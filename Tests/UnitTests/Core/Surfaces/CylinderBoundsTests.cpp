@@ -92,12 +92,12 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
   BOOST_CHECK_EQUAL(cylinderBoundsObject.type(), SurfaceBounds::eCylinder);
 
   /// test for inside(), 2D coords are r or phi ,z? : needs clarification
-  const Vector2D origin{0., 0.};
-  const Vector2D atPiBy2{M_PI / 2., 0.0};
-  const Vector2D atPi{M_PI, 0.0};
-  const Vector2D beyondEnd{0, 30.0};
-  const Vector2D unitZ{0.0, 1.0};
-  const Vector2D unitPhi{1.0, 0.0};
+  const Vector2 origin{0., 0.};
+  const Vector2 atPiBy2{M_PI / 2., 0.0};
+  const Vector2 atPi{M_PI, 0.0};
+  const Vector2 beyondEnd{0, 30.0};
+  const Vector2 unitZ{0.0, 1.0};
+  const Vector2 unitPhi{1.0, 0.0};
   const BoundaryCheck trueBoundaryCheckWithTolerance(true, true, 0.1, 0.1);
   BOOST_CHECK(
       cylinderBoundsObject.inside(atPiBy2, trueBoundaryCheckWithTolerance));
@@ -106,8 +106,8 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
   BOOST_CHECK(
       cylinderBoundsObject.inside(origin, trueBoundaryCheckWithTolerance));
 
-  /// test for inside3D() with Vector3D argument
-  const Vector3D origin3D{0., 0., 0.};
+  /// test for inside3D() with Vector3 argument
+  const Vector3 origin3D{0., 0., 0.};
   BOOST_CHECK(
       !cylinderBoundsObject.inside3D(origin3D, trueBoundaryCheckWithTolerance));
 

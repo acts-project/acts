@@ -116,9 +116,9 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   // Construct the rotation
   RotationMatrix3D rotation = RotationMatrix3D::Identity();
   double rotationAngle = 90_degree;
-  Vector3D xPos(cos(rotationAngle), 0., sin(rotationAngle));
-  Vector3D yPos(0., 1., 0.);
-  Vector3D zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+  Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
+  Vector3 yPos(0., 1., 0.);
+  Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
   rotation.col(0) = xPos;
   rotation.col(1) = yPos;
   rotation.col(2) = zPos;
@@ -133,7 +133,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
       std::make_shared<HomogeneousSurfaceMaterial>(matProp);
 
   // Set translation vectors
-  std::vector<Vector3D> translations;
+  std::vector<Vector3> translations;
   translations.reserve(6);
   translations.push_back({-500_mm, 0., 0.});
   translations.push_back({-300_mm, 0., 0.});
@@ -207,12 +207,12 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   std::cout << "Creating measurements:" << std::endl;
   std::vector<Test::TestSourceLink> sourcelinks;
   sourcelinks.reserve(6);
-  Vector2D lPosCenter{10_mm, 10_mm};
-  Vector2D resolution{30_um, 50_um};
+  Vector2 lPosCenter{10_mm, 10_mm};
+  Vector2 resolution{30_um, 50_um};
   SymMatrix2D cov2D = resolution.cwiseProduct(resolution).asDiagonal();
   for (const auto& surface : surfaces) {
     // 2D measurements
-    Vector2D loc = lPosCenter;
+    Vector2 loc = lPosCenter;
     loc[0] += resolution[0] * gauss(generator);
     loc[1] += resolution[1] * gauss(generator);
     sourcelinks.emplace_back(eBoundLoc0, eBoundLoc1, loc, cov2D,
@@ -227,7 +227,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   rNavigator.resolveSensitive = true;
 
   // Configure propagation with deactivated B-field
-  ConstantBField bField(Vector3D(0., 0., 0.));
+  ConstantBField bField(Vector3(0., 0., 0.));
   using RecoStepper = EigenStepper<ConstantBField>;
   RecoStepper rStepper(bField);
   using RecoPropagator = Propagator<RecoStepper, Navigator>;
@@ -238,8 +238,8 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   cov << std::pow(100_um, 2), 0., 0., 0., 0., 0., 0., std::pow(100_um, 2), 0.,
       0., 0., 0., 0., 0., 0.025, 0., 0., 0., 0., 0., 0., 0.025, 0., 0., 0., 0.,
       0., 0., 0.01, 0., 0., 0., 0., 0., 0., 1.;
-  Vector3D rPos(-1_m, 100_um * gauss(generator), 100_um * gauss(generator));
-  Vector3D rDir(1, 0.025 * gauss(generator), 0.025 * gauss(generator));
+  Vector3 rPos(-1_m, 100_um * gauss(generator), 100_um * gauss(generator));
+  Vector3 rDir(1, 0.025 * gauss(generator), 0.025 * gauss(generator));
   CurvilinearTrackParameters rStart(makeVector4(rPos, 42_ns), rDir, 1_GeV, 1_e,
                                     cov);
 

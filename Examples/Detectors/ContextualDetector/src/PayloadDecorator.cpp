@@ -30,7 +30,7 @@ ActsExamples::ProcessCode ActsExamples::Contextual::PayloadDecorator::decorate(
   if (context.eventNumber % m_cfg.iovSize) {
     for (auto& tf : aStore) {
       tf *= Acts::AngleAxis3D(m_cfg.rotationStep * context.eventNumber,
-                              Acts::Vector3D::UnitY());
+                              Acts::Vector3::UnitY());
     }
     // This creates a full payload context, i.e. the nominal store
     PayloadDetectorElement::ContextType alignableGeoContext;

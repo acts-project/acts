@@ -113,9 +113,9 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
     SurfaceConfig sCfg;
     sCfg.position = cfg.position;
     // Rotation of the surfaces: +pi/2 around axis y
-    Vector3D xPos(0., 0., 1.);
-    Vector3D yPos(0., 1., 0.);
-    Vector3D zPos(-1., 0., 0.);
+    Vector3 xPos(0., 0., 1.);
+    Vector3 yPos(0., 1., 0.);
+    Vector3 zPos(-1., 0., 0.);
     sCfg.rotation.col(0) = xPos;
     sCfg.rotation.col(1) = yPos;
     sCfg.rotation.col(2) = zPos;
@@ -202,7 +202,7 @@ Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
       m_cfg.length.x() * 0.5, m_cfg.length.y() * 0.5, m_cfg.length.z() * 0.5);
 
   // Build vector of confined volumes
-  std::vector<std::pair<TrackingVolumePtr, Vector3D>> tapVec;
+  std::vector<std::pair<TrackingVolumePtr, Vector3>> tapVec;
   tapVec.reserve(m_cfg.volumeCfg.size());
   for (auto& tVol : volumes) {
     tapVec.push_back(std::make_pair(tVol, tVol->center()));

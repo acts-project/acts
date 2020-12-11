@@ -7,12 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 inline detail::RealQuadraticEquation ConeSurface::intersectionSolver(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction) const {
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
   // Transform into the local frame
   Transform3D invTrans = transform(gctx).inverse();
-  Vector3D point1 = invTrans * position;
-  Vector3D dir1 = invTrans.linear() * direction;
+  Vector3 point1 = invTrans * position;
+  Vector3 dir1 = invTrans.linear() * direction;
 
   // See file header for the formula derivation
   double tan2Alpha = bounds().tanAlpha() * bounds().tanAlpha(),
@@ -30,8 +30,8 @@ inline detail::RealQuadraticEquation ConeSurface::intersectionSolver(
 }
 
 inline SurfaceIntersection ConeSurface::intersect(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const BoundaryCheck& bcheck) const {
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const BoundaryCheck& bcheck) const {
   // Solve the quadratic equation
   auto qe = intersectionSolver(gctx, position, direction);
 
@@ -41,7 +41,7 @@ inline SurfaceIntersection ConeSurface::intersect(
   }
 
   // Check the validity of the first solution
-  Vector3D solution1 = position + qe.first * direction;
+  Vector3 solution1 = position + qe.first * direction;
   Intersection3D::Status status1 =
       (qe.first * qe.first < s_onSurfaceTolerance * s_onSurfaceTolerance)
           ? Intersection3D::Status::onSurface
@@ -52,7 +52,7 @@ inline SurfaceIntersection ConeSurface::intersect(
   }
 
   // Check the validity of the second solution
-  Vector3D solution2 = position + qe.first * direction;
+  Vector3 solution2 = position + qe.first * direction;
   Intersection3D::Status status2 =
       (qe.second * qe.second < s_onSurfaceTolerance * s_onSurfaceTolerance)
           ? Intersection3D::Status::onSurface
@@ -141,13 +141,13 @@ inline AlignmentToPathMatrix ConeSurface::alignmentToPathDerivative(
 }
 
 inline ActsMatrix<2, 3> ConeSurface::localCartesianToBoundLocalDerivative(
-    const GeometryContext& gctx, const Vector3D& position) const {
+    const GeometryContext& gctx, const Vector3& position) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
   // The local frame transform
   const auto& sTransform = transform(gctx);
   // calculate the transformation to local coorinates
-  const Vector3D localPos = sTransform.inverse() * position;
+  const Vector3 localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);
   const double lphi = phi(localPos);
   const double lcphi = std::cos(lphi);

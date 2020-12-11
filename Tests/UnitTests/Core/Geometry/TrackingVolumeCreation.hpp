@@ -26,11 +26,10 @@ TrackingVolumePtr constructCylinderVolume(
     double volumeEnvelope, double innerVolumeR, double outerVolumeR,
     const std::string& name) {
   ///  the surface transforms
-  auto sfnPosition =
-      Vector3D(0., 0., -3 * surfaceHalfLengthZ - surfaceZoverlap);
+  auto sfnPosition = Vector3(0., 0., -3 * surfaceHalfLengthZ - surfaceZoverlap);
   auto sfnTransform = Transform3D(Translation3D(sfnPosition));
   auto sfcTransform = Transform3D::Identity();
-  auto sfpPosition = Vector3D(0., 0., 3 * surfaceHalfLengthZ - surfaceZoverlap);
+  auto sfpPosition = Vector3(0., 0., 3 * surfaceHalfLengthZ - surfaceZoverlap);
   auto sfpTransform = Transform3D(Translation3D(sfpPosition));
   ///  the surfaces
   auto sfnBounds = std::make_shared<CylinderBounds>(
@@ -55,11 +54,11 @@ TrackingVolumePtr constructCylinderVolume(
 
   detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Bound>
       axis(bUmin, bUmax, surfaces_only.size());
-  auto g2l = [](const Vector3D& glob) {
+  auto g2l = [](const Vector3& glob) {
     return std::array<double, 1>({{glob.z()}});
   };
   auto l2g = [](const std::array<double, 1>& loc) {
-    return Vector3D(0, 0, loc[0]);
+    return Vector3(0, 0, loc[0]);
   };
   auto sl = std::make_unique<SurfaceArray::SurfaceGridLookup<decltype(axis)>>(
       g2l, l2g, std::make_tuple(axis));
@@ -93,7 +92,7 @@ MutableTrackingVolumePtr constructContainerVolume(const GeometryContext& gctx,
                                                   double hVolumeHalflength,
                                                   const std::string& name) {
   ///  create the volume array
-  using VAP = std::pair<TrackingVolumePtr, Vector3D>;
+  using VAP = std::pair<TrackingVolumePtr, Vector3>;
   std::vector<VAP> volumes = {{iVolume, iVolume->binningPosition(gctx, binR)},
                               {oVolume, oVolume->binningPosition(gctx, binR)}};
   ///  the bounds for the container

@@ -226,7 +226,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getCompatibility(
   weightReduced = weightReduced.inverse();
 
   // Calculate compatibility / chi2
-  Vector2D trackParameters2D =
+  Vector2 trackParameters2D =
       linTrack.parametersAtPCA.template block<2, 1>(0, 0);
   double compatibility =
       trackParameters2D.dot(weightReduced * trackParameters2D);

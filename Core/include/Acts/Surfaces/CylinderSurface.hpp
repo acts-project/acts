@@ -87,8 +87,8 @@ class CylinderSurface : public Surface {
   /// @param bValue is the type of global binning to be done
   ///
   /// @return is the global position to be used for binning
-  Vector3D binningPosition(const GeometryContext& gctx,
-                           BinningValue bValue) const final;
+  Vector3 binningPosition(const GeometryContext& gctx,
+                          BinningValue bValue) const final;
 
   /// Return the measurement frame - this is needed for alignment, in particular
   /// The measurement frame of a cylinder is the tangential plane at a given
@@ -99,8 +99,8 @@ class CylinderSurface : public Surface {
   /// @param momentum is the momentum vector (ignored)
   /// @return rotation matrix that defines the measurement frame
   RotationMatrix3D referenceFrame(const GeometryContext& gctx,
-                                  const Vector3D& position,
-                                  const Vector3D& momentum) const final;
+                                  const Vector3& position,
+                                  const Vector3& momentum) const final;
 
   /// Return the surface type
   SurfaceType type() const override;
@@ -114,8 +114,8 @@ class CylinderSurface : public Surface {
   /// requested
   ///
   /// @return normal vector at the local position by value
-  Vector3D normal(const GeometryContext& gctx,
-                  const Vector2D& lposition) const final;
+  Vector3 normal(const GeometryContext& gctx,
+                 const Vector2& lposition) const final;
 
   /// Return method for surface normal information
   /// @note for a Cylinder a local position is always required for the normal
@@ -126,8 +126,8 @@ class CylinderSurface : public Surface {
   /// requested
   ///
   /// @return normal vector at the global position by value
-  Vector3D normal(const GeometryContext& gctx,
-                  const Vector3D& position) const final;
+  Vector3 normal(const GeometryContext& gctx,
+                 const Vector3& position) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -137,7 +137,7 @@ class CylinderSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   ///
   /// @return  the z-Axis of transform
-  virtual Vector3D rotSymmetryAxis(const GeometryContext& gctx) const;
+  virtual Vector3 rotSymmetryAxis(const GeometryContext& gctx) const;
 
   /// This method returns the CylinderBounds by reference
   const CylinderBounds& bounds() const final;
@@ -149,8 +149,8 @@ class CylinderSurface : public Surface {
   /// @param momentum is the global momentum (ignored in this operation)
   ///
   /// @return The global position by value
-  Vector3D localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
-                         const Vector3D& momentum) const final;
+  Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
+                        const Vector3& momentum) const final;
 
   /// Global to local transformation
   ///
@@ -160,10 +160,10 @@ class CylinderSurface : public Surface {
   /// @param tolerance optional tolerance within which a point is considered
   /// valid on surface
   ///
-  /// @return a Result<Vector2D> which can be !ok() if the operation fails
-  Result<Vector2D> globalToLocal(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& momentum,
+  /// @return a Result<Vector2> which can be !ok() if the operation fails
+  Result<Vector2> globalToLocal(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& momentum,
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// Straight line intersection schema from position/direction
@@ -177,8 +177,8 @@ class CylinderSurface : public Surface {
   ///
   /// @return SurfaceIntersection object (contains intersection & surface)
   SurfaceIntersection intersect(const GeometryContext& gctx,
-                                const Vector3D& position,
-                                const Vector3D& direction,
+                                const Vector3& position,
+                                const Vector3& direction,
                                 const BoundaryCheck& bcheck) const final;
 
   /// Path correction due to incident of the track
@@ -188,8 +188,8 @@ class CylinderSurface : public Surface {
   /// @param direction is the global momentum at the starting point
   ///
   /// @return is the correction factor due to incident
-  double pathCorrection(const GeometryContext& gctx, const Vector3D& position,
-                        const Vector3D& direction) const final;
+  double pathCorrection(const GeometryContext& gctx, const Vector3& position,
+                        const Vector3& direction) const final;
 
   /// Return method for properly formatted output string
   std::string name() const override;
@@ -226,7 +226,7 @@ class CylinderSurface : public Surface {
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
   ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
-      const GeometryContext& gctx, const Vector3D& position) const final;
+      const GeometryContext& gctx, const Vector3& position) const final;
 
  protected:
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
@@ -266,8 +266,8 @@ class CylinderSurface : public Surface {
   ///
   /// @return the quadratic equation
   detail::RealQuadraticEquation intersectionSolver(
-      const Transform3D& transform, const Vector3D& position,
-      const Vector3D& direction) const;
+      const Transform3D& transform, const Vector3& position,
+      const Vector3& direction) const;
 };
 
 #include "Acts/Surfaces/detail/CylinderSurface.ipp"

@@ -88,10 +88,10 @@ Acts::Transform3D Acts::DD4hepVolumeBuilder::convertTransform(
   const Double_t* rotation = tGeoTrans->GetRotationMatrix();
   const Double_t* translation = tGeoTrans->GetTranslation();
   return TGeoPrimitivesHelper::makeTransform(
-      Acts::Vector3D(rotation[0], rotation[3], rotation[6]),
-      Acts::Vector3D(rotation[1], rotation[4], rotation[7]),
-      Acts::Vector3D(rotation[2], rotation[5], rotation[8]),
-      Acts::Vector3D(translation[0] * UnitConstants::cm,
-                     translation[1] * UnitConstants::cm,
-                     translation[2] * UnitConstants::cm));
+      Acts::Vector3(rotation[0], rotation[3], rotation[6]),
+      Acts::Vector3(rotation[1], rotation[4], rotation[7]),
+      Acts::Vector3(rotation[2], rotation[5], rotation[8]),
+      Acts::Vector3(translation[0] * UnitConstants::cm,
+                    translation[1] * UnitConstants::cm,
+                    translation[2] * UnitConstants::cm));
 }

@@ -36,8 +36,8 @@ void StraightLineStepper::update(State& state, const FreeVector& parameters,
   state.cov = covariance;
 }
 
-void StraightLineStepper::update(State& state, const Vector3D& uposition,
-                                 const Vector3D& udirection, double up,
+void StraightLineStepper::update(State& state, const Vector3& uposition,
+                                 const Vector3& udirection, double up,
                                  double time) const {
   state.pars.template segment<3>(eFreePos0) = uposition;
   state.pars.template segment<3>(eFreeDir0) = udirection;

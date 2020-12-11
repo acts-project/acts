@@ -38,10 +38,10 @@ using SurfaceMatcher = std::function<bool(
 using SurfaceVector = std::vector<const Surface*>;
 using SurfaceMatrix = std::vector<SurfaceVector>;
 
-using V3Vector = std::vector<Vector3D>;
+using V3Vector = std::vector<Vector3>;
 using V3Matrix = std::vector<V3Vector>;
 
-using AxisScalar = Vector3D::Scalar;
+using AxisScalar = Vector3::Scalar;
 
 /// @class SurfaceArrayCreator
 ///
@@ -446,9 +446,9 @@ class SurfaceArrayCreator {
   /// @param surface the surface associated with the given vertices
   /// @param locVertices a vector of the vertices in local coordinates
   /// @return a vector of the vertices in global coordinates
-  std::vector<Acts::Vector3D> makeGlobalVertices(
+  std::vector<Acts::Vector3> makeGlobalVertices(
       const GeometryContext& gctx, const Acts::Surface& surface,
-      const std::vector<Acts::Vector2D>& locVertices) const;
+      const std::vector<Acts::Vector2>& locVertices) const;
 };
 
 }  // namespace Acts

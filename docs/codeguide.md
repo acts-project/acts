@@ -17,11 +17,11 @@ Example:
 
 ```cpp
 // local surface coordinate vector
-Vector2D loc;
+Vector2 loc;
 loc[ePos0] = 2.0;
 
 // space-time coordinate vector
-Vector4D pos4;
+Vector4 pos4;
 pos4[ePos0] = 0.1;
 ...
 pos4[eTime] = 12.3;

@@ -91,11 +91,11 @@ struct Fixture {
                                                               boundParams);
 
     // construct hit from free parameters
-    Acts::Vector4D r4;
+    Acts::Vector4 r4;
     r4.segment<3>(Acts::ePos0) = freeParams.segment<3>(Acts::eFreePos0);
     r4[Acts::eTime] = freeParams[Acts::eFreeTime];
     // construct 4-momentum vector assuming m=0
-    Acts::Vector4D p4;
+    Acts::Vector4 p4;
     p4.segment<3>(Acts::eMom0) =
         freeParams.segment<3>(Acts::eFreeDir0).normalized();
     p4[Acts::eEnergy] = 1;

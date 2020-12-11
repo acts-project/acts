@@ -23,7 +23,7 @@ Acts::PlanarModuleStepper::PlanarModuleStepper(
 
 std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
     const GeometryContext& gctx, const DigitizationModule& dmodule,
-    const Vector3D& startPoint, const Vector3D& endPoint) const {
+    const Vector3& startPoint, const Vector3& endPoint) const {
   // create the return vector
   std::vector<DigitizationStep> cSteps;
 
@@ -31,7 +31,7 @@ std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
   auto& stepSurfaces = dmodule.stepSurfaces(startPoint, endPoint);
 
   // the track direction
-  Vector3D trackDirection((endPoint - startPoint).normalized());
+  Vector3 trackDirection((endPoint - startPoint).normalized());
 
   // the intersections through the surfaces, start one is the first valid one
   std::vector<Acts::Intersection3D> stepIntersections;
@@ -57,7 +57,7 @@ std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
                      Intersection3D::Status::reachable));
   std::sort(stepIntersections.begin(), stepIntersections.end());
 
-  Vector3D lastPosition = startPoint;
+  Vector3 lastPosition = startPoint;
   // reserve the right amount
   cSteps.reserve(stepIntersections.size());
   for (auto& sIntersection : stepIntersections) {
@@ -73,12 +73,12 @@ std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
 // calculate the steps caused by this track - fast simulation interface
 std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
     const GeometryContext& gctx, const Acts::DigitizationModule& dmodule,
-    const Vector2D& moduleIntersection, const Vector3D& trackDirection) const {
+    const Vector2& moduleIntersection, const Vector3& trackDirection) const {
   // first, intersect the boundary surfaces
   auto boundarySurfaces = dmodule.boundarySurfaces();
   // intersect them - fast exit for cases where
   // readout and counter readout are hit
-  Vector3D intersection3D(moduleIntersection.x(), moduleIntersection.y(), 0.);
+  Vector3 intersection3D(moduleIntersection.x(), moduleIntersection.y(), 0.);
   size_t attempts = 0;
   // the collected intersections
   std::vector<Acts::Intersection3D> boundaryIntersections;

@@ -85,8 +85,8 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
     const auto& rawPos = step->GetPreStepPoint()->GetPosition();
     const auto& rawDir = step->GetPreStepPoint()->GetMomentum();
     Acts::MaterialInteraction mInteraction;
-    mInteraction.position = Acts::Vector3D(rawPos.x(), rawPos.y(), rawPos.z());
-    mInteraction.direction = Acts::Vector3D(rawDir.x(), rawDir.y(), rawDir.z());
+    mInteraction.position = Acts::Vector3(rawPos.x(), rawPos.y(), rawPos.z());
+    mInteraction.direction = Acts::Vector3(rawDir.x(), rawDir.y(), rawDir.z());
     mInteraction.direction.normalized();
     mInteraction.materialSlab = slab;
     m_materialSteps.push_back(mInteraction);

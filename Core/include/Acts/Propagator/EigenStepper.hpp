@@ -158,9 +158,9 @@ class EigenStepper {
     /// @brief Storage of magnetic field and the sub steps during a RKN4 step
     struct {
       /// Magnetic field evaulations
-      Vector3D B_first, B_middle, B_last;
+      Vector3 B_first, B_middle, B_last;
       /// k_i of the RKN4 algorithm
-      Vector3D k1, k2, k3, k4;
+      Vector3 k1, k2, k3, k4;
       /// k_i elements of the momenta
       std::array<double, 4> kQoP;
     } stepData;
@@ -188,7 +188,7 @@ class EigenStepper {
   /// @param [in,out] state is the propagation state associated with the track
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
-  Vector3D getField(State& state, const Vector3D& pos) const {
+  Vector3 getField(State& state, const Vector3& pos) const {
     // get the field from the cell
     return m_bField.getField(pos, state.fieldCache);
   }
@@ -196,14 +196,14 @@ class EigenStepper {
   /// Global particle position accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  Vector3D position(const State& state) const {
+  Vector3 position(const State& state) const {
     return state.pars.template segment<3>(eFreePos0);
   }
 
   /// Momentum direction accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  Vector3D direction(const State& state) const {
+  Vector3 direction(const State& state) const {
     return state.pars.template segment<3>(eFreeDir0);
   }
 
@@ -333,8 +333,8 @@ class EigenStepper {
   /// @param [in] uposition the updated position
   /// @param [in] udirection the updated direction
   /// @param [in] up the updated momentum value
-  void update(State& state, const Vector3D& uposition,
-              const Vector3D& udirection, double up, double time) const;
+  void update(State& state, const Vector3& uposition, const Vector3& udirection,
+              double up, double time) const;
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,

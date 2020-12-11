@@ -82,9 +82,9 @@ class LineSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position is ignored
   ///
-  /// @return a Vector3D by value
-  Vector3D normal(const GeometryContext& gctx,
-                  const Vector2D& lposition) const final;
+  /// @return a Vector3 by value
+  Vector3 normal(const GeometryContext& gctx,
+                 const Vector2& lposition) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -96,8 +96,8 @@ class LineSurface : public Surface {
   /// @param bValue is the binning type to be used
   ///
   /// @return position that can beused for this binning
-  Vector3D binningPosition(const GeometryContext& gctx,
-                           BinningValue bValue) const final;
+  Vector3 binningPosition(const GeometryContext& gctx,
+                          BinningValue bValue) const final;
 
   /// Return the measurement frame - this is needed for alignment, in particular
   ///
@@ -112,8 +112,8 @@ class LineSurface : public Surface {
   ///
   /// @return is a rotation matrix that indicates the measurement frame
   RotationMatrix3D referenceFrame(const GeometryContext& gctx,
-                                  const Vector3D& position,
-                                  const Vector3D& momentum) const final;
+                                  const Vector3& position,
+                                  const Vector3& momentum) const final;
 
   /// Calculate the jacobian from local to global which the surface knows best,
   /// hence the calculation is done here.
@@ -144,8 +144,8 @@ class LineSurface : public Surface {
   /// @param momentum is the global momentum (used to sign the closest approach)
   ///
   /// @return global position by value
-  Vector3D localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
-                         const Vector3D& momentum) const final;
+  Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
+                        const Vector3& momentum) const final;
 
   /// Specified for LineSurface: global to local method without dynamic
   /// memory allocation
@@ -182,10 +182,10 @@ class LineSurface : public Surface {
   /// @param momentum global 3D momentum representation (optionally ignored)
   /// @param tolerance (unused)
   ///
-  /// @return a Result<Vector2D> which can be !ok() if the operation fails
-  Result<Vector2D> globalToLocal(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& momentum,
+  /// @return a Result<Vector2> which can be !ok() if the operation fails
+  Result<Vector2> globalToLocal(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& momentum,
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// @brief Straight line intersection schema
@@ -225,8 +225,8 @@ class LineSurface : public Surface {
   ///
   /// @return is the intersection object
   SurfaceIntersection intersect(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction,
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction,
       const BoundaryCheck& bcheck = false) const final;
 
   /// the pathCorrection for derived classes with thickness
@@ -234,8 +234,8 @@ class LineSurface : public Surface {
   ///
   /// @note input parameters are ignored
   /// @note there's no material associated to the line surface
-  double pathCorrection(const GeometryContext& gctx, const Vector3D& position,
-                        const Vector3D& momentum) const override;
+  double pathCorrection(const GeometryContext& gctx, const Vector3& position,
+                        const Vector3& momentum) const override;
 
   /// This method returns the bounds of the Surface by reference */
   const SurfaceBounds& bounds() const final;
@@ -264,7 +264,7 @@ class LineSurface : public Surface {
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
   ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
-      const GeometryContext& gctx, const Vector3D& position) const final;
+      const GeometryContext& gctx, const Vector3& position) const final;
 
  protected:
   std::shared_ptr<const LineBounds> m_bounds;  ///< bounds (shared)
@@ -276,8 +276,8 @@ class LineSurface : public Surface {
   /// @param position is the global position
   /// @param momentum is the momentum
   /// @param lposition is the local position to be filled
-  bool globalToLocalPlain(const GeometryContext& gctx, const Vector3D& position,
-                          const Vector3D& momentum, Vector2D& lposition) const;
+  bool globalToLocalPlain(const GeometryContext& gctx, const Vector3& position,
+                          const Vector3& momentum, Vector2& lposition) const;
 };
 
 #include "Acts/Surfaces/detail/LineSurface.ipp"

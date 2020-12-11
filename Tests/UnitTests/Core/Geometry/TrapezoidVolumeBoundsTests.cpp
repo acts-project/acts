@@ -30,22 +30,22 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
   TrapezoidVolumeBounds tvb(5, 10, 8, 4);
 
   auto bb = tvb.boundingBox();
-  CHECK_CLOSE_ABS(bb.max(), Vector3D(10, 8, 4), tol);
-  CHECK_CLOSE_ABS(bb.min(), Vector3D(-10, -8, -4), tol);
+  CHECK_CLOSE_ABS(bb.max(), Vector3(10, 8, 4), tol);
+  CHECK_CLOSE_ABS(bb.min(), Vector3(-10, -8, -4), tol);
 
   Transform3D trf;
 
-  trf = Translation3D(Vector3D(0, 30, 20));
+  trf = Translation3D(Vector3(0, 30, 20));
 
   bb = tvb.boundingBox(&trf);
-  CHECK_CLOSE_ABS(bb.max(), Vector3D(10, 38, 24), tol);
-  CHECK_CLOSE_ABS(bb.min(), Vector3D(-10, 22, 16), tol);
+  CHECK_CLOSE_ABS(bb.max(), Vector3(10, 38, 24), tol);
+  CHECK_CLOSE_ABS(bb.min(), Vector3(-10, 22, 16), tol);
 
-  trf = AngleAxis3D(M_PI / 2., Vector3D(-2, 4, 5).normalized());
+  trf = AngleAxis3D(M_PI / 2., Vector3(-2, 4, 5).normalized());
 
   bb = tvb.boundingBox(&trf);
-  CHECK_CLOSE_ABS(bb.max(), Vector3D(9.32577, 11.4906, 11.5777), tol);
-  CHECK_CLOSE_ABS(bb.min(), Vector3D(-9.77021, -8.65268, -9.23688), tol);
+  CHECK_CLOSE_ABS(bb.max(), Vector3(9.32577, 11.4906, 11.5777), tol);
+  CHECK_CLOSE_ABS(bb.min(), Vector3(-9.77021, -8.65268, -9.23688), tol);
 }
 
 BOOST_AUTO_TEST_CASE(TrapezoidVolumeBoundarySurfaces) {
@@ -67,9 +67,9 @@ BOOST_AUTO_TEST_CASE(TrapezoidVolumeBoundarySurfaces) {
     BOOST_CHECK(!tvb.inside(outsideTvb));
   }
 
-  Vector3D xaxis(1., 0., 0.);
-  Vector3D yaxis(0., 1., 0.);
-  Vector3D zaxis(0., 0., 1.);
+  Vector3 xaxis(1., 0., 0.);
+  Vector3 yaxis(0., 1., 0.);
+  Vector3 zaxis(0., 0., 1.);
 
   // Test the orientation of the boundary surfaces
   auto nFaceXY =

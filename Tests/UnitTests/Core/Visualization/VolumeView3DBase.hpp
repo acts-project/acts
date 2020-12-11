@@ -151,7 +151,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
 
   //----------------------------------------------------
   // Trapezoid volume section
-  std::array<Vector3D, 8> vertices;
+  std::array<Vector3, 8> vertices;
   vertices = {{{0, 0, 0},
                {2, 0, 0},
                {2, 1, 0},

@@ -12,7 +12,7 @@
 #include <iostream>
 #include <utility>
 
-Acts::PerigeeSurface::PerigeeSurface(const Vector3D& gp)
+Acts::PerigeeSurface::PerigeeSurface(const Vector3& gp)
     : LineSurface(Transform3D(Translation3D(gp.x(), gp.y(), gp.z())), nullptr) {
 }
 
@@ -48,7 +48,7 @@ std::ostream& Acts::PerigeeSurface::toStream(const GeometryContext& gctx,
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::PerigeeSurface:" << std::endl;
-  const Vector3D& sfCenter = center(gctx);
+  const Vector3& sfCenter = center(gctx);
   sl << "     Center position  (x, y, z) = (" << sfCenter.x() << ", "
      << sfCenter.y() << ", " << sfCenter.z() << ")";
   sl << std::setprecision(-1);
@@ -58,19 +58,19 @@ std::ostream& Acts::PerigeeSurface::toStream(const GeometryContext& gctx,
 Acts::Polyhedron Acts::PerigeeSurface::polyhedronRepresentation(
     const GeometryContext& gctx, size_t /*lseg*/) const {
   // Prepare vertices and faces
-  std::vector<Vector3D> vertices;
+  std::vector<Vector3> vertices;
   std::vector<Polyhedron::FaceType> faces;
   std::vector<Polyhedron::FaceType> triangularMesh;
 
   const Transform3D& ctransform = transform(gctx);
-  Vector3D left(0, 0, -100.);
-  Vector3D right(0, 0, 100.);
+  Vector3 left(0, 0, -100.);
+  Vector3 right(0, 0, 100.);
 
   // The central wire/straw
   vertices.push_back(ctransform * left);
   vertices.push_back(ctransform * right);
   faces.push_back({0, 1});
-  vertices.push_back(ctransform * Vector3D(0., 0., 0.));
+  vertices.push_back(ctransform * Vector3(0., 0., 0.));
   triangularMesh.push_back({0, 2, 1});
 
   return Polyhedron(vertices, faces, triangularMesh);

@@ -148,7 +148,7 @@ double eta(const Eigen::MatrixBase<Derived>& v) noexcept {
 ///
 /// For this method a 3D vector is required to guarantee all potential
 /// binning values.
-inline double cast(const Vector3D& position, BinningValue bval) {
+inline double cast(const Vector3& position, BinningValue bval) {
   switch (bval) {
     case binX:
       return position[0];
@@ -180,7 +180,7 @@ inline double cast(const Vector3D& position, BinningValue bval) {
 /// @param [in] m Matrix that will be used for cross products
 /// @param [in] v Vector for cross products
 /// @return Constructed matrix
-inline ActsMatrix<3, 3> cross(const ActsMatrix<3, 3>& m, const Vector3D& v) {
+inline ActsMatrix<3, 3> cross(const ActsMatrix<3, 3>& m, const Vector3& v) {
   ActsMatrix<3, 3> r;
   r.col(0) = m.col(0).cross(v);
   r.col(1) = m.col(1).cross(v);
@@ -190,7 +190,7 @@ inline ActsMatrix<3, 3> cross(const ActsMatrix<3, 3>& m, const Vector3D& v) {
 }
 
 /// Access the three-position components in a four-position vector.
-inline auto position(const Vector4D& pos4) {
+inline auto position(const Vector4& pos4) {
   return pos4.segment<3>(ePos0);
 }
 
@@ -279,7 +279,7 @@ inline std::string toString(const Eigen::MatrixBase<derived_t>& matrix,
 /// @return The printed string
 inline std::string toString(const Acts::Translation3D& translation,
                             int precision = 4) {
-  Acts::Vector3D trans;
+  Acts::Vector3 trans;
   trans[0] = translation.x();
   trans[1] = translation.y();
   trans[2] = translation.z();

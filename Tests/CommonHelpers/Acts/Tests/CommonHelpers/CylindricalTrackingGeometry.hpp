@@ -99,8 +99,8 @@ struct CylindricalTrackingGeometry {
       auto mModuleTransform = Transform3D(
           Translation3D(ringRadius * std::cos(phi), ringRadius * std::sin(phi),
                         ringZ + (im % 2) * zStagger) *
-          AngleAxis3D(phi - 0.5 * M_PI, Vector3D::UnitZ()) *
-          AngleAxis3D(moduleTilt, Vector3D::UnitY()));
+          AngleAxis3D(phi - 0.5 * M_PI, Vector3::UnitZ()) *
+          AngleAxis3D(moduleTilt, Vector3::UnitY()));
 
       // Create the detector element
       auto detElement = std::make_unique<const DetectorElementStub>(
@@ -153,13 +153,13 @@ struct CylindricalTrackingGeometry {
       // The association transform
       double modulePhi = VectorHelpers::phi(mCenter);
       // Local z axis is the normal vector
-      Vector3D moduleLocalZ(cos(modulePhi + moduleTiltPhi),
-                            sin(modulePhi + moduleTiltPhi), 0.);
+      Vector3 moduleLocalZ(cos(modulePhi + moduleTiltPhi),
+                           sin(modulePhi + moduleTiltPhi), 0.);
       // Local y axis is the global z axis
-      Vector3D moduleLocalY(0., 0., 1);
+      Vector3 moduleLocalY(0., 0., 1);
       // Local x axis the normal to local y,z
-      Vector3D moduleLocalX(-sin(modulePhi + moduleTiltPhi),
-                            cos(modulePhi + moduleTiltPhi), 0.);
+      Vector3 moduleLocalX(-sin(modulePhi + moduleTiltPhi),
+                           cos(modulePhi + moduleTiltPhi), 0.);
       // Create the RotationMatrix
       RotationMatrix3D moduleRotation;
       moduleRotation.col(0) = moduleLocalX;
@@ -180,13 +180,13 @@ struct CylindricalTrackingGeometry {
 
   /// Helper method for cylinder layer
   /// create the positions for module surfaces on a cylinder
-  std::vector<Vector3D> modulePositionsCylinder(
+  std::vector<Vector3> modulePositionsCylinder(
       double radius, double zStagger, double moduleHalfLength, double lOverlap,
       const std::pair<int, int>& binningSchema) {
     int nPhiBins = binningSchema.first;
     int nZbins = binningSchema.second;
     // prepare the return value
-    std::vector<Vector3D> mPositions;
+    std::vector<Vector3> mPositions;
     mPositions.reserve(nPhiBins * nZbins);
     // prep work
     double phiStep = 2 * M_PI / (nPhiBins);
@@ -202,8 +202,8 @@ struct CylindricalTrackingGeometry {
       for (size_t phiBin = 0; phiBin < size_t(nPhiBins); ++phiBin) {
         // calculate the current phi value
         double modulePhi = minPhi + phiBin * phiStep;
-        mPositions.push_back(Vector3D(moduleR * cos(modulePhi),
-                                      moduleR * sin(modulePhi), moduleZ));
+        mPositions.push_back(Vector3(moduleR * cos(modulePhi),
+                                     moduleR * sin(modulePhi), moduleZ));
       }
     }
     return mPositions;

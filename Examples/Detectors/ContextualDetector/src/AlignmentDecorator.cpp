@@ -62,22 +62,22 @@ ActsExamples::Contextual::AlignmentDecorator::decorate(
               auto colX = tMatrix.block<3, 1>(0, 0).transpose();
               auto colY = tMatrix.block<3, 1>(0, 1).transpose();
               auto colZ = tMatrix.block<3, 1>(0, 2).transpose();
-              Acts::Vector3D newCenter = tMatrix.block<3, 1>(0, 3).transpose() +
-                                         tx * colX + ty * colY + tz * colZ;
+              Acts::Vector3 newCenter = tMatrix.block<3, 1>(0, 3).transpose() +
+                                        tx * colX + ty * colY + tz * colZ;
               atForm->translation() = newCenter;
             }
             // now modify it - rotation around local X
             if (m_cfg.aSigmaX != 0.) {
               (*atForm) *= Acts::AngleAxis3D(m_cfg.aSigmaX * gauss(rng),
-                                             Acts::Vector3D::UnitX());
+                                             Acts::Vector3::UnitX());
             }
             if (m_cfg.aSigmaY != 0.) {
               (*atForm) *= Acts::AngleAxis3D(m_cfg.aSigmaY * gauss(rng),
-                                             Acts::Vector3D::UnitY());
+                                             Acts::Vector3::UnitY());
             }
             if (m_cfg.aSigmaZ != 0.) {
               (*atForm) *= Acts::AngleAxis3D(m_cfg.aSigmaZ * gauss(rng),
-                                             Acts::Vector3D::UnitZ());
+                                             Acts::Vector3::UnitZ());
             }
           }
           // put it back into the store

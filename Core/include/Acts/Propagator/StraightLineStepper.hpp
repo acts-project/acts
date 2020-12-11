@@ -149,22 +149,22 @@ class StraightLineStepper {
   /// @param [in,out] state is the propagation state associated with the track
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
-  Vector3D getField(State& /*state*/, const Vector3D& /*pos*/) const {
+  Vector3 getField(State& /*state*/, const Vector3& /*pos*/) const {
     // get the field from the cell
-    return Vector3D(0., 0., 0.);
+    return Vector3(0., 0., 0.);
   }
 
   /// Global particle position accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  Vector3D position(const State& state) const {
+  Vector3 position(const State& state) const {
     return state.pars.template segment<3>(eFreePos0);
   }
 
   /// Momentum direction accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  Vector3D direction(const State& state) const {
+  Vector3 direction(const State& state) const {
     return state.pars.template segment<3>(eFreeDir0);
   }
 
@@ -292,8 +292,8 @@ class StraightLineStepper {
   /// @param [in] udirection the updated direction
   /// @param [in] up the updated momentum value
   /// @param [in] time the updated time value
-  void update(State& state, const Vector3D& uposition,
-              const Vector3D& udirection, double up, double time) const;
+  void update(State& state, const Vector3& uposition, const Vector3& udirection,
+              double up, double time) const;
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,
@@ -333,7 +333,7 @@ class StraightLineStepper {
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
     const auto dtds = std::hypot(1., state.options.mass / p);
     // Update the track parameters according to the equations of motion
-    Vector3D dir = direction(state.stepping);
+    Vector3 dir = direction(state.stepping);
     state.stepping.pars.template segment<3>(eFreePos0) += h * dir;
     state.stepping.pars[eFreeTime] += h * dtds;
     // Propagate the jacobian

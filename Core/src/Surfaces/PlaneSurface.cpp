@@ -28,17 +28,17 @@ Acts::PlaneSurface::PlaneSurface(const GeometryContext& gctx,
                                  const Transform3D& shift)
     : GeometryObject(), Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
 
-Acts::PlaneSurface::PlaneSurface(const Vector3D& center, const Vector3D& normal)
+Acts::PlaneSurface::PlaneSurface(const Vector3& center, const Vector3& normal)
     : Surface(), m_bounds(nullptr) {
   /// the right-handed coordinate system is defined as
   /// T = normal
   /// U = Z x T if T not parallel to Z otherwise U = X x T
   /// V = T x U
-  Vector3D T = normal.normalized();
-  Vector3D U = std::abs(T.dot(Vector3D::UnitZ())) < s_curvilinearProjTolerance
-                   ? Vector3D::UnitZ().cross(T).normalized()
-                   : Vector3D::UnitX().cross(T).normalized();
-  Vector3D V = T.cross(U);
+  Vector3 T = normal.normalized();
+  Vector3 U = std::abs(T.dot(Vector3::UnitZ())) < s_curvilinearProjTolerance
+                  ? Vector3::UnitZ().cross(T).normalized()
+                  : Vector3::UnitX().cross(T).normalized();
+  Vector3 V = T.cross(U);
   RotationMatrix3D curvilinearRotation;
   curvilinearRotation.col(0) = U;
   curvilinearRotation.col(1) = V;
@@ -73,21 +73,21 @@ Acts::Surface::SurfaceType Acts::PlaneSurface::type() const {
   return Surface::Plane;
 }
 
-Acts::Vector3D Acts::PlaneSurface::localToGlobal(
-    const GeometryContext& gctx, const Vector2D& lposition,
-    const Vector3D& /*unused*/) const {
+Acts::Vector3 Acts::PlaneSurface::localToGlobal(
+    const GeometryContext& gctx, const Vector2& lposition,
+    const Vector3& /*unused*/) const {
   return transform(gctx) *
-         Vector3D(lposition[Acts::eBoundLoc0], lposition[Acts::eBoundLoc1], 0.);
+         Vector3(lposition[Acts::eBoundLoc0], lposition[Acts::eBoundLoc1], 0.);
 }
 
-Acts::Result<Acts::Vector2D> Acts::PlaneSurface::globalToLocal(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& /*unused*/, double tolerance) const {
-  Vector3D loc3Dframe = transform(gctx).inverse() * position;
+Acts::Result<Acts::Vector2> Acts::PlaneSurface::globalToLocal(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& /*unused*/, double tolerance) const {
+  Vector3 loc3Dframe = transform(gctx).inverse() * position;
   if (loc3Dframe.z() * loc3Dframe.z() > tolerance * tolerance) {
-    return Result<Vector2D>::failure(SurfaceError::GlobalPositionNotOnSurface);
+    return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
-  return Result<Vector2D>::success({loc3Dframe.x(), loc3Dframe.y()});
+  return Result<Vector2>::success({loc3Dframe.x(), loc3Dframe.y()});
 }
 
 std::string Acts::PlaneSurface::name() const {
@@ -104,7 +104,7 @@ const Acts::SurfaceBounds& Acts::PlaneSurface::bounds() const {
 Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
     const GeometryContext& gctx, size_t lseg) const {
   // Prepare vertices and faces
-  std::vector<Vector3D> vertices;
+  std::vector<Vector3> vertices;
   std::vector<Polyhedron::FaceType> faces;
   std::vector<Polyhedron::FaceType> triangularMesh;
   bool exactPolyhedron = true;
@@ -114,7 +114,7 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
     auto vertices2D = m_bounds->vertices(lseg);
     vertices.reserve(vertices2D.size() + 1);
     for (const auto& v2D : vertices2D) {
-      vertices.push_back(transform(gctx) * Vector3D(v2D.x(), v2D.y(), 0.));
+      vertices.push_back(transform(gctx) * Vector3(v2D.x(), v2D.y(), 0.));
     }
     bool isEllipse = bounds().type() == SurfaceBounds::eEllipse;
     bool innerExists = false, coversFull = false;

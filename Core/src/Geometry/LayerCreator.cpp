@@ -465,7 +465,7 @@ bool Acts::LayerCreator::checkBinning(const GeometryContext& gctx,
     ACTS_ERROR(" -- Inaccessible surfaces: ");
     for (const auto& srf : diff) {
       // have to choose BinningValue here
-      Vector3D ctr = srf->binningPosition(gctx, binR);
+      Vector3 ctr = srf->binningPosition(gctx, binR);
       ACTS_ERROR(" Surface(x=" << ctr.x() << ", y=" << ctr.y()
                                << ", z=" << ctr.z() << ", r=" << perp(ctr)
                                << ", phi=" << phi(ctr) << ")");

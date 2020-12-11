@@ -21,21 +21,21 @@ namespace ActsExamples {
 
 struct FixedVertexGenerator {
   /// The fixed vertex position and time.
-  Acts::Vector4D fixed = Acts::Vector4D::Zero();
+  Acts::Vector4 fixed = Acts::Vector4::Zero();
 
-  Acts::Vector4D operator()(RandomEngine& /* unused */) const { return fixed; }
+  Acts::Vector4 operator()(RandomEngine& /* unused */) const { return fixed; }
 };
 
 struct GaussianVertexGenerator {
   // standard deviation comes first, since it is more likely to be modified
   /// Vertex position and time standard deviation.
-  Acts::Vector4D stddev = {0.0, 0.0, 0.0, 0.0};
+  Acts::Vector4 stddev = {0.0, 0.0, 0.0, 0.0};
   /// Mean vertex position and time.
-  Acts::Vector4D mean = {0.0, 0.0, 0.0, 0.0};
+  Acts::Vector4 mean = {0.0, 0.0, 0.0, 0.0};
 
-  Acts::Vector4D operator()(RandomEngine& rng) const {
+  Acts::Vector4 operator()(RandomEngine& rng) const {
     auto normal = std::normal_distribution<double>(0.0, 1.0);
-    Acts::Vector4D rndNormal = {
+    Acts::Vector4 rndNormal = {
         normal(rng),
         normal(rng),
         normal(rng),

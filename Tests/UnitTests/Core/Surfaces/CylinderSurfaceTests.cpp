@@ -88,17 +88,17 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   BOOST_CHECK_EQUAL(cylinderSurfaceObject->type(), Surface::Cylinder);
   //
   /// Test binningPosition
-  Vector3D binningPosition{0., 1., 2.};
+  Vector3 binningPosition{0., 1., 2.};
   CHECK_CLOSE_ABS(
       cylinderSurfaceObject->binningPosition(testContext, BinningValue::binPhi),
       binningPosition, 1e-9);
   //
   /// Test referenceFrame
   double rootHalf = std::sqrt(0.5);
-  Vector3D globalPosition{rootHalf, 1. - rootHalf, 0.};
-  Vector3D globalPositionZ{rootHalf, 1. - rootHalf, 2.0};
-  Vector3D momentum{15., 15., 15.};
-  Vector3D momentum2{6.6, -3., 2.};
+  Vector3 globalPosition{rootHalf, 1. - rootHalf, 0.};
+  Vector3 globalPositionZ{rootHalf, 1. - rootHalf, 2.0};
+  Vector3 momentum{15., 15., 15.};
+  Vector3 momentum2{6.6, -3., 2.};
   RotationMatrix3D expectedFrame;
   expectedFrame << rootHalf, 0., rootHalf, rootHalf, 0., -rootHalf, 0., 1., 0.;
   // check without shift
@@ -111,14 +111,14 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
                        expectedFrame, 1e-6, 1e-9);
   //
   /// Test normal, given 3D position
-  Vector3D origin{0., 0., 0.};
-  Vector3D normal3D = {0., -1., 0.};
+  Vector3 origin{0., 0., 0.};
+  Vector3 normal3D = {0., -1., 0.};
   CHECK_CLOSE_ABS(cylinderSurfaceObject->normal(testContext, origin), normal3D,
                   1e-9);
 
-  Vector3D pos45deg = {rootHalf, 1 + rootHalf, 0.};
-  Vector3D pos45degZ = {rootHalf, 1 + rootHalf, 4.};
-  Vector3D normal45deg = {rootHalf, rootHalf, 0.};
+  Vector3 pos45deg = {rootHalf, 1 + rootHalf, 0.};
+  Vector3 pos45degZ = {rootHalf, 1 + rootHalf, 4.};
+  Vector3 normal45deg = {rootHalf, rootHalf, 0.};
   // test the normal vector
   CHECK_CLOSE_ABS(cylinderSurfaceObject->normal(testContext, pos45deg),
                   normal45deg, 1e-6 * rootHalf);
@@ -127,14 +127,14 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
                   normal45deg, 1e-6 * rootHalf);
   //
   /// Test normal given 2D rphi position
-  Vector2D positionPiBy2(1.0, 0.);
-  Vector3D normalAtPiBy2{std::cos(1.), std::sin(1.), 0.};
+  Vector2 positionPiBy2(1.0, 0.);
+  Vector3 normalAtPiBy2{std::cos(1.), std::sin(1.), 0.};
   CHECK_CLOSE_ABS(cylinderSurfaceObject->normal(testContext, positionPiBy2),
                   normalAtPiBy2, 1e-9);
 
   //
   /// Test rotational symmetry axis
-  Vector3D symmetryAxis{0., 0., 1.};
+  Vector3 symmetryAxis{0., 0., 1.};
   CHECK_CLOSE_ABS(cylinderSurfaceObject->rotSymmetryAxis(testContext),
                   symmetryAxis, 1e-9);
   //
@@ -143,31 +143,31 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
                     SurfaceBounds::eCylinder);
   //
   /// Test localToGlobal
-  Vector2D localPosition{0., 0.};
+  Vector2 localPosition{0., 0.};
   globalPosition = cylinderSurfaceObject->localToGlobal(
       testContext, localPosition, momentum);
-  Vector3D expectedPosition{1, 1, 2};
+  Vector3 expectedPosition{1, 1, 2};
   BOOST_CHECK_EQUAL(globalPosition, expectedPosition);
   //
   /// Testing globalToLocal
   localPosition = cylinderSurfaceObject
                       ->globalToLocal(testContext, globalPosition, momentum)
                       .value();
-  Vector2D expectedLocalPosition{0., 0.};
+  Vector2 expectedLocalPosition{0., 0.};
   BOOST_CHECK_EQUAL(localPosition, expectedLocalPosition);
   //
   /// Test isOnSurface
-  Vector3D offSurface{100, 1, 2};
+  Vector3 offSurface{100, 1, 2};
   BOOST_CHECK(cylinderSurfaceObject->isOnSurface(testContext, globalPosition,
                                                  momentum, true));
   BOOST_CHECK(!cylinderSurfaceObject->isOnSurface(testContext, offSurface,
                                                   momentum, true));
   //
   /// intersection test
-  Vector3D direction{-1., 0, 0};
+  Vector3 direction{-1., 0, 0};
   auto sfIntersection = cylinderSurfaceObject->intersect(
       testContext, offSurface, direction, false);
-  Intersection3D expectedIntersect{Vector3D{1, 1, 2}, 99.,
+  Intersection3D expectedIntersect{Vector3{1, 1, 2}, 99.,
                                    Intersection3D::Status::reachable};
   BOOST_CHECK(bool(sfIntersection));
   CHECK_CLOSE_ABS(sfIntersection.intersection.position,
@@ -259,12 +259,12 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceAlignment) {
 
   const auto& rotation = pTransform.rotation();
   // The local frame z axis
-  const Vector3D localZAxis = rotation.col(2);
+  const Vector3 localZAxis = rotation.col(2);
   // Check the local z axis is aligned to global z axis
-  CHECK_CLOSE_ABS(localZAxis, Vector3D(0., 0., 1.), 1e-15);
+  CHECK_CLOSE_ABS(localZAxis, Vector3(0., 0., 1.), 1e-15);
 
   /// Define the track (global) position and direction
-  Vector3D globalPosition{0, 2, 2};
+  Vector3 globalPosition{0, 2, 2};
 
   // Test the derivative of bound track parameters local position w.r.t.
   // position in local 3D Cartesian coordinates

@@ -113,21 +113,21 @@ inline double AlignableDetectorElement::thickness() const {
 /// Unit test for creating compliant/non-compliant Surface object
 BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
   // The nominal and alingments
-  Vector3D nominalCenter(0., 0., 0.);
-  Vector3D negativeCenter(0., 0., -1.);
-  Vector3D positiveCenter(0., 0., 1.);
+  Vector3 nominalCenter(0., 0., 0.);
+  Vector3 negativeCenter(0., 0., -1.);
+  Vector3 positiveCenter(0., 0., 1.);
 
   // Checkpoints
-  Vector3D onNominal(3., 3., 0.);
-  Vector3D onNegative(3., 3., -1.);
-  Vector3D onPositive(3., 3., 1.);
+  Vector3 onNominal(3., 3., 0.);
+  Vector3 onNegative(3., 3., -1.);
+  Vector3 onPositive(3., 3., 1.);
 
   // Local position
-  Vector2D localPosition(3., 3.);
+  Vector2 localPosition(3., 3.);
 
   // A position place holder and dymmy momentum
-  Vector3D globalPosition(100_cm, 100_cm, 100_cm);
-  Vector3D dummyMomentum(4., 4., 4.);
+  Vector3 globalPosition(100_cm, 100_cm, 100_cm);
+  Vector3 dummyMomentum(4., 4., 4.);
 
   Transform3D negativeTransform = Transform3D::Identity();
   negativeTransform.translation() = negativeCenter;
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
   localPosition =
       alignedSurface.globalToLocal(defaultContext, onNominal, dummyMomentum)
           .value();
-  BOOST_CHECK_EQUAL(localPosition, Vector2D(3., 3.));
+  BOOST_CHECK_EQUAL(localPosition, Vector2(3., 3.));
 
   globalPosition = alignedSurface.localToGlobal(negativeContext, localPosition,
                                                 dummyMomentum);
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
   localPosition =
       alignedSurface.globalToLocal(negativeContext, onNegative, dummyMomentum)
           .value();
-  BOOST_CHECK_EQUAL(localPosition, Vector2D(3., 3.));
+  BOOST_CHECK_EQUAL(localPosition, Vector2(3., 3.));
 
   globalPosition = alignedSurface.localToGlobal(positiveContext, localPosition,
                                                 dummyMomentum);
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
   localPosition =
       alignedSurface.globalToLocal(positiveContext, onPositive, dummyMomentum)
           .value();
-  BOOST_CHECK_EQUAL(localPosition, Vector2D(3., 3.));
+  BOOST_CHECK_EQUAL(localPosition, Vector2(3., 3.));
 }
 
 }  // namespace Test

@@ -39,8 +39,8 @@ const BoundSymMatrix cov = BoundSymMatrix::Identity();
 template <typename charge_t>
 void checkParameters(const SingleBoundTrackParameters<charge_t>& params,
                      double l0, double l1, double time, double phi,
-                     double theta, double p, double q, const Vector3D& pos,
-                     const Vector3D& unitDir) {
+                     double theta, double p, double q, const Vector3& pos,
+                     const Vector3& unitDir) {
   const auto qOverP = (q != 0) ? (q / p) : (1 / p);
   const auto pos4 = VectorHelpers::makeVector4(pos, time);
 
@@ -70,12 +70,12 @@ void runTest(std::shared_ptr<const Surface> surface, double l0, double l1,
   phi = ((0 < theta) and (theta < M_PI)) ? phi : 0.0;
 
   // global direction for reference
-  const Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  const Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
   // convert local-to-global for reference
-  const Vector2D loc(l0, l1);
-  const Vector3D pos = surface->localToGlobal(geoCtx, loc, dir);
+  const Vector2 loc(l0, l1);
+  const Vector3 pos = surface->localToGlobal(geoCtx, loc, dir);
   // global four-position as input
-  Vector4D pos4;
+  Vector4 pos4;
   pos4.segment<3>(ePos0) = pos;
   pos4[eTime] = time;
 
@@ -209,12 +209,12 @@ const auto discs = bdata::make({
                                      0 /* radius min */, 100 /* radius max */),
 });
 const auto perigees = bdata::make({
-    Surface::makeShared<PerigeeSurface>(Vector3D(0, 0, -1.5)),
+    Surface::makeShared<PerigeeSurface>(Vector3(0, 0, -1.5)),
 });
 const auto planes = bdata::make({
-    Surface::makeShared<PlaneSurface>(Vector3D(1, 2, 3), Vector3D::UnitX()),
-    Surface::makeShared<PlaneSurface>(Vector3D(-2, -3, -4), Vector3D::UnitY()),
-    Surface::makeShared<PlaneSurface>(Vector3D(3, -4, 5), Vector3D::UnitZ()),
+    Surface::makeShared<PlaneSurface>(Vector3(1, 2, 3), Vector3::UnitX()),
+    Surface::makeShared<PlaneSurface>(Vector3(-2, -3, -4), Vector3::UnitY()),
+    Surface::makeShared<PlaneSurface>(Vector3(3, -4, 5), Vector3::UnitZ()),
 });
 const auto straws = bdata::make({
     Surface::makeShared<StrawSurface>(Transform3D::Identity(), 2.0 /* radius */,

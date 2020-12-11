@@ -44,7 +44,7 @@ BoundVector transformFreeToBoundParameters(const FreeVector& freeParams,
 /// @warning The position is assumed to be on the surface. If this is not
 ///          the case, the behaviour is undefined.
 BoundVector transformFreeToBoundParameters(
-    const Vector3D& position, ActsScalar time, const Vector3D& direction,
+    const Vector3& position, ActsScalar time, const Vector3& direction,
     ActsScalar qOverP, const Surface& surface, const GeometryContext& geoCtx);
 
 /// Convert direction to curvilinear track parameters.
@@ -58,7 +58,7 @@ BoundVector transformFreeToBoundParameters(
 ///       curvilinear frame derived from the direction vector. The local
 ///       coordinates are zero by construction.
 BoundVector transformFreeToCurvilinearParameters(ActsScalar time,
-                                                 const Vector3D& direction,
+                                                 const Vector3& direction,
                                                  ActsScalar qOverP);
 
 /// Convert direction angles to curvilinear track parameters.

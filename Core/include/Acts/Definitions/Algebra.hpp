@@ -75,9 +75,9 @@ using ActsDynamicMatrix =
 /// @{
 
 // coordinate vectors
-using Vector2D = ActsVector<2>;
-using Vector3D = ActsVector<3>;
-using Vector4D = ActsVector<4>;
+using Vector2 = ActsVector<2>;
+using Vector3 = ActsVector<3>;
+using Vector4 = ActsVector<4>;
 
 // symmetric matrices e.g. for coordinate covariance matrices
 using SymMatrix2D = ActsSymMatrix<2>;

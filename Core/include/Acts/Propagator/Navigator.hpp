@@ -686,11 +686,11 @@ class Navigator {
         // Currently not used (only rays), but will be.
 
         /*
-        Vector3D pos = stepper.position(state.stepping);
+        Vector3 pos = stepper.position(state.stepping);
         double mom = stepper.momentum(state.stepping) / UnitConstants::GeV;
         double q = stepper.charge(state.stepping);
-        Vector3D dir = stepper.direction(state.stepping);
-        Vector3D B = stepper.getField(state.stepping, pos);
+        Vector3 dir = stepper.direction(state.stepping);
+        Vector3 B = stepper.getField(state.stepping, pos);
         if (B.squaredNorm() > 1e-9) {
           // ~ non-zero field
           double ir = (dir.cross(B).norm()) * q / mom;

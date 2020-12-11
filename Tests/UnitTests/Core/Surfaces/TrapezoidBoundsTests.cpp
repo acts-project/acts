@@ -95,11 +95,11 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties, *utf::expected_failures(3)) {
                     halfY);
   //
   /// Test distanceToBoundary
-  Vector2D outside(30., 0.);
-  Vector2D inRectangle(2., 0.5);
+  Vector2 outside(30., 0.);
+  Vector2 inRectangle(2., 0.5);
 
   /// Test vertices
-  std::vector<Vector2D> expectedVertices{
+  std::vector<Vector2> expectedVertices{
       {1., -2.}, {6., 2.}, {-6., 2.}, {-1., -2.}};
   const auto& actualVertices = trapezoidBoundsObject.vertices();
   BOOST_CHECK_EQUAL_COLLECTIONS(actualVertices.cbegin(), actualVertices.cend(),

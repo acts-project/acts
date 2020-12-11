@@ -97,7 +97,7 @@ ActsExamples::ProcessCode ActsExamples::HitSmearing::execute(
       }
 
       // create smeared local measurement
-      Acts::Vector2D loc = lpResult.value();
+      Acts::Vector2 loc = lpResult.value();
       loc[0] += m_cfg.sigmaLoc0 * stdNormal(rng);
       loc[1] += m_cfg.sigmaLoc1 * stdNormal(rng);
 

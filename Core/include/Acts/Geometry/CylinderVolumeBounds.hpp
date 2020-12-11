@@ -142,7 +142,7 @@ class CylinderVolumeBounds : public VolumeBounds {
   ///
   /// @param pos is a global position to be checked
   /// @param tol is the tolerance for the check
-  bool inside(const Vector3D& pos, double tol = 0.) const override;
+  bool inside(const Vector3& pos, double tol = 0.) const override;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
   /// according navigation direction into the volume given the normal
@@ -163,13 +163,13 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// @param entity Entity to associate this bounding box with
   /// @return Constructed bounding box
   Volume::BoundingBox boundingBox(const Transform3D* trf = nullptr,
-                                  const Vector3D& envelope = {0, 0, 0},
+                                  const Vector3& envelope = {0, 0, 0},
                                   const Volume* entity = nullptr) const final;
 
   /// Binning offset - overloaded for some R-binning types
   ///
   /// @param bValue is the type used for the binning
-  Vector3D binningOffset(BinningValue bValue) const override;
+  Vector3 binningOffset(BinningValue bValue) const override;
 
   /// Binning borders in double
   ///
@@ -209,8 +209,7 @@ class CylinderVolumeBounds : public VolumeBounds {
   stream_t& dumpT(stream_t& dt) const;
 };
 
-inline bool CylinderVolumeBounds::inside(const Vector3D& pos,
-                                         double tol) const {
+inline bool CylinderVolumeBounds::inside(const Vector3& pos, double tol) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
   double ros = perp(pos);
@@ -223,10 +222,10 @@ inline bool CylinderVolumeBounds::inside(const Vector3D& pos,
   return (insideZ && insideR && insidePhi);
 }
 
-inline Vector3D CylinderVolumeBounds::binningOffset(BinningValue bValue)
+inline Vector3 CylinderVolumeBounds::binningOffset(BinningValue bValue)
     const {  // the medium radius is taken for r-type binning
   if (bValue == Acts::binR || bValue == Acts::binRPhi) {
-    return Vector3D(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.);
+    return Vector3(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.);
   }
   return VolumeBounds::binningOffset(bValue);
 }

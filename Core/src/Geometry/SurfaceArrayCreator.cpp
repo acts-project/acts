@@ -52,13 +52,13 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
 
   Transform3D itransform = ftransform.inverse();
   // Transform lambda captures the transform matrix
-  auto globalToLocal = [ftransform](const Vector3D& pos) {
-    Vector3D loc = ftransform * pos;
-    return Vector2D(phi(loc), loc.z());
+  auto globalToLocal = [ftransform](const Vector3& pos) {
+    Vector3 loc = ftransform * pos;
+    return Vector2(phi(loc), loc.z());
   };
-  auto localToGlobal = [itransform, R](const Vector2D& loc) {
+  auto localToGlobal = [itransform, R](const Vector2& loc) {
     return itransform *
-           Vector3D(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
+           Vector3(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
   };
 
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
@@ -108,13 +108,13 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   }
 
   Transform3D itransform = ftransform.inverse();
-  auto globalToLocal = [ftransform](const Vector3D& pos) {
-    Vector3D loc = ftransform * pos;
-    return Vector2D(phi(loc), loc.z());
+  auto globalToLocal = [ftransform](const Vector3& pos) {
+    Vector3 loc = ftransform * pos;
+    return Vector2(phi(loc), loc.z());
   };
-  auto localToGlobal = [itransform, R](const Vector2D& loc) {
+  auto localToGlobal = [itransform, R](const Vector2& loc) {
     return itransform *
-           Vector3D(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
+           Vector3(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
   };
 
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
@@ -163,13 +163,13 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 
   Transform3D itransform = transform.inverse();
   // transform lambda captures the transform matrix
-  auto globalToLocal = [ftransform](const Vector3D& pos) {
-    Vector3D loc = ftransform * pos;
-    return Vector2D(perp(loc), phi(loc));
+  auto globalToLocal = [ftransform](const Vector3& pos) {
+    Vector3 loc = ftransform * pos;
+    return Vector2(perp(loc), phi(loc));
   };
-  auto localToGlobal = [itransform, Z](const Vector2D& loc) {
+  auto localToGlobal = [itransform, Z](const Vector2& loc) {
     return itransform *
-           Vector3D(loc[0] * std::cos(loc[1]), loc[0] * std::sin(loc[1]), Z);
+           Vector3(loc[0] * std::cos(loc[1]), loc[0] * std::sin(loc[1]), Z);
   };
 
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
@@ -225,7 +225,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     // this FORCES equidistant binning
     std::vector<std::vector<const Surface*>> phiModules(pAxisR.nBins);
     for (const auto& srf : surfacesRaw) {
-      Vector3D bpos = srf->binningPosition(gctx, binR);
+      Vector3 bpos = srf->binningPosition(gctx, binR);
       size_t bin = pAxisR.getBin(perp(bpos));
       phiModules.at(bin).push_back(srf);
     }
@@ -269,13 +269,13 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 
   Transform3D itransform = ftransform.inverse();
   // transform lambda captures the transform matrix
-  auto globalToLocal = [ftransform](const Vector3D& pos) {
-    Vector3D loc = ftransform * pos;
-    return Vector2D(perp(loc), phi(loc));
+  auto globalToLocal = [ftransform](const Vector3& pos) {
+    Vector3 loc = ftransform * pos;
+    return Vector2(perp(loc), phi(loc));
   };
-  auto localToGlobal = [itransform, Z](const Vector2D& loc) {
+  auto localToGlobal = [itransform, Z](const Vector2& loc) {
     return itransform *
-           Vector3D(loc[0] * std::cos(loc[1]), loc[0] * std::sin(loc[1]), Z);
+           Vector3(loc[0] * std::cos(loc[1]), loc[0] * std::sin(loc[1]), Z);
   };
 
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
@@ -318,12 +318,12 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
   Transform3D ftransform = transform;
   Transform3D itransform = transform.inverse();
   // transform lambda captures the transform matrix
-  auto globalToLocal = [ftransform](const Vector3D& pos) {
-    Vector3D loc = ftransform * pos;
-    return Vector2D(loc.x(), loc.y());
+  auto globalToLocal = [ftransform](const Vector3& pos) {
+    Vector3 loc = ftransform * pos;
+    return Vector2(loc.x(), loc.y());
   };
-  auto localToGlobal = [itransform](const Vector2D& loc) {
-    return itransform * Vector3D(loc.x(), loc.y(), 0.);
+  auto localToGlobal = [itransform](const Vector2& loc) {
+    return itransform * Vector3(loc.x(), loc.y(), 0.);
   };
   // Build the grid
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl;
@@ -440,7 +440,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
 
     // create rotation, so that maxPhi is +pi
     AxisScalar angle = -(M_PI + maxPhi);
-    transform = (transform)*AngleAxis3D(angle, Vector3D::UnitZ());
+    transform = (transform)*AngleAxis3D(angle, Vector3::UnitZ());
 
     // iterate over all key surfaces, and use their mean position as bValues,
     // but
@@ -471,11 +471,11 @@ Acts::SurfaceArrayCreator::createVariableAxis(
           "Given SurfaceBounds are not planar - not implemented for "
           "other bounds yet! ");
     // get the global vertices
-    std::vector<Acts::Vector3D> backVertices =
+    std::vector<Acts::Vector3> backVertices =
         makeGlobalVertices(gctx, *backSurface, backBounds->vertices(segments));
     AxisScalar maxBValue = phi(
         *std::max_element(backVertices.begin(), backVertices.end(),
-                          [](const Acts::Vector3D& a, const Acts::Vector3D& b) {
+                          [](const Acts::Vector3& a, const Acts::Vector3& b) {
                             return phi(a) < phi(b);
                           }));
 
@@ -615,7 +615,7 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
         double angle = M_PI - (max + 0.5 * step);
 
         // replace given transform ref
-        transform = (transform)*AngleAxis3D(angle, Vector3D::UnitZ());
+        transform = (transform)*AngleAxis3D(angle, Vector3::UnitZ());
 
       } else {
         minimum = protoLayer.min(binPhi, true);
@@ -650,13 +650,13 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
   return pAxis;
 }
 
-std::vector<Acts::Vector3D> Acts::SurfaceArrayCreator::makeGlobalVertices(
+std::vector<Acts::Vector3> Acts::SurfaceArrayCreator::makeGlobalVertices(
     const GeometryContext& gctx, const Acts::Surface& surface,
-    const std::vector<Acts::Vector2D>& locVertices) const {
-  std::vector<Acts::Vector3D> globVertices;
+    const std::vector<Acts::Vector2>& locVertices) const {
+  std::vector<Acts::Vector3> globVertices;
   for (auto& vertex : locVertices) {
-    Acts::Vector3D globVertex =
-        surface.localToGlobal(gctx, vertex, Acts::Vector3D());
+    Acts::Vector3 globVertex =
+        surface.localToGlobal(gctx, vertex, Acts::Vector3());
     globVertices.push_back(globVertex);
   }
   return globVertices;

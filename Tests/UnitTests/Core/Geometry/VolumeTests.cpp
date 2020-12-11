@@ -27,14 +27,14 @@ BOOST_AUTO_TEST_CASE(VolumeTest) {
   double eps = std::numeric_limits<double>::epsilon();
 
   // Build a translation
-  Vector3D translation{1_mm, 2_mm, 3_mm};
+  Vector3 translation{1_mm, 2_mm, 3_mm};
 
   // Build a translation
   ActsMatrix<3, 3> rotation = RotationMatrix3D::Identity();
   double rotationAngle = 60_degree;
-  Vector3D xPos(cos(rotationAngle), 0., sin(rotationAngle));
-  Vector3D yPos(0., 1., 0.);
-  Vector3D zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+  Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
+  Vector3 yPos(0., 1., 0.);
+  Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
   rotation.col(0) = xPos;
   rotation.col(1) = yPos;
   rotation.col(2) = zPos;
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(VolumeTest) {
 
   // Build and test a shifted volume
   Transform3D shift(Transform3D::Identity());
-  Vector3D shiftTranslation{-4_mm, -5_mm, -6_mm};
+  Vector3 shiftTranslation{-4_mm, -5_mm, -6_mm};
   shift.translation() = shiftTranslation;
   Volume volumeShift(volume, shift);
   BOOST_CHECK_EQUAL(volumeShift.center(),

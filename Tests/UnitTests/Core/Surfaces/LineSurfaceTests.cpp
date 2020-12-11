@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   Translation3D translation{0., 1., 2.};
   Transform3D transform(translation);
   LineSurfaceStub line(transform, 2.0, 20.);
-  Vector3D referencePosition{0., 1., 2.};
+  Vector3 referencePosition{0., 1., 2.};
   CHECK_CLOSE_ABS(referencePosition, line.binningPosition(tgContext, binX),
                   1e-6);
   //
@@ -85,41 +85,41 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   BOOST_CHECK_EQUAL(bounds, LineBounds(2., 10.0));
   //
   // globalToLocal()
-  Vector3D gpos{0., 1., 0.};
-  const Vector3D mom{20., 0., 0.};  // needs more realistic parameters
-  Vector2D localPosition = line.globalToLocal(tgContext, gpos, mom).value();
-  const Vector2D expectedResult{0, -2};
+  Vector3 gpos{0., 1., 0.};
+  const Vector3 mom{20., 0., 0.};  // needs more realistic parameters
+  Vector2 localPosition = line.globalToLocal(tgContext, gpos, mom).value();
+  const Vector2 expectedResult{0, -2};
   CHECK_CLOSE_ABS(expectedResult, localPosition, 1e-6);
   //
   // intersection
-  const Vector3D direction{0., 1., 2.};
+  const Vector3 direction{0., 1., 2.};
   BoundaryCheck bcheck(false);
   auto sfIntersection =
       line.intersect(tgContext, {0., 0., 0.}, direction.normalized(), bcheck);
   BOOST_CHECK(bool(sfIntersection));
-  Vector3D expectedIntersection(0, 1., 2.);
+  Vector3 expectedIntersection(0, 1., 2.);
   CHECK_CLOSE_ABS(sfIntersection.intersection.position, expectedIntersection,
                   1e-6);  // need more tests..
   BOOST_CHECK_EQUAL(sfIntersection.object, &line);
   //
   // isOnSurface
-  const Vector3D insidePosition{0., 2.5, 0.};
+  const Vector3 insidePosition{0., 2.5, 0.};
   BOOST_CHECK(line.isOnSurface(tgContext, insidePosition, mom,
                                false));  // need better test here
-  const Vector3D outsidePosition{100., 100., 200.};
+  const Vector3 outsidePosition{100., 100., 200.};
   BOOST_CHECK(!line.isOnSurface(tgContext, outsidePosition, mom, true));
   //
   // localToGlobal
-  Vector3D returnedGlobalPosition{0., 0., 0.};
-  // Vector2D localPosition{0., 0.};
-  const Vector3D momentum{300., 200., 0.};  // find better values!
+  Vector3 returnedGlobalPosition{0., 0., 0.};
+  // Vector2 localPosition{0., 0.};
+  const Vector3 momentum{300., 200., 0.};  // find better values!
   returnedGlobalPosition =
       line.localToGlobal(tgContext, localPosition, momentum);
-  const Vector3D expectedGlobalPosition{0, 1, 0};
+  const Vector3 expectedGlobalPosition{0, 1, 0};
   CHECK_CLOSE_ABS(returnedGlobalPosition, expectedGlobalPosition, 1e-6);
   //
   // referenceFrame
-  Vector3D globalPosition{0., 0., 0.};
+  Vector3 globalPosition{0., 0., 0.};
   auto returnedRotationMatrix =
       line.referenceFrame(tgContext, globalPosition, momentum);
   double v0 = std::cos(std::atan(2. / 3.));
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   BOOST_CHECK(output.is_equal("Acts::LineSurface"));
   //
   // normal
-  Vector3D normalVector{0., 0., 1.};  // line direction is same as normal????
+  Vector3 normalVector{0., 0., 1.};  // line direction is same as normal????
   CHECK_CLOSE_ABS(line.normal(tgContext), normalVector, 1e-6);
   //
   // pathCorrection
@@ -164,14 +164,14 @@ BOOST_AUTO_TEST_CASE(LineSurfaceAlignment) {
 
   const auto& rotation = transform.rotation();
   // The local frame z axis
-  const Vector3D localZAxis = rotation.col(2);
+  const Vector3 localZAxis = rotation.col(2);
   // Check the local z axis is aligned to global z axis
-  CHECK_CLOSE_ABS(localZAxis, Vector3D(0., 0., 1.), 1e-15);
+  CHECK_CLOSE_ABS(localZAxis, Vector3(0., 0., 1.), 1e-15);
 
   // Define the track (global) position and direction
-  Vector3D globalPosition{1, 2, 4};
-  Vector3D momentum{-1, 1, 1};
-  Vector3D direction = momentum.normalized();
+  Vector3 globalPosition{1, 2, 4};
+  Vector3 momentum{-1, 1, 1};
+  Vector3 direction = momentum.normalized();
   // Construct a free parameters
   FreeVector parameters = FreeVector::Zero();
   parameters.head<3>() = globalPosition;

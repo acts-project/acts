@@ -97,8 +97,8 @@ BOOST_AUTO_TEST_CASE(ConeBoundsProperties) {
   double alpha(M_PI / 8.0), zMin(3.), zMax(6.), halfPhi(M_PI / 4.0),
       averagePhi(0.);
   // const bool symmetric(false);
-  const Vector2D origin(0, 0);
-  const Vector2D somewhere(4., 4.);
+  const Vector2 origin(0, 0);
+  const Vector2 somewhere(4., 4.);
   ConeBounds coneBoundsObject(alpha, zMin, zMax, halfPhi, averagePhi);
   //
   /// test for type (redundant)

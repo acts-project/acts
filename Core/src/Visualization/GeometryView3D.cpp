@@ -87,8 +87,8 @@ void Acts::GeometryView3D::drawSurfaceArray(IVisualization3D& helper,
       for (auto phi : phiValues) {
         double cphi = std::cos(phi);
         double sphi = std::sin(phi);
-        Vector3D p1(R * cphi, R * sphi, axes[1]->getMin());
-        Vector3D p0(R * cphi, R * sphi, axes[1]->getMax());
+        Vector3 p1(R * cphi, R * sphi, axes[1]->getMin());
+        Vector3 p0(R * cphi, R * sphi, axes[1]->getMax());
         drawSegment(helper, transform * p0, transform * p1, gridConfig);
       }
       CylinderVolumeBounds cvb(R - 0.5 * thickness, R + 0.5 * thickness,
@@ -121,8 +121,8 @@ void Acts::GeometryView3D::drawSurfaceArray(IVisualization3D& helper,
       for (auto phi : phiValues) {
         double cphi = std::cos(phi);
         double sphi = std::sin(phi);
-        Vector3D p1(rMax * cphi, rMax * sphi, z);
-        Vector3D p0(rMin * cphi, rMin * sphi, z);
+        Vector3 p1(rMax * cphi, rMax * sphi, z);
+        Vector3 p0(rMin * cphi, rMin * sphi, z);
         drawSegment(helper, transform * p0, transform * p1, gridConfig);
       }
     }
@@ -245,16 +245,16 @@ void Acts::GeometryView3D::drawTrackingVolume(
 }
 
 void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
-                                           const Vector3D& start,
-                                           const Vector3D& end, int arrows,
+                                           const Vector3& start,
+                                           const Vector3& end, int arrows,
                                            double arrowLength,
                                            double arrowWidth,
                                            const ViewConfig& viewConfig) {
   double thickness = viewConfig.lineThickness;
 
   // Draw the parameter shaft and cone
-  auto direction = Vector3D(end - start).normalized();
-  double hlength = 0.5 * Vector3D(end - start).norm();
+  auto direction = Vector3(end - start).normalized();
+  double hlength = 0.5 * Vector3(end - start).norm();
 
   auto unitVectors = makeCurvilinearUnitVectors(direction);
   RotationMatrix3D lrotation;
@@ -262,7 +262,7 @@ void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
   lrotation.col(1) = unitVectors.second;
   lrotation.col(2) = direction;
 
-  Vector3D lcenter = 0.5 * (start + end);
+  Vector3 lcenter = 0.5 * (start + end);
   double alength = (thickness > 0.) ? arrowLength * thickness : 2.;
   if (alength > hlength) {
     alength = hlength;
@@ -272,7 +272,7 @@ void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
     hlength -= alength;
   } else if (arrows != 0) {
     hlength -= 0.5 * alength;
-    lcenter -= Vector3D(arrows * 0.5 * alength * direction);
+    lcenter -= Vector3(arrows * 0.5 * alength * direction);
   }
 
   // Line - draw a line
@@ -308,7 +308,7 @@ void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
       // Arrow end plate
       auto aptransform = Transform3D::Identity();
       aptransform.prerotate(lrotation);
-      aptransform.pretranslate(Vector3D(end - alength * direction));
+      aptransform.pretranslate(Vector3(end - alength * direction));
 
       auto plate = Surface::makeShared<DiscSurface>(aptransform, plateBounds);
       drawSurface(helper, *plate, GeometryContext(), Transform3D::Identity(),
@@ -327,7 +327,7 @@ void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
       // Arrow end plate
       auto aptransform = Transform3D::Identity();
       aptransform.prerotate(lrotation);
-      aptransform.pretranslate(Vector3D(start + alength * direction));
+      aptransform.pretranslate(Vector3(start + alength * direction));
 
       auto plate = Surface::makeShared<DiscSurface>(aptransform, plateBounds);
       drawSurface(helper, *plate, GeometryContext(), Transform3D::Identity(),
@@ -337,27 +337,26 @@ void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
 }
 
 void Acts::GeometryView3D::drawSegment(IVisualization3D& helper,
-                                       const Vector3D& start,
-                                       const Vector3D& end,
+                                       const Vector3& start, const Vector3& end,
                                        const ViewConfig& viewConfig) {
   drawSegmentBase(helper, start, end, 0, 0., 0., viewConfig);
 }
 
 void Acts::GeometryView3D::drawArrowBackward(
-    IVisualization3D& helper, const Vector3D& start, const Vector3D& end,
+    IVisualization3D& helper, const Vector3& start, const Vector3& end,
     double arrowLength, double arrowWidth, const ViewConfig& viewConfig) {
   drawSegmentBase(helper, start, end, -1, arrowLength, arrowWidth, viewConfig);
 }
 
 void Acts::GeometryView3D::drawArrowForward(
-    IVisualization3D& helper, const Vector3D& start, const Vector3D& end,
+    IVisualization3D& helper, const Vector3& start, const Vector3& end,
     double arrowLength, double arrowWidth, const ViewConfig& viewConfig) {
   drawSegmentBase(helper, start, end, 1, arrowLength, arrowWidth, viewConfig);
 }
 
 void Acts::GeometryView3D::drawArrowsBoth(IVisualization3D& helper,
-                                          const Vector3D& start,
-                                          const Vector3D& end,
+                                          const Vector3& start,
+                                          const Vector3& end,
                                           double arrowLength, double arrowWidth,
                                           const ViewConfig& viewConfig) {
   drawSegmentBase(helper, start, end, 2, arrowLength, arrowWidth, viewConfig);

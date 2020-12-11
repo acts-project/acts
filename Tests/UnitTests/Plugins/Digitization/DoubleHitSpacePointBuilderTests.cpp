@@ -57,14 +57,14 @@ BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1),
 
   double rotation = 0.026;
   RotationMatrix3D rotationPos;
-  Vector3D xPos(cos(rotation), sin(rotation), 0.);
-  Vector3D yPos(-sin(rotation), cos(rotation), 0.);
-  Vector3D zPos(0., 0., 1.);
+  Vector3 xPos(cos(rotation), sin(rotation), 0.);
+  Vector3 yPos(-sin(rotation), cos(rotation), 0.);
+  Vector3 zPos(0., 0., 1.);
   rotationPos.col(0) = xPos;
   rotationPos.col(1) = yPos;
   rotationPos.col(2) = zPos;
   Transform3D t3d(Transform3D::Identity() * rotationPos);
-  t3d.translation() = Vector3D(0., 0., 10_m);
+  t3d.translation() = Vector3(0., 0., 10_m);
 
   // Build Digitization
   const DigitizationModule digMod(segmentation, 1., 1., 0.);
@@ -72,7 +72,7 @@ BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1),
   auto pSur = Surface::makeShared<PlaneSurface>(recBounds, detElem);
   SymMatrix3D cov;
   cov << 0., 0., 0., 0., 0., 0., 0., 0., 0.;
-  Vector2D local = {0.1, -0.1};
+  Vector2 local = {0.1, -0.1};
 
   // Build PlanarModuleCluster
   PlanarModuleCluster pmc(pSur, DigitizationSourceLink(pSur->geometryId(), {}),
@@ -85,14 +85,14 @@ BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1),
 
   double rotation2 = -0.026;
   RotationMatrix3D rotationNeg;
-  Vector3D xNeg(cos(rotation2), sin(rotation2), 0.);
-  Vector3D yNeg(-sin(rotation2), cos(rotation2), 0.);
-  Vector3D zNeg(0., 0., 1.);
+  Vector3 xNeg(cos(rotation2), sin(rotation2), 0.);
+  Vector3 yNeg(-sin(rotation2), cos(rotation2), 0.);
+  Vector3 zNeg(0., 0., 1.);
   rotationNeg.col(0) = xNeg;
   rotationNeg.col(1) = yNeg;
   rotationNeg.col(2) = zNeg;
   Transform3D t3d2(Transform3D::Identity() * rotationNeg);
-  t3d2.translation() = Vector3D(0., 0., 10.005_m);
+  t3d2.translation() = Vector3(0., 0., 10.005_m);
 
   DetectorElementStub detElem2(t3d2);
 
@@ -127,7 +127,7 @@ BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1),
 
   // Build third PlanarModuleCluster
   Transform3D t3d3(Transform3D::Identity() * rotationNeg);
-  t3d3.translation() = Vector3D(0., 0., 10.005_m);
+  t3d3.translation() = Vector3(0., 0., 10.005_m);
 
   DetectorElementStub detElem3(t3d3);
   auto pSur3 = Surface::makeShared<PlaneSurface>(recBounds, detElem3);

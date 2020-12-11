@@ -70,7 +70,7 @@ struct SeedfinderConfig {
   float bFieldInZ = 0.00208;
   // location of beam in x,y plane.
   // used as offset for Space Points
-  Acts::Vector2D beamPos{0, 0};
+  Acts::Vector2 beamPos{0, 0};
 
   // average radiation lengths of material on the length of a seed. used for
   // scattering.

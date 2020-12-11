@@ -36,8 +36,8 @@ Acts::Surface::Surface(const GeometryContext& gctx, const Surface& other,
 Acts::Surface::~Surface() = default;
 
 bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
-                                const Vector3D& position,
-                                const Vector3D& momentum,
+                                const Vector3& position,
+                                const Vector3& momentum,
                                 const BoundaryCheck& bcheck) const {
   // global to local transformation
   auto lpResult = globalToLocal(gctx, position, momentum);
@@ -190,13 +190,13 @@ std::ostream& Acts::Surface::toStream(const GeometryContext& gctx,
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(4);
   sl << name() << std::endl;
-  const Vector3D& sfcenter = center(gctx);
+  const Vector3& sfcenter = center(gctx);
   sl << "     Center position  (x, y, z) = (" << sfcenter.x() << ", "
      << sfcenter.y() << ", " << sfcenter.z() << ")" << std::endl;
   Acts::RotationMatrix3D rot(transform(gctx).matrix().block<3, 3>(0, 0));
-  Acts::Vector3D rotX(rot.col(0));
-  Acts::Vector3D rotY(rot.col(1));
-  Acts::Vector3D rotZ(rot.col(2));
+  Acts::Vector3 rotX(rot.col(0));
+  Acts::Vector3 rotY(rot.col(1));
+  Acts::Vector3 rotZ(rot.col(2));
   sl << std::setprecision(6);
   sl << "     Rotation:             colX = (" << rotX(0) << ", " << rotX(1)
      << ", " << rotX(2) << ")" << std::endl;

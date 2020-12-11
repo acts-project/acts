@@ -443,7 +443,7 @@ const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
     vMaterial = new Acts::HomogeneousVolumeMaterial(mmat[0]);
   } else {
     if (bUtility.dimensions() == 2) {
-      std::function<Acts::Vector2D(Acts::Vector3D)> transfoGlobalToLocal;
+      std::function<Acts::Vector2(Acts::Vector3)> transfoGlobalToLocal;
       Acts::Grid2D grid = createGrid2D(bUtility, transfoGlobalToLocal);
 
       Acts::Grid2D::point_t min = grid.minPosition();
@@ -464,7 +464,7 @@ const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
           new Acts::InterpolatedMaterialMap<MaterialMapper<MaterialGrid2D>>(
               std::move(matMap), bUtility);
     } else if (bUtility.dimensions() == 3) {
-      std::function<Acts::Vector3D(Acts::Vector3D)> transfoGlobalToLocal;
+      std::function<Acts::Vector3(Acts::Vector3)> transfoGlobalToLocal;
       Acts::Grid3D grid = createGrid3D(bUtility, transfoGlobalToLocal);
 
       Acts::Grid3D::point_t min = grid.minPosition();

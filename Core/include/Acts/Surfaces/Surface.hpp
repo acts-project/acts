@@ -173,7 +173,7 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   ///
   /// @return center position by value
-  virtual Vector3D center(const GeometryContext& gctx) const;
+  virtual Vector3 center(const GeometryContext& gctx) const;
 
   /// Return method for the normal vector of the surface
   /// The normal vector can only be generally defined at a given local position
@@ -184,8 +184,8 @@ class Surface : public virtual GeometryObject,
   /// constructed
   ///
   /// @return normal vector by value
-  virtual Vector3D normal(const GeometryContext& gctx,
-                          const Vector2D& lposition) const = 0;
+  virtual Vector3 normal(const GeometryContext& gctx,
+                         const Vector2& lposition) const = 0;
 
   /// Return method for the normal vector of the surface
   /// The normal vector can only be generally defined at a given local position
@@ -197,8 +197,8 @@ class Surface : public virtual GeometryObject,
 
   ///
   /// @return normal vector by value
-  virtual Vector3D normal(const GeometryContext& gctx,
-                          const Vector3D& position) const;
+  virtual Vector3 normal(const GeometryContext& gctx,
+                         const Vector3& position) const;
 
   /// Return method for the normal vector of the surface
   ///
@@ -207,7 +207,7 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   //
   /// @return normal vector by value
-  virtual Vector3D normal(const GeometryContext& gctx) const {
+  virtual Vector3 normal(const GeometryContext& gctx) const {
     return normal(gctx, center(gctx));
   }
 
@@ -258,8 +258,8 @@ class Surface : public virtual GeometryObject,
   /// @param bcheck BoundaryCheck directive for this onSurface check
   ///
   /// @return boolean indication if operation was successful
-  bool isOnSurface(const GeometryContext& gctx, const Vector3D& position,
-                   const Vector3D& momentum,
+  bool isOnSurface(const GeometryContext& gctx, const Vector3& position,
+                   const Vector3& momentum,
                    const BoundaryCheck& bcheck = true) const;
 
   /// The insideBounds method for local positions
@@ -267,7 +267,7 @@ class Surface : public virtual GeometryObject,
   /// @param lposition The local position to check
   /// @param bcheck BoundaryCheck directive for this onSurface check
   /// @return boolean indication if operation was successful
-  virtual bool insideBounds(const Vector2D& lposition,
+  virtual bool insideBounds(const Vector2& lposition,
                             const BoundaryCheck& bcheck = true) const;
 
   /// Local to global transformation
@@ -280,9 +280,9 @@ class Surface : public virtual GeometryObject,
   /// @param momentum global 3D momentum representation (optionally ignored)
   ///
   /// @return The global position by value
-  virtual Vector3D localToGlobal(const GeometryContext& gctx,
-                                 const Vector2D& lposition,
-                                 const Vector3D& momentum) const = 0;
+  virtual Vector3 localToGlobal(const GeometryContext& gctx,
+                                const Vector2& lposition,
+                                const Vector3& momentum) const = 0;
 
   /// Global to local transformation
   /// Generalized global to local transformation for the surface types. Since
@@ -296,10 +296,10 @@ class Surface : public virtual GeometryObject,
   /// @param tolerance optional tolerance within which a point is considered
   /// valid on surface
   ///
-  /// @return a Result<Vector2D> which can be !ok() if the operation fails
-  virtual Result<Vector2D> globalToLocal(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& momentum,
+  /// @return a Result<Vector2> which can be !ok() if the operation fails
+  virtual Result<Vector2> globalToLocal(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& momentum,
       double tolerance = s_onSurfaceTolerance) const = 0;
 
   /// Return mehtod for the reference frame
@@ -314,8 +314,8 @@ class Surface : public virtual GeometryObject,
   /// @return RotationMatrix3D which defines the three axes of the measurement
   /// frame
   virtual Acts::RotationMatrix3D referenceFrame(const GeometryContext& gctx,
-                                                const Vector3D& position,
-                                                const Vector3D& momentum) const;
+                                                const Vector3& position,
+                                                const Vector3& momentum) const;
 
   /// Calculate the jacobian from local to global which the surface knows best,
   /// hence the calculation is done here.
@@ -379,8 +379,8 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return Path correction with respect to the nominal incident.
   virtual double pathCorrection(const GeometryContext& gctx,
-                                const Vector3D& position,
-                                const Vector3D& direction) const = 0;
+                                const Vector3& position,
+                                const Vector3& direction) const = 0;
 
   /// Straight line intersection schema from position/direction
   ///
@@ -391,8 +391,8 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return SurfaceIntersection object (contains intersection & surface)
   virtual SurfaceIntersection intersect(const GeometryContext& gctx,
-                                        const Vector3D& position,
-                                        const Vector3D& direction,
+                                        const Vector3& position,
+                                        const Vector3& direction,
                                         const BoundaryCheck& bcheck) const = 0;
 
   /// Output Method for std::ostream, to be overloaded by child classes
@@ -462,7 +462,7 @@ class Surface : public virtual GeometryObject,
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
   virtual ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
-      const GeometryContext& gctx, const Vector3D& position) const = 0;
+      const GeometryContext& gctx, const Vector3& position) const = 0;
 
  protected:
   /// Transform3D definition that positions

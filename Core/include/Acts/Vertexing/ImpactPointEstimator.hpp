@@ -95,8 +95,7 @@ class ImpactPointEstimator {
   /// @return Distance
   Result<double> calculate3dDistance(const GeometryContext& gctx,
                                      const BoundTrackParameters& trkParams,
-                                     const Vector3D& vtxPos,
-                                     State& state) const;
+                                     const Vector3& vtxPos, State& state) const;
 
   /// @brief Creates track parameters bound to plane
   /// at point of closest approach in 3d to given
@@ -117,7 +116,7 @@ class ImpactPointEstimator {
   estimate3DImpactParameters(const GeometryContext& gctx,
                              const Acts::MagneticFieldContext& mctx,
                              const BoundTrackParameters& trkParams,
-                             const Vector3D& vtxPos, State& state) const;
+                             const Vector3& vtxPos, State& state) const;
 
   /// @brief Estimates the compatibility of a
   /// track to a vertex position based on the 3d
@@ -131,7 +130,7 @@ class ImpactPointEstimator {
   /// @return The compatibility value
   Result<double> get3dVertexCompatibility(const GeometryContext& gctx,
                                           const BoundTrackParameters* trkParams,
-                                          const Vector3D& vertexPos) const;
+                                          const Vector3& vertexPos) const;
 
   /// @brief Estimates the impact parameters and their errors of a given
   /// track w.r.t. a vertex by propagating the trajectory state
@@ -160,8 +159,8 @@ class ImpactPointEstimator {
   /// @param r     Helix radius
   ///
   /// @return New phi value
-  Result<double> performNewtonApproximation(const Vector3D& trkPos,
-                                            const Vector3D& vtxPos, double phi,
+  Result<double> performNewtonApproximation(const Vector3& trkPos,
+                                            const Vector3& vtxPos, double phi,
                                             double theta, double r) const;
 
   /// @brief Helper function to calculate relative
@@ -178,8 +177,8 @@ class ImpactPointEstimator {
   /// @param state The state object
   Result<void> getDistanceAndMomentum(const GeometryContext& gctx,
                                       const BoundTrackParameters& trkParams,
-                                      const Vector3D& vtxPos, Vector3D& deltaR,
-                                      Vector3D& momDir, State& state) const;
+                                      const Vector3& vtxPos, Vector3& deltaR,
+                                      Vector3& momDir, State& state) const;
 };
 
 }  // namespace Acts

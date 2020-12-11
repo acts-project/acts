@@ -121,6 +121,6 @@ void covarianceTransport(BoundSymMatrix& covarianceMatrix,
                          BoundMatrix& jacobian, FreeMatrix& transportJacobian,
                          FreeVector& derivatives,
                          BoundToFreeMatrix& jacToGlobal,
-                         const Vector3D& direction);
+                         const Vector3& direction);
 }  // namespace detail
 }  // namespace Acts

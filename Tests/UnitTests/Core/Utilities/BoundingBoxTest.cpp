@@ -380,7 +380,7 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
 BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
   using Ray = Ray<double, 3>;
 
-  std::array<Vector3D, 8> vertices;
+  std::array<Vector3, 8> vertices;
   vertices = {{{0, 0, 0},
                {2, 0, 0.4},
                {2, 1, 0.4},
@@ -391,8 +391,8 @@ BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
                {0, 1, 1}}};
   auto cubo = std::make_shared<GenericCuboidVolumeBounds>(vertices);
   auto trf =
-      Transform3D(Translation3D(Vector3D(0, 8, -5)) *
-                  AngleAxis3D(M_PI / 3., Vector3D(1, -3, 9).normalized()));
+      Transform3D(Translation3D(Vector3(0, 8, -5)) *
+                  AngleAxis3D(M_PI / 3., Vector3(1, -3, 9).normalized()));
 
   AbstractVolume vol(trf, cubo);
 
@@ -408,11 +408,11 @@ BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
 
   ply.clear();
 
-  Vector3D origin(10, -20, 6);
-  Vector3D centroid(0., 0., 0.);
+  Vector3 origin(10, -20, 6);
+  Vector3 centroid(0., 0., 0.);
 
   for (const auto& vtx_ : vertices) {
-    Vector3D vtx = trf * vtx_;
+    Vector3 vtx = trf * vtx_;
     centroid += vtx;
   }
 
@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
 
   // shoot rays to the corner points of the cuboid
   for (const auto& vtx_ : vertices) {
-    Vector3D vtx = trf * vtx_;
+    Vector3 vtx = trf * vtx_;
 
     // this ray goes straight to the actual vertex, this should
     // definitely intersect the OBB

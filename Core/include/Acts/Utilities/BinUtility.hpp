@@ -140,9 +140,9 @@ class BinUtility {
   /// @param position is the 3D position to be evaluated
   ///
   /// @return is the bin value in 3D
-  std::array<size_t, 3> binTriple(const Vector3D& position) const {
+  std::array<size_t, 3> binTriple(const Vector3& position) const {
     /// transform or not
-    const Vector3D bPosition = m_itransform * position;
+    const Vector3 bPosition = m_itransform * position;
     // get the dimension
     size_t mdim = m_binningData.size();
     /// now get the bins
@@ -159,7 +159,7 @@ class BinUtility {
   /// @param ba is the bin dimension
   ///
   /// @return is the bin value
-  size_t bin(const Vector3D& position, size_t ba = 0) const {
+  size_t bin(const Vector3& position, size_t ba = 0) const {
     if (ba >= m_binningData.size()) {
       return 0;
     }
@@ -177,7 +177,7 @@ class BinUtility {
   /// @param ba is the binning accessor
   ///
   /// @return a vector of neighbour sizes
-  std::vector<size_t> neighbourRange(const Vector3D& position,
+  std::vector<size_t> neighbourRange(const Vector3& position,
                                      size_t ba = 0) const {
     if (ba >= m_binningData.size()) {
       return {0};
@@ -205,7 +205,7 @@ class BinUtility {
   /// @todo the
   ///
   /// @return the next bin
-  int nextDirection(const Vector3D& position, const Vector3D& direction,
+  int nextDirection(const Vector3& position, const Vector3& direction,
                     size_t ba = 0) const {
     if (ba >= m_binningData.size()) {
       return 0;
@@ -224,19 +224,19 @@ class BinUtility {
   /// @param ba is the bin dimension
   ///
   /// @return bin calculated from local
-  size_t bin(const Vector2D& lposition, size_t ba = 0) const {
+  size_t bin(const Vector2& lposition, size_t ba = 0) const {
     if (ba >= m_binningData.size()) {
       return 0;
     }
     return m_binningData[ba].searchLocal(lposition);
   }
-  /// Check if bin is inside from Vector2D - optional transform applied
+  /// Check if bin is inside from Vector2 - optional transform applied
   ///
   /// @param position is the global position to be evaluated
   /// @return is a boolean check
-  bool inside(const Vector3D& position) const {
+  bool inside(const Vector3& position) const {
     /// transform or not
-    const Vector3D& bPosition = m_itransform * position;
+    const Vector3& bPosition = m_itransform * position;
     // loop and break
     for (auto& bData : m_binningData) {
       if (!(bData.inside(bPosition))) {
@@ -247,11 +247,11 @@ class BinUtility {
     return true;
   }
 
-  /// Check if bin is inside from Vector2D - no optional transform applied
+  /// Check if bin is inside from Vector2 - no optional transform applied
   ///
   /// @param lposition is the local position to be evaluated
   /// @return is a boolean check
-  bool inside(const Vector2D& lposition) const {
+  bool inside(const Vector2& lposition) const {
     return true;
     std::vector<BinningData>::const_iterator bdIter = m_binningData.begin();
     for (; bdIter != m_binningData.end(); ++bdIter) {

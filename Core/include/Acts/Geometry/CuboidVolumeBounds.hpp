@@ -97,7 +97,7 @@ class CuboidVolumeBounds : public VolumeBounds {
   ///
   /// @param pos is the position in volume frame to be checked
   /// @param tol is the absolute tolerance to be applied
-  bool inside(const Vector3D& pos, double tol = 0.) const override;
+  bool inside(const Vector3& pos, double tol = 0.) const override;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
   /// according navigation direction into the volume given the normal
@@ -118,7 +118,7 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// @param entity Entity to associate this bounding box with
   /// @return Constructed bounding box
   Volume::BoundingBox boundingBox(const Transform3D* trf = nullptr,
-                                  const Vector3D& envelope = {0, 0, 0},
+                                  const Vector3& envelope = {0, 0, 0},
                                   const Volume* entity = nullptr) const final;
 
   /// Access to the bound values
@@ -152,7 +152,7 @@ class CuboidVolumeBounds : public VolumeBounds {
   void checkConsistency() noexcept(false);
 };
 
-inline bool CuboidVolumeBounds::inside(const Vector3D& pos, double tol) const {
+inline bool CuboidVolumeBounds::inside(const Vector3& pos, double tol) const {
   return (std::abs(pos.x()) <= get(eHalfLengthX) + tol &&
           std::abs(pos.y()) <= get(eHalfLengthY) + tol &&
           std::abs(pos.z()) <= get(eHalfLengthZ) + tol);

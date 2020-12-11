@@ -35,7 +35,7 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
   /// - the second 4 vertices are the "bottom" face
   /// - both faces are given in counter clock wise order
   GenericCuboidVolumeBounds(
-      const std::array<Acts::Vector3D, 8>& vertices) noexcept(false);
+      const std::array<Acts::Vector3, 8>& vertices) noexcept(false);
 
   /// Constructor from a fixed size array
   ///
@@ -60,7 +60,7 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
   /// @param tol is the tolerance applied for the inside check
   ///
   /// @return boolean indicating if the position is inside
-  bool inside(const Vector3D& gpos, double tol = 0.) const override;
+  bool inside(const Vector3& gpos, double tol = 0.) const override;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
   /// according navigation direction into the volume given the normal
@@ -81,7 +81,7 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
   /// @param entity Entity to associate this bounding box with
   /// @return Constructed bounding box
   Volume::BoundingBox boundingBox(const Transform3D* trf = nullptr,
-                                  const Vector3D& envelope = {0, 0, 0},
+                                  const Vector3& envelope = {0, 0, 0},
                                   const Volume* entity = nullptr) const final;
 
   /// @param sl is the output stream to be written into
@@ -95,8 +95,8 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
             const Transform3D& transform = Transform3D::Identity()) const;
 
  private:
-  std::array<Vector3D, 8> m_vertices;
-  std::array<Vector3D, 6> m_normals;
+  std::array<Vector3, 8> m_vertices;
+  std::array<Vector3, 6> m_normals;
 
   /// Private helper method to contruct the Volume bounds
   /// to be called by the constructors, from the ordered input vertices

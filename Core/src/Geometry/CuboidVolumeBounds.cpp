@@ -84,10 +84,10 @@ std::ostream& Acts::CuboidVolumeBounds::toStream(std::ostream& sl) const {
 }
 
 Acts::Volume::BoundingBox Acts::CuboidVolumeBounds::boundingBox(
-    const Acts::Transform3D* trf, const Vector3D& envelope,
+    const Acts::Transform3D* trf, const Vector3& envelope,
     const Volume* entity) const {
-  Vector3D vmin(-get(eHalfLengthX), -get(eHalfLengthY), -get(eHalfLengthZ));
-  Vector3D vmax(get(eHalfLengthX), get(eHalfLengthY), get(eHalfLengthZ));
+  Vector3 vmin(-get(eHalfLengthX), -get(eHalfLengthY), -get(eHalfLengthZ));
+  Vector3 vmax(get(eHalfLengthX), get(eHalfLengthY), get(eHalfLengthZ));
 
   Volume::BoundingBox box(entity, vmin - envelope, vmax + envelope);
   return trf == nullptr ? box : box.transformed(*trf);

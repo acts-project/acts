@@ -6,39 +6,39 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline Vector3D LineSurface::localToGlobal(const GeometryContext& gctx,
-                                           const Vector2D& lposition,
-                                           const Vector3D& momentum) const {
+inline Vector3 LineSurface::localToGlobal(const GeometryContext& gctx,
+                                          const Vector2& lposition,
+                                          const Vector3& momentum) const {
   const auto& sTransform = transform(gctx);
   const auto& tMatrix = sTransform.matrix();
-  Vector3D lineDirection(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
+  Vector3 lineDirection(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 
   // get the vector perpendicular to the momentum and the straw axis
-  Vector3D radiusAxisGlobal(lineDirection.cross(momentum));
-  Vector3D locZinGlobal = sTransform * Vector3D(0., 0., lposition[eBoundLoc1]);
+  Vector3 radiusAxisGlobal(lineDirection.cross(momentum));
+  Vector3 locZinGlobal = sTransform * Vector3(0., 0., lposition[eBoundLoc1]);
   // add eBoundLoc0 * radiusAxis
-  return Vector3D(locZinGlobal +
-                  lposition[eBoundLoc0] * radiusAxisGlobal.normalized());
+  return Vector3(locZinGlobal +
+                 lposition[eBoundLoc0] * radiusAxisGlobal.normalized());
 }
 
-inline Result<Vector2D> LineSurface::globalToLocal(const GeometryContext& gctx,
-                                                   const Vector3D& position,
-                                                   const Vector3D& momentum,
-                                                   double /*tolerance*/) const {
+inline Result<Vector2> LineSurface::globalToLocal(const GeometryContext& gctx,
+                                                  const Vector3& position,
+                                                  const Vector3& momentum,
+                                                  double /*tolerance*/) const {
   using VectorHelpers::perp;
   const auto& sTransform = transform(gctx);
   const auto& tMatrix = sTransform.matrix();
-  Vector3D lineDirection(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
+  Vector3 lineDirection(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
   // Bring the global position into the local frame
-  Vector3D loc3Dframe = sTransform.inverse() * position;
+  Vector3 loc3Dframe = sTransform.inverse() * position;
   // construct localPosition with sign*perp(candidate) and z.()
-  Vector2D lposition(perp(loc3Dframe), loc3Dframe.z());
-  Vector3D sCenter(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
-  Vector3D decVec(position - sCenter);
+  Vector2 lposition(perp(loc3Dframe), loc3Dframe.z());
+  Vector3 sCenter(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
+  Vector3 decVec(position - sCenter);
   // assign the right sign
   double sign = ((lineDirection.cross(momentum)).dot(decVec) < 0.) ? -1. : 1.;
   lposition[eBoundLoc0] *= sign;
-  return Result<Vector2D>::success(lposition);
+  return Result<Vector2>::success(lposition);
 }
 
 inline std::string LineSurface::name() const {
@@ -46,13 +46,13 @@ inline std::string LineSurface::name() const {
 }
 
 inline RotationMatrix3D LineSurface::referenceFrame(
-    const GeometryContext& gctx, const Vector3D& /*unused*/,
-    const Vector3D& momentum) const {
+    const GeometryContext& gctx, const Vector3& /*unused*/,
+    const Vector3& momentum) const {
   RotationMatrix3D mFrame;
   const auto& tMatrix = transform(gctx).matrix();
-  Vector3D measY(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
-  Vector3D measX(measY.cross(momentum).normalized());
-  Vector3D measDepth(measX.cross(measY));
+  Vector3 measY(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
+  Vector3 measX(measY.cross(momentum).normalized());
+  Vector3 measDepth(measX.cross(measY));
   // assign the columnes
   mFrame.col(0) = measX;
   mFrame.col(1) = measY;
@@ -62,20 +62,20 @@ inline RotationMatrix3D LineSurface::referenceFrame(
 }
 
 inline double LineSurface::pathCorrection(const GeometryContext& /*unused*/,
-                                          const Vector3D& /*pos*/,
-                                          const Vector3D& /*mom*/) const {
+                                          const Vector3& /*pos*/,
+                                          const Vector3& /*mom*/) const {
   return 1.;
 }
 
-inline Vector3D LineSurface::binningPosition(const GeometryContext& gctx,
-                                             BinningValue /*bValue*/) const {
+inline Vector3 LineSurface::binningPosition(const GeometryContext& gctx,
+                                            BinningValue /*bValue*/) const {
   return center(gctx);
 }
 
-inline Vector3D LineSurface::normal(const GeometryContext& gctx,
-                                    const Vector2D& /*lpos*/) const {
+inline Vector3 LineSurface::normal(const GeometryContext& gctx,
+                                   const Vector2& /*lpos*/) const {
   const auto& tMatrix = transform(gctx).matrix();
-  return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
+  return Vector3(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 
 inline const SurfaceBounds& LineSurface::bounds() const {
@@ -86,18 +86,18 @@ inline const SurfaceBounds& LineSurface::bounds() const {
 }
 
 inline SurfaceIntersection LineSurface::intersect(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const BoundaryCheck& bcheck) const {
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const BoundaryCheck& bcheck) const {
   // following nominclature found in header file and doxygen documentation
   // line one is the straight track
-  const Vector3D& ma = position;
-  const Vector3D& ea = direction;
+  const Vector3& ma = position;
+  const Vector3& ea = direction;
   // line two is the line surface
   const auto& tMatrix = transform(gctx).matrix();
-  Vector3D mb = tMatrix.block<3, 1>(0, 3).transpose();
-  Vector3D eb = tMatrix.block<3, 1>(0, 2).transpose();
+  Vector3 mb = tMatrix.block<3, 1>(0, 3).transpose();
+  Vector3 eb = tMatrix.block<3, 1>(0, 2).transpose();
   // now go ahead and solve for the closest approach
-  Vector3D mab(mb - ma);
+  Vector3 mab(mb - ma);
   double eaTeb = ea.dot(eb);
   double denom = 1 - eaTeb * eaTeb;
   // validity parameter
@@ -108,12 +108,12 @@ inline SurfaceIntersection LineSurface::intersect(
     status = (u * u < s_onSurfaceTolerance * s_onSurfaceTolerance)
                  ? Intersection3D::Status::onSurface
                  : Intersection3D::Status::reachable;
-    Vector3D result = (ma + u * ea);
+    Vector3 result = (ma + u * ea);
     // Evaluate the boundary check if requested
     // m_bounds == nullptr prevents unecessary calulations for PerigeeSurface
     if (bcheck and m_bounds) {
       // At closest approach: check inside R or and inside Z
-      const Vector3D vecLocal(result - mb);
+      const Vector3 vecLocal(result - mb);
       double cZ = vecLocal.dot(eb);
       double hZ =
           m_bounds->get(LineBounds::eHalfLengthZ) + s_onSurfaceTolerance;
@@ -136,9 +136,9 @@ inline BoundToFreeMatrix LineSurface::jacobianLocalToGlobal(
   FreeVector freeParams =
       detail::transformBoundToFreeParameters(*this, gctx, boundParams);
   // The global position
-  const Vector3D position = freeParams.segment<3>(eFreePos0);
+  const Vector3 position = freeParams.segment<3>(eFreePos0);
   // The direction
-  const Vector3D direction = freeParams.segment<3>(eFreeDir0);
+  const Vector3 direction = freeParams.segment<3>(eFreeDir0);
   // Get the sines and cosines directly
   const double cos_theta = std::cos(boundParams[eBoundTheta]);
   const double sin_theta = std::sin(boundParams[eBoundTheta]);
@@ -220,7 +220,7 @@ inline AlignmentToPathMatrix LineSurface::alignmentToPathDerivative(
   // The rotation
   const auto& rotation = transform(gctx).rotation();
   // The local frame z axis
-  const Vector3D localZAxis = rotation.col(2);
+  const Vector3 localZAxis = rotation.col(2);
   // The local z coordinate
   const auto pz = pcRowVec * localZAxis;
   // Cosine of angle between momentum direction and local frame z axis
@@ -241,12 +241,12 @@ inline AlignmentToPathMatrix LineSurface::alignmentToPathDerivative(
 }
 
 inline ActsMatrix<2, 3> LineSurface::localCartesianToBoundLocalDerivative(
-    const GeometryContext& gctx, const Vector3D& position) const {
+    const GeometryContext& gctx, const Vector3& position) const {
   using VectorHelpers::phi;
   // The local frame transform
   const auto& sTransform = transform(gctx);
   // calculate the transformation to local coorinates
-  const Vector3D localPos = sTransform.inverse() * position;
+  const Vector3 localPos = sTransform.inverse() * position;
   const double lphi = phi(localPos);
   const double lcphi = std::cos(lphi);
   const double lsphi = std::sin(lphi);

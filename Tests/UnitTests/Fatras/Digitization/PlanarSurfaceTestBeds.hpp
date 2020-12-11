@@ -29,7 +29,7 @@
 
 namespace ActsFatras {
 
-using Randomizer = std::function<Acts::Vector2D(double, double)>;
+using Randomizer = std::function<Acts::Vector2(double, double)>;
 
 using PlanarTestBed =
     std::tuple<std::string, std::shared_ptr<const Acts::Surface>,
@@ -102,7 +102,7 @@ struct PlanarSurfaceTestBeds {
     // Annulus disc test
     rmin = 2.5;
     rmax = 5.5;
-    Acts::Vector2D aorigin(0.1, -0.3);
+    Acts::Vector2 aorigin(0.1, -0.3);
     double phimin = -0.25;
     double phimax = 0.38;
     auto annulus = std::make_shared<Acts::AnnulusBounds>(rmin, rmax, phimin,
@@ -113,7 +113,7 @@ struct PlanarSurfaceTestBeds {
         annulus);
 
     auto vertices = annulus->vertices(72);
-    std::for_each(vertices.begin(), vertices.end(), [&](Acts::Vector2D& v) {
+    std::for_each(vertices.begin(), vertices.end(), [&](Acts::Vector2& v) {
       double r = Acts::VectorHelpers::perp(v);
       rmin = std::min(rmin, r);
       rmax = std::max(rmax, r);

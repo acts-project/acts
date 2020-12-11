@@ -14,7 +14,7 @@
 template <typename input_track_t>
 void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
                                             const Vertex<input_track_t>& vtx) {
-  const Vector3D vtxPos = vtx.fullPosition().template head<3>();
+  const Vector3 vtxPos = vtx.fullPosition().template head<3>();
 
   // Get the linearized track
   const LinearizedTrack& linTrack = track.linearizedState;
@@ -39,8 +39,8 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   const ActsVector<5> residual = linTrack.constantTerm.head<5>();
 
   // Refit track momentum
-  Vector3D newTrkMomentum = sMat * momJac.transpose() * trkParamWeight *
-                            (trkParams - residual - posJac * vtxPos);
+  Vector3 newTrkMomentum = sMat * momJac.transpose() * trkParamWeight *
+                           (trkParams - residual - posJac * vtxPos);
 
   // Refit track parameters
   BoundVector newTrkParams(BoundVector::Zero());
@@ -70,7 +70,7 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   const SymMatrix3D& reducedVtxWeight = matrixCache.newVertexWeight;
 
   // Difference in positions
-  Vector3D posDiff = vtx.position() - matrixCache.newVertexPos;
+  Vector3 posDiff = vtx.position() - matrixCache.newVertexPos;
 
   // Get smoothed params
   ActsVector<5> smParams =

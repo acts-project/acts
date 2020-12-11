@@ -100,7 +100,7 @@ class ConeVolumeBounds : public VolumeBounds {
   ///
   /// @param pos is the position in volume frame to be checked
   /// @param tol is the absolute tolerance to be applied
-  bool inside(const Vector3D& pos, double tol = 0.) const final;
+  bool inside(const Vector3& pos, double tol = 0.) const final;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
   /// according navigation direction into the volume given the normal
@@ -121,7 +121,7 @@ class ConeVolumeBounds : public VolumeBounds {
   /// @param entity Entity to associate this bounding box with
   /// @return Constructed bounding box
   Volume::BoundingBox boundingBox(const Transform3D* trf = nullptr,
-                                  const Vector3D& envelope = {0, 0, 0},
+                                  const Vector3& envelope = {0, 0, 0},
                                   const Volume* entity = nullptr) const final;
 
   /// Access to the bound values

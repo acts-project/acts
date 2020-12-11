@@ -94,7 +94,7 @@ struct MeasurementsCreator {
     const MeasurementResolution& resolution = *found;
 
     // Apply global to local
-    Acts::Vector2D loc =
+    Acts::Vector2 loc =
         surface
             .globalToLocal(state.geoContext, stepper.position(state.stepping),
                            stepper.direction(state.stepping))
@@ -104,7 +104,7 @@ struct MeasurementsCreator {
 
     // compute covariance for all components, might contain bogus values
     // depending on the configuration. but those remain unused.
-    Vector2D stddev(resolution.stddev[0], resolution.stddev[1]);
+    Vector2 stddev(resolution.stddev[0], resolution.stddev[1]);
     SymMatrix2D cov = stddev.cwiseProduct(stddev).asDiagonal();
 
     if (resolution.type == MeasurementType::eLoc0) {
@@ -124,9 +124,9 @@ struct MeasurementsCreator {
       result.outlierSourceLinks.emplace_back(eBoundLoc1, out, cov(0, 0), geoId,
                                              sourceId);
     } else if (resolution.type == MeasurementType::eLoc01) {
-      Vector2D val = loc + stddev.cwiseProduct(
-                               Vector2D(normalDist(*rng), normalDist(*rng)));
-      Vector2D out = val + Vector2D(distanceOutlier, -distanceOutlier);
+      Vector2 val = loc + stddev.cwiseProduct(
+                              Vector2(normalDist(*rng), normalDist(*rng)));
+      Vector2 out = val + Vector2(distanceOutlier, -distanceOutlier);
       result.sourceLinks.emplace_back(eBoundLoc0, eBoundLoc1, val, cov, geoId,
                                       sourceId);
       result.outlierSourceLinks.emplace_back(eBoundLoc0, eBoundLoc1, out, cov,

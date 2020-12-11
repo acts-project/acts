@@ -282,7 +282,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
       }
     }
     if (nearTrackFound) {
-      vtx.setFullPosition(Vector4D(0., 0., newZ, 0.));
+      vtx.setFullPosition(Vector4(0., 0., newZ, 0.));
 
       // Update vertex info for current vertex
       fitterState.vtxInfoMap[&vtx] =
@@ -500,7 +500,7 @@ template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
     const Vertex<InputTrack_t>& vtx,
     const std::vector<Vertex<InputTrack_t>*>& allVertices) const -> bool {
-  const Vector4D& candidatePos = vtx.fullPosition();
+  const Vector4& candidatePos = vtx.fullPosition();
   const SymMatrix4D& candidateCov = vtx.fullCovariance();
   const double candidateZPos = candidatePos[eZ];
   const double candidateZCov = candidateCov(eZ, eZ);
@@ -509,12 +509,12 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
     if (&vtx == otherVtx) {
       continue;
     }
-    const Vector4D& otherPos = otherVtx->fullPosition();
+    const Vector4& otherPos = otherVtx->fullPosition();
     const SymMatrix4D& otherCov = otherVtx->fullCovariance();
     const double otherZPos = otherPos[eZ];
     const double otherZCov = otherCov(eZ, eZ);
 
-    const Vector4D deltaPos = otherPos - candidatePos;
+    const Vector4 deltaPos = otherPos - candidatePos;
     const double deltaZPos = otherZPos - candidateZPos;
     const double sumCovZ = otherZCov + candidateZCov;
 

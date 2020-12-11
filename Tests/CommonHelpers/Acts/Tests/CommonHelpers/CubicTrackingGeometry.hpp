@@ -45,9 +45,9 @@ struct CubicTrackingGeometry {
 
     // Construct the rotation
     double rotationAngle = 90_degree;
-    Vector3D xPos(cos(rotationAngle), 0., sin(rotationAngle));
-    Vector3D yPos(0., 1., 0.);
-    Vector3D zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+    Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
+    Vector3 yPos(0., 1., 0.);
+    Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
     rotation.col(0) = xPos;
     rotation.col(1) = yPos;
     rotation.col(2) = zPos;
@@ -67,7 +67,7 @@ struct CubicTrackingGeometry {
 
     // Set translation vectors
     double eps = 1_mm;
-    std::vector<Vector3D> translations;
+    std::vector<Vector3> translations;
     translations.push_back({-2_m, 0., 0.});
     translations.push_back({-1_m, 0., 0.});
     translations.push_back({1_m - eps, 0., 0.});
@@ -107,7 +107,7 @@ struct CubicTrackingGeometry {
 
     // Build volume for surfaces with negative x-values
     Transform3D trafoVol1(Transform3D::Identity());
-    trafoVol1.translation() = Vector3D(-1.5_m, 0., 0.);
+    trafoVol1.translation() = Vector3(-1.5_m, 0., 0.);
 
     auto boundsVol =
         std::make_shared<const CuboidVolumeBounds>(1.5_m, 0.5_m, 0.5_m);
@@ -129,7 +129,7 @@ struct CubicTrackingGeometry {
 
     // Build volume for surfaces with positive x-values
     Transform3D trafoVol2(Transform3D::Identity());
-    trafoVol2.translation() = Vector3D(1.5_m, 0., 0.);
+    trafoVol2.translation() = Vector3(1.5_m, 0., 0.);
 
     layVec.clear();
     for (i = 2; i < 6; i++)
@@ -153,15 +153,15 @@ struct CubicTrackingGeometry {
 
     // Build world volume
     Transform3D trafoWorld(Transform3D::Identity());
-    trafoWorld.translation() = Vector3D(0., 0., 0.);
+    trafoWorld.translation() = Vector3(0., 0., 0.);
 
     auto worldVol =
         std::make_shared<const CuboidVolumeBounds>(3._m, 0.5_m, 0.5_m);
 
-    std::vector<std::pair<TrackingVolumePtr, Vector3D>> tapVec;
+    std::vector<std::pair<TrackingVolumePtr, Vector3>> tapVec;
 
-    tapVec.push_back(std::make_pair(trackVolume1, Vector3D(-1.5_m, 0., 0.)));
-    tapVec.push_back(std::make_pair(trackVolume2, Vector3D(1.5_m, 0., 0.)));
+    tapVec.push_back(std::make_pair(trackVolume1, Vector3(-1.5_m, 0., 0.)));
+    tapVec.push_back(std::make_pair(trackVolume2, Vector3(1.5_m, 0., 0.)));
 
     std::vector<float> binBoundaries = {-3._m, 0., 3._m};
 

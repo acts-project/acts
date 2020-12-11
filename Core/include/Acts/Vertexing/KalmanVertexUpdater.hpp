@@ -24,7 +24,7 @@ namespace KalmanVertexUpdater {
 
 /// Cache object to store matrix information
 struct MatrixCache {
-  Vector3D newVertexPos = Vector3D::Zero();
+  Vector3 newVertexPos = Vector3::Zero();
   SymMatrix3D newVertexCov = SymMatrix3D::Zero();
   SymMatrix3D newVertexWeight = SymMatrix3D::Zero();
   SymMatrix3D oldVertexWeight = SymMatrix3D::Zero();

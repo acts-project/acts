@@ -46,8 +46,8 @@ static inline std::string run(IVisualization3D& helper) {
   lineView.lineThickness = 0.1;
 
   // Line visualization ------------------------------------------------
-  Vector3D start = {1., 1., 1.};
-  Vector3D end = {4., 4., 4.};
+  Vector3 start = {1., 1., 1.};
+  Vector3 end = {4., 4., 4.};
   Acts::GeometryView3D::drawSegment(helper, start, end);
   helper.write("Primitives_Line");
   helper.write(ss);
@@ -82,7 +82,7 @@ static inline std::string run(IVisualization3D& helper) {
   double r01 = 0.78;
   cov << s0 * s0, r01 * s0 * s1, r01 * s0 * s1, s1 * s1;
 
-  Vector2D lcentered{0., 0.};
+  Vector2 lcentered{0., 0.};
   Acts::EventDataView3D::drawCovarianceCartesian(
       helper, lcentered, cov, plane->transform(gctx), 1.0, errorVis);
 
@@ -98,8 +98,8 @@ static inline std::string run(IVisualization3D& helper) {
   r01 = 0.3;
   cov << s0 * s0, r01 * s0 * s1, r01 * s0 * s1, s1 * s1;
 
-  Vector3D origin{0., 0., 0.};
-  Vector3D direction = Vector3D(1., 3., 15.).normalized();
+  Vector3 origin{0., 0., 0.};
+  Vector3 direction = Vector3(1., 3., 15.).normalized();
 
   double directionScale = 5.;
 

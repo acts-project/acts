@@ -26,7 +26,7 @@ namespace ActsFatras {
 ///
 struct Channelizer {
   /// Shorthand for a 2D segment
-  using Segment2D = std::array<Acts::Vector2D, 2>;
+  using Segment2D = std::array<Acts::Vector2, 2>;
   /// Shorthand for a 2D bin
   using Bin2D = std::array<unsigned int, 2>;
   /// shorthand for a 2D bin delta
@@ -37,7 +37,7 @@ struct Channelizer {
     /// This is the delta to the last step in bins
     BinDelta2D delta = {0, 0};
     /// The intersection with the channel boundary
-    Acts::Vector2D intersect;
+    Acts::Vector2 intersect;
     /// The patlength from the start
     double path = 0.;
 
@@ -46,8 +46,8 @@ struct Channelizer {
     /// @param delta_ The bin delta for this step
     /// @param intersect_ The intersect with the channel boundary
     /// @param start The start of the surface segment, for path from origin
-    ChannelStep(BinDelta2D delta_, Acts::Vector2D intersect_,
-                const Acts::Vector2D& start)
+    ChannelStep(BinDelta2D delta_, Acts::Vector2 intersect_,
+                const Acts::Vector2& start)
         : delta(delta_),
           intersect(intersect_),
           path((intersect - start).norm()) {}

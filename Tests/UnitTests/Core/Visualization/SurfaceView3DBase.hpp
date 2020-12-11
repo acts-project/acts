@@ -284,7 +284,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
 
   double annulusMinPhi = 0.75;
   double annulusMaxPhi = 1.35;
-  Vector2D offset(-4., 2.);
+  Vector2 offset(-4., 2.);
   auto annulus = std::make_shared<AnnulusBounds>(
       discRmin, discRmax, annulusMinPhi, annulusMaxPhi, offset);
   disc = Surface::makeShared<DiscSurface>(identity, annulus);
@@ -373,7 +373,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
 
   // ConvexPolygon shaped example: Triangle
   name = "Surfaces_PlaneSurfaceTriangleRegular";
-  std::vector<Vector2D> tvertices = {{-3, -1.5}, {3, -1.5}, {0, 4.5}};
+  std::vector<Vector2> tvertices = {{-3, -1.5}, {3, -1.5}, {0, 4.5}};
   auto triangle = std::make_shared<ConvexPolygonBounds<3>>(tvertices);
   plane = Surface::makeShared<PlaneSurface>(identity, triangle);
   planarSurfaces.push_back(plane);
@@ -443,7 +443,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   // Off-centered Rectangle plane:
   name = "Surfaces_PlaneSurfaceRectangleOffcentered";
   rectangle =
-      std::make_shared<RectangleBounds>(Vector2D{1., 2.}, Vector2D{15., 12.});
+      std::make_shared<RectangleBounds>(Vector2{1., 2.}, Vector2{15., 12.});
   plane = Surface::makeShared<PlaneSurface>(identity, rectangle);
   GeometryView3D::drawSurface(helper, *plane, gctx, Transform3D::Identity(),
                               sConfig);

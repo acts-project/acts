@@ -6,17 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline Vector2D DiscSurface::localPolarToCartesian(
-    const Vector2D& lpolar) const {
-  return Vector2D(lpolar[eBoundLoc0] * cos(lpolar[eBoundLoc1]),
-                  lpolar[eBoundLoc0] * sin(lpolar[eBoundLoc1]));
+inline Vector2 DiscSurface::localPolarToCartesian(const Vector2& lpolar) const {
+  return Vector2(lpolar[eBoundLoc0] * cos(lpolar[eBoundLoc1]),
+                 lpolar[eBoundLoc0] * sin(lpolar[eBoundLoc1]));
 }
 
-inline Vector2D DiscSurface::localCartesianToPolar(
-    const Vector2D& lcart) const {
-  return Vector2D(sqrt(lcart[eBoundLoc0] * lcart[eBoundLoc0] +
-                       lcart[eBoundLoc1] * lcart[eBoundLoc1]),
-                  atan2(lcart[eBoundLoc1], lcart[eBoundLoc0]));
+inline Vector2 DiscSurface::localCartesianToPolar(const Vector2& lcart) const {
+  return Vector2(sqrt(lcart[eBoundLoc0] * lcart[eBoundLoc0] +
+                      lcart[eBoundLoc1] * lcart[eBoundLoc1]),
+                 atan2(lcart[eBoundLoc1], lcart[eBoundLoc0]));
 }
 
 inline BoundToFreeMatrix DiscSurface::jacobianLocalToGlobal(
@@ -25,9 +23,9 @@ inline BoundToFreeMatrix DiscSurface::jacobianLocalToGlobal(
   FreeVector freeParams =
       detail::transformBoundToFreeParameters(*this, gctx, boundParams);
   // The global position
-  const Vector3D position = freeParams.segment<3>(eFreePos0);
+  const Vector3 position = freeParams.segment<3>(eFreePos0);
   // The direction
-  const Vector3D direction = freeParams.segment<3>(eFreeDir0);
+  const Vector3 direction = freeParams.segment<3>(eFreeDir0);
   // Get the sines and cosines directly
   const double cos_theta = std::cos(boundParams[eBoundTheta]);
   const double sin_theta = std::sin(boundParams[eBoundTheta]);
@@ -82,7 +80,7 @@ inline FreeToBoundMatrix DiscSurface::jacobianGlobalToLocal(
   RotationMatrix3D rframeT =
       referenceFrame(gctx, position, direction).transpose();
   // calculate the transformation to local coorinates
-  const Vector3D pos_loc = transform(gctx).inverse() * position;
+  const Vector3 pos_loc = transform(gctx).inverse() * position;
   const double lr = perp(pos_loc);
   const double lphi = phi(pos_loc);
   const double lcphi = cos(lphi);
@@ -109,8 +107,8 @@ inline FreeToBoundMatrix DiscSurface::jacobianGlobalToLocal(
 }
 
 inline SurfaceIntersection DiscSurface::intersect(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const BoundaryCheck& bcheck) const {
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const BoundaryCheck& bcheck) const {
   // Get the contextual transform
   auto gctxTransform = transform(gctx);
   // Use the intersection helper for planar surfaces
@@ -121,9 +119,8 @@ inline SurfaceIntersection DiscSurface::intersect(
       m_bounds != nullptr) {
     // Built-in local to global for speed reasons
     const auto& tMatrix = gctxTransform.matrix();
-    const Vector3D vecLocal(intersection.position - tMatrix.block<3, 1>(0, 3));
-    const Vector2D lcartesian =
-        tMatrix.block<3, 2>(0, 0).transpose() * vecLocal;
+    const Vector3 vecLocal(intersection.position - tMatrix.block<3, 1>(0, 3));
+    const Vector2 lcartesian = tMatrix.block<3, 2>(0, 0).transpose() * vecLocal;
     if (bcheck.type() == BoundaryCheck::Type::eAbsolute and
         m_bounds->coversFullAzimuth()) {
       double tolerance = s_onSurfaceTolerance + bcheck.tolerance()[eBoundLoc0];
@@ -139,13 +136,13 @@ inline SurfaceIntersection DiscSurface::intersect(
 }
 
 inline ActsMatrix<2, 3> DiscSurface::localCartesianToBoundLocalDerivative(
-    const GeometryContext& gctx, const Vector3D& position) const {
+    const GeometryContext& gctx, const Vector3& position) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
   // The local frame transform
   const auto& sTransform = transform(gctx);
   // calculate the transformation to local coorinates
-  const Vector3D localPos = sTransform.inverse() * position;
+  const Vector3 localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);
   const double lphi = phi(localPos);
   const double lcphi = std::cos(lphi);
@@ -156,19 +153,19 @@ inline ActsMatrix<2, 3> DiscSurface::localCartesianToBoundLocalDerivative(
   return loc3DToLocBound;
 }
 
-inline Vector3D DiscSurface::normal(const GeometryContext& gctx,
-                                    const Vector2D& /*unused*/) const {
+inline Vector3 DiscSurface::normal(const GeometryContext& gctx,
+                                   const Vector2& /*unused*/) const {
   // fast access via tranform matrix (and not rotation())
   const auto& tMatrix = transform(gctx).matrix();
-  return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
+  return Vector3(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 
-inline Vector3D DiscSurface::binningPosition(const GeometryContext& gctx,
-                                             BinningValue bValue) const {
+inline Vector3 DiscSurface::binningPosition(const GeometryContext& gctx,
+                                            BinningValue bValue) const {
   if (bValue == binR) {
     double r = m_bounds->binningValueR();
     double phi = m_bounds->binningValuePhi();
-    return Vector3D(r * cos(phi), r * sin(phi), center(gctx).z());
+    return Vector3(r * cos(phi), r * sin(phi), center(gctx).z());
   }
   return center(gctx);
 }
@@ -183,8 +180,8 @@ inline double DiscSurface::binningPositionValue(const GeometryContext& gctx,
 }
 
 inline double DiscSurface::pathCorrection(const GeometryContext& gctx,
-                                          const Vector3D& position,
-                                          const Vector3D& direction) const {
+                                          const Vector3& position,
+                                          const Vector3& direction) const {
   /// we can ignore the global position here
   return 1. / std::abs(Surface::normal(gctx, position).dot(direction));
 }

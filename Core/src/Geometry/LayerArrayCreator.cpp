@@ -44,7 +44,7 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
   GeometryObjectSorterT<std::shared_ptr<const Layer>> layerSorter(gctx, bValue);
   std::sort(layers.begin(), layers.end(), layerSorter);
   // useful typedef
-  using LayerOrderPosition = std::pair<std::shared_ptr<const Layer>, Vector3D>;
+  using LayerOrderPosition = std::pair<std::shared_ptr<const Layer>, Vector3>;
   // needed for all cases
   std::shared_ptr<const Layer> layer = nullptr;
   std::unique_ptr<const BinUtility> binUtility = nullptr;
@@ -175,20 +175,20 @@ std::shared_ptr<Acts::Surface> Acts::LayerArrayCreator::createNavigationSurface(
   // surface reference
   const Surface& layerSurface = layer.surfaceRepresentation();
   // translation to be applied
-  Vector3D translation(0., 0., 0.);
+  Vector3 translation(0., 0., 0.);
   // switching he binnig values
   switch (bValue) {
     // case x
     case binX: {
-      translation = Vector3D(offset, 0., 0.);
+      translation = Vector3(offset, 0., 0.);
     } break;
     // case y
     case binY: {
-      translation = Vector3D(0., offset, 0.);
+      translation = Vector3(0., offset, 0.);
     } break;
     // case z
     case binZ: {
-      translation = Vector3D(0., 0., offset);
+      translation = Vector3(0., 0., offset);
     } break;
     // case R
     case binR: {
@@ -196,7 +196,7 @@ std::shared_ptr<Acts::Surface> Acts::LayerArrayCreator::createNavigationSurface(
       if (layerSurface.type() == Surface::Cylinder) {
         break;
       }
-      translation = Vector3D(offset, 0., 0.);
+      translation = Vector3(offset, 0., 0.);
     } break;
     // do nothing for the default
     default: {

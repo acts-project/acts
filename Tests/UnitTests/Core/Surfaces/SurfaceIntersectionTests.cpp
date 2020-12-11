@@ -30,7 +30,7 @@ GeometryContext tgContext = GeometryContext();
 // Some random transform
 Transform3D aTransform = Transform3D::Identity() *
                          Translation3D(30_cm, 7_m, -87_mm) *
-                         AngleAxis3D(0.42, Vector3D(-3., 1., 8).normalized());
+                         AngleAxis3D(0.42, Vector3(-3., 1., 8).normalized());
 
 namespace Test {
 
@@ -51,14 +51,14 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
     auto lTransform = transform.linear();
 
     // An onCylinder solution
-    Vector3D onCylinder = transform * Vector3D(radius, 0., 0.);
-    Vector3D outCylinder = transform * Vector3D(-radius, 0.6 * radius, 90_cm);
-    Vector3D atCenter = transform * Vector3D(0., 0., 0.);
-    Vector3D atEdge = transform * Vector3D(0.5 * radius, 0., 0.99 * halfZ);
+    Vector3 onCylinder = transform * Vector3(radius, 0., 0.);
+    Vector3 outCylinder = transform * Vector3(-radius, 0.6 * radius, 90_cm);
+    Vector3 atCenter = transform * Vector3(0., 0., 0.);
+    Vector3 atEdge = transform * Vector3(0.5 * radius, 0., 0.99 * halfZ);
     // Simply along the x axis
-    Vector3D alongX = lTransform * Vector3D(1., 0., 0.);
-    Vector3D transXY = lTransform * Vector3D(1., 1., 0).normalized();
-    Vector3D transTZ = lTransform * Vector3D(1., 0., 1.).normalized();
+    Vector3 alongX = lTransform * Vector3(1., 0., 0.);
+    Vector3 transXY = lTransform * Vector3(1., 1., 0).normalized();
+    Vector3 transTZ = lTransform * Vector3(1., 0., 1.).normalized();
 
     // Intersect without boundary check
     auto aIntersection =
@@ -178,11 +178,11 @@ BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
     auto lTransform = transform.linear();
 
     // An onCylinder solution
-    Vector3D onCone = transform * Vector3D(std::sqrt(2.), std::sqrt(2.), 2.);
-    Vector3D outCone = transform * Vector3D(std::sqrt(4.), std::sqrt(4.), 2.);
+    Vector3 onCone = transform * Vector3(std::sqrt(2.), std::sqrt(2.), 2.);
+    Vector3 outCone = transform * Vector3(std::sqrt(4.), std::sqrt(4.), 2.);
     // Simply along the x axis
-    Vector3D perpXY = lTransform * Vector3D(1., -1., 0.).normalized();
-    Vector3D transXY = lTransform * Vector3D(1., 1., 0).normalized();
+    Vector3 perpXY = lTransform * Vector3(1., -1., 0.).normalized();
+    Vector3 transXY = lTransform * Vector3(1., 1., 0).normalized();
 
     // Intersect without boundary check with an on solution
     BOOST_CHECK(aCone->isOnSurface(tgContext, onCone, transXY, false));
@@ -231,17 +231,17 @@ BOOST_AUTO_TEST_CASE(PlanarIntersectionTest) {
         transform, std::make_shared<RectangleBounds>(halfX, halfY));
 
     /// Forward interseciton test
-    Vector3D before = transform * Vector3D(-50_cm, -1_m, -1_m);
-    Vector3D onit = transform * Vector3D(11_cm, -22_cm, 0_m);
-    Vector3D after = transform * Vector3D(33_cm, 12_mm, 1_m);
-    Vector3D outside = transform * Vector3D(2. * halfX, 2 * halfY, -1_mm);
+    Vector3 before = transform * Vector3(-50_cm, -1_m, -1_m);
+    Vector3 onit = transform * Vector3(11_cm, -22_cm, 0_m);
+    Vector3 after = transform * Vector3(33_cm, 12_mm, 1_m);
+    Vector3 outside = transform * Vector3(2. * halfX, 2 * halfY, -1_mm);
 
     // Linear transform
     auto lTransform = transform.linear();
 
     // A direction that is non trivial
-    Vector3D direction = lTransform * Vector3D(4_mm, 8_mm, 50_cm).normalized();
-    Vector3D parallel = lTransform * Vector3D(1., 1., 0.).normalized();
+    Vector3 direction = lTransform * Vector3(4_mm, 8_mm, 50_cm).normalized();
+    Vector3 parallel = lTransform * Vector3(1., 1., 0.).normalized();
 
     // Intersect forward
     auto fIntersection = aPlane->intersect(tgContext, before, direction, true);
@@ -324,17 +324,17 @@ BOOST_AUTO_TEST_CASE(LineIntersectionTest) {
     auto aLine = Surface::makeShared<StrawSurface>(transform, radius, halfZ);
 
     /// Forward interseciton test
-    Vector3D before = transform * Vector3D(-50_cm, -1_m, -1_m);
-    Vector3D onit1 = transform * Vector3D(0_m, 0_m, 0_m);
-    Vector3D onitP = transform * Vector3D(1_cm, 0_m, 23_um);
-    Vector3D after = transform * Vector3D(33_cm, 12_mm, 1_m);
-    Vector3D outside = transform * Vector3D(2., 0., 100_m);
+    Vector3 before = transform * Vector3(-50_cm, -1_m, -1_m);
+    Vector3 onit1 = transform * Vector3(0_m, 0_m, 0_m);
+    Vector3 onitP = transform * Vector3(1_cm, 0_m, 23_um);
+    Vector3 after = transform * Vector3(33_cm, 12_mm, 1_m);
+    Vector3 outside = transform * Vector3(2., 0., 100_m);
 
     // Linear transform
     auto lTransform = transform.linear();
-    Vector3D direction = lTransform * Vector3D(2_cm, 3_cm, 5_cm).normalized();
-    Vector3D normalP = lTransform * Vector3D(0, 1., 0.).normalized();
-    Vector3D parallel = lTransform * Vector3D(0, 0., 1.).normalized();
+    Vector3 direction = lTransform * Vector3(2_cm, 3_cm, 5_cm).normalized();
+    Vector3 normalP = lTransform * Vector3(0, 1., 0.).normalized();
+    Vector3 parallel = lTransform * Vector3(0, 0., 1.).normalized();
 
     // A random intersection form backward
     // Intersect forward

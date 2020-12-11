@@ -8,15 +8,15 @@
 
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 
-inline Acts::Vector3D Acts::Surface::center(const GeometryContext& gctx) const {
+inline Acts::Vector3 Acts::Surface::center(const GeometryContext& gctx) const {
   // fast access via tranform matrix (and not translation())
   auto tMatrix = transform(gctx).matrix();
-  return Vector3D(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
+  return Vector3(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
 }
 
-inline Acts::Vector3D Acts::Surface::normal(const GeometryContext& gctx,
-                                            const Vector3D& /*unused*/) const {
-  return normal(gctx, Vector2D(Vector2D::Zero()));
+inline Acts::Vector3 Acts::Surface::normal(const GeometryContext& gctx,
+                                           const Vector3& /*unused*/) const {
+  return normal(gctx, Vector2(Vector2::Zero()));
 }
 
 inline const Acts::Transform3D& Acts::Surface::transform(
@@ -27,14 +27,14 @@ inline const Acts::Transform3D& Acts::Surface::transform(
   return m_transform;
 }
 
-inline bool Acts::Surface::insideBounds(const Vector2D& lposition,
+inline bool Acts::Surface::insideBounds(const Vector2& lposition,
                                         const BoundaryCheck& bcheck) const {
   return bounds().inside(lposition, bcheck);
 }
 
 inline Acts::RotationMatrix3D Acts::Surface::referenceFrame(
-    const GeometryContext& gctx, const Vector3D& /*unused*/,
-    const Vector3D& /*unused*/) const {
+    const GeometryContext& gctx, const Vector3& /*unused*/,
+    const Vector3& /*unused*/) const {
   return transform(gctx).matrix().block<3, 3>(0, 0);
 }
 
@@ -44,9 +44,9 @@ inline Acts::BoundToFreeMatrix Acts::Surface::jacobianLocalToGlobal(
   FreeVector freeParams =
       detail::transformBoundToFreeParameters(*this, gctx, boundParams);
   // The global position
-  const Vector3D position = freeParams.segment<3>(eFreePos0);
+  const Vector3 position = freeParams.segment<3>(eFreePos0);
   // The direction
-  const Vector3D direction = freeParams.segment<3>(eFreeDir0);
+  const Vector3 direction = freeParams.segment<3>(eFreeDir0);
   // Get the sines and cosines directly
   const double cos_theta = std::cos(boundParams[eBoundTheta]);
   const double sin_theta = std::sin(boundParams[eBoundTheta]);
@@ -114,7 +114,7 @@ inline Acts::FreeToPathMatrix Acts::Surface::freeToPathDerivative(
   // The measurement frame of the surface
   const RotationMatrix3D rframe = referenceFrame(gctx, position, direction);
   // The measurement frame z axis
-  const Vector3D refZAxis = rframe.col(2);
+  const Vector3 refZAxis = rframe.col(2);
   // Cosine of angle between momentum direction and measurement frame z axis
   const double dz = refZAxis.dot(direction);
   // Initialize the derivative

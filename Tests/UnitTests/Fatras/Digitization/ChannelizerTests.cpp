@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(ChannelizerCartesian) {
   Channelizer cl;
 
   // Test: Normal hit into the surface
-  Acts::Vector2D nPosition(0.37, 0.76);
+  Acts::Vector2 nPosition(0.37, 0.76);
   auto nSegments =
       cl.segments(geoCtx, *planeSurface, pixelated, {nPosition, nPosition});
   BOOST_CHECK(nSegments.size() == 1);
@@ -61,22 +61,22 @@ BOOST_AUTO_TEST_CASE(ChannelizerCartesian) {
   BOOST_CHECK(nSegments[0].bin[1] == 17);
 
   // Test: Inclined hit into the surface - negative x direction
-  Acts::Vector2D ixPositionS(0.37, 0.76);
-  Acts::Vector2D ixPositionE(0.02, 0.73);
+  Acts::Vector2 ixPositionS(0.37, 0.76);
+  Acts::Vector2 ixPositionE(0.02, 0.73);
   auto ixSegments =
       cl.segments(geoCtx, *planeSurface, pixelated, {ixPositionS, ixPositionE});
   BOOST_CHECK(ixSegments.size() == 4);
 
   // Test: Inclined hit into the surface - positive y direction
-  Acts::Vector2D iyPositionS(0.37, 0.76);
-  Acts::Vector2D iyPositionE(0.39, 0.91);
+  Acts::Vector2 iyPositionS(0.37, 0.76);
+  Acts::Vector2 iyPositionE(0.39, 0.91);
   auto iySegments =
       cl.segments(geoCtx, *planeSurface, pixelated, {iyPositionS, iyPositionE});
   BOOST_CHECK(iySegments.size() == 3);
 
   // Test: Inclined hit into the surface - x/y direction
-  Acts::Vector2D ixyPositionS(-0.27, 0.76);
-  Acts::Vector2D ixyPositionE(-0.02, -0.73);
+  Acts::Vector2 ixyPositionS(-0.27, 0.76);
+  Acts::Vector2 ixyPositionE(-0.02, -0.73);
   auto ixySegments = cl.segments(geoCtx, *planeSurface, pixelated,
                                  {ixyPositionS, ixyPositionE});
   BOOST_CHECK(ixySegments.size() == 18);
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(ChannelizerPolarRadial) {
   Channelizer cl;
 
   // Test: Normal hit into the surface
-  Acts::Vector2D nPosition(6.76, 0.5);
+  Acts::Vector2 nPosition(6.76, 0.5);
   auto nSegments =
       cl.segments(geoCtx, *radialDisc, strips, {nPosition, nPosition});
   BOOST_CHECK(nSegments.size() == 1);
@@ -105,15 +105,15 @@ BOOST_AUTO_TEST_CASE(ChannelizerPolarRadial) {
   BOOST_CHECK(nSegments[0].bin[1] == 161);
 
   // Test: now opver more phi strips
-  Acts::Vector2D sPositionS(6.76, 0.5);
-  Acts::Vector2D sPositionE(7.03, -0.3);
+  Acts::Vector2 sPositionS(6.76, 0.5);
+  Acts::Vector2 sPositionE(7.03, -0.3);
   auto sSegment =
       cl.segments(geoCtx, *radialDisc, strips, {sPositionS, sPositionE});
   BOOST_CHECK(sSegment.size() == 59);
 
   // Test: jump over R boundary, but stay in phi bin
-  sPositionS = Acts::Vector2D(6.76, 0.);
-  sPositionE = Acts::Vector2D(7.83, 0.);
+  sPositionS = Acts::Vector2(6.76, 0.);
+  sPositionE = Acts::Vector2(7.83, 0.);
   sSegment = cl.segments(geoCtx, *radialDisc, strips, {sPositionS, sPositionE});
   BOOST_CHECK(sSegment.size() == 2);
 }

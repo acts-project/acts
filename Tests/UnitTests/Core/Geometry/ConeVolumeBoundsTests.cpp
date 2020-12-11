@@ -90,9 +90,9 @@ BOOST_AUTO_TEST_CASE(ConeVolumeBoundsSurfaceOrientation) {
   BOOST_CHECK_EQUAL(cvbOrientedSurfaces.size(), 4);
 
   auto geoCtx = GeometryContext();
-  Vector3D xaxis(1., 0., 0.);
-  Vector3D yaxis(0., 1., 0.);
-  Vector3D zaxis(0., 0., 1.);
+  Vector3 xaxis(1., 0., 0.);
+  Vector3 yaxis(0., 1., 0.);
+  Vector3 zaxis(0., 0., 1.);
 
   for (auto& os : cvbOrientedSurfaces) {
     // Test the orientation of the boundary surfaces

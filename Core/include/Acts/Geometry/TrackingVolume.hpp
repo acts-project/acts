@@ -162,7 +162,7 @@ class TrackingVolume : public Volume {
   ///
   /// @return plain pointer to layer object
   const Layer* associatedLayer(const GeometryContext& gctx,
-                               const Vector3D& position) const;
+                               const Vector3& position) const;
 
   /// @brief Resolves the volume into (compatible) Layers
   ///
@@ -176,8 +176,8 @@ class TrackingVolume : public Volume {
   ///
   /// @return vector of compatible intersections with layers
   std::vector<LayerIntersection> compatibleLayers(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, const NavigationOptions<Layer>& options) const;
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const NavigationOptions<Layer>& options) const;
 
   /// @brief Returns all boundary surfaces sorted by the user.
   ///
@@ -192,8 +192,8 @@ class TrackingVolume : public Volume {
   ///
   /// @return is the templated boundary intersection
   std::vector<BoundaryIntersection> compatibleBoundaries(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, const NavigationOptions<Surface>& options,
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const NavigationOptions<Surface>& options,
       LoggerWrapper logger = getDummyLogger()) const;
 
   /// @brief Return surfaces in given direction from bounding volume hierarchy
@@ -207,8 +207,8 @@ class TrackingVolume : public Volume {
   ///
   /// @return Vector of surface candidates
   std::vector<SurfaceIntersection> compatibleSurfacesFromHierarchy(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, double angle,
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, double angle,
       const NavigationOptions<Surface>& options) const;
 
   /// Return the associated sub Volume, returns THIS if no subVolume exists
@@ -219,7 +219,7 @@ class TrackingVolume : public Volume {
   ///
   /// @return plain pointer to associated with the position
   const TrackingVolume* lowestTrackingVolume(const GeometryContext& gctx,
-                                             const Vector3D& position,
+                                             const Vector3& position,
                                              const double tol = 0.) const;
 
   /// Return the confined static layer array - if it exists

@@ -138,13 +138,13 @@ Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
 
   if (m_sectorBounds) {
     RotationMatrix3D sectorRotation;
-    sectorRotation.col(0) = Vector3D::UnitZ();
-    sectorRotation.col(1) = Vector3D::UnitX();
-    sectorRotation.col(2) = Vector3D::UnitY();
+    sectorRotation.col(0) = Vector3::UnitZ();
+    sectorRotation.col(1) = Vector3::UnitX();
+    sectorRotation.col(2) = Vector3::UnitY();
 
     Transform3D negSectorRelTrans{sectorRotation};
     negSectorRelTrans.prerotate(
-        AngleAxis3D(get(eAveragePhi) - get(eHalfPhiSector), Vector3D::UnitZ()));
+        AngleAxis3D(get(eAveragePhi) - get(eHalfPhiSector), Vector3::UnitZ()));
     auto negSectorAbsTrans = transform * negSectorRelTrans;
     auto negSectorPlane =
         Surface::makeShared<PlaneSurface>(negSectorAbsTrans, m_sectorBounds);
@@ -152,7 +152,7 @@ Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
 
     Transform3D posSectorRelTrans{sectorRotation};
     posSectorRelTrans.prerotate(
-        AngleAxis3D(get(eAveragePhi) + get(eHalfPhiSector), Vector3D::UnitZ()));
+        AngleAxis3D(get(eAveragePhi) + get(eHalfPhiSector), Vector3::UnitZ()));
     auto posSectorAbsTrans = transform * posSectorRelTrans;
     auto posSectorPlane =
         Surface::makeShared<PlaneSurface>(posSectorAbsTrans, m_sectorBounds);
@@ -182,7 +182,7 @@ void Acts::ConeVolumeBounds::checkConsistency() noexcept(false) {
   }
 }
 
-bool Acts::ConeVolumeBounds::inside(const Vector3D& pos, double tol) const {
+bool Acts::ConeVolumeBounds::inside(const Vector3& pos, double tol) const {
   double z = pos.z();
   double zmin = z + tol;
   double zmax = z - tol;
@@ -271,10 +271,10 @@ void Acts::ConeVolumeBounds::buildSurfaceBounds() {
   // Create the sector bounds
   if (std::abs(get(eHalfPhiSector) - M_PI) > s_epsilon) {
     // The 4 points building the sector
-    std::vector<Vector2D> polyVertices = {{-get(eHalfLengthZ), m_innerRmin},
-                                          {get(eHalfLengthZ), m_innerRmax},
-                                          {get(eHalfLengthZ), m_outerRmax},
-                                          {-get(eHalfLengthZ), m_outerRmin}};
+    std::vector<Vector2> polyVertices = {{-get(eHalfLengthZ), m_innerRmin},
+                                         {get(eHalfLengthZ), m_innerRmax},
+                                         {get(eHalfLengthZ), m_outerRmax},
+                                         {-get(eHalfLengthZ), m_outerRmin}};
     m_sectorBounds =
         std::make_shared<ConvexPolygonBounds<4>>(std::move(polyVertices));
   }
@@ -286,10 +286,10 @@ std::ostream& Acts::ConeVolumeBounds::toStream(std::ostream& sl) const {
 }
 
 Acts::Volume::BoundingBox Acts::ConeVolumeBounds::boundingBox(
-    const Acts::Transform3D* trf, const Vector3D& envelope,
+    const Acts::Transform3D* trf, const Vector3& envelope,
     const Volume* entity) const {
-  Vector3D vmin(-outerRmax(), -outerRmax(), -0.5 * get(eHalfLengthZ));
-  Vector3D vmax(outerRmax(), outerRmax(), 0.5 * get(eHalfLengthZ));
+  Vector3 vmin(-outerRmax(), -outerRmax(), -0.5 * get(eHalfLengthZ));
+  Vector3 vmax(outerRmax(), outerRmax(), 0.5 * get(eHalfLengthZ));
   Volume::BoundingBox box(entity, vmin - envelope, vmax + envelope);
   return trf == nullptr ? box : box.transformed(*trf);
 }

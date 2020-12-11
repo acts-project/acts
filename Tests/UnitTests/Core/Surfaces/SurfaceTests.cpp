@@ -31,17 +31,17 @@ namespace Acts {
 /// Mock track object with minimal methods implemented for compilation
 class MockTrack {
  public:
-  MockTrack(const Vector3D& mom, const Vector3D& pos) : m_mom(mom), m_pos(pos) {
+  MockTrack(const Vector3& mom, const Vector3& pos) : m_mom(mom), m_pos(pos) {
     // nop
   }
 
-  Vector3D momentum() const { return m_mom; }
+  Vector3 momentum() const { return m_mom; }
 
-  Vector3D position() const { return m_pos; }
+  Vector3 position() const { return m_pos; }
 
  private:
-  Vector3D m_mom;
-  Vector3D m_pos;
+  Vector3 m_mom;
+  Vector3 m_pos;
 };
 
 namespace Test {
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties, *utf::expected_failures(1)) {
   // build a test object , 'surface'
   std::shared_ptr<const Acts::PlanarBounds> pPlanarBound =
       std::make_shared<const RectangleBounds>(5., 10.);
-  Vector3D reference{0., 1., 2.};
+  Vector3 reference{0., 1., 2.};
   Translation3D translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   auto pLayer = PlaneLayer::create(pTransform, pPlanarBound);
@@ -95,12 +95,12 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties, *utf::expected_failures(1)) {
   // center()
   CHECK_CLOSE_OR_SMALL(reference, surface.center(tgContext), 1e-6, 1e-9);
   // insideBounds
-  Vector2D localPosition{0.1, 3.0};
+  Vector2 localPosition{0.1, 3.0};
   BOOST_CHECK(surface.insideBounds(localPosition));
-  Vector2D outside{20., 20.};
+  Vector2 outside{20., 20.};
   BOOST_CHECK(!surface.insideBounds(
       outside));  // fails: m_bounds only in derived classes
-  Vector3D mom{100., 200., 300.};
+  Vector3 mom{100., 200., 300.};
   // isOnSurface
   BOOST_CHECK(surface.isOnSurface(tgContext, reference, mom, false));
   BOOST_CHECK(surface.isOnSurface(tgContext, reference, mom,
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties, *utf::expected_failures(1)) {
   auto normal = surface.Surface::normal(tgContext,
                                         reference);  // needs more complex
                                                      // test
-  Vector3D zero{0., 0., 0.};
+  Vector3 zero{0., 0., 0.};
   BOOST_CHECK_EQUAL(zero, normal);
   // pathCorrection is pure virtual
   // surfaceMaterial()
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   // build some test objects
   std::shared_ptr<const Acts::PlanarBounds> pPlanarBound =
       std::make_shared<const RectangleBounds>(5., 10.);
-  Vector3D reference{0., 1., 2.};
+  Vector3 reference{0., 1., 2.};
   Translation3D translation1{0., 1., 2.};
   Translation3D translation2{1., 1., 2.};
   auto pTransform1 = Transform3D(translation1);

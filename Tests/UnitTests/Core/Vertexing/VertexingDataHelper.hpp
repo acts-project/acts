@@ -30,7 +30,7 @@ enum VertexCsvData { BeamSpotData, VerticesData, TracksData };
 /// @brief Helper struct to store reference vertex related information
 struct VertexInfo {
   // The position
-  Vector3D position;
+  Vector3 position;
   // The covariance
   SymMatrix3D covariance;
   // Number of tracks
@@ -76,7 +76,7 @@ readTracksAndVertexCSV(std::string toolString,
         std::sregex_token_iterator(line.begin(), line.end(), comma, -1),
         std::sregex_token_iterator()};
 
-    Vector3D beamspotPos;
+    Vector3 beamspotPos;
     SymMatrix3D beamspotCov;
     beamspotPos << std::stod(row[0]) * (1_mm), std::stod(row[1]) * (1_mm),
         std::stod(row[2]) * (1_mm);
@@ -127,7 +127,7 @@ readTracksAndVertexCSV(std::string toolString,
         std::sregex_token_iterator(line.begin(), line.end(), comma, -1),
         std::sregex_token_iterator()};
 
-    Vector3D pos;
+    Vector3 pos;
     pos << std::stod(row[0]) * (1_mm), std::stod(row[1]) * (1_mm),
         std::stod(row[2]) * (1_mm);
     SymMatrix3D cov;

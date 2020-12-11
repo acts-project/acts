@@ -126,8 +126,8 @@ struct GeometryView3D {
   /// @param arrowLength wrt halflength
   /// @param arrowWidth wrt thickness
   /// @param ViewConfig The drawing configuration for this segement
-  static void drawSegmentBase(IVisualization3D& helper, const Vector3D& start,
-                              const Vector3D& end, int arrows = 0,
+  static void drawSegmentBase(IVisualization3D& helper, const Vector3& start,
+                              const Vector3& end, int arrows = 0,
                               double arrowLength = 0., double arrowWidth = 0.,
                               const ViewConfig& viewConfig = s_viewLine);
 
@@ -137,8 +137,8 @@ struct GeometryView3D {
   /// @param start The start point
   /// @param end The end point
   /// @param ViewConfig The drawing configuration for this segement
-  static void drawSegment(IVisualization3D& helper, const Vector3D& start,
-                          const Vector3D& end,
+  static void drawSegment(IVisualization3D& helper, const Vector3& start,
+                          const Vector3& end,
                           const ViewConfig& viewConfig = s_viewLine);
 
   /// Convenience function : arrow pointing back
@@ -149,8 +149,8 @@ struct GeometryView3D {
   /// @param arrowLength wrt thickness
   /// @param arrowWidth wrt thickness
   /// @param ViewConfig The drawing configuration for this segement
-  static void drawArrowBackward(IVisualization3D& helper, const Vector3D& start,
-                                const Vector3D& end, double arrowLength,
+  static void drawArrowBackward(IVisualization3D& helper, const Vector3& start,
+                                const Vector3& end, double arrowLength,
                                 double arrowWidth,
                                 const ViewConfig& viewConfig = s_viewLine);
 
@@ -162,8 +162,8 @@ struct GeometryView3D {
   /// @param arrowLength wrt thickness
   /// @param arrowWidth wrt thickness
   /// @param ViewConfig The drawing configuration for this segement
-  static void drawArrowForward(IVisualization3D& helper, const Vector3D& start,
-                               const Vector3D& end, double arrowLength,
+  static void drawArrowForward(IVisualization3D& helper, const Vector3& start,
+                               const Vector3& end, double arrowLength,
                                double arrowWidth,
                                const ViewConfig& viewConfig = s_viewLine);
 
@@ -175,8 +175,8 @@ struct GeometryView3D {
   /// @param arrowLength wrt thickness
   /// @param arrowWidth wrt thickness
   /// @param ViewConfig The drawing configuration for this segement
-  static void drawArrowsBoth(IVisualization3D& helper, const Vector3D& start,
-                             const Vector3D& end, double arrowLength,
+  static void drawArrowsBoth(IVisualization3D& helper, const Vector3& start,
+                             const Vector3& end, double arrowLength,
                              double arrowWidth,
                              const ViewConfig& viewConfig = s_viewLine);
 };
