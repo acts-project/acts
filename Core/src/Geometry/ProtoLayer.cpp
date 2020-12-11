@@ -73,7 +73,7 @@ void ProtoLayer::measure(const GeometryContext& gctx,
       Vector3 sfNormal = sf->normal(gctx, sf->center(gctx));
       std::vector<double> deltaT = {-0.5 * thickness, 0.5 * thickness};
       for (const auto& dT : deltaT) {
-        Transform3D dtransform = Transform3D::Identity();
+        Transform3 dtransform = Transform3::Identity();
         dtransform.pretranslate(dT * sfNormal);
         extent.extend(sfPolyhedron.extent(dtransform));
       }

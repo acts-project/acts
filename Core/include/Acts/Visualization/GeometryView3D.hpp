@@ -45,11 +45,10 @@ struct GeometryView3D {
   /// @param gctx The geometry context for which it is drawn
   /// @param transform An option additional transform
   /// @param ViewConfig The drawing configuration
-  static void drawSurface(
-      IVisualization3D& helper, const Surface& surface,
-      const GeometryContext& gctx,
-      const Transform3D& transform = Transform3D::Identity(),
-      const ViewConfig& ViewConfig = s_viewSensitive);
+  static void drawSurface(IVisualization3D& helper, const Surface& surface,
+                          const GeometryContext& gctx,
+                          const Transform3& transform = Transform3::Identity(),
+                          const ViewConfig& ViewConfig = s_viewSensitive);
 
   /// Helper method to draw SurfaceArray objects
   ///
@@ -63,7 +62,7 @@ struct GeometryView3D {
   static void drawSurfaceArray(
       IVisualization3D& helper, const SurfaceArray& surfaceArray,
       const GeometryContext& gctx,
-      const Transform3D& transform = Transform3D::Identity(),
+      const Transform3& transform = Transform3::Identity(),
       const ViewConfig& sensitiveConfig = s_viewSensitive,
       const ViewConfig& passiveConfig = s_viewPassive,
       const ViewConfig& gridConfig = s_viewGrid);
@@ -77,7 +76,7 @@ struct GeometryView3D {
   /// @param viewConfig The drawing configuration for boundary surfaces
   static void drawVolume(IVisualization3D& helper, const AbstractVolume& volume,
                          const GeometryContext& gctx,
-                         const Transform3D& transform = Transform3D::Identity(),
+                         const Transform3& transform = Transform3::Identity(),
                          const ViewConfig& viewConfig = s_viewVolume);
 
   /// Helper method to draw AbstractVolume objects

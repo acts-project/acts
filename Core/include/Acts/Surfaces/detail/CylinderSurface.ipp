@@ -13,7 +13,7 @@ inline Vector3 CylinderSurface::rotSymmetryAxis(
 }
 
 inline detail::RealQuadraticEquation CylinderSurface::intersectionSolver(
-    const Transform3D& transform, const Vector3& position,
+    const Transform3& transform, const Vector3& position,
     const Vector3& direction) const {
   // Solve for radius R
   double R = bounds().get(CylinderBounds::eR);

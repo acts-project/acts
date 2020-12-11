@@ -39,11 +39,11 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceConstruction) {
   //
   /// Test DiscSurface constructor with default halfPhiSector
   BOOST_CHECK_NO_THROW(
-      Surface::makeShared<DiscSurface>(Transform3D::Identity(), rMin, rMax));
+      Surface::makeShared<DiscSurface>(Transform3::Identity(), rMin, rMax));
   //
   /// Test DiscSurface constructor with a transform specified
   Translation3 translation{0., 1., 2.};
-  auto pTransform = Transform3D(translation);
+  auto pTransform = Transform3(translation);
   BOOST_CHECK_NO_THROW(
       Surface::makeShared<DiscSurface>(pTransform, rMin, rMax, halfPhiSector));
   //
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties, *utf::expected_failures(2)) {
   Vector3 origin3D{0, 0, 0};
   double rMin(1.0), rMax(5.0), halfPhiSector(M_PI / 8.);
   auto discSurfaceObject = Surface::makeShared<DiscSurface>(
-      Transform3D::Identity(), rMin, rMax, halfPhiSector);
+      Transform3::Identity(), rMin, rMax, halfPhiSector);
   //
   /// Test type
   BOOST_CHECK_EQUAL(discSurfaceObject->type(), Surface::Disc);
@@ -205,9 +205,9 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceAssignment) {
   Vector3 origin3D{0, 0, 0};
   double rMin(1.0), rMax(5.0), halfPhiSector(M_PI / 8.);
   auto discSurfaceObject = Surface::makeShared<DiscSurface>(
-      Transform3D::Identity(), rMin, rMax, halfPhiSector);
+      Transform3::Identity(), rMin, rMax, halfPhiSector);
   auto assignedDisc =
-      Surface::makeShared<DiscSurface>(Transform3D::Identity(), 2.2, 4.4, 0.07);
+      Surface::makeShared<DiscSurface>(Transform3::Identity(), 2.2, 4.4, 0.07);
   //
   BOOST_CHECK_NO_THROW(*assignedDisc = *discSurfaceObject);
   BOOST_CHECK((*assignedDisc) == (*discSurfaceObject));
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceExtent) {
   double rMin(1.0), rMax(5.0);
 
   auto pDisc =
-      Surface::makeShared<DiscSurface>(Transform3D::Identity(), 0., rMax);
+      Surface::makeShared<DiscSurface>(Transform3::Identity(), 0., rMax);
   auto pDiscExtent = pDisc->polyhedronRepresentation(tgContext, 1).extent();
 
   CHECK_CLOSE_ABS(0., pDiscExtent.min(binZ), s_onSurfaceTolerance);
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceExtent) {
   CHECK_CLOSE_ABS(M_PI, pDiscExtent.max(binPhi), s_onSurfaceTolerance);
 
   auto pRing =
-      Surface::makeShared<DiscSurface>(Transform3D::Identity(), rMin, rMax);
+      Surface::makeShared<DiscSurface>(Transform3::Identity(), rMin, rMax);
   auto pRingExtent = pRing->polyhedronRepresentation(tgContext, 1).extent();
 
   CHECK_CLOSE_ABS(0., pRingExtent.min(binZ), s_onSurfaceTolerance);
@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceExtent) {
 /// Unit test for testing DiscSurface alignment derivatives
 BOOST_AUTO_TEST_CASE(DiscSurfaceAlignment) {
   Translation3 translation{0., 1., 2.};
-  Transform3D transform(translation);
+  Transform3 transform(translation);
   double rMin(1.0), rMax(5.0), halfPhiSector(M_PI / 8.);
   auto discSurfaceObject =
       Surface::makeShared<DiscSurface>(transform, rMin, rMax, halfPhiSector);

@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(PolyhedronExtent) {
 
   // Now shift the Extent
   Vector3 shift(-1., 0., 1.);
-  Transform3D shiftedTransform = Transform3D::Identity();
+  Transform3 shiftedTransform = Transform3::Identity();
   shiftedTransform.pretranslate(shift);
   rExtent = rectangle.extent(shiftedTransform);
   CHECK_CLOSE_ABS(rExtent.min(binX), -2., 1e-6);

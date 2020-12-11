@@ -28,9 +28,9 @@ using namespace UnitLiterals;
 GeometryContext tgContext = GeometryContext();
 
 // Some random transform
-Transform3D aTransform = Transform3D::Identity() *
-                         Translation3(30_cm, 7_m, -87_mm) *
-                         AngleAxis3(0.42, Vector3(-3., 1., 8).normalized());
+Transform3 aTransform = Transform3::Identity() *
+                        Translation3(30_cm, 7_m, -87_mm) *
+                        AngleAxis3(0.42, Vector3(-3., 1., 8).normalized());
 
 namespace Test {
 
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
   double radius = 1_m;
   double halfZ = 10_m;
 
-  auto testCylinderIntersection = [&](const Transform3D& transform) -> void {
+  auto testCylinderIntersection = [&](const Transform3& transform) -> void {
     // A cylinder created alinged with a provided transform
     auto aCylinder =
         Surface::makeShared<CylinderSurface>(transform, radius, halfZ);
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
   };
 
   // In a nominal world
-  testCylinderIntersection(Transform3D::Identity());
+  testCylinderIntersection(Transform3::Identity());
 
   // In a system somewhere away
   testCylinderIntersection(aTransform);
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
 BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
   double alpha = 0.25 * M_PI;
 
-  auto testConeIntersection = [&](const Transform3D& transform) -> void {
+  auto testConeIntersection = [&](const Transform3& transform) -> void {
     // A cone suface ready to use
     auto aCone = Surface::makeShared<ConeSurface>(transform, alpha, true);
 
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
   };
 
   // In a nominal world
-  testConeIntersection(Transform3D::Identity());
+  testConeIntersection(Transform3::Identity());
 
   // In a system somewhere away
   testConeIntersection(aTransform);
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(PlanarIntersectionTest) {
   double halfX = 1_m;
   double halfY = 10_m;
 
-  auto testPlanarIntersection = [&](const Transform3D& transform) -> void {
+  auto testPlanarIntersection = [&](const Transform3& transform) -> void {
     // A Plane created with a specific transform
     auto aPlane = Surface::makeShared<PlaneSurface>(
         transform, std::make_shared<RectangleBounds>(halfX, halfY));
@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE(PlanarIntersectionTest) {
   };
 
   // In a nominal world
-  testPlanarIntersection(Transform3D::Identity());
+  testPlanarIntersection(Transform3::Identity());
 
   // In a system somewhere away
   testPlanarIntersection(aTransform);
@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(LineIntersectionTest) {
   double radius = 1_m;
   double halfZ = 10_m;
 
-  auto testLineAppraoch = [&](const Transform3D& transform) -> void {
+  auto testLineAppraoch = [&](const Transform3& transform) -> void {
     // A Plane created with a specific transform
     auto aLine = Surface::makeShared<StrawSurface>(transform, radius, halfZ);
 
@@ -411,7 +411,7 @@ BOOST_AUTO_TEST_CASE(LineIntersectionTest) {
   };
 
   // In a nominal world
-  testLineAppraoch(Transform3D::Identity());
+  testLineAppraoch(Transform3::Identity());
 
   // In a system somewhere away
   testLineAppraoch(aTransform);

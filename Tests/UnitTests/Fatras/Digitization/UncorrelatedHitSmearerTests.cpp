@@ -78,7 +78,7 @@ struct Fixture {
             3)),
         pid(ActsFatras::Barcode().setVertexPrimary(12).setParticle(23)),
         surface(Acts::Surface::makeShared<Acts::PlaneSurface>(
-            Acts::Transform3D(Acts::Translation3(3, 2, 1)))) {
+            Acts::Transform3(Acts::Translation3(3, 2, 1)))) {
     using namespace Acts::UnitLiterals;
     using Acts::VectorHelpers::makeVector4;
 

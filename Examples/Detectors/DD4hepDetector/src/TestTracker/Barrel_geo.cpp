@@ -98,8 +98,8 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
           // Place Module Box Volumes in layer
           PlacedVolume placedmodule = layer_vol.placeVolume(
               mod_vol,
-              Transform3D(RotationX(0.5 * M_PI) * RotationY(phi - 0.6 * M_PI),
-                          trans));
+              Transform3(RotationX(0.5 * M_PI) * RotationY(phi - 0.6 * M_PI),
+                         trans));
           placedmodule.addPhysVolID("module", module_num);
           // assign module DetElement to the placed module volume
           mod_det.setPlacement(placedmodule);

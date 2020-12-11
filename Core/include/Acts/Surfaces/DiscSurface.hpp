@@ -45,17 +45,17 @@ class DiscSurface : public Surface {
   friend Surface;
 
  protected:
-  /// Constructor for Discs from Transform3D, \f$ r_{min}, r_{max} \f$
+  /// Constructor for Discs from Transform3, \f$ r_{min}, r_{max} \f$
   ///
   /// @param transform is transform that places the disc in the global 3D space
   /// @param rmin The inner radius of the disc surface
   /// @param rmax The outer radius of the disc surface
   /// @param hphisec The opening angle of the disc surface and is optional
   ///        the default is a full disc
-  DiscSurface(const Transform3D& transform, double rmin, double rmax,
+  DiscSurface(const Transform3& transform, double rmin, double rmax,
               double hphisec = M_PI);
 
-  /// Constructor for Discs from Transform3D, \f$ r_{min}, r_{max}, hx_{min},
+  /// Constructor for Discs from Transform3, \f$ r_{min}, r_{max}, hx_{min},
   /// hx_{max} \f$
   /// This is n this case you have DiscTrapezoidBounds
   ///
@@ -66,14 +66,14 @@ class DiscSurface : public Surface {
   /// @param maxR The inner radius of the disc surface
   /// @param avephi The position in phi (default is 0.)
   /// @param stereo The optional stereo angle
-  DiscSurface(const Transform3D& transform, double minhalfx, double maxhalfx,
+  DiscSurface(const Transform3& transform, double minhalfx, double maxhalfx,
               double minR, double maxR, double avephi = 0., double stereo = 0.);
 
-  /// Constructor for Discs from Transform3D and shared DiscBounds
+  /// Constructor for Discs from Transform3 and shared DiscBounds
   ///
   /// @param transform The transform that positions the disc in global 3D
   /// @param dbounds The disc bounds describing the surface coverage
-  DiscSurface(const Transform3D& transform,
+  DiscSurface(const Transform3& transform,
               std::shared_ptr<const DiscBounds> dbounds = nullptr);
 
   /// Constructor from DetectorElementBase : Element proxy
@@ -94,7 +94,7 @@ class DiscSurface : public Surface {
   /// @param other is the source cone surface
   /// @param shift is the additional transfrom applied after copying
   DiscSurface(const GeometryContext& gctx, const DiscSurface& other,
-              const Transform3D& shift);
+              const Transform3& shift);
 
  public:
   ~DiscSurface() override = default;

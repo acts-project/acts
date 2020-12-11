@@ -107,13 +107,13 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
         // create the subtraction
         Volume sub_vol("subtraction_components",
                        SubtractionSolid(trap_shape, tubs_shape,
-                                        Transform3D(RotationX(0.5 * M_PI))),
+                                        Transform3(RotationX(0.5 * M_PI))),
                        lcdd.material(x_sub.materialStr()));
         sub_vol.setVisAttributes(lcdd, x_sub.visStr());
         // Place the volume in the module
         PlacedVolume placedSub = mod_vol.placeVolume(
-            sub_vol, Transform3D(RotationZ(0.5 * M_PI) * RotationY(M_PI),
-                                 Position(0., 0., x_sub.z())));
+            sub_vol, Transform3(RotationZ(0.5 * M_PI) * RotationY(M_PI),
+                                Position(0., 0., x_sub.z())));
         placedSub.addPhysVolID("component", comp_num);
         comp_num++;
       }
@@ -127,8 +127,8 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
         pipe_vol.setVisAttributes(lcdd, x_tubs.visStr());
         // Place the cooling pipe into the module
         PlacedVolume placedPipe = mod_vol.placeVolume(
-            pipe_vol, Transform3D(RotationX(0.5 * M_PI) * RotationY(0.5 * M_PI),
-                                  Position(0., 0., x_tubs.z())));
+            pipe_vol, Transform3(RotationX(0.5 * M_PI) * RotationY(0.5 * M_PI),
+                                 Position(0., 0., x_tubs.z())));
         placedPipe.addPhysVolID("component", comp_num);
         comp_num++;
       }
@@ -158,9 +158,9 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
           // Place Module Box Volumes in layer
           PlacedVolume placedmodule = layer_vol.placeVolume(
               mod_vol,
-              Transform3D(RotationX(-0.5 * M_PI) * RotationZ(-0.5 * M_PI) *
-                              RotationX(phi - 0.6 * M_PI),
-                          trans));
+              Transform3(RotationX(-0.5 * M_PI) * RotationZ(-0.5 * M_PI) *
+                             RotationX(phi - 0.6 * M_PI),
+                         trans));
           placedmodule.addPhysVolID("module", module_num);
           // assign module DetElement to the placed module volume
           mod_det.setPlacement(placedmodule);

@@ -89,7 +89,7 @@ Acts::ConeVolumeBounds::ConeVolumeBounds(double cylinderR, double alpha,
 }
 
 Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
-    const Transform3D& transform) const {
+    const Transform3& transform) const {
   OrientedSurfaces oSurfaces;
   oSurfaces.reserve(6);
 
@@ -140,7 +140,7 @@ Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
     sectorRotation.col(1) = Vector3::UnitX();
     sectorRotation.col(2) = Vector3::UnitY();
 
-    Transform3D negSectorRelTrans{sectorRotation};
+    Transform3 negSectorRelTrans{sectorRotation};
     negSectorRelTrans.prerotate(
         AngleAxis3(get(eAveragePhi) - get(eHalfPhiSector), Vector3::UnitZ()));
     auto negSectorAbsTrans = transform * negSectorRelTrans;
@@ -148,7 +148,7 @@ Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
         Surface::makeShared<PlaneSurface>(negSectorAbsTrans, m_sectorBounds);
     oSurfaces.push_back(OrientedSurface(std::move(negSectorPlane), forward));
 
-    Transform3D posSectorRelTrans{sectorRotation};
+    Transform3 posSectorRelTrans{sectorRotation};
     posSectorRelTrans.prerotate(
         AngleAxis3(get(eAveragePhi) + get(eHalfPhiSector), Vector3::UnitZ()));
     auto posSectorAbsTrans = transform * posSectorRelTrans;
@@ -284,7 +284,7 @@ std::ostream& Acts::ConeVolumeBounds::toStream(std::ostream& sl) const {
 }
 
 Acts::Volume::BoundingBox Acts::ConeVolumeBounds::boundingBox(
-    const Acts::Transform3D* trf, const Vector3& envelope,
+    const Acts::Transform3* trf, const Vector3& envelope,
     const Volume* entity) const {
   Vector3 vmin(-outerRmax(), -outerRmax(), -0.5 * get(eHalfLengthZ));
   Vector3 vmax(outerRmax(), outerRmax(), 0.5 * get(eHalfLengthZ));

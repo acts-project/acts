@@ -27,7 +27,7 @@ namespace Acts {
 namespace PrimitivesView3DTest {
 
 // Test on a plane
-auto identity = Transform3D::Identity();
+auto identity = Transform3::Identity();
 auto rectangle = std::make_shared<RectangleBounds>(10., 10.);
 auto plane = Surface::makeShared<PlaneSurface>(identity, rectangle);
 

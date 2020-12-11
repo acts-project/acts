@@ -136,7 +136,7 @@ static dd4hep::Ref_t createTkLayoutTrackerBarrel(
           lY = xModule.Y() + sin(currentPhi) * componentOffset;
           lZ = xModule.Z();
           dd4hep::Translation3 moduleOffset(lX, lY, lZ);
-          dd4hep::Transform3D lTrafo(
+          dd4hep::Transform3 lTrafo(
               dd4hep::RotationZ(atan2(lY, lX) + 0.5 * M_PI), moduleOffset);
           dd4hep::RotationZ lRotation(phi);
           PlacedVolume placedModuleVolume =

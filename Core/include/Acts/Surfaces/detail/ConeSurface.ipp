@@ -10,7 +10,7 @@ inline detail::RealQuadraticEquation ConeSurface::intersectionSolver(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
   // Transform into the local frame
-  Transform3D invTrans = transform(gctx).inverse();
+  Transform3 invTrans = transform(gctx).inverse();
   Vector3 point1 = invTrans * position;
   Vector3 dir1 = invTrans.linear() * direction;
 

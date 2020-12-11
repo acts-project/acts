@@ -39,11 +39,11 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceConstruction) {
   double alpha{M_PI / 8.}, halfPhiSector{M_PI / 16.}, zMin{1.0}, zMax{10.};
   bool symmetric(false);
   Translation3 translation{0., 1., 2.};
-  auto pTransform = Transform3D(translation);
-  BOOST_CHECK_EQUAL(Surface::makeShared<ConeSurface>(Transform3D::Identity(),
-                                                     alpha, symmetric)
-                        ->type(),
-                    Surface::Cone);
+  auto pTransform = Transform3(translation);
+  BOOST_CHECK_EQUAL(
+      Surface::makeShared<ConeSurface>(Transform3::Identity(), alpha, symmetric)
+          ->type(),
+      Surface::Cone);
   BOOST_CHECK_EQUAL(
       Surface::makeShared<ConeSurface>(pTransform, alpha, symmetric)->type(),
       Surface::Cone);
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceConstruction) {
 
   /// Construct with nullptr bounds
   BOOST_CHECK_THROW(auto nullBounds = Surface::makeShared<ConeSurface>(
-                        Transform3D::Identity(), nullptr),
+                        Transform3::Identity(), nullptr),
                     AssertionFailureException);
 }
 //
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   double alpha{M_PI / 8.} /*,halfPhiSector{M_PI/16.}, zMin{1.0}, zMax{10.}*/;
   bool symmetric(false);
   Translation3 translation{0., 1., 2.};
-  auto pTransform = Transform3D(translation);
+  auto pTransform = Transform3(translation);
   auto coneSurfaceObject =
       Surface::makeShared<ConeSurface>(pTransform, alpha, symmetric);
   //
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceEqualityOperators) {
   double alpha{M_PI / 8.} /*, halfPhiSector{M_PI/16.}, zMin{1.0}, zMax{10.}*/;
   bool symmetric(false);
   Translation3 translation{0., 1., 2.};
-  auto pTransform = Transform3D(translation);
+  auto pTransform = Transform3(translation);
   auto coneSurfaceObject =
       Surface::makeShared<ConeSurface>(pTransform, alpha, symmetric);
   //
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceEqualityOperators) {
       "Create and then assign a ConeSurface object to the existing one");
   /// Test assignment
   auto assignedConeSurface =
-      Surface::makeShared<ConeSurface>(Transform3D::Identity(), 0.1, true);
+      Surface::makeShared<ConeSurface>(Transform3::Identity(), 0.1, true);
   *assignedConeSurface = *coneSurfaceObject;
   /// Test equality of assigned to original
   BOOST_CHECK(*assignedConeSurface == *coneSurfaceObject);
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceExtent) {
   Translation3 translation{0., 0., 0.};
 
   // Testing a Full cone
-  auto pTransform = Transform3D(translation);
+  auto pTransform = Transform3(translation);
   auto pConeBounds = std::make_shared<const ConeBounds>(alpha, zMin, zMax);
   auto pCone = Surface::makeShared<ConeSurface>(pTransform, pConeBounds);
   auto pConeExtent = pCone->polyhedronRepresentation(tgContext, 1).extent();
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceAlignment) {
   double alpha{M_PI / 8.};
   bool symmetric(false);
   Translation3 translation{0., 1., 2.};
-  auto pTransform = Transform3D(translation);
+  auto pTransform = Transform3(translation);
   auto coneSurfaceObject =
       Surface::makeShared<ConeSurface>(pTransform, alpha, symmetric);
 

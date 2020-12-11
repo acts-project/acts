@@ -167,7 +167,7 @@ class GeometryObjectSorterT : public std::binary_function<T, T, bool> {
   /// @param bValue is the value in which the binning is done
   /// @param transform is an optional transform to be performed
   GeometryObjectSorterT(const GeometryContext& gctx, BinningValue bValue,
-                        std::shared_ptr<const Transform3D> transform = nullptr)
+                        std::shared_ptr<const Transform3> transform = nullptr)
       : m_context(gctx),
         m_objectSorter(bValue),
         m_transform(std::move(transform)) {}
@@ -197,6 +197,6 @@ class GeometryObjectSorterT : public std::binary_function<T, T, bool> {
  protected:
   std::reference_wrapper<const GeometryContext> m_context;
   ObjectSorterT<Vector3> m_objectSorter;
-  std::shared_ptr<const Transform3D> m_transform;
+  std::shared_ptr<const Transform3> m_transform;
 };
 }  // namespace Acts

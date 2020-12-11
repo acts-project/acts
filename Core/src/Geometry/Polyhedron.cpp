@@ -34,12 +34,12 @@ void Acts::Polyhedron::merge(const Acts::Polyhedron& other) {
   join(triangularMesh, other.triangularMesh);
 }
 
-void Acts::Polyhedron::move(const Transform3D& transform) {
+void Acts::Polyhedron::move(const Transform3& transform) {
   for_each(vertices.begin(), vertices.end(),
            [&](auto& v) { v = transform * v; });
 }
 
-Acts::Extent Acts::Polyhedron::extent(const Transform3D& transform) const {
+Acts::Extent Acts::Polyhedron::extent(const Transform3& transform) const {
   Extent extent;
   auto vtxs = vertices;
   std::transform(vtxs.begin(), vtxs.end(), vtxs.begin(), [&](auto& v) {

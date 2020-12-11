@@ -42,7 +42,7 @@ Acts::CuboidVolumeBuilder::buildSurface(
   std::shared_ptr<PlaneSurface> surface;
 
   // Build transformation
-  Transform3D trafo(Transform3D::Identity() * cfg.rotation);
+  Transform3 trafo(Transform3::Identity() * cfg.rotation);
   trafo.translation() = cfg.position;
 
   // Create and store surface
@@ -65,7 +65,7 @@ std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
     cfg.surface = buildSurface(gctx, cfg.surfaceCfg);
   }
   // Build transformation centered at the surface position
-  Transform3D trafo(Transform3D::Identity() * cfg.surfaceCfg.rotation);
+  Transform3 trafo(Transform3::Identity() * cfg.surfaceCfg.rotation);
   trafo.translation() = cfg.surfaceCfg.position;
 
   LayerCreator::Config lCfg;
@@ -102,7 +102,7 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
     const GeometryContext& gctx,
     Acts::CuboidVolumeBuilder::VolumeConfig& cfg) const {
   // Build transformation
-  Transform3D trafo(Transform3D::Identity());
+  Transform3 trafo(Transform3::Identity());
   trafo.translation() = cfg.position;
   // Set bounds
   auto bounds = std::make_shared<const CuboidVolumeBounds>(
@@ -194,7 +194,7 @@ Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
   }
 
   // Translation
-  Transform3D trafo(Transform3D::Identity());
+  Transform3 trafo(Transform3::Identity());
   trafo.translation() = m_cfg.position;
 
   // Size of the volume

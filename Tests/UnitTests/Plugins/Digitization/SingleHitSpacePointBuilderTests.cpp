@@ -64,7 +64,7 @@ BOOST_DATA_TEST_CASE(SingleHitSpacePointBuilder_basic, bdata::xrange(1),
   rotationPos.col(0) = xPos;
   rotationPos.col(1) = yPos;
   rotationPos.col(2) = zPos;
-  Transform3D t3d(Transform3D::Identity() * rotationPos);
+  Transform3 t3d(Transform3::Identity() * rotationPos);
   t3d.translation() = Vector3(0., 0., 10_m);
 
   // Build Digitization

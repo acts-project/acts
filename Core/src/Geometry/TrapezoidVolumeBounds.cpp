@@ -51,7 +51,7 @@ Acts::TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex,
 }
 
 Acts::OrientedSurfaces Acts::TrapezoidVolumeBounds::orientedSurfaces(
-    const Transform3D& transform) const {
+    const Transform3& transform) const {
   OrientedSurfaces oSurfaces;
   oSurfaces.reserve(6);
 
@@ -147,7 +147,7 @@ std::ostream& Acts::TrapezoidVolumeBounds::toStream(std::ostream& sl) const {
 }
 
 Acts::Volume::BoundingBox Acts::TrapezoidVolumeBounds::boundingBox(
-    const Acts::Transform3D* trf, const Vector3& envelope,
+    const Acts::Transform3* trf, const Vector3& envelope,
     const Volume* entity) const {
   double minx = get(eHalfLengthXnegY);
   double maxx = get(eHalfLengthXposY);
@@ -163,7 +163,7 @@ Acts::Volume::BoundingBox Acts::TrapezoidVolumeBounds::boundingBox(
                                       {-maxx, +haley, +halez},
                                       {+maxx, +haley, +halez}}};
 
-  Transform3D transform = Transform3D::Identity();
+  Transform3 transform = Transform3::Identity();
   if (trf != nullptr) {
     transform = *trf;
   }

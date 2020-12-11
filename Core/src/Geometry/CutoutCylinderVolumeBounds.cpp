@@ -47,7 +47,7 @@ bool Acts::CutoutCylinderVolumeBounds::inside(const Acts::Vector3& gpos,
 }
 
 Acts::OrientedSurfaces Acts::CutoutCylinderVolumeBounds::orientedSurfaces(
-    const Transform3D& transform) const {
+    const Transform3& transform) const {
   OrientedSurfaces oSurfaces;
 
   if (get(eMinR) == 0.) {
@@ -115,7 +115,7 @@ Acts::OrientedSurfaces Acts::CutoutCylinderVolumeBounds::orientedSurfaces(
 }
 
 Acts::Volume::BoundingBox Acts::CutoutCylinderVolumeBounds::boundingBox(
-    const Acts::Transform3D* trf, const Acts::Vector3& envelope,
+    const Acts::Transform3* trf, const Acts::Vector3& envelope,
     const Acts::Volume* entity) const {
   Vector3 vmin, vmax;
 

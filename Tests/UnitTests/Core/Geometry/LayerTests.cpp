@@ -61,8 +61,8 @@ BOOST_AUTO_TEST_CASE(LayerProperties, *utf::expected_failures(1)) {
   auto rBounds = std::make_shared<const RectangleBounds>(1., 1.);
   /// Constructor
   const std::vector<std::shared_ptr<const Surface>> aSurfaces{
-      Surface::makeShared<PlaneSurface>(Transform3D::Identity(), rBounds),
-      Surface::makeShared<PlaneSurface>(Transform3D::Identity(), rBounds)};
+      Surface::makeShared<PlaneSurface>(Transform3::Identity(), rBounds),
+      Surface::makeShared<PlaneSurface>(Transform3::Identity(), rBounds)};
   std::unique_ptr<ApproachDescriptor> ad(
       new GenericApproachDescriptor(aSurfaces));
   auto adPtr = ad.get();

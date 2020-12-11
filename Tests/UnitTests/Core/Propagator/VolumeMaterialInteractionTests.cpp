@@ -61,7 +61,7 @@ struct Stepper {
 
 BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   // Create a Tracking Volume
-  auto htrans = Transform3D(Translation3{-10., -10., 0.});
+  auto htrans = Transform3(Translation3{-10., -10., 0.});
   auto bound = std::make_shared<const CuboidVolumeBounds>(1_m, 1_m, 1_m);
   auto mat = makeSilicon();
   auto volMat = std::make_shared<const HomogeneousVolumeMaterial>(mat);

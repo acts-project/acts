@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(GenericCuboidBoundsOrientedSurfaces) {
     return false;
   };
 
-  auto surfaces = cubo.orientedSurfaces(Transform3D::Identity());
+  auto surfaces = cubo.orientedSurfaces(Transform3::Identity());
   for (const auto& srf : surfaces) {
     auto pbounds = dynamic_cast<const PlanarBounds*>(&srf.first->bounds());
     for (const auto& vtx : pbounds->vertices()) {
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(GenericCuboidBoundsOrientedSurfaces) {
                {0, 1, 1}}};
   cubo = GenericCuboidVolumeBounds(vertices);
 
-  surfaces = cubo.orientedSurfaces(Transform3D::Identity());
+  surfaces = cubo.orientedSurfaces(Transform3::Identity());
   for (const auto& srf : surfaces) {
     auto pbounds = dynamic_cast<const PlanarBounds*>(&srf.first->bounds());
     for (const auto& vtx : pbounds->vertices()) {
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(GenericCuboidBoundsOrientedSurfaces) {
     }
   }
 
-  Transform3D trf;
+  Transform3 trf;
   trf = Translation3(Vector3(0, 8, -5)) *
         AngleAxis3(M_PI / 3., Vector3(1, -3, 9).normalized());
 
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
   GenericCuboidVolumeBounds gcvb(vertices);
   auto bb = gcvb.boundingBox();
 
-  Transform3D rot;
+  Transform3 rot;
   rot = AngleAxis3(M_PI / 2., Vector3::UnitX());
 
   BOOST_CHECK_EQUAL(bb.entity(), nullptr);
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(GenericCuboidVolumeBoundarySurfaces) {
 
   GenericCuboidVolumeBounds cubo(vertices);
 
-  auto gcvbOrientedSurfaces = cubo.orientedSurfaces(Transform3D::Identity());
+  auto gcvbOrientedSurfaces = cubo.orientedSurfaces(Transform3::Identity());
   BOOST_CHECK_EQUAL(gcvbOrientedSurfaces.size(), 6);
 
   for (auto& os : gcvbOrientedSurfaces) {

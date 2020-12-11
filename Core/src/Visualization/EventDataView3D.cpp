@@ -10,7 +10,7 @@
 
 void Acts::EventDataView3D::drawCovarianceCartesian(
     IVisualization3D& helper, const Vector2& lposition,
-    const SymMatrix2& covariance, const Transform3D& transform,
+    const SymMatrix2& covariance, const Transform3& transform,
     double locErrorScale, const ViewConfig& viewConfig) {
   auto [lambda0, lambda1, theta] = decomposeCovariance(covariance);
 
@@ -37,9 +37,9 @@ void Acts::EventDataView3D::drawCovarianceAngular(
   double dphi = VectorHelpers::phi(direction);
   double dtheta = VectorHelpers::theta(direction);
 
-  Transform3D eplane(Translation3(anker) *
-                     AngleAxis3(dtheta, Vector3(1., 0., 0.)) *
-                     AngleAxis3(dphi, Vector3(0., 0., 1.)));
+  Transform3 eplane(Translation3(anker) *
+                    AngleAxis3(dtheta, Vector3(1., 0., 0.)) *
+                    AngleAxis3(dphi, Vector3(0., 0., 1.)));
 
   // Now generate the ellipse points
   std::vector<Vector3> ellipse =

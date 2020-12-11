@@ -291,7 +291,7 @@ inline std::string toString(const Acts::Translation3& translation,
 /// @param precision Numeric output precision
 /// @param offset Offset in front of matrix lines
 /// @return The printed string
-inline std::string toString(const Acts::Transform3D& transform,
+inline std::string toString(const Acts::Transform3& transform,
                             int precision = 4, const std::string& offset = "") {
   std::ostringstream sout;
   sout << "Translation : " << toString(transform.translation(), precision)

@@ -64,7 +64,7 @@ struct EventDataView3D {
   static inline std::vector<Vector3> createEllipse(
       double lambda0, double lambda1, double theta, size_t lseg, double offset,
       const Vector2& lposition = Vector2(0., 0.),
-      const Transform3D& transform = Transform3D::Identity()) {
+      const Transform3& transform = Transform3::Identity()) {
     double ctheta = std::cos(theta);
     double stheta = std::sin(theta);
 
@@ -96,7 +96,7 @@ struct EventDataView3D {
   /// @param viewConfig The visualization parameters
   static void drawCovarianceCartesian(
       IVisualization3D& helper, const Vector2& lposition,
-      const SymMatrix2& covariance, const Transform3D& transform,
+      const SymMatrix2& covariance, const Transform3& transform,
       double locErrorScale = 1, const ViewConfig& viewConfig = s_viewParameter);
 
   /// Helper method to draw error cone of a direction
@@ -136,7 +136,7 @@ struct EventDataView3D {
       const ViewConfig& surfConfig = s_viewSensitive) {
     if (surfConfig.visible) {
       GeometryView3D::drawSurface(helper, parameters.referenceSurface(), gctx,
-                                  Transform3D::Identity(), surfConfig);
+                                  Transform3::Identity(), surfConfig);
     }
 
     // Draw the parameter shaft and cone
@@ -218,7 +218,7 @@ struct EventDataView3D {
       // First, if necessary, draw the surface
       if (surfaceConfig.visible) {
         GeometryView3D::drawSurface(helper, state.referenceSurface(), gctx,
-                                    Transform3D::Identity(), surfaceConfig);
+                                    Transform3::Identity(), surfaceConfig);
       }
 
       // Second, if necessary and present, draw the calibrated measurement (only

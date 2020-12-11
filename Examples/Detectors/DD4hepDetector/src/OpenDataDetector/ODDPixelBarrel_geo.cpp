@@ -37,7 +37,7 @@ static void completeStaveStructure(Detector& oddd, xml_comp_t& x_stave,
     // Create the subtraction
     Volume foamVolume("CarbonFoam",
                       SubtractionSolid(foamShape, foamCutout,
-                                       Transform3D(RotationX(0.5 * M_PI))),
+                                       Transform3(RotationX(0.5 * M_PI))),
                       oddd.material(x_sub.materialStr()));
     foamVolume.setVisAttributes(oddd, x_sub.visStr());
     // Place the volume in the stave
@@ -53,9 +53,9 @@ static void completeStaveStructure(Detector& oddd, xml_comp_t& x_stave,
 
     // Place the pipe in the stave
     staveAssembly.placeVolume(
-        pipeVolume, Transform3D(RotationX(0.5 * M_PI),
-                                Position(x_pipe.x_offset(), x_pipe.y_offset(),
-                                         x_pipe.z_offset())));
+        pipeVolume, Transform3(RotationX(0.5 * M_PI),
+                               Position(x_pipe.x_offset(), x_pipe.y_offset(),
+                                        x_pipe.z_offset())));
 
     xml_comp_t x_cable = x_stave.child(_U(eltube));
     // Place the support cables for the modules
@@ -72,7 +72,7 @@ static void completeStaveStructure(Detector& oddd, xml_comp_t& x_stave,
         // Place the pipe in the stave
         staveAssembly.placeVolume(
             cableVolume,
-            Transform3D(
+            Transform3(
                 RotationX(0.5 * M_PI),
                 Position(
                     x_cable.x_offset() + 2.05 * modCable * x_cable.rmax(),
@@ -186,9 +186,9 @@ static Ref_t create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
       // Now place the stave
       PlacedVolume placedStave = layerVolume.placeVolume(
           staveAssembly,
-          Transform3D(RotationY(0.5 * M_PI) * RotationZ(0.5 * M_PI) *
-                          RotationY(phi + phiTilt),
-                      Position(x, y, 0.)));
+          Transform3(RotationY(0.5 * M_PI) * RotationZ(0.5 * M_PI) *
+                         RotationY(phi + phiTilt),
+                     Position(x, y, 0.)));
       placedStave.addPhysVolID("stave", staveNum);
 
       // Clone the stave element from the template

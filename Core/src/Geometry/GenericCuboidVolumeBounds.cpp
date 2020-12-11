@@ -61,7 +61,7 @@ bool Acts::GenericCuboidVolumeBounds::inside(const Acts::Vector3& gpos,
 }
 
 Acts::OrientedSurfaces Acts::GenericCuboidVolumeBounds::orientedSurfaces(
-    const Transform3D& transform) const {
+    const Transform3& transform) const {
   OrientedSurfaces oSurfaces;
 
   // approximate cog of the volume
@@ -86,8 +86,8 @@ Acts::OrientedSurfaces Acts::GenericCuboidVolumeBounds::orientedSurfaces(
     // build transform from z unit to normal
     // z is normal in local coordinates
     // Volume local to surface local
-    Transform3D vol2srf;
-    vol2srf = (Eigen::Quaternion<Transform3D::Scalar>().setFromTwoVectors(
+    Transform3 vol2srf;
+    vol2srf = (Eigen::Quaternion<Transform3::Scalar>().setFromTwoVectors(
         normal, Vector3::UnitZ()));
 
     vol2srf = vol2srf * Translation3(-ctrd);
@@ -191,11 +191,11 @@ std::vector<double> Acts::GenericCuboidVolumeBounds::values() const {
 }
 
 Acts::Volume::BoundingBox Acts::GenericCuboidVolumeBounds::boundingBox(
-    const Acts::Transform3D* trf, const Vector3& envelope,
+    const Acts::Transform3* trf, const Vector3& envelope,
     const Volume* entity) const {
   Vector3 vmin, vmax;
 
-  Transform3D transform = Transform3D::Identity();
+  Transform3 transform = Transform3::Identity();
   if (trf != nullptr) {
     transform = *trf;
   }
@@ -213,7 +213,7 @@ Acts::Volume::BoundingBox Acts::GenericCuboidVolumeBounds::boundingBox(
 }
 
 void Acts::GenericCuboidVolumeBounds::draw(IVisualization3D& helper,
-                                           const Transform3D& transform) const {
+                                           const Transform3& transform) const {
   auto draw_face = [&](const auto& a, const auto& b, const auto& c,
                        const auto& d) {
     helper.face(std::vector<Vector3>(

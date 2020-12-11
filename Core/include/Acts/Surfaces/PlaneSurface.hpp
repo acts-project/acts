@@ -46,7 +46,7 @@ class PlaneSurface : public Surface {
   /// @param other is the source cone surface
   /// @param transf is the additional transfrom applied after copying
   PlaneSurface(const GeometryContext& gctx, const PlaneSurface& other,
-               const Transform3D& transf);
+               const Transform3& transf);
 
   /// Dedicated Constructor with normal vector
   /// This is for curvilinear surfaces which are by definition boundless
@@ -66,7 +66,7 @@ class PlaneSurface : public Surface {
   ///
   /// @param htrans transform in 3D that positions this surface
   /// @param pbounds bounds object to describe the actual surface area
-  PlaneSurface(const Transform3D& htrans,
+  PlaneSurface(const Transform3& htrans,
                std::shared_ptr<const PlanarBounds> pbounds = nullptr);
 
  public:

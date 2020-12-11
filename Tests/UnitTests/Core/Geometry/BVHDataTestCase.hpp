@@ -39,7 +39,7 @@ gridBoxFactory(size_t n = NBOXES, double hl = 1000, size_t octd = 5) {
       for (size_t k = 0; k <= n; k++) {
         Vector3 pos(min + i * step, min + j * step, min + k * step);
 
-        auto trf = Transform3D(Translation3(pos));
+        auto trf = Transform3(Translation3(pos));
         auto vol = std::make_unique<AbstractVolume>(trf, vbds);
 
         volumes.push_back(std::move(vol));
@@ -64,7 +64,7 @@ gridBoxFactory(size_t n = NBOXES, double hl = 1000, size_t octd = 5) {
   auto tvBounds =
       std::make_shared<CuboidVolumeBounds>(hl * 1.1, hl * 1.1, hl * 1.1);
 
-  auto tv = TrackingVolume::create(Transform3D::Identity(), tvBounds,
+  auto tv = TrackingVolume::create(Transform3::Identity(), tvBounds,
                                    std::move(boxStore), std::move(volumes), top,
                                    nullptr, "TheVolume");
 

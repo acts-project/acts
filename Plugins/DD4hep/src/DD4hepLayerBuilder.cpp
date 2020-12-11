@@ -323,7 +323,7 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
   return dd4hepDetElement->surface().getSharedPtr();
 }
 
-Acts::Transform3D Acts::DD4hepLayerBuilder::convertTransform(
+Acts::Transform3 Acts::DD4hepLayerBuilder::convertTransform(
     const TGeoMatrix* tGeoTrans) const {
   // get the placement and orientation in respect to its mother
   const Double_t* rotation = tGeoTrans->GetRotationMatrix();

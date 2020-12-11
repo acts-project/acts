@@ -26,7 +26,7 @@ This is indicated by the ``const std::string& axes`` argument of the converter.
 The nomenclature/convention is the following:
  * the resulting local cartesian coordinate system must by right-handed: this is guaranteed by the fact that the third local axis is contructed as a cross product of the first two local axis
  * defining the new local axes with respect to the ``TGeo`` definition is done by naming the new axes in order, e.g. an unchanged coordinate system has the tag ``XYZ``, or ``XY*``, as the third axis is defined by the first two ones
- * flipping the direction of a axis is done by lower capital, e.g. ``yZ*`` redefines the negative y-axis of the ``TGeoMatrix`` as the (obvisouly) positive x-axis of the ``Acts::Transform3D`` and redefines the positive z-axis of the ``TGeoMatrix`` as corresponding y-axis of the ``Acts::Transform3D`` 
+ * flipping the direction of a axis is done by lower capital, e.g. ``yZ*`` redefines the negative y-axis of the ``TGeoMatrix`` as the (obvisouly) positive x-axis of the ``Acts::Transform3`` and redefines the positive z-axis of the ``TGeoMatrix`` as corresponding y-axis of the ``Acts::Transform3`` 
 
 In case a translation request is malformed, a ``std::exception`` is thrown, indicating the problem.
 

@@ -44,8 +44,8 @@ GeometryContext tgContext = GeometryContext();
 
 // Create a test plane in 10 m distance
 // Some random transform
-Transform3D at = Transform3D::Identity() * Translation3(0_m, 0_m, 10_m) *
-                 AngleAxis3(0.15, Vector3(1.2, 1.2, 0.12).normalized());
+Transform3 at = Transform3::Identity() * Translation3(0_m, 0_m, 10_m) *
+                AngleAxis3(0.15, Vector3(1.2, 1.2, 0.12).normalized());
 
 // Define the Plane surface
 auto rb = std::make_shared<RectangleBounds>(1_m, 1_m);

@@ -25,7 +25,7 @@ Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other)
 
 Acts::PlaneSurface::PlaneSurface(const GeometryContext& gctx,
                                  const PlaneSurface& other,
-                                 const Transform3D& shift)
+                                 const Transform3& shift)
     : GeometryObject(), Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
 
 Acts::PlaneSurface::PlaneSurface(const Vector3& center, const Vector3& normal)
@@ -45,7 +45,7 @@ Acts::PlaneSurface::PlaneSurface(const Vector3& center, const Vector3& normal)
   curvilinearRotation.col(2) = T;
 
   // curvilinear surfaces are boundless
-  m_transform = Transform3D{curvilinearRotation};
+  m_transform = Transform3{curvilinearRotation};
   m_transform.pretranslate(center);
 }
 
@@ -57,7 +57,7 @@ Acts::PlaneSurface::PlaneSurface(
   throw_assert(pbounds, "PlaneBounds must not be nullptr");
 }
 
-Acts::PlaneSurface::PlaneSurface(const Transform3D& transform,
+Acts::PlaneSurface::PlaneSurface(const Transform3& transform,
                                  std::shared_ptr<const PlanarBounds> pbounds)
     : Surface(transform), m_bounds(std::move(pbounds)) {}
 

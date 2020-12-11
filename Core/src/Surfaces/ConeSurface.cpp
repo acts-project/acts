@@ -25,23 +25,23 @@ Acts::ConeSurface::ConeSurface(const ConeSurface& other)
 
 Acts::ConeSurface::ConeSurface(const GeometryContext& gctx,
                                const ConeSurface& other,
-                               const Transform3D& shift)
+                               const Transform3& shift)
     : GeometryObject(), Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
 
-Acts::ConeSurface::ConeSurface(const Transform3D& transform, double alpha,
+Acts::ConeSurface::ConeSurface(const Transform3& transform, double alpha,
                                bool symmetric)
     : GeometryObject(),
       Surface(transform),
       m_bounds(std::make_shared<const ConeBounds>(alpha, symmetric)) {}
 
-Acts::ConeSurface::ConeSurface(const Transform3D& transform, double alpha,
+Acts::ConeSurface::ConeSurface(const Transform3& transform, double alpha,
                                double zmin, double zmax, double halfPhi)
     : GeometryObject(),
       Surface(transform),
       m_bounds(std::make_shared<const ConeBounds>(alpha, zmin, zmax, halfPhi)) {
 }
 
-Acts::ConeSurface::ConeSurface(const Transform3D& transform,
+Acts::ConeSurface::ConeSurface(const Transform3& transform,
                                const std::shared_ptr<const ConeBounds>& cbounds)
     : GeometryObject(), Surface(transform), m_bounds(cbounds) {
   throw_assert(cbounds, "ConeBounds must not be nullptr");

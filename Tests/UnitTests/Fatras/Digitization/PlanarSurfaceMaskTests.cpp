@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_SUITE(Digitization)
 BOOST_AUTO_TEST_CASE(PlaneMaskRectangleBounds) {
   auto rectangleBounds = std::make_shared<Acts::RectangleBounds>(2., 3.5);
   auto planeSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      Acts::Transform3D::Identity(), rectangleBounds);
+      Acts::Transform3::Identity(), rectangleBounds);
 
   ActsFatras::PlanarSurfaceMask psm;
 
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(DiscMaskRadialBounds) {
   auto discRadial =
       std::make_shared<Acts::RadialBounds>(2., 7.5, M_PI_4, M_PI_2);
   auto discSurface = Acts::Surface::makeShared<Acts::DiscSurface>(
-      Acts::Transform3D::Identity(), discRadial);
+      Acts::Transform3::Identity(), discRadial);
 
   ActsFatras::PlanarSurfaceMask psm;
 

@@ -60,7 +60,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   // get perpendicular direction vector
   Vector3 perpDir = momDir.cross(corrDeltaR);
 
-  Transform3D thePlane;
+  Transform3 thePlane;
   // rotation matrix
   thePlane.matrix().block(0, 0, 3, 1) = corrDeltaR;
   thePlane.matrix().block(0, 1, 3, 1) = perpDir;

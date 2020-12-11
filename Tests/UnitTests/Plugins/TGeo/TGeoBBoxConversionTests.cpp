@@ -80,11 +80,11 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   // Check if the surface is the (negative) identity
   auto transform_XYZ = plane_XYZ->transform(tgContext);
   auto rotation_XYZ = transform_XYZ.rotation();
-  BOOST_CHECK(transform_XYZ.isApprox(Transform3D::Identity()));
+  BOOST_CHECK(transform_XYZ.isApprox(Transform3::Identity()));
 
   const Vector3 offset_XYZ{-5.5 * x, 0., 0.};
   GeometryView3D::drawSurface(objVis, *plane_XYZ, tgContext,
-                              Transform3D(Translation3{offset_XYZ}));
+                              Transform3(Translation3{offset_XYZ}));
   const Vector3 center_XYZ = plane_XYZ->center(tgContext) + offset_XYZ;
   GeometryView3D::drawArrowForward(
       objVis, center_XYZ,
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
 
   const Vector3 offset_xyz{-2 * x, 0., 0.};
   GeometryView3D::drawSurface(objVis, *plane_xyz, tgContext,
-                              Transform3D(Translation3{offset_xyz}));
+                              Transform3(Translation3{offset_xyz}));
   const Vector3 center_xyz = plane_xyz->center(tgContext) + offset_xyz;
   GeometryView3D::drawArrowForward(
       objVis, center_xyz,
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   const Vector3 offset_xYz{2 * x, 0., 0.};
   GeometryView3D::drawSurface(
       objVis, *plane_xYz, tgContext,
-      Translation3{offset_xYz} * Transform3D::Identity());
+      Translation3{offset_xYz} * Transform3::Identity());
   const Vector3 center_xYz = plane_xYz->center(tgContext) + offset_xYz;
   GeometryView3D::drawArrowForward(
       objVis, center_xYz,
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
 
   const Vector3 offset_YXz{5.5 * x, 0., 0.};
   GeometryView3D::drawSurface(objVis, *plane_YXz, tgContext,
-                              Transform3D(Translation3{offset_YXz}));
+                              Transform3(Translation3{offset_YXz}));
   const Vector3 center_YXz = plane_YXz->center(tgContext) + offset_YXz;
   GeometryView3D::drawArrowForward(
       objVis, center_YXz,

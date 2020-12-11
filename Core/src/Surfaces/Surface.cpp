@@ -14,7 +14,7 @@
 #include <iostream>
 #include <utility>
 
-Acts::Surface::Surface(const Transform3D& transform)
+Acts::Surface::Surface(const Transform3& transform)
     : GeometryObject(), m_transform(transform) {}
 
 Acts::Surface::Surface(const DetectorElementBase& detelement)
@@ -27,7 +27,7 @@ Acts::Surface::Surface(const Surface& other)
       m_surfaceMaterial(other.m_surfaceMaterial) {}
 
 Acts::Surface::Surface(const GeometryContext& gctx, const Surface& other,
-                       const Transform3D& shift)
+                       const Transform3& shift)
     : GeometryObject(),
       m_transform(shift * other.transform(gctx)),
       m_associatedLayer(nullptr),

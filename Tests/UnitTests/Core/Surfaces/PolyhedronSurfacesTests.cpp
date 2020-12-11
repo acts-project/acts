@@ -64,7 +64,7 @@ GeometryContext tgContext = GeometryContext();
 std::vector<std::tuple<std::string, bool, unsigned int>> testModes = {
     {"", false, 72}, {"Triangulate", true, 72}, {"Extremas", false, 1}};
 
-auto transform = std::make_shared<Transform3D>(Transform3D::Identity());
+auto transform = std::make_shared<Transform3>(Transform3::Identity());
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
@@ -384,8 +384,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
 
   // Special test for shifted plane to check rMin/rMax
   Vector3 shift(0., shiftY, 0.);
-  auto shiftedTransform =
-      std::make_shared<Transform3D>(Transform3D::Identity());
+  auto shiftedTransform = std::make_shared<Transform3>(Transform3::Identity());
   shiftedTransform->pretranslate(shift);
   auto shiftedPlane =
       Surface::makeShared<PlaneSurface>(shiftedTransform, rectangular);

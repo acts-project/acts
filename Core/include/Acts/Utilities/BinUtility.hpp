@@ -35,15 +35,15 @@ class BinUtility {
   /// Constructor for equidistant
   BinUtility()
       : m_binningData(),
-        m_transform(Transform3D::Identity()),
-        m_itransform(Transform3D::Identity()) {
+        m_transform(Transform3::Identity()),
+        m_itransform(Transform3::Identity()) {
     m_binningData.reserve(3);
   }
 
-  /// Constructor with only a Transform3D
+  /// Constructor with only a Transform3
   ///
   /// @param tForm is the local to global transform
-  BinUtility(const Transform3D& tForm)
+  BinUtility(const Transform3& tForm)
       : m_binningData(), m_transform(tForm), m_itransform(tForm.inverse()) {
     m_binningData.reserve(3);
   }
@@ -53,7 +53,7 @@ class BinUtility {
   /// @param bData is the provided binning data
   /// @param tForm is the (optional) transform
   BinUtility(const BinningData& bData,
-             const Transform3D& tForm = Transform3D::Identity())
+             const Transform3& tForm = Transform3::Identity())
       : m_binningData(), m_transform(tForm), m_itransform(tForm.inverse()) {
     m_binningData.reserve(3);
     m_binningData.push_back(bData);
@@ -69,7 +69,7 @@ class BinUtility {
   /// @param tForm is the (optional) transform
   BinUtility(size_t bins, float min, float max, BinningOption opt = open,
              BinningValue value = binX,
-             const Transform3D& tForm = Transform3D::Identity())
+             const Transform3& tForm = Transform3::Identity())
       : m_binningData(), m_transform(tForm), m_itransform(tForm.inverse()) {
     m_binningData.reserve(3);
     m_binningData.push_back(BinningData(opt, value, bins, min, max));
@@ -83,7 +83,7 @@ class BinUtility {
   /// @param tForm is the (optional) transform
   BinUtility(std::vector<float>& bValues, BinningOption opt = open,
              BinningValue value = binPhi,
-             const Transform3D& tForm = Transform3D::Identity())
+             const Transform3& tForm = Transform3::Identity())
       : m_binningData(), m_transform(tForm), m_itransform(tForm.inverse()) {
     m_binningData.reserve(3);
     m_binningData.push_back(BinningData(opt, value, bValues));
@@ -293,7 +293,7 @@ class BinUtility {
   /// Transform applied to global positions before lookup
   ///
   /// @return Shared pointer to transform
-  const Transform3D& transform() const { return m_transform; }
+  const Transform3& transform() const { return m_transform; }
 
   /// The type/value of the binning
   ///
@@ -352,8 +352,8 @@ class BinUtility {
 
  private:
   std::vector<BinningData> m_binningData;  /// vector of BinningData
-  Transform3D m_transform;                 /// shared transform
-  Transform3D m_itransform;                /// unique inverse transform
+  Transform3 m_transform;                  /// shared transform
+  Transform3 m_itransform;                 /// unique inverse transform
 };
 
 /// Overload of << operator for std::ostream for debug output

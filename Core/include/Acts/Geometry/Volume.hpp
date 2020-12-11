@@ -40,7 +40,7 @@ class Volume : public virtual GeometryObject {
   /// @param volbounds is the volume boundary definitions
   /// @note This will automatically build an oriented bounding box with an
   /// envelope value of (0.05, 0.05, 0.05)mm
-  Volume(const Transform3D& transform, VolumeBoundsPtr volbounds);
+  Volume(const Transform3& transform, VolumeBoundsPtr volbounds);
 
   /// Copy Constructor - with optional shift
   ///
@@ -48,7 +48,7 @@ class Volume : public virtual GeometryObject {
   /// @param shift is the optional shift applied as : shift * vol.transform()
   /// @note This will automatically build an oriented bounding box with an
   /// envelope value of (0.05, 0.05, 0.05)mm
-  Volume(const Volume& vol, const Transform3D& shift = Transform3D::Identity());
+  Volume(const Volume& vol, const Transform3& shift = Transform3::Identity());
 
   Volume() = delete;
   virtual ~Volume() = default;
@@ -59,10 +59,10 @@ class Volume : public virtual GeometryObject {
   Volume& operator=(const Volume& vol);
 
   /// Return methods for geometry transform
-  const Transform3D& transform() const;
+  const Transform3& transform() const;
 
   /// Returns the inverted transform of this volume.
-  const Transform3D& itransform() const;
+  const Transform3& itransform() const;
 
   /// returns the center of the volume
   const Vector3& center() const;
@@ -98,18 +98,18 @@ class Volume : public virtual GeometryObject {
                           BinningValue bValue) const override;
 
  protected:
-  Transform3D m_transform;
-  Transform3D m_itransform;
+  Transform3 m_transform;
+  Transform3 m_itransform;
   Vector3 m_center;
   VolumeBoundsPtr m_volumeBounds;
   BoundingBox m_orientedBoundingBox;
 };
 
-inline const Transform3D& Volume::transform() const {
+inline const Transform3& Volume::transform() const {
   return m_transform;
 }
 
-inline const Transform3D& Volume::itransform() const {
+inline const Transform3& Volume::itransform() const {
   return m_itransform;
 }
 

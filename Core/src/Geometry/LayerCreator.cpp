@@ -49,8 +49,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsPhi,
     size_t binsZ, std::optional<ProtoLayer> _protoLayer,
-    const Transform3D& transform,
-    std::unique_ptr<ApproachDescriptor> ad) const {
+    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
 
@@ -82,7 +81,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
   // we need to transform in case layerZ != 0, so that the layer will be
   // correctly defined using the halflength
   Translation3 addTranslation(0., 0., 0.);
-  if (transform.isApprox(Transform3D::Identity())) {
+  if (transform.isApprox(Transform3::Identity())) {
     // double shift = -(layerZ + envZShift);
     addTranslation = Translation3(0., 0., layerZ);
     ACTS_VERBOSE(" - layer z shift  = " << -layerZ);
@@ -122,8 +121,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypePhi,
     BinningType bTypeZ, std::optional<ProtoLayer> _protoLayer,
-    const Transform3D& transform,
-    std::unique_ptr<ApproachDescriptor> ad) const {
+    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
 
@@ -155,7 +153,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
   // correctly defined using the halflength
   // create the layer transforms if not given
   Translation3 addTranslation(0., 0., 0.);
-  if (transform.isApprox(Transform3D::Identity()) && bTypeZ == equidistant) {
+  if (transform.isApprox(Transform3::Identity()) && bTypeZ == equidistant) {
     addTranslation = Translation3(0., 0., layerZ);
     ACTS_VERBOSE(" - layer z shift    = " << -layerZ);
   }
@@ -195,8 +193,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsR,
     size_t binsPhi, std::optional<ProtoLayer> _protoLayer,
-    const Transform3D& transform,
-    std::unique_ptr<ApproachDescriptor> ad) const {
+    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
 
@@ -225,7 +222,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
 
   // create the layer transforms if not given
   Translation3 addTranslation(0., 0., 0.);
-  if (transform.isApprox(Transform3D::Identity())) {
+  if (transform.isApprox(Transform3::Identity())) {
     addTranslation = Translation3(0., 0., layerZ);
   }
   // create the surface array
@@ -259,8 +256,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
     BinningType bTypePhi, std::optional<ProtoLayer> _protoLayer,
-    const Transform3D& transform,
-    std::unique_ptr<ApproachDescriptor> ad) const {
+    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
 
@@ -288,7 +284,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
 
   // create the layer transforms if not given
   Translation3 addTranslation(0., 0., 0.);
-  if (transform.isApprox(Transform3D::Identity())) {
+  if (transform.isApprox(Transform3::Identity())) {
     addTranslation = Translation3(0., 0., layerZ);
   }
 
@@ -321,8 +317,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, size_t bins1,
     size_t bins2, BinningValue bValue, std::optional<ProtoLayer> _protoLayer,
-    const Transform3D& transform,
-    std::unique_ptr<ApproachDescriptor> ad) const {
+    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
 
@@ -365,7 +360,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
   // we need to transform in case centerX/centerY/centerZ != 0, so that the
   // layer will be correctly defined
   Translation3 addTranslation(0., 0., 0.);
-  if (transform.isApprox(Transform3D::Identity())) {
+  if (transform.isApprox(Transform3::Identity())) {
     // double shift = (layerZ + envZShift);
     addTranslation = Translation3(centerX, centerY, centerZ);
     ACTS_VERBOSE(" - layer shift  = "

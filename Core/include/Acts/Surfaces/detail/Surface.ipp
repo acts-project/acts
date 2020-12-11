@@ -19,7 +19,7 @@ inline Acts::Vector3 Acts::Surface::normal(const GeometryContext& gctx,
   return normal(gctx, Vector2(Vector2::Zero()));
 }
 
-inline const Acts::Transform3D& Acts::Surface::transform(
+inline const Acts::Transform3& Acts::Surface::transform(
     const GeometryContext& gctx) const {
   if (m_associatedDetElement != nullptr) {
     return m_associatedDetElement->transform(gctx);

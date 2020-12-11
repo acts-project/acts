@@ -403,7 +403,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   time = 7.5;
   charge = 1.;
   cov = 8.5 * Covariance::Identity();
-  Transform3D trafo = Transform3D::Identity();
+  Transform3 trafo = Transform3::Identity();
   auto disc = Surface::makeShared<DiscSurface>(trafo);
   BoundTrackParameters boundDisc(disc, geoCtx, pos4, unitDir, absMom, charge);
 

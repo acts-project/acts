@@ -46,9 +46,9 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 /// @param nnomal The nominal normal direction
 /// @param angleT Rotation around the norminal normal
 /// @param angleU Roation around the original U axis
-Transform3D createCylindricTransform(const Vector3& nposition, double angleX,
-                                     double angleY) {
-  Transform3D ctransform;
+Transform3 createCylindricTransform(const Vector3& nposition, double angleX,
+                                    double angleY) {
+  Transform3 ctransform;
   ctransform.setIdentity();
   ctransform.pretranslate(nposition);
   ctransform.prerotate(AngleAxis3(angleX, Vector3::UnitX()));
@@ -63,9 +63,9 @@ Transform3D createCylindricTransform(const Vector3& nposition, double angleX,
 /// @param nnomal The nominal normal direction
 /// @param angleT Rotation around the norminal normal
 /// @param angleU Roation around the original U axis
-Transform3D createPlanarTransform(const Vector3& nposition,
-                                  const Vector3& nnormal, double angleT,
-                                  double angleU) {
+Transform3 createPlanarTransform(const Vector3& nposition,
+                                 const Vector3& nnormal, double angleT,
+                                 double angleU) {
   // the rotation of the destination surface
   Vector3 T = nnormal.normalized();
   Vector3 U = std::abs(T.dot(Vector3::UnitZ())) < 0.99
@@ -78,7 +78,7 @@ Transform3D createPlanarTransform(const Vector3& nposition,
   curvilinearRotation.col(1) = V;
   curvilinearRotation.col(2) = T;
   // curvilinear surfaces are boundless
-  Transform3D ctransform{curvilinearRotation};
+  Transform3 ctransform{curvilinearRotation};
   ctransform.pretranslate(nposition);
   ctransform.prerotate(AngleAxis3(angleT, T));
   ctransform.prerotate(AngleAxis3(angleU, U));

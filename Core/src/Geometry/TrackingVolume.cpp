@@ -29,7 +29,7 @@
 #include <utility>
 
 Acts::TrackingVolume::TrackingVolume(
-    const Transform3D& transform, VolumeBoundsPtr volbounds,
+    const Transform3& transform, VolumeBoundsPtr volbounds,
     const std::shared_ptr<const TrackingVolumeArray>& containedVolumeArray,
     const std::string& volumeName)
     : Volume(transform, std::move(volbounds)),
@@ -44,7 +44,7 @@ Acts::TrackingVolume::TrackingVolume(
 
 // constructor for arguments
 Acts::TrackingVolume::TrackingVolume(
-    const Transform3D& transform, VolumeBoundsPtr volumeBounds,
+    const Transform3& transform, VolumeBoundsPtr volumeBounds,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial,
     std::unique_ptr<const LayerArray> staticLayerArray,
     std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
@@ -63,7 +63,7 @@ Acts::TrackingVolume::TrackingVolume(
 
 // constructor for arguments
 Acts::TrackingVolume::TrackingVolume(
-    const Transform3D& transform, VolumeBoundsPtr volbounds,
+    const Transform3& transform, VolumeBoundsPtr volbounds,
     std::vector<std::unique_ptr<Volume::BoundingBox>> boxStore,
     std::vector<std::unique_ptr<const Volume>> descendants,
     const Volume::BoundingBox* top,

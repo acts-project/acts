@@ -96,7 +96,7 @@ struct CylindricalTrackingGeometry {
     for (int im = 0; im < nPhi; ++im) {
       // Get the moduleTransform
       double phi = -M_PI + im * phiStep;
-      auto mModuleTransform = Transform3D(
+      auto mModuleTransform = Transform3(
           Translation3(ringRadius * std::cos(phi), ringRadius * std::sin(phi),
                        ringZ + (im % 2) * zStagger) *
           AngleAxis3(phi - 0.5 * M_PI, Vector3::UnitZ()) *
@@ -167,7 +167,7 @@ struct CylindricalTrackingGeometry {
       moduleRotation.col(2) = moduleLocalZ;
       // Get the moduleTransform
       auto mModuleTransform =
-          Transform3D(Translation3(mCenter) * moduleRotation);
+          Transform3(Translation3(mCenter) * moduleRotation);
       // Create the detector element
       auto detElement = std::make_unique<const DetectorElementStub>(
           mModuleTransform, mBounds, moduleThickness, moduleMaterialPtr);
@@ -324,9 +324,9 @@ struct CylindricalTrackingGeometry {
     auto pVolumeBounds =
         std::make_shared<const CylinderVolumeBounds>(25., 300., 1100.);
     // create the Tracking volume
-    auto pVolume = TrackingVolume::create(
-        Transform3D::Identity(), pVolumeBounds, nullptr, std::move(pLayerArray),
-        nullptr, {}, "Pixel::Barrel");
+    auto pVolume = TrackingVolume::create(Transform3::Identity(), pVolumeBounds,
+                                          nullptr, std::move(pLayerArray),
+                                          nullptr, {}, "Pixel::Barrel");
 
     // The combined volume
     auto detectorVolume = cylinderVolumeHelper->createContainerTrackingVolume(

@@ -86,7 +86,7 @@ struct SurfaceArrayCreatorFixture {
       double z = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
       double phi = std::fma(i, phiStep, shift);
 
-      Transform3D trans;
+      Transform3 trans;
       trans.setIdentity();
       trans.rotate(Eigen::AngleAxisd(phi, Vector3(0, 0, 1)));
       trans.translate(Vector3(r, 0, z));
@@ -115,7 +115,7 @@ struct SurfaceArrayCreatorFixture {
       double z = zbase;
       double phi = std::fma(i, phiStep, shift);
 
-      Transform3D trans;
+      Transform3 trans;
       trans.setIdentity();
       trans.rotate(Eigen::AngleAxisd(phi, Vector3(0, 0, 1)));
       trans.translate(Vector3(10, 0, z));
@@ -136,11 +136,11 @@ struct SurfaceArrayCreatorFixture {
 
   SrfVec straightLineSurfaces(
       size_t n = 10., double step = 3, const Vector3& origin = {0, 0, 1.5},
-      const Transform3D& pretrans = Transform3D::Identity(),
+      const Transform3& pretrans = Transform3::Identity(),
       const Vector3& dir = {0, 0, 1}) {
     SrfVec res;
     for (size_t i = 0; i < n; ++i) {
-      Transform3D trans;
+      Transform3 trans;
       trans.setIdentity();
       trans.translate(origin + dir * step * i);
       // trans.rotate(AngleAxis3(M_PI/9., Vector3(0, 0, 1)));
@@ -187,7 +187,7 @@ struct SurfaceArrayCreatorFixture {
       double z = i * w * 2 + z0;
       for (int j = 0; j < nPhi; ++j) {
         double phi = std::fma(j, phiStep, shift);
-        Transform3D trans;
+        Transform3 trans;
         trans.setIdentity();
         trans.rotate(Eigen::AngleAxisd(phi, Vector3(0, 0, 1)));
         trans.translate(Vector3(10, 0, z));
@@ -199,7 +199,7 @@ struct SurfaceArrayCreatorFixture {
             Surface::makeShared<PlaneSurface>(trans, bounds);
 
         Vector3 nrm = srfA->normal(tgContext);
-        Transform3D transB = trans;
+        Transform3 transB = trans;
         transB.pretranslate(nrm * 0.1);
         std::shared_ptr<Surface> srfB =
             Surface::makeShared<PlaneSurface>(transB, bounds);
@@ -256,7 +256,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
   // fail on empty srf vector
   std::vector<const Surface*> emptyRaw;
   ProtoLayer pl(tgContext, emptyRaw);
-  auto tr = Transform3D::Identity();
+  auto tr = Transform3::Identity();
   BOOST_CHECK_THROW(
       createEquidistantAxis(tgContext, emptyRaw, BinningValue::binPhi, pl, tr),
       std::logic_error);
@@ -279,7 +279,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     auto surfaces = fullPhiTestSurfacesEC(30, angleShift, z);
     std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
     pl = ProtoLayer(tgContext, surfacesRaw);
-    tr = Transform3D::Identity();
+    tr = Transform3::Identity();
     auto axis = createEquidistantAxis(tgContext, surfacesRaw,
                                       BinningValue::binPhi, pl, tr);
 
@@ -294,7 +294,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     surfaces = fullPhiTestSurfacesEC(30, angleShift, z);
     surfacesRaw = unpack_shared_vector(surfaces);
     pl = ProtoLayer(tgContext, surfacesRaw);
-    tr = Transform3D::Identity();
+    tr = Transform3::Identity();
     axis = createEquidistantAxis(tgContext, surfacesRaw, BinningValue::binPhi,
                                  pl, tr);
     draw_surfaces(surfaces,
@@ -310,7 +310,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     surfaces = fullPhiTestSurfacesEC(30, angleShift, z);
     surfacesRaw = unpack_shared_vector(surfaces);
     pl = ProtoLayer(tgContext, surfacesRaw);
-    tr = Transform3D::Identity();
+    tr = Transform3::Identity();
     axis = createEquidistantAxis(tgContext, surfacesRaw, BinningValue::binPhi,
                                  pl, tr);
     draw_surfaces(surfaces,
@@ -327,7 +327,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     surfacesRaw = unpack_shared_vector(surfaces);
     pl = ProtoLayer(tgContext, surfaces);
     surfacesRaw = unpack_shared_vector(surfaces);
-    tr = Transform3D::Identity();
+    tr = Transform3::Identity();
     axis = createEquidistantAxis(tgContext, surfacesRaw, BinningValue::binPhi,
                                  pl, tr);
     surfacesRaw = unpack_shared_vector(surfaces);
@@ -347,7 +347,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     auto surfaces = fullPhiTestSurfacesBRL(30, angleShift, z);
     auto surfacesRaw = unpack_shared_vector(surfaces);
     pl = ProtoLayer(tgContext, surfacesRaw);
-    tr = Transform3D::Identity();
+    tr = Transform3::Identity();
     auto axis = createEquidistantAxis(tgContext, surfacesRaw,
                                       BinningValue::binPhi, pl, tr);
     draw_surfaces(surfaces,
@@ -363,7 +363,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     surfaces = fullPhiTestSurfacesBRL(30, angleShift, z);
     surfacesRaw = unpack_shared_vector(surfaces);
     pl = ProtoLayer(tgContext, surfacesRaw);
-    tr = Transform3D::Identity();
+    tr = Transform3::Identity();
     axis = createEquidistantAxis(tgContext, surfacesRaw, BinningValue::binPhi,
                                  pl, tr);
     draw_surfaces(surfaces,
@@ -380,7 +380,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     surfaces = fullPhiTestSurfacesBRL(30, angleShift, z);
     surfacesRaw = unpack_shared_vector(surfaces);
     pl = ProtoLayer(tgContext, surfacesRaw);
-    tr = Transform3D::Identity();
+    tr = Transform3::Identity();
     axis = createEquidistantAxis(tgContext, surfacesRaw, BinningValue::binPhi,
                                  pl, tr);
     draw_surfaces(surfaces,
@@ -397,7 +397,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     surfaces = fullPhiTestSurfacesBRL(30, angleShift, z);
     surfacesRaw = unpack_shared_vector(surfaces);
     pl = ProtoLayer(tgContext, surfacesRaw);
-    tr = Transform3D::Identity();
+    tr = Transform3::Identity();
     axis = createEquidistantAxis(tgContext, surfacesRaw, BinningValue::binPhi,
                                  pl, tr);
     draw_surfaces(surfaces,
@@ -419,7 +419,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
                 "SurfaceArrayCreator_createEquidistantAxis_EC_Single.obj");
 
   pl = ProtoLayer(tgContext, surfacesRaw);
-  tr = Transform3D::Identity();
+  tr = Transform3::Identity();
   auto axis = createEquidistantAxis(tgContext, surfacesRaw,
                                     BinningValue::binPhi, pl, tr);
   BOOST_CHECK_EQUAL(axis.nBins, 1u);
@@ -435,7 +435,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Z,
   auto surfaces = straightLineSurfaces(1);
   auto surfacesRaw = unpack_shared_vector(surfaces);
   ProtoLayer pl = ProtoLayer(tgContext, surfacesRaw);
-  auto trf = Transform3D::Identity();
+  auto trf = Transform3::Identity();
   auto axis = createEquidistantAxis(tgContext, surfacesRaw, BinningValue::binZ,
                                     pl, trf);
   draw_surfaces(surfaces, "SurfaceArrayCreator_createEquidistantAxis_Z_1.obj");
@@ -450,7 +450,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Z,
     surfaces = straightLineSurfaces(10, 3, Vector3(0, 0, z0 + 1.5));
     surfacesRaw = unpack_shared_vector(surfaces);
     pl = ProtoLayer(tgContext, surfacesRaw);
-    trf = Transform3D::Identity();
+    trf = Transform3::Identity();
     axis = createEquidistantAxis(tgContext, surfacesRaw, BinningValue::binZ, pl,
                                  trf);
     draw_surfaces(
@@ -466,12 +466,12 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Z,
   }
 
   // z row where elements are rotated around y
-  Transform3D tr = Transform3D::Identity();
+  Transform3 tr = Transform3::Identity();
   tr.rotate(AngleAxis3(M_PI / 4., Vector3(0, 0, 1)));
   surfaces = straightLineSurfaces(10, 3, Vector3(0, 0, 0 + 1.5), tr);
   surfacesRaw = unpack_shared_vector(surfaces);
   pl = ProtoLayer(tgContext, surfacesRaw);
-  trf = Transform3D::Identity();
+  trf = Transform3::Identity();
   axis = createEquidistantAxis(tgContext, surfacesRaw, BinningValue::binZ, pl,
                                trf);
   draw_surfaces(surfaces, "SurfaceArrayCreator_createEquidistantAxis_Z_3.obj");
@@ -487,7 +487,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_R,
   auto surfaces = fullPhiTestSurfacesEC(1, 0, 0, 15);
   auto surfacesRaw = unpack_shared_vector(surfaces);
   draw_surfaces(surfaces, "SurfaceArrayCreator_createEquidistantAxis_R_1.obj");
-  auto trf = Transform3D::Identity();
+  auto trf = Transform3::Identity();
   ProtoLayer pl = ProtoLayer(tgContext, surfacesRaw);
   auto axis = createEquidistantAxis(tgContext, surfacesRaw, BinningValue::binR,
                                     pl, trf);
@@ -508,7 +508,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_R,
 
   surfacesRaw = unpack_shared_vector(surfaces);
   pl = ProtoLayer(tgContext, surfacesRaw);
-  trf = Transform3D::Identity();
+  trf = Transform3::Identity();
   axis = createEquidistantAxis(tgContext, surfacesRaw, BinningValue::binR, pl,
                                trf);
 
@@ -599,7 +599,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
   ProtoLayer pl(tgContext, brl);
 
   // EQUIDISTANT
-  Transform3D tr = Transform3D::Identity();
+  Transform3 tr = Transform3::Identity();
 
   auto pAxisPhi =
       createEquidistantAxis(tgContext, brlRaw, BinningValue::binPhi, pl, tr);
@@ -607,7 +607,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
       createEquidistantAxis(tgContext, brlRaw, BinningValue::binZ, pl, tr);
 
   double R = 10.;
-  Transform3D itr = tr.inverse();
+  Transform3 itr = tr.inverse();
 
   auto globalToLocal = [tr](const Vector3& pos) {
     Vector3 rot = tr * pos;
@@ -647,7 +647,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
 
   // VARIABLE
   BOOST_TEST_CONTEXT("Barrel Stagger Variable binning") {
-    tr = Transform3D::Identity();
+    tr = Transform3::Identity();
 
     auto pAxisPhiVar =
         createVariableAxis(tgContext, brlRaw, BinningValue::binPhi, pl, tr);

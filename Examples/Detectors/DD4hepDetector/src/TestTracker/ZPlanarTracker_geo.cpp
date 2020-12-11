@@ -212,7 +212,7 @@ static Ref_t create_element(Detector& lcdd, xml_h e, SensitiveDetector sens) {
 
       /* pv = */ layer_assembly.placeVolume(
           supp_vol,
-          Transform3D(
+          Transform3(
               rot,
               Position((radius + lthick / 2.) * cos(phi) - offset * sin(phi),
                        (radius + lthick / 2.) * sin(phi) + offset * cos(phi),
@@ -225,7 +225,7 @@ static Ref_t create_element(Detector& lcdd, xml_h e, SensitiveDetector sens) {
 
       pv = layer_assembly.placeVolume(
           sens_vol,
-          Transform3D(
+          Transform3(
               rot,
               Position((radius + lthick / 2.0) * cos(phi) - offset * sin(phi),
                        (radius + lthick / 2.0) * sin(phi) + offset * cos(phi),
@@ -260,7 +260,7 @@ static Ref_t create_element(Detector& lcdd, xml_h e, SensitiveDetector sens) {
   Tube   tubeSolid (inner_r, outer_r, z_half ) ;
   Volume tube_vol( name+"_inner_cylinder_air", tubeSolid ,  lcdd.material("Air") ) ;
 
-  assembly.placeVolume( tube_vol , Transform3D() ) ;
+  assembly.placeVolume( tube_vol , Transform3() ) ;
 
   Vector3 ocyl(  inner_r + 0.5*tube_thick , 0. , 0. ) ;
 

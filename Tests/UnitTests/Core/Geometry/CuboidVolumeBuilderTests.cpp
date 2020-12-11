@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
     cfg.thickness = 1_um;
 
     cfg.detElementConstructor =
-        [](const Transform3D& trans,
+        [](const Transform3& trans,
            std::shared_ptr<const RectangleBounds> bounds, double thickness) {
           return new DetectorElementStub(trans, bounds, thickness);
         };

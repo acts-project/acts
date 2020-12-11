@@ -60,11 +60,11 @@ BOOST_AUTO_TEST_CASE(SurfaceConstruction) {
   SurfaceStub original;
   BOOST_CHECK_EQUAL(Surface::Other, SurfaceStub(original).type());
   Translation3 translation{0., 1., 2.};
-  Transform3D transform(translation);
+  Transform3 transform(translation);
   BOOST_CHECK_EQUAL(Surface::Other,
                     SurfaceStub(tgContext, original, transform).type());
   // need some cruft to make the next one work
-  auto pTransform = Transform3D(translation);
+  auto pTransform = Transform3(translation);
   std::shared_ptr<const Acts::PlanarBounds> p =
       std::make_shared<const RectangleBounds>(5., 10.);
   DetectorElementStub detElement{pTransform, p, 0.2, nullptr};
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties, *utf::expected_failures(1)) {
       std::make_shared<const RectangleBounds>(5., 10.);
   Vector3 reference{0., 1., 2.};
   Translation3 translation{0., 1., 2.};
-  auto pTransform = Transform3D(translation);
+  auto pTransform = Transform3(translation);
   auto pLayer = PlaneLayer::create(pTransform, pPlanarBound);
   auto pMaterial =
       std::make_shared<const HomogeneousSurfaceMaterial>(makePercentSlab());
@@ -136,8 +136,8 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   Vector3 reference{0., 1., 2.};
   Translation3 translation1{0., 1., 2.};
   Translation3 translation2{1., 1., 2.};
-  auto pTransform1 = Transform3D(translation1);
-  auto pTransform2 = Transform3D(translation2);
+  auto pTransform1 = Transform3(translation1);
+  auto pTransform2 = Transform3(translation2);
   // build a planeSurface to be compared
   auto planeSurface =
       Surface::makeShared<PlaneSurface>(pTransform1, pPlanarBound);

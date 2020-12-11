@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(VolumeTest) {
   rotation.col(2) = zPos;
 
   // Build a transform
-  Transform3D transform(Transform3D::Identity() * rotation);
+  Transform3 transform(Transform3::Identity() * rotation);
   transform.translation() = translation;
   // Build the bounds
   CuboidVolumeBounds bounds(4_mm, 5_mm, 6_mm);
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(VolumeTest) {
   BOOST_CHECK_EQUAL(*vBounds, bounds);
 
   // Build and test a shifted volume
-  Transform3D shift(Transform3D::Identity());
+  Transform3 shift(Transform3::Identity());
   Vector3 shiftTranslation{-4_mm, -5_mm, -6_mm};
   shift.translation() = shiftTranslation;
   Volume volumeShift(volume, shift);

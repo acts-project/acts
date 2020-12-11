@@ -125,7 +125,7 @@ class SurfaceArrayCreator {
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsPhi,
       size_t binsZ, std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const Transform3D& transform = Transform3D::Identity()) const;
+      const Transform3& transform = Transform3::Identity()) const;
 
   /// SurfaceArrayCreator interface method
   ///
@@ -149,7 +149,7 @@ class SurfaceArrayCreator {
       std::vector<std::shared_ptr<const Surface>> surfaces,
       BinningType bTypePhi = equidistant, BinningType bTypeZ = equidistant,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const Transform3D& transform = Transform3D::Identity()) const;
+      const Transform3& transform = Transform3::Identity()) const;
 
   /// SurfaceArrayCreator interface method
   /// - create an array on a disc, binned in r, phi when extremas and
@@ -171,7 +171,7 @@ class SurfaceArrayCreator {
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsR,
       size_t binsPhi, std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const Transform3D& transform = Transform3D::Identity()) const;
+      const Transform3& transform = Transform3::Identity()) const;
 
   /// SurfaceArrayCreator interface method
   ///
@@ -198,7 +198,7 @@ class SurfaceArrayCreator {
       std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
       BinningType bTypePhi,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const Transform3D& transform = Transform3D::Identity()) const;
+      const Transform3& transform = Transform3::Identity()) const;
 
   /// SurfaceArrayCreator interface method
   /// - create an array on a plane
@@ -225,7 +225,7 @@ class SurfaceArrayCreator {
       std::vector<std::shared_ptr<const Surface>> surfaces, size_t bins1,
       size_t bins2, BinningValue bValue,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const Transform3D& transform = Transform3D::Identity()) const;
+      const Transform3& transform = Transform3::Identity()) const;
 
   /// Static check funtion for surface equivalent
   ///
@@ -315,7 +315,7 @@ class SurfaceArrayCreator {
   ProtoAxis createVariableAxis(const GeometryContext& gctx,
                                const std::vector<const Surface*>& surfaces,
                                BinningValue bValue, ProtoLayer protoLayer,
-                               Transform3D& transform) const;
+                               Transform3& transform) const;
 
   /// SurfaceArrayCreator internal method
   /// Creates a equidistant @c ProtoAxis when the extremas and the bin number
@@ -341,7 +341,7 @@ class SurfaceArrayCreator {
   ProtoAxis createEquidistantAxis(const GeometryContext& gctx,
                                   const std::vector<const Surface*>& surfaces,
                                   BinningValue bValue, ProtoLayer protoLayer,
-                                  Transform3D& transform,
+                                  Transform3& transform,
                                   size_t nBins = 0) const;
 
   /// SurfaceArrayCreator internal method

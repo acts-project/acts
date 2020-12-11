@@ -30,13 +30,13 @@ using OrientedSurface = std::pair<SurfacePtr, NavigationDirection>;
 using OrientedSurfaces = std::vector<OrientedSurface>;
 
 // Planar definitions to help construct the boundary surfaces
-static const Transform3D s_planeXY = Transform3D::Identity();
-static const Transform3D s_planeYZ = AngleAxis3(0.5 * M_PI, Vector3::UnitY()) *
-                                     AngleAxis3(0.5 * M_PI, Vector3::UnitZ()) *
-                                     Transform3D::Identity();
-static const Transform3D s_planeZX = AngleAxis3(-0.5 * M_PI, Vector3::UnitX()) *
-                                     AngleAxis3(-0.5 * M_PI, Vector3::UnitZ()) *
-                                     Transform3D::Identity();
+static const Transform3 s_planeXY = Transform3::Identity();
+static const Transform3 s_planeYZ = AngleAxis3(0.5 * M_PI, Vector3::UnitY()) *
+                                    AngleAxis3(0.5 * M_PI, Vector3::UnitZ()) *
+                                    Transform3::Identity();
+static const Transform3 s_planeZX = AngleAxis3(-0.5 * M_PI, Vector3::UnitX()) *
+                                    AngleAxis3(-0.5 * M_PI, Vector3::UnitZ()) *
+                                    Transform3::Identity();
 
 /// @class VolumeBounds
 ///
@@ -99,7 +99,7 @@ class VolumeBounds {
   ///
   /// @return a vector of surfaces bounding this volume
   virtual OrientedSurfaces orientedSurfaces(
-      const Transform3D& transform = Transform3D::Identity()) const = 0;
+      const Transform3& transform = Transform3::Identity()) const = 0;
 
   /// Construct bounding box for this shape
   /// @param trf Optional transform
@@ -107,7 +107,7 @@ class VolumeBounds {
   /// @param entity Entity to associate this bounding box with
   /// @return Constructed bounding box
   virtual Volume::BoundingBox boundingBox(
-      const Transform3D* trf = nullptr, const Vector3& envelope = {0, 0, 0},
+      const Transform3* trf = nullptr, const Vector3& envelope = {0, 0, 0},
       const Volume* entity = nullptr) const = 0;
 
   /// Binning offset - overloaded for some R-binning types

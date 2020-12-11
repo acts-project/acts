@@ -730,8 +730,8 @@ json Acts::JsonGeometryConverter::surfaceMaterialToJson(
       smj[binkeys[ibin]] = binj;
     }
     std::vector<double> transfo;
-    Acts::Transform3D transfo_matrix = bUtility->transform();
-    if (not transfo_matrix.isApprox(Acts::Transform3D::Identity())) {
+    Acts::Transform3 transfo_matrix = bUtility->transform();
+    if (not transfo_matrix.isApprox(Acts::Transform3::Identity())) {
       for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
           transfo.push_back(transfo_matrix(j, i));
@@ -842,7 +842,7 @@ json Acts::JsonGeometryConverter::volumeMaterialToJson(
       smj[binkeys[ibin]] = binj;
     }
     std::vector<double> transfo;
-    Acts::Transform3D transfo_matrix = bUtility->transform();
+    Acts::Transform3 transfo_matrix = bUtility->transform();
     for (int i = 0; i < 4; i++) {
       for (int j = 0; j < 4; j++) {
         transfo.push_back(transfo_matrix(j, i));
@@ -930,9 +930,9 @@ Acts::BinUtility Acts::JsonGeometryConverter::jsonToBinUtility(
 }
 
 /// Create the local to global transform
-Acts::Transform3D Acts::JsonGeometryConverter::jsonToTransform(
+Acts::Transform3 Acts::JsonGeometryConverter::jsonToTransform(
     const json& transfo) {
-  Transform3D transform;
+  Transform3 transform;
   int i = 0;
   int j = 0;
   for (auto& element : transfo) {

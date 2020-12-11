@@ -98,8 +98,8 @@ using AngleAxis3 = Eigen::AngleAxis<ActsScalar>;
 // combined affine transformations. types are chosen for better data alignment:
 // - 2d affine compact stored as 2x3 matrix
 // - 3d affine stored as 4x4 matrix
-using Transform2D = Eigen::Transform<ActsScalar, 2, Eigen::AffineCompact>;
-using Transform3D = Eigen::Transform<ActsScalar, 3, Eigen::Affine>;
+using Transform2 = Eigen::Transform<ActsScalar, 2, Eigen::AffineCompact>;
+using Transform3 = Eigen::Transform<ActsScalar, 3, Eigen::Affine>;
 
 /// @}
 

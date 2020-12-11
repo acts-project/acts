@@ -13,9 +13,9 @@
 #include <utility>
 
 Acts::PerigeeSurface::PerigeeSurface(const Vector3& gp)
-    : LineSurface(Transform3D(Translation3(gp.x(), gp.y(), gp.z())), nullptr) {}
+    : LineSurface(Transform3(Translation3(gp.x(), gp.y(), gp.z())), nullptr) {}
 
-Acts::PerigeeSurface::PerigeeSurface(const Transform3D& transform)
+Acts::PerigeeSurface::PerigeeSurface(const Transform3& transform)
     : GeometryObject(), LineSurface(transform) {}
 
 Acts::PerigeeSurface::PerigeeSurface(const PerigeeSurface& other)
@@ -23,7 +23,7 @@ Acts::PerigeeSurface::PerigeeSurface(const PerigeeSurface& other)
 
 Acts::PerigeeSurface::PerigeeSurface(const GeometryContext& gctx,
                                      const PerigeeSurface& other,
-                                     const Transform3D& shift)
+                                     const Transform3& shift)
     : GeometryObject(), LineSurface(gctx, other, shift) {}
 
 Acts::PerigeeSurface& Acts::PerigeeSurface::operator=(
@@ -61,7 +61,7 @@ Acts::Polyhedron Acts::PerigeeSurface::polyhedronRepresentation(
   std::vector<Polyhedron::FaceType> faces;
   std::vector<Polyhedron::FaceType> triangularMesh;
 
-  const Transform3D& ctransform = transform(gctx);
+  const Transform3& ctransform = transform(gctx);
   Vector3 left(0, 0, -100.);
   Vector3 right(0, 0, 100.);
 

@@ -123,7 +123,7 @@ struct LayerCreatorFixture {
     for (size_t i = 0; i < n; ++i) {
       double z = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
 
-      Transform3D trans;
+      Transform3 trans;
       trans.setIdentity();
       trans.rotate(Eigen::AngleAxisd(i * phiStep + shift, Vector3(0, 0, 1)));
       trans.translate(Vector3(r, 0, z));
@@ -149,7 +149,7 @@ struct LayerCreatorFixture {
     for (int i = 0; i < n; ++i) {
       double z = zbase;
 
-      Transform3D trans;
+      Transform3 trans;
       trans.setIdentity();
       trans.rotate(Eigen::AngleAxisd(i * phiStep + shift, Vector3(0, 0, 1)));
       trans.translate(Vector3(10, 0, z));
@@ -195,7 +195,7 @@ struct LayerCreatorFixture {
 
       double phiStep = 2 * M_PI / nPhi;
       for (int j = 0; j < nPhi; ++j) {
-        Transform3D trans;
+        Transform3 trans;
         trans.setIdentity();
         trans.rotate(Eigen::AngleAxisd(j * phiStep + shift, Vector3(0, 0, 1)));
         trans.translate(Vector3(10, 0, z));
@@ -207,7 +207,7 @@ struct LayerCreatorFixture {
             Surface::makeShared<PlaneSurface>(trans, bounds);
 
         Vector3 nrm = srfA->normal(tgContext);
-        Transform3D transB = trans;
+        Transform3 transB = trans;
         transB.pretranslate(nrm * 0.1);
         std::shared_ptr<PlaneSurface> srfB =
             Surface::makeShared<PlaneSurface>(transB, bounds);

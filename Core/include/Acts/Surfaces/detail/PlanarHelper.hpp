@@ -23,7 +23,7 @@ namespace PlanarHelper {
 /// @param direction The starting direction for the intersection
 ///
 /// @return The intersection
-static Intersection3D intersect(const Transform3D& transform,
+static Intersection3D intersect(const Transform3& transform,
                                 const Vector3& position,
                                 const Vector3& direction) {
   // Get the matrix from the transform (faster access)

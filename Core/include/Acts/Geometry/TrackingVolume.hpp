@@ -98,7 +98,7 @@ class TrackingVolume : public Volume {
   ///
   /// @return shared pointer to a new TrackingVolume
   static MutableTrackingVolumePtr create(
-      const Transform3D& transform, VolumeBoundsPtr volumeBounds,
+      const Transform3& transform, VolumeBoundsPtr volumeBounds,
       const std::shared_ptr<const TrackingVolumeArray>& containedVolumes =
           nullptr,
       const std::string& volumeName = "undefined") {
@@ -119,7 +119,7 @@ class TrackingVolume : public Volume {
   ///
   /// @return shared pointer to a new TrackingVolume
   static MutableTrackingVolumePtr create(
-      const Transform3D& transform, VolumeBoundsPtr volbounds,
+      const Transform3& transform, VolumeBoundsPtr volbounds,
       std::vector<std::unique_ptr<Volume::BoundingBox>> boxStore,
       std::vector<std::unique_ptr<const Volume>> descendants,
       const Volume::BoundingBox* top,
@@ -143,7 +143,7 @@ class TrackingVolume : public Volume {
   ///
   /// @return shared pointer to a new TrackingVolume
   static MutableTrackingVolumePtr create(
-      const Transform3D& transform, VolumeBoundsPtr volumeBounds,
+      const Transform3& transform, VolumeBoundsPtr volumeBounds,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial,
       std::unique_ptr<const LayerArray> containedLayers = nullptr,
       std::shared_ptr<const TrackingVolumeArray> containedVolumes = nullptr,
@@ -359,12 +359,12 @@ class TrackingVolume : public Volume {
   /// @param volbounds is the description of the volume boundaries
   /// @param containedVolumeArray are the static volumes that fill this volume
   /// @param volumeName is a string identifier
-  TrackingVolume(const Transform3D& transform, VolumeBoundsPtr volbounds,
+  TrackingVolume(const Transform3& transform, VolumeBoundsPtr volbounds,
                  const std::shared_ptr<const TrackingVolumeArray>&
                      containedVolumeArray = nullptr,
                  const std::string& volumeName = "undefined");
 
-  TrackingVolume(const Transform3D& transform, VolumeBoundsPtr volbounds,
+  TrackingVolume(const Transform3& transform, VolumeBoundsPtr volbounds,
                  std::vector<std::unique_ptr<Volume::BoundingBox>> boxStore,
                  std::vector<std::unique_ptr<const Volume>> descendants,
                  const Volume::BoundingBox* top,
@@ -383,7 +383,7 @@ class TrackingVolume : public Volume {
   /// @param denseVolumeVector  The contained dense volumes
   /// @param volumeName is a string identifier
   TrackingVolume(
-      const Transform3D& transform, VolumeBoundsPtr volumeBounds,
+      const Transform3& transform, VolumeBoundsPtr volumeBounds,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial,
       std::unique_ptr<const LayerArray> staticLayerArray = nullptr,
       std::shared_ptr<const TrackingVolumeArray> containedVolumeArray = nullptr,

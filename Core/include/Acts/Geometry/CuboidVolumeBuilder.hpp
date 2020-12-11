@@ -54,7 +54,7 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     // Constructor function for optional detector elements
     // Arguments are transform, rectangle bounds and thickness.
     std::function<DetectorElementBase*(
-        const Transform3D&, std::shared_ptr<const RectangleBounds>, double)>
+        const Transform3&, std::shared_ptr<const RectangleBounds>, double)>
         detElementConstructor;
   };
 

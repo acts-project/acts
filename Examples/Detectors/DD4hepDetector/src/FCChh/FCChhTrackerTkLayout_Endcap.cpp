@@ -166,7 +166,7 @@ static dd4hep::Ref_t createTkLayoutTrackerEndcap(
             dd4hep::RotationZ lRotation_PhiPos(phi);
             // position in  disk
             dd4hep::Translation3 lTranslation(lX, lY, lZ + componentOffset);
-            dd4hep::Transform3D myTrafo(
+            dd4hep::Transform3 myTrafo(
                 lRotation4 * lRotation3 * lRotation2 * lRotation1,
                 lTranslation);
             PlacedVolume placedComponentVolume =

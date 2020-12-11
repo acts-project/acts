@@ -68,7 +68,7 @@ struct Polyhedron {
   /// Move the polyhedron with a Transfrom3D
   ///
   /// @param transform The additional transform applied
-  void move(const Transform3D& transform);
+  void move(const Transform3& transform);
 
   /// Maximum extent of the polyhedron in space
   ///
@@ -77,6 +77,6 @@ struct Polyhedron {
   /// with respect to a given coordinate frame
   ///
   /// @return ranges that describe the space taken by this surface
-  Extent extent(const Transform3D& transform = Transform3D::Identity()) const;
+  Extent extent(const Transform3& transform = Transform3::Identity()) const;
 };
 }  // namespace Acts

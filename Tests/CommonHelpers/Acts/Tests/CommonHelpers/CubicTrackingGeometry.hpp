@@ -79,7 +79,7 @@ struct CubicTrackingGeometry {
     std::array<std::shared_ptr<const Surface>, 6> surfaces;
     unsigned int i;
     for (i = 0; i < translations.size(); i++) {
-      Transform3D trafo(Transform3D::Identity() * rotation);
+      Transform3 trafo(Transform3::Identity() * rotation);
       trafo.translation() = translations[i];
       // Create the detector element
       auto detElement = std::make_unique<const DetectorElementStub>(
@@ -93,7 +93,7 @@ struct CubicTrackingGeometry {
     // Construct layers
     std::array<LayerPtr, 6> layers;
     for (i = 0; i < 6; i++) {
-      Transform3D trafo(Transform3D::Identity() * rotation);
+      Transform3 trafo(Transform3::Identity() * rotation);
       trafo.translation() = translations[i];
 
       std::unique_ptr<SurfaceArray> surArray(new SurfaceArray(surfaces[i]));
@@ -106,7 +106,7 @@ struct CubicTrackingGeometry {
     }
 
     // Build volume for surfaces with negative x-values
-    Transform3D trafoVol1(Transform3D::Identity());
+    Transform3 trafoVol1(Transform3::Identity());
     trafoVol1.translation() = Vector3(-1.5_m, 0., 0.);
 
     auto boundsVol =
@@ -128,7 +128,7 @@ struct CubicTrackingGeometry {
                                std::move(layArr1), nullptr, {}, "Volume 1");
 
     // Build volume for surfaces with positive x-values
-    Transform3D trafoVol2(Transform3D::Identity());
+    Transform3 trafoVol2(Transform3::Identity());
     trafoVol2.translation() = Vector3(1.5_m, 0., 0.);
 
     layVec.clear();
@@ -152,7 +152,7 @@ struct CubicTrackingGeometry {
         BoundarySurfaceFace::negativeFaceYZ);
 
     // Build world volume
-    Transform3D trafoWorld(Transform3D::Identity());
+    Transform3 trafoWorld(Transform3::Identity());
     trafoWorld.translation() = Vector3(0., 0., 0.);
 
     auto worldVol =

@@ -68,11 +68,11 @@ class Surface : public virtual GeometryObject,
   };
 
  protected:
-  /// Constructor with Transform3D as a shared object
+  /// Constructor with Transform3 as a shared object
   ///
-  /// @param transform Transform3D positions the surface in 3D global space
+  /// @param transform Transform3 positions the surface in 3D global space
   /// @note also acts as default constructor
-  Surface(const Transform3D& transform = Transform3D::Identity());
+  Surface(const Transform3& transform = Transform3::Identity());
 
   /// Copy constructor
   ///
@@ -96,7 +96,7 @@ class Surface : public virtual GeometryObject,
   /// @param other Source surface for copy
   /// @param shift Additional transform applied as: shift * transform
   Surface(const GeometryContext& gctx, const Surface& other,
-          const Transform3D& shift);
+          const Transform3& shift);
 
  public:
   virtual ~Surface();
@@ -157,7 +157,7 @@ class Surface : public virtual GeometryObject,
   /// Return method for the Surface type to avoid dynamic casts
   virtual SurfaceType type() const = 0;
 
-  /// Return method for the surface Transform3D by reference
+  /// Return method for the surface Transform3 by reference
   /// In case a detector element is associated the surface transform
   /// is just forwarded to the detector element in order to keep the
   /// (mis-)alignment cache cetrally handled
@@ -165,7 +165,7 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   ///
   /// @return the contextual transform
-  virtual const Transform3D& transform(const GeometryContext& gctx) const;
+  virtual const Transform3& transform(const GeometryContext& gctx) const;
 
   /// Return method for the surface center by reference
   /// @note the center is always recalculated in order to not keep a cache
@@ -465,9 +465,9 @@ class Surface : public virtual GeometryObject,
       const GeometryContext& gctx, const Vector3& position) const = 0;
 
  protected:
-  /// Transform3D definition that positions
+  /// Transform3 definition that positions
   /// (translation, rotation) the surface in global space
-  Transform3D m_transform = Transform3D::Identity();
+  Transform3 m_transform = Transform3::Identity();
 
   /// Pointer to the a DetectorElementBase
   const DetectorElementBase* m_associatedDetElement{nullptr};

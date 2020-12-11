@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(toString_test_helper) {
   out = toString(trl);
   BOOST_CHECK(out.size() > 0);
 
-  Transform3D trf;
+  Transform3 trf;
   trf = trl;
   out = toString(trf);
   BOOST_CHECK(out.size() > 0);

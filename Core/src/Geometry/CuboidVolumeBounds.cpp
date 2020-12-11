@@ -41,7 +41,7 @@ Acts::CuboidVolumeBounds& Acts::CuboidVolumeBounds::operator=(
 }
 
 Acts::OrientedSurfaces Acts::CuboidVolumeBounds::orientedSurfaces(
-    const Transform3D& transform) const {
+    const Transform3& transform) const {
   OrientedSurfaces oSurfaces;
   oSurfaces.reserve(6);
   // Face surfaces xy -------------------------------------
@@ -84,7 +84,7 @@ std::ostream& Acts::CuboidVolumeBounds::toStream(std::ostream& sl) const {
 }
 
 Acts::Volume::BoundingBox Acts::CuboidVolumeBounds::boundingBox(
-    const Acts::Transform3D* trf, const Vector3& envelope,
+    const Acts::Transform3* trf, const Vector3& envelope,
     const Volume* entity) const {
   Vector3 vmin(-get(eHalfLengthX), -get(eHalfLengthY), -get(eHalfLengthZ));
   Vector3 vmax(get(eHalfLengthX), get(eHalfLengthY), get(eHalfLengthZ));

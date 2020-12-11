@@ -52,7 +52,7 @@ Acts::CylinderVolumeBounds::CylinderVolumeBounds(
 }
 
 Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
-    const Transform3D& transform) const {
+    const Transform3& transform) const {
   OrientedSurfaces oSurfaces;
   oSurfaces.reserve(6);
 
@@ -80,7 +80,7 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
   // [4] & [5] - Sectoral planes (optional)
   if (m_sectorPlaneBounds != nullptr) {
     // sectorPlane 1 (negative phi)
-    const Transform3D sp1Transform = Transform3D(
+    const Transform3 sp1Transform = Transform3(
         transform * AngleAxis3(-get(eHalfPhiSector), Vector3(0., 0., 1.)) *
         Translation3(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.) *
         AngleAxis3(M_PI / 2, Vector3(1., 0., 0.)));
@@ -88,7 +88,7 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
         Surface::makeShared<PlaneSurface>(sp1Transform, m_sectorPlaneBounds);
     oSurfaces.push_back(OrientedSurface(std::move(pSurface), forward));
     // sectorPlane 2 (positive phi)
-    const Transform3D sp2Transform = Transform3D(
+    const Transform3 sp2Transform = Transform3(
         transform * AngleAxis3(get(eHalfPhiSector), Vector3(0., 0., 1.)) *
         Translation3(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.) *
         AngleAxis3(-M_PI / 2, Vector3(1., 0., 0.)));
@@ -120,7 +120,7 @@ std::ostream& Acts::CylinderVolumeBounds::toStream(std::ostream& sl) const {
 }
 
 Acts::Volume::BoundingBox Acts::CylinderVolumeBounds::boundingBox(
-    const Transform3D* trf, const Vector3& envelope,
+    const Transform3* trf, const Vector3& envelope,
     const Volume* entity) const {
   double xmax, xmin, ymax, ymin;
   xmax = get(eMaxR);

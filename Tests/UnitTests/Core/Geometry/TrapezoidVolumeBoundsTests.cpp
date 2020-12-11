@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
   CHECK_CLOSE_ABS(bb.max(), Vector3(10, 8, 4), tol);
   CHECK_CLOSE_ABS(bb.min(), Vector3(-10, -8, -4), tol);
 
-  Transform3D trf;
+  Transform3 trf;
 
   trf = Translation3(Vector3(0, 30, 20));
 
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
 BOOST_AUTO_TEST_CASE(TrapezoidVolumeBoundarySurfaces) {
   TrapezoidVolumeBounds tvb(5, 10, 8, 4);
 
-  auto tvbOrientedSurfaces = tvb.orientedSurfaces(Transform3D::Identity());
+  auto tvbOrientedSurfaces = tvb.orientedSurfaces(Transform3::Identity());
   BOOST_CHECK_EQUAL(tvbOrientedSurfaces.size(), 6);
 
   auto geoCtx = GeometryContext();

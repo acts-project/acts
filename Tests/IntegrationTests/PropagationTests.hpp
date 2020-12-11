@@ -153,7 +153,7 @@ inline void checkCovarianceConsistency(
 
 /// Construct the transformation from the curvilinear to the global coordinates.
 template <typename charge_t>
-inline Acts::Transform3D makeCurvilinearTransform(
+inline Acts::Transform3 makeCurvilinearTransform(
     const Acts::SingleBoundTrackParameters<charge_t>& params,
     const Acts::GeometryContext& geoCtx) {
   Acts::Vector3 unitW = params.unitDirection();
@@ -164,7 +164,7 @@ inline Acts::Transform3D makeCurvilinearTransform(
   rotation.col(1) = unitV;
   rotation.col(2) = unitW;
   Acts::Translation3 offset(params.position(geoCtx));
-  Acts::Transform3D toGlobal = offset * rotation;
+  Acts::Transform3 toGlobal = offset * rotation;
 
   return toGlobal;
 }
@@ -178,7 +178,7 @@ struct ZCylinderSurfaceBuilder {
     auto radius = params.position(geoCtx).template head<2>().norm();
     auto halfz = std::numeric_limits<double>::max();
     return Acts::Surface::makeShared<Acts::CylinderSurface>(
-        Acts::Transform3D::Identity(), radius, halfz);
+        Acts::Transform3::Identity(), radius, halfz);
   }
 };
 
@@ -224,7 +224,7 @@ struct ZStrawSurfaceBuilder {
       const Acts::SingleBoundTrackParameters<charge_t>& params,
       const Acts::GeometryContext& geoCtx) {
     return Acts::Surface::makeShared<Acts::StrawSurface>(
-        Acts::Transform3D(Acts::Translation3(params.position(geoCtx))));
+        Acts::Transform3(Acts::Translation3(params.position(geoCtx))));
   }
 };
 

@@ -82,7 +82,7 @@ Acts::DD4hepVolumeBuilder::centralVolumes() const {
   return volumes;
 }
 
-Acts::Transform3D Acts::DD4hepVolumeBuilder::convertTransform(
+Acts::Transform3 Acts::DD4hepVolumeBuilder::convertTransform(
     const TGeoMatrix* tGeoTrans) const {
   // Get the placement and orientation in respect to its mother
   const Double_t* rotation = tGeoTrans->GetRotationMatrix();

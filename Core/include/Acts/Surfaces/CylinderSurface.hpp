@@ -41,22 +41,22 @@ class CylinderSurface : public Surface {
   CylinderSurface(std::shared_ptr<const CylinderBounds> cbounds,
                   const DetectorElementBase& detelement);
 
-  /// Constructor from Transform3D and CylinderBounds
+  /// Constructor from Transform3 and CylinderBounds
   ///
   /// @param transform The transform to position the surface
   /// @param radius The radius of the cylinder
   /// @param halfz The half length in z
   /// @param halfphi The half opening angle
   /// @param avphi The phi value from which the opening angle spans (both sides)
-  CylinderSurface(const Transform3D& transform, double radius, double halfz,
+  CylinderSurface(const Transform3& transform, double radius, double halfz,
                   double halfphi = M_PI, double avphi = 0.);
 
-  /// Constructor from Transform3D and CylinderBounds arguments
+  /// Constructor from Transform3 and CylinderBounds arguments
   ///
   /// @param transform The transform to position the surface
   /// @param cbounds is a shared pointer to a cylindeer bounds object,
   /// it must exist (assert test)
-  CylinderSurface(const Transform3D& transform,
+  CylinderSurface(const Transform3& transform,
                   const std::shared_ptr<const CylinderBounds>& cbounds);
 
   /// Copy constructor
@@ -70,7 +70,7 @@ class CylinderSurface : public Surface {
   /// @param other is the source cone surface
   /// @param shift is the additional transfrom applied after copying
   CylinderSurface(const GeometryContext& gctx, const CylinderSurface& other,
-                  const Transform3D& shift);
+                  const Transform3& shift);
 
  public:
   ~CylinderSurface() override = default;
@@ -266,7 +266,7 @@ class CylinderSurface : public Surface {
   ///
   /// @return the quadratic equation
   detail::RealQuadraticEquation intersectionSolver(
-      const Transform3D& transform, const Vector3& position,
+      const Transform3& transform, const Vector3& position,
       const Vector3& direction) const;
 };
 

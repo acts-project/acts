@@ -61,8 +61,8 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
   std::shared_ptr<const PlanarBounds> moduleBounds(
       new RectangleBounds(m_activeBounds->boundingBox()));
   // - they are separated by half a thickness in z
-  auto readoutPlaneTransform = Transform3D::Identity();
-  auto counterPlaneTransform = Transform3D::Identity();
+  auto readoutPlaneTransform = Transform3::Identity();
+  auto counterPlaneTransform = Transform3::Identity();
   // readout and counter readout bounds, the bounds of the readout plane are
   // like the active ones
   std::shared_ptr<const PlanarBounds> readoutPlaneBounds = moduleBounds;
@@ -156,7 +156,7 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
           boundaryStraight ? xBinRotationMatrix : lorentzPlaneRotationMatrix;
       // build the rotation from it
       auto boundaryXTransform =
-          Transform3D(Translation3(boundaryXPosition) * boundaryXRotation);
+          Transform3(Translation3(boundaryXPosition) * boundaryXRotation);
       // the correct bounds for this
       std::shared_ptr<const PlanarBounds> boundaryXBounds =
           boundaryStraight ? xBinBounds : lorentzPlaneBounds;
@@ -168,7 +168,7 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
       // shift by the lorentz angle
       Vector3 lorentzPlanePosition(
           cPosX - readoutDirection * lorentzPlaneShiftX, 0., 0.);
-      auto lorentzPlaneTransform = Transform3D(
+      auto lorentzPlaneTransform = Transform3(
           Translation3(lorentzPlanePosition) * lorentzPlaneRotationMatrix);
       // lorentz plane surfaces
       segmentationSurfacesX.push_back(Surface::makeShared<PlaneSurface>(
@@ -199,7 +199,7 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
     Vector3 binSurfaceCenter(0., binPosY, 0.);
     // the binning transform
     auto binTransform =
-        Transform3D(Translation3(binSurfaceCenter) * yBinRotationMatrix);
+        Transform3(Translation3(binSurfaceCenter) * yBinRotationMatrix);
     // these are the boundaries
     if (ibiny == 0 || ibiny == m_binUtility->bins(1)) {
       boundarySurfaces.push_back(

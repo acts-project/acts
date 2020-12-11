@@ -38,7 +38,7 @@ class ConeSurface : public Surface {
   /// @param transform is the transform to place to cone in a 3D frame
   /// @param alpha is the opening angle of the cone
   /// @param symmetric indicates if the cones are built to +/1 z
-  ConeSurface(const Transform3D& transform, double alpha,
+  ConeSurface(const Transform3& transform, double alpha,
               bool symmetric = false);
 
   /// Constructor form HepTransform and an opening angle
@@ -48,14 +48,14 @@ class ConeSurface : public Surface {
   /// @param zmin is the z range over which the cone spans
   /// @param zmax is the z range over which the cone spans
   /// @param halfPhi is the openen angle for cone ssectors
-  ConeSurface(const Transform3D& transform, double alpha, double zmin,
+  ConeSurface(const Transform3& transform, double alpha, double zmin,
               double zmax, double halfPhi = M_PI);
 
   /// Constructor from HepTransform and ConeBounds
   ///
   /// @param transform is the transform that places the cone in the global frame
   /// @param cbounds is the boundary class, the bounds must exit
-  ConeSurface(const Transform3D& transform,
+  ConeSurface(const Transform3& transform,
               const std::shared_ptr<const ConeBounds>& cbounds);
 
   /// Copy constructor
@@ -69,7 +69,7 @@ class ConeSurface : public Surface {
   /// @param other is the source cone surface
   /// @param shift is the additional transfrom applied after copying
   ConeSurface(const GeometryContext& gctx, const ConeSurface& other,
-              const Transform3D& shift);
+              const Transform3& shift);
 
  public:
   ~ConeSurface() override = default;

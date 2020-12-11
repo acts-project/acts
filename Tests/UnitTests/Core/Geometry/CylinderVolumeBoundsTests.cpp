@@ -166,7 +166,7 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBoundsOrientedSurfaces,
   double halfz = 3.;
   CylinderVolumeBounds cylBounds(rmin, rmax, halfz);
   // create the transformation matrix
-  auto transform = Transform3D(Translation3(pos));
+  auto transform = Transform3(Translation3(pos));
   transform *= rotZ;
   transform *= rotY;
   transform *= rotX;
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsBoundingBox) {
   CylinderVolumeBounds cvb(0., 5, 10);
   auto bb = cvb.boundingBox();
 
-  Transform3D rot;
+  Transform3 rot;
   rot = AngleAxis3(M_PI / 2., Vector3::UnitX());
 
   BOOST_CHECK_EQUAL(bb.entity(), nullptr);
@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeOrientedBoundaries) {
 
   CylinderVolumeBounds cvb(5, 10, 20);
 
-  auto cvbOrientedSurfaces = cvb.orientedSurfaces(Transform3D::Identity());
+  auto cvbOrientedSurfaces = cvb.orientedSurfaces(Transform3::Identity());
   BOOST_CHECK_EQUAL(cvbOrientedSurfaces.size(), 4);
 
   auto geoCtx = GeometryContext();

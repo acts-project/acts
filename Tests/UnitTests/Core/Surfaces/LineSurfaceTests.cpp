@@ -38,8 +38,8 @@ BOOST_AUTO_TEST_CASE(LineSurface_Constructors_test) {
   // LineSurfaceStub l;
   // ctor with translation, radius, halfz
   Translation3 translation{0., 1., 2.};
-  Transform3D transform(translation);
-  auto pTransform = Transform3D(translation);
+  Transform3 transform(translation);
+  auto pTransform = Transform3(translation);
   const double radius{2.0}, halfz{20.};
   BOOST_CHECK(LineSurfaceStub(pTransform, radius, halfz).constructedOk());
   // ctor with nullptr for LineBounds
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_Constructors_test) {
 BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   // binningPosition()
   Translation3 translation{0., 1., 2.};
-  Transform3D transform(translation);
+  Transform3 transform(translation);
   LineSurfaceStub line(transform, 2.0, 20.);
   Vector3 referencePosition{0., 1., 2.};
   CHECK_CLOSE_ABS(referencePosition, line.binningPosition(tgContext, binX),
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
 /// Unit test for testing LineSurface assignment
 BOOST_AUTO_TEST_CASE(LineSurface_assignment_test) {
   Translation3 translation{0., 1., 2.};
-  Transform3D transform(translation);
+  Transform3 transform(translation);
   LineSurfaceStub originalLine(transform, 2.0, 20.);
   LineSurfaceStub assignedLine(transform, 1.0, 1.0);
   BOOST_CHECK(assignedLine != originalLine);  // operator != from base
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_assignment_test) {
 /// Unit test for testing LineSurface alignment derivatives
 BOOST_AUTO_TEST_CASE(LineSurfaceAlignment) {
   Translation3 translation{0., 1., 2.};
-  Transform3D transform(translation);
+  Transform3 transform(translation);
   LineSurfaceStub line(transform, 2.0, 20.);
 
   const auto& rotation = transform.rotation();

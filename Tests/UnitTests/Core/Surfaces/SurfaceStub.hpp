@@ -18,10 +18,10 @@ namespace Acts {
 /// Surface derived class stub
 class SurfaceStub : public Surface {
  public:
-  SurfaceStub(const Transform3D& htrans = Transform3D::Identity())
+  SurfaceStub(const Transform3& htrans = Transform3::Identity())
       : GeometryObject(), Surface(htrans) {}
   SurfaceStub(const GeometryContext& gctx, const SurfaceStub& sf,
-              const Transform3D& transf)
+              const Transform3& transf)
       : GeometryObject(), Surface(gctx, sf, transf) {}
   SurfaceStub(const DetectorElementBase& detelement)
       : GeometryObject(), Surface(detelement) {}

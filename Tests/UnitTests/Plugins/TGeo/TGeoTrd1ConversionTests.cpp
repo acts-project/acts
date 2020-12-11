@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(TGeoTrd1_to_PlaneSurface) {
     auto rotation = transform.rotation();
     const Vector3 offset{(-5.5 + (itrd++) * 2.5) * hxmax, 0., 0.};
     GeometryView3D::drawSurface(objVis, *plane, tgContext,
-                                Translation3{offset} * Transform3D::Identity());
+                                Translation3{offset} * Transform3::Identity());
     const Vector3 center = plane->center(tgContext) + offset;
     GeometryView3D::drawArrowForward(
         objVis, center, center + 1.2 * (hXminY + hXmaxY) * rotation.col(0), 4.,

@@ -92,12 +92,12 @@ BOOST_AUTO_TEST_CASE(BinUtility_equidistant_binning) {
 }
 // OPEN - local to global transform test
 BOOST_AUTO_TEST_CASE(BinUtility_transform) {
-  Transform3D transform_LtoG = Transform3D::Identity();
+  Transform3 transform_LtoG = Transform3::Identity();
   transform_LtoG = transform_LtoG * Translation3(0., 0., -50);
   transform_LtoG = transform_LtoG * AngleAxis3(M_PI / 4, Vector3(0, 0, 1));
   ;
 
-  Transform3D transform_GtoL = transform_LtoG.inverse();
+  Transform3 transform_GtoL = transform_LtoG.inverse();
 
   BinUtility rUtil(10, 0., 100., open, binR);
   BinUtility phiUtil(10, -M_PI, M_PI, closed, binPhi);

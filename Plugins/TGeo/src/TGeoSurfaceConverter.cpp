@@ -40,7 +40,7 @@
 #include "TGeoTrd2.h"
 #include "TGeoTube.h"
 
-std::tuple<std::shared_ptr<const Acts::CylinderBounds>, const Acts::Transform3D,
+std::tuple<std::shared_ptr<const Acts::CylinderBounds>, const Acts::Transform3,
            double>
 Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
                                                const Double_t* rotation,
@@ -48,7 +48,7 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
                                                const std::string& axes,
                                                double scalor) noexcept(false) {
   std::shared_ptr<const CylinderBounds> bounds = nullptr;
-  Transform3D transform = Transform3D::Identity();
+  Transform3 transform = Transform3::Identity();
   double thickness = 0.;
 
   // Check if it's a tube (segment)
@@ -105,7 +105,7 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
   return {bounds, transform, thickness};
 }
 
-std::tuple<std::shared_ptr<const Acts::DiscBounds>, const Acts::Transform3D,
+std::tuple<std::shared_ptr<const Acts::DiscBounds>, const Acts::Transform3,
            double>
 Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
                                            const Double_t* rotation,
@@ -114,7 +114,7 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
                                            double scalor) noexcept(false) {
   using Line2D = Eigen::Hyperplane<double, 2>;
   std::shared_ptr<const DiscBounds> bounds = nullptr;
-  Transform3D transform = Transform3D::Identity();
+  Transform3 transform = Transform3::Identity();
 
   double thickness = 0.;
   // Special test for composite shape of silicon
@@ -257,7 +257,7 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
   return {bounds, transform, thickness};
 }
 
-std::tuple<std::shared_ptr<const Acts::PlanarBounds>, const Acts::Transform3D,
+std::tuple<std::shared_ptr<const Acts::PlanarBounds>, const Acts::Transform3,
            double>
 Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
                                             const Double_t* rotation,

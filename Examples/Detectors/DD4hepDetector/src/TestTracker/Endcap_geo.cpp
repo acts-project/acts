@@ -148,10 +148,10 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
           }
           Rotation3 rotation1(1., 0., 0., 0., 1., 0., 0., 0., 1.);
           // Place Module Box Volumes in layer
-          Transform3D transf1(RotationX(0.5 * M_PI) *
-                                  RotationY(phi + 0.5 * M_PI) *
-                                  RotationZ(0.1 * M_PI),
-                              trans);
+          Transform3 transf1(RotationX(0.5 * M_PI) *
+                                 RotationY(phi + 0.5 * M_PI) *
+                                 RotationZ(0.1 * M_PI),
+                             trans);
           PlacedVolume placedmodule =
               layer_vol.placeVolume(mod_vol, rotation1 * transf1);
           placedmodule.addPhysVolID("module",
@@ -185,7 +185,7 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
   if (x_det_dim.z() < 0.) {
     rotation.SetComponents(1., 0., 0., 0., -1., 0., 0., 0., -1.);
   }
-  Transform3D endcap_transform(rotation, endcap_translation);
+  Transform3 endcap_transform(rotation, endcap_translation);
   Volume mother_vol = lcdd.pickMotherVolume(cylinderVolume);
   PlacedVolume placedTube = mother_vol.placeVolume(tube_vol, endcap_transform);
   placedTube.addPhysVolID("system", cylinderVolume.id());

@@ -121,10 +121,10 @@ EigenPropagatorType epropagator(std::move(estepper));
 
 auto mCylinder = std::make_shared<CylinderBounds>(10_mm, 1000_mm);
 auto mSurface =
-    Surface::makeShared<CylinderSurface>(Transform3D::Identity(), mCylinder);
+    Surface::makeShared<CylinderSurface>(Transform3::Identity(), mCylinder);
 auto cCylinder = std::make_shared<CylinderBounds>(150_mm, 1000_mm);
 auto cSurface =
-    Surface::makeShared<CylinderSurface>(Transform3D::Identity(), cCylinder);
+    Surface::makeShared<CylinderSurface>(Transform3::Identity(), cCylinder);
 
 const int ntests = 5;
 

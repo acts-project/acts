@@ -25,10 +25,10 @@ Acts::CylinderSurface::CylinderSurface(const CylinderSurface& other)
 
 Acts::CylinderSurface::CylinderSurface(const GeometryContext& gctx,
                                        const CylinderSurface& other,
-                                       const Transform3D& shift)
+                                       const Transform3& shift)
     : GeometryObject(), Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
 
-Acts::CylinderSurface::CylinderSurface(const Transform3D& transform,
+Acts::CylinderSurface::CylinderSurface(const Transform3& transform,
                                        double radius, double halfz,
                                        double halfphi, double avphi)
     : Surface(transform),
@@ -44,7 +44,7 @@ Acts::CylinderSurface::CylinderSurface(
 }
 
 Acts::CylinderSurface::CylinderSurface(
-    const Transform3D& transform,
+    const Transform3& transform,
     const std::shared_ptr<const CylinderBounds>& cbounds)
     : Surface(transform), m_bounds(cbounds) {
   throw_assert(cbounds, "CylinderBounds must not be nullptr");
@@ -121,8 +121,8 @@ Acts::Result<Acts::Vector2> Acts::CylinderSurface::globalToLocal(
   if (inttol < 0.01) {
     inttol = 0.01;
   }
-  const Transform3D& sfTransform = transform(gctx);
-  Transform3D inverseTrans(sfTransform.inverse());
+  const Transform3& sfTransform = transform(gctx);
+  Transform3 inverseTrans(sfTransform.inverse());
   Vector3 loc3Dframe(inverseTrans * position);
   if (std::abs(perp(loc3Dframe) - bounds().get(CylinderBounds::eR)) > inttol) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
@@ -144,7 +144,7 @@ Acts::Vector3 Acts::CylinderSurface::normal(
 
 Acts::Vector3 Acts::CylinderSurface::normal(
     const GeometryContext& gctx, const Acts::Vector3& position) const {
-  const Transform3D& sfTransform = transform(gctx);
+  const Transform3& sfTransform = transform(gctx);
   // get it into the cylinder frame
   Vector3 pos3D = sfTransform.inverse() * position;
   // set the z coordinate to 0

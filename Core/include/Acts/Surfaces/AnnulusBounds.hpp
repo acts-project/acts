@@ -154,8 +154,8 @@ class AnnulusBounds : public DiscBounds {
   Vector2 m_moduleOrigin;
   Vector2 m_shiftXY;  // == -m_moduleOrigin
   Vector2 m_shiftPC;
-  Transform2D m_rotationStripPC;
-  Transform2D m_translation;
+  Transform2 m_rotationStripPC;
+  Transform2 m_translation;
 
   // Vectors needed for inside checking
   Vector2 m_outLeftStripPC;

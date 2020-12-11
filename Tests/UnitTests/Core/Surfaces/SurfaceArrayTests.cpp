@@ -55,7 +55,7 @@ struct SurfaceArrayFixture {
     for (size_t i = 0; i < n; ++i) {
       double z = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
 
-      Transform3D trans;
+      Transform3 trans;
       trans.setIdentity();
       trans.rotate(Eigen::AngleAxisd(i * phiStep + shift, Vector3(0, 0, 1)));
       trans.translate(Vector3(r, 0, z));
@@ -81,7 +81,7 @@ struct SurfaceArrayFixture {
     for (int i = 0; i < n; ++i) {
       double z = zbase;
 
-      Transform3D trans;
+      Transform3 trans;
       trans.setIdentity();
       trans.rotate(Eigen::AngleAxisd(i * phiStep + shift, Vector3(0, 0, 1)));
       trans.translate(Vector3(10, 0, z));
@@ -102,11 +102,11 @@ struct SurfaceArrayFixture {
 
   SrfVec straightLineSurfaces(
       size_t n = 10., double step = 3, const Vector3& origin = {0, 0, 1.5},
-      const Transform3D& pretrans = Transform3D::Identity(),
+      const Transform3& pretrans = Transform3::Identity(),
       const Vector3& dir = {0, 0, 1}) {
     SrfVec res;
     for (size_t i = 0; i < n; ++i) {
-      Transform3D trans;
+      Transform3 trans;
       trans.setIdentity();
       trans.translate(origin + dir * step * i);
       // trans.rotate(AngleAxis3(M_PI/9., Vector3(0, 0, 1)));
@@ -239,7 +239,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
 BOOST_AUTO_TEST_CASE(SurfaceArray_singleElement) {
   double w = 3, h = 4;
   auto bounds = std::make_shared<const RectangleBounds>(w, h);
-  auto srf = Surface::makeShared<PlaneSurface>(Transform3D::Identity(), bounds);
+  auto srf = Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
 
   SurfaceArray sa(srf);
 

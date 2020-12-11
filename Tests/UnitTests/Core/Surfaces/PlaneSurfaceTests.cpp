@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceConstruction) {
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
   /// Constructor with transform and bounds
   Translation3 translation{0., 1., 2.};
-  auto pTransform = Transform3D(translation);
+  auto pTransform = Transform3(translation);
   // constructor with transform
   BOOST_CHECK_EQUAL(
       Surface::makeShared<PlaneSurface>(pTransform, rBounds)->type(),
@@ -68,12 +68,12 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
   /// Test clone method
   Translation3 translation{0., 1., 2.};
-  auto pTransform = Transform3D(translation);
+  auto pTransform = Transform3(translation);
   auto planeSurfaceObject =
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
   // Is it in the right place?
   Translation3 translation2{0., 2., 4.};
-  auto pTransform2 = Transform3D(translation2);
+  auto pTransform2 = Transform3(translation2);
   auto planeSurfaceObject2 =
       Surface::makeShared<PlaneSurface>(pTransform2, rBounds);
   /// Test type (redundant)
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceEqualityOperators) {
   // rectangle bounds
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
   Translation3 translation{0., 1., 2.};
-  auto pTransform = Transform3D(translation);
+  auto pTransform = Transform3(translation);
   auto planeSurfaceObject =
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
   auto planeSurfaceObject2 =
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceEqualityOperators) {
       "Create and then assign a PlaneSurface object to the existing one");
   /// Test assignment
   auto assignedPlaneSurface =
-      Surface::makeShared<PlaneSurface>(Transform3D::Identity(), nullptr);
+      Surface::makeShared<PlaneSurface>(Transform3::Identity(), nullptr);
   *assignedPlaneSurface = *planeSurfaceObject;
   /// Test equality of assigned to original
   BOOST_CHECK(*assignedPlaneSurface == *planeSurfaceObject);
@@ -207,9 +207,9 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceEqualityOperators) {
 /// Unit test for testing PlaneSurface extent via Polyhedron representation
 BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
   // First test - non-rotated
-  static const Transform3D planeZX = AngleAxis3(-0.5 * M_PI, Vector3::UnitX()) *
-                                     AngleAxis3(-0.5 * M_PI, Vector3::UnitZ()) *
-                                     Transform3D::Identity();
+  static const Transform3 planeZX = AngleAxis3(-0.5 * M_PI, Vector3::UnitX()) *
+                                    AngleAxis3(-0.5 * M_PI, Vector3::UnitZ()) *
+                                    Transform3::Identity();
 
   double rHx = 2.;
   double rHy = 4.;
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
   auto rBounds = std::make_shared<RectangleBounds>(rHx, rHy);
 
   auto plane = Surface::makeShared<PlaneSurface>(
-      Transform3D(Translation3(Vector3(0., yPs, 0.)) * planeZX), rBounds);
+      Transform3(Translation3(Vector3(0., yPs, 0.)) * planeZX), rBounds);
 
   auto planeExtent = plane->polyhedronRepresentation(tgContext, 1).extent();
 
@@ -234,8 +234,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
   // Now rotate
   double alpha = 0.123;
   auto planeRot = Surface::makeShared<PlaneSurface>(
-      Transform3D(Translation3(Vector3(0., yPs, 0.)) *
-                  AngleAxis3(alpha, Vector3(0., 0., 1.)) * planeZX),
+      Transform3(Translation3(Vector3(0., yPs, 0.)) *
+                 AngleAxis3(alpha, Vector3(0., 0., 1.)) * planeZX),
       rBounds);
 
   auto planeExtentRot =
@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
   // Test clone method
   Translation3 translation{0., 1., 2.};
-  auto pTransform = Transform3D(translation);
+  auto pTransform = Transform3(translation);
   auto planeSurfaceObject =
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
   const auto& rotation = pTransform.rotation();

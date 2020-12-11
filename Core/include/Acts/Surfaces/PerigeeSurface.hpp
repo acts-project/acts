@@ -32,7 +32,7 @@ class PerigeeSurface : public LineSurface {
   /// Constructor with a Transform - needed for tilt
   ///
   /// @param transform is the transform for position and tilting
-  PerigeeSurface(const Transform3D& transform);
+  PerigeeSurface(const Transform3& transform);
 
   /// Copy constructor
   ///
@@ -45,7 +45,7 @@ class PerigeeSurface : public LineSurface {
   /// @param other is the source cone surface
   /// @param shift is the additional transfrom applied after copying
   PerigeeSurface(const GeometryContext& gctx, const PerigeeSurface& other,
-                 const Transform3D& shift);
+                 const Transform3& shift);
 
  public:
   /// Destructor - defaulted

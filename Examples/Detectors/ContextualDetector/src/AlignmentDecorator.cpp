@@ -50,7 +50,7 @@ ActsExamples::Contextual::AlignmentDecorator::decorate(
           // get the nominal transform
           auto& tForm = ldet->nominalTransform(context.geoContext);
           // create a new transform
-          auto atForm = std::make_unique<Acts::Transform3D>(tForm);
+          auto atForm = std::make_unique<Acts::Transform3>(tForm);
           if (iov != 0 or not m_cfg.firstIovNominal) {
             // the shifts in x, y, z
             double tx = m_cfg.gSigmaX != 0 ? m_cfg.gSigmaX * gauss(rng) : 0.;

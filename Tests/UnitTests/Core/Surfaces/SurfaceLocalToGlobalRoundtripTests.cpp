@@ -77,16 +77,16 @@ const auto thetas = bdata::make({0.0, M_PI}) + thetasNoForwardBackward;
 // parameters must be chosen such that all possible local positions (as defined
 // in the datasets above) represent valid points on the surface.
 const auto cones = bdata::make({
-    Surface::makeShared<ConeSurface>(Transform3D::Identity(),
+    Surface::makeShared<ConeSurface>(Transform3::Identity(),
                                      0.5 /* opening angle */),
 });
 const auto cylinders = bdata::make({
-    Surface::makeShared<CylinderSurface>(Transform3D::Identity(),
+    Surface::makeShared<CylinderSurface>(Transform3::Identity(),
                                          10.0 /* radius */, 100 /* half z */),
 });
 const auto discs = bdata::make({
-    Surface::makeShared<DiscSurface>(Transform3D::Identity(),
-                                     0 /* radius min */, 100 /* radius max */),
+    Surface::makeShared<DiscSurface>(Transform3::Identity(), 0 /* radius min */,
+                                     100 /* radius max */),
 });
 const auto perigees = bdata::make({
     Surface::makeShared<PerigeeSurface>(Vector3(0, 0, -1.5)),
@@ -97,7 +97,7 @@ const auto planes = bdata::make({
     Surface::makeShared<PlaneSurface>(Vector3(3, -4, 5), Vector3::UnitZ()),
 });
 const auto straws = bdata::make({
-    Surface::makeShared<StrawSurface>(Transform3D::Identity(), 2.0 /* radius */,
+    Surface::makeShared<StrawSurface>(Transform3::Identity(), 2.0 /* radius */,
                                       200.0 /* half z */),
 });
 

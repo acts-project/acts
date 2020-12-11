@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(ChannelizerCartesian) {
 
   auto rectangleBounds = std::make_shared<Acts::RectangleBounds>(1., 1.);
   auto planeSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      Acts::Transform3D::Identity(), rectangleBounds);
+      Acts::Transform3::Identity(), rectangleBounds);
 
   // The segementation
   Acts::BinUtility pixelated(20, -1., 1., Acts::open, Acts::binX);
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(ChannelizerPolarRadial) {
   auto radialBounds =
       std::make_shared<const Acts::RadialBounds>(5., 10., 0.25, 0.);
   auto radialDisc = Acts::Surface::makeShared<Acts::DiscSurface>(
-      Acts::Transform3D::Identity(), radialBounds);
+      Acts::Transform3::Identity(), radialBounds);
 
   // The segementation
   Acts::BinUtility strips(2, 5., 10., Acts::open, Acts::binR);

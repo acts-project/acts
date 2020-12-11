@@ -76,7 +76,7 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   /// Return local to global transform associated with this identifier
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  const Transform3D& transform(const GeometryContext& gctx) const final;
+  const Transform3& transform(const GeometryContext& gctx) const final;
 
   /// Return surface associated with this identifier, which should come from the
   const Surface& surface() const final;
@@ -94,7 +94,7 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   /// Pointer to TGeoNode (not owned)
   const TGeoNode* m_detElement{nullptr};
   /// Transformation of the detector element
-  Transform3D m_transform = Transform3D::Identity();
+  Transform3 m_transform = Transform3::Identity();
   /// Identifier of the detector element
   Identifier m_identifier;
   /// Boundaries of the detector element
@@ -109,7 +109,7 @@ inline Identifier TGeoDetectorElement::identifier() const {
   return m_identifier;
 }
 
-inline const Transform3D& TGeoDetectorElement::transform(
+inline const Transform3& TGeoDetectorElement::transform(
     const GeometryContext& /*gctx*/) const {
   return m_transform;
 }

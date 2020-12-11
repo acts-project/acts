@@ -302,8 +302,8 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
         moduleRotation.col(1) = moduleLocalY;
         moduleRotation.col(2) = moduleLocalZ;
         // get the moduleTransform
-        std::shared_ptr<Acts::Transform3D> mutableModuleTransform =
-            std::make_shared<Acts::Transform3D>(
+        std::shared_ptr<Acts::Transform3> mutableModuleTransform =
+            std::make_shared<Acts::Transform3>(
                 Acts::Translation3(moduleCenter) * moduleRotation);
         // stereo angle if necessary
         if (m_cfg.centralModuleFrontsideStereo.size() &&
@@ -316,7 +316,7 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
         // count the modules
         Identifier moduleIdentifier = Identifier(identifier_type(imodule++));
         // Finalize the transform
-        auto moduleTransform = std::const_pointer_cast<const Acts::Transform3D>(
+        auto moduleTransform = std::const_pointer_cast<const Acts::Transform3>(
             mutableModuleTransform);
         // create the module
         auto module = std::make_shared<detector_element_t>(
@@ -335,7 +335,7 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
           Acts::Vector3 bsModuleCenter =
               moduleCenter +
               m_cfg.centralModuleBacksideGap.at(icl) * moduleLocalZ;
-          mutableModuleTransform = std::make_shared<Acts::Transform3D>(
+          mutableModuleTransform = std::make_shared<Acts::Transform3>(
               Acts::Translation3(bsModuleCenter) * moduleRotation);
           // apply the stereo
           if (m_cfg.centralModuleBacksideStereo.size()) {
@@ -345,7 +345,7 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
                 Acts::AngleAxis3(-stereoBackSide, Acts::Vector3::UnitZ());
           }
           // Finalize the transform
-          moduleTransform = std::const_pointer_cast<const Acts::Transform3D>(
+          moduleTransform = std::const_pointer_cast<const Acts::Transform3>(
               mutableModuleTransform);
           // create the backseide moulde
           auto bsmodule = std::make_shared<detector_element_t>(
@@ -499,8 +499,8 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
           moduleRotation.col(1) = moduleLocalY;
           moduleRotation.col(2) = moduleLocalZ;
           // the transforms for the two modules
-          std::shared_ptr<const Acts::Transform3D> moduleTransform =
-              std::make_shared<const Acts::Transform3D>(
+          std::shared_ptr<const Acts::Transform3> moduleTransform =
+              std::make_shared<const Acts::Transform3>(
                   Acts::Translation3(moduleCenter) * moduleRotation);
 
           // reate the modules identifier
@@ -521,7 +521,7 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
                 moduleCenter +
                 m_cfg.posnegModuleBacksideGap.at(ipnl).at(ipnR) * moduleLocalZ;
             // the new transforms
-            auto mutableModuleTransform = std::make_shared<Acts::Transform3D>(
+            auto mutableModuleTransform = std::make_shared<Acts::Transform3>(
                 Acts::Translation3(moduleCenter) * moduleRotation);
             // apply the stereo
             if (m_cfg.posnegModuleBacksideStereo.size()) {
@@ -532,7 +532,7 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
                   Acts::AngleAxis3(-stereoBackSide, Acts::Vector3::UnitZ());
             }
             // Finalize the transform
-            moduleTransform = std::const_pointer_cast<const Acts::Transform3D>(
+            moduleTransform = std::const_pointer_cast<const Acts::Transform3>(
                 mutableModuleTransform);
             // everything is set for the next module
             auto bsmodule = std::make_shared<detector_element_t>(
