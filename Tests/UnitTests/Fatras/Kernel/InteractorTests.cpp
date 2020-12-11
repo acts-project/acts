@@ -39,7 +39,7 @@ struct MockPhysicsList {
 };
 
 struct MockStepperState {
-  using Scalar = ActsScalar;
+  using Scalar = Acts::ActsScalar;
   using Vector3 = Acts::ActsVector<3>;
 
   Vector3 position;
