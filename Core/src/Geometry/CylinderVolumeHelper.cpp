@@ -13,7 +13,6 @@
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
-#include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Geometry/GlueVolumesDescriptor.hpp"
 #include "Acts/Geometry/ILayerArrayCreator.hpp"
 #include "Acts/Geometry/ITrackingVolumeArrayCreator.hpp"
