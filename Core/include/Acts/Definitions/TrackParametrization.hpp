@@ -12,10 +12,9 @@
 
 #include <type_traits>
 
-// The user can override the (track) parameter ordering. If the preprocessor
+// The user can override the track parameters ordering. If the preprocessor
 // variable is defined, it must point to a header file that contains the same
-// enum and type definitions for bound and free track parameters as well as
-// space points as given below.
+// enum definitions for bound and free track parameters as given below.
 #ifdef ACTS_PARAMETER_DEFINITIONS_HEADER
 #include ACTS_PARAMETER_DEFINITIONS_HEADER
 #else
@@ -106,7 +105,7 @@ static_assert(FreeIndices::eFreeSize == 8u,
               "Free track parameters must have eight components");
 
 // Ensure bound track parameter indices are consistently defined.
-static_assert(eBoundLoc0 != eBoundLoc1, "Local parameters must be differents");
+static_assert(eBoundLoc0 != eBoundLoc1, "Local parameters must be different");
 
 // Ensure free track parameter indices are consistently defined.
 static_assert(eFreePos1 == eFreePos0 + 1u, "Position must be continous");
@@ -114,27 +113,18 @@ static_assert(eFreePos2 == eFreePos0 + 2u, "Position must be continous");
 static_assert(eFreeDir1 == eFreeDir0 + 1u, "Direction must be continous");
 static_assert(eFreeDir2 == eFreeDir0 + 2u, "Direction must be continous");
 
-// Define shorthand types for vectors and matrices that use the track parameters
-// vector space sizes.
-
-// Matrix and vector types related to bound track parameters.
-
+// Shorthand vector/matrix types related to bound track parameters.
 using BoundVector = ActsVector<eBoundSize>;
 using BoundMatrix = ActsMatrix<eBoundSize, eBoundSize>;
 using BoundSymMatrix = ActsSymMatrix<eBoundSize>;
+// Mapping from bound track parameters.
+using BoundToFreeMatrix = ActsMatrix<eFreeSize, eBoundSize>;
 
-// Matrix and vector types related to free track parameters.
-
+// Shorthand vector/matrix types related to free track parameters.
 using FreeVector = ActsVector<eFreeSize>;
 using FreeMatrix = ActsMatrix<eFreeSize, eFreeSize>;
 using FreeSymMatrix = ActsSymMatrix<eFreeSize>;
-
-// Mapping from bound track parameters.
-
-using BoundToFreeMatrix = ActsMatrix<eFreeSize, eBoundSize>;
-
 // Mapping from free track parameters.
-
 using FreeToBoundMatrix = ActsMatrix<eBoundSize, eFreeSize>;
 using FreeToPathMatrix = ActsMatrix<1, eFreeSize>;
 
