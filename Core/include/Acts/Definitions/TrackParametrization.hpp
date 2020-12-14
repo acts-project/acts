@@ -12,10 +12,9 @@
 
 #include <type_traits>
 
-// The user can override the (track) parameter ordering and underlying
-// Scalar type. If the variable is defined, it must point to a header
-// file that contains the same enum and type definitions for bound and free
-// track parameters as well as space points as given below.
+// The user can override the track parameters ordering. If the preprocessor
+// variable is defined, it must point to a header file that contains the same
+// enum definitions for bound and free track parameters as given below.
 #ifdef ACTS_PARAMETER_DEFINITIONS_HEADER
 #include ACTS_PARAMETER_DEFINITIONS_HEADER
 #else
@@ -56,9 +55,6 @@ enum BoundIndices : unsigned int {
   eBoundSize,
 };
 
-/// Underlying fundamental Scalar type for bound track parameters.
-using BoundScalar = ActsScalar;
-
 /// Components of a free track parameters vector.
 ///
 /// To be used to access components by named indices instead of just numbers.
@@ -85,9 +81,6 @@ enum FreeIndices : unsigned int {
   eFreeSize,
 };
 
-/// Underlying fundamental Scalar type for free track parameters.
-using FreeScalar = ActsScalar;
-
 }  // namespace Acts
 #endif
 
@@ -98,23 +91,21 @@ static_assert(std::is_enum_v<BoundIndices>,
               "'BoundIndices' must be an enum type");
 static_assert(std::is_convertible_v<BoundIndices, size_t>,
               "'BoundIndices' must be convertible to size_t");
-static_assert(2 <= BoundIndices::eBoundSize,
-              "Bound track parameters must have at least two components");
-static_assert(std::is_floating_point_v<BoundScalar>,
-              "'BoundScalar' must be a floating point type");
+// Only the order can be user-defined
+static_assert(BoundIndices::eBoundSize == 6u,
+              "Bound track parameters must have six components");
 
 // Ensure free track parameters definition is valid.
 static_assert(std::is_enum_v<FreeIndices>,
               "'FreeIndices' must be an enum type");
 static_assert(std::is_convertible_v<FreeIndices, size_t>,
               "'FreeIndices' must be convertible to size_t");
-static_assert(6 <= FreeIndices::eFreeSize,
-              "Free track parameters must have at least six components");
-static_assert(std::is_floating_point_v<FreeScalar>,
-              "'FreeScalar' must be a floating point type");
+// Only the order can be user-defined
+static_assert(FreeIndices::eFreeSize == 8u,
+              "Free track parameters must have eight components");
 
 // Ensure bound track parameter indices are consistently defined.
-static_assert(eBoundLoc0 != eBoundLoc1, "Local parameters must be differents");
+static_assert(eBoundLoc0 != eBoundLoc1, "Local parameters must be different");
 
 // Ensure free track parameter indices are consistently defined.
 static_assert(eFreePos1 == eFreePos0 + 1u, "Position must be continous");
@@ -122,39 +113,19 @@ static_assert(eFreePos2 == eFreePos0 + 2u, "Position must be continous");
 static_assert(eFreeDir1 == eFreeDir0 + 1u, "Direction must be continous");
 static_assert(eFreeDir2 == eFreeDir0 + 2u, "Direction must be continous");
 
-// The following matrix and vector types are automatically derived from the
-// indices enums and Scalar typedefs.
+// Shorthand vector/matrix types related to bound track parameters.
+using BoundVector = ActsVector<eBoundSize>;
+using BoundMatrix = ActsMatrix<eBoundSize, eBoundSize>;
+using BoundSymMatrix = ActsSymMatrix<eBoundSize>;
+// Mapping from bound track parameters.
+using BoundToFreeMatrix = ActsMatrix<eFreeSize, eBoundSize>;
 
-// Matrix and vector types related to bound track parameters.
-
-using BoundVector = ActsVector<BoundScalar, eBoundSize>;
-using BoundRowVector = ActsRowVector<BoundScalar, eBoundSize>;
-using BoundMatrix = ActsMatrix<BoundScalar, eBoundSize, eBoundSize>;
-using BoundSymMatrix = ActsSymMatrix<BoundScalar, eBoundSize>;
-
-using LocalCartesianToBoundLocalMatrix = ActsMatrix<BoundScalar, 2, 3>;
-
-// Matrix and vector types related to free track parameters.
-
-using FreeVector = ActsVector<FreeScalar, eFreeSize>;
-using FreeRowVector = ActsRowVector<FreeScalar, eFreeSize>;
-using FreeMatrix = ActsMatrix<FreeScalar, eFreeSize, eFreeSize>;
-using FreeSymMatrix = ActsSymMatrix<FreeScalar, eFreeSize>;
-
-// Mapping to bound track parameters.
-//
-// Assumes that matrices represent maps from another space into the space of
-// bound track parameters. Thus, the bound Scalar type is sufficient
-// to retain accuracy.
-
-using FreeToBoundMatrix = ActsMatrix<BoundScalar, eBoundSize, eFreeSize>;
-
-// Mapping to free track parameters.
-//
-// Assumes that matrices represent maps from another space into the space of
-// free track parameters. Thus, the free Scalar type is sufficient
-// to retain accuracy.
-
-using BoundToFreeMatrix = ActsMatrix<FreeScalar, eFreeSize, eBoundSize>;
+// Shorthand vector/matrix types related to free track parameters.
+using FreeVector = ActsVector<eFreeSize>;
+using FreeMatrix = ActsMatrix<eFreeSize, eFreeSize>;
+using FreeSymMatrix = ActsSymMatrix<eFreeSize>;
+// Mapping from free track parameters.
+using FreeToBoundMatrix = ActsMatrix<eBoundSize, eFreeSize>;
+using FreeToPathMatrix = ActsMatrix<1, eFreeSize>;
 
 }  // namespace Acts

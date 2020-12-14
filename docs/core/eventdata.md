@@ -24,7 +24,7 @@ namespace detail {
    */
   struct coordinate_transformation
   {
-    typedef ActsVector<BoundScalar, Acts::NGlobalPars> ParVector_t;
+    typedef ActsVector<ActsScalar, Acts::NGlobalPars> ParVector_t;
 
     static Vector3D
     parameters2globalPosition(const ParVector_t& pars, const Surface& s)

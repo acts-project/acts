@@ -73,21 +73,19 @@ Acts::Surface::alignmentToBoundDerivativeWithoutCorrection(
   // The global posiiton
   const auto position = parameters.segment<3>(eFreePos0);
   // The vector between position and center
-  const ActsRowVector<AlignmentScalar, 3> pcRowVec =
-      (position - center(gctx)).transpose();
+  const auto pcRowVec = (position - center(gctx)).transpose().eval();
   // The local frame rotation
   const auto& rotation = transform(gctx).rotation();
   // The axes of local frame
-  const Vector3D localXAxis = rotation.col(0);
-  const Vector3D localYAxis = rotation.col(1);
-  const Vector3D localZAxis = rotation.col(2);
+  const auto& localXAxis = rotation.col(0);
+  const auto& localYAxis = rotation.col(1);
+  const auto& localZAxis = rotation.col(2);
   // Calculate the derivative of local frame axes w.r.t its rotation
   const auto [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
       detail::rotationToLocalAxesDerivative(rotation);
   // Calculate the derivative of local 3D Cartesian coordinates w.r.t.
   // alignment parameters (without path correction)
-  AlignmentToLocalCartesianMatrix alignToLoc3D =
-      AlignmentToLocalCartesianMatrix::Zero();
+  AlignmentToPositionMatrix alignToLoc3D = AlignmentToPositionMatrix::Zero();
   alignToLoc3D.block<1, 3>(eX, eAlignmentCenter0) = -localXAxis.transpose();
   alignToLoc3D.block<1, 3>(eY, eAlignmentCenter0) = -localYAxis.transpose();
   alignToLoc3D.block<1, 3>(eZ, eAlignmentCenter0) = -localZAxis.transpose();
@@ -98,7 +96,7 @@ Acts::Surface::alignmentToBoundDerivativeWithoutCorrection(
   alignToLoc3D.block<1, 3>(eZ, eAlignmentRotation0) =
       pcRowVec * rotToLocalZAxis;
   // The derivative of bound local w.r.t. local 3D Cartesian coordinates
-  LocalCartesianToBoundLocalMatrix loc3DToBoundLoc =
+  ActsMatrix<2, 3> loc3DToBoundLoc =
       localCartesianToBoundLocalDerivative(gctx, position);
   // Initialize the derivative of bound parameters w.r.t. alignment
   // parameters without path correction
@@ -109,27 +107,26 @@ Acts::Surface::alignmentToBoundDerivativeWithoutCorrection(
   return alignToBound;
 }
 
-Acts::AlignmentRowVector Acts::Surface::alignmentToPathDerivative(
+Acts::AlignmentToPathMatrix Acts::Surface::alignmentToPathDerivative(
     const GeometryContext& gctx, const FreeVector& parameters) const {
   // The global posiiton
   const auto position = parameters.segment<3>(eFreePos0);
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
   // The vector between position and center
-  const ActsRowVector<AlignmentScalar, 3> pcRowVec =
-      (position - center(gctx)).transpose();
+  const auto pcRowVec = (position - center(gctx)).transpose().eval();
   // The local frame rotation
   const auto& rotation = transform(gctx).rotation();
   // The local frame z axis
-  const Vector3D localZAxis = rotation.col(2);
+  const auto& localZAxis = rotation.col(2);
   // Cosine of angle between momentum direction and local frame z axis
-  const double dz = localZAxis.dot(direction);
+  const auto dz = localZAxis.dot(direction);
   // Calculate the derivative of local frame axes w.r.t its rotation
   const auto [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
       detail::rotationToLocalAxesDerivative(rotation);
   // Initialize the derivative of propagation path w.r.t. local frame
   // translation (origin) and rotation
-  AlignmentRowVector alignToPath = AlignmentRowVector::Zero();
+  AlignmentToPathMatrix alignToPath = AlignmentToPathMatrix::Zero();
   alignToPath.segment<3>(eAlignmentCenter0) = localZAxis.transpose() / dz;
   alignToPath.segment<3>(eAlignmentRotation0) =
       -pcRowVec * rotToLocalZAxis / dz;

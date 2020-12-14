@@ -87,7 +87,7 @@ class ScalableBField final {
   /// @todo return derivative
   Acts::Vector3D getFieldGradient(
       const Acts::Vector3D& /*position*/,
-      Acts::ActsMatrixD<3, 3>& /*derivative*/) const {
+      Acts::ActsMatrix<3, 3>& /*derivative*/) const {
     return m_BField;
   }
 
@@ -104,7 +104,7 @@ class ScalableBField final {
   /// @note currently the derivative is not calculated
   /// @todo return derivative
   Acts::Vector3D getFieldGradient(const Acts::Vector3D& /*position*/,
-                                  Acts::ActsMatrixD<3, 3>& /*derivative*/,
+                                  Acts::ActsMatrix<3, 3>& /*derivative*/,
                                   Cache& cache) const {
     return m_BField * cache.scalor;
   }

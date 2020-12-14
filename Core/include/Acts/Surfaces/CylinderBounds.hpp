@@ -119,7 +119,7 @@ class CylinderBounds : public SurfaceBounds {
   Vector2D shifted(const Vector2D& lposition) const;
 
   /// Return the jacobian into the polar coordinate
-  ActsMatrixD<2, 2> jacobian() const;
+  ActsMatrix<2, 2> jacobian() const;
 };
 
 inline std::vector<double> CylinderBounds::values() const {

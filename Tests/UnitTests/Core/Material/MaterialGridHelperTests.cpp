@@ -27,9 +27,9 @@ using Grid2D =
 using Grid3D =
     Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
 using MaterialGrid2D =
-    Acts::detail::Grid<Acts::ActsVector<float, 5>, EAxis, EAxis>;
+    Acts::detail::Grid<Acts::Material::ParametersVector, EAxis, EAxis>;
 using MaterialGrid3D =
-    Acts::detail::Grid<Acts::ActsVector<float, 5>, EAxis, EAxis, EAxis>;
+    Acts::detail::Grid<Acts::Material::ParametersVector, EAxis, EAxis, EAxis>;
 
 /// @brief Various test for the Material in the case of a Cuboid volume and 2D
 /// Grid

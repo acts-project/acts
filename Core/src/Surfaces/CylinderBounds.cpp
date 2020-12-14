@@ -28,8 +28,8 @@ Acts::Vector2D Acts::CylinderBounds::shifted(
           lposition[Acts::eBoundLoc1]};
 }
 
-Acts::ActsMatrixD<2, 2> Acts::CylinderBounds::jacobian() const {
-  ActsMatrixD<2, 2> j;
+Acts::ActsMatrix<2, 2> Acts::CylinderBounds::jacobian() const {
+  ActsMatrix<2, 2> j;
   j(0, eBoundLoc0) = 1 / get(eR);
   j(0, eBoundLoc1) = 0;
   j(1, eBoundLoc0) = 0;

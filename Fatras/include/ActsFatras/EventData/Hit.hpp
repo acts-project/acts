@@ -27,8 +27,8 @@ namespace ActsFatras {
 class Hit {
  public:
   using Scalar = Acts::ActsScalar;
-  using Vector3 = Acts::ActsVector<Scalar, 3>;
-  using Vector4 = Acts::ActsVector<Scalar, 4>;
+  using Vector3 = Acts::ActsVector<3>;
+  using Vector4 = Acts::ActsVector<4>;
 
   /// Construct default hit with (mostly) invalid information.
   Hit() = default;
