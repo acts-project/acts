@@ -155,10 +155,6 @@ std::vector<SurfaceIntersection> Layer::compatibleSurfaces(
     // check if intersection is valid and pathLimit has not been exceeded
     double sifPath = sfi.intersection.pathLength;
     // check the maximum path length
-    if (boundaryCheck == false) {
-      std::cout << "sifPath : " << sifPath << std::endl;
-      std::cout << "lim : " << pathLimit << std::endl;
-    }
     if (sfi && sifPath > overstepLimit &&
         sifPath * sifPath <= pathLimit * pathLimit) {
       // Now put the right sign on it

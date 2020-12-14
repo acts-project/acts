@@ -428,18 +428,6 @@ class Navigator {
 
     // Call the navigation helper prior to actual navigation
     ACTS_VERBOSE(volInfo(state) << "Initialization.");
-    GeometryIdentifier test;
-    test.setVolume(13);
-    test.setLayer(2);
-    test.setSensitive(96);
-    GeometryIdentifier test2;
-    test2.setVolume(13);
-    test2.setLayer(2);
-    test2.setSensitive(98);
-    state.navigation.externalSurfaces.insert(
-        std::pair<uint64_t, GeometryIdentifier>(test.layer(), test));
-    // state.navigation.externalSurfaces.insert(
-    //     std::pair<uint64_t, GeometryIdentifier>(test2.layer(), test2));
     // Set the world volume if it is not set
     if (not state.navigation.worldVolume) {
       state.navigation.worldVolume = trackingGeometry->highestTrackingVolume();
