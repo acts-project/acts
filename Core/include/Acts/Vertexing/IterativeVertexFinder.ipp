@@ -30,6 +30,11 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
     // retrieve the seed vertex as the last element in
     // the seed vertexCollection
     Vertex<InputTrack_t>& seedVertex = *seedRes;
+
+    if(seedVertex.fullPosition()[eZ] == 0){ 
+      break;
+    }
+
     /// End seeding
     /// Now take only tracks compatible with current seed
     // Tracks used for the fit in this iteration
