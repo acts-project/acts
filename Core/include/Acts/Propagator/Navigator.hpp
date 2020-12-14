@@ -592,14 +592,19 @@ class Navigator {
                    << "No surfaces present, target at layer first.");
       return false;
     }
-    auto layerID = state.navigation.navLayerIter->object->geometryId().layer();
-    auto externalSurfaceRange =
-        state.navigation.externalSurfaces.equal_range(layerID);
     std::vector<GeometryIdentifier> externalSurfaces;
-    externalSurfaces.reserve(state.navigation.externalSurfaces.count(layerID));
-    for (auto itSurface = externalSurfaceRange.first;
-         itSurface != externalSurfaceRange.second; itSurface++) {
-      externalSurfaces.push_back(itSurface->second);
+    if (!state.navigation.externalSurfaces.empty()) {
+      auto layerID =
+          state.navigation.navLayerIter->object->geometryId().layer();
+      auto externalSurfaceRange =
+          state.navigation.externalSurfaces.equal_range(layerID);
+
+      externalSurfaces.reserve(
+          state.navigation.externalSurfaces.count(layerID));
+      for (auto itSurface = externalSurfaceRange.first;
+           itSurface != externalSurfaceRange.second; itSurface++) {
+        externalSurfaces.push_back(itSurface->second);
+      }
     }
     // Loop over the remaining navigation surfaces
     while (state.navigation.navSurfaceIter !=
@@ -1055,14 +1060,17 @@ class Navigator {
         state.stepping.navDir, true, resolveSensitive, resolveMaterial,
         resolvePassive, startSurface, state.navigation.targetSurface);
 
-    auto layerID = layerSurface->geometryId().layer();
-    auto externalSurfaceRange =
-        state.navigation.externalSurfaces.equal_range(layerID);
-    navOpts.externalSurfaces.reserve(
-        state.navigation.externalSurfaces.count(layerID));
-    for (auto itSurface = externalSurfaceRange.first;
-         itSurface != externalSurfaceRange.second; itSurface++) {
-      navOpts.externalSurfaces.push_back(itSurface->second);
+    std::vector<GeometryIdentifier> externalSurfaces;
+    if (!state.navigation.externalSurfaces.empty()) {
+      auto layerID = layerSurface->geometryId().layer();
+      auto externalSurfaceRange =
+          state.navigation.externalSurfaces.equal_range(layerID);
+      navOpts.externalSurfaces.reserve(
+          state.navigation.externalSurfaces.count(layerID));
+      for (auto itSurface = externalSurfaceRange.first;
+           itSurface != externalSurfaceRange.second; itSurface++) {
+        navOpts.externalSurfaces.push_back(itSurface->second);
+      }
     }
     // Check the limit
     navOpts.pathLimit = state.stepping.stepSize.value(ConstrainedStep::aborter);
