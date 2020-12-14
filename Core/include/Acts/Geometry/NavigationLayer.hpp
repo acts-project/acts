@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -124,7 +123,8 @@ inline Vector3D NavigationLayer::binningPosition(const GeometryContext& gctx,
 inline bool NavigationLayer::isOnLayer(const GeometryContext& gctx,
                                        const Vector3D& gp,
                                        const BoundaryCheck& bcheck) const {
-  return m_surfaceRepresentation->isOnSurface(gctx, gp, s_origin, bcheck);
+  return m_surfaceRepresentation->isOnSurface(gctx, gp, Vector3D::Zero(),
+                                              bcheck);
 }
 
 inline bool NavigationLayer::resolve(bool /*resolveSensitive*/,

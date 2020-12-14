@@ -13,7 +13,6 @@
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
-#include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Geometry/GlueVolumesDescriptor.hpp"
 #include "Acts/Geometry/ILayerArrayCreator.hpp"
 #include "Acts/Geometry/ITrackingVolumeArrayCreator.hpp"
@@ -74,7 +73,7 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
   //     use transform
   // (4) !volumeBounds && transform==identity : estimate size &
   //     translation from layers
-  bool idTrf = transform.isApprox(s_idTransform);
+  bool idTrf = transform.isApprox(Transform3D::Identity());
 
   const CylinderVolumeBounds* cylinderBounds = nullptr;
   // this is the implementation of CylinderVolumeHelper
@@ -502,9 +501,9 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
 
   bool concentric = (zEstFromLayerEnv * zEstFromLayerEnv < 0.001);
 
-  bool idTrf = transform.isApprox(s_idTransform);
+  bool idTrf = transform.isApprox(Transform3D::Identity());
 
-  Transform3D vtransform = s_idTransform;
+  Transform3D vtransform = Transform3D::Identity();
   // no CylinderBounds and Translation given - make it
   if ((cylinderVolumeBounds == nullptr) && idTrf) {
     // create the CylinderBounds from parsed layer inputs
@@ -513,7 +512,7 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
     // and the transform
     vtransform = concentric
                      ? Transform3D(Translation3D(0., 0., zEstFromLayerEnv))
-                     : s_idTransform;
+                     : Transform3D::Identity();
   } else if ((cylinderVolumeBounds != nullptr) && idTrf && !concentric) {
     vtransform = Transform3D(Translation3D(0., 0., zEstFromLayerEnv));
   } else if (not idTrf && (cylinderVolumeBounds == nullptr)) {
@@ -809,7 +808,7 @@ void Acts::CylinderVolumeHelper::glueTrackingVolumes(
         nullptr;
 
     // the transform of the new boundary surface
-    Transform3D transform = s_idTransform;
+    Transform3D transform = Transform3D::Identity();
     if (std::abs(zMin + zMax) > 0.1) {
       // it's not a concentric cylinder, so create a transform
       transform =
