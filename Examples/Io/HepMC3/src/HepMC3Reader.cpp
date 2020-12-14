@@ -7,8 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/HepMC3/HepMC3Reader.hpp"
+
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+
 #include <HepMC3/Units.h>
 
 bool ActsExamples::HepMC3AsciiReader::readEvent(HepMC3::ReaderAscii& reader,
@@ -53,7 +55,7 @@ ActsExamples::ProcessCode ActsExamples::HepMC3AsciiReader::read(
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".hepmc3",
                                ctx.eventNumber);
 
-  ACTS_DEBUG("Attempting to write event to " << path);
+  ACTS_DEBUG("Attempting to read event from " << path);
   HepMC3::ReaderAscii reader(path);
 
   reader.read_event(event);
@@ -66,7 +68,9 @@ ActsExamples::ProcessCode ActsExamples::HepMC3AsciiReader::read(
   if (events.empty())
     return ActsExamples::ProcessCode::ABORT;
 
+  ACTS_VERBOSE(events.size() << " events read");
   ctx.eventStore.add(m_cfg.outputEvents, std::move(events));
 
+  reader.close();
   return ActsExamples::ProcessCode::SUCCESS;
 }

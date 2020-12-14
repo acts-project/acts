@@ -8,45 +8,15 @@
 
 #pragma once
 
-#include <Acts/EventData/ParameterSet.hpp>
-#include <Acts/Geometry/GeometryContext.hpp>
-#include <Acts/Utilities/BinUtility.hpp>
-#include <Acts/Utilities/ParameterDefinitions.hpp>
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/ParameterSet.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 
-#include <functional>
 #include <unordered_set>
-
-namespace Acts {
-class Surface;
-}  // namespace Acts
+#include <utility>
 
 namespace ActsFatras {
-
-class Hit;
-
-/// Digitization input to be used by the digitizers to harmonize
-/// the interface
-///
-struct DigitizationInput {
-  std::reference_wrapper<const Hit> hit;
-  std::reference_wrapper<const Acts::GeometryContext> geoContext;
-  const Acts::Surface* surface = nullptr;
-  Acts::BinUtility segmentation;
-
-  /// Only valid constructor, wraps the @param hit_,
-  /// the  and optionally the @param surface_
-  DigitizationInput(
-      std::reference_wrapper<const Hit> hit_,
-      std::reference_wrapper<const Acts::GeometryContext> geoContext_,
-      const Acts::Surface* surface_ = nullptr,
-      Acts::BinUtility segmentation_ = Acts::BinUtility())
-      : hit(hit_),
-        geoContext(geoContext_),
-        surface(surface_),
-        segmentation(segmentation_) {}
-
-  DigitizationInput() = delete;
-};
 
 /// A single cell definition: index, cell central value
 using Cell = std::pair<unsigned int, double>;
@@ -54,14 +24,14 @@ using Cell = std::pair<unsigned int, double>;
 /// A channel definition: Cell identification, readout word, links
 ///
 /// @tparam signal_t Type of the signal, requires += operator
-/// @tparam kParameters ... The parameters pack
-template <typename signal_t, Acts::BoundIndices... kParameters>
+/// @tparam kSize Number of channel coordinates
+template <typename signal_t, size_t kSize>
 struct Channel {
   /// The cell identification in sizeof..(kParameters) dimensions
-  std::array<Cell, sizeof...(kParameters)> cellId;
+  std::array<Cell, kSize> cellId;
   /// The signal value, as complex as possible,
   /// but need += operator and double() cast for the weight
-  signal_t value = 0.;
+  signal_t value = 0;
   /// The potential (truth) links
   std::unordered_set<unsigned int> links = {};
 
@@ -70,36 +40,44 @@ struct Channel {
   /// @param cellId_ The Cell idenficiation and position
   /// @param value_ The Cell value
   /// @param links_ The (optional) links to e.g. truth indices
-  Channel(std::array<Cell, sizeof...(kParameters)> cellId_, signal_t value_,
+  Channel(std::array<Cell, kSize> cellId_, signal_t value_,
           std::unordered_set<unsigned int> links_ = {})
       : cellId(cellId_), value(value_), links(links_) {}
 
   Channel() = delete;
 };
 
-/// A Cluster definition.
+/// A (simulated) cluster with its constituents.
 ///
 /// @tparam signal_t Type of the signal carried, see above
-/// @tparam kParameters Parameters pack for the cluster
-///
-template <typename signal_t, Acts::BoundIndices... kParameters>
+/// @tparam kSize Number of cluster coordinates
+template <typename signal_t, size_t kSize>
 struct Cluster {
-  /// The parameters
-  Acts::ParameterSet<Acts::BoundIndices, kParameters...> parameterSet;
-  /// The resulting cluster size
-  std::array<unsigned int, sizeof...(kParameters)> clusterSize;
-  /// The contained Channels
-  std::vector<Channel<signal_t, kParameters...> > channels;
+  using Scalar = Acts::ActsScalar;
+  using ParametersVector = Acts::ActsVector<Scalar, kSize>;
+  using CovarianceMatrix = Acts::ActsSymMatrix<Scalar, kSize>;
+
+  /// Measured parameters.
+  ParametersVector parameters = ParametersVector::Zero();
+  /// Measurement covariance.
+  CovarianceMatrix covariance = CovarianceMatrix::Zero();
+  /// The resulting cluster size along each channel dimension.
+  std::array<unsigned int, kSize> clusterSize;
+  /// The constituating signal channels.
+  std::vector<Channel<signal_t, kSize>> channels;
 
   /// Cluster constructor
   ///
-  /// @param pSet The parameter set repesenting cluster position and error
+  /// @param p Measured parameters
+  /// @param c Measurement covariance
   /// @param cSize The cluster size definition
   /// @param cChannels The channel
-  Cluster(Acts::ParameterSet<Acts::BoundIndices, kParameters...> pSet,
+  template <typename parameters_t, typename covariance_t>
+  Cluster(const Eigen::MatrixBase<parameters_t>& p,
+          const Eigen::MatrixBase<covariance_t>& c,
           std::array<unsigned int, sizeof...(kParameters)> cSize,
-          std::vector<Channel<signal_t, kParameters...> > cChannels)
-      : parameterSet(pSet), clusterSize(cSize), channels(cChannels) {}
+          std::vector<Channel<signal_t, kParameters...>> cChannels)
+      : parameters(p), covariance(c), clusterSize(cSize), channels(cChannels) {}
 
   Cluster() = delete;
 };

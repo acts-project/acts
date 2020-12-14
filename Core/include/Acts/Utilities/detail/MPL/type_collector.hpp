@@ -23,7 +23,7 @@ namespace hana = boost::hana;
 struct result_type_extractor {
   // Checks whether the type even has a result type
   static constexpr auto predicate = hana::is_valid(
-      [](auto t) -> hana::type<typename decltype(t)::type::result_type>{});
+      [](auto t) -> hana::type<typename decltype(t)::type::result_type> {});
   // meta function to extract the result type
   template <typename T>
   using extractor_impl = typename T::result_type;
@@ -38,7 +38,7 @@ struct result_type_extractor {
 struct action_type_extractor {
   // Checks if aborter even has action type
   static constexpr auto predicate = hana::is_valid(
-      [](auto t) -> hana::type<typename decltype(t)::type::action_type>{});
+      [](auto t) -> hana::type<typename decltype(t)::type::action_type> {});
   // meta function to extract the action type
   template <typename T>
   using extractor_impl = typename T::action_type;

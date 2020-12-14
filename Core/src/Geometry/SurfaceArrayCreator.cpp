@@ -8,15 +8,15 @@
 
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <algorithm>
@@ -427,7 +427,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
   };
   std::vector<const Acts::Surface*> keys = findKeySurfaces(surfaces, equal);
 
-  std::vector<double> bValues;
+  std::vector<AxisScalar> bValues;
   if (bValue == Acts::binPhi) {
     std::stable_sort(keys.begin(), keys.end(),
                      [&gctx](const Acts::Surface* a, const Acts::Surface* b) {
@@ -435,24 +435,24 @@ Acts::SurfaceArrayCreator::createVariableAxis(
                                phi(b->binningPosition(gctx, binPhi)));
                      });
 
-    double maxPhi = 0.5 * (phi(keys.at(0)->binningPosition(gctx, binPhi)) +
-                           phi(keys.at(1)->binningPosition(gctx, binPhi)));
+    AxisScalar maxPhi = 0.5 * (phi(keys.at(0)->binningPosition(gctx, binPhi)) +
+                               phi(keys.at(1)->binningPosition(gctx, binPhi)));
 
     // create rotation, so that maxPhi is +pi
-    double angle = -(M_PI + maxPhi);
+    AxisScalar angle = -(M_PI + maxPhi);
     transform = (transform)*AngleAxis3D(angle, Vector3D::UnitZ());
 
     // iterate over all key surfaces, and use their mean position as bValues,
     // but
     // rotate using transform from before
-    double previous = phi(keys.at(0)->binningPosition(gctx, binPhi));
+    AxisScalar previous = phi(keys.at(0)->binningPosition(gctx, binPhi));
     // go through key surfaces
     for (size_t i = 1; i < keys.size(); i++) {
       const Surface* surface = keys.at(i);
       // create central binning values which is the mean of the center
       // positions in the binning direction of the current and previous
       // surface
-      double edge =
+      AxisScalar edge =
           0.5 * (previous + phi(surface->binningPosition(gctx, binPhi))) +
           angle;
       bValues.push_back(edge);
@@ -473,7 +473,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     // get the global vertices
     std::vector<Acts::Vector3D> backVertices =
         makeGlobalVertices(gctx, *backSurface, backBounds->vertices(segments));
-    double maxBValue = phi(
+    AxisScalar maxBValue = phi(
         *std::max_element(backVertices.begin(), backVertices.end(),
                           [](const Acts::Vector3D& a, const Acts::Vector3D& b) {
                             return phi(a) < phi(b);
@@ -494,7 +494,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     bValues.push_back(protoLayer.max(binZ));
 
     // the z-center position of the previous surface
-    double previous = keys.front()->binningPosition(gctx, binZ).z();
+    AxisScalar previous = keys.front()->binningPosition(gctx, binZ).z();
     // go through key surfaces
     for (auto surface = keys.begin() + 1; surface != keys.end(); surface++) {
       // create central binning values which is the mean of the center
@@ -515,7 +515,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     bValues.push_back(protoLayer.max(binR));
 
     // the r-center position of the previous surface
-    double previous = perp(keys.front()->binningPosition(gctx, binR));
+    AxisScalar previous = perp(keys.front()->binningPosition(gctx, binR));
 
     // go through key surfaces
     for (auto surface = keys.begin() + 1; surface != keys.end(); surface++) {

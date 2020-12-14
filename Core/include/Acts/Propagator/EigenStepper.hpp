@@ -11,6 +11,7 @@
 // Workaround for building on clang+libstdc++
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
@@ -20,7 +21,6 @@
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/Units.hpp"
 
 #include <cmath>
 #include <functional>
@@ -64,6 +64,8 @@ class EigenStepper {
 
     /// Constructor from the initial bound track parameters
     ///
+    /// @tparam charge_t Type of the bound parameter charge
+    ///
     /// @param [in] gctx is the context object for the geometry
     /// @param [in] mctx is the context object for the magnetic field
     /// @param [in] par The track parameters at start
@@ -105,7 +107,12 @@ class EigenStepper {
     FreeVector pars = FreeVector::Zero();
 
     /// The charge as the free vector can be 1/p or q/p
-    double q = 1;
+    double q = 1.;
+
+    /// Covariance matrix (and indicator)
+    /// associated with the initial error on track parameters
+    bool covTransport = false;
+    Covariance cov = Covariance::Zero();
 
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
@@ -121,11 +128,6 @@ class EigenStepper {
 
     /// The propagation derivative
     FreeVector derivative = FreeVector::Zero();
-
-    /// Covariance matrix (and indicator)
-    /// associated with the initial error on track parameters
-    bool covTransport = false;
-    Covariance cov = Covariance::Zero();
 
     /// Accummulated path length state
     double pathAccumulated = 0.;

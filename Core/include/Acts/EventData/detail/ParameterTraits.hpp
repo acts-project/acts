@@ -8,10 +8,11 @@
 
 #pragma once
 
-#include "Acts/Utilities/ParameterDefinitions.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 
 namespace Acts {
 namespace detail {
@@ -159,14 +160,12 @@ struct ParametersTraitsImpl;
 template <>
 struct ParametersTraitsImpl<BoundIndices> {
   using Scalar = BoundScalar;
-  static constexpr unsigned int kSize =
-      static_cast<unsigned int>(BoundIndices::eBoundSize);
+  static constexpr size_t kSize = static_cast<size_t>(BoundIndices::eBoundSize);
 };
 template <>
 struct ParametersTraitsImpl<FreeIndices> {
   using Scalar = FreeScalar;
-  static constexpr unsigned int kSize =
-      static_cast<unsigned int>(FreeIndices::eFreeSize);
+  static constexpr size_t kSize = static_cast<size_t>(FreeIndices::eFreeSize);
 };
 
 /// Scalar type that corresponds to the indices enum.
@@ -175,7 +174,7 @@ using ParametersScalar = typename ParametersTraitsImpl<indices_t>::Scalar;
 
 /// The maximum parameters vector size definable for an indices enum.
 template <typename indices_t>
-constexpr unsigned int kParametersSize = ParametersTraitsImpl<indices_t>::kSize;
+constexpr size_t kParametersSize = ParametersTraitsImpl<indices_t>::kSize;
 
 }  // namespace detail
 }  // namespace Acts

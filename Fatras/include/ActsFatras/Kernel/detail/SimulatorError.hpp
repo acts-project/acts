@@ -14,7 +14,7 @@ namespace ActsFatras {
 namespace detail {
 
 enum class SimulatorError {
-  // ensure all errors are non-null
+  // ensure all values are non-zero
   eInvalidInputParticleId = 1,
 };
 

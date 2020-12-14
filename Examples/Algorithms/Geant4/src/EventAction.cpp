@@ -8,12 +8,13 @@
 
 #include "EventAction.hpp"
 
+#include "ActsExamples/Geant4/PrimaryGeneratorAction.hpp"
+
 #include <stdexcept>
 
 #include <G4Event.hh>
 #include <G4RunManager.hh>
 
-#include "ActsExamples/Geant4/PrimaryGeneratorAction.hpp"
 #include "SteppingAction.hpp"
 
 using namespace ActsExamples;

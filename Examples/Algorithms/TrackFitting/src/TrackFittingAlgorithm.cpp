@@ -32,6 +32,9 @@ ActsExamples::TrackFittingAlgorithm::TrackFittingAlgorithm(
     throw std::invalid_argument(
         "Missing input initial track parameters collection");
   }
+  if (not m_cfg.trackingGeometry) {
+    throw std::invalid_argument("Missing tracking geometry");
+  }
   if (m_cfg.outputTrajectories.empty()) {
     throw std::invalid_argument("Missing output trajectories collection");
   }
@@ -72,6 +75,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
   // Perform the fit for each input track
   std::vector<IndexSourceLink> trackSourceLinks;
+  std::vector<const Acts::Surface*> surfSequence;
   for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
     // The list of hits and the initial start parameters
     const auto& protoTrack = protoTracks[itrack];
@@ -92,16 +96,20 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
     // Fill the source links via their indices from the container
     for (auto hitIndex : protoTrack) {
       auto sourceLink = sourceLinks.nth(hitIndex);
+      auto geoId = sourceLink->geometryId();
       if (sourceLink == sourceLinks.end()) {
         ACTS_FATAL("Proto track " << itrack << " contains invalid hit index"
                                   << hitIndex);
         return ProcessCode::ABORT;
       }
       trackSourceLinks.push_back(*sourceLink);
+      surfSequence.push_back(m_cfg.trackingGeometry->findSurface(geoId));
     }
 
     ACTS_DEBUG("Invoke fitter");
-    auto result = m_cfg.fit(trackSourceLinks, initialParams, kfOptions);
+    auto result =
+        fitTrack(trackSourceLinks, initialParams, kfOptions, surfSequence);
+
     if (result.ok()) {
       // Get the fit output object
       const auto& fitOutput = result.value();

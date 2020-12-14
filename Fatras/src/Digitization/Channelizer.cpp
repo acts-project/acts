@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsFatras/Digitization/Channelizer.hpp"
+
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 #include "Acts/Utilities/BinUtility.hpp"

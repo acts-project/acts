@@ -8,9 +8,10 @@
 
 #pragma once
 
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 
 #include <memory>
+
 #include "RtypesCore.h"
 
 class TGeoShape;

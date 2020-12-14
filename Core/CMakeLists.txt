@@ -25,6 +25,12 @@ if(ACTS_PARAMETER_DEFINITIONS_HEADER)
     PUBLIC -DACTS_PARAMETER_DEFINITIONS_HEADER="${ACTS_PARAMETER_DEFINITIONS_HEADER}")
 endif()
 
+if(ACTS_CUSTOM_SCALARTYPE)
+  target_compile_definitions(
+    ActsCore
+    PUBLIC -DACTS_CUSTOM_SCALARTYPE=${ACTS_CUSTOM_SCALARTYPE})
+endif()
+
 install(
   TARGETS ActsCore
   EXPORT ActsCoreTargets
@@ -44,6 +50,8 @@ add_subdirectory(src/MagneticField)
 add_subdirectory(src/Material)
 add_subdirectory(src/Propagator)
 add_subdirectory(src/Surfaces)
+add_subdirectory(src/TrackFinding)
+add_subdirectory(src/TrackFitting)
 add_subdirectory(src/Utilities)
 add_subdirectory(src/Vertexing)
 add_subdirectory(src/Visualization)

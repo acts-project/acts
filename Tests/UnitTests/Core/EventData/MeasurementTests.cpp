@@ -1,86 +1,235 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Measurement.hpp"
-#include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
 
+#include <limits>
 #include <random>
+#include <tuple>
+#include <vector>
 
-namespace Acts {
-namespace Test {
+using namespace Acts;
+using namespace Acts::Test;
+using SourceLink = Acts::Test::TestSourceLink;
+namespace bd = boost::unit_test::data;
 
-template <BoundIndices... params>
-using MeasurementType = Measurement<TestSourceLink, BoundIndices, params...>;
+namespace {
+constexpr BoundIndices boundIndices[] = {
+    eBoundLoc0, eBoundLoc1, eBoundTime, eBoundPhi, eBoundTheta, eBoundQOverP,
+};
+constexpr FreeIndices freeIndices[] = {
+    eFreePos0, eFreePos1, eFreePos2, eFreeTime,
+    eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP,
+};
+const TestSourceLink source;
+// fix seed for reproducible tests
+std::default_random_engine rng(123);
+}  // namespace
 
-/// @brief Unit test for creation of Measurement object
-///
-BOOST_AUTO_TEST_CASE(measurement_initialization) {
-  auto cylinder =
-      Surface::makeShared<CylinderSurface>(Transform3D::Identity(), 3, 10);
+// the underlying subspace implementation is already tested exhaustively in a
+// separate unit test. here we only test concrete extreme cases and
+// measurement-specific functionality.
 
-  SymMatrix2D cov;
-  cov << 0.04, 0, 0, 0.1;
-  MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1> m(
-      cylinder, {}, cov, -0.1, 0.45);
+BOOST_AUTO_TEST_SUITE(EventDataMeasurement)
 
-  MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1> m_vec(
-      cylinder, {}, cov, {-0.1, 0.45});
+BOOST_DATA_TEST_CASE(FixedBoundOne, bd::make(boundIndices), index) {
+  auto [params, cov] = generateParametersCovariance<BoundScalar, 1u>(rng);
+  auto meas = makeMeasurement(source, params, cov, index);
 
-  std::default_random_engine generator(42);
-
-  // Create a measurement on a cylinder
-  SymMatrix2D covc;
-  covc << 0.04, 0, 0, 0.1;
-  MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1> mc(
-      cylinder, {}, std::move(covc), -0.1, 0.45);
-
-  // Check the copy constructor
-  auto mcCopy(mc);
-
-  // The surface should be not null and point to the same
-  const Surface* sfCopy = &mcCopy.referenceObject();
-  BOOST_CHECK_NE(sfCopy, nullptr);
-  BOOST_CHECK_EQUAL(sfCopy, cylinder.get());
-  // The parameters should be identical though
-  BOOST_CHECK_EQUAL(mc.parameters(), mcCopy.parameters());
-
-  // check the assignment operator
-  auto mcAssigned = mc;
-
-  // The surface should be not null and point to the same
-  const Surface* sfAssigned = &mcAssigned.referenceObject();
-  BOOST_CHECK_NE(sfAssigned, nullptr);
-  BOOST_CHECK_EQUAL(sfAssigned, cylinder.get());
-  // The parameters should be identical though
-  BOOST_CHECK_EQUAL(mc.parameters(), mcAssigned.parameters());
-
-  std::vector<
-      MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1>>
-      caMeasurements{std::move(mcCopy), std::move(mcAssigned)};
-
-  auto plane = Surface::makeShared<PlaneSurface>(Vector3D(0., 0., 0.),
-                                                 Vector3D(1., 0., 0.));
-  ActsSymMatrixD<1> covp;
-  covp << 0.01;
-  MeasurementType<BoundIndices::eBoundLoc0> mp(plane, {}, std::move(covp), 0.1);
-
-  SymMatrix2D covpp;
-  covpp << 0.01, 0., 0., 0.02;
-  MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1> mpp(
-      plane, {}, std::move(covpp), 0.1, 0.2);
-
-  std::vector<FittableMeasurement<TestSourceLink>> measurements{
-      std::move(mc), std::move(mp), std::move(mpp)};
+  BOOST_CHECK_EQUAL(meas.size(), 1);
+  for (auto i : boundIndices) {
+    if (i == index) {
+      BOOST_CHECK(meas.contains(i));
+    } else {
+      BOOST_CHECK(not meas.contains(i));
+    }
+  }
+  BOOST_CHECK_EQUAL(meas.parameters(), params);
+  BOOST_CHECK_EQUAL(meas.covariance(), cov);
+  BOOST_CHECK_EQUAL(meas.sourceLink(), source);
 }
-}  // namespace Test
-}  // namespace Acts
+
+BOOST_AUTO_TEST_CASE(FixedBoundAll) {
+  auto [params, cov] = generateBoundParametersCovariance(rng);
+  auto meas = makeMeasurement(source, params, cov, eBoundLoc0, eBoundLoc1,
+                              eBoundPhi, eBoundTheta, eBoundQOverP, eBoundTime);
+
+  BOOST_CHECK_EQUAL(meas.size(), eBoundSize);
+  for (auto i : boundIndices) {
+    BOOST_CHECK(meas.contains(i));
+  }
+  BOOST_CHECK_EQUAL(meas.parameters(), params);
+  BOOST_CHECK_EQUAL(meas.covariance(), cov);
+  BOOST_CHECK_EQUAL(meas.sourceLink(), source);
+}
+
+namespace {
+// example data for phi residual tests. each entry contains
+//
+//     measured, reference, expected residual
+//
+const std::vector<std::tuple<double, double, double>> kPhiDataset = {
+    // measurement and reference in bounds and close
+    {0.5, 0.75, -0.25},
+    // measurement and reference in bounds but at different edges
+    {0.25, 2 * M_PI - 0.25, 0.5},
+    {2 * M_PI - 0.125, 0.125, -0.25},
+    // measurement in bounds, reference ouf-of-bounds, both near lower edge
+    {0.25, -0.25, 0.5},
+    // measurement in bounds, reference ouf-of-bounds, both near upper edge
+    {2 * M_PI - 0.25, 2 * M_PI + 0.25, -0.5},
+    // measurement out-of-bounds, reference in bounds, both near lower edge
+    {-0.25, 0.25, -0.5},
+    // measurement out-of-bounds, reference in bounds, both near upper edge
+    {2 * M_PI + 0.25, 2 * M_PI - 0.25, 0.5},
+};
+}  // namespace
+
+BOOST_DATA_TEST_CASE(BoundResidualsPhi, bd::make(kPhiDataset), phiMea, phiRef,
+                     phiRes) {
+  using MeasurementVector = Acts::ActsVector<Acts::BoundScalar, 1>;
+  using MeasurementCovariance = Acts::ActsSymMatrix<Acts::BoundScalar, 1>;
+
+  // prepare measurement
+  MeasurementVector params = MeasurementVector::Zero();
+  MeasurementCovariance cov = MeasurementCovariance::Zero();
+  params[0] = phiMea;
+  auto measurement = makeMeasurement(source, params, cov, eBoundPhi);
+  // prepare reference parameters
+  Acts::BoundVector reference = Acts::BoundVector::Zero();
+  reference[eBoundPhi] = phiRef;
+
+  // compute and check residual
+  auto res = measurement.residuals(reference);
+  CHECK_CLOSE_ABS(res[0], phiRes, std::numeric_limits<BoundScalar>::epsilon());
+}
+
+BOOST_DATA_TEST_CASE(FixedFreeOne, bd::make(freeIndices), index) {
+  auto [params, cov] = generateParametersCovariance<FreeScalar, 1u>(rng);
+  auto meas = makeMeasurement(source, params, cov, index);
+
+  BOOST_CHECK_EQUAL(meas.size(), 1);
+  for (auto i : freeIndices) {
+    if (i == index) {
+      BOOST_CHECK(meas.contains(i));
+    } else {
+      BOOST_CHECK(not meas.contains(i));
+    }
+  }
+  BOOST_CHECK_EQUAL(meas.parameters(), params);
+  BOOST_CHECK_EQUAL(meas.covariance(), cov);
+  BOOST_CHECK_EQUAL(meas.sourceLink(), source);
+
+  // all free parameters are unrestricted and we know the expected residual.
+  constexpr auto tol = std::numeric_limits<FreeScalar>::epsilon();
+  auto [ref, refCov] = generateFreeParametersCovariance(rng);
+  auto res = meas.residuals(ref);
+  CHECK_CLOSE_ABS(res[0], params[0] - ref[index], tol);
+}
+
+BOOST_AUTO_TEST_CASE(FixedFreeAll) {
+  auto [params, cov] = generateFreeParametersCovariance(rng);
+  auto meas =
+      makeMeasurement(source, params, cov, eFreePos0, eFreePos1, eFreePos2,
+                      eFreeTime, eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP);
+
+  BOOST_CHECK_EQUAL(meas.size(), eFreeSize);
+  for (auto i : freeIndices) {
+    BOOST_CHECK(meas.contains(i));
+  }
+  BOOST_CHECK_EQUAL(meas.parameters(), params);
+  BOOST_CHECK_EQUAL(meas.covariance(), cov);
+  BOOST_CHECK_EQUAL(meas.sourceLink(), source);
+
+  // all free parameters are unrestricted and we know the expected residual.
+  constexpr auto tol = std::numeric_limits<FreeScalar>::epsilon();
+  auto [ref, refCov] = generateFreeParametersCovariance(rng);
+  CHECK_CLOSE_ABS(meas.residuals(ref), params - ref, tol);
+}
+
+BOOST_AUTO_TEST_CASE(VariantBound) {
+  // generate w/ a single parameter
+  auto [par1, cov1] = generateParametersCovariance<BoundScalar, 1u>(rng);
+  BoundVariantMeasurement<SourceLink> meas =
+      makeMeasurement(source, par1, cov1, eBoundTheta);
+  std::visit(
+      [](const auto& m) {
+        BOOST_CHECK_EQUAL(m.size(), 1);
+        BOOST_CHECK(not m.contains(eBoundLoc0));
+        BOOST_CHECK(not m.contains(eBoundLoc1));
+        BOOST_CHECK(not m.contains(eBoundTime));
+        BOOST_CHECK(not m.contains(eBoundPhi));
+        BOOST_CHECK(m.contains(eBoundTheta));
+        BOOST_CHECK(not m.contains(eBoundQOverP));
+      },
+      meas);
+
+  // reassign w/ all parameters
+  auto [parN, covN] = generateBoundParametersCovariance(rng);
+  meas = makeMeasurement(source, parN, covN, eBoundLoc0, eBoundLoc1, eBoundPhi,
+                         eBoundTheta, eBoundQOverP, eBoundTime);
+  std::visit(
+      [](const auto& m) {
+        BOOST_CHECK_EQUAL(m.size(), eBoundSize);
+        BOOST_CHECK(m.contains(eBoundLoc0));
+        BOOST_CHECK(m.contains(eBoundLoc1));
+        BOOST_CHECK(m.contains(eBoundTime));
+        BOOST_CHECK(m.contains(eBoundPhi));
+        BOOST_CHECK(m.contains(eBoundTheta));
+        BOOST_CHECK(m.contains(eBoundQOverP));
+      },
+      meas);
+}
+
+BOOST_AUTO_TEST_CASE(VariantFree) {
+  // generate w/ two parameters
+  auto [par2, cov2] = generateParametersCovariance<FreeScalar, 2u>(rng);
+  FreeVariantMeasurement<SourceLink> meas =
+      makeMeasurement(source, par2, cov2, eFreePos2, eFreeTime);
+  std::visit(
+      [](const auto& m) {
+        BOOST_CHECK_EQUAL(m.size(), 2);
+        BOOST_CHECK(not m.contains(eFreePos0));
+        BOOST_CHECK(not m.contains(eFreePos1));
+        BOOST_CHECK(m.contains(eFreePos2));
+        BOOST_CHECK(m.contains(eFreeTime));
+        BOOST_CHECK(not m.contains(eFreeDir0));
+        BOOST_CHECK(not m.contains(eFreeDir1));
+        BOOST_CHECK(not m.contains(eFreeDir2));
+        BOOST_CHECK(not m.contains(eFreeQOverP));
+      },
+      meas);
+
+  // reassign w/ all parameters
+  auto [parN, covN] = generateFreeParametersCovariance(rng);
+  meas =
+      makeMeasurement(source, parN, covN, eFreePos0, eFreePos1, eFreePos2,
+                      eFreeTime, eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP);
+  std::visit(
+      [](const auto& m) {
+        BOOST_CHECK_EQUAL(m.size(), eFreeSize);
+        BOOST_CHECK(m.contains(eFreePos0));
+        BOOST_CHECK(m.contains(eFreePos1));
+        BOOST_CHECK(m.contains(eFreePos2));
+        BOOST_CHECK(m.contains(eFreeTime));
+        BOOST_CHECK(m.contains(eFreeDir0));
+        BOOST_CHECK(m.contains(eFreeDir1));
+        BOOST_CHECK(m.contains(eFreeDir2));
+        BOOST_CHECK(m.contains(eFreeQOverP));
+      },
+      meas);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

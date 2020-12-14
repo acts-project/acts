@@ -9,6 +9,7 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
@@ -21,16 +22,16 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsFatras/Digitization/Channelizer.hpp"
-#include "DigitizationCsvOutput.hpp"
-#include "PlanarSurfaceTestBeds.hpp"
 
 #include <array>
 #include <fstream>
 #include <functional>
 #include <vector>
+
+#include "DigitizationCsvOutput.hpp"
+#include "PlanarSurfaceTestBeds.hpp"
 
 namespace bdata = boost::unit_test::data;
 

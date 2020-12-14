@@ -82,7 +82,7 @@ struct Interactor {
     // avoid having a clumsy `initialized` flag by reconstructing the particle
     // state directly from the propagation state; using only the identity
     // parameters from the initial particle state.
-    const auto before =
+    const Particle before =
         Particle(particle)
             // include passed material from the initial particle state
             .setMaterialPassed(particle.pathInX0() + result.pathInX0,
@@ -90,10 +90,10 @@ struct Interactor {
             .setPosition4(stepper.position(state.stepping),
                           stepper.time(state.stepping))
             .setDirection(stepper.direction(state.stepping))
-            .setAbsMomentum(stepper.momentum(state.stepping));
+            .setAbsoluteMomentum(stepper.momentum(state.stepping));
     // we want to keep the particle state before and after the interaction.
     // since the particle is modified in-place we need a copy.
-    auto after = before;
+    Particle after = before;
 
     // interactions only make sense if there is material to interact with.
     if (surface.surfaceMaterial()) {
@@ -103,8 +103,7 @@ struct Interactor {
       auto lpResult = surface.globalToLocal(state.geoContext, before.position(),
                                             before.unitDirection());
       if (lpResult.ok()) {
-        Acts::Vector2D local(0., 0.);
-
+        Acts::Vector2D local = lpResult.value();
         Acts::MaterialSlab slab =
             surface.surfaceMaterial()->materialSlab(local);
 
@@ -143,13 +142,13 @@ struct Interactor {
       result.hits.emplace_back(
           surface.geometryId(), before.particleId(),
           // the interaction could potentially modify the particle position
-          Hit::Scalar(0.5) * (before.position4() + after.position4()),
-          before.momentum4(), after.momentum4(), result.hits.size());
+          Hit::Scalar(0.5) * (before.fourPosition() + after.fourPosition()),
+          before.fourMomentum(), after.fourMomentum(), result.hits.size());
     }
 
     // continue the propagation with the modified parameters
     stepper.update(state.stepping, after.position(), after.unitDirection(),
-                   after.absMomentum(), after.time());
+                   after.absoluteMomentum(), after.time());
   }
 
   /// Pure observer interface. Does not apply to the Fatras simulator.

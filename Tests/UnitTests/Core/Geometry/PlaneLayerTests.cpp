@@ -16,6 +16,7 @@
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+
 #include "LayerStub.hpp"
 
 using boost::test_tools::output_test_stream;

@@ -8,10 +8,10 @@
 
 #include "Acts/Geometry/PlaneLayer.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 #include <vector>
 

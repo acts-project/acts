@@ -10,6 +10,8 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
@@ -20,9 +22,7 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
-#include "Acts/Utilities/Units.hpp"
 
 #include <memory>
 
@@ -144,7 +144,7 @@ struct PropagatorState {
     }
 
     BoundState boundState(State& state, const Surface& surface, bool /*unused*/
-                          ) const {
+    ) const {
       BoundTrackParameters parameters(surface.getSharedPtr(), tgContext,
                                       state.pos4, state.dir, state.p, state.q);
       BoundState bState{std::move(parameters), Jacobian::Identity(),
@@ -153,7 +153,7 @@ struct PropagatorState {
     }
 
     CurvilinearState curvilinearState(State& state, bool /*unused*/
-                                      ) const {
+    ) const {
       CurvilinearTrackParameters parameters(state.pos4, state.dir, state.p,
                                             state.q);
       // Create the bound state

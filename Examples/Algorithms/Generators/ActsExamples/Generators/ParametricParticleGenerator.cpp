@@ -27,8 +27,8 @@ ActsExamples::ParametricParticleGenerator::ParametricParticleGenerator(
       m_cosThetaMax(std::nextafter(std::cos(m_cfg.thetaMax),
                                    std::numeric_limits<double>::max())) {}
 
-ActsExamples::SimParticleContainer ActsExamples::ParametricParticleGenerator::
-operator()(RandomEngine& rng) const {
+ActsExamples::SimParticleContainer
+ActsExamples::ParametricParticleGenerator::operator()(RandomEngine& rng) const {
   using UniformIndex = std::uniform_int_distribution<unsigned int>;
   using UniformReal = std::uniform_real_distribution<double>;
 
@@ -74,7 +74,7 @@ operator()(RandomEngine& rng) const {
     // construct the particle;
     ActsFatras::Particle particle(pid, pdg, q, m_mass);
     particle.setDirection(dir);
-    particle.setAbsMomentum(p);
+    particle.setAbsoluteMomentum(p);
 
     // generated particle ids are already ordered and should end up at the end
     particles.insert(particles.end(), std::move(particle));

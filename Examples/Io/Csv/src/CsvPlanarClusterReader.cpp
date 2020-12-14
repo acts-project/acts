@@ -8,9 +8,10 @@
 
 #include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
-#include "Acts/Utilities/Units.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
@@ -26,9 +27,8 @@
 ActsExamples::CsvPlanarClusterReader::CsvPlanarClusterReader(
     const ActsExamples::CsvPlanarClusterReader::Config& cfg,
     Acts::Logging::Level lvl)
-    : m_cfg(cfg)
+    : m_cfg(cfg),
       // TODO check that all files (hits,cells,truth) exists
-      ,
       m_eventsRange(determineEventFilesRange(cfg.inputDir, "hits.csv")),
       m_logger(Acts::getDefaultLogger("CsvPlanarClusterReader", lvl)) {
   if (m_cfg.outputClusters.empty()) {

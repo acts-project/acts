@@ -177,7 +177,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersWriter::writeT(
           const auto& particle = *ip;
           ACTS_DEBUG("Find the truth particle with barcode = " << m_t_barcode);
           // Get the truth particle info at vertex
-          const auto p = particle.absMomentum();
+          const auto p = particle.absoluteMomentum();
           m_t_charge = particle.charge();
           m_t_time = particle.time();
           m_t_vx = particle.position().x();

@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
 
 #include <autodiff/forward.hpp>
 #include <autodiff/forward/eigen.hpp>
@@ -71,8 +71,7 @@ struct AutodiffExtensionWrapper {
  private:
   // A fake stepper-state
   struct FakeStepperState {
-    AutodiffScalar t, p;
-    AutodiffVector3 pos, dir;
+    AutodiffFreeVector pars;
     AutodiffFreeVector derivative;
     double q;
     bool covTransport = false;
@@ -89,9 +88,15 @@ struct AutodiffExtensionWrapper {
   // A fake stepper
   struct FakeStepper {
     auto charge(const FakeStepperState& s) const { return s.q; }
-    auto momentum(const FakeStepperState& s) const { return s.p; }
-    auto direction(const FakeStepperState& s) const { return s.dir; }
-    auto position(const FakeStepperState& s) const { return s.pos; }
+    auto momentum(const FakeStepperState& s) const {
+      return s.q / s.pars(eFreeQOverP);
+    }
+    auto direction(const FakeStepperState& s) const {
+      return s.pars.template segment<3>(eFreeDir0);
+    }
+    auto position(const FakeStepperState& s) const {
+      return s.pars.template segment<3>(eFreePos0);
+    }
   };
 
   // Here the autodiff jacobian is computed
@@ -135,11 +140,7 @@ struct AutodiffExtensionWrapper {
     FakeStepper stepper;
 
     // Set dependent variables
-    state.stepping.pos = in.segment<3>(eFreePos0);
-    state.stepping.t = in(eFreeTime);
-    state.stepping.dir = in.segment<3>(eFreeDir0);
-    state.stepping.p =
-        (state.stepping.q != 0. ? state.stepping.q : 1.) / in(eFreeQOverP);
+    state.stepping.pars = in;
 
     std::array<AutodiffScalar, 4> kQoP;
     std::array<AutodiffVector3, 4> k;
@@ -172,11 +173,10 @@ struct AutodiffExtensionWrapper {
     out.segment<3>(eFreeDir0) = final_dir / final_dir.norm();
 
     // qop
-    out(eFreeQOverP) =
-        (state.stepping.q != 0. ? state.stepping.q : 1.) / state.stepping.p;
+    out(eFreeQOverP) = state.stepping.pars(eFreeQOverP);
 
     // time
-    out(eFreeTime) = state.stepping.t;
+    out(eFreeTime) = state.stepping.pars(eFreeTime);
 
     return out;
   }

@@ -6,246 +6,266 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-#include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
+#include <algorithm>
+#include <limits>
+#include <random>
 #include <system_error>
 #include <variant>
 
-namespace ActsFatras {
-
-BOOST_AUTO_TEST_SUITE(Digitization)
-
 namespace {
 
-struct Random {};
+namespace bd = boost::unit_test::data;
 
-struct AddSmearer {
-  unsigned int stats = 0;  // dummy seed / stats
-
-  Acts::Result<std::pair<double, double>> operator()(double value,
-                                                     Random& /*unused*/) {
-    ++stats;
-    return Acts::Result<std::pair<double, double>>(
-        std::make_pair<double, double>(value + 1., 3.));
-  }
-};
+using RandomGenerator = std::default_random_engine;
 
 struct SterileSmearer {
-  Acts::Result<std::pair<double, double>> operator()(double value,
-                                                     Random& /*unused*/) {
+  Acts::Result<std::pair<double, double>> operator()(
+      double value, RandomGenerator& /*unused*/) {
     return Acts::Result<std::pair<double, double>>(
         std::make_pair<double, double>(value + 0., 0.));
   }
 };
 
+struct AddSmearer {
+  double offset = 1.0;
+
+  Acts::Result<std::pair<double, double>> operator()(
+      double value, RandomGenerator& /*unused*/) {
+    return Acts::Result<std::pair<double, double>>(
+        std::make_pair<double, double>(value + offset, 3.));
+  }
+};
+
 struct InvalidSmearer {
-  Acts::Result<std::pair<double, double>> operator()(double /*ignored*/,
-                                                     Random& /*unused*/) {
+  Acts::Result<std::pair<double, double>> operator()(
+      double /*ignored*/, RandomGenerator& /*unused*/) {
     return Acts::Result<std::pair<double, double>>(
         ActsFatras::DigitizationError::SmearingError);
   }
 };
 
-const auto pid = Barcode().setVertexPrimary(12).setParticle(23);
-const auto gid =
-    Acts::GeometryIdentifier().setVolume(1).setLayer(2).setSensitive(3);
+struct Fixture {
+  RandomGenerator rng;
+  // identifiers
+  Acts::GeometryIdentifier gid;
+  ActsFatras::Barcode pid;
+  // geometry information
+  std::shared_ptr<Acts::Surface> surface;
+  Acts::GeometryContext geoCtx;
+  // local and global track parameters
+  Acts::BoundVector boundParams;
+  Acts::FreeVector freeParams;
+  // hit information
+  ActsFatras::Hit hit;
 
-auto rec = std::make_shared<Acts::RectangleBounds>(1000, 1000);
-auto tSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-    Acts::Transform3D::Identity(), rec);
+  Fixture(uint64_t rngSeed)
+      : rng(rngSeed),
+        gid(Acts::GeometryIdentifier().setVolume(1).setLayer(2).setSensitive(
+            3)),
+        pid(ActsFatras::Barcode().setVertexPrimary(12).setParticle(23)),
+        surface(Acts::Surface::makeShared<Acts::PlaneSurface>(
+            Acts::Transform3D(Acts::Translation3D(3, 2, 1)))) {
+    using namespace Acts::UnitLiterals;
+    using Acts::VectorHelpers::makeVector4;
+
+    surface->assignGeometryId(gid);
+
+    // generate random track parameters
+    auto [par, cov] = Acts::Test::generateBoundParametersCovariance(rng);
+    boundParams = par;
+    freeParams = Acts::detail::transformBoundToFreeParameters(*surface, geoCtx,
+                                                              boundParams);
+
+    // construct hit from free parameters
+    Acts::Vector4D r4;
+    r4.segment<3>(Acts::ePos0) = freeParams.segment<3>(Acts::eFreePos0);
+    r4[Acts::eTime] = freeParams[Acts::eFreeTime];
+    // construct 4-momentum vector assuming m=0
+    Acts::Vector4D p4;
+    p4.segment<3>(Acts::eMom0) =
+        freeParams.segment<3>(Acts::eFreeDir0).normalized();
+    p4[Acts::eEnergy] = 1;
+    p4 *= std::abs(1_e / freeParams[Acts::eFreeQOverP]);
+    // same 4-momentum before/after hit
+    hit = ActsFatras::Hit(gid, pid, r4, p4, p4, 13);
+  }
+};
+
+// track parameter indices to test smearing with. q/p smearing is not supported
+// in either case.
+const Acts::BoundIndices boundIndices[] = {
+    Acts::eBoundLoc0, Acts::eBoundLoc1,  Acts::eBoundTime,
+    Acts::eBoundPhi,  Acts::eBoundTheta,
+};
+const Acts::FreeIndices freeIndices[] = {
+    Acts::eFreePos0, Acts::eFreePos1, Acts::eFreePos2, Acts::eFreeTime,
+    Acts::eFreeDir0, Acts::eFreeDir1, Acts::eFreeDir2,
+};
+
+constexpr auto tol = 128 * std::numeric_limits<double>::epsilon();
 
 }  // namespace
 
-BOOST_AUTO_TEST_CASE(BoundParameterSmeering) {
-  Acts::GeometryContext geoCtx = Acts::GeometryContext();
+BOOST_AUTO_TEST_SUITE(FatrasUncorrelatedHitSmearer)
 
-  Random sRandom;
+BOOST_DATA_TEST_CASE(Bound1, bd::make(boundIndices), index) {
+  Fixture f(123);
+  ActsFatras::BoundParametersSmearer<RandomGenerator, 1u> s;
+  s.indices = {index};
 
-  // some hit position
-  auto p4 = Hit::Vector4(3, 2, 0, 10.);
-  // before/after four-momenta are the same
-  auto m4 = Hit::Vector4(1, 2, 1, 4);
-  auto hit = Hit(gid, pid, p4, m4, m4, 12u);
-
-  SmearInput sInput{hit, geoCtx, tSurface.get()};
-
-  AddSmearer tAddFnc;
-  SterileSmearer tSterileFnc;
-  InvalidSmearer tInvalidFnc;
-
-  BoundParametersSmearer<Acts::eBoundLoc0> oneDimSmearer;
-  auto oneDim = oneDimSmearer(sInput, sRandom, {tAddFnc});
-
-  BOOST_CHECK(oneDim.ok());
-
-  const auto& smearedOne = oneDim.value();
-  BOOST_CHECK(smearedOne.contains<Acts::eBoundLoc0>());
-
-  const auto& sParametersOne = smearedOne.getParameters();
-  const auto& sCovarianceOne = smearedOne.getCovariance().value();
-
-  CHECK_CLOSE_ABS(sParametersOne[0], 4., Acts::s_epsilon);
-  CHECK_CLOSE_ABS(sCovarianceOne(0, 0), 9., Acts::s_epsilon);
-
-  BoundParametersSmearer<Acts::eBoundLoc0, Acts::eBoundLoc1> twoDimSmearer;
-  auto twoDim = twoDimSmearer(sInput, sRandom, {tAddFnc, tAddFnc});
-
-  BOOST_CHECK(twoDim.ok());
-  const auto& smearedTwo = twoDim.value();
-  BOOST_CHECK(smearedTwo.contains<Acts::eBoundLoc0>());
-  BOOST_CHECK(smearedTwo.contains<Acts::eBoundLoc1>());
-
-  const auto& sParametersTwo = smearedTwo.getParameters();
-  const auto& sCovarianceTwo = smearedTwo.getCovariance().value();
-
-  CHECK_CLOSE_ABS(sParametersTwo[0], 4., Acts::s_epsilon);
-  CHECK_CLOSE_ABS(sParametersTwo[1], 3., Acts::s_epsilon);
-  CHECK_CLOSE_ABS(sCovarianceTwo(0, 0), 9., Acts::s_epsilon);
-  CHECK_CLOSE_ABS(sCovarianceTwo(1, 1), 9., Acts::s_epsilon);
-
-  // Check smearing of time
-  BoundParametersSmearer<Acts::eBoundLoc1, Acts::eBoundTime> locYTimeSmearer;
-  auto locYTime = locYTimeSmearer(sInput, sRandom, {tAddFnc, tAddFnc});
-  BOOST_CHECK(locYTime.ok());
-  const auto& smearedLocyTime = locYTime.value();
-  BOOST_CHECK(smearedLocyTime.contains<Acts::eBoundLoc1>());
-  BOOST_CHECK(smearedLocyTime.contains<Acts::eBoundTime>());
-  CHECK_CLOSE_ABS(smearedLocyTime.getParameter<Acts::eBoundLoc1>(), 3.,
-                  Acts::s_epsilon);
-  CHECK_CLOSE_ABS(smearedLocyTime.getParameter<Acts::eBoundTime>(), 11.,
-                  Acts::s_epsilon);
-
-  // Use sterile BoundParametersSmearer to check if direction is properly
-  // translated
-  BoundParametersSmearer<Acts::eBoundPhi, Acts::eBoundTheta> phiThetaSmearer;
-  auto phiTheta = phiThetaSmearer(sInput, sRandom, {tSterileFnc, tSterileFnc});
-  BOOST_CHECK(phiTheta.ok());
-  auto phiThetaParSet = phiTheta.value();
-  BOOST_CHECK(phiThetaParSet.contains<Acts::eBoundPhi>());
-  BOOST_CHECK(phiThetaParSet.contains<Acts::eBoundTheta>());
-  CHECK_CLOSE_ABS(phiThetaParSet.getParameter<Acts::eBoundPhi>(),
-                  Acts::VectorHelpers::phi(hit.unitDirection()),
-                  Acts::s_epsilon);
-  CHECK_CLOSE_ABS(phiThetaParSet.getParameter<Acts::eBoundTheta>(),
-                  Acts::VectorHelpers::theta(hit.unitDirection()),
-                  Acts::s_epsilon);
-
-  // Finally check an invalid smearing
-  BoundParametersSmearer<Acts::eBoundPhi, Acts::eBoundTheta>
-      invalidHitFirstSmearer;
-  auto invalidHitFirst =
-      invalidHitFirstSmearer(sInput, sRandom, {tInvalidFnc, tSterileFnc});
-  BOOST_CHECK(not invalidHitFirst.ok());
-
-  BoundParametersSmearer<Acts::eBoundLoc0, Acts::eBoundLoc1, Acts::eBoundPhi,
-                         Acts::eBoundTheta>
-      invalidHitMiddleSmearer;
-
-  auto invalidHitMiddle = invalidHitMiddleSmearer(
-      sInput, sRandom, {tSterileFnc, tSterileFnc, tInvalidFnc, tSterileFnc});
-  BOOST_CHECK(not invalidHitMiddle.ok());
-
-  BoundParametersSmearer<Acts::eBoundPhi, Acts::eBoundTheta>
-      invalidHitLastSmearer;
-  auto invalidHitLast =
-      invalidHitLastSmearer(sInput, sRandom, {tSterileFnc, tInvalidFnc});
-  BOOST_CHECK(not invalidHitLast.ok());
-
-  // Test the variant approach for smearers
-  using StripSmearer = std::pair<BoundParametersSmearer<Acts::eBoundLoc0>,
-                                 std::array<SmearFunction<Random>, 1>>;
-
-  using PixelSmearer =
-      std::pair<BoundParametersSmearer<Acts::eBoundLoc0, Acts::eBoundLoc1>,
-                std::array<SmearFunction<Random>, 2>>;
-
-  using SiliconSmearer = std::variant<StripSmearer, PixelSmearer>;
-
-  using SiliconParSets =
-      std::variant<Acts::ParameterSet<Acts::BoundIndices, Acts::eBoundLoc0>,
-                   Acts::ParameterSet<Acts::BoundIndices, Acts::eBoundLoc0,
-                                      Acts::eBoundLoc1>>;
-
-  StripSmearer stripSmearer(oneDimSmearer, {tAddFnc});
-  PixelSmearer pixelSmearer(twoDimSmearer, {tAddFnc, tAddFnc});
-
-  std::map<std::string, SiliconSmearer> siSmearers;
-  siSmearers["pixel"] = pixelSmearer;
-  siSmearers["strip"] = stripSmearer;
-
-  std::map<std::string, Hit> siHits;
-  siHits["pixel"] = hit;
-  siHits["strip"] = hit;
-
-  std::vector<SiliconParSets> siParSets;
-
-  for (auto& [key, value] : siHits) {
-    std::string key_id = key;
-    std::visit(
-        [&](auto&& sm) {
-          auto sParSet = sm.first(sInput, sRandom, sm.second);
-          if (sParSet.ok()) {
-            siParSets.push_back(sParSet.value());
-            // siParSets.push_Back(sParSet);
-            std::cout << "Smearing a hit for " << key_id << std::endl;
-            std::cout << " - contains loc0 : "
-                      << sParSet.value().template contains<Acts::eBoundLoc0>()
-                      << std::endl;
-            std::cout << " - contains loc1 : "
-                      << sParSet.value().template contains<Acts::eBoundLoc1>()
-                      << std::endl;
-          }
-        },
-        siSmearers[key]);
+  // smearing does not do anything
+  {
+    s.smearFunctions.fill(SterileSmearer{});
+    auto ret = s(f.rng, f.hit, *f.surface, f.geoCtx);
+    BOOST_CHECK(ret.ok());
+    auto [par, cov] = ret.value();
+    CHECK_CLOSE_REL(par[0], f.boundParams[index], tol);
   }
-
-  BOOST_CHECK_EQUAL(siParSets.size(), 2u);
+  // smearing adds something
+  {
+    s.smearFunctions.fill(AddSmearer{-42.0});
+    auto ret = s(f.rng, f.hit, *f.surface, f.geoCtx);
+    BOOST_CHECK(ret.ok());
+    auto [par, cov] = ret.value();
+    CHECK_CLOSE_REL(par[0], f.boundParams[index] - 42.0, tol);
+  }
+  // smearing fails
+  {
+    s.smearFunctions.fill(InvalidSmearer{});
+    auto ret = s(f.rng, f.hit, *f.surface, f.geoCtx);
+    BOOST_CHECK(not ret.ok());
+    BOOST_CHECK(ret.error());
+  }
 }
 
-BOOST_AUTO_TEST_CASE(FreeParameterSmeering) {
-  using FreeSmearer =
-      FreeParametersSmearer<Acts::eFreePos0, Acts::eFreePos1, Acts::eFreeDir2>;
+BOOST_AUTO_TEST_CASE(BoundAll) {
+  Fixture f(12356);
+  // without q/p
+  ActsFatras::BoundParametersSmearer<RandomGenerator, std::size(boundIndices)>
+      s;
+  std::copy(std::begin(boundIndices), std::end(boundIndices),
+            s.indices.begin());
 
-  Acts::GeometryContext geoCtx = Acts::GeometryContext();
+  // smearing does not do anything
+  {
+    s.smearFunctions.fill(SterileSmearer{});
+    auto ret = s(f.rng, f.hit, *f.surface, f.geoCtx);
+    BOOST_CHECK(ret.ok());
+    auto [par, cov] = ret.value();
+    for (size_t i = 0; i < s.indices.size(); ++i) {
+      BOOST_TEST_INFO("Comparing smeared measurement "
+                      << i << " originating from bound parameter "
+                      << s.indices[i]);
+      CHECK_CLOSE_REL(par[i], f.boundParams[s.indices[i]], tol);
+    }
+  }
+  // smearing adds something
+  {
+    s.smearFunctions.fill(AddSmearer{-23.0});
+    auto ret = s(f.rng, f.hit, *f.surface, f.geoCtx);
+    BOOST_CHECK(ret.ok());
+    auto [par, cov] = ret.value();
+    for (size_t i = 0; i < s.indices.size(); ++i) {
+      BOOST_TEST_INFO("Comparing smeared measurement "
+                      << i << " originating from bound parameter "
+                      << s.indices[i]);
+      CHECK_CLOSE_REL(par[i], f.boundParams[s.indices[i]] - 23.0, tol);
+    }
+  }
+  // one smearer fails
+  {
+    s.smearFunctions.fill(SterileSmearer{});
+    s.smearFunctions[3] = InvalidSmearer{};
+    auto ret = s(f.rng, f.hit, *f.surface, f.geoCtx);
+    BOOST_CHECK(not ret.ok());
+    BOOST_CHECK(ret.error());
+  }
+}
 
-  Random sRandom;
+BOOST_DATA_TEST_CASE(Free1, bd::make(freeIndices), index) {
+  Fixture f(1234);
+  ActsFatras::FreeParametersSmearer<RandomGenerator, 1u> s;
+  s.indices = {index};
 
-  FreeSmearer freeSmearer;
+  // smearing does not do anything
+  {
+    s.smearFunctions.fill(SterileSmearer{});
+    auto ret = s(f.rng, f.hit);
+    BOOST_CHECK(ret.ok());
+    auto [par, cov] = ret.value();
+    CHECK_CLOSE_REL(par[0], f.freeParams[index], tol);
+  }
+  // smearing adds something
+  {
+    s.smearFunctions.fill(AddSmearer{-42.0});
+    auto ret = s(f.rng, f.hit);
+    BOOST_CHECK(ret.ok());
+    auto [par, cov] = ret.value();
+    CHECK_CLOSE_REL(par[0], f.freeParams[index] - 42.0, tol);
+  }
+  // smearing fails
+  {
+    s.smearFunctions.fill(InvalidSmearer{});
+    auto ret = s(f.rng, f.hit);
+    BOOST_CHECK(not ret.ok());
+    BOOST_CHECK(ret.error());
+  }
+}
 
-  // some hit position
-  auto p4 = Hit::Vector4(3, 2, 0, 10.);
-  // before/after four-momenta are the same
-  auto m4 = Hit::Vector4(1, 2, 1, 4);
-  auto hit = Hit(gid, pid, p4, m4, m4, 12u);
+BOOST_AUTO_TEST_CASE(FreeAll) {
+  Fixture f(123567);
+  // without q/p
+  ActsFatras::FreeParametersSmearer<RandomGenerator, std::size(freeIndices)> s;
+  std::copy(std::begin(freeIndices), std::end(freeIndices), s.indices.begin());
 
-  AddSmearer tAddFnc;
-  SterileSmearer tSterileFnc;
-
-  auto freeSmearing =
-      freeSmearer({hit, geoCtx}, sRandom, {tSterileFnc, tAddFnc, tSterileFnc});
-
-  BOOST_CHECK(freeSmearing.ok());
-  const auto& freeSet = freeSmearing.value();
-  BOOST_CHECK(freeSet.contains<Acts::eFreePos0>());
-  BOOST_CHECK(freeSet.contains<Acts::eFreePos1>());
-  CHECK_CLOSE_ABS(freeSet.getParameter<Acts::eFreePos0>(), 3., Acts::s_epsilon);
-  CHECK_CLOSE_ABS(freeSet.getParameter<Acts::eFreePos1>(), 3., Acts::s_epsilon);
-  CHECK_CLOSE_ABS(freeSet.getParameter<Acts::eFreeDir2>(),
-                  m4.segment<3>(0).normalized()[2], Acts::s_epsilon);
+  // smearing does not do anything
+  {
+    s.smearFunctions.fill(SterileSmearer{});
+    auto ret = s(f.rng, f.hit);
+    BOOST_CHECK(ret.ok());
+    auto [par, cov] = ret.value();
+    for (size_t i = 0; i < s.indices.size(); ++i) {
+      BOOST_TEST_INFO("Comparing smeared measurement "
+                      << i << " originating from free parameter "
+                      << s.indices[i]);
+      CHECK_CLOSE_REL(par[i], f.freeParams[s.indices[i]], tol);
+    }
+  }
+  // smearing adds something
+  {
+    s.smearFunctions.fill(AddSmearer{42.0});
+    auto ret = s(f.rng, f.hit);
+    BOOST_CHECK(ret.ok());
+    auto [par, cov] = ret.value();
+    for (size_t i = 0; i < s.indices.size(); ++i) {
+      BOOST_TEST_INFO("Comparing smeared measurement "
+                      << i << " originating from free parameter "
+                      << s.indices[i]);
+      CHECK_CLOSE_REL(par[i], f.freeParams[s.indices[i]] + 42.0, tol);
+    }
+  }
+  // one smearer fails
+  {
+    s.smearFunctions.fill(SterileSmearer{});
+    s.smearFunctions[3] = InvalidSmearer{};
+    auto ret = s(f.rng, f.hit);
+    BOOST_CHECK(not ret.ok());
+    BOOST_CHECK(ret.error());
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-}  // namespace ActsFatras

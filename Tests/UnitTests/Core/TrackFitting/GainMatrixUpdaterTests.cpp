@@ -8,99 +8,79 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
 
-#include <memory>
+namespace {
 
-#include <boost/optional/optional_io.hpp>
+using namespace Acts;
+using namespace Acts::Test;
 
-namespace Acts {
-namespace Test {
+using ParametersVector = Acts::BoundVector;
+using CovarianceMatrix = Acts::BoundSymMatrix;
+using Jacobian = Acts::BoundMatrix;
 
-using Jacobian = BoundMatrix;
-using Covariance = BoundSymMatrix;
-template <BoundIndices... params>
-using MeasurementType = Measurement<TestSourceLink, BoundIndices, params...>;
+constexpr double tol = 1e-6;
+const Acts::GeometryContext tgContext;
+const Acts::Test::TestSourceLinkCalibrator calibrator;
 
-// Create a test context
-GeometryContext tgContext = GeometryContext();
+}  // namespace
 
-BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
+BOOST_AUTO_TEST_SUITE(TrackFittingGainMatrixUpdater)
+
+BOOST_AUTO_TEST_CASE(Update) {
   // Make dummy measurement
-  auto cylinder =
-      Surface::makeShared<CylinderSurface>(Transform3D::Identity(), 3, 10);
+  Vector2D measPar(-0.1, 0.45);
+  SymMatrix2D measCov = Vector2D(0.04, 0.1).asDiagonal();
+  auto sourceLink = TestSourceLink(eBoundLoc0, eBoundLoc1, measPar, measCov);
 
-  SymMatrix2D cov;
-  cov << 0.04, 0, 0, 0.1;
-  FittableMeasurement<TestSourceLink> meas(
-      MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1>(
-          cylinder, {}, std::move(cov), -0.1, 0.45));
+  // Make dummy track parameters
+  ParametersVector trkPar;
+  trkPar << 0.3, 0.5, 0.5 * M_PI, 0.3 * M_PI, 0.01, 0.;
+  CovarianceMatrix trkCov = CovarianceMatrix::Zero();
+  trkCov.diagonal() << 0.08, 0.3, 1, 1, 1, 0;
 
-  // Make dummy track parameter
-  Covariance covTrk;
-  covTrk.setZero();
-  covTrk.diagonal() << 0.08, 0.3, 1, 1, 1, 0;
-  BoundVector parValues;
-  parValues << 0.3, 0.5, 0.5 * M_PI, 0.3 * M_PI, 0.01, 0.;
-
+  // Make trajectory w/ one state
   MultiTrajectory<TestSourceLink> traj;
-  traj.addTrackState(TrackStatePropMask::All);
-  auto ts = traj.getTrackState(0);
+  auto idx = traj.addTrackState(TrackStatePropMask::All);
+  auto ts = traj.getTrackState(idx);
 
-  ts.uncalibrated() = TestSourceLink(meas);
-  // "calibrate"
-  std::visit([&](const auto& m) { ts.setCalibrated(m); }, meas);
-
-  ts.predicted() = parValues;
-  ts.predictedCovariance() = covTrk;
+  // Fill the state w/ the dummy information
+  ts.predicted() = trkPar;
+  ts.predictedCovariance() = trkCov;
   ts.pathLength() = 0.;
+  ts.uncalibrated() = sourceLink;
+  std::visit([&](const auto& m) { ts.setCalibrated(m); },
+             calibrator(sourceLink, nullptr));
 
-  // Gain matrix update and filtered state
-  GainMatrixUpdater gmu;
-
+  // Check that the state has storage available
+  BOOST_CHECK(ts.hasPredicted());
   BOOST_CHECK(ts.hasFiltered());
   BOOST_CHECK(ts.hasCalibrated());
-  BOOST_CHECK(gmu(tgContext, ts).ok());
-  // ref surface is same on measurements and parameters
-  BOOST_CHECK_EQUAL(&ts.referenceSurface(), cylinder.get());
+
+  // Gain matrix update and filtered state
+  BOOST_CHECK(GainMatrixUpdater()(tgContext, ts).ok());
 
   // Check for regression. This does NOT test if the math is correct, just that
   // the result is the same as when the test was written.
 
-  Covariance expCov;
-  expCov.setZero();
+  ParametersVector expPar;
+  expPar << 0.0333333, 0.4625000, 1.5707963, 0.9424778, 0.0100000, 0.0000000;
+  CHECK_CLOSE_ABS(ts.filtered(), expPar, tol);
+
+  CovarianceMatrix expCov = CovarianceMatrix::Zero();
   expCov.diagonal() << 0.0266667, 0.0750000, 1.0000000, 1.0000000, 1.0000000,
       0.0000000;
+  CHECK_CLOSE_ABS(ts.filteredCovariance(), expCov, tol);
 
-  BoundVector expPar;
-  expPar << 0.0333333, 0.4625000, 1.5707963, 0.9424778, 0.0100000, 0.0000000;
-
-  Vector3D expPosition;
-  expPosition << 2.9998148, 0.0333326, 0.4625000;
-
-  Vector3D expMomentum;
-  expMomentum << 0.0000000, 80.9016994, 58.7785252;
-
-  BoundTrackParameters filtered(cylinder, ts.filtered(),
-                                ts.filteredCovariance());
-
-  double expChi2 = 1.33958;
-
-  double tol = 1e-6;
-
-  CHECK_CLOSE_ABS(expCov, *filtered.covariance(), tol);
-  CHECK_CLOSE_ABS(expPar, filtered.parameters(), tol);
-  CHECK_CLOSE_ABS(expPosition, filtered.position(tgContext), tol);
-  CHECK_CLOSE_ABS(expMomentum, filtered.momentum(), tol);
-  CHECK_CLOSE_ABS(expChi2, ts.chi2(), 1e-4);
+  CHECK_CLOSE_ABS(ts.chi2(), 1.33958, 1e-4);
 }
 
-}  // namespace Test
-}  // namespace Acts
+BOOST_AUTO_TEST_SUITE_END()

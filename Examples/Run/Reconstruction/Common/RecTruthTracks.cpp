@@ -20,13 +20,15 @@
 #include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
+#include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
+#include "ActsExamples/TrackFitting/TrackFittingOptions.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include <Acts/Utilities/Units.hpp>
+#include <Acts/Definitions/Units.hpp>
 
 #include <memory>
 
@@ -45,6 +47,7 @@ int runRecTruthTracks(int argc, char* argv[],
   Options::addOutputOptions(desc);
   detector->addOptions(desc);
   Options::addBFieldOptions(desc);
+  Options::addFittingOptions(desc);
 
   auto vm = Options::parse(desc, argc, argv);
   if (vm.empty()) {
@@ -59,6 +62,8 @@ int runRecTruthTracks(int argc, char* argv[],
   auto outputDir = ensureWritableDirectory(vm["output-dir"].as<std::string>());
   auto rnd = std::make_shared<ActsExamples::RandomNumbers>(
       Options::readRandomNumbersConfig(vm));
+
+  auto dirNav = vm["directed-navigation"].as<bool>();
 
   // Setup detector geometry
   auto geometry = Geometry::build(vm, *detector);
@@ -143,14 +148,33 @@ int runRecTruthTracks(int argc, char* argv[],
   sequencer.addAlgorithm(
       std::make_shared<ParticleSmearing>(particleSmearingCfg, logLevel));
 
+  SurfaceSortingAlgorithm::Config sorterCfg;
+
+  // Setup the surface sorter if running direct navigator
+  sorterCfg.inputProtoTracks = trackFinderCfg.outputProtoTracks;
+  sorterCfg.inputSimulatedHits = simHitReaderCfg.outputSimHits;
+  sorterCfg.inputMeasurementSimHitsMap =
+      hitSmearingCfg.outputMeasurementSimHitsMap;
+  sorterCfg.outputProtoTracks = "sortedprototracks";
+  if (dirNav) {
+    sequencer.addAlgorithm(
+        std::make_shared<SurfaceSortingAlgorithm>(sorterCfg, logLevel));
+  }
+
   // setup the fitter
   TrackFittingAlgorithm::Config fitter;
   fitter.inputMeasurements = hitSmearingCfg.outputMeasurements;
   fitter.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
   fitter.inputProtoTracks = trackFinderCfg.outputProtoTracks;
+  if (dirNav) {
+    fitter.inputProtoTracks = sorterCfg.outputProtoTracks;
+  }
   fitter.inputInitialTrackParameters =
       particleSmearingCfg.outputTrackParameters;
   fitter.outputTrajectories = "trajectories";
+  fitter.directNavigation = dirNav;
+  fitter.trackingGeometry = trackingGeometry;
+  fitter.dFit = TrackFittingAlgorithm::makeTrackFitterFunction(magneticField);
   fitter.fit = TrackFittingAlgorithm::makeTrackFitterFunction(trackingGeometry,
                                                               magneticField);
   sequencer.addAlgorithm(
@@ -161,7 +185,6 @@ int runRecTruthTracks(int argc, char* argv[],
   trackStatesWriter.inputTrajectories = fitter.outputTrajectories;
   trackStatesWriter.inputParticles = inputParticles;
   trackStatesWriter.inputSimHits = simHitReaderCfg.outputSimHits;
-  trackStatesWriter.inputMeasurements = hitSmearingCfg.outputMeasurements;
   trackStatesWriter.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
   trackStatesWriter.inputMeasurementSimHitsMap =

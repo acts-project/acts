@@ -17,7 +17,7 @@
 namespace ActsExamples {
 
 /// Variable measurement type that can contain all possible combinations.
-using Measurement = ::Acts::FittableMeasurement<IndexSourceLink>;
+using Measurement = ::Acts::BoundVariantMeasurement<IndexSourceLink>;
 /// Container of measurements.
 ///
 /// In contrast to the source links, the measurements themself must not be

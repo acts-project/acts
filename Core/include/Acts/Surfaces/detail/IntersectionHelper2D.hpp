@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include <array>
-
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+
+#include <array>
 
 namespace Acts {
 namespace detail {
@@ -38,7 +38,8 @@ struct IntersectionHelper2D {
   /// @param dir The Direction of intersection line
   ///
   /// @return the intersection points
-  static std::array<Intersection2D, 2> intersectEllipse(double Rx, double Ry,
+  static std::array<Intersection2D, 2> intersectEllipse(ActsScalar Rx,
+                                                        ActsScalar Ry,
                                                         const Vector2D& origin,
                                                         const Vector2D& dir);
 
@@ -50,7 +51,7 @@ struct IntersectionHelper2D {
   ///
   /// @return the intersection points
   static inline std::array<Intersection2D, 2> intersectCircle(
-      double R, const Vector2D& origin, const Vector2D& dir) {
+      ActsScalar R, const Vector2D& origin, const Vector2D& dir) {
     return intersectEllipse(R, R, origin, dir);
   }
 
@@ -65,8 +66,8 @@ struct IntersectionHelper2D {
   /// @param dir The Direction of intersection line
   ///
   /// @return the intersection points
-  static Intersection2D intersectCircleSegment(double R, double phiMin,
-                                               double phiMax,
+  static Intersection2D intersectCircleSegment(ActsScalar R, ActsScalar phiMin,
+                                               ActsScalar phiMax,
                                                const Vector2D& origin,
                                                const Vector2D& dir);
 

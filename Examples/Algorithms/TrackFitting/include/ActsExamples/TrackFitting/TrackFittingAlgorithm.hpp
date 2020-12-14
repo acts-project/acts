@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -37,6 +38,12 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
       const std::vector<IndexSourceLink>&, const TrackParameters&,
       const TrackFitterOptions&)>;
 
+  /// Fit function that takes the above parameters plus a sorted surface
+  /// sequence for the DirectNavigator to follow
+  using DirectedTrackFitterFunction = std::function<TrackFitterResult(
+      const std::vector<IndexSourceLink>&, const TrackParameters&,
+      const TrackFitterOptions&, const std::vector<const Acts::Surface*>&)>;
+
   /// Create the track fitter function implementation.
   ///
   /// The magnetic field is intentionally given by-value since the variant
@@ -45,9 +52,14 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
       Options::BFieldVariant magneticField);
 
+  static DirectedTrackFitterFunction makeTrackFitterFunction(
+      Options::BFieldVariant magneticField);
+
   struct Config {
     /// Input measurements collection.
     std::string inputMeasurements;
+    /// Boolean determining to use DirectNavigator or standard Navigator
+    bool directNavigation;
     /// Input source links collection.
     std::string inputSourceLinks;
     /// Input proto tracks collection, i.e. groups of hit indices.
@@ -56,8 +68,12 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
     std::string inputInitialTrackParameters;
     /// Output fitted trajectories collection.
     std::string outputTrajectories;
-    /// Type erased track fitter function.
+    /// Type erased fitter function.
     TrackFitterFunction fit;
+    /// Type erased direct navigation fitter function
+    DirectedTrackFitterFunction dFit;
+    /// Tracking geometry for surface lookup
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   };
 
   /// Constructor of the fitting algorithm
@@ -73,7 +89,28 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
   ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const final;
 
  private:
+  /// Helper function to call correct FitterFunction
+  TrackFitterResult fitTrack(
+      const std::vector<ActsExamples::IndexSourceLink>& sourceLinks,
+      const ActsExamples::TrackParameters& initialParameters,
+      const TrackFitterOptions& options,
+      const std::vector<const Acts::Surface*>& surfSequence) const;
+
   Config m_cfg;
 };
+
+inline ActsExamples::TrackFittingAlgorithm::TrackFitterResult
+ActsExamples::TrackFittingAlgorithm::fitTrack(
+    const std::vector<ActsExamples::IndexSourceLink>& sourceLinks,
+    const ActsExamples::TrackParameters& initialParameters,
+    const Acts::KalmanFitterOptions<MeasurementCalibrator,
+                                    Acts::VoidOutlierFinder>& options,
+    const std::vector<const Acts::Surface*>& surfSequence) const {
+  if (m_cfg.directNavigation) {
+    return m_cfg.dFit(sourceLinks, initialParameters, options, surfSequence);
+  }
+
+  return m_cfg.fit(sourceLinks, initialParameters, options);
+}
 
 }  // namespace ActsExamples
