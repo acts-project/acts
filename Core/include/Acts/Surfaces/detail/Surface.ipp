@@ -16,7 +16,7 @@ inline Acts::Vector3D Acts::Surface::center(const GeometryContext& gctx) const {
 
 inline Acts::Vector3D Acts::Surface::normal(const GeometryContext& gctx,
                                             const Vector3D& /*unused*/) const {
-  return normal(gctx, s_origin2D);
+  return normal(gctx, Vector2D(Vector2D::Zero()));
 }
 
 inline const Acts::Transform3D& Acts::Surface::transform(

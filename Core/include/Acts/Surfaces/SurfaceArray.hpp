@@ -438,7 +438,7 @@ class SurfaceArray {
   /// @param transform Optional additional transform for this SurfaceArray
   SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
                std::vector<std::shared_ptr<const Surface>> surfaces,
-               const Transform3D& transform = s_idTransform);
+               const Transform3D& transform = Transform3D::Identity());
 
   /// @brief Constructor which takes concrete type SurfaceGridLookup
   /// @param gridLookup The grid storage. Is static casted to ISurfaceGridLookup

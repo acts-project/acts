@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
@@ -126,7 +125,7 @@ class SurfaceArrayCreator {
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsPhi,
       size_t binsZ, std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const Transform3D& transform = s_idTransform) const;
+      const Transform3D& transform = Transform3D::Identity()) const;
 
   /// SurfaceArrayCreator interface method
   ///
@@ -150,7 +149,7 @@ class SurfaceArrayCreator {
       std::vector<std::shared_ptr<const Surface>> surfaces,
       BinningType bTypePhi = equidistant, BinningType bTypeZ = equidistant,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const Transform3D& transform = s_idTransform) const;
+      const Transform3D& transform = Transform3D::Identity()) const;
 
   /// SurfaceArrayCreator interface method
   /// - create an array on a disc, binned in r, phi when extremas and
@@ -172,7 +171,7 @@ class SurfaceArrayCreator {
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsR,
       size_t binsPhi, std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const Transform3D& transform = s_idTransform) const;
+      const Transform3D& transform = Transform3D::Identity()) const;
 
   /// SurfaceArrayCreator interface method
   ///
@@ -199,7 +198,7 @@ class SurfaceArrayCreator {
       std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
       BinningType bTypePhi,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const Transform3D& transform = s_idTransform) const;
+      const Transform3D& transform = Transform3D::Identity()) const;
 
   /// SurfaceArrayCreator interface method
   /// - create an array on a plane
@@ -226,7 +225,7 @@ class SurfaceArrayCreator {
       std::vector<std::shared_ptr<const Surface>> surfaces, size_t bins1,
       size_t bins2, BinningValue bValue,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const Transform3D& transform = s_idTransform) const;
+      const Transform3D& transform = Transform3D::Identity()) const;
 
   /// Static check funtion for surface equivalent
   ///
