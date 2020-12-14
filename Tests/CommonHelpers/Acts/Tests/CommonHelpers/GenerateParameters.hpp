@@ -23,11 +23,11 @@ namespace Test {
 /// @return std:::pair<ParametersVector, CovarianceMatrix>
 template <typename scalar_t, size_t kSize, typename generator_t>
 inline auto generateParametersCovariance(generator_t& rng)
-    -> std::pair<Acts::ActsVector<scalar_t, kSize>,
-                 Acts::ActsSymMatrix<scalar_t, kSize>> {
+    -> std::pair<Eigen::Matrix<scalar_t, kSize, 1>,
+                 Eigen::Matrix<scalar_t, kSize, kSize>> {
   using Scalar = scalar_t;
-  using ParametersVector = Acts::ActsVector<Scalar, kSize>;
-  using CovarianceMatrix = Acts::ActsSymMatrix<Scalar, kSize>;
+  using ParametersVector = Eigen::Matrix<scalar_t, kSize, 1>;
+  using CovarianceMatrix = Eigen::Matrix<scalar_t, kSize, kSize>;
 
   std::normal_distribution<Scalar> distNormal(0, 1);
   std::uniform_real_distribution<Scalar> distCorr(-1, 1);
@@ -63,7 +63,7 @@ inline auto generateParametersCovariance(generator_t& rng)
 /// Generate a random bound parameters vector and covariance matrix.
 template <typename generator_t>
 inline auto generateBoundParametersCovariance(generator_t& rng) {
-  auto parCov = generateParametersCovariance<BoundScalar, eBoundSize>(rng);
+  auto parCov = generateParametersCovariance<ActsScalar, eBoundSize>(rng);
   auto [phi, theta] = detail::normalizePhiTheta(parCov.first[eBoundPhi],
                                                 parCov.first[eBoundTheta]);
   parCov.first[eBoundPhi] = phi;
@@ -74,7 +74,7 @@ inline auto generateBoundParametersCovariance(generator_t& rng) {
 /// Generate a random free parameters vector and covariance matrix.
 template <typename generator_t>
 inline auto generateFreeParametersCovariance(generator_t& rng) {
-  return generateParametersCovariance<FreeScalar, eFreeSize>(rng);
+  return generateParametersCovariance<ActsScalar, eFreeSize>(rng);
 }
 
 }  // namespace Test

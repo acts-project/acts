@@ -72,11 +72,11 @@ BOOST_DATA_TEST_CASE(EncodingDecodingRoundtrip,
                      }),
                      material) {
   // encode material
-  Acts::ActsVector<float, 5> numbers0 = material.parameters();
+  Acts::Material::ParametersVector numbers0 = material.parameters();
   // construct from encoded numbers
   Acts::Material fromNumbers(numbers0);
   // encode material again
-  Acts::ActsVector<float, 5> numbers1 = fromNumbers.parameters();
+  Acts::Material::ParametersVector numbers1 = fromNumbers.parameters();
 
   BOOST_CHECK_EQUAL(material, fromNumbers);
   BOOST_CHECK_EQUAL(numbers0, numbers1);

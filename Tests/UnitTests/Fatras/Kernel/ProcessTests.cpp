@@ -30,10 +30,10 @@ struct MakeChildren {
                                                  ActsFatras::Particle &) const {
     // create daughter particles
     return {
-        Particle().setAbsMomentum(1_GeV),
-        Particle().setAbsMomentum(2_GeV),
-        Particle().setAbsMomentum(3_GeV),
-        Particle().setAbsMomentum(4_GeV),
+        Particle().setAbsoluteMomentum(1_GeV),
+        Particle().setAbsoluteMomentum(2_GeV),
+        Particle().setAbsoluteMomentum(3_GeV),
+        Particle().setAbsoluteMomentum(4_GeV),
     };
   }
 };
@@ -43,14 +43,14 @@ struct HighP {
   double minP = 10_GeV;
 
   bool operator()(const ActsFatras::Particle &particle) const {
-    return (minP <= particle.absMomentum());
+    return (minP <= particle.absoluteMomentum());
   }
 };
 
 struct Fixture {
   std::default_random_engine generator;
   Acts::MaterialSlab slab{Acts::Test::makeBeryllium(), 1_mm};
-  Particle parent = Particle().setAbsMomentum(10_GeV);
+  Particle parent = Particle().setAbsoluteMomentum(10_GeV);
   std::vector<Particle> children;
 };
 }  // namespace
@@ -72,15 +72,15 @@ BOOST_AUTO_TEST_CASE(WithInputSelector) {
   process.selectInput.minP = 10_GeV;
 
   // above threshold should not abort
-  f.parent.setAbsMomentum(20_GeV);
+  f.parent.setAbsoluteMomentum(20_GeV);
   BOOST_CHECK(not process(f.generator, f.slab, f.parent, f.children));
   BOOST_CHECK_EQUAL(f.children.size(), 4u);
   // on threshold should still not abort
-  f.parent.setAbsMomentum(10_GeV);
+  f.parent.setAbsoluteMomentum(10_GeV);
   BOOST_CHECK(not process(f.generator, f.slab, f.parent, f.children));
   BOOST_CHECK_EQUAL(f.children.size(), 8u);
   // below threshold should abort and not run the process at all
-  f.parent.setAbsMomentum(2_GeV);
+  f.parent.setAbsoluteMomentum(2_GeV);
   BOOST_CHECK(not process(f.generator, f.slab, f.parent, f.children));
   // process did not run -> no new children
   BOOST_CHECK_EQUAL(f.children.size(), 8u);
@@ -92,15 +92,15 @@ BOOST_AUTO_TEST_CASE(WithOutputSelector) {
   process.selectOutputParticle.minP = 10_GeV;
 
   // above threshold should not abort
-  f.parent.setAbsMomentum(20_GeV);
+  f.parent.setAbsoluteMomentum(20_GeV);
   BOOST_CHECK(not process(f.generator, f.slab, f.parent, f.children));
   BOOST_CHECK_EQUAL(f.children.size(), 4u);
   // on threshold should still not abort
-  f.parent.setAbsMomentum(10_GeV);
+  f.parent.setAbsoluteMomentum(10_GeV);
   BOOST_CHECK(not process(f.generator, f.slab, f.parent, f.children));
   BOOST_CHECK_EQUAL(f.children.size(), 8u);
   // below threshold should abort but only after running the process
-  f.parent.setAbsMomentum(2_GeV);
+  f.parent.setAbsoluteMomentum(2_GeV);
   BOOST_CHECK(process(f.generator, f.slab, f.parent, f.children));
   // process did still run -> new children
   BOOST_CHECK_EQUAL(f.children.size(), 12u);

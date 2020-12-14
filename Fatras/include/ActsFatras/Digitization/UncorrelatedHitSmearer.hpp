@@ -9,158 +9,134 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/ParameterSet.hpp"
+#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceError.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "ActsFatras/Digitization/DigitizationError.hpp"
-#include "ActsFatras/Digitization/detail/ParametersSmearer.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 
+#include <array>
 #include <functional>
+#include <utility>
 
 namespace ActsFatras {
 
-/// Smearing functions definition:
+/// Smearing function definition for single track parameters.
+///
+/// The function takes the unsmeared parameter and returns the smeared value and
+/// a standard deviation.
 ///
 /// @tparam generator_t The type of the random generator.
-///
-/// - it takes the unsmeared parameter
-/// - it returns the smeared parameter and a covariance
 template <typename generator_t>
-using SmearFunction = std::function<Acts::Result<std::pair<double, double>>(
-    double, generator_t&)>;
+using SingleParameterSmearFunction =
+    std::function<Acts::Result<std::pair<double, double>>(double,
+                                                          generator_t&)>;
 
-/// Smearing input to be used by the smearers
-/// - this struct helps to harmonize the interface between
-///   free and bound smearers
-struct SmearInput {
-  /// Only valid constructor, wraps the @param hit_,
-  /// the  and optionally the @param surface_
-  SmearInput(std::reference_wrapper<const Hit> hit_,
-             std::reference_wrapper<const Acts::GeometryContext> geoContext_,
-             const Acts::Surface* surface_ = nullptr)
-      : hit(hit_), geoContext(geoContext_), surface(surface_) {}
-
-  SmearInput() = delete;
-
-  std::reference_wrapper<const Hit> hit;
-  std::reference_wrapper<const Acts::GeometryContext> geoContext;
-  const Acts::Surface* surface = nullptr;
-};
-
-/// Parameter smearer for fast digitisation for bound parameters
+/// Uncorrelated smearing algorithm for fast digitisation of bound parameters.
 ///
+/// @tparam generator_t Random number generator type
+/// @tparam kSize Number of smeared parameters
 ///
-/// The logic of this smearer is the following:
-/// - Input is a single simulated ActsFatras::Hit which is wrapped into
-/// - It returns smeared parameter vector and a covariance matrix
-///
-/// @note This smearer only supports uncorrelated smearing of parameters
-///
-template <Acts::BoundIndices... kParameters>
+/// The smearer takes a single simulated `Hit` and generates a smeared parameter
+/// vector and associated covariance matrix.
+template <typename generator_t, size_t kSize>
 struct BoundParametersSmearer {
-  using ParSet = Acts::ParameterSet<Acts::BoundIndices, kParameters...>;
+  using Scalar = Acts::ActsScalar;
+  using ParametersVector = Acts::ActsVector<kSize>;
+  using CovarianceMatrix = Acts::ActsSymMatrix<kSize>;
+  using Result = Acts::Result<std::pair<ParametersVector, CovarianceMatrix>>;
 
-  /// Generic implementation of a smearing meathod for bound parameters
-  ///
-  /// @tparam generator_t The type of the random generator provided
-  /// @tparam kParameters parameter pack describing the parameters to smear
-  ///
-  /// @param sInput The smearing input struct: surface and simulated hit
-  /// @param sRandom The smearing random number gnerator
-  /// @param sFunctions The smearing functions that are applied
-  ///
-  /// @return Smeared bound parameter set wrapped in a Result<...> object
-  template <typename generator_t>
-  Acts::Result<Acts::ParameterSet<Acts::BoundIndices, kParameters...>>
-  operator()(const SmearInput& sInput, generator_t& sRandom,
-             const std::array<SmearFunction<generator_t>,
-                              sizeof...(kParameters)>& sFunctions) const {
-    using Result = Acts::Result<ParSet>;
-    using ParametersSmearer =
-        detail::ParametersSmearer<Acts::BoundIndices, kParameters...>;
+  /// Parameter indices that will be used to create the smeared measurements.
+  std::array<Acts::BoundIndices, kSize> indices;
+  std::array<SingleParameterSmearFunction<generator_t>, kSize> smearFunctions;
 
-    if (sInput.surface == nullptr) {
-      return Result(ActsFatras::DigitizationError::UndefinedSurface);
+  static constexpr size_t size() { return kSize; }
+
+  /// Generate smeared measured for configured parameters.
+  ///
+  /// @param rng Random number generator
+  /// @param hit Simulated hit
+  /// @param surface Local surface on which the hit is smeared
+  /// @param geoCtx Geometry context
+  /// @retval Smeared parameters vector and associated covariance on success
+  /// @retval Error code for failure
+  Result operator()(generator_t& rng, const Hit& hit,
+                    const Acts::Surface& surface,
+                    const Acts::GeometryContext& geoCtx) const {
+    // construct full bound parameters. they are probably not all needed, but it
+    // is easier to just create them all and then select the requested ones.
+    Acts::BoundVector boundParams =
+        Acts::detail::transformFreeToBoundParameters(hit.position(), hit.time(),
+                                                     hit.unitDirection(), 0,
+                                                     surface, geoCtx);
+
+    ParametersVector par = ParametersVector::Zero();
+    CovarianceMatrix cov = CovarianceMatrix::Zero();
+    for (size_t i = 0; i < kSize; ++i) {
+      auto res = smearFunctions[i](boundParams[indices[i]], rng);
+      if (not res.ok()) {
+        return Result::failure(res.error());
+      }
+      auto [value, stddev] = res.value();
+      par[i] = value;
+      cov(i, i) = stddev * stddev;
     }
 
-    const auto& hit = sInput.hit.get();
-    auto dir = hit.unitDirection();
-    auto gltResult =
-        sInput.surface->globalToLocal(sInput.geoContext, hit.position(), dir);
-    if (not gltResult.ok()) {
-      return Result(Acts::SurfaceError::GlobalPositionNotOnSurface);
-    }
-    const auto& lPosition = gltResult.value();
-
-    typename ParSet::FullParametersVector fParameters;
-    fParameters.setZero();
-    fParameters.template segment<2>(0) = lPosition;
-    fParameters[Acts::eBoundPhi] = Acts::VectorHelpers::phi(dir);
-    fParameters[Acts::eBoundTheta] = Acts::VectorHelpers::theta(dir);
-    fParameters[Acts::eBoundTime] = hit.time();
-    typename ParSet::ParametersVector sParameters =
-        ParSet::projector() * fParameters;
-
-    typename ParSet::CovarianceMatrix sCovariance;
-    sCovariance.setZero();
-
-    auto smearResult =
-        ParametersSmearer::run(sParameters, sCovariance, sRandom, sFunctions);
-    if (not smearResult.ok()) {
-      return Result(smearResult.error());
-    }
-    return ParSet{sCovariance, sParameters};
+    return Result::success(std::make_pair(par, cov));
   }
 };
 
-/// Generic implementation of a smearing meathod for free parameters
+/// Uncorrelated smearing algorithm for fast digitisation of free parameters.
 ///
-/// @tparam kParameters parameter pack describing the parameters to smear
-template <Acts::FreeIndices... kParameters>
+/// @tparam generator_t Random number generator type
+/// @tparam kSize Number of smeared parameters
+///
+/// The smearer takes a single simulated `Hit` and generates a smeared parameter
+/// vector and associated covariance matrix.
+///
+/// @note Uncorrelated smearing of the direction using each components
+///   individually is not recommended
+template <typename generator_t, size_t kSize>
 struct FreeParametersSmearer {
-  /// Smearing function
+  using Scalar = Acts::ActsScalar;
+  using ParametersVector = Acts::ActsVector<kSize>;
+  using CovarianceMatrix = Acts::ActsSymMatrix<kSize>;
+  using Result = Acts::Result<std::pair<ParametersVector, CovarianceMatrix>>;
+
+  /// Parameter indices that will be used to create the smeared measurements.
+  std::array<Acts::FreeIndices, kSize> indices;
+  std::array<SingleParameterSmearFunction<generator_t>, kSize> smearFunctions;
+
+  static constexpr size_t size() { return kSize; }
+
+  /// Generate smeared measured for configured parameters.
   ///
-  /// @tparam random_gnerator_t The type of the random generator provided
-  /// @tparam kParameters parameter pack describing the parameters to smear
-  ///
-  /// @param sInput The smearing input struct with the simulated hit
-  /// @param sRandom The smearing random number gnerator
-  /// @param sFunctions The smearing functions that are applied
-  ///
-  /// @note uncorrelated smearing of the direction using the components
-  ///       is not recommended
-  ///
+  /// @param rng Random number generator
+  /// @param hit Simulated hit
   /// @return Smeared free parameter set wrapped in a Result<...> object
-  template <typename generator_t>
-  Acts::Result<Acts::ParameterSet<Acts::FreeIndices, kParameters...>>
-  operator()(const SmearInput& sInput, generator_t& sRandom,
-             const std::array<SmearFunction<generator_t>,
-                              sizeof...(kParameters)>& sFunctions) const {
-    using ParSet = Acts::ParameterSet<Acts::FreeIndices, kParameters...>;
-    using Result = Acts::Result<ParSet>;
-    using ParametersSmearer =
-        detail::ParametersSmearer<Acts::FreeIndices, kParameters...>;
+  /// @retval Smeared parameters vector and associated covariance on success
+  /// @retval Error code for failure
+  Result operator()(generator_t& rng, const Hit& hit) const {
+    // construct full free parameters. they are probably not all needed, but it
+    // is easier to just create them all and then select the requested ones.
+    Acts::FreeVector freeParams;
+    freeParams.segment<3>(Acts::eFreePos0) = hit.position();
+    freeParams[Acts::eFreeTime] = hit.time();
+    freeParams.segment<3>(Acts::eFreeDir0) = hit.unitDirection();
+    freeParams[Acts::eFreeQOverP] = 0;
 
-    const auto& hit = sInput.hit.get();
-
-    typename ParSet::FullParametersVector fParameters;
-    fParameters.setZero();
-    fParameters.template segment<4>(0) = hit.position4();
-    fParameters.template segment<3>(4) = hit.unitDirection();
-    typename ParSet::ParametersVector sParameters =
-        ParSet::projector() * fParameters;
-    typename ParSet::CovarianceMatrix sCovariance;
-    sCovariance.setZero();
-
-    auto smearResult =
-        ParametersSmearer::run(sParameters, sCovariance, sRandom, sFunctions);
-    if (not smearResult.ok()) {
-      return Result(smearResult.error());
+    ParametersVector par = ParametersVector::Zero();
+    CovarianceMatrix cov = CovarianceMatrix::Zero();
+    for (size_t i = 0; i < kSize; ++i) {
+      auto res = smearFunctions[i](freeParams[indices[i]], rng);
+      if (not res.ok()) {
+        return Result::failure(res.error());
+      }
+      auto [value, stddev] = res.value();
+      par[i] = value;
+      cov(i, i) = stddev * stddev;
     }
-    return ParSet{sCovariance, sParameters};
+
+    return Result::success(std::make_pair(par, cov));
   }
 };
 

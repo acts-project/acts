@@ -180,8 +180,8 @@ inline double cast(const Vector3D& position, BinningValue bval) {
 /// @param [in] m Matrix that will be used for cross products
 /// @param [in] v Vector for cross products
 /// @return Constructed matrix
-inline ActsMatrixD<3, 3> cross(const ActsMatrixD<3, 3>& m, const Vector3D& v) {
-  ActsMatrixD<3, 3> r;
+inline ActsMatrix<3, 3> cross(const ActsMatrix<3, 3>& m, const Vector3D& v) {
+  ActsMatrix<3, 3> r;
   r.col(0) = m.col(0).cross(v);
   r.col(1) = m.col(1).cross(v);
   r.col(2) = m.col(2).cross(v);
@@ -227,12 +227,15 @@ inline double roundWithPrecision(double val, int precision) {
 }  // namespace detail
 
 /// Print out a matrix in a structured way.
+///
+/// @tparam derived_t Type of the matrix
 /// @param matrix The matrix to print
 /// @param precision Numeric output precision
 /// @param offset Offset in front of matrix lines
 /// @return The printed string
-inline std::string toString(const ActsMatrixXd& matrix, int precision = 4,
-                            const std::string& offset = "") {
+template <typename derived_t>
+inline std::string toString(const Eigen::MatrixBase<derived_t>& matrix,
+                            int precision = 4, const std::string& offset = "") {
   std::ostringstream sout;
 
   sout << std::setiosflags(std::ios::fixed) << std::setprecision(precision);

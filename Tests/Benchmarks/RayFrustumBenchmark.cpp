@@ -166,7 +166,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     return tmax > tmin && tmax > 0.0;
   };
 
-  using Vector3F = ActsMatrix<float, 3, 1>;
+  using Vector3F = Eigen::Matrix<float, 3, 1>;
 
   std::vector<Ray3> rays{n, Ray3{Vector3F{0, 0, 0}, Vector3F{1, 0, 0}}};
   std::generate(rays.begin(), rays.end(), [&]() {

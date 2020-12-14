@@ -58,7 +58,8 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::getMaxZPositionAndWidth(
 }
 
 template <int trkGridSize>
-std::pair<int, Acts::ActsVector<float, trkGridSize>>
+std::pair<int,
+          typename Acts::AdaptiveGridTrackDensity<trkGridSize>::TrackGridVector>
 Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
     const Acts::BoundTrackParameters& trk, std::vector<float>& mainGridDensity,
     std::vector<int>& mainGridZValues) const {
@@ -82,8 +83,7 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
   float distCtrD = d0 - binCtrD;
   float distCtrZ = z0 - binCtrZ;
 
-  ActsVector<float, trkGridSize> trackGrid(
-      ActsVector<float, trkGridSize>::Zero());
+  TrackGridVector trackGrid(TrackGridVector::Zero());
 
   // Check if current track does affect grid density
   // in central bins at z-axis
@@ -129,7 +129,7 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
 
 template <int trkGridSize>
 void Acts::AdaptiveGridTrackDensity<trkGridSize>::removeTrackGridFromMainGrid(
-    int zBin, const ActsVector<float, trkGridSize>& trkGrid,
+    int zBin, const TrackGridVector& trkGrid,
     std::vector<float>& mainGridDensity,
     const std::vector<int>& mainGridZValues) const {
   // Find position of current z bin in mainGridZValues
@@ -146,12 +146,11 @@ void Acts::AdaptiveGridTrackDensity<trkGridSize>::removeTrackGridFromMainGrid(
 }
 
 template <int trkGridSize>
-Acts::ActsVector<float, trkGridSize>
+typename Acts::AdaptiveGridTrackDensity<trkGridSize>::TrackGridVector
 Acts::AdaptiveGridTrackDensity<trkGridSize>::createTrackGrid(
     int offset, const Acts::SymMatrix2D& cov, float distCtrD,
     float distCtrZ) const {
-  ActsVector<float, trkGridSize> trackGrid(
-      ActsVector<float, trkGridSize>::Zero());
+  TrackGridVector trackGrid(TrackGridVector::Zero());
 
   float i = (trkGridSize - 1) / 2 + offset;
   float d = (i - static_cast<float>(trkGridSize) / 2 + 0.5f) * m_cfg.binSize;
@@ -306,7 +305,7 @@ double Acts::AdaptiveGridTrackDensity<trkGridSize>::getDensitySum(
   double sum = mainGridDensity[pos];
   // Sum up only the density contributions from the
   // neighboring bins if they are still within bounds
-  if (pos - 1 >= 0) {
+  if (0 < pos) {
     // Check if we are still operating on continous z values
     if (mainGridZValues[pos] - mainGridZValues[pos - 1] == 1) {
       sum += mainGridDensity[pos - 1];

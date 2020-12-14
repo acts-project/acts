@@ -131,7 +131,7 @@ class BoundaryCheck {
   /// @param jacobian Tranform Jacobian for the covariance
   /// @warning This currently only transforms the covariance and does not work
   ///          for the tolerance based check.
-  BoundaryCheck transformed(const ActsMatrixD<2, 2>& jacobian) const;
+  BoundaryCheck transformed(const ActsMatrix<2, 2>& jacobian) const;
 
   /// Check if the distance vector is within the absolute or relative limits.
   bool isTolerated(const Vector2D& delta) const;
@@ -199,7 +199,7 @@ inline Acts::BoundaryCheck::BoundaryCheck(const SymMatrix2D& localCovariance,
       m_type(Type::eChi2) {}
 
 inline Acts::BoundaryCheck Acts::BoundaryCheck::transformed(
-    const ActsMatrixD<2, 2>& jacobian) const {
+    const ActsMatrix<2, 2>& jacobian) const {
   BoundaryCheck bc = *this;
   if (m_type == Type::eAbsolute) {
     // project tolerances to the new system. depending on the jacobian we need

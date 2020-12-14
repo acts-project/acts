@@ -178,10 +178,10 @@ BOOST_AUTO_TEST_CASE(LineSurfaceAlignment) {
   parameters.segment<3>(eFreeDir0) = direction;
 
   // (a) Test the derivative of path length w.r.t. alignment parameters
-  const AlignmentRowVector& alignToPath =
+  const AlignmentToPathMatrix& alignToPath =
       line.alignmentToPathDerivative(tgContext, parameters);
   // The expected results
-  AlignmentRowVector expAlignToPath = AlignmentRowVector::Zero();
+  AlignmentToPathMatrix expAlignToPath = AlignmentToPathMatrix::Zero();
   const double value = std::sqrt(3) / 2;
   expAlignToPath << -value, value, 0, -3 * value, -value, 0;
   // Check if the calculated derivative is as expected
@@ -192,8 +192,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceAlignment) {
   const auto& loc3DToLocBound =
       line.localCartesianToBoundLocalDerivative(tgContext, globalPosition);
   // Check if the result is as expected
-  LocalCartesianToBoundLocalMatrix expLoc3DToLocBound =
-      LocalCartesianToBoundLocalMatrix::Zero();
+  ActsMatrix<2, 3> expLoc3DToLocBound = ActsMatrix<2, 3>::Zero();
   expLoc3DToLocBound << 1 / std::sqrt(2), 1 / std::sqrt(2), 0, 0, 0, 1;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
 }

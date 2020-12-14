@@ -124,7 +124,7 @@ class SurfaceArray {
     /// This resolves to @c ActsVector<DIM> for DIM > 1, else @c
     /// std::array<double, 1>
     using point_t =
-        std::conditional_t<DIM == 1, std::array<double, 1>, ActsVectorD<DIM>>;
+        std::conditional_t<DIM == 1, std::array<double, 1>, ActsVector<DIM>>;
     using Grid_t = detail::Grid<SurfaceVector, Axes...>;
 
     /// @brief Default constructor
@@ -134,7 +134,7 @@ class SurfaceArray {
     /// @param axes The axes to build the grid data structure.
     /// @param bValues What the axes represent (optional)
     /// @note Signature of localToGlobal and globalToLocal depends on @c DIM.
-    ///       If DIM > 1, local coords are @c ActsVectorD<DIM> else
+    ///       If DIM > 1, local coords are @c ActsVector<DIM> else
     ///       @c std::array<double, 1>.
     SurfaceGridLookup(std::function<point_t(const Vector3D&)> globalToLocal,
                       std::function<Vector3D(const point_t&)> localToGlobal,
@@ -328,7 +328,7 @@ class SurfaceArray {
     /// This is the version for DIM>1
     template <size_t D = DIM, std::enable_if_t<D != 1, int> = 0>
     Vector3D getBinCenterImpl(size_t bin) const {
-      return m_localToGlobal(ActsVectorD<DIM>(
+      return m_localToGlobal(ActsVector<DIM>(
           m_grid.binCenter(m_grid.localBinsFromGlobalBin(bin)).data()));
     }
 
@@ -438,7 +438,7 @@ class SurfaceArray {
   /// @param transform Optional additional transform for this SurfaceArray
   SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
                std::vector<std::shared_ptr<const Surface>> surfaces,
-               const Transform3D& transform = s_idTransform);
+               const Transform3D& transform = Transform3D::Identity());
 
   /// @brief Constructor which takes concrete type SurfaceGridLookup
   /// @param gridLookup The grid storage. Is static casted to ISurfaceGridLookup

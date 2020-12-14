@@ -18,8 +18,8 @@ namespace ActsExamples {
 
 /// A simultated vertex e.g. from a physics process.
 struct SimVertex {
-  using Scalar = double;
-  using Vector4 = Acts::ActsVector<Scalar, 4>;
+  using Scalar = Acts::ActsScalar;
+  using Vector4 = Acts::ActsVector<4>;
 
   /// The vertex four-position.
   Vector4 position4 = Vector4::Zero();

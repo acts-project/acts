@@ -50,12 +50,12 @@ Acts::Vector2D Acts::SolenoidBField::getField(const Vector2D& position) const {
 }
 
 Acts::Vector3D Acts::SolenoidBField::getFieldGradient(
-    const Vector3D& position, ActsMatrixD<3, 3>& /*derivative*/) const {
+    const Vector3D& position, ActsMatrix<3, 3>& /*derivative*/) const {
   return getField(position);
 }
 
 Acts::Vector3D Acts::SolenoidBField::getFieldGradient(
-    const Vector3D& position, ActsMatrixD<3, 3>& /*derivative*/,
+    const Vector3D& position, ActsMatrix<3, 3>& /*derivative*/,
     Cache& /*cache*/) const {
   return getField(position);
 }

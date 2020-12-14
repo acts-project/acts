@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -91,9 +91,6 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   using ClusterContainer =
       ActsExamples::GeometryIdMultimap<Acts::PlanarModuleCluster>;
-  using ConcreteMeasurement =
-      Acts::Measurement<IndexSourceLink, Acts::BoundIndices, Acts::eBoundLoc0,
-                        Acts::eBoundLoc1, Acts::eBoundTime>;
 
   // retrieve input
   const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
@@ -181,6 +178,7 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
       Acts::SymMatrix3D cov;
       cov << 0.05, 0., 0., 0., 0.05, 0., 0., 0.,
           900. * Acts::UnitConstants::ps * Acts::UnitConstants::ps;
+      Acts::Vector3D par(localX, localY, simHit.time());
 
       // create the planar cluster
       Acts::PlanarModuleCluster cluster(
@@ -192,8 +190,8 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
       // the measurement will be stored is known before adding it.
       Index hitIdx = measurements.size();
       IndexSourceLink sourceLink(moduleGeoId, hitIdx);
-      ConcreteMeasurement meas(dg.surface->getSharedPtr(), sourceLink, cov,
-                               localX, localY, simHit.time());
+      auto meas = Acts::makeMeasurement(sourceLink, par, cov, Acts::eBoundLoc0,
+                                        Acts::eBoundLoc1, Acts::eBoundTime);
 
       // add to output containers. since the input is already geometry-order,
       // new elements in geometry containers can just be appended at the end.

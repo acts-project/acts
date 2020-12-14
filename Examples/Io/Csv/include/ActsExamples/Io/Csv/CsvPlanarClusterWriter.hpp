@@ -8,11 +8,13 @@
 
 #pragma once
 
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <limits>
+#include <memory>
 #include <string>
 
 namespace ActsExamples {
@@ -45,6 +47,8 @@ class CsvPlanarClusterWriter final
     std::string outputDir;
     /// Number of decimal digits for floating point precision in output.
     size_t outputPrecision = std::numeric_limits<float>::max_digits10;
+    /// Tracking geometry required to access global-to-local transforms.
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   };
 
   /// Construct the cluster writer.

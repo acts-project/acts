@@ -82,7 +82,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
   // we need to transform in case layerZ != 0, so that the layer will be
   // correctly defined using the halflength
   Translation3D addTranslation(0., 0., 0.);
-  if (transform.isApprox(s_idTransform)) {
+  if (transform.isApprox(Transform3D::Identity())) {
     // double shift = -(layerZ + envZShift);
     addTranslation = Translation3D(0., 0., layerZ);
     ACTS_VERBOSE(" - layer z shift  = " << -layerZ);
@@ -155,7 +155,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
   // correctly defined using the halflength
   // create the layer transforms if not given
   Translation3D addTranslation(0., 0., 0.);
-  if (transform.isApprox(s_idTransform) && bTypeZ == equidistant) {
+  if (transform.isApprox(Transform3D::Identity()) && bTypeZ == equidistant) {
     addTranslation = Translation3D(0., 0., layerZ);
     ACTS_VERBOSE(" - layer z shift    = " << -layerZ);
   }
@@ -225,7 +225,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
 
   // create the layer transforms if not given
   Translation3D addTranslation(0., 0., 0.);
-  if (transform.isApprox(s_idTransform)) {
+  if (transform.isApprox(Transform3D::Identity())) {
     addTranslation = Translation3D(0., 0., layerZ);
   }
   // create the surface array
@@ -288,7 +288,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
 
   // create the layer transforms if not given
   Translation3D addTranslation(0., 0., 0.);
-  if (transform.isApprox(s_idTransform)) {
+  if (transform.isApprox(Transform3D::Identity())) {
     addTranslation = Translation3D(0., 0., layerZ);
   }
 
@@ -365,7 +365,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
   // we need to transform in case centerX/centerY/centerZ != 0, so that the
   // layer will be correctly defined
   Translation3D addTranslation(0., 0., 0.);
-  if (transform.isApprox(s_idTransform)) {
+  if (transform.isApprox(Transform3D::Identity())) {
     // double shift = (layerZ + envZShift);
     addTranslation = Translation3D(centerX, centerY, centerZ);
     ACTS_VERBOSE(" - layer shift  = "
