@@ -95,7 +95,7 @@ struct Types {
     Flags = Eigen::ColMajor | Eigen::AutoAlign,
     SizeIncrement = 8,
   };
-  using Scalar = double;
+  using Scalar = ActsScalar;
   // single items
   using Coefficients = Eigen::Matrix<Scalar, Size, 1, Flags>;
   using Covariance = Eigen::Matrix<Scalar, Size, Size, Flags>;

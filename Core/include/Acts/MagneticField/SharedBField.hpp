@@ -59,7 +59,7 @@ class SharedBField {
   /// @note currently the derivative is not calculated
   /// @todo return derivative
   Vector3D getFieldGradient(const Vector3D& position,
-                            ActsMatrixD<3, 3>& derivative) const {
+                            ActsMatrix<3, 3>& derivative) const {
     return m_bField->getFieldGradient(position, derivative);
   }
 
@@ -73,7 +73,7 @@ class SharedBField {
   /// @note currently the derivative is not calculated
   /// @todo return derivative
   Vector3D getFieldGradient(const Vector3D& position,
-                            ActsMatrixD<3, 3>& derivative, Cache& cache) const {
+                            ActsMatrix<3, 3>& derivative, Cache& cache) const {
     return m_bField->getFieldGradient(position, derivative, cache);
   }
 

@@ -42,6 +42,9 @@ class GridDensityVertexFinder {
   using GridDensity = GaussianGridTrackDensity<mainGridSize, trkGridSize>;
 
  public:
+  using MainGridVector = typename GridDensity::MainGridVector;
+  using TrackGridVector = typename GridDensity::TrackGridVector;
+
   /// @brief The Config struct
   struct Config {
     ///@param zMinMax min and max z value of big z-axis grid
@@ -76,12 +79,10 @@ class GridDensityVertexFinder {
   /// Only needed if cacheGridStateForTrackRemoval == true
   struct State {
     // The main density grid
-    ActsVector<float, mainGridSize> mainGrid =
-        ActsVector<float, mainGridSize>::Zero();
+    MainGridVector mainGrid = MainGridVector::Zero();
     // Map to store z-bin and track grid (i.e. the density contribution of
     // a single track to the main grid) for every single track
-    std::map<const InputTrack_t*,
-             std::pair<int, ActsVector<float, trkGridSize>>>
+    std::map<const InputTrack_t*, std::pair<int, TrackGridVector>>
         binAndTrackGridMap;
 
     // Map to store bool if track has passed track selection or not

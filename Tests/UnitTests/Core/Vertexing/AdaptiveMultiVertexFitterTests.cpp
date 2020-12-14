@@ -525,10 +525,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   const Vector3D expVtx1Pos(0.077_mm, -0.189_mm, 2.924_mm);
 
   // Helper matrix to create const expVtx1Cov below
-  ActsSymMatrixD<3> expVtx1Cov;
+  SymMatrix3D expVtx1Cov;
   expVtx1Cov << 0.329, 0.016, -0.035, 0.016, 0.250, 0.085, -0.035, 0.085, 0.242;
 
-  ActsVectorD<6> expVtx1TrkWeights;
+  ActsVector<6> expVtx1TrkWeights;
   expVtx1TrkWeights << 0.8128, 0.7994, 0.8164, 0.8165, 0.8165, 0.8119;
   const double expVtx1chi2 = 0.9812;
   const double expVtx1ndf = 6.7474;
@@ -536,7 +536,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   // Vertex 2
   const Vector3D expVtx2Pos(-0.443_mm, -0.044_mm, -4.829_mm);
   // Helper matrix to create const expVtx2Cov below
-  ActsSymMatrixD<3> expVtx2Cov;
+  SymMatrix3D expVtx2Cov;
   expVtx2Cov << 1.088, 0.028, -0.066, 0.028, 0.643, 0.073, -0.066, 0.073, 0.435;
 
   const Vector3D expVtx2TrkWeights(0.8172, 0.8150, 0.8137);

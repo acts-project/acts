@@ -54,7 +54,7 @@ struct InterpolatedBFieldMapper {
     ///                         each Dimension)
     /// @param [in] fieldValues field values at the hyper box corners sorted in
     ///                         the canonical order defined in Acts::interpolate
-    FieldCell(std::function<ActsVectorD<DIM_POS>(const Vector3D&)> transformPos,
+    FieldCell(std::function<ActsVector<DIM_POS>(const Vector3D&)> transformPos,
               std::array<double, DIM_POS> lowerLeft,
               std::array<double, DIM_POS> upperRight,
               std::array<Vector3D, N> fieldValues)
@@ -93,7 +93,7 @@ struct InterpolatedBFieldMapper {
 
    private:
     /// geometric transformation applied to global 3D positions
-    std::function<ActsVectorD<DIM_POS>(const Vector3D&)> m_transformPos;
+    std::function<ActsVector<DIM_POS>(const Vector3D&)> m_transformPos;
 
     /// generalized lower-left corner of the confining hyper-box
     std::array<double, DIM_POS> m_lowerLeft;
@@ -117,7 +117,7 @@ struct InterpolatedBFieldMapper {
   /// the global 3D position as input
   /// @param [in] grid      grid storing magnetic field values
   InterpolatedBFieldMapper(
-      std::function<ActsVectorD<DIM_POS>(const Vector3D&)> transformPos,
+      std::function<ActsVector<DIM_POS>(const Vector3D&)> transformPos,
       std::function<Vector3D(const FieldType&, const Vector3D&)>
           transformBField,
       Grid_t grid)
@@ -204,7 +204,7 @@ struct InterpolatedBFieldMapper {
 
  private:
   /// geometric transformation applied to global 3D positions
-  std::function<ActsVectorD<DIM_POS>(const Vector3D&)> m_transformPos;
+  std::function<ActsVector<DIM_POS>(const Vector3D&)> m_transformPos;
   /// Transformation calculating the global 3D coordinates (cartesian) of the
   /// magnetic field with the local n dimensional field and the global 3D
   /// position as input
@@ -301,7 +301,7 @@ class InterpolatedBFieldMap final {
   /// @note currently the derivative is not calculated
   /// @todo return derivative
   Vector3D getFieldGradient(const Vector3D& position,
-                            ActsMatrixD<3, 3>& /*derivative*/) const {
+                            ActsMatrix<3, 3>& /*derivative*/) const {
     return m_config.mapper.getField(position);
   }
 
@@ -316,7 +316,7 @@ class InterpolatedBFieldMap final {
   /// @note Cache is not used currently
   /// @todo return derivative
   Vector3D getFieldGradient(const Vector3D& position,
-                            ActsMatrixD<3, 3>& /*derivative*/,
+                            ActsMatrix<3, 3>& /*derivative*/,
                             Cache& /*cache*/) const {
     return m_config.mapper.getField(position);
   }

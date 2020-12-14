@@ -27,7 +27,7 @@ using namespace Acts;
 using namespace Acts::UnitLiterals;
 using AnyFreeTrackParameters = SingleFreeTrackParameters<AnyCharge>;
 
-constexpr auto eps = 8 * std::numeric_limits<FreeScalar>::epsilon();
+constexpr auto eps = 8 * std::numeric_limits<ActsScalar>::epsilon();
 const GeometryContext geoCtx;
 const FreeSymMatrix cov = FreeSymMatrix::Identity();
 

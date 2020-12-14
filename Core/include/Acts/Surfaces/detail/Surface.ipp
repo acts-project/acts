@@ -105,7 +105,7 @@ inline Acts::FreeToBoundMatrix Acts::Surface::jacobianGlobalToLocal(
   return jacToLocal;
 }
 
-inline Acts::FreeRowVector Acts::Surface::freeToPathDerivative(
+inline Acts::FreeToPathMatrix Acts::Surface::freeToPathDerivative(
     const GeometryContext& gctx, const FreeVector& parameters) const {
   // The global position
   const auto position = parameters.segment<3>(eFreePos0);
@@ -118,7 +118,7 @@ inline Acts::FreeRowVector Acts::Surface::freeToPathDerivative(
   // Cosine of angle between momentum direction and measurement frame z axis
   const double dz = refZAxis.dot(direction);
   // Initialize the derivative
-  FreeRowVector freeToPath = FreeRowVector::Zero();
+  FreeToPathMatrix freeToPath = FreeToPathMatrix::Zero();
   freeToPath.segment<3>(eFreePos0) = -1.0 * refZAxis.transpose() / dz;
   return freeToPath;
 }

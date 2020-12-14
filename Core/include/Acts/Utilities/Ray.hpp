@@ -23,7 +23,7 @@ class Ray {
   /// Re expose the value type
   using value_type = value_t;
   /// Vertex type based on the value type and dimension
-  using VertexType = ActsVector<value_t, DIM>;
+  using VertexType = Eigen::Matrix<value_t, DIM, 1>;
   /// Vertex array type corresponding to the vertex type
   using vertex_array_type = Eigen::Array<value_t, DIM, 1>;
   /// Associated transform type

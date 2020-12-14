@@ -117,16 +117,16 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
     //     m_tracksteps.emplace_back(
     //         0,
     //         0,  // set Acts::GeometryIdentifier = 0 and Barcode = 0
-    //         Acts::ActsVectorD<4>(trkPos.x() * Acts::UnitConstants::mm,
+    //         Acts::ActsVector<4>(trkPos.x() * Acts::UnitConstants::mm,
     //                              trkPos.y() * Acts::UnitConstants::mm,
     //                              trkPos.z() * Acts::UnitConstants::mm,
     //                              trkTime * Acts::UnitConstants::ns),  // pos4
-    //         Acts::ActsVectorD<4>(
+    //         Acts::ActsVector<4>(
     //             par4Mom.px() * Acts::UnitConstants::MeV,
     //             par4Mom.py() * Acts::UnitConstants::MeV,
     //             par4Mom.pz() * Acts::UnitConstants::MeV,
     //             par4Mom.e() * Acts::UnitConstants::MeV),  // before4
-    //         Acts::ActsVectorD<4>(0, 0, 0, 0));            // after4
+    //         Acts::ActsVector<4>(0, 0, 0, 0));            // after4
     //   }
   }
 }

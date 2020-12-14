@@ -52,7 +52,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
   auto random_point = [&]() -> Vector2D { return {xDist(rng), yDist(rng)}; };
 
   // for covariance based check, set up one;
-  ActsMatrixD<2, 2> cov;
+  ActsMatrix<2, 2> cov;
   cov << 1.0, 0, 0, 0.05;
 
   BoundaryCheck bcAbs{true};

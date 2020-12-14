@@ -340,7 +340,7 @@ class StraightLineStepper {
     if (state.stepping.covTransport) {
       // The step transport matrix in global coordinates
       FreeMatrix D = FreeMatrix::Identity();
-      D.block<3, 3>(0, 4) = ActsSymMatrixD<3>::Identity() * h;
+      D.block<3, 3>(0, 4) = ActsSymMatrix<3>::Identity() * h;
       // Extend the calculation by the time propagation
       // Evaluate dt/dlambda
       D(3, 7) = h * state.options.mass * state.options.mass *

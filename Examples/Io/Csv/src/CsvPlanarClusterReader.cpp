@@ -254,7 +254,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
     local = lpResult.value();
 
     // TODO what to use as cluster uncertainty?
-    Acts::ActsSymMatrixD<3> cov = Acts::ActsSymMatrixD<3>::Identity();
+    Acts::ActsSymMatrix<3> cov = Acts::ActsSymMatrix<3>::Identity();
     // create the planar cluster
     Acts::PlanarModuleCluster cluster(
         surface->getSharedPtr(),
