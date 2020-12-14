@@ -17,7 +17,7 @@ Acts::TrackingGeometry::TrackingGeometry(
     const MutableTrackingVolumePtr& highestVolume,
     const IMaterialDecorator* materialDecorator)
     : m_world(highestVolume),
-      m_beam(Surface::makeShared<PerigeeSurface>(s_origin)) {
+      m_beam(Surface::makeShared<PerigeeSurface>(Vector3D::Zero())) {
   // Close the geometry: assign geometryID and successively the material
   size_t volumeID = 0;
   highestVolume->closeGeometry(materialDecorator, m_volumesById, volumeID);

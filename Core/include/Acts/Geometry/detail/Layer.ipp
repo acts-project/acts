@@ -286,7 +286,7 @@ inline bool Layer::isOnLayer(const GeometryContext& gctx,
     return m_representingVolume->inside(position);
   }
   return (surfaceRepresentation())
-      .isOnSurface(gctx, position, s_origin, bcheck);
+      .isOnSurface(gctx, position, Vector3D::Zero(), bcheck);
 }
 
 }  // namespace Acts
