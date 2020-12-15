@@ -109,6 +109,8 @@ inline Range<typename GeometryIdMultiset<T>::const_iterator> selectVolume(
       std::lower_bound(beg, container.end(), cmp, detail::CompareGeometryId{});
   return makeRange(beg, end);
 }
+
+/// Select all elements within the given volume.
 template <typename T>
 inline auto selectVolume(const GeometryIdMultiset<T>& container,
                          Acts::GeometryIdentifier id) {
@@ -133,6 +135,8 @@ inline Range<typename GeometryIdMultiset<T>::const_iterator> selectLayer(
       std::lower_bound(beg, container.end(), cmp, detail::CompareGeometryId{});
   return makeRange(beg, end);
 }
+
+// Select all elements within the given layer.
 template <typename T>
 inline auto selectLayer(const GeometryIdMultiset<T>& container,
                         Acts::GeometryIdentifier id) {
@@ -146,6 +150,8 @@ inline Range<typename GeometryIdMultiset<T>::const_iterator> selectModule(
   // module is the lowest level and defines a single geometry id value
   return makeRange(container.equal_range(geoId));
 }
+
+/// Select all elements for the given module / sensitive surface.
 template <typename T>
 inline auto selectModule(const GeometryIdMultiset<T>& container,
                          Acts::GeometryIdentifier::Value volume,
