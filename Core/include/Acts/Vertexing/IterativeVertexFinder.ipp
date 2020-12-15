@@ -31,7 +31,7 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
     // the seed vertexCollection
     Vertex<InputTrack_t>& seedVertex = *seedRes;
 
-    if(seedVertex.fullPosition()[eZ] == 0){ 
+    if (seedVertex.fullPosition()[eZ] == 0) {
       break;
     }
 
