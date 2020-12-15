@@ -8,13 +8,14 @@
 
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
 
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/BoundarySurfaceT.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Plugins/Digitization/CartesianSegmentation.hpp"
+#include "Acts/Plugins/Digitization/DigitizationModule.hpp"
+#include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include <Acts/Definitions/Units.hpp>
-#include <Acts/Geometry/TrackingVolume.hpp>
-#include <Acts/Plugins/Digitization/CartesianSegmentation.hpp>
-#include <Acts/Plugins/Digitization/DigitizationModule.hpp>
-#include <Acts/Plugins/Identification/IdentifiedDetectorElement.hpp>
-#include <Acts/Surfaces/Surface.hpp>
 
 #include <iostream>
 #include <sstream>
@@ -22,7 +23,7 @@
 
 #include <dfe/dfe_io_dsv.hpp>
 
-#include "TrackMlData.hpp"
+#include "CsvOutputData.hpp"
 
 using namespace ActsExamples;
 
@@ -47,16 +48,17 @@ std::string CsvTrackingGeometryWriter::name() const {
 }
 
 namespace {
+
 using SurfaceWriter = dfe::NamedTupleCsvWriter<SurfaceData>;
+using BoundarySurface = Acts::BoundarySurfaceT<Acts::TrackingVolume>;
 
 /// Write a single surface.
-void writeSurface(SurfaceWriter& writer, const Acts::Surface& surface,
-                  const Acts::GeometryContext& geoCtx) {
-  SurfaceData data;
-
+void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
+                     const Acts::GeometryContext& geoCtx) {
   // encoded and partially decoded geometry identifier
   data.geometry_id = surface.geometryId().value();
   data.volume_id = surface.geometryId().volume();
+  data.boundary_id = surface.geometryId().boundary();
   data.layer_id = surface.geometryId().layer();
   data.module_id = surface.geometryId().sensitive();
   // center position
@@ -76,49 +78,31 @@ void writeSurface(SurfaceWriter& writer, const Acts::Surface& surface,
   data.rot_zv = transform(2, 1);
   data.rot_zw = transform(2, 2);
 
-  // module thickness
-  if (surface.associatedDetectorElement()) {
-    const auto* detElement =
-        dynamic_cast<const Acts::IdentifiedDetectorElement*>(
-            surface.associatedDetectorElement());
-    if (detElement) {
-      data.module_t = detElement->thickness() / Acts::UnitConstants::mm;
-    }
-  }
+  std::array<float*, 7> dataBoundParameters = {
+      &data.p0, &data.p1, &data.p2, &data.p3, &data.p4, &data.p5, &data.p6};
 
-  // bounds and pitch (if available)
   const auto& bounds = surface.bounds();
-  const auto* planarBounds = dynamic_cast<const Acts::PlanarBounds*>(&bounds);
-  if (planarBounds) {
-    // extract limits from value store
-    auto boundValues = surface.bounds().values();
-    if (boundValues.size() == 2) {
-      data.module_minhu = boundValues[0] / Acts::UnitConstants::mm;
-      data.module_maxhu = boundValues[0] / Acts::UnitConstants::mm;
-      data.module_hv = boundValues[1] / Acts::UnitConstants::mm;
-    } else if (boundValues.size() == 3) {
-      data.module_minhu = boundValues[0] / Acts::UnitConstants::mm;
-      data.module_maxhu = boundValues[1] / Acts::UnitConstants::mm;
-      data.module_hv = boundValues[2] / Acts::UnitConstants::mm;
-    }
-    // get the pitch from the digitization module
-    const auto* detElement =
-        dynamic_cast<const Acts::IdentifiedDetectorElement*>(
-            surface.associatedDetectorElement());
-    if (detElement and detElement->digitizationModule()) {
-      auto dModule = detElement->digitizationModule();
-      // dynamic_cast to CartesianSegmentation
-      const auto* cSegmentation =
-          dynamic_cast<const Acts::CartesianSegmentation*>(
-              &(dModule->segmentation()));
-      if (cSegmentation) {
-        auto pitch = cSegmentation->pitch();
-        data.pitch_u = pitch.first / Acts::UnitConstants::mm;
-        data.pitch_u = pitch.second / Acts::UnitConstants::mm;
-      }
-    }
+  data.bounds_type = static_cast<int>(bounds.type());
+  auto boundValues = bounds.values();
+  for (size_t ipar = 0; ipar < boundValues.size(); ++ipar) {
+    (*dataBoundParameters[ipar]) = boundValues[ipar];
   }
+}
 
+/// Write a single surface.
+void writeSurface(SurfaceWriter& writer, const Acts::Surface& surface,
+                  const Acts::GeometryContext& geoCtx) {
+  SurfaceData data;
+  fillSurfaceData(data, surface, geoCtx);
+  writer.append(data);
+}
+
+/// Write a single surface.
+void writeBoundarySurface(SurfaceWriter& writer,
+                          const BoundarySurface& bsurface,
+                          const Acts::GeometryContext& geoCtx) {
+  SurfaceData data;
+  fillSurfaceData(data, bsurface.surfaceRepresentation(), geoCtx);
   writer.append(data);
 }
 
@@ -128,7 +112,7 @@ void writeVolume(SurfaceWriter& writer, const Acts::TrackingVolume& volume,
   // process all layers that are directly stored within this volume
   if (volume.confinedLayers()) {
     for (auto layer : volume.confinedLayers()->arrayObjects()) {
-      // we jump navigation layers
+      // We jump navigation layers
       if (layer->layerType() == Acts::navigation) {
         continue;
       }
@@ -140,6 +124,10 @@ void writeVolume(SurfaceWriter& writer, const Acts::TrackingVolume& volume,
           }
         }
       }
+    }
+    // This is a navigation volume, write the boundaries
+    for (auto bsurface : volume.boundarySurfaces()) {
+      writeBoundarySurface(writer, *bsurface, geoCtx);
     }
   }
   // step down into hierarchy to process all child volumnes

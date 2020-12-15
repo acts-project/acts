@@ -135,25 +135,32 @@ struct SurfaceData {
   /// Surface identifier. Not available in the TrackML datasets.
   uint64_t geometry_id;
   /// Partially decoded surface identifier components.
-  uint32_t volume_id, layer_id, module_id;
+  uint32_t volume_id, boundary_id, layer_id, module_id;
   /// Center position components in mm.
   float cx, cy, cz;
   /// Rotation matrix components.
   float rot_xu, rot_xv, rot_xw;
   float rot_yu, rot_yv, rot_yw;
   float rot_zu, rot_zv, rot_zw;
-  /// Limits and pitches in mm. Not always available.
-  float module_t = -1;
-  float module_minhu = -1;
-  float module_maxhu = -1;
-  float module_hv = -1;
-  float pitch_u = -1;
-  float pitch_v = -1;
 
-  DFE_NAMEDTUPLE(SurfaceData, geometry_id, volume_id, layer_id, module_id, cx,
-                 cy, cz, rot_xu, rot_xv, rot_xw, rot_yu, rot_yv, rot_yw, rot_zu,
-                 rot_zv, rot_zw, module_t, module_minhu, module_maxhu,
-                 module_hv, pitch_u, pitch_v);
+  // In case it describes a boundary surface
+  int volume_link_o = -1;
+  int volume_link_a = -1;
+
+  /// The type of the surface bpounds object, determines the parameters filled
+  int bounds_type;
+  float p0 = -1.f;
+  float p1 = -1.f;
+  float p2 = -1.f;
+  float p3 = -1.f;
+  float p4 = -1.f;
+  float p5 = -1.f;
+  float p6 = -1.f;
+
+  DFE_NAMEDTUPLE(SurfaceData, geometry_id, volume_id, boundary_id, layer_id,
+                 module_id, cx, cy, cz, rot_xu, rot_xv, rot_xw, rot_yu, rot_yv,
+                 rot_yw, rot_zu, rot_zv, rot_zw, volume_link_o, volume_link_a,
+                 bounds_type, p0, p1, p2, p3, p4, p5, p6);
 };
 
 }  // namespace ActsExamples
