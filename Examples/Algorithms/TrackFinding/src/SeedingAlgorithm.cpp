@@ -8,15 +8,13 @@
 
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/Seedfinder.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <stdexcept>
@@ -25,15 +23,19 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     ActsExamples::SeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)
     : ActsExamples::BareAlgorithm("SeedingAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
-  if (m_cfg.inputMeasurements.empty()) {
-    throw std::invalid_argument(
-        "Missing measurement input collection with the hits");
+  if (m_cfg.inputSpacePoints.empty()) {
+    throw std::invalid_argument("Missing space point input collections");
+  }
+  for (const auto& i : m_cfg.inputSpacePoints) {
+    if (i.empty()) {
+      throw std::invalid_argument("Invalid space point input collection");
+    }
+  }
+  if (m_cfg.outputProtoTracks.empty()) {
+    throw std::invalid_argument("Missing proto tracks output collection");
   }
   if (m_cfg.outputSeeds.empty()) {
-    throw std::invalid_argument("Missing output seeds collection");
-  }
-  if (not m_cfg.trackingGeometry) {
-    throw std::invalid_argument("Missing tracking geometry");
+    throw std::invalid_argument("Missing seeds output collection");
   }
 
   m_gridCfg.bFieldInZ = m_cfg.bFieldInZ;
@@ -63,127 +65,78 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   m_finderCfg.radLengthPerSeed = m_cfg.radLengthPerSeed;
   m_finderCfg.minPt = m_cfg.minPt;
   m_finderCfg.bFieldInZ = m_cfg.bFieldInZ;
-  m_finderCfg.beamPos = m_cfg.beamPos;
+  m_finderCfg.beamPos = Acts::Vector2(m_cfg.beamPosX, m_cfg.beamPosY);
   m_finderCfg.impactMax = m_cfg.impactMax;
-}
-
-std::unique_ptr<ActsExamples::SimSpacePoint>
-ActsExamples::SeedingAlgorithm::makeSpacePoint(
-    const Measurement& measurement, const Acts::Surface& surface,
-    const Acts::GeometryContext& geoCtx) const {
-  SimSpacePoint sp = std::visit(
-      [&](const auto& m) {
-        // since we do not know if and where the local parameters are contained
-        // in the measurement, we always transform to the bound space where we
-        // do not their location. if the local parameters are not measured, this
-        // results in a zero location.
-        Acts::BoundVector localPar = m.expander() * m.parameters();
-        Acts::BoundSymMatrix localCov =
-            m.expander() * m.covariance() * m.expander().transpose();
-
-        // transform local position to global coordinates
-        Acts::Vector3 globalFakeMom(1, 1, 1);
-        Acts::Vector3 globalPos = surface.localToGlobal(
-            geoCtx, {localPar[Acts::eBoundLoc0], localPar[Acts::eBoundLoc1]},
-            globalFakeMom);
-
-        // transfrom local covariance to global coordinates
-        Acts::BoundToFreeMatrix jacToGlobal =
-            surface.jacobianLocalToGlobal(geoCtx, localPar);
-        Acts::SymMatrix3 globalCov =
-            (jacToGlobal * localCov * jacToGlobal.transpose())
-                .block<3, 3>(Acts::eFreePos0, Acts::eFreePos0);
-
-        // create space point
-        float x = globalPos[Acts::ePos0];
-        float y = globalPos[Acts::ePos1];
-        float z = globalPos[Acts::ePos2];
-        float r = std::hypot(x, y);
-        float varianceR = globalCov(0, 0);
-        float varianceZ = globalCov(1, 1);
-        return SimSpacePoint{
-            m.sourceLink().index(), x, y, z, r, varianceR, varianceZ};
-      },
-      measurement);
-  return std::make_unique<SimSpacePoint>(std::move(sp));
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     const AlgorithmContext& ctx) const {
+  // construct the combined input container of space point pointers from all
+  // configured input sources.
+  // pre-compute the total size required so we only need to allocate once
+  size_t nSpacePoints = 0;
+  for (const auto& isp : m_cfg.inputSpacePoints) {
+    nSpacePoints += ctx.eventStore.get<SimSpacePointContainer>(isp).size();
+  }
+  std::vector<const SimSpacePoint*> spacePointPtrs;
+  spacePointPtrs.reserve(nSpacePoints);
+  for (const auto& isp : m_cfg.inputSpacePoints) {
+    for (const auto& spacePoint :
+         ctx.eventStore.get<SimSpacePointContainer>(isp)) {
+      // since the event store owns the space points, their pointers should be
+      // stable and we do not need to create local copies.
+      spacePointPtrs.push_back(&spacePoint);
+    }
+  }
+
+  // construct the seeding tools
+  // covariance tool, extracts covariances per spacepoint as required
+  auto extractCovariance = [=](const SimSpacePoint& sp, float, float,
+                               float) -> Acts::Vector2 {
+    return {sp.varianceR(), sp.varianceZ()};
+  };
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
       Acts::BinFinder<SimSpacePoint>());
   auto topBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
       Acts::BinFinder<SimSpacePoint>());
-
-  // covariance tool, sets covariances per spacepoint as required
-  auto ct = [=](const SimSpacePoint& sp, float, float, float) -> Acts::Vector2 {
-    return {sp.varianceR(), sp.varianceZ()};
-  };
-
-  const auto& measurements =
-      ctx.eventStore.get<MeasurementContainer>(m_cfg.inputMeasurements);
-
-  // create the space points
-  std::vector<const SimSpacePoint*> spVec;
-  unsigned int hit_id = 0;
-  for (Index imeas = 0u; imeas < measurements.size(); ++imeas) {
-    const auto& meas = measurements[imeas];
-    const auto geoId = std::visit(
-        [](const auto& m) { return m.sourceLink().geometryId(); }, meas);
-    const auto volumeId = geoId.volume();
-    const auto layerId = geoId.layer();
-
-    // volumes and layers for seed finding
-    if (volumeId == m_cfg.barrelVolume) {
-      if (std::find(m_cfg.barrelLayers.begin(), m_cfg.barrelLayers.end(),
-                    layerId) == m_cfg.barrelLayers.end())
-        continue;
-    } else if (volumeId == m_cfg.posEndcapVolume) {
-      if (std::find(m_cfg.posEndcapLayers.begin(), m_cfg.posEndcapLayers.end(),
-                    layerId) == m_cfg.posEndcapLayers.end())
-        continue;
-    } else if (volumeId == m_cfg.negEndcapVolume) {
-      if (std::find(m_cfg.negEndcapLayers.begin(), m_cfg.negEndcapLayers.end(),
-                    layerId) == m_cfg.negEndcapLayers.end())
-        continue;
-    } else {
-      continue;
-    }
-
-    // lookup surface
-    const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
-    if (not surface) {
-      ACTS_ERROR("Could not find surface " << geoId);
-      return ProcessCode::ABORT;
-    }
-
-    auto sp = makeSpacePoint(meas, *surface, ctx.geoContext).release();
-    spVec.push_back(sp);
-    hit_id++;
-  }
   auto grid = Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(m_gridCfg);
-  Acts::BinnedSPGroup<SimSpacePoint> spGroup(spVec.begin(), spVec.end(), ct,
-                                             bottomBinFinder, topBinFinder,
-                                             std::move(grid), m_finderCfg);
-  Acts::Seedfinder<SimSpacePoint> finder(m_finderCfg);
+  auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
+      spacePointPtrs.begin(), spacePointPtrs.end(), extractCovariance,
+      bottomBinFinder, topBinFinder, std::move(grid), m_finderCfg);
+  auto finder = Acts::Seedfinder<SimSpacePoint>(m_finderCfg);
 
-  std::vector<std::vector<Acts::Seed<SimSpacePoint>>> seedVector;
-  auto groupIt = spGroup.begin();
-  auto endOfGroups = spGroup.end();
-  for (; !(groupIt == endOfGroups); ++groupIt) {
-    seedVector.push_back(finder.createSeedsForGroup(
-        groupIt.bottom(), groupIt.middle(), groupIt.top()));
+  // run the seeding
+  std::vector<std::vector<Acts::Seed<SimSpacePoint>>> seeds;
+  auto group = spacePointsGrouping.begin();
+  auto groupEnd = spacePointsGrouping.end();
+  for (; !(group == groupEnd); ++group) {
+    seeds.push_back(finder.createSeedsForGroup(group.bottom(), group.middle(),
+                                               group.top()));
   }
 
-  int numSeeds = 0;
-  for (auto& outVec : seedVector) {
-    numSeeds += outVec.size();
+  // extract proto tracks, i.e. groups of measurement indices, from tracks seeds
+  size_t nSeeds = 0;
+  for (const auto& regionSeeds : seeds) {
+    nSeeds += regionSeeds.size();
+  }
+  ProtoTrackContainer protoTracks;
+  protoTracks.reserve(nSeeds);
+  for (const auto& regionSeeds : seeds) {
+    for (const auto& seed : regionSeeds) {
+      ProtoTrack protoTrack;
+      protoTrack.reserve(seed.sp().size());
+      for (auto spacePointPtr : seed.sp()) {
+        protoTrack.push_back(spacePointPtr->measurementIndex());
+      }
+      protoTracks.push_back(std::move(protoTrack));
+    }
   }
 
-  ACTS_DEBUG(spVec.size() << " hits, " << seedVector.size() << " regions, "
-                          << numSeeds << " seeds");
+  ACTS_DEBUG("Created " << protoTracks.size() << " track seeds in "
+                        << seeds.size() << " regions from "
+                        << spacePointPtrs.size() << " space points");
 
-  ctx.eventStore.add(m_cfg.outputSeeds, std::move(seedVector));
-
+  ctx.eventStore.add(m_cfg.outputSeeds, std::move(seeds));
+  ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(protoTracks));
   return ActsExamples::ProcessCode::SUCCESS;
 }
