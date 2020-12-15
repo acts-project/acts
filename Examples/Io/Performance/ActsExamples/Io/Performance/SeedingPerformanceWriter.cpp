@@ -9,6 +9,7 @@
 #include "SeedingPerformanceWriter.hpp"
 
 #include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
@@ -26,8 +27,8 @@ ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
     : WriterT(cfg.inputSeeds, "SeedingPerformanceWriter", lvl),
       m_cfg(std::move(cfg)),
       m_effPlotTool(m_cfg.effPlotToolConfig, lvl) {
-  if (m_cfg.inputSeeds.empty()) {
-    throw std::invalid_argument("Missing input seeds collection");
+  if (m_cfg.inputMeasurementParticlesMap.empty()) {
+    throw std::invalid_argument("Missing hit-particles map input collection");
   }
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input particles collection");
@@ -35,14 +36,11 @@ ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
   if (m_cfg.outputFilename.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
-  if (m_cfg.inputMeasurementParticlesMap.empty()) {
-    throw std::invalid_argument("Missing hit-particles map input collection");
-  }
 
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
   // must always be opened internally
-  auto path = m_cfg.outputFilename;
+  auto path = joinPaths(cfg.outputDir, cfg.outputFilename);
   m_outputFile = TFile::Open(path.c_str(), "RECREATE");
   if (not m_outputFile) {
     throw std::invalid_argument("Could not open '" + path + "'");
