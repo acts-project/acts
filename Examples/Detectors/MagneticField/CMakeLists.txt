@@ -1,7 +1,7 @@
 add_library(
   ActsExamplesMagneticField SHARED
   src/BFieldOptions.cpp
-  src/BFieldScalor.cpp
+  src/ScalableBFieldService.cpp
   src/BFieldUtils.cpp)
 target_include_directories(
   ActsExamplesMagneticField
