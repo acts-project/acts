@@ -39,8 +39,8 @@ struct MockPhysicsList {
 };
 
 struct MockStepperState {
-  using Scalar = double;
-  using Vector3 = Acts::ActsVector<double, 3>;
+  using Scalar = Acts::ActsScalar;
+  using Vector3 = Acts::ActsVector<3>;
 
   Vector3 position;
   Scalar time;
@@ -97,7 +97,7 @@ struct Fixture {
                  Acts::PdgParticle::eProton, 0, 1)
             .setPosition4(1, 2, 3, 4)
             .setDirection(1, 0, 0)
-            .setAbsMomentum(100);
+            .setAbsoluteMomentum(100);
     interactor.generator = &generator;
     interactor.physics.energyLoss = energyLoss;
     interactor.particle = particle;
@@ -105,14 +105,14 @@ struct Fixture {
     state.stepping.position = particle.position();
     state.stepping.time = particle.time();
     state.stepping.direction = particle.unitDirection();
-    state.stepping.momentum = particle.absMomentum();
+    state.stepping.momentum = particle.absoluteMomentum();
   }
 };
 
 // make a surface without material.
 std::shared_ptr<Acts::Surface> makeEmptySurface() {
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      Acts::Vector3D(1, 2, 3), Acts::Vector3D(1, 0, 0));
+      Acts::Vector3(1, 2, 3), Acts::Vector3(1, 0, 0));
   return surface;
 }
 

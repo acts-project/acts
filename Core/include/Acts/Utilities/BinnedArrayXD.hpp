@@ -33,7 +33,7 @@ namespace Acts {
 template <class T>
 class BinnedArrayXD : public BinnedArray<T> {
   /// typedef the object and position for readability
-  using TAP = std::pair<T, Vector3D>;
+  using TAP = std::pair<T, Vector3>;
 
  public:
   /// Constructor for single object
@@ -131,7 +131,7 @@ class BinnedArrayXD : public BinnedArray<T> {
   /// @param bins is the bin triple filled during this access
   ///
   /// @return is the object in that bin
-  T object(const Vector2D& lposition, std::array<size_t, 3>& bins) const final {
+  T object(const Vector2& lposition, std::array<size_t, 3>& bins) const final {
     if (m_binUtility) {
       size_t bdim = m_binUtility->dimensions();
       bins[2] = bdim > 2 ? m_binUtility->bin(lposition, 2) : 0;
@@ -143,7 +143,7 @@ class BinnedArrayXD : public BinnedArray<T> {
   }
 
   // satisfy overload / override
-  T object(const Vector2D& lposition) const override {
+  T object(const Vector2& lposition) const override {
     std::array<size_t, 3> bins;
     return object(lposition, bins);
   }
@@ -154,7 +154,7 @@ class BinnedArrayXD : public BinnedArray<T> {
   /// @param bins is the bins triple filled during access
   ///
   /// @return is the object in that bin
-  T object(const Vector3D& position, std::array<size_t, 3>& bins) const final {
+  T object(const Vector3& position, std::array<size_t, 3>& bins) const final {
     if (m_binUtility) {
       size_t bdim = m_binUtility->dimensions();
       bins[2] = bdim > 2 ? m_binUtility->bin(position, 2) : 0;
@@ -166,7 +166,7 @@ class BinnedArrayXD : public BinnedArray<T> {
   }
 
   // satisfy overload / override
-  T object(const Vector3D& position) const override {
+  T object(const Vector3& position) const override {
     std::array<size_t, 3> bins;
     return object(position, bins);
   }

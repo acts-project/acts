@@ -154,7 +154,7 @@ auto main(int argc, char** argv) -> int {
   Acts::Seedfinder<SpacePoint> normalSeedfinder(config);
   auto covarianceTool = [=](const SpacePoint& sp, float /*unused*/,
                             float /*unused*/,
-                            float_t /*unused*/) -> Acts::Vector2D {
+                            float_t /*unused*/) -> Acts::Vector2 {
     return {sp.varianceR, sp.varianceZ};
   };
   std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =

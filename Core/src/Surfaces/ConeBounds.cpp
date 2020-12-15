@@ -39,12 +39,11 @@ Acts::SurfaceBounds::BoundsType Acts::ConeBounds::type() const {
 }
 
 /// Shift r-phi coordinate to be centered around the average phi.
-Acts::Vector2D Acts::ConeBounds::shifted(
-    const Acts::Vector2D& lposition) const {
+Acts::Vector2 Acts::ConeBounds::shifted(const Acts::Vector2& lposition) const {
   using Acts::detail::radian_sym;
 
   auto x = r(lposition[eBoundLoc1]);  // cone radius at the local position
-  Vector2D shifted;
+  Vector2 shifted;
   shifted[eBoundLoc1] = lposition[eBoundLoc1];
   shifted[eBoundLoc0] =
       std::isnormal(x)
@@ -53,11 +52,11 @@ Acts::Vector2D Acts::ConeBounds::shifted(
   return shifted;
 }
 
-bool Acts::ConeBounds::inside(const Acts::Vector2D& lposition,
+bool Acts::ConeBounds::inside(const Acts::Vector2& lposition,
                               const Acts::BoundaryCheck& bcheck) const {
   auto rphiHalf = r(lposition[eBoundLoc1]) * get(eHalfPhiSector);
-  return bcheck.isInside(shifted(lposition), Vector2D(-rphiHalf, get(eMinZ)),
-                         Vector2D(rphiHalf, get(eMaxZ)));
+  return bcheck.isInside(shifted(lposition), Vector2(-rphiHalf, get(eMinZ)),
+                         Vector2(rphiHalf, get(eMaxZ)));
 }
 
 std::ostream& Acts::ConeBounds::toStream(std::ostream& sl) const {

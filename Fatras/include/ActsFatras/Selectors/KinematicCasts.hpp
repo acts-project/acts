@@ -56,15 +56,16 @@ struct AbsEta {
 struct Pt {
   double operator()(const Particle& particle) const {
     // particle direction is always normalized, i.e. dt²+dz²=1 w/ dt²=dx²+dy²
-    return particle.absMomentum() * std::hypot(particle.unitDirection().x(),
-                                               particle.unitDirection().y());
+    return particle.absoluteMomentum() *
+           std::hypot(particle.unitDirection().x(),
+                      particle.unitDirection().y());
   }
 };
 
 /// Retrieve the absolute momentum.
 struct P {
   double operator()(const Particle& particle) const {
-    return particle.absMomentum();
+    return particle.absoluteMomentum();
   }
 };
 

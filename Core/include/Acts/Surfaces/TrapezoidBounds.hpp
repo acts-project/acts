@@ -108,7 +108,7 @@ class TrapezoidBounds : public PlanarBounds {
   /// @param bcheck boundary check directive
   ///
   /// @return boolean indicator for the success of this operation
-  bool inside(const Vector2D& lposition,
+  bool inside(const Vector2& lposition,
               const BoundaryCheck& bcheck) const final;
 
   /// Return the vertices
@@ -119,7 +119,7 @@ class TrapezoidBounds : public PlanarBounds {
   /// @note the number of segements is ignored in this representation
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2D> vertices(unsigned int lseg = 1) const final;
+  std::vector<Vector2> vertices(unsigned int lseg = 1) const final;
 
   // Bounding box representation
   const RectangleBounds& boundingBox() const final;

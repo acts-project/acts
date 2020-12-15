@@ -28,19 +28,19 @@ class Vertex {
   /// @brief Construct for vertex at given 3d-position, sets covariance to zero
   ///
   /// @param position Vertex position
-  Vertex(const Vector3D& position);
+  Vertex(const Vector3& position);
 
   /// @brief Construct for vertex at given 4d-position, sets covariance to zero
   ///
   /// @param position Vertex position
-  Vertex(const Vector4D& position);
+  Vertex(const Vector4& position);
 
   /// @brief Vertex constructor
   ///
   /// @param position Vertex position
   /// @param covariance Position covariance matrix
   /// @param tracks Vector of tracks associated with the vertex
-  Vertex(const Vector3D& position, const SymMatrix3D& covariance,
+  Vertex(const Vector3& position, const SymMatrix3& covariance,
          const std::vector<TrackAtVertex<input_track_t>>& tracks);
 
   /// @brief Vertex constructor
@@ -48,23 +48,23 @@ class Vertex {
   /// @param position Full vertex position
   /// @param covariance 4x4 covariance matrix
   /// @param tracks Vector of tracks associated with the vertex
-  Vertex(const Vector4D& position, const SymMatrix4D& covariance,
+  Vertex(const Vector4& position, const SymMatrix4& covariance,
          const std::vector<TrackAtVertex<input_track_t>>& tracks);
 
   /// @return Returns 3-position
-  Vector3D position() const;
+  Vector3 position() const;
 
   /// @return Returns time
-  BoundScalar time() const;
+  ActsScalar time() const;
 
   /// @return Returns 4-position
-  const Vector4D& fullPosition() const;
+  const Vector4& fullPosition() const;
 
   /// @return Returns position covariance
-  SymMatrix3D covariance() const;
+  SymMatrix3 covariance() const;
 
   /// @return Returns 4x4 covariance
-  const SymMatrix4D& fullCovariance() const;
+  const SymMatrix4& fullCovariance() const;
 
   /// @return Returns vector of tracks associated with the vertex
   const std::vector<TrackAtVertex<input_track_t>>& tracks() const;
@@ -76,27 +76,27 @@ class Vertex {
   ///
   /// @param position Vertex position
   /// @param time The time
-  void setPosition(const Vector3D& position, BoundScalar time = 0);
+  void setPosition(const Vector3& position, ActsScalar time = 0);
 
   /// @brief Set position and time
   ///
   /// @param fullPosition Vertex position and time
-  void setFullPosition(const Vector4D& fullPosition);
+  void setFullPosition(const Vector4& fullPosition);
 
   /// @brief Sets time
   ///
   /// @param time The time
-  void setTime(BoundScalar time);
+  void setTime(ActsScalar time);
 
   /// @brief Sets 3x3 covariance
   ///
   /// @param covariance Position covariance matrix
-  void setCovariance(const ActsSymMatrixD<3>& covariance);
+  void setCovariance(const SymMatrix3& covariance);
 
   /// @brief Sets 4x4 covariance
   ///
   /// @param covariance The 4x4 covariance matrix
-  void setFullCovariance(const SymMatrix4D& covariance);
+  void setFullCovariance(const SymMatrix4& covariance);
 
   /// @param tracks Vector of tracks at vertex
   void setTracksAtVertex(
@@ -110,8 +110,8 @@ class Vertex {
   void setFitQuality(std::pair<double, double> fitQuality);
 
  private:
-  Vector4D m_position = Vector4D::Zero();
-  SymMatrix4D m_covariance = SymMatrix4D::Zero();
+  Vector4 m_position = Vector4::Zero();
+  SymMatrix4 m_covariance = SymMatrix4::Zero();
   std::vector<TrackAtVertex<input_track_t>> m_tracksAtVertex;
   double m_chiSquared = 0.;  // chi2 of the fit
   double m_numberDoF = 0.;   // number of degrees of freedom

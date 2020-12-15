@@ -74,7 +74,7 @@ int main(int argc, char* argv[]) {
   VertexFitterAlgorithm::Config fitVertices;
   fitVertices.inputTrackParameters = smearParticles.outputTrackParameters;
   fitVertices.inputProtoVertices = findVertices.outputProtoVertices;
-  fitVertices.bField = Acts::Vector3D(0_T, 0_T, 2_T);
+  fitVertices.bField = Acts::Vector3(0_T, 0_T, 2_T);
   sequencer.addAlgorithm(
       std::make_shared<VertexFitterAlgorithm>(fitVertices, logLevel));
 

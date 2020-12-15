@@ -33,8 +33,8 @@ using BoundingBoxScalar = ActsScalar;
 
 using ObjectBBox = Acts::AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
 
-using Vector2F = ActsMatrix<BoundingBoxScalar, 2, 1>;
-using Vector3F = ActsMatrix<BoundingBoxScalar, 3, 1>;
+using Vector2F = Eigen::Matrix<BoundingBoxScalar, 2, 1>;
+using Vector3F = Eigen::Matrix<BoundingBoxScalar, 3, 1>;
 using AngleAxis3F = Eigen::AngleAxis<BoundingBoxScalar>;
 
 BOOST_AUTO_TEST_CASE(box_construction) {
@@ -380,7 +380,7 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
 BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
   using Ray = Ray<double, 3>;
 
-  std::array<Vector3D, 8> vertices;
+  std::array<Vector3, 8> vertices;
   vertices = {{{0, 0, 0},
                {2, 0, 0.4},
                {2, 1, 0.4},
@@ -390,15 +390,14 @@ BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
                {1.8, 1, 1},
                {0, 1, 1}}};
   auto cubo = std::make_shared<GenericCuboidVolumeBounds>(vertices);
-  auto trf =
-      Transform3D(Translation3D(Vector3D(0, 8, -5)) *
-                  AngleAxis3D(M_PI / 3., Vector3D(1, -3, 9).normalized()));
+  auto trf = Transform3(Translation3(Vector3(0, 8, -5)) *
+                        AngleAxis3(M_PI / 3., Vector3(1, -3, 9).normalized()));
 
   AbstractVolume vol(trf, cubo);
 
   PlyVisualization3D<double> ply;
 
-  Transform3D trl = Transform3D::Identity();
+  Transform3 trl = Transform3::Identity();
   trl.translation() = trf.translation();
 
   cubo->draw(ply);
@@ -408,11 +407,11 @@ BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
 
   ply.clear();
 
-  Vector3D origin(10, -20, 6);
-  Vector3D centroid(0., 0., 0.);
+  Vector3 origin(10, -20, 6);
+  Vector3 centroid(0., 0., 0.);
 
   for (const auto& vtx_ : vertices) {
-    Vector3D vtx = trf * vtx_;
+    Vector3 vtx = trf * vtx_;
     centroid += vtx;
   }
 
@@ -421,7 +420,7 @@ BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
 
   // shoot rays to the corner points of the cuboid
   for (const auto& vtx_ : vertices) {
-    Vector3D vtx = trf * vtx_;
+    Vector3 vtx = trf * vtx_;
 
     // this ray goes straight to the actual vertex, this should
     // definitely intersect the OBB
@@ -484,7 +483,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 2>;
     Object o;
-    Box::Size size(ActsVector<BoundingBoxScalar, 2>(2, 2));
+    Box::Size size(Eigen::Matrix<BoundingBoxScalar, 2, 1>(2, 2));
 
     n = 10;
     BoundingBoxScalar minx = -20;
@@ -580,8 +579,8 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
       for (size_t i = 0; i <= n; i++) {
         for (size_t j = 0; j <= n; j++) {
           boxes.emplace_back(&o,
-                             ActsVector<BoundingBoxScalar, 2>{minx + i * stepx,
-                                                              miny + j * stepy},
+                             Eigen::Matrix<BoundingBoxScalar, 2, 1>{
+                                 minx + i * stepx, miny + j * stepy},
                              size);
           std::stringstream st;
           st << boxes.size() - 1;
@@ -859,15 +858,15 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
       Object o;
       using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
-      Box::Size size(ActsVector<BoundingBoxScalar, 3>(2, 2, 2));
+      Box::Size size(Eigen::Matrix<BoundingBoxScalar, 3, 1>(2, 2, 2));
 
       size_t idx = 0;
 
       for (size_t i = 0; i <= n; i++) {
         for (size_t j = 0; j <= n; j++) {
           for (size_t k = 0; k <= n; k++) {
-            ActsVector<BoundingBoxScalar, 3> pos(min + i * step, min + j * step,
-                                                 min + k * step);
+            Eigen::Matrix<BoundingBoxScalar, 3, 1> pos(
+                min + i * step, min + j * step, min + k * step);
             Box bb(&o, pos, size);
 
             std::array<int, 3> color = {255, 0, 0};
@@ -1123,14 +1122,14 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
       Object o;
       using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
-      Box::Size size(ActsVector<BoundingBoxScalar, 3>(2, 2, 2));
+      Box::Size size(Eigen::Matrix<BoundingBoxScalar, 3, 1>(2, 2, 2));
 
       size_t idx = 0;
       for (size_t i = 0; i <= n; i++) {
         for (size_t j = 0; j <= n; j++) {
           for (size_t k = 0; k <= n; k++) {
-            ActsVector<BoundingBoxScalar, 3> pos(min + i * step, min + j * step,
-                                                 min + k * step);
+            Eigen::Matrix<BoundingBoxScalar, 3, 1> pos(
+                min + i * step, min + j * step, min + k * step);
             Box bb(&o, pos, size);
 
             std::array<int, 3> color = {255, 0, 0};
@@ -1156,7 +1155,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
   BOOST_TEST_CONTEXT("3D - 5 Sides") {
     using Frustum = Frustum<BoundingBoxScalar, 3, 5>;
     using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
-    Box::Size size(ActsVector<BoundingBoxScalar, 3>(2, 2, 2));
+    Box::Size size(Eigen::Matrix<BoundingBoxScalar, 3, 1>(2, 2, 2));
 
     Object o;
 
@@ -1178,7 +1177,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
   BOOST_TEST_CONTEXT("3D - 10 Sides") {
     using Frustum = Frustum<BoundingBoxScalar, 3, 10>;
     using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
-    using vec3 = ActsVector<BoundingBoxScalar, 3>;
+    using vec3 = Eigen::Matrix<BoundingBoxScalar, 3, 1>;
     Box::Size size(vec3(2, 2, 2));
 
     Object o;

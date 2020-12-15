@@ -9,7 +9,6 @@
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
@@ -32,21 +31,21 @@ class LineSurface : public Surface {
   friend Surface;
 
  protected:
-  /// Constructor from Transform3D and bounds
+  /// Constructor from Transform3 and bounds
   ///
   /// @param transform The transform that positions the surface in the global
   /// frame
   /// @param radius The straw radius
   /// @param halez The half length in z
-  LineSurface(const Transform3D& transform, double radius, double halez);
+  LineSurface(const Transform3& transform, double radius, double halez);
 
-  /// Constructor from Transform3D and a shared bounds object
+  /// Constructor from Transform3 and a shared bounds object
   ///
   /// @param transform The transform that positions the surface in the global
   /// frame
   /// @param lbounds The bounds describing the straw dimensions, can be
   /// optionally nullptr
-  LineSurface(const Transform3D& transform,
+  LineSurface(const Transform3& transform,
               std::shared_ptr<const LineBounds> lbounds = nullptr);
 
   /// Constructor from DetectorElementBase : Element proxy
@@ -67,7 +66,7 @@ class LineSurface : public Surface {
   /// @param other is the source cone surface
   /// @param shift is the additional transform applied after copying
   LineSurface(const GeometryContext& gctx, const LineSurface& other,
-              const Transform3D& shift);
+              const Transform3& shift);
 
  public:
   ~LineSurface() override = default;
@@ -83,9 +82,9 @@ class LineSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position is ignored
   ///
-  /// @return a Vector3D by value
-  Vector3D normal(const GeometryContext& gctx,
-                  const Vector2D& lposition) const final;
+  /// @return a Vector3 by value
+  Vector3 normal(const GeometryContext& gctx,
+                 const Vector2& lposition) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -97,13 +96,13 @@ class LineSurface : public Surface {
   /// @param bValue is the binning type to be used
   ///
   /// @return position that can beused for this binning
-  Vector3D binningPosition(const GeometryContext& gctx,
-                           BinningValue bValue) const final;
+  Vector3 binningPosition(const GeometryContext& gctx,
+                          BinningValue bValue) const final;
 
   /// Return the measurement frame - this is needed for alignment, in particular
   ///
   /// for StraightLine and Perigee Surface
-  ///  - the default implementation is the the RotationMatrix3D of the transform
+  ///  - the default implementation is the the RotationMatrix3 of the transform
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position where the measurement frame is
@@ -112,9 +111,9 @@ class LineSurface : public Surface {
   /// construction
   ///
   /// @return is a rotation matrix that indicates the measurement frame
-  RotationMatrix3D referenceFrame(const GeometryContext& gctx,
-                                  const Vector3D& position,
-                                  const Vector3D& momentum) const final;
+  RotationMatrix3 referenceFrame(const GeometryContext& gctx,
+                                 const Vector3& position,
+                                 const Vector3& momentum) const final;
 
   /// Calculate the jacobian from local to global which the surface knows best,
   /// hence the calculation is done here.
@@ -133,8 +132,8 @@ class LineSurface : public Surface {
   /// @param parameters is the free parameters
   ///
   /// @return Derivative of path length w.r.t. free parameters
-  FreeRowVector freeToPathDerivative(const GeometryContext& gctx,
-                                     const FreeVector& parameters) const final;
+  FreeToPathMatrix freeToPathDerivative(
+      const GeometryContext& gctx, const FreeVector& parameters) const final;
 
   /// Local to global transformation
   /// for line surfaces the momentum is used in order to interpret the drift
@@ -145,8 +144,8 @@ class LineSurface : public Surface {
   /// @param momentum is the global momentum (used to sign the closest approach)
   ///
   /// @return global position by value
-  Vector3D localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
-                         const Vector3D& momentum) const final;
+  Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
+                        const Vector3& momentum) const final;
 
   /// Specified for LineSurface: global to local method without dynamic
   /// memory allocation
@@ -183,10 +182,10 @@ class LineSurface : public Surface {
   /// @param momentum global 3D momentum representation (optionally ignored)
   /// @param tolerance (unused)
   ///
-  /// @return a Result<Vector2D> which can be !ok() if the operation fails
-  Result<Vector2D> globalToLocal(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& momentum,
+  /// @return a Result<Vector2> which can be !ok() if the operation fails
+  Result<Vector2> globalToLocal(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& momentum,
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// @brief Straight line intersection schema
@@ -226,8 +225,8 @@ class LineSurface : public Surface {
   ///
   /// @return is the intersection object
   SurfaceIntersection intersect(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction,
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction,
       const BoundaryCheck& bcheck = false) const final;
 
   /// the pathCorrection for derived classes with thickness
@@ -235,8 +234,8 @@ class LineSurface : public Surface {
   ///
   /// @note input parameters are ignored
   /// @note there's no material associated to the line surface
-  double pathCorrection(const GeometryContext& gctx, const Vector3D& position,
-                        const Vector3D& momentum) const override;
+  double pathCorrection(const GeometryContext& gctx, const Vector3& position,
+                        const Vector3& momentum) const override;
 
   /// This method returns the bounds of the Surface by reference */
   const SurfaceBounds& bounds() const final;
@@ -253,7 +252,7 @@ class LineSurface : public Surface {
   /// @param parameters is the free parameters
   ///
   /// @return Derivative of path length w.r.t. the alignment parameters
-  AlignmentRowVector alignmentToPathDerivative(
+  AlignmentToPathMatrix alignmentToPathDerivative(
       const GeometryContext& gctx, const FreeVector& parameters) const final;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.
@@ -264,8 +263,8 @@ class LineSurface : public Surface {
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
-      const GeometryContext& gctx, const Vector3D& position) const final;
+  ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
+      const GeometryContext& gctx, const Vector3& position) const final;
 
  protected:
   std::shared_ptr<const LineBounds> m_bounds;  ///< bounds (shared)
@@ -277,8 +276,8 @@ class LineSurface : public Surface {
   /// @param position is the global position
   /// @param momentum is the momentum
   /// @param lposition is the local position to be filled
-  bool globalToLocalPlain(const GeometryContext& gctx, const Vector3D& position,
-                          const Vector3D& momentum, Vector2D& lposition) const;
+  bool globalToLocalPlain(const GeometryContext& gctx, const Vector3& position,
+                          const Vector3& momentum, Vector2& lposition) const;
 };
 
 #include "Acts/Surfaces/detail/LineSurface.ipp"

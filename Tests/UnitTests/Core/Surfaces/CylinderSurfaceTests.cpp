@@ -36,8 +36,8 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceConstruction) {
   //
   /// Constructor with transform, radius and halfZ
   double radius(1.0), halfZ(10.), halfPhiSector(M_PI / 8.);
-  Translation3D translation{0., 1., 2.};
-  auto pTransform = Transform3D(translation);
+  Translation3 translation{0., 1., 2.};
+  auto pTransform = Transform3(translation);
   BOOST_CHECK_EQUAL(
       Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ)->type(),
       Surface::Cylinder);
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceConstruction) {
 
   /// Construct with nullptr bounds
   BOOST_CHECK_THROW(auto nullBounds = Surface::makeShared<CylinderSurface>(
-                        Transform3D::Identity(), nullptr),
+                        Transform3::Identity(), nullptr),
                     AssertionFailureException);
 }
 //
@@ -79,8 +79,8 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceConstruction) {
 BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   /// Test clone method
   double radius(1.0), halfZ(10.);
-  Translation3D translation{0., 1., 2.};
-  auto pTransform = Transform3D(translation);
+  Translation3 translation{0., 1., 2.};
+  auto pTransform = Transform3(translation);
   auto cylinderSurfaceObject =
       Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);
   //
@@ -88,18 +88,18 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   BOOST_CHECK_EQUAL(cylinderSurfaceObject->type(), Surface::Cylinder);
   //
   /// Test binningPosition
-  Vector3D binningPosition{0., 1., 2.};
+  Vector3 binningPosition{0., 1., 2.};
   CHECK_CLOSE_ABS(
       cylinderSurfaceObject->binningPosition(testContext, BinningValue::binPhi),
       binningPosition, 1e-9);
   //
   /// Test referenceFrame
   double rootHalf = std::sqrt(0.5);
-  Vector3D globalPosition{rootHalf, 1. - rootHalf, 0.};
-  Vector3D globalPositionZ{rootHalf, 1. - rootHalf, 2.0};
-  Vector3D momentum{15., 15., 15.};
-  Vector3D momentum2{6.6, -3., 2.};
-  RotationMatrix3D expectedFrame;
+  Vector3 globalPosition{rootHalf, 1. - rootHalf, 0.};
+  Vector3 globalPositionZ{rootHalf, 1. - rootHalf, 2.0};
+  Vector3 momentum{15., 15., 15.};
+  Vector3 momentum2{6.6, -3., 2.};
+  RotationMatrix3 expectedFrame;
   expectedFrame << rootHalf, 0., rootHalf, rootHalf, 0., -rootHalf, 0., 1., 0.;
   // check without shift
   CHECK_CLOSE_OR_SMALL(cylinderSurfaceObject->referenceFrame(
@@ -111,14 +111,14 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
                        expectedFrame, 1e-6, 1e-9);
   //
   /// Test normal, given 3D position
-  Vector3D origin{0., 0., 0.};
-  Vector3D normal3D = {0., -1., 0.};
+  Vector3 origin{0., 0., 0.};
+  Vector3 normal3D = {0., -1., 0.};
   CHECK_CLOSE_ABS(cylinderSurfaceObject->normal(testContext, origin), normal3D,
                   1e-9);
 
-  Vector3D pos45deg = {rootHalf, 1 + rootHalf, 0.};
-  Vector3D pos45degZ = {rootHalf, 1 + rootHalf, 4.};
-  Vector3D normal45deg = {rootHalf, rootHalf, 0.};
+  Vector3 pos45deg = {rootHalf, 1 + rootHalf, 0.};
+  Vector3 pos45degZ = {rootHalf, 1 + rootHalf, 4.};
+  Vector3 normal45deg = {rootHalf, rootHalf, 0.};
   // test the normal vector
   CHECK_CLOSE_ABS(cylinderSurfaceObject->normal(testContext, pos45deg),
                   normal45deg, 1e-6 * rootHalf);
@@ -127,14 +127,14 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
                   normal45deg, 1e-6 * rootHalf);
   //
   /// Test normal given 2D rphi position
-  Vector2D positionPiBy2(1.0, 0.);
-  Vector3D normalAtPiBy2{std::cos(1.), std::sin(1.), 0.};
+  Vector2 positionPiBy2(1.0, 0.);
+  Vector3 normalAtPiBy2{std::cos(1.), std::sin(1.), 0.};
   CHECK_CLOSE_ABS(cylinderSurfaceObject->normal(testContext, positionPiBy2),
                   normalAtPiBy2, 1e-9);
 
   //
   /// Test rotational symmetry axis
-  Vector3D symmetryAxis{0., 0., 1.};
+  Vector3 symmetryAxis{0., 0., 1.};
   CHECK_CLOSE_ABS(cylinderSurfaceObject->rotSymmetryAxis(testContext),
                   symmetryAxis, 1e-9);
   //
@@ -143,31 +143,31 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
                     SurfaceBounds::eCylinder);
   //
   /// Test localToGlobal
-  Vector2D localPosition{0., 0.};
+  Vector2 localPosition{0., 0.};
   globalPosition = cylinderSurfaceObject->localToGlobal(
       testContext, localPosition, momentum);
-  Vector3D expectedPosition{1, 1, 2};
+  Vector3 expectedPosition{1, 1, 2};
   BOOST_CHECK_EQUAL(globalPosition, expectedPosition);
   //
   /// Testing globalToLocal
   localPosition = cylinderSurfaceObject
                       ->globalToLocal(testContext, globalPosition, momentum)
                       .value();
-  Vector2D expectedLocalPosition{0., 0.};
+  Vector2 expectedLocalPosition{0., 0.};
   BOOST_CHECK_EQUAL(localPosition, expectedLocalPosition);
   //
   /// Test isOnSurface
-  Vector3D offSurface{100, 1, 2};
+  Vector3 offSurface{100, 1, 2};
   BOOST_CHECK(cylinderSurfaceObject->isOnSurface(testContext, globalPosition,
                                                  momentum, true));
   BOOST_CHECK(!cylinderSurfaceObject->isOnSurface(testContext, offSurface,
                                                   momentum, true));
   //
   /// intersection test
-  Vector3D direction{-1., 0, 0};
+  Vector3 direction{-1., 0, 0};
   auto sfIntersection = cylinderSurfaceObject->intersect(
       testContext, offSurface, direction, false);
-  Intersection3D expectedIntersect{Vector3D{1, 1, 2}, 99.,
+  Intersection3D expectedIntersect{Vector3{1, 1, 2}, 99.,
                                    Intersection3D::Status::reachable};
   BOOST_CHECK(bool(sfIntersection));
   CHECK_CLOSE_ABS(sfIntersection.intersection.position,
@@ -206,8 +206,8 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
 
 BOOST_AUTO_TEST_CASE(CylinderSurfaceEqualityOperators) {
   double radius(1.0), halfZ(10.);
-  Translation3D translation{0., 1., 2.};
-  auto pTransform = Transform3D(translation);
+  Translation3 translation{0., 1., 2.};
+  auto pTransform = Transform3(translation);
   auto cylinderSurfaceObject =
       Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);
   //
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceEqualityOperators) {
       "Create and then assign a CylinderSurface object to the existing one");
   /// Test assignment
   auto assignedCylinderSurface =
-      Surface::makeShared<CylinderSurface>(Transform3D::Identity(), 6.6, 5.4);
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), 6.6, 5.4);
   *assignedCylinderSurface = *cylinderSurfaceObject;
   /// Test equality of assigned to original
   BOOST_CHECK(*assignedCylinderSurface == *cylinderSurfaceObject);
@@ -231,8 +231,8 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceEqualityOperators) {
 BOOST_AUTO_TEST_CASE(CylinderSurfaceExtent) {
   // Some radius and half length
   double radius(1.0), halfZ(10.);
-  Translation3D translation{0., 0., 2.};
-  auto pTransform = Transform3D(translation);
+  Translation3 translation{0., 0., 2.};
+  auto pTransform = Transform3(translation);
   auto cylinderSurface =
       Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);
   // The Extent, let's measure it
@@ -252,19 +252,19 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceExtent) {
 /// Unit test for testing CylinderSurface alignment derivatives
 BOOST_AUTO_TEST_CASE(CylinderSurfaceAlignment) {
   double radius(1.0), halfZ(10.);
-  Translation3D translation{0., 1., 2.};
-  auto pTransform = Transform3D(translation);
+  Translation3 translation{0., 1., 2.};
+  auto pTransform = Transform3(translation);
   auto cylinderSurfaceObject =
       Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);
 
   const auto& rotation = pTransform.rotation();
   // The local frame z axis
-  const Vector3D localZAxis = rotation.col(2);
+  const Vector3 localZAxis = rotation.col(2);
   // Check the local z axis is aligned to global z axis
-  CHECK_CLOSE_ABS(localZAxis, Vector3D(0., 0., 1.), 1e-15);
+  CHECK_CLOSE_ABS(localZAxis, Vector3(0., 0., 1.), 1e-15);
 
   /// Define the track (global) position and direction
-  Vector3D globalPosition{0, 2, 2};
+  Vector3 globalPosition{0, 2, 2};
 
   // Test the derivative of bound track parameters local position w.r.t.
   // position in local 3D Cartesian coordinates
@@ -272,8 +272,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceAlignment) {
       cylinderSurfaceObject->localCartesianToBoundLocalDerivative(
           testContext, globalPosition);
   // Check if the result is as expected
-  LocalCartesianToBoundLocalMatrix expLoc3DToLocBound =
-      LocalCartesianToBoundLocalMatrix::Zero();
+  ActsMatrix<2, 3> expLoc3DToLocBound = ActsMatrix<2, 3>::Zero();
   expLoc3DToLocBound << -1, 0, 0, 0, 0, 1;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
 }

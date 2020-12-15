@@ -30,7 +30,7 @@ double maxRadius = 12.0;
 double minPhi = 0.74195;
 double maxPhi = 1.33970;
 
-Vector2D offset(-2., 2.);
+Vector2 offset(-2., 2.);
 
 // Unit tests for AnnulusBounds constrcuctors
 BOOST_AUTO_TEST_CASE(AnnulusBoundsConstruction) {
@@ -84,19 +84,19 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsProperties) {
 
   /// Test positions inside/outside
   // - start from cartesian (from test drawing)
-  Vector2D inSurfaceXY(7., 7.);
-  Vector2D outsideXY1(5., 5.);
-  Vector2D outsideXY2(10., 3.);
-  Vector2D outsideXY3(10., 10.);
-  Vector2D outsideXY4(4., 10.);
-  std::vector<Vector2D> testPoints = {inSurfaceXY, outsideXY1, outsideXY2,
-                                      outsideXY3, outsideXY4};
+  Vector2 inSurfaceXY(7., 7.);
+  Vector2 outsideXY1(5., 5.);
+  Vector2 outsideXY2(10., 3.);
+  Vector2 outsideXY3(10., 10.);
+  Vector2 outsideXY4(4., 10.);
+  std::vector<Vector2> testPoints = {inSurfaceXY, outsideXY1, outsideXY2,
+                                     outsideXY3, outsideXY4};
 
-  auto toStripFrame = [&](const Vector2D& xy) -> Vector2D {
+  auto toStripFrame = [&](const Vector2& xy) -> Vector2 {
     auto shifted = xy + offset;
     double r = VectorHelpers::perp(shifted);
     double phi = VectorHelpers::phi(shifted);
-    return Vector2D(r, phi);
+    return Vector2(r, phi);
   };
 
   BOOST_CHECK(aBounds.inside(toStripFrame(inSurfaceXY), BoundaryCheck(true)));

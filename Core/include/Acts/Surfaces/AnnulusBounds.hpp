@@ -55,7 +55,7 @@ class AnnulusBounds : public DiscBounds {
   /// @note For @c morigin you need to actually calculate the cartesian
   /// offset
   AnnulusBounds(double minR, double maxR, double minPhiRel, double maxPhiRel,
-                const Vector2D& moduleOrigin = {0, 0},
+                const Vector2& moduleOrigin = {0, 0},
                 double avgPhi = 0) noexcept(false)
       : AnnulusBounds({minR, maxR, minPhiRel, maxPhiRel, avgPhi,
                        moduleOrigin.x(), moduleOrigin.y()}) {}
@@ -81,7 +81,7 @@ class AnnulusBounds : public DiscBounds {
   /// @param lposition Local position (assumed to be in right surface frame)
   /// @param bcheck boundary check directive
   /// @return boolean indicator for the success of this operation
-  virtual bool inside(const Vector2D& lposition,
+  virtual bool inside(const Vector2& lposition,
                       const BoundaryCheck& bcheck) const final;
 
   /// Outstream operator
@@ -118,13 +118,13 @@ class AnnulusBounds : public DiscBounds {
   /// considered. The module origin needs to consider the rotation introduced by
   /// @c averagePhi
   /// @return The origin of the local frame
-  Vector2D moduleOrigin() const;
+  Vector2 moduleOrigin() const;
 
   /// This method returns the four corners of the bounds in polar coordinates
   /// Starting from the upper right (max R, pos locX) and proceding clock-wise
   /// i.e. (max R; pos locX), (min R; pos locX), (min R; neg loc X), (max R: neg
   /// locX)
-  std::vector<Vector2D> corners() const;
+  std::vector<Vector2> corners() const;
 
   /// This method returns the xy coordinates of the four corners of the
   /// bounds in module coorindates (in x/y)
@@ -139,7 +139,7 @@ class AnnulusBounds : public DiscBounds {
   ///  which may slightly alter the number of segments returned
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2D> vertices(unsigned int lseg) const;
+  std::vector<Vector2> vertices(unsigned int lseg) const;
 
   /// This method returns inner radius
   double rMin() const final;
@@ -151,27 +151,27 @@ class AnnulusBounds : public DiscBounds {
   std::array<double, eSize> m_values;
 
   // @TODO: Does this need to be in bound values?
-  Vector2D m_moduleOrigin;
-  Vector2D m_shiftXY;  // == -m_moduleOrigin
-  Vector2D m_shiftPC;
-  Transform2D m_rotationStripPC;
-  Transform2D m_translation;
+  Vector2 m_moduleOrigin;
+  Vector2 m_shiftXY;  // == -m_moduleOrigin
+  Vector2 m_shiftPC;
+  Transform2 m_rotationStripPC;
+  Transform2 m_translation;
 
   // Vectors needed for inside checking
-  Vector2D m_outLeftStripPC;
-  Vector2D m_inLeftStripPC;
-  Vector2D m_outRightStripPC;
-  Vector2D m_inRightStripPC;
+  Vector2 m_outLeftStripPC;
+  Vector2 m_inLeftStripPC;
+  Vector2 m_outRightStripPC;
+  Vector2 m_inRightStripPC;
 
-  Vector2D m_outLeftModulePC;
-  Vector2D m_inLeftModulePC;
-  Vector2D m_outRightModulePC;
-  Vector2D m_inRightModulePC;
+  Vector2 m_outLeftModulePC;
+  Vector2 m_inLeftModulePC;
+  Vector2 m_outRightModulePC;
+  Vector2 m_inRightModulePC;
 
-  Vector2D m_outLeftStripXY;
-  Vector2D m_inLeftStripXY;
-  Vector2D m_outRightStripXY;
-  Vector2D m_inRightStripXY;
+  Vector2 m_outLeftStripXY;
+  Vector2 m_inLeftStripXY;
+  Vector2 m_outRightStripXY;
+  Vector2 m_inRightStripXY;
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
@@ -185,7 +185,7 @@ class AnnulusBounds : public DiscBounds {
   /// @param tolR tolerance on the radius
   /// @param tolPhi tolerance on the polar angle phi
   /// @return boolean indicator for the success of this operation
-  virtual bool inside(const Vector2D& lposition, double tolR,
+  virtual bool inside(const Vector2& lposition, double tolR,
                       double tolPhi) const final;
 
   /// Transform the strip cartesien
@@ -193,15 +193,14 @@ class AnnulusBounds : public DiscBounds {
   ///
   /// @param vStripXy the position in the cartesian strip system
   /// @return the poistion in the module polar coordiante system
-  Vector2D stripXYToModulePC(const Vector2D& vStripXY) const;
+  Vector2 stripXYToModulePC(const Vector2& vStripXY) const;
 
   /// Private helper method
-  Vector2D closestOnSegment(const Vector2D& a, const Vector2D& b,
-                            const Vector2D& p,
-                            const ActsSymMatrixD<2>& weight) const;
+  Vector2 closestOnSegment(const Vector2& a, const Vector2& b, const Vector2& p,
+                           const SymMatrix2& weight) const;
 
   /// Private helper mehtod
-  double squaredNorm(const Vector2D& v, const ActsSymMatrixD<2>& weight) const;
+  double squaredNorm(const Vector2& v, const SymMatrix2& weight) const;
 };
 
 inline SurfaceBounds::BoundsType AnnulusBounds::type() const {

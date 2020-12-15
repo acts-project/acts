@@ -18,7 +18,7 @@ namespace Acts {
 template <typename Cluster>
 struct SpacePoint {
   /// Storage of a point in space.
-  Vector3D vector;
+  Vector3 vector;
   /// Storage of the cluster on a surface
   std::vector<const Cluster*> clusterModule;
 

@@ -46,9 +46,9 @@ using Grid2D =
 using Grid3D =
     Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
 using MaterialGrid2D =
-    Acts::detail::Grid<Acts::ActsVector<float, 5>, EAxis, EAxis>;
+    Acts::detail::Grid<Acts::Material::ParametersVector, EAxis, EAxis>;
 using MaterialGrid3D =
-    Acts::detail::Grid<Acts::ActsVector<float, 5>, EAxis, EAxis, EAxis>;
+    Acts::detail::Grid<Acts::Material::ParametersVector, EAxis, EAxis, EAxis>;
 
 }  // namespace
 
@@ -206,9 +206,9 @@ void Acts::VolumeMaterialMapper::collectMaterialSurfaces(
 
 void Acts::VolumeMaterialMapper::createExtraHits(
     RecordedMaterialVolumePoint& matPoint, Acts::MaterialSlab properties,
-    Vector3D position, Vector3D direction) const {
-  std::vector<Acts::Vector3D> extraPosition;
-  std::vector<Acts::Vector3D> extraRemainderPositions;
+    Vector3 position, Vector3 direction) const {
+  std::vector<Acts::Vector3> extraPosition;
+  std::vector<Acts::Vector3> extraRemainderPositions;
 
   int volumeStep = floor(properties.thickness() / m_cfg.mappingStep);
   float remainder = properties.thickness() - m_cfg.mappingStep * volumeStep;
@@ -246,7 +246,7 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
     } else if (mState.materialBin[recMaterial.first].dimensions() == 2) {
       // Accumulate all the recorded material onto a grid
       ACTS_DEBUG("Grid material volume");
-      std::function<Acts::Vector2D(Acts::Vector3D)> transfoGlobalToLocal;
+      std::function<Acts::Vector2(Acts::Vector3)> transfoGlobalToLocal;
       Grid2D Grid = createGrid2D(mState.materialBin[recMaterial.first],
                                  transfoGlobalToLocal);
       MaterialGrid2D matGrid =
@@ -258,7 +258,7 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
     } else if (mState.materialBin[recMaterial.first].dimensions() == 3) {
       // Accumulate all the recorded material onto a grid
       ACTS_DEBUG("Grid material volume");
-      std::function<Acts::Vector3D(Acts::Vector3D)> transfoGlobalToLocal;
+      std::function<Acts::Vector3(Acts::Vector3)> transfoGlobalToLocal;
       Grid3D Grid = createGrid3D(mState.materialBin[recMaterial.first],
                                  transfoGlobalToLocal);
       MaterialGrid3D matGrid =
@@ -330,8 +330,8 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   auto currentRecMaterial = mState.recordedMaterial.end();
 
   // store end position of the last material slab
-  Acts::Vector3D lastPositionEnd = {0, 0, 0};
-  Acts::Vector3D direction = {0, 0, 0};
+  Acts::Vector3 lastPositionEnd = {0, 0, 0};
+  Acts::Vector3 direction = {0, 0, 0};
 
   if (volIter != mappingVolumes.end()) {
     lastPositionEnd = volIter->position;

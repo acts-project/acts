@@ -24,7 +24,7 @@ namespace ActsFatras {
 /// A brief struct that allows to apply a surface bound mask.
 struct PlanarSurfaceMask {
   /// Shorthand for a 2-d segment;
-  using Segment2D = std::array<Acts::Vector2D, 2>;
+  using Segment2D = std::array<Acts::Vector2, 2>;
 
   /// Apply the mask on the segment
   /// - If the semgent is full inside the surface, return unchanged
@@ -54,7 +54,7 @@ struct PlanarSurfaceMask {
   ///
   /// @return a result wrapping a segment
   Acts::Result<Segment2D> polygonMask(
-      const std::vector<Acts::Vector2D>& vertices, const Segment2D& segment,
+      const std::vector<Acts::Vector2>& vertices, const Segment2D& segment,
       bool firstInside) const;
 
   /// Apply the mask of a Radial disk

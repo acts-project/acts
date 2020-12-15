@@ -61,20 +61,20 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
   std::shared_ptr<const PlanarBounds> moduleBounds(
       new RectangleBounds(m_activeBounds->boundingBox()));
   // - they are separated by half a thickness in z
-  auto readoutPlaneTransform = Transform3D::Identity();
-  auto counterPlaneTransform = Transform3D::Identity();
+  auto readoutPlaneTransform = Transform3::Identity();
+  auto counterPlaneTransform = Transform3::Identity();
   // readout and counter readout bounds, the bounds of the readout plane are
   // like the active ones
   std::shared_ptr<const PlanarBounds> readoutPlaneBounds = moduleBounds;
   std::shared_ptr<const PlanarBounds> counterPlaneBounds(nullptr);
   // the transform of the readout plane is always centric
   readoutPlaneTransform.translation() =
-      Vector3D(0., 0., readoutDirection * halfThickness);
+      Vector3(0., 0., readoutDirection * halfThickness);
   // no lorentz angle and everything is straight-forward
   if (lorentzAngle == 0.) {
     counterPlaneBounds = moduleBounds;
     counterPlaneTransform.translation() =
-        Vector3D(0., 0., -readoutDirection * halfThickness);
+        Vector3(0., 0., -readoutDirection * halfThickness);
   } else {
     // lorentz reduced Bounds
     double lorentzReducedHalfX =
@@ -87,7 +87,7 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
     // angle
     double counterPlaneShift = -readoutDirection * lorentzPlaneShiftX;
     counterPlaneTransform.translation() =
-        Vector3D(counterPlaneShift, 0., -readoutDirection * halfThickness);
+        Vector3(counterPlaneShift, 0., -readoutDirection * halfThickness);
   }
   // - build the readout & counter readout surfaces
   boundarySurfaces.push_back(Surface::makeShared<PlaneSurface>(
@@ -116,15 +116,15 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
                                     lorentzPlaneHalfX));
 
   // now the rotation matrix for the xBins
-  RotationMatrix3D xBinRotationMatrix;
-  xBinRotationMatrix.col(0) = Vector3D::UnitY();
-  xBinRotationMatrix.col(1) = Vector3D::UnitZ();
-  xBinRotationMatrix.col(2) = Vector3D::UnitX();
+  RotationMatrix3 xBinRotationMatrix;
+  xBinRotationMatrix.col(0) = Vector3::UnitY();
+  xBinRotationMatrix.col(1) = Vector3::UnitZ();
+  xBinRotationMatrix.col(2) = Vector3::UnitX();
   // now the lorentz plane rotation should be the xBin rotation, rotated by the
   // lorentz angle around y
-  RotationMatrix3D lorentzPlaneRotationMatrix =
+  RotationMatrix3 lorentzPlaneRotationMatrix =
       (lorentzAngle != 0.)
-          ? xBinRotationMatrix * AngleAxis3D(lorentzAngle, Vector3D::UnitX())
+          ? xBinRotationMatrix * AngleAxis3(lorentzAngle, Vector3::UnitX())
           : xBinRotationMatrix;
 
   // reserve, it's always (number of bins-1) as the boundaries are within the
@@ -147,16 +147,16 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
            (ibinx == m_binUtility->bins(0) &&
             readoutDirection * lorentzAngle < 0));
       // set the low boundary parameters : position & rotation
-      Vector3D boundaryXPosition =
+      Vector3 boundaryXPosition =
           boundaryStraight
-              ? Vector3D(cPosX, 0., 0.)
-              : Vector3D(cPosX - readoutDirection * lorentzPlaneShiftX, 0., 0.);
+              ? Vector3(cPosX, 0., 0.)
+              : Vector3(cPosX - readoutDirection * lorentzPlaneShiftX, 0., 0.);
       // rotation of the boundary: striaght or lorentz
-      const RotationMatrix3D& boundaryXRotation =
+      const RotationMatrix3& boundaryXRotation =
           boundaryStraight ? xBinRotationMatrix : lorentzPlaneRotationMatrix;
       // build the rotation from it
       auto boundaryXTransform =
-          Transform3D(Translation3D(boundaryXPosition) * boundaryXRotation);
+          Transform3(Translation3(boundaryXPosition) * boundaryXRotation);
       // the correct bounds for this
       std::shared_ptr<const PlanarBounds> boundaryXBounds =
           boundaryStraight ? xBinBounds : lorentzPlaneBounds;
@@ -166,10 +166,10 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
       // (ii) this is the in between bins  --- ( 1 <= ibin < m_mbnsX )
     } else {
       // shift by the lorentz angle
-      Vector3D lorentzPlanePosition(
+      Vector3 lorentzPlanePosition(
           cPosX - readoutDirection * lorentzPlaneShiftX, 0., 0.);
-      auto lorentzPlaneTransform = Transform3D(
-          Translation3D(lorentzPlanePosition) * lorentzPlaneRotationMatrix);
+      auto lorentzPlaneTransform = Transform3(
+          Translation3(lorentzPlanePosition) * lorentzPlaneRotationMatrix);
       // lorentz plane surfaces
       segmentationSurfacesX.push_back(Surface::makeShared<PlaneSurface>(
           lorentzPlaneTransform, lorentzPlaneBounds));
@@ -179,10 +179,10 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
   // (C) - bin Y surfaces - everything is defined
   // -----------------------------------------------------------
   // now the rotation matrix for the yBins - anticyclic
-  RotationMatrix3D yBinRotationMatrix;
-  yBinRotationMatrix.col(0) = Vector3D::UnitX();
-  yBinRotationMatrix.col(1) = Vector3D::UnitZ();
-  yBinRotationMatrix.col(2) = Vector3D(0., -1., 0.);
+  RotationMatrix3 yBinRotationMatrix;
+  yBinRotationMatrix.col(0) = Vector3::UnitX();
+  yBinRotationMatrix.col(1) = Vector3::UnitZ();
+  yBinRotationMatrix.col(2) = Vector3(0., -1., 0.);
   // easy stuff first, constant pitch in Y
   double pitchY =
       2. * m_activeBounds->boundingBox().halfLengthY() / m_binUtility->bins(1);
@@ -196,10 +196,10 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
     // the position of the bin surface
     double binPosY =
         -m_activeBounds->boundingBox().halfLengthY() + ibiny * pitchY;
-    Vector3D binSurfaceCenter(0., binPosY, 0.);
+    Vector3 binSurfaceCenter(0., binPosY, 0.);
     // the binning transform
     auto binTransform =
-        Transform3D(Translation3D(binSurfaceCenter) * yBinRotationMatrix);
+        Transform3(Translation3(binSurfaceCenter) * yBinRotationMatrix);
     // these are the boundaries
     if (ibiny == 0 || ibiny == m_binUtility->bins(1)) {
       boundarySurfaces.push_back(
@@ -211,7 +211,7 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
   }
 }
 
-Acts::Vector2D Acts::CartesianSegmentation::cellPosition(
+Acts::Vector2 Acts::CartesianSegmentation::cellPosition(
     const DigitizationCell& dCell) const {
   double bX = m_binUtility->bins(0) > 1
                   ? m_binUtility->binningData()[0].center(dCell.channel0)
@@ -219,15 +219,15 @@ Acts::Vector2D Acts::CartesianSegmentation::cellPosition(
   double bY = m_binUtility->bins(1) > 1
                   ? m_binUtility->binningData()[1].center(dCell.channel1)
                   : 0.;
-  return Vector2D(bX, bY);
+  return Vector2(bX, bY);
 }
 
 /** Get the digitization cell from 3D position, it used the projection to the
  * readout surface to estimate the 2D positon */
 Acts::DigitizationStep Acts::CartesianSegmentation::digitizationStep(
-    const Vector3D& startStep, const Vector3D& endStep, double halfThickness,
+    const Vector3& startStep, const Vector3& endStep, double halfThickness,
     int readoutDirection, double lorentzAngle) const {
-  Vector3D stepCenter = 0.5 * (startStep + endStep);
+  Vector3 stepCenter = 0.5 * (startStep + endStep);
   // take the full drift length
   // this is the absolute drift in z
   double driftInZ = halfThickness - readoutDirection * stepCenter.z();
@@ -236,10 +236,10 @@ Acts::DigitizationStep Acts::CartesianSegmentation::digitizationStep(
   // project to parameter the readout surface
   double lorentzDeltaX = readoutDirection * driftInZ * tan(lorentzAngle);
   // the projected center, it has the lorentz shift applied
-  Vector2D stepCenterProjected(stepCenter.x() + lorentzDeltaX, stepCenter.y());
+  Vector2 stepCenterProjected(stepCenter.x() + lorentzDeltaX, stepCenter.y());
   // the cell & its center
   Acts::DigitizationCell dCell = cell(stepCenterProjected);
-  Vector2D cellCenter = cellPosition(dCell);
+  Vector2 cellCenter = cellPosition(dCell);
   // we are ready to return what we have
   return DigitizationStep((endStep - startStep).norm(), driftLength, dCell,
                           startStep, endStep, stepCenterProjected, cellCenter);

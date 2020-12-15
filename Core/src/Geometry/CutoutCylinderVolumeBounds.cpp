@@ -24,7 +24,7 @@
 #include <ostream>
 #include <vector>
 
-bool Acts::CutoutCylinderVolumeBounds::inside(const Acts::Vector3D& gpos,
+bool Acts::CutoutCylinderVolumeBounds::inside(const Acts::Vector3& gpos,
                                               double tol) const {
   // first check whether we are in the outer envelope at all (ignore r_med)
   using VectorHelpers::perp;
@@ -47,7 +47,7 @@ bool Acts::CutoutCylinderVolumeBounds::inside(const Acts::Vector3D& gpos,
 }
 
 Acts::OrientedSurfaces Acts::CutoutCylinderVolumeBounds::orientedSurfaces(
-    const Transform3D& transform) const {
+    const Transform3& transform) const {
   OrientedSurfaces oSurfaces;
 
   if (get(eMinR) == 0.) {
@@ -72,12 +72,12 @@ Acts::OrientedSurfaces Acts::CutoutCylinderVolumeBounds::orientedSurfaces(
   double zChoke = get(eHalfLengthZcutout) + hlChoke;
 
   if (m_innerCylinderBounds != nullptr) {
-    auto posChokeTrf = transform * Translation3D(Vector3D(0, 0, zChoke));
+    auto posChokeTrf = transform * Translation3(Vector3(0, 0, zChoke));
     auto posInner = Surface::makeShared<CylinderSurface>(posChokeTrf,
                                                          m_innerCylinderBounds);
     oSurfaces.at(index7) = OrientedSurface(std::move(posInner), forward);
 
-    auto negChokeTrf = transform * Translation3D(Vector3D(0, 0, -zChoke));
+    auto negChokeTrf = transform * Translation3(Vector3(0, 0, -zChoke));
     auto negInner = Surface::makeShared<CylinderSurface>(negChokeTrf,
                                                          m_innerCylinderBounds);
     oSurfaces.at(index6) = OrientedSurface(std::move(negInner), forward);
@@ -85,14 +85,14 @@ Acts::OrientedSurfaces Acts::CutoutCylinderVolumeBounds::orientedSurfaces(
 
   // Two Outer disks
   auto posOutDiscTrf =
-      transform * Translation3D(Vector3D(0, 0, get(eHalfLengthZ)));
+      transform * Translation3(Vector3(0, 0, get(eHalfLengthZ)));
   auto posOutDisc =
       Surface::makeShared<DiscSurface>(posOutDiscTrf, m_outerDiscBounds);
   oSurfaces.at(positiveFaceXY) =
       OrientedSurface(std::move(posOutDisc), backward);
 
   auto negOutDiscTrf =
-      transform * Translation3D(Vector3D(0, 0, -get(eHalfLengthZ)));
+      transform * Translation3(Vector3(0, 0, -get(eHalfLengthZ)));
   auto negOutDisc =
       Surface::makeShared<DiscSurface>(negOutDiscTrf, m_outerDiscBounds);
   oSurfaces.at(negativeFaceXY) =
@@ -100,13 +100,13 @@ Acts::OrientedSurfaces Acts::CutoutCylinderVolumeBounds::orientedSurfaces(
 
   // Two Inner disks
   auto posInDiscTrf =
-      transform * Translation3D(Vector3D(0, 0, get(eHalfLengthZcutout)));
+      transform * Translation3(Vector3(0, 0, get(eHalfLengthZcutout)));
   auto posInDisc =
       Surface::makeShared<DiscSurface>(posInDiscTrf, m_innerDiscBounds);
   oSurfaces.at(index5) = OrientedSurface(std::move(posInDisc), forward);
 
   auto negInDiscTrf =
-      transform * Translation3D(Vector3D(0, 0, -get(eHalfLengthZcutout)));
+      transform * Translation3(Vector3(0, 0, -get(eHalfLengthZcutout)));
   auto negInDisc =
       Surface::makeShared<DiscSurface>(negInDiscTrf, m_innerDiscBounds);
   oSurfaces.at(index4) = OrientedSurface(std::move(negInDisc), backward);
@@ -115,9 +115,9 @@ Acts::OrientedSurfaces Acts::CutoutCylinderVolumeBounds::orientedSurfaces(
 }
 
 Acts::Volume::BoundingBox Acts::CutoutCylinderVolumeBounds::boundingBox(
-    const Acts::Transform3D* trf, const Acts::Vector3D& envelope,
+    const Acts::Transform3* trf, const Acts::Vector3& envelope,
     const Acts::Volume* entity) const {
-  Vector3D vmin, vmax;
+  Vector3 vmin, vmax;
 
   // no phi sector is possible, so this is just the outer size of
   // the cylinder

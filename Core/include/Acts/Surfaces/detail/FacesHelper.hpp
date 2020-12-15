@@ -32,7 +32,7 @@ struct FacesHelper {
   /// @param centerLast Boolean indicator if the center is given for
   /// a better triangulation method as last element of the vector
   static std::pair<FaceVector, FaceVector> convexFaceMesh(
-      const std::vector<Vector3D>& vertices, bool centerLast = false) {
+      const std::vector<Vector3>& vertices, bool centerLast = false) {
     FaceVector faces;
     FaceVector triangularMesh;
     // Write the face
@@ -64,7 +64,7 @@ struct FacesHelper {
   /// @param vertices The vector of vertices
   /// @param fullTwoPi The indicator if the concentric face is closed
   static std::pair<FaceVector, FaceVector> cylindricalFaceMesh(
-      const std::vector<Vector3D>& vertices, bool fullTwoPi = true) {
+      const std::vector<Vector3>& vertices, bool fullTwoPi = true) {
     FaceVector faces;
     FaceVector triangularMesh;
     size_t nqfaces = 0.5 * vertices.size();

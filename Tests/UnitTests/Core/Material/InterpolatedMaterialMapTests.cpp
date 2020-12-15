@@ -24,10 +24,10 @@ namespace Acts {
 namespace Test {
 
 constexpr unsigned int dim = 2;
-using grid_t = detail::Grid<ActsVector<float, 5>, detail::EquidistantAxis,
-                            detail::EquidistantAxis>;
+using grid_t = detail::Grid<Acts::Material::ParametersVector,
+                            detail::EquidistantAxis, detail::EquidistantAxis>;
 
-ActsVectorD<dim> trafoGlobalToLocal(const Vector3D& global) {
+ActsVector<dim> trafoGlobalToLocal(const Vector3& global) {
   return {global.x(), global.y()};
 }
 
@@ -35,21 +35,22 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_MaterialCell_test) {
   // Build a material cell
   std::array<double, dim> lowerLeft{{0., 0.}};
   std::array<double, dim> upperRight{{1., 1.}};
-  ActsVector<float, 5> mat;
+  Acts::Material::ParametersVector mat;
   mat << 1, 2, 3, 4, 5;
-  std::array<ActsVector<float, 5>, 4> matArray = {mat, mat, mat, mat};
+  std::array<Acts::Material::ParametersVector, 4> matArray = {mat, mat, mat,
+                                                              mat};
 
   MaterialMapper<grid_t>::MaterialCell materialCell(
       trafoGlobalToLocal, lowerLeft, upperRight, matArray);
 
   // Test InterpolatedMaterialMap::MaterialCell<DIM>::isInside method
-  BOOST_CHECK_EQUAL(materialCell.isInside(Vector3D(0.5, 0.5, 0.5)), true);
-  BOOST_CHECK_EQUAL(materialCell.isInside(Vector3D(-1., 0., 0.)), false);
-  BOOST_CHECK_EQUAL(materialCell.isInside(Vector3D(0., -1., 0.)), false);
-  BOOST_CHECK_EQUAL(materialCell.isInside(Vector3D(0., 0., -1.)), true);
-  BOOST_CHECK_EQUAL(materialCell.isInside(Vector3D(2., 0., 0.)), false);
-  BOOST_CHECK_EQUAL(materialCell.isInside(Vector3D(0., 2., 0.)), false);
-  BOOST_CHECK_EQUAL(materialCell.isInside(Vector3D(0., 0., 2.)), true);
+  BOOST_CHECK_EQUAL(materialCell.isInside(Vector3(0.5, 0.5, 0.5)), true);
+  BOOST_CHECK_EQUAL(materialCell.isInside(Vector3(-1., 0., 0.)), false);
+  BOOST_CHECK_EQUAL(materialCell.isInside(Vector3(0., -1., 0.)), false);
+  BOOST_CHECK_EQUAL(materialCell.isInside(Vector3(0., 0., -1.)), true);
+  BOOST_CHECK_EQUAL(materialCell.isInside(Vector3(2., 0., 0.)), false);
+  BOOST_CHECK_EQUAL(materialCell.isInside(Vector3(0., 2., 0.)), false);
+  BOOST_CHECK_EQUAL(materialCell.isInside(Vector3(0., 0., 2.)), true);
 
   // Test the getter
   CHECK_CLOSE_REL(materialCell.getMaterial({0.5, 0.5, 0.5}), Material(mat),
@@ -63,7 +64,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_MaterialMapper_test) {
 
   // The material mapping grid
   auto grid = grid_t(std::make_tuple(std::move(axisX), std::move(axisY)));
-  ActsVector<float, 5> mat;
+  Acts::Material::ParametersVector mat;
   mat << 1, 2, 3, 4, 5;
 
   for (size_t i = 0; i < grid.size(); i++) {
@@ -95,13 +96,13 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_MaterialMapper_test) {
   CHECK_CLOSE_REL(limits[1], 3., 1e-4);
 
   // Test the inside check
-  BOOST_CHECK_EQUAL(matMap.isInside(Vector3D(1., 1., 1.)), true);
-  BOOST_CHECK_EQUAL(matMap.isInside(Vector3D(-1., 0., 0.)), false);
-  BOOST_CHECK_EQUAL(matMap.isInside(Vector3D(0., -1., 0.)), false);
-  BOOST_CHECK_EQUAL(matMap.isInside(Vector3D(0., 0., -1.)), true);
-  BOOST_CHECK_EQUAL(matMap.isInside(Vector3D(4., 0., 0.)), false);
-  BOOST_CHECK_EQUAL(matMap.isInside(Vector3D(0., 4., 0.)), false);
-  BOOST_CHECK_EQUAL(matMap.isInside(Vector3D(0., 0., 4.)), true);
+  BOOST_CHECK_EQUAL(matMap.isInside(Vector3(1., 1., 1.)), true);
+  BOOST_CHECK_EQUAL(matMap.isInside(Vector3(-1., 0., 0.)), false);
+  BOOST_CHECK_EQUAL(matMap.isInside(Vector3(0., -1., 0.)), false);
+  BOOST_CHECK_EQUAL(matMap.isInside(Vector3(0., 0., -1.)), true);
+  BOOST_CHECK_EQUAL(matMap.isInside(Vector3(4., 0., 0.)), false);
+  BOOST_CHECK_EQUAL(matMap.isInside(Vector3(0., 4., 0.)), false);
+  BOOST_CHECK_EQUAL(matMap.isInside(Vector3(0., 0., 4.)), true);
 
   // Test the grid getter
   auto matMapGrid = matMap.getGrid();
@@ -122,7 +123,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_test) {
 
   // The material mapping grid
   auto grid = grid_t(std::make_tuple(std::move(axisX), std::move(axisY)));
-  ActsVector<float, 5> mat;
+  Acts::Material::ParametersVector mat;
   mat << 1, 2, 3, 4, 5;
 
   for (size_t i = 0; i < grid.size(); i++) {
@@ -138,24 +139,25 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_test) {
   // Build a material cell
   std::array<double, dim> lowerLeft{{0., 0.}};
   std::array<double, dim> upperRight{{1., 1.}};
-  std::array<ActsVector<float, 5>, 4> matArray = {mat, mat, mat, mat};
+  std::array<Acts::Material::ParametersVector, 4> matArray = {mat, mat, mat,
+                                                              mat};
 
   MaterialMapper<grid_t>::MaterialCell materialCell(
       trafoGlobalToLocal, lowerLeft, upperRight, matArray);
   InterpolatedMaterialMap<MaterialMapper<grid_t>>::Cache cache;
   cache.matCell = materialCell;
   cache.initialized = true;
-  CHECK_CLOSE_REL(ipolMatMap.getMaterial(Vector3D(0.5, 0.5, 0.5), cache),
+  CHECK_CLOSE_REL(ipolMatMap.getMaterial(Vector3(0.5, 0.5, 0.5), cache),
                   Material(mat), 1e-4);
 
   // Test the inside check
-  BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3D(1., 1., 1.)), true);
-  BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3D(-1., 0., 0.)), false);
-  BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3D(0., -1., 0.)), false);
-  BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3D(0., 0., -1.)), true);
-  BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3D(4., 0., 0.)), false);
-  BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3D(0., 4., 0.)), false);
-  BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3D(0., 0., 4.)), true);
+  BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3(1., 1., 1.)), true);
+  BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3(-1., 0., 0.)), false);
+  BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3(0., -1., 0.)), false);
+  BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3(0., 0., -1.)), true);
+  BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3(4., 0., 0.)), false);
+  BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3(0., 4., 0.)), false);
+  BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3(0., 0., 4.)), true);
 }
 }  // namespace Test
 

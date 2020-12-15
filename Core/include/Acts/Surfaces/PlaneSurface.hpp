@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
@@ -47,14 +46,14 @@ class PlaneSurface : public Surface {
   /// @param other is the source cone surface
   /// @param transf is the additional transfrom applied after copying
   PlaneSurface(const GeometryContext& gctx, const PlaneSurface& other,
-               const Transform3D& transf);
+               const Transform3& transf);
 
   /// Dedicated Constructor with normal vector
   /// This is for curvilinear surfaces which are by definition boundless
   ///
   /// @param center is the center position of the surface
   /// @param normal is thenormal vector of the plane surface
-  PlaneSurface(const Vector3D& center, const Vector3D& normal);
+  PlaneSurface(const Vector3& center, const Vector3& normal);
 
   /// Constructor from DetectorElementBase : Element proxy
   ///
@@ -67,7 +66,7 @@ class PlaneSurface : public Surface {
   ///
   /// @param htrans transform in 3D that positions this surface
   /// @param pbounds bounds object to describe the actual surface area
-  PlaneSurface(const Transform3D& htrans,
+  PlaneSurface(const Transform3& htrans,
                std::shared_ptr<const PlanarBounds> pbounds = nullptr);
 
  public:
@@ -84,9 +83,9 @@ class PlaneSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position is ignored
   ///
-  /// return a Vector3D by value
-  Vector3D normal(const GeometryContext& gctx,
-                  const Vector2D& lposition) const final;
+  /// return a Vector3 by value
+  Vector3 normal(const GeometryContext& gctx,
+                 const Vector2& lposition) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -98,8 +97,8 @@ class PlaneSurface : public Surface {
   /// @param bValue is the binning type to be used
   ///
   /// @return position that can beused for this binning
-  Vector3D binningPosition(const GeometryContext& gctx,
-                           BinningValue bValue) const final;
+  Vector3 binningPosition(const GeometryContext& gctx,
+                          BinningValue bValue) const final;
 
   /// Return the surface type
   SurfaceType type() const override;
@@ -116,8 +115,8 @@ class PlaneSurface : public Surface {
   /// @param momentum global 3D momentum representation (optionally ignored)
   ///
   /// @return the global position by value
-  Vector3D localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
-                         const Vector3D& momentum) const override;
+  Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
+                        const Vector3& momentum) const override;
 
   /// Global to local transformation
   /// For planar surfaces the momentum is ignroed in the global to local
@@ -131,10 +130,10 @@ class PlaneSurface : public Surface {
   /// @param tolerance optional tolerance within which a point is considered
   /// valid on surface
   ///
-  /// @return a Result<Vector2D> which can be !ok() if the operation fails
-  Result<Vector2D> globalToLocal(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& momentum,
+  /// @return a Result<Vector2> which can be !ok() if the operation fails
+  Result<Vector2> globalToLocal(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& momentum,
       double tolerance = s_onSurfaceTolerance) const override;
 
   /// Method that calculates the correction due to incident angle
@@ -145,8 +144,8 @@ class PlaneSurface : public Surface {
   /// @note this is the final implementation of the pathCorrection function
   ///
   /// @return a double representing the scaling factor
-  double pathCorrection(const GeometryContext& gctx, const Vector3D& position,
-                        const Vector3D& direction) const final;
+  double pathCorrection(const GeometryContext& gctx, const Vector3& position,
+                        const Vector3& direction) const final;
 
   /// @brief Straight line intersection
   ///
@@ -175,8 +174,8 @@ class PlaneSurface : public Surface {
   ///
   /// @return the SurfaceIntersection object
   SurfaceIntersection intersect(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction,
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction,
       const BoundaryCheck& bcheck = false) const final;
 
   /// Return a Polyhedron for the surfaces
@@ -201,8 +200,8 @@ class PlaneSurface : public Surface {
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
-      const GeometryContext& gctx, const Vector3D& position) const final;
+  ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
+      const GeometryContext& gctx, const Vector3& position) const final;
 
  protected:
   /// the bounds of this surface

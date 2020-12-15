@@ -207,9 +207,9 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
       m_step_dz.push_back(mint.direction.z());
 
       if (m_cfg.prePostStep) {
-        Acts::Vector3D prePos =
+        Acts::Vector3 prePos =
             mint.position - 0.5 * mint.pathCorrection * mint.direction;
-        Acts::Vector3D posPos =
+        Acts::Vector3 posPos =
             mint.position + 0.5 * mint.pathCorrection * mint.direction;
         m_step_sx.push_back(prePos.x());
         m_step_sy.push_back(prePos.y());

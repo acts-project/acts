@@ -44,8 +44,8 @@ BoundVector transformFreeToBoundParameters(const FreeVector& freeParams,
 /// @warning The position is assumed to be on the surface. If this is not
 ///          the case, the behaviour is undefined.
 BoundVector transformFreeToBoundParameters(
-    const Vector3D& position, FreeScalar time, const Vector3D& direction,
-    FreeScalar qOverP, const Surface& surface, const GeometryContext& geoCtx);
+    const Vector3& position, ActsScalar time, const Vector3& direction,
+    ActsScalar qOverP, const Surface& surface, const GeometryContext& geoCtx);
 
 /// Convert direction to curvilinear track parameters.
 ///
@@ -57,9 +57,9 @@ BoundVector transformFreeToBoundParameters(
 /// @note The parameters are assumed to be defined at the origin of the
 ///       curvilinear frame derived from the direction vector. The local
 ///       coordinates are zero by construction.
-BoundVector transformFreeToCurvilinearParameters(FreeScalar time,
-                                                 const Vector3D& direction,
-                                                 FreeScalar qOverP);
+BoundVector transformFreeToCurvilinearParameters(ActsScalar time,
+                                                 const Vector3& direction,
+                                                 ActsScalar qOverP);
 
 /// Convert direction angles to curvilinear track parameters.
 ///
@@ -72,10 +72,10 @@ BoundVector transformFreeToCurvilinearParameters(FreeScalar time,
 /// @note The parameters are assumed to be defined at the origin of the
 ///       curvilinear frame derived from the direction angles. The local
 ///       coordinates are zero by construction.
-BoundVector transformFreeToCurvilinearParameters(FreeScalar time,
-                                                 FreeScalar phi,
-                                                 FreeScalar theta,
-                                                 FreeScalar qOverP);
+BoundVector transformFreeToCurvilinearParameters(ActsScalar time,
+                                                 ActsScalar phi,
+                                                 ActsScalar theta,
+                                                 ActsScalar qOverP);
 
 }  // namespace detail
 }  // namespace Acts

@@ -119,7 +119,7 @@ ActsExamples::SimParticleContainer ActsExamples::Pythia8Generator::operator()(
     particle.setPosition4(pos4);
     // normalization/ units are not import for the direction
     particle.setDirection(genParticle.px(), genParticle.py(), genParticle.pz());
-    particle.setAbsMomentum(
+    particle.setAbsoluteMomentum(
         std::hypot(genParticle.px(), genParticle.py(), genParticle.pz()) *
         1_GeV);
 

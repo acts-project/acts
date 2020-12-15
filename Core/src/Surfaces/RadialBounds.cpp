@@ -19,23 +19,23 @@ Acts::SurfaceBounds::BoundsType Acts::RadialBounds::type() const {
   return SurfaceBounds::eDisc;
 }
 
-Acts::Vector2D Acts::RadialBounds::shifted(
-    const Acts::Vector2D& lposition) const {
-  Vector2D tmp;
+Acts::Vector2 Acts::RadialBounds::shifted(
+    const Acts::Vector2& lposition) const {
+  Vector2 tmp;
   tmp[eBoundLoc0] = lposition[eBoundLoc0];
   tmp[eBoundLoc1] =
       detail::radian_sym(lposition[eBoundLoc1] - get(eAveragePhi));
   return tmp;
 }
 
-bool Acts::RadialBounds::inside(const Acts::Vector2D& lposition,
+bool Acts::RadialBounds::inside(const Acts::Vector2& lposition,
                                 const Acts::BoundaryCheck& bcheck) const {
   return bcheck.isInside(shifted(lposition),
-                         Vector2D(get(eMinR), -get(eHalfPhiSector)),
-                         Vector2D(get(eMaxR), get(eHalfPhiSector)));
+                         Vector2(get(eMinR), -get(eHalfPhiSector)),
+                         Vector2(get(eMaxR), get(eHalfPhiSector)));
 }
 
-std::vector<Acts::Vector2D> Acts::RadialBounds::vertices(
+std::vector<Acts::Vector2> Acts::RadialBounds::vertices(
     unsigned int lseg) const {
   return detail::VerticesHelper::circularVertices(
       get(eMinR), get(eMaxR), get(eAveragePhi), get(eHalfPhiSector), lseg);

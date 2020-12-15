@@ -36,8 +36,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceConstruction) {
   // bounds object, rectangle type
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
   /// Constructor with transform and bounds
-  Translation3D translation{0., 1., 2.};
-  auto pTransform = Transform3D(translation);
+  Translation3 translation{0., 1., 2.};
+  auto pTransform = Transform3(translation);
   // constructor with transform
   BOOST_CHECK_EQUAL(
       Surface::makeShared<PlaneSurface>(pTransform, rBounds)->type(),
@@ -67,28 +67,28 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   // bounds object, rectangle type
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
   /// Test clone method
-  Translation3D translation{0., 1., 2.};
-  auto pTransform = Transform3D(translation);
+  Translation3 translation{0., 1., 2.};
+  auto pTransform = Transform3(translation);
   auto planeSurfaceObject =
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
   // Is it in the right place?
-  Translation3D translation2{0., 2., 4.};
-  auto pTransform2 = Transform3D(translation2);
+  Translation3 translation2{0., 2., 4.};
+  auto pTransform2 = Transform3(translation2);
   auto planeSurfaceObject2 =
       Surface::makeShared<PlaneSurface>(pTransform2, rBounds);
   /// Test type (redundant)
   BOOST_CHECK_EQUAL(planeSurfaceObject->type(), Surface::Plane);
   //
   /// Test binningPosition
-  Vector3D binningPosition{0., 1., 2.};
+  Vector3 binningPosition{0., 1., 2.};
   BOOST_CHECK_EQUAL(
       planeSurfaceObject->binningPosition(tgContext, BinningValue::binX),
       binningPosition);
   //
   /// Test referenceFrame
-  Vector3D globalPosition{2.0, 2.0, 0.0};
-  Vector3D momentum{1.e6, 1.e6, 1.e6};
-  RotationMatrix3D expectedFrame;
+  Vector3 globalPosition{2.0, 2.0, 0.0};
+  Vector3 momentum{1.e6, 1.e6, 1.e6};
+  RotationMatrix3 expectedFrame;
   expectedFrame << 1., 0., 0., 0., 1., 0., 0., 0., 1.;
 
   CHECK_CLOSE_OR_SMALL(
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
       expectedFrame, 1e-6, 1e-9);
   //
   /// Test normal, given 3D position
-  Vector3D normal3D(0., 0., 1.);
+  Vector3 normal3D(0., 0., 1.);
   BOOST_CHECK_EQUAL(planeSurfaceObject->normal(tgContext), normal3D);
   //
   /// Test bounds
@@ -104,13 +104,13 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
                     SurfaceBounds::eRectangle);
 
   /// Test localToGlobal
-  Vector2D localPosition{1.5, 1.7};
+  Vector2 localPosition{1.5, 1.7};
   globalPosition =
       planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
   //
   // expected position is the translated one
-  Vector3D expectedPosition{1.5 + translation.x(), 1.7 + translation.y(),
-                            translation.z()};
+  Vector3 expectedPosition{1.5 + translation.x(), 1.7 + translation.y(),
+                           translation.z()};
 
   CHECK_CLOSE_REL(globalPosition, expectedPosition, 1e-2);
   //
@@ -118,11 +118,11 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   localPosition =
       planeSurfaceObject->globalToLocal(tgContext, globalPosition, momentum)
           .value();
-  Vector2D expectedLocalPosition{1.5, 1.7};
+  Vector2 expectedLocalPosition{1.5, 1.7};
 
   CHECK_CLOSE_REL(localPosition, expectedLocalPosition, 1e-2);
 
-  Vector3D globalPositionOff =
+  Vector3 globalPositionOff =
       globalPosition +
       planeSurfaceObject->normal(tgContext, localPosition) * 0.1;
 
@@ -137,17 +137,17 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
                   .ok());
 
   /// Test isOnSurface
-  Vector3D offSurface{0, 1, -2.};
+  Vector3 offSurface{0, 1, -2.};
   BOOST_CHECK(planeSurfaceObject->isOnSurface(tgContext, globalPosition,
                                               momentum, true));
   BOOST_CHECK(
       !planeSurfaceObject->isOnSurface(tgContext, offSurface, momentum, true));
   //
   // Test intersection
-  Vector3D direction{0., 0., 1.};
+  Vector3 direction{0., 0., 1.};
   auto sfIntersection =
       planeSurfaceObject->intersect(tgContext, offSurface, direction, true);
-  Intersection3D expectedIntersect{Vector3D{0, 1, 2}, 4.,
+  Intersection3D expectedIntersect{Vector3{0, 1, 2}, 4.,
                                    Intersection3D::Status::reachable};
   BOOST_CHECK(bool(sfIntersection));
   BOOST_CHECK_EQUAL(sfIntersection.intersection.position,
@@ -184,8 +184,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
 BOOST_AUTO_TEST_CASE(PlaneSurfaceEqualityOperators) {
   // rectangle bounds
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
-  Translation3D translation{0., 1., 2.};
-  auto pTransform = Transform3D(translation);
+  Translation3 translation{0., 1., 2.};
+  auto pTransform = Transform3(translation);
   auto planeSurfaceObject =
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
   auto planeSurfaceObject2 =
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceEqualityOperators) {
       "Create and then assign a PlaneSurface object to the existing one");
   /// Test assignment
   auto assignedPlaneSurface =
-      Surface::makeShared<PlaneSurface>(Transform3D::Identity(), nullptr);
+      Surface::makeShared<PlaneSurface>(Transform3::Identity(), nullptr);
   *assignedPlaneSurface = *planeSurfaceObject;
   /// Test equality of assigned to original
   BOOST_CHECK(*assignedPlaneSurface == *planeSurfaceObject);
@@ -207,9 +207,9 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceEqualityOperators) {
 /// Unit test for testing PlaneSurface extent via Polyhedron representation
 BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
   // First test - non-rotated
-  static const Transform3D planeZX =
-      AngleAxis3D(-0.5 * M_PI, Vector3D::UnitX()) *
-      AngleAxis3D(-0.5 * M_PI, Vector3D::UnitZ()) * Transform3D::Identity();
+  static const Transform3 planeZX = AngleAxis3(-0.5 * M_PI, Vector3::UnitX()) *
+                                    AngleAxis3(-0.5 * M_PI, Vector3::UnitZ()) *
+                                    Transform3::Identity();
 
   double rHx = 2.;
   double rHy = 4.;
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
   auto rBounds = std::make_shared<RectangleBounds>(rHx, rHy);
 
   auto plane = Surface::makeShared<PlaneSurface>(
-      Transform3D(Translation3D(Vector3D(0., yPs, 0.)) * planeZX), rBounds);
+      Transform3(Translation3(Vector3(0., yPs, 0.)) * planeZX), rBounds);
 
   auto planeExtent = plane->polyhedronRepresentation(tgContext, 1).extent();
 
@@ -234,8 +234,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
   // Now rotate
   double alpha = 0.123;
   auto planeRot = Surface::makeShared<PlaneSurface>(
-      Transform3D(Translation3D(Vector3D(0., yPs, 0.)) *
-                  AngleAxis3D(alpha, Vector3D(0., 0., 1.)) * planeZX),
+      Transform3(Translation3(Vector3(0., yPs, 0.)) *
+                 AngleAxis3(alpha, Vector3(0., 0., 1.)) * planeZX),
       rBounds);
 
   auto planeExtentRot =
@@ -259,22 +259,22 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   // bounds object, rectangle type
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
   // Test clone method
-  Translation3D translation{0., 1., 2.};
-  auto pTransform = Transform3D(translation);
+  Translation3 translation{0., 1., 2.};
+  auto pTransform = Transform3(translation);
   auto planeSurfaceObject =
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
   const auto& rotation = pTransform.rotation();
   // The local frame z axis
-  const Vector3D localZAxis = rotation.col(2);
+  const Vector3 localZAxis = rotation.col(2);
   // Check the local z axis is aligned to global z axis
-  CHECK_CLOSE_ABS(localZAxis, Vector3D(0., 0., 1.), 1e-15);
+  CHECK_CLOSE_ABS(localZAxis, Vector3(0., 0., 1.), 1e-15);
 
   // Define the track (local) position and direction
-  Vector2D localPosition{1, 2};
-  Vector3D momentum{0, 0, 1};
-  Vector3D direction = momentum.normalized();
+  Vector2 localPosition{1, 2};
+  Vector3 momentum{0, 0, 1};
+  Vector3 direction = momentum.normalized();
   // Get the global position
-  Vector3D globalPosition =
+  Vector3 globalPosition =
       planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
   // Construct a free parameters
   FreeVector parameters = FreeVector::Zero();
@@ -282,10 +282,10 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   parameters.segment<3>(eFreeDir0) = direction;
 
   // (a) Test the derivative of path length w.r.t. alignment parameters
-  const AlignmentRowVector& alignToPath =
+  const AlignmentToPathMatrix& alignToPath =
       planeSurfaceObject->alignmentToPathDerivative(tgContext, parameters);
   // The expected results
-  AlignmentRowVector expAlignToPath = AlignmentRowVector::Zero();
+  AlignmentToPathMatrix expAlignToPath = AlignmentToPathMatrix::Zero();
   expAlignToPath << 0, 0, 1, 2, -1, 0;
   // Check if the calculated derivative is as expected
   CHECK_CLOSE_ABS(alignToPath, expAlignToPath, 1e-10);
@@ -296,8 +296,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
       planeSurfaceObject->localCartesianToBoundLocalDerivative(tgContext,
                                                                globalPosition);
   // For plane surface, this should be identity matrix
-  CHECK_CLOSE_ABS(loc3DToLocBound, LocalCartesianToBoundLocalMatrix::Identity(),
-                  1e-10);
+  CHECK_CLOSE_ABS(loc3DToLocBound, (ActsMatrix<2, 3>::Identity()), 1e-10);
 
   // (c) Test the derivative of bound parameters (only test loc0, loc1 here)
   // w.r.t. alignment parameters
@@ -306,14 +305,14 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   const AlignmentToBoundMatrix& alignToBound =
       planeSurfaceObject->alignmentToBoundDerivative(tgContext, parameters,
                                                      derivatives);
-  const AlignmentRowVector alignToloc0 =
+  const AlignmentToPathMatrix alignToloc0 =
       alignToBound.block<1, 6>(eBoundLoc0, eAlignmentCenter0);
-  const AlignmentRowVector alignToloc1 =
+  const AlignmentToPathMatrix alignToloc1 =
       alignToBound.block<1, 6>(eBoundLoc1, eAlignmentCenter0);
   // The expected results
-  AlignmentRowVector expAlignToloc0;
+  AlignmentToPathMatrix expAlignToloc0;
   expAlignToloc0 << -1, 0, 0, 0, 0, 2;
-  AlignmentRowVector expAlignToloc1;
+  AlignmentToPathMatrix expAlignToloc1;
   expAlignToloc1 << 0, -1, 0, 0, 0, -1;
   // Check if the calculated derivatives are as expected
   CHECK_CLOSE_ABS(alignToloc0, expAlignToloc0, 1e-10);

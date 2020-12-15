@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   Covariance covMat = Covariance::Identity();
 
   // Perigee surface for track parameters
-  Vector3D pos0{0, 0, 0};
+  Vector3 pos0{0, 0, 0};
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(pos0);
 
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   // Create nTracks tracks for test case
   for (unsigned int i = 0; i < nTracks; i++) {
     // The position of the particle
-    Vector3D pos(xdist(gen), ydist(gen), 0);
+    Vector3 pos(xdist(gen), ydist(gen), 0);
     // Produce most of the tracks at near z1 position,
     // some near z2. Highest track density then expected at z1
     if ((i % 4) == 0) {
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   double zResult1 = 0;
   if (res1.ok()) {
     BOOST_CHECK(!(*res1).empty());
-    Vector3D result1 = (*res1).back().position();
+    Vector3 result1 = (*res1).back().position();
     if (debugMode) {
       std::cout << "Vertex position result 1: " << result1 << std::endl;
     }
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   double zResult2 = 0;
   if (res2.ok()) {
     BOOST_CHECK(!(*res2).empty());
-    Vector3D result2 = (*res2).back().position();
+    Vector3 result2 = (*res2).back().position();
     if (debugMode) {
       std::cout << "Vertex position result 2: " << result2 << std::endl;
     }
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   Covariance covMat = Covariance::Identity();
 
   // Perigee surface for track parameters
-  Vector3D pos0{0, 0, 0};
+  Vector3 pos0{0, 0, 0};
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(pos0);
 
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     double eta = etaDist(gen);
     double charge = etaDist(gen) > 0 ? 1 : -1;
     trackVec.push_back(BoundTrackParameters(
-        perigeeSurface, geoContext, Vector4D(x, y, z, 0),
+        perigeeSurface, geoContext, Vector4(x, y, z, 0),
         makeDirectionUnitFromPhiEta(phi, eta), pt, charge, covMat));
   }
 
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   }
   if (res1.ok()) {
     BOOST_CHECK(!(*res1).empty());
-    Vector3D result = (*res1).back().position();
+    Vector3 result = (*res1).back().position();
     if (debugMode) {
       std::cout << "Vertex position after first fill 1: " << result
                 << std::endl;
@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   }
   if (res2.ok()) {
     BOOST_CHECK(!(*res2).empty());
-    Vector3D result = (*res2).back().position();
+    Vector3 result = (*res2).back().position();
     if (debugMode) {
       std::cout << "Vertex position after first fill 2: " << result
                 << std::endl;
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   }
   if (res3.ok()) {
     BOOST_CHECK(!(*res3).empty());
-    Vector3D result = (*res3).back().position();
+    Vector3 result = (*res3).back().position();
     if (debugMode) {
       std::cout
           << "Vertex position after removing tracks near first density peak 1: "
@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   }
   if (res4.ok()) {
     BOOST_CHECK(!(*res4).empty());
-    Vector3D result = (*res4).back().position();
+    Vector3 result = (*res4).back().position();
     if (debugMode) {
       std::cout
           << "Vertex position after removing tracks near first density peak 2: "
@@ -324,14 +324,14 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   Covariance covMat = Covariance::Identity();
 
   // Perigee surface for track parameters
-  Vector3D pos0{0, 0, 0};
+  Vector3 pos0{0, 0, 0};
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(pos0);
 
   VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
                                                           magFieldContext);
   Vertex<BoundTrackParameters> constraintVtx;
-  constraintVtx.setCovariance(ActsSymMatrixD<3>::Identity());
+  constraintVtx.setCovariance(SymMatrix3::Identity());
   vertexingOptions.vertexConstraint = constraintVtx;
 
   using Finder1 = GridDensityVertexFinder<mainGridSize, trkGridSize>;
@@ -370,7 +370,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
     double eta = etaDist(gen);
     double charge = etaDist(gen) > 0 ? 1 : -1;
     trackVec.push_back(BoundTrackParameters(
-        perigeeSurface, geoContext, Vector4D(x, y, z, 0),
+        perigeeSurface, geoContext, Vector4(x, y, z, 0),
         makeDirectionUnitFromPhiEta(phi, eta), pt, charge, covMat));
   }
 
@@ -388,7 +388,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   double covZZ1 = 0;
   if (res1.ok()) {
     BOOST_CHECK(!(*res1).empty());
-    ActsSymMatrixD<3> cov = (*res1).back().covariance();
+    SymMatrix3 cov = (*res1).back().covariance();
     BOOST_CHECK(constraintVtx.covariance() != cov);
     BOOST_CHECK(cov(eZ, eZ) != 0.);
     covZZ1 = cov(eZ, eZ);
@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   double covZZ2 = 0;
   if (res2.ok()) {
     BOOST_CHECK(!(*res2).empty());
-    ActsSymMatrixD<3> cov = (*res2).back().covariance();
+    SymMatrix3 cov = (*res2).back().covariance();
     BOOST_CHECK(constraintVtx.covariance() != cov);
     BOOST_CHECK(cov(eZ, eZ) != 0.);
     covZZ2 = cov(eZ, eZ);

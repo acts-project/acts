@@ -89,11 +89,11 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @copydoc SurfaceMaterial::fullMaterial
   const MaterialSlabMatrix& fullMaterial() const;
 
-  /// @copydoc SurfaceMaterial::materialSlab(const Vector2D&)
-  const MaterialSlab& materialSlab(const Vector2D& lp) const final;
+  /// @copydoc SurfaceMaterial::materialSlab(const Vector2&)
+  const MaterialSlab& materialSlab(const Vector2& lp) const final;
 
-  /// @copydoc SurfaceMaterial::materialSlab(const Vector3D&)
-  const MaterialSlab& materialSlab(const Vector3D& gp) const final;
+  /// @copydoc SurfaceMaterial::materialSlab(const Vector3&)
+  const MaterialSlab& materialSlab(const Vector3& gp) const final;
 
   /// @copydoc SurfaceMaterial::materialSlab(size_t, size_t)
   const MaterialSlab& materialSlab(size_t bin0, size_t bin1) const final;

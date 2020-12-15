@@ -24,19 +24,19 @@ namespace detail {
    */
   struct coordinate_transformation
   {
-    typedef ActsVector<BoundScalar, Acts::NGlobalPars> ParVector_t;
+    typedef ActsVector<ActsScalar, Acts::NGlobalPars> ParVector_t;
 
-    static Vector3D
+    static Vector3
     parameters2globalPosition(const ParVector_t& pars, const Surface& s)
     {
-      return s.localToGlobal(Vector2D(pars(Acts::eBoundLoc0), pars(Acts::eBoundLoc1)),
+      return s.localToGlobal(Vector2(pars(Acts::eBoundLoc0), pars(Acts::eBoundLoc1)),
                              parameters2globalMomentum(pars));
     }
 
-    static Vector3D
+    static Vector3
     parameters2globalMomentum(const ParVector_t& pars)
     {
-      Vector3D momentum;
+      Vector3 momentum;
       double         p     = std::abs(1. / pars(Acts::eBoundQOverP));
       double         phi   = pars(Acts::eBoundPhi);
       double         theta = pars(Acts::eBoundTheta);
@@ -47,8 +47,8 @@ namespace detail {
     }
 
     static ParVector_t
-    global2curvilinear(const Vector3D&,
-                       const Vector3D& mom,
+    global2curvilinear(const Vector3&,
+                       const Vector3& mom,
                        double                charge)
     {
       ParVector_t parameters;

@@ -35,7 +35,7 @@ namespace Acts {
 template <class charge_t>
 class SingleBoundTrackParameters {
  public:
-  using Scalar = BoundScalar;
+  using Scalar = ActsScalar;
   using ParametersVector = BoundVector;
   using CovarianceMatrix = BoundSymMatrix;
 
@@ -92,9 +92,8 @@ class SingleBoundTrackParameters {
   /// @param q Particle charge
   /// @param cov Bound parameters covariance matrix
   SingleBoundTrackParameters(std::shared_ptr<const Surface> surface,
-                             const GeometryContext& geoCtx,
-                             const Vector4D& pos4, const Vector3D& dir,
-                             Scalar p, Scalar q,
+                             const GeometryContext& geoCtx, const Vector4& pos4,
+                             const Vector3& dir, Scalar p, Scalar q,
                              std::optional<CovarianceMatrix> cov = std::nullopt)
       : m_params(detail::transformFreeToBoundParameters(
             pos4.segment<3>(ePos0), pos4[eTime], dir,
@@ -122,9 +121,8 @@ class SingleBoundTrackParameters {
   template <typename T = charge_t,
             std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
   SingleBoundTrackParameters(std::shared_ptr<const Surface> surface,
-                             const GeometryContext& geoCtx,
-                             const Vector4D& pos4, const Vector3D& dir,
-                             Scalar qOverP,
+                             const GeometryContext& geoCtx, const Vector4& pos4,
+                             const Vector3& dir, Scalar qOverP,
                              std::optional<CovarianceMatrix> cov = std::nullopt)
       : m_params(detail::transformFreeToBoundParameters(
             pos4.segment<3>(ePos0), pos4[eTime], dir, qOverP, *surface,
@@ -165,11 +163,11 @@ class SingleBoundTrackParameters {
   /// surface to globalcoordinates. This requires a geometry context to select
   /// the appropriate transformation and might be a computationally expensive
   /// operation.
-  Vector4D fourPosition(const GeometryContext& geoCtx) const {
-    const Vector2D loc(m_params[eBoundLoc0], m_params[eBoundLoc1]);
-    const Vector3D dir = makeDirectionUnitFromPhiTheta(m_params[eBoundPhi],
-                                                       m_params[eBoundTheta]);
-    Vector4D pos4;
+  Vector4 fourPosition(const GeometryContext& geoCtx) const {
+    const Vector2 loc(m_params[eBoundLoc0], m_params[eBoundLoc1]);
+    const Vector3 dir = makeDirectionUnitFromPhiTheta(m_params[eBoundPhi],
+                                                      m_params[eBoundTheta]);
+    Vector4 pos4;
     pos4.segment<3>(ePos0) = m_surface->localToGlobal(geoCtx, loc, dir);
     pos4[eTime] = m_params[eBoundTime];
     return pos4;
@@ -182,17 +180,17 @@ class SingleBoundTrackParameters {
   /// surface to globalcoordinates. This requires a geometry context to select
   /// the appropriate transformation and might be a computationally expensive
   /// operation.
-  Vector3D position(const GeometryContext& geoCtx) const {
-    const Vector2D loc(m_params[eBoundLoc0], m_params[eBoundLoc1]);
-    const Vector3D dir = makeDirectionUnitFromPhiTheta(m_params[eBoundPhi],
-                                                       m_params[eBoundTheta]);
+  Vector3 position(const GeometryContext& geoCtx) const {
+    const Vector2 loc(m_params[eBoundLoc0], m_params[eBoundLoc1]);
+    const Vector3 dir = makeDirectionUnitFromPhiTheta(m_params[eBoundPhi],
+                                                      m_params[eBoundTheta]);
     return m_surface->localToGlobal(geoCtx, loc, dir);
   }
   /// Time coordinate.
   Scalar time() const { return m_params[eBoundTime]; }
 
   /// Unit direction three-vector, i.e. the normalized momentum three-vector.
-  Vector3D unitDirection() const {
+  Vector3 unitDirection() const {
     return makeDirectionUnitFromPhiTheta(m_params[eBoundPhi],
                                          m_params[eBoundTheta]);
   }
@@ -205,7 +203,7 @@ class SingleBoundTrackParameters {
     return std::sin(m_params[eBoundTheta]) * absoluteMomentum();
   }
   /// Momentum three-vector.
-  Vector3D momentum() const { return absoluteMomentum() * unitDirection(); }
+  Vector3 momentum() const { return absoluteMomentum() * unitDirection(); }
 
   /// Particle electric charge.
   constexpr Scalar charge() const {
@@ -221,7 +219,7 @@ class SingleBoundTrackParameters {
   /// For planar surfaces, this is the transformation local-to-global rotation
   /// matrix. For non-planar surfaces, it is the local-to-global rotation matrix
   /// of the tangential plane at the track position.
-  RotationMatrix3D referenceFrame(const GeometryContext& geoCtx) const {
+  RotationMatrix3 referenceFrame(const GeometryContext& geoCtx) const {
     return m_surface->referenceFrame(geoCtx, position(geoCtx), momentum());
   }
 

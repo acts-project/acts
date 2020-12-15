@@ -51,7 +51,7 @@ class SeedingAlgorithm final : public BareAlgorithm {
     float radLengthPerSeed = 0.1;
     float minPt = 500.;
     float bFieldInZ = 0.00199724;
-    Acts::Vector2D beamPos = {0., 0.};
+    Acts::Vector2 beamPos = {0., 0.};
     float impactMax = 3.;
     unsigned int barrelVolume = 8;
     std::vector<unsigned int> barrelLayers = {2, 4, 6};

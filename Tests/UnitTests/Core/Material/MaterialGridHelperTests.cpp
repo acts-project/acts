@@ -20,16 +20,16 @@ namespace Acts {
 
 namespace Test {
 
-using RecordedMaterial = std::vector<std::pair<Acts::Material, Acts::Vector3D>>;
+using RecordedMaterial = std::vector<std::pair<Acts::Material, Acts::Vector3>>;
 using EAxis = Acts::detail::EquidistantAxis;
 using Grid2D =
     Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
 using Grid3D =
     Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
 using MaterialGrid2D =
-    Acts::detail::Grid<Acts::ActsVector<float, 5>, EAxis, EAxis>;
+    Acts::detail::Grid<Acts::Material::ParametersVector, EAxis, EAxis>;
 using MaterialGrid3D =
-    Acts::detail::Grid<Acts::ActsVector<float, 5>, EAxis, EAxis, EAxis>;
+    Acts::detail::Grid<Acts::Material::ParametersVector, EAxis, EAxis, EAxis>;
 
 /// @brief Various test for the Material in the case of a Cuboid volume and 2D
 /// Grid
@@ -37,13 +37,13 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
   BinUtility bu(7, -3., 3., open, binX);
   bu += BinUtility(3, -2., 2., open, binY);
   auto bd = bu.binningData();
-  std::function<Acts::Vector2D(Acts::Vector3D)> transfoGlobalToLocal;
+  std::function<Acts::Vector2(Acts::Vector3)> transfoGlobalToLocal;
 
   Grid2D Grid = createGrid2D(bu, transfoGlobalToLocal);
 
   // Test Global To Local transform
-  Acts::Vector3D pos(1., 2., 3.);
-  Acts::Vector2D pos_2d(1., 2.);
+  Acts::Vector3 pos(1., 2., 3.);
+  Acts::Vector2 pos_2d(1., 2.);
   BOOST_CHECK_EQUAL(pos_2d, transfoGlobalToLocal(pos));
 
   // Test Grid
@@ -68,9 +68,9 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
   Grid2D::index_t index2 = {7, 2};
   Grid2D::index_t index3 = {1, 3};
 
-  Acts::Vector3D pos1 = {-2.6, -1.5, -0.7};
-  Acts::Vector3D pos2 = {2.8, 0, 0.2};
-  Acts::Vector3D pos3 = {-2.7, 1.8, 0.8};
+  Acts::Vector3 pos1 = {-2.6, -1.5, -0.7};
+  Acts::Vector3 pos2 = {2.8, 0, 0.2};
+  Acts::Vector3 pos3 = {-2.7, 1.8, 0.8};
 
   for (int i = 0; i < 2; i++) {
     BOOST_CHECK_EQUAL(
@@ -85,14 +85,14 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
   }
   // Test material mapping
 
-  std::vector<Acts::Vector3D> vectPos1;
+  std::vector<Acts::Vector3> vectPos1;
   vectPos1.push_back(pos1);
-  std::vector<Acts::Vector3D> vectPos2;
+  std::vector<Acts::Vector3> vectPos2;
   vectPos2.push_back(pos2);
-  std::vector<Acts::Vector3D> vectPos3;
+  std::vector<Acts::Vector3> vectPos3;
   vectPos3.push_back(pos3);
 
-  std::vector<std::pair<MaterialSlab, std::vector<Vector3D>>> matRecord;
+  std::vector<std::pair<MaterialSlab, std::vector<Vector3>>> matRecord;
   Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
   Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
   Material vacuum;
@@ -118,12 +118,12 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
   BinUtility bu(2, -2., 2., open, binZ);
   bu += BinUtility(3, -M_PI, M_PI, closed, binPhi);
   auto bd = bu.binningData();
-  std::function<Acts::Vector2D(Acts::Vector3D)> transfoGlobalToLocal;
+  std::function<Acts::Vector2(Acts::Vector3)> transfoGlobalToLocal;
 
   Grid2D Grid = createGrid2D(bu, transfoGlobalToLocal);
 
   // Test Global To Local transform
-  Acts::Vector3D pos(1., 2., 3.);
+  Acts::Vector3 pos(1., 2., 3.);
 
   CHECK_CLOSE_REL(transfoGlobalToLocal(pos)[1], atan2(2, 1), 1e-4);
   CHECK_CLOSE_REL(transfoGlobalToLocal(pos)[0], 3, 1e-4);
@@ -150,9 +150,9 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
   Grid2D::index_t index2 = {1, 2};
   Grid2D::index_t index3 = {2, 3};
 
-  Acts::Vector3D pos1 = {-0.2, -1, -1};
-  Acts::Vector3D pos2 = {3.6, 0., -1.5};
-  Acts::Vector3D pos3 = {-1, 0.3, 0.8};
+  Acts::Vector3 pos1 = {-0.2, -1, -1};
+  Acts::Vector3 pos2 = {3.6, 0., -1.5};
+  Acts::Vector3 pos3 = {-1, 0.3, 0.8};
 
   for (int i = 0; i < 2; i++) {
     BOOST_CHECK_EQUAL(
@@ -167,14 +167,14 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
   }
 
   // Test material mapping
-  std::vector<Acts::Vector3D> vectPos1;
+  std::vector<Acts::Vector3> vectPos1;
   vectPos1.push_back(pos1);
-  std::vector<Acts::Vector3D> vectPos2;
+  std::vector<Acts::Vector3> vectPos2;
   vectPos2.push_back(pos2);
-  std::vector<Acts::Vector3D> vectPos3;
+  std::vector<Acts::Vector3> vectPos3;
   vectPos3.push_back(pos3);
 
-  std::vector<std::pair<MaterialSlab, std::vector<Vector3D>>> matRecord;
+  std::vector<std::pair<MaterialSlab, std::vector<Vector3>>> matRecord;
   Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
   Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
   Material vacuum;
@@ -200,12 +200,12 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
   bu += BinUtility(3, -2., 2., open, binY);
   bu += BinUtility(2, -1., 1., open, binZ);
   auto bd = bu.binningData();
-  std::function<Acts::Vector3D(Acts::Vector3D)> transfoGlobalToLocal;
+  std::function<Acts::Vector3(Acts::Vector3)> transfoGlobalToLocal;
 
   Grid3D Grid = createGrid3D(bu, transfoGlobalToLocal);
 
   // Test Global To Local transform
-  Acts::Vector3D pos(1., 2., 3.);
+  Acts::Vector3 pos(1., 2., 3.);
   BOOST_CHECK_EQUAL(pos, transfoGlobalToLocal(pos));
 
   // Test Grid
@@ -235,9 +235,9 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
   Grid3D::index_t index2 = {7, 2, 2};
   Grid3D::index_t index3 = {1, 3, 2};
 
-  Acts::Vector3D pos1 = {-2.6, -1.5, -0.7};
-  Acts::Vector3D pos2 = {2.8, 0, 0.2};
-  Acts::Vector3D pos3 = {-2.7, 1.8, 0.8};
+  Acts::Vector3 pos1 = {-2.6, -1.5, -0.7};
+  Acts::Vector3 pos2 = {2.8, 0, 0.2};
+  Acts::Vector3 pos3 = {-2.7, 1.8, 0.8};
 
   for (int i = 0; i < 3; i++) {
     BOOST_CHECK_EQUAL(
@@ -251,14 +251,14 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
         index3[i]);
   }
   // Test material mapping
-  std::vector<Acts::Vector3D> vectPos1;
+  std::vector<Acts::Vector3> vectPos1;
   vectPos1.push_back(pos1);
-  std::vector<Acts::Vector3D> vectPos2;
+  std::vector<Acts::Vector3> vectPos2;
   vectPos2.push_back(pos2);
-  std::vector<Acts::Vector3D> vectPos3;
+  std::vector<Acts::Vector3> vectPos3;
   vectPos3.push_back(pos3);
 
-  std::vector<std::pair<MaterialSlab, std::vector<Vector3D>>> matRecord;
+  std::vector<std::pair<MaterialSlab, std::vector<Vector3>>> matRecord;
   Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
   Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
   Material vacuum;
@@ -284,12 +284,12 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   bu += BinUtility(3, -M_PI, M_PI, closed, binPhi);
   bu += BinUtility(2, -2., 2., open, binZ);
   auto bd = bu.binningData();
-  std::function<Acts::Vector3D(Acts::Vector3D)> transfoGlobalToLocal;
+  std::function<Acts::Vector3(Acts::Vector3)> transfoGlobalToLocal;
 
   Grid3D Grid = createGrid3D(bu, transfoGlobalToLocal);
 
   // Test Global To Local transform
-  Acts::Vector3D pos(1., 2., 3.);
+  Acts::Vector3 pos(1., 2., 3.);
 
   CHECK_CLOSE_REL(transfoGlobalToLocal(pos)[0], sqrt(5), 1e-4);
   CHECK_CLOSE_REL(transfoGlobalToLocal(pos)[1], atan2(2, 1), 1e-4);
@@ -322,9 +322,9 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   Grid3D::index_t index2 = {4, 2, 1};
   Grid3D::index_t index3 = {1, 3, 2};
 
-  Acts::Vector3D pos1 = {-0.2, -1, -1};
-  Acts::Vector3D pos2 = {3.6, 0., -1.5};
-  Acts::Vector3D pos3 = {-1, 0.3, 0.8};
+  Acts::Vector3 pos1 = {-0.2, -1, -1};
+  Acts::Vector3 pos2 = {3.6, 0., -1.5};
+  Acts::Vector3 pos3 = {-1, 0.3, 0.8};
 
   for (int i = 0; i < 3; i++) {
     BOOST_CHECK_EQUAL(
@@ -339,14 +339,14 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   }
 
   // Test material mapping
-  std::vector<Acts::Vector3D> vectPos1;
+  std::vector<Acts::Vector3> vectPos1;
   vectPos1.push_back(pos1);
-  std::vector<Acts::Vector3D> vectPos2;
+  std::vector<Acts::Vector3> vectPos2;
   vectPos2.push_back(pos2);
-  std::vector<Acts::Vector3D> vectPos3;
+  std::vector<Acts::Vector3> vectPos3;
   vectPos3.push_back(pos3);
 
-  std::vector<std::pair<MaterialSlab, std::vector<Vector3D>>> matRecord;
+  std::vector<std::pair<MaterialSlab, std::vector<Vector3>>> matRecord;
   Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
   Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
   Material vacuum;

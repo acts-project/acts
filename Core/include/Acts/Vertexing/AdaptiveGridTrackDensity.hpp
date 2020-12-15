@@ -34,6 +34,8 @@ class AdaptiveGridTrackDensity {
   static_assert(trkGridSize % 2);
 
  public:
+  using TrackGridVector = Eigen::Matrix<float, trkGridSize, 1>;
+
   /// @struct Config The configuration struct
   struct Config {
     /// @param binSize_ The binSize in mm
@@ -90,7 +92,7 @@ class AdaptiveGridTrackDensity {
   /// @return A pair storing information about the z-bin position
   /// the track was added (int) and the 1-dim density contribution
   /// of the track itself
-  std::pair<int, ActsVector<float, trkGridSize>> addTrack(
+  std::pair<int, TrackGridVector> addTrack(
       const BoundTrackParameters& trk, std::vector<float>& mainGridDensity,
       std::vector<int>& mainGridZValues) const;
 
@@ -103,7 +105,7 @@ class AdaptiveGridTrackDensity {
   /// @param mainGridZValues The corresponding z-bin values of the track
   /// densities along the z-axis
   void removeTrackGridFromMainGrid(
-      int zBin, const ActsVector<float, trkGridSize>& trkGrid,
+      int zBin, const TrackGridVector& trkGrid,
       std::vector<float>& mainGridDensity,
       const std::vector<int>& mainGridZValues) const;
 
@@ -118,10 +120,8 @@ class AdaptiveGridTrackDensity {
   /// bin center in the 2-dim grid
   /// @param distCtrZ The distance in z0 from the track position to its
   /// bin center in the 2-dim grid
-  ActsVector<float, trkGridSize> createTrackGrid(int offset,
-                                                 const SymMatrix2D& cov,
-                                                 float distCtrD,
-                                                 float distCtrZ) const;
+  TrackGridVector createTrackGrid(int offset, const SymMatrix2& cov,
+                                  float distCtrD, float distCtrZ) const;
 
   /// @brief Function that estimates the seed width based on the full width
   /// at half maximum (FWHM) of the maximum density peak
@@ -137,7 +137,7 @@ class AdaptiveGridTrackDensity {
                                   float maxZ) const;
 
   /// @brief Helper to retrieve values according to a 2-dim normal distribution
-  float normal2D(float d, float z, const SymMatrix2D& cov) const;
+  float normal2D(float d, float z, const SymMatrix2& cov) const;
 
   /// @brief Checks the (up to) first three density maxima (only those that have
   /// a maximum relative deviation of 'relativeDensityDev' from the main

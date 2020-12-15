@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(BinAdjustmentVolume_Cylinder) {
   bu += BinUtility(1, 0, 1, Acts::open, Acts::binPhi);
   bu += BinUtility(1, 0, 1, Acts::open, Acts::binZ);
 
-  BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3D::Identity());
+  BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3::Identity());
 
   BOOST_CHECK_EQUAL(buAdjust.binningData()[0].min, 10);
   BOOST_CHECK_EQUAL(buAdjust.binningData()[0].max, 50);
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(BinAdjustmentVolume_CutoutCylinder) {
   bu += BinUtility(1, 0, 1, Acts::closed, Acts::binPhi);
   bu += BinUtility(1, 0, 1, Acts::open, Acts::binZ);
 
-  BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3D::Identity());
+  BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3::Identity());
 
   BOOST_CHECK_EQUAL(buAdjust.binningData()[0].min, 10);
   BOOST_CHECK_EQUAL(buAdjust.binningData()[0].max, 50);
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(BinAdjustmentVolume_Cuboid) {
   bu += BinUtility(1, 0, 1, Acts::open, Acts::binY);
   bu += BinUtility(1, 0, 1, Acts::open, Acts::binZ);
 
-  BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3D::Identity());
+  BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3::Identity());
 
   BOOST_CHECK_EQUAL(buAdjust.binningData()[0].min, -13);
   BOOST_CHECK_EQUAL(buAdjust.binningData()[0].max, 13);

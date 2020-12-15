@@ -85,13 +85,12 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
   }
 
   // Construct output vertex
-  Vector3D seedPos =
-      vertexingOptions.vertexConstraint.position() + Vector3D(0., 0., z);
+  Vector3 seedPos =
+      vertexingOptions.vertexConstraint.position() + Vector3(0., 0., z);
 
   Vertex<InputTrack_t> returnVertex = Vertex<InputTrack_t>(seedPos);
 
-  ActsSymMatrixD<4> seedCov =
-      vertexingOptions.vertexConstraint.fullCovariance();
+  SymMatrix4 seedCov = vertexingOptions.vertexConstraint.fullCovariance();
 
   if (width != 0.) {
     // Use z-constraint from seed width

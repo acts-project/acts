@@ -223,7 +223,7 @@ class JsonGeometryConverter {
   BinUtility jsonToBinUtility(const nlohmann::json& bin);
 
   /// Create the local to global transform for from Json
-  Transform3D jsonToTransform(const nlohmann::json& transfo);
+  Transform3 jsonToTransform(const nlohmann::json& transfo);
 
   /// Create Json from a detector represenation
   nlohmann::json detectorRepToJson(const DetectorRep& detRep);

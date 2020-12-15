@@ -18,9 +18,9 @@ Acts::Result<double>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     calculate3dDistance(const GeometryContext& gctx,
                         const BoundTrackParameters& trkParams,
-                        const Vector3D& vtxPos, State& state) const {
-  Vector3D deltaR;
-  Vector3D momDir;
+                        const Vector3& vtxPos, State& state) const {
+  Vector3 deltaR;
+  Vector3 momDir;
 
   auto res =
       getDistanceAndMomentum(gctx, trkParams, vtxPos, deltaR, momDir, state);
@@ -40,9 +40,9 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     estimate3DImpactParameters(const GeometryContext& gctx,
                                const Acts::MagneticFieldContext& mctx,
                                const BoundTrackParameters& trkParams,
-                               const Vector3D& vtxPos, State& state) const {
-  Vector3D deltaR;
-  Vector3D momDir;
+                               const Vector3& vtxPos, State& state) const {
+  Vector3 deltaR;
+  Vector3 momDir;
 
   auto res =
       getDistanceAndMomentum(gctx, trkParams, vtxPos, deltaR, momDir, state);
@@ -55,12 +55,12 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   deltaR.normalize();
 
   // corrected deltaR for small deviations from orthogonality
-  Vector3D corrDeltaR = deltaR - (deltaR.dot(momDir)) * momDir;
+  Vector3 corrDeltaR = deltaR - (deltaR.dot(momDir)) * momDir;
 
   // get perpendicular direction vector
-  Vector3D perpDir = momDir.cross(corrDeltaR);
+  Vector3 perpDir = momDir.cross(corrDeltaR);
 
-  Transform3D thePlane;
+  Transform3 thePlane;
   // rotation matrix
   thePlane.matrix().block(0, 0, 3, 1) = corrDeltaR;
   thePlane.matrix().block(0, 1, 3, 1) = perpDir;
@@ -91,36 +91,36 @@ Acts::Result<double>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     get3dVertexCompatibility(const GeometryContext& gctx,
                              const BoundTrackParameters* trkParams,
-                             const Vector3D& vertexPos) const {
+                             const Vector3& vertexPos) const {
   if (trkParams == nullptr) {
     return VertexingError::EmptyInput;
   }
 
   // surface rotation
-  RotationMatrix3D myRotation =
+  RotationMatrix3 myRotation =
       trkParams->referenceSurface().transform(gctx).rotation();
   // Surface translation
-  Vector3D myTranslation =
+  Vector3 myTranslation =
       trkParams->referenceSurface().transform(gctx).translation();
 
   // x and y direction of plane
-  Vector3D xDirPlane = myRotation.col(0);
-  Vector3D yDirPlane = myRotation.col(1);
+  Vector3 xDirPlane = myRotation.col(0);
+  Vector3 yDirPlane = myRotation.col(1);
 
   // transform vertex position in local plane reference frame
-  Vector3D vertexLocPlane = vertexPos - myTranslation;
+  Vector3 vertexLocPlane = vertexPos - myTranslation;
 
   // local x/y vertex position
-  Vector2D vertexLocXY{vertexLocPlane.dot(xDirPlane),
-                       vertexLocPlane.dot(yDirPlane)};
+  Vector2 vertexLocXY{vertexLocPlane.dot(xDirPlane),
+                      vertexLocPlane.dot(yDirPlane)};
 
   // track covariance
   auto cov = trkParams->covariance();
-  SymMatrix2D myWeightXY = cov->block<2, 2>(0, 0).inverse();
+  SymMatrix2 myWeightXY = cov->block<2, 2>(0, 0).inverse();
 
   // 2-dim residual
-  Vector2D myXYpos =
-      Vector2D(trkParams->parameters()[eX], trkParams->parameters()[eY]) -
+  Vector2 myXYpos =
+      Vector2(trkParams->parameters()[eX], trkParams->parameters()[eY]) -
       vertexLocXY;
 
   // return chi2
@@ -131,8 +131,8 @@ template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
 Acts::Result<double> Acts::ImpactPointEstimator<
     input_track_t, propagator_t,
-    propagator_options_t>::performNewtonApproximation(const Vector3D& trkPos,
-                                                      const Vector3D& vtxPos,
+    propagator_options_t>::performNewtonApproximation(const Vector3& trkPos,
+                                                      const Vector3& vtxPos,
                                                       double phi, double theta,
                                                       double r) const {
   double sinNewPhi = -std::sin(phi);
@@ -189,9 +189,9 @@ Acts::Result<void>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     getDistanceAndMomentum(const GeometryContext& gctx,
                            const BoundTrackParameters& trkParams,
-                           const Vector3D& vtxPos, Vector3D& deltaR,
-                           Vector3D& momDir, State& state) const {
-  Vector3D trkSurfaceCenter = trkParams.referenceSurface().center(gctx);
+                           const Vector3& vtxPos, Vector3& deltaR,
+                           Vector3& momDir, State& state) const {
+  Vector3 trkSurfaceCenter = trkParams.referenceSurface().center(gctx);
 
   double d0 = trkParams.parameters()[BoundIndices::eBoundLoc0];
   double z0 = trkParams.parameters()[BoundIndices::eBoundLoc1];
@@ -216,9 +216,9 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     r = sinTheta * (1. / qOvP) / bZ;
   }
 
-  Vector3D vec0 = trkSurfaceCenter + Vector3D(-(d0 - r) * std::sin(phi),
-                                              (d0 - r) * std::cos(phi),
-                                              z0 + r * phi * cotTheta);
+  Vector3 vec0 = trkSurfaceCenter + Vector3(-(d0 - r) * std::sin(phi),
+                                            (d0 - r) * std::cos(phi),
+                                            z0 + r * phi * cotTheta);
 
   // Perform newton approximation method
   // this will change the value of phi
@@ -233,10 +233,10 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   double sinPhi = std::sin(phi);
 
   // Set momentum direction
-  momDir = Vector3D(sinTheta * cosPhi, sinPhi * sinTheta, std::cos(theta));
+  momDir = Vector3(sinTheta * cosPhi, sinPhi * sinTheta, std::cos(theta));
 
   // point of closest approach in 3D
-  Vector3D pointCA3d = vec0 + r * Vector3D(-sinPhi, cosPhi, -cotTheta * phi);
+  Vector3 pointCA3d = vec0 + r * Vector3(-sinPhi, cosPhi, -cotTheta * phi);
 
   // Set deltaR
   deltaR = pointCA3d - vtxPos;
@@ -283,12 +283,12 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   const double cosPhi = std::cos(phi);
   const double cosTheta = std::cos(theta);
 
-  SymMatrix2D vrtXYCov = vtx.covariance().template block<2, 2>(0, 0);
+  SymMatrix2 vrtXYCov = vtx.covariance().template block<2, 2>(0, 0);
 
   // Covariance of perigee parameters after propagation to perigee surface
   const auto& perigeeCov = *(propRes.endParameters->covariance());
 
-  Vector2D d0JacXY(-sinPhi, cosPhi);
+  Vector2 d0JacXY(-sinPhi, cosPhi);
 
   ImpactParametersAndSigma newIPandSigma;
 
@@ -305,7 +305,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     newIPandSigma.PVsigmad0 = 0;
   }
 
-  SymMatrix2D covPerigeeZ0Theta;
+  SymMatrix2 covPerigeeZ0Theta;
   covPerigeeZ0Theta(0, 0) =
       perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundLoc1);
   covPerigeeZ0Theta(0, 1) =
@@ -317,7 +317,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   double vtxZZCov = vtx.covariance()(eZ, eZ);
 
-  Vector2D z0JacZ0Theta(sinTheta, z0 * cosTheta);
+  Vector2 z0JacZ0Theta(sinTheta, z0 * cosTheta);
 
   if (vtxZZCov >= 0) {
     newIPandSigma.IPz0SinTheta = z0 * sinTheta;

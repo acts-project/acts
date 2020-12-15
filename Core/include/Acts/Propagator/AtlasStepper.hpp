@@ -108,7 +108,7 @@ class AtlasStepper {
       // prepare the jacobian if we have a covariance
       if (pars.covariance()) {
         // copy the covariance matrix
-        covariance = new ActsSymMatrixD<eBoundSize>(*pars.covariance());
+        covariance = new BoundSymMatrix(*pars.covariance());
         covTransport = true;
         useJacobian = true;
         const auto transform = pars.referenceSurface().referenceFrame(
@@ -252,7 +252,7 @@ class AtlasStepper {
     bool needgradient;
     bool newfield;
     // internal parameters to be used
-    Vector3D field;
+    Vector3 field;
     std::array<double, 60> pVector;
 
     /// Storage pattern of pVector
@@ -467,18 +467,18 @@ class AtlasStepper {
   /// @param [in,out] state is the stepper state associated with the track
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
-  Vector3D getField(State& state, const Vector3D& pos) const {
+  Vector3 getField(State& state, const Vector3& pos) const {
     // get the field from the cell
     state.field = m_bField.getField(pos, state.fieldCache);
     return state.field;
   }
 
-  Vector3D position(const State& state) const {
-    return Vector3D(state.pVector[0], state.pVector[1], state.pVector[2]);
+  Vector3 position(const State& state) const {
+    return Vector3(state.pVector[0], state.pVector[1], state.pVector[2]);
   }
 
-  Vector3D direction(const State& state) const {
-    return Vector3D(state.pVector[4], state.pVector[5], state.pVector[6]);
+  Vector3 direction(const State& state) const {
+    return Vector3(state.pVector[4], state.pVector[5], state.pVector[6]);
   }
 
   double momentum(const State& state) const {
@@ -569,12 +569,12 @@ class AtlasStepper {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
     // extract state information
-    Acts::Vector4D pos4;
+    Acts::Vector4 pos4;
     pos4[ePos0] = state.pVector[0];
     pos4[ePos1] = state.pVector[1];
     pos4[ePos2] = state.pVector[2];
     pos4[eTime] = state.pVector[3];
-    Acts::Vector3D dir;
+    Acts::Vector3 dir;
     dir[eMom0] = state.pVector[4];
     dir[eMom1] = state.pVector[5];
     dir[eMom2] = state.pVector[6];
@@ -612,12 +612,12 @@ class AtlasStepper {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
     // extract state information
-    Acts::Vector4D pos4;
+    Acts::Vector4 pos4;
     pos4[ePos0] = state.pVector[0];
     pos4[ePos1] = state.pVector[1];
     pos4[ePos2] = state.pVector[2];
     pos4[eTime] = state.pVector[3];
-    Acts::Vector3D dir;
+    Acts::Vector3 dir;
     dir[eMom0] = state.pVector[4];
     dir[eMom1] = state.pVector[5];
     dir[eMom2] = state.pVector[6];
@@ -643,7 +643,7 @@ class AtlasStepper {
   /// @param [in] pars The new track parameters at start
   void update(State& state, const FreeVector& parameters,
               const Covariance& covariance) const {
-    Vector3D direction = parameters.template segment<3>(eFreeDir0).normalized();
+    Vector3 direction = parameters.template segment<3>(eFreeDir0).normalized();
     state.pVector[0] = parameters[eFreePos0];
     state.pVector[1] = parameters[eFreePos1];
     state.pVector[2] = parameters[eFreePos2];
@@ -661,7 +661,7 @@ class AtlasStepper {
 
     // prepare the jacobian if we have a covariance
     // copy the covariance matrix
-    state.covariance = new ActsSymMatrixD<eBoundSize>(covariance);
+    state.covariance = new BoundSymMatrix(covariance);
     state.covTransport = true;
     state.useJacobian = true;
 
@@ -674,8 +674,8 @@ class AtlasStepper {
   /// @param uposition the updated position
   /// @param udirection the updated direction
   /// @param p the updated momentum value
-  void update(State& state, const Vector3D& uposition,
-              const Vector3D& udirection, double up, double time) const {
+  void update(State& state, const Vector3& uposition, const Vector3& udirection,
+              double up, double time) const {
     // update the vector
     state.pVector[0] = uposition[0];
     state.pVector[1] = uposition[1];
@@ -845,8 +845,8 @@ class AtlasStepper {
   /// @param [in,out] state State of the stepper
   /// @param [in] surface is the surface to which the covariance is forwarded to
   void covarianceTransport(State& state, const Surface& surface) const {
-    Acts::Vector3D gp(state.pVector[0], state.pVector[1], state.pVector[2]);
-    Acts::Vector3D mom(state.pVector[4], state.pVector[5], state.pVector[6]);
+    Acts::Vector3 gp(state.pVector[0], state.pVector[1], state.pVector[2]);
+    Acts::Vector3 mom(state.pVector[4], state.pVector[5], state.pVector[6]);
     mom /= std::abs(state.pVector[7]);
 
     double p = 1. / state.pVector[7];
@@ -1110,11 +1110,11 @@ class AtlasStepper {
     // Invert mometum/2.
     double Pi = 0.5 * state.stepping.pVector[7];
     //    double dltm = 0.0002 * .03;
-    Vector3D f0, f;
+    Vector3 f0, f;
 
     // if new field is required get it
     if (state.stepping.newfield) {
-      const Vector3D pos(R[0], R[1], R[2]);
+      const Vector3 pos(R[0], R[1], R[2]);
       // This is sd.B_first in EigenStepper
       f0 = getField(state.stepping, pos);
     } else {
@@ -1149,7 +1149,7 @@ class AtlasStepper {
       //
       if (!Helix) {
         // This is pos1 in EigenStepper
-        const Vector3D pos(R[0] + A1 * S4, R[1] + B1 * S4, R[2] + C1 * S4);
+        const Vector3 pos(R[0] + A1 * S4, R[1] + B1 * S4, R[2] + C1 * S4);
         // This is sd.B_middle in EigenStepper
         f = getField(state.stepping, pos);
       } else {
@@ -1175,7 +1175,7 @@ class AtlasStepper {
       //
       if (!Helix) {
         // This is pos2 in EigenStepper
-        const Vector3D pos(R[0] + h * A4, R[1] + h * B4, R[2] + h * C4);
+        const Vector3 pos(R[0] + h * A4, R[1] + h * B4, R[2] + h * C4);
         // This is sd.B_last in Eigen stepper
         f = getField(state.stepping, pos);
       } else {

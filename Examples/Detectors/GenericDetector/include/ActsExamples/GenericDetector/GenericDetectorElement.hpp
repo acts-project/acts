@@ -46,7 +46,7 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
   /// @param material is the (optional) Surface material associated to it
   GenericDetectorElement(
       const Identifier identifier,
-      std::shared_ptr<const Acts::Transform3D> transform,
+      std::shared_ptr<const Acts::Transform3> transform,
       std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr,
       std::shared_ptr<const Acts::DigitizationModule> digitzationModule =
@@ -62,7 +62,7 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
   /// @param material is the (optional) Surface material associated to it
   GenericDetectorElement(
       const Identifier identifier,
-      std::shared_ptr<const Acts::Transform3D> transform,
+      std::shared_ptr<const Acts::Transform3> transform,
       std::shared_ptr<const Acts::DiscBounds> dBounds, double thickness,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr,
       std::shared_ptr<const Acts::DigitizationModule> digitzationModule =
@@ -77,7 +77,7 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
   ///
   /// @note this is called from the surface().transform(gctx) in the PROXY
   /// mode
-  const Acts::Transform3D& transform(
+  const Acts::Transform3& transform(
       const Acts::GeometryContext& gctx) const override;
 
   /// Return surface associated with this identifier,
@@ -98,7 +98,7 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
   /// identifier
   Identifier m_elementIdentifier;
   /// the transform for positioning in 3D space
-  std::shared_ptr<const Acts::Transform3D> m_elementTransform;
+  std::shared_ptr<const Acts::Transform3> m_elementTransform;
   /// the surface represented by it
   std::shared_ptr<const Acts::Surface> m_elementSurface;
   /// the element thickness
@@ -121,7 +121,7 @@ inline Identifier ActsExamples::Generic::GenericDetectorElement::identifier()
   return m_elementIdentifier;
 }
 
-inline const Acts::Transform3D&
+inline const Acts::Transform3&
 ActsExamples::Generic::GenericDetectorElement::transform(
     const Acts::GeometryContext& /*gctx*/) const {
   return *m_elementTransform;

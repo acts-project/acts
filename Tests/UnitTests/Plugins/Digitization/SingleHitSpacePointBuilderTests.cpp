@@ -57,23 +57,23 @@ BOOST_DATA_TEST_CASE(SingleHitSpacePointBuilder_basic, bdata::xrange(1),
   // Build translation
 
   double rotation = 0.026_rad;
-  RotationMatrix3D rotationPos;
-  Vector3D xPos(cos(rotation), sin(rotation), 0.);
-  Vector3D yPos(-sin(rotation), cos(rotation), 0.);
-  Vector3D zPos(0., 0., 1.);
+  RotationMatrix3 rotationPos;
+  Vector3 xPos(cos(rotation), sin(rotation), 0.);
+  Vector3 yPos(-sin(rotation), cos(rotation), 0.);
+  Vector3 zPos(0., 0., 1.);
   rotationPos.col(0) = xPos;
   rotationPos.col(1) = yPos;
   rotationPos.col(2) = zPos;
-  Transform3D t3d(Transform3D::Identity() * rotationPos);
-  t3d.translation() = Vector3D(0., 0., 10_m);
+  Transform3 t3d(Transform3::Identity() * rotationPos);
+  t3d.translation() = Vector3(0., 0., 10_m);
 
   // Build Digitization
   const DigitizationModule digMod(segmentation, 1., 1., 0.);
   DetectorElementStub detElem(t3d);
   auto pSur = Surface::makeShared<PlaneSurface>(recBounds, detElem);
-  ActsSymMatrixD<3> cov;
+  SymMatrix3 cov;
   cov << 0., 0., 0., 0., 0., 0., 0., 0., 0.;
-  Vector2D local = {0.1, -0.1};
+  Vector2 local = {0.1, -0.1};
 
   // Build PlanarModuleCluster
   PlanarModuleCluster* pmc = new PlanarModuleCluster(
@@ -87,7 +87,7 @@ BOOST_DATA_TEST_CASE(SingleHitSpacePointBuilder_basic, bdata::xrange(1),
   std::cout << "Hit added to storage" << std::endl;
 
   shsp.calculateSpacePoints(tgContext, {pmc}, data);
-  BOOST_CHECK_NE(data[0].vector, Vector3D::Zero());
+  BOOST_CHECK_NE(data[0].vector, Vector3::Zero());
 
   std::cout << "Space point calculated" << std::endl;
 }

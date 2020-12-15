@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
     std::cout << "[mm]" << std::endl;
   else if (lengthUnit(genevt) == Acts::UnitConstants::cm)
     std::cout << "[cm]" << std::endl;
-  Acts::Vector3D evtPos = eventPos(genevt);
+  Acts::Vector3 evtPos = eventPos(genevt);
   std::cout << "Event position: " << evtPos(0) << ", " << evtPos(1) << ", "
             << evtPos(2) << std::endl;
   std::cout << "Event time: " << eventTime(genevt) << std::endl;
@@ -108,9 +108,10 @@ int main(int argc, char** argv) {
   for (auto& particle : particles)
     std::cout << HepPID::particleName(particle.pdg())
               << "\tID:" << particle.particleId() << ", momentum: ("
-              << particle.momentum4()(0) << ", " << particle.momentum4()(1)
-              << ", " << particle.momentum4()(2)
-              << "), mass:  " << particle.mass() << std::endl;
+              << particle.fourMomentum()(0) << ", "
+              << particle.fourMomentum()(1) << ", "
+              << particle.fourMomentum()(2) << "), mass:  " << particle.mass()
+              << std::endl;
 
   std::cout << std::endl << "Initial to final state: ";
   std::vector<ActsExamples::SimParticle> fState = finalState(genevt);

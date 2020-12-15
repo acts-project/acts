@@ -38,7 +38,7 @@ class ConeSurface : public Surface {
   /// @param transform is the transform to place to cone in a 3D frame
   /// @param alpha is the opening angle of the cone
   /// @param symmetric indicates if the cones are built to +/1 z
-  ConeSurface(const Transform3D& transform, double alpha,
+  ConeSurface(const Transform3& transform, double alpha,
               bool symmetric = false);
 
   /// Constructor form HepTransform and an opening angle
@@ -48,14 +48,14 @@ class ConeSurface : public Surface {
   /// @param zmin is the z range over which the cone spans
   /// @param zmax is the z range over which the cone spans
   /// @param halfPhi is the openen angle for cone ssectors
-  ConeSurface(const Transform3D& transform, double alpha, double zmin,
+  ConeSurface(const Transform3& transform, double alpha, double zmin,
               double zmax, double halfPhi = M_PI);
 
   /// Constructor from HepTransform and ConeBounds
   ///
   /// @param transform is the transform that places the cone in the global frame
   /// @param cbounds is the boundary class, the bounds must exit
-  ConeSurface(const Transform3D& transform,
+  ConeSurface(const Transform3& transform,
               const std::shared_ptr<const ConeBounds>& cbounds);
 
   /// Copy constructor
@@ -69,7 +69,7 @@ class ConeSurface : public Surface {
   /// @param other is the source cone surface
   /// @param shift is the additional transfrom applied after copying
   ConeSurface(const GeometryContext& gctx, const ConeSurface& other,
-              const Transform3D& shift);
+              const Transform3& shift);
 
  public:
   ~ConeSurface() override = default;
@@ -86,15 +86,15 @@ class ConeSurface : public Surface {
   /// @param bValue defines the type of binning applied in the global frame
   ///
   /// @return The return type is a vector for positioning in the global frame
-  Vector3D binningPosition(const GeometryContext& gctx,
-                           BinningValue bValue) const final;
+  Vector3 binningPosition(const GeometryContext& gctx,
+                          BinningValue bValue) const final;
 
   /// Return the surface type
   SurfaceType type() const override;
 
   /// Return the measurement frame - this is needed for alignment, in particular
   ///  for StraightLine and Perigee Surface
-  ///  - the default implementation is the the RotationMatrix3D of the transform
+  ///  - the default implementation is the the RotationMatrix3 of the transform
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position where the measurement frame is
@@ -102,25 +102,25 @@ class ConeSurface : public Surface {
   /// @param momentum is the momentum used for the measurement frame
   /// construction
   /// @return matrix that indicates the measurement frame
-  RotationMatrix3D referenceFrame(const GeometryContext& gctx,
-                                  const Vector3D& position,
-                                  const Vector3D& momentum) const final;
+  RotationMatrix3 referenceFrame(const GeometryContext& gctx,
+                                 const Vector3& position,
+                                 const Vector3& momentum) const final;
 
   /// Return method for surface normal information
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position at normal vector request
-  /// @return Vector3D normal vector in global frame
-  Vector3D normal(const GeometryContext& gctx,
-                  const Vector2D& lposition) const final;
+  /// @return Vector3 normal vector in global frame
+  Vector3 normal(const GeometryContext& gctx,
+                 const Vector2& lposition) const final;
 
   /// Return method for surface normal information
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position as normal vector base
-  /// @return Vector3D normal vector in global frame
-  Vector3D normal(const GeometryContext& gctx,
-                  const Vector3D& position) const final;
+  /// @return Vector3 normal vector in global frame
+  Vector3 normal(const GeometryContext& gctx,
+                 const Vector3& position) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -130,7 +130,7 @@ class ConeSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   ///
   // @return This returns the local z axis
-  virtual Vector3D rotSymmetryAxis(const GeometryContext& gctx) const;
+  virtual Vector3 rotSymmetryAxis(const GeometryContext& gctx) const;
 
   /// This method returns the ConeBounds by reference
   const ConeBounds& bounds() const final;
@@ -142,8 +142,8 @@ class ConeSurface : public Surface {
   /// @param momentum is the global momentum (ignored in this operation)
   ///
   /// @return The global position by value
-  Vector3D localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
-                         const Vector3D& momentum) const final;
+  Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
+                        const Vector3& momentum) const final;
 
   /// Global to local transformation
   ///
@@ -153,10 +153,10 @@ class ConeSurface : public Surface {
   /// @param tolerance optional tolerance within which a point is considered
   /// valid on surface
   ///
-  /// @return a Result<Vector2D> which can be !ok() if the operation fails
-  Result<Vector2D> globalToLocal(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& momentum,
+  /// @return a Result<Vector2> which can be !ok() if the operation fails
+  Result<Vector2> globalToLocal(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& momentum,
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// Straight line intersection schema from position/direction
@@ -170,8 +170,8 @@ class ConeSurface : public Surface {
   ///
   /// @return SurfaceIntersection object (contains intersection & surface)
   SurfaceIntersection intersect(const GeometryContext& gctx,
-                                const Vector3D& position,
-                                const Vector3D& direction,
+                                const Vector3& position,
+                                const Vector3& direction,
                                 const BoundaryCheck& bcheck) const final;
 
   /// The pathCorrection for derived classes with thickness
@@ -180,8 +180,8 @@ class ConeSurface : public Surface {
   /// @param position is the global potion at the correction point
   /// @param direction is the momentum direction at the correction point
   /// @return is the path correction due to incident angle
-  double pathCorrection(const GeometryContext& gctx, const Vector3D& position,
-                        const Vector3D& direction) const final;
+  double pathCorrection(const GeometryContext& gctx, const Vector3& position,
+                        const Vector3& direction) const final;
 
   /// Return a Polyhedron for the surfaces
   ///
@@ -208,7 +208,7 @@ class ConeSurface : public Surface {
   /// @param parameters is the free parameters
   ///
   /// @return Derivative of path length w.r.t. the alignment parameters
-  AlignmentRowVector alignmentToPathDerivative(
+  AlignmentToPathMatrix alignmentToPathDerivative(
       const GeometryContext& gctx, const FreeVector& parameters) const final;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.
@@ -219,8 +219,8 @@ class ConeSurface : public Surface {
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
-      const GeometryContext& gctx, const Vector3D& position) const final;
+  ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
+      const GeometryContext& gctx, const Vector3& position) const final;
 
  protected:
   std::shared_ptr<const ConeBounds> m_bounds;  ///< bounds (shared)
@@ -262,8 +262,8 @@ class ConeSurface : public Surface {
   ///
   /// @return the quadratic equation
   detail::RealQuadraticEquation intersectionSolver(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction) const;
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const;
 };
 
 #include "Acts/Surfaces/detail/ConeSurface.ipp"

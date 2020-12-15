@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   std::mt19937 gen(mySeed);
 
   // Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 1._T));
+  ConstantBField bField(Vector3(0., 0., 1._T));
 
   // Set up EigenStepper
   EigenStepper<ConstantBField> stepper(bField);
@@ -102,11 +102,11 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
 
   // Create positions of three vertices, two of which (1 and 2) are
   // close to one another and will share a common track later
-  Vector3D vtxPos1(-0.15_mm, -0.1_mm, -1.5_mm);
-  Vector3D vtxPos2(-0.1_mm, -0.15_mm, -3._mm);
-  Vector3D vtxPos3(0.2_mm, 0.2_mm, 10._mm);
+  Vector3 vtxPos1(-0.15_mm, -0.1_mm, -1.5_mm);
+  Vector3 vtxPos2(-0.1_mm, -0.15_mm, -3._mm);
+  Vector3 vtxPos3(0.2_mm, 0.2_mm, 10._mm);
 
-  std::vector<Vector3D> vtxPosVec{vtxPos1, vtxPos2, vtxPos3};
+  std::vector<Vector3> vtxPosVec{vtxPos1, vtxPos2, vtxPos3};
 
   // Resolutions, use the same for all tracks
   double resD0 = resIPDist(gen);
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   for (auto& vtxPos : vtxPosVec) {
     Vertex<BoundTrackParameters> vtx(vtxPos);
     // Set some vertex covariance
-    SymMatrix4D posCovariance(SymMatrix4D::Identity());
+    SymMatrix4 posCovariance(SymMatrix4::Identity());
     vtx.setFullCovariance(posCovariance);
     // Add to vertex list
     vtxList.push_back(vtx);
@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   // Set debug mode
   bool debugMode = false;
   // Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 2_T));
+  ConstantBField bField(Vector3(0., 0., 2_T));
 
   // Set up EigenStepper
   // EigenStepper<ConstantBField> stepper(bField);
@@ -353,20 +353,20 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer> fitter(fitterCfg);
 
   // Create first vector of tracks
-  Vector3D pos1a(0.5_mm, -0.5_mm, 2.4_mm);
-  Vector3D mom1a(1000_MeV, 0_MeV, -500_MeV);
-  Vector3D pos1b(0.5_mm, -0.5_mm, 3.5_mm);
-  Vector3D mom1b(0_MeV, 1000_MeV, 500_MeV);
-  Vector3D pos1c(-0.2_mm, 0.1_mm, 3.4_mm);
-  Vector3D mom1c(-50_MeV, 180_MeV, 300_MeV);
+  Vector3 pos1a(0.5_mm, -0.5_mm, 2.4_mm);
+  Vector3 mom1a(1000_MeV, 0_MeV, -500_MeV);
+  Vector3 pos1b(0.5_mm, -0.5_mm, 3.5_mm);
+  Vector3 mom1b(0_MeV, 1000_MeV, 500_MeV);
+  Vector3 pos1c(-0.2_mm, 0.1_mm, 3.4_mm);
+  Vector3 mom1c(-50_MeV, 180_MeV, 300_MeV);
 
-  Vector3D pos1d(-0.1_mm, 0.3_mm, 3.0_mm);
-  Vector3D mom1d(-80_MeV, 480_MeV, -100_MeV);
-  Vector3D pos1e(-0.01_mm, 0.01_mm, 2.9_mm);
-  Vector3D mom1e(-600_MeV, 10_MeV, 210_MeV);
+  Vector3 pos1d(-0.1_mm, 0.3_mm, 3.0_mm);
+  Vector3 mom1d(-80_MeV, 480_MeV, -100_MeV);
+  Vector3 pos1e(-0.01_mm, 0.01_mm, 2.9_mm);
+  Vector3 mom1e(-600_MeV, 10_MeV, 210_MeV);
 
-  Vector3D pos1f(-0.07_mm, 0.03_mm, 2.5_mm);
-  Vector3D mom1f(240_MeV, 110_MeV, 150_MeV);
+  Vector3 pos1f(-0.07_mm, 0.03_mm, 2.5_mm);
+  Vector3 mom1f(240_MeV, 110_MeV, 150_MeV);
 
   // Start creating some track parameters
   Covariance covMat1;
@@ -396,12 +396,12 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   };
 
   // Create second vector of tracks
-  Vector3D pos2a(0.2_mm, 0_mm, -4.9_mm);
-  Vector3D mom2a(5000_MeV, 30_MeV, 200_MeV);
-  Vector3D pos2b(-0.5_mm, 0.1_mm, -5.1_mm);
-  Vector3D mom2b(800_MeV, 1200_MeV, 200_MeV);
-  Vector3D pos2c(0.05_mm, -0.5_mm, -4.7_mm);
-  Vector3D mom2c(400_MeV, -300_MeV, -200_MeV);
+  Vector3 pos2a(0.2_mm, 0_mm, -4.9_mm);
+  Vector3 mom2a(5000_MeV, 30_MeV, 200_MeV);
+  Vector3 pos2b(-0.5_mm, 0.1_mm, -5.1_mm);
+  Vector3 mom2b(800_MeV, 1200_MeV, 200_MeV);
+  Vector3 pos2c(0.05_mm, -0.5_mm, -4.7_mm);
+  Vector3 mom2c(400_MeV, -300_MeV, -200_MeV);
 
   // Define covariance as used in athena unit test
   Covariance covMat2 = covMat1;
@@ -423,12 +423,12 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
       magFieldContext);
 
   // The constraint vertex position covariance
-  SymMatrix4D covConstr(SymMatrix4D::Identity());
+  SymMatrix4 covConstr(SymMatrix4::Identity());
   covConstr = covConstr * 1e+8;
   covConstr(3, 3) = 0.;
 
   // Prepare first vertex
-  Vector3D vtxPos1(0.15_mm, 0.15_mm, 2.9_mm);
+  Vector3 vtxPos1(0.15_mm, 0.15_mm, 2.9_mm);
   Vertex<BoundTrackParameters> vtx1(vtxPos1);
 
   // Add to vertex list
@@ -455,7 +455,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   }
 
   // Prepare second vertex
-  Vector3D vtxPos2(0.3_mm, -0.2_mm, -4.8_mm);
+  Vector3 vtxPos2(0.3_mm, -0.2_mm, -4.8_mm);
   Vertex<BoundTrackParameters> vtx2(vtxPos2);
 
   // Add to vertex list
@@ -522,24 +522,24 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
 
   // Expected values from Athena implementation
   // Vertex 1
-  const Vector3D expVtx1Pos(0.077_mm, -0.189_mm, 2.924_mm);
+  const Vector3 expVtx1Pos(0.077_mm, -0.189_mm, 2.924_mm);
 
   // Helper matrix to create const expVtx1Cov below
-  ActsSymMatrixD<3> expVtx1Cov;
+  SymMatrix3 expVtx1Cov;
   expVtx1Cov << 0.329, 0.016, -0.035, 0.016, 0.250, 0.085, -0.035, 0.085, 0.242;
 
-  ActsVectorD<6> expVtx1TrkWeights;
+  ActsVector<6> expVtx1TrkWeights;
   expVtx1TrkWeights << 0.8128, 0.7994, 0.8164, 0.8165, 0.8165, 0.8119;
   const double expVtx1chi2 = 0.9812;
   const double expVtx1ndf = 6.7474;
 
   // Vertex 2
-  const Vector3D expVtx2Pos(-0.443_mm, -0.044_mm, -4.829_mm);
+  const Vector3 expVtx2Pos(-0.443_mm, -0.044_mm, -4.829_mm);
   // Helper matrix to create const expVtx2Cov below
-  ActsSymMatrixD<3> expVtx2Cov;
+  SymMatrix3 expVtx2Cov;
   expVtx2Cov << 1.088, 0.028, -0.066, 0.028, 0.643, 0.073, -0.066, 0.073, 0.435;
 
-  const Vector3D expVtx2TrkWeights(0.8172, 0.8150, 0.8137);
+  const Vector3 expVtx2TrkWeights(0.8172, 0.8150, 0.8137);
   const double expVtx2chi2 = 0.2114;
   const double expVtx2ndf = 1.8920;
 

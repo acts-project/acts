@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(NavigationLayerProperties, *utf::expected_failures(1)) {
   auto pNavigationLayer =
       NavigationLayer::create(std::move(pSurface), thickness);
   BinningValue b{BinningValue::binZ};
-  Vector3D origin{0., 0., 0.};
+  Vector3 origin{0., 0., 0.};
   // binningPosition(), needs a better test
   BOOST_CHECK_EQUAL(pNavigationLayer->binningPosition(tgContext, b), origin);
   // surfaceRepresentation() [looks dangerous]
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(NavigationLayerProperties, *utf::expected_failures(1)) {
   // isOnLayer()
   BOOST_CHECK(pNavigationLayer->isOnLayer(tgContext, origin, true));
   // isOnLayer()
-  Vector3D crazyPosition{1000., 10000., std::nan("")};
+  Vector3 crazyPosition{1000., 10000., std::nan("")};
   BOOST_CHECK(!pNavigationLayer->isOnLayer(tgContext, crazyPosition, true));
   // resolve()
   BOOST_CHECK(!pNavigationLayer->resolve(true, true, true));

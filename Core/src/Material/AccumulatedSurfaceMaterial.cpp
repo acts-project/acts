@@ -33,7 +33,7 @@ Acts::AccumulatedSurfaceMaterial::AccumulatedSurfaceMaterial(
 
 // Assign a material properites object
 std::array<size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
-    const Vector2D& lp, const MaterialSlab& mp, double pathCorrection) {
+    const Vector2& lp, const MaterialSlab& mp, double pathCorrection) {
   if (m_binUtility.dimensions() == 0) {
     m_accumulatedMaterial[0][0].accumulate(mp, pathCorrection);
     return {0, 0, 0};
@@ -46,7 +46,7 @@ std::array<size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
 
 // Assign a material properites object
 std::array<size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
-    const Vector3D& gp, const MaterialSlab& mp, double pathCorrection) {
+    const Vector3& gp, const MaterialSlab& mp, double pathCorrection) {
   if (m_binUtility.dimensions() == 0) {
     m_accumulatedMaterial[0][0].accumulate(mp, pathCorrection);
     return {0, 0, 0};
@@ -57,7 +57,7 @@ std::array<size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
 }
 
 // Void average for vacuum assignment
-void Acts::AccumulatedSurfaceMaterial::trackAverage(const Vector3D& gp,
+void Acts::AccumulatedSurfaceMaterial::trackAverage(const Vector3& gp,
                                                     bool emptyHit) {
   if (m_binUtility.dimensions() == 0) {
     m_accumulatedMaterial[0][0].trackAverage();

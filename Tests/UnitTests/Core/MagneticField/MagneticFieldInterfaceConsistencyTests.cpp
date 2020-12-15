@@ -40,9 +40,9 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 template <class BField_t>
 void testInterfaceConsistency(const BField_t& field) {
   using Cache_t = typename BField_t::Cache;
-  Vector3D pos(0, 0, 0);
-  Vector3D B;
-  ActsMatrixD<3, 3> gradient;
+  Vector3 pos(0, 0, 0);
+  Vector3 B;
+  ActsMatrix<3, 3> gradient;
 
   // test interface method without cache
   field.getField(pos);
@@ -67,14 +67,14 @@ BOOST_AUTO_TEST_CASE(TestSolenoidBFieldInterfaceConsistency) {
 BOOST_AUTO_TEST_CASE(TestInterpolatedBFieldMapInterfaceConsistency) {
   // define dummy mapper and field cell, we don't need them to do anything
   struct DummyFieldCell {
-    Vector3D getField(const Vector3D&) const { return {0, 0, 0}; }
-    bool isInside(const Vector3D&) const { return true; }
+    Vector3 getField(const Vector3&) const { return {0, 0, 0}; }
+    bool isInside(const Vector3&) const { return true; }
   };
 
   struct DummyMapper : DummyFieldCell {
     using FieldCell = DummyFieldCell;
 
-    DummyFieldCell getFieldCell(const Vector3D&) const {
+    DummyFieldCell getFieldCell(const Vector3&) const {
       return DummyFieldCell();
     }
     std::vector<size_t> getNBins() const { return {42}; }
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(TestInterpolatedBFieldMapInterfaceConsistency) {
 
 BOOST_AUTO_TEST_CASE(TestSharedBFieldInterfaceConsistency) {
   SharedBField<ConstantBField> field(
-      std::make_shared<ConstantBField>(Vector3D(1, 1, 1)));
+      std::make_shared<ConstantBField>(Vector3(1, 1, 1)));
   testInterfaceConsistency(field);
 }
 }  // namespace Test

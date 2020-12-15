@@ -22,8 +22,8 @@ namespace detail {
 template <typename scalar_t>
 struct GenericDefaultExtension {
   using Scalar = scalar_t;
-  /// @brief Vector3D replacement for the custom scalar type
-  using ThisVector3 = Acts::ActsVector<Scalar, 3>;
+  /// @brief Vector3 replacement for the custom scalar type
+  using ThisVector3 = Eigen::Matrix<Scalar, 3, 1>;
 
   /// @brief Control function if the step evaluation would be valid
   ///
@@ -52,7 +52,7 @@ struct GenericDefaultExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
-         ThisVector3& knew, const Vector3D& bField, std::array<Scalar, 4>& kQoP,
+         ThisVector3& knew, const Vector3& bField, std::array<Scalar, 4>& kQoP,
          const int i = 0, const double h = 0.,
          const ThisVector3& kprev = ThisVector3()) {
     auto qop =
@@ -173,15 +173,15 @@ struct GenericDefaultExtension {
     auto dGdT = D.block<3, 3>(4, 4);
     auto dGdL = D.block<3, 1>(4, 7);
 
-    ActsMatrixD<3, 3> dk1dT = ActsMatrixD<3, 3>::Zero();
-    ActsMatrixD<3, 3> dk2dT = ActsMatrixD<3, 3>::Identity();
-    ActsMatrixD<3, 3> dk3dT = ActsMatrixD<3, 3>::Identity();
-    ActsMatrixD<3, 3> dk4dT = ActsMatrixD<3, 3>::Identity();
+    ActsMatrix<3, 3> dk1dT = ActsMatrix<3, 3>::Zero();
+    ActsMatrix<3, 3> dk2dT = ActsMatrix<3, 3>::Identity();
+    ActsMatrix<3, 3> dk3dT = ActsMatrix<3, 3>::Identity();
+    ActsMatrix<3, 3> dk4dT = ActsMatrix<3, 3>::Identity();
 
-    Vector3D dk1dL = Vector3D::Zero();
-    Vector3D dk2dL = Vector3D::Zero();
-    Vector3D dk3dL = Vector3D::Zero();
-    Vector3D dk4dL = Vector3D::Zero();
+    Vector3 dk1dL = Vector3::Zero();
+    Vector3 dk2dL = Vector3::Zero();
+    Vector3 dk3dL = Vector3::Zero();
+    Vector3 dk4dL = Vector3::Zero();
 
     // For the case without energy loss
     dk1dL = dir.cross(sd.B_first);

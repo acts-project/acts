@@ -207,7 +207,7 @@ class RootBFieldWriter {
           double raw_y = minY + j * stepY;
           for (size_t k = 0; k <= nBinsZ; k++) {
             double raw_z = minZ + k * stepZ;
-            Acts::Vector3D position(raw_x, raw_y, raw_z);
+            Acts::Vector3 position(raw_x, raw_y, raw_z);
             if (cfg.bField->isInside(position)) {
               auto bField = cfg.bField->getField(position);
 
@@ -294,7 +294,7 @@ class RootBFieldWriter {
           double raw_z = minZ + k * stepZ;
           for (size_t j = 0; j < nBinsR; j++) {
             double raw_r = minR + j * stepR;
-            Acts::Vector3D position(raw_r * cos(phi), raw_r * sin(phi), raw_z);
+            Acts::Vector3 position(raw_r * cos(phi), raw_r * sin(phi), raw_z);
             if (cfg.bField->isInside(position)) {
               auto bField = cfg.bField->getField(position);
               z = raw_z / Acts::UnitConstants::mm;

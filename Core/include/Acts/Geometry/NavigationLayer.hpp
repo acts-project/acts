@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -48,8 +47,8 @@ class NavigationLayer : public Layer {
   ///  - as default the center is given, but may be overloaded
   ///
   /// @return The return vector can be used for binning in a TrackingVolume
-  Vector3D binningPosition(const GeometryContext& gctx,
-                           BinningValue bValue) const final;
+  Vector3 binningPosition(const GeometryContext& gctx,
+                          BinningValue bValue) const final;
 
   /// Default Constructor - deleted
   NavigationLayer() = delete;
@@ -75,7 +74,7 @@ class NavigationLayer : public Layer {
   /// @param bcheck is the boundary check directive
   ///
   /// @return boolean that indicates if the position is on surface
-  bool isOnLayer(const GeometryContext& gctx, const Vector3D& gp,
+  bool isOnLayer(const GeometryContext& gctx, const Vector3& gp,
                  const BoundaryCheck& bcheck = true) const final;
 
   /// Accept layer according to the following colelction directives
@@ -116,15 +115,16 @@ inline Surface& NavigationLayer::surfaceRepresentation() {
   return *(const_cast<Surface*>(m_surfaceRepresentation.get()));
 }
 
-inline Vector3D NavigationLayer::binningPosition(const GeometryContext& gctx,
-                                                 BinningValue bValue) const {
+inline Vector3 NavigationLayer::binningPosition(const GeometryContext& gctx,
+                                                BinningValue bValue) const {
   return m_surfaceRepresentation->binningPosition(gctx, bValue);
 }
 
 inline bool NavigationLayer::isOnLayer(const GeometryContext& gctx,
-                                       const Vector3D& gp,
+                                       const Vector3& gp,
                                        const BoundaryCheck& bcheck) const {
-  return m_surfaceRepresentation->isOnSurface(gctx, gp, s_origin, bcheck);
+  return m_surfaceRepresentation->isOnSurface(gctx, gp, Vector3::Zero(),
+                                              bcheck);
 }
 
 inline bool NavigationLayer::resolve(bool /*resolveSensitive*/,

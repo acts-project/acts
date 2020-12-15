@@ -27,13 +27,13 @@ using namespace Acts;
 using namespace Acts::UnitLiterals;
 using AnyFreeTrackParameters = SingleFreeTrackParameters<AnyCharge>;
 
-constexpr auto eps = 8 * std::numeric_limits<FreeScalar>::epsilon();
+constexpr auto eps = 8 * std::numeric_limits<ActsScalar>::epsilon();
 const GeometryContext geoCtx;
 const FreeSymMatrix cov = FreeSymMatrix::Identity();
 
 template <typename charge_t>
 void checkParameters(const SingleFreeTrackParameters<charge_t>& params,
-                     const Vector4D& pos4, const Vector3D& unitDir, double p,
+                     const Vector4& pos4, const Vector3& unitDir, double p,
                      double q) {
   const auto qOverP = (q != 0) ? (q / p) : (1 / p);
   const auto pos = pos4.segment<3>(ePos0);
@@ -76,8 +76,8 @@ BOOST_DATA_TEST_CASE(
     NeutralConstructFromAngles,
     posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps, x, y, z,
     time, phi, theta, p) {
-  Vector4D pos4(x, y, z, time);
-  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  Vector4 pos4(x, y, z, time);
+  Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
 
   NeutralFreeTrackParameters params(pos4, phi, theta, 1 / p);
   checkParameters(params, pos4, dir, p, 0_e);
@@ -93,8 +93,8 @@ BOOST_DATA_TEST_CASE(
     ChargedConstructFromAngles,
     posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
     x, y, z, time, phi, theta, p, q) {
-  Vector4D pos4(x, y, z, time);
-  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  Vector4 pos4(x, y, z, time);
+  Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
 
   FreeTrackParameters params(pos4, phi, theta, q / p);
   checkParameters(params, pos4, dir, p, q);
@@ -110,8 +110,8 @@ BOOST_DATA_TEST_CASE(
     AnyConstructFromAngles,
     posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
     x, y, z, time, phi, theta, p, q) {
-  Vector4D pos4(x, y, z, time);
-  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  Vector4 pos4(x, y, z, time);
+  Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
 
   AnyFreeTrackParameters params(pos4, phi, theta, p, q);
   checkParameters(params, pos4, dir, p, q);

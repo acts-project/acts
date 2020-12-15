@@ -41,13 +41,13 @@ MagneticFieldContext magFieldContext = MagneticFieldContext();
 ///
 BOOST_AUTO_TEST_CASE(track_density_finder_test) {
   // Define some track parameter properties
-  Vector3D pos0{0, 0, 0};
-  Vector3D pos1a{2_mm, 1_mm, -10_mm};
-  Vector3D mom1a{400_MeV, 600_MeV, 200_MeV};
-  Vector3D pos1b{1_mm, 2_mm, -3_mm};
-  Vector3D mom1b{600_MeV, 400_MeV, -200_MeV};
-  Vector3D pos1c{1.2_mm, 1.3_mm, -7_mm};
-  Vector3D mom1c{300_MeV, 1000_MeV, 100_MeV};
+  Vector3 pos0{0, 0, 0};
+  Vector3 pos1a{2_mm, 1_mm, -10_mm};
+  Vector3 mom1a{400_MeV, 600_MeV, 200_MeV};
+  Vector3 pos1b{1_mm, 2_mm, -3_mm};
+  Vector3 mom1b{600_MeV, 400_MeV, -200_MeV};
+  Vector3 pos1c{1.2_mm, 1.3_mm, -7_mm};
+  Vector3 mom1c{300_MeV, 1000_MeV, 100_MeV};
 
   VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
                                                           magFieldContext);
@@ -93,8 +93,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
   if (res1.ok() and res2.ok()) {
     BOOST_CHECK(!(*res1).empty());
     BOOST_CHECK(!(*res2).empty());
-    Vector3D result1 = (*res1).back().position();
-    Vector3D result2 = (*res2).back().position();
+    Vector3 result1 = (*res1).back().position();
+    Vector3 result2 = (*res2).back().position();
     BOOST_CHECK(result1 == result2);
   }
 }
@@ -105,13 +105,13 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
 ///
 BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
   // Define some track parameter properties
-  Vector3D pos0{0, 0, 0};
-  Vector3D pos1a{2_mm, 1_mm, -10_mm};
-  Vector3D mom1a{400_MeV, 600_MeV, 200_MeV};
-  Vector3D pos1b{1_mm, 2_mm, -3_mm};
-  Vector3D mom1b{600_MeV, 400_MeV, -200_MeV};
-  Vector3D pos1c{1.2_mm, 1.3_mm, -7_mm};
-  Vector3D mom1c{300_MeV, 1000_MeV, 100_MeV};
+  Vector3 pos0{0, 0, 0};
+  Vector3 pos1a{2_mm, 1_mm, -10_mm};
+  Vector3 mom1a{400_MeV, 600_MeV, 200_MeV};
+  Vector3 pos1b{1_mm, 2_mm, -3_mm};
+  Vector3 mom1b{600_MeV, 400_MeV, -200_MeV};
+  Vector3 pos1c{1.2_mm, 1.3_mm, -7_mm};
+  Vector3 mom1c{300_MeV, 1000_MeV, 100_MeV};
 
   // From Athena VertexSeedFinderTestAlg
   double const expectedZResult = -13.013;
@@ -121,8 +121,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
                                                           magFieldContext);
 
   // Create constraint for seed finding
-  Vector3D constraintPos{1.7_mm, 1.3_mm, -6_mm};
-  ActsSymMatrixD<3> constrCov = ActsSymMatrixD<3>::Identity();
+  Vector3 constraintPos{1.7_mm, 1.3_mm, -6_mm};
+  SymMatrix3 constrCov = ActsSymMatrix<3>::Identity();
 
   Vertex<BoundTrackParameters> vertexConstraint(constraintPos);
   vertexConstraint.setCovariance(constrCov);
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
 
   if (res.ok()) {
     BOOST_CHECK(!(*res).empty());
-    Vector3D result = (*res).back().position();
+    Vector3 result = (*res).back().position();
 
     BOOST_CHECK(result[eX] == constraintPos[eX]);
     BOOST_CHECK(result[eY] == constraintPos[eY]);
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
   Covariance covMat = Covariance::Identity();
 
   // Perigee surface for track parameters
-  Vector3D pos0{0, 0, 0};
+  Vector3 pos0{0, 0, 0};
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(pos0);
 
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
     double eta = etaDist(gen);
     double charge = etaDist(gen) > 0 ? 1 : -1;
     trackVec.push_back(BoundTrackParameters(
-        perigeeSurface, geoContext, Vector4D(x, y, z, 0),
+        perigeeSurface, geoContext, Vector4(x, y, z, 0),
         makeDirectionUnitFromPhiEta(phi, eta), pt, charge, covMat));
   }
 
@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
 
   if (res3.ok()) {
     BOOST_CHECK(!(*res3).empty());
-    Vector3D result = (*res3).back().position();
+    Vector3 result = (*res3).back().position();
     CHECK_CLOSE_ABS(result[eZ], zVertexPos, 1_mm);
   }
 }
@@ -264,13 +264,13 @@ struct InputTrack {
 ///
 BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   // Define some track parameter properties
-  Vector3D pos0{0, 0, 0};
-  Vector3D pos1a{2_mm, 1_mm, -10_mm};
-  Vector3D mom1a{400_MeV, 600_MeV, 200_MeV};
-  Vector3D pos1b{1_mm, 2_mm, -3_mm};
-  Vector3D mom1b{600_MeV, 400_MeV, -200_MeV};
-  Vector3D pos1c{1.2_mm, 1.3_mm, -7_mm};
-  Vector3D mom1c{300_MeV, 1000_MeV, 100_MeV};
+  Vector3 pos0{0, 0, 0};
+  Vector3 pos1a{2_mm, 1_mm, -10_mm};
+  Vector3 mom1a{400_MeV, 600_MeV, 200_MeV};
+  Vector3 pos1b{1_mm, 2_mm, -3_mm};
+  Vector3 mom1b{600_MeV, 400_MeV, -200_MeV};
+  Vector3 pos1c{1.2_mm, 1.3_mm, -7_mm};
+  Vector3 mom1c{300_MeV, 1000_MeV, 100_MeV};
 
   // From Athena VertexSeedFinderTestAlg
   double const expectedZResult = -13.013;
@@ -279,8 +279,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   VertexingOptions<InputTrack> vertexingOptions(geoContext, magFieldContext);
 
   // Create constraint for seed finding
-  Vector3D constraintPos{1.7_mm, 1.3_mm, -6_mm};
-  ActsSymMatrixD<3> constrCov = ActsSymMatrixD<3>::Identity();
+  Vector3 constraintPos{1.7_mm, 1.3_mm, -6_mm};
+  SymMatrix3 constrCov = SymMatrix3::Identity();
 
   Vertex<InputTrack> vertexConstraint(constraintPos);
   vertexConstraint.setCovariance(constrCov);
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
 
   if (res.ok()) {
     BOOST_CHECK(!(*res).empty());
-    Vector3D result = (*res).back().position();
+    Vector3 result = (*res).back().position();
 
     BOOST_CHECK(result[eX] == constraintPos[eX]);
     BOOST_CHECK(result[eY] == constraintPos[eY]);

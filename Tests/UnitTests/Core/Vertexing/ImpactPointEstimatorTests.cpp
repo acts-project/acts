@@ -62,7 +62,7 @@ auto vertices = vx0s * vy0s * vz0s * vt0s;
 
 // Construct an impact point estimator for a constant bfield along z.
 Estimator makeEstimator(double bZ) {
-  MagneticField field(Vector3D(0, 0, bZ));
+  MagneticField field(Vector3(0, 0, bZ));
   Stepper stepper(field);
   Estimator::Config cfg(field,
                         std::make_shared<Propagator>(std::move(stepper)));
@@ -82,8 +82,8 @@ Acts::BoundSymMatrix makeBoundParametersCovariance() {
 }
 
 // Construct a diagonal vertex covariance w/ reasonable values.
-Acts::SymMatrix4D makeVertexCovariance() {
-  Vector4D stddev;
+Acts::SymMatrix4 makeVertexCovariance() {
+  Vector4 stddev;
   stddev[ePos0] = 10_um;
   stddev[ePos1] = 10_um;
   stddev[ePos2] = 75_um;
@@ -110,7 +110,7 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3d, tracks, d0,
   Estimator ipEstimator = makeEstimator(2_T);
   Estimator::State state(magFieldContext);
   // reference position and corresponding perigee surface
-  Vector3D refPosition(0., 0., 0.);
+  Vector3 refPosition(0., 0., 0.);
   auto perigeeSurface = Surface::makeShared<PerigeeSurface>(refPosition);
   // create the track
   BoundTrackParameters myTrack(perigeeSurface, par,
@@ -141,7 +141,7 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3d, tracks, d0,
   // BOOST_CHECK_NE(atPerigee[eBoundPhi], atIp3d[eBoundPhi]);
   CHECK_CLOSE_ABS(atPerigee[eBoundTheta], atIp3d[eBoundTheta], 0.01_mrad);
   CHECK_CLOSE_REL(atPerigee[eBoundQOverP], atIp3d[eBoundQOverP],
-                  std::numeric_limits<BoundScalar>::epsilon());
+                  std::numeric_limits<ActsScalar>::epsilon());
 
   // check that we get sensible compatibility scores
   // this is a chi2-like value and should always be positive
@@ -164,9 +164,9 @@ BOOST_AUTO_TEST_CASE(SingleTrackDistanceParametersAthenaRegression) {
   Estimator::State state(magFieldContext);
 
   // Use same values as in Athena unit test
-  Vector4D pos1(2_mm, 1_mm, -10_mm, 0_ns);
-  Vector3D mom1(400_MeV, 600_MeV, 200_MeV);
-  Vector3D vtxPos(1.2_mm, 0.8_mm, -7_mm);
+  Vector4 pos1(2_mm, 1_mm, -10_mm, 0_ns);
+  Vector3 mom1(400_MeV, 600_MeV, 200_MeV);
+  Vector3 vtxPos(1.2_mm, 0.8_mm, -7_mm);
 
   // Start creating some track parameters
   auto perigeeSurface =
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(SingleTrackDistanceParametersAthenaRegression) {
       geoContext, magFieldContext, params1, vtxPos, state);
   BOOST_CHECK(res2.ok());
   BoundTrackParameters endParams = std::move(**res2);
-  Vector3D surfaceCenter = endParams.referenceSurface().center(geoContext);
+  Vector3 surfaceCenter = endParams.referenceSurface().center(geoContext);
 
   BOOST_CHECK_EQUAL(surfaceCenter, vtxPos);
 }
@@ -201,7 +201,7 @@ BOOST_DATA_TEST_CASE(SingeTrackImpactParameters, tracks* vertices, d0, l0, t0,
   par[eBoundPhi] = phi;
   par[eBoundTheta] = theta;
   par[eBoundQOverP] = q / p;
-  Vector4D vtxPos;
+  Vector4 vtxPos;
   vtxPos[ePos0] = vx0;
   vtxPos[ePos1] = vy0;
   vtxPos[ePos2] = vz0;
@@ -211,7 +211,7 @@ BOOST_DATA_TEST_CASE(SingeTrackImpactParameters, tracks* vertices, d0, l0, t0,
   Estimator::State state(magFieldContext);
 
   // reference position and corresponding perigee surface
-  Vector3D refPosition(0., 0., 0.);
+  Vector3 refPosition(0., 0., 0.);
   auto perigeeSurface = Surface::makeShared<PerigeeSurface>(refPosition);
   // create track and vertex
   BoundTrackParameters track(perigeeSurface, par,

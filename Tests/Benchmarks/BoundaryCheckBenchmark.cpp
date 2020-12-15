@@ -24,10 +24,10 @@ int main(int /*argc*/, char** /*argv[]*/) {
   // === PROBLEM DATA ===
 
   // Trapezoidal area of interest
-  const Vector2D poly[] = {{0.4, 0.25}, {0.6, 0.25}, {0.8, 0.75}, {0.2, 0.75}};
+  const Vector2 poly[] = {{0.4, 0.25}, {0.6, 0.25}, {0.8, 0.75}, {0.2, 0.75}};
 
   // Covariance matrix which specifies "soft" boundary check tolerance
-  SymMatrix2D cov;
+  SymMatrix2 cov;
   cov << 0.2, 0.02, 0.15, 0.02;
 
   // Random tests cover the ((0, 0), (1, 1)) rectangle. 20% of that area is
@@ -35,18 +35,18 @@ int main(int /*argc*/, char** /*argv[]*/) {
   // given the above covariance matrix.
   std::mt19937 rng(42);
   std::uniform_real_distribution<double> axis(0, 1);
-  auto random_point = [&]() -> Vector2D {
-    return Vector2D(axis(rng), axis(rng));
+  auto random_point = [&]() -> Vector2 {
+    return Vector2(axis(rng), axis(rng));
   };
 
   // This point is inside the area
-  const Vector2D center(0.5, 0.5);
+  const Vector2 center(0.5, 0.5);
   // This point is still inside the area, but close to an edge
-  const Vector2D edge_inside(0.401, 0.251);
+  const Vector2 edge_inside(0.401, 0.251);
   // This point is just a bit outside, should be considered "in" by tolerance
-  const Vector2D edge_outside(0.399, 0.249);
+  const Vector2 edge_outside(0.399, 0.249);
   // This point should always be considered outside the area
-  const Vector2D far_away(-1000., -1000.);
+  const Vector2 far_away(-1000., -1000.);
 
   // === BENCHMARKS ===
 
@@ -113,7 +113,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
               num_outside_points, "Far away");
 
     // Pre-rolled random points
-    std::vector<Vector2D> points(num_outside_points);
+    std::vector<Vector2> points(num_outside_points);
     std::generate(points.begin(), points.end(), random_point);
     run_bench_with_inputs(
         [&](const auto& point) { return check.isInside(point, poly); }, points,

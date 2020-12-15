@@ -24,7 +24,7 @@
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-Acts::DiscLayer::DiscLayer(const Transform3D& transform,
+Acts::DiscLayer::DiscLayer(const Transform3& transform,
                            const std::shared_ptr<const DiscBounds>& dbounds,
                            std::unique_ptr<SurfaceArray> surfaceArray,
                            double thickness,

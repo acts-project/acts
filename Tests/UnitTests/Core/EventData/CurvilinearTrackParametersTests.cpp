@@ -26,14 +26,14 @@ using namespace Acts::UnitLiterals;
 using AnyCurvilinearTrackParameters =
     SingleCurvilinearTrackParameters<AnyCharge>;
 
-constexpr auto eps = 8 * std::numeric_limits<BoundScalar>::epsilon();
+constexpr auto eps = 8 * std::numeric_limits<ActsScalar>::epsilon();
 const GeometryContext geoCtx;
 const BoundSymMatrix cov = BoundSymMatrix::Identity();
 
 template <typename charge_t>
 void checkParameters(const SingleCurvilinearTrackParameters<charge_t>& params,
                      double phi, double theta, double p, double q,
-                     const Vector4D& pos4, const Vector3D& unitDir) {
+                     const Vector4& pos4, const Vector3& unitDir) {
   const auto qOverP = (q != 0) ? (q / p) : (1 / p);
   const auto pos = pos4.segment<3>(ePos0);
 
@@ -73,8 +73,8 @@ BOOST_DATA_TEST_CASE(
     time, phiInput, theta, p) {
   // phi is ill-defined in forward/backward tracks
   const auto phi = ((0 < theta) and (theta < M_PI)) ? phiInput : 0.0;
-  const Vector4D pos4(x, y, z, time);
-  const Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  const Vector4 pos4(x, y, z, time);
+  const Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
 
   NeutralCurvilinearTrackParameters params(pos4, dir, 1 / p);
   checkParameters(params, phi, theta, p, 0_e, pos4, dir);
@@ -92,8 +92,8 @@ BOOST_DATA_TEST_CASE(
     x, y, z, time, phiInput, theta, p, q) {
   // phi is ill-defined in forward/backward tracks
   const auto phi = ((0 < theta) and (theta < M_PI)) ? phiInput : 0.0;
-  const Vector4D pos4(x, y, z, time);
-  const Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  const Vector4 pos4(x, y, z, time);
+  const Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
 
   CurvilinearTrackParameters params(pos4, dir, q / p);
   checkParameters(params, phi, theta, p, q, pos4, dir);
@@ -111,8 +111,8 @@ BOOST_DATA_TEST_CASE(
     z, time, phiInput, theta, p, q) {
   // phi is ill-defined in forward/backward tracks
   const auto phi = ((0 < theta) and (theta < M_PI)) ? phiInput : 0.0;
-  const Vector4D pos4(x, y, z, time);
-  const Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  const Vector4 pos4(x, y, z, time);
+  const Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
 
   AnyCurvilinearTrackParameters params(pos4, dir, p, q);
   checkParameters(params, phi, theta, p, q, pos4, dir);

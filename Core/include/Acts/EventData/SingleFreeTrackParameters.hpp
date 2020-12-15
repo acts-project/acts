@@ -28,7 +28,7 @@ namespace Acts {
 template <class charge_t>
 class SingleFreeTrackParameters {
  public:
-  using Scalar = FreeScalar;
+  using Scalar = ActsScalar;
   using ParametersVector = FreeVector;
   using CovarianceMatrix = FreeSymMatrix;
 
@@ -73,7 +73,7 @@ class SingleFreeTrackParameters {
   /// @param p Absolute momentum
   /// @param q Particle charge
   /// @param cov Free parameters covariance matrix
-  SingleFreeTrackParameters(const Vector4D& pos4, Scalar phi, Scalar theta,
+  SingleFreeTrackParameters(const Vector4& pos4, Scalar phi, Scalar theta,
                             Scalar p, Scalar q,
                             std::optional<CovarianceMatrix> cov = std::nullopt)
       : m_params(FreeVector::Zero()),
@@ -104,7 +104,7 @@ class SingleFreeTrackParameters {
   /// ambiguities, i.e. the charge interpretation type is default-constructible.
   template <typename T = charge_t,
             std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
-  SingleFreeTrackParameters(const Vector4D& pos4, Scalar phi, Scalar theta,
+  SingleFreeTrackParameters(const Vector4& pos4, Scalar phi, Scalar theta,
                             Scalar qOverP,
                             std::optional<CovarianceMatrix> cov = std::nullopt)
       : m_params(FreeVector::Zero()), m_cov(std::move(cov)) {
@@ -142,8 +142,8 @@ class SingleFreeTrackParameters {
   }
 
   /// Space-time position four-vector.
-  Vector4D fourPosition() const {
-    Vector4D pos4;
+  Vector4 fourPosition() const {
+    Vector4 pos4;
     pos4[ePos0] = m_params[eFreePos0];
     pos4[ePos1] = m_params[eFreePos1];
     pos4[ePos2] = m_params[eFreePos2];
@@ -151,12 +151,12 @@ class SingleFreeTrackParameters {
     return pos4;
   }
   /// Spatial position three-vector.
-  Vector3D position() const { return m_params.segment<3>(eFreePos0); }
+  Vector3 position() const { return m_params.segment<3>(eFreePos0); }
   /// Time coordinate.
   Scalar time() const { return m_params[eFreeTime]; }
 
   /// Unit direction three-vector, i.e. the normalized momentum three-vector.
-  Vector3D unitDirection() const {
+  Vector3 unitDirection() const {
     return m_params.segment<3>(eFreeDir0).normalized();
   }
   /// Absolute momentum.
@@ -177,7 +177,7 @@ class SingleFreeTrackParameters {
     return (transverseMagnitude / magnitude) * absoluteMomentum();
   }
   /// Momentum three-vector.
-  Vector3D momentum() const { return absoluteMomentum() * unitDirection(); }
+  Vector3 momentum() const { return absoluteMomentum() * unitDirection(); }
 
   /// Particle electric charge.
   constexpr Scalar charge() const {

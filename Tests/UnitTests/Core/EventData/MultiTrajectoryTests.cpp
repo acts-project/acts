@@ -51,8 +51,8 @@ struct TestTrackState {
   // @param size_t nMeasurement either 1 or 2
   template <typename rng_t>
   TestTrackState(rng_t& rng, size_t nMeasurements)
-      : surface(Surface::makeShared<PlaneSurface>(Vector3D::Zero(),
-                                                  Vector3D::UnitZ())),
+      : surface(Surface::makeShared<PlaneSurface>(Vector3::Zero(),
+                                                  Vector3::UnitZ())),
         // set bogus parameters first since they are not default-constructible
         predicted(surface, BoundVector::Zero()),
         filtered(surface, BoundVector::Zero()),
@@ -60,7 +60,7 @@ struct TestTrackState {
         jacobian(Jacobian::Identity()),
         chi2(std::chi_squared_distribution<double>(nMeasurements)(rng)),
         pathLength(
-            std::uniform_real_distribution<BoundScalar>(1_mm, 10_mm)(rng)) {
+            std::uniform_real_distribution<ActsScalar>(1_mm, 10_mm)(rng)) {
     // set a random geometry identifier to uniquely identify each surface
     auto geoId =
         std::uniform_int_distribution<GeometryIdentifier::Value>()(rng);
@@ -68,10 +68,10 @@ struct TestTrackState {
 
     // create source link w/ inline 1d or 2d measurement data
     if (nMeasurements == 1u) {
-      auto [par, cov] = generateParametersCovariance<BoundScalar, 1u>(rng);
+      auto [par, cov] = generateParametersCovariance<ActsScalar, 1u>(rng);
       sourceLink = TestSourceLink(eBoundLoc0, par[0], cov(0, 0), geoId);
     } else if (nMeasurements == 2u) {
-      auto [par, cov] = generateParametersCovariance<BoundScalar, 2u>(rng);
+      auto [par, cov] = generateParametersCovariance<ActsScalar, 2u>(rng);
       sourceLink = TestSourceLink(eBoundLoc1, eBoundQOverP, par, cov, geoId);
     } else {
       throw std::runtime_error("invalid number of measurement dimensions");
@@ -95,7 +95,7 @@ struct TestTrackState {
     for (Eigen::Index c = 0; c < jacobian.cols(); ++c) {
       for (Eigen::Index r = 0; r < jacobian.rows(); ++r) {
         jacobian(c, r) +=
-            std::uniform_real_distribution<BoundScalar>(-0.125, 0.125)(rng);
+            std::uniform_real_distribution<ActsScalar>(-0.125, 0.125)(rng);
       }
     }
   }
@@ -495,7 +495,7 @@ BOOST_AUTO_TEST_CASE(TrackStateReassignment) {
   // check that the overallocated parts are zeroed
   ParametersVector mParFull = ParametersVector::Zero();
   CovarianceMatrix mCovFull = CovarianceMatrix::Zero();
-  ActsMatrixD<MultiTrajectory<TestSourceLink>::MeasurementSizeMax, eBoundSize>
+  ActsMatrix<MultiTrajectory<TestSourceLink>::MeasurementSizeMax, eBoundSize>
       projFull;
   mParFull.head<2>() = m2.parameters();
   mCovFull.topLeftCorner<2, 2>() = m2.covariance();
@@ -562,7 +562,7 @@ BOOST_DATA_TEST_CASE(TrackStateProxyStorage, bd::make({1u, 2u}),
   }
 
   BOOST_CHECK(ts.hasProjector());
-  ActsMatrixD<MultiTrajectory<TestSourceLink>::MeasurementSizeMax, eBoundSize>
+  ActsMatrix<MultiTrajectory<TestSourceLink>::MeasurementSizeMax, eBoundSize>
       fullProj;
   fullProj.setZero();
   {

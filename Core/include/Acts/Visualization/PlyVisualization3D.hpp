@@ -32,21 +32,21 @@ class PlyVisualization3D : public IVisualization3D {
   using ValueType = T;
 
   /// Type of a vertex based on the value type
-  using VertexType = ActsVector<ValueType, 3>;
+  using VertexType = Eigen::Matrix<ValueType, 3, 1>;
 
   /// @copydoc Acts::IVisualization3D::vertex()
-  void vertex(const Vector3D& vtx, ColorRGB color = {120, 120, 120}) final;
+  void vertex(const Vector3& vtx, ColorRGB color = {120, 120, 120}) final;
 
   /// @copydoc Acts::IVisualization3D::line()
-  void face(const std::vector<Vector3D>& vtxs,
+  void face(const std::vector<Vector3>& vtxs,
             ColorRGB color = {120, 120, 120}) final;
 
   /// @copydoc Acts::IVisualization3D::faces()
-  void faces(const std::vector<Vector3D>& vtxs, const std::vector<FaceType>&,
+  void faces(const std::vector<Vector3>& vtxs, const std::vector<FaceType>&,
              ColorRGB color = {120, 120, 120}) final;
 
   /// @copydoc Acts::IVisualization3D::face()
-  void line(const Vector3D& a, const Vector3D& b,
+  void line(const Vector3& a, const Vector3& b,
             ColorRGB color = {120, 120, 120}) final;
 
   /// @copydoc Acts::IVisualization3D::write()

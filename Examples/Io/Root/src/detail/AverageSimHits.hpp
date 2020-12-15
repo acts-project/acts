@@ -34,18 +34,18 @@ using HitSimHitsRange = Range<IndexMultimap<Index>::const_iterator>;
 ///
 /// If more than one simulated hit is selected, the average truth information is
 /// returned.
-inline std::tuple<Acts::Vector2D, Acts::Vector4D, Acts::Vector3D>
-averageSimHits(const Acts::GeometryContext& gCtx, const Acts::Surface& surface,
-               const SimHitContainer& simHits,
-               const detail::HitSimHitsRange& hitSimHitsRange) {
+inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3> averageSimHits(
+    const Acts::GeometryContext& gCtx, const Acts::Surface& surface,
+    const SimHitContainer& simHits,
+    const detail::HitSimHitsRange& hitSimHitsRange) {
   using namespace Acts::UnitLiterals;
 
   ACTS_LOCAL_LOGGER(
       Acts::getDefaultLogger("averageSimHits", Acts::Logging::INFO));
 
-  Acts::Vector2D avgLocal = Acts::Vector2D::Zero();
-  Acts::Vector4D avgPos4 = Acts::Vector4D::Zero();
-  Acts::Vector3D avgDir = Acts::Vector3D::Zero();
+  Acts::Vector2 avgLocal = Acts::Vector2::Zero();
+  Acts::Vector4 avgPos4 = Acts::Vector4::Zero();
+  Acts::Vector3 avgDir = Acts::Vector3::Zero();
 
   size_t n = 0u;
   for (auto [_, simHitIdx] : hitSimHitsRange) {
@@ -69,7 +69,7 @@ averageSimHits(const Acts::GeometryContext& gCtx, const Acts::Surface& surface,
     }
     // global position should already be at the intersection. no need to perform
     // an additional intersection call.
-    avgPos4 += simHit.position4();
+    avgPos4 += simHit.fourPosition();
     avgDir += simHit.unitDirection();
   }
 

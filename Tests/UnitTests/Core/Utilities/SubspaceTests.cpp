@@ -51,8 +51,8 @@ using ScalarsAndFixedSizeSubspaces = std::tuple<
 
 /// Construct a random vector of the specified size.
 template <typename scalar_t, std::size_t kSize>
-ActsVector<scalar_t, kSize> makeRandomVector() {
-  ActsVector<scalar_t, kSize> vec;
+Eigen::Matrix<scalar_t, kSize, 1> makeRandomVector() {
+  Eigen::Matrix<scalar_t, kSize, 1> vec;
   vec.setRandom();
   return vec;
 }

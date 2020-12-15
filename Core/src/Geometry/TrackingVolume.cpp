@@ -29,7 +29,7 @@
 #include <utility>
 
 Acts::TrackingVolume::TrackingVolume(
-    const Transform3D& transform, VolumeBoundsPtr volbounds,
+    const Transform3& transform, VolumeBoundsPtr volbounds,
     const std::shared_ptr<const TrackingVolumeArray>& containedVolumeArray,
     const std::string& volumeName)
     : Volume(transform, std::move(volbounds)),
@@ -44,7 +44,7 @@ Acts::TrackingVolume::TrackingVolume(
 
 // constructor for arguments
 Acts::TrackingVolume::TrackingVolume(
-    const Transform3D& transform, VolumeBoundsPtr volumeBounds,
+    const Transform3& transform, VolumeBoundsPtr volumeBounds,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial,
     std::unique_ptr<const LayerArray> staticLayerArray,
     std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
@@ -63,7 +63,7 @@ Acts::TrackingVolume::TrackingVolume(
 
 // constructor for arguments
 Acts::TrackingVolume::TrackingVolume(
-    const Transform3D& transform, VolumeBoundsPtr volbounds,
+    const Transform3& transform, VolumeBoundsPtr volbounds,
     std::vector<std::unique_ptr<Volume::BoundingBox>> boxStore,
     std::vector<std::unique_ptr<const Volume>> descendants,
     const Volume::BoundingBox* top,
@@ -88,7 +88,7 @@ Acts::TrackingVolume::~TrackingVolume() {
 }
 
 const Acts::TrackingVolume* Acts::TrackingVolume::lowestTrackingVolume(
-    const GeometryContext& /*gctx*/, const Vector3D& position,
+    const GeometryContext& /*gctx*/, const Vector3& position,
     const double tol) const {
   // confined static volumes - highest hierarchy
   if (m_confinedVolumes) {
@@ -177,15 +177,14 @@ void Acts::TrackingVolume::glueTrackingVolume(const GeometryContext& gctx,
                                               BoundarySurfaceFace bsfNeighbor) {
   // Find the connection of the two tracking volumes: binR returns the center
   // except for cylindrical volumes
-  Vector3D bPosition(binningPosition(gctx, binR));
-  Vector3D distance =
-      Vector3D(neighbor->binningPosition(gctx, binR) - bPosition);
+  Vector3 bPosition(binningPosition(gctx, binR));
+  Vector3 distance = Vector3(neighbor->binningPosition(gctx, binR) - bPosition);
   // glue to the face
   std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bSurfaceMine =
       boundarySurfaces().at(bsfMine);
   // @todo - complex glueing could be possible with actual intersection for the
   // normal vector
-  Vector3D nvector =
+  Vector3 nvector =
       bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
   // estimate the orientation
   NavigationDirection navDir =
@@ -223,15 +222,15 @@ void Acts::TrackingVolume::glueTrackingVolumes(
   std::shared_ptr<const TrackingVolume> nRefVolume =
       neighbors->arrayObjects().at(0);
   // get the distance
-  Vector3D bPosition(binningPosition(gctx, binR));
-  Vector3D distance =
-      Vector3D(nRefVolume->binningPosition(gctx, binR) - bPosition);
+  Vector3 bPosition(binningPosition(gctx, binR));
+  Vector3 distance =
+      Vector3(nRefVolume->binningPosition(gctx, binR) - bPosition);
   // take the normal at the binning positio
   std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bSurfaceMine =
       boundarySurfaces().at(bsfMine);
   // @todo - complex glueing could be possible with actual intersection for the
   // normal vector
-  Vector3D nvector =
+  Vector3 nvector =
       bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
   // estimate the orientation
   NavigationDirection navDir =
@@ -476,8 +475,8 @@ void Acts::TrackingVolume::visitSurfaces(
 // Returns the boundary surfaces ordered in probability to hit them based on
 std::vector<Acts::BoundaryIntersection>
 Acts::TrackingVolume::compatibleBoundaries(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const NavigationOptions<Surface>& options,
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const NavigationOptions<Surface>& options,
     LoggerWrapper logger) const {
   ACTS_VERBOSE("Finding compatibleBoundaries");
   // Loop over boundarySurfaces and calculate the intersection
@@ -605,8 +604,8 @@ Acts::TrackingVolume::compatibleBoundaries(
 }
 
 std::vector<Acts::LayerIntersection> Acts::TrackingVolume::compatibleLayers(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const NavigationOptions<Layer>& options) const {
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const NavigationOptions<Layer>& options) const {
   // the layer intersections which are valid
   std::vector<LayerIntersection> lIntersections;
 
@@ -688,8 +687,8 @@ std::vector<const Acts::Volume*> intersectSearchHierarchy(
 
 std::vector<Acts::SurfaceIntersection>
 Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, double angle,
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, double angle,
     const NavigationOptions<Surface>& options) const {
   std::vector<SurfaceIntersection> sIntersections;
   sIntersections.reserve(20);  // arbitrary
@@ -703,7 +702,7 @@ Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
   }
 
   // The signed direction
-  Vector3D sdir = options.navDir * direction;
+  Vector3 sdir = options.navDir * direction;
 
   std::vector<const Volume*> hits;
   if (angle == 0) {
