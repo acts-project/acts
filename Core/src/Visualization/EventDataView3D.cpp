@@ -10,7 +10,7 @@
 
 void Acts::EventDataView3D::drawCovarianceCartesian(
     IVisualization3D& helper, const Vector2D& lposition,
-    const ActsSymMatrixD<2>& covariance, const Transform3D& transform,
+    const SymMatrix2D& covariance, const Transform3D& transform,
     double locErrorScale, const ViewConfig& viewConfig) {
   auto [lambda0, lambda1, theta] = decomposeCovariance(covariance);
 
@@ -27,7 +27,7 @@ void Acts::EventDataView3D::drawCovarianceCartesian(
 
 void Acts::EventDataView3D::drawCovarianceAngular(
     IVisualization3D& helper, const Vector3D& position,
-    const Vector3D& direction, const ActsSymMatrixD<2>& covariance,
+    const Vector3D& direction, const ActsSymMatrix<2>& covariance,
     double directionScale, double angularErrorScale,
     const ViewConfig& viewConfig) {
   auto [lambda0, lambda1, theta] = decomposeCovariance(covariance);

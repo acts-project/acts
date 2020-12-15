@@ -259,7 +259,7 @@ bool Acts::AnnulusBounds::inside(const Vector2D& lposition,
 
     double B = cosDPhiPhiStrip;
     double C = -sinDPhiPhiStrip;
-    ActsMatrixD<2, 2> jacobianStripPCToModulePC;
+    ActsMatrix<2, 2> jacobianStripPCToModulePC;
     jacobianStripPCToModulePC(0, 0) = (B * O_x + C * O_y + r_strip) / sqrtA;
     jacobianStripPCToModulePC(0, 1) =
         r_strip * (B * O_y + O_x * sinDPhiPhiStrip) / sqrtA;
@@ -336,8 +336,7 @@ Acts::Vector2D Acts::AnnulusBounds::stripXYToModulePC(
 
 Acts::Vector2D Acts::AnnulusBounds::closestOnSegment(
     const Vector2D& a, const Vector2D& b, const Vector2D& p,
-    const ActsSymMatrixD<2>& weight) const {
-  using Scalar = Vector2D::Scalar;
+    const SymMatrix2D& weight) const {
   // connecting vector
   auto n = b - a;
   // squared norm of line
@@ -345,14 +344,14 @@ Acts::Vector2D Acts::AnnulusBounds::closestOnSegment(
   // weighted scalar product of line to point and segment line
   auto u = ((p - a).transpose() * weight * n).value() / f;
   // clamp to [0, 1], convert to point
-  return std::min(std::max(u, static_cast<Scalar>(0.0)),
-                  static_cast<Scalar>(1.0)) *
+  return std::min(std::max(u, static_cast<ActsScalar>(0)),
+                  static_cast<ActsScalar>(1)) *
              n +
          a;
 }
 
 double Acts::AnnulusBounds::squaredNorm(const Vector2D& v,
-                                        const ActsSymMatrixD<2>& weight) const {
+                                        const SymMatrix2D& weight) const {
   return (v.transpose() * weight * v).value();
 }
 

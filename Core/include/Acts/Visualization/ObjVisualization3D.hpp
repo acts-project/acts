@@ -35,7 +35,7 @@ class ObjVisualization3D : public IVisualization3D {
   using ValueType = T;
 
   /// Type of a vertex based on the value type
-  using VertexType = ActsVector<ValueType, 3>;
+  using VertexType = Eigen::Matrix<ValueType, 3, 1>;
 
   /// Type of a line
   using LineType = std::pair<size_t, size_t>;

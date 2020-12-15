@@ -28,7 +28,7 @@ namespace Acts {
 template <class charge_t>
 class SingleFreeTrackParameters {
  public:
-  using Scalar = FreeScalar;
+  using Scalar = ActsScalar;
   using ParametersVector = FreeVector;
   using CovarianceMatrix = FreeSymMatrix;
 

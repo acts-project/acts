@@ -31,10 +31,10 @@ auto Acts::materialMapperRZ(
     std::vector<double> rPos, std::vector<double> zPos,
     std::vector<Acts::Material> material, double lengthUnit)
     -> MaterialMapper<
-        detail::Grid<ActsVector<float, 5>, detail::EquidistantAxis,
+        detail::Grid<Material::ParametersVector, detail::EquidistantAxis,
                      detail::EquidistantAxis>> {
   // [1] Decompose material
-  std::vector<ActsVector<float, 5>> materialVector;
+  std::vector<Material::ParametersVector> materialVector;
   materialVector.reserve(material.size());
 
   for (Material& mat : material) {
@@ -73,8 +73,8 @@ auto Acts::materialMapperRZ(
   detail::EquidistantAxis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
 
   // Create the grid
-  using Grid_t = detail::Grid<ActsVector<float, 5>, detail::EquidistantAxis,
-                              detail::EquidistantAxis>;
+  using Grid_t = detail::Grid<Material::ParametersVector,
+                              detail::EquidistantAxis, detail::EquidistantAxis>;
   Grid_t grid(std::make_tuple(std::move(rAxis), std::move(zAxis)));
 
   // [3] Set the material values
@@ -89,7 +89,7 @@ auto Acts::materialMapperRZ(
           materialVectorToGridMapper({{i - 1, j - 1}}, nIndices));
     }
   }
-  ActsVector<float, 5> vec;
+  Material::ParametersVector vec;
   vec << std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),
       0., 0., 0.;
   grid.setExteriorBins(vec);
@@ -102,9 +102,9 @@ auto Acts::materialMapperRZ(
 
   // [5] Create the mapper & BField Service
   // create material mapping
-  return MaterialMapper<detail::Grid<
-      ActsVector<float, 5>, detail::EquidistantAxis, detail::EquidistantAxis>>(
-      transformPos, std::move(grid));
+  return MaterialMapper<
+      detail::Grid<Material::ParametersVector, detail::EquidistantAxis,
+                   detail::EquidistantAxis>>(transformPos, std::move(grid));
 }
 
 auto Acts::materialMapperXYZ(
@@ -114,10 +114,10 @@ auto Acts::materialMapperXYZ(
     std::vector<double> xPos, std::vector<double> yPos,
     std::vector<double> zPos, std::vector<Material> material, double lengthUnit)
     -> MaterialMapper<
-        detail::Grid<ActsVector<float, 5>, detail::EquidistantAxis,
+        detail::Grid<Material::ParametersVector, detail::EquidistantAxis,
                      detail::EquidistantAxis, detail::EquidistantAxis>> {
   // [1] Decompose material
-  std::vector<ActsVector<float, 5>> materialVector;
+  std::vector<Material::ParametersVector> materialVector;
   materialVector.reserve(material.size());
 
   for (Material& mat : material) {
@@ -167,8 +167,9 @@ auto Acts::materialMapperXYZ(
   detail::EquidistantAxis yAxis(yMin * lengthUnit, yMax * lengthUnit, nBinsY);
   detail::EquidistantAxis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
   // Create the grid
-  using Grid_t = detail::Grid<ActsVector<float, 5>, detail::EquidistantAxis,
-                              detail::EquidistantAxis, detail::EquidistantAxis>;
+  using Grid_t =
+      detail::Grid<Material::ParametersVector, detail::EquidistantAxis,
+                   detail::EquidistantAxis, detail::EquidistantAxis>;
   Grid_t grid(
       std::make_tuple(std::move(xAxis), std::move(yAxis), std::move(zAxis)));
 
@@ -187,7 +188,7 @@ auto Acts::materialMapperXYZ(
       }
     }
   }
-  ActsVector<float, 5> vec;
+  Material::ParametersVector vec;
   vec << std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),
       0., 0., 0.;
   grid.setExteriorBins(vec);
@@ -199,7 +200,7 @@ auto Acts::materialMapperXYZ(
   // [5] Create the mapper & BField Service
   // create material mapping
   return MaterialMapper<
-      detail::Grid<ActsVector<float, 5>, detail::EquidistantAxis,
+      detail::Grid<Material::ParametersVector, detail::EquidistantAxis,
                    detail::EquidistantAxis, detail::EquidistantAxis>>(
       transformPos, std::move(grid));
 }

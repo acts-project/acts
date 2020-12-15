@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
                                                           magFieldContext);
   Vertex<BoundTrackParameters> constraintVtx;
-  constraintVtx.setCovariance(ActsSymMatrixD<3>::Identity());
+  constraintVtx.setCovariance(SymMatrix3D::Identity());
   vertexingOptions.vertexConstraint = constraintVtx;
 
   using Finder1 = GridDensityVertexFinder<mainGridSize, trkGridSize>;
@@ -388,7 +388,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   double covZZ1 = 0;
   if (res1.ok()) {
     BOOST_CHECK(!(*res1).empty());
-    ActsSymMatrixD<3> cov = (*res1).back().covariance();
+    SymMatrix3D cov = (*res1).back().covariance();
     BOOST_CHECK(constraintVtx.covariance() != cov);
     BOOST_CHECK(cov(eZ, eZ) != 0.);
     covZZ1 = cov(eZ, eZ);
@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   double covZZ2 = 0;
   if (res2.ok()) {
     BOOST_CHECK(!(*res2).empty());
-    ActsSymMatrixD<3> cov = (*res2).back().covariance();
+    SymMatrix3D cov = (*res2).back().covariance();
     BOOST_CHECK(constraintVtx.covariance() != cov);
     BOOST_CHECK(cov(eZ, eZ) != 0.);
     covZZ2 = cov(eZ, eZ);

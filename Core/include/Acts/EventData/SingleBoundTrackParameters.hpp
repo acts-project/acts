@@ -35,7 +35,7 @@ namespace Acts {
 template <class charge_t>
 class SingleBoundTrackParameters {
  public:
-  using Scalar = BoundScalar;
+  using Scalar = ActsScalar;
   using ParametersVector = BoundVector;
   using CovarianceMatrix = BoundSymMatrix;
 

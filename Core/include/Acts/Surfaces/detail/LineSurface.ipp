@@ -180,26 +180,25 @@ inline BoundToFreeMatrix LineSurface::jacobianLocalToGlobal(
   return jacToGlobal;
 }
 
-inline FreeRowVector LineSurface::freeToPathDerivative(
+inline FreeToPathMatrix LineSurface::freeToPathDerivative(
     const GeometryContext& gctx, const FreeVector& parameters) const {
   // The global posiiton
   const auto position = parameters.segment<3>(eFreePos0);
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
   // The vector between position and center
-  const ActsRowVector<AlignmentScalar, 3> pcRowVec =
-      (position - center(gctx)).transpose();
+  const auto pcRowVec = (position - center(gctx)).transpose().eval();
   // The rotation
   const auto& rotation = transform(gctx).rotation();
   // The local frame z axis
-  const Vector3D localZAxis = rotation.col(2);
+  const auto& localZAxis = rotation.col(2);
   // The local z coordinate
-  const double pz = pcRowVec * localZAxis;
+  const auto pz = pcRowVec * localZAxis;
   // Cosine of angle between momentum direction and local frame z axis
-  const double dz = localZAxis.dot(direction);
-  const double norm = 1. / (1. - dz * dz);
+  const auto dz = localZAxis.dot(direction);
+  const auto norm = 1 / (1 - dz * dz);
   // Initialize the derivative of propagation path w.r.t. free parameter
-  FreeRowVector freeToPath = FreeRowVector::Zero();
+  FreeToPathMatrix freeToPath = FreeToPathMatrix::Zero();
   // The derivative of path w.r.t. position
   freeToPath.segment<3>(eFreePos0) =
       norm * (dz * localZAxis.transpose() - direction.transpose());
@@ -210,30 +209,29 @@ inline FreeRowVector LineSurface::freeToPathDerivative(
   return freeToPath;
 }
 
-inline AlignmentRowVector LineSurface::alignmentToPathDerivative(
+inline AlignmentToPathMatrix LineSurface::alignmentToPathDerivative(
     const GeometryContext& gctx, const FreeVector& parameters) const {
   // The global posiiton
   const auto position = parameters.segment<3>(eFreePos0);
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
   // The vector between position and center
-  const ActsRowVector<AlignmentScalar, 3> pcRowVec =
-      (position - center(gctx)).transpose();
+  const auto pcRowVec = (position - center(gctx)).transpose().eval();
   // The rotation
   const auto& rotation = transform(gctx).rotation();
   // The local frame z axis
   const Vector3D localZAxis = rotation.col(2);
   // The local z coordinate
-  const double pz = pcRowVec * localZAxis;
+  const auto pz = pcRowVec * localZAxis;
   // Cosine of angle between momentum direction and local frame z axis
-  const double dz = localZAxis.dot(direction);
-  const double norm = 1. / (1. - dz * dz);
+  const auto dz = localZAxis.dot(direction);
+  const auto norm = 1 / (1 - dz * dz);
   // Calculate the derivative of local frame axes w.r.t its rotation
   const auto [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
       detail::rotationToLocalAxesDerivative(rotation);
   // Initialize the derivative of propagation path w.r.t. local frame
   // translation (origin) and rotation
-  AlignmentRowVector alignToPath = AlignmentRowVector::Zero();
+  AlignmentToPathMatrix alignToPath = AlignmentToPathMatrix::Zero();
   alignToPath.segment<3>(eAlignmentCenter0) =
       norm * (direction.transpose() - dz * localZAxis.transpose());
   alignToPath.segment<3>(eAlignmentRotation0) =
@@ -242,8 +240,7 @@ inline AlignmentRowVector LineSurface::alignmentToPathDerivative(
   return alignToPath;
 }
 
-inline LocalCartesianToBoundLocalMatrix
-LineSurface::localCartesianToBoundLocalDerivative(
+inline ActsMatrix<2, 3> LineSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3D& position) const {
   using VectorHelpers::phi;
   // The local frame transform
@@ -253,8 +250,7 @@ LineSurface::localCartesianToBoundLocalDerivative(
   const double lphi = phi(localPos);
   const double lcphi = std::cos(lphi);
   const double lsphi = std::sin(lphi);
-  LocalCartesianToBoundLocalMatrix loc3DToLocBound =
-      LocalCartesianToBoundLocalMatrix::Zero();
+  ActsMatrix<2, 3> loc3DToLocBound = ActsMatrix<2, 3>::Zero();
   loc3DToLocBound << lcphi, lsphi, 0, 0, 0, 1;
 
   return loc3DToLocBound;

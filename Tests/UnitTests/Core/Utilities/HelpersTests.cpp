@@ -61,11 +61,11 @@ BOOST_AUTO_TEST_CASE(theta_eta_test_helper) {
 BOOST_AUTO_TEST_CASE(cross_test_helper) {
   {
     Vector3D v(1, 2, 3);
-    ActsMatrixD<3, 3> mat;
+    ActsMatrix<3, 3> mat;
     mat << 1, 2, 3, 4, 5, 6, 7, 8, 9;
 
-    ActsMatrixD<3, 3> act = cross(mat, v);
-    ActsMatrixD<3, 3> exp;
+    ActsMatrix<3, 3> act = cross(mat, v);
+    ActsMatrix<3, 3> exp;
     exp << -2, -1, 0, 4, 2, 0, -2, -1, 0;
 
     CHECK_CLOSE_ABS(act, exp, 1e-9);
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(cross_test_helper) {
 }
 
 BOOST_AUTO_TEST_CASE(toString_test_helper) {
-  ActsMatrixD<3, 3> mat;
+  ActsMatrix<3, 3> mat;
   mat << 1, 2, 3, 4, 5, 6, 7, 8, 9;
   std::string out;
   out = toString(mat);

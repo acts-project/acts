@@ -33,8 +33,8 @@ using BoundingBoxScalar = ActsScalar;
 
 using ObjectBBox = Acts::AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
 
-using Vector2F = ActsMatrix<BoundingBoxScalar, 2, 1>;
-using Vector3F = ActsMatrix<BoundingBoxScalar, 3, 1>;
+using Vector2F = Eigen::Matrix<BoundingBoxScalar, 2, 1>;
+using Vector3F = Eigen::Matrix<BoundingBoxScalar, 3, 1>;
 using AngleAxis3F = Eigen::AngleAxis<BoundingBoxScalar>;
 
 BOOST_AUTO_TEST_CASE(box_construction) {
@@ -484,7 +484,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 2>;
     Object o;
-    Box::Size size(ActsVector<BoundingBoxScalar, 2>(2, 2));
+    Box::Size size(Eigen::Matrix<BoundingBoxScalar, 2, 1>(2, 2));
 
     n = 10;
     BoundingBoxScalar minx = -20;
@@ -580,8 +580,8 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
       for (size_t i = 0; i <= n; i++) {
         for (size_t j = 0; j <= n; j++) {
           boxes.emplace_back(&o,
-                             ActsVector<BoundingBoxScalar, 2>{minx + i * stepx,
-                                                              miny + j * stepy},
+                             Eigen::Matrix<BoundingBoxScalar, 2, 1>{
+                                 minx + i * stepx, miny + j * stepy},
                              size);
           std::stringstream st;
           st << boxes.size() - 1;
@@ -859,15 +859,15 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
       Object o;
       using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
-      Box::Size size(ActsVector<BoundingBoxScalar, 3>(2, 2, 2));
+      Box::Size size(Eigen::Matrix<BoundingBoxScalar, 3, 1>(2, 2, 2));
 
       size_t idx = 0;
 
       for (size_t i = 0; i <= n; i++) {
         for (size_t j = 0; j <= n; j++) {
           for (size_t k = 0; k <= n; k++) {
-            ActsVector<BoundingBoxScalar, 3> pos(min + i * step, min + j * step,
-                                                 min + k * step);
+            Eigen::Matrix<BoundingBoxScalar, 3, 1> pos(
+                min + i * step, min + j * step, min + k * step);
             Box bb(&o, pos, size);
 
             std::array<int, 3> color = {255, 0, 0};
@@ -1123,14 +1123,14 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
       Object o;
       using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
-      Box::Size size(ActsVector<BoundingBoxScalar, 3>(2, 2, 2));
+      Box::Size size(Eigen::Matrix<BoundingBoxScalar, 3, 1>(2, 2, 2));
 
       size_t idx = 0;
       for (size_t i = 0; i <= n; i++) {
         for (size_t j = 0; j <= n; j++) {
           for (size_t k = 0; k <= n; k++) {
-            ActsVector<BoundingBoxScalar, 3> pos(min + i * step, min + j * step,
-                                                 min + k * step);
+            Eigen::Matrix<BoundingBoxScalar, 3, 1> pos(
+                min + i * step, min + j * step, min + k * step);
             Box bb(&o, pos, size);
 
             std::array<int, 3> color = {255, 0, 0};
@@ -1156,7 +1156,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
   BOOST_TEST_CONTEXT("3D - 5 Sides") {
     using Frustum = Frustum<BoundingBoxScalar, 3, 5>;
     using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
-    Box::Size size(ActsVector<BoundingBoxScalar, 3>(2, 2, 2));
+    Box::Size size(Eigen::Matrix<BoundingBoxScalar, 3, 1>(2, 2, 2));
 
     Object o;
 
@@ -1178,7 +1178,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
   BOOST_TEST_CONTEXT("3D - 10 Sides") {
     using Frustum = Frustum<BoundingBoxScalar, 3, 10>;
     using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
-    using vec3 = ActsVector<BoundingBoxScalar, 3>;
+    using vec3 = Eigen::Matrix<BoundingBoxScalar, 3, 1>;
     Box::Size size(vec3(2, 2, 2));
 
     Object o;

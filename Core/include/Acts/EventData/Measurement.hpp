@@ -54,15 +54,15 @@ class Measurement {
   using Subspace = detail::FixedSizeSubspace<kFullSize, kSize>;
 
  public:
-  using Scalar = typename detail::ParametersScalar<indices_t>;
+  using Scalar = ActsScalar;
   /// Vector type containing for measured parameter values.
-  using ParametersVector = ActsVector<Scalar, kSize>;
+  using ParametersVector = ActsVector<kSize>;
   /// Matrix type for the measurement covariance.
-  using CovarianceMatrix = ActsSymMatrix<Scalar, kSize>;
+  using CovarianceMatrix = ActsSymMatrix<kSize>;
   /// Vector type containing all parameters in the same space.
-  using FullParametersVector = ActsVector<Scalar, kFullSize>;
-  using ProjectionMatrix = ActsMatrix<Scalar, kSize, kFullSize>;
-  using ExpansionMatrix = ActsMatrix<Scalar, kFullSize, kSize>;
+  using FullParametersVector = ActsVector<kFullSize>;
+  using ProjectionMatrix = ActsMatrix<kSize, kFullSize>;
+  using ExpansionMatrix = ActsMatrix<kFullSize, kSize>;
 
   /// Construct from source link, subset indices, and measured data.
   ///
@@ -144,7 +144,8 @@ class Measurement {
 
   std::ostream& operator<<(std::ostream& os) const {
     detail::printMeasurement(os, static_cast<indices_t>(kSize),
-                             m_subspace.indices().data(), m_params, m_cov);
+                             m_subspace.indices().data(), m_params.data(),
+                             m_cov.data());
     return os;
   }
 

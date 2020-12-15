@@ -41,6 +41,8 @@ class AdaptiveGridDensityVertexFinder {
   using GridDensity = AdaptiveGridTrackDensity<trkGridSize>;
 
  public:
+  using TrackGridVector = typename GridDensity::TrackGridVector;
+
   /// @brief The Config struct
   struct Config {
     ///@param binSize Bin size of grid in mm
@@ -81,8 +83,7 @@ class AdaptiveGridDensityVertexFinder {
 
     // Map to store z-bin and track grid (i.e. the density contribution of
     // a single track to the main grid) for every single track
-    std::map<const InputTrack_t*,
-             std::pair<int, ActsVector<float, trkGridSize>>>
+    std::map<const InputTrack_t*, std::pair<int, TrackGridVector>>
         binAndTrackGridMap;
 
     // Map to store bool if track has passed track selection or not

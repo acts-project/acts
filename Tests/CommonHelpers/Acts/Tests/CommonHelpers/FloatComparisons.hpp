@@ -257,15 +257,18 @@ boost::test_tools::predicate_result checkCloseOrSmall(const T& val,
   return compare(val, ref, closeOrSmall(reltol, small));
 }
 
-template <typename Scalar, int dim>
+template <typename val_t, typename ref_t>
 boost::test_tools::predicate_result checkCloseCovariance(
-    const ActsSymMatrix<Scalar, dim>& val,
-    const ActsSymMatrix<Scalar, dim>& ref, double tol) {
-  static_assert(dim != Eigen::Dynamic,
-                "Dynamic-size matrices are currently unsupported.");
+    const Eigen::MatrixBase<val_t>& val, const Eigen::MatrixBase<ref_t>& ref,
+    double tol) {
+  EIGEN_STATIC_ASSERT_FIXED_SIZE(val_t);
+  EIGEN_STATIC_ASSERT_FIXED_SIZE(ref_t);
+  EIGEN_STATIC_ASSERT_SAME_MATRIX_SIZE(val_t, ref_t);
+  assert(val.cols() == val.rows());
+  assert(ref.cols() == ref.rows());
 
-  for (int col = 0; col < dim; ++col) {
-    for (int row = col; row < dim; ++row) {
+  for (int col = 0; col < val.cols(); ++col) {
+    for (int row = col; row < val.rows(); ++row) {
       // For diagonal elements, this is just a regular relative comparison.
       // But for off-diagonal correlation terms, the tolerance scales with the
       // geometric mean of the variance terms that are being correlated.

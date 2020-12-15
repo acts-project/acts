@@ -270,10 +270,10 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceAlignment) {
   parameters.segment<3>(eFreeDir0) = direction;
 
   // (a) Test the derivative of path length w.r.t. alignment parameters
-  const AlignmentRowVector& alignToPath =
+  const AlignmentToPathMatrix& alignToPath =
       discSurfaceObject->alignmentToPathDerivative(tgContext, parameters);
   // The expected results
-  AlignmentRowVector expAlignToPath = AlignmentRowVector::Zero();
+  AlignmentToPathMatrix expAlignToPath = AlignmentToPathMatrix::Zero();
   expAlignToPath << 0, 0, 1, 3, 0, 0;
   // Check if the calculated derivative is as expected
   CHECK_CLOSE_ABS(alignToPath, expAlignToPath, 1e-10);
@@ -284,8 +284,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceAlignment) {
       discSurfaceObject->localCartesianToBoundLocalDerivative(tgContext,
                                                               globalPosition);
   // Check if the result is as expected
-  LocalCartesianToBoundLocalMatrix expLoc3DToLocBound =
-      LocalCartesianToBoundLocalMatrix::Zero();
+  ActsMatrix<2, 3> expLoc3DToLocBound = ActsMatrix<2, 3>::Zero();
   expLoc3DToLocBound << 0, 1, 0, -1.0 / 3, 0, 0;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
 }

@@ -116,7 +116,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   predParamsAtPCA[5] = 0.;
 
   // Fill position jacobian (D_k matrix), Eq. 5.36 in Ref(1)
-  ActsMatrix<BoundScalar, eBoundSize, 4> positionJacobian;
+  ActsMatrix<eBoundSize, 4> positionJacobian;
   positionJacobian.setZero();
   // First row
   positionJacobian(0, 0) = -sgnH * X / S;
@@ -138,7 +138,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   positionJacobian(5, 3) = 1;
 
   // Fill momentum jacobian (E_k matrix), Eq. 5.37 in Ref(1)
-  ActsMatrixD<eBoundSize, 3> momentumJacobian;
+  ActsMatrix<eBoundSize, 3> momentumJacobian;
   momentumJacobian.setZero();
 
   double R = X * cosPhiV + Y * sinPhiV;
@@ -174,8 +174,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
                           momentumJacobian * momentumAtPCA;
 
   // The parameter weight
-  ActsSymMatrixD<5> parWeight =
-      (parCovarianceAtPCA.block<5, 5>(0, 0)).inverse();
+  ActsSymMatrix<5> parWeight = (parCovarianceAtPCA.block<5, 5>(0, 0)).inverse();
 
   BoundSymMatrix weightAtPCA{BoundSymMatrix::Identity()};
   weightAtPCA.block<5, 5>(0, 0) = parWeight;

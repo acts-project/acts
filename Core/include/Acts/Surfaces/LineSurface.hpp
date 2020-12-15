@@ -9,7 +9,6 @@
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
@@ -133,8 +132,8 @@ class LineSurface : public Surface {
   /// @param parameters is the free parameters
   ///
   /// @return Derivative of path length w.r.t. free parameters
-  FreeRowVector freeToPathDerivative(const GeometryContext& gctx,
-                                     const FreeVector& parameters) const final;
+  FreeToPathMatrix freeToPathDerivative(
+      const GeometryContext& gctx, const FreeVector& parameters) const final;
 
   /// Local to global transformation
   /// for line surfaces the momentum is used in order to interpret the drift
@@ -253,7 +252,7 @@ class LineSurface : public Surface {
   /// @param parameters is the free parameters
   ///
   /// @return Derivative of path length w.r.t. the alignment parameters
-  AlignmentRowVector alignmentToPathDerivative(
+  AlignmentToPathMatrix alignmentToPathDerivative(
       const GeometryContext& gctx, const FreeVector& parameters) const final;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.
@@ -264,7 +263,7 @@ class LineSurface : public Surface {
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
+  ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3D& position) const final;
 
  protected:

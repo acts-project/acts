@@ -14,7 +14,6 @@
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
-#include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -368,7 +367,7 @@ class Surface : public virtual GeometryObject,
   /// @param parameters is the free parameters
   ///
   /// @return Derivative of path length w.r.t. free parameters
-  virtual FreeRowVector freeToPathDerivative(
+  virtual FreeToPathMatrix freeToPathDerivative(
       const GeometryContext& gctx, const FreeVector& parameters) const;
 
   /// Calucation of the path correction for incident
@@ -451,7 +450,7 @@ class Surface : public virtual GeometryObject,
   /// @param parameters is the free parameters
   ///
   /// @return Derivative of path length w.r.t. the alignment parameters
-  virtual AlignmentRowVector alignmentToPathDerivative(
+  virtual AlignmentToPathMatrix alignmentToPathDerivative(
       const GeometryContext& gctx, const FreeVector& parameters) const;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.
@@ -462,7 +461,7 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  virtual LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
+  virtual ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3D& position) const = 0;
 
  protected:

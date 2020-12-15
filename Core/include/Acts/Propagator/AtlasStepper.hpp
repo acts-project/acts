@@ -108,7 +108,7 @@ class AtlasStepper {
       // prepare the jacobian if we have a covariance
       if (pars.covariance()) {
         // copy the covariance matrix
-        covariance = new ActsSymMatrixD<eBoundSize>(*pars.covariance());
+        covariance = new BoundSymMatrix(*pars.covariance());
         covTransport = true;
         useJacobian = true;
         const auto transform = pars.referenceSurface().referenceFrame(
@@ -661,7 +661,7 @@ class AtlasStepper {
 
     // prepare the jacobian if we have a covariance
     // copy the covariance matrix
-    state.covariance = new ActsSymMatrixD<eBoundSize>(covariance);
+    state.covariance = new BoundSymMatrix(covariance);
     state.covTransport = true;
     state.useJacobian = true;
 

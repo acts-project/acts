@@ -29,7 +29,7 @@ class SingleCurvilinearTrackParameters
   using Base = SingleBoundTrackParameters<charge_t>;
 
  public:
-  using Scalar = BoundScalar;
+  using Scalar = ActsScalar;
   using ParametersVector = BoundVector;
   using CovarianceMatrix = BoundSymMatrix;
 

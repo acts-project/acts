@@ -36,7 +36,7 @@ struct EventDataView3D {
   ///
   /// @param covariance The covariance matrix
   static inline std::array<double, 3> decomposeCovariance(
-      const ActsSymMatrixD<2>& covariance) {
+      const ActsSymMatrix<2>& covariance) {
     double c00 = covariance(eBoundLoc0, eBoundLoc0);
     double c01 = covariance(eBoundLoc0, eBoundLoc1);
     double c11 = covariance(eBoundLoc1, eBoundLoc1);
@@ -96,7 +96,7 @@ struct EventDataView3D {
   /// @param viewConfig The visualization parameters
   static void drawCovarianceCartesian(
       IVisualization3D& helper, const Vector2D& lposition,
-      const ActsSymMatrixD<2>& covariance, const Transform3D& transform,
+      const SymMatrix2D& covariance, const Transform3D& transform,
       double locErrorScale = 1, const ViewConfig& viewConfig = s_viewParameter);
 
   /// Helper method to draw error cone of a direction
@@ -110,7 +110,7 @@ struct EventDataView3D {
   /// @param viewConfig The visualization parameters
   static void drawCovarianceAngular(
       IVisualization3D& helper, const Vector3D& position,
-      const Vector3D& direction, const ActsSymMatrixD<2>& covariance,
+      const Vector3D& direction, const ActsSymMatrix<2>& covariance,
       double directionScale = 1, double angularErrorScale = 1,
       const ViewConfig& viewConfig = s_viewParameter);
 
@@ -227,7 +227,7 @@ struct EventDataView3D {
       if (measurementConfig.visible and state.hasCalibrated() and
           state.calibratedSize() == 2) {
         const Vector2D& lposition = state.calibrated().template head<2>();
-        ActsSymMatrixD<2> covariance =
+        const SymMatrix2D covariance =
             state.calibratedCovariance().template topLeftCorner<2, 2>();
         drawCovarianceCartesian(helper, lposition, covariance,
                                 state.referenceSurface().transform(gctx),

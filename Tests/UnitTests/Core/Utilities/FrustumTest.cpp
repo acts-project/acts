@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_SUITE(Utilities)
 BOOST_AUTO_TEST_CASE(frustum_construction) {
   output_test_stream output;
 
-  using Vector2F = ActsVector<float, 2>;
+  using Vector2F = Eigen::Matrix<float, 2, 1>;
 
   using Frustum2f2 = Frustum<float, 2, 2>;
   Frustum2f2 fr({1, 0}, {0, 2}, M_PI / 2.);
@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(frustum_construction) {
   fr.svg(output, 200, 200);
   BOOST_CHECK(!output.is_empty(true));
 
-  using Vector3F = ActsVector<float, 3>;
+  using Vector3F = Eigen::Matrix<float, 3, 1>;
 
   using Frustum3f3 = Frustum<float, 3, 3>;
   Frustum3f3 fr33({1, 0, 0}, {0, 2, 1}, M_PI / 2.);
