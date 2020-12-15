@@ -77,7 +77,7 @@ class ProtoSurfaceMaterial : public ISurfaceMaterial {
   /// @param lp is local positioning vector
   ///
   /// @return will return dummy material
-  const MaterialSlab& materialSlab(const Vector2D& lp) const final;
+  const MaterialSlab& materialSlab(const Vector2& lp) const final;
 
   /// Return method for full material description of the Surface - from the
   /// global coordinates
@@ -85,7 +85,7 @@ class ProtoSurfaceMaterial : public ISurfaceMaterial {
   /// @param gp is the global positioning vector
   ///
   /// @return will return dummy material
-  const MaterialSlab& materialSlab(const Vector3D& gp) const final;
+  const MaterialSlab& materialSlab(const Vector3& gp) const final;
 
   /// Direct access via bins to the MaterialSlab
   ///
@@ -110,12 +110,12 @@ class ProtoSurfaceMaterial : public ISurfaceMaterial {
 }  // namespace Acts
 
 inline const Acts::MaterialSlab& Acts::ProtoSurfaceMaterial::materialSlab(
-    const Vector2D& /*lp*/) const {
+    const Vector2& /*lp*/) const {
   return (m_materialSlab);
 }
 
 inline const Acts::MaterialSlab& Acts::ProtoSurfaceMaterial::materialSlab(
-    const Vector3D& /*gp*/) const {
+    const Vector3& /*gp*/) const {
   return (m_materialSlab);
 }
 

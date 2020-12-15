@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_adding_test) {
 
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
+      Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
   BoundTrackParameters params0(perigeeSurface, paramVec0, covMat);
   BoundTrackParameters params1(perigeeSurface, paramVec1, covMat);
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_max_z_and_width_test) {
 
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
+      Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
   BoundTrackParameters params1(perigeeSurface, paramVec1, covMat);
   BoundTrackParameters params2(perigeeSurface, paramVec2, covMat);
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_highest_density_sum_test) {
 
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
+      Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
   BoundTrackParameters params1(perigeeSurface, paramVec1, covMat);
   BoundTrackParameters params2(perigeeSurface, paramVec2, covMat);
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_removing_test) {
 
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
+      Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
   BoundTrackParameters params0(perigeeSurface, paramVec0, covMat);
   BoundTrackParameters params1(perigeeSurface, paramVec1, covMat);

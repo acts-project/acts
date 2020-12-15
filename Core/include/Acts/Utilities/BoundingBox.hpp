@@ -115,7 +115,7 @@ class AxisAlignedBoundingBox {
    * @param center The center position
    * @param size The size (width and height) of the box.
    * @note The special type @c size is required to disambiguate this constructor
-   * from the other one above. It is a wrapper around a simple @c Vector3D.
+   * from the other one above. It is a wrapper around a simple @c Vector3.
    */
   AxisAlignedBoundingBox(const entity_t* entity, const VertexType& center,
                          const Size& size);

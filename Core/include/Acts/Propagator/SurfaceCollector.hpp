@@ -51,8 +51,8 @@ struct SurfaceSelector {
 /// The information to be writtern out per hit surface
 struct SurfaceHit {
   const Surface* surface = nullptr;
-  Vector3D position;
-  Vector3D direction;
+  Vector3 position;
+  Vector3 direction;
 };
 
 /// A Surface Collector struct

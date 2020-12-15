@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
 
   // Create perigee surface at origin
   std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
+      Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
   // Creates a random tracks around origin and a random vertex.
   // VertexUpdater adds track to vertex and updates the position
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     // Linearized state of the track
     LinearizedTrack linTrack =
         linearizer
-            .linearizeTrack(params, Vector4D::Zero(), geoContext,
+            .linearizeTrack(params, Vector4::Zero(), geoContext,
                             magFieldContext, state)
             .value();
 
@@ -140,9 +140,9 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     trkAtVtx.linearizedState = linTrack;
 
     // Create a vertex
-    Vector3D vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
+    Vector3 vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
     Vertex<BoundTrackParameters> vtx(vtxPos);
-    vtx.setFullCovariance(SymMatrix4D::Identity() * 0.01);
+    vtx.setFullCovariance(SymMatrix4::Identity() * 0.01);
 
     // Update trkAtVertex with assumption of originating from vtx
     KalmanVertexUpdater::updateVertexWithTrack<BoundTrackParameters>(vtx,

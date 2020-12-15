@@ -19,7 +19,7 @@
 
 namespace Acts {
 
-using TrackingVolumeOrderPosition = std::pair<TrackingVolumePtr, Vector3D>;
+using TrackingVolumeOrderPosition = std::pair<TrackingVolumePtr, Vector3>;
 
 ///@class TrackingVolumeArrayCreator
 ///

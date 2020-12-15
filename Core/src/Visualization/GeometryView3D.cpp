@@ -38,11 +38,11 @@ void Acts::GeometryView3D::drawPolyhedron(IVisualization3D& helper,
 void Acts::GeometryView3D::drawSurface(IVisualization3D& helper,
                                        const Surface& surface,
                                        const GeometryContext& gctx,
-                                       const Transform3D& transform,
+                                       const Transform3& transform,
                                        const ViewConfig& ViewConfig) {
   Polyhedron surfaceHedron =
       surface.polyhedronRepresentation(gctx, ViewConfig.nSegments);
-  if (not transform.isApprox(Transform3D::Identity())) {
+  if (not transform.isApprox(Transform3::Identity())) {
     surfaceHedron.move(transform);
   }
   drawPolyhedron(helper, surfaceHedron, ViewConfig);
@@ -51,7 +51,7 @@ void Acts::GeometryView3D::drawSurface(IVisualization3D& helper,
 void Acts::GeometryView3D::drawSurfaceArray(IVisualization3D& helper,
                                             const SurfaceArray& surfaceArray,
                                             const GeometryContext& gctx,
-                                            const Transform3D& transform,
+                                            const Transform3& transform,
                                             const ViewConfig& sensitiveConfig,
                                             const ViewConfig& passiveConfig,
                                             const ViewConfig& gridConfig) {
@@ -87,8 +87,8 @@ void Acts::GeometryView3D::drawSurfaceArray(IVisualization3D& helper,
       for (auto phi : phiValues) {
         double cphi = std::cos(phi);
         double sphi = std::sin(phi);
-        Vector3D p1(R * cphi, R * sphi, axes[1]->getMin());
-        Vector3D p0(R * cphi, R * sphi, axes[1]->getMax());
+        Vector3 p1(R * cphi, R * sphi, axes[1]->getMin());
+        Vector3 p0(R * cphi, R * sphi, axes[1]->getMax());
         drawSegment(helper, transform * p0, transform * p1, gridConfig);
       }
       CylinderVolumeBounds cvb(R - 0.5 * thickness, R + 0.5 * thickness,
@@ -97,7 +97,7 @@ void Acts::GeometryView3D::drawSurfaceArray(IVisualization3D& helper,
       for (auto z : zValues) {
         for (auto cvbSf : cvbOrientedSurfaces) {
           drawSurface(helper, *cvbSf.first, gctx,
-                      Translation3D(0., 0., z) * transform, gridRadConfig);
+                      Translation3(0., 0., z) * transform, gridRadConfig);
         }
       }
 
@@ -113,7 +113,7 @@ void Acts::GeometryView3D::drawSurfaceArray(IVisualization3D& helper,
         auto cvbOrientedSurfaces = cvb.orientedSurfaces();
         for (auto cvbSf : cvbOrientedSurfaces) {
           drawSurface(helper, *cvbSf.first, gctx,
-                      Translation3D(0., 0., z) * transform, gridRadConfig);
+                      Translation3(0., 0., z) * transform, gridRadConfig);
         }
       }
       double rMin = axes[0]->getMin();
@@ -121,8 +121,8 @@ void Acts::GeometryView3D::drawSurfaceArray(IVisualization3D& helper,
       for (auto phi : phiValues) {
         double cphi = std::cos(phi);
         double sphi = std::sin(phi);
-        Vector3D p1(rMax * cphi, rMax * sphi, z);
-        Vector3D p0(rMin * cphi, rMin * sphi, z);
+        Vector3 p1(rMax * cphi, rMax * sphi, z);
+        Vector3 p0(rMin * cphi, rMin * sphi, z);
         drawSegment(helper, transform * p0, transform * p1, gridConfig);
       }
     }
@@ -137,7 +137,7 @@ void Acts::GeometryView3D::drawSurfaceArray(IVisualization3D& helper,
 void Acts::GeometryView3D::drawVolume(IVisualization3D& helper,
                                       const AbstractVolume& volume,
                                       const GeometryContext& gctx,
-                                      const Transform3D& transform,
+                                      const Transform3& transform,
                                       const ViewConfig& viewConfig) {
   auto bSurfaces = volume.boundarySurfaces();
   for (const auto& bs : bSurfaces) {
@@ -155,11 +155,11 @@ void Acts::GeometryView3D::drawLayer(IVisualization3D& helper,
   if (layerConfig.visible) {
     auto layerVolume = layer.representingVolume();
     if (layerVolume != nullptr) {
-      drawVolume(helper, *layerVolume, gctx, Transform3D::Identity(),
+      drawVolume(helper, *layerVolume, gctx, Transform3::Identity(),
                  layerConfig);
     } else {
       const auto& layerSurface = layer.surfaceRepresentation();
-      drawSurface(helper, layerSurface, gctx, Transform3D::Identity(),
+      drawSurface(helper, layerSurface, gctx, Transform3::Identity(),
                   layerConfig);
     }
     if (not layerConfig.outputName.empty()) {
@@ -171,7 +171,7 @@ void Acts::GeometryView3D::drawLayer(IVisualization3D& helper,
   if (sensitiveConfig.visible or gridConfig.visible) {
     auto surfaceArray = layer.surfaceArray();
     if (surfaceArray != nullptr) {
-      drawSurfaceArray(helper, *surfaceArray, gctx, Transform3D::Identity(),
+      drawSurfaceArray(helper, *surfaceArray, gctx, Transform3::Identity(),
                        sensitiveConfig, layerConfig, gridConfig);
     }
   }
@@ -219,7 +219,7 @@ void Acts::GeometryView3D::drawTrackingVolume(
   auto bSurfaces = tVolume.boundarySurfaces();
   for (const auto& bs : bSurfaces) {
     drawSurface(helper, bs->surfaceRepresentation(), gctx,
-                Transform3D::Identity(), vcConfig);
+                Transform3::Identity(), vcConfig);
   }
   if (writeIt) {
     helper.write(vcConfig.outputName);
@@ -245,24 +245,24 @@ void Acts::GeometryView3D::drawTrackingVolume(
 }
 
 void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
-                                           const Vector3D& start,
-                                           const Vector3D& end, int arrows,
+                                           const Vector3& start,
+                                           const Vector3& end, int arrows,
                                            double arrowLength,
                                            double arrowWidth,
                                            const ViewConfig& viewConfig) {
   double thickness = viewConfig.lineThickness;
 
   // Draw the parameter shaft and cone
-  auto direction = Vector3D(end - start).normalized();
-  double hlength = 0.5 * Vector3D(end - start).norm();
+  auto direction = Vector3(end - start).normalized();
+  double hlength = 0.5 * Vector3(end - start).norm();
 
   auto unitVectors = makeCurvilinearUnitVectors(direction);
-  RotationMatrix3D lrotation;
+  RotationMatrix3 lrotation;
   lrotation.col(0) = unitVectors.first;
   lrotation.col(1) = unitVectors.second;
   lrotation.col(2) = direction;
 
-  Vector3D lcenter = 0.5 * (start + end);
+  Vector3 lcenter = 0.5 * (start + end);
   double alength = (thickness > 0.) ? arrowLength * thickness : 2.;
   if (alength > hlength) {
     alength = hlength;
@@ -272,19 +272,19 @@ void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
     hlength -= alength;
   } else if (arrows != 0) {
     hlength -= 0.5 * alength;
-    lcenter -= Vector3D(arrows * 0.5 * alength * direction);
+    lcenter -= Vector3(arrows * 0.5 * alength * direction);
   }
 
   // Line - draw a line
   if (thickness > 0.) {
-    auto ltransform = Transform3D::Identity();
+    auto ltransform = Transform3::Identity();
     ltransform.prerotate(lrotation);
     ltransform.pretranslate(lcenter);
 
     auto lbounds = std::make_shared<CylinderBounds>(thickness, hlength);
     auto line = Surface::makeShared<CylinderSurface>(ltransform, lbounds);
 
-    drawSurface(helper, *line, GeometryContext(), Transform3D::Identity(),
+    drawSurface(helper, *line, GeometryContext(), Transform3::Identity(),
                 viewConfig);
   } else {
     helper.line(start, end, viewConfig.color);
@@ -297,67 +297,66 @@ void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
     auto plateBounds = std::make_shared<RadialBounds>(thickness, awith);
 
     if (arrows > 0) {
-      auto aetransform = Transform3D::Identity();
+      auto aetransform = Transform3::Identity();
       aetransform.prerotate(lrotation);
       aetransform.pretranslate(end);
       // Arrow cone
       auto coneBounds = std::make_shared<ConeBounds>(alpha, -alength, 0.);
       auto cone = Surface::makeShared<ConeSurface>(aetransform, coneBounds);
-      drawSurface(helper, *cone, GeometryContext(), Transform3D::Identity(),
+      drawSurface(helper, *cone, GeometryContext(), Transform3::Identity(),
                   viewConfig);
       // Arrow end plate
-      auto aptransform = Transform3D::Identity();
+      auto aptransform = Transform3::Identity();
       aptransform.prerotate(lrotation);
-      aptransform.pretranslate(Vector3D(end - alength * direction));
+      aptransform.pretranslate(Vector3(end - alength * direction));
 
       auto plate = Surface::makeShared<DiscSurface>(aptransform, plateBounds);
-      drawSurface(helper, *plate, GeometryContext(), Transform3D::Identity(),
+      drawSurface(helper, *plate, GeometryContext(), Transform3::Identity(),
                   viewConfig);
     }
     if (arrows < 0 or arrows == 2) {
-      auto astransform = Transform3D::Identity();
+      auto astransform = Transform3::Identity();
       astransform.prerotate(lrotation);
       astransform.pretranslate(start);
 
       // Arrow cone
       auto coneBounds = std::make_shared<ConeBounds>(alpha, 0., alength);
       auto cone = Surface::makeShared<ConeSurface>(astransform, coneBounds);
-      drawSurface(helper, *cone, GeometryContext(), Transform3D::Identity(),
+      drawSurface(helper, *cone, GeometryContext(), Transform3::Identity(),
                   viewConfig);
       // Arrow end plate
-      auto aptransform = Transform3D::Identity();
+      auto aptransform = Transform3::Identity();
       aptransform.prerotate(lrotation);
-      aptransform.pretranslate(Vector3D(start + alength * direction));
+      aptransform.pretranslate(Vector3(start + alength * direction));
 
       auto plate = Surface::makeShared<DiscSurface>(aptransform, plateBounds);
-      drawSurface(helper, *plate, GeometryContext(), Transform3D::Identity(),
+      drawSurface(helper, *plate, GeometryContext(), Transform3::Identity(),
                   viewConfig);
     }
   }
 }
 
 void Acts::GeometryView3D::drawSegment(IVisualization3D& helper,
-                                       const Vector3D& start,
-                                       const Vector3D& end,
+                                       const Vector3& start, const Vector3& end,
                                        const ViewConfig& viewConfig) {
   drawSegmentBase(helper, start, end, 0, 0., 0., viewConfig);
 }
 
 void Acts::GeometryView3D::drawArrowBackward(
-    IVisualization3D& helper, const Vector3D& start, const Vector3D& end,
+    IVisualization3D& helper, const Vector3& start, const Vector3& end,
     double arrowLength, double arrowWidth, const ViewConfig& viewConfig) {
   drawSegmentBase(helper, start, end, -1, arrowLength, arrowWidth, viewConfig);
 }
 
 void Acts::GeometryView3D::drawArrowForward(
-    IVisualization3D& helper, const Vector3D& start, const Vector3D& end,
+    IVisualization3D& helper, const Vector3& start, const Vector3& end,
     double arrowLength, double arrowWidth, const ViewConfig& viewConfig) {
   drawSegmentBase(helper, start, end, 1, arrowLength, arrowWidth, viewConfig);
 }
 
 void Acts::GeometryView3D::drawArrowsBoth(IVisualization3D& helper,
-                                          const Vector3D& start,
-                                          const Vector3D& end,
+                                          const Vector3& start,
+                                          const Vector3& end,
                                           double arrowLength, double arrowWidth,
                                           const ViewConfig& viewConfig) {
   drawSegmentBase(helper, start, end, 2, arrowLength, arrowWidth, viewConfig);

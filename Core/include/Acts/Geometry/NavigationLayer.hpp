@@ -47,8 +47,8 @@ class NavigationLayer : public Layer {
   ///  - as default the center is given, but may be overloaded
   ///
   /// @return The return vector can be used for binning in a TrackingVolume
-  Vector3D binningPosition(const GeometryContext& gctx,
-                           BinningValue bValue) const final;
+  Vector3 binningPosition(const GeometryContext& gctx,
+                          BinningValue bValue) const final;
 
   /// Default Constructor - deleted
   NavigationLayer() = delete;
@@ -74,7 +74,7 @@ class NavigationLayer : public Layer {
   /// @param bcheck is the boundary check directive
   ///
   /// @return boolean that indicates if the position is on surface
-  bool isOnLayer(const GeometryContext& gctx, const Vector3D& gp,
+  bool isOnLayer(const GeometryContext& gctx, const Vector3& gp,
                  const BoundaryCheck& bcheck = true) const final;
 
   /// Accept layer according to the following colelction directives
@@ -115,15 +115,15 @@ inline Surface& NavigationLayer::surfaceRepresentation() {
   return *(const_cast<Surface*>(m_surfaceRepresentation.get()));
 }
 
-inline Vector3D NavigationLayer::binningPosition(const GeometryContext& gctx,
-                                                 BinningValue bValue) const {
+inline Vector3 NavigationLayer::binningPosition(const GeometryContext& gctx,
+                                                BinningValue bValue) const {
   return m_surfaceRepresentation->binningPosition(gctx, bValue);
 }
 
 inline bool NavigationLayer::isOnLayer(const GeometryContext& gctx,
-                                       const Vector3D& gp,
+                                       const Vector3& gp,
                                        const BoundaryCheck& bcheck) const {
-  return m_surfaceRepresentation->isOnSurface(gctx, gp, Vector3D::Zero(),
+  return m_surfaceRepresentation->isOnSurface(gctx, gp, Vector3::Zero(),
                                               bcheck);
 }
 

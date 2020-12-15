@@ -80,7 +80,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
       const GeometryContext& gctx, const LayerVector& layers,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial,
       VolumeBoundsPtr volumeBounds, MutableTrackingVolumeVector mtvVector = {},
-      const Transform3D& transform = Transform3D::Identity(),
+      const Transform3& transform = Transform3::Identity(),
       const std::string& volumeName = "UndefinedVolume",
       BinningType bType = arbitrary) const override;
 
@@ -205,7 +205,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   bool estimateAndCheckDimension(
       const GeometryContext& gctx, const LayerVector& layers,
       const CylinderVolumeBounds*& cylinderVolumeBounds,
-      const Transform3D& transform, double& rMinClean, double& rMaxClean,
+      const Transform3& transform, double& rMinClean, double& rMaxClean,
       double& zMinClean, double& zMaxClean, BinningValue& bValue,
       BinningType bType = arbitrary) const;
 

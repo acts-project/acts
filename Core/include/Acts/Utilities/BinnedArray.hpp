@@ -40,7 +40,7 @@ class BinnedArray {
   /// @param bins is the bin triple to filled
   ///
   /// @return the object according to the estimated bin
-  virtual T object(const Vector2D& lposition,
+  virtual T object(const Vector2& lposition,
                    std::array<size_t, 3>& bins) const = 0;
 
   /// Same method without bins for backward compatibility
@@ -48,7 +48,7 @@ class BinnedArray {
   /// @param lposition is the local position for finding the obect
   ///
   /// @return the object according to the estimated bin
-  virtual T object(const Vector2D& lposition) const {
+  virtual T object(const Vector2& lposition) const {
     std::array<size_t, 3> bins;
     return object(lposition, bins);
   }
@@ -59,7 +59,7 @@ class BinnedArray {
   /// @param bin is the bin triple filled
   ///
   /// @return the object according to the estimated bin
-  virtual T object(const Vector3D& position,
+  virtual T object(const Vector3& position,
                    std::array<size_t, 3>& bin) const = 0;
 
   /// Same method without bins for backward compatibility
@@ -67,7 +67,7 @@ class BinnedArray {
   /// @param position is the global position for the object finding
   ///
   /// @return the object according to the estimated bin
-  virtual T object(const Vector3D& position) const {
+  virtual T object(const Vector3& position) const {
     std::array<size_t, 3> bins;
     return object(position, bins);
   }

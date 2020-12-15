@@ -83,15 +83,15 @@ ActsExamples::SeedingAlgorithm::makeSpacePoint(
             m.expander() * m.covariance() * m.expander().transpose();
 
         // transform local position to global coordinates
-        Acts::Vector3D globalFakeMom(1, 1, 1);
-        Acts::Vector3D globalPos = surface.localToGlobal(
+        Acts::Vector3 globalFakeMom(1, 1, 1);
+        Acts::Vector3 globalPos = surface.localToGlobal(
             geoCtx, {localPar[Acts::eBoundLoc0], localPar[Acts::eBoundLoc1]},
             globalFakeMom);
 
         // transfrom local covariance to global coordinates
         Acts::BoundToFreeMatrix jacToGlobal =
             surface.jacobianLocalToGlobal(geoCtx, localPar);
-        Acts::SymMatrix3D globalCov =
+        Acts::SymMatrix3 globalCov =
             (jacToGlobal * localCov * jacToGlobal.transpose())
                 .block<3, 3>(Acts::eFreePos0, Acts::eFreePos0);
 
@@ -119,8 +119,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   Acts::Seedfinder<SimSpacePoint> seedFinder(m_cfg.finderConf);
 
   // covariance tool, sets covariances per spacepoint as required
-  auto ct = [=](const SimSpacePoint& sp, float, float,
-                float) -> Acts::Vector2D {
+  auto ct = [=](const SimSpacePoint& sp, float, float, float) -> Acts::Vector2 {
     return {sp.varianceR, sp.varianceZ};
   };
 

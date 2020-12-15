@@ -29,7 +29,7 @@
 
 namespace ActsFatras {
 
-using Randomizer = std::function<Acts::Vector2D(double, double)>;
+using Randomizer = std::function<Acts::Vector2(double, double)>;
 
 using PlanarTestBed =
     std::tuple<std::string, std::shared_ptr<const Acts::Surface>,
@@ -51,7 +51,7 @@ struct PlanarSurfaceTestBeds {
     double yhalf = 6.5;
     auto rectangle = std::make_shared<Acts::RectangleBounds>(xhalf, yhalf);
     auto rSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-        Acts::Transform3D::Identity(), rectangle);
+        Acts::Transform3::Identity(), rectangle);
     Acts::BinUtility pixelated(15, -xhalf, xhalf, Acts::open, Acts::binX);
     pixelated += Acts::BinUtility(26, -yhalf, yhalf, Acts::open, Acts::binY);
     RectangleRandom rRandom(xhalf * rScale, yhalf * rScale);
@@ -63,7 +63,7 @@ struct PlanarSurfaceTestBeds {
     auto trapezoid =
         std::make_shared<Acts::TrapezoidBounds>(xhalfminy, xhalfmaxy, yhalf);
     auto tSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-        Acts::Transform3D::Identity(), trapezoid);
+        Acts::Transform3::Identity(), trapezoid);
     Acts::BinUtility stripsX(35, -xhalfmaxy, xhalfmaxy, Acts::open, Acts::binX);
     stripsX += Acts::BinUtility(1, -yhalf, yhalf, Acts::open, Acts::binY);
     TrapezoidRandom tRandom(xhalfminy * rScale, xhalfmaxy * rScale,
@@ -80,7 +80,7 @@ struct PlanarSurfaceTestBeds {
     auto discTrapezoid =
         std::make_shared<Acts::DiscTrapezoidBounds>(xmin, xmax, rmin, rmax);
     auto dtSurface = Acts::Surface::makeShared<Acts::DiscSurface>(
-        Acts::Transform3D::Identity(), discTrapezoid);
+        Acts::Transform3::Identity(), discTrapezoid);
     Acts::BinUtility stripsPhi(1, rmin, rmax, Acts::open, Acts::binR);
     stripsPhi += Acts::BinUtility(25, M_PI_2 - alpha, M_PI_2 + alpha,
                                   Acts::open, Acts::binPhi);
@@ -91,7 +91,7 @@ struct PlanarSurfaceTestBeds {
     auto discRadial =
         std::make_shared<Acts::RadialBounds>(rmin, rmax, M_PI_4, M_PI_2);
     auto dSurface = Acts::Surface::makeShared<Acts::DiscSurface>(
-        Acts::Transform3D::Identity(), discRadial);
+        Acts::Transform3::Identity(), discRadial);
     Acts::BinUtility rphiseg(10, rmin, rmax, Acts::open, Acts::binR);
     rphiseg += Acts::BinUtility(20, (M_PI_2 - M_PI_4), (M_PI_2 + M_PI_4),
                                 Acts::open, Acts::binPhi);
@@ -102,18 +102,18 @@ struct PlanarSurfaceTestBeds {
     // Annulus disc test
     rmin = 2.5;
     rmax = 5.5;
-    Acts::Vector2D aorigin(0.1, -0.3);
+    Acts::Vector2 aorigin(0.1, -0.3);
     double phimin = -0.25;
     double phimax = 0.38;
     auto annulus = std::make_shared<Acts::AnnulusBounds>(rmin, rmax, phimin,
                                                          phimax, aorigin);
     auto aSurface = Acts::Surface::makeShared<Acts::DiscSurface>(
-        Acts::Transform3D::Identity() *
-            Acts::Translation3D(-aorigin.x(), -aorigin.y(), 0.),
+        Acts::Transform3::Identity() *
+            Acts::Translation3(-aorigin.x(), -aorigin.y(), 0.),
         annulus);
 
     auto vertices = annulus->vertices(72);
-    std::for_each(vertices.begin(), vertices.end(), [&](Acts::Vector2D& v) {
+    std::for_each(vertices.begin(), vertices.end(), [&](Acts::Vector2& v) {
       double r = Acts::VectorHelpers::perp(v);
       rmin = std::min(rmin, r);
       rmax = std::max(rmax, r);

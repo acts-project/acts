@@ -42,20 +42,20 @@ void lengthUnit(HepMC3::GenEvent& event, const double lengthUnit);
 /// @param event event in HepMC data type
 /// @param deltaPos relative spatial shift that will be applied
 /// @param deltaTime relative time shift that will be applied
-void shiftPositionBy(HepMC3::GenEvent& event, const Acts::Vector3D& deltaPos,
+void shiftPositionBy(HepMC3::GenEvent& event, const Acts::Vector3& deltaPos,
                      const double deltaTime);
 
 /// @brief Shifts the positioning of an event to a paint in space and time
 /// @param event event in HepMC data type
 /// @param pos new position of the event
 /// @param time new time of the event
-void shiftPositionTo(HepMC3::GenEvent& event, const Acts::Vector3D& pos,
+void shiftPositionTo(HepMC3::GenEvent& event, const Acts::Vector3& pos,
                      const double time);
 
 /// @brief Shifts the positioning of an event to a paint in space
 /// @param event event in HepMC data type
 /// @param pos new position of the event
-void shiftPositionTo(HepMC3::GenEvent& event, const Acts::Vector3D& pos);
+void shiftPositionTo(HepMC3::GenEvent& event, const Acts::Vector3& pos);
 
 /// @brief Shifts the positioning of an event to a paint in time
 /// @param event event in HepMC data type
@@ -113,7 +113,7 @@ double lengthUnit(const HepMC3::GenEvent& event);
 /// @brief Getter of the position of the event
 /// @param event event in HepMC data type
 /// @return vector to the location of the event
-Acts::Vector3D eventPos(const HepMC3::GenEvent& event);
+Acts::Vector3 eventPos(const HepMC3::GenEvent& event);
 
 /// @brief Getter of the time of the event
 /// @param event event in HepMC data type

@@ -71,13 +71,13 @@ struct BoundTrackParametersConceptImpl {
       std::is_convertible_v<ReturnTypeCovariance<T>,
                             std::optional<BoundSymMatrix>>;
   constexpr static bool hasMethodFourPositionFromContext =
-      identical_to<Vector4D, ReturnTypeFourPositionFromContext, const T>;
+      identical_to<Vector4, ReturnTypeFourPositionFromContext, const T>;
   constexpr static bool hasMethodPositionFromContext =
-      identical_to<Vector3D, ReturnTypePositionFromContext, const T>;
+      identical_to<Vector3, ReturnTypePositionFromContext, const T>;
   constexpr static bool hasMethodTime =
       identical_to<TypeScalar<T>, ReturnTypeTime, const T>;
   constexpr static bool hasMethodUnitDirection =
-      identical_to<Vector3D, ReturnTypeUnitDirection, const T>;
+      identical_to<Vector3, ReturnTypeUnitDirection, const T>;
   constexpr static bool hasMethodAbsoluteMomentum =
       identical_to<TypeScalar<T>, ReturnTypeAbsoluteMomentum, const T>;
   constexpr static bool hasMethodCharge =
@@ -128,13 +128,13 @@ struct FreeTrackParametersConceptImpl {
       std::is_convertible_v<ReturnTypeCovariance<T>,
                             std::optional<FreeSymMatrix>>;
   constexpr static bool hasMethodFourPosition =
-      identical_to<Vector4D, ReturnTypeFourPosition, const T>;
+      identical_to<Vector4, ReturnTypeFourPosition, const T>;
   constexpr static bool hasMethodPosition =
-      identical_to<Vector3D, ReturnTypePosition, const T>;
+      identical_to<Vector3, ReturnTypePosition, const T>;
   constexpr static bool hasMethodTime =
       identical_to<TypeScalar<T>, ReturnTypeTime, const T>;
   constexpr static bool hasMethodUnitDirection =
-      identical_to<Vector3D, ReturnTypeUnitDirection, const T>;
+      identical_to<Vector3, ReturnTypeUnitDirection, const T>;
   constexpr static bool hasMethodAbsoluteMomentum =
       identical_to<TypeScalar<T>, ReturnTypeAbsoluteMomentum, const T>;
   constexpr static bool hasMethodCharge =

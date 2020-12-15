@@ -44,7 +44,7 @@ using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-using SurfacePosition = std::pair<const Acts::Surface*, Acts::Vector3D>;
+using SurfacePosition = std::pair<const Acts::Surface*, Acts::Vector3>;
 
 struct ProtoLayerSurfaces {
   Acts::ProtoLayer protoLayer;
@@ -81,7 +81,7 @@ class ProtoLayerCreatorT {
     /// the binning schema: nPhi x nZ
     std::vector<std::pair<int, int>> centralModuleBinningSchema;
     /// the module center positions
-    std::vector<std::vector<Acts::Vector3D>> centralModulePositions;
+    std::vector<std::vector<Acts::Vector3>> centralModulePositions;
     /// the module tilt for this layer
     std::vector<double> centralModuleTiltPhi;
     /// the module bounds: local x
@@ -116,7 +116,7 @@ class ProtoLayerCreatorT {
     /// the envelope definitions
     std::vector<double> posnegLayerEnvelopeR;
     /// the module center positions
-    std::vector<std::vector<std::vector<Acts::Vector3D>>> posnegModulePositions;
+    std::vector<std::vector<std::vector<Acts::Vector3>>> posnegModulePositions;
     /// the phi binning
     std::vector<std::vector<size_t>> posnegModulePhiBins;
     /// the module bounds: min halfx
@@ -289,34 +289,34 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
         // create the association transform
         double modulePhi = phi(moduleCenter);
         // the local z axis is the normal vector
-        Acts::Vector3D moduleLocalZ(cos(modulePhi + modulePhiTilt),
-                                    sin(modulePhi + modulePhiTilt), 0.);
+        Acts::Vector3 moduleLocalZ(cos(modulePhi + modulePhiTilt),
+                                   sin(modulePhi + modulePhiTilt), 0.);
         // the local y axis is the global z axis
-        Acts::Vector3D moduleLocalY(0., 0., 1);
+        Acts::Vector3 moduleLocalY(0., 0., 1);
         // the local x axis the normal to local y,z
-        Acts::Vector3D moduleLocalX(-sin(modulePhi + modulePhiTilt),
-                                    cos(modulePhi + modulePhiTilt), 0.);
+        Acts::Vector3 moduleLocalX(-sin(modulePhi + modulePhiTilt),
+                                   cos(modulePhi + modulePhiTilt), 0.);
         // create the RotationMatrix
-        Acts::RotationMatrix3D moduleRotation;
+        Acts::RotationMatrix3 moduleRotation;
         moduleRotation.col(0) = moduleLocalX;
         moduleRotation.col(1) = moduleLocalY;
         moduleRotation.col(2) = moduleLocalZ;
         // get the moduleTransform
-        std::shared_ptr<Acts::Transform3D> mutableModuleTransform =
-            std::make_shared<Acts::Transform3D>(
-                Acts::Translation3D(moduleCenter) * moduleRotation);
+        std::shared_ptr<Acts::Transform3> mutableModuleTransform =
+            std::make_shared<Acts::Transform3>(
+                Acts::Translation3(moduleCenter) * moduleRotation);
         // stereo angle if necessary
         if (m_cfg.centralModuleFrontsideStereo.size() &&
             m_cfg.centralModuleFrontsideStereo.at(icl) != 0.) {
           // twist by the stereo angle
           double stereo = m_cfg.centralModuleFrontsideStereo.at(icl);
           (*mutableModuleTransform.get()) *=
-              Acts::AngleAxis3D(-stereo, Acts::Vector3D::UnitZ());
+              Acts::AngleAxis3(-stereo, Acts::Vector3::UnitZ());
         }
         // count the modules
         Identifier moduleIdentifier = Identifier(identifier_type(imodule++));
         // Finalize the transform
-        auto moduleTransform = std::const_pointer_cast<const Acts::Transform3D>(
+        auto moduleTransform = std::const_pointer_cast<const Acts::Transform3>(
             mutableModuleTransform);
         // create the module
         auto module = std::make_shared<detector_element_t>(
@@ -332,20 +332,20 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
         if (m_cfg.centralModuleBacksideGap.size()) {
           // create the module identifier
           moduleIdentifier = Identifier(identifier_type(imodule++));
-          Acts::Vector3D bsModuleCenter =
+          Acts::Vector3 bsModuleCenter =
               moduleCenter +
               m_cfg.centralModuleBacksideGap.at(icl) * moduleLocalZ;
-          mutableModuleTransform = std::make_shared<Acts::Transform3D>(
-              Acts::Translation3D(bsModuleCenter) * moduleRotation);
+          mutableModuleTransform = std::make_shared<Acts::Transform3>(
+              Acts::Translation3(bsModuleCenter) * moduleRotation);
           // apply the stereo
           if (m_cfg.centralModuleBacksideStereo.size()) {
             // twist by the stereo angle
             double stereoBackSide = m_cfg.centralModuleBacksideStereo.at(icl);
             (*mutableModuleTransform.get()) *=
-                Acts::AngleAxis3D(-stereoBackSide, Acts::Vector3D::UnitZ());
+                Acts::AngleAxis3(-stereoBackSide, Acts::Vector3::UnitZ());
           }
           // Finalize the transform
-          moduleTransform = std::const_pointer_cast<const Acts::Transform3D>(
+          moduleTransform = std::const_pointer_cast<const Acts::Transform3>(
               mutableModuleTransform);
           // create the backseide moulde
           auto bsmodule = std::make_shared<detector_element_t>(
@@ -486,22 +486,22 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
           // the module transform from the position
           double modulePhi = phi(ringModulePosition);
           // the center position of the modules
-          Acts::Vector3D moduleCenter(side * ringModulePosition);
+          Acts::Vector3 moduleCenter(side * ringModulePosition);
           // the rotation matrix of the module
-          Acts::Vector3D moduleLocalY(cos(modulePhi), sin(modulePhi), 0.);
+          Acts::Vector3 moduleLocalY(cos(modulePhi), sin(modulePhi), 0.);
           // take different axis to have the same readout direction
-          Acts::Vector3D moduleLocalZ(0., 0., side * 1.);
-          Acts::Vector3D moduleLocalX = moduleLocalY.cross(moduleLocalZ);
+          Acts::Vector3 moduleLocalZ(0., 0., side * 1.);
+          Acts::Vector3 moduleLocalX = moduleLocalY.cross(moduleLocalZ);
           // local rotation matrices
           // create the RotationMatrix - negative side
-          Acts::RotationMatrix3D moduleRotation;
+          Acts::RotationMatrix3 moduleRotation;
           moduleRotation.col(0) = moduleLocalX;
           moduleRotation.col(1) = moduleLocalY;
           moduleRotation.col(2) = moduleLocalZ;
           // the transforms for the two modules
-          std::shared_ptr<const Acts::Transform3D> moduleTransform =
-              std::make_shared<const Acts::Transform3D>(
-                  Acts::Translation3D(moduleCenter) * moduleRotation);
+          std::shared_ptr<const Acts::Transform3> moduleTransform =
+              std::make_shared<const Acts::Transform3>(
+                  Acts::Translation3(moduleCenter) * moduleRotation);
 
           // reate the modules identifier
           Identifier moduleIdentifier = Identifier(identifier_type(imodule++));
@@ -521,18 +521,18 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
                 moduleCenter +
                 m_cfg.posnegModuleBacksideGap.at(ipnl).at(ipnR) * moduleLocalZ;
             // the new transforms
-            auto mutableModuleTransform = std::make_shared<Acts::Transform3D>(
-                Acts::Translation3D(moduleCenter) * moduleRotation);
+            auto mutableModuleTransform = std::make_shared<Acts::Transform3>(
+                Acts::Translation3(moduleCenter) * moduleRotation);
             // apply the stereo
             if (m_cfg.posnegModuleBacksideStereo.size()) {
               // twist by the stereo angle
               double stereoBackSide =
                   m_cfg.posnegModuleBacksideStereo.at(ipnl).at(ipnR);
               (*mutableModuleTransform.get()) *=
-                  Acts::AngleAxis3D(-stereoBackSide, Acts::Vector3D::UnitZ());
+                  Acts::AngleAxis3(-stereoBackSide, Acts::Vector3::UnitZ());
             }
             // Finalize the transform
-            moduleTransform = std::const_pointer_cast<const Acts::Transform3D>(
+            moduleTransform = std::const_pointer_cast<const Acts::Transform3>(
                 mutableModuleTransform);
             // everything is set for the next module
             auto bsmodule = std::make_shared<detector_element_t>(

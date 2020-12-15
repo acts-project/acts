@@ -75,7 +75,7 @@ void Acts::KalmanVertexUpdater::updatePosition(
       linTrack.weightAtPCA.block<5, 5>(0, 0);
 
   // Vertex to be updated
-  const Vector3D& oldVtxPos = vtx.position();
+  const Vector3& oldVtxPos = vtx.position();
   matrixCache.oldVertexWeight = (vtx.covariance()).inverse();
 
   // W_k matrix
@@ -105,7 +105,7 @@ void Acts::KalmanVertexUpdater::updatePosition(
 template <typename input_track_t>
 double Acts::KalmanVertexUpdater::detail::vertexPositionChi2(
     const Vertex<input_track_t>& oldVtx, const MatrixCache& matrixCache) {
-  Vector3D posDiff = matrixCache.newVertexPos - oldVtx.position();
+  Vector3 posDiff = matrixCache.newVertexPos - oldVtx.position();
 
   // Calculate and return corresponding chi2
   return posDiff.transpose() * (matrixCache.oldVertexWeight * posDiff);
@@ -125,8 +125,8 @@ double Acts::KalmanVertexUpdater::detail::trackParametersChi2(
   const ActsVector<5> jacVtx = posJac * matrixCache.newVertexPos;
 
   // Refitted track momentum
-  Vector3D newTrackMomentum = matrixCache.momWeightInv * momJac.transpose() *
-                              trkParamWeight * (trkParams - constTerm - jacVtx);
+  Vector3 newTrackMomentum = matrixCache.momWeightInv * momJac.transpose() *
+                             trkParamWeight * (trkParams - constTerm - jacVtx);
 
   // Refitted track parameters
   ActsVector<5> newTrkParams = constTerm + jacVtx + momJac * newTrackMomentum;

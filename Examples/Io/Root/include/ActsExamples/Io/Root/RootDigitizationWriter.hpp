@@ -145,8 +145,8 @@ class RootDigitizationWriter final : public WriterT<MeasurementContainer> {
     /// @param lp The true local position
     /// @param xt The true 4D global position
     /// @param dir The true particle direction
-    void fillTruthParameters(const Acts::Vector2D& lp, const Acts::Vector4D& xt,
-                             const Acts::Vector3D& dir) {
+    void fillTruthParameters(const Acts::Vector2& lp, const Acts::Vector4& xt,
+                             const Acts::Vector3& dir) {
       trueBound[Acts::eBoundLoc0] = lp[Acts::eBoundLoc0];
       trueBound[Acts::eBoundLoc1] = lp[Acts::eBoundLoc1];
       trueBound[Acts::eBoundPhi] = Acts::VectorHelpers::phi(dir);

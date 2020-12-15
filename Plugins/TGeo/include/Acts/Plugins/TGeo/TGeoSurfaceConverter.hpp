@@ -36,7 +36,7 @@ struct TGeoSurfaceConverter {
   /// @param scalor The unit scalor between TGeo and Acts
   ///
   /// @return tuple of DiscBounds, Trasnform, thickness
-  static std::tuple<std::shared_ptr<const CylinderBounds>, const Transform3D,
+  static std::tuple<std::shared_ptr<const CylinderBounds>, const Transform3,
                     double>
   cylinderComponents(const TGeoShape& tgShape, const Double_t* rotation,
                      const Double_t* translation, const std::string& axes,
@@ -51,8 +51,7 @@ struct TGeoSurfaceConverter {
   /// @param scalor The unit scalor between TGeo and Acts
   ///
   /// @return tuple of DiscBounds, Trasnform, thickness
-  static std::tuple<std::shared_ptr<const DiscBounds>, const Transform3D,
-                    double>
+  static std::tuple<std::shared_ptr<const DiscBounds>, const Transform3, double>
   discComponents(const TGeoShape& tgShape, const Double_t* rotation,
                  const Double_t* translation, const std::string& axes,
                  double scalor = 10.) noexcept(false);
@@ -66,7 +65,7 @@ struct TGeoSurfaceConverter {
   /// @param scalor The unit scalor between TGeo and Acts
   ///
   /// @return tuple of PlanarBounds, Trasnform, thickness
-  static std::tuple<std::shared_ptr<const PlanarBounds>, const Transform3D,
+  static std::tuple<std::shared_ptr<const PlanarBounds>, const Transform3,
                     double>
   planeComponents(const TGeoShape& tgShape, const Double_t* rotation,
                   const Double_t* translation, const std::string& axes,

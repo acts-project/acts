@@ -7,11 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // clang-format off
-std::vector<Vector2D> rectVertices = {
-    Vector2D(-2.000000, -1.000000),
-    Vector2D(2.000000, -1.000000),
-    Vector2D(2.000000, 1.000000),
-    Vector2D(-2.000000, 1.000000)
+std::vector<Vector2> rectVertices = {
+    Vector2(-2.000000, -1.000000),
+    Vector2(2.000000, -1.000000),
+    Vector2(2.000000, 1.000000),
+    Vector2(-2.000000, 1.000000)
 };
 
 struct {
@@ -23,7 +23,7 @@ struct {
 
 (void)rectDimensions;
 
-std::vector<Vector2D> rectTestPoints = {
+std::vector<Vector2> rectTestPoints = {
     {-3.00, -2.00}, {-3.00, -1.60}, {-3.00, -1.20}, {-3.00, -0.80}, {-3.00, -0.40},
     {-3.00, 0.00}, {-3.00, 0.40}, {-3.00, 0.80}, {-3.00, 1.20}, {-3.00, 1.60},
     {-3.00, 2.00}, {-2.40, -2.00}, {-2.40, -1.60}, {-2.40, -1.20}, {-2.40, -0.80},
@@ -50,7 +50,7 @@ std::vector<Vector2D> rectTestPoints = {
     {3.00, 0.00}, {3.00, 0.40}, {3.00, 0.80}, {3.00, 1.20}, {3.00, 1.60},
     {3.00, 2.00}
 };
-std::vector<Vector2D> rectClosestPoints = {
+std::vector<Vector2> rectClosestPoints = {
     {-2.00, -1.00}, {-2.00, -1.00}, {-2.00, -1.00}, {-2.00, -0.80}, {-2.00, -0.40},
     {-2.00, 0.00}, {-2.00, 0.40}, {-2.00, 0.80}, {-2.00, 1.00}, {-2.00, 1.00},
     {-2.00, 1.00}, {-2.00, -1.00}, {-2.00, -1.00}, {-2.00, -1.00}, {-2.00, -0.80},
@@ -111,11 +111,11 @@ std::vector<double> rectDistances = {
     1.1661903789690602, 1.4142135623730951
 };
 
-std::vector<Vector2D> rectShiftedVertices = {
-    Vector2D(1.000000, 2.000000),
-    Vector2D(3.000000, 2.000000),
-    Vector2D(3.000000, 4.000000),
-    Vector2D(1.000000, 4.000000)
+std::vector<Vector2> rectShiftedVertices = {
+    Vector2(1.000000, 2.000000),
+    Vector2(3.000000, 2.000000),
+    Vector2(3.000000, 4.000000),
+    Vector2(1.000000, 4.000000)
 };
 
 struct {
@@ -127,7 +127,7 @@ struct {
 
 (void)rectShiftedDimensions;
 
-std::vector<Vector2D> rectShiftedTestPoints = {
+std::vector<Vector2> rectShiftedTestPoints = {
     {0.00, 1.50}, {0.00, 1.80}, {0.00, 2.10}, {0.00, 2.40}, {0.00, 2.70}, 
     {0.00, 3.00}, {0.00, 3.30}, {0.00, 3.60}, {0.00, 3.90}, {0.00, 4.20}, 
     {0.00, 4.50}, {0.40, 1.50}, {0.40, 1.80}, {0.40, 2.10}, {0.40, 2.40}, 
@@ -154,7 +154,7 @@ std::vector<Vector2D> rectShiftedTestPoints = {
     {4.00, 3.00}, {4.00, 3.30}, {4.00, 3.60}, {4.00, 3.90}, {4.00, 4.20}, 
     {4.00, 4.50}
 };
-std::vector<Vector2D> rectShiftedClosestPoints = {
+std::vector<Vector2> rectShiftedClosestPoints = {
     {1.00, 2.00}, {1.00, 2.00}, {1.00, 2.10}, {1.00, 2.40}, {1.00, 2.70}, 
     {1.00, 3.00}, {1.00, 3.30}, {1.00, 3.60}, {1.00, 3.90}, {1.00, 4.00}, 
     {1.00, 4.00}, {1.00, 2.00}, {1.00, 2.00}, {1.00, 2.10}, {1.00, 2.40}, 

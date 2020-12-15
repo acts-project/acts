@@ -26,12 +26,11 @@ TrackingVolumePtr constructCylinderVolume(
     double volumeEnvelope, double innerVolumeR, double outerVolumeR,
     const std::string& name) {
   ///  the surface transforms
-  auto sfnPosition =
-      Vector3D(0., 0., -3 * surfaceHalfLengthZ - surfaceZoverlap);
-  auto sfnTransform = Transform3D(Translation3D(sfnPosition));
-  auto sfcTransform = Transform3D::Identity();
-  auto sfpPosition = Vector3D(0., 0., 3 * surfaceHalfLengthZ - surfaceZoverlap);
-  auto sfpTransform = Transform3D(Translation3D(sfpPosition));
+  auto sfnPosition = Vector3(0., 0., -3 * surfaceHalfLengthZ - surfaceZoverlap);
+  auto sfnTransform = Transform3(Translation3(sfnPosition));
+  auto sfcTransform = Transform3::Identity();
+  auto sfpPosition = Vector3(0., 0., 3 * surfaceHalfLengthZ - surfaceZoverlap);
+  auto sfpTransform = Transform3(Translation3(sfpPosition));
   ///  the surfaces
   auto sfnBounds = std::make_shared<CylinderBounds>(
       surfaceR - 0.5 * surfaceRstagger, surfaceHalfLengthZ);
@@ -55,11 +54,11 @@ TrackingVolumePtr constructCylinderVolume(
 
   detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Bound>
       axis(bUmin, bUmax, surfaces_only.size());
-  auto g2l = [](const Vector3D& glob) {
+  auto g2l = [](const Vector3& glob) {
     return std::array<double, 1>({{glob.z()}});
   };
   auto l2g = [](const std::array<double, 1>& loc) {
-    return Vector3D(0, 0, loc[0]);
+    return Vector3(0, 0, loc[0]);
   };
   auto sl = std::make_unique<SurfaceArray::SurfaceGridLookup<decltype(axis)>>(
       g2l, l2g, std::make_tuple(axis));
@@ -68,7 +67,7 @@ TrackingVolumePtr constructCylinderVolume(
 
   ///  now create the Layer
   auto layer0bounds = std::make_shared<const CylinderBounds>(surfaceR, bUmax);
-  auto layer0 = CylinderLayer::create(Transform3D::Identity(), layer0bounds,
+  auto layer0 = CylinderLayer::create(Transform3::Identity(), layer0bounds,
                                       std::move(bArray),
                                       surfaceRstagger + 2 * layerEnvelope);
   std::unique_ptr<const LayerArray> layerArray =
@@ -79,7 +78,7 @@ TrackingVolumePtr constructCylinderVolume(
       innerVolumeR, outerVolumeR, bUmax + volumeEnvelope);
 
   TrackingVolumePtr volume =
-      TrackingVolume::create(Transform3D::Identity(), volumeBounds, nullptr,
+      TrackingVolume::create(Transform3::Identity(), volumeBounds, nullptr,
                              std::move(layerArray), nullptr, {}, name);
   ///  return the volume
   return volume;
@@ -93,7 +92,7 @@ MutableTrackingVolumePtr constructContainerVolume(const GeometryContext& gctx,
                                                   double hVolumeHalflength,
                                                   const std::string& name) {
   ///  create the volume array
-  using VAP = std::pair<TrackingVolumePtr, Vector3D>;
+  using VAP = std::pair<TrackingVolumePtr, Vector3>;
   std::vector<VAP> volumes = {{iVolume, iVolume->binningPosition(gctx, binR)},
                               {oVolume, oVolume->binningPosition(gctx, binR)}};
   ///  the bounds for the container
@@ -106,7 +105,7 @@ MutableTrackingVolumePtr constructContainerVolume(const GeometryContext& gctx,
       std::make_shared<const BinnedArrayXD<TrackingVolumePtr>>(
           volumes, std::move(vUtility));
   ///  create the container volume
-  auto hVolume = TrackingVolume::create(Transform3D::Identity(), hVolumeBounds,
+  auto hVolume = TrackingVolume::create(Transform3::Identity(), hVolumeBounds,
                                         vArray, name);
   // return the container
   return hVolume;

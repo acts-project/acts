@@ -80,8 +80,8 @@ int main(int argc, char* argv[]) {
   PropagatorOptions<> options(tgContext, mfContext, getDummyLogger());
   options.pathLimit = maxPathInM * UnitConstants::m;
 
-  Vector4D pos4(0, 0, 0, 0);
-  Vector3D dir(1, 0, 0);
+  Vector4 pos4(0, 0, 0, 0);
+  Vector3 dir(1, 0, 0);
   Covariance cov;
   // clang-format off
   cov << 10_mm, 0, 0, 0, 0, 0,

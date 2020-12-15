@@ -24,14 +24,14 @@ class VertexFitterAlgorithm final : public BareAlgorithm {
     /// Input proto vertex collection.
     std::string inputProtoVertices;
     /// The magnetic field.
-    Acts::Vector3D bField = Acts::Vector3D::Zero();
+    Acts::Vector3 bField = Acts::Vector3::Zero();
     bool doConstrainedFit = false;
     /// Vertex constraint position
-    Acts::Vector3D constraintPos = Acts::Vector3D(0, 0, 0);
+    Acts::Vector3 constraintPos = Acts::Vector3(0, 0, 0);
     /// Vertex constraint covariance matrix
-    Acts::SymMatrix3D constraintCov =
-        Acts::Vector3D(3 * Acts::UnitConstants::mm, 3 * Acts::UnitConstants::mm,
-                       10 * Acts::UnitConstants::mm)
+    Acts::SymMatrix3 constraintCov =
+        Acts::Vector3(3 * Acts::UnitConstants::mm, 3 * Acts::UnitConstants::mm,
+                      10 * Acts::UnitConstants::mm)
             .asDiagonal();
   };
 

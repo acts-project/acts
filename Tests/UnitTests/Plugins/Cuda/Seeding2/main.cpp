@@ -94,7 +94,7 @@ int main(int argc, char* argv[]) {
 
   // Covariance tool, sets covariances per spacepoint as required.
   auto ct = [=](const TestSpacePoint& sp, float, float,
-                float) -> Acts::Vector2D {
+                float) -> Acts::Vector2 {
     return {sp.m_varianceR, sp.m_varianceZ};
   };
 

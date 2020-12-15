@@ -49,8 +49,8 @@ constexpr auto bz = 2_T;
 
 const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
-const MagneticField magFieldZero(Acts::Vector3D::Zero());
-const MagneticField magFieldNonZero(Acts::Vector3D::UnitZ() * bz);
+const MagneticField magFieldZero(Acts::Vector3::Zero());
+const MagneticField magFieldNonZero(Acts::Vector3::UnitZ() * bz);
 const EigenPropagator eigenPropagatorZero{EigenStepper(magFieldZero)};
 const AutodiffPropagator autodiffPropagatorZero{AutodiffStepper(magFieldZero)};
 

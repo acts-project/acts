@@ -29,7 +29,7 @@ namespace Acts {
 ///
 /// @return new updated BinUtiltiy
 BinUtility adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds,
-                            const Transform3D& transform) {
+                            const Transform3& transform) {
   // Default constructor
   BinUtility uBinUtil(transform);
 
@@ -77,7 +77,7 @@ BinUtility adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds,
 ///
 /// @return new updated BinUtiltiy
 BinUtility adjustBinUtility(const BinUtility& bu, const CylinderBounds& cBounds,
-                            const Transform3D& transform) {
+                            const Transform3& transform) {
   // Default constructor
   BinUtility uBinUtil(transform);
 

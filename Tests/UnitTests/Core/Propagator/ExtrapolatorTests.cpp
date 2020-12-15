@@ -102,7 +102,7 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearTrackParameters start(Vector4D(0, 0, 0, time), phi, theta, p, q,
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, p, q,
                                    cov);
 
   PropagatorOptions<> options(tgContext, mfContext, getDummyLogger());
@@ -145,7 +145,7 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearTrackParameters start(Vector4D(0, 0, 0, time), phi, theta, p, q,
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, p, q,
                                    cov);
 
   // A PlaneSelector for the SurfaceCollector
@@ -212,7 +212,7 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearTrackParameters start(Vector4D(0, 0, 0, time), phi, theta, p, q,
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, p, q,
                                    cov);
 
   PropagatorOptions<ActionList<MaterialInteractor>> options(
@@ -260,7 +260,7 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearTrackParameters start(Vector4D(0, 0, 0, time), phi, theta, p, q,
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, p, q,
                                    cov);
 
   // Action list and abort list

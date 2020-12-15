@@ -20,8 +20,8 @@ namespace Acts {
 /// The information to be writtern out per hit surface
 struct MaterialHit {
   const Surface* surface = nullptr;
-  Vector3D position;
-  Vector3D direction;
+  Vector3 position;
+  Vector3 direction;
   Material material;
   double pathLength;
 };

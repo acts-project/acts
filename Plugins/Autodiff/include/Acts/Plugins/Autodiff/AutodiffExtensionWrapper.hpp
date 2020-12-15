@@ -47,9 +47,9 @@ struct AutodiffExtensionWrapper {
   // Just call underlying extension
   template <typename propagator_state_t, typename stepper_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
-         Vector3D& knew, const Vector3D& bField, std::array<double, 4>& kQoP,
+         Vector3& knew, const Vector3& bField, std::array<double, 4>& kQoP,
          const int i = 0, const double h = 0.,
-         const Vector3D& kprev = Vector3D()) {
+         const Vector3& kprev = Vector3()) {
     return m_doubleExtension.k(state, stepper, knew, bField, kQoP, i, h, kprev);
   }
 

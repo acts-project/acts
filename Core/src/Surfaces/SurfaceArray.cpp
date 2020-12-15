@@ -20,7 +20,7 @@ Acts::SurfaceArray::ISurfaceGridLookup::~ISurfaceGridLookup() = default;
 Acts::SurfaceArray::SurfaceArray(
     std::unique_ptr<ISurfaceGridLookup> gridLookup,
     std::vector<std::shared_ptr<const Surface>> surfaces,
-    const Transform3D& transform)
+    const Transform3& transform)
     : p_gridLookup(std::move(gridLookup)),
       m_surfaces(std::move(surfaces)),
       m_surfacesRawPointers(unpack_shared_vector(m_surfaces)),
