@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -57,6 +58,8 @@ struct NavigationOptions {
 
   /// Target surface to exclude
   const Surface* targetSurface = nullptr;
+  /// External surface identifier for which the boundary check is ignored
+  std::vector<GeometryIdentifier> externalSurfaces = {};
 
   /// The maximum path limit for this navigation step
   double pathLimit = std::numeric_limits<double>::max();
@@ -125,7 +128,7 @@ class Navigator {
   using NavigationBoundaries = std::vector<BoundaryIntersection>;
   using NavigationBoundaryIter = NavigationBoundaries::iterator;
 
-  using ExternalSurfaces = std::multimap<const Layer*, const Surface*>;
+  using ExternalSurfaces = std::multimap<uint64_t, GeometryIdentifier>;
 
   /// The navigation stage
   enum struct Stage : int {
@@ -425,7 +428,6 @@ class Navigator {
 
     // Call the navigation helper prior to actual navigation
     ACTS_VERBOSE(volInfo(state) << "Initialization.");
-
     // Set the world volume if it is not set
     if (not state.navigation.worldVolume) {
       state.navigation.worldVolume = trackingGeometry->highestTrackingVolume();
@@ -590,6 +592,20 @@ class Navigator {
                    << "No surfaces present, target at layer first.");
       return false;
     }
+    std::vector<GeometryIdentifier> externalSurfaces;
+    if (!state.navigation.externalSurfaces.empty()) {
+      auto layerID =
+          state.navigation.navLayerIter->object->geometryId().layer();
+      auto externalSurfaceRange =
+          state.navigation.externalSurfaces.equal_range(layerID);
+
+      externalSurfaces.reserve(
+          state.navigation.externalSurfaces.count(layerID));
+      for (auto itSurface = externalSurfaceRange.first;
+           itSurface != externalSurfaceRange.second; itSurface++) {
+        externalSurfaces.push_back(itSurface->second);
+      }
+    }
     // Loop over the remaining navigation surfaces
     while (state.navigation.navSurfaceIter !=
            state.navigation.navSurfaces.end()) {
@@ -605,8 +621,13 @@ class Navigator {
       ACTS_VERBOSE(volInfo(state) << "Next surface candidate will be "
                                   << surface->geometryId());
       // Estimate the surface status
+      bool boundaryCheck = true;
+      if (std::find(externalSurfaces.begin(), externalSurfaces.end(),
+                    surface->geometryId()) != externalSurfaces.end()) {
+        boundaryCheck = false;
+      }
       auto surfaceStatus =
-          stepper.updateSurfaceStatus(state.stepping, *surface, true);
+          stepper.updateSurfaceStatus(state.stepping, *surface, boundaryCheck);
       if (surfaceStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << "Surface reachable, step size updated to "
@@ -1038,6 +1059,19 @@ class Navigator {
     NavigationOptions<Surface> navOpts(
         state.stepping.navDir, true, resolveSensitive, resolveMaterial,
         resolvePassive, startSurface, state.navigation.targetSurface);
+
+    std::vector<GeometryIdentifier> externalSurfaces;
+    if (!state.navigation.externalSurfaces.empty()) {
+      auto layerID = layerSurface->geometryId().layer();
+      auto externalSurfaceRange =
+          state.navigation.externalSurfaces.equal_range(layerID);
+      navOpts.externalSurfaces.reserve(
+          state.navigation.externalSurfaces.count(layerID));
+      for (auto itSurface = externalSurfaceRange.first;
+           itSurface != externalSurfaceRange.second; itSurface++) {
+        navOpts.externalSurfaces.push_back(itSurface->second);
+      }
+    }
     // Check the limit
     navOpts.pathLimit = state.stepping.stepSize.value(ConstrainedStep::aborter);
     // No overstepping on start layer, otherwise ask the stepper
