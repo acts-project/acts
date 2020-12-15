@@ -9,52 +9,51 @@
 #include "Acts/Visualization/EventDataView3D.hpp"
 
 void Acts::EventDataView3D::drawCovarianceCartesian(
-    IVisualization3D& helper, const Vector2D& lposition,
-    const SymMatrix2D& covariance, const Transform3D& transform,
+    IVisualization3D& helper, const Vector2& lposition,
+    const SymMatrix2& covariance, const Transform3& transform,
     double locErrorScale, const ViewConfig& viewConfig) {
   auto [lambda0, lambda1, theta] = decomposeCovariance(covariance);
 
-  std::vector<Vector3D> ellipse = createEllipse(
+  std::vector<Vector3> ellipse = createEllipse(
       lambda0 * locErrorScale, lambda1 * locErrorScale, theta,
       viewConfig.nSegments, viewConfig.offset, lposition, transform);
 
   ellipse.push_back(transform *
-                    Vector3D(lposition.x(), lposition.y(), viewConfig.offset));
+                    Vector3(lposition.x(), lposition.y(), viewConfig.offset));
   auto faces = detail::FacesHelper::convexFaceMesh(ellipse, true);
   Polyhedron ellipseHedron(ellipse, faces.first, faces.second);
   Acts::GeometryView3D::drawPolyhedron(helper, ellipseHedron, viewConfig);
 }
 
 void Acts::EventDataView3D::drawCovarianceAngular(
-    IVisualization3D& helper, const Vector3D& position,
-    const Vector3D& direction, const ActsSymMatrix<2>& covariance,
-    double directionScale, double angularErrorScale,
-    const ViewConfig& viewConfig) {
+    IVisualization3D& helper, const Vector3& position, const Vector3& direction,
+    const ActsSymMatrix<2>& covariance, double directionScale,
+    double angularErrorScale, const ViewConfig& viewConfig) {
   auto [lambda0, lambda1, theta] = decomposeCovariance(covariance);
 
   // Anker point
-  Vector3D anker = position + directionScale * direction;
+  Vector3 anker = position + directionScale * direction;
 
   double dphi = VectorHelpers::phi(direction);
   double dtheta = VectorHelpers::theta(direction);
 
-  Transform3D eplane(Translation3D(anker) *
-                     AngleAxis3D(dtheta, Vector3D(1., 0., 0.)) *
-                     AngleAxis3D(dphi, Vector3D(0., 0., 1.)));
+  Transform3 eplane(Translation3(anker) *
+                    AngleAxis3(dtheta, Vector3(1., 0., 0.)) *
+                    AngleAxis3(dphi, Vector3(0., 0., 1.)));
 
   // Now generate the ellipse points
-  std::vector<Vector3D> ellipse =
+  std::vector<Vector3> ellipse =
       createEllipse(angularErrorScale * directionScale * tan(lambda0),
                     angularErrorScale * directionScale * tan(lambda1), theta,
                     viewConfig.nSegments, 0., {0., 0.}, eplane);
 
-  std::vector<Vector3D> coneTop = ellipse;
+  std::vector<Vector3> coneTop = ellipse;
   coneTop.push_back(anker);
   auto coneTopFaces = detail::FacesHelper::convexFaceMesh(coneTop, true);
   Polyhedron coneTopHedron(coneTop, coneTopFaces.first, coneTopFaces.second);
   GeometryView3D::drawPolyhedron(helper, coneTopHedron, viewConfig);
 
-  std::vector<Vector3D> cone = ellipse;
+  std::vector<Vector3> cone = ellipse;
   cone.push_back(position);
   // Force triangular
   ViewConfig coneViewConfig = viewConfig;

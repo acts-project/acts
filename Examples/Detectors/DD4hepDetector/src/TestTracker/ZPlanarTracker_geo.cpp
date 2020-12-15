@@ -159,10 +159,10 @@ static Ref_t create_element(Detector& lcdd, xml_h e, SensitiveDetector sens) {
 
     // -------- create a measurement plane for the tracking surface attched to
     // the sensitive volume -----
-    /*    Vector3D u(0., 1., 0.);
-        Vector3D v(0., 0., 1.);
-        Vector3D n(1., 0., 0.);
-        //    Vector3D o( 0. , 0. , 0. ) ;
+    /*    Vector3 u(0., 1., 0.);
+        Vector3 v(0., 0., 1.);
+        Vector3 n(1., 0., 0.);
+        //    Vector3 o( 0. , 0. , 0. ) ;
 
         // compute the inner and outer thicknesses that need to be assigned to
        the
@@ -262,7 +262,7 @@ static Ref_t create_element(Detector& lcdd, xml_h e, SensitiveDetector sens) {
 
   assembly.placeVolume( tube_vol , Transform3D() ) ;
 
-  Vector3D ocyl(  inner_r + 0.5*tube_thick , 0. , 0. ) ;
+  Vector3 ocyl(  inner_r + 0.5*tube_thick , 0. , 0. ) ;
 
   VolCylinder cylSurf( tube_vol , SurfaceType( SurfaceType::Helper ) , 0.5*tube_thick  , 0.5*tube_thick , ocyl ) ;
 

@@ -67,15 +67,15 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   /// @param hsm is the source material
   bool operator==(const HomogeneousSurfaceMaterial& hsm) const;
 
-  /// @copydoc SurfaceMaterial::materialSlab(const Vector2D&)
+  /// @copydoc SurfaceMaterial::materialSlab(const Vector2&)
   ///
   /// @note the input parameter is ignored
-  const MaterialSlab& materialSlab(const Vector2D& lp) const final;
+  const MaterialSlab& materialSlab(const Vector2& lp) const final;
 
-  /// @copydoc SurfaceMaterial::materialSlab(const Vector3D&)
+  /// @copydoc SurfaceMaterial::materialSlab(const Vector3&)
   ///
   /// @note the input parameter is ignored
-  const MaterialSlab& materialSlab(const Vector3D& gp) const final;
+  const MaterialSlab& materialSlab(const Vector3& gp) const final;
 
   /// @copydoc SurfaceMaterial::materialSlab(size_t, size_t)
   ///
@@ -102,12 +102,12 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
 };
 
 inline const MaterialSlab& HomogeneousSurfaceMaterial::materialSlab(
-    const Vector2D& /*lp*/) const {
+    const Vector2& /*lp*/) const {
   return (m_fullMaterial);
 }
 
 inline const MaterialSlab& HomogeneousSurfaceMaterial::materialSlab(
-    const Vector3D& /*gp*/) const {
+    const Vector3& /*gp*/) const {
   return (m_fullMaterial);
 }
 

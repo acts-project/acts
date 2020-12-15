@@ -40,8 +40,8 @@ inline const AbstractVolume* Layer::representingVolume() const {
 }
 
 inline const Layer* Layer::nextLayer(const GeometryContext& /*gctx*/,
-                                     const Vector3D& position,
-                                     const Vector3D& direction) const {
+                                     const Vector3& position,
+                                     const Vector3& direction) const {
   // no binutility -> no chance to find out the direction
   if (m_nextLayerUtility == nullptr) {
     return nullptr;
@@ -69,8 +69,8 @@ inline bool Layer::resolve(bool resolveSensitive, bool resolveMaterial,
 
 template <typename options_t>
 std::vector<SurfaceIntersection> Layer::compatibleSurfaces(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const options_t& options) const {
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const options_t& options) const {
   // the list of valid intersection
   std::vector<SurfaceIntersection> sIntersections;
   // remember the surfaces for duplicate removal
@@ -217,8 +217,8 @@ std::vector<SurfaceIntersection> Layer::compatibleSurfaces(
 
 template <typename options_t>
 const SurfaceIntersection Layer::surfaceOnApproach(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const options_t& options) const {
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const options_t& options) const {
   // resolve directive based by options
   // - options.resolvePassive is on -> always
   // - options.resolveSensitive is on -> always
@@ -286,13 +286,13 @@ const SurfaceIntersection Layer::surfaceOnApproach(
 }
 
 inline bool Layer::isOnLayer(const GeometryContext& gctx,
-                             const Vector3D& position,
+                             const Vector3& position,
                              const BoundaryCheck& bcheck) const {
   if (m_representingVolume != nullptr) {
     return m_representingVolume->inside(position);
   }
   return (surfaceRepresentation())
-      .isOnSurface(gctx, position, Vector3D::Zero(), bcheck);
+      .isOnSurface(gctx, position, Vector3::Zero(), bcheck);
 }
 
 }  // namespace Acts

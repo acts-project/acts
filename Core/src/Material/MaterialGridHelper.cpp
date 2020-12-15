@@ -77,37 +77,37 @@ Acts::Grid3D Acts::createGrid(std::array<double, 3> gridAxis1,
       std::make_tuple(std::move(axis1), std::move(axis2), std::move(axis3)));
 }
 
-std::function<double(Acts::Vector3D)> Acts::globalToLocalFromBin(
+std::function<double(Acts::Vector3)> Acts::globalToLocalFromBin(
     Acts::BinningValue& type) {
-  std::function<double(Acts::Vector3D)> transfoGlobalToLocal;
+  std::function<double(Acts::Vector3)> transfoGlobalToLocal;
 
   switch (type) {
     case Acts::binX:
-      transfoGlobalToLocal = [](Acts::Vector3D pos) -> double {
+      transfoGlobalToLocal = [](Acts::Vector3 pos) -> double {
         return (pos.x());
       };
       break;
 
     case Acts::binY:
-      transfoGlobalToLocal = [](Acts::Vector3D pos) -> double {
+      transfoGlobalToLocal = [](Acts::Vector3 pos) -> double {
         return (pos.y());
       };
       break;
 
     case Acts::binR:
-      transfoGlobalToLocal = [](Acts::Vector3D pos) -> double {
+      transfoGlobalToLocal = [](Acts::Vector3 pos) -> double {
         return (Acts::VectorHelpers::perp(pos));
       };
       break;
 
     case Acts::binPhi:
-      transfoGlobalToLocal = [](Acts::Vector3D pos) -> double {
+      transfoGlobalToLocal = [](Acts::Vector3 pos) -> double {
         return (Acts::VectorHelpers::phi(pos));
       };
       break;
 
     case Acts::binZ:
-      transfoGlobalToLocal = [](Acts::Vector3D pos) -> double {
+      transfoGlobalToLocal = [](Acts::Vector3 pos) -> double {
         return (pos.z());
       };
       break;
@@ -125,7 +125,7 @@ std::function<double(Acts::Vector3D)> Acts::globalToLocalFromBin(
 
 Acts::Grid2D Acts::createGrid2D(
     const Acts::BinUtility& bins,
-    std::function<Acts::Vector2D(Acts::Vector3D)>& transfoGlobalToLocal) {
+    std::function<Acts::Vector2(Acts::Vector3)>& transfoGlobalToLocal) {
   auto bu = bins.binningData();
   // First we nee to create the 2 axis
   std::array<double, 3> gridAxis1;
@@ -154,13 +154,13 @@ Acts::Grid2D Acts::createGrid2D(
   gridAxis2[1] = bu[1].max;
   gridAxis2[2] = bu[1].bins();
 
-  std::function<double(Acts::Vector3D)> coord1 =
+  std::function<double(Acts::Vector3)> coord1 =
       globalToLocalFromBin(bu[0].binvalue);
-  std::function<double(Acts::Vector3D)> coord2 =
+  std::function<double(Acts::Vector3)> coord2 =
       globalToLocalFromBin(bu[1].binvalue);
-  Transform3D transfo = bins.transform().inverse();
+  Transform3 transfo = bins.transform().inverse();
   transfoGlobalToLocal = [coord1, coord2,
-                          transfo](Acts::Vector3D pos) -> Acts::Vector2D {
+                          transfo](Acts::Vector3 pos) -> Acts::Vector2 {
     pos = transfo * pos;
     return {coord1(pos), coord2(pos)};
   };
@@ -169,7 +169,7 @@ Acts::Grid2D Acts::createGrid2D(
 
 Acts::Grid3D Acts::createGrid3D(
     const Acts::BinUtility& bins,
-    std::function<Acts::Vector3D(Acts::Vector3D)>& transfoGlobalToLocal) {
+    std::function<Acts::Vector3(Acts::Vector3)>& transfoGlobalToLocal) {
   auto bu = bins.binningData();
   // First we nee to create the 3 axis
   std::array<double, 3> gridAxis1;
@@ -203,16 +203,16 @@ Acts::Grid3D Acts::createGrid3D(
   gridAxis3[1] = bu[2].max;
   gridAxis3[2] = bu[2].bins();
 
-  std::function<double(Acts::Vector3D)> coord1 =
+  std::function<double(Acts::Vector3)> coord1 =
       globalToLocalFromBin(bu[0].binvalue);
-  std::function<double(Acts::Vector3D)> coord2 =
+  std::function<double(Acts::Vector3)> coord2 =
       globalToLocalFromBin(bu[1].binvalue);
-  std::function<double(Acts::Vector3D)> coord3 =
+  std::function<double(Acts::Vector3)> coord3 =
       globalToLocalFromBin(bu[2].binvalue);
-  Transform3D transfo = bins.transform().inverse();
+  Transform3 transfo = bins.transform().inverse();
 
   transfoGlobalToLocal = [coord1, coord2, coord3,
-                          transfo](Acts::Vector3D pos) -> Acts::Vector3D {
+                          transfo](Acts::Vector3 pos) -> Acts::Vector3 {
     pos = transfo * pos;
     return {coord1(pos), coord2(pos), coord3(pos)};
   };
@@ -222,7 +222,7 @@ Acts::Grid3D Acts::createGrid3D(
 
 Acts::MaterialGrid2D Acts::mapMaterialPoints(
     Acts::Grid2D& grid, const Acts::RecordedMaterialVolumePoint& mPoints,
-    std::function<Acts::Vector2D(Acts::Vector3D)>& transfoGlobalToLocal) {
+    std::function<Acts::Vector2(Acts::Vector3)>& transfoGlobalToLocal) {
   // Walk over each properties
   for (const auto& rm : mPoints) {
     // Walk over each point associated with the properties
@@ -254,7 +254,7 @@ Acts::MaterialGrid2D Acts::mapMaterialPoints(
 
 Acts::MaterialGrid3D Acts::mapMaterialPoints(
     Acts::Grid3D& grid, const Acts::RecordedMaterialVolumePoint& mPoints,
-    std::function<Acts::Vector3D(Acts::Vector3D)>& transfoGlobalToLocal) {
+    std::function<Acts::Vector3(Acts::Vector3)>& transfoGlobalToLocal) {
   // Walk over each properties
   for (const auto& rm : mPoints) {
     // Walk over each point associated with the properties

@@ -50,13 +50,13 @@ static constexpr auto eps = 1024 * std::numeric_limits<double>::epsilon();
 static constexpr auto stepSize = 10_mm;
 static constexpr auto tolerance = 10_um;
 static constexpr NavigationDirection navDir = backward;
-static const ConstantBField magneticField(Vector3D(0.1_T, -0.2_T, 2_T));
+static const ConstantBField magneticField(Vector3(0.1_T, -0.2_T, 2_T));
 
 // initial parameter state
-static const Vector4D pos4(1_mm, -1_mm, 2_mm, 2_ns);
-static const Vector3D pos = pos4.segment<3>(ePos0);
+static const Vector4 pos4(1_mm, -1_mm, 2_mm, 2_ns);
+static const Vector3 pos = pos4.segment<3>(ePos0);
 static const auto time = pos4[eTime];
-static const Vector3D unitDir = Vector3D(-2, 2, 1).normalized();
+static const Vector3 unitDir = Vector3(-2, 2, 1).normalized();
 static constexpr auto absMom = 1_GeV;
 static constexpr auto charge = -1_e;
 static const Covariance cov = Covariance::Identity();
@@ -137,10 +137,10 @@ BOOST_AUTO_TEST_CASE(UpdateFromBound) {
       CurvilinearTrackParameters(pos4, unitDir, absMom, charge, cov), navDir,
       stepSize, tolerance);
 
-  auto newPos4 = (pos4 + Vector4D(1_mm, 2_mm, 3_mm, 20_ns)).eval();
+  auto newPos4 = (pos4 + Vector4(1_mm, 2_mm, 3_mm, 20_ns)).eval();
   auto newPos = newPos4.segment<3>(ePos0);
   auto newTime = newPos4[eTime];
-  auto newUnitDir = (unitDir + Vector3D(1, -1, -1)).normalized();
+  auto newUnitDir = (unitDir + Vector3(1, -1, -1)).normalized();
   auto newAbsMom = 0.9 * absMom;
 
   // example surface and bound parameters at the updated position
@@ -175,9 +175,9 @@ BOOST_AUTO_TEST_CASE(UpdateFromComponents) {
       CurvilinearTrackParameters(pos4, unitDir, absMom, charge, cov), navDir,
       stepSize, tolerance);
 
-  auto newPos = (pos + Vector3D(1_mm, 2_mm, 3_mm)).eval();
+  auto newPos = (pos + Vector3(1_mm, 2_mm, 3_mm)).eval();
   auto newTime = time + 20_ns;
-  auto newUnitDir = (unitDir + Vector3D(1, -1, -1)).normalized();
+  auto newUnitDir = (unitDir + Vector3(1, -1, -1)).normalized();
   auto newAbsMom = 0.9 * absMom;
 
   stepper.update(state, newPos, newUnitDir, newAbsMom, newTime);
@@ -316,8 +316,8 @@ BOOST_AUTO_TEST_CASE(Reset) {
   stepper.step(state);
 
   // Construct the parameters
-  Vector3D pos(1.5, -2.5, 3.5);
-  Vector3D mom(4.5, -5.5, 6.5);
+  Vector3 pos(1.5, -2.5, 3.5);
+  Vector3 mom(4.5, -5.5, 6.5);
   double time = 7.5;
   double charge = 1.;
   BoundSymMatrix cov = 8.5 * Covariance::Identity();
@@ -403,7 +403,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   time = 7.5;
   charge = 1.;
   cov = 8.5 * Covariance::Identity();
-  Transform3D trafo = Transform3D::Identity();
+  Transform3 trafo = Transform3::Identity();
   auto disc = Surface::makeShared<DiscSurface>(trafo);
   BoundTrackParameters boundDisc(disc, geoCtx, pos4, unitDir, absMom, charge);
 

@@ -75,33 +75,31 @@ using ActsDynamicMatrix =
 /// @{
 
 // coordinate vectors
-using Vector2D = ActsVector<2>;
-using Vector3D = ActsVector<3>;
-using Vector4D = ActsVector<4>;
+using Vector2 = ActsVector<2>;
+using Vector3 = ActsVector<3>;
+using Vector4 = ActsVector<4>;
 
 // symmetric matrices e.g. for coordinate covariance matrices
-using SymMatrix2D = ActsSymMatrix<2>;
-using SymMatrix3D = ActsSymMatrix<3>;
-using SymMatrix4D = ActsSymMatrix<4>;
+using SymMatrix2 = ActsSymMatrix<2>;
+using SymMatrix3 = ActsSymMatrix<3>;
+using SymMatrix4 = ActsSymMatrix<4>;
 
 // pure translation transformations
-using Translation2D = Eigen::Translation<ActsScalar, 2>;
-using Translation3D = Eigen::Translation<ActsScalar, 3>;
+using Translation2 = Eigen::Translation<ActsScalar, 2>;
+using Translation3 = Eigen::Translation<ActsScalar, 3>;
 
 // linear (rotation) matrices
-using RotationMatrix2D = ActsMatrix<2, 2>;
-using RotationMatrix3D = ActsMatrix<3, 3>;
+using RotationMatrix2 = ActsMatrix<2, 2>;
+using RotationMatrix3 = ActsMatrix<3, 3>;
 
-// pure rotation transformations. only available in 2d and 3d
-using Rotation2D = Eigen::Rotation2D<ActsScalar>;
-using Rotation3D = Eigen::Quaternion<ActsScalar>;
-using AngleAxis3D = Eigen::AngleAxis<ActsScalar>;
+// pure rotation defined by a rotation angle around a rotation axis
+using AngleAxis3 = Eigen::AngleAxis<ActsScalar>;
 
 // combined affine transformations. types are chosen for better data alignment:
 // - 2d affine compact stored as 2x3 matrix
 // - 3d affine stored as 4x4 matrix
-using Transform2D = Eigen::Transform<ActsScalar, 2, Eigen::AffineCompact>;
-using Transform3D = Eigen::Transform<ActsScalar, 3, Eigen::Affine>;
+using Transform2 = Eigen::Transform<ActsScalar, 2, Eigen::AffineCompact>;
+using Transform3 = Eigen::Transform<ActsScalar, 3, Eigen::Affine>;
 
 /// @}
 

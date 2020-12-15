@@ -20,15 +20,15 @@ namespace Test {
 namespace tt = boost::test_tools;
 
 // the test positions in 3D
-Vector3D xyzPosition(0.5, 1.5, 2.5);
-Vector3D xyzPositionOutside(30., -30., 200.);
-Vector3D phi0Position(0.5, 0., 2.5);
-Vector3D phiPihPosition(0., 1.5, 2.5);
-Vector3D eta0Position(0.5, 1.5, 0.);
+Vector3 xyzPosition(0.5, 1.5, 2.5);
+Vector3 xyzPositionOutside(30., -30., 200.);
+Vector3 phi0Position(0.5, 0., 2.5);
+Vector3 phiPihPosition(0., 1.5, 2.5);
+Vector3 eta0Position(0.5, 1.5, 0.);
 // the test positions in 2D
-Vector2D xyPosition(0.5, 1.5);
-Vector2D rphizPosition(0.1, 2.5);
-Vector2D rphiPosition(3.5, M_PI / 8.);
+Vector2 xyPosition(0.5, 1.5);
+Vector2 rphizPosition(0.1, 2.5);
+Vector2 rphiPosition(3.5, M_PI / 8.);
 
 // the binnings - equidistant
 // x/y/zData
@@ -418,23 +418,23 @@ BOOST_AUTO_TEST_CASE(BinningData_phi_modules) {
   // now test the bin jump 0/maxbin
 
   float firstAngle = (-M_PI + 1.5 * deltaPhi);
-  Vector3D firstBin(cos(firstAngle), sin(firstAngle), 0.);
+  Vector3 firstBin(cos(firstAngle), sin(firstAngle), 0.);
   BOOST_CHECK_EQUAL(phiData_mod.search(firstAngle), size_t(0));
   BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(firstBin), size_t(0));
 
   float firstAngleNeg = (-M_PI + 0.5 * deltaPhi);
-  Vector3D lastBinNeg(cos(firstAngleNeg), sin(firstAngleNeg), 0.);
+  Vector3 lastBinNeg(cos(firstAngleNeg), sin(firstAngleNeg), 0.);
   BOOST_CHECK_EQUAL(phiData_mod.search(firstAngleNeg), size_t(4));
   BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(lastBinNeg), size_t(4));
 
   float lastAnglePos = (M_PI + 0.5 * deltaPhi);
-  Vector3D lastBinPos(cos(lastAnglePos), sin(lastAnglePos), 0.);
+  Vector3 lastBinPos(cos(lastAnglePos), sin(lastAnglePos), 0.);
   BOOST_CHECK_EQUAL(phiData_mod.search(lastAnglePos), size_t(4));
   BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(lastBinPos), size_t(4));
 
   // now test the (remaining) phi scaling
   float underscaledAngle = -M_PI - 0.5 * deltaPhi;
-  Vector3D underscaledPos(cos(underscaledAngle), sin(underscaledAngle), 0.);
+  Vector3 underscaledPos(cos(underscaledAngle), sin(underscaledAngle), 0.);
   BOOST_CHECK_EQUAL(phiData_mod.search(underscaledAngle), size_t(4));
   BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(underscaledPos), size_t(4));
 }

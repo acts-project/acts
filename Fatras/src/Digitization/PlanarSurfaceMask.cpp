@@ -74,17 +74,17 @@ ActsFatras::PlanarSurfaceMask::apply(const Acts::Surface& surface,
   // Plane surface section -------------------
   if (surfaceType == Acts::Surface::Plane or
       surface.bounds().type() == Acts::SurfaceBounds::eDiscTrapezoid) {
-    Acts::Vector2D localStart =
+    Acts::Vector2 localStart =
         (surfaceType == Acts::Surface::Plane)
             ? segment[0]
-            : Acts::Vector2D(Acts::VectorHelpers::perp(segment[0]),
-                             Acts::VectorHelpers::phi(segment[0]));
+            : Acts::Vector2(Acts::VectorHelpers::perp(segment[0]),
+                            Acts::VectorHelpers::phi(segment[0]));
 
-    Acts::Vector2D localEnd =
+    Acts::Vector2 localEnd =
         (surfaceType == Acts::Surface::Plane)
             ? segment[1]
-            : Acts::Vector2D(Acts::VectorHelpers::perp(segment[1]),
-                             Acts::VectorHelpers::phi(segment[1]));
+            : Acts::Vector2(Acts::VectorHelpers::perp(segment[1]),
+                            Acts::VectorHelpers::phi(segment[1]));
 
     bool startInside = surface.bounds().inside(localStart, true);
     bool endInside = surface.bounds().inside(localEnd, true);
@@ -114,10 +114,10 @@ ActsFatras::PlanarSurfaceMask::apply(const Acts::Surface& surface,
 
   } else if (surfaceType == Acts::Surface::Disc) {
     // Polar coordinates
-    Acts::Vector2D sPolar(Acts::VectorHelpers::perp(segment[0]),
-                          Acts::VectorHelpers::phi(segment[0]));
-    Acts::Vector2D ePolar(Acts::VectorHelpers::perp(segment[1]),
-                          Acts::VectorHelpers::phi(segment[1]));
+    Acts::Vector2 sPolar(Acts::VectorHelpers::perp(segment[0]),
+                         Acts::VectorHelpers::phi(segment[0]));
+    Acts::Vector2 ePolar(Acts::VectorHelpers::perp(segment[1]),
+                         Acts::VectorHelpers::phi(segment[1]));
 
     bool startInside = surface.bounds().inside(sPolar, true);
     bool endInside = surface.bounds().inside(ePolar, true);
@@ -144,16 +144,16 @@ ActsFatras::PlanarSurfaceMask::apply(const Acts::Surface& surface,
 
 Acts::Result<ActsFatras::PlanarSurfaceMask::Segment2D>
 ActsFatras::PlanarSurfaceMask::polygonMask(
-    const std::vector<Acts::Vector2D>& vertices, const Segment2D& segment,
+    const std::vector<Acts::Vector2>& vertices, const Segment2D& segment,
     bool firstInside) const {
   std::vector<Acts::Intersection2D> intersections;
-  Acts::Vector2D sVector(segment[1] - segment[0]);
-  Acts::Vector2D sDir = sVector.normalized();
+  Acts::Vector2 sVector(segment[1] - segment[0]);
+  Acts::Vector2 sDir = sVector.normalized();
   double sLength = sVector.norm();
 
   for (size_t iv = 0; iv < vertices.size(); ++iv) {
-    const Acts::Vector2D& s0 = vertices[iv];
-    const Acts::Vector2D& s1 =
+    const Acts::Vector2& s0 = vertices[iv];
+    const Acts::Vector2& s1 =
         (iv + 1) < vertices.size() ? vertices[iv + 1] : vertices[0];
     checkIntersection(
         intersections,
@@ -176,8 +176,8 @@ ActsFatras::PlanarSurfaceMask::radialMask(const Acts::RadialBounds& rBounds,
   std::array<double, 2> phii = {aPhi - hPhi, aPhi + hPhi};
 
   std::vector<Acts::Intersection2D> intersections;
-  Acts::Vector2D sVector(segment[1] - segment[0]);
-  Acts::Vector2D sDir = sVector.normalized();
+  Acts::Vector2 sVector(segment[1] - segment[0]);
+  Acts::Vector2 sDir = sVector.normalized();
   double sLength = sVector.norm();
 
   double sR = polarSegment[0][Acts::eBoundLoc0];
@@ -187,8 +187,8 @@ ActsFatras::PlanarSurfaceMask::radialMask(const Acts::RadialBounds& rBounds,
 
   // Helper method to intersect phi boundaries
   auto intersectPhiLine = [&](double phi) -> void {
-    Acts::Vector2D s0(rMin * std::cos(phi), rMin * std::sin(phi));
-    Acts::Vector2D s1(rMax * std::cos(phi), rMax * std::sin(phi));
+    Acts::Vector2 s0(rMin * std::cos(phi), rMin * std::sin(phi));
+    Acts::Vector2 s1(rMax * std::cos(phi), rMax * std::sin(phi));
     checkIntersection(
         intersections,
         intersector.intersectSegment(s0, s1, segment[0], sDir, true), sLength);
@@ -241,14 +241,14 @@ ActsFatras::PlanarSurfaceMask::annulusMask(const Acts::AnnulusBounds& aBounds,
                                            const Segment2D& segment,
                                            bool firstInside) const {
   auto vertices = aBounds.vertices(0);
-  Acts::Vector2D moduleOrigin = aBounds.moduleOrigin();
+  Acts::Vector2 moduleOrigin = aBounds.moduleOrigin();
 
   std::array<std::array<unsigned int, 2>, 2> edgeCombos = {
       std::array<unsigned int, 2>{0, 3}, std::array<unsigned int, 2>{1, 2}};
 
   std::vector<Acts::Intersection2D> intersections;
-  Acts::Vector2D sVector(segment[1] - segment[0]);
-  Acts::Vector2D sDir = sVector.normalized();
+  Acts::Vector2 sVector(segment[1] - segment[0]);
+  Acts::Vector2 sDir = sVector.normalized();
   double sLength = sVector.norm();
   // First the phi edges in strip system
   for (const auto& ec : edgeCombos) {

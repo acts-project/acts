@@ -50,7 +50,7 @@ int pdgID(const std::shared_ptr<HepMC3::GenParticle> particle);
 /// @brief Returns the momentum of a particle translated into Acts
 /// @param particle HepMC3::GenParticle particle
 /// @return momentum of the particle
-Acts::Vector3D momentum(const std::shared_ptr<HepMC3::GenParticle> particle);
+Acts::Vector3 momentum(const std::shared_ptr<HepMC3::GenParticle> particle);
 
 /// @brief Returns the energy of a particle translated into Acts
 /// @param particle HepMC3::GenParticle particle
@@ -76,7 +76,7 @@ void pdgID(std::shared_ptr<HepMC3::GenParticle> particle, const int pid);
 /// @param particle HepMC3::GenParticle particle
 /// @param mom momentum that will be set
 void momentum(std::shared_ptr<HepMC3::GenParticle> particle,
-              const Acts::Vector3D& mom);
+              const Acts::Vector3& mom);
 
 /// @brief Sets the energy of a particle translated from Acts
 /// @param particle HepMC3::GenParticle particle

@@ -43,8 +43,8 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitWriter::writeT(
   // Write data from internal impl. to output-side struct
   for (const auto& simHit : simHits) {
     // local simhit information in global coord.
-    const Acts::Vector4D& globalPos4 = simHit.fourPosition();
-    const Acts::Vector4D& momentum4Before = simHit.momentum4Before();
+    const Acts::Vector4& globalPos4 = simHit.fourPosition();
+    const Acts::Vector4& momentum4Before = simHit.momentum4Before();
 
     simhit.geometry_id = simHit.geometryId().value();
     simhit.particle_id = simHit.particleId().value();

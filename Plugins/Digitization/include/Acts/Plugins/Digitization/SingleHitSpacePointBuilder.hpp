@@ -44,7 +44,7 @@ class SpacePointBuilder<SpacePoint<Cluster>> {
   /// @param cluster object related to the cluster that holds the necessary
   /// information
   /// @return vector of the local coordinates of the cluster on the surface
-  Vector2D localCoords(const Cluster& cluster) const;
+  Vector2 localCoords(const Cluster& cluster) const;
 
   /// @brief Getter method for the global coordinates of a cluster
   ///
@@ -52,8 +52,8 @@ class SpacePointBuilder<SpacePoint<Cluster>> {
   /// @param cluster object related to the cluster that holds the necessary
   /// information
   /// @return vector of the global coordinates of the cluster
-  Vector3D globalCoords(const GeometryContext& gctx,
-                        const Cluster& cluster) const;
+  Vector3 globalCoords(const GeometryContext& gctx,
+                       const Cluster& cluster) const;
 };
 }  // namespace Acts
 #include "Acts/Plugins/Digitization/detail/SingleHitSpacePointBuilder.ipp"

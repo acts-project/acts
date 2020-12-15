@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
 
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
+      Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
   // Create position of vertex and perigee surface
   double x = vXYDist(gen);
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
 
   BoundVector vecBoundZero = BoundVector::Zero();
   BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
-  Vector4D vecSPZero = Vector4D::Zero();
+  Vector4 vecSPZero = Vector4::Zero();
   ActsMatrix<eBoundSize, 4> matBound2SPZero = ActsMatrix<eBoundSize, 4>::Zero();
   ActsMatrix<eBoundSize, 3> matBound2MomZero =
       ActsMatrix<eBoundSize, 3>::Zero();
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   for (const BoundTrackParameters& parameters : tracks) {
     LinearizedTrack linTrack =
         linFactory
-            .linearizeTrack(parameters, Vector4D::Zero(), geoContext,
+            .linearizeTrack(parameters, Vector4::Zero(), geoContext,
                             magFieldContext, state)
             .value();
 
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_straightline_test) {
 
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
+      Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
   // Create position of vertex and perigee surface
   double x = vXYDist(gen);
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_straightline_test) {
 
   BoundVector vecBoundZero = BoundVector::Zero();
   BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
-  Vector4D vecSPZero = Vector4D::Zero();
+  Vector4 vecSPZero = Vector4::Zero();
   ActsMatrix<eBoundSize, 4> matBound2SPZero = ActsMatrix<eBoundSize, 4>::Zero();
   ActsMatrix<eBoundSize, 3> matBound2MomZero =
       ActsMatrix<eBoundSize, 3>::Zero();
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_straightline_test) {
   for (const BoundTrackParameters& parameters : tracks) {
     LinearizedTrack linTrack =
         linFactory
-            .linearizeTrack(parameters, Vector4D::Zero(), geoContext,
+            .linearizeTrack(parameters, Vector4::Zero(), geoContext,
                             magFieldContext, state)
             .value();
 

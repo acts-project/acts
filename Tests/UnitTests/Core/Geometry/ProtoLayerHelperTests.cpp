@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
 
   ViewConfig unsorted({252, 160, 0});
   for (auto& sf : cylinderSurfaces) {
-    GeometryView3D::drawSurface(objVis, *sf, tgContext, Transform3D::Identity(),
+    GeometryView3D::drawSurface(objVis, *sf, tgContext, Transform3::Identity(),
                                 unsorted);
   }
   // Draw the all surfaces
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
     for (auto& sf : layer.surfaces()) {
       ViewConfig sorted(sortedColors[il]);
       GeometryView3D::drawSurface(objVis, *sf, tgContext,
-                                  Transform3D::Identity(), sorted);
+                                  Transform3::Identity(), sorted);
     }
     ++il;
   }
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
     for (auto& sf : layer.surfaces()) {
       ViewConfig ViewConfig(sortedColors[il]);
       GeometryView3D::drawSurface(objVis, *sf, tgContext,
-                                  Transform3D::Identity(), ViewConfig);
+                                  Transform3::Identity(), ViewConfig);
     }
     ++il;
   }

@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   // Set debug mode
   bool debugMode = false;
   // Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 2_T));
+  ConstantBField bField(Vector3(0., 0., 2_T));
 
   // Set up EigenStepper
   // EigenStepper<ConstantBField> stepper(bField);
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   // Set debug mode
   bool debugMode = false;
   // Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 2_T));
+  ConstantBField bField(Vector3(0., 0., 2_T));
 
   // Set up EigenStepper
   // EigenStepper<ConstantBField> stepper(bField);
@@ -344,7 +344,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
     std::cout << "Starting AMVF test with grid seed finder..." << std::endl;
   }
   // Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 2_T));
+  ConstantBField bField(Vector3(0., 0., 2_T));
 
   // Set up EigenStepper
   // EigenStepper<ConstantBField> stepper(bField);
@@ -493,7 +493,7 @@ BOOST_AUTO_TEST_CASE(
               << std::endl;
   }
   // Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 2_T));
+  ConstantBField bField(Vector3(0., 0., 2_T));
 
   // Set up EigenStepper
   // EigenStepper<ConstantBField> stepper(bField);

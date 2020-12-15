@@ -112,7 +112,7 @@ struct Fixture {
 // make a surface without material.
 std::shared_ptr<Acts::Surface> makeEmptySurface() {
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      Acts::Vector3D(1, 2, 3), Acts::Vector3D(1, 0, 0));
+      Acts::Vector3(1, 2, 3), Acts::Vector3(1, 0, 0));
   return surface;
 }
 

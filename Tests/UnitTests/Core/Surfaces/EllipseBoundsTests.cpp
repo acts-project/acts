@@ -117,9 +117,9 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsProperties) {
   // clone already tested
   //
   /// Test distanceToBoundary
-  Vector2D origin(0., 0.);
-  Vector2D outsideBy15(0., 30.);
-  Vector2D inRectangle(17., 11.);
+  Vector2 origin(0., 0.);
+  Vector2 outsideBy15(0., 30.);
+  Vector2 inRectangle(17., 11.);
   //
   /// Test rMinX
   BOOST_CHECK_EQUAL(ellipseBoundsObject.get(EllipseBounds::eInnerRx), innerRx);
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsProperties) {
                     averagePhi);
   //
   /// Test vertices
-  // std::vector<Vector2D> expectedVertices{{15, 0}, {0, 20}, {-15, 0}, {0,
+  // std::vector<Vector2> expectedVertices{{15, 0}, {0, 20}, {-15, 0}, {0,
   // -20}}; const auto& actualVertices = ellipseBoundsObject.vertices(4);
   // BOOST_CHECK_EQUAL_COLLECTIONS(actualVertices.cbegin(),
   // actualVertices.cend(),

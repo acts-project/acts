@@ -21,7 +21,7 @@ namespace detail {
 // rotation parameters. The first element is for x axis, second for y axis and
 // last for z axis
 using RotationToAxes =
-    std::tuple<RotationMatrix3D, RotationMatrix3D, RotationMatrix3D>;
+    std::tuple<RotationMatrix3, RotationMatrix3, RotationMatrix3>;
 
 /// @brief Evaluate the derivative of local frame axes vector w.r.t.
 /// its rotation around global x/y/z axis
@@ -31,7 +31,7 @@ using RotationToAxes =
 ///
 /// @return Derivative of local frame x/y/z axis vector w.r.t. its
 /// rotation angles (extrinsic Euler angles) around global x/y/z axis
-RotationToAxes rotationToLocalAxesDerivative(const RotationMatrix3D& rotation);
+RotationToAxes rotationToLocalAxesDerivative(const RotationMatrix3& rotation);
 
 }  // namespace detail
 

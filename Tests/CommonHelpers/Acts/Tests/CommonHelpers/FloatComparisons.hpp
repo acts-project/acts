@@ -214,7 +214,7 @@ predicate_result compare(const Eigen::DenseBase<T>& val,
 }
 
 // Eigen transform frontend
-predicate_result compare(const Transform3D& val, const Transform3D& ref,
+predicate_result compare(const Transform3& val, const Transform3& ref,
                          ScalarComparison&& compareImpl) {
   return matrixCompare(val.matrix(), ref.matrix(), std::move(compareImpl));
 }
