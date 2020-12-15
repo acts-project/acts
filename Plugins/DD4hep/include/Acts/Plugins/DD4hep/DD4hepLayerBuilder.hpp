@@ -8,13 +8,13 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Units.hpp"
 
 class TGeoMatrix;
 
@@ -160,7 +160,7 @@ class DD4hepLayerBuilder : public ILayerBuilder {
   // Private helper function to convert the TGeo transformation matrix into
   // an Acts transformation matrix
   // @param tGeoTrans TGeo transformation matrix which should be converted
-  Acts::Transform3D convertTransform(const TGeoMatrix* tGeoTrans) const;
+  Acts::Transform3 convertTransform(const TGeoMatrix* tGeoTrans) const;
 };
 
 inline const std::string& DD4hepLayerBuilder::identification() const {

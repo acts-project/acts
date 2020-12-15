@@ -9,6 +9,8 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
@@ -21,8 +23,6 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
@@ -52,7 +52,7 @@ InterpolatedBFieldMap::FieldMapper<3, 3> readFieldXYZ(
   std::vector<double> yPos;
   std::vector<double> zPos;
   // components of magnetic field on grid points
-  std::vector<Acts::Vector3D> bField;
+  std::vector<Acts::Vector3> bField;
   // reserve estimated size
   xPos.reserve(nPoints);
   yPos.reserve(nPoints);
@@ -73,7 +73,7 @@ InterpolatedBFieldMap::FieldMapper<3, 3> readFieldXYZ(
     xPos.push_back(x);
     yPos.push_back(y);
     zPos.push_back(z);
-    bField.push_back(Acts::Vector3D(bx, by, bz));
+    bField.push_back(Acts::Vector3(bx, by, bz));
   }
   map_file.close();
 

@@ -8,12 +8,12 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/ConeVolumeBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Units.hpp"
 
 namespace tt = boost::test_tools;
 
@@ -86,13 +86,13 @@ BOOST_AUTO_TEST_CASE(ConeVolumeBoundsSurfaceOrientation) {
 
   ConeVolumeBounds hcone(10_mm, 0.45, 80_mm, 50_mm, 0., M_PI);
 
-  auto cvbOrientedSurfaces = hcone.orientedSurfaces(Transform3D::Identity());
+  auto cvbOrientedSurfaces = hcone.orientedSurfaces(Transform3::Identity());
   BOOST_CHECK_EQUAL(cvbOrientedSurfaces.size(), 4);
 
   auto geoCtx = GeometryContext();
-  Vector3D xaxis(1., 0., 0.);
-  Vector3D yaxis(0., 1., 0.);
-  Vector3D zaxis(0., 0., 1.);
+  Vector3 xaxis(1., 0., 0.);
+  Vector3 yaxis(0., 1., 0.);
+  Vector3 zaxis(0., 0., 1.);
 
   for (auto& os : cvbOrientedSurfaces) {
     // Test the orientation of the boundary surfaces

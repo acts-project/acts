@@ -7,7 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
+
 #include "Acts/Plugins/Cuda/Cuda.hpp"
+
 #include <Eigen/Dense>
 #include <cuda_profiler_api.h>
 
@@ -24,7 +26,7 @@ namespace Test {
 
 BOOST_AUTO_TEST_SUITE(Utilities)
 BOOST_AUTO_TEST_CASE(CUDAOBJ_TEST) {
-  const int vecDim = 100;  // Vector Dimension
+  const int vecDim = 100;  // Vector imension
   const int nVec = 128;    // Number of vectors
 
   dim3 gridSize(1, 1, 1);

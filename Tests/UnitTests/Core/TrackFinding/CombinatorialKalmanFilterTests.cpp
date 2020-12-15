@@ -8,6 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -28,7 +29,9 @@
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
 #include <limits>
@@ -92,8 +95,6 @@ struct Fixture {
   std::vector<Acts::CurvilinearTrackParameters> endParameters;
 
   // generated measurements
-  std::vector<std::shared_ptr<Acts::FittableMeasurement<TestSourceLink>>>
-      measurementsStore;
   std::vector<TestSourceLink> sourceLinks;
 
   // CKF implementation to be tested
@@ -122,16 +123,16 @@ struct Fixture {
     Acts::BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
     // all tracks close to the transverse plane along the x axis w/ small
     // variations in position, direction.
-    Acts::Vector4D mPos0(-3_m, 0.0, 0.0, 1_ns);
-    Acts::Vector4D mPos1(-3_m, -15_mm, -15_mm, 2_ns);
-    Acts::Vector4D mPos2(-3_m, 15_mm, 15_mm, -1_ns);
+    Acts::Vector4 mPos0(-3_m, 0.0, 0.0, 1_ns);
+    Acts::Vector4 mPos1(-3_m, -15_mm, -15_mm, 2_ns);
+    Acts::Vector4 mPos2(-3_m, 15_mm, 15_mm, -1_ns);
     startParameters = {
         {mPos0, 0_degree, 90_degree, 1_GeV, 1_e, cov},
         {mPos1, -1_degree, 91_degree, 1_GeV, 1_e, cov},
         {mPos2, 1_degree, 89_degree, 1_GeV, -1_e, cov},
     };
     for (const auto& start : startParameters) {
-      Acts::Vector4D pos = start.fourPosition(geoCtx);
+      Acts::Vector4 pos = start.fourPosition(geoCtx);
       pos[Acts::ePos0] = 3_m;
       endParameters.emplace_back(pos, start.unitDirection(),
                                  start.absoluteMomentum(), start.charge());
@@ -144,9 +145,6 @@ struct Fixture {
       auto measurements = createMeasurements(
           measPropagator, geoCtx, magCtx, startParameters[trackId],
           detector.resolutions, rng, trackId);
-      for (auto& fm : measurements.store) {
-        measurementsStore.emplace_back(std::move(fm));
-      }
       for (auto& sl : measurements.sourceLinks) {
         sourceLinks.emplace_back(std::move(sl));
       }
@@ -171,7 +169,7 @@ struct Fixture {
     navigator.resolvePassive = false;
     navigator.resolveMaterial = true;
     navigator.resolveSensitive = true;
-    Acts::ConstantBField field(Acts::Vector3D(0.0, 0.0, bz));
+    Acts::ConstantBField field(Acts::Vector3(0.0, 0.0, bz));
     ConstantFieldStepper stepper(std::move(field));
     return ConstantFieldPropagator(std::move(stepper), std::move(navigator));
   }

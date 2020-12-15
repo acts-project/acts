@@ -8,9 +8,10 @@
 
 #include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
-#include "Acts/Utilities/Units.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
@@ -26,9 +27,8 @@
 ActsExamples::CsvPlanarClusterReader::CsvPlanarClusterReader(
     const ActsExamples::CsvPlanarClusterReader::Config& cfg,
     Acts::Logging::Level lvl)
-    : m_cfg(cfg)
+    : m_cfg(cfg),
       // TODO check that all files (hits,cells,truth) exists
-      ,
       m_eventsRange(determineEventFilesRange(cfg.inputDir, "hits.csv")),
       m_logger(Acts::getDefaultLogger("CsvPlanarClusterReader", lvl)) {
   if (m_cfg.outputClusters.empty()) {
@@ -240,12 +240,12 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
     }
 
     // transform global hit coordinates into local coordinates on the surface
-    Acts::Vector3D pos(hit.x * Acts::UnitConstants::mm,
-                       hit.y * Acts::UnitConstants::mm,
-                       hit.z * Acts::UnitConstants::mm);
+    Acts::Vector3 pos(hit.x * Acts::UnitConstants::mm,
+                      hit.y * Acts::UnitConstants::mm,
+                      hit.z * Acts::UnitConstants::mm);
     double time = hit.t * Acts::UnitConstants::ns;
-    Acts::Vector3D mom(1, 1, 1);  // fake momentum
-    Acts::Vector2D local(0, 0);
+    Acts::Vector3 mom(1, 1, 1);  // fake momentum
+    Acts::Vector2 local(0, 0);
     auto lpResult = surface->globalToLocal(ctx.geoContext, pos, mom);
     if (not lpResult.ok()) {
       ACTS_FATAL("Global to local transformation did not succeed.");
@@ -254,7 +254,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
     local = lpResult.value();
 
     // TODO what to use as cluster uncertainty?
-    Acts::ActsSymMatrixD<3> cov = Acts::ActsSymMatrixD<3>::Identity();
+    Acts::ActsSymMatrix<3> cov = Acts::ActsSymMatrix<3>::Identity();
     // create the planar cluster
     Acts::PlanarModuleCluster cluster(
         surface->getSharedPtr(),

@@ -10,6 +10,7 @@
 #include "Acts/Plugins/Cuda/Seeding2/Details/Types.hpp"
 #include "Acts/Plugins/Cuda/Utilities/Arrays.hpp"
 #include "Acts/Plugins/Cuda/Utilities/MemoryManager.hpp"
+
 #include "ErrorCheck.cuh"
 #include "StreamHandlers.cuh"
 

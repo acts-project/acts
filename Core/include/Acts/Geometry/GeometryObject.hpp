@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 namespace Acts {
@@ -56,8 +56,8 @@ class GeometryObject {
   /// @param bValue is the value in which you want to bin
   ///
   /// @return vector 3D used for the binning schema
-  virtual Vector3D binningPosition(const GeometryContext& gctx,
-                                   BinningValue bValue) const = 0;
+  virtual Vector3 binningPosition(const GeometryContext& gctx,
+                                  BinningValue bValue) const = 0;
 
   /// Implement the binningValue
   ///

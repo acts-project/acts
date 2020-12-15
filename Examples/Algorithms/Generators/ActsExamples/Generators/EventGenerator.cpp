@@ -64,7 +64,7 @@ ActsExamples::ProcessCode ActsExamples::EventGenerator::read(
         const auto pid = ActsFatras::Barcode(particle.particleId())
                              .setVertexPrimary(nPrimaryVertices);
         // move particle to the vertex
-        const auto pos4 = (vertexPosition + particle.position4()).eval();
+        const auto pos4 = (vertexPosition + particle.fourPosition()).eval();
         // `withParticleId` returns a copy because it changes the identity
         particle = particle.withParticleId(pid).setPosition4(pos4);
       };

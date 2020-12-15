@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 
 #include <fstream>
 
@@ -21,8 +21,8 @@ struct DigitizationCsvOutput {
   /// @param outf The output stream
   /// @param p0 The start point
   /// @param p1 The end point
-  void writeLine(std::ostream& outf, const Acts::Vector2D& p0,
-                 const Acts::Vector2D& p1) const {
+  void writeLine(std::ostream& outf, const Acts::Vector2& p0,
+                 const Acts::Vector2& p1) const {
     outf << "l," << p0.x() << "," << p0.y() << "," << p1.x() << "," << p1.y()
          << "\n";
   };
@@ -43,9 +43,8 @@ struct DigitizationCsvOutput {
   /// @param outf The output stream
   /// @param vertices The vertices of the polygon
   void writePolygon(std::ostream& outf,
-                    const std::vector<Acts::Vector2D>& vertices,
-                    const Acts::Vector2D& shift = Acts::Vector2D(0.,
-                                                                 0.)) const {
+                    const std::vector<Acts::Vector2>& vertices,
+                    const Acts::Vector2& shift = Acts::Vector2(0., 0.)) const {
     auto nvertices = vertices.size();
     for (unsigned long iv = 1; iv < nvertices; ++iv) {
       writeLine(outf, vertices[iv - 1] + shift, vertices[iv] + shift);

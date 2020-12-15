@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
@@ -81,7 +81,7 @@ class EllipseBounds : public PlanarBounds {
   /// @param lposition Local position (assumed to be in right surface frame)
   /// @param bcheck boundary check directive
   /// @return boolean indicator for the success of this operation
-  bool inside(const Vector2D& lposition,
+  bool inside(const Vector2& lposition,
               const BoundaryCheck& bcheck) const final;
 
   /// Return the vertices
@@ -93,7 +93,7 @@ class EllipseBounds : public PlanarBounds {
   /// the extremas in all direction
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2D> vertices(unsigned int lseg) const final;
+  std::vector<Vector2> vertices(unsigned int lseg) const final;
 
   // Bounding box representation
   const RectangleBounds& boundingBox() const final;

@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
@@ -54,13 +54,13 @@ void accessStepWise(field_t& bField, field_context_t& bFieldContext,
       for (size_t iphi = 0; iphi < phi_steps; ++iphi) {
         double phi = phi_0 + iphi * phi_step;
         // make a direction
-        Acts::Vector3D dir(cos(phi) * sin(theta), sin(phi) * sin(theta),
-                           cos(theta));
+        Acts::Vector3 dir(cos(phi) * sin(theta), sin(phi) * sin(theta),
+                          cos(theta));
         // check for the current step
         double currentStep = 0.;
         // now step through the magnetic field
         for (size_t istep = 0; istep < access_steps; ++istep) {
-          Acts::Vector3D position = currentStep * dir;
+          Acts::Vector3 position = currentStep * dir;
           // access the field directly
           auto field_direct = bField.getField(position);
           // access the field with the cell
@@ -98,7 +98,7 @@ void accessRandom(field_t& bField, field_context_t& bFieldContext,
   // the event loop
   // loop over the events - @todo move to parallel for
   for (size_t istep = 0; istep < totalSteps; ++istep) {
-    Acts::Vector3D position(xDist(rng), yDist(rng), zDist(rng));
+    Acts::Vector3 position(xDist(rng), yDist(rng), zDist(rng));
     // access the field directly
     auto field_direct = bField.getField(position);
     // access the field with the cell

@@ -8,12 +8,12 @@
 
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryObjectSorter.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArrayXD.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 #include <algorithm>
 #include <vector>
@@ -41,7 +41,7 @@ Acts::TrackingVolumeArrayCreator::trackingVolumeArray(
   // let's loop over the (sorted) volumes
   for (auto& tVolume : volumes) {
     // get the binning position
-    Vector3D binningPosition = tVolume->binningPosition(gctx, bValue);
+    Vector3 binningPosition = tVolume->binningPosition(gctx, bValue);
     double binningBorder = tVolume->volumeBounds().binningBorder(bValue);
     // get the center value according to the bin
     double value = tVolume->binningPositionValue(gctx, bValue);

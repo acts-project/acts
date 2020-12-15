@@ -44,7 +44,7 @@ const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
 
 inline std::pair<AtlasPropagator, EigenPropagator> makePropagators(double bz) {
-  MagneticField field(Acts::Vector3D(0.0, 0.0, bz));
+  MagneticField field(Acts::Vector3(0.0, 0.0, bz));
   return {AtlasPropagator(AtlasStepper(field)),
           EigenPropagator(EigenStepper(field))};
 }

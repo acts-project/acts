@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <vector>
@@ -45,8 +45,8 @@ class ApproachDescriptor {
   ///
   /// @return is a surface intersection
   virtual ObjectIntersection<Surface> approachSurface(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, const BoundaryCheck& bcheck) const = 0;
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const BoundaryCheck& bcheck) const = 0;
 
   /// Get all the contained surfaces
   /// @return all contained surfaces of this approach descriptor

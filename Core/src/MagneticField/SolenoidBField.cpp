@@ -11,6 +11,7 @@
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
+
 #include <boost/exception/exception.hpp>
 #include <boost/math/special_functions/ellint_1.hpp>
 #include <boost/math/special_functions/ellint_2.hpp>
@@ -20,64 +21,64 @@ Acts::SolenoidBField::SolenoidBField(Config config) : m_cfg(std::move(config)) {
   m_R2 = m_cfg.radius * m_cfg.radius;
   // we need to scale so we reproduce the expected B field strength
   // at the center of the solenoid
-  Vector2D field = multiCoilField({0, 0}, 1.);  // scale = 1
+  Vector2 field = multiCoilField({0, 0}, 1.);  // scale = 1
   m_scale = m_cfg.bMagCenter / field.norm();
 }
 
-Acts::Vector3D Acts::SolenoidBField::getField(const Vector3D& position) const {
+Acts::Vector3 Acts::SolenoidBField::getField(const Vector3& position) const {
   using VectorHelpers::perp;
-  Vector2D rzPos(perp(position), position.z());
-  Vector2D rzField = multiCoilField(rzPos, m_scale);
-  Vector3D xyzField(0, 0, rzField[1]);
+  Vector2 rzPos(perp(position), position.z());
+  Vector2 rzField = multiCoilField(rzPos, m_scale);
+  Vector3 xyzField(0, 0, rzField[1]);
 
   if (rzPos[0] != 0.) {
     // add xy field component, radially symmetric
-    Vector3D rDir = Vector3D(position.x(), position.y(), 0).normalized();
+    Vector3 rDir = Vector3(position.x(), position.y(), 0).normalized();
     xyzField += rDir * rzField[0];
   }
 
   return xyzField;
 }
 
-Acts::Vector3D Acts::SolenoidBField::getField(const Vector3D& position,
-                                              Cache& /*cache*/) const {
+Acts::Vector3 Acts::SolenoidBField::getField(const Vector3& position,
+                                             Cache& /*cache*/) const {
   return getField(position);
 }
 
-Acts::Vector2D Acts::SolenoidBField::getField(const Vector2D& position) const {
+Acts::Vector2 Acts::SolenoidBField::getField(const Vector2& position) const {
   return multiCoilField(position, m_scale);
 }
 
-Acts::Vector3D Acts::SolenoidBField::getFieldGradient(
-    const Vector3D& position, ActsMatrixD<3, 3>& /*derivative*/) const {
+Acts::Vector3 Acts::SolenoidBField::getFieldGradient(
+    const Vector3& position, ActsMatrix<3, 3>& /*derivative*/) const {
   return getField(position);
 }
 
-Acts::Vector3D Acts::SolenoidBField::getFieldGradient(
-    const Vector3D& position, ActsMatrixD<3, 3>& /*derivative*/,
+Acts::Vector3 Acts::SolenoidBField::getFieldGradient(
+    const Vector3& position, ActsMatrix<3, 3>& /*derivative*/,
     Cache& /*cache*/) const {
   return getField(position);
 }
 
-Acts::Vector2D Acts::SolenoidBField::multiCoilField(const Vector2D& pos,
-                                                    double scale) const {
+Acts::Vector2 Acts::SolenoidBField::multiCoilField(const Vector2& pos,
+                                                   double scale) const {
   // iterate over all coils
-  Vector2D resultField(0, 0);
+  Vector2 resultField(0, 0);
   for (size_t coil = 0; coil < m_cfg.nCoils; coil++) {
-    Vector2D shiftedPos =
-        Vector2D(pos[0], pos[1] + m_cfg.length * 0.5 - m_dz * (coil + 0.5));
+    Vector2 shiftedPos =
+        Vector2(pos[0], pos[1] + m_cfg.length * 0.5 - m_dz * (coil + 0.5));
     resultField += singleCoilField(shiftedPos, scale);
   }
 
   return resultField;
 }
 
-Acts::Vector2D Acts::SolenoidBField::singleCoilField(const Vector2D& pos,
-                                                     double scale) const {
+Acts::Vector2 Acts::SolenoidBField::singleCoilField(const Vector2& pos,
+                                                    double scale) const {
   return {B_r(pos, scale), B_z(pos, scale)};
 }
 
-double Acts::SolenoidBField::B_r(const Vector2D& pos, double scale) const {
+double Acts::SolenoidBField::B_r(const Vector2& pos, double scale) const {
   //              _
   //     2       /  pi / 2          2    2          - 1 / 2
   // E (k )  =   |         ( 1  -  k  sin {theta} )         dtheta
@@ -114,7 +115,7 @@ double Acts::SolenoidBField::B_r(const Vector2D& pos, double scale) const {
   return r / pos[0] * constant * B;
 }
 
-double Acts::SolenoidBField::B_z(const Vector2D& pos, double scale) const {
+double Acts::SolenoidBField::B_z(const Vector2& pos, double scale) const {
   //              _
   //     2       /  pi / 2          2    2          - 1 / 2
   // E (k )  =   |         ( 1  -  k  sin {theta} )         dtheta

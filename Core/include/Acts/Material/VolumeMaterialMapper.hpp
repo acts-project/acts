@@ -11,6 +11,7 @@
 // Workaround for building on clang+libstdc++
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -22,7 +23,6 @@
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <map>
@@ -38,7 +38,7 @@ class TrackingGeometry;
 
 /// list of point used in the mapping of a volume
 using RecordedMaterialVolumePoint =
-    std::vector<std::pair<Acts::MaterialSlab, std::vector<Acts::Vector3D>>>;
+    std::vector<std::pair<Acts::MaterialSlab, std::vector<Acts::Vector3>>>;
 
 //
 /// @brief VolumeMaterialMapper
@@ -189,8 +189,8 @@ class VolumeMaterialMapper {
   /// @param position position of the original hit
   /// @param direction direction of the track
   void createExtraHits(RecordedMaterialVolumePoint& matPoint,
-                       Acts::MaterialSlab properties, Vector3D position,
-                       Vector3D direction) const;
+                       Acts::MaterialSlab properties, Vector3 position,
+                       Vector3 direction) const;
 
   /// Standard logger method
   const Logger& logger() const { return *m_logger; }

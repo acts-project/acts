@@ -8,6 +8,7 @@
 
 #include "Acts/Geometry/LayerCreator.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
 #include "Acts/Geometry/Layer.hpp"
@@ -19,7 +20,6 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
@@ -49,8 +49,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsPhi,
     size_t binsZ, std::optional<ProtoLayer> _protoLayer,
-    const Transform3D& transform,
-    std::unique_ptr<ApproachDescriptor> ad) const {
+    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
 
@@ -81,10 +80,10 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
   // create the layer transforms if not given
   // we need to transform in case layerZ != 0, so that the layer will be
   // correctly defined using the halflength
-  Translation3D addTranslation(0., 0., 0.);
-  if (transform.isApprox(s_idTransform)) {
+  Translation3 addTranslation(0., 0., 0.);
+  if (transform.isApprox(Transform3::Identity())) {
     // double shift = -(layerZ + envZShift);
-    addTranslation = Translation3D(0., 0., layerZ);
+    addTranslation = Translation3(0., 0., layerZ);
     ACTS_VERBOSE(" - layer z shift  = " << -layerZ);
   }
 
@@ -122,8 +121,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypePhi,
     BinningType bTypeZ, std::optional<ProtoLayer> _protoLayer,
-    const Transform3D& transform,
-    std::unique_ptr<ApproachDescriptor> ad) const {
+    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
 
@@ -154,9 +152,9 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
   // we need to transform in case layerZ != 0, so that the layer will be
   // correctly defined using the halflength
   // create the layer transforms if not given
-  Translation3D addTranslation(0., 0., 0.);
-  if (transform.isApprox(s_idTransform) && bTypeZ == equidistant) {
-    addTranslation = Translation3D(0., 0., layerZ);
+  Translation3 addTranslation(0., 0., 0.);
+  if (transform.isApprox(Transform3::Identity()) && bTypeZ == equidistant) {
+    addTranslation = Translation3(0., 0., layerZ);
     ACTS_VERBOSE(" - layer z shift    = " << -layerZ);
   }
 
@@ -195,8 +193,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsR,
     size_t binsPhi, std::optional<ProtoLayer> _protoLayer,
-    const Transform3D& transform,
-    std::unique_ptr<ApproachDescriptor> ad) const {
+    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
 
@@ -224,9 +221,9 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
                                        << binsR << " x " << binsPhi << ")");
 
   // create the layer transforms if not given
-  Translation3D addTranslation(0., 0., 0.);
-  if (transform.isApprox(s_idTransform)) {
-    addTranslation = Translation3D(0., 0., layerZ);
+  Translation3 addTranslation(0., 0., 0.);
+  if (transform.isApprox(Transform3::Identity())) {
+    addTranslation = Translation3(0., 0., layerZ);
   }
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray;
@@ -259,8 +256,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
     BinningType bTypePhi, std::optional<ProtoLayer> _protoLayer,
-    const Transform3D& transform,
-    std::unique_ptr<ApproachDescriptor> ad) const {
+    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
 
@@ -287,9 +283,9 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
   ACTS_VERBOSE(" - # of modules     = " << surfaces.size());
 
   // create the layer transforms if not given
-  Translation3D addTranslation(0., 0., 0.);
-  if (transform.isApprox(s_idTransform)) {
-    addTranslation = Translation3D(0., 0., layerZ);
+  Translation3 addTranslation(0., 0., 0.);
+  if (transform.isApprox(Transform3::Identity())) {
+    addTranslation = Translation3(0., 0., layerZ);
   }
 
   // create the surface array
@@ -321,8 +317,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, size_t bins1,
     size_t bins2, BinningValue bValue, std::optional<ProtoLayer> _protoLayer,
-    const Transform3D& transform,
-    std::unique_ptr<ApproachDescriptor> ad) const {
+    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
 
@@ -364,10 +359,10 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
   // create the layer transforms if not given
   // we need to transform in case centerX/centerY/centerZ != 0, so that the
   // layer will be correctly defined
-  Translation3D addTranslation(0., 0., 0.);
-  if (transform.isApprox(s_idTransform)) {
+  Translation3 addTranslation(0., 0., 0.);
+  if (transform.isApprox(Transform3::Identity())) {
     // double shift = (layerZ + envZShift);
-    addTranslation = Translation3D(centerX, centerY, centerZ);
+    addTranslation = Translation3(centerX, centerY, centerZ);
     ACTS_VERBOSE(" - layer shift  = "
                  << "(" << centerX << ", " << centerY << ", " << centerZ
                  << ")");
@@ -465,7 +460,7 @@ bool Acts::LayerCreator::checkBinning(const GeometryContext& gctx,
     ACTS_ERROR(" -- Inaccessible surfaces: ");
     for (const auto& srf : diff) {
       // have to choose BinningValue here
-      Vector3D ctr = srf->binningPosition(gctx, binR);
+      Vector3 ctr = srf->binningPosition(gctx, binR);
       ACTS_ERROR(" Surface(x=" << ctr.x() << ", y=" << ctr.y()
                                << ", z=" << ctr.z() << ", r=" << perp(ctr)
                                << ", phi=" << phi(ctr) << ")");

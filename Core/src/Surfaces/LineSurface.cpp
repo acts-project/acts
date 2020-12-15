@@ -9,16 +9,17 @@
 #include "Acts/Surfaces/LineSurface.hpp"
 
 #include "Acts/Utilities/ThrowAssert.hpp"
+
 #include <cmath>
 #include <utility>
 
-Acts::LineSurface::LineSurface(const Transform3D& transform, double radius,
+Acts::LineSurface::LineSurface(const Transform3& transform, double radius,
                                double halez)
     : GeometryObject(),
       Surface(transform),
       m_bounds(std::make_shared<const LineBounds>(radius, halez)) {}
 
-Acts::LineSurface::LineSurface(const Transform3D& transform,
+Acts::LineSurface::LineSurface(const Transform3& transform,
                                std::shared_ptr<const LineBounds> lbounds)
     : GeometryObject(), Surface(transform), m_bounds(std::move(lbounds)) {}
 
@@ -33,7 +34,7 @@ Acts::LineSurface::LineSurface(const LineSurface& other)
 
 Acts::LineSurface::LineSurface(const GeometryContext& gctx,
                                const LineSurface& other,
-                               const Transform3D& shift)
+                               const Transform3& shift)
     : GeometryObject(), Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
 
 Acts::LineSurface& Acts::LineSurface::operator=(const LineSurface& other) {

@@ -26,17 +26,17 @@ Acts::SurfaceBounds::BoundsType Acts::DiscTrapezoidBounds::type() const {
   return SurfaceBounds::eDiscTrapezoid;
 }
 
-Acts::Vector2D Acts::DiscTrapezoidBounds::toLocalCartesian(
-    const Acts::Vector2D& lposition) const {
+Acts::Vector2 Acts::DiscTrapezoidBounds::toLocalCartesian(
+    const Acts::Vector2& lposition) const {
   return {lposition[eBoundLoc0] *
               std::sin(lposition[eBoundLoc1] - get(eAveragePhi)),
           lposition[eBoundLoc0] *
               std::cos(lposition[eBoundLoc1] - get(eAveragePhi))};
 }
 
-Acts::ActsMatrixD<2, 2> Acts::DiscTrapezoidBounds::jacobianToLocalCartesian(
-    const Acts::Vector2D& lposition) const {
-  ActsMatrixD<2, 2> jacobian;
+Acts::ActsMatrix<2, 2> Acts::DiscTrapezoidBounds::jacobianToLocalCartesian(
+    const Acts::Vector2& lposition) const {
+  ActsMatrix<2, 2> jacobian;
   jacobian(0, eBoundLoc0) = std::sin(lposition[eBoundLoc1] - get(eAveragePhi));
   jacobian(1, eBoundLoc0) = std::cos(lposition[eBoundLoc1] - get(eAveragePhi));
   jacobian(0, eBoundLoc1) =
@@ -47,20 +47,20 @@ Acts::ActsMatrixD<2, 2> Acts::DiscTrapezoidBounds::jacobianToLocalCartesian(
 }
 
 bool Acts::DiscTrapezoidBounds::inside(
-    const Acts::Vector2D& lposition, const Acts::BoundaryCheck& bcheck) const {
-  Vector2D vertices[] = {{get(eHalfLengthXminR), get(eMinR)},
-                         {get(eHalfLengthXmaxR), m_ymax},
-                         {-get(eHalfLengthXmaxR), m_ymax},
-                         {-get(eHalfLengthXminR), get(eMinR)}};
+    const Acts::Vector2& lposition, const Acts::BoundaryCheck& bcheck) const {
+  Vector2 vertices[] = {{get(eHalfLengthXminR), get(eMinR)},
+                        {get(eHalfLengthXmaxR), m_ymax},
+                        {-get(eHalfLengthXmaxR), m_ymax},
+                        {-get(eHalfLengthXminR), get(eMinR)}};
   auto jacobian = jacobianToLocalCartesian(lposition);
   return bcheck.transformed(jacobian).isInside(toLocalCartesian(lposition),
                                                vertices);
 }
 
-std::vector<Acts::Vector2D> Acts::DiscTrapezoidBounds::vertices(
+std::vector<Acts::Vector2> Acts::DiscTrapezoidBounds::vertices(
     unsigned int /*lseg*/) const {
-  Vector2D cAxis(std::cos(get(eAveragePhi)), std::sin(get(eAveragePhi)));
-  Vector2D nAxis(cAxis.y(), -cAxis.x());
+  Vector2 cAxis(std::cos(get(eAveragePhi)), std::sin(get(eAveragePhi)));
+  Vector2 nAxis(cAxis.y(), -cAxis.x());
   return {get(eMinR) * cAxis - get(eHalfLengthXminR) * nAxis,
           get(eMinR) * cAxis + get(eHalfLengthXminR) * nAxis,
           m_ymax * cAxis + get(eHalfLengthXmaxR) * nAxis,

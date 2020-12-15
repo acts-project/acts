@@ -44,14 +44,13 @@ constexpr auto epsDir = 0.125_mrad;
 constexpr auto epsMom = 1_eV;
 // relative covariance tolerance
 constexpr auto epsCov = 0.00125;
-constexpr bool showDebug = false;
 
 constexpr auto bz = 2_T;
 
 const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
-const MagneticField magFieldZero(Acts::Vector3D::Zero());
-const MagneticField magFieldNonZero(Acts::Vector3D::UnitZ() * bz);
+const MagneticField magFieldZero(Acts::Vector3::Zero());
+const MagneticField magFieldNonZero(Acts::Vector3::UnitZ() * bz);
 const EigenPropagator eigenPropagatorZero{EigenStepper(magFieldZero)};
 const AutodiffPropagator autodiffPropagatorZero{AutodiffStepper(magFieldZero)};
 

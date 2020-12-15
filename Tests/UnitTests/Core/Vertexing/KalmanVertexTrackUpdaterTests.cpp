@@ -10,13 +10,13 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/KalmanVertexTrackUpdater.hpp"
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
 
   // Create perigee surface at origin
   std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
+      Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
   // Create random tracks around origin and a random vertex.
   // Update tracks with the assumption that they originate from
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     // Linearized state of the track
     LinearizedTrack linTrack =
         linearizer
-            .linearizeTrack(params, Vector4D::Zero(), geoContext,
+            .linearizeTrack(params, Vector4::Zero(), geoContext,
                             magFieldContext, linState)
             .value();
 
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     auto fittedParamsCopy = trkAtVtx.fittedParams;
 
     // Create a vertex
-    Vector3D vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
+    Vector3 vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
     Vertex<BoundTrackParameters> vtx(vtxPos);
 
     // Update trkAtVertex with assumption of originating from vtx

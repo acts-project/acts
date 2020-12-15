@@ -8,29 +8,52 @@
 
 #pragma once
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Measurement.hpp"
-#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 
+#include <array>
 #include <cassert>
+#include <cstddef>
 #include <iosfwd>
+#include <stdexcept>
 
 namespace Acts {
 namespace Test {
 
 /// A minimal source link implementation for testing.
 ///
-/// Just stores a pointer to a measurement without actually linking back to a
-/// detector readout. In addition it stores a source identifier that can be used
-/// to store additional information. How this is interpreted depends on the
-/// specific tests.
+/// Instead of storing a reference to a measurement or raw data, the measurement
+/// data is stored inline directly in the source link. Only 1d or 2d
+/// measurements are supported to limit the overhead. Additionaly, a source
+/// identifier is stored that can be used to store additional information. How
+/// this is interpreted depends on the specific tests.
 struct TestSourceLink {
-  const FittableMeasurement<TestSourceLink>* measurement = nullptr;
+  GeometryIdentifier geoId;
   size_t sourceId = 0u;
+  // use eBoundSize to indicate unused indices
+  std::array<BoundIndices, 2> indices = {eBoundSize, eBoundSize};
+  Acts::ActsVector<2> parameters;
+  Acts::ActsSymMatrix<2> covariance;
 
-  /// Construct from a measurement and optional source identifier.
-  TestSourceLink(const FittableMeasurement<TestSourceLink>& m, size_t sid = 0u)
-      : measurement(&m), sourceId(sid) {}
+  /// Construct a source link for a 1d measurement.
+  TestSourceLink(BoundIndices idx, ActsScalar val, ActsScalar var,
+                 GeometryIdentifier gid = GeometryIdentifier(), size_t sid = 0u)
+      : geoId(gid),
+        sourceId(sid),
+        indices{idx, eBoundSize},
+        parameters(val, 0),
+        covariance(Acts::ActsVector<2>(var, 0).asDiagonal()) {}
+  /// Construct a source link for a 2d measurement.
+  TestSourceLink(BoundIndices idx0, BoundIndices idx1,
+                 const Acts::ActsVector<2>& params,
+                 const Acts::ActsSymMatrix<2>& cov,
+                 GeometryIdentifier gid = GeometryIdentifier(), size_t sid = 0u)
+      : geoId(gid),
+        sourceId(sid),
+        indices{idx0, idx1},
+        parameters(params),
+        covariance(cov) {}
   /// Default-construct an invalid source link to satisfy SourceLinkConcept.
   TestSourceLink() = default;
   TestSourceLink(const TestSourceLink&) = default;
@@ -38,42 +61,39 @@ struct TestSourceLink {
   TestSourceLink& operator=(const TestSourceLink&) = default;
   TestSourceLink& operator=(TestSourceLink&&) = default;
 
-  GeometryIdentifier geometryId() const {
-    if (not measurement) {
-      return GeometryIdentifier();
-    }
-    return MeasurementHelpers::getSurface(*measurement)->geometryId();
-  }
-
-  // implementing this a non-friend functions breaks the build. not sure why.
-  friend bool operator==(const TestSourceLink& lhs, const TestSourceLink& rhs) {
-    return (lhs.measurement == rhs.measurement) and
-           (lhs.sourceId == rhs.sourceId);
-  }
-  friend bool operator!=(const TestSourceLink& lhs, const TestSourceLink& rhs) {
-    return not(lhs == rhs);
-  }
+  constexpr GeometryIdentifier geometryId() const { return geoId; }
 };
 
+bool operator==(const TestSourceLink& lhs, const TestSourceLink& rhs);
+bool operator!=(const TestSourceLink& lhs, const TestSourceLink& rhs);
 std::ostream& operator<<(std::ostream& os, const TestSourceLink& sourceLink);
 
-/// Extract measurements from test source links.
-///
-/// The tests source links directly to a measurement so the calibration is
-/// just a pass-through. Consequently, it does not depend on the track
-/// parameters, but they still must be part of the interface.
+/// Extract measurements from TestSourceLinks.
 struct TestSourceLinkCalibrator {
-  /// Extract the measurement from a minimal source link.
+  /// Extract the measurement from a TestSourceLink.
   ///
   /// @tparam parameters_t Track parameters type
   /// @param sourceLink Input source link
   /// @param parameters Input track parameters (unused)
+  ///
+  /// Since the TestSourceLink stores the necessary data inline, this just
+  /// constructs the correct type from the stored data. Consequently, it does
+  /// not depend on the track parameters, but they still must be part of the
+  /// interface.
   template <typename parameters_t>
-  const FittableMeasurement<TestSourceLink>& operator()(
-      const TestSourceLink& sourceLink,
-      const parameters_t& /* parameters */) const {
-    assert(sourceLink.measurement and "Detected invalid minimal source link");
-    return *sourceLink.measurement;
+  BoundVariantMeasurement<TestSourceLink> operator()(
+      const TestSourceLink& sl, const parameters_t& /* parameters */) const {
+    if ((sl.indices[0] != eBoundSize) and (sl.indices[1] != eBoundSize)) {
+      return makeMeasurement(sl, sl.parameters, sl.covariance, sl.indices[0],
+                             sl.indices[1]);
+    } else if (sl.indices[0] != eBoundSize) {
+      return makeMeasurement(sl, sl.parameters.head<1>(),
+                             sl.covariance.topLeftCorner<1, 1>(),
+                             sl.indices[0]);
+    } else {
+      throw std::runtime_error(
+          "Tried to extract measurement from invalid TestSourceLink");
+    }
   }
 };
 

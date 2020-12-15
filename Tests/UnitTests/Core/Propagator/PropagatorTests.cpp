@@ -10,6 +10,8 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -21,8 +23,6 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Units.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
@@ -121,10 +121,10 @@ EigenPropagatorType epropagator(std::move(estepper));
 
 auto mCylinder = std::make_shared<CylinderBounds>(10_mm, 1000_mm);
 auto mSurface =
-    Surface::makeShared<CylinderSurface>(Transform3D::Identity(), mCylinder);
+    Surface::makeShared<CylinderSurface>(Transform3::Identity(), mCylinder);
 auto cCylinder = std::make_shared<CylinderBounds>(150_mm, 1000_mm);
 auto cSurface =
-    Surface::makeShared<CylinderSurface>(Transform3D::Identity(), cCylinder);
+    Surface::makeShared<CylinderSurface>(Transform3::Identity(), cCylinder);
 
 const int ntests = 5;
 
@@ -188,8 +188,8 @@ BOOST_DATA_TEST_CASE(
   double py = pT * sin(phi);
   double pz = pT / tan(theta);
   double q = dcharge;
-  Vector3D pos(x, y, z);
-  Vector3D mom(px, py, pz);
+  Vector3 pos(x, y, z);
+  Vector3 mom(px, py, pz);
   CurvilinearTrackParameters start(makeVector4(pos, time), mom, mom.norm(), q);
   // propagate to the cylinder surface
   const auto& result = epropagator.propagate(start, *cSurface, options).value();
@@ -234,8 +234,8 @@ BOOST_DATA_TEST_CASE(
   double py = pT * sin(phi);
   double pz = pT / tan(theta);
   double q = dcharge;
-  Vector3D pos(x, y, z);
-  Vector3D mom(px, py, pz);
+  Vector3 pos(x, y, z);
+  Vector3 mom(px, py, pz);
   /// a covariance matrix to transport
   Covariance cov;
   // take some major correlations (off-diagonals)
@@ -308,8 +308,8 @@ BOOST_DATA_TEST_CASE(
   double py = pT * sin(phi);
   double pz = pT / tan(theta);
   double q = dcharge;
-  Vector3D pos(x, y, z);
-  Vector3D mom(px, py, pz);
+  Vector3 pos(x, y, z);
+  Vector3 mom(px, py, pz);
   /// a covariance matrix to transport
   Covariance cov;
   // take some major correlations (off-diagonals)

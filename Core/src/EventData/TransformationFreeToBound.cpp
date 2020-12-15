@@ -40,8 +40,8 @@ Acts::BoundVector Acts::detail::transformFreeToBoundParameters(
 }
 
 Acts::BoundVector Acts::detail::transformFreeToBoundParameters(
-    const Acts::Vector3D& position, FreeScalar time,
-    const Acts::Vector3D& direction, FreeScalar qOverP,
+    const Acts::Vector3& position, ActsScalar time,
+    const Acts::Vector3& direction, ActsScalar qOverP,
     const Acts::Surface& surface, const Acts::GeometryContext& geoCtx) {
   // initialize the bound vector
   BoundVector bp = BoundVector::Zero();
@@ -65,7 +65,7 @@ Acts::BoundVector Acts::detail::transformFreeToBoundParameters(
 }
 
 Acts::BoundVector Acts::detail::transformFreeToCurvilinearParameters(
-    FreeScalar time, FreeScalar phi, FreeScalar theta, FreeScalar qOverP) {
+    ActsScalar time, ActsScalar phi, ActsScalar theta, ActsScalar qOverP) {
   BoundVector bp = BoundVector::Zero();
   // local coordinates are zero by construction
   bp[eBoundTime] = time;
@@ -76,7 +76,7 @@ Acts::BoundVector Acts::detail::transformFreeToCurvilinearParameters(
 }
 
 Acts::BoundVector Acts::detail::transformFreeToCurvilinearParameters(
-    FreeScalar time, const Vector3D& direction, FreeScalar qOverP) {
+    ActsScalar time, const Vector3& direction, ActsScalar qOverP) {
   BoundVector bp = BoundVector::Zero();
   // local coordinates are zero by construction
   bp[eBoundTime] = time;

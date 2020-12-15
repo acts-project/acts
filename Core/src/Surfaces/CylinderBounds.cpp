@@ -21,15 +21,15 @@ Acts::SurfaceBounds::BoundsType Acts::CylinderBounds::type() const {
   return SurfaceBounds::eCylinder;
 }
 
-Acts::Vector2D Acts::CylinderBounds::shifted(
-    const Acts::Vector2D& lposition) const {
+Acts::Vector2 Acts::CylinderBounds::shifted(
+    const Acts::Vector2& lposition) const {
   return {Acts::detail::radian_sym((lposition[Acts::eBoundLoc0] / get(eR)) -
                                    get(eAveragePhi)),
           lposition[Acts::eBoundLoc1]};
 }
 
-Acts::ActsMatrixD<2, 2> Acts::CylinderBounds::jacobian() const {
-  ActsMatrixD<2, 2> j;
+Acts::ActsMatrix<2, 2> Acts::CylinderBounds::jacobian() const {
+  ActsMatrix<2, 2> j;
   j(0, eBoundLoc0) = 1 / get(eR);
   j(0, eBoundLoc1) = 0;
   j(1, eBoundLoc0) = 0;
@@ -37,15 +37,15 @@ Acts::ActsMatrixD<2, 2> Acts::CylinderBounds::jacobian() const {
   return j;
 }
 
-bool Acts::CylinderBounds::inside(const Vector2D& lposition,
+bool Acts::CylinderBounds::inside(const Vector2& lposition,
                                   const BoundaryCheck& bcheck) const {
   return bcheck.transformed(jacobian())
       .isInside(shifted(lposition),
-                Vector2D(-get(eHalfPhiSector), -get(eHalfLengthZ)),
-                Vector2D(get(eHalfPhiSector), get(eHalfLengthZ)));
+                Vector2(-get(eHalfPhiSector), -get(eHalfLengthZ)),
+                Vector2(get(eHalfPhiSector), get(eHalfLengthZ)));
 }
 
-bool Acts::CylinderBounds::inside3D(const Vector3D& position,
+bool Acts::CylinderBounds::inside3D(const Vector3& position,
                                     const BoundaryCheck& bcheck) const {
   // additional tolerance from the boundary check if configred
   bool checkAbsolute = bcheck.m_type == BoundaryCheck::Type::eAbsolute;
@@ -63,11 +63,11 @@ bool Acts::CylinderBounds::inside3D(const Vector3D& position,
             std::abs(position.z()));
   }
   // detailed, but slower check
-  Vector2D lpos(detail::radian_sym(phi(position) - get(eAveragePhi)),
-                position.z());
+  Vector2 lpos(detail::radian_sym(phi(position) - get(eAveragePhi)),
+               position.z());
   return bcheck.transformed(jacobian())
-      .isInside(lpos, Vector2D(-get(eHalfPhiSector), -get(eHalfLengthZ)),
-                Vector2D(get(eHalfPhiSector), get(eHalfLengthZ)));
+      .isInside(lpos, Vector2(-get(eHalfPhiSector), -get(eHalfLengthZ)),
+                Vector2(get(eHalfPhiSector), get(eHalfLengthZ)));
 }
 
 std::ostream& Acts::CylinderBounds::toStream(std::ostream& sl) const {

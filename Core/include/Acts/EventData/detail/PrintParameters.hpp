@@ -8,8 +8,9 @@
 
 #pragma once
 
-#include "Acts/Utilities/ParameterDefinitions.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 
+#include <cstdint>
 #include <iosfwd>
 
 namespace Acts {
@@ -35,6 +36,28 @@ void printBoundParameters(std::ostream& os, const Surface& surface,
 /// @param cov Optional free parameters covariance matrix
 void printFreeParameters(std::ostream& os, const FreeVector& params,
                          const FreeMatrix* cov = nullptr);
+
+/// Print bound measurement content to the output stream.
+///
+/// @param os The output stream
+/// @param size Size of the measurement space
+/// @param indices Which parameters are measured, must contain size elements
+/// @param params Parameters vector data, must contain size elements
+/// @param cov Optional Covariance matrix data, must contain sizexsize elements
+void printMeasurement(std::ostream& os, BoundIndices size,
+                      const uint8_t* indices, const ActsScalar* params,
+                      const ActsScalar* cov);
+
+/// Print free measurement content to the output stream.
+///
+/// @param os The output stream
+/// @param size Size of the measurement space
+/// @param indices Which parameters are measured, must contain size elements
+/// @param params Parameters vector data, must contain size elements
+/// @param cov Optional Covariance matrix data, must contain sizexsize elements
+void printMeasurement(std::ostream& os, FreeIndices size,
+                      const uint8_t* indices, const ActsScalar* params,
+                      const ActsScalar* cov);
 
 }  // namespace detail
 }  // namespace Acts

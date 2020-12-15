@@ -27,7 +27,7 @@ using CurvilinearState =
 /// @param [in] direction Normalised direction vector
 ///
 /// @return Projection Jacobian
-FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3D& direction) {
+FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction) {
   // Optimized trigonometry on the propagation direction
   const double x = direction(0);  // == cos(phi) * sin(theta)
   const double y = direction(1);  // == sin(phi) * sin(theta)
@@ -99,7 +99,7 @@ void jacobianLocalToLocal(
     Jacobian& jacFull, const Surface& surface) {
   // Calculate the derivative of path length at the final surface or the
   // point-of-closest approach w.r.t. free parameters
-  const FreeRowVector freeToPath =
+  const FreeToPathMatrix freeToPath =
       surface.freeToPathDerivative(geoContext, parameters);
   // Calculate the jacobian from global to local at the final surface
   FreeToBoundMatrix jacToLocal =
@@ -134,13 +134,13 @@ void jacobianLocalToLocal(
 /// @note The parameter @p surface is only required if projected to bound
 /// parameters. In the case of curvilinear parameters the geometry and the
 /// position is known and the calculation can be simplified
-void jacobianLocalToLocal(const Vector3D& direction,
+void jacobianLocalToLocal(const Vector3& direction,
                           const BoundToFreeMatrix& jacToGlobal,
                           const FreeMatrix& transportJacobian,
                           const FreeVector& derivatives, Jacobian& jacFull) {
   // Calculate the derivative of path length at the the curvilinear surface
   // w.r.t. free parameters
-  FreeRowVector freeToPath = FreeRowVector::Zero();
+  FreeToPathMatrix freeToPath = FreeToPathMatrix::Zero();
   freeToPath.segment<3>(eFreePos0) = -1.0 * direction;
   // Calculate the jacobian from global to local at the curvilinear surface
   FreeToBoundMatrix jacToLocal = freeToCurvilinearJacobian(direction);
@@ -177,8 +177,8 @@ void reinitializeJacobians(
   derivatives = FreeVector::Zero();
 
   // Get the local position
-  const Vector3D position = freeParams.segment<3>(eFreePos0);
-  const Vector3D direction = freeParams.segment<3>(eFreeDir0);
+  const Vector3 position = freeParams.segment<3>(eFreePos0);
+  const Vector3 direction = freeParams.segment<3>(eFreeDir0);
   auto lpResult = surface.globalToLocal(geoContext, position, direction);
   if (not lpResult.ok()) {
     ACTS_LOCAL_LOGGER(
@@ -206,7 +206,7 @@ void reinitializeJacobians(
 void reinitializeJacobians(FreeMatrix& transportJacobian,
                            FreeVector& derivatives,
                            BoundToFreeMatrix& jacToGlobal,
-                           const Vector3D& direction) {
+                           const Vector3& direction) {
   // Reset the jacobians
   transportJacobian = FreeMatrix::Identity();
   derivatives = FreeVector::Zero();
@@ -278,7 +278,7 @@ CurvilinearState curvilinearState(Covariance& covarianceMatrix,
                                   BoundToFreeMatrix& jacToGlobal,
                                   const FreeVector& parameters,
                                   bool covTransport, double accumulatedPath) {
-  const Vector3D& direction = parameters.segment<3>(eFreeDir0);
+  const Vector3& direction = parameters.segment<3>(eFreeDir0);
 
   // Covariance transport
   std::optional<BoundSymMatrix> cov = std::nullopt;
@@ -296,7 +296,7 @@ CurvilinearState curvilinearState(Covariance& covarianceMatrix,
   }
 
   // Create the curvilinear parameters
-  Vector4D pos4 = Vector4D::Zero();
+  Vector4 pos4 = Vector4::Zero();
   pos4[ePos0] = parameters[eFreePos0];
   pos4[ePos1] = parameters[eFreePos1];
   pos4[ePos2] = parameters[eFreePos2];
@@ -311,7 +311,7 @@ CurvilinearState curvilinearState(Covariance& covarianceMatrix,
 void covarianceTransport(Covariance& covarianceMatrix, Jacobian& jacobian,
                          FreeMatrix& transportJacobian, FreeVector& derivatives,
                          BoundToFreeMatrix& jacToGlobal,
-                         const Vector3D& direction) {
+                         const Vector3& direction) {
   // Calculate the full jacobian from local parameters at the start surface to
   // current curvilinear parameters
   jacobianLocalToLocal(direction, jacToGlobal, transportJacobian, derivatives,

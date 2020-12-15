@@ -7,19 +7,22 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Geant4HepMC/EventRecording.hpp"
+
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
+
 #include <iostream>
 #include <stdexcept>
+
 #include <FTFP_BERT.hh>
+#include <HepMC3/GenParticle.h>
+
 #include "EventAction.hpp"
 #include "G4RunManager.hh"
 #include "PrimaryGeneratorAction.hpp"
 #include "RunAction.hpp"
 #include "SteppingAction.hpp"
-
-#include <HepMC3/GenParticle.h>
 
 ActsExamples::EventRecording::~EventRecording() {
   m_runManager = nullptr;
@@ -85,8 +88,8 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
     event.shift_position_by(shift);
 
     // Set beam particle properties
-    const Acts::Vector4D momentum4 =
-        part.momentum4() / Acts::UnitConstants::GeV;
+    const Acts::Vector4 momentum4 =
+        part.fourMomentum() / Acts::UnitConstants::GeV;
     HepMC3::FourVector beamMom4(momentum4[0], momentum4[1], momentum4[2],
                                 momentum4[3]);
     auto beamParticle = event.particles()[0];

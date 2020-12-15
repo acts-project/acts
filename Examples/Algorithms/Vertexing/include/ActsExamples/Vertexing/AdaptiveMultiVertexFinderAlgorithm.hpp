@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 
 #include <string>
@@ -23,7 +23,7 @@ class AdaptiveMultiVertexFinderAlgorithm final : public BareAlgorithm {
     /// Output proto vertex collection.
     std::string outputProtoVertices;
     /// Magnetic field vector.
-    Acts::Vector3D bField = Acts::Vector3D::Zero();
+    Acts::Vector3 bField = Acts::Vector3::Zero();
   };
 
   AdaptiveMultiVertexFinderAlgorithm(const Config& cfg,

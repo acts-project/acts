@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -28,7 +28,7 @@ namespace ActsExamples {
 using RecordedMaterial = Acts::MaterialInteractor::result_type;
 /// A material track with start position and momentum and recorded material.
 using RecordedMaterialTrack =
-    std::pair<std::pair<Acts::Vector3D, Acts::Vector3D>, RecordedMaterial>;
+    std::pair<std::pair<Acts::Vector3, Acts::Vector3>, RecordedMaterial>;
 
 /// Records the simulation geometry using geantinos.
 ///

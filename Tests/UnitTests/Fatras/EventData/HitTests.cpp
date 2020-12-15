@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(WithoutInteraction) {
   BOOST_CHECK_EQUAL(h.geometryId(), gid);
   BOOST_CHECK_EQUAL(h.particleId(), pid);
   BOOST_CHECK_EQUAL(h.index(), 12u);
-  CHECK_CLOSE_REL(h.position4(), p4, eps);
+  CHECK_CLOSE_REL(h.fourPosition(), p4, eps);
   CHECK_CLOSE_REL(h.position(), Hit::Vector3(1, 2, 3), eps);
   CHECK_CLOSE_REL(h.time(), 4, eps);
   CHECK_CLOSE_REL(h.momentum4Before(), m4, eps);
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(WithEnergyLoss) {
   BOOST_CHECK_EQUAL(h.geometryId(), gid);
   BOOST_CHECK_EQUAL(h.particleId(), pid);
   BOOST_CHECK_EQUAL(h.index(), 13u);
-  CHECK_CLOSE_REL(h.position4(), p4, eps);
+  CHECK_CLOSE_REL(h.fourPosition(), p4, eps);
   CHECK_CLOSE_REL(h.position(), Hit::Vector3(1, 2, 3), eps);
   CHECK_CLOSE_REL(h.time(), 4, eps);
   CHECK_CLOSE_OR_SMALL(h.momentum4Before(), m40, eps, eps);
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(WithScattering) {
   BOOST_CHECK_EQUAL(h.geometryId(), gid);
   BOOST_CHECK_EQUAL(h.particleId(), pid);
   BOOST_CHECK_EQUAL(h.index(), 42u);
-  CHECK_CLOSE_REL(h.position4(), p4, eps);
+  CHECK_CLOSE_REL(h.fourPosition(), p4, eps);
   CHECK_CLOSE_REL(h.position(), Hit::Vector3(1, 2, 3), eps);
   CHECK_CLOSE_REL(h.time(), 4, eps);
   CHECK_CLOSE_OR_SMALL(h.momentum4Before(), m40, eps, eps);
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(WithEverything) {
   BOOST_CHECK_EQUAL(h.geometryId(), gid);
   BOOST_CHECK_EQUAL(h.particleId(), pid);
   BOOST_CHECK_EQUAL(h.index(), 1u);
-  CHECK_CLOSE_REL(h.position4(), p4, eps);
+  CHECK_CLOSE_REL(h.fourPosition(), p4, eps);
   CHECK_CLOSE_REL(h.position(), Hit::Vector3(1, 2, 3), eps);
   CHECK_CLOSE_REL(h.time(), 4, eps);
   CHECK_CLOSE_OR_SMALL(h.momentum4Before(), m40, eps, eps);

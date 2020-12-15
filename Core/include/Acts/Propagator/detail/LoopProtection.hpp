@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 namespace Acts {
@@ -29,7 +29,7 @@ struct LoopProtection {
     // Estimate the loop protection limit
     if (state.options.loopProtection) {
       // Get the field at the start position
-      Vector3D field =
+      Vector3 field =
           stepper.getField(state.stepping, stepper.position(state.stepping));
       const double B = field.norm();
       if (B != 0.) {

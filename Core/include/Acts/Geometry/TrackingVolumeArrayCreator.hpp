@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ITrackingVolumeArrayCreator.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -19,7 +19,7 @@
 
 namespace Acts {
 
-using TrackingVolumeOrderPosition = std::pair<TrackingVolumePtr, Vector3D>;
+using TrackingVolumeOrderPosition = std::pair<TrackingVolumePtr, Vector3>;
 
 ///@class TrackingVolumeArrayCreator
 ///

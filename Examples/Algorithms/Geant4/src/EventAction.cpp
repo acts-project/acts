@@ -8,12 +8,13 @@
 
 #include "EventAction.hpp"
 
+#include "ActsExamples/Geant4/PrimaryGeneratorAction.hpp"
+
 #include <stdexcept>
 
 #include <G4Event.hh>
 #include <G4RunManager.hh>
 
-#include "ActsExamples/Geant4/PrimaryGeneratorAction.hpp"
 #include "SteppingAction.hpp"
 
 using namespace ActsExamples;
@@ -48,8 +49,8 @@ void EventAction::EndOfEventAction(const G4Event* event) {
   // create the RecordedMaterialTrack
   Acts::RecordedMaterialTrack mtrecord;
   mtrecord.first.first =
-      Acts::Vector3D(rawPos->GetX0(), rawPos->GetY0(), rawPos->GetZ0());
-  mtrecord.first.second = Acts::Vector3D(rawDir.x(), rawDir.y(), rawDir.z());
+      Acts::Vector3(rawPos->GetX0(), rawPos->GetY0(), rawPos->GetZ0());
+  mtrecord.first.second = Acts::Vector3(rawDir.x(), rawDir.y(), rawDir.z());
   mtrecord.second.materialInteractions =
       SteppingAction::instance()->materialSteps();
 

@@ -95,8 +95,8 @@ struct ParticleSimulator {
     interactor.particle = particle;
     // use AnyCharge to be able to handle neutral and charged parameters
     Acts::SingleCurvilinearTrackParameters<Acts::AnyCharge> start(
-        particle.position4(), particle.unitDirection(), particle.absMomentum(),
-        particle.charge());
+        particle.fourPosition(), particle.unitDirection(),
+        particle.absoluteMomentum(), particle.charge());
     auto result = propagator.propagate(start, options);
     if (result.ok()) {
       return result.value().template get<InteractorResult>();

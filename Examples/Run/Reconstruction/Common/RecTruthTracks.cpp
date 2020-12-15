@@ -28,7 +28,7 @@
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include <Acts/Utilities/Units.hpp>
+#include <Acts/Definitions/Units.hpp>
 
 #include <memory>
 
@@ -185,7 +185,6 @@ int runRecTruthTracks(int argc, char* argv[],
   trackStatesWriter.inputTrajectories = fitter.outputTrajectories;
   trackStatesWriter.inputParticles = inputParticles;
   trackStatesWriter.inputSimHits = simHitReaderCfg.outputSimHits;
-  trackStatesWriter.inputMeasurements = hitSmearingCfg.outputMeasurements;
   trackStatesWriter.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
   trackStatesWriter.inputMeasurementSimHitsMap =

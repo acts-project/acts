@@ -8,10 +8,10 @@
 
 #include "ActsExamples/EmptyDetector/EmptyDetector.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/EmptyDetector/EmptyDetectorOptions.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 
@@ -37,7 +37,7 @@ auto EmptyDetector::finalize(
 
   // Create the world volume
   auto worldVolume = Acts::TrackingVolume::create(
-      Acts::Transform3D::Identity(), cvBounds, nullptr, "EmptyCylinder");
+      Acts::Transform3::Identity(), cvBounds, nullptr, "EmptyCylinder");
 
   // Create the tracking geometry
   auto tgGeometry =

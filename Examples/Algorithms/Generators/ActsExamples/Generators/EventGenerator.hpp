@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
@@ -45,7 +45,7 @@ class EventGenerator final : public ActsExamples::IReader {
   /// particle barcode except the primary vertex. The primary vertex will be
   /// set/overwritten by the event generator.
   using MultiplicityGenerator = std::function<size_t(RandomEngine&)>;
-  using VertexGenerator = std::function<Acts::Vector4D(RandomEngine&)>;
+  using VertexGenerator = std::function<Acts::Vector4(RandomEngine&)>;
   using ParticlesGenerator = std::function<SimParticleContainer(RandomEngine&)>;
   struct Generator {
     MultiplicityGenerator multiplicity = nullptr;

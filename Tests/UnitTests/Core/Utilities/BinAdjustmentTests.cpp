@@ -8,12 +8,11 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
-
 #include "Acts/Utilities/BinAdjustment.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 #include <cmath>
 
@@ -29,7 +28,7 @@ BOOST_AUTO_TEST_CASE(BinAdjustment_Radial) {
   bu += BinUtility(1, 0, 1, Acts::open, Acts::binR);
   bu += BinUtility(1, 0, 1, Acts::closed, Acts::binPhi);
 
-  BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3D::Identity());
+  BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3::Identity());
 
   BOOST_CHECK_EQUAL(buAdjust.binningData()[0].min, 50);
   BOOST_CHECK_EQUAL(buAdjust.binningData()[0].max, 75);
@@ -44,7 +43,7 @@ BOOST_AUTO_TEST_CASE(BinAdjustment_Cylinder) {
   bu += BinUtility(1, 0, 1, Acts::open, Acts::binPhi);
   bu += BinUtility(1, 0, 1, Acts::open, Acts::binZ);
 
-  BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3D::Identity());
+  BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3::Identity());
 
   BOOST_CHECK_EQUAL(buAdjust.binningData()[0].min, float(-M_PI / 4));
   BOOST_CHECK_EQUAL(buAdjust.binningData()[0].max, float(M_PI / 4));

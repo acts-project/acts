@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 #include <array>
 #include <vector>
@@ -58,7 +58,7 @@ class LineBounds : public SurfaceBounds {
   /// @param bcheck boundary check directive
   ///
   /// @return boolean indicator for the success of this operation
-  bool inside(const Vector2D& lposition,
+  bool inside(const Vector2& lposition,
               const BoundaryCheck& bcheck) const final;
 
   /// Output Method for std::ostream

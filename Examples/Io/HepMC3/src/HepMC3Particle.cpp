@@ -19,7 +19,7 @@ ActsExamples::SimParticle ActsExamples::HepMC3Particle::particle(
                  HepPID::charge(particle->pid()), particle->generated_mass());
   fw.setDirection(particle->momentum().x(), particle->momentum().y(),
                   particle->momentum().z());
-  fw.setAbsMomentum(particle->momentum().p3mod());
+  fw.setAbsoluteMomentum(particle->momentum().p3mod());
   return fw;
 }
 
@@ -55,9 +55,9 @@ int ActsExamples::HepMC3Particle::pdgID(
   return particle->pid();
 }
 
-Acts::Vector3D ActsExamples::HepMC3Particle::momentum(
+Acts::Vector3 ActsExamples::HepMC3Particle::momentum(
     const std::shared_ptr<HepMC3::GenParticle> particle) {
-  Acts::Vector3D mom;
+  Acts::Vector3 mom;
   mom(0) = particle->momentum().x();
   mom(1) = particle->momentum().y();
   mom(2) = particle->momentum().z();
@@ -85,7 +85,7 @@ void ActsExamples::HepMC3Particle::pdgID(
 }
 
 void ActsExamples::HepMC3Particle::momentum(
-    std::shared_ptr<HepMC3::GenParticle> particle, const Acts::Vector3D& mom) {
+    std::shared_ptr<HepMC3::GenParticle> particle, const Acts::Vector3& mom) {
   HepMC3::FourVector fVec(mom(0), mom(1), mom(2), particle->momentum().e());
   particle->set_momentum(fVec);
 }

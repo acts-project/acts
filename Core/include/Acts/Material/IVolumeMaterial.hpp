@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/Material.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 
@@ -29,7 +29,7 @@ class IVolumeMaterial {
   ///
   /// @param position is the request position for the material call
   /// @todo interface to change including 'cell'
-  virtual const Material material(const Vector3D& position) const = 0;
+  virtual const Material material(const Vector3& position) const = 0;
 
   /// @brief output stream operator
   ///

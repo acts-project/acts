@@ -9,11 +9,11 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/SurfaceBinningMatcher.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 #include <boost/format.hpp>
 
@@ -25,7 +25,7 @@ namespace Test {
 GeometryContext tgContext = GeometryContext();
 
 BOOST_AUTO_TEST_CASE(PlaneSurfaceMatcher) {
-  auto identity = Transform3D::Identity();
+  auto identity = Transform3::Identity();
 
   double rMin = 5.;
   double rMax = 10.;

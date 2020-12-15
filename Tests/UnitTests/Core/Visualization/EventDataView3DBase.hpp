@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -31,7 +32,6 @@
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Visualization/EventDataView3D.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
@@ -68,7 +68,7 @@ static inline std::string testBoundTrackParameters(IVisualization3D& helper) {
   ViewConfig scolor({235, 198, 52});
 
   auto gctx = GeometryContext();
-  auto identity = Transform3D::Identity();
+  auto identity = Transform3::Identity();
 
   // rectangle and plane
   auto rectangle = std::make_shared<RectangleBounds>(15., 15.);
@@ -114,11 +114,11 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   CalibrationContext calContext = CalibrationContext();
 
   // Construct the rotation
-  RotationMatrix3D rotation = RotationMatrix3D::Identity();
+  RotationMatrix3 rotation = RotationMatrix3::Identity();
   double rotationAngle = 90_degree;
-  Vector3D xPos(cos(rotationAngle), 0., sin(rotationAngle));
-  Vector3D yPos(0., 1., 0.);
-  Vector3D zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+  Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
+  Vector3 yPos(0., 1., 0.);
+  Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
   rotation.col(0) = xPos;
   rotation.col(1) = yPos;
   rotation.col(2) = zPos;
@@ -133,7 +133,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
       std::make_shared<HomogeneousSurfaceMaterial>(matProp);
 
   // Set translation vectors
-  std::vector<Vector3D> translations;
+  std::vector<Vector3> translations;
   translations.reserve(6);
   translations.push_back({-500_mm, 0., 0.});
   translations.push_back({-300_mm, 0., 0.});
@@ -155,7 +155,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
     // The thickness to construct the associated detector element
     sConf.thickness = 1._um;
     sConf.detElementConstructor =
-        [](const Transform3D& trans,
+        [](const Transform3& trans,
            std::shared_ptr<const RectangleBounds> bounds, double thickness) {
           return new Test::DetectorElementStub(trans, bounds, thickness);
         };
@@ -205,28 +205,19 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   // Create measurements (assuming they are for a linear track parallel to
   // global x-axis)
   std::cout << "Creating measurements:" << std::endl;
-  std::vector<FittableMeasurement<Test::TestSourceLink>> measurements;
-  measurements.reserve(6);
-  Vector2D lPosCenter{10_mm, 10_mm};
-  std::array<double, 2> resolution = {30_um, 50_um};
-  SymMatrix2D cov2D;
-  cov2D << resolution[eBoundLoc0] * resolution[eBoundLoc0], 0., 0.,
-      resolution[eBoundLoc1] * resolution[eBoundLoc1];
+  std::vector<Test::TestSourceLink> sourcelinks;
+  sourcelinks.reserve(6);
+  Vector2 lPosCenter{10_mm, 10_mm};
+  Vector2 resolution{30_um, 50_um};
+  SymMatrix2 cov2D = resolution.cwiseProduct(resolution).asDiagonal();
   for (const auto& surface : surfaces) {
     // 2D measurements
-    double dx = resolution[eBoundLoc0] * gauss(generator);
-    double dy = resolution[eBoundLoc1] * gauss(generator);
-    MeasurementType<eBoundLoc0, eBoundLoc1> m01(
-        surface->getSharedPtr(), {}, cov2D, lPosCenter[eBoundLoc0] + dx,
-        lPosCenter[eBoundLoc1] + dy);
-    measurements.push_back(std::move(m01));
+    Vector2 loc = lPosCenter;
+    loc[0] += resolution[0] * gauss(generator);
+    loc[1] += resolution[1] * gauss(generator);
+    sourcelinks.emplace_back(eBoundLoc0, eBoundLoc1, loc, cov2D,
+                             surface->geometryId());
   }
-
-  // Make a vector of source links as input to the KF
-  std::vector<Test::TestSourceLink> sourcelinks;
-  std::transform(measurements.begin(), measurements.end(),
-                 std::back_inserter(sourcelinks),
-                 [](const auto& m) { return Test::TestSourceLink{m}; });
 
   // The KalmanFitter - we use the eigen stepper for covariance transport
   std::cout << "Construct KalmanFitter and perform fit" << std::endl;
@@ -236,7 +227,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   rNavigator.resolveSensitive = true;
 
   // Configure propagation with deactivated B-field
-  ConstantBField bField(Vector3D(0., 0., 0.));
+  ConstantBField bField(Vector3(0., 0., 0.));
   using RecoStepper = EigenStepper<ConstantBField>;
   RecoStepper rStepper(bField);
   using RecoPropagator = Propagator<RecoStepper, Navigator>;
@@ -247,8 +238,8 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   cov << std::pow(100_um, 2), 0., 0., 0., 0., 0., 0., std::pow(100_um, 2), 0.,
       0., 0., 0., 0., 0., 0.025, 0., 0., 0., 0., 0., 0., 0.025, 0., 0., 0., 0.,
       0., 0., 0.01, 0., 0., 0., 0., 0., 0., 1.;
-  Vector3D rPos(-1_m, 100_um * gauss(generator), 100_um * gauss(generator));
-  Vector3D rDir(1, 0.025 * gauss(generator), 0.025 * gauss(generator));
+  Vector3 rPos(-1_m, 100_um * gauss(generator), 100_um * gauss(generator));
+  Vector3 rDir(1, 0.025 * gauss(generator), 0.025 * gauss(generator));
   CurvilinearTrackParameters rStart(makeVector4(rPos, 42_ns), rDir, 1_GeV, 1_e,
                                     cov);
 

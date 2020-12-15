@@ -15,7 +15,7 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 
 std::tuple<std::vector<const Volume*>, std::shared_ptr<TrackingGeometry>>
 gridBoxFactory(size_t n = NBOXES, double hl = 1000, size_t octd = 5) {
-  Box::Size size(Acts::Vector3D(2, 2, 2));
+  Box::Size size(Acts::Vector3(2, 2, 2));
 
   std::shared_ptr<CuboidVolumeBounds> vbds =
       std::make_shared<CuboidVolumeBounds>(10, 10, 10);
@@ -37,9 +37,9 @@ gridBoxFactory(size_t n = NBOXES, double hl = 1000, size_t octd = 5) {
   for (size_t i = 0; i <= n; i++) {
     for (size_t j = 0; j <= n; j++) {
       for (size_t k = 0; k <= n; k++) {
-        Vector3D pos(min + i * step, min + j * step, min + k * step);
+        Vector3 pos(min + i * step, min + j * step, min + k * step);
 
-        auto trf = Transform3D(Translation3D(pos));
+        auto trf = Transform3(Translation3(pos));
         auto vol = std::make_unique<AbstractVolume>(trf, vbds);
 
         volumes.push_back(std::move(vol));
@@ -64,7 +64,7 @@ gridBoxFactory(size_t n = NBOXES, double hl = 1000, size_t octd = 5) {
   auto tvBounds =
       std::make_shared<CuboidVolumeBounds>(hl * 1.1, hl * 1.1, hl * 1.1);
 
-  auto tv = TrackingVolume::create(Transform3D::Identity(), tvBounds,
+  auto tv = TrackingVolume::create(Transform3::Identity(), tvBounds,
                                    std::move(boxStore), std::move(volumes), top,
                                    nullptr, "TheVolume");
 
@@ -99,7 +99,7 @@ BOOST_DATA_TEST_CASE(
 
   // construct ray from parameters
   double theta = 2 * std::atan(std::exp(-eta));
-  Acts::Vector3D dir;
+  Acts::Vector3 dir;
   dir << std::cos(phi), std::sin(phi), 1. / std::tan(theta);
   dir.normalize();
   Ray ray({x, y, z}, dir);
@@ -145,7 +145,7 @@ BOOST_DATA_TEST_CASE(
 
   options.pathLimit = 20_m;
 
-  Acts::Vector4D pos4 = Acts::Vector4D::Zero();
+  Acts::Vector4 pos4 = Acts::Vector4::Zero();
   pos4.segment<3>(Acts::ePos0) = ray.origin();
   // momentum value should be irrelevant.
   Acts::CurvilinearTrackParameters startPar(pos4, ray.dir(), 50_GeV, 1_e);

@@ -8,6 +8,7 @@
 
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
@@ -29,7 +30,6 @@
 #include "Acts/Utilities/BinAdjustment.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -250,7 +250,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
   // Use those to minimize the lookup
   GeometryIdentifier lastID = GeometryIdentifier();
   GeometryIdentifier currentID = GeometryIdentifier();
-  Vector3D currentPos(0., 0., 0);
+  Vector3 currentPos(0., 0., 0);
   double currentPathCorrection = 0.;
   auto currentAccMaterial = mState.accumulatedMaterial.end();
 

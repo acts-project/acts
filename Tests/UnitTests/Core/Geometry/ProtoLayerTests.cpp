@@ -33,32 +33,32 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   auto recBounds = std::make_shared<RectangleBounds>(3., 6.);
 
   // Planar definitions to help construct the boundary surfaces
-  static const Transform3D planeYZ =
-      AngleAxis3D(0.5 * M_PI, Vector3D::UnitY()) *
-      AngleAxis3D(0.5 * M_PI, Vector3D::UnitZ()) * Transform3D::Identity();
-  static const Transform3D planeZX =
-      AngleAxis3D(-0.5 * M_PI, Vector3D::UnitX()) *
-      AngleAxis3D(-0.5 * M_PI, Vector3D::UnitZ()) * Transform3D::Identity();
+  static const Transform3 planeYZ = AngleAxis3(0.5 * M_PI, Vector3::UnitY()) *
+                                    AngleAxis3(0.5 * M_PI, Vector3::UnitZ()) *
+                                    Transform3::Identity();
+  static const Transform3 planeZX = AngleAxis3(-0.5 * M_PI, Vector3::UnitX()) *
+                                    AngleAxis3(-0.5 * M_PI, Vector3::UnitZ()) *
+                                    Transform3::Identity();
 
   std::vector<std::shared_ptr<const Surface>> surfaceStore;
   surfaceStore.reserve(100);
 
-  auto createProtoLayer = [&](const Transform3D& trf,
+  auto createProtoLayer = [&](const Transform3& trf,
                               bool shared = false) -> ProtoLayer {
     auto atNegX = Surface::makeShared<PlaneSurface>(
-        Transform3D(trf * Translation3D(Vector3D(-3., 0., 0.)) * planeYZ),
+        Transform3(trf * Translation3(Vector3(-3., 0., 0.)) * planeYZ),
         recBounds);
 
     auto atPosX = Surface::makeShared<PlaneSurface>(
-        Transform3D(trf * Translation3D(Vector3D(3., 0., 0.)) * planeYZ),
+        Transform3(trf * Translation3(Vector3(3., 0., 0.)) * planeYZ),
         recBounds);
 
     auto atNegY = Surface::makeShared<PlaneSurface>(
-        Transform3D(trf * Translation3D(Vector3D(0., -3, 0.)) * planeZX),
+        Transform3(trf * Translation3(Vector3(0., -3, 0.)) * planeZX),
         recBounds);
 
     auto atPosY = Surface::makeShared<PlaneSurface>(
-        Transform3D(trf * Translation3D(Vector3D(0., 3., 0.)) * planeZX),
+        Transform3(trf * Translation3(Vector3(0., 3., 0.)) * planeZX),
         recBounds);
 
     std::vector<std::shared_ptr<const Surface>> sharedSurfaces = {
@@ -75,8 +75,8 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   };
 
   // Test 0 - check constructor with surfaces and shared surfaces
-  auto pLayerSf = createProtoLayer(Transform3D::Identity());
-  auto pLayerSfShared = createProtoLayer(Transform3D::Identity());
+  auto pLayerSf = createProtoLayer(Transform3::Identity());
+  auto pLayerSfShared = createProtoLayer(Transform3::Identity());
 
   BOOST_CHECK(pLayerSf.extent.ranges == pLayerSfShared.extent.ranges);
   BOOST_CHECK(pLayerSf.envelope == pLayerSfShared.envelope);
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
 
   // Create the detector element
   auto addSurface =
-      Surface::makeShared<PlaneSurface>(Transform3D::Identity(), rB);
+      Surface::makeShared<PlaneSurface>(Transform3::Identity(), rB);
 
   pLayerSf.add(tgContext, *addSurface.get());
   // CHECK That if you now have 5 surfaces
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   BOOST_CHECK(pLayerSf.extent.ranges != pLayerSfShared.extent.ranges);
 
   // Test 1 - identity transform
-  auto protoLayer = createProtoLayer(Transform3D::Identity());
+  auto protoLayer = createProtoLayer(Transform3::Identity());
 
   CHECK_CLOSE_ABS(protoLayer.range(binX), 12., 1e-8);
   CHECK_CLOSE_ABS(protoLayer.medium(binX), 0., 1e-8);
@@ -119,8 +119,8 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
 
   // Test 2 - rotate around Z-Axis, should leave R, Z untouched,
   // only preserves medium values
-  auto protoLayerRot = createProtoLayer(AngleAxis3D(-0.345, Vector3D::UnitZ()) *
-                                        Transform3D::Identity());
+  auto protoLayerRot = createProtoLayer(AngleAxis3(-0.345, Vector3::UnitZ()) *
+                                        Transform3::Identity());
 
   BOOST_CHECK_NE(protoLayer.min(binX), -6.);
   CHECK_CLOSE_ABS(protoLayerRot.medium(binX), 0., 1e-8);

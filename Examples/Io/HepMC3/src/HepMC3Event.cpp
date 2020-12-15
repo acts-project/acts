@@ -19,7 +19,7 @@ namespace {
 HepMC3::GenParticlePtr actsParticleToGen(
     std::shared_ptr<ActsExamples::SimParticle> actsParticle) {
   // Extract momentum and energy from Acts particle for HepMC3::FourVector
-  const auto mom4 = actsParticle->momentum4();
+  const auto mom4 = actsParticle->fourMomentum();
   const HepMC3::FourVector vec(mom4[0], mom4[1], mom4[2], mom4[3]);
   // Create HepMC3::GenParticle
   HepMC3::GenParticle genParticle(vec, actsParticle->pdg());
@@ -129,7 +129,7 @@ void ActsExamples::HepMC3Event::lengthUnit(HepMC3::GenEvent& event,
 }
 
 void ActsExamples::HepMC3Event::shiftPositionBy(HepMC3::GenEvent& event,
-                                                const Acts::Vector3D& deltaPos,
+                                                const Acts::Vector3& deltaPos,
                                                 const double deltaTime) {
   // Create HepMC3::FourVector from position and time for shift
   const HepMC3::FourVector vec(deltaPos(0), deltaPos(1), deltaPos(2),
@@ -138,7 +138,7 @@ void ActsExamples::HepMC3Event::shiftPositionBy(HepMC3::GenEvent& event,
 }
 
 void ActsExamples::HepMC3Event::shiftPositionTo(HepMC3::GenEvent& event,
-                                                const Acts::Vector3D& pos,
+                                                const Acts::Vector3& pos,
                                                 const double time) {
   // Create HepMC3::FourVector from position and time for the new position
   const HepMC3::FourVector vec(pos(0), pos(1), pos(2), time);
@@ -146,7 +146,7 @@ void ActsExamples::HepMC3Event::shiftPositionTo(HepMC3::GenEvent& event,
 }
 
 void ActsExamples::HepMC3Event::shiftPositionTo(HepMC3::GenEvent& event,
-                                                const Acts::Vector3D& pos) {
+                                                const Acts::Vector3& pos) {
   // Create HepMC3::FourVector from position and time for the new position
   const HepMC3::FourVector vec(pos(0), pos(1), pos(2), event.event_pos().t());
   event.shift_position_to(vec);
@@ -224,10 +224,10 @@ double ActsExamples::HepMC3Event::lengthUnit(const HepMC3::GenEvent& event) {
               : Acts::UnitConstants::cm);
 }
 
-Acts::Vector3D ActsExamples::HepMC3Event::eventPos(
+Acts::Vector3 ActsExamples::HepMC3Event::eventPos(
     const HepMC3::GenEvent& event) {
   // Extract the position from HepMC3::FourVector
-  Acts::Vector3D vec;
+  Acts::Vector3 vec;
   vec(0) = event.event_pos().x();
   vec(1) = event.event_pos().y();
   vec(2) = event.event_pos().z();

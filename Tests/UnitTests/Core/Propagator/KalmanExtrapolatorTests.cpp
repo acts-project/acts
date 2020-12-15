@@ -8,6 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -20,7 +21,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 #include <cmath>
 #include <random>
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
   navigator.resolveSensitive = true;
 
   // Configure propagation with deactivated B-field
-  ConstantBField bField(Vector3D(0., 0., 0.));
+  ConstantBField bField(Vector3(0., 0., 0.));
   using Stepper = EigenStepper<ConstantBField>;
   Stepper stepper(bField);
   using Propagator = Propagator<Stepper, Navigator>;
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
   // The start parameters
-  CurvilinearTrackParameters start(Vector4D(-3_m, 0, 0, 42_ns), 0_degree,
+  CurvilinearTrackParameters start(Vector4(-3_m, 0, 0, 42_ns), 0_degree,
                                    90_degree, 1_GeV, 1_e, cov);
 
   // Create the ActionList and AbortList

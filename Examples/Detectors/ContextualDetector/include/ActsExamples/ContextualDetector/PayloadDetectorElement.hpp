@@ -8,12 +8,12 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Plugins/Identification/Identifier.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
 
 #include <map>
@@ -45,7 +45,7 @@ class PayloadDetectorElement : public Generic::GenericDetectorElement {
   struct ContextType {
     // The alignment store of this event
     // not the fastest, but good enough for a demonstrator
-    std::vector<Acts::Transform3D> alignmentStore;
+    std::vector<Acts::Transform3> alignmentStore;
   };
 
   /// Constructor for an alignable surface
@@ -60,11 +60,11 @@ class PayloadDetectorElement : public Generic::GenericDetectorElement {
   /// @param gctx The current geometry context object, e.g. alignment
   ///
   /// @note this is called from the surface().transform(gctx)
-  const Acts::Transform3D& transform(
+  const Acts::Transform3& transform(
       const Acts::GeometryContext& gctx) const final override;
 };
 
-inline const Acts::Transform3D& PayloadDetectorElement::transform(
+inline const Acts::Transform3& PayloadDetectorElement::transform(
     const Acts::GeometryContext& gctx) const {
   // cast into the right context object
   auto alignContext = std::any_cast<ContextType>(gctx);

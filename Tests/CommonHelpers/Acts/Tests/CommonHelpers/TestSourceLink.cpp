@@ -10,9 +10,28 @@
 
 #include <ostream>
 
+bool Acts::Test::operator==(const TestSourceLink& lhs,
+                            const TestSourceLink& rhs) {
+  return (lhs.geoId == rhs.geoId) and (lhs.sourceId == rhs.sourceId) and
+         (lhs.indices == rhs.indices) and (lhs.parameters == rhs.parameters) and
+         (lhs.covariance == rhs.covariance);
+}
+
+bool Acts::Test::operator!=(const TestSourceLink& lhs,
+                            const TestSourceLink& rhs) {
+  return not(lhs == rhs);
+}
+
 std::ostream& Acts::Test::operator<<(
     std::ostream& os, const Acts::Test::TestSourceLink& sourceLink) {
-  os << "TestsSourceLink(geometryId=" << sourceLink.geometryId()
-     << ",measurement=" << sourceLink.measurement << ")";
+  os << "TestsSourceLink(geometryId=" << sourceLink.geoId
+     << ",sourceId=" << sourceLink.sourceId;
+  if (sourceLink.indices[0] != eBoundSize) {
+    os << ",index0=" << sourceLink.indices[0];
+  }
+  if (sourceLink.indices[1] != eBoundSize) {
+    os << ",index1=" << sourceLink.indices[1];
+  }
+  os << ")";
   return os;
 }

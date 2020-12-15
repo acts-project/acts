@@ -443,7 +443,7 @@ const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
     vMaterial = new Acts::HomogeneousVolumeMaterial(mmat[0]);
   } else {
     if (bUtility.dimensions() == 2) {
-      std::function<Acts::Vector2D(Acts::Vector3D)> transfoGlobalToLocal;
+      std::function<Acts::Vector2(Acts::Vector3)> transfoGlobalToLocal;
       Acts::Grid2D grid = createGrid2D(bUtility, transfoGlobalToLocal);
 
       Acts::Grid2D::point_t min = grid.minPosition();
@@ -464,7 +464,7 @@ const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
           new Acts::InterpolatedMaterialMap<MaterialMapper<MaterialGrid2D>>(
               std::move(matMap), bUtility);
     } else if (bUtility.dimensions() == 3) {
-      std::function<Acts::Vector3D(Acts::Vector3D)> transfoGlobalToLocal;
+      std::function<Acts::Vector3(Acts::Vector3)> transfoGlobalToLocal;
       Acts::Grid3D grid = createGrid3D(bUtility, transfoGlobalToLocal);
 
       Acts::Grid3D::point_t min = grid.minPosition();
@@ -730,8 +730,8 @@ json Acts::JsonGeometryConverter::surfaceMaterialToJson(
       smj[binkeys[ibin]] = binj;
     }
     std::vector<double> transfo;
-    Acts::Transform3D transfo_matrix = bUtility->transform();
-    if (not transfo_matrix.isApprox(Acts::Transform3D::Identity())) {
+    Acts::Transform3 transfo_matrix = bUtility->transform();
+    if (not transfo_matrix.isApprox(Acts::Transform3::Identity())) {
       for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
           transfo.push_back(transfo_matrix(j, i));
@@ -842,7 +842,7 @@ json Acts::JsonGeometryConverter::volumeMaterialToJson(
       smj[binkeys[ibin]] = binj;
     }
     std::vector<double> transfo;
-    Acts::Transform3D transfo_matrix = bUtility->transform();
+    Acts::Transform3 transfo_matrix = bUtility->transform();
     for (int i = 0; i < 4; i++) {
       for (int j = 0; j < 4; j++) {
         transfo.push_back(transfo_matrix(j, i));
@@ -862,7 +862,7 @@ void Acts::JsonGeometryConverter::addSurfaceToJson(json& sjson,
 
   // Cast the surface bound to both disk and cylinder
   const Acts::SurfaceBounds& surfaceBounds = surface->bounds();
-  auto sTransform = surface->transform(GeometryContext());
+  auto sTransform = surface->transform(m_cfg.context);
 
   const Acts::RadialBounds* radialBounds =
       dynamic_cast<const Acts::RadialBounds*>(&surfaceBounds);
@@ -930,9 +930,9 @@ Acts::BinUtility Acts::JsonGeometryConverter::jsonToBinUtility(
 }
 
 /// Create the local to global transform
-Acts::Transform3D Acts::JsonGeometryConverter::jsonToTransform(
+Acts::Transform3 Acts::JsonGeometryConverter::jsonToTransform(
     const json& transfo) {
-  Transform3D transform;
+  Transform3 transform;
   int i = 0;
   int j = 0;
   for (auto& element : transfo) {

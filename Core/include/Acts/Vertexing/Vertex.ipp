@@ -7,19 +7,19 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <typename input_track_t>
-Acts::Vertex<input_track_t>::Vertex(const Vector3D& position) {
+Acts::Vertex<input_track_t>::Vertex(const Vector3& position) {
   m_position[ePos0] = position[ePos0];
   m_position[ePos1] = position[ePos1];
   m_position[ePos2] = position[ePos2];
 }
 
 template <typename input_track_t>
-Acts::Vertex<input_track_t>::Vertex(const Vector4D& position)
+Acts::Vertex<input_track_t>::Vertex(const Vector4& position)
     : m_position(position) {}
 
 template <typename input_track_t>
 Acts::Vertex<input_track_t>::Vertex(
-    const Vector3D& position, const SymMatrix3D& covariance,
+    const Vector3& position, const SymMatrix3& covariance,
     const std::vector<TrackAtVertex<input_track_t>>& tracks)
     : m_tracksAtVertex(tracks) {
   m_position[ePos0] = position[ePos0];
@@ -30,34 +30,34 @@ Acts::Vertex<input_track_t>::Vertex(
 
 template <typename input_track_t>
 Acts::Vertex<input_track_t>::Vertex(
-    const Vector4D& position, const SymMatrix4D& covariance,
+    const Vector4& position, const SymMatrix4& covariance,
     const std::vector<TrackAtVertex<input_track_t>>& tracks)
     : m_position(position),
       m_covariance(covariance),
       m_tracksAtVertex(tracks) {}
 
 template <typename input_track_t>
-Acts::Vector3D Acts::Vertex<input_track_t>::position() const {
+Acts::Vector3 Acts::Vertex<input_track_t>::position() const {
   return VectorHelpers::position(m_position);
 }
 
 template <typename input_track_t>
-Acts::BoundScalar Acts::Vertex<input_track_t>::time() const {
+Acts::ActsScalar Acts::Vertex<input_track_t>::time() const {
   return m_position[eTime];
 }
 
 template <typename input_track_t>
-const Acts::Vector4D& Acts::Vertex<input_track_t>::fullPosition() const {
+const Acts::Vector4& Acts::Vertex<input_track_t>::fullPosition() const {
   return m_position;
 }
 
 template <typename input_track_t>
-Acts::SymMatrix3D Acts::Vertex<input_track_t>::covariance() const {
+Acts::SymMatrix3 Acts::Vertex<input_track_t>::covariance() const {
   return m_covariance.block<3, 3>(ePos0, ePos0);
 }
 
 template <typename input_track_t>
-const Acts::SymMatrix4D& Acts::Vertex<input_track_t>::fullCovariance() const {
+const Acts::SymMatrix4& Acts::Vertex<input_track_t>::fullCovariance() const {
   return m_covariance;
 }
 
@@ -73,8 +73,8 @@ std::pair<double, double> Acts::Vertex<input_track_t>::fitQuality() const {
 }
 
 template <typename input_track_t>
-void Acts::Vertex<input_track_t>::setPosition(const Vector3D& position,
-                                              BoundScalar time) {
+void Acts::Vertex<input_track_t>::setPosition(const Vector3& position,
+                                              ActsScalar time) {
   m_position[ePos0] = position[ePos0];
   m_position[ePos1] = position[ePos1];
   m_position[ePos2] = position[ePos2];
@@ -82,25 +82,24 @@ void Acts::Vertex<input_track_t>::setPosition(const Vector3D& position,
 }
 
 template <typename input_track_t>
-void Acts::Vertex<input_track_t>::setFullPosition(
-    const Vector4D& fullPosition) {
+void Acts::Vertex<input_track_t>::setFullPosition(const Vector4& fullPosition) {
   m_position = fullPosition;
 }
 
 template <typename input_track_t>
-void Acts::Vertex<input_track_t>::setTime(BoundScalar time) {
+void Acts::Vertex<input_track_t>::setTime(ActsScalar time) {
   m_position[eTime] = time;
 }
 
 template <typename input_track_t>
-void Acts::Vertex<input_track_t>::setCovariance(const SymMatrix3D& covariance) {
+void Acts::Vertex<input_track_t>::setCovariance(const SymMatrix3& covariance) {
   m_covariance.setZero();
   m_covariance.block<3, 3>(ePos0, ePos0) = covariance;
 }
 
 template <typename input_track_t>
 void Acts::Vertex<input_track_t>::setFullCovariance(
-    const SymMatrix4D& covariance) {
+    const SymMatrix4& covariance) {
   m_covariance = covariance;
 }
 

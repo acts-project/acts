@@ -34,7 +34,7 @@ void test(const Scattering& scattering, uint32_t seed,
 
   const auto outgoing = scattering(gen, Acts::Test::makePercentSlab(), after);
   // scattering leaves absolute energy/momentum unchanged
-  CHECK_CLOSE_REL(after.absMomentum(), before.absMomentum(), eps);
+  CHECK_CLOSE_REL(after.absoluteMomentum(), before.absoluteMomentum(), eps);
   CHECK_CLOSE_REL(after.energy(), before.energy(), eps);
   // scattering has changed the direction
   BOOST_CHECK_LT(before.unitDirection().dot(after.unitDirection()), 1);

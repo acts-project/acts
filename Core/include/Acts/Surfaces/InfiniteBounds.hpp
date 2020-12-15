@@ -7,8 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 
@@ -34,7 +34,7 @@ class InfiniteBounds : public SurfaceBounds {
   /// ignores input parameters
   ///
   /// @return always true
-  bool inside(const Vector2D& /*lposition*/,
+  bool inside(const Vector2& /*lposition*/,
               const BoundaryCheck& /*bcheck*/) const final {
     return true;
   }

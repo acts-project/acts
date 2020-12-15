@@ -53,7 +53,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       const auto phi = Acts::VectorHelpers::phi(particle.unitDirection());
       const auto theta = Acts::VectorHelpers::theta(particle.unitDirection());
       const auto pt = particle.transverseMomentum();
-      const auto p = particle.absMomentum();
+      const auto p = particle.absoluteMomentum();
       const auto q = particle.charge();
 
       // compute momentum-dependent resolutions

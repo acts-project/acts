@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <bitset>
@@ -25,11 +26,11 @@ inline TrackStateProxy<SL, M, ReadOnly>::TrackStateProxy(
 template <typename SL, size_t M, bool ReadOnly>
 TrackStatePropMask TrackStateProxy<SL, M, ReadOnly>::getMask() const {
   using PM = TrackStatePropMask;
+
   PM mask = PM::None;
   if (hasPredicted()) {
     mask |= PM::Predicted;
   }
-
   if (hasFiltered()) {
     mask |= PM::Filtered;
   }
@@ -45,7 +46,6 @@ TrackStatePropMask TrackStateProxy<SL, M, ReadOnly>::getMask() const {
   if (hasCalibrated()) {
     mask |= PM::Calibrated;
   }
-
   return mask;
 }
 

@@ -12,7 +12,7 @@
 /// to generate smeared track parameters. Use this pseudo-reconstructed
 /// tracks as the input to the vertex finder.
 
-#include "Acts/Utilities/Units.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
   IterativeVertexFinderAlgorithm::Config findVertices;
   findVertices.inputTrackParameters = smearParticles.outputTrackParameters;
   findVertices.outputProtoVertices = "protovertices";
-  findVertices.bField = Acts::Vector3D(0_T, 0_T, 2_T);
+  findVertices.bField = Acts::Vector3(0_T, 0_T, 2_T);
   sequencer.addAlgorithm(
       std::make_shared<IterativeVertexFinderAlgorithm>(findVertices, logLevel));
 

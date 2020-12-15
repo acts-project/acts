@@ -7,12 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 inline detail::RealQuadraticEquation ConeSurface::intersectionSolver(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction) const {
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
   // Transform into the local frame
-  Transform3D invTrans = transform(gctx).inverse();
-  Vector3D point1 = invTrans * position;
-  Vector3D dir1 = invTrans.linear() * direction;
+  Transform3 invTrans = transform(gctx).inverse();
+  Vector3 point1 = invTrans * position;
+  Vector3 dir1 = invTrans.linear() * direction;
 
   // See file header for the formula derivation
   double tan2Alpha = bounds().tanAlpha() * bounds().tanAlpha(),
@@ -30,8 +30,8 @@ inline detail::RealQuadraticEquation ConeSurface::intersectionSolver(
 }
 
 inline SurfaceIntersection ConeSurface::intersect(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const BoundaryCheck& bcheck) const {
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const BoundaryCheck& bcheck) const {
   // Solve the quadratic equation
   auto qe = intersectionSolver(gctx, position, direction);
 
@@ -41,7 +41,7 @@ inline SurfaceIntersection ConeSurface::intersect(
   }
 
   // Check the validity of the first solution
-  Vector3D solution1 = position + qe.first * direction;
+  Vector3 solution1 = position + qe.first * direction;
   Intersection3D::Status status1 =
       (qe.first * qe.first < s_onSurfaceTolerance * s_onSurfaceTolerance)
           ? Intersection3D::Status::onSurface
@@ -52,7 +52,7 @@ inline SurfaceIntersection ConeSurface::intersect(
   }
 
   // Check the validity of the second solution
-  Vector3D solution2 = position + qe.first * direction;
+  Vector3 solution2 = position + qe.first * direction;
   Intersection3D::Status status2 =
       (qe.second * qe.second < s_onSurfaceTolerance * s_onSurfaceTolerance)
           ? Intersection3D::Status::onSurface
@@ -87,52 +87,52 @@ inline SurfaceIntersection ConeSurface::intersect(
   return cIntersection;
 }
 
-inline AlignmentRowVector ConeSurface::alignmentToPathDerivative(
+inline AlignmentToPathMatrix ConeSurface::alignmentToPathDerivative(
     const GeometryContext& gctx, const FreeVector& parameters) const {
   // The global position
   const auto position = parameters.segment<3>(eFreePos0);
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
   // The vector between position and center
-  const ActsRowVector<AlignmentScalar, 3> pcRowVec =
-      (position - center(gctx)).transpose();
+  const auto pcRowVec = (position - center(gctx)).transpose().eval();
   // The rotation
   const auto& rotation = transform(gctx).rotation();
   // The local frame x/y/z axis
-  const Vector3D localXAxis = rotation.col(0);
-  const Vector3D localYAxis = rotation.col(1);
-  const Vector3D localZAxis = rotation.col(2);
+  const auto& localXAxis = rotation.col(0);
+  const auto& localYAxis = rotation.col(1);
+  const auto& localZAxis = rotation.col(2);
   // The local coordinates
-  const Vector3D localPos = rotation.transpose() * position;
-  const double dx = direction.dot(localXAxis);
-  const double dy = direction.dot(localYAxis);
-  const double dz = direction.dot(localZAxis);
+  const auto localPos = (rotation.transpose() * position).eval();
+  const auto dx = direction.dot(localXAxis);
+  const auto dy = direction.dot(localYAxis);
+  const auto dz = direction.dot(localZAxis);
   // The normalization factor
-  const double tanAlpha2 = bounds().tanAlpha() * bounds().tanAlpha();
-  const double norm = 1. / (1. - dz * dz * (1 + tanAlpha2));
+  const auto tanAlpha2 = bounds().tanAlpha() * bounds().tanAlpha();
+  const auto norm = 1 / (1 - dz * dz * (1 + tanAlpha2));
   // The direction transpose
-  const ActsRowVector<AlignmentScalar, 3> dirRowVec = direction.transpose();
+  const auto& dirRowVec = direction.transpose();
   // The derivative of path w.r.t. the local axes
   // @note The following calculations assume that the intersection of the track
   // with the cone always satisfy: localPos.z()*tanAlpha =perp(localPos)
-  const ActsRowVector<AlignmentScalar, 3> localXAxisToPath =
-      -2.0 * norm * (dx * pcRowVec + localPos.x() * dirRowVec);
-  const ActsRowVector<AlignmentScalar, 3> localYAxisToPath =
-      -2.0 * norm * (dy * pcRowVec + localPos.y() * dirRowVec);
-  const ActsRowVector<AlignmentScalar, 3> localZAxisToPath =
-      2.0 * norm * tanAlpha2 * (dz * pcRowVec + localPos.z() * dirRowVec) -
-      4.0 * norm * norm * (1 + tanAlpha2) *
-          (dx * localPos.x() + dy * localPos.y() -
-           dz * localPos.z() * tanAlpha2) *
-          dz * dirRowVec;
+  const auto localXAxisToPath =
+      (-2 * norm * (dx * pcRowVec + localPos.x() * dirRowVec)).eval();
+  const auto localYAxisToPath =
+      (-2 * norm * (dy * pcRowVec + localPos.y() * dirRowVec)).eval();
+  const auto localZAxisToPath =
+      (2 * norm * tanAlpha2 * (dz * pcRowVec + localPos.z() * dirRowVec) -
+       4 * norm * norm * (1 + tanAlpha2) *
+           (dx * localPos.x() + dy * localPos.y() -
+            dz * localPos.z() * tanAlpha2) *
+           dz * dirRowVec)
+          .eval();
   // Calculate the derivative of local frame axes w.r.t its rotation
   const auto [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
       detail::rotationToLocalAxesDerivative(rotation);
   // Initialize the derivative of propagation path w.r.t. local frame
   // translation (origin) and rotation
-  AlignmentRowVector alignToPath = AlignmentRowVector::Zero();
+  AlignmentToPathMatrix alignToPath = AlignmentToPathMatrix::Zero();
   alignToPath.segment<3>(eAlignmentCenter0) =
-      2.0 * norm * (dx * localXAxis.transpose() + dy * localYAxis.transpose());
+      2 * norm * (dx * localXAxis.transpose() + dy * localYAxis.transpose());
   alignToPath.segment<3>(eAlignmentRotation0) =
       localXAxisToPath * rotToLocalXAxis + localYAxisToPath * rotToLocalYAxis +
       localZAxisToPath * rotToLocalZAxis;
@@ -140,23 +140,21 @@ inline AlignmentRowVector ConeSurface::alignmentToPathDerivative(
   return alignToPath;
 }
 
-inline LocalCartesianToBoundLocalMatrix
-ConeSurface::localCartesianToBoundLocalDerivative(
-    const GeometryContext& gctx, const Vector3D& position) const {
+inline ActsMatrix<2, 3> ConeSurface::localCartesianToBoundLocalDerivative(
+    const GeometryContext& gctx, const Vector3& position) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
   // The local frame transform
   const auto& sTransform = transform(gctx);
   // calculate the transformation to local coorinates
-  const Vector3D localPos = sTransform.inverse() * position;
+  const Vector3 localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);
   const double lphi = phi(localPos);
   const double lcphi = std::cos(lphi);
   const double lsphi = std::sin(lphi);
   // Solve for radius R
   const double R = localPos.z() * bounds().tanAlpha();
-  LocalCartesianToBoundLocalMatrix loc3DToLocBound =
-      LocalCartesianToBoundLocalMatrix::Zero();
+  ActsMatrix<2, 3> loc3DToLocBound = ActsMatrix<2, 3>::Zero();
   loc3DToLocBound << -R * lsphi / lr, R * lcphi / lr,
       lphi * bounds().tanAlpha(), 0, 0, 1;
 

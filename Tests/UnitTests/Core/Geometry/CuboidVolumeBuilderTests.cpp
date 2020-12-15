@@ -8,6 +8,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -24,8 +26,6 @@
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Units.hpp"
 
 #include <vector>
 
@@ -40,7 +40,7 @@ struct StepVolumeCollector {
   ///
   struct this_result {
     // Position of the propagator after each step
-    std::vector<Vector3D> position;
+    std::vector<Vector3> position;
     // Volume of the propagator after each step
     std::vector<TrackingVolume const*> volume;
   };
@@ -71,9 +71,9 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
 
     // Rotation of the surfaces
     double rotationAngle = M_PI * 0.5;
-    Vector3D xPos(cos(rotationAngle), 0., sin(rotationAngle));
-    Vector3D yPos(0., 1., 0.);
-    Vector3D zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+    Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
+    Vector3 yPos(0., 1., 0.);
+    Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
     cfg.rotation.col(0) = xPos;
     cfg.rotation.col(1) = yPos;
     cfg.rotation.col(2) = zPos;
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
     cfg.thickness = 1_um;
 
     cfg.detElementConstructor =
-        [](const Transform3D& trans,
+        [](const Transform3& trans,
            std::shared_ptr<const RectangleBounds> bounds, double thickness) {
           return new DetectorElementStub(trans, bounds, thickness);
         };
@@ -195,9 +195,9 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
 
     // Rotation of the surfaces
     double rotationAngle = M_PI * 0.5;
-    Vector3D xPos(cos(rotationAngle), 0., sin(rotationAngle));
-    Vector3D yPos(0., 1., 0.);
-    Vector3D zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+    Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
+    Vector3 yPos(0., 1., 0.);
+    Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
     cfg.rotation.col(0) = xPos;
     cfg.rotation.col(1) = yPos;
     cfg.rotation.col(2) = zPos;
@@ -243,11 +243,11 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
   std::unique_ptr<const TrackingGeometry> detector =
       tgb.trackingGeometry(tgContext);
   BOOST_CHECK_EQUAL(
-      detector->lowestTrackingVolume(tgContext, Vector3D(1., 0., 0.))
+      detector->lowestTrackingVolume(tgContext, Vector3(1., 0., 0.))
           ->volumeName(),
       volumeConfig.name);
   BOOST_CHECK_EQUAL(
-      detector->lowestTrackingVolume(tgContext, Vector3D(-1., 0., 0.))
+      detector->lowestTrackingVolume(tgContext, Vector3(-1., 0., 0.))
           ->volumeName(),
       volumeConfig2.name);
 }
@@ -319,7 +319,7 @@ UnitConstants::m, 0., 0.})
   Propagator<StraightLineStepper, Navigator> prop(sls, navi);
 
   // Set initial parameters for the particle track
-  Vector3D startParams(0., 0., 0.), startMom(1. * UnitConstants::GeV, 0., 0.);
+  Vector3 startParams(0., 0., 0.), startMom(1. * UnitConstants::GeV, 0., 0.);
   CurvilinearTrackParameters sbtp(
       std::nullopt, startParams, startMom, 1., 0.);
 
@@ -433,7 +433,7 @@ propOpts(tgContext, mfContext);
   Propagator<StraightLineStepper, Navigator> prop(sls, navi);
 
   // Set initial parameters for the particle track
-  Vector3D startParams(0., 0., 0.), startMom(1. * UnitConstants::GeV, 0., 0.);
+  Vector3 startParams(0., 0., 0.), startMom(1. * UnitConstants::GeV, 0., 0.);
   CurvilinearTrackParameters sbtp(
       std::nullopt, startParams, startMom, 1., 0.);
 

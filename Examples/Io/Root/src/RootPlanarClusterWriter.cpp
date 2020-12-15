@@ -8,11 +8,12 @@
 
 #include "ActsExamples/Io/Root/RootPlanarClusterWriter.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/Digitization/DigitizationModule.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Plugins/Digitization/Segmentation.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
-#include "Acts/Utilities/Units.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -36,6 +37,9 @@ ActsExamples::RootPlanarClusterWriter::RootPlanarClusterWriter(
   }
   if (m_cfg.treeName.empty()) {
     throw std::invalid_argument("Missing tree name");
+  }
+  if (not m_cfg.trackingGeometry) {
+    throw std::invalid_argument("Missing tracking geometry");
   }
   // Setup ROOT I/O
   if (m_outputFile == nullptr) {
@@ -106,96 +110,104 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
   m_eventNr = ctx.eventNumber;
 
   // Loop over the planar clusters in this event
-  for (const auto& entry : clusters) {
-    Acts::GeometryIdentifier geoId = entry.first;
-    const Acts::PlanarModuleCluster& cluster = entry.second;
-    // local cluster information: position, @todo coveraiance
-    auto parameters = cluster.parameters();
-    Acts::Vector2D local(parameters[Acts::BoundIndices::eBoundLoc0],
-                         parameters[Acts::BoundIndices::eBoundLoc1]);
-
-    /// prepare for calculating the
-    Acts::Vector3D mom(1, 1, 1);
-    // the cluster surface
-    const auto& clusterSurface = cluster.referenceObject();
-    // transform local into global position information
-    Acts::Vector3D pos =
-        clusterSurface.localToGlobal(ctx.geoContext, local, mom);
-    // identification
-    m_volumeID = geoId.volume();
-    m_layerID = geoId.layer();
-    m_surfaceID = geoId.sensitive();
-    m_x = pos.x();
-    m_y = pos.y();
-    m_z = pos.z();
-    m_t = parameters[2] / Acts::UnitConstants::ns;
-    m_lx = local.x();
-    m_ly = local.y();
-    m_cov_lx = 0.;  // @todo fill in
-    m_cov_ly = 0.;  // @todo fill in
-    // get the cells and run through them
-    const auto& cells = cluster.digitizationCells();
-    auto detectorElement = dynamic_cast<const Acts::IdentifiedDetectorElement*>(
-        clusterSurface.associatedDetectorElement());
-    for (auto& cell : cells) {
-      // cell identification
-      m_cell_IDx.push_back(cell.channel0);
-      m_cell_IDy.push_back(cell.channel1);
-      m_cell_data.push_back(cell.data);
-      // for more we need the digitization module
-      if (detectorElement && detectorElement->digitizationModule()) {
-        auto digitationModule = detectorElement->digitizationModule();
-        const Acts::Segmentation& segmentation =
-            digitationModule->segmentation();
-        // get the cell positions
-        auto cellLocalPosition = segmentation.cellPosition(cell);
-        m_cell_lx.push_back(cellLocalPosition.x());
-        m_cell_ly.push_back(cellLocalPosition.y());
-      }
+  for (auto [moduleGeoId, moduleClusters] : groupByModule(clusters)) {
+    const Acts::Surface* surfacePtr =
+        m_cfg.trackingGeometry->findSurface(moduleGeoId);
+    if (not surfacePtr) {
+      ACTS_ERROR("Could not find surface for " << moduleGeoId);
+      return ProcessCode::ABORT;
     }
-    // write hit-particle truth association
-    // each hit can have multiple particles, e.g. in a dense environment
-    for (auto idx : cluster.sourceLink().indices()) {
-      auto it = simHits.nth(idx);
-      if (it == simHits.end()) {
-        ACTS_FATAL("Simulation hit with index " << idx << " does not exist");
-        return ProcessCode::ABORT;
-      }
-      const auto& simHit = *it;
+    const Acts::Surface& surface = *surfacePtr;
 
-      // local position to be calculated
-      Acts::Vector2D lPosition{0., 0.};
-      auto lpResult = clusterSurface.globalToLocal(
-          ctx.geoContext, simHit.position(), simHit.unitDirection());
-      if (not lpResult.ok()) {
-        ACTS_FATAL("Global to local transformation did not succeed.");
-        return ProcessCode::ABORT;
+    // geometry identification is the same for all clusters on this module
+    m_volumeID = moduleGeoId.volume();
+    m_layerID = moduleGeoId.layer();
+    m_surfaceID = moduleGeoId.sensitive();
+
+    for (const auto& entry : moduleClusters) {
+      const Acts::PlanarModuleCluster& cluster = entry.second;
+      // local cluster information: position, @todo coveraiance
+      auto parameters = cluster.parameters();
+      Acts::Vector2 local(parameters[Acts::BoundIndices::eBoundLoc0],
+                          parameters[Acts::BoundIndices::eBoundLoc1]);
+
+      /// prepare for calculating the
+      Acts::Vector3 mom(1, 1, 1);
+      // transform local into global position information
+      Acts::Vector3 pos = surface.localToGlobal(ctx.geoContext, local, mom);
+      m_x = pos.x();
+      m_y = pos.y();
+      m_z = pos.z();
+      m_t = parameters[2] / Acts::UnitConstants::ns;
+      m_lx = local.x();
+      m_ly = local.y();
+      m_cov_lx = 0.;  // @todo fill in
+      m_cov_ly = 0.;  // @todo fill in
+      // get the cells and run through them
+      const auto& cells = cluster.digitizationCells();
+      auto detectorElement =
+          dynamic_cast<const Acts::IdentifiedDetectorElement*>(
+              surface.associatedDetectorElement());
+      for (auto& cell : cells) {
+        // cell identification
+        m_cell_IDx.push_back(cell.channel0);
+        m_cell_IDy.push_back(cell.channel1);
+        m_cell_data.push_back(cell.data);
+        // for more we need the digitization module
+        if (detectorElement && detectorElement->digitizationModule()) {
+          auto digitationModule = detectorElement->digitizationModule();
+          const Acts::Segmentation& segmentation =
+              digitationModule->segmentation();
+          // get the cell positions
+          auto cellLocalPosition = segmentation.cellPosition(cell);
+          m_cell_lx.push_back(cellLocalPosition.x());
+          m_cell_ly.push_back(cellLocalPosition.y());
+        }
       }
-      lPosition = lpResult.value();
-      // fill the variables
-      m_t_gx.push_back(simHit.position().x());
-      m_t_gy.push_back(simHit.position().y());
-      m_t_gz.push_back(simHit.position().z());
-      m_t_gt.push_back(simHit.time());
-      m_t_lx.push_back(lPosition.x());
-      m_t_ly.push_back(lPosition.y());
-      m_t_barcode.push_back(simHit.particleId().value());
+      // write hit-particle truth association
+      // each hit can have multiple particles, e.g. in a dense environment
+      for (auto idx : cluster.sourceLink().indices()) {
+        auto it = simHits.nth(idx);
+        if (it == simHits.end()) {
+          ACTS_FATAL("Simulation hit with index " << idx << " does not exist");
+          return ProcessCode::ABORT;
+        }
+        const auto& simHit = *it;
+
+        // local position to be calculated
+        Acts::Vector2 lPosition{0., 0.};
+        auto lpResult = surface.globalToLocal(ctx.geoContext, simHit.position(),
+                                              simHit.unitDirection());
+        if (not lpResult.ok()) {
+          ACTS_FATAL("Global to local transformation did not succeed.");
+          return ProcessCode::ABORT;
+        }
+        lPosition = lpResult.value();
+        // fill the variables
+        m_t_gx.push_back(simHit.position().x());
+        m_t_gy.push_back(simHit.position().y());
+        m_t_gz.push_back(simHit.position().z());
+        m_t_gt.push_back(simHit.time());
+        m_t_lx.push_back(lPosition.x());
+        m_t_ly.push_back(lPosition.y());
+        m_t_barcode.push_back(simHit.particleId().value());
+      }
+      // fill the tree
+      m_outputTree->Fill();
+      // now reset
+      m_cell_IDx.clear();
+      m_cell_IDy.clear();
+      m_cell_lx.clear();
+      m_cell_ly.clear();
+      m_cell_data.clear();
+      m_t_gx.clear();
+      m_t_gy.clear();
+      m_t_gz.clear();
+      m_t_gt.clear();
+      m_t_lx.clear();
+      m_t_ly.clear();
+      m_t_barcode.clear();
     }
-    // fill the tree
-    m_outputTree->Fill();
-    // now reset
-    m_cell_IDx.clear();
-    m_cell_IDy.clear();
-    m_cell_lx.clear();
-    m_cell_ly.clear();
-    m_cell_data.clear();
-    m_t_gx.clear();
-    m_t_gy.clear();
-    m_t_gz.clear();
-    m_t_gt.clear();
-    m_t_lx.clear();
-    m_t_ly.clear();
-    m_t_barcode.clear();
   }
   return ActsExamples::ProcessCode::SUCCESS;
 }

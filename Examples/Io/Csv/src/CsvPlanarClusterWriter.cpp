@@ -8,8 +8,9 @@
 
 #include "ActsExamples/Io/Csv/CsvPlanarClusterWriter.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
-#include "Acts/Utilities/Units.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -28,6 +29,9 @@ ActsExamples::CsvPlanarClusterWriter::CsvPlanarClusterWriter(
   // inputClusters is already checked by base constructor
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
+  }
+  if (not m_cfg.trackingGeometry) {
+    throw std::invalid_argument("Missing tracking geometry");
   }
 }
 
@@ -58,76 +62,85 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
   // will be reused as hit counter
   hit.hit_id = 0;
 
-  for (const auto& entry : clusters) {
-    Acts::GeometryIdentifier geoId = entry.first;
-    const Acts::PlanarModuleCluster& cluster = entry.second;
-    // local cluster information
-    const auto& parameters = cluster.parameters();
-    Acts::Vector2D localPos(parameters[0], parameters[1]);
-    Acts::Vector3D globalFakeMom(1, 1, 1);
-    Acts::Vector3D globalPos = cluster.referenceObject().localToGlobal(
-        ctx.geoContext, localPos, globalFakeMom);
-
-    // encoded geometry identifier
-    hit.geometry_id = geoId.value();
-    // (partially) decoded geometry identifier
-    hit.volume_id = geoId.volume();
-    hit.layer_id = geoId.layer();
-    hit.module_id = geoId.sensitive();
-    // write global hit information
-    hit.x = globalPos.x() / Acts::UnitConstants::mm;
-    hit.y = globalPos.y() / Acts::UnitConstants::mm;
-    hit.z = globalPos.z() / Acts::UnitConstants::mm;
-    hit.t = parameters[2] / Acts::UnitConstants::ns;
-    writerHits.append(hit);
-
-    // write local cell information
-    cell.hit_id = hit.hit_id;
-    for (auto& c : cluster.digitizationCells()) {
-      cell.ch0 = c.channel0;
-      cell.ch1 = c.channel1;
-      // TODO store digitial timestamp once added to the cell definition
-      cell.timestamp = 0;
-      cell.value = c.data;
-      writerCells.append(cell);
+  for (auto [moduleGeoId, moduleClusters] : groupByModule(clusters)) {
+    const Acts::Surface* surfacePtr =
+        m_cfg.trackingGeometry->findSurface(moduleGeoId);
+    if (not surfacePtr) {
+      ACTS_ERROR("Could not find surface for " << moduleGeoId);
+      return ProcessCode::ABORT;
     }
 
-    // write hit-particle truth association
-    // each hit can have multiple particles, e.g. in a dense environment
-    truth.hit_id = hit.hit_id;
-    truth.geometry_id = hit.geometry_id;
-    for (auto idx : cluster.sourceLink().indices()) {
-      auto it = simHits.nth(idx);
-      if (it == simHits.end()) {
-        ACTS_FATAL("Simulation hit with index " << idx << " does not exist");
-        return ProcessCode::ABORT;
+    // encoded geometry identifier. same for all hits on the module
+    hit.geometry_id = moduleGeoId.value();
+    // (partially) decoded geometry identifier
+    hit.volume_id = moduleGeoId.volume();
+    hit.layer_id = moduleGeoId.layer();
+    hit.module_id = moduleGeoId.sensitive();
+
+    for (const auto& entry : moduleClusters) {
+      const Acts::PlanarModuleCluster& cluster = entry.second;
+      // local cluster information
+      const auto& parameters = cluster.parameters();
+      Acts::Vector2 localPos(parameters[0], parameters[1]);
+      Acts::Vector3 globalFakeMom(1, 1, 1);
+      Acts::Vector3 globalPos =
+          surfacePtr->localToGlobal(ctx.geoContext, localPos, globalFakeMom);
+
+      // write global hit information
+      hit.x = globalPos.x() / Acts::UnitConstants::mm;
+      hit.y = globalPos.y() / Acts::UnitConstants::mm;
+      hit.z = globalPos.z() / Acts::UnitConstants::mm;
+      hit.t = parameters[2] / Acts::UnitConstants::ns;
+      writerHits.append(hit);
+
+      // write local cell information
+      cell.hit_id = hit.hit_id;
+      for (auto& c : cluster.digitizationCells()) {
+        cell.ch0 = c.channel0;
+        cell.ch1 = c.channel1;
+        // TODO store digitial timestamp once added to the cell definition
+        cell.timestamp = 0;
+        cell.value = c.data;
+        writerCells.append(cell);
       }
 
-      const auto& simHit = *it;
-      truth.particle_id = simHit.particleId().value();
-      // hit position
-      truth.tx = simHit.position().x() / Acts::UnitConstants::mm;
-      truth.ty = simHit.position().y() / Acts::UnitConstants::mm;
-      truth.tz = simHit.position().z() / Acts::UnitConstants::mm;
-      truth.tt = simHit.time() / Acts::UnitConstants::ns;
-      // particle four-momentum before interaction
-      truth.tpx = simHit.momentum4Before().x() / Acts::UnitConstants::GeV;
-      truth.tpy = simHit.momentum4Before().y() / Acts::UnitConstants::GeV;
-      truth.tpz = simHit.momentum4Before().z() / Acts::UnitConstants::GeV;
-      truth.te = simHit.momentum4Before().w() / Acts::UnitConstants::GeV;
-      // particle four-momentum change due to interaction
-      const auto delta4 = simHit.momentum4After() - simHit.momentum4Before();
-      truth.deltapx = delta4.x() / Acts::UnitConstants::GeV;
-      truth.deltapy = delta4.y() / Acts::UnitConstants::GeV;
-      truth.deltapz = delta4.z() / Acts::UnitConstants::GeV;
-      truth.deltae = delta4.w() / Acts::UnitConstants::GeV;
-      // TODO write hit index along the particle trajectory
-      truth.index = simHit.index();
-      writerTruth.append(truth);
-    }
+      // write hit-particle truth association
+      // each hit can have multiple particles, e.g. in a dense environment
+      truth.hit_id = hit.hit_id;
+      truth.geometry_id = hit.geometry_id;
+      for (auto idx : cluster.sourceLink().indices()) {
+        auto it = simHits.nth(idx);
+        if (it == simHits.end()) {
+          ACTS_FATAL("Simulation hit with index " << idx << " does not exist");
+          return ProcessCode::ABORT;
+        }
 
-    // increase hit id for next iteration
-    hit.hit_id += 1;
+        const auto& simHit = *it;
+        truth.particle_id = simHit.particleId().value();
+        // hit position
+        truth.tx = simHit.position().x() / Acts::UnitConstants::mm;
+        truth.ty = simHit.position().y() / Acts::UnitConstants::mm;
+        truth.tz = simHit.position().z() / Acts::UnitConstants::mm;
+        truth.tt = simHit.time() / Acts::UnitConstants::ns;
+        // particle four-momentum before interaction
+        truth.tpx = simHit.momentum4Before().x() / Acts::UnitConstants::GeV;
+        truth.tpy = simHit.momentum4Before().y() / Acts::UnitConstants::GeV;
+        truth.tpz = simHit.momentum4Before().z() / Acts::UnitConstants::GeV;
+        truth.te = simHit.momentum4Before().w() / Acts::UnitConstants::GeV;
+        // particle four-momentum change due to interaction
+        const auto delta4 = simHit.momentum4After() - simHit.momentum4Before();
+        truth.deltapx = delta4.x() / Acts::UnitConstants::GeV;
+        truth.deltapy = delta4.y() / Acts::UnitConstants::GeV;
+        truth.deltapz = delta4.z() / Acts::UnitConstants::GeV;
+        truth.deltae = delta4.w() / Acts::UnitConstants::GeV;
+        // TODO write hit index along the particle trajectory
+        truth.index = simHit.index();
+        writerTruth.append(truth);
+      }
+
+      // increase hit id for next iteration
+      hit.hit_id += 1;
+    }
   }
 
   return ActsExamples::ProcessCode::SUCCESS;

@@ -115,22 +115,19 @@ class CKFSourceLinkSelector {
     for (const auto& sourcelink : sourcelinks) {
       std::visit(
           [&](const auto& calibrated) {
-            // The measurement surface should be the same as parameter surface
-            assert(&calibrated.referenceObject() == surface);
-
             // Take the projector (measurement mapping function)
             const auto& H = calibrated.projector();
             // Take the parameter covariance
             const auto& predictedCovariance = *predictedParams.covariance();
-            // Get the residual
-            const auto& residual =
-                calibrated.residual(predictedParams.parameters());
+            // Get the residuals
+            const auto& res =
+                calibrated.residuals(predictedParams.parameters());
             // Get the chi2
-            double chi2 = (residual.transpose() *
+            double chi2 = (res.transpose() *
                            ((calibrated.covariance() +
                              H * predictedCovariance * H.transpose()))
                                .inverse() *
-                           residual)
+                           res)
                               .eval()(0, 0);
 
             ACTS_VERBOSE("Chi2: " << chi2);

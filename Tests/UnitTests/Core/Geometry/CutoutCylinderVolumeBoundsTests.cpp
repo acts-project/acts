@@ -8,12 +8,12 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Visualization/PlyVisualization3D.hpp"
 
 #include <fstream>
@@ -170,10 +170,10 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsBoundingBox) {
   GeometryContext tgContext = GeometryContext();
   CutoutCylinderVolumeBounds ccvb(5, 10, 15, 30, 25);
   auto box = ccvb.boundingBox();
-  CHECK_CLOSE_ABS(box.min(), Vector3D(-15, -15, -30), 1e-6);
-  CHECK_CLOSE_ABS(box.max(), Vector3D(15, 15, 30), 1e-6);
+  CHECK_CLOSE_ABS(box.min(), Vector3(-15, -15, -30), 1e-6);
+  CHECK_CLOSE_ABS(box.max(), Vector3(15, 15, 30), 1e-6);
 
-  auto ccvbSurfaces = ccvb.orientedSurfaces(Transform3D::Identity());
+  auto ccvbSurfaces = ccvb.orientedSurfaces(Transform3::Identity());
 }
 
 BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeOrientedBoundaries) {
@@ -181,13 +181,13 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeOrientedBoundaries) {
 
   CutoutCylinderVolumeBounds ccvb(5, 10, 15, 30, 25);
 
-  auto ccvbOrientedSurfaces = ccvb.orientedSurfaces(Transform3D::Identity());
+  auto ccvbOrientedSurfaces = ccvb.orientedSurfaces(Transform3::Identity());
   BOOST_CHECK_EQUAL(ccvbOrientedSurfaces.size(), 8);
 
   auto geoCtx = GeometryContext();
-  Vector3D xaxis(1., 0., 0.);
-  Vector3D yaxis(0., 1., 0.);
-  Vector3D zaxis(0., 0., 1.);
+  Vector3 xaxis(1., 0., 0.);
+  Vector3 yaxis(0., 1., 0.);
+  Vector3 zaxis(0., 0., 1.);
 
   for (auto& os : ccvbOrientedSurfaces) {
     auto onSurface = os.first->binningPosition(geoCtx, binR);

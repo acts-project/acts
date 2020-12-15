@@ -34,6 +34,7 @@ option(ACTS_BUILD_PLUGIN_IDENTIFICATION "Build Identification plugin" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
 option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" OFF)
 option(ACTS_BUILD_PLUGIN_LEGACY "Build legacy plugin" OFF)
+option(ACTS_BUILD_PLUGIN_ONNX "Build Onnx plugin" OFF)
 option(ACTS_BUILD_PLUGIN_SYCL "Build SYCL plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TGEO "Build TGeo plugin" OFF)
 # fatras related options
@@ -92,6 +93,7 @@ set_option_if(
   ACTS_BUILD_FATRAS
   ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_PLUGIN_LEGACY ACTS_BUILD_EVERYTHING)
+set_option_if(ACTS_BUILD_PLUGIN_AUTODIFF ACTS_BUILD_EVERYTHING)
 
 # additional configuration and tools
 include(GNUInstallDirs) # GNU-like installation paths, e.g. lib/, include/, ...
@@ -110,6 +112,15 @@ find_package(Boost 1.69 MODULE REQUIRED COMPONENTS filesystem program_options un
 find_package(Eigen3 3.2.9 CONFIG REQUIRED)
 # NOTE we use boost::filesystem instead of std::filesystem since the later
 #   is not uniformly supported even on compilers that nominally support C++17 
+
+# Helper macro that overrides the project function in subdirectories, so 
+# we can intercept and store their versions. This is used to lock them down
+# in an installation later on.
+cmake_policy(SET CMP0048 NEW)    
+macro(project)
+    _project(${ARGN})
+    set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION}" CACHE INTERNAL "")
+endmacro()
 
 # optional packages
 #
@@ -144,14 +155,18 @@ if(ACTS_BUILD_PLUGIN_JSON)
   endif()
 endif()
 if(ACTS_BUILD_PLUGIN_AUTODIFF)
+  set(autodiff_VERSION 0.5.11 CACHE INTERNAL "")
   if(ACTS_USE_SYSTEM_AUTODIFF)
-    find_package(autodiff 0.5.11 CONFIG REQUIRED)
+    find_package(autodiff ${autodiff_VERSION} CONFIG REQUIRED)
     message(STATUS "Using system installation of autodiff")
   else()
     add_subdirectory(thirdparty/autodiff)
     add_library(autodiff::autodiff ALIAS autodiff)
     message(STATUS "Using bundled autodiff")
   endif()
+endif()
+if(ACTS_BUILD_PLUGIN_ONNX)
+  find_package(OnnxRuntime REQUIRED)
 endif()
 if(ACTS_BUILD_PLUGIN_SYCL)
   find_package(SYCL REQUIRED)
@@ -167,7 +182,13 @@ if(ACTS_BUILD_EXAMPLES)
   # standalone components. for simplicity always request all possible
   # required components.
   find_package(ROOT ${_root_version} CONFIG REQUIRED COMPONENTS Core Geom GenVector Hist Tree TreePlayer)
-  find_package(TBB REQUIRED)
+  # newer DD4hep version require TBB and search interally for TBB in
+  # config-only mode. to avoid missmatches we explicitely search using
+  # config-only mode first to be sure that we find the same version.
+  find_package(TBB CONFIG)
+  if(NOT TBB_FOUND)
+    find_package(TBB MODULE REQUIRED)
+  endif()
   add_subdirectory(thirdparty/dfelibs)
 endif()
 if(ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
@@ -202,6 +223,10 @@ endif()
 if(ACTS_BUILD_DOCS)
   find_package(Doxygen 1.8.11 REQUIRED)
   find_package(Sphinx REQUIRED)
+endif()
+
+if(ACTS_CUSTOM_SCALARTYPE)
+    message(STATUS "Building Acts with custom scalar type: ${ACTS_CUSTOM_SCALARTYPE}")
 endif()
 
 # core library, core plugins, and other components

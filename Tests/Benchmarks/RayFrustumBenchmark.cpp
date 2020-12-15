@@ -6,6 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
+#include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/Frustum.hpp"
+#include "Acts/Utilities/Ray.hpp"
+
 #include <algorithm>
 #include <chrono>
 #include <functional>
@@ -13,14 +21,6 @@
 #include <map>
 #include <random>
 #include <vector>
-
-#include "Acts/Surfaces/BoundaryCheck.hpp"
-#include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
-#include "Acts/Utilities/BoundingBox.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Frustum.hpp"
-#include "Acts/Utilities/Ray.hpp"
-#include "Acts/Utilities/Units.hpp"
 
 using namespace Acts;
 
@@ -165,6 +165,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
     return tmax > tmin && tmax > 0.0;
   };
+
+  using Vector3F = Eigen::Matrix<float, 3, 1>;
 
   std::vector<Ray3> rays{n, Ray3{Vector3F{0, 0, 0}, Vector3F{1, 0, 0}}};
   std::generate(rays.begin(), rays.end(), [&]() {

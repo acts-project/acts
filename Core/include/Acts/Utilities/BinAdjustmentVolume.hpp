@@ -12,13 +12,12 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Volume.hpp"
-
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 #include <stdexcept>
 
@@ -32,7 +31,7 @@ namespace Acts {
 /// @return new updated BinUtiltiy
 BinUtility adjustBinUtility(const BinUtility& bu,
                             const CylinderVolumeBounds& cBounds,
-                            const Transform3D& transform) {
+                            const Transform3& transform) {
   // Default constructor
   BinUtility uBinUtil(transform);
   // The parameters from the cylinder bounds
@@ -86,7 +85,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
 /// @return new updated BinUtiltiy
 BinUtility adjustBinUtility(const BinUtility& bu,
                             const CutoutCylinderVolumeBounds& cBounds,
-                            const Transform3D& transform) {
+                            const Transform3& transform) {
   // Default constructor
   BinUtility uBinUtil(transform);
   // The parameters from the cutout cylinder bounds
@@ -140,7 +139,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
 /// @return new updated BinUtiltiy
 BinUtility adjustBinUtility(const BinUtility& bu,
                             const CuboidVolumeBounds& cBounds,
-                            const Transform3D& transform) {
+                            const Transform3& transform) {
   // Default constructor
   BinUtility uBinUtil(transform);
   // The parameters from the cylinder bounds

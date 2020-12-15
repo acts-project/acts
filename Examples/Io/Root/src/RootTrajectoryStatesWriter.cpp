@@ -47,9 +47,6 @@ ActsExamples::RootTrajectoryStatesWriter::RootTrajectoryStatesWriter(
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
   }
-  if (m_cfg.inputMeasurements.empty()) {
-    throw std::invalid_argument("Missing measurements input collection");
-  }
   if (m_cfg.inputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument("Missing hit-particles map input collection");
   }
@@ -245,9 +242,6 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
   using HitSimHitsMap = IndexMultimap<Index>;
-  using ConcreteMeasurement =
-      Acts::Measurement<ActsExamples::IndexSourceLink, Acts::BoundIndices,
-                        Acts::eBoundLoc0, Acts::eBoundLoc1>;
 
   if (m_outputFile == nullptr)
     return ProcessCode::SUCCESS;
@@ -257,8 +251,6 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
   const auto& particles =
       ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
   const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
-  const auto& measurements =
-      ctx.eventStore.get<MeasurementContainer>(m_cfg.inputMeasurements);
   const auto& hitParticlesMap =
       ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
   const auto& hitSimHitsMap =
@@ -330,13 +322,11 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
           return true;
         }
 
-        const auto hitIdx = state.uncalibrated().index();
-        const auto& fullMeas = measurements[hitIdx];
-        const auto& meas = std::get<ConcreteMeasurement>(fullMeas);
-        const auto& surface = meas.referenceObject();
+        const auto& surface = state.referenceSurface();
 
         // get the truth hits corresponding to this trackState
         // Use average truth in the case of multiple contributing sim hits
+        const auto hitIdx = state.uncalibrated().index();
         auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
         auto [truthLocal, truthPos4, truthUnitDir] =
             detail::averageSimHits(ctx.geoContext, surface, simHits, indices);
@@ -360,7 +350,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
         m_t_r.push_back(perp(truthPos4.template segment<3>(Acts::ePos0)));
         m_t_dx.push_back(truthUnitDir[Acts::eMom0]);
         m_t_dy.push_back(truthUnitDir[Acts::eMom1]);
-        m_t_dz.push_back(truthUnitDir[Acts::eMom1]);
+        m_t_dz.push_back(truthUnitDir[Acts::eMom2]);
 
         // get the truth track parameter at this track State
         float truthLOC0 = truthLocal[Acts::ePos0];
@@ -383,25 +373,21 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
         m_layerID.push_back(geoID.layer());
         m_moduleID.push_back(geoID.sensitive());
 
-        // get local position
-        Acts::Vector2D local(meas.parameters()[Acts::eBoundLoc0],
-                             meas.parameters()[Acts::eBoundLoc1]);
-        // get global position
-        Acts::Vector3D mom(1, 1, 1);
-        Acts::Vector3D global =
+        // expand the local measurements into the full bound space
+        Acts::BoundVector meas =
+            state.projector().transpose() * state.calibrated();
+        // extract local and global position
+        Acts::Vector2 local(meas[Acts::eBoundLoc0], meas[Acts::eBoundLoc1]);
+        Acts::Vector3 mom(1, 1, 1);
+        Acts::Vector3 global =
             surface.localToGlobal(ctx.geoContext, local, mom);
 
-        // get measurement covariance
-        auto cov = meas.covariance();
-        // float resX = sqrt(cov(Acts::eBoundLoc0, Acts::eBoundLoc0));
-        // float resY = sqrt(cov(Acts::eBoundLoc1, Acts::eBoundLoc1));
-
         // fill the measurement info
-        m_lx_hit.push_back(local.x());
-        m_ly_hit.push_back(local.y());
-        m_x_hit.push_back(global.x());
-        m_y_hit.push_back(global.y());
-        m_z_hit.push_back(global.z());
+        m_lx_hit.push_back(local[Acts::ePos0]);
+        m_ly_hit.push_back(local[Acts::ePos1]);
+        m_x_hit.push_back(global[Acts::ePos0]);
+        m_y_hit.push_back(global[Acts::ePos1]);
+        m_z_hit.push_back(global[Acts::ePos2]);
 
         // status of the fitted track parameters
         std::array<bool, 3> hasParams = {false, false, false};
@@ -435,21 +421,23 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
           if (trackParamsOpt) {
             const auto& [parameters, covariance] = *trackParamsOpt;
             if (ipar == 0) {
+              //
               // local hit residual info
-              auto H = meas.projector();
-              auto resCov = cov + H * covariance * H.transpose();
-              auto residual = meas.residual(parameters);
-              m_res_x_hit.push_back(residual(Acts::eBoundLoc0));
-              m_res_y_hit.push_back(residual(Acts::eBoundLoc1));
+              auto H = state.effectiveProjector();
+              auto resCov = state.effectiveCalibratedCovariance() +
+                            H * covariance * H.transpose();
+              auto res = state.effectiveCalibrated() - H * parameters;
+              m_res_x_hit.push_back(res[Acts::eBoundLoc0]);
+              m_res_y_hit.push_back(res[Acts::eBoundLoc1]);
               m_err_x_hit.push_back(
                   sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
               m_err_y_hit.push_back(
                   sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
               m_pull_x_hit.push_back(
-                  residual(Acts::eBoundLoc0) /
+                  res[Acts::eBoundLoc0] /
                   sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
               m_pull_y_hit.push_back(
-                  residual(Acts::eBoundLoc1) /
+                  res[Acts::eBoundLoc1] /
                   sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
               m_dim_hit.push_back(state.calibratedSize());
             }

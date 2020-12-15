@@ -10,8 +10,8 @@ template <typename external_spacepoint_t>
 template <typename spacepoint_iterator_t>
 Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
-    std::function<Acts::Vector2D(const external_spacepoint_t&, float, float,
-                                 float)>
+    std::function<Acts::Vector2(const external_spacepoint_t&, float, float,
+                                float)>
         covTool,
     std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
     std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
@@ -55,9 +55,9 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     }
 
     // 2D variance tool provided by user
-    Acts::Vector2D variance =
+    Acts::Vector2 variance =
         covTool(sp, config.zAlign, config.rAlign, config.sigmaError);
-    Acts::Vector3D spPosition(spX, spY, spZ);
+    Acts::Vector3 spPosition(spX, spY, spZ);
     auto isp =
         std::make_unique<const InternalSpacePoint<external_spacepoint_t>>(
             sp, spPosition, config.beamPos, variance);
@@ -74,7 +74,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   // space points with delta r < rbin size can be out of order
   for (auto& rbin : rBins) {
     for (auto& isp : rbin) {
-      Acts::Vector2D spLocation(isp->phi(), isp->z());
+      Acts::Vector2 spLocation(isp->phi(), isp->z());
       std::vector<
           std::unique_ptr<const InternalSpacePoint<external_spacepoint_t>>>&
           bin = grid->atPosition(spLocation);

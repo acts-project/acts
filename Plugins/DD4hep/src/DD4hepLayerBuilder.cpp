@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
@@ -25,7 +26,6 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArrayXD.hpp"
-#include "Acts/Utilities/Units.hpp"
 
 #include <boost/algorithm/string.hpp>
 
@@ -323,16 +323,16 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
   return dd4hepDetElement->surface().getSharedPtr();
 }
 
-Acts::Transform3D Acts::DD4hepLayerBuilder::convertTransform(
+Acts::Transform3 Acts::DD4hepLayerBuilder::convertTransform(
     const TGeoMatrix* tGeoTrans) const {
   // get the placement and orientation in respect to its mother
   const Double_t* rotation = tGeoTrans->GetRotationMatrix();
   const Double_t* translation = tGeoTrans->GetTranslation();
   return TGeoPrimitivesHelper::makeTransform(
-      Acts::Vector3D(rotation[0], rotation[3], rotation[6]),
-      Acts::Vector3D(rotation[1], rotation[4], rotation[7]),
-      Acts::Vector3D(rotation[2], rotation[5], rotation[8]),
-      Acts::Vector3D(translation[0] * UnitConstants::cm,
-                     translation[1] * UnitConstants::cm,
-                     translation[2] * UnitConstants::cm));
+      Acts::Vector3(rotation[0], rotation[3], rotation[6]),
+      Acts::Vector3(rotation[1], rotation[4], rotation[7]),
+      Acts::Vector3(rotation[2], rotation[5], rotation[8]),
+      Acts::Vector3(translation[0] * UnitConstants::cm,
+                    translation[1] * UnitConstants::cm,
+                    translation[2] * UnitConstants::cm));
 }

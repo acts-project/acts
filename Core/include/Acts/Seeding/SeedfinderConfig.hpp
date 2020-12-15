@@ -8,8 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/Definitions.hpp"
-
+#include "Acts/Definitions/Algebra.hpp"
 namespace Acts {
 // forward declaration to avoid cyclic dependence
 template <typename T>
@@ -45,6 +44,8 @@ struct SeedfinderConfig {
 
   // how many sigmas of scattering angle should be considered?
   float sigmaScattering = 5;
+  // Upper pt limit for scattering calculation
+  float maxPtScattering = 10000;
 
   // for how many seeds can one SpacePoint be the middle SpacePoint?
   int maxSeedsPerSpM = 5;
@@ -69,7 +70,7 @@ struct SeedfinderConfig {
   float bFieldInZ = 0.00208;
   // location of beam in x,y plane.
   // used as offset for Space Points
-  Acts::Vector2D beamPos{0, 0};
+  Acts::Vector2 beamPos{0, 0};
 
   // average radiation lengths of material on the length of a seed. used for
   // scattering.

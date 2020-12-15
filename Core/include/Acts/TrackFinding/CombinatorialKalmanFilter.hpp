@@ -11,6 +11,7 @@
 // Workaround for building on clang+libstdc++
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
@@ -30,7 +31,6 @@
 #include "Acts/TrackFinding/detail/VoidTrackFinderComponents.hpp"
 #include "Acts/TrackFitting/detail/VoidKalmanComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -764,6 +764,10 @@ class CombinatorialKalmanFilter {
       }
       trackStateProxy.jacobian() = jacobian;
       trackStateProxy.pathLength() = pathLength;
+
+      // Set the surface
+      trackStateProxy.setReferenceSurface(
+          boundParams.referenceSurface().getSharedPtr());
 
       // Assign the uncalibrated&calibrated measurement to the track
       // state (the uncalibrated could be already stored in other states)

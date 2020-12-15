@@ -8,8 +8,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
 #include "Acts/Utilities/detail/interpolation_impl.hpp"
 
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(interpolation_3d) {
 }
 
 BOOST_AUTO_TEST_CASE(interpolation_mixed_point_values) {
-  using Point1 = ActsVectorD<1>;
+  using Point1 = ActsVector<1>;
   using Point2 = std::array<double, 1u>;
   using Point3 = std::vector<double>;
   using Values = std::array<double, 2u>;

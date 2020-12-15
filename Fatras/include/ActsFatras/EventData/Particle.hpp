@@ -8,7 +8,8 @@
 
 #pragma once
 
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
@@ -22,9 +23,9 @@ namespace ActsFatras {
 /// Simulation particle information and kinematic state.
 class Particle {
  public:
-  using Scalar = double;
-  using Vector3 = Acts::ActsVector<Scalar, 3>;
-  using Vector4 = Acts::ActsVector<Scalar, 4>;
+  using Scalar = Acts::ActsScalar;
+  using Vector3 = Acts::ActsVector<3>;
+  using Vector4 = Acts::ActsVector<4>;
 
   /// Construct a default particle with invalid identity.
   Particle() = default;
@@ -99,7 +100,7 @@ class Particle {
     return *this;
   }
   /// Set the absolute momentum.
-  Particle &setAbsMomentum(Scalar absMomentum) {
+  Particle &setAbsoluteMomentum(Scalar absMomentum) {
     m_absMomentum = absMomentum;
     return *this;
   }
@@ -130,13 +131,13 @@ class Particle {
   constexpr Scalar mass() const { return m_mass; }
 
   /// Space-time position four-vector.
-  constexpr const Vector4 &position4() const { return m_position4; }
+  constexpr const Vector4 &fourPosition() const { return m_position4; }
   /// Three-position, i.e. spatial coordinates without the time.
   auto position() const { return m_position4.segment<3>(Acts::ePos0); }
   /// Time coordinate.
   Scalar time() const { return m_position4[Acts::eTime]; }
   /// Energy-momentum four-vector.
-  Vector4 momentum4() const {
+  Vector4 fourMomentum() const {
     Vector4 mom4;
     // stored direction is always normalized
     mom4[Acts::eMom0] = m_absMomentum * m_unitDirection[Acts::ePos0];
@@ -152,7 +153,7 @@ class Particle {
     return m_absMomentum * m_unitDirection.segment<2>(Acts::eMom0).norm();
   }
   /// Absolute momentum.
-  constexpr Scalar absMomentum() const { return m_absMomentum; }
+  constexpr Scalar absoluteMomentum() const { return m_absMomentum; }
   /// Total energy, i.e. norm of the four-momentum.
   Scalar energy() const { return std::hypot(m_mass, m_absMomentum); }
 

@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsFatras/Digitization/Channelizer.hpp"
+
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
@@ -72,10 +73,10 @@ ActsFatras::Channelizer::segments(const Acts::GeometryContext& geoCtx,
     }
 
   } else if (surface.type() == Acts::Surface::SurfaceType::Disc) {
-    Acts::Vector2D pstart(Acts::VectorHelpers::perp(start),
-                          Acts::VectorHelpers::phi(start));
-    Acts::Vector2D pend(Acts::VectorHelpers::perp(end),
-                        Acts::VectorHelpers::phi(end));
+    Acts::Vector2 pstart(Acts::VectorHelpers::perp(start),
+                         Acts::VectorHelpers::phi(start));
+    Acts::Vector2 pend(Acts::VectorHelpers::perp(end),
+                       Acts::VectorHelpers::phi(end));
 
     // Get the segmentation and convert it to lines & arcs
     bstart = {static_cast<unsigned int>(segmentation.bin(pstart, 0)),
@@ -110,15 +111,15 @@ ActsFatras::Channelizer::segments(const Acts::GeometryContext& geoCtx,
     // The phi boundaries
     if (bstart[1] != bend[1]) {
       double referenceR = surface.binningPositionValue(geoCtx, Acts::binR);
-      Acts::Vector2D origin = {0., 0.};
+      Acts::Vector2 origin = {0., 0.};
       const auto& phiboundaries = segmentation.binningData()[1].boundaries();
       std::vector<double> phibbounds = {
           phiboundaries.begin() + std::min(bstart[1], bend[1]) + 1,
           phiboundaries.begin() + std::max(bstart[1], bend[1]) + 1};
 
       for (const auto& phi : phibbounds) {
-        Acts::Vector2D philine(referenceR * std::cos(phi),
-                               referenceR * std::sin(phi));
+        Acts::Vector2 philine(referenceR * std::cos(phi),
+                              referenceR * std::sin(phi));
         auto phiIntersection =
             Acts::detail::IntersectionHelper2D::intersectSegment(
                 origin, philine, start, (end - start).normalized());
@@ -140,7 +141,7 @@ ActsFatras::Channelizer::segments(const Acts::GeometryContext& geoCtx,
 
   Bin2D currentBin = {bstart[0], bstart[1]};
   BinDelta2D lastDelta = {0, 0};
-  Acts::Vector2D lastIntersect = start;
+  Acts::Vector2 lastIntersect = start;
   double lastPath = 0.;
   for (auto& cStep : cSteps) {
     currentBin[0] += lastDelta[0];

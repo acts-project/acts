@@ -8,17 +8,18 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
 
 #include <unordered_map>
 
 namespace Acts {
 namespace detail {
+
 /// Calculate the global track parameters covariance for a smoothed trajectory
 /// stored in MultiTrajecty based on formulas at Journal of Physics: Conference
 /// Series 219 (2010) 032028.
@@ -33,7 +34,7 @@ namespace detail {
 /// @return The global track parameters covariance matrix and the starting
 /// row/column for smoothed states
 template <typename source_link_t, typename parameters_t = BoundTrackParameters>
-std::pair<ActsMatrixX<BoundScalar>, std::unordered_map<size_t, size_t>>
+std::pair<ActsDynamicMatrix, std::unordered_map<size_t, size_t>>
 globalTrackParametersCovariance(
     const Acts::MultiTrajectory<source_link_t>& multiTraj,
     const size_t& entryIndex) {
@@ -55,9 +56,9 @@ globalTrackParametersCovariance(
   });
 
   // Set the size of global track parameters covariance for all smoothed states
-  ActsMatrixX<BoundScalar> fullGlobalTrackParamsCov =
-      ActsMatrixX<BoundScalar>::Zero(nSmoothedStates * eBoundSize,
-                                     nSmoothedStates * eBoundSize);
+  ActsDynamicMatrix fullGlobalTrackParamsCov(nSmoothedStates * eBoundSize,
+                                             nSmoothedStates * eBoundSize);
+  fullGlobalTrackParamsCov.setZero();
   // The index of state within the trajectory and the starting row/column for
   // this state in the global covariance matrix
   std::unordered_map<size_t, size_t> stateRowIndices;

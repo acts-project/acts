@@ -8,13 +8,13 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
@@ -36,7 +36,7 @@ struct EventDataView3D {
   ///
   /// @param covariance The covariance matrix
   static inline std::array<double, 3> decomposeCovariance(
-      const ActsSymMatrixD<2>& covariance) {
+      const ActsSymMatrix<2>& covariance) {
     double c00 = covariance(eBoundLoc0, eBoundLoc0);
     double c01 = covariance(eBoundLoc0, eBoundLoc1);
     double c11 = covariance(eBoundLoc1, eBoundLoc1);
@@ -61,10 +61,10 @@ struct EventDataView3D {
   /// @param offset The out of plane offset for visibility
   /// @param lposition The local anker point of the ellipse
   /// @param transform The transform to global
-  static inline std::vector<Vector3D> createEllipse(
+  static inline std::vector<Vector3> createEllipse(
       double lambda0, double lambda1, double theta, size_t lseg, double offset,
-      const Vector2D& lposition = Vector2D(0., 0.),
-      const Transform3D& transform = Transform3D::Identity()) {
+      const Vector2& lposition = Vector2(0., 0.),
+      const Transform3& transform = Transform3::Identity()) {
     double ctheta = std::cos(theta);
     double stheta = std::sin(theta);
 
@@ -72,7 +72,7 @@ struct EventDataView3D {
     double l2sq = std::sqrt(lambda1);
 
     // Now generate the ellipse points
-    std::vector<Vector3D> ellipse;
+    std::vector<Vector3> ellipse;
     ellipse.reserve(lseg);
     double thetaStep = 2 * M_PI / lseg;
     for (size_t it = 0; it < lseg; ++it) {
@@ -81,7 +81,7 @@ struct EventDataView3D {
       double sphi = std::sin(phi);
       double x = lposition.x() + (l1sq * ctheta * cphi - l2sq * stheta * sphi);
       double y = lposition.y() + (l1sq * stheta * cphi + l2sq * ctheta * sphi);
-      ellipse.push_back(transform * Vector3D(x, y, offset));
+      ellipse.push_back(transform * Vector3(x, y, offset));
     }
     return ellipse;
   }
@@ -95,8 +95,8 @@ struct EventDataView3D {
   /// @param locErrorScale The local Error scale
   /// @param viewConfig The visualization parameters
   static void drawCovarianceCartesian(
-      IVisualization3D& helper, const Vector2D& lposition,
-      const ActsSymMatrixD<2>& covariance, const Transform3D& transform,
+      IVisualization3D& helper, const Vector2& lposition,
+      const SymMatrix2& covariance, const Transform3& transform,
       double locErrorScale = 1, const ViewConfig& viewConfig = s_viewParameter);
 
   /// Helper method to draw error cone of a direction
@@ -109,8 +109,8 @@ struct EventDataView3D {
   /// @param angularErrorScale The local Error scale
   /// @param viewConfig The visualization parameters
   static void drawCovarianceAngular(
-      IVisualization3D& helper, const Vector3D& position,
-      const Vector3D& direction, const ActsSymMatrixD<2>& covariance,
+      IVisualization3D& helper, const Vector3& position,
+      const Vector3& direction, const ActsSymMatrix<2>& covariance,
       double directionScale = 1, double angularErrorScale = 1,
       const ViewConfig& viewConfig = s_viewParameter);
 
@@ -136,7 +136,7 @@ struct EventDataView3D {
       const ViewConfig& surfConfig = s_viewSensitive) {
     if (surfConfig.visible) {
       GeometryView3D::drawSurface(helper, parameters.referenceSurface(), gctx,
-                                  Transform3D::Identity(), surfConfig);
+                                  Transform3::Identity(), surfConfig);
     }
 
     // Draw the parameter shaft and cone
@@ -146,7 +146,7 @@ struct EventDataView3D {
 
     ViewConfig lparConfig = parConfig;
     lparConfig.lineThickness = 0.05;
-    Vector3D parLength = p * momentumScale * direction;
+    Vector3 parLength = p * momentumScale * direction;
 
     GeometryView3D::drawArrowBackward(
         helper, position, position + 0.5 * parLength, 100., 1.0, lparConfig);
@@ -218,7 +218,7 @@ struct EventDataView3D {
       // First, if necessary, draw the surface
       if (surfaceConfig.visible) {
         GeometryView3D::drawSurface(helper, state.referenceSurface(), gctx,
-                                    Transform3D::Identity(), surfaceConfig);
+                                    Transform3::Identity(), surfaceConfig);
       }
 
       // Second, if necessary and present, draw the calibrated measurement (only
@@ -226,8 +226,8 @@ struct EventDataView3D {
       // @Todo: how to draw 1D measurement?
       if (measurementConfig.visible and state.hasCalibrated() and
           state.calibratedSize() == 2) {
-        const Vector2D& lposition = state.calibrated().template head<2>();
-        ActsSymMatrixD<2> covariance =
+        const Vector2& lposition = state.calibrated().template head<2>();
+        const SymMatrix2 covariance =
             state.calibratedCovariance().template topLeftCorner<2, 2>();
         drawCovarianceCartesian(helper, lposition, covariance,
                                 state.referenceSurface().transform(gctx),
