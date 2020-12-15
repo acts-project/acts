@@ -130,6 +130,23 @@ jobs:
           -DACTS_BUILD_UNITTESTS=ON
       - name: Build
         run: cmake --build build --
+  sycl:
+    runs-on: ubuntu-latest
+    container: ghcr.io/acts-project/ubuntu2004_sycl:v7
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configure
+        run: >
+          source /opt/intel/oneapi/setvars.sh
+          && cmake -B build -S .
+          -GNinja
+          -DCMAKE_CXX_COMPILER=/usr/bin/clang++
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
+          -DACTS_BUILD_PLUGIN_SYCL=ON
+          -DACTS_BUILD_UNITTESTS=ON
+      - name: Build
+        run: cmake --build build --
   docs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004:v7
