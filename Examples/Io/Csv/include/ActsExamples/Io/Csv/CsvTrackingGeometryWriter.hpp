@@ -40,6 +40,8 @@ class CsvTrackingGeometryWriter : public IWriter {
     std::string outputDir;
     /// Number of decimal digits for floating point precision in output.
     std::size_t outputPrecision = std::numeric_limits<float>::max_digits10;
+    /// Write sensitive surfaces
+    bool writeSensitives = true;
     /// Write boundary surfaces
     bool writeBoundaries = false;
     /// Split boundary surfaces
