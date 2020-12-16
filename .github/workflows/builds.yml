@@ -149,7 +149,9 @@ jobs:
           -DACTS_BUILD_PLUGIN_SYCL=ON
           -DACTS_BUILD_UNITTESTS=ON
       - name: Build
-        run: cmake --build build --
+        run: >
+          source /opt/intel/oneapi/setvars.sh
+          && cmake --build build --
   docs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004:v8
