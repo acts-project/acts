@@ -127,9 +127,8 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     std::unique_ptr<Acts::SurfaceArray> surArray(
         new Acts::SurfaceArray(surfaces[i]));
 
-    // Set the layer thickness to be larger than the detector element
-    layers[i] = Acts::PlaneLayer::create(trafo, rBounds, std::move(surArray),
-                                         thickness + 1._mm);
+    layers.push_back(
+        Acts::PlaneLayer::create(trafo, rBounds, std::move(surArray), 1._mm));
 
     auto mutableSurface = const_cast<Acts::Surface*>(surfaces[i].get());
     mutableSurface->associateLayer(*layers[i]);
