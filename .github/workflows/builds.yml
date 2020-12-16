@@ -137,7 +137,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Configure
         run: >
-          source /opt/intel/oneapi/setvars.sh
+          . /opt/intel/oneapi/setvars.sh
           && cmake -B build -S .
           -GNinja
           -DCMAKE_CXX_COMPILER=/usr/bin/clang++
