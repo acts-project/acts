@@ -143,7 +143,7 @@ jobs:
           source /opt/intel/oneapi/setvars.sh
           && cmake -B build -S .
           -GNinja
-          -DCMAKE_CXX_COMPILER=/usr/bin/clang++
+          -DCMAKE_CXX_COMPILER=clang++
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
           -DACTS_BUILD_PLUGIN_SYCL=ON
