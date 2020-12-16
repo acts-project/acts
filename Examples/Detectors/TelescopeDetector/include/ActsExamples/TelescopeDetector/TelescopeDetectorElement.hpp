@@ -85,7 +85,7 @@ class TelescopeDetectorElement : public Acts::IdentifiedDetectorElement {
 
   /// Retrieve the DigitizationModule
   const std::shared_ptr<const Acts::DigitizationModule> digitizationModule()
-      const;
+      const override;
 
   /// Return local to global transform associated with this identifier
   ///
