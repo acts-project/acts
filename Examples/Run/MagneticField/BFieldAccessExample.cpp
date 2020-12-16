@@ -123,10 +123,14 @@ int main(int argc, char* argv[]) {
   auto desc = ActsExamples::Options::makeDefaultOptions();
   ActsExamples::Options::addSequencerOptions(desc);
   ActsExamples::Options::addBFieldOptions(desc);
-  desc.add_options()("bf-phi-range",
-                     po::value<read_range>()->default_value({-M_PI, M_PI}),
-                     "range in which the phi parameter is generated.")(
-      "bf-theta-range", po::value<read_range>()->default_value({0., M_PI}),
+  desc.add_options()(
+      "bf-phi-range",
+      po::value<ActsExamples::Options::Doubles<2>>()->default_value(
+          {{-M_PI, M_PI}}),
+      "range in which the phi parameter is generated.")(
+      "bf-theta-range",
+      po::value<ActsExamples::Options::Doubles<2>>()->default_value(
+          {{0., M_PI}}),
       "range in which the eta parameter is generated.")(
       "bf-phisteps", po::value<size_t>()->default_value(1000),
       "number of steps for the phi parameter.")(
@@ -152,8 +156,8 @@ int main(int argc, char* argv[]) {
   auto bFieldVar = ActsExamples::Options::readBField(vm);
 
   // Get the phi and eta range
-  auto phir = vm["bf-phi-range"].as<read_range>();
-  auto thetar = vm["bf-theta-range"].as<read_range>();
+  auto phir = vm["bf-phi-range"].as<ActsExamples::Options::Doubles<2>>();
+  auto thetar = vm["bf-theta-range"].as<ActsExamples::Options::Doubles<2>>();
   // Get the granularity
   size_t phi_steps = vm["bf-phisteps"].as<size_t>();
   size_t theta_steps = vm["bf-thetasteps"].as<size_t>();

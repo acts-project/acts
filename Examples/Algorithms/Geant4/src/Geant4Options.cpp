@@ -41,11 +41,9 @@ void ActsExamples::Options::addGeant4Options(
       "The Y spread of the geantino vertex");
   opt("g4-vertex-sigmaZ", value<double>()->default_value(0.0),
       "The Z spread of the geantino vertex");
-  opt("g4-phi-range",
-      value<read_range>()->multitoken()->default_value({-M_PI, M_PI}),
+  opt("g4-phi-range", value<Doubles<2>>()->default_value({{-M_PI, M_PI}}),
       "Azimutal angle phi range for the geantino");
-  opt("g4-eta-range",
-      value<read_range>()->multitoken()->default_value({-5., 5.}),
+  opt("g4-eta-range", value<Doubles<2>>()->default_value({{-5., 5.}}),
       "Pseudorapidity eta range for the geantino");
   opt("g4-sampling-variable", value<std::string>()->default_value("theta"),
       "Variable from which the particle generation is uniform. Can be theta "
@@ -78,8 +76,8 @@ ActsExamples::Options::readGeantinoRecordingConfig(
   gRecConfig.generationConfig.vertexSigmaZ =
       variables["g4-vertex-sigmaZ"].as<double>();
 
-  read_range iphir = variables["g4-phi-range"].template as<read_range>();
-  read_range ietar = variables["g4-eta-range"].template as<read_range>();
+  auto iphir = variables["g4-phi-range"].template as<Doubles<2>>();
+  auto ietar = variables["g4-eta-range"].template as<Doubles<2>>();
 
   gRecConfig.generationConfig.phiRange = {iphir[0], iphir[1]};
   gRecConfig.generationConfig.etaRange = {ietar[0], ietar[1]};
