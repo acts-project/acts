@@ -133,11 +133,14 @@ jobs:
   sycl:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004_oneapi:v8
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v2
       - name: Configure
         run: >
-          . /opt/intel/oneapi/setvars.sh
+          source /opt/intel/oneapi/setvars.sh
           && cmake -B build -S .
           -GNinja
           -DCMAKE_CXX_COMPILER=/usr/bin/clang++
