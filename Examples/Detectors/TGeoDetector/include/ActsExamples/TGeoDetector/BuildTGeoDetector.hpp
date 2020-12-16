@@ -96,9 +96,9 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
   std::string rootFileName = vm["geo-tgeo-filename"].template as<std::string>();
 
   // Create a beam pipe if configured to do so
-  auto beamPipeParameters =
-      vm["geo-tgeo-bp-parameters"].template as<read_range>();
-  if (beamPipeParameters.size() > 2) {
+  if (vm.count("geo-tgeo-bp-parameters")) {
+    auto beamPipeParameters =
+        vm["geo-tgeo-bp-parameters"].template as<Options::Doubles<3>>();
     /// configure the beam pipe layer builder
     Acts::PassiveLayerBuilder::Config bplConfig;
     bplConfig.layerIdentification = "BeamPipe";
