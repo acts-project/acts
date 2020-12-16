@@ -28,12 +28,20 @@ auto TelescopeDetector::finalize(
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
   // --------------------------------------------------------------------------------
   DetectorElement::ContextType nominalContext;
-  auto layerRelDists = vm["geo-tele-layerdists"].template as<read_range>();
+  auto layerDists = vm["geo-tele-layerdists"].template as<read_range>();
   auto firstLayerCenter = vm["geo-tele-firstcenter"].template as<read_range>();
   auto boundary = vm["geo-tele-layerbounds"].template as<read_range>();
-  // Translate the value in unit mm
+  // Translate the value in unit of mm
   auto thickness = vm["geo-tele-layerthickness"].template as<double>() * 0.001;
   auto binValue = vm["geo-tele-alignaxis"].template as<size_t>();
+  // A few checks of the input values
+  for (const auto& dist : layerDists) {
+    if (dist <= 0) {
+      throw std::invalid_argument(
+          "The distance of other layers from the first layer should have "
+          "positive values.");
+    }
+  }
   if (firstLayerCenter.size() != 3) {
     throw std::invalid_argument(
         "Three parameters are needed for the first layer center.");
@@ -43,16 +51,16 @@ auto TelescopeDetector::finalize(
         "Two parameters are needed for the layer boundary.");
   }
   if (binValue > 2) {
-    throw std::invalid_argument("The axis value could be only 0, 1, or 2");
+    throw std::invalid_argument("The axis value could only be 0, 1, or 2.");
   }
 
   // Sort the provided distances
-  std::sort(layerRelDists.begin(), layerRelDists.end());
+  std::sort(layerDists.begin(), layerDists.end());
 
   /// Return the telescope detector
   TrackingGeometryPtr gGeometry =
       ActsExamples::Telescope::buildDetector<DetectorElement>(
-          nominalContext, detectorStore, layerRelDists,
+          nominalContext, detectorStore, layerDists,
           Acts::Vector3(firstLayerCenter[0], firstLayerCenter[1],
                         firstLayerCenter[2]),
           boundary, thickness, static_cast<Acts::BinningValue>(binValue));

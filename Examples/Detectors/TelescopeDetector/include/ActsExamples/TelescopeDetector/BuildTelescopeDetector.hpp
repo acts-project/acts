@@ -58,7 +58,7 @@ template <typename detector_element_t>
 std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     const typename detector_element_t::ContextType& gctx,
     std::vector<std::shared_ptr<detector_element_t>>& detectorStore,
-    const std::vector<double>& layerRelDists,
+    const std::vector<double>& layerDists,
     const Acts::Vector3& firstLayerCenter, const std::vector<double>& boundary,
     double thickness, Acts::BinningValue binValue = Acts::BinningValue::binX) {
   using namespace Acts::UnitLiterals;
@@ -89,11 +89,11 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   }
 
   // Set translation vectors
-  size_t nLayers = layerRelDists.size() + 1;
+  size_t nLayers = layerDists.size() + 1;
   std::vector<Acts::Vector3> translations;
   translations.reserve(nLayers);
   translations.push_back(firstLayerCenter);
-  for (const auto dist : layerRelDists) {
+  for (const auto dist : layerDists) {
     Acts::Vector3 shift(0, 0, 0);
     // This assumes the binValue is binX, binY or binZ
     shift[binValue] = dist;
@@ -140,7 +140,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
 
   // The volume bounds is a bit larger than the cubic with layers
   auto boundsVol = std::make_shared<const Acts::CuboidVolumeBounds>(
-      boundary[0] + 5._mm, boundary[1] + 5._mm, layerRelDists.back() + 10._mm);
+      boundary[0] + 5._mm, boundary[1] + 5._mm, layerDists.back() + 10._mm);
 
   Acts::LayerArrayCreator::Config lacConfig;
   Acts::LayerArrayCreator layArrCreator(
