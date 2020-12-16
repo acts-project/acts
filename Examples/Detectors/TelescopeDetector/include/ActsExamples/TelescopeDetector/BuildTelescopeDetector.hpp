@@ -58,9 +58,9 @@ template <typename detector_element_t>
 std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     const typename detector_element_t::ContextType& gctx,
     std::vector<std::shared_ptr<detector_element_t>>& detectorStore,
-    const std::vector<double>& layerDists,
-    const Acts::Vector3& firstLayerCenter, const std::vector<double>& boundary,
-    double thickness, Acts::BinningValue binValue = Acts::BinningValue::binX) {
+    const std::vector<double>& longShifts,
+    const std::vector<double>& tranShifts, const std::vector<double>& boundary,
+    double thickness, Acts::BinningValue binValue = Acts::BinningValue::binZ) {
   using namespace Acts::UnitLiterals;
 
   // The rectangle bounds
@@ -89,15 +89,27 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   }
 
   // Set translation vectors
-  size_t nLayers = layerDists.size() + 1;
+  size_t nLayers = longShifts.size();
   std::vector<Acts::Vector3> translations;
   translations.reserve(nLayers);
-  translations.push_back(firstLayerCenter);
-  for (const auto dist : layerDists) {
-    Acts::Vector3 shift(0, 0, 0);
+  // The transverse shift is the same for all planes
+  Acts::Vector3 tshift(0, 0, 0);
+  if (binValue == Acts::BinningValue::binX) {
+    tshift.y() = tranShifts[0];
+    tshift.z() = tranShifts[1];
+  } else if (binValue == Acts::BinningValue::binY) {
+    tshift.x() = tranShifts[0];
+    tshift.z() = tranShifts[1];
+  } else {
+    tshift.x() = tranShifts[0];
+    tshift.y() = tranShifts[1];
+  }
+  for (const auto& pos : longShifts) {
+    // The longidutinal shift
+    Acts::Vector3 lshift(0, 0, 0);
     // This assumes the binValue is binX, binY or binZ
-    shift[binValue] = dist;
-    translations.push_back(firstLayerCenter + shift);
+    lshift[binValue] = pos;
+    translations.push_back(tshift + lshift);
   }
 
   // Construct surfaces
@@ -139,8 +151,9 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   trafoVol.translation() = (translations.front() + translations.back()) * 0.5;
 
   // The volume bounds is a bit larger than the cubic with layers
+  auto longDist = longShifts.back() - longShifts.front();
   auto boundsVol = std::make_shared<const Acts::CuboidVolumeBounds>(
-      boundary[0] + 5._mm, boundary[1] + 5._mm, layerDists.back() + 10._mm);
+      boundary[0] + 5._mm, boundary[1] + 5._mm, longDist + 10._mm);
 
   Acts::LayerArrayCreator::Config lacConfig;
   Acts::LayerArrayCreator layArrCreator(
