@@ -160,30 +160,3 @@ void ActsExamples::Options::detail::printIntegers(std::ostream& os, size_t size,
                                                   const int* values) {
   print(os, size, values);
 }
-
-namespace {
-/// Helper function to print multiple elements in a container.
-template <typename Iterator>
-inline std::ostream& printContainer(std::ostream& os, Iterator begin,
-                                    Iterator end, const char* separator) {
-  for (auto it = begin; it != end; ++it) {
-    if (it != begin) {
-      os << separator;
-    }
-    os << *it;
-  }
-  return os;
-}
-}  // namespace
-
-std::ostream& std::operator<<(std::ostream& os, const read_series& vec) {
-  return printContainer(os, vec.begin(), vec.end(), " ");
-}
-
-std::ostream& std::operator<<(std::ostream& os, const read_range& vec) {
-  return printContainer(os, vec.begin(), vec.end(), " ");
-}
-
-std::ostream& std::operator<<(std::ostream& os, const read_strings& vec) {
-  return printContainer(os, vec.begin(), vec.end(), " ");
-}

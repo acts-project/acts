@@ -11,7 +11,6 @@
 #include <array>
 #include <iosfwd>
 #include <optional>
-#include <string>
 #include <vector>
 
 namespace ActsExamples {
@@ -171,18 +170,3 @@ inline std::ostream& operator<<(std::ostream& os,
 
 }  // namespace Options
 }  // namespace ActsExamples
-
-using read_series = std::vector<int>;
-using read_range = std::vector<double>;
-using read_strings = std::vector<std::string>;
-
-// Overloads must exist in the `std` namespace so ADL-lookup can find them.
-namespace std {
-
-std::ostream& operator<<(std::ostream& os, const read_series& vec);
-
-std::ostream& operator<<(std::ostream& os, const read_range& vec);
-
-std::ostream& operator<<(std::ostream& os, const read_strings& vec);
-
-}  // namespace std
