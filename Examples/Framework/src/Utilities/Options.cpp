@@ -65,23 +65,6 @@ std::ostream& ActsExamples::Options::operator<<(
   return os;
 }
 
-std::istream& ActsExamples::Options::operator>>(
-    std::istream& is, std::vector<ActsExamples::Options::Interval>& intervals) {
-  for (auto& interval : intervals) {
-    is >> interval;
-  }
-  return is;
-}
-
-std::ostream& ActsExamples::Options::operator<<(
-    std::ostream& os,
-    const std::vector<ActsExamples::Options::Interval>& intervals) {
-  for (auto& interval : intervals) {
-    os << interval;
-  }
-  return os;
-}
-
 // helper functions to parse and print multiple values
 
 namespace {
