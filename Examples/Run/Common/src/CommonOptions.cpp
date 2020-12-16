@@ -59,7 +59,7 @@ void ActsExamples::Options::addGeometryOptions(
       "The output log level for the layer building.")(
       "geo-volume-loglevel", value<size_t>()->default_value(3),
       "The output log level for the volume building.")(
-      "geo-detector-volume", value<read_strings>()->default_value({{}}),
+      "geo-detector-volume", value<std::vector<std::string>>(),
       "Sub detectors for the output writing");
 }
 
@@ -112,10 +112,10 @@ void ActsExamples::Options::addInputOptions(
   // Add specific options for this example
   opt.add_options()("input-dir", value<std::string>()->default_value(""),
                     "Input directory location.")(
-      "input-files", value<read_strings>()->multitoken()->default_value({}),
-      "Input files, space separated.")("input-root",
-                                       value<bool>()->default_value(false),
-                                       "Switch on to read '.root' file(s).")(
+      "input-files", value<std::vector<std::string>>(),
+      "Input files, can occur multiple times.")(
+      "input-root", value<bool>()->default_value(false),
+      "Switch on to read '.root' file(s).")(
       "input-csv", value<bool>()->default_value(false),
       "Switch on to read '.csv' file(s).")("input-obj",
                                            value<bool>()->default_value(false),
