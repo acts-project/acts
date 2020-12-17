@@ -18,8 +18,8 @@
 #include <boost/program_options.hpp>
 
 void TelescopeDetector::addOptions(
-    boost::program_options::options_description& opt) const {
-  ActsExamples::Options::addTelescopeGeometryOptions(opt);
+    boost::program_options::options_description& desc) const {
+  ActsExamples::Options::addTelescopeGeometryOptions(desc);
 }
 
 auto TelescopeDetector::finalize(

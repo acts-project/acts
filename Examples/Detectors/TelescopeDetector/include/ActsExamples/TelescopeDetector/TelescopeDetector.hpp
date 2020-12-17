@@ -25,7 +25,7 @@ struct TelescopeDetector : public ActsExamples::IBaseDetector {
   using DetectorElementPtr = std::shared_ptr<DetectorElement>;
   using DetectorStore = std::vector<DetectorElementPtr>;
 
-  /// The Store of the detector elements (lifetime: job)
+  /// The store of the detector elements (lifetime: job)
   DetectorStore detectorStore;
 
   void addOptions(
