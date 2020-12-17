@@ -31,7 +31,10 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
     // the seed vertexCollection
     Vertex<InputTrack_t>& seedVertex = *seedRes;
 
-    if(seedVertex.fullPosition()[eZ] == 0){ 
+    if(seedVertex.fullPosition()[eZ] == 
+       vertexingOptions.vertexConstraint.position().z()){
+      ACTS_DEBUG(
+          "No seed found anymore. Break and stop primary vertex finding."); 
       break;
     }
 
