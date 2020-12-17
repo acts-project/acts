@@ -25,11 +25,13 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/TGeoDetector/BuildTGeoDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetectorOptions.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 
 #include <list>
 #include <vector>
 
-#include "TGeoManager.h"
+#include <TGeoManager.h>
+#include <boost/program_options.hpp>
 
 namespace ActsExamples {
 namespace TGeo {
@@ -130,7 +132,7 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
   TGeoManager::Import(rootFileName.c_str());
 
   auto layerBuilderConfigs =
-      ActsExamples::Options::readTGeoLayerBuilderConfigs<variable_maps_t>(vm);
+      ActsExamples::Options::readTGeoLayerBuilderConfigs(vm);
 
   // remember the layer builders to collect the detector elements
   std::vector<std::shared_ptr<const Acts::TGeoLayerBuilder>> tgLayerBuilders;
