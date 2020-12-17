@@ -49,7 +49,7 @@ jobs:
 
   clang-tidy:
     runs-on: ubuntu-latest
-    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:v8
+    container: ghcr.io/acts-project/ubuntu2004:v8
     steps:
       - uses: actions/checkout@v2
       - name: Install clang-tidy
