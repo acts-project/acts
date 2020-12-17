@@ -53,7 +53,7 @@ namespace Telescope {
 /// @param positions is the offset w of different layers in the longitudinal
 /// direction
 /// @param offsets is the offset (u, v) of the layers in the transverse plane
-/// @param boundary is the plane rectangle bound size
+/// @param pSize is the plane size
 /// @param thickness is the material thickness of each layer
 /// @param binValue indicates which axis the planes normals are parallel to
 template <typename detector_element_t>
@@ -61,13 +61,13 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     const typename detector_element_t::ContextType& gctx,
     std::vector<std::shared_ptr<detector_element_t>>& detectorStore,
     const std::vector<double>& positions, const std::vector<double>& offsets,
-    const std::vector<double>& boundary, double thickness,
+    const std::vector<double>& pSize, double thickness,
     Acts::BinningValue binValue = Acts::BinningValue::binZ) {
   using namespace Acts::UnitLiterals;
 
   // The rectangle bounds
   const auto rBounds = std::make_shared<const Acts::RectangleBounds>(
-      Acts::RectangleBounds(boundary[0], boundary[1]));
+      Acts::RectangleBounds(pSize[0] * 0.5, pSize[1] * 0.5));
 
   // Material of the surfaces
   Acts::Material silicon = Acts::Material::fromMassDensity(
@@ -102,12 +102,12 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     // Create the detector element
     auto detElement = std::make_shared<TelescopeDetectorElement>(
         Identifier(i), std::make_shared<const Acts::Transform3>(trafo), rBounds,
-        1_um, surfaceMaterial);
-    // And remember the surface
+        1._um, surfaceMaterial);
+    // Get the surface
     auto surface = detElement->surface().getSharedPtr();
-    // Add it to the event store
+    // Add the detector element to the event store
     detectorStore.push_back(std::move(detElement));
-    // Construct the surface array
+    // Construct the surface array (one surface contained)
     std::unique_ptr<Acts::SurfaceArray> surArray(
         new Acts::SurfaceArray(surface));
     // Construct the layer
@@ -123,10 +123,10 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
                               (positions.front() + positions.back()) * 0.5);
   Acts::Transform3 trafoVol(rotation * transVol);
 
-  // The volume bounds is a bit larger than the cubic with layers
+  // The volume bounds is set to be a bit larger than cubic with planes
   auto length = positions.back() - positions.front();
   auto boundsVol = std::make_shared<const Acts::CuboidVolumeBounds>(
-      boundary[0] + 5._mm, boundary[1] + 5._mm, length + 10._mm);
+      pSize[0] * 0.5 + 5._mm, pSize[1] * 0.5 + 5._mm, length + 10._mm);
 
   Acts::LayerArrayCreator::Config lacConfig;
   Acts::LayerArrayCreator layArrCreator(
