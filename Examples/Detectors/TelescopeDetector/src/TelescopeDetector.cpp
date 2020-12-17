@@ -50,10 +50,9 @@ auto TelescopeDetector::finalize(
   std::sort(positions.begin(), positions.end());
 
   /// Return the telescope detector
-  TrackingGeometryPtr gGeometry =
-      ActsExamples::Telescope::buildDetector<DetectorElement>(
-          nominalContext, detectorStore, positions, offsets, pSize, thickness,
-          static_cast<Acts::BinningValue>(binValue));
+  TrackingGeometryPtr gGeometry = ActsExamples::Telescope::buildDetector(
+      nominalContext, detectorStore, positions, offsets, pSize, thickness,
+      static_cast<Acts::BinningValue>(binValue));
   ContextDecorators gContextDecorators = {};
   // return the pair of geometry and empty decorators
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
