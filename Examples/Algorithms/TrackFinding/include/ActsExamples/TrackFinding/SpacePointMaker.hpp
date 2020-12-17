@@ -55,6 +55,10 @@ class SpacePointMaker final : public BareAlgorithm {
     /// selection must not have duplicates.
     std::vector<Acts::GeometryIdentifier> geometrySelection = {
         // generic detector barrel layers
+        // the selection intentionally contains duplicates to demonstrate the
+        // automatic selection normalization. setting only the volume already
+        // selects all layers within it. the explicit layers in the selection
+        // should have no effect.
         Acts::GeometryIdentifier().setVolume(8),
         Acts::GeometryIdentifier().setVolume(8).setLayer(2),
         Acts::GeometryIdentifier().setVolume(8).setLayer(4),
