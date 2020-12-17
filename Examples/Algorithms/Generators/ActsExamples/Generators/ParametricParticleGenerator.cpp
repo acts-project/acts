@@ -66,7 +66,7 @@ ActsExamples::ParametricParticleGenerator::operator()(RandomEngine& rng) const {
     const double p = pDist(rng);
 
     // we already have sin/cos theta. they can be used directly to
-    Acts::Vector3D dir;
+    Acts::Vector3 dir;
     dir[Acts::eMom0] = sinTheta * std::cos(phi);
     dir[Acts::eMom1] = sinTheta * std::sin(phi);
     dir[Acts::eMom2] = cosTheta;

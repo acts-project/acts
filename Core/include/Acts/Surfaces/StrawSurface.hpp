@@ -29,21 +29,21 @@ class StrawSurface : public LineSurface {
   friend Surface;
 
  protected:
-  /// Constructor from Transform3D and bounds
+  /// Constructor from Transform3 and bounds
   ///
   /// @param transform the transform that positions the straw in the global
   /// frame
   /// @param radius is the straw radius
   /// @param halez is the half length in z
-  StrawSurface(const Transform3D& transform, double radius, double halez);
+  StrawSurface(const Transform3& transform, double radius, double halez);
 
-  /// Constructor from Transform3D and a shared bounds object
+  /// Constructor from Transform3 and a shared bounds object
   ///
   /// @param transform the transform that positions the straw in the global
   /// frame
   /// @param lbounds are the bounds describing the straw dimensions, can be
   /// optionally nullptr
-  StrawSurface(const Transform3D& transform,
+  StrawSurface(const Transform3& transform,
                std::shared_ptr<const LineBounds> lbounds = nullptr);
 
   /// Constructor from DetectorElementBase : Element proxy
@@ -65,7 +65,7 @@ class StrawSurface : public LineSurface {
   /// @param other is the source cone surface
   /// @param shift is the additional transfrom applied after copying
   StrawSurface(const GeometryContext& gctx, const StrawSurface& other,
-               const Transform3D& shift);
+               const Transform3& shift);
 
  public:
   ~StrawSurface() override = default;

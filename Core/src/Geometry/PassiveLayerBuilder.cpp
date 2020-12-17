@@ -67,8 +67,8 @@ const Acts::LayerVector Acts::PassiveLayerBuilder::endcapLayers(
           std::make_shared<const RadialBounds>(m_cfg.posnegLayerRmin.at(ipnl),
                                                m_cfg.posnegLayerRmax.at(ipnl));
       // create the layer transforms
-      const Transform3D eTransform(
-          Translation3D(0., 0., side * m_cfg.posnegLayerPositionZ.at(ipnl)));
+      const Transform3 eTransform(
+          Translation3(0., 0., side * m_cfg.posnegLayerPositionZ.at(ipnl)));
       // create the layers
       MutableLayerPtr eLayer = DiscLayer::create(
           eTransform, dBounds, nullptr, m_cfg.posnegLayerThickness.at(ipnl));
@@ -110,7 +110,7 @@ const Acts::LayerVector Acts::PassiveLayerBuilder::centralLayers(
           m_cfg.centralLayerRadii[icl], m_cfg.centralLayerHalflengthZ.at(icl));
       // create the layer
       MutableLayerPtr cLayer =
-          CylinderLayer::create(Transform3D::Identity(), cBounds, nullptr,
+          CylinderLayer::create(Transform3::Identity(), cBounds, nullptr,
                                 m_cfg.centralLayerThickness.at(icl));
       // assign the material to the layer surface
       std::shared_ptr<const ISurfaceMaterial> material = nullptr;

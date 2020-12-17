@@ -97,8 +97,8 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
 
       Acts::RecordedMaterialTrack rmTrack;
       // Fill the position and momentum
-      rmTrack.first.first = Acts::Vector3D(m_v_x, m_v_y, m_v_z);
-      rmTrack.first.second = Acts::Vector3D(m_v_px, m_v_py, m_v_pz);
+      rmTrack.first.first = Acts::Vector3(m_v_x, m_v_y, m_v_z);
+      rmTrack.first.second = Acts::Vector3(m_v_px, m_v_py, m_v_pz);
 
       // Fill the individual steps
       size_t msteps = m_step_length->size();
@@ -118,9 +118,9 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
         /// Fill the position & the material
         Acts::MaterialInteraction mInteraction;
         mInteraction.position =
-            Acts::Vector3D((*m_step_x)[is], (*m_step_y)[is], (*m_step_z)[is]);
-        mInteraction.direction = Acts::Vector3D(
-            (*m_step_dx)[is], (*m_step_dy)[is], (*m_step_dz)[is]);
+            Acts::Vector3((*m_step_x)[is], (*m_step_y)[is], (*m_step_z)[is]);
+        mInteraction.direction =
+            Acts::Vector3((*m_step_dx)[is], (*m_step_dy)[is], (*m_step_dz)[is]);
         mInteraction.materialSlab = Acts::MaterialSlab(
             Acts::Material::fromMassDensity(mX0, mL0, (*m_step_A)[is],
                                             (*m_step_Z)[is], (*m_step_rho)[is]),

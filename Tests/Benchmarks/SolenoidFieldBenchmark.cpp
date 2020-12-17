@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
   std::uniform_real_distribution<> zDist(1.5 * (-L / 2.), 1.5 * L / 2.);
   std::uniform_real_distribution<> rDist(0, R * 1.5);
   std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
-  auto genPos = [&]() -> Acts::Vector3D {
+  auto genPos = [&]() -> Acts::Vector3 {
     const double z = zDist(rng), r = rDist(rng), phi = phiDist(rng);
     return {r * std::cos(phi), r * std::sin(phi), z};
   };
@@ -152,8 +152,8 @@ int main(int argc, char* argv[]) {
   {
     std::cout << "Benchmarking advancing interpolated field lookup: "
               << std::flush;
-    Acts::Vector3D pos{0, 0, 0};
-    Acts::Vector3D dir{};
+    Acts::Vector3 pos{0, 0, 0};
+    Acts::Vector3 dir{};
     dir.setRandom();
     double h = 1e-3;
     const auto map_adv_result = Acts::Test::microBenchmark(
@@ -175,8 +175,8 @@ int main(int argc, char* argv[]) {
     std::cout << "Benchmarking cached advancing interpolated field lookup: "
               << std::flush;
     Cache cache{mctx};
-    Acts::Vector3D pos{0, 0, 0};
-    Acts::Vector3D dir{};
+    Acts::Vector3 pos{0, 0, 0};
+    Acts::Vector3 dir{};
     dir.setRandom();
     double h = 1e-3;
     const auto map_adv_result_cache = Acts::Test::microBenchmark(

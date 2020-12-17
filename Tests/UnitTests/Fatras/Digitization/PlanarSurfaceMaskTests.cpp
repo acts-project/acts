@@ -38,13 +38,13 @@ BOOST_AUTO_TEST_SUITE(Digitization)
 BOOST_AUTO_TEST_CASE(PlaneMaskRectangleBounds) {
   auto rectangleBounds = std::make_shared<Acts::RectangleBounds>(2., 3.5);
   auto planeSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      Acts::Transform3D::Identity(), rectangleBounds);
+      Acts::Transform3::Identity(), rectangleBounds);
 
   ActsFatras::PlanarSurfaceMask psm;
 
   /// Case one : one outside
-  std::array<Acts::Vector2D, 2> segment = {Acts::Vector2D(2.5, -4.5),
-                                           Acts::Vector2D(-1., -1.)};
+  std::array<Acts::Vector2, 2> segment = {Acts::Vector2(2.5, -4.5),
+                                          Acts::Vector2(-1., -1.)};
   auto clipped = psm.apply(*planeSurface, segment).value();
 
   CHECK_CLOSE_ABS(clipped[1].x(), segment[1].x(), Acts::s_epsilon);
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(PlaneMaskRectangleBounds) {
   CHECK_CLOSE_ABS(clipped[0].y(), -3.5, Acts::s_epsilon);
 
   /// Case two : two outside
-  segment = {Acts::Vector2D(1., 4.), Acts::Vector2D(3., 2.)};
+  segment = {Acts::Vector2(1., 4.), Acts::Vector2(3., 2.)};
   clipped = psm.apply(*planeSurface, segment).value();
 
   CHECK_CLOSE_ABS(clipped[1].x(), 2., Acts::s_epsilon);
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(PlaneMaskRectangleBounds) {
   CHECK_CLOSE_ABS(clipped[0].y(), 3.5, Acts::s_epsilon);
 
   /// Case two : both inside (most likely case, untouched)
-  segment = {Acts::Vector2D(-1., 0.5), Acts::Vector2D(0., 2.)};
+  segment = {Acts::Vector2(-1., 0.5), Acts::Vector2(0., 2.)};
   clipped = psm.apply(*planeSurface, segment).value();
 
   CHECK_CLOSE_ABS(clipped[0].x(), segment[0].x(), Acts::s_epsilon);
@@ -75,13 +75,13 @@ BOOST_AUTO_TEST_CASE(DiscMaskRadialBounds) {
   auto discRadial =
       std::make_shared<Acts::RadialBounds>(2., 7.5, M_PI_4, M_PI_2);
   auto discSurface = Acts::Surface::makeShared<Acts::DiscSurface>(
-      Acts::Transform3D::Identity(), discRadial);
+      Acts::Transform3::Identity(), discRadial);
 
   ActsFatras::PlanarSurfaceMask psm;
 
   /// Case one : one outside R min
-  std::array<Acts::Vector2D, 2> segment = {Acts::Vector2D(0.5, 1.8),
-                                           Acts::Vector2D(0.9, 6.)};
+  std::array<Acts::Vector2, 2> segment = {Acts::Vector2(0.5, 1.8),
+                                          Acts::Vector2(0.9, 6.)};
   auto clipped = psm.apply(*discSurface, segment).value();
 
   CHECK_CLOSE_ABS(clipped[1].x(), segment[1].x(), Acts::s_epsilon);
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(DiscMaskRadialBounds) {
                   5 * Acts::s_epsilon);
 
   /// Case two : one outside R max
-  segment = {Acts::Vector2D(0.5, 2.8), Acts::Vector2D(0.9, 8.5)};
+  segment = {Acts::Vector2(0.5, 2.8), Acts::Vector2(0.9, 8.5)};
   clipped = psm.apply(*discSurface, segment).value();
 
   CHECK_CLOSE_ABS(clipped[0].x(), segment[0].x(), Acts::s_epsilon);
@@ -99,20 +99,20 @@ BOOST_AUTO_TEST_CASE(DiscMaskRadialBounds) {
                   5 * Acts::s_epsilon);
 
   /// Case three : both outside R min / max
-  segment = {Acts::Vector2D(0.5, 1.8), Acts::Vector2D(0.9, 8.5)};
+  segment = {Acts::Vector2(0.5, 1.8), Acts::Vector2(0.9, 8.5)};
   clipped = psm.apply(*discSurface, segment).value();
   CHECK_CLOSE_ABS(Acts::VectorHelpers::perp(clipped[0]), 2.,
                   5 * Acts::s_epsilon);
   CHECK_CLOSE_ABS(Acts::VectorHelpers::perp(clipped[1]), 7.5,
                   5 * Acts::s_epsilon);
   /// Case four: outside phi min
-  segment = {Acts::Vector2D(2.8, 2.5), Acts::Vector2D(0., 3.5)};
+  segment = {Acts::Vector2(2.8, 2.5), Acts::Vector2(0., 3.5)};
   clipped = psm.apply(*discSurface, segment).value();
   CHECK_CLOSE_ABS(Acts::VectorHelpers::phi(clipped[0]), M_PI_4,
                   Acts::s_epsilon);
 
   /// Case five: outside phi max
-  segment = {Acts::Vector2D(0., 3.5), Acts::Vector2D(-8., 5.)};
+  segment = {Acts::Vector2(0., 3.5), Acts::Vector2(-8., 5.)};
   clipped = psm.apply(*discSurface, segment).value();
   CHECK_CLOSE_ABS(Acts::VectorHelpers::phi(clipped[1]), M_PI_2 + M_PI_4,
                   Acts::s_epsilon);
@@ -169,7 +169,7 @@ BOOST_DATA_TEST_CASE(RandomPlanarSurfaceMask,
     auto start = randomizer(startR0, startR1);
     auto end = randomizer(endR0, endR1);
 
-    std::array<Acts::Vector2D, 2> segment = {start, end};
+    std::array<Acts::Vector2, 2> segment = {start, end};
     auto clippedTest = psm.apply(*surface, segment);
     if (clippedTest.ok()) {
       auto clipped = clippedTest.value();

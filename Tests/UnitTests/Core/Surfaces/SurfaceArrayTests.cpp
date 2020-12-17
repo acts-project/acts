@@ -55,10 +55,10 @@ struct SurfaceArrayFixture {
     for (size_t i = 0; i < n; ++i) {
       double z = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
 
-      Transform3D trans;
+      Transform3 trans;
       trans.setIdentity();
-      trans.rotate(Eigen::AngleAxisd(i * phiStep + shift, Vector3D(0, 0, 1)));
-      trans.translate(Vector3D(r, 0, z));
+      trans.rotate(Eigen::AngleAxisd(i * phiStep + shift, Vector3(0, 0, 1)));
+      trans.translate(Vector3(r, 0, z));
 
       auto bounds = std::make_shared<const RectangleBounds>(2, 1);
       std::shared_ptr<const Surface> srf =
@@ -81,12 +81,12 @@ struct SurfaceArrayFixture {
     for (int i = 0; i < n; ++i) {
       double z = zbase;
 
-      Transform3D trans;
+      Transform3 trans;
       trans.setIdentity();
-      trans.rotate(Eigen::AngleAxisd(i * phiStep + shift, Vector3D(0, 0, 1)));
-      trans.translate(Vector3D(10, 0, z));
-      trans.rotate(Eigen::AngleAxisd(incl, Vector3D(0, 0, 1)));
-      trans.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3D(0, 1, 0)));
+      trans.rotate(Eigen::AngleAxisd(i * phiStep + shift, Vector3(0, 0, 1)));
+      trans.translate(Vector3(10, 0, z));
+      trans.rotate(Eigen::AngleAxisd(incl, Vector3(0, 0, 1)));
+      trans.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3(0, 1, 0)));
 
       auto bounds = std::make_shared<const RectangleBounds>(w, h);
       std::shared_ptr<const Surface> srf =
@@ -101,16 +101,16 @@ struct SurfaceArrayFixture {
   }
 
   SrfVec straightLineSurfaces(
-      size_t n = 10., double step = 3, const Vector3D& origin = {0, 0, 1.5},
-      const Transform3D& pretrans = Transform3D::Identity(),
-      const Vector3D& dir = {0, 0, 1}) {
+      size_t n = 10., double step = 3, const Vector3& origin = {0, 0, 1.5},
+      const Transform3& pretrans = Transform3::Identity(),
+      const Vector3& dir = {0, 0, 1}) {
     SrfVec res;
     for (size_t i = 0; i < n; ++i) {
-      Transform3D trans;
+      Transform3 trans;
       trans.setIdentity();
       trans.translate(origin + dir * step * i);
-      // trans.rotate(AngleAxis3D(M_PI/9., Vector3D(0, 0, 1)));
-      trans.rotate(AngleAxis3D(M_PI / 2., Vector3D(1, 0, 0)));
+      // trans.rotate(AngleAxis3(M_PI/9., Vector3(0, 0, 1)));
+      trans.rotate(AngleAxis3(M_PI / 2., Vector3(1, 0, 0)));
       trans = trans * pretrans;
 
       auto bounds = std::make_shared<const RectangleBounds>(2, 1.5);
@@ -154,8 +154,8 @@ struct SurfaceArrayFixture {
           dynamic_cast<const PlanarBounds*>(&srf->bounds());
 
       for (const auto& vtxloc : bounds->vertices()) {
-        Vector3D vtx =
-            srf->transform(tgContext) * Vector3D(vtxloc.x(), vtxloc.y(), 0);
+        Vector3 vtx =
+            srf->transform(tgContext) * Vector3(vtxloc.x(), vtxloc.y(), 0);
         os << "v " << vtx.x() << " " << vtx.y() << " " << vtx.z() << "\n";
       }
 
@@ -188,13 +188,13 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
       zAxis(-14, 14, 7u);
 
   double angleShift = 2 * M_PI / 30. / 2.;
-  auto transform = [angleShift](const Vector3D& pos) {
-    return Vector2D(phi(pos) + angleShift, pos.z());
+  auto transform = [angleShift](const Vector3& pos) {
+    return Vector2(phi(pos) + angleShift, pos.z());
   };
   double R = 10;
-  auto itransform = [angleShift, R](const Vector2D& loc) {
-    return Vector3D(R * std::cos(loc[0] - angleShift),
-                    R * std::sin(loc[0] - angleShift), loc[1]);
+  auto itransform = [angleShift, R](const Vector2& loc) {
+    return Vector3(R * std::cos(loc[0] - angleShift),
+                   R * std::sin(loc[0] - angleShift), loc[1]);
   };
 
   auto sl = std::make_unique<
@@ -208,7 +208,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
   sa.toStream(tgContext, std::cout);
 
   for (const auto& srf : brl) {
-    Vector3D ctr = srf->binningPosition(tgContext, binR);
+    Vector3 ctr = srf->binningPosition(tgContext, binR);
     std::vector<const Surface*> binContent = sa.at(ctr);
 
     BOOST_CHECK_EQUAL(binContent.size(), 1u);
@@ -216,7 +216,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
   }
 
   std::vector<const Surface*> neighbors =
-      sa.neighbors(itransform(Vector2D(0, 0)));
+      sa.neighbors(itransform(Vector2(0, 0)));
   BOOST_CHECK_EQUAL(neighbors.size(), 9u);
 
   auto sl2 = std::make_unique<
@@ -228,7 +228,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
   SurfaceArray sa2(std::move(sl2), brl);
   sa.toStream(tgContext, std::cout);
   for (const auto& srf : brl) {
-    Vector3D ctr = srf->binningPosition(tgContext, binR);
+    Vector3 ctr = srf->binningPosition(tgContext, binR);
     std::vector<const Surface*> binContent = sa2.at(ctr);
 
     BOOST_CHECK_EQUAL(binContent.size(), 1u);
@@ -239,11 +239,11 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
 BOOST_AUTO_TEST_CASE(SurfaceArray_singleElement) {
   double w = 3, h = 4;
   auto bounds = std::make_shared<const RectangleBounds>(w, h);
-  auto srf = Surface::makeShared<PlaneSurface>(Transform3D::Identity(), bounds);
+  auto srf = Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
 
   SurfaceArray sa(srf);
 
-  auto binContent = sa.at(Vector3D(42, 42, 42));
+  auto binContent = sa.at(Vector3(42, 42, 42));
   BOOST_CHECK_EQUAL(binContent.size(), 1u);
   BOOST_CHECK_EQUAL(binContent.at(0), srf.get());
   BOOST_CHECK_EQUAL(sa.surfaces().size(), 1u);

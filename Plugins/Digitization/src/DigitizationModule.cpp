@@ -68,7 +68,7 @@ const Acts::SurfacePtrVector Acts::DigitizationModule::segmentationSurfaces(
 }
 
 const Acts::SurfacePtrVector Acts::DigitizationModule::stepSurfaces(
-    const Vector3D& start, const Vector3D& end) const {
+    const Vector3& start, const Vector3& end) const {
   // prepare the return vector
   SurfacePtrVector stepSurfaces;
 

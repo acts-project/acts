@@ -25,9 +25,9 @@ struct IntersectionHelper2D {
   /// @param dir The Direction of intersection line
   ///
   /// @return the intersection point with status
-  static Intersection2D intersectSegment(const Vector2D& s0, const Vector2D& s1,
-                                         const Vector2D& origin,
-                                         const Vector2D& dir,
+  static Intersection2D intersectSegment(const Vector2& s0, const Vector2& s1,
+                                         const Vector2& origin,
+                                         const Vector2& dir,
                                          bool boundCheck = false);
 
   /// Intersect ellipses
@@ -40,8 +40,8 @@ struct IntersectionHelper2D {
   /// @return the intersection points
   static std::array<Intersection2D, 2> intersectEllipse(ActsScalar Rx,
                                                         ActsScalar Ry,
-                                                        const Vector2D& origin,
-                                                        const Vector2D& dir);
+                                                        const Vector2& origin,
+                                                        const Vector2& dir);
 
   /// Intersect the circle
   ///
@@ -51,7 +51,7 @@ struct IntersectionHelper2D {
   ///
   /// @return the intersection points
   static inline std::array<Intersection2D, 2> intersectCircle(
-      ActsScalar R, const Vector2D& origin, const Vector2D& dir) {
+      ActsScalar R, const Vector2& origin, const Vector2& dir) {
     return intersectEllipse(R, R, origin, dir);
   }
 
@@ -68,8 +68,8 @@ struct IntersectionHelper2D {
   /// @return the intersection points
   static Intersection2D intersectCircleSegment(ActsScalar R, ActsScalar phiMin,
                                                ActsScalar phiMax,
-                                               const Vector2D& origin,
-                                               const Vector2D& dir);
+                                               const Vector2& origin,
+                                               const Vector2& dir);
 
 };  // struct IntersectionHelper2D
 

@@ -206,7 +206,7 @@ int main(int argc, char** argv) {
   Acts::Seedfinder<SpacePoint, Acts::Cuda> seedfinder_cuda(config);
 
   // covariance tool, sets covariances per spacepoint as required
-  auto ct = [=](const SpacePoint& sp, float, float, float) -> Acts::Vector2D {
+  auto ct = [=](const SpacePoint& sp, float, float, float) -> Acts::Vector2 {
     return {sp.varianceR, sp.varianceZ};
   };
 

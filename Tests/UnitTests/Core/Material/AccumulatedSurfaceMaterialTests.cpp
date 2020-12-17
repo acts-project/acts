@@ -54,11 +54,11 @@ BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_fill_convert_0D) {
 
   AccumulatedSurfaceMaterial material0D{};
   // assign 2 one steps
-  material0D.accumulate(Vector2D{0., 0.}, one);
-  material0D.accumulate(Vector2D{0., 0.}, one);
+  material0D.accumulate(Vector2{0., 0.}, one);
+  material0D.accumulate(Vector2{0., 0.}, one);
   material0D.trackAverage();
   // assign 1 double step
-  material0D.accumulate(Vector3D(0., 0., 0.), two);
+  material0D.accumulate(Vector3(0., 0., 0.), two);
   material0D.trackAverage();
   // get the single matrix
   auto accMat0D = material0D.accumulatedMaterial();
@@ -84,22 +84,22 @@ BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_fill_convert_1D) {
 
   // assign in the different bins
   // event 0
-  material2D.accumulate(Vector2D{-0.5, -0.5}, one);
-  material2D.accumulate(Vector2D{0.5, -0.5}, two);
-  material2D.accumulate(Vector2D{-0.5, 0.5}, three);
-  material2D.accumulate(Vector2D{0.5, 0.5}, four);
+  material2D.accumulate(Vector2{-0.5, -0.5}, one);
+  material2D.accumulate(Vector2{0.5, -0.5}, two);
+  material2D.accumulate(Vector2{-0.5, 0.5}, three);
+  material2D.accumulate(Vector2{0.5, 0.5}, four);
   material2D.trackAverage();
   // event 1
-  material2D.accumulate(Vector2D{0.5, -0.5}, two);
-  material2D.accumulate(Vector2D{-0.5, 0.5}, three);
-  material2D.accumulate(Vector2D{0.5, 0.5}, four);
+  material2D.accumulate(Vector2{0.5, -0.5}, two);
+  material2D.accumulate(Vector2{-0.5, 0.5}, three);
+  material2D.accumulate(Vector2{0.5, 0.5}, four);
   material2D.trackAverage();
   // event 2
-  material2D.accumulate(Vector2D{-0.5, 0.5}, three);
-  material2D.accumulate(Vector2D{0.5, 0.5}, four);
+  material2D.accumulate(Vector2{-0.5, 0.5}, three);
+  material2D.accumulate(Vector2{0.5, 0.5}, four);
   material2D.trackAverage();
   // event 2
-  material2D.accumulate(Vector2D{0.5, 0.5}, four);
+  material2D.accumulate(Vector2{0.5, 0.5}, four);
   material2D.trackAverage();
   // get the single matrix
   auto accMat2D = material2D.accumulatedMaterial();

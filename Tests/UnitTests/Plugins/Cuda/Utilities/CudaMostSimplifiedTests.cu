@@ -26,7 +26,7 @@ namespace Test {
 
 BOOST_AUTO_TEST_SUITE(Utilities)
 BOOST_AUTO_TEST_CASE(CUDAOBJ_TEST) {
-  const int vecDim = 100;  // Vector Dimension
+  const int vecDim = 100;  // Vector imension
   const int nVec = 128;    // Number of vectors
 
   dim3 gridSize(1, 1, 1);

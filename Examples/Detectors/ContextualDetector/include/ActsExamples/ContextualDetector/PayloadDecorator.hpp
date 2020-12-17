@@ -73,7 +73,7 @@ class PayloadDecorator : public IContextDecorator {
   std::string m_name = "PayloadDecorator";
 
   /// Map of nominal transforms
-  std::vector<Acts::Transform3D> m_nominalStore;
+  std::vector<Acts::Transform3> m_nominalStore;
 
   /// Private access to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }

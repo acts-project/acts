@@ -104,7 +104,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
      0, 0, 0, 0, 0, 1_us;
   // clang-format on
   std::cout << cov.determinant() << std::endl;
-  CurvilinearTrackParameters start(Vector4D(0, 0, 0, time), phi, theta, q / p,
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, q / p,
                                    cov);
 
   // Action list and abort list

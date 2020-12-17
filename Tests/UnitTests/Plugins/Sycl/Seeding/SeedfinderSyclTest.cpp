@@ -17,6 +17,7 @@
 #include "Acts/Seeding/Seedfinder.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <chrono>
 #include <cmath>
@@ -143,12 +144,17 @@ auto main(int argc, char** argv) -> int {
   config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
       Acts::SeedFilter<SpacePoint>(Acts::SeedFilterConfig(), &atlasCuts));
 
+  const Acts::Logging::Level logLvl =
+      cmdlTool.csvFormat ? Acts::Logging::WARNING : Acts::Logging::INFO;
   Acts::Sycl::Seedfinder<SpacePoint> syclSeedfinder(
-      config, deviceAtlasCuts, Acts::Sycl::QueueWrapper(cmdlTool.deviceName));
+      config, deviceAtlasCuts,
+      Acts::Sycl::QueueWrapper(
+          cmdlTool.deviceName,
+          Acts::getDefaultLogger("Sycl::QueueWrapper", logLvl)));
   Acts::Seedfinder<SpacePoint> normalSeedfinder(config);
   auto covarianceTool = [=](const SpacePoint& sp, float /*unused*/,
                             float /*unused*/,
-                            float_t /*unused*/) -> Acts::Vector2D {
+                            float_t /*unused*/) -> Acts::Vector2 {
     return {sp.varianceR, sp.varianceZ};
   };
   std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =

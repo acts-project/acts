@@ -126,7 +126,7 @@ class Layer : public virtual GeometryObject {
   /// @param bcheck is the boundary check directive
   ///
   /// @return boolean that indicates success of the operation
-  virtual bool isOnLayer(const GeometryContext& gctx, const Vector3D& position,
+  virtual bool isOnLayer(const GeometryContext& gctx, const Vector3& position,
                          const BoundaryCheck& bcheck = true) const;
 
   /// Return method for the approach descriptor, can be nullptr
@@ -168,8 +168,8 @@ class Layer : public virtual GeometryObject {
   /// @return list of intersection of surfaces on the layer
   template <typename options_t>
   std::vector<SurfaceIntersection> compatibleSurfaces(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, const options_t& options) const;
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const options_t& options) const;
 
   /// Surface seen on approach
   ///
@@ -186,8 +186,8 @@ class Layer : public virtual GeometryObject {
   /// @return the Surface intersection of the approach surface
   template <typename options_t>
   const SurfaceIntersection surfaceOnApproach(const GeometryContext& gctx,
-                                              const Vector3D& position,
-                                              const Vector3D& direction,
+                                              const Vector3& position,
+                                              const Vector3& direction,
                                               const options_t& options) const;
 
   /// Fast navigation to next layer
@@ -197,8 +197,8 @@ class Layer : public virtual GeometryObject {
   /// @param direction is the direction for the search
   ///
   /// @return the pointer to the next layer
-  const Layer* nextLayer(const GeometryContext& gctx, const Vector3D& position,
-                         const Vector3D& direction) const;
+  const Layer* nextLayer(const GeometryContext& gctx, const Vector3& position,
+                         const Vector3& direction) const;
 
   /// Get the confining TrackingVolume
   ///

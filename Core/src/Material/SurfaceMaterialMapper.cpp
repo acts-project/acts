@@ -250,7 +250,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
   // Use those to minimize the lookup
   GeometryIdentifier lastID = GeometryIdentifier();
   GeometryIdentifier currentID = GeometryIdentifier();
-  Vector3D currentPos(0., 0., 0);
+  Vector3 currentPos(0., 0., 0);
   double currentPathCorrection = 0.;
   auto currentAccMaterial = mState.accumulatedMaterial.end();
 

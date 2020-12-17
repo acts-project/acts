@@ -43,7 +43,7 @@ using RecordedMaterial = Acts::MaterialInteractor::result_type;
 /// - this is start:  position, start momentum
 ///   and the Recorded material
 using RecordedMaterialTrack =
-    std::pair<std::pair<Acts::Vector3D, Acts::Vector3D>, RecordedMaterial>;
+    std::pair<std::pair<Acts::Vector3, Acts::Vector3>, RecordedMaterial>;
 
 /// Finally the output of the propagation test
 using PropagationOutput =

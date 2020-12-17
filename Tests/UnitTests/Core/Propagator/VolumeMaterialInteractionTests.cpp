@@ -24,7 +24,7 @@ namespace Test {
 
 /// @brief Simplified stepper state
 struct StepperState {
-  Vector3D pos, dir;
+  Vector3 pos, dir;
   double t, p, q;
   bool covTransport;
   NavigationDirection navDir;
@@ -48,11 +48,11 @@ struct State {
 struct Stepper {
   Stepper() = default;
 
-  Vector3D position(const StepperState& state) const { return state.pos; }
+  Vector3 position(const StepperState& state) const { return state.pos; }
 
   double time(const StepperState& state) const { return state.t; }
 
-  Vector3D direction(const StepperState& state) const { return state.dir; }
+  Vector3 direction(const StepperState& state) const { return state.dir; }
 
   double momentum(const StepperState& state) const { return state.p; }
 
@@ -61,7 +61,7 @@ struct Stepper {
 
 BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   // Create a Tracking Volume
-  auto htrans = Transform3D(Translation3D{-10., -10., 0.});
+  auto htrans = Transform3(Translation3{-10., -10., 0.});
   auto bound = std::make_shared<const CuboidVolumeBounds>(1_m, 1_m, 1_m);
   auto mat = makeSilicon();
   auto volMat = std::make_shared<const HomogeneousVolumeMaterial>(mat);
@@ -69,8 +69,8 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
 
   // Create a propagator state
   State state;
-  state.stepping.pos = Vector3D(1., 2., 3.);
-  state.stepping.dir = Vector3D(4., 5., 6.);
+  state.stepping.pos = Vector3(1., 2., 3.);
+  state.stepping.dir = Vector3(4., 5., 6.);
   state.stepping.t = 7.;
   state.stepping.p = 8.;
   state.stepping.q = 9.;

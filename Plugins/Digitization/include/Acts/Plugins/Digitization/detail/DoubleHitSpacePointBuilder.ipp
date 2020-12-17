@@ -17,19 +17,19 @@ namespace detail {
 /// points
 struct SpacePointParameters {
   /// Vector pointing from bottom to top end of first SDE
-  Vector3D q;
+  Vector3 q;
   /// Vector pointing from bottom to top end of second SDE
-  Vector3D r;
+  Vector3 r;
   /// Twice the vector pointing from vertex to to midpoint of first SDE
-  Vector3D s;
+  Vector3 s;
   /// Twice the vector pointing from vertex to to midpoint of second SDE
-  Vector3D t;
+  Vector3 t;
   /// Cross product between SpacePointParameters::q and
   /// SpacePointParameters::s
-  Vector3D qs;
+  Vector3 qs;
   /// Cross product between SpacePointParameters::r and
   /// SpacePointParameters::t
-  Vector3D rt;
+  Vector3 rt;
   /// Magnitude of SpacePointParameters::q
   double qmag = 0.;
   /// Parameter that determines the hit position on the first SDE
@@ -53,8 +53,8 @@ struct SpacePointParameters {
 /// @param [in] maxAnglePhi2 Maximum squared phi angle between two clusters
 ///
 /// @return The squared sum within configuration parameters, otherwise -1
-double differenceOfClustersChecked(const Vector3D& pos1, const Vector3D& pos2,
-                                   const Vector3D& posVertex,
+double differenceOfClustersChecked(const Vector3& pos1, const Vector3& pos2,
+                                   const Vector3& posVertex,
                                    const double maxDistance,
                                    const double maxAngleTheta2,
                                    const double maxAnglePhi2) {
@@ -93,8 +93,8 @@ double differenceOfClustersChecked(const Vector3D& pos1, const Vector3D& pos2,
 /// @param [in] segment Segmentation of the detector element
 ///
 /// @return Pair containing the top and bottom end
-std::pair<Vector2D, Vector2D> findLocalTopAndBottomEnd(
-    const Vector2D& local, const CartesianSegmentation* segment) {
+std::pair<Vector2, Vector2> findLocalTopAndBottomEnd(
+    const Vector2& local, const CartesianSegmentation* segment) {
   auto& binData = segment->binUtility().binningData();
   auto& boundariesX = binData[0].boundaries();
   auto& boundariesY = binData[1].boundaries();
@@ -104,7 +104,7 @@ std::pair<Vector2D, Vector2D> findLocalTopAndBottomEnd(
   size_t binY = binData[1].searchLocal(local);
 
   // Storage of the local top (first) and bottom (second) end
-  std::pair<Vector2D, Vector2D> topBottomLocal;
+  std::pair<Vector2, Vector2> topBottomLocal;
 
   if (boundariesX[binX + 1] - boundariesX[binX] <
       boundariesY[binY + 1] - boundariesY[binY]) {
@@ -133,8 +133,8 @@ std::pair<Vector2D, Vector2D> findLocalTopAndBottomEnd(
 /// 1. if it failed
 /// @note The meaning of the parameter is explained in more detail in the
 /// function body
-double calcPerpendicularProjection(const Vector3D& a, const Vector3D& c,
-                                   const Vector3D& q, const Vector3D& r) {
+double calcPerpendicularProjection(const Vector3& a, const Vector3& c,
+                                   const Vector3& q, const Vector3& r) {
   /// This approach assumes that no vertex is available. This option aims to
   /// approximate the space points from cosmic data.
   /// The underlying assumption is that the best point is given by the closest
@@ -145,7 +145,7 @@ double calcPerpendicularProjection(const Vector3D& a, const Vector3D& c,
   /// lambda1 * r.
   /// x get resolved by resolving lambda0 from the condition that |x-y| is the
   /// shortest distance between two skew lines.
-  Vector3D ac = c - a;
+  Vector3 ac = c - a;
   double qr = q.dot(r);
   double denom = q.dot(q) - qr * qr;
 
@@ -260,9 +260,9 @@ bool recoverSpacePoint(SpacePointParameters& spaPoPa,
 /// detector element length
 ///
 /// @return Boolean statement whether the space point calculation was succesful
-bool calculateSpacePoint(const std::pair<Vector3D, Vector3D>& stripEnds1,
-                         const std::pair<Vector3D, Vector3D>& stripEnds2,
-                         const Vector3D& posVertex,
+bool calculateSpacePoint(const std::pair<Vector3, Vector3>& stripEnds1,
+                         const std::pair<Vector3, Vector3>& stripEnds2,
+                         const Vector3& posVertex,
                          SpacePointParameters& spaPoPa,
                          const double stripLengthTolerance) {
   /// The following algorithm is meant for finding the position on the first
@@ -314,23 +314,23 @@ Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::SpacePointBuilder(
     : m_cfg(std::move(cfg)) {}
 
 template <typename Cluster>
-Acts::Vector2D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::localCoords(
+Acts::Vector2 Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::localCoords(
     const Cluster& cluster) const {
   // Local position information
   auto par = cluster.parameters();
-  Acts::Vector2D local(par[Acts::BoundIndices::eBoundLoc0],
-                       par[Acts::BoundIndices::eBoundLoc1]);
+  Acts::Vector2 local(par[Acts::BoundIndices::eBoundLoc0],
+                      par[Acts::BoundIndices::eBoundLoc1]);
   return local;
 }
 
 template <typename Cluster>
-Acts::Vector3D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
+Acts::Vector3 Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
     const GeometryContext& gctx, const Cluster& cluster) const {
   // Receive corresponding surface
   auto& clusterSurface = cluster.referenceObject();
 
   // Transform local into global position information
-  Vector3D mom(1., 1., 1.);
+  Vector3 mom(1., 1., 1.);
   return clusterSurface.localToGlobal(gctx, localCoords(cluster), mom);
 }
 
@@ -383,25 +383,24 @@ void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::makeClusterPairs(
 }
 
 template <typename Cluster>
-std::pair<Acts::Vector3D, Acts::Vector3D>
+std::pair<Acts::Vector3, Acts::Vector3>
 Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::endsOfStrip(
     const GeometryContext& gctx, const Cluster& cluster) const {
   // Calculate the local coordinates of the cluster
-  const Acts::Vector2D local = localCoords(cluster);
+  const Acts::Vector2 local = localCoords(cluster);
 
   // Receive the binning
   auto segment = dynamic_cast<const Acts::CartesianSegmentation*>(
       &(cluster.digitizationModule()->segmentation()));
 
-  std::pair<Vector2D, Vector2D> topBottomLocal =
+  std::pair<Vector2, Vector2> topBottomLocal =
       detail::findLocalTopAndBottomEnd(local, segment);
 
   // Calculate the global coordinates of the top and bottom end of the strip
-  Acts::Vector3D mom(1., 1., 1);  // mom is a dummy variable
+  Acts::Vector3 mom(1., 1., 1);  // mom is a dummy variable
   const auto* sur = &cluster.referenceObject();
-  Acts::Vector3D topGlobal =
-      sur->localToGlobal(gctx, topBottomLocal.first, mom);
-  Acts::Vector3D bottomGlobal =
+  Acts::Vector3 topGlobal = sur->localToGlobal(gctx, topBottomLocal.first, mom);
+  Acts::Vector3 bottomGlobal =
       sur->localToGlobal(gctx, topBottomLocal.second, mom);
 
   // Return the top and bottom end of the strip in global coordinates
@@ -435,7 +434,7 @@ void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
         Acts::SpacePoint<Cluster> sp;
         sp.clusterModule.push_back(cp.first);
         sp.clusterModule.push_back(cp.second);
-        Vector3D pos = ends1.first + resultPerpProj * spaPoPa.q;
+        Vector3 pos = ends1.first + resultPerpProj * spaPoPa.q;
         sp.vector = pos;
         spacePoints.push_back(std::move(sp));
         continue;
@@ -448,7 +447,7 @@ void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
       Acts::SpacePoint<Cluster> sp;
       sp.clusterModule.push_back(cp.first);
       sp.clusterModule.push_back(cp.second);
-      Vector3D pos = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
+      Vector3 pos = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
       // TODO: Clusters should deliver timestamp
       sp.vector = pos;
       spacePoints.push_back(std::move(sp));
@@ -464,7 +463,7 @@ void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
         Acts::SpacePoint<Cluster> sp;
         sp.clusterModule.push_back(cp.first);
         sp.clusterModule.push_back(cp.second);
-        Vector3D pos =
+        Vector3 pos =
             0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
         sp.vector = pos;
         spacePoints.push_back(std::move(sp));

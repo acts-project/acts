@@ -63,7 +63,7 @@ class TrackingGeometry {
   ///
   /// @return plain pointer to the lowest TrackingVolume
   const TrackingVolume* lowestTrackingVolume(const GeometryContext& gctx,
-                                             const Vector3D& gp) const;
+                                             const Vector3& gp) const;
 
   /// Forward the associated Layer information
   ///
@@ -72,7 +72,7 @@ class TrackingGeometry {
   ///
   /// @return plain pointer to assocaiated layer
   const Layer* associatedLayer(const GeometryContext& gctx,
-                               const Vector3D& gp) const;
+                               const Vector3& gp) const;
 
   /// Register the beam tube
   ///

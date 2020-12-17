@@ -76,20 +76,20 @@ class CartesianSegmentation : public Segmentation {
                                   double lorentzAngle = 0.) const final;
 
   /// @copydoc Segmentation::cell
-  DigitizationCell cell(const Vector3D& position) const final;
+  DigitizationCell cell(const Vector3& position) const final;
 
   /// @copydoc Segmentation::cell
-  DigitizationCell cell(const Vector2D& position) const final;
+  DigitizationCell cell(const Vector2& position) const final;
 
   /// @copydoc Segmentation::cellPosition
-  Vector2D cellPosition(const DigitizationCell& dCell) const final;
+  Vector2 cellPosition(const DigitizationCell& dCell) const final;
 
   /// Fill the associated digitsation cell from this start and end position
   /// correct for lorentz effect if needed
   ///
   /// @copydoc Segmentation::digitizationStep
-  DigitizationStep digitizationStep(const Vector3D& startStep,
-                                    const Vector3D& endStep,
+  DigitizationStep digitizationStep(const Vector3& startStep,
+                                    const Vector3& endStep,
                                     double halfThickness,
                                     int readoutDirection = 1,
                                     double lorentzAngle = 0.) const final;
@@ -128,13 +128,13 @@ DigitizationCell CartesianSegmentation::cellT(const T& position) const {
 }
 
 inline DigitizationCell CartesianSegmentation::cell(
-    const Vector3D& position) const {
-  return cellT<Vector3D>(position);
+    const Vector3& position) const {
+  return cellT<Vector3>(position);
 }
 
 inline DigitizationCell CartesianSegmentation::cell(
-    const Vector2D& position) const {
-  return cellT<Vector2D>(position);
+    const Vector2& position) const {
+  return cellT<Vector2>(position);
 }
 
 inline std::pair<double, double> CartesianSegmentation::pitch() const {

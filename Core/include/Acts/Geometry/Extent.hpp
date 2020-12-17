@@ -111,7 +111,7 @@ struct Extent {
 
   /// Check the vertex
   /// @param vtx the Vertex to be checked
-  void check(const Vector3D& vtx) {
+  void check(const Vector3& vtx) {
     // min/max value check
     auto minMax = [&](BinningValue bval, double value) -> void {
       ranges[bval].first = std::min(value, ranges[bval].first);

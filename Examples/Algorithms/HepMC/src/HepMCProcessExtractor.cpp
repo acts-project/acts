@@ -132,7 +132,7 @@ std::vector<ActsExamples::SimParticle> selectOutgoingParticles(
       // Build an Acts particle out of the data
       ActsExamples::SimParticle simParticle(barcode, pid);
       simParticle.setPosition4(pos4.x(), pos4.y(), pos4.z(), pos4.t());
-      Acts::Vector3D mom3(mom4[0], mom4[1], mom4[2]);
+      Acts::Vector3 mom3(mom4[0], mom4[1], mom4[2]);
       simParticle.setDirection(mom3.normalized());
       simParticle.setAbsMomentum(mom3.norm());
 

@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_CylinderSurface) {
 
     // Check if the surface is the (negative) identity
     GeometryView3D::drawSurface(objVis, *cylinder, tgContext);
-    const Vector3D center = cylinder->center(tgContext);
+    const Vector3 center = cylinder->center(tgContext);
     GeometryView3D::drawArrowForward(
         objVis, center, center + 1.2 * bR * rotation.col(0), 4., 2.5, red);
     GeometryView3D::drawArrowForward(
@@ -180,14 +180,13 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
 
     // Check if the surface is the (negative) identity
     GeometryView3D::drawSurface(objVis, *disc, tgContext);
-    const Vector3D center = disc->center(tgContext);
+    const Vector3 center = disc->center(tgContext);
     GeometryView3D::drawArrowForward(
-        objVis, center, center + 1.2 * rmax * Vector3D::UnitX(), 4., 2.5, red);
-    GeometryView3D::drawArrowForward(objVis, center,
-                                     center + 1.2 * rmax * Vector3D::UnitY(),
-                                     4., 2.5, green);
+        objVis, center, center + 1.2 * rmax * Vector3::UnitX(), 4., 2.5, red);
     GeometryView3D::drawArrowForward(
-        objVis, center, center + 1.2 * hz * Vector3D::UnitZ(), 4., 2.5, blue);
+        objVis, center, center + 1.2 * rmax * Vector3::UnitY(), 4., 2.5, green);
+    GeometryView3D::drawArrowForward(
+        objVis, center, center + 1.2 * hz * Vector3::UnitZ(), 4., 2.5, blue);
     objVis.write("TGeoConversion_TGeoTube_DiscSurface_" +
                  std::to_string(idisc));
     objVis.clear();
@@ -211,13 +210,13 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
       CHECK_CLOSE_ABS(mphi, 0., s_epsilon);
       GeometryView3D::drawSurface(objVis, *discSegment, tgContext);
       GeometryView3D::drawArrowForward(objVis, center,
-                                       center + 1.2 * bmaxr * Vector3D::UnitX(),
+                                       center + 1.2 * bmaxr * Vector3::UnitX(),
                                        4., 2.5, red);
       GeometryView3D::drawArrowForward(objVis, center,
-                                       center + 1.2 * bmaxr * Vector3D::UnitY(),
+                                       center + 1.2 * bmaxr * Vector3::UnitY(),
                                        4., 2.5, green);
       GeometryView3D::drawArrowForward(
-          objVis, center, center + 1.2 * hz * Vector3D::UnitZ(), 4., 2.5, blue);
+          objVis, center, center + 1.2 * hz * Vector3::UnitZ(), 4., 2.5, blue);
       objVis.write("TGeoConversion_TGeoTube_DiscSegmentSurface_" +
                    std::to_string(idisc));
       objVis.clear();

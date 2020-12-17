@@ -47,7 +47,7 @@ namespace Generic {
 /// @param moduleHalfLength is the module length (longitudinal)
 /// @param lOverlap is the overlap of the modules (longitudinal)
 /// @binningSchema is the way the bins are laid out rphi x z
-std::vector<Acts::Vector3D> modulePositionsCylinder(
+std::vector<Acts::Vector3> modulePositionsCylinder(
     double radius, double zStagger, double moduleHalfLength, double lOverlap,
     const std::pair<int, int>& binningSchema);
 
@@ -57,10 +57,10 @@ std::vector<Acts::Vector3D> modulePositionsCylinder(
 /// @param phiStagger is the radial staggering along phi
 /// @param lOverlap is the overlap of the modules
 /// @parm nPhiBins is the number of bins in phi
-std::vector<Acts::Vector3D> modulePositionsRing(double z, double radius,
-                                                double phiStagger,
-                                                double phiSubStagger,
-                                                int nPhiBins);
+std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
+                                               double phiStagger,
+                                               double phiSubStagger,
+                                               int nPhiBins);
 
 /// Helper method for positioning
 /// @param z is the nominal z posiiton of the dis
@@ -72,7 +72,7 @@ std::vector<Acts::Vector3D> modulePositionsRing(double z, double radius,
 /// @param outerRadius is the outer Radius for the disc
 /// @param discBinning is the binning setup in r, phi
 /// @param moduleHalfLength is pair of phibins and module length
-std::vector<std::vector<Acts::Vector3D>> modulePositionsDisc(
+std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
     double z, double ringStagger, std::vector<double> phiStagger,
     std::vector<double> phiSubStagger, double innerRadius, double outerRadius,
     const std::vector<size_t>& discBinning,
@@ -270,7 +270,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   pplConfig.centralModuleBacksideStereo = {};
   pplConfig.centralModuleBacksideGap = {};
   // mPositions
-  std::vector<std::vector<Acts::Vector3D>> pplCentralModulePositions;
+  std::vector<std::vector<Acts::Vector3>> pplCentralModulePositions;
   for (size_t plb = 0; plb < pplConfig.centralLayerRadii.size(); ++plb) {
     // call the helper function
     pplCentralModulePositions.push_back(
@@ -330,8 +330,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   pplConfig.posnegModuleBacksideStereo = {};
   pplConfig.posnegModuleBacksideGap = {};
   // mPositions
-  std::vector<std::vector<std::vector<Acts::Vector3D>>>
-      pplPosnegModulePositions;
+  std::vector<std::vector<std::vector<Acts::Vector3>>> pplPosnegModulePositions;
   for (size_t id = 0; id < pplConfig.posnegLayerPositionsZ.size(); ++id) {
     pplPosnegModulePositions.push_back(modulePositionsDisc(
         pplConfig.posnegLayerPositionsZ[id], 0.0, {4.0, 4.0}, {0.5, 0.}, 30.,
@@ -492,7 +491,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     ssplConfig.centralModuleBacksideStereo = {};
     ssplConfig.centralModuleBacksideGap = {};
     // mPositions
-    std::vector<std::vector<Acts::Vector3D>> ssplCentralModulePositions;
+    std::vector<std::vector<Acts::Vector3>> ssplCentralModulePositions;
     for (size_t sslb = 0; sslb < ssplConfig.centralLayerRadii.size(); ++sslb) {
       // call the helper function
       ssplCentralModulePositions.push_back(
@@ -557,7 +556,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     ssplConfig.posnegModuleBacksideGap = {};
 
     // mPositions
-    std::vector<std::vector<std::vector<Acts::Vector3D>>>
+    std::vector<std::vector<std::vector<Acts::Vector3>>>
         ssplPosnegModulePositions;
     for (size_t id = 0; id < ssplConfig.posnegLayerPositionsZ.size(); ++id) {
       ssplPosnegModulePositions.push_back(modulePositionsDisc(
@@ -683,7 +682,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     lsplConfig.centralModuleBacksideStereo = {};
     lsplConfig.centralModuleBacksideGap = {};
     // mPositions
-    std::vector<std::vector<Acts::Vector3D>> lslbCentralModulePositions;
+    std::vector<std::vector<Acts::Vector3>> lslbCentralModulePositions;
     for (size_t lslb = 0; lslb < lsplConfig.centralLayerRadii.size(); ++lslb) {
       // call the helper function
       lslbCentralModulePositions.push_back(
@@ -743,7 +742,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     lsplConfig.posnegModuleBacksideGap = {};
 
     // mPositions
-    std::vector<std::vector<std::vector<Acts::Vector3D>>>
+    std::vector<std::vector<std::vector<Acts::Vector3>>>
         lssbPosnegModulePositions;
     for (size_t id = 0; id < lsplConfig.posnegLayerPositionsZ.size(); ++id) {
       lssbPosnegModulePositions.push_back(modulePositionsDisc(
