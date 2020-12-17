@@ -151,7 +151,7 @@ int runSeedingExample(int argc, char* argv[],
   tfPerfCfg.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
   tfPerfCfg.outputDir = outputDir;
-  tfPerfCfg.outputFilename = "performance-trees.root";
+  tfPerfCfg.outputFilename = "performance_seeding_trees.root";
   sequencer.addWriter(
       std::make_shared<TrackFinderPerformanceWriter>(tfPerfCfg, logLevel));
 
@@ -161,7 +161,7 @@ int runSeedingExample(int argc, char* argv[],
   seedPerfCfg.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
   seedPerfCfg.outputDir = outputDir;
-  seedPerfCfg.outputFilename = "performance-hists.root";
+  seedPerfCfg.outputFilename = "performance_seeding_hists.root";
   sequencer.addWriter(
       std::make_shared<SeedingPerformanceWriter>(seedPerfCfg, logLevel));
 
