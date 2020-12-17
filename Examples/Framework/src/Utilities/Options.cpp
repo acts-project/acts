@@ -95,7 +95,7 @@ void parseVariable(std::istream& is, std::vector<value_t>& values,
 template <typename value_t, typename converter_t>
 void parseFixed(std::istream& is, size_t size, value_t* values,
                 converter_t&& convert) {
-  // reserve space for the expecte number of values
+  // reserve space for the expected number of values
   std::vector<value_t> tmp(size, 0);
   parseVariable(is, tmp, std::forward<converter_t>(convert));
   if (tmp.size() < size) {
