@@ -84,7 +84,7 @@ class SpacePointMaker final : public BareAlgorithm {
 
   /// Run the space point construction.
   ///
-  /// @param cxt is the algorithm context with event information
+  /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
   ProcessCode execute(const AlgorithmContext& ctx) const final override;
 
