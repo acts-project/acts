@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 namespace ActsExamples {

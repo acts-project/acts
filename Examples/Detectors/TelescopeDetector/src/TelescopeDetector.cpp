@@ -14,6 +14,7 @@
 #include "ActsExamples/TelescopeDetector/BuildTelescopeDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetectorOptions.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 
 #include <boost/program_options.hpp>
 
