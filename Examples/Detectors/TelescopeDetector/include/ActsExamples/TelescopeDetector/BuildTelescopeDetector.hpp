@@ -13,7 +13,6 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
-#include "Acts/Geometry/PassiveLayerBuilder.hpp"
 #include "Acts/Geometry/PlaneLayer.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -27,8 +26,6 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/BinnedArrayXD.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
 
@@ -53,30 +50,35 @@ namespace Telescope {
 ///
 /// @param gctx is the detector element dependent geometry context
 /// @param detectorStore is the store for the detector element
-/// @param matDecorator is an optional decorator for the material
+/// @param positions is the offset w of different layers in the longitudinal
+/// direction
+/// @param offsets is the offset (u, v) of the layers in the transverse plane
+/// @param boundary is the plane rectangle bound size
+/// @param thickness is the material thickness of each layer
+/// @param binValue indicates which axis the planes normals are parallel to
 template <typename detector_element_t>
 std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     const typename detector_element_t::ContextType& gctx,
     std::vector<std::shared_ptr<detector_element_t>>& detectorStore,
-    const std::vector<double>& longShifts,
-    const std::vector<double>& tranShifts, const std::vector<double>& boundary,
-    double thickness, Acts::BinningValue binValue = Acts::BinningValue::binZ) {
+    const std::vector<double>& positions, const std::vector<double>& offsets,
+    const std::vector<double>& boundary, double thickness,
+    Acts::BinningValue binValue = Acts::BinningValue::binZ) {
   using namespace Acts::UnitLiterals;
 
   // The rectangle bounds
-  // @todo make the bound size configurable
   const auto rBounds = std::make_shared<const Acts::RectangleBounds>(
       Acts::RectangleBounds(boundary[0], boundary[1]));
 
   // Material of the surfaces
-  Acts::Material silicon = Acts::Material::fromMolarDensity(
+  Acts::Material silicon = Acts::Material::fromMassDensity(
       9.370_cm, 46.52_cm, 28.0855, 14, 2.329_g / 1_cm3);
   Acts::MaterialSlab matProp(silicon, thickness);
   const auto surfaceMaterial =
       std::make_shared<Acts::HomogeneousSurfaceMaterial>(matProp);
 
   // Construct the rotation
-  // This assumes the binValue is binX, binY or binZ
+  // This assumes the binValue is binX, binY or binZ. No reset is necessary in
+  // case of binZ
   Acts::RotationMatrix3 rotation = Acts::RotationMatrix3::Identity();
   if (binValue == Acts::BinningValue::binX) {
     rotation.col(0) = Acts::Vector3(0, 0, -1);
@@ -88,87 +90,58 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     rotation.col(2) = Acts::Vector3(0, 1, 0);
   }
 
-  // Set translation vectors
-  size_t nLayers = longShifts.size();
-  std::vector<Acts::Vector3> translations;
-  translations.reserve(nLayers);
-  // The transverse shift is the same for all planes
-  Acts::Vector3 tshift(0, 0, 0);
-  if (binValue == Acts::BinningValue::binX) {
-    tshift.y() = tranShifts[0];
-    tshift.z() = tranShifts[1];
-  } else if (binValue == Acts::BinningValue::binY) {
-    tshift.x() = tranShifts[0];
-    tshift.z() = tranShifts[1];
-  } else {
-    tshift.x() = tranShifts[0];
-    tshift.y() = tranShifts[1];
-  }
-  for (const auto& pos : longShifts) {
-    // The longidutinal shift
-    Acts::Vector3 lshift(0, 0, 0);
-    // This assumes the binValue is binX, binY or binZ
-    lshift[binValue] = pos;
-    translations.push_back(tshift + lshift);
-  }
-
-  // Construct surfaces
-  std::vector<std::shared_ptr<const Acts::Surface>> surfaces;
-  surfaces.reserve(nLayers);
+  // Construct the surfaces and layers
+  size_t nLayers = positions.size();
+  std::vector<Acts::LayerPtr> layers(nLayers);
   unsigned int i;
-  for (i = 0; i < nLayers; i++) {
-    Acts::Transform3 trafo(Acts::Transform3::Identity() * rotation);
-    trafo.translation() = translations[i];
+  for (i = 0; i < nLayers; ++i) {
+    // The translation without rotation yet
+    Acts::Translation3 trans(offsets[0], offsets[1], positions[i]);
+    // The transform
+    Acts::Transform3 trafo(rotation * trans);
     // Create the detector element
     auto detElement = std::make_shared<TelescopeDetectorElement>(
         Identifier(i), std::make_shared<const Acts::Transform3>(trafo), rBounds,
         1_um, surfaceMaterial);
     // And remember the surface
-    surfaces.push_back(detElement->surface().getSharedPtr());
+    auto surface = detElement->surface().getSharedPtr();
     // Add it to the event store
     detectorStore.push_back(std::move(detElement));
-  }
-
-  // Construct layers
-  std::vector<Acts::LayerPtr> layers;
-  layers.reserve(nLayers);
-  for (i = 0; i < nLayers; i++) {
-    Acts::Transform3 trafo(Acts::Transform3::Identity() * rotation);
-    trafo.translation() = translations[i];
-
+    // Construct the surface array
     std::unique_ptr<Acts::SurfaceArray> surArray(
-        new Acts::SurfaceArray(surfaces[i]));
-
-    layers.push_back(
-        Acts::PlaneLayer::create(trafo, rBounds, std::move(surArray), 1._mm));
-
-    auto mutableSurface = const_cast<Acts::Surface*>(surfaces[i].get());
+        new Acts::SurfaceArray(surface));
+    // Construct the layer
+    layers[i] =
+        Acts::PlaneLayer::create(trafo, rBounds, std::move(surArray), 1._mm);
+    // Associate the layer to the surface
+    auto mutableSurface = const_cast<Acts::Surface*>(surface.get());
     mutableSurface->associateLayer(*layers[i]);
   }
 
-  // Build volume for the layers
-  Acts::Transform3 trafoVol(Acts::Transform3::Identity() * rotation);
-  trafoVol.translation() = (translations.front() + translations.back()) * 0.5;
+  // The volume transform
+  Acts::Translation3 transVol(offsets[0], offsets[1],
+                              (positions.front() + positions.back()) * 0.5);
+  Acts::Transform3 trafoVol(rotation * transVol);
 
   // The volume bounds is a bit larger than the cubic with layers
-  auto longDist = longShifts.back() - longShifts.front();
+  auto length = positions.back() - positions.front();
   auto boundsVol = std::make_shared<const Acts::CuboidVolumeBounds>(
-      boundary[0] + 5._mm, boundary[1] + 5._mm, longDist + 10._mm);
+      boundary[0] + 5._mm, boundary[1] + 5._mm, length + 10._mm);
 
   Acts::LayerArrayCreator::Config lacConfig;
   Acts::LayerArrayCreator layArrCreator(
       lacConfig,
       Acts::getDefaultLogger("LayerArrayCreator", Acts::Logging::INFO));
-
   Acts::LayerVector layVec;
   for (i = 0; i < nLayers; i++) {
     layVec.push_back(layers[i]);
   }
+  // Create the layer array
   std::unique_ptr<const Acts::LayerArray> layArr(layArrCreator.layerArray(
-      gctx, layVec, (translations.front())[binValue] - 2._mm,
-      (translations.back())[binValue] + 2._mm, Acts::BinningType::arbitrary,
-      binValue));
+      gctx, layVec, positions.front() - 2._mm, positions.back() + 2._mm,
+      Acts::BinningType::arbitrary, binValue));
 
+  // Build the tracking volume
   auto trackVolume =
       Acts::TrackingVolume::create(trafoVol, boundsVol, nullptr,
                                    std::move(layArr), nullptr, {}, "Telescope");
