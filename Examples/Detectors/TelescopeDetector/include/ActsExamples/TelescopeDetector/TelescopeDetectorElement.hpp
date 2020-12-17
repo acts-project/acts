@@ -17,7 +17,6 @@ class ISurfaceMaterial;
 }  // namespace Acts
 
 namespace ActsExamples {
-
 namespace Telescope {
 
 /// @class TelescopeDetectorElement

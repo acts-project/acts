@@ -28,8 +28,7 @@ struct TelescopeDetector : public ActsExamples::IBaseDetector {
   /// The store of the detector elements (lifetime: job)
   DetectorStore detectorStore;
 
-  void addOptions(
-      boost::program_options::options_description& opt) const override;
+  void addOptions(ActsExamples::Options::Description& desc) const override;
 
   std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
   finalize(const boost::program_options::variables_map& vm,
