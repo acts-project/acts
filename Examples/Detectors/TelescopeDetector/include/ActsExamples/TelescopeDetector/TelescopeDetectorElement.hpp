@@ -6,20 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// TelescopeDetectorElement.h, Acts project, Telescope Detector plugin
-///////////////////////////////////////////////////////////////////
-
 #pragma once
 
-#include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
-#include "Acts/Plugins/Identification/Identifier.hpp"
+#include "Acts/Geometry/DetectorElementBase.hpp"
 
 namespace Acts {
 class Surface;
 class PlanarBounds;
 class ISurfaceMaterial;
-class DigitizationModule;
 }  // namespace Acts
 
 namespace ActsExamples {
@@ -30,7 +24,7 @@ namespace Telescope {
 ///
 /// This is a lightweight type of detector element,
 /// it simply implements the base class.
-class TelescopeDetectorElement : public Acts::IdentifiedDetectorElement {
+class TelescopeDetectorElement : public Acts::DetectorElementBase {
  public:
   /// @class ContextType
   /// convention: nested to the Detector element
@@ -42,13 +36,11 @@ class TelescopeDetectorElement : public Acts::IdentifiedDetectorElement {
   /// Constructor for single sided detector element
   /// - bound to a Plane Surface
   ///
-  /// @param identifier is the module identifier
   /// @param transform is the transform that element the layer in 3D frame
   /// @param pBounds is the planar bounds for the planar detector element
   /// @param thickness is the module thickness
   /// @param material is the (optional) Surface material associated to it
   TelescopeDetectorElement(
-      const Identifier identifier,
       std::shared_ptr<const Acts::Transform3> transform,
       std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
@@ -56,21 +48,11 @@ class TelescopeDetectorElement : public Acts::IdentifiedDetectorElement {
   ///  Destructor
   ~TelescopeDetectorElement() override = default;
 
-  /// Identifier
-  Identifier identifier() const override;
-
   /// Return surface associated with this detector element
   const Acts::Surface& surface() const final;
 
   /// The maximal thickness of the detector element wrt normal axis
   double thickness() const final;
-
-  /// Set the identifier after construction (sometimes needed)
-  void assignIdentifier(const Identifier& identifier);
-
-  /// Retrieve the DigitizationModule
-  const std::shared_ptr<const Acts::DigitizationModule> digitizationModule()
-      const override;
 
   /// Return local to global transform associated with this identifier
   ///
@@ -98,8 +80,6 @@ class TelescopeDetectorElement : public Acts::IdentifiedDetectorElement {
       const;
 
  private:
-  /// the element representation identifier
-  Identifier m_elementIdentifier;
   /// the transform for positioning in 3D space
   std::shared_ptr<const Acts::Transform3> m_elementTransform = nullptr;
   // the aligned transforms
@@ -118,21 +98,6 @@ inline const Acts::Surface& TelescopeDetectorElement::surface() const {
 
 inline double TelescopeDetectorElement::thickness() const {
   return m_elementThickness;
-}
-
-inline void ActsExamples::Telescope::TelescopeDetectorElement::assignIdentifier(
-    const Identifier& identifier) {
-  m_elementIdentifier = identifier;
-}
-
-inline Identifier
-ActsExamples::Telescope::TelescopeDetectorElement::identifier() const {
-  return m_elementIdentifier;
-}
-
-inline const std::shared_ptr<const Acts::DigitizationModule>
-ActsExamples::Telescope::TelescopeDetectorElement::digitizationModule() const {
-  return nullptr;
 }
 
 inline const Acts::Transform3& TelescopeDetectorElement::transform(

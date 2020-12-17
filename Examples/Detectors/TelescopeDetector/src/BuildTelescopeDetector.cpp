@@ -74,8 +74,8 @@ ActsExamples::Telescope::buildDetector(
     Acts::Transform3 trafo(rotation * trans);
     // Create the detector element
     auto detElement = std::make_shared<TelescopeDetectorElement>(
-        Identifier(i), std::make_shared<const Acts::Transform3>(trafo), rBounds,
-        1._um, surfaceMaterial);
+        std::make_shared<const Acts::Transform3>(trafo), rBounds, 1._um,
+        surfaceMaterial);
     // Get the surface
     auto surface = detElement->surface().getSharedPtr();
     // Add the detector element to the detector store

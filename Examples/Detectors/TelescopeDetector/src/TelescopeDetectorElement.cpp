@@ -12,12 +12,10 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 
 ActsExamples::Telescope::TelescopeDetectorElement::TelescopeDetectorElement(
-    const Identifier identifier,
     std::shared_ptr<const Acts::Transform3> transform,
     std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
     std::shared_ptr<const Acts::ISurfaceMaterial> material)
-    : Acts::IdentifiedDetectorElement(),
-      m_elementIdentifier(std::move(identifier)),
+    : Acts::DetectorElementBase(),
       m_elementTransform(std::move(transform)),
       m_elementSurface(
           Acts::Surface::makeShared<Acts::PlaneSurface>(pBounds, *this)),
