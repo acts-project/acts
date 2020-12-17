@@ -30,9 +30,9 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 ///
 /// Tests the correct behavior and consistency of
 /// -# ConstantBField::ConstantBField(double Bx,double By,double Bz)
-/// -# ConstantBField::ConstantBField(Vector3D B)
+/// -# ConstantBField::ConstantBField(Vector3 B)
 /// -# ConstantBField::getField(const double* xyz, double* B) const
-/// -# ConstantBField::getField(const Vector3D& pos) const
+/// -# ConstantBField::getField(const Vector3& pos) const
 BOOST_DATA_TEST_CASE(ConstantBField_components,
                      bdata::random(-2_T, 2_T) ^ bdata::random(-1_T, 4_T) ^
                          bdata::random(0_T, 10_T) ^ bdata::random(-10_m, 10_m) ^
@@ -41,34 +41,34 @@ BOOST_DATA_TEST_CASE(ConstantBField_components,
                      x, y, z, bx, by, bz, index) {
   (void)index;
   BOOST_TEST_CONTEXT("Eigen interface") {
-    const Vector3D Btrue(bx, by, bz);
-    const Vector3D pos(x, y, z);
+    const Vector3 Btrue(bx, by, bz);
+    const Vector3 pos(x, y, z);
     const ConstantBField BField(Btrue);
 
     ConstantBField::Cache bCache(mfContext);
 
     BOOST_CHECK_EQUAL(Btrue, BField.getField(pos));
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3D(0, 0, 0)));
+    BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0)));
     BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos));
 
     BOOST_CHECK_EQUAL(Btrue, BField.getField(pos, bCache));
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3D(0, 0, 0), bCache));
+    BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0), bCache));
     BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos, bCache));
   }
 
   BOOST_TEST_CONTEXT("C-array initialised - Eigen retrieved") {
     const ConstantBField BField(bx, by, bz);
-    const Vector3D Btrue(bx, by, bz);
-    const Vector3D pos(x, y, z);
+    const Vector3 Btrue(bx, by, bz);
+    const Vector3 pos(x, y, z);
 
     ConstantBField::Cache bCache(mfContext);
 
     BOOST_CHECK_EQUAL(Btrue, BField.getField(pos));
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3D(0, 0, 0)));
+    BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0)));
     BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos));
 
     BOOST_CHECK_EQUAL(Btrue, BField.getField(pos, bCache));
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3D(0, 0, 0), bCache));
+    BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0), bCache));
     BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos, bCache));
   }
 }
@@ -77,9 +77,9 @@ BOOST_DATA_TEST_CASE(ConstantBField_components,
 ///
 /// Tests the correct behavior and consistency of
 /// -# ConstantBField::setField(double Bx, double By, double Bz)
-/// -# ConstantBField::setField(const Vector3D& B)
+/// -# ConstantBField::setField(const Vector3& B)
 /// -# ConstantBField::getField(const double* xyz, double* B) const
-/// -# ConstantBField::getField(const Vector3D& pos) const
+/// -# ConstantBField::getField(const Vector3& pos) const
 BOOST_DATA_TEST_CASE(ConstantBField_update,
                      bdata::random(-2_T, 2_T) ^ bdata::random(-1_T, 4_T) ^
                          bdata::random(0_T, 10_T) ^ bdata::random(-10_m, 10_m) ^
@@ -90,34 +90,34 @@ BOOST_DATA_TEST_CASE(ConstantBField_update,
   ConstantBField BField(0, 0, 0);
 
   BOOST_TEST_CONTEXT("Eigen interface") {
-    const Vector3D Btrue(bx, by, bz);
-    const Vector3D pos(x, y, z);
+    const Vector3 Btrue(bx, by, bz);
+    const Vector3 pos(x, y, z);
     BField.setField(Btrue);
 
     ConstantBField::Cache bCache(mfContext);
 
     BOOST_CHECK_EQUAL(Btrue, BField.getField(pos));
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3D(0, 0, 0)));
+    BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0)));
     BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos));
 
     BOOST_CHECK_EQUAL(Btrue, BField.getField(pos, bCache));
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3D(0, 0, 0), bCache));
+    BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0), bCache));
     BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos, bCache));
   }
 
   BOOST_TEST_CONTEXT("C-array initialised - Eigen retrieved") {
-    const Vector3D Btrue(bx, by, bz);
-    const Vector3D pos(x, y, z);
+    const Vector3 Btrue(bx, by, bz);
+    const Vector3 pos(x, y, z);
     BField.setField(bx, by, bz);
 
     ConstantBField::Cache bCache(mfContext);
 
     BOOST_CHECK_EQUAL(Btrue, BField.getField(pos));
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3D(0, 0, 0)));
+    BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0)));
     BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos));
 
     BOOST_CHECK_EQUAL(Btrue, BField.getField(pos, bCache));
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3D(0, 0, 0), bCache));
+    BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0), bCache));
     BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos, bCache));
   }
 }

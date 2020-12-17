@@ -80,12 +80,12 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   // Check if the surface is the (negative) identity
   auto transform_XYZ = plane_XYZ->transform(tgContext);
   auto rotation_XYZ = transform_XYZ.rotation();
-  BOOST_CHECK(transform_XYZ.isApprox(Transform3D::Identity()));
+  BOOST_CHECK(transform_XYZ.isApprox(Transform3::Identity()));
 
-  const Vector3D offset_XYZ{-5.5 * x, 0., 0.};
+  const Vector3 offset_XYZ{-5.5 * x, 0., 0.};
   GeometryView3D::drawSurface(objVis, *plane_XYZ, tgContext,
-                              Transform3D(Translation3D{offset_XYZ}));
-  const Vector3D center_XYZ = plane_XYZ->center(tgContext) + offset_XYZ;
+                              Transform3(Translation3{offset_XYZ}));
+  const Vector3 center_XYZ = plane_XYZ->center(tgContext) + offset_XYZ;
   GeometryView3D::drawArrowForward(
       objVis, center_XYZ,
       center_XYZ + 0.6 * (maxX - minX) * rotation_XYZ.col(0), 4., 2.5, red);
@@ -111,10 +111,10 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   BOOST_CHECK(rotation_xyz.col(1).isApprox(-1 * rotation_XYZ.col(1)));
   BOOST_CHECK(rotation_xyz.col(2).isApprox(rotation_XYZ.col(2)));
 
-  const Vector3D offset_xyz{-2 * x, 0., 0.};
+  const Vector3 offset_xyz{-2 * x, 0., 0.};
   GeometryView3D::drawSurface(objVis, *plane_xyz, tgContext,
-                              Transform3D(Translation3D{offset_xyz}));
-  const Vector3D center_xyz = plane_xyz->center(tgContext) + offset_xyz;
+                              Transform3(Translation3{offset_xyz}));
+  const Vector3 center_xyz = plane_xyz->center(tgContext) + offset_xyz;
   GeometryView3D::drawArrowForward(
       objVis, center_xyz,
       center_xyz + 0.6 * (maxX - minX) * rotation_xyz.col(0), 4., 2.5, red);
@@ -140,11 +140,11 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   BOOST_CHECK(rotation_xYz.col(1).isApprox(rotation_XYZ.col(1)));
   BOOST_CHECK(rotation_xYz.col(2).isApprox(-1. * rotation_XYZ.col(2)));
 
-  const Vector3D offset_xYz{2 * x, 0., 0.};
+  const Vector3 offset_xYz{2 * x, 0., 0.};
   GeometryView3D::drawSurface(
       objVis, *plane_xYz, tgContext,
-      Translation3D{offset_xYz} * Transform3D::Identity());
-  const Vector3D center_xYz = plane_xYz->center(tgContext) + offset_xYz;
+      Translation3{offset_xYz} * Transform3::Identity());
+  const Vector3 center_xYz = plane_xYz->center(tgContext) + offset_xYz;
   GeometryView3D::drawArrowForward(
       objVis, center_xYz,
       center_xYz + 0.6 * (maxX - minX) * rotation_xYz.col(0), 4., 2.5, red);
@@ -174,10 +174,10 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   BOOST_CHECK(rotation_YXz.col(1).isApprox(rotation_XYZ.col(0)));
   BOOST_CHECK(rotation_YXz.col(2).isApprox(-1. * rotation_XYZ.col(2)));
 
-  const Vector3D offset_YXz{5.5 * x, 0., 0.};
+  const Vector3 offset_YXz{5.5 * x, 0., 0.};
   GeometryView3D::drawSurface(objVis, *plane_YXz, tgContext,
-                              Transform3D(Translation3D{offset_YXz}));
-  const Vector3D center_YXz = plane_YXz->center(tgContext) + offset_YXz;
+                              Transform3(Translation3{offset_YXz}));
+  const Vector3 center_YXz = plane_YXz->center(tgContext) + offset_YXz;
   GeometryView3D::drawArrowForward(
       objVis, center_YXz,
       center_YXz + 0.6 * (maxX - minX) * rotation_YXz.col(0), 4., 2.5, red);

@@ -23,7 +23,7 @@ class TutorialVertexFinderAlgorithm final : public BareAlgorithm {
     /// Output proto vertex collection.
     std::string outputProtoVertices;
     /// Magnetic field vector.
-    Acts::Vector3D bField = Acts::Vector3D::Zero();
+    Acts::Vector3 bField = Acts::Vector3::Zero();
   };
 
   TutorialVertexFinderAlgorithm(const Config& cfg, Acts::Logging::Level lvl);

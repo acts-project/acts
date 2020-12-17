@@ -29,7 +29,7 @@ struct RectangleRandom {
   /// generate a x/y position inside the Rectangle @return
   ///
   /// @note r0, r1 need to be within [0,1]
-  Acts::Vector2D operator()(double r0, double r1) const {
+  Acts::Vector2 operator()(double r0, double r1) const {
     return {(2 * r0 - 1) * xmax, (2 * r1 - 1) * ymax};
   }
 };
@@ -62,7 +62,7 @@ struct TrapezoidRandom {
   /// generate a x/y position inside the Trapezoid @return
   ///
   /// @note r0, r1 need to be within [0,1]
-  Acts::Vector2D operator()(double r0, double r1) const {
+  Acts::Vector2 operator()(double r0, double r1) const {
     double y = ymin + (ymax - ymin) * r1;
     double xmax = xminy + (xmaxy - xminy) / (ymax - ymin) * (y - ymin);
     double x = (2 * r0 - 1) * xmax;
@@ -90,7 +90,7 @@ struct DiscRandom {
   /// generate a x/y position inside the Disc @return
   ///
   /// @note r0, r1 need to be within [0,1]
-  Acts::Vector2D operator()(double r0, double r1) const {
+  Acts::Vector2 operator()(double r0, double r1) const {
     double r = rmin + (rmax - rmin) * r0;
     double phi = phimin + (phimax - phimin) * r1;
     return {r * std::cos(phi), r * std::sin(phi)};
@@ -127,7 +127,7 @@ struct AnnulusRandom {
   /// generate a x/y position inside Annulus shape and  @return
   ///
   /// @note r0, r1 need to be within [0,1]
-  Acts::Vector2D operator()(double r0, double r1) const {
+  Acts::Vector2 operator()(double r0, double r1) const {
     double r = rmin + (rmax - rmin) * r0;
     double phi = phimins + (phimaxs - phimins) * r1;
     return {r * std::cos(phi), r * std::sin(phi)};

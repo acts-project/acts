@@ -98,7 +98,7 @@ ConstantFieldPropagator makeConstantFieldPropagator(
   navigator.resolvePassive = false;
   navigator.resolveMaterial = true;
   navigator.resolveSensitive = true;
-  Acts::ConstantBField field(Acts::Vector3D(0.0, 0.0, bz));
+  Acts::ConstantBField field(Acts::Vector3(0.0, 0.0, bz));
   ConstantFieldStepper stepper(std::move(field));
   return ConstantFieldPropagator(std::move(stepper), std::move(navigator));
 }
@@ -115,7 +115,7 @@ Acts::CurvilinearTrackParameters makeParameters() {
   stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
   Acts::BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // define a track in the transverse plane along x
-  Acts::Vector4D mPos4(-3_m, 0., 0., 42_ns);
+  Acts::Vector4 mPos4(-3_m, 0., 0., 42_ns);
   return Acts::CurvilinearTrackParameters(mPos4, 0_degree, 90_degree, 1_GeV,
                                           1_e, cov);
 }
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
   BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
   // create a track near the tracker exit for outward->inward filtering
-  Vector4D posOuter = start.fourPosition(geoCtx);
+  Vector4 posOuter = start.fourPosition(geoCtx);
   posOuter[ePos0] = 3_m;
   CurvilinearTrackParameters startOuter(posOuter, start.unitDirection(),
                                         start.absoluteMomentum(),
@@ -313,8 +313,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceAtExit) {
   BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
   // create a boundless target surface near the tracker exit
-  Vector3D center(3._m, 0., 0.);
-  Vector3D normal(1., 0., 0.);
+  Vector3 center(3._m, 0., 0.);
+  Vector3 normal(1., 0., 0.);
   auto targetSurface = Surface::makeShared<PlaneSurface>(center, normal);
 
   KalmanFitterOptions<TestSourceLinkCalibrator, VoidOutlierFinder> kfOptions(

@@ -42,13 +42,13 @@ const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
 
 inline Propagator makePropagator(double Bz) {
-  MagneticField magField(Acts::Vector3D(0.0, 0.0, Bz));
+  MagneticField magField(Acts::Vector3(0.0, 0.0, Bz));
   Stepper stepper(std::move(magField));
   return Propagator(std::move(stepper));
 }
 
 inline RiddersPropagator makeRiddersPropagator(double bz) {
-  MagneticField magField(Acts::Vector3D(0.0, 0.0, bz));
+  MagneticField magField(Acts::Vector3(0.0, 0.0, bz));
   Stepper stepper(std::move(magField));
   return RiddersPropagator(std::move(stepper));
 }

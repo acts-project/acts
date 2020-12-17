@@ -16,14 +16,14 @@ requirements for the magnetic field implementation are shown in the example ``Fi
       };
 
       // get field for a given position, no cache
-      Vector3D getField(const Vector3D& pos) const;
+      Vector3 getField(const Vector3& pos) const;
       // get field and the gradient, no cache
-      Vector3D getFieldGradient(const Vector3D& pos, ActsMatrix<3,3>& deriv) const;
+      Vector3 getFieldGradient(const Vector3& pos, ActsMatrix<3,3>& deriv) const;
 
       // get the field for a given position, and provide the cache object
-      Vector3D getField(const Vector3D& position, Cache& cache) const;
+      Vector3 getField(const Vector3& position, Cache& cache) const;
       // get the field and gradient for a given position, provide cache
-      Vector3D getFieldGradient(const Vector3D& pos, 
+      Vector3 getFieldGradient(const Vector3& pos, 
                                 ActsMatrix<3,3>& deriv, // mutable reference
                                 Cache& cache) const;
     };

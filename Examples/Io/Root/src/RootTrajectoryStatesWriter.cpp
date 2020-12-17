@@ -377,9 +377,9 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
         Acts::BoundVector meas =
             state.projector().transpose() * state.calibrated();
         // extract local and global position
-        Acts::Vector2D local(meas[Acts::eBoundLoc0], meas[Acts::eBoundLoc1]);
-        Acts::Vector3D mom(1, 1, 1);
-        Acts::Vector3D global =
+        Acts::Vector2 local(meas[Acts::eBoundLoc0], meas[Acts::eBoundLoc1]);
+        Acts::Vector3 mom(1, 1, 1);
+        Acts::Vector3 global =
             surface.localToGlobal(ctx.geoContext, local, mom);
 
         // fill the measurement info

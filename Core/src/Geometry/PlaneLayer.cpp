@@ -15,7 +15,7 @@
 
 #include <vector>
 
-Acts::PlaneLayer::PlaneLayer(const Transform3D& transform,
+Acts::PlaneLayer::PlaneLayer(const Transform3& transform,
                              std::shared_ptr<const PlanarBounds>& pbounds,
                              std::unique_ptr<SurfaceArray> surfaceArray,
                              double thickness,
@@ -52,16 +52,16 @@ void Acts::PlaneLayer::buildApproachDescriptor() {
   // get the appropriate transform, the center and the normal vector
 
   //@todo fix with representing volume
-  const Transform3D& lTransform = PlaneSurface::transform(GeometryContext());
-  RotationMatrix3D lRotation = lTransform.rotation();
-  const Vector3D& lCenter = PlaneSurface::center(GeometryContext());
-  const Vector3D& lVector = Surface::normal(GeometryContext(), lCenter);
+  const Transform3& lTransform = PlaneSurface::transform(GeometryContext());
+  RotationMatrix3 lRotation = lTransform.rotation();
+  const Vector3& lCenter = PlaneSurface::center(GeometryContext());
+  const Vector3& lVector = Surface::normal(GeometryContext(), lCenter);
   // create new surfaces
-  const Transform3D apnTransform = Transform3D(
-      Translation3D(lCenter - 0.5 * Layer::m_layerThickness * lVector) *
+  const Transform3 apnTransform = Transform3(
+      Translation3(lCenter - 0.5 * Layer::m_layerThickness * lVector) *
       lRotation);
-  const Transform3D appTransform = Transform3D(
-      Translation3D(lCenter + 0.5 * Layer::m_layerThickness * lVector) *
+  const Transform3 appTransform = Transform3(
+      Translation3(lCenter + 0.5 * Layer::m_layerThickness * lVector) *
       lRotation);
   // create the new surfaces
   aSurfaces.push_back(Surface::makeShared<Acts::PlaneSurface>(

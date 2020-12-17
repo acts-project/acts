@@ -126,7 +126,7 @@ ProcessCode PropagationAlgorithm<propagator_t>::execute(
 
   std::shared_ptr<const Acts::PerigeeSurface> surface =
       Acts::Surface::makeShared<Acts::PerigeeSurface>(
-          Acts::Vector3D(0., 0., 0.));
+          Acts::Vector3(0., 0., 0.));
 
   // Output : the propagation steps
   std::vector<std::vector<Acts::detail::Step>> propagationSteps;
@@ -156,8 +156,8 @@ ProcessCode PropagationAlgorithm<propagator_t>::execute(
     pars << d0, z0, phi, theta, qop, t;
     // some screen output
 
-    Acts::Vector3D sPosition(0., 0., 0.);
-    Acts::Vector3D sMomentum(0., 0., 0.);
+    Acts::Vector3 sPosition(0., 0., 0.);
+    Acts::Vector3 sMomentum(0., 0., 0.);
 
     // The covariance generation
     auto cov = generateCovariance(rng, gauss);

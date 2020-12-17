@@ -94,7 +94,7 @@ int main(int argc, char* argv[]) {
   if (withCov) {
     optCov = cov;
   }
-  CurvilinearTrackParameters pars(Vector4D::Zero(), 0_degree, 90_degree,
+  CurvilinearTrackParameters pars(Vector4::Zero(), 0_degree, 90_degree,
                                   ptInGeV * UnitConstants::GeV, 1_e, optCov);
 
   double totalPathLength = 0;

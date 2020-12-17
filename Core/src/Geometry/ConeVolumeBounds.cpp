@@ -89,14 +89,13 @@ Acts::ConeVolumeBounds::ConeVolumeBounds(double cylinderR, double alpha,
 }
 
 Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
-    const Transform3D& transform) const {
+    const Transform3& transform) const {
   OrientedSurfaces oSurfaces;
   oSurfaces.reserve(6);
 
   // Create an inner Cone
   if (m_innerConeBounds != nullptr) {
-    auto innerConeTrans =
-        transform * Translation3D(0., 0., -get(eInnerOffsetZ));
+    auto innerConeTrans = transform * Translation3(0., 0., -get(eInnerOffsetZ));
     auto innerCone =
         Surface::makeShared<ConeSurface>(innerConeTrans, m_innerConeBounds);
     oSurfaces.push_back(OrientedSurface(std::move(innerCone), forward));
@@ -109,8 +108,7 @@ Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
 
   // Create an outer Cone
   if (m_outerConeBounds != nullptr) {
-    auto outerConeTrans =
-        transform * Translation3D(0., 0., -get(eOuterOffsetZ));
+    auto outerConeTrans = transform * Translation3(0., 0., -get(eOuterOffsetZ));
     auto outerCone =
         Surface::makeShared<ConeSurface>(outerConeTrans, m_outerConeBounds);
     oSurfaces.push_back(OrientedSurface(std::move(outerCone), backward));
@@ -124,35 +122,35 @@ Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
   // Set a disc at Zmin
   if (m_negativeDiscBounds != nullptr) {
     auto negativeDiscTrans =
-        transform * Translation3D(0., 0., -get(eHalfLengthZ));
+        transform * Translation3(0., 0., -get(eHalfLengthZ));
     auto negativeDisc = Surface::makeShared<DiscSurface>(negativeDiscTrans,
                                                          m_negativeDiscBounds);
     oSurfaces.push_back(OrientedSurface(std::move(negativeDisc), forward));
   }
 
   // Set a disc at Zmax
-  auto positiveDiscTrans = transform * Translation3D(0., 0., get(eHalfLengthZ));
+  auto positiveDiscTrans = transform * Translation3(0., 0., get(eHalfLengthZ));
   auto positiveDisc =
       Surface::makeShared<DiscSurface>(positiveDiscTrans, m_positiveDiscBounds);
   oSurfaces.push_back(OrientedSurface(std::move(positiveDisc), backward));
 
   if (m_sectorBounds) {
-    RotationMatrix3D sectorRotation;
-    sectorRotation.col(0) = Vector3D::UnitZ();
-    sectorRotation.col(1) = Vector3D::UnitX();
-    sectorRotation.col(2) = Vector3D::UnitY();
+    RotationMatrix3 sectorRotation;
+    sectorRotation.col(0) = Vector3::UnitZ();
+    sectorRotation.col(1) = Vector3::UnitX();
+    sectorRotation.col(2) = Vector3::UnitY();
 
-    Transform3D negSectorRelTrans{sectorRotation};
+    Transform3 negSectorRelTrans{sectorRotation};
     negSectorRelTrans.prerotate(
-        AngleAxis3D(get(eAveragePhi) - get(eHalfPhiSector), Vector3D::UnitZ()));
+        AngleAxis3(get(eAveragePhi) - get(eHalfPhiSector), Vector3::UnitZ()));
     auto negSectorAbsTrans = transform * negSectorRelTrans;
     auto negSectorPlane =
         Surface::makeShared<PlaneSurface>(negSectorAbsTrans, m_sectorBounds);
     oSurfaces.push_back(OrientedSurface(std::move(negSectorPlane), forward));
 
-    Transform3D posSectorRelTrans{sectorRotation};
+    Transform3 posSectorRelTrans{sectorRotation};
     posSectorRelTrans.prerotate(
-        AngleAxis3D(get(eAveragePhi) + get(eHalfPhiSector), Vector3D::UnitZ()));
+        AngleAxis3(get(eAveragePhi) + get(eHalfPhiSector), Vector3::UnitZ()));
     auto posSectorAbsTrans = transform * posSectorRelTrans;
     auto posSectorPlane =
         Surface::makeShared<PlaneSurface>(posSectorAbsTrans, m_sectorBounds);
@@ -182,7 +180,7 @@ void Acts::ConeVolumeBounds::checkConsistency() noexcept(false) {
   }
 }
 
-bool Acts::ConeVolumeBounds::inside(const Vector3D& pos, double tol) const {
+bool Acts::ConeVolumeBounds::inside(const Vector3& pos, double tol) const {
   double z = pos.z();
   double zmin = z + tol;
   double zmax = z - tol;
@@ -271,10 +269,10 @@ void Acts::ConeVolumeBounds::buildSurfaceBounds() {
   // Create the sector bounds
   if (std::abs(get(eHalfPhiSector) - M_PI) > s_epsilon) {
     // The 4 points building the sector
-    std::vector<Vector2D> polyVertices = {{-get(eHalfLengthZ), m_innerRmin},
-                                          {get(eHalfLengthZ), m_innerRmax},
-                                          {get(eHalfLengthZ), m_outerRmax},
-                                          {-get(eHalfLengthZ), m_outerRmin}};
+    std::vector<Vector2> polyVertices = {{-get(eHalfLengthZ), m_innerRmin},
+                                         {get(eHalfLengthZ), m_innerRmax},
+                                         {get(eHalfLengthZ), m_outerRmax},
+                                         {-get(eHalfLengthZ), m_outerRmin}};
     m_sectorBounds =
         std::make_shared<ConvexPolygonBounds<4>>(std::move(polyVertices));
   }
@@ -286,10 +284,10 @@ std::ostream& Acts::ConeVolumeBounds::toStream(std::ostream& sl) const {
 }
 
 Acts::Volume::BoundingBox Acts::ConeVolumeBounds::boundingBox(
-    const Acts::Transform3D* trf, const Vector3D& envelope,
+    const Acts::Transform3* trf, const Vector3& envelope,
     const Volume* entity) const {
-  Vector3D vmin(-outerRmax(), -outerRmax(), -0.5 * get(eHalfLengthZ));
-  Vector3D vmax(outerRmax(), outerRmax(), 0.5 * get(eHalfLengthZ));
+  Vector3 vmin(-outerRmax(), -outerRmax(), -0.5 * get(eHalfLengthZ));
+  Vector3 vmax(outerRmax(), outerRmax(), 0.5 * get(eHalfLengthZ));
   Volume::BoundingBox box(entity, vmin - envelope, vmax + envelope);
   return trf == nullptr ? box : box.transformed(*trf);
 }

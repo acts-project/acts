@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
   IterativeVertexFinderAlgorithm::Config findVertices;
   findVertices.inputTrackParameters = smearParticles.outputTrackParameters;
   findVertices.outputProtoVertices = "protovertices";
-  findVertices.bField = Acts::Vector3D(0_T, 0_T, 2_T);
+  findVertices.bField = Acts::Vector3(0_T, 0_T, 2_T);
   sequencer.addAlgorithm(
       std::make_shared<IterativeVertexFinderAlgorithm>(findVertices, logLevel));
 

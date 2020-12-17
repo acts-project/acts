@@ -96,8 +96,8 @@ auto Acts::materialMapperRZ(
 
   // [4] Create the transformation for the position
   // map (x,y,z) -> (r,z)
-  auto transformPos = [](const Vector3D& pos) {
-    return Vector2D(perp(pos), pos.z());
+  auto transformPos = [](const Vector3& pos) {
+    return Vector2(perp(pos), pos.z());
   };
 
   // [5] Create the mapper & BField Service
@@ -195,7 +195,7 @@ auto Acts::materialMapperXYZ(
 
   // [4] Create the transformation for the position
   // map (x,y,z) -> (r,z)
-  auto transformPos = [](const Vector3D& pos) { return pos; };
+  auto transformPos = [](const Vector3& pos) { return pos; };
 
   // [5] Create the mapper & BField Service
   // create material mapping

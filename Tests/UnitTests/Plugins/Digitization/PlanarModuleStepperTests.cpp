@@ -77,8 +77,8 @@ BOOST_DATA_TEST_CASE(
   (void)index;
 
   // Entry and exit point
-  Vector3D entry(entryX, entryY, -hThickness);
-  Vector3D exit(exitX, exitY, hThickness);
+  Vector3 entry(entryX, entryY, -hThickness);
+  Vector3 exit(exitX, exitY, hThickness);
 
   // test the module flavours
   for (auto& dm : testModules) {

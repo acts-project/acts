@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(CUDAOBJ_TEST) {
 
   using AFloat = float;
 
-  const int vecDim = 16;  // Vector Dimension
+  const int vecDim = 16;  // Vector imension
   const int nVec = 128;   // Number of vectors
 
   dim3 gridSize;

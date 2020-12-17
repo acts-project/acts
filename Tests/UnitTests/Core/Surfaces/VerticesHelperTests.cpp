@@ -31,27 +31,27 @@ BOOST_AUTO_TEST_SUITE(Surfaces)
 
 BOOST_AUTO_TEST_CASE(VerticesHelperOnHyperPlane) {
   // Create the transform
-  Transform3D transform(AngleAxis3D(0.234, Vector3D(0., 1., 0.)) *
-                        AngleAxis3D(-0.734, Vector3D(1., 1., 1.).normalized()) *
-                        Translation3D(Vector3D(-1., 2., 3.)));
+  Transform3 transform(AngleAxis3(0.234, Vector3(0., 1., 0.)) *
+                       AngleAxis3(-0.734, Vector3(1., 1., 1.).normalized()) *
+                       Translation3(Vector3(-1., 2., 3.)));
 
-  auto trfSpace = [](std::vector<Vector3D>& vtxs,
-                     const Transform3D& trf) -> void {
+  auto trfSpace = [](std::vector<Vector3>& vtxs,
+                     const Transform3& trf) -> void {
     std::transform(vtxs.begin(), vtxs.end(), vtxs.begin(),
                    [&](auto& v) { return (trf * v); });
   };
 
   // x-y plane test
-  std::vector<Vector3D> xyplane = {Vector3D(1., 3., 0.), Vector3D(-2., 1., 0.),
-                                   Vector3D(5., 8., 0.), Vector3D(-9., -9., 0.),
-                                   Vector3D(5., 0., 0.), Vector3D(3., 1., 0.)};
+  std::vector<Vector3> xyplane = {Vector3(1., 3., 0.), Vector3(-2., 1., 0.),
+                                  Vector3(5., 8., 0.), Vector3(-9., -9., 0.),
+                                  Vector3(5., 0., 0.), Vector3(3., 1., 0.)};
 
   trfSpace(xyplane, transform);
 
   // All on a hyper plane
   BOOST_CHECK(VerticesHelper::onHyperPlane(xyplane));
   // One outside the s_onSurfaceTolerance
-  xyplane.push_back(transform * Vector3D(3., -4., 0.05));
+  xyplane.push_back(transform * Vector3(3., -4., 0.05));
   BOOST_CHECK(!VerticesHelper::onHyperPlane(xyplane));
   // But inside extended tolerance
   BOOST_CHECK(VerticesHelper::onHyperPlane(xyplane, 0.6));

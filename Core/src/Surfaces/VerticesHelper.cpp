@@ -44,15 +44,15 @@ std::vector<Acts::ActsScalar> Acts::detail::VerticesHelper::phiSegments(
   return phiSegments;
 }
 
-std::vector<Acts::Vector2D> Acts::detail::VerticesHelper::ellipsoidVertices(
+std::vector<Acts::Vector2> Acts::detail::VerticesHelper::ellipsoidVertices(
     ActsScalar innerRx, ActsScalar innerRy, ActsScalar outerRx,
     ActsScalar outerRy, ActsScalar avgPhi, ActsScalar halfPhi,
     unsigned int lseg) {
   // List of vertices counter-clockwise starting at smallest phi w.r.t center,
   // for both inner/outer ring/segment
-  std::vector<Vector2D> rvertices;  // return vertices
-  std::vector<Vector2D> ivertices;  // inner vertices
-  std::vector<Vector2D> overtices;  // outer verices
+  std::vector<Vector2> rvertices;  // return vertices
+  std::vector<Vector2> ivertices;  // inner vertices
+  std::vector<Vector2> overtices;  // outer verices
 
   bool innerExists = (innerRx > 0. and innerRy > 0.);
   bool closed = std::abs(halfPhi - M_PI) < s_onSurfaceTolerance;
@@ -65,20 +65,20 @@ std::vector<Acts::Vector2D> Acts::detail::VerticesHelper::ellipsoidVertices(
   for (unsigned int iseg = 0; iseg < phiSegs.size() - 1; ++iseg) {
     int addon = (iseg == phiSegs.size() - 2 and not closed) ? 1 : 0;
     if (innerExists) {
-      createSegment<Vector2D, Transform2D>(ivertices, {innerRx, innerRy},
-                                           phiSegs[iseg], phiSegs[iseg + 1],
-                                           lseg, addon);
-    }
-    createSegment<Vector2D, Transform2D>(overtices, {outerRx, outerRy},
+      createSegment<Vector2, Transform2>(ivertices, {innerRx, innerRy},
                                          phiSegs[iseg], phiSegs[iseg + 1], lseg,
                                          addon);
+    }
+    createSegment<Vector2, Transform2>(overtices, {outerRx, outerRy},
+                                       phiSegs[iseg], phiSegs[iseg + 1], lseg,
+                                       addon);
   }
 
   // We want to keep the same counter-clockwise orientation for displaying
   if (not innerExists) {
     if (not closed) {
       // Add the center case we have a sector
-      rvertices.push_back(Vector2D(0., 0.));
+      rvertices.push_back(Vector2(0., 0.));
     }
     rvertices.insert(rvertices.end(), overtices.begin(), overtices.end());
   } else if (not closed) {
@@ -91,7 +91,7 @@ std::vector<Acts::Vector2D> Acts::detail::VerticesHelper::ellipsoidVertices(
   return rvertices;
 }
 
-std::vector<Acts::Vector2D> Acts::detail::VerticesHelper::circularVertices(
+std::vector<Acts::Vector2> Acts::detail::VerticesHelper::circularVertices(
     ActsScalar innerR, ActsScalar outerR, ActsScalar avgPhi, ActsScalar halfPhi,
     unsigned int lseg) {
   return ellipsoidVertices(innerR, innerR, outerR, outerR, avgPhi, halfPhi,
@@ -99,7 +99,7 @@ std::vector<Acts::Vector2D> Acts::detail::VerticesHelper::circularVertices(
 }
 
 bool Acts::detail::VerticesHelper::onHyperPlane(
-    const std::vector<Acts::Vector3D>& vertices, ActsScalar tolerance) {
+    const std::vector<Acts::Vector3>& vertices, ActsScalar tolerance) {
   // Obvious always on one surface
   if (vertices.size() < 4) {
     return true;

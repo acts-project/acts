@@ -24,13 +24,13 @@ ActsExamples::Contextual::PayloadDecorator::PayloadDecorator(
 ActsExamples::ProcessCode ActsExamples::Contextual::PayloadDecorator::decorate(
     AlgorithmContext& context) {
   // Start with the nominal map
-  std::vector<Acts::Transform3D> aStore = m_nominalStore;
+  std::vector<Acts::Transform3> aStore = m_nominalStore;
 
   ACTS_VERBOSE("New IOV detected, emulate new alignment");
   if (context.eventNumber % m_cfg.iovSize) {
     for (auto& tf : aStore) {
-      tf *= Acts::AngleAxis3D(m_cfg.rotationStep * context.eventNumber,
-                              Acts::Vector3D::UnitY());
+      tf *= Acts::AngleAxis3(m_cfg.rotationStep * context.eventNumber,
+                             Acts::Vector3::UnitY());
     }
     // This creates a full payload context, i.e. the nominal store
     PayloadDetectorElement::ContextType alignableGeoContext;
@@ -50,8 +50,8 @@ void ActsExamples::Contextual::PayloadDecorator::parseGeometry(
   PayloadDetectorElement::ContextType nominalCtx;
 
   // Collect the surfacas into the nominal store
-  std::vector<Acts::Transform3D> aStore(nTransforms,
-                                        Acts::Transform3D::Identity());
+  std::vector<Acts::Transform3> aStore(nTransforms,
+                                       Acts::Transform3::Identity());
 
   auto fillTransforms = [&aStore, &nominalCtx](const auto* surface) -> void {
     auto alignableElement = dynamic_cast<const PayloadDetectorElement*>(

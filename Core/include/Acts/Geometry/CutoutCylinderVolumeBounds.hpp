@@ -89,7 +89,7 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   /// @param gpos The point to test
   /// @param tol The tolerance to test with
   /// @return Whether the point is inside or not.
-  bool inside(const Vector3D& gpos, double tol = 0) const override;
+  bool inside(const Vector3& gpos, double tol = 0) const override;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
   /// according navigation direction into the volume given the normal
@@ -102,7 +102,7 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   ///
   /// @return a vector of surfaces bounding this volume
   OrientedSurfaces orientedSurfaces(
-      const Transform3D& transform = Transform3D::Identity()) const override;
+      const Transform3& transform = Transform3::Identity()) const override;
 
   /// Construct bounding box for this shape
   ///
@@ -110,8 +110,8 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   /// @param envelope Optional envelope to add / subtract from min/max
   /// @param entity Entity to associate this bounding box with
   /// @return Constructed bounding box
-  Volume::BoundingBox boundingBox(const Transform3D* trf = nullptr,
-                                  const Vector3D& envelope = {0, 0, 0},
+  Volume::BoundingBox boundingBox(const Transform3* trf = nullptr,
+                                  const Vector3& envelope = {0, 0, 0},
                                   const Volume* entity = nullptr) const final;
 
   /// Write information about this instance to an outstream

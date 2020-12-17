@@ -40,7 +40,7 @@
 #include "TGeoTrd2.h"
 #include "TGeoTube.h"
 
-std::tuple<std::shared_ptr<const Acts::CylinderBounds>, const Acts::Transform3D,
+std::tuple<std::shared_ptr<const Acts::CylinderBounds>, const Acts::Transform3,
            double>
 Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
                                                const Double_t* rotation,
@@ -48,7 +48,7 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
                                                const std::string& axes,
                                                double scalor) noexcept(false) {
   std::shared_ptr<const CylinderBounds> bounds = nullptr;
-  Transform3D transform = Transform3D::Identity();
+  Transform3 transform = Transform3::Identity();
   double thickness = 0.;
 
   // Check if it's a tube (segment)
@@ -66,14 +66,14 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
     int ys = islower(axes.at(1)) ? -1 : 1;
 
     // Create translation and rotation
-    Vector3D t(scalor * translation[0], scalor * translation[1],
-               scalor * translation[2]);
+    Vector3 t(scalor * translation[0], scalor * translation[1],
+              scalor * translation[2]);
     bool flipxy = not boost::istarts_with(axes, "X");
-    Vector3D ax = flipxy ? xs * Vector3D(rotation[1], rotation[4], rotation[7])
-                         : xs * Vector3D(rotation[0], rotation[3], rotation[6]);
-    Vector3D ay = flipxy ? ys * Vector3D(rotation[0], rotation[3], rotation[6])
-                         : ys * Vector3D(rotation[1], rotation[4], rotation[7]);
-    Vector3D az = ax.cross(ay);
+    Vector3 ax = flipxy ? xs * Vector3(rotation[1], rotation[4], rotation[7])
+                        : xs * Vector3(rotation[0], rotation[3], rotation[6]);
+    Vector3 ay = flipxy ? ys * Vector3(rotation[0], rotation[3], rotation[6])
+                        : ys * Vector3(rotation[1], rotation[4], rotation[7]);
+    Vector3 az = ax.cross(ay);
 
     double minR = tube->GetRmin() * scalor;
     double maxR = tube->GetRmax() * scalor;
@@ -105,7 +105,7 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
   return {bounds, transform, thickness};
 }
 
-std::tuple<std::shared_ptr<const Acts::DiscBounds>, const Acts::Transform3D,
+std::tuple<std::shared_ptr<const Acts::DiscBounds>, const Acts::Transform3,
            double>
 Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
                                            const Double_t* rotation,
@@ -114,7 +114,7 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
                                            double scalor) noexcept(false) {
   using Line2D = Eigen::Hyperplane<double, 2>;
   std::shared_ptr<const DiscBounds> bounds = nullptr;
-  Transform3D transform = Transform3D::Identity();
+  Transform3 transform = Transform3::Identity();
 
   double thickness = 0.;
   // Special test for composite shape of silicon
@@ -128,11 +128,11 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
     }
 
     // Create translation and rotation
-    Vector3D t(scalor * translation[0], scalor * translation[1],
-               scalor * translation[2]);
-    Vector3D ax(rotation[0], rotation[3], rotation[6]);
-    Vector3D ay(rotation[1], rotation[4], rotation[7]);
-    Vector3D az(rotation[2], rotation[5], rotation[8]);
+    Vector3 t(scalor * translation[0], scalor * translation[1],
+              scalor * translation[2]);
+    Vector3 ax(rotation[0], rotation[3], rotation[6]);
+    Vector3 ay(rotation[1], rotation[4], rotation[7]);
+    Vector3 az(rotation[2], rotation[5], rotation[8]);
 
     transform = TGeoPrimitivesHelper::makeTransform(ax, ay, az, t);
 
@@ -151,18 +151,18 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
           // we apply it to the vertices directly
           const Double_t* polyTrl = nullptr;
           polyTrl = (maskTransform->GetTranslation());
-          std::vector<Vector2D> vertices;
+          std::vector<Vector2> vertices;
           for (unsigned int v = 0; v < 8; v += 2) {
-            Vector2D vtx = Vector2D((polyTrl[0] + polyVrt[v + 0]) * scalor,
-                                    (polyTrl[1] + polyVrt[v + 1]) * scalor);
+            Vector2 vtx = Vector2((polyTrl[0] + polyVrt[v + 0]) * scalor,
+                                  (polyTrl[1] + polyVrt[v + 1]) * scalor);
             vertices.push_back(vtx);
           }
 
-          std::vector<std::pair<Vector2D, Vector2D>> boundLines;
+          std::vector<std::pair<Vector2, Vector2>> boundLines;
           for (size_t i = 0; i < vertices.size(); ++i) {
-            Vector2D a = vertices.at(i);
-            Vector2D b = vertices.at((i + 1) % vertices.size());
-            Vector2D ab = b - a;
+            Vector2 a = vertices.at(i);
+            Vector2 b = vertices.at((i + 1) % vertices.size());
+            Vector2 ab = b - a;
             double phi = VectorHelpers::phi(ab);
 
             if (std::abs(phi) > 3 * M_PI / 4. || std::abs(phi) < M_PI / 4.) {
@@ -183,10 +183,10 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
               Line2D::Through(boundLines[0].first, boundLines[0].second);
           Line2D lB =
               Line2D::Through(boundLines[1].first, boundLines[1].second);
-          Vector2D ix = lA.intersection(lB);
+          Vector2 ix = lA.intersection(lB);
 
           const Eigen::Translation3d originTranslation(ix.x(), ix.y(), 0.);
-          const Vector2D originShift = -ix;
+          const Vector2 originShift = -ix;
 
           // Update transform by prepending the origin shift translation
           transform = transform * originTranslation;
@@ -224,11 +224,11 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
       int ys = islower(axes.at(1)) ? -1 : 1;
 
       // Create translation and rotation
-      Vector3D t(scalor * translation[0], scalor * translation[1],
-                 scalor * translation[2]);
-      Vector3D ax = xs * Vector3D(rotation[0], rotation[3], rotation[6]);
-      Vector3D ay = ys * Vector3D(rotation[1], rotation[4], rotation[7]);
-      Vector3D az = ax.cross(ay);
+      Vector3 t(scalor * translation[0], scalor * translation[1],
+                scalor * translation[2]);
+      Vector3 ax = xs * Vector3(rotation[0], rotation[3], rotation[6]);
+      Vector3 ay = ys * Vector3(rotation[1], rotation[4], rotation[7]);
+      Vector3 az = ax.cross(ay);
       transform = TGeoPrimitivesHelper::makeTransform(ax, ay, az, t);
 
       double minR = tube->GetRmin() * scalor;
@@ -257,7 +257,7 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
   return {bounds, transform, thickness};
 }
 
-std::tuple<std::shared_ptr<const Acts::PlanarBounds>, const Acts::Transform3D,
+std::tuple<std::shared_ptr<const Acts::PlanarBounds>, const Acts::Transform3,
            double>
 Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
                                             const Double_t* rotation,
@@ -265,11 +265,11 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
                                             const std::string& axes,
                                             double scalor) noexcept(false) {
   // Create translation and rotation
-  Vector3D t(scalor * translation[0], scalor * translation[1],
-             scalor * translation[2]);
-  Vector3D ax(rotation[0], rotation[3], rotation[6]);
-  Vector3D ay(rotation[1], rotation[4], rotation[7]);
-  Vector3D az(rotation[2], rotation[5], rotation[8]);
+  Vector3 t(scalor * translation[0], scalor * translation[1],
+            scalor * translation[2]);
+  Vector3 ax(rotation[0], rotation[3], rotation[6]);
+  Vector3 ay(rotation[1], rotation[4], rotation[7]);
+  Vector3 az(rotation[2], rotation[5], rotation[8]);
 
   std::shared_ptr<const PlanarBounds> bounds = nullptr;
 
@@ -329,8 +329,8 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
   int ys = islower(axes.at(1)) ? -1 : 1;
 
   // Set up the columns : only cyclic iterations are allowed
-  Vector3D cx = xs * ax;
-  Vector3D cy = ys * ay;
+  Vector3 cx = xs * ax;
+  Vector3 cy = ys * ay;
   if (boost::istarts_with(axes, "XY")) {
     if (trapezoid2) {
       double dx1 = (ys < 0) ? trapezoid1->GetDx2() : trapezoid1->GetDx1();
@@ -340,10 +340,10 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
       thickness = scalor * trapezoid2->GetDz();
     } else if (polygon8) {
       Double_t* tgverts = polygon8->GetVertices();
-      std::vector<Vector2D> pVertices;
+      std::vector<Vector2> pVertices;
       for (unsigned int ivtx = 0; ivtx < 4; ++ivtx) {
-        pVertices.push_back(Vector2D(scalor * xs * tgverts[ivtx * 2],
-                                     scalor * ys * tgverts[ivtx * 2 + 1]));
+        pVertices.push_back(Vector2(scalor * xs * tgverts[ivtx * 2],
+                                    scalor * ys * tgverts[ivtx * 2 + 1]));
       }
       bounds = std::make_shared<ConvexPolygonBounds<4>>(pVertices);
       thickness = scalor * polygon8->GetDz();
@@ -408,10 +408,10 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
       thickness = scalor * trapezoid2->GetDz();
     } else if (polygon8) {
       const Double_t* tgverts = polygon8->GetVertices();
-      std::vector<Vector2D> pVertices;
+      std::vector<Vector2> pVertices;
       for (unsigned int ivtx = 0; ivtx < 4; ++ivtx) {
-        pVertices.push_back(Vector2D(scalor * xs * tgverts[ivtx * 2 + 1],
-                                     scalor * ys * tgverts[ivtx * 2]));
+        pVertices.push_back(Vector2(scalor * xs * tgverts[ivtx * 2 + 1],
+                                    scalor * ys * tgverts[ivtx * 2]));
       }
       bounds = std::make_shared<ConvexPolygonBounds<4>>(pVertices);
       thickness = scalor * polygon8->GetDz();

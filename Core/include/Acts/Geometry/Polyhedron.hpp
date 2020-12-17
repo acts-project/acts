@@ -36,7 +36,7 @@ struct Polyhedron {
   /// @param triangularMeshIn List of lists of indices for a triangular mesh
   /// @param isExact A dedicated flag if this is exact or not
   /// @note This creates copies of the input vectors
-  Polyhedron(const std::vector<Vector3D>& verticesIn,
+  Polyhedron(const std::vector<Vector3>& verticesIn,
              const std::vector<FaceType>& facesIn,
              const std::vector<FaceType>& triangularMeshIn, bool isExact = true)
       : vertices(verticesIn),
@@ -45,7 +45,7 @@ struct Polyhedron {
         exact(isExact) {}
 
   /// List of 3D vertices as vectors
-  std::vector<Vector3D> vertices;
+  std::vector<Vector3> vertices;
 
   /// List of faces connecting the vertices.
   /// each face is a list of vertices v
@@ -68,7 +68,7 @@ struct Polyhedron {
   /// Move the polyhedron with a Transfrom3D
   ///
   /// @param transform The additional transform applied
-  void move(const Transform3D& transform);
+  void move(const Transform3& transform);
 
   /// Maximum extent of the polyhedron in space
   ///
@@ -77,6 +77,6 @@ struct Polyhedron {
   /// with respect to a given coordinate frame
   ///
   /// @return ranges that describe the space taken by this surface
-  Extent extent(const Transform3D& transform = Transform3D::Identity()) const;
+  Extent extent(const Transform3& transform = Transform3::Identity()) const;
 };
 }  // namespace Acts

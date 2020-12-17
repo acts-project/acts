@@ -45,9 +45,9 @@ struct CubicTrackingGeometry {
 
     // Construct the rotation
     double rotationAngle = 90_degree;
-    Vector3D xPos(cos(rotationAngle), 0., sin(rotationAngle));
-    Vector3D yPos(0., 1., 0.);
-    Vector3D zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+    Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
+    Vector3 yPos(0., 1., 0.);
+    Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
     rotation.col(0) = xPos;
     rotation.col(1) = yPos;
     rotation.col(2) = zPos;
@@ -67,7 +67,7 @@ struct CubicTrackingGeometry {
 
     // Set translation vectors
     double eps = 1_mm;
-    std::vector<Vector3D> translations;
+    std::vector<Vector3> translations;
     translations.push_back({-2_m, 0., 0.});
     translations.push_back({-1_m, 0., 0.});
     translations.push_back({1_m - eps, 0., 0.});
@@ -79,7 +79,7 @@ struct CubicTrackingGeometry {
     std::array<std::shared_ptr<const Surface>, 6> surfaces;
     unsigned int i;
     for (i = 0; i < translations.size(); i++) {
-      Transform3D trafo(Transform3D::Identity() * rotation);
+      Transform3 trafo(Transform3::Identity() * rotation);
       trafo.translation() = translations[i];
       // Create the detector element
       auto detElement = std::make_unique<const DetectorElementStub>(
@@ -93,7 +93,7 @@ struct CubicTrackingGeometry {
     // Construct layers
     std::array<LayerPtr, 6> layers;
     for (i = 0; i < 6; i++) {
-      Transform3D trafo(Transform3D::Identity() * rotation);
+      Transform3 trafo(Transform3::Identity() * rotation);
       trafo.translation() = translations[i];
 
       std::unique_ptr<SurfaceArray> surArray(new SurfaceArray(surfaces[i]));
@@ -106,8 +106,8 @@ struct CubicTrackingGeometry {
     }
 
     // Build volume for surfaces with negative x-values
-    Transform3D trafoVol1(Transform3D::Identity());
-    trafoVol1.translation() = Vector3D(-1.5_m, 0., 0.);
+    Transform3 trafoVol1(Transform3::Identity());
+    trafoVol1.translation() = Vector3(-1.5_m, 0., 0.);
 
     auto boundsVol =
         std::make_shared<const CuboidVolumeBounds>(1.5_m, 0.5_m, 0.5_m);
@@ -128,8 +128,8 @@ struct CubicTrackingGeometry {
                                std::move(layArr1), nullptr, {}, "Volume 1");
 
     // Build volume for surfaces with positive x-values
-    Transform3D trafoVol2(Transform3D::Identity());
-    trafoVol2.translation() = Vector3D(1.5_m, 0., 0.);
+    Transform3 trafoVol2(Transform3::Identity());
+    trafoVol2.translation() = Vector3(1.5_m, 0., 0.);
 
     layVec.clear();
     for (i = 2; i < 6; i++)
@@ -152,16 +152,16 @@ struct CubicTrackingGeometry {
         BoundarySurfaceFace::negativeFaceYZ);
 
     // Build world volume
-    Transform3D trafoWorld(Transform3D::Identity());
-    trafoWorld.translation() = Vector3D(0., 0., 0.);
+    Transform3 trafoWorld(Transform3::Identity());
+    trafoWorld.translation() = Vector3(0., 0., 0.);
 
     auto worldVol =
         std::make_shared<const CuboidVolumeBounds>(3._m, 0.5_m, 0.5_m);
 
-    std::vector<std::pair<TrackingVolumePtr, Vector3D>> tapVec;
+    std::vector<std::pair<TrackingVolumePtr, Vector3>> tapVec;
 
-    tapVec.push_back(std::make_pair(trackVolume1, Vector3D(-1.5_m, 0., 0.)));
-    tapVec.push_back(std::make_pair(trackVolume2, Vector3D(1.5_m, 0., 0.)));
+    tapVec.push_back(std::make_pair(trackVolume1, Vector3(-1.5_m, 0., 0.)));
+    tapVec.push_back(std::make_pair(trackVolume2, Vector3(1.5_m, 0., 0.)));
 
     std::vector<float> binBoundaries = {-3._m, 0., 3._m};
 
@@ -179,7 +179,7 @@ struct CubicTrackingGeometry {
         new Acts::TrackingGeometry(mtvpWorld));
   }
 
-  RotationMatrix3D rotation = RotationMatrix3D::Identity();
+  RotationMatrix3 rotation = RotationMatrix3::Identity();
   std::shared_ptr<const RectangleBounds> rBounds = nullptr;
   std::shared_ptr<const ISurfaceMaterial> surfaceMaterial = nullptr;
 
