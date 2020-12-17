@@ -49,12 +49,14 @@ jobs:
 
   clang-tidy:
     runs-on: ubuntu-latest
-    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:v4
+    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:v8
     steps:
       - uses: actions/checkout@v2
       - name: Install clang-tidy
         run: >
-          apt-get install -y clang-10 clang-tidy-10
+          apt-get install -y clang-10 clang-tidy-10 g++-8
+          && apt-get remove -r gcc-9
+          && apt-get autoremove -y
           && ln -s /usr/bin/clang++-10 /usr/bin/clang++
           && ln -s /usr/bin/clang-tidy-10 /usr/bin/clang-tidy
       - name: Configure and build
