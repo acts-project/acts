@@ -80,18 +80,16 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::endRun() {
 ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
     const AlgorithmContext& ctx,
     const std::vector<std::vector<Acts::Seed<SimSpacePoint>>>& seedVector) {
-  // Read truth particles from input collection
+  // Read truth information collections
   const auto& particles =
-      ctx.eventStore.get<ActsExamples::SimParticleContainer>(
-          m_cfg.inputParticles);
+      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
+  const auto& hitParticlesMap =
+      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
 
   size_t nSeeds = 0;
   size_t nMatchedSeeds = 0;
   // Map from particles to how many times they were successfully found by a seed
   std::unordered_map<ActsFatras::Barcode, std::size_t> truthCount;
-  ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
-  const auto hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
 
   for (auto& regionVec : seedVector) {
     nSeeds += regionVec.size();
