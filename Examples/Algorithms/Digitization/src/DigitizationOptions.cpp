@@ -37,7 +37,7 @@ void ActsExamples::Options::addDigitizationOptions(Description& desc) {
   //
   //   --digi-smear-volume-id=11
   //   --digi-smear-indices=1       # loc1
-  //   --digi-smear-types=0:0:3     # loc1 uses truncated gaussian
+  //   --digi-smear-types=0         # loc1 uses truncated gaussian
   //   --digi-smear-parameters=12.5 # loc1 gaussian width
   //
   auto opt = desc.add_options();
