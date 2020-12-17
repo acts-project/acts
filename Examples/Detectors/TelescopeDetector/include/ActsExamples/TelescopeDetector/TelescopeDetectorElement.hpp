@@ -18,7 +18,6 @@
 namespace Acts {
 class Surface;
 class PlanarBounds;
-class DiscBounds;
 class ISurfaceMaterial;
 class DigitizationModule;
 }  // namespace Acts
@@ -52,20 +51,6 @@ class TelescopeDetectorElement : public Acts::IdentifiedDetectorElement {
       const Identifier identifier,
       std::shared_ptr<const Acts::Transform3> transform,
       std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
-      std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
-
-  /// Constructor for single sided detector element
-  /// - bound to a Disc Surface
-  ///
-  /// @param identifier is the module identifier
-  /// @param transform is the transform that element the layer in 3D frame
-  /// @param dBounds is the planar bounds for the disc like detector element
-  /// @param thickness is the module thickness
-  /// @param material is the (optional) Surface material associated to it
-  TelescopeDetectorElement(
-      const Identifier identifier,
-      std::shared_ptr<const Acts::Transform3> transform,
-      std::shared_ptr<const Acts::DiscBounds> dBounds, double thickness,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
 
   ///  Destructor
@@ -113,8 +98,7 @@ class TelescopeDetectorElement : public Acts::IdentifiedDetectorElement {
       const;
 
  private:
-  /// the element representation
-  /// identifier
+  /// the element representation identifier
   Identifier m_elementIdentifier;
   /// the transform for positioning in 3D space
   std::shared_ptr<const Acts::Transform3> m_elementTransform = nullptr;
@@ -124,9 +108,8 @@ class TelescopeDetectorElement : public Acts::IdentifiedDetectorElement {
   std::shared_ptr<const Acts::Surface> m_elementSurface = nullptr;
   /// the element thickness
   double m_elementThickness = 0.;
-  /// store either
+  /// the planar bounds
   std::shared_ptr<const Acts::PlanarBounds> m_elementPlanarBounds = nullptr;
-  std::shared_ptr<const Acts::DiscBounds> m_elementDiscBounds = nullptr;
 };
 
 inline const Acts::Surface& TelescopeDetectorElement::surface() const {
