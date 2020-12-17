@@ -58,6 +58,7 @@ jobs:
           && apt-get remove -y gcc-9
           && apt-get autoremove -y
           && ln -s /usr/bin/clang++-10 /usr/bin/clang++
+          && ln -s /usr/bin/clang-10 /usr/bin/clang
           && ln -s /usr/bin/clang-tidy-10 /usr/bin/clang-tidy
       - name: Configure and build
         uses: lukka/run-cmake@v2
