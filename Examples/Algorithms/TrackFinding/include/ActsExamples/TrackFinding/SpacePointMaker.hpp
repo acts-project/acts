@@ -42,7 +42,7 @@ class SpacePointMaker final : public BareAlgorithm {
     std::string inputSourceLinks;
     /// Input measurements collection.
     std::string inputMeasurements;
-    /// Output space points sollection.
+    /// Output space points collection.
     std::string outputSpacePoints;
     /// Tracking geometry for transformation lookup.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
