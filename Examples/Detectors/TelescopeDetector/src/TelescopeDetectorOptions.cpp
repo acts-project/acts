@@ -8,6 +8,8 @@
 
 #include "ActsExamples/TelescopeDetector/TelescopeDetectorOptions.hpp"
 
+#include "ActsExamples/Utilities/Options.hpp"
+
 #include <boost/program_options.hpp>
 
 void ActsExamples::Options::addTelescopeGeometryOptions(

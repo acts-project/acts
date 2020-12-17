@@ -9,10 +9,7 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesDetectorTelescope
-  PUBLIC ActsCore ActsPluginIdentification ActsPluginDigitization)
-target_link_libraries(
-  ActsExamplesDetectorTelescope
-  PUBLIC ActsExamplesFramework ActsExamplesDetectorsCommon)
+  PUBLIC ActsCore ActsExamplesFramework ActsExamplesDetectorsCommon)
 
 install(
   TARGETS ActsExamplesDetectorTelescope

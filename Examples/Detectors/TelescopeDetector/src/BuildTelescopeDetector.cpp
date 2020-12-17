@@ -120,6 +120,5 @@ ActsExamples::Telescope::buildDetector(
                                    std::move(layArr), nullptr, {}, "Telescope");
 
   // Build and return tracking geometry
-  return std::unique_ptr<Acts::TrackingGeometry>(
-      new Acts::TrackingGeometry(trackVolume));
+  return std::make_unique<Acts::TrackingGeometry>(trackVolume);
 }
