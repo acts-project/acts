@@ -54,7 +54,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install clang-tidy
         run: >
-          apt-get install -y clang-10 clang-tidy-10 g++-8
+          apt-get install -y clang-10 clang-tidy-10 g++-8 libstdc++-8-dev
           && apt-get remove -y gcc-9
           && apt-get autoremove -y
           && ln -s /usr/bin/clang++-10 /usr/bin/clang++
