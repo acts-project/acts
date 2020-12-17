@@ -55,11 +55,12 @@ jobs:
       - name: Install clang-tidy
         run: >
           apt-get install -y clang-10 clang-tidy-10 g++-8 libstdc++-8-dev
-          && apt-get remove -y g++-9 gcc-9 libstdc++-9-dev
           && ln -s /usr/bin/clang++-10 /usr/bin/clang++
           && ln -s /usr/bin/clang-10 /usr/bin/clang
           && ln -s /usr/bin/clang-tidy-10 /usr/bin/clang-tidy
-          && clang++ -v
+          && mkdir -p /opt/lib/gcc/x86_64-linux-gnu
+          && ln -s /usr/lib/gcc/x86_64-linux-gnu/8/ /opt/lib/gcc/x86_64-linux-gnu/ 
+          && clang++ --gcc-toolchain=/opt -v
       - name: Configure and build
         uses: lukka/run-cmake@v2
         with:
@@ -69,6 +70,7 @@ jobs:
             -GNinja
             -DCMAKE_CXX_COMPILER=clang++
             -DCMAKE_C_COMPILER=clang
+            -DCMAKE_CXX_FLAGS="--gcc-toolchain=/opt"
             -DCMAKE_BUILD_TYPE=Release
             -DCMAKE_CXX_FLAGS="-Werror"
             -DACTS_BUILD_EVERYTHING=on
