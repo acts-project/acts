@@ -8,10 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/ParameterSet.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
 
 #include <unordered_set>
 #include <utility>
@@ -19,7 +17,7 @@
 namespace ActsFatras {
 
 /// A single cell definition: index, cell central value
-using Cell = std::pair<unsigned int, double>;
+using Cell = std::pair<unsigned int, Acts::ActsScalar>;
 
 /// A channel definition: Cell identification, readout word, links
 ///
@@ -75,8 +73,8 @@ struct Cluster {
   template <typename parameters_t, typename covariance_t>
   Cluster(const Eigen::MatrixBase<parameters_t>& p,
           const Eigen::MatrixBase<covariance_t>& c,
-          std::array<unsigned int, sizeof...(kParameters)> cSize,
-          std::vector<Channel<signal_t, kParameters...>> cChannels)
+          std::array<unsigned int, kSize> cSize,
+          std::vector<Channel<signal_t, kSize>> cChannels)
       : parameters(p), covariance(c), clusterSize(cSize), channels(cChannels) {}
 
   Cluster() = delete;
