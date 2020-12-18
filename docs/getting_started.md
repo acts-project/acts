@@ -119,20 +119,27 @@ A set of container images is available through the [Acts container
 registry][acts_containers]. The following containers are used as part of the
 continous integration setup and come with all dependencies pre-installed.
 
--   `centos7-lcg95apython3`: based on CentOS 7 with HEP-specific software from
-    LCG release 95apython3
--   `centos7-lcg96`: based on CentOS 7 with HEP-specific software from LCG
-    release 96
+-   `centos7-lcg97apython3-gcc9`: based on CentOS 7 with HEP-specific software from
+    LCG 97apython3 using the GCC 9 compiler
+-   `centos7-lcg98python3-gcc10`: based on CentOS 7 with HEP-specific software from LCG
+    98python3 using the GCC 10 compiler
 -   `ubuntu2004`: based on Ubuntu 20.04 with manual installation of HEP-specific
     software
 
 To use these locally, you first need to pull the relevant images from the
 registry. Stable versions are tagged as `vX` where `X` is the version number.
-The latest version is also tagged as `master`. The following command downloads
-the latest `ubuntu2004` image:
+The latest, potentially unstable, version is tagged as `latest`. To list all
+available tags, e.g. for the `ubuntu2004` image, you can use the following
+command:
 
 ```console
-$ docker pull ghcr.io/acts-project/ubuntu2004:master
+$ docker search --list-tags ghcr.io/acts-project/ubuntu2004
+```
+
+The following command then downloads a stable tag of the `ubuntu2004` image:
+
+```console
+$ docker pull ghcr.io/acts-project/ubuntu2004:v9
 ```
 
 This should print the image id as part of the output. You can also find out the
