@@ -65,6 +65,16 @@ endif()
 if(PluginAutodiff IN_LIST Acts_COMPONENTS)
   find_dependency(autodiff @autodiff_VERSION@ CONFIG EXACT)
 endif()
+if(PluginOnnx IN_LIST Acts_COMPONENTS)
+  find_package(OnnxRuntime QUIET)
+  if(NOT OnnxRuntime_FOUND)
+    message(FATAL_ERROR "Could not find OnnxRuntime. Since at the moment \
+    OnnxRuntime does not provide a configuration file \
+    ('OnnxRuntimeConfig.cmake' or 'onnxruntime-config.cmake'), consider \
+    copying the file 'FindOnnxRuntime.cmake' from the Acts repository \
+    into your project's CMAKE_MODULE_PATH")
+  endif()
+endif()
 
 # load **all** available components. we can not just include the requested
 # components since there can be interdependencies between them.
