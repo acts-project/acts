@@ -107,7 +107,7 @@ std::vector<ActsExamples::SimParticle> selectOutgoingParticles(
       if (procPartOut->attribute<HepMC3::IntAttribute>("TrackID")->value() ==
               trackID &&
           procPartOut->end_vertex()) {
-        for (const HepMC3::ConstGenParticlePtr dyingPartOut :
+        for (const HepMC3::ConstGenParticlePtr& dyingPartOut :
              procPartOut->end_vertex()->particles_out()) {
           finalStateParticles.push_back(
               ActsExamples::HepMC3Particle::particle(dyingPartOut));
