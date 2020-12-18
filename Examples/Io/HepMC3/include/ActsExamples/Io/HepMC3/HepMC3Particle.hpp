@@ -17,9 +17,8 @@
 #include <HepPID/ParticleIDMethods.hh>
 
 namespace ActsExamples {
-
-/// Helper struct to convert HepMC3 particles to internal format.
 namespace HepMC3Particle {
+
 /// @brief Returns the particle translated into Acts
 /// @param particle HepMC3::GenParticle particle
 /// @return corresponding Acts particle
@@ -87,6 +86,6 @@ void energy(std::shared_ptr<HepMC3::GenParticle> particle, const double energy);
 /// @param particle HepMC3::GenParticle particle
 /// @param mass mass that will be set
 void mass(std::shared_ptr<HepMC3::GenParticle> particle, const double mass);
-}  // namespace HepMC3Particle
 
+}  // namespace HepMC3Particle
 }  // namespace ActsExamples
