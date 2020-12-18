@@ -91,17 +91,16 @@ The build commands are the same regardless of where you are building the
 software. Depending on your build environment, there are different ways how to
 make the dependencies available.
 
-### On lxplus
+### With a LCG release on CVMFS
 
-On CERNs lxplus login machines, dependencies are provided via LCG releases
-that are available through CVMFS. A setup script is provided to activate one of the compatible releases that can be used as follows:
+If you have access to a machine running [CVMFS](https://cernvm.cern.ch/fs/),
+e.g. CERNs lxplus login machines, the dependencies can be easily satisfied
+via a LCG releases available through CVMFS. A setup script is provided to activate a compatible releases that can be used as follows:
 
 ```console
 $ cd <source>
-$ source CI/setup_lcg95.sh # or setup_lcg96.sh
+$ source CI/setup_cvmfs_lcg.sh
 ```
-
-This activates a compatible release variant on *CentOS 7*.
 
 After sourcing the setup script, you can build Acts as described above. The
 following commands will build Acts in the `<source>/build` directory with the
@@ -109,7 +108,7 @@ Fatras component.
 
 ```console
 $ cd <source>
-$ source CI/setup_lcg96.sh
+$ source CI/setup_cvmfs_lcg.sh
 $ cmake -B build -S . -DACTS_BUILD_FATRAS=on
 $ cmake --build build
 ```
