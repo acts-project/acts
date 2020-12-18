@@ -230,6 +230,7 @@ components.
 | ACTS_BUILD_PLUGIN_IDENTIFICATION      | Build Identification plugin |
 | ACTS_BUILD_PLUGIN_JSON                | Build Json plugin |
 | ACTS_BUILD_PLUGIN_LEGACY              | Build legacy plugin |
+| ACTS_BUILD_PLUGIN_ONNX                | Build ONNX plugin |
 | ACTS_BUILD_PLUGIN_SYCL                | Build SYCL plugin |
 | ACTS_BUILD_PLUGIN_TGEO                | Build TGeo plugin |
 | ACTS_BUILD_FATRAS                     | Build FAst TRAcking Simulation package |
@@ -243,6 +244,7 @@ components.
 | ACTS_BUILD_UNITTESTS                  | Build unit tests |
 | ACTS_BUILD_DOCS                       | Build documentation |
 | ACTS_PARAMETER_DEFINITIONS_HEADER     | Use a different (track) parameter definitions header |
+| ACTS_USE_SYSTEM_AUTODIFF              | Use autodiff provided by the system instead of the bundled version |
 | ACTS_USE_SYSTEM_NLOHMANN_JSON         | Use nlohmann::json provided by the system instead of the bundled version |
 
 All Acts-specific options are disabled or empty by default and must be
