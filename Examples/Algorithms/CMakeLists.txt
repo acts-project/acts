@@ -1,4 +1,3 @@
-add_subdirectory(Seeding)
 add_subdirectory(Digitization)
 add_subdirectory_if(HepMC ACTS_BUILD_EXAMPLES_HEPMC3)
 add_subdirectory(Fatras)

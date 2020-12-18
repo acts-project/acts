@@ -80,14 +80,14 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
   const Acts::Logger& _logger;
 
   Impl(Config&& c, const Acts::Logger& l) : cfg(std::move(c)), _logger(l) {
-    if (cfg.inputParticles.empty()) {
-      throw std::invalid_argument("Missing particles input collection");
+    if (cfg.inputProtoTracks.empty()) {
+      throw std::invalid_argument("Missing proto tracks input collection");
     }
     if (cfg.inputMeasurementParticlesMap.empty()) {
       throw std::invalid_argument("Missing hit-particles map input collection");
     }
-    if (cfg.inputProtoTracks.empty()) {
-      throw std::invalid_argument("Missing proto tracks input collection");
+    if (cfg.inputParticles.empty()) {
+      throw std::invalid_argument("Missing particles input collection");
     }
     if (cfg.outputFilename.empty()) {
       throw std::invalid_argument("Missing output filename");

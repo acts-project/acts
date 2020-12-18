@@ -133,9 +133,9 @@ class GroupBy {
 
 /// Construct the group-by proxy for a container.
 template <typename Container, typename KeyGetter>
-GroupBy<typename Container::const_iterator, KeyGetter> makeGroupBy(
-    const Container& container, KeyGetter keyGetter) {
-  return {container.begin(), container.end(), std::move(keyGetter)};
+auto makeGroupBy(const Container& container, KeyGetter keyGetter)
+    -> GroupBy<decltype(std::begin(container)), KeyGetter> {
+  return {std::begin(container), std::end(container), std::move(keyGetter)};
 }
 
 }  // namespace ActsExamples
