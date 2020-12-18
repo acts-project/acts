@@ -174,7 +174,7 @@ container $ cmake --build build
 
 Building and running Acts on your local machine is not offically supported.
 However, if you have the necessary prerequisites installed it is possible to use
-it locally. Acts developers regularly use different recent Linux distributions
+it locally. Acts developers regularly use different Linux distributions
 and macOS to build and develop Acts.
 
 ## Building the documentation
