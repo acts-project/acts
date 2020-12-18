@@ -19,7 +19,7 @@
 namespace ActsFatras {
 
 /// Generic implementation of a channel merger, currently only additive
-/// channel merging
+/// channel merging.
 ///
 /// @tparam signal_t The type of signal, needs operator+= to be defined
 /// @tparam kSize the dimensonality of the object (cluster)
