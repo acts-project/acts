@@ -5,22 +5,23 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Digitization/HitSmearing.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
-#include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Performance/SeedingPerformanceWriter.hpp"
+#include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
-#include "ActsExamples/Plugins/Obj/ObjPropagationStepsWriter.hpp"
-#include "ActsExamples/Seeding/SeedingAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include <Acts/Definitions/Units.hpp>
-#include <Acts/Geometry/TrackingGeometry.hpp>
 
 #include <memory>
 
@@ -32,7 +33,6 @@ using namespace ActsExamples;
 int runSeedingExample(int argc, char* argv[],
                       std::shared_ptr<ActsExamples::IBaseDetector> detector) {
   // Setup and parse options
-
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
   Options::addRandomNumbersOptions(desc);
@@ -51,6 +51,7 @@ int runSeedingExample(int argc, char* argv[],
 
   // Now read the standard options
   auto logLevel = Options::readLogLevel(vm);
+  auto outputDir = ensureWritableDirectory(vm["output-dir"].as<std::string>());
 
   // The geometry, material and decoration
   auto geometry = Geometry::build(vm, *detector);
@@ -81,8 +82,8 @@ int runSeedingExample(int argc, char* argv[],
   // Create smeared measurements
   HitSmearing::Config hitSmearingCfg;
   hitSmearingCfg.inputSimHits = simHitReaderCfg.outputSimHits;
-  hitSmearingCfg.outputMeasurements = "measurements";
   hitSmearingCfg.outputSourceLinks = "sourcelinks";
+  hitSmearingCfg.outputMeasurements = "measurements";
   hitSmearingCfg.outputMeasurementParticlesMap = "measurement_particles_map";
   hitSmearingCfg.outputMeasurementSimHitsMap = "measurement_simhits_map";
   hitSmearingCfg.sigmaLoc0 = 25_um;
@@ -92,11 +93,37 @@ int runSeedingExample(int argc, char* argv[],
   sequencer.addAlgorithm(
       std::make_shared<HitSmearing>(hitSmearingCfg, logLevel));
 
+  // Create space points
+  SpacePointMaker::Config spCfg;
+  spCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
+  spCfg.inputMeasurements = hitSmearingCfg.outputMeasurements;
+  spCfg.outputSpacePoints = "spacepoints";
+  spCfg.trackingGeometry = tGeometry;
+  spCfg.geometrySelection = {
+      // barrel pixel layers
+      Acts::GeometryIdentifier().setVolume(8).setLayer(2),
+      Acts::GeometryIdentifier().setVolume(8).setLayer(4),
+      Acts::GeometryIdentifier().setVolume(8).setLayer(6),
+      // positive endcap pixel layers
+      Acts::GeometryIdentifier().setVolume(9).setLayer(2),
+      Acts::GeometryIdentifier().setVolume(9).setLayer(4),
+      Acts::GeometryIdentifier().setVolume(9).setLayer(6),
+      Acts::GeometryIdentifier().setVolume(9).setLayer(8),
+      // negative endcap pixel layers
+      Acts::GeometryIdentifier().setVolume(7).setLayer(14),
+      Acts::GeometryIdentifier().setVolume(7).setLayer(12),
+      Acts::GeometryIdentifier().setVolume(7).setLayer(10),
+      Acts::GeometryIdentifier().setVolume(7).setLayer(8),
+  };
+  sequencer.addAlgorithm(std::make_shared<SpacePointMaker>(spCfg, logLevel));
+
   // Seeding algorithm
   SeedingAlgorithm::Config seedingCfg;
+  seedingCfg.inputSpacePoints = {
+      spCfg.outputSpacePoints,
+  };
   seedingCfg.outputSeeds = "seeds";
-  seedingCfg.inputMeasurements = hitSmearingCfg.outputMeasurements;
-  seedingCfg.trackingGeometry = tGeometry;
+  seedingCfg.outputProtoTracks = "prototracks";
   seedingCfg.rMax = 200.;
   seedingCfg.deltaRMax = 60.;
   seedingCfg.collisionRegionMin = -250;
@@ -109,25 +136,30 @@ int runSeedingExample(int argc, char* argv[],
   seedingCfg.radLengthPerSeed = 0.1;
   seedingCfg.minPt = 500.;
   seedingCfg.bFieldInZ = 0.00199724;
-  seedingCfg.beamPos = {0., 0.};
+  seedingCfg.beamPosX = 0;
+  seedingCfg.beamPosY = 0;
   seedingCfg.impactMax = 3.;
-  seedingCfg.barrelVolume = 8;
-  seedingCfg.barrelLayers = {2, 4, 6};
-  seedingCfg.posEndcapVolume = 9;
-  seedingCfg.posEndcapLayers = {2, 4, 6, 8};
-  seedingCfg.negEndcapVolume = 7;
-  seedingCfg.negEndcapLayers = {14, 12, 10, 8};
-
   sequencer.addAlgorithm(
       std::make_shared<SeedingAlgorithm>(seedingCfg, logLevel));
 
   // Performance Writer
+  TrackFinderPerformanceWriter::Config tfPerfCfg;
+  tfPerfCfg.inputProtoTracks = seedingCfg.outputProtoTracks;
+  tfPerfCfg.inputParticles = particleReader.outputParticles;
+  tfPerfCfg.inputMeasurementParticlesMap =
+      hitSmearingCfg.outputMeasurementParticlesMap;
+  tfPerfCfg.outputDir = outputDir;
+  tfPerfCfg.outputFilename = "performance_seeding_trees.root";
+  sequencer.addWriter(
+      std::make_shared<TrackFinderPerformanceWriter>(tfPerfCfg, logLevel));
+
   SeedingPerformanceWriter::Config seedPerfCfg;
   seedPerfCfg.inputSeeds = seedingCfg.outputSeeds;
   seedPerfCfg.inputParticles = particleReader.outputParticles;
   seedPerfCfg.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
-  seedPerfCfg.outputFilename = "performance.root";
+  seedPerfCfg.outputDir = outputDir;
+  seedPerfCfg.outputFilename = "performance_seeding_hists.root";
   sequencer.addWriter(
       std::make_shared<SeedingPerformanceWriter>(seedPerfCfg, logLevel));
 

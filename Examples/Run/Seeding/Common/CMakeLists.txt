@@ -12,7 +12,7 @@ target_link_libraries(
     ActsCore
     ActsExamplesFramework
     ActsExamplesPropagation
-    ActsExamplesSeeding
+    ActsExamplesTrackFinding
     ActsExamplesCommon
     ActsExamplesDigitization  
     ActsExamplesMagneticField
