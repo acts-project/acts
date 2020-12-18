@@ -24,26 +24,33 @@ section.
 The following dependencies are required to build the Acts core library:
 
 -   A C++17 compatible compiler (recent versions of either gcc and clang should work)
--   [CMake](https://cmake.org) >= 3.11
--   [Boost](http://boost.org) >= 1.69 with `filesystem`, `program_options`, and `unit_test_framework`
--   [Eigen](http://eigen.tuxfamily.org) >= 3.2.9
+-   [CMake](https://cmake.org) >= 3.14
+-   [Boost](http://boost.org) >= 1.71 with `filesystem`, `program_options`, and `unit_test_framework`
+-   [Eigen](http://eigen.tuxfamily.org) >= 3.3.7
 
 The following dependencies are optional and are needed to build additional
-components.
+components:
 
--   [DD4Hep](http://dd4hep.cern.ch) >= 1.10 for the DD4Hep plugin and some examples
--   [Doxygen](http://doxygen.org) >= 1.8.11 for the documentation
+-   [CUDA](https://developer.nvidia.com/cuda-zone) for the CUDA plugin
+-   [DD4Hep](http://dd4hep.cern.ch) >= 1.11 for the DD4Hep plugin and some examples
+-   [Doxygen](http://doxygen.org) >= 1.8.15 for the documentation
 -   [Geant4](http://geant4.org/) for some examples
--   [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) >= 3.1 for some examples
+-   [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) >= 3.2.1 for some examples
 -   [Pythia8](http://home.thep.lu.se/~torbjorn/Pythia.html) for some examples
--   [Intel Threading Building Blocks](https://01.org/tbb) for the examples
--   [ROOT](https://root.cern.ch) >= 6.10 for the TGeo plugin and the examples
+-   [Intel Threading Building Blocks](https://01.org/tbb) >= 2020.1 for the examples
+-   [ONNX](https://onnx.ai) for the ONNX plugin and some examples
+-   [ROOT](https://root.cern.ch) >= 6.20 for the TGeo plugin and the examples
 -   [Sphinx](https://www.sphinx-doc.org) >= 2.0 with [Breathe](https://breathe.readthedocs.io/en/latest/), [Exhale](https://exhale.readthedocs.io/en/latest/), and [recommonmark](https://recommonmark.readthedocs.io/en/latest/index.html) extensions for the documentation
+-   [SYCL](https://www.khronos.org/sycl/) for the SYCL plugin
+
+There are some additional dependencies that are automatically provided as part of
+the build system.
+These are usually not available through the system package manager and can be found in the ``thirdparty`` directory.
 
 All external dependencies must be provided prior to building Acts. Compatible
 versions of all dependencies are provided e.g. by the [LCG
-releases](http://lcginfo.cern.ch/). The minimum support release is [LCG
-95apython3](http://lcginfo.cern.ch/release/95apython3). Other options are also
+releases](http://lcginfo.cern.ch/) starting from [LCG 97apython3](http://lcginfo.cern.ch/release/97apython3/).
+Other options are also
 available and are discussed in the [Building Acts](#building-acts) section.
 
 ## Building Acts
