@@ -1,0 +1,95 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2020 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "ActsExamples/Framework/BareAlgorithm.hpp"
+
+#include <memory>
+#include <string>
+#include <vector>
+
+namespace Acts {
+class TrackingGeometry;
+}
+
+namespace ActsExamples {
+
+/// Create space point representations from measurements.
+///
+/// This implements simple space point construction, where each surface-based
+/// measurement translates into one space point using the surface
+/// local-to-global transform.
+///
+/// The algorithm takes both the source links and measurements container as
+/// input. The source link container is geometry-sorted and each element is
+/// small compared to a measurement. The geometry selection is therefore much
+/// easier to perform on the source links than on the unsorted measurements.
+///
+/// There are no explicit requirements on the content of the input measurements.
+/// If no local positions are measured, the transformed global positions will
+/// always be the position of the module origin.
+class SpacePointMaker final : public BareAlgorithm {
+ public:
+  struct Config {
+    /// Input source links collection.
+    std::string inputSourceLinks;
+    /// Input measurements collection.
+    std::string inputMeasurements;
+    /// Output space points collection.
+    std::string outputSpacePoints;
+    /// Tracking geometry for transformation lookup.
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
+    /// For which part of the detector geometry should space points be created.
+    ///
+    /// Only volumes and layers can be set. Zero values can be used as wildcards
+    /// to select larger parts of the hierarchy, i.e. setting only the volume
+    /// selects alls measurements within that volume. Adding a single identifier
+    /// with all components set to zero selects all available measurements. The
+    /// selection must not have duplicates.
+    std::vector<Acts::GeometryIdentifier> geometrySelection = {
+        // generic detector barrel layers
+        // the selection intentionally contains duplicates to demonstrate the
+        // automatic selection normalization. setting only the volume already
+        // selects all layers within it. the explicit layers in the selection
+        // should have no effect.
+        Acts::GeometryIdentifier().setVolume(8),
+        Acts::GeometryIdentifier().setVolume(8).setLayer(2),
+        Acts::GeometryIdentifier().setVolume(8).setLayer(4),
+        Acts::GeometryIdentifier().setVolume(8).setLayer(6),
+        // generic detector positive endcap layers
+        Acts::GeometryIdentifier().setVolume(9).setLayer(2),
+        Acts::GeometryIdentifier().setVolume(9).setLayer(4),
+        Acts::GeometryIdentifier().setVolume(9).setLayer(6),
+        Acts::GeometryIdentifier().setVolume(9).setLayer(8),
+        // generic detector negative endcap layers
+        Acts::GeometryIdentifier().setVolume(7).setLayer(14),
+        Acts::GeometryIdentifier().setVolume(7).setLayer(12),
+        Acts::GeometryIdentifier().setVolume(7).setLayer(10),
+        Acts::GeometryIdentifier().setVolume(7).setLayer(8),
+    };
+  };
+
+  /// Construct the space point maker.
+  ///
+  /// @param cfg is the algorithm configuration
+  /// @param lvl is the logging level
+  SpacePointMaker(Config cfg, Acts::Logging::Level lvl);
+
+  /// Run the space point construction.
+  ///
+  /// @param ctx is the algorithm context with event information
+  /// @return a process code indication success or failure
+  ProcessCode execute(const AlgorithmContext& ctx) const final override;
+
+ private:
+  Config m_cfg;
+};
+
+}  // namespace ActsExamples
