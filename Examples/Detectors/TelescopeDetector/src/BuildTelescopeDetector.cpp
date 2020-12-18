@@ -33,8 +33,8 @@ ActsExamples::Telescope::buildDetector(
     std::vector<
         std::shared_ptr<ActsExamples::Telescope::TelescopeDetectorElement>>&
         detectorStore,
-    const std::vector<double>& positions, const std::vector<double>& offsets,
-    const std::vector<double>& pSize, double thickness,
+    const std::vector<double>& positions, std::array<double, 2> offsets,
+    std::array<double, 2> pSize, double thickness,
     Acts::BinningValue binValue) {
   using namespace Acts::UnitLiterals;
 
