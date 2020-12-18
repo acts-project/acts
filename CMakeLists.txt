@@ -203,7 +203,6 @@ if(ACTS_BUILD_EXAMPLES_HEPMC3)
   # must be version 3.1+. version 3.0 uses HepMC w/o number as module name.
   # version 3.1.0 misses the version variable so we can not check for it
   find_package(HepMC3 CONFIG REQUIRED)
-  find_package(HepPID REQUIRED)
   # HepMC version 3.1.0 has a broken cmake config: it searches for the
   # HepMC libray instead of the correct HepMC3 one and sets HEPMC_LIBRARIES
   # instead of the expected HEPMC3_LIBRARIES. fix manually.
