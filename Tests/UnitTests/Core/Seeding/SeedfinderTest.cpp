@@ -15,6 +15,7 @@
 #include "Acts/Seeding/Seedfinder.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 
+#include <algorithm>
 #include <chrono>
 #include <fstream>
 #include <iostream>
@@ -26,10 +27,10 @@
 #include "ATLASCuts.hpp"
 #include "SpacePoint.hpp"
 
-std::vector<const SpacePoint*> readFile(std::string filename) {
+std::vector<SpacePoint> readFile(std::string filename) {
   std::string line;
   int layer;
-  std::vector<const SpacePoint*> readSP;
+  std::vector<SpacePoint> sps;
 
   std::ifstream spFile(filename);
   if (spFile.is_open()) {
@@ -54,16 +55,11 @@ std::vector<const SpacePoint*> readFile(std::string filename) {
           varianceR = 9. * cov;
           varianceZ = .06;
         }
-        SpacePoint* sp =
-            new SpacePoint{x, y, z, r, layer, varianceR, varianceZ};
-        //     if(r < 200.){
-        //       sp->setClusterList(1,0);
-        //     }
-        readSP.push_back(sp);
+        sps.push_back(SpacePoint{x, y, z, r, layer, varianceR, varianceZ});
       }
     }
   }
-  return readSP;
+  return sps;
 }
 
 int main(int argc, char** argv) {
@@ -105,7 +101,12 @@ int main(int argc, char** argv) {
   }
 
   auto start_read = std::chrono::system_clock::now();
-  std::vector<const SpacePoint*> spVec = readFile(file);
+  std::vector<SpacePoint> sps = readFile(file);
+  std::vector<const SpacePoint*> spVec;
+  spVec.reserve(sps.size());
+  // Store the pointers in the vector
+  std::transform(sps.begin(), sps.end(), std::back_inserter(spVec),
+                 [](const SpacePoint& sp) { return &sp; });
   auto end_read = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_read = end_read - start_read;
 
@@ -176,22 +177,21 @@ int main(int argc, char** argv) {
   std::cout << "time to create seeds: " << elapsed_seconds.count() << std::endl;
   std::cout << "Number of regions: " << seedVector.size() << std::endl;
   int numSeeds = 0;
-  for (auto& outVec : seedVector) {
-    numSeeds += outVec.size();
+  for (auto& regionVec : seedVector) {
+    numSeeds += regionVec.size();
   }
   std::cout << "Number of seeds generated: " << numSeeds << std::endl;
   if (!quiet) {
-    for (auto& regionVec : seedVector) {
-      for (size_t i = 0; i < regionVec.size(); i++) {
-        const Acts::Seed<SpacePoint>* seed = &regionVec[i];
-        const SpacePoint* sp = seed->sp()[0];
-        std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z()
-                  << ") ";
-        sp = seed->sp()[1];
-        std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", "
+    for (const auto& regionVec : seedVector) {
+      for (const auto& seed : regionVec) {
+        const SpacePoint* sp = seed.sp()[0];
+        std::cout << sp->layer << " (" << sp->x() << ", " << sp->y() << ", "
                   << sp->z() << ") ";
-        sp = seed->sp()[2];
-        std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", "
+        sp = seed.sp()[1];
+        std::cout << sp->layer << " (" << sp->x() << ", " << sp->y() << ", "
+                  << sp->z() << ") ";
+        sp = seed.sp()[2];
+        std::cout << sp->layer << " (" << sp->x() << ", " << sp->y() << ", "
                   << sp->z() << ") ";
         std::cout << std::endl;
       }
