@@ -44,6 +44,8 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// Magnetic field getter
     BFieldGetter bFieldGetter;
+    /// The minimum transverse momentum
+    double ptMin = 0.5 * Acts::UnitConstants::GeV;
     /// Constant term of the d0 resolution.
     double sigmaD0 = 30 * Acts::UnitConstants::um;
     /// Pt-dependent d0 resolution of the form sigma_d0 = A*exp(-1.*abs(B)*pt).

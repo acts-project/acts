@@ -66,23 +66,17 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       // Get the magnetic field at the first space point
       Acts::Vector3 field = m_cfg.bFieldGetter(
           Acts::Vector3(firstSP->x(), firstSP->y(), firstSP->z()));
-
-      const double bFieldZ = field.z();
-      //@todo make this configurable
-      double ptMin = 0.5 * Acts::UnitConstants::GeV;
-      auto optParams = Acts::estimateTrackParamsFromSeed(seed.sp(), transform,
-                                                         bFieldZ, ptMin);
+      // Estimate the track parameters from seed
+      auto optParams = Acts::estimateTrackParamsFromSeed(
+          seed.sp(), transform, field.z(), m_cfg.ptMin);
       if (not optParams.has_value()) {
         ACTS_WARNING("Estimation of track parameters for seed failed.");
       } else {
         const auto& params = optParams.value();
         const double p = 1.0 / std::abs(params[Acts::eBoundQOverP]);
         const double pt = p * std::sin(params[Acts::eBoundTheta]);
-        // @todo could it be q/p =0?
-        float charge = (params[Acts::eBoundQOverP] != 0)
-                           ? std::abs(params[Acts::eBoundQOverP]) /
-                                 params[Acts::eBoundQOverP]
-                           : 1;
+        double charge =
+            std::abs(params[Acts::eBoundQOverP]) / params[Acts::eBoundQOverP];
 
         // compute momentum-dependent resolutions
         const double sigmaD0 =
@@ -106,6 +100,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
         cov(Acts::eBoundPhi, Acts::eBoundPhi) = sigmaPhi * sigmaPhi;
         cov(Acts::eBoundTheta, Acts::eBoundTheta) = sigmaTheta * sigmaTheta;
         cov(Acts::eBoundQOverP, Acts::eBoundQOverP) = sigmaQOverP * sigmaQOverP;
+
         parameters.emplace_back(surface->getSharedPtr(), params, charge, cov);
       }
     }

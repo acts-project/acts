@@ -33,7 +33,7 @@ namespace Acts {
 /// propagation (counter clockwise as positive)
 ///
 /// @tparam external_spacepoint_t The type of space point
-/// @param sps is a vector of space points
+/// @param sps is a vector of space points with positions in unit of mm
 ///
 /// @return optional estimated parameters d0, 1/R and phi
 template <typename external_spacepoint_t>
@@ -41,7 +41,7 @@ std::optional<std::array<double, 3>> estimateTrackParamsFromSeed(
     const std::vector<external_spacepoint_t*>& sps) {
   if (sps.empty()) {
     ACTS_LOCAL_LOGGER(
-        Acts::getDefaultLogger("TrackParametersEstimation", Logging::INFO));
+        getDefaultLogger("TrackParametersEstimation", Logging::INFO));
     ACTS_FATAL("No space points exsit.")
     return std::nullopt;
   }
@@ -111,20 +111,23 @@ std::optional<std::array<double, 3>> estimateTrackParamsFromSeed(
 /// the origin, positive when counter clock-wise
 ///
 /// @tparam external_spacepoint_t The type of space point
-/// @param sps is the vector of space points
+/// @param sps is the vector of space points with positions in unit of mm
 /// @param transform is the transform which helps to represent the track
 /// parameters
 /// @param bFieldZ is the magnetic field in z direction in T
 /// @param ptMin is the minimum transverse momentum allowed in GeV
+/// @param ptTolerance is the tolerance of pt in percent
+/// @param mass is the estimated particle mass
 ///
 /// @return optional bound parameters
 template <typename external_spacepoint_t>
 std::optional<BoundVector> estimateTrackParamsFromSeed(
     const std::vector<external_spacepoint_t>& sps, const Transform3& transform,
-    double bFieldZ, double ptMin, double ptTolerance = 0.1) {
+    double bFieldZ, double ptMin, double ptTolerance = 0.1,
+    double mass = 139.57018 * UnitConstants::MeV) {
   if (sps.size() < 3) {
     ACTS_LOCAL_LOGGER(
-        Acts::getDefaultLogger("TrackParametersEstimation", Logging::INFO));
+        getDefaultLogger("TrackParametersEstimation", Logging::INFO));
     ACTS_FATAL("At least three space points are required.")
     return std::nullopt;
   }
@@ -162,15 +165,15 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
 
   // Project to the surface
   const auto matrix = transform.matrix();
-  Acts::Vector3 Ax = matrix.block<3, 1>(0, 0);
-  Acts::Vector3 Ay = matrix.block<3, 1>(0, 1);
+  Vector3 Ax = matrix.block<3, 1>(0, 0);
+  Vector3 Ay = matrix.block<3, 1>(0, 1);
   // Center of the surface in the global frame
-  Acts::Vector3 D = matrix.block<3, 1>(0, 3);
+  Vector3 D = matrix.block<3, 1>(0, 3);
   // Location of the first SP w.r.t. the surface center
-  Acts::Vector3 d(x0 - D[0], y0 - D[1], z0 - D[2]);
+  Vector3 d(x0 - D[0], y0 - D[1], z0 - D[2]);
 
   // Initialize the bound parameters vector
-  Acts::BoundVector params = Acts::BoundVector::Zero();
+  BoundVector params = BoundVector::Zero();
   // The estimated loc0 and loc1
   params[0] = d.dot(Ax);
   params[1] = d.dot(Ay);
@@ -179,7 +182,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   double invTanTheta;
   double qOverPt;
   // Check if magnetic field is more than 0.1 Tesla
-  if (bFieldZ > 0.1 * Acts::UnitConstants::T) {
+  if (bFieldZ > 0.1 * UnitConstants::T) {
     // Estimate of the track dz/dr (1/tanTheta), corrected for curvature effects
     invTanTheta = z2 * std::sqrt(r2) / (1. + 0.04 * rho * rho * rn);
     // The estimated phi
@@ -199,7 +202,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // Return nullopt if the estimate pt is not not within requirement
   if (std::abs(qOverPt) * ptMin > (1. + ptTolerance)) {
     ACTS_LOCAL_LOGGER(
-        Acts::getDefaultLogger("TrackParametersEstimation", Logging::INFO));
+        getDefaultLogger("TrackParametersEstimation", Logging::INFO));
     ACTS_FATAL("Estimated transverse momentum = "
                << std::abs(1.0 / qOverPt)
                << " [GeV] is small than ptMin = " << ptMin << " [GeV]")
@@ -211,7 +214,11 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // The estimated q/p from q/pt and 1.0/tanTheta
   params[4] = qOverPt / std::sqrt(1. + invTanTheta * invTanTheta);
 
+  // The estimated p and pz
+  double pz = 1.0 / std::abs(qOverPt) * invTanTheta;
   // @todo: add the estimation of the timing
+  double vz = pz / std::sqrt(1.0 / (params[4] * params[4]) + mass * mass);
+  params[5] = sps[0]->z() * 0.001 / vz;
   return params;
 }
 

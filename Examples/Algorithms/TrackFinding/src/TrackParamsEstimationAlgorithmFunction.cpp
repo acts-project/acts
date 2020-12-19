@@ -38,9 +38,7 @@ ActsExamples::TrackParamsEstimationAlgorithm::makeBFieldGetter(
         using InputMagneticField =
             typename std::decay_t<decltype(inputField)>::element_type;
         using MagneticField = Acts::SharedBField<InputMagneticField>;
-
         MagneticField field(std::move(inputField));
-
         // build the B field getter functions. owns the fitter object.
         return BFieldGetterImpl<MagneticField>(std::move(field));
       },
