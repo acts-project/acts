@@ -19,7 +19,6 @@
 #include <vector>
 
 namespace Acts {
-namespace detail {
 /// @todo:
 /// 1) Implement the simple Line and Circle fit based on Taubin Circle fit
 /// 2) Implement the simple Line and Parabola fit (from HPS reconstruction by
@@ -216,5 +215,4 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   return params;
 }
 
-}  // namespace detail
 }  // namespace Acts

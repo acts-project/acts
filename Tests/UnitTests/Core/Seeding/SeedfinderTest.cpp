@@ -8,6 +8,7 @@
 
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
+#include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/Seed.hpp"
@@ -66,15 +67,19 @@ int main(int argc, char** argv) {
   std::string file{"sp.txt"};
   bool help(false);
   bool quiet(false);
+  bool estimateTrackParams(false);
 
   int opt;
-  while ((opt = getopt(argc, argv, "hf:q")) != -1) {
+  while ((opt = getopt(argc, argv, "hf:qe")) != -1) {
     switch (opt) {
       case 'f':
         file = optarg;
         break;
       case 'q':
         quiet = true;
+        break;
+      case 'e':
+        estimateTrackParams = true;
         break;
       case 'h':
         help = true;
@@ -87,6 +92,8 @@ int main(int argc, char** argv) {
               << "      -f FILE : read spacepoints from FILE. Default is \""
               << file << "\"" << std::endl;
           std::cout << "      -q : don't print out all found seeds"
+                    << std::endl;
+          std::cout << "      -e : estimate track parameters from found seeds"
                     << std::endl;
         }
 
@@ -182,9 +189,12 @@ int main(int argc, char** argv) {
   }
   std::cout << "Number of seeds generated: " << numSeeds << std::endl;
   if (!quiet) {
-    for (const auto& regionVec : seedVector) {
-      for (const auto& seed : regionVec) {
+    for (size_t ir = 0; ir < seedVector.size(); ++ir) {
+      for (size_t is = 0; is < seedVector[ir].size(); ++is) {
+        const auto& seed = seedVector[ir][is];
         const SpacePoint* sp = seed.sp()[0];
+        std::cout << "Print out info of found seed: " << is
+                  << " in region: " << ir << std::endl;
         std::cout << sp->layer << " (" << sp->x() << ", " << sp->y() << ", "
                   << sp->z() << ") ";
         sp = seed.sp()[1];
@@ -194,6 +204,32 @@ int main(int argc, char** argv) {
         std::cout << sp->layer << " (" << sp->x() << ", " << sp->y() << ", "
                   << sp->z() << ") ";
         std::cout << std::endl;
+        if (estimateTrackParams) {
+          auto transParamsRes = Acts::estimateTrackParamsFromSeed(seed.sp());
+          if (transParamsRes.has_value()) {
+            auto transParams = transParamsRes.value();
+            std::cout << "Estimated (d0, curvature, phi): \n " << transParams[0]
+                      << "  " << transParams[1] << "  " << transParams[2]
+                      << std::endl;
+          } else {
+            std::cout
+                << "WARNING: estimation of (d0, curvature, phi) for found seed "
+                << is << " in region " << ir << " failed." << std::endl;
+          }
+          auto boundParamsRes = Acts::estimateTrackParamsFromSeed(
+              seed.sp(), Acts::Transform3::Identity(), config.bFieldInZ * 1000,
+              config.minPt * 0.001);
+          if (boundParamsRes.has_value()) {
+            auto boundParams = boundParamsRes.value();
+            std::cout << "Estimated (loc0, loc1, phi, theta, q/p, t) on the "
+                         "surface with identify transform: \n"
+                      << boundParams.transpose() << std::endl;
+          } else {
+            std::cout
+                << "WARNING: estimation of bound parameters for found seed "
+                << is << " in region " << ir << " failed." << std::endl;
+          }
+        }
       }
     }
   }
