@@ -98,6 +98,13 @@ class Barcode : public Acts::MultiIndex<uint64_t, 12, 12, 16, 8, 16> {
   using Base::Base;
   using Base::Value;
 
+  // Construct an invalid barcode with all levels set to zero.
+  Barcode() : Base(Base::Zeros()) {}
+  Barcode(const Barcode&) = default;
+  Barcode(Barcode&&) = default;
+  Barcode& operator=(const Barcode&) = default;
+  Barcode& operator=(Barcode&&) = default;
+
   /// Return the primary vertex identifier.
   constexpr Value vertexPrimary() const { return level(0); }
   /// Return the secondary vertex identifier.
