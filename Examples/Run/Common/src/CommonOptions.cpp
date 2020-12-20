@@ -58,9 +58,7 @@ void ActsExamples::Options::addGeometryOptions(
       "geo-layer-loglevel", value<size_t>()->default_value(3),
       "The output log level for the layer building.")(
       "geo-volume-loglevel", value<size_t>()->default_value(3),
-      "The output log level for the volume building.")(
-      "geo-detector-volume", value<std::vector<std::string>>(),
-      "Sub detectors for the output writing");
+      "The output log level for the volume building.");
 }
 
 void ActsExamples::Options::addMaterialOptions(

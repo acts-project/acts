@@ -27,7 +27,7 @@ void ActsExamples::Options::addTGeoGeometryOptions(Description& desc) {
   //
   // required per-volume options:
   //
-  //   --geo-detector-volume InnerPixels
+  //   --geo-tgeo-volume InnerPixels
   //   --geo-tgeo-sfbin-r-tolerance 5:5
   //   --geo-tgeo-sfbin-phi-tolerance 0.025:0.025
   //   --geo-tgeo-sfbin-z-tolerance 5:5
@@ -68,12 +68,15 @@ void ActsExamples::Options::addTGeoGeometryOptions(Description& desc) {
   opt("geo-tgeo-filename", value<std::string>()->default_value(""),
       "Root file name.");
   opt("geo-tgeo-worldvolume", value<std::string>()->default_value(""),
-      "Root world volume to start search from.")(
-      "geo-tgeo-unit-scalor", value<double>()->default_value(10.),
+      "Root world volume to start search from.");
+  opt("geo-tgeo-unit-scalor", value<double>()->default_value(10.),
       "Unit scalor from ROOT to Acts.");
-  opt("geo-tgeo-bp-parameters", value<Doubles<3>>(),
-      "Potential beam pipe parameters {r, z, t} in [mm].");
+  opt("geo-tgeo-beampipe-parameters", value<Doubles<3>>(),
+      "Beam pipe parameters {r, z, t} in [mm]. Beam pipe is automatically "
+      "created if the parameters are present.");
   // required per-volume options that can be present more than once
+  opt("geo-tgeo-volume", value<std::vector<std::string>>(),
+      "Detector volume name");
   opt("geo-tgeo-sfbin-r-tolerance", value<std::vector<Interval>>(),
       "Tolerance interval in r [mm] for automated surface binninng.");
   opt("geo-tgeo-sfbin-phi-tolerance", value<std::vector<Interval>>(),
@@ -151,13 +154,9 @@ ActsExamples::Options::readTGeoLayerBuilderConfigs(const Variables& vm) {
 
   auto unitScalor = vm["geo-tgeo-unit-scalor"].template as<double>();
 
-  // TODO how is this used?
-  // If a beam pipe is present, shift the sub detector names by one
-  //   size_t iVolOffset = vm.count("geo-tgeo-bp-parameters") ? 1 : 0;
-
   // subdetector selection
   auto subDetectors =
-      vm["geo-detector-volume"].template as<std::vector<std::string>>();
+      vm["geo-tgeo-volume"].template as<std::vector<std::string>>();
   // per-volume automated binning configuration
   auto binToleranceR =
       vm["geo-tgeo-sfbin-r-tolerance"].template as<std::vector<Interval>>();
