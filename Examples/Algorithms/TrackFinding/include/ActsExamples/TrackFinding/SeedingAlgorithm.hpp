@@ -8,36 +8,31 @@
 
 #pragma once
 
-#include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 
-#include <memory>
 #include <string>
 #include <vector>
 
-namespace Acts {
-class Surface;
-class TrackingGeometry;
-}  // namespace Acts
-
 namespace ActsExamples {
 
-/// Create planar clusters from simulation hits.
+/// Construct track seeds from space points.
 class SeedingAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
-    /// Output collection of clusters.
+    /// Input space point collections.
+    ///
+    /// We allow multiple space point collections to allow different parts of
+    /// the detector to use different algorithms for space point construction,
+    /// e.g. single-hit space points for pixel-like detectors or double-hit
+    /// space points for strip-like detectors.
+    std::vector<std::string> inputSpacePoints;
+    /// Output track seed collection.
     std::string outputSeeds;
-    // input measurements from hit smearing algorithm
-    std::string inputMeasurements;
-    /// Tracking geometry for surface lookup.
-    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
-
+    /// Output proto track collection.
+    std::string outputProtoTracks;
     float rMax = 200.;
     float deltaRMin = 1.;
     float deltaRMax = 60.;
@@ -51,20 +46,9 @@ class SeedingAlgorithm final : public BareAlgorithm {
     float radLengthPerSeed = 0.1;
     float minPt = 500.;
     float bFieldInZ = 0.00199724;
-    Acts::Vector2 beamPos = {0., 0.};
+    float beamPosX = 0;
+    float beamPosY = 0;
     float impactMax = 3.;
-    unsigned int barrelVolume = 8;
-    std::vector<unsigned int> barrelLayers = {2, 4, 6};
-    unsigned int posEndcapVolume = 9;
-    std::vector<unsigned int> posEndcapLayers = {2, 4, 6, 8};
-    unsigned int negEndcapVolume = 7;
-    std::vector<unsigned int> negEndcapLayers = {14, 12, 10, 8};
-
-    Acts::SeedfinderConfig<SimSpacePoint> finderConf;
-
-    Acts::SeedFilterConfig sfconf;
-
-    Acts::SpacePointGridConfig gridConf;
   };
 
   /// Construct the seeding algorithm.
@@ -81,10 +65,8 @@ class SeedingAlgorithm final : public BareAlgorithm {
 
  private:
   Config m_cfg;
-
-  std::unique_ptr<ActsExamples::SimSpacePoint> makeSpacePoint(
-      const Measurement& measurement, const Acts::Surface& surface,
-      const Acts::GeometryContext& geoCtx) const;
+  Acts::SpacePointGridConfig m_gridCfg;
+  Acts::SeedfinderConfig<SimSpacePoint> m_finderCfg;
 };
 
 }  // namespace ActsExamples

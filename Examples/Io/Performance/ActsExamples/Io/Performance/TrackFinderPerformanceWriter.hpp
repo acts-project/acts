@@ -25,13 +25,13 @@ class TrackFinderPerformanceWriter final : public WriterT<ProtoTrackContainer> {
   struct Config {
     /// Input reconstructed proto tracks collection.
     std::string inputProtoTracks;
-    /// Input particles collection.
-    std::string inputParticles;
     /// Input hit-particles map collection.
     std::string inputMeasurementParticlesMap;
+    /// Input particles collection.
+    std::string inputParticles;
     /// Output directory.
     std::string outputDir;
-    /// Output filename
+    /// Output filename.
     std::string outputFilename = "performance_track_finder.root";
   };
 
