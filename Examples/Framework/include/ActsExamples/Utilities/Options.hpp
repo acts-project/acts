@@ -38,19 +38,19 @@ struct Interval {
   std::optional<double> upper;
 };
 
-/// A fixed number of doubles as one user option.
+/// A fixed number of real values as one user option.
 ///
 /// @note Implemented as a subclass so it is distinct from `std::array`
 ///   and we can provide overloads in the same namespace.
 template <size_t kSize>
-class Doubles : public std::array<double, kSize> {};
+class Reals : public std::array<double, kSize> {};
 
-/// An arbitrary number of doubles as one user option.
+/// An arbitrary number of revaluesal  as one user option.
 ///
 /// @note Making this a `std::vector<double>` typedef or subclass confuses
 ///   program options, since `std::vector<double>` is interpreted as a `double`
 ///   option that can be provided multiple times.
-struct VariableDoubles {
+struct VariableReals {
   std::vector<double> values;
 };
 
@@ -96,7 +96,7 @@ void printDoubles(std::ostream& os, size_t size, const double* values);
 ///   and additional command line both start with `-` and would be
 ///   undistinguishable.
 template <size_t kSize>
-inline std::istream& operator>>(std::istream& is, Doubles<kSize>& values) {
+inline std::istream& operator>>(std::istream& is, Reals<kSize>& values) {
   detail::parseDoublesFixed(is, kSize, values.data());
   return is;
 }
@@ -106,22 +106,20 @@ inline std::istream& operator>>(std::istream& is, Doubles<kSize>& values) {
 /// @note If the values would be separated by whitespace, negative values
 ///   and additional command line both start with `-` and would be
 ///   undistinguishable.
-inline std::istream& operator>>(std::istream& is, VariableDoubles& values) {
+inline std::istream& operator>>(std::istream& is, VariableReals& values) {
   detail::parseDoublesVariable(is, values.values);
   return is;
 }
 
 /// Print a fixed number of doubles as `x:y:z`.
 template <size_t kSize>
-inline std::ostream& operator<<(std::ostream& os,
-                                const Doubles<kSize>& values) {
+inline std::ostream& operator<<(std::ostream& os, const Reals<kSize>& values) {
   detail::printDoubles(os, kSize, values.data());
   return os;
 }
 
 /// Print a variable number of doubles as `x:y:z:...`.
-inline std::ostream& operator<<(std::ostream& os,
-                                const VariableDoubles& values) {
+inline std::ostream& operator<<(std::ostream& os, const VariableReals& values) {
   detail::printDoubles(os, values.values.size(), values.values.data());
   return os;
 }

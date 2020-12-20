@@ -30,12 +30,12 @@ auto TelescopeDetector::finalize(
   // --------------------------------------------------------------------------------
   DetectorElement::ContextType nominalContext;
   auto positions = vm["geo-tele-positions"]
-                       .template as<ActsExamples::Options::VariableDoubles>()
+                       .template as<ActsExamples::Options::VariableReals>()
                        .values;
   auto offsets =
-      vm["geo-tele-offsets"].template as<ActsExamples::Options::Doubles<2>>();
+      vm["geo-tele-offsets"].template as<ActsExamples::Options::Reals<2>>();
   auto pSize =
-      vm["geo-tele-size"].template as<ActsExamples::Options::Doubles<2>>();
+      vm["geo-tele-size"].template as<ActsExamples::Options::Reals<2>>();
   // Translate the thickness in unit of mm
   auto thickness = vm["geo-tele-thickness"].template as<double>() * 0.001;
   auto binValue = vm["geo-tele-alignaxis"].template as<size_t>();

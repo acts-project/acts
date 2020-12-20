@@ -43,13 +43,13 @@ int main(int argc, char* argv[]) {
       "Please set this flag to true, if you want to print out the field map in "
       "cylinder coordinates (r,z). The default are cartesian coordinates "
       "(x,y,z). ")(
-      "bf-rRange", value<ActsExamples::Options::Doubles<2>>(),
+      "bf-rRange", value<ActsExamples::Options::Reals<2>>(),
       "[optional] range which the bfield map should be written out in either r "
       "(cylinder "
       "coordinates) or x/y (cartesian coordinates)  in [mm]. In case no value "
       "is handed over the whole map will be written out. Please "
       "hand over by simply seperating the values by space")(
-      "bf-zRange", value<ActsExamples::Options::Doubles<2>>(),
+      "bf-zRange", value<ActsExamples::Options::Reals<2>>(),
       "[optional] range which the bfield map should be written out in z in "
       "[mm].In case no value is handed over for 'bf-rRange' and 'bf-zRange the "
       "whole map will be written out. "

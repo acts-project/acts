@@ -71,7 +71,7 @@ void addBFieldOptions(boost::program_options::options_description& opt) {
       "first octant/quadrant and should be symmetrically created for all "
       "other "
       "octants/quadrants.")(
-      "bf-values", po::value<Doubles<3>>()->default_value({{0., 0., 0.}}),
+      "bf-values", po::value<Reals<3>>()->default_value({{0., 0., 0.}}),
       "In case no magnetic field map is handed over. A constant magnetic "
       "field will be created automatically. The values can be set with this "
       "options. Please hand over the coordinates in cartesian coordinates: "
@@ -208,7 +208,7 @@ BFieldVariant readBField(const boost::program_options::variables_map& vm) {
   } else {  // constant
     // No bfield map is handed over
     // get the constant bField values
-    auto bFieldValues = vm["bf-values"].template as<Doubles<3>>();
+    auto bFieldValues = vm["bf-values"].template as<Reals<3>>();
     if (vm["bf-context-scalable"].template as<bool>()) {
       // Create the scalable magnetic field
       return std::make_shared<ActsExamples::BField::ScalableBField>(

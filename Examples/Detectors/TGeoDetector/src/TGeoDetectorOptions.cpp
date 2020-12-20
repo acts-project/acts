@@ -71,7 +71,7 @@ void ActsExamples::Options::addTGeoGeometryOptions(Description& desc) {
       "Root world volume to start search from.");
   opt("geo-tgeo-unit-scalor", value<double>()->default_value(10.),
       "Unit scalor from ROOT to Acts.");
-  opt("geo-tgeo-beampipe-parameters", value<Doubles<3>>(),
+  opt("geo-tgeo-beampipe-parameters", value<Reals<3>>(),
       "Beam pipe parameters {r, z, t} in [mm]. Beam pipe is automatically "
       "created if the parameters are present.");
   // required per-volume options that can be present more than once

@@ -100,7 +100,7 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
   // Create a beam pipe if configured to do so
   if (vm.count("geo-tgeo-beampipe-parameters")) {
     auto beamPipeParameters =
-        vm["geo-tgeo-beampipe-parameters"].template as<Options::Doubles<3>>();
+        vm["geo-tgeo-beampipe-parameters"].template as<Options::Reals<3>>();
     /// configure the beam pipe layer builder
     Acts::PassiveLayerBuilder::Config bplConfig;
     bplConfig.layerIdentification = "BeamPipe";

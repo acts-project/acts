@@ -54,7 +54,7 @@ void ActsExamples::Options::addDigitizationOptions(Description& desc) {
   opt("digi-smear-types", value<std::vector<VariableIntegers>>(),
       "Smearing Input: smear function types as 0 (gauss), 1 (truncated gauss), "
       "2 (clipped gauss), 3 (uniform), 4 (digital).");
-  opt("digi-smear-parameters", value<std::vector<VariableDoubles>>(),
+  opt("digi-smear-parameters", value<std::vector<VariableReals>>(),
       "Smearing Input: smear parameters depending on the smearing type, 1 "
       "parameter for simple gauss, 3 for all others (1 parameter, 2 range "
       "values.");
@@ -125,7 +125,7 @@ ActsExamples::Options::readSmearingConfig(const Variables& variables) {
   auto types =
       variables["digi-smear-types"].as<std::vector<VariableIntegers>>();
   auto parameters =
-      variables["digi-smear-parameters"].as<std::vector<VariableDoubles>>();
+      variables["digi-smear-parameters"].as<std::vector<VariableReals>>();
   if (indices.size() != volumes.size()) {
     ACTS_ERROR("Inconsistent digi-smear-indices options. Expected "
                << volumes.size() << ", but received " << indices.size());
