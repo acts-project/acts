@@ -27,6 +27,8 @@
 
 #include <boost/program_options.hpp>
 
+#include "RecInput.hpp"
+
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
 
@@ -65,33 +67,14 @@ int runSeedingExample(int argc, char* argv[],
     sequencer.addContextDecorator(cdr);
   }
 
-  // Read particles (initial states) and clusters from CSV files
-  auto particleReader = Options::readCsvParticleReaderConfig(vm);
-  particleReader.inputStem = "particles_initial";
-  particleReader.outputParticles = "particles_initial";
-  sequencer.addReader(
-      std::make_shared<CsvParticleReader>(particleReader, logLevel));
+  // Read the sim hits
+  auto simHitReaderCfg = setupSimHitReading(vm, sequencer);
+  // Read the particles
+  auto particleReader = setupParticleReading(vm, sequencer);
 
-  // Read truth hits from CSV files
-  auto simHitReaderCfg = Options::readCsvSimHitReaderConfig(vm);
-  simHitReaderCfg.inputStem = "simhits";
-  simHitReaderCfg.outputSimHits = "simhits";
-  sequencer.addReader(
-      std::make_shared<CsvSimHitReader>(simHitReaderCfg, logLevel));
-
-  // Create smeared measurements
-  HitSmearing::Config hitSmearingCfg;
-  hitSmearingCfg.inputSimHits = simHitReaderCfg.outputSimHits;
-  hitSmearingCfg.outputSourceLinks = "sourcelinks";
-  hitSmearingCfg.outputMeasurements = "measurements";
-  hitSmearingCfg.outputMeasurementParticlesMap = "measurement_particles_map";
-  hitSmearingCfg.outputMeasurementSimHitsMap = "measurement_simhits_map";
-  hitSmearingCfg.sigmaLoc0 = 25_um;
-  hitSmearingCfg.sigmaLoc1 = 100_um;
-  hitSmearingCfg.randomNumbers = rnd;
-  hitSmearingCfg.trackingGeometry = tGeometry;
-  sequencer.addAlgorithm(
-      std::make_shared<HitSmearing>(hitSmearingCfg, logLevel));
+  // Run the sim hits smearing
+  auto hitSmearingCfg = runSimHitSmearing(vm, sequencer, rnd, tGeometry,
+                                          simHitReaderCfg.outputSimHits);
 
   // Create space points
   SpacePointMaker::Config spCfg;

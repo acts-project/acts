@@ -34,6 +34,8 @@
 
 #include <boost/filesystem.hpp>
 
+#include "RecInput.hpp"
+
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
 using namespace boost::filesystem;
@@ -77,67 +79,24 @@ int runRecCKFTracks(int argc, char* argv[],
   // Setup the magnetic field
   auto magneticField = Options::readBField(vm);
 
-  // Read particles (initial states) and clusters from CSV files
-  auto particleReader = Options::readCsvParticleReaderConfig(vm);
-  particleReader.inputStem = "particles_initial";
-  particleReader.outputParticles = "particles_initial";
-  sequencer.addReader(
-      std::make_shared<CsvParticleReader>(particleReader, logLevel));
-  // Read truth hits from CSV files
-  auto simHitReaderCfg = Options::readCsvSimHitReaderConfig(vm);
-  simHitReaderCfg.inputStem = "simhits";
-  simHitReaderCfg.outputSimHits = "simhits";
-  sequencer.addReader(
-      std::make_shared<CsvSimHitReader>(simHitReaderCfg, logLevel));
+  // Read the sim hits
+  auto simHitReaderCfg = setupSimHitReading(vm, sequencer);
+  // Read the particles
+  auto particleReader = setupParticleReading(vm, sequencer);
 
-  // Create smeared measurements
-  HitSmearing::Config hitSmearingCfg;
-  hitSmearingCfg.inputSimHits = simHitReaderCfg.outputSimHits;
-  hitSmearingCfg.outputMeasurements = "measurements";
-  hitSmearingCfg.outputSourceLinks = "sourcelinks";
-  hitSmearingCfg.outputMeasurementParticlesMap = "measurement_particles_map";
-  hitSmearingCfg.outputMeasurementSimHitsMap = "measurement_simhits_map";
-  hitSmearingCfg.sigmaLoc0 = 25_um;
-  hitSmearingCfg.sigmaLoc1 = 100_um;
-  hitSmearingCfg.randomNumbers = rnd;
-  hitSmearingCfg.trackingGeometry = trackingGeometry;
-  sequencer.addAlgorithm(
-      std::make_shared<HitSmearing>(hitSmearingCfg, logLevel));
+  // Run the sim hits smearing
+  auto hitSmearingCfg = runSimHitSmearing(vm, sequencer, rnd, trackingGeometry,
+                                          simHitReaderCfg.outputSimHits);
+ 
+  // Run the particle selection
+  auto particleSelectorCfg = runParticleSelection(vm, sequencer, particleReader.outputParticles, hitSmearingCfg.outputMeasurementParticlesMap);
 
-  // Pre-select particles
-  // The pre-selection will select truth particles satisfying provided criteria
-  // from all particles read in by particle reader for further processing. It
-  // has no impact on the truth hits read-in by the cluster reader.
-  // @TODO: add options for truth particle selection criteria
-  TruthSeedSelector::Config particleSelectorCfg;
-  particleSelectorCfg.inputParticles = particleReader.outputParticles;
-  particleSelectorCfg.inputMeasurementParticlesMap =
-      hitSmearingCfg.outputMeasurementParticlesMap;
-  particleSelectorCfg.outputParticles = "particles_selected";
-  particleSelectorCfg.ptMin = 1_GeV;
-  particleSelectorCfg.nHitsMin = 9;
-  sequencer.addAlgorithm(
-      std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));
-
+  // The selected particles
   const auto& inputParticles = particleSelectorCfg.outputParticles;
-  // Create smeared particles states
-  ParticleSmearing::Config particleSmearingCfg;
-  particleSmearingCfg.inputParticles = inputParticles;
-  particleSmearingCfg.outputTrackParameters = "smearedparameters";
-  particleSmearingCfg.randomNumbers = rnd;
-  // Gaussian sigmas to smear particle parameters
-  particleSmearingCfg.sigmaD0 = 20_um;
-  particleSmearingCfg.sigmaD0PtA = 30_um;
-  particleSmearingCfg.sigmaD0PtB = 0.3 / 1_GeV;
-  particleSmearingCfg.sigmaZ0 = 20_um;
-  particleSmearingCfg.sigmaZ0PtA = 30_um;
-  particleSmearingCfg.sigmaZ0PtB = 0.3 / 1_GeV;
-  particleSmearingCfg.sigmaPhi = 1_degree;
-  particleSmearingCfg.sigmaTheta = 1_degree;
-  particleSmearingCfg.sigmaPRel = 0.01;
-  particleSmearingCfg.sigmaT0 = 1_ns;
-  sequencer.addAlgorithm(
-      std::make_shared<ParticleSmearing>(particleSmearingCfg, logLevel));
+
+  // Run the particle smearing
+  auto particleSmearingCfg =
+      runParticleSmearing(vm, sequencer, rnd, inputParticles);
 
   // Setup the track finding algorithm with CKF
   // It takes all the source links created from truth hit smearing, seeds from
@@ -192,7 +151,6 @@ int runRecCKFTracks(int argc, char* argv[],
   CKFPerformanceWriter::Config perfWriterCfg;
   perfWriterCfg.inputParticles = inputParticles;
   perfWriterCfg.inputTrajectories = trackFindingCfg.outputTrajectories;
-  perfWriterCfg.inputParticles = inputParticles;
   perfWriterCfg.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
   perfWriterCfg.outputDir = outputDir;

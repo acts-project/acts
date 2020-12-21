@@ -1,5 +1,6 @@
 add_library(
   ActsExamplesRecTracksCommon SHARED
+  RecInput.cpp 
   RecTruthTracks.cpp
   RecCKFTracks.cpp
   SeedingExample.cpp)
