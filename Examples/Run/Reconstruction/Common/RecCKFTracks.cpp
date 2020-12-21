@@ -71,7 +71,7 @@ int runRecCKFTracks(int argc, char* argv[],
   auto outputDir = ensureWritableDirectory(vm["output-dir"].as<std::string>());
   auto rnd = std::make_shared<ActsExamples::RandomNumbers>(
       Options::readRandomNumbersConfig(vm));
-  bool estimateTrackParamsFromSeed = true;
+  bool estimateTrackParamsFromSeed = vm["ckf-truth-seeds"].template as<bool>();
 
   // Setup detector geometry
   auto geometry = Geometry::build(vm, *detector);

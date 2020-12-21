@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,6 +16,7 @@
 
 void ActsExamples::Options::addTrackFindingOptions(
     ActsExamples::Options::Description& desc) {
+  using boost::program_options::bool_switch;
   using boost::program_options::value;
 
   auto opt = desc.add_options();
@@ -24,6 +25,7 @@ void ActsExamples::Options::addTrackFindingOptions(
   opt("ckf-selection-nmax", value<size_t>()->default_value(10),
       "Global criteria of maximum number of measurement candidates on a "
       "surface for CKF measurement selection");
+  opt("ckf-truth-seeds", bool_switch(), "Use truth seeds for steering CKF");
 }
 
 ActsExamples::TrackFindingAlgorithm::Config
