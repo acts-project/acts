@@ -89,6 +89,5 @@ ActsExamples::ParticleSmearing::Config runParticleSmearing(
 /// @return config used for particle selection
 ActsExamples::TruthSeedSelector::Config runParticleSelection(
     const ActsExamples::Options::Variables& vars,
-    ActsExamples::Sequencer& sequencer,
-    const std::string& inputParticles,
+    ActsExamples::Sequencer& sequencer, const std::string& inputParticles,
     const std::string& inputMeasurementParticlesMap);

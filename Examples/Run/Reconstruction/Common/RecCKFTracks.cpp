@@ -22,8 +22,11 @@
 #include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
+#include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingOptions.hpp"
+#include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
@@ -68,6 +71,7 @@ int runRecCKFTracks(int argc, char* argv[],
   auto outputDir = ensureWritableDirectory(vm["output-dir"].as<std::string>());
   auto rnd = std::make_shared<ActsExamples::RandomNumbers>(
       Options::readRandomNumbersConfig(vm));
+  bool estimateTrackParamsFromSeed = true;
 
   // Setup detector geometry
   auto geometry = Geometry::build(vm, *detector);
@@ -87,16 +91,90 @@ int runRecCKFTracks(int argc, char* argv[],
   // Run the sim hits smearing
   auto hitSmearingCfg = runSimHitSmearing(vm, sequencer, rnd, trackingGeometry,
                                           simHitReaderCfg.outputSimHits);
- 
+
   // Run the particle selection
-  auto particleSelectorCfg = runParticleSelection(vm, sequencer, particleReader.outputParticles, hitSmearingCfg.outputMeasurementParticlesMap);
+  auto particleSelectorCfg =
+      runParticleSelection(vm, sequencer, particleReader.outputParticles,
+                           hitSmearingCfg.outputMeasurementParticlesMap);
 
   // The selected particles
   const auto& inputParticles = particleSelectorCfg.outputParticles;
 
   // Run the particle smearing
-  auto particleSmearingCfg =
-      runParticleSmearing(vm, sequencer, rnd, inputParticles);
+  // auto particleSmearingCfg =
+  //    runParticleSmearing(vm, sequencer, rnd, inputParticles);
+
+  auto trackParams = [&](bool useTruthSeeds) {
+    if (useTruthSeeds) {
+      // Run the particle smearing
+      auto particleSmearingCfg =
+          runParticleSmearing(vm, sequencer, rnd, inputParticles);
+      return particleSmearingCfg.outputTrackParameters;
+    } else {
+      // Create space points
+      SpacePointMaker::Config spCfg;
+      spCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
+      spCfg.inputMeasurements = hitSmearingCfg.outputMeasurements;
+      spCfg.outputSpacePoints = "spacepoints";
+      spCfg.trackingGeometry = trackingGeometry;
+      spCfg.geometrySelection = {
+          // barrel pixel layers
+          Acts::GeometryIdentifier().setVolume(8).setLayer(2),
+          Acts::GeometryIdentifier().setVolume(8).setLayer(4),
+          Acts::GeometryIdentifier().setVolume(8).setLayer(6),
+          // positive endcap pixel layers
+          Acts::GeometryIdentifier().setVolume(9).setLayer(2),
+          Acts::GeometryIdentifier().setVolume(9).setLayer(4),
+          Acts::GeometryIdentifier().setVolume(9).setLayer(6),
+          Acts::GeometryIdentifier().setVolume(9).setLayer(8),
+          // negative endcap pixel layers
+          Acts::GeometryIdentifier().setVolume(7).setLayer(14),
+          Acts::GeometryIdentifier().setVolume(7).setLayer(12),
+          Acts::GeometryIdentifier().setVolume(7).setLayer(10),
+          Acts::GeometryIdentifier().setVolume(7).setLayer(8),
+      };
+      sequencer.addAlgorithm(
+          std::make_shared<SpacePointMaker>(spCfg, logLevel));
+
+      // Seeding algorithm
+      SeedingAlgorithm::Config seedingCfg;
+      seedingCfg.inputSpacePoints = {
+          spCfg.outputSpacePoints,
+      };
+      seedingCfg.outputSeeds = "seeds";
+      seedingCfg.outputProtoTracks = "prototracks";
+      seedingCfg.rMax = 200.;
+      seedingCfg.deltaRMax = 60.;
+      seedingCfg.collisionRegionMin = -250;
+      seedingCfg.collisionRegionMax = 250.;
+      seedingCfg.zMin = -2000.;
+      seedingCfg.zMax = 2000.;
+      seedingCfg.maxSeedsPerSpM = 1;
+      seedingCfg.cotThetaMax = 7.40627;  // 2.7 eta
+      seedingCfg.sigmaScattering = 50;
+      seedingCfg.radLengthPerSeed = 0.1;
+      seedingCfg.minPt = 500.;
+      seedingCfg.bFieldInZ = 0.00199724;
+      seedingCfg.beamPosX = 0;
+      seedingCfg.beamPosY = 0;
+      seedingCfg.impactMax = 3.;
+      sequencer.addAlgorithm(
+          std::make_shared<SeedingAlgorithm>(seedingCfg, logLevel));
+
+      // Algorithm estimating track parameter from seed
+      TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
+      paramsEstimationCfg.inputSeeds = seedingCfg.outputSeeds;
+      paramsEstimationCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
+      paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
+      paramsEstimationCfg.trackingGeometry = trackingGeometry;
+      paramsEstimationCfg.bFieldGetter =
+          TrackParamsEstimationAlgorithm::makeBFieldGetter(magneticField);
+      sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
+          paramsEstimationCfg, logLevel));
+
+      return paramsEstimationCfg.outputTrackParameters;
+    }
+  };
 
   // Setup the track finding algorithm with CKF
   // It takes all the source links created from truth hit smearing, seeds from
@@ -105,7 +183,7 @@ int runRecCKFTracks(int argc, char* argv[],
   trackFindingCfg.inputMeasurements = hitSmearingCfg.outputMeasurements;
   trackFindingCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
   trackFindingCfg.inputInitialTrackParameters =
-      particleSmearingCfg.outputTrackParameters;
+      trackParams(estimateTrackParamsFromSeed);
   trackFindingCfg.outputTrajectories = "trajectories";
   trackFindingCfg.findTracks = TrackFindingAlgorithm::makeTrackFinderFunction(
       trackingGeometry, magneticField);

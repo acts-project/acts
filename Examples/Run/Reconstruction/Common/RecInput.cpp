@@ -100,7 +100,7 @@ ActsExamples::ParticleSmearing::Config runParticleSmearing(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer,
     std::shared_ptr<const ActsExamples::RandomNumbers> rnd,
-    const std::string& inputParticles){
+    const std::string& inputParticles) {
   using namespace ActsExamples;
 
   // Read some standard options
@@ -130,8 +130,7 @@ ActsExamples::ParticleSmearing::Config runParticleSmearing(
 
 ActsExamples::TruthSeedSelector::Config runParticleSelection(
     const ActsExamples::Options::Variables& vars,
-    ActsExamples::Sequencer& sequencer,
-    const std::string& inputParticles,
+    ActsExamples::Sequencer& sequencer, const std::string& inputParticles,
     const std::string& inputMeasurementParticlesMap) {
   using namespace ActsExamples;
 

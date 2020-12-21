@@ -84,7 +84,9 @@ int runRecTruthTracks(int argc, char* argv[],
   auto hitSmearingCfg = runSimHitSmearing(vm, sequencer, rnd, trackingGeometry,
                                           simHitReaderCfg.outputSimHits);
   // Run the particle selection
-  auto particleSelectorCfg = runParticleSelection(vm, sequencer, particleReader.outputParticles, hitSmearingCfg.outputMeasurementParticlesMap);
+  auto particleSelectorCfg =
+      runParticleSelection(vm, sequencer, particleReader.outputParticles,
+                           hitSmearingCfg.outputMeasurementParticlesMap);
 
   // The selected particles
   const auto& inputParticles = particleSelectorCfg.outputParticles;
