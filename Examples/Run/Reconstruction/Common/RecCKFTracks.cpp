@@ -166,6 +166,7 @@ int runRecCKFTracks(int argc, char* argv[],
       paramsEstimationCfg.inputSeeds = seedingCfg.outputSeeds;
       paramsEstimationCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
       paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
+      paramsEstimationCfg.ptMin = 1.0 * Acts::UnitConstants::GeV;
       paramsEstimationCfg.trackingGeometry = trackingGeometry;
       paramsEstimationCfg.bFieldGetter =
           TrackParamsEstimationAlgorithm::makeBFieldGetter(magneticField);

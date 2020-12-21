@@ -70,7 +70,8 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       auto optParams = Acts::estimateTrackParamsFromSeed(
           seed.sp(), transform, field.z(), m_cfg.ptMin);
       if (not optParams.has_value()) {
-        ACTS_WARNING("Estimation of track parameters for seed failed.");
+        ACTS_WARNING("Estimation of track parameters from seed failed.");
+        continue;
       } else {
         const auto& params = optParams.value();
         const double p = 1.0 / std::abs(params[Acts::eBoundQOverP]);

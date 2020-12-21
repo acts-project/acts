@@ -189,7 +189,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
     params[2] = std::atan2(b + a * A, a - b * A);
     // The estimated inverse transverse momentum in [GeV/c]^-1.
     // @note the curvature needs to be in the unit of [m]^-1.
-    qOverPt = rho * 1000 / (0.3 * bFieldZ);
+    qOverPt = rho * 1000 / (0.3 * bFieldZ / UnitConstants::T);
   } else {
     // Use straight-line estimate (no curvature correction)
     invTanTheta = z2 * sqrt(r2);
@@ -201,11 +201,6 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
 
   // Return nullopt if the estimate pt is not not within requirement
   if (std::abs(qOverPt) * ptMin > (1. + ptTolerance)) {
-    ACTS_LOCAL_LOGGER(
-        getDefaultLogger("TrackParametersEstimation", Logging::INFO));
-    ACTS_FATAL("Estimated transverse momentum = "
-               << std::abs(1.0 / qOverPt)
-               << " [GeV] is small than ptMin = " << ptMin << " [GeV]")
     return std::nullopt;
   }
 
