@@ -70,16 +70,16 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
                      << geoId << " is not found in the tracking gemetry");
         continue;
       }
-      const Acts::Transform3 transform = surface->transform(ctx.geoContext);
 
       // Get the magnetic field at the first space point
       Acts::Vector3 field = m_cfg.bFieldGetter(
           Acts::Vector3(firstSP->x(), firstSP->y(), firstSP->z()));
       // Estimate the track parameters from seed
       auto optParams = Acts::estimateTrackParamsFromSeed(
-          seed.sp(), transform, field.z(), m_cfg.ptMin);
+          ctx.geoContext, seed.sp(), *surface, field.z(), m_cfg.bFieldZMin);
       if (not optParams.has_value()) {
-        ACTS_WARNING("Estimation of track parameters from seed failed.");
+        ACTS_WARNING("Estimation of track parameters from seed "
+                     << iseed << " in region " << iregion << " failed.");
         continue;
       } else {
         const auto& params = optParams.value();

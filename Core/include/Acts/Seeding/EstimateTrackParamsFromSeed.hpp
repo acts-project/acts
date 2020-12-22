@@ -10,7 +10,9 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Seeding/Seed.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
@@ -39,9 +41,10 @@ namespace Acts {
 template <typename external_spacepoint_t>
 std::optional<std::array<double, 3>> estimateTrackParamsFromSeed(
     const std::vector<external_spacepoint_t*>& sps) {
+  // The local logger
+  ACTS_LOCAL_LOGGER(
+      getDefaultLogger("estimateTrackParamsFromSeed", Logging::INFO));
   if (sps.empty()) {
-    ACTS_LOCAL_LOGGER(
-        getDefaultLogger("TrackParametersEstimation", Logging::INFO));
     ACTS_FATAL("No space points exsit.")
     return std::nullopt;
   }
@@ -111,26 +114,45 @@ std::optional<std::array<double, 3>> estimateTrackParamsFromSeed(
 /// the origin, positive when counter clock-wise
 ///
 /// @tparam external_spacepoint_t The type of space point
+///
+/// @param gctx is the geometry context
 /// @param sps is the vector of space points with positions in unit of mm
-/// @param transform is the transform which helps to represent the track
-/// parameters
+/// @param surface is the surface at which the bound track parameters will be
+/// represented
 /// @param bFieldZ is the magnetic field in z direction in T
-/// @param ptMin is the minimum transverse momentum allowed in GeV
-/// @param ptTolerance is the tolerance of pt in percent
+/// @param bFieldZMin is the minimum magnetic field in z direction in T when
+/// estimation of q/p is done
 /// @param mass is the estimated particle mass
 ///
 /// @return optional bound parameters
 template <typename external_spacepoint_t>
 std::optional<BoundVector> estimateTrackParamsFromSeed(
-    const std::vector<external_spacepoint_t>& sps, const Transform3& transform,
-    double bFieldZ, double ptMin = 0.5 * UnitConstants::GeV,
-    double ptTolerance = 0.1, double mass = 139.57018 * UnitConstants::MeV) {
+    const GeometryContext& gctx, const std::vector<external_spacepoint_t>& sps,
+    const Surface& surface, double bFieldZ,
+    double bFieldZMin = 0.1 * UnitConstants::T,
+    double mass = 139.57018 * UnitConstants::MeV) {
+  // The local logger
+  ACTS_LOCAL_LOGGER(
+      getDefaultLogger("estimateTrackParamsFromSeed", Logging::INFO));
   if (sps.size() < 3) {
-    ACTS_LOCAL_LOGGER(
-        getDefaultLogger("TrackParametersEstimation", Logging::INFO));
     ACTS_FATAL("At least three space points are required.")
     return std::nullopt;
   }
+
+  // Make sure the pt and bFieldZ are in expected units
+  double bFieldZInTesla = bFieldZ / UnitConstants::T;
+  double bFieldZMinInTesla = bFieldZMin / UnitConstants::T;
+  // Check if magnetic field is too small
+  if (bFieldZInTesla < bFieldZMinInTesla) {
+    // @note shall we use straight-line estimation and use default q/pt in such
+    // case?
+    ACTS_FATAL("The magnetic field at the first space point: Bz = "
+               << bFieldZInTesla << " T is too small.")
+    return std::nullopt;
+  }
+
+  // Initialize the bound parameters vector
+  BoundVector params = BoundVector::Zero();
 
   double x0 = sps[0]->x();
   double y0 = sps[0]->y();
@@ -163,64 +185,44 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // @todo checks the sign of rho
   double rho = -1.0 * B / std::sqrt(1. + A * A);
 
-  // Project to the surface
-  const auto matrix = transform.matrix();
-  Vector3 Ax = matrix.block<3, 1>(0, 0);
-  Vector3 Ay = matrix.block<3, 1>(0, 1);
-  // Center of the surface in the global frame
-  Vector3 D = matrix.block<3, 1>(0, 3);
-  // Location of the first SP w.r.t. the surface center
-  Vector3 d(x0 - D[0], y0 - D[1], z0 - D[2]);
-
-  // Initialize the bound parameters vector
-  BoundVector params = BoundVector::Zero();
-  // The estimated loc0 and loc1
-  params[0] = d.dot(Ax);
-  params[1] = d.dot(Ay);
-
-  // Make sure the ptMin and bFieldZ are in expected units
-  double ptMinInGeV = ptMin / UnitConstants::GeV;
-  double bFieldZInTesla = bFieldZ / UnitConstants::T;
-
-  // The 1/tanTheta inverse and qOverPt
-  double invTanTheta;
-  double qOverPt;
-  // Check if magnetic field is more than 0.1 Tesla
-  if (bFieldZInTesla > 0.1) {
-    // Estimate of the track dz/dr (1/tanTheta), corrected for curvature effects
-    invTanTheta = z2 * std::sqrt(r2) / (1. + 0.04 * rho * rho * rn);
-    // The estimated phi
-    params[2] = std::atan2(b + a * A, a - b * A);
-    // The estimated inverse transverse momentum in [GeV/c]^-1 assumes the space
-    // point global positions have units in mm
-    // @note the curvature needs to be in the unit of [m]^-1.
-    qOverPt = rho * 1000 / (0.3 * bFieldZInTesla);
-  } else {
-    // Use straight-line estimate (no curvature correction)
-    invTanTheta = z2 * sqrt(r2);
-    // The estimated phi
-    params[2] = std::atan2(y2, x2);
-    // No pt estimation, assume min pt and positive charge
-    qOverPt = 1. / ptMinInGeV;
-  }
-
-  // Return nullopt if the estimate pt is not not within requirement
-  if (std::abs(qOverPt) * ptMinInGeV > (1. + ptTolerance)) {
-    return std::nullopt;
-  }
-
+  // Estimate of the track dz/dr (1/tanTheta), corrected for curvature effects
+  // @note why 0.04?
+  double invTanTheta = z2 * std::sqrt(r2) / (1. + 0.04 * rho * rho * rn);
+  // The estimated phi
+  params[2] = std::atan2(b + a * A, a - b * A);
   // The estimated theta
   params[3] = std::atan2(1., invTanTheta);
-  // The estimated q/p in [GeV/c]^-1 using q/pt and 1.0/tanTheta
-  params[4] = qOverPt / std::sqrt(1. + invTanTheta * invTanTheta);
-
+  // The estimated q/pt in [GeV/c]^-1 assuming the space
+  // point global positions have units in mm
+  double estQOverPt = rho * 1000 / (0.3 * bFieldZInTesla);
+  // The estimated q/p in [GeV/c]^-1
+  params[4] = estQOverPt / std::sqrt(1. + invTanTheta * invTanTheta);
   // The estimated pz and p in GeV/c
-  double pzInGeV = 1.0 / std::abs(qOverPt) * invTanTheta;
-  double pInGeV = 1.0 / params[4];
+  double pzInGeV = 1.0 / std::abs(estQOverPt) * invTanTheta;
+  double pInGeV = std::abs(1.0 / params[4]);
   double massInGeV = mass / UnitConstants::GeV;
   double vz = pzInGeV / std::sqrt(pInGeV * pInGeV + massInGeV * massInGeV);
   // The estimated time in ms?
   params[5] = sps[0]->z() / vz;
+
+  // The estimated momentum direction
+  double sinTheta = std::sin(params[3]);
+  double cosTheta = std::cos(params[3]);
+  double sinPhi = std::sin(params[2]);
+  double cosPhi = std::cos(params[2]);
+  Vector3 direction(sinTheta * cosPhi, sinTheta * sinPhi, cosTheta);
+  // Transform the first space point to the provided surface
+  Vector3 global(x0, y0, z0);
+  auto lpResult = surface.globalToLocal(gctx, global, direction);
+  if (not lpResult.ok()) {
+    ACTS_ERROR("Global to local transformation did not succeed.");
+    return std::nullopt;
+  }
+  Vector2 local = lpResult.value();
+  // The estimated loc0 and loc1
+  params[0] = local[0];
+  params[1] = local[1];
+
   return params;
 }
 

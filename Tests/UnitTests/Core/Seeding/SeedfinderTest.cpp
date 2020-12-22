@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
@@ -15,6 +16,7 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/Seedfinder.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -193,6 +195,8 @@ int main(int argc, char** argv) {
       for (size_t is = 0; is < seedVector[ir].size(); ++is) {
         const auto& seed = seedVector[ir][is];
         const SpacePoint* sp = seed.sp()[0];
+        Acts::Vector3 global0(sp->x(), sp->y(), sp->z());
+
         std::cout << "Print out info of found seed: " << is
                   << " in region: " << ir << std::endl;
         std::cout << sp->layer << " (" << sp->x() << ", " << sp->y() << ", "
@@ -216,10 +220,11 @@ int main(int argc, char** argv) {
                 << "WARNING: estimation of (d0, curvature, phi) for found seed "
                 << is << " in region " << ir << " failed." << std::endl;
           }
+          const auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
+              global0, Acts::Vector3(0, 0, 1));
           auto boundParamsRes = Acts::estimateTrackParamsFromSeed(
-              seed.sp(), Acts::Transform3::Identity(),
-              config.bFieldInZ * 1000 * Acts::UnitConstants::T,
-              config.minPt * Acts::UnitConstants::MeV);
+              Acts::GeometryContext(), seed.sp(), *surface,
+              config.bFieldInZ * 1000 * Acts::UnitConstants::T);
           if (boundParamsRes.has_value()) {
             auto boundParams = boundParamsRes.value();
             std::cout << "Estimated (loc0, loc1, phi, theta, q/p, t) on the "
