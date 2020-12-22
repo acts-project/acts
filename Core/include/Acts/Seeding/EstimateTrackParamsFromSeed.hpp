@@ -147,7 +147,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
     // @note shall we use straight-line estimation and use default q/pt in such
     // case?
     ACTS_WARNING("The magnetic field at the first space point: Bz = "
-               << bFieldZInTesla << " T is too small.")
+                 << bFieldZInTesla << " T is too small.")
     return std::nullopt;
   }
 

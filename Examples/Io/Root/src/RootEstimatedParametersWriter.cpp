@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Io/Root/RootEstimatedParametersWriter.hpp"
 
-//#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -29,8 +28,6 @@
 
 #include "detail/AverageSimHits.hpp"
 
-using Acts::VectorHelpers::eta;
-using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
 

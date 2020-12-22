@@ -30,16 +30,13 @@ struct BFieldGetterImpl {
 ActsExamples::TrackParamsEstimationAlgorithm::BFieldGetter
 ActsExamples::TrackParamsEstimationAlgorithm::makeBFieldGetter(
     Options::BFieldVariant magneticField) {
-  // unpack the magnetic field variant and instantiate the corresponding fitter.
   return std::visit(
       [](auto&& inputField) -> BFieldGetter {
-        // each entry in the variant is already a shared_ptr
-        // need ::element_type to get the real magnetic field type
         using InputMagneticField =
             typename std::decay_t<decltype(inputField)>::element_type;
         using MagneticField = Acts::SharedBField<InputMagneticField>;
         MagneticField field(std::move(inputField));
-        // build the B field getter functions. owns the fitter object.
+
         return BFieldGetterImpl<MagneticField>(std::move(field));
       },
       std::move(magneticField));
