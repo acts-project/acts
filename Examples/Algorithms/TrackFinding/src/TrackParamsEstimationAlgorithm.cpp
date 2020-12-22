@@ -15,6 +15,7 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <map>
 #include <stdexcept>
 
 ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
@@ -31,6 +32,10 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
   if (m_cfg.outputTrackParameters.empty()) {
     throw std::invalid_argument("Missing output track parameters collection");
   }
+  if (m_cfg.outputTrackParamsSeedMap.empty()) {
+    throw std::invalid_argument(
+        "Missing output trackparameters-to-seed collection");
+  }
   if (not m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
@@ -39,16 +44,20 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
 ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   using SeedContainer = std::vector<std::vector<Acts::Seed<SimSpacePoint>>>;
+  using TrackParamsSeedMap = std::map<Index, std::pair<Index, Index>>;
   const auto& seeds = ctx.eventStore.get<SeedContainer>(m_cfg.inputSeeds);
   // need source links to get the geometry identifer
   const auto& sourceLinks =
       ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
 
-  TrackParametersContainer parameters;
-  parameters.reserve(seeds.size());
+  TrackParametersContainer trackParameters;
+  TrackParamsSeedMap trackParamsSeedMap;
+  trackParameters.reserve(seeds.size());
 
-  for (const auto& regionSeeds : seeds) {
-    for (const auto& seed : regionSeeds) {
+  for (size_t iregion = 0; iregion < seeds.size(); ++iregion) {
+    const auto& regionSeeds = seeds[iregion];
+    for (size_t iseed = 0; iseed < regionSeeds.size(); ++iseed) {
+      const auto& seed = regionSeeds[iseed];
       // Get the transform of the reference surface of the first space point
       // @todo do we need to sort the sps first
       const auto firstSP = seed.sp().front();
@@ -102,11 +111,16 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
         cov(Acts::eBoundTheta, Acts::eBoundTheta) = sigmaTheta * sigmaTheta;
         cov(Acts::eBoundQOverP, Acts::eBoundQOverP) = sigmaQOverP * sigmaQOverP;
 
-        parameters.emplace_back(surface->getSharedPtr(), params, charge, cov);
+        trackParameters.emplace_back(surface->getSharedPtr(), params, charge,
+                                     cov);
+        trackParamsSeedMap.emplace(trackParameters.size() - 1,
+                                   std::make_pair(iregion, iseed));
       }
     }
   }
 
-  ctx.eventStore.add(m_cfg.outputTrackParameters, std::move(parameters));
+  ctx.eventStore.add(m_cfg.outputTrackParameters, std::move(trackParameters));
+  ctx.eventStore.add(m_cfg.outputTrackParamsSeedMap,
+                     std::move(trackParamsSeedMap));
   return ActsExamples::ProcessCode::SUCCESS;
 }

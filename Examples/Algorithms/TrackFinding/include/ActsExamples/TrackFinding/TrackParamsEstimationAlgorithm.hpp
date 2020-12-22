@@ -34,17 +34,19 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
   static BFieldGetter makeBFieldGetter(Options::BFieldVariant magneticField);
 
   struct Config {
-    /// Input seeds collection
+    /// Input seeds collection.
     std::string inputSeeds;
     /// Input source links collection.
     std::string inputSourceLinks;
-    /// Output estimated track parameters collection
+    /// Output estimated track parameters collection.
     std::string outputTrackParameters;
-    /// Tracking geometry for surface lookup
+    /// Output estimated track parameters to seed map collection.
+    std::string outputTrackParamsSeedMap;
+    /// Tracking geometry for surface lookup.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
-    /// Magnetic field getter
+    /// Magnetic field getter.
     BFieldGetter bFieldGetter;
-    /// The minimum transverse momentum
+    /// The minimum transverse momentum.
     double ptMin = 0.5 * Acts::UnitConstants::GeV;
     /// Constant term of the d0 resolution.
     double sigmaD0 = 30 * Acts::UnitConstants::um;

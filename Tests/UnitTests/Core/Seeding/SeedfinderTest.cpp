@@ -217,8 +217,9 @@ int main(int argc, char** argv) {
                 << is << " in region " << ir << " failed." << std::endl;
           }
           auto boundParamsRes = Acts::estimateTrackParamsFromSeed(
-              seed.sp(), Acts::Transform3::Identity(), config.bFieldInZ * 1000,
-              config.minPt * 0.001);
+              seed.sp(), Acts::Transform3::Identity(),
+              config.bFieldInZ * 1000 * Acts::UnitConstants::T,
+              config.minPt * Acts::UnitConstants::MeV);
           if (boundParamsRes.has_value()) {
             auto boundParams = boundParamsRes.value();
             std::cout << "Estimated (loc0, loc1, phi, theta, q/p, t) on the "
