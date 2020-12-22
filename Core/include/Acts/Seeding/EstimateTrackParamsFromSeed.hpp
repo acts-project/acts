@@ -45,7 +45,7 @@ std::optional<std::array<double, 3>> estimateTrackParamsFromSeed(
   ACTS_LOCAL_LOGGER(
       getDefaultLogger("estimateTrackParamsFromSeed", Logging::INFO));
   if (sps.empty()) {
-    ACTS_FATAL("No space points exsit.")
+    ACTS_ERROR("No space points exsit.")
     return std::nullopt;
   }
 
@@ -135,7 +135,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   ACTS_LOCAL_LOGGER(
       getDefaultLogger("estimateTrackParamsFromSeed", Logging::INFO));
   if (sps.size() < 3) {
-    ACTS_FATAL("At least three space points are required.")
+    ACTS_ERROR("At least three space points are required.")
     return std::nullopt;
   }
 
@@ -146,7 +146,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   if (bFieldZInTesla < bFieldZMinInTesla) {
     // @note shall we use straight-line estimation and use default q/pt in such
     // case?
-    ACTS_FATAL("The magnetic field at the first space point: Bz = "
+    ACTS_WARNING("The magnetic field at the first space point: Bz = "
                << bFieldZInTesla << " T is too small.")
     return std::nullopt;
   }
