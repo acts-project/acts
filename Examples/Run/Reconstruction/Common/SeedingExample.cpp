@@ -17,9 +17,12 @@
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Performance/SeedingPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/RootEstimatedParametersWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
+#include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
@@ -42,6 +45,7 @@ int runSeedingExample(int argc, char* argv[],
   Options::addMaterialOptions(desc);
   Options::addOutputOptions(desc);
   Options::addInputOptions(desc);
+  Options::addBFieldOptions(desc);
 
   // Add specific options for this geometry
   detector->addOptions(desc);
@@ -66,6 +70,9 @@ int runSeedingExample(int argc, char* argv[],
   for (auto cdr : contextDecorators) {
     sequencer.addContextDecorator(cdr);
   }
+
+  // Setup the magnetic field
+  auto magneticField = Options::readBField(vm);
 
   // Read the sim hits
   auto simHitReaderCfg = setupSimHitReading(vm, sequencer);
@@ -125,7 +132,19 @@ int runSeedingExample(int argc, char* argv[],
   sequencer.addAlgorithm(
       std::make_shared<SeedingAlgorithm>(seedingCfg, logLevel));
 
-  // Performance Writer
+  // Algorithm estimating track parameter from seed
+  TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
+  paramsEstimationCfg.inputSeeds = seedingCfg.outputSeeds;
+  paramsEstimationCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
+  paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
+  paramsEstimationCfg.outputTrackParamsSeedMap = "estimatedparams_seed_map";
+  paramsEstimationCfg.trackingGeometry = tGeometry;
+  paramsEstimationCfg.bFieldGetter =
+      TrackParamsEstimationAlgorithm::makeBFieldGetter(magneticField);
+  sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
+      paramsEstimationCfg, logLevel));
+
+  // Seeding performance Writers
   TrackFinderPerformanceWriter::Config tfPerfCfg;
   tfPerfCfg.inputProtoTracks = seedingCfg.outputProtoTracks;
   tfPerfCfg.inputParticles = particleReader.outputParticles;
@@ -145,6 +164,25 @@ int runSeedingExample(int argc, char* argv[],
   seedPerfCfg.outputFilename = "performance_seeding_hists.root";
   sequencer.addWriter(
       std::make_shared<SeedingPerformanceWriter>(seedPerfCfg, logLevel));
+
+  // The track parameters estimation writer
+  RootEstimatedParametersWriter::Config estParamsWriterCfg;
+  estParamsWriterCfg.inputSeeds = seedingCfg.outputSeeds;
+  estParamsWriterCfg.inputTrackParameters =
+      paramsEstimationCfg.outputTrackParameters;
+  estParamsWriterCfg.inputTrackParamsSeedMap =
+      paramsEstimationCfg.outputTrackParamsSeedMap;
+  estParamsWriterCfg.inputParticles = particleReader.outputParticles;
+  estParamsWriterCfg.inputSimHits = simHitReaderCfg.outputSimHits;
+  estParamsWriterCfg.inputMeasurementParticlesMap =
+      hitSmearingCfg.outputMeasurementParticlesMap;
+  estParamsWriterCfg.inputMeasurementSimHitsMap =
+      hitSmearingCfg.outputMeasurementSimHitsMap;
+  estParamsWriterCfg.outputDir = outputDir;
+  estParamsWriterCfg.outputFilename = "estimatedparams.root";
+  estParamsWriterCfg.outputTreename = "estimatedparams";
+  sequencer.addWriter(std::make_shared<RootEstimatedParametersWriter>(
+      estParamsWriterCfg, logLevel));
 
   return sequencer.run();
 }
