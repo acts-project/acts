@@ -31,7 +31,9 @@ using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
 
 int runSeedingExample(int argc, char* argv[],
-                      std::shared_ptr<ActsExamples::IBaseDetector> detector) {
+                      std::shared_ptr<ActsExamples::IBaseDetector> detector,
+		      std::vector<Acts::GeometryIdentifier> layersForSeeding
+		      ) {
   // Setup and parse options
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
@@ -99,22 +101,7 @@ int runSeedingExample(int argc, char* argv[],
   spCfg.inputMeasurements = hitSmearingCfg.outputMeasurements;
   spCfg.outputSpacePoints = "spacepoints";
   spCfg.trackingGeometry = tGeometry;
-  spCfg.geometrySelection = {
-      // barrel pixel layers
-      Acts::GeometryIdentifier().setVolume(8).setLayer(2),
-      Acts::GeometryIdentifier().setVolume(8).setLayer(4),
-      Acts::GeometryIdentifier().setVolume(8).setLayer(6),
-      // positive endcap pixel layers
-      Acts::GeometryIdentifier().setVolume(9).setLayer(2),
-      Acts::GeometryIdentifier().setVolume(9).setLayer(4),
-      Acts::GeometryIdentifier().setVolume(9).setLayer(6),
-      Acts::GeometryIdentifier().setVolume(9).setLayer(8),
-      // negative endcap pixel layers
-      Acts::GeometryIdentifier().setVolume(7).setLayer(14),
-      Acts::GeometryIdentifier().setVolume(7).setLayer(12),
-      Acts::GeometryIdentifier().setVolume(7).setLayer(10),
-      Acts::GeometryIdentifier().setVolume(7).setLayer(8),
-  };
+  spCfg.geometrySelection = layersForSeeding;
   sequencer.addAlgorithm(std::make_shared<SpacePointMaker>(spCfg, logLevel));
 
   // Seeding algorithm

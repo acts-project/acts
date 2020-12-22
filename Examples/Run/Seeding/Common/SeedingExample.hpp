@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 
 namespace ActsExamples {
 class IBaseDetector;
@@ -19,4 +20,6 @@ class IBaseDetector;
 /// @param argv the argument list
 /// @param detector The detector descriptor instance
 int runSeedingExample(int argc, char* argv[],
-                      std::shared_ptr<ActsExamples::IBaseDetector> detector);
+                      std::shared_ptr<ActsExamples::IBaseDetector> detector,
+		      std::vector<Acts::GeometryIdentifier> layersForSeeding
+		      );
