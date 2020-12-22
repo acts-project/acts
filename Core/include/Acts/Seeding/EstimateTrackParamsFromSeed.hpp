@@ -123,8 +123,8 @@ std::optional<std::array<double, 3>> estimateTrackParamsFromSeed(
 template <typename external_spacepoint_t>
 std::optional<BoundVector> estimateTrackParamsFromSeed(
     const std::vector<external_spacepoint_t>& sps, const Transform3& transform,
-    double bFieldZ, double ptMin, double ptTolerance = 0.1,
-    double mass = 139.57018 * UnitConstants::MeV) {
+    double bFieldZ, double ptMin = 0.5 * UnitConstants::GeV,
+    double ptTolerance = 0.1, double mass = 139.57018 * UnitConstants::MeV) {
   if (sps.size() < 3) {
     ACTS_LOCAL_LOGGER(
         getDefaultLogger("TrackParametersEstimation", Logging::INFO));
@@ -178,42 +178,49 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   params[0] = d.dot(Ax);
   params[1] = d.dot(Ay);
 
+  // Make sure the ptMin and bFieldZ are in expected units
+  double ptMinInGeV = ptMin / UnitConstants::GeV;
+  double bFieldZInTesla = bFieldZ / UnitConstants::T;
+
   // The 1/tanTheta inverse and qOverPt
   double invTanTheta;
   double qOverPt;
   // Check if magnetic field is more than 0.1 Tesla
-  if (bFieldZ > 0.1 * UnitConstants::T) {
+  if (bFieldZInTesla > 0.1) {
     // Estimate of the track dz/dr (1/tanTheta), corrected for curvature effects
     invTanTheta = z2 * std::sqrt(r2) / (1. + 0.04 * rho * rho * rn);
     // The estimated phi
     params[2] = std::atan2(b + a * A, a - b * A);
-    // The estimated inverse transverse momentum in [GeV/c]^-1.
+    // The estimated inverse transverse momentum in [GeV/c]^-1 assumes the space
+    // point global positions have units in mm
     // @note the curvature needs to be in the unit of [m]^-1.
-    qOverPt = rho * 1000 / (0.3 * bFieldZ / UnitConstants::T);
+    qOverPt = rho * 1000 / (0.3 * bFieldZInTesla);
   } else {
     // Use straight-line estimate (no curvature correction)
     invTanTheta = z2 * sqrt(r2);
     // The estimated phi
     params[2] = std::atan2(y2, x2);
     // No pt estimation, assume min pt and positive charge
-    qOverPt = 1. / ptMin;
+    qOverPt = 1. / ptMinInGeV;
   }
 
   // Return nullopt if the estimate pt is not not within requirement
-  if (std::abs(qOverPt) * ptMin > (1. + ptTolerance)) {
+  if (std::abs(qOverPt) * ptMinInGeV > (1. + ptTolerance)) {
     return std::nullopt;
   }
 
   // The estimated theta
   params[3] = std::atan2(1., invTanTheta);
-  // The estimated q/p from q/pt and 1.0/tanTheta
+  // The estimated q/p in [GeV/c]^-1 using q/pt and 1.0/tanTheta
   params[4] = qOverPt / std::sqrt(1. + invTanTheta * invTanTheta);
 
-  // The estimated p and pz
-  double pz = 1.0 / std::abs(qOverPt) * invTanTheta;
-  // @todo: add the estimation of the timing
-  double vz = pz / std::sqrt(1.0 / (params[4] * params[4]) + mass * mass);
-  params[5] = sps[0]->z() * 0.001 / vz;
+  // The estimated pz and p in GeV/c
+  double pzInGeV = 1.0 / std::abs(qOverPt) * invTanTheta;
+  double pInGeV = 1.0 / params[4];
+  double massInGeV = mass / UnitConstants::GeV;
+  double vz = pzInGeV / std::sqrt(pInGeV * pInGeV + massInGeV * massInGeV);
+  // The estimated time in ms?
+  params[5] = sps[0]->z() / vz;
   return params;
 }
 
