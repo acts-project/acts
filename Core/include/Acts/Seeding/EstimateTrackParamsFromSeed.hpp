@@ -24,8 +24,7 @@ namespace Acts {
 /// @todo:
 /// 1) Implement the simple Line and Circle fit based on Taubin Circle fit
 /// 2) Implement the simple Line and Parabola fit (from HPS reconstruction by
-/// Robert
-/// Johnson)
+/// Robert Johnson)
 
 /// Estimate the track parameters on transverse plane
 ///
@@ -189,21 +188,21 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // @note why 0.04?
   double invTanTheta = z2 * std::sqrt(r2) / (1. + 0.04 * rho * rho * rn);
   // The estimated phi
-  params[2] = std::atan2(b + a * A, a - b * A);
+  params[eBoundPhi] = std::atan2(b + a * A, a - b * A);
   // The estimated theta
-  params[3] = std::atan2(1., invTanTheta);
+  params[eBoundTheta] = std::atan2(1., invTanTheta);
   // The estimated q/pt in [GeV/c]^-1 assuming the space
   // point global positions have units in mm
   double estQOverPt = rho * 1000 / (0.3 * bFieldZInTesla);
   // The estimated q/p in [GeV/c]^-1
-  params[4] = estQOverPt / std::sqrt(1. + invTanTheta * invTanTheta);
+  params[eBoundQOverP] = estQOverPt / std::sqrt(1. + invTanTheta * invTanTheta);
   // The estimated pz and p in GeV/c
   double pzInGeV = 1.0 / std::abs(estQOverPt) * invTanTheta;
-  double pInGeV = std::abs(1.0 / params[4]);
+  double pInGeV = std::abs(1.0 / params[eBoundQOverP]);
   double massInGeV = mass / UnitConstants::GeV;
   double vz = pzInGeV / std::sqrt(pInGeV * pInGeV + massInGeV * massInGeV);
   // The estimated time in ms?
-  params[5] = sps[0]->z() / vz;
+  params[eBoundTime] = sps[0]->z() / vz;
 
   // The estimated momentum direction
   double sinTheta = std::sin(params[3]);
@@ -220,8 +219,8 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   }
   Vector2 local = lpResult.value();
   // The estimated loc0 and loc1
-  params[0] = local[0];
-  params[1] = local[1];
+  params[eBoundLoc0] = local[0];
+  params[eBoundLoc1] = local[1];
 
   return params;
 }

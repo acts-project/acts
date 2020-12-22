@@ -58,7 +58,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     const auto& regionSeeds = seeds[iregion];
     for (size_t iseed = 0; iseed < regionSeeds.size(); ++iseed) {
       const auto& seed = regionSeeds[iseed];
-      // Get the transform of the reference surface of the first space point
+      // Get the first space point and its reference surface
       // @todo do we need to sort the sps first
       const auto firstSP = seed.sp().front();
       const auto hitIdx = firstSP->measurementIndex();
