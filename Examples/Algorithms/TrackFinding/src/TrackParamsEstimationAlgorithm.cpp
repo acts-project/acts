@@ -58,10 +58,10 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     const auto& regionSeeds = seeds[iregion];
     for (size_t iseed = 0; iseed < regionSeeds.size(); ++iseed) {
       const auto& seed = regionSeeds[iseed];
-      // Get the first space point and its reference surface
+      // Get the bottom space point and its reference surface
       // @todo do we need to sort the sps first
-      const auto firstSP = seed.sp().front();
-      const auto hitIdx = firstSP->measurementIndex();
+      const auto bottomSP = seed.sp().front();
+      const auto hitIdx = bottomSP->measurementIndex();
       const auto sourceLink = sourceLinks.nth(hitIdx);
       auto geoId = sourceLink->geometryId();
       const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
@@ -71,12 +71,12 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
         continue;
       }
 
-      // Get the magnetic field at the first space point
+      // Get the magnetic field at the bottom space point
       Acts::Vector3 field = m_cfg.bFieldGetter(
-          Acts::Vector3(firstSP->x(), firstSP->y(), firstSP->z()));
+          Acts::Vector3(bottomSP->x(), bottomSP->y(), bottomSP->z()));
       // Estimate the track parameters from seed
       auto optParams = Acts::estimateTrackParamsFromSeed(
-          ctx.geoContext, seed.sp(), *surface, field.z(), m_cfg.bFieldZMin);
+          ctx.geoContext, seed.sp(), *surface, field, m_cfg.bFieldZMin);
       if (not optParams.has_value()) {
         ACTS_WARNING("Estimation of track parameters from seed "
                      << iseed << " in region " << iregion << " failed.");

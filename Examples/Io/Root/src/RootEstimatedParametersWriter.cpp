@@ -146,7 +146,7 @@ ActsExamples::ProcessCode ActsExamples::RootEstimatedParametersWriter::writeT(
   // Loop over the estimated track parameters
   for (size_t iparams = 0; iparams < parameters.size(); ++iparams) {
     // The reference surface of the parameters, i.e. also the reference surface
-    // of the first space point
+    // of the bottom space point
     const auto& surface = parameters[iparams].referenceSurface();
     // The estimated bound parameters vector
     const auto params = parameters[iparams].parameters();
@@ -171,14 +171,14 @@ ActsExamples::ProcessCode ActsExamples::RootEstimatedParametersWriter::writeT(
       m_truthMatched = true;
     }
 
-    // Get the index of the first space point
-    const auto& firstSP = seed.sp().front();
-    const auto& hitIdx = firstSP->measurementIndex();
+    // Get the index of the bottom space point
+    const auto& bottomSP = seed.sp().front();
+    const auto& hitIdx = bottomSP->measurementIndex();
     // Get the sim hits via the measurement to sim hits map
     auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
     auto [truthLocal, truthPos4, truthUnitDir] =
         detail::averageSimHits(ctx.geoContext, surface, simHits, indices);
-    // Get the truth track parameter at the first space point
+    // Get the truth track parameter at the bottom space point
     m_t_eLOC0 = truthLocal[Acts::ePos0];
     m_t_eLOC1 = truthLocal[Acts::ePos1];
     m_t_ePHI = phi(truthUnitDir);

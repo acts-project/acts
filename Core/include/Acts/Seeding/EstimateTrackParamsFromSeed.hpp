@@ -16,6 +16,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
+#include <cmath>
 #include <iostream>
 #include <optional>
 #include <vector>
@@ -109,7 +110,7 @@ std::optional<std::array<double, 3>> estimateTrackParamsFromSeed(
 ///
 /// @note This function gives an estimation of the bound track parameters from a
 /// seed using a conformal map transformation, i.e. (loc1, loc2, phi, theta,
-/// q/p, t) at the first space point. phi is the angle of the track direction
+/// q/p, t) at the bottom space point. phi is the angle of the track direction
 /// with respect the origin, positive when counter clock-wise
 ///
 /// @tparam external_spacepoint_t The type of space point
@@ -118,17 +119,17 @@ std::optional<std::array<double, 3>> estimateTrackParamsFromSeed(
 /// @param sps is the vector of space points with positions in unit of mm
 /// @param surface is the surface at which the bound track parameters will be
 /// represented
-/// @param bFieldZ is the magnetic field in z direction in T
-/// @param bFieldZMin is the minimum magnetic field in z direction in T when
-/// estimation of q/p is done
+/// @param bField is the magnetic field vector
+/// @param bFieldMin is the minimum magnetic field to be able to perform the
+/// estimation of q/pt
 /// @param mass is the estimated particle mass
 ///
 /// @return optional bound parameters
 template <typename external_spacepoint_t>
 std::optional<BoundVector> estimateTrackParamsFromSeed(
     const GeometryContext& gctx, const std::vector<external_spacepoint_t>& sps,
-    const Surface& surface, double bFieldZ,
-    double bFieldZMin = 0.1 * UnitConstants::T,
+    const Surface& surface, Vector3 bField,
+    double bFieldMin = 0.1 * UnitConstants::T,
     double mass = 139.57018 * UnitConstants::MeV) {
   // The local logger
   ACTS_LOCAL_LOGGER(
@@ -138,94 +139,120 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
     return std::nullopt;
   }
 
-  // Convert bFieldZ to Tesla
-  double bFieldZInTesla = bFieldZ / UnitConstants::T;
-  double bFieldZMinInTesla = bFieldZMin / UnitConstants::T;
+  // Convert bField to Tesla
+  double bFieldInTesla = bField.norm() / UnitConstants::T;
+  double bFieldMinInTesla = bFieldMin / UnitConstants::T;
   // Check if magnetic field is too small
-  if (bFieldZInTesla < bFieldZMinInTesla) {
+  if (bFieldInTesla < bFieldMinInTesla) {
     // @todo shall we use straight-line estimation and use default q/pt in such
     // case?
-    ACTS_WARNING("The magnetic field at the first space point: Bz = "
-                 << bFieldZInTesla << " T is too small.")
+    ACTS_WARNING("The magnetic field at the bottom space point: B = "
+                 << bFieldInTesla << " T is smaller than |B|_min = "
+                 << bFieldMinInTesla << " T. Estimation cann't be done.")
     return std::nullopt;
   }
 
   // Initialize the bound parameters vector
   BoundVector params = BoundVector::Zero();
 
-  double x0 = sps[0]->x();
-  double y0 = sps[0]->y();
-  double z0 = sps[0]->z();
-  // Define the locations of the second and third space points with respect to
-  // the first one in the Space point vector
-  double x1 = sps[1]->x() - x0;
-  double y1 = sps[1]->y() - y0;
-  double x2 = sps[2]->x() - x0;
-  double y2 = sps[2]->y() - y0;
-  double z2 = sps[2]->z() - z0;
+  // The global position of the bottom, middle and top space point
+  Vector3 bGlobal(sps[0]->x(), sps[0]->y(), sps[0]->z());
+  Vector3 mGlobal(sps[1]->x(), sps[1]->y(), sps[1]->z());
+  Vector3 tGlobal(sps[2]->x(), sps[2]->y(), sps[2]->z());
+  // Define a new coordinate frame with its origin at the bottom space point, z
+  // axis long the magnetic field direction and y axis perpendicular to vector
+  // from the bottom to middle space point. Hence, the projection of the middle
+  // space point on the tranverse plane will be located at the x axis of the new
+  // frame.
+  Vector3 mRelVec = mGlobal - bGlobal;
+  Vector3 newZAxis = bField.normalized();
+  Vector3 newYAxis = newZAxis.cross(mRelVec).normalized();
+  Vector3 newXAxis = newYAxis.cross(newZAxis);
+  RotationMatrix3 rotation;
+  rotation.col(0) = newXAxis;
+  rotation.col(1) = newYAxis;
+  rotation.col(2) = newZAxis;
+  // The center of the new frame is at the bottom space point
+  Translation3 trans(bGlobal);
+  // The transform which constructs the new frame
+  Transform3 transform(trans * rotation);
 
-  // Define conformal map variables in the transformed frame with center at the
-  // first space point, x axis (x1/sqrt(x1*x1 + y1*y1), y1/sqrt(x1*x1 +
-  // y1*y1)) and y axis (-y1/sqrt(x1*x1 + y1*y1), x1/sqrt(x1*x1 + y1*y1)). In
-  // the transformed frame, the second space point has the coordinate
-  // (sqrt(x1*x1 + y1*y1), 0) and the thrid space point has the coordinate
-  // ((x1*x2 + y1*y2)/sqrt(x1*x1 + y1*y1), (-y1*x2 + x1*y2)/sqrt((x1*x1 +
-  // y1*y1)). The (u, v) defined as u =x/(x*x+y*y) and v = y/(x*x+y*y) for the
-  // second (u1, v1) and third space point (u2, v2) are calculated below.
-  double u1 = 1. / std::sqrt(x1 * x1 + y1 * y1);
-  // denominator for conformal mapping
-  double rn = x2 * x2 + y2 * y2;
-  double r2 = 1. / rn;
-  // coordinate system for conformal mapping
-  double a = x1 * u1;
-  double b = y1 * u1;
-  // (u, v) coordinates of third SP in conformal mapping
-  double u2 = (a * x2 + b * y2) * r2;
-  double v2 = (a * y2 - b * x2) * r2;
+  // The coordinate of the middle and top space point in the new frame
+  Vector3 local1 = transform.inverse() * mGlobal;
+  Vector3 local2 = transform.inverse() * tGlobal;
+  // Lambda to transform the coordinates to the (u, v) space
+  auto uvTransform = [](const Vector3& local) -> Vector2 {
+    Vector2 uv;
+    double denominator = local.x() * local.x() + local.y() * local.y();
+    uv.x() = local.x() / denominator;
+    uv.y() = local.y() / denominator;
+    return uv;
+  };
+  // The uv1.y() should be zero
+  Vector2 uv1 = uvTransform(local1);
+  Vector2 uv2 = uvTransform(local2);
+
   // A,B are slope and intercept of the straight line in the u,v plane
   // connecting the three points.
-  double A = v2 / (u2 - u1);
-  double B = v2 - A * u2;
+  double A = uv2.y() / (uv2.x() - uv1.x());
+  double B = uv2.y() - A * uv2.x();
   // Curvature (with a sign) estimate
-  double rho = -2.0 * B / std::sqrt(1. + A * A);
+  double rho = -2.0 * B / std::hypot(1., A);
 
-  // The estimated phi
-  params[eBoundPhi] = std::atan2(b + a * A, a - b * A);
-  // Estimate of the track dz/dr (1/tanTheta), corrected for curvature effects
+  // The phi of momentum in the new frame
+  double phi =
+      std::atan2(local1.y() + local1.x() * A, local1.x() - local1.y() * A);
+  double rn = local2.x() * local2.x() + local2.y() * local2.y();
+  double r2 = 1. / rn;
+  // The (1/tanTheta) of momentum the new frame, corrected for curvature effects
   // @note why 0.04?
-  double invTanTheta = z2 * std::sqrt(r2) / (1. + 0.04 * rho * rho * rn);
-  // The estimated theta
-  params[eBoundTheta] = std::atan2(1., invTanTheta);
-  // The estimated q/pt in [GeV/c]^-1
-  double estQOverPt = rho * (UnitConstants::m) / (0.3 * bFieldZInTesla);
-  // The estimated q/p in [GeV/c]^-1
-  params[eBoundQOverP] = estQOverPt / std::sqrt(1. + invTanTheta * invTanTheta);
-  // The estimated pz and p in GeV/c
-  double pzInGeV = 1.0 / std::abs(estQOverPt) * invTanTheta;
-  double pInGeV = std::abs(1.0 / params[eBoundQOverP]);
-  double massInGeV = mass / UnitConstants::GeV;
-  // The velocity in z direction
-  double vz = pzInGeV / std::sqrt(pInGeV * pInGeV + massInGeV * massInGeV);
-  // The estimated time in ms if the space point has global position in mm
-  params[eBoundTime] = sps[0]->z() / vz;
+  double invTanTheta =
+      local2.z() * std::sqrt(r2) / (1. + 0.04 * rho * rho * rn);
+  // The theta of momentum in the new frame
+  double theta = std::atan2(1., invTanTheta);
+  // The momentum diretion in the new frame
+  double sinTheta = std::sin(theta);
+  double cosTheta = std::cos(theta);
+  double sinPhi = std::sin(phi);
+  double cosPhi = std::cos(phi);
+  Vector3 transDirection(cosTheta * cosPhi, cosTheta * sinPhi, sinTheta);
+  // The momentum direction in the original coordinate frame
+  Vector3 direction = transform * transDirection;
 
-  // The estimated momentum direction
-  double sinTheta = std::sin(params[3]);
-  double cosTheta = std::cos(params[3]);
-  double sinPhi = std::sin(params[2]);
-  double cosPhi = std::cos(params[2]);
-  Vector3 direction(sinTheta * cosPhi, sinTheta * sinPhi, cosTheta);
-  // Transform the first space point to the provided surface
-  Vector3 global(x0, y0, z0);
-  auto lpResult = surface.globalToLocal(gctx, global, direction);
+  // The phi and theta
+  params[eBoundPhi] = VectorHelpers::phi(direction);
+  params[eBoundTheta] = VectorHelpers::theta(direction);
+
+  // Transform the bottom space point to the provided surface
+  auto lpResult = surface.globalToLocal(gctx, bGlobal, direction);
   if (not lpResult.ok()) {
     ACTS_ERROR("Global to local transformation did not succeed.");
     return std::nullopt;
   }
-  Vector2 local = lpResult.value();
+  Vector2 bLocal = lpResult.value();
   // The estimated loc0 and loc1
-  params[eBoundLoc0] = local[0];
-  params[eBoundLoc1] = local[1];
+  params[eBoundLoc0] = bLocal.x();
+  params[eBoundLoc1] = bLocal.y();
+
+  // The estimated q/pt in [GeV/c]^-1 (note that the pt is the projection of
+  // momentum in the transverse plane of the new frame)
+  double qOverPt = rho * (UnitConstants::m) / (0.3 * bFieldInTesla);
+  // The estimated q/p in [GeV/c]^-1
+  params[eBoundQOverP] = qOverPt / std::hypot(1., invTanTheta);
+
+  // The estimated momentum and momentum along the magnetic field diretion in
+  // GeV/c
+  double pInGeV = std::abs(1.0 / params[eBoundQOverP]);
+  double pzInGeV = 1.0 / std::abs(qOverPt) * invTanTheta;
+  double massInGeV = mass / UnitConstants::GeV;
+  // The velocity along the magnetic field diretion (i.e. z axis of the new
+  // frame)
+  double vz = pzInGeV / std::hypot(pInGeV, massInGeV);
+  // The z coordinate of the bottom space point along the magnetic field
+  // direction
+  double zDist = bGlobal.dot(bField) / bField.norm();
+  // The estimated time in ms if the space point has global position in mm
+  params[eBoundTime] = zDist / vz;
 
   return params;
 }

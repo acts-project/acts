@@ -222,9 +222,10 @@ int main(int argc, char** argv) {
           }
           const auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
               global0, Acts::Vector3(0, 0, 1));
+          const Acts::Vector3 bField(
+              0, 0, config.bFieldInZ * 1000 * Acts::UnitConstants::T);
           auto boundParamsRes = Acts::estimateTrackParamsFromSeed(
-              Acts::GeometryContext(), seed.sp(), *surface,
-              config.bFieldInZ * 1000 * Acts::UnitConstants::T);
+              Acts::GeometryContext(), seed.sp(), *surface, bField);
           if (boundParamsRes.has_value()) {
             auto boundParams = boundParamsRes.value();
             std::cout << "Estimated (loc0, loc1, phi, theta, q/p, t) on the "
