@@ -107,10 +107,10 @@ std::optional<std::array<double, 3>> estimateTrackParamsFromSeed(
 /// here:
 /// https://acode-browser.usatlas.bnl.gov/lxr/source/athena/InnerDetector/InDetRecTools/SiTrackMakerTool_xk/src/SiTrackMaker_xk.cxx
 ///
-/// @note This method gives an estimate of the track parameters of a seed using
-/// a conformal map transformation The track parameters are of the form loc1,
-/// loc2, phi, theta, q/p. phi0 is the angle of the track direction with respect
-/// the origin, positive when counter clock-wise
+/// @note This function gives an estimation of the bound track parameters from a
+/// seed using a conformal map transformation, i.e. (loc1, loc2, phi, theta,
+/// q/p, t) at the first space point. phi is the angle of the track direction
+/// with respect the origin, positive when counter clock-wise
 ///
 /// @tparam external_spacepoint_t The type of space point
 ///
@@ -138,12 +138,12 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
     return std::nullopt;
   }
 
-  // Make sure the pt and bFieldZ are in expected units
+  // Convert bFieldZ to Tesla
   double bFieldZInTesla = bFieldZ / UnitConstants::T;
   double bFieldZMinInTesla = bFieldZMin / UnitConstants::T;
   // Check if magnetic field is too small
   if (bFieldZInTesla < bFieldZMinInTesla) {
-    // @note shall we use straight-line estimation and use default q/pt in such
+    // @todo shall we use straight-line estimation and use default q/pt in such
     // case?
     ACTS_WARNING("The magnetic field at the first space point: Bz = "
                  << bFieldZInTesla << " T is too small.")
@@ -164,7 +164,14 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   double y2 = sps[2]->y() - y0;
   double z2 = sps[2]->z() - z0;
 
-  // Define conformal map variables
+  // Define conformal map variables in the transformed frame with center at the
+  // first space point, x axis (x1/sqrt(x1*x1 + y1*y1), y1/sqrt(x1*x1 +
+  // y1*y1)) and y axis (-y1/sqrt(x1*x1 + y1*y1), x1/sqrt(x1*x1 + y1*y1)). In
+  // the transformed frame, the second space point has the coordinate
+  // (sqrt(x1*x1 + y1*y1), 0) and the thrid space point has the coordinate
+  // ((x1*x2 + y1*y2)/sqrt(x1*x1 + y1*y1), (-y1*x2 + x1*y2)/sqrt((x1*x1 +
+  // y1*y1)). The (u, v) defined as u =x/(x*x+y*y) and v = y/(x*x+y*y) for the
+  // second (u1, v1) and third space point (u2, v2) are calculated below.
   double u1 = 1. / std::sqrt(x1 * x1 + y1 * y1);
   // denominator for conformal mapping
   double rn = x2 * x2 + y2 * y2;
@@ -176,32 +183,30 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   double u2 = (a * x2 + b * y2) * r2;
   double v2 = (a * y2 - b * x2) * r2;
   // A,B are slope and intercept of the straight line in the u,v plane
-  // connecting the three points
+  // connecting the three points.
   double A = v2 / (u2 - u1);
-  double B = 2. * (v2 - A * u2);
-  // Curvature estimate : (2R)²=(1+A²)/b² => 1/2R = b/sqrt(1+A²) = B /
-  // sqrt(1+A²)
-  // @todo checks the sign of rho
-  double rho = -1.0 * B / std::sqrt(1. + A * A);
+  double B = v2 - A * u2;
+  // Curvature (with a sign) estimate
+  double rho = -2.0 * B / std::sqrt(1. + A * A);
 
+  // The estimated phi
+  params[eBoundPhi] = std::atan2(b + a * A, a - b * A);
   // Estimate of the track dz/dr (1/tanTheta), corrected for curvature effects
   // @note why 0.04?
   double invTanTheta = z2 * std::sqrt(r2) / (1. + 0.04 * rho * rho * rn);
-  // The estimated phi
-  params[eBoundPhi] = std::atan2(b + a * A, a - b * A);
   // The estimated theta
   params[eBoundTheta] = std::atan2(1., invTanTheta);
-  // The estimated q/pt in [GeV/c]^-1 assuming the space
-  // point global positions have units in mm
-  double estQOverPt = rho * 1000 / (0.3 * bFieldZInTesla);
+  // The estimated q/pt in [GeV/c]^-1
+  double estQOverPt = rho * (UnitConstants::m) / (0.3 * bFieldZInTesla);
   // The estimated q/p in [GeV/c]^-1
   params[eBoundQOverP] = estQOverPt / std::sqrt(1. + invTanTheta * invTanTheta);
   // The estimated pz and p in GeV/c
   double pzInGeV = 1.0 / std::abs(estQOverPt) * invTanTheta;
   double pInGeV = std::abs(1.0 / params[eBoundQOverP]);
   double massInGeV = mass / UnitConstants::GeV;
+  // The velocity in z direction
   double vz = pzInGeV / std::sqrt(pInGeV * pInGeV + massInGeV * massInGeV);
-  // The estimated time in ms?
+  // The estimated time in ms if the space point has global position in mm
   params[eBoundTime] = sps[0]->z() / vz;
 
   // The estimated momentum direction
