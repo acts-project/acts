@@ -180,6 +180,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // The coordinate of the middle and top space point in the new frame
   Vector3 local1 = transform.inverse() * mGlobal;
   Vector3 local2 = transform.inverse() * tGlobal;
+
   // Lambda to transform the coordinates to the (u, v) space
   auto uvTransform = [](const Vector3& local) -> Vector2 {
     Vector2 uv;
@@ -198,26 +199,18 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   double B = uv2.y() - A * uv2.x();
   // Curvature (with a sign) estimate
   double rho = -2.0 * B / std::hypot(1., A);
-
-  // The phi of momentum in the new frame
-  double phi =
-      std::atan2(local1.y() + local1.x() * A, local1.x() - local1.y() * A);
+  // The projection of the top space point on the transverse plane of the new
+  // frame
   double rn = local2.x() * local2.x() + local2.y() * local2.y();
-  double r2 = 1. / rn;
-  // The (1/tanTheta) of momentum the new frame, corrected for curvature effects
-  // @note why 0.04?
+  // The (1/tanTheta) of momentum in the new frame, corrected for curvature
+  // effects (@note why 0.04?)
   double invTanTheta =
-      local2.z() * std::sqrt(r2) / (1. + 0.04 * rho * rho * rn);
-  // The theta of momentum in the new frame
-  double theta = std::atan2(1., invTanTheta);
-  // The momentum diretion in the new frame
-  double sinTheta = std::sin(theta);
-  double cosTheta = std::cos(theta);
-  double sinPhi = std::sin(phi);
-  double cosPhi = std::cos(phi);
-  Vector3 transDirection(cosTheta * cosPhi, cosTheta * sinPhi, sinTheta);
-  // The momentum direction in the original coordinate frame
-  Vector3 direction = transform * transDirection;
+      local2.z() * std::sqrt(1. / rn) / (1. + 0.04 * rho * rho * rn);
+  // The momentum direction in the new frame (the center of the circle has the
+  // coordinate (-1.*A/(2*B), 1./(2*B)))
+  Vector3 transDirection(1., A, std::hypot(1, A) * invTanTheta);
+  // Transform it back to the original frame
+  Vector3 direction = rotation * transDirection.normalized();
 
   // The phi and theta
   params[eBoundPhi] = VectorHelpers::phi(direction);
@@ -240,8 +233,8 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // The estimated q/p in [GeV/c]^-1
   params[eBoundQOverP] = qOverPt / std::hypot(1., invTanTheta);
 
-  // The estimated momentum and momentum along the magnetic field diretion in
-  // GeV/c
+  // The estimated momentum and projection of the momentum in the magnetic field
+  // diretion
   double pInGeV = std::abs(1.0 / params[eBoundQOverP]);
   double pzInGeV = 1.0 / std::abs(qOverPt) * invTanTheta;
   double massInGeV = mass / UnitConstants::GeV;
