@@ -88,20 +88,23 @@ class RootEstimatedParametersWriter final
   unsigned int m_eventNr{0};     ///< the event number
 
   int m_t_charge{0};            ///< Truth particle charge
-  float m_t_eLOC0{-99.};        ///< Truth parameter eBoundLoc0
-  float m_t_eLOC1{-99.};        ///< Truth parameter eBoundLoc1
-  float m_t_ePHI{-99.};         ///< Truth parameter ePHI
-  float m_t_eTHETA{-99.};       ///< Truth parameter eTHETA
-  float m_t_eQOP{-99.};         ///< Truth parameter eQOP
-  float m_t_eT{-99.};           ///< Truth parameter eT
+  float m_t_loc0{-99.};         ///< Truth parameter loc0
+  float m_t_loc1{-99.};         ///< Truth parameter loc1
+  float m_t_phi{-99.};          ///< Truth parameter phi
+  float m_t_theta{-99.};        ///< Truth parameter theta
+  float m_t_qop{-99.};          ///< Truth parameter qop
+  float m_t_time{-99.};         ///< Truth parameter time
   bool m_truthMatched = false;  ///< Whether the seed is matched with truth
 
-  float m_eLOC0_est{-99.};   ///< Estimated parameter eBoundLoc0
-  float m_eLOC1_est{-99.};   ///< Estimated parameter eBoundLoc1
-  float m_ePHI_est{-99.};    ///< Estimated parameter ePHI
-  float m_eTHETA_est{-99.};  ///< Estimated parameter eTHETA
-  float m_eQOP_est{-99.};    ///< Estimated parameter eQOP
-  float m_eT_est{-99.};      ///< Estimated parameter eT
+  float m_loc0_est{-99.};   ///< Estimated parameter loc0
+  float m_loc1_est{-99.};   ///< Estimated parameter loc1
+  float m_phi_est{-99.};    ///< Estimated parameter phi
+  float m_theta_est{-99.};  ///< Estimated parameter theta
+  float m_qop_est{-99.};    ///< Estimated parameter qop
+  float m_time_est{-99.};   ///< Estimated parameter time
+  float m_p_est{-99.};      ///< Estimated parameter p
+  float m_pt_est{-99.};     ///< Estimated parameter pt
+  float m_eta_est{-99.};    ///< Estimated parameter eta
 };
 
 }  // namespace ActsExamples

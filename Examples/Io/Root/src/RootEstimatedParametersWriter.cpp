@@ -28,6 +28,7 @@
 
 #include "detail/AverageSimHits.hpp"
 
+using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
 
@@ -80,20 +81,23 @@ ActsExamples::RootEstimatedParametersWriter::RootEstimatedParametersWriter(
   else {
     // I/O parameters
     m_outputTree->Branch("eventNr", &m_eventNr);
-    m_outputTree->Branch("t_eLOC0", &m_t_eLOC0);
-    m_outputTree->Branch("t_eLOC1", &m_t_eLOC1);
-    m_outputTree->Branch("t_ePHI", &m_t_ePHI);
-    m_outputTree->Branch("t_eTHETA", &m_t_eTHETA);
-    m_outputTree->Branch("t_eQOP", &m_t_eQOP);
-    m_outputTree->Branch("t_eT", &m_t_eT);
+    m_outputTree->Branch("t_loc0", &m_t_loc0);
+    m_outputTree->Branch("t_loc1", &m_t_loc1);
+    m_outputTree->Branch("t_phi", &m_t_phi);
+    m_outputTree->Branch("t_theta", &m_t_theta);
+    m_outputTree->Branch("t_qop", &m_t_qop);
+    m_outputTree->Branch("t_time", &m_t_time);
     m_outputTree->Branch("truthMatched", &m_truthMatched);
 
-    m_outputTree->Branch("eLOC0_est", &m_eLOC0_est);
-    m_outputTree->Branch("eLOC1_est", &m_eLOC1_est);
-    m_outputTree->Branch("ePHI_est", &m_ePHI_est);
-    m_outputTree->Branch("eTHETA_est", &m_eTHETA_est);
-    m_outputTree->Branch("eQOP_est", &m_eQOP_est);
-    m_outputTree->Branch("eT_est", &m_eT_est);
+    m_outputTree->Branch("loc0_est", &m_loc0_est);
+    m_outputTree->Branch("loc1_est", &m_loc1_est);
+    m_outputTree->Branch("phi_est", &m_phi_est);
+    m_outputTree->Branch("theta_est", &m_theta_est);
+    m_outputTree->Branch("qop_est", &m_qop_est);
+    m_outputTree->Branch("time_est", &m_time_est);
+    m_outputTree->Branch("pt_est", &m_pt_est);
+    m_outputTree->Branch("p_est", &m_p_est);
+    m_outputTree->Branch("eta_est", &m_eta_est);
   }
 }
 
@@ -146,16 +150,19 @@ ActsExamples::ProcessCode ActsExamples::RootEstimatedParametersWriter::writeT(
   // Loop over the estimated track parameters
   for (size_t iparams = 0; iparams < parameters.size(); ++iparams) {
     // The reference surface of the parameters, i.e. also the reference surface
-    // of the bottom space point
+    // of the first space point
     const auto& surface = parameters[iparams].referenceSurface();
     // The estimated bound parameters vector
     const auto params = parameters[iparams].parameters();
-    m_eLOC0_est = params[Acts::eBoundLoc0];
-    m_eLOC1_est = params[Acts::eBoundLoc1];
-    m_ePHI_est = params[Acts::eBoundPhi];
-    m_eTHETA_est = params[Acts::eBoundTheta];
-    m_eQOP_est = params[Acts::eBoundQOverP];
-    m_eT_est = params[Acts::eBoundTime];
+    m_loc0_est = params[Acts::eBoundLoc0];
+    m_loc1_est = params[Acts::eBoundLoc1];
+    m_phi_est = params[Acts::eBoundPhi];
+    m_theta_est = params[Acts::eBoundTheta];
+    m_qop_est = params[Acts::eBoundQOverP];
+    m_time_est = params[Acts::eBoundTime];
+    m_p_est = std::abs(1.0 / m_qop_est);
+    m_pt_est = m_p_est * std::sin(m_theta_est);
+    m_eta_est = std::atanh(std::cos(m_theta_est));
 
     // Get the seed via the estimated parameters to seed map
     const auto& [iregion, iseed] = trackParamsSeedMap.at(iparams);
@@ -171,19 +178,19 @@ ActsExamples::ProcessCode ActsExamples::RootEstimatedParametersWriter::writeT(
       m_truthMatched = true;
     }
 
-    // Get the index of the bottom space point
-    const auto& bottomSP = seed.sp().front();
-    const auto& hitIdx = bottomSP->measurementIndex();
+    // Get the index of the first space point
+    const auto& firstSP = seed.sp().front();
+    const auto& hitIdx = firstSP->measurementIndex();
     // Get the sim hits via the measurement to sim hits map
     auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
     auto [truthLocal, truthPos4, truthUnitDir] =
         detail::averageSimHits(ctx.geoContext, surface, simHits, indices);
-    // Get the truth track parameter at the bottom space point
-    m_t_eLOC0 = truthLocal[Acts::ePos0];
-    m_t_eLOC1 = truthLocal[Acts::ePos1];
-    m_t_ePHI = phi(truthUnitDir);
-    m_t_eTHETA = theta(truthUnitDir);
-    m_t_eT = truthPos4[Acts::eTime];
+    // Get the truth track parameter at the first space point
+    m_t_loc0 = truthLocal[Acts::ePos0];
+    m_t_loc1 = truthLocal[Acts::ePos1];
+    m_t_phi = phi(truthUnitDir);
+    m_t_theta = theta(truthUnitDir);
+    m_t_time = truthPos4[Acts::eTime];
     // momemtum averaging makes even less sense than averaging position and
     // direction. use the first momentum or set q/p to zero
     if (not indices.empty()) {
@@ -199,7 +206,7 @@ ActsExamples::ProcessCode ActsExamples::RootEstimatedParametersWriter::writeT(
       if (ip != particles.end()) {
         const auto& particle = *ip;
         m_t_charge = particle.charge();
-        m_t_eQOP = m_t_charge / p;
+        m_t_qop = m_t_charge / p;
       } else {
         ACTS_WARNING("Truth particle with barcode = " << particleId
                                                       << " not found!");
