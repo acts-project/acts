@@ -130,7 +130,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
     m_effPlotTool.fill(m_effPlotCache, particle, isMatched);
   }
 
-  ACTS_INFO("Number of seeds: " << nSeeds);
+  ACTS_DEBUG("Number of seeds: " << nSeeds);
   m_nTotalSeeds += nSeeds;
   m_nTotalMatchedSeeds += nMatchedSeeds;
   m_nTotalParticles += particles.size();
