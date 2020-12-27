@@ -28,6 +28,7 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
+#include "Acts/TrackFinding/detail/VariantMeasurementSelector.hpp"
 #include "Acts/TrackFinding/detail/VoidTrackFinderComponents.hpp"
 #include "Acts/TrackFitting/detail/VoidKalmanComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
@@ -531,12 +532,18 @@ class CombinatorialKalmanFilter {
                          return m_calibrator(sl, boundParams);
                        });
 
+        auto preSelectedMeasurements =
+            detail::findVariantMeasurements<source_link_t, BoundIndices>(
+                measurements, boundParams.parameters());
+        // std::cout<<"measurements size " << measurements.size() <<", selected
+        // measurements size = " << preSelectedMeasurements.size() << std::endl;
+
         // Invoke the measurement selector to select compatible measurements
         // with the predicted track parameter. It could return either the
         // compatible measurement indices or an outlier index.
         bool isOutlier = false;
         auto sourcelinkSelectionRes = m_sourcelinkSelector(
-            boundParams, measurements, result.measurementChi2,
+            boundParams, preSelectedMeasurements, result.measurementChi2,
             result.measurementCandidateIndices, isOutlier, logger);
         if (!sourcelinkSelectionRes.ok()) {
           ACTS_ERROR("Selection of calibrated measurements failed: "
