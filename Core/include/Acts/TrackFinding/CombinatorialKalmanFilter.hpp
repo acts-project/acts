@@ -1147,7 +1147,7 @@ class CombinatorialKalmanFilter {
   /// the filter and smoother
   ///
   /// @tparam source_link_container_t Source link container type
-  /// @tparam start_parameters_t Type of the initial parameters
+  /// @tparam start_parameters_container_t Initial parameters container type
   /// @tparam calibrator_t Type of the source link calibrator
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
@@ -1160,18 +1160,17 @@ class CombinatorialKalmanFilter {
   /// @c calibrator_t's job to turn them into calibrated measurements used in
   /// the track finding.
   ///
-  /// @return the output as an output track
-  template <typename source_link_container_t, typename start_parameters_t,
-            typename calibrator_t, typename source_link_selector_t,
+  /// @return a container of output tracks
+  template <typename source_link_container_t,
+            typename start_parameters_container_t, typename calibrator_t,
+            typename source_link_selector_t,
             typename parameters_t = BoundTrackParameters>
-  Result<CombinatorialKalmanFilterResult<
+  std::vector<CombinatorialKalmanFilterResult<
       typename source_link_container_t::value_type>>
-  findTracks(
-      const std::unordered_map<GeometryIdentifier, source_link_container_t>&
-          inputMeasurements,
-      const start_parameters_t& sParameters,
-      const CombinatorialKalmanFilterOptions<
-          calibrator_t, source_link_selector_t>& tfOptions) const {
+  findTracks(const source_link_container_t& sourcelinks,
+             const start_parameters_container_t& initialParameters,
+             const CombinatorialKalmanFilterOptions<
+                 calibrator_t, source_link_selector_t>& tfOptions) const {
     using SourceLink = typename source_link_container_t::value_type;
     static_assert(SourceLinkConcept<SourceLink>,
                   "Source link does not fulfill SourceLinkConcept");
@@ -1180,13 +1179,12 @@ class CombinatorialKalmanFilter {
 
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
-    ACTS_VERBOSE("Preparing " << inputMeasurements.size()
-                              << " input measurements");
-    // std::map<GeometryIdentifier, std::vector<SourceLink>>
-    //    inputMeasurements;
-    // for (const auto& sl : sourcelinks) {
-    //  inputMeasurements[sl.geometryId()].emplace_back(sl);
-    //}
+    ACTS_VERBOSE("Preparing " << sourcelinks.size() << " input measurements");
+    std::unordered_map<GeometryIdentifier, std::vector<SourceLink>>
+        inputMeasurements;
+    for (const auto& sl : sourcelinks) {
+      inputMeasurements[sl.geometryId()].emplace_back(sl);
+    }
 
     // Create the ActionList and AbortList
     using CombinatorialKalmanFilterAborter =
@@ -1218,38 +1216,45 @@ class CombinatorialKalmanFilter {
     combKalmanActor.m_calibrator = tfOptions.calibrator;
     combKalmanActor.m_sourcelinkSelector = tfOptions.sourcelinkSelector;
 
-    // Run the CombinatorialKalmanFilter
-    auto result = m_propagator.template propagate(sParameters, propOptions);
+    // Run the CombinatorialKalmanFilter.
+    // @note The same target surface is used for all the initial track parameters, which is not necessarily the case. 
+    std::vector<CombinatorialKalmanFilterResult> fittedResults;
+    fittedResults.reserve(initialParameters.size());
+    for (const auto& sParameters : initialParameters) {
+      auto result = m_propagator.template propagate(sParameters, propOptions);
 
-    if (!result.ok()) {
-      ACTS_ERROR("Propapation failed: " << result.error());
-      return result.error();
+      if (!result.ok()) {
+        ACTS_ERROR("Propapation failed: " << result.error());
+        continue;
+      }
+
+      const auto& propRes = *result;
+
+      /// Get the result of the CombinatorialKalmanFilter
+      auto combKalmanResult =
+          propRes.template get<CombinatorialKalmanFilterResult>();
+
+      /// The propagation could already reach max step size
+      /// before the track finding is finished during two phases:
+      // -> filtering for track finding
+      // -> surface targeting to get fitted parameters at target surface
+      // @TODO: Implement distinguishment between the above two cases if
+      // necessary
+      if (combKalmanResult.result.ok() and not combKalmanResult.finished) {
+        combKalmanResult.result = Result<void>(
+            CombinatorialKalmanFilterError::PropagationReachesMaxSteps);
+      }
+
+      if (!combKalmanResult.result.ok()) {
+        ACTS_ERROR("CombinatorialKalmanFilter failed: "
+                   << combKalmanResult.result.error());
+        continue;
+      }
+
+      // Emplace back the result
+      fittedResults.emplace_back(combKalmanResult);
     }
-
-    const auto& propRes = *result;
-
-    /// Get the result of the CombinatorialKalmanFilter
-    auto combKalmanResult =
-        propRes.template get<CombinatorialKalmanFilterResult>();
-
-    /// The propagation could already reach max step size
-    /// before the track finding is finished during two phases:
-    // -> filtering for track finding
-    // -> surface targeting to get fitted parameters at target surface
-    // @TODO: Implement distinguishment between the above two cases if necessary
-    if (combKalmanResult.result.ok() and not combKalmanResult.finished) {
-      combKalmanResult.result = Result<void>(
-          CombinatorialKalmanFilterError::PropagationReachesMaxSteps);
-    }
-
-    if (!combKalmanResult.result.ok()) {
-      // ACTS_ERROR("CombinatorialKalmanFilter failed: "
-      //           << combKalmanResult.result.error());
-      return combKalmanResult.result.error();
-    }
-
-    // Return the converted Track
-    return combKalmanResult;
+    return fittedResults;
   }
 
 };  // namespace Acts

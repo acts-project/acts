@@ -29,14 +29,11 @@ struct TrackFinderFunctionImpl {
   TrackFinderFunctionImpl(track_finder_t&& f) : trackFinder(std::move(f)) {}
 
   ActsExamples::TrackFindingAlgorithm::TrackFinderResult operator()(
-      const std::unordered_map<Acts::GeometryIdentifier,
-                               std::vector<ActsExamples::IndexSourceLink>>&
-          inputMeasurements,
-      const ActsExamples::TrackParameters& initialParameters,
+      const ActsExamples::IndexSourceLinkContainer& sourcelinks,
+      const ActsExamples::TrackParametersContainer& initialParameters,
       const ActsExamples::TrackFindingAlgorithm::TrackFinderOptions& options)
       const {
-    return trackFinder.findTracks(inputMeasurements, initialParameters,
-                                  options);
+    return trackFinder.findTracks(sourcelinks, initialParameters, options);
   };
 };
 

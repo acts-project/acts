@@ -62,37 +62,16 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       Acts::CKFSourceLinkSelector(m_cfg.sourcelinkSelectorCfg),
       Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
 
-  std::unordered_map<Acts::GeometryIdentifier,
-                     std::vector<ActsExamples::IndexSourceLink>>
-      inputMeasurements;
-
-  // This could take 4 seconds
-  for (const auto& sl : sourceLinks) {
-    inputMeasurements[sl.geometryId()].emplace_back(sl);
-  }
-
   // Perform the track finding for each starting parameter
-  // @TODO: use seeds from track seeding algorithm as starting parameter
-  for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
-    const auto& initialParams = initialParameters[iseed];
+  ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
+                                          << " seeds.");
+  auto results = m_cfg.findTracks(sourceLinks, initialParameters, options);
 
-    ACTS_DEBUG("Invoke track finding seeded by truth particle " << iseed);
-    auto result = m_cfg.findTracks(inputMeasurements, initialParams, options);
-    if (result.ok()) {
-      // Get the track finding output object
-      const auto& trackFindingOutput = result.value();
-      // Create a Trajectories result struct
-      trajectories.emplace_back(std::move(trackFindingOutput.fittedStates),
-                                std::move(trackFindingOutput.trackTips),
-                                std::move(trackFindingOutput.fittedParameters));
-    }
-    // else {
-    //  ACTS_WARNING("Track finding failed for seed " << iseed << " with error"
-    //                                                << result.error());
-    //  // Track finding failed. Add an empty result so the output container has
-    //  // the same number of entries as the input.
-    //  trajectories.push_back(Trajectories());
-    //}
+  for (const auto& trackFindingOutput : results) {
+    // Create a Trajectories result struct
+    trajectories.emplace_back(std::move(trackFindingOutput.fittedStates),
+                              std::move(trackFindingOutput.trackTips),
+                              std::move(trackFindingOutput.fittedParameters));
   }
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
