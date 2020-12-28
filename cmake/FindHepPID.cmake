@@ -7,7 +7,7 @@ list(APPEND CMAKE_PREFIX_PATH $ENV{HepPID_DIR})
 
 find_library(
   HepPID_LIBRARY
-  NAMES HepPID libHepPI.so
+  NAMES HepPID libHepPID.so
   DOC "The HepPID library")
 find_path(
   HepPID_INCLUDE_DIR
