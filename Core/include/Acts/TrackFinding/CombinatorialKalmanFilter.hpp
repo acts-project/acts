@@ -532,9 +532,9 @@ class CombinatorialKalmanFilter {
                          return m_calibrator(sl, boundParams);
                        });
 
-        auto preSelectedMeasurements =
-            detail::findVariantMeasurements<source_link_t, BoundIndices>(
-                measurements, boundParams.parameters());
+        // auto preSelectedMeasurements =
+        //    detail::findVariantMeasurements<source_link_t, BoundIndices>(
+        //        measurements, boundParams.parameters());
         // std::cout<<"measurements size " << measurements.size() <<", selected
         // measurements size = " << preSelectedMeasurements.size() << std::endl;
 
@@ -543,7 +543,7 @@ class CombinatorialKalmanFilter {
         // compatible measurement indices or an outlier index.
         bool isOutlier = false;
         auto sourcelinkSelectionRes = m_sourcelinkSelector(
-            boundParams, preSelectedMeasurements, result.measurementChi2,
+            boundParams, measurements, result.measurementChi2,
             result.measurementCandidateIndices, isOutlier, logger);
         if (!sourcelinkSelectionRes.ok()) {
           ACTS_ERROR("Selection of calibrated measurements failed: "
@@ -767,7 +767,7 @@ class CombinatorialKalmanFilter {
       // Get the track state proxy
       auto trackStateProxy = result.fittedStates.getTrackState(currentTip);
 
-      auto [boundParams, jacobian, pathLength] = boundState;
+      auto& [boundParams, jacobian, pathLength] = boundState;
 
       // Fill the parametric part of the track state proxy
       if ((not ACTS_CHECK_BIT(stateMask, TrackStatePropMask::Predicted)) and
@@ -865,7 +865,7 @@ class CombinatorialKalmanFilter {
       typeFlags.set(TrackStateFlag::ParameterFlag);
       typeFlags.set(TrackStateFlag::HoleFlag);
 
-      auto [boundParams, jacobian, pathLength] = boundState;
+      auto& [boundParams, jacobian, pathLength] = boundState;
       // Fill the track state
       trackStateProxy.predicted() = boundParams.parameters();
       trackStateProxy.predictedCovariance() = *boundParams.covariance();
@@ -910,7 +910,7 @@ class CombinatorialKalmanFilter {
       typeFlags.set(TrackStateFlag::MaterialFlag);
       typeFlags.set(TrackStateFlag::ParameterFlag);
 
-      auto [curvilinearParams, jacobian, pathLength] = curvilinearState;
+      auto& [curvilinearParams, jacobian, pathLength] = curvilinearState;
       // Fill the track state
       trackStateProxy.predicted() = curvilinearParams.parameters();
       trackStateProxy.predictedCovariance() = *curvilinearParams.covariance();
@@ -1166,10 +1166,12 @@ class CombinatorialKalmanFilter {
             typename parameters_t = BoundTrackParameters>
   Result<CombinatorialKalmanFilterResult<
       typename source_link_container_t::value_type>>
-  findTracks(const source_link_container_t& sourcelinks,
-             const start_parameters_t& sParameters,
-             const CombinatorialKalmanFilterOptions<
-                 calibrator_t, source_link_selector_t>& tfOptions) const {
+  findTracks(
+      const std::unordered_map<GeometryIdentifier, source_link_container_t>&
+          inputMeasurements,
+      const start_parameters_t& sParameters,
+      const CombinatorialKalmanFilterOptions<
+          calibrator_t, source_link_selector_t>& tfOptions) const {
     using SourceLink = typename source_link_container_t::value_type;
     static_assert(SourceLinkConcept<SourceLink>,
                   "Source link does not fulfill SourceLinkConcept");
@@ -1178,12 +1180,13 @@ class CombinatorialKalmanFilter {
 
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
-    ACTS_VERBOSE("Preparing " << sourcelinks.size() << " input measurements");
-    std::unordered_map<GeometryIdentifier, std::vector<SourceLink>>
-        inputMeasurements;
-    for (const auto& sl : sourcelinks) {
-      inputMeasurements[sl.geometryId()].emplace_back(sl);
-    }
+    ACTS_VERBOSE("Preparing " << inputMeasurements.size()
+                              << " input measurements");
+    // std::map<GeometryIdentifier, std::vector<SourceLink>>
+    //    inputMeasurements;
+    // for (const auto& sl : sourcelinks) {
+    //  inputMeasurements[sl.geometryId()].emplace_back(sl);
+    //}
 
     // Create the ActionList and AbortList
     using CombinatorialKalmanFilterAborter =
@@ -1240,8 +1243,8 @@ class CombinatorialKalmanFilter {
     }
 
     if (!combKalmanResult.result.ok()) {
-      ACTS_ERROR("CombinatorialKalmanFilter failed: "
-                 << combKalmanResult.result.error());
+      // ACTS_ERROR("CombinatorialKalmanFilter failed: "
+      //           << combKalmanResult.result.error());
       return combKalmanResult.result.error();
     }
 

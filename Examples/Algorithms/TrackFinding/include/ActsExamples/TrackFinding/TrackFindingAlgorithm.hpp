@@ -31,8 +31,9 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   using TrackFinderResult =
       Acts::Result<Acts::CombinatorialKalmanFilterResult<IndexSourceLink>>;
   using TrackFinderFunction = std::function<TrackFinderResult(
-      const IndexSourceLinkContainer&, const TrackParameters&,
-      const TrackFinderOptions&)>;
+      const std::unordered_map<Acts::GeometryIdentifier,
+                               std::vector<IndexSourceLink>>&,
+      const TrackParameters&, const TrackFinderOptions&)>;
 
   /// Create the track finder function implementation.
   ///
