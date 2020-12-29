@@ -1217,9 +1217,11 @@ class CombinatorialKalmanFilter {
     combKalmanActor.m_sourcelinkSelector = tfOptions.sourcelinkSelector;
 
     // Run the CombinatorialKalmanFilter.
-    // @note The same target surface is used for all the initial track parameters, which is not necessarily the case. 
-    std::vector<CombinatorialKalmanFilterResult> fittedResults;
-    fittedResults.reserve(initialParameters.size());
+    // @todo The same target surface is used for all the initial track
+    // parameters, which is not necessarily the case.
+    std::vector<CombinatorialKalmanFilterResult> ckfResults;
+    ckfResults.reserve(initialParameters.size());
+    // Loop over all initial track parameters. Only store the successful result.
     for (const auto& sParameters : initialParameters) {
       auto result = m_propagator.template propagate(sParameters, propOptions);
 
@@ -1252,9 +1254,9 @@ class CombinatorialKalmanFilter {
       }
 
       // Emplace back the result
-      fittedResults.emplace_back(combKalmanResult);
+      ckfResults.emplace_back(combKalmanResult);
     }
-    return fittedResults;
+    return ckfResults;
   }
 
 };  // namespace Acts

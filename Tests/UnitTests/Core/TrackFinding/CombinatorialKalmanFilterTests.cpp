@@ -192,21 +192,24 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   auto options = f.makeCkfOptions();
   // this is the default option. set anyways for consistency
   options.propagatorPlainOptions.direction = Acts::forward;
+  // Construct a plane surface as the target surface
+  auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      Acts::Vector3{-3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
+  // Set the target surface
+  options.referenceSurface = &(*pSurface);
 
-  // run the CKF for each initial track state
+  // run the CKF for all initial track states
+  auto tracks = f.ckf.findTracks(f.sourceLinks, f.startParameters, options);
+  // There should be three found tracks with three initial track states
+  BOOST_CHECK_EQUAL(tracks.size(), 3u);
+  std::cout << "findTracks " << std::endl;
+
+  // check the found tracks
   for (size_t trackId = 0u; trackId < f.startParameters.size(); ++trackId) {
     const auto& params = f.startParameters[trackId];
     BOOST_TEST_INFO("initial parameters before detector:\n" << params);
 
-    // find the tracks
-    options.referenceSurface = &params.referenceSurface();
-    auto res = f.ckf.findTracks(f.sourceLinks, params, options);
-    if (not res.ok()) {
-      BOOST_TEST_INFO(res.error() << " " << res.error().message());
-    }
-    BOOST_REQUIRE(res.ok());
-
-    auto val = *res;
+    auto val = tracks[trackId];
     // with the given source link selection cuts, only one trajectory for the
     // given input parameters should be found.
     BOOST_CHECK_EQUAL(val.trackTips.size(), 1u);
@@ -230,21 +233,23 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward, *boost::unit_test::disabled()) {
 
   auto options = f.makeCkfOptions();
   options.propagatorPlainOptions.direction = Acts::backward;
+  // Construct a plane surface as the target surface
+  auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      Acts::Vector3{3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
+  // Set the target surface
+  options.referenceSurface = &(*pSurface);
 
-  // run the CKF for each final track state
+  // run the CKF for all initial track states
+  auto tracks = f.ckf.findTracks(f.sourceLinks, f.endParameters, options);
+  // There should be three found tracks with three initial track states
+  BOOST_CHECK_EQUAL(tracks.size(), 3u);
+
+  // check the found tracks
   for (size_t trackId = 0u; trackId < f.endParameters.size(); ++trackId) {
     const auto& params = f.endParameters[trackId];
     BOOST_TEST_INFO("initial parameters after detector:\n" << params);
 
-    // find the tracks
-    options.referenceSurface = &params.referenceSurface();
-    auto res = f.ckf.findTracks(f.sourceLinks, params, options);
-    if (not res.ok()) {
-      BOOST_TEST_INFO(res.error() << " " << res.error().message());
-    }
-    BOOST_REQUIRE(res.ok());
-
-    auto val = *res;
+    auto val = tracks[trackId];
     // with the given source link selection cuts, only one trajectory for the
     // given input parameters should be found.
     BOOST_CHECK_EQUAL(val.trackTips.size(), 1u);
