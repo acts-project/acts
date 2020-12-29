@@ -123,20 +123,22 @@ struct Fixture {
     Acts::BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
     // all tracks close to the transverse plane along the x axis w/ small
     // variations in position, direction.
-    Acts::Vector4 mPos0(-3_m, 0.0, 0.0, 1_ns);
-    Acts::Vector4 mPos1(-3_m, -15_mm, -15_mm, 2_ns);
-    Acts::Vector4 mPos2(-3_m, 15_mm, 15_mm, -1_ns);
+    Acts::Vector4 mStartPos0(-3_m, 0.0, 0.0, 1_ns);
+    Acts::Vector4 mStartPos1(-3_m, -15_mm, -15_mm, 2_ns);
+    Acts::Vector4 mStartPos2(-3_m, 15_mm, 15_mm, -1_ns);
     startParameters = {
-        {mPos0, 0_degree, 90_degree, 1_GeV, 1_e, cov},
-        {mPos1, -1_degree, 91_degree, 1_GeV, 1_e, cov},
-        {mPos2, 1_degree, 89_degree, 1_GeV, -1_e, cov},
+        {mStartPos0, 0_degree, 90_degree, 1_GeV, 1_e, cov},
+        {mStartPos1, -1_degree, 91_degree, 1_GeV, 1_e, cov},
+        {mStartPos2, 1_degree, 89_degree, 1_GeV, -1_e, cov},
     };
-    for (const auto& start : startParameters) {
-      Acts::Vector4 pos = start.fourPosition(geoCtx);
-      pos[Acts::ePos0] = 3_m;
-      endParameters.emplace_back(pos, start.unitDirection(),
-                                 start.absoluteMomentum(), start.charge());
-    }
+    Acts::Vector4 mEndPos0(3_m, 0.0, 0.0, 1_ns);
+    Acts::Vector4 mEndPos1(3_m, -100_mm, -100_mm, 2_ns);
+    Acts::Vector4 mEndPos2(3_m, 100_mm, 100_mm, -1_ns);
+    endParameters = {
+        {mEndPos0, 0_degree, 90_degree, 1_GeV, 1_e, cov * 100},
+        {mEndPos1, -1_degree, 91_degree, 1_GeV, 1_e, cov * 100},
+        {mEndPos2, 1_degree, 89_degree, 1_GeV, -1_e, cov * 100},
+    };
 
     // create some measurements
     auto measPropagator = makeStraightPropagator(detector.geometry);
@@ -202,7 +204,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   auto tracks = f.ckf.findTracks(f.sourceLinks, f.startParameters, options);
   // There should be three found tracks with three initial track states
   BOOST_CHECK_EQUAL(tracks.size(), 3u);
-  std::cout << "findTracks " << std::endl;
 
   // check the found tracks
   for (size_t trackId = 0u; trackId < f.startParameters.size(); ++trackId) {
@@ -228,7 +229,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
 }
 
 // TODO test currently fails w/ a smoothing error
-BOOST_AUTO_TEST_CASE(ZeroFieldBackward, *boost::unit_test::disabled()) {
+BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   Fixture f(0_T);
 
   auto options = f.makeCkfOptions();
