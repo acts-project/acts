@@ -33,9 +33,7 @@ void sortVariantMeasurements(
               bool less = false;
               std::visit(
                   [&](const auto& x, const auto& y) {
-                    if (x.contains(kIndex) and y.contains(kIndex)) {
-                      less = x.parameters()[kIndex] < y.parameters()[kIndex];
-                    }
+                    less = x.parameters()[kIndex] < y.parameters()[kIndex];
                   },
                   lhs, rhs);
               return less;
@@ -60,9 +58,22 @@ auto findVariantMeasurements(
       measurements;
   std::vector<VariantMeasurement<source_link_t, indices_t>>
       selectedMeasurements;
-  selectedMeasurements.reserve(10);
-  for (size_t ipara = 0; ipara < kParametersSize<indices_t>; ++ipara) {
-    indices_t kIndex = static_cast<indices_t>(ipara);
+  selectedMeasurements.reserve(2);
+  // Get the measurement indices via the first measurement.
+  // The sorting and selection below assumes all the measurements contain the
+  // same set of indices
+  std::vector<uint8_t> measIndices;
+  std::visit(
+      [&](const auto& m) {
+        const auto& indices = m.indices();
+        for (const auto& index : indices) {
+          measIndices.push_back(index);
+        }
+      },
+      measurements.front());
+
+  for (const auto& index : measIndices) {
+    indices_t kIndex = static_cast<indices_t>(index);
     // Sort measurements using their parameters with kIndex
     sortVariantMeasurements<source_link_t, indices_t>(newMeasurements, kIndex);
 
@@ -80,8 +91,8 @@ auto findVariantMeasurements(
 
     // Make a range with the found measurement
     auto itLow =
-        it - newMeasurements.begin() < 5 ? newMeasurements.begin() : it - 5;
-    auto itUp = newMeasurements.end() - it < 5 ? newMeasurements.end() : it + 5;
+        it - newMeasurements.begin() < 1 ? newMeasurements.begin() : it - 1;
+    auto itUp = newMeasurements.end() - it < 1 ? newMeasurements.end() : it + 1;
     selectedMeasurements.clear();
     std::copy(itLow, itUp, std::back_inserter(selectedMeasurements));
     newMeasurements = selectedMeasurements;
