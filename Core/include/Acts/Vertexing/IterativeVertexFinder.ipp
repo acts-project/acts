@@ -30,6 +30,14 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
     // retrieve the seed vertex as the last element in
     // the seed vertexCollection
     Vertex<InputTrack_t>& seedVertex = *seedRes;
+
+    if (seedVertex.fullPosition()[eZ] ==
+        vertexingOptions.vertexConstraint.position().z()) {
+      ACTS_DEBUG(
+          "No seed found anymore. Break and stop primary vertex finding.");
+      break;
+    }
+
     /// End seeding
     /// Now take only tracks compatible with current seed
     // Tracks used for the fit in this iteration
