@@ -107,11 +107,6 @@ class Measurement {
   /// Check if a specific parameter is part of this measurement.
   bool contains(indices_t i) const { return m_subspace.contains(i); }
 
-  /// The contained parameter indices
-  constexpr const std::array<uint8_t, kSize>& indices() const {
-    return m_subspace.indices();
-  }
-
   /// Measured parameters values.
   const ParametersVector& parameters() const { return m_params; }
 
