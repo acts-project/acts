@@ -267,51 +267,6 @@ struct EventDataView3D {
       return true;
     });
   }
-
-  static inline void drawTrackState(
-      IVisualization3D& helper, const GeometryContext& gctx,
-      const Surface& surface, const Vector2D& loc,
-      const ActsSymMatrixD<2>& locCov, const BoundTrackParameters& predicted,
-      const BoundTrackParameters& filtered,
-      const BoundTrackParameters& smoothed, double momentumScale = 1.,
-      double locErrorScale = 1., double angularErrorScale = 1.,
-      const ViewConfig& surfaceConfig = s_viewSensitive,
-      const ViewConfig& measurementConfig = s_viewMeasurement,
-      const ViewConfig& predictedConfig = s_viewPredicted,
-      const ViewConfig& filteredConfig = s_viewFiltered,
-      const ViewConfig& smoothedConfig = s_viewSmoothed) {
-    if (surfaceConfig.visible) {
-      GeometryView3D::drawSurface(helper, surface, gctx,
-                                  Transform3D::Identity(), surfaceConfig);
-    }
-
-    if (measurementConfig.visible) {
-      drawCovarianceCartesian(helper, loc, locCov, surface.transform(gctx),
-                              locErrorScale, measurementConfig);
-    }
-
-    // The predicted parameter
-    if (predictedConfig.visible) {
-      drawBoundTrackParameters(helper, predicted, gctx, momentumScale,
-                               locErrorScale, angularErrorScale,
-                               predictedConfig, predictedConfig,
-                               ViewConfig(false));
-    }
-
-    // The filtered parameter
-    if (filteredConfig.visible) {
-      drawBoundTrackParameters(helper, filtered, gctx, momentumScale,
-                               locErrorScale, angularErrorScale, filteredConfig,
-                               filteredConfig, ViewConfig(false));
-    }
-
-    // The smoothed parameter
-    if (smoothedConfig.visible) {
-      drawBoundTrackParameters(helper, smoothed, gctx, momentumScale,
-                               locErrorScale, angularErrorScale, smoothedConfig,
-                               smoothedConfig, ViewConfig(false));
-    }
-  }
 };
 
 }  // namespace Acts
