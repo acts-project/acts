@@ -9,11 +9,12 @@ on:
 
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
+  CONTAINER_VERSION: v9
 
 jobs:
   linux:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v8
+    container: ghcr.io/acts-project/${{ matrix.image }}:$CONTAINER_VERSION
     strategy:
       matrix:
         image:
@@ -116,7 +117,7 @@ jobs:
         run: ./build-downstream/bin/ShowActsVersion
   cuda:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu1804_cuda:v8
+    container: ghcr.io/acts-project/ubuntu1804_cuda:$CONTAINER_VERSION
     steps:
       - uses: actions/checkout@v2
       - name: Configure
@@ -132,7 +133,7 @@ jobs:
         run: cmake --build build --
   sycl:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_oneapi:v9
+    container: ghcr.io/acts-project/ubuntu2004_oneapi:$CONTAINER_VERSION
     defaults:
       run:
         shell: bash
@@ -154,7 +155,7 @@ jobs:
           && cmake --build build --
   docs:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v8
+    container: ghcr.io/acts-project/ubuntu2004:$CONTAINER_VERSION
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
