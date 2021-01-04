@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -25,7 +25,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
-#include "Acts/TrackFinding/CKFSourceLinkSelector.hpp"
+#include "Acts/TrackFinding/CKFMeasurementSelector.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
@@ -82,7 +82,7 @@ struct Fixture {
                                       KalmanSmoother>;
   using CombinatorialKalmanFilterOptions =
       Acts::CombinatorialKalmanFilterOptions<TestSourceLinkCalibrator,
-                                             Acts::CKFSourceLinkSelector>;
+                                             Acts::CKFMeasurementSelector>;
 
   Acts::GeometryContext geoCtx;
   Acts::MagneticFieldContext magCtx;
@@ -99,9 +99,9 @@ struct Fixture {
 
   // CKF implementation to be tested
   CombinatorialKalmanFilter ckf;
-  // configuration for the source link selector
-  Acts::CKFSourceLinkSelector::Config sourceLinkSelectorCfg = {
-      // global default: no chi2 cut, only one source link per surface
+  // configuration for the measurement selector
+  Acts::CKFMeasurementSelector::Config measurementSelectorCfg = {
+      // global default: no chi2 cut, only one measurement per surface
       {Acts::GeometryIdentifier(), {std::numeric_limits<double>::max(), 1u}},
   };
 
@@ -179,7 +179,7 @@ struct Fixture {
   CombinatorialKalmanFilterOptions makeCkfOptions() const {
     return CombinatorialKalmanFilterOptions(
         geoCtx, magCtx, calCtx, TestSourceLinkCalibrator(),
-        Acts::CKFSourceLinkSelector(sourceLinkSelectorCfg),
+        Acts::CKFMeasurementSelector(measurementSelectorCfg),
         Acts::LoggerWrapper{*logger}, Acts::PropagatorPlainOptions());
   }
 };
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
     BOOST_TEST_INFO("initial parameters before detector:\n" << params);
 
     auto val = tracks[trackId];
-    // with the given source link selection cuts, only one trajectory for the
+    // with the given measurement selection cuts, only one trajectory for the
     // given input parameters should be found.
     BOOST_CHECK_EQUAL(val.trackTips.size(), 1u);
     // check purity of first found track
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
     BOOST_TEST_INFO("initial parameters after detector:\n" << params);
 
     auto val = tracks[trackId];
-    // with the given source link selection cuts, only one trajectory for the
+    // with the given measurement selection cuts, only one trajectory for the
     // given input parameters should be found.
     BOOST_CHECK_EQUAL(val.trackTips.size(), 1u);
     // check purity of first found track

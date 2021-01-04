@@ -36,7 +36,7 @@ ActsExamples::Pythia8Generator::Pythia8Generator(const Config& cfg,
                                                  Acts::Logging::Level lvl)
     : m_cfg(cfg),
       m_logger(Acts::getDefaultLogger("Pythia8Generator", lvl)),
-      m_pythia8(std::make_unique<Pythia8::Pythia>("", false)) {
+      m_pythia8(std::make_unique<Pythia8::Pythia>()) {
   // disable all output by default but allow reenable via config
   m_pythia8->settings.flag("Print:quiet", true);
   for (const auto& setting : m_cfg.settings) {

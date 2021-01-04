@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/Measurement.hpp"
-#include "Acts/EventData/SourceLinkConcept.hpp"
+//#include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
@@ -26,11 +26,11 @@ namespace Acts {
 ///
 /// The default configuration only takes the best matching calibrated
 /// measurement without a cut on the local chi2.
-struct SourceLinkSelectorCuts {
+struct MeasurementSelectorCuts {
   /// Maximum local chi2 contribution.
   double chi2CutOff = std::numeric_limits<double>::max();
   /// Maximum number of associated measurements on a single surface.
-  size_t numSourcelinksCutOff = 1;
+  size_t numMeasurementsCutOff = 1;
 };
 
 /// @brief Calibrated measurement selection struct selecting those calibrated
@@ -43,22 +43,22 @@ struct SourceLinkSelectorCuts {
 /// If there is no compatible measurement, the measurement with the mininum
 /// chi2 will be selected and the status will be tagged as an outlier
 ///
-class CKFSourceLinkSelector {
+class CKFMeasurementSelector {
  public:
   /// Geometry-dependent cut configuration.
   ///
   /// Different components on the geometry can require different cut settings.
   /// The configuration must either contain explicit settings for all geometry
   /// components that are used or contain a global default.
-  using Config = Acts::GeometryHierarchyMap<SourceLinkSelectorCuts>;
+  using Config = Acts::GeometryHierarchyMap<MeasurementSelectorCuts>;
 
   /// @brief Default constructor
-  CKFSourceLinkSelector() = default;
+  CKFMeasurementSelector() = default;
   /// @brief Constructor with config and (non-owning) logger
   ///
   /// @param config a config instance
   /// @param logger a logger instance
-  CKFSourceLinkSelector(Config cfg) : m_config(std::move(cfg)) {}
+  CKFMeasurementSelector(Config cfg) : m_config(std::move(cfg)) {}
 
   /// @brief Operater that select the calibrated measurements compatible with
   /// the given track parameter on a surface
@@ -79,11 +79,11 @@ class CKFSourceLinkSelector {
                           std::vector<std::pair<size_t, double>>& measChi2,
                           std::vector<size_t>& measCandidateIndices,
                           bool& isOutlier, LoggerWrapper logger) const {
-    ACTS_VERBOSE("Invoked CKFSourceLinkSelector");
+    ACTS_VERBOSE("Invoked CKFMeasurementSelector");
 
     // Return error if no measurement
     if (measurements.empty()) {
-      return CombinatorialKalmanFilterError::SourcelinkSelectionFailed;
+      return CombinatorialKalmanFilterError::MeasurementSelectionFailed;
     }
 
     // Get geoID of this surface
@@ -96,13 +96,13 @@ class CKFSourceLinkSelector {
       // for now we consider missing cuts an unrecoverable error
       // TODO consider other options e.g. do not add measurements at all (not
       // even as outliers)
-      return CombinatorialKalmanFilterError::SourcelinkSelectionFailed;
+      return CombinatorialKalmanFilterError::MeasurementSelectionFailed;
     }
     const auto chi2CutOff = cuts->chi2CutOff;
-    const auto numSourcelinksCutOff = cuts->numSourcelinksCutOff;
+    const auto numMeasurementsCutOff = cuts->numMeasurementsCutOff;
     ACTS_VERBOSE("Allowed maximum chi2: " << chi2CutOff);
     ACTS_VERBOSE(
-        "Allowed maximum number of measurements: " << numSourcelinksCutOff);
+        "Allowed maximum number of measurements: " << numMeasurementsCutOff);
 
     measChi2.resize(measurements.size());
     double minChi2 = std::numeric_limits<double>::max();
@@ -147,7 +147,7 @@ class CKFSourceLinkSelector {
     // Get the number of measurement candidates with provided constraint
     // considered
     size_t nFinalCandidates =
-        std::min(nInitialCandidates, numSourcelinksCutOff);
+        std::min(nInitialCandidates, numMeasurementsCutOff);
 
     // If there is no selected measurement, return the measurement with the best
     // chi2 and tag it as an outlier
