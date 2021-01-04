@@ -105,6 +105,106 @@ static inline std::string testBoundTrackParameters(IVisualization3D& helper) {
   return ss.str();
 }
 
+static inline std::string testTrackState(IVisualization3D& helper) {
+  std::stringstream ss;
+  auto gctx = GeometryContext();
+
+  double momentumScale = 0.1;
+  double localErrorScale = 1.;
+  double directionErrorScale = 1000;
+
+  ViewConfig scolor({129, 173, 181});
+  ViewConfig mcolor({255, 145, 48});
+  mcolor.offset = -0.01;
+  ViewConfig ppcolor({173, 133, 186});
+  ppcolor.offset = -0.015;
+  ViewConfig fpcolor({178, 200, 145});
+  fpcolor.offset = -0.02;
+  ViewConfig spcolor({20, 120, 20});
+  spcolor.offset = -0.025;
+
+  // Boundaries of the surfaces
+  const auto rBounds =
+      std::make_shared<const RectangleBounds>(RectangleBounds(10, 10));
+  // Material of the surfaces
+  MaterialSlab matProp(Acts::Test::makeSilicon(), 0.5);
+  const auto surfaceMaterial =
+      std::make_shared<HomogeneousSurfaceMaterial>(matProp);
+  // Construct the transform
+  RotationMatrix3D rotation = RotationMatrix3D::Identity();
+  double rotationAngle = M_PI / 2;
+  Vector3D xPos(cos(rotationAngle), 0., sin(rotationAngle));
+  Vector3D yPos(0., 1., 0.);
+  Vector3D zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+  rotation.col(0) = xPos;
+  rotation.col(1) = yPos;
+  rotation.col(2) = zPos;
+  Vector3D translation(0, 0, 0);
+  // Vector3D translation(49, 0, 0);
+  Transform3D trafo(Transform3D::Identity() * rotation);
+  trafo.translation() = translation;
+  // The surface
+  auto surface = Surface::makeShared<PlaneSurface>(trafo, rBounds);
+  // surface->assignSurfaceMaterial(surfaceMaterial);
+
+  // The measurement
+  const Vector2D loc(2.64678, 8.00062);
+  ActsSymMatrixD<2> locCov;
+  locCov << 0.0009, 0, 0, 0.0009;
+
+  // The predicted parameters
+  BoundVector predicted;
+  BoundMatrix pCov;
+  predicted << 2.58362, 7.88022, 0.010775, 1.5724, -0.25334, 140.272;
+  pCov << 0.00280054, -1.16316e-07, 4.55413e-05, 2.0449e-09, -4.55897e-08,
+      3.9782e-05, -1.16316e-07, 0.00280019, -2.34827e-09, -4.55322e-05,
+      -1.02568e-12, 1.36071e-05, 4.55413e-05, -2.34827e-09, 8.38368e-07,
+      3.73733e-11, -2.01704e-09, 6.4539e-07, 2.0449e-09, -4.55322e-05,
+      3.73733e-11, 8.38124e-07, 4.1299e-14, -2.41901e-07, -4.55897e-08,
+      -1.02568e-12, -2.01704e-09, 4.1299e-14, 6.4018e-08, -1.40676e-08,
+      3.9782e-05, 1.36071e-05, 6.4539e-07, -2.41901e-07, -1.40676e-08,
+      2.24689e+06;
+
+  // The filtered parameters;
+  BoundVector filtered;
+  BoundMatrix fCov;
+  filtered << 2.63142, 7.97133, 0.0115522, 1.57091, -0.253341, 140.273;
+  fCov << 0.000681113, -6.88073e-09, 1.1076e-05, 1.49229e-10, -1.10878e-08,
+      9.6754e-06, -6.88073e-09, 0.000681092, -2.22996e-10, -1.10748e-05,
+      -5.98021e-13, 3.30997e-06, 1.1076e-05, -2.22996e-10, 2.77906e-07,
+      9.258e-13, -1.45598e-09, 1.55809e-07, 1.49229e-10, -1.10748e-05,
+      9.258e-13, 2.77834e-07, 3.62369e-14, -7.44673e-08, -1.10878e-08,
+      -5.98021e-13, -1.45598e-09, 3.62369e-14, 6.40175e-08, -1.35774e-08,
+      9.6754e-06, 3.30997e-06, 1.55809e-07, -7.44673e-08, -1.35774e-08,
+      2.24689e+06;
+
+  // The smootehd parameters;
+  BoundVector smoothed;
+  BoundMatrix sCov;
+  smoothed << 2.63053, 7.98807, 0.0115394, 1.57052, -0.25334, 140.273;
+  sCov << 0.000156495, 1.9583e-09, 3.59525e-07, 2.88542e-11, 4.57374e-08,
+      2.25306e-06, 1.9583e-09, 0.000156456, -4.42585e-11, -3.58953e-07,
+      -9.43293e-13, 2.98877e-07, 3.59525e-07, -4.42585e-11, 4.68873e-08,
+      -6.69897e-13, 7.46465e-10, 4.1954e-09, 2.88542e-11, -3.58953e-07,
+      -6.69897e-13, 4.68772e-08, -2.47294e-15, -1.04123e-08, 4.57374e-08,
+      -9.43293e-13, 7.46465e-10, -2.47294e-15, 6.38984e-08, -1.27689e-08,
+      2.25306e-06, 2.98877e-07, 4.1954e-09, -1.04123e-08, -1.27689e-08,
+      2.24689e+06;
+
+  EventDataView3D::drawTrackState(
+      helper, gctx, *surface, loc, locCov,
+      BoundTrackParameters(surface, predicted, std::move(pCov)),
+      BoundTrackParameters(surface, filtered, std::move(fCov)),
+      BoundTrackParameters(surface, smoothed, std::move(sCov)), momentumScale,
+      localErrorScale, directionErrorScale, scolor, mcolor, ppcolor, fpcolor,
+      spcolor);
+
+  helper.write("EventData_TrackState");
+  helper.write(ss);
+
+  return ss.str();
+}
+
 static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   std::stringstream ss;
 
@@ -125,7 +225,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
 
   // Boundaries of the surfaces
   const auto rBounds =
-      std::make_shared<const RectangleBounds>(RectangleBounds(0.1_m, 0.1_m));
+      std::make_shared<const RectangleBounds>(RectangleBounds(25_mm, 25_mm));
 
   // Material of the surfaces
   MaterialSlab matProp(Acts::Test::makeSilicon(), 0.5_mm);
@@ -135,12 +235,12 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   // Set translation vectors
   std::vector<Vector3> translations;
   translations.reserve(6);
-  translations.push_back({-500_mm, 0., 0.});
   translations.push_back({-300_mm, 0., 0.});
+  translations.push_back({-200_mm, 0., 0.});
   translations.push_back({-100_mm, 0., 0.});
   translations.push_back({100_mm, 0., 0.});
+  translations.push_back({200_mm, 0., 0.});
   translations.push_back({300_mm, 0., 0.});
-  translations.push_back({500_mm, 0., 0.});
 
   // Construct layer configs
   std::vector<CuboidVolumeBuilder::LayerConfig> lConfs;
@@ -153,7 +253,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
     sConf.rBounds = rBounds;
     sConf.surMat = surfaceMaterial;
     // The thickness to construct the associated detector element
-    sConf.thickness = 1._um;
+    sConf.thickness = 1_um;
     sConf.detElementConstructor =
         [](const Transform3& trans,
            std::shared_ptr<const RectangleBounds> bounds, double thickness) {
@@ -207,8 +307,8 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   std::cout << "Creating measurements:" << std::endl;
   std::vector<Test::TestSourceLink> sourcelinks;
   sourcelinks.reserve(6);
-  Vector2 lPosCenter{10_mm, 10_mm};
-  Vector2 resolution{30_um, 50_um};
+  Vector2 lPosCenter{5_mm, 5_mm};
+  Vector2 resolution{200_um, 150_um};
   SymMatrix2 cov2D = resolution.cwiseProduct(resolution).asDiagonal();
   for (const auto& surface : surfaces) {
     // 2D measurements
@@ -236,10 +336,10 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   // Set initial parameters for the particle track
   Covariance cov;
   cov << std::pow(100_um, 2), 0., 0., 0., 0., 0., 0., std::pow(100_um, 2), 0.,
-      0., 0., 0., 0., 0., 0.025, 0., 0., 0., 0., 0., 0., 0.025, 0., 0., 0., 0.,
+      0., 0., 0., 0., 0., 0.0025, 0., 0., 0., 0., 0., 0., 0.0025, 0., 0., 0., 0.,
       0., 0., 0.01, 0., 0., 0., 0., 0., 0., 1.;
-  Vector3 rPos(-1_m, 100_um * gauss(generator), 100_um * gauss(generator));
-  Vector3 rDir(1, 0.025 * gauss(generator), 0.025 * gauss(generator));
+  Vector3D rPos(-350._mm, 100_um * gauss(generator), 100_um * gauss(generator));
+  Vector3D rDir(1, 0.025 * gauss(generator), 0.025 * gauss(generator));
   CurvilinearTrackParameters rStart(makeVector4(rPos, 42_ns), rDir, 1_GeV, 1_e,
                                     cov);
 
@@ -267,19 +367,21 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
 
   // Draw the track
   std::cout << "Draw the fitted track" << std::endl;
-  double momentumScale = 15;
+  double momentumScale = 10;
   double localErrorScale = 100.;
-  double directionErrorScale = 500000;
+  double directionErrorScale = 100000;
 
-  ViewConfig scolor({235, 198, 52});
+  ViewConfig scolor({129, 173, 181});
   ViewConfig mcolor({255, 145, 48});
   mcolor.offset = -0.01;
-  ViewConfig ppcolor({138, 214, 255});
+  
+  ViewConfig ppcolor({173, 133, 186});
   ppcolor.offset = -0.02;
-  ViewConfig fpcolor({92, 149, 255});
+  ViewConfig fpcolor({178, 200, 145});
   fpcolor.offset = -0.03;
   ViewConfig spcolor({20, 120, 20});
   spcolor.offset = -0.04;
+
 
   EventDataView3D::drawMultiTrajectory(
       helper, fittedTrack.fittedStates, fittedTrack.trackTip, tgContext,

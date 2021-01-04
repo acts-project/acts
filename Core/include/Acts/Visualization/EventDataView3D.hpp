@@ -148,9 +148,10 @@ struct EventDataView3D {
     lparConfig.lineThickness = 0.05;
     Vector3 parLength = p * momentumScale * direction;
 
-    GeometryView3D::drawArrowBackward(
-        helper, position, position + 0.5 * parLength, 100., 1.0, lparConfig);
-
+     GeometryView3D::drawArrowBackward(
+            helper, position, position + 0.5 * parLength, 100., 1.0,
+            lparConfig);
+    
     GeometryView3D::drawArrowForward(helper, position + 0.5 * parLength,
                                      position + parLength, 4., 2.5, lparConfig);
 
@@ -208,11 +209,11 @@ struct EventDataView3D {
         return true;
       }
 
-      // Use unit scaling factors for the first state
+      // Use smaller scaling factors for the first state
       // @Todo: add parameter for the first state error scaling
       if (state.index() == 0) {
-        locErrorScale = 1;
-        angularErrorScale = 1;
+        locErrorScale = locErrorScale*0.1;
+        angularErrorScale = angularErrorScale*0.1;
       }
 
       // First, if necessary, draw the surface
@@ -265,6 +266,51 @@ struct EventDataView3D {
       }
       return true;
     });
+  }
+
+  static inline void drawTrackState(
+      IVisualization3D& helper, const GeometryContext& gctx,
+      const Surface& surface, const Vector2D& loc,
+      const ActsSymMatrixD<2>& locCov, const BoundTrackParameters& predicted,
+      const BoundTrackParameters& filtered,
+      const BoundTrackParameters& smoothed, double momentumScale = 1.,
+      double locErrorScale = 1., double angularErrorScale = 1.,
+      const ViewConfig& surfaceConfig = s_viewSensitive,
+      const ViewConfig& measurementConfig = s_viewMeasurement,
+      const ViewConfig& predictedConfig = s_viewPredicted,
+      const ViewConfig& filteredConfig = s_viewFiltered,
+      const ViewConfig& smoothedConfig = s_viewSmoothed) {
+    if (surfaceConfig.visible) {
+      GeometryView3D::drawSurface(helper, surface, gctx,
+                                  Transform3D::Identity(), surfaceConfig);
+    }
+
+    if (measurementConfig.visible) {
+      drawCovarianceCartesian(helper, loc, locCov, surface.transform(gctx),
+                              locErrorScale, measurementConfig);
+    }
+
+    // The predicted parameter
+    if (predictedConfig.visible) {
+      drawBoundTrackParameters(helper, predicted, gctx, momentumScale,
+                               locErrorScale, angularErrorScale,
+                               predictedConfig, predictedConfig,
+                               ViewConfig(false));
+    }
+
+    // The filtered parameter
+    if (filteredConfig.visible) {
+      drawBoundTrackParameters(helper, filtered, gctx, momentumScale,
+                               locErrorScale, angularErrorScale, filteredConfig,
+                               filteredConfig, ViewConfig(false));
+    }
+
+    // The smoothed parameter
+    if (smoothedConfig.visible) {
+      drawBoundTrackParameters(helper, smoothed, gctx, momentumScale,
+                               locErrorScale, angularErrorScale, smoothedConfig,
+                               smoothedConfig, ViewConfig(false));
+    }
   }
 };
 

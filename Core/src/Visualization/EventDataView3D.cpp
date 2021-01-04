@@ -37,14 +37,14 @@ void Acts::EventDataView3D::drawCovarianceAngular(
   double dphi = VectorHelpers::phi(direction);
   double dtheta = VectorHelpers::theta(direction);
 
-  Transform3 eplane(Translation3(anker) *
-                    AngleAxis3(dtheta, Vector3(1., 0., 0.)) *
-                    AngleAxis3(dphi, Vector3(0., 0., 1.)));
+  Transform3D eplane(Translation3D(anker) *
+                     AngleAxis3D(dphi, Vector3D(0., 0., 1.)) *
+                     AngleAxis3D(dtheta, Vector3D(0., 1., 0.)));
 
   // Now generate the ellipse points
-  std::vector<Vector3> ellipse =
-      createEllipse(angularErrorScale * directionScale * tan(lambda0),
-                    angularErrorScale * directionScale * tan(lambda1), theta,
+  std::vector<Vector3D> ellipse =
+      createEllipse(angularErrorScale * directionScale * lambda0 * sin(dtheta),
+                    angularErrorScale * directionScale * lambda1, theta,
                     viewConfig.nSegments, 0., {0., 0.}, eplane);
 
   std::vector<Vector3> coneTop = ellipse;
