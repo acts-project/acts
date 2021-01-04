@@ -13,7 +13,7 @@ env:
 jobs:
   linux:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v8
+    container: ghcr.io/acts-project/${{ matrix.image }}:v9
     strategy:
       matrix:
         image:
@@ -116,7 +116,7 @@ jobs:
         run: ./build-downstream/bin/ShowActsVersion
   cuda:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu1804_cuda:v8
+    container: ghcr.io/acts-project/ubuntu1804_cuda:v9
     steps:
       - uses: actions/checkout@v2
       - name: Configure
@@ -154,7 +154,7 @@ jobs:
           && cmake --build build --
   docs:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v8
+    container: ghcr.io/acts-project/ubuntu2004:v9
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
