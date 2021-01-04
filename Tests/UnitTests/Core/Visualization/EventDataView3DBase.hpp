@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -76,7 +76,7 @@ static inline std::string testBoundTrackParameters(IVisualization3D& helper) {
 
   double momentumScale = 0.005;
   double localErrorScale = 10.;
-  double directionErrorScale = 100.;
+  double directionErrorScale = 1000.;
 
   // now create parameters on this surface
   // l_x, l_y, phi, theta, q/p (1/p), t
@@ -125,7 +125,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
 
   // Boundaries of the surfaces
   const auto rBounds =
-      std::make_shared<const RectangleBounds>(RectangleBounds(25_mm, 25_mm));
+      std::make_shared<const RectangleBounds>(RectangleBounds(50_mm, 50_mm));
 
   // Material of the surfaces
   MaterialSlab matProp(Acts::Test::makeSilicon(), 0.5_mm);
@@ -153,7 +153,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
     sConf.rBounds = rBounds;
     sConf.surMat = surfaceMaterial;
     // The thickness to construct the associated detector element
-    sConf.thickness = 1_um;
+    sConf.thickness = 1._um;
     sConf.detElementConstructor =
         [](const Transform3& trans,
            std::shared_ptr<const RectangleBounds> bounds, double thickness) {
@@ -236,10 +236,10 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   // Set initial parameters for the particle track
   Covariance cov;
   cov << std::pow(100_um, 2), 0., 0., 0., 0., 0., 0., std::pow(100_um, 2), 0.,
-      0., 0., 0., 0., 0., 0.0025, 0., 0., 0., 0., 0., 0., 0.0025, 0., 0., 0., 0.,
-      0., 0., 0.01, 0., 0., 0., 0., 0., 0., 1.;
-  Vector3D rPos(-350._mm, 100_um * gauss(generator), 100_um * gauss(generator));
-  Vector3D rDir(1, 0.025 * gauss(generator), 0.025 * gauss(generator));
+      0., 0., 0., 0., 0., 0.0025, 0., 0., 0., 0., 0., 0., 0.0025, 0., 0., 0.,
+      0., 0., 0., 0.01, 0., 0., 0., 0., 0., 0., 1.;
+  Vector3 rPos(-350._mm, 100_um * gauss(generator), 100_um * gauss(generator));
+  Vector3 rDir(1, 0.025 * gauss(generator), 0.025 * gauss(generator));
   CurvilinearTrackParameters rStart(makeVector4(rPos, 42_ns), rDir, 1_GeV, 1_e,
                                     cov);
 
@@ -271,17 +271,15 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   double localErrorScale = 100.;
   double directionErrorScale = 100000;
 
-  ViewConfig scolor({129, 173, 181});
+  ViewConfig scolor({214, 214, 214});
   ViewConfig mcolor({255, 145, 48});
   mcolor.offset = -0.01;
-  
-  ViewConfig ppcolor({173, 133, 186});
+  ViewConfig ppcolor({51, 204, 51});
   ppcolor.offset = -0.02;
-  ViewConfig fpcolor({178, 200, 145});
+  ViewConfig fpcolor({255, 255, 0});
   fpcolor.offset = -0.03;
-  ViewConfig spcolor({20, 120, 20});
+  ViewConfig spcolor({0, 125, 255});
   spcolor.offset = -0.04;
-
 
   EventDataView3D::drawMultiTrajectory(
       helper, fittedTrack.fittedStates, fittedTrack.trackTip, tgContext,

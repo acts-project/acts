@@ -148,10 +148,9 @@ struct EventDataView3D {
     lparConfig.lineThickness = 0.05;
     Vector3 parLength = p * momentumScale * direction;
 
-     GeometryView3D::drawArrowBackward(
-            helper, position, position + 0.5 * parLength, 100., 1.0,
-            lparConfig);
-    
+    GeometryView3D::drawArrowBackward(
+        helper, position, position + 0.5 * parLength, 100., 1.0, lparConfig);
+
     GeometryView3D::drawArrowForward(helper, position + 0.5 * parLength,
                                      position + parLength, 4., 2.5, lparConfig);
 
@@ -212,8 +211,8 @@ struct EventDataView3D {
       // Use smaller scaling factors for the first state
       // @Todo: add parameter for the first state error scaling
       if (state.index() == 0) {
-        locErrorScale = locErrorScale*0.1;
-        angularErrorScale = angularErrorScale*0.1;
+        locErrorScale = locErrorScale * 0.1;
+        angularErrorScale = angularErrorScale * 0.1;
       }
 
       // First, if necessary, draw the surface
