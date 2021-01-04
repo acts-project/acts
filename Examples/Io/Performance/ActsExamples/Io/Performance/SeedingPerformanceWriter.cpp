@@ -8,14 +8,14 @@
 
 #include "SeedingPerformanceWriter.hpp"
 
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
 
-#include <numeric>
-#include <set>
 #include <stdexcept>
+#include <unordered_map>
 
 #include <TFile.h>
 
@@ -27,8 +27,8 @@ ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
     : WriterT(cfg.inputSeeds, "SeedingPerformanceWriter", lvl),
       m_cfg(std::move(cfg)),
       m_effPlotTool(m_cfg.effPlotToolConfig, lvl) {
-  if (m_cfg.inputSeeds.empty()) {
-    throw std::invalid_argument("Missing input seeds collection");
+  if (m_cfg.inputMeasurementParticlesMap.empty()) {
+    throw std::invalid_argument("Missing hit-particles map input collection");
   }
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input particles collection");
@@ -36,14 +36,11 @@ ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
   if (m_cfg.outputFilename.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
-  if (m_cfg.inputMeasurementParticlesMap.empty()) {
-    throw std::invalid_argument("Missing hit-particles map input collection");
-  }
 
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
   // must always be opened internally
-  auto path = m_cfg.outputFilename;
+  auto path = joinPaths(m_cfg.outputDir, m_cfg.outputFilename);
   m_outputFile = TFile::Open(path.c_str(), "RECREATE");
   if (not m_outputFile) {
     throw std::invalid_argument("Could not open '" + path + "'");
@@ -83,25 +80,24 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::endRun() {
 ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
     const AlgorithmContext& ctx,
     const std::vector<std::vector<Acts::Seed<SimSpacePoint>>>& seedVector) {
-  // Read truth particles from input collection
+  // Read truth information collections
   const auto& particles =
-      ctx.eventStore.get<ActsExamples::SimParticleContainer>(
-          m_cfg.inputParticles);
+      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
+  const auto& hitParticlesMap =
+      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
 
   size_t nSeeds = 0;
   size_t nMatchedSeeds = 0;
   // Map from particles to how many times they were successfully found by a seed
   std::unordered_map<ActsFatras::Barcode, std::size_t> truthCount;
-  ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
-  const auto hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
 
   for (auto& regionVec : seedVector) {
     nSeeds += regionVec.size();
     for (size_t i = 0; i < regionVec.size(); i++) {
       const Acts::Seed<SimSpacePoint>* seed = &regionVec[i];
-      ProtoTrack ptrack{seed->sp()[0]->index(), seed->sp()[1]->index(),
-                        seed->sp()[2]->index()};
+      ProtoTrack ptrack{seed->sp()[0]->measurementIndex(),
+                        seed->sp()[1]->measurementIndex(),
+                        seed->sp()[2]->measurementIndex()};
       std::vector<ParticleHitCount> particleHitCounts;
       identifyContributingParticles(hitParticlesMap, ptrack, particleHitCounts);
 
