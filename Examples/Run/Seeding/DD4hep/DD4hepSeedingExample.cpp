@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
       // Acts::GeometryIdentifier().setVolume(14).setLayer(6),
       // Acts::GeometryIdentifier().setVolume(14).setLayer(8),
       // open detector negative endcap layers
-      Acts::GeometryIdentifier().setVolume(2),
+      Acts::GeometryIdentifier().setVolume(12),
       // Acts::GeometryIdentifier().setVolume(2).setLayer(16),
       // Acts::GeometryIdentifier().setVolume(2).setLayer(14),
       // Acts::GeometryIdentifier().setVolume(2).setLayer(12),
