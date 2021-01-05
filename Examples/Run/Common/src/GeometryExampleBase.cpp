@@ -56,8 +56,6 @@ int processGeometry(int argc, char* argv[],
   auto contextDecorators = geometry.second;
 
   // The detectors
-  read_strings subDetectors = vm["geo-detector-volume"].as<read_strings>();
-
   auto volumeLogLevel =
       Acts::Logging::Level(vm["geo-volume-loglevel"].as<size_t>());
 
