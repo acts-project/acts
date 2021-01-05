@@ -18,7 +18,7 @@ env:
 jobs:
   build_debug:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v5
+    container: ghcr.io/acts-project/ubuntu2004:v9
     steps:
       - uses: actions/checkout@v2
       - name: Configure
@@ -48,7 +48,7 @@ jobs:
           file: ./build/coverage/cov.xml
   build_performance:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v5
+    container: ghcr.io/acts-project/ubuntu2004:v9
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
