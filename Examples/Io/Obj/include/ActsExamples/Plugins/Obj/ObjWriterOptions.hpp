@@ -32,29 +32,25 @@ void addObjWriterOptions(aopt_t& opt) {
       "obj-scalor", po::value<double>()->default_value(1.),
       "Optional scaling from Acts units to ouput units.")(
       "obj-container-view",
-      po::value<read_series>()->multitoken()->default_value(
-          {0, 220, 220, 220, 0}),
+      po::value<Integers<5>>()->default_value({{0, 220, 220, 220, 0}}),
       "View configuration of container volumes (vis/novis, r, g, b, trimesh).")(
       "obj-volume-view",
-      po::value<read_series>()->multitoken()->default_value(
-          {1, 220, 220, 0, 0}),
+      po::value<Integers<5>>()->default_value({{1, 220, 220, 0, 0}}),
       "View configuration of navigation volumes (vis/novis, r, g, b, "
       "trimesh).")(
       "obj-layer-view",
-      po::value<read_series>()->multitoken()->default_value(
-          {1, 100, 180, 240, 0}),
+      po::value<Integers<5>>()->default_value({{1, 100, 180, 240, 0}}),
       "View configuration of layer structures (vis/novis, r, g, b, trimesh).")(
       "obj-sensitive-view",
-      po::value<read_series>()->multitoken()->default_value(
-          {1, 0, 180, 240, 0}),
+      po::value<Integers<5>>()->default_value({{1, 0, 180, 240, 0}}),
       "View configuration of sensitive surfaces (vis/novis, r, g, b, "
-      "trimesh).")("obj-passive-view",
-                   po::value<read_series>()->multitoken()->default_value(
-                       {1, 240, 280, 0, 0}),
-                   "View configuration of sensitive surfaces (vis/novis, r, g, "
-                   "b, trimesh).")(
+      "trimesh).")(
+      "obj-passive-view",
+      po::value<Integers<5>>()->default_value({{1, 240, 280, 0, 0}}),
+      "View configuration of sensitive surfaces (vis/novis, r, g, "
+      "b, trimesh).")(
       "obj-grid-view",
-      po::value<read_series>()->multitoken()->default_value({1, 220, 0, 0, 0}),
+      po::value<Integers<5>>()->default_value({{1, 220, 0, 0, 0}}),
       "View configuration of grid structures (vis/novis, r, g, b, trimesh).")(
       "obj-grid-offset", po::value<double>()->default_value(0.),
       "View offset of grid values.")("obj-grid-thickness",
@@ -75,7 +71,7 @@ readObjTrackingGeometryWriterConfig(
 
   auto setView = [&](const std::string& vname,
                      Acts::ViewConfig& viewCfg) -> void {
-    read_series cview = vm[vname].template as<read_series>();
+    auto cview = vm[vname].template as<Integers<5>>();
     if (not cview.empty()) {
       if (cview[0] == 0) {
         viewCfg.visible = false;

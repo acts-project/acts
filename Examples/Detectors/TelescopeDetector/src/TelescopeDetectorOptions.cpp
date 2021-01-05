@@ -17,17 +17,14 @@ void ActsExamples::Options::addTelescopeGeometryOptions(
   using boost::program_options::value;
   auto opt = desc.add_options();
   opt("geo-tele-positions",
-      value<read_range>()->multitoken()->default_value(
-          {0, 30, 60, 120, 150, 180}),
+      value<VariableReals>()->default_value({{0, 30, 60, 120, 150, 180}}),
       "Telescope detector Input: the layers positions in the longidutinal "
       "direction in mm");
-  opt("geo-tele-offsets",
-      value<read_range>()->multitoken()->default_value({0, 0}),
+  opt("geo-tele-offsets", value<Reals<2>>()->default_value({{0, 0}}),
       "Telescope detector Input: the layers offsets in the transverse plane in "
       "mm. Same values for "
       "all layers");
-  opt("geo-tele-size",
-      value<read_range>()->multitoken()->default_value({50, 25}),
+  opt("geo-tele-size", value<Reals<2>>()->default_value({{50, 25}}),
       "Telescope detector Input: the size of each plane in local x and y "
       "directions in mm");
   opt("geo-tele-thickness", value<double>()->default_value(80),

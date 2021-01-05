@@ -29,21 +29,16 @@ auto TelescopeDetector::finalize(
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
   // --------------------------------------------------------------------------------
   DetectorElement::ContextType nominalContext;
-  auto positions = vm["geo-tele-positions"].template as<read_range>();
-  auto offsets = vm["geo-tele-offsets"].template as<read_range>();
-  auto pSize = vm["geo-tele-size"].template as<read_range>();
+  auto positions = vm["geo-tele-positions"]
+                       .template as<ActsExamples::Options::VariableReals>()
+                       .values;
+  auto offsets =
+      vm["geo-tele-offsets"].template as<ActsExamples::Options::Reals<2>>();
+  auto pSize =
+      vm["geo-tele-size"].template as<ActsExamples::Options::Reals<2>>();
   // Translate the thickness in unit of mm
   auto thickness = vm["geo-tele-thickness"].template as<double>() * 0.001;
   auto binValue = vm["geo-tele-alignaxis"].template as<size_t>();
-  if (offsets.size() != 2) {
-    throw std::invalid_argument(
-        "Two parameters are needed for the shift of the planes in the "
-        "transverse direction.");
-  }
-  if (pSize.size() != 2) {
-    throw std::invalid_argument(
-        "Two parameters are needed for the plane size.");
-  }
   if (binValue > 2) {
     throw std::invalid_argument("The axis value could only be 0, 1, or 2.");
   }
