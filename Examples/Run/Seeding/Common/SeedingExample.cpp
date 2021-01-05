@@ -33,8 +33,7 @@ using namespace ActsExamples;
 
 int runSeedingExample(int argc, char* argv[],
                       std::shared_ptr<ActsExamples::IBaseDetector> detector,
-		      std::vector<Acts::GeometryIdentifier> layersForSeeding
-		      ) {
+                      std::vector<Acts::GeometryIdentifier> layersForSeeding) {
   // Setup and parse options
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
@@ -159,7 +158,7 @@ int runSeedingExample(int argc, char* argv[],
 
   SeedingPerformanceWriter::Config seedPerfCfg;
   seedPerfCfg.inputSeeds = seedingCfg.outputSeeds;
-  seedPerfCfg.inputParticles =   particleSelectorCfg.outputParticles;
+  seedPerfCfg.inputParticles = particleSelectorCfg.outputParticles;
   seedPerfCfg.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
   seedPerfCfg.outputDir = outputDir;

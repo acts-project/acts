@@ -21,5 +21,4 @@ class IBaseDetector;
 /// @param detector The detector descriptor instance
 int runSeedingExample(int argc, char* argv[],
                       std::shared_ptr<ActsExamples::IBaseDetector> detector,
-		      std::vector<Acts::GeometryIdentifier> layersForSeeding
-		      );
+                      std::vector<Acts::GeometryIdentifier> layersForSeeding);
