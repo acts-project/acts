@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,7 +20,7 @@
 
 namespace ActsFatras {
 
-/// Simulation particle information and kinematic state.
+/// Particle identity information and kinematic state.
 class Particle {
  public:
   using Scalar = Acts::ActsScalar;
@@ -162,32 +162,21 @@ class Particle {
   /// Check if the particle is dead, i.e is at rest.
   constexpr bool operator!() const { return m_absMomentum <= Scalar(0); }
 
-  /// Set the material that the particle has passed.
+  // simulation specific properties
+
+  /// Set the accumulated material measured in radiation/interaction lengths.
   ///
-  /// @param pathX0 passed material measured in radiation lengths
-  /// @param pathL0 passed thickness measured in interaction lengths
-  constexpr Particle &setMaterialPassed(Scalar pathX0, Scalar pathL0) {
-    m_pathX0 = pathX0;
-    m_pathL0 = pathL0;
+  /// @param pathInX0 accumulated material measured in radiation lengths
+  /// @param pathInL0 accumulated material measured in interaction lengths
+  constexpr Particle &setMaterialPassed(Scalar pathInX0, Scalar pathInL0) {
+    m_pathInX0 = pathInX0;
+    m_pathInL0 = pathInL0;
     return *this;
   }
-  /// Set the material limits.
-  ///
-  /// @param limitX0 maximum radiation lengths the particle can pass
-  /// @param limitL0 maximum interaction lengths the particle can pass
-  constexpr Particle &setMaterialLimits(Scalar limitX0, Scalar limitL0) {
-    m_limitX0 = limitX0;
-    m_limitL0 = limitL0;
-    return *this;
-  }
-  /// The passed material measured in radiation lengths.
-  constexpr Scalar pathInX0() const { return m_pathX0; }
-  /// The passed material measured in interaction lengths.
-  constexpr Scalar pathInL0() const { return m_pathL0; }
-  /// The maximum radation length the particle is allowed to pass.
-  constexpr Scalar pathLimitX0() const { return m_limitX0; }
-  /// The maximum interaction length the particle is allowed to pass.
-  constexpr Scalar pathLimitL0() const { return m_limitL0; }
+  /// Accumulated path within material measured in radiation lengths.
+  constexpr Scalar pathInX0() const { return m_pathInX0; }
+  /// Accumulated path within material measured in interaction lengths.
+  constexpr Scalar pathInL0() const { return m_pathInL0; }
 
  private:
   // identity, i.e. things that do not change over the particle lifetime.
@@ -204,18 +193,9 @@ class Particle {
   Vector3 m_unitDirection = Vector3::UnitZ();
   Scalar m_absMomentum = Scalar(0);
   Vector4 m_position4 = Vector4::Zero();
-  // simulation-specific X0/L0 information and limits
-  // these values are here to simplify the simulation of (nuclear) interactions.
-  // instead of checking at every surface whether an interaction should occur we
-  // can draw an overall limit once. the relevant interaction only needs to
-  // be executed once the limit is reached.
-  // this information is not really particle-specific and should probably be
-  // handled separately. for now, storing it directly here is the simplest
-  // solution.
-  Scalar m_pathX0 = Scalar(0);
-  Scalar m_pathL0 = Scalar(0);
-  Scalar m_limitX0 = std::numeric_limits<Scalar>::max();
-  Scalar m_limitL0 = std::numeric_limits<Scalar>::max();
+  // accumulated material
+  Scalar m_pathInX0 = Scalar(0);
+  Scalar m_pathInL0 = Scalar(0);
 };
 
 std::ostream &operator<<(std::ostream &os, const Particle &particle);

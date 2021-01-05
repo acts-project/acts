@@ -159,15 +159,6 @@ struct Interactor {
           // event if the particle was killed.
           result.pathInX0 += slab.thicknessInX0();
           result.pathInL0 += slab.thicknessInL0();
-          // WARNING this overwrites changes that the physics interactions
-          //         might have performed with regard to the passed material.
-          //         ensures consistent material counting by making the one
-          //         component that by construction will see all material
-          //         contributions (this Interactor) responsible.
-          // TODO review this for supporting multiple interactions within the
-          // same material slab
-          after.setMaterialPassed(before.pathInX0() + slab.thicknessInX0(),
-                                  before.pathInL0() + slab.thicknessInL0());
         }
       }
     }
@@ -200,9 +191,6 @@ struct Interactor {
     // state directly from the propagation state; using only the identity
     // parameters from the initial particle state.
     return Particle(initialParticle)
-        // include passed material from the initial particle state
-        .setMaterialPassed(initialParticle.pathInX0() + result.pathInX0,
-                           initialParticle.pathInL0() + result.pathInL0)
         .setPosition4(stepper.position(state), stepper.time(state))
         .setDirection(stepper.direction(state))
         .setAbsoluteMomentum(stepper.momentum(state));
