@@ -67,13 +67,9 @@ void sortFCChhDetElements(std::vector<dd4hep::DetElement>& det) {
 template <typename aopt_t>
 void addDD4hepOptions(aopt_t& opt) {
   opt.add_options()(
-      "dd4hep-input",
-      po::value<read_strings>()->multitoken()->default_value(
-          {"file:Detectors/DD4hepDetector/compact/OpenDataDetector/"
-           "OpenDataDetector.xml"}),
+      "dd4hep-input", po::value<std::vector<std::string>>(),
       "The locations of the input DD4hep files, use 'file:foo.xml'. In case "
-      "you want to read in multiple files, just seperate the strings by "
-      "space.")(
+      "you want to read in multiple files, add the option multiple times.")(
       "dd4hep-envelopeR",
       po::value<double>()->default_value(1. * Acts::UnitConstants::mm),
       "The envelop cover in R for DD4hep volumes.")(
@@ -104,7 +100,8 @@ ActsExamples::DD4hep::DD4hepGeometryService::Config readDD4hepConfig(
   ActsExamples::DD4hep::DD4hepGeometryService::Config gsConfig;
   gsConfig.logLevel =
       Acts::Logging::Level(vm["dd4hep-loglevel"].template as<size_t>());
-  gsConfig.xmlFileNames = vm["dd4hep-input"].template as<read_strings>();
+  gsConfig.xmlFileNames =
+      vm["dd4hep-input"].template as<std::vector<std::string>>();
   gsConfig.bTypePhi = Acts::equidistant;
   gsConfig.bTypeR = Acts::arbitrary;
   gsConfig.bTypeZ = Acts::equidistant;
