@@ -12,6 +12,7 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
 
+#include <array>
 #include <memory>
 #include <vector>
 
@@ -31,8 +32,8 @@ namespace Telescope {
 std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     const typename TelescopeDetectorElement::ContextType& gctx,
     std::vector<std::shared_ptr<TelescopeDetectorElement>>& detectorStore,
-    const std::vector<double>& positions, const std::vector<double>& offsets,
-    const std::vector<double>& pSize, double thickness,
+    const std::vector<double>& positions, std::array<double, 2> offsets,
+    std::array<double, 2> pSize, double thickness,
     Acts::BinningValue binValue = Acts::BinningValue::binZ);
 
 }  // end of namespace Telescope
