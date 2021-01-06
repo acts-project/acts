@@ -120,7 +120,7 @@ find_package(Eigen3 ${_acts_eigen3_version} REQUIRED CONFIG)
 
 # optional packages
 #
-# find packages explicitely for each component even if this means searching for
+# find packages explicitly for each component even if this means searching for
 # the same package twice. This avoids having complex if/else trees to sort out
 # when a particular package is actually needed.
 # plugin dependencies
