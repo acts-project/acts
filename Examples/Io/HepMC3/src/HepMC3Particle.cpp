@@ -9,14 +9,16 @@
 #include "ActsExamples/Io/HepMC3/HepMC3Particle.hpp"
 
 #include "ActsExamples/Io/HepMC3/HepMC3Vertex.hpp"
+#include "ActsFatras/Utilities/ParticleData.hpp"
 
 ActsExamples::SimParticle ActsExamples::HepMC3Particle::particle(
     HepMC3::ConstGenParticlePtr particle) {
   // TODO this is probably not quite right
   ActsFatras::Barcode particleId;
   particleId.setParticle(particle->id());
+  Acts::PdgParticle pdg = static_cast<Acts::PdgParticle>(particle->pid());
   SimParticle fw(particleId, static_cast<Acts::PdgParticle>(particle->pid()),
-                 HepPID::charge(particle->pid()), particle->generated_mass());
+                 ActsFatras::findCharge(pdg), particle->generated_mass());
   fw.setDirection(particle->momentum().x(), particle->momentum().y(),
                   particle->momentum().z());
   fw.setAbsoluteMomentum(particle->momentum().p3mod());
@@ -76,7 +78,8 @@ double ActsExamples::HepMC3Particle::mass(
 
 double ActsExamples::HepMC3Particle::charge(
     const std::shared_ptr<HepMC3::GenParticle> particle) {
-  return HepPID::charge(particle->pid());
+  return ActsFatras::findCharge(
+      static_cast<Acts::PdgParticle>(particle->pid()));
 }
 
 void ActsExamples::HepMC3Particle::pdgID(

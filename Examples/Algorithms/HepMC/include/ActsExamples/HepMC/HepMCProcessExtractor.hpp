@@ -16,6 +16,8 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <memory>
+#include <string>
+#include <vector>
 
 class G4RunManager;
 
@@ -50,7 +52,7 @@ class HepMCProcessExtractor final : public ActsExamples::BareAlgorithm {
   };
 
   /// Constructor
-  HepMCProcessExtractor(Config&& cnf, Acts::Logging::Level level);
+  HepMCProcessExtractor(Config cfg, Acts::Logging::Level level);
   ~HepMCProcessExtractor();
 
   ActsExamples::ProcessCode execute(
@@ -60,4 +62,5 @@ class HepMCProcessExtractor final : public ActsExamples::BareAlgorithm {
   /// The config object
   Config m_cfg;
 };
+
 }  // namespace ActsExamples

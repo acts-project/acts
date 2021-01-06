@@ -11,6 +11,7 @@
 #include "ActsExamples/Io/HepMC3/HepMC3Particle.hpp"
 
 namespace {
+
 /// @brief Converts HepMC3::GenParticle objects into Acts
 /// @param genParticles list of HepMC3::GenParticle objects
 /// @return converted list
@@ -59,7 +60,9 @@ HepMC3::GenParticlePtr matchParticles(
   }
   return nullptr;
 }
+
 }  // namespace
+
 std::unique_ptr<ActsExamples::SimVertex>
 ActsExamples::HepMC3Vertex::processVertex(
     const std::shared_ptr<HepMC3::GenVertex> vertex) {
