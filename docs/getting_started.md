@@ -35,7 +35,6 @@ components.
 -   [Doxygen](http://doxygen.org) >= 1.8.11 for the documentation
 -   [Geant4](http://geant4.org/) for some examples
 -   [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) >= 3.1 for some examples
--   [HepPDT](http://lcginfo.cern.ch/pkg/HepPDT) >= 2.06 for some examples
 -   [Pythia8](http://home.thep.lu.se/~torbjorn/Pythia.html) for some examples
 -   [Intel Threading Building Blocks](https://01.org/tbb) for the examples
 -   [ROOT](https://root.cern.ch) >= 6.10 for the TGeo plugin and the examples

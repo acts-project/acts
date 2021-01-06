@@ -16,12 +16,10 @@
 #include <HepMC3/GenEvent.h>
 #include <HepMC3/GenParticle.h>
 #include <HepMC3/GenVertex.h>
-#include <HepPID/ParticleIDMethods.hh>
 
 namespace ActsExamples {
-
-/// Helper functions to convert HepMC3 event to the internal format.
 namespace HepMC3Event {
+
 ///
 /// Setter
 ///
@@ -139,5 +137,6 @@ std::vector<SimParticle> beams(const HepMC3::GenEvent& event);
 /// @param event event in HepMC data type
 /// @return List of final state particles
 std::vector<SimParticle> finalState(const HepMC3::GenEvent& event);
+
 }  // namespace HepMC3Event
 }  // namespace ActsExamples

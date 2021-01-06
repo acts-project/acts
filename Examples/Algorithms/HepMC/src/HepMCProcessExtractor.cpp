@@ -107,7 +107,7 @@ std::vector<ActsExamples::SimParticle> selectOutgoingParticles(
       if (procPartOut->attribute<HepMC3::IntAttribute>("TrackID")->value() ==
               trackID &&
           procPartOut->end_vertex()) {
-        for (const HepMC3::ConstGenParticlePtr dyingPartOut :
+        for (const HepMC3::ConstGenParticlePtr& dyingPartOut :
              procPartOut->end_vertex()->particles_out()) {
           finalStateParticles.push_back(
               ActsExamples::HepMC3Particle::particle(dyingPartOut));
@@ -134,7 +134,7 @@ std::vector<ActsExamples::SimParticle> selectOutgoingParticles(
       simParticle.setPosition4(pos4.x(), pos4.y(), pos4.z(), pos4.t());
       Acts::Vector3 mom3(mom4[0], mom4[1], mom4[2]);
       simParticle.setDirection(mom3.normalized());
-      simParticle.setAbsMomentum(mom3.norm());
+      simParticle.setAbsoluteMomentum(mom3.norm());
 
       // Store the particle
       finalStateParticles.push_back(simParticle);
@@ -177,10 +177,9 @@ void filterAndSort(
 ActsExamples::HepMCProcessExtractor::~HepMCProcessExtractor() {}
 
 ActsExamples::HepMCProcessExtractor::HepMCProcessExtractor(
-    ActsExamples::HepMCProcessExtractor::Config&& cnf,
-    Acts::Logging::Level level)
+    ActsExamples::HepMCProcessExtractor::Config cfg, Acts::Logging::Level level)
     : ActsExamples::BareAlgorithm("HepMCProcessExtractor", level),
-      m_cfg(std::move(cnf)) {
+      m_cfg(std::move(cfg)) {
   if (m_cfg.inputEvents.empty()) {
     throw std::invalid_argument("Missing input event collection");
   }

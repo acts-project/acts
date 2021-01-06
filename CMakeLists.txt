@@ -60,10 +60,7 @@ set_option_if(ACTS_BUILD_UNITTESTS ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_INTEGRATIONTESTS ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_EXAMPLES_DD4HEP ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_EXAMPLES_GEANT4 ACTS_BUILD_EVERYTHING)
-# HepMC3 is not available in an appropriate version on LCG95apython3 and
-# can thus not be used on all CI builds yet.
-# TODO include in EVERYTHING once LCG95apython3 support is dropped
-# set_option_if(ACTS_BUILD_EXAMPLES_HEPMC3 ACTS_BUILD_EVERYTHING)
+set_option_if(ACTS_BUILD_EXAMPLES_HEPMC3 ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_EXAMPLES_PYTHIA8 ACTS_BUILD_EVERYTHING)
 # any examples component activates the general option
 set_option_if(
@@ -203,7 +200,6 @@ if(ACTS_BUILD_EXAMPLES_HEPMC3)
   # must be version 3.1+. version 3.0 uses HepMC w/o number as module name.
   # version 3.1.0 misses the version variable so we can not check for it
   find_package(HepMC3 CONFIG REQUIRED)
-  find_package(HepPID REQUIRED)
   # HepMC version 3.1.0 has a broken cmake config: it searches for the
   # HepMC libray instead of the correct HepMC3 one and sets HEPMC_LIBRARIES
   # instead of the expected HEPMC3_LIBRARIES. fix manually.
