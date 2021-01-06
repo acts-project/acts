@@ -101,7 +101,9 @@ include(ActsComponentsHelpers) # handle components via add_..._if commands
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
 
-# dependency versions
+# minimal dependency versions. they are defined here in a single place so
+# they can be easily upgraded, although they might not be used if the
+# dependency is included via `add_subdirectory(...)`.
 set(_acts_autodiff_version 0.5.11)
 set(_acts_boost_version 1.71)
 set(_acts_dd4hep_version 1.11)
@@ -117,6 +119,17 @@ set(_acts_tbb_version 2020.1)
 #   is not uniformly supported even on compilers that nominally support C++17 
 find_package(Boost ${_acts_boost_version} REQUIRED CONFIG COMPONENTS filesystem program_options unit_test_framework)
 find_package(Eigen3 ${_acts_eigen3_version} REQUIRED CONFIG)
+
+# the `<project_name>_VERSION` variables set by `setup(... VERSION ...)` have
+# only local scope, i.e. they are not accessible her for dependencies added
+# via `add_subdirectory`. this overrides the `project(...)` funcion for
+# sub-projects such that the resulting `<project_name>_VERSION` has
+# global scope and is accessible within the main project later on.
+cmake_policy(SET CMP0048 NEW)
+macro(project)
+  _project(${ARGN})
+  set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION}" CACHE INTERNAL "")
+endmacro()
 
 # optional packages
 #
