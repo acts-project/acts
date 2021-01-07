@@ -52,23 +52,22 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/Modules)
 # `find_dependency` is a wrapper around `find_package` that automatically
 # handles QUIET and REQUIRED parameters.
 include(CMakeFindDependencyMacro)
-set(Boost_NO_BOOST_CMAKE ON)
-find_dependency(Boost @Boost_VERSION_STRING@ MODULE EXACT)
+find_dependency(Boost @Boost_VERSION_STRING@ CONFIG EXACT)
 find_dependency(Eigen3 @Eigen3_VERSION@ CONFIG EXACT)
+if(PluginAutodiff IN_LIST Acts_COMPONENTS)
+  find_dependency(autodiff @autodiff_VERSION@ CONFIG EXACT)
+endif()
 if(PluginDD4hep IN_LIST Acts_COMPONENTS)
   find_dependency(DD4hep @DD4hep_VERSION@ CONFIG EXACT)
 endif()
 if(PluginJson IN_LIST Acts_COMPONENTS)
-  # if nlohmann::json is compiled as part of the Acts build
-  # then the version is undefined; can not search for exac match
-  find_dependency(nlohmann_json @nlohman_json_VERSION@ CONFIG)
+  find_dependency(nlohmann_json @nlohmann_json_VERSION@ CONFIG EXACT)
 endif()
 if(PluginTGeo IN_LIST Acts_COMPONENTS)
   find_dependency(ROOT @ROOT_VERSION@ CONFIG EXACT)
 endif()
-if(PluginAutodiff IN_LIST Acts_COMPONENTS)
-  find_dependency(autodiff @autodiff_VERSION@ CONFIG EXACT)
-endif()
+
+# dependencies which cannot be searched in CONFIG mode
 if(PluginOnnx IN_LIST Acts_COMPONENTS)
   find_package(OnnxRuntime REQUIRED)
 endif()
