@@ -9,7 +9,9 @@
 #include "ActsExamples/Io/Root/RootNuclearInteractionParametersWriter.hpp"
 
 #include "ActsExamples/EventData/SimParticle.hpp"
+
 #include <stdexcept>
+
 #include <TFile.h>
 
 namespace {

@@ -8,11 +8,11 @@
 
 #include "ActsExamples/Io/Root/detail/NuclearInteractionParametrisation.hpp"
 
+#include <iostream>
 #include <limits>
+
 #include <Eigen/Eigenvalues>
 #include <TMath.h>
-
-#include <iostream>
 
 namespace NuclearInteractionParametrisation {
 namespace {
