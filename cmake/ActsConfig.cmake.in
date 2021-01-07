@@ -48,25 +48,19 @@ endforeach()
 # `find_dependency` is a wrapper around `find_package` that automatically
 # handles QUIET and REQUIRED parameters.
 include(CMakeFindDependencyMacro)
-set(Boost_NO_BOOST_CMAKE ON)
-find_dependency(Boost @Boost_VERSION_STRING@ MODULE EXACT)
+find_dependency(Boost @Boost_VERSION_STRING@ CONFIG EXACT)
 find_dependency(Eigen3 @Eigen3_VERSION@ CONFIG EXACT)
+if(PluginAutodiff IN_LIST Acts_COMPONENTS)
+  find_dependency(autodiff @autodiff_VERSION@ CONFIG EXACT)
+endif()
 if(PluginDD4hep IN_LIST Acts_COMPONENTS)
   find_dependency(DD4hep @DD4hep_VERSION@ CONFIG EXACT)
 endif()
 if(PluginJson IN_LIST Acts_COMPONENTS)
-  # if nlohmann::json is compiled as part of the Acts build
-  # then the version is undefined; can not search for exac match
-  find_dependency(nlohmann_json @nlohman_json_VERSION@ CONFIG)
-endif()
-if(PluginTGeo IN_LIST Acts_COMPONENTS)
-  find_dependency(ROOT @ROOT_VERSION@ CONFIG EXACT)
-endif()
-if(PluginAutodiff IN_LIST Acts_COMPONENTS)
-  find_dependency(autodiff @autodiff_VERSION@ CONFIG EXACT)
+  find_dependency(nlohmann_json @nlohmann_json_VERSION@ CONFIG EXACT)
 endif()
 if(PluginOnnx IN_LIST Acts_COMPONENTS)
-  find_package(OnnxRuntime QUIET)
+  find_dependency(OnnxRuntime)
   if(NOT OnnxRuntime_FOUND)
     message(FATAL_ERROR "Could not find OnnxRuntime. Since at the moment \
     OnnxRuntime does not provide a configuration file \
@@ -74,6 +68,9 @@ if(PluginOnnx IN_LIST Acts_COMPONENTS)
     copying the file 'FindOnnxRuntime.cmake' from the Acts repository \
     into your project's CMAKE_MODULE_PATH")
   endif()
+endif()
+if(PluginTGeo IN_LIST Acts_COMPONENTS)
+  find_dependency(ROOT @ROOT_VERSION@ CONFIG EXACT)
 endif()
 
 # load **all** available components. we can not just include the requested
