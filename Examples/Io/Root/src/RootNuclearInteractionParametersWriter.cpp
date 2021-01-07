@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -29,14 +29,14 @@ void labelEvents(
       // Search for the maximum in particles with the same PDG ID as the
       // interacting one
       if (p.pdg() == event.initialParticle.pdg())
-        maxMom = std::max(p.absMomentum(), maxMom);
+        maxMom = std::max(p.absoluteMomentum(), maxMom);
       // And the maximum among the others
       else
-        maxMomOthers = std::max(p.absMomentum(), maxMomOthers);
+        maxMomOthers = std::max(p.absoluteMomentum(), maxMomOthers);
     }
 
     // Label the initial momentum
-    event.initialMomentum = event.initialParticle.absMomentum();
+    event.initialMomentum = event.initialParticle.absoluteMomentum();
 
     // Label the indication that the interacting particle carries most of the
     // momentum
@@ -44,10 +44,10 @@ void labelEvents(
 
     // Get the final state p_T
     double pt = 0.;
-    Acts::Vector2D ptVec(0., 0.);
+    Acts::Vector2 ptVec(0., 0.);
     for (const ActsExamples::SimParticle& p : event.finalParticles) {
-      Acts::Vector2D particlePt =
-          p.momentum4().template segment<2>(Acts::eMom0);
+      Acts::Vector2 particlePt =
+          p.fourMomentum().template segment<2>(Acts::eMom0);
       ptVec[0] += particlePt[0];
       ptVec[1] += particlePt[1];
     }

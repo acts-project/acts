@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -116,14 +116,14 @@ EventProperties prepateMomenta(const EventCollection& events,
   for (const EventFraction& event : events) {
     // Test the multiplicity and type of the event
     if (event.multiplicity == multiplicity && event.soft == soft) {
-      const float initialMomentum = event.initialParticle.absMomentum();
+      const float initialMomentum = event.initialParticle.absoluteMomentum();
       float sum = 0.;
       std::vector<float> momenta;
       momenta.reserve(multiplicity);
       // Fill the vector with the scaled momenta
       for (const ActsExamples::SimParticle& p : event.finalParticles) {
-        sum += p.absMomentum();
-        momenta.push_back(p.absMomentum() / initialMomentum);
+        sum += p.absoluteMomentum();
+        momenta.push_back(p.absoluteMomentum() / initialMomentum);
       }
       // Add the scaled sum of momenta
       momenta.push_back(sum / initialMomentum);
@@ -198,12 +198,12 @@ EventProperties prepareInvariantMasses(const EventCollection& events,
   for (const EventFraction& event : events) {
     // Test the multiplicity and type of the event
     if (event.multiplicity == multiplicity && event.soft == soft) {
-      const auto fourVectorBefore = event.interactingParticle.momentum4();
+      const auto fourVectorBefore = event.interactingParticle.fourMomentum();
       std::vector<float> invariantMasses;
       invariantMasses.reserve(multiplicity);
       // Fill the vector with the invariant masses
       for (const ActsExamples::SimParticle& p : event.finalParticles) {
-        const auto fourVector = p.momentum4();
+        const auto fourVector = p.fourMomentum();
         invariantMasses.push_back(invariantMass(fourVectorBefore, fourVector));
       }
       result.push_back(invariantMasses);
