@@ -30,11 +30,9 @@ jobs:
         if: contains(matrix.image, 'lcg')
         run: echo "SETUP=${SETUP_LCG}" >> $GITHUB_ENV
       - name: Configure
-        # use manual mkdir+cd. CMake on LCG95 does not like -B ... -S ...
         run: >
           ${SETUP} &&
-          mkdir build && cd build &&
-          cmake ..
+          cmake -B build -S .
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
@@ -55,8 +53,7 @@ jobs:
       - name: Downstream configure
         run: >
           ${SETUP} &&
-          mkdir build-downstream && cd build-downstream &&
-          cmake ../Tests/DownstreamProject
+          cmake -B build-downstream -S Tests/DownstreamProject
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
