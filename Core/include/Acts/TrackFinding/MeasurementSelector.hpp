@@ -43,7 +43,7 @@ struct MeasurementSelectorCuts {
 /// If there is no compatible measurement, the measurement with the mininum
 /// chi2 will be selected and the status will be tagged as an outlier
 ///
-class CKFMeasurementSelector {
+class MeasurementSelector {
  public:
   /// Geometry-dependent cut configuration.
   ///
@@ -53,12 +53,12 @@ class CKFMeasurementSelector {
   using Config = Acts::GeometryHierarchyMap<MeasurementSelectorCuts>;
 
   /// @brief Default constructor
-  CKFMeasurementSelector() = default;
+  MeasurementSelector() = default;
   /// @brief Constructor with config and (non-owning) logger
   ///
   /// @param config a config instance
   /// @param logger a logger instance
-  CKFMeasurementSelector(Config cfg) : m_config(std::move(cfg)) {}
+  MeasurementSelector(Config cfg) : m_config(std::move(cfg)) {}
 
   /// @brief Operater that select the calibrated measurements compatible with
   /// the given track parameter on a surface
@@ -79,7 +79,7 @@ class CKFMeasurementSelector {
                           std::vector<std::pair<size_t, double>>& measChi2,
                           std::vector<size_t>& measCandidateIndices,
                           bool& isOutlier, LoggerWrapper logger) const {
-    ACTS_VERBOSE("Invoked CKFMeasurementSelector");
+    ACTS_VERBOSE("Invoked MeasurementSelector");
 
     // Return error if no measurement
     if (measurements.empty()) {

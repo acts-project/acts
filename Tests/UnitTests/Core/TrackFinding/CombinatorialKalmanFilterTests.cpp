@@ -25,8 +25,8 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
-#include "Acts/TrackFinding/CKFMeasurementSelector.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
+#include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -82,7 +82,7 @@ struct Fixture {
                                       KalmanSmoother>;
   using CombinatorialKalmanFilterOptions =
       Acts::CombinatorialKalmanFilterOptions<TestSourceLinkCalibrator,
-                                             Acts::CKFMeasurementSelector>;
+                                             Acts::MeasurementSelector>;
 
   Acts::GeometryContext geoCtx;
   Acts::MagneticFieldContext magCtx;
@@ -100,7 +100,7 @@ struct Fixture {
   // CKF implementation to be tested
   CombinatorialKalmanFilter ckf;
   // configuration for the measurement selector
-  Acts::CKFMeasurementSelector::Config measurementSelectorCfg = {
+  Acts::MeasurementSelector::Config measurementSelectorCfg = {
       // global default: no chi2 cut, only one measurement per surface
       {Acts::GeometryIdentifier(), {std::numeric_limits<double>::max(), 1u}},
   };
@@ -179,7 +179,7 @@ struct Fixture {
   CombinatorialKalmanFilterOptions makeCkfOptions() const {
     return CombinatorialKalmanFilterOptions(
         geoCtx, magCtx, calCtx, TestSourceLinkCalibrator(),
-        Acts::CKFMeasurementSelector(measurementSelectorCfg),
+        Acts::MeasurementSelector(measurementSelectorCfg),
         Acts::LoggerWrapper{*logger}, Acts::PropagatorPlainOptions());
   }
 };

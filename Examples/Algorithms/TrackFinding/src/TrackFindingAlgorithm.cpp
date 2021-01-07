@@ -59,7 +59,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   ActsExamples::TrackFindingAlgorithm::TrackFinderOptions options(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
       MeasurementCalibrator(measurements),
-      Acts::CKFMeasurementSelector(m_cfg.measurementSelectorCfg),
+      Acts::MeasurementSelector(m_cfg.measurementSelectorCfg),
       Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
 
   // Perform the track finding for each starting parameter
