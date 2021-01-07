@@ -100,7 +100,6 @@ void writeSurface(SurfaceWriter& writer, const Acts::Surface& surface,
 /// Write a single surface.
 void writeBoundarySurface(SurfaceWriter& writer,
                           const BoundarySurface& bsurface,
-                          bool /*splitBoundaries*/,
                           const Acts::GeometryContext& geoCtx) {
   SurfaceData data;
   fillSurfaceData(data, bsurface.surfaceRepresentation(), geoCtx);
@@ -109,8 +108,8 @@ void writeBoundarySurface(SurfaceWriter& writer,
 
 /// Write all child surfaces and descend into confined volumes.
 void writeVolume(SurfaceWriter& writer, const Acts::TrackingVolume& volume,
-                 bool writeSensitive, bool writeBoundaries,
-                 bool splitBoundaries, const Acts::GeometryContext& geoCtx) {
+                 bool writeSensitive, bool writeBoundary,
+                 const Acts::GeometryContext& geoCtx) {
   // process all layers that are directly stored within this volume
   if (volume.confinedLayers()) {
     for (auto layer : volume.confinedLayers()->arrayObjects()) {
@@ -128,17 +127,17 @@ void writeVolume(SurfaceWriter& writer, const Acts::TrackingVolume& volume,
       }
     }
     // This is a navigation volume, write the boundaries
-    if (writeBoundaries) {
+    if (writeBoundary) {
       for (auto bsurface : volume.boundarySurfaces()) {
-        writeBoundarySurface(writer, *bsurface, splitBoundaries, geoCtx);
+        writeBoundarySurface(writer, *bsurface, geoCtx);
       }
     }
   }
   // step down into hierarchy to process all child volumnes
   if (volume.confinedVolumes()) {
     for (auto confined : volume.confinedVolumes()->arrayObjects()) {
-      writeVolume(writer, *confined.get(), writeSensitive, writeBoundaries,
-                  splitBoundaries, geoCtx);
+      writeVolume(writer, *confined.get(), writeSensitive, writeBoundary,
+                  geoCtx);
     }
   }
 }
@@ -151,15 +150,15 @@ ProcessCode CsvTrackingGeometryWriter::write(const AlgorithmContext& ctx) {
   SurfaceWriter writer(
       perEventFilepath(m_cfg.outputDir, "detectors.csv", ctx.eventNumber),
       m_cfg.outputPrecision);
-  writeVolume(writer, *m_world, m_cfg.writeSensitives, m_cfg.writeSensitives,
-              m_cfg.splitBoundaries, ctx.geoContext);
+  writeVolume(writer, *m_world, m_cfg.writeSensitive, m_cfg.writeSensitive,
+              ctx.geoContext);
   return ProcessCode::SUCCESS;
 }
 
 ProcessCode CsvTrackingGeometryWriter::endRun() {
   SurfaceWriter writer(joinPaths(m_cfg.outputDir, "detectors.csv"),
                        m_cfg.outputPrecision);
-  writeVolume(writer, *m_world, m_cfg.writeSensitives, m_cfg.writeSensitives,
-              m_cfg.splitBoundaries, Acts::GeometryContext());
+  writeVolume(writer, *m_world, m_cfg.writeSensitive, m_cfg.writeSensitive,
+              Acts::GeometryContext());
   return ProcessCode::SUCCESS;
 }
