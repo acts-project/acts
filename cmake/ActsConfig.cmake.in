@@ -40,6 +40,10 @@ foreach(_component ${Acts_FIND_COMPONENTS})
   endif()
 endforeach()
 
+# add this to the current CMAKE_MODULE_PATH to find third party modules 
+# that not provide a XXXConfig.cmake or XXX-config.cmake file
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/thirdparty)
+
 # find external dependencies that are needed to link with Acts. since the
 # exported Acts targets only store the linked external target names they need
 # to be found again. this avoids hard-coded paths and makes the installed
@@ -66,14 +70,7 @@ if(PluginAutodiff IN_LIST Acts_COMPONENTS)
   find_dependency(autodiff @autodiff_VERSION@ CONFIG EXACT)
 endif()
 if(PluginOnnx IN_LIST Acts_COMPONENTS)
-  find_package(OnnxRuntime QUIET)
-  if(NOT OnnxRuntime_FOUND)
-    message(FATAL_ERROR "Could not find OnnxRuntime. Since at the moment \
-    OnnxRuntime does not provide a configuration file \
-    ('OnnxRuntimeConfig.cmake' or 'onnxruntime-config.cmake'), consider \
-    copying the file 'FindOnnxRuntime.cmake' from the Acts repository \
-    into your project's CMAKE_MODULE_PATH")
-  endif()
+  find_package(OnnxRuntime REQUIRED)
 endif()
 
 # load **all** available components. we can not just include the requested

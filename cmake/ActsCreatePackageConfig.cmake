@@ -22,6 +22,13 @@ install(
     ${PROJECT_BINARY_DIR}/ActsConfigVersion.cmake
     ${PROJECT_BINARY_DIR}/ActsConfig.cmake
   DESTINATION ${install_package_config_dir})
+  
+# install third party FindXXX.cmake files
+install(
+  FILES
+    ${CMAKE_CURRENT_LIST_DIR}/FindOnnxRuntime.cmake
+  DESTINATION ${install_package_config_dir}/thirdparty)    
+
 # install target configs for all available components
 foreach(_component ${_components})
   install(
