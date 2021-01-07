@@ -54,7 +54,7 @@ using BoundarySurface = Acts::BoundarySurfaceT<Acts::TrackingVolume>;
 
 /// Write a single surface.
 void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
-                     const Acts::GeometryContext& geoCtx) {
+                     const Acts::GeometryContext& geoCtx) noexcept(false) {
   // encoded and partially decoded geometry identifier
   data.geometry_id = surface.geometryId().value();
   data.volume_id = surface.geometryId().volume();
@@ -84,6 +84,12 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
   const auto& bounds = surface.bounds();
   data.bounds_type = static_cast<int>(bounds.type());
   auto boundValues = bounds.values();
+
+  if (boundValues.size() > dataBoundParameters.size()) {
+    throw std::invalid_argument(
+        "Bound types with too many parameters. Should never happen.");
+  }
+
   for (size_t ipar = 0; ipar < boundValues.size(); ++ipar) {
     (*dataBoundParameters[ipar]) = boundValues[ipar];
   }
