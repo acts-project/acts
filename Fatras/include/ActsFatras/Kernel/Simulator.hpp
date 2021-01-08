@@ -34,17 +34,23 @@ namespace ActsFatras {
 
 /// Single particle simulator with a fixed propagator and physics list.
 ///
-/// @tparam propagator_t is the type of the underlying propagator
-/// @tparam physics_list_t is the type of the interaction physics list
-/// @tparam hit_surface_selector_t is the type that selects hit surfaces
-/// @tparam decay_t is the type of the decay module
-template <typename propagator_t, typename physics_list_t,
-          typename hit_surface_selector_t, typename decay_t>
+/// @tparam generator_t random number generator
+/// @tparam continuous_physics_t physics lists for continuous interactions
+/// @tparam pointlike_physics_t physics lists for point-like interactions
+/// @tparam hit_surface_selector_t sensitive hit surfaces selector
+/// @tparam decay_t decay module
+template <typename propagator_t, typename continuous_physics_t,
+          typename pointlike_physics_t, typename hit_surface_selector_t,
+          typename decay_t>
 struct ParticleSimulator {
   /// How and within which geometry to propagate the particle.
   propagator_t propagator;
-  /// Interactions to be simulated. Will be copied to the per-call interactor.
-  physics_list_t physics;
+  /// Physics list detailing the simulated continuous interactions.
+  /// Will be copied to the per-call interactor.
+  continuous_physics_t continuous;
+  /// Physics list detailing the simulated point-like interactions.
+  /// Will be copied to the per-call interactor.
+  pointlike_physics_t pointlike;
   /// Where hits are registiered. Will be copied to the per-call interactor.
   hit_surface_selector_t selectHitSurface;
   /// Decay module.
@@ -78,7 +84,8 @@ struct ParticleSimulator {
 
     // propagator-related additional types
     using Interactor =
-        detail::Interactor<generator_t, physics_list_t, hit_surface_selector_t>;
+        detail::Interactor<generator_t, continuous_physics_t,
+                           pointlike_physics_t, hit_surface_selector_t>;
     using InteractorResult = typename Interactor::result_type;
     using Actions = Acts::ActionList<Interactor>;
     using Abort = Acts::AbortList<typename Interactor::ParticleNotAlive,
@@ -93,7 +100,8 @@ struct ParticleSimulator {
     // setup the interactor as part of the propagator options
     auto &interactor = options.actionList.template get<Interactor>();
     interactor.generator = &generator;
-    interactor.physics = physics;
+    interactor.continuous = continuous;
+    interactor.pointlike = pointlike;
     interactor.selectHitSurface = selectHitSurface;
     interactor.initialParticle = particle;
     interactor.properTimeLimit =
