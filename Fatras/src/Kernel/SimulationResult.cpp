@@ -15,10 +15,10 @@ std::ostream& ActsFatras::operator<<(std::ostream& os,
   switch (status) {
     case SimulationParticleStatus::eAlive:
       return (os << "alive");
-    case SimulationParticleStatus::eKilled:
-      return (os << "killed");
+    case SimulationParticleStatus::eInteracted:
+      return (os << "killed-by-interaction");
     case SimulationParticleStatus::eDecayed:
-      return (os << "decayed");
+      return (os << "killed-by-decay");
     default:
       return (os << "invalid");
   }

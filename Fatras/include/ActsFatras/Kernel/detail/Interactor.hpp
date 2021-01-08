@@ -153,7 +153,7 @@ struct Interactor {
           slab.scaleThickness(cosIncidenceInv);
           // physics list returns true if the particle was killed
           if (physics(*generator, slab, after, result.generatedParticles)) {
-            result.particleStatus = SimulationParticleStatus::eKilled;
+            result.particleStatus = SimulationParticleStatus::eInteracted;
           }
           // add the accumulated material; assumes the full material was passsed
           // event if the particle was killed.

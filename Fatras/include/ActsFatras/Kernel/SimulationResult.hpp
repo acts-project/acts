@@ -21,8 +21,8 @@ namespace ActsFatras {
 enum class SimulationParticleStatus {
   /// Particle is alive and can be simulated further.
   eAlive,
-  /// Particle has been killed e.g. by an interaction.
-  eKilled,
+  /// Particle has been killed by an interaction.
+  eInteracted,
   /// Particle has decayed.
   eDecayed,
 };
