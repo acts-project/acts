@@ -62,16 +62,28 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       Acts::MeasurementSelector(m_cfg.measurementSelectorCfg),
       Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
 
-  // Perform the track finding for each starting parameter
+  // Perform the track finding for all starting parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
                                           << " seeds.");
   auto results = m_cfg.findTracks(sourceLinks, initialParameters, options);
-
-  for (const auto& trackFindingOutput : results) {
-    // Create a Trajectories result struct
-    trajectories.emplace_back(std::move(trackFindingOutput.fittedStates),
-                              std::move(trackFindingOutput.trackTips),
-                              std::move(trackFindingOutput.fittedParameters));
+  // Loop over the track finding results for all starting parameters
+  for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
+    // The result for this seed
+    auto& result = results[iseed];
+    if (result.ok()) {
+      // Get the track finding output object
+      const auto& trackFindingOutput = result.value();
+      // Create a Trajectories result struct
+      trajectories.emplace_back(std::move(trackFindingOutput.fittedStates),
+                                std::move(trackFindingOutput.trackTips),
+                                std::move(trackFindingOutput.fittedParameters));
+    } else {
+      ACTS_WARNING("Track finding failed for seed " << iseed << " with error"
+                                                    << result.error());
+      // Track finding failed. Add an empty result so the output container has
+      // the same number of entries as the input.
+      trajectories.push_back(Trajectories());
+    }
   }
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));

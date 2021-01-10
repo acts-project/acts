@@ -28,8 +28,8 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   using TrackFinderOptions =
       Acts::CombinatorialKalmanFilterOptions<MeasurementCalibrator,
                                              Acts::MeasurementSelector>;
-  using TrackFinderResult =
-      std::vector<Acts::CombinatorialKalmanFilterResult<IndexSourceLink>>;
+  using TrackFinderResult = std::vector<
+      Acts::Result<Acts::CombinatorialKalmanFilterResult<IndexSourceLink>>>;
   using TrackFinderFunction = std::function<TrackFinderResult(
       const IndexSourceLinkContainer&, const TrackParametersContainer&,
       const TrackFinderOptions&)>;

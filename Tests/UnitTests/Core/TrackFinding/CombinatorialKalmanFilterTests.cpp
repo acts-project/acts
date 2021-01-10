@@ -201,16 +201,22 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   options.referenceSurface = &(*pSurface);
 
   // run the CKF for all initial track states
-  auto tracks = f.ckf.findTracks(f.sourceLinks, f.startParameters, options);
-  // There should be three found tracks with three initial track states
-  BOOST_CHECK_EQUAL(tracks.size(), 3u);
+  auto results = f.ckf.findTracks(f.sourceLinks, f.startParameters, options);
+  // There should be three track finding results with three initial track states
+  BOOST_CHECK_EQUAL(results.size(), 3u);
 
   // check the found tracks
   for (size_t trackId = 0u; trackId < f.startParameters.size(); ++trackId) {
     const auto& params = f.startParameters[trackId];
     BOOST_TEST_INFO("initial parameters before detector:\n" << params);
 
-    auto val = tracks[trackId];
+    auto& res = results[trackId];
+    if (not res.ok()) {
+      BOOST_TEST_INFO(res.error() << " " << res.error().message());
+    }
+    BOOST_REQUIRE(res.ok());
+
+    auto val = *res;
     // with the given measurement selection cuts, only one trajectory for the
     // given input parameters should be found.
     BOOST_CHECK_EQUAL(val.trackTips.size(), 1u);
@@ -228,7 +234,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   }
 }
 
-// TODO test currently fails w/ a smoothing error
 BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   Fixture f(0_T);
 
@@ -241,16 +246,22 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   options.referenceSurface = &(*pSurface);
 
   // run the CKF for all initial track states
-  auto tracks = f.ckf.findTracks(f.sourceLinks, f.endParameters, options);
+  auto results = f.ckf.findTracks(f.sourceLinks, f.endParameters, options);
   // There should be three found tracks with three initial track states
-  BOOST_CHECK_EQUAL(tracks.size(), 3u);
+  BOOST_CHECK_EQUAL(results.size(), 3u);
 
   // check the found tracks
   for (size_t trackId = 0u; trackId < f.endParameters.size(); ++trackId) {
     const auto& params = f.endParameters[trackId];
     BOOST_TEST_INFO("initial parameters after detector:\n" << params);
 
-    auto val = tracks[trackId];
+    auto& res = results[trackId];
+    if (not res.ok()) {
+      BOOST_TEST_INFO(res.error() << " " << res.error().message());
+    }
+    BOOST_REQUIRE(res.ok());
+
+    auto val = *res;
     // with the given measurement selection cuts, only one trajectory for the
     // given input parameters should be found.
     BOOST_CHECK_EQUAL(val.trackTips.size(), 1u);
