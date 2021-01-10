@@ -238,6 +238,8 @@ int runRecCKFTracks(int argc, char* argv[],
   perfWriterCfg.inputTrajectories = trackFindingCfg.outputTrajectories;
   perfWriterCfg.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
+  // The bottom seed on a pixel detector 'eats' two measurements
+  perfWriterCfg.nMeasurementsMin = particleSelectorCfg.nHitsMin - 2;
   perfWriterCfg.outputDir = outputDir;
 #ifdef ACTS_PLUGIN_ONNX
   // Onnx plugin related options

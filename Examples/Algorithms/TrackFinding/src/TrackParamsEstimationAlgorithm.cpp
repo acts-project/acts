@@ -76,40 +76,31 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
           Acts::Vector3(bottomSP->x(), bottomSP->y(), bottomSP->z()));
       // Estimate the track parameters from seed
       auto optParams = Acts::estimateTrackParamsFromSeed(
-          ctx.geoContext, seed.sp(), *surface, field, m_cfg.bFieldZMin);
+          ctx.geoContext, seed.sp(), *surface, field, m_cfg.bFieldMin);
       if (not optParams.has_value()) {
         ACTS_WARNING("Estimation of track parameters from seed "
                      << iseed << " in region " << iregion << " failed.");
         continue;
       } else {
         const auto& params = optParams.value();
-        const double p = 1.0 / std::abs(params[Acts::eBoundQOverP]);
-        const double pt = p * std::sin(params[Acts::eBoundTheta]);
         double charge =
             std::abs(params[Acts::eBoundQOverP]) / params[Acts::eBoundQOverP];
 
         // compute momentum-dependent resolutions
-        const double sigmaD0 =
-            m_cfg.sigmaD0 +
-            m_cfg.sigmaD0PtA * std::exp(-1.0 * std::abs(m_cfg.sigmaD0PtB) * pt);
-        const double sigmaZ0 =
-            m_cfg.sigmaZ0 +
-            m_cfg.sigmaZ0PtA * std::exp(-1.0 * std::abs(m_cfg.sigmaZ0PtB) * pt);
-        const double sigmaP = m_cfg.sigmaPRel * p;
-        // var(q/p) = (d(1/p)/dp)² * var(p) = (-1/p²)² * var(p)
-        const double sigmaQOverP = sigmaP / (p * p);
-        // shortcuts for other resolutions
-        const double sigmaT0 = m_cfg.sigmaT0;
-        const double sigmaPhi = m_cfg.sigmaPhi;
-        const double sigmaTheta = m_cfg.sigmaTheta;
+        const double& sigmaLoc0 = m_cfg.sigmaLoc0;
+        const double& sigmaLoc1 = m_cfg.sigmaLoc1;
+        const double& sigmaPhi = m_cfg.sigmaPhi;
+        const double& sigmaTheta = m_cfg.sigmaTheta;
+        const double& sigmaQOverP = m_cfg.sigmaQOverP;
+        const double& sigmaT0 = m_cfg.sigmaT0;
 
         Acts::BoundSymMatrix cov = Acts::BoundSymMatrix::Zero();
-        cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = sigmaD0 * sigmaD0;
-        cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = sigmaZ0 * sigmaZ0;
-        cov(Acts::eBoundTime, Acts::eBoundTime) = sigmaT0 * sigmaT0;
+        cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = sigmaLoc0 * sigmaLoc0;
+        cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = sigmaLoc1 * sigmaLoc1;
         cov(Acts::eBoundPhi, Acts::eBoundPhi) = sigmaPhi * sigmaPhi;
         cov(Acts::eBoundTheta, Acts::eBoundTheta) = sigmaTheta * sigmaTheta;
         cov(Acts::eBoundQOverP, Acts::eBoundQOverP) = sigmaQOverP * sigmaQOverP;
+        cov(Acts::eBoundTime, Acts::eBoundTime) = sigmaT0 * sigmaT0;
 
         trackParameters.emplace_back(surface->getSharedPtr(), params, charge,
                                      cov);

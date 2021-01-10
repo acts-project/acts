@@ -244,7 +244,8 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // The z coordinate of the bottom space point along the magnetic field
   // direction
   double zDist = bGlobal.dot(bField) / bField.norm();
-  // The estimated time in ms if the space point has global position in mm
+  // The estimated time in Acts::UnitConstants::s if the space point has global
+  // position in mm
   params[eBoundTime] = zDist / vz;
 
   return params;
