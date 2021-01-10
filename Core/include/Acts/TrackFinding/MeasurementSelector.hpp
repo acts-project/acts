@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/EventData/Measurement.hpp"
-//#include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
@@ -21,7 +20,7 @@
 
 namespace Acts {
 
-/// Selection cuts for associating calibrated measurements with predicted track
+/// Selection cuts for associating measurements with predicted track
 /// parameters on a surface.
 ///
 /// The default configuration only takes the best matching calibrated
@@ -33,7 +32,7 @@ struct MeasurementSelectorCuts {
   size_t numMeasurementsCutOff = 1;
 };
 
-/// @brief Calibrated measurement selection struct selecting those calibrated
+/// @brief Measurement selection struct selecting those calibrated
 /// measurements compatible with the given track parameter against provided
 /// criteria on one surface
 ///
@@ -60,13 +59,13 @@ class MeasurementSelector {
   /// @param logger a logger instance
   MeasurementSelector(Config cfg) : m_config(std::move(cfg)) {}
 
-  /// @brief Operater that select the calibrated measurements compatible with
+  /// @brief Operater that select the measurements compatible with
   /// the given track parameter on a surface
   ///
-  /// @tparam measurement_t The type of calibrated measurement
+  /// @tparam measurement_t The type of measurement
   ///
   /// @param predictedParams The predicted track parameter on a surface
-  /// @param measurements The pool of calibrated measurements
+  /// @param measurements The pool of measurements
   /// @param measChi2 The container for index and chi2 of intermediate
   /// measurement candidates
   /// @param measCandidateIndices The container for index of final measurement
@@ -112,21 +111,20 @@ class MeasurementSelector {
     // Loop over all measurements to select the compatible measurements
     for (const auto& measurement : measurements) {
       std::visit(
-          [&](const auto& calibrated) {
+          [&](const auto& meas) {
             // Take the projector (measurement mapping function)
-            const auto& H = calibrated.projector();
+            const auto& H = meas.projector();
             // Take the parameter covariance
             const auto& predictedCovariance = *predictedParams.covariance();
             // Get the residuals
-            const auto& res =
-                calibrated.residuals(predictedParams.parameters());
+            const auto& res = meas.residuals(predictedParams.parameters());
             // Get the chi2
-            double chi2 = (res.transpose() *
-                           ((calibrated.covariance() +
-                             H * predictedCovariance * H.transpose()))
-                               .inverse() *
-                           res)
-                              .eval()(0, 0);
+            double chi2 =
+                (res.transpose() *
+                 ((meas.covariance() + H * predictedCovariance * H.transpose()))
+                     .inverse() *
+                 res)
+                    .eval()(0, 0);
 
             ACTS_VERBOSE("Chi2: " << chi2);
             // Push the measurement index and chi2 if satisfying the criteria
