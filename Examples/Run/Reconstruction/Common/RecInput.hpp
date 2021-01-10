@@ -16,7 +16,6 @@
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
-#include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
 #include <memory>
