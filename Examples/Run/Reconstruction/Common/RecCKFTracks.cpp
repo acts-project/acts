@@ -93,17 +93,23 @@ int runRecCKFTracks(int argc, char* argv[],
                                           simHitReaderCfg.outputSimHits);
 
   // Run the particle selection
-  auto particleSelectorCfg =
-      runParticleSelection(vm, sequencer, particleReader.outputParticles,
-                           hitSmearingCfg.outputMeasurementParticlesMap);
+  // The pre-selection will select truth particles satisfying provided criteria
+  // from all particles read in by particle reader for further processing. It
+  // has no impact on the truth hits read-in by the cluster reader.
+  TruthSeedSelector::Config particleSelectorCfg;
+  particleSelectorCfg.inputParticles = particleReader.outputParticles;
+  particleSelectorCfg.inputMeasurementParticlesMap =
+      hitSmearingCfg.outputMeasurementParticlesMap;
+  particleSelectorCfg.outputParticles = "particles_selected";
+  particleSelectorCfg.ptMin = 1_GeV;
+  particleSelectorCfg.nHitsMin = 9;
+  sequencer.addAlgorithm(
+      std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));
 
   // The selected particles
   const auto& inputParticles = particleSelectorCfg.outputParticles;
 
-  // Run the particle smearing
-  // auto particleSmearingCfg =
-  //    runParticleSmearing(vm, sequencer, rnd, inputParticles);
-
+  // Run particle smearing or run seed finding
   auto trackParams = [&](bool useTruthSeeds) {
     if (useTruthSeeds) {
       // Run the particle smearing

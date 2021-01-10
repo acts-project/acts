@@ -74,18 +74,3 @@ ActsExamples::ParticleSmearing::Config runParticleSmearing(
     ActsExamples::Sequencer& sequencer,
     std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
     const std::string& inputParticles);
-
-/// Run particle selection
-///
-/// @param variables The configuration variables
-/// @param sequencer The framework sequencer
-/// @param inputParticles The input particle collection (e.g. from particle
-/// reader)
-/// @param inputMeasurementParticlesMap The input map between measurement and
-/// particle (e.g. from hit smearing)
-///
-/// @return config used for particle selection
-ActsExamples::TruthSeedSelector::Config runParticleSelection(
-    const ActsExamples::Options::Variables& vars,
-    ActsExamples::Sequencer& sequencer, const std::string& inputParticles,
-    const std::string& inputMeasurementParticlesMap);

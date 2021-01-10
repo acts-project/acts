@@ -83,6 +83,23 @@ int runSeedingExample(int argc, char* argv[],
   auto hitSmearingCfg = runSimHitSmearing(vm, sequencer, rnd, tGeometry,
                                           simHitReaderCfg.outputSimHits);
 
+  // Run the particle selection
+  // The pre-selection will select truth particles satisfying provided criteria
+  // from all particles read in by particle reader for further processing. It
+  // has no impact on the truth hits read-in by the cluster reader.
+  TruthSeedSelector::Config particleSelectorCfg;
+  particleSelectorCfg.inputParticles = particleReader.outputParticles;
+  particleSelectorCfg.inputMeasurementParticlesMap =
+      hitSmearingCfg.outputMeasurementParticlesMap;
+  particleSelectorCfg.outputParticles = "particles_selected";
+  particleSelectorCfg.ptMin = 1_GeV;
+  particleSelectorCfg.nHitsMin = 9;
+  sequencer.addAlgorithm(
+      std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));
+
+  // The selected particles
+  const auto& inputParticles = particleSelectorCfg.outputParticles;
+
   // Create space points
   SpacePointMaker::Config spCfg;
   spCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
@@ -147,7 +164,7 @@ int runSeedingExample(int argc, char* argv[],
   // Seeding performance Writers
   TrackFinderPerformanceWriter::Config tfPerfCfg;
   tfPerfCfg.inputProtoTracks = seedingCfg.outputProtoTracks;
-  tfPerfCfg.inputParticles = particleReader.outputParticles;
+  tfPerfCfg.inputParticles = inputParticles;
   tfPerfCfg.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
   tfPerfCfg.outputDir = outputDir;
@@ -157,7 +174,7 @@ int runSeedingExample(int argc, char* argv[],
 
   SeedingPerformanceWriter::Config seedPerfCfg;
   seedPerfCfg.inputSeeds = seedingCfg.outputSeeds;
-  seedPerfCfg.inputParticles = particleReader.outputParticles;
+  seedPerfCfg.inputParticles = inputParticles;
   seedPerfCfg.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
   seedPerfCfg.outputDir = outputDir;

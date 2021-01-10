@@ -84,9 +84,17 @@ int runRecTruthTracks(int argc, char* argv[],
   auto hitSmearingCfg = runSimHitSmearing(vm, sequencer, rnd, trackingGeometry,
                                           simHitReaderCfg.outputSimHits);
   // Run the particle selection
-  auto particleSelectorCfg =
-      runParticleSelection(vm, sequencer, particleReader.outputParticles,
-                           hitSmearingCfg.outputMeasurementParticlesMap);
+  // The pre-selection will select truth particles satisfying provided criteria
+  // from all particles read in by particle reader for further processing. It
+  // has no impact on the truth hits read-in by the cluster reader.
+  TruthSeedSelector::Config particleSelectorCfg;
+  particleSelectorCfg.inputParticles = particleReader.outputParticles;
+  particleSelectorCfg.inputMeasurementParticlesMap =
+      hitSmearingCfg.outputMeasurementParticlesMap;
+  particleSelectorCfg.outputParticles = "particles_selected";
+  particleSelectorCfg.nHitsMin = 1;
+  sequencer.addAlgorithm(
+      std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));
 
   // The selected particles
   const auto& inputParticles = particleSelectorCfg.outputParticles;
