@@ -23,8 +23,8 @@ namespace Acts {
 /// Selection cuts for associating measurements with predicted track
 /// parameters on a surface.
 ///
-/// The default configuration only takes the best matching calibrated
-/// measurement without a cut on the local chi2.
+/// The default configuration only takes the best matching measurement without a
+/// cut on the local chi2.
 struct MeasurementSelectorCuts {
   /// Maximum local chi2 contribution.
   double chi2CutOff = std::numeric_limits<double>::max();
@@ -32,9 +32,8 @@ struct MeasurementSelectorCuts {
   size_t numMeasurementsCutOff = 1;
 };
 
-/// @brief Measurement selection struct selecting those calibrated
-/// measurements compatible with the given track parameter against provided
-/// criteria on one surface
+/// @brief Measurement selection struct selecting those measurements compatible
+/// with the given track parameter against provided criteria on one surface
 ///
 /// The selection criteria could be allowed maximum chi2
 /// and allowed maximum number of measurements on one surface
@@ -71,6 +70,7 @@ class MeasurementSelector {
   /// @param measCandidateIndices The container for index of final measurement
   /// candidates
   /// @param isOutlier The indicator for outlier or not
+  /// @param logger The logger wrapper
   ///
   template <typename measurement_t>
   Result<void> operator()(const BoundTrackParameters& predictedParams,

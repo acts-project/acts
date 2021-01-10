@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -183,7 +183,7 @@ struct CombinatorialKalmanFilterResult {
 ///
 ///
 /// @tparam propagator_t Type of the propagator
-/// @tparam updater_t Type of the Kalman
+/// @tparam updater_t Type of the Kalman updater
 /// @tparam smoother_t Type of the Kalman smoother
 /// @tparam branch_stopper_t Type of the branch stopper
 ///
@@ -268,7 +268,7 @@ class CombinatorialKalmanFilter {
     /// @tparam stepper_t Type of the stepper
     ///
     /// @param state is the mutable propagator state object
-    /// @param stepper The stepper in use
+    /// @param stepper is the stepper in use
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
@@ -447,7 +447,7 @@ class CombinatorialKalmanFilter {
     /// @tparam stepper_t Type of the stepper
     ///
     /// @param state is the mutable propagator state object
-    /// @param stepper The stepper in use
+    /// @param stepper is the stepper in use
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t>
     void reset(propagator_state_t& state, stepper_t& stepper,
@@ -742,6 +742,7 @@ class CombinatorialKalmanFilter {
     /// @param neighborTip The neighbor state tip on this surface (the predicted
     /// parameters could be shared between neighbors)
     /// @param sharedTip The tip of state with shared source link
+    /// @param logger The logger wrapper
     ///
     /// @return The tip of added state and its state
     Result<std::pair<size_t, TipState>> addSourcelinkState(
@@ -841,6 +842,7 @@ class CombinatorialKalmanFilter {
     /// @param result is the mutable result state object
     /// and which to leave invalid
     /// @param prevTip The index of the previous state
+    /// @param logger The logger wrapper
     ///
     /// @return The tip of added state
     size_t addHoleState(const TrackStatePropMask& stateMask,
@@ -885,6 +887,7 @@ class CombinatorialKalmanFilter {
     /// @param result is the mutable result state object
     /// and which to leave invalid
     /// @param prevTip The index of the previous state
+    /// @param logger The logger wrapper
     ///
     /// @return The tip of added state
     size_t addPassiveState(const TrackStatePropMask& stateMask,
@@ -905,7 +908,7 @@ class CombinatorialKalmanFilter {
       typeFlags.set(TrackStateFlag::MaterialFlag);
       typeFlags.set(TrackStateFlag::ParameterFlag);
 
-      auto& [curvilinearParams, jacobian, pathLength] = curvilinearState;
+      const auto& [curvilinearParams, jacobian, pathLength] = curvilinearState;
       // Fill the track state
       trackStateProxy.predicted() = curvilinearParams.parameters();
       trackStateProxy.predictedCovariance() = *curvilinearParams.covariance();
@@ -1141,8 +1144,9 @@ class CombinatorialKalmanFilter {
   /// Combinatorial Kalman Filter implementation, calls the the Kalman filter
   /// and smoother
   ///
-  /// @tparam source_link_container_t Source link container type
-  /// @tparam start_parameters_container_t Initial parameters container type
+  /// @tparam source_link_container_t Type of the source link container
+  /// @tparam start_parameters_container_t Type of the initial parameters
+  /// container
   /// @tparam calibrator_t Type of the source link calibrator
   /// @tparam measurement_selector_t Type of the measurement selector
   /// @tparam parameters_t Type of parameters used for local parameters
@@ -1156,7 +1160,8 @@ class CombinatorialKalmanFilter {
   /// @c calibrator_t's job to turn them into calibrated measurements used in
   /// the track finding.
   ///
-  /// @return a container of output tracks for all the initial track parameters
+  /// @return a container of track finding result for all the initial track
+  /// parameters
   template <typename source_link_container_t,
             typename start_parameters_container_t, typename calibrator_t,
             typename measurement_selector_t,
