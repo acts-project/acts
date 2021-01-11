@@ -79,7 +79,9 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
   data.rot_zw = transform(2, 2);
 
   std::array<float*, 7> dataBoundParameters = {
-      &data.p0, &data.p1, &data.p2, &data.p3, &data.p4, &data.p5, &data.p6};
+      &data.bound_param0, &data.bound_param1, &data.bound_param2,
+      &data.bound_param3, &data.bound_param4, &data.bound_param5,
+      &data.bound_param6};
 
   const auto& bounds = surface.bounds();
   data.bounds_type = static_cast<int>(bounds.type());

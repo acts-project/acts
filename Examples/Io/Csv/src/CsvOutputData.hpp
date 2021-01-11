@@ -144,18 +144,19 @@ struct SurfaceData {
   float rot_zu, rot_zv, rot_zw;
   /// The type of the surface bpounds object, determines the parameters filled
   int bounds_type;
-  float p0 = -1.f;
-  float p1 = -1.f;
-  float p2 = -1.f;
-  float p3 = -1.f;
-  float p4 = -1.f;
-  float p5 = -1.f;
-  float p6 = -1.f;
+  float bound_param0 = -1.f;
+  float bound_param1 = -1.f;
+  float bound_param2 = -1.f;
+  float bound_param3 = -1.f;
+  float bound_param4 = -1.f;
+  float bound_param5 = -1.f;
+  float bound_param6 = -1.f;
 
   DFE_NAMEDTUPLE(SurfaceData, geometry_id, volume_id, boundary_id, layer_id,
                  module_id, cx, cy, cz, rot_xu, rot_xv, rot_xw, rot_yu, rot_yv,
-                 rot_yw, rot_zu, rot_zv, rot_zw, bounds_type, p0, p1, p2, p3,
-                 p4, p5, p6);
+                 rot_yw, rot_zu, rot_zv, rot_zw, bounds_type, bound_param0,
+                 bound_param1, bound_param2, bound_param3, bound_param4,
+                 bound_param5, bound_param6);
 };
 
 }  // namespace ActsExamples
