@@ -15,7 +15,7 @@
 
 #include <dfe/dfe_io_dsv.hpp>
 
-#include "TrackMlData.hpp"
+#include "CsvOutputData.hpp"
 
 ActsExamples::CsvSimHitReader::CsvSimHitReader(
     const ActsExamples::CsvSimHitReader::Config& cfg, Acts::Logging::Level lvl)
