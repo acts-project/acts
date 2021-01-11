@@ -21,7 +21,7 @@
 
 #include <dfe/dfe_io_dsv.hpp>
 
-#include "TrackMlData.hpp"
+#include "CsvOutputData.hpp"
 
 ActsExamples::CsvParticleReader::CsvParticleReader(
     const ActsExamples::CsvParticleReader::Config& cfg,
