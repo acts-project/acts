@@ -8,6 +8,7 @@ find_package(
   COMPONENTS
     Core
     Fatras
+    PluginAutodiff
     PluginDD4hep
     PluginDigitization
     PluginIdentification

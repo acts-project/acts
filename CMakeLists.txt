@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.14)
 
 # LCG sets CPATH, which gets treated like -I by the compiler. We want to ignore
 # warnings from libraries, by unsetting it here, it gets processed by the usual
@@ -20,13 +20,13 @@ project(Acts VERSION ${_acts_version} LANGUAGES CXX)
 #
 # NOTE if you are adding a new option make sure that is defined in such a way
 #   that it is off/empty by default. if you think that is not possible, then
-#   it should probably be not an optional component.
+#   it probably is not an optional component.
 option(ACTS_BUILD_EVERYTHING "Build with most options enabled (except HepMC3 and documentation)" OFF)
 # core related options
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
 # plugins related options
 option(ACTS_BUILD_PLUGIN_AUTODIFF "Build the autodiff plugin" OFF)
-option(ACTS_USE_SYSTEM_AUTODIFF "Use autodiff library provided by the system instead of the bundled version" OFF)
+option(ACTS_USE_SYSTEM_AUTODIFF "Use autodiff provided by the system instead of the bundled version" OFF)
 option(ACTS_BUILD_PLUGIN_CUDA "Build CUDA plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DIGITIZATION "Build Digitization plugin" OFF)
@@ -34,7 +34,7 @@ option(ACTS_BUILD_PLUGIN_IDENTIFICATION "Build Identification plugin" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
 option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" OFF)
 option(ACTS_BUILD_PLUGIN_LEGACY "Build legacy plugin" OFF)
-option(ACTS_BUILD_PLUGIN_ONNX "Build Onnx plugin" OFF)
+option(ACTS_BUILD_PLUGIN_ONNX "Build ONNX plugin" OFF)
 option(ACTS_BUILD_PLUGIN_SYCL "Build SYCL plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TGEO "Build TGeo plugin" OFF)
 # fatras related options
@@ -53,6 +53,7 @@ option(ACTS_BUILD_UNITTESTS "Build unit tests" OFF)
 option(ACTS_BUILD_DOCS "Build documentation" OFF)
 
 # handle option inter-dependencies and the everything flag
+# NOTE: ordering is important here. dependencies must come before dependees
 include(ActsOptionHelpers)
 # options without inter-dependencies
 set_option_if(ACTS_BUILD_BENCHMARKS ACTS_BUILD_EVERYTHING)
@@ -62,7 +63,7 @@ set_option_if(ACTS_BUILD_EXAMPLES_DD4HEP ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_EXAMPLES_GEANT4 ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_EXAMPLES_HEPMC3 ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_EXAMPLES_PYTHIA8 ACTS_BUILD_EVERYTHING)
-# any examples component activates the general option
+# any examples component activates the general examples option
 set_option_if(
   ACTS_BUILD_EXAMPLES
   ACTS_BUILD_EXAMPLES_DD4HEP
@@ -73,7 +74,7 @@ set_option_if(
 # core plugins might be required by examples or depend on each other
 set_option_if(
   ACTS_BUILD_PLUGIN_DD4HEP
-  ACTS_BUILD_EXAMPLES_DD4HEP) # OR ACTS_BUILD_EVERYTHING)
+  ACTS_BUILD_EXAMPLES_DD4HEP OR ACTS_BUILD_EVERYTHING)
 set_option_if(
   ACTS_BUILD_PLUGIN_TGEO
   ACTS_BUILD_PLUGIN_DD4HEP OR ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
@@ -96,39 +97,56 @@ set_option_if(ACTS_BUILD_PLUGIN_AUTODIFF ACTS_BUILD_EVERYTHING)
 include(GNUInstallDirs) # GNU-like installation paths, e.g. lib/, include/, ...
 include(ActsCompilerOptions) # default compile options
 include(ActsComponentsHelpers) # handle components via add_..._if commands
-include(TargetSourcesLocal) # needed only until we require CMake 3.13
 # place build products in `<build_dir>/bin` and `<build_dir>/lib` for simple use
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
 
+# minimal dependency versions. they are defined here in a single place so
+# they can be easily upgraded, although they might not be used if the
+# dependency is included via `add_subdirectory(...)`.
+set(_acts_autodiff_version 0.5.11)
+set(_acts_boost_version 1.71)
+set(_acts_dd4hep_version 1.11)
+set(_acts_doxygen_version 1.8.15)
+set(_acts_eigen3_version 3.3.7)
+set(_acts_hepmc3_version 3.2.1)
+set(_acts_nlohmanjson_version 3.2.0)
+set(_acts_root_version 6.20)
+set(_acts_tbb_version 2020.1)
+
 # required packages
-# use only the CMake FindBoost module; avoids issues with the new cmake configs
-# that become available with Boost 1.70
-set(Boost_NO_BOOST_CMAKE ON)
-find_package(Boost 1.69 MODULE REQUIRED COMPONENTS filesystem program_options unit_test_framework)
-find_package(Eigen3 3.2.9 CONFIG REQUIRED)
 # NOTE we use boost::filesystem instead of std::filesystem since the later
 #   is not uniformly supported even on compilers that nominally support C++17 
+find_package(Boost ${_acts_boost_version} REQUIRED CONFIG COMPONENTS filesystem program_options unit_test_framework)
+find_package(Eigen3 ${_acts_eigen3_version} REQUIRED CONFIG)
 
-# Helper macro that overrides the project function in subdirectories, so 
-# we can intercept and store their versions. This is used to lock them down
-# in an installation later on.
-cmake_policy(SET CMP0048 NEW)    
+# the `<project_name>_VERSION` variables set by `setup(... VERSION ...)` have
+# only local scope, i.e. they are not accessible her for dependencies added
+# via `add_subdirectory`. this overrides the `project(...)` funcion for
+# sub-projects such that the resulting `<project_name>_VERSION` has
+# global scope and is accessible within the main project later on.
+cmake_policy(SET CMP0048 NEW)
 macro(project)
-    _project(${ARGN})
-    set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION}" CACHE INTERNAL "")
+  _project(${ARGN})
+  set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION}" CACHE INTERNAL "")
 endmacro()
 
 # optional packages
 #
-# find packages explicitely for each component even if this means searching for
+# find packages explicitly for each component even if this means searching for
 # the same package twice. This avoids having complex if/else trees to sort out
 # when a particular package is actually needed.
-#
-# version variables for external dependencies that are required more than once
-set(_dd4hep_version 1.10)
-set(_root_version 6.10)
 # plugin dependencies
+if(ACTS_BUILD_PLUGIN_AUTODIFF)
+  if(ACTS_USE_SYSTEM_AUTODIFF)
+    find_package(autodiff ${_acts_autodiff_version} CONFIG REQUIRED)
+    message(STATUS "Using system installation of autodiff")
+  else()
+    add_subdirectory(thirdparty/autodiff)
+    add_library(autodiff::autodiff ALIAS autodiff)
+    message(STATUS "Using bundled autodiff")
+  endif()
+endif()
 if(ACTS_BUILD_PLUGIN_CUDA)
   enable_language(CUDA)
   set(CMAKE_CUDA_STANDARD 14 CACHE STRING "CUDA C++ standard to use")
@@ -139,27 +157,16 @@ if(ACTS_BUILD_PLUGIN_CUDA)
   set(CMAKE_CUDA_FLAGS_DEBUG "-g -G")
 endif()
 if(ACTS_BUILD_PLUGIN_DD4HEP)
-  find_package(DD4hep ${_dd4hep_version} CONFIG REQUIRED COMPONENTS DDCore)
+  find_package(DD4hep ${_acts_dd4hep_version} REQUIRED CONFIG COMPONENTS DDCore)
 endif()
 if(ACTS_BUILD_PLUGIN_JSON)
   if(ACTS_USE_SYSTEM_NLOHMANN_JSON)
     message(STATUS "Using system installation of nlohmann::json")
-    find_package(nlohmann_json 3.2.0 CONFIG REQUIRED)
+    find_package(nlohmann_json ${_acts_nlohmanjson_version} REQUIRED CONFIG)
   else()
     message(STATUS "Using bundled nlohmann::json")
     set(JSON_BuildTests OFF CACHE INTERNAL "")
     add_subdirectory(thirdparty/nlohmann_json)
-  endif()
-endif()
-if(ACTS_BUILD_PLUGIN_AUTODIFF)
-  set(autodiff_VERSION 0.5.11 CACHE INTERNAL "")
-  if(ACTS_USE_SYSTEM_AUTODIFF)
-    find_package(autodiff ${autodiff_VERSION} CONFIG REQUIRED)
-    message(STATUS "Using system installation of autodiff")
-  else()
-    add_subdirectory(thirdparty/autodiff)
-    add_library(autodiff::autodiff ALIAS autodiff)
-    message(STATUS "Using bundled autodiff")
   endif()
 endif()
 if(ACTS_BUILD_PLUGIN_ONNX)
@@ -169,55 +176,41 @@ if(ACTS_BUILD_PLUGIN_SYCL)
   find_package(SYCL REQUIRED)
 endif()
 if(ACTS_BUILD_PLUGIN_TGEO)
-  find_package(ROOT ${_root_version} CONFIG REQUIRED COMPONENTS Geom)
+  find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Geom)
 endif()
 # examples dependencies
 if(ACTS_BUILD_EXAMPLES)
   set(THREADS_PREFER_PTHREAD_FLAG ON)
   find_package(Threads REQUIRED)
-  # we could select ROOT components based on the configured core plugins and
-  # standalone components. for simplicity always request all possible
-  # required components.
-  find_package(ROOT ${_root_version} CONFIG REQUIRED COMPONENTS Core Geom GenVector Hist Tree TreePlayer)
+  # for simplicity always request all potentially required components.
+  find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Core Geom GenVector Hist Tree TreePlayer)
   # newer DD4hep version require TBB and search interally for TBB in
   # config-only mode. to avoid missmatches we explicitely search using
   # config-only mode first to be sure that we find the same version.
-  find_package(TBB CONFIG)
+  find_package(TBB ${_acts_tbb_version} CONFIG)
   if(NOT TBB_FOUND)
+    # no version check possible when using the find module
     find_package(TBB MODULE REQUIRED)
   endif()
   add_subdirectory(thirdparty/dfelibs)
 endif()
 if(ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
-  find_package(DD4hep ${_dd4hep_version} CONFIG REQUIRED COMPONENTS DDCore DDG4)
+  find_package(DD4hep ${_acts_dd4hep_version} REQUIRED CONFIG COMPONENTS DDCore DDG4)
 elseif(ACTS_BUILD_EXAMPLES_DD4HEP)
-  find_package(DD4hep ${_dd4hep_version} CONFIG REQUIRED COMPONENTS DDCore)
+  find_package(DD4hep ${_acts_dd4hep_version} REQUIRED CONFIG COMPONENTS DDCore)
 endif()
 if(ACTS_BUILD_EXAMPLES_GEANT4)
-  find_package(Geant4 CONFIG REQUIRED COMPONENTS gdml)
+  find_package(Geant4 REQUIRED CONFIG COMPONENTS gdml)
 endif()
 if(ACTS_BUILD_EXAMPLES_HEPMC3)
-  # must be version 3.1+. version 3.0 uses HepMC w/o number as module name.
-  # version 3.1.0 misses the version variable so we can not check for it
-  find_package(HepMC3 CONFIG REQUIRED)
-  # HepMC version 3.1.0 has a broken cmake config: it searches for the
-  # HepMC libray instead of the correct HepMC3 one and sets HEPMC_LIBRARIES
-  # instead of the expected HEPMC3_LIBRARIES. fix manually.
-  if(NOT HEPMC3_LIBRARIES)
-    message(STATUS "Workaround for HepMC3. Search in $ENV{HepMC3_DIR}")
-    find_library(
-      HEPMC3_LIB Names HepMC3
-      PATHS $ENV{HepMC3_DIR}/lib $ENV{HepMC3_DIR}/lib64 NO_DEFAULT_PATH)
-    set(HEPMC3_INCLUDE_DIR ${HEPMC_INCLUDE_DIR})
-    set(HEPMC3_LIBRARIES ${HEPMC3_LIB})
-  endif()
+  find_package(HepMC3 ${_acts_hepmc3_version} REQUIRED CONFIG)
 endif()
 if(ACTS_BUILD_EXAMPLES_PYTHIA8)
   find_package(Pythia8 REQUIRED)
 endif()
 # other dependencies
 if(ACTS_BUILD_DOCS)
-  find_package(Doxygen 1.8.11 REQUIRED)
+  find_package(Doxygen ${_acts_doxygen_version} REQUIRED)
   find_package(Sphinx REQUIRED)
 endif()
 
@@ -230,7 +223,7 @@ add_component(Core Core)
 add_subdirectory(Plugins)
 add_component_if(Fatras Fatras ACTS_BUILD_FATRAS)
 
-# manual examples
+# examples
 add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
 
 # automated tests and benchmarks
