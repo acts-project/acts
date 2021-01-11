@@ -63,18 +63,15 @@ void addPropagationOptions(aopt_t& opt) {
       "Sigma of the signed inverse momentum [in GeV^{-1}].")(
       "prop-t-sigma", po::value<double>()->default_value(1_ns),
       "Sigma of the time parameter [in ns].")(
-      "prop-corr-offd",
-      po::value<read_range>()->multitoken()->default_value({}),
+      "prop-corr-offd", po::value<Reals<15>>(),
       "The 15 off-diagonal correlation rho(d0,z0), rho(d0,phi), [...], "
       "rho(z0,phi), rho(z0, theta), [...], rho(qop,t). Row-wise.")(
-      "prop-phi-range",
-      po::value<read_range>()->multitoken()->default_value({-M_PI, M_PI}),
+      "prop-phi-range", po::value<Reals<2>>()->default_value({{-M_PI, M_PI}}),
       "Azimutal angle phi range for proprapolated tracks.")(
-      "prop-eta-range",
-      po::value<read_range>()->multitoken()->default_value({-4., 4.}),
+      "prop-eta-range", po::value<Reals<2>>()->default_value({{-4., 4.}}),
       "Pseudorapidity range for proprapolated tracks.")(
       "prop-pt-range",
-      po::value<read_range>()->multitoken()->default_value({100_MeV, 100_GeV}),
+      po::value<Reals<2>>()->default_value({{100_MeV, 100_GeV}}),
       "Transverse momentum range for proprapolated tracks [in GeV].")(
       "prop-max-stepsize", po::value<double>()->default_value(3_m),
       "Maximum step size for the propagation [in mm].")(
@@ -97,9 +94,9 @@ readPropagationConfig(const vmap_t& vm, propagator_t propagator) {
   typename ActsExamples::PropagationAlgorithm<propagator_t>::Config pAlgConfig(
       std::move(propagator));
 
-  read_range iphir = vm["prop-phi-range"].template as<read_range>();
-  read_range ietar = vm["prop-eta-range"].template as<read_range>();
-  read_range iptr = vm["prop-pt-range"].template as<read_range>();
+  auto iphir = vm["prop-phi-range"].template as<Reals<2>>();
+  auto ietar = vm["prop-eta-range"].template as<Reals<2>>();
+  auto iptr = vm["prop-pt-range"].template as<Reals<2>>();
 
   /// Material interaction behavior
   pAlgConfig.energyLoss = vm["prop-energyloss"].template as<bool>();
@@ -153,10 +150,9 @@ readPropagationConfig(const vmap_t& vm, propagator_t propagator) {
                            Acts::BoundIndices::eBoundTime) =
         pAlgConfig.tSigma * pAlgConfig.tSigma;
 
-    // Read if the offdiagonal parameters have been read
-    auto readOffd = vm["prop-corr-offd"].template as<read_range>();
-    // Only if they are properly defined, assign
-    if (readOffd.size() == 15) {
+    // Only if they are properly defined, assign off-diagonals
+    if (vm.count("prop-corr-offd")) {
+      auto readOffd = vm["prop-corr-offd"].template as<Reals<15>>();
       pAlgConfig.correlations(Acts::BoundIndices::eBoundLoc0,
                               Acts::BoundIndices::eBoundLoc1) = readOffd[0];
       pAlgConfig.correlations(Acts::BoundIndices::eBoundLoc0,

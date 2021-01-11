@@ -13,7 +13,8 @@
 namespace ActsExamples {
 namespace Options {
 
-/// Add option for the telescope geometry
+/// Add option for the telescope geometry.
 void addTelescopeGeometryOptions(Description& desc);
+
 }  // namespace Options
 }  // namespace ActsExamples

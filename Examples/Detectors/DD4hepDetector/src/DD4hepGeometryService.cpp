@@ -17,9 +17,15 @@
 #include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
+#include <stdexcept>
+
 ActsExamples::DD4hep::DD4hepGeometryService::DD4hepGeometryService(
     const ActsExamples::DD4hep::DD4hepGeometryService::Config& cfg)
-    : BareService("DD4hepGeometryService", cfg.logLevel), m_cfg(cfg) {}
+    : BareService("DD4hepGeometryService", cfg.logLevel), m_cfg(cfg) {
+  if (m_cfg.xmlFileNames.empty()) {
+    throw std::invalid_argument("Missing DD4hep XML filenames");
+  }
+}
 
 ActsExamples::DD4hep::DD4hepGeometryService::~DD4hepGeometryService() {
   if (m_lcdd)

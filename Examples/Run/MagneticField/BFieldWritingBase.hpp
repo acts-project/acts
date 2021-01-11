@@ -35,8 +35,8 @@ void writeField(boost::program_options::variables_map vm,
   writerConfig.bField = bField;
   std::cout << "setting rBounds" << std::endl;
   if (vm.count("bf-rRange") && vm.count("bf-zRange")) {
-    auto rBounds = vm["bf-rRange"].template as<read_range>();
-    auto zBounds = vm["bf-zRange"].template as<read_range>();
+    auto rBounds = vm["bf-rRange"].template as<Options::Reals<2>>();
+    auto zBounds = vm["bf-zRange"].template as<Options::Reals<2>>();
     writerConfig.rBounds = {{rBounds[0] * Acts::UnitConstants::mm,
                              rBounds[1] * Acts::UnitConstants::mm}};
     writerConfig.zBounds = {{zBounds[0] * Acts::UnitConstants::mm,

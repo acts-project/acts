@@ -40,6 +40,10 @@ foreach(_component ${Acts_FIND_COMPONENTS})
   endif()
 endforeach()
 
+# add this to the current CMAKE_MODULE_PATH to find third party modules 
+# that not provide a XXXConfig.cmake or XXX-config.cmake file
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/Modules)
+
 # find external dependencies that are needed to link with Acts. since the
 # exported Acts targets only store the linked external target names they need
 # to be found again. this avoids hard-coded paths and makes the installed
@@ -48,22 +52,27 @@ endforeach()
 # `find_dependency` is a wrapper around `find_package` that automatically
 # handles QUIET and REQUIRED parameters.
 include(CMakeFindDependencyMacro)
-set(Boost_NO_BOOST_CMAKE ON)
-find_dependency(Boost @Boost_VERSION_STRING@ MODULE EXACT)
+find_dependency(Boost @Boost_VERSION_STRING@ CONFIG EXACT)
 find_dependency(Eigen3 @Eigen3_VERSION@ CONFIG EXACT)
+if(PluginAutodiff IN_LIST Acts_COMPONENTS)
+  find_dependency(autodiff @autodiff_VERSION@ CONFIG EXACT)
+endif()
 if(PluginDD4hep IN_LIST Acts_COMPONENTS)
   find_dependency(DD4hep @DD4hep_VERSION@ CONFIG EXACT)
 endif()
 if(PluginJson IN_LIST Acts_COMPONENTS)
-  # if nlohmann::json is compiled as part of the Acts build
-  # then the version is undefined; can not search for exac match
-  find_dependency(nlohmann_json @nlohman_json_VERSION@ CONFIG)
+  find_dependency(nlohmann_json @nlohmann_json_VERSION@ CONFIG EXACT)
 endif()
 if(PluginTGeo IN_LIST Acts_COMPONENTS)
   find_dependency(ROOT @ROOT_VERSION@ CONFIG EXACT)
 endif()
-if(PluginAutodiff IN_LIST Acts_COMPONENTS)
-  find_dependency(autodiff @autodiff_VERSION@ CONFIG EXACT)
+
+# dependencies which cannot be searched in CONFIG mode
+if(PluginOnnx IN_LIST Acts_COMPONENTS)
+  find_package(OnnxRuntime REQUIRED)
+endif()
+if(PluginSycl IN_LIST Acts_COMPONENTS)
+  find_package(SYCL REQUIRED)
 endif()
 
 # load **all** available components. we can not just include the requested
