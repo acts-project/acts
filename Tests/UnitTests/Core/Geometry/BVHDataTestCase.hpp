@@ -13,7 +13,7 @@ using Ray = Acts::Ray<double, 3>;
 GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
-CubicBVHTrackingGeometry grid(NBOXES, 1000, 5);
+Test::CubicBVHTrackingGeometry grid(NBOXES, 1000, 5);
 
 auto volumes = grid.volumes;
 auto tg = grid.trackingGeometry;
