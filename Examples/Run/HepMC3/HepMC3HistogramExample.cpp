@@ -9,7 +9,7 @@
 #include "ActsExamples/HepMC/HepMCProcessExtractor.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Options.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Reader.hpp"
-#include "ActsExamples/Io/Root/RootNuclearInteractionParametersWriter.hpp"
+#include "ActsExamples/Io/NuclearInteractions/RootNuclearInteractionParametersWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 
 ///

@@ -12,8 +12,6 @@ add_library(
   src/RootTrackParameterWriter.cpp
   src/RootTrajectoryStatesWriter.cpp
   src/RootTrajectoryParametersWriter.cpp
-  src/RootNuclearInteractionParametersWriter.cpp
-  src/detail/NuclearInteractionParametrisation.cpp
 )
 target_include_directories(
   ActsExamplesIoRoot
