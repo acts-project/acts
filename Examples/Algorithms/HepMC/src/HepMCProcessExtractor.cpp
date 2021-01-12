@@ -150,7 +150,7 @@ std::vector<ActsExamples::SimParticle> selectOutgoingParticles(
 /// @param [in, out] interactions The recorded interactions
 void filterAndSort(
     const ActsExamples::HepMCProcessExtractor::Config& cfg,
-    std::vector<ActsExamples::ExtractedSimulationProcess>& interactions) {
+    ActsExamples::ExtractedSimulationProcessContainer& interactions) {
   for (auto& interaction : interactions) {
     for (auto cit = interaction.after.cbegin();
          cit != interaction.after.cend();) {
@@ -197,7 +197,7 @@ ActsExamples::ProcessCode ActsExamples::HepMCProcessExtractor::execute(
   const auto events =
       context.eventStore.get<std::vector<HepMC3::GenEvent>>(m_cfg.inputEvents);
 
-  std::vector<ActsExamples::ExtractedSimulationProcess> fractions;
+  ActsExamples::ExtractedSimulationProcessContainer fractions;
   for (const HepMC3::GenEvent& event : events) {
     // Fast exit
     if (event.particles().empty() || event.vertices().empty()) {

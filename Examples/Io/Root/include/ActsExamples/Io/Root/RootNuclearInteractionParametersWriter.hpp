@@ -18,14 +18,14 @@ namespace ActsExamples {
 
 struct ExtractedSimulationProcess;
 
-/// @brief This class takes fractions of recorded events that represent the
+/// This class takes fractions of recorded events that represent the
 /// effect of a nuclear interaction and produces histograms and parameters which
 /// can be used for a parametrisation based simultion of nuclear interaction.
 /// Since the parameters are based on the set of all provided events, during the
 /// event loop newly provided events are stored until the end of the run. Then
 /// all parts are calculated and written to file.
 class RootNuclearInteractionParametersWriter final
-    : public WriterT<std::vector<ExtractedSimulationProcess>> {
+    : public WriterT<ExtractedSimulationProcessContainer> {
  public:
   struct Config {
     /// Input collection to map measured hits to simulated hits.
@@ -46,7 +46,7 @@ class RootNuclearInteractionParametersWriter final
     /// The highest final state multiplicity that will considered
     unsigned int multiplicityMax = 10;
     /// Choice whether the histograms should be written to file
-    bool writeHistograms = true;
+    bool writeOptionalHistograms = true;
     /// Number of simulated histograms
     unsigned int nSimulatedEvents = 0;
   };
@@ -69,12 +69,12 @@ class RootNuclearInteractionParametersWriter final
   /// m_eventFractionCollection
   ProcessCode writeT(
       const AlgorithmContext& /*ctx*/,
-      const std::vector<ExtractedSimulationProcess>& event) final override;
+      const ExtractedSimulationProcessContainer& event) final override;
 
  private:
   Config m_cfg;             ///< The config class
   std::mutex m_writeMutex;  ///< Mutex used to protect multi-threaded writes
-  std::vector<NuclearInteractionParametrisation::EventFraction>
+  std::vector<detail::NuclearInteractionParametrisation::EventFraction>
       m_eventFractionCollection;  ///< The recorded fractions of events
 };
 }  // namespace ActsExamples

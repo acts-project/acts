@@ -21,9 +21,10 @@ namespace {
 ///
 /// @param [in] events The events that will be labeled
 void labelEvents(
-    std::vector<NuclearInteractionParametrisation::EventFraction>& events) {
+    std::vector<ActsExamples::detail::NuclearInteractionParametrisation::EventFraction>& events) {
+	namespace Parametrisation = ActsExamples::detail::NuclearInteractionParametrisation;
   // Search for the highest momentum particles per event
-  for (NuclearInteractionParametrisation::EventFraction& event : events) {
+  for (Parametrisation::EventFraction& event : events) {
     double maxMom = 0.;
     double maxMomOthers = 0.;
     // Walk over all final state particles
@@ -220,32 +221,33 @@ std::vector<std::pair<std::vector<float>, std::vector<uint32_t>>> buildMaps(
 /// @param [in] interactionType The interaction type that will be parametrised
 /// @param [in] cfg Configuration that steers the binning of histograms
 void recordKinematicParametrisation(
-    const std::vector<NuclearInteractionParametrisation::EventFraction>&
+    const std::vector<ActsExamples::detail::NuclearInteractionParametrisation::EventFraction>&
         eventFractionCollection,
     bool interactionType, unsigned int multiplicity,
     const ActsExamples::RootNuclearInteractionParametersWriter::Config& cfg) {
+namespace Parametrisation = ActsExamples::detail::NuclearInteractionParametrisation;
   gDirectory->mkdir(std::to_string(multiplicity).c_str());
   gDirectory->cd(std::to_string(multiplicity).c_str());
 
   // Parametrise the momentum und invarian mass distributions
   const auto momentumParameters =
-      NuclearInteractionParametrisation::buildMomentumParameters(
+      Parametrisation::buildMomentumParameters(
           eventFractionCollection, multiplicity, interactionType,
           cfg.momentumBins);
-  std::vector<NuclearInteractionParametrisation::CumulativeDistribution>
+  std::vector<Parametrisation::CumulativeDistribution>
       distributionsMom = momentumParameters.second;
   const auto invariantMassParameters =
-      NuclearInteractionParametrisation::buildInvariantMassParameters(
+      Parametrisation::buildInvariantMassParameters(
           eventFractionCollection, multiplicity, interactionType,
           cfg.invariantMassBins);
-  std::vector<NuclearInteractionParametrisation::CumulativeDistribution>
+  std::vector<Parametrisation::CumulativeDistribution>
       distributionsInvMass = invariantMassParameters.second;
 
   // Fast exit in case of no events
   if (!distributionsMom.empty() && !distributionsInvMass.empty()) {
     if (multiplicity > 1) {
       // Write the eigenspace components for the momenta
-      NuclearInteractionParametrisation::EigenspaceComponents esComponentsMom =
+      Parametrisation::EigenspaceComponents esComponentsMom =
           momentumParameters.first;
 
       auto momEigenVal = std::get<0>(esComponentsMom);
@@ -263,7 +265,7 @@ void recordKinematicParametrisation(
       gDirectory->WriteObject(&momVecMean, "MomentumMean");
 
       // Write the eigenspace components for the invariant masses
-      NuclearInteractionParametrisation::EigenspaceComponents
+      Parametrisation::EigenspaceComponents
           esComponentsInvMass = invariantMassParameters.first;
 
       auto invMassEigenVal = std::get<0>(esComponentsInvMass);
@@ -287,7 +289,7 @@ void recordKinematicParametrisation(
 
     // Write the distributions
     for (unsigned int i = 0; i <= multiplicity; i++) {
-      if (cfg.writeHistograms) {
+      if (cfg.writeOptionalHistograms) {
         gDirectory->WriteObject(
             distributionsMom[i],
             ("MomentumDistributionHistogram_" + std::to_string(i)).c_str());
@@ -301,7 +303,7 @@ void recordKinematicParametrisation(
       delete (distributionsMom[i]);
     }
     for (unsigned int i = 0; i < multiplicity; i++) {
-      if (cfg.writeHistograms) {
+      if (cfg.writeOptionalHistograms) {
         gDirectory->WriteObject(
             distributionsInvMass[i],
             ("InvariantMassDistributionHistogram_" + std::to_string(i))
@@ -342,6 +344,7 @@ ActsExamples::RootNuclearInteractionParametersWriter::
 
 ActsExamples::ProcessCode
 ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
+	namespace Parametrisation = detail::NuclearInteractionParametrisation;
   if (m_eventFractionCollection.empty())
     return ProcessCode::ABORT;
 
@@ -366,11 +369,11 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
 
   // Write the nuclear interaction probability
   ACTS_DEBUG("Starting parametrisation of nuclear interaction probability");
-  const auto nuclearInteractionProbability = NuclearInteractionParametrisation::
+  const auto nuclearInteractionProbability = Parametrisation::
       cumulativeNuclearInteractionProbability(m_eventFractionCollection,
                                               m_cfg.interactionProbabilityBins);
 
-  if (m_cfg.writeHistograms)
+  if (m_cfg.writeOptionalHistograms)
     gDirectory->WriteObject(nuclearInteractionProbability,
                             "NuclearInteractionHistogram");
   const auto mapNIprob =
@@ -383,7 +386,7 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
   ACTS_DEBUG("Starting calulcation of probability of interaction type");
   // Write the interaction type proability
   const auto softProbability =
-      NuclearInteractionParametrisation::softProbability(
+      Parametrisation::softProbability(
           m_eventFractionCollection);
 
   gDirectory->WriteObject(&softProbability, "SoftInteraction");
@@ -393,7 +396,7 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
   ACTS_DEBUG(
       "Starting calulcation of transition probabilities betweend PDG IDs");
   const auto pdgIdMap =
-      NuclearInteractionParametrisation::cumulativePDGprobability(
+      Parametrisation::cumulativePDGprobability(
           m_eventFractionCollection);
   std::vector<int> branchingPdgIds;
   std::vector<int> targetPdgIds;
@@ -415,12 +418,12 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
   // Write the multiplicity and kinematics distribution
   ACTS_DEBUG("Starting parametrisation of multiplicity probabilities");
   const auto multiplicity =
-      NuclearInteractionParametrisation::cumulativeMultiplicityProbability(
+      Parametrisation::cumulativeMultiplicityProbability(
           m_eventFractionCollection, m_cfg.multiplicityMax);
   ACTS_DEBUG("Parametrisation of multiplicity probabilities finished");
 
   gDirectory->cd("soft");
-  if (m_cfg.writeHistograms)
+  if (m_cfg.writeOptionalHistograms)
     gDirectory->WriteObject(multiplicity.first, "MultiplicityHistogram");
   const auto multProbSoft = buildMap(multiplicity.first);
   gDirectory->WriteObject(&multProbSoft.first, "MultiplicityBinBorders");
@@ -434,7 +437,7 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
                std::to_string(i) + " particle(s) final state finished");
   }
   gDirectory->cd("../hard");
-  if (m_cfg.writeHistograms)
+  if (m_cfg.writeOptionalHistograms)
     gDirectory->WriteObject(multiplicity.second, "MultiplicityHistogram");
   const auto multProbHard = buildMap(multiplicity.second);
   gDirectory->WriteObject(&multProbHard.first, "MultiplicityBinBorders");
@@ -460,9 +463,9 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
 ActsExamples::ProcessCode
 ActsExamples::RootNuclearInteractionParametersWriter::writeT(
     const AlgorithmContext& /*ctx*/,
-    const std::vector<ExtractedSimulationProcess>& event) {
+    const ExtractedSimulationProcessContainer& event) {
   // Convert the tuple to use additional categorisation variables
-  std::vector<NuclearInteractionParametrisation::EventFraction> eventFractions;
+  std::vector<detail::NuclearInteractionParametrisation::EventFraction> eventFractions;
   eventFractions.reserve(event.size());
   for (const auto& e : event) {
     eventFractions.emplace_back(e);

@@ -9,16 +9,18 @@
 #pragma once
 
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Utilities/detail/ExtractedSimulationProcess.hpp"
+#include "ActsExamples/EventData/ExtractedSimulationProcess.hpp"
 
 #include <unordered_map>
 
 #include <TH1F.h>
 #include <TVectorF.h>
 
+namespace ActsExamples {
+namespace detail {
 namespace NuclearInteractionParametrisation {
 
-/// @brief This struct stores a fraction of an event around a nuclear
+/// This struct stores a fraction of an event around a nuclear
 /// interaction.
 struct EventFraction {
   EventFraction() = default;
@@ -65,7 +67,7 @@ using Parametrisation =
 /// @param [in] soft Decision whether soft interactions should be considered
 ///
 /// @return Vector containing the scaled final states
-EventProperties prepateMomenta(const EventCollection& events,
+EventProperties prepareMomenta(const EventCollection& events,
                                unsigned int multiplicity, bool soft);
 
 /// @brief This method builds the distributions of each generation of a final
@@ -185,3 +187,4 @@ TVectorF softProbability(const EventCollection& events);
 CumulativeDistribution cumulativeNuclearInteractionProbability(
     const EventCollection& events, unsigned int interactionProbabilityBins);
 }  // namespace NuclearInteractionParametrisation
+}}

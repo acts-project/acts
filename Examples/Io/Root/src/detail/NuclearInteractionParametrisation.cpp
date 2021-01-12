@@ -14,6 +14,8 @@
 #include <Eigen/Eigenvalues>
 #include <TMath.h>
 
+namespace ActsExamples {
+namespace detail {
 namespace NuclearInteractionParametrisation {
 namespace {
 
@@ -91,7 +93,7 @@ Parametrisation buildMomentumParameters(const EventCollection& events,
                                         unsigned int multiplicity, bool soft,
                                         unsigned int nBins) {
   // Strip off data
-  auto momenta = prepateMomenta(events, multiplicity, soft);
+  auto momenta = prepareMomenta(events, multiplicity, soft);
 
   // Build histos
   ProbabilityDistributions histos = buildMomPerMult(momenta, nBins);
@@ -107,7 +109,7 @@ Parametrisation buildMomentumParameters(const EventCollection& events,
   return std::make_pair(eigenspaceElements, histos);
 }
 
-EventProperties prepateMomenta(const EventCollection& events,
+EventProperties prepareMomenta(const EventCollection& events,
                                unsigned int multiplicity,
                                bool soft)  // TODO: build enum instead of bool
 {
@@ -335,3 +337,4 @@ CumulativeDistribution cumulativeNuclearInteractionProbability(
                  // account
 }
 }  // namespace NuclearInteractionParametrisation
+}}

@@ -14,7 +14,7 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/Utilities/detail/ExtractedSimulationProcess.hpp"
+#include "ActsExamples/EventData/ExtractedSimulationProcess.hpp"
 
 #include <memory>
 #include <string>

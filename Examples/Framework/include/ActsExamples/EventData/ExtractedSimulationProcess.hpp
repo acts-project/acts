@@ -21,4 +21,6 @@ struct ExtractedSimulationProcess {
   SimParticle before;
   std::vector<SimParticle> after;
 };
+
+using ExtractedSimulationProcessContainer = std::vector<ExtractedSimulationProcess>;
 }  // namespace ActsExamples
