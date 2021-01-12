@@ -17,7 +17,7 @@
 
 #include <dfe/dfe_io_dsv.hpp>
 
-#include "TrackMlData.hpp"
+#include "CsvOutputData.hpp"
 
 ActsExamples::CsvParticleWriter::CsvParticleWriter(
     const ActsExamples::CsvParticleWriter::Config& cfg,
