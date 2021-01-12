@@ -87,7 +87,7 @@ class JsonGeometryConverter {
   };
 
   /// @class Config
-  /// Configuration of the Reader
+  /// Configuration of the Converter
   class Config {
    public:
     /// The geometry version
@@ -110,13 +110,13 @@ class JsonGeometryConverter {
     std::string senkey = "sensitive";
     /// The representing idntification string
     std::string repkey = "representing";
-    /// The bin keys
+    /// The bin0 key
     std::string bin0key = "bin0";
     /// The bin1 key
     std::string bin1key = "bin1";
     /// The bin2 key
     std::string bin2key = "bin2";
-    /// The local to global tranfo key
+    /// The local to global transformation key
     std::string transfokeys = "transformation";
     /// The type key -> proto, else
     std::string typekey = "type";
@@ -126,7 +126,7 @@ class JsonGeometryConverter {
     std::string geometryidkey = "Geoid";
     /// The surface geoid key
     std::string surfacegeometryidkey = "SGeoid";
-    /// The mapping key, add surface to map if true
+    /// The mapping key, add surface to mapping procedure if true
     std::string mapkey = "mapMaterial";
     /// The surface type key
     std::string surfacetypekey = "stype";
