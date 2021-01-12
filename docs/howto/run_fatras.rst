@@ -107,7 +107,7 @@ muons in a reasonable kinematic range are generated.
        --output-csv=1 \
        --events=100 \
        --bf-value=0 0 2 \
-       --digi-geometric-3d
+       --digi-geo3d
 
 For each event, the following files will be created
 
@@ -139,6 +139,6 @@ particles.
        --select-pt=0.5: \
        --remove-neutral \
        --bf-value=0 0 2 \
-       --digi-geometric-3d
+       --digi-geo3d
 
 The output file structure will be the same as discussed above.

@@ -87,7 +87,7 @@ for mu in 0 50 100 150 200 250 300 ; do
     eval ${gen}
 
     # Run sim
-    sim="${exe_dir}/ActsExampleFatras${detector} ${dd4hep_input} ${bField} --select-pt-gev '0.1:' --select-eta '-3:3' --fatras-pmin-gev 0.1 --remove-neutral 1 --digi-geometric-3d --input-dir=data/gen/ttbar_e${numEvents}_mu${mu} --output-csv=1 --output-dir=data/sim_${detector}/ttbar_e${numEvents}_mu${mu}"  
+    sim="${exe_dir}/ActsExampleFatras${detector} ${dd4hep_input} ${bField} --select-pt-gev '0.1:' --select-eta '-3:3' --fatras-pmin-gev 0.1 --remove-neutral 1 --digi-geo3d --input-dir=data/gen/ttbar_e${numEvents}_mu${mu} --output-csv=1 --output-dir=data/sim_${detector}/ttbar_e${numEvents}_mu${mu}"  
     echo ${sim}
     eval ${sim}
 

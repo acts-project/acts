@@ -23,6 +23,12 @@ void ActsExamples::Options::addDigitizationOptions(Description& desc) {
   using boost::program_options::bool_switch;
   using boost::program_options::value;
 
+  // digitization can be done using a smearing approach or a geometric approach
+  //
+  // --digi-smear on  # swtiches the smearing on
+  // --digi-geo2d on  # switches the geometric clustering in 2d on 
+  // --digi-geo3d on  # switches the geometric clustering in 3d on (legacy)
+  //
   // each volume configuration is one logical block
   //
   //   --digi-smear-volume-id=8
@@ -44,8 +50,10 @@ void ActsExamples::Options::addDigitizationOptions(Description& desc) {
   opt("digi-config-file", value<std::string>(),
       "Configuration (.json) file for digitization description, overwrites "
       "options input on command line.");
-  opt("digi-geometric-3d", bool_switch(),
-      "Geometric: Switching geometric digitisation in 3D on");
+  opt("digi-geo3d", bool_switch(),
+      "Geometric: Switching geometric digitization in 2D on");
+  opt("digi-geo2d", bool_switch(),
+      "Geometric: Switching geometric digitization in 3D on");
   opt("digi-smear", bool_switch(), "Smearing: Switching hit smearing on");
   opt("digi-smear-volume", value<std::vector<int>>(),
       "Smearing Input: sensitive volume identifiers.");
