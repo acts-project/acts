@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/ExtractedSimulationProcess.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 
 #include <unordered_map>
 
@@ -187,4 +187,5 @@ TVectorF softProbability(const EventCollection& events);
 CumulativeDistribution cumulativeNuclearInteractionProbability(
     const EventCollection& events, unsigned int interactionProbabilityBins);
 }  // namespace NuclearInteractionParametrisation
-}}
+}  // namespace detail
+}  // namespace ActsExamples

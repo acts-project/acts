@@ -337,4 +337,5 @@ CumulativeDistribution cumulativeNuclearInteractionProbability(
                  // account
 }
 }  // namespace NuclearInteractionParametrisation
-}}
+}  // namespace detail
+}  // namespace ActsExamples
