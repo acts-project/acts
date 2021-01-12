@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-//#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -36,7 +35,7 @@ namespace Acts {
 /// propagation (counter clockwise as positive)
 ///
 /// @tparam external_spacepoint_t The type of space point
-/// @param sps is a vector of space points with positions in unit of mm
+/// @param sps is a vector of space points
 ///
 /// @return optional estimated parameters d0, 1/R and phi
 template <typename external_spacepoint_t>
@@ -46,7 +45,7 @@ std::optional<std::array<ActsScalar, 3>> estimateTrackParamsFromSeed(
   ACTS_LOCAL_LOGGER(
       getDefaultLogger("estimateTrackParamsFromSeed", Logging::INFO));
   if (sps.empty()) {
-    ACTS_ERROR("No space points exsit.")
+    ACTS_ERROR("No space points exist.")
     return std::nullopt;
   }
 
@@ -117,7 +116,7 @@ std::optional<std::array<ActsScalar, 3>> estimateTrackParamsFromSeed(
 /// @tparam external_spacepoint_t The type of space point
 ///
 /// @param gctx is the geometry context
-/// @param sps is the vector of space points with positions in unit of mm
+/// @param sps is the vector of space points
 /// @param surface is the surface at which the bound track parameters will be
 /// represented
 /// @param bField is the magnetic field vector
@@ -245,8 +244,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // The z coordinate of the bottom space point along the magnetic field
   // direction
   ActsScalar pathz = bGlobal.dot(bField) / bField.norm();
-  // The estimated time in Acts::UnitConstants::s if the space point has global
-  // position in mm
+  // The estimated time
   params[eBoundTime] = pathz / vz;
 
   return params;

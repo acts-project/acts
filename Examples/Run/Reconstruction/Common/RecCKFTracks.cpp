@@ -124,34 +124,19 @@ int runRecCKFTracks(int argc, char* argv[],
       spCfg.outputSpacePoints = "spacepoints";
       spCfg.trackingGeometry = trackingGeometry;
       spCfg.geometrySelection = {
-          //      Acts::GeometryIdentifier().setVolume(8).setLayer(2),
-          //      Acts::GeometryIdentifier().setVolume(8).setLayer(4),
-          //      Acts::GeometryIdentifier().setVolume(8).setLayer(6),
-          //      // positive endcap pixel layers
-          //      Acts::GeometryIdentifier().setVolume(9).setLayer(2),
-          //      Acts::GeometryIdentifier().setVolume(9).setLayer(4),
-          //      Acts::GeometryIdentifier().setVolume(9).setLayer(6),
-          //      Acts::GeometryIdentifier().setVolume(9).setLayer(8),
-          //      // negative endcap pixel layers
-          //      Acts::GeometryIdentifier().setVolume(7).setLayer(14),
-          //      Acts::GeometryIdentifier().setVolume(7).setLayer(12),
-          //      Acts::GeometryIdentifier().setVolume(7).setLayer(10),
-          //      Acts::GeometryIdentifier().setVolume(7).setLayer(8),
-
-          // barrel pixel layers (8)
-          Acts::GeometryIdentifier().setVolume(13).setLayer(2),
-          Acts::GeometryIdentifier().setVolume(13).setLayer(4),
-          Acts::GeometryIdentifier().setVolume(13).setLayer(6),
-          // positive endcap pixel layers (9)
-          Acts::GeometryIdentifier().setVolume(14).setLayer(2),
-          Acts::GeometryIdentifier().setVolume(14).setLayer(4),
-          Acts::GeometryIdentifier().setVolume(14).setLayer(6),
-          Acts::GeometryIdentifier().setVolume(14).setLayer(8),
-          // negative endcap pixel layers (7)
-          Acts::GeometryIdentifier().setVolume(12).setLayer(16),
-          Acts::GeometryIdentifier().setVolume(12).setLayer(14),
-          Acts::GeometryIdentifier().setVolume(12).setLayer(12),
-          Acts::GeometryIdentifier().setVolume(12).setLayer(10),
+          Acts::GeometryIdentifier().setVolume(8).setLayer(2),
+          Acts::GeometryIdentifier().setVolume(8).setLayer(4),
+          Acts::GeometryIdentifier().setVolume(8).setLayer(6),
+          // positive endcap pixel layers
+          Acts::GeometryIdentifier().setVolume(9).setLayer(2),
+          Acts::GeometryIdentifier().setVolume(9).setLayer(4),
+          Acts::GeometryIdentifier().setVolume(9).setLayer(6),
+          Acts::GeometryIdentifier().setVolume(9).setLayer(8),
+          // negative endcap pixel layers
+          Acts::GeometryIdentifier().setVolume(7).setLayer(14),
+          Acts::GeometryIdentifier().setVolume(7).setLayer(12),
+          Acts::GeometryIdentifier().setVolume(7).setLayer(10),
+          Acts::GeometryIdentifier().setVolume(7).setLayer(8),
       };
       sequencer.addAlgorithm(
           std::make_shared<SpacePointMaker>(spCfg, logLevel));
@@ -187,8 +172,6 @@ int runRecCKFTracks(int argc, char* argv[],
       paramsEstimationCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
       paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
       paramsEstimationCfg.outputTrackParamsSeedMap = "estimatedparams_seed_map";
-      paramsEstimationCfg.inputMeasurementParticlesMap =
-          hitSmearingCfg.outputMeasurementParticlesMap;
       paramsEstimationCfg.trackingGeometry = trackingGeometry;
       paramsEstimationCfg.bFieldGetter =
           TrackParamsEstimationAlgorithm::makeBFieldGetter(magneticField);
