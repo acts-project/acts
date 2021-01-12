@@ -97,7 +97,7 @@ class JsonGeometryConverter {
     /// The volume identification string
     std::string volkey = "volumes";
     /// The name identification
-    std::string namekey = "Name";
+    std::string namekey = "name";
     /// The boundary surface string
     std::string boukey = "boundaries";
     /// The layer identification string
@@ -117,7 +117,7 @@ class JsonGeometryConverter {
     /// The bin2 key
     std::string bin2key = "bin2";
     /// The local to global tranfo key
-    std::string transfokeys = "tranformation";
+    std::string transfokeys = "transformation";
     /// The type key -> proto, else
     std::string typekey = "type";
     /// The data key
@@ -154,7 +154,7 @@ class JsonGeometryConverter {
     /// Steering to handle volume data
     bool processDenseVolumes = false;
     /// Add proto material to all surfaces
-    bool processnonmaterial = false;
+    bool processNonMaterial = false;
     /// Write out data
     bool writeData = true;
 
