@@ -17,8 +17,18 @@ target_link_libraries(
     ActsExamplesRecTracksCommon 
     ActsExamplesDetectorDD4hep)
 
+add_executable(
+  ActsExampleSeedingDD4hep
+  DD4hepSeedingExample.cpp)
+target_link_libraries(
+  ActsExampleSeedingDD4hep
+  PRIVATE
+    ActsExamplesRecTracksCommon
+    ActsExamplesDetectorDD4hep)
+
 install(
   TARGETS
     ActsExampleTruthTracksDD4hep
     ActsExampleCKFTracksDD4hep
+    ActsExampleSeedingDD4hep
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

@@ -93,7 +93,7 @@ int runSeedingExample(int argc, char* argv[],
   particleSelectorCfg.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
   particleSelectorCfg.outputParticles = "particles_selected";
-  particleSelectorCfg.ptMin = 1_GeV;
+  particleSelectorCfg.ptMin = 500_MeV;
   particleSelectorCfg.nHitsMin = 9;
   sequencer.addAlgorithm(
       std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));

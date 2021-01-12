@@ -101,7 +101,7 @@ int runRecCKFTracks(int argc, char* argv[],
   particleSelectorCfg.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
   particleSelectorCfg.outputParticles = "particles_selected";
-  particleSelectorCfg.ptMin = 1_GeV;
+  particleSelectorCfg.ptMin = 500_MeV;
   particleSelectorCfg.nHitsMin = 9;
   sequencer.addAlgorithm(
       std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));
@@ -123,6 +123,7 @@ int runRecCKFTracks(int argc, char* argv[],
       spCfg.inputMeasurements = hitSmearingCfg.outputMeasurements;
       spCfg.outputSpacePoints = "spacepoints";
       spCfg.trackingGeometry = trackingGeometry;
+      // @todo: use json for the seeding configuration 
       spCfg.geometrySelection = {
           // barrel pixel layers
           Acts::GeometryIdentifier().setVolume(8).setLayer(2),
