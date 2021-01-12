@@ -123,7 +123,7 @@ int runRecCKFTracks(int argc, char* argv[],
       spCfg.inputMeasurements = hitSmearingCfg.outputMeasurements;
       spCfg.outputSpacePoints = "spacepoints";
       spCfg.trackingGeometry = trackingGeometry;
-      // @todo: use json for the seeding configuration 
+      // @todo: use json for the seeding configuration
       spCfg.geometrySelection = {
           // barrel pixel layers
           Acts::GeometryIdentifier().setVolume(8).setLayer(2),

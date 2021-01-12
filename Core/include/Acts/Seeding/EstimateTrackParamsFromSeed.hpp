@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+//#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -39,7 +40,7 @@ namespace Acts {
 ///
 /// @return optional estimated parameters d0, 1/R and phi
 template <typename external_spacepoint_t>
-std::optional<std::array<double, 3>> estimateTrackParamsFromSeed(
+std::optional<std::array<ActsScalar, 3>> estimateTrackParamsFromSeed(
     const std::vector<external_spacepoint_t*>& sps) {
   // The local logger
   ACTS_LOCAL_LOGGER(
@@ -49,18 +50,18 @@ std::optional<std::array<double, 3>> estimateTrackParamsFromSeed(
     return std::nullopt;
   }
 
-  double x2m = 0., xm = 0.;
-  double xym = 0.;
-  double y2m = 0., ym = 0.;
-  double r2m = 0., r4m = 0.;
-  double xr2m = 0., yr2m = 0.;
+  ActsScalar x2m = 0., xm = 0.;
+  ActsScalar xym = 0.;
+  ActsScalar y2m = 0., ym = 0.;
+  ActsScalar r2m = 0., r4m = 0.;
+  ActsScalar xr2m = 0., yr2m = 0.;
 
   size_t numSP = sps.size();
 
   for (const auto& sp : sps) {
-    double x = sp->x();
-    double y = sp->y();
-    double r2 = x * x + y * y;
+    ActsScalar x = sp->x();
+    ActsScalar y = sp->y();
+    ActsScalar r2 = x * x + y * y;
     x2m += x * x;
     xm += x;
     xym += x * y;
@@ -81,24 +82,24 @@ std::optional<std::array<double, 3>> estimateTrackParamsFromSeed(
   xr2m = xr2m / numSP;
   yr2m = yr2m / numSP;
 
-  double Cxx = x2m - xm * xm;
-  double Cxy = xym - xm * ym;
-  double Cyy = y2m - ym * ym;
-  double Cxr2 = xr2m - xm * r2m;
-  double Cyr2 = yr2m - ym * r2m;
-  double Cr2r2 = r4m - r2m * r2m;
+  ActsScalar Cxx = x2m - xm * xm;
+  ActsScalar Cxy = xym - xm * ym;
+  ActsScalar Cyy = y2m - ym * ym;
+  ActsScalar Cxr2 = xr2m - xm * r2m;
+  ActsScalar Cyr2 = yr2m - ym * r2m;
+  ActsScalar Cr2r2 = r4m - r2m * r2m;
 
-  double q1 = Cr2r2 * Cxy - Cxr2 * Cyr2;
-  double q2 = Cr2r2 * (Cxx - Cyy) - Cxr2 * Cxr2 + Cyr2 * Cyr2;
+  ActsScalar q1 = Cr2r2 * Cxy - Cxr2 * Cyr2;
+  ActsScalar q2 = Cr2r2 * (Cxx - Cyy) - Cxr2 * Cxr2 + Cyr2 * Cyr2;
 
-  double phi = 0.5 * std::atan(2 * q1 / q2);
-  double k = (std::sin(phi) * Cxr2 - std::cos(phi) * Cyr2) * (1. / Cr2r2);
-  double delta = -k * r2m + std::sin(phi) * xm - std::cos(phi) * ym;
+  ActsScalar phi = 0.5 * std::atan(2 * q1 / q2);
+  ActsScalar k = (std::sin(phi) * Cxr2 - std::cos(phi) * Cyr2) * (1. / Cr2r2);
+  ActsScalar delta = -k * r2m + std::sin(phi) * xm - std::cos(phi) * ym;
 
-  double rho = (2 * k) / (std::sqrt(1 - 4 * delta * k));
-  double d = (2 * delta) / (1 + std::sqrt(1 - 4 * delta * k));
+  ActsScalar rho = (2 * k) / (std::sqrt(1 - 4 * delta * k));
+  ActsScalar d = (2 * delta) / (1 + std::sqrt(1 - 4 * delta * k));
 
-  return std::array<double, 3>{d, rho, phi};
+  return std::array<ActsScalar, 3>{d, rho, phi};
 }
 
 ///  Estimate the full track parameters from space points
@@ -129,8 +130,8 @@ template <typename external_spacepoint_t>
 std::optional<BoundVector> estimateTrackParamsFromSeed(
     const GeometryContext& gctx, const std::vector<external_spacepoint_t>& sps,
     const Surface& surface, Vector3 bField,
-    double bFieldMin = 0.1 * UnitConstants::T,
-    double mass = 139.57018 * UnitConstants::MeV) {
+    ActsScalar bFieldMin = 0.1 * UnitConstants::T,
+    ActsScalar mass = 139.57018 * UnitConstants::MeV) {
   // The local logger
   ACTS_LOCAL_LOGGER(
       getDefaultLogger("estimateTrackParamsFromSeed", Logging::INFO));
@@ -140,15 +141,15 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   }
 
   // Convert bField to Tesla
-  double bFieldInTesla = bField.norm() / UnitConstants::T;
-  double bFieldMinInTesla = bFieldMin / UnitConstants::T;
+  ActsScalar bFieldInTesla = bField.norm() / UnitConstants::T;
+  ActsScalar bFieldMinInTesla = bFieldMin / UnitConstants::T;
   // Check if magnetic field is too small
   if (bFieldInTesla < bFieldMinInTesla) {
     // @todo shall we use straight-line estimation and use default q/pt in such
     // case?
     ACTS_WARNING("The magnetic field at the bottom space point: B = "
                  << bFieldInTesla << " T is smaller than |B|_min = "
-                 << bFieldMinInTesla << " T. Estimation cann't be done.")
+                 << bFieldMinInTesla << " T. Estimation is not performed.")
     return std::nullopt;
   }
 
@@ -184,7 +185,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // Lambda to transform the coordinates to the (u, v) space
   auto uvTransform = [](const Vector3& local) -> Vector2 {
     Vector2 uv;
-    double denominator = local.x() * local.x() + local.y() * local.y();
+    ActsScalar denominator = local.x() * local.x() + local.y() * local.y();
     uv.x() = local.x() / denominator;
     uv.y() = local.y() / denominator;
     return uv;
@@ -195,16 +196,16 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
 
   // A,B are slope and intercept of the straight line in the u,v plane
   // connecting the three points.
-  double A = uv2.y() / (uv2.x() - uv1.x());
-  double B = uv2.y() - A * uv2.x();
+  ActsScalar A = uv2.y() / (uv2.x() - uv1.x());
+  ActsScalar B = uv2.y() - A * uv2.x();
   // Curvature (with a sign) estimate
-  double rho = -2.0 * B / std::hypot(1., A);
+  ActsScalar rho = -2.0 * B / std::hypot(1., A);
   // The projection of the top space point on the transverse plane of the new
   // frame
-  double rn = local2.x() * local2.x() + local2.y() * local2.y();
+  ActsScalar rn = local2.x() * local2.x() + local2.y() * local2.y();
   // The (1/tanTheta) of momentum in the new frame, corrected for curvature
   // effects (@note why 0.04?)
-  double invTanTheta =
+  ActsScalar invTanTheta =
       local2.z() * std::sqrt(1. / rn) / (1. + 0.04 * rho * rho * rn);
   // The momentum direction in the new frame (the center of the circle has the
   // coordinate (-1.*A/(2*B), 1./(2*B)))
@@ -229,24 +230,24 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
 
   // The estimated q/pt in [GeV/c]^-1 (note that the pt is the projection of
   // momentum in the transverse plane of the new frame)
-  double qOverPt = rho * (UnitConstants::m) / (0.3 * bFieldInTesla);
+  ActsScalar qOverPt = rho * (UnitConstants::m) / (0.3 * bFieldInTesla);
   // The estimated q/p in [GeV/c]^-1
   params[eBoundQOverP] = qOverPt / std::hypot(1., invTanTheta);
 
   // The estimated momentum and projection of the momentum in the magnetic field
   // diretion
-  double pInGeV = std::abs(1.0 / params[eBoundQOverP]);
-  double pzInGeV = 1.0 / std::abs(qOverPt) * invTanTheta;
-  double massInGeV = mass / UnitConstants::GeV;
+  ActsScalar pInGeV = std::abs(1.0 / params[eBoundQOverP]);
+  ActsScalar pzInGeV = 1.0 / std::abs(qOverPt) * invTanTheta;
+  ActsScalar massInGeV = mass / UnitConstants::GeV;
   // The velocity along the magnetic field diretion (i.e. z axis of the new
   // frame)
-  double vz = pzInGeV / std::hypot(pInGeV, massInGeV);
+  ActsScalar vz = pzInGeV / std::hypot(pInGeV, massInGeV);
   // The z coordinate of the bottom space point along the magnetic field
   // direction
-  double zDist = bGlobal.dot(bField) / bField.norm();
+  ActsScalar pathz = bGlobal.dot(bField) / bField.norm();
   // The estimated time in Acts::UnitConstants::s if the space point has global
   // position in mm
-  params[eBoundTime] = zDist / vz;
+  params[eBoundTime] = pathz / vz;
 
   return params;
 }
