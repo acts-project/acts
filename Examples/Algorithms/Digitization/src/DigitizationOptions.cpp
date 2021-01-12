@@ -26,7 +26,7 @@ void ActsExamples::Options::addDigitizationOptions(Description& desc) {
   // digitization can be done using a smearing approach or a geometric approach
   //
   // --digi-smear on  # swtiches the smearing on
-  // --digi-geo2d on  # switches the geometric clustering in 2d on 
+  // --digi-geo2d on  # switches the geometric clustering in 2d on
   // --digi-geo3d on  # switches the geometric clustering in 3d on (legacy)
   //
   // each volume configuration is one logical block

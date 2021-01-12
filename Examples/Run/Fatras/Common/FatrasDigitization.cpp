@@ -7,9 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Digitization/PlanarModuleStepper.hpp"
+#include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
 #include "ActsExamples/Digitization/DigitizationOptions.hpp"
 #include "ActsExamples/Digitization/PlanarSteppingAlgorithm.hpp"
-#include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
 #include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
@@ -66,9 +66,7 @@ void setupDigitization(
           std::make_shared<RootDigitizationWriter>(smearWriterRoot, logLevel));
     }
 
-  } else if (vars["digi-geo2d"].as<bool>()) { 
-
-
+  } else if (vars["digi-geo2d"].as<bool>()) {
   } else if (vars["digi-geo3d"].as<bool>()) {
     // Configure the digitizer
     PlanarSteppingAlgorithm::Config digi;

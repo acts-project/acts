@@ -28,7 +28,6 @@ namespace ActsExamples {
 /// Algorithm that turns simulated hits into measurements by truth smearing.
 class DigitizationAlgorithm final : public BareAlgorithm {
  public:
-
   struct Config {
     /// Input collection of simulated hits.
     std::string inputSimHits;
@@ -61,7 +60,6 @@ class DigitizationAlgorithm final : public BareAlgorithm {
   ProcessCode execute(const AlgorithmContext& ctx) const final override;
 
  private:
-
   Config m_cfg;
 };
 

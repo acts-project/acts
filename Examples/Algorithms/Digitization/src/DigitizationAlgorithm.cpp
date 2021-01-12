@@ -74,10 +74,10 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
     // otherwise clang on macos complains that it is unable to capture the local
     // binding in the lambda used for visiting the smearer below.
     Acts::GeometryIdentifier moduleGeoId = simHitsGroup.first;
-   
+
     const Acts::Surface* surfacePtr =
         m_cfg.trackingGeometry->findSurface(moduleGeoId);
-   
+
     if (not surfacePtr) {
       // this is either an invalid geometry id or a misconfigured smearer
       // setup; both cases can not be handled and should be fatal.
@@ -85,9 +85,8 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
                                            << " for configured smearer");
       return ProcessCode::ABORT;
     }
-
   }
-  
+
   ctx.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));
   ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
   ctx.eventStore.add(m_cfg.outputMeasurementParticlesMap,
