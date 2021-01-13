@@ -11,10 +11,10 @@
 #include "ActsExamples/EventData/ExtractedSimulationProcess.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 
-#include <unordered_map>
-
 #include <TH1F.h>
 #include <TVectorF.h>
+#include <tuple>
+#include <utility>
 
 namespace ActsExamples {
 namespace detail {

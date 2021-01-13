@@ -10,13 +10,12 @@
 
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Io/NuclearInteractions/detail/NuclearInteractionParametrisation.hpp"
+#include "ActsExamples/EventData/ExtractedSimulationProcess.hpp"
 
 #include <mutex>
 #include <vector>
 
 namespace ActsExamples {
-
-struct ExtractedSimulationProcess;
 
 /// This class takes fractions of recorded events that represent the
 /// effect of a nuclear interaction and produces histograms and parameters which
