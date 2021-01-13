@@ -219,8 +219,8 @@ struct Interactor {
       const auto x0 = result.particle.pathInX0() + partialSlab.thicknessInX0();
       const auto l0 = result.particle.pathInX0() + partialSlab.thicknessInL0();
       bool retval = false;
-      if (continuous(*(this->generator), partialSlab, result.particle,
-                     result.generatedParticles)) {
+      if (continuous.run(*(this->generator), partialSlab, result.particle,
+                         result.generatedParticles)) {
         result.particleStatus = SimulationParticleStatus::eInteracted;
         retval = true;
       }
