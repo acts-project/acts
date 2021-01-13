@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,7 +15,7 @@
 
 namespace ActsFatras {
 
-/// Decay module that makes all particles stable.
+/// Decay module that treats all particles as stable.
 struct NoDecay {
   /// Generate the proper time limit for a particle.
   ///
@@ -27,8 +27,8 @@ struct NoDecay {
   }
   /// Decay the particle without generating any descendant particles.
   template <typename generator_t>
-  constexpr std::array<Particle, 0> generateDescendants(
-      generator_t& /* rng */, const Particle& /* particle */) const {
+  constexpr std::array<Particle, 0> run(generator_t& /* rng */,
+                                        const Particle& /* particle */) const {
     return {};
   }
 };

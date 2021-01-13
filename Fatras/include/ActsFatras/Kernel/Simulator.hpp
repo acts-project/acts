@@ -118,7 +118,7 @@ struct ParticleSimulator {
 
     // add decay products to the generated particles if the particle has decayed
     if (value.particleStatus == SimulationParticleStatus::eDecayed) {
-      auto descendants = decay.generateDescendants(generator, value.particle);
+      auto descendants = decay.run(generator, value.particle);
       for (auto &&descendant : descendants) {
         value.generatedParticles.emplace_back(std::move(descendant));
       }
