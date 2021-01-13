@@ -2,7 +2,7 @@
     "volumes": {
         "2": {
             "Geoid": "vol=2|lay=2",
-            "Name": "",
+            "name": "",
             "layers": {
                 "2": {
                     "Geoid": "vol=2|lay=2",

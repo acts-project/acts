@@ -592,20 +592,11 @@ class Navigator {
                    << "No surfaces present, target at layer first.");
       return false;
     }
-    std::vector<GeometryIdentifier> externalSurfaces;
-    if (!state.navigation.externalSurfaces.empty()) {
-      auto layerID =
-          state.navigation.navLayerIter->object->geometryId().layer();
-      auto externalSurfaceRange =
-          state.navigation.externalSurfaces.equal_range(layerID);
-
-      externalSurfaces.reserve(
-          state.navigation.externalSurfaces.count(layerID));
-      for (auto itSurface = externalSurfaceRange.first;
-           itSurface != externalSurfaceRange.second; itSurface++) {
-        externalSurfaces.push_back(itSurface->second);
-      }
-    }
+    auto layerID =
+        state.navigation.navSurfaceIter->object->geometryId().layer();
+    std::pair<ExternalSurfaces::iterator, ExternalSurfaces::iterator>
+        externalSurfaceRange =
+            state.navigation.externalSurfaces.equal_range(layerID);
     // Loop over the remaining navigation surfaces
     while (state.navigation.navSurfaceIter !=
            state.navigation.navSurfaces.end()) {
@@ -622,9 +613,12 @@ class Navigator {
                                   << surface->geometryId());
       // Estimate the surface status
       bool boundaryCheck = true;
-      if (std::find(externalSurfaces.begin(), externalSurfaces.end(),
-                    surface->geometryId()) != externalSurfaces.end()) {
-        boundaryCheck = false;
+      for (auto it = externalSurfaceRange.first;
+           it != externalSurfaceRange.second; it++) {
+        if (surface->geometryId() == it->second) {
+          boundaryCheck = false;
+          break;
+        }
       }
       auto surfaceStatus =
           stepper.updateSurfaceStatus(state.stepping, *surface, boundaryCheck);
