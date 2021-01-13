@@ -20,29 +20,6 @@ namespace ActsFatras {
 /// List of point-like physics processes.
 template <typename... processes_t>
 class PointLikePhysicsList {
-  // TODO check that all processes are unique types.
-
-  // utility struct to retrieve index of the first matching type in the tuple.
-  // from https://stackoverflow.com/a/18063608.
-  template <class T, class Tuple>
-  struct Index;
-  template <class T, class... Types>
-  struct Index<T, std::tuple<T, Types...>> {
-    static constexpr std::size_t value = 0u;
-  };
-  template <class T, class U, class... Types>
-  struct Index<T, std::tuple<U, Types...>> {
-    static constexpr std::size_t value =
-        1u + Index<T, std::tuple<Types...>>::value;
-  };
-
-  using Mask = std::bitset<sizeof...(processes_t)>;
-  using Processes = std::tuple<processes_t...>;
-
-  // allow processes to be masked. defaults to zeros -> no masked processes
-  Mask m_mask;
-  Processes m_processes;
-
  public:
   struct Selection {
     Particle::Scalar x0Limit =
@@ -105,6 +82,29 @@ class PointLikePhysicsList {
   }
 
  private:
+  // TODO check that all processes are unique types.
+
+  // utility struct to retrieve index of the first matching type in the tuple.
+  // from https://stackoverflow.com/a/18063608.
+  template <class T, class Tuple>
+  struct Index;
+  template <class T, class... Types>
+  struct Index<T, std::tuple<T, Types...>> {
+    static constexpr std::size_t value = 0u;
+  };
+  template <class T, class U, class... Types>
+  struct Index<T, std::tuple<U, Types...>> {
+    static constexpr std::size_t value =
+        1u + Index<T, std::tuple<Types...>>::value;
+  };
+
+  using Mask = std::bitset<sizeof...(processes_t)>;
+  using Processes = std::tuple<processes_t...>;
+
+  // allow processes to be masked. defaults to zeros -> no masked processes
+  Mask m_mask;
+  Processes m_processes;
+
   // for the `arm` call, we need to iterate over all available processes and
   // select the ones that generate the smallest limits. this is done using an
   // index-based compile-time recursive call.
