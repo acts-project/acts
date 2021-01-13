@@ -37,7 +37,7 @@ void setupDigitization(
   auto logLevel = Options::readLogLevel(vars);
   auto outputDir = vars["output-dir"].template as<std::string>();
 
-  if (vars["digi-smearing"].as<bool>()) {
+  if (vars["digi-smear"].as<bool>()) {
     SmearingAlgorithm::Config smearCfg = Options::readSmearingConfig(vars);
     smearCfg.inputSimHits = kFatrasCollectionHits;
     smearCfg.outputMeasurements = "measurements";

@@ -144,7 +144,7 @@ int processGeometry(int argc, char* argv[],
       jmConverterCfg.processDenseVolumes =
           vm["mat-output-dense-volumes"].template as<bool>();
       jmConverterCfg.writeData = vm["mat-output-data"].template as<bool>();
-      jmConverterCfg.processnonmaterial =
+      jmConverterCfg.processNonMaterial =
           vm["mat-output-allmaterial"].template as<bool>();
       jmConverterCfg.context = context.geoContext;
       // The writer
