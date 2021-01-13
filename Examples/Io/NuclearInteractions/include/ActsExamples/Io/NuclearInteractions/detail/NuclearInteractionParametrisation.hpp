@@ -12,6 +12,7 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 
 #include <tuple>
+#include <unordered_map>
 #include <utility>
 
 #include <TH1F.h>
