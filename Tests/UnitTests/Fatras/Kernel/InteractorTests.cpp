@@ -34,8 +34,8 @@ struct MockContinuousPhysicsList {
   double energyLoss = 0;
 
   template <typename generator_t>
-  bool operator()(generator_t &, const Acts::MaterialSlab &, Particle &particle,
-                  std::vector<Particle> &generated) const {
+  bool run(generator_t &, const Acts::MaterialSlab &, Particle &particle,
+           std::vector<Particle> &generated) const {
     generated.push_back(particle);
     particle.correctEnergy(-energyLoss);
     // break if particle is not alive anymore
