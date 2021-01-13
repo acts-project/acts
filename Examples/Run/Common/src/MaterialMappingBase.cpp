@@ -96,7 +96,7 @@ int materialMappingExample(int argc, char* argv[],
   // ---------------------------------------------------------------------------------
   // Input directory & input file handling
   std::string intputDir = vm["input-dir"].template as<std::string>();
-  auto intputFiles = vm["input-files"].template as<read_strings>();
+  auto intputFiles = vm["input-files"].template as<std::vector<std::string>>();
 
   if (vm["input-root"].template as<bool>()) {
     // Read the material step information from a ROOT TTree

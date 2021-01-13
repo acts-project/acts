@@ -50,4 +50,5 @@ class HepMC3AsciiWriter final : public WriterT<std::vector<HepMC3::GenEvent>> {
   /// The configuration of this writer
   Config m_cfg;
 };
+
 }  // namespace ActsExamples

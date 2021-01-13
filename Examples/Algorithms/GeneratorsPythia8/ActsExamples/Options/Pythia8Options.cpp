@@ -43,11 +43,13 @@ void ActsExamples::Options::addPythia8Options(Description& desc) {
       value<int32_t>()->default_value(Acts::PdgParticle::eProton),
       "PDG number of the second beam particle");
   opt("gen-hard-process",
-      value<std::vector<std::string>>()->default_value({"HardQCD:all = on"}),
+      value<std::vector<std::string>>()->default_value({"HardQCD:all = on"},
+                                                       "HardQCD:all = on"),
       "Pythia8 process string for the hard interactions. Can be given multiple "
       "times.");
   opt("gen-pileup-process",
-      value<std::vector<std::string>>()->default_value({"SoftQCD:all = on"}),
+      value<std::vector<std::string>>()->default_value({"SoftQCD:all = on"},
+                                                       "SoftQCD:all = on"),
       "Pythi8 process string for the pile-up interactions. Can be given "
       "multiple times.");
 }

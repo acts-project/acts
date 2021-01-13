@@ -528,7 +528,7 @@ void Acts::JsonGeometryConverter::convertToRep(
   // Write the material if there's one
   if (tVolume.volumeMaterial() != nullptr) {
     volRep.material = tVolume.volumeMaterial();
-  } else if (m_cfg.processnonmaterial == true) {
+  } else if (m_cfg.processNonMaterial == true) {
     Acts::BinUtility bUtility = DefaultBin(tVolume);
     Acts::IVolumeMaterial* bMaterial = new Acts::ProtoVolumeMaterial(bUtility);
     volRep.material = bMaterial;
@@ -560,7 +560,7 @@ void Acts::JsonGeometryConverter::convertToRep(
         volRep.boundaries[bid] = bssfRep.surfaceMaterial();
         volRep.boundarySurfaces[bid] = &bssfRep;
       }
-    } else if (m_cfg.processnonmaterial == true) {
+    } else if (m_cfg.processNonMaterial == true) {
       // if no material suface exist add a default one for the mapping
       // configuration
       Acts::GeometryIdentifier boundaryID = bssfRep.geometryId();
@@ -595,7 +595,7 @@ Acts::JsonGeometryConverter::LayerRep Acts::JsonGeometryConverter::convertToRep(
         geo_id_value sid = sensitiveID.sensitive();
         layRep.sensitives.insert({sid, ssf->surfaceMaterial()});
         layRep.sensitiveSurfaces.insert({sid, ssf});
-      } else if (m_cfg.processnonmaterial == true) {
+      } else if (m_cfg.processNonMaterial == true) {
         // if no material suface exist add a default one for the mapping
         // configuration
         Acts::GeometryIdentifier sensitiveID = ssf->geometryId();
@@ -613,7 +613,7 @@ Acts::JsonGeometryConverter::LayerRep Acts::JsonGeometryConverter::convertToRep(
     if (tLayer.surfaceRepresentation().surfaceMaterial() != nullptr) {
       layRep.representing = tLayer.surfaceRepresentation().surfaceMaterial();
       layRep.representingSurface = &tLayer.surfaceRepresentation();
-    } else if (m_cfg.processnonmaterial == true) {
+    } else if (m_cfg.processNonMaterial == true) {
       // if no material suface exist add a default one for the mapping
       // configuration
       Acts::BinUtility rUtility = DefaultBin(tLayer.surfaceRepresentation());
@@ -632,7 +632,7 @@ Acts::JsonGeometryConverter::LayerRep Acts::JsonGeometryConverter::convertToRep(
         geo_id_value aid = approachID.approach();
         layRep.approaches.insert({aid, asf->surfaceMaterial()});
         layRep.approacheSurfaces.insert({aid, asf});
-      } else if (m_cfg.processnonmaterial == true) {
+      } else if (m_cfg.processNonMaterial == true) {
         // if no material suface exist add a default one for the mapping
         // configuration
         Acts::GeometryIdentifier approachID = asf->geometryId();

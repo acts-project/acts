@@ -13,7 +13,7 @@ env:
 jobs:
   linux:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v6
+    container: ghcr.io/acts-project/${{ matrix.image }}:v9
     strategy:
       matrix:
         image:
@@ -30,11 +30,9 @@ jobs:
         if: contains(matrix.image, 'lcg')
         run: echo "SETUP=${SETUP_LCG}" >> $GITHUB_ENV
       - name: Configure
-        # use manual mkdir+cd. CMake on LCG95 does not like -B ... -S ...
         run: >
           ${SETUP} &&
-          mkdir build && cd build &&
-          cmake ..
+          cmake -B build -S .
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
@@ -55,8 +53,7 @@ jobs:
       - name: Downstream configure
         run: >
           ${SETUP} &&
-          mkdir build-downstream && cd build-downstream &&
-          cmake ../Tests/DownstreamProject
+          cmake -B build-downstream -S Tests/DownstreamProject
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
@@ -116,7 +113,7 @@ jobs:
         run: ./build-downstream/bin/ShowActsVersion
   cuda:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu1804_cuda:v6
+    container: ghcr.io/acts-project/ubuntu1804_cuda:v9
     steps:
       - uses: actions/checkout@v2
       - name: Configure
@@ -126,13 +123,35 @@ jobs:
           -DCMAKE_CXX_COMPILER=/usr/bin/g++-8
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
-          -DACTS_BUILD_CUDA_PLUGIN=ON
+          -DACTS_BUILD_PLUGIN_CUDA=ON
           -DACTS_BUILD_UNITTESTS=ON
       - name: Build
         run: cmake --build build --
+  sycl:
+    runs-on: ubuntu-latest
+    container: ghcr.io/acts-project/ubuntu2004_oneapi:v9
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configure
+        run: >
+          source /opt/intel/oneapi/setvars.sh
+          && cmake -B build -S .
+          -GNinja
+          -DCMAKE_CXX_COMPILER=clang++
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
+          -DACTS_BUILD_PLUGIN_SYCL=ON
+          -DACTS_BUILD_UNITTESTS=ON
+      - name: Build
+        run: >
+          source /opt/intel/oneapi/setvars.sh
+          && cmake --build build --
   docs:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v6
+    container: ghcr.io/acts-project/ubuntu2004:v9
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies

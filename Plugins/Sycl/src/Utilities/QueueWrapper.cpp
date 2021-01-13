@@ -21,26 +21,51 @@
 
 namespace Acts::Sycl {
 
-QueueWrapper::QueueWrapper(const std::string& deviceNameSubtring) {
-  initialize(deviceNameSubtring);
+QueueWrapper::QueueWrapper(const std::string& deviceNameSubstring,
+                           std::unique_ptr<const Logger> incomingLogger)
+    : m_queue(nullptr), m_ownsQueue(true), m_logger(std::move(incomingLogger)) {
+  // SYCL kernel exceptions are asynchronous
+  auto exception_handler = [&log =
+                                m_logger](cl::sycl::exception_list exceptions) {
+    for (std::exception_ptr const& e : exceptions) {
+      try {
+        std::rethrow_exception(e);
+      } catch (std::exception& e) {
+        LoggerWrapper logger(*log);
+        ACTS_FATAL("Caught asynchronous (kernel) SYCL exception:\n" << e.what())
+      }
+    }
+  };
+
+  // Create queue with custom device selector
+  m_queue = new cl::sycl::queue(DeviceSelector(deviceNameSubstring),
+                                exception_handler);
+  m_ownsQueue = true;
+
+  // See which device we are running on.
+  LoggerWrapper logger(*m_logger);
+  ACTS_INFO("Running on: "
+            << m_queue->get_device().get_info<cl::sycl::info::device::name>());
 }
 
 QueueWrapper::QueueWrapper(QueueWrapper&& parent) noexcept
-    : m_queue(parent.m_queue), m_ownsQueue(parent.m_ownsQueue) {
+    : m_queue(parent.m_queue),
+      m_ownsQueue(parent.m_ownsQueue),
+      m_logger(std::move(parent.m_logger)) {
   parent.m_queue = nullptr;
   parent.m_ownsQueue = false;
 }
 
-QueueWrapper::QueueWrapper(const QueueWrapper& other) {
-  m_queue = other.m_queue;
-  m_ownsQueue = false;
-}
+QueueWrapper::QueueWrapper(const QueueWrapper& other)
+    : m_queue(other.m_queue),
+      m_ownsQueue(false),
+      m_logger(getDefaultLogger("Sycl::QueueWrapper", Logging::INFO)) {}
 
 QueueWrapper::~QueueWrapper() {
   if (m_ownsQueue && (m_queue != nullptr)) {
     delete m_queue;
   }
-};
+}
 
 QueueWrapper& QueueWrapper::operator=(QueueWrapper&& rhs) noexcept {
   // Check whether we have to do anything
@@ -56,12 +81,13 @@ QueueWrapper& QueueWrapper::operator=(QueueWrapper&& rhs) noexcept {
   // Perform the move
   m_queue = rhs.m_queue;
   m_ownsQueue = rhs.m_ownsQueue;
+  m_logger = std::move(rhs.m_logger);
   rhs.m_queue = nullptr;
   rhs.m_ownsQueue = false;
 
   // Return this object.
   return *this;
-};
+}
 
 QueueWrapper& QueueWrapper::operator=(const QueueWrapper& other) {
   // Check whether we have to do anything
@@ -72,37 +98,10 @@ QueueWrapper& QueueWrapper::operator=(const QueueWrapper& other) {
   m_queue = other.m_queue;
   m_ownsQueue = false;
   return *this;
-};
+}
 
 cl::sycl::queue* QueueWrapper::getQueue() const {
   return m_queue;
 }
-
-void QueueWrapper::initialize(const std::string& deviceNameSubstring) {
-  // SYCL kernel exceptions are asynchronous
-  auto exception_handler = [](cl::sycl::exception_list exceptions) {
-    for (std::exception_ptr const& e : exceptions) {
-      try {
-        std::rethrow_exception(e);
-      } catch (std::exception& e) {
-        ACTS_LOCAL_LOGGER(
-            Acts::getDefaultLogger("SyclQueue", Acts::Logging::INFO));
-        ACTS_FATAL("Caught asynchronous (kernel) SYCL exception:\n" << e.what())
-      }
-    }
-  };
-
-  ACTS_LOCAL_LOGGER(
-      Acts::getDefaultLogger("QueueWrapper", Acts::Logging::INFO));
-  // Create queue with custom device selector
-  m_queue = new cl::sycl::queue(DeviceSelector(deviceNameSubstring),
-                                exception_handler);
-
-  m_ownsQueue = true;
-
-  // See which device we are running on.
-  ACTS_INFO("Running on: "
-            << m_queue->get_device().get_info<cl::sycl::info::device::name>());
-};
 
 }  // namespace Acts::Sycl

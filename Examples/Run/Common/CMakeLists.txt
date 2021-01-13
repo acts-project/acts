@@ -16,8 +16,7 @@ target_link_libraries(
     ActsExamplesFramework ActsExamplesMagneticField
     ActsExamplesDetectorsCommon ActsExamplesPropagation
     ActsExamplesMaterialMapping ActsExamplesIoCsv ActsExamplesIoJson
-    ActsExamplesIoRoot ActsExamplesIoObj ActsExamplesIoPerformance
-    ActsExamplesSeeding)
+    ActsExamplesIoRoot ActsExamplesIoObj ActsExamplesIoPerformance)
 
 install(
   TARGETS ActsExamplesCommon

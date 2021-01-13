@@ -24,27 +24,33 @@ section.
 The following dependencies are required to build the Acts core library:
 
 -   A C++17 compatible compiler (recent versions of either gcc and clang should work)
--   [CMake](https://cmake.org) >= 3.11
--   [Boost](http://boost.org) >= 1.69 with `filesystem`, `program_options`, and `unit_test_framework`
--   [Eigen](http://eigen.tuxfamily.org) >= 3.2.9
+-   [CMake](https://cmake.org) >= 3.14
+-   [Boost](http://boost.org) >= 1.71 with `filesystem`, `program_options`, and `unit_test_framework`
+-   [Eigen](http://eigen.tuxfamily.org) >= 3.3.7
 
 The following dependencies are optional and are needed to build additional
-components.
+components:
 
--   [DD4Hep](http://dd4hep.cern.ch) >= 1.10 for the DD4Hep plugin and some examples
--   [Doxygen](http://doxygen.org) >= 1.8.11 for the documentation
+-   [CUDA](https://developer.nvidia.com/cuda-zone) for the CUDA plugin
+-   [DD4Hep](http://dd4hep.cern.ch) >= 1.11 for the DD4Hep plugin and some examples
+-   [Doxygen](http://doxygen.org) >= 1.8.15 for the documentation
 -   [Geant4](http://geant4.org/) for some examples
--   [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) >= 3.1 for some examples
--   [HepPDT](http://lcginfo.cern.ch/pkg/HepPDT) >= 2.06 for some examples
+-   [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) >= 3.2.1 for some examples
+-   [Intel Threading Building Blocks](https://01.org/tbb) >= 2020.1 for the examples
+-   [ONNX](https://onnx.ai) for the ONNX plugin and some examples
 -   [Pythia8](http://home.thep.lu.se/~torbjorn/Pythia.html) for some examples
--   [Intel Threading Building Blocks](https://01.org/tbb) for the examples
--   [ROOT](https://root.cern.ch) >= 6.10 for the TGeo plugin and the examples
+-   [ROOT](https://root.cern.ch) >= 6.20 for the TGeo plugin and the examples
 -   [Sphinx](https://www.sphinx-doc.org) >= 2.0 with [Breathe](https://breathe.readthedocs.io/en/latest/), [Exhale](https://exhale.readthedocs.io/en/latest/), and [recommonmark](https://recommonmark.readthedocs.io/en/latest/index.html) extensions for the documentation
+-   [SYCL](https://www.khronos.org/sycl/) for the SYCL plugin
+
+There are some additional dependencies that are automatically provided as part of
+the build system.
+These are usually not available through the system package manager and can be found in the ``thirdparty`` directory.
 
 All external dependencies must be provided prior to building Acts. Compatible
 versions of all dependencies are provided e.g. by the [LCG
-releases](http://lcginfo.cern.ch/). The minimum support release is [LCG
-95apython3](http://lcginfo.cern.ch/release/95apython3). Other options are also
+releases](http://lcginfo.cern.ch/) starting from [LCG 97apython3](http://lcginfo.cern.ch/release/97apython3/).
+Other options are also
 available and are discussed in the [Building Acts](#building-acts) section.
 
 ## Building Acts
@@ -85,17 +91,16 @@ The build commands are the same regardless of where you are building the
 software. Depending on your build environment, there are different ways how to
 make the dependencies available.
 
-### On lxplus
+### With a LCG release on CVMFS
 
-On CERNs lxplus login machines, dependencies are provided via LCG releases
-that are available through CVMFS. A setup script is provided to activate one of the compatible releases that can be used as follows:
+If you have access to a machine running [CVMFS](https://cernvm.cern.ch/fs/),
+e.g. CERNs lxplus login machines, the dependencies can be easily satisfied
+via a LCG releases available through CVMFS. A setup script is provided to activate a compatible releases that can be used as follows:
 
 ```console
 $ cd <source>
-$ source CI/setup_lcg95.sh # or setup_lcg96.sh
+$ source CI/setup_cvmfs_lcg.sh
 ```
-
-This activates a compatible release variant on *CentOS 7*.
 
 After sourcing the setup script, you can build Acts as described above. The
 following commands will build Acts in the `<source>/build` directory with the
@@ -103,7 +108,7 @@ Fatras component.
 
 ```console
 $ cd <source>
-$ source CI/setup_lcg96.sh
+$ source CI/setup_cvmfs_lcg.sh
 $ cmake -B build -S . -DACTS_BUILD_FATRAS=on
 $ cmake --build build
 ```
@@ -114,20 +119,27 @@ A set of container images is available through the [Acts container
 registry][acts_containers]. The following containers are used as part of the
 continous integration setup and come with all dependencies pre-installed.
 
--   `centos7-lcg95apython3`: based on CentOS 7 with HEP-specific software from
-    LCG release 95apython3
--   `centos7-lcg96`: based on CentOS 7 with HEP-specific software from LCG
-    release 96
+-   `centos7-lcg97apython3-gcc9`: based on CentOS 7 with HEP-specific software from
+    LCG 97apython3 using the GCC 9 compiler
+-   `centos7-lcg98python3-gcc10`: based on CentOS 7 with HEP-specific software from LCG
+    98python3 using the GCC 10 compiler
 -   `ubuntu2004`: based on Ubuntu 20.04 with manual installation of HEP-specific
     software
 
 To use these locally, you first need to pull the relevant images from the
 registry. Stable versions are tagged as `vX` where `X` is the version number.
-The latest version is also tagged as `master`. The following command downloads
-the latest `ubuntu2004` image:
+The latest, potentially unstable, version is tagged as `latest`. To list all
+available tags, e.g. for the `ubuntu2004` image, you can use the following
+command:
 
 ```console
-$ docker pull ghcr.io/acts-project/ubuntu2004:master
+$ docker search --list-tags ghcr.io/acts-project/ubuntu2004
+```
+
+The following command then downloads a stable tag of the `ubuntu2004` image:
+
+```console
+$ docker pull ghcr.io/acts-project/ubuntu2004:v9
 ```
 
 This should print the image id as part of the output. You can also find out the
@@ -162,7 +174,7 @@ container $ cmake --build build
 
 Building and running Acts on your local machine is not offically supported.
 However, if you have the necessary prerequisites installed it is possible to use
-it locally. Acts developers regularly use different recent Linux distributions
+it locally. Acts developers regularly use different Linux distributions
 and macOS to build and develop Acts.
 
 ## Building the documentation
@@ -231,6 +243,7 @@ components.
 | ACTS_BUILD_PLUGIN_IDENTIFICATION      | Build Identification plugin |
 | ACTS_BUILD_PLUGIN_JSON                | Build Json plugin |
 | ACTS_BUILD_PLUGIN_LEGACY              | Build legacy plugin |
+| ACTS_BUILD_PLUGIN_ONNX                | Build ONNX plugin |
 | ACTS_BUILD_PLUGIN_SYCL                | Build SYCL plugin |
 | ACTS_BUILD_PLUGIN_TGEO                | Build TGeo plugin |
 | ACTS_BUILD_FATRAS                     | Build FAst TRAcking Simulation package |
@@ -244,6 +257,7 @@ components.
 | ACTS_BUILD_UNITTESTS                  | Build unit tests |
 | ACTS_BUILD_DOCS                       | Build documentation |
 | ACTS_PARAMETER_DEFINITIONS_HEADER     | Use a different (track) parameter definitions header |
+| ACTS_USE_SYSTEM_AUTODIFF              | Use autodiff provided by the system instead of the bundled version |
 | ACTS_USE_SYSTEM_NLOHMANN_JSON         | Use nlohmann::json provided by the system instead of the bundled version |
 
 All Acts-specific options are disabled or empty by default and must be

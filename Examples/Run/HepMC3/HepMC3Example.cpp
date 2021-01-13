@@ -12,12 +12,12 @@
 #include "ActsExamples/Io/HepMC3/HepMC3Options.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Reader.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsFatras/Utilities/ParticleData.hpp"
 
 #include <fstream>
 
 #include <HepMC3/GenEvent.h>
 #include <HepMC3/ReaderAscii.h>
-#include <HepPID/ParticleName.hh>
 
 ///
 /// Straight forward example of reading a HepMC3 file.
@@ -77,8 +77,11 @@ int main(int argc, char** argv) {
   if (beam.empty())
     std::cout << "none" << std::endl;
   else {
-    for (auto& pbeam : beam)
-      std::cout << HepPID::particleName(pbeam.pdg()) << " ";
+    for (auto& pbeam : beam) {
+      std::cout << ActsFatras::findName(
+                       static_cast<Acts::PdgParticle>(pbeam.pdg()))
+                << " ";
+    }
     std::cout << std::endl;
   }
 
@@ -90,11 +93,17 @@ int main(int argc, char** argv) {
   else {
     std::cout << std::endl;
     for (auto& vertex : vertices) {
-      for (auto& particle : vertex->incoming)
-        std::cout << HepPID::particleName(particle.pdg()) << " ";
+      for (auto& particle : vertex->incoming) {
+        std::cout << ActsFatras::findName(
+                         static_cast<Acts::PdgParticle>(particle.pdg()))
+                  << " ";
+      }
       std::cout << "-> ";
-      for (auto& particle : vertex->outgoing)
-        std::cout << HepPID::particleName(particle.pdg()) << " ";
+      for (auto& particle : vertex->outgoing) {
+        std::cout << ActsFatras::findName(
+                         static_cast<Acts::PdgParticle>(particle.pdg()))
+                  << " ";
+      }
       std::cout << "\t@(" << vertex->time() << ", " << vertex->position()(0)
                 << ", " << vertex->position()(1) << ", "
                 << vertex->position()(2) << ")" << std::endl;
@@ -105,20 +114,27 @@ int main(int argc, char** argv) {
   std::cout << "Total particle record:" << std::endl;
   std::vector<ActsExamples::SimParticle> particles =
       ActsExamples::HepMC3Event::particles(genevt);
-  for (auto& particle : particles)
-    std::cout << HepPID::particleName(particle.pdg())
+  for (auto& particle : particles) {
+    std::cout << ActsFatras::findName(
+                     static_cast<Acts::PdgParticle>(particle.pdg()))
               << "\tID:" << particle.particleId() << ", momentum: ("
               << particle.fourMomentum()(0) << ", "
               << particle.fourMomentum()(1) << ", "
               << particle.fourMomentum()(2) << "), mass:  " << particle.mass()
               << std::endl;
+  }
 
   std::cout << std::endl << "Initial to final state: ";
   std::vector<ActsExamples::SimParticle> fState = finalState(genevt);
-  for (auto& pbeam : beam)
-    std::cout << HepPID::particleName(pbeam.pdg()) << " ";
+  for (auto& pbeam : beam) {
+    std::cout << ActsFatras::findName(
+                     static_cast<Acts::PdgParticle>(pbeam.pdg()))
+              << " ";
+  }
   std::cout << "-> ";
-  for (auto& fs : fState)
-    std::cout << HepPID::particleName(fs.pdg()) << " ";
+  for (auto& fs : fState) {
+    std::cout << ActsFatras::findName(static_cast<Acts::PdgParticle>(fs.pdg()))
+              << " ";
+  }
   std::cout << std::endl;
 }
