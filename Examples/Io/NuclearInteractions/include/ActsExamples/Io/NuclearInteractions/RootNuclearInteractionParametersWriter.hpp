@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/ExtractedSimulationProcess.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Io/NuclearInteractions/detail/NuclearInteractionParametrisation.hpp"
-#include "ActsExamples/EventData/ExtractedSimulationProcess.hpp"
 
 #include <mutex>
 #include <vector>
