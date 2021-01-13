@@ -28,7 +28,7 @@ namespace {
 ///
 /// Each run call creates one descendant particle.
 struct X0Process {
-  std::pair<Scalar, Scalar> generateLimits(Rng &, const Particle &) const {
+  std::pair<Scalar, Scalar> generatePathLimits(Rng &, const Particle &) const {
     return {0.5, std::numeric_limits<Scalar>::infinity()};
   }
 
@@ -43,7 +43,7 @@ struct X0Process {
 ///
 /// Each run call creates two descendant particles.
 struct L0Process {
-  std::pair<Scalar, Scalar> generateLimits(Rng &, const Particle &) const {
+  std::pair<Scalar, Scalar> generatePathLimits(Rng &, const Particle &) const {
     return {std::numeric_limits<Scalar>::infinity(), 1.5};
   }
 

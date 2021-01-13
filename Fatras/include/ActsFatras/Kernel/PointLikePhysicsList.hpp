@@ -117,7 +117,7 @@ class PointLikePhysicsList {
     // only arm the process if it is not masked
     if (not m_mask[I0]) {
       auto [x0Limit, l0Limit] =
-          std::get<I0>(m_processes).generateLimits(rng, particle);
+          std::get<I0>(m_processes).generatePathLimits(rng, particle);
       if (x0Limit < selection.x0Limit) {
         selection.x0Limit = x0Limit;
         selection.x0Process = I0;
