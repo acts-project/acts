@@ -215,17 +215,22 @@ struct Interactor {
     auto runContinuousPartial = [&, this](float fraction) {
       Acts::MaterialSlab partialSlab = slab;
       partialSlab.scaleThickness(fraction);
-      // material after particle passage
+      // material after passing this slab
       const auto x0 = result.particle.pathInX0() + partialSlab.thicknessInX0();
       const auto l0 = result.particle.pathInX0() + partialSlab.thicknessInL0();
-      result.particle.setMaterialPassed(x0, l0);
-      //
+      bool retval = false;
       if (continuous(*(this->generator), partialSlab, result.particle,
                      result.generatedParticles)) {
         result.particleStatus = SimulationParticleStatus::eInteracted;
-        return true;
+        retval = true;
       }
-      return false;
+      // the Interactor is in charge of keeping track of the material. since the
+      // accumulated material is stored in the particle it could (but should
+      // not) be modified by a physics process. to avoid issues, the material is
+      // updated only after process simulation has occured. this intentionally
+      // overwrites any material updates made by the process.
+      result.particle.setMaterialPassed(x0, l0);
+      return retval;
     };
 
     // material thickness measured in radiation/interaction lengths
