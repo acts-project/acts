@@ -116,11 +116,7 @@ class JsonGeometryConverter {
     std::string bin1key = "bin1";
     /// The bin2 key
     std::string bin2key = "bin2";
-<<<<<<< HEAD
     /// The local to global transformation key
-=======
-    /// The local to global tranfo key
->>>>>>> 3a8c2740b... make generic examples work again
     std::string transfokeys = "transformation";
     /// The type key -> proto, else
     std::string typekey = "type";
