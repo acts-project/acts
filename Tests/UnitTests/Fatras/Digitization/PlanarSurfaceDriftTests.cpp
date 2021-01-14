@@ -23,7 +23,6 @@ namespace ActsFatras {
 BOOST_AUTO_TEST_SUITE(Digitization)
 
 BOOST_AUTO_TEST_CASE(PlanarSurfaceDrift) {
-    
   Acts::GeometryContext geoCtx;
 
   ActsFatras::PlanarSurfaceDrift psd;
