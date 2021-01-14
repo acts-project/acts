@@ -24,14 +24,30 @@ namespace ActsFatras {
 /// disabled at run-time. By default all processes are applied.
 template <typename... processes_t>
 class PhysicsList {
+  using Mask = std::bitset<sizeof...(processes_t)>;
+  using Processes = std::tuple<processes_t...>;
+
  public:
-  /// Disable a specific process by type.
+  /// Disable a specific process identified by index.
+  void disable(size_t process) { m_mask.set(process); }
+  /// Disable a specific process identified by type.
+  ///
+  /// @note Disables only the first element, if multiple elements of the same
+  ///   type exist.
   template <typename process_t>
   void disable() {
     m_mask.set(Index<process_t, Processes>::value);
   }
 
-  /// Access a specific process by type.
+  /// Access a specific process identified by index.
+  template <size_t kProcess>
+  std::tuple_element<kProcess, Processes>& get() {
+    return std::get<kProcess>(m_processes);
+  }
+  /// Access a specific process identified by type.
+  ///
+  /// @warning This function only works if all configured processes have
+  ///   different types.
   template <typename process_t>
   process_t& get() {
     return std::get<process_t>(m_processes);
@@ -59,8 +75,6 @@ class PhysicsList {
   }
 
  private:
-  // TODO check that all processes are unique types.
-
   // utility struct to retrieve index of the first matching type in the tuple.
   // from https://stackoverflow.com/a/18063608.
   template <class T, class Tuple>
@@ -74,9 +88,6 @@ class PhysicsList {
     static constexpr std::size_t value =
         1u + Index<T, std::tuple<Types...>>::value;
   };
-
-  using Mask = std::bitset<sizeof...(processes_t)>;
-  using Processes = std::tuple<processes_t...>;
 
   // allow processes to be masked. defaults to zeros -> no masked processes
   Mask m_mask;
