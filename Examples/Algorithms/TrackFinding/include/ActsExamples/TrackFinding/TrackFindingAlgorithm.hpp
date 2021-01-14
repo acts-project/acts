@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/TrackFinding/CKFSourceLinkSelector.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
+#include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
@@ -27,11 +27,11 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   /// and track finder options and returns some track-finder-specific result.
   using TrackFinderOptions =
       Acts::CombinatorialKalmanFilterOptions<MeasurementCalibrator,
-                                             Acts::CKFSourceLinkSelector>;
-  using TrackFinderResult =
-      Acts::Result<Acts::CombinatorialKalmanFilterResult<IndexSourceLink>>;
+                                             Acts::MeasurementSelector>;
+  using TrackFinderResult = std::vector<
+      Acts::Result<Acts::CombinatorialKalmanFilterResult<IndexSourceLink>>>;
   using TrackFinderFunction = std::function<TrackFinderResult(
-      const IndexSourceLinkContainer&, const TrackParameters&,
+      const IndexSourceLinkContainer&, const TrackParametersContainer&,
       const TrackFinderOptions&)>;
 
   /// Create the track finder function implementation.
@@ -53,8 +53,8 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
     std::string outputTrajectories;
     /// Type erased track finder function.
     TrackFinderFunction findTracks;
-    /// CKF source link selector config
-    Acts::CKFSourceLinkSelector::Config sourcelinkSelectorCfg;
+    /// CKF measurement selector config
+    Acts::MeasurementSelector::Config measurementSelectorCfg;
   };
 
   /// Constructor of the track finding algorithm
