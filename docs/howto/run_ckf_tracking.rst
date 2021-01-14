@@ -20,16 +20,16 @@ and run the CKF which will perform the track finding and track fitting simultane
 
 Currently, there are two configurable criteria to select compatible source links on a surface with track parameters in CKF:
 
-* Global maximum chi2 of Kalman filtering. This could be set up via ``--ckf-slselection-chi2max``
-* Global maximum number of source links on a surface. This could be set up via ``--ckf-slselection-nmax`` 
+* Global maximum chi2 of Kalman filtering. This could be set up via ``--ckf-selection-chi2max``
+* Global maximum number of measurements on a surface. This could be set up via ``--ckf-selection-nmax`` 
 
 .. code-block:: console
 
    $ <build>/bin/ActsExampleCKFTracksGeneric \
        --input-dir=data/sim_trackML/ttbar_mu200 \
        --bf-value=0 0 2 \
-       --ckf-slselection-chi2max 15 \
-       --ckf-slselection-nmax 10 \
+       --ckf-selection-chi2max 15 \
+       --ckf-selection-nmax 10 \
        --output-dir=data/reco_trackML/ttbar_mu200
 
 The magnetic field setup should be consistent between simulation and CKF tracking.
