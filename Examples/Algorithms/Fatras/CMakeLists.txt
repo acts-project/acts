@@ -1,7 +1,8 @@
 add_library(
   ActsExamplesFatras SHARED
   src/FatrasAlgorithm.cpp
-  src/FatrasAlgorithmOptions.cpp)
+  src/FatrasAlgorithmOptions.cpp
+  src/NuclearInteractionOptions.cpp)
 target_include_directories(
   ActsExamplesFatras
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)

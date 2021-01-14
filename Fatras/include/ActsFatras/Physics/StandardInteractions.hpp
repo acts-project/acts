@@ -16,6 +16,7 @@
 #include "ActsFatras/Selectors/KinematicCasts.hpp"
 #include "ActsFatras/Selectors/ParticleSelectors.hpp"
 #include "ActsFatras/Selectors/SelectorHelpers.hpp"
+#include "ActsFatras/Physics/NuclearInteraction/NuclearInteraction.hpp"
 
 namespace ActsFatras {
 namespace detail {
@@ -40,6 +41,9 @@ using StandardBetheBloch =
 using StandardBetheHeitler =
     ContinuousProcess<BetheHeitler, SelectElectronLike, SelectPMin, SelectPMin>;
 
+            /// Parametrized nuclear interaction that applies to hadrons.
+using ParametrizedNuclearInteraction =
+    Process<NuclearInteraction, SelectPMin, SelectPMin, EveryParticle>;
 }  // namespace detail
 
 /// Standard set of electro-magnetic interactions for charged particles.

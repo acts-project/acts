@@ -14,6 +14,7 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
+#include "ActsFatras/Physics/NuclearInteraction/NuclearInteraction.hpp"
 
 #include <memory>
 #include <string>
@@ -35,6 +36,8 @@ class FatrasAlgorithm final : public BareAlgorithm {
     std::string outputParticlesFinal;
     /// The simulated hits output collection.
     std::string outputSimHits;
+    /// Parametrisation of nuclear interaction
+    std::string imputParametrisation = "parameters";
     /// Random number service.
     std::shared_ptr<const RandomNumbers> randomNumbers;
     /// The tracking geometry that should be used.
