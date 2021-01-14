@@ -108,9 +108,6 @@ class PointLikePhysicsList {
   // for the `arm` call, we need to iterate over all available processes and
   // select the ones that generate the smallest limits. this is done using an
   // index-based compile-time recursive call.
-  template <typename generator_t>
-  void armImpl(generator_t&, const Particle&, Selection&,
-               std::index_sequence<>) const {}
   template <typename generator_t, std::size_t I0, std::size_t... INs>
   void armImpl(generator_t& rng, const Particle& particle, Selection& selection,
                std::index_sequence<I0, INs...>) const {
@@ -130,18 +127,13 @@ class PointLikePhysicsList {
     // continue with the remaining processes
     armImpl(rng, particle, selection, std::index_sequence<INs...>());
   }
+  template <typename generator_t>
+  void armImpl(generator_t&, const Particle&, Selection&,
+               std::index_sequence<>) const {}
 
   // for the `run` call we need call just one process. since we can not select a
   // tuple element with a runtime index, we need to iterate over all processes
   // with a compile-time recursive function until we reach the requested one.
-  template <typename generator_t>
-  bool runImpl(generator_t&, size_t, Particle&, std::vector<Particle>&,
-               std::index_sequence<>) const {
-    // the requested process index is outside the possible range. **do not**
-    // treat this as an error to simplify the case of an empty physics lists or
-    // a default process index.
-    return false;
-  }
   template <typename generator_t, size_t I0, size_t... INs>
   bool runImpl(generator_t& rng, size_t process, Particle& particle,
                std::vector<Particle>& generated,
@@ -157,6 +149,14 @@ class PointLikePhysicsList {
     // continue the iteration with the remaining processes
     return runImpl(rng, process, particle, generated,
                    std::index_sequence<INs...>());
+  }
+  template <typename generator_t>
+  bool runImpl(generator_t&, size_t, Particle&, std::vector<Particle>&,
+               std::index_sequence<>) const {
+    // the requested process index is outside the possible range. **do not**
+    // treat this as an error to simplify the case of an empty physics lists or
+    // a default process index.
+    return false;
   }
 };
 
