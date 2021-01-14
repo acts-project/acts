@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -25,8 +25,8 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
-#include "Acts/TrackFinding/CKFSourceLinkSelector.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
+#include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -82,7 +82,7 @@ struct Fixture {
                                       KalmanSmoother>;
   using CombinatorialKalmanFilterOptions =
       Acts::CombinatorialKalmanFilterOptions<TestSourceLinkCalibrator,
-                                             Acts::CKFSourceLinkSelector>;
+                                             Acts::MeasurementSelector>;
 
   Acts::GeometryContext geoCtx;
   Acts::MagneticFieldContext magCtx;
@@ -99,9 +99,9 @@ struct Fixture {
 
   // CKF implementation to be tested
   CombinatorialKalmanFilter ckf;
-  // configuration for the source link selector
-  Acts::CKFSourceLinkSelector::Config sourceLinkSelectorCfg = {
-      // global default: no chi2 cut, only one source link per surface
+  // configuration for the measurement selector
+  Acts::MeasurementSelector::Config measurementSelectorCfg = {
+      // global default: no chi2 cut, only one measurement per surface
       {Acts::GeometryIdentifier(), {std::numeric_limits<double>::max(), 1u}},
   };
 
@@ -123,20 +123,22 @@ struct Fixture {
     Acts::BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
     // all tracks close to the transverse plane along the x axis w/ small
     // variations in position, direction.
-    Acts::Vector4 mPos0(-3_m, 0.0, 0.0, 1_ns);
-    Acts::Vector4 mPos1(-3_m, -15_mm, -15_mm, 2_ns);
-    Acts::Vector4 mPos2(-3_m, 15_mm, 15_mm, -1_ns);
+    Acts::Vector4 mStartPos0(-3_m, 0.0, 0.0, 1_ns);
+    Acts::Vector4 mStartPos1(-3_m, -15_mm, -15_mm, 2_ns);
+    Acts::Vector4 mStartPos2(-3_m, 15_mm, 15_mm, -1_ns);
     startParameters = {
-        {mPos0, 0_degree, 90_degree, 1_GeV, 1_e, cov},
-        {mPos1, -1_degree, 91_degree, 1_GeV, 1_e, cov},
-        {mPos2, 1_degree, 89_degree, 1_GeV, -1_e, cov},
+        {mStartPos0, 0_degree, 90_degree, 1_GeV, 1_e, cov},
+        {mStartPos1, -1_degree, 91_degree, 1_GeV, 1_e, cov},
+        {mStartPos2, 1_degree, 89_degree, 1_GeV, -1_e, cov},
     };
-    for (const auto& start : startParameters) {
-      Acts::Vector4 pos = start.fourPosition(geoCtx);
-      pos[Acts::ePos0] = 3_m;
-      endParameters.emplace_back(pos, start.unitDirection(),
-                                 start.absoluteMomentum(), start.charge());
-    }
+    Acts::Vector4 mEndPos0(3_m, 0.0, 0.0, 1_ns);
+    Acts::Vector4 mEndPos1(3_m, -100_mm, -100_mm, 2_ns);
+    Acts::Vector4 mEndPos2(3_m, 100_mm, 100_mm, -1_ns);
+    endParameters = {
+        {mEndPos0, 0_degree, 90_degree, 1_GeV, 1_e, cov * 100},
+        {mEndPos1, -1_degree, 91_degree, 1_GeV, 1_e, cov * 100},
+        {mEndPos2, 1_degree, 89_degree, 1_GeV, -1_e, cov * 100},
+    };
 
     // create some measurements
     auto measPropagator = makeStraightPropagator(detector.geometry);
@@ -177,7 +179,7 @@ struct Fixture {
   CombinatorialKalmanFilterOptions makeCkfOptions() const {
     return CombinatorialKalmanFilterOptions(
         geoCtx, magCtx, calCtx, TestSourceLinkCalibrator(),
-        Acts::CKFSourceLinkSelector(sourceLinkSelectorCfg),
+        Acts::MeasurementSelector(measurementSelectorCfg),
         Acts::LoggerWrapper{*logger}, Acts::PropagatorPlainOptions());
   }
 };
@@ -192,22 +194,30 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   auto options = f.makeCkfOptions();
   // this is the default option. set anyways for consistency
   options.propagatorPlainOptions.direction = Acts::forward;
+  // Construct a plane surface as the target surface
+  auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      Acts::Vector3{-3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
+  // Set the target surface
+  options.referenceSurface = &(*pSurface);
 
-  // run the CKF for each initial track state
+  // run the CKF for all initial track states
+  auto results = f.ckf.findTracks(f.sourceLinks, f.startParameters, options);
+  // There should be three track finding results with three initial track states
+  BOOST_CHECK_EQUAL(results.size(), 3u);
+
+  // check the found tracks
   for (size_t trackId = 0u; trackId < f.startParameters.size(); ++trackId) {
     const auto& params = f.startParameters[trackId];
     BOOST_TEST_INFO("initial parameters before detector:\n" << params);
 
-    // find the tracks
-    options.referenceSurface = &params.referenceSurface();
-    auto res = f.ckf.findTracks(f.sourceLinks, params, options);
+    auto& res = results[trackId];
     if (not res.ok()) {
       BOOST_TEST_INFO(res.error() << " " << res.error().message());
     }
     BOOST_REQUIRE(res.ok());
 
     auto val = *res;
-    // with the given source link selection cuts, only one trajectory for the
+    // with the given measurement selection cuts, only one trajectory for the
     // given input parameters should be found.
     BOOST_CHECK_EQUAL(val.trackTips.size(), 1u);
     // check purity of first found track
@@ -224,28 +234,35 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   }
 }
 
-// TODO test currently fails w/ a smoothing error
-BOOST_AUTO_TEST_CASE(ZeroFieldBackward, *boost::unit_test::disabled()) {
+BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   Fixture f(0_T);
 
   auto options = f.makeCkfOptions();
   options.propagatorPlainOptions.direction = Acts::backward;
+  // Construct a plane surface as the target surface
+  auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      Acts::Vector3{3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
+  // Set the target surface
+  options.referenceSurface = &(*pSurface);
 
-  // run the CKF for each final track state
+  // run the CKF for all initial track states
+  auto results = f.ckf.findTracks(f.sourceLinks, f.endParameters, options);
+  // There should be three found tracks with three initial track states
+  BOOST_CHECK_EQUAL(results.size(), 3u);
+
+  // check the found tracks
   for (size_t trackId = 0u; trackId < f.endParameters.size(); ++trackId) {
     const auto& params = f.endParameters[trackId];
     BOOST_TEST_INFO("initial parameters after detector:\n" << params);
 
-    // find the tracks
-    options.referenceSurface = &params.referenceSurface();
-    auto res = f.ckf.findTracks(f.sourceLinks, params, options);
+    auto& res = results[trackId];
     if (not res.ok()) {
       BOOST_TEST_INFO(res.error() << " " << res.error().message());
     }
     BOOST_REQUIRE(res.ok());
 
     auto val = *res;
-    // with the given source link selection cuts, only one trajectory for the
+    // with the given measurement selection cuts, only one trajectory for the
     // given input parameters should be found.
     BOOST_CHECK_EQUAL(val.trackTips.size(), 1u);
     // check purity of first found track
