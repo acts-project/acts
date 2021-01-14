@@ -187,7 +187,7 @@ std::cout << "Momentum found: "<< parameters.momentum << " " << name << std::end
 			// Get the nuclear interaction probability
 			TH1F* nuclearInteraction = (TH1F*) gDirectory->Get("NuclearInteraction");
 std::cout << "NuclearInteraction retrieved: " << nuclearInteraction << std::endl;
-			parameters.nuclearInteractionProbability = buildMap(nuclearInteraction, nSimulatedEvents[0]); // TODO: nSimulatedEvents need to be treated in the loop
+			parameters.nuclearInteractionProbability = buildMap(nuclearInteraction, nSimulatedEvents);
 std::cout << "Nuclear interaction" << std::endl;
 			// Get the soft interaction probability
 			TVectorF* softInteraction = (TVectorF*) gDirectory->Get("SoftInteraction");

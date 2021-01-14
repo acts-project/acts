@@ -31,7 +31,7 @@ void addNuclearInteractionOptions(Description& desc);
 
 /// Reads the parametrisation and provides the parametrisation
 ActsFatras::detail::MultiParticleParametrisation readParametrisations(
-    const std::vector<std::string>& fileNames, const std::vector<int>& nSimulatedEvents);
+    const std::string& fileName, const uint32_t& nSimulatedEvents);
       
 /// Read Fatras options to create the algorithm config.
 ///
