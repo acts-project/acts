@@ -57,7 +57,7 @@ class PointLikePhysicsList {
     return selection;
   }
 
-  /// Run one physics processes for the particle.
+  /// Run one physics process for the particle.
   ///
   /// @tparam generator_t must be a RandomNumberEngine
   /// @param[in] rng is the random number generator
