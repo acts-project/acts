@@ -83,11 +83,6 @@ class PhysicsList {
   Processes m_processes;
 
   // compile-time index-based recursive function call for all processes
-  template <typename generator_t>
-  bool runImpl(generator_t&, const Acts::MaterialSlab&, Particle&,
-               std::vector<Particle>&, std::index_sequence<>) const {
-    return false;
-  }
   template <typename generator_t, std::size_t I0, std::size_t... INs>
   bool runImpl(generator_t& generator, const Acts::MaterialSlab& slab,
                Particle& particle, std::vector<Particle>& generated,
@@ -100,6 +95,11 @@ class PhysicsList {
     }
     return runImpl(generator, slab, particle, generated,
                    std::index_sequence<INs...>());
+  }
+  template <typename generator_t>
+  bool runImpl(generator_t&, const Acts::MaterialSlab&, Particle&,
+               std::vector<Particle>&, std::index_sequence<>) const {
+    return false;
   }
 };
 
