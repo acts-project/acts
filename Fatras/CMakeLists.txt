@@ -2,6 +2,7 @@ add_library(
   ActsFatras SHARED
   src/Digitization/Channelizer.cpp
   src/Digitization/DigitizationError.cpp
+  src/Digitization/PlanarSurfaceDrift.cpp
   src/Digitization/PlanarSurfaceMask.cpp
   src/EventData/Particle.cpp
   src/EventData/ProcessType.cpp

@@ -12,6 +12,7 @@ target_link_libraries(
   ActsExamplesDigitization
   PRIVATE
     ActsCore ActsPluginDigitization ActsPluginIdentification
+    ActsFatras
     ActsExamplesFramework
     Boost::program_options)
 

@@ -15,7 +15,7 @@
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
+#include "ActsFatras/Digitization/ChannelMerger.hpp"
 
 #include <algorithm>
 #include <stdexcept>
@@ -68,13 +68,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
   // setup random number generator
   auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
 
-  for (auto simHitsGroup : groupByModule(simHits)) {
-    // manual pair unpacking instead of using
-    //   auto [moduleGeoId, moduleSimHits] : ...
-    // otherwise clang on macos complains that it is unable to capture the local
-    // binding in the lambda used for visiting the smearer below.
-    Acts::GeometryIdentifier moduleGeoId = simHitsGroup.first;
-
+  for (auto [moduleGeoId, moduleSimHits] : groupByModule(simHits)) {
     const Acts::Surface* surfacePtr =
         m_cfg.trackingGeometry->findSurface(moduleGeoId);
 
@@ -84,6 +78,33 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
       ACTS_ERROR("Could not find surface " << moduleGeoId
                                            << " for configured smearer");
       return ProcessCode::ABORT;
+    }
+
+    auto segmentationItr = m_cfg.segmentations.find(moduleGeoId);
+    if (segmentationItr == m_cfg.segmentations.end()) {
+      ACTS_DEBUG("No segmentation present for module " << moduleGeoId);
+      continue;
+    }
+
+    // Loop over sim hits per module
+    for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
+      const auto& simHit = *h;
+      const auto simHitIdx = simHits.index_of(h);
+
+      // @todo: Get the drift direction
+      Acts::Vector3 driftDir(0., 0., 1.);
+      // Bring the hit into the local coordinate frame by drifting
+      auto readoutSegment = m_planarDrift.toReadout(
+          ctx.geoContext, *surfacePtr, 0., simHit.position(),
+          simHit.unitDirection(), driftDir);
+      // Mask it with the surface bounds
+      auto maskedSegment = m_planarMask.apply(*surfacePtr, readoutSegment);
+      if (maskedSegment.ok()) {
+        // Channelize it
+        auto channelSegments =
+            m_channelizer.segments(ctx.geoContext, *surfacePtr,
+                                   *segmentationItr, maskedSegment.value());
+      }
     }
   }
 

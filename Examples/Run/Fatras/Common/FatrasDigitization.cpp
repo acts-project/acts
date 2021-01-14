@@ -67,6 +67,18 @@ void setupDigitization(
     }
 
   } else if (vars["digi-geo2d"].as<bool>()) {
+    DigitizationAlgorithm::Config digiCfg =
+        Options::readDigitizationConfig(vars);
+    digiCfg.inputSimHits = kFatrasCollectionHits;
+    digiCfg.outputMeasurements = "measurements";
+    digiCfg.outputSourceLinks = "sourcelinks";
+    digiCfg.outputMeasurementParticlesMap = "measurement_particles_map";
+    digiCfg.outputMeasurementSimHitsMap = "measurement_simhits_map";
+    digiCfg.trackingGeometry = trackingGeometry;
+    digiCfg.randomNumbers = randomNumbers;
+    sequencer.addAlgorithm(
+        std::make_shared<DigitizationAlgorithm>(digiCfg, logLevel));
+
   } else if (vars["digi-geo3d"].as<bool>()) {
     // Configure the digitizer
     PlanarSteppingAlgorithm::Config digi;

@@ -29,20 +29,29 @@ void ActsExamples::Options::addDigitizationOptions(Description& desc) {
   // --digi-geo2d on  # switches the geometric clustering in 2d on
   // --digi-geo3d on  # switches the geometric clustering in 3d on (legacy)
   //
-  // each volume configuration is one logical block
+  // geometric 2d configuration
+  //   each volume configuration is one logical block
+  //   --digi-volume-id=8
+  //   --digi-indices=0:1 # loc0, loc1
+  //   --digi-geo2d-pitches=0.05:0.05
   //
-  //   --digi-smear-volume-id=8
-  //   --digi-smear-indices=0:1:5 # loc0, loc1, and time
+  //  which can be repeated as often as needed
+  //
+  // smearing configuration:
+  //   each volume configuration is one logical block
+  //
+  //   --digi-volume-id=8
+  //   --digi-indices=0:1:5 # loc0, loc1, and time
   //   --digi-smear-types=0:0:3   # loc{0,1} uses gaussian, time uses uniform
   //   # parameter 0: loc0 gaussian width
   //   # parameter 1: loc1 gaussian width
   //   # parameter 2-4: time pitch,min,max
   //   --digi-smear-parameters=10:20:2.5:-25:25
   //
-  // which can be repeated as often as needed
+  //   which can be repeated as often as needed
   //
-  //   --digi-smear-volume-id=11
-  //   --digi-smear-indices=1       # loc1
+  //   --digi-volume-id=11
+  //   --digi-indices=1       # loc1
   //   --digi-smear-types=0         # loc1 uses gaussian
   //   --digi-smear-parameters=12.5 # loc1 gaussian width
   //
@@ -51,14 +60,14 @@ void ActsExamples::Options::addDigitizationOptions(Description& desc) {
       "Configuration (.json) file for digitization description, overwrites "
       "options input on command line.");
   opt("digi-geo3d", bool_switch(),
-      "Geometric: Switching geometric digitization in 2D on");
+      "Geometric: Switching geometric digitization in 3D on (legacy).");
+  opt("digi-volume", value<std::vector<int>>(),
+      "Common Input: sensitive volume identifiers.");
+  opt("digi-indices", value<std::vector<VariableIntegers>>(),
+      "Common Input: smear parameter indices for this volume.");
   opt("digi-geo2d", bool_switch(),
-      "Geometric: Switching geometric digitization in 3D on");
+      "Geometric: Switching geometric digitization in 2D on.");
   opt("digi-smear", bool_switch(), "Smearing: Switching hit smearing on");
-  opt("digi-smear-volume", value<std::vector<int>>(),
-      "Smearing Input: sensitive volume identifiers.");
-  opt("digi-smear-indices", value<std::vector<VariableIntegers>>(),
-      "Smearing Input: smear parameter indices for this volume.");
   opt("digi-smear-types", value<std::vector<VariableIntegers>>(),
       "Smearing Input: smear function types as 0 (gauss), 1 (truncated gauss), "
       "2 (clipped gauss), 3 (uniform), 4 (digital).");
@@ -122,20 +131,19 @@ ActsExamples::Options::readSmearingConfig(const Variables& variables) {
   // smearers configuration. this will be caught later on during the algorithm
   // construction.
 
-  auto volumes = variables["digi-smear-volume"].as<std::vector<int>>();
+  auto volumes = variables["digi-volume"].as<std::vector<int>>();
   if (volumes.empty()) {
     // no configured volumes are not considered an error at this stage
     return smearCfg;
   }
 
-  auto indices =
-      variables["digi-smear-indices"].as<std::vector<VariableIntegers>>();
+  auto indices = variables["digi-indices"].as<std::vector<VariableIntegers>>();
   auto types =
       variables["digi-smear-types"].as<std::vector<VariableIntegers>>();
   auto parameters =
       variables["digi-smear-parameters"].as<std::vector<VariableReals>>();
   if (indices.size() != volumes.size()) {
-    ACTS_ERROR("Inconsistent digi-smear-indices options. Expected "
+    ACTS_ERROR("Inconsistent digi-indices options. Expected "
                << volumes.size() << ", but received " << indices.size());
     return smearCfg;
   }
@@ -210,4 +218,14 @@ ActsExamples::Options::readSmearingConfig(const Variables& variables) {
           std::move(smearersInput));
 
   return smearCfg;
+}
+
+ActsExamples::DigitizationAlgorithm::Config
+ActsExamples::Options::readDigitizationConfig(const Variables& variables) {
+  ACTS_LOCAL_LOGGER(
+      Acts::getDefaultLogger("DigitizationOptions", Acts::Logging::INFO));
+
+  DigitizationAlgorithm::Config digiCfg;
+
+  return digiCfg;
 }

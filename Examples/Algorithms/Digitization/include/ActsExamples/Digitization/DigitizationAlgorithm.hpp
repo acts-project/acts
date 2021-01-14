@@ -10,8 +10,12 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsFatras/Digitization/Channelizer.hpp"
+#include "ActsFatras/Digitization/PlanarSurfaceDrift.hpp"
+#include "ActsFatras/Digitization/PlanarSurfaceMask.hpp"
 
 #include <memory>
 #include <string>
@@ -44,7 +48,7 @@ class DigitizationAlgorithm final : public BareAlgorithm {
     /// Random numbers tool.
     std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
     /// The smearers per GeometryIdentifier
-    // Acts::GeometryHierarchyMap<SmearerConfig> smearers;
+    Acts::GeometryHierarchyMap<Acts::BinUtility> segmentations;
   };
 
   /// Construct the smearing algorithm.
@@ -61,6 +65,9 @@ class DigitizationAlgorithm final : public BareAlgorithm {
 
  private:
   Config m_cfg;
+  ActsFatras::Channelizer m_channelizer;
+  ActsFatras::PlanarSurfaceDrift m_planarDrift;
+  ActsFatras::PlanarSurfaceMask m_planarMask;
 };
 
 }  // namespace ActsExamples
