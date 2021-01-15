@@ -39,11 +39,7 @@ using StandardBetheBloch =
 ///
 /// Only applies to electrons and positrons.
 using StandardBetheHeitler =
-    ContinuousProcess<BetheHeitler, SelectElectronLike, SelectPMin, SelectPMin>;
-
-            /// Parametrized nuclear interaction that applies to hadrons.
-using ParametrizedNuclearInteraction =
-    Process<NuclearInteraction, SelectPMin, SelectPMin, EveryParticle>;
+    Process<BetheHeitler, SelectElectronLike, SelectPMin, EveryParticle>;
 }  // namespace detail
 
 /// Standard set of electro-magnetic interactions for charged particles.

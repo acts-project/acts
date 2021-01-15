@@ -169,30 +169,38 @@ std::cout << "Read call " << std::endl;
 
     // Now read file
 std::cout << "Reading file " << fileName << std::endl;
-		ActsFatras::detail::Parametrisation parametrisation; // TODO: Does a single file break the reading pattern?
-		TFile tf(fileName.c_str(), "read");
-		gDirectory->cd();
-		// Walk over all elements in the file
-		auto list = gDirectory->GetListOfKeys();
-		auto elem = list->First();
-		while(elem)
+	ActsFatras::detail::Parametrisation parametrisation; // TODO: Does a single file break the reading pattern?
+	TFile tf(fileName.c_str(), "read");
+	gDirectory->cd();
+	auto listOfParticles = gDirectory->GetListOfKeys();
+	auto initialParticle = listOfParticles->First();
+	while(initialParticle)
+	{
+		// Get the initial particle
+		char const* particleName = initialParticle->GetName();
+		gDirectory->cd(particleName);
+			
+		// Walk over all initial momenta for a particle
+		auto listOfMomenta = gDirectory->GetListOfKeys();
+		auto initialMomentum = listOfMomenta->First();
+		while(initialMomentum)
 		{
 			// Parameters for a fixed inital momentum
 			ActsFatras::detail::Parameters parameters;
 			// Get the initial momentum
-			char const* name = elem->GetName();
-			parameters.momentum = std::stof(name);
-			gDirectory->cd(name);
-std::cout << "Momentum found: "<< parameters.momentum << " " << name << std::endl;
+			char const* nameMomentum = initialMomentum->GetName();
+			parameters.momentum = std::stof(nameMomentum);
+			gDirectory->cd(nameMomentum);
+	std::cout << "Momentum found: "<< parameters.momentum << " " << nameMomentum << std::endl;
 			// Get the nuclear interaction probability
 			TH1F* nuclearInteraction = (TH1F*) gDirectory->Get("NuclearInteraction");
-std::cout << "NuclearInteraction retrieved: " << nuclearInteraction << std::endl;
+	std::cout << "NuclearInteraction retrieved: " << nuclearInteraction << std::endl;
 			parameters.nuclearInteractionProbability = buildMap(nuclearInteraction, nSimulatedEvents);
-std::cout << "Nuclear interaction" << std::endl;
+	std::cout << "Nuclear interaction" << std::endl;
 			// Get the soft interaction probability
 			TVectorF* softInteraction = (TVectorF*) gDirectory->Get("SoftInteraction");
 			parameters.softInteractionProbability = (*softInteraction)[0];
-std::cout << "Soft Interaction" << std::endl;
+	std::cout << "Soft Interaction" << std::endl;
 			// Get the branching probabilities
 			std::vector<int> branchingPdgIds = *((std::vector<int>*) gDirectory->Get("BranchingPdgIds"));
 			std::vector<int> targetPdgIds = *((std::vector<int>*) gDirectory->Get("TargetPdgIds"));
@@ -212,13 +220,13 @@ std::cout << "Soft Interaction" << std::endl;
 					parameters.pdgMap.push_back(std::make_pair(branchingPdgIds[i], std::vector<std::pair<int, float>>{target}));
 				}
 			}
-std::cout << "pdg probability" << std::endl;
+	std::cout << "pdg probability" << std::endl;
 			// Get the soft distributions
 			gDirectory->cd("soft");
 			// Get the multiplicity distribution
 			TH1F* softMultiplicity = (TH1F*) gDirectory->Get("Multiplicity");
 			parameters.softMultiplicity = buildMap(softMultiplicity);
-std::cout << "multiplicity" << std::endl;
+	std::cout << "multiplicity" << std::endl;
 			//~ // Get the distributions for each final state multiplicity
 			auto softList = gDirectory->GetListOfKeys();
 			auto softElement = softList->First();
@@ -290,7 +298,7 @@ std::cout << "multiplicity" << std::endl;
 						invariantMassDistributions.push_back(std::move((TH1F*) gDirectory->Get(("InvariantMassDistribution_" + std::to_string(i)).c_str())));
 					}
 					momentumDistributions.push_back(std::move((TH1F*) gDirectory->Get(("MomentumDistribution_" + std::to_string(mult)).c_str())));
-	
+
 					// Get the eigenspace components for the kinematic parameters
 					std::vector<float> momentumEigenvalues = *((std::vector<float>*) gDirectory->Get("MomentumEigenvalues"));
 					std::vector<float> momentumEigenvectors = *((std::vector<float>*) gDirectory->Get("MomentumEigenvectors"));
@@ -313,15 +321,17 @@ std::cout << "multiplicity" << std::endl;
 				}
 				hardElement = softList->After(hardElement);
 			}
-			elem = list->After(elem); // TODO: this might be not needed
+			initialMomentum = listOfMomenta->After(initialMomentum);
 			// Store the parametrisation
 			parametrisation.push_back(std::make_pair(parameters.momentum, parameters));
 		}
 		tf.Close();
 		
 		// Write to the collection to the EventStore
-		mpp.push_back(std::make_pair(211, parametrisation));
-  
+		mpp.push_back(std::make_pair(std::stof(particleName), parametrisation));
+		
+		initialParticle = listOfParticles->After(initialParticle);
+  }
   // Return success flag
   return mpp;
 }
