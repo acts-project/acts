@@ -114,7 +114,7 @@ class BinningData {
     checkSubStructure();
   }
 
-  /// Constructor for equidistant binning
+  /// Constructor for non-equidistant binning
   ///
   /// @param bOption is the binning option : open / closed
   /// @param bValue is the binning value : binX, binY, etc.
@@ -212,6 +212,9 @@ class BinningData {
     }
     return (*this);
   }
+
+  /// Default constructor - needed for persistency streaming
+  BinningData() = default;
 
   /// Destructor
   ~BinningData() = default;
