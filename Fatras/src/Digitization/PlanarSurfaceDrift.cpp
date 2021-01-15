@@ -11,7 +11,7 @@
 ActsFatras::PlanarSurfaceDrift::Segment2D
 ActsFatras::PlanarSurfaceDrift::toReadout(const Acts::GeometryContext& gctx,
                                           const Acts::Surface& surface,
-                                          double depletion,
+                                          double thickness,
                                           const Acts::Vector3& pos,
                                           const Acts::Vector3& dir,
                                           const Acts::Vector3& driftDir) const {
@@ -19,20 +19,18 @@ ActsFatras::PlanarSurfaceDrift::toReadout(const Acts::GeometryContext& gctx,
   const auto& invTransform = surface.transform(gctx).inverse();
   Acts::Vector2 pos2Local = (invTransform * pos).segment<2>(0);
   Acts::Vector3 seg3Local = invTransform.linear() * dir;
-  // Scale unit direction to the actual segemnt in the (depletion) zone
-  seg3Local *= depletion / std::cos(Acts::VectorHelpers::theta(seg3Local));
+  // Scale unit direction to the actual segment in the (depletion/drift) zone
+  seg3Local *= thickness / std::cos(Acts::VectorHelpers::theta(seg3Local));
   // Calulate local entry/exit before drift
   Acts::Vector2 entry = pos2Local - 0.5 * seg3Local.segment<2>(0);
   Acts::Vector2 exit = pos2Local + 0.5 * seg3Local.segment<2>(0);
   // Actually apply a drift
   // - dirftDir is assumed in local coordinates
-  if (not driftDir.isApprox(Acts::Vector3(0., 0., 0.)) and
-      not driftDir.isApprox(Acts::Vector3(0., 0., 1.)) and
-      not driftDir.isApprox(Acts::Vector3(0., 0., -1.))) {
+  if (not driftDir.segment<2>(0).isApprox(Acts::Vector2(0., 0.))) {
     // Apply the scaled drift
     auto applyDrift = [&](Acts::Vector2& local) {
       auto scaledDriftDir =
-          driftDir * depletion / std::cos(Acts::VectorHelpers::theta(driftDir));
+          driftDir * thickness / std::cos(Acts::VectorHelpers::theta(driftDir));
       local += scaledDriftDir.segment<2>(0);
     };
 

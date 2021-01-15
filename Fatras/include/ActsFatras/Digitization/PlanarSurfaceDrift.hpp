@@ -21,7 +21,8 @@ namespace ActsFatras {
 /// The PlanarSurfaceDrift takes an intersection in the nominal surface and
 /// projects the ends into the readout surface, which can be at : -1, 0, 1
 ///
-/// A Lorentz drift angle can be applied, such as a small smearing to it
+/// A Lorentz drift angle can be applied.
+///
 struct PlanarSurfaceDrift {
   /// Shorthand for a 2D segment
   using Segment2D = std::array<Acts::Vector2, 2>;
@@ -30,7 +31,7 @@ struct PlanarSurfaceDrift {
   ///
   /// @param gctx The current Geometry context
   /// @param surface The nominal intersection surface
-  /// @param depletion The emulated module/depletion thickness
+  /// @param thickness The emulated module/depletion thickness
   /// @param pos The position in global coordinates
   /// @param dir The direciton in global coordinates
   /// @param driftDir The drift direction in local (surface) coordinates
@@ -41,7 +42,7 @@ struct PlanarSurfaceDrift {
   ///
   /// @return a Segment on the readout surface @note without masking
   Segment2D toReadout(const Acts::GeometryContext& gctx,
-                      const Acts::Surface& surface, double depletion,
+                      const Acts::Surface& surface, double thickness,
                       const Acts::Vector3& pos, const Acts::Vector3& dir,
                       const Acts::Vector3& driftdir) const;
 };
