@@ -21,6 +21,8 @@
 namespace ActsFatras {
 
 /// Particle identity information and kinematic state.
+///
+/// Also stores some simulation-specific properties.
 class Particle {
  public:
   using Scalar = Acts::ActsScalar;
@@ -164,6 +166,16 @@ class Particle {
 
   // simulation specific properties
 
+  /// Set the proper time in the particle rest frame.
+  ///
+  /// @param properTime passed proper time in the rest frame
+  constexpr Particle &setProperTime(Scalar properTime) {
+    m_properTime = properTime;
+    return *this;
+  }
+  /// Proper time in the particle rest frame.
+  constexpr Scalar properTime() const { return m_properTime; }
+
   /// Set the accumulated material measured in radiation/interaction lengths.
   ///
   /// @param pathInX0 accumulated material measured in radiation lengths
@@ -193,6 +205,8 @@ class Particle {
   Vector3 m_unitDirection = Vector3::UnitZ();
   Scalar m_absMomentum = Scalar(0);
   Vector4 m_position4 = Vector4::Zero();
+  // proper time in the particle rest frame
+  Scalar m_properTime = Scalar(0);
   // accumulated material
   Scalar m_pathInX0 = Scalar(0);
   Scalar m_pathInL0 = Scalar(0);
