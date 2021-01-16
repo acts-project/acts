@@ -11,23 +11,10 @@
 #include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
-#include <iosfwd>
 #include <limits>
 #include <vector>
 
 namespace ActsFatras {
-
-/// Particle simulation status.
-enum class SimulationParticleStatus {
-  /// Particle is alive and can be simulated further.
-  eAlive,
-  /// Particle has been killed by an interaction.
-  eInteracted,
-  /// Particle has decayed.
-  eDecayed,
-};
-
-std::ostream& operator<<(std::ostream& os, SimulationParticleStatus status);
 
 /// Single particle simulation result (and intermediate state).
 ///
@@ -48,8 +35,8 @@ struct SimulationResult {
   // called for the first time, i.e. when the result struct is
   // default-initialized.
 
-  /// Status flag, e.g. if the particle is alive and can be simulated further
-  SimulationParticleStatus particleStatus = SimulationParticleStatus::eAlive;
+  // Whether the particle is still alive and the simulation should continue
+  bool isAlive = true;
   // Proper time limit before decay.
   Particle::Scalar properTimeLimit =
       std::numeric_limits<Particle::Scalar>::quiet_NaN();

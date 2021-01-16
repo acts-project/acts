@@ -48,7 +48,8 @@ struct Interactor {
     template <typename propagator_state_t, typename stepper_t>
     constexpr bool operator()(propagator_state_t &, const stepper_t &,
                               const result_type &result) const {
-      return (result.particleStatus != SimulationParticleStatus::eAlive);
+      // must return true if the propagation should abort
+      return not result.isAlive;
     }
   };
 
@@ -102,7 +103,7 @@ struct Interactor {
       for (auto &&descendant : descendants) {
         result.generatedParticles.emplace_back(std::move(descendant));
       }
-      result.particleStatus = SimulationParticleStatus::eDecayed;
+      result.isAlive = false;
       return;
     }
 
@@ -221,7 +222,7 @@ struct Interactor {
       bool retval = false;
       if (continuous.run(*(this->generator), partialSlab, result.particle,
                          result.generatedParticles)) {
-        result.particleStatus = SimulationParticleStatus::eInteracted;
+        result.isAlive = false;
         retval = true;
       }
       // the Interactor is in charge of keeping track of the material. since the
@@ -277,7 +278,7 @@ struct Interactor {
       // simulate the selected point-like process
       if (pointlike.run(*generator, process, result.particle,
                         result.generatedParticles)) {
-        result.particleStatus = SimulationParticleStatus::eInteracted;
+        result.isAlive = false;
         return;
       }
       // simulate continuous processes after the point-like interaction

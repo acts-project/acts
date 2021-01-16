@@ -168,8 +168,7 @@ BOOST_AUTO_TEST_CASE(HitsOnEmptySurface) {
 
   // call interactor: surface selection -> one hit, no material -> no secondary
   f.interactor(f.state, f.stepper, f.result);
-  BOOST_CHECK_EQUAL(f.result.particleStatus,
-                    ActsFatras::SimulationParticleStatus::eAlive);
+  BOOST_CHECK(f.result.isAlive);
   CHECK_CLOSE_REL(f.result.particle.energy(), f.e, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 0u);
   BOOST_CHECK_EQUAL(f.result.hits.size(), 1u);
@@ -192,14 +191,14 @@ BOOST_AUTO_TEST_CASE(HitsOnEmptySurface) {
 
   // call interactor again: one more hit, still no secondary
   f.interactor(f.state, f.stepper, f.result);
-  BOOST_CHECK_EQUAL(f.result.particleStatus,
-                    ActsFatras::SimulationParticleStatus::eAlive);
+  BOOST_CHECK(f.result.isAlive);
   CHECK_CLOSE_REL(f.result.particle.energy(), f.e, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 0u);
   BOOST_CHECK_EQUAL(f.result.hits.size(), 2u);
   BOOST_CHECK_EQUAL(f.result.hits[0].index(), 0u);
   BOOST_CHECK_EQUAL(f.result.hits[1].index(), 1u);
-  // proper time must be non-NaN, but is zero since no time has passed
+  // proper time must be non-NaN, but is zero since no time
+  // has passed
   BOOST_CHECK_EQUAL(f.result.particle.properTime(), 0);
   // empty surfaces adds no material
   BOOST_CHECK_EQUAL(f.result.particle.pathInX0(), 0);
@@ -236,13 +235,13 @@ BOOST_AUTO_TEST_CASE(HitsOnMaterialSurface) {
 
   // call interactor: surface selection -> one hit, material -> one secondary
   f.interactor(f.state, f.stepper, f.result);
-  BOOST_CHECK_EQUAL(f.result.particleStatus,
-                    ActsFatras::SimulationParticleStatus::eAlive);
+  BOOST_CHECK(f.result.isAlive);
   CHECK_CLOSE_REL(f.result.particle.energy(), f.e - 125_MeV, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 1u);
   BOOST_CHECK_EQUAL(f.result.hits.size(), 1u);
   BOOST_CHECK_EQUAL(f.result.hits[0].index(), 0u);
-  // proper time must be non-NaN, but is zero since no time has passed
+  // proper time must be non-NaN, but is zero since no time
+  // has passed
   BOOST_CHECK_EQUAL(f.result.particle.properTime(), 0);
   // test material is a unit slab
   BOOST_CHECK_EQUAL(f.result.particle.pathInX0(), 1);
@@ -260,14 +259,14 @@ BOOST_AUTO_TEST_CASE(HitsOnMaterialSurface) {
 
   // call interactor again: one more hit, one more secondary
   f.interactor(f.state, f.stepper, f.result);
-  BOOST_CHECK_EQUAL(f.result.particleStatus,
-                    ActsFatras::SimulationParticleStatus::eAlive);
+  BOOST_CHECK(f.result.isAlive);
   CHECK_CLOSE_REL(f.result.particle.energy(), f.e - 250_MeV, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 2u);
   BOOST_CHECK_EQUAL(f.result.hits.size(), 2u);
   BOOST_CHECK_EQUAL(f.result.hits[0].index(), 0u);
   BOOST_CHECK_EQUAL(f.result.hits[1].index(), 1u);
-  // proper time must be non-NaN, but is zero since no time has passed
+  // proper time must be non-NaN, but is zero since no time
+  // has passed
   BOOST_CHECK_EQUAL(f.result.particle.properTime(), 0);
   // test material is a unit slab that was passed twice
   BOOST_CHECK_EQUAL(f.result.particle.pathInX0(), 2);
@@ -304,12 +303,12 @@ BOOST_AUTO_TEST_CASE(NoHitsEmptySurface) {
 
   // call interactor: no surface sel. -> no hit, no material -> no secondary
   f.interactor(f.state, f.stepper, f.result);
-  BOOST_CHECK_EQUAL(f.result.particleStatus,
-                    ActsFatras::SimulationParticleStatus::eAlive);
+  BOOST_CHECK(f.result.isAlive);
   CHECK_CLOSE_REL(f.result.particle.energy(), f.e, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 0u);
   BOOST_CHECK_EQUAL(f.result.hits.size(), 0u);
-  // proper time must be non-NaN, but is zero since no time has passed
+  // proper time must be non-NaN, but is zero since no time
+  // has passed
   BOOST_CHECK_EQUAL(f.result.particle.properTime(), 0);
   // empty surfaces adds no material
   BOOST_CHECK_EQUAL(f.result.particle.pathInX0(), 0);
@@ -327,12 +326,12 @@ BOOST_AUTO_TEST_CASE(NoHitsEmptySurface) {
 
   // call interactor again: no hit, still no secondary
   f.interactor(f.state, f.stepper, f.result);
-  BOOST_CHECK_EQUAL(f.result.particleStatus,
-                    ActsFatras::SimulationParticleStatus::eAlive);
+  BOOST_CHECK(f.result.isAlive);
   CHECK_CLOSE_REL(f.result.particle.energy(), f.e, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 0u);
   BOOST_CHECK_EQUAL(f.result.hits.size(), 0u);
-  // proper time must be non-NaN, but is zero since no time has passed
+  // proper time must be non-NaN, but is zero since no time
+  // has passed
   BOOST_CHECK_EQUAL(f.result.particle.properTime(), 0);
   // empty surfaces adds no material
   BOOST_CHECK_EQUAL(f.result.particle.pathInX0(), 0);
@@ -361,12 +360,12 @@ BOOST_AUTO_TEST_CASE(NoHitsMaterialSurface) {
 
   // call interactor: no surface sel. -> no hit, material -> one secondary
   f.interactor(f.state, f.stepper, f.result);
-  BOOST_CHECK_EQUAL(f.result.particleStatus,
-                    ActsFatras::SimulationParticleStatus::eAlive);
+  BOOST_CHECK(f.result.isAlive);
   CHECK_CLOSE_REL(f.result.particle.energy(), f.e - 125_MeV, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 1u);
   BOOST_CHECK_EQUAL(f.result.hits.size(), 0u);
-  // proper time must be non-NaN, but is zero since no time has passed
+  // proper time must be non-NaN, but is zero since no time
+  // has passed
   BOOST_CHECK_EQUAL(f.result.particle.properTime(), 0);
   // test material is a unit slab
   BOOST_CHECK_EQUAL(f.result.particle.pathInX0(), 1);
@@ -384,12 +383,12 @@ BOOST_AUTO_TEST_CASE(NoHitsMaterialSurface) {
 
   // call interactor again: still no hit, one more secondary
   f.interactor(f.state, f.stepper, f.result);
-  BOOST_CHECK_EQUAL(f.result.particleStatus,
-                    ActsFatras::SimulationParticleStatus::eAlive);
+  BOOST_CHECK(f.result.isAlive);
   CHECK_CLOSE_REL(f.result.particle.energy(), f.e - 250_MeV, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 2u);
   BOOST_CHECK_EQUAL(f.result.hits.size(), 0u);
-  // proper time must be non-NaN, but is zero since no time has passed
+  // proper time must be non-NaN, but is zero since no time
+  // has passed
   BOOST_CHECK_EQUAL(f.result.particle.properTime(), 0);
   // test material is a unit slab that was passed twice
   BOOST_CHECK_EQUAL(f.result.particle.pathInX0(), 2);
@@ -422,8 +421,7 @@ BOOST_AUTO_TEST_CASE(Decay) {
 
   // first step w/ defaults leaves particle alive
   f.interactor(f.state, f.stepper, f.result);
-  BOOST_CHECK_EQUAL(f.result.particleStatus,
-                    ActsFatras::SimulationParticleStatus::eAlive);
+  BOOST_CHECK(f.result.isAlive);
   BOOST_CHECK_EQUAL(f.result.particle.particleId(), f.pid);
   BOOST_CHECK_EQUAL(f.result.particle.process(), f.proc);
   BOOST_CHECK_EQUAL(f.result.particle.pdg(), f.pdg);
@@ -435,8 +433,7 @@ BOOST_AUTO_TEST_CASE(Decay) {
   // second step w/ defaults increases proper time
   f.state.stepping.time += 1_ns;
   f.interactor(f.state, f.stepper, f.result);
-  BOOST_CHECK_EQUAL(f.result.particleStatus,
-                    ActsFatras::SimulationParticleStatus::eAlive);
+  BOOST_CHECK(f.result.isAlive);
   BOOST_CHECK_EQUAL(f.result.particle.particleId(), f.pid);
   BOOST_CHECK_EQUAL(f.result.particle.process(), f.proc);
   BOOST_CHECK_EQUAL(f.result.particle.pdg(), f.pdg);
@@ -449,8 +446,7 @@ BOOST_AUTO_TEST_CASE(Decay) {
   f.state.stepping.time += 1_ns;
   f.result.properTimeLimit = f.result.particle.properTime() + gammaInv * 0.5_ns;
   f.interactor(f.state, f.stepper, f.result);
-  BOOST_CHECK_EQUAL(f.result.particleStatus,
-                    ActsFatras::SimulationParticleStatus::eDecayed);
+  BOOST_CHECK(not f.result.isAlive);
   BOOST_CHECK_EQUAL(f.result.particle.particleId(), f.pid);
   BOOST_CHECK_EQUAL(f.result.particle.process(), f.proc);
   BOOST_CHECK_EQUAL(f.result.particle.pdg(), f.pdg);
