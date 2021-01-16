@@ -34,9 +34,9 @@ struct MockDecay {
   Particle::Scalar properTimeLimit = inf;
 
   template <typename generator_t>
-  constexpr Particle::Scalar generateProperTimeLimit(generator_t &,
-                                                     const Particle &) const {
-    return properTimeLimit;
+  constexpr Particle::Scalar generateProperTimeLimit(
+      generator_t &, const Particle &particle) const {
+    return particle.properTime() + properTimeLimit;
   }
   template <typename generator_t>
   constexpr std::array<Particle, 0> run(generator_t &, const Particle &) const {

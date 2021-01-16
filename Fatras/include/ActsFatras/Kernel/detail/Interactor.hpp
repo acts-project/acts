@@ -87,9 +87,7 @@ struct Interactor {
       // first step is special: there is no previous state and we need to arm
       // the decay simulation for all future steps.
       result.particle = makeParticle(initialParticle, stepper, state.stepping);
-      // limit is relative to the initial state
       result.properTimeLimit =
-          initialParticle.properTime() +
           decay.generateProperTimeLimit(*generator, initialParticle);
     } else {
       result.particle = makeParticle(result.particle, stepper, state.stepping);
@@ -198,10 +196,8 @@ struct Interactor {
   void armPointLikeInteractions(const Particle &particle,
                                 result_type &result) const {
     auto selection = pointlike.arm(*generator, particle);
-    // since interactions can occur multiple times, the generated limits must
-    // always be considered relative to the already accumulated paths.
-    result.x0Limit = particle.pathInX0() + selection.x0Limit;
-    result.l0Limit = particle.pathInL0() + selection.l0Limit;
+    result.x0Limit = selection.x0Limit;
+    result.l0Limit = selection.l0Limit;
     result.x0Process = selection.x0Process;
     result.l0Process = selection.l0Process;
   }
