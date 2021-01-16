@@ -31,10 +31,11 @@ namespace detail {
 /// material.
 ///
 /// @tparam generator_t random number generator
+/// @tparam decay_t decay module
 /// @tparam continuous_physics_t physics lists for continuous interactions
 /// @tparam pointlike_physics_t physics lists for point-like interactions
 /// @tparam hit_surface_selector_t sensitive hit surfaces selector
-template <typename generator_t, typename continuous_physics_t,
+template <typename generator_t, typename decay_t, typename continuous_physics_t,
           typename pointlike_physics_t, typename hit_surface_selector_t>
 struct Interactor {
   using result_type = SimulationResult;
@@ -53,6 +54,8 @@ struct Interactor {
 
   /// Random number generator used for the simulation.
   generator_t *generator = nullptr;
+  /// Decay module.
+  decay_t decay;
   /// Physics list detailing the simulated continuous interactions.
   continuous_physics_t continuous;
   /// Physics list detailing the simulated point-like interactions.
@@ -61,8 +64,6 @@ struct Interactor {
   hit_surface_selector_t selectHitSurface;
   /// Initial particle state.
   Particle initialParticle;
-  Particle::Scalar properTimeLimit =
-      std::numeric_limits<Particle::Scalar>::infinity();
 
   /// Simulate the interaction with a single surface.
   ///
@@ -77,51 +78,37 @@ struct Interactor {
                   result_type &result) const {
     assert(generator and "The generator pointer must be valid");
 
-    // arm the point-like interactions before the first step
-    if (std::isnan(result.properTime)) {
-      arm(initialParticle, result);
-    }
-
-    // compute the change in proper time first. this needs the particle state
-    // from the previous step for reference and thus must occur before the state
-    // is updated. this also means, that the first simulation step needs to be
-    // treated differently from subsequent ones as there is no previous state.
-    // for the decay, only the elapsed proper time during simulation is
-    // relevant.
-    //
-    // a particle can loose energy and thus its gamma factor is not a constant
-    // of motion. since the stepper provides only the lab time, we need to
-    // compute the change in proper time for each step separately. this assumes
-    // that the gamma factor is constant over one stepper step.
-    if (std::isnan(result.properTime)) {
-      // compute the first step w/ respect to the initial particle
-      const auto deltaLabTime =
-          stepper.time(state.stepping) - initialParticle.time();
-      // proper-time = time / gamma = (1/gamma) * time
-      //       beta² = p²/E²
-      //       gamma = 1 / sqrt(1 - beta²) = sqrt(m² + p²) / m
-      //     1/gamma = m / sqrt(m² + p²) = m / E
-      const auto gammaInv = initialParticle.mass() / initialParticle.energy();
-      // first step resets the proper time
-      result.properTime = gammaInv * deltaLabTime;
+    // update the particle state first. this also computes the proper time which
+    // needs the particle state from the previous step for reference. that means
+    // this must happen for every step (not just on surface) and before
+    // everything, e.g. any interactions that could modify the state.
+    if (std::isnan(result.properTimeLimit)) {
+      // first step is special: there is no previous state and we need to arm
+      // the decay simulation for all future steps.
       result.particle = makeParticle(initialParticle, stepper, state.stepping);
+      // limit is relative to the initial state
+      result.properTimeLimit =
+          initialParticle.properTime() +
+          decay.generateProperTimeLimit(*generator, initialParticle);
     } else {
-      // compute the current step w/ respect to the previous state
-      const auto deltaLabTime =
-          stepper.time(state.stepping) - result.particle.time();
-      const auto gammaInv = result.particle.mass() / result.particle.energy();
-      // all other steps accumulate proper time
-      result.properTime += gammaInv * deltaLabTime;
       result.particle = makeParticle(result.particle, stepper, state.stepping);
     }
 
     // decay check. needs to happen at every step, not just on surfaces.
     // TODO limit the stepsize when close to the lifetime limit to avoid
     //   overstepping and decaying the particle systematically too late
-    if (properTimeLimit < result.properTime) {
-      // result.particle was already updated
+    if (result.properTimeLimit < result.particle.properTime()) {
+      auto descendants = decay.run(generator, result.particle);
+      for (auto &&descendant : descendants) {
+        result.generatedParticles.emplace_back(std::move(descendant));
+      }
       result.particleStatus = SimulationParticleStatus::eDecayed;
       return;
+    }
+
+    // arm the point-like interaction limits in the first step
+    if (std::isnan(result.x0Limit) or std::isnan(result.l0Limit)) {
+      armPointLikeInteractions(initialParticle, result);
     }
 
     // If we are on target, everything should have been done
@@ -185,17 +172,30 @@ struct Interactor {
 
   /// Construct the current particle state from the stepper state.
   template <typename stepper_t>
-  Particle makeParticle(const Particle &source, const stepper_t &stepper,
+  Particle makeParticle(const Particle &previous, const stepper_t &stepper,
                         const typename stepper_t::State &state) const {
+    // a particle can loose energy and thus its gamma factor is not a constant
+    // of motion. since the stepper provides only the lab time, we need to
+    // compute the change in proper time for each step separately. this assumes
+    // that the gamma factor is constant over one stepper step.
+    const auto deltaLabTime = stepper.time(state) - previous.time();
+    // proper-time = time / gamma = (1/gamma) * time
+    //       beta² = p²/E²
+    //       gamma = 1 / sqrt(1 - beta²) = sqrt(m² + p²) / m
+    //     1/gamma = m / sqrt(m² + p²) = m / E
+    const auto gammaInv = previous.mass() / previous.energy();
+    const auto properTime = previous.properTime() + gammaInv * deltaLabTime;
     // copy all properties and update kinematic state from stepper
-    return Particle(source)
+    return Particle(previous)
         .setPosition4(stepper.position(state), stepper.time(state))
         .setDirection(stepper.direction(state))
-        .setAbsoluteMomentum(stepper.momentum(state));
+        .setAbsoluteMomentum(stepper.momentum(state))
+        .setProperTime(properTime);
   }
 
   /// Prepare limits and process selection for the next point-like interaction.
-  void arm(const Particle &particle, result_type &result) const {
+  void armPointLikeInteractions(const Particle &particle,
+                                result_type &result) const {
     auto selection = pointlike.arm(*generator, particle);
     // since interactions can occur multiple times, the generated limits must
     // always be considered relative to the already accumulated paths.
@@ -262,14 +262,14 @@ struct Interactor {
     // fraction of the material where the first point-like interaction occurs
     const float frac = std::min(fracX0, fracL0);
 
-    // do not run if there is zero material
+    // do not run if there is zero material before the point-like interaction
     if (0.0f < frac) {
       // simulate continuous processes before the point-like interaction
       if (runContinuousPartial(frac)) {
         return;
       }
     }
-    // do not run if there is not point-like interaction
+    // do not run if there is no point-like interaction
     if (frac < 1.0f) {
       // select which process to simulate
       const size_t process =
@@ -291,7 +291,7 @@ struct Interactor {
       // should already occur within the same material slab. thus, re-arming is
       // done after all processes are simulated to enforce the
       // one-interaction-per-slab rule.
-      arm(result.particle, result);
+      armPointLikeInteractions(result.particle, result);
     }
   }
 };

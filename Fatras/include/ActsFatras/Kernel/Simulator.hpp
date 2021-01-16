@@ -84,7 +84,7 @@ struct ParticleSimulator {
 
     // propagator-related additional types
     using Interactor =
-        detail::Interactor<generator_t, continuous_physics_t,
+        detail::Interactor<generator_t, decay_t, continuous_physics_t,
                            pointlike_physics_t, hit_surface_selector_t>;
     using InteractorResult = typename Interactor::result_type;
     using Actions = Acts::ActionList<Interactor>;
@@ -100,12 +100,11 @@ struct ParticleSimulator {
     // setup the interactor as part of the propagator options
     auto &interactor = options.actionList.template get<Interactor>();
     interactor.generator = &generator;
+    interactor.decay = decay;
     interactor.continuous = continuous;
     interactor.pointlike = pointlike;
     interactor.selectHitSurface = selectHitSurface;
     interactor.initialParticle = particle;
-    interactor.properTimeLimit =
-        decay.generateProperTimeLimit(generator, particle);
     // use AnyCharge to be able to handle neutral and charged parameters
     Acts::SingleCurvilinearTrackParameters<Acts::AnyCharge> start(
         particle.fourPosition(), particle.unitDirection(),
@@ -115,14 +114,6 @@ struct ParticleSimulator {
       return result.error();
     }
     auto &value = result.value().template get<InteractorResult>();
-
-    // add decay products to the generated particles if the particle has decayed
-    if (value.particleStatus == SimulationParticleStatus::eDecayed) {
-      auto descendants = decay.run(generator, value.particle);
-      for (auto &&descendant : descendants) {
-        value.generatedParticles.emplace_back(std::move(descendant));
-      }
-    }
 
     return std::move(value);
   }
