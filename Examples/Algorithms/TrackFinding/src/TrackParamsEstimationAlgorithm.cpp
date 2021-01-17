@@ -76,7 +76,8 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
           Acts::Vector3(bottomSP->x(), bottomSP->y(), bottomSP->z()));
       // Estimate the track parameters from seed
       auto optParams = Acts::estimateTrackParamsFromSeed(
-          ctx.geoContext, seed.sp(), *surface, field, m_cfg.bFieldMin);
+          ctx.geoContext, seed.sp().begin(), seed.sp().end(), *surface, field,
+          m_cfg.bFieldMin);
       if (not optParams.has_value()) {
         ACTS_WARNING("Estimation of track parameters from seed "
                      << iseed << " in region " << iregion << " failed.");

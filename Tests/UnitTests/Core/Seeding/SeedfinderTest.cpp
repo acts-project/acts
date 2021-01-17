@@ -209,7 +209,8 @@ int main(int argc, char** argv) {
                   << sp->z() << ") ";
         std::cout << std::endl;
         if (estimateTrackParams) {
-          auto transParamsRes = Acts::estimateTrackParamsFromSeed(seed.sp());
+          auto transParamsRes = Acts::estimateTrackParamsFromSeed(
+              seed.sp().begin(), seed.sp().end());
           if (transParamsRes.has_value()) {
             auto transParams = transParamsRes.value();
             std::cout << "Estimated (d0, curvature, phi): \n " << transParams[0]
@@ -225,7 +226,8 @@ int main(int argc, char** argv) {
           const Acts::Vector3 bField(
               0, 0, config.bFieldInZ * 1000 * Acts::UnitConstants::T);
           auto boundParamsRes = Acts::estimateTrackParamsFromSeed(
-              Acts::GeometryContext(), seed.sp(), *surface, bField);
+              Acts::GeometryContext(), seed.sp().begin(), seed.sp().end(),
+              *surface, bField);
           if (boundParamsRes.has_value()) {
             auto boundParams = boundParamsRes.value();
             std::cout << "Estimated (loc0, loc1, phi, theta, q/p, t) on the "

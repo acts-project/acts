@@ -27,27 +27,28 @@ namespace Acts {
 /// 2) Implement the simple Line and Parabola fit (from HPS reconstruction by
 /// Robert Johnson)
 
-/// Estimate the track parameters on transverse plane
+/// Estimate the track parameters on the xy plane from at least space points. It
+/// assumes the trajectory projection on the xy plane is a circle, i.e. the
+/// magnetic field is along global z-axis.
 ///
-/// Using method based on V. Karimaki NIM A305 (1991) 187-191 - no weights
+/// The method is based on V. Karimaki NIM A305 (1991) 187-191 - no weights
 /// are used in Karimaki's fit, d0 is the distance of the closest approach to
 /// the origin, 1/R is the curvature, phi is the angle of the direction
 /// propagation (counter clockwise as positive)
 ///
-/// @tparam external_spacepoint_t The type of space point
-/// @param sps is a vector of space points
+/// @tparam spacepoint_iterator_t The type of space point iterator
+///
+/// @param spBegin is the begin iterator for the space points
+/// @param spEnd is the end iterator for the space points
 ///
 /// @return optional estimated parameters d0, 1/R and phi
-template <typename external_spacepoint_t>
+
+template <typename spacepoint_iterator_t>
 std::optional<std::array<ActsScalar, 3>> estimateTrackParamsFromSeed(
-    const std::vector<external_spacepoint_t*>& sps) {
+    spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd) {
   // The local logger
   ACTS_LOCAL_LOGGER(
       getDefaultLogger("estimateTrackParamsFromSeed", Logging::INFO));
-  if (sps.empty()) {
-    ACTS_ERROR("No space points exist.")
-    return std::nullopt;
-  }
 
   ActsScalar x2m = 0., xm = 0.;
   ActsScalar xym = 0.;
@@ -55,9 +56,14 @@ std::optional<std::array<ActsScalar, 3>> estimateTrackParamsFromSeed(
   ActsScalar r2m = 0., r4m = 0.;
   ActsScalar xr2m = 0., yr2m = 0.;
 
-  size_t numSP = sps.size();
+  size_t numSP = 0;
+  for (spacepoint_iterator_t it = spBegin; it != spEnd; it++) {
+    if (*it == nullptr) {
+      continue;
+    }
 
-  for (const auto& sp : sps) {
+    const auto& sp = *it;
+
     ActsScalar x = sp->x();
     ActsScalar y = sp->y();
     ActsScalar r2 = x * x + y * y;
@@ -70,7 +76,14 @@ std::optional<std::array<ActsScalar, 3>> estimateTrackParamsFromSeed(
     r4m += r2 * r2;
     xr2m += x * r2;
     yr2m += y * r2;
+    numSP++;
   }
+
+  if (numSP < 3) {
+    ACTS_ERROR("At least three valid space points are required.")
+    return std::nullopt;
+  }
+
   x2m = x2m / numSP;
   xm = xm / numSP;
   xym = xym / numSP;
@@ -101,43 +114,42 @@ std::optional<std::array<ActsScalar, 3>> estimateTrackParamsFromSeed(
   return std::array<ActsScalar, 3>{d, rho, phi};
 }
 
-/// Estimate the full track parameters from space points
+/// Estimate the full track parameters from three space points
 ///
-/// This resembles the method used in ATLAS for the track parameters
+/// This method is based on the conformal map transformation. It estimates the
+/// full bound track parameters, i.e. (loc0, loc1, phi, theta, q/p, t) at the
+/// bottom space point. The surface with the bottom space point on it should be
+/// provided for the representation of the bound track parameters. The magnetic
+/// field (which might be along any direction) is also necessary for the
+/// momentum estimation.
+///
+/// It resembles the method used in ATLAS for the track parameters
 /// estimated from seed, i.e. the function InDet::SiTrackMaker_xk::getAtaPlane
 /// here:
 /// https://acode-browser.usatlas.bnl.gov/lxr/source/athena/InnerDetector/InDetRecTools/SiTrackMakerTool_xk/src/SiTrackMaker_xk.cxx
 ///
-/// This function gives an estimation of the bound track parameters from a
-/// seed using a conformal map transformation, i.e. (loc1, loc2, phi, theta,
-/// q/p, t) at the bottom space point. phi is the angle of the track direction
-/// with respect the origin, positive when counter clock-wise
-///
-/// @tparam external_spacepoint_t The type of space point
+/// @tparam spacepoint_iterator_t  The type of space point iterator
 ///
 /// @param gctx is the geometry context
-/// @param sps is the vector of space points
+/// @param spBegin is the begin iterator for the space points
+/// @param spEnd is the end iterator for the space points
 /// @param surface is the surface of the bottom space point. The estimated bound
 /// track parameters will be represented also at this surface
 /// @param bField is the magnetic field vector
-/// @param bFieldMin is the minimum magnetic field to be able to perform the
+/// @param bFieldMin is the minimum magnetic field required to trigger the
 /// estimation of q/pt
 /// @param mass is the estimated particle mass
 ///
 /// @return optional bound parameters
-template <typename external_spacepoint_t>
+template <typename spacepoint_iterator_t>
 std::optional<BoundVector> estimateTrackParamsFromSeed(
-    const GeometryContext& gctx, const std::vector<external_spacepoint_t>& sps,
-    const Surface& surface, Vector3 bField,
+    const GeometryContext& gctx, spacepoint_iterator_t spBegin,
+    spacepoint_iterator_t spEnd, const Surface& surface, Vector3 bField,
     ActsScalar bFieldMin = 0.1 * UnitConstants::T,
     ActsScalar mass = 139.57018 * UnitConstants::MeV) {
   // The local logger
   ACTS_LOCAL_LOGGER(
       getDefaultLogger("estimateTrackParamsFromSeed", Logging::INFO));
-  if (sps.size() != 3) {
-    ACTS_ERROR("The number of space points should be three.")
-    return std::nullopt;
-  }
 
   // Convert bField to Tesla
   ActsScalar bFieldInTesla = bField.norm() / UnitConstants::T;
@@ -152,13 +164,39 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
     return std::nullopt;
   }
 
+  // The global position of the bottom, middle and top space point
+  Vector3 bGlobal, mGlobal, tGlobal;
+  size_t numSP = 0;
+  for (spacepoint_iterator_t it = spBegin; it != spEnd; it++) {
+    if (*it == nullptr) {
+      continue;
+    }
+    const auto& sp = *it;
+    switch (numSP) {
+      case 0: {
+        bGlobal = Vector3(sp->x(), sp->y(), sp->z());
+        break;
+      }
+      case 1: {
+        mGlobal = Vector3(sp->x(), sp->y(), sp->z());
+        break;
+      }
+      case 2: {
+        tGlobal = Vector3(sp->x(), sp->y(), sp->z());
+        break;
+      }
+      default: {
+        ACTS_WARNING(
+            "More than three space points are provided. The extra space point "
+            "is not used for the "
+            "estimation.");
+      }
+    }
+    numSP++;
+  }
+
   // Initialize the bound parameters vector
   BoundVector params = BoundVector::Zero();
-
-  // The global position of the bottom, middle and top space point
-  Vector3 bGlobal(sps[0]->x(), sps[0]->y(), sps[0]->z());
-  Vector3 mGlobal(sps[1]->x(), sps[1]->y(), sps[1]->z());
-  Vector3 tGlobal(sps[2]->x(), sps[2]->y(), sps[2]->z());
   // Define a new coordinate frame with its origin at the bottom space point, z
   // axis long the magnetic field direction and y axis perpendicular to vector
   // from the bottom to middle space point. Hence, the projection of the middle
