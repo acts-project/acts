@@ -29,7 +29,7 @@ namespace Acts {
 
 /// Estimate the track parameters on transverse plane
 ///
-/// @note Using method based on V. Karimaki NIM A305 (1991) 187-191 - no weights
+/// Using method based on V. Karimaki NIM A305 (1991) 187-191 - no weights
 /// are used in Karimaki's fit, d0 is the distance of the closest approach to
 /// the origin, 1/R is the curvature, phi is the angle of the direction
 /// propagation (counter clockwise as positive)
@@ -101,14 +101,14 @@ std::optional<std::array<ActsScalar, 3>> estimateTrackParamsFromSeed(
   return std::array<ActsScalar, 3>{d, rho, phi};
 }
 
-///  Estimate the full track parameters from space points
+/// Estimate the full track parameters from space points
 ///
-/// @note This resembles the method used in ATLAS for the track parameters
+/// This resembles the method used in ATLAS for the track parameters
 /// estimated from seed, i.e. the function InDet::SiTrackMaker_xk::getAtaPlane
 /// here:
 /// https://acode-browser.usatlas.bnl.gov/lxr/source/athena/InnerDetector/InDetRecTools/SiTrackMakerTool_xk/src/SiTrackMaker_xk.cxx
 ///
-/// @note This function gives an estimation of the bound track parameters from a
+/// This function gives an estimation of the bound track parameters from a
 /// seed using a conformal map transformation, i.e. (loc1, loc2, phi, theta,
 /// q/p, t) at the bottom space point. phi is the angle of the track direction
 /// with respect the origin, positive when counter clock-wise
@@ -117,8 +117,8 @@ std::optional<std::array<ActsScalar, 3>> estimateTrackParamsFromSeed(
 ///
 /// @param gctx is the geometry context
 /// @param sps is the vector of space points
-/// @param surface is the surface at which the bound track parameters will be
-/// represented
+/// @param surface is the surface of the bottom space point. The estimated bound
+/// track parameters will be represented also at this surface
 /// @param bField is the magnetic field vector
 /// @param bFieldMin is the minimum magnetic field to be able to perform the
 /// estimation of q/pt
@@ -134,8 +134,8 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // The local logger
   ACTS_LOCAL_LOGGER(
       getDefaultLogger("estimateTrackParamsFromSeed", Logging::INFO));
-  if (sps.size() < 3) {
-    ACTS_ERROR("At least three space points are required.")
+  if (sps.size() != 3) {
+    ACTS_ERROR("The number of space points should be three.")
     return std::nullopt;
   }
 
@@ -216,7 +216,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   params[eBoundPhi] = VectorHelpers::phi(direction);
   params[eBoundTheta] = VectorHelpers::theta(direction);
 
-  // Transform the bottom space point to the provided surface
+  // Transform the bottom space point to local coordinates
   auto lpResult = surface.globalToLocal(gctx, bGlobal, direction);
   if (not lpResult.ok()) {
     ACTS_ERROR("Global to local transformation did not succeed.");
