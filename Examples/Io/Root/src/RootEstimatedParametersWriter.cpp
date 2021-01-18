@@ -38,7 +38,7 @@ ActsExamples::RootEstimatedParametersWriter::RootEstimatedParametersWriter(
     : WriterT(cfg.inputTrackParameters, "RootEstimatedParametersWriter", lvl),
       m_cfg(cfg),
       m_outputFile(cfg.rootFile) {
-  if (m_cfg.inputTrackParamsSeedMap.empty()) {
+  if (m_cfg.inputTrackParametersSeedMap.empty()) {
     throw std::invalid_argument(
         "Missing parameters-to-seed map input collection");
   }
@@ -121,7 +121,7 @@ ActsExamples::RootEstimatedParametersWriter::endRun() {
 
 ActsExamples::ProcessCode ActsExamples::RootEstimatedParametersWriter::writeT(
     const AlgorithmContext& ctx, const TrackParametersContainer& parameters) {
-  using TrackParamsSeedMap = std::map<Index, std::pair<Index, Index>>;
+  using TrackParametersSeedMap = std::map<Index, std::pair<Index, Index>>;
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
   using HitSimHitsMap = IndexMultimap<Index>;
 
@@ -129,8 +129,9 @@ ActsExamples::ProcessCode ActsExamples::RootEstimatedParametersWriter::writeT(
     return ProcessCode::SUCCESS;
 
   // Read additional input collections
-  const auto& trackParamsSeedMap =
-      ctx.eventStore.get<TrackParamsSeedMap>(m_cfg.inputTrackParamsSeedMap);
+  const auto& trackParametersSeedMap =
+      ctx.eventStore.get<TrackParametersSeedMap>(
+          m_cfg.inputTrackParametersSeedMap);
   const auto& seeds = ctx.eventStore.get<SimSeedContainer>(m_cfg.inputSeeds);
   const auto& particles =
       ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
@@ -164,7 +165,7 @@ ActsExamples::ProcessCode ActsExamples::RootEstimatedParametersWriter::writeT(
     m_eta_est = std::atanh(std::cos(m_theta_est));
 
     // Get the seed via the estimated parameters to seed map
-    const auto& [iregion, iseed] = trackParamsSeedMap.at(iparams);
+    const auto& [iregion, iseed] = trackParametersSeedMap.at(iparams);
     const auto& seed = seeds[iregion][iseed];
     // check the seed quality
     ProtoTrack ptrack{seed.sp()[0]->measurementIndex(),

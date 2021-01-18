@@ -187,7 +187,7 @@ int runSeedingExample(int argc, char* argv[],
   estParamsWriterCfg.inputSeeds = seedingCfg.outputSeeds;
   estParamsWriterCfg.inputTrackParameters =
       paramsEstimationCfg.outputTrackParameters;
-  estParamsWriterCfg.inputTrackParamsSeedMap =
+  estParamsWriterCfg.inputTrackParametersSeedMap =
       paramsEstimationCfg.outputTrackParametersSeedMap;
   estParamsWriterCfg.inputParticles = particleReader.outputParticles;
   estParamsWriterCfg.inputSimHits = simHitReaderCfg.outputSimHits;

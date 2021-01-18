@@ -43,14 +43,14 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  using TrackParamsSeedMap = std::map<Index, std::pair<Index, Index>>;
+  using TrackParametersSeedMap = std::map<Index, std::pair<Index, Index>>;
   const auto& seeds = ctx.eventStore.get<SimSeedContainer>(m_cfg.inputSeeds);
   // need source links to get the geometry identifer
   const auto& sourceLinks =
       ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
 
   TrackParametersContainer trackParameters;
-  TrackParamsSeedMap trackParamsSeedMap;
+  TrackParametersSeedMap trackParametersSeedMap;
   trackParameters.reserve(seeds.size());
 
   for (size_t iregion = 0; iregion < seeds.size(); ++iregion) {
@@ -104,14 +104,14 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
 
         trackParameters.emplace_back(surface->getSharedPtr(), params, charge,
                                      cov);
-        trackParamsSeedMap.emplace(trackParameters.size() - 1,
-                                   std::make_pair(iregion, iseed));
+        trackParametersSeedMap.emplace(trackParameters.size() - 1,
+                                       std::make_pair(iregion, iseed));
       }
     }
   }
 
   ctx.eventStore.add(m_cfg.outputTrackParameters, std::move(trackParameters));
   ctx.eventStore.add(m_cfg.outputTrackParametersSeedMap,
-                     std::move(trackParamsSeedMap));
+                     std::move(trackParametersSeedMap));
   return ActsExamples::ProcessCode::SUCCESS;
 }

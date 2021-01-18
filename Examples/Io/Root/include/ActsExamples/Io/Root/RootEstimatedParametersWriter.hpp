@@ -40,7 +40,7 @@ class RootEstimatedParametersWriter final
     /// Input estimated track parameters collection.
     std::string inputTrackParameters;
     /// Input parameters to seed map collection.
-    std::string inputTrackParamsSeedMap;
+    std::string inputTrackParametersSeedMap;
     /// Input seeds collection.
     std::string inputSeeds;
     /// Input particles collection.
