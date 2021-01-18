@@ -15,7 +15,7 @@
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
@@ -122,7 +122,6 @@ ActsExamples::RootEstimatedParametersWriter::endRun() {
 ActsExamples::ProcessCode ActsExamples::RootEstimatedParametersWriter::writeT(
     const AlgorithmContext& ctx, const TrackParametersContainer& parameters) {
   using TrackParamsSeedMap = std::map<Index, std::pair<Index, Index>>;
-  using SeedContainer = std::vector<std::vector<Acts::Seed<SimSpacePoint>>>;
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
   using HitSimHitsMap = IndexMultimap<Index>;
 
@@ -132,7 +131,7 @@ ActsExamples::ProcessCode ActsExamples::RootEstimatedParametersWriter::writeT(
   // Read additional input collections
   const auto& trackParamsSeedMap =
       ctx.eventStore.get<TrackParamsSeedMap>(m_cfg.inputTrackParamsSeedMap);
-  const auto& seeds = ctx.eventStore.get<SeedContainer>(m_cfg.inputSeeds);
+  const auto& seeds = ctx.eventStore.get<SimSeedContainer>(m_cfg.inputSeeds);
   const auto& particles =
       ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
   const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);

@@ -11,7 +11,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
@@ -43,9 +43,8 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  using SeedContainer = std::vector<std::vector<Acts::Seed<SimSpacePoint>>>;
   using TrackParamsSeedMap = std::map<Index, std::pair<Index, Index>>;
-  const auto& seeds = ctx.eventStore.get<SeedContainer>(m_cfg.inputSeeds);
+  const auto& seeds = ctx.eventStore.get<SimSeedContainer>(m_cfg.inputSeeds);
   // need source links to get the geometry identifer
   const auto& sourceLinks =
       ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
