@@ -41,7 +41,7 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
     /// Output estimated track parameters collection.
     std::string outputTrackParameters;
     /// Output estimated track parameters to seed map collection.
-    std::string outputTrackParamsSeedMap;
+    std::string outputTrackParametersSeedMap;
     /// Tracking geometry for surface lookup.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// Magnetic field getter.

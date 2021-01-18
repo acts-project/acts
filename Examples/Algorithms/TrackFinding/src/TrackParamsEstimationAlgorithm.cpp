@@ -32,7 +32,7 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
   if (m_cfg.outputTrackParameters.empty()) {
     throw std::invalid_argument("Missing output track parameters collection");
   }
-  if (m_cfg.outputTrackParamsSeedMap.empty()) {
+  if (m_cfg.outputTrackParametersSeedMap.empty()) {
     throw std::invalid_argument(
         "Missing output trackparameters-to-seed collection");
   }
@@ -112,7 +112,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
   }
 
   ctx.eventStore.add(m_cfg.outputTrackParameters, std::move(trackParameters));
-  ctx.eventStore.add(m_cfg.outputTrackParamsSeedMap,
+  ctx.eventStore.add(m_cfg.outputTrackParametersSeedMap,
                      std::move(trackParamsSeedMap));
   return ActsExamples::ProcessCode::SUCCESS;
 }
