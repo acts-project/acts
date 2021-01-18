@@ -39,6 +39,20 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
   if (not m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
+
+  // Set up the track parameters covariance (the same for all tracks)
+  m_cfg.covariance(Acts::eBoundLoc0, Acts::eBoundLoc0) =
+      m_cfg.sigmaLoc0 * m_cfg.sigmaLoc0;
+  m_cfg.covariance(Acts::eBoundLoc1, Acts::eBoundLoc1) =
+      m_cfg.sigmaLoc1 * m_cfg.sigmaLoc1;
+  m_cfg.covariance(Acts::eBoundPhi, Acts::eBoundPhi) =
+      m_cfg.sigmaPhi * m_cfg.sigmaPhi;
+  m_cfg.covariance(Acts::eBoundTheta, Acts::eBoundTheta) =
+      m_cfg.sigmaTheta * m_cfg.sigmaTheta;
+  m_cfg.covariance(Acts::eBoundQOverP, Acts::eBoundQOverP) =
+      m_cfg.sigmaQOverP * m_cfg.sigmaQOverP;
+  m_cfg.covariance(Acts::eBoundTime, Acts::eBoundTime) =
+      m_cfg.sigmaT0 * m_cfg.sigmaT0;
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
@@ -85,25 +99,8 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
         const auto& params = optParams.value();
         double charge =
             std::abs(params[Acts::eBoundQOverP]) / params[Acts::eBoundQOverP];
-
-        // compute momentum-dependent resolutions
-        const double& sigmaLoc0 = m_cfg.sigmaLoc0;
-        const double& sigmaLoc1 = m_cfg.sigmaLoc1;
-        const double& sigmaPhi = m_cfg.sigmaPhi;
-        const double& sigmaTheta = m_cfg.sigmaTheta;
-        const double& sigmaQOverP = m_cfg.sigmaQOverP;
-        const double& sigmaT0 = m_cfg.sigmaT0;
-
-        Acts::BoundSymMatrix cov = Acts::BoundSymMatrix::Zero();
-        cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = sigmaLoc0 * sigmaLoc0;
-        cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = sigmaLoc1 * sigmaLoc1;
-        cov(Acts::eBoundPhi, Acts::eBoundPhi) = sigmaPhi * sigmaPhi;
-        cov(Acts::eBoundTheta, Acts::eBoundTheta) = sigmaTheta * sigmaTheta;
-        cov(Acts::eBoundQOverP, Acts::eBoundQOverP) = sigmaQOverP * sigmaQOverP;
-        cov(Acts::eBoundTime, Acts::eBoundTime) = sigmaT0 * sigmaT0;
-
         trackParameters.emplace_back(surface->getSharedPtr(), params, charge,
-                                     cov);
+                                     m_cfg.covariance);
         trackParametersSeedMap.emplace(trackParameters.size() - 1,
                                        std::make_pair(iregion, iseed));
       }

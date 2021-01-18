@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -57,6 +58,8 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
     double sigmaQOverP = 0.1;
     /// Time resolution.
     double sigmaT0 = 1400 * Acts::UnitConstants::s;
+    /// The track parameters covariance
+    Acts::BoundSymMatrix covariance = Acts::BoundSymMatrix::Zero();
   };
 
   /// Construct the track parameters making algorithm.
