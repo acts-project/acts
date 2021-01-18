@@ -16,7 +16,7 @@
 // Custom Json encoder/decoders. Maming is mandated by nlohman::json and thus
 // can not match our naming guidelines.
 
-void toJson(nlohmann::json& j, const Acts::BinningData& bd);
+void to_json(nlohmann::json& j, const Acts::BinningData& bd);
 
 void from_json(const nlohmann::json& j, Acts::BinningData& bd);
 
