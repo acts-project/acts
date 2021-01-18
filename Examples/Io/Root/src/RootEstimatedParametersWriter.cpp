@@ -125,8 +125,9 @@ ActsExamples::ProcessCode ActsExamples::RootEstimatedParametersWriter::writeT(
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
   using HitSimHitsMap = IndexMultimap<Index>;
 
-  if (m_outputFile == nullptr)
+  if (m_outputFile == nullptr) {
     return ProcessCode::SUCCESS;
+  }
 
   // Read additional input collections
   const auto& trackParametersSeedMap =
