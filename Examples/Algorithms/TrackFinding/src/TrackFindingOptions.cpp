@@ -16,7 +16,6 @@
 
 void ActsExamples::Options::addTrackFindingOptions(
     ActsExamples::Options::Description& desc) {
-  using boost::program_options::bool_switch;
   using boost::program_options::value;
 
   auto opt = desc.add_options();
@@ -25,7 +24,6 @@ void ActsExamples::Options::addTrackFindingOptions(
   opt("ckf-selection-nmax", value<size_t>()->default_value(10),
       "Global criteria of maximum number of measurement candidates on a "
       "surface for CKF measurement selection");
-  opt("ckf-truth-seeds", bool_switch(), "Use truth seeds for steering CKF");
 }
 
 ActsExamples::TrackFindingAlgorithm::Config

@@ -44,6 +44,14 @@ using namespace ActsExamples;
 using namespace boost::filesystem;
 using namespace std::placeholders;
 
+void addRecCKFOptions(ActsExamples::Options::Description& desc) {
+  using namespace ActsExamples;
+  using boost::program_options::bool_switch;
+
+  auto opt = desc.add_options();
+  opt("ckf-truth-seeds", bool_switch(), "Use truth seeds for steering CKF");
+}
+
 int runRecCKFTracks(int argc, char* argv[],
                     std::shared_ptr<ActsExamples::IBaseDetector> detector) {
   // setup and parse options
@@ -57,6 +65,7 @@ int runRecCKFTracks(int argc, char* argv[],
   detector->addOptions(desc);
   Options::addBFieldOptions(desc);
   Options::addTrackFindingOptions(desc);
+  addRecCKFOptions(desc);
 
   auto vm = Options::parse(desc, argc, argv);
   if (vm.empty()) {
