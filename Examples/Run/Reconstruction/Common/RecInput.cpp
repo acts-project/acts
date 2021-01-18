@@ -68,7 +68,7 @@ ActsExamples::CsvParticleReader::Config setupParticleReading(
   return particleReader;
 }
 
-ActsExamples::HitSmearing::Config runSimHitSmearing(
+ActsExamples::HitSmearing::Config setupSimHitSmearing(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer,
     std::shared_ptr<const ActsExamples::RandomNumbers> rnd,
@@ -96,7 +96,7 @@ ActsExamples::HitSmearing::Config runSimHitSmearing(
   return hitSmearingCfg;
 }
 
-ActsExamples::ParticleSmearing::Config runParticleSmearing(
+ActsExamples::ParticleSmearing::Config setupParticleSmearing(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer,
     std::shared_ptr<const ActsExamples::RandomNumbers> rnd,

@@ -98,8 +98,8 @@ int runRecCKFTracks(int argc, char* argv[],
   auto particleReader = setupParticleReading(vm, sequencer);
 
   // Run the sim hits smearing
-  auto hitSmearingCfg = runSimHitSmearing(vm, sequencer, rnd, trackingGeometry,
-                                          simHitReaderCfg.outputSimHits);
+  auto hitSmearingCfg = setupSimHitSmearing(
+      vm, sequencer, rnd, trackingGeometry, simHitReaderCfg.outputSimHits);
 
   // Run the particle selection
   // The pre-selection will select truth particles satisfying provided criteria
@@ -123,7 +123,7 @@ int runRecCKFTracks(int argc, char* argv[],
   if (truthSeeded) {
     // Run the particle smearing
     auto particleSmearingCfg =
-        runParticleSmearing(vm, sequencer, rnd, inputParticles);
+        setupParticleSmearing(vm, sequencer, rnd, inputParticles);
     outputTrackParameters = particleSmearingCfg.outputTrackParameters;
   } else {
     // Create space points

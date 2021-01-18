@@ -43,7 +43,7 @@ ActsExamples::CsvParticleReader::Config setupParticleReading(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer);
 
-/// Run sim hit smearing
+/// Setup sim hit smearing
 ///
 /// @param variables The configuration variables
 /// @param sequencer The framework sequencer
@@ -52,14 +52,14 @@ ActsExamples::CsvParticleReader::Config setupParticleReading(
 /// @param inputSimHits The input sim hit collection (e.g. from sim hit reader)
 ///
 /// @return config for hit smearing
-ActsExamples::HitSmearing::Config runSimHitSmearing(
+ActsExamples::HitSmearing::Config setupSimHitSmearing(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer,
     std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     const std::string& inputSimHits);
 
-/// Run particle smearing
+/// Setup particle smearing
 ///
 /// @param variables The configuration variables
 /// @param sequencer The framework sequencer
@@ -68,7 +68,7 @@ ActsExamples::HitSmearing::Config runSimHitSmearing(
 /// reader or from particle selection)
 ///
 /// @return config for particle smearing
-ActsExamples::ParticleSmearing::Config runParticleSmearing(
+ActsExamples::ParticleSmearing::Config setupParticleSmearing(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer,
     std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,

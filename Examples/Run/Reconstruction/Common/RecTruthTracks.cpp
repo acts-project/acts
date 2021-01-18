@@ -81,8 +81,8 @@ int runRecTruthTracks(int argc, char* argv[],
   auto particleReader = setupParticleReading(vm, sequencer);
 
   // Run the sim hits smearing
-  auto hitSmearingCfg = runSimHitSmearing(vm, sequencer, rnd, trackingGeometry,
-                                          simHitReaderCfg.outputSimHits);
+  auto hitSmearingCfg = setupSimHitSmearing(
+      vm, sequencer, rnd, trackingGeometry, simHitReaderCfg.outputSimHits);
   // Run the particle selection
   // The pre-selection will select truth particles satisfying provided criteria
   // from all particles read in by particle reader for further processing. It
@@ -101,7 +101,7 @@ int runRecTruthTracks(int argc, char* argv[],
 
   // Run the particle smearing
   auto particleSmearingCfg =
-      runParticleSmearing(vm, sequencer, rnd, inputParticles);
+      setupParticleSmearing(vm, sequencer, rnd, inputParticles);
 
   // The fitter needs the measurements (proto tracks) and initial
   // track states (proto states). The elements in both collections

@@ -81,8 +81,8 @@ int runSeedingExample(int argc, char* argv[],
   auto particleReader = setupParticleReading(vm, sequencer);
 
   // Run the sim hits smearing
-  auto hitSmearingCfg = runSimHitSmearing(vm, sequencer, rnd, tGeometry,
-                                          simHitReaderCfg.outputSimHits);
+  auto hitSmearingCfg = setupSimHitSmearing(vm, sequencer, rnd, tGeometry,
+                                            simHitReaderCfg.outputSimHits);
 
   // Run the particle selection
   // The pre-selection will select truth particles satisfying provided criteria
