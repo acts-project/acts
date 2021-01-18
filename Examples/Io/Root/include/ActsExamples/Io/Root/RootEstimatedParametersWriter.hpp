@@ -21,18 +21,11 @@ namespace ActsExamples {
 
 /// @class RootEstimatedParametersWriter
 ///
-/// Write out the estimated track parameters from found seeds into a TTree
+/// Write out the estimated track parameters from reconstructed seeds into a
+/// TTree
 ///
-/// Safe to use from multiple writer threads - uses a std::mutex lock.
-///
-/// Each entry in the TTree corresponds to one set of estimated track parameters
-/// for optimum writing speed. The event number is part of the written data.
-///
-/// A common file can be provided for to the writer to attach his TTree,
-/// this is done by setting the Config::rootFile pointer to an existing
-/// file
-///
-/// Safe to use from multiple writer threads - uses a std::mutex lock.
+/// Each entry in the TTree corresponds to one seed for optimum writing
+/// speed. The event number is part of the written data.
 class RootEstimatedParametersWriter final
     : public WriterT<TrackParametersContainer> {
  public:
