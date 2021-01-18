@@ -72,8 +72,8 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       }
 
       // Get the magnetic field at the bottom space point
-      Acts::Vector3 field = m_cfg.bFieldGetter(
-          Acts::Vector3(bottomSP->x(), bottomSP->y(), bottomSP->z()));
+      Acts::Vector3 field =
+          getField(Acts::Vector3(bottomSP->x(), bottomSP->y(), bottomSP->z()));
       // Estimate the track parameters from seed
       auto optParams = Acts::estimateTrackParamsFromSeed(
           ctx.geoContext, seed.sp().begin(), seed.sp().end(), *surface, field,

@@ -10,8 +10,12 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
+#include "Acts/MagneticField/SharedBField.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
+#include "ActsExamples/Plugins/BField/ScalableBField.hpp"
 
 #include <functional>
 #include <memory>
@@ -26,13 +30,6 @@ namespace ActsExamples {
 
 class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
  public:
-  /// Function type to get the magnetic field
-  /// @todo shall we use fieldCache?
-  using BFieldGetter = std::function<Acts::Vector3(const Acts::Vector3& pos)>;
-
-  /// Function to get the magnetic field
-  static BFieldGetter makeBFieldGetter(Options::BFieldVariant magneticField);
-
   struct Config {
     /// Input seeds collection.
     std::string inputSeeds;
@@ -44,8 +41,8 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
     std::string outputTrackParametersSeedMap;
     /// Tracking geometry for surface lookup.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
-    /// Magnetic field getter.
-    BFieldGetter bFieldGetter;
+    /// Magnetic field variant.
+    Options::BFieldVariant magneticField;
     /// The minimum magnetic field to trigger the track parameters estimation
     double bFieldMin = 0.1 * Acts::UnitConstants::T;
     /// Constant term of the loc0 resolution.
@@ -76,6 +73,22 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
 
  private:
   Config m_cfg;
+
+  /// Get magnetic field at requested position
+  ///
+  /// @param position The global position
+  /// @return the magnetic field at the position
+  Acts::Vector3 getField(const Acts::Vector3& position) const {
+    return std::visit(
+        [&](auto&& inputField) -> Acts::Vector3 {
+          using InputMagneticField =
+              typename std::decay_t<decltype(inputField)>::element_type;
+          using MagneticField = Acts::SharedBField<InputMagneticField>;
+          MagneticField field(std::move(inputField));
+          return field.getField(position);
+        },
+        std::move(m_cfg.magneticField));
+  }
 };
 
 }  // namespace ActsExamples

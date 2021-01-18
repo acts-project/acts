@@ -157,8 +157,7 @@ int runSeedingExample(int argc, char* argv[],
   paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
   paramsEstimationCfg.outputTrackParametersSeedMap = "estimatedparams_seed_map";
   paramsEstimationCfg.trackingGeometry = tGeometry;
-  paramsEstimationCfg.bFieldGetter =
-      TrackParamsEstimationAlgorithm::makeBFieldGetter(magneticField);
+  paramsEstimationCfg.magneticField = magneticField;
   sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
       paramsEstimationCfg, logLevel));
 

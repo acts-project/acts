@@ -174,8 +174,7 @@ int runRecCKFTracks(int argc, char* argv[],
       paramsEstimationCfg.outputTrackParametersSeedMap =
           "estimatedparams_seed_map";
       paramsEstimationCfg.trackingGeometry = trackingGeometry;
-      paramsEstimationCfg.bFieldGetter =
-          TrackParamsEstimationAlgorithm::makeBFieldGetter(magneticField);
+      paramsEstimationCfg.magneticField = magneticField;
       sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
           paramsEstimationCfg, logLevel));
 
