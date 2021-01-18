@@ -80,7 +80,7 @@ int runRecCKFTracks(int argc, char* argv[],
   auto outputDir = ensureWritableDirectory(vm["output-dir"].as<std::string>());
   auto rnd = std::make_shared<ActsExamples::RandomNumbers>(
       Options::readRandomNumbersConfig(vm));
-  bool estimateTrackParamsFromSeed = vm["ckf-truth-seeds"].template as<bool>();
+  bool truthSeeded = vm["ckf-truth-seeds"].template as<bool>();
 
   // Setup detector geometry
   auto geometry = Geometry::build(vm, *detector);
@@ -118,78 +118,76 @@ int runRecCKFTracks(int argc, char* argv[],
   // The selected particles
   const auto& inputParticles = particleSelectorCfg.outputParticles;
 
+  std::string outputTrackParameters;
   // Run particle smearing or run seed finding
-  auto trackParams = [&](bool useTruthSeeds) {
-    if (useTruthSeeds) {
-      // Run the particle smearing
-      auto particleSmearingCfg =
-          runParticleSmearing(vm, sequencer, rnd, inputParticles);
-      return particleSmearingCfg.outputTrackParameters;
-    } else {
-      // Create space points
-      SpacePointMaker::Config spCfg;
-      spCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
-      spCfg.inputMeasurements = hitSmearingCfg.outputMeasurements;
-      spCfg.outputSpacePoints = "spacepoints";
-      spCfg.trackingGeometry = trackingGeometry;
-      spCfg.geometrySelection = {
-          Acts::GeometryIdentifier().setVolume(8).setLayer(2),
-          Acts::GeometryIdentifier().setVolume(8).setLayer(4),
-          Acts::GeometryIdentifier().setVolume(8).setLayer(6),
-          // positive endcap pixel layers
-          Acts::GeometryIdentifier().setVolume(9).setLayer(2),
-          Acts::GeometryIdentifier().setVolume(9).setLayer(4),
-          Acts::GeometryIdentifier().setVolume(9).setLayer(6),
-          Acts::GeometryIdentifier().setVolume(9).setLayer(8),
-          // negative endcap pixel layers
-          Acts::GeometryIdentifier().setVolume(7).setLayer(14),
-          Acts::GeometryIdentifier().setVolume(7).setLayer(12),
-          Acts::GeometryIdentifier().setVolume(7).setLayer(10),
-          Acts::GeometryIdentifier().setVolume(7).setLayer(8),
-      };
-      sequencer.addAlgorithm(
-          std::make_shared<SpacePointMaker>(spCfg, logLevel));
+  if (truthSeeded) {
+    // Run the particle smearing
+    auto particleSmearingCfg =
+        runParticleSmearing(vm, sequencer, rnd, inputParticles);
+    outputTrackParameters = particleSmearingCfg.outputTrackParameters;
+  } else {
+    // Create space points
+    SpacePointMaker::Config spCfg;
+    spCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
+    spCfg.inputMeasurements = hitSmearingCfg.outputMeasurements;
+    spCfg.outputSpacePoints = "spacepoints";
+    spCfg.trackingGeometry = trackingGeometry;
+    spCfg.geometrySelection = {
+        Acts::GeometryIdentifier().setVolume(8).setLayer(2),
+        Acts::GeometryIdentifier().setVolume(8).setLayer(4),
+        Acts::GeometryIdentifier().setVolume(8).setLayer(6),
+        // positive endcap pixel layers
+        Acts::GeometryIdentifier().setVolume(9).setLayer(2),
+        Acts::GeometryIdentifier().setVolume(9).setLayer(4),
+        Acts::GeometryIdentifier().setVolume(9).setLayer(6),
+        Acts::GeometryIdentifier().setVolume(9).setLayer(8),
+        // negative endcap pixel layers
+        Acts::GeometryIdentifier().setVolume(7).setLayer(14),
+        Acts::GeometryIdentifier().setVolume(7).setLayer(12),
+        Acts::GeometryIdentifier().setVolume(7).setLayer(10),
+        Acts::GeometryIdentifier().setVolume(7).setLayer(8),
+    };
+    sequencer.addAlgorithm(std::make_shared<SpacePointMaker>(spCfg, logLevel));
 
-      // Seeding algorithm
-      SeedingAlgorithm::Config seedingCfg;
-      seedingCfg.inputSpacePoints = {
-          spCfg.outputSpacePoints,
-      };
-      seedingCfg.outputSeeds = "seeds";
-      seedingCfg.outputProtoTracks = "prototracks";
-      seedingCfg.rMax = 200.;
-      seedingCfg.deltaRMax = 60.;
-      seedingCfg.collisionRegionMin = -250;
-      seedingCfg.collisionRegionMax = 250.;
-      seedingCfg.zMin = -2000.;
-      seedingCfg.zMax = 2000.;
-      seedingCfg.maxSeedsPerSpM = 1;
-      seedingCfg.cotThetaMax = 7.40627;  // 2.7 eta
-      seedingCfg.sigmaScattering = 50;
-      seedingCfg.radLengthPerSeed = 0.1;
-      seedingCfg.minPt = 500.;
-      seedingCfg.bFieldInZ = 0.00199724;
-      seedingCfg.beamPosX = 0;
-      seedingCfg.beamPosY = 0;
-      seedingCfg.impactMax = 3.;
-      sequencer.addAlgorithm(
-          std::make_shared<SeedingAlgorithm>(seedingCfg, logLevel));
+    // Seeding algorithm
+    SeedingAlgorithm::Config seedingCfg;
+    seedingCfg.inputSpacePoints = {
+        spCfg.outputSpacePoints,
+    };
+    seedingCfg.outputSeeds = "seeds";
+    seedingCfg.outputProtoTracks = "prototracks";
+    seedingCfg.rMax = 200.;
+    seedingCfg.deltaRMax = 60.;
+    seedingCfg.collisionRegionMin = -250;
+    seedingCfg.collisionRegionMax = 250.;
+    seedingCfg.zMin = -2000.;
+    seedingCfg.zMax = 2000.;
+    seedingCfg.maxSeedsPerSpM = 1;
+    seedingCfg.cotThetaMax = 7.40627;  // 2.7 eta
+    seedingCfg.sigmaScattering = 50;
+    seedingCfg.radLengthPerSeed = 0.1;
+    seedingCfg.minPt = 500.;
+    seedingCfg.bFieldInZ = 0.00199724;
+    seedingCfg.beamPosX = 0;
+    seedingCfg.beamPosY = 0;
+    seedingCfg.impactMax = 3.;
+    sequencer.addAlgorithm(
+        std::make_shared<SeedingAlgorithm>(seedingCfg, logLevel));
 
-      // Algorithm estimating track parameter from seed
-      TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
-      paramsEstimationCfg.inputSeeds = seedingCfg.outputSeeds;
-      paramsEstimationCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
-      paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
-      paramsEstimationCfg.outputTrackParametersSeedMap =
-          "estimatedparams_seed_map";
-      paramsEstimationCfg.trackingGeometry = trackingGeometry;
-      paramsEstimationCfg.magneticField = magneticField;
-      sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
-          paramsEstimationCfg, logLevel));
+    // Algorithm estimating track parameter from seed
+    TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
+    paramsEstimationCfg.inputSeeds = seedingCfg.outputSeeds;
+    paramsEstimationCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
+    paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
+    paramsEstimationCfg.outputTrackParametersSeedMap =
+        "estimatedparams_seed_map";
+    paramsEstimationCfg.trackingGeometry = trackingGeometry;
+    paramsEstimationCfg.magneticField = magneticField;
+    sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
+        paramsEstimationCfg, logLevel));
 
-      return paramsEstimationCfg.outputTrackParameters;
-    }
-  };
+    outputTrackParameters = paramsEstimationCfg.outputTrackParameters;
+  }
 
   // Setup the track finding algorithm with CKF
   // It takes all the source links created from truth hit smearing, seeds from
@@ -197,8 +195,7 @@ int runRecCKFTracks(int argc, char* argv[],
   auto trackFindingCfg = Options::readTrackFindingConfig(vm);
   trackFindingCfg.inputMeasurements = hitSmearingCfg.outputMeasurements;
   trackFindingCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
-  trackFindingCfg.inputInitialTrackParameters =
-      trackParams(estimateTrackParamsFromSeed);
+  trackFindingCfg.inputInitialTrackParameters = outputTrackParameters;
   trackFindingCfg.outputTrajectories = "trajectories";
   trackFindingCfg.findTracks = TrackFindingAlgorithm::makeTrackFinderFunction(
       trackingGeometry, magneticField);
