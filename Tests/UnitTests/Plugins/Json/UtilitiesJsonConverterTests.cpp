@@ -8,32 +8,89 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-
-#include <nlohmann/json.hpp>
+#include "Acts/Utilities/BinningData.hpp"
 
 #include <fstream>
 #include <iostream>
 
+#include <nlohmann/json.hpp>
+
 BOOST_AUTO_TEST_SUITE(UtilitiesJsonConverter)
 
-BOOST_AUTO_TEST_CASE(BinUtilityRoundTripTests) {
+namespace {
+/// Check whether the BinningData objects are equal
+///
+/// @param ba The first BinningData object
+/// @param bb The second BinningData object
+/// @param tolerance a tolerance parameter
+///
+/// @return a boolean
+bool isEqual(const Acts::BinningData& ba, const Acts::BinningData& bb,
+             float tolerance) {
+  bool equalBool = (ba.type == bb.type) and (ba.option == bb.option) and
+                   (ba.binvalue == bb.binvalue) and (ba.zdim == bb.zdim) and
+                   (ba.subBinningAdditive == bb.subBinningAdditive);
 
-  Acts::BinUtility reference(Acts::binR, 0, 4);
+  bool equalRange = (std::abs(ba.min - bb.min) < tolerance) and
+                    (std::abs(ba.max - bb.max) < tolerance) and
+                    (std::abs(ba.step - bb.step) < tolerance);
+
+  bool euqalStructure =
+      (ba.subBinningData != nullptr)
+          ? isEqual(*ba.subBinningData, *bb.subBinningData, tolerance)
+          : (bb.subBinningData == nullptr);
+
+  bool equalBoundaries = (ba.boundaries().size() == bb.boundaries().size());
+  if (equalBoundaries) {
+    for (size_t ib = 0; ib < ba.boundaries().size(); ++ib) {
+      equalBoundaries =
+          (std::abs(ba.boundaries()[ib] - bb.boundaries()[ib]) < tolerance);
+      if (not equalBoundaries) {
+        break;
+      }
+    }
+  }
+  return equalBool and equalRange and euqalStructure;
+}
+
+/// Check whether the BinUtility ojbects are equal
+///
+/// @param ba The first BinUtility object
+/// @param bb the second BinUtility object
+/// @param tolerance a tolerance parameter
+///
+/// @return a bollean if equal
+bool isEqual(const Acts::BinUtility& ba, const Acts::BinUtility& bb,
+             float tolerance) {
+  bool equal = (ba.binningData().size() == bb.binningData().size());
+  if (equal) {
+    for (size_t ib = 0; ib < ba.binningData().size(); ++ib) {
+      equal = isEqual(ba.binningData()[ib], bb.binningData()[ib], tolerance);
+    }
+  }
+  return equal;
+}
+
+}  // namespace
+
+BOOST_AUTO_TEST_CASE(BinUtilityRoundTripTests) {
+  Acts::BinUtility reference(2, 0., 4., Acts::open, Acts::binR);
 
   std::ofstream out;
-
 
   // Test in in one dimension
   nlohmann::json joneDimOut;
   to_json(joneDimOut, reference);
-  out.open("oneDim.json");
+  out.open("BinUtility_1D.json");
   out << joneDimOut.dump(2);
   out.close();
 
-  auto in = std::ifstream("oneDim.json", std::ifstream::in | std::ifstream::binary);
+  auto in = std::ifstream("BinUtility_1D.json",
+                          std::ifstream::in | std::ifstream::binary);
   BOOST_CHECK(in.good());
   nlohmann::json joneDimIn;
   in >> joneDimIn;
@@ -42,24 +99,75 @@ BOOST_AUTO_TEST_CASE(BinUtilityRoundTripTests) {
   Acts::BinUtility test;
   from_json(joneDimIn, test);
 
+  BOOST_CHECK(isEqual(reference, test, 0.0001));
+
   // Increase to two dimensions
   reference += Acts::BinUtility(10., -M_PI, M_PI, Acts::closed, Acts::binPhi);
   nlohmann::json jtwoDimOut;
   to_json(jtwoDimOut, reference);
-  out.open("twoDim.json");
+  out.open("BinUtility_2D.json");
   out << jtwoDimOut.dump(2);
   out.close();
 
-  in = std::ifstream("twoDim.json", std::ifstream::in | std::ifstream::binary);
+  in = std::ifstream("BinUtility_2D.json",
+                     std::ifstream::in | std::ifstream::binary);
   BOOST_CHECK(in.good());
   nlohmann::json jtwoDimIn;
   in >> jtwoDimIn;
   in.close();
-  
+
   test = Acts::BinUtility();
   from_json(jtwoDimIn, test);
 
+  BOOST_CHECK(isEqual(reference, test, 0.0001));
 
+  // Increase to three dimensions
+  std::vector<float> boundaries = {-4., -1.5, 0., 10.};
+  reference += Acts::BinUtility(boundaries, Acts::open, Acts::binZ);
+  nlohmann::json jthreeDimOut;
+  to_json(jthreeDimOut, reference);
+  out.open("BinUtility_3D.json");
+  out << jthreeDimOut.dump(2);
+  out.close();
+
+  in = std::ifstream("BinUtility_3D.json",
+                     std::ifstream::in | std::ifstream::binary);
+  BOOST_CHECK(in.good());
+  nlohmann::json jthreeDimIn;
+  in >> jthreeDimIn;
+  in.close();
+
+  test = Acts::BinUtility();
+  from_json(jthreeDimIn, test);
+
+  BOOST_CHECK(isEqual(reference, test, 0.0001));
+
+  // One with transform
+  Acts::Transform3 t;
+  t = Eigen::AngleAxis(0.12334, Acts::Vector3(1., 2., 3).normalized());
+  t.pretranslate(Acts::Vector3(1., 2., 3.));
+
+  auto bData = reference.binningData()[0];
+
+  reference = Acts::BinUtility(bData, t);
+
+  nlohmann::json jtransformOut;
+  to_json(jtransformOut, reference);
+  out.open("BinUtility_Transform.json");
+  out << jtransformOut.dump(2);
+  out.close();
+
+  in = std::ifstream("BinUtility_Transform.json",
+                     std::ifstream::in | std::ifstream::binary);
+  BOOST_CHECK(in.good());
+  nlohmann::json jtransformIn;
+  in >> jtransformIn;
+  in.close();
+
+  test = Acts::BinUtility();
+  from_json(jtransformIn, test);
+
+  BOOST_CHECK(isEqual(reference, test, 0.0001));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -6,9 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// BinUtility.h, Acts project
-///////////////////////////////////////////////////////////////////
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -213,10 +210,7 @@ class BinningData {
     return (*this);
   }
 
-  /// Default constructor - needed for persistency streaming
   BinningData() = default;
-
-  /// Destructor
   ~BinningData() = default;
 
   /// Return the number of bins - including sub bins

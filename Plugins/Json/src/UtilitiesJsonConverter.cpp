@@ -8,6 +8,8 @@
 
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 
+#include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
+
 // Custom Json encoder/decoders. Maming is mandated by nlohman::json and thus
 // can not match our naming guidelines.
 
@@ -25,7 +27,7 @@ void to_json(nlohmann::json& j, const Acts::BinningData& bd) {
     j["subdata"] = subjson;
     j["subadditive"] = bd.subBinningAdditive;
     // this modifies the bins as bins() returns total number in general
-    if (bd.subBinningAdditive){
+    if (bd.subBinningAdditive) {
       bins -= static_cast<int>(subjson["bins"]) + 1;
     } else {
       bins /= static_cast<int>(subjson["bins"]);
@@ -76,15 +78,28 @@ void from_json(const nlohmann::json& j, Acts::BinningData& bd) {
 }
 
 void to_json(nlohmann::json& j, const Acts::BinUtility& bu) {
+  nlohmann::json jbindata;
   for (const auto& bdata : bu.binningData()) {
     nlohmann::json jdata;
     to_json(jdata, bdata);
-    j.push_back(jdata);
+    jbindata.push_back(jdata);
+  }
+  j["binningdata"] = jbindata;
+  if (not bu.transform().isApprox(Acts::Transform3::Identity())) {
+    nlohmann::json jtrf;
+    to_json(jtrf, bu.transform());
+    j["transform"] = jtrf;
   }
 }
 
 void from_json(const nlohmann::json& j, Acts::BinUtility& bu) {
-  for (const auto& jdata : j) {
+  bu = Acts::BinUtility();
+  if (j.find("transform") != j.end() and not j["transform"].empty()) {
+    Acts::Transform3 trf;
+    from_json(j["transform"], trf);
+    bu = Acts::BinUtility(trf);
+  }
+  for (const auto& jdata : j["binningdata"]) {
     Acts::BinningData bd;
     from_json(jdata, bd);
     bu += Acts::BinUtility(bd);

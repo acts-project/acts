@@ -127,7 +127,7 @@ class BinUtility {
   /// Virtual Destructor
   ~BinUtility() = default;
 
-  /// return the binning data vector
+  /// Return the binning data vector
   const std::vector<BinningData>& binningData() const { return m_binningData; }
 
   /// Return the total number of bins
