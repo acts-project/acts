@@ -1,7 +1,6 @@
 add_executable(
   ActsExampleTruthTracksDD4hep
   DD4hepRecTruthTracks.cpp)
-
 target_link_libraries(
   ActsExampleTruthTracksDD4hep
   PRIVATE
