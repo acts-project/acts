@@ -57,7 +57,6 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  using TrackParametersSeedMap = std::map<Index, std::pair<Index, Index>>;
   const auto& seeds = ctx.eventStore.get<SimSeedContainer>(m_cfg.inputSeeds);
   // need source links to get the geometry identifer
   const auto& sourceLinks =
@@ -67,9 +66,9 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
   TrackParametersSeedMap trackParametersSeedMap;
   trackParameters.reserve(seeds.size());
 
-  for (size_t iregion = 0; iregion < seeds.size(); ++iregion) {
+  for (Index iregion = 0; iregion < seeds.size(); ++iregion) {
     const auto& regionSeeds = seeds[iregion];
-    for (size_t iseed = 0; iseed < regionSeeds.size(); ++iseed) {
+    for (Index iseed = 0; iseed < regionSeeds.size(); ++iseed) {
       const auto& seed = regionSeeds[iseed];
       // Get the bottom space point and its reference surface
       // @todo do we need to sort the sps first
@@ -102,7 +101,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
         trackParameters.emplace_back(surface->getSharedPtr(), params, charge,
                                      m_cfg.covariance);
         trackParametersSeedMap.emplace(trackParameters.size() - 1,
-                                       std::make_pair(iregion, iseed));
+                                       GroupedSeedIdx{iregion, iseed});
       }
     }
   }

@@ -227,7 +227,7 @@ int main(int argc, char** argv) {
               0, 0, config.bFieldInZ * 1000 * Acts::UnitConstants::T);
           auto boundParamsRes = Acts::estimateTrackParamsFromSeed(
               Acts::GeometryContext(), seed.sp().begin(), seed.sp().end(),
-              *surface, bField);
+              *surface, bField, 0.1 * Acts::UnitConstants::T);
           if (boundParamsRes.has_value()) {
             auto boundParams = boundParamsRes.value();
             std::cout << "Estimated (loc0, loc1, phi, theta, q/p, t) on the "

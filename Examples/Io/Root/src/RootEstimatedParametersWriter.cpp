@@ -121,7 +121,6 @@ ActsExamples::RootEstimatedParametersWriter::endRun() {
 
 ActsExamples::ProcessCode ActsExamples::RootEstimatedParametersWriter::writeT(
     const AlgorithmContext& ctx, const TrackParametersContainer& parameters) {
-  using TrackParametersSeedMap = std::map<Index, std::pair<Index, Index>>;
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
   using HitSimHitsMap = IndexMultimap<Index>;
 
@@ -166,8 +165,8 @@ ActsExamples::ProcessCode ActsExamples::RootEstimatedParametersWriter::writeT(
     m_eta_est = std::atanh(std::cos(m_theta_est));
 
     // Get the seed via the estimated parameters to seed map
-    const auto& [iregion, iseed] = trackParametersSeedMap.at(iparams);
-    const auto& seed = seeds[iregion][iseed];
+    const auto& groupedSeedIdx = trackParametersSeedMap.at(iparams);
+    const auto& seed = seeds[groupedSeedIdx.regionIdx][groupedSeedIdx.seedIdx];
     // check the seed quality
     ProtoTrack ptrack{seed.sp()[0]->measurementIndex(),
                       seed.sp()[1]->measurementIndex(),
