@@ -27,14 +27,16 @@ namespace Acts {
 /// 2) Implement the simple Line and Parabola fit (from HPS reconstruction by
 /// Robert Johnson)
 
-/// Estimate the track parameters on the xy plane from at least space points. It
-/// assumes the trajectory projection on the xy plane is a circle, i.e. the
-/// magnetic field is along global z-axis.
+/// Estimate the track parameters on the xy plane from at least three space
+/// points. It assumes the trajectory projection on the xy plane is a circle,
+/// i.e. the magnetic field is along global z-axis.
 ///
-/// The method is based on V. Karimaki NIM A305 (1991) 187-191 - no weights
-/// are used in Karimaki's fit, d0 is the distance of the closest approach to
-/// the origin, 1/R is the curvature, phi is the angle of the direction
-/// propagation (counter clockwise as positive)
+/// The method is based on V. Karimaki NIM A305 (1991) 187-191:
+/// https://doi.org/10.1016/0168-9002(91)90533-V
+/// - no weights are used in Karimaki's fit, d0 is the distance of the point of
+/// closest approach to the origin, 1/R is the curvature, phi is the angle of
+/// the direction propagation (counter clockwise as positive) at the point of
+/// cloest approach.
 ///
 /// @tparam spacepoint_iterator_t The type of space point iterator
 ///
@@ -109,9 +111,9 @@ std::optional<std::array<ActsScalar, 3>> estimateTrackParamsFromSeed(
   ActsScalar delta = -k * r2m + std::sin(phi) * xm - std::cos(phi) * ym;
 
   ActsScalar rho = (2 * k) / (std::sqrt(1 - 4 * delta * k));
-  ActsScalar d = (2 * delta) / (1 + std::sqrt(1 - 4 * delta * k));
+  ActsScalar d0 = (2 * delta) / (1 + std::sqrt(1 - 4 * delta * k));
 
-  return std::array<ActsScalar, 3>{d, rho, phi};
+  return std::array<ActsScalar, 3>{d0, rho, phi};
 }
 
 /// Estimate the full track parameters from three space points
