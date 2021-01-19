@@ -147,8 +147,7 @@ template <typename spacepoint_iterator_t>
 std::optional<BoundVector> estimateTrackParamsFromSeed(
     const GeometryContext& gctx, spacepoint_iterator_t spBegin,
     spacepoint_iterator_t spEnd, const Surface& surface, Vector3 bField,
-    ActsScalar bFieldMin = 0.1 * UnitConstants::T,
-    ActsScalar mass = 139.57018 * UnitConstants::MeV) {
+    ActsScalar bFieldMin, ActsScalar mass = 139.57018 * UnitConstants::MeV) {
   // The local logger
   ACTS_LOCAL_LOGGER(
       getDefaultLogger("estimateTrackParamsFromSeed", Logging::INFO));
@@ -199,6 +198,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
 
   // Initialize the bound parameters vector
   BoundVector params = BoundVector::Zero();
+
   // Define a new coordinate frame with its origin at the bottom space point, z
   // axis long the magnetic field direction and y axis perpendicular to vector
   // from the bottom to middle space point. Hence, the projection of the middle
