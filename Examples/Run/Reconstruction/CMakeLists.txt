@@ -41,12 +41,24 @@ target_link_libraries(
     ActsExamplesRecTracksCommon
     ActsExamplesDetectorTelescope)
 
+# Seeding for Generic detector
+add_executable(
+  ActsExampleSeedingGeneric
+  GenericSeedingExample.cpp)
+target_link_libraries(
+  ActsExampleSeedingGeneric
+  PRIVATE
+  ActsExamplesRecTracksCommon
+    ActsExamplesDetectorGeneric
+)
+
 install(
   TARGETS
     ActsExampleTruthTracksGeneric
     ActsExampleTruthTracksTelescope
     ActsExampleCKFTracksGeneric
     ActsExampleCKFTracksTelescope
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+    ActsExampleSeedingGeneric
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_subdirectory_if(DD4hep ACTS_BUILD_EXAMPLES_DD4HEP)
