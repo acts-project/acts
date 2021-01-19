@@ -166,7 +166,9 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   }
 
   // The global position of the bottom, middle and top space point
-  Vector3 bGlobal, mGlobal, tGlobal;
+  Vector3 bGlobal = Vector3::Zero();
+  Vector3 mGlobal = Vector3::Zero();
+  Vector3 tGlobal = Vector3::Zero();
   size_t numSP = 0;
   for (spacepoint_iterator_t it = spBegin; it != spEnd; it++) {
     if (*it == nullptr) {
