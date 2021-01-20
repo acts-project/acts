@@ -113,6 +113,16 @@ class GeometryHierarchyMap {
   /// @retval `.end()` iterator if no matching element exists
   Iterator find(GeometryIdentifier id) const;
 
+  /// Find the value for a given geometry identifier. 
+  ///
+  /// This will be the element matching exactly to the given geometry
+  /// id, this thus ignore the hierachical nature of this container.
+  ///
+  /// @param id geometry identifier for which information is requested
+  /// @retval iterator to an existing value
+  /// @retval `.end()` iterator if no matching element exists
+  Iterator findAtId(GeometryIdentifier id) const;
+
  private:
   // NOTE this class assumes that it knows the ordering of the levels within
   //      the geometry id. if the geometry id changes, this code has to be
@@ -290,6 +300,28 @@ inline auto GeometryHierarchyMap<value_t>::find(GeometryIdentifier id) const
 
   // all options are exhausted and no matching element was found.
   return end();
+}
+
+template <typename value_t>
+inline auto GeometryHierarchyMap<value_t>::findAtId(GeometryIdentifier id) const
+    -> Iterator {
+  assert((m_ids.size() == m_values.size()) and
+         "Inconsistent container state: #ids != # values");
+  assert((m_masks.size() == m_values.size()) and
+         "Inconsistent container state: #masks != #values");
+
+  // Search the element in the Hierarchy corresponding to the identifier.
+  const auto itId = std::find(m_ids.begin(), m_ids.end(), id.value());
+  // If it does not exist return a end iterator.
+  if(itId == m_ids.end()){
+    return end();
+  }
+  else{
+    // Determine the index of the Id and return the iterator on the value
+    // for this index.
+    auto index = std::distance(m_ids.begin(), itId);
+    return std::next(begin(), index);
+  }
 }
 
 }  // namespace Acts

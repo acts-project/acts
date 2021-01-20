@@ -187,7 +187,6 @@ int materialMappingExample(int argc, char* argv[],
         vm["mat-output-boundaries"].template as<bool>();
     jmConverterCfg.processVolumes =
         vm["mat-output-volumes"].template as<bool>();
-    jmConverterCfg.writeData = vm["mat-output-data"].template as<bool>();
     jmConverterCfg.context = geoContext;
     // The writer
     ActsExamples::JsonMaterialWriter jmwImpl(jmConverterCfg,

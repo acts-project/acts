@@ -74,30 +74,30 @@ class GeometryHierarchyMapJsonConverter {
     nlohmann::json encoded;
     // only store non-zero identifiers
     if (id.volume()) {
-      encoded["volume"] = id.volume();
+      encoded["Volume"] = id.volume();
     }
     if (id.boundary()) {
-      encoded["boundary"] = id.boundary();
+      encoded["_Boundary"] = id.boundary();
     }
     if (id.layer()) {
-      encoded["layer"] = id.layer();
+      encoded["_Layer"] = id.layer();
     }
     if (id.approach()) {
-      encoded["approach"] = id.approach();
+      encoded["__Approach"] = id.approach();
     }
     if (id.sensitive()) {
-      encoded["sensitive"] = id.sensitive();
+      encoded["__Sensitive"] = id.sensitive();
     }
     return encoded;
   }
   static GeometryIdentifier decodeIdentifier(const nlohmann::json& encoded) {
     return GeometryIdentifier()
-        .setVolume(encoded.value("volume", GeometryIdentifier::Value(0u)))
-        .setBoundary(encoded.value("boundary", GeometryIdentifier::Value(0u)))
-        .setLayer(encoded.value("layer", GeometryIdentifier::Value(0u)))
-        .setApproach(encoded.value("approach", GeometryIdentifier::Value(0u)))
+        .setVolume(encoded.value("Volume", GeometryIdentifier::Value(0u)))
+        .setBoundary(encoded.value("_Boundary", GeometryIdentifier::Value(0u)))
+        .setLayer(encoded.value("_Layer", GeometryIdentifier::Value(0u)))
+        .setApproach(encoded.value("__Approach", GeometryIdentifier::Value(0u)))
         .setSensitive(
-            encoded.value("sensitive", GeometryIdentifier::Value(0u)));
+            encoded.value("__Sensitive", GeometryIdentifier::Value(0u)));
   }
 };
 

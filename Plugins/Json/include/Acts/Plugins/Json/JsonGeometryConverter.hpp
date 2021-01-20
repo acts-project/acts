@@ -18,6 +18,8 @@
 #include <Acts/Geometry/TrackingVolume.hpp>
 #include <Acts/Surfaces/Surface.hpp>
 
+#include "Acts/Plugins/Json/GeometryHierarchyMapJsonConverter.hpp"
+
 #include <map>
 
 #include <nlohmann/json.hpp>
@@ -31,85 +33,16 @@ class JsonGeometryConverter {
  public:
   using SurfaceMaterialMap =
       std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
-
   using VolumeMaterialMap =
       std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
-
   using DetectorMaterialMaps = std::pair<SurfaceMaterialMap, VolumeMaterialMap>;
 
-  using geo_id_value = uint64_t;
-
-  using SurfaceMaterialRep = std::map<geo_id_value, const ISurfaceMaterial*>;
-  using SurfaceRep = std::map<geo_id_value, const Surface*>;
-  using VolumeMaterialRep = std::map<geo_id_value, const IVolumeMaterial*>;
-
-  /// @brief Layer representation for Json writing
-  struct LayerRep {
-    // the layer id
-    GeometryIdentifier layerID;
-
-    SurfaceMaterialRep sensitives;
-    SurfaceRep sensitiveSurfaces;
-    SurfaceMaterialRep approaches;
-    SurfaceRep approacheSurfaces;
-    const ISurfaceMaterial* representing = nullptr;
-    const Surface* representingSurface = nullptr;
-
-    /// The LayerRep is actually worth it to write out
-    operator bool() const {
-      return (!sensitives.empty() or !approaches.empty() or
-              representing != nullptr);
-    }
-  };
-
-  /// @brief Volume representation for Json writing
-  struct VolumeRep {
-    // The geometry id
-    GeometryIdentifier volumeID;
-
-    /// The namne
-    std::string volumeName;
-
-    std::map<geo_id_value, LayerRep> layers;
-    SurfaceMaterialRep boundaries;
-    SurfaceRep boundarySurfaces;
-    const IVolumeMaterial* material = nullptr;
-
-    /// The VolumeRep is actually worth it to write out
-    operator bool() const {
-      return (!layers.empty() or !boundaries.empty() or material != nullptr);
-    }
-  };
-
-  /// @brief Detector representation for Json writing
-  struct DetectorRep {
-    std::map<geo_id_value, VolumeRep> volumes;
-  };
-
-  /// @class Config
-  /// Configuration of the Converter
-  class Config {
-   public:
-    /// The geometry version
-    std::string geoversion = "undefined";
-    /// The detector tag
-    std::string detkey = "detector";
-    /// The volume identification string
-    std::string volkey = "volumes";
+  /// @struct jsonKey
+  ///
+  /// @brief store in a single place the different key used for the material mapping 
+  struct jsonKey {
     /// The name identification
-    std::string namekey = "name";
-    /// The boundary surface string
-    std::string boukey = "boundaries";
-    /// The layer identification string
-    std::string laykey = "layers";
-    /// The volume material string
-    std::string matkey = "material";
-    /// The approach identification string
-    std::string appkey = "approach";
-    /// The sensitive identification string
-    std::string senkey = "sensitive";
-    /// The representing idntification string
-    std::string repkey = "representing";
+    std::string namekey = "Name";
     /// The bin0 key
     std::string bin0key = "bin0";
     /// The bin1 key
@@ -124,8 +57,6 @@ class JsonGeometryConverter {
     std::string datakey = "data";
     /// The geoid key
     std::string geometryidkey = "Geoid";
-    /// The surface geoid key
-    std::string surfacegeometryidkey = "SGeoid";
     /// The mapping key, add surface to mapping procedure if true
     std::string mapkey = "mapMaterial";
     /// The surface type key
@@ -134,6 +65,12 @@ class JsonGeometryConverter {
     std::string surfacepositionkey = "sposition";
     /// The surface range key
     std::string surfacerangekey = "srange";
+  };
+
+  /// @class Config
+  /// Configuration of the Converter
+  class Config {
+   public:
     /// The default logger
     std::shared_ptr<const Logger> logger;
     /// Default geometry context to extract surface tranforms
@@ -155,8 +92,6 @@ class JsonGeometryConverter {
     bool processDenseVolumes = false;
     /// Add proto material to all surfaces
     bool processNonMaterial = false;
-    /// Write out data
-    bool writeData = true;
 
     /// Constructor
     ///
@@ -175,86 +110,53 @@ class JsonGeometryConverter {
   /// Destructor
   ~JsonGeometryConverter() = default;
 
-  /// Convert method
+  /// Convert a json material map to a DetectorMaterialMaps
   ///
-  /// @param surfaceMaterialMap The indexed material map collection
-  std::pair<
-      std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>,
-      std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>>
-  jsonToMaterialMaps(const nlohmann::json& materialmaps);
+  /// @param materialmaps The json material
+  DetectorMaterialMaps jsonToMaterialMaps(const nlohmann::json& materialmaps);
 
-  /// Convert method
+  /// Convert a DetectorMaterialMaps to json
   ///
-  /// @param surfaceMaterialMap The indexed material map collection
+  /// @param maps The material map collection
   nlohmann::json materialMapsToJson(const DetectorMaterialMaps& maps);
 
-  /// Write method
+  /// Convert a tracking geometry to json.
+  /// Can be used to initialise the material mapping process.
   ///
-  /// @param tGeometry is the tracking geometry which contains the material
+  /// @param tGeometry is the tracking geometry
   nlohmann::json trackingGeometryToJson(const TrackingGeometry& tGeometry);
 
+  /// Go through a volume to find subvolume, layers and surfaces.
+  /// Store volumes and surfaces in two vector used to initialised the geometry hierachy.
+  ///
+  /// @param volumeHierarchy is a vector of volume to be filled
+  /// @param surfaceHierarchy is a vector of surfaces to be filled
+  /// @param tVolume is a volume 
+  void convertToHierarchy(
+      std::vector<std::pair<GeometryIdentifier, const TrackingVolume*>>&
+          volumeHierarchy,
+      std::vector<std::pair<GeometryIdentifier, const Surface*>>&
+          surfaceHierarchy,
+      const Acts::TrackingVolume* tVolume);
+
  private:
-  /// Convert to internal representation method, recursive call
-  ///
-  /// @param tGeometry is the tracking geometry which contains the material
-  void convertToRep(DetectorRep& detRep, const TrackingVolume& tVolume);
-
-  /// Convert to internal representation method
-  ///
-  /// @param tGeometry is the tracking geometry which contains the material
-  LayerRep convertToRep(const Layer& tLayer);
-
-  /// Create the Surface Material from Json
-  /// - factory method, ownership given
-  /// @param material is the json part representing a material object
-  const ISurfaceMaterial* jsonToSurfaceMaterial(const nlohmann::json& material);
-
-  /// Create the Volume Material from Json
-  /// - factory method, ownership given
-  /// @param material is the json part representing a material object
-  const IVolumeMaterial* jsonToVolumeMaterial(const nlohmann::json& material);
-
-  /// Create the Material Matrix from Json
-  ///
-  /// @param data is the json part representing a material data array
-  MaterialSlabMatrix jsonToMaterialMatrix(const nlohmann::json& data);
-
-  /// Create the BinUtility for from Json
-  BinUtility jsonToBinUtility(const nlohmann::json& bin);
-
-  /// Create the local to global transform for from Json
-  Transform3 jsonToTransform(const nlohmann::json& transfo);
-
-  /// Create Json from a detector represenation
-  nlohmann::json detectorRepToJson(const DetectorRep& detRep);
-
-  /// SurfaceMaterial to Json
-  ///
-  /// @param the SurfaceMaterial
-  nlohmann::json surfaceMaterialToJson(const ISurfaceMaterial& sMaterial);
-
-  /// VolumeMaterial to Json
-  ///
-  /// @param the VolumeMaterial
-  nlohmann::json volumeMaterialToJson(const IVolumeMaterial& vMaterial);
-
-  /// Add surface information to json surface
-  ///
-  /// @param The json surface The surface
-  void addSurfaceToJson(nlohmann::json& sjson, const Surface* surface);
-
-  /// Default BinUtility to create proto material
-  ///
-  /// @param the Surface
-  Acts::BinUtility DefaultBin(const Acts::Surface& surface);
-
-  /// Default BinUtility to create proto material
-  ///
-  /// @param the Volume
-  Acts::BinUtility DefaultBin(const Acts::TrackingVolume& volume);
 
   /// The config class
   Config m_cfg;
+
+  /// Name of the volume hierarchy
+  std::string m_volumeName = "Material Volume Map";
+  /// Geometry hierarchy writer for volume material.
+  Acts::GeometryHierarchyMapJsonConverter<const IVolumeMaterial*> m_volumeMaterialConverter;
+  /// Geometry hierarchy writer for tracking volume.
+  Acts::GeometryHierarchyMapJsonConverter<const TrackingVolume*> m_volumeConverter;
+  
+  /// Name of the surface hierarchy
+  std::string m_surfaceName = "Material Surface Map";
+  /// Geometry hierarchy writer for surface material.
+  Acts::GeometryHierarchyMapJsonConverter<const ISurfaceMaterial*> m_surfaceMaterialConverter;
+/// Geometry hierarchy writer for surface.
+  Acts::GeometryHierarchyMapJsonConverter<const Surface*> m_surfaceConverter;
 
   /// Private access to the logging instance
   const Logger& logger() const { return *m_cfg.logger; }

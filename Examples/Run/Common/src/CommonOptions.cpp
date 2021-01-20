@@ -82,8 +82,6 @@ void ActsExamples::Options::addMaterialOptions(
       "Write material information of volumes.")(
       "mat-output-dense-volumes", value<bool>()->default_value(false),
       "Write material information of dense volumes.")(
-      "mat-output-data", value<bool>()->default_value(true),
-      "Output the data field(s).")(
       "mat-output-allmaterial", value<bool>()->default_value(false),
       "Add protoMaterial to all surfaces and volume for the mapping.");
 }
