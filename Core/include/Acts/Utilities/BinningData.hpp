@@ -6,9 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// BinUtility.h, Acts project
-///////////////////////////////////////////////////////////////////
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -115,7 +112,7 @@ class BinningData {
     checkSubStructure();
   }
 
-  /// Constructor for equidistant binning
+  /// Constructor for non-equidistant binning
   ///
   /// @param bOption is the binning option : open / closed
   /// @param bValue is the binning value : binX, binY, etc.
@@ -211,7 +208,7 @@ class BinningData {
     return (*this);
   }
 
-  /// Destructor
+  BinningData() = default;
   ~BinningData() = default;
 
   /// Return the number of bins - including sub bins
