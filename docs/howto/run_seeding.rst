@@ -67,7 +67,7 @@ The plots below are examples of the efficiency plots produced using the ttbar sa
 
 Using a different detector
 -------------------
-The example above uses the Generic detector, but you can also try the seeding example with a DD4hep detector.
+The example above uses the Generic Detector, but you can also try the seeding example with a DD4hep detector.
 To run the seeding example with the OpenData detector,
 
 .. code-block:: console
@@ -94,7 +94,7 @@ The detector volumes and layers used for seeding are set in ``acts/Examples/Run/
       // open detector negative endcap layers
       Acts::GeometryIdentifier().setVolume(12),
 
-If you want to try a different detector geometry, you need to set the detector volumes and layers properly in this file.
+If you want to try a different detector geometry, you need to set the detector volumes and layers in this file.
 
 
 
