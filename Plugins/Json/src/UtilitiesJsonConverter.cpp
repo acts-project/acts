@@ -89,7 +89,7 @@ void Acts::to_json(nlohmann::json& j, const Acts::BinUtility& bu) {
   }
 }
 
-void from_json(const nlohmann::json& j, Acts::BinUtility& bu) {
+void Acts::from_json(const nlohmann::json& j, Acts::BinUtility& bu) {
   bu = Acts::BinUtility();
   if (j.find("transform") != j.end() and not j["transform"].empty()) {
     Acts::Transform3 trf;
