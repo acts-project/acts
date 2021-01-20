@@ -18,12 +18,12 @@
 
 namespace Acts {
 
-void to_json(nlohmann::json& j, const Acts::BinningData& bd);
+void to_json(nlohmann::json& j, const BinningData& bd);
 
-void from_json(const nlohmann::json& j, Acts::BinningData& bd);
+void from_json(const nlohmann::json& j, BinningData& bd);
 
-void to_json(nlohmann::json& j, const Acts::BinUtility& bu);
+void to_json(nlohmann::json& j, const BinUtility& bu);
 
-void from_json(const nlohmann::json& j, Acts::BinUtility& bu);
+void from_json(const nlohmann::json& j, BinUtility& bu);
 
 }  // namespace Acts

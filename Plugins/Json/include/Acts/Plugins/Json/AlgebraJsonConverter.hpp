@@ -16,8 +16,8 @@
 // can not match our naming guidelines.
 namespace Acts {
 
-void to_json(nlohmann::json& j, const Acts::Transform3& t);
+void to_json(nlohmann::json& j, const Transform3& t);
 
-void from_json(const nlohmann::json& j, Acts::Transform3& t);
+void from_json(const nlohmann::json& j, Transform3& t);
 
 }  // namespace Acts
