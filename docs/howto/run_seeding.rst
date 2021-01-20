@@ -16,13 +16,34 @@ Run the seeding example
 Suppose the generated ttbar sample is available at ``data/sim_generic/ttbar_pu200``.
 The seed finding example reads the fatras simulation output and creates smeared measurements from the truth hits.
 After that, it creates space points from the smeared measurements, and the seed finding algorithm is performed.
-The parameters for the seed finding are configured in ``/acts/Examples/Run/Seeding/Common/SeedingExample.cpp``.
+The following parameters for the seed finding are set in ``/acts/Examples/Run/Seeding/Common/SeedingExample.cpp``.
+
+.. code-block:: console
+
+  seedingCfg.rMax = 200.;
+  seedingCfg.deltaRMax = 60.;
+  seedingCfg.collisionRegionMin = -250;
+  seedingCfg.collisionRegionMax = 250.;
+  seedingCfg.zMin = -2000.;
+  seedingCfg.zMax = 2000.;
+  seedingCfg.maxSeedsPerSpM = 1;
+  seedingCfg.cotThetaMax = 7.40627;  // 2.7 eta
+  seedingCfg.sigmaScattering = 50;
+  seedingCfg.radLengthPerSeed = 0.1;
+  seedingCfg.minPt = 500.;
+  seedingCfg.bFieldInZ = 0.00199724;
+  seedingCfg.beamPosX = 0;
+  seedingCfg.beamPosY = 0;
+  seedingCfg.impactMax = 3.;
+
+
+You can run the seeding example with a comand like this:
 
 .. code-block:: console
 
    $ <build>/bin/ActsExampleSeedingGeneric \
 	--input-dir=data/sim_generic/ttbar_pu200 \
-	--output-dir=output_generic_ttbar200 
+	--output-dir=output_generic_ttbar_pu200 
 
 After running this example, you should see something like this:
 
