@@ -3,6 +3,7 @@ add_library(
   src/Digitization/Channelizer.cpp
   src/Digitization/DigitizationError.cpp
   src/Digitization/PlanarSurfaceMask.cpp
+  src/Digitization/PlanarSurfaceDrift.cpp
   src/EventData/Particle.cpp
   src/EventData/ProcessType.cpp
   src/Kernel/SimulatorError.cpp
