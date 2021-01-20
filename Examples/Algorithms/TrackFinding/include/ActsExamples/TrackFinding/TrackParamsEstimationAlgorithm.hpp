@@ -81,17 +81,20 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
   ///
   /// @param position The global position
   /// @return the magnetic field at the position
-  Acts::Vector3 getField(const Acts::Vector3& position) const {
-    return std::visit(
-        [&](auto&& inputField) -> Acts::Vector3 {
-          using InputMagneticField =
-              typename std::decay_t<decltype(inputField)>::element_type;
-          using MagneticField = Acts::SharedBField<InputMagneticField>;
-          MagneticField field(std::move(inputField));
-          return field.getField(position);
-        },
-        std::move(m_cfg.magneticField));
-  }
+  Acts::Vector3 getField(const Acts::Vector3& position) const;
 };
+
+inline Acts::Vector3 TrackParamsEstimationAlgorithm::getField(
+    const Acts::Vector3& position) const {
+  return std::visit(
+      [&](auto&& inputField) -> Acts::Vector3 {
+        using InputMagneticField =
+            typename std::decay_t<decltype(inputField)>::element_type;
+        using MagneticField = Acts::SharedBField<InputMagneticField>;
+        MagneticField field(std::move(inputField));
+        return field.getField(position);
+      },
+      std::move(m_cfg.magneticField));
+}
 
 }  // namespace ActsExamples
