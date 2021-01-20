@@ -73,13 +73,13 @@ To run the seeding example with the OpenData detector,
 .. code-block:: console
 
    $ <build>/bin/ActsExampleSeedingDD4hep \
-    --dd4hep-input ../../acts/Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml \
+    --dd4hep-input ../acts/Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml \
     --input-dir=data/sim_dd4hep/ttbar_pu200 \
     --output-dir=output_dd4_ttbar_pu200
 
 The input dataset needs to be simulated with the same detector in advance.
 
-The detector volumes and layers used for seeding are configured in ``acts/Examples/Run/Seeding/DD4hep/DD4hepSeedingExample.cpp`` as follows.
+The detector volumes and layers used for seeding are set in ``acts/Examples/Run/Seeding/DD4hep/DD4hepSeedingExample.cpp`` as follows.
 
 .. code-block::
 		
