@@ -56,8 +56,6 @@ int processGeometry(int argc, char* argv[],
   auto contextDecorators = geometry.second;
 
   // The detectors
-  read_strings subDetectors = vm["geo-detector-volume"].as<read_strings>();
-
   auto volumeLogLevel =
       Acts::Logging::Level(vm["geo-volume-loglevel"].as<size_t>());
 
@@ -146,7 +144,7 @@ int processGeometry(int argc, char* argv[],
       jmConverterCfg.processDenseVolumes =
           vm["mat-output-dense-volumes"].template as<bool>();
       jmConverterCfg.writeData = vm["mat-output-data"].template as<bool>();
-      jmConverterCfg.processnonmaterial =
+      jmConverterCfg.processNonMaterial =
           vm["mat-output-allmaterial"].template as<bool>();
       jmConverterCfg.context = context.geoContext;
       // The writer

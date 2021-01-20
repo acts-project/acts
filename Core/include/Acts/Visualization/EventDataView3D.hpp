@@ -208,11 +208,11 @@ struct EventDataView3D {
         return true;
       }
 
-      // Use unit scaling factors for the first state
+      // Use smaller scaling factors for the first state
       // @Todo: add parameter for the first state error scaling
       if (state.index() == 0) {
-        locErrorScale = 1;
-        angularErrorScale = 1;
+        locErrorScale = locErrorScale * 0.1;
+        angularErrorScale = angularErrorScale * 0.1;
       }
 
       // First, if necessary, draw the surface

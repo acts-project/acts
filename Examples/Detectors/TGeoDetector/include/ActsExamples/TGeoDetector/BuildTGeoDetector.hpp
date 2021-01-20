@@ -25,11 +25,13 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/TGeoDetector/BuildTGeoDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetectorOptions.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 
 #include <list>
 #include <vector>
 
-#include "TGeoManager.h"
+#include <TGeoManager.h>
+#include <boost/program_options.hpp>
 
 namespace ActsExamples {
 namespace TGeo {
@@ -96,9 +98,9 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
   std::string rootFileName = vm["geo-tgeo-filename"].template as<std::string>();
 
   // Create a beam pipe if configured to do so
-  auto beamPipeParameters =
-      vm["geo-tgeo-bp-parameters"].template as<read_range>();
-  if (beamPipeParameters.size() > 2) {
+  if (vm.count("geo-tgeo-beampipe-parameters")) {
+    auto beamPipeParameters =
+        vm["geo-tgeo-beampipe-parameters"].template as<Options::Reals<3>>();
     /// configure the beam pipe layer builder
     Acts::PassiveLayerBuilder::Config bplConfig;
     bplConfig.layerIdentification = "BeamPipe";
@@ -130,7 +132,7 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
   TGeoManager::Import(rootFileName.c_str());
 
   auto layerBuilderConfigs =
-      ActsExamples::Options::readTGeoLayerBuilderConfigs<variable_maps_t>(vm);
+      ActsExamples::Options::readTGeoLayerBuilderConfigs(vm);
 
   // remember the layer builders to collect the detector elements
   std::vector<std::shared_ptr<const Acts::TGeoLayerBuilder>> tgLayerBuilders;
