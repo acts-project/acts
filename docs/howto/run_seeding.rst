@@ -61,7 +61,7 @@ The plots below are examples of the efficiency plots produced using the ttbar sa
 .. image:: ../figures/performance/seeding/seeding_eff_vs_pt.png
    :width: 300
 
-.. image:: ../figures/performance/fitter/seeding_eff_vs_eta.png
+.. image:: ../figures/performance/seeding/seeding_eff_vs_eta.png
    :width: 300
 
 
