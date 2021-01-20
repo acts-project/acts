@@ -12,7 +12,7 @@
 
 #include <nlohmann/json.hpp>
 
-// Custom Json encoder/decoders. Maming is mandated by nlohman::json and thus
+// Custom Json encoder/decoders. Naming is mandated by nlohman::json and thus
 // can not match our naming guidelines.
 
 void to_json(nlohmann::json& j, const Acts::Transform3& t);

@@ -8,9 +8,6 @@
 
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 
-// Custom Json encoder/decoders. Maming is mandated by nlohman::json and thus
-// can not match our naming guidelines.
-
 void to_json(nlohmann::json& j, const Acts::Transform3& r) {
   auto translation = r.translation();
   if (translation != Acts::Vector3(0., 0., 0)) {

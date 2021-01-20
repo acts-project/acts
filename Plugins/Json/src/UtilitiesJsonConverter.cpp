@@ -10,9 +10,6 @@
 
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 
-// Custom Json encoder/decoders. Maming is mandated by nlohman::json and thus
-// can not match our naming guidelines.
-
 void to_json(nlohmann::json& j, const Acts::BinningData& bd) {
   // Common to all bin utilities
   j["min"] = bd.min;
