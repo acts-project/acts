@@ -58,10 +58,10 @@ The example also generates output root files in the output directory.
 In ``performance_seeding_hists.root``, you can find the efficiency plots.
 The plots below are examples of the efficiency plots produced using the ttbar sample with 200 pile-up vertices.
 
-.. image:: ../figures/performance/fitter/trackeff_vs_eta_ttbar_pu200.png
+.. image:: ../figures/performance/seeding/seeding_eff_vs_pt.png
    :width: 300
 
-.. image:: ../figures/performance/fitter/trackeff_vs_pT_ttbar_pu200.png
+.. image:: ../figures/performance/fitter/seeding_eff_vs_eta.png
    :width: 300
 
 
