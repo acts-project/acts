@@ -19,13 +19,15 @@ After that, it creates space points from the smeared measurements, and the seed 
 The parameters for the seed finding are configured in ``/acts/Examples/Run/Seeding/Common/SeedingExample.cpp``.
 
 .. code-block:: console
+
    $ <build>/bin/ActsExampleSeedingGeneric \
-   --input-dir=data/sim_generic/ttbar_pu200 \
-   --output-dir=output_generic_ttbar200 
+	--input-dir=data/sim_generic/ttbar_pu200 \
+	--output-dir=output_generic_ttbar200 
 
 After running this example, you should see something like this:
 
 .. code-block::
+   
    SeedingPerfo  INFO   Efficiency (nMatchedParticles / nAllParticles) = 0.917263
    SeedingPerfo  INFO   Fake rate (nUnMatchedSeeds / nAllSeeds) =0.317763
    SeedingPerfo  INFO   Duplication rate (nDuplicatedMatchedParticles / nMatchedParticles) =0.998711
@@ -48,7 +50,8 @@ The example above uses the Generic detector, but you can also try the seeding ex
 To run the seeding example with the OpenData detector,
 
 .. code-block:: console
-    $ <build>/bin/ActsExampleSeedingDD4hep \
+
+   $ <build>/bin/ActsExampleSeedingDD4hep \
     --dd4hep-input ../../acts/Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml \
     --input-dir=data/sim_dd4hep/ttbar_pu200 \
     --output-dir=output_dd4_ttbar_pu200
@@ -56,7 +59,9 @@ To run the seeding example with the OpenData detector,
 The input dataset needs to be simulated with the same detector in advance.
 
 The detector volumes and layers used for seeding are configured in ``acts/Examples/Run/Seeding/DD4hep/DD4hepSeedingExample.cpp`` as follows.
-.. code-block:: console
+
+.. code-block::
+		
       // open detector barrel layers
       // the selection intentionally contains duplicates to demonstrate the
       // automatic selection normalization. setting only the volume already
