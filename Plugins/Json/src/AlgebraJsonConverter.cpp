@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
+#include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 
 void Acts::to_json(nlohmann::json& j, const Acts::Transform3& r) {
   auto translation = r.translation();
