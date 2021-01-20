@@ -43,7 +43,6 @@ int runSeedingExample(int argc, char* argv[],
   Options::addMaterialOptions(desc);
   Options::addOutputOptions(desc);
   Options::addInputOptions(desc);
-  Options::addBFieldOptions(desc);
 
   // Add specific options for this geometry
   detector->addOptions(desc);
