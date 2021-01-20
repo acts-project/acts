@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(BinningData_bins) {
   // | 0 | 1 | 2 | 3 | 4 | 10 |
   BOOST_CHECK_EQUAL(xData_arb.searchGlobal(xyzPosition), size_t(0));
   BOOST_CHECK_EQUAL(xData_arb.search(6.), size_t(4));
-  BOOST_CHECK_EQUAL(xData_arb_binary.searchGlobal(xyzPosition), size_t(1));
+  BOOST_CHECK_EQUAL(xData_arb_binary.searchGlobal(xyzPosition), size_t(0));
   BOOST_CHECK_EQUAL(xData_arb_binary.search(50.), (nBins_binary - 1));
   // | 0 | 1 | 1.5 | 2 |  3 | 4 | 5 |
   BOOST_CHECK_EQUAL(xData_add.searchGlobal(xyzPosition), size_t(0));
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(BinningData_bins) {
   BOOST_CHECK_EQUAL(yData_eq.searchLocal(xyPosition), size_t(1));
   BOOST_CHECK_EQUAL(zData_eq.searchLocal(rphizPosition), size_t(2));
   BOOST_CHECK_EQUAL(xData_arb.searchLocal(xyPosition), size_t(0));
-  BOOST_CHECK_EQUAL(xData_arb_binary.searchLocal(xyPosition), size_t(1));
+  BOOST_CHECK_EQUAL(xData_arb_binary.searchLocal(xyPosition), size_t(0));
 
   // r/phi/rphiData
   BOOST_CHECK_EQUAL(rData_eq.searchGlobal(xyzPosition), size_t(1));
@@ -276,29 +276,6 @@ BOOST_AUTO_TEST_CASE(BinningData_open_close) {
                     xData_arb_binary.bins());
   BOOST_CHECK_EQUAL(yData_arb.searchGlobal(xyzPositionOutside), size_t(0));
 
-  // increment an open bin
-  // - for equidistant
-  size_t bin = 9;
-  xData_eq.increment(bin);
-  BOOST_CHECK_EQUAL(bin, size_t(9));
-  bin = 0;
-  xData_eq.decrement(bin);
-  BOOST_CHECK_EQUAL(bin, size_t(0));
-  // - for arbitrary
-  bin = 5;
-  xData_arb.increment(bin);
-  BOOST_CHECK_EQUAL(bin, size_t(5));
-  bin = 0;
-  xData_arb.decrement(bin);
-  BOOST_CHECK_EQUAL(bin, size_t(0));
-
-  bin = nBins_binary;
-  xData_arb_binary.increment(bin);
-  BOOST_CHECK_EQUAL(bin, nBins_binary);
-  bin = 0;
-  xData_arb_binary.decrement(bin);
-  BOOST_CHECK_EQUAL(bin, size_t(0));
-
   // closed values
   BOOST_CHECK_EQUAL(phiData_eq.search(-4.), size_t(4));
   BOOST_CHECK_EQUAL(phiData_eq.search(4.), size_t(0));
@@ -306,27 +283,6 @@ BOOST_AUTO_TEST_CASE(BinningData_open_close) {
   BOOST_CHECK_EQUAL(phiData_arb.search(4.), size_t(0));
   BOOST_CHECK_EQUAL(phiData_arb_binary.search(-4.), (nBins_binary - 1));
   BOOST_CHECK_EQUAL(phiData_arb_binary.search(4.), size_t(0));
-
-  bin = 4;
-  phiData_eq.increment(bin);
-  BOOST_CHECK_EQUAL(bin, size_t(0));
-  bin = 0;
-  phiData_eq.decrement(bin);
-  BOOST_CHECK_EQUAL(bin, size_t(4));
-
-  bin = 4;
-  phiData_arb.increment(bin);
-  BOOST_CHECK_EQUAL(bin, size_t(0));
-  bin = 0;
-  phiData_arb.decrement(bin);
-  BOOST_CHECK_EQUAL(bin, size_t(4));
-
-  bin = nBins_binary;
-  phiData_arb_binary.increment(bin);
-  BOOST_CHECK_EQUAL(bin, size_t(0));
-  bin = 0;
-  phiData_arb_binary.decrement(bin);
-  BOOST_CHECK_EQUAL(bin, (nBins_binary - 1));
 }
 
 // test boundaries
