@@ -33,12 +33,21 @@ target_link_libraries(
   ActsExampleFatrasTGeo
   PRIVATE ActsExamplesFatrasCommon ActsExamplesDetectorTGeo)
 
+# Telescope detector
+add_executable(
+  ActsExampleFatrasTelescope
+  TelescopeFatrasExample.cpp)
+target_link_libraries(
+  ActsExampleFatrasTelescope
+  PRIVATE ActsExamplesFatrasCommon ActsExamplesDetectorTelescope)
+
 install(
   TARGETS
     ActsExampleFatrasGeneric
     ActsExampleFatrasAligned
     ActsExampleFatrasPayload
     ActsExampleFatrasTGeo
+    ActsExampleFatrasTelescope
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_subdirectory_if(DD4hep ACTS_BUILD_EXAMPLES_DD4HEP)
