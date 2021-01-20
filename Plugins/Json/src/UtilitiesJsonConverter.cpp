@@ -10,7 +10,7 @@
 
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 
-void to_json(nlohmann::json& j, const Acts::BinningData& bd) {
+void Acts::to_json(nlohmann::json& j, const Acts::BinningData& bd) {
   // Common to all bin utilities
   j["min"] = bd.min;
   j["max"] = bd.max;
@@ -40,7 +40,7 @@ void to_json(nlohmann::json& j, const Acts::BinningData& bd) {
   j["bins"] = bins;
 }
 
-void from_json(const nlohmann::json& j, Acts::BinningData& bd) {
+void Acts::from_json(const nlohmann::json& j, Acts::BinningData& bd) {
   // Common to all bin utilities
   float min = j["min"];
   float max = j["max"];
@@ -74,7 +74,7 @@ void from_json(const nlohmann::json& j, Acts::BinningData& bd) {
   }
 }
 
-void to_json(nlohmann::json& j, const Acts::BinUtility& bu) {
+void Acts::to_json(nlohmann::json& j, const Acts::BinUtility& bu) {
   nlohmann::json jbindata;
   for (const auto& bdata : bu.binningData()) {
     nlohmann::json jdata;

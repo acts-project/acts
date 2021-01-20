@@ -14,7 +14,10 @@
 
 // Custom Json encoder/decoders. Naming is mandated by nlohman::json and thus
 // can not match our naming guidelines.
+namespace Acts {
 
 void to_json(nlohmann::json& j, const Acts::Transform3& t);
 
 void from_json(const nlohmann::json& j, Acts::Transform3& t);
+
+}  // namespace Acts

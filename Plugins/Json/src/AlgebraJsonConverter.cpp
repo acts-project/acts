@@ -8,7 +8,7 @@
 
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 
-void to_json(nlohmann::json& j, const Acts::Transform3& r) {
+void Acts::to_json(nlohmann::json& j, const Acts::Transform3& r) {
   auto translation = r.translation();
   if (translation != Acts::Vector3(0., 0., 0)) {
     std::array<Acts::ActsScalar, 3> tdata = {translation.x(), translation.y(),
@@ -30,7 +30,7 @@ void to_json(nlohmann::json& j, const Acts::Transform3& r) {
   }
 }
 
-void from_json(const nlohmann::json& j, Acts::Transform3& t) {
+void Acts::from_json(const nlohmann::json& j, Acts::Transform3& t) {
   t = Acts::Transform3::Identity();
   if (j.find("translation") != j.end() and not j["translation"].empty()) {
     std::array<Acts::ActsScalar, 3> tdata = j["translation"];

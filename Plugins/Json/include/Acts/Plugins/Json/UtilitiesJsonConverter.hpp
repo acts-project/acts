@@ -16,6 +16,8 @@
 // Custom Json encoder/decoders. Naming is mandated by nlohman::json and thus
 // can not match our naming guidelines.
 
+namespace Acts {
+
 void to_json(nlohmann::json& j, const Acts::BinningData& bd);
 
 void from_json(const nlohmann::json& j, Acts::BinningData& bd);
@@ -23,3 +25,5 @@ void from_json(const nlohmann::json& j, Acts::BinningData& bd);
 void to_json(nlohmann::json& j, const Acts::BinUtility& bu);
 
 void from_json(const nlohmann::json& j, Acts::BinUtility& bu);
+
+}  // namespace Acts

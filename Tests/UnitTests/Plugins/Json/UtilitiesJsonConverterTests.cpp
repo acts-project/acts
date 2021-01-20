@@ -19,6 +19,8 @@
 
 #include <nlohmann/json.hpp>
 
+using namespace Acts;
+
 BOOST_AUTO_TEST_SUITE(UtilitiesJsonConverter)
 
 namespace {
@@ -29,8 +31,7 @@ namespace {
 /// @param tolerance a tolerance parameter
 ///
 /// @return a boolean
-bool isEqual(const Acts::BinningData& ba, const Acts::BinningData& bb,
-             float tolerance) {
+bool isEqual(const BinningData& ba, const BinningData& bb, float tolerance) {
   bool equalBool = (ba.type == bb.type) and (ba.option == bb.option) and
                    (ba.binvalue == bb.binvalue) and (ba.zdim == bb.zdim) and
                    (ba.subBinningAdditive == bb.subBinningAdditive);
@@ -64,8 +65,7 @@ bool isEqual(const Acts::BinningData& ba, const Acts::BinningData& bb,
 /// @param tolerance a tolerance parameter
 ///
 /// @return a bollean if equal
-bool isEqual(const Acts::BinUtility& ba, const Acts::BinUtility& bb,
-             float tolerance) {
+bool isEqual(const BinUtility& ba, const BinUtility& bb, float tolerance) {
   bool equal = (ba.binningData().size() == bb.binningData().size());
   if (equal) {
     for (size_t ib = 0; ib < ba.binningData().size(); ++ib) {
@@ -78,7 +78,7 @@ bool isEqual(const Acts::BinUtility& ba, const Acts::BinUtility& bb,
 }  // namespace
 
 BOOST_AUTO_TEST_CASE(BinUtilityRoundTripTests) {
-  Acts::BinUtility reference(2, 0., 4., Acts::open, Acts::binR);
+  BinUtility reference(2, 0., 4., open, binR);
 
   std::ofstream out;
 
@@ -96,13 +96,13 @@ BOOST_AUTO_TEST_CASE(BinUtilityRoundTripTests) {
   in >> joneDimIn;
   in.close();
 
-  Acts::BinUtility test;
+  BinUtility test;
   from_json(joneDimIn, test);
 
   BOOST_CHECK(isEqual(reference, test, 0.0001));
 
   // Increase to two dimensions
-  reference += Acts::BinUtility(10., -M_PI, M_PI, Acts::closed, Acts::binPhi);
+  reference += BinUtility(10., -M_PI, M_PI, closed, binPhi);
   nlohmann::json jtwoDimOut;
   to_json(jtwoDimOut, reference);
   out.open("BinUtility_2D.json");
@@ -116,14 +116,14 @@ BOOST_AUTO_TEST_CASE(BinUtilityRoundTripTests) {
   in >> jtwoDimIn;
   in.close();
 
-  test = Acts::BinUtility();
+  test = BinUtility();
   from_json(jtwoDimIn, test);
 
   BOOST_CHECK(isEqual(reference, test, 0.0001));
 
   // Increase to three dimensions
   std::vector<float> boundaries = {-4., -1.5, 0., 10.};
-  reference += Acts::BinUtility(boundaries, Acts::open, Acts::binZ);
+  reference += BinUtility(boundaries, open, binZ);
   nlohmann::json jthreeDimOut;
   to_json(jthreeDimOut, reference);
   out.open("BinUtility_3D.json");
@@ -137,19 +137,19 @@ BOOST_AUTO_TEST_CASE(BinUtilityRoundTripTests) {
   in >> jthreeDimIn;
   in.close();
 
-  test = Acts::BinUtility();
+  test = BinUtility();
   from_json(jthreeDimIn, test);
 
   BOOST_CHECK(isEqual(reference, test, 0.0001));
 
   // One with transform
-  Acts::Transform3 t;
-  t = Eigen::AngleAxis(0.12334, Acts::Vector3(1., 2., 3).normalized());
-  t.pretranslate(Acts::Vector3(1., 2., 3.));
+  Transform3 t;
+  t = Eigen::AngleAxis(0.12334, Vector3(1., 2., 3).normalized());
+  t.pretranslate(Vector3(1., 2., 3.));
 
   auto bData = reference.binningData()[0];
 
-  reference = Acts::BinUtility(bData, t);
+  reference = BinUtility(bData, t);
 
   nlohmann::json jtransformOut;
   to_json(jtransformOut, reference);
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(BinUtilityRoundTripTests) {
   in >> jtransformIn;
   in.close();
 
-  test = Acts::BinUtility();
+  test = BinUtility();
   from_json(jtransformIn, test);
 
   BOOST_CHECK(isEqual(reference, test, 0.0001));

@@ -17,10 +17,12 @@
 
 #include <nlohmann/json.hpp>
 
+using namespace Acts;
+
 BOOST_AUTO_TEST_SUITE(AlgebraJsonConverter)
 
 BOOST_AUTO_TEST_CASE(TransformRoundTripTests) {
-  Acts::Transform3 reference = Acts::Transform3::Identity();
+  Transform3 reference = Transform3::Identity();
 
   std::ofstream out;
 
@@ -38,13 +40,13 @@ BOOST_AUTO_TEST_CASE(TransformRoundTripTests) {
   in >> identityIn;
   in.close();
 
-  Acts::Transform3 test;
+  Transform3 test;
   from_json(identityIn, test);
 
   BOOST_CHECK(test.isApprox(reference));
 
   // Test a pure translation transform
-  reference.pretranslate(Acts::Vector3(1., 2., 3.));
+  reference.pretranslate(Vector3(1., 2., 3.));
 
   nlohmann::json translationOut;
   to_json(translationOut, reference);
@@ -59,14 +61,14 @@ BOOST_AUTO_TEST_CASE(TransformRoundTripTests) {
   in >> translationIn;
   in.close();
 
-  test = Acts::Transform3::Identity();
+  test = Transform3::Identity();
   from_json(translationIn, test);
 
   BOOST_CHECK(test.isApprox(reference));
 
   // Test a full transform
-  reference = Eigen::AngleAxis(0.12334, Acts::Vector3(1., 2., 3).normalized());
-  reference.pretranslate(Acts::Vector3(1., 2., 3.));
+  reference = Eigen::AngleAxis(0.12334, Vector3(1., 2., 3).normalized());
+  reference.pretranslate(Vector3(1., 2., 3.));
 
   nlohmann::json fullOut;
   to_json(fullOut, reference);
@@ -81,7 +83,7 @@ BOOST_AUTO_TEST_CASE(TransformRoundTripTests) {
   in >> fullIn;
   in.close();
 
-  test = Acts::Transform3::Identity();
+  test = Transform3::Identity();
   from_json(fullIn, test);
 
   BOOST_CHECK(test.isApprox(reference));
