@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
+#include "ActsExamples/Digitization/SmearingConfig.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
 #include <numeric>
@@ -143,8 +144,7 @@ ActsExamples::Options::readSmearingConfig(const Variables& variables) {
   }
 
   // construct the input for the smearer configuation
-  std::vector<
-      std::pair<Acts::GeometryIdentifier, SmearingAlgorithm::SmearerConfig>>
+  std::vector<std::pair<Acts::GeometryIdentifier, SmearingConfig>>
       smearersInput;
   for (size_t ivol = 0; ivol < volumes.size(); ++ivol) {
     Acts::GeometryIdentifier geoId =
@@ -173,7 +173,7 @@ ActsExamples::Options::readSmearingConfig(const Variables& variables) {
     }
 
     // create the smearing configuration for this geometry identifier
-    SmearingAlgorithm::SmearerConfig geoCfg;
+    SmearingConfig geoCfg;
     geoCfg.reserve(volIndices.size());
 
     for (size_t iidx = 0, ipar = 0; iidx < volIndices.size(); ++iidx) {
@@ -182,7 +182,7 @@ ActsExamples::Options::readSmearingConfig(const Variables& variables) {
       const double* smearingParameters = &volParameters[ipar];
       ipar += numConfigParametersForType(smearingType);
 
-      SmearingAlgorithm::ParameterSmearerConfig parCfg;
+      ParameterSmearingConfig parCfg;
       parCfg.index = paramIndex;
       parCfg.smearFunction =
           makeSmearFunctionForType(smearingType, smearingParameters);
@@ -198,8 +198,7 @@ ActsExamples::Options::readSmearingConfig(const Variables& variables) {
   }
   // set the smearer configuration from the prepared input
   smearCfg.smearers =
-      Acts::GeometryHierarchyMap<SmearingAlgorithm::SmearerConfig>(
-          std::move(smearersInput));
+      Acts::GeometryHierarchyMap<SmearingConfig>(std::move(smearersInput));
 
   return smearCfg;
 }

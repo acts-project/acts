@@ -1,0 +1,147 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2021 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
+
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
+#include "ActsExamples/Digitization/Smearers.hpp"
+
+#include <functional>
+
+void ActsExamples::to_json(nlohmann::json& j,
+                           const ActsExamples::ParameterSmearingConfig& psc) {
+  j["index"] = psc.index;
+  // Gauss:
+  const Digitization::Gauss* gauss =
+      psc.smearFunction.target<const Digitization::Gauss>();
+  if (gauss != nullptr) {
+    j["type"] = "Gauss";
+    j["mean"] = gauss->dist.mean();
+    j["stddev"] = gauss->dist.stddev();
+  }
+  // Truncated gauss:
+  const Digitization::GaussTrunc* gaussT =
+      psc.smearFunction.target<const Digitization::GaussTrunc>();
+  if (gaussT != nullptr) {
+    j["type"] = "GaussTrunc";
+    j["mean"] = gaussT->dist.mean();
+    j["stddev"] = gaussT->dist.stddev();
+    j["range"] = gaussT->range;
+  }
+  // Clipped gauss:
+  const Digitization::GaussClipped* gaussC =
+      psc.smearFunction.target<const Digitization::GaussClipped>();
+  if (gaussC != nullptr) {
+    j["type"] = "GaussClipped";
+    j["mean"] = gaussC->dist.mean();
+    j["stddev"] = gaussC->dist.stddev();
+    j["range"] = gaussC->range;
+    j["max_attempts"] = gaussC->maxAttemps;
+  }
+  // Uniform
+  const Digitization::Uniform* uniform =
+      psc.smearFunction.target<const Digitization::Uniform>();
+  if (uniform != nullptr) {
+    j["type"] = "Uniform";
+    j["bindata"] = nlohmann::json(uniform->binningData);
+  }
+  // Digital
+  const Digitization::Digital* digital =
+      psc.smearFunction.target<const Digitization::Digital>();
+  if (uniform != nullptr) {
+    j["type"] = "Digitial";
+    j["bindata"] = nlohmann::json(digital->binningData);
+  }
+}
+
+void ActsExamples::from_json(const nlohmann::json& j,
+                             ActsExamples::ParameterSmearingConfig& psc) {
+  std::string sType = j["type"];
+
+  psc.index = static_cast<Acts::BoundIndices>(j["index"]);
+
+  if (sType == "Gauss") {
+    psc.smearFunction = Digitization::Gauss(j["stddev"]);
+  } else if (sType == "GaussTrunc") {
+    Acts::ActsScalar sigma = j["stddev"];
+    std::pair<Acts::ActsScalar, Acts::ActsScalar> range = j["range"];
+    psc.smearFunction = Digitization::GaussTrunc(sigma, range);
+  } else if (sType == "GaussClipped") {
+    Acts::ActsScalar sigma = j["stddev"];
+    std::pair<Acts::ActsScalar, Acts::ActsScalar> range = j["range"];
+    psc.smearFunction = Digitization::GaussClipped(sigma, range);
+  } else if (sType == "Uniform") {
+    Acts::BinningData bd;
+    from_json(j["bindata"], bd);
+    psc.smearFunction = Digitization::Uniform(std::move(bd));
+  } else if (sType == "Digitial") {
+    Acts::BinningData bd;
+    from_json(j["bindata"], bd);
+    psc.smearFunction = Digitization::Uniform(std::move(bd));
+  }
+}
+
+void ActsExamples::to_json(
+    nlohmann::json& j, const ActsExamples::GeometricDigitizationConfig& gdc) {
+  j["segmentation"] = nlohmann::json(gdc.segmentation);
+  j["thickness"] = gdc.thickness;
+  j["threshold"] = gdc.threshold;
+  j["digital"] = gdc.digital;
+  std::array<Acts::ActsScalar, 3> driftData = {
+      gdc.driftDirection.x(), gdc.driftDirection.y(), gdc.driftDirection.z()};
+  j["drfit"] = driftData;
+}
+
+void ActsExamples::from_json(const nlohmann::json& j,
+                             ActsExamples::GeometricDigitizationConfig& gdc) {
+  from_json(j["segmentation"], gdc.segmentation);
+  gdc.thickness = j["thickness"];
+  gdc.threshold = j["threshold"];
+  gdc.digital = j["digital"];
+  std::array<Acts::ActsScalar, 3> driftData = j["drift"];
+  gdc.driftDirection = Acts::Vector3(driftData[0], driftData[1], driftData[2]);
+}
+
+void ActsExamples::to_json(nlohmann::json& j,
+                           const ActsExamples::SmearingConfig& sdc) {
+  for (const auto& sc : sdc) {
+    j.push_back(nlohmann::json(sc));
+  }
+}
+
+void ActsExamples::from_json(const nlohmann::json& j,
+                             ActsExamples::SmearingConfig& sdc) {
+  for (const auto jpsc : j) {
+    ActsExamples::ParameterSmearingConfig psc;
+    from_json(jpsc, psc);
+    sdc.push_back(psc);
+  }
+}
+
+void ActsExamples::to_json(nlohmann::json& j,
+                           const ActsExamples::DigitizationConfig& dc) {
+  if (dc.geometricDigiConfig.segmentation.dimensions() > 0) {
+    j["geometric"] = nlohmann::json(dc.geometricDigiConfig);
+  }
+  if (not dc.smearingDigiConfig.empty()) {
+    j["smearing"] = nlohmann::json(dc.smearingDigiConfig);
+  }
+}
+
+void ActsExamples::from_json(const nlohmann::json& j,
+                             ActsExamples::DigitizationConfig& dc) {
+  if (j.find("geometric") != j.end()) {
+    nlohmann::json jgdc = j["geometric"];
+    from_json(jgdc, dc.geometricDigiConfig);
+  }
+  if (j.find("smearing") != j.end()) {
+    nlohmann::json jsdc = j["smearing"];
+    from_json(jsdc, dc.smearingDigiConfig);
+  }
+}

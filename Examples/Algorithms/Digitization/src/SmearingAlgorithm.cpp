@@ -56,17 +56,17 @@ ActsExamples::SmearingAlgorithm::SmearingAlgorithm(
   for (size_t i = 0; i < m_cfg.smearers.size(); ++i) {
     Acts::GeometryIdentifier geoId = m_cfg.smearers.idAt(i);
     // copy so we can sort in-place
-    SmearerConfig geoCfg = m_cfg.smearers.valueAt(i);
+    SmearingConfig geoCfg = m_cfg.smearers.valueAt(i);
 
     // make sure the configured input parameter indices are sorted and unique
     std::sort(geoCfg.begin(), geoCfg.end(),
-              [](const ParameterSmearerConfig& lhs,
-                 const ParameterSmearerConfig& rhs) {
+              [](const ParameterSmearingConfig& lhs,
+                 const ParameterSmearingConfig& rhs) {
                 return lhs.index < rhs.index;
               });
     auto dup = std::adjacent_find(geoCfg.begin(), geoCfg.end(),
-                                  [](const ParameterSmearerConfig& lhs,
-                                     const ParameterSmearerConfig& rhs) {
+                                  [](const ParameterSmearingConfig& lhs,
+                                     const ParameterSmearingConfig& rhs) {
                                     return lhs.index == rhs.index;
                                   });
     if (dup != geoCfg.end()) {
