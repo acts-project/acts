@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/MagneticField/BFieldProvider.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
@@ -228,7 +229,7 @@ struct InterpolatedBFieldMapper {
 /// - looking up the magnetic field values on the closest grid points,
 /// - doing a linear interpolation of these magnetic field values.
 template <typename Mapper_t>
-class InterpolatedBFieldMap final {
+class InterpolatedBFieldMap final : public BFieldProvider {
  public:
   /// @brief configuration object for magnetic field interpolation
   struct Config {
@@ -268,58 +269,6 @@ class InterpolatedBFieldMap final {
   /// @return copy of the internal configuration object
   Config getConfiguration() const { return m_config; }
 
-  /// @brief retrieve magnetic field value
-  ///
-  /// @param [in] position global 3D position
-  ///
-  /// @return magnetic field vector at given position
-  Vector3 getField(const Vector3& position) const {
-    return m_config.mapper.getField(position);
-  }
-
-  /// @brief retrieve magnetic field value
-  ///
-  /// @param [in] position global 3D position
-  /// @param [in,out] cache Cache object. Contains field cell used for
-  /// interpolation
-  ///
-  /// @return magnetic field vector at given position
-  Vector3 getField(const Vector3& position, Cache& cache) const {
-    if (!cache.fieldCell || !(*cache.fieldCell).isInside(position)) {
-      cache.fieldCell = getFieldCell(position);
-    }
-    return (*cache.fieldCell).getField(position);
-  }
-
-  /// @brief retrieve magnetic field value & its gradient
-  ///
-  /// @param [in]  position   global 3D position
-  /// @param [out] derivative gradient of magnetic field vector as (3x3) matrix
-  /// @return magnetic field vector
-  ///
-  /// @note currently the derivative is not calculated
-  /// @todo return derivative
-  Vector3 getFieldGradient(const Vector3& position,
-                           ActsMatrix<3, 3>& /*derivative*/) const {
-    return m_config.mapper.getField(position);
-  }
-
-  /// @brief retrieve magnetic field value & its gradient
-  ///
-  /// @param [in]  position   global 3D position
-  /// @param [out] derivative gradient of magnetic field vector as (3x3) matrix
-  /// @param [in,out] cache Cache object. Contains field cell used for
-  /// @return magnetic field vector
-  ///
-  /// @note currently the derivative is not calculated
-  /// @note Cache is not used currently
-  /// @todo return derivative
-  Vector3 getFieldGradient(const Vector3& position,
-                           ActsMatrix<3, 3>& /*derivative*/,
-                           Cache& /*cache*/) const {
-    return m_config.mapper.getField(position);
-  }
-
   /// @brief get global scaling factor for magnetic field
   ///
   /// @return global factor for scaling the magnetic field
@@ -343,6 +292,49 @@ class InterpolatedBFieldMap final {
   ///
   /// @param [in] config new configuration object
   void setConfiguration(const Config& config) { m_config = config; }
+
+ public:
+  /// @copydoc BFieldBase::makeCache(const MagneticFieldContext&)
+  BFieldProvider::Cache makeCache(
+      const MagneticFieldContext& mctx) const override {
+    return BFieldProvider::Cache::make<Cache>(mctx);
+  }
+
+  /// @copydoc BFieldBase::getField(const Vector3&)
+  Vector3 getField(const Vector3& position) const override {
+    return m_config.mapper.getField(position);
+  }
+
+  /// @copydoc BFieldBase::getField(const Vector3&,BFieldBase::Cache&)
+  Vector3 getField(const Vector3& position,
+                   BFieldProvider::Cache& gcache) const override {
+    Cache& cache = gcache.get<Cache>();
+    if (!cache.fieldCell || !(*cache.fieldCell).isInside(position)) {
+      cache.fieldCell = getFieldCell(position);
+    }
+    return (*cache.fieldCell).getField(position);
+  }
+
+  /// @copydoc BFieldBase::getFieldGradient(const Vector3&,ActsMatrix<3,3>&)
+  ///
+  /// @note currently the derivative is not calculated
+  /// @todo return derivative
+  Vector3 getFieldGradient(const Vector3& position,
+                           ActsMatrix<3, 3>& /*derivative*/) const override {
+    return m_config.mapper.getField(position);
+  }
+
+  /// @copydoc BFieldBase::getFieldGradient(const
+  /// Vector3&,ActsMatrix<3,3>&,BFieldBase::Cache&)
+  ///
+  /// @note currently the derivative is not calculated
+  /// @note Cache is not used currently
+  /// @todo return derivative
+  Vector3 getFieldGradient(const Vector3& position,
+                           ActsMatrix<3, 3>& /*derivative*/,
+                           BFieldProvider::Cache& /*cache*/) const override {
+    return m_config.mapper.getField(position);
+  }
 
  private:
   /// @brief retrieve field cell for given position

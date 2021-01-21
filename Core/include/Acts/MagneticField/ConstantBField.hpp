@@ -8,6 +8,7 @@
 
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/MagneticField/BFieldProvider.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 
 namespace Acts {
@@ -17,7 +18,7 @@ namespace Acts {
 /// This class implements a simple constant magnetic field. The
 /// magnetic field value has to be set at creation time, but can
 /// be updated later on.
-class ConstantBField final {
+class ConstantBField final : public BFieldProvider {
  public:
   struct Cache {
     /// @brief constructor with context
@@ -37,48 +38,36 @@ class ConstantBField final {
   ConstantBField(double Bx = 0., double By = 0., double Bz = 0.)
       : m_BField(Bx, By, Bz) {}
 
-  /// @brief retrieve magnetic field value
-  ///
-  /// @param [in] position global position
-  /// @return magnetic field vector
+  /// @copydoc BFieldBase::getField(const Vector3&)
   ///
   /// @note The @p position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
-  Vector3 getField(const Vector3& /*position*/) const { return m_BField; }
-
-  /// @brief retrieve magnetic field value
-  ///
-  /// @param [in] position global position
-  /// @param [in] cache Cache object (is ignored)
-  /// @return magnetic field vector
-  ///
-  /// @note The @p position is ignored and only kept as argument to provide
-  ///       a consistent interface with other magnetic field services.
-  Vector3 getField(const Vector3& /*position*/, Cache& /*cache*/) const {
+  Vector3 getField(const Vector3& /*position*/) const override {
     return m_BField;
   }
 
-  /// @brief retrieve magnetic field value & its gradient
+  /// @copydoc BFieldBase::getField(const Vector3&,BFieldBase::Cache&)
   ///
-  /// @param [in]  position   global position
-  /// @param [out] derivative gradient of magnetic field vector as (3x3) matrix
-  /// @return magnetic field vector
+  /// @note The @p position is ignored and only kept as argument to provide
+  ///       a consistent interface with other magnetic field services.
+  Vector3 getField(const Vector3& /*position*/,
+                   BFieldProvider::Cache& /*cache*/) const override {
+    return m_BField;
+  }
+
+  /// @copydoc BFieldBase::getFieldGradient(const Vector3&,ActsMatrix<3,3>&)
   ///
   /// @note The @p position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
   /// @note currently the derivative is not calculated
   /// @todo return derivative
   Vector3 getFieldGradient(const Vector3& /*position*/,
-                           ActsMatrix<3, 3>& /*derivative*/) const {
+                           ActsMatrix<3, 3>& /*derivative*/) const override {
     return m_BField;
   }
 
-  /// @brief retrieve magnetic field value & its gradient
-  ///
-  /// @param [in]  position   global position
-  /// @param [out] derivative gradient of magnetic field vector as (3x3) matrix
-  /// @param [in] cache Cache object (is ignored)
-  /// @return magnetic field vector
+  /// @copydoc BFieldBase::getFieldGradient(const
+  /// Vector3&,ActsMatrix<3,3>&,BFieldBase::Cache&)
   ///
   /// @note The @p position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
@@ -86,8 +75,14 @@ class ConstantBField final {
   /// @todo return derivative
   Vector3 getFieldGradient(const Vector3& /*position*/,
                            ActsMatrix<3, 3>& /*derivative*/,
-                           Cache& /*cache*/) const {
+                           BFieldProvider::Cache& /*cache*/) const override {
     return m_BField;
+  }
+
+  /// @copydoc BFieldBase::makeCache(const MagneticFieldContext&)
+  Acts::BFieldProvider::Cache makeCache(
+      const Acts::MagneticFieldContext& mctx) const override {
+    return Acts::BFieldProvider::Cache::make<Cache>(mctx);
   }
 
   /// @brief check whether given 3D position is inside look-up domain

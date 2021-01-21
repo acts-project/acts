@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/BFieldProvider.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -45,9 +46,11 @@ class ImpactPointEstimator {
     /// @brief The state constructor
     ///
     /// @param mctx The magnetic field context
-    State(const Acts::MagneticFieldContext& mctx) : fieldCache(mctx) {}
+    State(const Acts::MagneticFieldContext& mctx)
+        : fieldCache(
+              BFieldProvider::Cache::make<typename BField_t::Cache>(mctx)) {}
     /// Magnetic field cache
-    typename BField_t::Cache fieldCache;
+    BFieldProvider::Cache fieldCache;
   };
 
   struct Config {

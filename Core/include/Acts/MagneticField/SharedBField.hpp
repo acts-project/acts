@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/MagneticField/BFieldProvider.hpp"
 
 #include <memory>
 
@@ -20,9 +21,8 @@ namespace Acts {
 /// in several places and with multiple steppers
 /// mainly targeted to save memory
 template <typename BField>
-class SharedBField {
+class SharedBField final : public BFieldProvider {
  public:
-  // typedef wrapped BField's cache type
   using Cache = typename BField::Cache;
 
   /// Disallow construction without a valid underlying field.
@@ -33,48 +33,35 @@ class SharedBField {
   /// @tparam bField is the shared BField to be stored
   SharedBField(std::shared_ptr<const BField> bField) : m_bField(bField) {}
 
-  /// @brief retrieve magnetic field value
-  ///
-  /// @param [in] position global 3D position
-  ///
-  /// @return magnetic field vector at given position
-  Vector3 getField(const Vector3& position) const {
+  /// @copydoc BFieldBase::getField(const Vector3&)
+  Vector3 getField(const Vector3& position) const override {
     return m_bField->getField(position);
   }
 
-  /// @brief Retrieve magnetic field value
-  ///
-  /// @param [in] position global 3D position
-  /// @param [in,out] cache Cache object, passed through to wrapped BField
-  Vector3 getField(const Vector3& position, Cache& cache) const {
+  /// @copydoc BFieldBase::getField(const Vector3&,BFieldBase::Cache&)
+  Vector3 getField(const Vector3& position,
+                   BFieldProvider::Cache& cache) const override {
     return m_bField->getField(position, cache);
   }
 
-  /// @brief retrieve magnetic field value & its gradient
-  ///
-  /// @param [in]  position   global 3D position
-  /// @param [out] derivative gradient of magnetic field vector as (3x3) matrix
-  /// @return magnetic field vector
-  ///
-  /// @note currently the derivative is not calculated
-  /// @todo return derivative
+  /// @copydoc BFieldBase::getFieldGradient(const Vector3&,ActsMatrix<3,3>&)
   Vector3 getFieldGradient(const Vector3& position,
-                           ActsMatrix<3, 3>& derivative) const {
+                           ActsMatrix<3, 3>& derivative) const override {
     return m_bField->getFieldGradient(position, derivative);
   }
 
-  /// @brief retrieve magnetic field value & its gradient
-  ///
-  /// @param [in]  position   global 3D position
-  /// @param [out] derivative gradient of magnetic field vector as (3x3) matrix
-  /// @param [in,out] cache Cache object, passed through to wrapped BField
-  /// @return magnetic field vector
-  ///
-  /// @note currently the derivative is not calculated
-  /// @todo return derivative
+  /// @copydoc BFieldBase::getFieldGradient(const
+  /// Vector3&,ActsMatrix<3,3>&,BFieldBase::Cache&)
   Vector3 getFieldGradient(const Vector3& position,
-                           ActsMatrix<3, 3>& derivative, Cache& cache) const {
+                           ActsMatrix<3, 3>& derivative,
+                           BFieldProvider::Cache& cache) const override {
     return m_bField->getFieldGradient(position, derivative, cache);
+  }
+
+  /// @copydoc BFieldBase::makeCache(const MagneticFieldContext&)
+  BFieldProvider::Cache makeCache(
+      const MagneticFieldContext& mctx) const override {
+    return m_bField->makeCache(mctx);
   }
 
  private:

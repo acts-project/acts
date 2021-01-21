@@ -14,6 +14,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/MagneticField/BFieldProvider.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -93,8 +94,7 @@ BOOST_AUTO_TEST_CASE(TestInterpolatedBFieldMapInterfaceConsistency) {
 }
 
 BOOST_AUTO_TEST_CASE(TestSharedBFieldInterfaceConsistency) {
-  SharedBField<ConstantBField> field(
-      std::make_shared<ConstantBField>(Vector3(1, 1, 1)));
+  SharedBField field(std::make_shared<ConstantBField>(Vector3(1, 1, 1)));
   testInterfaceConsistency(field);
 }
 }  // namespace Test
