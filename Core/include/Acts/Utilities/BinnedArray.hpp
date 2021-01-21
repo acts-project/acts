@@ -72,17 +72,6 @@ class BinnedArray {
     return object(position, bins);
   }
 
-  /// Returns the object found through global position search
-  /// and their neighbor objects
-  ///
-  /// @todo check if this needs connectivity directive
-  ///
-  /// @param bin is the binning
-  ///
-  /// @return a vector of unique objects
-  virtual std::vector<T> objectCluster(
-      const std::array<size_t, 3>& bin) const = 0;
-
   /// Return all unqiue object
   /// @note this is the accessor to the
   /// @return the vector of all array objects
