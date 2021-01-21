@@ -77,9 +77,7 @@ void Acts::from_json(const nlohmann::json& j, Acts::BinningData& bd) {
 void Acts::to_json(nlohmann::json& j, const Acts::BinUtility& bu) {
   nlohmann::json jbindata;
   for (const auto& bdata : bu.binningData()) {
-    nlohmann::json jdata;
-    to_json(jdata, bdata);
-    jbindata.push_back(jdata);
+    jbindata.push_back(nlohmann::json(bdata));
   }
   j["binningdata"] = jbindata;
   if (not bu.transform().isApprox(Acts::Transform3::Identity())) {

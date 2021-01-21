@@ -4,3 +4,4 @@ add_unittest(GeometryHierarchyMapJsonConverter GeometryHierarchyMapJsonConverter
 add_unittest(MaterialMapJsonConverter MaterialMapJsonConverterTests.cpp)
 add_unittest(AlgebraJsonConverter AlgebraJsonConverterTests.cpp)
 add_unittest(UtilitiesJsonConverter UtilitiesJsonConverterTests.cpp)
+add_unittest(SurfaceBoundsJsonConverter SurfaceBoundsJsonConverterTests.cpp)
