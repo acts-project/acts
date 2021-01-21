@@ -55,7 +55,7 @@ class RootDigitizationWriter final : public WriterT<MeasurementContainer> {
     std::string filePath = "";          ///< path of the output file
     std::string fileMode = "RECREATE";  ///< file access mode
     /// Optional the smearFunctions
-    Acts::GeometryHierarchyMap<SmearingAlgorithm::SmearerConfig> smearers;
+    Acts::GeometryHierarchyMap<SmearingConfig> smearers;
     /// Tracking geometry required to access local-to-global transforms.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   };
