@@ -19,19 +19,12 @@
 // can not match our naming guidelines.
 namespace Acts {
 
-static std::vector<std::string> boundTypes = {"ConeBounds",
-                                              "CylinderBounds",
-                                              "DiamondBounds",
-                                              "RadialBounds",
-                                              "EllipseBounds",
-                                              "LineBounds",
-                                              "RectangleBounds",
-                                              "TrapezoidBounds",
-                                              "TriangleBounds",
-                                              "DiscTrapezoidBounds",
-                                              "ConvexPolygonBounds",
-                                              "AnnulusBounds",
-                                              "Boundless"};
+static std::vector<std::string> boundTypes = {
+    "ConeBounds",          "CylinderBounds",      "DiamondBounds",
+    "RadialBounds",          "EllipseBounds",       "LineBounds",
+    "RectangleBounds",     "TrapezoidBounds",     "TriangleBounds",
+    "DiscTrapezoidBounds", "ConvexPolygonBounds", "AnnulusBounds",
+    "OtherBounds"};
 
 void to_json(nlohmann::json& j, const SurfaceBounds& bounds);
 
