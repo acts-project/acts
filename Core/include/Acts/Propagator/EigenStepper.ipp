@@ -9,17 +9,28 @@
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
-template <typename B, typename E, typename A>
-Acts::EigenStepper<B, E, A>::EigenStepper(B bField)
+template <typename E, typename A>
+Acts::EigenStepper<E, A>::EigenStepper(
+    std::unique_ptr<const BFieldProvider> bField)
     : m_bField(std::move(bField)) {}
 
-template <typename B, typename E, typename A>
-void Acts::EigenStepper<B, E, A>::resetState(State& state,
-                                             const BoundVector& boundParams,
-                                             const BoundSymMatrix& cov,
-                                             const Surface& surface,
-                                             const NavigationDirection navDir,
-                                             const double stepSize) const {
+template <typename E, typename A>
+template <typename charge_t>
+auto Acts::EigenStepper<E, A>::makeState(
+    std::reference_wrapper<const GeometryContext> gctx,
+    std::reference_wrapper<const MagneticFieldContext> mctx,
+    const SingleBoundTrackParameters<charge_t>& par, NavigationDirection ndir,
+    double ssize, double stolerance) const -> State {
+  return State{gctx, m_bField->makeCache(mctx), par, ndir, ssize, stolerance};
+}
+
+template <typename E, typename A>
+void Acts::EigenStepper<E, A>::resetState(State& state,
+                                          const BoundVector& boundParams,
+                                          const BoundSymMatrix& cov,
+                                          const Surface& surface,
+                                          const NavigationDirection navDir,
+                                          const double stepSize) const {
   // Update the stepping state
   update(state,
          detail::transformBoundToFreeParameters(surface, state.geoContext,
@@ -37,10 +48,9 @@ void Acts::EigenStepper<B, E, A>::resetState(State& state,
   state.derivative = FreeVector::Zero();
 }
 
-template <typename B, typename E, typename A>
-auto Acts::EigenStepper<B, E, A>::boundState(State& state,
-                                             const Surface& surface,
-                                             bool transportCov) const
+template <typename E, typename A>
+auto Acts::EigenStepper<E, A>::boundState(State& state, const Surface& surface,
+                                          bool transportCov) const
     -> BoundState {
   return detail::boundState(
       state.geoContext, state.cov, state.jacobian, state.jacTransport,
@@ -48,9 +58,9 @@ auto Acts::EigenStepper<B, E, A>::boundState(State& state,
       state.covTransport && transportCov, state.pathAccumulated, surface);
 }
 
-template <typename B, typename E, typename A>
-auto Acts::EigenStepper<B, E, A>::curvilinearState(State& state,
-                                                   bool transportCov) const
+template <typename E, typename A>
+auto Acts::EigenStepper<E, A>::curvilinearState(State& state,
+                                                bool transportCov) const
     -> CurvilinearState {
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
@@ -58,42 +68,42 @@ auto Acts::EigenStepper<B, E, A>::curvilinearState(State& state,
       state.pathAccumulated);
 }
 
-template <typename B, typename E, typename A>
-void Acts::EigenStepper<B, E, A>::update(State& state,
-                                         const FreeVector& parameters,
-                                         const Covariance& covariance) const {
+template <typename E, typename A>
+void Acts::EigenStepper<E, A>::update(State& state,
+                                      const FreeVector& parameters,
+                                      const Covariance& covariance) const {
   state.pars = parameters;
   state.cov = covariance;
 }
 
-template <typename B, typename E, typename A>
-void Acts::EigenStepper<B, E, A>::update(State& state, const Vector3& uposition,
-                                         const Vector3& udirection, double up,
-                                         double time) const {
+template <typename E, typename A>
+void Acts::EigenStepper<E, A>::update(State& state, const Vector3& uposition,
+                                      const Vector3& udirection, double up,
+                                      double time) const {
   state.pars.template segment<3>(eFreePos0) = uposition;
   state.pars.template segment<3>(eFreeDir0) = udirection;
   state.pars[eFreeTime] = time;
   state.pars[eFreeQOverP] = (state.q != 0. ? state.q / up : 1. / up);
 }
 
-template <typename B, typename E, typename A>
-void Acts::EigenStepper<B, E, A>::covarianceTransport(State& state) const {
+template <typename E, typename A>
+void Acts::EigenStepper<E, A>::covarianceTransport(State& state) const {
   detail::covarianceTransport(state.cov, state.jacobian, state.jacTransport,
                               state.derivative, state.jacToGlobal,
                               direction(state));
 }
 
-template <typename B, typename E, typename A>
-void Acts::EigenStepper<B, E, A>::covarianceTransport(
+template <typename E, typename A>
+void Acts::EigenStepper<E, A>::covarianceTransport(
     State& state, const Surface& surface) const {
   detail::covarianceTransport(state.geoContext.get(), state.cov, state.jacobian,
                               state.jacTransport, state.derivative,
                               state.jacToGlobal, state.pars, surface);
 }
 
-template <typename B, typename E, typename A>
+template <typename E, typename A>
 template <typename propagator_state_t>
-Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
+Acts::Result<double> Acts::EigenStepper<E, A>::step(
     propagator_state_t& state) const {
   using namespace UnitLiterals;
 
