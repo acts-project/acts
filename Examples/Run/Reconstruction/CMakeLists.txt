@@ -48,7 +48,7 @@ add_executable(
 target_link_libraries(
   ActsExampleSeedingGeneric
   PRIVATE
-  ActsExamplesRecTracksCommon
+    ActsExamplesRecTracksCommon
     ActsExamplesDetectorGeneric
 )
 
@@ -59,6 +59,6 @@ install(
     ActsExampleCKFTracksGeneric
     ActsExampleCKFTracksTelescope
     ActsExampleSeedingGeneric 
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_subdirectory_if(DD4hep ACTS_BUILD_EXAMPLES_DD4HEP)
