@@ -21,7 +21,7 @@ namespace Acts {
 
 static std::vector<std::string> boundTypes = {
     "ConeBounds",          "CylinderBounds",      "DiamondBounds",
-    "DiscBounds",          "EllipseBounds",       "LineBounds",
+    "RadialBounds",        "EllipseBounds",       "LineBounds",
     "RectangleBounds",     "TrapezoidBounds",     "TriangleBounds",
     "DiscTrapezoidBounds", "ConvexPolygonBounds", "AnnulusBounds",
     "OtherBounds"};
