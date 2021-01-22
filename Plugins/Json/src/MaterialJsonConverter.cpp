@@ -56,7 +56,7 @@ void Acts::to_json(nlohmann::json& j, const MaterialSlab& t) {
 void Acts::from_json(const nlohmann::json& j, MaterialSlab& t) {
   Material mat(j.at("material"));
   t = Acts::MaterialSlab(mat, j.at("thickness").get<float>());
-};
+}
 
 void Acts::from_json(const nlohmann::json& j, MaterialSlabMatrix& t) {
   // the input data must be array[array[object]]
