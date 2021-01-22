@@ -8,17 +8,13 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
-#include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Plugins/Json/GeometryHierarchyMapJsonConverter.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include <Acts/Geometry/TrackingVolume.hpp>
 #include <Acts/Surfaces/Surface.hpp>
-
-#include "Acts/Plugins/Json/GeometryHierarchyMapJsonConverter.hpp"
 
 #include <map>
 
@@ -36,36 +32,6 @@ class JsonGeometryConverter {
   using VolumeMaterialMap =
       std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
   using DetectorMaterialMaps = std::pair<SurfaceMaterialMap, VolumeMaterialMap>;
-
-  /// @struct jsonKey
-  ///
-  /// @brief store in a single place the different key used for the material mapping 
-  struct jsonKey {
-    /// The name identification
-    std::string namekey = "Name";
-    /// The bin0 key
-    std::string bin0key = "bin0";
-    /// The bin1 key
-    std::string bin1key = "bin1";
-    /// The bin2 key
-    std::string bin2key = "bin2";
-    /// The local to global transformation key
-    std::string transfokeys = "transformation";
-    /// The type key -> proto, else
-    std::string typekey = "type";
-    /// The data key
-    std::string datakey = "data";
-    /// The geoid key
-    std::string geometryidkey = "Geoid";
-    /// The mapping key, add surface to mapping procedure if true
-    std::string mapkey = "mapMaterial";
-    /// The surface type key
-    std::string surfacetypekey = "stype";
-    /// The surface position key
-    std::string surfacepositionkey = "sposition";
-    /// The surface range key
-    std::string surfacerangekey = "srange";
-  };
 
   /// @class Config
   /// Configuration of the Converter
@@ -127,11 +93,12 @@ class JsonGeometryConverter {
   nlohmann::json trackingGeometryToJson(const TrackingGeometry& tGeometry);
 
   /// Go through a volume to find subvolume, layers and surfaces.
-  /// Store volumes and surfaces in two vector used to initialised the geometry hierachy.
+  /// Store volumes and surfaces in two vector used to initialised the geometry
+  /// hierachy.
   ///
   /// @param volumeHierarchy is a vector of volume to be filled
   /// @param surfaceHierarchy is a vector of surfaces to be filled
-  /// @param tVolume is a volume 
+  /// @param tVolume is a volume
   void convertToHierarchy(
       std::vector<std::pair<GeometryIdentifier, const TrackingVolume*>>&
           volumeHierarchy,
@@ -140,22 +107,24 @@ class JsonGeometryConverter {
       const Acts::TrackingVolume* tVolume);
 
  private:
-
   /// The config class
   Config m_cfg;
 
   /// Name of the volume hierarchy
   std::string m_volumeName = "Material Volume Map";
   /// Geometry hierarchy writer for volume material.
-  Acts::GeometryHierarchyMapJsonConverter<const IVolumeMaterial*> m_volumeMaterialConverter;
+  Acts::GeometryHierarchyMapJsonConverter<const IVolumeMaterial*>
+      m_volumeMaterialConverter;
   /// Geometry hierarchy writer for tracking volume.
-  Acts::GeometryHierarchyMapJsonConverter<const TrackingVolume*> m_volumeConverter;
-  
+  Acts::GeometryHierarchyMapJsonConverter<const TrackingVolume*>
+      m_volumeConverter;
+
   /// Name of the surface hierarchy
   std::string m_surfaceName = "Material Surface Map";
   /// Geometry hierarchy writer for surface material.
-  Acts::GeometryHierarchyMapJsonConverter<const ISurfaceMaterial*> m_surfaceMaterialConverter;
-/// Geometry hierarchy writer for surface.
+  Acts::GeometryHierarchyMapJsonConverter<const ISurfaceMaterial*>
+      m_surfaceMaterialConverter;
+  /// Geometry hierarchy writer for surface.
   Acts::GeometryHierarchyMapJsonConverter<const Surface*> m_surfaceConverter;
 
   /// Private access to the logging instance
