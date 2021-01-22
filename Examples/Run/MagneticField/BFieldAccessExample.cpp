@@ -18,7 +18,7 @@
 #include <string>
 
 #include <boost/program_options.hpp>
-#include <boost/progress.hpp>
+#include <boost/timer/progress_display.hpp>
 
 /// The main executable
 ///
@@ -42,7 +42,7 @@ void accessStepWise(const Acts::MagneticFieldProvider& bField,
   auto bCache = bField.makeCache(bFieldContext);
   // boost display
   size_t totalSteps = events * theta_steps * phi_steps * access_steps;
-  boost::progress_display show_progress(totalSteps);
+  boost::timer::progress_display show_progress(totalSteps);
   // the event loop
   // loop over the events - @todo move to parallel for
   for (size_t ievt = 0; ievt < events; ++ievt) {
@@ -83,7 +83,7 @@ void accessRandom(const Acts::MagneticFieldProvider& bField,
 
   // initialize the field cache
   auto bCache = bField.makeCache(bFieldContext);
-  boost::progress_display show_progress(totalSteps);
+  boost::timer::progress_display show_progress(totalSteps);
 
   // the event loop
   // loop over the events - @todo move to parallel for
