@@ -2,9 +2,10 @@ add_library(
   ActsPluginJson SHARED
   src/JsonGeometryConverter.cpp
   src/AlgebraJsonConverter.cpp
-  src/UtilitiesJsonConverter.cpp
   src/MaterialJsonConverter.cpp
-  src/TrackingGeometryJsonConverter.cpp)  
+  src/SurfaceBoundsJsonConverter.cpp
+  src/TrackingGeometryJsonConverter.cpp
+  src/UtilitiesJsonConverter.cpp)
 target_include_directories(
   ActsPluginJson
   PUBLIC
