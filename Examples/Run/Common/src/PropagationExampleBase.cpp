@@ -80,12 +80,12 @@ int propagationExample(int argc, char* argv[],
         // Resolve the bfield map and create the propgator
         using field_type =
             typename std::decay_t<decltype(bField)>::element_type;
-        Acts::SharedBField<field_type> fieldMap(bField);
+        auto fieldMap =
+            std::make_shared<Acts::SharedBField<field_type>>(bField);
 
-        using field_map_type = decltype(fieldMap);
+        using field_map_type = Acts::SharedBField<field_type>;
 
-        std::optional<std::variant<Acts::EigenStepper<field_map_type>,
-                                   Acts::AtlasStepper<field_map_type>,
+        std::optional<std::variant<Acts::EigenStepper<>, Acts::AtlasStepper,
                                    Acts::StraightLineStepper>>
             var_stepper;
 
@@ -93,9 +93,9 @@ int propagationExample(int argc, char* argv[],
         if (vm["prop-stepper"].template as<int>() == 0) {
           var_stepper = Acts::StraightLineStepper{};
         } else if (vm["prop-stepper"].template as<int>() == 1) {
-          var_stepper = Acts::EigenStepper<field_map_type>{std::move(fieldMap)};
+          var_stepper = Acts::EigenStepper<>{std::move(fieldMap)};
         } else if (vm["prop-stepper"].template as<int>() == 2) {
-          var_stepper = Acts::AtlasStepper<field_map_type>{std::move(fieldMap)};
+          var_stepper = Acts::AtlasStepper{std::move(fieldMap)};
         }
 
         // resolve stepper, setup propagator

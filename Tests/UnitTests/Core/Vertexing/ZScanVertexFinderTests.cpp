@@ -32,7 +32,7 @@ namespace Acts {
 namespace Test {
 
 using Covariance = BoundSymMatrix;
-using Propagator = Propagator<EigenStepper<ConstantBField>>;
+using Propagator = Acts::Propagator<EigenStepper<>>;
 using Linearizer_t = HelicalTrackLinearizer<Propagator>;
 
 // Create a test context
@@ -77,10 +77,10 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     std::mt19937 gen(mySeed);
 
     // Set up constant B-Field
-    ConstantBField bField(0.0, 0.0, 1_T);
+    auto bField = std::make_shared<ConstantBField>(0.0, 0.0, 1_T);
 
     // Set up Eigenstepper
-    EigenStepper<ConstantBField> stepper(bField);
+    EigenStepper<> stepper(bField);
 
     // Set up propagator with void navigator
     auto propagator = std::make_shared<Propagator>(stepper);
@@ -202,10 +202,10 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     std::mt19937 gen(mySeed);
 
     // Set up constant B-Field
-    ConstantBField bField(0.0, 0.0, 1_T);
+    auto bField = std::make_shared<ConstantBField>(0.0, 0.0, 1_T);
 
     // Set up Eigenstepper
-    EigenStepper<ConstantBField> stepper(bField);
+    EigenStepper<> stepper(bField);
 
     // Set up propagator with void navigator
     auto propagator = std::make_shared<Propagator>(stepper);

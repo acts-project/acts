@@ -27,7 +27,7 @@ namespace ds = ActsTests::PropagationDatasets;
 using namespace Acts::UnitLiterals;
 
 using MagneticField = Acts::ConstantBField;
-using Stepper = Acts::AtlasStepper<MagneticField>;
+using Stepper = Acts::AtlasStepper;
 using Propagator = Acts::Propagator<Stepper>;
 using RiddersPropagator = Acts::RiddersPropagator<Propagator>;
 
@@ -42,13 +42,13 @@ const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
 
 inline Propagator makePropagator(double Bz) {
-  MagneticField magField(Acts::Vector3(0.0, 0.0, Bz));
+  auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, Bz));
   Stepper stepper(std::move(magField));
   return Propagator(std::move(stepper));
 }
 
 inline RiddersPropagator makeRiddersPropagator(double bz) {
-  MagneticField magField(Acts::Vector3(0.0, 0.0, bz));
+  auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, Bz));
   Stepper stepper(std::move(magField));
   return RiddersPropagator(std::move(stepper));
 }

@@ -57,11 +57,12 @@ class AdaptiveMultiVertexFinder {
     /// @param lin Track linearizer
     Config(vfitter_t fitter, const sfinder_t& sfinder,
            const ImpactPointEstimator<InputTrack_t, Propagator_t>& ipEst,
-           const Linearizer_t& lin)
+           const Linearizer_t& lin, std::shared_ptr<BFieldProvider> bIn)
         : vertexFitter(std::move(fitter)),
           seedFinder(sfinder),
           ipEstimator(ipEst),
-          linearizer(lin) {}
+          linearizer(lin),
+          bField{std::move(bIn)} {}
 
     // Vertex fitter
     vfitter_t vertexFitter;
@@ -74,6 +75,8 @@ class AdaptiveMultiVertexFinder {
 
     // Track linearizer
     Linearizer_t linearizer;
+
+    std::shared_ptr<BFieldProvider> bField;
 
     // Use a beam spot constraint, vertexConstraint in VertexingOptions
     // has to be set in this case

@@ -44,7 +44,7 @@ Navigator navigator(tGeometry);
 DirectNavigator dnavigator;
 
 using BField = ConstantBField;
-using Stepper = EigenStepper<BField>;
+using Stepper = EigenStepper<>;
 using ReferencePropagator = Propagator<Stepper, Navigator>;
 using DirectPropagator = Propagator<Stepper, DirectNavigator>;
 

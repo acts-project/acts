@@ -55,7 +55,7 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
       makeTrackParametersPointerContainer(inputTrackParameters);
 
   using MagneticField = Acts::ConstantBField;
-  using Stepper = Acts::EigenStepper<MagneticField>;
+  using Stepper = Acts::EigenStepper<>;
   using Propagator = Acts::Propagator<Stepper>;
   using PropagatorOptions = Acts::PropagatorOptions<>;
   using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
@@ -69,7 +69,7 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
       Acts::VertexingOptions<Acts::BoundTrackParameters>;
 
   // Set up the magnetic field
-  MagneticField bField(m_cfg.bField);
+  auto bField = std::make_shared<MagneticField>(m_cfg.bField);
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(Stepper(bField));
   PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext,
@@ -91,7 +91,7 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   finderCfg.maxVertices = 200;
   finderCfg.reassignTracksAfterFirstFit = true;
   VertexFinder finder(finderCfg);
-  VertexFinder::State state(ctx.magFieldContext);
+  VertexFinder::State state(bField->makeCache(ctx.magFieldContext));
   VertexFinderOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
 
   // find vertices

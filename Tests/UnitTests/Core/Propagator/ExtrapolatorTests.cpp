@@ -51,7 +51,7 @@ auto tGeometry = cGeometry();
 Navigator navigator(tGeometry);
 
 using BFieldType = ConstantBField;
-using EigenStepperType = EigenStepper<BFieldType>;
+using EigenStepperType = EigenStepper<>;
 using EigenPropagatorType = Propagator<EigenStepperType, Navigator>;
 using Covariance = BoundSymMatrix;
 

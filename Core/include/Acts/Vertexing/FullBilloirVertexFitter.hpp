@@ -38,14 +38,14 @@ class FullBilloirVertexFitter {
  public:
   using InputTrack_t = input_track_t;
   using Propagator_t = typename linearizer_t::Propagator_t;
-  using BField_t = typename linearizer_t::BField_t;
   using Linearizer_t = linearizer_t;
 
   struct State {
     /// @brief The state constructor
     ///
     /// @param mctx The magnetic field context
-    State(const Acts::MagneticFieldContext& mctx) : linearizerState(mctx) {}
+    State(BFieldProvider::Cache fieldCache)
+        : linearizerState(std::move(fieldCache)) {}
     /// The linearizer state
     typename Linearizer_t::State linearizerState;
   };

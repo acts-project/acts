@@ -68,13 +68,14 @@ ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
         using InputMagneticField =
             typename std::decay_t<decltype(inputField)>::element_type;
         using SharedMagneticField = Acts::SharedBField<InputMagneticField>;
-        using Stepper = Acts::EigenStepper<SharedMagneticField>;
+        using Stepper = Acts::EigenStepper<>;
         using Navigator = Acts::Navigator;
         using Propagator = Acts::Propagator<Stepper, Navigator>;
         using Fitter = Acts::KalmanFitter<Propagator, Updater, Smoother>;
 
         // construct all components for the fitter
-        SharedMagneticField field(std::move(inputField));
+        auto field =
+            std::make_shared<SharedMagneticField>(std::move(inputField));
         Stepper stepper(std::move(field));
         Navigator navigator(trackingGeometry);
         navigator.resolvePassive = false;
@@ -103,13 +104,14 @@ ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
         using InputMagneticField =
             typename std::decay_t<decltype(inputField)>::element_type;
         using SharedMagneticField = Acts::SharedBField<InputMagneticField>;
-        using Stepper = Acts::EigenStepper<SharedMagneticField>;
+        using Stepper = Acts::EigenStepper<>;
         using Navigator = Acts::DirectNavigator;
         using Propagator = Acts::Propagator<Stepper, Navigator>;
         using Fitter = Acts::KalmanFitter<Propagator, Updater, Smoother>;
 
         // construct all components for the fitter
-        SharedMagneticField field(std::move(inputField));
+        auto field =
+            std::make_shared<SharedMagneticField>(std::move(inputField));
         Stepper stepper(std::move(field));
         Navigator navigator;
         Propagator propagator(std::move(stepper), std::move(navigator));

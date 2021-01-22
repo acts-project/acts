@@ -33,7 +33,7 @@ using namespace Acts::UnitLiterals;
 
 using MagneticField = Acts::ConstantBField;
 using Stepper = Acts::EigenStepper<
-    MagneticField, Acts::StepperExtensionList<Acts::DenseEnvironmentExtension>>;
+    Acts::StepperExtensionList<Acts::DenseEnvironmentExtension>>;
 using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
 using RiddersPropagator = Acts::RiddersPropagator<Propagator>;
 

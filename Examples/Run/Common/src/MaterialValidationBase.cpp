@@ -43,9 +43,9 @@ namespace {
 /// @param tGeometry The TrackingGeometry object
 ///
 /// @return a process code
-template <typename bfield_t>
 ActsExamples::ProcessCode setupPropagation(
-    ActsExamples::Sequencer& sequencer, bfield_t bfield, po::variables_map& vm,
+    ActsExamples::Sequencer& sequencer,
+    std::shared_ptr<Acts::BFieldProvider> bfield, po::variables_map& vm,
     std::shared_ptr<ActsExamples::RandomNumbers> randomNumberSvc,
     std::shared_ptr<const Acts::TrackingGeometry> tGeometry) {
   // Get the log level
@@ -59,7 +59,6 @@ ActsExamples::ProcessCode setupPropagation(
 
   // Resolve the bfield map template and create the propgator
   using Stepper = Acts::EigenStepper<
-      bfield_t,
       Acts::StepperExtensionList<Acts::DefaultExtension,
                                  Acts::DenseEnvironmentExtension>,
       Acts::detail::HighestValidAuctioneer>;
@@ -174,7 +173,8 @@ int materialValidationExample(int argc, char* argv[],
         [&](auto& bField) {
           using field_type =
               typename std::decay_t<decltype(bField)>::element_type;
-          Acts::SharedBField<field_type> fieldMap(bField);
+          auto fieldMap =
+              std::make_shared<Acts::SharedBField<field_type>>(bField);
           setupPropagation(sequencer, fieldMap, vm, randomNumberSvc, tGeometry);
         },
         bFieldVar);

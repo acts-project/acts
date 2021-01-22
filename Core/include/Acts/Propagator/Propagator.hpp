@@ -183,11 +183,11 @@ struct PropagatorOptions : public PropagatorPlainOptions {
 
   /// The context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
-)
+
   /// The context object for the magnetic field
   std::reference_wrapper<const MagneticFieldContext> magFieldContext;
 
-LoggerWrapper logger;
+  LoggerWrapper logger;
 };
 
 /// @brief Propagator for particles (optionally in a magnetic field)

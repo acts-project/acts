@@ -11,7 +11,7 @@
 
 template <typename E, typename A>
 Acts::EigenStepper<E, A>::EigenStepper(
-    std::unique_ptr<const BFieldProvider> bField)
+    std::shared_ptr<const BFieldProvider> bField)
     : m_bField(std::move(bField)) {}
 
 template <typename E, typename A>

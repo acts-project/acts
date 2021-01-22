@@ -37,6 +37,7 @@ struct VertexingOptions {
   /// Context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
   /// Context object for the magnetic field
+  // @TODO: Can this go?
   std::reference_wrapper<const MagneticFieldContext> magFieldContext;
   /// The vertex constraint for the fitting
   Vertex<input_track_t> vertexConstraint;

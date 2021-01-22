@@ -32,13 +32,15 @@ using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 
 using MagneticField = Acts::ConstantBField;
-using Stepper = Acts::EigenStepper<MagneticField>;
+using Stepper = Acts::EigenStepper<>;
 using Propagator = Acts::Propagator<Stepper>;
 using Estimator =
     Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
 
 const Acts::GeometryContext geoContext;
 const Acts::MagneticFieldContext magFieldContext;
+const Acts::BFieldProvider::Cache magFieldCache{
+    NullBField{}.makeCache(magFieldContext)};
 
 // perigee track parameters dataset
 // only non-zero distances are tested
@@ -62,7 +64,7 @@ auto vertices = vx0s * vy0s * vz0s * vt0s;
 
 // Construct an impact point estimator for a constant bfield along z.
 Estimator makeEstimator(double bZ) {
-  MagneticField field(Vector3(0, 0, bZ));
+  auto field = std::make_shared<MagneticField>(Vector3(0, 0, bZ));
   Stepper stepper(field);
   Estimator::Config cfg(field,
                         std::make_shared<Propagator>(std::move(stepper)));
@@ -108,7 +110,7 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3d, tracks, d0,
   par[eBoundQOverP] = q / p;
 
   Estimator ipEstimator = makeEstimator(2_T);
-  Estimator::State state(magFieldContext);
+  Estimator::State state(magFieldCache);
   // reference position and corresponding perigee surface
   Vector3 refPosition(0., 0., 0.);
   auto perigeeSurface = Surface::makeShared<PerigeeSurface>(refPosition);
@@ -161,7 +163,7 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3d, tracks, d0,
 //
 BOOST_AUTO_TEST_CASE(SingleTrackDistanceParametersAthenaRegression) {
   Estimator ipEstimator = makeEstimator(1.9971546939_T);
-  Estimator::State state(magFieldContext);
+  Estimator::State state(magFieldCache);
 
   // Use same values as in Athena unit test
   Vector4 pos1(2_mm, 1_mm, -10_mm, 0_ns);
@@ -208,7 +210,7 @@ BOOST_DATA_TEST_CASE(SingeTrackImpactParameters, tracks* vertices, d0, l0, t0,
   vtxPos[eTime] = vt0;
 
   Estimator ipEstimator = makeEstimator(1_T);
-  Estimator::State state(magFieldContext);
+  Estimator::State state(magFieldCache);
 
   // reference position and corresponding perigee surface
   Vector3 refPosition(0., 0., 0.);

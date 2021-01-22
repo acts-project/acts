@@ -58,7 +58,7 @@ struct SplitEnergyLoss {
 using Navigator = Acts::Navigator;
 using MagneticField = Acts::ConstantBField;
 // propagate charged particles numerically in a constant magnetic field
-using ChargedStepper = Acts::EigenStepper<MagneticField>;
+using ChargedStepper = Acts::EigenStepper<>;
 using ChargedPropagator = Acts::Propagator<ChargedStepper, Navigator>;
 // propagate neutral particles with just straight lines
 using NeutralStepper = Acts::StraightLineStepper;

@@ -29,7 +29,7 @@ using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 
 using Covariance = BoundSymMatrix;
-using Propagator = Propagator<EigenStepper<ConstantBField>>;
+using Propagator = Acts::Propagator<EigenStepper<>>;
 using Linearizer = HelicalTrackLinearizer<Propagator>;
 
 // Create a test context
@@ -71,10 +71,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   std::mt19937 gen(mySeed);
 
   // Set up constant B-Field
-  ConstantBField bField(Vector3(0., 0., 1._T));
+  auto bField = std::make_shared<ConstantBField>(0.0, 0.0, 1_T);
 
   // Set up EigenStepper
-  EigenStepper<ConstantBField> stepper(bField);
+  EigenStepper<> stepper(bField);
 
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   }
 
   AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>::State state(
-      magFieldContext);
+      bField->makeCache(magFieldContext));
 
   for (unsigned int iTrack = 0; iTrack < nTracksPerVtx * vtxPosVec.size();
        iTrack++) {
@@ -316,11 +316,11 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   // Set debug mode
   bool debugMode = false;
   // Set up constant B-Field
-  ConstantBField bField(Vector3(0., 0., 2_T));
+  auto bField = std::make_shared<ConstantBField>(0.0, 0.0, 2_T);
 
   // Set up EigenStepper
-  // EigenStepper<ConstantBField> stepper(bField);
-  EigenStepper<ConstantBField> stepper(bField);
+  // EigenStepper<> stepper(bField);
+  EigenStepper<> stepper(bField);
 
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
@@ -420,7 +420,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   std::vector<Vertex<BoundTrackParameters>*> vtxList;
 
   AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>::State state(
-      magFieldContext);
+      bField->makeCache(magFieldContext));
 
   // The constraint vertex position covariance
   SymMatrix4 covConstr(SymMatrix4::Identity());
