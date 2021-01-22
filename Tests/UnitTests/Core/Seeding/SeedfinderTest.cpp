@@ -209,30 +209,35 @@ int main(int argc, char** argv) {
                   << sp->z() << ") ";
         std::cout << std::endl;
         if (estimateTrackParams) {
-          auto transParamsRes = Acts::estimateTrackParamsFromSeed(
+          // Estimate the partial set of bound track parameters
+          auto pBoundParamsRes = Acts::estimateTrackParamsFromSeed(
               seed.sp().begin(), seed.sp().end());
-          if (transParamsRes.has_value()) {
-            auto transParams = transParamsRes.value();
-            std::cout << "Estimated (d0, curvature, phi): \n " << transParams[0]
-                      << "  " << transParams[1] << "  " << transParams[2]
-                      << std::endl;
+          if (pBoundParamsRes.has_value()) {
+            auto pBoundParams = pBoundParamsRes.value();
+            std::cout << "Estimated (d0, phi, curvature): \n "
+                      << pBoundParams[Acts::eBoundLoc0] << "  "
+                      << pBoundParams[Acts::eBoundPhi] << "  "
+                      << pBoundParams[Acts::eBoundQOverP] << std::endl;
           } else {
             std::cout
-                << "WARNING: estimation of (d0, curvature, phi) for found seed "
+                << "WARNING: estimation of (d0, phi, curvature) for found seed "
                 << is << " in region " << ir << " failed." << std::endl;
           }
+
+          // Construct a plane surface with center at the bottom space point and
+          // direction along the global z
           const auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
               global0, Acts::Vector3(0, 0, 1));
           const Acts::Vector3 bField(
               0, 0, config.bFieldInZ * 1000 * Acts::UnitConstants::T);
-          auto boundParamsRes = Acts::estimateTrackParamsFromSeed(
+          // Estimate the full set of bound track parameters
+          auto fBoundParamsRes = Acts::estimateTrackParamsFromSeed(
               Acts::GeometryContext(), seed.sp().begin(), seed.sp().end(),
               *surface, bField, 0.1 * Acts::UnitConstants::T);
-          if (boundParamsRes.has_value()) {
-            auto boundParams = boundParamsRes.value();
-            std::cout << "Estimated (loc0, loc1, phi, theta, q/p, t) on the "
-                         "surface with identify transform: \n"
-                      << boundParams.transpose() << std::endl;
+          if (fBoundParamsRes.has_value()) {
+            auto fBoundParams = fBoundParamsRes.value();
+            std::cout << "Estimated (loc0, loc1, phi, theta, q/p, t): \n"
+                      << fBoundParams.transpose() << std::endl;
           } else {
             std::cout
                 << "WARNING: estimation of bound parameters for found seed "

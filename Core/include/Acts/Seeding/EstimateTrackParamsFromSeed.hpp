@@ -33,7 +33,7 @@ namespace Acts {
 ///
 /// The method is based on V. Karimaki NIM A305 (1991) 187-191:
 /// https://doi.org/10.1016/0168-9002(91)90533-V
-/// - no weights are used in Karimaki's fit, d0 is the distance of the point of
+/// - no weights are used in Karimaki's fit; d0 is the distance of the point of
 /// closest approach to the origin, 1/R is the curvature, phi is the angle of
 /// the direction propagation (counter clockwise as positive) at the point of
 /// cloest approach.
@@ -43,14 +43,22 @@ namespace Acts {
 /// @param spBegin is the begin iterator for the space points
 /// @param spEnd is the end iterator for the space points
 ///
-/// @return optional estimated parameters d0, 1/R and phi
-
+/// @return optional bound track parameters with the estimated d0, phi and 1/R
+/// stored with the indices, eBoundLoc0, eBoundPhi and eBoundQOverP,
+/// respectively. The bound parameters with other indices are set to zero.
 template <typename spacepoint_iterator_t>
-std::optional<std::array<ActsScalar, 3>> estimateTrackParamsFromSeed(
+std::optional<BoundVector> estimateTrackParamsFromSeed(
     spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd) {
   // The local logger
   ACTS_LOCAL_LOGGER(
       getDefaultLogger("estimateTrackParamsFromSeed", Logging::INFO));
+
+  // Check the number of provided space points
+  size_t numSP = std::distance(spBegin, spEnd);
+  if (numSP < 3) {
+    ACTS_ERROR("At least three space points are required.")
+    return std::nullopt;
+  }
 
   ActsScalar x2m = 0., xm = 0.;
   ActsScalar xym = 0.;
@@ -58,12 +66,11 @@ std::optional<std::array<ActsScalar, 3>> estimateTrackParamsFromSeed(
   ActsScalar r2m = 0., r4m = 0.;
   ActsScalar xr2m = 0., yr2m = 0.;
 
-  size_t numSP = 0;
   for (spacepoint_iterator_t it = spBegin; it != spEnd; it++) {
     if (*it == nullptr) {
-      continue;
+      ACTS_ERROR("Empty space point found. This should not happen.")
+      return std::nullopt;
     }
-
     const auto& sp = *it;
 
     ActsScalar x = sp->x();
@@ -80,12 +87,6 @@ std::optional<std::array<ActsScalar, 3>> estimateTrackParamsFromSeed(
     yr2m += y * r2;
     numSP++;
   }
-
-  if (numSP < 3) {
-    ACTS_ERROR("At least three valid space points are required.")
-    return std::nullopt;
-  }
-
   x2m = x2m / numSP;
   xm = xm / numSP;
   xym = xym / numSP;
@@ -113,14 +114,21 @@ std::optional<std::array<ActsScalar, 3>> estimateTrackParamsFromSeed(
   ActsScalar rho = (2 * k) / (std::sqrt(1 - 4 * delta * k));
   ActsScalar d0 = (2 * delta) / (1 + std::sqrt(1 - 4 * delta * k));
 
-  return std::array<ActsScalar, 3>{d0, rho, phi};
+  // Initialize the bound parameters vector
+  BoundVector params = BoundVector::Zero();
+  params[eBoundLoc0] = d0;
+  params[eBoundPhi] = phi;
+  params[eBoundQOverP] = rho;
+
+  return params;
 }
 
 /// Estimate the full track parameters from three space points
 ///
 /// This method is based on the conformal map transformation. It estimates the
 /// full bound track parameters, i.e. (loc0, loc1, phi, theta, q/p, t) at the
-/// bottom space point. The surface with the bottom space point on it should be
+/// bottom space point. The bottom space is assumed to be the first element
+/// in the range defined by the iterators. It must lie on the surface
 /// provided for the representation of the bound track parameters. The magnetic
 /// field (which might be along any direction) is also necessary for the
 /// momentum estimation.
@@ -152,6 +160,13 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   ACTS_LOCAL_LOGGER(
       getDefaultLogger("estimateTrackParamsFromSeed", Logging::INFO));
 
+  // Check the number of provided space points
+  size_t numSP = std::distance(spBegin, spEnd);
+  if (numSP != 3) {
+    ACTS_ERROR("There should be exactly three space points provided.")
+    return std::nullopt;
+  }
+
   // Convert bField to Tesla
   ActsScalar bFieldInTesla = bField.norm() / UnitConstants::T;
   ActsScalar bFieldMinInTesla = bFieldMin / UnitConstants::T;
@@ -165,63 +180,42 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
     return std::nullopt;
   }
 
-  // The global position of the bottom, middle and top space point
-  Vector3 bGlobal = Vector3::Zero();
-  Vector3 mGlobal = Vector3::Zero();
-  Vector3 tGlobal = Vector3::Zero();
-  size_t numSP = 0;
-  for (spacepoint_iterator_t it = spBegin; it != spEnd; it++) {
+  // The global positions of the bottom, middle and space points
+  std::array<Vector3, 3> spGlobalPositions = {Vector3::Zero(), Vector3::Zero(),
+                                              Vector3::Zero()};
+  // The first, second and third space point are assumed to be bottom, middle
+  // and top space point, respectively
+  for (size_t isp = 0; isp < 3; ++isp) {
+    spacepoint_iterator_t it = std::next(spBegin, isp);
     if (*it == nullptr) {
-      continue;
+      ACTS_ERROR("Empty space point found. This should not happen.")
+      return std::nullopt;
     }
     const auto& sp = *it;
-    switch (numSP) {
-      case 0: {
-        bGlobal = Vector3(sp->x(), sp->y(), sp->z());
-        break;
-      }
-      case 1: {
-        mGlobal = Vector3(sp->x(), sp->y(), sp->z());
-        break;
-      }
-      case 2: {
-        tGlobal = Vector3(sp->x(), sp->y(), sp->z());
-        break;
-      }
-      default: {
-        ACTS_WARNING(
-            "More than three space points are provided. The extra space point "
-            "is not used for the "
-            "estimation.");
-      }
-    }
-    numSP++;
+    spGlobalPositions[isp] = Vector3(sp->x(), sp->y(), sp->z());
   }
-
-  // Initialize the bound parameters vector
-  BoundVector params = BoundVector::Zero();
 
   // Define a new coordinate frame with its origin at the bottom space point, z
   // axis long the magnetic field direction and y axis perpendicular to vector
   // from the bottom to middle space point. Hence, the projection of the middle
   // space point on the tranverse plane will be located at the x axis of the new
   // frame.
-  Vector3 mRelVec = mGlobal - bGlobal;
+  Vector3 relVec = spGlobalPositions[1] - spGlobalPositions[0];
   Vector3 newZAxis = bField.normalized();
-  Vector3 newYAxis = newZAxis.cross(mRelVec).normalized();
+  Vector3 newYAxis = newZAxis.cross(relVec).normalized();
   Vector3 newXAxis = newYAxis.cross(newZAxis);
   RotationMatrix3 rotation;
   rotation.col(0) = newXAxis;
   rotation.col(1) = newYAxis;
   rotation.col(2) = newZAxis;
   // The center of the new frame is at the bottom space point
-  Translation3 trans(bGlobal);
+  Translation3 trans(spGlobalPositions[0]);
   // The transform which constructs the new frame
   Transform3 transform(trans * rotation);
 
   // The coordinate of the middle and top space point in the new frame
-  Vector3 local1 = transform.inverse() * mGlobal;
-  Vector3 local2 = transform.inverse() * tGlobal;
+  Vector3 local1 = transform.inverse() * spGlobalPositions[1];
+  Vector3 local2 = transform.inverse() * spGlobalPositions[2];
 
   // Lambda to transform the coordinates to the (u, v) space
   auto uvTransform = [](const Vector3& local) -> Vector2 {
@@ -236,7 +230,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   Vector2 uv2 = uvTransform(local2);
 
   // A,B are slope and intercept of the straight line in the u,v plane
-  // connecting the three points.
+  // connecting the three points
   ActsScalar A = uv2.y() / (uv2.x() - uv1.x());
   ActsScalar B = uv2.y() - A * uv2.x();
   // Curvature (with a sign) estimate
@@ -254,28 +248,34 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // Transform it back to the original frame
   Vector3 direction = rotation * transDirection.normalized();
 
-  // The phi and theta
+  // Initialize the bound parameters vector
+  BoundVector params = BoundVector::Zero();
+
+  // The estimated phi and theta
   params[eBoundPhi] = VectorHelpers::phi(direction);
   params[eBoundTheta] = VectorHelpers::theta(direction);
 
-  // Transform the bottom space point to local coordinates
-  auto lpResult = surface.globalToLocal(gctx, bGlobal, direction);
+  // Transform the bottom space point to local coordinates of the provided
+  // surface
+  auto lpResult = surface.globalToLocal(gctx, spGlobalPositions[0], direction);
   if (not lpResult.ok()) {
-    ACTS_ERROR("Global to local transformation did not succeed.");
+    ACTS_ERROR(
+        "Global to local transformation did not succeed. Please make sure the "
+        "bottom space point lies on the provided surface.");
     return std::nullopt;
   }
-  Vector2 bLocal = lpResult.value();
+  Vector2 bottomLocalPos = lpResult.value();
   // The estimated loc0 and loc1
-  params[eBoundLoc0] = bLocal.x();
-  params[eBoundLoc1] = bLocal.y();
+  params[eBoundLoc0] = bottomLocalPos.x();
+  params[eBoundLoc1] = bottomLocalPos.y();
 
   // The estimated q/pt in [GeV/c]^-1 (note that the pt is the projection of
-  // momentum in the transverse plane of the new frame)
+  // momentum on the transverse plane of the new frame)
   ActsScalar qOverPt = rho * (UnitConstants::m) / (0.3 * bFieldInTesla);
   // The estimated q/p in [GeV/c]^-1
   params[eBoundQOverP] = qOverPt / std::hypot(1., invTanTheta);
 
-  // The estimated momentum and projection of the momentum in the magnetic field
+  // The estimated momentum, and its projection along the magnetic field
   // diretion
   ActsScalar pInGeV = std::abs(1.0 / params[eBoundQOverP]);
   ActsScalar pzInGeV = 1.0 / std::abs(qOverPt) * invTanTheta;
@@ -285,7 +285,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   ActsScalar vz = pzInGeV / std::hypot(pInGeV, massInGeV);
   // The z coordinate of the bottom space point along the magnetic field
   // direction
-  ActsScalar pathz = bGlobal.dot(bField) / bField.norm();
+  ActsScalar pathz = spGlobalPositions[0].dot(bField) / bField.norm();
   // The estimated time
   params[eBoundTime] = pathz / vz;
 
