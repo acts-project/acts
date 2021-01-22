@@ -12,6 +12,7 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/Digitization/SmearingConfig.hpp"
+#include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
 namespace ActsExamples {
 
@@ -23,11 +24,14 @@ namespace ActsExamples {
 /// are defined by this.
 ///
 struct GeometricDigitizationConfig {
+  std::vector<Acts::BoundIndices> indices = {};
   Acts::BinUtility segmentation;
+  // The drift information
   double thickness = 0.;
   double threshold = 0.;
   bool digital = true;
   Acts::Vector3 driftDirection = Acts::Vector3(0., 0., 0.);
+  ParameterSmearingConfig driftSmearing;
 };
 
 /// Configuration struct for the Digitization algorithm

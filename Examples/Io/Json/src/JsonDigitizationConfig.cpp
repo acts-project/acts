@@ -89,23 +89,33 @@ void ActsExamples::from_json(const nlohmann::json& j,
 
 void ActsExamples::to_json(
     nlohmann::json& j, const ActsExamples::GeometricDigitizationConfig& gdc) {
+  std::vector<size_t> indices;
+  for (auto idx : gdc.indices) {
+    indices.push_back(static_cast<size_t>(idx));
+  }
+  j["indices"] = indices;
   j["segmentation"] = nlohmann::json(gdc.segmentation);
   j["thickness"] = gdc.thickness;
   j["threshold"] = gdc.threshold;
   j["digital"] = gdc.digital;
   std::array<Acts::ActsScalar, 3> driftData = {
       gdc.driftDirection.x(), gdc.driftDirection.y(), gdc.driftDirection.z()};
-  j["drfit"] = driftData;
+  j["drift"] = driftData;
+  j["drift_smearing"] = nlohmann::json(gdc.driftSmearing);
 }
 
 void ActsExamples::from_json(const nlohmann::json& j,
                              ActsExamples::GeometricDigitizationConfig& gdc) {
+  for (const auto jidx : j["indices"]) {
+    gdc.indices.push_back(static_cast<Acts::BoundIndices>(jidx));
+  }
   from_json(j["segmentation"], gdc.segmentation);
   gdc.thickness = j["thickness"];
   gdc.threshold = j["threshold"];
   gdc.digital = j["digital"];
   std::array<Acts::ActsScalar, 3> driftData = j["drift"];
   gdc.driftDirection = Acts::Vector3(driftData[0], driftData[1], driftData[2]);
+  from_json(j["drift_smearing"], gdc.driftSmearing);
 }
 
 void ActsExamples::to_json(nlohmann::json& j,
@@ -126,7 +136,7 @@ void ActsExamples::from_json(const nlohmann::json& j,
 
 void ActsExamples::to_json(nlohmann::json& j,
                            const ActsExamples::DigitizationConfig& dc) {
-  if (dc.geometricDigiConfig.segmentation.dimensions() > 0) {
+  if (not dc.geometricDigiConfig.indices.empty()) {
     j["geometric"] = nlohmann::json(dc.geometricDigiConfig);
   }
   if (not dc.smearingDigiConfig.empty()) {
