@@ -33,16 +33,16 @@ class SurfaceBounds {
     eCylinder = 1,
     eDiamond = 2,
     eDisc = 3,
-    eEllipse = 5,
-    eLine = 6,
-    eRectangle = 7,
-    eTrapezoid = 8,
-    eTriangle = 9,
-    eDiscTrapezoid = 10,
-    eConvexPolygon = 11,
-    eAnnulus = 12,
-    eBoundless = 13,
-    eOther = 14
+    eEllipse = 4,
+    eLine = 5,
+    eRectangle = 6,
+    eTrapezoid = 7,
+    eTriangle = 8,
+    eDiscTrapezoid = 9,
+    eConvexPolygon = 10,
+    eAnnulus = 11,
+    eBoundless = 12,
+    eOther = 13
   };
 
   virtual ~SurfaceBounds() = default;
