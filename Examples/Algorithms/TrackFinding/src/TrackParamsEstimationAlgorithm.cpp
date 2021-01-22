@@ -41,17 +41,17 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
   }
 
   // Set up the track parameters covariance (the same for all tracks)
-  m_cfg.covariance(Acts::eBoundLoc0, Acts::eBoundLoc0) =
-      m_cfg.sigmaLoc0 * m_cfg.sigmaLoc0;
-  m_cfg.covariance(Acts::eBoundLoc1, Acts::eBoundLoc1) =
-      m_cfg.sigmaLoc1 * m_cfg.sigmaLoc1;
-  m_cfg.covariance(Acts::eBoundPhi, Acts::eBoundPhi) =
-      m_cfg.sigmaPhi * m_cfg.sigmaPhi;
-  m_cfg.covariance(Acts::eBoundTheta, Acts::eBoundTheta) =
-      m_cfg.sigmaTheta * m_cfg.sigmaTheta;
-  m_cfg.covariance(Acts::eBoundQOverP, Acts::eBoundQOverP) =
-      m_cfg.sigmaQOverP * m_cfg.sigmaQOverP;
-  m_cfg.covariance(Acts::eBoundTime, Acts::eBoundTime) =
+  m_covariance(Acts::eBoundLoc0, Acts::eBoundLoc0) =
+      cfg.sigmaLoc0 * m_cfg.sigmaLoc0;
+  m_covariance(Acts::eBoundLoc1, Acts::eBoundLoc1) =
+      cfg.sigmaLoc1 * m_cfg.sigmaLoc1;
+  m_covariance(Acts::eBoundPhi, Acts::eBoundPhi) =
+      cfg.sigmaPhi * m_cfg.sigmaPhi;
+  m_covariance(Acts::eBoundTheta, Acts::eBoundTheta) =
+      cfg.sigmaTheta * m_cfg.sigmaTheta;
+  m_covariance(Acts::eBoundQOverP, Acts::eBoundQOverP) =
+      cfg.sigmaQOverP * m_cfg.sigmaQOverP;
+  m_covariance(Acts::eBoundTime, Acts::eBoundTime) =
       m_cfg.sigmaT0 * m_cfg.sigmaT0;
 }
 
@@ -96,10 +96,9 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
         continue;
       } else {
         const auto& params = optParams.value();
-        double charge =
-            std::abs(params[Acts::eBoundQOverP]) / params[Acts::eBoundQOverP];
+        double charge = std::copysign(1, params[Acts::eBoundQOverP]);
         trackParameters.emplace_back(surface->getSharedPtr(), params, charge,
-                                     m_cfg.covariance);
+                                     m_covariance);
         trackParametersSeedMap.emplace(trackParameters.size() - 1,
                                        GroupedSeedIdx{iregion, iseed});
       }

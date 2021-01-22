@@ -58,8 +58,6 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
     double sigmaQOverP = 0.1;
     /// Time resolution.
     double sigmaT0 = 1400 * Acts::UnitConstants::s;
-    /// The track parameters covariance
-    Acts::BoundSymMatrix covariance = Acts::BoundSymMatrix::Zero();
   };
 
   /// Construct the track parameters making algorithm.
@@ -76,6 +74,10 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
 
  private:
   Config m_cfg;
+
+  /// The track parameters covariance (assumed to be the same for all estimated
+  /// track parameters for the moment)
+  Acts::BoundSymMatrix m_covariance = Acts::BoundSymMatrix::Zero();
 
   /// Get magnetic field at requested position
   ///
