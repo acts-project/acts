@@ -113,7 +113,7 @@ class GeometryHierarchyMap {
   /// @retval `.end()` iterator if no matching element exists
   Iterator find(GeometryIdentifier id) const;
 
-  /// Find the value for a given geometry identifier. 
+  /// Find the value for a given geometry identifier.
   ///
   /// This will be the element matching exactly to the given geometry
   /// id, this thus ignore the hierachical nature of this container.
@@ -313,10 +313,9 @@ inline auto GeometryHierarchyMap<value_t>::findAtId(GeometryIdentifier id) const
   // Search the element in the Hierarchy corresponding to the identifier.
   const auto itId = std::find(m_ids.begin(), m_ids.end(), id.value());
   // If it does not exist return a end iterator.
-  if(itId == m_ids.end()){
+  if (itId == m_ids.end()) {
     return end();
-  }
-  else{
+  } else {
     // Determine the index of the Id and return the iterator on the value
     // for this index.
     auto index = std::distance(m_ids.begin(), itId);

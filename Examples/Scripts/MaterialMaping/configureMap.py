@@ -21,7 +21,7 @@ if sys.version_info[0] < 3:
     print('To obtain the proper ordering in the Json files Python 3 is recomanded')
 
 if len(sys.argv) < 2 :
-    inFileName = 'surfaces-map.json'
+    inFileName = 'geometry-maps.json'
     confFileName = 'config-map.json'
     
 if len(sys.argv) < 3 :
@@ -37,53 +37,61 @@ with open(inFileName,'r+') as json_file:
 
         config = json.load(config_file)
         data = json.load(json_file)
-    
-        for kvol in data['volumes']:
-            Name = data['volumes'][kvol]['Name']
-            
-            if 'boundaries' in data['volumes'][kvol] :
-                for kbound in data['volumes'][kvol]['boundaries'] :
-                    dbound = data['volumes'][kvol]['boundaries'][kbound]
-                    data['volumes'][kvol]['boundaries'][kbound]['bin0']        = config[Name]['boundaries'][dbound['stype']]['bin0']
-                    data['volumes'][kvol]['boundaries'][kbound]['bin1']        = config[Name]['boundaries'][dbound['stype']]['bin1']
-                    data['volumes'][kvol]['boundaries'][kbound]['mapMaterial'] = config[Name]['boundaries'][dbound['stype']]['mapMaterial']
 
-                    
-            if 'layers' in data['volumes'][kvol] :
-                for klay in data['volumes'][kvol]['layers'] :
-                
-                    if 'representing' in data['volumes'][kvol]['layers'][klay] :
-                        drep = data['volumes'][kvol]['layers'][klay]['representing']
-                        data['volumes'][kvol]['layers'][klay]['representing']['bin0']        = config[Name]['representing'][drep['stype']]['bin0']
-                        data['volumes'][kvol]['layers'][klay]['representing']['bin1']        = config[Name]['representing'][drep['stype']]['bin1']
-                        data['volumes'][kvol]['layers'][klay]['representing']['mapMaterial'] = config[Name]['representing'][drep['stype']]['mapMaterial']
-                
-                    if 'approach' in data['volumes'][kvol]['layers'][klay] :
-                        for kapp  in data['volumes'][kvol]['layers'][klay]['approach'] :
-                            dapp = data['volumes'][kvol]['layers'][klay]['approach'][kapp]
-                            data['volumes'][kvol]['layers'][klay]['approach'][kapp]['bin0']        = config[Name]['approach'][dapp['stype']][kapp]['bin0']
-                            data['volumes'][kvol]['layers'][klay]['approach'][kapp]['bin1']        = config[Name]['approach'][dapp['stype']][kapp]['bin1']
-                            data['volumes'][kvol]['layers'][klay]['approach'][kapp]['mapMaterial'] = config[Name]['approach'][dapp['stype']][kapp]['mapMaterial']
-                                
-                    if 'sensitive' in data['volumes'][kvol]['layers'][klay] :
-                        for ksen  in data['volumes'][kvol]['layers'][klay]['sensitive'] :
-                            dsen = data['volumes'][kvol]['layers'][klay]['sensitive'][ksen]
-                            data['volumes'][kvol]['layers'][klay]['sensitive'][ksen]['bin0']        = config[Name]['sensitive'][dsen['stype']]['bin0']
-                            data['volumes'][kvol]['layers'][klay]['sensitive'][ksen]['bin1']        = config[Name]['sensitive'][dsen['stype']]['bin1']
-                            data['volumes'][kvol]['layers'][klay]['sensitive'][ksen]['mapMaterial'] = config[Name]['sensitive'][dsen['stype']]['mapMaterial']
+        for entry in data['2.Surfaces']['entries']:
 
-                            
-            if 'material' in data['volumes'][kvol] :
-                data['volumes'][kvol]['material']['mapMaterial'] = config[Name]['material']['mapMaterial']
-                for bin in data['volumes'][kvol]['material'] :
-                    if bin == 'bin0' :
-                        data['volumes'][kvol]['material']['bin0'] =  config[Name]['material']['bin0']
-                    if bin == 'bin1' :
-                        data['volumes'][kvol]['material']['bin1'] =  config[Name]['material']['bin1']
-                    if bin == 'bin2' :                
-                        data['volumes'][kvol]['material']['bin2'] =  config[Name]['material']['bin2']
+            if 'stype' not in entry['value']:
+                entry['value']['stype'] = ''
 
-                        
+            if '_Layer' in entry:  
+                if '__Approach' not in entry:
+                    if '__Sensitive' not in entry:
+                        for conf in config[str(entry['Volume'])]:
+                            if '_Layer' in conf and conf['_Layer'] == 'X' and conf['value']['stype'] == entry['value']['stype']:
+                                entry['value']['mapMaterial'] = conf['value']['mapMaterial']
+                                ibin = 0
+                                for bin in entry['value']['binUtility']['binningdata']:                                  
+                                    bin['bins'] = conf['value']['binUtility']['binningdata'][ibin]['bins']
+                                    ibin = ibin+1
+                                continue
+                        continue
+
+            if '_Boundary' in entry:    
+                if '_Layer' not in entry:
+                    for conf in config[str(entry['Volume'])]:
+                        if '_Boundary' in conf and conf['_Boundary'] == 'X' and conf['value']['stype'] == entry['value']['stype']:
+                            entry['value']['mapMaterial'] = conf['value']['mapMaterial']
+                            ibin = 0
+                            for bin in entry['value']['binUtility']['binningdata']:
+                                bin['bins'] = conf['value']['binUtility']['binningdata'][ibin]['bins']
+                                ibin = ibin+1
+                            continue
+                    continue
+                 
+            if '__Approach' in entry:
+                if '__Sensitive' not in entry:
+                    for conf in config[str(entry['Volume'])]:
+                        if '__Approach' in conf and conf['__Approach'] == entry['__Approach'] and conf['value']['stype'] == entry['value']['stype']:
+                            entry['value']['mapMaterial'] = conf['value']['mapMaterial']
+                            ibin = 0
+                            for bin in entry['value']['binUtility']['binningdata']:
+                                bin['bins'] = conf['value']['binUtility']['binningdata'][ibin]['bins']
+                                ibin = ibin+1
+                            continue
+                    continue
+                 
+            if '__Sensitive' in entry:  
+                if '__Approach' not in entry:
+                    for conf in config[str(entry['Volume'])]:
+                        if '__Sensitive' in conf and conf['__Sensitive'] == 'X' and conf['_Layer'] == entry['_Layer'] and conf['value']['stype'] == entry['value']['stype']:
+                            entry['value']['mapMaterial'] = conf['value']['mapMaterial']
+                            ibin = 0
+                            for bin in entry['value']['binUtility']['binningdata']:
+                                bin['bins'] = conf['value']['binUtility']['binningdata'][ibin]['bins']
+                                ibin = ibin+1
+                            continue
+                    continue  
+                     
     json_file.seek(0) 
     json.dump(data, json_file, indent=4)
     json_file.truncate()
