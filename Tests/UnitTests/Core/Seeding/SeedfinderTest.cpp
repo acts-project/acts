@@ -9,7 +9,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
-#include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/Seed.hpp"
@@ -69,7 +68,6 @@ int main(int argc, char** argv) {
   std::string file{"sp.txt"};
   bool help(false);
   bool quiet(false);
-  bool estimateTrackParams(false);
 
   int opt;
   while ((opt = getopt(argc, argv, "hf:qe")) != -1) {
@@ -80,8 +78,6 @@ int main(int argc, char** argv) {
       case 'q':
         quiet = true;
         break;
-      case 'e':
-        estimateTrackParams = true;
         break;
       case 'h':
         help = true;
@@ -94,8 +90,6 @@ int main(int argc, char** argv) {
               << "      -f FILE : read spacepoints from FILE. Default is \""
               << file << "\"" << std::endl;
           std::cout << "      -q : don't print out all found seeds"
-                    << std::endl;
-          std::cout << "      -e : estimate track parameters from found seeds"
                     << std::endl;
         }
 
@@ -208,42 +202,6 @@ int main(int argc, char** argv) {
         std::cout << sp->layer << " (" << sp->x() << ", " << sp->y() << ", "
                   << sp->z() << ") ";
         std::cout << std::endl;
-        if (estimateTrackParams) {
-          // Estimate the partial set of bound track parameters
-          auto pBoundParamsRes = Acts::estimateTrackParamsFromSeed(
-              seed.sp().begin(), seed.sp().end());
-          if (pBoundParamsRes.has_value()) {
-            auto pBoundParams = pBoundParamsRes.value();
-            std::cout << "Estimated (d0, phi, curvature): \n "
-                      << pBoundParams[Acts::eBoundLoc0] << "  "
-                      << pBoundParams[Acts::eBoundPhi] << "  "
-                      << pBoundParams[Acts::eBoundQOverP] << std::endl;
-          } else {
-            std::cout
-                << "WARNING: estimation of (d0, phi, curvature) for found seed "
-                << is << " in region " << ir << " failed." << std::endl;
-          }
-
-          // Construct a plane surface with center at the bottom space point and
-          // direction along the global z
-          const auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-              global0, Acts::Vector3(0, 0, 1));
-          const Acts::Vector3 bField(
-              0, 0, config.bFieldInZ * 1000 * Acts::UnitConstants::T);
-          // Estimate the full set of bound track parameters
-          auto fBoundParamsRes = Acts::estimateTrackParamsFromSeed(
-              Acts::GeometryContext(), seed.sp().begin(), seed.sp().end(),
-              *surface, bField, 0.1 * Acts::UnitConstants::T);
-          if (fBoundParamsRes.has_value()) {
-            auto fBoundParams = fBoundParamsRes.value();
-            std::cout << "Estimated (loc0, loc1, phi, theta, q/p, t): \n"
-                      << fBoundParams.transpose() << std::endl;
-          } else {
-            std::cout
-                << "WARNING: estimation of bound parameters for found seed "
-                << is << " in region " << ir << " failed." << std::endl;
-          }
-        }
       }
     }
   }

@@ -232,17 +232,16 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
 
   // A,B are slope and intercept of the straight line in the u,v plane
   // connecting the three points
-  ActsScalar A = uv2.y() / (uv2.x() - uv1.x());
+  ActsScalar A = (uv2.y() - uv1.y()) / (uv2.x() - uv1.x());
   ActsScalar B = uv2.y() - A * uv2.x();
   // Curvature (with a sign) estimate
   ActsScalar rho = -2.0 * B / std::hypot(1., A);
   // The projection of the top space point on the transverse plane of the new
   // frame
   ActsScalar rn = local2.x() * local2.x() + local2.y() * local2.y();
-  // The (1/tanTheta) of momentum in the new frame, corrected for curvature
-  // effects (@note why 0.04?)
+  // The (1/tanTheta) of momentum in the new frame,
   ActsScalar invTanTheta =
-      local2.z() * std::sqrt(1. / rn) / (1. + 0.04 * rho * rho * rn);
+      local2.z() * std::sqrt(1. / rn) / (1. + rho * rho * rn);
   // The momentum direction in the new frame (the center of the circle has the
   // coordinate (-1.*A/(2*B), 1./(2*B)))
   Vector3 transDirection(1., A, std::hypot(1, A) * invTanTheta);
@@ -281,14 +280,20 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   ActsScalar pInGeV = std::abs(1.0 / params[eBoundQOverP]);
   ActsScalar pzInGeV = 1.0 / std::abs(qOverPt) * invTanTheta;
   ActsScalar massInGeV = mass / UnitConstants::GeV;
-  // The velocity along the magnetic field diretion (i.e. z axis of the new
-  // frame)
+  // The estimated velocity, and its projection along the magnetic field
+  // diretion
+  ActsScalar v = pInGeV / std::hypot(pInGeV, massInGeV);
   ActsScalar vz = pzInGeV / std::hypot(pInGeV, massInGeV);
   // The z coordinate of the bottom space point along the magnetic field
   // direction
   ActsScalar pathz = spGlobalPositions[0].dot(bField) / bField.norm();
-  // The estimated time
-  params[eBoundTime] = pathz / vz;
+  // The estimated time (use path length along magnetic field only if it's not
+  // zero)
+  if (pathz != 0) {
+    params[eBoundTime] = pathz / vz;
+  } else {
+    params[eBoundTime] = spGlobalPositions[0].norm() / v;
+  }
 
   return params;
 }
