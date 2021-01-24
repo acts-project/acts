@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
             }
           }
 
-          // Check if there is at least 3 space points
+          // Check if there are at least 3 space points
           if (spacePoints.size() < 3) {
             BOOST_TEST_WARN("Number of space points less than 3.");
             continue;
@@ -155,10 +155,10 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
                          [](const auto& sp) { return &sp.second; });
 
           // Test the partial track parameters estimator
-          auto partialParamsRes = estimateTrackParamsFromSeed(
+          auto partialParamsOpt = estimateTrackParamsFromSeed(
               spacePointPtrs.begin(), spacePointPtrs.end());
-          BOOST_REQUIRE(partialParamsRes.has_value());
-          const auto& estPartialParams = partialParamsRes.value();
+          BOOST_REQUIRE(partialParamsOpt.has_value());
+          const auto& estPartialParams = partialParamsOpt.value();
           BOOST_TEST_INFO(
               "The estimated track parameters at the transverse plane: \n"
               << estPartialParams.transpose());
@@ -175,11 +175,11 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
           CHECK_CLOSE_ABS(estPartialParams[eBoundTime], 0., 1e-10);
 
           // Test the full track parameters estimator
-          auto fullParamsRes = estimateTrackParamsFromSeed(
+          auto fullParamsOpt = estimateTrackParamsFromSeed(
               geoCtx, spacePointPtrs.begin(), spacePointPtrs.end(),
               *bottomSurface, Vector3(0, 0, 2._T), 0.1_T);
-          BOOST_REQUIRE(fullParamsRes.has_value());
-          const auto& estFullParams = fullParamsRes.value();
+          BOOST_REQUIRE(fullParamsOpt.has_value());
+          const auto& estFullParams = fullParamsOpt.value();
           BOOST_TEST_INFO(
               "The estimated full track parameters at the bottom space point: "
               "\n"
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
                           1e-5);
           CHECK_CLOSE_ABS(estFullParams[eBoundLoc1], expParams[eBoundLoc1],
                           1e-5);
-          // @todo Understand why the phi has a limited precision
+          // @todo Understand why the estimated phi has a limited precision
           CHECK_CLOSE_ABS(estFullParams[eBoundPhi], expParams[eBoundPhi], 1e-1);
           CHECK_CLOSE_ABS(estFullParams[eBoundTheta], expParams[eBoundTheta],
                           1e-2);
