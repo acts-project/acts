@@ -17,7 +17,7 @@
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Performance/SeedingPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
-#include "ActsExamples/Io/Root/RootEstimatedParametersWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackParameterWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
@@ -183,23 +183,23 @@ int runSeedingExample(int argc, char* argv[],
       std::make_shared<SeedingPerformanceWriter>(seedPerfCfg, logLevel));
 
   // The track parameters estimation writer
-  RootEstimatedParametersWriter::Config estParamsWriterCfg;
-  estParamsWriterCfg.inputSeeds = seedingCfg.outputSeeds;
-  estParamsWriterCfg.inputTrackParameters =
+  RootTrackParameterWriter::Config trackParamsWriterCfg;
+  trackParamsWriterCfg.inputSeeds = seedingCfg.outputSeeds;
+  trackParamsWriterCfg.inputTrackParameters =
       paramsEstimationCfg.outputTrackParameters;
-  estParamsWriterCfg.inputTrackParametersSeedMap =
+  trackParamsWriterCfg.inputTrackParametersSeedMap =
       paramsEstimationCfg.outputTrackParametersSeedMap;
-  estParamsWriterCfg.inputParticles = particleReader.outputParticles;
-  estParamsWriterCfg.inputSimHits = simHitReaderCfg.outputSimHits;
-  estParamsWriterCfg.inputMeasurementParticlesMap =
+  trackParamsWriterCfg.inputParticles = particleReader.outputParticles;
+  trackParamsWriterCfg.inputSimHits = simHitReaderCfg.outputSimHits;
+  trackParamsWriterCfg.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
-  estParamsWriterCfg.inputMeasurementSimHitsMap =
+  trackParamsWriterCfg.inputMeasurementSimHitsMap =
       hitSmearingCfg.outputMeasurementSimHitsMap;
-  estParamsWriterCfg.outputDir = outputDir;
-  estParamsWriterCfg.outputFilename = "estimatedparams.root";
-  estParamsWriterCfg.outputTreename = "estimatedparams";
-  sequencer.addWriter(std::make_shared<RootEstimatedParametersWriter>(
-      estParamsWriterCfg, logLevel));
+  trackParamsWriterCfg.outputDir = outputDir;
+  trackParamsWriterCfg.outputFilename = "estimatedparams.root";
+  trackParamsWriterCfg.outputTreename = "estimatedparams";
+  sequencer.addWriter(std::make_shared<RootTrackParameterWriter>(
+      trackParamsWriterCfg, logLevel));
 
   return sequencer.run();
 }
