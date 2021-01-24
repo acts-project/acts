@@ -1,12 +1,11 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
@@ -15,9 +14,7 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/Seedfinder.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
 
-#include <algorithm>
 #include <chrono>
 #include <fstream>
 #include <iostream>
@@ -29,10 +26,10 @@
 #include "ATLASCuts.hpp"
 #include "SpacePoint.hpp"
 
-std::vector<SpacePoint> readFile(std::string filename) {
+std::vector<const SpacePoint*> readFile(std::string filename) {
   std::string line;
   int layer;
-  std::vector<SpacePoint> sps;
+  std::vector<const SpacePoint*> readSP;
 
   std::ifstream spFile(filename);
   if (spFile.is_open()) {
@@ -57,11 +54,16 @@ std::vector<SpacePoint> readFile(std::string filename) {
           varianceR = 9. * cov;
           varianceZ = .06;
         }
-        sps.push_back(SpacePoint{x, y, z, r, layer, varianceR, varianceZ});
+        SpacePoint* sp =
+            new SpacePoint{x, y, z, r, layer, varianceR, varianceZ};
+        //     if(r < 200.){
+        //       sp->setClusterList(1,0);
+        //     }
+        readSP.push_back(sp);
       }
     }
   }
-  return sps;
+  return readSP;
 }
 
 int main(int argc, char** argv) {
@@ -70,14 +72,13 @@ int main(int argc, char** argv) {
   bool quiet(false);
 
   int opt;
-  while ((opt = getopt(argc, argv, "hf:qe")) != -1) {
+  while ((opt = getopt(argc, argv, "hf:q")) != -1) {
     switch (opt) {
       case 'f':
         file = optarg;
         break;
       case 'q':
         quiet = true;
-        break;
         break;
       case 'h':
         help = true;
@@ -104,12 +105,7 @@ int main(int argc, char** argv) {
   }
 
   auto start_read = std::chrono::system_clock::now();
-  std::vector<SpacePoint> sps = readFile(file);
-  std::vector<const SpacePoint*> spVec;
-  spVec.reserve(sps.size());
-  // Store the pointers in the vector
-  std::transform(sps.begin(), sps.end(), std::back_inserter(spVec),
-                 [](const SpacePoint& sp) { return &sp; });
+  std::vector<const SpacePoint*> spVec = readFile(file);
   auto end_read = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_read = end_read - start_read;
 
@@ -180,25 +176,21 @@ int main(int argc, char** argv) {
   std::cout << "time to create seeds: " << elapsed_seconds.count() << std::endl;
   std::cout << "Number of regions: " << seedVector.size() << std::endl;
   int numSeeds = 0;
-  for (auto& regionVec : seedVector) {
-    numSeeds += regionVec.size();
+  for (auto& outVec : seedVector) {
+    numSeeds += outVec.size();
   }
   std::cout << "Number of seeds generated: " << numSeeds << std::endl;
   if (!quiet) {
-    for (size_t ir = 0; ir < seedVector.size(); ++ir) {
-      for (size_t is = 0; is < seedVector[ir].size(); ++is) {
-        const auto& seed = seedVector[ir][is];
-        const SpacePoint* sp = seed.sp()[0];
-        Acts::Vector3 global0(sp->x(), sp->y(), sp->z());
-
-        std::cout << "Print out info of found seed: " << is
-                  << " in region: " << ir << std::endl;
+    for (auto& regionVec : seedVector) {
+      for (size_t i = 0; i < regionVec.size(); i++) {
+        const Acts::Seed<SpacePoint>* seed = &regionVec[i];
+        const SpacePoint* sp = seed->sp()[0];
+        std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z()
+                  << ") ";
+        sp = seed->sp()[1];
         std::cout << sp->layer << " (" << sp->x() << ", " << sp->y() << ", "
                   << sp->z() << ") ";
-        sp = seed.sp()[1];
-        std::cout << sp->layer << " (" << sp->x() << ", " << sp->y() << ", "
-                  << sp->z() << ") ";
-        sp = seed.sp()[2];
+        sp = seed->sp()[2];
         std::cout << sp->layer << " (" << sp->x() << ", " << sp->y() << ", "
                   << sp->z() << ") ";
         std::cout << std::endl;
