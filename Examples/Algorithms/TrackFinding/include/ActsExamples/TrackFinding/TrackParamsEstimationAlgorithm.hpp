@@ -55,7 +55,7 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
     /// Theta angular resolution.
     double sigmaTheta = 0.001 * Acts::UnitConstants::degree;
     /// q/p resolution.
-    double sigmaQOverP = 0.1;
+    double sigmaQOverP = 0.1 / Acts::UnitConstants::GeV;
     /// Time resolution.
     double sigmaT0 = 1400 * Acts::UnitConstants::s;
   };

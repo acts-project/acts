@@ -183,6 +183,13 @@ int runRecCKFTracks(int argc, char* argv[],
         "estimatedparams_seed_map";
     paramsEstimationCfg.trackingGeometry = trackingGeometry;
     paramsEstimationCfg.magneticField = magneticField;
+    paramsEstimationCfg.bFieldMin = 0.1_T;
+    paramsEstimationCfg.sigmaLoc0 = 25._um;
+    paramsEstimationCfg.sigmaLoc1 = 100._um;
+    paramsEstimationCfg.sigmaPhi = 0.005_deg;
+    paramsEstimationCfg.sigmaTheta = 0.001_deg;
+    paramsEstimationCfg.sigmaQOverP = 0.1 / 1._GeV;
+    paramsEstimationCfg.sigmaT0 = 1400._s;
     sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
         paramsEstimationCfg, logLevel));
 
