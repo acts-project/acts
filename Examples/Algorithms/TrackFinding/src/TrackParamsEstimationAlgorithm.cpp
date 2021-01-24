@@ -100,7 +100,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
         trackParameters.emplace_back(surface->getSharedPtr(), params, charge,
                                      m_covariance);
         trackParametersSeedMap.emplace(trackParameters.size() - 1,
-                                       GroupedSeedIdx{iregion, iseed});
+                                       GroupedSeedIndex{iregion, iseed});
       }
     }
   }

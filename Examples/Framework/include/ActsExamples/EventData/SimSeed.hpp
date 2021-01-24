@@ -19,7 +19,7 @@ namespace ActsExamples {
 using SimSeedContainer = std::vector<std::vector<Acts::Seed<SimSpacePoint>>>;
 
 /// Struct for the grouped seed index
-struct GroupedSeedIdx {
+struct GroupedSeedIndex {
   /// The region index
   Index regionIdx = 0;
 
@@ -28,6 +28,6 @@ struct GroupedSeedIdx {
 };
 
 /// The track parameters to seed map
-using TrackParametersSeedMap = std::map<Index, GroupedSeedIdx>;
+using TrackParametersSeedMap = std::map<Index, GroupedSeedIndex>;
 
 }  // namespace ActsExamples
