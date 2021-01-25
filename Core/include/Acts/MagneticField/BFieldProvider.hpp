@@ -63,7 +63,7 @@ class SBOCache {
   SBOCache(SBOCache&& other) {
     m_handler = other.m_handler;
     assert(m_handler && "Handler is null");
-    m_handler->move(other.m_data.data(), m_data.data());
+    m_handler->moveConstruct(other.m_data.data(), m_data.data());
   }
 
   SBOCache& operator=(SBOCache&& other) {
@@ -90,21 +90,29 @@ class SBOCache {
   SBOCache(){};
 
   struct HandlerBase {
-    virtual void destroy(void* ptr) = 0;
-    virtual void move(void* from, void* to) = 0;
-    virtual void copy(const void* from, void* to) = 0;
+    virtual void destroy(void* ptr) const = 0;
+    virtual void moveConstruct(void* from, void* to) const = 0;
+    virtual void move(void* from, void* to) const = 0;
+    virtual void copy(const void* from, void* to) const = 0;
     virtual ~HandlerBase() = default;
   };
 
   template <typename T>
   struct Handler final : public HandlerBase {
-    void destroy(void* ptr) override {
+    void destroy(void* ptr) const override {
       assert(ptr != nullptr && "Address to destroy is nullptr");
       T* obj = static_cast<T*>(ptr);
       obj->~T();
     }
 
-    void move(void* from, void* to) override {
+    void moveConstruct(void* from, void* to) const override {
+      assert(from != nullptr && "Source is null");
+      assert(to != nullptr && "Target is null");
+      T* _from = static_cast<T*>(from);
+      /*T* ptr =*/new (to) T(std::move(*_from));
+    }
+
+    void move(void* from, void* to) const override {
       assert(from != nullptr && "Source is null");
       assert(to != nullptr && "Target is null");
 
@@ -114,7 +122,7 @@ class SBOCache {
       (*_to) = std::move(*_from);
     }
 
-    void copy(const void* from, void* to) override {
+    void copy(const void* from, void* to) const override {
       assert(from != nullptr && "Source is null");
       assert(to != nullptr && "Target is null");
 
