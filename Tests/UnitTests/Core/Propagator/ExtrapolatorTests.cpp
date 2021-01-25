@@ -55,7 +55,7 @@ using EigenStepperType = EigenStepper<>;
 using EigenPropagatorType = Propagator<EigenStepperType, Navigator>;
 using Covariance = BoundSymMatrix;
 
-BFieldType bField(0, 0, 2_T);
+auto bField = std::make_shared<BFieldType>(0, 0, 2_T);
 EigenStepperType estepper(bField);
 EigenPropagatorType epropagator(std::move(estepper), std::move(navigator));
 
@@ -273,7 +273,7 @@ BOOST_DATA_TEST_CASE(
   // this test assumes state.options.loopFraction = 0.5
   // maximum momentum allowed
   double pmax = options.pathLimit *
-                bField.getField(start.position(tgContext)).norm() / M_PI;
+                bField->getField(start.position(tgContext)).norm() / M_PI;
   if (p < pmax) {
     BOOST_CHECK_LT(status.pathLength, options.pathLimit);
   } else {

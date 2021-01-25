@@ -47,7 +47,7 @@ inline Propagator makePropagator(double Bz) {
   return Propagator(std::move(stepper));
 }
 
-inline RiddersPropagator makeRiddersPropagator(double bz) {
+inline RiddersPropagator makeRiddersPropagator(double Bz) {
   auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, Bz));
   Stepper stepper(std::move(magField));
   return RiddersPropagator(std::move(stepper));
