@@ -40,18 +40,18 @@ with open(inFileName,'r+') as json_file:
 
         for entry in data['2.Surfaces']['entries']:
 
-            if 'stype' not in entry['value']:
-                entry['value']['stype'] = ''
+            if 'type' not in entry['value']['bounds']:
+                entry['value']['bounds']['type'] = ''
 
             if '_Layer' in entry:  
                 if '__Approach' not in entry:
                     if '__Sensitive' not in entry:
                         for conf in config[str(entry['Volume'])]:
-                            if '_Layer' in conf and conf['_Layer'] == 'X' and conf['value']['stype'] == entry['value']['stype']:
-                                entry['value']['mapMaterial'] = conf['value']['mapMaterial']
+                            if '_Layer' in conf and conf['_Layer'] == 'X' and conf['value']['bounds']['type'] == entry['value']['bounds']['type']:
+                                entry['value']['material']['mapMaterial'] = conf['value']['material']['mapMaterial']
                                 ibin = 0
-                                for bin in entry['value']['binUtility']['binningdata']:                                  
-                                    bin['bins'] = conf['value']['binUtility']['binningdata'][ibin]['bins']
+                                for bin in entry['value']['material']['binUtility']['binningdata']:                                  
+                                    bin['bins'] = conf['value']['material']['binUtility']['binningdata'][ibin]['bins']
                                     ibin = ibin+1
                                 continue
                         continue
@@ -59,11 +59,11 @@ with open(inFileName,'r+') as json_file:
             if '_Boundary' in entry:    
                 if '_Layer' not in entry:
                     for conf in config[str(entry['Volume'])]:
-                        if '_Boundary' in conf and conf['_Boundary'] == 'X' and conf['value']['stype'] == entry['value']['stype']:
-                            entry['value']['mapMaterial'] = conf['value']['mapMaterial']
+                        if '_Boundary' in conf and conf['_Boundary'] == 'X' and conf['value']['bounds']['type'] == entry['value']['bounds']['type']:
+                            entry['value']['material']['mapMaterial'] = conf['value']['material']['mapMaterial']
                             ibin = 0
-                            for bin in entry['value']['binUtility']['binningdata']:
-                                bin['bins'] = conf['value']['binUtility']['binningdata'][ibin]['bins']
+                            for bin in entry['value']['material']['binUtility']['binningdata']:
+                                bin['bins'] = conf['value']['material']['binUtility']['binningdata'][ibin]['bins']
                                 ibin = ibin+1
                             continue
                     continue
@@ -71,11 +71,11 @@ with open(inFileName,'r+') as json_file:
             if '__Approach' in entry:
                 if '__Sensitive' not in entry:
                     for conf in config[str(entry['Volume'])]:
-                        if '__Approach' in conf and conf['__Approach'] == entry['__Approach'] and conf['value']['stype'] == entry['value']['stype']:
-                            entry['value']['mapMaterial'] = conf['value']['mapMaterial']
+                        if '__Approach' in conf and conf['__Approach'] == entry['__Approach'] and conf['value']['bounds']['type'] == entry['value']['bounds']['type']:
+                            entry['value']['material']['mapMaterial'] = conf['value']['material']['mapMaterial']
                             ibin = 0
-                            for bin in entry['value']['binUtility']['binningdata']:
-                                bin['bins'] = conf['value']['binUtility']['binningdata'][ibin]['bins']
+                            for bin in entry['value']['material']['binUtility']['binningdata']:
+                                bin['bins'] = conf['value']['material']['binUtility']['binningdata'][ibin]['bins']
                                 ibin = ibin+1
                             continue
                     continue
@@ -83,11 +83,11 @@ with open(inFileName,'r+') as json_file:
             if '__Sensitive' in entry:  
                 if '__Approach' not in entry:
                     for conf in config[str(entry['Volume'])]:
-                        if '__Sensitive' in conf and conf['__Sensitive'] == 'X' and conf['_Layer'] == entry['_Layer'] and conf['value']['stype'] == entry['value']['stype']:
+                        if '__Sensitive' in conf and conf['__Sensitive'] == 'X' and conf['_Layer'] == entry['_Layer'] and conf['value']['bounds']['type'] == entry['value']['bounds']['type']:
                             entry['value']['mapMaterial'] = conf['value']['mapMaterial']
                             ibin = 0
-                            for bin in entry['value']['binUtility']['binningdata']:
-                                bin['bins'] = conf['value']['binUtility']['binningdata'][ibin]['bins']
+                            for bin in entry['value']['material']['binUtility']['binningdata']:
+                                bin['bins'] = conf['value']['material']['binUtility']['binningdata'][ibin]['bins']
                                 ibin = ibin+1
                             continue
                     continue  

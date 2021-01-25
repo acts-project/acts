@@ -16,13 +16,12 @@
 
 #include <nlohmann/json.hpp>
 
-namespace {
-using volumeMaterialPointer = const Acts::IVolumeMaterial*;
-using surfaceMaterialPointer = const Acts::ISurfaceMaterial*;
-}  // namespace
 // Custom Json encoder/decoders. Naming is mandated by nlohman::json and thus
 // can not match our naming guidelines.
 namespace Acts {
+
+using volumeMaterialPointer = const Acts::IVolumeMaterial*;
+using surfaceMaterialPointer = const Acts::ISurfaceMaterial*;
 
 void to_json(nlohmann::json& j, const Material& t);
 

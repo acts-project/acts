@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
@@ -25,6 +26,17 @@
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
+#include "Acts/Plugins/Json/MaterialJsonConverter.hpp"
+
+void Acts::to_json(nlohmann::json& j, const Acts::SurfaceAndMaterial& surface) {
+  to_json(j, surface.first);
+  to_json(j, surface.second.get());
+}
+
+void Acts::to_json(nlohmann::json& j, const Acts::SurfacePointer& surface) {
+  to_json(j, *surface);
+}
+
 void Acts::to_json(nlohmann::json& j, const Acts::Surface& surface) {
   Acts::GeometryContext gctx;
   toJson(j, surface, gctx);
@@ -40,9 +52,10 @@ void Acts::toJson(nlohmann::json& j, const Acts::Surface& surface,
   j["transform"] = trfj;
   j["type"] = surfaceTypes[surface.type()];
   j["geo_id"] = surface.geometryId().value();
-  // @todo add SurfaceMaterial converter when available
+  if(surface.surfaceMaterial() != nullptr){
+    j["material"] = nlohmann::json(surface.surfaceMaterial());
+  }
 }
-
 std::shared_ptr<Acts::Surface> Acts::surfaceFromJson(const nlohmann::json& j) {
   std::string sType = j["type"];
   std::string bType = j["bounds"]["type"];
@@ -87,11 +100,13 @@ std::shared_ptr<Acts::Surface> Acts::surfaceFromJson(const nlohmann::json& j) {
   if (mutableSf != nullptr) {
     GeometryIdentifier geoID(j["geo_id"]);
     mutableSf->assignGeometryId(geoID);
-    // @todo add material
-    // if (j.find("material") != j.end() and not j["material"].empty()) {
-    //
-    // }
+    // Add material
+    if (j.find("material") != j.end() and not j["material"].empty()) {
+      const Acts::ISurfaceMaterial* surfaceMaterial;
+      from_json(j, surfaceMaterial);
+      std::shared_ptr<const ISurfaceMaterial> sharedSurfaceMaterial(surfaceMaterial);
+      mutableSf->assignSurfaceMaterial(sharedSurfaceMaterial);
+    }
   }
-
   return mutableSf;
 }

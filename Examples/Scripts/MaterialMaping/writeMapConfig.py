@@ -19,6 +19,8 @@ import sys
 def getSurfaceMateral(mat):
     outputmat = {}
     value = {}
+    material = {}
+    bound = {}
     outputmat['Volume'] = mat['Volume']
     if '_Boundary' in mat:
         outputmat['_Boundary'] = 'X'
@@ -31,9 +33,11 @@ def getSurfaceMateral(mat):
     if '__Sensitive' in mat:
         outputmat['_Layer'] = mat['_Layer']
         outputmat['__Sensitive'] = 'X'
-    value['binUtility'] = mat['value']['binUtility']
-    value['mapMaterial'] = False
-    value['stype'] = mat['value']['stype']
+    material['binUtility'] = mat['value']['material']['binUtility']
+    material['mapMaterial'] = False
+    bound['type'] = mat['value']['bounds']['type']
+    value['material'] = material
+    value['bounds'] = bound
     outputmat['value'] = value
     return outputmat
 
@@ -64,22 +68,22 @@ with open(inFileName,'r') as json_file:
             typeSensitive = []
             listLayer = []
 
-        if 'stype' not in entry['value']:
-            entry['value']['stype'] = ''
+        if 'type' not in entry['value']['bounds']:
+            entry['value']['bounds']['type'] = ''
 
         if '_Layer' in entry:  
             if '__Approach' not in entry:
                 if '__Sensitive' not in entry:
-                    if entry['value']['stype'] not in typeLayer:
-                        typeLayer.append(entry['value']['stype'])
+                    if entry['value']['bounds']['type'] not in typeLayer:
+                        typeLayer.append(entry['value']['bounds']['type'])
                         surface = getSurfaceMateral(entry)
                         vconfig.append(surface)
                         continue
 
         if '_Boundary' in entry:    
             if '_Layer' not in entry:
-                if entry['value']['stype'] not in typeBoundary:
-                    typeBoundary.append(entry['value']['stype'])
+                if entry['value']['bounds']['type'] not in typeBoundary:
+                    typeBoundary.append(entry['value']['bounds']['type'])
                     surface = getSurfaceMateral(entry)
                     vconfig.append(surface)
                     continue         
@@ -99,10 +103,10 @@ with open(inFileName,'r') as json_file:
 
         if '__Sensitive' in entry:  
             if '__Approach' not in entry:
-                if entry['value']['stype'] not in typeSensitive:
+                if entry['value']['bounds']['type'] not in typeSensitive:
                     if entry['_Layer'] not in listLayer:
                         listLayer.append(entry['_Layer'])
-                        typeSensitive.append(entry['value']['stype'])
+                        typeSensitive.append(entry['value']['bounds']['type'])
                         surface = getSurfaceMateral(entry)
                         vconfig.append(surface)
                         continue

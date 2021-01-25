@@ -21,22 +21,16 @@ struct jsonKey {
   std::string namekey = "Name";
   /// The bin key
   std::string binkey = "binUtility";
+  /// The material key
+  std::string materialkey = "material";
   /// The local to global transformation key
   std::string transfokeys = "transformation";
   /// The type key -> proto, else
   std::string typekey = "type";
   /// The data key
   std::string datakey = "data";
-  /// The geoid key
-  std::string geometryidkey = "Geoid";
   /// The mapping key, add surface to mapping procedure if true
   std::string mapkey = "mapMaterial";
-  /// The surface type key
-  std::string surfacetypekey = "stype";
-  /// The surface position key
-  std::string surfacepositionkey = "sposition";
-  /// The surface range key
-  std::string surfacerangekey = "srange";
 };
 
 }  // namespace Acts

@@ -19,11 +19,6 @@
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
-namespace {
-using volumeMaterialPointer = const Acts::IVolumeMaterial*;
-using surfaceMaterialPointer = const Acts::ISurfaceMaterial*;
-}  // namespace
-
 void Acts::to_json(nlohmann::json& j, const Material& t) {
   if (!t) {
     return;
@@ -71,27 +66,29 @@ void Acts::from_json(const nlohmann::json& j, MaterialSlabMatrix& t) {
 }
 
 void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
+  nlohmann::json jMaterial;
   // A bin utility needs to be written
   const Acts::BinUtility* bUtility = nullptr;
   // Check if we have a proto material
   auto psMaterial = dynamic_cast<const Acts::ProtoSurfaceMaterial*>(material);
   if (psMaterial != nullptr) {
     // Type is proto material
-    j[Acts::jsonKey().typekey] = "proto";
+    jMaterial[Acts::jsonKey().typekey] = "proto";
     // by default the protoMaterial is not used for mapping
-    j[Acts::jsonKey().mapkey] = false;
+    jMaterial[Acts::jsonKey().mapkey] = false;
     // write the bin utility
     bUtility = &(psMaterial->binUtility());
     // Check in the number of bin is different from 1
     auto& binningData = bUtility->binningData();
     for (size_t ibin = 0; ibin < binningData.size(); ++ibin) {
       if (binningData[ibin].bins() > 1) {
-        j[Acts::jsonKey().mapkey] = true;
+        jMaterial[Acts::jsonKey().mapkey] = true;
         break;
       }
     }
     nlohmann::json jBin(*bUtility);
-    j[Acts::jsonKey().binkey] = jBin;
+    jMaterial[Acts::jsonKey().binkey] = jBin;
+    j[Acts::jsonKey().materialkey] = jMaterial;
     return;
   }
   // Now check if we have a homogeneous material
@@ -99,23 +96,23 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
       dynamic_cast<const Acts::HomogeneousSurfaceMaterial*>(material);
   if (hsMaterial != nullptr) {
     // type is homogeneous
-    j[Acts::jsonKey().typekey] = "homogeneous";
-    j[Acts::jsonKey().mapkey] = true;
+    jMaterial[Acts::jsonKey().typekey] = "homogeneous";
+    jMaterial[Acts::jsonKey().mapkey] = true;
     nlohmann::json jmat(hsMaterial->materialSlab(0, 0));
-    j[Acts::jsonKey().datakey] = nlohmann::json::array({
+    jMaterial[Acts::jsonKey().datakey] = nlohmann::json::array({
         nlohmann::json::array({
             jmat,
         }),
     });
-    // write the bin utility
+    j[Acts::jsonKey().materialkey] = jMaterial;
     return;
   }
   // Only option remaining: BinnedSurface material
   auto bsMaterial = dynamic_cast<const Acts::BinnedSurfaceMaterial*>(material);
   if (bsMaterial != nullptr) {
     // type is binned
-    j[Acts::jsonKey().typekey] = "binned";
-    j[Acts::jsonKey().mapkey] = true;
+    jMaterial[Acts::jsonKey().typekey] = "binned";
+    jMaterial[Acts::jsonKey().mapkey] = true;
     bUtility = &(bsMaterial->binUtility());
     // convert the data
     // get the material matrix
@@ -128,10 +125,11 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
       }
       mmat.push_back(std::move(mvec));
     }
-    j[Acts::jsonKey().datakey] = std::move(mmat);
+    jMaterial[Acts::jsonKey().datakey] = std::move(mmat);
     // write the bin utility
     nlohmann::json jBin(*bUtility);
-    j[Acts::jsonKey().binkey] = jBin;
+    jMaterial[Acts::jsonKey().binkey] = jBin;
+    j[Acts::jsonKey().materialkey] = jMaterial;
     return;
   }
   // No material the json object is left empty.
@@ -140,15 +138,19 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
 
 void Acts::from_json(const nlohmann::json& j,
                      surfaceMaterialPointer& material) {
+  if(j.find(Acts::jsonKey().materialkey) == j.end()){
+    return;
+  }
+  nlohmann::json jMaterial = j[Acts::jsonKey().materialkey];
   // By default no material is return.
   material = nullptr;
-  if (j[Acts::jsonKey().mapkey] == false) {
+  if (jMaterial[Acts::jsonKey().mapkey] == false) {
     return;
   }
   // The bin utility and material
   Acts::BinUtility bUtility;
   Acts::MaterialSlabMatrix mpMatrix;
-  for (auto& [key, value] : j.items()) {
+  for (auto& [key, value] : jMaterial.items()) {
     if (key == Acts::jsonKey().binkey and not value.empty()) {
       from_json(value, bUtility);
     }
@@ -167,27 +169,29 @@ void Acts::from_json(const nlohmann::json& j,
 }
 
 void Acts::to_json(nlohmann::json& j, const volumeMaterialPointer& material) {
+  nlohmann::json jMaterial;
   // A bin utility needs to be written
   const Acts::BinUtility* bUtility = nullptr;
   // Check if we have a proto material
   auto pvMaterial = dynamic_cast<const Acts::ProtoVolumeMaterial*>(material);
   if (pvMaterial != nullptr) {
     // Type is proto material
-    j[Acts::jsonKey().typekey] = "proto";
+    jMaterial[Acts::jsonKey().typekey] = "proto";
     // By default the protoMaterial is not used for mapping
-    j[Acts::jsonKey().mapkey] = false;
+    jMaterial[Acts::jsonKey().mapkey] = false;
     bUtility = &(pvMaterial->binUtility());
     // Check in the number of bin is different from 1
     auto& binningData = bUtility->binningData();
     for (size_t ibin = 0; ibin < binningData.size(); ++ibin) {
       if (binningData[ibin].bins() > 1) {
-        j[Acts::jsonKey().mapkey] = true;
+        jMaterial[Acts::jsonKey().mapkey] = true;
         break;
       }
     }
     // Write the bin utility
     nlohmann::json jBin(*bUtility);
-    j[Acts::jsonKey().binkey] = jBin;
+    jMaterial[Acts::jsonKey().binkey] = jBin;
+    j[Acts::jsonKey().materialkey] = jMaterial;
     return;
   }
   // Now check if we have a homogeneous material
@@ -195,13 +199,14 @@ void Acts::to_json(nlohmann::json& j, const volumeMaterialPointer& material) {
       dynamic_cast<const Acts::HomogeneousVolumeMaterial*>(material);
   if (hvMaterial != nullptr) {
     // type is homogeneous
-    j[Acts::jsonKey().typekey] = "homogeneous";
-    j[Acts::jsonKey().mapkey] = true;
+    jMaterial[Acts::jsonKey().typekey] = "homogeneous";
+    jMaterial[Acts::jsonKey().mapkey] = true;
     // array of encoded materials w/ one entry
     nlohmann::json jmat(hvMaterial->material({0, 0, 0}));
-    j[Acts::jsonKey().datakey] = nlohmann::json::array({
+    jMaterial[Acts::jsonKey().datakey] = nlohmann::json::array({
         jmat,
     });
+    j[Acts::jsonKey().materialkey] = jMaterial;
     return;
   }
   // Only option remaining: material map
@@ -210,8 +215,8 @@ void Acts::to_json(nlohmann::json& j, const volumeMaterialPointer& material) {
   // Now check if we have a 2D map
   if (bvMaterial2D != nullptr) {
     // type is binned
-    j[Acts::jsonKey().typekey] = "interpolated2D";
-    j[Acts::jsonKey().mapkey] = true;
+    jMaterial[Acts::jsonKey().typekey] = "interpolated2D";
+    jMaterial[Acts::jsonKey().mapkey] = true;
     bUtility = &(bvMaterial2D->binUtility());
     // convert the data
     nlohmann::json mmat = nlohmann::json::array();
@@ -220,10 +225,11 @@ void Acts::to_json(nlohmann::json& j, const volumeMaterialPointer& material) {
       nlohmann::json jmat(Material(grid.at(bin)));
       mmat.push_back(jmat);
     }
-    j[Acts::jsonKey().datakey] = std::move(mmat);
+    jMaterial[Acts::jsonKey().datakey] = std::move(mmat);
     // Write the bin utility
     nlohmann::json jBin(*bUtility);
-    j[Acts::jsonKey().binkey] = jBin;
+    jMaterial[Acts::jsonKey().binkey] = jBin;
+    j[Acts::jsonKey().materialkey] = jMaterial;
     return;
   }
   // Only option remaining: material map
@@ -232,8 +238,8 @@ void Acts::to_json(nlohmann::json& j, const volumeMaterialPointer& material) {
   // Now check if we have a 3D map
   if (bvMaterial3D != nullptr) {
     // type is binned
-    j[Acts::jsonKey().typekey] = "interpolated3D";
-    j[Acts::jsonKey().mapkey] = true;
+    jMaterial[Acts::jsonKey().typekey] = "interpolated3D";
+    jMaterial[Acts::jsonKey().mapkey] = true;
     bUtility = &(bvMaterial3D->binUtility());
     // convert the data
     nlohmann::json mmat = nlohmann::json::array();
@@ -242,24 +248,29 @@ void Acts::to_json(nlohmann::json& j, const volumeMaterialPointer& material) {
       nlohmann::json jmat(Material(grid.at(bin)));
       mmat.push_back(jmat);
     }
-    j[Acts::jsonKey().datakey] = std::move(mmat);
+    jMaterial[Acts::jsonKey().datakey] = std::move(mmat);
     // Write the bin utility
     nlohmann::json jBin(*bUtility);
-    j[Acts::jsonKey().binkey] = jBin;
+    jMaterial[Acts::jsonKey().binkey] = jBin;
+    j[Acts::jsonKey().materialkey] = jMaterial;
     return;
   }
 }
 
 void Acts::from_json(const nlohmann::json& j, volumeMaterialPointer& material) {
+  if(j.find(Acts::jsonKey().materialkey) == j.end()){
+    return;
+  }
+  nlohmann::json jMaterial = j[Acts::jsonKey().materialkey];
   // By default no material is return.
   material = nullptr;
-  if (j[Acts::jsonKey().mapkey] == false) {
+  if (jMaterial[Acts::jsonKey().mapkey] == false) {
     return;
   }
   // The bin utility and material
   Acts::BinUtility bUtility;
   std::vector<Acts::Material> mmat;
-  for (auto& [key, value] : j.items()) {
+  for (auto& [key, value] : jMaterial.items()) {
     if (key == Acts::jsonKey().binkey and not value.empty()) {
       from_json(value, bUtility);
     }

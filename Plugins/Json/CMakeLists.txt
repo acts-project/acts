@@ -4,9 +4,9 @@ add_library(
   src/AlgebraJsonConverter.cpp
   src/MaterialJsonConverter.cpp
   src/SurfaceBoundsJsonConverter.cpp
-  src/TrackingGeometryJsonConverter.cpp
   src/SurfaceJsonConverter.cpp
-  src/UtilitiesJsonConverter.cpp)
+  src/UtilitiesJsonConverter.cpp
+  src/VolumeJsonConverter.cpp)
 target_include_directories(
   ActsPluginJson
   PUBLIC
