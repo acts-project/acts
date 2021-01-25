@@ -19,6 +19,7 @@ namespace ActsExamples {
 using SimSeedContainer = std::vector<std::vector<Acts::Seed<SimSpacePoint>>>;
 
 /// Struct for the grouped seed index
+// @todo This might not be necessary if storing the seed as a ProtoTrack
 struct GroupedSeedIndex {
   /// The region index
   Index regionIdx = 0;

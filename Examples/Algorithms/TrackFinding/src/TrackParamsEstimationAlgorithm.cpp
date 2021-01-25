@@ -57,6 +57,8 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
+  // @todo storing the seed as a ProtoTrack in the SeedingAlgorithm. The input
+  // will be ProtoTrackContainer then.
   const auto& seeds = ctx.eventStore.get<SimSeedContainer>(m_cfg.inputSeeds);
   // need source links to get the geometry identifer
   const auto& sourceLinks =
