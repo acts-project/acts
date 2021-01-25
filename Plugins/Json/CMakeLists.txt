@@ -5,6 +5,7 @@ add_library(
   src/MaterialJsonConverter.cpp
   src/SurfaceBoundsJsonConverter.cpp
   src/TrackingGeometryJsonConverter.cpp
+  src/SurfaceJsonConverter.cpp
   src/UtilitiesJsonConverter.cpp)
 target_include_directories(
   ActsPluginJson
