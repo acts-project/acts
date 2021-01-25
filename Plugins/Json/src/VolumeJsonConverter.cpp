@@ -8,15 +8,17 @@
 
 #include "Acts/Plugins/Json/VolumeJsonConverter.hpp"
 
-#include "Acts/Plugins/Json/MaterialJsonConverter.hpp"
 #include "Acts/Plugins/Json/GeometryJsonKeys.hpp"
+#include "Acts/Plugins/Json/MaterialJsonConverter.hpp"
 
-void Acts::to_json(nlohmann::json& j, const Acts::TrackingVolumeAndMaterial& volume) {
+void Acts::to_json(nlohmann::json& j,
+                   const Acts::TrackingVolumeAndMaterial& volume) {
   to_json(j, volume.first);
   to_json(j, volume.second.get());
 }
 
-void Acts::to_json(nlohmann::json& j, const Acts::TrackingVolumePointer& volume) {
+void Acts::to_json(nlohmann::json& j,
+                   const Acts::TrackingVolumePointer& volume) {
   to_json(j, *volume);
 }
 

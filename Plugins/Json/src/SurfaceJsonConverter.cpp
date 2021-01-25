@@ -9,6 +9,7 @@
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 
 #include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Plugins/Json/MaterialJsonConverter.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
@@ -25,8 +26,6 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-
-#include "Acts/Plugins/Json/MaterialJsonConverter.hpp"
 
 void Acts::to_json(nlohmann::json& j, const Acts::SurfaceAndMaterial& surface) {
   to_json(j, surface.first);
@@ -52,7 +51,7 @@ void Acts::toJson(nlohmann::json& j, const Acts::Surface& surface,
   j["transform"] = trfj;
   j["type"] = surfaceTypes[surface.type()];
   j["geo_id"] = surface.geometryId().value();
-  if(surface.surfaceMaterial() != nullptr){
+  if (surface.surfaceMaterial() != nullptr) {
     j["material"] = nlohmann::json(surface.surfaceMaterial());
   }
 }
@@ -104,7 +103,8 @@ std::shared_ptr<Acts::Surface> Acts::surfaceFromJson(const nlohmann::json& j) {
     if (j.find("material") != j.end() and not j["material"].empty()) {
       const Acts::ISurfaceMaterial* surfaceMaterial;
       from_json(j, surfaceMaterial);
-      std::shared_ptr<const ISurfaceMaterial> sharedSurfaceMaterial(surfaceMaterial);
+      std::shared_ptr<const ISurfaceMaterial> sharedSurfaceMaterial(
+          surfaceMaterial);
       mutableSf->assignSurfaceMaterial(sharedSurfaceMaterial);
     }
   }

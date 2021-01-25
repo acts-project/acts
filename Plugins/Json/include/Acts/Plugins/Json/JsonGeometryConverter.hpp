@@ -22,8 +22,12 @@
 
 namespace Acts {
 
-using SurfaceAndMaterial = std::pair<const Acts::Surface*, std::shared_ptr<const Acts::ISurfaceMaterial>>;
-using TrackingVolumeAndMaterial = std::pair<const Acts::TrackingVolume*, std::shared_ptr<const Acts::IVolumeMaterial>>;
+using SurfaceAndMaterial =
+    std::pair<const Acts::Surface*,
+              std::shared_ptr<const Acts::ISurfaceMaterial>>;
+using TrackingVolumeAndMaterial =
+    std::pair<const Acts::TrackingVolume*,
+              std::shared_ptr<const Acts::IVolumeMaterial>>;
 
 /// @class JsonGeometryConverter
 ///
@@ -103,8 +107,8 @@ class JsonGeometryConverter {
   /// @param surfaceHierarchy is a vector of surfaces to be filled
   /// @param tVolume is a volume
   void convertToHierarchy(
-      std::vector<std::pair<GeometryIdentifier, Acts::TrackingVolumeAndMaterial>>&
-          volumeHierarchy,
+      std::vector<std::pair<GeometryIdentifier,
+                            Acts::TrackingVolumeAndMaterial>>& volumeHierarchy,
       std::vector<std::pair<GeometryIdentifier, Acts::SurfaceAndMaterial>>&
           surfaceHierarchy,
       const Acts::TrackingVolume* tVolume);
@@ -128,7 +132,8 @@ class JsonGeometryConverter {
   Acts::GeometryHierarchyMapJsonConverter<const ISurfaceMaterial*>
       m_surfaceMaterialConverter;
   /// Geometry hierarchy writer for surface.
-  Acts::GeometryHierarchyMapJsonConverter<Acts::SurfaceAndMaterial> m_surfaceConverter;
+  Acts::GeometryHierarchyMapJsonConverter<Acts::SurfaceAndMaterial>
+      m_surfaceConverter;
 
   /// Private access to the logging instance
   const Logger& logger() const { return *m_cfg.logger; }

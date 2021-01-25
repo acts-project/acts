@@ -23,7 +23,9 @@
 namespace Acts {
 
 using SurfacePointer = const Acts::Surface*;
-using SurfaceAndMaterial = std::pair<const Acts::Surface*, std::shared_ptr<const Acts::ISurfaceMaterial>>;
+using SurfaceAndMaterial =
+    std::pair<const Acts::Surface*,
+              std::shared_ptr<const Acts::ISurfaceMaterial>>;
 
 static std::vector<std::string> surfaceTypes = {
     "ConeSurface",  "CylinderSurface", "DiscSurface",       "PerigeeSurface",

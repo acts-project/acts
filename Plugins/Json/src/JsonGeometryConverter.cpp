@@ -8,27 +8,28 @@
 
 #include "Acts/Plugins/Json/JsonGeometryConverter.hpp"
 
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
+#include "Acts/Plugins/Json/MaterialJsonConverter.hpp"
+#include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
+#include "Acts/Plugins/Json/VolumeJsonConverter.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 #include <Acts/Surfaces/AnnulusBounds.hpp>
 #include <Acts/Surfaces/CylinderBounds.hpp>
 #include <Acts/Surfaces/RadialBounds.hpp>
 #include <Acts/Surfaces/SurfaceBounds.hpp>
-#include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Plugins/Json/MaterialJsonConverter.hpp"
-#include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
-#include "Acts/Plugins/Json/VolumeJsonConverter.hpp"
+
 #include <map>
 
 namespace {
 
 Acts::SurfaceAndMaterial defaultSurfaceMaterial(const Acts::Surface* surface) {
-  if(surface->surfaceMaterialSharedPtr() != nullptr){
+  if (surface->surfaceMaterialSharedPtr() != nullptr) {
     return {surface, surface->surfaceMaterialSharedPtr()};
   }
   Acts::BinUtility bUtility;
@@ -96,9 +97,10 @@ Acts::SurfaceAndMaterial defaultSurfaceMaterial(const Acts::Surface* surface) {
   return {surface, std::make_shared<Acts::ProtoSurfaceMaterial>(bUtility)};
 }
 
-Acts::TrackingVolumeAndMaterial defaultVolumeMaterial(const Acts::TrackingVolume* volume) {
+Acts::TrackingVolumeAndMaterial defaultVolumeMaterial(
+    const Acts::TrackingVolume* volume) {
   Acts::BinUtility bUtility;
-  if(volume->volumeMaterialSharedPtr() != nullptr){
+  if (volume->volumeMaterialSharedPtr() != nullptr) {
     return {volume, volume->volumeMaterialSharedPtr()};
   }
   // Check which type of bound is associated to the volume
@@ -154,8 +156,6 @@ Acts::TrackingVolumeAndMaterial defaultVolumeMaterial(const Acts::TrackingVolume
   return {volume, std::make_shared<Acts::ProtoVolumeMaterial>(bUtility)};
 }
 }  // namespace
-
-
 
 Acts::JsonGeometryConverter::JsonGeometryConverter(
     const Acts::JsonGeometryConverter::Config& cfg)
@@ -233,13 +233,15 @@ nlohmann::json Acts::JsonGeometryConverter::trackingGeometryToJson(
     const Acts::TrackingGeometry& tGeometry) {
   std::vector<std::pair<GeometryIdentifier, Acts::TrackingVolumeAndMaterial>>
       volumeHierarchy;
-  std::vector<std::pair<GeometryIdentifier, Acts::SurfaceAndMaterial>> surfaceHierarchy;
+  std::vector<std::pair<GeometryIdentifier, Acts::SurfaceAndMaterial>>
+      surfaceHierarchy;
   convertToHierarchy(volumeHierarchy, surfaceHierarchy,
                      tGeometry.highestTrackingVolume());
   GeometryHierarchyMap<Acts::TrackingVolumeAndMaterial> HierarchyVolumeMap(
       volumeHierarchy);
   nlohmann::json jsonVolumes = m_volumeConverter.toJson(HierarchyVolumeMap);
-  GeometryHierarchyMap<Acts::SurfaceAndMaterial> HierarchySurfaceMap(surfaceHierarchy);
+  GeometryHierarchyMap<Acts::SurfaceAndMaterial> HierarchySurfaceMap(
+      surfaceHierarchy);
   nlohmann::json jsonSurfaces = m_surfaceConverter.toJson(HierarchySurfaceMap);
   nlohmann::json hierarchyMap;
   hierarchyMap["1.Volumes"] = jsonVolumes;
@@ -256,7 +258,8 @@ void Acts::JsonGeometryConverter::convertToHierarchy(
   if ((tVolume->volumeMaterial() != nullptr ||
        m_cfg.processNonMaterial == true) &&
       m_cfg.processVolumes == true) {
-    volumeHierarchy.push_back({tVolume->geometryId(), defaultVolumeMaterial(tVolume)});
+    volumeHierarchy.push_back(
+        {tVolume->geometryId(), defaultVolumeMaterial(tVolume)});
   }
   // there are confined volumes
   if (tVolume->confinedVolumes() != nullptr) {
@@ -286,7 +289,8 @@ void Acts::JsonGeometryConverter::convertToHierarchy(
         if ((layRep.surfaceMaterial() != nullptr ||
              m_cfg.processNonMaterial == true) &&
             layRep.geometryId() != GeometryIdentifier()) {
-          surfaceHierarchy.push_back({layRep.geometryId(), defaultSurfaceMaterial(&layRep)});
+          surfaceHierarchy.push_back(
+              {layRep.geometryId(), defaultSurfaceMaterial(&layRep)});
         }
       }
       if (lay->approachDescriptor() != nullptr &&
@@ -294,7 +298,8 @@ void Acts::JsonGeometryConverter::convertToHierarchy(
         for (auto& asf : lay->approachDescriptor()->containedSurfaces()) {
           if (asf->surfaceMaterial() != nullptr ||
               m_cfg.processNonMaterial == true) {
-            surfaceHierarchy.push_back({asf->geometryId(), defaultSurfaceMaterial(asf)});
+            surfaceHierarchy.push_back(
+                {asf->geometryId(), defaultSurfaceMaterial(asf)});
           }
         }
       }
@@ -302,7 +307,8 @@ void Acts::JsonGeometryConverter::convertToHierarchy(
         for (auto& ssf : lay->surfaceArray()->surfaces()) {
           if (ssf->surfaceMaterial() != nullptr ||
               m_cfg.processNonMaterial == true) {
-            surfaceHierarchy.push_back({ssf->geometryId(), defaultSurfaceMaterial(ssf)});
+            surfaceHierarchy.push_back(
+                {ssf->geometryId(), defaultSurfaceMaterial(ssf)});
           }
         }
       }
@@ -316,7 +322,8 @@ void Acts::JsonGeometryConverter::convertToHierarchy(
         m_cfg.processBoundaries == true) {
       if (bssfRep.surfaceMaterial() != nullptr ||
           m_cfg.processNonMaterial == true) {
-        surfaceHierarchy.push_back({bssfRep.geometryId(), defaultSurfaceMaterial(&bssfRep)});
+        surfaceHierarchy.push_back(
+            {bssfRep.geometryId(), defaultSurfaceMaterial(&bssfRep)});
       }
     }
   }

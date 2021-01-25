@@ -138,7 +138,7 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
 
 void Acts::from_json(const nlohmann::json& j,
                      surfaceMaterialPointer& material) {
-  if(j.find(Acts::jsonKey().materialkey) == j.end()){
+  if (j.find(Acts::jsonKey().materialkey) == j.end()) {
     return;
   }
   nlohmann::json jMaterial = j[Acts::jsonKey().materialkey];
@@ -258,7 +258,7 @@ void Acts::to_json(nlohmann::json& j, const volumeMaterialPointer& material) {
 }
 
 void Acts::from_json(const nlohmann::json& j, volumeMaterialPointer& material) {
-  if(j.find(Acts::jsonKey().materialkey) == j.end()){
+  if (j.find(Acts::jsonKey().materialkey) == j.end()) {
     return;
   }
   nlohmann::json jMaterial = j[Acts::jsonKey().materialkey];
