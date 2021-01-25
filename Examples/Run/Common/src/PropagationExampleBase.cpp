@@ -83,8 +83,6 @@ int propagationExample(int argc, char* argv[],
         auto fieldMap =
             std::make_shared<Acts::SharedBField<field_type>>(bField);
 
-        using field_map_type = Acts::SharedBField<field_type>;
-
         std::optional<std::variant<Acts::EigenStepper<>, Acts::AtlasStepper,
                                    Acts::StraightLineStepper>>
             var_stepper;
