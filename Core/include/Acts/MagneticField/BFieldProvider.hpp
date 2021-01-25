@@ -76,7 +76,7 @@ class SBOCache {
   SBOCache(const SBOCache& other) {
     m_handler = other.m_handler;
     assert(m_handler && "Handler is null");
-    m_handler->copy(other.m_data.data(), m_data.data());
+    m_handler->copyConstruct(other.m_data.data(), m_data.data());
   };
 
   SBOCache& operator=(const SBOCache& other) {
@@ -94,6 +94,7 @@ class SBOCache {
     virtual void moveConstruct(void* from, void* to) const = 0;
     virtual void move(void* from, void* to) const = 0;
     virtual void copy(const void* from, void* to) const = 0;
+    virtual void copyConstruct(const void* from, void* to) const = 0;
     virtual ~HandlerBase() = default;
   };
 
@@ -130,6 +131,13 @@ class SBOCache {
       T* _to = static_cast<T*>(to);
 
       (*_to) = (*_from);
+    }
+
+    void copyConstruct(const void* from, void* to) const override {
+      assert(from != nullptr && "Source is null");
+      assert(to != nullptr && "Target is null");
+      const T* _from = static_cast<const T*>(from);
+      /*T* ptr =*/new (to) T(*_from);
     }
   };
 
