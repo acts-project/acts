@@ -81,26 +81,26 @@ struct NuclearInteraction {
         if (particle.pathInL0() >= particle.pathLimitL0()) {
           std::normal_distribution<double> normalDistribution{0., 1.};
           // Dice the interaction type
-          const bool softInteraction =
+          const bool interactSoft =
               softInteraction(normalDistribution(generator),
                               parametrisation.softInteractionProbability);
 
           // Get the final state multiplicity
           const unsigned int multiplicity = finalStateMultiplicity(
               uniformDistribution(generator),
-              softInteraction ? parametrisation.softMultiplicity
+              interactSoft ? parametrisation.softMultiplicity
                               : parametrisation.hardMultiplicity);
 
           // Get the particle types
           const std::vector<int> pdgIds =
               samplePdgIds(generator, parametrisation.pdgMap, multiplicity,
-                           particle.pdg(), softInteraction);
+                           particle.pdg(), interactSoft);
 
           // Get the multiplicity
           const std::vector<
               detail::Parameters::ParametersWithFixedMultiplicity>&
               parametrisationOfType =
-                  softInteraction ? parametrisation.softKinematicParameters
+                  interactSoft ? parametrisation.softKinematicParameters
                                   : parametrisation.hardKinematicParameters;
           const detail::Parameters::ParametersWithFixedMultiplicity&
               parametrisationOfMultiplicity =
@@ -109,15 +109,15 @@ struct NuclearInteraction {
           // Get the kinematics
           const auto kinematics = sampleKinematics(
               generator, parametrisationOfMultiplicity,
-              parametrisation.momentum, multiplicity, softInteraction);
+              parametrisation.momentum);
 
           // Construct the particles
           const auto particles = convertParametersToParticles(
               generator, pdgIds, kinematics.first, kinematics.second, particle,
-              softInteraction);
+              interactSoft);
 
           // Kill the particle in a hard process
-          if (!softInteraction)
+          if (!interactSoft)
             particle.setAbsoluteMomentum(0);
 
           return particles;
@@ -127,6 +127,7 @@ struct NuclearInteraction {
         return {};
       }
     }
+    return {};
   }
 
  private:
@@ -223,15 +224,13 @@ struct NuclearInteraction {
   /// @param [in, out] The random number generator
   /// @param [in] parameters The parametrisation
   /// @param [in] momentum The momentum of the parametrisation
-  /// @param [in] multiplicity The final state multiplicity
-  /// @param [in] soft Treat it as soft or hard nuclear interaction
   ///
   /// @return The final state momenta and invariant masses
   template <typename generator_t>
   std::pair<Acts::ActsDynamicVector, Acts::ActsDynamicVector> sampleKinematics(
       generator_t& generator,
       const detail::Parameters::ParametersWithFixedMultiplicity& parameters,
-      float momentum, unsigned int multiplicity, bool soft) const;
+      float momentum) const;
 
   /// @brief Converts relative angles to absolute angles wrt the global
   /// coordinate system.
@@ -363,7 +362,7 @@ Acts::ActsDynamicVector NuclearInteraction::sampleInvariantMasses(
   // Sample in the eigenspace
   for (unsigned int i = 0; i < size; i++) {
     float variance = parametrisation.eigenvaluesInvariantMass[i];
-    std::normal_distribution<float> dist{parametrisation.meanInvariantMass[i],
+    std::normal_distribution<Acts::ActsScalar> dist{parametrisation.meanInvariantMass[i],
                                          sqrtf(variance)};
     parameters[i] = dist(generator);
   }
@@ -392,7 +391,7 @@ Acts::ActsDynamicVector NuclearInteraction::sampleMomenta(
   // Sample in the eigenspace
   for (unsigned int i = 0; i < size + 1; i++) {
     float variance = parametrisation.eigenvaluesMomentum[i];
-    std::normal_distribution<float> dist{parametrisation.meanMomentum[i],
+    std::normal_distribution<Acts::ActsScalar> dist{parametrisation.meanMomentum[i],
                                          sqrtf(variance)};
     parameters[i] = dist(generator);
   }
@@ -420,7 +419,7 @@ std::pair<Acts::ActsDynamicVector, Acts::ActsDynamicVector>
 NuclearInteraction::sampleKinematics(
     generator_t& generator,
     const detail::Parameters::ParametersWithFixedMultiplicity& parameters,
-    float momentum, unsigned int multiplicity, bool soft) const {
+    float momentum) const {
   unsigned int trials = 0;
   auto invariantMasses = sampleInvariantMasses(generator, parameters);
   auto momenta = sampleMomenta(generator, parameters, momentum);

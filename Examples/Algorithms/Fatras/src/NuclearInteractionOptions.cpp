@@ -156,7 +156,7 @@ void ActsExamples::Options::addNuclearInteractionOptions(
      value<std::string>()->default_value({}),
      "List of files containing a parametrisation for nuclear interaction.");
   opt("fatras-simulated-events-nuclear-interaction-parametrisation",
-    value<int32_t>()->default_value(0),
+    value<uint32_t>()->default_value(0),
     "Number of events simulated for the parametrisation of the nuclear interaction.");
 }
 

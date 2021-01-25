@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,7 +11,7 @@
 namespace ActsFatras {
 
 const detail::Parameters& NuclearInteraction::findParameters(
-    double rnd, const detail::Parametrization& parametrization,
+    double rnd, const detail::Parametrisation& parametrization,
     float particleMomentum) const {
   // Return lowest/highest if momentum outside the boundary
   if (particleMomentum <= parametrization.begin()->first)
@@ -90,7 +90,7 @@ NuclearInteraction::globalAngle(ActsFatras::Particle::Scalar phi1,
                                 ActsFatras::Particle::Scalar theta1, float phi2,
                                 float theta2) const {
   // Rotation around the global y-axis
-  Acts::SymMatrix3D rotY = Acts::SymMatrix3D::Zero();
+  Acts::SymMatrix3 rotY = Acts::SymMatrix3::Zero();
   rotY(0, 0) = std::cos(theta1);
   rotY(0, 2) = std::sin(theta1);
   rotY(1, 1) = 1.;
@@ -98,7 +98,7 @@ NuclearInteraction::globalAngle(ActsFatras::Particle::Scalar phi1,
   rotY(2, 2) = std::cos(theta1);
 
   // Rotation around the global z-axis
-  Acts::SymMatrix3D rotZ = Acts::SymMatrix3D::Zero();
+  Acts::SymMatrix3 rotZ = Acts::SymMatrix3::Zero();
   rotZ(0, 0) = std::cos(phi1);
   rotZ(0, 1) = -std::sin(phi1);
   rotZ(1, 0) = std::sin(phi1);
@@ -106,10 +106,10 @@ NuclearInteraction::globalAngle(ActsFatras::Particle::Scalar phi1,
   rotZ(2, 2) = 1.;
 
   // Rotate the direction vector of the second particle
-  const Acts::Vector3D vector2(std::sin(theta2) * std::cos(phi2),
+  const Acts::Vector3 vector2(std::sin(theta2) * std::cos(phi2),
                                std::sin(theta2) * std::sin(phi2),
                                std::cos(theta2));
-  const Acts::Vector3D vectorSum = rotZ * rotY * vector2;
+  const Acts::Vector3 vectorSum = rotZ * rotY * vector2;
 
   // Calculate the global angles
   const float theta = std::acos(vectorSum.z() / vectorSum.norm());

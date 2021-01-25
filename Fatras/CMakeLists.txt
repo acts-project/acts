@@ -8,6 +8,7 @@ add_library(
   src/EventData/ProcessType.cpp
   src/Kernel/SimulationError.cpp
   src/Physics/BetheHeitler.cpp
+  src/Physics/NuclearInteraction/NuclearInteraction.cpp
   src/Physics/PhotonConversion.cpp
   src/Physics/StandardInteractions.cpp
   src/Utilities/LandauDistribution.cpp
