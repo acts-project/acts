@@ -22,7 +22,6 @@ ActsExamples::ProcessCode ActsExamples::BField::BFieldScalor::decorate(
   ScalableBFieldContext bFieldContext{
       std::pow(m_cfg.scalor, context.eventNumber)};
   context.magFieldContext = bFieldContext;
-  //   Acts::MagneticFieldContext::make<ScalableBFieldContext>(bFieldContext);
 
   return ProcessCode::SUCCESS;
 }
