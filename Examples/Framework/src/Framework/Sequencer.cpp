@@ -258,6 +258,8 @@ int ActsExamples::Sequencer::run() {
   }
 
   // execute the parallel event loop
+  std::atomic<size_t> nProcessedEvents = 0;
+  size_t nTotalEvents = eventsRange.second - eventsRange.first;
   tbb::task_scheduler_init init(m_cfg.numThreads);
   tbb::parallel_for(
       tbb::blocked_range<size_t>(eventsRange.first, eventsRange.second),
@@ -307,7 +309,16 @@ int ActsExamples::Sequencer::run() {
               throw std::runtime_error("Failed to write output data");
             }
           }
-          ACTS_INFO("finished event " << event);
+
+          nProcessedEvents++;
+          if (nTotalEvents <= 100) {
+            ACTS_INFO("finished event " << event);
+          } else {
+            if (nProcessedEvents % 100 == 0) {
+              ACTS_INFO(nProcessedEvents << " / " << nTotalEvents
+                                         << " events processed");
+            }
+          }
         }
 
         // add timing info to global information
