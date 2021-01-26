@@ -13,9 +13,9 @@
 namespace Acts {
 
 /// Strong type wrapper around std::any. This has all the flexibility of
-/// std::any, but it does not auto construct from anything. You have to call the
-/// make static factory manually with the target type, to populate the internal
-/// std::any. You can then access and modify the any as desired.
+/// std::any, but it does not convert-construct from anything. You have to call
+/// one of the explicit constructors manually to populate
+/// the internal std::any. You can then access and modify the any as desired.
 ///
 /// @note This is used for the context types, and should probably not used
 /// outside of this use-case.
@@ -25,45 +25,39 @@ class ContextType {
   ///
   ContextType() {}
 
-  /// Static factory method from arguments.
+  /// Move construct a new Context Type object from anything. Must be explicit.
   ///
-  /// @tparam T The underlying type to construct
-  /// @tparam Args Types of construction arguments
-  /// @param args Values of construction arguments
-  /// @return ContextType The constructed context instance
-  //   template <typename T, typename... Args>
-  //   static ContextType make(Args&&... args) {
-  //     ContextType ctx;
-  //     ctx.m_data.emplace<T>(std::forward<Args>(args)...);
-  //     return ctx;
-  //   }
-
-  //   template <typename T>
-  //   static ContextType make(T&& value) {
-  //     ContextType ctx;
-  //     ctx.m_data = value;
-  //     return ctx;
-  //   }
-
-  //   template <typename T>
-  //   static ContextType make(const T& value) {
-  //     ContextType ctx;
-  //     ctx.m_data = value;
-  //     return ctx;
-  //   }
-
+  /// @tparam T The type of the value to construct from
+  /// @param value The value to construct from
   template <typename T>
   explicit ContextType(T&& value) : m_data{std::move(value)} {}
 
+  /// Copy construct a new Context Type object from anything. Must be explicit.
+  ///
+  /// @tparam T The type of the value to construct from
+  /// @param value The value to construct from
+  template <typename T>
+  explicit ContextType(const T& value) : m_data{value} {}
+
+  /// Move assignment of anything to this object is allowed.
+  ///
+  /// @tparam T The type of the value to assign
+  /// @param value The value to assign
+  /// @return ContextType&
   template <typename T>
   ContextType& operator=(T&& value) {
     m_data = std::move(value);
     return *this;
   }
 
+  /// Copy assignment of anything to this object is allowed.
+  ///
+  /// @tparam T The type of the value to assign
+  /// @param value The value to assign
+  /// @return ContextType&
   template <typename T>
   ContextType& operator=(const T& value) {
-    m_data = std::move(value);
+    m_data = value;
     return *this;
   }
 
