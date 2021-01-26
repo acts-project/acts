@@ -97,8 +97,7 @@ class SurfaceMaterialMapper {
   /// Nested State struct which is used for the mapping prococess
   struct State {
     /// Constructor of the Sate with contexts
-    State(std::reference_wrapper<const GeometryContext> gctx,
-          std::reference_wrapper<const MagneticFieldContext> mctx)
+    State(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : geoContext(gctx), magFieldContext(mctx) {}
 
     /// The accumulated material per geometry ID

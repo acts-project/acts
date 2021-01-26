@@ -47,7 +47,7 @@ void ActsExamples::Contextual::PayloadDecorator::parseGeometry(
   size_t nTransforms = 0;
   tGeometry.visitSurfaces([&nTransforms](const auto*) { ++nTransforms; });
 
-  PayloadDetectorElement::ContextType nominalCtx;
+  Acts::GeometryContext nominalCtx{PayloadDetectorElement::ContextType{}};
 
   // Collect the surfacas into the nominal store
   std::vector<Acts::Transform3> aStore(nTransforms,
