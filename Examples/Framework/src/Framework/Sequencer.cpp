@@ -316,7 +316,7 @@ int ActsExamples::Sequencer::run() {
           } else {
             if (nProcessedEvents % 100 == 0) {
               ACTS_INFO(nProcessedEvents << " / " << nTotalEvents
-                                         << " processed");
+                                         << " events processed");
             }
           }
         }
