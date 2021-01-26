@@ -32,6 +32,7 @@
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include <Acts/Definitions/Units.hpp>
+#include <Acts/MagneticField/BFieldProvider.hpp>
 
 #include <memory>
 

@@ -45,7 +45,7 @@ namespace {
 /// @return a process code
 ActsExamples::ProcessCode setupPropagation(
     ActsExamples::Sequencer& sequencer,
-    std::shared_ptr<Acts::BFieldProvider> bfield, po::variables_map& vm,
+    std::shared_ptr<const Acts::BFieldProvider> bfield, po::variables_map& vm,
     std::shared_ptr<ActsExamples::RandomNumbers> randomNumberSvc,
     std::shared_ptr<const Acts::TrackingGeometry> tGeometry) {
   // Get the log level
@@ -169,15 +169,7 @@ int materialValidationExample(int argc, char* argv[],
     // Straight line stepper was chosen
     setupStraightLinePropagation(sequencer, vm, randomNumberSvc, tGeometry);
   } else {
-    std::visit(
-        [&](auto& bField) {
-          using field_type =
-              typename std::decay_t<decltype(bField)>::element_type;
-          auto fieldMap =
-              std::make_shared<Acts::SharedBField<field_type>>(bField);
-          setupPropagation(sequencer, fieldMap, vm, randomNumberSvc, tGeometry);
-        },
-        bFieldVar);
+    setupPropagation(sequencer, bField, vm, randomNumberSvc, tGeometry);
   }
 
   // ---------------------------------------------------------------------------------

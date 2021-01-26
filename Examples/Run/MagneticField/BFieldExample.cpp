@@ -69,24 +69,21 @@ int main(int argc, char* argv[]) {
     return EXIT_FAILURE;
   }
 
-  auto bFieldVar = ActsExamples::Options::readMagneticField(vm);
+  ActsExamples::Options::readBField(vm);
 
-  return std::visit(
-      [&](auto& bField) -> int {
-        using field_type =
-            typename std::decay_t<decltype(bField)>::element_type;
-        if constexpr (!std::is_same_v<
-                          field_type,
-                          ActsExamples::detail::InterpolatedMagneticField2> &&
-                      !std::is_same_v<
-                          field_type,
-                          ActsExamples::detail::InterpolatedMagneticField3>) {
-          std::cout << "Bfield map could not be read. Exiting." << std::endl;
-          return EXIT_FAILURE;
-        } else {
-          ActsExamples::BField::writeField<field_type>(vm, bField);
-          return EXIT_SUCCESS;
-        }
-      },
-      bFieldVar);
+  if (auto bField2D =
+          std::dynamic_pointer_cast<const InterpolatedBFieldMap2D>(bFieldVar);
+      bField2D) {
+    ActsExamples::BField::writeField(vm, *bField2D);
+    return EXIT_SUCCESS;
+  } else if (auto bField3D =
+                 std::dynamic_pointer_cast<const InterpolatedBFieldMap3D>(
+                     bFieldVar);
+             bField3D) {
+    ActsExamples::BField::writeField(vm, *bField3D);
+    return EXIT_SUCCESS;
+  } else {
+    std::cout << "Bfield map could not be read. Exiting." << std::endl;
+    return EXIT_FAILURE;
+  }
 }

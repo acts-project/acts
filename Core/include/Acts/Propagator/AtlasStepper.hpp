@@ -299,7 +299,7 @@ class AtlasStepper {
     size_t debugMsgWidth = 50;
   };
 
-  AtlasStepper(std::shared_ptr<BFieldProvider> bField)
+  AtlasStepper(std::shared_ptr<const BFieldProvider> bField)
       : m_bField(std::move(bField)){};
 
   template <typename charge_t>
@@ -1347,7 +1347,7 @@ class AtlasStepper {
   }
 
  private:
-  std::shared_ptr<BFieldProvider> m_bField;
+  std::shared_ptr<const BFieldProvider> m_bField;
 
   /// Overstep limit: could/should be dynamic
   double m_overstepLimit = -50_um;

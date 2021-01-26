@@ -22,11 +22,18 @@
 
 namespace {
 
-template <typename track_fitter_t>
-struct TrackFitterFunctionImpl {
-  track_fitter_t trackFitter;
+using Updater = Acts::GainMatrixUpdater;
+using Smoother = Acts::GainMatrixSmoother;
+using Stepper = Acts::EigenStepper<>;
+using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
+using Fitter = Acts::KalmanFitter<Propagator, Updater, Smoother>;
+using DirectPropagator = Acts::Propagator<Stepper, Acts::DirectNavigator>;
+using DirectFitter = Acts::KalmanFitter<DirectPropagator, Updater, Smoother>;
 
-  TrackFitterFunctionImpl(track_fitter_t&& f) : trackFitter(std::move(f)) {}
+struct TrackFitterFunctionImpl {
+  Fitter trackFitter;
+
+  TrackFitterFunctionImpl(Fitter&& f) : trackFitter(std::move(f)) {}
 
   ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
       const std::vector<ActsExamples::IndexSourceLink>& sourceLinks,
@@ -37,10 +44,9 @@ struct TrackFitterFunctionImpl {
   };
 };
 
-template <typename Fitter>
 struct DirectedFitterFunctionImpl {
-  Fitter fitter;
-  DirectedFitterFunctionImpl(Fitter&& f) : fitter(std::move(f)) {}
+  DirectFitter fitter;
+  DirectedFitterFunctionImpl(DirectFitter&& f) : fitter(std::move(f)) {}
 
   ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
       const std::vector<ActsExamples::IndexSourceLink>& sourceLinks,
@@ -56,69 +62,28 @@ struct DirectedFitterFunctionImpl {
 ActsExamples::TrackFittingAlgorithm::TrackFitterFunction
 ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-    MagneticField magneticField) {
-  using Updater = Acts::GainMatrixUpdater;
-  using Smoother = Acts::GainMatrixSmoother;
+    std::shared_ptr<const Acts::BFieldProvider> magneticField) {
+  Stepper stepper(std::move(magneticField));
+  Acts::Navigator navigator(trackingGeometry);
+  navigator.resolvePassive = false;
+  navigator.resolveMaterial = true;
+  navigator.resolveSensitive = true;
+  Propagator propagator(std::move(stepper), std::move(navigator));
+  Fitter trackFitter(std::move(propagator));
 
-  // unpack the magnetic field variant and instantiate the corresponding fitter.
-  return std::visit(
-      [trackingGeometry](auto&& inputField) -> TrackFitterFunction {
-        // each entry in the variant is already a shared_ptr
-        // need ::element_type to get the real magnetic field type
-        using InputMagneticField =
-            typename std::decay_t<decltype(inputField)>::element_type;
-        using SharedMagneticField = Acts::SharedBField<InputMagneticField>;
-        using Stepper = Acts::EigenStepper<>;
-        using Navigator = Acts::Navigator;
-        using Propagator = Acts::Propagator<Stepper, Navigator>;
-        using Fitter = Acts::KalmanFitter<Propagator, Updater, Smoother>;
-
-        // construct all components for the fitter
-        auto field =
-            std::make_shared<SharedMagneticField>(std::move(inputField));
-        Stepper stepper(std::move(field));
-        Navigator navigator(trackingGeometry);
-        navigator.resolvePassive = false;
-        navigator.resolveMaterial = true;
-        navigator.resolveSensitive = true;
-        Propagator propagator(std::move(stepper), std::move(navigator));
-        Fitter trackFitter(std::move(propagator));
-
-        // build the fitter functions. owns the fitter object.
-        return TrackFitterFunctionImpl<Fitter>(std::move(trackFitter));
-      },
-      std::move(magneticField));
+  // build the fitter functions. owns the fitter object.
+  return TrackFitterFunctionImpl(std::move(trackFitter));
 }
 
 ActsExamples::TrackFittingAlgorithm::DirectedTrackFitterFunction
 ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
-    MagneticField magneticField) {
-  using Updater = Acts::GainMatrixUpdater;
-  using Smoother = Acts::GainMatrixSmoother;
+    std::shared_ptr<const Acts::BFieldProvider> magneticField) {
+  // construct all components for the fitter
+  Stepper stepper(std::move(magneticField));
+  Acts::DirectNavigator navigator;
+  DirectPropagator propagator(std::move(stepper), std::move(navigator));
+  DirectFitter fitter(std::move(propagator));
 
-  // unpack the magnetic field variant and instantiate the corresponding fitter.
-  return std::visit(
-      [](auto&& inputField) -> DirectedTrackFitterFunction {
-        // each entry in the variant is already a shared_ptr
-        // need ::element_type to get the real magnetic field type
-        using InputMagneticField =
-            typename std::decay_t<decltype(inputField)>::element_type;
-        using SharedMagneticField = Acts::SharedBField<InputMagneticField>;
-        using Stepper = Acts::EigenStepper<>;
-        using Navigator = Acts::DirectNavigator;
-        using Propagator = Acts::Propagator<Stepper, Navigator>;
-        using Fitter = Acts::KalmanFitter<Propagator, Updater, Smoother>;
-
-        // construct all components for the fitter
-        auto field =
-            std::make_shared<SharedMagneticField>(std::move(inputField));
-        Stepper stepper(std::move(field));
-        Navigator navigator;
-        Propagator propagator(std::move(stepper), std::move(navigator));
-        Fitter fitter(std::move(propagator));
-
-        // build the fitter functions. owns the fitter object.
-        return DirectedFitterFunctionImpl<Fitter>(std::move(fitter));
-      },
-      std::move(magneticField));
+  // build the fitter functions. owns the fitter object.
+  return DirectedFitterFunctionImpl(std::move(fitter));
 }
