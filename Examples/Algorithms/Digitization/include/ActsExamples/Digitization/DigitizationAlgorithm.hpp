@@ -8,15 +8,21 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsFatras/Digitization/Channelizer.hpp"
+#include "ActsFatras/Digitization/PlanarSurfaceDrift.hpp"
+#include "ActsFatras/Digitization/PlanarSurfaceMask.hpp"
 
 #include <memory>
-#include <optional>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -63,40 +69,102 @@ class DigitzationAlgorithm final : public BareAlgorithm {
   ProcessCode execute(const AlgorithmContext& ctx) const final override;
 
  private:
-  // Support up to 4d measurements
-  using Smearer =
-      std::variant<ActsFatras::BoundParametersSmearer<RandomEngine, 1u>,
-                   ActsFatras::BoundParametersSmearer<RandomEngine, 2u>,
-                   ActsFatras::BoundParametersSmearer<RandomEngine, 3u>,
-                   ActsFatras::BoundParametersSmearer<RandomEngine, 4u>>;
+  /// Nested struct for digitized parameters
+  struct DigitizedParameters {
+    std::vector<Acts::BoundIndices> indices = {};
+    std::vector<Acts::ActsScalar> values = {};
+    std::vector<Acts::ActsScalar> covariances = {};
+    std::vector<Acts::ActsScalar> trueValues = {};
+  };
 
-  // Nested smearer struct that holds geometric digitizer and smearing
-  template <size_t kGeoDIM, size_t kSmearDIM = 0> 
-  struct CombinedDigitizer {    
-    const size_t kDIM = kGeoDIM + kSmearDIM;
-    //GeometricDigitizationConfig geometric;
-    //ActsFatras::BoundParametersSmearer<RandomEngine, kSmearDIM> smearing;
+  /// Helper method for the geometric channelizing part
+  ///
+  /// @param geoCfg is the geometric digitization configuration
+  /// @param hit the Simultated hit
+  /// @param surface the Surface on which this is supposed to happen
+  /// @param gcts the Geometry context
+  ///
+  /// @return the list of channels
+  std::vector<ActsFatras::Channelizer::ChannelSegment> channelizing(
+      const GeometricDigitizationConfig& geoCfg, const SimHit& hit,
+      const Acts::Surface& surface, const Acts::GeometryContext& gctx) const;
+
+  /// Helper method for creating digitized parameters from clusters
+  ///
+  /// @todo ADD random smearing
+  /// @param geoCfg is the geometric digitization configuration
+  /// @param channels are the input channels
+  DigitizedParameters localParameters(
+      const GeometricDigitizationConfig& geoCfg,
+      const std::vector<ActsFatras::Channelizer::ChannelSegment>& channels)
+      const;
+
+  /// Helper method for created a measurement from digitized parameters
+  ///
+  /// @param dParams The digitized parameters of variable size
+  /// @param isl The indexed source link for the measurement
+  ///
+  /// @return a variant measurement
+  Measurement createMeasurement(const DigitizedParameters& dParams,
+                                const IndexSourceLink& isl) const
+      noexcept(false);
+
+  /// Nested smearer struct that holds geometric digitizer and smearing
+  /// Support up to 4 dimensions.
+  template <size_t kGeoDIM, size_t kSmearDIM = 0>
+  struct CombinedDigitizer {
+    GeometricDigitizationConfig geometric;
+    ActsFatras::BoundParametersSmearer<RandomEngine, kSmearDIM> smearing;
   };
 
   // Support max 4 digitization dimensions - either digital or smeared
-  using Digitizer = 
-    std::variant<CombinedDigitizer<1,0>, CombinedDigitizer<2,0>,
-                 CombinedDigitizer<1,1>, CombinedDigitizer<1,2>,
-                 CombinedDigitizer<1,3>, 
-                 CombinedDigitizer<2,1>, CombinedDigitizer<2,2>,
-                 CombinedDigitizer<0,1>, CombinedDigitizer<0,2>,
-                 CombinedDigitizer<0,3>, CombinedDigitizer<0,4>>;
+  using Digitizer = std::variant<CombinedDigitizer<0>, CombinedDigitizer<1>,
+                                 CombinedDigitizer<2>, CombinedDigitizer<3>,
+                                 CombinedDigitizer<4>>;
 
+  /// Configuration of the Algorithm
   Config m_cfg;
-  //Acts::GeometryHierarchyMap<Digitizer> m_digitizers;
+  /// Digitizers within geometry hierarchy
+  Acts::GeometryHierarchyMap<Digitizer> m_digitizers;
+  /// Geometric digtizers
+  ActsFatras::PlanarSurfaceDrift m_surfaceDrift;
+  ActsFatras::PlanarSurfaceMask m_surfaceMask;
+  ActsFatras::Channelizer m_channelizer;
+
+  /// Contruct the constituents of a measurement
+  template <size_t kMeasDIM>
+  std::tuple<std::array<Acts::BoundIndices, kMeasDIM>,
+             Acts::ActsVector<kMeasDIM>, Acts::ActsSymMatrix<kMeasDIM>>
+  measurementConstituents(const DigitizedParameters& dParams) const {
+    std::array<Acts::BoundIndices, kMeasDIM> indices;
+    Acts::ActsVector<kMeasDIM> par;
+    Acts::ActsSymMatrix<kMeasDIM> cov =
+        Acts::ActsSymMatrix<kMeasDIM>::Identity();
+    for (Eigen::Index ei = 0; ei < static_cast<Eigen::Index>(kMeasDIM); ++ei) {
+      indices[ei] = dParams.indices[ei];
+      par[ei] = dParams.values[ei];
+      cov(ei, ei) = dParams.covariances[ei];
+    }
+    return {indices, par, cov};
+  }
 
   /// Construct a fixed-size smearer from a configuration.
+  ///
+  /// It's templated on the smearing dimention given by @tparam kSmearDim
+  ///
+  /// @param cfg Is the digitization configuration input
+  ///
+  /// @return a variant of a Digitizer
   template <size_t kSmearDIM>
-  static Smearer makeSmearer(const SmearingConfig& cfg) {
-    ActsFatras::BoundParametersSmearer<RandomEngine, kSmearDIM> impl;
+  static Digitizer makeDigitizer(const DigitizationConfig& cfg) {
+    CombinedDigitizer<kSmearDIM> impl;
+    // Copy the geometric configuration
+    impl.geometric = cfg.geometricDigiConfig;
+    // Prepare the smearing configuration
     for (size_t i = 0; i < kSmearDIM; ++i) {
-      impl.indices[i] = cfg.at(i).index;
-      impl.smearFunctions[i] = cfg.at(i).smearFunction;
+      impl.smearing.indices[i] = cfg.smearingDigiConfig.at(i).index;
+      impl.smearing.smearFunctions[i] =
+          cfg.smearingDigiConfig.at(i).smearFunction;
     }
     return impl;
   }
