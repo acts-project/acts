@@ -6,18 +6,25 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline Vector2 DiscSurface::localPolarToCartesian(const Vector2& lpolar) const {
+#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/Surfaces/detail/PlanarHelper.hpp"
+
+namespace Acts {
+
+ACTS_SURFACE_MAYBE_INLINE Vector2
+DiscSurface::localPolarToCartesian(const Vector2& lpolar) const {
   return Vector2(lpolar[eBoundLoc0] * cos(lpolar[eBoundLoc1]),
                  lpolar[eBoundLoc0] * sin(lpolar[eBoundLoc1]));
 }
 
-inline Vector2 DiscSurface::localCartesianToPolar(const Vector2& lcart) const {
+ACTS_SURFACE_MAYBE_INLINE Vector2
+DiscSurface::localCartesianToPolar(const Vector2& lcart) const {
   return Vector2(sqrt(lcart[eBoundLoc0] * lcart[eBoundLoc0] +
                       lcart[eBoundLoc1] * lcart[eBoundLoc1]),
                  atan2(lcart[eBoundLoc1], lcart[eBoundLoc0]));
 }
 
-inline BoundToFreeMatrix DiscSurface::jacobianLocalToGlobal(
+ACTS_SURFACE_MAYBE_INLINE BoundToFreeMatrix DiscSurface::jacobianLocalToGlobal(
     const GeometryContext& gctx, const BoundVector& boundParams) const {
   // Transform from bound to free parameters
   FreeVector freeParams =
@@ -58,7 +65,7 @@ inline BoundToFreeMatrix DiscSurface::jacobianLocalToGlobal(
   return jacToGlobal;
 }
 
-inline FreeToBoundMatrix DiscSurface::jacobianGlobalToLocal(
+ACTS_SURFACE_MAYBE_INLINE FreeToBoundMatrix DiscSurface::jacobianGlobalToLocal(
     const GeometryContext& gctx, const FreeVector& parameters) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
@@ -106,7 +113,7 @@ inline FreeToBoundMatrix DiscSurface::jacobianGlobalToLocal(
   return jacToLocal;
 }
 
-inline SurfaceIntersection DiscSurface::intersect(
+ACTS_SURFACE_MAYBE_INLINE SurfaceIntersection DiscSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryCheck& bcheck) const {
   // Get the contextual transform
@@ -135,7 +142,8 @@ inline SurfaceIntersection DiscSurface::intersect(
   return {intersection, this};
 }
 
-inline ActsMatrix<2, 3> DiscSurface::localCartesianToBoundLocalDerivative(
+ACTS_SURFACE_MAYBE_INLINE ActsMatrix<2, 3>
+DiscSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3& position) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
@@ -153,15 +161,15 @@ inline ActsMatrix<2, 3> DiscSurface::localCartesianToBoundLocalDerivative(
   return loc3DToLocBound;
 }
 
-inline Vector3 DiscSurface::normal(const GeometryContext& gctx,
-                                   const Vector2& /*unused*/) const {
+ACTS_SURFACE_MAYBE_INLINE Vector3 DiscSurface::normal(
+    const GeometryContext& gctx, const Vector2& /*unused*/) const {
   // fast access via tranform matrix (and not rotation())
   const auto& tMatrix = transform(gctx).matrix();
   return Vector3(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 
-inline Vector3 DiscSurface::binningPosition(const GeometryContext& gctx,
-                                            BinningValue bValue) const {
+ACTS_SURFACE_MAYBE_INLINE Vector3 DiscSurface::binningPosition(
+    const GeometryContext& gctx, BinningValue bValue) const {
   if (bValue == binR) {
     double r = m_bounds->binningValueR();
     double phi = m_bounds->binningValuePhi();
@@ -170,8 +178,8 @@ inline Vector3 DiscSurface::binningPosition(const GeometryContext& gctx,
   return center(gctx);
 }
 
-inline double DiscSurface::binningPositionValue(const GeometryContext& gctx,
-                                                BinningValue bValue) const {
+ACTS_SURFACE_MAYBE_INLINE double DiscSurface::binningPositionValue(
+    const GeometryContext& gctx, BinningValue bValue) const {
   // only modify binR
   if (bValue == binR) {
     return VectorHelpers::perp(center(gctx)) + m_bounds->binningValueR();
@@ -179,9 +187,11 @@ inline double DiscSurface::binningPositionValue(const GeometryContext& gctx,
   return GeometryObject::binningPositionValue(gctx, bValue);
 }
 
-inline double DiscSurface::pathCorrection(const GeometryContext& gctx,
-                                          const Vector3& position,
-                                          const Vector3& direction) const {
+ACTS_SURFACE_MAYBE_INLINE double DiscSurface::pathCorrection(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
   /// we can ignore the global position here
   return 1. / std::abs(Surface::normal(gctx, position).dot(direction));
 }
+
+}  // namespace Acts

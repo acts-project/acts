@@ -180,3 +180,7 @@ Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
   }
   return Polyhedron(vertices, faces, triangularMesh, exactPolyhedron);
 }
+
+#ifndef ACTS_DO_SURFACE_INLINE
+#include "Acts/Surfaces/detail/DiscSurface.ipp"
+#endif

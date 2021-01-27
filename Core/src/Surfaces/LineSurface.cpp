@@ -44,3 +44,7 @@ Acts::LineSurface& Acts::LineSurface::operator=(const LineSurface& other) {
   }
   return *this;
 }
+
+#ifndef ACTS_DO_SURFACE_INLINE
+#include "Acts/Surfaces/detail/LineSurface.ipp"
+#endif

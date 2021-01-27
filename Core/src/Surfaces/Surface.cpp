@@ -212,3 +212,7 @@ std::ostream& Acts::Surface::toStream(const GeometryContext& gctx,
 bool Acts::Surface::operator!=(const Acts::Surface& sf) const {
   return !(operator==(sf));
 }
+
+#ifndef ACTS_DO_SURFACE_INLINE
+#include "Acts/Surfaces/detail/Surface.ipp"
+#endif

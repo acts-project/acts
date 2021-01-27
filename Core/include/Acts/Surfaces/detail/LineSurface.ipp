@@ -6,9 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline Vector3 LineSurface::localToGlobal(const GeometryContext& gctx,
-                                          const Vector2& lposition,
-                                          const Vector3& momentum) const {
+#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+
+namespace Acts {
+
+ACTS_SURFACE_MAYBE_INLINE Vector3 LineSurface::localToGlobal(
+    const GeometryContext& gctx, const Vector2& lposition,
+    const Vector3& momentum) const {
   const auto& sTransform = transform(gctx);
   const auto& tMatrix = sTransform.matrix();
   Vector3 lineDirection(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
@@ -21,10 +25,9 @@ inline Vector3 LineSurface::localToGlobal(const GeometryContext& gctx,
                  lposition[eBoundLoc0] * radiusAxisGlobal.normalized());
 }
 
-inline Result<Vector2> LineSurface::globalToLocal(const GeometryContext& gctx,
-                                                  const Vector3& position,
-                                                  const Vector3& momentum,
-                                                  double /*tolerance*/) const {
+ACTS_SURFACE_MAYBE_INLINE Result<Vector2> LineSurface::globalToLocal(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& momentum, double /*tolerance*/) const {
   using VectorHelpers::perp;
   const auto& sTransform = transform(gctx);
   const auto& tMatrix = sTransform.matrix();
@@ -41,11 +44,11 @@ inline Result<Vector2> LineSurface::globalToLocal(const GeometryContext& gctx,
   return Result<Vector2>::success(lposition);
 }
 
-inline std::string LineSurface::name() const {
+ACTS_SURFACE_MAYBE_INLINE std::string LineSurface::name() const {
   return "Acts::LineSurface";
 }
 
-inline RotationMatrix3 LineSurface::referenceFrame(
+ACTS_SURFACE_MAYBE_INLINE RotationMatrix3 LineSurface::referenceFrame(
     const GeometryContext& gctx, const Vector3& /*unused*/,
     const Vector3& momentum) const {
   RotationMatrix3 mFrame;
@@ -61,31 +64,31 @@ inline RotationMatrix3 LineSurface::referenceFrame(
   return mFrame;
 }
 
-inline double LineSurface::pathCorrection(const GeometryContext& /*unused*/,
-                                          const Vector3& /*pos*/,
-                                          const Vector3& /*mom*/) const {
+ACTS_SURFACE_MAYBE_INLINE double LineSurface::pathCorrection(
+    const GeometryContext& /*unused*/, const Vector3& /*pos*/,
+    const Vector3& /*mom*/) const {
   return 1.;
 }
 
-inline Vector3 LineSurface::binningPosition(const GeometryContext& gctx,
-                                            BinningValue /*bValue*/) const {
+ACTS_SURFACE_MAYBE_INLINE Vector3 LineSurface::binningPosition(
+    const GeometryContext& gctx, BinningValue /*bValue*/) const {
   return center(gctx);
 }
 
-inline Vector3 LineSurface::normal(const GeometryContext& gctx,
-                                   const Vector2& /*lpos*/) const {
+ACTS_SURFACE_MAYBE_INLINE Vector3 LineSurface::normal(
+    const GeometryContext& gctx, const Vector2& /*lpos*/) const {
   const auto& tMatrix = transform(gctx).matrix();
   return Vector3(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 
-inline const SurfaceBounds& LineSurface::bounds() const {
+ACTS_SURFACE_MAYBE_INLINE const SurfaceBounds& LineSurface::bounds() const {
   if (m_bounds) {
     return (*m_bounds.get());
   }
   return s_noBounds;
 }
 
-inline SurfaceIntersection LineSurface::intersect(
+ACTS_SURFACE_MAYBE_INLINE SurfaceIntersection LineSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryCheck& bcheck) const {
   // following nominclature found in header file and doxygen documentation
@@ -130,7 +133,7 @@ inline SurfaceIntersection LineSurface::intersect(
           this};
 }
 
-inline BoundToFreeMatrix LineSurface::jacobianLocalToGlobal(
+ACTS_SURFACE_MAYBE_INLINE BoundToFreeMatrix LineSurface::jacobianLocalToGlobal(
     const GeometryContext& gctx, const BoundVector& boundParams) const {
   // Transform from bound to free parameters
   FreeVector freeParams =
@@ -180,7 +183,7 @@ inline BoundToFreeMatrix LineSurface::jacobianLocalToGlobal(
   return jacToGlobal;
 }
 
-inline FreeToPathMatrix LineSurface::freeToPathDerivative(
+ACTS_SURFACE_MAYBE_INLINE FreeToPathMatrix LineSurface::freeToPathDerivative(
     const GeometryContext& gctx, const FreeVector& parameters) const {
   // The global posiiton
   const auto position = parameters.segment<3>(eFreePos0);
@@ -209,8 +212,9 @@ inline FreeToPathMatrix LineSurface::freeToPathDerivative(
   return freeToPath;
 }
 
-inline AlignmentToPathMatrix LineSurface::alignmentToPathDerivative(
-    const GeometryContext& gctx, const FreeVector& parameters) const {
+ACTS_SURFACE_MAYBE_INLINE AlignmentToPathMatrix
+LineSurface::alignmentToPathDerivative(const GeometryContext& gctx,
+                                       const FreeVector& parameters) const {
   // The global posiiton
   const auto position = parameters.segment<3>(eFreePos0);
   // The direction
@@ -240,7 +244,8 @@ inline AlignmentToPathMatrix LineSurface::alignmentToPathDerivative(
   return alignToPath;
 }
 
-inline ActsMatrix<2, 3> LineSurface::localCartesianToBoundLocalDerivative(
+ACTS_SURFACE_MAYBE_INLINE ActsMatrix<2, 3>
+LineSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3& position) const {
   using VectorHelpers::phi;
   // The local frame transform
@@ -255,3 +260,5 @@ inline ActsMatrix<2, 3> LineSurface::localCartesianToBoundLocalDerivative(
 
   return loc3DToLocBound;
 }
+
+}  // namespace Acts

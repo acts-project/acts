@@ -253,3 +253,7 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
   }
   return Polyhedron(vertices, faces, triangularMesh, false);
 }
+
+#ifndef ACTS_DO_SURFACE_INLINE
+#include "Acts/Surfaces/detail/ConeSurface.ipp"
+#endif

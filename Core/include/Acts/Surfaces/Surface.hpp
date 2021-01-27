@@ -502,4 +502,7 @@ class Surface : public virtual GeometryObject,
 };
 
 }  // namespace Acts
+
+#ifdef ACTS_DO_SURFACE_INLINE
 #include "Acts/Surfaces/detail/Surface.ipp"
+#endif

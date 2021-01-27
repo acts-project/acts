@@ -6,26 +6,29 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline Vector3 PlaneSurface::normal(const GeometryContext& gctx,
-                                    const Vector2& /*lpos*/) const {
+#include "Acts/Surfaces/detail/PlanarHelper.hpp"
+
+namespace Acts {
+ACTS_SURFACE_MAYBE_INLINE Vector3 PlaneSurface::normal(
+    const GeometryContext& gctx, const Vector2& /*lpos*/) const {
   // fast access via tranform matrix (and not rotation())
   const auto& tMatrix = transform(gctx).matrix();
   return Vector3(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 
-inline Vector3 PlaneSurface::binningPosition(const GeometryContext& gctx,
-                                             BinningValue /*bValue*/) const {
+ACTS_SURFACE_MAYBE_INLINE Vector3 PlaneSurface::binningPosition(
+    const GeometryContext& gctx, BinningValue /*bValue*/) const {
   return center(gctx);
 }
 
-inline double PlaneSurface::pathCorrection(const GeometryContext& gctx,
-                                           const Vector3& position,
-                                           const Vector3& direction) const {
+ACTS_SURFACE_MAYBE_INLINE double PlaneSurface::pathCorrection(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
   // We can ignore the global position here
   return 1. / std::abs(Surface::normal(gctx, position).dot(direction));
 }
 
-inline SurfaceIntersection PlaneSurface::intersect(
+ACTS_SURFACE_MAYBE_INLINE SurfaceIntersection PlaneSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryCheck& bcheck) const {
   // Get the contextual transform
@@ -47,8 +50,11 @@ inline SurfaceIntersection PlaneSurface::intersect(
   return {intersection, this};
 }
 
-inline ActsMatrix<2, 3> PlaneSurface::localCartesianToBoundLocalDerivative(
+ACTS_SURFACE_MAYBE_INLINE ActsMatrix<2, 3>
+PlaneSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& /*unused*/, const Vector3& /*unused*/) const {
   const ActsMatrix<2, 3> loc3DToLocBound = ActsMatrix<2, 3>::Identity();
   return loc3DToLocBound;
 }
+
+}  // namespace Acts

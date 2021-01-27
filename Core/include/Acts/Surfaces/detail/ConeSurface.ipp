@@ -6,9 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline detail::RealQuadraticEquation ConeSurface::intersectionSolver(
-    const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction) const {
+#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+
+namespace Acts {
+
+ACTS_SURFACE_MAYBE_INLINE detail::RealQuadraticEquation
+ConeSurface::intersectionSolver(const GeometryContext& gctx,
+                                const Vector3& position,
+                                const Vector3& direction) const {
   // Transform into the local frame
   Transform3 invTrans = transform(gctx).inverse();
   Vector3 point1 = invTrans * position;
@@ -29,7 +34,7 @@ inline detail::RealQuadraticEquation ConeSurface::intersectionSolver(
   return detail::RealQuadraticEquation(A, B, C);
 }
 
-inline SurfaceIntersection ConeSurface::intersect(
+ACTS_SURFACE_MAYBE_INLINE SurfaceIntersection ConeSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryCheck& bcheck) const {
   // Solve the quadratic equation
@@ -87,8 +92,9 @@ inline SurfaceIntersection ConeSurface::intersect(
   return cIntersection;
 }
 
-inline AlignmentToPathMatrix ConeSurface::alignmentToPathDerivative(
-    const GeometryContext& gctx, const FreeVector& parameters) const {
+ACTS_SURFACE_MAYBE_INLINE AlignmentToPathMatrix
+ConeSurface::alignmentToPathDerivative(const GeometryContext& gctx,
+                                       const FreeVector& parameters) const {
   // The global position
   const auto position = parameters.segment<3>(eFreePos0);
   // The direction
@@ -140,7 +146,8 @@ inline AlignmentToPathMatrix ConeSurface::alignmentToPathDerivative(
   return alignToPath;
 }
 
-inline ActsMatrix<2, 3> ConeSurface::localCartesianToBoundLocalDerivative(
+ACTS_SURFACE_MAYBE_INLINE ActsMatrix<2, 3>
+ConeSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3& position) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
@@ -160,3 +167,5 @@ inline ActsMatrix<2, 3> ConeSurface::localCartesianToBoundLocalDerivative(
 
   return loc3DToLocBound;
 }
+
+}  // namespace Acts

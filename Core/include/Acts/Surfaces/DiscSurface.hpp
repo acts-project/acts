@@ -14,7 +14,6 @@
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 namespace Acts {
@@ -305,6 +304,8 @@ class DiscSurface : public Surface {
  protected:
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)
 };
-
-#include "Acts/Surfaces/detail/DiscSurface.ipp"
 }  // end of namespace Acts
+
+#ifdef ACTS_DO_SURFACE_INLINE
+#include "Acts/Surfaces/detail/DiscSurface.ipp"
+#endif

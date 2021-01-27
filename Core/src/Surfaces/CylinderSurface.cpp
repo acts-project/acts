@@ -202,3 +202,7 @@ Acts::Polyhedron Acts::CylinderSurface::polyhedronRepresentation(
       detail::FacesHelper::cylindricalFaceMesh(vertices, fullCylinder);
   return Polyhedron(vertices, facesMesh.first, facesMesh.second, false);
 }
+
+#ifndef ACTS_DO_SURFACE_INLINE
+#include "Acts/Surfaces/detail/CylinderSurface.ipp"
+#endif

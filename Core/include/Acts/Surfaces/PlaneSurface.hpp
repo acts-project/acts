@@ -14,7 +14,6 @@
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/detail/PlanarHelper.hpp"
 
 #include <limits>
 
@@ -210,6 +209,8 @@ class PlaneSurface : public Surface {
  private:
 };
 
-#include "Acts/Surfaces/detail/PlaneSurface.ipp"
-
 }  // end of namespace Acts
+
+#ifdef ACTS_DO_SURFACE_INLINE
+#include "Acts/Surfaces/detail/PlaneSurface.ipp"
+#endif

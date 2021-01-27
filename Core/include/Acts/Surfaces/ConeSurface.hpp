@@ -266,6 +266,9 @@ class ConeSurface : public Surface {
       const Vector3& direction) const;
 };
 
-#include "Acts/Surfaces/detail/ConeSurface.ipp"
-
 }  // namespace Acts
+
+#ifdef ACTS_DO_SURFACE_INLINE
+#include "Acts/Surfaces/detail/ConeSurface.ipp"
+#else
+#endif

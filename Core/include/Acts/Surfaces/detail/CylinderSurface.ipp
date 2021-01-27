@@ -6,15 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline Vector3 CylinderSurface::rotSymmetryAxis(
-    const GeometryContext& gctx) const {
+namespace Acts {
+
+ACTS_SURFACE_MAYBE_INLINE Vector3
+CylinderSurface::rotSymmetryAxis(const GeometryContext& gctx) const {
   // fast access via tranform matrix (and not rotation())
   return transform(gctx).matrix().block<3, 1>(0, 2);
 }
 
-inline detail::RealQuadraticEquation CylinderSurface::intersectionSolver(
-    const Transform3& transform, const Vector3& position,
-    const Vector3& direction) const {
+ACTS_SURFACE_MAYBE_INLINE detail::RealQuadraticEquation
+CylinderSurface::intersectionSolver(const Transform3& transform,
+                                    const Vector3& position,
+                                    const Vector3& direction) const {
   // Solve for radius R
   double R = bounds().get(CylinderBounds::eR);
 
@@ -34,7 +37,7 @@ inline detail::RealQuadraticEquation CylinderSurface::intersectionSolver(
   return detail::RealQuadraticEquation(a, b, c);
 }
 
-inline SurfaceIntersection CylinderSurface::intersect(
+ACTS_SURFACE_MAYBE_INLINE SurfaceIntersection CylinderSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryCheck& bcheck) const {
   const auto& gctxTransform = transform(gctx);
@@ -112,8 +115,9 @@ inline SurfaceIntersection CylinderSurface::intersect(
   return cIntersection;
 }
 
-inline AlignmentToPathMatrix CylinderSurface::alignmentToPathDerivative(
-    const GeometryContext& gctx, const FreeVector& parameters) const {
+ACTS_SURFACE_MAYBE_INLINE AlignmentToPathMatrix
+CylinderSurface::alignmentToPathDerivative(const GeometryContext& gctx,
+                                           const FreeVector& parameters) const {
   // The global position
   const auto position = parameters.segment<3>(eFreePos0);
   // The direction
@@ -161,7 +165,8 @@ inline AlignmentToPathMatrix CylinderSurface::alignmentToPathDerivative(
   return alignToPath;
 }
 
-inline ActsMatrix<2, 3> CylinderSurface::localCartesianToBoundLocalDerivative(
+ACTS_SURFACE_MAYBE_INLINE ActsMatrix<2, 3>
+CylinderSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3& position) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
@@ -180,3 +185,5 @@ inline ActsMatrix<2, 3> CylinderSurface::localCartesianToBoundLocalDerivative(
 
   return loc3DToLocBound;
 }
+
+}  // namespace Acts

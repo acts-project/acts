@@ -8,18 +8,19 @@
 
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 
-inline Acts::Vector3 Acts::Surface::center(const GeometryContext& gctx) const {
+ACTS_SURFACE_MAYBE_INLINE Acts::Vector3 Acts::Surface::center(
+    const GeometryContext& gctx) const {
   // fast access via tranform matrix (and not translation())
   auto tMatrix = transform(gctx).matrix();
   return Vector3(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
 }
 
-inline Acts::Vector3 Acts::Surface::normal(const GeometryContext& gctx,
-                                           const Vector3& /*unused*/) const {
+ACTS_SURFACE_MAYBE_INLINE Acts::Vector3 Acts::Surface::normal(
+    const GeometryContext& gctx, const Vector3& /*unused*/) const {
   return normal(gctx, Vector2(Vector2::Zero()));
 }
 
-inline const Acts::Transform3& Acts::Surface::transform(
+ACTS_SURFACE_MAYBE_INLINE const Acts::Transform3& Acts::Surface::transform(
     const GeometryContext& gctx) const {
   if (m_associatedDetElement != nullptr) {
     return m_associatedDetElement->transform(gctx);
@@ -27,19 +28,20 @@ inline const Acts::Transform3& Acts::Surface::transform(
   return m_transform;
 }
 
-inline bool Acts::Surface::insideBounds(const Vector2& lposition,
-                                        const BoundaryCheck& bcheck) const {
+ACTS_SURFACE_MAYBE_INLINE bool Acts::Surface::insideBounds(
+    const Vector2& lposition, const BoundaryCheck& bcheck) const {
   return bounds().inside(lposition, bcheck);
 }
 
-inline Acts::RotationMatrix3 Acts::Surface::referenceFrame(
+ACTS_SURFACE_MAYBE_INLINE Acts::RotationMatrix3 Acts::Surface::referenceFrame(
     const GeometryContext& gctx, const Vector3& /*unused*/,
     const Vector3& /*unused*/) const {
   return transform(gctx).matrix().block<3, 3>(0, 0);
 }
 
-inline Acts::BoundToFreeMatrix Acts::Surface::jacobianLocalToGlobal(
-    const GeometryContext& gctx, const BoundVector& boundParams) const {
+ACTS_SURFACE_MAYBE_INLINE Acts::BoundToFreeMatrix
+Acts::Surface::jacobianLocalToGlobal(const GeometryContext& gctx,
+                                     const BoundVector& boundParams) const {
   // Transform from bound to free parameters
   FreeVector freeParams =
       detail::transformBoundToFreeParameters(*this, gctx, boundParams);
@@ -70,8 +72,9 @@ inline Acts::BoundToFreeMatrix Acts::Surface::jacobianLocalToGlobal(
   return jacToGlobal;
 }
 
-inline Acts::FreeToBoundMatrix Acts::Surface::jacobianGlobalToLocal(
-    const GeometryContext& gctx, const FreeVector& parameters) const {
+ACTS_SURFACE_MAYBE_INLINE Acts::FreeToBoundMatrix
+Acts::Surface::jacobianGlobalToLocal(const GeometryContext& gctx,
+                                     const FreeVector& parameters) const {
   // The global position
   const auto position = parameters.segment<3>(eFreePos0);
   // The direction
@@ -105,8 +108,9 @@ inline Acts::FreeToBoundMatrix Acts::Surface::jacobianGlobalToLocal(
   return jacToLocal;
 }
 
-inline Acts::FreeToPathMatrix Acts::Surface::freeToPathDerivative(
-    const GeometryContext& gctx, const FreeVector& parameters) const {
+ACTS_SURFACE_MAYBE_INLINE Acts::FreeToPathMatrix
+Acts::Surface::freeToPathDerivative(const GeometryContext& gctx,
+                                    const FreeVector& parameters) const {
   // The global position
   const auto position = parameters.segment<3>(eFreePos0);
   // The direction
@@ -123,29 +127,32 @@ inline Acts::FreeToPathMatrix Acts::Surface::freeToPathDerivative(
   return freeToPath;
 }
 
-inline const Acts::DetectorElementBase*
+ACTS_SURFACE_MAYBE_INLINE const Acts::DetectorElementBase*
 Acts::Surface::associatedDetectorElement() const {
   return m_associatedDetElement;
 }
 
-inline const Acts::Layer* Acts::Surface::associatedLayer() const {
+ACTS_SURFACE_MAYBE_INLINE const Acts::Layer* Acts::Surface::associatedLayer()
+    const {
   return (m_associatedLayer);
 }
 
-inline const Acts::ISurfaceMaterial* Acts::Surface::surfaceMaterial() const {
+ACTS_SURFACE_MAYBE_INLINE const Acts::ISurfaceMaterial*
+Acts::Surface::surfaceMaterial() const {
   return m_surfaceMaterial.get();
 }
 
-inline const std::shared_ptr<const Acts::ISurfaceMaterial>&
+ACTS_SURFACE_MAYBE_INLINE const std::shared_ptr<const Acts::ISurfaceMaterial>&
 Acts::Surface::surfaceMaterialSharedPtr() const {
   return m_surfaceMaterial;
 }
 
-inline void Acts::Surface::assignSurfaceMaterial(
+ACTS_SURFACE_MAYBE_INLINE void Acts::Surface::assignSurfaceMaterial(
     std::shared_ptr<const Acts::ISurfaceMaterial> material) {
   m_surfaceMaterial = std::move(material);
 }
 
-inline void Acts::Surface::associateLayer(const Acts::Layer& lay) {
+ACTS_SURFACE_MAYBE_INLINE void Acts::Surface::associateLayer(
+    const Acts::Layer& lay) {
   m_associatedLayer = (&lay);
 }
