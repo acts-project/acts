@@ -82,22 +82,27 @@ class DigitzationAlgorithm final : public BareAlgorithm {
   /// @param geoCfg is the geometric digitization configuration
   /// @param hit the Simultated hit
   /// @param surface the Surface on which this is supposed to happen
-  /// @param gcts the Geometry context
+  /// @param gctx the Geometry context
+  /// @param rng the Random number engine for the drift smearing
   ///
   /// @return the list of channels
   std::vector<ActsFatras::Channelizer::ChannelSegment> channelizing(
       const GeometricDigitizationConfig& geoCfg, const SimHit& hit,
-      const Acts::Surface& surface, const Acts::GeometryContext& gctx) const;
+      const Acts::Surface& surface, const Acts::GeometryContext& gctx,
+      RandomEngine& rng) const;
 
   /// Helper method for creating digitized parameters from clusters
   ///
   /// @todo ADD random smearing
   /// @param geoCfg is the geometric digitization configuration
   /// @param channels are the input channels
+  /// @param rng the Random number engine for the charge generation smearing
+  ///
+  /// @return the list of digitized parameters
   DigitizedParameters localParameters(
       const GeometricDigitizationConfig& geoCfg,
-      const std::vector<ActsFatras::Channelizer::ChannelSegment>& channels)
-      const;
+      const std::vector<ActsFatras::Channelizer::ChannelSegment>& channels,
+      RandomEngine& rng) const;
 
   /// Helper method for created a measurement from digitized parameters
   ///
@@ -131,7 +136,13 @@ class DigitzationAlgorithm final : public BareAlgorithm {
   ActsFatras::PlanarSurfaceMask m_surfaceMask;
   ActsFatras::Channelizer m_channelizer;
 
-  /// Contruct the constituents of a measurement
+  /// Contruct the constituents of a measurement.
+  ///
+  /// @tparam kMeasDIM the full dimension of the measurement
+  ///
+  /// @param dParams the struct of arrays of parameters to be created
+  ///
+  /// @return a tuple of constituents for a measurement
   template <size_t kMeasDIM>
   std::tuple<std::array<Acts::BoundIndices, kMeasDIM>,
              Acts::ActsVector<kMeasDIM>, Acts::ActsSymMatrix<kMeasDIM>>

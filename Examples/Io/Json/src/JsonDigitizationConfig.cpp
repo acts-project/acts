@@ -98,10 +98,6 @@ void ActsExamples::to_json(
   j["thickness"] = gdc.thickness;
   j["threshold"] = gdc.threshold;
   j["digital"] = gdc.digital;
-  std::array<Acts::ActsScalar, 3> driftData = {
-      gdc.driftDirection.x(), gdc.driftDirection.y(), gdc.driftDirection.z()};
-  j["drift"] = driftData;
-  j["drift_smearing"] = nlohmann::json(gdc.driftSmearing);
 }
 
 void ActsExamples::from_json(const nlohmann::json& j,
@@ -113,9 +109,6 @@ void ActsExamples::from_json(const nlohmann::json& j,
   gdc.thickness = j["thickness"];
   gdc.threshold = j["threshold"];
   gdc.digital = j["digital"];
-  std::array<Acts::ActsScalar, 3> driftData = j["drift"];
-  gdc.driftDirection = Acts::Vector3(driftData[0], driftData[1], driftData[2]);
-  from_json(j["drift_smearing"], gdc.driftSmearing);
 }
 
 void ActsExamples::to_json(nlohmann::json& j,
