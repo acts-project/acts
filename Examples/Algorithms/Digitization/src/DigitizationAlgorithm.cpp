@@ -8,11 +8,11 @@
 
 #include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
@@ -54,15 +54,14 @@ ActsExamples::DigitzationAlgorithm::DigitzationAlgorithm(
   }
 
   // create the smearers from the configuration
-  //std::vector<std::pair<Acts::GeometryIdentifier, Digitizer>> digitizerInput;
+  std::vector<std::pair<Acts::GeometryIdentifier, Digitizer>> digitizerInput;
 
   for (size_t i = 0; i < m_cfg.digitizationConfigs.size(); ++i) {
-
-    GeometricDigitizationConfig geometric;
+    GeometricDigitizationConfig geoCfg;
     Acts::GeometryIdentifier geoId = m_cfg.digitizationConfigs.idAt(i);
 
     const auto& digiCfg = m_cfg.digitizationConfigs.valueAt(i);
-    geometric = digiCfg.geometricDigiConfig;
+    geoCfg = digiCfg.geometricDigiConfig;
     // Copy so we can sort in-place
     SmearingConfig smCfg = digiCfg.smearingDigiConfig;
 
@@ -70,8 +69,8 @@ ActsExamples::DigitzationAlgorithm::DigitzationAlgorithm(
     for (auto& gcf : smCfg) {
       indices.push_back(gcf.index);
     }
-    indices.insert(indices.begin(), geometric.indices.begin(),
-                   geometric.indices.end());
+    indices.insert(indices.begin(), geoCfg.indices.begin(),
+                   geoCfg.indices.end());
 
     // Make sure the configured input parameter indices are sorted and unique
     std::sort(indices.begin(), indices.end());
@@ -82,28 +81,28 @@ ActsExamples::DigitzationAlgorithm::DigitzationAlgorithm(
           "Digitization configuration contains duplicate parameter indices");
     }
 
-    Smearer smearing;
-    // Create the smearer for this setup
     switch (smCfg.size()) {
+      case 0u:
+        digitizerInput.emplace_back(geoId, makeDigitizer<0u>(digiCfg));
+        break;
       case 1u:
-        smearing = makeSmearer<1u>(smCfg);
+        digitizerInput.emplace_back(geoId, makeDigitizer<1u>(digiCfg));
         break;
       case 2u:
-        smearing = makeSmearer<2u>(smCfg);
+        digitizerInput.emplace_back(geoId, makeDigitizer<2u>(digiCfg));
         break;
       case 3u:
-        smearing = makeSmearer<3u>(smCfg);
+        digitizerInput.emplace_back(geoId, makeDigitizer<3u>(digiCfg));
         break;
       case 4u:
-        smearing = makeSmearer<4u>(smCfg);
+        digitizerInput.emplace_back(geoId, makeDigitizer<4u>(digiCfg));
         break;
+      default:
+        throw std::invalid_argument("Unsupported smearer size");
     }
-    // The digitizers fully configured
-    // digitizerInput.emplace_back(geoId, std::move(digitizer));
   }
 
-  //m_digitizers =
-  //    Acts::GeometryHierarchyMap<Digitizer>(std::move(digitizerInput));
+  m_digitizers = Acts::GeometryHierarchyMap<Digitizer>(digitizerInput);
 }
 
 ActsExamples::ProcessCode ActsExamples::DigitzationAlgorithm::execute(
@@ -143,40 +142,63 @@ ActsExamples::ProcessCode ActsExamples::DigitzationAlgorithm::execute(
       return ProcessCode::ABORT;
     }
 
-    /*
-    // run the smearer. iterate over the hits for this surface inside the
+    auto digitizerItr = m_digitizers.find(moduleGeoId);
+    if (digitizerItr == m_digitizers.end()) {
+      ACTS_DEBUG("No digitizer present for module " << moduleGeoId);
+      continue;
+    }
+
+    // Run the digitizer. Iterate over the hits for this surface inside the
     // visitor so we do not need to lookup the variant object per-hit.
     std::visit(
-        [&](const auto& smearer) {
-          using ThisSmearer = std::decay_t<decltype(smearer)>;
-          using ThisMeasurement =
-              Acts::Measurement<IndexSourceLink, Acts::BoundIndices,
-                                ThisSmearer::size()>;
-
+        [&](const auto& digitizer) {
           for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
             const auto& simHit = *h;
             const auto simHitIdx = simHits.index_of(h);
 
-            auto res = smearer(rng, simHit, *surfacePtr, ctx.geoContext);
-            if (not res.ok()) {
-              // ignore un-smearable measurements
-              // TODO log this or at least count invalid hits?
-              return;
-            }
-            const auto& [par, cov] = res.value();
+            DigitizedParameters dParameters;
 
-            // the measurement container is unordered and the index under which
+            // Geometric part - 0, 1, 2 local parameters are possible
+            if (not digitizer.geometric.indices.empty()) {
+              auto channels = channelizing(digitizer.geometric, simHit,
+                                           *surfacePtr, ctx.geoContext);
+              if (channels.empty()) {
+                ACTS_DEBUG(
+                    "Geometric channelization did not work, skipping this hit.")
+                continue;
+              }
+              dParameters = localParameters(digitizer.geometric, channels);
+            }
+
+            // Smearing part - (optionally) rest
+            if (not digitizer.smearing.indices.empty()) {
+              auto res =
+                  digitizer.smearing(rng, simHit, *surfacePtr, ctx.geoContext);
+              if (not res.ok()) {
+                ACTS_DEBUG("Problem in hit smearing, skipping this hit.")
+                continue;
+              }
+              const auto& [par, cov] = res.value();
+              for (Eigen::Index ip = 0; ip < par.rows(); ++ip) {
+                dParameters.indices.push_back(digitizer.smearing.indices[ip]);
+                dParameters.values.push_back(par[ip]);
+                dParameters.covariances.push_back(cov(ip, ip));
+              }
+            }
+
+            // The measurement container is unordered and the index under which
             // the measurement will be stored is known before adding it.
             Index hitIdx = measurements.size();
             IndexSourceLink sourceLink(moduleGeoId, hitIdx);
-            ThisMeasurement meas(sourceLink, smearer.indices, par, cov);
 
-            // add to output containers
+            // Add to output containers:
             // index map and source link container are geometry-ordered.
             // since the input is also geometry-ordered, new items can
             // be added at the end.
             sourceLinks.emplace_hint(sourceLinks.end(), std::move(sourceLink));
-            measurements.emplace_back(std::move(meas));
+            measurements.emplace_back(
+                createMeasurement(dParameters, sourceLink));
+
             // this digitization does not do hit merging so there is only one
             // mapping entry for each digitized hit.
             hitParticlesMap.emplace_hint(hitParticlesMap.end(), hitIdx,
@@ -184,8 +206,7 @@ ActsExamples::ProcessCode ActsExamples::DigitzationAlgorithm::execute(
             hitSimHitsMap.emplace_hint(hitSimHitsMap.end(), hitIdx, simHitIdx);
           }
         },
-        *smearerItr);
-        */
+        *digitizerItr);
   }
 
   ctx.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));
@@ -195,4 +216,84 @@ ActsExamples::ProcessCode ActsExamples::DigitzationAlgorithm::execute(
   ctx.eventStore.add(m_cfg.outputMeasurementSimHitsMap,
                      std::move(hitSimHitsMap));
   return ProcessCode::SUCCESS;
+}
+
+std::vector<ActsFatras::Channelizer::ChannelSegment>
+ActsExamples::DigitzationAlgorithm::channelizing(
+    const GeometricDigitizationConfig& geoCfg, const SimHit& hit,
+    const Acts::Surface& surface, const Acts::GeometryContext& gctx) const {
+  Acts::Vector3 surfaceDrift = geoCfg.driftDirection;
+
+  auto driftedSegment =
+      m_surfaceDrift.toReadout(gctx, surface, geoCfg.thickness, hit.position(),
+                               hit.unitDirection(), surfaceDrift);
+  auto maskedSegmentRes = m_surfaceMask.apply(surface, driftedSegment);
+  if (maskedSegmentRes.ok()) {
+    auto maskedSegment = maskedSegmentRes.value();
+    // Now Channelize
+    return m_channelizer.segments(gctx, surface, geoCfg.segmentation,
+                                  maskedSegment);
+  }
+  return {};
+}
+
+ActsExamples::DigitzationAlgorithm::DigitizedParameters
+ActsExamples::DigitzationAlgorithm::localParameters(
+    const GeometricDigitizationConfig& geoCfg,
+    const std::vector<ActsFatras::Channelizer::ChannelSegment>& channels)
+    const {
+  DigitizedParameters dParameters;
+
+  const auto& binningData = geoCfg.segmentation.binningData();
+
+  Acts::ActsScalar totalWeight = 0.;
+  Acts::Vector2 m(0., 0.);
+  // Combine the channels
+  for (const auto& ch : channels) {
+    auto bin = ch.bin;
+    Acts::ActsScalar charge = geoCfg.digital ? 1. : ch.pathLength;
+    // @todo -> pathlength to charge creator with smearing
+    if (geoCfg.digital or charge > geoCfg.threshold) {
+      totalWeight += charge;
+      m += Acts::Vector2(charge * binningData[0].center(bin[0]),
+                         charge * binningData[1].center(bin[1]));
+    }
+  }
+  if (totalWeight > 0.) {
+    m *= 1. / totalWeight;
+    dParameters.indices = geoCfg.indices;
+    for (auto idx : dParameters.indices) {
+      dParameters.values.push_back(m[idx]);
+      // @todo -> get parameterized errors for this
+      dParameters.covariances.push_back(99.);
+    }
+  }
+  return dParameters;
+}
+
+ActsExamples::Measurement ActsExamples::DigitzationAlgorithm::createMeasurement(
+    const DigitizedParameters& dParams, const IndexSourceLink& isl) const {
+  switch (dParams.indices.size()) {
+    case 1u: {
+      auto [indices, par, cov] = measurementConstituents<1>(dParams);
+      return Acts::Measurement<IndexSourceLink, Acts::BoundIndices, 1>(
+          isl, indices, par, cov);
+    }
+    case 2u: {
+      auto [indices, par, cov] = measurementConstituents<2>(dParams);
+      return Acts::Measurement<IndexSourceLink, Acts::BoundIndices, 2>(
+          isl, indices, par, cov);
+    };
+    case 3u: {
+      auto [indices, par, cov] = measurementConstituents<3>(dParams);
+      return Acts::Measurement<IndexSourceLink, Acts::BoundIndices, 3>(
+          isl, indices, par, cov);
+    };
+    case 4u: {
+      auto [indices, par, cov] = measurementConstituents<4>(dParams);
+      return Acts::Measurement<IndexSourceLink, Acts::BoundIndices, 4>(
+          isl, indices, par, cov);
+    };
+  }
+  throw std::runtime_error("Invalid/mismatching dimension of measurement.");
 }
