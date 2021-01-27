@@ -161,13 +161,13 @@ ActsExamples::ProcessCode ActsExamples::DigitzationAlgorithm::execute(
             // Geometric part - 0, 1, 2 local parameters are possible
             if (not digitizer.geometric.indices.empty()) {
               auto channels = channelizing(digitizer.geometric, simHit,
-                                           *surfacePtr, ctx.geoContext);
+                                           *surfacePtr, ctx.geoContext, rng);
               if (channels.empty()) {
                 ACTS_DEBUG(
                     "Geometric channelization did not work, skipping this hit.")
                 continue;
               }
-              dParameters = localParameters(digitizer.geometric, channels);
+              dParameters = localParameters(digitizer.geometric, channels, rng);
             }
 
             // Smearing part - (optionally) rest
@@ -221,12 +221,13 @@ ActsExamples::ProcessCode ActsExamples::DigitzationAlgorithm::execute(
 std::vector<ActsFatras::Channelizer::ChannelSegment>
 ActsExamples::DigitzationAlgorithm::channelizing(
     const GeometricDigitizationConfig& geoCfg, const SimHit& hit,
-    const Acts::Surface& surface, const Acts::GeometryContext& gctx) const {
-  Acts::Vector3 surfaceDrift = geoCfg.driftDirection;
+    const Acts::Surface& surface, const Acts::GeometryContext& gctx,
+    RandomEngine& rng) const {
+  Acts::Vector3 driftDir = geoCfg.drift(hit.position(), rng);
 
   auto driftedSegment =
       m_surfaceDrift.toReadout(gctx, surface, geoCfg.thickness, hit.position(),
-                               hit.unitDirection(), surfaceDrift);
+                               hit.unitDirection(), driftDir);
   auto maskedSegmentRes = m_surfaceMask.apply(surface, driftedSegment);
   if (maskedSegmentRes.ok()) {
     auto maskedSegment = maskedSegmentRes.value();
@@ -240,23 +241,33 @@ ActsExamples::DigitzationAlgorithm::channelizing(
 ActsExamples::DigitzationAlgorithm::DigitizedParameters
 ActsExamples::DigitzationAlgorithm::localParameters(
     const GeometricDigitizationConfig& geoCfg,
-    const std::vector<ActsFatras::Channelizer::ChannelSegment>& channels)
-    const {
+    const std::vector<ActsFatras::Channelizer::ChannelSegment>& channels,
+    RandomEngine& rng) const {
   DigitizedParameters dParameters;
 
   const auto& binningData = geoCfg.segmentation.binningData();
 
   Acts::ActsScalar totalWeight = 0.;
   Acts::Vector2 m(0., 0.);
+  size_t b0min = SIZE_MAX;
+  size_t b0max = 0;
+  size_t b1min = SIZE_MAX;
+  size_t b1max = 0;
   // Combine the channels
   for (const auto& ch : channels) {
     auto bin = ch.bin;
-    Acts::ActsScalar charge = geoCfg.digital ? 1. : ch.pathLength;
-    // @todo -> pathlength to charge creator with smearing
+    Acts::ActsScalar charge =
+        geoCfg.digital ? 1. : geoCfg.charge(ch.pathLength, ch.pathLength, rng);
     if (geoCfg.digital or charge > geoCfg.threshold) {
       totalWeight += charge;
-      m += Acts::Vector2(charge * binningData[0].center(bin[0]),
-                         charge * binningData[1].center(bin[1]));
+      size_t b0 = bin[0];
+      size_t b1 = bin[1];
+      m += Acts::Vector2(charge * binningData[0].center(b0),
+                         charge * binningData[1].center(b1));
+      b0min = std::min(b0min, b0);
+      b0max = std::max(b0max, b0);
+      b1min = std::min(b1min, b1);
+      b1max = std::max(b1max, b1);
     }
   }
   if (totalWeight > 0.) {
@@ -264,8 +275,15 @@ ActsExamples::DigitzationAlgorithm::localParameters(
     dParameters.indices = geoCfg.indices;
     for (auto idx : dParameters.indices) {
       dParameters.values.push_back(m[idx]);
-      // @todo -> get parameterized errors for this
-      dParameters.covariances.push_back(99.);
+    }
+    size_t size0 = static_cast<size_t>(b0max - b0min + 1);
+    size_t size1 = static_cast<size_t>(b1max - b1min + 1);
+    auto covariances = geoCfg.covariance(size0, size1, rng);
+    if (covariances.size() == dParameters.indices.size()) {
+      dParameters.covariances = covariances;
+    } else {
+      dParameters.covariances =
+          std::vector<Acts::ActsScalar>(covariances.size(), -1.);
     }
   }
   return dParameters;
