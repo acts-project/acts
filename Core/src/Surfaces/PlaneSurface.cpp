@@ -148,6 +148,6 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
   return Polyhedron(vertices, faces, triangularMesh, exactPolyhedron);
 }
 
-#ifndef ACTS_DO_SURFACE_INLINE
+#ifndef ACTS_SURFACE_INLINE
 #include "Acts/Surfaces/detail/PlaneSurface.ipp"
 #endif

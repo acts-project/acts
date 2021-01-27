@@ -282,6 +282,6 @@ class LineSurface : public Surface {
 
 }  // namespace Acts
 
-#ifdef ACTS_DO_SURFACE_INLINE
+#ifdef ACTS_SURFACE_INLINE
 #include "Acts/Surfaces/detail/LineSurface.ipp"
 #endif
