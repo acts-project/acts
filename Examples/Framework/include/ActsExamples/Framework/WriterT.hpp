@@ -16,8 +16,12 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include <Acts/Utilities/Logger.hpp>
 
+#include <limits>
 #include <memory>
 #include <string>
+
+#define NaNdouble std::numeric_limits<double>::quiet_NaN()
+#define NaNfloat std::numeric_limits<float>::quiet_NaN()
 
 namespace ActsExamples {
 

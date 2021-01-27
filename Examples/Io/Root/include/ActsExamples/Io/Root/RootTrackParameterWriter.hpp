@@ -82,23 +82,23 @@ class RootTrackParameterWriter final : public TrackParameterWriter {
   TTree* m_outputTree{nullptr};  ///< The output tree
   int m_eventNr{0};              ///< the event number of
 
-  float m_loc0{0.};   ///< loc0
-  float m_loc1{0.};   ///< loc1
-  float m_phi{0.};    ///< phi
-  float m_theta{0.};  ///< theta
-  float m_qop{0.};    ///< q/p
-  float m_time{0.};   ///< time
-  float m_p{0.};      ///< p
-  float m_pt{0.};     ///< pt
-  float m_eta{0.};    ///< eta
+  float m_loc0{NaNfloat};   ///< loc0
+  float m_loc1{NaNfloat};   ///< loc1
+  float m_phi{NaNfloat};    ///< phi
+  float m_theta{NaNfloat};  ///< theta
+  float m_qop{NaNfloat};    ///< q/p
+  float m_time{NaNfloat};   ///< time
+  float m_p{NaNfloat};      ///< p
+  float m_pt{NaNfloat};     ///< pt
+  float m_eta{NaNfloat};    ///< eta
 
   int m_t_charge{0};            ///< Truth particle charge
-  float m_t_loc0{-99.};         ///< Truth parameter loc0
-  float m_t_loc1{-99.};         ///< Truth parameter loc1
-  float m_t_phi{-99.};          ///< Truth parameter phi
-  float m_t_theta{-99.};        ///< Truth parameter theta
-  float m_t_qop{-99.};          ///< Truth parameter qop
-  float m_t_time{-99.};         ///< Truth parameter time
+  float m_t_loc0{NaNfloat};     ///< Truth parameter loc0
+  float m_t_loc1{NaNfloat};     ///< Truth parameter loc1
+  float m_t_phi{NaNfloat};      ///< Truth parameter phi
+  float m_t_theta{NaNfloat};    ///< Truth parameter theta
+  float m_t_qop{NaNfloat};      ///< Truth parameter qop
+  float m_t_time{NaNfloat};     ///< Truth parameter time
   bool m_truthMatched = false;  ///< Whether the seed is matched with truth
 };
 
