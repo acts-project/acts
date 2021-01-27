@@ -12,6 +12,7 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <memory>
@@ -139,8 +140,7 @@ class BinningData {
     min = m_boundaries[0];
     max = m_boundaries[m_boundaries.size() - 1];
     // set to equidistant search
-    m_functionPtr =
-        m_bins < 50 ? &searchInVectorWithBoundary : &binarySearchWithBoundary;
+    m_functionPtr = &searchInVectorWithBoundary;
     // the binning data has sub structure - multiplicative
     checkSubStructure();
   }
@@ -173,8 +173,7 @@ class BinningData {
     if (type == equidistant) {
       m_functionPtr = &searchEquidistantWithBoundary;
     } else {
-      m_functionPtr =
-          m_bins < 50 ? &searchInVectorWithBoundary : &binarySearchWithBoundary;
+      m_functionPtr = &searchInVectorWithBoundary;
     }
   }
 
@@ -203,8 +202,7 @@ class BinningData {
       if (type == equidistant) {
         m_functionPtr = &searchEquidistantWithBoundary;
       } else {
-        m_functionPtr = m_bins < 50 ? &searchInVectorWithBoundary
-                                    : &binarySearchWithBoundary;
+        m_functionPtr = &searchInVectorWithBoundary;
       }
     }
     return (*this);
@@ -215,26 +213,6 @@ class BinningData {
 
   /// Return the number of bins - including sub bins
   size_t bins() const { return m_totalBins; }
-
-  /// Decrement the bin
-  /// - boolean indicates if decrement actually worked
-  ///
-  /// @param bin is the bin to be decremented
-  bool decrement(size_t& bin) const {
-    size_t sbin = bin;
-    bin = bin > 0 ? bin - 1 : (option == open ? bin : m_bins - 1);
-    return (sbin != bin);
-  }
-
-  /// Increment the bin
-  /// - boolean indicates if decrement actually worked
-  ///
-  /// @param bin the bin to be incremented
-  bool increment(size_t& bin) const {
-    size_t sbin = bin;
-    bin = bin + 1 < m_bins ? bin + 1 : (option == open ? bin : 0);
-    return (sbin != bin);
-  }
 
   /// Return the boundaries  - including sub boundaries
   /// @return vector of floats indicating the boundary values
@@ -426,29 +404,6 @@ class BinningData {
     return 0.5 * (bmin + bmax);
   }
 
-  /// access to lower/higher bins
-  ///
-  /// takes a bin entry and returns the lower/higher bound
-  /// respecting open/closed
-  /// @return low/high bounds
-  std::vector<size_t> neighbourRange(size_t bin) const {
-    size_t low = bin;
-    size_t high = bin;
-    // decrement and increment
-    bool dsucc = decrement(low);
-    bool isucc = increment(high);
-    // both worked -> triple range
-    if (dsucc && isucc) {
-      return {low, bin, high};
-    }
-    // one worked -> double range
-    if (dsucc || isucc) {
-      return {low, high};
-    }
-    // none worked -> single bin
-    return {bin};
-  }
-
  private:
   size_t m_bins;                    ///< number of bins
   std::vector<float> m_boundaries;  ///< vector of holding the bin boundaries
@@ -530,8 +485,7 @@ class BinningData {
                       : ((bData.option == open) ? (bData.m_bins - 1) : 0));
   }
 
-  // Linear search in arbitrary vector
-  // - superior in O(10) searches
+  // Search in arbitrary boundary
   static size_t searchInVectorWithBoundary(float value,
                                            const BinningData& bData) {
     // lower boundary
@@ -542,45 +496,11 @@ class BinningData {
     if (value >= bData.max) {
       return (bData.option == closed) ? 0 : (bData.m_bins - 1);
     }
-    // search
-    auto vIter = bData.m_boundaries.begin();
-    size_t bin = 0;
-    for (; vIter != bData.m_boundaries.end(); ++vIter, ++bin) {
-      if ((*vIter) > value) {
-        break;
-      }
-    }
-    return (bin - 1);
-  }
 
-  // A binary search with in an arbitrary vector
-  //    - faster than vector search for O(50) objects
-  static size_t binarySearchWithBoundary(float value,
-                                         const BinningData& bData) {
-    // Binary search in an array of n values to locate value
-    if (value <= bData.m_boundaries[0]) {
-      return (bData.option == closed) ? (bData.m_bins - 1) : 0;
-    }
-    size_t nabove, nbelow, middle;
-    // overflow
-    nabove = bData.m_boundaries.size();
-    if (value >= bData.max) {
-      return (bData.option == closed) ? 0 : nabove - 2;
-    }
-    // binary search
-    nbelow = 0;
-    while (nabove - nbelow > 1) {
-      middle = (nabove + nbelow) / 2;
-      if (value == bData.m_boundaries[middle - 1]) {
-        return middle - 1;
-      }
-      if (value < bData.m_boundaries[middle - 1]) {
-        nabove = middle;
-      } else {
-        nbelow = middle;
-      }
-    }
-    return nbelow - 1;
+    auto lb = std::lower_bound(bData.m_boundaries.begin(),
+                               bData.m_boundaries.end(), value);
+    return static_cast<size_t>(std::distance(bData.m_boundaries.begin(), lb) -
+                               1);
   }
 };
 }  // namespace Acts

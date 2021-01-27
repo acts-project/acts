@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
-#include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 
 #include <fstream>
 #include <iostream>
