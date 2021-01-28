@@ -50,6 +50,12 @@ auto TelescopeDetector::finalize(
   if (binValue > 2) {
     throw std::invalid_argument("The axis value could only be 0, 1, or 2.");
   }
+  // Check if the bounds parameters are valid
+  if (surfaceType == 1 and bounds[0] >= bounds[1]) {
+    throw std::invalid_argument(
+        "The minR should be smaller than the maxR for disc surface bounds.");
+  }
+
   // Sort the provided distances
   std::sort(positions.begin(), positions.end());
 

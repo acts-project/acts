@@ -35,10 +35,10 @@ ActsExamples::Telescope::buildDetector(
     std::vector<
         std::shared_ptr<ActsExamples::Telescope::TelescopeDetectorElement>>&
         detectorStore,
-    const std::vector<double>& positions, std::array<double, 2> offsets,
-    std::array<double, 2> bounds, double thickness,
+    const std::vector<double>& positions, const std::array<double, 2>& offsets,
+    const std::array<double, 2>& bounds, double thickness,
     const ActsExamples::Telescope::TelescopeSurfaceType& surfaceType,
-    Acts::BinningValue binValue) {
+    const Acts::BinningValue& binValue) {
   using namespace Acts::UnitLiterals;
 
   // The rectangle bounds for plane surface

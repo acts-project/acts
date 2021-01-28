@@ -41,10 +41,10 @@ enum TelescopeSurfaceType : unsigned int {
 std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     const typename TelescopeDetectorElement::ContextType& gctx,
     std::vector<std::shared_ptr<TelescopeDetectorElement>>& detectorStore,
-    const std::vector<double>& positions, std::array<double, 2> offsets,
-    std::array<double, 2> bounds, double thickness,
+    const std::vector<double>& positions, const std::array<double, 2>& offsets,
+    const std::array<double, 2>& bounds, double thickness,
     const TelescopeSurfaceType& surfaceType,
-    Acts::BinningValue binValue = Acts::BinningValue::binZ);
+    const Acts::BinningValue& binValue = Acts::BinningValue::binZ);
 
 }  // end of namespace Telescope
 }  // end of namespace ActsExamples
