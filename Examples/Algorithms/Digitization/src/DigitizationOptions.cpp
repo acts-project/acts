@@ -15,6 +15,7 @@
 #include "ActsExamples/Digitization/SmearingConfig.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
+#include <fstream>
 #include <numeric>
 #include <string>
 
@@ -44,7 +45,7 @@ void ActsExamples::Options::addDigitizationOptions(Description& desc) {
   auto opt = desc.add_options();
   opt("digi-config-file", value<std::string>(),
       "Configuration (.json) file for digitization description, overwrites "
-      "options input on command line.");
+      "smearing options input on command line.");
   opt("digi-geometric-3d", bool_switch(),
       "Geometric: Switching geometric digitisation in 3D on");
   opt("digi-smear", bool_switch(), "Smearing: Switching hit smearing on");
@@ -108,8 +109,9 @@ ActsExamples::Options::readSmearingConfig(const Variables& variables) {
   SmearingAlgorithm::Config smearCfg;
 
   // Smear configuration with command line input
-  // only limited smearing configuration possible
-  // TODO add configuration file for more complex smearing setups
+  // only limited smearing configuration possible:
+  // complex smearing option configuration has to be done with a
+  // digitization config file
 
   // in case of an error, we always return a configuration struct with empty
   // smearers configuration. this will be caught later on during the algorithm
@@ -201,4 +203,13 @@ ActsExamples::Options::readSmearingConfig(const Variables& variables) {
       Acts::GeometryHierarchyMap<SmearingConfig>(std::move(smearersInput));
 
   return smearCfg;
+}
+
+ActsExamples::DigitizationAlgorithm::Config
+ActsExamples::Options::readDigitizationConfig(const Variables& /*variables*/) {
+  ACTS_LOCAL_LOGGER(
+      Acts::getDefaultLogger("DigitzationOptions", Acts::Logging::INFO));
+
+  DigitizationAlgorithm::Config digiCfg;
+  return digiCfg;
 }
