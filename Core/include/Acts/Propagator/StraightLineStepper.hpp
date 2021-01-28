@@ -59,8 +59,8 @@ class StraightLineStepper {
     ///
     /// @note the covariance matrix is copied when needed
     template <typename charge_t>
-    explicit State(std::reference_wrapper<const GeometryContext> gctx,
-                   std::reference_wrapper<const MagneticFieldContext> /*mctx*/,
+    explicit State(const GeometryContext& gctx,
+                   const MagneticFieldContext& /*mctx*/,
                    const SingleBoundTrackParameters<charge_t>& par,
                    NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max(),

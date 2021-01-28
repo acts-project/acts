@@ -21,7 +21,7 @@ class ConstantBField final {
  public:
   struct Cache {
     /// @brief constructor with context
-    Cache(std::reference_wrapper<const MagneticFieldContext> /*mcfg*/) {}
+    Cache(const MagneticFieldContext& /*mcfg*/) {}
   };
 
   /// Construct constant magnetic field from field vector.

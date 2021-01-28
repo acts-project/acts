@@ -70,7 +70,7 @@ class SolenoidBField {
     /// @brief Constructor with magnetic field context
     ///
     /// @param mcfg the magnetic field context
-    Cache(std::reference_wrapper<const MagneticFieldContext> /*mcfg*/) {}
+    Cache(const MagneticFieldContext& /*mcfg*/) {}
   };
 
   /// Config struct for the SolenoidBfield.
