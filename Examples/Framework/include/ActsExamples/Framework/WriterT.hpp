@@ -20,10 +20,11 @@
 #include <memory>
 #include <string>
 
-#define NaNdouble std::numeric_limits<double>::quiet_NaN()
-#define NaNfloat std::numeric_limits<float>::quiet_NaN()
-
 namespace ActsExamples {
+
+/// NaN values for TTree variables
+constexpr double NaNdouble = std::numeric_limits<double>::quiet_NaN();
+constexpr float NaNfloat = std::numeric_limits<float>::quiet_NaN();
 
 /// A helper class for users to implement framework writers.
 ///
