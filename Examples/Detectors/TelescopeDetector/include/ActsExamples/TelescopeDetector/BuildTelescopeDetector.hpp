@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,6 +19,12 @@
 namespace ActsExamples {
 namespace Telescope {
 
+/// The telescope detector surface type
+enum TelescopeSurfaceType : unsigned int {
+  Plane = 0,
+  Disc = 1,
+};
+
 /// Global method to build the telescope tracking geometry
 ///
 /// @param gctx is the detector element dependent geometry context
@@ -26,14 +32,18 @@ namespace Telescope {
 /// @param positions is the offset w of different layers in the longitudinal
 /// direction
 /// @param offsets is the offset (u, v) of the layers in the transverse plane
-/// @param pSize is the plane size
+/// @param bounds is the surface bound parameters, i.e. halfX and halfY if plane
+/// surface, and rmin and rMax if disc surface
 /// @param thickness is the material thickness of each layer
-/// @param binValue indicates which axis the planes normals are parallel to
+/// @param surfaceType is the detector surface type
+/// @param binValue indicates which axis the detector surface normals are
+/// parallel to
 std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     const typename TelescopeDetectorElement::ContextType& gctx,
     std::vector<std::shared_ptr<TelescopeDetectorElement>>& detectorStore,
     const std::vector<double>& positions, std::array<double, 2> offsets,
-    std::array<double, 2> pSize, double thickness,
+    std::array<double, 2> bounds, double thickness,
+    const TelescopeSurfaceType& surfaceType,
     Acts::BinningValue binValue = Acts::BinningValue::binZ);
 
 }  // end of namespace Telescope

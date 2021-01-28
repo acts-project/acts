@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -38,7 +38,13 @@ auto TelescopeDetector::finalize(
       vm["geo-tele-size"].template as<ActsExamples::Options::Reals<2>>();
   // Translate the thickness in unit of mm
   auto thickness = vm["geo-tele-thickness"].template as<double>() * 0.001;
-  auto binValue = vm["geo-tele-alignaxis"].template as<size_t>();
+  auto surfaceType = vm["geo-tele-surface"].template as<int>();
+  auto binValue = vm["geo-tele-alignaxis"].template as<int>();
+  if (surfaceType > 1) {
+    throw std::invalid_argument(
+        "The surface type could either be 0 for plane surface or 1 for disc "
+        "surface.");
+  }
   if (binValue > 2) {
     throw std::invalid_argument("The axis value could only be 0, 1, or 2.");
   }
@@ -48,6 +54,7 @@ auto TelescopeDetector::finalize(
   /// Return the telescope detector
   TrackingGeometryPtr gGeometry = ActsExamples::Telescope::buildDetector(
       nominalContext, detectorStore, positions, offsets, pSize, thickness,
+      static_cast<ActsExamples::Telescope::TelescopeSurfaceType>(surfaceType),
       static_cast<Acts::BinningValue>(binValue));
   ContextDecorators gContextDecorators = {};
   // return the pair of geometry and empty decorators
