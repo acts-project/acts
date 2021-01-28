@@ -34,8 +34,10 @@ auto TelescopeDetector::finalize(
                        .values;
   auto offsets =
       vm["geo-tele-offsets"].template as<ActsExamples::Options::Reals<2>>();
-  auto pSize =
-      vm["geo-tele-size"].template as<ActsExamples::Options::Reals<2>>();
+  // The bounds parameters are taken as (halfX, halfY) for plane surface and
+  // (minR, maxR) for disc surface
+  auto bounds =
+      vm["geo-tele-bounds"].template as<ActsExamples::Options::Reals<2>>();
   // Translate the thickness in unit of mm
   auto thickness = vm["geo-tele-thickness"].template as<double>() * 0.001;
   auto surfaceType = vm["geo-tele-surface"].template as<int>();
@@ -53,7 +55,7 @@ auto TelescopeDetector::finalize(
 
   /// Return the telescope detector
   TrackingGeometryPtr gGeometry = ActsExamples::Telescope::buildDetector(
-      nominalContext, detectorStore, positions, offsets, pSize, thickness,
+      nominalContext, detectorStore, positions, offsets, bounds, thickness,
       static_cast<ActsExamples::Telescope::TelescopeSurfaceType>(surfaceType),
       static_cast<Acts::BinningValue>(binValue));
   ContextDecorators gContextDecorators = {};

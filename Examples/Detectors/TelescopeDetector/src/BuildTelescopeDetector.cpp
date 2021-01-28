@@ -48,15 +48,6 @@ ActsExamples::Telescope::buildDetector(
   const auto rBounds =
       std::make_shared<const Acts::RadialBounds>(bounds[0], bounds[1]);
 
-  //  std::shared_ptr<const Acts::SurfaceBounds> sBounds = nullptr;
-  //  if(surfaceType == TelescopeSurfaceType::Plane){
-  //    sBounds =  std::make_shared<const Acts::RectangleBounds>(bounds[0],
-  //    bounds[1]);
-  //  } else {
-  //    sBounds =  std::make_shared<const Acts::RadialBounds>(bounds[0],
-  //    bounds[1]);
-  //  }
-
   // Material of the surfaces
   Acts::Material silicon = Acts::Material::fromMassDensity(
       9.370_cm, 46.52_cm, 28.0855, 14, 2.329_g / 1_cm3);
@@ -123,7 +114,8 @@ ActsExamples::Telescope::buildDetector(
                               (positions.front() + positions.back()) * 0.5);
   Acts::Transform3 trafoVol(rotation * transVol);
 
-  // The volume bounds is set to be a bit larger than cubic with planes
+  // The volume bounds is set to be a bit larger than either cubic with planes
+  // or cylinder with discs
   auto length = positions.back() - positions.front();
   Acts::VolumeBoundsPtr boundsVol = nullptr;
   if (surfaceType == TelescopeSurfaceType::Plane) {
