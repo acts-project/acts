@@ -33,7 +33,7 @@ class ScalableBField final {
 
     /// @brief constructor with context
     Cache(const Acts::MagneticFieldContext& mctx) {
-      scalor = std::any_cast<const ScalableBFieldContext>(mctx.any()).scalor;
+      scalor = mctx.get<const ScalableBFieldContext>().scalor;
     }
   };
 

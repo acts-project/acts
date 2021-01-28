@@ -61,15 +61,23 @@ class ContextType {
     return *this;
   }
 
-  /// Mutable access to the contained any storage
+  /// Retrieve a reference to the contained type
   ///
-  /// @return std::any&
-  std::any& any() { return m_data; }
+  /// @tparam T The type to attempt to retrieve the value as
+  /// @return Reference to the contained value
+  template <typename T>
+  std::decay_t<T>& get() {
+    return std::any_cast<std::decay_t<T>&>(m_data);
+  }
 
-  /// Immutable access to the ocntained any storage
+  /// Retrieve a reference to the contained type
   ///
-  /// @return const std::any&
-  const std::any& any() const { return m_data; }
+  /// @tparam T The type to attempt to retrieve the value as
+  /// @return Reference to the contained value
+  template <typename T>
+  const std::decay_t<T>& get() const {
+    return std::any_cast<const std::decay_t<T>&>(m_data);
+  }
 
  private:
   std::any m_data;

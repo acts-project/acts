@@ -94,7 +94,7 @@ class AlignableDetectorElement : public DetectorElementBase {
 
 inline const Transform3& AlignableDetectorElement::transform(
     const GeometryContext& gctx) const {
-  auto alignContext = std::any_cast<AlignmentContext>(gctx.any());
+  auto alignContext = gctx.get<AlignmentContext>();
   if (alignContext.alignmentStore != nullptr and
       alignContext.alignmentIndex < 2) {
     return (*(alignContext.alignmentStore))[alignContext.alignmentIndex];
