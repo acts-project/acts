@@ -35,7 +35,7 @@ class TrackingGeometry;
 namespace ActsExamples {
 
 /// Algorithm that turns simulated hits into measurements by truth smearing.
-class DigitzationAlgorithm final : public BareAlgorithm {
+class DigitizationAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
     /// Input collection of simulated hits.
@@ -60,7 +60,7 @@ class DigitzationAlgorithm final : public BareAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  DigitzationAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  DigitizationAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
   /// Build measurement from simulation hits at input.
   ///

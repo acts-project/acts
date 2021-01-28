@@ -21,9 +21,9 @@
 #include <stdexcept>
 #include <type_traits>
 
-ActsExamples::DigitzationAlgorithm::DigitzationAlgorithm(
-    ActsExamples::DigitzationAlgorithm::Config cfg, Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("DigitzationAlgorithm", lvl),
+ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
+    ActsExamples::DigitizationAlgorithm::Config cfg, Acts::Logging::Level lvl)
+    : ActsExamples::BareAlgorithm("DigitizationAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
@@ -105,7 +105,7 @@ ActsExamples::DigitzationAlgorithm::DigitzationAlgorithm(
   m_digitizers = Acts::GeometryHierarchyMap<Digitizer>(digitizerInput);
 }
 
-ActsExamples::ProcessCode ActsExamples::DigitzationAlgorithm::execute(
+ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   // Retrieve input
   const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
@@ -219,7 +219,7 @@ ActsExamples::ProcessCode ActsExamples::DigitzationAlgorithm::execute(
 }
 
 std::vector<ActsFatras::Channelizer::ChannelSegment>
-ActsExamples::DigitzationAlgorithm::channelizing(
+ActsExamples::DigitizationAlgorithm::channelizing(
     const GeometricDigitizationConfig& geoCfg, const SimHit& hit,
     const Acts::Surface& surface, const Acts::GeometryContext& gctx,
     RandomEngine& rng) const {
@@ -238,8 +238,8 @@ ActsExamples::DigitzationAlgorithm::channelizing(
   return {};
 }
 
-ActsExamples::DigitzationAlgorithm::DigitizedParameters
-ActsExamples::DigitzationAlgorithm::localParameters(
+ActsExamples::DigitizationAlgorithm::DigitizedParameters
+ActsExamples::DigitizationAlgorithm::localParameters(
     const GeometricDigitizationConfig& geoCfg,
     const std::vector<ActsFatras::Channelizer::ChannelSegment>& channels,
     RandomEngine& rng) const {
@@ -289,7 +289,8 @@ ActsExamples::DigitzationAlgorithm::localParameters(
   return dParameters;
 }
 
-ActsExamples::Measurement ActsExamples::DigitzationAlgorithm::createMeasurement(
+ActsExamples::Measurement
+ActsExamples::DigitizationAlgorithm::createMeasurement(
     const DigitizedParameters& dParams, const IndexSourceLink& isl) const {
   switch (dParams.indices.size()) {
     case 1u: {

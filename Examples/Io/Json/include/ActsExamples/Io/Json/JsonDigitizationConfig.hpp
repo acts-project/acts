@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Plugins/Json/GeometryHierarchyMapJsonConverter.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 
 #include <nlohmann/json.hpp>
@@ -29,5 +30,9 @@ void from_json(const nlohmann::json& j, SmearingConfig& sdc);
 void to_json(nlohmann::json& j, const DigitizationConfig& dc);
 
 void from_json(const nlohmann::json& j, DigitizationConfig& dc);
+
+using DigiConfigContainer = Acts::GeometryHierarchyMap<DigitizationConfig>;
+using DigiConfigConverter =
+    Acts::GeometryHierarchyMapJsonConverter<DigitizationConfig>;
 
 }  // namespace ActsExamples
