@@ -30,8 +30,7 @@ struct VertexingOptions {
   /// @param mctx The magnetic context for this fit
   /// @param vconstr The pointing contraint to a vertex
   VertexingOptions(
-      std::reference_wrapper<const GeometryContext> gctx,
-      std::reference_wrapper<const MagneticFieldContext> mctx,
+      const GeometryContext& gctx, const MagneticFieldContext& mctx,
       const Vertex<input_track_t>& vconstr = Vertex<input_track_t>())
       : geoContext(gctx), magFieldContext(mctx), vertexConstraint(vconstr) {}
 
