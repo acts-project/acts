@@ -110,8 +110,9 @@ ActsExamples::Telescope::buildDetector(
     layVec.push_back(layers[i]);
   }
   // Create the layer array
+  Acts::GeometryContext genGctx{gctx};
   std::unique_ptr<const Acts::LayerArray> layArr(layArrCreator.layerArray(
-      gctx, layVec, positions.front() - 2._mm, positions.back() + 2._mm,
+      genGctx, layVec, positions.front() - 2._mm, positions.back() + 2._mm,
       Acts::BinningType::arbitrary, binValue));
 
   // Build the tracking volume
