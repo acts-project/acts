@@ -83,8 +83,7 @@ struct CombinatorialKalmanFilterOptions {
   /// @param eLoss Whether to include energy loss
   /// @param rSmoothing Whether to run smoothing to get fitted parameter
   CombinatorialKalmanFilterOptions(
-      std::reference_wrapper<const GeometryContext> gctx,
-      std::reference_wrapper<const MagneticFieldContext> mctx,
+      const GeometryContext& gctx, const MagneticFieldContext& mctx,
       std::reference_wrapper<const CalibrationContext> cctx,
       Calibrator calibrator_, MeasurementSelector measurementSelector_,
       LoggerWrapper logger_, const PropagatorPlainOptions& pOptions,
@@ -749,8 +748,7 @@ class CombinatorialKalmanFilter {
         const TrackStatePropMask& stateMask, const BoundState& boundState,
         const source_link_t& sourcelink,
         const BoundVariantMeasurement<source_link_t>& measurement,
-        bool isOutlier, result_type& result,
-        std::reference_wrapper<const GeometryContext> geoContext,
+        bool isOutlier, result_type& result, const GeometryContext& geoContext,
         const size_t& prevTip, const TipState& prevTipState,
         size_t neighborTip = SIZE_MAX, size_t sharedTip = SIZE_MAX,
         LoggerWrapper logger = getDummyLogger()) const {
