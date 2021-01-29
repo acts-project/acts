@@ -54,7 +54,7 @@ void setupDigitization(
       in.close();
 
       DigiConfigContainer digitizationConfigs =
-          DigiConfigConverter("DigitizationConfig").fromJson(djson);
+          DigiConfigConverter("digitization-configuration").fromJson(djson);
 
       DigitizationAlgorithm::Config digiCfg =
           Options::readDigitizationConfig(vars);
@@ -72,7 +72,6 @@ void setupDigitization(
 
       // Write digitization output as ROOT files
       if (vars["output-root"].template as<bool>()) {
-        // clusters as root
         RootDigitizationWriter::Config digitWriterRoot;
         digitWriterRoot.inputMeasurements = digiCfg.outputMeasurements;
         digitWriterRoot.inputSimHits = digiCfg.inputSimHits;
@@ -80,7 +79,27 @@ void setupDigitization(
             digiCfg.outputMeasurementSimHitsMap;
         digitWriterRoot.filePath =
             joinPaths(outputDir, digiCfg.outputMeasurements + ".root");
-        // digitWriterRoot.smearers = smearCfg.smearers;
+        // Translate into bound indices of the digitization configuration
+        std::vector<std::pair<Acts::GeometryIdentifier,
+                              std::vector<Acts::BoundIndices>>>
+            bIndexInput;
+        for (size_t ibi = 0; ibi < digiCfg.digitizationConfigs.size(); ++ibi) {
+          Acts::GeometryIdentifier geoID =
+              digiCfg.digitizationConfigs.idAt(ibi);
+          const auto dCfg = digiCfg.digitizationConfigs.valueAt(ibi);
+          std::vector<Acts::BoundIndices> boundIndices;
+          boundIndices.insert(boundIndices.end(),
+                              dCfg.geometricDigiConfig.indices.begin(),
+                              dCfg.geometricDigiConfig.indices.end());
+          for (const auto& sConfig : dCfg.smearingDigiConfig) {
+            boundIndices.push_back(sConfig.index);
+          }
+          bIndexInput.push_back({geoID, boundIndices});
+        }
+        digitWriterRoot.boundIndices =
+            Acts::GeometryHierarchyMap<std::vector<Acts::BoundIndices>>(
+                bIndexInput);
+
         digitWriterRoot.trackingGeometry = trackingGeometry;
         sequencer.addWriter(std::make_shared<RootDigitizationWriter>(
             digitWriterRoot, logLevel));
@@ -101,7 +120,6 @@ void setupDigitization(
 
     // Write digitization output as ROOT files
     if (vars["output-root"].template as<bool>()) {
-      // clusters as root
       RootDigitizationWriter::Config smearWriterRoot;
       smearWriterRoot.inputMeasurements = smearCfg.outputMeasurements;
       smearWriterRoot.inputSimHits = smearCfg.inputSimHits;
@@ -109,7 +127,23 @@ void setupDigitization(
           smearCfg.outputMeasurementSimHitsMap;
       smearWriterRoot.filePath =
           joinPaths(outputDir, smearCfg.outputMeasurements + ".root");
-      smearWriterRoot.smearers = smearCfg.smearers;
+      // Translate into bound indices of the digitization configuration
+      std::vector<
+          std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
+          bIndexInput;
+      for (size_t ibi = 0; ibi < smearCfg.smearers.size(); ++ibi) {
+        Acts::GeometryIdentifier geoID = smearCfg.smearers.idAt(ibi);
+        const auto sCfg = smearCfg.smearers.valueAt(ibi);
+        std::vector<Acts::BoundIndices> boundIndices;
+
+        for (const auto& sConfig : sCfg) {
+          boundIndices.push_back(sConfig.index);
+        }
+        bIndexInput.push_back({geoID, boundIndices});
+      }
+      smearWriterRoot.boundIndices =
+          Acts::GeometryHierarchyMap<std::vector<Acts::BoundIndices>>(
+              bIndexInput);
       smearWriterRoot.trackingGeometry = trackingGeometry;
       sequencer.addWriter(
           std::make_shared<RootDigitizationWriter>(smearWriterRoot, logLevel));
