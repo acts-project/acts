@@ -80,7 +80,9 @@ void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,
     // This is a navigation volume, write the boundaries
     if (writeBoundary) {
       for (auto bsurface : volume.boundarySurfaces()) {
-        // ;
+        const auto& bsRep = bsurface->surfaceRepresentation();
+        cSurfaces.push_back(SurfaceContainer::InputElement{
+            bsRep.geometryId(), bsRep.getSharedPtr()});
       }
     }
   }
