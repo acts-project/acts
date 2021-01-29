@@ -45,9 +45,7 @@ struct CylindricalTrackingGeometry {
   std::reference_wrapper<const GeometryContext> geoContext;
 
   /// Only allowed constructor with reference wrapper
-  CylindricalTrackingGeometry(
-      std::reference_wrapper<const GeometryContext> gctx)
-      : geoContext(gctx) {}
+  CylindricalTrackingGeometry(const GeometryContext& gctx) : geoContext(gctx) {}
 
   using DetectorStore = std::vector<std::unique_ptr<const DetectorElementStub>>;
 

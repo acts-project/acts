@@ -94,7 +94,7 @@ class AlignableDetectorElement : public DetectorElementBase {
 
 inline const Transform3& AlignableDetectorElement::transform(
     const GeometryContext& gctx) const {
-  auto alignContext = std::any_cast<AlignmentContext>(gctx);
+  auto alignContext = gctx.get<AlignmentContext>();
   if (alignContext.alignmentStore != nullptr and
       alignContext.alignmentIndex < 2) {
     return (*(alignContext.alignmentStore))[alignContext.alignmentIndex];
@@ -149,9 +149,9 @@ BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
   const auto& alignedSurface = alignedElement.surface();
 
   // The alignment centexts
-  AlignmentContext defaultContext{};
-  AlignmentContext negativeContext(alignmentStore, 0);
-  AlignmentContext positiveContext(alignmentStore, 1);
+  GeometryContext defaultContext{AlignmentContext{}};
+  GeometryContext negativeContext{AlignmentContext{alignmentStore, 0}};
+  GeometryContext positiveContext{AlignmentContext{alignmentStore, 1}};
 
   // Test the transforms
   BOOST_CHECK(alignedSurface.transform(defaultContext)

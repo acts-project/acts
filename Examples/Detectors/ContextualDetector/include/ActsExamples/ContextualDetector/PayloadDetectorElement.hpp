@@ -67,7 +67,7 @@ class PayloadDetectorElement : public Generic::GenericDetectorElement {
 inline const Acts::Transform3& PayloadDetectorElement::transform(
     const Acts::GeometryContext& gctx) const {
   // cast into the right context object
-  auto alignContext = std::any_cast<ContextType>(gctx);
+  auto alignContext = gctx.get<ContextType>();
   identifier_type idValue = identifier_type(identifier());
 
   // check if we have the right alignment parameter in hand

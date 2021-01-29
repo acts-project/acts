@@ -84,7 +84,7 @@ inline const Acts::Transform3& AlignedDetectorElement::transform(
   // Check if a different transform than the nominal exists
   if (m_alignedTransforms.size()) {
     // cast into the right context object
-    auto alignContext = std::any_cast<ContextType>(gctx);
+    auto alignContext = gctx.get<ContextType>();
     return (*m_alignedTransforms[alignContext.iov].get());
   }
   // Return the standard transform if not found
