@@ -49,7 +49,7 @@ class ParticleSmearing final : public BareAlgorithm {
     /// Relative momentum resolution.
     double sigmaPRel = 0.001;
     /// Random numbers service.
-    std::shared_ptr<RandomNumbers> randomNumbers = nullptr;
+    std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
   };
 
   ParticleSmearing(const Config& cfg, Acts::Logging::Level lvl);

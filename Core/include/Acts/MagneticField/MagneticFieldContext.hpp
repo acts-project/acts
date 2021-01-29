@@ -13,7 +13,7 @@
 #include ACTS_CORE_MAGFIELDCONTEXT_PLUGIN
 #else
 
-#include <any>
+#include "Acts/Utilities/detail/ContextType.hpp"
 
 namespace Acts {
 
@@ -23,7 +23,7 @@ namespace Acts {
 /// It is propagated through the code to allow for event/thread
 /// dependent magnetic field changes
 
-using MagneticFieldContext = std::any;
+using MagneticFieldContext = ContextType;
 
 }  // namespace Acts
 
