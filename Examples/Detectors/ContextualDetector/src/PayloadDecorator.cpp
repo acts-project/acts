@@ -27,17 +27,16 @@ ActsExamples::ProcessCode ActsExamples::Contextual::PayloadDecorator::decorate(
   std::vector<Acts::Transform3> aStore = m_nominalStore;
 
   ACTS_VERBOSE("New IOV detected, emulate new alignment");
-  if (context.eventNumber % m_cfg.iovSize) {
-    for (auto& tf : aStore) {
-      tf *= Acts::AngleAxis3(m_cfg.rotationStep * context.eventNumber,
-                             Acts::Vector3::UnitY());
-    }
-    // This creates a full payload context, i.e. the nominal store
-    PayloadDetectorElement::ContextType alignableGeoContext;
-    alignableGeoContext.alignmentStore = std::move(aStore);
-    context.geoContext =
-        std::make_any<PayloadDetectorElement::ContextType>(alignableGeoContext);
+  for (auto& tf : aStore) {
+    tf *= Acts::AngleAxis3(
+        m_cfg.rotationStep * (context.eventNumber / m_cfg.iovSize),
+        Acts::Vector3::UnitY());
   }
+  // This creates a full payload context, i.e. the nominal store
+  PayloadDetectorElement::ContextType alignableGeoContext;
+  alignableGeoContext.alignmentStore = std::move(aStore);
+  context.geoContext =
+      std::make_any<PayloadDetectorElement::ContextType>(alignableGeoContext);
   return ProcessCode::SUCCESS;
 }
 
