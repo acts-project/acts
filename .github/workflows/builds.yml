@@ -9,6 +9,7 @@ on:
 
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
+  HOMEBREW_NO_INSTALL_CLEANUP: 1
 
 jobs:
   linux:
