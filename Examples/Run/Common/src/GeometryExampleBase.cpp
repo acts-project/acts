@@ -14,6 +14,7 @@
 #include "ActsExamples/Io/Csv/CsvOptionsWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
 #include "ActsExamples/Io/Json/JsonMaterialWriter.hpp"
+#include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
@@ -112,6 +113,19 @@ int processGeometry(int argc, char* argv[],
 
       // Write the tracking geometry object
       tgCsvWriter->write(context);
+    }
+
+    // JSON output
+    if (vm["output-json"].as<bool>()) {
+      ActsExamples::JsonSurfacesWriter::Config sJsonWriterConfig;
+      sJsonWriterConfig.trackingGeometry = tGeometry;
+      sJsonWriterConfig.outputDir = outputDir;
+      sJsonWriterConfig.writePerEvent = true;
+      auto sJsonWriter = std::make_shared<ActsExamples::JsonSurfacesWriter>(
+          sJsonWriterConfig, logLevel);
+
+      // Write the tracking geometry object
+      sJsonWriter->write(context);
     }
 
     // Get the file name from the options

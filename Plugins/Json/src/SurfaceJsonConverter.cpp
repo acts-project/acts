@@ -30,6 +30,18 @@ void Acts::to_json(nlohmann::json& j, const Acts::Surface& surface) {
   toJson(j, surface, gctx);
 }
 
+void Acts::to_json(nlohmann::json& j,
+                   std::shared_ptr<const Acts::Surface> surface) {
+  Acts::GeometryContext gctx;
+  toJson(j, *(surface.get()), gctx);
+}
+
+void Acts::toJson(nlohmann::json& j,
+                  std::shared_ptr<const Acts::Surface> surface,
+                  const Acts::GeometryContext& gctx) {
+  toJson(j, *(surface.get()), gctx);
+}
+
 void Acts::toJson(nlohmann::json& j, const Acts::Surface& surface,
                   const Acts::GeometryContext& gctx) {
   const auto& sBounds = surface.bounds();
