@@ -1,6 +1,7 @@
 add_library(
   ActsExamplesIoJson SHARED
-  src/JsonMaterialWriter.cpp)
+  src/JsonMaterialWriter.cpp
+  src/JsonSurfacesWriter.cpp)
 target_include_directories(
   ActsExamplesIoJson
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
