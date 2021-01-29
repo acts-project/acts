@@ -34,7 +34,7 @@ auto TelescopeDetector::finalize(
                        .values;
   auto offsets =
       vm["geo-tele-offsets"].template as<ActsExamples::Options::Reals<2>>();
-  // The bounds parameters are taken as (halfX, halfY) for plane surface and
+  // The bounds values are taken as (halfX, halfY) for plane surface and
   // (minR, maxR) for disc surface
   auto bounds =
       vm["geo-tele-bounds"].template as<ActsExamples::Options::Reals<2>>();
@@ -50,7 +50,7 @@ auto TelescopeDetector::finalize(
   if (binValue > 2) {
     throw std::invalid_argument("The axis value could only be 0, 1, or 2.");
   }
-  // Check if the bounds parameters are valid
+  // Check if the bounds values are valid
   if (surfaceType == 1 and bounds[0] >= bounds[1]) {
     throw std::invalid_argument(
         "The minR should be smaller than the maxR for disc surface bounds.");

@@ -37,8 +37,8 @@ ActsExamples::Telescope::buildDetector(
         detectorStore,
     const std::vector<double>& positions, const std::array<double, 2>& offsets,
     const std::array<double, 2>& bounds, double thickness,
-    const ActsExamples::Telescope::TelescopeSurfaceType& surfaceType,
-    const Acts::BinningValue& binValue) {
+    ActsExamples::Telescope::TelescopeSurfaceType surfaceType,
+    Acts::BinningValue binValue) {
   using namespace Acts::UnitLiterals;
 
   // The rectangle bounds for plane surface

@@ -25,7 +25,7 @@ void ActsExamples::Options::addTelescopeGeometryOptions(
       "mm. Same values for "
       "all layers");
   opt("geo-tele-bounds", value<Reals<2>>()->default_value({{25, 100}}),
-      "Telescope detector Input: the parameters for surface bounds in mm: "
+      "Telescope detector Input: the values for surface bounds in mm: "
       "(halfX, halfY) - plane surface, (minR, maxR) - disc surface");
   opt("geo-tele-thickness", value<double>()->default_value(80),
       "Telescope detector Input: the silicon material thickness of "

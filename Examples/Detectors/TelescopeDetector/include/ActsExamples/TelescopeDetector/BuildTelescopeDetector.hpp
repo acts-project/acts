@@ -20,7 +20,7 @@ namespace ActsExamples {
 namespace Telescope {
 
 /// The telescope detector surface type
-enum TelescopeSurfaceType : unsigned int {
+enum class TelescopeSurfaceType {
   Plane = 0,
   Disc = 1,
 };
@@ -43,8 +43,8 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     std::vector<std::shared_ptr<TelescopeDetectorElement>>& detectorStore,
     const std::vector<double>& positions, const std::array<double, 2>& offsets,
     const std::array<double, 2>& bounds, double thickness,
-    const TelescopeSurfaceType& surfaceType,
-    const Acts::BinningValue& binValue = Acts::BinningValue::binZ);
+    TelescopeSurfaceType surfaceType,
+    Acts::BinningValue binValue = Acts::BinningValue::binZ);
 
 }  // end of namespace Telescope
 }  // end of namespace ActsExamples
