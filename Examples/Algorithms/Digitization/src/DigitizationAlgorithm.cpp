@@ -114,6 +114,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
   // Prepare output containers
   IndexSourceLinkContainer sourceLinks;
   MeasurementContainer measurements;
+  ClusterContainer clusters;
   IndexMultimap<ActsFatras::Barcode> hitParticlesMap;
   IndexMultimap<Index> hitSimHitsMap;
   sourceLinks.reserve(simHits.size());
@@ -217,7 +218,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
             sourceLinks.emplace_hint(sourceLinks.end(), std::move(sourceLink));
             measurements.emplace_back(
                 createMeasurement(dParameters, sourceLink));
-
+            clusters.emplace_back(std::move(dParameters.cluster));
             // this digitization does not do hit merging so there is only one
             // mapping entry for each digitized hit.
             hitParticlesMap.emplace_hint(hitParticlesMap.end(), hitIdx,
@@ -230,6 +231,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
 
   ctx.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));
   ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
+  ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
   ctx.eventStore.add(m_cfg.outputMeasurementParticlesMap,
                      std::move(hitParticlesMap));
   ctx.eventStore.add(m_cfg.outputMeasurementSimHitsMap,
@@ -276,7 +278,7 @@ ActsExamples::DigitizationAlgorithm::localParameters(
   for (const auto& ch : channels) {
     auto bin = ch.bin;
     Acts::ActsScalar charge =
-        geoCfg.digital ? 1. : geoCfg.charge(ch.pathLength, ch.pathLength, rng);
+        geoCfg.digital ? 1. : geoCfg.charge(ch.activation, ch.activation, rng);
     if (geoCfg.digital or charge > geoCfg.threshold) {
       totalWeight += charge;
       size_t b0 = bin[0];
@@ -287,6 +289,10 @@ ActsExamples::DigitizationAlgorithm::localParameters(
       b0max = std::max(b0max, b0);
       b1min = std::min(b1min, b1);
       b1max = std::max(b1max, b1);
+      auto chdig = ch;
+      chdig.bin = ch.bin;
+      chdig.activation = charge;
+      dParameters.cluster.channels.push_back(chdig);
     }
   }
   if (totalWeight > 0.) {
@@ -304,7 +310,11 @@ ActsExamples::DigitizationAlgorithm::localParameters(
       dParameters.covariances =
           std::vector<Acts::ActsScalar>(dParameters.indices.size(), -1.);
     }
+
+    dParameters.cluster.sizeLoc0 = size0;
+    dParameters.cluster.sizeLoc1 = size1;
   }
+
   return dParameters;
 }
 
