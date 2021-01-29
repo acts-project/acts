@@ -32,7 +32,7 @@ enum class TelescopeSurfaceType {
 /// @param positions is the offset w of different layers in the longitudinal
 /// direction
 /// @param offsets is the offset (u, v) of the layers in the transverse plane
-/// @param bounds is the surface bound parameters, i.e. halfX and halfY if plane
+/// @param bounds is the surface bound values, i.e. halfX and halfY if plane
 /// surface, and minR and maxR if disc surface
 /// @param thickness is the material thickness of each layer
 /// @param surfaceType is the detector surface type
