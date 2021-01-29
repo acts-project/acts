@@ -14,6 +14,11 @@ namespace ActsExamples {
 class IBaseDetector;
 }
 
+/// The options for running CKF reco
+///
+/// @param desc The options description to add options to
+void addRecCKFOptions(ActsExamples::Options::Description& desc);
+
 /// Main function for running CKF reco with a specific detector.
 ///
 /// @param argc number of command line arguments

@@ -26,13 +26,13 @@ void ActsExamples::EffPlotTool::book(
   ACTS_DEBUG("Initialize the histograms for efficiency plots");
   // efficiency vs pT
   effPlotCache.trackEff_vs_pT = PlotHelpers::bookEff(
-      "trackeff_vs_pT", "Tracking efficiency;pT [GeV/c];Efficiency", bPt);
+      "trackeff_vs_pT", "Tracking efficiency;Truth pT [GeV/c];Efficiency", bPt);
   // efficiency vs eta
   effPlotCache.trackEff_vs_eta = PlotHelpers::bookEff(
-      "trackeff_vs_eta", "Tracking efficiency;#eta;Efficiency", bEta);
+      "trackeff_vs_eta", "Tracking efficiency;Truth #eta;Efficiency", bEta);
   // efficiency vs phi
   effPlotCache.trackEff_vs_phi = PlotHelpers::bookEff(
-      "trackeff_vs_phi", "Tracking efficiency;#phi;Efficiency", bPhi);
+      "trackeff_vs_phi", "Tracking efficiency;Truth #phi;Efficiency", bPhi);
 }
 
 void ActsExamples::EffPlotTool::clear(EffPlotCache& effPlotCache) const {
