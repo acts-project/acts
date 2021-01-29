@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Root/RootDigitizationWriter.hpp"
+#include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -28,11 +28,10 @@
 
 #include "detail/AverageSimHits.hpp"
 
-ActsExamples::RootDigitizationWriter::RootDigitizationWriter(
-    const ActsExamples::RootDigitizationWriter::Config& cfg,
+ActsExamples::RootMeasurementWriter::RootMeasurementWriter(
+    const ActsExamples::RootMeasurementWriter::Config& cfg,
     Acts::Logging::Level lvl)
-    : WriterT(cfg.inputMeasurements, "RootDigitizationWriter", lvl),
-      m_cfg(cfg) {
+    : WriterT(cfg.inputMeasurements, "RootMeasurementWriter", lvl), m_cfg(cfg) {
   // Input container for measurements is already checked by base constructor
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
@@ -64,6 +63,9 @@ ActsExamples::RootDigitizationWriter::RootDigitizationWriter(
       auto dTree = std::make_unique<DigitizationTree>(geoID);
       for (const auto& bIndex : bIndices) {
         dTree->setupBoundRecBranch(bIndex);
+        if (not m_cfg.inputClusters.empty()) {
+          dTree->setupClusterBranch(bIndex);
+        }
       }
       dTrees.push_back({geoID, std::move(dTree)});
     }
@@ -72,7 +74,7 @@ ActsExamples::RootDigitizationWriter::RootDigitizationWriter(
       std::move(dTrees));
 }
 
-ActsExamples::RootDigitizationWriter::~RootDigitizationWriter() {
+ActsExamples::RootMeasurementWriter::~RootMeasurementWriter() {
   /// Close the file if it's yours
   m_outputFile->cd();
   for (auto dTree = m_outputTrees.begin(); dTree != m_outputTrees.end();
@@ -82,16 +84,21 @@ ActsExamples::RootDigitizationWriter::~RootDigitizationWriter() {
   m_outputFile->Close();
 }
 
-ActsExamples::ProcessCode ActsExamples::RootDigitizationWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::endRun() {
   // Write the tree
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::RootDigitizationWriter::writeT(
+ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::writeT(
     const AlgorithmContext& ctx, const MeasurementContainer& measurements) {
   const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
   const auto& hitSimHitsMap = ctx.eventStore.get<IndexMultimap<Index>>(
       m_cfg.inputMeasurementSimHitsMap);
+
+  ClusterContainer clusters;
+  if (not m_cfg.inputClusters.empty()) {
+    clusters = ctx.eventStore.get<ClusterContainer>(m_cfg.inputClusters);
+  }
 
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
@@ -126,7 +133,16 @@ ActsExamples::ProcessCode ActsExamples::RootDigitizationWriter::writeT(
               detail::averageSimHits(ctx.geoContext, surface, simHits, indices);
           dTree->fillTruthParameters(local, pos4, dir);
           dTree->fillBoundMeasurement(m);
+          if (not clusters.empty()) {
+            const auto& c = clusters[hitIdx];
+            dTree->fillCluster(c);
+          }
           dTree->tree->Fill();
+          if (dTree->chLoc0 != nullptr) {
+            dTree->chLoc0->clear();
+            dTree->chLoc1->clear();
+            dTree->chValue->clear();
+          }
         },
         meas);
   }

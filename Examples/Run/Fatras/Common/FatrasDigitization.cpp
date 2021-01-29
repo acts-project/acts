@@ -16,7 +16,7 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Io/Csv/CsvPlanarClusterWriter.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
-#include "ActsExamples/Io/Root/RootDigitizationWriter.hpp"
+#include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 #include "ActsExamples/Io/Root/RootPlanarClusterWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
@@ -60,6 +60,7 @@ void setupDigitization(
           Options::readDigitizationConfig(vars);
       digiCfg.inputSimHits = kFatrasCollectionHits;
       digiCfg.outputMeasurements = "measurements";
+      digiCfg.outputClusters = "clusters";
       digiCfg.outputSourceLinks = "sourcelinks";
       digiCfg.outputMeasurementParticlesMap = "measurement_particles_map";
       digiCfg.outputMeasurementSimHitsMap = "measurement_simhits_map";
@@ -70,14 +71,15 @@ void setupDigitization(
       sequencer.addAlgorithm(
           std::make_shared<DigitizationAlgorithm>(digiCfg, logLevel));
 
-      // Write digitization output as ROOT files
+      // Write digitization output (=measurements) as ROOT files
       if (vars["output-root"].template as<bool>()) {
-        RootDigitizationWriter::Config digitWriterRoot;
-        digitWriterRoot.inputMeasurements = digiCfg.outputMeasurements;
-        digitWriterRoot.inputSimHits = digiCfg.inputSimHits;
-        digitWriterRoot.inputMeasurementSimHitsMap =
+        RootMeasurementWriter::Config measWriterRoot;
+        measWriterRoot.inputMeasurements = digiCfg.outputMeasurements;
+        measWriterRoot.inputClusters = digiCfg.outputClusters;
+        measWriterRoot.inputSimHits = digiCfg.inputSimHits;
+        measWriterRoot.inputMeasurementSimHitsMap =
             digiCfg.outputMeasurementSimHitsMap;
-        digitWriterRoot.filePath =
+        measWriterRoot.filePath =
             joinPaths(outputDir, digiCfg.outputMeasurements + ".root");
         // Translate into bound indices of the digitization configuration
         std::vector<std::pair<Acts::GeometryIdentifier,
@@ -96,13 +98,13 @@ void setupDigitization(
           }
           bIndexInput.push_back({geoID, boundIndices});
         }
-        digitWriterRoot.boundIndices =
+        measWriterRoot.boundIndices =
             Acts::GeometryHierarchyMap<std::vector<Acts::BoundIndices>>(
                 bIndexInput);
 
-        digitWriterRoot.trackingGeometry = trackingGeometry;
-        sequencer.addWriter(std::make_shared<RootDigitizationWriter>(
-            digitWriterRoot, logLevel));
+        measWriterRoot.trackingGeometry = trackingGeometry;
+        sequencer.addWriter(
+            std::make_shared<RootMeasurementWriter>(measWriterRoot, logLevel));
       }
     }
 
@@ -120,12 +122,12 @@ void setupDigitization(
 
     // Write digitization output as ROOT files
     if (vars["output-root"].template as<bool>()) {
-      RootDigitizationWriter::Config smearWriterRoot;
-      smearWriterRoot.inputMeasurements = smearCfg.outputMeasurements;
-      smearWriterRoot.inputSimHits = smearCfg.inputSimHits;
-      smearWriterRoot.inputMeasurementSimHitsMap =
+      RootMeasurementWriter::Config measWriterRoot;
+      measWriterRoot.inputMeasurements = smearCfg.outputMeasurements;
+      measWriterRoot.inputSimHits = smearCfg.inputSimHits;
+      measWriterRoot.inputMeasurementSimHitsMap =
           smearCfg.outputMeasurementSimHitsMap;
-      smearWriterRoot.filePath =
+      measWriterRoot.filePath =
           joinPaths(outputDir, smearCfg.outputMeasurements + ".root");
       // Translate into bound indices of the digitization configuration
       std::vector<
@@ -141,12 +143,12 @@ void setupDigitization(
         }
         bIndexInput.push_back({geoID, boundIndices});
       }
-      smearWriterRoot.boundIndices =
+      measWriterRoot.boundIndices =
           Acts::GeometryHierarchyMap<std::vector<Acts::BoundIndices>>(
               bIndexInput);
-      smearWriterRoot.trackingGeometry = trackingGeometry;
+      measWriterRoot.trackingGeometry = trackingGeometry;
       sequencer.addWriter(
-          std::make_shared<RootDigitizationWriter>(smearWriterRoot, logLevel));
+          std::make_shared<RootMeasurementWriter>(measWriterRoot, logLevel));
     }
 
   } else if (vars["digi-geometric-3d"].as<bool>()) {
