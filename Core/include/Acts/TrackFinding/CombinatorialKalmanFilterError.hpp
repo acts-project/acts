@@ -17,7 +17,7 @@ enum class CombinatorialKalmanFilterError {
   UpdateFailed = 1,
   SmoothFailed,
   OutputConversionFailed,
-  SourcelinkSelectionFailed,
+  MeasurementSelectionFailed,
   NoTrackFound,
   PropagationReachesMaxSteps,
 };

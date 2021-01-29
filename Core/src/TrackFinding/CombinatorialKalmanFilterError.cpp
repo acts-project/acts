@@ -28,8 +28,8 @@ class CombinatorialKalmanFilterErrorCategory : public std::error_category {
         return "Kalman smooth failed";
       case CombinatorialKalmanFilterError::OutputConversionFailed:
         return "Kalman output conversion failed";
-      case CombinatorialKalmanFilterError::SourcelinkSelectionFailed:
-        return "Source link selection failed";
+      case CombinatorialKalmanFilterError::MeasurementSelectionFailed:
+        return "Measurement selection failed";
       case CombinatorialKalmanFilterError::NoTrackFound:
         return "No track is found";
       case CombinatorialKalmanFilterError::PropagationReachesMaxSteps:

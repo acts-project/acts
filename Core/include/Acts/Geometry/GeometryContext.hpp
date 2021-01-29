@@ -13,7 +13,7 @@
 #include ACTS_CORE_GEOMETRYCONTEXT_PLUGIN
 #else
 
-#include <any>
+#include "Acts/Utilities/detail/ContextType.hpp"
 
 namespace Acts {
 
@@ -23,7 +23,7 @@ namespace Acts {
 /// It is propagated through the code to allow for event/thread
 /// dependent geometry changes
 
-using GeometryContext = std::any;
+using GeometryContext = ContextType;
 
 }  // namespace Acts
 

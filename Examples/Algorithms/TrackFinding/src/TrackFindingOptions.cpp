@@ -19,22 +19,22 @@ void ActsExamples::Options::addTrackFindingOptions(
   using boost::program_options::value;
 
   auto opt = desc.add_options();
-  opt("ckf-slselection-chi2max", value<double>()->default_value(15),
-      "Global criteria of maximum chi2 for CKF source link selection");
-  opt("ckf-slselection-nmax", value<size_t>()->default_value(10),
-      "Global criteria of maximum number of source link candidates on a "
-      "surface for CKF source link selection");
+  opt("ckf-selection-chi2max", value<double>()->default_value(15),
+      "Global criteria of maximum chi2 for CKF measurement selection");
+  opt("ckf-selection-nmax", value<size_t>()->default_value(10),
+      "Global criteria of maximum number of measurement candidates on a "
+      "surface for CKF measurement selection");
 }
 
 ActsExamples::TrackFindingAlgorithm::Config
 ActsExamples::Options::readTrackFindingConfig(
     const ActsExamples::Options::Variables& variables) {
-  auto chi2Max = variables["ckf-slselection-chi2max"].template as<double>();
-  auto nMax = variables["ckf-slselection-nmax"].template as<size_t>();
+  auto chi2Max = variables["ckf-selection-chi2max"].template as<double>();
+  auto nMax = variables["ckf-selection-nmax"].template as<size_t>();
 
   // config is a GeometryHierarchyMap with just the global default
   TrackFindingAlgorithm::Config cfg;
-  cfg.sourcelinkSelectorCfg = {
+  cfg.measurementSelectorCfg = {
       {Acts::GeometryIdentifier(), {chi2Max, nMax}},
   };
   return cfg;

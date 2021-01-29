@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
-#include <Acts/EventData/TrackParameters.hpp>
 
 #include <mutex>
 
@@ -18,19 +18,40 @@ class TTree;
 
 namespace ActsExamples {
 
-using BoundTrackParameters = Acts::BoundTrackParameters;
-using TrackParameterWriter = WriterT<std::vector<BoundTrackParameters>>;
+using TrackParameterWriter = WriterT<TrackParametersContainer>;
 
-/// Writes out SingleBoundTrackParamters into a TTree
-
+/// Write out the track parameters from both simulation and those estimated from
+/// reconstructed seeds into a TTree
+///
+/// Each entry in the TTree corresponds to one seed for optimum writing
+/// speed. The event number is part of the written data.
 class RootTrackParameterWriter final : public TrackParameterWriter {
  public:
   struct Config {
-    std::string collection;             ///< parameter collection to write
-    std::string filePath;               ///< path of the output file
-    std::string fileMode = "RECREATE";  ///< file access mode
-    std::string treeName = "trackparameters";  ///< name of the output tree
-    TFile* rootFile = nullptr;                 ///< common root file
+    /// Input estimated track parameters collection.
+    std::string inputTrackParameters;
+    /// Input parameters to seed map collection.
+    std::string inputTrackParametersSeedMap;
+    /// Input seeds collection.
+    std::string inputSeeds;
+    /// Input particles collection.
+    std::string inputParticles;
+    /// Input collection of simulated hits.
+    std::string inputSimHits;
+    /// Input hit-particles map collection.
+    std::string inputMeasurementParticlesMap;
+    /// Input collection to map measured hits to simulated hits.
+    std::string inputMeasurementSimHitsMap;
+    /// output directory.
+    std::string outputDir;
+    /// output filename.
+    std::string outputFilename = "estimatedparams.root";
+    /// name of the output tree.
+    std::string outputTreename = "estimatedparams";
+    /// file access mode.
+    std::string fileMode = "RECREATE";
+    /// common root file.
+    TFile* rootFile = nullptr;
   };
 
   /// Constructor
@@ -52,7 +73,7 @@ class RootTrackParameterWriter final : public TrackParameterWriter {
   /// @param [in] trackParams are parameters to write
   ProcessCode writeT(
       const AlgorithmContext& ctx,
-      const std::vector<BoundTrackParameters>& trackParams) final override;
+      const TrackParametersContainer& trackParams) final override;
 
  private:
   Config m_cfg;             ///< The config class
@@ -60,11 +81,25 @@ class RootTrackParameterWriter final : public TrackParameterWriter {
   TFile* m_outputFile{nullptr};  ///< The output file
   TTree* m_outputTree{nullptr};  ///< The output tree
   int m_eventNr{0};              ///< the event number of
-  float m_d0{0.};                ///< transversal IP d0
-  float m_z0{0.};                ///< longitudinal IP z0
-  float m_phi{0.};               ///< phi
-  float m_theta{0.};             ///< theta
-  float m_qp{0.};                ///< q/p
+
+  float m_loc0{NaNfloat};   ///< loc0
+  float m_loc1{NaNfloat};   ///< loc1
+  float m_phi{NaNfloat};    ///< phi
+  float m_theta{NaNfloat};  ///< theta
+  float m_qop{NaNfloat};    ///< q/p
+  float m_time{NaNfloat};   ///< time
+  float m_p{NaNfloat};      ///< p
+  float m_pt{NaNfloat};     ///< pt
+  float m_eta{NaNfloat};    ///< eta
+
+  int m_t_charge{0};            ///< Truth particle charge
+  float m_t_loc0{NaNfloat};     ///< Truth parameter loc0
+  float m_t_loc1{NaNfloat};     ///< Truth parameter loc1
+  float m_t_phi{NaNfloat};      ///< Truth parameter phi
+  float m_t_theta{NaNfloat};    ///< Truth parameter theta
+  float m_t_qop{NaNfloat};      ///< Truth parameter qop
+  float m_t_time{NaNfloat};     ///< Truth parameter time
+  bool m_truthMatched = false;  ///< Whether the seed is matched with truth
 };
 
 }  // namespace ActsExamples

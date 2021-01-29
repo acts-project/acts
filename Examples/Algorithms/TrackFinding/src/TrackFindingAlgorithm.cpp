@@ -59,16 +59,17 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   ActsExamples::TrackFindingAlgorithm::TrackFinderOptions options(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
       MeasurementCalibrator(measurements),
-      Acts::CKFSourceLinkSelector(m_cfg.sourcelinkSelectorCfg),
+      Acts::MeasurementSelector(m_cfg.measurementSelectorCfg),
       Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
 
-  // Perform the track finding for each starting parameter
-  // @TODO: use seeds from track seeding algorithm as starting parameter
+  // Perform the track finding for all initial parameters
+  ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
+                                          << " seeds.");
+  auto results = m_cfg.findTracks(sourceLinks, initialParameters, options);
+  // Loop over the track finding results for all initial parameters
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
-    const auto& initialParams = initialParameters[iseed];
-
-    ACTS_DEBUG("Invoke track finding seeded by truth particle " << iseed);
-    auto result = m_cfg.findTracks(sourceLinks, initialParams, options);
+    // The result for this seed
+    auto& result = results[iseed];
     if (result.ok()) {
       // Get the track finding output object
       const auto& trackFindingOutput = result.value();
