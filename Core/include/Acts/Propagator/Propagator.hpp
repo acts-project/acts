@@ -120,9 +120,8 @@ struct PropagatorOptions : public PropagatorPlainOptions {
       const PropagatorOptions<action_list_t, aborter_list_t>& po) = default;
 
   /// PropagatorOptions with context
-  PropagatorOptions(std::reference_wrapper<const GeometryContext> gctx,
-                    std::reference_wrapper<const MagneticFieldContext> mctx,
-                    LoggerWrapper logger_)
+  PropagatorOptions(const GeometryContext& gctx,
+                    const MagneticFieldContext& mctx, LoggerWrapper logger_)
       : geoContext(gctx), magFieldContext(mctx), logger(logger_) {}
 
   /// @brief Expand the Options with extended aborters

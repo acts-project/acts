@@ -59,8 +59,7 @@ class AtlasStepper {
     /// @param[in] ssize the steps size limitation
     /// @param [in] stolerance is the stepping tolerance
     template <typename Parameters>
-    State(std::reference_wrapper<const GeometryContext> gctx,
-          std::reference_wrapper<const MagneticFieldContext> mctx,
+    State(const GeometryContext& gctx, const MagneticFieldContext& mctx,
           const Parameters& pars, NavigationDirection ndir = forward,
           double ssize = std::numeric_limits<double>::max(),
           double stolerance = s_onSurfaceTolerance)

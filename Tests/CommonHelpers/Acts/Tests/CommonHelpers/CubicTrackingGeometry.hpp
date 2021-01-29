@@ -39,8 +39,7 @@ struct CubicTrackingGeometry {
   /// Default constructor for the Cubit tracking geometry
   ///
   /// @param gctx the geometry context for this geometry at building time
-  CubicTrackingGeometry(std::reference_wrapper<const GeometryContext> gctx)
-      : geoContext(gctx) {
+  CubicTrackingGeometry(const GeometryContext& gctx) : geoContext(gctx) {
     using namespace UnitLiterals;
 
     // Construct the rotation
