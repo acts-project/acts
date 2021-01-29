@@ -85,8 +85,8 @@ class EigenStepper {
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
-          fieldCache(BFieldProvider::Cache::make<typename bfield_t::Cache>(
-              mctx.get())),
+          fieldCache(
+              BFieldProvider::Cache::make<typename bfield_t::Cache>(mctx)),
           geoContext(gctx) {
       pars.template segment<3>(eFreePos0) = par.position(gctx);
       pars.template segment<3>(eFreeDir0) = par.unitDirection();
