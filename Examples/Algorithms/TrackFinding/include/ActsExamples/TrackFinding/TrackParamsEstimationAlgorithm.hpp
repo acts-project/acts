@@ -41,7 +41,7 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
     /// Tracking geometry for surface lookup.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// Magnetic field variant.
-    MagneticField magneticField;
+    std::shared_ptr<const Acts::BFieldProvider> magneticField;
     /// The minimum magnetic field to trigger the track parameters estimation
     double bFieldMin = 0.1 * Acts::UnitConstants::T;
     /// Constant term of the loc0 resolution.
@@ -76,12 +76,6 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
   /// The track parameters covariance (assumed to be the same for all estimated
   /// track parameters for the moment)
   Acts::BoundSymMatrix m_covariance = Acts::BoundSymMatrix::Zero();
-
-  /// Get magnetic field at requested position
-  ///
-  /// @param position The global position
-  /// @return the magnetic field at the position
-  Acts::Vector3 getField(const Acts::Vector3& position) const;
 };
 
 }  // namespace ActsExamples
