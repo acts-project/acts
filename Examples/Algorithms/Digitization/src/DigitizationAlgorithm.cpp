@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 
 ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
@@ -123,6 +124,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
   // Setup random number generator
   auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
 
+  ACTS_DEBUG("Starting loop over modules ...");
   for (auto simHitsGroup : groupByModule(simHits)) {
     // Manual pair unpacking instead of using
     //   auto [moduleGeoId, moduleSimHits] : ...
@@ -146,6 +148,8 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
     if (digitizerItr == m_digitizers.end()) {
       ACTS_DEBUG("No digitizer present for module " << moduleGeoId);
       continue;
+    } else {
+      ACTS_DEBUG("Digitizer found for module " << moduleGeoId);
     }
 
     // Run the digitizer. Iterate over the hits for this surface inside the
@@ -160,6 +164,9 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
 
             // Geometric part - 0, 1, 2 local parameters are possible
             if (not digitizer.geometric.indices.empty()) {
+              ACTS_VERBOSE("Configured to geometric digitize "
+                           << digitizer.geometric.indices.size()
+                           << " parameters.");
               auto channels = channelizing(digitizer.geometric, simHit,
                                            *surfacePtr, ctx.geoContext, rng);
               if (channels.empty()) {
@@ -167,11 +174,16 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
                     "Geometric channelization did not work, skipping this hit.")
                 continue;
               }
+              ACTS_VERBOSE("Activated " << channels.size()
+                                        << " channels for this hit.");
               dParameters = localParameters(digitizer.geometric, channels, rng);
             }
 
             // Smearing part - (optionally) rest
             if (not digitizer.smearing.indices.empty()) {
+              ACTS_VERBOSE("Configured to smear "
+                           << digitizer.smearing.indices.size()
+                           << " parameters.");
               auto res =
                   digitizer.smearing(rng, simHit, *surfacePtr, ctx.geoContext);
               if (not res.ok()) {
@@ -184,6 +196,13 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
                 dParameters.values.push_back(par[ip]);
                 dParameters.covariances.push_back(cov(ip, ip));
               }
+            }
+
+            // Check on success - threshold could have eliminated all channels
+            if (dParameters.values.empty()) {
+              ACTS_VERBOSE(
+                  "Parameter digitization did not yield a measurement.")
+              continue;
             }
 
             // The measurement container is unordered and the index under which
@@ -283,7 +302,7 @@ ActsExamples::DigitizationAlgorithm::localParameters(
       dParameters.covariances = covariances;
     } else {
       dParameters.covariances =
-          std::vector<Acts::ActsScalar>(covariances.size(), -1.);
+          std::vector<Acts::ActsScalar>(dParameters.indices.size(), -1.);
     }
   }
   return dParameters;
@@ -314,5 +333,8 @@ ActsExamples::DigitizationAlgorithm::createMeasurement(
           isl, indices, par, cov);
     };
   }
-  throw std::runtime_error("Invalid/mismatching dimension of measurement.");
+  std::string errorMsg = "Invalid/mismatching measurement dimension: " +
+                         std::to_string(dParams.indices.size());
+
+  throw std::runtime_error(errorMsg.c_str());
 }

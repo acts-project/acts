@@ -54,8 +54,8 @@ class RootDigitizationWriter final : public WriterT<MeasurementContainer> {
     std::string inputMeasurementSimHitsMap;
     std::string filePath = "";          ///< path of the output file
     std::string fileMode = "RECREATE";  ///< file access mode
-    /// Optional the smearFunctions
-    Acts::GeometryHierarchyMap<SmearingConfig> smearers;
+    /// The indices for this digitization configurations
+    Acts::GeometryHierarchyMap<std::vector<Acts::BoundIndices>> boundIndices;
     /// Tracking geometry required to access local-to-global transforms.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   };
