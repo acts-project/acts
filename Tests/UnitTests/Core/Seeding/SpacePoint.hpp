@@ -13,7 +13,7 @@ struct SpacePoint {
   float m_y;
   float m_z;
   float m_r;
-  int surface;
+  int layer;
   float varianceR;
   float varianceZ;
   float x() const { return m_x; }

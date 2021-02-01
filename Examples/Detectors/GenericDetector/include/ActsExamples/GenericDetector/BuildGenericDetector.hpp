@@ -99,7 +99,7 @@ std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
 /// return a unique vector to the tracking geometry
 template <typename detector_element_t>
 std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
-    const typename detector_element_t::ContextType& gctx,
+    const typename detector_element_t::ContextType& gctxIn,
     std::vector<std::vector<std::shared_ptr<detector_element_t>>>&
         detectorStore,
     size_t level,
@@ -112,6 +112,9 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
 
   using ProtoLayerCreator = ProtoLayerCreatorT<detector_element_t>;
   using LayerBuilder = LayerBuilderT<detector_element_t>;
+
+  //   auto gctx = Acts::GeometryContext::make(gctxIn);
+  Acts::GeometryContext gctx{gctxIn};
 
   // configure surface array creator
   Acts::SurfaceArrayCreator::Config sacConfig;

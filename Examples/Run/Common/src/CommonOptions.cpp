@@ -93,16 +93,13 @@ void ActsExamples::Options::addOutputOptions(
   // Add specific options for this example
   opt.add_options()("output-dir", value<std::string>()->default_value(""),
                     "Output directory location.")(
-      "output-root", value<bool>()->default_value(false),
+      "output-root", bool_switch(),
       "Switch on to write '.root' output file(s).")(
-      "output-csv", value<bool>()->default_value(false),
-      "Switch on to write '.csv' output file(s).")(
-      "output-obj", value<bool>()->default_value(false),
-      "Switch on to write '.obj' ouput file(s).")(
-      "output-json", value<bool>()->default_value(false),
+      "output-csv", bool_switch(), "Switch on to write '.csv' output file(s).")(
+      "output-obj", bool_switch(), "Switch on to write '.obj' ouput file(s).")(
+      "output-json", bool_switch(),
       "Switch on to write '.json' ouput file(s).")(
-      "output-txt", value<bool>()->default_value(false),
-      "Switch on to write '.txt' ouput file(s).");
+      "output-txt", bool_switch(), "Switch on to write '.txt' ouput file(s).");
 }
 
 void ActsExamples::Options::addInputOptions(
