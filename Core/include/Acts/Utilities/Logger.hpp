@@ -157,7 +157,8 @@ enum Level {
   INFO,         ///< INFO level
   WARNING,      ///< WARNING level
   ERROR,        ///< ERROR level
-  FATAL         ///< FATAL level
+  FATAL,        ///< FATAL level
+  MAX           ///< Must be kept above the maximum supported debug level
 };
 
 /// @brief debug level above which an exception will be thrown after logging
@@ -170,7 +171,7 @@ constexpr Level FAILURE_THRESHOLD =
   #ifdef ACTS_LOG_FAILURE_THRESHOLD
     (ACTS_LOG_FAILURE_THRESHOLD);
   #else
-    Acts::Logging::FATAL + 1;
+    Level::MAX;
   #endif
 
 /// @brief abstract base class for printing debug output
