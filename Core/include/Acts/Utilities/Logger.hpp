@@ -159,6 +159,19 @@ enum Level {
   FATAL         ///< FATAL level
 };
 
+/// @brief debug level above which an exception will be thrown after logging
+///
+/// All messages with a debug level equal or higher than FAILURE_THRESHOLD will
+/// cause an exception to be thrown after log emission. This behavior, which is
+/// controlled via the ACTS_LOG_FAILURE_THRESHOLD preprocessor define, enables
+/// reliably catching non-fatal errors in automated Acts tests.
+constexpr Level FAILURE_THRESHOLD =
+  #ifdef ACTS_LOG_FAILURE_THRESHOLD
+    (ACTS_LOG_FAILURE_THRESHOLD);
+  #else
+    Acts::Logging::FATAL + 1;
+  #endif
+
 /// @brief abstract base class for printing debug output
 ///
 /// Implementations of this interface need to define how and where to @a print
