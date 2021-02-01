@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
   // Setup and parse options
   auto desc = ActsExamples::Options::makeDefaultOptions();
   ActsExamples::Options::addSequencerOptions(desc);
-  ActsExamples::Options::addOutputOptions(desc);
+  ActsExamples::Options::addOutputOptions(desc, ActsExamples::Options::None);
   ActsExamples::Options::addDD4hepOptions(desc);
   ActsExamples::Options::addGeant4Options(desc);
   ActsExamples::Options::addHepMC3WriterOptions(desc);

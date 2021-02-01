@@ -41,7 +41,18 @@ void addMaterialOptions(boost::program_options::options_description& opt);
 void addInputOptions(boost::program_options::options_description& opt);
 
 /// Add common output-related options.
-void addOutputOptions(boost::program_options::options_description& opt);
+enum OutputFormat {
+  None = 0,
+  Root = 1,
+  Csv = 2,
+  Obj = 4,
+  Json = 8,
+  Txt = 16,
+  All = Root | Csv | Obj | Json | Txt
+};
+
+void addOutputOptions(boost::program_options::options_description& opt,
+                      int formats = OutputFormat::All);
 
 /// Parse options and return the resulting variables map.
 ///

@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
   // Setup and parse options
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
-  Options::addOutputOptions(desc);
+  Options::addOutputOptions(desc, Options::Root);
   Options::addDD4hepOptions(desc);
   Options::addGeant4Options(desc);
   auto vm = Options::parse(desc, argc, argv);

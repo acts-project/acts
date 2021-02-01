@@ -52,7 +52,7 @@ int runFatras(int argc, char* argv[],
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
   Options::addRandomNumbersOptions(desc);
-  Options::addOutputOptions(desc);
+  Options::addOutputOptions(desc, Options::Root | Options::Csv);
   addInputOptions(desc);
   // add general and detector-specific geometry options
   Options::addGeometryOptions(desc);

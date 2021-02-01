@@ -43,7 +43,8 @@ int materialMappingExample(int argc, char* argv[],
   ActsExamples::Options::addMaterialMappingOptions(desc);
   ActsExamples::Options::addPropagationOptions(desc);
   ActsExamples::Options::addInputOptions(desc);
-  ActsExamples::Options::addOutputOptions(desc);
+  ActsExamples::Options::addOutputOptions(
+      desc, ActsExamples::Options::Root | ActsExamples::Options::Json);
 
   // Add specific options for this geometry
   detector.addOptions(desc);
