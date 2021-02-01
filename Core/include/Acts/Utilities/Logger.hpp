@@ -493,7 +493,7 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
   void flush(const Level& lvl, const std::ostringstream& input) final {
     (*m_out) << input.str() << std::endl;
     if (lvl >= FAILURE_THRESHOLD) {
-      throw std::runtime_error("Previous debug message exceeds "
+      throw std::runtime_error("Previous debug message exceeds the "
         "ACTS_LOG_FAILURE_THRESHOLD configuration, bailing out");
     }
   }
