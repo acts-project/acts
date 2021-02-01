@@ -52,7 +52,7 @@ class GeometryHierarchyMapJsonConverter {
   ///
   /// @param container Geometry hierarchy map that should be encoded
   /// @return Encoded Json object
-  nlohmann::json toJson(const Container& container) const;
+  nlohmann::ordered_json toJson(const Container& container) const;
 
   /// Decode a Json object into a geometry hierarchy map.
   ///
@@ -70,8 +70,8 @@ class GeometryHierarchyMapJsonConverter {
 
   std::string m_valueIdentifier;
 
-  static nlohmann::json encodeIdentifier(GeometryIdentifier id) {
-    nlohmann::json encoded;
+  static nlohmann::ordered_json encodeIdentifier(GeometryIdentifier id) {
+    nlohmann::ordered_json encoded;
     // only store non-zero identifiers
     if (id.volume()) {
       encoded["volume"] = id.volume();
@@ -104,16 +104,17 @@ class GeometryHierarchyMapJsonConverter {
 // implementations
 
 template <typename value_t>
-nlohmann::json GeometryHierarchyMapJsonConverter<value_t>::toJson(
+nlohmann::ordered_json GeometryHierarchyMapJsonConverter<value_t>::toJson(
     const Container& container) const {
   // encode header
-  nlohmann::json encoded = nlohmann::json::object();
+  nlohmann::ordered_json encoded = nlohmann::json::object();
+  ;
   encoded[kHeaderKey] = {
       {"format-version", kFormatVersion},
       {"value-identifier", m_valueIdentifier},
   };
   // encode entries
-  nlohmann::json entries = nlohmann::json::array();
+  nlohmann::ordered_json entries = nlohmann::json::array();
   for (std::size_t i = 0; i < container.size(); ++i) {
     auto entry = encodeIdentifier(container.idAt(i));
     entry["value"] = nlohmann::json(container.valueAt(i));
