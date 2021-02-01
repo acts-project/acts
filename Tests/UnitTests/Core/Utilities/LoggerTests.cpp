@@ -51,10 +51,8 @@ void debug_level_test(const char* output_file, Logging::Level lvl) {
   // If fail-on-error is enabled, then the logger will not, and should not,
   // tolerate being set up with a coarser debug level.
   if (lvl > Logging::FAILURE_THRESHOLD) {
-    BOOST_CHECK_THROW(
-      detail::create_logger("TestLogger", &logfile, lvl),
-      std::runtime_error
-    );
+    BOOST_CHECK_THROW(detail::create_logger("TestLogger", &logfile, lvl),
+                      std::runtime_error);
     return;
   }
 
@@ -72,23 +70,21 @@ void debug_level_test(const char* output_file, Logging::Level lvl) {
   };
 
   // Test logging at all debug levels
-  test_logging([&]{ ACTS_FATAL("fatal level"); }, FATAL);
-  test_logging([&]{ ACTS_ERROR("error level"); }, ERROR);
-  test_logging([&]{ ACTS_WARNING("warning level"); }, WARNING);
-  test_logging([&]{ ACTS_INFO("info level"); }, INFO);
-  test_logging([&]{ ACTS_DEBUG("debug level"); }, DEBUG);
-  test_logging([&]{ ACTS_VERBOSE("verbose level"); }, VERBOSE);
+  test_logging([&] { ACTS_FATAL("fatal level"); }, FATAL);
+  test_logging([&] { ACTS_ERROR("error level"); }, ERROR);
+  test_logging([&] { ACTS_WARNING("warning level"); }, WARNING);
+  test_logging([&] { ACTS_INFO("info level"); }, INFO);
+  test_logging([&] { ACTS_DEBUG("debug level"); }, DEBUG);
+  test_logging([&] { ACTS_VERBOSE("verbose level"); }, VERBOSE);
   logfile.close();
 
   // Compute expected output for current debug levels
-  std::vector<std::string> lines{
-    "TestLogger     FATAL     fatal level",
-    "TestLogger     ERROR     error level",
-    "TestLogger     WARNING   warning level",
-    "TestLogger     INFO      info level",
-    "TestLogger     DEBUG     debug level",
-    "TestLogger     VERBOSE   verbose level"
-  };
+  std::vector<std::string> lines{"TestLogger     FATAL     fatal level",
+                                 "TestLogger     ERROR     error level",
+                                 "TestLogger     WARNING   warning level",
+                                 "TestLogger     INFO      info level",
+                                 "TestLogger     DEBUG     debug level",
+                                 "TestLogger     VERBOSE   verbose level"};
   lines.resize(static_cast<int>(Logging::Level::MAX) - static_cast<int>(lvl));
 
   // Check output

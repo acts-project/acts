@@ -164,11 +164,11 @@ enum Level {
 /// controlled via the ACTS_LOG_FAILURE_THRESHOLD preprocessor define, enables
 /// reliably catching non-fatal errors in automated Acts tests.
 constexpr Level FAILURE_THRESHOLD =
-  #ifdef ACTS_LOG_FAILURE_THRESHOLD
+#ifdef ACTS_LOG_FAILURE_THRESHOLD
     static_cast<Level>(ACTS_LOG_FAILURE_THRESHOLD);
-  #else
+#else
     Level::MAX;
-  #endif
+#endif
 
 /// @brief abstract base class for printing debug output
 ///
@@ -215,8 +215,9 @@ class DefaultFilterPolicy final : public OutputFilterPolicy {
   /// @param [in] lvl threshold debug level
   explicit DefaultFilterPolicy(const Level& lvl) : m_level(lvl) {
     if (lvl > FAILURE_THRESHOLD) {
-      throw std::runtime_error("Requested debug level is incompatible with "
-        "the ACTS_LOG_FAILURE_THRESHOLD configuration");
+      throw std::runtime_error(
+          "Requested debug level is incompatible with "
+          "the ACTS_LOG_FAILURE_THRESHOLD configuration");
     }
   }
 
@@ -427,8 +428,9 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
   void flush(const Level& lvl, const std::string& input) final {
     (*m_out) << input << std::endl;
     if (lvl >= FAILURE_THRESHOLD) {
-      throw std::runtime_error("Previous debug message exceeds the "
-        "ACTS_LOG_FAILURE_THRESHOLD configuration, bailing out");
+      throw std::runtime_error(
+          "Previous debug message exceeds the "
+          "ACTS_LOG_FAILURE_THRESHOLD configuration, bailing out");
     }
   }
 
