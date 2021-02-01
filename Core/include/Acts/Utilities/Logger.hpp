@@ -169,7 +169,7 @@ enum Level {
 /// reliably catching non-fatal errors in automated Acts tests.
 constexpr Level FAILURE_THRESHOLD =
   #ifdef ACTS_LOG_FAILURE_THRESHOLD
-    (ACTS_LOG_FAILURE_THRESHOLD);
+    static_cast<Level>(ACTS_LOG_FAILURE_THRESHOLD);
   #else
     Level::MAX;
   #endif
