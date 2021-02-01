@@ -9,6 +9,7 @@
 #pragma once
 // STL include(s)
 #include <ctime>
+#include <exception>
 #include <functional>
 #include <iomanip>
 #include <iostream>
@@ -276,7 +277,12 @@ class DefaultFilterPolicy final : public OutputFilterPolicy {
   /// @brief constructor
   ///
   /// @param [in] lvl threshold debug level
-  explicit DefaultFilterPolicy(const Level& lvl) : m_level(lvl) {}
+  explicit DefaultFilterPolicy(const Level& lvl) : m_level(lvl) {
+    if (lvl > FAILURE_THRESHOLD) {
+      throw std::runtime_error("Requested debug level is incompatible with "
+        "the ACTS_LOG_FAILURE_THRESHOLD configuration");
+    }
+  }
 
   /// virtual default destructor
   ~DefaultFilterPolicy() override = default;
@@ -483,8 +489,12 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
   ///
   /// @param [in] lvl   debug level of debug message
   /// @param [in] input text of debug message
-  void flush(const Level& /*lvl*/, const std::ostringstream& input) final {
+  void flush(const Level& lvl, const std::ostringstream& input) final {
     (*m_out) << input.str() << std::endl;
+    if (lvl >= FAILURE_THRESHOLD) {
+      throw std::runtime_error("Previous debug message exceeds "
+        "ACTS_LOG_FAILURE_THRESHOLD configuration, bailing out");
+    }
   }
 
  private:
