@@ -48,20 +48,20 @@ typename FatrasAlgorithm<simulator_t>::Config readFatrasConfig(
   const auto pmin = variables["fatras-pmin-gev"].as<double>() * 1_GeV;
   cfg.simulator.selectCharged.template get<PMin>().valMin = pmin;
   cfg.simulator.selectNeutral.template get<PMin>().valMin = pmin;
-  cfg.simulator.charged.physics =
+  cfg.simulator.charged.continuous =
       ActsFatras::makeChargedElectroMagneticPhysicsList(pmin);
 
   // all physics process are enabled by default
   if (not variables["fatras-em-scattering"].as<bool>()) {
-    cfg.simulator.charged.physics
+    cfg.simulator.charged.continuous
         .template disable<ActsFatras::detail::StandardScattering>();
   }
   if (not variables["fatras-em-ionisation"].as<bool>()) {
-    cfg.simulator.charged.physics
+    cfg.simulator.charged.continuous
         .template disable<ActsFatras::detail::StandardBetheBloch>();
   }
   if (not variables["fatras-em-radiation"].as<bool>()) {
-    cfg.simulator.charged.physics
+    cfg.simulator.charged.continuous
         .template disable<ActsFatras::detail::StandardBetheHeitler>();
   }
 

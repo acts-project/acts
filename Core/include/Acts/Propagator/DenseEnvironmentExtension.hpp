@@ -33,10 +33,9 @@ struct DenseStepperPropagatorOptions
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param mctx The current magnetic fielc context object
-  DenseStepperPropagatorOptions(
-      std::reference_wrapper<const GeometryContext> gctx,
-      std::reference_wrapper<const MagneticFieldContext> mctx,
-      LoggerWrapper logger_)
+  DenseStepperPropagatorOptions(const GeometryContext& gctx,
+                                const MagneticFieldContext& mctx,
+                                LoggerWrapper logger_)
       : PropagatorOptions<action_list_t, aborter_list_t>(gctx, mctx, logger_) {}
 
   /// Toggle between mean and mode evaluation of energy loss

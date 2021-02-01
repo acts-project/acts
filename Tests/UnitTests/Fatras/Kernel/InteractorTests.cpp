@@ -8,29 +8,48 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "ActsFatras/Kernel/PointLikePhysicsList.hpp"
 #include "ActsFatras/Kernel/detail/Interactor.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
 
+#include <array>
 #include <limits>
 #include <random>
 
+using namespace Acts::UnitLiterals;
 using namespace ActsFatras;
 
 namespace {
 
-constexpr auto eps = std::numeric_limits<Particle::Scalar>::epsilon();
+constexpr auto tol = 4 * std::numeric_limits<Particle::Scalar>::epsilon();
+constexpr auto inf = std::numeric_limits<Particle::Scalar>::infinity();
 
-struct MockPhysicsList {
+struct MockDecay {
+  Particle::Scalar properTimeLimit = inf;
+
+  template <typename generator_t>
+  constexpr Particle::Scalar generateProperTimeLimit(
+      generator_t &, const Particle &particle) const {
+    return particle.properTime() + properTimeLimit;
+  }
+  template <typename generator_t>
+  constexpr std::array<Particle, 0> run(generator_t &, const Particle &) const {
+    return {};
+  }
+};
+
+struct MockContinuousPhysicsList {
   double energyLoss = 0;
 
   template <typename generator_t>
-  bool operator()(generator_t &, const Acts::MaterialSlab &, Particle &particle,
-                  std::vector<Particle> &generated) const {
+  bool run(generator_t &, const Acts::MaterialSlab &, Particle &particle,
+           std::vector<Particle> &generated) const {
     generated.push_back(particle);
     particle.correctEnergy(-energyLoss);
     // break if particle is not alive anymore
@@ -42,26 +61,27 @@ struct MockStepperState {
   using Scalar = Acts::ActsScalar;
   using Vector3 = Acts::ActsVector<3>;
 
-  Vector3 position;
+  Vector3 pos;
   Scalar time;
-  Vector3 direction;
-  Scalar momentum;
+  Vector3 dir;
+  Scalar p;
 };
 
 struct MockStepper {
+  using State = MockStepperState;
   using Scalar = MockStepperState::Scalar;
   using Vector3 = MockStepperState::Vector3;
 
-  auto position(MockStepperState &state) const { return state.position; }
-  auto time(MockStepperState &state) const { return state.time; }
-  auto direction(MockStepperState &state) const { return state.direction; }
-  auto momentum(MockStepperState &state) const { return state.momentum; }
-  void update(MockStepperState &state, const Vector3 &position,
-              const Vector3 &direction, Scalar momentum, Scalar time) {
-    state.position = position;
+  auto position(const State &state) const { return state.pos; }
+  auto time(const State &state) const { return state.time; }
+  auto direction(const State &state) const { return state.dir; }
+  auto momentum(const State &state) const { return state.p; }
+  void update(State &state, const Vector3 &pos, const Vector3 &dir, Scalar p,
+              Scalar time) {
+    state.pos = pos;
     state.time = time;
-    state.direction = direction;
-    state.momentum = momentum;
+    state.dir = dir;
+    state.p = p;
   }
 };
 
@@ -77,11 +97,19 @@ struct MockPropagatorState {
 template <typename SurfaceSelector>
 struct Fixture {
   using Generator = std::ranlux48;
-  using Interactor =
-      typename ActsFatras::detail::Interactor<Generator, MockPhysicsList,
-                                              SurfaceSelector>;
+  using Interactor = typename ActsFatras::detail::Interactor<
+      Generator, MockDecay, MockContinuousPhysicsList,
+      ActsFatras::PointLikePhysicsList<>, SurfaceSelector>;
   using InteractorResult = typename Interactor::result_type;
 
+  // reference information for initial particle
+  Barcode pid = Barcode().setVertexPrimary(12u).setParticle(3u);
+  ProcessType proc = ProcessType::eUndefined;
+  Acts::PdgParticle pdg = Acts::PdgParticle::eProton;
+  Particle::Scalar q = 1_e;
+  Particle::Scalar m = 1_GeV;
+  Particle::Scalar p = 1_GeV;
+  Particle::Scalar e;
   Generator generator;
   std::shared_ptr<Acts::Surface> surface;
   Interactor interactor;
@@ -90,22 +118,20 @@ struct Fixture {
   MockStepper stepper;
 
   Fixture(double energyLoss, std::shared_ptr<Acts::Surface> surface_)
-      : generator(42), surface(std::move(surface_)) {
-    // use zero-mass to simplify the math
-    const auto particle =
-        Particle(Barcode().setVertexPrimary(12u).setParticle(3u),
-                 Acts::PdgParticle::eProton, 0, 1)
-            .setPosition4(1, 2, 3, 4)
-            .setDirection(1, 0, 0)
-            .setAbsoluteMomentum(100);
+      : e(std::hypot(m, p)), generator(42), surface(std::move(surface_)) {
+    const auto particle = Particle(pid, pdg, q, m)
+                              .setProcess(proc)
+                              .setPosition4(1_mm, 2_mm, 3_mm, 4_ns)
+                              .setDirection(1, 0, 0)
+                              .setAbsoluteMomentum(p);
     interactor.generator = &generator;
-    interactor.physics.energyLoss = energyLoss;
-    interactor.particle = particle;
+    interactor.continuous.energyLoss = energyLoss;
+    interactor.initialParticle = particle;
     state.navigation.currentSurface = surface.get();
-    state.stepping.position = particle.position();
+    state.stepping.pos = particle.position();
     state.stepping.time = particle.time();
-    state.stepping.direction = particle.unitDirection();
-    state.stepping.momentum = particle.absoluteMomentum();
+    state.stepping.dir = particle.unitDirection();
+    state.stepping.p = particle.absoluteMomentum();
   }
 };
 
@@ -116,10 +142,10 @@ std::shared_ptr<Acts::Surface> makeEmptySurface() {
   return surface;
 }
 
-// make a surface with material.
+// make a surface with 1% X0/L0 material.
 std::shared_ptr<Acts::Surface> makeMaterialSurface() {
   auto surface = makeEmptySurface();
-  auto slab = Acts::Test::makePercentSlab();
+  auto slab = Acts::Test::makeUnitSlab();
   surface->assignSurfaceMaterial(
       std::make_shared<Acts::HomogeneousSurfaceMaterial>(std::move(slab)));
   return surface;
@@ -130,113 +156,304 @@ std::shared_ptr<Acts::Surface> makeMaterialSurface() {
 BOOST_AUTO_TEST_SUITE(FatrasInteractor)
 
 BOOST_AUTO_TEST_CASE(HitsOnEmptySurface) {
-  Fixture<EverySurface> f(0.5, makeEmptySurface());
+  Fixture<EverySurface> f(125_MeV, makeEmptySurface());
+
+  // input reference check
+  BOOST_CHECK_EQUAL(f.interactor.initialParticle.particleId(), f.pid);
+  BOOST_CHECK_EQUAL(f.interactor.initialParticle.process(), f.proc);
+  BOOST_CHECK_EQUAL(f.interactor.initialParticle.pdg(), f.pdg);
+  BOOST_CHECK_EQUAL(f.interactor.initialParticle.mass(), f.m);
+  BOOST_CHECK_EQUAL(f.interactor.initialParticle.absoluteMomentum(), f.p);
+  BOOST_CHECK_EQUAL(f.interactor.initialParticle.energy(), f.e);
 
   // call interactor: surface selection -> one hit, no material -> no secondary
   f.interactor(f.state, f.stepper, f.result);
+  BOOST_CHECK(f.result.isAlive);
+  CHECK_CLOSE_REL(f.result.particle.energy(), f.e, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 0u);
   BOOST_CHECK_EQUAL(f.result.hits.size(), 1u);
   BOOST_CHECK_EQUAL(f.result.hits[0].index(), 0u);
+  // proper time must be non-NaN, but is zero since no time has passed
+  BOOST_CHECK_EQUAL(f.result.particle.properTime(), 0);
+  // empty surfaces adds no material
+  BOOST_CHECK_EQUAL(f.result.particle.pathInX0(), 0);
+  BOOST_CHECK_EQUAL(f.result.particle.pathInL0(), 0);
+  // no processes are configured, so none can be selected
+  BOOST_CHECK_EQUAL(f.result.x0Limit, inf);
+  BOOST_CHECK_EQUAL(f.result.x0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(f.result.l0Limit, inf);
+  BOOST_CHECK_EQUAL(f.result.l0Process, SIZE_MAX);
+  // check consistency between particle and stepper state
+  BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
+  BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
+  BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
+  BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
 
   // call interactor again: one more hit, still no secondary
   f.interactor(f.state, f.stepper, f.result);
+  BOOST_CHECK(f.result.isAlive);
+  CHECK_CLOSE_REL(f.result.particle.energy(), f.e, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 0u);
   BOOST_CHECK_EQUAL(f.result.hits.size(), 2u);
   BOOST_CHECK_EQUAL(f.result.hits[0].index(), 0u);
   BOOST_CHECK_EQUAL(f.result.hits[1].index(), 1u);
+  // proper time must be non-NaN, but is zero since no time
+  // has passed
+  BOOST_CHECK_EQUAL(f.result.particle.properTime(), 0);
+  // empty surfaces adds no material
+  BOOST_CHECK_EQUAL(f.result.particle.pathInX0(), 0);
+  BOOST_CHECK_EQUAL(f.result.particle.pathInL0(), 0);
+  // no processes are configured, so none can be selected
+  BOOST_CHECK_EQUAL(f.result.x0Limit, inf);
+  BOOST_CHECK_EQUAL(f.result.x0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(f.result.l0Limit, inf);
+  BOOST_CHECK_EQUAL(f.result.l0Process, SIZE_MAX);
+  // check consistency between particle and stepper state
+  BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
+  BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
+  BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
+  BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
 
   // particle identity should be the same as the initial input
-  BOOST_CHECK_EQUAL(f.result.particle.particleId(),
-                    f.interactor.particle.particleId());
-  BOOST_CHECK_EQUAL(f.result.particle.process(),
-                    f.interactor.particle.process());
-  BOOST_CHECK_EQUAL(f.result.particle.pdg(), f.interactor.particle.pdg());
-  BOOST_CHECK_EQUAL(f.result.particle.charge(), f.interactor.particle.charge());
-  BOOST_CHECK_EQUAL(f.result.particle.mass(), f.interactor.particle.mass());
-  // particle energy has not changed since there were no interactions
-  CHECK_CLOSE_REL(f.result.particle.energy(), f.interactor.particle.energy(),
-                  eps);
+  BOOST_CHECK_EQUAL(f.result.particle.particleId(), f.pid);
+  BOOST_CHECK_EQUAL(f.result.particle.process(), f.proc);
+  BOOST_CHECK_EQUAL(f.result.particle.pdg(), f.pdg);
+  BOOST_CHECK_EQUAL(f.result.particle.charge(), f.q);
+  BOOST_CHECK_EQUAL(f.result.particle.mass(), f.m);
 }
 
 BOOST_AUTO_TEST_CASE(HitsOnMaterialSurface) {
-  Fixture<EverySurface> f(0.5, makeMaterialSurface());
+  Fixture<EverySurface> f(125_MeV, makeMaterialSurface());
+
+  // input reference check
+  BOOST_CHECK_EQUAL(f.interactor.initialParticle.particleId(), f.pid);
+  BOOST_CHECK_EQUAL(f.interactor.initialParticle.process(), f.proc);
+  BOOST_CHECK_EQUAL(f.interactor.initialParticle.pdg(), f.pdg);
+  BOOST_CHECK_EQUAL(f.interactor.initialParticle.mass(), f.m);
+  BOOST_CHECK_EQUAL(f.interactor.initialParticle.absoluteMomentum(), f.p);
+  BOOST_CHECK_EQUAL(f.interactor.initialParticle.energy(), f.e);
 
   // call interactor: surface selection -> one hit, material -> one secondary
   f.interactor(f.state, f.stepper, f.result);
+  BOOST_CHECK(f.result.isAlive);
+  CHECK_CLOSE_REL(f.result.particle.energy(), f.e - 125_MeV, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 1u);
   BOOST_CHECK_EQUAL(f.result.hits.size(), 1u);
   BOOST_CHECK_EQUAL(f.result.hits[0].index(), 0u);
+  // proper time must be non-NaN, but is zero since no time
+  // has passed
+  BOOST_CHECK_EQUAL(f.result.particle.properTime(), 0);
+  // test material is a unit slab
+  BOOST_CHECK_EQUAL(f.result.particle.pathInX0(), 1);
+  BOOST_CHECK_EQUAL(f.result.particle.pathInL0(), 1);
+  // no processes are configured, so none can be selected
+  BOOST_CHECK_EQUAL(f.result.x0Limit, inf);
+  BOOST_CHECK_EQUAL(f.result.x0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(f.result.l0Limit, inf);
+  BOOST_CHECK_EQUAL(f.result.l0Process, SIZE_MAX);
+  // check consistency between particle and stepper state
+  BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
+  BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
+  BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
+  BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
 
   // call interactor again: one more hit, one more secondary
   f.interactor(f.state, f.stepper, f.result);
+  BOOST_CHECK(f.result.isAlive);
+  CHECK_CLOSE_REL(f.result.particle.energy(), f.e - 250_MeV, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 2u);
   BOOST_CHECK_EQUAL(f.result.hits.size(), 2u);
   BOOST_CHECK_EQUAL(f.result.hits[0].index(), 0u);
   BOOST_CHECK_EQUAL(f.result.hits[1].index(), 1u);
+  // proper time must be non-NaN, but is zero since no time
+  // has passed
+  BOOST_CHECK_EQUAL(f.result.particle.properTime(), 0);
+  // test material is a unit slab that was passed twice
+  BOOST_CHECK_EQUAL(f.result.particle.pathInX0(), 2);
+  BOOST_CHECK_EQUAL(f.result.particle.pathInL0(), 2);
+  // no processes are configured, so none can be selected
+  BOOST_CHECK_EQUAL(f.result.x0Limit, inf);
+  BOOST_CHECK_EQUAL(f.result.x0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(f.result.l0Limit, inf);
+  BOOST_CHECK_EQUAL(f.result.l0Process, SIZE_MAX);
+  // check consistency between particle and stepper state
+  BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
+  BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
+  BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
+  BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
 
   // particle identity should be the same as the initial input
-  BOOST_CHECK_EQUAL(f.result.particle.particleId(),
-                    f.interactor.particle.particleId());
-  BOOST_CHECK_EQUAL(f.result.particle.process(),
-                    f.interactor.particle.process());
-  BOOST_CHECK_EQUAL(f.result.particle.pdg(), f.interactor.particle.pdg());
-  BOOST_CHECK_EQUAL(f.result.particle.charge(), f.interactor.particle.charge());
-  BOOST_CHECK_EQUAL(f.result.particle.mass(), f.interactor.particle.mass());
-  // particle energy has changed due to interactions
-  CHECK_CLOSE_REL((f.result.particle.energy() + 1),
-                  f.interactor.particle.energy(), eps);
+  BOOST_CHECK_EQUAL(f.result.particle.particleId(), f.pid);
+  BOOST_CHECK_EQUAL(f.result.particle.process(), f.proc);
+  BOOST_CHECK_EQUAL(f.result.particle.pdg(), f.pdg);
+  BOOST_CHECK_EQUAL(f.result.particle.charge(), f.q);
+  BOOST_CHECK_EQUAL(f.result.particle.mass(), f.m);
 }
 
 BOOST_AUTO_TEST_CASE(NoHitsEmptySurface) {
-  Fixture<NoSurface> f(0.5, makeEmptySurface());
+  Fixture<NoSurface> f(125_MeV, makeEmptySurface());
+
+  // input reference check
+  BOOST_CHECK_EQUAL(f.interactor.initialParticle.particleId(), f.pid);
+  BOOST_CHECK_EQUAL(f.interactor.initialParticle.process(), f.proc);
+  BOOST_CHECK_EQUAL(f.interactor.initialParticle.pdg(), f.pdg);
+  BOOST_CHECK_EQUAL(f.interactor.initialParticle.mass(), f.m);
+  BOOST_CHECK_EQUAL(f.interactor.initialParticle.absoluteMomentum(), f.p);
+  BOOST_CHECK_EQUAL(f.interactor.initialParticle.energy(), f.e);
 
   // call interactor: no surface sel. -> no hit, no material -> no secondary
   f.interactor(f.state, f.stepper, f.result);
+  BOOST_CHECK(f.result.isAlive);
+  CHECK_CLOSE_REL(f.result.particle.energy(), f.e, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 0u);
   BOOST_CHECK_EQUAL(f.result.hits.size(), 0u);
+  // proper time must be non-NaN, but is zero since no time
+  // has passed
+  BOOST_CHECK_EQUAL(f.result.particle.properTime(), 0);
+  // empty surfaces adds no material
+  BOOST_CHECK_EQUAL(f.result.particle.pathInX0(), 0);
+  BOOST_CHECK_EQUAL(f.result.particle.pathInL0(), 0);
+  // no processes are configured, so none can be selected
+  BOOST_CHECK_EQUAL(f.result.x0Limit, inf);
+  BOOST_CHECK_EQUAL(f.result.x0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(f.result.l0Limit, inf);
+  BOOST_CHECK_EQUAL(f.result.l0Process, SIZE_MAX);
+  // check consistency between particle and stepper state
+  BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
+  BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
+  BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
+  BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
 
   // call interactor again: no hit, still no secondary
   f.interactor(f.state, f.stepper, f.result);
+  BOOST_CHECK(f.result.isAlive);
+  CHECK_CLOSE_REL(f.result.particle.energy(), f.e, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 0u);
   BOOST_CHECK_EQUAL(f.result.hits.size(), 0u);
+  // proper time must be non-NaN, but is zero since no time
+  // has passed
+  BOOST_CHECK_EQUAL(f.result.particle.properTime(), 0);
+  // empty surfaces adds no material
+  BOOST_CHECK_EQUAL(f.result.particle.pathInX0(), 0);
+  BOOST_CHECK_EQUAL(f.result.particle.pathInL0(), 0);
+  // no processes are configured, so none can be selected
+  BOOST_CHECK_EQUAL(f.result.x0Limit, inf);
+  BOOST_CHECK_EQUAL(f.result.x0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(f.result.l0Limit, inf);
+  BOOST_CHECK_EQUAL(f.result.l0Process, SIZE_MAX);
+  // check consistency between particle and stepper state
+  BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
+  BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
+  BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
+  BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
 
   // particle identity should be the same as the initial input
-  BOOST_CHECK_EQUAL(f.result.particle.particleId(),
-                    f.interactor.particle.particleId());
-  BOOST_CHECK_EQUAL(f.result.particle.process(),
-                    f.interactor.particle.process());
-  BOOST_CHECK_EQUAL(f.result.particle.pdg(), f.interactor.particle.pdg());
-  BOOST_CHECK_EQUAL(f.result.particle.charge(), f.interactor.particle.charge());
-  BOOST_CHECK_EQUAL(f.result.particle.mass(), f.interactor.particle.mass());
-  // particle energy has not changed since there were no interactions
-  CHECK_CLOSE_REL(f.result.particle.energy(), f.interactor.particle.energy(),
-                  eps);
+  BOOST_CHECK_EQUAL(f.result.particle.particleId(), f.pid);
+  BOOST_CHECK_EQUAL(f.result.particle.process(), f.proc);
+  BOOST_CHECK_EQUAL(f.result.particle.pdg(), f.pdg);
+  BOOST_CHECK_EQUAL(f.result.particle.charge(), f.q);
+  BOOST_CHECK_EQUAL(f.result.particle.mass(), f.m);
 }
 
 BOOST_AUTO_TEST_CASE(NoHitsMaterialSurface) {
-  Fixture<NoSurface> f(0.5, makeMaterialSurface());
+  Fixture<NoSurface> f(125_MeV, makeMaterialSurface());
 
   // call interactor: no surface sel. -> no hit, material -> one secondary
   f.interactor(f.state, f.stepper, f.result);
+  BOOST_CHECK(f.result.isAlive);
+  CHECK_CLOSE_REL(f.result.particle.energy(), f.e - 125_MeV, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 1u);
   BOOST_CHECK_EQUAL(f.result.hits.size(), 0u);
+  // proper time must be non-NaN, but is zero since no time
+  // has passed
+  BOOST_CHECK_EQUAL(f.result.particle.properTime(), 0);
+  // test material is a unit slab
+  BOOST_CHECK_EQUAL(f.result.particle.pathInX0(), 1);
+  BOOST_CHECK_EQUAL(f.result.particle.pathInL0(), 1);
+  // no processes are configured, so none can be selected
+  BOOST_CHECK_EQUAL(f.result.x0Limit, inf);
+  BOOST_CHECK_EQUAL(f.result.x0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(f.result.l0Limit, inf);
+  BOOST_CHECK_EQUAL(f.result.l0Process, SIZE_MAX);
+  // check consistency between particle and stepper state
+  BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
+  BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
+  BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
+  BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
 
   // call interactor again: still no hit, one more secondary
   f.interactor(f.state, f.stepper, f.result);
+  BOOST_CHECK(f.result.isAlive);
+  CHECK_CLOSE_REL(f.result.particle.energy(), f.e - 250_MeV, tol);
   BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 2u);
   BOOST_CHECK_EQUAL(f.result.hits.size(), 0u);
+  // proper time must be non-NaN, but is zero since no time
+  // has passed
+  BOOST_CHECK_EQUAL(f.result.particle.properTime(), 0);
+  // test material is a unit slab that was passed twice
+  BOOST_CHECK_EQUAL(f.result.particle.pathInX0(), 2);
+  BOOST_CHECK_EQUAL(f.result.particle.pathInL0(), 2);
+  // no processes are configured, so none can be selected
+  BOOST_CHECK_EQUAL(f.result.x0Limit, inf);
+  BOOST_CHECK_EQUAL(f.result.x0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(f.result.l0Limit, inf);
+  BOOST_CHECK_EQUAL(f.result.l0Process, SIZE_MAX);
+  // check consistency between particle and stepper state
+  BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
+  BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
+  BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
+  BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
 
   // particle identity should be the same as the initial input
-  BOOST_CHECK_EQUAL(f.result.particle.particleId(),
-                    f.interactor.particle.particleId());
-  BOOST_CHECK_EQUAL(f.result.particle.process(),
-                    f.interactor.particle.process());
-  BOOST_CHECK_EQUAL(f.result.particle.pdg(), f.interactor.particle.pdg());
-  BOOST_CHECK_EQUAL(f.result.particle.charge(), f.interactor.particle.charge());
-  BOOST_CHECK_EQUAL(f.result.particle.mass(), f.interactor.particle.mass());
-  // particle energy has changed due to interactions
-  CHECK_CLOSE_REL((f.result.particle.energy() + 1),
-                  f.interactor.particle.energy(), eps);
+  BOOST_CHECK_EQUAL(f.result.particle.particleId(), f.pid);
+  BOOST_CHECK_EQUAL(f.result.particle.process(), f.proc);
+  BOOST_CHECK_EQUAL(f.result.particle.pdg(), f.pdg);
+  BOOST_CHECK_EQUAL(f.result.particle.charge(), f.q);
+  BOOST_CHECK_EQUAL(f.result.particle.mass(), f.m);
+}
+
+BOOST_AUTO_TEST_CASE(Decay) {
+  // configure no energy loss for the decay tests
+  Fixture<NoSurface> f(0_GeV, makeEmptySurface());
+
+  // inverse Lorentz factor for proper time dilation: 1/gamma = m/E
+  const auto gammaInv = f.m / f.e;
+
+  // first step w/ defaults leaves particle alive
+  f.interactor(f.state, f.stepper, f.result);
+  BOOST_CHECK(f.result.isAlive);
+  BOOST_CHECK_EQUAL(f.result.particle.particleId(), f.pid);
+  BOOST_CHECK_EQUAL(f.result.particle.process(), f.proc);
+  BOOST_CHECK_EQUAL(f.result.particle.pdg(), f.pdg);
+  BOOST_CHECK_EQUAL(f.result.particle.charge(), f.q);
+  BOOST_CHECK_EQUAL(f.result.particle.mass(), f.m);
+  CHECK_CLOSE_REL(f.result.particle.energy(), f.e, tol);
+  BOOST_CHECK_EQUAL(f.result.particle.properTime(), 0_ns);
+
+  // second step w/ defaults increases proper time
+  f.state.stepping.time += 1_ns;
+  f.interactor(f.state, f.stepper, f.result);
+  BOOST_CHECK(f.result.isAlive);
+  BOOST_CHECK_EQUAL(f.result.particle.particleId(), f.pid);
+  BOOST_CHECK_EQUAL(f.result.particle.process(), f.proc);
+  BOOST_CHECK_EQUAL(f.result.particle.pdg(), f.pdg);
+  BOOST_CHECK_EQUAL(f.result.particle.charge(), f.q);
+  BOOST_CHECK_EQUAL(f.result.particle.mass(), f.m);
+  CHECK_CLOSE_REL(f.result.particle.energy(), f.e, tol);
+  CHECK_CLOSE_REL(f.result.particle.properTime(), gammaInv * 1_ns, tol);
+
+  // third step w/ proper time limit decays the particle
+  f.state.stepping.time += 1_ns;
+  f.result.properTimeLimit = f.result.particle.properTime() + gammaInv * 0.5_ns;
+  f.interactor(f.state, f.stepper, f.result);
+  BOOST_CHECK(not f.result.isAlive);
+  BOOST_CHECK_EQUAL(f.result.particle.particleId(), f.pid);
+  BOOST_CHECK_EQUAL(f.result.particle.process(), f.proc);
+  BOOST_CHECK_EQUAL(f.result.particle.pdg(), f.pdg);
+  BOOST_CHECK_EQUAL(f.result.particle.charge(), f.q);
+  BOOST_CHECK_EQUAL(f.result.particle.mass(), f.m);
+  CHECK_CLOSE_REL(f.result.particle.energy(), f.e, tol);
+  CHECK_CLOSE_REL(f.result.particle.properTime(), gammaInv * 2_ns, tol);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
