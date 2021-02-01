@@ -18,7 +18,7 @@ class NullBField final {
  public:
   struct Cache {
     /// @brief constructor with context
-    Cache(std::reference_wrapper<const MagneticFieldContext> /*mcfg*/) {}
+    Cache(const MagneticFieldContext& /*mcfg*/) {}
   };
 
   /// @brief Default constructor

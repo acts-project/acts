@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,6 +13,7 @@
 namespace Acts {
 class Surface;
 class PlanarBounds;
+class DiscBounds;
 class ISurfaceMaterial;
 }  // namespace Acts
 
@@ -42,6 +43,18 @@ class TelescopeDetectorElement : public Acts::DetectorElementBase {
   TelescopeDetectorElement(
       std::shared_ptr<const Acts::Transform3> transform,
       std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
+      std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
+
+  /// Constructor for single sided detector element
+  /// - bound to a Disc Surface
+  ///
+  /// @param transform is the transform that element the layer in 3D frame
+  /// @param dBounds is the planar bounds for the disc like detector element
+  /// @param thickness is the module thickness
+  /// @param material is the (optional) Surface material associated to it
+  TelescopeDetectorElement(
+      std::shared_ptr<const Acts::Transform3> transform,
+      std::shared_ptr<const Acts::DiscBounds> dBounds, double thickness,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
 
   ///  Destructor
@@ -89,6 +102,8 @@ class TelescopeDetectorElement : public Acts::DetectorElementBase {
   double m_elementThickness = 0.;
   /// the planar bounds
   std::shared_ptr<const Acts::PlanarBounds> m_elementPlanarBounds = nullptr;
+  /// the disc bounds
+  std::shared_ptr<const Acts::DiscBounds> m_elementDiscBounds = nullptr;
 };
 
 inline const Acts::Surface& TelescopeDetectorElement::surface() const {
@@ -104,7 +119,7 @@ inline const Acts::Transform3& TelescopeDetectorElement::transform(
   // Check if a different transform than the nominal exists
   if (m_alignedTransforms.size()) {
     // cast into the right context object
-    auto alignContext = std::any_cast<ContextType>(gctx);
+    auto alignContext = gctx.get<ContextType>();
     return (*m_alignedTransforms[alignContext.iov].get());
   }
   // Return the standard transform if not found

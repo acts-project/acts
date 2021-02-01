@@ -90,8 +90,7 @@ ActsExamples::Contextual::AlignmentDecorator::decorate(
   }
   // Set the geometry context
   AlignedDetectorElement::ContextType alignedContext{iov};
-  context.geoContext =
-      std::make_any<AlignedDetectorElement::ContextType>(alignedContext);
+  context.geoContext = alignedContext;
 
   return ProcessCode::SUCCESS;
 }
