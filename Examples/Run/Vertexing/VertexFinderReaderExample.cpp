@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
   Options::addRandomNumbersOptions(desc);
   ParticleSelector::addOptions(desc);
   Options::addInputOptions(desc);
-  Options::addOutputOptions(desc, Options::None);
+  Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
   auto vars = Options::parse(desc, argc, argv);
   if (vars.empty()) {
     return EXIT_FAILURE;

@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Options/CommonOptions.hpp"
 
+#include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
 #include <exception>
@@ -89,28 +90,29 @@ void ActsExamples::Options::addMaterialOptions(
 }
 
 void ActsExamples::Options::addOutputOptions(
-    boost::program_options::options_description& opt, int formats) {
+    boost::program_options::options_description& opt,
+    OutputFormat formatFlags) {
   // Add specific options for this example
   opt.add_options()("output-dir", value<std::string>()->default_value(""),
                     "Output directory location.");
 
-  if ((OutputFormat::Root & formats) == OutputFormat::Root)
+  if (ACTS_CHECK_BIT(OutputFormat::Root, formatFlags))
     opt.add_options()("output-root", bool_switch(),
                       "Switch on to write '.root' output file(s).");
 
-  if ((OutputFormat::Csv & formats) == OutputFormat::Csv)
+  if (ACTS_CHECK_BIT(OutputFormat::Csv, formatFlags))
     opt.add_options()("output-csv", bool_switch(),
                       "Switch on to write '.csv' output file(s).");
 
-  if ((OutputFormat::Obj & formats) == OutputFormat::Obj)
+  if (ACTS_CHECK_BIT(OutputFormat::Obj, formatFlags))
     opt.add_options()("output-obj", bool_switch(),
                       "Switch on to write '.obj' ouput file(s).");
 
-  if ((OutputFormat::Json & formats) == OutputFormat::Json)
+  if (ACTS_CHECK_BIT(OutputFormat::Json, formatFlags))
     opt.add_options()("output-json", bool_switch(),
                       "Switch on to write '.json' ouput file(s).");
 
-  if ((OutputFormat::Txt & formats) == OutputFormat::Txt)
+  if (ACTS_CHECK_BIT(OutputFormat::Txt, formatFlags))
     opt.add_options()("output-txt", bool_switch(),
                       "Switch on to write '.txt' ouput file(s).");
 }

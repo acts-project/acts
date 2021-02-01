@@ -61,7 +61,7 @@ int runRecCKFTracks(int argc, char* argv[],
   Options::addGeometryOptions(desc);
   Options::addMaterialOptions(desc);
   Options::addInputOptions(desc);
-  Options::addOutputOptions(desc, Options::None);
+  Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
   detector->addOptions(desc);
   Options::addBFieldOptions(desc);
   Options::addTrackFindingOptions(desc);

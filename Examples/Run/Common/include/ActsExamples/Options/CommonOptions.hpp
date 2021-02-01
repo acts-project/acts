@@ -8,15 +8,29 @@
 
 #pragma once
 
+#include "Acts/Utilities/EnumBitwiseOperators.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
-#include <Acts/Utilities/Logger.hpp>
 
 #include <string>
 
 #include <boost/program_options.hpp>
 
 namespace ActsExamples {
+
+enum class OutputFormat : uint8_t {
+  DirectoryOnly = 0,
+  Root = 1,
+  Csv = 2,
+  Obj = 4,
+  Json = 8,
+  Txt = 16,
+  All = std::numeric_limits<uint8_t>::max()
+};
+
+ACTS_DEFINE_ENUM_BITWISE_OPERATORS(OutputFormat)
+
 namespace Options {
 
 /// Construct the options description with minimal default options.
@@ -41,18 +55,8 @@ void addMaterialOptions(boost::program_options::options_description& opt);
 void addInputOptions(boost::program_options::options_description& opt);
 
 /// Add common output-related options.
-enum OutputFormat {
-  None = 0,
-  Root = 1,
-  Csv = 2,
-  Obj = 4,
-  Json = 8,
-  Txt = 16,
-  All = Root | Csv | Obj | Json | Txt
-};
-
 void addOutputOptions(boost::program_options::options_description& opt,
-                      int formats = OutputFormat::All);
+                      OutputFormat format);
 
 /// Parse options and return the resulting variables map.
 ///
