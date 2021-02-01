@@ -90,7 +90,7 @@ void ActsExamples::from_json(const nlohmann::json& j,
 void ActsExamples::to_json(
     nlohmann::json& j, const ActsExamples::GeometricDigitizationConfig& gdc) {
   std::vector<size_t> indices;
-  for (auto idx : gdc.indices) {
+  for (const auto& idx : gdc.indices) {
     indices.push_back(static_cast<size_t>(idx));
   }
   j["indices"] = indices;
@@ -102,7 +102,7 @@ void ActsExamples::to_json(
 
 void ActsExamples::from_json(const nlohmann::json& j,
                              ActsExamples::GeometricDigitizationConfig& gdc) {
-  for (const auto jidx : j["indices"]) {
+  for (const auto& jidx : j["indices"]) {
     gdc.indices.push_back(static_cast<Acts::BoundIndices>(jidx));
   }
   from_json(j["segmentation"], gdc.segmentation);
@@ -120,7 +120,7 @@ void ActsExamples::to_json(nlohmann::json& j,
 
 void ActsExamples::from_json(const nlohmann::json& j,
                              ActsExamples::SmearingConfig& sdc) {
-  for (const auto jpsc : j) {
+  for (const auto& jpsc : j) {
     ActsExamples::ParameterSmearingConfig psc;
     from_json(jpsc, psc);
     sdc.push_back(psc);
