@@ -108,7 +108,6 @@ nlohmann::ordered_json GeometryHierarchyMapJsonConverter<value_t>::toJson(
     const Container& container) const {
   // encode header
   nlohmann::ordered_json encoded = nlohmann::json::object();
-  ;
   encoded[kHeaderKey] = {
       {"format-version", kFormatVersion},
       {"value-identifier", m_valueIdentifier},
