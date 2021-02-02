@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
   Options::addRandomNumbersOptions(desc);
   Options::addPythia8Options(desc);
   ParticleSelector::addOptions(desc);
-  Options::addOutputOptions(desc, OutputFormat);
+  Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
   auto vars = Options::parse(desc, argc, argv);
   if (vars.empty()) {
     return EXIT_FAILURE;
