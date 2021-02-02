@@ -65,6 +65,7 @@ struct MockStepperState {
   Scalar time;
   Vector3 dir;
   Scalar p;
+  FreeVector derivative;  
 };
 
 struct MockStepper {

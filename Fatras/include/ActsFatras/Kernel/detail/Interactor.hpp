@@ -105,6 +105,18 @@ struct Interactor {
       result.isAlive = false;
       return;
     }
+    
+    // Regulate the step size 
+    if(std::isfinite(result.properTimeLimit)) {
+		//    beta² = p²/E²
+		//    gamma = 1 / sqrt(1 - beta²) = sqrt(m² + p²) / m = E / m
+	    //     time = proper-time * gamma		
+		// stepSize = (ds/dt)*time
+		const auto properTimeDiff = result.particle.properTime() - result.properTimeLimit;
+		const auto gamma = result.particle.energy() / result.particle.mass();
+		const auto stepSize = state.stepping.derivative(Acts::eFreeTime) * properTimeDiff;
+		stepper.setStepSize(state, stepSize);
+	}
 
     // arm the point-like interaction limits in the first step
     if (std::isnan(result.x0Limit) or std::isnan(result.l0Limit)) {
