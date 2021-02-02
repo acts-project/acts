@@ -39,6 +39,7 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_BUILD_EVERYTHING=on
+          -DACTS_LOG_FAILURE_THRESHOLD=WARNING
       - name: Build
         run: ${SETUP} && cmake --build build -- 
       - name: Unit tests
@@ -89,6 +90,7 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DCMAKE_PREFIX_PATH=/usr/local/acts
           -DACTS_BUILD_EVERYTHING=on
+          -DACTS_LOG_FAILURE_THRESHOLD=WARNING
       - name: Build
         run: cmake --build build  --
       - name: Unit tests
@@ -127,6 +129,7 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DACTS_BUILD_PLUGIN_CUDA=ON
           -DACTS_BUILD_UNITTESTS=ON
+          -DACTS_LOG_FAILURE_THRESHOLD=WARNING
       - name: Build
         run: cmake --build build --
   sycl:
@@ -147,6 +150,7 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DACTS_BUILD_PLUGIN_SYCL=ON
           -DACTS_BUILD_UNITTESTS=ON
+          -DACTS_LOG_FAILURE_THRESHOLD=WARNING
       - name: Build
         run: >
           source /opt/intel/oneapi/setvars.sh
