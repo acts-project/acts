@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Common.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 #include "ActsFatras/Plugins/Geant4/G4DetectorConstruction.hpp"
+
 #include "G4DecayProducts.hh"
 #include "G4DecayTable.hh"
 #include "G4RunManager.hh"

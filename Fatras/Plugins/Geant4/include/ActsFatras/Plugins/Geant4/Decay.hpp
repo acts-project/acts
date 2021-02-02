@@ -8,13 +8,15 @@
 
 #pragma once
 
-#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Plugins/Geant4/PDGtoG4Converter.hpp"
+
 #include <cmath>
 #include <random>
 #include <vector>
+
 #include "G4ParticleDefinition.hh"
 
 class G4RunManager;
@@ -26,8 +28,8 @@ namespace ActsFatras {
 /// to a particle. This lifetime is used to trigger the decay.
 class Decay {
  public:
- using Scalar = Particle::Scalar;
- 
+  using Scalar = Particle::Scalar;
+
   /// Constructor
   Decay();
 
@@ -40,7 +42,8 @@ class Decay {
   ///
   /// @return Proper time limit of the particle
   template <typename generator_t>
-  Scalar generateProperTimeLimit(generator_t& generator, const Particle& particle) const;
+  Scalar generateProperTimeLimit(generator_t& generator,
+                                 const Particle& particle) const;
 
   /// @brief This function tests if a decay should occur, triggers it whenever
   /// necessary and evaluates the decay products.
@@ -50,8 +53,7 @@ class Decay {
   ///
   /// @return Vector containing decay products
   template <typename generator_t>
-  std::vector<Particle> run(generator_t&,
-                                   Particle& particle) const;
+  std::vector<Particle> run(generator_t&, Particle& particle) const;
 
   /// @brief This function evaluates the decay products of a given particle
   ///
@@ -73,8 +75,8 @@ class Decay {
 };
 
 template <typename generator_t>
-Particle::Scalar Decay::generateProperTimeLimit(generator_t& generator,
-                                 const Particle& particle) const {
+Particle::Scalar Decay::generateProperTimeLimit(
+    generator_t& generator, const Particle& particle) const {
   // Get the particle properties
   const int pdgCode = particle.pdg();
   // Keep muons stable
@@ -99,13 +101,11 @@ Particle::Scalar Decay::generateProperTimeLimit(generator_t& generator,
 }
 
 template <typename generator_t>
-std::vector<Particle> Decay::run(
-    generator_t&,
-    Particle& particle) const {
+std::vector<Particle> Decay::run(generator_t&, Particle& particle) const {
   // Fast exit if particle is not alive
-  if(!particle)
-	return {};
-	
+  if (!particle)
+    return {};
+
   // Perform the decay
   std::vector<Particle> decayProducts = decayParticle(particle);
 
