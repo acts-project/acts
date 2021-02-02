@@ -1,12 +1,12 @@
 {
-    "1.Volumes": {
+    "Volumes": {
         "acts-geometry-hierarchy-map": {
             "format-version": 0,
             "value-identifier": "Material Volume Map"
         },
         "entries": [
             {
-                "Volume": 2,
+                "volume": 2,
                 "value": {
                     "material": {
                         "binUtility": {
@@ -134,16 +134,16 @@
             }
         ]
     },
-    "2.Surfaces": {
+    "Surfaces": {
         "acts-geometry-hierarchy-map": {
             "format-version": 0,
             "value-identifier": "Material Surface Map"
         },
         "entries": [
             {
-                "Volume": 13,
-                "_Layer": 2,
-                "__Approach": 2,
+                "volume": 13,
+                "layer": 2,
+                "approach": 2,
                 "value": {
                     "material": {
                         "binUtility": {
@@ -198,9 +198,9 @@
                 }
             },
             {
-                "Volume": 13,
-                "_Layer": 4,
-                "__Approach": 2,
+                "volume": 13,
+                "layer": 4,
+                "approach": 2,
                 "value": {
                     "material": {
                         "binUtility": {
@@ -255,8 +255,8 @@
                 }
             },
             {
-                "Volume": 14,
-                "_Boundary": 1,
+                "volume": 14,
+                "boundary": 1,
                 "value": {
                     "material": {
                         "binUtility": {
@@ -323,8 +323,8 @@
                 }
             },
             {
-                "Volume": 18,
-                "_Layer": 2,
+                "volume": 18,
+                "layer": 2,
                 "value": {
                     "material": {
                         "binUtility": {
