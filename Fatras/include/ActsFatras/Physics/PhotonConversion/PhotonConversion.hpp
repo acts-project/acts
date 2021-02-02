@@ -8,14 +8,16 @@
 
 #pragma once
 
-#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 #include "ActsFatras/Utilities/ParticleData.hpp"
+
 #include <limits>
 #include <random>
 #include <vector>
+
 #include <math.h>
 
 namespace ActsFatras {
@@ -41,7 +43,8 @@ class PhotonConversion {
   ///
   /// @param The distance in X_0
   template <typename generator_t>
-  std::pair<Scalar, Scalar> generatePathLimits(generator_t& generator, const Particle& particle) const;
+  std::pair<Scalar, Scalar> generatePathLimits(generator_t& generator,
+                                               const Particle& particle) const;
 
   /// @brief This method evaluates the final state due to the photon conversion
   ///
@@ -52,8 +55,8 @@ class PhotonConversion {
   ///
   /// @return True if the conversion occured, else false
   template <typename generator_t>
-  bool run(generator_t& generator,
-                                   Particle& particle, std::vector<Particle>& generated) const;
+  bool run(generator_t& generator, Particle& particle,
+           std::vector<Particle>& generated) const;
 
  private:
   /// @brief This method constructs and returns the child particles
@@ -67,8 +70,7 @@ class PhotonConversion {
   /// @return Vector containing the produced leptons
   template <typename generator_t>
   std::vector<Particle> recordProduct(
-      generator_t& generator, const Particle& photon,
-      Scalar childEnergy,
+      generator_t& generator, const Particle& photon, Scalar childEnergy,
       const Particle::Vector3& childDirection) const;
 
   /// @brief This method evaluates the energy of a child particle
@@ -79,8 +81,7 @@ class PhotonConversion {
   ///
   /// @return The energy of the child particle
   template <typename generator_t>
-  Scalar childEnergyFraction(generator_t& generator,
-                                       Scalar gammaMom) const;
+  Scalar childEnergyFraction(generator_t& generator, Scalar gammaMom) const;
 
   /// @brief This method evaluates the direction of a child particle
   ///
@@ -120,14 +121,16 @@ inline Particle::Scalar PhotonConversion::screenFunction2(Scalar delta) const {
 }
 
 template <typename generator_t>
-std::pair<Particle::Scalar, Particle::Scalar> PhotonConversion::generatePathLimits(generator_t& generator,
-                                                  const Particle& particle) const {
+std::pair<Particle::Scalar, Particle::Scalar>
+PhotonConversion::generatePathLimits(generator_t& generator,
+                                     const Particle& particle) const {
   /// This method is based upon the Athena class PhotonConversionTool
 
   // Fast exit if not a photon or the energy is too low
   if (particle.pdg() != 22 ||
       particle.absoluteMomentum() < 2. * childMomentumMin)
-    return std::make_pair(std::numeric_limits<Scalar>::infinity(), std::numeric_limits<Scalar>::infinity());
+    return std::make_pair(std::numeric_limits<Scalar>::infinity(),
+                          std::numeric_limits<Scalar>::infinity());
 
   // Use for the moment only Al data - Yung Tsai - Rev.Mod.Particle Physics Vol.
   // 46, No.4, October 1974 optainef from a fit given in the momentum range 100
@@ -152,13 +155,15 @@ std::pair<Particle::Scalar, Particle::Scalar> PhotonConversion::generatePathLimi
   std::uniform_real_distribution<Scalar> uniformDistribution{0., 1.};
   // This is a transformation of eq. 3.75
   return std::make_pair(-m_nineOverSeven *
-          log(conversionProbScaleFactor * (1 - uniformDistribution(generator))) /
-          (1. - xi), std::numeric_limits<Scalar>::infinity());
+                            log(conversionProbScaleFactor *
+                                (1 - uniformDistribution(generator))) /
+                            (1. - xi),
+                        std::numeric_limits<Scalar>::infinity());
 }
 
 template <typename generator_t>
-Particle::Scalar PhotonConversion::childEnergyFraction(
-    generator_t& generator, Scalar gammaMom) const {
+Particle::Scalar PhotonConversion::childEnergyFraction(generator_t& generator,
+                                                       Scalar gammaMom) const {
   /// This method is based upon the Geant4 class G4PairProductionRelModel
 
   /// @note This method is from the Geant4 class G4Element
@@ -215,8 +220,7 @@ Particle::Scalar PhotonConversion::childEnergyFraction(
 
 template <typename generator_t>
 Particle::Vector3 PhotonConversion::childDirection(
-    generator_t& generator,
-    const Particle::Vector4& gammaMom4) const {
+    generator_t& generator, const Particle::Vector4& gammaMom4) const {
   /// This method is based upon the Athena class PhotonConversionTool
 
   // Following the Geant4 approximation from L. Urban
@@ -252,16 +256,15 @@ Particle::Vector3 PhotonConversion::childDirection(
 
   // And arbitrarily in psi
   Eigen::Transform<Scalar, 3, Eigen::Affine> rotPsi;
-  rotPsi = Eigen::AngleAxis<Scalar>(
-      uniformDistribution(generator) * 2. * M_PI, gammaMomHep);
+  rotPsi = Eigen::AngleAxis<Scalar>(uniformDistribution(generator) * 2. * M_PI,
+                                    gammaMomHep);
 
   return rotPsi * rotTheta * newDirectionHep;
 }
 
 template <typename generator_t>
 std::vector<Particle> PhotonConversion::recordProduct(
-    generator_t& generator, const Particle& photon,
-    Scalar childEnergy,
+    generator_t& generator, const Particle& photon, Scalar childEnergy,
     const Particle::Vector3& childDirection) const {
   // Calculate the child momentum
   const Scalar massChild = findMass(Acts::eElectron);
@@ -316,30 +319,32 @@ std::vector<Particle> PhotonConversion::recordProduct(
 }
 
 template <typename generator_t>
-bool PhotonConversion::run(
-    generator_t& generator, Particle& particle, std::vector<Particle>& generated) const {
-	// Fast exit if particle is not alive
-  if(!particle)
-	return true;
-	
-	// Fast exit if momentum is too low
+bool PhotonConversion::run(generator_t& generator, Particle& particle,
+                           std::vector<Particle>& generated) const {
+  // Fast exit if particle is not alive
+  if (!particle)
+    return true;
+
+  // Fast exit if momentum is too low
   const Scalar p = particle.absoluteMomentum();
-  if(p < 2. * childMomentumMin)
-	return false;
+  if (p < 2. * childMomentumMin)
+    return false;
 
   // Get one child energy
   const Scalar childEnergy = p * childEnergyFraction(generator, p);
 
   // Now get the deflection
-  const Particle::Vector3 childDir = childDirection(generator, particle.fourMomentum());
+  const Particle::Vector3 childDir =
+      childDirection(generator, particle.fourMomentum());
 
   // Produce the final state
-  const std::vector<Particle> finalState = recordProduct(generator, particle, childEnergy, childDir);
+  const std::vector<Particle> finalState =
+      recordProduct(generator, particle, childEnergy, childDir);
   generated.insert(generated.end(), finalState.begin(), finalState.end());
-  
+
   // Kill the photon
   particle.setAbsoluteMomentum(0.);
-  
+
   return true;
 }
 }  // namespace ActsFatras
