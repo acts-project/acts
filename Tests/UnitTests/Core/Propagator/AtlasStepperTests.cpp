@@ -398,10 +398,10 @@ BOOST_AUTO_TEST_CASE(Reset) {
   // Reset using different surface shapes
   // 1) Disc surface
   // Setting some parameters
-  newPos << 1.5, -2.5, 0.;
+  newPos << 0.5, -1.5, 0.;
   newAbsMom *= 1.23;
-  newTime = 7.5;
-  newCharge = 1.;
+  newTime = 8.4;
+  newCharge = -1.;
   newCov = 10.9 * Covariance::Identity();
   Transform3 trafo = Transform3::Identity();
   auto disc = Surface::makeShared<DiscSurface>(trafo);
@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   newPos << 1.5, -2.5, 3.5;
   newAbsMom *= 0.45;
   newTime = 2.3;
-  newCharge = -1.;
+  newCharge = 1.;
   newCov = 8.7 * Covariance::Identity();
   auto perigee = Surface::makeShared<PerigeeSurface>(trafo);
   BoundTrackParameters boundPerigee(perigee, geoCtx,
