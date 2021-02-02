@@ -96,7 +96,8 @@ struct Interactor {
     // decay check. needs to happen at every step, not just on surfaces.
     // TODO limit the stepsize when close to the lifetime limit to avoid
     //   overstepping and decaying the particle systematically too late
-    if ((result.properTimeLimit < result.particle.properTime()) && result.isAlive) {
+    if ((result.properTimeLimit < result.particle.properTime()) &&
+        result.isAlive) {
       auto descendants = decay.run(generator, result.particle);
       for (auto &&descendant : descendants) {
         result.generatedParticles.emplace_back(std::move(descendant));
