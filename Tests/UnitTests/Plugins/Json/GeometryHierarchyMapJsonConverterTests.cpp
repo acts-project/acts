@@ -102,14 +102,14 @@ BOOST_AUTO_TEST_CASE(FromJson) {
           "entries",
           {
               {
-                  {"Volume", 2},
-                  {"_Layer", 3},
+                  {"volume", 2},
+                  {"layer", 3},
                   {"value", {{"x", 4.0}, {"y", 4}}},
               },
               {
-                  {"Volume", 5},
-                  {"_Layer", 6},
-                  {"__Sensitive", 7},
+                  {"volume", 5},
+                  {"layer", 6},
+                  {"sensitive", 7},
                   {"value", {{"x", 3.0}, {"y", 3}}},
               },
           },
