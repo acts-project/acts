@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,7 +8,17 @@
 
 #include "ActsExamples/Io/Root/RootTrackParameterWriter.hpp"
 
-#include <Acts/Utilities/Helpers.hpp>
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Seeding/Seed.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SimSeed.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
+#include "ActsExamples/Validation/TrackClassification.hpp"
 
 #include <ios>
 #include <iostream>
@@ -17,39 +27,80 @@
 #include <TFile.h>
 #include <TTree.h>
 
+#include "detail/AverageSimHits.hpp"
+
+using Acts::VectorHelpers::eta;
+using Acts::VectorHelpers::phi;
+using Acts::VectorHelpers::theta;
+
 ActsExamples::RootTrackParameterWriter::RootTrackParameterWriter(
     const ActsExamples::RootTrackParameterWriter::Config& cfg,
     Acts::Logging::Level level)
-    : TrackParameterWriter(cfg.collection, "RootTrackParameterWriter", level),
+    : TrackParameterWriter(cfg.inputTrackParameters, "RootTrackParameterWriter",
+                           level),
       m_cfg(cfg),
       m_outputFile(cfg.rootFile) {
-  // An input collection name and tree name must be specified
-  if (m_cfg.collection.empty()) {
-    throw std::invalid_argument("Missing input collection");
-  } else if (m_cfg.treeName.empty()) {
+  if (m_cfg.inputTrackParametersSeedMap.empty()) {
+    throw std::invalid_argument(
+        "Missing parameters-to-seed map input collection");
+  }
+  if (m_cfg.inputSeeds.empty()) {
+    throw std::invalid_argument("Missing seeds input collection");
+  }
+  if (m_cfg.inputParticles.empty()) {
+    throw std::invalid_argument("Missing particles input collection");
+  }
+  if (m_cfg.inputSimHits.empty()) {
+    throw std::invalid_argument("Missing simulated hits input collection");
+  }
+  if (m_cfg.inputMeasurementParticlesMap.empty()) {
+    throw std::invalid_argument("Missing hit-particles map input collection");
+  }
+  if (m_cfg.inputMeasurementSimHitsMap.empty()) {
+    throw std::invalid_argument(
+        "Missing hit-simulated-hits map input collection");
+  }
+  if (m_cfg.outputFilename.empty()) {
+    throw std::invalid_argument("Missing output filename");
+  }
+  if (m_cfg.outputTreename.empty()) {
     throw std::invalid_argument("Missing tree name");
   }
 
   // Setup ROOT I/O
   if (m_outputFile == nullptr) {
-    m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
+    auto path = joinPaths(m_cfg.outputDir, m_cfg.outputFilename);
+    m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
     if (m_outputFile == nullptr) {
-      throw std::ios_base::failure("Could not open '" + m_cfg.filePath);
+      throw std::ios_base::failure("Could not open '" + path);
     }
   }
   m_outputFile->cd();
-  m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
+  m_outputTree =
+      new TTree(m_cfg.outputTreename.c_str(), m_cfg.outputTreename.c_str());
   if (m_outputTree == nullptr)
     throw std::bad_alloc();
   else {
-    // I/O parameters
+    // The estimated track parameters
     m_outputTree->Branch("event_nr", &m_eventNr);
-    m_outputTree->Branch("d0", &m_d0);
-    m_outputTree->Branch("z0", &m_z0);
+    m_outputTree->Branch("loc0", &m_loc0);
+    m_outputTree->Branch("loc1", &m_loc1);
     m_outputTree->Branch("phi", &m_phi);
     m_outputTree->Branch("theta", &m_theta);
-    m_outputTree->Branch("qp", &m_qp);
-    // MORE HERE
+    m_outputTree->Branch("qop", &m_qop);
+    m_outputTree->Branch("time", &m_time);
+    m_outputTree->Branch("p", &m_p);
+    m_outputTree->Branch("pt", &m_pt);
+    m_outputTree->Branch("eta", &m_eta);
+    // The truth track parameters
+    m_outputTree->Branch("eventNr", &m_eventNr);
+    m_outputTree->Branch("t_loc0", &m_t_loc0);
+    m_outputTree->Branch("t_loc1", &m_t_loc1);
+    m_outputTree->Branch("t_phi", &m_t_phi);
+    m_outputTree->Branch("t_theta", &m_t_theta);
+    m_outputTree->Branch("t_qop", &m_t_qop);
+    m_outputTree->Branch("t_time", &m_t_time);
+    m_outputTree->Branch("truthMatched", &m_truthMatched);
   }
 }
 
@@ -63,17 +114,35 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::endRun() {
   if (m_outputFile) {
     m_outputFile->cd();
     m_outputTree->Write();
-    ACTS_INFO("Wrote trackparameters to tree '" << m_cfg.treeName << "' in '"
-                                                << m_cfg.filePath << "'");
+    ACTS_INFO("Write estimated parameters from seed to tree '"
+              << m_cfg.outputTreename << "' in '"
+              << joinPaths(m_cfg.outputDir, m_cfg.outputFilename) << "'");
   }
   return ProcessCode::SUCCESS;
 }
 
 ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
     const ActsExamples::AlgorithmContext& ctx,
-    const std::vector<BoundTrackParameters>& trackParams) {
-  if (m_outputFile == nullptr)
+    const TrackParametersContainer& trackParams) {
+  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
+  using HitSimHitsMap = IndexMultimap<Index>;
+
+  if (m_outputFile == nullptr) {
     return ProcessCode::SUCCESS;
+  }
+
+  // Read additional input collections
+  const auto& trackParametersSeedMap =
+      ctx.eventStore.get<TrackParametersSeedMap>(
+          m_cfg.inputTrackParametersSeedMap);
+  const auto& seeds = ctx.eventStore.get<SimSeedContainer>(m_cfg.inputSeeds);
+  const auto& particles =
+      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
+  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
+  const auto& hitParticlesMap =
+      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
+  const auto& hitSimHitsMap =
+      ctx.eventStore.get<HitSimHitsMap>(m_cfg.inputMeasurementSimHitsMap);
 
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
@@ -81,12 +150,70 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
   // Get the event number
   m_eventNr = ctx.eventNumber;
 
-  for (auto& params : trackParams) {
-    m_d0 = params.parameters()[0];
-    m_z0 = params.parameters()[1];
-    m_phi = params.parameters()[2];
-    m_theta = params.parameters()[3];
-    m_qp = params.parameters()[4];
+  // Loop over the estimated track parameters
+  for (size_t iparams = 0; iparams < trackParams.size(); ++iparams) {
+    // The reference surface of the parameters, i.e. also the reference surface
+    // of the first space point
+    const auto& surface = trackParams[iparams].referenceSurface();
+    // The estimated bound parameters vector
+    const auto params = trackParams[iparams].parameters();
+    m_loc0 = params[Acts::eBoundLoc0];
+    m_loc1 = params[Acts::eBoundLoc1];
+    m_phi = params[Acts::eBoundPhi];
+    m_theta = params[Acts::eBoundTheta];
+    m_qop = params[Acts::eBoundQOverP];
+    m_time = params[Acts::eBoundTime];
+    m_p = std::abs(1.0 / m_qop);
+    m_pt = m_p * std::sin(m_theta);
+    m_eta = std::atanh(std::cos(m_theta));
+
+    // Get the seed via the estimated parameters to seed map
+    const auto& groupedSeedIdx = trackParametersSeedMap.at(iparams);
+    const auto& seed = seeds[groupedSeedIdx.regionIdx][groupedSeedIdx.seedIdx];
+    // check the seed quality
+    ProtoTrack ptrack{seed.sp()[0]->measurementIndex(),
+                      seed.sp()[1]->measurementIndex(),
+                      seed.sp()[2]->measurementIndex()};
+    std::vector<ParticleHitCount> particleHitCounts;
+    identifyContributingParticles(hitParticlesMap, ptrack, particleHitCounts);
+    m_truthMatched = false;
+    if (particleHitCounts.size() == 1) {
+      m_truthMatched = true;
+    }
+    // Get the index of the first space point
+    const auto& firstSP = seed.sp().front();
+    const auto& hitIdx = firstSP->measurementIndex();
+    // Get the sim hits via the measurement to sim hits map
+    auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
+    auto [truthLocal, truthPos4, truthUnitDir] =
+        detail::averageSimHits(ctx.geoContext, surface, simHits, indices);
+    // Get the truth track parameter at the first space point
+    m_t_loc0 = truthLocal[Acts::ePos0];
+    m_t_loc1 = truthLocal[Acts::ePos1];
+    m_t_phi = phi(truthUnitDir);
+    m_t_theta = theta(truthUnitDir);
+    m_t_time = truthPos4[Acts::eTime];
+    // momemtum averaging makes even less sense than averaging position and
+    // direction. use the first momentum or set q/p to zero
+    if (not indices.empty()) {
+      // we assume that the indices are within valid ranges so we do not
+      // need to check their validity again.
+      const auto simHitIdx0 = indices.begin()->second;
+      const auto& simHit0 = *simHits.nth(simHitIdx0);
+      const auto p =
+          simHit0.momentum4Before().template segment<3>(Acts::eMom0).norm();
+      const auto& particleId = simHit0.particleId();
+      // The truth charge has to be retrieved from the sim particle
+      auto ip = particles.find(particleId);
+      if (ip != particles.end()) {
+        const auto& particle = *ip;
+        m_t_charge = particle.charge();
+        m_t_qop = m_t_charge / p;
+      } else {
+        ACTS_WARNING("Truth particle with barcode = " << particleId
+                                                      << " not found!");
+      }
+    }
 
     m_outputTree->Fill();
   }

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,15 +17,21 @@
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Performance/SeedingPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackParameterWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
+#include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
+#include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <memory>
 
 #include <boost/program_options.hpp>
+
+#include "RecInput.hpp"
 
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
@@ -40,6 +46,7 @@ int runSeedingExample(int argc, char* argv[],
   Options::addMaterialOptions(desc);
   Options::addOutputOptions(desc);
   Options::addInputOptions(desc);
+  Options::addBFieldOptions(desc);
 
   // Add specific options for this geometry
   detector->addOptions(desc);
@@ -65,33 +72,34 @@ int runSeedingExample(int argc, char* argv[],
     sequencer.addContextDecorator(cdr);
   }
 
-  // Read particles (initial states) and clusters from CSV files
-  auto particleReader = Options::readCsvParticleReaderConfig(vm);
-  particleReader.inputStem = "particles_initial";
-  particleReader.outputParticles = "particles_initial";
-  sequencer.addReader(
-      std::make_shared<CsvParticleReader>(particleReader, logLevel));
+  // Setup the magnetic field
+  auto magneticField = Options::readBField(vm);
 
-  // Read truth hits from CSV files
-  auto simHitReaderCfg = Options::readCsvSimHitReaderConfig(vm);
-  simHitReaderCfg.inputStem = "simhits";
-  simHitReaderCfg.outputSimHits = "simhits";
-  sequencer.addReader(
-      std::make_shared<CsvSimHitReader>(simHitReaderCfg, logLevel));
+  // Read the sim hits
+  auto simHitReaderCfg = setupSimHitReading(vm, sequencer);
+  // Read the particles
+  auto particleReader = setupParticleReading(vm, sequencer);
 
-  // Create smeared measurements
-  HitSmearing::Config hitSmearingCfg;
-  hitSmearingCfg.inputSimHits = simHitReaderCfg.outputSimHits;
-  hitSmearingCfg.outputSourceLinks = "sourcelinks";
-  hitSmearingCfg.outputMeasurements = "measurements";
-  hitSmearingCfg.outputMeasurementParticlesMap = "measurement_particles_map";
-  hitSmearingCfg.outputMeasurementSimHitsMap = "measurement_simhits_map";
-  hitSmearingCfg.sigmaLoc0 = 25_um;
-  hitSmearingCfg.sigmaLoc1 = 100_um;
-  hitSmearingCfg.randomNumbers = rnd;
-  hitSmearingCfg.trackingGeometry = tGeometry;
+  // Run the sim hits smearing
+  auto hitSmearingCfg = setupSimHitSmearing(vm, sequencer, rnd, tGeometry,
+                                            simHitReaderCfg.outputSimHits);
+
+  // Run the particle selection
+  // The pre-selection will select truth particles satisfying provided criteria
+  // from all particles read in by particle reader for further processing. It
+  // has no impact on the truth hits read-in by the cluster reader.
+  TruthSeedSelector::Config particleSelectorCfg;
+  particleSelectorCfg.inputParticles = particleReader.outputParticles;
+  particleSelectorCfg.inputMeasurementParticlesMap =
+      hitSmearingCfg.outputMeasurementParticlesMap;
+  particleSelectorCfg.outputParticles = "particles_selected";
+  particleSelectorCfg.ptMin = 500_MeV;
+  particleSelectorCfg.nHitsMin = 9;
   sequencer.addAlgorithm(
-      std::make_shared<HitSmearing>(hitSmearingCfg, logLevel));
+      std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));
+
+  // The selected particles
+  const auto& inputParticles = particleSelectorCfg.outputParticles;
 
   // Create space points
   SpacePointMaker::Config spCfg;
@@ -142,10 +150,21 @@ int runSeedingExample(int argc, char* argv[],
   sequencer.addAlgorithm(
       std::make_shared<SeedingAlgorithm>(seedingCfg, logLevel));
 
-  // Performance Writer
+  // Algorithm estimating track parameter from seed
+  TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
+  paramsEstimationCfg.inputSeeds = seedingCfg.outputSeeds;
+  paramsEstimationCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
+  paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
+  paramsEstimationCfg.outputTrackParametersSeedMap = "estimatedparams_seed_map";
+  paramsEstimationCfg.trackingGeometry = tGeometry;
+  paramsEstimationCfg.magneticField = magneticField;
+  sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
+      paramsEstimationCfg, logLevel));
+
+  // Seeding performance Writers
   TrackFinderPerformanceWriter::Config tfPerfCfg;
   tfPerfCfg.inputProtoTracks = seedingCfg.outputProtoTracks;
-  tfPerfCfg.inputParticles = particleReader.outputParticles;
+  tfPerfCfg.inputParticles = inputParticles;
   tfPerfCfg.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
   tfPerfCfg.outputDir = outputDir;
@@ -155,13 +174,32 @@ int runSeedingExample(int argc, char* argv[],
 
   SeedingPerformanceWriter::Config seedPerfCfg;
   seedPerfCfg.inputSeeds = seedingCfg.outputSeeds;
-  seedPerfCfg.inputParticles = particleReader.outputParticles;
+  seedPerfCfg.inputParticles = inputParticles;
   seedPerfCfg.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
   seedPerfCfg.outputDir = outputDir;
   seedPerfCfg.outputFilename = "performance_seeding_hists.root";
   sequencer.addWriter(
       std::make_shared<SeedingPerformanceWriter>(seedPerfCfg, logLevel));
+
+  // The track parameters estimation writer
+  RootTrackParameterWriter::Config trackParamsWriterCfg;
+  trackParamsWriterCfg.inputSeeds = seedingCfg.outputSeeds;
+  trackParamsWriterCfg.inputTrackParameters =
+      paramsEstimationCfg.outputTrackParameters;
+  trackParamsWriterCfg.inputTrackParametersSeedMap =
+      paramsEstimationCfg.outputTrackParametersSeedMap;
+  trackParamsWriterCfg.inputParticles = particleReader.outputParticles;
+  trackParamsWriterCfg.inputSimHits = simHitReaderCfg.outputSimHits;
+  trackParamsWriterCfg.inputMeasurementParticlesMap =
+      hitSmearingCfg.outputMeasurementParticlesMap;
+  trackParamsWriterCfg.inputMeasurementSimHitsMap =
+      hitSmearingCfg.outputMeasurementSimHitsMap;
+  trackParamsWriterCfg.outputDir = outputDir;
+  trackParamsWriterCfg.outputFilename = "estimatedparams.root";
+  trackParamsWriterCfg.outputTreename = "estimatedparams";
+  sequencer.addWriter(std::make_shared<RootTrackParameterWriter>(
+      trackParamsWriterCfg, logLevel));
 
   return sequencer.run();
 }

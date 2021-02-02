@@ -18,26 +18,10 @@ struct EveryParticle {
   constexpr bool operator()(const Particle &) const { return true; }
 };
 
-// No-op input selector that selects all configurations.
-struct EveryInput {
-  constexpr bool operator()(const Particle &,
-                            const Acts::MaterialSlab &) const {
-    return true;
-  }
-};
-
-/// Enable usage of a particle selector as an input selector.
-template <typename ParticleSelector>
-struct AsInputSelector : public ParticleSelector {
-  bool operator()(const Particle &particle, const Acts::MaterialSlab &) const {
-    return ParticleSelector::operator()(particle);
-  }
-};
-
 /// A simulation process based on a physics interaction plus selectors.
 ///
 /// @tparam physics_t is the physics interaction type
-/// @tparam input_selector_t is the input material + particle selector
+/// @tparam input_particle_selector_t is the input particle selector
 /// @tparam output_particle_selector_t is the output particle selector
 /// @tparam child_particle_selector_t is the child particle selector
 ///
@@ -48,14 +32,15 @@ struct AsInputSelector : public ParticleSelector {
 ///
 /// @note The output and child particle selectors are identical unless the
 ///       child particle selector is explicitely specified.
-template <typename physics_t, typename input_selector_t = EveryInput,
+template <typename physics_t,
+          typename input_particle_selector_t = EveryParticle,
           typename output_particle_selector_t = EveryParticle,
           typename child_particle_selector_t = output_particle_selector_t>
 struct Process {
   /// The physics interactions implementation.
   physics_t physics;
-  /// Input selection: if this process applies to material + particle.
-  input_selector_t selectInput;
+  /// Input selection: if this process applies to this particle.
+  input_particle_selector_t selectInputParticle;
   /// Output selection: if the particle is still valid after the interaction.
   output_particle_selector_t selectOutputParticle;
   /// Child selection: if a generated child particle should be kept.
@@ -74,7 +59,7 @@ struct Process {
   bool operator()(generator_t &generator, const Acts::MaterialSlab &slab,
                   Particle &particle, std::vector<Particle> &generated) const {
     // not selecting this process is not a break condition
-    if (not selectInput(particle, slab)) {
+    if (not selectInputParticle(particle)) {
       return false;
     }
     // modify particle according to the physics process
