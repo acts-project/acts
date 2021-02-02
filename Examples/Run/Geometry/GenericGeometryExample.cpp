@@ -16,6 +16,6 @@
 int main(int argc, char* argv[]) {
   // --------------------------------------------------------------------------------
   GenericDetector detector;
-  // now process it
+
   return processGeometry(argc, argv, detector);
 }

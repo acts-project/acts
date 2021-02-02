@@ -80,8 +80,8 @@ class Segmentation {
   /// @return the center position of the associated cell
   virtual Vector2 cellPosition(const DigitizationCell& cId) const = 0;
 
-  /// Fill the associated digitsation cell from the start and end position in 3D
-  /// correct for lorentz effect if needed
+  /// Fill the associated digitization cell from the start and end position in
+  /// 3D correct for lorentz effect if needed
   ///
   /// @param start is the start position of the step
   /// @param end is the end position of the step
