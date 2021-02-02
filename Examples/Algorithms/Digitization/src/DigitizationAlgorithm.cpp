@@ -164,7 +164,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
 
             // Geometric part - 0, 1, 2 local parameters are possible
             if (not digitizer.geometric.indices.empty()) {
-              ACTS_VERBOSE("Configured to geometric digitize "
+              ACTS_VERBOSE("Configured to geometrically digitize "
                            << digitizer.geometric.indices.size()
                            << " parameters.");
               auto channels = channelizing(digitizer.geometric, simHit,
@@ -194,7 +194,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
               for (Eigen::Index ip = 0; ip < par.rows(); ++ip) {
                 dParameters.indices.push_back(digitizer.smearing.indices[ip]);
                 dParameters.values.push_back(par[ip]);
-                dParameters.covariances.push_back(cov(ip, ip));
+                dParameters.variances.push_back(cov(ip, ip));
               }
             }
 
@@ -297,11 +297,11 @@ ActsExamples::DigitizationAlgorithm::localParameters(
     }
     size_t size0 = static_cast<size_t>(b0max - b0min + 1);
     size_t size1 = static_cast<size_t>(b1max - b1min + 1);
-    auto covariances = geoCfg.covariance(size0, size1, rng);
-    if (covariances.size() == dParameters.indices.size()) {
-      dParameters.covariances = covariances;
+    auto variances = geoCfg.variances(size0, size1, rng);
+    if (variances.size() == dParameters.indices.size()) {
+      dParameters.variances = variances;
     } else {
-      dParameters.covariances =
+      dParameters.variances =
           std::vector<Acts::ActsScalar>(dParameters.indices.size(), -1.);
     }
   }

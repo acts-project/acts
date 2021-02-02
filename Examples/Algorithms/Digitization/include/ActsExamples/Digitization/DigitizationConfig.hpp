@@ -19,58 +19,18 @@
 
 namespace ActsExamples {
 
+/// Takes as an argument the position, and a random engine
+///  @return drift direction in local 3D coordinates
 using DriftGenerator =
     std::function<Acts::Vector3(const Acts::Vector3&, RandomEngine&)>;
+/// Takes as an argument the path length, the drift length, and a random engine
+/// @return a charge to which the threshold can be applied
 using ChargeGenerator = std::function<Acts::ActsScalar(
     Acts::ActsScalar, Acts::ActsScalar, RandomEngine&)>;
-using CovarianceGenerator =
+/// Takes as an argument the clsuter size and an random engine
+/// @return a vector of uncorrelated covariance values
+using VarianceGenerator =
     std::function<std::vector<Acts::ActsScalar>(size_t, size_t, RandomEngine&)>;
-
-// A void drift generator - no lorentz drift.
-struct VoidDriftGenerator {
-  /// Charge generation call operator
-  ///
-  /// @param pos is the position of the call (unused here)
-  /// @param rng is the random engine (unused here)
-  ///
-  /// @return the unchanged path length
-  Acts::Vector3 operator()(const Acts::Vector3& /*pos, unused*/,
-                           RandomEngine& /*rng, nused*/) const {
-    return Acts::Vector3{0., 0., 0.};
-  }
-};
-
-/// A void charge generator - simply returns the path length.
-struct VoidChargeGenerator {
-  /// Charge generation call operator
-  ///
-  /// @param path is the input path length in the pixel
-  /// @param dlength is the drift length (unused here)
-  /// @param rng is the random engine (unused here)
-  ///
-  /// @return the unchanged path length
-  Acts::ActsScalar operator()(Acts::ActsScalar path,
-                              Acts::ActsScalar /*dlength, unused*/,
-                              RandomEngine& /*rng, unused*/) const {
-    return path;
-  }
-};
-
-/// A void covariance generator - returns empty vector
-struct VoidCovarianceGenerator {
-  /// Charge generation call operator
-  ///
-  /// @param b0 is the size of the cluster in first direction
-  /// @param b1 is the size of the cluster in second direction
-  /// @param rng is the random engine (unused here)
-  ///
-  /// @return the unchanged path length
-  std::vector<Acts::ActsScalar> operator()(
-      size_t /*b0, unused*/, size_t /*b1, unused*/,
-      RandomEngine& /*rng, unused*/) const {
-    return {};
-  }
-};
 
 /// Configuration struct for geometric digitization
 ///
@@ -83,14 +43,23 @@ struct GeometricDigitizationConfig {
   std::vector<Acts::BoundIndices> indices = {};
   Acts::BinUtility segmentation;
   /// Drift generation
-  DriftGenerator drift = VoidDriftGenerator{};
+  DriftGenerator drift = [](const Acts::Vector3&,
+                            RandomEngine&) -> Acts::Vector3 {
+    return Acts::Vector3(0., 0., 0.);
+  };
   double thickness = 0.;
   /// Charge generation
-  ChargeGenerator charge = VoidChargeGenerator{};
+  ChargeGenerator charge = [](Acts::ActsScalar path, Acts::ActsScalar,
+                              RandomEngine&) -> Acts::ActsScalar {
+    return path;
+  };
   double threshold = 0.;
   /// Position and Covariance generation
   bool digital = false;
-  CovarianceGenerator covariance = VoidCovarianceGenerator{};
+  VarianceGenerator variances =
+      [](size_t, size_t, RandomEngine&) -> std::vector<Acts::ActsScalar> {
+    return {};
+  };
 };
 
 /// Configuration struct for the Digitization algorithm

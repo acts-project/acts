@@ -73,7 +73,7 @@ class DigitizationAlgorithm final : public BareAlgorithm {
   struct DigitizedParameters {
     std::vector<Acts::BoundIndices> indices = {};
     std::vector<Acts::ActsScalar> values = {};
-    std::vector<Acts::ActsScalar> covariances = {};
+    std::vector<Acts::ActsScalar> variances = {};
     std::vector<Acts::ActsScalar> trueValues = {};
   };
 
@@ -116,7 +116,7 @@ class DigitizationAlgorithm final : public BareAlgorithm {
 
   /// Nested smearer struct that holds geometric digitizer and smearing
   /// Support up to 4 dimensions.
-  template <size_t kGeoDIM, size_t kSmearDIM = 0>
+  template <size_t kSmearDIM>
   struct CombinedDigitizer {
     GeometricDigitizationConfig geometric;
     ActsFatras::BoundParametersSmearer<RandomEngine, kSmearDIM> smearing;
@@ -154,14 +154,14 @@ class DigitizationAlgorithm final : public BareAlgorithm {
     for (Eigen::Index ei = 0; ei < static_cast<Eigen::Index>(kMeasDIM); ++ei) {
       indices[ei] = dParams.indices[ei];
       par[ei] = dParams.values[ei];
-      cov(ei, ei) = dParams.covariances[ei];
+      cov(ei, ei) = dParams.variances[ei];
     }
     return {indices, par, cov};
   }
 
   /// Construct a fixed-size smearer from a configuration.
   ///
-  /// It's templated on the smearing dimention given by @tparam kSmearDim
+  /// It's templated on the smearing dimention given by @tparam kSmearDIM
   ///
   /// @param cfg Is the digitization configuration input
   ///
