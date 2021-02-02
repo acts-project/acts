@@ -13,6 +13,7 @@
 #include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/SimulationResult.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -114,8 +115,8 @@ struct Interactor {
 		// stepSize = (ds/dt)*time
 		const auto properTimeDiff = result.particle.properTime() - result.properTimeLimit;
 		const auto gamma = result.particle.energy() / result.particle.mass();
-		const auto stepSize = state.stepping.derivative(Acts::eFreeTime) * properTimeDiff;
-		stepper.setStepSize(state, stepSize);
+		const auto stepSize = state.stepping.derivative(Acts::eFreeTime) * properTimeDiff * gamma;
+		stepper.setStepSize(state.stepping, stepSize, Acts::ConstrainedStep::actor);
 	}
 
     // arm the point-like interaction limits in the first step

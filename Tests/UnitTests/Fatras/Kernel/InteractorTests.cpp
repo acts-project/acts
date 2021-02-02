@@ -17,6 +17,8 @@
 #include "ActsFatras/Kernel/PointLikePhysicsList.hpp"
 #include "ActsFatras/Kernel/detail/Interactor.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 
 #include <array>
 #include <limits>
@@ -65,7 +67,7 @@ struct MockStepperState {
   Scalar time;
   Vector3 dir;
   Scalar p;
-  FreeVector derivative;  
+  Acts::FreeVector derivative;  
 };
 
 struct MockStepper {
@@ -83,6 +85,8 @@ struct MockStepper {
     state.time = time;
     state.dir = dir;
     state.p = p;
+  }
+  void setStepSize(State&, double, Acts::ConstrainedStep::Type) const {
   }
 };
 
