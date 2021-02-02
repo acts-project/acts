@@ -126,10 +126,10 @@ std::pair<Particle::Scalar, Particle::Scalar> PhotonConversion::generatePathLimi
 
   // Fast exit if not a photon or the energy is too low
   if (particle.pdg() != 22 ||
-      particle.absoluteMomentum() < 100. * Acts::UnitConstants::MeV)
+      particle.absoluteMomentum() < 2. * childMomentumMin)
     return std::make_pair(std::numeric_limits<Scalar>::infinity(), std::numeric_limits<Scalar>::infinity());
 
-  // use for the moment only Al data - Yung Tsai - Rev.Mod.Particle Physics Vol.
+  // Use for the moment only Al data - Yung Tsai - Rev.Mod.Particle Physics Vol.
   // 46, No.4, October 1974 optainef from a fit given in the momentum range 100
   // 10 6 2 1 0.6 0.4 0.2 0.1 GeV
 
@@ -146,7 +146,7 @@ std::pair<Particle::Scalar, Particle::Scalar> PhotonConversion::generatePathLimi
   constexpr Scalar p1 = 7.69040e-02;
   constexpr Scalar p2 = -6.07682e-01;
 
-  // calculate xi
+  // Calculate xi
   const Scalar xi = p0 + p1 * pow(particle.absoluteMomentum(), p2);
 
   std::uniform_real_distribution<Scalar> uniformDistribution{0., 1.};
@@ -183,18 +183,18 @@ Particle::Scalar PhotonConversion::childEnergyFraction(
   const Scalar deltaFactor = deltaPreFactor * eps0;
   const Scalar deltaMin = 4. * deltaFactor;
 
-  // compute the limits of eps
+  // Compute the limits of eps
   const Scalar epsMin =
       std::max(eps0, 0.5 - 0.5 * std::sqrt(1. - deltaMin / deltaMax));
   const Scalar epsRange = 0.5 - epsMin;
 
-  // sample the energy rate (eps) of the created electron (or positron)
+  // Sample the energy rate (eps) of the created electron (or positron)
   const Scalar F10 = screenFunction1(deltaMin) - FZ;
   const Scalar F20 = screenFunction2(deltaMin) - FZ;
   const Scalar NormF1 = F10 * epsRange * epsRange;
   const Scalar NormF2 = 1.5 * F20;
 
-  // we will need 3 uniform random number for each trial of sampling
+  // We will need 3 uniform random number for each trial of sampling
   Scalar greject = 0.;
   Scalar eps;
   std::uniform_real_distribution<Scalar> rndmEngine;
@@ -209,7 +209,7 @@ Particle::Scalar PhotonConversion::childEnergyFraction(
       greject = (screenFunction2(delta) - FZ) / F20;
     }
   } while (greject < rndmEngine(generator));
-  //  end of eps sampling
+  //  End of eps sampling
   return eps * childEnergyScaleFactor;
 }
 
@@ -232,25 +232,25 @@ Particle::Vector3 PhotonConversion::childDirection(
                ? u
                : u * m_oneOverThree;  // 9./(9.+27) = 0.25
 
-  // more complex but "more true"
+  // More complex but "more true"
   const Particle::Vector3 gammaMomHep =
       gammaMom4.template segment<3>(Acts::eMom0);
   const Particle::Vector3 newDirectionHep(gammaMomHep.normalized());
 
-  // if it runs along the z axis - no good ==> take the x axis
+  // If it runs along the z axis - no good ==> take the x axis
   const Scalar x =
       (newDirectionHep[Acts::eZ] * newDirectionHep[Acts::eZ] > 0.999999)
           ? 1.
           : -newDirectionHep[Acts::eY];
   const Scalar y = newDirectionHep[Acts::eX];
 
-  // deflector direction
+  // Deflector direction
   const Particle::Vector3 deflectorHep(x, y, 0.);
-  // rotate the new direction for scattering
+  // Rotate the new direction for scattering
   Eigen::Transform<Scalar, 3, Eigen::Affine> rotTheta;
   rotTheta = Eigen::AngleAxis<Scalar>(theta, deflectorHep);
 
-  // and arbitrarily in psi
+  // And arbitrarily in psi
   Eigen::Transform<Scalar, 3, Eigen::Affine> rotPsi;
   rotPsi = Eigen::AngleAxis<Scalar>(
       uniformDistribution(generator) * 2. * M_PI, gammaMomHep);
@@ -318,7 +318,14 @@ std::vector<Particle> PhotonConversion::recordProduct(
 template <typename generator_t>
 bool PhotonConversion::run(
     generator_t& generator, Particle& particle, std::vector<Particle>& generated) const {
+	// Fast exit if particle is not alive
+  if(!particle)
+	return true;
+	
+	// Fast exit if momentum is too low
   const Scalar p = particle.absoluteMomentum();
+  if(p < 2. * childMomentumMin)
+	return false;
 
   // Get one child energy
   const Scalar childEnergy = p * childEnergyFraction(generator, p);
