@@ -84,7 +84,7 @@ class CartesianSegmentation : public Segmentation {
   /// @copydoc Segmentation::cellPosition
   Vector2 cellPosition(const DigitizationCell& dCell) const final;
 
-  /// Fill the associated digitsation cell from this start and end position
+  /// Fill the associated digitization cell from this start and end position
   /// correct for lorentz effect if needed
   ///
   /// @copydoc Segmentation::digitizationStep
