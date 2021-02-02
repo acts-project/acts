@@ -74,7 +74,7 @@ jobs:
           brew install cmake eigen ninja
           && sudo mkdir /usr/local/acts
           && sudo chown $USER /usr/local/acts
-          && wget --continue --retry-connrefused --tries=5 --timeout=2 -o deps.tar.gz https://acts.web.cern.ch/ci/macOS/deps.43e0201.tar.gz
+          && wget --verbose --continue --retry-connrefused --tries=5 --timeout=2 -o deps.tar.gz https://acts.web.cern.ch/ci/macOS/deps.43e0201.tar.gz
           && tar -xf deps.tar.gz -C /usr/local/acts
       - name: Configure
         # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
