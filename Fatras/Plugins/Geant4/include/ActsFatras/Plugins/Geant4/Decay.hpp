@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Utilities/Units.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Plugins/Geant4/PDGtoG4Converter.hpp"
 #include <cmath>
@@ -26,6 +26,8 @@ namespace ActsFatras {
 /// to a particle. This lifetime is used to trigger the decay.
 class Decay {
  public:
+ using Scalar = Particle::Scalar;
+ 
   /// Constructor
   Decay();
 
@@ -34,23 +36,22 @@ class Decay {
   ///
   /// @tparam generator_t Type of the random number generator
   /// @param [in, out] generator The random number generator
-  /// @param [in, out] isp The particle that gets a lifetime assigned
+  /// @param [in] particle The particle that gets a lifetime assigned
+  ///
+  /// @return Proper time limit of the particle
   template <typename generator_t>
-  void lifeTime(generator_t& generator, Particle& isp) const;
+  Scalar generateProperTimeLimit(generator_t& generator, const Particle& particle) const;
 
   /// @brief This function tests if a decay should occur, triggers it whenever
   /// necessary and evaluates the decay products.
   ///
   /// @tparam generator_t Type of the random number generator
-  /// @param [in, out] generator The random number generator
-  /// @param [in] slab The material slab
-  /// @param [in, out] isp The particle that may decay
+  /// @param [in, out] particle The particle that may decay
   ///
   /// @return Vector containing decay products
   template <typename generator_t>
-  std::vector<Particle> operator()(generator_t& generator,
-                                   const Acts::MaterialSlab& /*slab*/,
-                                   Particle& isp) const;
+  std::vector<Particle> run(generator_t&,
+                                   Particle& particle) const;
 
   /// @brief This function evaluates the decay products of a given particle
   ///
@@ -71,54 +72,45 @@ class Decay {
       m_pdgToG4Conv;  ///< Handle for converting a PDG ID into a Geant4 particle
 };
 
-}  // namespace ActsFatras
-
 template <typename generator_t>
-void ActsFatras::Decay::lifeTime(generator_t& generator,
-                                 ActsFatras::Particle& isp) const {
+Particle::Scalar Decay::generateProperTimeLimit(generator_t& generator,
+                                 const Particle& particle) const {
   // Get the particle properties
-  const int pdgCode = isp.pdg();
+  const int pdgCode = particle.pdg();
   // Keep muons stable
   if (std::abs(pdgCode) == 13)
-    return;
+    return std::numeric_limits<Scalar>::infinity();
 
   // Get the Geant4 particle
   G4ParticleDefinition* pDef = m_pdgToG4Conv.getParticleDefinition(pdgCode);
 
   // Fast exit if the particle is stable
   if (!pDef || pDef->GetPDGStable()) {
-    return;
+    return std::numeric_limits<Scalar>::infinity();
   }
 
   // Get average lifetime
-  constexpr double convertTime = Acts::UnitConstants::mm / CLHEP::s;
-  const double tau = pDef->GetPDGLifeTime() * convertTime;
-  // Sample the lifetime
-  std::uniform_real_distribution<double> uniformDistribution{0., 1.};
-  const double lifeTime = -tau * log(uniformDistribution(generator));
+  constexpr Scalar convertTime = Acts::UnitConstants::mm / CLHEP::s;
+  const Scalar tau = pDef->GetPDGLifeTime() * convertTime;
+  // Sample & return the lifetime
+  std::uniform_real_distribution<Scalar> uniformDistribution{0., 1.};
 
-  // Assign the lifetime
-  isp.setLifetimeLimit(lifeTime);
+  return -tau * log(uniformDistribution(generator));
 }
 
 template <typename generator_t>
-std::vector<ActsFatras::Particle> ActsFatras::Decay::operator()(
-    generator_t& generator, const Acts::MaterialSlab& /*slab*/,
-    ActsFatras::Particle& isp) const {
-  // Test if decay condition is fulfilled
-  if (isp.pathLimitTime() < isp.time())
-    return {};
-
-  // perform the decay
-  std::vector<Particle> decayProducts = decayParticle(isp);
-
-  // Assign a lifetime to decay products
-  for (Particle& decayProduct : decayProducts) {
-    lifeTime(generator, decayProduct);
-  }
+std::vector<Particle> Decay::run(
+    generator_t&,
+    Particle& particle) const {
+  // Fast exit if particle is not alive
+  if(!particle)
+	return {};
+	
+  // Perform the decay
+  std::vector<Particle> decayProducts = decayParticle(particle);
 
   // Kill the particle
-  isp.setAbsMomentum(Particle::Scalar(0));
-
+  particle.setAbsoluteMomentum(Scalar(0));
   return decayProducts;
 }
+}  // namespace ActsFatras

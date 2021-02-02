@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,7 +8,7 @@
 
 #include "ActsFatras/Plugins/Geant4/Decay.hpp"
 
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Common.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 #include "ActsFatras/Plugins/Geant4/G4DetectorConstruction.hpp"
 #include "G4DecayProducts.hh"
@@ -45,7 +45,7 @@ std::vector<ActsFatras::Particle> ActsFatras::Decay::decayParticle(
   }
 
   // Boost the decay products using the parents four-momentum
-  const Particle::Vector4 mom4 = parent.momentum4();
+  const Particle::Vector4 mom4 = parent.fourMomentum();
   products->Boost(mom4[Acts::eMom0] / mom4[Acts::eEnergy],
                   mom4[Acts::eMom1] / mom4[Acts::eEnergy],
                   mom4[Acts::eMom2] / mom4[Acts::eEnergy]);
@@ -59,14 +59,14 @@ std::vector<ActsFatras::Particle> ActsFatras::Decay::decayParticle(
 
     // Convert the decay product from Geant4 to Acts
     const G4ThreeVector& mom = prod->GetMomentum();
-    constexpr double convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
-    Acts::Vector3D amgMom(mom.x(), mom.y(), mom.z());
+    constexpr Scalar convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
+    Acts::Vector3 amgMom(mom.x(), mom.y(), mom.z());
     amgMom *= convertEnergy;
     const int32_t pdg = prod->GetPDGcode();
 
     Particle childParticle(Barcode(), static_cast<Acts::PdgParticle>(pdg));
-    childParticle.setPosition4(parent.position4())
-        .setAbsMomentum(amgMom.norm())
+    childParticle.setPosition4(parent.fourPosition())
+        .setAbsoluteMomentum(amgMom.norm())
         .setDirection(amgMom)
         .setProcess(ProcessType::eDecay);
 
