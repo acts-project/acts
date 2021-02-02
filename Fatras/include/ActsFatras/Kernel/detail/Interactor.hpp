@@ -93,12 +93,13 @@ struct Interactor {
     } else {
       result.particle = makeParticle(result.particle, stepper, state.stepping);
     }
-
+std::cout << result.properTimeLimit << " | " << result.particle.properTime() << std::endl;
     // decay check. needs to happen at every step, not just on surfaces.
     // TODO limit the stepsize when close to the lifetime limit to avoid
     //   overstepping and decaying the particle systematically too late
     if ((result.properTimeLimit < result.particle.properTime()) &&
         result.isAlive) {
+std::cout << " BOOOOOOM " << std::endl;
       auto descendants = decay.run(generator, result.particle);
       for (auto &&descendant : descendants) {
         result.generatedParticles.emplace_back(std::move(descendant));
@@ -113,10 +114,12 @@ struct Interactor {
 		//    gamma = 1 / sqrt(1 - beta²) = sqrt(m² + p²) / m = E / m
 	    //     time = proper-time * gamma		
 		// stepSize = (ds/dt)*time
-		const auto properTimeDiff = result.particle.properTime() - result.properTimeLimit;
+		const auto properTimeDiff = result.properTimeLimit - result.particle.properTime();
 		const auto gamma = result.particle.energy() / result.particle.mass();
-		const auto stepSize = state.stepping.derivative(Acts::eFreeTime) * properTimeDiff * gamma;
-		stepper.setStepSize(state.stepping, stepSize, Acts::ConstrainedStep::actor);
+		const auto stepSize = (state.stepping.derivative(Acts::eFreeTime) == 0. ? 
+				properTimeDiff * result.particle.absoluteMomentum() / result.particle.mass() : state.stepping.derivative(Acts::eFreeTime) * properTimeDiff * gamma);
+		stepper.setStepSize(state.stepping, stepSize, Acts::ConstrainedStep::user);
+std::cout << "StepSize: " << stepSize << " | " << properTimeDiff << " " << gamma << " " << stepSize << " " << state.stepping.derivative(Acts::eFreeTime) << std::endl;
 	}
 
     // arm the point-like interaction limits in the first step
