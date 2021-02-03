@@ -16,6 +16,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
@@ -32,7 +33,7 @@ class TTree;
 
 namespace ActsExamples {
 
-/// @class RootDigitizationWriter
+/// @class RootMeasurementWriter
 ///
 /// Write out a planar cluster collection into a root file
 /// to avoid immense long vectors, each cluster is one entry
@@ -43,11 +44,13 @@ namespace ActsExamples {
 /// this is done by setting the Config::rootFile pointer to an existing file
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
-class RootDigitizationWriter final : public WriterT<MeasurementContainer> {
+class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
  public:
   struct Config {
     /// Which measurement collection to write.
     std::string inputMeasurements;
+    /// Which cluster collection to write (optional)
+    std::string inputClusters;
     /// Which simulated (truth) hits collection to use.
     std::string inputSimHits;
     /// Input collection to map measured hits to simulated hits.
@@ -72,15 +75,26 @@ class RootDigitizationWriter final : public WriterT<MeasurementContainer> {
     int surfaceID;
 
     /// Type 0 - free, 1 - bound
-    int measType = 1.;
+    int measType = 1;
 
-    // Truth parameters
+    /// Truth parameters
     float trueBound[Acts::eBoundSize];
     float trueGx = 0.;
     float trueGy = 0.;
     float trueGz = 0.;
 
+    /// Reconstruction information
     float recBound[Acts::eBoundSize];
+
+    /// Cluster information comprised of
+    /// nch :  number of channels
+    /// cSize : cluster size in loc0 and loc1
+    /// chId : channel identification
+    /// chValue: value/activation of the channel
+    int nch = 0;
+    int cSize[2];
+    std::array<std::vector<int>*, 2> chId = {nullptr, nullptr};
+    std::vector<float>* chValue = nullptr;
 
     /// Setup helper to create the tree and
     /// register the branches
@@ -120,13 +134,37 @@ class RootDigitizationWriter final : public WriterT<MeasurementContainer> {
       setupTree(treeName);
     }
 
+    /// Non-trivial destructor for memory cleanup
+    ~DigitizationTree() {
+      delete chId[0];
+      delete chId[1];
+      delete chValue;
+    }
+
     /// Setup the dimension depended branches
     ///
-    /// @tparam parset_t Type of the parameter set
-    ///
-    /// @param ps A dummy bound parameter set
+    /// @param i the bound index in question
     void setupBoundRecBranch(Acts::BoundIndices i) {
       tree->Branch(std::string("rec_" + bNames[i]).c_str(), &recBound[i]);
+    }
+
+    /// Setup the cluster related branch
+    ///
+    /// @param bIndices the bound indices to be written
+    void setupClusterBranch(const std::vector<Acts::BoundIndices>& bIndices) {
+      chValue = new std::vector<float>;
+      tree->Branch("clus_size", &nch);
+      tree->Branch("channel_value", &chValue);
+      // Both are allocated, but only relevant ones are set
+      chId[0] = new std::vector<int>;
+      chId[1] = new std::vector<int>;
+      for (const auto& ib : bIndices) {
+        if (static_cast<unsigned int>(ib) < 2) {
+          tree->Branch(std::string("channel_" + bNames[ib]).c_str(), &chId[ib]);
+          tree->Branch(std::string("clus_size_" + bNames[ib]).c_str(),
+                       &cSize[ib]);
+        }
+      }
     }
 
     /// Convenience function to register idenfication
@@ -172,15 +210,29 @@ class RootDigitizationWriter final : public WriterT<MeasurementContainer> {
       recBound[Acts::eBoundTheta] = fullVect[Acts::eBoundTheta];
       recBound[Acts::eBoundTime] = fullVect[Acts::eBoundTime];
     }
+
+    /// Convenience function to fill the cluster information
+    ///
+    /// @param c The cluster
+    void fillCluster(const Cluster& c) {
+      nch = static_cast<int>(c.channels.size());
+      cSize[0] = static_cast<int>(c.sizeLoc0);
+      cSize[1] = static_cast<int>(c.sizeLoc1);
+      for (auto ch : c.channels) {
+        chId[0]->push_back(static_cast<int>(ch.bin[0]));
+        chId[1]->push_back(static_cast<int>(ch.bin[1]));
+        chValue->push_back(static_cast<float>(ch.activation));
+      }
+    }
   };
 
   /// Constructor with
   /// @param cfg configuration struct
   /// @param output logging level
-  RootDigitizationWriter(const Config& cfg, Acts::Logging::Level lvl);
+  RootMeasurementWriter(const Config& cfg, Acts::Logging::Level lvl);
 
   /// Virtual destructor
-  ~RootDigitizationWriter() final override;
+  ~RootMeasurementWriter() final override;
 
   /// End-of-run hook
   ProcessCode endRun() final override;
