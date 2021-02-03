@@ -211,7 +211,7 @@ class EigenStepper {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double momentum(const State& state) const {
-    return std::abs(state.q / state.pars[eFreeQOverP]);
+    return std::abs((state.q == 0. ? 1. : state.q) / state.pars[eFreeQOverP]);
   }
 
   /// Charge access
