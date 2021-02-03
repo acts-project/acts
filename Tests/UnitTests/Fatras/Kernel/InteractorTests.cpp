@@ -17,7 +17,6 @@
 #include "ActsFatras/Kernel/PointLikePhysicsList.hpp"
 #include "ActsFatras/Kernel/detail/Interactor.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 
 #include <array>
@@ -45,7 +44,7 @@ struct MockDecay {
     return {};
   }
   
-  Particle::Scalar properTimeTolerance = Particle::Scalar(0.);
+  Particle::Scalar properTimeTolerance = 1e-3;
 };
 
 struct MockContinuousPhysicsList {
@@ -69,7 +68,6 @@ struct MockStepperState {
   Scalar time;
   Vector3 dir;
   Scalar p;
-  Acts::FreeVector derivative;  
 };
 
 struct MockStepper {
