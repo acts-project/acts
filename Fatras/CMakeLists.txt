@@ -30,5 +30,3 @@ install(
 install(
   DIRECTORY include/ActsFatras
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-  
-add_subdirectory(Plugins)

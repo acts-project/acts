@@ -1,1 +1,0 @@
-add_subdirectory_if(Geant4 ACTS_BUILD_EXAMPLES_GEANT4)
