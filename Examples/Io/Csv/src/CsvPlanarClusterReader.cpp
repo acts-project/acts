@@ -228,7 +228,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
       auto range = makeRange(std::equal_range(cells.begin(), cells.end(),
                                               hit.hit_id, CompareHitId{}));
       for (const auto& c : range) {
-        digitizationCells.emplace_back(c.ch0, c.ch1, c.value);
+        digitizationCells.emplace_back(c.channel0, c.channel1, c.value);
       }
     }
 

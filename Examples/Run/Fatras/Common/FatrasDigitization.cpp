@@ -14,6 +14,7 @@
 #include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvPlanarClusterWriter.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
@@ -45,46 +46,42 @@ void setupDigitization(
 
   auto cfile = vars["digi-config-file"].as<std::string>();
 
-  if (not cfile.empty()) {
-    auto in = std::ifstream(cfile, std::ifstream::in | std::ifstream::binary);
-    if (in.good()) {
-      // Get the json file
-      nlohmann::json djson;
-      in >> djson;
-      in.close();
+  if (not cfile.empty() or vars["digi-smear"].as<bool>()) {
+    // To be handles differently between DigitizationAlgorithm/SmearingAlgorithm
+    std::string clusters = "";
+    std::vector<
+        std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
+        bIndexInput;
 
-      DigiConfigContainer digitizationConfigs =
-          DigiConfigConverter("digitization-configuration").fromJson(djson);
+    if (not cfile.empty()) {
+      // Configuration by json file evokes 'DigitizationAlgorithm'
+      auto in = std::ifstream(cfile, std::ifstream::in | std::ifstream::binary);
+      if (in.good()) {
+        // Get the json file for the configuration
+        nlohmann::json djson;
+        in >> djson;
+        in.close();
 
-      DigitizationAlgorithm::Config digiCfg =
-          Options::readDigitizationConfig(vars);
-      digiCfg.inputSimHits = kFatrasCollectionHits;
-      digiCfg.outputMeasurements = "measurements";
-      digiCfg.outputClusters = "clusters";
-      digiCfg.outputSourceLinks = "sourcelinks";
-      digiCfg.outputMeasurementParticlesMap = "measurement_particles_map";
-      digiCfg.outputMeasurementSimHitsMap = "measurement_simhits_map";
-      digiCfg.trackingGeometry = trackingGeometry;
-      digiCfg.randomNumbers = randomNumbers;
-      digiCfg.digitizationConfigs = digitizationConfigs;
+        DigiConfigContainer digitizationConfigs =
+            DigiConfigConverter("digitization-configuration").fromJson(djson);
 
-      sequencer.addAlgorithm(
-          std::make_shared<DigitizationAlgorithm>(digiCfg, logLevel));
+        DigitizationAlgorithm::Config digiCfg =
+            Options::readDigitizationConfig(vars);
+        digiCfg.inputSimHits = kFatrasCollectionHits;
+        digiCfg.outputMeasurements = kFatrasCollectionMeasurements;
+        digiCfg.outputClusters = kFatrasCollectionClusters;
+        digiCfg.outputSourceLinks = kFatrasCollectionSourceLinks;
+        digiCfg.outputMeasurementParticlesMap = kFatrasMapMeasurementParticles;
+        digiCfg.outputMeasurementSimHitsMap = kFatrasMapMeasurementSimHits;
+        digiCfg.trackingGeometry = trackingGeometry;
+        digiCfg.randomNumbers = randomNumbers;
+        digiCfg.digitizationConfigs = digitizationConfigs;
+        sequencer.addAlgorithm(
+            std::make_shared<DigitizationAlgorithm>(digiCfg, logLevel));
 
-      // Write digitization output (=measurements) as ROOT files
-      if (vars["output-root"].template as<bool>()) {
-        RootMeasurementWriter::Config measWriterRoot;
-        measWriterRoot.inputMeasurements = digiCfg.outputMeasurements;
-        measWriterRoot.inputClusters = digiCfg.outputClusters;
-        measWriterRoot.inputSimHits = digiCfg.inputSimHits;
-        measWriterRoot.inputMeasurementSimHitsMap =
-            digiCfg.outputMeasurementSimHitsMap;
-        measWriterRoot.filePath =
-            joinPaths(outputDir, digiCfg.outputMeasurements + ".root");
-        // Translate into bound indices of the digitization configuration
-        std::vector<std::pair<Acts::GeometryIdentifier,
-                              std::vector<Acts::BoundIndices>>>
-            bIndexInput;
+        clusters = kFatrasCollectionClusters;
+
+        // Prepare for the (eventual) output writing
         for (size_t ibi = 0; ibi < digiCfg.digitizationConfigs.size(); ++ibi) {
           Acts::GeometryIdentifier geoID =
               digiCfg.digitizationConfigs.idAt(ibi);
@@ -98,41 +95,21 @@ void setupDigitization(
           }
           bIndexInput.push_back({geoID, boundIndices});
         }
-        measWriterRoot.boundIndices =
-            Acts::GeometryHierarchyMap<std::vector<Acts::BoundIndices>>(
-                bIndexInput);
-
-        measWriterRoot.trackingGeometry = trackingGeometry;
-        sequencer.addWriter(
-            std::make_shared<RootMeasurementWriter>(measWriterRoot, logLevel));
       }
-    }
+    } else if (vars["digi-smear"].as<bool>()) {
+      // Simpler configuration for smearing algorithm
+      SmearingAlgorithm::Config smearCfg = Options::readSmearingConfig(vars);
+      smearCfg.inputSimHits = kFatrasCollectionHits;
+      smearCfg.outputMeasurements = kFatrasCollectionMeasurements;
+      smearCfg.outputSourceLinks = kFatrasCollectionSourceLinks;
+      smearCfg.outputMeasurementParticlesMap = kFatrasMapMeasurementParticles;
+      smearCfg.outputMeasurementSimHitsMap = kFatrasMapMeasurementSimHits;
+      smearCfg.trackingGeometry = trackingGeometry;
+      smearCfg.randomNumbers = randomNumbers;
+      sequencer.addAlgorithm(
+          std::make_shared<SmearingAlgorithm>(smearCfg, logLevel));
 
-  } else if (vars["digi-smear"].as<bool>()) {
-    SmearingAlgorithm::Config smearCfg = Options::readSmearingConfig(vars);
-    smearCfg.inputSimHits = kFatrasCollectionHits;
-    smearCfg.outputMeasurements = "measurements";
-    smearCfg.outputSourceLinks = "sourcelinks";
-    smearCfg.outputMeasurementParticlesMap = "measurement_particles_map";
-    smearCfg.outputMeasurementSimHitsMap = "measurement_simhits_map";
-    smearCfg.trackingGeometry = trackingGeometry;
-    smearCfg.randomNumbers = randomNumbers;
-    sequencer.addAlgorithm(
-        std::make_shared<SmearingAlgorithm>(smearCfg, logLevel));
-
-    // Write digitization output as ROOT files
-    if (vars["output-root"].template as<bool>()) {
-      RootMeasurementWriter::Config measWriterRoot;
-      measWriterRoot.inputMeasurements = smearCfg.outputMeasurements;
-      measWriterRoot.inputSimHits = smearCfg.inputSimHits;
-      measWriterRoot.inputMeasurementSimHitsMap =
-          smearCfg.outputMeasurementSimHitsMap;
-      measWriterRoot.filePath =
-          joinPaths(outputDir, smearCfg.outputMeasurements + ".root");
-      // Translate into bound indices of the digitization configuration
-      std::vector<
-          std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
-          bIndexInput;
+      // Prepare for the (eventual) output writing
       for (size_t ibi = 0; ibi < smearCfg.smearers.size(); ++ibi) {
         Acts::GeometryIdentifier geoID = smearCfg.smearers.idAt(ibi);
         const auto sCfg = smearCfg.smearers.valueAt(ibi);
@@ -143,12 +120,35 @@ void setupDigitization(
         }
         bIndexInput.push_back({geoID, boundIndices});
       }
+    }
+
+    // Write digitization output as ROOT files
+    if (vars["output-root"].template as<bool>()) {
+      RootMeasurementWriter::Config measWriterRoot;
+      measWriterRoot.inputMeasurements = kFatrasCollectionMeasurements;
+      measWriterRoot.inputClusters = clusters;
+      measWriterRoot.inputSimHits = kFatrasCollectionHits;
+      measWriterRoot.inputMeasurementSimHitsMap = kFatrasMapMeasurementSimHits;
+      measWriterRoot.filePath = joinPaths(
+          outputDir, std::string(kFatrasCollectionMeasurements) + ".root");
       measWriterRoot.boundIndices =
           Acts::GeometryHierarchyMap<std::vector<Acts::BoundIndices>>(
               bIndexInput);
       measWriterRoot.trackingGeometry = trackingGeometry;
       sequencer.addWriter(
           std::make_shared<RootMeasurementWriter>(measWriterRoot, logLevel));
+    }
+
+    // Write digitization out as CSV files
+    if (vars["output-csv"].template as<bool>()) {
+      CsvMeasurementWriter::Config measWriterCsv;
+      measWriterCsv.inputMeasurements = kFatrasCollectionMeasurements;
+      measWriterCsv.inputClusters = clusters;
+      measWriterCsv.inputSimHits = kFatrasCollectionHits;
+      measWriterCsv.inputMeasurementSimHitsMap = kFatrasMapMeasurementSimHits;
+      measWriterCsv.trackingGeometry = trackingGeometry;
+      sequencer.addWriter(
+          std::make_shared<CsvMeasurementWriter>(measWriterCsv, logLevel));
     }
 
   } else if (vars["digi-geometric-3d"].as<bool>()) {

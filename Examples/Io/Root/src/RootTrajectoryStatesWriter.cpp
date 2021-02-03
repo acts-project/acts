@@ -13,6 +13,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
@@ -26,8 +27,6 @@
 
 #include <TFile.h>
 #include <TTree.h>
-
-#include "detail/AverageSimHits.hpp"
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
@@ -329,7 +328,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
         const auto hitIdx = state.uncalibrated().index();
         auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
         auto [truthLocal, truthPos4, truthUnitDir] =
-            detail::averageSimHits(ctx.geoContext, surface, simHits, indices);
+            averageSimHits(ctx.geoContext, surface, simHits, indices);
         // momemtum averaging makes even less sense than averaging position and
         // direction. use the first momentum or set q/p to zero
         float truthQOP = 0.0f;

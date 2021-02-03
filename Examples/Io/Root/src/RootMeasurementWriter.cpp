@@ -12,6 +12,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -25,8 +26,6 @@
 
 #include <TFile.h>
 #include <TString.h>
-
-#include "detail/AverageSimHits.hpp"
 
 ActsExamples::RootMeasurementWriter::RootMeasurementWriter(
     const ActsExamples::RootMeasurementWriter::Config& cfg,
@@ -130,7 +129,7 @@ ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::writeT(
           auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
           // Use average truth in the case of multiple contributing sim hits
           auto [local, pos4, dir] =
-              detail::averageSimHits(ctx.geoContext, surface, simHits, indices);
+              averageSimHits(ctx.geoContext, surface, simHits, indices);
           dTree->fillTruthParameters(local, pos4, dir);
           dTree->fillBoundMeasurement(m);
           if (not clusters.empty()) {
