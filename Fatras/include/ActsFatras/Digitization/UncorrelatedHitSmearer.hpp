@@ -71,7 +71,7 @@ struct BoundParametersSmearer {
 
     ParametersVector par = ParametersVector::Zero();
     CovarianceMatrix cov = CovarianceMatrix::Zero();
-    for (size_t i = 0; i < kSize; ++i) {
+    for (int i = 0; i < static_cast<int>(kSize); ++i) {
       auto res = smearFunctions[i](boundParams[indices[i]], rng);
       if (not res.ok()) {
         return Result::failure(res.error());

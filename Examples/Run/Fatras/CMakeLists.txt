@@ -7,7 +7,7 @@ add_executable(
   GenericFatrasExample.cpp)
 target_link_libraries(
   ActsExampleFatrasGeneric
-  PRIVATE ActsExamplesFatrasCommon ActsExamplesDetectorGeneric)
+  PRIVATE ActsExamplesFatrasCommon ActsExamplesDetectorGeneric ActsExamplesIoJson)
 
 # Generic detector with IOV based alignment
 add_executable(
@@ -15,7 +15,7 @@ add_executable(
   AlignedFatrasExample.cpp)
 target_link_libraries(
   ActsExampleFatrasAligned
-  PRIVATE ActsExamplesFatrasCommon ActsExamplesDetectorContextual)
+  PRIVATE ActsExamplesFatrasCommon ActsExamplesDetectorContextual ActsExamplesIoJson)
 
 # Generic detector with Payload based alignment
 add_executable(
@@ -23,7 +23,7 @@ add_executable(
   PayloadFatrasExample.cpp)
 target_link_libraries(
   ActsExampleFatrasPayload
-  PRIVATE ActsExamplesFatrasCommon ActsExamplesDetectorContextual)
+  PRIVATE ActsExamplesFatrasCommon ActsExamplesDetectorContextual ActsExamplesIoJson)
 
 # TGeo detector
 add_executable(
@@ -31,7 +31,7 @@ add_executable(
   TGeoFatrasExample.cpp)
 target_link_libraries(
   ActsExampleFatrasTGeo
-  PRIVATE ActsExamplesFatrasCommon ActsExamplesDetectorTGeo)
+  PRIVATE ActsExamplesFatrasCommon ActsExamplesDetectorTGeo ActsExamplesIoJson)
 
 # Telescope detector
 add_executable(
@@ -39,7 +39,7 @@ add_executable(
   TelescopeFatrasExample.cpp)
 target_link_libraries(
   ActsExampleFatrasTelescope
-  PRIVATE ActsExamplesFatrasCommon ActsExamplesDetectorTelescope)
+  PRIVATE ActsExamplesFatrasCommon ActsExamplesDetectorTelescope ActsExamplesIoJson)
 
 install(
   TARGETS

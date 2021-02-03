@@ -1,5 +1,6 @@
 add_library(
   ActsExamplesDigitization SHARED
+  src/DigitizationAlgorithm.cpp
   src/PlanarSteppingAlgorithm.cpp
   src/HitSmearing.cpp
   src/SmearingAlgorithm.cpp
