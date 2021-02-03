@@ -56,14 +56,14 @@ ActsExamples::RootDigitizationWriter::RootDigitizationWriter(
   std::vector<
       std::pair<Acts::GeometryIdentifier, std::unique_ptr<DigitizationTree>>>
       dTrees;
-  if (not m_cfg.smearers.empty()) {
-    ACTS_DEBUG("Smearers are present, preparing trees.");
-    for (size_t ikv = 0; ikv < m_cfg.smearers.size(); ++ikv) {
-      auto geoID = m_cfg.smearers.idAt(ikv);
-      auto geoCfg = m_cfg.smearers.valueAt(ikv);
+  if (not m_cfg.boundIndices.empty()) {
+    ACTS_DEBUG("Bound indices are declared, preparing trees.");
+    for (size_t ikv = 0; ikv < m_cfg.boundIndices.size(); ++ikv) {
+      auto geoID = m_cfg.boundIndices.idAt(ikv);
+      auto bIndices = m_cfg.boundIndices.valueAt(ikv);
       auto dTree = std::make_unique<DigitizationTree>(geoID);
-      for (const auto& parCfg : geoCfg) {
-        dTree->setupBoundRecBranch(parCfg.index);
+      for (const auto& bIndex : bIndices) {
+        dTree->setupBoundRecBranch(bIndex);
       }
       dTrees.push_back({geoID, std::move(dTree)});
     }
