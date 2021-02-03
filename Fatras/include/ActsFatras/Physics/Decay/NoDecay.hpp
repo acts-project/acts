@@ -31,8 +31,6 @@ struct NoDecay {
                                         const Particle& /* particle */) const {
     return {};
   }
-  
-  Particle::Scalar properTimeTolerance = Particle::Scalar(0.);
 };
 
 }  // namespace ActsFatras

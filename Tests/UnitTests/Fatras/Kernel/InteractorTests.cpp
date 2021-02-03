@@ -43,8 +43,6 @@ struct MockDecay {
   constexpr std::array<Particle, 0> run(generator_t &, const Particle &) const {
     return {};
   }
-  
-  Particle::Scalar properTimeTolerance = 1e-3;
 };
 
 struct MockContinuousPhysicsList {

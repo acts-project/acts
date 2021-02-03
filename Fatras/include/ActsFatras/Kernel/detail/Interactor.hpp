@@ -67,6 +67,9 @@ struct Interactor {
   /// Initial particle state.
   Particle initialParticle;
 
+  /// Deviation factor from generated proper time limit
+  Particle::Scalar properTimeTolerance = 1e-2;
+  
   /// Simulate the interaction with a single surface.
   ///
   /// @tparam propagator_state_t is propagator state
@@ -97,7 +100,7 @@ struct Interactor {
     // decay check. needs to happen at every step, not just on surfaces.
     // TODO limit the stepsize when close to the lifetime limit to avoid
     //   overstepping and decaying the particle systematically too late
-    if ((result.properTimeLimit - result.particle.properTime() < result.properTimeLimit * decay.properTimeTolerance) &&
+    if ((result.properTimeLimit - result.particle.properTime() < result.properTimeLimit * properTimeTolerance) &&
         result.isAlive) {
       auto descendants = decay.run(generator, result.particle);
       for (auto &&descendant : descendants) {
