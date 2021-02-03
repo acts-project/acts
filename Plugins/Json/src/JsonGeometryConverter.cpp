@@ -28,7 +28,8 @@
 
 namespace {
 
-Acts::SurfaceAndMaterial defaultSurfaceMaterial(const Acts::Surface* surface) {
+Acts::SurfaceAndMaterial defaultSurfaceMaterial(
+    std::shared_ptr<const Acts::Surface> surface) {
   if (surface->surfaceMaterialSharedPtr() != nullptr) {
     return {surface, surface->surfaceMaterialSharedPtr()};
   }
@@ -290,7 +291,8 @@ void Acts::JsonGeometryConverter::convertToHierarchy(
              m_cfg.processNonMaterial == true) &&
             layRep.geometryId() != GeometryIdentifier()) {
           surfaceHierarchy.push_back(
-              {layRep.geometryId(), defaultSurfaceMaterial(&layRep)});
+              {layRep.geometryId(),
+               defaultSurfaceMaterial(layRep.getSharedPtr())});
         }
       }
       if (lay->approachDescriptor() != nullptr &&
@@ -299,7 +301,8 @@ void Acts::JsonGeometryConverter::convertToHierarchy(
           if (asf->surfaceMaterial() != nullptr ||
               m_cfg.processNonMaterial == true) {
             surfaceHierarchy.push_back(
-                {asf->geometryId(), defaultSurfaceMaterial(asf)});
+                {asf->geometryId(),
+                 defaultSurfaceMaterial(asf->getSharedPtr())});
           }
         }
       }
@@ -308,7 +311,8 @@ void Acts::JsonGeometryConverter::convertToHierarchy(
           if (ssf->surfaceMaterial() != nullptr ||
               m_cfg.processNonMaterial == true) {
             surfaceHierarchy.push_back(
-                {ssf->geometryId(), defaultSurfaceMaterial(ssf)});
+                {ssf->geometryId(),
+                 defaultSurfaceMaterial(ssf->getSharedPtr())});
           }
         }
       }
@@ -323,7 +327,8 @@ void Acts::JsonGeometryConverter::convertToHierarchy(
       if (bssfRep.surfaceMaterial() != nullptr ||
           m_cfg.processNonMaterial == true) {
         surfaceHierarchy.push_back(
-            {bssfRep.geometryId(), defaultSurfaceMaterial(&bssfRep)});
+            {bssfRep.geometryId(),
+             defaultSurfaceMaterial(bssfRep.getSharedPtr())});
       }
     }
   }

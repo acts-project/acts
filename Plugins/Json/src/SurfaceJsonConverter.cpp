@@ -32,10 +32,6 @@ void Acts::to_json(nlohmann::json& j, const Acts::SurfaceAndMaterial& surface) {
   to_json(j, surface.second.get());
 }
 
-void Acts::to_json(nlohmann::json& j, const Acts::SurfacePointer& surface) {
-  to_json(j, *surface);
-}
-
 void Acts::to_json(nlohmann::json& j, const Acts::Surface& surface) {
   Acts::GeometryContext gctx;
   toJson(j, surface, gctx);

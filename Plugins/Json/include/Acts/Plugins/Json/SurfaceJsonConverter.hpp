@@ -22,9 +22,8 @@
 // can not match our naming guidelines.
 namespace Acts {
 
-using SurfacePointer = const Acts::Surface*;
 using SurfaceAndMaterial =
-    std::pair<const Acts::Surface*,
+    std::pair<std::shared_ptr<const Acts::Surface>,
               std::shared_ptr<const Acts::ISurfaceMaterial>>;
 
 static std::vector<std::string> surfaceTypes = {
@@ -33,9 +32,6 @@ static std::vector<std::string> surfaceTypes = {
 
 /// Conversion of a pair of surface and material used for the material mapping
 void to_json(nlohmann::json& j, const SurfaceAndMaterial& surface);
-
-/// Conversion of a const pointer on a surface used to write the geometry
-void to_json(nlohmann::json& j, const SurfacePointer& surface);
 
 /// Non-contextual conversion of a surface
 ///

@@ -23,7 +23,7 @@
 namespace Acts {
 
 using SurfaceAndMaterial =
-    std::pair<const Acts::Surface*,
+    std::pair<std::shared_ptr<const Acts::Surface>,
               std::shared_ptr<const Acts::ISurfaceMaterial>>;
 using TrackingVolumeAndMaterial =
     std::pair<const Acts::TrackingVolume*,
