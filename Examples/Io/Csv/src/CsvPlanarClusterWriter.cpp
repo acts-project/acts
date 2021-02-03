@@ -96,8 +96,8 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
       // write local cell information
       cell.hit_id = hit.hit_id;
       for (auto& c : cluster.digitizationCells()) {
-        cell.ch0 = c.channel0;
-        cell.ch1 = c.channel1;
+        cell.channel0 = c.channel0;
+        cell.channel1 = c.channel1;
         // TODO store digitial timestamp once added to the cell definition
         cell.timestamp = 0;
         cell.value = c.data;

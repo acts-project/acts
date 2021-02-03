@@ -12,3 +12,10 @@
 
 static constexpr const char* kFatrasCollectionParticles = "particles";
 static constexpr const char* kFatrasCollectionHits = "hits";
+static constexpr const char* kFatrasCollectionMeasurements = "measurements";
+static constexpr const char* kFatrasCollectionClusters = "clusters";
+static constexpr const char* kFatrasCollectionSourceLinks = "sourcelinks";
+static constexpr const char* kFatrasMapMeasurementParticles =
+    "measurement_particles_map";
+static constexpr const char* kFatrasMapMeasurementSimHits =
+    "measurement_simhits_map";
