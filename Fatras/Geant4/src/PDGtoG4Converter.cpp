@@ -17,8 +17,8 @@ ActsFatras::PDGtoG4Converter::PDGtoG4Converter() : m_pdgG4ParticleMap() {
 }
 
 G4ParticleDefinition* ActsFatras::PDGtoG4Converter::getParticleDefinition(
-    int pdgCode) const {
-  std::unordered_map<int, G4ParticleDefinition*>::const_iterator it =
+    Acts::PdgParticle pdgCode) const {
+  std::unordered_map<Acts::PdgParticle, G4ParticleDefinition*>::const_iterator it =
       m_pdgG4ParticleMap.find(pdgCode);
 
   // Find the corresponding particle and return it
@@ -27,7 +27,7 @@ G4ParticleDefinition* ActsFatras::PDGtoG4Converter::getParticleDefinition(
   else {
     // Rescue mechanism: If the particle is neutral and its anti-particle is
     // stored then return that one instead
-    it = m_pdgG4ParticleMap.find(std::abs(pdgCode));
+    it = m_pdgG4ParticleMap.find(makeAbsolutePdgParticle(pdgCode));
     if (it != m_pdgG4ParticleMap.end() &&
         std::abs(it->second->GetPDGCharge()) < 0.1) {
       return it->second;

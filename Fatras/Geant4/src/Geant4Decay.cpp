@@ -24,8 +24,7 @@ std::vector<ActsFatras::Particle> ActsFatras::Geant4Decay::decayParticle(
   std::vector<Particle> children;
 
   // Find the particle type that will decay
-  int pdgCode = parent.pdg();
-  G4ParticleDefinition* pDef = m_pdgToG4Conv.getParticleDefinition(pdgCode);
+  G4ParticleDefinition* pDef = m_pdgToG4Conv.getParticleDefinition(parent.pdg());
   if (!pDef) {
     return children;
   }

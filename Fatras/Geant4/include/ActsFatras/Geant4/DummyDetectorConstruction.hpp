@@ -14,11 +14,11 @@ class G4LogicalVolume;
 class G4VPhysicalVolume;
 
 namespace ActsFatras {
-/// @brief This class produces a dummy Geant4 detector
-class G4DetectorConstruction : public G4VUserDetectorConstruction {
+/// Construct a dummy Geant4 detector.
+class DummyDetectorConstruction : public G4VUserDetectorConstruction {
  public:
   /// Destructor
-  ~G4DetectorConstruction();
+  ~DummyDetectorConstruction();
 
   /// @brief Interface method for Geant4
   G4VPhysicalVolume* Construct();

@@ -74,7 +74,7 @@ template <typename generator_t>
 Particle::Scalar Geant4Decay::generateProperTimeLimit(
     generator_t& generator, const Particle& particle) const {
   // Get the particle properties
-  const int pdgCode = particle.pdg();
+  const Acts::PdgParticle pdgCode = particle.pdg();
   // Keep muons stable
   if (makeAbsolutePdgParticle(pdgCode) == Acts::PdgParticle::eMuon)
     return std::numeric_limits<Scalar>::infinity();

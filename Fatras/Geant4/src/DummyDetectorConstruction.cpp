@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsFatras/Plugins/Geant4/G4DetectorConstruction.hpp"
+#include "ActsFatras/Plugins/Geant4/DummyDetectorConstruction.hpp"
 
 #include "G4Box.hh"
 #include "G4LogicalVolume.hh"
@@ -14,12 +14,12 @@
 #include "G4PVPlacement.hh"
 #include "G4ThreeVector.hh"
 
-ActsFatras::G4DetectorConstruction::~G4DetectorConstruction() {
+ActsFatras::DummyDetectorConstruction::~DummyDetectorConstruction() {
   delete (m_worldLog);
   delete (m_worldPhys);
 }
 
-void ActsFatras::G4DetectorConstruction::dummyDetector() {
+void ActsFatras::DummyDetectorConstruction::dummyDetector() {
   G4ThreeVector materialPosition(0., 0., 0.);
 
   // Create the world setup
@@ -47,7 +47,7 @@ void ActsFatras::G4DetectorConstruction::dummyDetector() {
                                       m_worldLog, 0, false, 0);
 }
 
-G4VPhysicalVolume* ActsFatras::G4DetectorConstruction::Construct() {
+G4VPhysicalVolume* ActsFatras::DummyDetectorConstruction::Construct() {
   // Construct the detector and return it
   dummyDetector();
   return m_worldPhys;
