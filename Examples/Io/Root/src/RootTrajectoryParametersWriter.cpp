@@ -13,6 +13,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
@@ -26,8 +27,6 @@
 
 #include <TFile.h>
 #include <TTree.h>
-
-#include "detail/AverageSimHits.hpp"
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;

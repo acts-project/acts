@@ -19,7 +19,6 @@
 #include <tuple>
 
 namespace ActsExamples {
-namespace detail {
 
 /// A range within a hit-simhits map.
 using HitSimHitsRange = Range<IndexMultimap<Index>::const_iterator>;
@@ -36,8 +35,7 @@ using HitSimHitsRange = Range<IndexMultimap<Index>::const_iterator>;
 /// returned.
 inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3> averageSimHits(
     const Acts::GeometryContext& gCtx, const Acts::Surface& surface,
-    const SimHitContainer& simHits,
-    const detail::HitSimHitsRange& hitSimHitsRange) {
+    const SimHitContainer& simHits, const HitSimHitsRange& hitSimHitsRange) {
   using namespace Acts::UnitLiterals;
 
   ACTS_LOCAL_LOGGER(
@@ -84,5 +82,4 @@ inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3> averageSimHits(
   return {avgLocal, avgPos4, avgDir};
 }
 
-}  // namespace detail
 }  // namespace ActsExamples
