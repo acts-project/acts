@@ -134,7 +134,7 @@ BOOST_DATA_TEST_CASE(PhotonConversion, Dataset::parametersPhotonConversion, phi,
       sqrt(particleInit.energy() * particleInit.energy() -
            particleInit.absoluteMomentum() * particleInit.absoluteMomentum());
 
-  CHECK_CLOSE_OR_SMALL(sSum, sParticle, 1e-3, 1e-3);
+  CHECK_CLOSE_OR_SMALL(sSum, sParticle, 1e-2, 1e-2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
