@@ -44,7 +44,7 @@ int runSeedingExample(int argc, char* argv[],
   Options::addRandomNumbersOptions(desc);
   Options::addGeometryOptions(desc);
   Options::addMaterialOptions(desc);
-  Options::addOutputOptions(desc);
+  Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
   Options::addInputOptions(desc);
   Options::addBFieldOptions(desc);
 

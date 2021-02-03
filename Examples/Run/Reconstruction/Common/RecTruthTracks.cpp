@@ -46,7 +46,7 @@ int runRecTruthTracks(int argc, char* argv[],
   Options::addGeometryOptions(desc);
   Options::addMaterialOptions(desc);
   Options::addInputOptions(desc);
-  Options::addOutputOptions(desc);
+  Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
   detector->addOptions(desc);
   Options::addBFieldOptions(desc);
   Options::addFittingOptions(desc);

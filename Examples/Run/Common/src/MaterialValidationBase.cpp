@@ -136,7 +136,8 @@ int materialValidationExample(int argc, char* argv[],
   ActsExamples::Options::addBFieldOptions(desc);
   ActsExamples::Options::addRandomNumbersOptions(desc);
   ActsExamples::Options::addPropagationOptions(desc);
-  ActsExamples::Options::addOutputOptions(desc);
+  ActsExamples::Options::addOutputOptions(desc,
+                                          ActsExamples::OutputFormat::Root);
 
   // Add specific options for this geometry
   detector.addOptions(desc);
