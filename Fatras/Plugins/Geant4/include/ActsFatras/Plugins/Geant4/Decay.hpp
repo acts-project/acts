@@ -30,6 +30,9 @@ class Decay {
  public:
   using Scalar = Particle::Scalar;
 
+  /// Deviation factor from generated proper time limit
+  Scalar properTimeTolerance = 1e-2;
+  
   /// Constructor
   Decay();
 
