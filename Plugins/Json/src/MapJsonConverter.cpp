@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Json/JsonGeometryConverter.hpp"
+#include "Acts/Plugins/Json/MapJsonConverter.hpp"
 
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
@@ -158,8 +158,8 @@ Acts::TrackingVolumeAndMaterial defaultVolumeMaterial(
 }
 }  // namespace
 
-Acts::JsonGeometryConverter::JsonGeometryConverter(
-    const Acts::JsonGeometryConverter::Config& cfg)
+Acts::MapJsonConverter::MapJsonConverter(
+    const Acts::MapJsonConverter::Config& cfg)
     : m_cfg(std::move(cfg)),
       m_volumeMaterialConverter(m_volumeName),
       m_volumeConverter(m_volumeName),
@@ -173,7 +173,7 @@ Acts::JsonGeometryConverter::JsonGeometryConverter(
 
 /// Convert method
 ///
-nlohmann::json Acts::JsonGeometryConverter::materialMapsToJson(
+nlohmann::json Acts::MapJsonConverter::materialMapsToJson(
     const DetectorMaterialMaps& maps) {
   VolumeMaterialMap volumeMap = maps.second;
   std::vector<std::pair<GeometryIdentifier, const IVolumeMaterial*>>
@@ -201,9 +201,8 @@ nlohmann::json Acts::JsonGeometryConverter::materialMapsToJson(
   return materialMap;
 }
 
-Acts::JsonGeometryConverter::DetectorMaterialMaps
-Acts::JsonGeometryConverter::jsonToMaterialMaps(
-    const nlohmann::json& materialmap) {
+Acts::MapJsonConverter::DetectorMaterialMaps
+Acts::MapJsonConverter::jsonToMaterialMaps(const nlohmann::json& materialmap) {
   nlohmann::json materialVolume = materialmap["Volumes"];
   GeometryHierarchyMap<const IVolumeMaterial*> HierarchyVolumeMap =
       m_volumeMaterialConverter.fromJson(materialVolume);
@@ -223,14 +222,13 @@ Acts::JsonGeometryConverter::jsonToMaterialMaps(
     surfaceMap.insert({HierarchySurfaceMap.idAt(i), std::move(surfacePointer)});
   }
 
-  Acts::JsonGeometryConverter::DetectorMaterialMaps maps = {surfaceMap,
-                                                            volumeMap};
+  Acts::MapJsonConverter::DetectorMaterialMaps maps = {surfaceMap, volumeMap};
 
   // Return the filled maps
   return maps;
 }
 
-nlohmann::json Acts::JsonGeometryConverter::trackingGeometryToJson(
+nlohmann::json Acts::MapJsonConverter::trackingGeometryToJson(
     const Acts::TrackingGeometry& tGeometry) {
   std::vector<std::pair<GeometryIdentifier, Acts::TrackingVolumeAndMaterial>>
       volumeHierarchy;
@@ -250,7 +248,7 @@ nlohmann::json Acts::JsonGeometryConverter::trackingGeometryToJson(
   return hierarchyMap;
 }
 
-void Acts::JsonGeometryConverter::convertToHierarchy(
+void Acts::MapJsonConverter::convertToHierarchy(
     std::vector<std::pair<GeometryIdentifier, Acts::TrackingVolumeAndMaterial>>&
         volumeHierarchy,
     std::vector<std::pair<GeometryIdentifier, Acts::SurfaceAndMaterial>>&

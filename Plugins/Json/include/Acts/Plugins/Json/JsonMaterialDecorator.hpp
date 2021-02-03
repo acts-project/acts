@@ -12,7 +12,7 @@
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
-#include "Acts/Plugins/Json/JsonGeometryConverter.hpp"
+#include "Acts/Plugins/Json/MapJsonConverter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <fstream>
@@ -35,7 +35,7 @@ class JsonMaterialDecorator : public IMaterialDecorator {
   using VolumeMaterialMap =
       std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
 
-  JsonMaterialDecorator(const JsonGeometryConverter::Config& rConfig,
+  JsonMaterialDecorator(const MapJsonConverter::Config& rConfig,
                         const std::string& jFileName,
                         bool clearSurfaceMaterial = true,
                         bool clearVolumeMaterial = true)
@@ -43,7 +43,7 @@ class JsonMaterialDecorator : public IMaterialDecorator {
         m_clearSurfaceMaterial(clearSurfaceMaterial),
         m_clearVolumeMaterial(clearVolumeMaterial) {
     // the material reader
-    Acts::JsonGeometryConverter jmConverter(rConfig);
+    Acts::MapJsonConverter jmConverter(rConfig);
 
     std::ifstream ifj(jFileName.c_str());
     nlohmann::json jin;
@@ -85,7 +85,7 @@ class JsonMaterialDecorator : public IMaterialDecorator {
   }
 
  private:
-  JsonGeometryConverter::Config m_readerConfig;
+  MapJsonConverter::Config m_readerConfig;
   SurfaceMaterialMap m_surfaceMaterialMap;
   VolumeMaterialMap m_volumeMaterialMap;
 

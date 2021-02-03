@@ -12,7 +12,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
-#include "Acts/Plugins/Json/JsonGeometryConverter.hpp"
+#include "Acts/Plugins/Json/MapJsonConverter.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
@@ -42,7 +42,7 @@ class JsonMaterialWriter {
   /// Constructor
   ///
   /// @param cfg The configuration struct of the converter
-  JsonMaterialWriter(const Acts::JsonGeometryConverter::Config& cfg,
+  JsonMaterialWriter(const Acts::MapJsonConverter::Config& cfg,
                      const std::string& fileName);
 
   /// Virtual destructor
@@ -60,7 +60,7 @@ class JsonMaterialWriter {
 
  private:
   /// The config class of the converter
-  Acts::JsonGeometryConverter::Config m_cfg;
+  Acts::MapJsonConverter::Config m_cfg;
 
   /// The file name
   std::string m_fileName;

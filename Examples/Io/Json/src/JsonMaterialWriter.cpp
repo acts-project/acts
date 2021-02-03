@@ -17,7 +17,7 @@
 #include <stdexcept>
 
 ActsExamples::JsonMaterialWriter::JsonMaterialWriter(
-    const Acts::JsonGeometryConverter::Config& cfg, const std::string& fileName)
+    const Acts::MapJsonConverter::Config& cfg, const std::string& fileName)
     : m_cfg(cfg), m_fileName(fileName) {
   // Validate the configuration
   if (m_cfg.name.empty()) {
@@ -30,7 +30,7 @@ ActsExamples::JsonMaterialWriter::~JsonMaterialWriter() {}
 void ActsExamples::JsonMaterialWriter::write(
     const Acts::DetectorMaterialMaps& detMaterial) {
   // Evoke the converter
-  Acts::JsonGeometryConverter jmConverter(m_cfg);
+  Acts::MapJsonConverter jmConverter(m_cfg);
   auto jout = jmConverter.materialMapsToJson(detMaterial);
   // And write the file
   std::ofstream ofj(m_fileName);
@@ -40,7 +40,7 @@ void ActsExamples::JsonMaterialWriter::write(
 void ActsExamples::JsonMaterialWriter::write(
     const Acts::TrackingGeometry& tGeometry) {
   // Evoke the converter
-  Acts::JsonGeometryConverter jmConverter(m_cfg);
+  Acts::MapJsonConverter jmConverter(m_cfg);
   auto jout = jmConverter.trackingGeometryToJson(tGeometry);
   // And write the file
   std::ofstream ofj(m_fileName);

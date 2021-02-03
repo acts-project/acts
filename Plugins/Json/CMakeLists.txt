@@ -1,6 +1,6 @@
 add_library(
   ActsPluginJson SHARED
-  src/JsonGeometryConverter.cpp
+  src/MapJsonConverter.cpp
   src/AlgebraJsonConverter.cpp
   src/MaterialJsonConverter.cpp
   src/SurfaceBoundsJsonConverter.cpp

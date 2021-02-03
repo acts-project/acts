@@ -29,10 +29,10 @@ using TrackingVolumeAndMaterial =
     std::pair<const Acts::TrackingVolume*,
               std::shared_ptr<const Acts::IVolumeMaterial>>;
 
-/// @class JsonGeometryConverter
+/// @class MapJsonConverter
 ///
 /// @brief read the material from Json
-class JsonGeometryConverter {
+class MapJsonConverter {
  public:
   using SurfaceMaterialMap =
       std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
@@ -70,7 +70,7 @@ class JsonGeometryConverter {
     ///
     /// @param lname Name of the writer tool
     /// @param lvl The output logging level
-    Config(const std::string& lname = "JsonGeometryConverter",
+    Config(const std::string& lname = "MapJsonConverter",
            Logging::Level lvl = Logging::INFO)
         : logger(getDefaultLogger(lname, lvl)), name(lname) {}
   };
@@ -78,10 +78,10 @@ class JsonGeometryConverter {
   /// Constructor
   ///
   /// @param cfg configuration struct for the reader
-  JsonGeometryConverter(const Config& cfg);
+  MapJsonConverter(const Config& cfg);
 
   /// Destructor
-  ~JsonGeometryConverter() = default;
+  ~MapJsonConverter() = default;
 
   /// Convert a json material map to a DetectorMaterialMaps
   ///
