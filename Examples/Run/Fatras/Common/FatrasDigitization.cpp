@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -47,7 +47,7 @@ void setupDigitization(
   auto cfile = vars["digi-config-file"].as<std::string>();
 
   if (not cfile.empty() or vars["digi-smear"].as<bool>()) {
-    // To be handles differently between DigitizationAlgorithm/SmearingAlgorithm
+    // Clusters present only for the DigitizationAlgorithm
     std::string clusters = "";
     std::vector<
         std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
@@ -135,57 +135,59 @@ void setupDigitization(
           Acts::GeometryHierarchyMap<std::vector<Acts::BoundIndices>>(
               bIndexInput);
       measWriterRoot.trackingGeometry = trackingGeometry;
+      sequencer.addWriter(
+          std::make_shared<RootMeasurementWriter>(measWriterRoot, logLevel));
+    }
+    // Write digitization out as CSV files
+    if (vars["output-csv"].template as<bool>()) {
+      CsvMeasurementWriter::Config measWriterCsv;
+      measWriterCsv.inputMeasurements = kFatrasCollectionMeasurements;
+      measWriterCsv.inputClusters = clusters;
+      measWriterCsv.inputSimHits = kFatrasCollectionHits;
+      measWriterCsv.inputMeasurementSimHitsMap = kFatrasMapMeasurementSimHits;
+      measWriterCsv.trackingGeometry = trackingGeometry;
+      sequencer.addWriter(
+          std::make_shared<CsvMeasurementWriter>(measWriterCsv, logLevel));
+    }
 
-      // Write digitization out as CSV files
-      if (vars["output-csv"].template as<bool>()) {
-        CsvMeasurementWriter::Config measWriterCsv;
-        measWriterCsv.inputMeasurements = kFatrasCollectionMeasurements;
-        measWriterCsv.inputClusters = clusters;
-        measWriterCsv.inputSimHits = kFatrasCollectionHits;
-        measWriterCsv.inputMeasurementSimHitsMap = kFatrasMapMeasurementSimHits;
-        measWriterCsv.trackingGeometry = trackingGeometry;
-        sequencer.addWriter(
-            std::make_shared<CsvMeasurementWriter>(measWriterCsv, logLevel));
-      }
+  } else if (vars["digi-geometric-3d"].as<bool>()) {
+    // Configure the digitizer
+    PlanarSteppingAlgorithm::Config digi;
+    digi.inputSimHits = "hits";
+    digi.outputClusters = "clusters";
+    digi.outputMeasurements = "measurements";
+    digi.outputSourceLinks = "sourcelinks";
+    digi.outputMeasurementParticlesMap = "measurement_particles_map";
+    digi.outputMeasurementSimHitsMap = "measurement_simhits_map";
+    digi.planarModuleStepper = std::make_shared<Acts::PlanarModuleStepper>(
+        Acts::getDefaultLogger("PlanarModuleStepper", logLevel));
+    digi.randomNumbers = randomNumbers;
+    digi.trackingGeometry = trackingGeometry;
+    sequencer.addAlgorithm(
+        std::make_shared<PlanarSteppingAlgorithm>(digi, logLevel));
 
-    } else if (vars["digi-geometric-3d"].as<bool>()) {
-      // Configure the digitizer
-      PlanarSteppingAlgorithm::Config digi;
-      digi.inputSimHits = "hits";
-      digi.outputClusters = "clusters";
-      digi.outputMeasurements = "measurements";
-      digi.outputSourceLinks = "sourcelinks";
-      digi.outputMeasurementParticlesMap = "measurement_particles_map";
-      digi.outputMeasurementSimHitsMap = "measurement_simhits_map";
-      digi.planarModuleStepper = std::make_shared<Acts::PlanarModuleStepper>(
-          Acts::getDefaultLogger("PlanarModuleStepper", logLevel));
-      digi.randomNumbers = randomNumbers;
-      digi.trackingGeometry = trackingGeometry;
-      sequencer.addAlgorithm(
-          std::make_shared<PlanarSteppingAlgorithm>(digi, logLevel));
+    // Write digitisation output as Csv files
+    if (vars["output-csv"].template as<bool>()) {
+      // clusters as root
+      CsvPlanarClusterWriter::Config clusterWriterCsv;
+      clusterWriterCsv.inputClusters = digi.outputClusters;
+      clusterWriterCsv.inputSimHits = digi.inputSimHits;
+      clusterWriterCsv.outputDir = outputDir;
+      clusterWriterCsv.trackingGeometry = trackingGeometry;
+      sequencer.addWriter(
+          std::make_shared<CsvPlanarClusterWriter>(clusterWriterCsv, logLevel));
+    }
 
-      // Write digitisation output as Csv files
-      if (vars["output-csv"].template as<bool>()) {
-        // clusters as root
-        CsvPlanarClusterWriter::Config clusterWriterCsv;
-        clusterWriterCsv.inputClusters = digi.outputClusters;
-        clusterWriterCsv.inputSimHits = digi.inputSimHits;
-        clusterWriterCsv.outputDir = outputDir;
-        clusterWriterCsv.trackingGeometry = trackingGeometry;
-        sequencer.addWriter(std::make_shared<CsvPlanarClusterWriter>(
-            clusterWriterCsv, logLevel));
-      }
-
-      // Write digitization output as ROOT files
-      if (vars["output-root"].template as<bool>()) {
-        // clusters as root
-        RootPlanarClusterWriter::Config clusterWriterRoot;
-        clusterWriterRoot.inputClusters = digi.outputClusters;
-        clusterWriterRoot.inputSimHits = digi.inputSimHits;
-        clusterWriterRoot.filePath =
-            joinPaths(outputDir, digi.outputClusters + ".root");
-        sequencer.addWriter(std::make_shared<RootPlanarClusterWriter>(
-            clusterWriterRoot, logLevel));
-      }
+    // Write digitization output as ROOT files
+    if (vars["output-root"].template as<bool>()) {
+      // clusters as root
+      RootPlanarClusterWriter::Config clusterWriterRoot;
+      clusterWriterRoot.inputClusters = digi.outputClusters;
+      clusterWriterRoot.inputSimHits = digi.inputSimHits;
+      clusterWriterRoot.filePath =
+          joinPaths(outputDir, digi.outputClusters + ".root");
+      sequencer.addWriter(std::make_shared<RootPlanarClusterWriter>(
+          clusterWriterRoot, logLevel));
     }
   }
+}
