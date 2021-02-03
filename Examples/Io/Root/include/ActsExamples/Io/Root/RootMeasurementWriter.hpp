@@ -86,11 +86,14 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
     /// Reconstruction information
     float recBound[Acts::eBoundSize];
 
-    // Cluster information
+    /// Cluster information comprised of
+    /// nch :  number of channels
+    /// cSize : cluster size in loc0 and loc1
+    /// chId : channel identification
+    /// chValue: value/activation of the channel
     int nch = 0;
     int cSize[2];
-    std::vector<int>* chLoc0 = nullptr;
-    std::vector<int>* chLoc1 = nullptr;
+    std::array<std::vector<int>*, 2> chId = {nullptr, nullptr};
     std::vector<float>* chValue = nullptr;
 
     /// Setup helper to create the tree and
@@ -133,8 +136,8 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
 
     /// Non-trivial destructor for memory cleanup
     ~DigitizationTree() {
-      delete chLoc0;
-      delete chLoc1;
+      delete chId[0];
+      delete chId[1];
       delete chValue;
     }
 
@@ -145,20 +148,22 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
       tree->Branch(std::string("rec_" + bNames[i]).c_str(), &recBound[i]);
     }
 
-    /// Setup the cluster related brnach
+    /// Setup the cluster related branch
     ///
-    /// @param i the bound index in question
-    void setupClusterBranch(Acts::BoundIndices i) {
-      chLoc0 = new std::vector<int>;
-      chLoc1 = new std::vector<int>;
+    /// @param bIndices the bound indices to be written
+    void setupClusterBranch(const std::vector<Acts::BoundIndices>& bIndices) {
       chValue = new std::vector<float>;
-
       tree->Branch("clus_size", &nch);
-      tree->Branch("channel_loc0", &chLoc0);
-      tree->Branch("channel_loc1", &chLoc1);
       tree->Branch("channel_value", &chValue);
-      if (static_cast<unsigned int>(i) < 2) {
-        tree->Branch(std::string("clus_size_" + bNames[i]).c_str(), &cSize[i]);
+      // Both are allocated, but only relevant ones are set
+      chId[0] = new std::vector<int>;
+      chId[1] = new std::vector<int>;
+      for (const auto& ib : bIndices) {
+        if (static_cast<unsigned int>(ib) < 2) {
+          tree->Branch(std::string("channel_" + bNames[ib]).c_str(), &chId[ib]);
+          tree->Branch(std::string("clus_size_" + bNames[ib]).c_str(),
+                       &cSize[ib]);
+        }
       }
     }
 
@@ -214,8 +219,8 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
       cSize[0] = static_cast<int>(c.sizeLoc0);
       cSize[1] = static_cast<int>(c.sizeLoc1);
       for (auto ch : c.channels) {
-        chLoc0->push_back(static_cast<int>(ch.bin[0]));
-        chLoc1->push_back(static_cast<int>(ch.bin[1]));
+        chId[0]->push_back(static_cast<int>(ch.bin[0]));
+        chId[1]->push_back(static_cast<int>(ch.bin[1]));
         chValue->push_back(static_cast<float>(ch.activation));
       }
     }

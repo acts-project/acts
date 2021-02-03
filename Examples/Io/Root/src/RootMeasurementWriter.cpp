@@ -63,9 +63,9 @@ ActsExamples::RootMeasurementWriter::RootMeasurementWriter(
       auto dTree = std::make_unique<DigitizationTree>(geoID);
       for (const auto& bIndex : bIndices) {
         dTree->setupBoundRecBranch(bIndex);
-        if (not m_cfg.inputClusters.empty()) {
-          dTree->setupClusterBranch(bIndex);
-        }
+      }
+      if (not m_cfg.inputClusters.empty()) {
+        dTree->setupClusterBranch(bIndices);
       }
       dTrees.push_back({geoID, std::move(dTree)});
     }
@@ -138,10 +138,14 @@ ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::writeT(
             dTree->fillCluster(c);
           }
           dTree->tree->Fill();
-          if (dTree->chLoc0 != nullptr) {
-            dTree->chLoc0->clear();
-            dTree->chLoc1->clear();
+          if (dTree->chValue != nullptr) {
             dTree->chValue->clear();
+          }
+          if (dTree->chId[0] != nullptr) {
+            dTree->chId[0]->clear();
+          }
+          if (dTree->chId[1] != nullptr) {
+            dTree->chId[1]->clear();
           }
         },
         meas);

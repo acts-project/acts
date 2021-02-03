@@ -289,6 +289,7 @@ ActsExamples::DigitizationAlgorithm::localParameters(
       b0max = std::max(b0max, b0);
       b1min = std::min(b1min, b1);
       b1max = std::max(b1max, b1);
+      // Create a copy of the channel, as activation may change
       auto chdig = ch;
       chdig.bin = ch.bin;
       chdig.activation = charge;
