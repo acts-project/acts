@@ -12,6 +12,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
@@ -44,6 +45,8 @@ class DigitizationAlgorithm final : public BareAlgorithm {
     std::string outputSourceLinks;
     /// Output measurements collection.
     std::string outputMeasurements;
+    /// Output cluster collection.
+    std::string outputClusters;
     /// Output collection to map measured hits to contributing particles.
     std::string outputMeasurementParticlesMap;
     /// Output collection to map measured hits to simulated hits.
@@ -74,7 +77,8 @@ class DigitizationAlgorithm final : public BareAlgorithm {
     std::vector<Acts::BoundIndices> indices = {};
     std::vector<Acts::ActsScalar> values = {};
     std::vector<Acts::ActsScalar> variances = {};
-    std::vector<Acts::ActsScalar> trueValues = {};
+
+    Cluster cluster;
   };
 
   /// Helper method for the geometric channelizing part
@@ -172,7 +176,7 @@ class DigitizationAlgorithm final : public BareAlgorithm {
     // Copy the geometric configuration
     impl.geometric = cfg.geometricDigiConfig;
     // Prepare the smearing configuration
-    for (size_t i = 0; i < kSmearDIM; ++i) {
+    for (int i = 0; i < static_cast<int>(kSmearDIM); ++i) {
       impl.smearing.indices[i] = cfg.smearingDigiConfig.at(i).index;
       impl.smearing.smearFunctions[i] =
           cfg.smearingDigiConfig.at(i).smearFunction;
