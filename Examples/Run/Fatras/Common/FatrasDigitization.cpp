@@ -135,9 +135,6 @@ void setupDigitization(
           Acts::GeometryHierarchyMap<std::vector<Acts::BoundIndices>>(
               bIndexInput);
       measWriterRoot.trackingGeometry = trackingGeometry;
-      sequencer.addWriter(
-          std::make_shared<RootMeasurementWriter>(measWriterRoot, logLevel));
-    }
 
     // Write digitization out as CSV files
     if (vars["output-csv"].template as<bool>()) {
@@ -150,7 +147,7 @@ void setupDigitization(
       sequencer.addWriter(
           std::make_shared<CsvMeasurementWriter>(measWriterCsv, logLevel));
     }
-
+      
   } else if (vars["digi-geometric-3d"].as<bool>()) {
     // Configure the digitizer
     PlanarSteppingAlgorithm::Config digi;
