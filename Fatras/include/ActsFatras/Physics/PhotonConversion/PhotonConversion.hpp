@@ -10,10 +10,10 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 #include "ActsFatras/Utilities/ParticleData.hpp"
-#include "Acts/Utilities/UnitVectors.hpp"
 
 #include <limits>
 #include <random>
@@ -79,7 +79,8 @@ class PhotonConversion {
   ///
   /// @return The energy of the child particle
   template <typename generator_t>
-  Scalar generateFirstChildEnergyFraction(generator_t& generator, Scalar gammaMom) const;
+  Scalar generateFirstChildEnergyFraction(generator_t& generator,
+                                          Scalar gammaMom) const;
 
   /// Generate the direction of the first child particle.
   ///
@@ -97,7 +98,7 @@ class PhotonConversion {
   /// G4PairProductionRelModel
   Scalar screenFunction1(Scalar delta) const;
   Scalar screenFunction2(Scalar delta) const;
-  
+
   const Scalar electronMass = findMass(Acts::eElectron);
 };
 
@@ -148,7 +149,7 @@ PhotonConversion::generatePathLimits(generator_t& generator,
 
   std::uniform_real_distribution<Scalar> uniformDistribution{0., 1.};
   // This is a transformation of eq. 3.75
-  return std::make_pair(-9./7. *
+  return std::make_pair(-9. / 7. *
                             log(conversionProbScaleFactor *
                                 (1 - uniformDistribution(generator))) /
                             (1. - xi),
@@ -156,8 +157,8 @@ PhotonConversion::generatePathLimits(generator_t& generator,
 }
 
 template <typename generator_t>
-Particle::Scalar PhotonConversion::generateFirstChildEnergyFraction(generator_t& generator,
-                                                       Scalar gammaMom) const {
+Particle::Scalar PhotonConversion::generateFirstChildEnergyFraction(
+    generator_t& generator, Scalar gammaMom) const {
   /// This method is based upon the Geant4 class G4PairProductionRelModel
 
   /// @note This method is from the Geant4 class G4Element
@@ -174,11 +175,11 @@ Particle::Scalar PhotonConversion::generateFirstChildEnergyFraction(generator_t&
   constexpr Scalar coulombFactor =
       (k1 * az4 + k2 + 1. / (1. + az2)) * az2 - (k3 * az4 + k4) * az4;
 
-  constexpr Scalar logZ13 = log(m_Z) * 1./3.;
+  constexpr Scalar logZ13 = log(m_Z) * 1. / 3.;
   constexpr Scalar FZ = 8. * (logZ13 + coulombFactor);
   const Scalar deltaMax = exp((42.038 - FZ) * 0.1206) - 0.958;
 
-  constexpr Scalar deltaPreFactor = 136. / pow(m_Z, 1./3.);
+  constexpr Scalar deltaPreFactor = 136. / pow(m_Z, 1. / 3.);
   const Scalar eps0 = electronMass / gammaMom;
   const Scalar deltaFactor = deltaPreFactor * eps0;
   const Scalar deltaMin = 4. * deltaFactor;
@@ -200,7 +201,7 @@ Particle::Scalar PhotonConversion::generateFirstChildEnergyFraction(generator_t&
   std::uniform_real_distribution<Scalar> rndmEngine;
   do {
     if (NormF1 > rndmEngine(generator) * (NormF1 + NormF2)) {
-      eps = 0.5 - epsRange * pow(rndmEngine(generator), 1./3.);
+      eps = 0.5 - epsRange * pow(rndmEngine(generator), 1. / 3.);
       const Scalar delta = deltaFactor / (eps * (1. - eps));
       greject = (screenFunction1(delta) - FZ) / F10;
     } else {
@@ -229,21 +230,21 @@ Particle::Vector3 PhotonConversion::childDirection(
 
   theta *= (uniformDistribution(generator) < 0.25)
                ? u
-               : u * 1./3.;  // 9./(9.+27) = 0.25
-  
-      // draw the random orientation angle
-    const auto psi =
-        std::uniform_real_distribution<double>(-M_PI, M_PI)(generator);
+               : u * 1. / 3.;  // 9./(9.+27) = 0.25
 
-    Acts::Vector3 direction = particle.unitDirection();
-    // construct the combined rotation to the scattered direction
-    Acts::RotationMatrix3 rotation(
-        // rotation of the scattering deflector axis relative to the reference
-        Acts::AngleAxis3(psi, direction) *
-        // rotation by the scattering angle around the deflector axis
-        Acts::AngleAxis3(theta, Acts::makeCurvilinearUnitU(direction)));
-    direction.applyOnTheLeft(rotation);
-    return direction;
+  // draw the random orientation angle
+  const auto psi =
+      std::uniform_real_distribution<double>(-M_PI, M_PI)(generator);
+
+  Acts::Vector3 direction = particle.unitDirection();
+  // construct the combined rotation to the scattered direction
+  Acts::RotationMatrix3 rotation(
+      // rotation of the scattering deflector axis relative to the reference
+      Acts::AngleAxis3(psi, direction) *
+      // rotation by the scattering angle around the deflector axis
+      Acts::AngleAxis3(theta, Acts::makeCurvilinearUnitU(direction)));
+  direction.applyOnTheLeft(rotation);
+  return direction;
 }
 
 std::array<Particle, 2> PhotonConversion::generateChildren(
@@ -263,19 +264,21 @@ std::array<Particle, 2> PhotonConversion::generateChildren(
   // Build the particles and store them
   std::array<Particle, 2> children;
 
-    Particle child1 = Particle(photon.particleId().makeDescendant(0), static_cast<Acts::PdgParticle>(Acts::eElectron))
-                         .setPosition4(photon.fourPosition())
-                         .setDirection(childDirection)
-                         .setAbsoluteMomentum(momentum1)
-                         .setProcess(ProcessType::ePhotonConversion);
-    children[0] = std::move(child1);
+  Particle child1 = Particle(photon.particleId().makeDescendant(0),
+                             static_cast<Acts::PdgParticle>(Acts::eElectron))
+                        .setPosition4(photon.fourPosition())
+                        .setDirection(childDirection)
+                        .setAbsoluteMomentum(momentum1)
+                        .setProcess(ProcessType::ePhotonConversion);
+  children[0] = std::move(child1);
 
-    Particle child2 = Particle(photon.particleId().makeDescendant(1), static_cast<Acts::PdgParticle>(-Acts::eElectron))
-                         .setPosition4(photon.fourPosition())
-                         .setDirection(childDirection)
-                         .setAbsoluteMomentum(momentum2)
-                         .setProcess(ProcessType::ePhotonConversion);
-    children[1] = std::move(child2);
+  Particle child2 = Particle(photon.particleId().makeDescendant(1),
+                             static_cast<Acts::PdgParticle>(-Acts::eElectron))
+                        .setPosition4(photon.fourPosition())
+                        .setDirection(childDirection)
+                        .setAbsoluteMomentum(momentum2)
+                        .setProcess(ProcessType::ePhotonConversion);
+  children[1] = std::move(child2);
 
   return children;
 }
@@ -296,8 +299,7 @@ bool PhotonConversion::run(generator_t& generator, Particle& particle,
   const Scalar childEnergy = p * generateFirstChildEnergyFraction(generator, p);
 
   // Now get the deflection
-  const Particle::Vector3 childDir =
-      childDirection(generator, particle);
+  const Particle::Vector3 childDir = childDirection(generator, particle);
 
   // Produce the final state
   const std::array<Particle, 2> finalState =

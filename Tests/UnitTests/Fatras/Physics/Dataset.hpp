@@ -41,9 +41,8 @@ const auto rngSeed =
 // combined parameter set
 const auto parameters =
     particlePdg * momentumPhi * momentumLambda * momentumAbs ^ rngSeed;
-    
-const auto parametersPhotonConversion =
-	momentumPhi * momentumLambda ^ rngSeed;
+
+const auto parametersPhotonConversion = momentumPhi * momentumLambda ^ rngSeed;
 
 // utility function to build a particle from the dataset parameters
 inline ActsFatras::Particle makeParticle(Acts::PdgParticle pdg, double phi,
