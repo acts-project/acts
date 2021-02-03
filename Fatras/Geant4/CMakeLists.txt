@@ -1,6 +1,6 @@
 add_library(
   ActsFatrasGeant4 SHARED
-  src/Decay.cpp
+  src/Geant4Decay.cpp
   src/PDGtoG4Converter.cpp
   src/G4DetectorConstruction.cpp)
 target_compile_definitions(

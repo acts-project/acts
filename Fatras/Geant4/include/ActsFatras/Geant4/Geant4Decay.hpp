@@ -23,18 +23,15 @@ class G4RunManager;
 
 namespace ActsFatras {
 
-/// @brief This class handles the decay of a particle using the Geant4 classes
-/// and provides the decay products. Additionally this class assigns a lifetime
-/// to a particle. This lifetime is used to trigger the decay.
-class Decay {
+/// Handle particle decays using the Geant4 decay models.
+class Geant4Decay {
  public:
   using Scalar = Particle::Scalar;
 
   /// Constructor
-  Decay();
+  Geant4Decay();
 
-  /// @brief This method assigns a randomised lifetime to a particle based on
-  /// its type.
+  /// Generate the particle life time.
   ///
   /// @tparam generator_t Type of the random number generator
   /// @param [in, out] generator The random number generator
@@ -45,8 +42,7 @@ class Decay {
   Scalar generateProperTimeLimit(generator_t& generator,
                                  const Particle& particle) const;
 
-  /// @brief This function tests if a decay should occur, triggers it whenever
-  /// necessary and evaluates the decay products.
+  /// Decay the particle and create the decay products.
   ///
   /// @tparam generator_t Type of the random number generator
   /// @param [in, out] particle The particle that may decay
@@ -55,6 +51,7 @@ class Decay {
   template <typename generator_t>
   std::vector<Particle> run(generator_t&, Particle& particle) const;
 
+ private:
   /// @brief This function evaluates the decay products of a given particle
   ///
   /// @param [in] parent The decaying particle
@@ -62,7 +59,6 @@ class Decay {
   /// @return Vector containing the decay products
   std::vector<Particle> decayParticle(const Particle& parent) const;
 
- private:
   /// @brief Convenience method assuring the existance of a G4RunManager
   ///
   /// @return Pointer to the run manager
@@ -75,12 +71,12 @@ class Decay {
 };
 
 template <typename generator_t>
-Particle::Scalar Decay::generateProperTimeLimit(
+Particle::Scalar Geant4Decay::generateProperTimeLimit(
     generator_t& generator, const Particle& particle) const {
   // Get the particle properties
   const int pdgCode = particle.pdg();
   // Keep muons stable
-  if (std::abs(pdgCode) == 13)
+  if (makeAbsolutePdgParticle(pdgCode) == Acts::PdgParticle::eMuon)
     return std::numeric_limits<Scalar>::infinity();
 
   // Get the Geant4 particle
@@ -101,7 +97,7 @@ Particle::Scalar Decay::generateProperTimeLimit(
 }
 
 template <typename generator_t>
-std::vector<Particle> Decay::run(generator_t&, Particle& particle) const {
+std::vector<Particle> Geant4Decay::run(generator_t&, Particle& particle) const {
   // Fast exit if particle is not alive
   if (!particle)
     return {};

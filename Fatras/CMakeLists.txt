@@ -31,4 +31,4 @@ install(
   DIRECTORY include/ActsFatras
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
   
-add_subdirectory(Plugins)
+add_subdirectory_if(Geant4 ACTS_BUILD_FATRAS_GEANT4)
