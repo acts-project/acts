@@ -77,6 +77,8 @@ class DigitizationAlgorithm final : public BareAlgorithm {
     std::vector<Acts::BoundIndices> indices = {};
     std::vector<Acts::ActsScalar> values = {};
     std::vector<Acts::ActsScalar> variances = {};
+
+    Cluster cluster;
   };
 
   /// Helper method for the geometric channelizing part
@@ -174,7 +176,7 @@ class DigitizationAlgorithm final : public BareAlgorithm {
     // Copy the geometric configuration
     impl.geometric = cfg.geometricDigiConfig;
     // Prepare the smearing configuration
-    for (size_t i = 0; i < kSmearDIM; ++i) {
+    for (int i = 0; i < static_cast<int>(kSmearDIM); ++i) {
       impl.smearing.indices[i] = cfg.smearingDigiConfig.at(i).index;
       impl.smearing.smearFunctions[i] =
           cfg.smearingDigiConfig.at(i).smearFunction;

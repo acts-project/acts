@@ -165,7 +165,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
 
             // Geometric part - 0, 1, 2 local parameters are possible
             if (not digitizer.geometric.indices.empty()) {
-              ACTS_VERBOSE("Configured to geometrically digitize "
+              ACTS_VERBOSE("Configured to geometric digitize "
                            << digitizer.geometric.indices.size()
                            << " parameters.");
               auto channels = channelizing(digitizer.geometric, simHit,
