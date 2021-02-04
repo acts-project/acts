@@ -67,7 +67,7 @@ struct Interactor {
   /// Initial particle state.
   Particle initialParticle;
 
-  /// Deviation factor from generated proper time limit
+  /// Relative tolerance of generated proper time limit
   Particle::Scalar properTimeTolerance = 1e-2;
 
   /// Simulate the interaction with a single surface.
