@@ -83,10 +83,10 @@ struct Interactor {
                   result_type &result) const {
     assert(generator and "The generator pointer must be valid");
 
-	// actors are called once more after the propagation terminated
-if (not result.isAlive) {
-  return;
-}
+    // actors are called once more after the propagation terminated
+    if (not result.isAlive) {
+      return;
+    }
 
     // update the particle state first. this also computes the proper time which
     // needs the particle state from the previous step for reference. that means
@@ -103,10 +103,8 @@ if (not result.isAlive) {
     }
 
     // decay check. needs to happen at every step, not just on surfaces.
-    // TODO limit the stepsize when close to the lifetime limit to avoid
-    //   overstepping and decaying the particle systematically too late
     if (result.properTimeLimit - result.particle.properTime() <
-         result.properTimeLimit * properTimeTolerance) {
+        result.properTimeLimit * properTimeTolerance) {
       auto descendants = decay.run(generator, result.particle);
       for (auto &&descendant : descendants) {
         result.generatedParticles.emplace_back(std::move(descendant));
@@ -123,7 +121,8 @@ if (not result.isAlive) {
       // ds = beta * dt = (p/E) dt (E/m) = (p/m) proper-time
       const auto properTimeDiff =
           result.properTimeLimit - result.particle.properTime();
-      // Evaluate the step size for massive particle, assuming massless particles to be stable
+      // Evaluate the step size for massive particle, assuming massless
+      // particles to be stable
       const auto stepSize = properTimeDiff *
                             result.particle.absoluteMomentum() /
                             result.particle.mass();
