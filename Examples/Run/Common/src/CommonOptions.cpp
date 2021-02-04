@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -83,8 +83,6 @@ void ActsExamples::Options::addMaterialOptions(
       "Write material information of volumes.")(
       "mat-output-dense-volumes", value<bool>()->default_value(false),
       "Write material information of dense volumes.")(
-      "mat-output-data", value<bool>()->default_value(true),
-      "Output the data field(s).")(
       "mat-output-allmaterial", value<bool>()->default_value(false),
       "Add protoMaterial to all surfaces and volume for the mapping.");
 }
