@@ -175,11 +175,11 @@ Particle::Scalar PhotonConversion::generateFirstChildEnergyFraction(
   constexpr Scalar coulombFactor =
       (k1 * az4 + k2 + 1. / (1. + az2)) * az2 - (k3 * az4 + k4) * az4;
 
-  constexpr Scalar logZ13 = std::log(m_Z) * 1. / 3.;
-  constexpr Scalar FZ = 8. * (logZ13 + coulombFactor);
+  const Scalar logZ13 = std::log(m_Z) * 1. / 3.;
+  const Scalar FZ = 8. * (logZ13 + coulombFactor);
   const Scalar deltaMax = exp((42.038 - FZ) * 0.1206) - 0.958;
 
-  constexpr Scalar deltaPreFactor = 136. / std::pow(m_Z, 1. / 3.);
+  const Scalar deltaPreFactor = 136. / std::pow(m_Z, 1. / 3.);
   const Scalar eps0 = electronMass / gammaMom;
   const Scalar deltaFactor = deltaPreFactor * eps0;
   const Scalar deltaMin = 4. * deltaFactor;
@@ -284,10 +284,10 @@ std::array<Particle, 2> PhotonConversion::generateChildren(
 }
 
 template <typename generator_t>
-bool PhotonConversion::run(generator_t& generator, Particle& particle,
+bool PhotonConversion::run(generator_t& generator, const Particle& particle,
                            std::vector<Particle>& generated) const {
-  // Fast exit if particle is not alive
-  if (!particle || (particle.pdg() != Acts::PdgParticle::eGamma))
+  // Fast exit if particle is not a photon
+  if (particle.pdg() != Acts::PdgParticle::eGamma)
     return false;
 
   // Fast exit if momentum is too low
@@ -305,9 +305,6 @@ bool PhotonConversion::run(generator_t& generator, Particle& particle,
   const std::array<Particle, 2> finalState =
       generateChildren(particle, childEnergy, childDir);
   generated.insert(generated.end(), finalState.begin(), finalState.end());
-
-  // Kill the photon
-  particle.setAbsoluteMomentum(0.);
 
   return true;
 }
