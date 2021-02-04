@@ -2,7 +2,7 @@ add_library(
   ActsFatrasGeant4 SHARED
   src/Geant4Decay.cpp
   src/PDGtoG4Converter.cpp
-  src/G4DetectorConstruction.cpp)
+  src/DummyDetectorConstruction.cpp)
 target_compile_definitions(
   ActsFatrasGeant4
   PUBLIC ${Geant4_DEFINITIONS})

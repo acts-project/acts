@@ -9,11 +9,18 @@
 #pragma once
 
 #include "G4VUserDetectorConstruction.hh"
+#include "G4RunManager.hh"
 
 class G4LogicalVolume;
 class G4VPhysicalVolume;
 
 namespace ActsFatras {
+
+/// @brief Convenience method assuring the existance of a G4RunManager
+///
+/// @return Pointer to the run manager
+G4RunManager* makeDummyRunManager();
+
 /// Construct a dummy Geant4 detector.
 class DummyDetectorConstruction : public G4VUserDetectorConstruction {
  public:

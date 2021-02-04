@@ -6,13 +6,36 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsFatras/Plugins/Geant4/DummyDetectorConstruction.hpp"
+#include "ActsFatras/Geant4/DummyDetectorConstruction.hpp"
 
 #include "G4Box.hh"
 #include "G4LogicalVolume.hh"
 #include "G4Material.hh"
 #include "G4PVPlacement.hh"
 #include "G4ThreeVector.hh"
+#include "QGSP_BERT.hh"
+
+G4RunManager*
+ActsFatras::makeDummyRunManager() {
+  // Test if there's already a G4RunManager
+  if (G4RunManager::GetRunManager() == nullptr) {
+    G4RunManager* runManager = new G4RunManager;
+
+    // Initialise physics
+    G4VUserPhysicsList* thePL = new QGSP_BERT;
+    runManager->SetUserInitialization(thePL);
+
+    // Build a dummy detector
+    runManager->SetUserInitialization(new DummyDetectorConstruction());
+
+    // Initialise the G4RunManager itself
+    runManager->Initialize();
+    return runManager;
+  } else {
+    // Return the existing G4RunManager
+    return G4RunManager::GetRunManager();
+  }
+}
 
 ActsFatras::DummyDetectorConstruction::~DummyDetectorConstruction() {
   delete (m_worldLog);

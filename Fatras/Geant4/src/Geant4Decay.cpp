@@ -6,18 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsFatras/Plugins/Geant4/Geant4Decay.hpp"
+#include "ActsFatras/Geant4/Geant4Decay.hpp"
 
 #include "Acts/Definitions/Common.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
-#include "ActsFatras/Plugins/Geant4/G4DetectorConstruction.hpp"
+#include "ActsFatras/Geant4/DummyDetectorConstruction.hpp"
 
 #include "G4DecayProducts.hh"
 #include "G4DecayTable.hh"
 #include "G4RunManager.hh"
 #include "QGSP_BERT.hh"
 
-ActsFatras::Geant4Decay::Geant4Decay() : m_g4RunManager(initG4RunManager()) {}
+ActsFatras::Geant4Decay::Geant4Decay() : m_g4RunManager(makeDummyRunManager()) {}
 
 std::vector<ActsFatras::Particle> ActsFatras::Geant4Decay::decayParticle(
     const ActsFatras::Particle& parent) const {
@@ -74,25 +74,4 @@ std::vector<ActsFatras::Particle> ActsFatras::Geant4Decay::decayParticle(
     children.push_back(std::move(childParticle));
   }
   return children;
-}
-
-G4RunManager* ActsFatras::Geant4Decay::initG4RunManager() const {
-  // Test if there's already a G4RunManager
-  if (G4RunManager::GetRunManager() == nullptr) {
-    G4RunManager* runManager = new G4RunManager;
-
-    // Initialise physics
-    G4VUserPhysicsList* thePL = new QGSP_BERT;
-    runManager->SetUserInitialization(thePL);
-
-    // Build a dummy detector
-    runManager->SetUserInitialization(new G4DetectorConstruction());
-
-    // Initialise the G4RunManager itself
-    runManager->Initialize();
-    return runManager;
-  } else {
-    // Return the existing G4RunManager
-    return G4RunManager::GetRunManager();
-  }
 }

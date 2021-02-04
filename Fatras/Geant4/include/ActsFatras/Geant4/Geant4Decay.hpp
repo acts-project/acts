@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
-#include "ActsFatras/Plugins/Geant4/PDGtoG4Converter.hpp"
+#include "ActsFatras/Geant4/PDGtoG4Converter.hpp"
 
 #include <cmath>
 #include <random>
@@ -58,11 +58,6 @@ class Geant4Decay {
   ///
   /// @return Vector containing the decay products
   std::vector<Particle> decayParticle(const Particle& parent) const;
-
-  /// @brief Convenience method assuring the existance of a G4RunManager
-  ///
-  /// @return Pointer to the run manager
-  G4RunManager* initG4RunManager() const;
 
   mutable G4RunManager* m_g4RunManager;  ///< for dummy G4 initialization
 

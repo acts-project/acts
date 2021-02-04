@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsFatras/Plugins/Geant4/PDGtoG4Converter.hpp"
+#include "ActsFatras/Geant4/PDGtoG4Converter.hpp"
 
 #include "G4ParticleDefinition.hh"
 #include "G4ParticleTypes.hh"
@@ -134,5 +134,5 @@ void ActsFatras::PDGtoG4Converter::addParticle(G4ParticleDefinition* pDef) {
   if (pDef == nullptr)
     return;
 
-  m_pdgG4ParticleMap[pDef->GetPDGEncoding()] = pDef;
+  m_pdgG4ParticleMap[static_cast<Acts::PdgParticle>(pDef->GetPDGEncoding())] = pDef;
 }
