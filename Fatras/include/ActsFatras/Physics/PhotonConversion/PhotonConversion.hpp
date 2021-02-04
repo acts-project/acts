@@ -151,7 +151,7 @@ PhotonConversion::generatePathLimits(generator_t& generator,
   // This is a transformation of eq. 3.75
   return std::make_pair(-9. / 7. *
                             std::log(conversionProbScaleFactor *
-                                (1 - uniformDistribution(generator))) /
+                                     (1 - uniformDistribution(generator))) /
                             (1. - xi),
                         std::numeric_limits<Scalar>::infinity());
 }
@@ -224,9 +224,9 @@ Particle::Vector3 PhotonConversion::childDirection(
   Scalar theta = electronMass / particle.energy();
 
   std::uniform_real_distribution<Scalar> uniformDistribution{0., 1.};
-  const Scalar u =
-      -std::log(uniformDistribution(generator) * uniformDistribution(generator)) *
-      1.6;
+  const Scalar u = -std::log(uniformDistribution(generator) *
+                             uniformDistribution(generator)) *
+                   1.6;
 
   theta *= (uniformDistribution(generator) < 0.25)
                ? u
