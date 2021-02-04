@@ -18,7 +18,7 @@ namespace Acts {
 /// mapping
 struct jsonKey {
   /// The name identification
-  std::string namekey = "Name";
+  std::string namekey = "name";
   /// The bin key
   std::string binkey = "binUtility";
   /// The material key
