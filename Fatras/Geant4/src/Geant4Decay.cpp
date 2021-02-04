@@ -14,17 +14,17 @@
 
 #include "G4DecayProducts.hh"
 #include "G4DecayTable.hh"
-#include "G4RunManager.hh"
-#include "QGSP_BERT.hh"
 
-ActsFatras::Geant4Decay::Geant4Decay() : m_g4RunManager(makeDummyRunManager()) {}
+ActsFatras::Geant4Decay::Geant4Decay()
+    : m_g4RunManager(makeDummyRunManager()) {}
 
 std::vector<ActsFatras::Particle> ActsFatras::Geant4Decay::decayParticle(
     const ActsFatras::Particle& parent) const {
   std::vector<Particle> children;
 
   // Find the particle type that will decay
-  G4ParticleDefinition* pDef = m_pdgToG4Conv.getParticleDefinition(parent.pdg());
+  G4ParticleDefinition* pDef =
+      m_pdgToG4Conv.getParticleDefinition(parent.pdg());
   if (!pDef) {
     return children;
   }

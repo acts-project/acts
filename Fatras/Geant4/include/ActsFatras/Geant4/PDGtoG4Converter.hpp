@@ -38,6 +38,7 @@ class PDGtoG4Converter {
   void addParticle(G4ParticleDefinition* pDef);
 
   /// The internal storage consisting of PDG ID and the Geant4 particle
-  std::unordered_map<Acts::PdgParticle, G4ParticleDefinition*> m_pdgG4ParticleMap;
+  std::unordered_map<Acts::PdgParticle, G4ParticleDefinition*>
+      m_pdgG4ParticleMap;
 };
 }  // namespace ActsFatras

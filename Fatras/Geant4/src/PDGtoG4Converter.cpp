@@ -18,8 +18,8 @@ ActsFatras::PDGtoG4Converter::PDGtoG4Converter() : m_pdgG4ParticleMap() {
 
 G4ParticleDefinition* ActsFatras::PDGtoG4Converter::getParticleDefinition(
     Acts::PdgParticle pdgCode) const {
-  std::unordered_map<Acts::PdgParticle, G4ParticleDefinition*>::const_iterator it =
-      m_pdgG4ParticleMap.find(pdgCode);
+  std::unordered_map<Acts::PdgParticle, G4ParticleDefinition*>::const_iterator
+      it = m_pdgG4ParticleMap.find(pdgCode);
 
   // Find the corresponding particle and return it
   if (it != m_pdgG4ParticleMap.end())
@@ -134,5 +134,6 @@ void ActsFatras::PDGtoG4Converter::addParticle(G4ParticleDefinition* pDef) {
   if (pDef == nullptr)
     return;
 
-  m_pdgG4ParticleMap[static_cast<Acts::PdgParticle>(pDef->GetPDGEncoding())] = pDef;
+  m_pdgG4ParticleMap[static_cast<Acts::PdgParticle>(pDef->GetPDGEncoding())] =
+      pDef;
 }

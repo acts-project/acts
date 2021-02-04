@@ -15,8 +15,7 @@
 #include "G4ThreeVector.hh"
 #include "QGSP_BERT.hh"
 
-G4RunManager*
-ActsFatras::makeDummyRunManager() {
+G4RunManager* ActsFatras::makeDummyRunManager() {
   // Test if there's already a G4RunManager
   if (G4RunManager::GetRunManager() == nullptr) {
     G4RunManager* runManager = new G4RunManager;
