@@ -52,7 +52,7 @@ class Geant4Decay {
   std::vector<Particle> run(generator_t&, Particle& particle) const;
 
  private:
-  /// @brief This function evaluates the decay products of a given particle
+  /// This function evaluates the decay products of a given particle
   ///
   /// @param [in] parent The decaying particle
   ///
