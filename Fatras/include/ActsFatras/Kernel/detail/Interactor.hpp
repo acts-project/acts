@@ -67,8 +67,8 @@ struct Interactor {
   /// Initial particle state.
   Particle initialParticle;
 
-  /// Relative tolerance of generated proper time limit
-  Particle::Scalar properTimeTolerance = 1e-2;
+  /// Relative tolerance of the particles proper time limit
+  Particle::Scalar properTimeRelativeTolerance = 1e-3;
 
   /// Simulate the interaction with a single surface.
   ///
@@ -104,7 +104,7 @@ struct Interactor {
 
     // decay check. needs to happen at every step, not just on surfaces.
     if (result.properTimeLimit - result.particle.properTime() <
-        result.properTimeLimit * properTimeTolerance) {
+        result.properTimeLimit * properTimeRelativeTolerance) {
       auto descendants = decay.run(generator, result.particle);
       for (auto &&descendant : descendants) {
         result.generatedParticles.emplace_back(std::move(descendant));
