@@ -32,26 +32,63 @@ namespace ActsFatras {
 /// interaction. Either the initial particle survives (soft) or it gets
 /// destroyed (hard) by this process.
 struct NuclearInteraction {
+	using Scalar = Particle::Scalar;
   /// The storage of the parameterisation
   detail::MultiParticleParametrisation multiParticleParameterisation;
   /// The number of trials to match momenta and inveriant masses
   unsigned int nMatchingTrials = std::numeric_limits<unsigned int>::max();
 
-  /// @brief Main call operator
+  /// This method evaluates the nuclear interaction length L0.
+  ///
+  /// @tparam generator_t The random number generator type
+  /// @param [in, out] generator The random number generator
+  /// @param [in] particle The ingoing particle
+  ///
+  /// @return valid X0 limit and no limit on L0
+  template <typename generator_t>
+  std::pair<Scalar, Scalar> generatePathLimits(generator_t& generator,
+                                               const Particle& particle) const {   
+	    // Fast exit: No paramtrization provided
+    if (multiParticleParameterisation.empty()) {
+      return std::make_pair(std::numeric_limits<Scalar>::infinity(), std::numeric_limits<Scalar>::infinity());
+    }	
+   
+       // Find the parametrisation that corresponds to the particle type
+    for (const auto& particleParametrisation : multiParticleParameterisation) {
+      if (particleParametrisation.first == particle.pdg()) {
+        std::uniform_real_distribution<double> uniformDistribution{0., 1.};
+         
+            // Get the parameters
+        const detail::Parametrisation& singleParticleParametrisation =
+            particleParametrisation.second;
+        const detail::Parameters& parametrisation = findParameters(
+            uniformDistribution(generator), singleParticleParametrisation,
+            particle.absoluteMomentum());
+
+        // Set the L0 limit if not done already
+          const auto& distribution =
+              parametrisation.nuclearInteractionProbability;
+              return std::make_pair(std::numeric_limits<Scalar>::infinity(), sampleContinuousValues(uniformDistribution(generator),
+                                     distribution));
+								 }   }
+	return std::make_pair(std::numeric_limits<Scalar>::infinity(), std::numeric_limits<Scalar>::infinity());
+  }
+           
+  /// This method performs a nuclear interaction.
   ///
   /// @tparam generator_t The random number generator type
   /// @param [in, out] generator The random number generator
   /// @param [in] slab The material
   /// @param [in, out] particle The ingoing particle
   ///
-  /// @return Vector containing the produced secondaries
+  /// @return True if the particle was killed, false otherwise
   template <typename generator_t>
-  std::vector<Particle> operator()(generator_t& generator,
-                                   const Acts::MaterialSlab& /*slab*/,
-                                   Particle& particle) const {
+  bool run(generator_t& generator, Particle& particle,
+           std::vector<Particle>& generated) const {
+			   
     // Fast exit: No paramtrization provided
     if (multiParticleParameterisation.empty()) {
-      return {};
+      return false;
     }
 
     // Find the parametrisation that corresponds to the particle type
@@ -66,19 +103,6 @@ struct NuclearInteraction {
             uniformDistribution(generator), singleParticleParametrisation,
             particle.absoluteMomentum());
 
-        // Set the L0 limit if not done already
-        if (particle.pathLimitL0() ==
-            std::numeric_limits<Particle::Scalar>::max()) {
-          const auto& distribution =
-              parametrisation.nuclearInteractionProbability;
-          particle.setMaterialLimits(
-              particle.pathLimitX0(),
-              sampleContinuousValues(uniformDistribution(generator),
-                                     distribution));
-        }
-
-        // Test whether enough material was passed for a nuclear interaction
-        if (particle.pathInL0() >= particle.pathLimitL0()) {
           std::normal_distribution<double> normalDistribution{0., 1.};
           // Dice the interaction type
           const bool interactSoft =
@@ -119,15 +143,15 @@ struct NuclearInteraction {
           // Kill the particle in a hard process
           if (!interactSoft)
             particle.setAbsoluteMomentum(0);
-
-          return particles;
-        }
+            
+			generated.insert(generated.end(), particles.begin(), particles.end());
+          return !interactSoft;
       } else {
         // Fast exit if no parametrisation for the particle was provided
-        return {};
+        return false;
       }
     }
-    return {};
+    return false;
   }
 
  private:
@@ -466,22 +490,6 @@ std::vector<Particle> NuclearInteraction::convertParametersToParticles(
         .setPosition4(initialParticle.fourPosition())
         .setAbsoluteMomentum(momentum)
         .setDirection(direction);
-
-    // Search for the parametrisation of the particle
-    auto cit = multiParticleParameterisation.begin();
-    while (cit->first != p.pdg() && cit != multiParticleParameterisation.end())
-      cit++;
-
-    if (cit != multiParticleParameterisation.end()) {
-      // Assign a path limit in L0 to the particle
-      const auto& distribution =
-          findParameters(uniformDistribution(generator), cit->second,
-                         p.absoluteMomentum())
-              .nuclearInteractionProbability;
-      p.setMaterialLimits(
-          p.pathLimitX0(),
-          sampleContinuousValues(uniformDistribution(generator), distribution));
-    }
 
     // Store the particle
     if (i == 0 && soft)

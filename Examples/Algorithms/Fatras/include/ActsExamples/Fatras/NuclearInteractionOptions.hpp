@@ -40,14 +40,14 @@ ActsFatras::detail::MultiParticleParametrisation readParametrisations(
 /// @param simulator    the simulation kernel
 template <typename simulator_t>
 void readNuclearInteractionConfig(
-    const Variables& variables, simulator_t& simulator) {
+    const boost::program_options::variables_map& variables, simulator_t& simulator) {
 
   ACTS_LOCAL_LOGGER(
       Acts::getDefaultLogger("NuclearInteractionOptions", Acts::Logging::INFO))
   
   const auto nuclearInteractionParametrisation = variables["fatras-nuclear-interaction-parametrisation"].as<std::string>();
   const auto nSimulatedEvents = variables["fatras-simulated-events-nuclear-interaction-parametrisation"].as<uint32_t>(); 
-   	
+
 	if(nuclearInteractionParametrisation.empty()) {
 		ACTS_WARNING("No parametrisation for the nuclear interaction provided.");
 		return;
@@ -60,15 +60,15 @@ void readNuclearInteractionConfig(
 	} else {
 		ACTS_VERBOSE("Number of simulated events for nuclear interaction parametrisation: " << nSimulatedEvents);
 	}
-	
-	auto& chargedNuclearInteraction = simulator.charged.physics.template get<ActsFatras::detail::ParametrizedNuclearInteraction>();
-	auto& neutralNuclearInteraction = simulator.neutral.physics.template get<ActsFatras::detail::ParametrizedNuclearInteraction>();
-	
+
+	auto& chargedNuclearInteraction = simulator.charged.pointlike.template get<ActsFatras::NuclearInteraction>();
+	auto& neutralNuclearInteraction = simulator.neutral.pointlike.template get<ActsFatras::NuclearInteraction>();
+
 	const auto mpp = readParametrisations(nuclearInteractionParametrisation, nSimulatedEvents);
 	ACTS_VERBOSE("Parametrisations for nuclear interaction from " << mpp.size() << " particles provided");
 	
-	chargedNuclearInteraction.physics.multiParticleParameterisation = mpp;
-	neutralNuclearInteraction.physics.multiParticleParameterisation = mpp;
+	chargedNuclearInteraction.multiParticleParameterisation = mpp;
+	neutralNuclearInteraction.multiParticleParameterisation = mpp;
 }
 
 }  // namespace Options

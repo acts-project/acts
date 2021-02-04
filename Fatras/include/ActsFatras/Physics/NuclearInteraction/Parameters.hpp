@@ -31,9 +31,9 @@ struct Parameters {
     ParametersWithFixedMultiplicity() = default;
 
     ParametersWithFixedMultiplicity(
-        Distributions&& momenta, std::vector<float>& eValMom,
+        Distributions& momenta, std::vector<float>& eValMom,
         std::vector<float>& eVecMom, std::vector<float>& meanMom,
-        Distributions&& invariantMasses, std::vector<float>& eValIM,
+        Distributions& invariantMasses, std::vector<float>& eValIM,
         std::vector<float>& eVecIM, std::vector<float>& meanIM)
         : momentumDistributions(momenta),
           invariantMassDistributions(invariantMasses) {
