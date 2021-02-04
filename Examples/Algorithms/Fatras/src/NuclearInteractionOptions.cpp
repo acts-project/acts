@@ -18,9 +18,10 @@ namespace {
 std::pair<std::vector<float>, std::vector<uint32_t>> readHistogram(const std::string&& binBordersName, const std::string&& binContentsName) {
 	std::vector<float>* binBorders;
 	std::vector<uint32_t>* binContents;
-	
+	// Get the decomposed histogram
 	binBorders = (std::vector<float>*) gDirectory->Get(binBordersName.c_str());
 	binContents = (std::vector<uint32_t>*) gDirectory->Get(binContentsName.c_str());
+	// Return the histogram if available
 	if(binBorders != nullptr && binContents != nullptr)
 	{
 		return std::make_pair(std::move(*binBorders), std::move(*binContents));
@@ -30,8 +31,9 @@ std::pair<std::vector<float>, std::vector<uint32_t>> readHistogram(const std::st
 
 std::vector<float> readVector(const std::string&& vectorName) {
 	std::vector<float>* vector;
-	
+	// Get the vector
 	vector = (std::vector<float>*) gDirectory->Get(vectorName.c_str());
+	// Return the vector if available
 	if(vector != nullptr)
 	{
 		return *vector;
@@ -96,10 +98,7 @@ void ActsExamples::Options::addNuclearInteractionOptions(
   auto opt = desc.add_options();
   opt("fatras-nuclear-interaction-parametrisation",
      value<std::string>()->default_value({}),
-     "List of files containing a parametrisation for nuclear interaction.");
-  opt("fatras-simulated-events-nuclear-interaction-parametrisation",
-    value<uint32_t>()->default_value(0),
-    "Number of events simulated for the parametrisation of the nuclear interaction.");
+     "File containing parametrisations for nuclear interaction.");
 }
 
 ActsFatras::detail::MultiParticleParametrisation ActsExamples::Options::readParametrisations(

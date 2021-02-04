@@ -25,7 +25,7 @@
 
 namespace ActsFatras {
 
-/// @brief This class provides a parametrised nuclear interaction. The thereby
+/// This class provides a parametrised nuclear interaction. The thereby
 /// required parametrisation needs to be set and is not provided by default.
 ///
 /// @note This class differs between two different processes labelled as nuclear
@@ -155,7 +155,7 @@ struct NuclearInteraction {
   }
 
  private:
-  /// @brief Retrieves the parametrisation for the particle
+  /// Retrieves the parametrisation for the particle
   ///
   /// @param [in] rnd A random number
   /// @param [in] parametrisation The storage of parametrisations
@@ -166,7 +166,7 @@ struct NuclearInteraction {
       double rnd, const detail::Parametrisation& parametrisation,
       float particleMomentum) const;
 
-  /// @brief Estimates the interaction type
+  /// Estimates the interaction type
   ///
   /// @param [in] rnd Random number
   /// @param [in] probability The probability for a soft interaction
@@ -176,7 +176,7 @@ struct NuclearInteraction {
     return rnd <= probability;
   }
 
-  /// @brief Evaluates the multiplicity of the final state
+  /// Evaluates the multiplicity of the final state
   ///
   /// @param [in] rnd Random number
   /// @param [in] distribution The multiplicity distribution
@@ -186,7 +186,7 @@ struct NuclearInteraction {
       double rnd,
       const detail::Parameters::CumulativeDistribution& distribution) const;
 
-  /// @brief Evaluates the final state PDG IDs
+  /// Evaluates the final state PDG IDs
   ///
   /// @tparam generator_t The random number generator type
   /// @param [in, out] generator The random number generator
@@ -202,7 +202,7 @@ struct NuclearInteraction {
                                 unsigned int multiplicity, int particlePdg,
                                 bool soft) const;
 
-  /// @brief Evaluates the final state invariant masses
+  /// Evaluates the final state invariant masses
   ///
   /// @tparam generator_t The random number generator type
   /// @param [in, out] generator The random number generator
@@ -215,7 +215,7 @@ struct NuclearInteraction {
       const detail::Parameters::ParametersWithFixedMultiplicity&
           parametrisation) const;
 
-  /// @brief Evaluates the final state momenta
+  /// Evaluates the final state momenta
   ///
   /// @tparam generator_t The random number generator type
   /// @param [in, out] The random number generator
@@ -229,7 +229,7 @@ struct NuclearInteraction {
           parametrisation,
       float initialMomentum) const;
 
-  /// @brief Tests whether the final state momenta and invariant masses are
+  /// Tests whether the final state momenta and invariant masses are
   /// matching to each other to allow the evaluation of particle directions.
   ///
   /// @param [in] momenta The final state momenta
@@ -242,7 +242,7 @@ struct NuclearInteraction {
              const Acts::ActsDynamicVector& invariantMasses,
              float initialMomentum) const;
 
-  /// @brief This method samples the kinematics of the final state particles
+  /// This method samples the kinematics of the final state particles
   ///
   /// @tparam generator_t The random number generator type
   /// @param [in, out] The random number generator
@@ -256,7 +256,7 @@ struct NuclearInteraction {
       const detail::Parameters::ParametersWithFixedMultiplicity& parameters,
       float momentum) const;
 
-  /// @brief Converts relative angles to absolute angles wrt the global
+  /// Converts relative angles to absolute angles wrt the global
   /// coordinate system.
   /// @note It is assumed that the angles of the first particle are provided in
   /// the context of the global coordinate system whereas the angles of the
@@ -274,7 +274,7 @@ struct NuclearInteraction {
               ActsFatras::Particle::Scalar theta1, float phi2,
               float theta2) const;
 
-  /// @brief Converter from sampled numbers to a vector of particles
+  /// Converter from sampled numbers to a vector of particles
   ///
   /// @tparam generator_t The random number generator type
   /// @param [in, out] The random number generator
@@ -292,7 +292,7 @@ struct NuclearInteraction {
       const Acts::ActsDynamicVector& invariantMasses, Particle& initialParticle,
       bool soft) const;
 
-  /// @brief This function performs an inverse sampling to provide a discrete
+  /// This function performs an inverse sampling to provide a discrete
   /// value from a distribution.
   ///
   /// @param [in] rnd A random number in [0,1]
@@ -303,7 +303,7 @@ struct NuclearInteraction {
       double rnd,
       const detail::Parameters::CumulativeDistribution& distribution) const;
 
-  /// @brief This function performs an inverse sampling to provide a continuous
+  /// This function performs an inverse sampling to provide a continuous
   /// value from a distribition.
   ///
   /// @param [in] rnd A random number in [0,1]

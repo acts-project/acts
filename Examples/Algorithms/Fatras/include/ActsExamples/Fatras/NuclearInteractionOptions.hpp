@@ -31,7 +31,7 @@ void addNuclearInteractionOptions(Description& desc);
 
 /// Reads the parametrisation and provides the parametrisation
 ActsFatras::detail::MultiParticleParametrisation readParametrisations(
-    const std::string& fileName, const uint32_t& nSimulatedEvents);
+    const std::string& fileName);
       
 /// Read Fatras options to create the algorithm config.
 ///
@@ -46,7 +46,6 @@ void readNuclearInteractionConfig(
       Acts::getDefaultLogger("NuclearInteractionOptions", Acts::Logging::INFO))
   
   const auto nuclearInteractionParametrisation = variables["fatras-nuclear-interaction-parametrisation"].as<std::string>();
-  const auto nSimulatedEvents = variables["fatras-simulated-events-nuclear-interaction-parametrisation"].as<uint32_t>(); 
 
 	if(nuclearInteractionParametrisation.empty()) {
 		ACTS_WARNING("No parametrisation for the nuclear interaction provided.");
@@ -54,17 +53,10 @@ void readNuclearInteractionConfig(
 	}
 	ACTS_VERBOSE("Nuclear interaction parametrisation file" << nuclearInteractionParametrisation << " provided.");
 	
-	if(nSimulatedEvents == 0)
-	{
-		ACTS_VERBOSE("Number of simulated events not provided - Assuming to be the same as in the parametrisation file");
-	} else {
-		ACTS_VERBOSE("Number of simulated events for nuclear interaction parametrisation: " << nSimulatedEvents);
-	}
-
 	auto& chargedNuclearInteraction = simulator.charged.pointlike.template get<ActsFatras::NuclearInteraction>();
 	auto& neutralNuclearInteraction = simulator.neutral.pointlike.template get<ActsFatras::NuclearInteraction>();
 
-	const auto mpp = readParametrisations(nuclearInteractionParametrisation, nSimulatedEvents);
+	const auto mpp = readParametrisations(nuclearInteractionParametrisation);
 	ACTS_VERBOSE("Parametrisations for nuclear interaction from " << mpp.size() << " particles provided");
 	
 	chargedNuclearInteraction.multiParticleParameterisation = mpp;
