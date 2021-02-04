@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -146,8 +146,8 @@ int processGeometry(int argc, char* argv[],
       /// The name of the output file
       std::string fileName = vm["mat-output-file"].template as<std::string>();
       // the material writer
-      Acts::JsonGeometryConverter::Config jmConverterCfg(
-          "JsonGeometryConverter", Acts::Logging::INFO);
+      Acts::MaterialMapJsonConverter::Config jmConverterCfg(
+          "MaterialMapJsonConverter", Acts::Logging::INFO);
       jmConverterCfg.processSensitives =
           vm["mat-output-sensitives"].template as<bool>();
       jmConverterCfg.processApproaches =
@@ -160,7 +160,6 @@ int processGeometry(int argc, char* argv[],
           vm["mat-output-volumes"].template as<bool>();
       jmConverterCfg.processDenseVolumes =
           vm["mat-output-dense-volumes"].template as<bool>();
-      jmConverterCfg.writeData = vm["mat-output-data"].template as<bool>();
       jmConverterCfg.processNonMaterial =
           vm["mat-output-allmaterial"].template as<bool>();
       jmConverterCfg.context = context.geoContext;

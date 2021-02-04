@@ -1,6 +1,6 @@
 # This file is part of the Acts project.
 #
-# Copyright (C) 2020 CERN for the benefit of the Acts project
+# Copyright (C) 2020-2021 CERN for the benefit of the Acts project
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,33 +16,37 @@ import sys
 # The config file can be used to define a binning for all the surfaces in a given volume
 # It can also be used to define the binning for volume mapping
 
-def getSurfaceMateral ( mat ):
+def getSurfaceMateral(mat):
     outputmat = {}
-    outputmat['bin0'] = mat['bin0']
-    outputmat['bin1'] = mat['bin1']
-    outputmat['mapMaterial'] = mat['mapMaterial']
+    value = {}
+    material = {}
+    bound = {}
+    outputmat['Volume'] = mat['Volume']
+    if '_Boundary' in mat:
+        outputmat['_Boundary'] = 'X'
+    if '_Layer' in mat:
+        if '__Approach' not in entry:
+            if '__Sensitive' not in entry:        
+                outputmat['_Layer'] = 'X'
+    if '__Approach' in mat:
+        outputmat['__Approach'] = mat['__Approach']
+    if '__Sensitive' in mat:
+        outputmat['_Layer'] = mat['_Layer']
+        outputmat['__Sensitive'] = 'X'
+    material['binUtility'] = mat['value']['material']['binUtility']
+    material['mapMaterial'] = False
+    bound['type'] = mat['value']['bounds']['type']
+    value['material'] = material
+    value['bounds'] = bound
+    outputmat['value'] = value
     return outputmat
-
-
-def getVolumeMateral ( mat ):
-    outputmat = {}
-    for bin in mat :
-        if bin == 'bin0' :
-            outputmat['bin0'] = mat['bin0']
-        if bin == 'bin1' :
-            outputmat['bin1'] = mat['bin1']
-        if bin == 'bin2' :                
-            outputmat['bin2'] = mat['bin2']       
-    outputmat['mapMaterial'] = mat['mapMaterial']
-    return outputmat
-
 
 if sys.version_info[0] < 3:
     print('Using Python 2')
     print('To obtain the proper ordering in the Json files Python 3 is recomanded')
 
 if len(sys.argv) < 2 :
-    inFileName = 'surfaces-map.json'
+    inFileName = 'geometry-maps.json'
 else :
     inFileName = sys.argv[1]
 
@@ -50,52 +54,66 @@ else :
 with open(inFileName,'r') as json_file:
     config = {}
     data = json.load(json_file)
-    
-    for kvol in data['volumes']:
-        vconfig = {}
-        bconfig = {}
-        rconfig = {}
-        aconfig = {}
-        abin    = {}
-        sconfig = {}
+    lastVol = -1
+    for entry in data['2.Surfaces']['entries']:
+        if lastVol != entry['Volume']:
+            if lastVol != -1:
+                config[lastVol] = vconfig
+            vconfig = []
+            lastVol = entry['Volume']
+            typeLayer = []
+            createdApproach1 = False
+            createdApproach2 = False
+            typeBoundary = []
+            typeSensitive = []
+            listLayer = []
 
-        if 'boundaries' in data['volumes'][kvol] :
-            for kbound in data['volumes'][kvol]['boundaries'] :
-                dbound = data['volumes'][kvol]['boundaries'][kbound]
-                if not dbound['stype'] in bconfig :
-                    bconfig[dbound['stype']] = getSurfaceMateral(dbound)
-            vconfig['boundaries']=bconfig
+        if 'type' not in entry['value']['bounds']:
+            entry['value']['bounds']['type'] = ''
 
-            
-        if 'layers' in data['volumes'][kvol] :
-            for klay in data['volumes'][kvol]['layers'] :
-                
-                if 'representing' in data['volumes'][kvol]['layers'][klay] :
-                    drep = data['volumes'][kvol]['layers'][klay]['representing']
-                    if not drep['stype'] in rconfig :
-                        rconfig[drep['stype']] = getSurfaceMateral(drep)
-                    vconfig['representing'] = rconfig
-                
-                if 'approach' in data['volumes'][kvol]['layers'][klay] :
-                    for kapp  in data['volumes'][kvol]['layers'][klay]['approach'] :
-                        dapp = data['volumes'][kvol]['layers'][klay]['approach'][kapp]
-                        abin[kapp] = getSurfaceMateral(dapp)
-                    aconfig[dapp['stype']] = abin
-                    vconfig['approach'] = aconfig
+        if '_Layer' in entry:  
+            if '__Approach' not in entry:
+                if '__Sensitive' not in entry:
+                    if entry['value']['bounds']['type'] not in typeLayer:
+                        typeLayer.append(entry['value']['bounds']['type'])
+                        surface = getSurfaceMateral(entry)
+                        vconfig.append(surface)
+                        continue
 
-                if 'sensitive' in data['volumes'][kvol]['layers'][klay] :
-                    for ksen  in data['volumes'][kvol]['layers'][klay]['sensitive'] :
-                        dsen = data['volumes'][kvol]['layers'][klay]['sensitive'][ksen]
-                        if not dsen['stype'] in sconfig :
-                            sconfig[dsen['stype']] = getSurfaceMateral(dsen)
-                    vconfig['sensitive'] = sconfig
+        if '_Boundary' in entry:    
+            if '_Layer' not in entry:
+                if entry['value']['bounds']['type'] not in typeBoundary:
+                    typeBoundary.append(entry['value']['bounds']['type'])
+                    surface = getSurfaceMateral(entry)
+                    vconfig.append(surface)
+                    continue         
 
-                    
-        if 'material' in data['volumes'][kvol] :                  
-            vconfig['material'] = getVolumeMateral(data['volumes'][kvol]['material'])
+        if '__Approach' in entry:
+            if '__Sensitive' not in entry:
+                if entry['__Approach'] == 1 and createdApproach1 == False:
+                    createdApproach1 = True
+                    surface = getSurfaceMateral(entry)
+                    vconfig.append(surface)
+                    continue
+                if entry['__Approach'] == 2 and createdApproach2 == False:
+                    createdApproach2 = True
+                    surface = getSurfaceMateral(entry)
+                    vconfig.append(surface)
+                    continue
 
-        config[data['volumes'][kvol]['Name']] = vconfig
+        if '__Sensitive' in entry:  
+            if '__Approach' not in entry:
+                if entry['value']['bounds']['type'] not in typeSensitive:
+                    if entry['_Layer'] not in listLayer:
+                        listLayer.append(entry['_Layer'])
+                        typeSensitive.append(entry['value']['bounds']['type'])
+                        surface = getSurfaceMateral(entry)
+                        vconfig.append(surface)
+                        continue
 
+    if lastVol != -1:
+        config[lastVol] = vconfig
+    config['2.Surfaces'] = vconfig
 
 if len(sys.argv) < 3 :
     outFileName = 'config-map.json'
