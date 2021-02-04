@@ -11,13 +11,13 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "ActsFatras/Kernel/PointLikePhysicsList.hpp"
 #include "ActsFatras/Kernel/detail/Interactor.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
-#include "Acts/Propagator/ConstrainedStep.hpp"
 
 #include <array>
 #include <limits>
@@ -84,8 +84,7 @@ struct MockStepper {
     state.dir = dir;
     state.p = p;
   }
-  void setStepSize(State&, double, Acts::ConstrainedStep::Type) const {
-  }
+  void setStepSize(State &, double, Acts::ConstrainedStep::Type) const {}
 };
 
 struct MockPropagatorState {

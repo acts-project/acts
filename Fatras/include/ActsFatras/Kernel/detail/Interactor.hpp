@@ -9,11 +9,11 @@
 #pragma once
 
 #include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/SimulationResult.hpp"
-#include "Acts/Propagator/ConstrainedStep.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -69,7 +69,7 @@ struct Interactor {
 
   /// Deviation factor from generated proper time limit
   Particle::Scalar properTimeTolerance = 1e-2;
-  
+
   /// Simulate the interaction with a single surface.
   ///
   /// @tparam propagator_state_t is propagator state
@@ -100,7 +100,8 @@ struct Interactor {
     // decay check. needs to happen at every step, not just on surfaces.
     // TODO limit the stepsize when close to the lifetime limit to avoid
     //   overstepping and decaying the particle systematically too late
-    if ((result.properTimeLimit - result.particle.properTime() < result.properTimeLimit * properTimeTolerance) &&
+    if ((result.properTimeLimit - result.particle.properTime() <
+         result.properTimeLimit * properTimeTolerance) &&
         result.isAlive) {
       auto descendants = decay.run(generator, result.particle);
       for (auto &&descendant : descendants) {
@@ -109,17 +110,21 @@ struct Interactor {
       result.isAlive = false;
       return;
     }
-    
-    // Regulate the step size 
-    if(std::isfinite(result.properTimeLimit)) {
-		//    beta² = p²/E²
-		//    gamma = 1 / sqrt(1 - beta²) = sqrt(m² + p²) / m = E / m
-	    //     time = proper-time * gamma
-	    // ds = beta * dt = (p/E) dt (E/m) = (p/m) proper-time
-		const auto properTimeDiff = result.properTimeLimit - result.particle.properTime();
-		const auto stepSize = properTimeDiff * result.particle.absoluteMomentum() / result.particle.mass();
-		stepper.setStepSize(state.stepping, stepSize, Acts::ConstrainedStep::user);
-	}
+
+    // Regulate the step size
+    if (std::isfinite(result.properTimeLimit)) {
+      //    beta² = p²/E²
+      //    gamma = 1 / sqrt(1 - beta²) = sqrt(m² + p²) / m = E / m
+      //     time = proper-time * gamma
+      // ds = beta * dt = (p/E) dt (E/m) = (p/m) proper-time
+      const auto properTimeDiff =
+          result.properTimeLimit - result.particle.properTime();
+      const auto stepSize = properTimeDiff *
+                            result.particle.absoluteMomentum() /
+                            result.particle.mass();
+      stepper.setStepSize(state.stepping, stepSize,
+                          Acts::ConstrainedStep::user);
+    }
 
     // arm the point-like interaction limits in the first step
     if (std::isnan(result.x0Limit) or std::isnan(result.l0Limit)) {
