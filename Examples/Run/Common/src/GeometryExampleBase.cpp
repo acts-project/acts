@@ -146,8 +146,8 @@ int processGeometry(int argc, char* argv[],
       /// The name of the output file
       std::string fileName = vm["mat-output-file"].template as<std::string>();
       // the material writer
-      Acts::MapJsonConverter::Config jmConverterCfg("MapJsonConverter",
-                                                    Acts::Logging::INFO);
+      Acts::MaterialMapJsonConverter::Config jmConverterCfg(
+          "MaterialMapJsonConverter", Acts::Logging::INFO);
       jmConverterCfg.processSensitives =
           vm["mat-output-sensitives"].template as<bool>();
       jmConverterCfg.processApproaches =

@@ -11,7 +11,7 @@
 #include "ActsExamples/Io/Root/RootMaterialDecorator.hpp"
 #include <Acts/Material/IMaterialDecorator.hpp>
 #include <Acts/Plugins/Json/JsonMaterialDecorator.hpp>
-#include <Acts/Plugins/Json/MapJsonConverter.hpp>
+#include <Acts/Plugins/Json/MaterialMapJsonConverter.hpp>
 #include <Acts/Utilities/Logger.hpp>
 
 #include <string>
@@ -45,7 +45,7 @@ build(const boost::program_options::variables_map& vm,
     // json or root based decorator
     if (fileName.find(".json") != std::string::npos) {
       // Set up the converter first
-      Acts::MapJsonConverter::Config jsonGeoConvConfig;
+      Acts::MaterialMapJsonConverter::Config jsonGeoConvConfig;
       // Set up the json-based decorator
       matDeco = std::make_shared<const Acts::JsonMaterialDecorator>(
           jsonGeoConvConfig, fileName);

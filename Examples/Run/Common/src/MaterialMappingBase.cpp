@@ -22,7 +22,7 @@
 #include <Acts/Geometry/TrackingGeometry.hpp>
 #include <Acts/MagneticField/MagneticFieldContext.hpp>
 #include <Acts/Material/SurfaceMaterialMapper.hpp>
-#include <Acts/Plugins/Json/MapJsonConverter.hpp>
+#include <Acts/Plugins/Json/MaterialMapJsonConverter.hpp>
 #include <Acts/Propagator/Navigator.hpp>
 #include <Acts/Propagator/Propagator.hpp>
 #include <Acts/Propagator/StraightLineStepper.hpp>
@@ -177,8 +177,8 @@ int materialMappingExample(int argc, char* argv[],
     /// The name of the output file
     std::string fileName = vm["mat-output-file"].template as<std::string>();
     // the material writer
-    Acts::MapJsonConverter::Config jmConverterCfg("MapJsonConverter",
-                                                  Acts::Logging::INFO);
+    Acts::MaterialMapJsonConverter::Config jmConverterCfg(
+        "MaterialMapJsonConverter", Acts::Logging::INFO);
     jmConverterCfg.processSensitives =
         vm["mat-output-sensitives"].template as<bool>();
     jmConverterCfg.processApproaches =
