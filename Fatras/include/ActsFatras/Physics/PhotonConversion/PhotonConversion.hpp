@@ -284,7 +284,7 @@ std::array<Particle, 2> PhotonConversion::generateChildren(
 }
 
 template <typename generator_t>
-bool PhotonConversion::run(generator_t& generator, const Particle& particle,
+bool PhotonConversion::run(generator_t& generator, Particle& particle,
                            std::vector<Particle>& generated) const {
   // Fast exit if particle is not a photon
   if (particle.pdg() != Acts::PdgParticle::eGamma)
