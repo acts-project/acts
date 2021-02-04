@@ -88,7 +88,7 @@ Particle::Scalar Geant4Decay::generateProperTimeLimit(
   // Sample & return the lifetime
   std::uniform_real_distribution<Scalar> uniformDistribution{0., 1.};
 
-  return -tau * log(uniformDistribution(generator));
+  return -tau * std::log(uniformDistribution(generator));
 }
 
 template <typename generator_t>
@@ -100,8 +100,6 @@ std::vector<Particle> Geant4Decay::run(generator_t&, Particle& particle) const {
   // Perform the decay
   std::vector<Particle> decayProducts = decayParticle(particle);
 
-  // Kill the particle
-  particle.setAbsoluteMomentum(Scalar(0));
   return decayProducts;
 }
 }  // namespace ActsFatras
