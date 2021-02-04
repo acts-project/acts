@@ -16,7 +16,6 @@
 #include "ActsFatras/Selectors/KinematicCasts.hpp"
 #include "ActsFatras/Selectors/ParticleSelectors.hpp"
 #include "ActsFatras/Selectors/SelectorHelpers.hpp"
-#include "ActsFatras/Physics/NuclearInteraction/NuclearInteraction.hpp"
 
 namespace ActsFatras {
 namespace detail {
@@ -40,6 +39,7 @@ using StandardBetheBloch =
 /// Only applies to electrons and positrons.
 using StandardBetheHeitler =
     Process<BetheHeitler, SelectElectronLike, SelectPMin, EveryParticle>;
+
 }  // namespace detail
 
 /// Standard set of electro-magnetic interactions for charged particles.
