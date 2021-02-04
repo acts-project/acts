@@ -104,14 +104,14 @@ class PhotonConversion {
 
 inline Particle::Scalar PhotonConversion::screenFunction1(Scalar delta) const {
   // Compute the value of the screening function 3*PHI1(delta) - PHI2(delta)
-  return (delta > 1.4) ? 42.038 - 8.29 * log(delta + 0.958)
+  return (delta > 1.4) ? 42.038 - 8.29 * std::log(delta + 0.958)
                        : 42.184 - delta * (7.444 - 1.623 * delta);
 }
 
 inline Particle::Scalar PhotonConversion::screenFunction2(Scalar delta) const {
   // Compute the value of the screening function 1.5*PHI1(delta)
   // +0.5*PHI2(delta)
-  return (delta > 1.4) ? 42.038 - 8.29 * log(delta + 0.958)
+  return (delta > 1.4) ? 42.038 - 8.29 * std::log(delta + 0.958)
                        : 41.326 - delta * (5.848 - 0.902 * delta);
 }
 
@@ -145,12 +145,12 @@ PhotonConversion::generatePathLimits(generator_t& generator,
   constexpr Scalar p2 = -6.07682e-01;
 
   // Calculate xi
-  const Scalar xi = p0 + p1 * pow(particle.absoluteMomentum(), p2);
+  const Scalar xi = p0 + p1 * std::pow(particle.absoluteMomentum(), p2);
 
   std::uniform_real_distribution<Scalar> uniformDistribution{0., 1.};
   // This is a transformation of eq. 3.75
   return std::make_pair(-9. / 7. *
-                            log(conversionProbScaleFactor *
+                            std::log(conversionProbScaleFactor *
                                 (1 - uniformDistribution(generator))) /
                             (1. - xi),
                         std::numeric_limits<Scalar>::infinity());
@@ -175,11 +175,11 @@ Particle::Scalar PhotonConversion::generateFirstChildEnergyFraction(
   constexpr Scalar coulombFactor =
       (k1 * az4 + k2 + 1. / (1. + az2)) * az2 - (k3 * az4 + k4) * az4;
 
-  constexpr Scalar logZ13 = log(m_Z) * 1. / 3.;
+  constexpr Scalar logZ13 = std::log(m_Z) * 1. / 3.;
   constexpr Scalar FZ = 8. * (logZ13 + coulombFactor);
   const Scalar deltaMax = exp((42.038 - FZ) * 0.1206) - 0.958;
 
-  constexpr Scalar deltaPreFactor = 136. / pow(m_Z, 1. / 3.);
+  constexpr Scalar deltaPreFactor = 136. / std::pow(m_Z, 1. / 3.);
   const Scalar eps0 = electronMass / gammaMom;
   const Scalar deltaFactor = deltaPreFactor * eps0;
   const Scalar deltaMin = 4. * deltaFactor;
@@ -201,7 +201,7 @@ Particle::Scalar PhotonConversion::generateFirstChildEnergyFraction(
   std::uniform_real_distribution<Scalar> rndmEngine;
   do {
     if (NormF1 > rndmEngine(generator) * (NormF1 + NormF2)) {
-      eps = 0.5 - epsRange * pow(rndmEngine(generator), 1. / 3.);
+      eps = 0.5 - epsRange * std::pow(rndmEngine(generator), 1. / 3.);
       const Scalar delta = deltaFactor / (eps * (1. - eps));
       greject = (screenFunction1(delta) - FZ) / F10;
     } else {
@@ -225,7 +225,7 @@ Particle::Vector3 PhotonConversion::childDirection(
 
   std::uniform_real_distribution<Scalar> uniformDistribution{0., 1.};
   const Scalar u =
-      -log(uniformDistribution(generator) * uniformDistribution(generator)) *
+      -std::log(uniformDistribution(generator) * uniformDistribution(generator)) *
       1.6;
 
   theta *= (uniformDistribution(generator) < 0.25)
