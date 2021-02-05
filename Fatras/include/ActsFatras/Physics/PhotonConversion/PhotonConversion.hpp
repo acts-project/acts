@@ -15,11 +15,10 @@
 #include "ActsFatras/EventData/ProcessType.hpp"
 #include "ActsFatras/Utilities/ParticleData.hpp"
 
+#include <cmath>
 #include <limits>
 #include <random>
 #include <vector>
-
-#include <cmath>
 
 namespace ActsFatras {
 /// This class handles the photon conversion. It evaluates the distance
@@ -89,7 +88,7 @@ class PhotonConversion {
   /// @return The direction vector of the child particle
   template <typename generator_t>
   Particle::Vector3 generateChildDirection(generator_t& generator,
-                                   const Particle& particle) const;
+                                           const Particle& particle) const;
 
   /// Helper methods for momentum evaluation
   /// @note These methods are taken from the Geant4 class
@@ -263,17 +262,17 @@ std::array<Particle, 2> PhotonConversion::generateChildren(
   const Scalar momentum2 = vtmp.norm();
 
   // Build the particles and store them
- std::array<Particle, 2> children = {
-    Particle(photon.particleId().makeDescendant(0), Acts::eElectron)
-      .setPosition4(photon.fourPosition())
-      .setDirection(childDirection)
-      .setAbsoluteMomentum(momentum1)
-      .setProcess(ProcessType::ePhotonConversion),
-    Particle(photon.particleId().makeDescendant(1), Acts::ePositron)
-      .setPosition4(photon.fourPosition())
-      .setDirection(childDirection)
-      .setAbsoluteMomentum(momentum2)
-      .setProcess(ProcessType::ePhotonConversion),
+  std::array<Particle, 2> children = {
+      Particle(photon.particleId().makeDescendant(0), Acts::eElectron)
+          .setPosition4(photon.fourPosition())
+          .setDirection(childDirection)
+          .setAbsoluteMomentum(momentum1)
+          .setProcess(ProcessType::ePhotonConversion),
+      Particle(photon.particleId().makeDescendant(1), Acts::ePositron)
+          .setPosition4(photon.fourPosition())
+          .setDirection(childDirection)
+          .setAbsoluteMomentum(momentum2)
+          .setProcess(ProcessType::ePhotonConversion),
   };
   return children;
 }
@@ -294,7 +293,8 @@ bool PhotonConversion::run(generator_t& generator, Particle& particle,
   const Scalar childEnergy = p * generateFirstChildEnergyFraction(generator, p);
 
   // Now get the deflection
-  const Particle::Vector3 childDir = generateChildDirection(generator, particle);
+  const Particle::Vector3 childDir =
+      generateChildDirection(generator, particle);
 
   // Produce the final state
   const std::array<Particle, 2> finalState =

@@ -25,8 +25,8 @@ using Generator = std::ranlux48;
 
 BOOST_AUTO_TEST_SUITE(FatrasPhotonConversion)
 
-BOOST_DATA_TEST_CASE(NoPhoton, Dataset::parametersPhotonConversion, phi,
-                     lambda, seed) {
+BOOST_DATA_TEST_CASE(NoPhoton, Dataset::parametersPhotonConversion, phi, lambda,
+                     seed) {
   using Scalar = ActsFatras::PhotonConversion::Scalar;
   using namespace Acts::UnitLiterals;
 
@@ -60,17 +60,18 @@ BOOST_DATA_TEST_CASE(NoPhoton, Dataset::parametersPhotonConversion, phi,
 
 BOOST_DATA_TEST_CASE(DeadPhoton, Dataset::parametersPhotonConversion, phi,
                      lambda, seed) {
-						   using Scalar = ActsFatras::PhotonConversion::Scalar;
+  using Scalar = ActsFatras::PhotonConversion::Scalar;
   using namespace Acts::UnitLiterals;
 
   Generator gen(seed);
-  
+
   /// Produce a dead photon
-  ActsFatras::Particle particle = Dataset::makeParticle(Acts::PdgParticle::eGamma, phi, lambda, 0);
-ActsFatras::Particle particleInit = particle;
+  ActsFatras::Particle particle =
+      Dataset::makeParticle(Acts::PdgParticle::eGamma, phi, lambda, 0);
+  ActsFatras::Particle particleInit = particle;
 
   ActsFatras::PhotonConversion pc;
-  
+
   // No limits should be set - momentum too low
   std::pair<Scalar, Scalar> limits = pc.generatePathLimits(gen, particle);
   BOOST_CHECK_EQUAL(limits.first, std::numeric_limits<Scalar>::infinity());
@@ -89,20 +90,20 @@ ActsFatras::Particle particleInit = particle;
   BOOST_CHECK_EQUAL(particle.pathInL0(), particleInit.pathInL0());
 }
 
-BOOST_DATA_TEST_CASE(LowMomentumPhoton, Dataset::parametersPhotonConversion, phi,
-                     lambda, seed) {
-						   using Scalar = ActsFatras::PhotonConversion::Scalar;
+BOOST_DATA_TEST_CASE(LowMomentumPhoton, Dataset::parametersPhotonConversion,
+                     phi, lambda, seed) {
+  using Scalar = ActsFatras::PhotonConversion::Scalar;
   using namespace Acts::UnitLiterals;
 
   Generator gen(seed);
-  
+
   /// Produce a low momentum photon
   ActsFatras::Particle particle =
       Dataset::makeParticle(Acts::PdgParticle::eGamma, phi, lambda, 1_keV);
   ActsFatras::Particle particleInit = particle;
 
   ActsFatras::PhotonConversion pc;
-  
+
   // No limits should be set - momentum too low
   std::pair<Scalar, Scalar> limits = pc.generatePathLimits(gen, particle);
   BOOST_CHECK_EQUAL(limits.first, std::numeric_limits<Scalar>::infinity());
@@ -121,20 +122,20 @@ BOOST_DATA_TEST_CASE(LowMomentumPhoton, Dataset::parametersPhotonConversion, phi
   BOOST_CHECK_EQUAL(particle.pathInL0(), particleInit.pathInL0());
 }
 
-BOOST_DATA_TEST_CASE(HighMomentumPhoton, Dataset::parametersPhotonConversion, phi,
-                     lambda, seed) {
-						   using Scalar = ActsFatras::PhotonConversion::Scalar;
+BOOST_DATA_TEST_CASE(HighMomentumPhoton, Dataset::parametersPhotonConversion,
+                     phi, lambda, seed) {
+  using Scalar = ActsFatras::PhotonConversion::Scalar;
   using namespace Acts::UnitLiterals;
 
   Generator gen(seed);
-  
+
   /// Produce a high momentum photon
   ActsFatras::Particle particle =
       Dataset::makeParticle(Acts::PdgParticle::eGamma, phi, lambda, 1_GeV);
   ActsFatras::Particle particleInit = particle;
 
   ActsFatras::PhotonConversion pc;
-  
+
   // No limits should be set - momentum too low
   std::pair<Scalar, Scalar> limits = pc.generatePathLimits(gen, particle);
   BOOST_CHECK_NE(limits.first, std::numeric_limits<Scalar>::infinity());
@@ -155,15 +156,16 @@ BOOST_DATA_TEST_CASE(HighMomentumPhoton, Dataset::parametersPhotonConversion, ph
   BOOST_CHECK_NE(generated[1].fourMomentum(), Acts::Vector4::Zero());
 
   // Test for similar invariant masses
-  Acts::Vector4 momSum = generated[0].fourMomentum() + generated[1].fourMomentum();
+  Acts::Vector4 momSum =
+      generated[0].fourMomentum() + generated[1].fourMomentum();
   Acts::Vector3 momVector = momSum.template segment<3>(Acts::eMom0);
   double sSum = momSum[Acts::eEnergy] * momSum[Acts::eEnergy] -
-                   momVector.norm() * momVector.norm();
-  BOOST_CHECK(std::isfinite(sSum));                 
-  
+                momVector.norm() * momVector.norm();
+  BOOST_CHECK(std::isfinite(sSum));
+
   double sParticle =
       particleInit.energy() * particleInit.energy() -
-           particleInit.absoluteMomentum() * particleInit.absoluteMomentum();
+      particleInit.absoluteMomentum() * particleInit.absoluteMomentum();
   BOOST_CHECK(std::isfinite(sParticle));
   CHECK_CLOSE_OR_SMALL(sSum, sParticle, 1e-2, 1e-2);
 }
