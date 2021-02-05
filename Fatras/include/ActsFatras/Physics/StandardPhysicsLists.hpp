@@ -19,6 +19,7 @@
 
 namespace ActsFatras {
 namespace detail {
+
 /// Select electrons and positrons only.
 using SelectElectronLike = AbsPdgSelector<Acts::PdgParticle::eElectron>;
 /// Select particles above a minimum absolute momentum.
@@ -26,19 +27,19 @@ using SelectPMin = Min<Casts::P>;
 
 /// Highland multiple scattering that applies everywhere.
 using StandardScattering =
-    Process<HighlandScattering, EveryInput, EveryParticle, EveryParticle>;
+    Process<HighlandScattering, EveryParticle, EveryParticle, EveryParticle>;
 /// Ionisation/excitation energy loss with a lower p cut on output particles.
 ///
 /// Bethe-Bloch generates no particles and the child selector has no effect.
 using StandardBetheBloch =
-    Process<BetheBloch, EveryInput, SelectPMin, EveryParticle>;
+    Process<BetheBloch, EveryParticle, SelectPMin, EveryParticle>;
 /// Electron Bremsstrahlung energy loss with a lower p cut on output particles.
 ///
 /// Only applies to electrons and positions. Bethe-Heitler generates no
 /// particles and the child selector has no effect.
 using StandardBetheHeitler =
-    Process<BetheHeitler, AsInputSelector<SelectElectronLike>, SelectPMin,
-            EveryParticle>;
+    Process<BetheHeitler, SelectElectronLike, SelectPMin, EveryParticle>;
+
 }  // namespace detail
 
 /// Electro-magnetic interactions for charged particles.

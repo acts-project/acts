@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,9 +10,9 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "ActsExamples/Digitization/SmearingConfig.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
 #include <memory>
 #include <string>
@@ -29,16 +29,6 @@ namespace ActsExamples {
 /// Algorithm that turns simulated hits into measurements by truth smearing.
 class SmearingAlgorithm final : public BareAlgorithm {
  public:
-  struct ParameterSmearerConfig {
-    // Which parameter does this apply to.
-    Acts::BoundIndices index = Acts::eBoundSize;
-    // The smearing function for this parameter.
-    ActsFatras::SingleParameterSmearFunction<RandomEngine> smearFunction;
-  };
-  // The configured indices must be unique, i.e. each one can only appear once
-  // in a smearer configuration.
-  using SmearerConfig = std::vector<ParameterSmearerConfig>;
-
   struct Config {
     /// Input collection of simulated hits.
     std::string inputSimHits;
@@ -55,7 +45,7 @@ class SmearingAlgorithm final : public BareAlgorithm {
     /// Random numbers tool.
     std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
     /// The smearers per GeometryIdentifier
-    Acts::GeometryHierarchyMap<SmearerConfig> smearers;
+    Acts::GeometryHierarchyMap<SmearingConfig> smearers;
   };
 
   /// Construct the smearing algorithm.
@@ -83,7 +73,7 @@ class SmearingAlgorithm final : public BareAlgorithm {
 
   /// Construct a fixed-size smearer from a configuration.
   template <size_t kSize>
-  static Smearer makeSmearer(const SmearerConfig& cfg) {
+  static Smearer makeSmearer(const SmearingConfig& cfg) {
     ActsFatras::BoundParametersSmearer<RandomEngine, kSize> impl;
     for (size_t i = 0; i < kSize; ++i) {
       impl.indices[i] = cfg.at(i).index;

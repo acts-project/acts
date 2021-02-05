@@ -27,7 +27,7 @@ Four types of surfaces exist:
 
 By default, all the surfaces will be written but one can turn a specific type off (for example the sensitive) by using the appropriate option : ``mat-output-XXX false``
 
-The JSON file can now be edited to select which surfaces and volumes you want to have material mapped on. The JSON file contains a list of volumes, in those volumes you can find boundaries and layers. The layers then contain approaches, representing and sensitives surfaces. Information of the surface such as their type, range, id and position are available. To add one surface to the material mapping, one simply needs to switch the ``mapMaterial`` variable to ``true``. The binning can then be changed by changing the number associated to ``bin0`` and ``bin1``, the type of bin can also be changed. For the volume, the same method can be applied, except that up to 3 bins can be associated.
+The JSON file can now be edited to select which surfaces and volumes you want to have material mapped on. The JSON file is comprise of two parts, the first one contain a list of volumes and the second a list of surfaces. Information of the surface and volumes such as their type, range, id and position are available. To add one surface to the material mapping, one simply needs to switch the ``mapMaterial`` variable to ``true``. The binning can then be changed by changing the number associated to ``bins``, the type of bin can also be changed. For the volume, the same method can be applied, except that up to 3 bins can be associated.
 
 .. warning::
   When mapping onto a surface, the material inside volumes with material (or ``ProtoMaterial``) will be ignored, you should thus avoid mapping material onto surfaces within material volumes. When mapping onto a volume, only the material within that volume will be used. If you have a large gap between the last material surface and the volume you might then want to also map material onto the boundary of the material volume.
@@ -43,13 +43,13 @@ The first one take as an input the surfaces map previously generated and will re
 
 .. code-block:: console
 
-  python3 ../acts-framework/scripts/MaterialMaping/writeMapConfig.py geometry-map.json config-map.json
+  python3 ../Examples/Scripts/MaterialMaping/writeMapConfig.py geometry-map.json config-map.json
 
 Then edit the config-map.json file
 
 .. code-block:: console
 
-  python3 ../acts-framework/scripts/MaterialMaping/configureMap.py geometry-map.json config-map.json
+  python3 ../Examples/Scripts/MaterialMaping/configureMap.py geometry-map.json config-map.json
 
 Geantino scan
 -------------
@@ -58,7 +58,7 @@ The next step is to do a geantino scan of our detector. For this we will use the
 
 .. code-block:: console
 
-  ./../build/bin/ActsSimGeantinoRecording -j1 --dd4hep-input ../Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml --output-root true -n10000
+  ./../build/bin/ActsExampleGeantinoRecordingDD4hep -j1 --dd4hep-input ../Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml --output-root true -n10000
 
 
 The result of the geantino scan will be a root file containing material tracks. Those contain the direction and production vertex of the geantino, the total material accumulated and all the interaction points in the detector.
@@ -104,7 +104,7 @@ To do the validation, five root macros are available in ``scripts/MaterialMaping
 
   mkdir Validation
 
-  root -l -b ../acts-framework/scripts/MaterialMaping/Mat_map.C'("propagation-material.root","material-maps_tracks.root","Validation")'
+  root -l -b ../Examples/Scripts/MaterialMaping/Mat_map.C'("propagation-material.root","material-maps_tracks.root","Validation")'
   .q
 
   mkdir Surfaces
@@ -116,11 +116,11 @@ To do the validation, five root macros are available in ``scripts/MaterialMaping
   mkdir 1D_plot
   cd ..
 
-  root -l -b ../acts-framework/scripts/MaterialMaping/Mat_map_surface_plot_ratio.C'("propagation-material.root","material-maps_tracks.root","geometry-map.json",100000,"Surfaces/ratio_plot","Surfaces/prop_plot","Surfaces/map_plot")'
+  root -l -b ../Examples/Scripts/MaterialMaping/Mat_map_surface_plot_ratio.C'("propagation-material.root","material-maps_tracks.root","geometry-map.json",100000,"Surfaces/ratio_plot","Surfaces/prop_plot","Surfaces/map_plot")'
   .q
-  root -l -b ../acts-framework/scripts/MaterialMaping/Mat_map_surface_plot_dist.C'("material-maps_tracks.root","geometry-map.json",-1,"Surfaces/dist_plot")'
+  root -l -b ../Examples/Scripts/MaterialMaping/Mat_map_surface_plot_dist.C'("material-maps_tracks.root","geometry-map.json",-1,"Surfaces/dist_plot")'
   .q
-  root -l -b ../acts-framework/scripts/MaterialMaping/Mat_map_surface_plot_1D.C'("material-maps_tracks.root","geometry-map.json",100000,"Surfaces/1D_plot")'
+  root -l -b ../Examples/Scripts/MaterialMaping/Mat_map_surface_plot_1D.C'("material-maps_tracks.root","geometry-map.json",100000,"Surfaces/1D_plot")'
   .q
 
 Using the validation plots you can then adapt the binning and the mapped surface to improve the mapping.

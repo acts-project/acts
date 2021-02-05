@@ -22,9 +22,16 @@
 // can not match our naming guidelines.
 namespace Acts {
 
+using SurfaceAndMaterial =
+    std::pair<std::shared_ptr<const Acts::Surface>,
+              std::shared_ptr<const Acts::ISurfaceMaterial>>;
+
 static std::vector<std::string> surfaceTypes = {
     "ConeSurface",  "CylinderSurface", "DiscSurface",       "PerigeeSurface",
     "PlaneSurface", "StrawSurface",    "CurvilinearSurface"};
+
+/// Conversion of a pair of surface and material used for the material mapping
+void to_json(nlohmann::json& j, const SurfaceAndMaterial& surface);
 
 /// Non-contextual conversion of a surface
 ///
@@ -37,6 +44,19 @@ void to_json(nlohmann::json& j, const Surface& surface);
 /// @param surface the surface to be converted
 /// @param gctx the geometry context for this
 void toJson(nlohmann::json& j, const Surface& surface,
+            const Acts::GeometryContext& gctx);
+
+/// Non-contextual conversion of a surface
+///
+/// @note it will take the default context
+void to_json(nlohmann::json& j, std::shared_ptr<const Surface> surface);
+
+/// Contextual conversion of a surface
+///
+/// @param j the json to be filled
+/// @param surface the surface to be converted
+/// @param gctx the geometry context for this
+void toJson(nlohmann::json& j, std::shared_ptr<const Surface> surface,
             const Acts::GeometryContext& gctx);
 
 /// Converstion to Surface from jsonn

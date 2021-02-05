@@ -43,6 +43,9 @@ namespace Options {
 
 // common bfield options, with a bf prefix
 void addBFieldOptions(boost::program_options::options_description& opt) {
+  if (opt.find_nothrow("bf-map", true) != nullptr) {
+    return;
+  }
   opt.add_options()("bf-map", po::value<std::string>()->default_value(""),
                     "Set this string to point to the bfield source file."
                     "That can either be a '.txt', a '.csv' or a '.root' file. "

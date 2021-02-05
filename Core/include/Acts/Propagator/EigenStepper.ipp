@@ -86,7 +86,7 @@ void Acts::EigenStepper<B, E, A>::covarianceTransport(State& state) const {
 template <typename B, typename E, typename A>
 void Acts::EigenStepper<B, E, A>::covarianceTransport(
     State& state, const Surface& surface) const {
-  detail::covarianceTransport(state.geoContext, state.cov, state.jacobian,
+  detail::covarianceTransport(state.geoContext.get(), state.cov, state.jacobian,
                               state.jacTransport, state.derivative,
                               state.jacToGlobal, state.pars, surface);
 }

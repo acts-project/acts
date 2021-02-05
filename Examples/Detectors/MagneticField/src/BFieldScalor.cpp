@@ -21,7 +21,7 @@ ActsExamples::ProcessCode ActsExamples::BField::BFieldScalor::decorate(
     AlgorithmContext& context) {
   ScalableBFieldContext bFieldContext{
       std::pow(m_cfg.scalor, context.eventNumber)};
-  context.magFieldContext = std::make_any<ScalableBFieldContext>(bFieldContext);
+  context.magFieldContext = bFieldContext;
 
   return ProcessCode::SUCCESS;
 }
