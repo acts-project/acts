@@ -80,7 +80,7 @@ class PhotonConversion {
   Scalar generateFirstChildEnergyFraction(generator_t& generator,
                                           Scalar gammaMom) const;
 
-  /// Generate the direction of the first child particle.
+  /// Generate the direction of the child particles.
   ///
   /// @tparam generator_t Type of the random number generator
   /// @param [in, out] generator The random number generator
@@ -88,7 +88,7 @@ class PhotonConversion {
   ///
   /// @return The direction vector of the child particle
   template <typename generator_t>
-  Particle::Vector3 generateFirstChildDirection(generator_t& generator,
+  Particle::Vector3 generateChildDirection(generator_t& generator,
                                    const Particle& particle) const;
 
   /// Helper methods for momentum evaluation
@@ -216,7 +216,7 @@ Particle::Scalar PhotonConversion::generateFirstChildEnergyFraction(
 }
 
 template <typename generator_t>
-Particle::Vector3 PhotonConversion::generateFirstChildDirection(
+Particle::Vector3 PhotonConversion::generateChildDirection(
     generator_t& generator, const Particle& particle) const {
   /// This method is based upon the Athena class PhotonConversionTool
 
@@ -294,7 +294,7 @@ bool PhotonConversion::run(generator_t& generator, Particle& particle,
   const Scalar childEnergy = p * generateFirstChildEnergyFraction(generator, p);
 
   // Now get the deflection
-  const Particle::Vector3 childDir = generateFirstChildDirection(generator, particle);
+  const Particle::Vector3 childDir = generateChildDirection(generator, particle);
 
   // Produce the final state
   const std::array<Particle, 2> finalState =
