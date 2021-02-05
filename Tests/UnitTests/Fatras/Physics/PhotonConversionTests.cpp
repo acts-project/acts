@@ -129,11 +129,12 @@ BOOST_DATA_TEST_CASE(PhotonConversion, Dataset::parametersPhotonConversion, phi,
   auto momVector = momSum.template segment<3>(Acts::eMom0);
   auto sSum = sqrt(momSum[Acts::eEnergy] * momSum[Acts::eEnergy] -
                    momVector.norm() * momVector.norm());
-
+  BOOST_CHECK(std::isfinite(sSum));                 
+  
   auto sParticle =
       sqrt(particleInit.energy() * particleInit.energy() -
            particleInit.absoluteMomentum() * particleInit.absoluteMomentum());
-
+  BOOST_CHECK(std::isfinite(sParticle));
   CHECK_CLOSE_OR_SMALL(sSum, sParticle, 1e-2, 1e-2);
 }
 
