@@ -1,5 +1,6 @@
 add_library(
   ActsFatrasGeant4 SHARED
+  src/Geant4Decay.cpp
   src/PDGtoG4Converter.cpp
   src/DummyDetectorConstruction.cpp)
 target_compile_definitions(
@@ -23,8 +24,8 @@ target_link_libraries(
 install(
   TARGETS ActsFatrasGeant4
   EXPORT ActsFatrasTargets
-	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(
   DIRECTORY include/ActsFatras
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
