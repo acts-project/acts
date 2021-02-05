@@ -8,20 +8,20 @@
 
 #pragma once
 
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
-#include "ActsFatras/Geant4/PDGtoG4Converter.hpp"
-#include "Acts/Definitions/Common.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 #include "ActsFatras/Geant4/DummyDetectorConstruction.hpp"
+#include "ActsFatras/Geant4/PDGtoG4Converter.hpp"
 
 #include <cmath>
 #include <random>
 #include <vector>
 
-#include "G4ParticleDefinition.hh"
 #include "G4DecayProducts.hh"
 #include "G4DecayTable.hh"
+#include "G4ParticleDefinition.hh"
 
 class G4RunManager;
 
@@ -34,7 +34,7 @@ class Geant4Decay {
 
   /// Constructor
   Geant4Decay() : : m_g4RunManager(ensureGeant4RunManager()) {}
-    
+
   /// Generate the particle life time.
   ///
   /// @tparam generator_t Type of the random number generator
