@@ -28,7 +28,7 @@ class Geant4Decay {
   using Scalar = Particle::Scalar;
 
   /// Constructor
-  Geant4Decay() : : m_g4RunManager(ensureGeant4RunManager()) {}
+  Geant4Decay();
 
   /// Generate the particle life time.
   ///

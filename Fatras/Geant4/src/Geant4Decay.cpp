@@ -16,7 +16,7 @@
 #include "G4DecayTable.hh"
 
 ActsFatras::Geant4Decay::Geant4Decay()
-    : m_g4RunManager(makeDummyRunManager()) {}
+    : m_g4RunManager(ensureGeant4RunManager()) {}
 
 std::vector<ActsFatras::Particle> ActsFatras::Geant4Decay::decayParticle(
     const ActsFatras::Particle& parent) const {
