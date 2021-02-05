@@ -19,7 +19,7 @@
 #include <random>
 #include <vector>
 
-#include <math.h>
+#include <cmath>
 
 namespace ActsFatras {
 /// This class handles the photon conversion. It evaluates the distance
@@ -28,8 +28,6 @@ namespace ActsFatras {
 class PhotonConversion {
  public:
   using Scalar = ActsFatras::Particle::Scalar;
-  /// Lower energy threshold for produced children
-  Scalar minimumMomentum = 100. * Acts::UnitConstants::MeV;
   /// Scaling factor of children energy
   Scalar childEnergyScaleFactor = 2.;
   /// Scaling factor for photon conversion probability
@@ -90,7 +88,7 @@ class PhotonConversion {
   ///
   /// @return The direction vector of the child particle
   template <typename generator_t>
-  Particle::Vector3 childDirection(generator_t& generator,
+  Particle::Vector3 generateFirstChildDirection(generator_t& generator,
                                    const Particle& particle) const;
 
   /// Helper methods for momentum evaluation
@@ -99,7 +97,10 @@ class PhotonConversion {
   Scalar screenFunction1(Scalar delta) const;
   Scalar screenFunction2(Scalar delta) const;
 
-  const Scalar electronMass = findMass(Acts::eElectron);
+  /// Electron mass
+  const Scalar m_electronMass = findMass(Acts::eElectron);
+  /// Lower energy threshold for produced children
+  const Scalar m_minimumMomentum = 2. * m_electronMass;
 };
 
 inline Particle::Scalar PhotonConversion::screenFunction1(Scalar delta) const {
@@ -123,7 +124,7 @@ PhotonConversion::generatePathLimits(generator_t& generator,
 
   // Fast exit if not a photon or the energy is too low
   if (particle.pdg() != Acts::PdgParticle::eGamma ||
-      particle.absoluteMomentum() < minimumMomentum)
+      particle.absoluteMomentum() < m_minimumMomentum)
     return std::make_pair(std::numeric_limits<Scalar>::infinity(),
                           std::numeric_limits<Scalar>::infinity());
 
@@ -180,7 +181,7 @@ Particle::Scalar PhotonConversion::generateFirstChildEnergyFraction(
   const Scalar deltaMax = exp((42.038 - FZ) * 0.1206) - 0.958;
 
   const Scalar deltaPreFactor = 136. / std::pow(m_Z, 1. / 3.);
-  const Scalar eps0 = electronMass / gammaMom;
+  const Scalar eps0 = m_electronMass / gammaMom;
   const Scalar deltaFactor = deltaPreFactor * eps0;
   const Scalar deltaMin = 4. * deltaFactor;
 
@@ -215,13 +216,13 @@ Particle::Scalar PhotonConversion::generateFirstChildEnergyFraction(
 }
 
 template <typename generator_t>
-Particle::Vector3 PhotonConversion::childDirection(
+Particle::Vector3 PhotonConversion::generateFirstChildDirection(
     generator_t& generator, const Particle& particle) const {
   /// This method is based upon the Athena class PhotonConversionTool
 
   // Following the Geant4 approximation from L. Urban
   // the azimutal angle
-  Scalar theta = electronMass / particle.energy();
+  Scalar theta = m_electronMass / particle.energy();
 
   std::uniform_real_distribution<Scalar> uniformDistribution{0., 1.};
   const Scalar u = -std::log(uniformDistribution(generator) *
@@ -251,7 +252,7 @@ std::array<Particle, 2> PhotonConversion::generateChildren(
     const Particle& photon, Scalar childEnergy,
     const Particle::Vector3& childDirection) const {
   // Calculate the child momentum
-  const Scalar massChild = electronMass;
+  const Scalar massChild = m_electronMass;
   const Scalar momentum1 =
       sqrt(childEnergy * childEnergy - massChild * massChild);
 
@@ -262,24 +263,18 @@ std::array<Particle, 2> PhotonConversion::generateChildren(
   const Scalar momentum2 = vtmp.norm();
 
   // Build the particles and store them
-  std::array<Particle, 2> children;
-
-  Particle child1 = Particle(photon.particleId().makeDescendant(0),
-                             static_cast<Acts::PdgParticle>(Acts::eElectron))
-                        .setPosition4(photon.fourPosition())
-                        .setDirection(childDirection)
-                        .setAbsoluteMomentum(momentum1)
-                        .setProcess(ProcessType::ePhotonConversion);
-  children[0] = std::move(child1);
-
-  Particle child2 = Particle(photon.particleId().makeDescendant(1),
-                             static_cast<Acts::PdgParticle>(-Acts::eElectron))
-                        .setPosition4(photon.fourPosition())
-                        .setDirection(childDirection)
-                        .setAbsoluteMomentum(momentum2)
-                        .setProcess(ProcessType::ePhotonConversion);
-  children[1] = std::move(child2);
-
+ std::array<Particle, 2> children = {
+    Particle(photon.particleId().makeDescendant(0), Acts::eElectron)
+      .setPosition4(photon.fourPosition())
+      .setDirection(childDirection)
+      .setAbsoluteMomentum(momentum1)
+      .setProcess(ProcessType::ePhotonConversion),
+    Particle(photon.particleId().makeDescendant(1), Acts::ePositron)
+      .setPosition4(photon.fourPosition())
+      .setDirection(childDirection)
+      .setAbsoluteMomentum(momentum2)
+      .setProcess(ProcessType::ePhotonConversion),
+  };
   return children;
 }
 
@@ -292,14 +287,14 @@ bool PhotonConversion::run(generator_t& generator, Particle& particle,
 
   // Fast exit if momentum is too low
   const Scalar p = particle.absoluteMomentum();
-  if (p < minimumMomentum)
+  if (p < m_minimumMomentum)
     return false;
 
   // Get one child energy
   const Scalar childEnergy = p * generateFirstChildEnergyFraction(generator, p);
 
   // Now get the deflection
-  const Particle::Vector3 childDir = childDirection(generator, particle);
+  const Particle::Vector3 childDir = generateFirstChildDirection(generator, particle);
 
   // Produce the final state
   const std::array<Particle, 2> finalState =
