@@ -159,6 +159,7 @@ BOOST_DATA_TEST_CASE(HighMomentumPhoton, Dataset::parametersPhotonConversion, ph
   auto momVector = momSum.template segment<3>(Acts::eMom0);
   auto sSum = sqrt(momSum[Acts::eEnergy] * momSum[Acts::eEnergy] -
                    momVector.norm() * momVector.norm());
+std::cout << momSum[Acts::eEnergy] << " " << momVector.norm() << std::endl;
   BOOST_CHECK(std::isfinite(sSum));                 
   
   auto sParticle =
