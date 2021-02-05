@@ -57,7 +57,7 @@ class Geant4Decay {
   ///
   /// @return Vector containing the decay products
   std::vector<Particle> decayParticle(const Particle& parent) const;
-  
+
   mutable G4RunManager* m_g4RunManager;  ///< for dummy G4 initialization
 
   PDGtoG4Converter
