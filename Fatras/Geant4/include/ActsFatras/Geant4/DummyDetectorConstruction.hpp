@@ -16,10 +16,10 @@ class G4VPhysicalVolume;
 
 namespace ActsFatras {
 
-/// @brief Convenience method assuring the existance of a G4RunManager
+/// Either return the global run manager or create a new dummy one.
 ///
 /// @return Pointer to the run manager
-G4RunManager* makeDummyRunManager();
+G4RunManager* ensureGeant4RunManager();
 
 /// Construct a dummy Geant4 detector.
 class DummyDetectorConstruction : public G4VUserDetectorConstruction {
@@ -27,11 +27,11 @@ class DummyDetectorConstruction : public G4VUserDetectorConstruction {
   /// Destructor
   ~DummyDetectorConstruction();
 
-  /// @brief Interface method for Geant4
+  /// Interface method for Geant4.
   G4VPhysicalVolume* Construct();
 
  private:
-  /// @brief This method builds a dummy Geant4 detector
+  /// This method builds a dummy Geant4 detector.
   void dummyDetector();
 
   // Logical volume

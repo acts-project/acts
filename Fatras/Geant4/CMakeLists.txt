@@ -1,6 +1,5 @@
 add_library(
   ActsFatrasGeant4 SHARED
-  src/Geant4Decay.cpp
   src/PDGtoG4Converter.cpp
   src/DummyDetectorConstruction.cpp)
 target_compile_definitions(

@@ -9,15 +9,19 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Material/MaterialSlab.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Geant4/PDGtoG4Converter.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "ActsFatras/EventData/ProcessType.hpp"
+#include "ActsFatras/Geant4/DummyDetectorConstruction.hpp"
 
 #include <cmath>
 #include <random>
 #include <vector>
 
 #include "G4ParticleDefinition.hh"
+#include "G4DecayProducts.hh"
+#include "G4DecayTable.hh"
 
 class G4RunManager;
 
@@ -29,8 +33,8 @@ class Geant4Decay {
   using Scalar = Particle::Scalar;
 
   /// Constructor
-  Geant4Decay();
-
+  Geant4Decay() : : m_g4RunManager(ensureGeant4RunManager()) {}
+    
   /// Generate the particle life time.
   ///
   /// @tparam generator_t Type of the random number generator
@@ -52,13 +56,6 @@ class Geant4Decay {
   std::vector<Particle> run(generator_t&, Particle& particle) const;
 
  private:
-  /// This function evaluates the decay products of a given particle
-  ///
-  /// @param [in] parent The decaying particle
-  ///
-  /// @return Vector containing the decay products
-  std::vector<Particle> decayParticle(const Particle& parent) const;
-
   mutable G4RunManager* m_g4RunManager;  ///< for dummy G4 initialization
 
   PDGtoG4Converter
@@ -93,13 +90,59 @@ Particle::Scalar Geant4Decay::generateProperTimeLimit(
 
 template <typename generator_t>
 std::vector<Particle> Geant4Decay::run(generator_t&, Particle& particle) const {
-  // Fast exit if particle is not alive
-  if (!particle)
-    return {};
+  std::vector<Particle> children;
 
-  // Perform the decay
-  std::vector<Particle> decayProducts = decayParticle(particle);
+  // Find the particle type that will decay
+  G4ParticleDefinition* pDef =
+      m_pdgToG4Conv.getParticleDefinition(parent.pdg());
+  if (!pDef) {
+    return children;
+  }
+  // Get the particles decay table
+  G4DecayTable* dt = pDef->GetDecayTable();
+  if (!dt) {
+    return children;
+  }
+  // Select a decay channel
+  G4VDecayChannel* channel = dt->SelectADecayChannel();
+  if (!channel) {
+    return children;
+  }
+  // Get the decay products from the selected channel
+  G4DecayProducts* products = channel->DecayIt();
+  if (!products) {
+    return children;
+  }
 
-  return decayProducts;
+  // Boost the decay products using the parents four-momentum
+  const Particle::Vector4 mom4 = parent.fourMomentum();
+  products->Boost(mom4[Acts::eMom0] / mom4[Acts::eEnergy],
+                  mom4[Acts::eMom1] / mom4[Acts::eEnergy],
+                  mom4[Acts::eMom2] / mom4[Acts::eEnergy]);
+
+  G4int nProducts = products->entries();
+  for (G4int i = 0; i < nProducts; i++) {
+    G4DynamicParticle* prod = products->PopProducts();
+    if (!prod) {
+      continue;
+    }
+
+    // Convert the decay product from Geant4 to Acts
+    const G4ThreeVector& mom = prod->GetMomentum();
+    constexpr Scalar convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
+    Acts::Vector3 amgMom(mom.x(), mom.y(), mom.z());
+    amgMom *= convertEnergy;
+    const int32_t pdg = prod->GetPDGcode();
+
+    Particle childParticle(Barcode(), static_cast<Acts::PdgParticle>(pdg));
+    childParticle.setPosition4(parent.fourPosition())
+        .setAbsoluteMomentum(amgMom.norm())
+        .setDirection(amgMom)
+        .setProcess(ProcessType::eDecay);
+
+    // Store the particle
+    children.push_back(std::move(childParticle));
+  }
+  return children;
 }
 }  // namespace ActsFatras
