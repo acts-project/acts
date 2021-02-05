@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -66,6 +67,9 @@ struct Interactor {
   /// Initial particle state.
   Particle initialParticle;
 
+  /// Relative tolerance of the particles proper time limit
+  Particle::Scalar properTimeRelativeTolerance = 1e-3;
+
   /// Simulate the interaction with a single surface.
   ///
   /// @tparam propagator_state_t is propagator state
@@ -78,6 +82,11 @@ struct Interactor {
   void operator()(propagator_state_t &state, stepper_t &stepper,
                   result_type &result) const {
     assert(generator and "The generator pointer must be valid");
+
+    // actors are called once more after the propagation terminated
+    if (not result.isAlive) {
+      return;
+    }
 
     // update the particle state first. this also computes the proper time which
     // needs the particle state from the previous step for reference. that means
@@ -94,15 +103,31 @@ struct Interactor {
     }
 
     // decay check. needs to happen at every step, not just on surfaces.
-    // TODO limit the stepsize when close to the lifetime limit to avoid
-    //   overstepping and decaying the particle systematically too late
-    if (result.properTimeLimit < result.particle.properTime()) {
+    if (result.properTimeLimit - result.particle.properTime() <
+        result.properTimeLimit * properTimeRelativeTolerance) {
       auto descendants = decay.run(generator, result.particle);
       for (auto &&descendant : descendants) {
         result.generatedParticles.emplace_back(std::move(descendant));
       }
       result.isAlive = false;
       return;
+    }
+
+    // Regulate the step size
+    if (std::isfinite(result.properTimeLimit)) {
+      //    beta² = p²/E²
+      //    gamma = 1 / sqrt(1 - beta²) = sqrt(m² + p²) / m = E / m
+      //     time = proper-time * gamma
+      // ds = beta * dt = (p/E) dt (E/m) = (p/m) proper-time
+      const auto properTimeDiff =
+          result.properTimeLimit - result.particle.properTime();
+      // Evaluate the step size for massive particle, assuming massless
+      // particles to be stable
+      const auto stepSize = properTimeDiff *
+                            result.particle.absoluteMomentum() /
+                            result.particle.mass();
+      stepper.setStepSize(state.stepping, stepSize,
+                          Acts::ConstrainedStep::user);
     }
 
     // arm the point-like interaction limits in the first step
