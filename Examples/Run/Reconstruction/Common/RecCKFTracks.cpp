@@ -10,7 +10,7 @@
 #ifdef ACTS_PLUGIN_ONNX
 #include "Acts/Plugins/Onnx/MLTrackClassifier.hpp"
 #endif
-#include "ActsExamples/Digitization/HitSmearing.hpp"
+#include "ActsExamples/Digitization/DigitizationOptions.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
@@ -66,6 +66,7 @@ int runRecCKFTracks(int argc, char* argv[],
   Options::addBFieldOptions(desc);
   Options::addTrackFindingOptions(desc);
   addRecCKFOptions(desc);
+  Options::addDigitizationOptions(desc);
 
   auto vm = Options::parse(desc, argc, argv);
   if (vm.empty()) {

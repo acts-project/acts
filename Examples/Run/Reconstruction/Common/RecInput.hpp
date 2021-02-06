@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ActsExamples/Digitization/HitSmearing.hpp"
+#include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
@@ -52,7 +52,7 @@ ActsExamples::CsvParticleReader::Config setupParticleReading(
 /// @param inputSimHits The input sim hit collection (e.g. from sim hit reader)
 ///
 /// @return config for hit smearing
-ActsExamples::HitSmearing::Config setupSimHitSmearing(
+ActsExamples::SmearingAlgorithm::Config setupSimHitSmearing(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer,
     std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,

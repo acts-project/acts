@@ -10,7 +10,8 @@
 #ifdef ACTS_PLUGIN_ONNX
 #include "Acts/Plugins/Onnx/MLTrackClassifier.hpp"
 #endif
-#include "ActsExamples/Digitization/HitSmearing.hpp"
+#include "ActsExamples/Digitization/DigitizationOptions.hpp"
+#include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/SeedingPerformanceWriter.hpp"
@@ -68,7 +69,7 @@ ActsExamples::CsvParticleReader::Config setupParticleReading(
   return particleReader;
 }
 
-ActsExamples::HitSmearing::Config setupSimHitSmearing(
+ActsExamples::SmearingAlgorithm::Config setupSimHitSmearing(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer,
     std::shared_ptr<const ActsExamples::RandomNumbers> rnd,
@@ -80,18 +81,16 @@ ActsExamples::HitSmearing::Config setupSimHitSmearing(
   auto logLevel = Options::readLogLevel(vars);
 
   // Create smeared measurements
-  HitSmearing::Config hitSmearingCfg;
+  SmearingAlgorithm::Config hitSmearingCfg = Options::readSmearingConfig(vars);
   hitSmearingCfg.inputSimHits = inputSimHits;
   hitSmearingCfg.outputMeasurements = "measurements";
   hitSmearingCfg.outputSourceLinks = "sourcelinks";
   hitSmearingCfg.outputMeasurementParticlesMap = "measurement_particles_map";
   hitSmearingCfg.outputMeasurementSimHitsMap = "measurement_simhits_map";
-  hitSmearingCfg.sigmaLoc0 = 25_um;
-  hitSmearingCfg.sigmaLoc1 = 100_um;
   hitSmearingCfg.randomNumbers = rnd;
   hitSmearingCfg.trackingGeometry = trackingGeometry;
   sequencer.addAlgorithm(
-      std::make_shared<HitSmearing>(hitSmearingCfg, logLevel));
+      std::make_shared<SmearingAlgorithm>(hitSmearingCfg, logLevel));
 
   return hitSmearingCfg;
 }

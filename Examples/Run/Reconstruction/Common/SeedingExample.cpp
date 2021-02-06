@@ -7,9 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Units.hpp"
+#include "ActsExamples/Digitization/DigitizationOptions.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
-#include "ActsExamples/Digitization/HitSmearing.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
@@ -47,6 +47,7 @@ int runSeedingExample(int argc, char* argv[],
   Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
   Options::addInputOptions(desc);
   Options::addBFieldOptions(desc);
+  Options::addDigitizationOptions(desc);
 
   // Add specific options for this geometry
   detector->addOptions(desc);

@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Detector/IBaseDetector.hpp"
-#include "ActsExamples/Digitization/HitSmearing.hpp"
+#include "ActsExamples/Digitization/DigitizationOptions.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
@@ -50,6 +50,7 @@ int runRecTruthTracks(int argc, char* argv[],
   detector->addOptions(desc);
   Options::addBFieldOptions(desc);
   Options::addFittingOptions(desc);
+  Options::addDigitizationOptions(desc);
 
   auto vm = Options::parse(desc, argc, argv);
   if (vm.empty()) {
