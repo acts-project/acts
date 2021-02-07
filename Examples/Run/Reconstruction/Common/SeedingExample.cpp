@@ -112,6 +112,7 @@ int runSeedingExample(int argc, char* argv[],
       Acts::GeometryIdentifier().setVolume(8).setLayer(2),
       Acts::GeometryIdentifier().setVolume(8).setLayer(4),
       Acts::GeometryIdentifier().setVolume(8).setLayer(6),
+      Acts::GeometryIdentifier().setVolume(8).setLayer(8),
       // positive endcap pixel layers
       Acts::GeometryIdentifier().setVolume(9).setLayer(2),
       Acts::GeometryIdentifier().setVolume(9).setLayer(4),
@@ -173,7 +174,7 @@ int runSeedingExample(int argc, char* argv[],
       std::make_shared<TrackFinderPerformanceWriter>(tfPerfCfg, logLevel));
 
   SeedingPerformanceWriter::Config seedPerfCfg;
-  seedPerfCfg.inputSeeds = seedingCfg.outputSeeds;
+  seedPerfCfg.inputProtoTracks = seedingCfg.outputProtoTracks;
   seedPerfCfg.inputParticles = inputParticles;
   seedPerfCfg.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
