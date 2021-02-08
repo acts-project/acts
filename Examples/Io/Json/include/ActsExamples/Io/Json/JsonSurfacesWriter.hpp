@@ -45,11 +45,13 @@ class JsonSurfacesWriter : public IWriter {
     /// Write layer approach
     bool writeApproach = false;
     /// Write sensitive surfaces
-    bool writeSensitive = true;
+    bool writeSensitive = false;
     /// Write boundary surfaces
     bool writeBoundary = false;
     /// Whether to write the per-event file.
     bool writePerEvent = false;
+    /// Write a string object, containing the type name.
+    bool writeOnlyNames = false;
   };
 
   /// Construct the geometry writer.
