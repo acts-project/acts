@@ -12,8 +12,11 @@
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "ActsExamples/Digitization/MeasurementCreation.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -29,13 +32,13 @@ ActsExamples::CsvMeasurementReader::CsvMeasurementReader(
     Acts::Logging::Level lvl)
     : m_cfg(cfg),
       // TODO check that all files (hits,cells,truth) exists
-      m_eventsRange(determineEventFilesRange(cfg.inputDir, "hits.csv")),
+      m_eventsRange(determineEventFilesRange(cfg.inputDir, "measurements.csv")),
       m_logger(Acts::getDefaultLogger("CsvMeasurementReader", lvl)) {
   if (m_cfg.outputMeasurements.empty()) {
-    throw std::invalid_argument("Missing cluster output collection");
+    throw std::invalid_argument("Missing measurement output collection");
   }
   if (m_cfg.outputMeasurementIds.empty()) {
-    throw std::invalid_argument("Missing hit id output collection");
+    throw std::invalid_argument("Missing measurement id output collection");
   }
   if (m_cfg.outputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument("Missing hit-particles map output collection");
@@ -53,8 +56,8 @@ std::string ActsExamples::CsvMeasurementReader::CsvMeasurementReader::name()
   return "CsvMeasurementReader";
 }
 
-std::pair<size_t, size_t>
-ActsExamples::CsvMeasurementReader::availableEvents() const {
+std::pair<size_t, size_t> ActsExamples::CsvMeasurementReader::availableEvents()
+    const {
   return m_eventsRange;
 }
 
@@ -78,7 +81,7 @@ struct CompareHitId {
 
 /// Convert separate volume/layer/module id into a single geometry identifier.
 inline Acts::GeometryIdentifier extractGeometryId(
-    const ActsExamples::HitData& data) {
+    const ActsExamples::MeasurementData& data) {
   // if available, use the encoded geometry directly
   if (data.geometry_id != 0u) {
     return data.geometry_id;
@@ -92,8 +95,8 @@ inline Acts::GeometryIdentifier extractGeometryId(
 }
 
 struct CompareGeometryId {
-  bool operator()(const ActsExamples::HitData& left,
-                  const ActsExamples::HitData& right) const {
+  bool operator()(const ActsExamples::MeasurementData& left,
+                  const ActsExamples::MeasurementData& right) const {
     auto leftId = extractGeometryId(left).value();
     auto rightId = extractGeometryId(right).value();
     return leftId < rightId;
@@ -116,11 +119,11 @@ inline std::vector<Data> readEverything(
   return everything;
 }
 
-std::vector<ActsExamples::HitData> readHitsByGeometryId(
+std::vector<ActsExamples::MeasurementData> readMeasurementsByGeometryId(
     const std::string& inputDir, size_t event) {
   // geometry_id and t are optional columns
-  auto hits = readEverything<ActsExamples::HitData>(
-      inputDir, "hits.csv", {"geometry_id", "t"}, event);
+  auto hits = readEverything<ActsExamples::MeasurementData>(
+      inputDir, "measurements.csv", {"geometry_id", "t"}, event);
   // sort same way they will be sorted in the output container
   std::sort(hits.begin(), hits.end(), CompareGeometryId{});
   return hits;
@@ -159,28 +162,38 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   // to simplify data handling. to be able to perform this mapping we first
   // read all data into memory before converting to the internal event data
   // types.
-  auto hits = readHitsByGeometryId(m_cfg.inputDir, ctx.eventNumber);
-  auto cells = readCellsByHitId(m_cfg.inputDir, ctx.eventNumber);
-  auto truths = readTruthHitsByHitId(m_cfg.inputDir, ctx.eventNumber);
+  //
+  // Note: the cell data is optional
+  auto measurementData =
+      readMeasurementsByGeometryId(m_cfg.inputDir, ctx.eventNumber);
+  std::vector<ActsExamples::CellData> cellData = {};
+  if (not m_cfg.outputClusters.empty()) {
+    cellData = readCellsByHitId(m_cfg.inputDir, ctx.eventNumber);
+  }
+  auto truthData = readTruthHitsByHitId(m_cfg.inputDir, ctx.eventNumber);
 
-  // prepare containers for the hit data using the framework event data types
-  GeometryIdMultimap<Acts::PlanarModuleCluster> clusters;
-  std::vector<uint64_t> hitIds;
+  // Prepare containers for the hit data using the framework event data types
+  GeometryIdMultimap<Measurement> measurements;
+  ClusterContainer clusters;
+  IndexSourceLinkContainer sourceLinks;
+  std::vector<uint64_t> measurementIds;
   IndexMultimap<ActsFatras::Barcode> hitParticlesMap;
   SimHitContainer simHits;
-  clusters.reserve(hits.size());
-  hitIds.reserve(hits.size());
-  hitParticlesMap.reserve(truths.size());
-  simHits.reserve(truths.size());
 
-  for (const HitData& hit : hits) {
-    Acts::GeometryIdentifier geoId = extractGeometryId(hit);
+  measurements.reserve(measurementData.size());
+  measurementIds.reserve(measurementData.size());
+  sourceLinks.reserve(measurementData.size());
+  hitParticlesMap.reserve(truthData.size());
+  simHits.reserve(truthData.size());
 
-    // find associated truth/ simulation hits
+  for (const MeasurementData& m : measurementData) {
+    Acts::GeometryIdentifier geoId = extractGeometryId(m);
+
+    // Find associated truth/simulation hits
     std::vector<std::size_t> simHitIndices;
     {
-      auto range = makeRange(std::equal_range(truths.begin(), truths.end(),
-                                              hit.hit_id, CompareHitId{}));
+      auto range = makeRange(std::equal_range(
+          truthData.begin(), truthData.end(), m.hit_id, CompareHitId{}));
       simHitIndices.reserve(range.size());
       for (const auto& truth : range) {
         const auto simGeometryId = Acts::GeometryIdentifier(truth.geometry_id);
@@ -206,86 +219,92 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
             truth.deltae * Acts::UnitConstants::GeV,
         };
 
-        // the cluster stores indices to the underlying simulation hits. thus
-        // their position in the container must be stable. the preordering of
-        // hits by geometry id should ensure that new sim hits are always added
-        // at the end and previously created ones rest at their existing
+        // The measurement stores indices to the underlying simulation hits.
+        // thus their position in the container must be stable. the preordering
+        // of hits by geometry id should ensure that new sim hits are always
+        // added at the end and previously created ones rest at their existing
         // locations.
         auto inserted = simHits.emplace_hint(simHits.end(), simGeometryId,
                                              simParticleId, simPos4, simMom4,
                                              simMom4 + simDelta4, simIndex);
         if (std::next(inserted) != simHits.end()) {
-          ACTS_FATAL("Truth hit sorting broke for input hit id " << hit.hit_id);
+          ACTS_FATAL("Truth hit sorting broke for input hit id " << m.hit_id);
           return ProcessCode::ABORT;
         }
         simHitIndices.push_back(simHits.index_of(inserted));
       }
     }
 
-    // find matching pixel cell information
-    std::vector<Acts::DigitizationCell> digitizationCells;
-    {
-      auto range = makeRange(std::equal_range(cells.begin(), cells.end(),
-                                              hit.hit_id, CompareHitId{}));
-      for (const auto& c : range) {
-        digitizationCells.emplace_back(c.channel0, c.channel1, c.value);
+    // Identify hit surface
+    const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
+    if (not surface) {
+      ACTS_FATAL("Could not retrieve the surface for measurement " << m);
+      return ProcessCode::ABORT;
+    }
+
+    // Create the measurement
+    DigitizedParameters dParameters;
+    for (unsigned int ipar = 0;
+         ipar < static_cast<unsigned int>(Acts::eBoundSize); ++ipar) {
+      if ((m.local_key) & (1 << (ipar + 1))) {
+        dParameters.indices.push_back(static_cast<Acts::BoundIndices>(ipar));
+        switch (ipar) {
+          case static_cast<unsigned int>(Acts::eBoundLoc0): {
+            dParameters.values.push_back(m.local0);
+            dParameters.variances.push_back(m.varLocal0);
+          }; break;
+          case static_cast<unsigned int>(Acts::eBoundLoc1): {
+            dParameters.values.push_back(m.local1);
+            dParameters.variances.push_back(m.varLocal1);
+          }; break;
+          case static_cast<unsigned int>(Acts::eBoundPhi): {
+            dParameters.values.push_back(m.phi);
+            dParameters.variances.push_back(m.varPhi);
+          }; break;
+          case static_cast<unsigned int>(Acts::eBoundTheta): {
+            dParameters.values.push_back(m.theta);
+            dParameters.variances.push_back(m.varTheta);
+          }; break;
+          case static_cast<unsigned int>(Acts::eBoundTime): {
+            dParameters.values.push_back(m.time);
+            dParameters.variances.push_back(m.varTime);
+          }; break;
+          default:
+            break;
+        }
       }
     }
 
-    // identify hit surface
-    const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
-    if (not surface) {
-      ACTS_FATAL("Could not retrieve the surface for hit " << hit);
-      return ProcessCode::ABORT;
-    }
+    IndexSourceLink sourceLink(geoId, simHitIndices.size());
+    auto measurement = createMeasurement(dParameters, sourceLink);
 
-    // transform global hit coordinates into local coordinates on the surface
-    Acts::Vector3 pos(hit.x * Acts::UnitConstants::mm,
-                      hit.y * Acts::UnitConstants::mm,
-                      hit.z * Acts::UnitConstants::mm);
-    double time = hit.t * Acts::UnitConstants::ns;
-    Acts::Vector3 mom(1, 1, 1);  // fake momentum
-    Acts::Vector2 local(0, 0);
-    auto lpResult = surface->globalToLocal(ctx.geoContext, pos, mom);
-    if (not lpResult.ok()) {
-      ACTS_FATAL("Global to local transformation did not succeed.");
-      return ProcessCode::ABORT;
-    }
-    local = lpResult.value();
-
-    // TODO what to use as cluster uncertainty?
-    Acts::ActsSymMatrix<3> cov = Acts::ActsSymMatrix<3>::Identity();
-    // create the planar cluster
-    Acts::PlanarModuleCluster cluster(
-        surface->getSharedPtr(),
-        Acts::DigitizationSourceLink(geoId, std::move(simHitIndices)),
-        std::move(cov), local[0], local[1], time, std::move(digitizationCells));
-
-    // due to the previous sorting of the raw hit data by geometry id, new
-    // clusters should always end up at the end of the container. previous
+    // Due to the previous sorting of the raw hit data by geometry id, new
+    // measurements should always end up at the end of the container. previous
     // elements were not touched; cluster indices remain stable and can
-    // be used to identify the hit.
-    auto inserted =
-        clusters.emplace_hint(clusters.end(), geoId, std::move(cluster));
-    if (std::next(inserted) != clusters.end()) {
+    // be used to identify the m.
+    auto inserted = measurements.emplace_hint(measurements.end(), geoId,
+                                              std::move(measurement));
+    if (std::next(inserted) != measurements.end()) {
       ACTS_FATAL("Something went horribly wrong with the hit sorting");
       return ProcessCode::ABORT;
     }
-    auto hitIndex = clusters.index_of(inserted);
-    auto truthRange = makeRange(std::equal_range(truths.begin(), truths.end(),
-                                                 hit.hit_id, CompareHitId{}));
+
+    auto measurementIndex = measurements.index_of(inserted);
+    auto truthRange = makeRange(std::equal_range(
+        truthData.begin(), truthData.end(), m.hit_id, CompareHitId{}));
     for (const auto& truth : truthRange) {
-      hitParticlesMap.emplace_hint(hitParticlesMap.end(), hitIndex,
+      hitParticlesMap.emplace_hint(hitParticlesMap.end(), measurementIndex,
                                    truth.particle_id);
     }
 
-    // map internal hit/cluster index back to original, non-monotonic hit id
-    hitIds.push_back(hit.hit_id);
+    // Map internal measurement index back to original, non-monotonic hit id
+    measurementIds.push_back(m.hit_id);
   }
 
-  // write the data to the EventStore
-  ctx.eventStore.add(m_cfg.outputMeasurements, std::move(clusters));
-  ctx.eventStore.add(m_cfg.outputMeasurementIds, std::move(hitIds));
+  // Write the data to the EventStore
+  ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
+  ctx.eventStore.add(m_cfg.outputMeasurementIds, std::move(measurementIds));
+  ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
   ctx.eventStore.add(m_cfg.outputMeasurementParticlesMap,
                      std::move(hitParticlesMap));
   ctx.eventStore.add(m_cfg.outputSimHits, std::move(simHits));
