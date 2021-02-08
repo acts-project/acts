@@ -153,10 +153,13 @@ int runSeedingExample(int argc, char* argv[],
 
   // Algorithm estimating track parameter from seed
   TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
-  paramsEstimationCfg.inputSeeds = seedingCfg.outputSeeds;
+  paramsEstimationCfg.inputProtoTracks = seedingCfg.outputProtoTracks;
+  paramsEstimationCfg.inputSpacePoints = {
+      spCfg.outputSpacePoints,
+  };
   paramsEstimationCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
   paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
-  paramsEstimationCfg.outputTrackParametersSeedMap = "estimatedparams_seed_map";
+  paramsEstimationCfg.outputProtoTracks = "prototracks_estimated";
   paramsEstimationCfg.trackingGeometry = tGeometry;
   paramsEstimationCfg.magneticField = magneticField;
   sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
@@ -185,11 +188,9 @@ int runSeedingExample(int argc, char* argv[],
 
   // The track parameters estimation writer
   RootTrackParameterWriter::Config trackParamsWriterCfg;
-  trackParamsWriterCfg.inputSeeds = seedingCfg.outputSeeds;
   trackParamsWriterCfg.inputTrackParameters =
       paramsEstimationCfg.outputTrackParameters;
-  trackParamsWriterCfg.inputTrackParametersSeedMap =
-      paramsEstimationCfg.outputTrackParametersSeedMap;
+  trackParamsWriterCfg.inputProtoTracks = paramsEstimationCfg.outputProtoTracks;
   trackParamsWriterCfg.inputParticles = particleReader.outputParticles;
   trackParamsWriterCfg.inputSimHits = simHitReaderCfg.outputSimHits;
   trackParamsWriterCfg.inputMeasurementParticlesMap =

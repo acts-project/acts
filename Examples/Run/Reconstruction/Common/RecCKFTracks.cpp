@@ -136,6 +136,7 @@ int runRecCKFTracks(int argc, char* argv[],
         Acts::GeometryIdentifier().setVolume(8).setLayer(2),
         Acts::GeometryIdentifier().setVolume(8).setLayer(4),
         Acts::GeometryIdentifier().setVolume(8).setLayer(6),
+        Acts::GeometryIdentifier().setVolume(8).setLayer(8),
         // positive endcap pixel layers
         Acts::GeometryIdentifier().setVolume(9).setLayer(2),
         Acts::GeometryIdentifier().setVolume(9).setLayer(4),
@@ -176,11 +177,13 @@ int runRecCKFTracks(int argc, char* argv[],
 
     // Algorithm estimating track parameter from seed
     TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
-    paramsEstimationCfg.inputSeeds = seedingCfg.outputSeeds;
+    paramsEstimationCfg.inputProtoTracks = seedingCfg.outputProtoTracks;
+    paramsEstimationCfg.inputSpacePoints = {
+        spCfg.outputSpacePoints,
+    };
     paramsEstimationCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
     paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
-    paramsEstimationCfg.outputTrackParametersSeedMap =
-        "estimatedparams_seed_map";
+    paramsEstimationCfg.outputProtoTracks = "prototracks_estimated";
     paramsEstimationCfg.trackingGeometry = trackingGeometry;
     paramsEstimationCfg.magneticField = magneticField;
     paramsEstimationCfg.bFieldMin = 0.1_T;
