@@ -84,7 +84,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
   TruthHitData truth;
 
   // Will be reused as hit counter
-  meas.measurement_id = 0;
+  meas.hit_id = 0;
 
   ACTS_VERBOSE("Writing " << measurements.size()
                           << " measurments in this event.");
@@ -137,7 +137,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
           // CLUSTER / channel information ------------------------------
           if (not clusters.empty()) {
             auto cluster = clusters[hitIdx];
-            cell.hit_id = meas.measurement_id;
+            cell.hit_id = meas.hit_id;
             for (auto& c : cluster.channels) {
               cell.channel0 = c.bin[0];
               cell.channel1 = c.bin[1];
@@ -150,7 +150,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
 
           // TRUTH information ------------------------------------------
           // @TODO support mulitple associations
-          truth.hit_id = meas.measurement_id;
+          truth.hit_id = meas.hit_id;
           truth.geometry_id = meas.geometry_id;
           auto idx = m.sourceLink().index();
           auto it = simHits.nth(idx);
@@ -183,7 +183,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
           writerTruth.append(truth);
 
           // Increase counter
-          meas.measurement_id += 1;
+          meas.hit_id += 1;
         },
         measurement);
   }

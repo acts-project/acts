@@ -116,7 +116,7 @@ struct HitData {
 
 struct MeasurementData {
   /// Event-unique measurement identifier. Each value can appear at most once.
-  uint64_t measurement_id;
+  uint64_t hit_id;
   /// Hit surface identifier.
   uint64_t geometry_id = 0u;
   /// Partially decoded hit surface identifier components.
@@ -126,9 +126,9 @@ struct MeasurementData {
   float local0, local1, phi, theta, time;
   float varLocal0, varLocal1, varPhi, varTheta, varTime;
 
-  DFE_NAMEDTUPLE(MeasurementData, measurement_id, geometry_id, volume_id,
-                 layer_id, module_id, local0, local1, phi, theta, time,
-                 varLocal0, varLocal1, varPhi, varTheta, varTime);
+  DFE_NAMEDTUPLE(MeasurementData, hit_id, geometry_id, volume_id, layer_id,
+                 module_id, local0, local1, phi, theta, time, varLocal0,
+                 varLocal1, varPhi, varTheta, varTime);
 };
 
 struct CellData {

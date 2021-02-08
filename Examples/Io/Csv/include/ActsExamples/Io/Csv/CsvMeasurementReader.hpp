@@ -28,10 +28,10 @@ namespace ActsExamples {
 /// directory. By default it reads file in the current working directory.
 /// Files are assumed to be named using the following schema
 ///
-///     event000000001-cells.csv
+///     event000000001-cells.csv (optional)
 ///     event000000001-measurements.csv
 ///     event000000001-truth.csv
-///     event000000002-cells.csv
+///     event000000002-cells.csv (optional)
 ///     event000000002-measurements.csv
 ///     event000000002-truth.csv
 ///
@@ -43,8 +43,10 @@ class CsvMeasurementReader final : public IReader {
   struct Config {
     /// Where to read input files from.
     std::string inputDir;
-    /// Output cluster collection.
+    /// Output measurement collection.
     std::string outputMeasurements;
+    /// Output cluster collection (optional).
+    std::string outputClusters;
     /// For each cluster/ hit index the original hit id stored on file.
     std::string outputMeasurementIds;
     /// Output hit-particles mapping collection.
