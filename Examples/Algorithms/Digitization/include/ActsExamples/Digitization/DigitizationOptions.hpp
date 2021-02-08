@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
 #include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
@@ -23,6 +24,12 @@ void addDigitizationOptions(Description& desc);
 ///
 /// @param variables The variables to read from
 SmearingAlgorithm::Config readSmearingConfig(const Variables& variables);
+
+/// Read Digitization Config from the options.
+///
+/// @param variables The variables to read from
+DigitizationAlgorithm::Config readDigitizationConfig(
+    const Variables& variables);
 
 }  // namespace Options
 }  // namespace ActsExamples

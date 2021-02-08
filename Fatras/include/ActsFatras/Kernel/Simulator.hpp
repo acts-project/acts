@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -34,18 +34,27 @@ namespace ActsFatras {
 
 /// Single particle simulator with a fixed propagator and physics list.
 ///
-/// @tparam propagator_t is the type of the underlying propagator
-/// @tparam physics_list_t is the type of the simulated physics list
-/// @tparam hit_surface_selector_t is the type that selects hit surfaces
-template <typename propagator_t, typename physics_list_t,
-          typename hit_surface_selector_t>
+/// @tparam generator_t random number generator
+/// @tparam continuous_physics_t physics lists for continuous interactions
+/// @tparam pointlike_physics_t physics lists for point-like interactions
+/// @tparam hit_surface_selector_t sensitive hit surfaces selector
+/// @tparam decay_t decay module
+template <typename propagator_t, typename continuous_physics_t,
+          typename pointlike_physics_t, typename hit_surface_selector_t,
+          typename decay_t>
 struct ParticleSimulator {
   /// How and within which geometry to propagate the particle.
   propagator_t propagator;
-  /// What should be simulated. Will be copied to the per-call interactor.
-  physics_list_t physics;
+  /// Physics list detailing the simulated continuous interactions.
+  /// Will be copied to the per-call interactor.
+  continuous_physics_t continuous;
+  /// Physics list detailing the simulated point-like interactions.
+  /// Will be copied to the per-call interactor.
+  pointlike_physics_t pointlike;
   /// Where hits are registiered. Will be copied to the per-call interactor.
   hit_surface_selector_t selectHitSurface;
+  /// Decay module.
+  decay_t decay;
   /// Local logger for debug output.
   std::shared_ptr<const Acts::Logger> localLogger = nullptr;
 
@@ -75,7 +84,8 @@ struct ParticleSimulator {
 
     // propagator-related additional types
     using Interactor =
-        detail::Interactor<generator_t, physics_list_t, hit_surface_selector_t>;
+        detail::Interactor<generator_t, decay_t, continuous_physics_t,
+                           pointlike_physics_t, hit_surface_selector_t>;
     using InteractorResult = typename Interactor::result_type;
     using Actions = Acts::ActionList<Interactor>;
     using Abort = Acts::AbortList<typename Interactor::ParticleNotAlive,
@@ -85,28 +95,31 @@ struct ParticleSimulator {
     // Construct per-call options.
     PropagatorOptions options(geoCtx, magCtx,
                               Acts::LoggerWrapper{*localLogger});
-    options.absPdgCode = particle.pdg();
+    options.absPdgCode = Acts::makeAbsolutePdgParticle(particle.pdg());
     options.mass = particle.mass();
     // setup the interactor as part of the propagator options
     auto &interactor = options.actionList.template get<Interactor>();
     interactor.generator = &generator;
-    interactor.physics = physics;
+    interactor.decay = decay;
+    interactor.continuous = continuous;
+    interactor.pointlike = pointlike;
     interactor.selectHitSurface = selectHitSurface;
-    interactor.particle = particle;
+    interactor.initialParticle = particle;
     // use AnyCharge to be able to handle neutral and charged parameters
     Acts::SingleCurvilinearTrackParameters<Acts::AnyCharge> start(
         particle.fourPosition(), particle.unitDirection(),
         particle.absoluteMomentum(), particle.charge());
     auto result = propagator.propagate(start, options);
-    if (result.ok()) {
-      return result.value().template get<InteractorResult>();
-    } else {
+    if (not result.ok()) {
       return result.error();
     }
+    auto &value = result.value().template get<InteractorResult>();
+
+    return std::move(value);
   }
 };
 
-/// Fatras multi-particle simulator.
+/// Multi-particle simulator.
 ///
 /// @tparam charged_selector_t Callable selector type for charged particles
 /// @tparam charged_simulator_t Single particle simulator for charged particles
@@ -205,7 +218,7 @@ struct Simulator {
       //
       // WARNING the initial particle state output container will be modified
       //         during iteration. New secondaries are added to and failed
-      //         particles might be removed. to avoid issues, access must always
+      //         particles might be removed. To avoid issues, access must always
       //         occur via indices.
       auto iinitial = simulatedParticlesInitial.size();
       simulatedParticlesInitial.push_back(inputParticle);
