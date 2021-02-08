@@ -64,7 +64,7 @@ std::vector<ActsFatras::Particle> ActsFatras::Geant4Decay::decayParticle(
     amgMom *= convertEnergy;
     const int32_t pdg = prod->GetPDGcode();
 
-    Particle childParticle(Barcode(), static_cast<Acts::PdgParticle>(pdg));
+    Particle childParticle(parent.particleId().makeDescendant(i), static_cast<Acts::PdgParticle>(pdg));
     childParticle.setPosition4(parent.fourPosition())
         .setAbsoluteMomentum(amgMom.norm())
         .setDirection(amgMom)

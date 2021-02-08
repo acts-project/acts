@@ -23,7 +23,7 @@ target_link_libraries(
 
 install(
   TARGETS ActsFatrasGeant4
-  EXPORT ActsFatrasTargets
+  EXPORT ActsFatrasGeant4Targets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(
