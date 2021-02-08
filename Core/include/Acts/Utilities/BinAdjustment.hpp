@@ -130,7 +130,8 @@ BinUtility adjustBinUtility(const BinUtility& bu, const CylinderBounds& cBounds,
 /// @param rBounds the Rectangular bounds to adjust to
 ///
 /// @return new updated BinUtiltiy
-BinUtility adjustBinUtility(const BinUtility& bu, const RectangleBounds& rBounds,
+BinUtility adjustBinUtility(const BinUtility& bu,
+                            const RectangleBounds& rBounds,
                             const Transform3& transform) {
   // Default constructor
   BinUtility uBinUtil(transform);
@@ -152,10 +153,10 @@ BinUtility adjustBinUtility(const BinUtility& bu, const RectangleBounds& rBounds
     // - not equidistant
     if (bd.type == arbitrary) {
       throw std::invalid_argument("Arbirary binning can not be adjusted.");
-    }// else if (bval != binR and bval != binPhi) {
-     // std::cout << "bval = " << bval << std::endl;
-     // throw std::invalid_argument("Disc binning must be: phi, r");
-  //  }
+    }  // else if (bval != binR and bval != binPhi) {
+       // std::cout << "bval = " << bval << std::endl;
+       // throw std::invalid_argument("Disc binning must be: phi, r");
+       //  }
     float min, max = 0.;
     // Perform the value adjustment
     if (bval == binPhi) {
@@ -171,7 +172,6 @@ BinUtility adjustBinUtility(const BinUtility& bu, const RectangleBounds& rBounds
   }
   return uBinUtil;
 }
-
 
 /// @brief adjust the BinUtility bu to a surface
 ///
@@ -197,13 +197,12 @@ BinUtility adjustBinUtility(const BinUtility& bu, const Surface& surface) {
     auto rBounds = dynamic_cast<const RectangleBounds*>(&(surface.bounds()));
     // Return specific adjustment
     return adjustBinUtility(bu, *rBounds, surface.transform(GeometryContext()));
-  }
-  else{
+  } else {
     std::cout << " Surface type = " << surface.type() << std::endl;
- 
+
     throw std::invalid_argument(
-      "Bin adjustment not implemented for this surface yet!");
+        "Bin adjustment not implemented for this surface yet!");
     return BinUtility();
-    }
   }
+}
 }  // namespace Acts
