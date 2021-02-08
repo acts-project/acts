@@ -39,6 +39,7 @@ option(ACTS_BUILD_PLUGIN_SYCL "Build SYCL plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TGEO "Build TGeo plugin" OFF)
 # fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
+option(ACTS_BUILD_FATRAS_GEANT4 "Build Geant4 Fatras package" OFF)
 # examples related options
 option(ACTS_BUILD_EXAMPLES "Build standalone examples" OFF)
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
@@ -63,6 +64,8 @@ set_option_if(ACTS_BUILD_EXAMPLES_DD4HEP ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_EXAMPLES_GEANT4 ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_EXAMPLES_HEPMC3 ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_EXAMPLES_PYTHIA8 ACTS_BUILD_EVERYTHING)
+set_option_if(ACTS_BUILD_FATRAS_GEANT4 ACTS_BUILD_EVERYTHING)
+set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_FATRAS_GEANT4)
 # any examples component activates the general examples option
 set_option_if(
   ACTS_BUILD_EXAMPLES
