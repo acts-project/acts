@@ -1,5 +1,5 @@
 # Acts Common Tracking Software
- 
+
 or *A Common Tracking Software* if you do not like recursive acronyms
 
 [![10.5281/zenodo.3606011](https://badgen.net/badge/DOI/10.5281%2Fzenodo.3606011/blue)](https://doi.org/10.5281/zenodo.3606011)
