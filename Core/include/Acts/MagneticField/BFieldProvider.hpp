@@ -39,6 +39,9 @@ class SBOCache {
                   "Please pass the raw type, no const or ref");
     static_assert(sizeof(T) <= sizeof(cache.m_data),
                   "Passed type is too large");
+    static_assert(
+        std::is_move_assignable_v<T> && std::is_move_constructible_v<T>,
+        "Type needs to be move assignable and move constructible");
 
     /*T* ptr =*/new (cache.m_data.data()) T(std::forward<Args>(args)...);
     static Handler<T> static_handler{};
@@ -53,6 +56,14 @@ class SBOCache {
                   "Please pass the raw type, no const or ref");
     static_assert(sizeof(T) <= sizeof(m_data), "Passed type is too large");
     return *reinterpret_cast<T*>(m_data.data());
+  }
+
+  template <typename T>
+  const T& get() const {
+    static_assert(std::is_same_v<T, std::decay_t<T>>,
+                  "Please pass the raw type, no const or ref");
+    static_assert(sizeof(T) <= sizeof(m_data), "Passed type is too large");
+    return *reinterpret_cast<const T*>(m_data.data());
   }
 
   ~SBOCache() {
@@ -73,19 +84,6 @@ class SBOCache {
     return *this;
   }
 
-  SBOCache(const SBOCache& other) {
-    m_handler = other.m_handler;
-    assert(m_handler && "Handler is null");
-    m_handler->copyConstruct(other.m_data.data(), m_data.data());
-  };
-
-  SBOCache& operator=(const SBOCache& other) {
-    m_handler = other.m_handler;
-    assert(m_handler && "Handler is null");
-    m_handler->copy(other.m_data.data(), m_data.data());
-    return *this;
-  };
-
  private:
   SBOCache(){};
 
@@ -93,8 +91,6 @@ class SBOCache {
     virtual void destroy(void* ptr) const = 0;
     virtual void moveConstruct(void* from, void* to) const = 0;
     virtual void move(void* from, void* to) const = 0;
-    virtual void copy(const void* from, void* to) const = 0;
-    virtual void copyConstruct(const void* from, void* to) const = 0;
     virtual ~HandlerBase() = default;
   };
 
@@ -122,23 +118,6 @@ class SBOCache {
 
       (*_to) = std::move(*_from);
     }
-
-    void copy(const void* from, void* to) const override {
-      assert(from != nullptr && "Source is null");
-      assert(to != nullptr && "Target is null");
-
-      const T* _from = static_cast<const T*>(from);
-      T* _to = static_cast<T*>(to);
-
-      (*_to) = (*_from);
-    }
-
-    void copyConstruct(const void* from, void* to) const override {
-      assert(from != nullptr && "Source is null");
-      assert(to != nullptr && "Target is null");
-      const T* _from = static_cast<const T*>(from);
-      /*T* ptr =*/new (to) T(*_from);
-    }
   };
 
   alignas(std::max_align_t) std::array<char, 512> m_data;
@@ -163,7 +142,16 @@ class AnyCache {
 
   template <typename T>
   T& get() {
+    static_assert(std::is_same_v<T, std::decay_t<T>>,
+                  "Please pass the raw type, no const or ref");
     return std::any_cast<T&>(m_any);
+  }
+
+  template <typename T>
+  const T& get() const {
+    static_assert(std::is_same_v<T, std::decay_t<T>>,
+                  "Please pass the raw type, no const or ref");
+    return std::any_cast<const T&>(m_any);
   }
 
  private:

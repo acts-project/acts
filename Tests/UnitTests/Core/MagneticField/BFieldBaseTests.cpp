@@ -53,6 +53,29 @@ BOOST_AUTO_TEST_CASE(TypeErasedCacheType) {
   BOOST_CHECK(constructor_called);
   BOOST_CHECK(destructor_called);
 }
+
+BOOST_AUTO_TEST_CASE(CacheNonCopyable) {
+  struct MyCache {
+    int m_value{0};
+
+    MyCache() = default;
+    MyCache(int value) : m_value(value) {}
+
+    MyCache(const MyCache&) = delete;
+    MyCache& operator=(const MyCache&) = delete;
+
+    MyCache& operator=(MyCache&&) = default;
+    MyCache(MyCache&&) = default;
+  };
+
+  auto cache = BFieldProvider::Cache::make<MyCache>(42);
+  // MyCache c{42};
+  // std::any a;
+  // a = std::move(c);
+  // a.emplace<MyCache>(42);
+  // a = std::make_any<MyCache>(42);
+}
+
 }  // namespace Test
 
 }  // namespace Acts
