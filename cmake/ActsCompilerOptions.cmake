@@ -4,13 +4,6 @@ if (NOT CMAKE_BUILD_TYPE)
   message(STATUS "Setting default build type: ${CMAKE_BUILD_TYPE}")
 endif() 
 
-if(ACTS_SURFACE_INLINE)
-add_compile_definitions(ACTS_SURFACE_INLINE)
-add_compile_definitions(ACTS_SURFACE_MAYBE_INLINE=inline)
-else()
-add_compile_definitions(ACTS_SURFACE_MAYBE_INLINE=)
-endif()
-
 set(ACTS_CXX_FLAGS "-Wall -Wextra -Wpedantic -Wshadow -Wunused-local-typedefs")
 set(ACTS_CXX_FLAGS_DEBUG "--coverage")
 set(ACTS_CXX_FLAGS_MINSIZEREL "")

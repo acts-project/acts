@@ -210,7 +210,3 @@ class PlaneSurface : public Surface {
 };
 
 }  // end of namespace Acts
-
-#ifdef ACTS_SURFACE_INLINE
-#include "Acts/Surfaces/detail/PlaneSurface.ipp"
-#endif

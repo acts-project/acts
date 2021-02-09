@@ -271,7 +271,3 @@ class CylinderSurface : public Surface {
 };
 
 }  // namespace Acts
-
-#ifdef ACTS_SURFACE_INLINE
-#include "Acts/Surfaces/detail/CylinderSurface.ipp"
-#endif

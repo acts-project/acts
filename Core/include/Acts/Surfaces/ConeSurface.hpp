@@ -267,8 +267,3 @@ class ConeSurface : public Surface {
 };
 
 }  // namespace Acts
-
-#ifdef ACTS_SURFACE_INLINE
-#include "Acts/Surfaces/detail/ConeSurface.ipp"
-#else
-#endif

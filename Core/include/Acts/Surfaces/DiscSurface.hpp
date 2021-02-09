@@ -305,7 +305,3 @@ class DiscSurface : public Surface {
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)
 };
 }  // end of namespace Acts
-
-#ifdef ACTS_SURFACE_INLINE
-#include "Acts/Surfaces/detail/DiscSurface.ipp"
-#endif
