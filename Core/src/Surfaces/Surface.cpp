@@ -8,6 +8,7 @@
 
 #include "Acts/Surfaces/Surface.hpp"
 
+#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 
 #include <iomanip>
