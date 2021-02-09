@@ -18,7 +18,7 @@
 
 #include <dfe/dfe_io_dsv.hpp>
 
-#include "TrackMlData.hpp"
+#include "CsvOutputData.hpp"
 
 ActsExamples::CsvSimHitWriter::CsvSimHitWriter(
     const ActsExamples::CsvSimHitWriter::Config& cfg, Acts::Logging::Level lvl)
@@ -38,7 +38,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitWriter::writeT(
   dfe::NamedTupleCsvWriter<SimHitData> writerSimHit(pathSimHit,
                                                     m_cfg.outputPrecision);
 
-  // TrackMlData struct
+  // CsvOutputData struct
   SimHitData simhit;
   // Write data from internal impl. to output-side struct
   for (const auto& simHit : simHits) {

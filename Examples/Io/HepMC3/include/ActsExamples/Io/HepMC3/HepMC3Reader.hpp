@@ -63,4 +63,5 @@ class HepMC3AsciiReader final : public IReader {
 
   const Acts::Logger& logger() const { return *m_logger; }
 };
+
 }  // namespace ActsExamples

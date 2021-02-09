@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -38,13 +38,13 @@ void Acts::EventDataView3D::drawCovarianceAngular(
   double dtheta = VectorHelpers::theta(direction);
 
   Transform3 eplane(Translation3(anker) *
-                    AngleAxis3(dtheta, Vector3(1., 0., 0.)) *
-                    AngleAxis3(dphi, Vector3(0., 0., 1.)));
+                    AngleAxis3(dphi, Vector3(0., 0., 1.)) *
+                    AngleAxis3(dtheta, Vector3(0., 1., 0.)));
 
   // Now generate the ellipse points
   std::vector<Vector3> ellipse =
-      createEllipse(angularErrorScale * directionScale * tan(lambda0),
-                    angularErrorScale * directionScale * tan(lambda1), theta,
+      createEllipse(angularErrorScale * directionScale * lambda0 * sin(dtheta),
+                    angularErrorScale * directionScale * lambda1, theta,
                     viewConfig.nSegments, 0., {0., 0.}, eplane);
 
   std::vector<Vector3> coneTop = ellipse;

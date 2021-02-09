@@ -18,7 +18,9 @@
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/Kernel/PhysicsList.hpp"
+#include "ActsFatras/Kernel/PointLikePhysicsList.hpp"
 #include "ActsFatras/Kernel/Simulator.hpp"
+#include "ActsFatras/Physics/Decay/NoDecay.hpp"
 #include "ActsFatras/Physics/StandardPhysicsLists.hpp"
 #include "ActsFatras/Selectors/ChargeSelectors.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
@@ -70,14 +72,18 @@ using ChargedSelector = ActsFatras::ChargedSelector;
 using ChargedPhysicsList =
     ActsFatras::PhysicsList<ActsFatras::detail::StandardScattering,
                             SplitEnergyLoss>;
-using ChargedSimulator =
-    ActsFatras::ParticleSimulator<ChargedPropagator, ChargedPhysicsList,
-                                  ActsFatras::EverySurface>;
+using ChargePointLikePhysicsList = ActsFatras::PointLikePhysicsList<>;
+using ChargedSimulator = ActsFatras::ParticleSimulator<
+    ChargedPropagator, ChargedPhysicsList, ChargePointLikePhysicsList,
+    ActsFatras::EverySurface, ActsFatras::NoDecay>;
 // all neutral particles w/o physics and no hits
 using NeutralSelector = ActsFatras::NeutralSelector;
+using NeutralPhysicsList = ActsFatras::PhysicsList<>;
+using NeutralPointLikePhysicsList = ActsFatras::PointLikePhysicsList<>;
 using NeutralSimulator =
-    ActsFatras::ParticleSimulator<NeutralPropagator, ActsFatras::PhysicsList<>,
-                                  ActsFatras::NoSurface>;
+    ActsFatras::ParticleSimulator<NeutralPropagator, NeutralPhysicsList,
+                                  NeutralPointLikePhysicsList,
+                                  ActsFatras::NoSurface, ActsFatras::NoDecay>;
 // full simulator type for charged and neutrals
 using Simulator = ActsFatras::Simulator<ChargedSelector, ChargedSimulator,
                                         NeutralSelector, NeutralSimulator>;

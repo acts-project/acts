@@ -17,6 +17,7 @@
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -48,6 +49,7 @@ using MeasurementResolutionMap =
 struct Measurements {
   std::vector<TestSourceLink> sourceLinks;
   std::vector<TestSourceLink> outlierSourceLinks;
+  std::vector<BoundVector> truthParameters;
 };
 
 /// Propagator action to create smeared measurements.
@@ -99,6 +101,17 @@ struct MeasurementsCreator {
             .globalToLocal(state.geoContext, stepper.position(state.stepping),
                            stepper.direction(state.stepping))
             .value();
+
+    // The truth info
+    BoundVector parameters = BoundVector::Zero();
+    parameters[eBoundLoc0] = loc[eBoundLoc0];
+    parameters[eBoundLoc1] = loc[eBoundLoc1];
+    const auto& direction = stepper.position(state.stepping);
+    parameters[eBoundPhi] = VectorHelpers::phi(direction);
+    parameters[eBoundTheta] = VectorHelpers::theta(direction);
+    parameters[eBoundQOverP] = state.stepping.pars[eFreeQOverP];
+    parameters[eBoundTime] = state.stepping.pars[eFreeTime];
+    result.truthParameters.push_back(std::move(parameters));
 
     std::normal_distribution<double> normalDist(0., 1.);
 

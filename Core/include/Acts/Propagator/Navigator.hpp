@@ -592,20 +592,11 @@ class Navigator {
                    << "No surfaces present, target at layer first.");
       return false;
     }
-    std::vector<GeometryIdentifier> externalSurfaces;
-    if (!state.navigation.externalSurfaces.empty()) {
-      auto layerID =
-          state.navigation.navLayerIter->object->geometryId().layer();
-      auto externalSurfaceRange =
-          state.navigation.externalSurfaces.equal_range(layerID);
-
-      externalSurfaces.reserve(
-          state.navigation.externalSurfaces.count(layerID));
-      for (auto itSurface = externalSurfaceRange.first;
-           itSurface != externalSurfaceRange.second; itSurface++) {
-        externalSurfaces.push_back(itSurface->second);
-      }
-    }
+    auto layerID =
+        state.navigation.navSurfaceIter->object->geometryId().layer();
+    std::pair<ExternalSurfaces::iterator, ExternalSurfaces::iterator>
+        externalSurfaceRange =
+            state.navigation.externalSurfaces.equal_range(layerID);
     // Loop over the remaining navigation surfaces
     while (state.navigation.navSurfaceIter !=
            state.navigation.navSurfaces.end()) {
@@ -622,9 +613,12 @@ class Navigator {
                                   << surface->geometryId());
       // Estimate the surface status
       bool boundaryCheck = true;
-      if (std::find(externalSurfaces.begin(), externalSurfaces.end(),
-                    surface->geometryId()) != externalSurfaces.end()) {
-        boundaryCheck = false;
+      for (auto it = externalSurfaceRange.first;
+           it != externalSurfaceRange.second; it++) {
+        if (surface->geometryId() == it->second) {
+          boundaryCheck = false;
+          break;
+        }
       }
       auto surfaceStatus =
           stepper.updateSurfaceStatus(state.stepping, *surface, boundaryCheck);
@@ -802,14 +796,16 @@ class Navigator {
       initializeTarget(state, stepper);
     }
     // Screen output
-    logger().log(Logging::VERBOSE, [&](auto dstream) {
-      dstream << "Last layer";
+    if (logger().doPrint(Logging::VERBOSE)) {
+      std::ostringstream os;
+      os << "Last layer";
       if (state.navigation.currentVolume == state.navigation.targetVolume) {
-        dstream << " (final volume) done, proceed to target.";
+        os << " (final volume) done, proceed to target.";
       } else {
-        dstream << " done, target volume boundary.";
+        os << " done, target volume boundary.";
       }
-    });
+      logger.log(Logging::VERBOSE, os.str());
+    }
     // Set the navigation break if necessary
     state.navigation.navigationBreak =
         (state.navigation.currentVolume == state.navigation.targetVolume);
@@ -893,12 +889,13 @@ class Navigator {
               LoggerWrapper{logger()});
       // The number of boundary candidates
       if (logger().doPrint(Logging::VERBOSE)) {
-        auto dstream = logger().log(Logging::VERBOSE);
-        dstream << state.navigation.navBoundaries.size();
-        dstream << " boundary candidates found at path(s): ";
+        std::ostringstream os;
+        os << state.navigation.navBoundaries.size();
+        os << " boundary candidates found at path(s): ";
         for (auto& bc : state.navigation.navBoundaries) {
-          dstream << bc.intersection.pathLength << "  ";
+          os << bc.intersection.pathLength << "  ";
         }
+        logger.log(Logging::VERBOSE, os.str());
       }
       // Set the begin iterator
       state.navigation.navBoundaryIter = state.navigation.navBoundaries.begin();
@@ -933,12 +930,13 @@ class Navigator {
         return true;
       } else {
         if (logger().doPrint(Logging::VERBOSE)) {
-          auto dstream = logger().log(Logging::VERBOSE);
-          dstream << "Boundary ";
-          dstream << std::distance(state.navigation.navBoundaryIter,
-                                   state.navigation.navBoundaries.end());
-          dstream << " out of " << state.navigation.navBoundaries.size();
-          dstream << " not reachable anymore, switching to next.";
+          std::ostringstream os;
+          os << "Boundary ";
+          os << std::distance(state.navigation.navBoundaryIter,
+                              state.navigation.navBoundaries.end());
+          os << " out of " << state.navigation.navBoundaries.size();
+          os << " not reachable anymore, switching to next.";
+          logger.log(Logging::VERBOSE, os.str());
         }
       }
       // Increase the iterator to the next one
@@ -1085,13 +1083,15 @@ class Navigator {
         stepper.direction(state.stepping), navOpts);
     // the number of layer candidates
     if (!state.navigation.navSurfaces.empty()) {
-      logger().log(Logging::VERBOSE, [&](auto dstream) {
-        dstream << state.navigation.navSurfaces.size();
-        dstream << " surface candidates found at path(s): ";
+      if (logger.doPrint(Logging::VERBOSE)) {
+        std::ostringstream os;
+        os << state.navigation.navSurfaces.size();
+        os << " surface candidates found at path(s): ";
         for (auto& sfc : state.navigation.navSurfaces) {
-          dstream << sfc.intersection.pathLength << "  ";
+          os << sfc.intersection.pathLength << "  ";
         }
-      });
+        logger.log(Logging::VERBOSE, os.str());
+      }
 
       // set the iterator
       state.navigation.navSurfaceIter = state.navigation.navSurfaces.begin();
@@ -1151,13 +1151,15 @@ class Navigator {
     // Layer candidates have been found
     if (!state.navigation.navLayers.empty()) {
       // Screen output where they are
-      logger().log(Logging::VERBOSE, [&](auto dstream) {
-        dstream << state.navigation.navLayers.size();
-        dstream << " layer candidates found at path(s): ";
+      if (logger().doPrint(Logging::VERBOSE)) {
+        std::ostringstream os;
+        os << state.navigation.navLayers.size();
+        os << " layer candidates found at path(s): ";
         for (auto& lc : state.navigation.navLayers) {
-          dstream << lc.intersection.pathLength << "  ";
+          os << lc.intersection.pathLength << "  ";
         }
-      });
+        logger.log(Logging::VERBOSE, os.str());
+      }
       // Set the iterator to the first
       state.navigation.navLayerIter = state.navigation.navLayers.begin();
       // Setting the step size towards first

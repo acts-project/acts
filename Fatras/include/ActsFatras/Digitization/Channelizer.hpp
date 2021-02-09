@@ -67,18 +67,18 @@ struct Channelizer {
     Bin2D bin = {0, 0};
     /// The segment start, end points
     Segment2D path2D;
-    /// The clipped path length
-    double pathLength = 0.;
+    /// The (clipped) value (uncorrected: path length)
+    double activation = 0.;
 
     /// Constructor with arguments
     ///
     /// @param bin_ The bin corresponding to this step
     /// @param path2D_ The start/end 2D position of the segement
-    /// @param pathLength_ The segment length for this bin
-    ChannelSegment(Bin2D bin_, Segment2D path2D_, double pathLength_)
+    /// @param activation_ The segment activation (clean: length) for this bin
+    ChannelSegment(Bin2D bin_, Segment2D path2D_, double activation_)
         : bin(std::move(bin_)),
           path2D(std::move(path2D_)),
-          pathLength(pathLength_) {}
+          activation(activation_) {}
   };
 
   /// Divide the surface segment into channel segments.

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,20 +9,20 @@
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
+#include "ActsExamples/Io/Json/JsonMaterialWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
 #include "ActsExamples/MaterialMapping/MaterialMapping.hpp"
 #include "ActsExamples/MaterialMapping/MaterialMappingOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
-#include "ActsExamples/Plugins/Json/JsonMaterialWriter.hpp"
 #include "ActsExamples/Propagation/PropagationOptions.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include <Acts/Geometry/GeometryContext.hpp>
 #include <Acts/Geometry/TrackingGeometry.hpp>
 #include <Acts/MagneticField/MagneticFieldContext.hpp>
 #include <Acts/Material/SurfaceMaterialMapper.hpp>
-#include <Acts/Plugins/Json/JsonGeometryConverter.hpp>
+#include <Acts/Plugins/Json/MaterialMapJsonConverter.hpp>
 #include <Acts/Propagator/Navigator.hpp>
 #include <Acts/Propagator/Propagator.hpp>
 #include <Acts/Propagator/StraightLineStepper.hpp>
@@ -43,7 +43,9 @@ int materialMappingExample(int argc, char* argv[],
   ActsExamples::Options::addMaterialMappingOptions(desc);
   ActsExamples::Options::addPropagationOptions(desc);
   ActsExamples::Options::addInputOptions(desc);
-  ActsExamples::Options::addOutputOptions(desc);
+  ActsExamples::Options::addOutputOptions(
+      desc,
+      ActsExamples::OutputFormat::Root | ActsExamples::OutputFormat::Json);
 
   // Add specific options for this geometry
   detector.addOptions(desc);
@@ -96,7 +98,7 @@ int materialMappingExample(int argc, char* argv[],
   // ---------------------------------------------------------------------------------
   // Input directory & input file handling
   std::string intputDir = vm["input-dir"].template as<std::string>();
-  auto intputFiles = vm["input-files"].template as<read_strings>();
+  auto intputFiles = vm["input-files"].template as<std::vector<std::string>>();
 
   if (vm["input-root"].template as<bool>()) {
     // Read the material step information from a ROOT TTree
@@ -175,8 +177,8 @@ int materialMappingExample(int argc, char* argv[],
     /// The name of the output file
     std::string fileName = vm["mat-output-file"].template as<std::string>();
     // the material writer
-    Acts::JsonGeometryConverter::Config jmConverterCfg("JsonGeometryConverter",
-                                                       Acts::Logging::INFO);
+    Acts::MaterialMapJsonConverter::Config jmConverterCfg(
+        "MaterialMapJsonConverter", Acts::Logging::INFO);
     jmConverterCfg.processSensitives =
         vm["mat-output-sensitives"].template as<bool>();
     jmConverterCfg.processApproaches =
@@ -187,7 +189,6 @@ int materialMappingExample(int argc, char* argv[],
         vm["mat-output-boundaries"].template as<bool>();
     jmConverterCfg.processVolumes =
         vm["mat-output-volumes"].template as<bool>();
-    jmConverterCfg.writeData = vm["mat-output-data"].template as<bool>();
     jmConverterCfg.context = geoContext;
     // The writer
     ActsExamples::JsonMaterialWriter jmwImpl(jmConverterCfg,

@@ -92,11 +92,12 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction) {
 /// parameters at the final surface
 /// @param [in] surface The final surface onto which the projection should be
 /// performed
-void jacobianLocalToLocal(
-    std::reference_wrapper<const GeometryContext> geoContext,
-    const FreeVector& parameters, const BoundToFreeMatrix& jacToGlobal,
-    const FreeMatrix& transportJacobian, const FreeVector& derivatives,
-    Jacobian& jacFull, const Surface& surface) {
+void jacobianLocalToLocal(const GeometryContext& geoContext,
+                          const FreeVector& parameters,
+                          const BoundToFreeMatrix& jacToGlobal,
+                          const FreeMatrix& transportJacobian,
+                          const FreeVector& derivatives, Jacobian& jacFull,
+                          const Surface& surface) {
   // Calculate the derivative of path length at the final surface or the
   // point-of-closest approach w.r.t. free parameters
   const FreeToPathMatrix freeToPath =
@@ -164,11 +165,12 @@ void jacobianLocalToLocal(const Vector3& direction,
 /// parametrisation to free parameters
 /// @param [in] freeParams Free, nominal parametrisation
 /// @param [in] surface The reference surface of the local parametrisation
-void reinitializeJacobians(
-    std::reference_wrapper<const GeometryContext> geoContext,
-    FreeMatrix& transportJacobian, FreeVector& derivatives,
-    BoundToFreeMatrix& jacToGlobal, const FreeVector& freeParams,
-    const Surface& surface) {
+void reinitializeJacobians(const GeometryContext& geoContext,
+                           FreeMatrix& transportJacobian,
+                           FreeVector& derivatives,
+                           BoundToFreeMatrix& jacToGlobal,
+                           const FreeVector& freeParams,
+                           const Surface& surface) {
   using VectorHelpers::phi;
   using VectorHelpers::theta;
 
@@ -240,7 +242,7 @@ void reinitializeJacobians(FreeMatrix& transportJacobian,
 
 namespace detail {
 
-BoundState boundState(std::reference_wrapper<const GeometryContext> geoContext,
+BoundState boundState(const GeometryContext& geoContext,
                       Covariance& covarianceMatrix, Jacobian& jacobian,
                       FreeMatrix& transportJacobian, FreeVector& derivatives,
                       BoundToFreeMatrix& jacToGlobal,
@@ -329,12 +331,11 @@ void covarianceTransport(Covariance& covarianceMatrix, Jacobian& jacobian,
   reinitializeJacobians(transportJacobian, derivatives, jacToGlobal, direction);
 }
 
-void covarianceTransport(
-    std::reference_wrapper<const GeometryContext> geoContext,
-    Covariance& covarianceMatrix, Jacobian& jacobian,
-    FreeMatrix& transportJacobian, FreeVector& derivatives,
-    BoundToFreeMatrix& jacToGlobal, const FreeVector& parameters,
-    const Surface& surface) {
+void covarianceTransport(const GeometryContext& geoContext,
+                         Covariance& covarianceMatrix, Jacobian& jacobian,
+                         FreeMatrix& transportJacobian, FreeVector& derivatives,
+                         BoundToFreeMatrix& jacToGlobal,
+                         const FreeVector& parameters, const Surface& surface) {
   // Calculate the full jacobian from local parameters at the start surface to
   // current bound parameters
   jacobianLocalToLocal(geoContext, parameters, jacToGlobal, transportJacobian,

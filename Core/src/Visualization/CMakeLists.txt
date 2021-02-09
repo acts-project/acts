@@ -1,4 +1,4 @@
-target_sources_local(
+target_sources(
   ActsCore
   PRIVATE
     IVisualization3D.cpp

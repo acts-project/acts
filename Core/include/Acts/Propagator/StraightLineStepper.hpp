@@ -59,8 +59,8 @@ class StraightLineStepper {
     ///
     /// @note the covariance matrix is copied when needed
     template <typename charge_t>
-    explicit State(std::reference_wrapper<const GeometryContext> gctx,
-                   std::reference_wrapper<const MagneticFieldContext> /*mctx*/,
+    explicit State(const GeometryContext& gctx,
+                   const MagneticFieldContext& /*mctx*/,
                    const SingleBoundTrackParameters<charge_t>& par,
                    NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max(),
@@ -172,7 +172,7 @@ class StraightLineStepper {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double momentum(const State& state) const {
-    return std::abs(state.q / state.pars[eFreeQOverP]);
+    return std::abs((state.q == 0. ? 1. : state.q) / state.pars[eFreeQOverP]);
   }
 
   /// Charge access

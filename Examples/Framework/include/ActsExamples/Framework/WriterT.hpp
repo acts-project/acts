@@ -16,10 +16,15 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include <Acts/Utilities/Logger.hpp>
 
+#include <limits>
 #include <memory>
 #include <string>
 
 namespace ActsExamples {
+
+/// NaN values for TTree variables
+constexpr double NaNdouble = std::numeric_limits<double>::quiet_NaN();
+constexpr float NaNfloat = std::numeric_limits<float>::quiet_NaN();
 
 /// A helper class for users to implement framework writers.
 ///

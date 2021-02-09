@@ -11,23 +11,18 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/ExtractedSimulationProcess.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <memory>
+#include <string>
+#include <vector>
 
 class G4RunManager;
 
 namespace ActsExamples {
-
-/// Stores the initial properties of a particle, the properties before the
-/// interaction and the particle properties after the interaction
-struct ExtractedSimulationProcess {
-  SimParticle initial;
-  SimParticle before;
-  std::vector<SimParticle> after;
-};
 
 /// @brief This class extracts a certain process from a HepMC event record.
 class HepMCProcessExtractor final : public ActsExamples::BareAlgorithm {
@@ -50,7 +45,7 @@ class HepMCProcessExtractor final : public ActsExamples::BareAlgorithm {
   };
 
   /// Constructor
-  HepMCProcessExtractor(Config&& cnf, Acts::Logging::Level level);
+  HepMCProcessExtractor(Config cfg, Acts::Logging::Level level);
   ~HepMCProcessExtractor();
 
   ActsExamples::ProcessCode execute(
@@ -60,4 +55,5 @@ class HepMCProcessExtractor final : public ActsExamples::BareAlgorithm {
   /// The config object
   Config m_cfg;
 };
+
 }  // namespace ActsExamples

@@ -14,7 +14,6 @@
 #include "HepMC3Writer.hpp"
 
 namespace ActsExamples {
-
 namespace Options {
 
 /// Add HepMC3 specific writer options.
@@ -40,5 +39,6 @@ void addHepMC3ReaderOptions(Description& desc);
 ///
 /// @returns a Config object for the HepMC3ReaderAscii
 HepMC3AsciiReader::Config readHepMC3ReaderOptions(const Variables& variables);
+
 }  // namespace Options
 }  // namespace ActsExamples

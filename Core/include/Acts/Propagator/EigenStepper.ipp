@@ -86,7 +86,7 @@ void Acts::EigenStepper<B, E, A>::covarianceTransport(State& state) const {
 template <typename B, typename E, typename A>
 void Acts::EigenStepper<B, E, A>::covarianceTransport(
     State& state, const Surface& surface) const {
-  detail::covarianceTransport(state.geoContext, state.cov, state.jacobian,
+  detail::covarianceTransport(state.geoContext.get(), state.cov, state.jacobian,
                               state.jacTransport, state.derivative,
                               state.jacToGlobal, state.pars, surface);
 }
@@ -166,8 +166,8 @@ Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
 
     // If step size becomes too small the particle remains at the initial
     // place
-    if (state.stepping.stepSize * state.stepping.stepSize <
-        state.options.stepSizeCutOff * state.options.stepSizeCutOff) {
+    if (std::abs(state.stepping.stepSize) <
+        std::abs(state.options.stepSizeCutOff)) {
       // Not moving due to too low momentum needs an aborter
       return EigenStepperError::StepSizeStalled;
     }
