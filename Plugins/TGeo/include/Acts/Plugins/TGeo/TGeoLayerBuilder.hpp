@@ -74,7 +74,7 @@ class TGeoLayerBuilder : public ILayerBuilder {
         : volumeName(""),
           sensorNames({}),
           localAxes("XZY"),
-          envelope(std::pair<double, double>(1_mm, 1_mm)) {}
+          envelope(std::pair<double, double>(0_mm, 0_mm)) {}
   };
 
   /// @struct Config
