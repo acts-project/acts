@@ -46,6 +46,35 @@ jobs:
         run: ${SETUP} && cmake --build build -- test
       - name: Integration tests
         run: ${SETUP} && cmake --build build -- integrationtests
+      - name: Examples
+        run: >
+          # Common setup
+          NUM_EVENTS=100
+          SRC_DIR=`pwd`
+          BUILD_DIR=`pwd`/build
+          DD4HEP_INPUT="--dd4hep-input file:${SRC_DIR}/Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml"
+          cd ${SRC_DIR}/Examples
+          run_example() { ${BUILD_DIR}/bin/$* -n ${NUM_EVENTS}; }
+
+          # Run geometry examples for all geometries
+          #
+          # Other examples will only be run with the Generic geometry to reduce
+          # combinatorial explosion in the number of executed examples (and thus
+          # in the CI running time)
+          #
+          run_example ActsExampleGeometryAligned &&
+          run_example ActsExampleGeometryDD4hep ${DD4HEP_INPUT} &&
+          run_example ActsExampleGeometryEmpty &&
+          run_example ActsExampleGeometryGeneric &&
+          run_example ActsExampleGeometryPayload &&
+          run_example ActsExampleGeometryTelescope &&
+          # TODO: Add TGeo geometry example (needs an input file + knowhow)
+
+          # TODO: Add more examples
+          # TODO: Bring back output reproducibility tests
+
+          # Go back to source dir in the end
+          cd ${SRC_DIR}
       - name: Install
         run: ${SETUP} && cmake --build build -- install
       - uses: actions/upload-artifact@v2
