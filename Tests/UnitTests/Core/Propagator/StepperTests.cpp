@@ -55,7 +55,7 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 template <typename stepper_state_t>
 struct PropState {
   /// @brief Constructor
-  PropState(stepper_state_t sState) : stepping(sState) {}
+  PropState(stepper_state_t sState) : stepping(std::move(sState)) {}
   /// State of the eigen stepper
   stepper_state_t stepping;
   /// Propagator options which only carry the relevant components
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // Perform a step without and with covariance transport
   esState.cov = cov;
-  PropState ps(esState);
+  PropState ps(std::move(esState));
 
   ps.stepping.covTransport = false;
   double h = es.step(ps).value();
@@ -296,8 +296,38 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   ndir = forward;
   double stepSize2 = -2. * stepSize;
 
+  auto copyState = [&](auto& field, const auto& state) {
+    using field_t = std::decay_t<decltype(field)>;
+    std::decay_t<decltype(state)> copy(tgContext, mfContext, cp, ndir, stepSize,
+                                       tolerance);
+    copy.pars = state.pars;
+    copy.q = state.q;
+    copy.covTransport = state.covTransport;
+    copy.cov = state.cov;
+    copy.navDir = state.navDir;
+    copy.jacobian = state.jacobian;
+    copy.jacToGlobal = state.jacToGlobal;
+    copy.jacTransport = state.jacTransport;
+    copy.derivative = state.derivative;
+    copy.pathAccumulated = state.pathAccumulated;
+    copy.stepSize = state.stepSize;
+    copy.previousStepSize = state.previousStepSize;
+    copy.tolerance = state.tolerance;
+
+    copy.fieldCache = BFieldProvider::Cache::make<typename field_t::Cache>(
+        state.fieldCache.template get<typename field_t::Cache>());
+
+    copy.geoContext = state.geoContext;
+    copy.extension = state.extension;
+    copy.auctioneer = state.auctioneer;
+    copy.stepData = state.stepData;
+
+    return copy;
+  };
+
   // Reset all possible parameters
-  EigenStepper<ConstantBField>::State esStateCopy(ps.stepping);
+  EigenStepper<ConstantBField>::State esStateCopy(
+      copyState(bField, ps.stepping));
   es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface(), ndir, stepSize2);
   // Test all components
@@ -322,7 +352,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(esStateCopy.tolerance, ps.stepping.tolerance);
 
   // Reset all possible parameters except the step size
-  esStateCopy = ps.stepping;
+  esStateCopy = copyState(bField, ps.stepping);
   es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface(), ndir);
   // Test all components
@@ -348,7 +378,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(esStateCopy.tolerance, ps.stepping.tolerance);
 
   // Reset the least amount of parameters
-  esStateCopy = ps.stepping;
+  esStateCopy = copyState(bField, ps.stepping);
   es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface());
   // Test all components
@@ -448,7 +478,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   EigenStepper<NullBField> nes(nBfield);
   EigenStepper<NullBField>::State nesState(tgContext, mfContext, cp, ndir,
                                            stepSize, tolerance);
-  PropState nps(nesState);
+  PropState nps(copyState(nBfield, nesState));
   // Test that we can reach the minimum step size
   nps.options.tolerance = 1e-21;
   nps.options.stepSizeCutOff = 1e20;

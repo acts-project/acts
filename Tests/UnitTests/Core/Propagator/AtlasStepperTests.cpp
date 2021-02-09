@@ -328,8 +328,46 @@ BOOST_AUTO_TEST_CASE(Reset) {
   NavigationDirection ndir = forward;
   double stepSize = -256.;
 
+  auto copyState = [&](auto& field, const auto& other) {
+    using field_t = std::decay_t<decltype(field)>;
+    std::decay_t<decltype(other)> copy(geoCtx, magCtx, cp, ndir, stepSize,
+                                       tolerance);
+
+    copy.state_ready = other.state_ready;
+    copy.navDir = other.navDir;
+    copy.useJacobian = other.useJacobian;
+    copy.step = other.step;
+    copy.maxPathLength = other.maxPathLength;
+    copy.mcondition = other.mcondition;
+    copy.needgradient = other.needgradient;
+    copy.newfield = other.newfield;
+    copy.field = other.field;
+    copy.pVector = other.pVector;
+    std::copy(std::begin(other.parameters), std::end(other.parameters),
+              std::begin(copy.parameters));
+    copy.covariance = other.covariance;
+    copy.covTransport = other.covTransport;
+    std::copy(std::begin(other.jacobian), std::end(other.jacobian),
+              std::begin(copy.jacobian));
+    copy.pathAccumulated = other.pathAccumulated;
+    copy.stepSize = other.stepSize;
+    copy.previousStepSize = other.previousStepSize;
+    copy.tolerance = other.tolerance;
+
+    copy.fieldCache = BFieldProvider::Cache::make<typename field_t::Cache>(
+        other.fieldCache.template get<typename field_t::Cache>());
+
+    copy.geoContext = other.geoContext;
+    copy.debug = other.debug;
+    copy.debugString = other.debugString;
+    copy.debugPfxWidth = other.debugPfxWidth;
+    copy.debugMsgWidth = other.debugMsgWidth;
+
+    return copy;
+  };
+
   // Reset all possible parameters
-  Stepper::State stateCopy(state.stepping);
+  Stepper::State stateCopy(copyState(magneticField, state.stepping));
   stepper.resetState(stateCopy, cp.parameters(), *cp.covariance(),
                      cp.referenceSurface(), ndir, stepSize);
   // Test all components
@@ -351,7 +389,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   BOOST_CHECK_EQUAL(stateCopy.tolerance, state.stepping.tolerance);
 
   // Reset all possible parameters except the step size
-  stateCopy = state.stepping;
+  stateCopy = copyState(magneticField, state.stepping);
   stepper.resetState(stateCopy, cp.parameters(), *cp.covariance(),
                      cp.referenceSurface(), ndir);
   // Test all components
@@ -374,7 +412,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   BOOST_CHECK_EQUAL(stateCopy.tolerance, state.stepping.tolerance);
 
   // Reset the least amount of parameters
-  stateCopy = state.stepping;
+  stateCopy = copyState(magneticField, state.stepping);
   stepper.resetState(stateCopy, cp.parameters(), *cp.covariance(),
                      cp.referenceSurface());
   // Test all components
@@ -409,7 +447,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
                                  unitDir, newAbsMom, newCharge, newCov);
 
   // Reset the state and test
-  Stepper::State stateDisc = state.stepping;
+  Stepper::State stateDisc = copyState(magneticField, state.stepping);
   stepper.resetState(stateDisc, boundDisc.parameters(), *boundDisc.covariance(),
                      boundDisc.referenceSurface());
 
@@ -429,7 +467,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
                                     newAbsMom, newCharge, newCov);
 
   // Reset the state and test
-  Stepper::State statePerigee = state.stepping;
+  Stepper::State statePerigee = copyState(magneticField, state.stepping);
   stepper.resetState(statePerigee, boundPerigee.parameters(),
                      *boundPerigee.covariance(),
                      boundPerigee.referenceSurface());
@@ -444,7 +482,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
                                   unitDir, newAbsMom, newCharge, newCov);
 
   // Reset the state and test
-  Stepper::State stateStraw = state.stepping;
+  Stepper::State stateStraw = copyState(magneticField, state.stepping);
   stepper.resetState(stateStraw, boundStraw.parameters(),
                      *boundStraw.covariance(), boundStraw.referenceSurface());
   CHECK_NE_COLLECTIONS(stateStraw.pVector, stateCopy.pVector);
