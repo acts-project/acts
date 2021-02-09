@@ -10,8 +10,10 @@ SRC_DIR=`pwd`
 BUILD_DIR=`pwd`/build
 DD4HEP_INPUT="--dd4hep-input file:${SRC_DIR}/Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml"
 run_example() {
-    echo "--- Running $* -n ${NUM_EVENTS} ---"
-    time ${BUILD_DIR}/bin/$* -n ${NUM_EVENTS} && echo "------------"
+    echo ""
+    echo "=== Running $* -n ${NUM_EVENTS} ==="
+    echo ""
+    time ${BUILD_DIR}/bin/$* -n ${NUM_EVENTS}
 }
 
 # Run hello world example
