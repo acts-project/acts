@@ -33,12 +33,12 @@ class MirrorOutputDecorator final : public OutputDecorator {
   /// @param [in] input text of debug message
   ///
   /// This function inverts the given string and flushes it to the right.
-  void flush(const Level& lvl, const std::ostringstream& input) override {
+  void flush(const Level& lvl, const std::string& input) override {
     std::ostringstream os;
-    std::string text = input.str();
+    std::string text = input;
     std::reverse(text.begin(), text.end());
     os << std::right << std::setw(m_maxWidth) << text;
-    OutputDecorator::flush(lvl, os);
+    OutputDecorator::flush(lvl, os.str());
   }
 
  private:
