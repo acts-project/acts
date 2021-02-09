@@ -47,7 +47,7 @@ jobs:
       - name: Integration tests
         run: ${SETUP} && cmake --build build -- integrationtests
       - name: Examples
-        run: ./CI/run_examples.sh
+        run: ${SETUP} && ./CI/run_examples.sh
       - name: Install
         run: ${SETUP} && cmake --build build -- install
       - uses: actions/upload-artifact@v2
