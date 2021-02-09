@@ -38,193 +38,91 @@ std::string failure_msg(const std::string& expected, const std::string& found) {
 }  // namespace detail
 /// @endcond
 
-/// @brief unit test for FATAL debug level
+/// @brief unit test for a certain debug level
 ///
 /// This test checks for the expected output when using the
-/// Acts::Logging::FATAL debug level as threshold. It also tests
+/// specified debug level as threshold. It also tests
 /// - #ACTS_LOCAL_LOGGER
 /// - Acts::getDefaultLogger
-BOOST_AUTO_TEST_CASE(FATAL_test) {
-  std::ofstream logfile("fatal_log.txt");
+void debug_level_test(const char* output_file, Logging::Level lvl) {
+  // Logs will go to this file
+  std::ofstream logfile(output_file);
 
-  auto log = detail::create_logger("TestLogger", &logfile, FATAL);
+  // If fail-on-error is enabled, then the logger will not, and should not,
+  // tolerate being set up with a coarser debug level.
+  if (lvl > Logging::FAILURE_THRESHOLD) {
+    BOOST_CHECK_THROW(detail::create_logger("TestLogger", &logfile, lvl),
+                      std::runtime_error);
+    return;
+  }
+
+  // Set up local logger
+  auto log = detail::create_logger("TestLogger", &logfile, lvl);
   ACTS_LOCAL_LOGGER(std::move(log));
-  ACTS_FATAL("fatal level");
-  ACTS_ERROR("error level");
-  ACTS_WARNING("warning level");
-  ACTS_INFO("info level");
-  ACTS_DEBUG("debug level");
-  ACTS_VERBOSE("verbose level");
+
+  // Test logging at a certain debug level
+  auto test_logging = [](auto&& test_operation, Logging::Level test_lvl) {
+    if (test_lvl >= Logging::FAILURE_THRESHOLD) {
+      BOOST_CHECK_THROW(test_operation(), std::runtime_error);
+    } else {
+      test_operation();
+    }
+  };
+
+  // Test logging at all debug levels
+  test_logging([&] { ACTS_FATAL("fatal level"); }, FATAL);
+  test_logging([&] { ACTS_ERROR("error level"); }, ERROR);
+  test_logging([&] { ACTS_WARNING("warning level"); }, WARNING);
+  test_logging([&] { ACTS_INFO("info level"); }, INFO);
+  test_logging([&] { ACTS_DEBUG("debug level"); }, DEBUG);
+  test_logging([&] { ACTS_VERBOSE("verbose level"); }, VERBOSE);
   logfile.close();
 
-  std::vector<std::string> lines;
-  lines.push_back("TestLogger     FATAL     fatal level");
+  // Compute expected output for current debug levels
+  std::vector<std::string> lines{"TestLogger     FATAL     fatal level",
+                                 "TestLogger     ERROR     error level",
+                                 "TestLogger     WARNING   warning level",
+                                 "TestLogger     INFO      info level",
+                                 "TestLogger     DEBUG     debug level",
+                                 "TestLogger     VERBOSE   verbose level"};
+  lines.resize(static_cast<int>(Logging::Level::MAX) - static_cast<int>(lvl));
 
-  std::ifstream infile("fatal_log.txt", std::ios::in);
+  // Check output
+  std::ifstream infile(output_file, std::ios::in);
   size_t i = 0;
   for (std::string line; std::getline(infile, line); ++i) {
     BOOST_CHECK_EQUAL(line, lines.at(i));
   }
+}
+
+/// @brief unit test for FATAL debug level
+BOOST_AUTO_TEST_CASE(FATAL_test) {
+  debug_level_test("fatal_log.txt", FATAL);
 }
 
 /// @brief unit test for ERROR debug level
-///
-/// This test checks for the expected output when using the
-/// Acts::Logging::ERROR debug level as threshold. It also tests
-/// - #ACTS_LOCAL_LOGGER
-/// - Acts::getDefaultLogger
 BOOST_AUTO_TEST_CASE(ERROR_test) {
-  std::ofstream logfile("error_log.txt");
-
-  auto log = detail::create_logger("TestLogger", &logfile, ERROR);
-  ACTS_LOCAL_LOGGER(std::move(log));
-  ACTS_FATAL("fatal level");
-  ACTS_ERROR("error level");
-  ACTS_WARNING("warning level");
-  ACTS_INFO("info level");
-  ACTS_DEBUG("debug level");
-  ACTS_VERBOSE("verbose level");
-  logfile.close();
-
-  std::vector<std::string> lines;
-  lines.push_back("TestLogger     FATAL     fatal level");
-  lines.push_back("TestLogger     ERROR     error level");
-
-  std::ifstream infile("error_log.txt", std::ios::in);
-  size_t i = 0;
-  for (std::string line; std::getline(infile, line); ++i) {
-    BOOST_CHECK_EQUAL(line, lines.at(i));
-  }
+  debug_level_test("error_log.txt", ERROR);
 }
 
 /// @brief unit test for WARNING debug level
-///
-/// This test checks for the expected output when using the
-/// Acts::Logging::WARNING debug level as threshold. It also tests
-/// - #ACTS_LOCAL_LOGGER
-/// - Acts::getDefaultLogger
 BOOST_AUTO_TEST_CASE(WARNING_test) {
-  std::ofstream logfile("warning_log.txt");
-
-  auto log = detail::create_logger("TestLogger", &logfile, WARNING);
-  ACTS_LOCAL_LOGGER(std::move(log));
-  ACTS_FATAL("fatal level");
-  ACTS_ERROR("error level");
-  ACTS_WARNING("warning level");
-  ACTS_INFO("info level");
-  ACTS_DEBUG("debug level");
-  ACTS_VERBOSE("verbose level");
-  logfile.close();
-
-  std::vector<std::string> lines;
-  lines.push_back("TestLogger     FATAL     fatal level");
-  lines.push_back("TestLogger     ERROR     error level");
-  lines.push_back("TestLogger     WARNING   warning level");
-
-  std::ifstream infile("warning_log.txt", std::ios::in);
-  size_t i = 0;
-  for (std::string line; std::getline(infile, line); ++i) {
-    BOOST_CHECK_EQUAL(line, lines.at(i));
-  }
+  debug_level_test("warning_log.txt", WARNING);
 }
 
 /// @brief unit test for INFO debug level
-///
-/// This test checks for the expected output when using the
-/// Acts::Logging::INFO debug level as threshold. It also tests
-/// - #ACTS_LOCAL_LOGGER
-/// - Acts::getDefaultLogger
 BOOST_AUTO_TEST_CASE(INFO_test) {
-  std::ofstream logfile("info_log.txt");
-
-  auto log = detail::create_logger("TestLogger", &logfile, INFO);
-  ACTS_LOCAL_LOGGER(std::move(log));
-  ACTS_FATAL("fatal level");
-  ACTS_ERROR("error level");
-  ACTS_WARNING("warning level");
-  ACTS_INFO("info level");
-  ACTS_DEBUG("debug level");
-  ACTS_VERBOSE("verbose level");
-  logfile.close();
-
-  std::vector<std::string> lines;
-  lines.push_back("TestLogger     FATAL     fatal level");
-  lines.push_back("TestLogger     ERROR     error level");
-  lines.push_back("TestLogger     WARNING   warning level");
-  lines.push_back("TestLogger     INFO      info level");
-
-  std::ifstream infile("info_log.txt", std::ios::in);
-  size_t i = 0;
-  for (std::string line; std::getline(infile, line); ++i) {
-    BOOST_CHECK_EQUAL(line, lines.at(i));
-  }
+  debug_level_test("info_log.txt", INFO);
 }
 
 /// @brief unit test for DEBUG debug level
-///
-/// This test checks for the expected output when using the
-/// Acts::Logging::DEBUG debug level as threshold. It also tests
-/// - #ACTS_LOCAL_LOGGER
-/// - Acts::getDefaultLogger
 BOOST_AUTO_TEST_CASE(DEBUG_test) {
-  std::ofstream logfile("debug_log.txt");
-
-  auto log = detail::create_logger("TestLogger", &logfile, DEBUG);
-  ACTS_LOCAL_LOGGER(std::move(log));
-  ACTS_FATAL("fatal level");
-  ACTS_ERROR("error level");
-  ACTS_WARNING("warning level");
-  ACTS_INFO("info level");
-  ACTS_DEBUG("debug level");
-  ACTS_VERBOSE("verbose level");
-  logfile.close();
-
-  std::vector<std::string> lines;
-  lines.push_back("TestLogger     FATAL     fatal level");
-  lines.push_back("TestLogger     ERROR     error level");
-  lines.push_back("TestLogger     WARNING   warning level");
-  lines.push_back("TestLogger     INFO      info level");
-  lines.push_back("TestLogger     DEBUG     debug level");
-
-  std::ifstream infile("debug_log.txt", std::ios::in);
-  size_t i = 0;
-  for (std::string line; std::getline(infile, line); ++i) {
-    BOOST_CHECK_EQUAL(line, lines.at(i));
-  }
+  debug_level_test("debug_log.txt", DEBUG);
 }
 
 /// @brief unit test for VERBOSE debug level
-///
-/// This test checks for the expected output when using the
-/// Acts::Logging::VERBOSE debug level as threshold. It also tests
-/// - #ACTS_LOCAL_LOGGER
-/// - Acts::getDefaultLogger
 BOOST_AUTO_TEST_CASE(VERBOSE_test) {
-  std::ofstream logfile("verbose_log.txt");
-
-  auto log = detail::create_logger("TestLogger", &logfile, VERBOSE);
-  ACTS_LOCAL_LOGGER(std::move(log));
-  ACTS_FATAL("fatal level");
-  ACTS_ERROR("error level");
-  ACTS_WARNING("warning level");
-  ACTS_INFO("info level");
-  ACTS_DEBUG("debug level");
-  ACTS_VERBOSE("verbose level");
-  logfile.close();
-
-  std::vector<std::string> lines;
-  lines.push_back("TestLogger     FATAL     fatal level");
-  lines.push_back("TestLogger     ERROR     error level");
-  lines.push_back("TestLogger     WARNING   warning level");
-  lines.push_back("TestLogger     INFO      info level");
-  lines.push_back("TestLogger     DEBUG     debug level");
-  lines.push_back("TestLogger     VERBOSE   verbose level");
-
-  std::ifstream infile("verbose_log.txt", std::ios::in);
-  size_t i = 0;
-  for (std::string line; std::getline(infile, line); ++i) {
-    BOOST_CHECK_EQUAL(line, lines.at(i));
-  }
+  debug_level_test("verbose_log.txt", VERBOSE);
 }
 }  // namespace Test
 }  // namespace Acts
