@@ -298,8 +298,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   auto copyState = [&](auto& field, const auto& state) {
     using field_t = std::decay_t<decltype(field)>;
-    std::decay_t<decltype(state)> copy(tgContext, mfContext, cp, ndir, stepSize,
-                                       tolerance);
+    std::decay_t<decltype(state)> copy(tgContext, field.makeCache(mfContext),
+                                       cp, ndir, stepSize, tolerance);
     copy.pars = state.pars;
     copy.q = state.q;
     copy.covTransport = state.covTransport;
