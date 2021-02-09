@@ -49,18 +49,21 @@ jobs:
       - name: Examples
         run: >
           # Common setup
-          NUM_EVENTS=100
-          SRC_DIR=`pwd`
-          BUILD_DIR=`pwd`/build
-          DD4HEP_INPUT="--dd4hep-input file:${SRC_DIR}/Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml"
-          run_example() { ${BUILD_DIR}/bin/$* -n ${NUM_EVENTS}; }
+          NUM_EVENTS=100 &&
+          SRC_DIR=`pwd` &&
+          BUILD_DIR=`pwd`/build &&
+          DD4HEP_INPUT="--dd4hep-input file:${SRC_DIR}/Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml" &&
+          run_example() { time ${BUILD_DIR}/bin/$* -n ${NUM_EVENTS} && echo "---"; } &&
           cd ${SRC_DIR}/Examples &&
+
+          # Run hello world example
+          run_example ActsExampleHelloWorld &&
 
           # Run geometry examples for all geometries
           #
-          # Other examples will only be run with the Generic geometry to reduce
-          # combinatorial explosion in the number of executed examples (and thus
-          # in the CI running time)
+          # We must try to avoid running examples for all geometries because
+          # that results in a combinatorial explosion of CI running time. But
+          # these examples are fast enough.
           #
           run_example ActsExampleGeometryAligned &&
           run_example ActsExampleGeometryDD4hep ${DD4HEP_INPUT} &&
@@ -69,6 +72,24 @@ jobs:
           run_example ActsExampleGeometryPayload &&
           run_example ActsExampleGeometryTelescope &&
           # TODO: Add TGeo geometry example (needs an input file + knowhow)
+
+          # Run propagation examples for all geometries
+          #
+          # In addition to the geometry examples, we also need one slightly more
+          # complex example to run with all geometries because geometries with
+          # conditions have code paths that are only exercised when the
+          # Sequencer actually runs.
+          #
+          run_example ActsExamplePropagationAligned &&
+          run_example ActsExamplePropagationDD4hep ${DD4HEP_INPUT} &&
+          run_example ActsExampleGeometryEmpty &&
+          run_example ActsExampleGeometryGeneric &&
+          run_example ActsExampleGeometryPayload &&
+          # TODO: Add TGeo geometry example (needs an input file + knowhow)
+
+          # Run event generation examples
+          run_example ActsExampleParticleGun &&
+          run_example ActsExamplePythia8 &&
 
           # TODO: Add more examples
           # TODO: Bring back output reproducibility tests
