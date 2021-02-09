@@ -316,13 +316,13 @@ BOOST_AUTO_TEST_CASE(Reset) {
   stepper.step(state);
 
   // Construct the parameters
-  Vector3 pos(1.5, -2.5, 3.5);
-  Vector3 mom(4.5, -5.5, 6.5);
-  double time = 7.5;
-  double charge = 1.;
-  BoundSymMatrix cov = 8.5 * Covariance::Identity();
-  CurvilinearTrackParameters cp(makeVector4(pos, time), unitDir, absMom, charge,
-                                cov);
+  Vector3 newPos(1.5, -2.5, 3.5);
+  auto newAbsMom = 4.2 * absMom;
+  double newTime = 7.5;
+  double newCharge = 1.;
+  BoundSymMatrix newCov = 8.5 * Covariance::Identity();
+  CurvilinearTrackParameters cp(makeVector4(newPos, newTime), unitDir,
+                                newAbsMom, newCharge, newCov);
   FreeVector freeParams = detail::transformBoundToFreeParameters(
       cp.referenceSurface(), geoCtx, cp.parameters());
   NavigationDirection ndir = forward;
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
                      cp.referenceSurface(), ndir, stepSize);
   // Test all components
   BOOST_CHECK(stateCopy.covTransport);
-  BOOST_CHECK_EQUAL(*stateCopy.covariance, cov);
+  BOOST_CHECK_EQUAL(*stateCopy.covariance, newCov);
   BOOST_CHECK_EQUAL(stepper.position(stateCopy),
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(stepper.direction(stateCopy),
@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
                      cp.referenceSurface(), ndir);
   // Test all components
   BOOST_CHECK(stateCopy.covTransport);
-  BOOST_CHECK_EQUAL(*stateCopy.covariance, cov);
+  BOOST_CHECK_EQUAL(*stateCopy.covariance, newCov);
   BOOST_CHECK_EQUAL(stepper.position(stateCopy),
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(stepper.direction(stateCopy),
@@ -379,7 +379,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
                      cp.referenceSurface());
   // Test all components
   BOOST_CHECK(stateCopy.covTransport);
-  BOOST_CHECK_EQUAL(*stateCopy.covariance, cov);
+  BOOST_CHECK_EQUAL(*stateCopy.covariance, newCov);
   BOOST_CHECK_EQUAL(stepper.position(stateCopy),
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(stepper.direction(stateCopy),
@@ -398,14 +398,15 @@ BOOST_AUTO_TEST_CASE(Reset) {
   // Reset using different surface shapes
   // 1) Disc surface
   // Setting some parameters
-  pos << 1.5, -2.5, 0.;
-  mom << 4.5, -5.5, 6.5;
-  time = 7.5;
-  charge = 1.;
-  cov = 8.5 * Covariance::Identity();
+  newPos << 0.5, -1.5, 0.;
+  newAbsMom *= 1.23;
+  newTime = 8.4;
+  newCharge = -1.;
+  newCov = 10.9 * Covariance::Identity();
   Transform3 trafo = Transform3::Identity();
   auto disc = Surface::makeShared<DiscSurface>(trafo);
-  BoundTrackParameters boundDisc(disc, geoCtx, pos4, unitDir, absMom, charge);
+  BoundTrackParameters boundDisc(disc, geoCtx, makeVector4(newPos, newTime),
+                                 unitDir, newAbsMom, newCharge, newCov);
 
   // Reset the state and test
   Stepper::State stateDisc = state.stepping;
@@ -417,14 +418,15 @@ BOOST_AUTO_TEST_CASE(Reset) {
 
   // 2) Perigee surface
   // Setting some parameters
-  pos << 1.5, -2.5, 3.5;
-  mom << 4.5, -5.5, 6.5;
-  time = 7.5;
-  charge = 1.;
-  cov = 8.5 * Covariance::Identity();
+  newPos << 1.5, -2.5, 3.5;
+  newAbsMom *= 0.45;
+  newTime = 2.3;
+  newCharge = 1.;
+  newCov = 8.7 * Covariance::Identity();
   auto perigee = Surface::makeShared<PerigeeSurface>(trafo);
-  BoundTrackParameters boundPerigee(perigee, geoCtx, pos4, unitDir, absMom,
-                                    charge);
+  BoundTrackParameters boundPerigee(perigee, geoCtx,
+                                    makeVector4(newPos, newTime), unitDir,
+                                    newAbsMom, newCharge, newCov);
 
   // Reset the state and test
   Stepper::State statePerigee = state.stepping;
@@ -436,14 +438,10 @@ BOOST_AUTO_TEST_CASE(Reset) {
   CHECK_NE_COLLECTIONS(statePerigee.pVector, stateDisc.pVector);
 
   // 3) Straw surface
-  // Setting some parameters
-  pos << 1.5, -2.5, 3.5;
-  mom << 4.5, -5.5, 6.5;
-  time = 7.5;
-  charge = 1.;
-  cov = 8.5 * Covariance::Identity();
+  // Use the same parameters as for previous Perigee surface
   auto straw = Surface::makeShared<StrawSurface>(trafo);
-  BoundTrackParameters boundStraw(straw, geoCtx, pos4, unitDir, absMom, charge);
+  BoundTrackParameters boundStraw(straw, geoCtx, makeVector4(newPos, newTime),
+                                  unitDir, newAbsMom, newCharge, newCov);
 
   // Reset the state and test
   Stepper::State stateStraw = state.stepping;

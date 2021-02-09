@@ -2,6 +2,5 @@ set(unittest_extra_libraries ActsFatras)
 
 add_unittest(FatrasChargeSelectors ChargeSelectorsTests.cpp)
 add_unittest(FatrasKinematicCasts KinematicCastsTests.cpp)
-add_unittest(FatrasLimitSelectors LimitSelectorsTests.cpp)
 add_unittest(FatrasPdgSelectors PdgSelectorsTests.cpp)
 add_unittest(FatrasSelectorHelpers SelectorHelpersTests.cpp)

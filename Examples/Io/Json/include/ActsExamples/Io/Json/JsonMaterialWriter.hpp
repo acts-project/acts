@@ -6,17 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// JsonMaterialWriter.h
-///////////////////////////////////////////////////////////////////
-
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
-#include "Acts/Plugins/Json/JsonGeometryConverter.hpp"
+#include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
@@ -46,7 +42,7 @@ class JsonMaterialWriter {
   /// Constructor
   ///
   /// @param cfg The configuration struct of the converter
-  JsonMaterialWriter(const Acts::JsonGeometryConverter::Config& cfg,
+  JsonMaterialWriter(const Acts::MaterialMapJsonConverter::Config& cfg,
                      const std::string& fileName);
 
   /// Virtual destructor
@@ -64,7 +60,7 @@ class JsonMaterialWriter {
 
  private:
   /// The config class of the converter
-  Acts::JsonGeometryConverter::Config m_cfg;
+  Acts::MaterialMapJsonConverter::Config m_cfg;
 
   /// The file name
   std::string m_fileName;

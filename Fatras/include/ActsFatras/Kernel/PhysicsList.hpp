@@ -24,48 +24,54 @@ namespace ActsFatras {
 /// disabled at run-time. By default all processes are applied.
 template <typename... processes_t>
 class PhysicsList {
+  using Mask = std::bitset<sizeof...(processes_t)>;
+  using Processes = std::tuple<processes_t...>;
+
  public:
+  /// Disable a specific process identified by index.
+  void disable(size_t process) { m_mask.set(process); }
+  /// Disable a specific process identified by type.
+  ///
+  /// @note Disables only the first element, if multiple elements of the same
+  ///   type exist.
+  template <typename process_t>
+  void disable() {
+    m_mask.set(Index<process_t, Processes>::value);
+  }
+
+  /// Access a specific process identified by index.
+  template <size_t kProcess>
+  std::tuple_element<kProcess, Processes>& get() {
+    return std::get<kProcess>(m_processes);
+  }
+  /// Access a specific process identified by type.
+  ///
+  /// @warning This function only works if all configured processes have
+  ///   different types.
+  template <typename process_t>
+  process_t& get() {
+    return std::get<process_t>(m_processes);
+  }
+
   /// Run the physics list for a given material and particle.
   ///
+  /// @tparam generator_t must be a RandomNumberEngine
   /// @param[in]     generator is the random number generator
   /// @param[in]     slab      is the passed material
   /// @param[in,out] particle  is the particle being updated
   /// @param[out]    generated is the container of generated particles
   /// @return Break condition, i.e. whether a process stoped the propagation
-  ///
-  /// @tparam generator_t must be a RandomNumberEngine
   template <typename generator_t>
-  bool operator()(generator_t& generator, const Acts::MaterialSlab& slab,
-                  Particle& particle, std::vector<Particle>& generated) const {
+  bool run(generator_t& generator, const Acts::MaterialSlab& slab,
+           Particle& particle, std::vector<Particle>& generated) const {
     static_assert(
         (true && ... &&
          std::is_same_v<bool, decltype(processes_t()(generator, slab, particle,
                                                      generated))>),
         "Not all processes conform to the expected interface");
 
-    return impl(std::index_sequence_for<processes_t...>(), generator, slab,
-                particle, generated);
-  }
-
-  /// Access a specific process by index.
-  template <size_t I>
-  std::tuple_element_t<I, std::tuple<processes_t...>>& get() {
-    return std::get<I>(m_processes);
-  }
-  /// Access a specific process by type.
-  template <typename process_t>
-  process_t& get() {
-    return std::get<process_t>(m_processes);
-  }
-
-  /// Disable a specific process by index.
-  void disable(std::size_t i) { m_mask.set(i, true); }
-  /// Disable a specific process by type.
-  ///
-  /// @warning Disables only the first of multiple processes of the same type.
-  template <typename process_t>
-  void disable() {
-    return disable(Index<process_t, std::tuple<processes_t...>>::value);
+    return runImpl(generator, slab, particle, generated,
+                   std::index_sequence_for<processes_t...>());
   }
 
  private:
@@ -83,28 +89,28 @@ class PhysicsList {
         1u + Index<T, std::tuple<Types...>>::value;
   };
 
-  std::bitset<sizeof...(processes_t)> m_mask;
-  std::tuple<processes_t...> m_processes;
+  // allow processes to be masked. defaults to zeros -> no masked processes
+  Mask m_mask;
+  Processes m_processes;
 
   // compile-time index-based recursive function call for all processes
-  template <typename generator_t>
-  bool impl(std::index_sequence<>, generator_t&, const Acts::MaterialSlab&,
-            Particle&, std::vector<Particle>&) const {
-    return false;
-  }
-  template <std::size_t I0, std::size_t... INs, typename generator_t>
-  bool impl(std::index_sequence<I0, INs...>, generator_t& generator,
-            const Acts::MaterialSlab& slab, Particle& particle,
-            std::vector<Particle>& generated) const {
+  template <typename generator_t, std::size_t I0, std::size_t... INs>
+  bool runImpl(generator_t& generator, const Acts::MaterialSlab& slab,
+               Particle& particle, std::vector<Particle>& generated,
+               std::index_sequence<I0, INs...>) const {
     // only call process if it is not masked
     if (not m_mask[I0] and
         std::get<I0>(m_processes)(generator, slab, particle, generated)) {
       // exit early in case the process signals an abort
       return true;
-    } else {
-      return impl(std::index_sequence<INs...>(), generator, slab, particle,
-                  generated);
     }
+    return runImpl(generator, slab, particle, generated,
+                   std::index_sequence<INs...>());
+  }
+  template <typename generator_t>
+  bool runImpl(generator_t&, const Acts::MaterialSlab&, Particle&,
+               std::vector<Particle>&, std::index_sequence<>) const {
+    return false;
   }
 };
 

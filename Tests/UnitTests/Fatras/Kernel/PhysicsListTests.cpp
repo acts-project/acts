@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(Empty) {
 
   // w/o processes the list should never abort
   BOOST_CHECK(
-      not emptyList(fix.generator, fix.slab, fix.inputParticle, outgoing));
+      not emptyList.run(fix.generator, fix.slab, fix.inputParticle, outgoing));
 }
 
 BOOST_AUTO_TEST_CASE(SingleSterile) {
@@ -71,8 +71,8 @@ BOOST_AUTO_TEST_CASE(SingleSterile) {
   BOOST_CHECK_EQUAL(sterileList.get<SterileProcess>().some_parameter, 2);
 
   // sterile process should never abort
-  BOOST_CHECK(
-      not sterileList(fix.generator, fix.slab, fix.inputParticle, outgoing));
+  BOOST_CHECK(not sterileList.run(fix.generator, fix.slab, fix.inputParticle,
+                                  outgoing));
 }
 
 BOOST_AUTO_TEST_CASE(SingleFatal) {
@@ -81,11 +81,12 @@ BOOST_AUTO_TEST_CASE(SingleFatal) {
   std::vector<ActsFatras::Particle> outgoing;
 
   // fatal process must always abort
-  BOOST_CHECK(fatalList(fix.generator, fix.slab, fix.inputParticle, outgoing));
+  BOOST_CHECK(
+      fatalList.run(fix.generator, fix.slab, fix.inputParticle, outgoing));
   // unless we disable it
   fatalList.disable<FatalProcess>();
   BOOST_CHECK(
-      not fatalList(fix.generator, fix.slab, fix.inputParticle, outgoing));
+      not fatalList.run(fix.generator, fix.slab, fix.inputParticle, outgoing));
 }
 
 BOOST_AUTO_TEST_CASE(SterileFatal) {
@@ -95,11 +96,11 @@ BOOST_AUTO_TEST_CASE(SterileFatal) {
 
   // the contained fatal process must always abort
   BOOST_CHECK(
-      physicsList(fix.generator, fix.slab, fix.inputParticle, outgoing));
+      physicsList.run(fix.generator, fix.slab, fix.inputParticle, outgoing));
   // with the fatal process disabled, it should go through again
   physicsList.disable<FatalProcess>();
-  BOOST_CHECK(
-      not physicsList(fix.generator, fix.slab, fix.inputParticle, outgoing));
+  BOOST_CHECK(not physicsList.run(fix.generator, fix.slab, fix.inputParticle,
+                                  outgoing));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
