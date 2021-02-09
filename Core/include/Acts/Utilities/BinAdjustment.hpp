@@ -123,14 +123,14 @@ BinUtility adjustBinUtility(const BinUtility& bu, const CylinderBounds& cBounds,
   return uBinUtil;
 }
 
-
 /// @brief adjust the BinUtility bu to the dimensions of plane bounds
 ///
 /// @param bu BinUtility at source
 /// @param pBounds the Rectangle bounds to adjust to
 ///
 /// @return new updated BinUtiltiy
-BinUtility adjustBinUtility(const BinUtility& bu, const RectangleBounds& pBounds,
+BinUtility adjustBinUtility(const BinUtility& bu,
+                            const RectangleBounds& pBounds,
                             const Transform3& transform) {
   // Default constructor
   BinUtility uBinUtil(transform);
@@ -167,7 +167,7 @@ BinUtility adjustBinUtility(const BinUtility& bu, const RectangleBounds& pBounds
     // Create the updated BinningData
     BinningData uBinData(bd.option, bval, bd.bins(), min, max);
     uBinUtil += BinUtility(uBinData);
-    }
+  }
 
   return uBinUtil;
 }
@@ -191,19 +191,19 @@ BinUtility adjustBinUtility(const BinUtility& bu, const Surface& surface) {
     auto rBounds = dynamic_cast<const RadialBounds*>(&(surface.bounds()));
     // Return specific adjustment
     return adjustBinUtility(bu, *rBounds, surface.transform(GeometryContext()));
-  }
-  else if (surface.type() == Surface::Plane) { 
+  } else if (surface.type() == Surface::Plane) {
     if (surface.bounds().type() == SurfaceBounds::eRectangle) {
       // Cast to Plane bounds and return
       auto pBounds = dynamic_cast<const RectangleBounds*>(&(surface.bounds()));
       // Return specific adjustment
-      return adjustBinUtility(bu, *pBounds, surface.transform(GeometryContext()));
+      return adjustBinUtility(bu, *pBounds,
+                              surface.transform(GeometryContext()));
     } else {
       throw std::invalid_argument(
-        "Bin adjustment not implemented for this type of plane surface yet!");    
+          "Bin adjustment not implemented for this type of plane surface yet!");
     }
   }
-  
+
   throw std::invalid_argument(
       "Bin adjustment not implemented for this surface yet!");
 

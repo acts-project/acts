@@ -52,7 +52,6 @@ BOOST_AUTO_TEST_CASE(BinAdjustment_Cylinder) {
   BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max, 50);
 }
 
-
 // Test Rectangule
 BOOST_AUTO_TEST_CASE(BinAdjustment_Rectangle) {
   RectangleBounds bound(20, 30);
@@ -63,9 +62,9 @@ BOOST_AUTO_TEST_CASE(BinAdjustment_Rectangle) {
   BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3::Identity());
 
   BOOST_CHECK_EQUAL(buAdjust.binningData()[0].min, -20);
-  BOOST_CHECK_EQUAL(buAdjust.binningData()[0].max,  20);
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[0].max, 20);
   BOOST_CHECK_EQUAL(buAdjust.binningData()[1].min, -30);
-  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max,  30);
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max, 30);
 }
 
 }  // namespace Test
