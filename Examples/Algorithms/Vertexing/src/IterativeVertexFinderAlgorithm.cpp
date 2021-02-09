@@ -91,7 +91,7 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   finderCfg.maxVertices = 200;
   finderCfg.reassignTracksAfterFirstFit = true;
   VertexFinder finder(finderCfg);
-  VertexFinder::State state(bField->makeCache(ctx.magFieldContext));
+  VertexFinder::State state(*bField, ctx.magFieldContext);
   VertexFinderOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
 
   // find vertices

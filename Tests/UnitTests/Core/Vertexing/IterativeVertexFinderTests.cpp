@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     cfg.reassignTracksAfterFirstFit = true;
 
     VertexFinder finder(cfg);
-    VertexFinder::State state(bField->makeCache(magFieldContext));
+    VertexFinder::State state(*bField, magFieldContext);
 
     // Vector to be filled with all tracks in current event
     std::vector<std::unique_ptr<const BoundTrackParameters>> tracks;
@@ -362,7 +362,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     cfg.reassignTracksAfterFirstFit = true;
 
     VertexFinder finder(cfg, extractParameters);
-    VertexFinder::State state(bField->makeCache(magFieldContext));
+    VertexFinder::State state(*bField, magFieldContext);
 
     // Same for user track type tracks
     std::vector<std::unique_ptr<const InputTrack>> tracks;
@@ -576,7 +576,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   cfg.significanceCutSeeding = 12;
 
   VertexFinder finder(cfg);
-  VertexFinder::State state(bField->makeCache(magFieldContext));
+  VertexFinder::State state(*bField, magFieldContext);
 
   auto csvData = readTracksAndVertexCSV(toolString);
   auto tracks = std::get<TracksData>(csvData);
