@@ -53,8 +53,8 @@ jobs:
           SRC_DIR=`pwd`
           BUILD_DIR=`pwd`/build
           DD4HEP_INPUT="--dd4hep-input file:${SRC_DIR}/Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml"
-          cd ${SRC_DIR}/Examples
           run_example() { ${BUILD_DIR}/bin/$* -n ${NUM_EVENTS}; }
+          cd ${SRC_DIR}/Examples &&
 
           # Run geometry examples for all geometries
           #
