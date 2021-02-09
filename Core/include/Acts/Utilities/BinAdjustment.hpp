@@ -192,13 +192,18 @@ BinUtility adjustBinUtility(const BinUtility& bu, const Surface& surface) {
     // Return specific adjustment
     return adjustBinUtility(bu, *rBounds, surface.transform(GeometryContext()));
   }
-  else if (surface.type() == Surface::Plane && surface.bounds().type() == SurfaceBounds::eRectangle) {
-    // Cast to Plane bounds and return
-    auto pBounds = dynamic_cast<const RectangleBounds*>(&(surface.bounds()));
-    // Return specific adjustment
-    return adjustBinUtility(bu, *pBounds, surface.transform(GeometryContext()));
+  else if (surface.type() == Surface::Plane) { 
+    if (surface.bounds().type() == SurfaceBounds::eRectangle) {
+      // Cast to Plane bounds and return
+      auto pBounds = dynamic_cast<const RectangleBounds*>(&(surface.bounds()));
+      // Return specific adjustment
+      return adjustBinUtility(bu, *pBounds, surface.transform(GeometryContext()));
+    } else {
+      throw std::invalid_argument(
+        "Bin adjustment not implemented for this type of plane surface yet!");    
+    }
   }
-
+  
   throw std::invalid_argument(
       "Bin adjustment not implemented for this surface yet!");
 
