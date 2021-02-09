@@ -192,7 +192,7 @@ BinUtility adjustBinUtility(const BinUtility& bu, const Surface& surface) {
     // Return specific adjustment
     return adjustBinUtility(bu, *rBounds, surface.transform(GeometryContext()));
   }
-  else if (surface.type() == Surface::Plane) {
+  else if (surface.type() == Surface::Plane && surface.bounds().type() == SurfaceBounds::eRectangle) {
     // Cast to Plane bounds and return
     auto pBounds = dynamic_cast<const RectangleBounds*>(&(surface.bounds()));
     // Return specific adjustment
