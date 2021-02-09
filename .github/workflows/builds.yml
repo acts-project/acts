@@ -129,7 +129,6 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DACTS_BUILD_PLUGIN_CUDA=ON
           -DACTS_BUILD_UNITTESTS=ON
-          -DACTS_LOG_FAILURE_THRESHOLD=WARNING
       - name: Build
         run: cmake --build build --
   sycl:
@@ -150,7 +149,6 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DACTS_BUILD_PLUGIN_SYCL=ON
           -DACTS_BUILD_UNITTESTS=ON
-          -DACTS_LOG_FAILURE_THRESHOLD=WARNING
       - name: Build
         run: >
           source /opt/intel/oneapi/setvars.sh
