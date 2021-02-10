@@ -44,7 +44,9 @@ run_example ActsExampleGeometryTelescope
 run_example ActsExamplePropagationAligned
 # FIXME: Cannot enable DD4hep yet due to a variation of issue #697
 # run_example ActsExamplePropagationDD4hep ${DD4HEP_INPUT}
-run_example ActsExamplePropagationEmpty
+#
+# FIXME: Disabled because of issue #710
+# run_example ActsExamplePropagationEmpty
 run_example ActsExamplePropagationGeneric
 run_example ActsExamplePropagationPayload
 # TODO: Add TGeo propagation example (needs an input file + knowhow)
