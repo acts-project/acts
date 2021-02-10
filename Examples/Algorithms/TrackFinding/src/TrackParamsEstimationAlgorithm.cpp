@@ -55,15 +55,6 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
       m_cfg.sigmaT0 * m_cfg.sigmaT0;
 }
 
-Acts::Vector3 ActsExamples::TrackParamsEstimationAlgorithm::getField(
-    const Acts::Vector3& position) const {
-  return std::visit(
-      [&](const auto& inputField) -> Acts::Vector3 {
-        return inputField->getField(position);
-      },
-      m_cfg.magneticField);
-}
-
 ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // @todo storing the seed as a ProtoTrack in the SeedingAlgorithm. The input

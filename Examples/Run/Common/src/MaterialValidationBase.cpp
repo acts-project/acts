@@ -163,7 +163,7 @@ int materialValidationExample(int argc, char* argv[],
 
   // Create BField service
   ActsExamples::Options::setupMagneticFieldServices(vm, sequencer);
-  auto bFieldVar = ActsExamples::Options::readMagneticField(vm);
+  auto bField = ActsExamples::Options::readMagneticField(vm);
 
   if (vm["prop-stepper"].template as<int>() == 0) {
     // Straight line stepper was chosen

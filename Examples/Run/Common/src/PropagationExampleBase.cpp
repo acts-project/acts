@@ -70,7 +70,7 @@ int propagationExample(int argc, char* argv[],
 
   // Create BField service
   ActsExamples::Options::setupMagneticFieldServices(vm, sequencer);
-  auto bFieldVar = ActsExamples::Options::readMagneticField(vm);
+  auto bField = ActsExamples::Options::readMagneticField(vm);
 
   auto setupPropagator = [&](auto&& stepper) {
     using Stepper = std::decay_t<decltype(stepper)>;

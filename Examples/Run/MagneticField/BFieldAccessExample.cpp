@@ -79,8 +79,8 @@ void accessStepWise(const Acts::BFieldProvider& bField,
   }
 }
 
-template <typename field_t, typename field_context_t>
-void accessRandom(field_t& bField, field_context_t& bFieldContext,
+void accessRandom(const Acts::BFieldProvider& bField,
+                  const Acts::MagneticFieldContext& bFieldContext,
                   size_t totalSteps, double radius) {
   std::cout << "[>>>] Start: random access pattern ... " << std::endl;
   size_t mismatched = 0;
@@ -90,9 +90,7 @@ void accessRandom(field_t& bField, field_context_t& bFieldContext,
   UniformDist zDist(-radius, radius);
 
   // initialize the field cache
-  auto bCache =
-      Acts::MagneticFieldProvider::Cache::make<typename field_t::Cache>(
-          bFieldContext);
+  auto bCache = bField.makeCache(bFieldContext);
   boost::progress_display show_progress(totalSteps);
 
   // the event loop
@@ -152,7 +150,7 @@ int main(int argc, char* argv[]) {
   // per-event access patterns this should be switched to a proper
   // Sequencer-based tool. Otherwise it should be removed.
   auto nEvents = ActsExamples::Options::readSequencerConfig(vm).events;
-  auto bFieldVar = ActsExamples::Options::readMagneticField(vm);
+  auto bField = ActsExamples::Options::readMagneticField(vm);
 
   // Get the phi and eta range
   auto phir = vm["bf-phi-range"].as<ActsExamples::Options::Reals<2>>();

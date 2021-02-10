@@ -8,6 +8,7 @@
 
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/MagneticField/MagneticField.hpp"
 #include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 
@@ -69,16 +70,16 @@ int main(int argc, char* argv[]) {
     return EXIT_FAILURE;
   }
 
-  ActsExamples::Options::readBField(vm);
+  auto bFieldVar = ActsExamples::Options::readMagneticField(vm);
 
-  if (auto bField2D =
-          std::dynamic_pointer_cast<const InterpolatedBFieldMap2D>(bFieldVar);
+  if (auto bField2D = std::dynamic_pointer_cast<
+          const ActsExamples::detail::InterpolatedMagneticField2>(bFieldVar);
       bField2D) {
     ActsExamples::BField::writeField(vm, *bField2D);
     return EXIT_SUCCESS;
-  } else if (auto bField3D =
-                 std::dynamic_pointer_cast<const InterpolatedBFieldMap3D>(
-                     bFieldVar);
+  } else if (auto bField3D = std::dynamic_pointer_cast<
+                 const ActsExamples::detail::InterpolatedMagneticField3>(
+                 bFieldVar);
              bField3D) {
     ActsExamples::BField::writeField(vm, *bField3D);
     return EXIT_SUCCESS;
