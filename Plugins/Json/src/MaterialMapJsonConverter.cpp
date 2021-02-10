@@ -173,7 +173,7 @@ Acts::MaterialMapJsonConverter::MaterialMapJsonConverter(
 
 /// Convert method
 ///
-nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
+nlohmann::ordered_json Acts::MaterialMapJsonConverter::materialMapsToJson(
     const DetectorMaterialMaps& maps) {
   VolumeMaterialMap volumeMap = maps.second;
   std::vector<std::pair<GeometryIdentifier, const IVolumeMaterial*>>
@@ -183,7 +183,7 @@ nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
   }
   GeometryHierarchyMap<const IVolumeMaterial*> HierarchyVolumeMap(
       mapVolumeInit);
-  nlohmann::json materialVolume =
+  nlohmann::ordered_json materialVolume =
       m_volumeMaterialConverter.toJson(HierarchyVolumeMap);
   SurfaceMaterialMap surfaceMap = maps.first;
   std::vector<std::pair<GeometryIdentifier, const ISurfaceMaterial*>>
@@ -193,7 +193,7 @@ nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
   }
   GeometryHierarchyMap<const ISurfaceMaterial*> HierarchySurfaceMap(
       mapSurfaceInit);
-  nlohmann::json materialSurface =
+  nlohmann::ordered_json materialSurface =
       m_surfaceMaterialConverter.toJson(HierarchySurfaceMap);
   nlohmann::ordered_json materialMap;
   materialMap["Volumes"] = materialVolume;
@@ -230,7 +230,7 @@ Acts::MaterialMapJsonConverter::jsonToMaterialMaps(
   return maps;
 }
 
-nlohmann::json Acts::MaterialMapJsonConverter::trackingGeometryToJson(
+nlohmann::ordered_json Acts::MaterialMapJsonConverter::trackingGeometryToJson(
     const Acts::TrackingGeometry& tGeometry) {
   std::vector<std::pair<GeometryIdentifier, Acts::TrackingVolumeAndMaterial>>
       volumeHierarchy;
@@ -240,10 +240,12 @@ nlohmann::json Acts::MaterialMapJsonConverter::trackingGeometryToJson(
                      tGeometry.highestTrackingVolume());
   GeometryHierarchyMap<Acts::TrackingVolumeAndMaterial> HierarchyVolumeMap(
       volumeHierarchy);
-  nlohmann::json jsonVolumes = m_volumeConverter.toJson(HierarchyVolumeMap);
+  nlohmann::ordered_json jsonVolumes =
+      m_volumeConverter.toJson(HierarchyVolumeMap);
   GeometryHierarchyMap<Acts::SurfaceAndMaterial> HierarchySurfaceMap(
       surfaceHierarchy);
-  nlohmann::json jsonSurfaces = m_surfaceConverter.toJson(HierarchySurfaceMap);
+  nlohmann::ordered_json jsonSurfaces =
+      m_surfaceConverter.toJson(HierarchySurfaceMap);
   nlohmann::ordered_json hierarchyMap;
   hierarchyMap["Volumes"] = jsonVolumes;
   hierarchyMap["Surfaces"] = jsonSurfaces;
