@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/BinAdjustment.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
@@ -49,6 +50,21 @@ BOOST_AUTO_TEST_CASE(BinAdjustment_Cylinder) {
   BOOST_CHECK_EQUAL(buAdjust.binningData()[0].max, float(M_PI / 4));
   BOOST_CHECK_EQUAL(buAdjust.binningData()[1].min, -50);
   BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max, 50);
+}
+
+// Test Rectangule
+BOOST_AUTO_TEST_CASE(BinAdjustment_Rectangle) {
+  RectangleBounds bound(20, 30);
+  BinUtility bu;
+  bu += BinUtility(1, 0, 1, Acts::open, Acts::binX);
+  bu += BinUtility(1, 0, 1, Acts::open, Acts::binY);
+
+  BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3::Identity());
+
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[0].min, -20);
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[0].max, 20);
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].min, -30);
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max, 30);
 }
 
 }  // namespace Test
