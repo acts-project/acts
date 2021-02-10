@@ -61,7 +61,8 @@ run_example ActsExamplePythia8
 #        thread-unsafe Geant4 code is accidentally run outside of the
 #        mutex-protected region of the code. See issue #207 .
 #
-# FIXME: Cannot enable DD4hep yet due to a variation of issue #697
+# FIXME: Cannot enable DD4hep yet due to a variation of issue #697 .
+#        Even with DD4hep on, will still fail due to missing Geant4 data files.
 # run_example ActsExampleGeantinoRecordingDD4hep ${DD4HEP_INPUT} -j1
 # TODO: Add GDML version (needs an input file + knowhow)
 
