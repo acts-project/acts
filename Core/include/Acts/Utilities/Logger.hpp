@@ -9,6 +9,7 @@
 #pragma once
 // STL include(s)
 #include <ctime>
+#include <exception>
 #include <functional>
 #include <iomanip>
 #include <iostream>
@@ -56,6 +57,14 @@
   };                                                                           \
   __local_acts_logger logger(log_object);
 
+// Debug level agnostic implementation of the ACTS_XYZ logging macros
+#define ACTS_LOG(level, x)                                                     \
+  if (logger().doPrint(level)) {                                               \
+    std::ostringstream os;                                                     \
+    os << x;                                                                   \
+    logger().log(level, os.str());                                             \
+  }
+
 /// @brief macro for verbose debug output
 /// @ingroup Logging
 ///
@@ -66,9 +75,7 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::VERBOSE.
-#define ACTS_VERBOSE(x)                                                        \
-  if (logger().doPrint(Acts::Logging::VERBOSE))                                \
-    logger().log(Acts::Logging::VERBOSE) << x;
+#define ACTS_VERBOSE(x)  ACTS_LOG(Acts::Logging::VERBOSE, x)
 
 /// @brief macro for debug debug output
 /// @ingroup Logging
@@ -80,9 +87,7 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::DEBUG.
-#define ACTS_DEBUG(x)                                                          \
-  if (logger().doPrint(Acts::Logging::DEBUG))                                  \
-    logger().log(Acts::Logging::DEBUG) << x;
+#define ACTS_DEBUG(x)  ACTS_LOG(Acts::Logging::DEBUG, x)
 
 /// @brief macro for info debug output
 /// @ingroup Logging
@@ -94,9 +99,7 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::INFO.
-#define ACTS_INFO(x)                                                           \
-  if (logger().doPrint(Acts::Logging::INFO))                                   \
-    logger().log(Acts::Logging::INFO) << x;
+#define ACTS_INFO(x)  ACTS_LOG(Acts::Logging::INFO, x)
 
 /// @brief macro for warning debug output
 /// @ingroup Logging
@@ -108,9 +111,7 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::WARNING.
-#define ACTS_WARNING(x)                                                        \
-  if (logger().doPrint(Acts::Logging::WARNING))                                \
-    logger().log(Acts::Logging::WARNING) << x;
+#define ACTS_WARNING(x)  ACTS_LOG(Acts::Logging::WARNING, x)
 
 /// @brief macro for error debug output
 /// @ingroup Logging
@@ -122,9 +123,7 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::ERROR.
-#define ACTS_ERROR(x)                                                          \
-  if (logger().doPrint(Acts::Logging::ERROR))                                  \
-    logger().log(Acts::Logging::ERROR) << x;
+#define ACTS_ERROR(x)  ACTS_LOG(Acts::Logging::ERROR, x)
 
 /// @brief macro for fatal debug output
 /// @ingroup Logging
@@ -136,9 +135,7 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::FATAL.
-#define ACTS_FATAL(x)                                                          \
-  if (logger().doPrint(Acts::Logging::FATAL))                                  \
-    logger().log(Acts::Logging::FATAL) << x;
+#define ACTS_FATAL(x)  ACTS_LOG(Acts::Logging::FATAL, x)
 // clang-format on
 
 namespace Acts {
@@ -156,8 +153,22 @@ enum Level {
   INFO,         ///< INFO level
   WARNING,      ///< WARNING level
   ERROR,        ///< ERROR level
-  FATAL         ///< FATAL level
+  FATAL,        ///< FATAL level
+  MAX           ///< Must be kept above the maximum supported debug level
 };
+
+/// @brief debug level above which an exception will be thrown after logging
+///
+/// All messages with a debug level equal or higher than FAILURE_THRESHOLD will
+/// cause an exception to be thrown after log emission. This behavior, which is
+/// controlled via the ACTS_LOG_FAILURE_THRESHOLD preprocessor define, enables
+/// reliably catching non-fatal errors in automated Acts tests.
+constexpr Level FAILURE_THRESHOLD =
+#ifdef ACTS_LOG_FAILURE_THRESHOLD
+    static_cast<Level>(ACTS_LOG_FAILURE_THRESHOLD);
+#else
+    Level::MAX;
+#endif
 
 /// @brief abstract base class for printing debug output
 ///
@@ -172,7 +183,7 @@ class OutputPrintPolicy {
   ///
   /// @param [in] lvl   debug output level of message
   /// @param [in] input text of debug message
-  virtual void flush(const Level& lvl, const std::ostringstream& input) = 0;
+  virtual void flush(const Level& lvl, const std::string& input) = 0;
 };
 
 /// @brief abstract base class for filtering debug output
@@ -193,67 +204,6 @@ class OutputFilterPolicy {
   virtual bool doPrint(const Level& lvl) const = 0;
 };
 
-/// @brief thread-safe output stream
-///
-/// This classes caches the output internally and only flushes it to the
-/// destination stream once it is destroyed. Using local instances of this
-/// class therefore provides a thread-safe way for printing debug messages.
-class OutStream final {
-  /// function type for output flushing
-  using OutputFunc = std::function<void(const std::ostringstream&)>;
-
- public:
-  /// @brief construct stream object
-  ///
-  /// @param [in] output function object called for flushing the internal
-  ///        cache
-  explicit OutStream(OutputFunc output)
-      : m_stream(), m_outputFunctor(std::move(output)) {}
-
-  /// @brief copy constructor
-  ///
-  /// @param [in] copy stream object to copy
-  OutStream(const OutStream& copy)
-      : m_stream(), m_outputFunctor(copy.m_outputFunctor) {
-    m_stream << copy.m_stream.str();
-  }
-
-  /// @brief destructor
-  ///
-  /// When calling the destructor, the internal cache is flushed using the
-  /// function provided during construction.
-  ~OutStream() { m_outputFunctor(m_stream); }
-
-  /// @brief stream input operator forwarded to internal cache
-  ///
-  /// @tparam T input type
-  ///
-  /// @param [in] input content added to the stream
-  template <typename T>
-  OutStream& operator<<(T&& input) {
-    m_stream << std::forward<T>(input);
-    return *this;
-  }
-
-  /// @brief forward stream modifiers to internal cache
-  ///
-  /// @tparam T stream type
-  ///
-  /// @param [in] f stream modifier
-  template <typename T>
-  OutStream& operator<<(T& (*f)(T&)) {
-    f(m_stream);
-    return *this;
-  }
-
- private:
-  /// internal cache of stream
-  std::ostringstream m_stream;
-
-  /// output function called for flushing cache upon destruction
-  OutputFunc m_outputFunctor;
-};
-
 /// @brief default filter policy for debug messages
 ///
 /// All debug messages with a debug level equal or larger to the specified
@@ -263,7 +213,13 @@ class DefaultFilterPolicy final : public OutputFilterPolicy {
   /// @brief constructor
   ///
   /// @param [in] lvl threshold debug level
-  explicit DefaultFilterPolicy(const Level& lvl) : m_level(lvl) {}
+  explicit DefaultFilterPolicy(const Level& lvl) : m_level(lvl) {
+    if (lvl > FAILURE_THRESHOLD) {
+      throw std::runtime_error(
+          "Requested debug level is incompatible with "
+          "the ACTS_LOG_FAILURE_THRESHOLD configuration");
+    }
+  }
 
   /// virtual default destructor
   ~DefaultFilterPolicy() override = default;
@@ -301,7 +257,7 @@ class OutputDecorator : public OutputPrintPolicy {
   ///
   /// This function delegates the flushing of the debug message to its wrapped
   /// object.
-  void flush(const Level& lvl, const std::ostringstream& input) override {
+  void flush(const Level& lvl, const std::string& input) override {
     m_wrappee->flush(lvl, input);
   }
 
@@ -333,11 +289,11 @@ class NamedOutputDecorator final : public OutputDecorator {
   ///
   /// This function prepends the given name to the debug message and then
   /// delegates the flushing of the whole message to its wrapped object.
-  void flush(const Level& lvl, const std::ostringstream& input) override {
+  void flush(const Level& lvl, const std::string& input) override {
     std::ostringstream os;
     os << std::left << std::setw(m_maxWidth) << m_name.substr(0, m_maxWidth - 3)
-       << input.str();
-    OutputDecorator::flush(lvl, os);
+       << input;
+    OutputDecorator::flush(lvl, os.str());
   }
 
  private:
@@ -368,10 +324,10 @@ class TimedOutputDecorator final : public OutputDecorator {
   ///
   /// This function prepends a time stamp to the debug message and then
   /// delegates the flushing of the whole message to its wrapped object.
-  void flush(const Level& lvl, const std::ostringstream& input) override {
+  void flush(const Level& lvl, const std::string& input) override {
     std::ostringstream os;
-    os << std::left << std::setw(12) << now() << input.str();
-    OutputDecorator::flush(lvl, os);
+    os << std::left << std::setw(12) << now() << input;
+    OutputDecorator::flush(lvl, os.str());
   }
 
  private:
@@ -408,11 +364,10 @@ class ThreadOutputDecorator final : public OutputDecorator {
   ///
   /// This function prepends the thread ID to the debug message and then
   /// delegates the flushing of the whole message to its wrapped object.
-  void flush(const Level& lvl, const std::ostringstream& input) override {
+  void flush(const Level& lvl, const std::string& input) override {
     std::ostringstream os;
-    os << std::left << std::setw(20) << std::this_thread::get_id()
-       << input.str();
-    OutputDecorator::flush(lvl, os);
+    os << std::left << std::setw(20) << std::this_thread::get_id() << input;
+    OutputDecorator::flush(lvl, os.str());
   }
 };
 
@@ -434,10 +389,10 @@ class LevelOutputDecorator final : public OutputDecorator {
   ///
   /// This function prepends the debug level to the debug message and then
   /// delegates the flushing of the whole message to its wrapped object.
-  void flush(const Level& lvl, const std::ostringstream& input) override {
+  void flush(const Level& lvl, const std::string& input) override {
     std::ostringstream os;
-    os << std::left << std::setw(10) << toString(lvl) << input.str();
-    OutputDecorator::flush(lvl, os);
+    os << std::left << std::setw(10) << toString(lvl) << input;
+    OutputDecorator::flush(lvl, os.str());
   }
 
  private:
@@ -470,8 +425,13 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
   ///
   /// @param [in] lvl   debug level of debug message
   /// @param [in] input text of debug message
-  void flush(const Level& /*lvl*/, const std::ostringstream& input) final {
-    (*m_out) << input.str() << std::endl;
+  void flush(const Level& lvl, const std::string& input) final {
+    (*m_out) << input << std::endl;
+    if (lvl >= FAILURE_THRESHOLD) {
+      throw std::runtime_error(
+          "Previous debug message exceeds the "
+          "ACTS_LOG_FAILURE_THRESHOLD configuration, bailing out");
+    }
   }
 
  private:
@@ -505,26 +465,13 @@ class Logger {
     return m_filterPolicy->doPrint(lvl);
   }
 
-  /// @brief create output stream object with internal cache
+  /// @brief log a debug message
   ///
   /// @param [in] lvl debug level of debug message
-  ///
-  /// This function creates and returns a stream object which behaves like a
-  /// std::ostream and internally caches the debug message. The message will
-  /// only be written to the destination stream once this stream object goes out
-  /// of scope.
-  ///
-  /// @return output stream object with internal cache for debug message
-  Logging::OutStream log(const Logging::Level& lvl) const {
-    return Logging::OutStream(std::bind(&Logging::OutputPrintPolicy::flush,
-                                        m_printPolicy.get(), lvl,
-                                        std::placeholders::_1));
-  }
-
-  template <typename Callable>
-  void log(const Logging::Level& lvl, Callable&& callable) const {
+  /// @param [in] input text of debug message
+  void log(const Logging::Level& lvl, const std::string& input) const {
     if (doPrint(lvl)) {
-      callable(log(lvl));
+      m_printPolicy->flush(lvl, input);
     }
   }
 
@@ -555,8 +502,8 @@ class LoggerWrapper {
 
   /// Add a logging message at a given level
   /// @param lvl The level to print at
-  /// @return Accumulating output stream.
-  Logging::OutStream log(const Logging::Level& lvl) const;
+  /// @param input text of debug message
+  void log(const Logging::Level& lvl, const std::string& input) const;
 
   /// Call operator that returns the contained logger instance.
   /// Enables using the logging macros `ACTS_*` when an instance of this class

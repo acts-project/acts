@@ -256,6 +256,7 @@ components.
 | ACTS_BUILD_INTEGRATIONTESTS           | Build integration tests |
 | ACTS_BUILD_UNITTESTS                  | Build unit tests |
 | ACTS_BUILD_DOCS                       | Build documentation |
+| ACTS_LOG_FAILURE_THRESHOLD            | Automatically fail when a log above the specified debug level is emitted (useful for automated tests) |
 | ACTS_PARAMETER_DEFINITIONS_HEADER     | Use a different (track) parameter definitions header |
 | ACTS_USE_SYSTEM_AUTODIFF              | Use autodiff provided by the system instead of the bundled version |
 | ACTS_USE_SYSTEM_NLOHMANN_JSON         | Use nlohmann::json provided by the system instead of the bundled version |

@@ -270,6 +270,4 @@ class CylinderSurface : public Surface {
       const Vector3& direction) const;
 };
 
-#include "Acts/Surfaces/detail/CylinderSurface.ipp"
-
 }  // namespace Acts
