@@ -14,6 +14,7 @@
 #include "ActsExamples/Io/Csv/CsvOptionsWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
 #include "ActsExamples/Io/Json/JsonMaterialWriter.hpp"
+#include "ActsExamples/Io/Json/JsonOptionsWriter.hpp"
 #include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
@@ -38,10 +39,11 @@ int processGeometry(int argc, char* argv[],
   ActsExamples::Options::addMaterialOptions(desc);
   ActsExamples::Options::addObjWriterOptions(desc);
   ActsExamples::Options::addCsvWriterOptions(desc);
-  ActsExamples::Options::addOutputOptions(desc,
-                                          ActsExamples::OutputFormat::Root |
-                                              ActsExamples::OutputFormat::Json |
-                                              ActsExamples::OutputFormat::Csv);
+  ActsExamples::Options::addJsonWriterOptions(desc);
+  ActsExamples::Options::addOutputOptions(
+      desc,
+      ActsExamples::OutputFormat::Root | ActsExamples::OutputFormat::Json |
+          ActsExamples::OutputFormat::Csv | ActsExamples::OutputFormat::Obj);
 
   // Add specific options for this geometry
   detector.addOptions(desc);
@@ -120,7 +122,8 @@ int processGeometry(int argc, char* argv[],
 
     // JSON output
     if (vm["output-json"].as<bool>()) {
-      ActsExamples::JsonSurfacesWriter::Config sJsonWriterConfig;
+      auto sJsonWriterConfig =
+          ActsExamples::Options::readJsonSurfacesWriterConfig(vm);
       sJsonWriterConfig.trackingGeometry = tGeometry;
       sJsonWriterConfig.outputDir = outputDir;
       sJsonWriterConfig.writePerEvent = true;

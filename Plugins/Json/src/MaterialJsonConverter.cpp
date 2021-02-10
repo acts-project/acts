@@ -58,7 +58,7 @@ void Acts::from_json(const nlohmann::json& j, MaterialSlabMatrix& t) {
   for (auto& outer : j) {
     Acts::MaterialSlabVector mpVector;
     for (auto& inner : outer) {
-      MaterialSlab mat(inner);
+      MaterialSlab mat = inner.get<MaterialSlab>();
       mpVector.emplace_back(mat);
     }
     t.push_back(std::move(mpVector));

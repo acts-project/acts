@@ -15,6 +15,9 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
+#include <sstream>
+#include <string>
+
 using namespace ActsExamples;
 
 JsonSurfacesWriter::JsonSurfacesWriter(const JsonSurfacesWriter::Config& cfg,
@@ -109,9 +112,26 @@ ProcessCode JsonSurfacesWriter::write(const AlgorithmContext& ctx) {
                   m_cfg.writeSensitive, m_cfg.writeBoundary);
   SurfaceContainer sContainer(cSurfaces);
 
-  auto j = SurfaceConverter("surfaces").toJson(sContainer);
-  out << std::setprecision(m_cfg.outputPrecision) << j.dump(2);
-  out.close();
+  if (not m_cfg.writeOnlyNames) {
+    auto j = SurfaceConverter("surfaces").toJson(sContainer);
+    out << std::setprecision(m_cfg.outputPrecision) << j.dump(2);
+    out.close();
+  } else {
+    using NamedContainer = Acts::GeometryHierarchyMap<std::string>;
+    using NamedConverter = Acts::GeometryHierarchyMapJsonConverter<std::string>;
+
+    std::vector<std::pair<Acts::GeometryIdentifier, std::string>> namedEntries;
+    for (size_t is = 0; is < sContainer.size(); ++is) {
+      Acts::GeometryIdentifier geometryId = sContainer.idAt(is);
+      std::stringstream geoTypeName;
+      geoTypeName << geometryId;
+      namedEntries.push_back({geometryId, geoTypeName.str()});
+    }
+    NamedContainer nContainer(namedEntries);
+    auto j = NamedConverter("surface_types").toJson(nContainer);
+    out << j.dump(2);
+    out.close();
+  }
 
   return ProcessCode::SUCCESS;
 }

@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
+#include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <cmath>
@@ -146,4 +147,51 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
         "Polyhedron repr of boundless surface not possible.");
   }
   return Polyhedron(vertices, faces, triangularMesh, exactPolyhedron);
+}
+
+Acts::Vector3 Acts::PlaneSurface::normal(const GeometryContext& gctx,
+                                         const Vector2& /*lpos*/) const {
+  // fast access via tranform matrix (and not rotation())
+  const auto& tMatrix = transform(gctx).matrix();
+  return Vector3(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
+}
+
+Acts::Vector3 Acts::PlaneSurface::binningPosition(
+    const GeometryContext& gctx, BinningValue /*bValue*/) const {
+  return center(gctx);
+}
+
+double Acts::PlaneSurface::pathCorrection(const GeometryContext& gctx,
+                                          const Vector3& position,
+                                          const Vector3& direction) const {
+  // We can ignore the global position here
+  return 1. / std::abs(Surface::normal(gctx, position).dot(direction));
+}
+
+Acts::SurfaceIntersection Acts::PlaneSurface::intersect(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const BoundaryCheck& bcheck) const {
+  // Get the contextual transform
+  const auto& gctxTransform = transform(gctx);
+  // Use the intersection helper for planar surfaces
+  auto intersection =
+      PlanarHelper::intersect(gctxTransform, position, direction);
+  // Evaluate boundary check if requested (and reachable)
+  if (intersection.status != Intersection3D::Status::unreachable and bcheck) {
+    // Built-in local to global for speed reasons
+    const auto& tMatrix = gctxTransform.matrix();
+    // Create the reference vector in local
+    const Vector3 vecLocal(intersection.position - tMatrix.block<3, 1>(0, 3));
+    if (not insideBounds(tMatrix.block<3, 2>(0, 0).transpose() * vecLocal,
+                         bcheck)) {
+      intersection.status = Intersection3D::Status::missed;
+    }
+  }
+  return {intersection, this};
+}
+
+Acts::ActsMatrix<2, 3> Acts::PlaneSurface::localCartesianToBoundLocalDerivative(
+    const GeometryContext& /*unused*/, const Vector3& /*unused*/) const {
+  const ActsMatrix<2, 3> loc3DToLocBound = ActsMatrix<2, 3>::Identity();
+  return loc3DToLocBound;
 }
