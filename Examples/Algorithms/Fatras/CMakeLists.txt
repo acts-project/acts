@@ -1,7 +1,7 @@
 add_library(
   ActsExamplesFatras SHARED
   src/FatrasAlgorithm.cpp
-)
+  src/FatrasAlgorithmOptions.cpp)
 target_include_directories(
   ActsExamplesFatras
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
@@ -10,6 +10,7 @@ target_link_libraries(
   PUBLIC
     ActsCore ActsFatras
     ActsExamplesFramework ActsExamplesMagneticField
+  PRIVATE
     Boost::program_options)
 
 install(
