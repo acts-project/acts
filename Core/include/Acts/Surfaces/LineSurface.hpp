@@ -280,6 +280,4 @@ class LineSurface : public Surface {
                           const Vector3& momentum, Vector2& lposition) const;
 };
 
-#include "Acts/Surfaces/detail/LineSurface.ipp"
-
 }  // namespace Acts

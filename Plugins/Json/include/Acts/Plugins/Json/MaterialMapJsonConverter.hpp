@@ -91,13 +91,14 @@ class MaterialMapJsonConverter {
   /// Convert a DetectorMaterialMaps to json
   ///
   /// @param maps The material map collection
-  nlohmann::json materialMapsToJson(const DetectorMaterialMaps& maps);
+  nlohmann::ordered_json materialMapsToJson(const DetectorMaterialMaps& maps);
 
   /// Convert a tracking geometry to json.
   /// Can be used to initialise the material mapping process.
   ///
   /// @param tGeometry is the tracking geometry
-  nlohmann::json trackingGeometryToJson(const TrackingGeometry& tGeometry);
+  nlohmann::ordered_json trackingGeometryToJson(
+      const TrackingGeometry& tGeometry);
 
   /// Go through a volume to find subvolume, layers and surfaces.
   /// Store volumes and surfaces in two vector used to initialised the geometry
