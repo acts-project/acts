@@ -1,0 +1,249 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#include "ActsExamples/Fatras/FatrasAlgorithm.hpp"
+
+#include "Acts/MagneticField/SharedBField.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsFatras/Kernel/PhysicsList.hpp"
+#include "ActsFatras/Kernel/PointLikePhysicsList.hpp"
+#include "ActsFatras/Kernel/Process.hpp"
+#include "ActsFatras/Kernel/Simulator.hpp"
+#include "ActsFatras/Physics/Decay/NoDecay.hpp"
+#include "ActsFatras/Physics/EnergyLoss/BetheBloch.hpp"
+#include "ActsFatras/Physics/EnergyLoss/BetheHeitler.hpp"
+#include "ActsFatras/Physics/Scattering/Highland.hpp"
+#include "ActsFatras/Physics/StandardPhysicsLists.hpp"
+#include "ActsFatras/Selectors/ChargeSelectors.hpp"
+#include "ActsFatras/Selectors/KinematicCasts.hpp"
+#include "ActsFatras/Selectors/SelectorHelpers.hpp"
+#include "ActsFatras/Selectors/SurfaceSelectors.hpp"
+
+namespace {
+
+/// Simple struct to select surfaces where hits should be generated.
+struct HitSurfaceSelector {
+  bool sensitive = false;
+  bool material = false;
+  bool passive = false;
+
+  /// Check if the surface should be used.
+  bool operator()(const Acts::Surface &surface) const {
+    // sensitive/material are not mutually exclusive
+    bool isSensitive = surface.associatedDetectorElement();
+    bool isMaterial = surface.surfaceMaterial();
+    // passive should be an orthogonal category
+    bool isPassive = not(isSensitive or isMaterial);
+    return (isSensitive and sensitive) or (isMaterial and material) or
+           (isPassive and passive);
+  }
+};
+
+}  // namespace
+
+// Same interface as `ActsFatras::Simulator` but with concrete types.
+struct ActsExamples::detail::FatrasAlgorithmSimulation {
+  virtual ~FatrasAlgorithmSimulation(){};
+  virtual Acts::Result<std::vector<ActsFatras::FailedParticle>> simulate(
+      const Acts::GeometryContext &, const Acts::MagneticFieldContext &,
+      ActsExamples::RandomEngine &, const ActsExamples::SimParticleContainer &,
+      ActsExamples::SimParticleContainer::sequence_type &,
+      ActsExamples::SimParticleContainer::sequence_type &,
+      ActsExamples::SimHitContainer::sequence_type &) const = 0;
+};
+
+namespace {
+
+// Magnetic-field specific PIMPL implementation.
+template <typename magnetic_field_t>
+struct FatrasAlgorithmSimulationT final
+    : ActsExamples::detail::FatrasAlgorithmSimulation {
+  using CutPMin = ActsFatras::Min<ActsFatras::Casts::P>;
+
+  // typedefs for charge particle simulation
+  // propagate charged particles numerically in the given magnetic field
+  using ChargedStepper = Acts::EigenStepper<magnetic_field_t>;
+  using ChargedPropagator = Acts::Propagator<ChargedStepper, Acts::Navigator>;
+  // charged particles w/ standard em physics list and selectable hits
+  using ChargedSelector =
+      ActsFatras::CombineAnd<ActsFatras::ChargedSelector, CutPMin>;
+  using ChargedSimulator = ActsFatras::ParticleSimulator<
+      ChargedPropagator, ActsFatras::ChargedElectroMagneticPhysicsList,
+      ActsFatras::PointLikePhysicsList<>, HitSurfaceSelector,
+      ActsFatras::NoDecay>;
+
+  // typedefs for neutral particle simulation
+  // propagate neutral particles with just straight lines
+  using NeutralStepper = Acts::StraightLineStepper;
+  using NeutralPropagator = Acts::Propagator<NeutralStepper, Acts::Navigator>;
+  // neutral particles w/o physics and no hits
+  using NeutralSelector =
+      ActsFatras::CombineAnd<ActsFatras::NeutralSelector, CutPMin>;
+  using NeutralSimulator =
+      ActsFatras::ParticleSimulator<NeutralPropagator,
+                                    ActsFatras::PhysicsList<>,
+                                    ActsFatras::PointLikePhysicsList<>,
+                                    ActsFatras::NoSurface, ActsFatras::NoDecay>;
+
+  // combined simulation type
+  using Simulation = ActsFatras::Simulator<ChargedSelector, ChargedSimulator,
+                                           NeutralSelector, NeutralSimulator>;
+
+  Simulation simulation;
+
+  FatrasAlgorithmSimulationT(magnetic_field_t &&mf,
+                             const ActsExamples::FatrasAlgorithm::Config &cfg,
+                             Acts::Logging::Level lvl)
+      : simulation(
+            ChargedSimulator(
+                ChargedPropagator(std::move(mf), cfg.trackingGeometry), lvl),
+            NeutralSimulator(
+                NeutralPropagator(NeutralStepper(), cfg.trackingGeometry),
+                lvl)) {
+    using namespace ActsFatras;
+    using namespace ActsFatras::detail;
+    // apply the configuration
+
+    // minimal p cut on input particles and as is-alive check for interactions
+    simulation.selectCharged.template get<CutPMin>().valMin = cfg.pMin;
+    simulation.selectNeutral.template get<CutPMin>().valMin = cfg.pMin;
+    simulation.charged.continuous =
+        makeChargedElectroMagneticPhysicsList(cfg.pMin);
+
+    // processes are enabled by default
+    if (not cfg.emScattering) {
+      simulation.charged.continuous.template disable<StandardScattering>();
+    }
+    if (not cfg.emEnergyLossIonisation) {
+      simulation.charged.continuous.template disable<StandardBetheBloch>();
+    }
+    if (not cfg.emEnergyLossRadiation) {
+      simulation.charged.continuous.template disable<StandardBetheHeitler>();
+    }
+
+    // configure hit surfaces for charged particles
+    simulation.charged.selectHitSurface.sensitive = cfg.generateHitsOnSensitive;
+    simulation.charged.selectHitSurface.material = cfg.generateHitsOnMaterial;
+    simulation.charged.selectHitSurface.passive = cfg.generateHitsOnPassive;
+  }
+  ~FatrasAlgorithmSimulationT() final override{};
+
+  Acts::Result<std::vector<ActsFatras::FailedParticle>> simulate(
+      const Acts::GeometryContext &geoCtx,
+      const Acts::MagneticFieldContext &magCtx, ActsExamples::RandomEngine &rng,
+      const ActsExamples::SimParticleContainer &inputParticles,
+      ActsExamples::SimParticleContainer::sequence_type
+          &simulatedParticlesInitial,
+      ActsExamples::SimParticleContainer::sequence_type
+          &simulatedParticlesFinal,
+      ActsExamples::SimHitContainer::sequence_type &simHits)
+      const final override {
+    return simulation.simulate(geoCtx, magCtx, rng, inputParticles,
+                               simulatedParticlesInitial,
+                               simulatedParticlesFinal, simHits);
+  }
+};
+
+}  // namespace
+
+ActsExamples::FatrasAlgorithm::FatrasAlgorithm(Config cfg,
+                                               Acts::Logging::Level lvl)
+    : ActsExamples::BareAlgorithm("FatrasAlgorithm", lvl),
+      m_cfg(std::move(cfg)) {
+  ACTS_DEBUG("hits on sensitive surfaces: " << m_cfg.generateHitsOnSensitive);
+  ACTS_DEBUG("hits on material surfaces: " << m_cfg.generateHitsOnMaterial);
+  ACTS_DEBUG("hits on passive surfaces: " << m_cfg.generateHitsOnPassive);
+
+  // construct the simulation for the specific magnetic field
+  m_sim = std::visit(
+      [&](auto &&mf)
+          -> std::unique_ptr<ActsExamples::detail::FatrasAlgorithmSimulation> {
+        // the variant sub-types are always wrapped in a shared_ptr
+        using ThisMagneticField =
+            typename std::decay_t<decltype(mf)>::element_type;
+        using SharedMagneticField = Acts::SharedBField<ThisMagneticField>;
+        using Implementation = FatrasAlgorithmSimulationT<SharedMagneticField>;
+
+        return std::make_unique<Implementation>(
+            SharedMagneticField(std::move(mf)), m_cfg, lvl);
+      },
+      m_cfg.magneticField);
+}
+
+// explicit destructor needed for the PIMPL implementation to work
+ActsExamples::FatrasAlgorithm::~FatrasAlgorithm() {}
+
+ActsExamples::ProcessCode ActsExamples::FatrasAlgorithm::execute(
+    const AlgorithmContext &ctx) const {
+  // read input containers
+  const auto &inputParticles =
+      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
+
+  // prepare output containers
+  SimParticleContainer::sequence_type particlesInitialUnordered;
+  SimParticleContainer::sequence_type particlesFinalUnordered;
+  SimHitContainer::sequence_type simHitsUnordered;
+  // reserve appropriate resources
+  particlesInitialUnordered.reserve(inputParticles.size());
+  particlesFinalUnordered.reserve(inputParticles.size());
+  simHitsUnordered.reserve(inputParticles.size() *
+                           m_cfg.averageHitsPerParticle);
+
+  // run the simulation w/ a local random generator
+  auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
+  auto ret = m_sim->simulate(ctx.geoContext, ctx.magFieldContext, rng,
+                             inputParticles, particlesInitialUnordered,
+                             particlesFinalUnordered, simHitsUnordered);
+  // fatal error leads to panic
+  if (not ret.ok()) {
+    ACTS_FATAL("event " << ctx.eventNumber << " simulation failed with error "
+                        << ret.error());
+    return ProcessCode::ABORT;
+  }
+  // failed particles are just logged. assumes that failed particles are due
+  // to edge-cases representing a tiny fraction of the event; not due to a
+  // fundamental issue.
+  for (const auto &failed : ret.value()) {
+    ACTS_ERROR("event " << ctx.eventNumber << " particle " << failed.particle
+                        << " failed to simulate with error " << failed.error
+                        << ": " << failed.error.message());
+  }
+  // TODO is there a point where too many failed particles or failed particles
+  //   of a particular type (e.g. from hard interaction or any primary particle)
+  //   should also lead to a panic?
+
+  ACTS_DEBUG(inputParticles.size() << " input particles");
+  ACTS_DEBUG(particlesInitialUnordered.size()
+             << " simulated particles (initial state)");
+  ACTS_DEBUG(particlesFinalUnordered.size()
+             << " simulated particles (final state)");
+  ACTS_DEBUG(simHitsUnordered.size() << " simulated hits");
+
+  // order output containers
+  SimParticleContainer particlesInitial;
+  SimParticleContainer particlesFinal;
+  SimHitContainer simHits;
+  particlesInitial.adopt_sequence(std::move(particlesInitialUnordered));
+  particlesFinal.adopt_sequence(std::move(particlesFinalUnordered));
+  simHits.adopt_sequence(std::move(simHitsUnordered));
+  // store ordered output containers
+  ctx.eventStore.add(m_cfg.outputParticlesInitial, std::move(particlesInitial));
+  ctx.eventStore.add(m_cfg.outputParticlesFinal, std::move(particlesFinal));
+  ctx.eventStore.add(m_cfg.outputSimHits, std::move(simHits));
+
+  return ActsExamples::ProcessCode::SUCCESS;
+}
