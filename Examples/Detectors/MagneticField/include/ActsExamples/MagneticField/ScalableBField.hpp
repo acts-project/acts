@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,23 +13,16 @@
 
 namespace ActsExamples {
 
-namespace BField {
-
-/// The Context to be handed around
+/// The ScalableBField-specific magnetic field context.
 struct ScalableBFieldContext {
-  double scalor = 1.;
+  Acts::ActsScalar scalor = 1.;
 };
 
-/// @ingroup MagneticField
-///
-/// @brief returns a given constant field value at every point
-///
-/// This class is based on the constant magnetic field class
-/// but allows a event based context
+/// A constant magnetic field that is scaled depending on the event context.
 class ScalableBField final {
  public:
   struct Cache {
-    double scalor = 1.;
+    Acts::ActsScalar scalor = 1.;
 
     /// @brief constructor with context
     Cache(const Acts::MagneticFieldContext& mctx) {
@@ -47,7 +40,8 @@ class ScalableBField final {
   /// @param [in] Bx magnetic field component in global x-direction
   /// @param [in] By magnetic field component in global y-direction
   /// @param [in] Bz magnetic field component in global z-direction
-  ScalableBField(double Bx = 0., double By = 0., double Bz = 0.)
+  ScalableBField(Acts::ActsScalar Bx = 0, Acts::ActsScalar By = 0,
+                 Acts::ActsScalar Bz = 0)
       : m_BField(Bx, By, Bz) {}
 
   /// @brief retrieve magnetic field value
@@ -133,5 +127,4 @@ class ScalableBField final {
   Acts::Vector3 m_BField;
 };
 
-}  // namespace BField
 }  // namespace ActsExamples
