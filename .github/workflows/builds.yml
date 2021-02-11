@@ -47,6 +47,7 @@ jobs:
       - name: Integration tests
         run: ${SETUP} && cmake --build build -- integrationtests
       - name: Examples
+        if: contains(matrix.image, 'ubuntu')
         run: ${SETUP} && ./CI/run_examples.sh
       - name: Install
         run: ${SETUP} && cmake --build build -- install
