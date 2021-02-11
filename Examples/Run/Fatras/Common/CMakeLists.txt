@@ -1,7 +1,6 @@
 add_library(
   ActsExamplesFatrasCommon SHARED
   Fatras.cpp
-  FatrasDigitization.cpp
   FatrasInput.cpp
   FatrasSimulation.cpp)
 target_include_directories(
