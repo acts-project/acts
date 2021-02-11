@@ -1,19 +1,16 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
-#include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
-#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
 #include <random>
@@ -122,7 +119,7 @@ int main(int argc, char* argv[]) {
   // Declare the supported program options.
   auto desc = ActsExamples::Options::makeDefaultOptions();
   ActsExamples::Options::addSequencerOptions(desc);
-  ActsExamples::Options::addBFieldOptions(desc);
+  ActsExamples::Options::addMagneticFieldOptions(desc);
   desc.add_options()(
       "bf-phi-range",
       po::value<ActsExamples::Options::Reals<2>>()->default_value(
@@ -152,7 +149,7 @@ int main(int argc, char* argv[]) {
   // per-event access patterns this should be switched to a proper
   // Sequencer-based tool. Otherwise it should be removed.
   auto nEvents = ActsExamples::Options::readSequencerConfig(vm).events;
-  auto bFieldVar = ActsExamples::Options::readBField(vm);
+  auto bFieldVar = ActsExamples::Options::readMagneticField(vm);
 
   // Get the phi and eta range
   auto phir = vm["bf-phi-range"].as<ActsExamples::Options::Reals<2>>();
@@ -177,8 +174,12 @@ int main(int argc, char* argv[]) {
       [&](auto& bField) -> int {
         using field_type =
             typename std::decay_t<decltype(bField)>::element_type;
-        if constexpr (!std::is_same_v<field_type, InterpolatedBFieldMap2D> &&
-                      !std::is_same_v<field_type, InterpolatedBFieldMap3D>) {
+        if constexpr (!std::is_same_v<
+                          field_type,
+                          ActsExamples::detail::InterpolatedMagneticField2> &&
+                      !std::is_same_v<
+                          field_type,
+                          ActsExamples::detail::InterpolatedMagneticField3>) {
           std::cout << "Bfield map could not be read. Exiting." << std::endl;
           return EXIT_FAILURE;
         } else {
