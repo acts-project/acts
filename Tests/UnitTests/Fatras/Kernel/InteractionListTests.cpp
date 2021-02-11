@@ -17,90 +17,239 @@
 #include <random>
 
 using namespace Acts::UnitLiterals;
+using namespace ActsFatras;
+
+using Acts::MaterialSlab;
+using Scalar = Particle::Scalar;
+using Rng = std::ranlux48;
 
 namespace {
-/// Physics process that does not trigger a break
-struct SterileProcess {
-  int some_parameter = 0;
 
-  /// call operator
-  template <typename generator_t, typename detector_t, typename particle_t>
-  bool operator()(generator_t &, const detector_t &, particle_t &,
-                  std::vector<particle_t> &) const {
+/// Continuous process that does not trigger a break
+struct SterileContinuousProcess {
+  bool operator()(Rng &, const MaterialSlab &, Particle &,
+                  std::vector<Particle> &) const {
     return false;
   }
 };
 
-/// Physics process that DOES trigger a break
-struct FatalProcess {
-  /// call operator
-  template <typename generator_t, typename detector_t, typename particle_t>
-  bool operator()(generator_t &, const detector_t &, particle_t &,
-                  std::vector<particle_t> &) const {
+/// Continuous process that DOES trigger a break
+struct FatalContinuousProcess {
+  bool operator()(Rng &, const MaterialSlab &, Particle &,
+                  std::vector<Particle> &) const {
+    return true;
+  }
+};
+
+/// EM-like point-like process that triggers on X0 and keeps the particle alive.
+///
+/// Each run call creates one descendant particle.
+struct X0PointLikeProcess {
+  std::pair<Scalar, Scalar> generatePathLimits(Rng &, const Particle &) const {
+    return {0.5, std::numeric_limits<Scalar>::infinity()};
+  }
+
+  bool run(Rng &, Particle &particle, std::vector<Particle> &generated) const {
+    auto pid0 = particle.particleId().makeDescendant(0);
+    generated.emplace_back(particle.withParticleId(pid0));
+    return false;
+  }
+};
+
+/// Nuclear-like point-like process that triggers on L0 and kills the particle.
+///
+/// Each run call creates two descendant particles.
+struct L0PointLikeProcess {
+  std::pair<Scalar, Scalar> generatePathLimits(Rng &, const Particle &) const {
+    return {std::numeric_limits<Scalar>::infinity(), 1.5};
+  }
+
+  bool run(Rng &, Particle &particle, std::vector<Particle> &generated) const {
+    auto pid0 = particle.particleId().makeDescendant(0);
+    auto pid1 = particle.particleId().makeDescendant(1);
+    generated.emplace_back(particle.withParticleId(pid0));
+    generated.emplace_back(particle.withParticleId(pid1));
     return true;
   }
 };
 
 struct Fixture {
-  std::ranlux48 generator{23};
+  Rng rng{23};
   Acts::MaterialSlab slab =
       Acts::MaterialSlab(Acts::Test::makeBeryllium(), 1_mm);
-  ActsFatras::Particle inputParticle;
+  Particle incoming;
+  std::vector<Particle> outgoing;
 };
+
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(FatrasInteractionList)
 
 BOOST_AUTO_TEST_CASE(Empty) {
-  Fixture fix;
-  ActsFatras::InteractionList<> emptyList;
-  std::vector<ActsFatras::Particle> outgoing;
+  Fixture f;
+  InteractionList<> l;
 
   // w/o processes the list should never abort
-  BOOST_CHECK(
-      not emptyList.run(fix.generator, fix.slab, fix.inputParticle, outgoing));
+  BOOST_CHECK(not l.runContinuous(f.rng, f.slab, f.incoming, f.outgoing));
+
+  // w/o processes there should be no selection
+  auto sel = l.armPointLike(f.rng, f.incoming);
+  BOOST_CHECK_EQUAL(sel.x0Limit, std::numeric_limits<Scalar>::infinity());
+  BOOST_CHECK_EQUAL(sel.l0Limit, std::numeric_limits<Scalar>::infinity());
+  BOOST_CHECK_EQUAL(sel.x0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(sel.l0Process, SIZE_MAX);
+
+  // running with an invalid process index should do nothing
+  // interaction list is empty and 0 should already be invalid
+  BOOST_CHECK(not l.runPointLike(f.rng, 0u, f.incoming, f.outgoing));
+  BOOST_CHECK_EQUAL(f.outgoing.size(), 0u);
+  // SIZE_MAX should always be an invalid index
+  BOOST_CHECK(not l.runPointLike(f.rng, SIZE_MAX, f.incoming, f.outgoing));
+  BOOST_CHECK_EQUAL(f.outgoing.size(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(SingleSterile) {
-  Fixture fix;
-  ActsFatras::InteractionList<SterileProcess> sterileList;
-  std::vector<ActsFatras::Particle> outgoing;
-
-  // set some process parameters
-  sterileList.get<SterileProcess>().some_parameter = 2;
-  BOOST_CHECK_EQUAL(sterileList.get<SterileProcess>().some_parameter, 2);
+BOOST_AUTO_TEST_CASE(ContinuousSterile) {
+  Fixture f;
+  InteractionList<SterileContinuousProcess> l;
 
   // sterile process should never abort
-  BOOST_CHECK(not sterileList.run(fix.generator, fix.slab, fix.inputParticle,
-                                  outgoing));
+  BOOST_CHECK(not l.runContinuous(f.rng, f.slab, f.incoming, f.outgoing));
 }
 
-BOOST_AUTO_TEST_CASE(SingleFatal) {
-  Fixture fix;
-  ActsFatras::InteractionList<FatalProcess> fatalList;
-  std::vector<ActsFatras::Particle> outgoing;
+BOOST_AUTO_TEST_CASE(ContinuousFatal) {
+  Fixture f;
+  InteractionList<FatalContinuousProcess> l;
 
   // fatal process must always abort
-  BOOST_CHECK(
-      fatalList.run(fix.generator, fix.slab, fix.inputParticle, outgoing));
-  // unless we disable it
-  fatalList.disable<FatalProcess>();
-  BOOST_CHECK(
-      not fatalList.run(fix.generator, fix.slab, fix.inputParticle, outgoing));
+  BOOST_CHECK(l.runContinuous(f.rng, f.slab, f.incoming, f.outgoing));
 }
 
-BOOST_AUTO_TEST_CASE(SterileFatal) {
-  Fixture fix;
-  ActsFatras::InteractionList<SterileProcess, FatalProcess> physicsList;
-  std::vector<ActsFatras::Particle> outgoing;
+BOOST_AUTO_TEST_CASE(ContinuousSterileFatal) {
+  Fixture f;
+  InteractionList<SterileContinuousProcess, FatalContinuousProcess> physicsList;
 
   // the contained fatal process must always abort
-  BOOST_CHECK(
-      physicsList.run(fix.generator, fix.slab, fix.inputParticle, outgoing));
+  BOOST_CHECK(physicsList.runContinuous(f.rng, f.slab, f.incoming, f.outgoing));
   // with the fatal process disabled, it should go through again
-  physicsList.disable<FatalProcess>();
-  BOOST_CHECK(not physicsList.run(fix.generator, fix.slab, fix.inputParticle,
-                                  outgoing));
+  physicsList.disable<FatalContinuousProcess>();
+  BOOST_CHECK(
+      not physicsList.runContinuous(f.rng, f.slab, f.incoming, f.outgoing));
+}
+
+BOOST_AUTO_TEST_CASE(PointLikeX0) {
+  Fixture f;
+  InteractionList<X0PointLikeProcess> l;
+
+  // w/o processes the list should never abort
+  auto sel = l.armPointLike(f.rng, f.incoming);
+  BOOST_CHECK_EQUAL(sel.x0Limit, 0.5);
+  BOOST_CHECK_EQUAL(sel.l0Limit, std::numeric_limits<Scalar>::infinity());
+  BOOST_CHECK_EQUAL(sel.x0Process, 0u);
+  BOOST_CHECK_EQUAL(sel.l0Process, SIZE_MAX);
+
+  // valid index, X0Process leaves the particle alive
+  BOOST_CHECK(not l.runPointLike(f.rng, 0u, f.incoming, f.outgoing));
+  BOOST_CHECK_EQUAL(f.outgoing.size(), 1u);
+  // invalid index, should do nothing
+  BOOST_CHECK(not l.runPointLike(f.rng, SIZE_MAX, f.incoming, f.outgoing));
+  BOOST_CHECK_EQUAL(f.outgoing.size(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(PointLikeL0) {
+  Fixture f;
+  InteractionList<L0PointLikeProcess> l;
+
+  // w/o processes the list should never abort
+  auto sel = l.armPointLike(f.rng, f.incoming);
+  BOOST_CHECK_EQUAL(sel.x0Limit, std::numeric_limits<Scalar>::infinity());
+  BOOST_CHECK_EQUAL(sel.l0Limit, 1.5);
+  BOOST_CHECK_EQUAL(sel.x0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(sel.l0Process, 0u);
+
+  // valid index, L0Process kills the particles and creates 2 descendants
+  BOOST_CHECK(l.runPointLike(f.rng, 0u, f.incoming, f.outgoing));
+  BOOST_CHECK_EQUAL(f.outgoing.size(), 2u);
+  // invalid index, should do nothing
+  BOOST_CHECK(not l.runPointLike(f.rng, SIZE_MAX, f.incoming, f.outgoing));
+  BOOST_CHECK_EQUAL(f.outgoing.size(), 2u);
+}
+
+BOOST_AUTO_TEST_CASE(PointLikeX0L0) {
+  Fixture f;
+  InteractionList<X0PointLikeProcess, L0PointLikeProcess> l;
+
+  // w/o processes the list should never abort
+  auto sel = l.armPointLike(f.rng, f.incoming);
+  BOOST_CHECK_EQUAL(sel.x0Limit, 0.5);
+  BOOST_CHECK_EQUAL(sel.l0Limit, 1.5);
+  BOOST_CHECK_EQUAL(sel.x0Process, 0u);
+  BOOST_CHECK_EQUAL(sel.l0Process, 1u);
+
+  // valid index, X0Process leaves the particle alive
+  BOOST_CHECK(not l.runPointLike(f.rng, 0u, f.incoming, f.outgoing));
+  BOOST_CHECK_EQUAL(f.outgoing.size(), 1u);
+  // valid index, L0Process kills the particles and creates 2 descendants
+  BOOST_CHECK(l.runPointLike(f.rng, 1u, f.incoming, f.outgoing));
+  BOOST_CHECK_EQUAL(f.outgoing.size(), 3u);
+  // invalid index, should do nothing
+  BOOST_CHECK(not l.runPointLike(f.rng, SIZE_MAX, f.incoming, f.outgoing));
+  BOOST_CHECK_EQUAL(f.outgoing.size(), 3u);
+}
+
+// this tests both the disable functionality and an interaction list with both
+// continuous and point-like processes.
+BOOST_AUTO_TEST_CASE(Disable) {
+  Fixture f;
+  InteractionList<SterileContinuousProcess, FatalContinuousProcess,
+                  X0PointLikeProcess, L0PointLikeProcess>
+      l;
+
+  // continuous should abort due to the fatal process
+  BOOST_CHECK(l.runContinuous(f.rng, f.slab, f.incoming, f.outgoing));
+  // unless we disable it
+  l.disable<FatalContinuousProcess>();
+  BOOST_CHECK(not l.runContinuous(f.rng, f.slab, f.incoming, f.outgoing));
+
+  // disabled X0Process should not participate in arming procedure
+  l.disable<X0PointLikeProcess>();
+  {
+    auto sel = l.armPointLike(f.rng, f.incoming);
+    BOOST_CHECK_EQUAL(sel.x0Limit, std::numeric_limits<Scalar>::infinity());
+    BOOST_CHECK_EQUAL(sel.l0Limit, 1.5);
+    BOOST_CHECK_EQUAL(sel.x0Process, SIZE_MAX);
+    BOOST_CHECK_EQUAL(sel.l0Process, 3u);
+
+    // index for X0Process, should do nothing since its disabled
+    f.outgoing.clear();
+    BOOST_CHECK(not l.runPointLike(f.rng, 2u, f.incoming, f.outgoing));
+    BOOST_CHECK_EQUAL(f.outgoing.size(), 0u);
+    // index for L0Process, should run and generate a break condition
+    BOOST_CHECK(l.runPointLike(f.rng, 3u, f.incoming, f.outgoing));
+    BOOST_CHECK_EQUAL(f.outgoing.size(), 2u);
+  }
+
+  // disabling L0Process is equivalent to an empty list (for arming)
+  l.disable<L0PointLikeProcess>();
+  {
+    auto sel = l.armPointLike(f.rng, f.incoming);
+    BOOST_CHECK_EQUAL(sel.x0Limit, std::numeric_limits<Scalar>::infinity());
+    BOOST_CHECK_EQUAL(sel.l0Limit, std::numeric_limits<Scalar>::infinity());
+    BOOST_CHECK_EQUAL(sel.x0Process, SIZE_MAX);
+    BOOST_CHECK_EQUAL(sel.l0Process, SIZE_MAX);
+
+    // index for X0Process, should do nothing since its disabled
+    f.outgoing.clear();
+    BOOST_CHECK(not l.runPointLike(f.rng, 2u, f.incoming, f.outgoing));
+    BOOST_CHECK_EQUAL(f.outgoing.size(), 0u);
+    // index for L0Process, should do nothing since its disabled
+    BOOST_CHECK(not l.runPointLike(f.rng, 3u, f.incoming, f.outgoing));
+    BOOST_CHECK_EQUAL(f.outgoing.size(), 0u);
+  }
+
+  // invalid index, should do nothing
+  f.outgoing.clear();
+  BOOST_CHECK(not l.runPointLike(f.rng, SIZE_MAX, f.incoming, f.outgoing));
+  BOOST_CHECK_EQUAL(f.outgoing.size(), 0u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
