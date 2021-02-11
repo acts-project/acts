@@ -10,7 +10,10 @@ target_link_libraries(
   PUBLIC
     ActsExamplesFramework
     ActsExamplesCommon
-    ActsExamplesDigitization)
+    ActsExamplesDigitization
+    ActsExamplesIoCsv
+    ActsExamplesIoJson
+    ActsExamplesIoRoot)
 
 install(
   TARGETS ActsExamplesDigitizationCommon

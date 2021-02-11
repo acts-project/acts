@@ -86,6 +86,9 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
   // Will be reused as hit counter
   meas.measurement_id = 0;
 
+  ACTS_VERBOSE("Writing " << measurements.size()
+                          << " measurments in this event.");
+
   for (Index hitIdx = 0u; hitIdx < measurements.size(); ++hitIdx) {
     const auto& measurement = measurements[hitIdx];
 

@@ -62,7 +62,7 @@ ActsExamples::Options::readCsvMeasurementWriterConfig(
   if (not vm["output-dir"].empty()) {
     cfg.outputDir = vm["output-dir"].as<std::string>();
   }
-  cfg.outputPrecision = vm["csv-output-precision"].as<size_t>();
+  // cfg.outputPrecision = vm["csv-output-precision"].as<size_t>();
   return cfg;
 }
 

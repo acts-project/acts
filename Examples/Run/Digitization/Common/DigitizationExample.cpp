@@ -17,6 +17,7 @@
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
+#include "ActsExamples/Io/Csv/CsvOptionsWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
@@ -46,6 +47,7 @@ int runDigitizationExample(
   Options::addGeometryOptions(desc);
   Options::addMaterialOptions(desc);
   Options::addOutputOptions(desc, OutputFormat::Csv | OutputFormat::Root);
+  Options::addCsvWriterOptions(desc);
   Options::addInputOptions(desc);
   Options::addMagneticFieldOptions(desc);
   Options::addDigitizationOptions(desc);
@@ -172,7 +174,6 @@ int runDigitizationExample(
       measWriterRoot.inputMeasurements = outputMeasurements;
       measWriterRoot.inputClusters = outputClusters;
       measWriterRoot.inputSimHits = simHitReaderCfg.outputSimHits;
-      ;
       measWriterRoot.inputMeasurementSimHitsMap = outputMeasurementSimHitsMap;
       measWriterRoot.filePath =
           joinPaths(outputDir, std::string(outputMeasurements) + ".root");
@@ -186,11 +187,12 @@ int runDigitizationExample(
 
     // Write digitization out as CSV files
     if (vm["output-csv"].template as<bool>()) {
-      CsvMeasurementWriter::Config measWriterCsv;
+      CsvMeasurementWriter::Config measWriterCsv =
+          Options::readCsvMeasurementWriterConfig(vm);
       measWriterCsv.inputMeasurements = outputMeasurements;
       measWriterCsv.inputClusters = outputClusters;
       measWriterCsv.inputSimHits = simHitReaderCfg.outputSimHits;
-      ;
+
       measWriterCsv.inputMeasurementSimHitsMap = outputMeasurementSimHitsMap;
       measWriterCsv.trackingGeometry = tGeometry;
       sequencer.addWriter(
