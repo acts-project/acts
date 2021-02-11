@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ActsFatras/Kernel/PhysicsList.hpp"
+#include "ActsFatras/Kernel/InteractionList.hpp"
 #include "ActsFatras/Kernel/Process.hpp"
 #include "ActsFatras/Physics/EnergyLoss/BetheBloch.hpp"
 #include "ActsFatras/Physics/EnergyLoss/BetheHeitler.hpp"
@@ -55,8 +55,8 @@ using StandardBetheHeitler =
 /// @todo Bethe-Heitler is applied after energy loss and thus sees the wrong
 ///       input energy.
 using ChargedElectroMagneticPhysicsList =
-    PhysicsList<detail::StandardScattering, detail::StandardBetheBloch,
-                detail::StandardBetheHeitler>;
+    InteractionList<detail::StandardScattering, detail::StandardBetheBloch,
+                    detail::StandardBetheHeitler>;
 
 /// Construct the standard electro-magnetic physics list for charged particles.
 ///

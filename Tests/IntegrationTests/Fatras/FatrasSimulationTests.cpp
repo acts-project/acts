@@ -17,7 +17,7 @@
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
-#include "ActsFatras/Kernel/PhysicsList.hpp"
+#include "ActsFatras/Kernel/InteractionList.hpp"
 #include "ActsFatras/Kernel/PointLikePhysicsList.hpp"
 #include "ActsFatras/Kernel/Simulator.hpp"
 #include "ActsFatras/Physics/Decay/NoDecay.hpp"
@@ -70,15 +70,15 @@ using Generator = std::ranlux48;
 // all charged particles w/ a mock-up physics list and hits everywhere
 using ChargedSelector = ActsFatras::ChargedSelector;
 using ChargedPhysicsList =
-    ActsFatras::PhysicsList<ActsFatras::detail::StandardScattering,
-                            SplitEnergyLoss>;
+    ActsFatras::InteractionList<ActsFatras::detail::StandardScattering,
+                                SplitEnergyLoss>;
 using ChargePointLikePhysicsList = ActsFatras::PointLikePhysicsList<>;
 using ChargedSimulator = ActsFatras::ParticleSimulator<
     ChargedPropagator, ChargedPhysicsList, ChargePointLikePhysicsList,
     ActsFatras::EverySurface, ActsFatras::NoDecay>;
 // all neutral particles w/o physics and no hits
 using NeutralSelector = ActsFatras::NeutralSelector;
-using NeutralPhysicsList = ActsFatras::PhysicsList<>;
+using NeutralPhysicsList = ActsFatras::InteractionList<>;
 using NeutralPointLikePhysicsList = ActsFatras::PointLikePhysicsList<>;
 using NeutralSimulator =
     ActsFatras::ParticleSimulator<NeutralPropagator, NeutralPhysicsList,

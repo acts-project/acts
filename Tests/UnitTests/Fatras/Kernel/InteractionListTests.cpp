@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,7 +12,7 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
-#include "ActsFatras/Kernel/PhysicsList.hpp"
+#include "ActsFatras/Kernel/InteractionList.hpp"
 
 #include <random>
 
@@ -49,11 +49,11 @@ struct Fixture {
 };
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(FatrasPhysicsList)
+BOOST_AUTO_TEST_SUITE(FatrasInteractionList)
 
 BOOST_AUTO_TEST_CASE(Empty) {
   Fixture fix;
-  ActsFatras::PhysicsList<> emptyList;
+  ActsFatras::InteractionList<> emptyList;
   std::vector<ActsFatras::Particle> outgoing;
 
   // w/o processes the list should never abort
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(Empty) {
 
 BOOST_AUTO_TEST_CASE(SingleSterile) {
   Fixture fix;
-  ActsFatras::PhysicsList<SterileProcess> sterileList;
+  ActsFatras::InteractionList<SterileProcess> sterileList;
   std::vector<ActsFatras::Particle> outgoing;
 
   // set some process parameters
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(SingleSterile) {
 
 BOOST_AUTO_TEST_CASE(SingleFatal) {
   Fixture fix;
-  ActsFatras::PhysicsList<FatalProcess> fatalList;
+  ActsFatras::InteractionList<FatalProcess> fatalList;
   std::vector<ActsFatras::Particle> outgoing;
 
   // fatal process must always abort
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(SingleFatal) {
 
 BOOST_AUTO_TEST_CASE(SterileFatal) {
   Fixture fix;
-  ActsFatras::PhysicsList<SterileProcess, FatalProcess> physicsList;
+  ActsFatras::InteractionList<SterileProcess, FatalProcess> physicsList;
   std::vector<ActsFatras::Particle> outgoing;
 
   // the contained fatal process must always abort

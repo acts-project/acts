@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,14 +16,14 @@
 
 namespace ActsFatras {
 
-/// Combined set of physics processes and interactions for the simulation.
+/// Compile-time set of possible interaction processes for the simulation.
 ///
 /// The physics processes are extendable by the user to be able to accomodate
-/// the specific requirements. While the set of available physics processes must
-/// be configured at compile-time, within that set processes can be selectively
-/// disabled at run-time. By default all processes are applied.
+/// their specific requirements. While the set of available physics processes
+/// must be configured at compile-time, within that set processes can be
+/// selectively disabled at run-time. By default all processes are applied.
 template <typename... processes_t>
-class PhysicsList {
+class InteractionList {
   using Mask = std::bitset<sizeof...(processes_t)>;
   using Processes = std::tuple<processes_t...>;
 
