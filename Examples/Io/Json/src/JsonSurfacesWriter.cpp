@@ -118,13 +118,13 @@ ProcessCode JsonSurfacesWriter::write(const AlgorithmContext& ctx) {
 
 ProcessCode JsonSurfacesWriter::endRun() {
   std::ofstream out;
-  out.open(joinPaths(m_cfg.outputDir, "detector.csv"));
+  out.open(joinPaths(m_cfg.outputDir, "detector.json"));
 
   std::vector<SurfaceContainer::InputElement> cSurfaces;
   collectSurfaces(cSurfaces, *m_world, m_cfg.writeLayer, m_cfg.writeApproach,
                   m_cfg.writeSensitive, m_cfg.writeBoundary);
-  SurfaceContainer sContainer(cSurfaces);
 
+  SurfaceContainer sContainer(cSurfaces);
   auto j = SurfaceConverter("surfaces").toJson(sContainer);
   out << std::setprecision(m_cfg.outputPrecision) << j.dump(2);
   out.close();

@@ -20,9 +20,9 @@
 
 using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(JsonDigitizationConfig)
+BOOST_AUTO_TEST_SUITE(JsonIo)
 
-BOOST_AUTO_TEST_CASE(DigitizationConfigRoundTrip) {
+BOOST_AUTO_TEST_CASE(JsonDigitizationConfigRoundTrip) {
   std::ofstream out;
 
   // As all SurfaceBounds have the same streaming API only a one is

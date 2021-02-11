@@ -275,7 +275,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
       }
     }
 
-    IndexSourceLink sourceLink(geoId, simHitIndices.size());
+    IndexSourceLink sourceLink(geoId, measurements.size());
     auto measurement = createMeasurement(dParameters, sourceLink);
 
     // Due to the previous sorting of the raw hit data by geometry id, new
