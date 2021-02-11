@@ -13,10 +13,8 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
-#include "Acts/MagneticField/SharedBField.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
-#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
-#include "ActsExamples/Plugins/BField/ScalableBField.hpp"
+#include "ActsExamples/MagneticField/MagneticField.hpp"
 
 #include <functional>
 #include <memory>
@@ -43,7 +41,7 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
     /// Tracking geometry for surface lookup.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// Magnetic field variant.
-    Options::BFieldVariant magneticField;
+    MagneticField magneticField;
     /// The minimum magnetic field to trigger the track parameters estimation
     double bFieldMin = 0.1 * Acts::UnitConstants::T;
     /// Constant term of the loc0 resolution.
@@ -85,18 +83,5 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
   /// @return the magnetic field at the position
   Acts::Vector3 getField(const Acts::Vector3& position) const;
 };
-
-inline Acts::Vector3 TrackParamsEstimationAlgorithm::getField(
-    const Acts::Vector3& position) const {
-  return std::visit(
-      [&](auto&& inputField) -> Acts::Vector3 {
-        using InputMagneticField =
-            typename std::decay_t<decltype(inputField)>::element_type;
-        using MagneticField = Acts::SharedBField<InputMagneticField>;
-        MagneticField field(std::move(inputField));
-        return field.getField(position);
-      },
-      std::move(m_cfg.magneticField));
-}
 
 }  // namespace ActsExamples

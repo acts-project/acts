@@ -15,9 +15,6 @@
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
 #include "ActsExamples/GenericDetector/GenericDetectorOptions.hpp"
-#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
-#include "ActsExamples/Plugins/BField/BFieldScalor.hpp"
-#include "ActsExamples/Plugins/BField/ScalableBField.hpp"
 
 #include <boost/program_options.hpp>
 
@@ -25,8 +22,6 @@ void PayloadDetector::addOptions(
     boost::program_options::options_description& opt) const {
   /// Add the generic geometry options
   ActsExamples::Options::addGenericGeometryOptions(opt);
-  // Add the bfield options for the magnetic field scaling
-  ActsExamples::Options::addBFieldOptions(opt);
   // specify the rotation setp
   opt.add_options()(
       "align-rotation-step",
@@ -75,16 +70,6 @@ auto PayloadDetector::finalize(
       agcsConfig,
       Acts::getDefaultLogger("PayloadDecorator", decoratorLogLevel));
   pContextDecorators.push_back(agcDecorator);
-
-  if (vm["bf-context-scalable"].template as<bool>()) {
-    ActsExamples::BField::BFieldScalor::Config bfsConfig;
-    bfsConfig.scalor = vm["bf-bscalor"].template as<double>();
-
-    auto bfDecorator =
-        std::make_shared<ActsExamples::BField::BFieldScalor>(bfsConfig);
-
-    pContextDecorators.push_back(bfDecorator);
-  }
 
   // return the pair of geometry and the alignment decorator(s)
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
