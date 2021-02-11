@@ -125,7 +125,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
           for (unsigned int ipar = 0;
                ipar < static_cast<unsigned int>(Acts::eBoundSize); ++ipar) {
             if (m.contains(static_cast<Acts::BoundIndices>(ipar))) {
-              ((1 << ipar) | meas.local_key);
+              meas.local_key = ((1 << (ipar + 1)) | meas.local_key);
             }
           }
 
