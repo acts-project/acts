@@ -56,8 +56,6 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::endRun() {
 ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
     const AlgorithmContext& ctx, const MeasurementContainer& measurements) {
   const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
-  // const auto& hitSimHitsMap = ctx.eventStore.get<IndexMultimap<Index>>(
-  //    m_cfg.inputMeasurementSimHitsMap);
 
   ClusterContainer clusters;
   if (not m_cfg.inputClusters.empty()) {
