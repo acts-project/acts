@@ -15,6 +15,7 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
+#include "ActsExamples/Io/Csv/CsvMeasurementReader.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvOptionsWriter.hpp"
@@ -51,6 +52,10 @@ int runDigitizationExample(
   Options::addInputOptions(desc);
   Options::addMagneticFieldOptions(desc);
   Options::addDigitizationOptions(desc);
+
+  auto opt = desc.add_options();
+  opt("digi-read-write-test", boost::program_options::bool_switch(),
+      "Test reading and writing roundtrip.");
 
   // Add specific options for this geometry
   detector->addOptions(desc);
@@ -113,25 +118,39 @@ int runDigitizationExample(
         DigiConfigContainer digitizationConfigs =
             DigiConfigConverter("digitization-configuration").fromJson(djson);
 
-        DigitizationAlgorithm::Config digiCfg =
-            Options::readDigitizationConfig(vm);
-        digiCfg.inputSimHits = simHitReaderCfg.outputSimHits;
-        digiCfg.outputMeasurements = outputMeasurements;
-        digiCfg.outputClusters = outputClusters;
-        digiCfg.outputSourceLinks = outputSourceLinks;
-        digiCfg.outputMeasurementParticlesMap = outputMeasurementSimHitsMap;
-        digiCfg.outputMeasurementSimHitsMap = outputMeasurementParticlesMap;
-        digiCfg.trackingGeometry = tGeometry;
-        digiCfg.randomNumbers = randomNumbers;
-        digiCfg.digitizationConfigs = digitizationConfigs;
-        sequencer.addAlgorithm(
-            std::make_shared<DigitizationAlgorithm>(digiCfg, logLevel));
+        if (vm["digi-read-write-test"].as<bool>()) {
+          // Read truth hits from CSV files
+          auto measReaderCfg = Options::readCsvMeasurementReaderConfig(vm);
+          measReaderCfg.inputDir = vm["input-dir"].as<std::string>();
+          measReaderCfg.outputMeasurements = outputMeasurements;
+          measReaderCfg.outputClusters = outputClusters;
+          measReaderCfg.outputMeasurementIds = "measurementids";
+          measReaderCfg.outputMeasurementParticlesMap =
+              outputMeasurementParticlesMap;
+          measReaderCfg.outputSimHits = simHitReaderCfg.outputSimHits;
+          sequencer.addReader(
+              std::make_shared<CsvMeasurementReader>(measReaderCfg, logLevel));
+
+        } else {
+          DigitizationAlgorithm::Config digiCfg =
+              Options::readDigitizationConfig(vm);
+          digiCfg.inputSimHits = simHitReaderCfg.outputSimHits;
+          digiCfg.outputMeasurements = outputMeasurements;
+          digiCfg.outputClusters = outputClusters;
+          digiCfg.outputSourceLinks = outputSourceLinks;
+          digiCfg.outputMeasurementParticlesMap = outputMeasurementSimHitsMap;
+          digiCfg.outputMeasurementSimHitsMap = outputMeasurementParticlesMap;
+          digiCfg.trackingGeometry = tGeometry;
+          digiCfg.randomNumbers = randomNumbers;
+          digiCfg.digitizationConfigs = digitizationConfigs;
+          sequencer.addAlgorithm(
+              std::make_shared<DigitizationAlgorithm>(digiCfg, logLevel));
+        }
 
         // Prepare for the (eventual) output writing
-        for (size_t ibi = 0; ibi < digiCfg.digitizationConfigs.size(); ++ibi) {
-          Acts::GeometryIdentifier geoID =
-              digiCfg.digitizationConfigs.idAt(ibi);
-          const auto dCfg = digiCfg.digitizationConfigs.valueAt(ibi);
+        for (size_t ibi = 0; ibi < digitizationConfigs.size(); ++ibi) {
+          Acts::GeometryIdentifier geoID = digitizationConfigs.idAt(ibi);
+          const auto dCfg = digitizationConfigs.valueAt(ibi);
           std::vector<Acts::BoundIndices> boundIndices;
           boundIndices.insert(boundIndices.end(),
                               dCfg.geometricDigiConfig.indices.begin(),
