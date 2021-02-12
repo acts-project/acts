@@ -18,8 +18,8 @@
 #include "ActsExamples/Io/Performance/SeedingPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackParameterWriter.hpp"
+#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
-#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
@@ -46,9 +46,8 @@ int runSeedingExample(int argc, char* argv[],
   Options::addMaterialOptions(desc);
   Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
   Options::addInputOptions(desc);
-  Options::addBFieldOptions(desc);
+  Options::addMagneticFieldOptions(desc);
   Options::addDigitizationOptions(desc);
-
   // Add specific options for this geometry
   detector->addOptions(desc);
   auto vm = Options::parse(desc, argc, argv);
@@ -74,7 +73,8 @@ int runSeedingExample(int argc, char* argv[],
   }
 
   // Setup the magnetic field
-  auto magneticField = Options::readBField(vm);
+  Options::setupMagneticFieldServices(vm, sequencer);
+  auto magneticField = Options::readMagneticField(vm);
 
   // Read the sim hits
   auto simHitReaderCfg = setupSimHitReading(vm, sequencer);
