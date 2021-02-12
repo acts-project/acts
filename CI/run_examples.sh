@@ -16,6 +16,23 @@ run_example() {
     time ${BUILD_DIR}/bin/$* -n ${NUM_EVENTS}
 }
 
+# Data for Geant4-based examples
+G4_DATA_URL=https://acts.web.cern.ch/ACTS/ci/G4/G4.data.tar.xz
+G4_DATA_DIR=/tmp/G4
+#
+curl $G4_DATA_URL \
+    -O \
+    -C - \
+    --retry 5
+#
+mkdir -p $G4_DATA_DIR
+tar xf G4.data.tar.xz --strip-components 1 -C $G4_DATA_DIR
+#
+export G4ENSDFSTATEDATA=$G4_DATA_DIR/G4ENSDFSTATE
+export G4LEVELGAMMADATA=$G4_DATA_DIR/G4LEVELGAMMA
+export G4LEDATA=$G4_DATA_DIR/G4LE
+export G4PARTICLEXSDATA=$G4_DATA_DIR/G4PARTICLESXS
+
 # Run hello world example
 run_example ActsExampleHelloWorld
 
@@ -26,8 +43,7 @@ run_example ActsExampleHelloWorld
 # these examples are fast enough.
 #
 run_example ActsExampleGeometryAligned
-# FIXME: Cannot enable DD4hep yet due to a variation of issue #697
-# run_example ActsExampleGeometryDD4hep ${DD4HEP_INPUT}
+run_example ActsExampleGeometryDD4hep ${DD4HEP_INPUT}
 run_example ActsExampleGeometryEmpty
 run_example ActsExampleGeometryGeneric
 run_example ActsExampleGeometryPayload
@@ -42,9 +58,7 @@ run_example ActsExampleGeometryTelescope
 # Sequencer actually runs.
 #
 run_example ActsExamplePropagationAligned
-# FIXME: Cannot enable DD4hep yet due to a variation of issue #697
-# run_example ActsExamplePropagationDD4hep ${DD4HEP_INPUT}
-#
+run_example ActsExamplePropagationDD4hep ${DD4HEP_INPUT}
 # FIXME: Disabled because of issue #710
 # run_example ActsExamplePropagationEmpty
 run_example ActsExamplePropagationGeneric
@@ -63,9 +77,7 @@ run_example ActsExamplePythia8
 #        thread-unsafe Geant4 code is accidentally run outside of the
 #        mutex-protected region of the code. See issue #207 .
 #
-# FIXME: Cannot enable DD4hep yet due to a variation of issue #697 .
-#        Even with DD4hep on, will still fail due to missing Geant4 data files.
-# run_example ActsExampleGeantinoRecordingDD4hep ${DD4HEP_INPUT} -j1
+run_example ActsExampleGeantinoRecordingDD4hep ${DD4HEP_INPUT} -j1
 # TODO: Add GDML version (needs an input file + knowhow)
 
 # Run material validation example (generic-only, see above)
