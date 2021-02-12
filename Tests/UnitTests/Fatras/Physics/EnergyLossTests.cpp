@@ -54,6 +54,8 @@ BOOST_DATA_TEST_CASE(BetheHeitler, Dataset::parameters, pdg, phi, lambda, p,
   // energy loss creates no new particles
   BOOST_CHECK_EQUAL(outgoing.size(), 1);
   BOOST_CHECK_GT(outgoing[0].absoluteMomentum(), 0.);
+  BOOST_CHECK_EQUAL(outgoing[0].pathInX0(), 0.);
+  BOOST_CHECK_EQUAL(outgoing[0].pathInL0(), 0.);
   
   // Get the four momenta
   	Acts::Vector4 p0 = before.fourMomentum();
