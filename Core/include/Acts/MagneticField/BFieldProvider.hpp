@@ -10,161 +10,17 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/detail/SmallObjectCache.hpp"
 
-#include <any>
 #include <array>
-#include <iostream>
 #include <memory>
 
 namespace Acts {
 
-namespace detail {
-
-/**
- * Two alternative opaque cache types are given, one using std::any, and the
- * other using a fixed maximum sized allocation on the stack. AnyCache did not
- * seem to perform worse even with heap allocation and checked casts. Both
- * implemenations are kept so we can evaluate in the future. It is selected
- * inside `BFieldBase`.
- */
-
-/// Small opaque cache type which uses small buffer optimization
-class SBOCache {
- public:
-  template <typename T, typename... Args>
-  static SBOCache make(Args&&... args) {
-    SBOCache cache{};
-
-    static_assert(std::is_same_v<T, std::decay_t<T>>,
-                  "Please pass the raw type, no const or ref");
-    static_assert(sizeof(T) <= sizeof(cache.m_data),
-                  "Passed type is too large");
-    static_assert(
-        std::is_move_assignable_v<T> && std::is_move_constructible_v<T>,
-        "Type needs to be move assignable and move constructible");
-
-    /*T* ptr =*/new (cache.m_data.data()) T(std::forward<Args>(args)...);
-    static Handler<T> static_handler{};
-    cache.m_handler = &static_handler;
-
-    return cache;
-  }
-
-  template <typename T>
-  T& get() {
-    static_assert(std::is_same_v<T, std::decay_t<T>>,
-                  "Please pass the raw type, no const or ref");
-    static_assert(sizeof(T) <= sizeof(m_data), "Passed type is too large");
-    return *reinterpret_cast<T*>(m_data.data());
-  }
-
-  template <typename T>
-  const T& get() const {
-    static_assert(std::is_same_v<T, std::decay_t<T>>,
-                  "Please pass the raw type, no const or ref");
-    static_assert(sizeof(T) <= sizeof(m_data), "Passed type is too large");
-    return *reinterpret_cast<const T*>(m_data.data());
-  }
-
-  ~SBOCache() {
-    assert(m_handler && "Handler cannot be dead");
-    m_handler->destroy(m_data.data());
-  }
-
-  SBOCache(SBOCache&& other) {
-    m_handler = other.m_handler;
-    assert(m_handler && "Handler is null");
-    m_handler->moveConstruct(other.m_data.data(), m_data.data());
-  }
-
-  SBOCache& operator=(SBOCache&& other) {
-    m_handler = other.m_handler;
-    assert(m_handler && "Handler is null");
-    m_handler->move(other.m_data.data(), m_data.data());
-    return *this;
-  }
-
- private:
-  SBOCache(){};
-
-  struct HandlerBase {
-    virtual void destroy(void* ptr) const = 0;
-    virtual void moveConstruct(void* from, void* to) const = 0;
-    virtual void move(void* from, void* to) const = 0;
-    virtual ~HandlerBase() = default;
-  };
-
-  template <typename T>
-  struct Handler final : public HandlerBase {
-    void destroy(void* ptr) const override {
-      assert(ptr != nullptr && "Address to destroy is nullptr");
-      T* obj = static_cast<T*>(ptr);
-      obj->~T();
-    }
-
-    void moveConstruct(void* from, void* to) const override {
-      assert(from != nullptr && "Source is null");
-      assert(to != nullptr && "Target is null");
-      T* _from = static_cast<T*>(from);
-      /*T* ptr =*/new (to) T(std::move(*_from));
-    }
-
-    void move(void* from, void* to) const override {
-      assert(from != nullptr && "Source is null");
-      assert(to != nullptr && "Target is null");
-
-      T* _from = static_cast<T*>(from);
-      T* _to = static_cast<T*>(to);
-
-      (*_to) = std::move(*_from);
-    }
-  };
-
-  alignas(std::max_align_t) std::array<char, 512> m_data;
-  HandlerBase* m_handler{nullptr};
-};
-
-/// Opaque cache type using std::any under the hood
-/// @note Currently unused
-class AnyCache {
- public:
-  template <typename T, typename... Args>
-  static AnyCache make(Args&&... args) {
-    AnyCache cache{};
-
-    static_assert(std::is_same_v<T, std::decay_t<T>>,
-                  "Please pass the raw type, no const or ref");
-
-    cache.m_any.emplace<T>(std::forward<Args>(args)...);
-
-    return cache;
-  }
-
-  template <typename T>
-  T& get() {
-    static_assert(std::is_same_v<T, std::decay_t<T>>,
-                  "Please pass the raw type, no const or ref");
-    return std::any_cast<T&>(m_any);
-  }
-
-  template <typename T>
-  const T& get() const {
-    static_assert(std::is_same_v<T, std::decay_t<T>>,
-                  "Please pass the raw type, no const or ref");
-    return std::any_cast<const T&>(m_any);
-  }
-
- private:
-  AnyCache() = default;
-
-  std::any m_any;
-};
-}  // namespace detail
-
 /// Base class for all magnetic field providers
 class BFieldProvider {
  public:
-  using Cache = detail::SBOCache;
+  using Cache = detail::SmallObjectCache;
 
   /// @brief Make an opaque cache for the magnetic field
   ///
@@ -205,6 +61,6 @@ class BFieldProvider {
   virtual Vector3 getFieldGradient(const Vector3& position,
                                    ActsMatrix<3, 3>& derivative,
                                    Cache& cache) const = 0;
-};  // namespace Acts
+};
 
 }  // namespace Acts
