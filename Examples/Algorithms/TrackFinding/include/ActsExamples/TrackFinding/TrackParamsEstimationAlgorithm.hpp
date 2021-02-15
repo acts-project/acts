@@ -33,12 +33,12 @@ namespace ActsExamples {
 ///
 /// The algorithm takes the either directly the seeds or indirectly the proto
 /// tracks and space points, and source links container as input. The proto
-/// track is basically a seed with info of the space points retrieved from the
-/// space point container. The source links container is necessary to retrieve
-/// the geometry identifier of the module at which a space point is located. It
-/// creates two additional container to the event store, i.e. the estimated
-/// track parameters container and the proto tracks container storing only those
-/// proto tracks with track parameters estimated.
+/// track is basically a seed and its space points info could be retrieved from
+/// the space point container. The source links container is necessary to
+/// retrieve the geometry identifier of the module at which a space point is
+/// located. It creates two additional container to the event store, i.e. the
+/// estimated track parameters container and the proto tracks container storing
+/// only those proto tracks with track parameters estimated.
 class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
  public:
   struct Config {

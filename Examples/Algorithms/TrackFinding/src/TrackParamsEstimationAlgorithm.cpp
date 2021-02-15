@@ -178,7 +178,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       double charge = std::copysign(1, params[Acts::eBoundQOverP]);
       trackParameters.emplace_back(surface->getSharedPtr(), params, charge,
                                    m_covariance);
-      // Create a new proto track for this seed
+      // Create a proto track for this seed
       ProtoTrack track;
       track.reserve(3);
       for (const auto& sp : seed.sp()) {
