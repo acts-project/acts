@@ -13,6 +13,8 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 
@@ -29,17 +31,19 @@ namespace ActsExamples {
 
 /// Estimate track parameters for track seeds.
 ///
-/// The algorithm takes the proto tracks, space points and source links
-/// container as input. The proto track is basically a seed. The info of the
-/// space points of the seed could be retrieved from the space point container.
-/// The source links container is necessary to retrieve the geometry identifier
-/// of the module at which a space point is located. It creates two additional
-/// container to the event store, i.e. the estimated track parameters container
-/// and the proto tracks container storing only those proto tracks with track
-/// parameters estimated.
+/// The algorithm takes the either directly the seeds or indirectly the proto
+/// tracks and space points, and source links container as input. The proto
+/// track is basically a seed with info of the space points retrieved from the
+/// space point container. The source links container is necessary to retrieve
+/// the geometry identifier of the module at which a space point is located. It
+/// creates two additional container to the event store, i.e. the estimated
+/// track parameters container and the proto tracks container storing only those
+/// proto tracks with track parameters estimated.
 class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
+    /// Input seeds collection.
+    std::string inputSeeds;
     /// Input space point collections.
     ///
     /// We allow multiple space point collections to allow different parts of
@@ -97,6 +101,14 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
   /// The track parameters covariance (assumed to be the same for all estimated
   /// track parameters for the moment)
   Acts::BoundSymMatrix m_covariance = Acts::BoundSymMatrix::Zero();
+
+  /// Create seeds from proto tracks and space points
+  ///
+  /// @param protoTracks The proto tracks
+  /// @param spacePoints The existing space points
+  /// @return the created seeds
+  SimSeedContainer createSeeds(const ProtoTrackContainer& protoTracks,
+                               const SimSpacePointContainer& spacePoints) const;
 };
 
 }  // namespace ActsExamples

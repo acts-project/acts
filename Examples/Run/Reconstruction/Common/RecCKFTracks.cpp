@@ -162,7 +162,8 @@ int runRecCKFTracks(int argc, char* argv[],
 
     // Create seeds (i.e. proto tracks) using either truth track finding or seed
     // finding algorithm
-    std::string inputProtoTracks;
+    std::string inputProtoTracks = "";
+    std::string inputSeeds = "";
     if (truthEstimatedSeeded) {
       // Truth track finding algorithm
       TruthTrackFinder::Config trackFinderCfg;
@@ -199,6 +200,7 @@ int runRecCKFTracks(int argc, char* argv[],
       sequencer.addAlgorithm(
           std::make_shared<SeedingAlgorithm>(seedingCfg, logLevel));
       inputProtoTracks = seedingCfg.outputProtoTracks;
+      inputSeeds = seedingCfg.outputSeeds;
     }
 
     // write track finding/seeding performance
@@ -215,6 +217,7 @@ int runRecCKFTracks(int argc, char* argv[],
 
     // Algorithm estimating track parameter from seed
     TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
+    paramsEstimationCfg.inputSeeds = inputSeeds;
     paramsEstimationCfg.inputProtoTracks = inputProtoTracks;
     paramsEstimationCfg.inputSpacePoints = {
         spCfg.outputSpacePoints,
