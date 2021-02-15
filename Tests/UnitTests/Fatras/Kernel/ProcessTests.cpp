@@ -68,8 +68,8 @@ BOOST_AUTO_TEST_CASE(NoSelectors) {
 
 BOOST_AUTO_TEST_CASE(WithInputSelector) {
   Fixture f;
-  Process<MakeChildren, AsInputSelector<HighP>> process;
-  process.selectInput.minP = 10_GeV;
+  Process<MakeChildren, HighP> process;
+  process.selectInputParticle.minP = 10_GeV;
 
   // above threshold should not abort
   f.parent.setAbsoluteMomentum(20_GeV);
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(WithInputSelector) {
 
 BOOST_AUTO_TEST_CASE(WithOutputSelector) {
   Fixture f;
-  Process<MakeChildren, EveryInput, HighP, EveryParticle> process;
+  Process<MakeChildren, EveryParticle, HighP, EveryParticle> process;
   process.selectOutputParticle.minP = 10_GeV;
 
   // above threshold should not abort
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(WithOutputSelector) {
 
 BOOST_AUTO_TEST_CASE(WithChildSelector) {
   Fixture f;
-  Process<MakeChildren, EveryInput, EveryParticle, HighP> process;
+  Process<MakeChildren, EveryParticle, EveryParticle, HighP> process;
   process.selectChildParticle.minP = 10_GeV;
 
   // all process should not abort regardless of child selection

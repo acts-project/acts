@@ -12,7 +12,6 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
-#include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
@@ -26,17 +25,11 @@
 
 void addInputOptions(ActsExamples::Options::Description& desc);
 void addSimulationOptions(ActsExamples::Options::Description& desc);
-void addDigitizationOptions(ActsExamples::Options::Description& desc);
 void setupInput(
     const ActsExamples::Options::Variables& variables,
     ActsExamples::Sequencer& sequencer,
     std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers);
 void setupSimulation(
-    const ActsExamples::Options::Variables& variables,
-    ActsExamples::Sequencer& sequencer,
-    std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
-    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry);
-void setupDigitization(
     const ActsExamples::Options::Variables& variables,
     ActsExamples::Sequencer& sequencer,
     std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
@@ -52,7 +45,7 @@ int runFatras(int argc, char* argv[],
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
   Options::addRandomNumbersOptions(desc);
-  Options::addOutputOptions(desc);
+  Options::addOutputOptions(desc, OutputFormat::Root | OutputFormat::Csv);
   addInputOptions(desc);
   // add general and detector-specific geometry options
   Options::addGeometryOptions(desc);
@@ -60,7 +53,6 @@ int runFatras(int argc, char* argv[],
   Options::addMaterialOptions(desc);
   // simulation also handles magnetic field
   addSimulationOptions(desc);
-  addDigitizationOptions(desc);
   auto vars = Options::parse(desc, argc, argv);
   if (vars.empty()) {
     return EXIT_FAILURE;
@@ -82,7 +74,6 @@ int runFatras(int argc, char* argv[],
   // setup other modules
   setupInput(vars, sequencer, randomNumbers);
   setupSimulation(vars, sequencer, randomNumbers, trackingGeometry);
-  setupDigitization(vars, sequencer, randomNumbers, trackingGeometry);
 
   // run the simulation
   return sequencer.run();

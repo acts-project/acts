@@ -58,44 +58,32 @@ BOOST_AUTO_TEST_CASE(BinUtility_equidistant_binning) {
   BOOST_CHECK_EQUAL(xyzTriple[0], 1u);
   BOOST_CHECK_EQUAL(xyzTriple[1], 2u);
   BOOST_CHECK_EQUAL(xyzTriple[2], 3u);
-
-  // Full range
-  std::vector<size_t> xRangeCheck0 = {0, 1, 2};
-  std::vector<size_t> xyRangeCheck1 = {1, 2, 3};
-  std::vector<size_t> xyzRangeCheck2 = {2, 3, 4};
-
-  auto xNrange0 = xUtil_eq.neighbourRange(xyzPosition, 0);
-  BOOST_CHECK_EQUAL_COLLECTIONS(xNrange0.begin(), xNrange0.end(),
-                                xRangeCheck0.begin(), xRangeCheck0.end());
-
-  auto xNrange1 = xUtil_eq.neighbourRange(xyzPosition, 1);
-  BOOST_CHECK_EQUAL(xNrange1.size(), 1u);
-  BOOST_CHECK_EQUAL(xNrange1[0], 0u);
-
-  auto xNrange2 = xUtil_eq.neighbourRange(xyzPosition, 2);
-  BOOST_CHECK_EQUAL(xNrange2.size(), 1u);
-  BOOST_CHECK_EQUAL(xNrange2[0], 0u);
-
-  auto xyNrange1 = xyUtil_eq.neighbourRange(xyzPosition, 1);
-  BOOST_CHECK_EQUAL_COLLECTIONS(xyNrange1.begin(), xyNrange1.end(),
-                                xyRangeCheck1.begin(), xyRangeCheck1.end());
-
-  auto xyzNrange2 = xyzUtil_eq.neighbourRange(xyzPosition, 2);
-  BOOST_CHECK_EQUAL_COLLECTIONS(xyzNrange2.begin(), xyzNrange2.end(),
-                                xyzRangeCheck2.begin(), xyzRangeCheck2.end());
-
-  // Partial range
-  std::vector<size_t> xEdgeCheck = {0, 1};
-  auto xEdgeRange = xUtil_eq.neighbourRange(edgePosition, 0);
-  BOOST_CHECK_EQUAL_COLLECTIONS(xEdgeRange.begin(), xEdgeRange.end(),
-                                xEdgeCheck.begin(), xEdgeCheck.end());
 }
+
+// OPEN - equidistant binning tests
+BOOST_AUTO_TEST_CASE(BinUtility_arbitrary_binning) {
+  std::vector<float> bvalues = {-5., 0., 1., 1.1, 8.};
+  BinUtility xUtil(bvalues, Acts::open, Acts::binX);
+
+  // Underflow
+  BOOST_CHECK_EQUAL(xUtil.bin(Vector3(-6., 0., 0.)), 0u);
+  // Bin 0
+  BOOST_CHECK_EQUAL(xUtil.bin(Vector3(-4., 0., 0.)), 0u);
+  // Bin 1
+  BOOST_CHECK_EQUAL(xUtil.bin(Vector3(0.5, 0., 0.)), 1u);
+  // Bin 2
+  BOOST_CHECK_EQUAL(xUtil.bin(Vector3(1.05, 0., 0.)), 2u);
+  // Bin 3
+  BOOST_CHECK_EQUAL(xUtil.bin(Vector3(4., 0., 0.)), 3u);
+  // Overflow
+  BOOST_CHECK_EQUAL(xUtil.bin(Vector3(9., 0., 0.)), 3u);
+}
+
 // OPEN - local to global transform test
 BOOST_AUTO_TEST_CASE(BinUtility_transform) {
   Transform3 transform_LtoG = Transform3::Identity();
   transform_LtoG = transform_LtoG * Translation3(0., 0., -50);
   transform_LtoG = transform_LtoG * AngleAxis3(M_PI / 4, Vector3(0, 0, 1));
-  ;
 
   Transform3 transform_GtoL = transform_LtoG.inverse();
 

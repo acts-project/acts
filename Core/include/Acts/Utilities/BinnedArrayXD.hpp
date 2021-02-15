@@ -182,52 +182,6 @@ class BinnedArrayXD : public BinnedArray<T> {
     return m_objectGrid;
   }
 
-  /// Returns the object according to the bin triple
-  /// and their neighbour objects (if different)
-  ///
-  /// @param binTriple is the binning
-  ///
-  /// @return a vector of unique objects
-  std::vector<T> objectCluster(
-      const std::array<size_t, 3>& binTriple) const override {
-    // prepare the return vector
-    std::vector<T> rvector;
-    // reference bin object to be excluded
-    T bObject = m_objectGrid[binTriple[2]][binTriple[1]][binTriple[0]];
-    // get the dimensions first
-    size_t bdim = m_binUtility->dimensions();
-    // avoiding code duplication
-    std::vector<size_t> zerorange = {0};
-    // 2D bin
-    std::vector<size_t> bin2values =
-        (bdim > 2) ? m_binUtility->binningData()[2].neighbourRange(binTriple[2])
-                   : zerorange;
-    // 1D bin
-    std::vector<size_t> bin1values =
-        (bdim > 1) ? m_binUtility->binningData()[1].neighbourRange(binTriple[1])
-                   : zerorange;
-    // 0D bin
-    std::vector<size_t> bin0values =
-        m_binUtility->binningData()[0].neighbourRange(binTriple[0]);
-
-    // do the loop
-    for (auto b2 : bin2values) {
-      for (auto b1 : bin1values) {
-        for (auto b0 : bin0values) {
-          // get the object
-          T object = m_objectGrid[b2][b1][b0];
-          if (object && object != bObject &&
-              std::find(rvector.begin(), rvector.end(), object) ==
-                  rvector.end()) {
-            rvector.push_back(object);
-          }
-        }
-      }
-    }
-    // return the ones you found
-    return rvector;
-  }
-
   /// Return the BinUtility
   /// @return plain pointer to the bin utility of this array
   const BinUtility* binUtility() const final { return (m_binUtility.get()); }

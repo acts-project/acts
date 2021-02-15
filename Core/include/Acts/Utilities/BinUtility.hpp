@@ -127,7 +127,7 @@ class BinUtility {
   /// Virtual Destructor
   ~BinUtility() = default;
 
-  /// return the binning data vector
+  /// Return the binning data vector
   const std::vector<BinningData>& binningData() const { return m_binningData; }
 
   /// Return the total number of bins
@@ -165,35 +165,6 @@ class BinUtility {
     }
     size_t bEval = m_binningData[ba].searchGlobal(m_itransform * position);
     return bEval;
-  }
-
-  /// Bin neighbour range
-  /// this method calls the increment/decreement methods
-  /// the bin itself is also contained, so if not an edge-case
-  /// this would be
-  ///  | n | c | p |
-  ///
-  /// @param position is the position for the neighbour Range test
-  /// @param ba is the binning accessor
-  ///
-  /// @return a vector of neighbour sizes
-  std::vector<size_t> neighbourRange(const Vector3& position,
-                                     size_t ba = 0) const {
-    if (ba >= m_binningData.size()) {
-      return {0};
-    }
-    std::vector<size_t> neighbourRange;
-    size_t cbin = bin(position, ba);
-    size_t pbin = cbin;
-    size_t nbin = cbin;
-    if (m_binningData[ba].decrement(pbin)) {
-      neighbourRange.push_back(pbin);
-    }
-    neighbourRange.push_back(cbin);
-    if (m_binningData[ba].increment(nbin) && nbin != pbin) {
-      neighbourRange.push_back(nbin);
-    }
-    return neighbourRange;
   }
 
   /// Return the oder direction for fast interlinking

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,8 +8,6 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
-#include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/SharedBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -27,13 +25,14 @@
 #include "ActsExamples/Io/Csv/CsvSimHitWriter.hpp"
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
+#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
-#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
-#include "ActsExamples/Plugins/BField/ScalableBField.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsFatras/Kernel/PhysicsList.hpp"
+#include "ActsFatras/Kernel/PointLikePhysicsList.hpp"
 #include "ActsFatras/Kernel/Process.hpp"
 #include "ActsFatras/Kernel/Simulator.hpp"
+#include "ActsFatras/Physics/Decay/NoDecay.hpp"
 #include "ActsFatras/Physics/EnergyLoss/BetheBloch.hpp"
 #include "ActsFatras/Physics/EnergyLoss/BetheHeitler.hpp"
 #include "ActsFatras/Physics/Scattering/Highland.hpp"
@@ -106,12 +105,16 @@ void setupSimulationAlgorithms(
       ActsFatras::CombineAnd<ActsFatras::ChargedSelector, MinP>;
   using ChargedSimulator = ActsFatras::ParticleSimulator<
       ChargedPropagator, ActsFatras::ChargedElectroMagneticPhysicsList,
-      HitSurfaceSelector>;
+      ActsFatras::PointLikePhysicsList<>, HitSurfaceSelector,
+      ActsFatras::NoDecay>;
   // neutral particles w/o physics and no hits
   using NeutralSelector =
       ActsFatras::CombineAnd<ActsFatras::NeutralSelector, MinP>;
-  using NeutralSimulator = ActsFatras::ParticleSimulator<
-      NeutralPropagator, ActsFatras::PhysicsList<>, ActsFatras::NoSurface>;
+  using NeutralSimulator =
+      ActsFatras::ParticleSimulator<NeutralPropagator,
+                                    ActsFatras::PhysicsList<>,
+                                    ActsFatras::PointLikePhysicsList<>,
+                                    ActsFatras::NoSurface, ActsFatras::NoDecay>;
   // full simulator type for charged and neutrals
   using Simulator = ActsFatras::Simulator<ChargedSelector, ChargedSimulator,
                                           NeutralSelector, NeutralSimulator>;
@@ -203,7 +206,7 @@ void setupSimulationAlgorithms(
 }  // namespace
 
 void addSimulationOptions(ActsExamples::Options::Description& desc) {
-  ActsExamples::Options::addBFieldOptions(desc);
+  ActsExamples::Options::addMagneticFieldOptions(desc);
   ActsExamples::Options::addFatrasOptions(desc);
 }
 
@@ -212,7 +215,7 @@ void setupSimulation(
     ActsExamples::Sequencer& sequencer,
     std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry) {
-  auto magneticFieldVariant = ActsExamples::Options::readBField(vars);
+  ActsExamples::Options::setupMagneticFieldServices(vars, sequencer);
   std::visit(
       [&](auto&& inputField) {
         using magnetic_field_t =
@@ -221,5 +224,5 @@ void setupSimulation(
         setupSimulationAlgorithms(vars, sequencer, randomNumbers,
                                   trackingGeometry, std::move(magneticField));
       },
-      magneticFieldVariant);
+      ActsExamples::Options::readMagneticField(vars));
 }

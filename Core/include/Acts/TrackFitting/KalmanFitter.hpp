@@ -63,8 +63,8 @@ struct KalmanFitterOptions {
   /// @param eLoss Whether to include energy loss
   /// @param rFiltering Whether to run filtering in reversed direction as
   /// smoothing
-  KalmanFitterOptions(std::reference_wrapper<const GeometryContext> gctx,
-                      std::reference_wrapper<const MagneticFieldContext> mctx,
+  KalmanFitterOptions(const GeometryContext& gctx,
+                      const MagneticFieldContext& mctx,
                       std::reference_wrapper<const CalibrationContext> cctx,
                       Calibrator calibrator_, OutlierFinder outlierFinder_,
                       LoggerWrapper logger_,
