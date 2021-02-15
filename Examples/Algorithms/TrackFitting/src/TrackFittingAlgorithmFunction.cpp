@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,8 +9,6 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
-#include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/SharedBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -19,7 +17,7 @@
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "ActsExamples/Plugins/BField/ScalableBField.hpp"
+#include "ActsExamples/MagneticField/MagneticField.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 
 namespace {
@@ -52,12 +50,13 @@ struct DirectedFitterFunctionImpl {
     return fitter.fit(sourceLinks, initialParameters, options, sSequence);
   };
 };
+
 }  // namespace
 
 ActsExamples::TrackFittingAlgorithm::TrackFitterFunction
 ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-    Options::BFieldVariant magneticField) {
+    MagneticField magneticField) {
   using Updater = Acts::GainMatrixUpdater;
   using Smoother = Acts::GainMatrixSmoother;
 
@@ -68,14 +67,14 @@ ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
         // need ::element_type to get the real magnetic field type
         using InputMagneticField =
             typename std::decay_t<decltype(inputField)>::element_type;
-        using MagneticField = Acts::SharedBField<InputMagneticField>;
-        using Stepper = Acts::EigenStepper<MagneticField>;
+        using SharedMagneticField = Acts::SharedBField<InputMagneticField>;
+        using Stepper = Acts::EigenStepper<SharedMagneticField>;
         using Navigator = Acts::Navigator;
         using Propagator = Acts::Propagator<Stepper, Navigator>;
         using Fitter = Acts::KalmanFitter<Propagator, Updater, Smoother>;
 
         // construct all components for the fitter
-        MagneticField field(std::move(inputField));
+        SharedMagneticField field(std::move(inputField));
         Stepper stepper(std::move(field));
         Navigator navigator(trackingGeometry);
         navigator.resolvePassive = false;
@@ -92,7 +91,7 @@ ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
 
 ActsExamples::TrackFittingAlgorithm::DirectedTrackFitterFunction
 ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
-    Options::BFieldVariant magneticField) {
+    MagneticField magneticField) {
   using Updater = Acts::GainMatrixUpdater;
   using Smoother = Acts::GainMatrixSmoother;
 
@@ -103,14 +102,14 @@ ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
         // need ::element_type to get the real magnetic field type
         using InputMagneticField =
             typename std::decay_t<decltype(inputField)>::element_type;
-        using MagneticField = Acts::SharedBField<InputMagneticField>;
-        using Stepper = Acts::EigenStepper<MagneticField>;
+        using SharedMagneticField = Acts::SharedBField<InputMagneticField>;
+        using Stepper = Acts::EigenStepper<SharedMagneticField>;
         using Navigator = Acts::DirectNavigator;
         using Propagator = Acts::Propagator<Stepper, Navigator>;
         using Fitter = Acts::KalmanFitter<Propagator, Updater, Smoother>;
 
         // construct all components for the fitter
-        MagneticField field(std::move(inputField));
+        SharedMagneticField field(std::move(inputField));
         Stepper stepper(std::move(field));
         Navigator navigator;
         Propagator propagator(std::move(stepper), std::move(navigator));
