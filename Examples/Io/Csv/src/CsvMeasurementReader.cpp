@@ -304,7 +304,9 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   // Write the data to the EventStore
   ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
   ctx.eventStore.add(m_cfg.outputMeasurementIds, std::move(measurementIds));
-  ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
+  if (not clusters.emtpy()) {
+    ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
+  }
   ctx.eventStore.add(m_cfg.outputMeasurementParticlesMap,
                      std::move(hitParticlesMap));
   ctx.eventStore.add(m_cfg.outputSimHits, std::move(simHits));

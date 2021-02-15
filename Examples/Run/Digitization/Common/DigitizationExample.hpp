@@ -12,8 +12,7 @@ namespace ActsExamples {
 class IBaseDetector;
 }
 
-/// The Propagation example
-///
+/// The Digitization example
 ///
 /// @param argc the number of argumetns of the call
 /// @param argv the argument list

@@ -93,7 +93,7 @@ int runDigitizationExample(
   auto cfile = vm["digi-config-file"].as<std::string>();
 
   if (not cfile.empty() or vm["digi-smear"].as<bool>()) {
-    // To be handles differently between DigitizationAlgorithm/SmearingAlgorithm
+    // To be handled differently between DigitizationAlgorithm/SmearingAlgorithm
     std::string outputMeasurements = "measurements";
     std::string outputSourceLinks = "sourcelinks";
     std::string outputClusters = "";
@@ -119,7 +119,7 @@ int runDigitizationExample(
             DigiConfigConverter("digitization-configuration").fromJson(djson);
 
         if (vm["digi-read-write-test"].as<bool>()) {
-          // Read truth hits from CSV files
+          // Read measurements from CSV files
           auto measReaderCfg = Options::readCsvMeasurementReaderConfig(vm);
           measReaderCfg.inputDir = vm["input-dir"].as<std::string>();
           measReaderCfg.outputMeasurements = outputMeasurements;

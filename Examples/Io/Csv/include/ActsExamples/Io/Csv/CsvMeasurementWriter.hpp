@@ -60,8 +60,6 @@ class CsvMeasurementWriter final : public WriterT<MeasurementContainer> {
     std::string inputMeasurementSimHitsMap;
     /// Where to place output files
     std::string outputDir;
-    /// Write the optional measurement surfaces collection
-    bool writeMeasurementSurfaces = false;
     /// Number of decimal digits for floating point precision in output.
     size_t outputPrecision = std::numeric_limits<float>::max_digits10;
     /// Tracking geometry required to access global-to-local transforms.

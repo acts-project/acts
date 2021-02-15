@@ -21,7 +21,7 @@
 
 /// Setup sim hit csv reader
 ///
-/// @param variables The configuration variables
+/// @param vars The configuration variables
 /// @param sequencer The framework sequencer
 ///
 /// @return config for sim hits csv reader
@@ -31,7 +31,7 @@ ActsExamples::CsvSimHitReader::Config setupSimHitReading(
 
 /// Setup sim particle csv reader
 ///
-/// @param variables The configuration variables
+/// @param vars The configuration variables
 /// @param sequencer The framework sequencer
 ///
 /// @return config for sim particles csv reader
