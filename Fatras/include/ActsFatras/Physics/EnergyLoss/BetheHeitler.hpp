@@ -9,12 +9,12 @@
 #pragma once
 
 #include "Acts/Material/MaterialSlab.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
 #include <array>
-#include <random>
 #include <iostream>
+#include <random>
 namespace ActsFatras {
 
 /// Simulate electron energy loss using the Bethe-Heitler description.
@@ -23,56 +23,63 @@ namespace ActsFatras {
 /// "A Gaussian-mixture approximation of the Bethe–Heitler model of electron
 /// energy loss by bremsstrahlung" R. Frühwirth
 struct BetheHeitler {
-	using Scalar = Particle::Scalar;
+  using Scalar = Particle::Scalar;
   using Vector3 = Particle::Vector3;
-  
+
   /// A scaling factor to
   double scaleFactor = 1.;
 
- // Simplified angle evaluation
+  // Simplified angle evaluation
   bool uniformHertzDipoleAngle = false;
-  
-// electron in original state, energy loss sampled
-Particle bremPhoton(const Particle &particle, Scalar gammaE, Scalar rndPsi, Scalar rndTheta1, Scalar rndTheta2, Scalar rndTheta3) const
-{
-  // ------------------------------------------------------
-  // simple approach
-  // (a) simulate theta uniform within the opening angle of the relativistic Hertz dipole
-  //      theta_max = 1/gamma
-  // (b)Following the Geant4 approximation from L. Urban -> encapsulate that later
-  //      the azimutal angle
-    
-  Scalar psi    =  2. * M_PI * rndPsi;
-    
-  // the start of the equation
-  Scalar theta = 0.;
-  if (uniformHertzDipoleAngle) {
-    // the simplest simulation
-    theta = particle.mass() / particle.energy() * rndTheta1;  
-  } else {
-    // -----> 
-    theta = particle.mass() / particle.energy();
-    // follow 
-    constexpr Scalar a = 0.625; // 5/8
-    Scalar u =  -log(rndTheta2 * rndTheta3) / a;
-    theta *= (rndTheta1 < 0.25 ) ? u : u / 3.; // 9./(9.+27) = 0.25
+
+  // electron in original state, energy loss sampled
+  Particle bremPhoton(const Particle &particle, Scalar gammaE, Scalar rndPsi,
+                      Scalar rndTheta1, Scalar rndTheta2,
+                      Scalar rndTheta3) const {
+    // ------------------------------------------------------
+    // simple approach
+    // (a) simulate theta uniform within the opening angle of the relativistic
+    // Hertz dipole
+    //      theta_max = 1/gamma
+    // (b)Following the Geant4 approximation from L. Urban -> encapsulate that
+    // later
+    //      the azimutal angle
+
+    Scalar psi = 2. * M_PI * rndPsi;
+
+    // the start of the equation
+    Scalar theta = 0.;
+    if (uniformHertzDipoleAngle) {
+      // the simplest simulation
+      theta = particle.mass() / particle.energy() * rndTheta1;
+    } else {
+      // ----->
+      theta = particle.mass() / particle.energy();
+      // follow
+      constexpr Scalar a = 0.625;  // 5/8
+      Scalar u = -log(rndTheta2 * rndTheta3) / a;
+      theta *= (rndTheta1 < 0.25) ? u : u / 3.;  // 9./(9.+27) = 0.25
+    }
+
+    Vector3 particleDirection = particle.unitDirection();
+    Vector3 photonDirection = particleDirection;
+
+    // construct the combined rotation to the scattered direction
+    Acts::RotationMatrix3 rotation(
+        // rotation of the scattering deflector axis relative to the reference
+        Acts::AngleAxis3(psi, particleDirection) *
+        // rotation by the scattering angle around the deflector axis
+        Acts::AngleAxis3(theta, Acts::makeCurvilinearUnitU(particleDirection)));
+    photonDirection.applyOnTheLeft(rotation);
+
+    Particle photon(particle.particleId().makeDescendant(0),
+                    Acts::PdgParticle::eGamma);
+    photon.setProcess(ActsFatras::ProcessType::eBremsstrahlung)
+        .setPosition4(particle.fourPosition())
+        .setDirection(photonDirection)
+        .setAbsoluteMomentum(gammaE);
+    return photon;
   }
-  
-  Vector3 particleDirection = particle.unitDirection();
-  Vector3 photonDirection = particleDirection;
-  
-  // construct the combined rotation to the scattered direction
-  Acts::RotationMatrix3 rotation(
-      // rotation of the scattering deflector axis relative to the reference
-      Acts::AngleAxis3(psi, particleDirection) *
-      // rotation by the scattering angle around the deflector axis
-      Acts::AngleAxis3(theta, Acts::makeCurvilinearUnitU(particleDirection)));
-  photonDirection.applyOnTheLeft(rotation);
-     
-     Particle photon(particle.particleId().makeDescendant(0), Acts::PdgParticle::eGamma);
-     photon.setProcess(ActsFatras::ProcessType::eBremsstrahlung).setPosition4(particle.fourPosition()).setDirection(photonDirection).setAbsoluteMomentum(gammaE);
-  return photon;
-} 
 
   /// Simulate energy loss and update the particle parameters.
   ///
@@ -85,7 +92,7 @@ Particle bremPhoton(const Particle &particle, Scalar gammaE, Scalar rndPsi, Scal
   template <typename generator_t>
   std::array<Particle, 1> operator()(generator_t &generator,
                                      const Acts::MaterialSlab &slab,
-                                     Particle &particle) const {    
+                                     Particle &particle) const {
     // Take a random gamma-distributed value - depending on t/X0
     std::gamma_distribution<double> gDist(slab.thicknessInX0() / std::log(2.0),
                                           1.0);
@@ -95,15 +102,19 @@ Particle bremPhoton(const Particle &particle, Scalar gammaE, Scalar rndPsi, Scal
     const auto sampledEnergyLoss =
         std::abs(scaleFactor * particle.energy() * (z - 1.));
 
-std::uniform_real_distribution<Scalar> uDist(0., 1.);
-// Build the produced photon
-Particle photon = bremPhoton(particle, sampledEnergyLoss,uDist(generator), uDist(generator), uDist(generator), uDist(generator));
-  // Recoil input momentum
-  particle.setDirection(particle.unitDirection() * particle.absoluteMomentum() - photon.energy() * photon.unitDirection());
-	
-	    // apply the energy loss
+    std::uniform_real_distribution<Scalar> uDist(0., 1.);
+    // Build the produced photon
+    Particle photon =
+        bremPhoton(particle, sampledEnergyLoss, uDist(generator),
+                   uDist(generator), uDist(generator), uDist(generator));
+    // Recoil input momentum
+    particle.setDirection(particle.unitDirection() *
+                              particle.absoluteMomentum() -
+                          photon.energy() * photon.unitDirection());
+
+    // apply the energy loss
     particle.correctEnergy(-sampledEnergyLoss);
-    
+
     return {photon};
   }
 };
