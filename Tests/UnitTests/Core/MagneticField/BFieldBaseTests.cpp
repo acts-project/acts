@@ -8,8 +8,8 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/MagneticField/BFieldProvider.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 
 namespace tt = boost::test_tools;
 
@@ -37,8 +37,9 @@ BOOST_AUTO_TEST_CASE(TypeErasedCacheType) {
   BOOST_CHECK(!destructor_called);
 
   {
-    BFieldProvider::Cache cache{BFieldProvider::Cache::make<MyCache>(
-        42, &constructor_called, &destructor_called)};
+    MagneticFieldProvider::Cache cache{
+        MagneticFieldProvider::Cache::make<MyCache>(42, &constructor_called,
+                                                    &destructor_called)};
     BOOST_CHECK(constructor_called);
     BOOST_CHECK(!destructor_called);
 
@@ -68,7 +69,7 @@ BOOST_AUTO_TEST_CASE(CacheNonCopyable) {
     MyCache(MyCache&&) = default;
   };
 
-  auto cache = BFieldProvider::Cache::make<MyCache>(42);
+  auto cache = MagneticFieldProvider::Cache::make<MyCache>(42);
   // MyCache c{42};
   // std::any a;
   // a = std::move(c);

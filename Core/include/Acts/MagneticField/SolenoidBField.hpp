@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/MagneticField/BFieldProvider.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 
 #include <functional>
 
@@ -65,7 +65,7 @@ namespace Acts {
 ///  z           4pi    __ |  |           2    |  2          1       |
 ///                   |/Rr |_ \   2r(1 - k )   /                    _|
 ///
-class SolenoidBField final : public BFieldProvider {
+class SolenoidBField final : public MagneticFieldProvider {
  public:
   struct Cache {
     /// @brief Constructor with magnetic field context
@@ -99,7 +99,7 @@ class SolenoidBField final : public BFieldProvider {
   Vector2 getField(const Vector2& position) const;
 
   /// @copydoc BFieldBase::makeCache(const MagneticFieldContext&)
-  BFieldProvider::Cache makeCache(
+  MagneticFieldProvider::Cache makeCache(
       const MagneticFieldContext& mctx) const override;
 
   /// @copydoc BFieldBase::getField(const Vector3&)
@@ -107,7 +107,7 @@ class SolenoidBField final : public BFieldProvider {
 
   /// @copydoc BFieldBase::getField(const Vector3&,BFieldBase::Cache&)
   Vector3 getField(const Vector3& position,
-                   BFieldProvider::Cache& /*cache*/) const override;
+                   MagneticFieldProvider::Cache& /*cache*/) const override;
 
   /// @copydoc BFieldBase::getFieldGradient(const Vector3&,ActsMatrix<3,3>&)
   ///
@@ -121,9 +121,9 @@ class SolenoidBField final : public BFieldProvider {
   ///
   /// @note currently the derivative is not calculated
   /// @todo return derivative
-  Vector3 getFieldGradient(const Vector3& position,
-                           ActsMatrix<3, 3>& /*derivative*/,
-                           BFieldProvider::Cache& /*cache*/) const override;
+  Vector3 getFieldGradient(
+      const Vector3& position, ActsMatrix<3, 3>& /*derivative*/,
+      MagneticFieldProvider::Cache& /*cache*/) const override;
 
  private:
   Config m_cfg;

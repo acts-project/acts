@@ -18,7 +18,7 @@
 namespace Acts {
 
 /// Base class for all magnetic field providers
-class BFieldProvider {
+class MagneticFieldProvider {
  public:
   using Cache = detail::SmallObjectCache;
 

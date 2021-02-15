@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/MagneticField/BFieldProvider.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
@@ -41,7 +41,8 @@ void accessStepWise(field_t& bField, field_context_t& bFieldContext,
   size_t mismatched = 0;
   // initialize the field cache
   auto bCache =
-      Acts::BFieldProvider::Cache::make<typename field_t::Cache>(bFieldContext);
+      Acts::MagneticFieldProvider::Cache::make<typename field_t::Cache>(
+          bFieldContext);
   // boost display
   size_t totalSteps = events * theta_steps * phi_steps * access_steps;
   boost::progress_display show_progress(totalSteps);
@@ -92,7 +93,8 @@ void accessRandom(field_t& bField, field_context_t& bFieldContext,
 
   // initialize the field cache
   auto bCache =
-      Acts::BFieldProvider::Cache::make<typename field_t::Cache>(bFieldContext);
+      Acts::MagneticFieldProvider::Cache::make<typename field_t::Cache>(
+          bFieldContext);
   boost::progress_display show_progress(totalSteps);
 
   // the event loop

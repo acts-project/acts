@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/MagneticField/BFieldProvider.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 
 namespace ActsExamples {
 
@@ -20,7 +20,7 @@ struct ScalableBFieldContext {
 };
 
 /// A constant magnetic field that is scaled depending on the event context.
-class ScalableBField final : public Acts::BFieldProvider {
+class ScalableBField final : public Acts::MagneticFieldProvider {
  public:
   struct Cache {
     Acts::ActsScalar scalor = 1.;
@@ -65,7 +65,7 @@ class ScalableBField final : public Acts::BFieldProvider {
   /// @note The @p position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
   Acts::Vector3 getField(const Acts::Vector3& /*position*/,
-                         BFieldProvider::Cache& gCache) const override {
+                         MagneticFieldProvider::Cache& gCache) const override {
     Cache& cache = gCache.get<Cache>();
     return m_BField * cache.scalor;
   }
@@ -99,16 +99,16 @@ class ScalableBField final : public Acts::BFieldProvider {
   ///       a consistent interface with other magnetic field services.
   /// @note currently the derivative is not calculated
   /// @todo return derivative
-  Acts::Vector3 getFieldGradient(const Acts::Vector3& /*position*/,
-                                 Acts::ActsMatrix<3, 3>& /*derivative*/,
-                                 BFieldProvider::Cache& gCache) const override {
+  Acts::Vector3 getFieldGradient(
+      const Acts::Vector3& /*position*/, Acts::ActsMatrix<3, 3>& /*derivative*/,
+      MagneticFieldProvider::Cache& gCache) const override {
     Cache& cache = gCache.get<Cache>();
     return m_BField * cache.scalor;
   }
 
-  Acts::BFieldProvider::Cache makeCache(
+  Acts::MagneticFieldProvider::Cache makeCache(
       const Acts::MagneticFieldContext& mctx) const override {
-    return Acts::BFieldProvider::Cache::make<Cache>(mctx);
+    return Acts::MagneticFieldProvider::Cache::make<Cache>(mctx);
   }
 
   /// @brief check whether given 3D position is inside look-up domain

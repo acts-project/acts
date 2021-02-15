@@ -25,9 +25,9 @@ Acts::SolenoidBField::SolenoidBField(Config config) : m_cfg(std::move(config)) {
   m_scale = m_cfg.bMagCenter / field.norm();
 }
 
-Acts::BFieldProvider::Cache Acts::SolenoidBField::makeCache(
+Acts::MagneticFieldProvider::Cache Acts::SolenoidBField::makeCache(
     const MagneticFieldContext& mctx) const {
-  return BFieldProvider::Cache::make<Cache>(mctx);
+  return MagneticFieldProvider::Cache::make<Cache>(mctx);
 }
 
 Acts::Vector3 Acts::SolenoidBField::getField(const Vector3& position) const {
@@ -46,7 +46,7 @@ Acts::Vector3 Acts::SolenoidBField::getField(const Vector3& position) const {
 }
 
 Acts::Vector3 Acts::SolenoidBField::getField(
-    const Vector3& position, BFieldProvider::Cache& /*cache*/) const {
+    const Vector3& position, MagneticFieldProvider::Cache& /*cache*/) const {
   return getField(position);
 }
 
@@ -61,7 +61,7 @@ Acts::Vector3 Acts::SolenoidBField::getFieldGradient(
 
 Acts::Vector3 Acts::SolenoidBField::getFieldGradient(
     const Vector3& position, ActsMatrix<3, 3>& /*derivative*/,
-    BFieldProvider::Cache& /*cache*/) const {
+    MagneticFieldProvider::Cache& /*cache*/) const {
   return getField(position);
 }
 

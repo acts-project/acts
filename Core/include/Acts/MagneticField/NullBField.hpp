@@ -8,14 +8,14 @@
 
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/MagneticField/BFieldProvider.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 
 namespace Acts {
 
 /// @ingroup MagneticField
 /// @brief Null bfield which returns 0 always
-class NullBField final : public BFieldProvider {
+class NullBField final : public MagneticFieldProvider {
  public:
   struct Cache {
     /// @brief constructor with context
@@ -38,7 +38,7 @@ class NullBField final : public BFieldProvider {
   /// @note The @p position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
   Vector3 getField(const Vector3& /*position*/,
-                   BFieldProvider::Cache& /*cache*/) const override {
+                   MagneticFieldProvider::Cache& /*cache*/) const override {
     return m_BField;
   }
 
@@ -60,16 +60,16 @@ class NullBField final : public BFieldProvider {
   ///       a consistent interface with other magnetic field services.
   /// @note currently the derivative is not calculated
   /// @todo return derivative
-  Vector3 getFieldGradient(const Vector3& /*position*/,
-                           ActsMatrix<3, 3>& /*derivative*/,
-                           BFieldProvider::Cache& /*cache*/) const override {
+  Vector3 getFieldGradient(
+      const Vector3& /*position*/, ActsMatrix<3, 3>& /*derivative*/,
+      MagneticFieldProvider::Cache& /*cache*/) const override {
     return m_BField;
   }
 
   /// @copydoc BFieldBase::makeCache(const MagneticFieldContext&)
-  Acts::BFieldProvider::Cache makeCache(
+  Acts::MagneticFieldProvider::Cache makeCache(
       const Acts::MagneticFieldContext& mctx) const override {
-    return Acts::BFieldProvider::Cache::make<Cache>(mctx);
+    return Acts::MagneticFieldProvider::Cache::make<Cache>(mctx);
   }
 
   /// @brief check whether given 3D position is inside look-up domain

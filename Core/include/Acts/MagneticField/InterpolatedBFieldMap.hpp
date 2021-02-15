@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/MagneticField/BFieldProvider.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
@@ -229,7 +229,7 @@ struct InterpolatedBFieldMapper {
 /// - looking up the magnetic field values on the closest grid points,
 /// - doing a linear interpolation of these magnetic field values.
 template <typename Mapper_t>
-class InterpolatedBFieldMap final : public BFieldProvider {
+class InterpolatedBFieldMap final : public MagneticFieldProvider {
  public:
   /// @brief configuration object for magnetic field interpolation
   struct Config {
@@ -295,9 +295,9 @@ class InterpolatedBFieldMap final : public BFieldProvider {
 
  public:
   /// @copydoc BFieldBase::makeCache(const MagneticFieldContext&)
-  BFieldProvider::Cache makeCache(
+  MagneticFieldProvider::Cache makeCache(
       const MagneticFieldContext& mctx) const override {
-    return BFieldProvider::Cache::make<Cache>(mctx);
+    return MagneticFieldProvider::Cache::make<Cache>(mctx);
   }
 
   /// @copydoc BFieldBase::getField(const Vector3&)
@@ -307,7 +307,7 @@ class InterpolatedBFieldMap final : public BFieldProvider {
 
   /// @copydoc BFieldBase::getField(const Vector3&,BFieldBase::Cache&)
   Vector3 getField(const Vector3& position,
-                   BFieldProvider::Cache& gcache) const override {
+                   MagneticFieldProvider::Cache& gcache) const override {
     Cache& cache = gcache.get<Cache>();
     if (!cache.fieldCell || !(*cache.fieldCell).isInside(position)) {
       cache.fieldCell = getFieldCell(position);
@@ -330,9 +330,9 @@ class InterpolatedBFieldMap final : public BFieldProvider {
   /// @note currently the derivative is not calculated
   /// @note Cache is not used currently
   /// @todo return derivative
-  Vector3 getFieldGradient(const Vector3& position,
-                           ActsMatrix<3, 3>& /*derivative*/,
-                           BFieldProvider::Cache& /*cache*/) const override {
+  Vector3 getFieldGradient(
+      const Vector3& position, ActsMatrix<3, 3>& /*derivative*/,
+      MagneticFieldProvider::Cache& /*cache*/) const override {
     return m_config.mapper.getField(position);
   }
 

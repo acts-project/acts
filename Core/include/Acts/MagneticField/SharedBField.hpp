@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/MagneticField/BFieldProvider.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 
 #include <memory>
 
@@ -21,7 +21,7 @@ namespace Acts {
 /// in several places and with multiple steppers
 /// mainly targeted to save memory
 template <typename BField>
-class SharedBField final : public BFieldProvider {
+class SharedBField final : public MagneticFieldProvider {
  public:
   using Cache = typename BField::Cache;
 
@@ -40,7 +40,7 @@ class SharedBField final : public BFieldProvider {
 
   /// @copydoc BFieldBase::getField(const Vector3&,BFieldBase::Cache&)
   Vector3 getField(const Vector3& position,
-                   BFieldProvider::Cache& cache) const override {
+                   MagneticFieldProvider::Cache& cache) const override {
     return m_bField->getField(position, cache);
   }
 
@@ -54,12 +54,12 @@ class SharedBField final : public BFieldProvider {
   /// Vector3&,ActsMatrix<3,3>&,BFieldBase::Cache&)
   Vector3 getFieldGradient(const Vector3& position,
                            ActsMatrix<3, 3>& derivative,
-                           BFieldProvider::Cache& cache) const override {
+                           MagneticFieldProvider::Cache& cache) const override {
     return m_bField->getFieldGradient(position, derivative, cache);
   }
 
   /// @copydoc BFieldBase::makeCache(const MagneticFieldContext&)
-  BFieldProvider::Cache makeCache(
+  MagneticFieldProvider::Cache makeCache(
       const MagneticFieldContext& mctx) const override {
     return m_bField->makeCache(mctx);
   }
