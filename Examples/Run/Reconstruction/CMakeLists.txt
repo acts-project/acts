@@ -34,7 +34,7 @@ target_link_libraries(
 # CKF reco for TGeo detector 
 add_executable(
   ActsExampleCKFTracksTGeo
-  GenericRecCKFTracks.cpp)
+  TGeoRecCKFTracks.cpp)
 target_link_libraries(
   ActsExampleCKFTracksTGeo
   PRIVATE
@@ -65,7 +65,7 @@ target_link_libraries(
 # Seeding for TGeo detector
 add_executable(
   ActsExampleSeedingTGeo
-  GenericSeedingExample.cpp)
+  TGeoSeedingExample.cpp)
 target_link_libraries(
   ActsExampleSeedingTGeo
   PRIVATE
