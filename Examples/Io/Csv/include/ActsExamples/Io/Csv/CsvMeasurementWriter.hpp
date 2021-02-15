@@ -15,6 +15,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -46,7 +47,7 @@ namespace ActsExamples {
 ///     event000000002-truth.csv
 ///     ...
 ///
-/// Intrinsically thread-safe as one file per event
+/// Intrinsically thread-safe as one file per event.
 class CsvMeasurementWriter final : public WriterT<MeasurementContainer> {
  public:
   struct Config {

@@ -39,7 +39,7 @@ ActsExamples::CsvParticleReader::Config setupParticleReading(
   // Read some standard options
   auto logLevel = Options::readLogLevel(vars);
 
-  // Read particles (initial states) and clusters from CSV files
+  // Read particles (initial states) from CSV files
   auto particleReader = Options::readCsvParticleReaderConfig(vars);
   particleReader.inputStem = "particles_initial";
   particleReader.outputParticles = "particles_initial";

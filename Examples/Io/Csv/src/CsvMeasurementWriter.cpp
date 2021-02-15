@@ -135,6 +135,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
           // CLUSTER / channel information ------------------------------
           if (not clusters.empty()) {
             auto cluster = clusters[hitIdx];
+            cell.geometry_id = meas.geometry_id;
             cell.hit_id = meas.hit_id;
             for (auto& c : cluster.channels) {
               cell.channel0 = c.bin[0];
@@ -159,12 +160,12 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
           }
           const auto& simHit = *it;
           truth.particle_id = simHit.particleId().value();
-          // hit position
+          // Hit position
           truth.tx = simHit.position().x() / Acts::UnitConstants::mm;
           truth.ty = simHit.position().y() / Acts::UnitConstants::mm;
           truth.tz = simHit.position().z() / Acts::UnitConstants::mm;
           truth.tt = simHit.time() / Acts::UnitConstants::ns;
-          // particle four-momentum before interaction
+          // Particle four-momentum before interaction
           truth.tpx = simHit.momentum4Before().x() / Acts::UnitConstants::GeV;
           truth.tpy = simHit.momentum4Before().y() / Acts::UnitConstants::GeV;
           truth.tpz = simHit.momentum4Before().z() / Acts::UnitConstants::GeV;
