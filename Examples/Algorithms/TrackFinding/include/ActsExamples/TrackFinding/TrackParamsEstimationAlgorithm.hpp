@@ -59,6 +59,10 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// Magnetic field variant.
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
+    /// Minimum deltaR between space points in a seed
+    float deltaRMin = 1. * Acts::UnitConstants::mm;
+    /// Maximum deltaR between space points in a seed
+    float deltaRMax = 100. * Acts::UnitConstants::mm;
     /// The minimum magnetic field to trigger the track parameters estimation
     double bFieldMin = 0.1 * Acts::UnitConstants::T;
     /// Constant term of the loc0 resolution.

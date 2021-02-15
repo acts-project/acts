@@ -80,16 +80,20 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
   for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
     // The list of hits and the initial start parameters
     const auto& protoTrack = protoTracks[itrack];
+    if (protoTrack.size() < 3) {
+      ACTS_WARNING("Proto track " << itrack << " size is less than 3.");
+      continue;
+    }
+
     // Space points on the proto track
     std::vector<SimSpacePoint> spacePointsOnTrack;
     spacePointsOnTrack.reserve(protoTrack.size());
-    // Loop over the hit index on the proto track
+    // Loop over the hit index on the proto track to find the space points
     for (const auto& hitIndex : protoTrack) {
       // Loop over the sets of space point container to find the space point
       for (const auto& isp : m_cfg.inputSpacePoints) {
         const auto& spacePoints =
             ctx.eventStore.get<SimSpacePointContainer>(isp);
-
         auto it =
             std::find_if(spacePoints.begin(), spacePoints.end(),
                          [&](const SimSpacePoint& spacePoint) {
@@ -101,58 +105,80 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
         }
       }
     }
-
     // At least three space points are required
     if (spacePointsOnTrack.size() < 3) {
       continue;
     }
-
     // Sort the space points
     std::sort(spacePointsOnTrack.begin(), spacePointsOnTrack.end(),
               [](const SimSpacePoint& lhs, const SimSpacePoint& rhs) {
                 return lhs.r() < rhs.r();
               });
-
-    // Create a three-spacepoints seed
-    Acts::Seed<SimSpacePoint> seed(spacePointsOnTrack[0], spacePointsOnTrack[1],
-                                   spacePointsOnTrack[2],
-                                   spacePointsOnTrack[1].z());
-
-    // Get the bottom space point and its reference surface
-    // @todo do we need to sort the sps first
-    const auto bottomSP = seed.sp().front();
-    const auto hitIdx = bottomSP->measurementIndex();
-    const auto sourceLink = sourceLinks.nth(hitIdx);
-    auto geoId = sourceLink->geometryId();
-    const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
-    if (surface == nullptr) {
-      ACTS_WARNING("surface with geoID "
-                   << geoId << " is not found in the tracking gemetry");
+    // Loop over the found space points to find seeds with simple selection
+    std::vector<Acts::Seed<SimSpacePoint>> seeds;
+    for (size_t ib = 0; ib < spacePointsOnTrack.size(); ++ib) {
+      for (size_t im = ib + 1; im < spacePointsOnTrack.size(); ++im) {
+        for (size_t it = im + 1; it < spacePointsOnTrack.size(); ++it) {
+          double bmDeltaR =
+              std::abs(spacePointsOnTrack[im].r() - spacePointsOnTrack[ib].r());
+          double mtDeltaR =
+              std::abs(spacePointsOnTrack[it].r() - spacePointsOnTrack[im].r());
+          if (bmDeltaR >= m_cfg.deltaRMin and bmDeltaR <= m_cfg.deltaRMax and
+              mtDeltaR >= m_cfg.deltaRMin and mtDeltaR <= m_cfg.deltaRMax) {
+            seeds.emplace_back(spacePointsOnTrack[ib], spacePointsOnTrack[im],
+                               spacePointsOnTrack[it],
+                               spacePointsOnTrack[im].z());
+          }
+        }
+      }
+    }
+    if (seeds.empty()) {
+      ACTS_WARNING("No seed found for proto track " << itrack << " with "
+                                                    << spacePointsOnTrack.size()
+                                                    << " space points.");
       continue;
     }
 
-    // Get the magnetic field at the bottom space point
-    Acts::Vector3 field =
-        getField(Acts::Vector3(bottomSP->x(), bottomSP->y(), bottomSP->z()));
-    // Estimate the track parameters from seed
-    auto optParams = Acts::estimateTrackParamsFromSeed(
-        ctx.geoContext, seed.sp().begin(), seed.sp().end(), *surface, field,
-        m_cfg.bFieldMin);
-    if (not optParams.has_value()) {
-      ACTS_WARNING("Estimation of track parameters for proto track "
-                   << itrack << " failed.");
-      continue;
-    } else {
-      const auto& params = optParams.value();
-      double charge = std::copysign(1, params[Acts::eBoundQOverP]);
-      trackParameters.emplace_back(surface->getSharedPtr(), params, charge,
-                                   m_covariance);
-      // Create a new proto track with only the three space points in the seed
-      ProtoTrack track(3);
-      for (size_t i = 0; i < 3; ++i) {
-        track[i] = spacePointsOnTrack[i].measurementIndex();
+    // Loop over all found seeds to estimate track parameters
+    size_t iseed = 0;
+    for (const auto& seed : seeds) {
+      // Get the bottom space point and its reference surface
+      const auto bottomSP = seed.sp().front();
+      const auto hitIdx = bottomSP->measurementIndex();
+      const auto sourceLink = sourceLinks.nth(hitIdx);
+      auto geoId = sourceLink->geometryId();
+      const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
+      if (surface == nullptr) {
+        ACTS_WARNING("surface with geoID "
+                     << geoId << " is not found in the tracking gemetry");
+        continue;
       }
-      tracks.emplace_back(track);
+
+      // Get the magnetic field at the bottom space point
+      Acts::Vector3 field =
+          getField(Acts::Vector3(bottomSP->x(), bottomSP->y(), bottomSP->z()));
+      // Estimate the track parameters from seed
+      auto optParams = Acts::estimateTrackParamsFromSeed(
+          ctx.geoContext, seed.sp().begin(), seed.sp().end(), *surface, field,
+          m_cfg.bFieldMin);
+      if (not optParams.has_value()) {
+        ACTS_WARNING("Estimation of track parameters for seed "
+                     << iseed << " on proto track " << itrack << " failed.");
+        continue;
+      } else {
+        const auto& params = optParams.value();
+        double charge = std::copysign(1, params[Acts::eBoundQOverP]);
+        trackParameters.emplace_back(surface->getSharedPtr(), params, charge,
+                                     m_covariance);
+        // Create a new proto track for this seed
+        ProtoTrack track;
+        track.reserve(3);
+        for (const auto& sp : seed.sp()) {
+          track.push_back(sp->measurementIndex());
+        }
+        tracks.emplace_back(track);
+      }
+      iseed++;
     }
   }
 
