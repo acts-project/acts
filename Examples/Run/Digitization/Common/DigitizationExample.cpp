@@ -124,10 +124,6 @@ int runDigitizationExample(
           measReaderCfg.inputDir = vm["input-dir"].as<std::string>();
           measReaderCfg.outputMeasurements = outputMeasurements;
           measReaderCfg.outputClusters = outputClusters;
-          measReaderCfg.outputMeasurementIds = "measurementids";
-          measReaderCfg.outputMeasurementParticlesMap =
-              outputMeasurementParticlesMap;
-          measReaderCfg.outputSimHits = simHitReaderCfg.outputSimHits;
           sequencer.addReader(
               std::make_shared<CsvMeasurementReader>(measReaderCfg, logLevel));
 
@@ -213,7 +209,6 @@ int runDigitizationExample(
       measWriterCsv.inputSimHits = simHitReaderCfg.outputSimHits;
 
       measWriterCsv.inputMeasurementSimHitsMap = outputMeasurementSimHitsMap;
-      measWriterCsv.trackingGeometry = tGeometry;
       sequencer.addWriter(
           std::make_shared<CsvMeasurementWriter>(measWriterCsv, logLevel));
     }

@@ -41,9 +41,6 @@ ActsExamples::CsvMeasurementWriter::CsvMeasurementWriter(
     throw std::invalid_argument(
         "Missing hit-to-simulated-hits map input collection");
   }
-  if (not m_cfg.trackingGeometry) {
-    throw std::invalid_argument("Missing tracking geometry");
-  }
 }
 
 ActsExamples::CsvMeasurementWriter::~CsvMeasurementWriter() {}
@@ -55,8 +52,6 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::endRun() {
 
 ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
     const AlgorithmContext& ctx, const MeasurementContainer& measurements) {
-  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
-
   ClusterContainer clusters;
   if (not m_cfg.inputClusters.empty()) {
     clusters = ctx.eventStore.get<ClusterContainer>(m_cfg.inputClusters);
@@ -67,19 +62,14 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
       perEventFilepath(m_cfg.outputDir, "measurements.csv", ctx.eventNumber);
   std::string pathCells =
       perEventFilepath(m_cfg.outputDir, "cells.csv", ctx.eventNumber);
-  std::string pathTruth =
-      perEventFilepath(m_cfg.outputDir, "truth.csv", ctx.eventNumber);
 
   dfe::NamedTupleCsvWriter<MeasurementData> writerMeasurements(
       pathMeasurements, m_cfg.outputPrecision);
   dfe::NamedTupleCsvWriter<CellData> writerCells(pathCells,
                                                  m_cfg.outputPrecision);
-  dfe::NamedTupleCsvWriter<TruthHitData> writerTruth(pathTruth,
-                                                     m_cfg.outputPrecision);
 
   MeasurementData meas;
   CellData cell;
-  TruthHitData truth;
 
   // Will be reused as hit counter
   meas.hit_id = 0;
@@ -93,21 +83,10 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
     std::visit(
         [&](const auto& m) {
           Acts::GeometryIdentifier geoId = m.sourceLink().geometryId();
-          // Find the corresponding surface
-          const Acts::Surface* surfacePtr =
-              m_cfg.trackingGeometry->findSurface(geoId);
-          if (not surfacePtr) {
-            ACTS_ERROR("Could not find surface for " << geoId);
-            return;
-          }
-
           // MEASUREMENT information ------------------------------------
+
           // Encoded geometry identifier. same for all hits on the module
           meas.geometry_id = geoId.value();
-          meas.volume_id = geoId.volume();
-          meas.layer_id = geoId.layer();
-          meas.module_id = geoId.sensitive();
-
           meas.local_key = 0;
           // Create a full set of parameters
           auto parameters = m.expander() * m.parameters();
@@ -118,11 +97,11 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
           meas.time = parameters[Acts::eBoundTime] / Acts::UnitConstants::ns;
 
           auto covariance = m.expander() * m.covariance();
-          meas.varLocal0 = covariance(Acts::eBoundLoc0, Acts::eBoundLoc0);
-          meas.varLocal1 = covariance(Acts::eBoundLoc1, Acts::eBoundLoc1);
-          meas.varPhi = covariance(Acts::eBoundPhi, Acts::eBoundPhi);
-          meas.varTheta = covariance(Acts::eBoundTheta, Acts::eBoundTheta);
-          meas.varTime = covariance(Acts::eBoundTime, Acts::eBoundTime);
+          meas.var_local0 = covariance(Acts::eBoundLoc0, Acts::eBoundLoc0);
+          meas.var_local1 = covariance(Acts::eBoundLoc1, Acts::eBoundLoc1);
+          meas.var_phi = covariance(Acts::eBoundPhi, Acts::eBoundPhi);
+          meas.var_theta = covariance(Acts::eBoundTheta, Acts::eBoundTheta);
+          meas.var_time = covariance(Acts::eBoundTime, Acts::eBoundTime);
           for (unsigned int ipar = 0;
                ipar < static_cast<unsigned int>(Acts::eBoundSize); ++ipar) {
             if (m.contains(static_cast<Acts::BoundIndices>(ipar))) {
@@ -146,41 +125,6 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
               writerCells.append(cell);
             }
           }
-
-          // TRUTH information ------------------------------------------
-          // @TODO support mulitple associations
-          truth.hit_id = meas.hit_id;
-          truth.geometry_id = meas.geometry_id;
-          auto idx = m.sourceLink().index();
-          auto it = simHits.nth(idx);
-          if (it == simHits.end()) {
-            ACTS_FATAL("Simulation hit with index " << idx
-                                                    << " does not exist");
-            return;
-          }
-          const auto& simHit = *it;
-          truth.particle_id = simHit.particleId().value();
-          // Hit position
-          truth.tx = simHit.position().x() / Acts::UnitConstants::mm;
-          truth.ty = simHit.position().y() / Acts::UnitConstants::mm;
-          truth.tz = simHit.position().z() / Acts::UnitConstants::mm;
-          truth.tt = simHit.time() / Acts::UnitConstants::ns;
-          // Particle four-momentum before interaction
-          truth.tpx = simHit.momentum4Before().x() / Acts::UnitConstants::GeV;
-          truth.tpy = simHit.momentum4Before().y() / Acts::UnitConstants::GeV;
-          truth.tpz = simHit.momentum4Before().z() / Acts::UnitConstants::GeV;
-          truth.te = simHit.momentum4Before().w() / Acts::UnitConstants::GeV;
-          // particle four-momentum change due to interaction
-          const auto delta4 =
-              simHit.momentum4After() - simHit.momentum4Before();
-          truth.deltapx = delta4.x() / Acts::UnitConstants::GeV;
-          truth.deltapy = delta4.y() / Acts::UnitConstants::GeV;
-          truth.deltapz = delta4.z() / Acts::UnitConstants::GeV;
-          truth.deltae = delta4.w() / Acts::UnitConstants::GeV;
-          // @TODO write hit index along the particle trajectory
-          truth.index = simHit.index();
-          writerTruth.append(truth);
-
           // Increase counter
           meas.hit_id += 1;
         },

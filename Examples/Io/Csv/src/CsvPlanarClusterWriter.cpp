@@ -72,10 +72,6 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
 
     // encoded geometry identifier. same for all hits on the module
     hit.geometry_id = moduleGeoId.value();
-    // (partially) decoded geometry identifier
-    hit.volume_id = moduleGeoId.volume();
-    hit.layer_id = moduleGeoId.layer();
-    hit.module_id = moduleGeoId.sensitive();
 
     for (const auto& entry : moduleClusters) {
       const Acts::PlanarModuleCluster& cluster = entry.second;

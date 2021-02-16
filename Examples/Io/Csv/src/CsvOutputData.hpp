@@ -103,15 +103,12 @@ struct HitData {
   uint64_t hit_id;
   /// Hit surface identifier. Not available in the TrackML datasets.
   uint64_t geometry_id = 0u;
-  /// Partially decoded hit surface identifier components.
-  uint32_t volume_id, layer_id, module_id;
   /// Global hit position components in mm.
   float x, y, z;
   /// Global hit time in ns. Not available in the TrackML datasets.
   float t = 0.0f;
 
-  DFE_NAMEDTUPLE(HitData, hit_id, geometry_id, volume_id, layer_id, module_id,
-                 x, y, z, t);
+  DFE_NAMEDTUPLE(HitData, hit_id, geometry_id, x, y, z, t);
 };
 
 struct MeasurementData {
@@ -119,16 +116,14 @@ struct MeasurementData {
   uint64_t hit_id;
   /// Hit surface identifier.
   uint64_t geometry_id = 0u;
-  /// Partially decoded hit surface identifier components.
-  uint32_t volume_id, layer_id, module_id;
   /// Local hit information - bit identification what's measured
   uint8_t local_key;
   float local0, local1, phi, theta, time;
-  float varLocal0, varLocal1, varPhi, varTheta, varTime;
+  float var_local0, var_local1, var_phi, var_theta, var_time;
 
-  DFE_NAMEDTUPLE(MeasurementData, hit_id, geometry_id, volume_id, layer_id,
-                 module_id, local0, local1, phi, theta, time, varLocal0,
-                 varLocal1, varPhi, varTheta, varTime);
+  DFE_NAMEDTUPLE(MeasurementData, hit_id, geometry_id, local_key, local0,
+                 local1, phi, theta, time, var_local0, var_local1, var_phi,
+                 var_theta, var_time);
 };
 
 struct CellData {
@@ -141,9 +136,9 @@ struct CellData {
   /// Digital cell address/ channel
   int32_t channel0, channel1;
   /// Digital cell timestamp. Not available in the TrackML datasets.
-  int32_t timestamp = 0;
+  float timestamp = 0;
   /// (Digital) measured cell value, e.g. amplitude or time-over-threshold.
-  int32_t value;
+  float value;
 
   DFE_NAMEDTUPLE(CellData, geometry_id, hit_id, channel0, channel1, timestamp,
                  value);

@@ -17,8 +17,6 @@
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
@@ -36,18 +34,6 @@ ActsExamples::CsvMeasurementReader::CsvMeasurementReader(
       m_logger(Acts::getDefaultLogger("CsvMeasurementReader", lvl)) {
   if (m_cfg.outputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurement output collection");
-  }
-  if (m_cfg.outputMeasurementIds.empty()) {
-    throw std::invalid_argument("Missing measurement id output collection");
-  }
-  if (m_cfg.outputMeasurementParticlesMap.empty()) {
-    throw std::invalid_argument("Missing hit-particles map output collection");
-  }
-  if (m_cfg.outputSimHits.empty()) {
-    throw std::invalid_argument("Missing simulated hits output collection");
-  }
-  if (not m_cfg.trackingGeometry) {
-    throw std::invalid_argument("Missing tracking geometry");
   }
 }
 
@@ -79,27 +65,10 @@ struct CompareHitId {
   }
 };
 
-/// Convert separate volume/layer/module id into a single geometry identifier.
-inline Acts::GeometryIdentifier extractGeometryId(
-    const ActsExamples::MeasurementData& data) {
-  // if available, use the encoded geometry directly
-  if (data.geometry_id != 0u) {
-    return data.geometry_id;
-  }
-  // otherwise, reconstruct it from the available components
-  Acts::GeometryIdentifier geoId;
-  geoId.setVolume(data.volume_id);
-  geoId.setLayer(data.layer_id);
-  geoId.setSensitive(data.module_id);
-  return geoId;
-}
-
 struct CompareGeometryId {
   bool operator()(const ActsExamples::MeasurementData& left,
                   const ActsExamples::MeasurementData& right) const {
-    auto leftId = extractGeometryId(left).value();
-    auto rightId = extractGeometryId(right).value();
-    return leftId < rightId;
+    return left.geometry_id < right.geometry_id;
   }
 };
 
@@ -121,12 +90,12 @@ inline std::vector<Data> readEverything(
 
 std::vector<ActsExamples::MeasurementData> readMeasurementsByGeometryId(
     const std::string& inputDir, size_t event) {
-  // geometry_id and t are optional columns
-  auto hits = readEverything<ActsExamples::MeasurementData>(
+  // Geometry_id and t are optional columns
+  auto measurements = readEverything<ActsExamples::MeasurementData>(
       inputDir, "measurements.csv", {"geometry_id", "t"}, event);
   // sort same way they will be sorted in the output container
-  std::sort(hits.begin(), hits.end(), CompareGeometryId{});
-  return hits;
+  std::sort(measurements.begin(), measurements.end(), CompareGeometryId{});
+  return measurements;
 }
 
 std::vector<ActsExamples::CellData> readCellsByHitId(
@@ -176,71 +145,12 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   GeometryIdMultimap<Measurement> measurements;
   ClusterContainer clusters;
   IndexSourceLinkContainer sourceLinks;
-  std::vector<uint64_t> measurementIds;
-  IndexMultimap<ActsFatras::Barcode> hitParticlesMap;
-  SimHitContainer simHits;
 
   measurements.reserve(measurementData.size());
-  measurementIds.reserve(measurementData.size());
   sourceLinks.reserve(measurementData.size());
-  hitParticlesMap.reserve(truthData.size());
-  simHits.reserve(truthData.size());
 
   for (const MeasurementData& m : measurementData) {
-    Acts::GeometryIdentifier geoId = extractGeometryId(m);
-
-    // Find associated truth/simulation hits
-    std::vector<std::size_t> simHitIndices;
-    {
-      auto range = makeRange(std::equal_range(
-          truthData.begin(), truthData.end(), m.hit_id, CompareHitId{}));
-      simHitIndices.reserve(range.size());
-      for (const auto& truth : range) {
-        const auto simGeometryId = Acts::GeometryIdentifier(truth.geometry_id);
-        // TODO validate geo id consistency
-        const auto simParticleId = ActsFatras::Barcode(truth.particle_id);
-        const auto simIndex = truth.index;
-        ActsFatras::Hit::Vector4 simPos4{
-            truth.tx * Acts::UnitConstants::mm,
-            truth.ty * Acts::UnitConstants::mm,
-            truth.tz * Acts::UnitConstants::mm,
-            truth.tt * Acts::UnitConstants::ns,
-        };
-        ActsFatras::Hit::Vector4 simMom4{
-            truth.tpx * Acts::UnitConstants::GeV,
-            truth.tpy * Acts::UnitConstants::GeV,
-            truth.tpz * Acts::UnitConstants::GeV,
-            truth.te * Acts::UnitConstants::GeV,
-        };
-        ActsFatras::Hit::Vector4 simDelta4{
-            truth.deltapx * Acts::UnitConstants::GeV,
-            truth.deltapy * Acts::UnitConstants::GeV,
-            truth.deltapz * Acts::UnitConstants::GeV,
-            truth.deltae * Acts::UnitConstants::GeV,
-        };
-
-        // The measurement stores indices to the underlying simulation hits.
-        // thus their position in the container must be stable. the preordering
-        // of hits by geometry id should ensure that new sim hits are always
-        // added at the end and previously created ones rest at their existing
-        // locations.
-        auto inserted = simHits.emplace_hint(simHits.end(), simGeometryId,
-                                             simParticleId, simPos4, simMom4,
-                                             simMom4 + simDelta4, simIndex);
-        if (std::next(inserted) != simHits.end()) {
-          ACTS_FATAL("Truth hit sorting broke for input hit id " << m.hit_id);
-          return ProcessCode::ABORT;
-        }
-        simHitIndices.push_back(simHits.index_of(inserted));
-      }
-    }
-
-    // Identify hit surface
-    const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
-    if (not surface) {
-      ACTS_FATAL("Could not retrieve the surface for measurement " << m);
-      return ProcessCode::ABORT;
-    }
+    Acts::GeometryIdentifier geoId = m.geometry_id;
 
     // Create the measurement
     DigitizedParameters dParameters;
@@ -251,23 +161,23 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
         switch (ipar) {
           case static_cast<unsigned int>(Acts::eBoundLoc0): {
             dParameters.values.push_back(m.local0);
-            dParameters.variances.push_back(m.varLocal0);
+            dParameters.variances.push_back(m.var_local0);
           }; break;
           case static_cast<unsigned int>(Acts::eBoundLoc1): {
             dParameters.values.push_back(m.local1);
-            dParameters.variances.push_back(m.varLocal1);
+            dParameters.variances.push_back(m.var_local1);
           }; break;
           case static_cast<unsigned int>(Acts::eBoundPhi): {
             dParameters.values.push_back(m.phi);
-            dParameters.variances.push_back(m.varPhi);
+            dParameters.variances.push_back(m.var_phi);
           }; break;
           case static_cast<unsigned int>(Acts::eBoundTheta): {
             dParameters.values.push_back(m.theta);
-            dParameters.variances.push_back(m.varTheta);
+            dParameters.variances.push_back(m.var_theta);
           }; break;
           case static_cast<unsigned int>(Acts::eBoundTime): {
             dParameters.values.push_back(m.time);
-            dParameters.variances.push_back(m.varTime);
+            dParameters.variances.push_back(m.var_time);
           }; break;
           default:
             break;
@@ -275,7 +185,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
       }
     }
 
-    IndexSourceLink sourceLink(geoId, simHitIndices.size());
+    IndexSourceLink sourceLink(geoId, 0);
     auto measurement = createMeasurement(dParameters, sourceLink);
 
     // Due to the previous sorting of the raw hit data by geometry id, new
@@ -288,28 +198,13 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
       ACTS_FATAL("Something went horribly wrong with the hit sorting");
       return ProcessCode::ABORT;
     }
-
-    auto measurementIndex = measurements.index_of(inserted);
-    auto truthRange = makeRange(std::equal_range(
-        truthData.begin(), truthData.end(), m.hit_id, CompareHitId{}));
-    for (const auto& truth : truthRange) {
-      hitParticlesMap.emplace_hint(hitParticlesMap.end(), measurementIndex,
-                                   truth.particle_id);
-    }
-
-    // Map internal measurement index back to original, non-monotonic hit id
-    measurementIds.push_back(m.hit_id);
   }
 
   // Write the data to the EventStore
   ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
-  ctx.eventStore.add(m_cfg.outputMeasurementIds, std::move(measurementIds));
   if (not clusters.empty()) {
     ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
   }
-  ctx.eventStore.add(m_cfg.outputMeasurementParticlesMap,
-                     std::move(hitParticlesMap));
-  ctx.eventStore.add(m_cfg.outputSimHits, std::move(simHits));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

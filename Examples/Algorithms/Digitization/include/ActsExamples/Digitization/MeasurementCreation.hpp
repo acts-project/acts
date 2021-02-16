@@ -16,7 +16,7 @@
 
 namespace ActsExamples {
 
-/// Nested struct for digitized parameters
+/// Struct to identify digitized parameters
 ///
 /// Is public as it is also used by the I/O system
 struct DigitizedParameters {

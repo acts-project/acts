@@ -47,14 +47,6 @@ class CsvMeasurementReader final : public IReader {
     std::string outputMeasurements;
     /// Output cluster collection (optional).
     std::string outputClusters;
-    /// For each cluster/ hit index the original hit id stored on file.
-    std::string outputMeasurementIds;
-    /// Output hit-particles mapping collection.
-    std::string outputMeasurementParticlesMap;
-    /// Output simulated (truth) hits collection.
-    std::string outputSimHits;
-    /// Tracking geometry required to access global-to-local transforms.
-    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   };
 
   /// Construct the cluster reader.

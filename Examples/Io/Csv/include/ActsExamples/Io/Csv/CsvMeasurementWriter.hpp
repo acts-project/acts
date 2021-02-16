@@ -13,7 +13,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
@@ -23,14 +22,7 @@
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
-#include <memory>
-#include <mutex>
-#include <vector>
-
-#include <TTree.h>
-
-class TFile;
-class TTree;
+#include <string>
 
 namespace ActsExamples {
 
@@ -41,10 +33,8 @@ namespace ActsExamples {
 ///
 ///     event000000001-cells.csv
 ///     event000000001-measurements.csv
-///     event000000001-truth.csv
 ///     event000000002-cells.csv
 ///     event000000002-measurements.csv
-///     event000000002-truth.csv
 ///     ...
 ///
 /// Intrinsically thread-safe as one file per event.
@@ -63,8 +53,6 @@ class CsvMeasurementWriter final : public WriterT<MeasurementContainer> {
     std::string outputDir;
     /// Number of decimal digits for floating point precision in output.
     size_t outputPrecision = std::numeric_limits<float>::max_digits10;
-    /// Tracking geometry required to access global-to-local transforms.
-    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr;
   };
 
   /// Constructor with
