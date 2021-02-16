@@ -348,6 +348,7 @@ ActsExamples::DigitizationAlgorithm::createMeasurement(
                          std::to_string(dParams.indices.size());
 
   throw std::runtime_error(errorMsg.c_str());
+}
 
 std::vector<std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
 ActsExamples::getBoundIndices(const ActsExamples::DigitizationAlgorithm::Config &cfg)
