@@ -72,7 +72,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
   CellData cell;
 
   // Will be reused as hit counter
-  meas.hit_id = 0;
+  meas.measurement_id = 0;
 
   ACTS_VERBOSE("Writing " << measurements.size()
                           << " measurments in this event.");
@@ -115,7 +115,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
           if (not clusters.empty()) {
             auto cluster = clusters[hitIdx];
             cell.geometry_id = meas.geometry_id;
-            cell.hit_id = meas.hit_id;
+            cell.hit_id = meas.measurement_id;
             for (auto& c : cluster.channels) {
               cell.channel0 = c.bin[0];
               cell.channel1 = c.bin[1];
@@ -126,7 +126,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
             }
           }
           // Increase counter
-          meas.hit_id += 1;
+          meas.measurement_id += 1;
         },
         measurement);
   }
