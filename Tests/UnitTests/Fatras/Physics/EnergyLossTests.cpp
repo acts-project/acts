@@ -39,9 +39,8 @@ BOOST_DATA_TEST_CASE(BetheBloch, Dataset::parameters, pdg, phi, lambda, p,
   BOOST_CHECK(outgoing.empty());
 }
 
-BOOST_DATA_TEST_CASE(BetheHeitler, Dataset::parameters, pdg, phi, lambda, p,
-                     seed) {
-  (void)pdg;
+BOOST_DATA_TEST_CASE(BetheHeitler, Dataset::momentumPhi * Dataset::momentumLambda * Dataset::momentumAbs ^ Dataset::rngSeed, phi, lambda, p, seed) {
+
   Generator gen(seed);
   ActsFatras::Particle before =
       Dataset::makeParticle(Acts::PdgParticle::eElectron, phi, lambda, p);
