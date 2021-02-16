@@ -118,6 +118,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     }
 
     ACTS_INFO("Fitted Vertex " << fittedVertex.fullPosition().transpose());
+    ACTS_INFO("Tracks at fitted Vertex: " << fittedVertex.tracks().size());
   }
   return ProcessCode::SUCCESS;
 }
