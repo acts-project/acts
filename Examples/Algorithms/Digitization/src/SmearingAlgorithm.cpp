@@ -186,3 +186,21 @@ ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
                      std::move(hitSimHitsMap));
   return ProcessCode::SUCCESS;
 }
+
+std::vector<std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
+ActsExamples::getBoundIndices(const ActsExamples::SmearingAlgorithm::Config &cfg)
+{
+  std::vector<std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>> bIndexInput;
+  for (size_t ibi = 0; ibi < cfg.smearers.size(); ++ibi) {
+    Acts::GeometryIdentifier geoID = cfg.smearers.idAt(ibi);
+    const auto sCfg = cfg.smearers.valueAt(ibi);
+    std::vector<Acts::BoundIndices> boundIndices;
+
+    for (const auto& sConfig : sCfg) {
+      boundIndices.push_back(sConfig.index);
+    }
+    bIndexInput.push_back({geoID, boundIndices});
+  }
+  return bIndexInput;
+}
+

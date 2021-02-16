@@ -83,4 +83,7 @@ class SmearingAlgorithm final : public BareAlgorithm {
   }
 };
 
+std::vector<std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
+getBoundIndices(const ActsExamples::SmearingAlgorithm::Config &cfg);
+
 }  // namespace ActsExamples

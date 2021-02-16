@@ -348,4 +348,23 @@ ActsExamples::DigitizationAlgorithm::createMeasurement(
                          std::to_string(dParams.indices.size());
 
   throw std::runtime_error(errorMsg.c_str());
+
+std::vector<std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
+ActsExamples::getBoundIndices(const ActsExamples::DigitizationAlgorithm::Config &cfg)
+{
+  std::vector<std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>> bIndexInput;
+
+  for (size_t ibi = 0; ibi < cfg.digitizationConfigs.size(); ++ibi) {
+    Acts::GeometryIdentifier geoID = cfg.digitizationConfigs.idAt(ibi);
+    const auto dCfg = cfg.digitizationConfigs.valueAt(ibi);
+    std::vector<Acts::BoundIndices> boundIndices;
+    boundIndices.insert(boundIndices.end(),
+			dCfg.geometricDigiConfig.indices.begin(),
+			dCfg.geometricDigiConfig.indices.end());
+    for (const auto& sConfig : dCfg.smearingDigiConfig) {
+      boundIndices.push_back(sConfig.index);
+    }
+    bIndexInput.push_back({geoID, boundIndices});
+  }
+  return bIndexInput;
 }

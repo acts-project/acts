@@ -3,7 +3,8 @@ add_library(
   src/DigitizationAlgorithm.cpp
   src/PlanarSteppingAlgorithm.cpp
   src/SmearingAlgorithm.cpp
-  src/DigitizationOptions.cpp)
+  src/DigitizationOptions.cpp
+  src/JsonDigitizationConfig.cpp)
 target_include_directories(
   ActsExamplesDigitization
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
@@ -11,7 +12,7 @@ target_link_libraries(
   ActsExamplesDigitization
   PRIVATE
     ActsCore ActsPluginDigitization ActsPluginIdentification
-    ActsExamplesFramework
+    ActsExamplesFramework ActsExamplesIoJson
     Boost::program_options)
 
 install(

@@ -11,6 +11,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Digitization/JsonDigitizationConfig.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Digitization/SmearingConfig.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
@@ -20,6 +21,7 @@
 #include <string>
 
 #include <boost/program_options.hpp>
+#include <nlohmann/json.hpp>
 
 void ActsExamples::Options::addDigitizationOptions(Description& desc) {
   using boost::program_options::bool_switch;
@@ -206,10 +208,35 @@ ActsExamples::Options::readSmearingConfig(const Variables& variables) {
 }
 
 ActsExamples::DigitizationAlgorithm::Config
-ActsExamples::Options::readDigitizationConfig(const Variables& /*variables*/) {
+ActsExamples::Options::readDigitizationConfig(const Variables& variables) {
   ACTS_LOCAL_LOGGER(
       Acts::getDefaultLogger("DigitzationOptions", Acts::Logging::INFO));
 
   DigitizationAlgorithm::Config digiCfg;
+
+  auto cfile = variables["digi-config-file"].as<std::string>();
+  if (not cfile.empty()) {
+    // Configuration by json file evokes 'DigitizationAlgorithm'
+    auto in = std::ifstream(cfile, std::ifstream::in | std::ifstream::binary);
+    if (in.good()) {
+      // Get the json file for the configuration
+      nlohmann::json djson;
+      in >> djson;
+      in.close();
+      digiCfg.digitizationConfigs = DigiConfigConverter("digitization-configuration").fromJson(djson);
+      return digiCfg;
+    }
+  }
+  ACTS_ERROR("Error while configuring digitization from .json: " << cfile);
   return digiCfg;
 }
+
+ActsExamples::Options::DigitizationConfiguration ActsExamples::Options::configureDigitization(const Variables &vm)
+{
+  if (vm["digi-smear"].as<bool>())
+    return readSmearingConfig(vm);
+  else
+    return readDigitizationConfig(vm);
+}
+
+

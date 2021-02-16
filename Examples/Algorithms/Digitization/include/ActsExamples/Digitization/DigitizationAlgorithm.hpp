@@ -185,4 +185,8 @@ class DigitizationAlgorithm final : public BareAlgorithm {
   }
 };
 
+std::vector<std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
+getBoundIndices(const ActsExamples::DigitizationAlgorithm::Config &cfg);
+
+
 }  // namespace ActsExamples

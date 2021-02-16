@@ -31,5 +31,7 @@ SmearingAlgorithm::Config readSmearingConfig(const Variables& variables);
 DigitizationAlgorithm::Config readDigitizationConfig(
     const Variables& variables);
 
+using DigitizationConfiguration = std::variant<SmearingAlgorithm::Config, DigitizationAlgorithm::Config>;
+DigitizationConfiguration configureDigitization(const Variables &vm);
 }  // namespace Options
 }  // namespace ActsExamples
