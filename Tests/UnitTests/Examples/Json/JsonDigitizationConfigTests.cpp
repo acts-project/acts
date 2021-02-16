@@ -11,7 +11,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
-#include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
+#include "ActsExamples/Digitization/JsonDigitizationConfig.hpp"
 
 #include <fstream>
 #include <iostream>
