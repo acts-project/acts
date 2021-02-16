@@ -30,10 +30,8 @@ namespace ActsExamples {
 ///
 ///     event000000001-cells.csv (optional)
 ///     event000000001-measurements.csv
-///     event000000001-truth.csv
 ///     event000000002-cells.csv (optional)
 ///     event000000002-measurements.csv
-///     event000000002-truth.csv
 ///
 /// and each line in the file corresponds to one hit/cluster.
 ///
