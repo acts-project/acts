@@ -14,7 +14,7 @@ env:
 jobs:
   linux:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v9
+    container: ghcr.io/acts-project/${{ matrix.image }}:v11
     strategy:
       matrix:
         image:
@@ -46,6 +46,9 @@ jobs:
         run: ${SETUP} && cmake --build build -- test
       - name: Integration tests
         run: ${SETUP} && cmake --build build -- integrationtests
+      - name: Examples
+        if: contains(matrix.image, 'ubuntu')
+        run: ${SETUP} && ./CI/run_examples.sh
       - name: Install
         run: ${SETUP} && cmake --build build -- install
       - uses: actions/upload-artifact@v2
