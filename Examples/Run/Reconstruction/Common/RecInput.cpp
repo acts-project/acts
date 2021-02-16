@@ -81,7 +81,7 @@ ActsExamples::Options::DigitizationConfiguration setupDigitization(
 
   auto digiCfg = Options::configureDigitization(vars);
   // Common options for digitization
-  std::visit([&](auto cfg) {
+  std::visit([&](auto& cfg) {
     cfg.inputSimHits = inputSimHits;
     cfg.outputMeasurements = "measurements";
     cfg.outputSourceLinks = "sourcelinks";
