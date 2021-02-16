@@ -50,6 +50,9 @@ int main(int argc, char* argv[]) {
   selectParticles.outputParticles = "particles_selected";
   // smearing only works with charge particles for now
   selectParticles.removeNeutral = true;
+  selectParticles.absEtaMax = 2.5;
+  selectParticles.rhoMax = 4_mm;
+  selectParticles.ptMin = 500_MeV;
   sequencer.addAlgorithm(
       std::make_shared<ParticleSelector>(selectParticles, logLevel));
 
