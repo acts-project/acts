@@ -99,7 +99,7 @@ int runRecCKFTracks(int argc, char* argv[],
   auto particleReader = setupParticleReading(vm, sequencer);
 
   // Run the sim hits smearing
-  auto hitSmearingCfg = setupSimHitSmearing(
+  auto digiCfg = setupDigitization(
       vm, sequencer, rnd, trackingGeometry, simHitReaderCfg.outputSimHits);
 
   // Run the particle selection
@@ -109,7 +109,7 @@ int runRecCKFTracks(int argc, char* argv[],
   TruthSeedSelector::Config particleSelectorCfg;
   particleSelectorCfg.inputParticles = particleReader.outputParticles;
   particleSelectorCfg.inputMeasurementParticlesMap =
-      hitSmearingCfg.outputMeasurementParticlesMap;
+    std::visit([&](const auto &cfg){return cfg.outputMeasurementParticlesMap;}, digiCfg);
   particleSelectorCfg.outputParticles = "particles_selected";
   particleSelectorCfg.ptMin = 500_MeV;
   particleSelectorCfg.nHitsMin = 9;
@@ -129,8 +129,8 @@ int runRecCKFTracks(int argc, char* argv[],
   } else {
     // Create space points
     SpacePointMaker::Config spCfg;
-    spCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
-    spCfg.inputMeasurements = hitSmearingCfg.outputMeasurements;
+    spCfg.inputSourceLinks = std::visit([&](const auto &cfg){return cfg.outputSourceLinks;}, digiCfg);
+    spCfg.inputMeasurements = std::visit([&](const auto &cfg){return cfg.outputMeasurements;}, digiCfg);
     spCfg.outputSpacePoints = "spacepoints";
     spCfg.trackingGeometry = trackingGeometry;
     spCfg.geometrySelection = {
@@ -178,7 +178,7 @@ int runRecCKFTracks(int argc, char* argv[],
     // Algorithm estimating track parameter from seed
     TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
     paramsEstimationCfg.inputSeeds = seedingCfg.outputSeeds;
-    paramsEstimationCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
+    paramsEstimationCfg.inputSourceLinks = std::visit([&](const auto &cfg){return cfg.outputSourceLinks;}, digiCfg);
     paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
     paramsEstimationCfg.outputTrackParametersSeedMap =
         "estimatedparams_seed_map";
@@ -201,8 +201,8 @@ int runRecCKFTracks(int argc, char* argv[],
   // It takes all the source links created from truth hit smearing, seeds from
   // truth particle smearing and source link selection config
   auto trackFindingCfg = Options::readTrackFindingConfig(vm);
-  trackFindingCfg.inputMeasurements = hitSmearingCfg.outputMeasurements;
-  trackFindingCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
+  trackFindingCfg.inputMeasurements = std::visit([&](const auto &cfg){return cfg.outputMeasurements;}, digiCfg);
+  trackFindingCfg.inputSourceLinks = std::visit([&](const auto &cfg){return cfg.outputSourceLinks;}, digiCfg);
   trackFindingCfg.inputInitialTrackParameters = outputTrackParameters;
   trackFindingCfg.outputTrajectories = "trajectories";
   trackFindingCfg.findTracks = TrackFindingAlgorithm::makeTrackFinderFunction(
@@ -220,9 +220,9 @@ int runRecCKFTracks(int argc, char* argv[],
   trackStatesWriter.inputParticles = particleReader.outputParticles;
   trackStatesWriter.inputSimHits = simHitReaderCfg.outputSimHits;
   trackStatesWriter.inputMeasurementParticlesMap =
-      hitSmearingCfg.outputMeasurementParticlesMap;
+    std::visit([&](const auto &cfg){return cfg.outputMeasurementParticlesMap;}, digiCfg);
   trackStatesWriter.inputMeasurementSimHitsMap =
-      hitSmearingCfg.outputMeasurementSimHitsMap;
+    std::visit([&](const auto &cfg){return cfg.outputMeasurementSimHitsMap;}, digiCfg);
   trackStatesWriter.outputDir = outputDir;
   trackStatesWriter.outputFilename = "trackstates_ckf.root";
   trackStatesWriter.outputTreename = "trackstates_ckf";
@@ -238,7 +238,7 @@ int runRecCKFTracks(int argc, char* argv[],
   // selection algorithm is used.
   trackParamsWriter.inputParticles = particleReader.outputParticles;
   trackParamsWriter.inputMeasurementParticlesMap =
-      hitSmearingCfg.outputMeasurementParticlesMap;
+    std::visit([&](const auto &cfg){return cfg.outputMeasurementParticlesMap;}, digiCfg);
   trackParamsWriter.outputDir = outputDir;
   trackParamsWriter.outputFilename = "trackparams_ckf.root";
   trackParamsWriter.outputTreename = "trackparams_ckf";
@@ -250,7 +250,7 @@ int runRecCKFTracks(int argc, char* argv[],
   perfWriterCfg.inputParticles = inputParticles;
   perfWriterCfg.inputTrajectories = trackFindingCfg.outputTrajectories;
   perfWriterCfg.inputMeasurementParticlesMap =
-      hitSmearingCfg.outputMeasurementParticlesMap;
+    std::visit([&](const auto &cfg){return cfg.outputMeasurementParticlesMap;}, digiCfg);
   // The bottom seed on a pixel detector 'eats' two measurements
   perfWriterCfg.nMeasurementsMin = particleSelectorCfg.nHitsMin - 2;
   perfWriterCfg.outputDir = outputDir;

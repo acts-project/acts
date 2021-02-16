@@ -68,7 +68,7 @@ ActsExamples::CsvParticleReader::Config setupParticleReading(
   return particleReader;
 }
 
-ActsExamples::SmearingAlgorithm::Config setupSimHitSmearing(
+ActsExamples::Options::DigitizationConfiguration setupDigitization(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer,
     std::shared_ptr<const ActsExamples::RandomNumbers> rnd,
@@ -79,19 +79,31 @@ ActsExamples::SmearingAlgorithm::Config setupSimHitSmearing(
   // Read some standard options
   auto logLevel = Options::readLogLevel(vars);
 
-  // Create smeared measurements
-  SmearingAlgorithm::Config hitSmearingCfg = Options::readSmearingConfig(vars);
-  hitSmearingCfg.inputSimHits = inputSimHits;
-  hitSmearingCfg.outputMeasurements = "measurements";
-  hitSmearingCfg.outputSourceLinks = "sourcelinks";
-  hitSmearingCfg.outputMeasurementParticlesMap = "measurement_particles_map";
-  hitSmearingCfg.outputMeasurementSimHitsMap = "measurement_simhits_map";
-  hitSmearingCfg.randomNumbers = rnd;
-  hitSmearingCfg.trackingGeometry = trackingGeometry;
-  sequencer.addAlgorithm(
-      std::make_shared<SmearingAlgorithm>(hitSmearingCfg, logLevel));
+  auto digiCfg = Options::configureDigitization(vars);
+  // Common options for digitization
+  std::visit([&](auto cfg) {
+    cfg.inputSimHits = inputSimHits;
+    cfg.outputMeasurements = "measurements";
+    cfg.outputSourceLinks = "sourcelinks";
+    cfg.outputMeasurementParticlesMap = "measurement_particles_map";
+    cfg.outputMeasurementSimHitsMap = "measurement_simhits_map";
+    cfg.randomNumbers = rnd;
+    cfg.trackingGeometry = trackingGeometry;
+  }, digiCfg);
+  // Specific to Digitization Algorithm
+  if (std::holds_alternative<DigitizationAlgorithm::Config>(digiCfg)) {
+    auto cfg = std::get<DigitizationAlgorithm::Config>(digiCfg);
+    cfg.outputClusters = "clusters";
+    sequencer.addAlgorithm(
+      std::make_shared<DigitizationAlgorithm>(cfg, logLevel));
+  } else {
+    // Specific to SmearingAlgorithm
+    auto cfg = std::get<SmearingAlgorithm::Config>(digiCfg);
+    sequencer.addAlgorithm(
+      std::make_shared<SmearingAlgorithm>(cfg, logLevel));
+  }
 
-  return hitSmearingCfg;
+  return digiCfg;
 }
 
 ActsExamples::ParticleSmearing::Config setupParticleSmearing(
