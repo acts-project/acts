@@ -52,7 +52,7 @@ ActsExamples::CsvParticleReader::Config setupParticleReading(
 /// @param inputSimHits The input sim hit collection (e.g. from sim hit reader)
 ///
 /// @return config for hit smearing
-ActsExamples::Options::DigitizationConfiguration setupDigitization(
+ActsExamples::Digitization::AlgorithmConfig setupDigitization(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer,
     std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,

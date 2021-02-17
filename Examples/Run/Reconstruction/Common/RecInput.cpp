@@ -68,7 +68,7 @@ ActsExamples::CsvParticleReader::Config setupParticleReading(
   return particleReader;
 }
 
-ActsExamples::Options::DigitizationConfiguration setupDigitization(
+ActsExamples::Digitization::AlgorithmConfig setupDigitization(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer,
     std::shared_ptr<const ActsExamples::RandomNumbers> rnd,
@@ -81,27 +81,15 @@ ActsExamples::Options::DigitizationConfiguration setupDigitization(
 
   auto digiCfg = Options::configureDigitization(vars);
   // Common options for digitization
-  std::visit([&](auto& cfg) {
-    cfg.inputSimHits = inputSimHits;
-    cfg.outputMeasurements = "measurements";
-    cfg.outputSourceLinks = "sourcelinks";
-    cfg.outputMeasurementParticlesMap = "measurement_particles_map";
-    cfg.outputMeasurementSimHitsMap = "measurement_simhits_map";
-    cfg.randomNumbers = rnd;
-    cfg.trackingGeometry = trackingGeometry;
-  }, digiCfg);
-  // Specific to Digitization Algorithm
-  if (std::holds_alternative<DigitizationAlgorithm::Config>(digiCfg)) {
-    auto cfg = std::get<DigitizationAlgorithm::Config>(digiCfg);
-    cfg.outputClusters = "clusters";
-    sequencer.addAlgorithm(
-      std::make_shared<DigitizationAlgorithm>(cfg, logLevel));
-  } else {
-    // Specific to SmearingAlgorithm
-    auto cfg = std::get<SmearingAlgorithm::Config>(digiCfg);
-    sequencer.addAlgorithm(
-      std::make_shared<SmearingAlgorithm>(cfg, logLevel));
-  }
+  digiCfg.inputSimHits = inputSimHits;
+  digiCfg.outputMeasurements = "measurements";
+  digiCfg.outputSourceLinks = "sourcelinks";
+  digiCfg.outputMeasurementParticlesMap = "measurement_particles_map";
+  digiCfg.outputMeasurementSimHitsMap = "measurement_simhits_map";
+  digiCfg.randomNumbers = rnd;
+  digiCfg.trackingGeometry = trackingGeometry;
+  digiCfg.outputClusters = "clusters";
+  sequencer.addAlgorithm(Options::createDigitizationAlgorithm(digiCfg, logLevel));
 
   return digiCfg;
 }

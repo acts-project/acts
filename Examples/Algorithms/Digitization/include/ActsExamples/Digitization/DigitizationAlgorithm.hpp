@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "ActsExamples/Digitization/AlgorithmConfig.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -38,32 +39,11 @@ namespace ActsExamples {
 /// Algorithm that turns simulated hits into measurements by truth smearing.
 class DigitizationAlgorithm final : public BareAlgorithm {
  public:
-  struct Config {
-    /// Input collection of simulated hits.
-    std::string inputSimHits;
-    /// Output source links collection.
-    std::string outputSourceLinks;
-    /// Output measurements collection.
-    std::string outputMeasurements;
-    /// Output cluster collection.
-    std::string outputClusters;
-    /// Output collection to map measured hits to contributing particles.
-    std::string outputMeasurementParticlesMap;
-    /// Output collection to map measured hits to simulated hits.
-    std::string outputMeasurementSimHitsMap;
-    /// Tracking geometry required to access global-to-local transforms.
-    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr;
-    /// Random numbers tool.
-    std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
-    /// The digitizers per GeometryIdentifier
-    Acts::GeometryHierarchyMap<DigitizationConfig> digitizationConfigs;
-  };
-
   /// Construct the smearing algorithm.
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  DigitizationAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  DigitizationAlgorithm(Digitization::AlgorithmConfig cfg, Acts::Logging::Level lvl);
 
   /// Build measurement from simulation hits at input.
   ///
@@ -132,7 +112,7 @@ class DigitizationAlgorithm final : public BareAlgorithm {
                                  CombinedDigitizer<4>>;
 
   /// Configuration of the Algorithm
-  Config m_cfg;
+  Digitization::AlgorithmConfig m_cfg;
   /// Digitizers within geometry hierarchy
   Acts::GeometryHierarchyMap<Digitizer> m_digitizers;
   /// Geometric digtizers
@@ -184,9 +164,5 @@ class DigitizationAlgorithm final : public BareAlgorithm {
     return impl;
   }
 };
-
-std::vector<std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
-getBoundIndices(const ActsExamples::DigitizationAlgorithm::Config &cfg);
-
 
 }  // namespace ActsExamples

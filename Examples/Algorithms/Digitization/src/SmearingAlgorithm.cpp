@@ -22,7 +22,7 @@
 #include <type_traits>
 
 ActsExamples::SmearingAlgorithm::SmearingAlgorithm(
-    ActsExamples::SmearingAlgorithm::Config cfg, Acts::Logging::Level lvl)
+    Digitization::AlgorithmConfig cfg, Acts::Logging::Level lvl)
     : ActsExamples::BareAlgorithm("SmearingAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
   if (m_cfg.inputSimHits.empty()) {
@@ -48,15 +48,15 @@ ActsExamples::SmearingAlgorithm::SmearingAlgorithm(
   if (not m_cfg.randomNumbers) {
     throw std::invalid_argument("Missing random numbers tool");
   }
-  if (m_cfg.smearers.empty()) {
+  if (m_cfg.digitizationConfigs.empty()) {
     throw std::invalid_argument("Missing smearers configuration");
   }
   // create the smearers from the configuration
   std::vector<std::pair<Acts::GeometryIdentifier, Smearer>> smearersInput;
-  for (size_t i = 0; i < m_cfg.smearers.size(); ++i) {
-    Acts::GeometryIdentifier geoId = m_cfg.smearers.idAt(i);
+  for (size_t i = 0; i < m_cfg.digitizationConfigs.size(); ++i) {
+    Acts::GeometryIdentifier geoId = m_cfg.digitizationConfigs.idAt(i);
     // copy so we can sort in-place
-    SmearingConfig geoCfg = m_cfg.smearers.valueAt(i);
+    SmearingConfig geoCfg = m_cfg.digitizationConfigs.valueAt(i).smearingDigiConfig;
 
     // make sure the configured input parameter indices are sorted and unique
     std::sort(geoCfg.begin(), geoCfg.end(),
@@ -186,21 +186,3 @@ ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
                      std::move(hitSimHitsMap));
   return ProcessCode::SUCCESS;
 }
-
-std::vector<std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
-ActsExamples::getBoundIndices(const ActsExamples::SmearingAlgorithm::Config &cfg)
-{
-  std::vector<std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>> bIndexInput;
-  for (size_t ibi = 0; ibi < cfg.smearers.size(); ++ibi) {
-    Acts::GeometryIdentifier geoID = cfg.smearers.idAt(ibi);
-    const auto sCfg = cfg.smearers.valueAt(ibi);
-    std::vector<Acts::BoundIndices> boundIndices;
-
-    for (const auto& sConfig : sCfg) {
-      boundIndices.push_back(sConfig.index);
-    }
-    bIndexInput.push_back({geoID, boundIndices});
-  }
-  return bIndexInput;
-}
-

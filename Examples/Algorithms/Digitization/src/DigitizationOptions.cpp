@@ -101,14 +101,15 @@ makeSmearFunctionForType(SmearingTypes smearingType, const double* parameters) {
 
 }  // namespace
 
-ActsExamples::SmearingAlgorithm::Config
+ActsExamples::Digitization::AlgorithmConfig
 ActsExamples::Options::readSmearingConfig(const Variables& variables) {
   ACTS_LOCAL_LOGGER(
       Acts::getDefaultLogger("SmearingOptions", Acts::Logging::INFO));
 
   using namespace Acts::UnitLiterals;
 
-  SmearingAlgorithm::Config smearCfg;
+  Digitization::AlgorithmConfig smearCfg;
+  smearCfg.isSimpleSmearer = true;
 
   // Smear configuration with command line input
   // only limited smearing configuration possible:
@@ -148,7 +149,7 @@ ActsExamples::Options::readSmearingConfig(const Variables& variables) {
   }
 
   // construct the input for the smearer configuation
-  std::vector<std::pair<Acts::GeometryIdentifier, SmearingConfig>>
+  std::vector<std::pair<Acts::GeometryIdentifier, DigitizationConfig>>
       smearersInput;
   for (size_t ivol = 0; ivol < volumes.size(); ++ivol) {
     Acts::GeometryIdentifier geoId =
@@ -198,21 +199,24 @@ ActsExamples::Options::readSmearingConfig(const Variables& variables) {
       }
       geoCfg.emplace_back(std::move(parCfg));
     }
-    smearersInput.emplace_back(geoId, std::move(geoCfg));
+    DigitizationConfig dcfg;
+    dcfg.smearingDigiConfig = geoCfg;
+    smearersInput.emplace_back(geoId, std::move(dcfg));
   }
   // set the smearer configuration from the prepared input
-  smearCfg.smearers =
-      Acts::GeometryHierarchyMap<SmearingConfig>(std::move(smearersInput));
+  smearCfg.digitizationConfigs =
+      Acts::GeometryHierarchyMap<DigitizationConfig>(std::move(smearersInput));
 
   return smearCfg;
 }
 
-ActsExamples::DigitizationAlgorithm::Config
+ActsExamples::Digitization::AlgorithmConfig
 ActsExamples::Options::readDigitizationConfig(const Variables& variables) {
   ACTS_LOCAL_LOGGER(
       Acts::getDefaultLogger("DigitzationOptions", Acts::Logging::INFO));
 
-  DigitizationAlgorithm::Config digiCfg;
+  Digitization::AlgorithmConfig digiCfg;
+  digiCfg.isSimpleSmearer = false;
 
   auto cfile = variables["digi-config-file"].as<std::string>();
   if (not cfile.empty()) {
@@ -231,7 +235,7 @@ ActsExamples::Options::readDigitizationConfig(const Variables& variables) {
   return digiCfg;
 }
 
-ActsExamples::Options::DigitizationConfiguration ActsExamples::Options::configureDigitization(const Variables &vm)
+ActsExamples::Digitization::AlgorithmConfig ActsExamples::Options::configureDigitization(const Variables &vm)
 {
   if (vm["digi-smear"].as<bool>())
     return readSmearingConfig(vm);
@@ -239,4 +243,12 @@ ActsExamples::Options::DigitizationConfiguration ActsExamples::Options::configur
     return readDigitizationConfig(vm);
 }
 
+std::shared_ptr<ActsExamples::IAlgorithm>
+ActsExamples::Options::createDigitizationAlgorithm(ActsExamples::Digitization::AlgorithmConfig &cfg, Acts::Logging::Level lvl)
+{
+  if (cfg.isSimpleSmearer)
+    return std::make_shared<SmearingAlgorithm>(cfg, lvl);
+  else
+    return std::make_shared<DigitizationAlgorithm>(cfg, lvl);
+}
 
