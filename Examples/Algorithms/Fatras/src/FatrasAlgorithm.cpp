@@ -193,6 +193,8 @@ ActsExamples::ProcessCode ActsExamples::FatrasAlgorithm::execute(
   const auto &inputParticles =
       ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
 
+  ACTS_DEBUG(inputParticles.size() << " input particles");
+
   // prepare output containers
   SimParticleContainer::sequence_type particlesInitialUnordered;
   SimParticleContainer::sequence_type particlesFinalUnordered;
@@ -223,7 +225,6 @@ ActsExamples::ProcessCode ActsExamples::FatrasAlgorithm::execute(
                         << ": " << failed.error.message());
   }
 
-  ACTS_DEBUG(inputParticles.size() << " input particles");
   ACTS_DEBUG(particlesInitialUnordered.size()
              << " simulated particles (initial state)");
   ACTS_DEBUG(particlesFinalUnordered.size()
