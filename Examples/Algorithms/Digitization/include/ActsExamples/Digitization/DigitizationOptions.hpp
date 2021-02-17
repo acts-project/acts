@@ -34,5 +34,7 @@ Digitization::AlgorithmConfig configureDigitization(const Variables &vm);
 
 std::shared_ptr<ActsExamples::IAlgorithm> createDigitizationAlgorithm(Digitization::AlgorithmConfig &cfg, Acts::Logging::Level lvl);
 
+Acts::GeometryHierarchyMap<DigitizationConfig> readConfigFromJson(const std::string &path);
+
 }  // namespace Options
 }  // namespace ActsExamples

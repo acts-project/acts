@@ -45,7 +45,7 @@ void ActsExamples::Options::addDigitizationOptions(Description& desc) {
   //   --digi-smear-parameters=12.5 # loc1 gaussian width
   //
   auto opt = desc.add_options();
-  opt("digi-config-file", value<std::string>(),
+  opt("digi-config-file", value<std::string>()->default_value(""),
       "Configuration (.json) file for digitization description, overwrites "
       "smearing options input on command line.");
   opt("digi-geometric-3d", bool_switch(),
@@ -110,6 +110,12 @@ ActsExamples::Options::readSmearingConfig(const Variables& variables) {
 
   Digitization::AlgorithmConfig smearCfg;
   smearCfg.isSimpleSmearer = true;
+
+  auto cfile = variables["digi-config-file"].as<std::string>();
+  if (not cfile.empty()) {
+    smearCfg.digitizationConfigs = readConfigFromJson(cfile);
+    return smearCfg;
+  }
 
   // Smear configuration with command line input
   // only limited smearing configuration possible:
@@ -210,6 +216,18 @@ ActsExamples::Options::readSmearingConfig(const Variables& variables) {
   return smearCfg;
 }
 
+Acts::GeometryHierarchyMap<ActsExamples::DigitizationConfig> ActsExamples::Options::readConfigFromJson(const std::string &path)
+{
+  nlohmann::json djson;
+  auto in = std::ifstream(path, std::ifstream::in | std::ifstream::binary);
+  if (in.good()) {
+    // Get the json file for the configuration
+    in >> djson;
+    in.close();
+  } // TODO handle errors
+  return DigiConfigConverter("digitization-configuration").fromJson(djson);
+}
+
 ActsExamples::Digitization::AlgorithmConfig
 ActsExamples::Options::readDigitizationConfig(const Variables& variables) {
   ACTS_LOCAL_LOGGER(
@@ -220,18 +238,10 @@ ActsExamples::Options::readDigitizationConfig(const Variables& variables) {
 
   auto cfile = variables["digi-config-file"].as<std::string>();
   if (not cfile.empty()) {
-    // Configuration by json file evokes 'DigitizationAlgorithm'
-    auto in = std::ifstream(cfile, std::ifstream::in | std::ifstream::binary);
-    if (in.good()) {
-      // Get the json file for the configuration
-      nlohmann::json djson;
-      in >> djson;
-      in.close();
-      digiCfg.digitizationConfigs = DigiConfigConverter("digitization-configuration").fromJson(djson);
-      return digiCfg;
-    }
+    digiCfg.digitizationConfigs = readConfigFromJson(cfile);
+    return digiCfg;
   }
-  ACTS_ERROR("Error while configuring digitization from .json: " << cfile);
+  ACTS_ERROR("Error while configuring digitization " << cfile);
   return digiCfg;
 }
 
