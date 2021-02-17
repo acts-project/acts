@@ -222,9 +222,6 @@ ActsExamples::ProcessCode ActsExamples::FatrasAlgorithm::execute(
                         << " failed to simulate with error " << failed.error
                         << ": " << failed.error.message());
   }
-  // TODO is there a point where too many failed particles or failed particles
-  //   of a particular type (e.g. from hard interaction or any primary particle)
-  //   should also lead to a panic?
 
   ACTS_DEBUG(inputParticles.size() << " input particles");
   ACTS_DEBUG(particlesInitialUnordered.size()
