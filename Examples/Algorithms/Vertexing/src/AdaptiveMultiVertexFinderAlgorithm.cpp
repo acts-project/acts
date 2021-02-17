@@ -28,6 +28,7 @@
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 
 #include "VertexingHelpers.hpp"
 
