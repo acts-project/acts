@@ -25,6 +25,7 @@
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 
 #include "VertexingHelpers.hpp"
 
