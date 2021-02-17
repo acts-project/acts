@@ -111,6 +111,15 @@ struct HitData {
   DFE_NAMEDTUPLE(HitData, hit_id, geometry_id, x, y, z, t);
 };
 
+struct MeasurementSimHitLink {
+  /// Event-unique measurement identifier. Each value can appear at most once.
+  uint64_t measurement_id;
+  /// Event-unique measurement sim hit identifier.
+  uint64_t hit_id;
+
+  DFE_NAMEDTUPLE(MeasurementSimHitLink, measurement_id, hit_id);
+};
+
 struct MeasurementData {
   /// Event-unique measurement identifier. Each value can appear at most once.
   uint64_t measurement_id;

@@ -52,6 +52,9 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::endRun() {
 
 ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
     const AlgorithmContext& ctx, const MeasurementContainer& measurements) {
+  const auto& measurementSimHitsMap = ctx.eventStore.get<IndexMultimap<Index>>(
+      m_cfg.inputMeasurementSimHitsMap);
+
   ClusterContainer clusters;
   if (not m_cfg.inputClusters.empty()) {
     clusters = ctx.eventStore.get<ClusterContainer>(m_cfg.inputClusters);
@@ -62,11 +65,15 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
       perEventFilepath(m_cfg.outputDir, "measurements.csv", ctx.eventNumber);
   std::string pathCells =
       perEventFilepath(m_cfg.outputDir, "cells.csv", ctx.eventNumber);
+  std::string pathMeasurementSimHitMap = perEventFilepath(
+      m_cfg.outputDir, "measurement-simhit-map.csv", ctx.eventNumber);
 
   dfe::NamedTupleCsvWriter<MeasurementData> writerMeasurements(
       pathMeasurements, m_cfg.outputPrecision);
   dfe::NamedTupleCsvWriter<CellData> writerCells(pathCells,
                                                  m_cfg.outputPrecision);
+  dfe::NamedTupleCsvWriter<MeasurementSimHitLink> writerMeasurementSimHitMap(
+      pathMeasurementSimHitMap, m_cfg.outputPrecision);
 
   MeasurementData meas;
   CellData cell;
@@ -79,6 +86,11 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
 
   for (Index hitIdx = 0u; hitIdx < measurements.size(); ++hitIdx) {
     const auto& measurement = measurements[hitIdx];
+
+    auto simHitIndices = makeRange(measurementSimHitsMap.equal_range(hitIdx));
+    for (auto [_, simHitIdx] : simHitIndices) {
+      writerMeasurementSimHitMap.append({hitIdx, simHitIdx});
+    }
 
     std::visit(
         [&](const auto& m) {

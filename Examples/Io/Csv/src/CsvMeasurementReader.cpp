@@ -185,7 +185,10 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
       }
     }
 
-    IndexSourceLink sourceLink(geoId, 0);
+    // The measurement container is unordered and the index under which
+    // the measurement will be stored is known before adding it.
+    Index hitIdx = measurements.size();
+    IndexSourceLink sourceLink(geoId, hitIdx);
     auto measurement = createMeasurement(dParameters, sourceLink);
 
     // Due to the previous sorting of the raw hit data by geometry id, new
