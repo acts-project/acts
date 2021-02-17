@@ -27,6 +27,7 @@ int main(int argc, char* argv[]) {
   Options::addRandomNumbersOptions(desc);
   Options::addPythia8Options(desc);
   ParticleSelector::addOptions(desc);
+  VertexFitterAlgorithm::addOptions(desc);
   Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
   auto vars = Options::parse(desc, argc, argv);
   if (vars.empty()) {
@@ -51,9 +52,9 @@ int main(int argc, char* argv[]) {
   selectParticles.outputParticles = "particles_selected";
   // smearing only works with charge particles for now
   selectParticles.removeNeutral = true;
-  selectParticles.absEtaMax = 2.5;
-  selectParticles.rhoMax = 4_mm;
-  selectParticles.ptMin = 500_MeV;
+  selectParticles.absEtaMax = vars["vertexing-eta-max"].as<double>();
+  selectParticles.rhoMax = vars["vertexing-rho-max"].as<double>() * 1_mm;
+  selectParticles.ptMin = vars["vertexing-pt-min"].as<double>() * 1_MeV;
   sequencer.addAlgorithm(
       std::make_shared<ParticleSelector>(selectParticles, logLevel));
 
