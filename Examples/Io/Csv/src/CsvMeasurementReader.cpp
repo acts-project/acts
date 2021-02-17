@@ -131,11 +131,8 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   // Prepare containers for the hit data using the framework event data types
   GeometryIdMultimap<Measurement> measurements;
   ClusterContainer clusters;
-  IndexSourceLinkContainer sourceLinks;
   IndexMultimap<Index> measurementSimHitsMap;
-
   measurements.reserve(measurementData.size());
-  sourceLinks.reserve(measurementData.size());
   // Safe long as we have single particle to sim hit association
   measurementSimHitsMap.reserve(measurementData.size());
 
