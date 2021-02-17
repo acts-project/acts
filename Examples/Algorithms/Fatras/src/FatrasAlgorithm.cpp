@@ -57,7 +57,7 @@ struct HitSurfaceSelector {
 
 // Same interface as `ActsFatras::Simulator` but with concrete types.
 struct ActsExamples::detail::FatrasAlgorithmSimulation {
-  virtual ~FatrasAlgorithmSimulation(){};
+  virtual ~FatrasAlgorithmSimulation() = default;
   virtual Acts::Result<std::vector<ActsFatras::FailedParticle>> simulate(
       const Acts::GeometryContext &, const Acts::MagneticFieldContext &,
       ActsExamples::RandomEngine &, const ActsExamples::SimParticleContainer &,
@@ -140,7 +140,7 @@ struct FatrasAlgorithmSimulationT final
     simulation.charged.selectHitSurface.material = cfg.generateHitsOnMaterial;
     simulation.charged.selectHitSurface.passive = cfg.generateHitsOnPassive;
   }
-  ~FatrasAlgorithmSimulationT() final override{};
+  ~FatrasAlgorithmSimulationT() final override = default;
 
   Acts::Result<std::vector<ActsFatras::FailedParticle>> simulate(
       const Acts::GeometryContext &geoCtx,
