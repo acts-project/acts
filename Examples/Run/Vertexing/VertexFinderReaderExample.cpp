@@ -21,6 +21,7 @@
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
+#include "ActsExamples/Vertexing/VertexingOptions.hpp"
 
 #include <memory>
 
@@ -33,7 +34,7 @@ int main(int argc, char* argv[]) {
   Options::addSequencerOptions(desc);
   Options::addRandomNumbersOptions(desc);
   ParticleSelector::addOptions(desc);
-  IterativeVertexFinderAlgorithm::addOptions(desc);
+  Options::addVertexingOptions(desc);
   Options::addInputOptions(desc);
   Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
   auto vars = Options::parse(desc, argc, argv);

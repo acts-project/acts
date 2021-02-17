@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
-#include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 #include <string>
 
@@ -26,9 +25,6 @@ class TutorialVertexFinderAlgorithm final : public BareAlgorithm {
     /// Magnetic field vector.
     Acts::Vector3 bField = Acts::Vector3::Zero();
   };
-
-  /// Add options for the particle selector.
-  static void addOptions(Options::Description& desc);
 
   TutorialVertexFinderAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
 

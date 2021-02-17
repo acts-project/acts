@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
-#include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 #include <string>
 
@@ -35,9 +34,6 @@ class VertexFitterAlgorithm final : public BareAlgorithm {
                       10 * Acts::UnitConstants::mm)
             .asDiagonal();
   };
-
-  /// Add options for the particle selector.
-  static void addOptions(Options::Description& desc);
 
   VertexFitterAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
 

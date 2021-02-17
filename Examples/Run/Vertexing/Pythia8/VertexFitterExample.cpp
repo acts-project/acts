@@ -14,6 +14,7 @@
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
 #include "ActsExamples/Vertexing/VertexFitterAlgorithm.hpp"
+#include "ActsExamples/Vertexing/VertexingOptions.hpp"
 
 #include <memory>
 
@@ -27,7 +28,7 @@ int main(int argc, char* argv[]) {
   Options::addRandomNumbersOptions(desc);
   Options::addPythia8Options(desc);
   ParticleSelector::addOptions(desc);
-  VertexFitterAlgorithm::addOptions(desc);
+  Options::addVertexingOptions(desc);
   Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
   auto vars = Options::parse(desc, argc, argv);
   if (vars.empty()) {

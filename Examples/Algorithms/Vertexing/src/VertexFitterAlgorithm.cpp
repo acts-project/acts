@@ -26,23 +26,6 @@
 
 #include <stdexcept>
 
-#include <boost/program_options.hpp>
-
-void ActsExamples::VertexFitterAlgorithm::addOptions(
-    Options::Description& desc) {
-  using boost::program_options::bool_switch;
-  using boost::program_options::value;
-  using Options::Interval;
-
-  auto opt = desc.add_options();
-  opt("vertexing-eta-max", value<double>()->default_value(2.5),
-      "Input track selection cut for primary vertexing - maximum absolute eta");
-  opt("vertexing-rho-max", value<double>()->default_value(4.),
-      "Input track selection cut for primary vertexing - maximum rho in mm");
-  opt("vertexing-pt-min", value<double>()->default_value(500.),
-      "Input track selection cut for primary vertexing - minimum pt in MeV");
-}
-
 ActsExamples::VertexFitterAlgorithm::VertexFitterAlgorithm(
     const Config& cfg, Acts::Logging::Level lvl)
     : ActsExamples::BareAlgorithm("VertexFit", lvl), m_cfg(cfg) {
