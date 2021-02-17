@@ -33,10 +33,12 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
-#include "VertexingHelpers.hpp"
 #include <boost/program_options.hpp>
 
-void ActsExamples::IterativeVertexFinderAlgorithm::addOptions(Options::Description& desc) {
+#include "VertexingHelpers.hpp"
+
+void ActsExamples::IterativeVertexFinderAlgorithm::addOptions(
+    Options::Description& desc) {
   using boost::program_options::bool_switch;
   using boost::program_options::value;
   using Options::Interval;

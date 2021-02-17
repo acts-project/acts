@@ -28,7 +28,8 @@
 
 #include <boost/program_options.hpp>
 
-void ActsExamples::VertexFitterAlgorithm::addOptions(Options::Description& desc) {
+void ActsExamples::VertexFitterAlgorithm::addOptions(
+    Options::Description& desc) {
   using boost::program_options::bool_switch;
   using boost::program_options::value;
   using Options::Interval;
