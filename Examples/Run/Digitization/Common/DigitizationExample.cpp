@@ -124,6 +124,8 @@ int runDigitizationExample(
           measReaderCfg.inputDir = vm["input-dir"].as<std::string>();
           measReaderCfg.outputMeasurements = outputMeasurements;
           measReaderCfg.outputClusters = outputClusters;
+          measReaderCfg.outputMeasurementSimHitsMap =
+              outputMeasurementSimHitsMap;
           sequencer.addReader(
               std::make_shared<CsvMeasurementReader>(measReaderCfg, logLevel));
 

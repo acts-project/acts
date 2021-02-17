@@ -16,6 +16,7 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
@@ -90,7 +91,7 @@ inline std::vector<Data> readEverything(
 
 std::vector<ActsExamples::MeasurementData> readMeasurementsByGeometryId(
     const std::string& inputDir, size_t event) {
-  // Geometry_id and t are optional columns
+  // geometry_id and t are optional columns
   auto measurements = readEverything<ActsExamples::MeasurementData>(
       inputDir, "measurements.csv", {"geometry_id", "t"}, event);
   // sort same way they will be sorted in the output container
@@ -108,20 +109,6 @@ std::vector<ActsExamples::CellData> readCellsByHitId(
   return cells;
 }
 
-std::vector<ActsExamples::TruthHitData> readTruthHitsByHitId(
-    const std::string& inputDir, size_t event) {
-  // define all optional columns
-  std::vector<std::string> optionalColumns = {
-      "geometry_id", "tt",      "te",     "deltapx",
-      "deltapy",     "deltapz", "deltae", "index",
-  };
-  auto truths = readEverything<ActsExamples::TruthHitData>(
-      inputDir, "truth.csv", optionalColumns, event);
-  // sort for fast hit id look up
-  std::sort(truths.begin(), truths.end(), CompareHitId{});
-  return truths;
-}
-
 }  // namespace
 
 ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
@@ -135,19 +122,30 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   // Note: the cell data is optional
   auto measurementData =
       readMeasurementsByGeometryId(m_cfg.inputDir, ctx.eventNumber);
+
   std::vector<ActsExamples::CellData> cellData = {};
   if (not m_cfg.outputClusters.empty()) {
     cellData = readCellsByHitId(m_cfg.inputDir, ctx.eventNumber);
   }
-  auto truthData = readTruthHitsByHitId(m_cfg.inputDir, ctx.eventNumber);
 
   // Prepare containers for the hit data using the framework event data types
   GeometryIdMultimap<Measurement> measurements;
   ClusterContainer clusters;
   IndexSourceLinkContainer sourceLinks;
+  IndexMultimap<Index> measurementSimHitsMap;
 
   measurements.reserve(measurementData.size());
   sourceLinks.reserve(measurementData.size());
+  // Safe long as we have single particle to sim hit association
+  measurementSimHitsMap.reserve(measurementData.size());
+
+  auto measurementSimHitLinkData =
+      readEverything<ActsExamples::MeasurementSimHitLink>(
+          m_cfg.inputDir, "measurement-simhit-map.csv", {}, ctx.eventNumber);
+  for (auto mshLink : measurementSimHitLinkData) {
+    measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
+                                       mshLink.measurement_id, mshLink.hit_id);
+  }
 
   for (const MeasurementData& m : measurementData) {
     Acts::GeometryIdentifier geoId = m.geometry_id;
@@ -205,6 +203,8 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
 
   // Write the data to the EventStore
   ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
+  ctx.eventStore.add(m_cfg.outputMeasurementSimHitsMap,
+                     std::move(measurementSimHitsMap));
   if (not clusters.empty()) {
     ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
   }

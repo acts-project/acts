@@ -30,8 +30,10 @@ namespace ActsExamples {
 ///
 ///     event000000001-cells.csv (optional)
 ///     event000000001-measurements.csv
+///     event000000001-measurement-simhit-map.csv
 ///     event000000002-cells.csv (optional)
 ///     event000000002-measurements.csv
+///     event000000001-measurement-simhit-map.csv
 ///
 /// and each line in the file corresponds to one hit/cluster.
 ///
@@ -43,6 +45,8 @@ class CsvMeasurementReader final : public IReader {
     std::string inputDir;
     /// Output measurement collection.
     std::string outputMeasurements;
+    /// Output measurement to sim hit collection.
+    std::string outputMeasurementSimHitsMap;
     /// Output cluster collection (optional).
     std::string outputClusters;
   };
