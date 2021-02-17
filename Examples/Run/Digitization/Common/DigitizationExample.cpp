@@ -134,8 +134,8 @@ int runDigitizationExample(
           digiCfg.outputMeasurements = outputMeasurements;
           digiCfg.outputClusters = outputClusters;
           digiCfg.outputSourceLinks = outputSourceLinks;
-          digiCfg.outputMeasurementParticlesMap = outputMeasurementSimHitsMap;
-          digiCfg.outputMeasurementSimHitsMap = outputMeasurementParticlesMap;
+          digiCfg.outputMeasurementParticlesMap = outputMeasurementParticlesMap;
+          digiCfg.outputMeasurementSimHitsMap = outputMeasurementSimHitsMap;
           digiCfg.trackingGeometry = tGeometry;
           digiCfg.randomNumbers = randomNumbers;
           digiCfg.digitizationConfigs = digitizationConfigs;
