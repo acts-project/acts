@@ -69,6 +69,10 @@ struct ActsExamples::detail::FatrasAlgorithmSimulation {
 namespace {
 
 // Magnetic-field specific PIMPL implementation.
+//
+// This always uses the EigenStepper with default extensions for charged
+// particle propagation and is thus limited to propagation in vaccum at the
+// moment.
 template <typename magnetic_field_t>
 struct FatrasAlgorithmSimulationT final
     : ActsExamples::detail::FatrasAlgorithmSimulation {
