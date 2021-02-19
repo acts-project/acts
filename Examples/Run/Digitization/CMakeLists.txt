@@ -17,7 +17,7 @@ install(
     ActsExampleDigitizationGeneric
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-# Digitization for Generic detector
+# Digitization for TGeo detector
 add_executable(
   ActsExampleDigitizationTGeo
   TGeoDigitizationExample.cpp)
