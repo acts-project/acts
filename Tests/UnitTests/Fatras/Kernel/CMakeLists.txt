@@ -2,5 +2,4 @@ set(unittest_extra_libraries ActsFatras)
 
 add_unittest(FatrasInteractionList InteractionListTests.cpp)
 add_unittest(FatrasInteractor InteractorTests.cpp)
-add_unittest(FatrasPointLikePhysicsList PointLikePhysicsListTests.cpp)
 add_unittest(FatrasProcess ProcessTests.cpp)
