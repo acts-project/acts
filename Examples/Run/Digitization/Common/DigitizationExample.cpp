@@ -21,7 +21,6 @@
 #include "ActsExamples/Io/Csv/CsvOptionsWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
-#include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 #include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
@@ -90,131 +89,64 @@ int runDigitizationExample(
   // Read the particles
   auto particleReaderCfg = setupParticleReading(vm, sequencer);
 
-  auto cfile = vm["digi-config-file"].as<std::string>();
+  auto digiCfg = Options::configureDigitization(vm);
+  digiCfg.inputSimHits = simHitReaderCfg.outputSimHits;
+  digiCfg.outputMeasurements = "measurements";
+  digiCfg.outputClusters = "clusters";
+  digiCfg.outputSourceLinks = "sourcelinks";
+  digiCfg.outputMeasurementParticlesMap = "measurement_particles_map";
+  digiCfg.outputMeasurementSimHitsMap = "measurement_simhits_map";
+  digiCfg.trackingGeometry = tGeometry;
+  digiCfg.randomNumbers = randomNumbers;
 
-  if (not cfile.empty() or vm["digi-smear"].as<bool>()) {
-    // To be handled differently between DigitizationAlgorithm/SmearingAlgorithm
-    std::string outputMeasurements = "measurements";
-    std::string outputSourceLinks = "sourcelinks";
-    std::string outputClusters = "";
-    std::string outputMeasurementParticlesMap = "measurement_particles_map";
-    std::string outputMeasurementSimHitsMap = "measurement_simhits_map";
+  std::vector<
+    std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
+    bIndexInput;
 
-    std::vector<
-        std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
-        bIndexInput;
-
-    if (not cfile.empty()) {
-      // Configuration by json file evokes 'DigitizationAlgorithm'
-      auto in = std::ifstream(cfile, std::ifstream::in | std::ifstream::binary);
-      if (in.good()) {
-        // Get the json file for the configuration
-        nlohmann::json djson;
-        in >> djson;
-        in.close();
-
-        outputClusters = "clusters";
-
-        DigiConfigContainer digitizationConfigs =
-            DigiConfigConverter("digitization-configuration").fromJson(djson);
-
-        if (vm["digi-read-write-test"].as<bool>()) {
-          // Read measurements from CSV files
-          auto measReaderCfg = Options::readCsvMeasurementReaderConfig(vm);
-          measReaderCfg.inputDir = vm["input-dir"].as<std::string>();
-          measReaderCfg.outputMeasurements = outputMeasurements;
-          measReaderCfg.outputClusters = outputClusters;
-          measReaderCfg.outputMeasurementSimHitsMap =
-              outputMeasurementSimHitsMap;
-          sequencer.addReader(
-              std::make_shared<CsvMeasurementReader>(measReaderCfg, logLevel));
-
-        } else {
-          DigitizationAlgorithm::Config digiCfg =
-              Options::readDigitizationConfig(vm);
-          digiCfg.inputSimHits = simHitReaderCfg.outputSimHits;
-          digiCfg.outputMeasurements = outputMeasurements;
-          digiCfg.outputClusters = outputClusters;
-          digiCfg.outputSourceLinks = outputSourceLinks;
-          digiCfg.outputMeasurementParticlesMap = outputMeasurementParticlesMap;
-          digiCfg.outputMeasurementSimHitsMap = outputMeasurementSimHitsMap;
-          digiCfg.trackingGeometry = tGeometry;
-          digiCfg.randomNumbers = randomNumbers;
-          digiCfg.digitizationConfigs = digitizationConfigs;
-          sequencer.addAlgorithm(
-              std::make_shared<DigitizationAlgorithm>(digiCfg, logLevel));
-        }
-
-        // Prepare for the (eventual) output writing
-        for (size_t ibi = 0; ibi < digitizationConfigs.size(); ++ibi) {
-          Acts::GeometryIdentifier geoID = digitizationConfigs.idAt(ibi);
-          const auto dCfg = digitizationConfigs.valueAt(ibi);
-          std::vector<Acts::BoundIndices> boundIndices;
-          boundIndices.insert(boundIndices.end(),
-                              dCfg.geometricDigiConfig.indices.begin(),
-                              dCfg.geometricDigiConfig.indices.end());
-          for (const auto& sConfig : dCfg.smearingDigiConfig) {
-            boundIndices.push_back(sConfig.index);
-          }
-          bIndexInput.push_back({geoID, boundIndices});
-        }
-      }
-    } else if (vm["digi-smear"].as<bool>()) {
-      // Simpler configuration for smearing algorithm
-      SmearingAlgorithm::Config smearCfg = Options::readSmearingConfig(vm);
-      smearCfg.inputSimHits = simHitReaderCfg.outputSimHits;
-      smearCfg.outputMeasurements = outputMeasurements;
-      smearCfg.outputSourceLinks = outputSourceLinks;
-      smearCfg.outputMeasurementParticlesMap = outputMeasurementParticlesMap;
-      smearCfg.outputMeasurementSimHitsMap = outputMeasurementSimHitsMap;
-      smearCfg.trackingGeometry = tGeometry;
-      smearCfg.randomNumbers = randomNumbers;
-      sequencer.addAlgorithm(
-          std::make_shared<SmearingAlgorithm>(smearCfg, logLevel));
-
-      // Prepare for the (eventual) output writing
-      for (size_t ibi = 0; ibi < smearCfg.smearers.size(); ++ibi) {
-        Acts::GeometryIdentifier geoID = smearCfg.smearers.idAt(ibi);
-        const auto sCfg = smearCfg.smearers.valueAt(ibi);
-        std::vector<Acts::BoundIndices> boundIndices;
-
-        for (const auto& sConfig : sCfg) {
-          boundIndices.push_back(sConfig.index);
-        }
-        bIndexInput.push_back({geoID, boundIndices});
-      }
-    }
-
-    // Write digitization output as ROOT files
-    if (vm["output-root"].template as<bool>()) {
-      RootMeasurementWriter::Config measWriterRoot;
-      measWriterRoot.inputMeasurements = outputMeasurements;
-      measWriterRoot.inputClusters = outputClusters;
-      measWriterRoot.inputSimHits = simHitReaderCfg.outputSimHits;
-      measWriterRoot.inputMeasurementSimHitsMap = outputMeasurementSimHitsMap;
-      measWriterRoot.filePath =
-          joinPaths(outputDir, std::string(outputMeasurements) + ".root");
-      measWriterRoot.boundIndices =
-          Acts::GeometryHierarchyMap<std::vector<Acts::BoundIndices>>(
-              bIndexInput);
-      measWriterRoot.trackingGeometry = tGeometry;
-      sequencer.addWriter(
-          std::make_shared<RootMeasurementWriter>(measWriterRoot, logLevel));
-    }
-
-    // Write digitization out as CSV files
-    if (vm["output-csv"].template as<bool>()) {
-      CsvMeasurementWriter::Config measWriterCsv =
-          Options::readCsvMeasurementWriterConfig(vm);
-      measWriterCsv.inputMeasurements = outputMeasurements;
-      measWriterCsv.inputClusters = outputClusters;
-      measWriterCsv.inputSimHits = simHitReaderCfg.outputSimHits;
-
-      measWriterCsv.inputMeasurementSimHitsMap = outputMeasurementSimHitsMap;
-      sequencer.addWriter(
-          std::make_shared<CsvMeasurementWriter>(measWriterCsv, logLevel));
-    }
+  if (not digiCfg.isSimpleSmearer and vm["digi-read-write-test"].as<bool>()) {
+    // Read measurements from CSV files
+    auto measReaderCfg = Options::readCsvMeasurementReaderConfig(vm);
+    measReaderCfg.inputDir = vm["input-dir"].as<std::string>();
+    measReaderCfg.outputMeasurements = digiCfg.outputMeasurements;
+    measReaderCfg.outputClusters = digiCfg.outputClusters;
+    measReaderCfg.outputMeasurementSimHitsMap =
+      digiCfg.outputMeasurementSimHitsMap;
+    sequencer.addReader(
+      std::make_shared<CsvMeasurementReader>(measReaderCfg, logLevel));
+  } else {
+    sequencer.addAlgorithm(
+      Options::createDigitizationAlgorithm(digiCfg, logLevel));
   }
+
+  // Write digitization output as ROOT files
+  if (vm["output-root"].template as<bool>()) {
+    RootMeasurementWriter::Config measWriterRoot;
+    measWriterRoot.inputMeasurements = digiCfg.outputMeasurements;
+    measWriterRoot.inputClusters = digiCfg.outputClusters;
+    measWriterRoot.inputSimHits = simHitReaderCfg.outputSimHits;
+    measWriterRoot.inputMeasurementSimHitsMap = digiCfg.outputMeasurementSimHitsMap;
+    measWriterRoot.filePath =
+      joinPaths(outputDir, std::string(digiCfg.outputMeasurements) + ".root");
+    measWriterRoot.boundIndices =
+      Acts::GeometryHierarchyMap<std::vector<Acts::BoundIndices>>(
+	Options::getBoundIndices(digiCfg));
+    measWriterRoot.trackingGeometry = tGeometry;
+    sequencer.addWriter(
+      std::make_shared<RootMeasurementWriter>(measWriterRoot, logLevel));
+  }
+
+  // Write digitization out as CSV files
+  if (vm["output-csv"].template as<bool>()) {
+    CsvMeasurementWriter::Config measWriterCsv =
+      Options::readCsvMeasurementWriterConfig(vm);
+    measWriterCsv.inputMeasurements = digiCfg.outputMeasurements;
+    measWriterCsv.inputClusters = digiCfg.outputClusters;
+    measWriterCsv.inputSimHits = simHitReaderCfg.outputSimHits;
+    measWriterCsv.inputMeasurementSimHitsMap = digiCfg.outputMeasurementSimHitsMap;
+    sequencer.addWriter(
+      std::make_shared<CsvMeasurementWriter>(measWriterCsv, logLevel));
+  }
+
 
   return sequencer.run();
 }

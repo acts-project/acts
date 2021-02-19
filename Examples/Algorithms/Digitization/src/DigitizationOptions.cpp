@@ -262,3 +262,26 @@ ActsExamples::Options::createDigitizationAlgorithm(ActsExamples::Digitization::A
     return std::make_shared<DigitizationAlgorithm>(cfg, lvl);
 }
 
+std::vector<std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
+ActsExamples::Options::getBoundIndices(ActsExamples::Digitization::AlgorithmConfig &cfg)
+{
+  std::vector<std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
+    bIndexInput;
+
+  for (size_t ibi = 0; ibi < cfg.digitizationConfigs.size(); ++ibi) {
+    Acts::GeometryIdentifier geoID = cfg.digitizationConfigs.idAt(ibi);
+    const auto dCfg = cfg.digitizationConfigs.valueAt(ibi);
+    std::vector<Acts::BoundIndices> boundIndices;
+    if (cfg.isSimpleSmearer) {
+      for (const auto& sConfig : dCfg.smearingDigiConfig) {
+	boundIndices.push_back(sConfig.index);
+      }
+    } else {
+      boundIndices.insert(boundIndices.end(),
+			  dCfg.geometricDigiConfig.indices.begin(),
+			  dCfg.geometricDigiConfig.indices.end());
+    }
+    bIndexInput.push_back({geoID, boundIndices});
+  }
+  return bIndexInput;
+}

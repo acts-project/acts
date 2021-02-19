@@ -36,5 +36,9 @@ std::shared_ptr<ActsExamples::IAlgorithm> createDigitizationAlgorithm(Digitizati
 
 Acts::GeometryHierarchyMap<DigitizationConfig> readConfigFromJson(const std::string &path);
 
+std::vector<std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
+getBoundIndices(ActsExamples::Digitization::AlgorithmConfig &cfg);
+
+
 }  // namespace Options
 }  // namespace ActsExamples
