@@ -25,7 +25,7 @@
 
 /// Setup sim hit csv reader
 ///
-/// @param variables The configuration variables
+/// @param vars The configuration variables
 /// @param sequencer The framework sequencer
 ///
 /// @return config for sim hits csv reader
@@ -35,7 +35,7 @@ ActsExamples::CsvSimHitReader::Config setupSimHitReading(
 
 /// Setup sim particle csv reader
 ///
-/// @param variables The configuration variables
+/// @param vars The configuration variables
 /// @param sequencer The framework sequencer
 ///
 /// @return config for sim particles csv reader
@@ -45,7 +45,7 @@ ActsExamples::CsvParticleReader::Config setupParticleReading(
 
 /// Setup sim hit smearing
 ///
-/// @param variables The configuration variables
+/// @param vars The configuration variables
 /// @param sequencer The framework sequencer
 /// @param randomNumbers The random number service
 /// @param trackingGeometry The TrackingGeometry for the tracking setup
@@ -61,7 +61,7 @@ ActsExamples::Digitization::AlgorithmConfig setupDigitization(
 
 /// Setup particle smearing
 ///
-/// @param variables The configuration variables
+/// @param vars The configuration variables
 /// @param sequencer The framework sequencer
 /// @param randomNumbers The random number service
 /// @param inputParticles The input particle collection (e.g. from particle

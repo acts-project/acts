@@ -6,9 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-/// @file Fatras definitions shared between files
-
 #pragma once
+#include "ActsExamples/Utilities/OptionsFwd.hpp"
 
-static constexpr const char* kFatrasCollectionParticles = "particles";
-static constexpr const char* kFatrasCollectionHits = "hits";
+namespace ActsExamples {
+namespace Options {
+
+/// Add vertexing options.
+///
+/// @param desc The options description to add options to
+void addVertexingOptions(Description& desc);
+
+}  // namespace Options
+}  // namespace ActsExamples
