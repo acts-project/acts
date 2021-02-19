@@ -27,7 +27,6 @@ class TrackingGeometry;
 
 namespace ActsExamples {
 
-
 /// Algorithm that turns simulated hits into measurements by truth smearing.
 class SmearingAlgorithm final : public BareAlgorithm {
  public:
@@ -35,7 +34,8 @@ class SmearingAlgorithm final : public BareAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  SmearingAlgorithm(Digitization::AlgorithmConfig cfg, Acts::Logging::Level lvl);
+  SmearingAlgorithm(Digitization::AlgorithmConfig cfg,
+                    Acts::Logging::Level lvl);
 
   /// Build measurement from simulation hits at input.
   ///

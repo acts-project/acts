@@ -44,7 +44,8 @@ class DigitizationAlgorithm final : public BareAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  DigitizationAlgorithm(Digitization::AlgorithmConfig cfg, Acts::Logging::Level lvl);
+  DigitizationAlgorithm(Digitization::AlgorithmConfig cfg,
+                        Acts::Logging::Level lvl);
 
   /// Build measurement from simulation hits at input.
   ///

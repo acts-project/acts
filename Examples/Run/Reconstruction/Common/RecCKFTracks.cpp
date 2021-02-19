@@ -99,8 +99,8 @@ int runRecCKFTracks(int argc, char* argv[],
   auto particleReader = setupParticleReading(vm, sequencer);
 
   // Run the sim hits smearing
-  auto digiCfg = setupDigitization(
-      vm, sequencer, rnd, trackingGeometry, simHitReaderCfg.outputSimHits);
+  auto digiCfg = setupDigitization(vm, sequencer, rnd, trackingGeometry,
+                                   simHitReaderCfg.outputSimHits);
 
   // Run the particle selection
   // The pre-selection will select truth particles satisfying provided criteria
@@ -108,7 +108,8 @@ int runRecCKFTracks(int argc, char* argv[],
   // has no impact on the truth hits read-in by the cluster reader.
   TruthSeedSelector::Config particleSelectorCfg;
   particleSelectorCfg.inputParticles = particleReader.outputParticles;
-  particleSelectorCfg.inputMeasurementParticlesMap = digiCfg.outputMeasurementParticlesMap;
+  particleSelectorCfg.inputMeasurementParticlesMap =
+      digiCfg.outputMeasurementParticlesMap;
   particleSelectorCfg.outputParticles = "particles_selected";
   particleSelectorCfg.ptMin = 500_MeV;
   particleSelectorCfg.nHitsMin = 9;
@@ -218,8 +219,10 @@ int runRecCKFTracks(int argc, char* argv[],
   // selection algorithm is used.
   trackStatesWriter.inputParticles = particleReader.outputParticles;
   trackStatesWriter.inputSimHits = simHitReaderCfg.outputSimHits;
-  trackStatesWriter.inputMeasurementParticlesMap = digiCfg.outputMeasurementParticlesMap;
-  trackStatesWriter.inputMeasurementSimHitsMap = digiCfg.outputMeasurementSimHitsMap;
+  trackStatesWriter.inputMeasurementParticlesMap =
+      digiCfg.outputMeasurementParticlesMap;
+  trackStatesWriter.inputMeasurementSimHitsMap =
+      digiCfg.outputMeasurementSimHitsMap;
   trackStatesWriter.outputDir = outputDir;
   trackStatesWriter.outputFilename = "trackstates_ckf.root";
   trackStatesWriter.outputTreename = "trackstates_ckf";
@@ -234,7 +237,8 @@ int runRecCKFTracks(int argc, char* argv[],
   // filtered particle collection. Thsi could be avoided when a seperate track
   // selection algorithm is used.
   trackParamsWriter.inputParticles = particleReader.outputParticles;
-  trackParamsWriter.inputMeasurementParticlesMap = digiCfg.outputMeasurementParticlesMap;
+  trackParamsWriter.inputMeasurementParticlesMap =
+      digiCfg.outputMeasurementParticlesMap;
   trackParamsWriter.outputDir = outputDir;
   trackParamsWriter.outputFilename = "trackparams_ckf.root";
   trackParamsWriter.outputTreename = "trackparams_ckf";
@@ -245,7 +249,8 @@ int runRecCKFTracks(int argc, char* argv[],
   CKFPerformanceWriter::Config perfWriterCfg;
   perfWriterCfg.inputParticles = inputParticles;
   perfWriterCfg.inputTrajectories = trackFindingCfg.outputTrajectories;
-  perfWriterCfg.inputMeasurementParticlesMap = digiCfg.outputMeasurementParticlesMap;
+  perfWriterCfg.inputMeasurementParticlesMap =
+      digiCfg.outputMeasurementParticlesMap;
   // The bottom seed on a pixel detector 'eats' two measurements
   perfWriterCfg.nMeasurementsMin = particleSelectorCfg.nHitsMin - 2;
   perfWriterCfg.outputDir = outputDir;

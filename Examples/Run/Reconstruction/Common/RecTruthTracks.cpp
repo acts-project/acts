@@ -82,15 +82,16 @@ int runRecTruthTracks(int argc, char* argv[],
   auto particleReader = setupParticleReading(vm, sequencer);
 
   // Run the sim hits smearing
-  auto digiCfg = setupDigitization(
-      vm, sequencer, rnd, trackingGeometry, simHitReaderCfg.outputSimHits);
+  auto digiCfg = setupDigitization(vm, sequencer, rnd, trackingGeometry,
+                                   simHitReaderCfg.outputSimHits);
   // Run the particle selection
   // The pre-selection will select truth particles satisfying provided criteria
   // from all particles read in by particle reader for further processing. It
   // has no impact on the truth hits read-in by the cluster reader.
   TruthSeedSelector::Config particleSelectorCfg;
   particleSelectorCfg.inputParticles = particleReader.outputParticles;
-  particleSelectorCfg.inputMeasurementParticlesMap = digiCfg.outputMeasurementParticlesMap;
+  particleSelectorCfg.inputMeasurementParticlesMap =
+      digiCfg.outputMeasurementParticlesMap;
   particleSelectorCfg.outputParticles = "particles_selected";
   particleSelectorCfg.nHitsMin = 1;
   sequencer.addAlgorithm(
@@ -109,7 +110,8 @@ int runRecTruthTracks(int argc, char* argv[],
   // Create truth tracks
   TruthTrackFinder::Config trackFinderCfg;
   trackFinderCfg.inputParticles = inputParticles;
-  trackFinderCfg.inputMeasurementParticlesMap = digiCfg.outputMeasurementParticlesMap;
+  trackFinderCfg.inputMeasurementParticlesMap =
+      digiCfg.outputMeasurementParticlesMap;
   trackFinderCfg.outputProtoTracks = "prototracks";
   sequencer.addAlgorithm(
       std::make_shared<TruthTrackFinder>(trackFinderCfg, logLevel));
@@ -118,7 +120,7 @@ int runRecTruthTracks(int argc, char* argv[],
   // Setup the surface sorter if running direct navigator
   sorterCfg.inputProtoTracks = trackFinderCfg.outputProtoTracks;
   sorterCfg.inputSimulatedHits = simHitReaderCfg.outputSimHits;
-  sorterCfg.inputMeasurementSimHitsMap = digiCfg.outputMeasurementSimHitsMap; 
+  sorterCfg.inputMeasurementSimHitsMap = digiCfg.outputMeasurementSimHitsMap;
   sorterCfg.outputProtoTracks = "sortedprototracks";
   if (dirNav) {
     sequencer.addAlgorithm(
@@ -149,8 +151,10 @@ int runRecTruthTracks(int argc, char* argv[],
   trackStatesWriter.inputTrajectories = fitter.outputTrajectories;
   trackStatesWriter.inputParticles = inputParticles;
   trackStatesWriter.inputSimHits = simHitReaderCfg.outputSimHits;
-  trackStatesWriter.inputMeasurementParticlesMap = digiCfg.outputMeasurementParticlesMap;
-  trackStatesWriter.inputMeasurementSimHitsMap = digiCfg.outputMeasurementSimHitsMap;
+  trackStatesWriter.inputMeasurementParticlesMap =
+      digiCfg.outputMeasurementParticlesMap;
+  trackStatesWriter.inputMeasurementSimHitsMap =
+      digiCfg.outputMeasurementSimHitsMap;
   trackStatesWriter.outputDir = outputDir;
   trackStatesWriter.outputFilename = "trackstates_fitter.root";
   trackStatesWriter.outputTreename = "trackstates_fitter";
@@ -161,7 +165,8 @@ int runRecTruthTracks(int argc, char* argv[],
   RootTrajectoryParametersWriter::Config trackParamsWriter;
   trackParamsWriter.inputTrajectories = fitter.outputTrajectories;
   trackParamsWriter.inputParticles = inputParticles;
-  trackParamsWriter.inputMeasurementParticlesMap = digiCfg.outputMeasurementParticlesMap;
+  trackParamsWriter.inputMeasurementParticlesMap =
+      digiCfg.outputMeasurementParticlesMap;
   trackParamsWriter.outputDir = outputDir;
   trackParamsWriter.outputFilename = "trackparams_fitter.root";
   trackParamsWriter.outputTreename = "trackparams_fitter";
@@ -172,14 +177,16 @@ int runRecTruthTracks(int argc, char* argv[],
   TrackFinderPerformanceWriter::Config perfFinder;
   perfFinder.inputProtoTracks = trackFinderCfg.outputProtoTracks;
   perfFinder.inputParticles = inputParticles;
-  perfFinder.inputMeasurementParticlesMap = digiCfg.outputMeasurementParticlesMap;
+  perfFinder.inputMeasurementParticlesMap =
+      digiCfg.outputMeasurementParticlesMap;
   perfFinder.outputDir = outputDir;
   sequencer.addWriter(
       std::make_shared<TrackFinderPerformanceWriter>(perfFinder, logLevel));
   TrackFitterPerformanceWriter::Config perfFitter;
   perfFitter.inputTrajectories = fitter.outputTrajectories;
   perfFitter.inputParticles = inputParticles;
-  perfFitter.inputMeasurementParticlesMap = digiCfg.outputMeasurementParticlesMap;
+  perfFitter.inputMeasurementParticlesMap =
+      digiCfg.outputMeasurementParticlesMap;
   perfFitter.outputDir = outputDir;
   sequencer.addWriter(
       std::make_shared<TrackFitterPerformanceWriter>(perfFitter, logLevel));

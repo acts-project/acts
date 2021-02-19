@@ -89,7 +89,8 @@ ActsExamples::Digitization::AlgorithmConfig setupDigitization(
   digiCfg.randomNumbers = rnd;
   digiCfg.trackingGeometry = trackingGeometry;
   digiCfg.outputClusters = "clusters";
-  sequencer.addAlgorithm(Options::createDigitizationAlgorithm(digiCfg, logLevel));
+  sequencer.addAlgorithm(
+      Options::createDigitizationAlgorithm(digiCfg, logLevel));
 
   return digiCfg;
 }

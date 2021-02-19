@@ -56,7 +56,8 @@ ActsExamples::SmearingAlgorithm::SmearingAlgorithm(
   for (size_t i = 0; i < m_cfg.digitizationConfigs.size(); ++i) {
     Acts::GeometryIdentifier geoId = m_cfg.digitizationConfigs.idAt(i);
     // copy so we can sort in-place
-    SmearingConfig geoCfg = m_cfg.digitizationConfigs.valueAt(i).smearingDigiConfig;
+    SmearingConfig geoCfg =
+        m_cfg.digitizationConfigs.valueAt(i).smearingDigiConfig;
 
     // make sure the configured input parameter indices are sorted and unique
     std::sort(geoCfg.begin(), geoCfg.end(),

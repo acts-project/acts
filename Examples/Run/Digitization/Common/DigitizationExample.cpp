@@ -100,8 +100,8 @@ int runDigitizationExample(
   digiCfg.randomNumbers = randomNumbers;
 
   std::vector<
-    std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
-    bIndexInput;
+      std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
+      bIndexInput;
 
   if (not digiCfg.isSimpleSmearer and vm["digi-read-write-test"].as<bool>()) {
     // Read measurements from CSV files
@@ -110,12 +110,12 @@ int runDigitizationExample(
     measReaderCfg.outputMeasurements = digiCfg.outputMeasurements;
     measReaderCfg.outputClusters = digiCfg.outputClusters;
     measReaderCfg.outputMeasurementSimHitsMap =
-      digiCfg.outputMeasurementSimHitsMap;
+        digiCfg.outputMeasurementSimHitsMap;
     sequencer.addReader(
-      std::make_shared<CsvMeasurementReader>(measReaderCfg, logLevel));
+        std::make_shared<CsvMeasurementReader>(measReaderCfg, logLevel));
   } else {
     sequencer.addAlgorithm(
-      Options::createDigitizationAlgorithm(digiCfg, logLevel));
+        Options::createDigitizationAlgorithm(digiCfg, logLevel));
   }
 
   // Write digitization output as ROOT files
@@ -124,29 +124,30 @@ int runDigitizationExample(
     measWriterRoot.inputMeasurements = digiCfg.outputMeasurements;
     measWriterRoot.inputClusters = digiCfg.outputClusters;
     measWriterRoot.inputSimHits = simHitReaderCfg.outputSimHits;
-    measWriterRoot.inputMeasurementSimHitsMap = digiCfg.outputMeasurementSimHitsMap;
+    measWriterRoot.inputMeasurementSimHitsMap =
+        digiCfg.outputMeasurementSimHitsMap;
     measWriterRoot.filePath =
-      joinPaths(outputDir, std::string(digiCfg.outputMeasurements) + ".root");
+        joinPaths(outputDir, std::string(digiCfg.outputMeasurements) + ".root");
     measWriterRoot.boundIndices =
-      Acts::GeometryHierarchyMap<std::vector<Acts::BoundIndices>>(
-	Options::getBoundIndices(digiCfg));
+        Acts::GeometryHierarchyMap<std::vector<Acts::BoundIndices>>(
+            Options::getBoundIndices(digiCfg));
     measWriterRoot.trackingGeometry = tGeometry;
     sequencer.addWriter(
-      std::make_shared<RootMeasurementWriter>(measWriterRoot, logLevel));
+        std::make_shared<RootMeasurementWriter>(measWriterRoot, logLevel));
   }
 
   // Write digitization out as CSV files
   if (vm["output-csv"].template as<bool>()) {
     CsvMeasurementWriter::Config measWriterCsv =
-      Options::readCsvMeasurementWriterConfig(vm);
+        Options::readCsvMeasurementWriterConfig(vm);
     measWriterCsv.inputMeasurements = digiCfg.outputMeasurements;
     measWriterCsv.inputClusters = digiCfg.outputClusters;
     measWriterCsv.inputSimHits = simHitReaderCfg.outputSimHits;
-    measWriterCsv.inputMeasurementSimHitsMap = digiCfg.outputMeasurementSimHitsMap;
+    measWriterCsv.inputMeasurementSimHitsMap =
+        digiCfg.outputMeasurementSimHitsMap;
     sequencer.addWriter(
-      std::make_shared<CsvMeasurementWriter>(measWriterCsv, logLevel));
+        std::make_shared<CsvMeasurementWriter>(measWriterCsv, logLevel));
   }
-
 
   return sequencer.run();
 }

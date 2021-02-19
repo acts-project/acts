@@ -83,7 +83,7 @@ int runSeedingExample(int argc, char* argv[],
 
   // Run the sim hits smearing
   auto digiCfg = setupDigitization(vm, sequencer, rnd, tGeometry,
-                                            simHitReaderCfg.outputSimHits);
+                                   simHitReaderCfg.outputSimHits);
 
   // Run the particle selection
   // The pre-selection will select truth particles satisfying provided criteria
@@ -91,12 +91,13 @@ int runSeedingExample(int argc, char* argv[],
   // has no impact on the truth hits read-in by the cluster reader.
   TruthSeedSelector::Config particleSelectorCfg;
   particleSelectorCfg.inputParticles = particleReader.outputParticles;
-  particleSelectorCfg.inputMeasurementParticlesMap = digiCfg.outputMeasurementParticlesMap;
+  particleSelectorCfg.inputMeasurementParticlesMap =
+      digiCfg.outputMeasurementParticlesMap;
   particleSelectorCfg.outputParticles = "particles_selected";
   particleSelectorCfg.ptMin = 500_MeV;
   particleSelectorCfg.nHitsMin = 9;
   sequencer.addAlgorithm(
-    std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));
+      std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));
 
   // The selected particles
   const auto& inputParticles = particleSelectorCfg.outputParticles;
@@ -104,7 +105,7 @@ int runSeedingExample(int argc, char* argv[],
   // Create space points
   SpacePointMaker::Config spCfg;
   spCfg.inputSourceLinks = digiCfg.outputSourceLinks;
-  spCfg.inputMeasurements =  digiCfg.outputMeasurements;
+  spCfg.inputMeasurements = digiCfg.outputMeasurements;
   spCfg.outputSpacePoints = "spacepoints";
   spCfg.trackingGeometry = tGeometry;
   spCfg.geometrySelection = {
@@ -165,7 +166,8 @@ int runSeedingExample(int argc, char* argv[],
   TrackFinderPerformanceWriter::Config tfPerfCfg;
   tfPerfCfg.inputProtoTracks = seedingCfg.outputProtoTracks;
   tfPerfCfg.inputParticles = inputParticles;
-  tfPerfCfg.inputMeasurementParticlesMap = digiCfg.outputMeasurementParticlesMap;
+  tfPerfCfg.inputMeasurementParticlesMap =
+      digiCfg.outputMeasurementParticlesMap;
   tfPerfCfg.outputDir = outputDir;
   tfPerfCfg.outputFilename = "performance_seeding_trees.root";
   sequencer.addWriter(
@@ -174,7 +176,8 @@ int runSeedingExample(int argc, char* argv[],
   SeedingPerformanceWriter::Config seedPerfCfg;
   seedPerfCfg.inputSeeds = seedingCfg.outputSeeds;
   seedPerfCfg.inputParticles = inputParticles;
-  seedPerfCfg.inputMeasurementParticlesMap = digiCfg.outputMeasurementParticlesMap;
+  seedPerfCfg.inputMeasurementParticlesMap =
+      digiCfg.outputMeasurementParticlesMap;
   seedPerfCfg.outputDir = outputDir;
   seedPerfCfg.outputFilename = "performance_seeding_hists.root";
   sequencer.addWriter(
@@ -189,8 +192,10 @@ int runSeedingExample(int argc, char* argv[],
       paramsEstimationCfg.outputTrackParametersSeedMap;
   trackParamsWriterCfg.inputParticles = particleReader.outputParticles;
   trackParamsWriterCfg.inputSimHits = simHitReaderCfg.outputSimHits;
-  trackParamsWriterCfg.inputMeasurementParticlesMap = digiCfg.outputMeasurementParticlesMap;
-  trackParamsWriterCfg.inputMeasurementSimHitsMap = digiCfg.outputMeasurementSimHitsMap;
+  trackParamsWriterCfg.inputMeasurementParticlesMap =
+      digiCfg.outputMeasurementParticlesMap;
+  trackParamsWriterCfg.inputMeasurementSimHitsMap =
+      digiCfg.outputMeasurementSimHitsMap;
   trackParamsWriterCfg.outputDir = outputDir;
   trackParamsWriterCfg.outputFilename = "estimatedparams.root";
   trackParamsWriterCfg.outputTreename = "estimatedparams";

@@ -18,27 +18,30 @@ namespace Options {
 /// Add Digitization options.
 ///
 /// @param desc The options description to add options to
-void addDigitizationOptions(Description& desc);
+void addDigitizationOptions(Description &desc);
 
 /// Read SmearingAlgorithm Config from the options.
 ///
 /// @param variables The variables to read from
-Digitization::AlgorithmConfig readSmearingConfig(const Variables& variables);
+Digitization::AlgorithmConfig readSmearingConfig(const Variables &variables);
 
 /// Read Digitization Config from the options.
 ///
 /// @param variables The variables to read from
-Digitization::AlgorithmConfig readDigitizationConfig(const Variables& variables);
+Digitization::AlgorithmConfig readDigitizationConfig(
+    const Variables &variables);
 
 Digitization::AlgorithmConfig configureDigitization(const Variables &vm);
 
-std::shared_ptr<ActsExamples::IAlgorithm> createDigitizationAlgorithm(Digitization::AlgorithmConfig &cfg, Acts::Logging::Level lvl);
+std::shared_ptr<ActsExamples::IAlgorithm> createDigitizationAlgorithm(
+    Digitization::AlgorithmConfig &cfg, Acts::Logging::Level lvl);
 
-Acts::GeometryHierarchyMap<DigitizationConfig> readConfigFromJson(const std::string &path);
+Acts::GeometryHierarchyMap<DigitizationConfig> readConfigFromJson(
+    const std::string &path);
 
-std::vector<std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
+std::vector<
+    std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
 getBoundIndices(ActsExamples::Digitization::AlgorithmConfig &cfg);
-
 
 }  // namespace Options
 }  // namespace ActsExamples

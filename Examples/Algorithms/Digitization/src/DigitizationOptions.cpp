@@ -216,15 +216,15 @@ ActsExamples::Options::readSmearingConfig(const Variables& variables) {
   return smearCfg;
 }
 
-Acts::GeometryHierarchyMap<ActsExamples::DigitizationConfig> ActsExamples::Options::readConfigFromJson(const std::string &path)
-{
+Acts::GeometryHierarchyMap<ActsExamples::DigitizationConfig>
+ActsExamples::Options::readConfigFromJson(const std::string& path) {
   nlohmann::json djson;
   auto in = std::ifstream(path, std::ifstream::in | std::ifstream::binary);
   if (in.good()) {
     // Get the json file for the configuration
     in >> djson;
     in.close();
-  } // TODO handle errors
+  }  // TODO handle errors
   return DigiConfigConverter("digitization-configuration").fromJson(djson);
 }
 
@@ -245,8 +245,8 @@ ActsExamples::Options::readDigitizationConfig(const Variables& variables) {
   return digiCfg;
 }
 
-ActsExamples::Digitization::AlgorithmConfig ActsExamples::Options::configureDigitization(const Variables &vm)
-{
+ActsExamples::Digitization::AlgorithmConfig
+ActsExamples::Options::configureDigitization(const Variables& vm) {
   if (vm["digi-smear"].as<bool>())
     return readSmearingConfig(vm);
   else
@@ -254,19 +254,22 @@ ActsExamples::Digitization::AlgorithmConfig ActsExamples::Options::configureDigi
 }
 
 std::shared_ptr<ActsExamples::IAlgorithm>
-ActsExamples::Options::createDigitizationAlgorithm(ActsExamples::Digitization::AlgorithmConfig &cfg, Acts::Logging::Level lvl)
-{
+ActsExamples::Options::createDigitizationAlgorithm(
+    ActsExamples::Digitization::AlgorithmConfig& cfg,
+    Acts::Logging::Level lvl) {
   if (cfg.isSimpleSmearer)
     return std::make_shared<SmearingAlgorithm>(cfg, lvl);
   else
     return std::make_shared<DigitizationAlgorithm>(cfg, lvl);
 }
 
-std::vector<std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
-ActsExamples::Options::getBoundIndices(ActsExamples::Digitization::AlgorithmConfig &cfg)
-{
-  std::vector<std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
-    bIndexInput;
+std::vector<
+    std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
+ActsExamples::Options::getBoundIndices(
+    ActsExamples::Digitization::AlgorithmConfig& cfg) {
+  std::vector<
+      std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
+      bIndexInput;
 
   for (size_t ibi = 0; ibi < cfg.digitizationConfigs.size(); ++ibi) {
     Acts::GeometryIdentifier geoID = cfg.digitizationConfigs.idAt(ibi);
@@ -274,12 +277,12 @@ ActsExamples::Options::getBoundIndices(ActsExamples::Digitization::AlgorithmConf
     std::vector<Acts::BoundIndices> boundIndices;
     if (cfg.isSimpleSmearer) {
       for (const auto& sConfig : dCfg.smearingDigiConfig) {
-	boundIndices.push_back(sConfig.index);
+        boundIndices.push_back(sConfig.index);
       }
     } else {
       boundIndices.insert(boundIndices.end(),
-			  dCfg.geometricDigiConfig.indices.begin(),
-			  dCfg.geometricDigiConfig.indices.end());
+                          dCfg.geometricDigiConfig.indices.begin(),
+                          dCfg.geometricDigiConfig.indices.end());
     }
     bIndexInput.push_back({geoID, boundIndices});
   }
