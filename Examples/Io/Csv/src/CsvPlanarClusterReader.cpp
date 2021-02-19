@@ -79,16 +79,7 @@ struct CompareHitId {
 /// Convert separate volume/layer/module id into a single geometry identifier.
 inline Acts::GeometryIdentifier extractGeometryId(
     const ActsExamples::HitData& data) {
-  // if available, use the encoded geometry directly
-  if (data.geometry_id != 0u) {
-    return data.geometry_id;
-  }
-  // otherwise, reconstruct it from the available components
-  Acts::GeometryIdentifier geoId;
-  geoId.setVolume(data.volume_id);
-  geoId.setLayer(data.layer_id);
-  geoId.setSensitive(data.module_id);
-  return geoId;
+  return data.geometry_id;
 }
 
 struct CompareGeometryId {
@@ -228,7 +219,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
       auto range = makeRange(std::equal_range(cells.begin(), cells.end(),
                                               hit.hit_id, CompareHitId{}));
       for (const auto& c : range) {
-        digitizationCells.emplace_back(c.ch0, c.ch1, c.value);
+        digitizationCells.emplace_back(c.channel0, c.channel1, c.value);
       }
     }
 
