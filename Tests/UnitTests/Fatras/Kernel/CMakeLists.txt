@@ -1,5 +1,5 @@
 set(unittest_extra_libraries ActsFatras)
 
+add_unittest(FatrasContinuousProcess ContinuousProcessTests.cpp)
 add_unittest(FatrasInteractionList InteractionListTests.cpp)
 add_unittest(FatrasInteractor InteractorTests.cpp)
-add_unittest(FatrasProcess ProcessTests.cpp)

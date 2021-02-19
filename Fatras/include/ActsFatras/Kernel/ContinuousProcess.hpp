@@ -18,14 +18,25 @@ struct EveryParticle {
   constexpr bool operator()(const Particle &) const { return true; }
 };
 
-/// A simulation process based on a physics interaction plus selectors.
+/// A continuous simulation process based on a physics model plus selectors.
 ///
-/// @tparam physics_t is the physics interaction type
+/// @tparam physics_t is the physics model type
 /// @tparam input_particle_selector_t is the input particle selector
 /// @tparam output_particle_selector_t is the output particle selector
 /// @tparam child_particle_selector_t is the child particle selector
 ///
-/// The input selector defines whether the interaction is applied while the
+/// The physics model type **must** provide a call operator with the following
+/// signature
+///
+///     <Particle Container>
+///     operator()(
+///         generator_t& generator,
+///         const Acts::MaterialSlab& slab,
+///         Particle& particle) const
+///
+/// The return type can be any `Container` with `Particle` elements.
+///
+/// The input selector defines whether the process is applied while the
 /// output selector defines a break condition, i.e. whether to continue
 /// simulating the particle propagation. The child selector is used to
 /// filter the generated child particles.
@@ -36,7 +47,7 @@ template <typename physics_t,
           typename input_particle_selector_t = EveryParticle,
           typename output_particle_selector_t = EveryParticle,
           typename child_particle_selector_t = output_particle_selector_t>
-struct Process {
+struct ContinuousProcess {
   /// The physics interactions implementation.
   physics_t physics;
   /// Input selection: if this process applies to this particle.
@@ -65,7 +76,7 @@ struct Process {
     // modify particle according to the physics process
     auto children = physics(generator, slab, particle);
     // move selected child particles to the output container
-    std::copy_if(children.begin(), children.end(),
+    std::copy_if(std::begin(children), std::end(children),
                  std::back_inserter(generated), selectChildParticle);
     // break condition is defined by whether the output particle is still valid
     // or not e.g. because it has fallen below a momentum threshold.
