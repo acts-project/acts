@@ -55,6 +55,17 @@ ActsExamples::Options::readCsvPlanarClusterWriterConfig(
   return cfg;
 }
 
+ActsExamples::CsvMeasurementWriter::Config
+ActsExamples::Options::readCsvMeasurementWriterConfig(
+    const ActsExamples::Options::Variables& vm) {
+  ActsExamples::CsvMeasurementWriter::Config cfg;
+  if (not vm["output-dir"].empty()) {
+    cfg.outputDir = vm["output-dir"].as<std::string>();
+  }
+  // cfg.outputPrecision = vm["csv-output-precision"].as<size_t>();
+  return cfg;
+}
+
 ActsExamples::CsvTrackingGeometryWriter::Config
 ActsExamples::Options::readCsvTrackingGeometryWriterConfig(
     const ActsExamples::Options::Variables& vm) {
