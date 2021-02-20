@@ -13,6 +13,11 @@
 
 namespace ActsFatras {
 
+/// No-op particle selector that selects all particles.
+struct EveryParticle {
+  bool operator()(const Particle &) const { return true; }
+};
+
 /// Select neutral particles.
 struct NeutralSelector {
   bool operator()(const Particle &particle) const {
