@@ -21,9 +21,10 @@ using namespace Acts::UnitLiterals;
 using namespace ActsFatras;
 
 namespace {
-/// A process leaves the particle as-is and creates four daughter particles
-/// with momenta 1,2,3,4 GeV.
-struct MakeChildren {
+
+/// A mock process that leaves the particle as-is and creates four daughter
+/// particles with momenta 1,2,3,4 GeV.
+struct MockMakeChildren {
   template <typename generator_t>
   std::array<ActsFatras::Particle, 4> operator()(generator_t &,
                                                  const Acts::MaterialSlab &,
@@ -38,8 +39,13 @@ struct MakeChildren {
   }
 };
 
-/// Select particles with momenta equal or above 10GeV.
-struct HighP {
+/// Mock particle selector that selects everything
+struct MockEverything {
+  bool operator()(const Particle &) const { return true; }
+};
+
+/// Mock particle selector for particles with momenta equal or above 10GeV.
+struct MockHighP {
   double minP = 10_GeV;
 
   bool operator()(const ActsFatras::Particle &particle) const {
@@ -53,13 +59,14 @@ struct Fixture {
   Particle parent = Particle().setAbsoluteMomentum(10_GeV);
   std::vector<Particle> children;
 };
+
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(FatrasContinuousProcess)
 
 BOOST_AUTO_TEST_CASE(NoSelectors) {
   Fixture f;
-  ContinuousProcess<MakeChildren> process;
+  ContinuousProcess<MockMakeChildren, MockEverything, MockEverything> process;
 
   // process should not abort
   BOOST_CHECK(not process(f.generator, f.slab, f.parent, f.children));
@@ -68,7 +75,7 @@ BOOST_AUTO_TEST_CASE(NoSelectors) {
 
 BOOST_AUTO_TEST_CASE(WithInputSelector) {
   Fixture f;
-  ContinuousProcess<MakeChildren, HighP> process;
+  ContinuousProcess<MockMakeChildren, MockHighP, MockEverything> process;
   process.selectInputParticle.minP = 10_GeV;
 
   // above threshold should not abort
@@ -88,7 +95,9 @@ BOOST_AUTO_TEST_CASE(WithInputSelector) {
 
 BOOST_AUTO_TEST_CASE(WithOutputSelector) {
   Fixture f;
-  ContinuousProcess<MakeChildren, EveryParticle, HighP, EveryParticle> process;
+  // explicit child selector so it does not default to the output selector
+  ContinuousProcess<MockMakeChildren, MockEverything, MockHighP, MockEverything>
+      process;
   process.selectOutputParticle.minP = 10_GeV;
 
   // above threshold should not abort
@@ -108,7 +117,8 @@ BOOST_AUTO_TEST_CASE(WithOutputSelector) {
 
 BOOST_AUTO_TEST_CASE(WithChildSelector) {
   Fixture f;
-  ContinuousProcess<MakeChildren, EveryParticle, EveryParticle, HighP> process;
+  ContinuousProcess<MockMakeChildren, MockEverything, MockEverything, MockHighP>
+      process;
   process.selectChildParticle.minP = 10_GeV;
 
   // all process should not abort regardless of child selection
