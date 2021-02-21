@@ -21,7 +21,7 @@
 #include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/SimulationResult.hpp"
-#include "ActsFatras/Kernel/detail/Interactor.hpp"
+#include "ActsFatras/Kernel/detail/SimulationActor.hpp"
 #include "ActsFatras/Kernel/detail/SimulatorError.hpp"
 
 #include <algorithm>
@@ -62,13 +62,13 @@ struct ParticleSimulator {
 
   /// Simulate a single particle without secondaries.
   ///
+  /// @tparam generator_t is the type of the random number generator
+  ///
   /// @param geoCtx is the geometry context to access surface geometries
   /// @param magCtx is the magnetic field context to access field values
   /// @param generator is the random number generator
   /// @param particle is the initial particle state
-  /// @returns the result of the corresponding Interactor propagator action.
-  ///
-  /// @tparam generator_t is the type of the random number generator
+  /// @returns Simulated particle state, hits, and generated particles.
   template <typename generator_t>
   Acts::Result<SimulationResult> simulate(
       const Acts::GeometryContext &geoCtx,
@@ -77,12 +77,12 @@ struct ParticleSimulator {
     assert(localLogger and "Missing local logger");
 
     // propagator-related additional types
-    using Interactor = detail::Interactor<generator_t, decay_t, interactions_t,
+    using Actor = detail::SimulationActor<generator_t, decay_t, interactions_t,
                                           hit_surface_selector_t>;
-    using InteractorResult = typename Interactor::result_type;
-    using Actions = Acts::ActionList<Interactor>;
-    using Abort = Acts::AbortList<typename Interactor::ParticleNotAlive,
-                                  Acts::EndOfWorldReached>;
+    using Aborter = typename Actor::ParticleNotAlive;
+    using Result = typename Actor::result_type;
+    using Actions = Acts::ActionList<Actor>;
+    using Abort = Acts::AbortList<Aborter, Acts::EndOfWorldReached>;
     using PropagatorOptions = Acts::PropagatorOptions<Actions, Abort>;
 
     // Construct per-call options.
@@ -91,12 +91,12 @@ struct ParticleSimulator {
     options.absPdgCode = Acts::makeAbsolutePdgParticle(particle.pdg());
     options.mass = particle.mass();
     // setup the interactor as part of the propagator options
-    auto &interactor = options.actionList.template get<Interactor>();
-    interactor.generator = &generator;
-    interactor.decay = decay;
-    interactor.interactions = interactions;
-    interactor.selectHitSurface = selectHitSurface;
-    interactor.initialParticle = particle;
+    auto &actor = options.actionList.template get<Actor>();
+    actor.generator = &generator;
+    actor.decay = decay;
+    actor.interactions = interactions;
+    actor.selectHitSurface = selectHitSurface;
+    actor.initialParticle = particle;
     // use AnyCharge to be able to handle neutral and charged parameters
     Acts::SingleCurvilinearTrackParameters<Acts::AnyCharge> start(
         particle.fourPosition(), particle.unitDirection(),
@@ -105,7 +105,7 @@ struct ParticleSimulator {
     if (not result.ok()) {
       return result.error();
     }
-    auto &value = result.value().template get<InteractorResult>();
+    auto &value = result.value().template get<Result>();
 
     return std::move(value);
   }
@@ -267,7 +267,7 @@ struct Simulator {
     return isValidCharged xor isValidNeutral;
   }
 
-  /// Copy Interactor results to output containers.
+  /// Copy results to output containers.
   ///
   /// @tparam particles_t is a SequenceContainer for particles
   /// @tparam hits_t is a SequenceContainer for hits
