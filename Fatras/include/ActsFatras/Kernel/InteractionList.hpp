@@ -108,7 +108,7 @@ using ContinuousIndices = TupleSubsetIndices<IsContinuousProcess, processes_t>;
 template <typename processes_t>
 using PointLikeIndices = TupleSubsetIndices<IsPointLikeProcess, processes_t>;
 
-};  // namespace detail
+}  // namespace detail
 
 /// Compile-time set of interaction processes for the simulation.
 ///
