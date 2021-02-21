@@ -7,8 +7,8 @@ add_library(
   src/EventData/Particle.cpp
   src/EventData/ProcessType.cpp
   src/Kernel/SimulationError.cpp
+  src/Physics/BetheHeitler.cpp
   src/Physics/StandardInteractions.cpp
-  src/Physics/EnergyLoss/BetheHeitler.cpp
   src/Utilities/LandauDistribution.cpp
   src/Utilities/ParticleData.cpp)
 target_compile_features(
