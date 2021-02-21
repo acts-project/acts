@@ -22,7 +22,7 @@
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/SimulationResult.hpp"
 #include "ActsFatras/Kernel/detail/SimulationActor.hpp"
-#include "ActsFatras/Kernel/detail/SimulatorError.hpp"
+#include "ActsFatras/Kernel/detail/SimulationError.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -200,7 +200,7 @@ struct Simulator {
       // required to allow correct particle id numbering for secondaries later
       if ((inputParticle.particleId().generation() != 0u) or
           (inputParticle.particleId().subParticle() != 0u)) {
-        return detail::SimulatorError::eInvalidInputParticleId;
+        return detail::SimulationError::eInvalidInputParticleId;
       }
 
       // Do a *depth-first* simulation of the particle and its secondaries,
