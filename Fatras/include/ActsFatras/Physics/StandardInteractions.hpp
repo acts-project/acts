@@ -12,7 +12,7 @@
 #include "ActsFatras/Kernel/InteractionList.hpp"
 #include "ActsFatras/Physics/ElectroMagnetic/BetheBloch.hpp"
 #include "ActsFatras/Physics/ElectroMagnetic/BetheHeitler.hpp"
-#include "ActsFatras/Physics/Scattering/Highland.hpp"
+#include "ActsFatras/Physics/ElectroMagnetic/Scattering.hpp"
 #include "ActsFatras/Selectors/ChargeSelectors.hpp"
 #include "ActsFatras/Selectors/KinematicCasts.hpp"
 #include "ActsFatras/Selectors/PdgSelectors.hpp"
