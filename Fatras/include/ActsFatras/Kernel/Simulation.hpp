@@ -32,7 +32,7 @@
 
 namespace ActsFatras {
 
-/// Single particle simulator with a fixed propagator and physics list.
+/// Single particle simulation with fixed propagator, interactions, and decay.
 ///
 /// @tparam generator_t random number generator
 /// @tparam interactions_t interaction list
@@ -40,7 +40,7 @@ namespace ActsFatras {
 /// @tparam decay_t decay module
 template <typename propagator_t, typename interactions_t,
           typename hit_surface_selector_t, typename decay_t>
-struct ParticleSimulator {
+struct SingleParticleSimulation {
   /// How and within which geometry to propagate the particle.
   propagator_t propagator;
   /// Decay module.
@@ -53,9 +53,9 @@ struct ParticleSimulator {
   std::shared_ptr<const Acts::Logger> localLogger = nullptr;
 
   /// Construct the simulator with the underlying propagator.
-  ParticleSimulator(propagator_t &&propagator_, Acts::Logging::Level lvl)
+  SingleParticleSimulation(propagator_t &&propagator_, Acts::Logging::Level lvl)
       : propagator(propagator_),
-        localLogger(Acts::getDefaultLogger("Simulator", lvl)) {}
+        localLogger(Acts::getDefaultLogger("Simulation", lvl)) {}
 
   /// Provide access to the local logger instance, e.g. for logging macros.
   const Acts::Logger &logger() const { return *localLogger; }
@@ -123,7 +123,7 @@ struct FailedParticle {
   std::error_code error;
 };
 
-/// Multi-particle simulator.
+/// Multi-particle/event simulation.
 ///
 /// @tparam charged_selector_t Callable selector type for charged particles
 /// @tparam charged_simulator_t Single particle simulator for charged particles
@@ -131,14 +131,14 @@ struct FailedParticle {
 /// @tparam neutral_simulator_t Single particle simulator for neutral particles
 template <typename charged_selector_t, typename charged_simulator_t,
           typename neutral_selector_t, typename neutral_simulator_t>
-struct Simulator {
+struct Simulation {
   charged_selector_t selectCharged;
   neutral_selector_t selectNeutral;
   charged_simulator_t charged;
   neutral_simulator_t neutral;
 
   /// Construct from the single charged/neutral particle simulators.
-  Simulator(charged_simulator_t &&charged_, neutral_simulator_t &&neutral_)
+  Simulation(charged_simulator_t &&charged_, neutral_simulator_t &&neutral_)
       : charged(std::move(charged_)), neutral(std::move(neutral_)) {}
 
   /// Simulate multiple particles and generated secondaries.
@@ -188,7 +188,7 @@ struct Simulator {
         (simulatedParticlesInitial.size() == simulatedParticlesFinal.size()) and
         "Inconsistent initial sizes of the simulated particle containers");
 
-    using ParticleSimulatorResult = Acts::Result<SimulationResult>;
+    using SingleParticleSimulationResult = Acts::Result<SimulationResult>;
 
     std::vector<FailedParticle> failedParticles;
 
@@ -219,7 +219,8 @@ struct Simulator {
 
         // only simulatable particles are pushed to the container.
         // they must therefore be either charged or neutral.
-        ParticleSimulatorResult result = ParticleSimulatorResult::success({});
+        SingleParticleSimulationResult result =
+            SingleParticleSimulationResult::success({});
         if (selectCharged(initialParticle)) {
           result = charged.simulate(geoCtx, magCtx, generator, initialParticle);
         } else {

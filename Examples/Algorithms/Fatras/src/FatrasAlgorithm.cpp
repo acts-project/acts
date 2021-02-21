@@ -20,7 +20,7 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsFatras/Kernel/InteractionList.hpp"
-#include "ActsFatras/Kernel/Simulator.hpp"
+#include "ActsFatras/Kernel/Simulation.hpp"
 #include "ActsFatras/Physics/Decay/NoDecay.hpp"
 #include "ActsFatras/Physics/StandardInteractions.hpp"
 #include "ActsFatras/Selectors/ChargeSelectors.hpp"
@@ -50,7 +50,7 @@ struct HitSurfaceSelector {
 
 }  // namespace
 
-// Same interface as `ActsFatras::Simulator` but with concrete types.
+// Same interface as `ActsFatras::Simulation` but with concrete types.
 struct ActsExamples::detail::FatrasAlgorithmSimulation {
   virtual ~FatrasAlgorithmSimulation() = default;
   virtual Acts::Result<std::vector<ActsFatras::FailedParticle>> simulate(
@@ -80,7 +80,7 @@ struct FatrasAlgorithmSimulationT final
   // charged particles w/ standard em physics list and selectable hits
   using ChargedSelector =
       ActsFatras::CombineAnd<ActsFatras::ChargedSelector, CutPMin>;
-  using ChargedSimulator = ActsFatras::ParticleSimulator<
+  using ChargedSimulation = ActsFatras::SingleParticleSimulation<
       ChargedPropagator, ActsFatras::StandardChargedElectroMagneticInteractions,
       HitSurfaceSelector, ActsFatras::NoDecay>;
 
@@ -91,14 +91,13 @@ struct FatrasAlgorithmSimulationT final
   // neutral particles w/o physics and no hits
   using NeutralSelector =
       ActsFatras::CombineAnd<ActsFatras::NeutralSelector, CutPMin>;
-  using NeutralSimulator =
-      ActsFatras::ParticleSimulator<NeutralPropagator,
-                                    ActsFatras::InteractionList<>,
-                                    ActsFatras::NoSurface, ActsFatras::NoDecay>;
+  using NeutralSimulation = ActsFatras::SingleParticleSimulation<
+      NeutralPropagator, ActsFatras::InteractionList<>, ActsFatras::NoSurface,
+      ActsFatras::NoDecay>;
 
   // combined simulation type
-  using Simulation = ActsFatras::Simulator<ChargedSelector, ChargedSimulator,
-                                           NeutralSelector, NeutralSimulator>;
+  using Simulation = ActsFatras::Simulation<ChargedSelector, ChargedSimulation,
+                                            NeutralSelector, NeutralSimulation>;
 
   Simulation simulation;
 
@@ -106,9 +105,9 @@ struct FatrasAlgorithmSimulationT final
                              const ActsExamples::FatrasAlgorithm::Config &cfg,
                              Acts::Logging::Level lvl)
       : simulation(
-            ChargedSimulator(
+            ChargedSimulation(
                 ChargedPropagator(std::move(mf), cfg.trackingGeometry), lvl),
-            NeutralSimulator(
+            NeutralSimulation(
                 NeutralPropagator(NeutralStepper(), cfg.trackingGeometry),
                 lvl)) {
     using namespace ActsFatras;

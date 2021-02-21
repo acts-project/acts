@@ -18,7 +18,7 @@
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/Kernel/InteractionList.hpp"
-#include "ActsFatras/Kernel/Simulator.hpp"
+#include "ActsFatras/Kernel/Simulation.hpp"
 #include "ActsFatras/Physics/Decay/NoDecay.hpp"
 #include "ActsFatras/Physics/StandardInteractions.hpp"
 #include "ActsFatras/Selectors/ChargeSelectors.hpp"
@@ -71,19 +71,20 @@ using ChargedSelector = ActsFatras::ChargedSelector;
 using ChargedInteractions =
     ActsFatras::InteractionList<ActsFatras::detail::StandardScattering,
                                 SplitEnergyLoss>;
-using ChargedSimulator =
-    ActsFatras::ParticleSimulator<ChargedPropagator, ChargedInteractions,
-                                  ActsFatras::EverySurface,
-                                  ActsFatras::NoDecay>;
+using ChargedSimulation =
+    ActsFatras::SingleParticleSimulation<ChargedPropagator, ChargedInteractions,
+                                         ActsFatras::EverySurface,
+                                         ActsFatras::NoDecay>;
 // all neutral particles w/o physics and no hits
 using NeutralSelector = ActsFatras::NeutralSelector;
 using NeutralInteractions = ActsFatras::InteractionList<>;
-using NeutralSimulator =
-    ActsFatras::ParticleSimulator<NeutralPropagator, NeutralInteractions,
-                                  ActsFatras::NoSurface, ActsFatras::NoDecay>;
+using NeutralSimulation =
+    ActsFatras::SingleParticleSimulation<NeutralPropagator, NeutralInteractions,
+                                         ActsFatras::NoSurface,
+                                         ActsFatras::NoDecay>;
 // full simulator type for charged and neutrals
-using Simulator = ActsFatras::Simulator<ChargedSelector, ChargedSimulator,
-                                        NeutralSelector, NeutralSimulator>;
+using Simulation = ActsFatras::Simulation<ChargedSelector, ChargedSimulation,
+                                          NeutralSelector, NeutralSimulation>;
 
 // parameters for data-driven test cases
 
@@ -167,9 +168,10 @@ BOOST_DATA_TEST_CASE(FatrasSimulation, dataset, pdg, phi, eta, p,
   NeutralPropagator neutralPropagator(NeutralStepper(), navigator);
 
   // construct the simulator
-  ChargedSimulator simulatorCharged(std::move(chargedPropagator), logLevel);
-  NeutralSimulator simulatorNeutral(std::move(neutralPropagator), logLevel);
-  Simulator simulator(std::move(simulatorCharged), std::move(simulatorNeutral));
+  ChargedSimulation simulatorCharged(std::move(chargedPropagator), logLevel);
+  NeutralSimulation simulatorNeutral(std::move(neutralPropagator), logLevel);
+  Simulation simulator(std::move(simulatorCharged),
+                       std::move(simulatorNeutral));
 
   // prepare simulation call parameters
   // random number generator
