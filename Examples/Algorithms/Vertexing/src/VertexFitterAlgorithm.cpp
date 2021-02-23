@@ -22,6 +22,7 @@
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 
 #include <stdexcept>
 
@@ -118,6 +119,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     }
 
     ACTS_INFO("Fitted Vertex " << fittedVertex.fullPosition().transpose());
+    ACTS_INFO("Tracks at fitted Vertex: " << fittedVertex.tracks().size());
   }
   return ProcessCode::SUCCESS;
 }

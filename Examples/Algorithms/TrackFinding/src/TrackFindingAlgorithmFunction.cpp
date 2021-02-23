@@ -1,20 +1,17 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/MagneticField/ConstantBField.hpp"
-#include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/SharedBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
-#include "ActsExamples/Plugins/BField/ScalableBField.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 
 #include <random>
@@ -42,7 +39,7 @@ struct TrackFinderFunctionImpl {
 ActsExamples::TrackFindingAlgorithm::TrackFinderFunction
 ActsExamples::TrackFindingAlgorithm::makeTrackFinderFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-    Options::BFieldVariant magneticField) {
+    MagneticField magneticField) {
   using Updater = Acts::GainMatrixUpdater;
   using Smoother = Acts::GainMatrixSmoother;
 
@@ -54,15 +51,15 @@ ActsExamples::TrackFindingAlgorithm::makeTrackFinderFunction(
         // need ::element_type to get the real magnetic field type
         using InputMagneticField =
             typename std::decay_t<decltype(inputField)>::element_type;
-        using MagneticField = Acts::SharedBField<InputMagneticField>;
-        using Stepper = Acts::EigenStepper<MagneticField>;
+        using SharedMagneticField = Acts::SharedBField<InputMagneticField>;
+        using Stepper = Acts::EigenStepper<SharedMagneticField>;
         using Navigator = Acts::Navigator;
         using Propagator = Acts::Propagator<Stepper, Navigator>;
         using CKF =
             Acts::CombinatorialKalmanFilter<Propagator, Updater, Smoother>;
 
         // construct all components for the track finder
-        MagneticField field(std::move(inputField));
+        SharedMagneticField field(std::move(inputField));
         Stepper stepper(std::move(field));
         Navigator navigator(trackingGeometry);
         navigator.resolvePassive = false;

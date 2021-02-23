@@ -11,7 +11,7 @@ target_link_libraries(
   ActsExamplesDetectorContextual
   PUBLIC
     ActsCore ActsPluginIdentification ActsPluginDigitization
-    ActsExamplesFramework ActsExamplesDetectorsCommon ActsExamplesDetectorGeneric ActsExamplesMagneticField)
+    ActsExamplesFramework ActsExamplesDetectorsCommon ActsExamplesDetectorGeneric)
 
 install(
   TARGETS ActsExamplesDetectorContextual
