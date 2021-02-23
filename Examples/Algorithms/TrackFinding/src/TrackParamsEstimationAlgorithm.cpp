@@ -79,7 +79,7 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
       continue;
     }
     // Space points on the proto track
-    std::vector<SimSpacePoint> spacePointsOnTrack;
+    std::vector<const SimSpacePoint*> spacePointsOnTrack;
     spacePointsOnTrack.reserve(protoTrack.size());
     // Loop over the hit index on the proto track to find the space points
     for (const auto& hitIndex : protoTrack) {
@@ -89,7 +89,7 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
                          return (spacePoint.measurementIndex() == hitIndex);
                        });
       if (it != spacePoints.end()) {
-        spacePointsOnTrack.push_back(*it);
+        spacePointsOnTrack.push_back(&(*it));
       }
     }
     // At least three space points are required
@@ -98,27 +98,27 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
     }
     // Sort the space points
     std::sort(spacePointsOnTrack.begin(), spacePointsOnTrack.end(),
-              [](const SimSpacePoint& lhs, const SimSpacePoint& rhs) {
-                return std::hypot(lhs.r(), lhs.z()) <
-                       std::hypot(rhs.r(), rhs.z());
+              [](const SimSpacePoint* lhs, const SimSpacePoint* rhs) {
+                return std::hypot(lhs->r(), lhs->z()) <
+                       std::hypot(rhs->r(), rhs->z());
               });
     // Loop over the found space points to find seeds with simple selection
     for (size_t ib = 0; ib < spacePointsOnTrack.size() - 2; ++ib) {
       for (size_t im = ib + 1; im < spacePointsOnTrack.size() - 1; ++im) {
         for (size_t it = im + 1; it < spacePointsOnTrack.size(); ++it) {
-          double bSpacePointR = std::hypot(spacePointsOnTrack[ib].r(),
-                                           spacePointsOnTrack[ib].z());
-          double mSpacePointR = std::hypot(spacePointsOnTrack[im].r(),
-                                           spacePointsOnTrack[im].z());
-          double tSpacePointR = std::hypot(spacePointsOnTrack[it].r(),
-                                           spacePointsOnTrack[it].z());
+          double bSpacePointR = std::hypot(spacePointsOnTrack[ib]->r(),
+                                           spacePointsOnTrack[ib]->z());
+          double mSpacePointR = std::hypot(spacePointsOnTrack[im]->r(),
+                                           spacePointsOnTrack[im]->z());
+          double tSpacePointR = std::hypot(spacePointsOnTrack[it]->r(),
+                                           spacePointsOnTrack[it]->z());
           double bmDeltaR = std::abs(mSpacePointR - bSpacePointR);
           double mtDeltaR = std::abs(tSpacePointR - mSpacePointR);
           if (bmDeltaR >= m_cfg.deltaRMin and bmDeltaR <= m_cfg.deltaRMax and
               mtDeltaR >= m_cfg.deltaRMin and mtDeltaR <= m_cfg.deltaRMax) {
-            seeds.emplace_back(spacePointsOnTrack[ib], spacePointsOnTrack[im],
-                               spacePointsOnTrack[it],
-                               spacePointsOnTrack[im].z());
+            seeds.emplace_back(*spacePointsOnTrack[ib], *spacePointsOnTrack[im],
+                               *spacePointsOnTrack[it],
+                               spacePointsOnTrack[im]->z());
           }
         }
       }
@@ -134,18 +134,17 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
   // Read seeds or create them from proto tracks and space points
   SimSeedContainer seeds;
+  SimSpacePointContainer spacePoints;
   if (not m_cfg.inputSeeds.empty()) {
     seeds = ctx.eventStore.get<SimSeedContainer>(m_cfg.inputSeeds);
   } else {
     const auto& protoTracks =
         ctx.eventStore.get<ProtoTrackContainer>(m_cfg.inputProtoTracks);
-    SimSpacePointContainer spacePoints;
     for (const auto& isp : m_cfg.inputSpacePoints) {
       const auto& sps = ctx.eventStore.get<SimSpacePointContainer>(isp);
       std::copy(sps.begin(), sps.end(), std::back_inserter(spacePoints));
     }
     seeds = createSeeds(protoTracks, spacePoints);
-    std::cout << "create " << seeds.size() << std::endl;
   }
 
   TrackParametersContainer trackParameters;
