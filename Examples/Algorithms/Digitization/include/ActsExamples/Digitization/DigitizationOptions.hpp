@@ -31,8 +31,6 @@ Digitization::AlgorithmConfig readSmearingConfig(const Variables &variables);
 Digitization::AlgorithmConfig readDigitizationConfig(
     const Variables &variables);
 
-Digitization::AlgorithmConfig configureDigitization(const Variables &vm);
-
 std::shared_ptr<ActsExamples::IAlgorithm> createDigitizationAlgorithm(
     Digitization::AlgorithmConfig &cfg, Acts::Logging::Level lvl);
 

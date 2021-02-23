@@ -101,21 +101,20 @@ makeSmearFunctionForType(SmearingTypes smearingType, const double* parameters) {
 
 }  // namespace
 
-ActsExamples::Digitization::AlgorithmConfig
-ActsExamples::Options::readSmearingConfig(const Variables& variables) {
+ActsExamples::Digitization::AlgorithmConfig::AlgorithmConfig(const Options::Variables &vars, Acts::GeometryHierarchyMap<DigitizationConfig> &&digiCfgs)
+  : isSimpleSmearer(vars["digi-smear"].as<bool>())
+{
+  digitizationConfigs = std::move(digiCfgs);
+  if (isSimpleSmearer)
+    smearingConfig(vars);
+}
+
+void ActsExamples::Digitization::AlgorithmConfig::smearingConfig(const Options::Variables &variables) {
   ACTS_LOCAL_LOGGER(
       Acts::getDefaultLogger("SmearingOptions", Acts::Logging::INFO));
 
   using namespace Acts::UnitLiterals;
-
-  Digitization::AlgorithmConfig smearCfg;
-  smearCfg.isSimpleSmearer = true;
-
-  auto cfile = variables["digi-config-file"].as<std::string>();
-  if (not cfile.empty()) {
-    smearCfg.digitizationConfigs = readConfigFromJson(cfile);
-    return smearCfg;
-  }
+  using namespace ActsExamples::Options;
 
   // Smear configuration with command line input
   // only limited smearing configuration possible:
@@ -129,7 +128,11 @@ ActsExamples::Options::readSmearingConfig(const Variables& variables) {
   auto volumes = variables["digi-smear-volume"].as<std::vector<int>>();
   if (volumes.empty()) {
     // no configured volumes are not considered an error at this stage
-    return smearCfg;
+    return;
+  }
+
+  if (not variables["digi-config-file"].as<std::string>().empty()) {
+    ACTS_WARNING("Smearing configuration on command-line will override .json configuration!");
   }
 
   auto indices =
@@ -141,17 +144,17 @@ ActsExamples::Options::readSmearingConfig(const Variables& variables) {
   if (indices.size() != volumes.size()) {
     ACTS_ERROR("Inconsistent digi-smear-indices options. Expected "
                << volumes.size() << ", but received " << indices.size());
-    return smearCfg;
+    return;
   }
   if (types.size() != volumes.size()) {
     ACTS_ERROR("Inconsistent digi-smear-types options. Expected "
                << volumes.size() << ", but received " << types.size());
-    return smearCfg;
+    return;
   }
   if (parameters.size() != volumes.size()) {
     ACTS_ERROR("Inconsistent digi-smear-parameters options. Expected "
                << volumes.size() << ", but received " << parameters.size());
-    return smearCfg;
+    return;
   }
 
   // construct the input for the smearer configuation
@@ -168,7 +171,7 @@ ActsExamples::Options::readSmearingConfig(const Variables& variables) {
       ACTS_ERROR("Inconsistent number of digi-smear-types values for volume "
                  << volumes[ivol] << ". Expected " << indices.size()
                  << ", but received " << types.size());
-      return smearCfg;
+      return;
     }
     // count the expected number of smearing configuration parameters
     size_t expectedNumParameters = 0;
@@ -180,7 +183,7 @@ ActsExamples::Options::readSmearingConfig(const Variables& variables) {
           "Inconsistent number of digi-smear-parameters values for volume "
           << volumes[ivol] << ". Expected " << expectedNumParameters
           << ", but received " << types.size());
-      return smearCfg;
+      return;
     }
 
     // create the smearing configuration for this geometry identifier
@@ -201,7 +204,7 @@ ActsExamples::Options::readSmearingConfig(const Variables& variables) {
         ACTS_ERROR("Invalid smearing type for entry "
                    << iidx << " for volume " << volumes[ivol] << ". Type "
                    << volTypes[iidx] << " is not valid");
-        return smearCfg;
+        return;
       }
       geoCfg.emplace_back(std::move(parCfg));
     }
@@ -210,10 +213,8 @@ ActsExamples::Options::readSmearingConfig(const Variables& variables) {
     smearersInput.emplace_back(geoId, std::move(dcfg));
   }
   // set the smearer configuration from the prepared input
-  smearCfg.digitizationConfigs =
+  digitizationConfigs =
       Acts::GeometryHierarchyMap<DigitizationConfig>(std::move(smearersInput));
-
-  return smearCfg;
 }
 
 Acts::GeometryHierarchyMap<ActsExamples::DigitizationConfig>
@@ -226,31 +227,6 @@ ActsExamples::Options::readConfigFromJson(const std::string& path) {
     in.close();
   }  // TODO handle errors
   return DigiConfigConverter("digitization-configuration").fromJson(djson);
-}
-
-ActsExamples::Digitization::AlgorithmConfig
-ActsExamples::Options::readDigitizationConfig(const Variables& variables) {
-  ACTS_LOCAL_LOGGER(
-      Acts::getDefaultLogger("DigitzationOptions", Acts::Logging::INFO));
-
-  Digitization::AlgorithmConfig digiCfg;
-  digiCfg.isSimpleSmearer = false;
-
-  auto cfile = variables["digi-config-file"].as<std::string>();
-  if (not cfile.empty()) {
-    digiCfg.digitizationConfigs = readConfigFromJson(cfile);
-    return digiCfg;
-  }
-  ACTS_ERROR("Error while configuring digitization " << cfile);
-  return digiCfg;
-}
-
-ActsExamples::Digitization::AlgorithmConfig
-ActsExamples::Options::configureDigitization(const Variables& vm) {
-  if (vm["digi-smear"].as<bool>())
-    return readSmearingConfig(vm);
-  else
-    return readDigitizationConfig(vm);
 }
 
 std::shared_ptr<ActsExamples::IAlgorithm>

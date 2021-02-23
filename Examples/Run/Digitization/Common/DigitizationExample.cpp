@@ -89,13 +89,9 @@ int runDigitizationExample(
   // Read the particles
   auto particleReaderCfg = setupParticleReading(vm, sequencer);
 
-  auto digiCfg = Options::configureDigitization(vm);
+  auto digiCfg = ActsExamples::Digitization::AlgorithmConfig(
+	  vm, Options::readConfigFromJson(vm["digi-config-file"].as<std::string>()));
   digiCfg.inputSimHits = simHitReaderCfg.outputSimHits;
-  digiCfg.outputMeasurements = "measurements";
-  digiCfg.outputClusters = "clusters";
-  digiCfg.outputSourceLinks = "sourcelinks";
-  digiCfg.outputMeasurementParticlesMap = "measurement_particles_map";
-  digiCfg.outputMeasurementSimHitsMap = "measurement_simhits_map";
   digiCfg.trackingGeometry = tGeometry;
   digiCfg.randomNumbers = randomNumbers;
 

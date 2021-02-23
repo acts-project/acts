@@ -79,16 +79,12 @@ ActsExamples::Digitization::AlgorithmConfig setupDigitization(
   // Read some standard options
   auto logLevel = Options::readLogLevel(vars);
 
-  auto digiCfg = Options::configureDigitization(vars);
+  auto digiCfg = ActsExamples::Digitization::AlgorithmConfig(
+	  vars, Options::readConfigFromJson(vars["digi-config-file"].as<std::string>()));
   // Common options for digitization
   digiCfg.inputSimHits = inputSimHits;
-  digiCfg.outputMeasurements = "measurements";
-  digiCfg.outputSourceLinks = "sourcelinks";
-  digiCfg.outputMeasurementParticlesMap = "measurement_particles_map";
-  digiCfg.outputMeasurementSimHitsMap = "measurement_simhits_map";
   digiCfg.randomNumbers = rnd;
   digiCfg.trackingGeometry = trackingGeometry;
-  digiCfg.outputClusters = "clusters";
   sequencer.addAlgorithm(
       Options::createDigitizationAlgorithm(digiCfg, logLevel));
 
