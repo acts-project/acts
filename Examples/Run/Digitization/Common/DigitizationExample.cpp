@@ -21,6 +21,7 @@
 #include "ActsExamples/Io/Csv/CsvOptionsWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
+#include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 #include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
@@ -89,8 +90,8 @@ int runDigitizationExample(
   // Read the particles
   auto particleReaderCfg = setupParticleReading(vm, sequencer);
 
-  auto digiCfg = ActsExamples::Digitization::AlgorithmConfig(
-	  vm, Options::readConfigFromJson(vm["digi-config-file"].as<std::string>()));
+  auto digiCfg = Digitization::AlgorithmConfig(
+	  vm, readDigiConfigFromJson(vm["digi-config-file"].as<std::string>()));
   digiCfg.inputSimHits = simHitReaderCfg.outputSimHits;
   digiCfg.trackingGeometry = tGeometry;
   digiCfg.randomNumbers = randomNumbers;

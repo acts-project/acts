@@ -11,17 +11,14 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Digitization/JsonDigitizationConfig.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Digitization/SmearingConfig.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
-#include <fstream>
 #include <numeric>
 #include <string>
 
 #include <boost/program_options.hpp>
-#include <nlohmann/json.hpp>
 
 void ActsExamples::Options::addDigitizationOptions(Description& desc) {
   using boost::program_options::bool_switch;
@@ -215,18 +212,6 @@ void ActsExamples::Digitization::AlgorithmConfig::smearingConfig(const Options::
   // set the smearer configuration from the prepared input
   digitizationConfigs =
       Acts::GeometryHierarchyMap<DigitizationConfig>(std::move(smearersInput));
-}
-
-Acts::GeometryHierarchyMap<ActsExamples::DigitizationConfig>
-ActsExamples::Options::readConfigFromJson(const std::string& path) {
-  nlohmann::json djson;
-  auto in = std::ifstream(path, std::ifstream::in | std::ifstream::binary);
-  if (in.good()) {
-    // Get the json file for the configuration
-    in >> djson;
-    in.close();
-  }  // TODO handle errors
-  return DigiConfigConverter("digitization-configuration").fromJson(djson);
 }
 
 std::shared_ptr<ActsExamples::IAlgorithm>

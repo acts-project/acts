@@ -34,9 +34,6 @@ Digitization::AlgorithmConfig readDigitizationConfig(
 std::shared_ptr<ActsExamples::IAlgorithm> createDigitizationAlgorithm(
     Digitization::AlgorithmConfig &cfg, Acts::Logging::Level lvl);
 
-Acts::GeometryHierarchyMap<DigitizationConfig> readConfigFromJson(
-    const std::string &path);
-
 std::vector<
     std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
 getBoundIndices(ActsExamples::Digitization::AlgorithmConfig &cfg);

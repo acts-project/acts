@@ -6,12 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Digitization/JsonDigitizationConfig.hpp"
+#include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 
+#include <fstream>
 #include <functional>
 
 void ActsExamples::to_json(nlohmann::json& j,
@@ -147,4 +148,17 @@ void ActsExamples::from_json(const nlohmann::json& j,
     nlohmann::json jsdc = j["smearing"];
     from_json(jsdc, dc.smearingDigiConfig);
   }
+}
+
+
+Acts::GeometryHierarchyMap<ActsExamples::DigitizationConfig>
+ActsExamples::readDigiConfigFromJson(const std::string& path) {
+  nlohmann::json djson;
+  auto in = std::ifstream(path, std::ifstream::in | std::ifstream::binary);
+  if (in.good()) {
+    // Get the json file for the configuration
+    in >> djson;
+    in.close();
+  }  // TODO handle errors
+  return DigiConfigConverter("digitization-configuration").fromJson(djson);
 }

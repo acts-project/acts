@@ -13,6 +13,7 @@
 #include "ActsExamples/Digitization/DigitizationOptions.hpp"
 #include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
+#include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/SeedingPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
@@ -80,7 +81,7 @@ ActsExamples::Digitization::AlgorithmConfig setupDigitization(
   auto logLevel = Options::readLogLevel(vars);
 
   auto digiCfg = ActsExamples::Digitization::AlgorithmConfig(
-	  vars, Options::readConfigFromJson(vars["digi-config-file"].as<std::string>()));
+	  vars, ActsExamples::readDigiConfigFromJson(vars["digi-config-file"].as<std::string>()));
   // Common options for digitization
   digiCfg.inputSimHits = inputSimHits;
   digiCfg.randomNumbers = rnd;
