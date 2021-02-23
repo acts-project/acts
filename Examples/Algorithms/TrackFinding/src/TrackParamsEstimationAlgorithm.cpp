@@ -103,17 +103,14 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
                        std::hypot(rhs->r(), rhs->z());
               });
     // Loop over the found space points to find seeds with simple selection
+    // @todo add the check of deltaZ
     for (size_t ib = 0; ib < spacePointsOnTrack.size() - 2; ++ib) {
       for (size_t im = ib + 1; im < spacePointsOnTrack.size() - 1; ++im) {
         for (size_t it = im + 1; it < spacePointsOnTrack.size(); ++it) {
-          double bSpacePointR = std::hypot(spacePointsOnTrack[ib]->r(),
-                                           spacePointsOnTrack[ib]->z());
-          double mSpacePointR = std::hypot(spacePointsOnTrack[im]->r(),
-                                           spacePointsOnTrack[im]->z());
-          double tSpacePointR = std::hypot(spacePointsOnTrack[it]->r(),
-                                           spacePointsOnTrack[it]->z());
-          double bmDeltaR = std::abs(mSpacePointR - bSpacePointR);
-          double mtDeltaR = std::abs(tSpacePointR - mSpacePointR);
+          double bmDeltaR = std::abs(spacePointsOnTrack[im]->r() -
+                                     spacePointsOnTrack[ib]->r());
+          double mtDeltaR = std::abs(spacePointsOnTrack[it]->r() -
+                                     spacePointsOnTrack[im]->r());
           if (bmDeltaR >= m_cfg.deltaRMin and bmDeltaR <= m_cfg.deltaRMax and
               mtDeltaR >= m_cfg.deltaRMin and mtDeltaR <= m_cfg.deltaRMax) {
             seeds.emplace_back(*spacePointsOnTrack[ib], *spacePointsOnTrack[im],
