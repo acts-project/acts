@@ -11,6 +11,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
@@ -26,8 +27,6 @@
 
 #include <TFile.h>
 #include <TTree.h>
-
-#include "detail/AverageSimHits.hpp"
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::phi;
@@ -186,7 +185,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
     // Get the sim hits via the measurement to sim hits map
     auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
     auto [truthLocal, truthPos4, truthUnitDir] =
-        detail::averageSimHits(ctx.geoContext, surface, simHits, indices);
+        averageSimHits(ctx.geoContext, surface, simHits, indices);
     // Get the truth track parameter at the first space point
     m_t_loc0 = truthLocal[Acts::ePos0];
     m_t_loc1 = truthLocal[Acts::ePos1];
