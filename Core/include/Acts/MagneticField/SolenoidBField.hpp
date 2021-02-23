@@ -98,26 +98,28 @@ class SolenoidBField final : public MagneticFieldProvider {
   /// @param [in] position local 2D position
   Vector2 getField(const Vector2& position) const;
 
-  /// @copydoc BFieldBase::makeCache(const MagneticFieldContext&)
+  /// @copydoc MagneticFieldProvider::makeCache(const MagneticFieldContext&)
   MagneticFieldProvider::Cache makeCache(
       const MagneticFieldContext& mctx) const override;
 
-  /// @copydoc BFieldBase::getField(const Vector3&)
+  /// @copydoc MagneticFieldProvider::getField(const Vector3&)
   Vector3 getField(const Vector3& position) const override;
 
-  /// @copydoc BFieldBase::getField(const Vector3&,BFieldBase::Cache&)
+  /// @copydoc MagneticFieldProvider::getField(const
+  /// Vector3&,MagneticFieldProvider::Cache&)
   Vector3 getField(const Vector3& position,
                    MagneticFieldProvider::Cache& /*cache*/) const override;
 
-  /// @copydoc BFieldBase::getFieldGradient(const Vector3&,ActsMatrix<3,3>&)
+  /// @copydoc MagneticFieldProvider::getFieldGradient(const
+  /// Vector3&,ActsMatrix<3,3>&)
   ///
   /// @note currently the derivative is not calculated
   /// @todo return derivative
   Vector3 getFieldGradient(const Vector3& position,
                            ActsMatrix<3, 3>& /*derivative*/) const override;
 
-  /// @copydoc BFieldBase::getFieldGradient(const
-  /// Vector3&,ActsMatrix<3,3>&,BFieldBase::Cache&)
+  /// @copydoc MagneticFieldProvider::getFieldGradient(const
+  /// Vector3&,ActsMatrix<3,3>&,MagneticFieldProvider::Cache&)
   ///
   /// @note currently the derivative is not calculated
   /// @todo return derivative

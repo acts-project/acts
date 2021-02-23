@@ -294,18 +294,19 @@ class InterpolatedBFieldMap final : public MagneticFieldProvider {
   void setConfiguration(const Config& config) { m_config = config; }
 
  public:
-  /// @copydoc BFieldBase::makeCache(const MagneticFieldContext&)
+  /// @copydoc MagneticFieldProvider::makeCache(const MagneticFieldContext&)
   MagneticFieldProvider::Cache makeCache(
       const MagneticFieldContext& mctx) const override {
     return MagneticFieldProvider::Cache::make<Cache>(mctx);
   }
 
-  /// @copydoc BFieldBase::getField(const Vector3&)
+  /// @copydoc MagneticFieldProvider::getField(const Vector3&)
   Vector3 getField(const Vector3& position) const override {
     return m_config.mapper.getField(position);
   }
 
-  /// @copydoc BFieldBase::getField(const Vector3&,BFieldBase::Cache&)
+  /// @copydoc MagneticFieldProvider::getField(const
+  /// Vector3&,MagneticFieldProvider::Cache&)
   Vector3 getField(const Vector3& position,
                    MagneticFieldProvider::Cache& gcache) const override {
     Cache& cache = gcache.get<Cache>();
@@ -315,7 +316,8 @@ class InterpolatedBFieldMap final : public MagneticFieldProvider {
     return (*cache.fieldCell).getField(position);
   }
 
-  /// @copydoc BFieldBase::getFieldGradient(const Vector3&,ActsMatrix<3,3>&)
+  /// @copydoc MagneticFieldProvider::getFieldGradient(const
+  /// Vector3&,ActsMatrix<3,3>&)
   ///
   /// @note currently the derivative is not calculated
   /// @todo return derivative
@@ -324,8 +326,8 @@ class InterpolatedBFieldMap final : public MagneticFieldProvider {
     return m_config.mapper.getField(position);
   }
 
-  /// @copydoc BFieldBase::getFieldGradient(const
-  /// Vector3&,ActsMatrix<3,3>&,BFieldBase::Cache&)
+  /// @copydoc MagneticFieldProvider::getFieldGradient(const
+  /// Vector3&,ActsMatrix<3,3>&,MagneticFieldProvider::Cache&)
   ///
   /// @note currently the derivative is not calculated
   /// @note Cache is not used currently

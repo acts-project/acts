@@ -25,7 +25,7 @@ class NullBField final : public MagneticFieldProvider {
   /// @brief Default constructor
   NullBField() = default;
 
-  /// @copydoc BFieldBase::getField(const Vector3&)
+  /// @copydoc MagneticFieldProvider::getField(const Vector3&)
   ///
   /// @note The @p position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
@@ -33,7 +33,8 @@ class NullBField final : public MagneticFieldProvider {
     return m_BField;
   }
 
-  /// @copydoc BFieldBase::getField(const Vector3&,BFieldBase::Cache&)
+  /// @copydoc MagneticFieldProvider::getField(const
+  /// Vector3&,MagneticFieldProvider::Cache&)
   ///
   /// @note The @p position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
@@ -42,7 +43,8 @@ class NullBField final : public MagneticFieldProvider {
     return m_BField;
   }
 
-  /// @copydoc BFieldBase::getFieldGradient(const Vector3&,ActsMatrix<3,3>&)
+  /// @copydoc MagneticFieldProvider::getFieldGradient(const
+  /// Vector3&,ActsMatrix<3,3>&)
   ///
   /// @note The @p position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
@@ -53,8 +55,8 @@ class NullBField final : public MagneticFieldProvider {
     return m_BField;
   }
 
-  /// @copydoc BFieldBase::getFieldGradient(const
-  /// Vector3&,ActsMatrix<3,3>&,BFieldBase::Cache&)
+  /// @copydoc MagneticFieldProvider::getFieldGradient(const
+  /// Vector3&,ActsMatrix<3,3>&,MagneticFieldProvider::Cache&)
   ///
   /// @note The @p position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
@@ -66,7 +68,7 @@ class NullBField final : public MagneticFieldProvider {
     return m_BField;
   }
 
-  /// @copydoc BFieldBase::makeCache(const MagneticFieldContext&)
+  /// @copydoc MagneticFieldProvider::makeCache(const MagneticFieldContext&)
   Acts::MagneticFieldProvider::Cache makeCache(
       const Acts::MagneticFieldContext& mctx) const override {
     return Acts::MagneticFieldProvider::Cache::make<Cache>(mctx);
