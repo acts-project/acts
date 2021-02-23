@@ -99,19 +99,21 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
     // Sort the space points
     std::sort(spacePointsOnTrack.begin(), spacePointsOnTrack.end(),
               [](const SimSpacePoint& lhs, const SimSpacePoint& rhs) {
-                return std::hypot(lhs.r(), lhs.z()) < std::hypot(rhs.r(), rhs.z());
+                return std::hypot(lhs.r(), lhs.z()) <
+                       std::hypot(rhs.r(), rhs.z());
               });
     // Loop over the found space points to find seeds with simple selection
-    for (size_t ib = 0; ib < spacePointsOnTrack.size() -2 ; ++ib) {
-      for (size_t im = ib + 1; im < spacePointsOnTrack.size()-1; ++im) {
+    for (size_t ib = 0; ib < spacePointsOnTrack.size() - 2; ++ib) {
+      for (size_t im = ib + 1; im < spacePointsOnTrack.size() - 1; ++im) {
         for (size_t it = im + 1; it < spacePointsOnTrack.size(); ++it) {
-	  double bSpacePointR = std::hypot(spacePointsOnTrack[ib].r(), spacePointsOnTrack[ib].z());
-	  double mSpacePointR = std::hypot(spacePointsOnTrack[im].r(), spacePointsOnTrack[im].z());
-	  double tSpacePointR = std::hypot(spacePointsOnTrack[it].r(), spacePointsOnTrack[it].z());
-          double bmDeltaR =
-              std::abs(mSpacePointR  - bSpacePointR);
-          double mtDeltaR =
-              std::abs(tSpacePointR - mSpacePointR);
+          double bSpacePointR = std::hypot(spacePointsOnTrack[ib].r(),
+                                           spacePointsOnTrack[ib].z());
+          double mSpacePointR = std::hypot(spacePointsOnTrack[im].r(),
+                                           spacePointsOnTrack[im].z());
+          double tSpacePointR = std::hypot(spacePointsOnTrack[it].r(),
+                                           spacePointsOnTrack[it].z());
+          double bmDeltaR = std::abs(mSpacePointR - bSpacePointR);
+          double mtDeltaR = std::abs(tSpacePointR - mSpacePointR);
           if (bmDeltaR >= m_cfg.deltaRMin and bmDeltaR <= m_cfg.deltaRMax and
               mtDeltaR >= m_cfg.deltaRMin and mtDeltaR <= m_cfg.deltaRMax) {
             seeds.emplace_back(spacePointsOnTrack[ib], spacePointsOnTrack[im],
@@ -143,6 +145,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       std::copy(sps.begin(), sps.end(), std::back_inserter(spacePoints));
     }
     seeds = createSeeds(protoTracks, spacePoints);
+    std::cout << "create " << seeds.size() << std::endl;
   }
 
   TrackParametersContainer trackParameters;
