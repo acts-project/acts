@@ -91,7 +91,7 @@ int runDigitizationExample(
   auto particleReaderCfg = setupParticleReading(vm, sequencer);
 
   auto digiCfg = Digitization::AlgorithmConfig(
-	  vm, readDigiConfigFromJson(vm["digi-config-file"].as<std::string>()));
+      vm, readDigiConfigFromJson(vm["digi-config-file"].as<std::string>()));
   digiCfg.inputSimHits = simHitReaderCfg.outputSimHits;
   digiCfg.trackingGeometry = tGeometry;
   digiCfg.randomNumbers = randomNumbers;

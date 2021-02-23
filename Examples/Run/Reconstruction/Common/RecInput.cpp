@@ -81,7 +81,8 @@ ActsExamples::Digitization::AlgorithmConfig setupDigitization(
   auto logLevel = Options::readLogLevel(vars);
 
   auto digiCfg = ActsExamples::Digitization::AlgorithmConfig(
-	  vars, ActsExamples::readDigiConfigFromJson(vars["digi-config-file"].as<std::string>()));
+      vars, ActsExamples::readDigiConfigFromJson(
+                vars["digi-config-file"].as<std::string>()));
   // Common options for digitization
   digiCfg.inputSimHits = inputSimHits;
   digiCfg.randomNumbers = rnd;

@@ -98,15 +98,17 @@ makeSmearFunctionForType(SmearingTypes smearingType, const double* parameters) {
 
 }  // namespace
 
-ActsExamples::Digitization::AlgorithmConfig::AlgorithmConfig(const Options::Variables &vars, Acts::GeometryHierarchyMap<DigitizationConfig> &&digiCfgs)
-  : isSimpleSmearer(vars["digi-smear"].as<bool>())
-{
+ActsExamples::Digitization::AlgorithmConfig::AlgorithmConfig(
+    const Options::Variables& vars,
+    Acts::GeometryHierarchyMap<DigitizationConfig>&& digiCfgs)
+    : isSimpleSmearer(vars["digi-smear"].as<bool>()) {
   digitizationConfigs = std::move(digiCfgs);
   if (isSimpleSmearer)
     smearingConfig(vars);
 }
 
-void ActsExamples::Digitization::AlgorithmConfig::smearingConfig(const Options::Variables &variables) {
+void ActsExamples::Digitization::AlgorithmConfig::smearingConfig(
+    const Options::Variables& variables) {
   ACTS_LOCAL_LOGGER(
       Acts::getDefaultLogger("SmearingOptions", Acts::Logging::INFO));
 
@@ -129,7 +131,9 @@ void ActsExamples::Digitization::AlgorithmConfig::smearingConfig(const Options::
   }
 
   if (not variables["digi-config-file"].as<std::string>().empty()) {
-    ACTS_WARNING("Smearing configuration on command-line will override .json configuration!");
+    ACTS_WARNING(
+        "Smearing configuration on command-line will override .json "
+        "configuration!");
   }
 
   auto indices =

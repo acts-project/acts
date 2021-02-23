@@ -19,13 +19,13 @@ namespace ActsExamples {
 namespace Digitization {
 
 class AlgorithmConfig {
-public:
+ public:
+  AlgorithmConfig(const Options::Variables &vars)
+      : AlgorithmConfig(vars,
+                        Acts::GeometryHierarchyMap<DigitizationConfig>()){};
 
-  AlgorithmConfig(const Options::Variables &vars) :
-    AlgorithmConfig(vars, Acts::GeometryHierarchyMap<DigitizationConfig>())
-    {};
-
-  AlgorithmConfig(const Options::Variables &vars, Acts::GeometryHierarchyMap<DigitizationConfig> &&digiCfgs);
+  AlgorithmConfig(const Options::Variables &vars,
+                  Acts::GeometryHierarchyMap<DigitizationConfig> &&digiCfgs);
 
   /// Input collection of simulated hits.
   std::string inputSimHits = "simhits";
@@ -48,11 +48,9 @@ public:
   /// The digitizers per GeometryIdentifiers
   Acts::GeometryHierarchyMap<DigitizationConfig> digitizationConfigs;
 
-private:
-
+ private:
   // Private initializer for SmearingAlgorithm
   void smearingConfig(const Options::Variables &vars);
-
 };
 }  // namespace Digitization
 }  // namespace ActsExamples
