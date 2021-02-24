@@ -88,8 +88,8 @@ void ActsExamples::from_json(const nlohmann::json& j,
   }
 }
 
-void ActsExamples::to_json(
-    nlohmann::json& j, const ActsExamples::GeometricConfig& gdc) {
+void ActsExamples::to_json(nlohmann::json& j,
+                           const ActsExamples::GeometricConfig& gdc) {
   std::vector<size_t> indices;
   for (const auto& idx : gdc.indices) {
     indices.push_back(static_cast<size_t>(idx));
@@ -149,7 +149,6 @@ void ActsExamples::from_json(const nlohmann::json& j,
     from_json(jsdc, dc.smearingDigiConfig);
   }
 }
-
 
 Acts::GeometryHierarchyMap<ActsExamples::DigiComponentsConfig>
 ActsExamples::readDigiConfigFromJson(const std::string& path) {
