@@ -85,7 +85,9 @@ class EigenStepper {
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
-          fieldCache(mctx),
+          fieldCache(
+              MagneticFieldProvider::Cache::make<typename bfield_t::Cache>(
+                  mctx)),
           geoContext(gctx) {
       pars.template segment<3>(eFreePos0) = par.position(gctx);
       pars.template segment<3>(eFreeDir0) = par.unitDirection();
@@ -144,7 +146,7 @@ class EigenStepper {
     /// This caches the current magnetic field cell and stays
     /// (and interpolates) within it as long as this is valid.
     /// See step() code for details.
-    typename BField::Cache fieldCache;
+    MagneticFieldProvider::Cache fieldCache;
 
     /// The geometry context
     std::reference_wrapper<const GeometryContext> geoContext;
