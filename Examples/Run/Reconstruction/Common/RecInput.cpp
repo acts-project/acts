@@ -69,7 +69,7 @@ ActsExamples::CsvParticleReader::Config setupParticleReading(
   return particleReader;
 }
 
-ActsExamples::Digitization::AlgorithmConfig setupDigitization(
+ActsExamples::DigitizationConfig setupDigitization(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer,
     std::shared_ptr<const ActsExamples::RandomNumbers> rnd,
@@ -80,7 +80,7 @@ ActsExamples::Digitization::AlgorithmConfig setupDigitization(
   // Read some standard options
   auto logLevel = Options::readLogLevel(vars);
 
-  auto digiCfg = ActsExamples::Digitization::AlgorithmConfig(
+  auto digiCfg = ActsExamples::DigitizationConfig(
       vars, ActsExamples::readDigiConfigFromJson(
                 vars["digi-config-file"].as<std::string>()));
   // Common options for digitization
@@ -88,7 +88,7 @@ ActsExamples::Digitization::AlgorithmConfig setupDigitization(
   digiCfg.randomNumbers = rnd;
   digiCfg.trackingGeometry = trackingGeometry;
   sequencer.addAlgorithm(
-      Options::createDigitizationAlgorithm(digiCfg, logLevel));
+    ActsExamples::createDigitizationAlgorithm(digiCfg, logLevel));
 
   return digiCfg;
 }

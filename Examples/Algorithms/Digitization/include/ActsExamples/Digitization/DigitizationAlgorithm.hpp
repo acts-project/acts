@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
-#include "ActsExamples/Digitization/AlgorithmConfig.hpp"
+#include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
@@ -44,7 +44,7 @@ class DigitizationAlgorithm final : public BareAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  DigitizationAlgorithm(Digitization::AlgorithmConfig cfg,
+  DigitizationAlgorithm(DigitizationConfig cfg,
                         Acts::Logging::Level lvl);
 
   /// Build measurement from simulation hits at input.
@@ -64,7 +64,7 @@ class DigitizationAlgorithm final : public BareAlgorithm {
   ///
   /// @return the list of channels
   std::vector<ActsFatras::Channelizer::ChannelSegment> channelizing(
-      const GeometricDigitizationConfig& geoCfg, const SimHit& hit,
+      const GeometricConfig& geoCfg, const SimHit& hit,
       const Acts::Surface& surface, const Acts::GeometryContext& gctx,
       RandomEngine& rng) const;
 
@@ -77,7 +77,7 @@ class DigitizationAlgorithm final : public BareAlgorithm {
   ///
   /// @return the list of digitized parameters
   DigitizedParameters localParameters(
-      const GeometricDigitizationConfig& geoCfg,
+      const GeometricConfig& geoCfg,
       const std::vector<ActsFatras::Channelizer::ChannelSegment>& channels,
       RandomEngine& rng) const;
 
@@ -85,7 +85,7 @@ class DigitizationAlgorithm final : public BareAlgorithm {
   /// Support up to 4 dimensions.
   template <size_t kSmearDIM>
   struct CombinedDigitizer {
-    GeometricDigitizationConfig geometric;
+    GeometricConfig geometric;
     ActsFatras::BoundParametersSmearer<RandomEngine, kSmearDIM> smearing;
   };
 
@@ -95,7 +95,7 @@ class DigitizationAlgorithm final : public BareAlgorithm {
                                  CombinedDigitizer<4>>;
 
   /// Configuration of the Algorithm
-  Digitization::AlgorithmConfig m_cfg;
+  DigitizationConfig m_cfg;
   /// Digitizers within geometry hierarchy
   Acts::GeometryHierarchyMap<Digitizer> m_digitizers;
   /// Geometric digtizers
@@ -111,7 +111,7 @@ class DigitizationAlgorithm final : public BareAlgorithm {
   ///
   /// @return a variant of a Digitizer
   template <size_t kSmearDIM>
-  static Digitizer makeDigitizer(const DigitizationConfig& cfg) {
+  static Digitizer makeDigitizer(const DigiComponentsConfig& cfg) {
     CombinedDigitizer<kSmearDIM> impl;
     // Copy the geometric configuration
     impl.geometric = cfg.geometricDigiConfig;

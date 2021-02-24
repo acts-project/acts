@@ -22,7 +22,7 @@
 #include <type_traits>
 
 ActsExamples::SmearingAlgorithm::SmearingAlgorithm(
-    Digitization::AlgorithmConfig cfg, Acts::Logging::Level lvl)
+    DigitizationConfig cfg, Acts::Logging::Level lvl)
     : ActsExamples::BareAlgorithm("SmearingAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
   if (m_cfg.inputSimHits.empty()) {

@@ -24,7 +24,7 @@
 #include <type_traits>
 
 ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
-    Digitization::AlgorithmConfig cfg, Acts::Logging::Level lvl)
+    DigitizationConfig cfg, Acts::Logging::Level lvl)
     : ActsExamples::BareAlgorithm("DigitizationAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
   if (m_cfg.inputSimHits.empty()) {
@@ -59,7 +59,7 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
   std::vector<std::pair<Acts::GeometryIdentifier, Digitizer>> digitizerInput;
 
   for (size_t i = 0; i < m_cfg.digitizationConfigs.size(); ++i) {
-    GeometricDigitizationConfig geoCfg;
+    GeometricConfig geoCfg;
     Acts::GeometryIdentifier geoId = m_cfg.digitizationConfigs.idAt(i);
 
     const auto& digiCfg = m_cfg.digitizationConfigs.valueAt(i);
@@ -244,7 +244,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
 
 std::vector<ActsFatras::Channelizer::ChannelSegment>
 ActsExamples::DigitizationAlgorithm::channelizing(
-    const GeometricDigitizationConfig& geoCfg, const SimHit& hit,
+    const GeometricConfig& geoCfg, const SimHit& hit,
     const Acts::Surface& surface, const Acts::GeometryContext& gctx,
     RandomEngine& rng) const {
   Acts::Vector3 driftDir = geoCfg.drift(hit.position(), rng);
@@ -264,7 +264,7 @@ ActsExamples::DigitizationAlgorithm::channelizing(
 
 ActsExamples::DigitizedParameters
 ActsExamples::DigitizationAlgorithm::localParameters(
-    const GeometricDigitizationConfig& geoCfg,
+    const GeometricConfig& geoCfg,
     const std::vector<ActsFatras::Channelizer::ChannelSegment>& channels,
     RandomEngine& rng) const {
   DigitizedParameters dParameters;

@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
-#include "ActsExamples/Digitization/AlgorithmConfig.hpp"
+#include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/SmearingConfig.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
@@ -34,7 +34,7 @@ class SmearingAlgorithm final : public BareAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  SmearingAlgorithm(Digitization::AlgorithmConfig cfg,
+  SmearingAlgorithm(DigitizationConfig cfg,
                     Acts::Logging::Level lvl);
 
   /// Build measurement from simulation hits at input.
@@ -51,7 +51,7 @@ class SmearingAlgorithm final : public BareAlgorithm {
                    ActsFatras::BoundParametersSmearer<RandomEngine, 3u>,
                    ActsFatras::BoundParametersSmearer<RandomEngine, 4u>>;
 
-  Digitization::AlgorithmConfig m_cfg;
+  DigitizationConfig m_cfg;
   Acts::GeometryHierarchyMap<Smearer> m_smearers;
 
   /// Construct a fixed-size smearer from a configuration.

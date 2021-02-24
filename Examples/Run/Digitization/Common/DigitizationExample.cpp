@@ -90,7 +90,7 @@ int runDigitizationExample(
   // Read the particles
   auto particleReaderCfg = setupParticleReading(vm, sequencer);
 
-  auto digiCfg = Digitization::AlgorithmConfig(
+  auto digiCfg = DigitizationConfig(
       vm, readDigiConfigFromJson(vm["digi-config-file"].as<std::string>()));
   digiCfg.inputSimHits = simHitReaderCfg.outputSimHits;
   digiCfg.trackingGeometry = tGeometry;
@@ -112,7 +112,7 @@ int runDigitizationExample(
         std::make_shared<CsvMeasurementReader>(measReaderCfg, logLevel));
   } else {
     sequencer.addAlgorithm(
-        Options::createDigitizationAlgorithm(digiCfg, logLevel));
+        createDigitizationAlgorithm(digiCfg, logLevel));
   }
 
   // Write digitization output as ROOT files
@@ -127,7 +127,7 @@ int runDigitizationExample(
         joinPaths(outputDir, std::string(digiCfg.outputMeasurements) + ".root");
     measWriterRoot.boundIndices =
         Acts::GeometryHierarchyMap<std::vector<Acts::BoundIndices>>(
-            Options::getBoundIndices(digiCfg));
+            digiCfg.getBoundIndices());
     measWriterRoot.trackingGeometry = tGeometry;
     sequencer.addWriter(
         std::make_shared<RootMeasurementWriter>(measWriterRoot, logLevel));

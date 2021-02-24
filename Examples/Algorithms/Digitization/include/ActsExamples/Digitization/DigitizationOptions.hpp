@@ -23,20 +23,8 @@ void addDigitizationOptions(Description &desc);
 /// Read SmearingAlgorithm Config from the options.
 ///
 /// @param variables The variables to read from
-Digitization::AlgorithmConfig readSmearingConfig(const Variables &variables);
+DigitizationConfig readSmearingConfig(const Variables &variables);
 
-/// Read Digitization Config from the options.
-///
-/// @param variables The variables to read from
-Digitization::AlgorithmConfig readDigitizationConfig(
-    const Variables &variables);
-
-std::shared_ptr<ActsExamples::IAlgorithm> createDigitizationAlgorithm(
-    Digitization::AlgorithmConfig &cfg, Acts::Logging::Level lvl);
-
-std::vector<
-    std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
-getBoundIndices(ActsExamples::Digitization::AlgorithmConfig &cfg);
 
 }  // namespace Options
 }  // namespace ActsExamples
