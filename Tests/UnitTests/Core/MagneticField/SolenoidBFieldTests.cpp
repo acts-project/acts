@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(TestSolenoidBField) {
   cfg.bMagCenter = 2_T;
   SolenoidBField bField(cfg);
 
-  SolenoidBField::Cache cache(mfContext);
+  auto cache = bField.makeCache(mfContext);
   CHECK_CLOSE_ABS(bField.getField({0, 0, 0}, cache), Vector3(0, 0, 2.0_T),
                   1e-6_T);
 
