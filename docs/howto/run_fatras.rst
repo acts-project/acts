@@ -106,8 +106,7 @@ muons in a reasonable kinematic range are generated.
        --output-dir=data/sim_generic/single_muon \
        --output-csv=1 \
        --events=100 \
-       --bf-value=0 0 2 \
-       --digi-geometric-3d
+       --bf-value=0 0 2
 
 For each event, the following files will be created
 
@@ -138,7 +137,6 @@ particles.
        --select-eta=-3:3 \
        --select-pt=0.5: \
        --remove-neutral \
-       --bf-value=0 0 2 \
-       --digi-geometric-3d
+       --bf-value=0 0 2
 
 The output file structure will be the same as discussed above.
