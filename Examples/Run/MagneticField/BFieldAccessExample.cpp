@@ -32,7 +32,7 @@ namespace po = boost::program_options;
 using UniformDist = std::uniform_real_distribution<double>;
 using RandomEngine = std::mt19937;
 
-void accessStepWise(const Acts::BFieldProvider& bField,
+void accessStepWise(const Acts::MagneticFieldProvider& bField,
                     const Acts::MagneticFieldContext& bFieldContext,
                     size_t events, size_t theta_steps, double theta_0,
                     double theta_step, size_t phi_steps, double phi_0,
@@ -79,7 +79,7 @@ void accessStepWise(const Acts::BFieldProvider& bField,
   }
 }
 
-void accessRandom(const Acts::BFieldProvider& bField,
+void accessRandom(const Acts::MagneticFieldProvider& bField,
                   const Acts::MagneticFieldContext& bFieldContext,
                   size_t totalSteps, double radius) {
   std::cout << "[>>>] Start: random access pattern ... " << std::endl;

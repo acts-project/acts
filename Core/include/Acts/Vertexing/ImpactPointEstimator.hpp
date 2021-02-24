@@ -44,7 +44,7 @@ class ImpactPointEstimator {
     /// @brief The state constructor
     ///
     /// @param mctx The magnetic field context
-    State(BFieldProvider::Cache fieldCacheIn)
+    State(MagneticFieldProvider::Cache fieldCacheIn)
         : fieldCache(std::move(fieldCacheIn)) {}
     /// Magnetic field cache
     MagneticFieldProvider::Cache fieldCache;
@@ -55,7 +55,7 @@ class ImpactPointEstimator {
     ///
     /// @param bIn The magnetic field
     /// @param prop The propagator
-    Config(std::shared_ptr<BFieldProvider> bIn,
+    Config(std::shared_ptr<MagneticFieldProvider> bIn,
            std::shared_ptr<propagator_t> prop)
         : bField(std::move(bIn)), propagator(std::move(prop)) {}
 
@@ -67,7 +67,7 @@ class ImpactPointEstimator {
         : bField{std::make_shared<NullBField>()}, propagator(std::move(prop)) {}
 
     /// Magnetic field
-    std::shared_ptr<BFieldProvider> bField;
+    std::shared_ptr<MagneticFieldProvider> bField;
     /// Propagator
     std::shared_ptr<propagator_t> propagator;
     /// Max. number of iterations in Newton method

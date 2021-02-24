@@ -109,7 +109,7 @@ class IterativeVertexFinder {
 
   /// @struct State State struct
   struct State {
-    State(const BFieldProvider& field,
+    State(const MagneticFieldProvider& field,
           const Acts::MagneticFieldContext& magContext)
         : ipState(field.makeCache(magContext)),
           linearizerState(field.makeCache(magContext)),

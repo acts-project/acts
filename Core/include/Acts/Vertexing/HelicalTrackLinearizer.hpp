@@ -51,7 +51,7 @@ class HelicalTrackLinearizer {
     /// @brief The state constructor
     ///
     /// @param mctx The magnetic field context
-    State(BFieldProvider::Cache fieldCacheIn)
+    State(MagneticFieldProvider::Cache fieldCacheIn)
         : fieldCache(std::move(fieldCacheIn)) {}
     /// Magnetic field cache
     MagneticFieldProvider::Cache fieldCache;
@@ -63,7 +63,7 @@ class HelicalTrackLinearizer {
     ///
     /// @param bIn The magnetic field
     /// @param prop The propagator
-    Config(std::shared_ptr<BFieldProvider> bIn,
+    Config(std::shared_ptr<MagneticFieldProvider> bIn,
            std::shared_ptr<Propagator_t> prop)
         : bField(std::move(bIn)), propagator(std::move(prop)) {}
 
@@ -74,7 +74,7 @@ class HelicalTrackLinearizer {
         : bField{std::make_shared<NullBField>()}, propagator(std::move(prop)) {}
 
     // The magnetic field
-    std::shared_ptr<BFieldProvider> bField;
+    std::shared_ptr<MagneticFieldProvider> bField;
     // The propagator
     std::shared_ptr<Propagator_t> propagator;
 

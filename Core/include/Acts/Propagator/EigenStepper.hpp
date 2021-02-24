@@ -74,7 +74,7 @@ class EigenStepper {
     /// @note the covariance matrix is copied when needed
     template <typename charge_t>
     explicit State(const GeometryContext& gctx,
-                   BFieldProvider::Cache fieldCacheIn,
+                   MagneticFieldProvider::Cache fieldCacheIn,
                    const SingleBoundTrackParameters<charge_t>& par,
                    NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max(),
@@ -165,7 +165,7 @@ class EigenStepper {
   };
 
   /// Constructor requires knowledge of the detector's magnetic field
-  EigenStepper(std::shared_ptr<const BFieldProvider> bField);
+  EigenStepper(std::shared_ptr<const MagneticFieldProvider> bField);
 
   template <typename charge_t>
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
@@ -377,7 +377,7 @@ class EigenStepper {
 
  private:
   /// Magnetic field inside of the detector
-  std::shared_ptr<const BFieldProvider> m_bField;
+  std::shared_ptr<const MagneticFieldProvider> m_bField;
 
   /// Overstep limit: could/should be dynamic
   double m_overstepLimit = 100_um;

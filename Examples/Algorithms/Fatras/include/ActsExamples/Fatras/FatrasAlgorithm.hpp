@@ -40,7 +40,7 @@ class FatrasAlgorithm final : public BareAlgorithm {
     /// The tracking geometry that should be used.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// The magnetic field that should be used.
-    MagneticField magneticField;
+    std::shared_ptr<Acts::MagneticFieldProvider> magneticField;
 
     // tuning parameters
     /// Minimal absolute momentum for particles to be simulated.

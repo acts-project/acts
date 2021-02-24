@@ -9,7 +9,7 @@
 #include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/MagneticField/BFieldProvider.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/MagneticField/ScalableBFieldService.hpp"
@@ -78,8 +78,8 @@ void ActsExamples::Options::setupMagneticFieldServices(const Variables& vars,
   }
 }
 
-std::shared_ptr<Acts::BFieldProvider> ActsExamples::Options::readMagneticField(
-    const Variables& vars) {
+std::shared_ptr<Acts::MagneticFieldProvider>
+ActsExamples::Options::readMagneticField(const Variables& vars) {
   using namespace ActsExamples::detail;
   using boost::filesystem::path;
 

@@ -62,7 +62,7 @@ struct DirectedFitterFunctionImpl {
 ActsExamples::TrackFittingAlgorithm::TrackFitterFunction
 ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-    std::shared_ptr<const Acts::BFieldProvider> magneticField) {
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField) {
   Stepper stepper(std::move(magneticField));
   Acts::Navigator navigator(trackingGeometry);
   navigator.resolvePassive = false;
@@ -77,7 +77,7 @@ ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
 
 ActsExamples::TrackFittingAlgorithm::DirectedTrackFitterFunction
 ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
-    std::shared_ptr<const Acts::BFieldProvider> magneticField) {
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField) {
   // construct all components for the fitter
   Stepper stepper(std::move(magneticField));
   Acts::DirectNavigator navigator;

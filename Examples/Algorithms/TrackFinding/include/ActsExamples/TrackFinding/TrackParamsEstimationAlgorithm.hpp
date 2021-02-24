@@ -41,7 +41,7 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
     /// Tracking geometry for surface lookup.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// Magnetic field variant.
-    std::shared_ptr<const Acts::BFieldProvider> magneticField;
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
     /// The minimum magnetic field to trigger the track parameters estimation
     double bFieldMin = 0.1 * Acts::UnitConstants::T;
     /// Constant term of the loc0 resolution.

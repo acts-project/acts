@@ -57,8 +57,9 @@ class AtlasStepper {
     /// @param[in] ssize the steps size limitation
     /// @param [in] stolerance is the stepping tolerance
     template <typename Parameters>
-    State(const GeometryContext& gctx, BFieldProvider::Cache fieldCacheIn,
-          const Parameters& pars, NavigationDirection ndir = forward,
+    State(const GeometryContext& gctx,
+          MagneticFieldProvider::Cache fieldCacheIn, const Parameters& pars,
+          NavigationDirection ndir = forward,
           double ssize = std::numeric_limits<double>::max(),
           double stolerance = s_onSurfaceTolerance)
         : navDir(ndir),
@@ -299,7 +300,7 @@ class AtlasStepper {
     size_t debugMsgWidth = 50;
   };
 
-  AtlasStepper(std::shared_ptr<const BFieldProvider> bField)
+  AtlasStepper(std::shared_ptr<const MagneticFieldProvider> bField)
       : m_bField(std::move(bField)){};
 
   template <typename charge_t>
@@ -1347,7 +1348,7 @@ class AtlasStepper {
   }
 
  private:
-  std::shared_ptr<const BFieldProvider> m_bField;
+  std::shared_ptr<const MagneticFieldProvider> m_bField;
 
   /// Overstep limit: could/should be dynamic
   double m_overstepLimit = -50_um;

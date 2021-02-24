@@ -44,7 +44,7 @@ class FullBilloirVertexFitter {
     /// @brief The state constructor
     ///
     /// @param mctx The magnetic field context
-    State(BFieldProvider::Cache fieldCache)
+    State(MagneticFieldProvider::Cache fieldCache)
         : linearizerState(std::move(fieldCache)) {}
     /// The linearizer state
     typename Linearizer_t::State linearizerState;

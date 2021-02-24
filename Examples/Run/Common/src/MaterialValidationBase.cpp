@@ -45,7 +45,8 @@ namespace {
 /// @return a process code
 ActsExamples::ProcessCode setupPropagation(
     ActsExamples::Sequencer& sequencer,
-    std::shared_ptr<const Acts::BFieldProvider> bfield, po::variables_map& vm,
+    std::shared_ptr<const Acts::MagneticFieldProvider> bfield,
+    po::variables_map& vm,
     std::shared_ptr<ActsExamples::RandomNumbers> randomNumberSvc,
     std::shared_ptr<const Acts::TrackingGeometry> tGeometry) {
   // Get the log level

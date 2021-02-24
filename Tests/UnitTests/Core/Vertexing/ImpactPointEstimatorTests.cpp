@@ -40,7 +40,7 @@ using Estimator =
 const Acts::GeometryContext geoContext;
 const Acts::MagneticFieldContext magFieldContext;
 
-Acts::BFieldProvider::Cache magFieldCache() {
+Acts::MagneticFieldProvider::Cache magFieldCache() {
   return NullBField{}.makeCache(magFieldContext);
 }
 
