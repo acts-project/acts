@@ -150,9 +150,10 @@ using PointLikeIndices = TupleSubsetIndices<IsPointLikeProcess, processes_t>;
 ///         Particle& particle,
 ///         std::vector<Particle>& generatedParticles) const
 ///
-/// For both cases, the output particle is modified in-place (if needed) and the
-/// return value indicates a break condition in the simulation, i.e. the
-/// particle is dead (true) or alive (false) after the interaction.
+/// For both continuous and point-like interactions, the output particle is
+/// modified in-place (if needed) and the return value indicates a break
+/// condition in the simulation, i.e. the particle is dead (true) or alive
+/// (false) after the interaction.
 ///
 /// @note If an interaction destroys the incoming particle, the process
 ///   simulation should indicate this via the break condition only and not
