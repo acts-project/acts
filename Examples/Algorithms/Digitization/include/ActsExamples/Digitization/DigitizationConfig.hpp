@@ -30,15 +30,15 @@ namespace ActsExamples {
 /// Takes as an argument the position, and a random engine
 ///  @return drift direction in local 3D coordinates
 using DriftGenerator =
-    std::function<Acts::Vector3(const Acts::Vector3&, RandomEngine&)>;
+    std::function<Acts::Vector3(const Acts::Vector3 &, RandomEngine &)>;
 /// Takes as an argument the path length, the drift length, and a random engine
 /// @return a charge to which the threshold can be applied
 using ChargeGenerator = std::function<Acts::ActsScalar(
-    Acts::ActsScalar, Acts::ActsScalar, RandomEngine&)>;
+    Acts::ActsScalar, Acts::ActsScalar, RandomEngine &)>;
 /// Takes as an argument the clsuter size and an random engine
 /// @return a vector of uncorrelated covariance values
-using VarianceGenerator =
-    std::function<std::vector<Acts::ActsScalar>(size_t, size_t, RandomEngine&)>;
+using VarianceGenerator = std::function<std::vector<Acts::ActsScalar>(
+    size_t, size_t, RandomEngine &)>;
 
 /// Configuration struct for geometric digitization
 ///
@@ -51,21 +51,21 @@ struct GeometricConfig {
   std::vector<Acts::BoundIndices> indices = {};
   Acts::BinUtility segmentation;
   /// Drift generation
-  DriftGenerator drift = [](const Acts::Vector3&,
-                            RandomEngine&) -> Acts::Vector3 {
+  DriftGenerator drift = [](const Acts::Vector3 &,
+                            RandomEngine &) -> Acts::Vector3 {
     return Acts::Vector3(0., 0., 0.);
   };
   double thickness = 0.;
   /// Charge generation
   ChargeGenerator charge = [](Acts::ActsScalar path, Acts::ActsScalar,
-                              RandomEngine&) -> Acts::ActsScalar {
+                              RandomEngine &) -> Acts::ActsScalar {
     return path;
   };
   double threshold = 0.;
   /// Position and Covariance generation
   bool digital = false;
   VarianceGenerator variances =
-      [](size_t, size_t, RandomEngine&) -> std::vector<Acts::ActsScalar> {
+      [](size_t, size_t, RandomEngine &) -> std::vector<Acts::ActsScalar> {
     return {};
   };
 };
@@ -83,11 +83,12 @@ struct DigiComponentsConfig {
 class DigitizationConfig {
  public:
   DigitizationConfig(const Options::Variables &vars)
-      : DigitizationConfig(vars,
-                        Acts::GeometryHierarchyMap<DigiComponentsConfig>()){};
+      : DigitizationConfig(
+            vars, Acts::GeometryHierarchyMap<DigiComponentsConfig>()){};
 
-  DigitizationConfig(const Options::Variables &vars,
-                  Acts::GeometryHierarchyMap<DigiComponentsConfig> &&digiCfgs);
+  DigitizationConfig(
+      const Options::Variables &vars,
+      Acts::GeometryHierarchyMap<DigiComponentsConfig> &&digiCfgs);
 
   /// Input collection of simulated hits.
   std::string inputSimHits = "simhits";
@@ -111,7 +112,7 @@ class DigitizationConfig {
   Acts::GeometryHierarchyMap<DigiComponentsConfig> digitizationConfigs;
 
   std::vector<
-    std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
+      std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
   getBoundIndices();
 
  private:
@@ -120,6 +121,6 @@ class DigitizationConfig {
 };
 
 std::shared_ptr<ActsExamples::IAlgorithm> createDigitizationAlgorithm(
-  DigitizationConfig &cfg, Acts::Logging::Level lvl);
+    DigitizationConfig &cfg, Acts::Logging::Level lvl);
 
 }  // namespace ActsExamples

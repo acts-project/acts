@@ -60,4 +60,3 @@ void ActsExamples::Options::addDigitizationOptions(Description& desc) {
       "parameter for simple gauss, 3 for all others (1 parameter, 2 range "
       "values.");
 }
-

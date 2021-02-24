@@ -11,8 +11,8 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
+#include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "ActsExamples/Digitization/SmearingConfig.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
@@ -175,14 +175,13 @@ void ActsExamples::DigitizationConfig::smearingConfig(
     smearersInput.emplace_back(geoId, std::move(dcfg));
   }
   // set the smearer configuration from the prepared input
-  digitizationConfigs =
-      Acts::GeometryHierarchyMap<DigiComponentsConfig>(std::move(smearersInput));
+  digitizationConfigs = Acts::GeometryHierarchyMap<DigiComponentsConfig>(
+      std::move(smearersInput));
 }
 
 std::shared_ptr<ActsExamples::IAlgorithm>
-ActsExamples::createDigitizationAlgorithm(
-    ActsExamples::DigitizationConfig& cfg,
-    Acts::Logging::Level lvl) {
+ActsExamples::createDigitizationAlgorithm(ActsExamples::DigitizationConfig& cfg,
+                                          Acts::Logging::Level lvl) {
   if (cfg.isSimpleSmearer)
     return std::make_shared<SmearingAlgorithm>(cfg, lvl);
   else

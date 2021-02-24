@@ -25,6 +25,5 @@ void addDigitizationOptions(Description &desc);
 /// @param variables The variables to read from
 DigitizationConfig readSmearingConfig(const Variables &variables);
 
-
 }  // namespace Options
 }  // namespace ActsExamples

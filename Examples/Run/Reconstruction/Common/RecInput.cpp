@@ -88,7 +88,7 @@ ActsExamples::DigitizationConfig setupDigitization(
   digiCfg.randomNumbers = rnd;
   digiCfg.trackingGeometry = trackingGeometry;
   sequencer.addAlgorithm(
-    ActsExamples::createDigitizationAlgorithm(digiCfg, logLevel));
+      ActsExamples::createDigitizationAlgorithm(digiCfg, logLevel));
 
   return digiCfg;
 }

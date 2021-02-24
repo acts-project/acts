@@ -12,7 +12,6 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
-#include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -44,8 +43,7 @@ class DigitizationAlgorithm final : public BareAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  DigitizationAlgorithm(DigitizationConfig cfg,
-                        Acts::Logging::Level lvl);
+  DigitizationAlgorithm(DigitizationConfig cfg, Acts::Logging::Level lvl);
 
   /// Build measurement from simulation hits at input.
   ///
