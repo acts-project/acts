@@ -36,48 +36,45 @@ struct TupleIndexOf<T, std::tuple<U, Types...>> {
 
 // Construct an index sequence for a subset of the tuple elements.
 //
-// Whether an element is part of the subset is defined by a configurable
-// selector template struct. It must take the element type as its only template
-// parameter and must provide a static `Value` member value. If the value
-// evaluates to `true`, then the corresponding index will be part of the index
-// sequence.
+// Whether an element is part of the subset is defined by a the predicate
+// template type. It must take the element type as its only template parameter
+// and must provide a static `value` member value. If the value evaluates to
+// `true`, then the corresponding index will be part of the index sequence.
 //
 // Example: The tuple contains four elements, where all but the third one (i=2)
-// will be selected. This should lead to the following recursive expansion
+// should be selected. This leads to the following recursive expansion
 // where the index sequence of the subset is filled from the front.
 //
-//        TupleIndicesSubsetImpl<..., kCounter=4>          // select index=3
-//     -> TupleIndicesSubsetImpl<..., kCounter=3, 3>       // skip   index=2
-//     -> TupleIndicesSubsetImpl<..., kCounter=2, 3>       // select index=1
-//     -> TupleIndicesSubsetImpl<..., kCounter=1, 1, 3>    // select index=0
-//     -> TupleIndicesSubsetImpl<..., kCounter=0, 0, 1, 3> // terminate
+//        TupleFilterImpl<..., kCounter=4>          // select index=3
+//     -> TupleFilterImpl<..., kCounter=3, 3>       // skip   index=2
+//     -> TupleFilterImpl<..., kCounter=2, 3>       // select index=1
+//     -> TupleFilterImpl<..., kCounter=1, 1, 3>    // select index=0
+//     -> TupleFilterImpl<..., kCounter=0, 0, 1, 3> // terminate
 //
-template <template <typename> typename selector_t, typename tuple_t,
+template <template <typename> typename predicate_t, typename tuple_t,
           size_t kCounter, size_t... kIndices>
-struct TupleSubsetIndicesImpl {
+struct TupleFilterImpl {
   static constexpr auto kIndex = kCounter - 1u;
-  static constexpr bool elementSelection =
-      selector_t<std::tuple_element_t<kIndex, tuple_t>>::Value;
+  static constexpr bool kElementSelection =
+      predicate_t<std::tuple_element_t<kIndex, tuple_t>>::value;
   // recursive type if the element would be selected
-  using SelectElement =
-      typename TupleSubsetIndicesImpl<selector_t, tuple_t, kIndex, kIndex,
-                                      kIndices...>::Type;
+  using SelectElement = typename TupleFilterImpl<predicate_t, tuple_t, kIndex,
+                                                 kIndex, kIndices...>::Type;
   // recursive type if the element would be skipped
   using SkipElement =
-      typename TupleSubsetIndicesImpl<selector_t, tuple_t, kIndex,
-                                      kIndices...>::Type;
+      typename TupleFilterImpl<predicate_t, tuple_t, kIndex, kIndices...>::Type;
   // select recursive type based on the selector decision
-  using Type = std::conditional_t<elementSelection, SelectElement, SkipElement>;
+  using Type =
+      std::conditional_t<kElementSelection, SelectElement, SkipElement>;
 };
-template <template <typename> typename selector_t, typename tuple_t,
+template <template <typename> typename predicate_t, typename tuple_t,
           size_t... kIndices>
-struct TupleSubsetIndicesImpl<selector_t, tuple_t, 0u, kIndices...> {
+struct TupleFilterImpl<predicate_t, tuple_t, 0u, kIndices...> {
   using Type = std::index_sequence<kIndices...>;
 };
-template <template <typename> typename selector_t, typename tuple_t>
-using TupleSubsetIndices =
-    typename TupleSubsetIndicesImpl<selector_t, tuple_t,
-                                    std::tuple_size_v<tuple_t>>::Type;
+template <template <typename> typename predicate_t, typename tuple_t>
+using TupleFilter = typename TupleFilterImpl<predicate_t, tuple_t,
+                                             std::tuple_size_v<tuple_t>>::Type;
 
 /// Check if the given type is a point-like process.
 ///
@@ -96,17 +93,17 @@ class IsPointLikeProcess {
   static TwoByte test(...);
 
  public:
-  static constexpr bool Value = (sizeof(test<process_t>(0)) == sizeof(OneByte));
+  static constexpr bool value = (sizeof(test<process_t>(0)) == sizeof(OneByte));
 };
 template <typename process_t>
 struct IsContinuousProcess {
-  static constexpr bool Value = not IsPointLikeProcess<process_t>::Value;
+  static constexpr bool value = not IsPointLikeProcess<process_t>::value;
 };
 
 template <typename processes_t>
-using ContinuousIndices = TupleSubsetIndices<IsContinuousProcess, processes_t>;
+using ContinuousIndices = TupleFilter<IsContinuousProcess, processes_t>;
 template <typename processes_t>
-using PointLikeIndices = TupleSubsetIndices<IsPointLikeProcess, processes_t>;
+using PointLikeIndices = TupleFilter<IsPointLikeProcess, processes_t>;
 
 }  // namespace detail
 
