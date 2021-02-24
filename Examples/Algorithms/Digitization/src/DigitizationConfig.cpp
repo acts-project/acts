@@ -85,11 +85,12 @@ void ActsExamples::DigitizationConfig::smearingConfig(
   // smearers configuration. this will be caught later on during the algorithm
   // construction.
 
-  auto volumes = variables["digi-smear-volume"].as<std::vector<int>>();
-  if (volumes.empty()) {
-    // no configured volumes are not considered an error at this stage
+  // no configured volumes are not considered an error at this stage
+  if (not variables.count("digi-smear-volume"))
     return;
-  }
+  auto volumes = variables["digi-smear-volume"].as<std::vector<int>>();
+  if (volumes.empty())
+    return;
 
   if (not variables["digi-config-file"].as<std::string>().empty()) {
     ACTS_WARNING(
