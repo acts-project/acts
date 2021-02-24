@@ -90,6 +90,11 @@ ActsExamples::DigitizationConfig setupDigitization(
   sequencer.addAlgorithm(
       ActsExamples::createDigitizationAlgorithm(digiCfg, logLevel));
 
+  if (not vars["dump-digi-config"].as<std::string>().empty()) {
+    writeDigiConfigToJson(digiCfg.digitizationConfigs,
+                          vars["dump-digi-config"].as<std::string>());
+  }
+
   return digiCfg;
 }
 

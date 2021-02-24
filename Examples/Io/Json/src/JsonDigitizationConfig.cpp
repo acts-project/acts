@@ -153,6 +153,9 @@ void ActsExamples::from_json(const nlohmann::json& j,
 Acts::GeometryHierarchyMap<ActsExamples::DigiComponentsConfig>
 ActsExamples::readDigiConfigFromJson(const std::string& path) {
   nlohmann::json djson;
+  if (path.empty()) {
+    return Acts::GeometryHierarchyMap<ActsExamples::DigiComponentsConfig>();
+  }
   auto in = std::ifstream(path, std::ifstream::in | std::ifstream::binary);
   if (in.good()) {
     // Get the json file for the configuration
@@ -160,4 +163,15 @@ ActsExamples::readDigiConfigFromJson(const std::string& path) {
     in.close();
   }  // TODO handle errors
   return DigiConfigConverter("digitization-configuration").fromJson(djson);
+}
+
+void ActsExamples::writeDigiConfigToJson(
+    const Acts::GeometryHierarchyMap<DigiComponentsConfig>& cfg,
+    const std::string& path) {
+  nlohmann::json djson{
+      DigiConfigConverter("digitization-configuration").toJson(cfg)};
+  std::ofstream outfile(path, std::ofstream::out | std::ofstream::binary);
+  // rely on exception for error handling
+  outfile.exceptions(std::ofstream::failbit | std::ofstream::badbit);
+  outfile << djson;
 }

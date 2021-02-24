@@ -34,6 +34,10 @@ void from_json(const nlohmann::json& j, DigiComponentsConfig& dc);
 Acts::GeometryHierarchyMap<DigiComponentsConfig> readDigiConfigFromJson(
     const std::string& path);
 
+void writeDigiConfigToJson(
+    const Acts::GeometryHierarchyMap<DigiComponentsConfig>& cfg,
+    const std::string& path);
+
 using DigiConfigContainer = Acts::GeometryHierarchyMap<DigiComponentsConfig>;
 using DigiConfigConverter =
     Acts::GeometryHierarchyMapJsonConverter<DigiComponentsConfig>;

@@ -45,7 +45,9 @@ void ActsExamples::Options::addDigitizationOptions(Description& desc) {
   opt("digi-config-file", value<std::string>()->default_value(""),
       "Configuration (.json) file for digitization description, overwrites "
       "smearing options input on command line.");
-  opt("digi-geometric-3d", bool_switch(),
+  opt("dump-digi-config", value<std::string>()->default_value(""),
+      "Path to .json file in which to dump digitization configuration.");
+  opt("digi-geometric-3d", bool_switch(),  // FIXME remove?
       "Geometric: Switching geometric digitisation in 3D on");
   opt("digi-smear", bool_switch(), "Smearing: Switching hit smearing on");
   opt("digi-smear-volume", value<std::vector<int>>(),

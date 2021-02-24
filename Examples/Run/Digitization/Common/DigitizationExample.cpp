@@ -96,6 +96,11 @@ int runDigitizationExample(
   digiCfg.trackingGeometry = tGeometry;
   digiCfg.randomNumbers = randomNumbers;
 
+  if (not vm["dump-digi-config"].as<std::string>().empty()) {
+    writeDigiConfigToJson(digiCfg.digitizationConfigs,
+                          vm["dump-digi-config"].as<std::string>());
+  }
+
   std::vector<
       std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
       bIndexInput;
