@@ -22,22 +22,21 @@
 namespace ActsFatras {
 namespace detail {
 
-/// Fatras simulator plugin for the Acts propagator.
+/// Fatras simulation actor for the Acts propagator.
 ///
-/// This plugin must be added to the action list of the propagator and is the
+/// This actor must be added to the action list of the propagator and is the
 /// equivalent to the `MaterialInteractor` for the reconstruction. This
 /// implements surface-based simulation of particle interactions with matter
-/// using a configurable physics lists as well as some parts of the decay
-/// simulation. The physics lists is called for every surface with valid
+/// using a configurable interaction list as well as some parts of the decay
+/// simulation. The interactions are simulated for every surface with valid
 /// material.
 ///
 /// @tparam generator_t random number generator
 /// @tparam decay_t decay module
-/// @tparam continuous_physics_t physics lists for continuous interactions
-/// @tparam pointlike_physics_t physics lists for point-like interactions
-/// @tparam hit_surface_selector_t sensitive hit surfaces selector
-template <typename generator_t, typename decay_t, typename continuous_physics_t,
-          typename pointlike_physics_t, typename hit_surface_selector_t>
+/// @tparam interactions_t interaction list
+/// @tparam hit_surface_selector_t selector for hit surfaces
+template <typename generator_t, typename decay_t, typename interactions_t,
+          typename hit_surface_selector_t>
 struct Interactor {
   using result_type = SimulationResult;
 
@@ -58,10 +57,8 @@ struct Interactor {
   generator_t *generator = nullptr;
   /// Decay module.
   decay_t decay;
-  /// Physics list detailing the simulated continuous interactions.
-  continuous_physics_t continuous;
-  /// Physics list detailing the simulated point-like interactions.
-  pointlike_physics_t pointlike;
+  /// Interaction list containing the simulated interactions.
+  interactions_t interactions;
   /// Selector for surfaces that should generate hits.
   hit_surface_selector_t selectHitSurface;
   /// Initial particle state.
@@ -220,7 +217,7 @@ struct Interactor {
   /// Prepare limits and process selection for the next point-like interaction.
   void armPointLikeInteractions(const Particle &particle,
                                 result_type &result) const {
-    auto selection = pointlike.arm(*generator, particle);
+    auto selection = interactions.armPointLike(*generator, particle);
     result.x0Limit = selection.x0Limit;
     result.l0Limit = selection.l0Limit;
     result.x0Process = selection.x0Process;
@@ -241,8 +238,9 @@ struct Interactor {
       const auto x0 = result.particle.pathInX0() + partialSlab.thicknessInX0();
       const auto l0 = result.particle.pathInX0() + partialSlab.thicknessInL0();
       bool retval = false;
-      if (continuous.run(*(this->generator), partialSlab, result.particle,
-                         result.generatedParticles)) {
+      if (interactions.runContinuous(*(this->generator), partialSlab,
+                                     result.particle,
+                                     result.generatedParticles)) {
         result.isAlive = false;
         retval = true;
       }
@@ -297,8 +295,8 @@ struct Interactor {
       const size_t process =
           (fracX0 < fracL0) ? result.x0Process : result.l0Process;
       // simulate the selected point-like process
-      if (pointlike.run(*generator, process, result.particle,
-                        result.generatedParticles)) {
+      if (interactions.runPointLike(*generator, process, result.particle,
+                                    result.generatedParticles)) {
         result.isAlive = false;
         return;
       }

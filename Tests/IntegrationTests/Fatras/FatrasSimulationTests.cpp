@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,11 +17,10 @@
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
-#include "ActsFatras/Kernel/PhysicsList.hpp"
-#include "ActsFatras/Kernel/PointLikePhysicsList.hpp"
+#include "ActsFatras/Kernel/InteractionList.hpp"
 #include "ActsFatras/Kernel/Simulator.hpp"
 #include "ActsFatras/Physics/Decay/NoDecay.hpp"
-#include "ActsFatras/Physics/StandardPhysicsLists.hpp"
+#include "ActsFatras/Physics/StandardInteractions.hpp"
 #include "ActsFatras/Selectors/ChargeSelectors.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
 #include "ActsFatras/Utilities/ParticleData.hpp"
@@ -69,20 +68,18 @@ using NeutralPropagator = Acts::Propagator<NeutralStepper, Navigator>;
 using Generator = std::ranlux48;
 // all charged particles w/ a mock-up physics list and hits everywhere
 using ChargedSelector = ActsFatras::ChargedSelector;
-using ChargedPhysicsList =
-    ActsFatras::PhysicsList<ActsFatras::detail::StandardScattering,
-                            SplitEnergyLoss>;
-using ChargePointLikePhysicsList = ActsFatras::PointLikePhysicsList<>;
-using ChargedSimulator = ActsFatras::ParticleSimulator<
-    ChargedPropagator, ChargedPhysicsList, ChargePointLikePhysicsList,
-    ActsFatras::EverySurface, ActsFatras::NoDecay>;
+using ChargedInteractions =
+    ActsFatras::InteractionList<ActsFatras::detail::StandardScattering,
+                                SplitEnergyLoss>;
+using ChargedSimulator =
+    ActsFatras::ParticleSimulator<ChargedPropagator, ChargedInteractions,
+                                  ActsFatras::EverySurface,
+                                  ActsFatras::NoDecay>;
 // all neutral particles w/o physics and no hits
 using NeutralSelector = ActsFatras::NeutralSelector;
-using NeutralPhysicsList = ActsFatras::PhysicsList<>;
-using NeutralPointLikePhysicsList = ActsFatras::PointLikePhysicsList<>;
+using NeutralInteractions = ActsFatras::InteractionList<>;
 using NeutralSimulator =
-    ActsFatras::ParticleSimulator<NeutralPropagator, NeutralPhysicsList,
-                                  NeutralPointLikePhysicsList,
+    ActsFatras::ParticleSimulator<NeutralPropagator, NeutralInteractions,
                                   ActsFatras::NoSurface, ActsFatras::NoDecay>;
 // full simulator type for charged and neutrals
 using Simulator = ActsFatras::Simulator<ChargedSelector, ChargedSimulator,
