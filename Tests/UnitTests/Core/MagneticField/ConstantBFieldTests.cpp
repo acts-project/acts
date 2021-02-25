@@ -45,7 +45,7 @@ BOOST_DATA_TEST_CASE(ConstantBField_components,
     const Vector3 pos(x, y, z);
     const ConstantBField BField(Btrue);
 
-    ConstantBField::Cache bCache(mfContext);
+    auto bCache = BField.makeCache(mfContext);
 
     BOOST_CHECK_EQUAL(Btrue, BField.getField(pos));
     BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0)));
@@ -61,7 +61,7 @@ BOOST_DATA_TEST_CASE(ConstantBField_components,
     const Vector3 Btrue(bx, by, bz);
     const Vector3 pos(x, y, z);
 
-    ConstantBField::Cache bCache(mfContext);
+    auto bCache = BField.makeCache(mfContext);
 
     BOOST_CHECK_EQUAL(Btrue, BField.getField(pos));
     BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0)));
@@ -94,7 +94,7 @@ BOOST_DATA_TEST_CASE(ConstantBField_update,
     const Vector3 pos(x, y, z);
     BField.setField(Btrue);
 
-    ConstantBField::Cache bCache(mfContext);
+    auto bCache = BField.makeCache(mfContext);
 
     BOOST_CHECK_EQUAL(Btrue, BField.getField(pos));
     BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0)));
@@ -110,7 +110,7 @@ BOOST_DATA_TEST_CASE(ConstantBField_update,
     const Vector3 pos(x, y, z);
     BField.setField(bx, by, bz);
 
-    ConstantBField::Cache bCache(mfContext);
+    auto bCache = BField.makeCache(mfContext);
 
     BOOST_CHECK_EQUAL(Btrue, BField.getField(pos));
     BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0)));

@@ -119,6 +119,18 @@ struct ParticleSimulator {
   }
 };
 
+/// A particle that failed to simulate.
+struct FailedParticle {
+  /// Initial particle state of the failed particle.
+  ///
+  /// This must store the full particle state to be able to handle secondaries
+  /// that are not in the input particle list. Otherwise they could not be
+  /// referenced.
+  Particle particle;
+  /// The associated error code for this particular failure case.
+  std::error_code error;
+};
+
 /// Multi-particle simulator.
 ///
 /// @tparam charged_selector_t Callable selector type for charged particles
@@ -128,18 +140,6 @@ struct ParticleSimulator {
 template <typename charged_selector_t, typename charged_simulator_t,
           typename neutral_selector_t, typename neutral_simulator_t>
 struct Simulator {
-  /// A particle that failed to simulate.
-  struct FailedParticle {
-    /// Initial particle state of the failed particle.
-    ///
-    /// This must store the full particle state to be able to handle secondaries
-    /// that are not in the input particle list. Otherwise they could not be
-    /// referenced.
-    Particle particle;
-    /// The associated error code for this particular failure case.
-    std::error_code error;
-  };
-
   charged_selector_t selectCharged;
   neutral_selector_t selectNeutral;
   charged_simulator_t charged;

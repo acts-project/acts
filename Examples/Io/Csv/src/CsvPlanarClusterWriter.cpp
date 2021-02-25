@@ -72,10 +72,6 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
 
     // encoded geometry identifier. same for all hits on the module
     hit.geometry_id = moduleGeoId.value();
-    // (partially) decoded geometry identifier
-    hit.volume_id = moduleGeoId.volume();
-    hit.layer_id = moduleGeoId.layer();
-    hit.module_id = moduleGeoId.sensitive();
 
     for (const auto& entry : moduleClusters) {
       const Acts::PlanarModuleCluster& cluster = entry.second;
@@ -96,8 +92,8 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
       // write local cell information
       cell.hit_id = hit.hit_id;
       for (auto& c : cluster.digitizationCells()) {
-        cell.ch0 = c.channel0;
-        cell.ch1 = c.channel1;
+        cell.channel0 = c.channel0;
+        cell.channel1 = c.channel1;
         // TODO store digitial timestamp once added to the cell definition
         cell.timestamp = 0;
         cell.value = c.data;

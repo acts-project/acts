@@ -17,6 +17,7 @@
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -74,7 +75,9 @@ class AtlasStepper {
           covariance(nullptr),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
-          fieldCache(mctx),
+          fieldCache(
+              MagneticFieldProvider::Cache::make<typename bfield_t::Cache>(
+                  mctx)),
           geoContext(gctx) {
       // The rest of this constructor is copy&paste of AtlasStepper::update() -
       // this is a nasty but working solution for the stepper state without
@@ -287,7 +290,7 @@ class AtlasStepper {
 
     /// It caches the current magnetic field cell and stays (and interpolates)
     ///  within as long as this is valid. See step() code for details.
-    typename bfield_t::Cache fieldCache;
+    MagneticFieldProvider::Cache fieldCache;
 
     /// Cache the geometry context
     std::reference_wrapper<const GeometryContext> geoContext;

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvPlanarClusterWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitWriter.hpp"
@@ -30,6 +31,10 @@ ActsExamples::CsvSimHitWriter::Config readCsvSimHitWriterConfig(
 
 /// Read the CSV planar cluster writer options.
 ActsExamples::CsvPlanarClusterWriter::Config readCsvPlanarClusterWriterConfig(
+    const Variables& vm);
+
+/// Read the CSV measurement writer options.
+ActsExamples::CsvMeasurementWriter::Config readCsvMeasurementWriterConfig(
     const Variables& vm);
 
 /// Read the CSV tracking geometry writer config.

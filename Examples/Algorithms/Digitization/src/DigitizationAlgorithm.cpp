@@ -12,6 +12,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -115,12 +116,12 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
   IndexSourceLinkContainer sourceLinks;
   MeasurementContainer measurements;
   ClusterContainer clusters;
-  IndexMultimap<ActsFatras::Barcode> hitParticlesMap;
-  IndexMultimap<Index> hitSimHitsMap;
+  IndexMultimap<ActsFatras::Barcode> measurementParticlesMap;
+  IndexMultimap<Index> measurementSimHitsMap;
   sourceLinks.reserve(simHits.size());
   measurements.reserve(simHits.size());
-  hitParticlesMap.reserve(simHits.size());
-  hitSimHitsMap.reserve(simHits.size());
+  measurementParticlesMap.reserve(simHits.size());
+  measurementSimHitsMap.reserve(simHits.size());
 
   // Setup random number generator
   auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
@@ -208,8 +209,8 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
 
             // The measurement container is unordered and the index under which
             // the measurement will be stored is known before adding it.
-            Index hitIdx = measurements.size();
-            IndexSourceLink sourceLink(moduleGeoId, hitIdx);
+            Index measurementIdx = measurements.size();
+            IndexSourceLink sourceLink(moduleGeoId, measurementIdx);
 
             // Add to output containers:
             // index map and source link container are geometry-ordered.
@@ -221,9 +222,11 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
             clusters.emplace_back(std::move(dParameters.cluster));
             // this digitization does not do hit merging so there is only one
             // mapping entry for each digitized hit.
-            hitParticlesMap.emplace_hint(hitParticlesMap.end(), hitIdx,
-                                         simHit.particleId());
-            hitSimHitsMap.emplace_hint(hitSimHitsMap.end(), hitIdx, simHitIdx);
+            measurementParticlesMap.emplace_hint(measurementParticlesMap.end(),
+                                                 measurementIdx,
+                                                 simHit.particleId());
+            measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
+                                               measurementIdx, simHitIdx);
           }
         },
         *digitizerItr);
@@ -233,9 +236,9 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
   ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
   ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
   ctx.eventStore.add(m_cfg.outputMeasurementParticlesMap,
-                     std::move(hitParticlesMap));
+                     std::move(measurementParticlesMap));
   ctx.eventStore.add(m_cfg.outputMeasurementSimHitsMap,
-                     std::move(hitSimHitsMap));
+                     std::move(measurementSimHitsMap));
   return ProcessCode::SUCCESS;
 }
 
@@ -259,7 +262,7 @@ ActsExamples::DigitizationAlgorithm::channelizing(
   return {};
 }
 
-ActsExamples::DigitizationAlgorithm::DigitizedParameters
+ActsExamples::DigitizedParameters
 ActsExamples::DigitizationAlgorithm::localParameters(
     const GeometricDigitizationConfig& geoCfg,
     const std::vector<ActsFatras::Channelizer::ChannelSegment>& channels,
@@ -317,35 +320,4 @@ ActsExamples::DigitizationAlgorithm::localParameters(
   }
 
   return dParameters;
-}
-
-ActsExamples::Measurement
-ActsExamples::DigitizationAlgorithm::createMeasurement(
-    const DigitizedParameters& dParams, const IndexSourceLink& isl) const {
-  switch (dParams.indices.size()) {
-    case 1u: {
-      auto [indices, par, cov] = measurementConstituents<1>(dParams);
-      return Acts::Measurement<IndexSourceLink, Acts::BoundIndices, 1>(
-          isl, indices, par, cov);
-    }
-    case 2u: {
-      auto [indices, par, cov] = measurementConstituents<2>(dParams);
-      return Acts::Measurement<IndexSourceLink, Acts::BoundIndices, 2>(
-          isl, indices, par, cov);
-    };
-    case 3u: {
-      auto [indices, par, cov] = measurementConstituents<3>(dParams);
-      return Acts::Measurement<IndexSourceLink, Acts::BoundIndices, 3>(
-          isl, indices, par, cov);
-    };
-    case 4u: {
-      auto [indices, par, cov] = measurementConstituents<4>(dParams);
-      return Acts::Measurement<IndexSourceLink, Acts::BoundIndices, 4>(
-          isl, indices, par, cov);
-    };
-  }
-  std::string errorMsg = "Invalid/mismatching measurement dimension: " +
-                         std::to_string(dParams.indices.size());
-
-  throw std::runtime_error(errorMsg.c_str());
 }
