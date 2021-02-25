@@ -146,7 +146,9 @@ class EigenStepper {
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
-          fieldCache(mctx),
+          fieldCache(
+              MagneticFieldProvider::Cache::make<typename bfield_t::Cache>(
+                  mctx)),
           geoContext(gctx) {
       // Init the jacobian matrix if needed
       if (par.covariance()) {
