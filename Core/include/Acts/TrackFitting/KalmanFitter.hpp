@@ -756,7 +756,8 @@ class KalmanFitter {
 
         // Not creating bound state here, so need manually reinitialize
         // jacobian
-        state.stepping.jacobian = BoundMatrix::Identity();
+        state.stepping.jacobian.template emplace<BoundMatrix>(
+            BoundMatrix::Identity());
 
         // Update state and stepper with material effects
         materialInteractor(surface, state, stepper);

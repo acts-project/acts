@@ -136,7 +136,9 @@ void testJacobianToGlobal(const Parameters& pars) {
   auto asMatrix = convertToMatrix(astepState.pVector);
 
   // cross comparison checks
-  CHECK_CLOSE_OR_SMALL(asMatrix, estepState.jacToGlobal, 1e-6, 1e-9);
+  CHECK_CLOSE_OR_SMALL(asMatrix,
+                       std::get<BoundToFreeMatrix>(estepState.jacToGlobal),
+                       1e-6, 1e-9);
 }
 
 /// This tests the jacobian of local curvilinear -> global

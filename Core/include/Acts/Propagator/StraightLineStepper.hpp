@@ -35,10 +35,31 @@ namespace Acts {
 class StraightLineStepper {
  public:
   using Jacobian = BoundMatrix;
-  using Covariance = BoundSymMatrix;
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+
+  /// Variant Jacobian:
+  /// free-bound, bound-bound, bound-free, free-free
+  using VariantJacobian = std::variant<FreeToBoundMatrix, BoundMatrix,
+                                       BoundToFreeMatrix, FreeMatrix>;
+
+  /// Variant Jacobian initial to global:
+  /// bound-free, free-free
+  using VariantJacobianToGlobal = std::variant<BoundToFreeMatrix, FreeMatrix>;
+
+  /// Variant covariance:
+  /// bound, free
+  using VariantCovariance = std::variant<BoundSymMatrix, FreeSymMatrix>;
+
+  /// A bound state to a surface with its associated jacobian from last
+  /// set/reset
+  using BoundState = std::tuple<BoundTrackParameters, Jacobian, ActsScalar>;
+
+  /// A curvilinear state with its associated jacobian from last set/reset
   using CurvilinearState =
-      std::tuple<CurvilinearTrackParameters, Jacobian, double>;
+      std::tuple<CurvilinearTrackParameters, Jacobian, ActsScalar>;
+
+  /// A free state with its associated jacobian from last set/reset
+  using FreeState = std::tuple<FreeTrackParameters, Jacobian, ActsScalar>;
+
   using BField = NullBField;
 
   /// State for track parameter propagation
@@ -84,30 +105,31 @@ class StraightLineStepper {
       }
     }
 
-    /// Jacobian from local to the global frame
-    BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
-
-    /// Pure transport jacobian part from runge kutta integration
-    FreeMatrix jacTransport = FreeMatrix::Identity();
-
-    /// The full jacobian of the transport entire transport
-    Jacobian jacobian = Jacobian::Identity();
-
-    /// The propagation derivative
-    FreeVector derivative = FreeVector::Zero();
-
     /// Internal free vector parameters
     FreeVector pars = FreeVector::Zero();
 
     /// The charge as the free vector can be 1/p or q/p
     double q = 1.;
 
-    /// Boolean to indiciate if you need covariance transport
-    bool covTransport = false;
-    Covariance cov = Covariance::Zero();
-
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
+
+    // Covariance matrix (and indicator)
+    /// associated with the initial error on track parameters
+    bool covTransport = false;
+    VariantCovariance cov;
+
+    /// The full jacobian of the transport entire transport
+    VariantJacobian jacobian;
+
+    /// Jacobian from local to the global frame, allocate maximum
+    VariantJacobianToGlobal jacToGlobal;
+
+    /// Pure transport jacobian part from runge kutta integration
+    FreeMatrix jacTransport = FreeMatrix::Identity();
+
+    /// The propagation derivative
+    FreeVector derivative = FreeVector::Zero();
 
     /// accummulated path length state
     double pathAccumulated = 0.;
@@ -293,7 +315,7 @@ class StraightLineStepper {
   /// @param [in,out] state State object that will be updated
   /// @param [in] pars Parameters that will be written into @p state
   void update(State& state, const FreeVector& parameters,
-              const Covariance& covariance) const;
+              const BoundSymMatrix& covariance) const;
 
   /// Method to update momentum, direction and p
   ///

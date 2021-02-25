@@ -11,6 +11,7 @@
 // Workaround for building on clang+libstdc++
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
@@ -25,6 +26,7 @@
 #include <cmath>
 #include <functional>
 #include <limits>
+#include <variant>
 
 namespace Acts {
 
@@ -46,12 +48,31 @@ template <typename extensionlist_t = StepperExtensionList<DefaultExtension>,
           typename auctioneer_t = detail::VoidAuctioneer>
 class EigenStepper {
  public:
-  /// Jacobian, Covariance and State defintions
   using Jacobian = BoundMatrix;
-  using Covariance = BoundSymMatrix;
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+
+  /// Variant Jacobian:
+  /// free-bound, bound-bound, bound-free, free-free
+  using VariantJacobian = std::variant<FreeToBoundMatrix, BoundMatrix,
+                                       BoundToFreeMatrix, FreeMatrix>;
+
+  /// Variant Jacobian initial to global:
+  /// bound-free, free-free
+  using VariantJacobianToGlobal = std::variant<BoundToFreeMatrix, FreeMatrix>;
+
+  /// Variant covariance:
+  /// bound, free
+  using VariantCovariance = std::variant<BoundSymMatrix, FreeSymMatrix>;
+
+  /// A bound state to a surface with its associated jacobian from last
+  /// set/reset
+  using BoundState = std::tuple<BoundTrackParameters, Jacobian, ActsScalar>;
+
+  /// A curvilinear state with its associated jacobian from last set/reset
   using CurvilinearState =
-      std::tuple<CurvilinearTrackParameters, Jacobian, double>;
+      std::tuple<CurvilinearTrackParameters, Jacobian, ActsScalar>;
+
+  /// A free state with its associated jacobian from last set/reset
+  using FreeState = std::tuple<FreeTrackParameters, Jacobian, ActsScalar>;
 
   /// @brief State for track parameter propagation
   ///
@@ -96,8 +117,43 @@ class EigenStepper {
         const auto& surface = par.referenceSurface();
         // set the covariance transport flag to true and copy
         covTransport = true;
-        cov = BoundSymMatrix(*par.covariance());
+        cov.emplace<BoundSymMatrix>(*par.covariance());
         jacToGlobal = surface.jacobianLocalToGlobal(gctx, par.parameters());
+      }
+    }
+
+    /// Constructor from initial free track parameters
+    ///
+    /// @tparam charge_t Type of the free parameter charge
+    ///
+    /// @param [in] gctx is the context object for the geometry
+    /// @param [in] mctx is the context object for the magnetic field
+    /// @param [in] par The track parameters at start
+    /// @param [in] ndir The navigation direciton w.r.t momentum
+    /// @param [in] ssize is the maximum step size
+    /// @param [in] stolerance is the stepping tolerance
+    ///
+    /// @note the covariance matrix is copied when needed
+    template <typename charge_t>
+    explicit State(const GeometryContext& gctx,
+                   const MagneticFieldContext& mctx,
+                   const SingleFreeTrackParameters<charge_t>& par,
+                   NavigationDirection ndir = forward,
+                   double ssize = std::numeric_limits<double>::max(),
+                   double stolerance = s_onSurfaceTolerance)
+        : pars(par.parameters()),
+          q(par.charge()),
+          navDir(ndir),
+          stepSize(ndir * std::abs(ssize)),
+          tolerance(stolerance),
+          fieldCache(mctx),
+          geoContext(gctx) {
+      // Init the jacobian matrix if needed
+      if (par.covariance()) {
+        // set the covariance transport flag to true and copy
+        covTransport = true;
+        cov.emplace<FreeSymMatrix>(*par.covariance());
+        jacToGlobal = FreeSymMatrix::Identity();
       }
     }
 
@@ -107,19 +163,19 @@ class EigenStepper {
     /// The charge as the free vector can be 1/p or q/p
     double q = 1.;
 
-    /// Covariance matrix (and indicator)
-    /// associated with the initial error on track parameters
-    bool covTransport = false;
-    Covariance cov = Covariance::Zero();
-
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
 
-    /// The full jacobian of the transport entire transport
-    Jacobian jacobian = Jacobian::Identity();
+    /// Covariance matrix (and indicator)
+    /// associated with the initial error on track parameters
+    bool covTransport = false;
+    VariantCovariance cov;
 
-    /// Jacobian from local to the global frame
-    BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
+    /// The full jacobian of the transport entire transport
+    VariantJacobian jacobian;
+
+    /// Jacobian from local to the global frame, allocate maximum
+    VariantJacobianToGlobal jacToGlobal;
 
     /// Pure transport jacobian part from runge kutta integration
     FreeMatrix jacTransport = FreeMatrix::Identity();
@@ -174,19 +230,6 @@ class EigenStepper {
                   NavigationDirection ndir = forward,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const;
-
-  /// @brief Resets the state
-  ///
-  /// @param [in, out] state State of the stepper
-  /// @param [in] boundParams Parameters in bound parametrisation
-  /// @param [in] cov Covariance matrix
-  /// @param [in] surface The reference surface of the bound parameters
-  /// @param [in] navDir Navigation direction
-  /// @param [in] stepSize Step size
-  void resetState(
-      State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
-      const Surface& surface, const NavigationDirection navDir = forward,
-      const double stepSize = std::numeric_limits<double>::max()) const;
 
   /// Get the field for the stepping, it checks first if the access is still
   /// within the Cell, and updates the cell if necessary.
@@ -326,12 +369,27 @@ class EigenStepper {
   CurvilinearState curvilinearState(State& state,
                                     bool transportCov = true) const;
 
+  /// @brief Resets the state
+  ///
+  /// @param [in, out] state State of the stepper
+  /// @param [in] boundParams Parameters in bound parametrisation
+  /// @param [in] cov Covariance matrix
+  /// @param [in] surface The reference surface of the bound parameters
+  /// @param [in] navDir Navigation direction
+  /// @param [in] stepSize Step size
+  void resetState(
+      State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
+      const Surface& surface, const NavigationDirection navDir = forward,
+      const double stepSize = std::numeric_limits<double>::max()) const;
+
   /// Method to update a stepper state to the some parameters
   ///
   /// @param [in,out] state State object that will be updated
   /// @param [in] pars Parameters that will be written into @p state
+  ///
+  /// @todo remove mixture of free and bound covariance ?
   void update(State& state, const FreeVector& parameters,
-              const Covariance& covariance) const;
+              const BoundSymMatrix& covariance) const;
 
   /// Method to update momentum, direction and p
   ///
@@ -340,7 +398,7 @@ class EigenStepper {
   /// @param [in] udirection the updated direction
   /// @param [in] up the updated momentum value
   void update(State& state, const Vector3& uposition, const Vector3& udirection,
-              double up, double time) const;
+              ActsScalar up, ActsScalar time) const;
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,

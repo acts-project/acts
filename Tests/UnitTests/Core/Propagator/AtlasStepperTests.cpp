@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(StepWithCovariance) {
   BOOST_CHECK_EQUAL(stepper.charge(state.stepping), charge);
 
   stepper.covarianceTransport(state.stepping);
-  BOOST_CHECK_NE(state.stepping.cov, cov);
+  BOOST_CHECK_NE(std::get<BoundSymMatrix>(state.stepping.cov), cov);
 }
 
 // test state reset method

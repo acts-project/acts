@@ -17,23 +17,26 @@ std::tuple<BoundTrackParameters, BoundMatrix, double>
 StraightLineStepper::boundState(State& state, const Surface& surface,
                                 bool transportCov) const {
   return detail::boundState(
-      state.geoContext, state.cov, state.jacobian, state.jacTransport,
-      state.derivative, state.jacToGlobal, state.pars,
-      state.covTransport and transportCov, state.pathAccumulated, surface);
+      state.geoContext, std::get<BoundSymMatrix>(state.cov),
+      std::get<BoundMatrix>(state.jacobian), state.jacTransport,
+      state.derivative, std::get<BoundToFreeMatrix>(state.jacToGlobal),
+      state.pars, state.covTransport and transportCov, state.pathAccumulated,
+      surface);
 }
 
 std::tuple<CurvilinearTrackParameters, BoundMatrix, double>
 StraightLineStepper::curvilinearState(State& state, bool transportCov) const {
   return detail::curvilinearState(
-      state.cov, state.jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, state.pars, state.covTransport and transportCov,
-      state.pathAccumulated);
+      std::get<BoundSymMatrix>(state.cov),
+      std::get<BoundMatrix>(state.jacobian), state.jacTransport,
+      state.derivative, std::get<BoundToFreeMatrix>(state.jacToGlobal),
+      state.pars, state.covTransport and transportCov, state.pathAccumulated);
 }
 
 void StraightLineStepper::update(State& state, const FreeVector& parameters,
-                                 const Covariance& covariance) const {
+                                 const BoundSymMatrix& covariance) const {
   state.pars = parameters;
-  state.cov = covariance;
+  state.cov.emplace<BoundSymMatrix>(covariance);
 }
 
 void StraightLineStepper::update(State& state, const Vector3& uposition,
@@ -46,16 +49,20 @@ void StraightLineStepper::update(State& state, const Vector3& uposition,
 }
 
 void StraightLineStepper::covarianceTransport(State& state) const {
-  detail::covarianceTransport(state.cov, state.jacobian, state.jacTransport,
-                              state.derivative, state.jacToGlobal,
+  detail::covarianceTransport(std::get<BoundSymMatrix>(state.cov),
+                              std::get<BoundMatrix>(state.jacobian),
+                              state.jacTransport, state.derivative,
+                              std::get<BoundToFreeMatrix>(state.jacToGlobal),
                               state.pars.template segment<3>(eFreeDir0));
 }
 
 void StraightLineStepper::covarianceTransport(State& state,
                                               const Surface& surface) const {
-  detail::covarianceTransport(state.geoContext, state.cov, state.jacobian,
-                              state.jacTransport, state.derivative,
-                              state.jacToGlobal, state.pars, surface);
+  detail::covarianceTransport(
+      state.geoContext, std::get<BoundSymMatrix>(state.cov),
+      std::get<BoundMatrix>(state.jacobian), state.jacTransport,
+      state.derivative, std::get<BoundToFreeMatrix>(state.jacToGlobal),
+      state.pars, surface);
 }
 
 void StraightLineStepper::resetState(State& state,
@@ -74,9 +81,10 @@ void StraightLineStepper::resetState(State& state,
   state.pathAccumulated = 0.;
 
   // Reinitialize the stepping jacobian
-  state.jacToGlobal =
+  auto jacToGlobal =
       surface.jacobianLocalToGlobal(state.geoContext, boundParams);
-  state.jacobian = BoundMatrix::Identity();
+  state.jacToGlobal.template emplace<BoundToFreeMatrix>(jacToGlobal);
+  state.jacobian.template emplace<BoundMatrix>(BoundMatrix::Identity());
   state.jacTransport = FreeMatrix::Identity();
   state.derivative = FreeVector::Zero();
 }

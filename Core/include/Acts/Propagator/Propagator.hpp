@@ -13,6 +13,9 @@
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 // clang-format on
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AbortList.hpp"
@@ -20,12 +23,10 @@
 #include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
-#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
-#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Definitions/Units.hpp"
 
 #include <cmath>
 #include <functional>
@@ -218,14 +219,11 @@ struct PropagatorOptions : public PropagatorPlainOptions {
 template <typename stepper_t, typename navigator_t = detail::VoidNavigator>
 class Propagator final {
   using Jacobian = BoundMatrix;
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
-  using CurvilinearState =
-      std::tuple<CurvilinearTrackParameters, Jacobian, double>;
 
-  static_assert(StepperStateConcept<typename stepper_t::State>,
-                "Stepper does not fulfill stepper concept.");
-  static_assert(StepperConcept<stepper_t>,
-                "Stepper does not fulfill stepper concept.");
+  // static_assert(StepperStateConcept<typename stepper_t::State>,
+  //              "Stepper does not fulfill stepper concept.");
+  // static_assert(StepperConcept<stepper_t>,
+  //              "Stepper does not fulfill stepper concept.");
 
  public:
   /// Type of the stepper in use for public scope

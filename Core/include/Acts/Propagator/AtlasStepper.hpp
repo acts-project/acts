@@ -36,10 +36,26 @@ using namespace Acts::UnitLiterals;
 class AtlasStepper {
  public:
   using Jacobian = BoundMatrix;
-  using Covariance = BoundSymMatrix;
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+
+  /// Variant Jacobian:
+  /// free-bound, bound-bound, bound-free, free-free
+  using VariantJacobian = std::variant<FreeToBoundMatrix, BoundMatrix,
+                                       BoundToFreeMatrix, FreeMatrix>;
+
+  /// Variant covariance:
+  /// bound, free
+  using VariantCovariance = std::variant<BoundSymMatrix, FreeSymMatrix>;
+
+  /// A bound state to a surface with its associated jacobian from last
+  /// set/reset
+  using BoundState = std::tuple<BoundTrackParameters, Jacobian, ActsScalar>;
+
+  /// A curvilinear state with its associated jacobian from last set/reset
   using CurvilinearState =
-      std::tuple<CurvilinearTrackParameters, Jacobian, double>;
+      std::tuple<CurvilinearTrackParameters, Jacobian, ActsScalar>;
+
+  /// A free state with its associated jacobian from last set/reset
+  using FreeState = std::tuple<FreeTrackParameters, Jacobian, ActsScalar>;
 
   /// @brief Nested State struct for the local caching
   struct State {
@@ -267,9 +283,10 @@ class AtlasStepper {
 
     // result
     double parameters[eBoundSize] = {0., 0., 0., 0., 0., 0.};
-    const Covariance* covariance;
-    Covariance cov = Covariance::Zero();
+    const BoundSymMatrix* covariance;
+    VariantCovariance cov;
     bool covTransport = false;
+
     double jacobian[eBoundSize * eBoundSize];
 
     // accummulated path length cache
@@ -590,12 +607,10 @@ class AtlasStepper {
     const auto qOverP = state.pVector[7];
 
     // The transport of the covariance
-    std::optional<Covariance> covOpt = std::nullopt;
+    std::optional<BoundSymMatrix> covOpt = std::nullopt;
     if (state.covTransport && transportCov) {
       covarianceTransport(state, surface);
-    }
-    if (state.cov != Covariance::Zero()) {
-      covOpt = state.cov;
+      covOpt = std::get<BoundSymMatrix>(state.cov);
     }
 
     // Fill the end parameters
@@ -632,12 +647,10 @@ class AtlasStepper {
     dir[eMom2] = state.pVector[6];
     const auto qOverP = state.pVector[7];
 
-    std::optional<Covariance> covOpt = std::nullopt;
+    std::optional<BoundSymMatrix> covOpt = std::nullopt;
     if (state.covTransport && transportCov) {
       covarianceTransport(state);
-    }
-    if (state.cov != Covariance::Zero()) {
-      covOpt = state.cov;
+      covOpt = std::get<BoundSymMatrix>(state.cov);
     }
 
     CurvilinearTrackParameters parameters(pos4, dir, qOverP, std::move(covOpt));
@@ -651,7 +664,7 @@ class AtlasStepper {
   /// @param [in,out] state The stepper state for
   /// @param [in] pars The new track parameters at start
   void update(State& state, const FreeVector& parameters,
-              const Covariance& covariance) const {
+              const BoundSymMatrix& covariance) const {
     Vector3 direction = parameters.template segment<3>(eFreeDir0).normalized();
     state.pVector[0] = parameters[eFreePos0];
     state.pVector[1] = parameters[eFreePos1];
@@ -844,7 +857,8 @@ class AtlasStepper {
 
     Eigen::Map<Eigen::Matrix<double, eBoundSize, eBoundSize, Eigen::RowMajor>>
         J(state.jacobian);
-    state.cov = J * (*state.covariance) * J.transpose();
+    state.cov.template emplace<BoundSymMatrix>(J * (*state.covariance) *
+                                               J.transpose());
   }
 
   /// Method for on-demand transport of the covariance
@@ -1101,7 +1115,8 @@ class AtlasStepper {
 
     Eigen::Map<Eigen::Matrix<double, eBoundSize, eBoundSize, Eigen::RowMajor>>
         J(state.jacobian);
-    state.cov = J * (*state.covariance) * J.transpose();
+    state.cov.template emplace<BoundSymMatrix>(J * (*state.covariance) *
+                                               J.transpose());
   }
 
   /// Perform the actual step on the state
