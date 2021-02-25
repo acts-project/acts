@@ -12,7 +12,7 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
-#include "ActsFatras/Kernel/Process.hpp"
+#include "ActsFatras/Kernel/ContinuousProcess.hpp"
 
 #include <array>
 #include <random>
@@ -55,11 +55,11 @@ struct Fixture {
 };
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(FatrasProcess)
+BOOST_AUTO_TEST_SUITE(FatrasContinuousProcess)
 
 BOOST_AUTO_TEST_CASE(NoSelectors) {
   Fixture f;
-  Process<MakeChildren> process;
+  ContinuousProcess<MakeChildren> process;
 
   // process should not abort
   BOOST_CHECK(not process(f.generator, f.slab, f.parent, f.children));
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(NoSelectors) {
 
 BOOST_AUTO_TEST_CASE(WithInputSelector) {
   Fixture f;
-  Process<MakeChildren, HighP> process;
+  ContinuousProcess<MakeChildren, HighP> process;
   process.selectInputParticle.minP = 10_GeV;
 
   // above threshold should not abort
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(WithInputSelector) {
 
 BOOST_AUTO_TEST_CASE(WithOutputSelector) {
   Fixture f;
-  Process<MakeChildren, EveryParticle, HighP, EveryParticle> process;
+  ContinuousProcess<MakeChildren, EveryParticle, HighP, EveryParticle> process;
   process.selectOutputParticle.minP = 10_GeV;
 
   // above threshold should not abort
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(WithOutputSelector) {
 
 BOOST_AUTO_TEST_CASE(WithChildSelector) {
   Fixture f;
-  Process<MakeChildren, EveryParticle, EveryParticle, HighP> process;
+  ContinuousProcess<MakeChildren, EveryParticle, EveryParticle, HighP> process;
   process.selectChildParticle.minP = 10_GeV;
 
   // all process should not abort regardless of child selection
