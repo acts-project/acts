@@ -43,15 +43,17 @@ You can run the seeding example with a comand like this:
 
    $ <build>/bin/ActsExampleSeedingGeneric \
 	--input-dir=data/sim_generic/ttbar_pu200 \
-	--output-dir=output_generic_ttbar_pu200 
+	--output-dir=output_generic_ttbar_pu200 \
+        --bf-constant-tesla=0:0:2
 
 After running this example, you should see something like this:
 
 .. code-block::
    
-   SeedingPerfo  INFO   Efficiency (nMatchedParticles / nAllParticles) = 0.917263
-   SeedingPerfo  INFO   Fake rate (nUnMatchedSeeds / nAllSeeds) =0.317763
-   SeedingPerfo  INFO   Duplication rate (nDuplicatedMatchedParticles / nMatchedParticles) =0.998711
+   SeedingPerfo   INFO      Efficiency (nMatchedParticles / nAllParticles) = 0.865521
+   SeedingPerfo   INFO      Fake rate (nUnMatchedSeeds / nAllSeeds) = 0.332444
+   SeedingPerfo   INFO      Duplication rate (nDuplicatedMatchedParticles / nMatchedParticles) = 0.997516
+   SeedingPerfo   INFO      Average number of duplicated seeds ((nMatchedSeeds - nMatchedParticles) / nMatchedParticles) = 7.8082
 
 This output shows the efficiency, fake rate, and duplicate rate for the selected particles.
 The example also generates output root files in the output directory.
@@ -75,7 +77,8 @@ To run the seeding example with the OpenData detector,
    $ <build>/bin/ActsExampleSeedingDD4hep \
     --dd4hep-input ../acts/Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml \
     --input-dir=data/sim_dd4hep/ttbar_pu200 \
-    --output-dir=output_dd4_ttbar_pu200
+    --output-dir=output_dd4_ttbar_pu200 \
+    --bf-constant-tesla=0:0:2
 
 The input dataset needs to be simulated with the same detector in advance.
 
