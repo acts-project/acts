@@ -171,19 +171,13 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   BOOST_CHECK_EQUAL(es.charge(esState), 0.);
 
   // Test with covariance matrix
-  Covariance cov = 8. * Covariance::Identity();
+  BoundSymMatrix cov = 8. * BoundSymMatrix::Identity();
   ncp = NeutralCurvilinearTrackParameters(makeVector4(pos, time), dir,
                                           1 / absMom, cov);
-<<<<<<< HEAD:Tests/UnitTests/Core/Propagator/StepperTests.cpp
-  esState = EigenStepper<>::State(tgContext, bField->makeCache(mfContext), ncp,
-                                  ndir, stepSize, tolerance);
-  BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
-=======
-  esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, ncp, ndir,
+  esState = EigenStepper<ConstantBField>::State(tgContext, bField->makeCache(mfContext), ncp, ndir,
                                                 stepSize, tolerance);
   BOOST_CHECK_NE(std::get<BoundToFreeMatrix>(esState.jacToGlobal),
                  BoundToFreeMatrix::Zero());
->>>>>>> 5288d904e... internal variants for Steppers:Tests/UnitTests/Core/Propagator/EigenStepperTests.cpp
   BOOST_CHECK(esState.covTransport);
   BOOST_CHECK_EQUAL(std::get<BoundSymMatrix>(esState.cov), cov);
 }
