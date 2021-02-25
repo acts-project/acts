@@ -35,26 +35,20 @@ namespace ActsFatras {
 /// Single particle simulator with a fixed propagator and physics list.
 ///
 /// @tparam generator_t random number generator
-/// @tparam continuous_physics_t physics lists for continuous interactions
-/// @tparam pointlike_physics_t physics lists for point-like interactions
-/// @tparam hit_surface_selector_t sensitive hit surfaces selector
+/// @tparam interactions_t interaction list
+/// @tparam hit_surface_selector_t selector for hit surfaces
 /// @tparam decay_t decay module
-template <typename propagator_t, typename continuous_physics_t,
-          typename pointlike_physics_t, typename hit_surface_selector_t,
-          typename decay_t>
+template <typename propagator_t, typename interactions_t,
+          typename hit_surface_selector_t, typename decay_t>
 struct ParticleSimulator {
   /// How and within which geometry to propagate the particle.
   propagator_t propagator;
-  /// Physics list detailing the simulated continuous interactions.
-  /// Will be copied to the per-call interactor.
-  continuous_physics_t continuous;
-  /// Physics list detailing the simulated point-like interactions.
-  /// Will be copied to the per-call interactor.
-  pointlike_physics_t pointlike;
-  /// Where hits are registiered. Will be copied to the per-call interactor.
-  hit_surface_selector_t selectHitSurface;
   /// Decay module.
   decay_t decay;
+  /// Interaction list containing the simulated interactions.
+  interactions_t interactions;
+  /// Selector for surfaces that should generate hits.
+  hit_surface_selector_t selectHitSurface;
   /// Local logger for debug output.
   std::shared_ptr<const Acts::Logger> localLogger = nullptr;
 
@@ -83,9 +77,8 @@ struct ParticleSimulator {
     assert(localLogger and "Missing local logger");
 
     // propagator-related additional types
-    using Interactor =
-        detail::Interactor<generator_t, decay_t, continuous_physics_t,
-                           pointlike_physics_t, hit_surface_selector_t>;
+    using Interactor = detail::Interactor<generator_t, decay_t, interactions_t,
+                                          hit_surface_selector_t>;
     using InteractorResult = typename Interactor::result_type;
     using Actions = Acts::ActionList<Interactor>;
     using Abort = Acts::AbortList<typename Interactor::ParticleNotAlive,
@@ -101,8 +94,7 @@ struct ParticleSimulator {
     auto &interactor = options.actionList.template get<Interactor>();
     interactor.generator = &generator;
     interactor.decay = decay;
-    interactor.continuous = continuous;
-    interactor.pointlike = pointlike;
+    interactor.interactions = interactions;
     interactor.selectHitSurface = selectHitSurface;
     interactor.initialParticle = particle;
     // use AnyCharge to be able to handle neutral and charged parameters
