@@ -13,11 +13,6 @@
 
 namespace ActsFatras {
 
-/// No-op particle selector that selects all particles.
-struct EveryParticle {
-  constexpr bool operator()(const Particle &) const { return true; }
-};
-
 /// A continuous simulation process based on a physics model plus selectors.
 ///
 /// @tparam physics_t is the physics model type
@@ -43,9 +38,8 @@ struct EveryParticle {
 ///
 /// @note The output and child particle selectors are identical unless the
 ///       child particle selector is explicitely specified.
-template <typename physics_t,
-          typename input_particle_selector_t = EveryParticle,
-          typename output_particle_selector_t = EveryParticle,
+template <typename physics_t, typename input_particle_selector_t,
+          typename output_particle_selector_t,
           typename child_particle_selector_t = output_particle_selector_t>
 struct ContinuousProcess {
   /// The physics interactions implementation.
