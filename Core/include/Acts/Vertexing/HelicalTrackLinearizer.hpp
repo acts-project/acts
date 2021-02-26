@@ -12,6 +12,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -51,9 +52,12 @@ class HelicalTrackLinearizer {
     /// @brief The state constructor
     ///
     /// @param mctx The magnetic field context
-    State(const Acts::MagneticFieldContext& mctx) : fieldCache(mctx) {}
+    State(const Acts::MagneticFieldContext& mctx)
+        : fieldCache(
+              MagneticFieldProvider::Cache::make<typename BField_t::Cache>(
+                  mctx)) {}
     /// Magnetic field cache
-    typename BField_t::Cache fieldCache;
+    MagneticFieldProvider::Cache fieldCache;
   };
 
   /// @brief Configuration struct
