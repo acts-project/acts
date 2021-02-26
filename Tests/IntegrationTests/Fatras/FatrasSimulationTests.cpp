@@ -21,7 +21,7 @@
 #include "ActsFatras/Kernel/Simulation.hpp"
 #include "ActsFatras/Physics/Decay/NoDecay.hpp"
 #include "ActsFatras/Physics/StandardInteractions.hpp"
-#include "ActsFatras/Selectors/ChargeSelectors.hpp"
+#include "ActsFatras/Selectors/ParticleSelectors.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
 #include "ActsFatras/Utilities/ParticleData.hpp"
 

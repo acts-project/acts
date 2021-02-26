@@ -13,9 +13,8 @@
 #include "ActsFatras/Physics/ElectroMagnetic/BetheBloch.hpp"
 #include "ActsFatras/Physics/ElectroMagnetic/BetheHeitler.hpp"
 #include "ActsFatras/Physics/ElectroMagnetic/Scattering.hpp"
-#include "ActsFatras/Selectors/ChargeSelectors.hpp"
 #include "ActsFatras/Selectors/KinematicCasts.hpp"
-#include "ActsFatras/Selectors/PdgSelectors.hpp"
+#include "ActsFatras/Selectors/ParticleSelectors.hpp"
 #include "ActsFatras/Selectors/SelectorHelpers.hpp"
 
 namespace ActsFatras {
