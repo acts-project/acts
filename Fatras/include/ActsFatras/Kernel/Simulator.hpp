@@ -81,7 +81,6 @@ struct ParticleSimulator {
       const Acts::GeometryContext &geoCtx,
       const Acts::MagneticFieldContext &magCtx, generator_t &generator,
       const Particle &particle) const {
-    assert(localLogger and "Missing local logger");
 
     // propagator-related additional types
     using Interactor = detail::Interactor<generator_t, decay_t, interactions_t,
