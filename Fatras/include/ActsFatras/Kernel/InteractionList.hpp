@@ -78,17 +78,27 @@ using TupleFilter = typename TupleFilterImpl<predicate_t, tuple_t,
 
 /// Check if the given type is a point-like process.
 ///
-/// Only checks for the existence of the `generatePathLimits` method using the
-/// method described in https://stackoverflow.com/a/257382 .
+/// Only checks for the existence of the templated `generatePathLimits` method
+/// using the method described in https://stackoverflow.com/a/257382 .
 template <typename process_t>
 class IsPointLikeProcess {
-  using OneByte = char;
+  struct OneByte {
+    char x[1];
+  };
   struct TwoByte {
-    char x[2];
+    char y[2];
+  };
+  struct MockUniformRandomBitGenerator {
+    using result_type = unsigned int;
+
+    static constexpr result_type min() { return 0u; }
+    static constexpr result_type max() { return 1u << 15u; }
+    constexpr result_type operator()() { return 0u; }
   };
 
   template <typename T>
-  static OneByte test(decltype(&T::generatePathLimits));
+  static OneByte test(
+      decltype(&T::template generatePathLimits<MockUniformRandomBitGenerator>));
   template <typename T>
   static TwoByte test(...);
 
@@ -117,6 +127,7 @@ using PointLikeIndices = TupleFilter<IsPointLikeProcess, processes_t>;
 /// multiple scattering or ionisation. Continous process types **must** provide
 /// a call operator with the following signature:
 ///
+///     template <typename generator_t>
 ///     bool
 ///     operator()(
 ///         generator_t& rng,
@@ -135,12 +146,14 @@ using PointLikeIndices = TupleFilter<IsPointLikeProcess, processes_t>;
 /// types **must** provide the following two member functions:
 ///
 ///     // generate X0/L0 limits
+///     template <typename generator_t>
 ///     std::pair<Scalar, Scalar>
 ///     generatePathLimits(
 ///         generator& rng,
 ///         const Particle& particle) const
 ///
 ///     // run the process simulation
+///     template <typename generator_t>
 ///     bool
 ///     run(
 ///         generator_t& rng,
