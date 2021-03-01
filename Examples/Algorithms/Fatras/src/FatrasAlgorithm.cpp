@@ -22,6 +22,7 @@
 #include "ActsFatras/Kernel/InteractionList.hpp"
 #include "ActsFatras/Kernel/Simulator.hpp"
 #include "ActsFatras/Physics/Decay/NoDecay.hpp"
+#include "ActsFatras/Physics/PhotonConversion/PhotonConversion.hpp"
 #include "ActsFatras/Physics/StandardInteractions.hpp"
 #include "ActsFatras/Selectors/KinematicCasts.hpp"
 #include "ActsFatras/Selectors/ParticleSelectors.hpp"
@@ -91,9 +92,10 @@ struct FatrasAlgorithmSimulationT final
   // neutral particles w/o physics and no hits
   using NeutralSelector =
       ActsFatras::CombineAnd<ActsFatras::NeutralSelector, CutPMin>;
+  using NeutralInteractions =
+      ActsFatras::InteractionList<ActsFatras::PhotonConversion>;
   using NeutralSimulator =
-      ActsFatras::ParticleSimulator<NeutralPropagator,
-                                    ActsFatras::InteractionList<>,
+      ActsFatras::ParticleSimulator<NeutralPropagator, NeutralInteractions,
                                     ActsFatras::NoSurface, ActsFatras::NoDecay>;
 
   // combined simulation type
@@ -131,6 +133,9 @@ struct FatrasAlgorithmSimulationT final
     }
     if (not cfg.emEnergyLossRadiation) {
       simulation.charged.interactions.template disable<StandardBetheHeitler>();
+    }
+    if (not cfg.emPhotonConversion) {
+      simulation.neutral.interactions.template disable<PhotonConversion>();
     }
 
     // configure hit surfaces for charged particles

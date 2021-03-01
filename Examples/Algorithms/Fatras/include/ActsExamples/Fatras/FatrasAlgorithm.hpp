@@ -51,6 +51,8 @@ class FatrasAlgorithm final : public BareAlgorithm {
     bool emEnergyLossIonisation = false;
     /// Simulate radiative energy loss of charged particles.
     bool emEnergyLossRadiation = false;
+    /// Simulate electron-positron pair production by photon conversion.
+    bool emPhotonConversion = false;
     /// Generate simulation hits on sensitive surfaces.
     bool generateHitsOnSensitive = false;
     /// Generate simulation hits on surfaces with associated material.
