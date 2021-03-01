@@ -65,7 +65,7 @@ run_example ActsExamplePropagationGeneric
 run_example ActsExamplePropagationPayload
 # TODO: Add TGeo propagation example (needs an input file + knowhow)
 
-# Run event generation examples in the configuration suggested by the tutorial
+# Run event generation examples as suggested by the Fatras tutorial
 run_example ActsExampleParticleGun \
                 --output-dir=data/gen/four_muons \
                 --output-csv \
