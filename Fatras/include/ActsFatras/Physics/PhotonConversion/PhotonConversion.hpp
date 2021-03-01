@@ -13,7 +13,6 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
-#include "ActsFatras/Utilities/ParticleData.hpp"
 
 #include <cmath>
 #include <limits>
@@ -21,12 +20,14 @@
 #include <vector>
 
 namespace ActsFatras {
+
 /// This class handles the photon conversion. It evaluates the distance
 /// after which the interaction will occur and the final state due the
 /// interaction itself.
 class PhotonConversion {
  public:
   using Scalar = ActsFatras::Particle::Scalar;
+
   /// Scaling factor of children energy
   Scalar childEnergyScaleFactor = 2.;
   /// Scaling factor for photon conversion probability
@@ -96,10 +97,9 @@ class PhotonConversion {
   Scalar screenFunction1(Scalar delta) const;
   Scalar screenFunction2(Scalar delta) const;
 
-  /// Electron mass
-  const Scalar m_electronMass = findMass(Acts::eElectron);
-  /// Lower energy threshold for produced children
-  const Scalar m_minimumMomentum = 2. * m_electronMass;
+  /// Electron mass. This is an static constant and not a member variable so the
+  /// struct has no internal state. Otherwise, the interaction list breaks.
+  static const Scalar kElectronMass;
 };
 
 inline Particle::Scalar PhotonConversion::screenFunction1(Scalar delta) const {
@@ -123,7 +123,7 @@ PhotonConversion::generatePathLimits(generator_t& generator,
 
   // Fast exit if not a photon or the energy is too low
   if (particle.pdg() != Acts::PdgParticle::eGamma ||
-      particle.absoluteMomentum() < m_minimumMomentum)
+      particle.absoluteMomentum() < (2 * kElectronMass))
     return std::make_pair(std::numeric_limits<Scalar>::infinity(),
                           std::numeric_limits<Scalar>::infinity());
 
@@ -180,7 +180,7 @@ Particle::Scalar PhotonConversion::generateFirstChildEnergyFraction(
   const Scalar deltaMax = exp((42.038 - FZ) * 0.1206) - 0.958;
 
   const Scalar deltaPreFactor = 136. / std::pow(m_Z, 1. / 3.);
-  const Scalar eps0 = m_electronMass / gammaMom;
+  const Scalar eps0 = kElectronMass / gammaMom;
   const Scalar deltaFactor = deltaPreFactor * eps0;
   const Scalar deltaMin = 4. * deltaFactor;
 
@@ -221,7 +221,7 @@ Particle::Vector3 PhotonConversion::generateChildDirection(
 
   // Following the Geant4 approximation from L. Urban
   // the azimutal angle
-  Scalar theta = m_electronMass / particle.energy();
+  Scalar theta = kElectronMass / particle.energy();
 
   std::uniform_real_distribution<Scalar> uniformDistribution{0., 1.};
   const Scalar u = -std::log(uniformDistribution(generator) *
@@ -250,8 +250,10 @@ Particle::Vector3 PhotonConversion::generateChildDirection(
 std::array<Particle, 2> PhotonConversion::generateChildren(
     const Particle& photon, Scalar childEnergy,
     const Particle::Vector3& childDirection) const {
+  using namespace Acts::UnitLiterals;
+
   // Calculate the child momentum
-  const Scalar massChild = m_electronMass;
+  const Scalar massChild = kElectronMass;
   const Scalar momentum1 =
       sqrt(childEnergy * childEnergy - massChild * massChild);
 
@@ -261,14 +263,19 @@ std::array<Particle, 2> PhotonConversion::generateChildren(
       momentum1 * childDirection;
   const Scalar momentum2 = vtmp.norm();
 
-  // Build the particles and store them
+  // The daughter particles are created with the explicit electron mass used in
+  // the calculations for consistency. Using the full Particle constructor with
+  // charge and mass also avoids an additional lookup in the internal data
+  // tables.
   std::array<Particle, 2> children = {
-      Particle(photon.particleId().makeDescendant(0), Acts::eElectron)
+      Particle(photon.particleId().makeDescendant(0), Acts::eElectron, -1_e,
+               kElectronMass)
           .setPosition4(photon.fourPosition())
           .setDirection(childDirection)
           .setAbsoluteMomentum(momentum1)
           .setProcess(ProcessType::ePhotonConversion),
-      Particle(photon.particleId().makeDescendant(1), Acts::ePositron)
+      Particle(photon.particleId().makeDescendant(1), Acts::ePositron, 1_e,
+               kElectronMass)
           .setPosition4(photon.fourPosition())
           .setDirection(childDirection)
           .setAbsoluteMomentum(momentum2)
@@ -286,7 +293,7 @@ bool PhotonConversion::run(generator_t& generator, Particle& particle,
 
   // Fast exit if momentum is too low
   const Scalar p = particle.absoluteMomentum();
-  if (p < m_minimumMomentum)
+  if (p < (2 * kElectronMass))
     return false;
 
   // Get one child energy
@@ -303,4 +310,5 @@ bool PhotonConversion::run(generator_t& generator, Particle& particle,
 
   return true;
 }
+
 }  // namespace ActsFatras
