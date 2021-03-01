@@ -65,9 +65,23 @@ run_example ActsExamplePropagationGeneric
 run_example ActsExamplePropagationPayload
 # TODO: Add TGeo propagation example (needs an input file + knowhow)
 
-# Run event generation examples
-run_example ActsExampleParticleGun
-run_example ActsExamplePythia8
+# Run event generation examples in the configuration suggested by the tutorial
+run_example ActsExampleParticleGun \
+                --output-dir=data/gen/four_muons \
+                --output-csv \
+                --gen-phi-degree=0:90 \
+                --gen-eta=-2:2 \
+                --gen-p-gev=1:5 \
+                --gen-pdg=13 \
+                --gen-randomize-charge \
+                --gen-nparticles=4
+run_example ActsExamplePythia8 \
+                --output-dir=data/gen/ttbar_mu140 \
+                --output-csv \
+                --rnd-seed=42 \
+                --gen-cms-energy-gev=14000 \
+                --gen-hard-process=Top:qqbar2ttbar=on \
+                --gen-npileup=140
 
 # Run Geantino recording example
 #
