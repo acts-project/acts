@@ -123,15 +123,14 @@ struct KalmanFitterResult {
   // Fitted states that the actor has handled.
   MultiTrajectory<source_link_t> fittedStates;
 
-  // Non measurement states that occur after the last measurement;
-  MultiTrajectory<source_link_t> endNonMeasurementStates;
-
   // This is the index of the 'tip' of the track stored in multitrajectory.
+  // This correspond to the last measurment state in the multitrajectory.
   // Since this KF only stores one trajectory, it is unambiguous.
   // SIZE_MAX is the start of a trajectory.
   size_t trackTip = SIZE_MAX;
 
-  // This is the index of the 'tip' of the non-measuremnt states stored in
+  // This is the index of the 'tip' of the states stored in multitrajectory.
+  // This correspond to the last state in the multitrajectory.
   // multitrajectory. Since this KF only stores one trajectory, it is
   // unambiguous. SIZE_MAX is the start of a trajectory.
   size_t endTip = SIZE_MAX;
@@ -489,25 +488,6 @@ class KalmanFitter {
         // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
-
-        // If holes and material interaction occured since
-        // the last measurement, store them in the MultiTrajectory.
-        if (result.endTip != SIZE_MAX) {
-          for (size_t i = 0; i <= result.endTip; i++) {
-            auto endState = result.endNonMeasurementStates.getTrackState(i);
-            result.trackTip = result.fittedStates.addTrackState(
-                endState.getMask(), result.trackTip);
-            // Copy the hole/material state in the MultiTrajectory.
-            result.fittedStates.getTrackState(result.trackTip)
-                .copyFrom(endState);
-            // We count the processed state
-            ++result.processedStates;
-          }
-          // Reinitialise the hole/material MultiTrajectory.
-          result.endTip = SIZE_MAX;
-          result.endNonMeasurementStates = MultiTrajectory<source_link_t>();
-        }
-
         // Transport the covariance to the surface
         stepper.covarianceTransport(state.stepping, *surface);
 
@@ -520,12 +500,11 @@ class KalmanFitter {
 
         // add a full TrackState entry multi trajectory
         // (this allocates storage for all components, we will set them later)
-        result.trackTip = result.fittedStates.addTrackState(
-            TrackStatePropMask::All, result.trackTip);
+        result.endTip = result.fittedStates.addTrackState(
+            TrackStatePropMask::All, result.endTip);
 
         // now get track state proxy back
-        auto trackStateProxy =
-            result.fittedStates.getTrackState(result.trackTip);
+        auto trackStateProxy = result.fittedStates.getTrackState(result.endTip);
 
         trackStateProxy.setReferenceSurface(surface->getSharedPtr());
 
@@ -577,9 +556,6 @@ class KalmanFitter {
                          trackStateProxy.filteredCovariance());
           // We count the state with measurement
           ++result.measurementStates;
-          // Increase the number of holes count only when encoutering a
-          // measurement
-          result.measurementHoles = result.missedActiveSurfaces.size();
         } else {
           ACTS_VERBOSE(
               "Filtering step successful. But measurement is deterimined "
@@ -593,6 +569,12 @@ class KalmanFitter {
         materialInteractor(surface, state, stepper, postUpdate);
         // We count the processed state
         ++result.processedStates;
+        // Increase the number of holes count only when encoutering a
+        // measurement
+        result.measurementHoles = result.missedActiveSurfaces.size();
+        // Since we encountered a measurment update the trackTip to the endTip.
+        result.trackTip = result.endTip;
+
       } else if (surface->associatedDetectorElement() != nullptr ||
                  surface->surfaceMaterial() != nullptr) {
         // We only create track states here if there is already measurement
@@ -601,14 +583,14 @@ class KalmanFitter {
           // No source links on surface, add either hole or passive material
           // TrackState entry multi trajectory. No storage allocation for
           // uncalibrated/calibrated measurement and filtered parameter
-          result.endTip = result.endNonMeasurementStates.addTrackState(
+          result.endTip = result.fittedStates.addTrackState(
               ~(TrackStatePropMask::Uncalibrated |
                 TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered),
               result.endTip);
 
           // now get track state proxy back
           auto trackStateProxy =
-              result.endNonMeasurementStates.getTrackState(result.endTip);
+              result.fittedStates.getTrackState(result.endTip);
 
           // Set the surface
           trackStateProxy.setReferenceSurface(surface->getSharedPtr());
@@ -657,6 +639,8 @@ class KalmanFitter {
           // Set the filtered parameter index to be the same with predicted
           // parameter
           trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
+          // We count the processed state
+          ++result.processedStates;
         }
         if (surface->surfaceMaterial() != nullptr) {
           // Update state and stepper with material effects
