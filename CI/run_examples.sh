@@ -53,7 +53,7 @@ run_geometry_example() {
                   --mat-output-file geometry-map-$1 \
                   --output-json \
                   --mat-output-allmaterial true \
-                  --mat-output-sensitive false
+                  --mat-output-sensitives false
 }
 run_geometry_example Aligned
 run_geometry_example DD4hep ${DD4HEP_INPUT}
