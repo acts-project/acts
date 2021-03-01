@@ -82,7 +82,8 @@ run_example ActsExamplePropagationPayload
 run_example ActsExampleParticleGun
 run_example ActsExamplePythia8
 
-# Run Geantino recording example
+# Run Geantino recording example, as in the material mapping tutorial (but with
+# 10x less events to keep CI running times reasonable)
 #
 # FIXME: Currently only works in single-threaded mode, even though it
 #        should theoretically be thread-safe as Geant4 usage is
@@ -90,7 +91,11 @@ run_example ActsExamplePythia8
 #        thread-unsafe Geant4 code is accidentally run outside of the
 #        mutex-protected region of the code. See issue #207 .
 #
-run_example ActsExampleGeantinoRecordingDD4hep ${DD4HEP_INPUT} -j1
+timed_run ActsExampleGeantinoRecordingDD4hep \
+              -j1 \
+              ${DD4HEP_INPUT} \
+              --output-root \
+              -n1000
 # TODO: Add GDML version (needs an input file + knowhow)
 
 # Run material validation example (generic-only, see above)
