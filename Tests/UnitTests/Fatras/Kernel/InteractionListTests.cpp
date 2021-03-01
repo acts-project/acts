@@ -21,13 +21,13 @@ using namespace ActsFatras;
 
 using Acts::MaterialSlab;
 using Scalar = Particle::Scalar;
-using Rng = std::ranlux48;
 
 namespace {
 
 /// Continuous process that does not trigger a break
 struct SterileContinuousProcess {
-  bool operator()(Rng &, const MaterialSlab &, Particle &,
+  template <typename generator_t>
+  bool operator()(generator_t &, const MaterialSlab &, Particle &,
                   std::vector<Particle> &) const {
     return false;
   }
@@ -35,7 +35,8 @@ struct SterileContinuousProcess {
 
 /// Continuous process that DOES trigger a break
 struct FatalContinuousProcess {
-  bool operator()(Rng &, const MaterialSlab &, Particle &,
+  template <typename generator_t>
+  bool operator()(generator_t &, const MaterialSlab &, Particle &,
                   std::vector<Particle> &) const {
     return true;
   }
@@ -45,11 +46,15 @@ struct FatalContinuousProcess {
 ///
 /// Each run call creates one descendant particle.
 struct X0PointLikeProcess {
-  std::pair<Scalar, Scalar> generatePathLimits(Rng &, const Particle &) const {
+  template <typename generator_t>
+  std::pair<Scalar, Scalar> generatePathLimits(generator_t &,
+                                               const Particle &) const {
     return {0.5, std::numeric_limits<Scalar>::infinity()};
   }
 
-  bool run(Rng &, Particle &particle, std::vector<Particle> &generated) const {
+  template <typename generator_t>
+  bool run(generator_t &, Particle &particle,
+           std::vector<Particle> &generated) const {
     auto pid0 = particle.particleId().makeDescendant(0);
     generated.emplace_back(particle.withParticleId(pid0));
     return false;
@@ -60,11 +65,15 @@ struct X0PointLikeProcess {
 ///
 /// Each run call creates two descendant particles.
 struct L0PointLikeProcess {
-  std::pair<Scalar, Scalar> generatePathLimits(Rng &, const Particle &) const {
+  template <typename generator_t>
+  std::pair<Scalar, Scalar> generatePathLimits(generator_t &,
+                                               const Particle &) const {
     return {std::numeric_limits<Scalar>::infinity(), 1.5};
   }
 
-  bool run(Rng &, Particle &particle, std::vector<Particle> &generated) const {
+  template <typename generator_t>
+  bool run(generator_t &, Particle &particle,
+           std::vector<Particle> &generated) const {
     auto pid0 = particle.particleId().makeDescendant(0);
     auto pid1 = particle.particleId().makeDescendant(1);
     generated.emplace_back(particle.withParticleId(pid0));
@@ -74,7 +83,7 @@ struct L0PointLikeProcess {
 };
 
 struct Fixture {
-  Rng rng{23};
+  std::ranlux48 rng{23};
   Acts::MaterialSlab slab =
       Acts::MaterialSlab(Acts::Test::makeBeryllium(), 1_mm);
   Particle incoming;
