@@ -51,7 +51,7 @@ run_geometry_example() {
                   -n1 \
                   -j1 \
                   --mat-output-file geometry-map-$1 \
-                  --output-json true \
+                  --output-json \
                   --mat-output-allmaterial true \
                   --mat-output-sensitive false
 }
