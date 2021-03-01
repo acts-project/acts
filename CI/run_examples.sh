@@ -91,11 +91,15 @@ run_example ActsExamplePythia8
 #        thread-unsafe Geant4 code is accidentally run outside of the
 #        mutex-protected region of the code. See issue #207 .
 #
-timed_run ActsExampleGeantinoRecordingDD4hep \
-              -j1 \
-              ${DD4HEP_INPUT} \
-              --output-root \
-              -n1000
+run_geantino_example() {
+    timed_run ActsExampleGeantinoRecording$* \
+                  -n1000 \
+                  -j1 \
+                  ${DD4HEP_INPUT} \
+                  --g4-material-tracks=geant4-material-tracks-$1 \
+                  --output-root
+}
+run_geantino_example DD4hep ${DD4HEP_INPUT}
 # TODO: Add GDML version (needs an input file + knowhow)
 
 # Run material validation example (generic-only, see above)
