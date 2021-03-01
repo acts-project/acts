@@ -95,7 +95,6 @@ run_geantino_example() {
     timed_run ActsExampleGeantinoRecording$* \
                   -n1000 \
                   -j1 \
-                  ${DD4HEP_INPUT} \
                   --g4-material-tracks=geant4-material-tracks-$1 \
                   --output-root
 }
