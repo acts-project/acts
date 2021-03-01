@@ -17,9 +17,9 @@
 #include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
-#include "DD4hep/Printout.h"
-
 #include <stdexcept>
+
+#include "DD4hep/Printout.h"
 
 ActsExamples::DD4hep::DD4hepGeometryService::DD4hepGeometryService(
     const ActsExamples::DD4hep::DD4hepGeometryService::Config& cfg)
@@ -36,7 +36,7 @@ ActsExamples::DD4hep::DD4hepGeometryService::~DD4hepGeometryService() {
 
 ActsExamples::ProcessCode
 ActsExamples::DD4hep::DD4hepGeometryService::buildDD4hepGeometry() {
-  switch(m_cfg.logLevel) {
+  switch (m_cfg.logLevel) {
     case Acts::Logging::Level::VERBOSE:
       dd4hep::setPrintLevel(dd4hep::PrintLevel::VERBOSE);
       break;
