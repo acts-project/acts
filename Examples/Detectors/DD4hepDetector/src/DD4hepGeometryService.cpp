@@ -58,7 +58,7 @@ ActsExamples::DD4hep::DD4hepGeometryService::buildDD4hepGeometry() {
     case Acts::Logging::Level::MAX:
       dd4hep::setPrintLevel(dd4hep::PrintLevel::ALWAYS);
       break;
-  };
+  }
   m_lcdd = &(dd4hep::Detector::getInstance());
   for (auto& file : m_cfg.xmlFileNames) {
     m_lcdd->fromCompact(file.c_str());
