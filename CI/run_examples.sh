@@ -9,11 +9,14 @@ NUM_EVENTS=100
 SRC_DIR=`pwd`
 BUILD_DIR=`pwd`/build
 DD4HEP_INPUT="--dd4hep-input file:${SRC_DIR}/Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml"
+timed_run() {
+    echo ""
+    echo "=== Running $* ==="
+    echo ""
+    time ${BUILD_DIR}/bin/$*
+}
 run_example() {
-    echo ""
-    echo "=== Running $* -n ${NUM_EVENTS} ==="
-    echo ""
-    time ${BUILD_DIR}/bin/$* -n ${NUM_EVENTS}
+    timed_run $* -n ${NUM_EVENTS}
 }
 
 # Data for Geant4-based examples
@@ -36,18 +39,28 @@ export G4PARTICLEXSDATA=$G4_DATA_DIR/G4PARTICLESXS
 # Run hello world example
 run_example ActsExampleHelloWorld
 
-# Run geometry examples for all geometries
+# Run geometry examples for all geometries, in the configuration suggested by
+# the material mapping tutorial
 #
 # We must try to avoid running examples for all geometries because
 # that results in a combinatorial explosion of CI running time. But
-# these examples are fast enough.
+# these particular examples are fast enough.
 #
-run_example ActsExampleGeometryAligned
-run_example ActsExampleGeometryDD4hep ${DD4HEP_INPUT}
-run_example ActsExampleGeometryEmpty
-run_example ActsExampleGeometryGeneric
-run_example ActsExampleGeometryPayload
-run_example ActsExampleGeometryTelescope
+run_geometry_example() {
+    timed_run ActsExampleGeometry$* \
+                  -n1 \
+                  -j1 \
+                  --mat-output-file geometry-map-$1 \
+                  --output-json true \
+                  --mat-output-allmaterial true \
+                  --mat-output-sensitive false
+}
+run_geometry_example Aligned
+run_geometry_example DD4hep ${DD4HEP_INPUT}
+run_geometry_example Empty
+run_geometry_example Generic
+run_geometry_example Payload
+run_geometry_example Telescope
 # TODO: Add TGeo geometry example (needs an input file + knowhow)
 
 # Run propagation examples for all geometries
