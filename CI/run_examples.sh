@@ -44,7 +44,7 @@ run_example ActsExampleHelloWorld
 #
 # We must try to avoid running examples for all geometries because
 # that results in a combinatorial explosion of CI running time. But
-# these particular examples are fast enough.
+# these examples are fast enough.
 #
 run_geometry_example() {
     timed_run ActsExampleGeometry$* \
