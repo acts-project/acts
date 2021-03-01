@@ -99,14 +99,14 @@ set_option_if(ACTS_BUILD_PLUGIN_AUTODIFF ACTS_BUILD_EVERYTHING)
 
 # feature tests
 include(CheckCXXSourceCompiles)
-unset(ROOT_STRINGVIEW_CHECK CACHE)
 
+# function that tests if the root installation is compatible (i.e., compiled with C++17)
 function(check_root_compatibility)
   get_target_property(ROOT_INCLUDE_DIR ROOT::Core INTERFACE_INCLUDE_DIRECTORIES)
   set(CMAKE_REQUIRED_FLAGS -std=c++17)
   set(CMAKE_REQUIRED_INCLUDES ${ROOT_INCLUDE_DIR})
-  check_cxx_source_compiles("#include <string>\n#include <TString.h>\nint main(){}" ROOT_STRINGVIEW_CHECK)
-  if(NOT ROOT_STRINGVIEW_CHECK)
+  check_cxx_source_compiles("#include <string>\n#include <TString.h>\nint main(){}" ROOT_COMPATIBILITY_CHECK)
+  if(NOT ROOT_COMPATIBILITY_CHECK)
     message(FATAL_ERROR "Root installation is misconfigured. Ensure that your Root installation was compiled with C++17.")
   endif()
 endfunction()
