@@ -98,6 +98,7 @@ set_option_if(ACTS_BUILD_PLUGIN_LEGACY ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_PLUGIN_AUTODIFF ACTS_BUILD_EVERYTHING)
 
 # additional configuration and tools
+include(CheckCXXSourceCompiles)
 include(GNUInstallDirs) # GNU-like installation paths, e.g. lib/, include/, ...
 include(ActsCompilerOptions) # default compile options
 include(ActsComponentsHelpers) # handle components via add_..._if commands
