@@ -7,7 +7,8 @@ add_library(
   src/EventData/Particle.cpp
   src/EventData/ProcessType.cpp
   src/Kernel/SimulatorError.cpp
-  src/Physics/StandardPhysicsLists.cpp
+  src/Physics/PhotonConversion.cpp
+  src/Physics/StandardInteractions.cpp
   src/Physics/EnergyLoss/BetheHeitler.cpp
   src/Utilities/LandauDistribution.cpp
   src/Utilities/ParticleData.cpp)

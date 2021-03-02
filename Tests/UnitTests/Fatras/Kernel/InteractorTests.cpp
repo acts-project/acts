@@ -15,7 +15,6 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
-#include "ActsFatras/Kernel/PointLikePhysicsList.hpp"
 #include "ActsFatras/Kernel/detail/Interactor.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
 
@@ -45,16 +44,35 @@ struct MockDecay {
   }
 };
 
-struct MockContinuousPhysicsList {
+struct MockInteractionList {
+  struct Selection {
+    double x0Limit = std::numeric_limits<double>::infinity();
+    double l0Limit = std::numeric_limits<double>::infinity();
+    size_t x0Process = SIZE_MAX;
+    size_t l0Process = SIZE_MAX;
+  };
+
   double energyLoss = 0;
 
   template <typename generator_t>
-  bool run(generator_t &, const Acts::MaterialSlab &, Particle &particle,
-           std::vector<Particle> &generated) const {
+  bool runContinuous(generator_t &, const Acts::MaterialSlab &,
+                     Particle &particle,
+                     std::vector<Particle> &generated) const {
     generated.push_back(particle);
     particle.correctEnergy(-energyLoss);
     // break if particle is not alive anymore
     return !particle;
+  }
+
+  template <typename generator_t>
+  Selection armPointLike(generator_t &, const Particle &) const {
+    return {};
+  }
+
+  template <typename generator_t>
+  bool runPointLike(generator_t &, size_t, Particle &,
+                    std::vector<Particle> &) const {
+    return false;
   }
 };
 
@@ -100,8 +118,7 @@ template <typename SurfaceSelector>
 struct Fixture {
   using Generator = std::ranlux48;
   using Interactor = typename ActsFatras::detail::Interactor<
-      Generator, MockDecay, MockContinuousPhysicsList,
-      ActsFatras::PointLikePhysicsList<>, SurfaceSelector>;
+      Generator, MockDecay, MockInteractionList, SurfaceSelector>;
   using InteractorResult = typename Interactor::result_type;
 
   // reference information for initial particle
@@ -127,7 +144,7 @@ struct Fixture {
                               .setDirection(1, 0, 0)
                               .setAbsoluteMomentum(p);
     interactor.generator = &generator;
-    interactor.continuous.energyLoss = energyLoss;
+    interactor.interactions.energyLoss = energyLoss;
     interactor.initialParticle = particle;
     state.navigation.currentSurface = surface.get();
     state.stepping.pos = particle.position();

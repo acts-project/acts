@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,10 +8,37 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Utilities/PdgParticle.hpp"
-#include "ActsFatras/Selectors/PdgSelectors.hpp"
+#include "ActsFatras/Selectors/ParticleSelectors.hpp"
 
 #include "Dataset.hpp"
+
+using namespace ActsFatras;
+
+BOOST_AUTO_TEST_SUITE(FatrasParticleSelectors)
+
+BOOST_AUTO_TEST_CASE(NegativeParticle) {
+  const auto& particle = Dataset::centralElectron;
+  BOOST_CHECK(not NeutralSelector()(particle));
+  BOOST_CHECK(ChargedSelector()(particle));
+  BOOST_CHECK(not PositiveSelector()(particle));
+  BOOST_CHECK(NegativeSelector()(particle));
+}
+
+BOOST_AUTO_TEST_CASE(NeutralParticle) {
+  const auto& particle = Dataset::centralNeutron;
+  BOOST_CHECK(NeutralSelector()(particle));
+  BOOST_CHECK(not ChargedSelector()(particle));
+  BOOST_CHECK(not PositiveSelector()(particle));
+  BOOST_CHECK(not NegativeSelector()(particle));
+}
+
+BOOST_AUTO_TEST_CASE(PositiveParticle) {
+  const auto& particle = Dataset::centralPositron;
+  BOOST_CHECK(not NeutralSelector()(particle));
+  BOOST_CHECK(ChargedSelector()(particle));
+  BOOST_CHECK(PositiveSelector()(particle));
+  BOOST_CHECK(not NegativeSelector()(particle));
+}
 
 namespace {
 const auto& electron = Dataset::centralElectron;
@@ -20,8 +47,6 @@ const auto& muon = Dataset::centralMuon;
 const auto& antimuon = Dataset::centralAntiMuon;
 const auto& pion = Dataset::centralPion;
 }  // namespace
-
-BOOST_AUTO_TEST_SUITE(FatrasKinematicCasts)
 
 BOOST_AUTO_TEST_CASE(PdgSelector) {
   ActsFatras::PdgSelector<Acts::PdgParticle::eElectron> selectElectron;

@@ -19,17 +19,13 @@
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsFatras/Kernel/PhysicsList.hpp"
-#include "ActsFatras/Kernel/PointLikePhysicsList.hpp"
-#include "ActsFatras/Kernel/Process.hpp"
+#include "ActsFatras/Kernel/InteractionList.hpp"
 #include "ActsFatras/Kernel/Simulator.hpp"
 #include "ActsFatras/Physics/Decay/NoDecay.hpp"
-#include "ActsFatras/Physics/EnergyLoss/BetheBloch.hpp"
-#include "ActsFatras/Physics/EnergyLoss/BetheHeitler.hpp"
-#include "ActsFatras/Physics/Scattering/Highland.hpp"
-#include "ActsFatras/Physics/StandardPhysicsLists.hpp"
-#include "ActsFatras/Selectors/ChargeSelectors.hpp"
+#include "ActsFatras/Physics/PhotonConversion/PhotonConversion.hpp"
+#include "ActsFatras/Physics/StandardInteractions.hpp"
 #include "ActsFatras/Selectors/KinematicCasts.hpp"
+#include "ActsFatras/Selectors/ParticleSelectors.hpp"
 #include "ActsFatras/Selectors/SelectorHelpers.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
 
@@ -86,9 +82,8 @@ struct FatrasAlgorithmSimulationT final
   using ChargedSelector =
       ActsFatras::CombineAnd<ActsFatras::ChargedSelector, CutPMin>;
   using ChargedSimulator = ActsFatras::ParticleSimulator<
-      ChargedPropagator, ActsFatras::ChargedElectroMagneticPhysicsList,
-      ActsFatras::PointLikePhysicsList<>, HitSurfaceSelector,
-      ActsFatras::NoDecay>;
+      ChargedPropagator, ActsFatras::StandardChargedElectroMagneticInteractions,
+      HitSurfaceSelector, ActsFatras::NoDecay>;
 
   // typedefs for neutral particle simulation
   // propagate neutral particles with just straight lines
@@ -97,10 +92,10 @@ struct FatrasAlgorithmSimulationT final
   // neutral particles w/o physics and no hits
   using NeutralSelector =
       ActsFatras::CombineAnd<ActsFatras::NeutralSelector, CutPMin>;
+  using NeutralInteractions =
+      ActsFatras::InteractionList<ActsFatras::PhotonConversion>;
   using NeutralSimulator =
-      ActsFatras::ParticleSimulator<NeutralPropagator,
-                                    ActsFatras::PhysicsList<>,
-                                    ActsFatras::PointLikePhysicsList<>,
+      ActsFatras::ParticleSimulator<NeutralPropagator, NeutralInteractions,
                                     ActsFatras::NoSurface, ActsFatras::NoDecay>;
 
   // combined simulation type
@@ -125,18 +120,21 @@ struct FatrasAlgorithmSimulationT final
     // minimal p cut on input particles and as is-alive check for interactions
     simulation.selectCharged.template get<CutPMin>().valMin = cfg.pMin;
     simulation.selectNeutral.template get<CutPMin>().valMin = cfg.pMin;
-    simulation.charged.continuous =
-        makeChargedElectroMagneticPhysicsList(cfg.pMin);
+    simulation.charged.interactions =
+        makeStandardChargedElectroMagneticInteractions(cfg.pMin);
 
     // processes are enabled by default
     if (not cfg.emScattering) {
-      simulation.charged.continuous.template disable<StandardScattering>();
+      simulation.charged.interactions.template disable<StandardScattering>();
     }
     if (not cfg.emEnergyLossIonisation) {
-      simulation.charged.continuous.template disable<StandardBetheBloch>();
+      simulation.charged.interactions.template disable<StandardBetheBloch>();
     }
     if (not cfg.emEnergyLossRadiation) {
-      simulation.charged.continuous.template disable<StandardBetheHeitler>();
+      simulation.charged.interactions.template disable<StandardBetheHeitler>();
+    }
+    if (not cfg.emPhotonConversion) {
+      simulation.neutral.interactions.template disable<PhotonConversion>();
     }
 
     // configure hit surfaces for charged particles
