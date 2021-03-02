@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_CHECK_EQUAL(slsStateCopy.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(slsStateCopy.derivative, FreeVector::Zero());
   BOOST_CHECK(slsStateCopy.covTransport);
-  BOOST_CHECK_EQUAL(std::get<BoundSymMatrix>(ps.stepping.cov), cov2);
+  BOOST_CHECK_EQUAL(std::get<BoundSymMatrix>(slsStateCopy.cov), cov2);
   CHECK_CLOSE_ABS(sls.position(slsStateCopy),
                   freeParams.template segment<3>(eFreePos0), 1e-6);
   CHECK_CLOSE_ABS(sls.direction(slsStateCopy),

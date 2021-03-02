@@ -111,6 +111,9 @@ class EigenStepper {
       pars[eFreeTime] = par.time();
       pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
 
+      // Construction from bound parameterization
+      jacobian.template emplace<BoundMatrix>(BoundMatrix::Identity());
+
       // Init the jacobian matrix if needed
       if (par.covariance()) {
         // Get the reference surface for navigation
@@ -119,6 +122,10 @@ class EigenStepper {
         covTransport = true;
         cov.emplace<BoundSymMatrix>(*par.covariance());
         jacToGlobal = surface.jacobianLocalToGlobal(gctx, par.parameters());
+      } else {
+        jacToGlobal.template emplace<BoundToFreeMatrix>(
+            BoundToFreeMatrix::Zero());
+        cov.emplace<BoundSymMatrix>(BoundSymMatrix::Zero());
       }
     }
 
@@ -155,7 +162,7 @@ class EigenStepper {
         // set the covariance transport flag to true and copy
         covTransport = true;
         cov.emplace<FreeSymMatrix>(*par.covariance());
-        jacToGlobal = FreeSymMatrix::Identity();
+        jacToGlobal.emplace<FreeMatrix>(FreeMatrix::Identity());
       }
     }
 

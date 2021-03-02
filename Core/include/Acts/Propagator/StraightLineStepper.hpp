@@ -95,6 +95,10 @@ class StraightLineStepper {
       pars.template segment<3>(eFreeDir0) = par.unitDirection();
       pars[eFreeTime] = par.time();
       pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
+
+      // Construction from  bound parameterization
+      jacobian.template emplace<BoundMatrix>(BoundMatrix::Identity());
+
       if (par.covariance()) {
         // Get the reference surface for navigation
         const auto& surface = par.referenceSurface();
@@ -102,6 +106,10 @@ class StraightLineStepper {
         covTransport = true;
         cov = BoundSymMatrix(*par.covariance());
         jacToGlobal = surface.jacobianLocalToGlobal(gctx, par.parameters());
+      } else {
+        jacToGlobal.template emplace<BoundToFreeMatrix>(
+            BoundToFreeMatrix::Zero());
+        cov.template emplace<BoundSymMatrix>(BoundSymMatrix::Zero());
       }
     }
 
