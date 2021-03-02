@@ -36,9 +36,9 @@ Let's start with setting up a constant magnetic field:
 We need the ```Acts::Propagator``` with the ```Acts::EigenStepper```:
 ```cpp
 // Set up EigenStepper
-Acts::EigenStepper<Acts::ConstantBField> stepper(bField);
+Acts::EigenStepper<> stepper(bField);
 // Set up the propagator
-using Propagator = Acts::Propagator<Acts::EigenStepper<Acts::ConstantBField>>;
+using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
 auto propagator = std::make_shared<Propagator>(stepper);
 ```
 
