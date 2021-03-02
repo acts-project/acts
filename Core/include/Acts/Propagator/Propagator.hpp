@@ -264,10 +264,10 @@ class Propagator final {
     /// @param start The start parameters, used to initialize stepping state
     /// @param topts The options handed over by the propagate call
     template <typename parameters_t>
-    State(const parameters_t& start, const propagator_options_t& topts)
+    State(const parameters_t& start, const propagator_options_t& topts,
+          StepperState steppingIn)
         : options(topts),
-          stepping(topts.geoContext, topts.magFieldContext, start,
-                   topts.direction, topts.maxStepSize, topts.tolerance),
+          stepping{std::move(steppingIn)},
           geoContext(topts.geoContext) {
       // Setting the start surface
       navigation.startSurface = &start.referenceSurface();
