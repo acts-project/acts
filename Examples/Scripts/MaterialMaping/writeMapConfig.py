@@ -21,18 +21,18 @@ def getSurfaceMateral(mat):
     value = {}
     material = {}
     bound = {}
-    outputmat['Volume'] = mat['Volume']
-    if '_Boundary' in mat:
-        outputmat['_Boundary'] = 'X'
-    if '_Layer' in mat:
-        if '__Approach' not in entry:
-            if '__Sensitive' not in entry:        
-                outputmat['_Layer'] = 'X'
-    if '__Approach' in mat:
-        outputmat['__Approach'] = mat['__Approach']
-    if '__Sensitive' in mat:
-        outputmat['_Layer'] = mat['_Layer']
-        outputmat['__Sensitive'] = 'X'
+    outputmat['volume'] = mat['volume']
+    if 'boundary' in mat:
+        outputmat['boundary'] = 'X'
+    if 'layer' in mat:
+        if 'approach' not in entry:
+            if 'sensitive' not in entry:        
+                outputmat['layer'] = 'X'
+    if 'approach' in mat:
+        outputmat['approach'] = mat['approach']
+    if 'sensitive' in mat:
+        outputmat['layer'] = mat['layer']
+        outputmat['sensitive'] = 'X'
     material['binUtility'] = mat['value']['material']['binUtility']
     material['mapMaterial'] = False
     bound['type'] = mat['value']['bounds']['type']
@@ -55,12 +55,12 @@ with open(inFileName,'r') as json_file:
     config = {}
     data = json.load(json_file)
     lastVol = -1
-    for entry in data['2.Surfaces']['entries']:
-        if lastVol != entry['Volume']:
+    for entry in data['Surfaces']['entries']:
+        if lastVol != entry['volume']:
             if lastVol != -1:
                 config[lastVol] = vconfig
             vconfig = []
-            lastVol = entry['Volume']
+            lastVol = entry['volume']
             typeLayer = []
             createdApproach1 = False
             createdApproach2 = False
@@ -71,41 +71,41 @@ with open(inFileName,'r') as json_file:
         if 'type' not in entry['value']['bounds']:
             entry['value']['bounds']['type'] = ''
 
-        if '_Layer' in entry:  
-            if '__Approach' not in entry:
-                if '__Sensitive' not in entry:
+        if 'layer' in entry:  
+            if 'approach' not in entry:
+                if 'sensitive' not in entry:
                     if entry['value']['bounds']['type'] not in typeLayer:
                         typeLayer.append(entry['value']['bounds']['type'])
                         surface = getSurfaceMateral(entry)
                         vconfig.append(surface)
                         continue
 
-        if '_Boundary' in entry:    
-            if '_Layer' not in entry:
+        if 'boundary' in entry:    
+            if 'layer' not in entry:
                 if entry['value']['bounds']['type'] not in typeBoundary:
                     typeBoundary.append(entry['value']['bounds']['type'])
                     surface = getSurfaceMateral(entry)
                     vconfig.append(surface)
                     continue         
 
-        if '__Approach' in entry:
-            if '__Sensitive' not in entry:
-                if entry['__Approach'] == 1 and createdApproach1 == False:
+        if 'approach' in entry:
+            if 'sensitive' not in entry:
+                if entry['approach'] == 1 and createdApproach1 == False:
                     createdApproach1 = True
                     surface = getSurfaceMateral(entry)
                     vconfig.append(surface)
                     continue
-                if entry['__Approach'] == 2 and createdApproach2 == False:
+                if entry['approach'] == 2 and createdApproach2 == False:
                     createdApproach2 = True
                     surface = getSurfaceMateral(entry)
                     vconfig.append(surface)
                     continue
 
-        if '__Sensitive' in entry:  
-            if '__Approach' not in entry:
+        if 'sensitive' in entry:  
+            if 'approach' not in entry:
                 if entry['value']['bounds']['type'] not in typeSensitive:
-                    if entry['_Layer'] not in listLayer:
-                        listLayer.append(entry['_Layer'])
+                    if entry['layer'] not in listLayer:
+                        listLayer.append(entry['layer'])
                         typeSensitive.append(entry['value']['bounds']['type'])
                         surface = getSurfaceMateral(entry)
                         vconfig.append(surface)
@@ -113,7 +113,7 @@ with open(inFileName,'r') as json_file:
 
     if lastVol != -1:
         config[lastVol] = vconfig
-    config['2.Surfaces'] = vconfig
+    config['Surfaces'] = vconfig
 
 if len(sys.argv) < 3 :
     outFileName = 'config-map.json'
