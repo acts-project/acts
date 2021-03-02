@@ -20,7 +20,7 @@ class IterativeVertexFinderAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
     Config(std::shared_ptr<Acts::MagneticFieldProvider> magneticField)
-    : bField(magneticField) {}
+        : bField(magneticField) {}
     /// Input track parameters collection
     std::string inputTrackParameters;
     /// Output proto vertex collection

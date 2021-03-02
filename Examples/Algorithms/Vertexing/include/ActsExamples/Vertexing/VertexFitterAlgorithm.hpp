@@ -21,7 +21,7 @@ class VertexFitterAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
     Config(std::shared_ptr<Acts::MagneticFieldProvider> magneticField)
-    : bField(magneticField) {}
+        : bField(magneticField) {}
     /// Input track parameters collection
     std::string inputTrackParameters;
     /// Input proto vertex collection
