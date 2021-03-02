@@ -25,7 +25,6 @@
 #include "ActsFatras/Physics/PhotonConversion/PhotonConversion.hpp"
 #include "ActsFatras/Physics/StandardInteractions.hpp"
 #include "ActsFatras/Selectors/KinematicCasts.hpp"
-#include "ActsFatras/Selectors/ParticleSelectors.hpp"
 #include "ActsFatras/Selectors/SelectorHelpers.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
 
@@ -79,8 +78,7 @@ struct FatrasAlgorithmSimulationT final
   using ChargedStepper = Acts::EigenStepper<>;
   using ChargedPropagator = Acts::Propagator<ChargedStepper, Acts::Navigator>;
   // charged particles w/ standard em physics list and selectable hits
-  using ChargedSelector =
-      ActsFatras::CombineAnd<ActsFatras::ChargedSelector, CutPMin>;
+  using ChargedSelector = CutPMin;
   using ChargedSimulator = ActsFatras::ParticleSimulator<
       ChargedPropagator, ActsFatras::StandardChargedElectroMagneticInteractions,
       HitSurfaceSelector, ActsFatras::NoDecay>;
@@ -90,8 +88,7 @@ struct FatrasAlgorithmSimulationT final
   using NeutralStepper = Acts::StraightLineStepper;
   using NeutralPropagator = Acts::Propagator<NeutralStepper, Acts::Navigator>;
   // neutral particles w/o physics and no hits
-  using NeutralSelector =
-      ActsFatras::CombineAnd<ActsFatras::NeutralSelector, CutPMin>;
+  using NeutralSelector = CutPMin;
   using NeutralInteractions =
       ActsFatras::InteractionList<ActsFatras::PhotonConversion>;
   using NeutralSimulator =
@@ -119,8 +116,8 @@ struct FatrasAlgorithmSimulationT final
     // apply the configuration
 
     // minimal p cut on input particles and as is-alive check for interactions
-    simulation.selectCharged.template get<CutPMin>().valMin = cfg.pMin;
-    simulation.selectNeutral.template get<CutPMin>().valMin = cfg.pMin;
+    simulation.selectCharged.valMin = cfg.pMin;
+    simulation.selectNeutral.valMin = cfg.pMin;
     simulation.charged.interactions =
         makeStandardChargedElectroMagneticInteractions(cfg.pMin);
 
