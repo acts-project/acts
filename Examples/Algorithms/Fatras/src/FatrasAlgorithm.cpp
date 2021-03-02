@@ -101,16 +101,15 @@ struct FatrasAlgorithmSimulationT final
 
   Simulation simulation;
 
-  FatrasAlgorithmSimulationT(
-      std::shared_ptr<const Acts::MagneticFieldProvider> mf,
-      const ActsExamples::FatrasAlgorithm::Config &cfg,
-      Acts::Logging::Level lvl)
-      : simulation(
-            ChargedSimulation(
-                ChargedPropagator(std::move(mf), cfg.trackingGeometry), lvl),
-            NeutralSimulation(
-                NeutralPropagator(NeutralStepper(), cfg.trackingGeometry),
-                lvl)) {
+  FatrasAlgorithmSimulationT(const ActsExamples::FatrasAlgorithm::Config &cfg,
+                             Acts::Logging::Level lvl)
+      : simulation(ChargedSimulation(
+                       ChargedPropagator(ChargedStepper(cfg.magneticField),
+                                         cfg.trackingGeometry),
+                       lvl),
+                   NeutralSimulation(NeutralPropagator(NeutralStepper(),
+                                                       cfg.trackingGeometry),
+                                     lvl)) {
     using namespace ActsFatras;
     using namespace ActsFatras::detail;
     // apply the configuration
@@ -169,8 +168,7 @@ ActsExamples::FatrasAlgorithm::FatrasAlgorithm(Config cfg,
   ACTS_DEBUG("hits on passive surfaces: " << m_cfg.generateHitsOnPassive);
 
   // construct the simulation for the specific magnetic field
-  m_sim = std::make_unique<FatrasAlgorithmSimulationT>(m_cfg.magneticField,
-                                                       m_cfg, lvl);
+  m_sim = std::make_unique<FatrasAlgorithmSimulationT>(m_cfg, lvl);
 }
 
 // explicit destructor needed for the PIMPL implementation to work
