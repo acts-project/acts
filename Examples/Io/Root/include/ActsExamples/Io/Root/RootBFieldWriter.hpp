@@ -44,7 +44,7 @@ class RootBFieldWriter {
     /// the file access mode (recreate by default)
     std::string fileMode = "recreate";
     /// The magnetic field to be written out
-    std::shared_ptr<const bfield_t> bField = nullptr;
+    const bfield_t* bField;
     /// How the magnetic field map should be written out
     GridType gridType = GridType::xyz;
     /// [optional] Setting the range to be printed out in either r (for
@@ -86,7 +86,7 @@ class RootBFieldWriter {
       throw std::invalid_argument("Missing tree name");
     } else if (cfg.fileName.empty()) {
       throw std::invalid_argument("Missing file name");
-    } else if (!cfg.bField) {
+    } else if (cfg.bField == nullptr) {
       throw std::invalid_argument("Missing interpolated magnetic field");
     }
 
