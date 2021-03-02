@@ -142,6 +142,9 @@ struct KalmanFitterResult {
   size_t measurementStates = 0;
 
   // Counter for measurements holes
+  // A hole correspond to a surface with an associated detector element with no
+  // associated measurment. Holes are only taken into account if they are
+  // between the first and last measurements.
   size_t measurementHoles = 0;
 
   // Counter for handled states
