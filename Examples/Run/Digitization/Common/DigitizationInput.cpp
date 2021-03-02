@@ -23,7 +23,7 @@ ActsExamples::CsvSimHitReader::Config setupSimHitReading(
 
   // Read truth hits from CSV files
   auto simHitReaderCfg = Options::readCsvSimHitReaderConfig(vars);
-  simHitReaderCfg.inputStem = "simhits";
+  simHitReaderCfg.inputStem = "hits";
   simHitReaderCfg.outputSimHits = "simhits";
   sequencer.addReader(
       std::make_shared<CsvSimHitReader>(simHitReaderCfg, logLevel));
