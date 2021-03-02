@@ -107,8 +107,8 @@ double Bz = 2_T;
 
 using BFieldType = InterpolatedBFieldMap;
 using SharedFieldType = SharedBField<InterpolatedBFieldMap>;
-using EigenStepperType = EigenStepper<SharedFieldType>;
-using AtlasStepperType = AtlasStepper<SharedFieldType>;
+using EigenStepperType = EigenStepper<>;
+using AtlasStepperType = AtlasStepper;
 using EigenPropagatorType = Propagator<EigenStepperType>;
 using AtlasPropagatorType = Propagator<AtlasStepperType>;
 
