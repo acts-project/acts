@@ -131,14 +131,14 @@ struct KalmanFitterResult {
 
   // This is the index of the 'tip' of the states stored in multitrajectory.
   // This correspond to the last state in the multitrajectory.
-  // multitrajectory. Since this KF only stores one trajectory, it is
+  // Since this KF only stores one trajectory, it is
   // unambiguous. SIZE_MAX is the start of a trajectory.
   size_t endTip = SIZE_MAX;
 
   // The optional Parameters at the provided surface
   std::optional<BoundTrackParameters> fittedParameters;
 
-  // Counter for states with measurements
+  // Counter for states with non-outlier measurements
   size_t measurementStates = 0;
 
   // Counter for measurements holes
@@ -569,7 +569,7 @@ class KalmanFitter {
         materialInteractor(surface, state, stepper, postUpdate);
         // We count the processed state
         ++result.processedStates;
-        // Increase the number of holes count only when encoutering a
+        // Update the number of holes count only when encoutering a
         // measurement
         result.measurementHoles = result.missedActiveSurfaces.size();
         // Since we encountered a measurment update the trackTip to the endTip.
