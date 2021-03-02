@@ -105,11 +105,12 @@ int runDigitizationExample(
       std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
       bIndexInput;
 
-  if (not digiCfg.isSimpleSmearer and vm["digi-read-write-test"].as<bool>()) {
+  if (vm["digi-read-write-test"].as<bool>()) {
     // Read measurements from CSV files
     auto measReaderCfg = Options::readCsvMeasurementReaderConfig(vm);
     measReaderCfg.inputDir = vm["input-dir"].as<std::string>();
     measReaderCfg.outputMeasurements = digiCfg.outputMeasurements;
+    measReaderCfg.outputSourceLinks = digiCfg.outputSourceLinks;
     measReaderCfg.outputClusters = digiCfg.outputClusters;
     measReaderCfg.outputMeasurementSimHitsMap =
         digiCfg.outputMeasurementSimHitsMap;

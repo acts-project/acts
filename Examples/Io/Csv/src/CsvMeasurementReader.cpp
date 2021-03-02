@@ -132,9 +132,11 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   GeometryIdMultimap<Measurement> measurements;
   ClusterContainer clusters;
   IndexMultimap<Index> measurementSimHitsMap;
+  IndexSourceLinkContainer sourceLinks;
   measurements.reserve(measurementData.size());
   // Safe long as we have single particle to sim hit association
   measurementSimHitsMap.reserve(measurementData.size());
+  sourceLinks.reserve(measurementData.size());
 
   auto measurementSimHitLinkData =
       readEverything<ActsExamples::MeasurementSimHitLink>(
@@ -196,12 +198,15 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
       ACTS_FATAL("Something went horribly wrong with the hit sorting");
       return ProcessCode::ABORT;
     }
+
+    sourceLinks.emplace_hint(sourceLinks.end(), std::move(sourceLink));
   }
 
   // Write the data to the EventStore
   ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
   ctx.eventStore.add(m_cfg.outputMeasurementSimHitsMap,
                      std::move(measurementSimHitsMap));
+  ctx.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));
   if (not clusters.empty()) {
     ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
   }
