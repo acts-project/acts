@@ -31,13 +31,15 @@ namespace Acts {
 namespace Test {
 
 using BFieldType = ConstantBField;
-using EigenStepperType = EigenStepper<BFieldType>;
-using AtlasStepperType = AtlasStepper<BFieldType>;
+using EigenStepperType = EigenStepper<>;
+using AtlasStepperType = AtlasStepper;
 using Covariance = BoundSymMatrix;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
+
+static auto bField = std::make_shared<BFieldType>(Vector3{0, 0, 1_T});
 
 /// Helper method to create a transform for a plane
 /// to mimic detector situations, the plane is roughly
@@ -124,9 +126,11 @@ template <typename Parameters>
 void testJacobianToGlobal(const Parameters& pars) {
   // Jacobian creation for Propagator/Steppers
   // a) ATLAS stepper
-  AtlasStepperType::State astepState(tgContext, mfContext, pars);
+  AtlasStepperType::State astepState(tgContext, bField->makeCache(mfContext),
+                                     pars);
   // b) Eigen stepper
-  EigenStepperType::State estepState(tgContext, mfContext, pars);
+  EigenStepperType::State estepState(tgContext, bField->makeCache(mfContext),
+                                     pars);
 
   // create the matrices
   auto asMatrix = convertToMatrix(astepState.pVector);
