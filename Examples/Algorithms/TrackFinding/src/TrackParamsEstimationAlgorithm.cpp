@@ -64,7 +64,6 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
       m_cfg.sigmaT0 * m_cfg.sigmaT0;
 }
 
-
 ActsExamples::SimSeedContainer
 ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
     const ActsExamples::ProtoTrackContainer& protoTracks,
@@ -165,8 +164,8 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     }
 
     // Get the magnetic field at the bottom space point
-    Acts::Vector3 field =
-        getField(Acts::Vector3(bottomSP->x(), bottomSP->y(), bottomSP->z()));
+    Acts::Vector3 field = m_cfg.magneticField->getField(
+        {bottomSP->x(), bottomSP->y(), bottomSP->z()});
     // Estimate the track parameters from seed
     auto optParams = Acts::estimateTrackParamsFromSeed(
         ctx.geoContext, seed.sp().begin(), seed.sp().end(), *surface, field,
