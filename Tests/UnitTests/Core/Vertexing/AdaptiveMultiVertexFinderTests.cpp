@@ -35,7 +35,7 @@ namespace Test {
 using namespace Acts::UnitLiterals;
 
 using Covariance = BoundSymMatrix;
-using Propagator = Propagator<EigenStepper<ConstantBField>>;
+using Propagator = Acts::Propagator<EigenStepper<>>;
 using Linearizer = HelicalTrackLinearizer<Propagator>;
 
 // Create a test context
@@ -49,11 +49,11 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   // Set debug mode
   bool debugMode = false;
   // Set up constant B-Field
-  ConstantBField bField(Vector3(0., 0., 2_T));
+  auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 2_T));
 
   // Set up EigenStepper
-  // EigenStepper<ConstantBField> stepper(bField);
-  EigenStepper<ConstantBField> stepper(bField);
+  // EigenStepper<> stepper(bField);
+  EigenStepper<> stepper(bField);
 
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
   Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              linearizer);
+                              linearizer, bField);
 
   // TODO: test this as well!
   // finderConfig.useBeamSpotConstraint = false;
@@ -200,11 +200,11 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   // Set debug mode
   bool debugMode = false;
   // Set up constant B-Field
-  ConstantBField bField(Vector3(0., 0., 2_T));
+  auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 2_T));
 
   // Set up EigenStepper
-  // EigenStepper<ConstantBField> stepper(bField);
-  EigenStepper<ConstantBField> stepper(bField);
+  // EigenStepper<> stepper(bField);
+  EigenStepper<> stepper(bField);
 
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
   Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              linearizer);
+                              linearizer, bField);
   Finder::State state;
 
   Finder finder(finderConfig, extractParameters);
@@ -344,11 +344,11 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
     std::cout << "Starting AMVF test with grid seed finder..." << std::endl;
   }
   // Set up constant B-Field
-  ConstantBField bField(Vector3(0., 0., 2_T));
+  auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 2_T));
 
   // Set up EigenStepper
-  // EigenStepper<ConstantBField> stepper(bField);
-  EigenStepper<ConstantBField> stepper(bField);
+  // EigenStepper<> stepper(bField);
+  EigenStepper<> stepper(bField);
 
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
@@ -386,7 +386,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEst, linearizer);
+  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEst, linearizer,
+                              bField);
 
   // TODO: test this as well!
   // finderConfig.useBeamSpotConstraint = false;
@@ -493,11 +494,11 @@ BOOST_AUTO_TEST_CASE(
               << std::endl;
   }
   // Set up constant B-Field
-  ConstantBField bField(Vector3(0., 0., 2_T));
+  auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 2_T));
 
   // Set up EigenStepper
-  // EigenStepper<ConstantBField> stepper(bField);
-  EigenStepper<ConstantBField> stepper(bField);
+  // EigenStepper<> stepper(bField);
+  EigenStepper<> stepper(bField);
 
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
@@ -535,7 +536,8 @@ BOOST_AUTO_TEST_CASE(
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEst, linearizer);
+  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEst, linearizer,
+                              bField);
 
   Finder finder(finderConfig);
   Finder::State state;

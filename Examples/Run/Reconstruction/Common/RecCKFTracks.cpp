@@ -20,8 +20,8 @@
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectoryParametersWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
+#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
-#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
@@ -61,9 +61,9 @@ int runRecCKFTracks(int argc, char* argv[],
   Options::addGeometryOptions(desc);
   Options::addMaterialOptions(desc);
   Options::addInputOptions(desc);
-  Options::addOutputOptions(desc);
+  Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
   detector->addOptions(desc);
-  Options::addBFieldOptions(desc);
+  Options::addMagneticFieldOptions(desc);
   Options::addTrackFindingOptions(desc);
   addRecCKFOptions(desc);
 
@@ -90,7 +90,7 @@ int runRecCKFTracks(int argc, char* argv[],
     sequencer.addContextDecorator(cdr);
   }
   // Setup the magnetic field
-  auto magneticField = Options::readBField(vm);
+  auto magneticField = Options::readMagneticField(vm);
 
   // Read the sim hits
   auto simHitReaderCfg = setupSimHitReading(vm, sequencer);

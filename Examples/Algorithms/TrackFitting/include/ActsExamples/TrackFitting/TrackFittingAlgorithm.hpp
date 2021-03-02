@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,7 +14,7 @@
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
-#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
+#include "ActsExamples/MagneticField/MagneticField.hpp"
 
 #include <functional>
 #include <memory>
@@ -50,10 +50,10 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
   /// contains shared_ptr anyways.
   static TrackFitterFunction makeTrackFitterFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-      Options::BFieldVariant magneticField);
+      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
 
   static DirectedTrackFitterFunction makeTrackFitterFunction(
-      Options::BFieldVariant magneticField);
+      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
 
   struct Config {
     /// Input measurements collection.

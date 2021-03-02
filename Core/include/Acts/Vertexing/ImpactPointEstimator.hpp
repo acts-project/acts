@@ -11,6 +11,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -37,17 +38,16 @@ struct ImpactParametersAndSigma {
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t = PropagatorOptions<>>
 class ImpactPointEstimator {
-  using BField_t = typename propagator_t::Stepper::BField;
-
  public:
   /// @struct State struct
   struct State {
     /// @brief The state constructor
     ///
     /// @param mctx The magnetic field context
-    State(const Acts::MagneticFieldContext& mctx) : fieldCache(mctx) {}
+    State(MagneticFieldProvider::Cache fieldCacheIn)
+        : fieldCache(std::move(fieldCacheIn)) {}
     /// Magnetic field cache
-    typename BField_t::Cache fieldCache;
+    MagneticFieldProvider::Cache fieldCache;
   };
 
   struct Config {
@@ -55,19 +55,19 @@ class ImpactPointEstimator {
     ///
     /// @param bIn The magnetic field
     /// @param prop The propagator
-    Config(const BField_t& bIn, std::shared_ptr<propagator_t> prop)
-        : bField(bIn), propagator(std::move(prop)) {}
+    Config(std::shared_ptr<MagneticFieldProvider> bIn,
+           std::shared_ptr<propagator_t> prop)
+        : bField(std::move(bIn)), propagator(std::move(prop)) {}
 
-    /// @brief Config constructor if BField_t == NullBField (no B-Field
+    /// @brief Config constructor without B field -> uses NullBField
     /// provided)
     ///
     /// @param prop The propagator
-    template <typename T = BField_t,
-              std::enable_if_t<std::is_same<T, NullBField>::value, int> = 0>
-    Config(std::shared_ptr<propagator_t> prop) : propagator(std::move(prop)) {}
+    Config(std::shared_ptr<propagator_t> prop)
+        : bField{std::make_shared<NullBField>()}, propagator(std::move(prop)) {}
 
     /// Magnetic field
-    BField_t bField;
+    std::shared_ptr<MagneticFieldProvider> bField;
     /// Propagator
     std::shared_ptr<propagator_t> propagator;
     /// Max. number of iterations in Newton method

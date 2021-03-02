@@ -18,8 +18,8 @@
 #include "ActsExamples/Io/Performance/TrackFitterPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectoryParametersWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
+#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
-#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingOptions.hpp"
@@ -46,9 +46,9 @@ int runRecTruthTracks(int argc, char* argv[],
   Options::addGeometryOptions(desc);
   Options::addMaterialOptions(desc);
   Options::addInputOptions(desc);
-  Options::addOutputOptions(desc);
+  Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
   detector->addOptions(desc);
-  Options::addBFieldOptions(desc);
+  Options::addMagneticFieldOptions(desc);
   Options::addFittingOptions(desc);
 
   auto vm = Options::parse(desc, argc, argv);
@@ -73,7 +73,7 @@ int runRecTruthTracks(int argc, char* argv[],
     sequencer.addContextDecorator(cdr);
   }
   // Setup the magnetic field
-  auto magneticField = Options::readBField(vm);
+  auto magneticField = Options::readMagneticField(vm);
 
   // Read the sim hits
   auto simHitReaderCfg = setupSimHitReading(vm, sequencer);

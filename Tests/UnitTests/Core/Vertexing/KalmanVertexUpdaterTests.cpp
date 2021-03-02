@@ -28,7 +28,7 @@ namespace Acts {
 namespace Test {
 
 using Covariance = BoundSymMatrix;
-using Propagator = Propagator<EigenStepper<ConstantBField>>;
+using Propagator = Acts::Propagator<EigenStepper<>>;
 using Linearizer = HelicalTrackLinearizer<Propagator>;
 
 // Create a test context
@@ -73,10 +73,10 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
   std::mt19937 gen(mySeed);
 
   // Set up constant B-Field
-  ConstantBField bField(0.0, 0.0, 1_T);
+  auto bField = std::make_shared<ConstantBField>(0.0, 0.0, 1_T);
 
   // Set up Eigenstepper
-  EigenStepper<ConstantBField> stepper(bField);
+  EigenStepper<> stepper(bField);
 
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
   // Linearizer for BoundTrackParameters type test
   Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
-  Linearizer::State state(magFieldContext);
+  Linearizer::State state(bField->makeCache(magFieldContext));
 
   // Create perigee surface at origin
   std::shared_ptr<PerigeeSurface> perigeeSurface =

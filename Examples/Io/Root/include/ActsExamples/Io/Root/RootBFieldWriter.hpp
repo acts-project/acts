@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,14 +8,11 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/IService.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/Plugins/BField/ScalableBField.hpp"
-#include <Acts/Definitions/Units.hpp>
-#include <Acts/MagneticField/ConstantBField.hpp>
-#include <Acts/MagneticField/InterpolatedBFieldMap.hpp>
-#include <Acts/Utilities/Helpers.hpp>
-#include <Acts/Utilities/Logger.hpp>
 
 #include <array>
 #include <ios>
@@ -47,7 +44,7 @@ class RootBFieldWriter {
     /// the file access mode (recreate by default)
     std::string fileMode = "recreate";
     /// The magnetic field to be written out
-    std::shared_ptr<const bfield_t> bField = nullptr;
+    const bfield_t* bField;
     /// How the magnetic field map should be written out
     GridType gridType = GridType::xyz;
     /// [optional] Setting the range to be printed out in either r (for
@@ -89,7 +86,7 @@ class RootBFieldWriter {
       throw std::invalid_argument("Missing tree name");
     } else if (cfg.fileName.empty()) {
       throw std::invalid_argument("Missing file name");
-    } else if (!cfg.bField) {
+    } else if (cfg.bField == nullptr) {
       throw std::invalid_argument("Missing interpolated magnetic field");
     }
 

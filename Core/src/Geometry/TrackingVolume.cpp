@@ -554,11 +554,10 @@ Acts::TrackingVolume::compatibleBoundaries(
       // Get the boundary surface pointer
       const auto& bSurfaceRep = bsIter->surfaceRepresentation();
       if (logger().doPrint(Logging::VERBOSE)) {
-        auto os = logger().log(Logging::VERBOSE);
+        std::ostringstream os;
         os << "Consider boundary surface " << &bSurfaceRep << " :\n";
-        std::stringstream strm;
-        bSurfaceRep.toStream(gctx, strm);
-        os << strm.str();
+        bSurfaceRep.toStream(gctx, os);
+        logger().log(Logging::VERBOSE, os.str());
       }
 
       // Exclude the boundary where you are on

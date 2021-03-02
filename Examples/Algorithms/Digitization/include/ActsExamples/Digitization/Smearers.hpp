@@ -16,6 +16,8 @@
 #include <cmath>
 #include <limits>
 #include <random>
+#include <string>
+#include <tuple>
 #include <utility>
 
 namespace ActsExamples {
@@ -50,6 +52,7 @@ struct Gauss {
 /// indicating the truncation
 struct GaussTrunc {
   std::normal_distribution<> dist{0., 1.};
+
   std::pair<double, double> range = {std::numeric_limits<double>::lowest(),
                                      std::numeric_limits<double>::max()};
 
@@ -125,9 +128,9 @@ struct Uniform {
                     (range_.second - range_.first) / pitch, range_.first,
                     range_.second) {}
 
-  /// Constructor with a bin utility in order to get the bin borders.
+  /// Constructor with a binning data in order to get the bin borders.
   ///
-  /// @param bu the bin utility which d
+  /// @param bu the binning data
   Uniform(Acts::BinningData&& bd) : binningData(std::move(bd)) {}
 
   /// Call operator for the SmearFunction caller interface.

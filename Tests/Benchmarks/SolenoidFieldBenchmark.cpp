@@ -54,7 +54,6 @@ int main(int argc, char* argv[]) {
 
   BField_t::Config cfg(std::move(mapper));
   auto bFieldMap = BField_t(std::move(cfg));
-  using Cache = typename BField_t::Cache;
   Acts::MagneticFieldContext mctx{};
 
   std::minstd_rand rng;
@@ -123,7 +122,7 @@ int main(int argc, char* argv[]) {
   {
     std::cout << "Benchmarking cached interpolated field lookup: "
               << std::flush;
-    Cache cache{mctx};
+    auto cache = bFieldMap.makeCache(mctx);
     const auto map_cached_result_cache = Acts::Test::microBenchmark(
         [&] { return bFieldMap.getField(fixedPos, cache); }, iters_map);
     std::cout << map_cached_result_cache << std::endl;
@@ -137,7 +136,7 @@ int main(int argc, char* argv[]) {
   {
     std::cout << "Benchmarking cached random interpolated field lookup: "
               << std::flush;
-    Cache cache2{mctx};
+    auto cache2 = bFieldMap.makeCache(mctx);
     const auto map_rand_result_cache = Acts::Test::microBenchmark(
         [&] { return bFieldMap.getField(genPos(), cache2); }, iters_map);
     std::cout << map_rand_result_cache << std::endl;
@@ -174,7 +173,7 @@ int main(int argc, char* argv[]) {
   {
     std::cout << "Benchmarking cached advancing interpolated field lookup: "
               << std::flush;
-    Cache cache{mctx};
+    auto cache = bFieldMap.makeCache(mctx);
     Acts::Vector3 pos{0, 0, 0};
     Acts::Vector3 dir{};
     dir.setRandom();

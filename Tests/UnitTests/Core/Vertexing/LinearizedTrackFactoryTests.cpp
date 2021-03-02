@@ -28,8 +28,7 @@ namespace Acts {
 namespace Test {
 
 using Covariance = BoundSymMatrix;
-using Linearizer =
-    HelicalTrackLinearizer<Propagator<EigenStepper<ConstantBField>>>;
+using Linearizer = HelicalTrackLinearizer<Propagator<EigenStepper<>>>;
 
 // Create a test context
 GeometryContext geoContext = GeometryContext();
@@ -70,14 +69,13 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   std::mt19937 gen(mySeed);
 
   // Set up constant B-Field
-  ConstantBField bField(0.0, 0.0, 1_T);
+  auto bField = std::make_shared<ConstantBField>(0.0, 0.0, 1_T);
 
   // Set up Eigenstepper
-  EigenStepper<ConstantBField> stepper(bField);
+  EigenStepper<> stepper(bField);
 
   // Set up propagator with void navigator
-  auto propagator =
-      std::make_shared<Propagator<EigenStepper<ConstantBField>>>(stepper);
+  auto propagator = std::make_shared<Propagator<EigenStepper<>>>(stepper);
 
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -124,7 +122,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
 
   Linearizer::Config ltConfig(bField, propagator);
   Linearizer linFactory(ltConfig);
-  Linearizer::State state(magFieldContext);
+  Linearizer::State state(bField->makeCache(magFieldContext));
 
   BoundVector vecBoundZero = BoundVector::Zero();
   BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
@@ -215,7 +213,10 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_straightline_test) {
   // magnetic field, which results in the extreme case of a straight line
   LinearizerStraightLine::Config ltConfig(propagator);
   LinearizerStraightLine linFactory(ltConfig);
-  LinearizerStraightLine::State state(magFieldContext);
+
+  auto field = std::make_shared<NullBField>();
+
+  LinearizerStraightLine::State state(field->makeCache(magFieldContext));
 
   BoundVector vecBoundZero = BoundVector::Zero();
   BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();

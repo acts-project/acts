@@ -52,12 +52,12 @@ Navigator navigatorES(tGeometry);
 Navigator navigatorSL(tGeometry);
 
 using BField = ConstantBField;
-using EigenStepper = EigenStepper<BField>;
+using EigenStepper = Acts::EigenStepper<>;
 using EigenPropagator = Propagator<EigenStepper, Navigator>;
 using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 
 const double Bz = 2_T;
-BField bField(0, 0, Bz);
+auto bField = std::make_shared<BField>(0, 0, Bz);
 EigenStepper estepper(bField);
 EigenPropagator epropagator(std::move(estepper), std::move(navigatorES));
 

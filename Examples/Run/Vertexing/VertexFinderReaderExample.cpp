@@ -21,6 +21,7 @@
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
+#include "ActsExamples/Vertexing/VertexingOptions.hpp"
 
 #include <memory>
 
@@ -33,8 +34,9 @@ int main(int argc, char* argv[]) {
   Options::addSequencerOptions(desc);
   Options::addRandomNumbersOptions(desc);
   ParticleSelector::addOptions(desc);
+  Options::addVertexingOptions(desc);
   Options::addInputOptions(desc);
-  Options::addOutputOptions(desc);
+  Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
   auto vars = Options::parse(desc, argc, argv);
   if (vars.empty()) {
     return EXIT_FAILURE;
@@ -60,6 +62,9 @@ int main(int argc, char* argv[]) {
   selectParticles.outputParticles = "particles_selected";
   // smearing only works with charge particles for now
   selectParticles.removeNeutral = true;
+  selectParticles.absEtaMax = vars["vertexing-eta-max"].as<double>();
+  selectParticles.rhoMax = vars["vertexing-rho-max"].as<double>() * 1_mm;
+  selectParticles.ptMin = vars["vertexing-pt-min"].as<double>() * 1_MeV;
   sequencer.addAlgorithm(
       std::make_shared<ParticleSelector>(selectParticles, logLevel));
 

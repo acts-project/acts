@@ -7,7 +7,9 @@ add_library(
   src/EventData/Particle.cpp
   src/EventData/ProcessType.cpp
   src/Kernel/SimulatorError.cpp
-  src/Physics/StandardPhysicsLists.cpp
+  src/Physics/PhotonConversion.cpp
+  src/Physics/StandardInteractions.cpp
+  src/Physics/EnergyLoss/BetheHeitler.cpp
   src/Utilities/LandauDistribution.cpp
   src/Utilities/ParticleData.cpp)
 target_compile_features(
@@ -25,8 +27,10 @@ target_link_libraries(
 install(
   TARGETS ActsFatras
   EXPORT ActsFatrasTargets
-	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(
   DIRECTORY include/ActsFatras
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  
+add_component_if(Geant4 FatrasGeant4 ACTS_BUILD_FATRAS_GEANT4)

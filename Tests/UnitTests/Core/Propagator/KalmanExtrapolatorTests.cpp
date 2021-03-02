@@ -111,8 +111,8 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
   navigator.resolveSensitive = true;
 
   // Configure propagation with deactivated B-field
-  ConstantBField bField(Vector3(0., 0., 0.));
-  using Stepper = EigenStepper<ConstantBField>;
+  auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 0.));
+  using Stepper = EigenStepper<>;
   Stepper stepper(bField);
   using Propagator = Propagator<Stepper, Navigator>;
   Propagator propagator(stepper, navigator);

@@ -31,14 +31,14 @@ Open the file in your editor and let's start setting up the AMVF. We will start 
 Let's start with setting up a constant magnetic field:
 ```cpp
 // Set up the magnetic field
-Acts::ConstantBField bField(Acts::Vector3(0., 0., 2_T));
+ Acts::ConstantBField bField(m_cfg.bField);
 ```
 We need the ```Acts::Propagator``` with the ```Acts::EigenStepper```:
 ```cpp
 // Set up EigenStepper
-Acts::EigenStepper<Acts::ConstantBField> stepper(bField);
+Acts::EigenStepper<> stepper(bField);
 // Set up the propagator
-using Propagator = Acts::Propagator<Acts::EigenStepper<Acts::ConstantBField>>;
+using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
 auto propagator = std::make_shared<Propagator>(stepper);
 ```
 
@@ -113,7 +113,7 @@ VertexingOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
 Now we're ready to actually use the AMVF tool that we have set up above to find vertices on our input track collection. The ```find()``` methods on ACTS vertex finders return an ```Acts::Result``` object that we can use to check if any errors occured and to retrieve the vertex collection:
 ```cpp
 // Find vertices
-auto res = finder.find(inputTrackPtrCollection, finderOpts, state);
+auto res = finder.find(inputTrackPointers, finderOpts, state);
 
 if (res.ok()) {
   // Retrieve vertices found by vertex finder

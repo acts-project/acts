@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Options/CommonOptions.hpp"
 
+#include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
 #include <exception>
@@ -82,24 +83,36 @@ void ActsExamples::Options::addMaterialOptions(
       "Write material information of volumes.")(
       "mat-output-dense-volumes", value<bool>()->default_value(false),
       "Write material information of dense volumes.")(
-      "mat-output-data", value<bool>()->default_value(true),
-      "Output the data field(s).")(
       "mat-output-allmaterial", value<bool>()->default_value(false),
       "Add protoMaterial to all surfaces and volume for the mapping.");
 }
 
 void ActsExamples::Options::addOutputOptions(
-    boost::program_options::options_description& opt) {
+    boost::program_options::options_description& opt,
+    OutputFormat formatFlags) {
   // Add specific options for this example
   opt.add_options()("output-dir", value<std::string>()->default_value(""),
-                    "Output directory location.")(
-      "output-root", bool_switch(),
-      "Switch on to write '.root' output file(s).")(
-      "output-csv", bool_switch(), "Switch on to write '.csv' output file(s).")(
-      "output-obj", bool_switch(), "Switch on to write '.obj' ouput file(s).")(
-      "output-json", bool_switch(),
-      "Switch on to write '.json' ouput file(s).")(
-      "output-txt", bool_switch(), "Switch on to write '.txt' ouput file(s).");
+                    "Output directory location.");
+
+  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Root))
+    opt.add_options()("output-root", bool_switch(),
+                      "Switch on to write '.root' output file(s).");
+
+  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Csv))
+    opt.add_options()("output-csv", bool_switch(),
+                      "Switch on to write '.csv' output file(s).");
+
+  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Obj))
+    opt.add_options()("output-obj", bool_switch(),
+                      "Switch on to write '.obj' ouput file(s).");
+
+  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Json))
+    opt.add_options()("output-json", bool_switch(),
+                      "Switch on to write '.json' ouput file(s).");
+
+  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Txt))
+    opt.add_options()("output-txt", bool_switch(),
+                      "Switch on to write '.txt' ouput file(s).");
 }
 
 void ActsExamples::Options::addInputOptions(

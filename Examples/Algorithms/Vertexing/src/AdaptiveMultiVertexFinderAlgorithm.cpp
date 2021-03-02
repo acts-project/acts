@@ -28,6 +28,7 @@
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 
 #include "VertexingHelpers.hpp"
 
@@ -58,11 +59,11 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   //////////////////////////////////////////////
 
   // Set up EigenStepper
-  Acts::ConstantBField bField(m_cfg.bField);
-  Acts::EigenStepper<Acts::ConstantBField> stepper(bField);
+  auto bField = std::make_shared<Acts::ConstantBField>(m_cfg.bField);
+  Acts::EigenStepper<> stepper(bField);
 
   // Set up the propagator
-  using Propagator = Acts::Propagator<Acts::EigenStepper<Acts::ConstantBField>>;
+  using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // Set up ImpactPointEstimator
@@ -97,7 +98,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
   Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              linearizer);
+                              linearizer, bField);
   // We do not want to use a beamspot constraint here
   finderConfig.useBeamSpotConstraint = false;
 

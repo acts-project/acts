@@ -42,8 +42,7 @@ using namespace Acts::UnitLiterals;
 /// with s being the arc length of the track, q the charge of the particle,
 /// p the momentum magnitude and B the magnetic field
 ///
-template <typename bfield_t,
-          typename extensionlist_t = StepperExtensionList<DefaultExtension>,
+template <typename extensionlist_t = StepperExtensionList<DefaultExtension>,
           typename auctioneer_t = detail::VoidAuctioneer>
 class EigenStepper {
  public:
@@ -53,7 +52,6 @@ class EigenStepper {
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
-  using BField = bfield_t;
 
   /// @brief State for track parameter propagation
   ///
@@ -76,7 +74,7 @@ class EigenStepper {
     /// @note the covariance matrix is copied when needed
     template <typename charge_t>
     explicit State(const GeometryContext& gctx,
-                   const MagneticFieldContext& mctx,
+                   MagneticFieldProvider::Cache fieldCacheIn,
                    const SingleBoundTrackParameters<charge_t>& par,
                    NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max(),
@@ -85,7 +83,7 @@ class EigenStepper {
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
-          fieldCache(mctx),
+          fieldCache(std::move(fieldCacheIn)),
           geoContext(gctx) {
       pars.template segment<3>(eFreePos0) = par.position(gctx);
       pars.template segment<3>(eFreeDir0) = par.unitDirection();
@@ -144,7 +142,7 @@ class EigenStepper {
     /// This caches the current magnetic field cell and stays
     /// (and interpolates) within it as long as this is valid.
     /// See step() code for details.
-    typename BField::Cache fieldCache;
+    MagneticFieldProvider::Cache fieldCache;
 
     /// The geometry context
     std::reference_wrapper<const GeometryContext> geoContext;
@@ -167,7 +165,15 @@ class EigenStepper {
   };
 
   /// Constructor requires knowledge of the detector's magnetic field
-  EigenStepper(BField bField);
+  EigenStepper(std::shared_ptr<const MagneticFieldProvider> bField);
+
+  template <typename charge_t>
+  State makeState(std::reference_wrapper<const GeometryContext> gctx,
+                  std::reference_wrapper<const MagneticFieldContext> mctx,
+                  const SingleBoundTrackParameters<charge_t>& par,
+                  NavigationDirection ndir = forward,
+                  double ssize = std::numeric_limits<double>::max(),
+                  double stolerance = s_onSurfaceTolerance) const;
 
   /// @brief Resets the state
   ///
@@ -190,7 +196,7 @@ class EigenStepper {
   /// @param [in] pos is the field position
   Vector3 getField(State& state, const Vector3& pos) const {
     // get the field from the cell
-    return m_bField.getField(pos, state.fieldCache);
+    return m_bField->getField(pos, state.fieldCache);
   }
 
   /// Global particle position accessor
@@ -211,7 +217,7 @@ class EigenStepper {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double momentum(const State& state) const {
-    return std::abs(state.q / state.pars[eFreeQOverP]);
+    return std::abs((state.q == 0. ? 1. : state.q) / state.pars[eFreeQOverP]);
   }
 
   /// Charge access
@@ -371,7 +377,7 @@ class EigenStepper {
 
  private:
   /// Magnetic field inside of the detector
-  BField m_bField;
+  std::shared_ptr<const MagneticFieldProvider> m_bField;
 
   /// Overstep limit: could/should be dynamic
   double m_overstepLimit = 100_um;
