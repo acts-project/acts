@@ -25,7 +25,7 @@ namespace detail {
 /// Fatras simulation actor for the Acts propagator.
 ///
 /// This actor must be added to the action list of the propagator and is the
-/// equivalent to the `MaterialSimulationActor` for the reconstruction. This
+/// equivalent to the `MaterialInteractor` for the reconstruction. This
 /// implements surface-based simulation of particle interactions with matter
 /// using a configurable interaction list as well as the decay simulation. The
 /// interactions are simulated for every surface with valid material.
