@@ -129,6 +129,10 @@ struct FailedParticle {
 /// @tparam charged_simulator_t Single particle simulator for charged particles
 /// @tparam neutral_selector_t Callable selector type for neutral particles
 /// @tparam neutral_simulator_t Single particle simulator for neutral particles
+///
+/// The selector types for charged and neutral particles **do not** need to
+/// check for the particle charge. This is done automatically by the simulator
+/// to ensure consistency.
 template <typename charged_selector_t, typename charged_simulator_t,
           typename neutral_selector_t, typename neutral_simulator_t>
 struct Simulator {
@@ -217,10 +221,10 @@ struct Simulator {
       for (; iinitial < simulatedParticlesInitial.size(); ++iinitial) {
         const auto &initialParticle = simulatedParticlesInitial[iinitial];
 
-        // only simulatable particles are pushed to the container.
-        // they must therefore be either charged or neutral.
+        // only simulatable particles are pushed to the container and here we
+        // only need to switch between charged/neutral.
         ParticleSimulatorResult result = ParticleSimulatorResult::success({});
-        if (selectCharged(initialParticle)) {
+        if (initialParticle.charge() != Particle::Scalar(0)) {
           result = charged.simulate(geoCtx, magCtx, generator, initialParticle);
         } else {
           result = neutral.simulate(geoCtx, magCtx, generator, initialParticle);
@@ -255,16 +259,12 @@ struct Simulator {
 
  private:
   /// Select if the particle should be simulated at all.
-  ///
-  /// This also enforces mutual-exclusivity of the two charge selections. If
-  /// both charge selections evaluate true, they are probably not setup
-  /// correctly and not simulating them at all is a reasonable fall-back.
   bool selectParticle(const Particle &particle) const {
-    const bool isValidCharged = selectCharged(particle);
-    const bool isValidNeutral = selectNeutral(particle);
-    assert(not(isValidCharged and isValidNeutral) and
-           "Charge selectors are not mutually exclusive");
-    return isValidCharged xor isValidNeutral;
+    if (particle.charge() != Particle::Scalar(0)) {
+      return selectCharged(particle);
+    } else {
+      return selectNeutral(particle);
+    }
   }
 
   /// Copy Interactor results to output containers.

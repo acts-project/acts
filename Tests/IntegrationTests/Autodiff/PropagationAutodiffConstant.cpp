@@ -31,8 +31,7 @@ using namespace Acts::UnitLiterals;
 using MagneticField = Acts::ConstantBField;
 using Extension =
     Acts::AutodiffExtensionWrapper<Acts::detail::GenericDefaultExtension>;
-using Stepper =
-    Acts::EigenStepper<MagneticField, Acts::StepperExtensionList<Extension>>;
+using Stepper = Acts::EigenStepper<Acts::StepperExtensionList<Extension>>;
 using Propagator = Acts::Propagator<Stepper>;
 using RiddersPropagator = Acts::RiddersPropagator<Propagator>;
 
@@ -47,13 +46,13 @@ const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
 
 inline Propagator makePropagator(double bz) {
-  MagneticField magField(Acts::Vector3(0.0, 0.0, bz));
+  auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, bz));
   Stepper stepper(std::move(magField));
   return Propagator(std::move(stepper));
 }
 
 inline RiddersPropagator makeRiddersPropagator(double bz) {
-  MagneticField magField(Acts::Vector3(0.0, 0.0, bz));
+  auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, bz));
   Stepper stepper(std::move(magField));
   return RiddersPropagator(std::move(stepper));
 }

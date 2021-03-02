@@ -227,8 +227,8 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   rNavigator.resolveSensitive = true;
 
   // Configure propagation with deactivated B-field
-  ConstantBField bField(Vector3(0., 0., 0.));
-  using RecoStepper = EigenStepper<ConstantBField>;
+  auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 0.));
+  using RecoStepper = EigenStepper<>;
   RecoStepper rStepper(bField);
   using RecoPropagator = Propagator<RecoStepper, Navigator>;
   RecoPropagator rPropagator(rStepper, rNavigator);

@@ -45,17 +45,14 @@ template <typename propagator_t,
 class HelicalTrackLinearizer {
  public:
   using Propagator_t = propagator_t;
-  using BField_t = typename Propagator_t::Stepper::BField;
 
   /// @struct State struct
   struct State {
     /// @brief The state constructor
     ///
     /// @param mctx The magnetic field context
-    State(const Acts::MagneticFieldContext& mctx)
-        : fieldCache(
-              MagneticFieldProvider::Cache::make<typename BField_t::Cache>(
-                  mctx)) {}
+    State(MagneticFieldProvider::Cache fieldCacheIn)
+        : fieldCache(std::move(fieldCacheIn)) {}
     /// Magnetic field cache
     MagneticFieldProvider::Cache fieldCache;
   };
@@ -66,19 +63,18 @@ class HelicalTrackLinearizer {
     ///
     /// @param bIn The magnetic field
     /// @param prop The propagator
-    Config(const BField_t& bIn, std::shared_ptr<Propagator_t> prop)
-        : bField(bIn), propagator(std::move(prop)) {}
+    Config(std::shared_ptr<MagneticFieldProvider> bIn,
+           std::shared_ptr<Propagator_t> prop)
+        : bField(std::move(bIn)), propagator(std::move(prop)) {}
 
-    /// @brief Config constructor if BField_t == NullBField (no B-Field
-    /// provided)
+    /// @brief Config constructor without B field -> uses NullBField
     ///
     /// @param prop The propagator
-    template <typename T = BField_t,
-              std::enable_if_t<std::is_same<T, NullBField>::value, int> = 0>
-    Config(std::shared_ptr<Propagator_t> prop) : propagator(std::move(prop)) {}
+    Config(std::shared_ptr<Propagator_t> prop)
+        : bField{std::make_shared<NullBField>()}, propagator(std::move(prop)) {}
 
     // The magnetic field
-    BField_t bField;
+    std::shared_ptr<MagneticFieldProvider> bField;
     // The propagator
     std::shared_ptr<Propagator_t> propagator;
 
