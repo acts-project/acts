@@ -111,7 +111,8 @@ int runDigitizationExample(
     measReaderCfg.inputDir = vm["input-dir"].as<std::string>();
     measReaderCfg.outputMeasurements = digiCfg.outputMeasurements;
     measReaderCfg.outputSourceLinks = digiCfg.outputSourceLinks;
-    measReaderCfg.outputClusters = digiCfg.outputClusters;
+    if (not digiCfg.isSimpleSmearer)
+      measReaderCfg.outputClusters = digiCfg.outputClusters;
     measReaderCfg.outputMeasurementSimHitsMap =
         digiCfg.outputMeasurementSimHitsMap;
     sequencer.addReader(
@@ -143,7 +144,8 @@ int runDigitizationExample(
     CsvMeasurementWriter::Config measWriterCsv =
         Options::readCsvMeasurementWriterConfig(vm);
     measWriterCsv.inputMeasurements = digiCfg.outputMeasurements;
-    measWriterCsv.inputClusters = digiCfg.outputClusters;
+    if (not digiCfg.isSimpleSmearer)
+      measWriterCsv.inputClusters = digiCfg.outputClusters;
     measWriterCsv.inputSimHits = simHitReaderCfg.outputSimHits;
     measWriterCsv.inputMeasurementSimHitsMap =
         digiCfg.outputMeasurementSimHitsMap;

@@ -129,11 +129,11 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   }
 
   // Prepare containers for the hit data using the framework event data types
-  GeometryIdMultimap<Measurement> measurements;
+  GeometryIdMultimap<Measurement> orderedMeasurements;
   ClusterContainer clusters;
   IndexMultimap<Index> measurementSimHitsMap;
   IndexSourceLinkContainer sourceLinks;
-  measurements.reserve(measurementData.size());
+  orderedMeasurements.reserve(measurementData.size());
   // Safe long as we have single particle to sim hit association
   measurementSimHitsMap.reserve(measurementData.size());
   sourceLinks.reserve(measurementData.size());
@@ -184,7 +184,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
 
     // The measurement container is unordered and the index under which
     // the measurement will be stored is known before adding it.
-    Index hitIdx = measurements.size();
+    Index hitIdx = orderedMeasurements.size();
     IndexSourceLink sourceLink(geoId, hitIdx);
     auto measurement = createMeasurement(dParameters, sourceLink);
 
@@ -192,14 +192,19 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
     // measurements should always end up at the end of the container. previous
     // elements were not touched; cluster indices remain stable and can
     // be used to identify the m.
-    auto inserted = measurements.emplace_hint(measurements.end(), geoId,
-                                              std::move(measurement));
-    if (std::next(inserted) != measurements.end()) {
+    auto inserted = orderedMeasurements.emplace_hint(
+        orderedMeasurements.end(), geoId, std::move(measurement));
+    if (std::next(inserted) != orderedMeasurements.end()) {
       ACTS_FATAL("Something went horribly wrong with the hit sorting");
       return ProcessCode::ABORT;
     }
 
     sourceLinks.emplace_hint(sourceLinks.end(), std::move(sourceLink));
+  }
+
+  MeasurementContainer measurements;
+  for (auto& [_, meas] : orderedMeasurements) {
+    measurements.emplace_back(std::move(meas));
   }
 
   // Write the data to the EventStore
