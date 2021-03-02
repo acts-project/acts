@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 
 #include <string>
@@ -18,12 +19,14 @@ namespace ActsExamples {
 class IterativeVertexFinderAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
-    /// Input track parameters collection.
+    Config(std::shared_ptr<Acts::MagneticFieldProvider> magneticField)
+    : bField(magneticField) {}
+    /// Input track parameters collection
     std::string inputTrackParameters;
-    /// Output proto vertex collection.
+    /// Output proto vertex collection
     std::string outputProtoVertices;
-    /// Magnetic field vector.
-    Acts::Vector3 bField = Acts::Vector3::Zero();
+    /// The magnetic field
+    std::shared_ptr<Acts::MagneticFieldProvider> bField;
   };
 
   IterativeVertexFinderAlgorithm(const Config& cfg, Acts::Logging::Level lvl);

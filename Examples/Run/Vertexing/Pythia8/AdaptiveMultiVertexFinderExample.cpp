@@ -10,6 +10,7 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Options/Pythia8Options.hpp"
+#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
@@ -28,6 +29,7 @@ int main(int argc, char* argv[]) {
   Options::addPythia8Options(desc);
   ParticleSelector::addOptions(desc);
   Options::addVertexingOptions(desc);
+  Options::addMagneticFieldOptions(desc);
   Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
   auto vars = Options::parse(desc, argc, argv);
   if (vars.empty()) {
@@ -39,6 +41,9 @@ int main(int argc, char* argv[]) {
   auto rnd =
       std::make_shared<RandomNumbers>(Options::readRandomNumbersConfig(vars));
   Sequencer sequencer(Options::readSequencerConfig(vars));
+
+  // Setup the magnetic field
+  auto magneticField = Options::readMagneticField(vars);
 
   // setup event generator
   EventGenerator::Config evgen = Options::readPythia8Options(vars, logLevel);
@@ -67,10 +72,9 @@ int main(int argc, char* argv[]) {
       std::make_shared<ParticleSmearing>(smearParticles, logLevel));
 
   // find vertices
-  AdaptiveMultiVertexFinderAlgorithm::Config findVertices;
+  AdaptiveMultiVertexFinderAlgorithm::Config findVertices(magneticField);
   findVertices.inputTrackParameters = smearParticles.outputTrackParameters;
   findVertices.outputProtoVertices = "protovertices";
-  findVertices.bField = Acts::Vector3(0_T, 0_T, 2_T);
   sequencer.addAlgorithm(std::make_shared<AdaptiveMultiVertexFinderAlgorithm>(
       findVertices, logLevel));
 

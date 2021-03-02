@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 
 #include <string>
@@ -19,12 +20,15 @@ namespace ActsExamples {
 class VertexFitterAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
-    /// Input track parameters collection.
+    Config(std::shared_ptr<Acts::MagneticFieldProvider> magneticField)
+    : bField(magneticField) {}
+    /// Input track parameters collection
     std::string inputTrackParameters;
-    /// Input proto vertex collection.
+    /// Input proto vertex collection
     std::string inputProtoVertices;
-    /// The magnetic field.
-    Acts::Vector3 bField = Acts::Vector3::Zero();
+    /// The magnetic field
+    std::shared_ptr<Acts::MagneticFieldProvider> bField;
+    /// Constraint vertex fit bool
     bool doConstrainedFit = false;
     /// Vertex constraint position
     Acts::Vector3 constraintPos = Acts::Vector3(0, 0, 0);
