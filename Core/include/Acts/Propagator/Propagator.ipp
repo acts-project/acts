@@ -211,7 +211,13 @@ auto Acts::Propagator<S, N>::propagate(
   if (result.ok()) {
     auto& propRes = *result;
     // Compute the final results and mark the propagation as successful
-    auto bs = m_stepper.boundState(state.stepping, target);
+    auto bsRes = m_stepper.boundState(state.stepping, target);
+    if (!bsRes.ok()) {
+      return bsRes.error();
+    }
+
+    const auto& bs = *bsRes;
+
     auto& boundParams = std::get<BoundTrackParameters>(bs);
     // Fill the end parameters
     propRes.endParameters =

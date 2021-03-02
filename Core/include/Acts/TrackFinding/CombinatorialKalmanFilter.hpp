@@ -407,8 +407,14 @@ class CombinatorialKalmanFilter {
               ACTS_VERBOSE("Completing the track with entry index = "
                            << result.trackTips.at(result.iSmoothed));
               // Transport & bind the parameter to the final surface
-              auto fittedState =
-                  stepper.boundState(state.stepping, *targetSurface);
+              auto res = stepper.boundState(state.stepping, *targetSurface);
+              if (!res.ok()) {
+                ACTS_ERROR("Error in finalize: " << res.error());
+                result.result = res.error();
+                return;
+              }
+
+              auto fittedState = *res;
               // Assign the fitted parameters
               result.fittedParameters.emplace(
                   result.trackTips.at(result.iSmoothed),
@@ -513,8 +519,12 @@ class CombinatorialKalmanFilter {
         materialInteractor(surface, state, stepper, preUpdate);
 
         // Bind the transported state to the current surface
-        const auto boundState =
+        auto boundStateRes =
             stepper.boundState(state.stepping, *surface, false);
+        if (!boundStateRes.ok()) {
+          return boundStateRes.error();
+        }
+        auto boundState = *boundStateRes;
         const auto& boundParams = std::get<BoundTrackParameters>(boundState);
 
         // Get all source links on the surface
@@ -675,8 +685,12 @@ class CombinatorialKalmanFilter {
           size_t currentTip = SIZE_MAX;
           if (isSensitive) {
             // Transport & bind the state to the current surface
-            const auto boundState =
-                stepper.boundState(state.stepping, *surface);
+            auto res = stepper.boundState(state.stepping, *surface);
+            if (!res.ok()) {
+              ACTS_ERROR("Error in filter: " << res.error());
+              return res.error();
+            }
+            const auto boundState = *res;
             // Add a hole track state to the multitrajectory
             currentTip =
                 addHoleState(stateMask, boundState, result, prevTip, logger);

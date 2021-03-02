@@ -42,6 +42,9 @@ BOOST_DATA_TEST_CASE(
   // transform reference position
   Vector3 pos = surface->localToGlobal(geoCtx, loc, dir);
 
+  // @TODO: Add a test for the failing case, i.e. the parameters are not on
+  // surface.
+
   // convert free parameters to bound parameters
   {
     BOOST_TEST_INFO("Transform free parameters vector onto surface "
@@ -57,7 +60,7 @@ BOOST_DATA_TEST_CASE(
     fv[eFreeDir2] = dir[eMom2];
     fv[eFreeQOverP] = qOverP;
     BoundVector bv =
-        detail::transformFreeToBoundParameters(fv, *surface, geoCtx);
+        detail::transformFreeToBoundParameters(fv, *surface, geoCtx).value();
     CHECK_CLOSE_OR_SMALL(bv[eBoundLoc0], l0, eps, eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundLoc1], l1, eps, eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundTime], time, eps, eps);
@@ -71,7 +74,8 @@ BOOST_DATA_TEST_CASE(
                     << surface->name());
 
     BoundVector bv = detail::transformFreeToBoundParameters(
-        pos, time, dir, qOverP, *surface, geoCtx);
+                         pos, time, dir, qOverP, *surface, geoCtx)
+                         .value();
     CHECK_CLOSE_OR_SMALL(bv[eBoundLoc0], l0, eps, eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundLoc1], l1, eps, eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundTime], time, eps, eps);

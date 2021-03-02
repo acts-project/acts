@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
 
@@ -27,9 +28,9 @@ namespace detail {
 ///
 /// @warning The position is assumed to be on the surface. If this is not
 ///          the case, the behaviour is undefined.
-BoundVector transformFreeToBoundParameters(const FreeVector& freeParams,
-                                           const Surface& surface,
-                                           const GeometryContext& geoCtx);
+Result<BoundVector> transformFreeToBoundParameters(
+    const FreeVector& freeParams, const Surface& surface,
+    const GeometryContext& geoCtx);
 
 /// Convert position and direction to bound track parameters.
 ///
@@ -43,7 +44,7 @@ BoundVector transformFreeToBoundParameters(const FreeVector& freeParams,
 ///
 /// @warning The position is assumed to be on the surface. If this is not
 ///          the case, the behaviour is undefined.
-BoundVector transformFreeToBoundParameters(
+Result<BoundVector> transformFreeToBoundParameters(
     const Vector3& position, ActsScalar time, const Vector3& direction,
     ActsScalar qOverP, const Surface& surface, const GeometryContext& geoCtx);
 
