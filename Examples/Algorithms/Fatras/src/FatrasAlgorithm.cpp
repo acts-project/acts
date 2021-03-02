@@ -25,7 +25,6 @@
 #include "ActsFatras/Physics/ElectroMagnetic/PhotonConversion.hpp"
 #include "ActsFatras/Physics/StandardInteractions.hpp"
 #include "ActsFatras/Selectors/KinematicCasts.hpp"
-#include "ActsFatras/Selectors/ParticleSelectors.hpp"
 #include "ActsFatras/Selectors/SelectorHelpers.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
 
@@ -79,8 +78,7 @@ struct FatrasAlgorithmSimulationT final
   using ChargedStepper = Acts::EigenStepper<>;
   using ChargedPropagator = Acts::Propagator<ChargedStepper, Acts::Navigator>;
   // charged particles w/ standard em physics list and selectable hits
-  using ChargedSelector =
-      ActsFatras::CombineAnd<ActsFatras::ChargedSelector, CutPMin>;
+  using ChargedSelector = CutPMin;
   using ChargedSimulation = ActsFatras::SingleParticleSimulation<
       ChargedPropagator, ActsFatras::StandardChargedElectroMagneticInteractions,
       HitSurfaceSelector, ActsFatras::NoDecay>;
@@ -89,9 +87,8 @@ struct FatrasAlgorithmSimulationT final
   // propagate neutral particles with just straight lines
   using NeutralStepper = Acts::StraightLineStepper;
   using NeutralPropagator = Acts::Propagator<NeutralStepper, Acts::Navigator>;
-  // neutral particles w/o physics and no hits
-  using NeutralSelector =
-      ActsFatras::CombineAnd<ActsFatras::NeutralSelector, CutPMin>;
+  // neutral particles w/ photon conversion and no hits
+  using NeutralSelector = CutPMin;
   using NeutralInteractions =
       ActsFatras::InteractionList<ActsFatras::PhotonConversion>;
   using NeutralSimulation = ActsFatras::SingleParticleSimulation<
@@ -119,8 +116,8 @@ struct FatrasAlgorithmSimulationT final
     // apply the configuration
 
     // minimal p cut on input particles and as is-alive check for interactions
-    simulation.selectCharged.template get<CutPMin>().valMin = cfg.pMin;
-    simulation.selectNeutral.template get<CutPMin>().valMin = cfg.pMin;
+    simulation.selectCharged.valMin = cfg.pMin;
+    simulation.selectNeutral.valMin = cfg.pMin;
     simulation.charged.interactions =
         makeStandardChargedElectroMagneticInteractions(cfg.pMin);
 

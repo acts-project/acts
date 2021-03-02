@@ -67,7 +67,7 @@ using NeutralPropagator = Acts::Propagator<NeutralStepper, Navigator>;
 // the random number generator type
 using Generator = std::ranlux48;
 // all charged particles w/ a mock-up physics list and hits everywhere
-using ChargedSelector = ActsFatras::ChargedSelector;
+using ChargedSelector = ActsFatras::EveryParticle;
 using ChargedInteractions =
     ActsFatras::InteractionList<ActsFatras::detail::StandardScattering,
                                 SplitEnergyLoss>;
@@ -76,7 +76,7 @@ using ChargedSimulation =
                                          ActsFatras::EverySurface,
                                          ActsFatras::NoDecay>;
 // all neutral particles w/o physics and no hits
-using NeutralSelector = ActsFatras::NeutralSelector;
+using NeutralSelector = ActsFatras::EveryParticle;
 using NeutralInteractions = ActsFatras::InteractionList<>;
 using NeutralSimulation =
     ActsFatras::SingleParticleSimulation<NeutralPropagator, NeutralInteractions,
