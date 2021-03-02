@@ -38,7 +38,7 @@ using namespace Acts;
 using namespace Acts::Test;
 using namespace Acts::UnitLiterals;
 
-using ConstantFieldStepper = Acts::EigenStepper<Acts::ConstantBField>;
+using ConstantFieldStepper = Acts::EigenStepper<>;
 using ConstantFieldPropagator =
     Acts::Propagator<ConstantFieldStepper, Acts::Navigator>;
 
@@ -83,7 +83,8 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
   navigator.resolvePassive = false;
   navigator.resolveMaterial = true;
   navigator.resolveSensitive = true;
-  Acts::ConstantBField field(Acts::Vector3(0.0, 0.0, 2._T));
+  auto field =
+      std::make_shared<Acts::ConstantBField>(Acts::Vector3(0.0, 0.0, 2._T));
   ConstantFieldStepper stepper(std::move(field));
 
   ConstantFieldPropagator propagator(std::move(stepper), std::move(navigator));

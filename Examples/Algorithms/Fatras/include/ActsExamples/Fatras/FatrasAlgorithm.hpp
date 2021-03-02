@@ -40,7 +40,7 @@ class FatrasAlgorithm final : public BareAlgorithm {
     /// The tracking geometry that should be used.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// The magnetic field that should be used.
-    MagneticField magneticField;
+    std::shared_ptr<Acts::MagneticFieldProvider> magneticField;
 
     // tuning parameters
     /// Minimal absolute momentum for particles to be simulated.
@@ -51,6 +51,8 @@ class FatrasAlgorithm final : public BareAlgorithm {
     bool emEnergyLossIonisation = false;
     /// Simulate radiative energy loss of charged particles.
     bool emEnergyLossRadiation = false;
+    /// Simulate electron-positron pair production by photon conversion.
+    bool emPhotonConversion = false;
     /// Generate simulation hits on sensitive surfaces.
     bool generateHitsOnSensitive = false;
     /// Generate simulation hits on surfaces with associated material.

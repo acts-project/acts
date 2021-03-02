@@ -69,11 +69,11 @@ int main(int argc, char* argv[]) {
                            << "GeV in a " << BzInT << "T B-field");
 
   using BField_type = ConstantBField;
-  using Stepper_type = AtlasStepper<BField_type>;
+  using Stepper_type = AtlasStepper;
   using Propagator_type = Propagator<Stepper_type>;
   using Covariance = BoundSymMatrix;
 
-  BField_type bField(0, 0, BzInT * UnitConstants::T);
+  auto bField = std::make_shared<BField_type>(0, 0, BzInT * UnitConstants::T);
   Stepper_type atlas_stepper(std::move(bField));
   Propagator_type propagator(std::move(atlas_stepper));
 

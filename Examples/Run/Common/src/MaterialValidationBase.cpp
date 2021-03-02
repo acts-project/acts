@@ -43,9 +43,10 @@ namespace {
 /// @param tGeometry The TrackingGeometry object
 ///
 /// @return a process code
-template <typename bfield_t>
 ActsExamples::ProcessCode setupPropagation(
-    ActsExamples::Sequencer& sequencer, bfield_t bfield, po::variables_map& vm,
+    ActsExamples::Sequencer& sequencer,
+    std::shared_ptr<const Acts::MagneticFieldProvider> bfield,
+    po::variables_map& vm,
     std::shared_ptr<ActsExamples::RandomNumbers> randomNumberSvc,
     std::shared_ptr<const Acts::TrackingGeometry> tGeometry) {
   // Get the log level
@@ -59,7 +60,6 @@ ActsExamples::ProcessCode setupPropagation(
 
   // Resolve the bfield map template and create the propgator
   using Stepper = Acts::EigenStepper<
-      bfield_t,
       Acts::StepperExtensionList<Acts::DefaultExtension,
                                  Acts::DenseEnvironmentExtension>,
       Acts::detail::HighestValidAuctioneer>;
@@ -164,20 +164,13 @@ int materialValidationExample(int argc, char* argv[],
 
   // Create BField service
   ActsExamples::Options::setupMagneticFieldServices(vm, sequencer);
-  auto bFieldVar = ActsExamples::Options::readMagneticField(vm);
+  auto bField = ActsExamples::Options::readMagneticField(vm);
 
   if (vm["prop-stepper"].template as<int>() == 0) {
     // Straight line stepper was chosen
     setupStraightLinePropagation(sequencer, vm, randomNumberSvc, tGeometry);
   } else {
-    std::visit(
-        [&](auto& bField) {
-          using field_type =
-              typename std::decay_t<decltype(bField)>::element_type;
-          Acts::SharedBField<field_type> fieldMap(bField);
-          setupPropagation(sequencer, fieldMap, vm, randomNumberSvc, tGeometry);
-        },
-        bFieldVar);
+    setupPropagation(sequencer, bField, vm, randomNumberSvc, tGeometry);
   }
 
   // ---------------------------------------------------------------------------------
