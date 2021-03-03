@@ -204,7 +204,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   double cotTheta = 1. / std::tan(theta);
 
   // get B-field z-component at current position
-  double bZ = m_cfg.bField.getField(trkSurfaceCenter, state.fieldCache)[eZ];
+  double bZ = m_cfg.bField->getField(trkSurfaceCenter, state.fieldCache)[eZ];
 
   // The radius
   double r;
