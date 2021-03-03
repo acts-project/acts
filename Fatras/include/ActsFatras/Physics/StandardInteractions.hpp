@@ -10,9 +10,9 @@
 
 #include "ActsFatras/Kernel/ContinuousProcess.hpp"
 #include "ActsFatras/Kernel/InteractionList.hpp"
-#include "ActsFatras/Physics/EnergyLoss/BetheBloch.hpp"
-#include "ActsFatras/Physics/EnergyLoss/BetheHeitler.hpp"
-#include "ActsFatras/Physics/Scattering/Highland.hpp"
+#include "ActsFatras/Physics/ElectroMagnetic/BetheBloch.hpp"
+#include "ActsFatras/Physics/ElectroMagnetic/BetheHeitler.hpp"
+#include "ActsFatras/Physics/ElectroMagnetic/Scattering.hpp"
 #include "ActsFatras/Selectors/KinematicCasts.hpp"
 #include "ActsFatras/Selectors/ParticleSelectors.hpp"
 #include "ActsFatras/Selectors/SelectorHelpers.hpp"

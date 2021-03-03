@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
@@ -24,7 +25,8 @@ void addMagneticFieldOptions(Description& desc);
 void setupMagneticFieldServices(const Variables& vars, Sequencer& seq);
 
 /// Read and create the magnetic field from the given user variables.
-MagneticField readMagneticField(const Variables& vars);
+std::shared_ptr<Acts::MagneticFieldProvider> readMagneticField(
+    const Variables& vars);
 
 }  // namespace Options
 }  // namespace ActsExamples

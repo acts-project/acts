@@ -44,7 +44,7 @@ using namespace Acts::UnitLiterals;
 
 using StraightPropagator =
     Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
-using ConstantFieldStepper = Acts::EigenStepper<Acts::ConstantBField>;
+using ConstantFieldStepper = Acts::EigenStepper<>;
 using ConstantFieldPropagator =
     Acts::Propagator<ConstantFieldStepper, Acts::Navigator>;
 
@@ -98,7 +98,8 @@ ConstantFieldPropagator makeConstantFieldPropagator(
   navigator.resolvePassive = false;
   navigator.resolveMaterial = true;
   navigator.resolveSensitive = true;
-  Acts::ConstantBField field(Acts::Vector3(0.0, 0.0, bz));
+  auto field =
+      std::make_shared<Acts::ConstantBField>(Acts::Vector3(0.0, 0.0, bz));
   ConstantFieldStepper stepper(std::move(field));
   return ConstantFieldPropagator(std::move(stepper), std::move(navigator));
 }

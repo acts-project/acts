@@ -30,13 +30,13 @@ namespace ds = ActsTests::PropagationDatasets;
 using namespace Acts::UnitLiterals;
 
 using MagneticField = Acts::ConstantBField;
-using AtlasStepper = Acts::AtlasStepper<MagneticField>;
+using AtlasStepper = Acts::AtlasStepper;
 using AtlasPropagator = Acts::Propagator<AtlasStepper>;
 
 using Extension =
     Acts::AutodiffExtensionWrapper<Acts::detail::GenericDefaultExtension>;
 using AutodiffStepper =
-    Acts::EigenStepper<MagneticField, Acts::StepperExtensionList<Extension>>;
+    Acts::EigenStepper<Acts::StepperExtensionList<Extension>>;
 using AutodiffPropagator = Acts::Propagator<AutodiffStepper>;
 
 // absolute parameter tolerances for position, direction, and absolute momentum
@@ -51,7 +51,7 @@ const Acts::MagneticFieldContext magCtx;
 
 inline std::pair<AtlasPropagator, AutodiffPropagator> makePropagators(
     double bz) {
-  MagneticField field(Acts::Vector3(0.0, 0.0, bz));
+  auto field = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, bz));
   return {AtlasPropagator(AtlasStepper(field)),
           AutodiffPropagator(AutodiffStepper(field))};
 }
