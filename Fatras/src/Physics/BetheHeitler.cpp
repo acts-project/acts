@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsFatras/Physics/EnergyLoss/BetheHeitler.hpp"
+#include "ActsFatras/Physics/ElectroMagnetic/BetheHeitler.hpp"
 
 ActsFatras::Particle ActsFatras::BetheHeitler::bremPhoton(
     const Particle &particle, Scalar gammaE, Scalar rndPsi, Scalar rndTheta1,
