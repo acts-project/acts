@@ -30,10 +30,8 @@ class RootTrackParameterWriter final : public TrackParameterWriter {
   struct Config {
     /// Input estimated track parameters collection.
     std::string inputTrackParameters;
-    /// Input parameters to seed map collection.
-    std::string inputTrackParametersSeedMap;
-    /// Input seeds collection.
-    std::string inputSeeds;
+    /// Input reconstructed proto tracks collection.
+    std::string inputProtoTracks;
     /// Input particles collection.
     std::string inputParticles;
     /// Input collection of simulated hits.

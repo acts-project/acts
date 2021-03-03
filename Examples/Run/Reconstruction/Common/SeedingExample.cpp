@@ -93,7 +93,7 @@ int runSeedingExample(int argc, char* argv[],
   particleSelectorCfg.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
   particleSelectorCfg.outputParticles = "particles_selected";
-  particleSelectorCfg.ptMin = 500_MeV;
+  particleSelectorCfg.ptMin = 1_GeV;
   particleSelectorCfg.nHitsMin = 9;
   sequencer.addAlgorithm(
       std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));
@@ -112,6 +112,7 @@ int runSeedingExample(int argc, char* argv[],
       Acts::GeometryIdentifier().setVolume(8).setLayer(2),
       Acts::GeometryIdentifier().setVolume(8).setLayer(4),
       Acts::GeometryIdentifier().setVolume(8).setLayer(6),
+      Acts::GeometryIdentifier().setVolume(8).setLayer(8),
       // positive endcap pixel layers
       Acts::GeometryIdentifier().setVolume(9).setLayer(2),
       Acts::GeometryIdentifier().setVolume(9).setLayer(4),
@@ -133,7 +134,7 @@ int runSeedingExample(int argc, char* argv[],
   seedingCfg.outputSeeds = "seeds";
   seedingCfg.outputProtoTracks = "prototracks";
   seedingCfg.rMax = 200.;
-  seedingCfg.deltaRMax = 60.;
+  seedingCfg.deltaRMax = 100.;
   seedingCfg.collisionRegionMin = -250;
   seedingCfg.collisionRegionMax = 250.;
   seedingCfg.zMin = -2000.;
@@ -152,10 +153,13 @@ int runSeedingExample(int argc, char* argv[],
 
   // Algorithm estimating track parameter from seed
   TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
-  paramsEstimationCfg.inputSeeds = seedingCfg.outputSeeds;
+  paramsEstimationCfg.inputProtoTracks = seedingCfg.outputProtoTracks;
+  paramsEstimationCfg.inputSpacePoints = {
+      spCfg.outputSpacePoints,
+  };
   paramsEstimationCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
   paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
-  paramsEstimationCfg.outputTrackParametersSeedMap = "estimatedparams_seed_map";
+  paramsEstimationCfg.outputProtoTracks = "prototracks_estimated";
   paramsEstimationCfg.trackingGeometry = tGeometry;
   paramsEstimationCfg.magneticField = magneticField;
   sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
@@ -173,7 +177,7 @@ int runSeedingExample(int argc, char* argv[],
       std::make_shared<TrackFinderPerformanceWriter>(tfPerfCfg, logLevel));
 
   SeedingPerformanceWriter::Config seedPerfCfg;
-  seedPerfCfg.inputSeeds = seedingCfg.outputSeeds;
+  seedPerfCfg.inputProtoTracks = seedingCfg.outputProtoTracks;
   seedPerfCfg.inputParticles = inputParticles;
   seedPerfCfg.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
@@ -184,11 +188,9 @@ int runSeedingExample(int argc, char* argv[],
 
   // The track parameters estimation writer
   RootTrackParameterWriter::Config trackParamsWriterCfg;
-  trackParamsWriterCfg.inputSeeds = seedingCfg.outputSeeds;
   trackParamsWriterCfg.inputTrackParameters =
       paramsEstimationCfg.outputTrackParameters;
-  trackParamsWriterCfg.inputTrackParametersSeedMap =
-      paramsEstimationCfg.outputTrackParametersSeedMap;
+  trackParamsWriterCfg.inputProtoTracks = paramsEstimationCfg.outputProtoTracks;
   trackParamsWriterCfg.inputParticles = particleReader.outputParticles;
   trackParamsWriterCfg.inputSimHits = simHitReaderCfg.outputSimHits;
   trackParamsWriterCfg.inputMeasurementParticlesMap =
