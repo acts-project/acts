@@ -100,6 +100,17 @@ BOOST_DATA_TEST_CASE(
     CHECK_CLOSE_OR_SMALL(bv[eBoundTheta], theta, eps, eps);
     CHECK_CLOSE_OR_SMALL(bv[eBoundQOverP], qOverP, eps, eps);
   }
+
+  // Assert failure when trying to convert a position that is not on-surface.
+  {
+    BOOST_TEST_INFO("Transform free parameters components onto surface "
+                    << surface->name());
+
+    Vector3 posOff = pos + surface->normal(geoCtx, loc) * 0.5;
+    auto res = detail::transformFreeToBoundParameters(posOff, time, dir, qOverP,
+                                                      *surface, geoCtx);
+    BOOST_CHECK(!res.ok());
+  }
 }
 
 BOOST_DATA_TEST_CASE(GlobalToCurvilinearParameters,
