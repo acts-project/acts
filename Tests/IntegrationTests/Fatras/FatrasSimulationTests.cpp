@@ -57,7 +57,7 @@ struct SplitEnergyLoss {
 using Navigator = Acts::Navigator;
 using MagneticField = Acts::ConstantBField;
 // propagate charged particles numerically in a constant magnetic field
-using ChargedStepper = Acts::EigenStepper<MagneticField>;
+using ChargedStepper = Acts::EigenStepper<>;
 using ChargedPropagator = Acts::Propagator<ChargedStepper, Navigator>;
 // propagate neutral particles with just straight lines
 using NeutralStepper = Acts::StraightLineStepper;
@@ -67,7 +67,7 @@ using NeutralPropagator = Acts::Propagator<NeutralStepper, Navigator>;
 // the random number generator type
 using Generator = std::ranlux48;
 // all charged particles w/ a mock-up physics list and hits everywhere
-using ChargedSelector = ActsFatras::ChargedSelector;
+using ChargedSelector = ActsFatras::EveryParticle;
 using ChargedInteractions =
     ActsFatras::InteractionList<ActsFatras::detail::StandardScattering,
                                 SplitEnergyLoss>;
@@ -76,7 +76,7 @@ using ChargedSimulator =
                                   ActsFatras::EverySurface,
                                   ActsFatras::NoDecay>;
 // all neutral particles w/o physics and no hits
-using NeutralSelector = ActsFatras::NeutralSelector;
+using NeutralSelector = ActsFatras::EveryParticle;
 using NeutralInteractions = ActsFatras::InteractionList<>;
 using NeutralSimulator =
     ActsFatras::ParticleSimulator<NeutralPropagator, NeutralInteractions,
@@ -162,7 +162,8 @@ BOOST_DATA_TEST_CASE(FatrasSimulation, dataset, pdg, phi, eta, p,
 
   // construct the propagators
   Navigator navigator(trackingGeometry);
-  ChargedStepper chargedStepper(Acts::ConstantBField(0, 0, 1_T));
+  ChargedStepper chargedStepper(
+      std::make_shared<Acts::ConstantBField>(0, 0, 1_T));
   ChargedPropagator chargedPropagator(std::move(chargedStepper), navigator);
   NeutralPropagator neutralPropagator(NeutralStepper(), navigator);
 

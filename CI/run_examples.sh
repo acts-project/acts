@@ -9,11 +9,14 @@ NUM_EVENTS=100
 SRC_DIR=`pwd`
 BUILD_DIR=`pwd`/build
 DD4HEP_INPUT="--dd4hep-input file:${SRC_DIR}/Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml"
+timed_run() {
+    echo ""
+    echo "=== Running $* ==="
+    echo ""
+    time ${BUILD_DIR}/bin/$*
+}
 run_example() {
-    echo ""
-    echo "=== Running $* -n ${NUM_EVENTS} ==="
-    echo ""
-    time ${BUILD_DIR}/bin/$* -n ${NUM_EVENTS}
+    timed_run $* -n ${NUM_EVENTS}
 }
 
 # Data for Geant4-based examples
@@ -36,18 +39,28 @@ export G4PARTICLEXSDATA=$G4_DATA_DIR/G4PARTICLESXS
 # Run hello world example
 run_example ActsExampleHelloWorld
 
-# Run geometry examples for all geometries
+# Run geometry examples for all geometries, in the configuration suggested by
+# the material mapping tutorial
 #
 # We must try to avoid running examples for all geometries because
 # that results in a combinatorial explosion of CI running time. But
 # these examples are fast enough.
 #
-run_example ActsExampleGeometryAligned
-run_example ActsExampleGeometryDD4hep ${DD4HEP_INPUT}
-run_example ActsExampleGeometryEmpty
-run_example ActsExampleGeometryGeneric
-run_example ActsExampleGeometryPayload
-run_example ActsExampleGeometryTelescope
+run_geometry_example() {
+    timed_run ActsExampleGeometry$* \
+                  -n1 \
+                  -j1 \
+                  --mat-output-file geometry-map-$1 \
+                  --output-json \
+                  --mat-output-allmaterial true \
+                  --mat-output-sensitives false
+}
+run_geometry_example Aligned
+run_geometry_example DD4hep ${DD4HEP_INPUT}
+run_geometry_example Empty
+run_geometry_example Generic
+run_geometry_example Payload
+run_geometry_example Telescope
 # TODO: Add TGeo geometry example (needs an input file + knowhow)
 
 # Run propagation examples for all geometries
@@ -83,7 +96,8 @@ run_example ActsExamplePythia8 \
                 --gen-hard-process=Top:qqbar2ttbar=on \
                 --gen-npileup=140
 
-# Run Geantino recording example
+# Run Geantino recording example, as in the material mapping tutorial (but with
+# 10x less events to keep CI running times reasonable)
 #
 # FIXME: Currently only works in single-threaded mode, even though it
 #        should theoretically be thread-safe as Geant4 usage is
@@ -91,7 +105,14 @@ run_example ActsExamplePythia8 \
 #        thread-unsafe Geant4 code is accidentally run outside of the
 #        mutex-protected region of the code. See issue #207 .
 #
-run_example ActsExampleGeantinoRecordingDD4hep ${DD4HEP_INPUT} -j1
+run_geantino_example() {
+    timed_run ActsExampleGeantinoRecording$* \
+                  -n1000 \
+                  -j1 \
+                  --g4-material-tracks=geant4-material-tracks-$1 \
+                  --output-root
+}
+run_geantino_example DD4hep ${DD4HEP_INPUT}
 # TODO: Add GDML version (needs an input file + knowhow)
 
 # Run material validation example (generic-only, see above)

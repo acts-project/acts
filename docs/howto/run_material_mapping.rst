@@ -15,7 +15,7 @@ First we will need to extract the list of all the surfaces and volumes in our de
 
 .. code-block:: console
 
-  ./../build/bin/ActsExampleGeometryDD4hep -n1 -j1 --mat-output-file geometry-map  --dd4hep-input ../Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml --output-json --mat-output-allmaterial true --mat-output-sensitive false
+  ./../build/bin/ActsExampleGeometryDD4hep -n1 -j1 --mat-output-file geometry-map  --dd4hep-input ../Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml --output-json --mat-output-allmaterial true --mat-output-sensitives false
 
 This algorithm is useful to obtain a visualisation of your detector using the different types of output available (``output-obj`` gives ``.obj`` with a 3D representation of the different subdetectors, for example). Here, we use ``output-json`` to obtain a map of all the surfaces and volumes in the detector with a ``ProtoSurfaceMaterial`` (or a ``ProtoVolumeMaterial``), ``mat-output-allmaterial`` ensure that a ``ProtoSurfaceMaterial`` (or a ``ProtoVolumeMaterial``) is associated to all the surfaces (or volumes), enforcing all of them to be written.
 Four types of surfaces exist:

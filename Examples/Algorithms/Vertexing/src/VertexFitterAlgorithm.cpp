@@ -40,7 +40,7 @@ ActsExamples::VertexFitterAlgorithm::VertexFitterAlgorithm(
 ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   using MagneticField = Acts::ConstantBField;
-  using Stepper = Acts::EigenStepper<MagneticField>;
+  using Stepper = Acts::EigenStepper<>;
   using Propagator = Acts::Propagator<Stepper>;
   using PropagatorOptions = Acts::PropagatorOptions<>;
   using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
@@ -50,7 +50,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
       Acts::VertexingOptions<Acts::BoundTrackParameters>;
 
   // Setup the magnetic field
-  MagneticField bField(m_cfg.bField);
+  auto bField = std::make_shared<MagneticField>(m_cfg.bField);
   // Setup the propagator with void navigator
   auto propagator = std::make_shared<Propagator>(Stepper(bField));
   PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext,
@@ -58,7 +58,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
   // Setup the vertex fitter
   VertexFitter::Config vertexFitterCfg;
   VertexFitter vertexFitter(vertexFitterCfg);
-  VertexFitter::State state(ctx.magFieldContext);
+  VertexFitter::State state(bField->makeCache(ctx.magFieldContext));
   // Setup the linearizer
   Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);

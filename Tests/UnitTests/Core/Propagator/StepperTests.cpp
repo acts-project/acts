@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   NavigationDirection ndir = backward;
   double stepSize = 123.;
   double tolerance = 234.;
-  ConstantBField bField(Vector3(1., 2.5, 33.33));
+  auto bField = std::make_shared<ConstantBField>(Vector3(1., 2.5, 33.33));
 
   Vector3 pos(1., 2., 3.);
   Vector3 dir(4., 5., 6.);
@@ -144,10 +144,10 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
 
   // Test charged parameters without covariance matrix
   CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom);
-  EigenStepper<ConstantBField>::State esState(tgContext, mfContext, cp, ndir,
-                                              stepSize, tolerance);
+  EigenStepper<>::State esState(tgContext, bField->makeCache(mfContext), cp,
+                                ndir, stepSize, tolerance);
 
-  EigenStepper<ConstantBField> es(bField);
+  EigenStepper<> es(bField);
 
   // Test the result & compare with the input/test for reasonable members
   BOOST_CHECK_EQUAL(esState.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -164,16 +164,16 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   // Test without charge and covariance matrix
   NeutralCurvilinearTrackParameters ncp(makeVector4(pos, time), dir,
                                         1 / absMom);
-  esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, ncp, ndir,
-                                                stepSize, tolerance);
+  esState = EigenStepper<>::State(tgContext, bField->makeCache(mfContext), ncp,
+                                  ndir, stepSize, tolerance);
   BOOST_CHECK_EQUAL(es.charge(esState), 0.);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
   ncp = NeutralCurvilinearTrackParameters(makeVector4(pos, time), dir,
                                           1 / absMom, cov);
-  esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, ncp, ndir,
-                                                stepSize, tolerance);
+  esState = EigenStepper<>::State(tgContext, bField->makeCache(mfContext), ncp,
+                                  ndir, stepSize, tolerance);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK(esState.covTransport);
   BOOST_CHECK_EQUAL(esState.cov, cov);
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   NavigationDirection ndir = backward;
   double stepSize = 123.;
   double tolerance = 234.;
-  ConstantBField bField(Vector3(1., 2.5, 33.33));
+  auto bField = std::make_shared<ConstantBField>(Vector3(1., 2.5, 33.33));
 
   // Construct the parameters
   Vector3 pos(1., 2., 3.);
@@ -199,9 +199,9 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                                 cov);
 
   // Build the state and the stepper
-  EigenStepper<ConstantBField>::State esState(tgContext, mfContext, cp, ndir,
-                                              stepSize, tolerance);
-  EigenStepper<ConstantBField> es(bField);
+  EigenStepper<>::State esState(tgContext, bField->makeCache(mfContext), cp,
+                                ndir, stepSize, tolerance);
+  EigenStepper<> es(bField);
 
   // Test the getters
   CHECK_CLOSE_ABS(es.position(esState), pos, eps);
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_ABS(es.charge(esState), charge, eps);
   CHECK_CLOSE_ABS(es.time(esState), time, eps);
   //~ BOOST_CHECK_EQUAL(es.overstepLimit(esState), tolerance);
-  BOOST_CHECK_EQUAL(es.getField(esState, pos), bField.getField(pos));
+  BOOST_CHECK_EQUAL(es.getField(esState, pos), bField->getField(pos));
 
   // Step size modifies
   const std::string originalStepSize = esState.stepSize.toString();
@@ -298,8 +298,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   auto copyState = [&](auto& field, const auto& state) {
     using field_t = std::decay_t<decltype(field)>;
-    std::decay_t<decltype(state)> copy(tgContext, mfContext, cp, ndir, stepSize,
-                                       tolerance);
+    std::decay_t<decltype(state)> copy(tgContext, field.makeCache(mfContext),
+                                       cp, ndir, stepSize, tolerance);
     copy.pars = state.pars;
     copy.q = state.q;
     copy.covTransport = state.covTransport;
@@ -327,8 +327,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   };
 
   // Reset all possible parameters
-  EigenStepper<ConstantBField>::State esStateCopy(
-      copyState(bField, ps.stepping));
+  EigenStepper<>::State esStateCopy(copyState(*bField, ps.stepping));
   es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface(), ndir, stepSize2);
   // Test all components
@@ -353,7 +352,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(esStateCopy.tolerance, ps.stepping.tolerance);
 
   // Reset all possible parameters except the step size
-  esStateCopy = copyState(bField, ps.stepping);
+  esStateCopy = copyState(*bField, ps.stepping);
   es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface(), ndir);
   // Test all components
@@ -379,7 +378,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(esStateCopy.tolerance, ps.stepping.tolerance);
 
   // Reset the least amount of parameters
-  esStateCopy = copyState(bField, ps.stepping);
+  esStateCopy = copyState(*bField, ps.stepping);
   es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface());
   // Test all components
@@ -407,8 +406,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   auto plane = Surface::makeShared<PlaneSurface>(pos, dir.normalized());
   BoundTrackParameters bp(plane, tgContext, makeVector4(pos, time), dir,
                           charge / absMom, cov);
-  esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, cp, ndir,
-                                                stepSize, tolerance);
+  esState = EigenStepper<>::State(tgContext, bField->makeCache(mfContext), cp,
+                                  ndir, stepSize, tolerance);
 
   // Test the intersection in the context of a surface
   auto targetSurface =
@@ -475,11 +474,11 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_ABS(h0, esState.stepSize, eps);
 
   // Produce some errors
-  NullBField nBfield;
-  EigenStepper<NullBField> nes(nBfield);
-  EigenStepper<NullBField>::State nesState(tgContext, mfContext, cp, ndir,
-                                           stepSize, tolerance);
-  PropState nps(copyState(nBfield, nesState));
+  auto nBfield = std::make_shared<NullBField>();
+  EigenStepper<> nes(nBfield);
+  EigenStepper<>::State nesState(tgContext, nBfield->makeCache(mfContext), cp,
+                                 ndir, stepSize, tolerance);
+  PropState nps(copyState(*nBfield, nesState));
   // Test that we can reach the minimum step size
   nps.options.tolerance = 1e-21;
   nps.options.stepSizeCutOff = 1e20;
@@ -554,14 +553,12 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   propOpts.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
-  ConstantBField bField(Vector3(0., 0., 0.));
+  auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 0.));
   EigenStepper<
-      ConstantBField,
       StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
       detail::HighestValidAuctioneer>
       es(bField);
-  Propagator<EigenStepper<ConstantBField,
-                          StepperExtensionList<DefaultExtension,
+  Propagator<EigenStepper<StepperExtensionList<DefaultExtension,
                                                DenseEnvironmentExtension>,
                           detail::HighestValidAuctioneer>,
              Navigator>
@@ -594,11 +591,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   propOptsDef.maxSteps = 100;
   propOptsDef.maxStepSize = 1.5_m;
 
-  EigenStepper<ConstantBField, StepperExtensionList<DefaultExtension>> esDef(
-      bField);
-  Propagator<
-      EigenStepper<ConstantBField, StepperExtensionList<DefaultExtension>>,
-      Navigator>
+  EigenStepper<StepperExtensionList<DefaultExtension>> esDef(bField);
+  Propagator<EigenStepper<StepperExtensionList<DefaultExtension>>, Navigator>
       propDef(esDef, naviVac);
 
   // Launch and collect results
@@ -668,14 +662,12 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   propOpts.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
-  ConstantBField bField(Vector3(0., 0., 0.));
+  auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 0.));
   EigenStepper<
-      ConstantBField,
       StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
       detail::HighestValidAuctioneer>
       es(bField);
-  Propagator<EigenStepper<ConstantBField,
-                          StepperExtensionList<DefaultExtension,
+  Propagator<EigenStepper<StepperExtensionList<DefaultExtension,
                                                DenseEnvironmentExtension>,
                           detail::HighestValidAuctioneer>,
              Navigator>
@@ -717,10 +709,8 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   propOptsDense.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
-  EigenStepper<ConstantBField, StepperExtensionList<DenseEnvironmentExtension>>
-      esDense(bField);
-  Propagator<EigenStepper<ConstantBField,
-                          StepperExtensionList<DenseEnvironmentExtension>>,
+  EigenStepper<StepperExtensionList<DenseEnvironmentExtension>> esDense(bField);
+  Propagator<EigenStepper<StepperExtensionList<DenseEnvironmentExtension>>,
              Navigator>
       propDense(esDense, naviMat);
 
@@ -745,14 +735,12 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   ////////////////////////////////////////////////////////////////////
 
   // Re-launch the configuration with magnetic field
-  bField.setField(0., 1_T, 0.);
+  bField->setField(0., 1_T, 0.);
   EigenStepper<
-      ConstantBField,
       StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
       detail::HighestValidAuctioneer>
       esB(bField);
-  Propagator<EigenStepper<ConstantBField,
-                          StepperExtensionList<DefaultExtension,
+  Propagator<EigenStepper<StepperExtensionList<DefaultExtension,
                                                DenseEnvironmentExtension>,
                           detail::HighestValidAuctioneer>,
              Navigator>
@@ -837,14 +825,12 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   propOpts.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
-  ConstantBField bField(Vector3(0., 1_T, 0.));
+  auto bField = std::make_shared<ConstantBField>(Vector3(0., 1_T, 0.));
   EigenStepper<
-      ConstantBField,
       StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
       detail::HighestValidAuctioneer>
       es(bField);
-  Propagator<EigenStepper<ConstantBField,
-                          StepperExtensionList<DefaultExtension,
+  Propagator<EigenStepper<StepperExtensionList<DefaultExtension,
                                                DenseEnvironmentExtension>,
                           detail::HighestValidAuctioneer>,
              Navigator>
@@ -896,11 +882,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   propOptsDef.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
-  EigenStepper<ConstantBField, StepperExtensionList<DefaultExtension>> esDef(
-      bField);
-  Propagator<
-      EigenStepper<ConstantBField, StepperExtensionList<DefaultExtension>>,
-      Navigator>
+  EigenStepper<StepperExtensionList<DefaultExtension>> esDef(bField);
+  Propagator<EigenStepper<StepperExtensionList<DefaultExtension>>, Navigator>
       propDef(esDef, naviDet);
 
   // Launch and collect results
@@ -953,10 +936,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   propOptsDense.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
-  EigenStepper<ConstantBField, StepperExtensionList<DenseEnvironmentExtension>>
-      esDense(bField);
-  Propagator<EigenStepper<ConstantBField,
-                          StepperExtensionList<DenseEnvironmentExtension>>,
+  EigenStepper<StepperExtensionList<DenseEnvironmentExtension>> esDense(bField);
+  Propagator<EigenStepper<StepperExtensionList<DenseEnvironmentExtension>>,
              Navigator>
       propDense(esDense, naviDet);
 
@@ -1085,14 +1066,12 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   propOpts.maxSteps = 10000;
 
   // Build stepper and propagator
-  ConstantBField bField(Vector3(0., 0., 0.));
+  auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 0.));
   EigenStepper<
-      ConstantBField,
       StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
       detail::HighestValidAuctioneer>
       es(bField);
-  Propagator<EigenStepper<ConstantBField,
-                          StepperExtensionList<DefaultExtension,
+  Propagator<EigenStepper<StepperExtensionList<DefaultExtension,
                                                DenseEnvironmentExtension>,
                           detail::HighestValidAuctioneer>,
              Navigator>
