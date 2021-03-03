@@ -23,10 +23,6 @@ Acts::Result<Acts::BoundVector> Acts::detail::transformFreeToBoundParameters(
   auto direction = freeParams.segment<3>(eFreeDir0);
   auto result = surface.globalToLocal(geoCtx, position, direction);
   if (!result.ok()) {
-    ACTS_LOCAL_LOGGER(
-        Acts::getDefaultLogger("ParameterTransformation", Logging::INFO));
-    ACTS_FATAL(
-        "Inconsistency in global to local transformation from free to bound.")
     return Result<Acts::BoundVector>::failure(result.error());
   }
 
@@ -50,10 +46,6 @@ Acts::Result<Acts::BoundVector> Acts::detail::transformFreeToBoundParameters(
   // convert global to local position on the surface
   auto result = surface.globalToLocal(geoCtx, position, direction);
   if (!result.ok()) {
-    ACTS_LOCAL_LOGGER(
-        Acts::getDefaultLogger("ParameterTransformation", Logging::INFO));
-    ACTS_FATAL(
-        "Inconsistency in global to local transformation from free to bound.")
     return Result<Acts::BoundVector>::failure(result.error());
   }
 
