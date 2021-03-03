@@ -19,12 +19,16 @@
 
 #include <TFile.h>
 
+namespace {
+using SimParticleContainer = ActsExamples::SimParticleContainer;
 using HitParticlesMap = ActsExamples::IndexMultimap<ActsFatras::Barcode>;
+using ProtoTrackContainer = ActsExamples::ProtoTrackContainer;
+}  // namespace
 
 ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
     ActsExamples::SeedingPerformanceWriter::Config cfg,
     Acts::Logging::Level lvl)
-    : WriterT(cfg.inputSeeds, "SeedingPerformanceWriter", lvl),
+    : WriterT(cfg.inputProtoTracks, "SeedingPerformanceWriter", lvl),
       m_cfg(std::move(cfg)),
       m_effPlotTool(m_cfg.effPlotToolConfig, lvl) {
   if (m_cfg.inputMeasurementParticlesMap.empty()) {
@@ -78,37 +82,28 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::endRun() {
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
-    const AlgorithmContext& ctx,
-    const std::vector<std::vector<Acts::Seed<SimSpacePoint>>>& seedVector) {
+    const AlgorithmContext& ctx, const ProtoTrackContainer& tracks) {
   // Read truth information collections
   const auto& particles =
       ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
   const auto& hitParticlesMap =
       ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
 
-  size_t nSeeds = 0;
+  size_t nSeeds = tracks.size();
   size_t nMatchedSeeds = 0;
   // Map from particles to how many times they were successfully found by a seed
   std::unordered_map<ActsFatras::Barcode, std::size_t> truthCount;
 
-  for (auto& regionVec : seedVector) {
-    nSeeds += regionVec.size();
-    for (size_t i = 0; i < regionVec.size(); i++) {
-      const Acts::Seed<SimSpacePoint>* seed = &regionVec[i];
-      ProtoTrack ptrack{seed->sp()[0]->measurementIndex(),
-                        seed->sp()[1]->measurementIndex(),
-                        seed->sp()[2]->measurementIndex()};
-      std::vector<ParticleHitCount> particleHitCounts;
-      identifyContributingParticles(hitParticlesMap, ptrack, particleHitCounts);
-
-      if (particleHitCounts.size() == 1) {
-        auto prt = particleHitCounts.at(0);
-        if (prt.hitCount == 3) {
-          auto it = truthCount.try_emplace(prt.particleId, 0u).first;
-          it->second += 1;
-          nMatchedSeeds++;
-        }
-      }
+  for (size_t itrack = 0; itrack < tracks.size(); ++itrack) {
+    const auto& track = tracks[itrack];
+    std::vector<ParticleHitCount> particleHitCounts;
+    identifyContributingParticles(hitParticlesMap, track, particleHitCounts);
+    // All hits matched to the same particle
+    if (particleHitCounts.size() == 1) {
+      auto prt = particleHitCounts.at(0);
+      auto it = truthCount.try_emplace(prt.particleId, 0u).first;
+      it->second += 1;
+      nMatchedSeeds++;
     }
   }
 
