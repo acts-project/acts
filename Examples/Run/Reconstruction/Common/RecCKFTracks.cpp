@@ -170,7 +170,7 @@ int runRecCKFTracks(int argc, char* argv[],
       TruthTrackFinder::Config trackFinderCfg;
       trackFinderCfg.inputParticles = inputParticles;
       trackFinderCfg.inputMeasurementParticlesMap =
-	digiCfg.outputMeasurementParticlesMap;
+          digiCfg.outputMeasurementParticlesMap;
       trackFinderCfg.outputProtoTracks = "prototracks";
       sequencer.addAlgorithm(
           std::make_shared<TruthTrackFinder>(trackFinderCfg, logLevel));
@@ -210,7 +210,7 @@ int runRecCKFTracks(int argc, char* argv[],
     // using selected particles
     tfPerfCfg.inputParticles = inputParticles;
     tfPerfCfg.inputMeasurementParticlesMap =
-      digiCfg.outputMeasurementParticlesMap;
+        digiCfg.outputMeasurementParticlesMap;
     tfPerfCfg.outputDir = outputDir;
     tfPerfCfg.outputFilename = "performance_seeding_trees.root";
     sequencer.addWriter(
