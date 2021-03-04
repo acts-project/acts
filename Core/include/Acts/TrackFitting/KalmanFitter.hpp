@@ -366,7 +366,13 @@ class KalmanFitter {
         } else if (targetReached(state, stepper, *targetSurface)) {
           ACTS_VERBOSE("Completing with fitted track parameter");
           // Transport & bind the parameter to the final surface
-          auto fittedState = stepper.boundState(state.stepping, *targetSurface);
+          auto res = stepper.boundState(state.stepping, *targetSurface);
+          if (!res.ok()) {
+            ACTS_ERROR("Error in " << direction << " filter: " << res.error());
+            result.result = res.error();
+            return;
+          }
+          auto& fittedState = *res;
           // Assign the fitted parameters
           result.fittedParameters = std::get<BoundTrackParameters>(fittedState);
 
@@ -484,8 +490,11 @@ class KalmanFitter {
         materialInteractor(surface, state, stepper, preUpdate);
 
         // Bind the transported state to the current surface
-        auto [boundParams, jacobian, pathLength] =
-            stepper.boundState(state.stepping, *surface, false);
+        auto res = stepper.boundState(state.stepping, *surface, false);
+        if (!res.ok()) {
+          return res.error();
+        }
+        auto& [boundParams, jacobian, pathLength] = *res;
 
         // add a full TrackState entry multi trajectory
         // (this allocates storage for all components, we will set them later)
@@ -592,8 +601,12 @@ class KalmanFitter {
             result.missedActiveSurfaces.push_back(surface);
 
             // Transport & bind the state to the current surface
-            auto [boundParams, jacobian, pathLength] =
-                stepper.boundState(state.stepping, *surface);
+            auto res = stepper.boundState(state.stepping, *surface);
+            if (!res.ok()) {
+              ACTS_ERROR("Propagate to hole surface failed: " << res.error());
+              return res.error();
+            }
+            auto& [boundParams, jacobian, pathLength] = *res;
 
             // Fill the track state
             trackStateProxy.predicted() = std::move(boundParams.parameters());
@@ -669,8 +682,12 @@ class KalmanFitter {
         materialInteractor(surface, state, stepper, preUpdate);
 
         // Bind the transported state to the current surface
-        auto [boundParams, jacobian, pathLength] =
-            stepper.boundState(state.stepping, *surface, false);
+        auto res = stepper.boundState(state.stepping, *surface, false);
+        if (!res.ok()) {
+          return res.error();
+        }
+
+        auto& [boundParams, jacobian, pathLength] = *res;
 
         // Create a detached track state proxy
         auto tempTrackTip =
