@@ -300,8 +300,10 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   /// Repeat with surface related methods
   auto plane = Surface::makeShared<PlaneSurface>(pos, dir);
-  BoundTrackParameters bp(plane, tgContext, makeVector4(pos, time), dir,
-                          charge / absMom, cov);
+  auto bp =
+      BoundTrackParameters::create(plane, tgContext, makeVector4(pos, time),
+                                   dir, charge / absMom, cov)
+          .value();
   slsState = StraightLineStepper::State(tgContext, mfContext, cp, ndir,
                                         stepSize, tolerance);
 
@@ -328,7 +330,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_ABS(slsState.stepSize, 2, 1e-6);
 
   // Test the bound state construction
-  auto boundState = sls.boundState(slsState, *plane);
+  auto boundState = sls.boundState(slsState, *plane).value();
   auto boundPars = std::get<0>(boundState);
   CHECK_CLOSE_ABS(boundPars.position(tgContext), bp.position(tgContext), 1e-6);
   CHECK_CLOSE_ABS(boundPars.momentum(), bp.momentum(), 1e-6);

@@ -157,37 +157,49 @@ void runTest(std::shared_ptr<const Surface> surface, double l0, double l1,
   }
   // neutral parameters from global information
   {
-    NeutralBoundTrackParameters params(surface, geoCtx, pos4, dir, 1 / p);
+    auto params =
+        NeutralBoundTrackParameters::create(surface, geoCtx, pos4, dir, 1 / p)
+            .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
     BOOST_CHECK(not params.covariance());
   }
   // negative charged parameters from global information
   {
-    BoundTrackParameters params(surface, geoCtx, pos4, dir, -1_e / p);
+    auto params =
+        BoundTrackParameters::create(surface, geoCtx, pos4, dir, -1_e / p)
+            .value();
     checkParameters(params, l0, l1, time, phi, theta, p, -1_e, pos, dir);
     BOOST_CHECK(not params.covariance());
   }
   // positive charged parameters from global information
   {
-    BoundTrackParameters params(surface, geoCtx, pos4, dir, 1_e / p);
+    auto params =
+        BoundTrackParameters::create(surface, geoCtx, pos4, dir, 1_e / p)
+            .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 1_e, pos, dir);
     BOOST_CHECK(not params.covariance());
   }
   // neutral any parameters from global information
   {
-    AnyBoundTrackParameters params(surface, geoCtx, pos4, dir, p, 0_e);
+    auto params =
+        AnyBoundTrackParameters::create(surface, geoCtx, pos4, dir, p, 0_e)
+            .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
     BOOST_CHECK(not params.covariance());
   }
   // double-negative any parameters from global information
   {
-    AnyBoundTrackParameters params(surface, geoCtx, pos4, dir, p, -2_e);
+    auto params =
+        AnyBoundTrackParameters::create(surface, geoCtx, pos4, dir, p, -2_e)
+            .value();
     checkParameters(params, l0, l1, time, phi, theta, p, -2_e, pos, dir);
     BOOST_CHECK(not params.covariance());
   }
   // triple-positive any parameters from global information
   {
-    AnyBoundTrackParameters params(surface, geoCtx, pos4, dir, p, 3_e);
+    auto params =
+        AnyBoundTrackParameters::create(surface, geoCtx, pos4, dir, p, 3_e)
+            .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 3_e, pos, dir);
     BOOST_CHECK(not params.covariance());
   }
