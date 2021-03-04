@@ -37,7 +37,7 @@ directory.
    $ <build>/bin/ActsExampleParticleGun \
        --events=100 \
        --output-dir=data/gen/four_muons \
-       --output-csv=1 \
+       --output-csv \
        --gen-phi-degree=0:90 \
        --gen-eta=-2:2 \
        --gen-p-gev=1:5 \
@@ -70,7 +70,7 @@ the default soft QCD process. The output is written as CSV files in the
    $ <build>/bin/ActsExamplePythia8 \
        --events=100 \
        --output-dir=data/gen/ttbar_mu140 \
-       --output-csv=1 \
+       --output-csv \
        --rnd-seed=42 \
        --gen-cms-energy-gev=14000 \
        --gen-hard-process=Top:qqbar2ttbar=on \
@@ -104,7 +104,7 @@ muons in a reasonable kinematic range are generated.
 
    $ <build>/bin/ActsExampleFatrasGeneric \
        --output-dir=data/sim_generic/single_muon \
-       --output-csv=1 \
+       --output-csv \
        --events=100 \
        --bf-value=0 0 2 \
        --digi-geometric-3d
@@ -134,7 +134,7 @@ particles.
    $ <build>/bin/ActsExampleFatrasGeneric \
        --input-dir=data/gen/ttbar_mu140 \
        --output-dir=data/sim_generic/ttbar_mu140 \
-       --output-csv=1 \
+       --output-csv \
        --select-eta=-3:3 \
        --select-pt=0.5: \
        --remove-neutral \

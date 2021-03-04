@@ -165,12 +165,12 @@ void jacobianLocalToLocal(const Vector3& direction,
 /// parametrisation to free parameters
 /// @param [in] freeParams Free, nominal parametrisation
 /// @param [in] surface The reference surface of the local parametrisation
-void reinitializeJacobians(const GeometryContext& geoContext,
-                           FreeMatrix& transportJacobian,
-                           FreeVector& derivatives,
-                           BoundToFreeMatrix& jacToGlobal,
-                           const FreeVector& freeParams,
-                           const Surface& surface) {
+Result<void> reinitializeJacobians(const GeometryContext& geoContext,
+                                   FreeMatrix& transportJacobian,
+                                   FreeVector& derivatives,
+                                   BoundToFreeMatrix& jacToGlobal,
+                                   const FreeVector& freeParams,
+                                   const Surface& surface) {
   using VectorHelpers::phi;
   using VectorHelpers::theta;
 
@@ -189,10 +189,14 @@ void reinitializeJacobians(const GeometryContext& geoContext,
         "Inconsistency in global to local transformation during propagation.")
   }
   // Transform from free to bound parameters
-  BoundVector boundParams =
+  Result<BoundVector> boundParams =
       detail::transformFreeToBoundParameters(freeParams, surface, geoContext);
+  if (!boundParams.ok()) {
+    return boundParams.error();
+  }
   // Reset the jacobian from local to global
-  jacToGlobal = surface.jacobianLocalToGlobal(geoContext, boundParams);
+  jacToGlobal = surface.jacobianLocalToGlobal(geoContext, *boundParams);
+  return Result<void>::success();
 }
 
 /// @brief This function reinitialises the state members required for the
@@ -242,12 +246,13 @@ void reinitializeJacobians(FreeMatrix& transportJacobian,
 
 namespace detail {
 
-BoundState boundState(const GeometryContext& geoContext,
-                      Covariance& covarianceMatrix, Jacobian& jacobian,
-                      FreeMatrix& transportJacobian, FreeVector& derivatives,
-                      BoundToFreeMatrix& jacToGlobal,
-                      const FreeVector& parameters, bool covTransport,
-                      double accumulatedPath, const Surface& surface) {
+Result<BoundState> boundState(const GeometryContext& geoContext,
+                              Covariance& covarianceMatrix, Jacobian& jacobian,
+                              FreeMatrix& transportJacobian,
+                              FreeVector& derivatives,
+                              BoundToFreeMatrix& jacToGlobal,
+                              const FreeVector& parameters, bool covTransport,
+                              double accumulatedPath, const Surface& surface) {
   // Covariance transport
   std::optional<BoundSymMatrix> cov = std::nullopt;
   if (covTransport) {
@@ -265,11 +270,14 @@ BoundState boundState(const GeometryContext& geoContext,
   }
 
   // Create the bound parameters
-  BoundVector bv =
+  Result<BoundVector> bv =
       detail::transformFreeToBoundParameters(parameters, surface, geoContext);
+  if (!bv.ok()) {
+    return bv.error();
+  }
   // Create the bound state
   return std::make_tuple(
-      BoundTrackParameters(surface.getSharedPtr(), bv, std::move(cov)),
+      BoundTrackParameters(surface.getSharedPtr(), *bv, std::move(cov)),
       jacobian, accumulatedPath);
 }
 
