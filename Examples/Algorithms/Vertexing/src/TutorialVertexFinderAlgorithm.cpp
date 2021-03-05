@@ -9,7 +9,6 @@
 #include "ActsExamples/Vertexing/TutorialVertexFinderAlgorithm.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
