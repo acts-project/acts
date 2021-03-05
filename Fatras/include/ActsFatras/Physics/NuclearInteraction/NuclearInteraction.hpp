@@ -20,6 +20,7 @@
 #include <cmath>
 #include <iterator>
 #include <limits>
+#include <optional>
 #include <random>
 #include <vector>
 
