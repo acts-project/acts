@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Fatras/FatrasAlgorithm.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 //~ #include "ActsFatras/Kernel/Process.hpp"
@@ -32,7 +32,7 @@ void addNuclearInteractionOptions(Description& desc);
 /// Reads the parametrisation and provides the parametrisation
 ActsFatras::detail::MultiParticleParametrisation readParametrisations(
     const std::string& fileName);
-      
+
 /// Read Fatras options to create the algorithm config.
 ///
 /// @param vars         the variables to read from
@@ -42,21 +42,28 @@ std::string readNuclearInteractionConfig(
 /// Read the parametrisations.
 ///
 /// @tparam simulator_t type of the simulation kernel
-/// @param [in] nuclearInteractionParametrisation File name of the parametrisations
+/// @param [in] nuclearInteractionParametrisation File name of the
+/// parametrisations
 /// @param [in, out] simulator The simulation kernel
 template <typename simulator_t>
-void setNuclearInteractionParametrisations(const std::string& nuclearInteractionParametrisation, simulator_t& simulator) {
-	if(nuclearInteractionParametrisation.empty()) {
-		return;
-	}
-	
-	auto& chargedNuclearInteraction = simulator.charged.interactions.template get<ActsFatras::NuclearInteraction>();
-	auto& neutralNuclearInteraction = simulator.neutral.interactions.template get<ActsFatras::NuclearInteraction>();
+void setNuclearInteractionParametrisations(
+    const std::string& nuclearInteractionParametrisation,
+    simulator_t& simulator) {
+  if (nuclearInteractionParametrisation.empty()) {
+    return;
+  }
 
-	const auto mpp = readParametrisations(nuclearInteractionParametrisation);
-	
-	chargedNuclearInteraction.multiParticleParameterisation = mpp;
-	neutralNuclearInteraction.multiParticleParameterisation = mpp;
+  auto& chargedNuclearInteraction =
+      simulator.charged.interactions
+          .template get<ActsFatras::NuclearInteraction>();
+  auto& neutralNuclearInteraction =
+      simulator.neutral.interactions
+          .template get<ActsFatras::NuclearInteraction>();
+
+  const auto mpp = readParametrisations(nuclearInteractionParametrisation);
+
+  chargedNuclearInteraction.multiParticleParameterisation = mpp;
+  neutralNuclearInteraction.multiParticleParameterisation = mpp;
 }
 
 }  // namespace Options

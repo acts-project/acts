@@ -35,7 +35,7 @@ const detail::Parameters& NuclearInteraction::findParameters(
 
 unsigned int NuclearInteraction::sampleDiscreteValues(
     double rnd,
-    const detail::Parameters::CumulativeDistribution& distribution) const {			
+    const detail::Parameters::CumulativeDistribution& distribution) const {
   // Fast exit
   if (distribution.second.empty()) {
     return 0;
@@ -63,8 +63,8 @@ Particle::Scalar NuclearInteraction::sampleContinuousValues(
   // Find the bin
   const uint32_t int_rnd = UINT32_MAX * rnd;
   // Fast exit for non-normalised CDFs like interaction probabiltiy
-  if(int_rnd > distribution.second.back())
-	return std::numeric_limits<Scalar>::infinity();
+  if (int_rnd > distribution.second.back())
+    return std::numeric_limits<Scalar>::infinity();
   const auto it = std::upper_bound(distribution.second.begin(),
                                    distribution.second.end(), int_rnd);
   size_t iBin = std::min((size_t)std::distance(distribution.second.begin(), it),
@@ -110,8 +110,8 @@ NuclearInteraction::globalAngle(ActsFatras::Particle::Scalar phi1,
 
   // Rotate the direction vector of the second particle
   const Acts::Vector3 vector2(std::sin(theta2) * std::cos(phi2),
-                               std::sin(theta2) * std::sin(phi2),
-                               std::cos(theta2));
+                              std::sin(theta2) * std::sin(phi2),
+                              std::cos(theta2));
   const Acts::Vector3 vectorSum = rotZ * rotY * vector2;
 
   // Calculate the global angles

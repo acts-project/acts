@@ -33,8 +33,13 @@ struct Parameters {
         Acts::ActsDynamicVector& eVecMom, Acts::ActsDynamicVector& meanMom,
         Distributions& invariantMasses, Acts::ActsDynamicVector& eValIM,
         Acts::ActsDynamicVector& eVecIM, Acts::ActsDynamicVector& meanIM)
-        : validParametrisation(true), momentumDistributions(momenta), eigenvaluesMomentum(eValMom), meanMomentum(meanMom),
-          invariantMassDistributions(invariantMasses), eigenvaluesInvariantMass(eValIM), meanInvariantMass(meanIM) {
+        : validParametrisation(true),
+          momentumDistributions(momenta),
+          eigenvaluesMomentum(eValMom),
+          meanMomentum(meanMom),
+          invariantMassDistributions(invariantMasses),
+          eigenvaluesInvariantMass(eValIM),
+          meanInvariantMass(meanIM) {
       const unsigned int sizeMom = eigenvaluesMomentum.size();
       eigenvectorsMomentum.resize(sizeMom, sizeMom);
       for (unsigned int i = 0; i < sizeMom; i++) {
@@ -49,9 +54,9 @@ struct Parameters {
           eigenvectorsInvariantMass(i, j) = eVecIM[i * sizeInvMass + j];
       }
     }
-    
+
     bool validParametrisation = false;
-    
+
     /// Momentum parameters
     /// Generation-wise distributions
     Distributions momentumDistributions;
