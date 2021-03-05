@@ -573,8 +573,8 @@ class AtlasStepper {
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it
   ///   - and the path length (from start - for ordering)
-  BoundState boundState(State& state, const Surface& surface,
-                        bool transportCov = true) const {
+  Result<BoundState> boundState(State& state, const Surface& surface,
+                                bool transportCov = true) const {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
     // extract state information
@@ -599,10 +599,14 @@ class AtlasStepper {
     }
 
     // Fill the end parameters
-    BoundTrackParameters parameters(surface.getSharedPtr(), state.geoContext,
-                                    pos4, dir, qOverP, std::move(covOpt));
+    auto parameters =
+        BoundTrackParameters::create(surface.getSharedPtr(), state.geoContext,
+                                     pos4, dir, qOverP, std::move(covOpt));
+    if (!parameters.ok()) {
+      return parameters.error();
+    }
 
-    return BoundState(std::move(parameters), state.jacobian,
+    return BoundState(std::move(*parameters), state.jacobian,
                       state.pathAccumulated);
   }
 

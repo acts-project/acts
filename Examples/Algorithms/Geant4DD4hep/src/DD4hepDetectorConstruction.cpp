@@ -12,6 +12,7 @@
 
 #include <DD4hep/Detector.h>
 #include <DD4hep/Plugins.h>
+#include <DD4hep/Printout.h>
 #include <DDG4/Geant4Converter.h>
 #include <DDG4/Geant4GeometryInfo.h>
 
@@ -25,7 +26,7 @@ DD4hepDetectorConstruction::DD4hepDetectorConstruction(
 G4VPhysicalVolume* DD4hepDetectorConstruction::Construct() {
   dd4hep::sim::Geant4Mapping& g4map = dd4hep::sim::Geant4Mapping::instance();
   dd4hep::DetElement world = m_detector.world();
-  dd4hep::sim::Geant4Converter conv(m_detector, dd4hep::INFO);
+  dd4hep::sim::Geant4Converter conv(m_detector, dd4hep::PrintLevel::VERBOSE);
   dd4hep::sim::Geant4GeometryInfo* geo_info = conv.create(world).detach();
   g4map.attach(geo_info);
   // All volumes are deleted in ~G4PhysicalVolumeStore()

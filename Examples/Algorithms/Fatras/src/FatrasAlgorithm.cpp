@@ -20,9 +20,9 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsFatras/Kernel/InteractionList.hpp"
-#include "ActsFatras/Kernel/Simulator.hpp"
+#include "ActsFatras/Kernel/Simulation.hpp"
 #include "ActsFatras/Physics/Decay/NoDecay.hpp"
-#include "ActsFatras/Physics/PhotonConversion/PhotonConversion.hpp"
+#include "ActsFatras/Physics/ElectroMagnetic/PhotonConversion.hpp"
 #include "ActsFatras/Physics/StandardInteractions.hpp"
 #include "ActsFatras/Selectors/KinematicCasts.hpp"
 #include "ActsFatras/Selectors/SelectorHelpers.hpp"
@@ -50,7 +50,7 @@ struct HitSurfaceSelector {
 
 }  // namespace
 
-// Same interface as `ActsFatras::Simulator` but with concrete types.
+// Same interface as `ActsFatras::Simulation` but with concrete types.
 struct ActsExamples::detail::FatrasAlgorithmSimulation {
   virtual ~FatrasAlgorithmSimulation() = default;
   virtual Acts::Result<std::vector<ActsFatras::FailedParticle>> simulate(
@@ -79,7 +79,7 @@ struct FatrasAlgorithmSimulationT final
   using ChargedPropagator = Acts::Propagator<ChargedStepper, Acts::Navigator>;
   // charged particles w/ standard em physics list and selectable hits
   using ChargedSelector = CutPMin;
-  using ChargedSimulator = ActsFatras::ParticleSimulator<
+  using ChargedSimulation = ActsFatras::SingleParticleSimulation<
       ChargedPropagator, ActsFatras::StandardChargedElectroMagneticInteractions,
       HitSurfaceSelector, ActsFatras::NoDecay>;
 
@@ -87,30 +87,29 @@ struct FatrasAlgorithmSimulationT final
   // propagate neutral particles with just straight lines
   using NeutralStepper = Acts::StraightLineStepper;
   using NeutralPropagator = Acts::Propagator<NeutralStepper, Acts::Navigator>;
-  // neutral particles w/o physics and no hits
+  // neutral particles w/ photon conversion and no hits
   using NeutralSelector = CutPMin;
   using NeutralInteractions =
       ActsFatras::InteractionList<ActsFatras::PhotonConversion>;
-  using NeutralSimulator =
-      ActsFatras::ParticleSimulator<NeutralPropagator, NeutralInteractions,
-                                    ActsFatras::NoSurface, ActsFatras::NoDecay>;
+  using NeutralSimulation = ActsFatras::SingleParticleSimulation<
+      NeutralPropagator, NeutralInteractions, ActsFatras::NoSurface,
+      ActsFatras::NoDecay>;
 
   // combined simulation type
-  using Simulation = ActsFatras::Simulator<ChargedSelector, ChargedSimulator,
-                                           NeutralSelector, NeutralSimulator>;
+  using Simulation = ActsFatras::Simulation<ChargedSelector, ChargedSimulation,
+                                            NeutralSelector, NeutralSimulation>;
 
   Simulation simulation;
 
-  FatrasAlgorithmSimulationT(std::shared_ptr<Acts::MagneticFieldProvider> mf,
-                             const ActsExamples::FatrasAlgorithm::Config &cfg,
+  FatrasAlgorithmSimulationT(const ActsExamples::FatrasAlgorithm::Config &cfg,
                              Acts::Logging::Level lvl)
-      : simulation(
-            ChargedSimulator(ChargedPropagator(ChargedStepper{std::move(mf)},
-                                               cfg.trackingGeometry),
-                             lvl),
-            NeutralSimulator(
-                NeutralPropagator(NeutralStepper(), cfg.trackingGeometry),
-                lvl)) {
+      : simulation(ChargedSimulation(
+                       ChargedPropagator(ChargedStepper(cfg.magneticField),
+                                         cfg.trackingGeometry),
+                       lvl),
+                   NeutralSimulation(NeutralPropagator(NeutralStepper(),
+                                                       cfg.trackingGeometry),
+                                     lvl)) {
     using namespace ActsFatras;
     using namespace ActsFatras::detail;
     // apply the configuration
@@ -169,8 +168,7 @@ ActsExamples::FatrasAlgorithm::FatrasAlgorithm(Config cfg,
   ACTS_DEBUG("hits on passive surfaces: " << m_cfg.generateHitsOnPassive);
 
   // construct the simulation for the specific magnetic field
-  m_sim = std::make_unique<FatrasAlgorithmSimulationT>(m_cfg.magneticField,
-                                                       m_cfg, lvl);
+  m_sim = std::make_unique<FatrasAlgorithmSimulationT>(m_cfg, lvl);
 }
 
 // explicit destructor needed for the PIMPL implementation to work

@@ -51,7 +51,7 @@ void Acts::EigenStepper<E, A>::resetState(State& state,
 template <typename E, typename A>
 auto Acts::EigenStepper<E, A>::boundState(State& state, const Surface& surface,
                                           bool transportCov) const
-    -> BoundState {
+    -> Result<BoundState> {
   return detail::boundState(
       state.geoContext, state.cov, state.jacobian, state.jacTransport,
       state.derivative, state.jacToGlobal, state.pars,
