@@ -12,8 +12,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Fatras/FatrasAlgorithm.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
-//~ #include "ActsFatras/Kernel/Process.hpp"
-//~ #include "ActsFatras/Physics/StandardPhysicsLists.hpp"
 #include "ActsFatras/Physics/NuclearInteraction/NuclearInteraction.hpp"
 #include "ActsFatras/Physics/NuclearInteraction/Parameters.hpp"
 
@@ -35,7 +33,7 @@ ActsFatras::detail::MultiParticleParametrisation readParametrisations(
 
 /// Read Fatras options to create the algorithm config.
 ///
-/// @param vars         the variables to read from
+/// @param variables the variables to read from
 std::string readNuclearInteractionConfig(
     const boost::program_options::variables_map& variables);
 
