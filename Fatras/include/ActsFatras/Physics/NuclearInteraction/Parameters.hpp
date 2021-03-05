@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,8 +10,6 @@
 
 #include "Acts/Definitions/Common.hpp"
 
-#include <map>
-#include <unordered_map>
 #include <vector>
 
 namespace ActsFatras {
@@ -31,37 +29,29 @@ struct Parameters {
     ParametersWithFixedMultiplicity() = default;
 
     ParametersWithFixedMultiplicity(
-        Distributions& momenta, std::vector<float>& eValMom,
-        std::vector<float>& eVecMom, std::vector<float>& meanMom,
-        Distributions& invariantMasses, std::vector<float>& eValIM,
-        std::vector<float>& eVecIM, std::vector<float>& meanIM)
-        : momentumDistributions(momenta),
-          invariantMassDistributions(invariantMasses) {
-      const unsigned int sizeMom = eValMom.size();
-      eigenvaluesMomentum.resize(sizeMom);
+        Distributions& momenta, Acts::ActsDynamicVector& eValMom,
+        Acts::ActsDynamicVector& eVecMom, Acts::ActsDynamicVector& meanMom,
+        Distributions& invariantMasses, Acts::ActsDynamicVector& eValIM,
+        Acts::ActsDynamicVector& eVecIM, Acts::ActsDynamicVector& meanIM)
+        : validParametrisation(true), momentumDistributions(momenta), eigenvaluesMomentum(eValMom), meanMomentum(meanMom),
+          invariantMassDistributions(invariantMasses), eigenvaluesInvariantMass(eValIM), meanInvariantMass(meanIM) {
+      const unsigned int sizeMom = eigenvaluesMomentum.size();
       eigenvectorsMomentum.resize(sizeMom, sizeMom);
-      meanMomentum.resize(sizeMom);
-
       for (unsigned int i = 0; i < sizeMom; i++) {
-        eigenvaluesMomentum(i) = eValMom[i];
         for (unsigned int j = 0; j < sizeMom; j++)
           eigenvectorsMomentum(i, j) = eVecMom[i * sizeMom + j];
-        meanMomentum(i) = meanMom[i];
       }
 
-      const unsigned int sizeInvMass = eValIM.size();
-      eigenvaluesInvariantMass.resize(sizeInvMass);
+      const unsigned int sizeInvMass = eigenvaluesInvariantMass.size();
       eigenvectorsInvariantMass.resize(sizeInvMass, sizeInvMass);
-      meanInvariantMass.resize(sizeInvMass);
-
       for (unsigned int i = 0; i < sizeInvMass; i++) {
-        eigenvaluesInvariantMass(i) = eValIM[i];
-        for (unsigned int j = 0; j < sizeMom; j++)
-          eigenvectorsInvariantMass(i, j) = eVecIM[i * sizeMom + j];
-        meanInvariantMass(i) = meanIM[i];
+        for (unsigned int j = 0; j < sizeInvMass; j++)
+          eigenvectorsInvariantMass(i, j) = eVecIM[i * sizeInvMass + j];
       }
     }
-
+    
+    bool validParametrisation = false;
+    
     /// Momentum parameters
     /// Generation-wise distributions
     Distributions momentumDistributions;

@@ -38,7 +38,7 @@ using StandardBetheBloch =
 ///
 /// Only applies to electrons and positrons.
 using StandardBetheHeitler =
-    Process<BetheHeitler, SelectElectronLike, SelectPMin, EveryParticle>;
+    ContinuousProcess<BetheHeitler, SelectElectronLike, SelectPMin, SelectPMin>;
 
 }  // namespace detail
 

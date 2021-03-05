@@ -24,21 +24,27 @@ std::pair<std::vector<float>, std::vector<uint32_t>> readHistogram(const std::st
 	// Return the histogram if available
 	if(binBorders != nullptr && binContents != nullptr)
 	{
-		return std::make_pair(std::move(*binBorders), std::move(*binContents));
+		return std::make_pair(*binBorders, *binContents);
 	}
 	return std::make_pair(std::vector<float>(), std::vector<uint32_t>());
 }
 
-std::vector<float> readVector(const std::string&& vectorName) {
+Acts::ActsDynamicVector readVector(const std::string&& vectorName) {
 	std::vector<float>* vector;
 	// Get the vector
 	vector = (std::vector<float>*) gDirectory->Get(vectorName.c_str());
 	// Return the vector if available
 	if(vector != nullptr)
 	{
-		return *vector;
+		Acts::ActsDynamicVector result;
+		const unsigned int sizeVec = vector->size();
+		result.resize(sizeVec);
+		for(unsigned int i = 0; i < sizeVec; i++)
+			result(i) = (*vector)[i];
+      
+		return result;
 	}
-	return std::vector<float>();
+	return Acts::ActsDynamicVector();
 }
 
 void readKinematicParameters(ActsFatras::detail::Parameters& parameters, TObject* folder, bool softInteractionParameters) {
@@ -54,38 +60,43 @@ void readKinematicParameters(ActsFatras::detail::Parameters& parameters, TObject
 		invariantMassDistributions.resize(mult);
 		for(unsigned int i = 0; i < mult; i++)
 		{
-momentumDistributions[i] = readHistogram(("MomentumDistributionBinBorders_" + std::to_string(i)).c_str()
-	, ("MomentumDistributionBinContents_" + std::to_string(i)).c_str());
+			momentumDistributions[i] = readHistogram(("MomentumDistributionBinBorders_" + std::to_string(i)).c_str()
+				, ("MomentumDistributionBinContents_" + std::to_string(i)).c_str());
 
-momentumDistributions[i] = readHistogram(("InvariantMassDistributionBinBorders_" + std::to_string(i)).c_str()
-	, ("InvariantMassDistributionBinContents_" + std::to_string(i)).c_str());
+			invariantMassDistributions[i] = readHistogram(("InvariantMassDistributionBinBorders_" + std::to_string(i)).c_str()
+				, ("InvariantMassDistributionBinContents_" + std::to_string(i)).c_str());
 		}
-momentumDistributions.back() = readHistogram(("MomentumDistributionBinBorders_" + std::to_string(mult)).c_str()
-	, ("MomentumDistributionBinContents_" + std::to_string(mult)).c_str());
-		// Get the eigenspace components for the kinematic parameters
-		std::vector<float> momentumEigenvalues = readVector("MomentumEigenvalues");
-		std::vector<float> momentumEigenvectors = readVector("MomentumEigenvectors");
-		std::vector<float> momentumMean = readVector("MomentumMean");
-		std::vector<float> invariantMassEigenvalues = readVector("InvariantMassEigenvalues");
-		std::vector<float> invariantMassEigenvectors = readVector("InvariantMassEigenvectors");
-		std::vector<float> invariantMassMean = readVector("InvariantMassMean");
+		momentumDistributions.back() = readHistogram(("MomentumDistributionBinBorders_" + std::to_string(mult)).c_str()
+			, ("MomentumDistributionBinContents_" + std::to_string(mult)).c_str());
 
+		// Get the eigenspace components for the kinematic parameters
+		Acts::ActsDynamicVector momentumEigenvalues = readVector("MomentumEigenvalues");
+		Acts::ActsDynamicVector momentumEigenvectors = readVector("MomentumEigenvectors");
+		Acts::ActsDynamicVector momentumMean = readVector("MomentumMean");
+		Acts::ActsDynamicVector invariantMassEigenvalues = readVector("InvariantMassEigenvalues");
+		Acts::ActsDynamicVector invariantMassEigenvectors = readVector("InvariantMassEigenvectors");
+		Acts::ActsDynamicVector invariantMassMean = readVector("InvariantMassMean");
+			
+		// Test that a parametrisation is present
+		if(momentumEigenvalues.size() != 0 && momentumEigenvectors.size() != 0 && momentumMean.size() != 0
+			&& invariantMassEigenvalues.size() != 0 && invariantMassEigenvectors.size() != 0 && invariantMassMean.size() != 0)
+			{
 		// Prepare and store the kinematic parameters
 		ActsFatras::detail::Parameters::ParametersWithFixedMultiplicity kinematicParameters(momentumDistributions, 
 		momentumEigenvalues, momentumEigenvectors, momentumMean,
 		invariantMassDistributions,
 		invariantMassEigenvalues, invariantMassEigenvectors, invariantMassMean);
-				
 		if(softInteractionParameters)
 		{
 			if(mult >= parameters.softKinematicParameters.size())
 				parameters.softKinematicParameters.resize(mult + 1);
 			parameters.softKinematicParameters[mult] = kinematicParameters;
-} else {
+		} else {
 			if(mult >= parameters.hardKinematicParameters.size())
 				parameters.hardKinematicParameters.resize(mult + 1);
 			parameters.hardKinematicParameters[mult] = kinematicParameters;
 		}
+	}
 		gDirectory->cd("..");
 	}
 }
@@ -100,6 +111,12 @@ void ActsExamples::Options::addNuclearInteractionOptions(
      value<std::string>()->default_value({}),
      "File containing parametrisations for nuclear interaction.");
 }
+
+std::string ActsExamples::Options::readNuclearInteractionConfig(
+    const boost::program_options::variables_map& variables) {
+  return variables["fatras-nuclear-interaction-parametrisation"].as<std::string>();
+}
+
 
 ActsFatras::detail::MultiParticleParametrisation ActsExamples::Options::readParametrisations(
     const std::string& fileName) {
@@ -157,32 +174,34 @@ ActsFatras::detail::MultiParticleParametrisation ActsExamples::Options::readPara
 					parameters.pdgMap.push_back(std::make_pair(branchingPdgIds[i], std::vector<std::pair<int, float>>{target}));
 				}
 			}
+
 			// Get the soft distributions
 			gDirectory->cd("soft");
 			// Get the multiplicity distribution
 			parameters.softMultiplicity = readHistogram("MultiplicityBinBorders", "MultiplicityBinContents");
-
 			// Get the distributions for each final state multiplicity
 			auto softList = gDirectory->GetListOfKeys();
 			auto softElement = softList->First();
 			while(softElement)
 			{
-readKinematicParameters(parameters, softElement, true);
+				readKinematicParameters(parameters, softElement, true);
 				softElement = softList->After(softElement);
 			}
+
 			// Get the hard distributions
 			gDirectory->cd("../hard");
 			// Get the multiplicity distribution
-			parameters.softMultiplicity = readHistogram("MultiplicityBinBorders", "MultiplicityBinContents");
+			parameters.hardMultiplicity = readHistogram("MultiplicityBinBorders", "MultiplicityBinContents");
 
 			// Get the distributions for each final state multiplicity
 			auto hardList = gDirectory->GetListOfKeys();
 			auto hardElement = hardList->First();
 			while(hardElement)
 			{
-readKinematicParameters(parameters, hardElement, false);
+				readKinematicParameters(parameters, hardElement, false);
 				hardElement = hardList->After(hardElement);
 			}
+
 			initialMomentum = listOfMomenta->After(initialMomentum);
 			// Store the parametrisation
 			parametrisation.push_back(std::make_pair(parameters.momentum, parameters));

@@ -11,17 +11,17 @@
 namespace ActsFatras {
 
 const detail::Parameters& NuclearInteraction::findParameters(
-    double rnd, const detail::Parametrisation& parametrization,
+    double rnd, const detail::Parametrisation& parametrisation,
     float particleMomentum) const {
   // Return lowest/highest if momentum outside the boundary
-  if (particleMomentum <= parametrization.begin()->first)
-    return parametrization.begin()->second;
-  if (particleMomentum >= parametrization.end()->first)
-    return parametrization.end()->second;
+  if (particleMomentum <= parametrisation.front().first)
+    return parametrisation.front().second;
+  if (particleMomentum >= parametrisation.back().first)
+    return parametrisation.back().second;
 
-  // Find the two neighbouring parametrizations
+  // Find the two neighbouring parametrisations
   const auto lowerBound = std::lower_bound(
-      parametrization.begin(), parametrization.end(), particleMomentum,
+      parametrisation.begin(), parametrisation.end(), particleMomentum,
       [](const std::pair<const float, ActsFatras::detail::Parameters>& params,
          const float mom) { return params.first < mom; });
   const float momentumUpperNeighbour = lowerBound->first;
@@ -35,7 +35,7 @@ const detail::Parameters& NuclearInteraction::findParameters(
 
 unsigned int NuclearInteraction::sampleDiscreteValues(
     double rnd,
-    const detail::Parameters::CumulativeDistribution& distribution) const {
+    const detail::Parameters::CumulativeDistribution& distribution) const {			
   // Fast exit
   if (distribution.second.empty()) {
     return 0;
@@ -52,16 +52,19 @@ unsigned int NuclearInteraction::sampleDiscreteValues(
   return distribution.first[iBin];
 }
 
-double NuclearInteraction::sampleContinuousValues(
+Particle::Scalar NuclearInteraction::sampleContinuousValues(
     double rnd, const detail::Parameters::CumulativeDistribution& distribution,
     bool interpolate) const {
   // Fast exit
   if (distribution.second.empty()) {
-    return 0;
+    return std::numeric_limits<Scalar>::infinity();
   }
 
   // Find the bin
   const uint32_t int_rnd = UINT32_MAX * rnd;
+  // Fast exit for non-normalised CDFs like interaction probabiltiy
+  if(int_rnd > distribution.second.back())
+	return std::numeric_limits<Scalar>::infinity();
   const auto it = std::upper_bound(distribution.second.begin(),
                                    distribution.second.end(), int_rnd);
   size_t iBin = std::min((size_t)std::distance(distribution.second.begin(), it),
@@ -120,14 +123,13 @@ NuclearInteraction::globalAngle(ActsFatras::Particle::Scalar phi1,
 
 bool NuclearInteraction::match(const Acts::ActsDynamicVector& momenta,
                                const Acts::ActsDynamicVector& invariantMasses,
-                               float initialMomentum) const {
+                               float parametrizedMomentum) const {
   const unsigned int size = momenta.size();
   for (unsigned int i = 0; i < size; i++) {
     // Calculate the invariant masses
     const float momentum = momenta[i];
     const float invariantMass = invariantMasses[i];
-
-    const float p1p2 = 2. * momentum * initialMomentum;
+    const float p1p2 = 2. * momentum * parametrizedMomentum;
     const float costheta = 1. - invariantMass * invariantMass / p1p2;
 
     // Abort if an angle cannot be calculated
