@@ -160,7 +160,10 @@ predicate_result matrixCompare(const Eigen::DenseBase<Derived1>& val,
 //        only accept them. Does someone know a clean way to do that in C++?
 //
 template <typename Container,
-          typename Enable = typename Container::const_iterator>
+          typename CbeginDefined = std::decay_t<
+                decltype(*cbegin(std::declval<Container>()))>,
+          typename CendDefined = std::decay_t<
+                decltype(*cend(std::declval<Container>()))> >
 predicate_result compare(const Container& val, const Container& ref,
                          ScalarComparison&& compareImpl) {
   // Make sure that the two input containers have the same number of items
