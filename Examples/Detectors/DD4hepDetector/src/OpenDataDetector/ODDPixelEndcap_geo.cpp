@@ -47,12 +47,6 @@ static Ref_t create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
   PlacedVolume placedEndcap =
       motherVolume.placeVolume(endcapVolume, translation);
 
-  // Create the module components
-  xml_comp_t x_module = x_det.child(_U(module));
-  double ylength = 0.;
-  auto module =
-      ODDModuleHelper::assembleRectangularModule(oddd, sens, x_module, ylength);
-
   Assembly diskAssembly("disk");
 
   // DetElement tree
@@ -72,35 +66,45 @@ static Ref_t create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
     // DetElement tree
     DetElement ringElement(ringName, ringNum);
 
-    double r = x_ring.r();
-    double phi0 = x_ring.phi0();
-    unsigned int nModules = x_ring.nphi();
-    double zgap = x_ring.gap();
-    double phiStep = 2. * M_PI / nModules;
+    if (x_ring.hasChild(_U(module))) {
+      xml_comp_t x_module = x_ring.child(_U(module));
+      auto module =
+      ODDModuleHelper::assembleTrapezoidalModule(oddd, sens, x_module);
 
-    // Loop over modules
-    for (unsigned int modNum = 0; modNum < nModules; ++modNum) {
-      // The module name
-      string moduleName = _toString((int)modNum, "module%d");
-      bool odd = bool(modNum % 2);
-      // Position it
-      double phi = phi0 + modNum * phiStep;
-      double z = odd ? -zgap : zgap;
-      Position trans(r * cos(phi), r * sin(phi), z);
-      // Place Module Box Volumes, flip if necessary
-      double flip = x_det_dim.z() < 0. ? M_PI : 0.;
-      if (ringNum != 0) {
-        flip += M_PI;
+      double r = x_ring.r();
+      double phi0 = x_ring.phi0();
+      unsigned int nModules = x_ring.nphi();
+      double zgap = x_ring.gap();
+      double phiStep = 2. * M_PI / nModules;    
+
+      // Loop over modules
+      for (unsigned int modNum = 0; modNum < nModules; ++modNum) {
+        // The module name
+        string moduleName = _toString((int)modNum, "module%d");
+
+        bool odd = bool(modNum % 2);
+
+        double phi = phi0 + modNum * phiStep;
+        double x = r * cos(phi);
+        double y = r * sin(phi);
+        double z = odd ? -zgap : zgap;
+
+        // Place Module Box Volumes, flip if necessary
+        Position trans(x, y, z);
+
+        double angX = 1.5 * M_PI;
+        double angY = 0.5 * M_PI - phi;
+
+        PlacedVolume placedModule = ringAssembly.placeVolume(
+                         module.first,
+                         Transform3D(RotationX(angX) * RotationY(angY), trans));
+        placedModule.addPhysVolID("module", modNum);
+        // Clone the detector element
+        auto moduleElement = module.second.clone(moduleName, modNum);
+        moduleElement.setPlacement(placedModule);
+        // Assign it as child to the stave template
+        ringElement.add(moduleElement);
       }
-      PlacedVolume placedModule = ringAssembly.placeVolume(
-          module.first,
-          Transform3D(RotationZ(phi + 1.5 * M_PI) * RotationY(flip), trans));
-      placedModule.addPhysVolID("module", modNum);
-      // Clone the detector element
-      auto moduleElement = module.second.clone(moduleName, modNum);
-      moduleElement.setPlacement(placedModule);
-      // Assign it as child to the stave template
-      ringElement.add(moduleElement);
     }
 
     // Place Ring assembly into disk

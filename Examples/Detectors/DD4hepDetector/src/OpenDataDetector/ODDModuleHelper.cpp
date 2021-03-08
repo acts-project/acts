@@ -42,35 +42,41 @@ std::pair<Assembly, DetElement> ODDModuleHelper::assembleTrapezoidalModule(
                            oddd.material(x_comp.materialStr()));
     componentVolume.setVisAttributes(oddd, x_comp.visStr());
 
-    // overwrite if you have a subtraction
-    if (x_comp.hasChild(_U(subtraction))) {
+    // Place carbon foam structure
+    if (x_comp.hasChild(_U(subtraction)) and x_comp.hasChild(_U(tube))) {
       xml_comp_t x_sub = x_comp.child(_U(subtraction));
-      Tube tubeCutout(x_sub.rmin(), x_sub.rmax(), 1.1 * x_comp.length());
+      xml_comp_t x_tubs = x_sub.child(_U(tubs));
+      xml_comp_t x_pipe = x_comp.child(_U(tube));
+      double length = x_comp.length();
 
       // Create the subtraction
-      componentVolume = Volume(
-          compName,
-          SubtractionSolid(
-              trapShape, tubeCutout,
-              Position(x_sub.x_offset(), x_sub.y_offset(), x_sub.z_offset())),
-          oddd.material(x_comp.materialStr()));
+      Tube tubeCutoutSeg1(x_tubs.rmin(), x_tubs.rmax(), length + x_tubs.dz(), -0.1, 2.1*M_PI);
+      Tube tubeCutoutSeg2(x_tubs.rmin(), x_tubs.rmax(), length + x_tubs.dz(), 0, 2*M_PI);
+      UnionSolid foamCutout(tubeCutoutSeg1, tubeCutoutSeg2);
 
-      // place a fitting pipe if available
-      if (x_comp.hasChild(_U(tube))) {
-        xml_comp_t x_pipe = x_comp.child(_U(tube));
-        Tube coolingPipe(x_pipe.rmin(), x_pipe.rmax(), x_comp.length());
-        // Create the subtraction
-        Volume pipeVolume("CoolingPipe", coolingPipe,
-                          oddd.material(x_pipe.materialStr()));
-        pipeVolume.setVisAttributes(oddd, x_pipe.visStr());
+      componentVolume =
+          Volume(compName,
+                 SubtractionSolid(
+                     trapShape, foamCutout,
+                                 Position(x_sub.x_offset(), x_sub.y_offset(),
+                                          x_sub.z_offset())),
+                 oddd.material(x_comp.materialStr()));
+      componentVolume.setVisAttributes(oddd, x_comp.visStr());
 
-        componentVolume.placeVolume(
-            pipeVolume,
-            Position(x_pipe.x_offset(), x_pipe.y_offset(), x_pipe.z_offset()));
-      }
+      // Create the cooling pipe
+      Tube coolingPipe(x_pipe.rmin(), x_pipe.rmax(), 0.5*length + x_pipe.dz());
+      Volume pipeVolume("CoolingPipe", coolingPipe,
+                        oddd.material(x_pipe.materialStr()));
+      pipeVolume.setVisAttributes(oddd, x_pipe.visStr());
+
+      // Place the pipe in the module
+      moduleAssembly.placeVolume(
+          pipeVolume,
+                                  Position(x_pipe.x_offset(), x_pipe.y_offset(),
+                                           x_pipe.z_offset()));
     }
 
-    // Place the component
+     // Place the component
     double stereoAlpha = x_comp.alpha();
     PlacedVolume placedComponent = moduleAssembly.placeVolume(
         componentVolume,
@@ -127,37 +133,41 @@ std::pair<Assembly, DetElement> ODDModuleHelper::assembleRectangularModule(
     Volume componentVolume(componentName, boxShape,
                            oddd.material(x_comp.materialStr()));
 
-    // overwrite if you have a subtraction
-    if (x_comp.hasChild(_U(subtraction))) {
+    // Place carbon foam structure
+    if (x_comp.hasChild(_U(subtraction)) and x_comp.hasChild(_U(tube))) {
       xml_comp_t x_sub = x_comp.child(_U(subtraction));
-      Tube tubeCutout(x_sub.rmin(), x_sub.rmax(), x_comp.dy());
+      xml_comp_t x_tubs = x_sub.child(_U(tubs));
+      xml_comp_t x_pipe = x_comp.child(_U(tube));
+      double length = x_comp.dy();
 
       // Create the subtraction
+      Tube tubeCutoutSeg1(x_tubs.rmin(), x_tubs.rmax(), length + x_tubs.dz(), -0.1, 2.1*M_PI);
+      Tube tubeCutoutSeg2(x_tubs.rmin(), x_tubs.rmax(), length + x_tubs.dz(), 0, 2*M_PI);
+      UnionSolid foamCutout(tubeCutoutSeg1, tubeCutoutSeg2);
+
       componentVolume =
           Volume(componentName,
                  SubtractionSolid(
-                     boxShape, tubeCutout,
+                     boxShape, foamCutout,
                      Transform3D(RotationX(0.5 * M_PI),
                                  Position(x_sub.x_offset(), x_sub.y_offset(),
                                           x_sub.z_offset()))),
                  oddd.material(x_comp.materialStr()));
+      componentVolume.setVisAttributes(oddd, x_comp.visStr());
 
-      // place a fitting pipe if available
-      if (x_comp.hasChild(_U(tube))) {
-        xml_comp_t x_pipe = x_comp.child(_U(tube));
-        Tube coolingPipe(x_pipe.rmin(), x_pipe.rmax(), 0.5 * x_comp.dy());
-        // Create the subtraction
-        Volume pipeVolume("CoolingPipe", coolingPipe,
-                          oddd.material(x_pipe.materialStr()));
-        pipeVolume.setVisAttributes(oddd, x_pipe.visStr());
+      // Create the cooling pipe
+      Tube coolingPipe(x_pipe.rmin(), x_pipe.rmax(), 0.5*length + x_pipe.dz());
+      Volume pipeVolume("CoolingPipe", coolingPipe,
+                        oddd.material(x_pipe.materialStr()));
+      pipeVolume.setVisAttributes(oddd, x_pipe.visStr());
 
-        componentVolume.placeVolume(
-            pipeVolume,
-            Transform3D(RotationX(0.5 * M_PI),
-                        Position(x_pipe.x_offset(), x_pipe.y_offset(),
-                                 x_pipe.z_offset())));
-      }
+      // Place the pipe in the module
+      moduleAssembly.placeVolume(
+          pipeVolume, Transform3D(RotationX(0.5 * M_PI),
+                                  Position(x_pipe.x_offset(), x_pipe.y_offset(),
+                                           x_pipe.z_offset())));
     }
+
     componentVolume.setVisAttributes(oddd, x_comp.visStr());
 
     // Calculate the module dimension

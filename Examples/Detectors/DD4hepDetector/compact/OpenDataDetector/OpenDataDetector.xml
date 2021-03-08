@@ -21,43 +21,43 @@
         <constant name="world_z" value="world_size"/>
         <!--Dimensions of the beam pipe -->
         <constant name="bp_rmin" value="23.6*mm"/>
-        <constant name="bp_rmax" value="24.4*mm"/>
+        <constant name="bp_rmax" value="25.*mm"/>
         <constant name="bp_length" value="4.0*m"/>
         <!--Dimensions of the Pixel volume & sub volumes -->
-        <constant name="pix_env_rmin" value="30.*mm"/>
+        <constant name="pix_env_rmin" value="25.*mm"/>
         <constant name="pix_env_rmax" value="200.*mm"/>
         <constant name="pix_env_dz" value="2.4*m"/>  
         <constant name="pix_b_z"  value="0.*m"/>                
-        <constant name="pix_b_dz" value="0.575*m"/> 
+        <constant name="pix_b_dz" value="0.580*m"/> 
         <constant name="pix_e_nz" value="-1.480*m"/>                
         <constant name="pix_e_pz" value="1.480*m"/>                
         <constant name="pix_e_dz" value="0.9*m"/> 
         <!--Dimensions of the Pixel Support tube -->
-        <constant name="pst_rmin" value="201.*mm"/>
-        <constant name="pst_rmax" value="203.*mm"/>
+        <constant name="pst_rmin" value="200.*mm"/>
+        <constant name="pst_rmax" value="204.*mm"/>
         <constant name="pst_length" value="2.0*m"/>        
         <!--Dimensions of the Short Strips volume & sub volumes -->
         <constant name="ss_env_rmin" value="204.*mm"/>
         <constant name="ss_env_rmax" value="720.*mm"/>
-        <constant name="ss_env_dz" value="3.1*m"/>  
+        <constant name="ss_env_dz" value="3.15*m"/>  
         <constant name="ss_b_z"  value="0.*m"/>                
         <constant name="ss_b_dz" value="1.2*m"/> 
         <constant name="ss_e_nz" value="-2.175*m"/>                
         <constant name="ss_e_pz" value="2.175*m"/>                
-        <constant name="ss_e_dz" value="0.925*m"/>  
+        <constant name="ss_e_dz" value="0.975*m"/>  
         <!--Dimensions of the Long Strips volume & sub volumes -->
         <constant name="ls_env_rmin" value="720.*mm"/>
-        <constant name="ls_env_rmax" value="1150.*mm"/>
-        <constant name="ls_env_dz" value="3.1*m"/>  
+        <constant name="ls_env_rmax" value="1140.*mm"/>
+        <constant name="ls_env_dz" value="3.15*m"/>  
         <constant name="ls_b_z"  value="0.*m"/>                
         <constant name="ls_b_dz" value="1.2*m"/> 
         <constant name="ls_e_nz" value="-2.175*m"/>                
         <constant name="ls_e_pz" value="2.175*m"/>                
-        <constant name="ls_e_dz" value="0.925*m"/>   
+        <constant name="ls_e_dz" value="0.975*m"/>   
         <!--Dimensions of the Solenoid -->
         <constant name="sol_rmin" value="1140.*mm"/>
         <constant name="sol_rmax" value="1200.*mm"/>
-        <constant name="sol_hlength" value="2.85*m"/>  
+        <constant name="sol_hlength" value="3.0*m"/>  
         <!-- Material binning section -->
         <!-- beam pipe section -->
         <constant name="mat_bp_bPhi" value="1"/>
@@ -88,7 +88,7 @@
         <constant name="mat_lst_outer_bZ" value="75"/>
         <constant name="mat_lst_outer_bPhi" value="1"/>
         <constant name="mat_lst_inter_bR" value="25"/>
-        <constant name="mat_lst_inter_bPhi" value="1"/>                                          
+        <constant name="mat_lst_inter_bPhi" value="1"/>
     </define>
             
     <display>
@@ -127,7 +127,7 @@
         <readout name="LongStripBarrelReadout">
             <segmentation type="CartesianGridXY" grid_size_x="0.05*mm" grid_size_y="0.05*mm"/>
             <id>system:4,layer:4,stave:8,module:8,sensor:4,x:4,y:4</id>
-        </readout>
+        </readout>>
         <readout name="LongStripEndcapReadout">
             <segmentation type="CartesianGridXY" grid_size_x="0.05*mm" grid_size_y="0.05*mm"/>
             <id>system:4,layer:4,ring:4,module:8,sensor:4,x:4,y:4</id>
@@ -135,7 +135,7 @@
     </readouts> 
     <include ref="OpenDataPixels.xml"/>
     <include ref="OpenDataShortStrips.xml"/>
-    <include ref="OpenDataLongStrips.xml"/>        
+    <include ref="OpenDataLongStrips.xml"/>
     <detectors>
       <detector id="0" name="BeamPipe" type="ODDCylinder" vis="Beryllium">
             <beampipe/>
@@ -147,7 +147,7 @@
           <shape name="PixelVolume" type="Tube" rmin="pix_env_rmin" rmax="pix_env_rmax" dz="pix_env_dz" material="Air"/>
           <composite name="PixelEndcapN"/>
           <composite name="PixelBarrel"/>
-          <composite name="PixelEndcapP"/> 
+          <composite name="PixelEndcapP"/>
       </detector>
       <detector id="2" name="PST" type="ODDCylinder" beampipe="false" vis="CarbonFiber">
             <tubs name="PixelSupportCylinder" rmin="pst_rmin" rmax="pst_rmax" dz="pst_length" material="CarbonFiber"/>
@@ -156,13 +156,13 @@
           <shape name="ShortStripVolume" type="Tube" rmin="ss_env_rmin" rmax="ss_env_rmax" dz="ss_env_dz" material="Air"/>
           <composite name="ShortStripEndcapN"/>
           <composite name="ShortStripBarrel"/>
-          <composite name="ShortStripEndcapP"/> 
+          <composite name="ShortStripEndcapP"/>
       </detector>
       <detector id="4" name="LongStrips" type="DD4hep_SubdetectorAssembly" vis="invisible">
           <shape name="LongStripVolume" type="Tube" rmin="ls_env_rmin" rmax="ls_env_rmax" dz="ls_env_dz" material="Air"/>
           <composite name="LongStripEndcapN"/>
           <composite name="LongStripBarrel"/>
-          <composite name="LongStripEndcapP"/> 
+          <composite name="LongStripEndcapP"/>
       </detector>
       <detector id="5" name="Solenoid" type="ODDCylinder" beampipe="false" vis="grey">
             <tubs name="Solenoid" rmin="sol_rmin" rmax="sol_rmax" dz="sol_hlength" material="CarbonFiber"/>
