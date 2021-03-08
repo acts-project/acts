@@ -375,24 +375,30 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
       0, 0, 0, 0, 0, 1_ns;
 
   std::vector<BoundTrackParameters> params1 = {
-      BoundTrackParameters(Surface::makeShared<PerigeeSurface>(pos1a),
-                           geoContext, makeVector4(pos1a, 0), mom1a,
-                           mom1a.norm(), 1, covMat1),
-      BoundTrackParameters(Surface::makeShared<PerigeeSurface>(pos1b),
-                           geoContext, makeVector4(pos1b, 0), mom1b,
-                           mom1b.norm(), -1, covMat1),
-      BoundTrackParameters(Surface::makeShared<PerigeeSurface>(pos1c),
-                           geoContext, makeVector4(pos1c, 0), mom1c,
-                           mom1c.norm(), 1, covMat1),
-      BoundTrackParameters(Surface::makeShared<PerigeeSurface>(pos1d),
-                           geoContext, makeVector4(pos1d, 0), mom1d,
-                           mom1d.norm(), -1, covMat1),
-      BoundTrackParameters(Surface::makeShared<PerigeeSurface>(pos1e),
-                           geoContext, makeVector4(pos1e, 0), mom1e,
-                           mom1e.norm(), 1, covMat1),
-      BoundTrackParameters(Surface::makeShared<PerigeeSurface>(pos1f),
-                           geoContext, makeVector4(pos1f, 0), mom1f,
-                           mom1f.norm(), -1, covMat1),
+      BoundTrackParameters::create(Surface::makeShared<PerigeeSurface>(pos1a),
+                                   geoContext, makeVector4(pos1a, 0), mom1a,
+                                   mom1a.norm(), 1, covMat1)
+          .value(),
+      BoundTrackParameters::create(Surface::makeShared<PerigeeSurface>(pos1b),
+                                   geoContext, makeVector4(pos1b, 0), mom1b,
+                                   mom1b.norm(), -1, covMat1)
+          .value(),
+      BoundTrackParameters::create(Surface::makeShared<PerigeeSurface>(pos1c),
+                                   geoContext, makeVector4(pos1c, 0), mom1c,
+                                   mom1c.norm(), 1, covMat1)
+          .value(),
+      BoundTrackParameters::create(Surface::makeShared<PerigeeSurface>(pos1d),
+                                   geoContext, makeVector4(pos1d, 0), mom1d,
+                                   mom1d.norm(), -1, covMat1)
+          .value(),
+      BoundTrackParameters::create(Surface::makeShared<PerigeeSurface>(pos1e),
+                                   geoContext, makeVector4(pos1e, 0), mom1e,
+                                   mom1e.norm(), 1, covMat1)
+          .value(),
+      BoundTrackParameters::create(Surface::makeShared<PerigeeSurface>(pos1f),
+                                   geoContext, makeVector4(pos1f, 0), mom1f,
+                                   mom1f.norm(), -1, covMat1)
+          .value(),
   };
 
   // Create second vector of tracks
@@ -407,15 +413,18 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   Covariance covMat2 = covMat1;
 
   std::vector<BoundTrackParameters> params2 = {
-      BoundTrackParameters(Surface::makeShared<PerigeeSurface>(pos2a),
-                           geoContext, makeVector4(pos2a, 0), mom2a,
-                           mom2a.norm(), 1, covMat2),
-      BoundTrackParameters(Surface::makeShared<PerigeeSurface>(pos2b),
-                           geoContext, makeVector4(pos2b, 0), mom2b,
-                           mom2b.norm(), -1, covMat2),
-      BoundTrackParameters(Surface::makeShared<PerigeeSurface>(pos2c),
-                           geoContext, makeVector4(pos2c, 0), mom2c,
-                           mom2c.norm(), -1, covMat2),
+      BoundTrackParameters::create(Surface::makeShared<PerigeeSurface>(pos2a),
+                                   geoContext, makeVector4(pos2a, 0), mom2a,
+                                   mom2a.norm(), 1, covMat2)
+          .value(),
+      BoundTrackParameters::create(Surface::makeShared<PerigeeSurface>(pos2b),
+                                   geoContext, makeVector4(pos2b, 0), mom2b,
+                                   mom2b.norm(), -1, covMat2)
+          .value(),
+      BoundTrackParameters::create(Surface::makeShared<PerigeeSurface>(pos2c),
+                                   geoContext, makeVector4(pos2c, 0), mom2c,
+                                   mom2c.norm(), -1, covMat2)
+          .value(),
   };
   std::vector<Vertex<BoundTrackParameters>*> vtxList;
 

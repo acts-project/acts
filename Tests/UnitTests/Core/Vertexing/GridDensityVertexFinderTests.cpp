@@ -114,9 +114,11 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
     double eta = etaDist(gen);
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
-    trackVec.push_back(BoundTrackParameters(
-        perigeeSurface, geoContext, makeVector4(pos, 0),
-        makeDirectionUnitFromPhiEta(phi, eta), pt, charge, covMat));
+    trackVec.push_back(BoundTrackParameters::create(
+                           perigeeSurface, geoContext, makeVector4(pos, 0),
+                           makeDirectionUnitFromPhiEta(phi, eta), pt, charge,
+                           covMat)
+                           .value());
   }
 
   std::vector<const BoundTrackParameters*> trackPtrVec;
@@ -217,9 +219,11 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     double phi = phiDist(gen);
     double eta = etaDist(gen);
     double charge = etaDist(gen) > 0 ? 1 : -1;
-    trackVec.push_back(BoundTrackParameters(
-        perigeeSurface, geoContext, Vector4(x, y, z, 0),
-        makeDirectionUnitFromPhiEta(phi, eta), pt, charge, covMat));
+    trackVec.push_back(BoundTrackParameters::create(
+                           perigeeSurface, geoContext, Vector4(x, y, z, 0),
+                           makeDirectionUnitFromPhiEta(phi, eta), pt, charge,
+                           covMat)
+                           .value());
   }
 
   std::vector<const BoundTrackParameters*> trackPtrVec;
@@ -369,9 +373,11 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
     double phi = phiDist(gen);
     double eta = etaDist(gen);
     double charge = etaDist(gen) > 0 ? 1 : -1;
-    trackVec.push_back(BoundTrackParameters(
-        perigeeSurface, geoContext, Vector4(x, y, z, 0),
-        makeDirectionUnitFromPhiEta(phi, eta), pt, charge, covMat));
+    trackVec.push_back(BoundTrackParameters::create(
+                           perigeeSurface, geoContext, Vector4(x, y, z, 0),
+                           makeDirectionUnitFromPhiEta(phi, eta), pt, charge,
+                           covMat)
+                           .value());
   }
 
   std::vector<const BoundTrackParameters*> trackPtrVec;

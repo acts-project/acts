@@ -282,9 +282,9 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   spcolor.offset = -0.04;
 
   EventDataView3D::drawMultiTrajectory(
-      helper, fittedTrack.fittedStates, fittedTrack.trackTip, tgContext,
-      momentumScale, localErrorScale, directionErrorScale, scolor, mcolor,
-      ppcolor, fpcolor, spcolor);
+      helper, fittedTrack.fittedStates, fittedTrack.lastMeasurementIndex,
+      tgContext, momentumScale, localErrorScale, directionErrorScale, scolor,
+      mcolor, ppcolor, fpcolor, spcolor);
 
   helper.write("EventData_MultiTrajectory");
   helper.write(ss);

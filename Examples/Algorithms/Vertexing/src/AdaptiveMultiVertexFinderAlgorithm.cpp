@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -59,8 +58,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   //////////////////////////////////////////////
 
   // Set up EigenStepper
-  auto bField = std::make_shared<Acts::ConstantBField>(m_cfg.bField);
-  Acts::EigenStepper<> stepper(bField);
+  Acts::EigenStepper<> stepper(m_cfg.bField);
 
   // Set up the propagator
   using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
@@ -69,12 +67,12 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   // Set up ImpactPointEstimator
   using IPEstimator =
       Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
-  IPEstimator::Config ipEstimatorCfg(bField, propagator);
+  IPEstimator::Config ipEstimatorCfg(m_cfg.bField, propagator);
   IPEstimator ipEstimator(ipEstimatorCfg);
 
   // Set up the helical track linearizer
   using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
-  Linearizer::Config ltConfig(bField, propagator);
+  Linearizer::Config ltConfig(m_cfg.bField, propagator);
   Linearizer linearizer(ltConfig);
 
   // Set up deterministic annealing with user-defined temperatures
@@ -98,7 +96,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
   Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              linearizer, bField);
+                              linearizer, m_cfg.bField);
   // We do not want to use a beamspot constraint here
   finderConfig.useBeamSpotConstraint = false;
 

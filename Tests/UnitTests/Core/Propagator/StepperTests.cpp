@@ -404,8 +404,10 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   /// Repeat with surface related methods
   auto plane = Surface::makeShared<PlaneSurface>(pos, dir.normalized());
-  BoundTrackParameters bp(plane, tgContext, makeVector4(pos, time), dir,
-                          charge / absMom, cov);
+  auto bp =
+      BoundTrackParameters::create(plane, tgContext, makeVector4(pos, time),
+                                   dir, charge / absMom, cov)
+          .value();
   esState = EigenStepper<>::State(tgContext, bField->makeCache(mfContext), cp,
                                   ndir, stepSize, tolerance);
 
@@ -432,7 +434,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_ABS(esState.stepSize, 2., eps);
 
   // Test the bound state construction
-  auto boundState = es.boundState(esState, *plane);
+  auto boundState = es.boundState(esState, *plane).value();
   auto boundPars = std::get<0>(boundState);
   CHECK_CLOSE_ABS(boundPars.position(tgContext), bp.position(tgContext), eps);
   CHECK_CLOSE_ABS(boundPars.momentum(), bp.momentum(), 1e-7);
