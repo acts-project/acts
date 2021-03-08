@@ -9,7 +9,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
-#include "ActsExamples/Digitization/HitSmearing.hpp"
+#include "ActsExamples/Digitization/DigitizationOptions.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
@@ -47,6 +47,7 @@ int runSeedingExample(int argc, char* argv[],
   Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
   Options::addInputOptions(desc);
   Options::addMagneticFieldOptions(desc);
+  Options::addDigitizationOptions(desc);
   // Add specific options for this geometry
   detector->addOptions(desc);
   auto vm = Options::parse(desc, argc, argv);
@@ -81,8 +82,8 @@ int runSeedingExample(int argc, char* argv[],
   auto particleReader = setupParticleReading(vm, sequencer);
 
   // Run the sim hits smearing
-  auto hitSmearingCfg = setupSimHitSmearing(vm, sequencer, rnd, tGeometry,
-                                            simHitReaderCfg.outputSimHits);
+  auto digiCfg = setupDigitization(vm, sequencer, rnd, tGeometry,
+                                   simHitReaderCfg.outputSimHits);
 
   // Run the particle selection
   // The pre-selection will select truth particles satisfying provided criteria
@@ -91,7 +92,7 @@ int runSeedingExample(int argc, char* argv[],
   TruthSeedSelector::Config particleSelectorCfg;
   particleSelectorCfg.inputParticles = particleReader.outputParticles;
   particleSelectorCfg.inputMeasurementParticlesMap =
-      hitSmearingCfg.outputMeasurementParticlesMap;
+      digiCfg.outputMeasurementParticlesMap;
   particleSelectorCfg.outputParticles = "particles_selected";
   particleSelectorCfg.ptMin = 1_GeV;
   particleSelectorCfg.nHitsMin = 9;
@@ -103,8 +104,8 @@ int runSeedingExample(int argc, char* argv[],
 
   // Create space points
   SpacePointMaker::Config spCfg;
-  spCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
-  spCfg.inputMeasurements = hitSmearingCfg.outputMeasurements;
+  spCfg.inputSourceLinks = digiCfg.outputSourceLinks;
+  spCfg.inputMeasurements = digiCfg.outputMeasurements;
   spCfg.outputSpacePoints = "spacepoints";
   spCfg.trackingGeometry = tGeometry;
   spCfg.geometrySelection = {
@@ -157,7 +158,7 @@ int runSeedingExample(int argc, char* argv[],
   paramsEstimationCfg.inputSpacePoints = {
       spCfg.outputSpacePoints,
   };
-  paramsEstimationCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
+  paramsEstimationCfg.inputSourceLinks = digiCfg.outputSourceLinks;
   paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
   paramsEstimationCfg.outputProtoTracks = "prototracks_estimated";
   paramsEstimationCfg.trackingGeometry = tGeometry;
@@ -170,7 +171,7 @@ int runSeedingExample(int argc, char* argv[],
   tfPerfCfg.inputProtoTracks = seedingCfg.outputProtoTracks;
   tfPerfCfg.inputParticles = inputParticles;
   tfPerfCfg.inputMeasurementParticlesMap =
-      hitSmearingCfg.outputMeasurementParticlesMap;
+      digiCfg.outputMeasurementParticlesMap;
   tfPerfCfg.outputDir = outputDir;
   tfPerfCfg.outputFilename = "performance_seeding_trees.root";
   sequencer.addWriter(
@@ -180,7 +181,7 @@ int runSeedingExample(int argc, char* argv[],
   seedPerfCfg.inputProtoTracks = seedingCfg.outputProtoTracks;
   seedPerfCfg.inputParticles = inputParticles;
   seedPerfCfg.inputMeasurementParticlesMap =
-      hitSmearingCfg.outputMeasurementParticlesMap;
+      digiCfg.outputMeasurementParticlesMap;
   seedPerfCfg.outputDir = outputDir;
   seedPerfCfg.outputFilename = "performance_seeding_hists.root";
   sequencer.addWriter(
@@ -194,9 +195,9 @@ int runSeedingExample(int argc, char* argv[],
   trackParamsWriterCfg.inputParticles = particleReader.outputParticles;
   trackParamsWriterCfg.inputSimHits = simHitReaderCfg.outputSimHits;
   trackParamsWriterCfg.inputMeasurementParticlesMap =
-      hitSmearingCfg.outputMeasurementParticlesMap;
+      digiCfg.outputMeasurementParticlesMap;
   trackParamsWriterCfg.inputMeasurementSimHitsMap =
-      hitSmearingCfg.outputMeasurementSimHitsMap;
+      digiCfg.outputMeasurementSimHitsMap;
   trackParamsWriterCfg.outputDir = outputDir;
   trackParamsWriterCfg.outputFilename = "estimatedparams.root";
   trackParamsWriterCfg.outputTreename = "estimatedparams";

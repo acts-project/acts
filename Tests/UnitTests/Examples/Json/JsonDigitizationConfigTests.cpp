@@ -28,9 +28,9 @@ BOOST_AUTO_TEST_CASE(DigitizationConfigRoundTrip) {
   // As all SurfaceBounds have the same streaming API only a one is
   // tested here, all others are tests are identical
 
-  ActsExamples::DigitizationConfig dcf;
+  ActsExamples::DigiComponentsConfig dcf;
 
-  ActsExamples::GeometricDigitizationConfig gdc;
+  ActsExamples::GeometricConfig gdc;
 
   Acts::BinUtility segmentation;
   segmentation += Acts::BinUtility(336, -8.4, 8.4, Acts::open, Acts::binX);
@@ -41,22 +41,22 @@ BOOST_AUTO_TEST_CASE(DigitizationConfigRoundTrip) {
   gdc.thickness = 0.15;
   gdc.indices = {Acts::eBoundLoc0, Acts::eBoundLoc1};
 
-  ActsExamples::DigitizationConfig dcRef;
+  ActsExamples::DigiComponentsConfig dcRef;
   dcRef.geometricDigiConfig = gdc;
 
   nlohmann::json dcJsonOut(dcRef);
-  out.open("DigitizationConfig.json");
+  out.open("DigiComponentsConfig.json");
   out << dcJsonOut.dump(2);
   out.close();
 
-  auto in = std::ifstream("DigitizationConfig.json",
+  auto in = std::ifstream("DigiComponentsConfig.json",
                           std::ifstream::in | std::ifstream::binary);
   BOOST_CHECK(in.good());
   nlohmann::json dcJsonIn;
   in >> dcJsonIn;
   in.close();
 
-  ActsExamples::DigitizationConfig dcTest(dcJsonIn);
+  ActsExamples::DigiComponentsConfig dcTest(dcJsonIn);
   BOOST_CHECK(dcTest.geometricDigiConfig.indices ==
               dcRef.geometricDigiConfig.indices);
   BOOST_CHECK(dcTest.geometricDigiConfig.segmentation.dimensions() ==
