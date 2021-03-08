@@ -1,9 +1,9 @@
 add_library(
   ActsExamplesDigitization SHARED
   src/DigitizationAlgorithm.cpp
+  src/DigitizationConfig.cpp
   src/MeasurementCreation.cpp
   src/PlanarSteppingAlgorithm.cpp
-  src/HitSmearing.cpp
   src/SmearingAlgorithm.cpp
   src/DigitizationOptions.cpp)
 target_include_directories(
