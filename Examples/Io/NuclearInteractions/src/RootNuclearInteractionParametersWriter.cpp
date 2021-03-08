@@ -223,7 +223,7 @@ std::vector<std::pair<std::vector<float>, std::vector<uint32_t>>> buildMaps(
 /// @param [in] eventFractionCollection The event storage
 /// @param [in] interactionType The interaction type that will be parametrised
 /// @param [in] cfg Configuration that steers the binning of histograms
-void recordKinematicParametrisation(
+inline void recordKinematicParametrisation(
     const std::vector<
         ActsExamples::detail::NuclearInteractionParametrisation::EventFraction>&
         eventFractionCollection,
@@ -239,6 +239,7 @@ void recordKinematicParametrisation(
       eventFractionCollection, multiplicity, interactionType, cfg.momentumBins);
   std::vector<Parametrisation::CumulativeDistribution> distributionsMom =
       momentumParameters.second;
+
   const auto invariantMassParameters =
       Parametrisation::buildInvariantMassParameters(
           eventFractionCollection, multiplicity, interactionType,
@@ -262,7 +263,6 @@ void recordKinematicParametrisation(
                                    momEigenVec.data() + momEigenVec.size());
       std::vector<float> momVecMean(momMean.data(),
                                     momMean.data() + momMean.size());
-
       gDirectory->WriteObject(&momVecVal, "MomentumEigenvalues");
       gDirectory->WriteObject(&momVecVec, "MomentumEigenvectors");
       gDirectory->WriteObject(&momVecMean, "MomentumMean");
@@ -282,11 +282,11 @@ void recordKinematicParametrisation(
           invMassEigenVec.data() + invMassEigenVec.size());
       std::vector<float> invMassVecMean(
           invMassMean.data(), invMassMean.data() + invMassMean.size());
-
       gDirectory->WriteObject(&invMassVecVal, "InvariantMassEigenvalues");
       gDirectory->WriteObject(&invMassVecVec, "InvariantMassEigenvectors");
       gDirectory->WriteObject(&invMassVecMean, "InvariantMassMean");
     }
+
     const auto momDistributions = buildMaps(distributionsMom);
     const auto invMassDistributions = buildMaps(distributionsInvMass);
 
@@ -303,7 +303,6 @@ void recordKinematicParametrisation(
       gDirectory->WriteObject(
           &momDistributions[i].second,
           ("MomentumDistributionBinContents_" + std::to_string(i)).c_str());
-      delete (distributionsMom[i]);
     }
     for (unsigned int i = 0; i < multiplicity; i++) {
       if (cfg.writeOptionalHistograms) {
@@ -319,10 +318,8 @@ void recordKinematicParametrisation(
           &invMassDistributions[i].second,
           ("InvariantMassDistributionBinContents_" + std::to_string(i))
               .c_str());
-      delete (distributionsInvMass[i]);
     }
   }
-
   gDirectory->cd("..");
 }
 }  // namespace
@@ -347,6 +344,7 @@ ActsExamples::RootNuclearInteractionParametersWriter::
 
 ActsExamples::ProcessCode
 ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
+std::cout << "End Run called" << std::endl;
   namespace Parametrisation = detail::NuclearInteractionParametrisation;
   if (m_eventFractionCollection.empty())
     return ProcessCode::ABORT;
@@ -355,7 +353,7 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
   // The file
-  TFile tf(m_cfg.outputFilename.c_str(), m_cfg.fileMode.c_str());
+  TFile* tf = TFile::Open(m_cfg.outputFilename.c_str(), m_cfg.fileMode.c_str());
   gDirectory->cd();
   gDirectory->mkdir(
       std::to_string(m_eventFractionCollection[0].initialParticle.pdg())
@@ -369,7 +367,7 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
       std::to_string(m_eventFractionCollection[0].initialMomentum).c_str());
   gDirectory->mkdir("soft");
   gDirectory->mkdir("hard");
-
+  
   // Write the nuclear interaction probability
   ACTS_DEBUG("Starting parametrisation of nuclear interaction probability");
   const auto nuclearInteractionProbability =
@@ -383,7 +381,6 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
       buildMap(nuclearInteractionProbability, m_cfg.nSimulatedEvents);
   gDirectory->WriteObject(&mapNIprob.first, "NuclearInteractionBinBorders");
   gDirectory->WriteObject(&mapNIprob.second, "NuclearInteractionBinContents");
-  delete (nuclearInteractionProbability);
   ACTS_DEBUG("Nuclear interaction probability parametrised");
 
   ACTS_DEBUG("Starting calulcation of probability of interaction type");
@@ -428,7 +425,6 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
   const auto multProbSoft = buildMap(multiplicity.first);
   gDirectory->WriteObject(&multProbSoft.first, "MultiplicityBinBorders");
   gDirectory->WriteObject(&multProbSoft.second, "MultiplicityBinContents");
-
   for (unsigned int i = 1; i <= m_cfg.multiplicityMax; i++) {
     ACTS_DEBUG("Starting parametrisation of final state kinematics for soft " +
                std::to_string(i) + " particle(s) final state");
@@ -442,21 +438,17 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
   const auto multProbHard = buildMap(multiplicity.second);
   gDirectory->WriteObject(&multProbHard.first, "MultiplicityBinBorders");
   gDirectory->WriteObject(&multProbHard.second, "MultiplicityBinContents");
-
+  
   for (unsigned int i = 1; i <= m_cfg.multiplicityMax; i++) {
     ACTS_DEBUG("Starting parametrisation of final state kinematics for hard " +
                std::to_string(i) + " particle(s) final state");
     recordKinematicParametrisation(m_eventFractionCollection, false, i, m_cfg);
     ACTS_DEBUG("Parametrisation of final state kinematics for hard " +
                std::to_string(i) + " particle(s) final state finished");
-  }
-  delete (multiplicity.first);
-  delete (multiplicity.second);
-
+  }  
   gDirectory->cd();
-  tf.Write();
-  tf.Close();
-
+  tf->Write();
+  tf->Close();
   return ProcessCode::SUCCESS;
 }
 
@@ -464,6 +456,7 @@ ActsExamples::ProcessCode
 ActsExamples::RootNuclearInteractionParametersWriter::writeT(
     const AlgorithmContext& /*ctx*/,
     const ExtractedSimulationProcessContainer& event) {
+std::cout << "writeT called" << std::endl;
   // Convert the tuple to use additional categorisation variables
   std::vector<detail::NuclearInteractionParametrisation::EventFraction>
       eventFractions;
