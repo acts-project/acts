@@ -11,6 +11,5 @@
 #include "SeedingExample.hpp"
 
 int main(int argc, char* argv[]) {
-
   return runSeedingExample(argc, argv, std::make_shared<DD4hepDetector>());
 }
