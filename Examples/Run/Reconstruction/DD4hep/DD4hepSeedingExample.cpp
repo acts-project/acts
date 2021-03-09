@@ -12,5 +12,5 @@
 
 int main(int argc, char* argv[]) {
 
-  return runSeedingExample(argc, argv, std::make_shared<DD4hepDetector>();
+  return runSeedingExample(argc, argv, std::make_shared<DD4hepDetector>());
 }
