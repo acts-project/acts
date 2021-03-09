@@ -469,6 +469,13 @@ class AtlasStepper {
     }
   }
 
+  /// @brief Rest the jacobian
+  ///
+  /// @todo indicate if free/bound
+  void resetJacobian(State& /*state*/) const {
+    //@todo proper reset
+  }
+
   /// Get the field for the stepping
   /// It checks first if the access is still within the Cell,
   /// and updates the cell if necessary, then it takes the field
@@ -592,7 +599,7 @@ class AtlasStepper {
     // The transport of the covariance
     std::optional<Covariance> covOpt = std::nullopt;
     if (state.covTransport && transportCov) {
-      covarianceTransport(state, surface);
+      transportCovarianceToBound(state, surface);
     }
     if (state.cov != Covariance::Zero()) {
       covOpt = state.cov;
@@ -638,7 +645,7 @@ class AtlasStepper {
 
     std::optional<Covariance> covOpt = std::nullopt;
     if (state.covTransport && transportCov) {
-      covarianceTransport(state);
+      transportCovarianceToCurvilinear(state);
     }
     if (state.cov != Covariance::Zero()) {
       covOpt = state.cov;
@@ -707,7 +714,7 @@ class AtlasStepper {
   /// @param [in,out] state State of the stepper
   ///
   /// @return the full transport jacobian
-  void covarianceTransport(State& state) const {
+  void transportCovarianceToCurvilinear(State& state) const {
     double P[60];
     for (unsigned int i = 0; i < 60; ++i) {
       P[i] = state.pVector[i];
@@ -851,13 +858,27 @@ class AtlasStepper {
     state.cov = J * (*state.covariance) * J.transpose();
   }
 
+  /// Method to update the variances
+  ///
+  /// @param [in,out] state State object that will be updated
+  /// @param [in] variancePhi the updated variance in phi
+  /// @param [in] varianceTheta the updated variance in theta
+  /// @param [in] varianceQoverP the updated variance in qOverP
+  /// @param [in] mode Update mode
+  void addVariances(State& state, ActsScalar variancePhi,
+                    ActsScalar varianceTheta, ActsScalar varianceQoverP,
+                    NoiseUpdateMode mode) const {
+    detail::addSingleVariances(state.cov, variancePhi, varianceTheta,
+                               varianceQoverP, mode);
+  }
+
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current position,
   /// or direction of the state
   ///
   /// @param [in,out] state State of the stepper
   /// @param [in] surface is the surface to which the covariance is forwarded to
-  void covarianceTransport(State& state, const Surface& surface) const {
+  void transportCovarianceToBound(State& state, const Surface& surface) const {
     Acts::Vector3 gp(state.pVector[0], state.pVector[1], state.pVector[2]);
     Acts::Vector3 mom(state.pVector[4], state.pVector[5], state.pVector[6]);
     mom /= std::abs(state.pVector[7]);

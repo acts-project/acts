@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -42,8 +42,6 @@ using Acts::VectorHelpers::makeVector4;
 
 namespace Acts {
 namespace Test {
-
-using Covariance = BoundSymMatrix;
 
 static constexpr auto eps = 3 * std::numeric_limits<double>::epsilon();
 
@@ -129,7 +127,7 @@ struct StepCollector {
 };
 
 /// These tests are aiming to test whether the state setup is working properly
-BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
+BOOST_AUTO_TEST_CASE(eigen_stepper_state_bound_curv) {
   // Set up some variables
   NavigationDirection ndir = backward;
   double stepSize = 123.;
@@ -150,16 +148,17 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   EigenStepper<> es(bField);
 
   // Test the result & compare with the input/test for reasonable members
-  BOOST_CHECK_EQUAL(esState.jacToGlobal, BoundToFreeMatrix::Zero());
-  BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
-  BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
-  BOOST_CHECK(!esState.covTransport);
-  BOOST_CHECK_EQUAL(esState.cov, Covariance::Zero());
   BOOST_CHECK_EQUAL(esState.navDir, ndir);
   BOOST_CHECK_EQUAL(esState.pathAccumulated, 0.);
   BOOST_CHECK_EQUAL(esState.stepSize, ndir * stepSize);
   BOOST_CHECK_EQUAL(esState.previousStepSize, 0.);
   BOOST_CHECK_EQUAL(esState.tolerance, tolerance);
+  BOOST_CHECK_THROW(std::get<FreeSymMatrix>(esState.cov),
+                    std::bad_variant_access);
+  BOOST_CHECK(esState.covTransport == false);
+  BOOST_CHECK_EQUAL(esState.jacToGlobal, BoundToFreeMatrix::Zero());
+  BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
+  BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
 
   // Test without charge and covariance matrix
   NeutralCurvilinearTrackParameters ncp(makeVector4(pos, time), dir,
@@ -169,14 +168,14 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   BOOST_CHECK_EQUAL(es.charge(esState), 0.);
 
   // Test with covariance matrix
-  Covariance cov = 8. * Covariance::Identity();
+  BoundSymMatrix cov = 8. * BoundSymMatrix::Identity();
   ncp = NeutralCurvilinearTrackParameters(makeVector4(pos, time), dir,
                                           1 / absMom, cov);
   esState = EigenStepper<>::State(tgContext, bField->makeCache(mfContext), ncp,
                                   ndir, stepSize, tolerance);
+  BOOST_CHECK(esState.covTransport == true);
+  BOOST_CHECK_EQUAL(std::get<BoundSymMatrix>(esState.cov), cov);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
-  BOOST_CHECK(esState.covTransport);
-  BOOST_CHECK_EQUAL(esState.cov, cov);
 }
 
 /// These tests are aiming to test the functions of the EigenStepper
@@ -194,7 +193,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   double time = 7.;
   double absMom = 8.;
   double charge = -1.;
-  Covariance cov = 8. * Covariance::Identity();
+  BoundSymMatrix cov = 8. * BoundSymMatrix::Identity();
   CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
                                 cov);
 
@@ -248,9 +247,9 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(es.time(esState), newTime);
 
   // The covariance transport
-  esState.cov = cov;
-  es.covarianceTransport(esState);
-  BOOST_CHECK_NE(esState.cov, cov);
+  esState.cov.emplace<BoundSymMatrix>(cov);
+  es.transportCovarianceToCurvilinear(esState);
+  BOOST_CHECK_NE(std::get<BoundSymMatrix>(esState.cov), cov);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
@@ -262,7 +261,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   ps.stepping.covTransport = false;
   double h = es.step(ps).value();
   BOOST_CHECK_EQUAL(ps.stepping.stepSize, h);
-  CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, eps);
+  CHECK_CLOSE_COVARIANCE(std::get<BoundSymMatrix>(ps.stepping.cov), cov, eps);
   BOOST_CHECK_NE(es.position(ps.stepping).norm(), newPos.norm());
   BOOST_CHECK_NE(es.direction(ps.stepping), newMom.normalized());
   BOOST_CHECK_EQUAL(es.charge(ps.stepping), charge);
@@ -273,7 +272,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   ps.stepping.covTransport = true;
   double h2 = es.step(ps).value();
   BOOST_CHECK_EQUAL(h2, h);
-  CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, eps);
+  CHECK_CLOSE_COVARIANCE(std::get<BoundSymMatrix>(ps.stepping.cov), cov, eps);
   BOOST_CHECK_NE(es.position(ps.stepping).norm(), newPos.norm());
   BOOST_CHECK_NE(es.direction(ps.stepping), newMom.normalized());
   BOOST_CHECK_EQUAL(es.charge(ps.stepping), charge);
@@ -288,7 +287,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   double time2 = 7.5;
   double absMom2 = 8.5;
   double charge2 = 1.;
-  BoundSymMatrix cov2 = 8.5 * Covariance::Identity();
+  BoundSymMatrix cov2 = 8.5 * BoundSymMatrix::Identity();
   CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2, absMom2,
                                  charge2, cov2);
   FreeVector freeParams = detail::transformBoundToFreeParameters(
@@ -331,12 +330,12 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface(), ndir, stepSize2);
   // Test all components
+  BOOST_CHECK(esStateCopy.covTransport == true);
   BOOST_CHECK_NE(esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_NE(esStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
   BOOST_CHECK_EQUAL(esStateCopy.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esStateCopy.derivative, FreeVector::Zero());
-  BOOST_CHECK(esStateCopy.covTransport);
-  BOOST_CHECK_EQUAL(esStateCopy.cov, cov2);
+  BOOST_CHECK_EQUAL(std::get<BoundSymMatrix>(esStateCopy.cov), cov2);
   BOOST_CHECK_EQUAL(es.position(esStateCopy),
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(es.direction(esStateCopy),
@@ -356,12 +355,11 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface(), ndir);
   // Test all components
-  BOOST_CHECK_NE(esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
+  BOOST_CHECK(esStateCopy.covTransport == true);
   BOOST_CHECK_NE(esStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
   BOOST_CHECK_EQUAL(esStateCopy.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esStateCopy.derivative, FreeVector::Zero());
-  BOOST_CHECK(esStateCopy.covTransport);
-  BOOST_CHECK_EQUAL(esStateCopy.cov, cov2);
+  BOOST_CHECK_EQUAL(std::get<BoundSymMatrix>(esStateCopy.cov), cov2);
   BOOST_CHECK_EQUAL(es.position(esStateCopy),
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(es.direction(esStateCopy),
@@ -382,12 +380,11 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface());
   // Test all components
-  BOOST_CHECK_NE(esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
+  BOOST_CHECK(esStateCopy.covTransport == true);
   BOOST_CHECK_NE(esStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
   BOOST_CHECK_EQUAL(esStateCopy.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esStateCopy.derivative, FreeVector::Zero());
-  BOOST_CHECK(esStateCopy.covTransport);
-  BOOST_CHECK_EQUAL(esStateCopy.cov, cov2);
+  BOOST_CHECK_EQUAL(std::get<BoundSymMatrix>(esStateCopy.cov), cov2);
   BOOST_CHECK_EQUAL(es.position(esStateCopy),
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(es.direction(esStateCopy),
@@ -447,8 +444,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_ABS(std::get<2>(boundState), 0., eps);
 
   // Transport the covariance in the context of a surface
-  es.covarianceTransport(esState, *plane);
-  BOOST_CHECK_NE(esState.cov, cov);
+  es.transportCovarianceToBound(esState, *plane);
+  BOOST_CHECK_NE(std::get<BoundSymMatrix>(esState.cov), cov);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
@@ -467,7 +464,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // update does not change the particle hypothesis
   BOOST_CHECK_EQUAL(es.charge(esState), 1. * charge);
   CHECK_CLOSE_OR_SMALL(es.time(esState), 2. * time, eps, eps);
-  CHECK_CLOSE_COVARIANCE(esState.cov, Covariance(2. * cov), eps);
+  CHECK_CLOSE_COVARIANCE(std::get<BoundSymMatrix>(esState.cov),
+                         BoundSymMatrix(2. * cov), eps);
 
   // Test a case where no step size adjustment is required
   ps.options.tolerance = 2. * 4.4258e+09;
@@ -535,7 +533,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   naviVac.resolveSensitive = true;
 
   // Set initial parameters for the particle track
-  Covariance cov = Covariance::Identity();
+  BoundSymMatrix cov = BoundSymMatrix::Identity();
   const Vector3 startDir = makeDirectionUnitFromPhiTheta(0_degree, 90_degree);
   const Vector3 startMom = 1_GeV * startDir;
   const CurvilinearTrackParameters sbtp(Vector4::Zero(), startDir, 1_GeV, 1_e,
@@ -644,7 +642,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   naviMat.resolveSensitive = true;
 
   // Set initial parameters for the particle track
-  Covariance cov = Covariance::Identity();
+  BoundSymMatrix cov = BoundSymMatrix::Identity();
   const Vector3 startDir = makeDirectionUnitFromPhiTheta(0_degree, 90_degree);
   const Vector3 startMom = 5_GeV * startDir;
   const CurvilinearTrackParameters sbtp(Vector4::Zero(), startDir, 5_GeV, 1_e,
@@ -812,7 +810,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
 
   // Set initial parameters for the particle track
   CurvilinearTrackParameters sbtp(Vector4::Zero(), 0_degree, 90_degree, 5_GeV,
-                                  1_e, Covariance::Identity());
+                                  1_e, BoundSymMatrix::Identity());
 
   // Create action list for surface collection
   AbortList<EndOfWorld> abortList;
@@ -1058,7 +1056,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
 
   // Set initial parameters for the particle track
   CurvilinearTrackParameters sbtp(Vector4::Zero(), 0_degree, 90_degree,
-                                  1_e / 1_GeV, Covariance::Identity());
+                                  1_e / 1_GeV, BoundSymMatrix::Identity());
 
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector, MaterialInteractor>,

@@ -29,7 +29,8 @@ namespace Acts {
 /// As a consequence the methods can be located in a seperate file.
 namespace detail {
 
-/// Create and return the bound state at the current position
+/// Create and return the bound state (from a bound state) at the current
+/// position
 ///
 /// @brief It does not check if the transported state is at the surface, this
 /// needs to be guaranteed by the propagator
@@ -100,12 +101,11 @@ std::tuple<CurvilinearTrackParameters, BoundMatrix, double> curvilinearState(
 /// @param [in] surface is the surface to which the covariance is
 ///        forwarded to
 /// @note No check is done if the position is actually on the surface
-void covarianceTransport(const GeometryContext& geoContext,
-                         BoundSymMatrix& covarianceMatrix,
-                         BoundMatrix& jacobian, FreeMatrix& transportJacobian,
-                         FreeVector& derivatives,
-                         BoundToFreeMatrix& jacToGlobal,
-                         const FreeVector& parameters, const Surface& surface);
+void transportCovarianceToBound(
+    const GeometryContext& geoContext, BoundSymMatrix& covarianceMatrix,
+    BoundMatrix& jacobian, FreeMatrix& transportJacobian,
+    FreeVector& derivatives, BoundToFreeMatrix& jacToGlobal,
+    const FreeVector& parameters, const Surface& surface);
 
 /// @brief Method for on-demand transport of the covariance to a new frame at
 /// current position in parameter space
@@ -118,10 +118,11 @@ void covarianceTransport(const GeometryContext& geoContext,
 /// @param [in, out] jacToGlobal Projection jacobian of the last bound
 /// parametrisation to free parameters
 /// @param [in] direction Normalised direction vector
-void covarianceTransport(BoundSymMatrix& covarianceMatrix,
-                         BoundMatrix& jacobian, FreeMatrix& transportJacobian,
-                         FreeVector& derivatives,
-                         BoundToFreeMatrix& jacToGlobal,
-                         const Vector3& direction);
+void transportCovarianceToCurvilinear(BoundSymMatrix& covarianceMatrix,
+                                      BoundMatrix& jacobian,
+                                      FreeMatrix& transportJacobian,
+                                      FreeVector& derivatives,
+                                      BoundToFreeMatrix& jacToGlobal,
+                                      const Vector3& direction);
 }  // namespace detail
 }  // namespace Acts

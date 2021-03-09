@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(StepWithCovariance) {
   CHECK_CLOSE_ABS(stepper.momentum(state.stepping), absMom, eps);
   BOOST_CHECK_EQUAL(stepper.charge(state.stepping), charge);
 
-  stepper.covarianceTransport(state.stepping);
+  stepper.transportCovarianceToCurvilinear(state.stepping);
   BOOST_CHECK_NE(state.stepping.cov, cov);
 }
 

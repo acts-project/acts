@@ -43,10 +43,10 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
     return Intersection3D::Status::onSurface;
   } else if (sIntersection.intersection or sIntersection.alternative) {
     // Path and overstep limit checking
-    double pLimit = state.stepSize.value(ConstrainedStep::aborter);
-    double oLimit = stepper.overstepLimit(state);
+    ActsScalar pLimit = state.stepSize.value(ConstrainedStep::aborter);
+    ActsScalar oLimit = stepper.overstepLimit(state);
     auto checkIntersection = [&](const Intersection3D& intersection) -> bool {
-      double cLimit = intersection.pathLength;
+      ActsScalar cLimit = intersection.pathLength;
       bool accept = (cLimit > oLimit and cLimit * cLimit < pLimit * pLimit);
       if (accept) {
         stepper.setStepSize(state, state.navDir * cLimit);
@@ -75,8 +75,30 @@ template <typename stepper_t, typename object_intersection_t>
 void updateSingleStepSize(typename stepper_t::State& state,
                           const object_intersection_t& oIntersection,
                           bool release = true) {
-  double stepSize = oIntersection.intersection.pathLength;
+  ActsScalar stepSize = oIntersection.intersection.pathLength;
   state.stepSize.update(stepSize, ConstrainedStep::actor, release);
+}
+
+/// Update the variance
+///
+/// @param cov [in,out] The covariance to be updated
+/// @param variancePhi [in] The additional variance on phi
+/// @param varianceTheta [in] The additional variance on theta
+/// @param varianceQoverP [in] The additional variance on q/1 over P
+/// @param updateMode [in] The update mode for the noise treatment
+static void addSingleVariances(BoundSymMatrix& cov, ActsScalar variancePhi,
+                               ActsScalar varianceTheta,
+                               ActsScalar varianceQoverP,
+                               NoiseUpdateMode updateMode) {
+  // Protect against negative values
+  cov(eBoundPhi, eBoundPhi) = std::max(
+      0., cov(eBoundPhi, eBoundPhi) + std::copysign(variancePhi, updateMode));
+  cov(eBoundTheta, eBoundTheta) =
+      std::max(0., cov(eBoundTheta, eBoundTheta) +
+                       std::copysign(varianceTheta, updateMode));
+  cov(eBoundQOverP, eBoundQOverP) =
+      std::max(0., cov(eBoundQOverP, eBoundQOverP) +
+                       std::copysign(varianceQoverP, updateMode));
 }
 
 }  // namespace detail

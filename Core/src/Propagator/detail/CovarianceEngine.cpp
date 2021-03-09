@@ -261,9 +261,9 @@ Result<BoundState> boundState(const GeometryContext& geoContext,
     // Calculate the jacobian and transport the covarianceMatrix to final local.
     // Then reinitialize the transportJacobian, derivatives and the
     // jacToGlobal
-    covarianceTransport(geoContext, covarianceMatrix, jacobian,
-                        transportJacobian, derivatives, jacToGlobal, parameters,
-                        surface);
+    transportCovarianceToBound(geoContext, covarianceMatrix, jacobian,
+                               transportJacobian, derivatives, jacToGlobal,
+                               parameters, surface);
   }
   if (covarianceMatrix != BoundSymMatrix::Zero()) {
     cov = covarianceMatrix;
@@ -298,8 +298,9 @@ CurvilinearState curvilinearState(Covariance& covarianceMatrix,
     // Calculate the jacobian and transport the covarianceMatrix to final local.
     // Then reinitialize the transportJacobian, derivatives and the
     // jacToGlobal
-    covarianceTransport(covarianceMatrix, jacobian, transportJacobian,
-                        derivatives, jacToGlobal, direction);
+    transportCovarianceToCurvilinear(covarianceMatrix, jacobian,
+                                     transportJacobian, derivatives,
+                                     jacToGlobal, direction);
   }
   if (covarianceMatrix != BoundSymMatrix::Zero()) {
     cov = covarianceMatrix;
@@ -318,10 +319,12 @@ CurvilinearState curvilinearState(Covariance& covarianceMatrix,
                          accumulatedPath);
 }
 
-void covarianceTransport(Covariance& covarianceMatrix, Jacobian& jacobian,
-                         FreeMatrix& transportJacobian, FreeVector& derivatives,
-                         BoundToFreeMatrix& jacToGlobal,
-                         const Vector3& direction) {
+void transportCovarianceToCurvilinear(Covariance& covarianceMatrix,
+                                      Jacobian& jacobian,
+                                      FreeMatrix& transportJacobian,
+                                      FreeVector& derivatives,
+                                      BoundToFreeMatrix& jacToGlobal,
+                                      const Vector3& direction) {
   // Calculate the full jacobian from local parameters at the start surface to
   // current curvilinear parameters
   jacobianLocalToLocal(direction, jacToGlobal, transportJacobian, derivatives,
@@ -339,11 +342,11 @@ void covarianceTransport(Covariance& covarianceMatrix, Jacobian& jacobian,
   reinitializeJacobians(transportJacobian, derivatives, jacToGlobal, direction);
 }
 
-void covarianceTransport(const GeometryContext& geoContext,
-                         Covariance& covarianceMatrix, Jacobian& jacobian,
-                         FreeMatrix& transportJacobian, FreeVector& derivatives,
-                         BoundToFreeMatrix& jacToGlobal,
-                         const FreeVector& parameters, const Surface& surface) {
+void transportCovarianceToBound(
+    const GeometryContext& geoContext, Covariance& covarianceMatrix,
+    Jacobian& jacobian, FreeMatrix& transportJacobian, FreeVector& derivatives,
+    BoundToFreeMatrix& jacToGlobal, const FreeVector& parameters,
+    const Surface& surface) {
   // Calculate the full jacobian from local parameters at the start surface to
   // current bound parameters
   jacobianLocalToLocal(geoContext, parameters, jacToGlobal, transportJacobian,

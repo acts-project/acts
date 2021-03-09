@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,7 +20,7 @@ auto Acts::EigenStepper<E, A>::makeState(
     std::reference_wrapper<const GeometryContext> gctx,
     std::reference_wrapper<const MagneticFieldContext> mctx,
     const SingleBoundTrackParameters<charge_t>& par, NavigationDirection ndir,
-    double ssize, double stolerance) const -> State {
+    ActsScalar ssize, ActsScalar stolerance) const -> State {
   return State{gctx, m_bField->makeCache(mctx), par, ndir, ssize, stolerance};
 }
 
@@ -30,7 +30,7 @@ void Acts::EigenStepper<E, A>::resetState(State& state,
                                           const BoundSymMatrix& cov,
                                           const Surface& surface,
                                           const NavigationDirection navDir,
-                                          const double stepSize) const {
+                                          const ActsScalar stepSize) const {
   // Update the stepping state
   update(state,
          detail::transformBoundToFreeParameters(surface, state.geoContext,
@@ -43,7 +43,7 @@ void Acts::EigenStepper<E, A>::resetState(State& state,
   // Reinitialize the stepping jacobian
   state.jacToGlobal =
       surface.jacobianLocalToGlobal(state.geoContext, boundParams);
-  state.jacobian = BoundMatrix::Identity();
+  state.jacobian.template emplace<BoundMatrix>(BoundMatrix::Identity());
   state.jacTransport = FreeMatrix::Identity();
   state.derivative = FreeVector::Zero();
 }
@@ -53,7 +53,8 @@ auto Acts::EigenStepper<E, A>::boundState(State& state, const Surface& surface,
                                           bool transportCov) const
     -> Result<BoundState> {
   return detail::boundState(
-      state.geoContext, state.cov, state.jacobian, state.jacTransport,
+      state.geoContext, std::get<BoundSymMatrix>(state.cov),
+      std::get<BoundMatrix>(state.jacobian), state.jacTransport,
       state.derivative, state.jacToGlobal, state.pars,
       state.covTransport && transportCov, state.pathAccumulated, surface);
 }
@@ -63,23 +64,24 @@ auto Acts::EigenStepper<E, A>::curvilinearState(State& state,
                                                 bool transportCov) const
     -> CurvilinearState {
   return detail::curvilinearState(
-      state.cov, state.jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, state.pars, state.covTransport && transportCov,
-      state.pathAccumulated);
+      std::get<BoundSymMatrix>(state.cov),
+      std::get<BoundMatrix>(state.jacobian), state.jacTransport,
+      state.derivative, state.jacToGlobal, state.pars,
+      state.covTransport && transportCov, state.pathAccumulated);
 }
 
 template <typename E, typename A>
 void Acts::EigenStepper<E, A>::update(State& state,
                                       const FreeVector& parameters,
-                                      const Covariance& covariance) const {
+                                      const BoundSymMatrix& covariance) const {
   state.pars = parameters;
-  state.cov = covariance;
+  state.cov.template emplace<BoundSymMatrix>(covariance);
 }
 
 template <typename E, typename A>
 void Acts::EigenStepper<E, A>::update(State& state, const Vector3& uposition,
-                                      const Vector3& udirection, double up,
-                                      double time) const {
+                                      const Vector3& udirection, ActsScalar up,
+                                      ActsScalar time) const {
   state.pars.template segment<3>(eFreePos0) = uposition;
   state.pars.template segment<3>(eFreeDir0) = udirection;
   state.pars[eFreeTime] = time;
@@ -87,30 +89,43 @@ void Acts::EigenStepper<E, A>::update(State& state, const Vector3& uposition,
 }
 
 template <typename E, typename A>
-void Acts::EigenStepper<E, A>::covarianceTransport(State& state) const {
-  detail::covarianceTransport(state.cov, state.jacobian, state.jacTransport,
-                              state.derivative, state.jacToGlobal,
-                              direction(state));
+void Acts::EigenStepper<E, A>::addVariances(State& state,
+                                            ActsScalar variancePhi,
+                                            ActsScalar varianceTheta,
+                                            ActsScalar varianceQoverP,
+                                            NoiseUpdateMode mode) const {
+  detail::addSingleVariances(std::get<BoundSymMatrix>(state.cov), variancePhi,
+                             varianceTheta, varianceQoverP, mode);
 }
 
 template <typename E, typename A>
-void Acts::EigenStepper<E, A>::covarianceTransport(
+void Acts::EigenStepper<E, A>::transportCovarianceToCurvilinear(
+    State& state) const {
+  detail::transportCovarianceToCurvilinear(
+      std::get<BoundSymMatrix>(state.cov),
+      std::get<BoundMatrix>(state.jacobian), state.jacTransport,
+      state.derivative, state.jacToGlobal, direction(state));
+}
+
+template <typename E, typename A>
+void Acts::EigenStepper<E, A>::transportCovarianceToBound(
     State& state, const Surface& surface) const {
-  detail::covarianceTransport(state.geoContext.get(), state.cov, state.jacobian,
-                              state.jacTransport, state.derivative,
-                              state.jacToGlobal, state.pars, surface);
+  detail::transportCovarianceToBound(
+      state.geoContext.get(), std::get<BoundSymMatrix>(state.cov),
+      std::get<BoundMatrix>(state.jacobian), state.jacTransport,
+      state.derivative, state.jacToGlobal, state.pars, surface);
 }
 
 template <typename E, typename A>
 template <typename propagator_state_t>
-Acts::Result<double> Acts::EigenStepper<E, A>::step(
+Acts::Result<Acts::ActsScalar> Acts::EigenStepper<E, A>::step(
     propagator_state_t& state) const {
   using namespace UnitLiterals;
 
   // Runge-Kutta integrator state
   auto& sd = state.stepping.stepData;
-  double error_estimate = 0.;
-  double h2, half_h;
+  ActsScalar error_estimate = 0.;
+  ActsScalar h2, half_h;
 
   auto pos = position(state.stepping);
   auto dir = direction(state.stepping);
@@ -161,7 +176,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     return (error_estimate <= state.options.tolerance);
   };
 
-  double stepSizeScaling = 1.;
+  ActsScalar stepSizeScaling = 1.;
   size_t nStepTrials = 0;
   // Select and adjust the appropriate Runge-Kutta step size as given
   // ATL-SOFT-PUB-2009-001
@@ -192,7 +207,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   }
 
   // use the adjusted step size
-  const double h = state.stepping.stepSize;
+  const ActsScalar h = state.stepping.stepSize;
 
   // When doing error propagation, update the associated Jacobian matrix
   if (state.stepping.covTransport) {

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -25,6 +25,8 @@
 #include <cmath>
 #include <functional>
 #include <limits>
+#include <optional>
+#include <variant>
 
 namespace Acts {
 
@@ -46,12 +48,22 @@ template <typename extensionlist_t = StepperExtensionList<DefaultExtension>,
           typename auctioneer_t = detail::VoidAuctioneer>
 class EigenStepper {
  public:
-  /// Jacobian, Covariance and State defintions
+  /// Jacobian and State defintions
   using Jacobian = BoundMatrix;
-  using Covariance = BoundSymMatrix;
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+
+  // Variant jacobian matrix: free-free, free-boud, bound-free, bound-bound
+  using VariantJacobian = std::variant<FreeMatrix, FreeToBoundMatrix,
+                                       BoundToFreeMatrix, BoundMatrix>;
+
+  // Variant covariance: bound, free
+  using VariantCovariance = std::variant<BoundSymMatrix, FreeSymMatrix>;
+
+  using BoundState = std::tuple<BoundTrackParameters, Jacobian, ActsScalar>;
+
   using CurvilinearState =
-      std::tuple<CurvilinearTrackParameters, Jacobian, double>;
+      std::tuple<CurvilinearTrackParameters, Jacobian, ActsScalar>;
+
+  using FreeState = std::tuple<FreeTrackParameters, Jacobian, ActsScalar>;
 
   /// @brief State for track parameter propagation
   ///
@@ -77,8 +89,8 @@ class EigenStepper {
                    MagneticFieldProvider::Cache fieldCacheIn,
                    const SingleBoundTrackParameters<charge_t>& par,
                    NavigationDirection ndir = forward,
-                   double ssize = std::numeric_limits<double>::max(),
-                   double stolerance = s_onSurfaceTolerance)
+                   ActsScalar ssize = std::numeric_limits<ActsScalar>::max(),
+                   ActsScalar stolerance = s_onSurfaceTolerance)
         : q(par.charge()),
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
@@ -94,29 +106,32 @@ class EigenStepper {
       if (par.covariance()) {
         // Get the reference surface for navigation
         const auto& surface = par.referenceSurface();
-        // set the covariance transport flag to true and copy
+        // Set the covariance transport flag to true and copy
         covTransport = true;
-        cov = BoundSymMatrix(*par.covariance());
+        cov.template emplace<BoundSymMatrix>(*par.covariance());
         jacToGlobal = surface.jacobianLocalToGlobal(gctx, par.parameters());
+      } else {
+        cov.template emplace<BoundSymMatrix>(BoundSymMatrix::Zero());
       }
+      jacobian.template emplace<BoundMatrix>(BoundMatrix::Identity());
     }
 
     /// Internal free vector parameters
     FreeVector pars = FreeVector::Zero();
 
     /// The charge as the free vector can be 1/p or q/p
-    double q = 1.;
-
-    /// Covariance matrix (and indicator)
-    /// associated with the initial error on track parameters
-    bool covTransport = false;
-    Covariance cov = Covariance::Zero();
+    ActsScalar q = 1.;
 
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
 
+    /// Covariance matrix (and indicator)
+    /// associated with the initial error on track parameters
+    bool covTransport = false;
+    VariantCovariance cov;
+
     /// The full jacobian of the transport entire transport
-    Jacobian jacobian = Jacobian::Identity();
+    VariantJacobian jacobian;
 
     /// Jacobian from local to the global frame
     BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
@@ -128,16 +143,16 @@ class EigenStepper {
     FreeVector derivative = FreeVector::Zero();
 
     /// Accummulated path length state
-    double pathAccumulated = 0.;
+    ActsScalar pathAccumulated = 0.;
 
     /// Adaptive step size of the runge-kutta integration
-    ConstrainedStep stepSize{std::numeric_limits<double>::max()};
+    ConstrainedStep stepSize{std::numeric_limits<ActsScalar>::max()};
 
     /// Last performed step (for overstep limit calculation)
-    double previousStepSize = 0.;
+    ActsScalar previousStepSize = 0.;
 
     /// The tolerance for the stepping
-    double tolerance = s_onSurfaceTolerance;
+    ActsScalar tolerance = s_onSurfaceTolerance;
 
     /// This caches the current magnetic field cell and stays
     /// (and interpolates) within it as long as this is valid.
@@ -160,7 +175,7 @@ class EigenStepper {
       /// k_i of the RKN4 algorithm
       Vector3 k1, k2, k3, k4;
       /// k_i elements of the momenta
-      std::array<double, 4> kQoP;
+      std::array<ActsScalar, 4> kQoP;
     } stepData;
   };
 
@@ -172,8 +187,8 @@ class EigenStepper {
                   std::reference_wrapper<const MagneticFieldContext> mctx,
                   const SingleBoundTrackParameters<charge_t>& par,
                   NavigationDirection ndir = forward,
-                  double ssize = std::numeric_limits<double>::max(),
-                  double stolerance = s_onSurfaceTolerance) const;
+                  ActsScalar ssize = std::numeric_limits<ActsScalar>::max(),
+                  ActsScalar stolerance = s_onSurfaceTolerance) const;
 
   /// @brief Resets the state
   ///
@@ -186,7 +201,14 @@ class EigenStepper {
   void resetState(
       State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
       const Surface& surface, const NavigationDirection navDir = forward,
-      const double stepSize = std::numeric_limits<double>::max()) const;
+      const ActsScalar stepSize = std::numeric_limits<ActsScalar>::max()) const;
+
+  /// @brief Rest the jacobian
+  ///
+  /// @todo indicate if free/bound
+  void resetJacobian(State& state) const {
+    state.jacobian.template emplace<BoundSymMatrix>(BoundSymMatrix::Identity());
+  }
 
   /// Get the field for the stepping, it checks first if the access is still
   /// within the Cell, and updates the cell if necessary.
@@ -216,19 +238,19 @@ class EigenStepper {
   /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double momentum(const State& state) const {
+  ActsScalar momentum(const State& state) const {
     return std::abs((state.q == 0. ? 1. : state.q) / state.pars[eFreeQOverP]);
   }
 
   /// Charge access
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double charge(const State& state) const { return state.q; }
+  ActsScalar charge(const State& state) const { return state.q; }
 
   /// Time access
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double time(const State& state) const { return state.pars[eFreeTime]; }
+  ActsScalar time(const State& state) const { return state.pars[eFreeTime]; }
 
   /// Update surface status
   ///
@@ -260,12 +282,12 @@ class EigenStepper {
     detail::updateSingleStepSize<EigenStepper>(state, oIntersection, release);
   }
 
-  /// Set Step size - explicitely with a double
+  /// Set Step size - explicitely with a scalar
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value
   /// @param stype [in] The step size type to be set
-  void setStepSize(State& state, double stepSize,
+  void setStepSize(State& state, ActsScalar stepSize,
                    ConstrainedStep::Type stype = ConstrainedStep::actor) const {
     state.previousStepSize = state.stepSize;
     state.stepSize.update(stepSize, stype, true);
@@ -288,7 +310,7 @@ class EigenStepper {
   /// Overstep limit
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double overstepLimit(const State& /*state*/) const {
+  ActsScalar overstepLimit(const State& /*state*/) const {
     // A dynamic overstep limit could sit here
     return -m_overstepLimit;
   }
@@ -331,7 +353,7 @@ class EigenStepper {
   /// @param [in,out] state State object that will be updated
   /// @param [in] pars Parameters that will be written into @p state
   void update(State& state, const FreeVector& parameters,
-              const Covariance& covariance) const;
+              const BoundSymMatrix& covariance) const;
 
   /// Method to update momentum, direction and p
   ///
@@ -340,7 +362,18 @@ class EigenStepper {
   /// @param [in] udirection the updated direction
   /// @param [in] up the updated momentum value
   void update(State& state, const Vector3& uposition, const Vector3& udirection,
-              double up, double time) const;
+              ActsScalar up, ActsScalar time) const;
+
+  /// Method to update the variances
+  ///
+  /// @param [in,out] state State object that will be updated
+  /// @param [in] variancePhi the updated variance in phi
+  /// @param [in] varianceTheta the updated variance in theta
+  /// @param [in] varianceQoverP the updated variance in qOverP
+  /// @param [in] mode Update mode
+  void addVariances(State& state, ActsScalar variancePhi,
+                    ActsScalar varianceTheta, ActsScalar varianceQoverP,
+                    NoiseUpdateMode mode) const;
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,
@@ -349,7 +382,7 @@ class EigenStepper {
   /// @param [in,out] state State of the stepper
   ///
   /// @return the full transport jacobian
-  void covarianceTransport(State& state) const;
+  void transportCovarianceToCurvilinear(State& state) const;
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current position,
@@ -360,7 +393,7 @@ class EigenStepper {
   /// @param [in,out] state State of the stepper
   /// @param [in] surface is the surface to which the covariance is forwarded to
   /// @note no check is done if the position is actually on the surface
-  void covarianceTransport(State& state, const Surface& surface) const;
+  void transportCovarianceToBound(State& state, const Surface& surface) const;
 
   /// Perform a Runge-Kutta track parameter propagation step
   ///
@@ -373,14 +406,14 @@ class EigenStepper {
   ///                      and since we're using an adaptive algorithm, it can
   ///                      be modified by the stepper class during propagation.
   template <typename propagator_state_t>
-  Result<double> step(propagator_state_t& state) const;
+  Result<ActsScalar> step(propagator_state_t& state) const;
 
  private:
   /// Magnetic field inside of the detector
   std::shared_ptr<const MagneticFieldProvider> m_bField;
 
   /// Overstep limit: could/should be dynamic
-  double m_overstepLimit = 100_um;
+  ActsScalar m_overstepLimit = 100_um;
 };
 }  // namespace Acts
 

@@ -45,8 +45,9 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   BoundToFreeMatrix jacobianLocalToGlobal = 4. * BoundToFreeMatrix::Identity();
 
   // Covariance transport to curvilinear coordinates
-  detail::covarianceTransport(covariance, jacobian, transportJacobian,
-                              derivatives, jacobianLocalToGlobal, direction);
+  detail::transportCovarianceToCurvilinear(covariance, jacobian,
+                                           transportJacobian, derivatives,
+                                           jacobianLocalToGlobal, direction);
 
   // Tests to see that the right components are (un-)changed
   BOOST_CHECK_NE(covariance, Covariance::Identity());
@@ -66,9 +67,9 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
 
   // Repeat transport to surface
   auto surface = Surface::makeShared<PlaneSurface>(position, direction);
-  detail::covarianceTransport(tgContext, covariance, jacobian,
-                              transportJacobian, derivatives,
-                              jacobianLocalToGlobal, parameters, *surface);
+  detail::transportCovarianceToBound(
+      tgContext, covariance, jacobian, transportJacobian, derivatives,
+      jacobianLocalToGlobal, parameters, *surface);
 
   BOOST_CHECK_NE(covariance, Covariance::Identity());
   BOOST_CHECK_NE(jacobian, 2. * Jacobian::Identity());

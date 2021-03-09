@@ -36,10 +36,17 @@ class StraightLineStepper {
  public:
   using Jacobian = BoundMatrix;
   using Covariance = BoundSymMatrix;
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+
+  // Variant jacobian matrix: free-free, free-boud, bound-free, bound-bound
+  using VariantJacobian = std::variant<FreeMatrix, FreeToBoundMatrix,
+                                       BoundToFreeMatrix, BoundMatrix>;
+
+  // Variant covariance: bound, free
+  using VariantCovariance = std::variant<BoundSymMatrix, FreeSymMatrix>;
+
+  using BoundState = std::tuple<BoundTrackParameters, Jacobian, ActsScalar>;
   using CurvilinearState =
-      std::tuple<CurvilinearTrackParameters, Jacobian, double>;
-  using BField = NullBField;
+      std::tuple<CurvilinearTrackParameters, Jacobian, ActsScalar>;
 
   /// State for track parameter propagation
   ///
@@ -63,8 +70,8 @@ class StraightLineStepper {
                    const MagneticFieldContext& /*mctx*/,
                    const SingleBoundTrackParameters<charge_t>& par,
                    NavigationDirection ndir = forward,
-                   double ssize = std::numeric_limits<double>::max(),
-                   double stolerance = s_onSurfaceTolerance)
+                   ActsScalar ssize = std::numeric_limits<ActsScalar>::max(),
+                   ActsScalar stolerance = s_onSurfaceTolerance)
         : q(par.charge()),
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
@@ -74,15 +81,36 @@ class StraightLineStepper {
       pars.template segment<3>(eFreeDir0) = par.unitDirection();
       pars[eFreeTime] = par.time();
       pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
+
       if (par.covariance()) {
         // Get the reference surface for navigation
         const auto& surface = par.referenceSurface();
         // set the covariance transport flag to true and copy
         covTransport = true;
-        cov = BoundSymMatrix(*par.covariance());
+        cov.template emplace<BoundSymMatrix>(BoundSymMatrix(*par.covariance()));
         jacToGlobal = surface.jacobianLocalToGlobal(gctx, par.parameters());
+      } else {
+        cov.template emplace<BoundSymMatrix>(BoundSymMatrix::Zero());
       }
+      jacobian.template emplace<BoundMatrix>(BoundMatrix::Identity());
     }
+
+    /// Internal free vector parameters
+    FreeVector pars = FreeVector::Zero();
+
+    /// The charge as the free vector can be 1/p or q/p
+    ActsScalar q = 1.;
+
+    /// Navigation direction, this is needed for searching
+    NavigationDirection navDir;
+
+    /// Covariance matrix (and indicator)
+    /// associated with the initial error on track parameters
+    bool covTransport = false;
+    VariantCovariance cov;
+
+    /// The full jacobian of the transport entire transport
+    VariantJacobian jacobian;
 
     /// Jacobian from local to the global frame
     BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
@@ -90,36 +118,20 @@ class StraightLineStepper {
     /// Pure transport jacobian part from runge kutta integration
     FreeMatrix jacTransport = FreeMatrix::Identity();
 
-    /// The full jacobian of the transport entire transport
-    Jacobian jacobian = Jacobian::Identity();
-
     /// The propagation derivative
     FreeVector derivative = FreeVector::Zero();
 
-    /// Internal free vector parameters
-    FreeVector pars = FreeVector::Zero();
-
-    /// The charge as the free vector can be 1/p or q/p
-    double q = 1.;
-
-    /// Boolean to indiciate if you need covariance transport
-    bool covTransport = false;
-    Covariance cov = Covariance::Zero();
-
-    /// Navigation direction, this is needed for searching
-    NavigationDirection navDir;
-
-    /// accummulated path length state
-    double pathAccumulated = 0.;
+    /// Accummulated path length state
+    ActsScalar pathAccumulated = 0.;
 
     /// adaptive step size of the runge-kutta integration
-    ConstrainedStep stepSize = std::numeric_limits<double>::max();
+    ConstrainedStep stepSize = std::numeric_limits<ActsScalar>::max();
 
     // Previous step size for overstep estimation (ignored for SL stepper)
-    double previousStepSize = 0.;
+    ActsScalar previousStepSize = 0.;
 
     /// The tolerance for the stepping
-    double tolerance = s_onSurfaceTolerance;
+    ActsScalar tolerance = s_onSurfaceTolerance;
 
     // Cache the geometry context of this propagation
     std::reference_wrapper<const GeometryContext> geoContext;
@@ -136,8 +148,8 @@ class StraightLineStepper {
                   std::reference_wrapper<const MagneticFieldContext> mctx,
                   const SingleBoundTrackParameters<charge_t>& par,
                   NavigationDirection ndir = forward,
-                  double ssize = std::numeric_limits<double>::max(),
-                  double stolerance = s_onSurfaceTolerance) const {
+                  ActsScalar ssize = std::numeric_limits<ActsScalar>::max(),
+                  ActsScalar stolerance = s_onSurfaceTolerance) const {
     return State{gctx, mctx, par, ndir, ssize, stolerance};
   }
 
@@ -152,7 +164,14 @@ class StraightLineStepper {
   void resetState(
       State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
       const Surface& surface, const NavigationDirection navDir = forward,
-      const double stepSize = std::numeric_limits<double>::max()) const;
+      const ActsScalar stepSize = std::numeric_limits<ActsScalar>::max()) const;
+
+  /// @brief Rest the jacobian
+  ///
+  /// @todo indicate if free/bound
+  void resetJacobian(State& state) const {
+    state.jacobian.template emplace<BoundSymMatrix>(BoundSymMatrix::Identity());
+  }
 
   /// Get the field for the stepping, this gives back a zero field
   ///
@@ -181,24 +200,24 @@ class StraightLineStepper {
   /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double momentum(const State& state) const {
+  ActsScalar momentum(const State& state) const {
     return std::abs((state.q == 0. ? 1. : state.q) / state.pars[eFreeQOverP]);
   }
 
   /// Charge access
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double charge(const State& state) const { return state.q; }
+  ActsScalar charge(const State& state) const { return state.q; }
 
   /// Time access
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double time(const State& state) const { return state.pars[eFreeTime]; }
+  ActsScalar time(const State& state) const { return state.pars[eFreeTime]; }
 
   /// Overstep limit
   ///
   /// @param state The stepping state (thread-local cache)
-  double overstepLimit(const State& /*state*/) const {
+  ActsScalar overstepLimit(const State& /*state*/) const {
     return s_onSurfaceTolerance;
   }
 
@@ -233,12 +252,12 @@ class StraightLineStepper {
                                                       release);
   }
 
-  /// Set Step size - explicitely with a double
+  /// Set Step size - explicitely with a ActsScalar
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value
   /// @param stype [in] The step size type to be set
-  void setStepSize(State& state, double stepSize,
+  void setStepSize(State& state, ActsScalar stepSize,
                    ConstrainedStep::Type stype = ConstrainedStep::actor) const {
     state.previousStepSize = state.stepSize;
     state.stepSize.update(stepSize, stype, true);
@@ -293,7 +312,7 @@ class StraightLineStepper {
   /// @param [in,out] state State object that will be updated
   /// @param [in] pars Parameters that will be written into @p state
   void update(State& state, const FreeVector& parameters,
-              const Covariance& covariance) const;
+              const BoundSymMatrix& covariance) const;
 
   /// Method to update momentum, direction and p
   ///
@@ -303,14 +322,28 @@ class StraightLineStepper {
   /// @param [in] up the updated momentum value
   /// @param [in] time the updated time value
   void update(State& state, const Vector3& uposition, const Vector3& udirection,
-              double up, double time) const;
+              ActsScalar up, ActsScalar time) const;
+
+  /// Method to update the variances
+  ///
+  /// @param [in,out] state State object that will be updated
+  /// @param [in] variancePhi the updated variance in phi
+  /// @param [in] varianceTheta the updated variance in theta
+  /// @param [in] varianceQoverP the updated variance in qOverP
+  /// @param [in] mode Update mode
+  void addVariances(State& state, ActsScalar variancePhi,
+                    ActsScalar varianceTheta, ActsScalar varianceQoverP,
+                    NoiseUpdateMode mode) const {
+    detail::addSingleVariances(std::get<BoundSymMatrix>(state.cov), variancePhi,
+                               varianceTheta, varianceQoverP, mode);
+  }
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,
   /// or direction of the state - for the moment a dummy method
   ///
   /// @param [in,out] state State of the stepper
-  void covarianceTransport(State& state) const;
+  void transportCovarianceToCurvilinear(State& state) const;
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,
@@ -323,7 +356,7 @@ class StraightLineStepper {
   ///        forwarded to
   /// @note no check is done if the position is actually on the surface
   ///
-  void covarianceTransport(State& state, const Surface& surface) const;
+  void transportCovarianceToBound(State& state, const Surface& surface) const;
 
   /// Perform a straight line propagation step
   ///
@@ -336,10 +369,10 @@ class StraightLineStepper {
   ///
   /// @return the step size taken
   template <typename propagator_state_t>
-  Result<double> step(propagator_state_t& state) const {
+  Result<ActsScalar> step(propagator_state_t& state) const {
     // use the adjusted step size
-    const auto h = state.stepping.stepSize;
-    const double p = momentum(state.stepping);
+    const ActsScalar h = state.stepping.stepSize;
+    const ActsScalar p = momentum(state.stepping);
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
     const auto dtds = std::hypot(1., state.options.mass / p);
     // Update the track parameters according to the equations of motion
