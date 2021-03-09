@@ -1,0 +1,11 @@
+[
+    {
+        "volume": 13 // barrel layers
+    },
+    {
+        "volume": 14 // positive endcap layers
+    },
+    {
+        "volume": 12 // negative endcap layers
+    }
+]
