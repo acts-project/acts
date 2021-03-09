@@ -105,9 +105,11 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
 
   // Produce a bound state without covariance matrix
   covarianceBefore = covariance;
-  auto boundResult = detail::boundState(
-      tgContext, covariance, jacobian, transportJacobian, derivatives,
-      jacobianLocalToGlobal, parameters, false, 1337., *surface);
+  auto boundResult =
+      detail::boundState(tgContext, covariance, jacobian, transportJacobian,
+                         derivatives, jacobianLocalToGlobal, parameters, false,
+                         1337., *surface)
+          .value();
   BOOST_CHECK(std::get<0>(curvResult).covariance().has_value());
   BOOST_CHECK_EQUAL(*(std::get<0>(curvResult).covariance()), covarianceBefore);
   BOOST_CHECK_EQUAL(std::get<2>(boundResult), 1337.);
@@ -120,9 +122,11 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   jacobianLocalToGlobal = 4. * BoundToFreeMatrix::Identity();
 
   // Produce a bound state with covariance matrix
-  boundResult = detail::boundState(
-      tgContext, covariance, jacobian, transportJacobian, derivatives,
-      jacobianLocalToGlobal, parameters, true, 1337., *surface);
+  boundResult =
+      detail::boundState(tgContext, covariance, jacobian, transportJacobian,
+                         derivatives, jacobianLocalToGlobal, parameters, true,
+                         1337., *surface)
+          .value();
   BOOST_CHECK(std::get<0>(boundResult).covariance().has_value());
   BOOST_CHECK_NE(*(std::get<0>(boundResult).covariance()),
                  Covariance::Identity());

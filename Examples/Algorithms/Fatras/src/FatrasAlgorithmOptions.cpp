@@ -26,6 +26,8 @@ void ActsExamples::FatrasAlgorithm::addOptions(Options::Description& desc) {
       "Simulate ionisiation/excitation energy loss of charged particles");
   opt("fatras-em-radiation", value<bool>()->default_value(true),
       "Simulate radiative energy loss of charged particles");
+  opt("fatras-em-photonconversion", value<bool>()->default_value(true),
+      "Simulate electron-positron pair production by photon conversion");
   opt("fatras-hits",
       value<std::string>()
           ->value_name("none|sensitive|material|all")
@@ -44,6 +46,7 @@ ActsExamples::FatrasAlgorithm::Config ActsExamples::FatrasAlgorithm::readConfig(
   cfg.emScattering = vars["fatras-em-scattering"].as<bool>();
   cfg.emEnergyLossIonisation = vars["fatras-em-ionisation"].as<bool>();
   cfg.emEnergyLossRadiation = vars["fatras-em-radiation"].as<bool>();
+  cfg.emPhotonConversion = vars["fatras-em-photonconversion"].as<bool>();
 
   // select hit surfaces for charged particles
   const std::string hits = vars["fatras-hits"].as<std::string>();

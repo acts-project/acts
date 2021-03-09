@@ -33,7 +33,6 @@ namespace Acts {
 using namespace Acts::UnitLiterals;
 
 /// @brief the AtlasStepper implementation for the
-template <typename bfield_t>
 class AtlasStepper {
  public:
   using Jacobian = BoundMatrix;
@@ -41,8 +40,6 @@ class AtlasStepper {
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
-
-  using BField = bfield_t;
 
   /// @brief Nested State struct for the local caching
   struct State {
@@ -60,8 +57,9 @@ class AtlasStepper {
     /// @param[in] ssize the steps size limitation
     /// @param [in] stolerance is the stepping tolerance
     template <typename Parameters>
-    State(const GeometryContext& gctx, const MagneticFieldContext& mctx,
-          const Parameters& pars, NavigationDirection ndir = forward,
+    State(const GeometryContext& gctx,
+          MagneticFieldProvider::Cache fieldCacheIn, const Parameters& pars,
+          NavigationDirection ndir = forward,
           double ssize = std::numeric_limits<double>::max(),
           double stolerance = s_onSurfaceTolerance)
         : navDir(ndir),
@@ -75,9 +73,7 @@ class AtlasStepper {
           covariance(nullptr),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
-          fieldCache(
-              MagneticFieldProvider::Cache::make<typename bfield_t::Cache>(
-                  mctx)),
+          fieldCache(std::move(fieldCacheIn)),
           geoContext(gctx) {
       // The rest of this constructor is copy&paste of AtlasStepper::update() -
       // this is a nasty but working solution for the stepper state without
@@ -304,7 +300,18 @@ class AtlasStepper {
     size_t debugMsgWidth = 50;
   };
 
-  AtlasStepper(bfield_t bField) : m_bField(std::move(bField)){};
+  AtlasStepper(std::shared_ptr<const MagneticFieldProvider> bField)
+      : m_bField(std::move(bField)){};
+
+  template <typename charge_t>
+  State makeState(std::reference_wrapper<const GeometryContext> gctx,
+                  std::reference_wrapper<const MagneticFieldContext> mctx,
+                  const SingleBoundTrackParameters<charge_t>& par,
+                  NavigationDirection ndir = forward,
+                  double ssize = std::numeric_limits<double>::max(),
+                  double stolerance = s_onSurfaceTolerance) const {
+    return State{gctx, m_bField->makeCache(mctx), par, ndir, ssize, stolerance};
+  }
 
   /// @brief Resets the state
   ///
@@ -471,7 +478,7 @@ class AtlasStepper {
   /// @param [in] pos is the field position
   Vector3 getField(State& state, const Vector3& pos) const {
     // get the field from the cell
-    state.field = m_bField.getField(pos, state.fieldCache);
+    state.field = m_bField->getField(pos, state.fieldCache);
     return state.field;
   }
 
@@ -566,8 +573,8 @@ class AtlasStepper {
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it
   ///   - and the path length (from start - for ordering)
-  BoundState boundState(State& state, const Surface& surface,
-                        bool transportCov = true) const {
+  Result<BoundState> boundState(State& state, const Surface& surface,
+                                bool transportCov = true) const {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
     // extract state information
@@ -592,10 +599,14 @@ class AtlasStepper {
     }
 
     // Fill the end parameters
-    BoundTrackParameters parameters(surface.getSharedPtr(), state.geoContext,
-                                    pos4, dir, qOverP, std::move(covOpt));
+    auto parameters =
+        BoundTrackParameters::create(surface.getSharedPtr(), state.geoContext,
+                                     pos4, dir, qOverP, std::move(covOpt));
+    if (!parameters.ok()) {
+      return parameters.error();
+    }
 
-    return BoundState(std::move(parameters), state.jacobian,
+    return BoundState(std::move(*parameters), state.jacobian,
                       state.pathAccumulated);
   }
 
@@ -1341,7 +1352,7 @@ class AtlasStepper {
   }
 
  private:
-  bfield_t m_bField;
+  std::shared_ptr<const MagneticFieldProvider> m_bField;
 
   /// Overstep limit: could/should be dynamic
   double m_overstepLimit = -50_um;

@@ -44,7 +44,7 @@ using namespace Acts::UnitLiterals;
 
 using StraightPropagator =
     Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
-using ConstantFieldStepper = Acts::EigenStepper<Acts::ConstantBField>;
+using ConstantFieldStepper = Acts::EigenStepper<>;
 using ConstantFieldPropagator =
     Acts::Propagator<ConstantFieldStepper, Acts::Navigator>;
 
@@ -98,7 +98,8 @@ ConstantFieldPropagator makeConstantFieldPropagator(
   navigator.resolvePassive = false;
   navigator.resolveMaterial = true;
   navigator.resolveSensitive = true;
-  Acts::ConstantBField field(Acts::Vector3(0.0, 0.0, bz));
+  auto field =
+      std::make_shared<Acts::ConstantBField>(Acts::Vector3(0.0, 0.0, bz));
   ConstantFieldStepper stepper(std::move(field));
   return ConstantFieldPropagator(std::move(stepper), std::move(navigator));
 }
@@ -174,7 +175,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
   BOOST_REQUIRE(res.ok());
 
   const auto& val = res.value();
-  BOOST_CHECK_NE(val.trackTip, SIZE_MAX);
+  BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
   BOOST_CHECK(not val.fittedParameters);
   BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
   // check the output status flags
@@ -208,7 +209,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
     BOOST_CHECK(res.ok());
 
     const auto& val = res.value();
-    BOOST_CHECK_NE(val.trackTip, SIZE_MAX);
+    BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
     BOOST_CHECK(val.fittedParameters);
     BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
     // check the output status flags
@@ -225,7 +226,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
     BOOST_REQUIRE(res.ok());
 
     const auto& val = res.value();
-    BOOST_CHECK_NE(val.trackTip, SIZE_MAX);
+    BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
     BOOST_CHECK(val.fittedParameters);
     // check the output status flags
     BOOST_CHECK(not val.smoothed);
@@ -237,7 +238,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
     // count the number of `smoothed` states
     size_t nSmoothed = 0;
     val.fittedStates.visitBackwards(
-        val.trackTip,
+        val.lastMeasurementIndex,
         [&nSmoothed](const auto& state) { nSmoothed += state.hasSmoothed(); });
     BOOST_CHECK_EQUAL(nSmoothed, sourceLinks.size());
   }
@@ -270,7 +271,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
     BOOST_CHECK(res.ok());
 
     const auto& val = res.value();
-    BOOST_CHECK_NE(val.trackTip, SIZE_MAX);
+    BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
     BOOST_CHECK(val.fittedParameters);
     BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
     // check the output status flags
@@ -287,7 +288,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
     BOOST_CHECK(res.ok());
 
     const auto& val = res.value();
-    BOOST_CHECK_NE(val.trackTip, SIZE_MAX);
+    BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
     BOOST_CHECK(val.fittedParameters);
     BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
     // check the output status flags
@@ -299,7 +300,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
     // count the number of `smoothed` states
     size_t nSmoothed = 0;
     val.fittedStates.visitBackwards(
-        val.trackTip,
+        val.lastMeasurementIndex,
         [&nSmoothed](const auto& state) { nSmoothed += state.hasSmoothed(); });
     BOOST_CHECK_EQUAL(nSmoothed, sourceLinks.size());
   }
@@ -326,7 +327,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceAtExit) {
   BOOST_REQUIRE(res.ok());
 
   const auto& val = res.value();
-  BOOST_CHECK_NE(val.trackTip, SIZE_MAX);
+  BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
   BOOST_CHECK(val.fittedParameters);
   BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
   // check the output status flags
@@ -357,7 +358,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldShuffled) {
     BOOST_REQUIRE(res.ok());
 
     const auto& val = res.value();
-    BOOST_CHECK_NE(val.trackTip, SIZE_MAX);
+    BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
     BOOST_REQUIRE(val.fittedParameters);
     parameters = val.fittedParameters->parameters();
     BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
@@ -376,7 +377,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldShuffled) {
     BOOST_REQUIRE(res.ok());
 
     const auto& val = res.value();
-    BOOST_CHECK_NE(val.trackTip, SIZE_MAX);
+    BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
     BOOST_REQUIRE(val.fittedParameters);
     // check consistency w/ un-shuffled measurements
     CHECK_CLOSE_ABS(val.fittedParameters->parameters(), parameters, 1e-5);
@@ -415,7 +416,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithHole) {
     BOOST_REQUIRE(res.ok());
 
     const auto& val = res.value();
-    BOOST_CHECK_NE(val.trackTip, SIZE_MAX);
+    BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
     BOOST_CHECK(not val.fittedParameters);
     BOOST_CHECK_EQUAL(val.measurementStates, withHole.size());
     // check the output status flags
@@ -454,11 +455,11 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
     BOOST_REQUIRE(res.ok());
 
     const auto& val = res.value();
-    BOOST_CHECK_NE(val.trackTip, SIZE_MAX);
+    BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
     // count the number of outliers
     size_t nOutliers = 0;
     val.fittedStates.visitBackwards(
-        val.trackTip, [&nOutliers](const auto& state) {
+        val.lastMeasurementIndex, [&nOutliers](const auto& state) {
           nOutliers += state.typeFlags().test(TrackStateFlag::OutlierFlag);
         });
     BOOST_CHECK_EQUAL(nOutliers, 1u);
@@ -493,15 +494,16 @@ BOOST_AUTO_TEST_CASE(GlobalCovariance) {
   // Calculate global track parameters covariance matrix
   const auto& val = res.value();
   auto [trackParamsCov, stateRowIndices] =
-      detail::globalTrackParametersCovariance(val.fittedStates, val.trackTip);
+      detail::globalTrackParametersCovariance(val.fittedStates,
+                                              val.lastMeasurementIndex);
   BOOST_CHECK_EQUAL(trackParamsCov.rows(), sourceLinks.size() * eBoundSize);
   BOOST_CHECK_EQUAL(stateRowIndices.size(), sourceLinks.size());
   // Each smoothed track state will have eBoundSize rows/cols in the global
   // covariance. stateRowIndices is a map of the starting row/index with the
   // state tip as the key. Thus, the last track state (i.e. the state
-  // corresponding val.trackTip) has a starting row/index = eBoundSize *
-  // (nMeasurements - 1), i.e. 6*(6-1) = 30.
-  BOOST_CHECK_EQUAL(stateRowIndices.at(val.trackTip),
+  // corresponding val.lastMeasurementIndex) has a starting row/index =
+  // eBoundSize * (nMeasurements - 1), i.e. 6*(6-1) = 30.
+  BOOST_CHECK_EQUAL(stateRowIndices.at(val.lastMeasurementIndex),
                     eBoundSize * (nMeasurements - 1));
 }
 

@@ -39,32 +39,11 @@ namespace ActsExamples {
 /// Algorithm that turns simulated hits into measurements by truth smearing.
 class DigitizationAlgorithm final : public BareAlgorithm {
  public:
-  struct Config {
-    /// Input collection of simulated hits.
-    std::string inputSimHits;
-    /// Output source links collection.
-    std::string outputSourceLinks;
-    /// Output measurements collection.
-    std::string outputMeasurements;
-    /// Output cluster collection.
-    std::string outputClusters;
-    /// Output collection to map measured hits to contributing particles.
-    std::string outputMeasurementParticlesMap;
-    /// Output collection to map measured hits to simulated hits.
-    std::string outputMeasurementSimHitsMap;
-    /// Tracking geometry required to access global-to-local transforms.
-    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr;
-    /// Random numbers tool.
-    std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
-    /// The digitizers per GeometryIdentifier
-    Acts::GeometryHierarchyMap<DigitizationConfig> digitizationConfigs;
-  };
-
   /// Construct the smearing algorithm.
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  DigitizationAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  DigitizationAlgorithm(DigitizationConfig cfg, Acts::Logging::Level lvl);
 
   /// Build measurement from simulation hits at input.
   ///
@@ -83,7 +62,7 @@ class DigitizationAlgorithm final : public BareAlgorithm {
   ///
   /// @return the list of channels
   std::vector<ActsFatras::Channelizer::ChannelSegment> channelizing(
-      const GeometricDigitizationConfig& geoCfg, const SimHit& hit,
+      const GeometricConfig& geoCfg, const SimHit& hit,
       const Acts::Surface& surface, const Acts::GeometryContext& gctx,
       RandomEngine& rng) const;
 
@@ -96,7 +75,7 @@ class DigitizationAlgorithm final : public BareAlgorithm {
   ///
   /// @return the list of digitized parameters
   DigitizedParameters localParameters(
-      const GeometricDigitizationConfig& geoCfg,
+      const GeometricConfig& geoCfg,
       const std::vector<ActsFatras::Channelizer::ChannelSegment>& channels,
       RandomEngine& rng) const;
 
@@ -104,7 +83,7 @@ class DigitizationAlgorithm final : public BareAlgorithm {
   /// Support up to 4 dimensions.
   template <size_t kSmearDIM>
   struct CombinedDigitizer {
-    GeometricDigitizationConfig geometric;
+    GeometricConfig geometric;
     ActsFatras::BoundParametersSmearer<RandomEngine, kSmearDIM> smearing;
   };
 
@@ -114,7 +93,7 @@ class DigitizationAlgorithm final : public BareAlgorithm {
                                  CombinedDigitizer<4>>;
 
   /// Configuration of the Algorithm
-  Config m_cfg;
+  DigitizationConfig m_cfg;
   /// Digitizers within geometry hierarchy
   Acts::GeometryHierarchyMap<Digitizer> m_digitizers;
   /// Geometric digtizers
@@ -130,7 +109,7 @@ class DigitizationAlgorithm final : public BareAlgorithm {
   ///
   /// @return a variant of a Digitizer
   template <size_t kSmearDIM>
-  static Digitizer makeDigitizer(const DigitizationConfig& cfg) {
+  static Digitizer makeDigitizer(const DigiComponentsConfig& cfg) {
     CombinedDigitizer<kSmearDIM> impl;
     // Copy the geometric configuration
     impl.geometric = cfg.geometricDigiConfig;

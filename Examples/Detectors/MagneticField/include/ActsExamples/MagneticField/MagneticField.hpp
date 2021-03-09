@@ -35,18 +35,4 @@ using InterpolatedMagneticField3 =
 
 }  // namespace detail
 
-/// Magnetic field variant with all supported fields.
-///
-/// This is a value-like type, i.e. can be copied and stored by-value, that can
-/// be used wherever magnetic field information is needed. The examples support
-/// only the finite set of magnetic field type contained in this variant. This
-/// enables the use of a single concrete value-like type that can be used in
-/// interfaces.
-using MagneticField =
-    std::variant<std::shared_ptr<Acts::NullBField>,
-                 std::shared_ptr<Acts::ConstantBField>,
-                 std::shared_ptr<ScalableBField>,
-                 std::shared_ptr<detail::InterpolatedMagneticField2>,
-                 std::shared_ptr<detail::InterpolatedMagneticField3>>;
-
 }  // namespace ActsExamples

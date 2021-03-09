@@ -70,53 +70,31 @@ int propagationExample(int argc, char* argv[],
 
   // Create BField service
   ActsExamples::Options::setupMagneticFieldServices(vm, sequencer);
-  auto bFieldVar = ActsExamples::Options::readMagneticField(vm);
+  auto bField = ActsExamples::Options::readMagneticField(vm);
 
-  // Get a Navigator
-  Acts::Navigator navigator(tGeometry);
+  auto setupPropagator = [&](auto&& stepper) {
+    using Stepper = std::decay_t<decltype(stepper)>;
+    using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
+    Acts::Navigator navigator(tGeometry);
+    Propagator propagator(std::move(stepper), std::move(navigator));
 
-  std::visit(
-      [&](auto& bField) {
-        // Resolve the bfield map and create the propgator
-        using field_type =
-            typename std::decay_t<decltype(bField)>::element_type;
-        Acts::SharedBField<field_type> fieldMap(bField);
+    // Read the propagation config and create the algorithms
+    auto pAlgConfig =
+        ActsExamples::Options::readPropagationConfig(vm, propagator);
+    pAlgConfig.randomNumberSvc = randomNumberSvc;
+    sequencer.addAlgorithm(
+        std::make_shared<ActsExamples::PropagationAlgorithm<Propagator>>(
+            pAlgConfig, logLevel));
+  };
 
-        using field_map_type = decltype(fieldMap);
-
-        std::optional<std::variant<Acts::EigenStepper<field_map_type>,
-                                   Acts::AtlasStepper<field_map_type>,
-                                   Acts::StraightLineStepper>>
-            var_stepper;
-
-        // translate option to variant
-        if (vm["prop-stepper"].template as<int>() == 0) {
-          var_stepper = Acts::StraightLineStepper{};
-        } else if (vm["prop-stepper"].template as<int>() == 1) {
-          var_stepper = Acts::EigenStepper<field_map_type>{std::move(fieldMap)};
-        } else if (vm["prop-stepper"].template as<int>() == 2) {
-          var_stepper = Acts::AtlasStepper<field_map_type>{std::move(fieldMap)};
-        }
-
-        // resolve stepper, setup propagator
-        std::visit(
-            [&](auto& stepper) {
-              using Stepper = std::decay_t<decltype(stepper)>;
-              using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
-              Propagator propagator(std::move(stepper), std::move(navigator));
-
-              // Read the propagation config and create the algorithms
-              auto pAlgConfig =
-                  ActsExamples::Options::readPropagationConfig(vm, propagator);
-              pAlgConfig.randomNumberSvc = randomNumberSvc;
-              sequencer.addAlgorithm(
-                  std::make_shared<
-                      ActsExamples::PropagationAlgorithm<Propagator>>(
-                      pAlgConfig, logLevel));
-            },
-            *var_stepper);
-      },
-      bFieldVar);
+  // translate option to variant
+  if (vm["prop-stepper"].template as<int>() == 0) {
+    setupPropagator(Acts::StraightLineStepper{});
+  } else if (vm["prop-stepper"].template as<int>() == 1) {
+    setupPropagator(Acts::EigenStepper<>{std::move(bField)});
+  } else if (vm["prop-stepper"].template as<int>() == 2) {
+    setupPropagator(Acts::AtlasStepper{std::move(bField)});
+  }
 
   // ---------------------------------------------------------------------------------
   // Output directory

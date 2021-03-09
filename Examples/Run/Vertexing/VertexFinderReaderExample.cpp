@@ -16,6 +16,7 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
+#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Printers/TrackParametersPrinter.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
@@ -36,6 +37,7 @@ int main(int argc, char* argv[]) {
   ParticleSelector::addOptions(desc);
   Options::addVertexingOptions(desc);
   Options::addInputOptions(desc);
+  Options::addMagneticFieldOptions(desc);
   Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
   auto vars = Options::parse(desc, argc, argv);
   if (vars.empty()) {
@@ -47,6 +49,9 @@ int main(int argc, char* argv[]) {
   auto rnd =
       std::make_shared<RandomNumbers>(Options::readRandomNumbersConfig(vars));
   Sequencer sequencer(Options::readSequencerConfig(vars));
+
+  // Setup the magnetic field
+  auto magneticField = Options::readMagneticField(vars);
 
   // setup particle reader generator
   CsvParticleReader::Config readParticles =
@@ -83,10 +88,9 @@ int main(int argc, char* argv[]) {
       std::make_shared<TrackParametersPrinter>(printTracks, logLevel));
 
   // find vertices
-  IterativeVertexFinderAlgorithm::Config findVertices;
+  IterativeVertexFinderAlgorithm::Config findVertices(magneticField);
   findVertices.inputTrackParameters = smearParticles.outputTrackParameters;
   findVertices.outputProtoVertices = "protovertices";
-  findVertices.bField = Acts::Vector3(0_T, 0_T, 2_T);
   sequencer.addAlgorithm(
       std::make_shared<IterativeVertexFinderAlgorithm>(findVertices, logLevel));
 

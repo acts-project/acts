@@ -21,7 +21,7 @@ class Seed {
   Seed(const SpacePoint& b, const SpacePoint& m, const SpacePoint& u,
        float vertex);
   Seed(const Seed&) = default;
-  Seed& operator=(const Seed&);
+  Seed& operator=(const Seed&) = default;
 
   const std::vector<const SpacePoint*>& sp() const { return m_spacepoints; }
   double z() const { return m_zvertex; }

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,12 +17,11 @@
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
-#include "ActsFatras/Kernel/PhysicsList.hpp"
-#include "ActsFatras/Kernel/PointLikePhysicsList.hpp"
-#include "ActsFatras/Kernel/Simulator.hpp"
+#include "ActsFatras/Kernel/InteractionList.hpp"
+#include "ActsFatras/Kernel/Simulation.hpp"
 #include "ActsFatras/Physics/Decay/NoDecay.hpp"
-#include "ActsFatras/Physics/StandardPhysicsLists.hpp"
-#include "ActsFatras/Selectors/ChargeSelectors.hpp"
+#include "ActsFatras/Physics/StandardInteractions.hpp"
+#include "ActsFatras/Selectors/ParticleSelectors.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
 #include "ActsFatras/Utilities/ParticleData.hpp"
 
@@ -58,7 +57,7 @@ struct SplitEnergyLoss {
 using Navigator = Acts::Navigator;
 using MagneticField = Acts::ConstantBField;
 // propagate charged particles numerically in a constant magnetic field
-using ChargedStepper = Acts::EigenStepper<MagneticField>;
+using ChargedStepper = Acts::EigenStepper<>;
 using ChargedPropagator = Acts::Propagator<ChargedStepper, Navigator>;
 // propagate neutral particles with just straight lines
 using NeutralStepper = Acts::StraightLineStepper;
@@ -68,25 +67,24 @@ using NeutralPropagator = Acts::Propagator<NeutralStepper, Navigator>;
 // the random number generator type
 using Generator = std::ranlux48;
 // all charged particles w/ a mock-up physics list and hits everywhere
-using ChargedSelector = ActsFatras::ChargedSelector;
-using ChargedPhysicsList =
-    ActsFatras::PhysicsList<ActsFatras::detail::StandardScattering,
-                            SplitEnergyLoss>;
-using ChargePointLikePhysicsList = ActsFatras::PointLikePhysicsList<>;
-using ChargedSimulator = ActsFatras::ParticleSimulator<
-    ChargedPropagator, ChargedPhysicsList, ChargePointLikePhysicsList,
-    ActsFatras::EverySurface, ActsFatras::NoDecay>;
+using ChargedSelector = ActsFatras::EveryParticle;
+using ChargedInteractions =
+    ActsFatras::InteractionList<ActsFatras::detail::StandardScattering,
+                                SplitEnergyLoss>;
+using ChargedSimulation =
+    ActsFatras::SingleParticleSimulation<ChargedPropagator, ChargedInteractions,
+                                         ActsFatras::EverySurface,
+                                         ActsFatras::NoDecay>;
 // all neutral particles w/o physics and no hits
-using NeutralSelector = ActsFatras::NeutralSelector;
-using NeutralPhysicsList = ActsFatras::PhysicsList<>;
-using NeutralPointLikePhysicsList = ActsFatras::PointLikePhysicsList<>;
-using NeutralSimulator =
-    ActsFatras::ParticleSimulator<NeutralPropagator, NeutralPhysicsList,
-                                  NeutralPointLikePhysicsList,
-                                  ActsFatras::NoSurface, ActsFatras::NoDecay>;
+using NeutralSelector = ActsFatras::EveryParticle;
+using NeutralInteractions = ActsFatras::InteractionList<>;
+using NeutralSimulation =
+    ActsFatras::SingleParticleSimulation<NeutralPropagator, NeutralInteractions,
+                                         ActsFatras::NoSurface,
+                                         ActsFatras::NoDecay>;
 // full simulator type for charged and neutrals
-using Simulator = ActsFatras::Simulator<ChargedSelector, ChargedSimulator,
-                                        NeutralSelector, NeutralSimulator>;
+using Simulation = ActsFatras::Simulation<ChargedSelector, ChargedSimulation,
+                                          NeutralSelector, NeutralSimulation>;
 
 // parameters for data-driven test cases
 
@@ -165,14 +163,16 @@ BOOST_DATA_TEST_CASE(FatrasSimulation, dataset, pdg, phi, eta, p,
 
   // construct the propagators
   Navigator navigator(trackingGeometry);
-  ChargedStepper chargedStepper(Acts::ConstantBField(0, 0, 1_T));
+  ChargedStepper chargedStepper(
+      std::make_shared<Acts::ConstantBField>(0, 0, 1_T));
   ChargedPropagator chargedPropagator(std::move(chargedStepper), navigator);
   NeutralPropagator neutralPropagator(NeutralStepper(), navigator);
 
   // construct the simulator
-  ChargedSimulator simulatorCharged(std::move(chargedPropagator), logLevel);
-  NeutralSimulator simulatorNeutral(std::move(neutralPropagator), logLevel);
-  Simulator simulator(std::move(simulatorCharged), std::move(simulatorNeutral));
+  ChargedSimulation simulatorCharged(std::move(chargedPropagator), logLevel);
+  NeutralSimulation simulatorNeutral(std::move(neutralPropagator), logLevel);
+  Simulation simulator(std::move(simulatorCharged),
+                       std::move(simulatorNeutral));
 
   // prepare simulation call parameters
   // random number generator
