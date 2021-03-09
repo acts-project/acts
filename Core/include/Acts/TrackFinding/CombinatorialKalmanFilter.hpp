@@ -249,7 +249,7 @@ class CombinatorialKalmanFilter {
     const Surface* targetSurface = nullptr;
 
     /// Allows retrieving measurements for a surface
-    std::unordered_map<GeometryIdentifier, std::vector<source_link_t>>
+    const std::unordered_map<GeometryIdentifier, std::vector<source_link_t>>*
         inputMeasurements;
 
     /// Whether to consider multiple scattering.
@@ -506,8 +506,8 @@ class CombinatorialKalmanFilter {
       size_t nBranchesOnSurface = 0;
 
       // Try to find the surface in the measurement surfaces
-      auto sourcelink_it = inputMeasurements.find(surface->geometryId());
-      if (sourcelink_it != inputMeasurements.end()) {
+      auto sourcelink_it = inputMeasurements->find(surface->geometryId());
+      if (sourcelink_it != inputMeasurements->end()) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
@@ -1219,7 +1219,7 @@ class CombinatorialKalmanFilter {
     // Catch the actor and set the measurements
     auto& combKalmanActor =
         propOptions.actionList.template get<CombinatorialKalmanFilterActor>();
-    combKalmanActor.inputMeasurements = std::move(inputMeasurements);
+    combKalmanActor.inputMeasurements = &inputMeasurements;
     combKalmanActor.targetSurface = tfOptions.referenceSurface;
     combKalmanActor.multipleScattering = tfOptions.multipleScattering;
     combKalmanActor.energyLoss = tfOptions.energyLoss;
