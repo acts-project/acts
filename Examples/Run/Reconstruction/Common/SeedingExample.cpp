@@ -22,6 +22,7 @@
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
+#include "ActsExamples/TrackFinding/SpacePointOptions.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
@@ -48,6 +49,7 @@ int runSeedingExample(int argc, char* argv[],
   Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
   Options::addInputOptions(desc);
   Options::addMagneticFieldOptions(desc);
+  Options::addSpacePointOptions(desc);
   // Add specific options for this geometry
   detector->addOptions(desc);
   auto vm = Options::parse(desc, argc, argv);
@@ -105,12 +107,13 @@ int runSeedingExample(int argc, char* argv[],
   const auto& inputParticles = particleSelectorCfg.outputParticles;
 
   // Create space points
-  SpacePointMaker::Config spCfg;
+  SpacePointMaker::Config spCfg = Options::readSpacePointConfig(vm);
   spCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
   spCfg.inputMeasurements = hitSmearingCfg.outputMeasurements;
   spCfg.outputSpacePoints = "spacepoints";
   spCfg.trackingGeometry = tGeometry;
-  spCfg.geometrySelection = layersForSeeding;
+  if (not layersForSeeding.empty())
+    spCfg.geometrySelection = layersForSeeding;
   sequencer.addAlgorithm(std::make_shared<SpacePointMaker>(spCfg, logLevel));
 
   // Seeding algorithm
