@@ -63,15 +63,18 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
       Surface::makeShared<PerigeeSurface>(pos0);
 
   // Test finder for some fixed track parameter values
-  BoundTrackParameters params1a(perigeeSurface, geoContext,
-                                makeVector4(pos1a, 0), mom1a, mom1a.norm(), 1,
-                                covMat);
-  BoundTrackParameters params1b(perigeeSurface, geoContext,
-                                makeVector4(pos1b, 0), mom1b, mom1b.norm(), -1,
-                                covMat);
-  BoundTrackParameters params1c(perigeeSurface, geoContext,
-                                makeVector4(pos1c, 0), mom1c, mom1c.norm(), -1,
-                                covMat);
+  auto params1a = BoundTrackParameters::create(perigeeSurface, geoContext,
+                                               makeVector4(pos1a, 0), mom1a,
+                                               mom1a.norm(), 1, covMat)
+                      .value();
+  auto params1b = BoundTrackParameters::create(perigeeSurface, geoContext,
+                                               makeVector4(pos1b, 0), mom1b,
+                                               mom1b.norm(), -1, covMat)
+                      .value();
+  auto params1c = BoundTrackParameters::create(perigeeSurface, geoContext,
+                                               makeVector4(pos1c, 0), mom1c,
+                                               mom1c.norm(), -1, covMat)
+                      .value();
 
   // Vectors of track parameters in different orders
   std::vector<const BoundTrackParameters*> vec1 = {&params1a, &params1b,
@@ -140,15 +143,18 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
       Surface::makeShared<PerigeeSurface>(pos0);
 
   // Test finder for some fixed track parameter values
-  BoundTrackParameters params1a(perigeeSurface, geoContext,
-                                makeVector4(pos1a, 0), mom1a, mom1a.norm(), 1,
-                                covMat);
-  BoundTrackParameters params1b(perigeeSurface, geoContext,
-                                makeVector4(pos1b, 0), mom1b, mom1b.norm(), -1,
-                                covMat);
-  BoundTrackParameters params1c(perigeeSurface, geoContext,
-                                makeVector4(pos1c, 0), mom1c, mom1c.norm(), -1,
-                                covMat);
+  auto params1a = BoundTrackParameters::create(perigeeSurface, geoContext,
+                                               makeVector4(pos1a, 0), mom1a,
+                                               mom1a.norm(), 1, covMat)
+                      .value();
+  auto params1b = BoundTrackParameters::create(perigeeSurface, geoContext,
+                                               makeVector4(pos1b, 0), mom1b,
+                                               mom1b.norm(), -1, covMat)
+                      .value();
+  auto params1c = BoundTrackParameters::create(perigeeSurface, geoContext,
+                                               makeVector4(pos1c, 0), mom1c,
+                                               mom1c.norm(), -1, covMat)
+                      .value();
 
   // Vector of track parameters
   std::vector<const BoundTrackParameters*> vec1 = {&params1a, &params1b,
@@ -224,9 +230,11 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
     double phi = phiDist(gen);
     double eta = etaDist(gen);
     double charge = etaDist(gen) > 0 ? 1 : -1;
-    trackVec.push_back(BoundTrackParameters(
-        perigeeSurface, geoContext, Vector4(x, y, z, 0),
-        makeDirectionUnitFromPhiEta(phi, eta), pt, charge, covMat));
+    trackVec.push_back(BoundTrackParameters::create(
+                           perigeeSurface, geoContext, Vector4(x, y, z, 0),
+                           makeDirectionUnitFromPhiEta(phi, eta), pt, charge,
+                           covMat)
+                           .value());
   }
 
   std::vector<const BoundTrackParameters*> trackPtrVec;
@@ -302,15 +310,18 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
       Surface::makeShared<PerigeeSurface>(pos0);
 
   // Test finder for some fixed track parameter values
-  InputTrack params1a(BoundTrackParameters(perigeeSurface, geoContext,
-                                           makeVector4(pos1a, 0), mom1a,
-                                           mom1a.norm(), 1, covMat));
-  InputTrack params1b(BoundTrackParameters(perigeeSurface, geoContext,
-                                           makeVector4(pos1b, 0), mom1b,
-                                           mom1b.norm(), -1, covMat));
-  InputTrack params1c(BoundTrackParameters(perigeeSurface, geoContext,
-                                           makeVector4(pos1c, 0), mom1c,
-                                           mom1c.norm(), -1, covMat));
+  InputTrack params1a(BoundTrackParameters::create(perigeeSurface, geoContext,
+                                                   makeVector4(pos1a, 0), mom1a,
+                                                   mom1a.norm(), 1, covMat)
+                          .value());
+  InputTrack params1b(BoundTrackParameters::create(perigeeSurface, geoContext,
+                                                   makeVector4(pos1b, 0), mom1b,
+                                                   mom1b.norm(), -1, covMat)
+                          .value());
+  InputTrack params1c(BoundTrackParameters::create(perigeeSurface, geoContext,
+                                                   makeVector4(pos1c, 0), mom1c,
+                                                   mom1c.norm(), -1, covMat)
+                          .value());
 
   // Vector of track parameters
   std::vector<const InputTrack*> vec1 = {&params1a, &params1b, &params1c};

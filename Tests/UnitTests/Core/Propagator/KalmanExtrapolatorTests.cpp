@@ -68,7 +68,7 @@ struct StepWiseActor {
     auto surface = state.navigation.currentSurface;
     if (surface and surface->associatedDetectorElement()) {
       // Create a bound state and log the jacobian
-      auto boundState = stepper.boundState(state.stepping, *surface);
+      auto boundState = stepper.boundState(state.stepping, *surface).value();
       result.jacobians.push_back(std::move(std::get<Jacobian>(boundState)));
       result.paths.push_back(std::get<double>(boundState));
     }
@@ -111,8 +111,8 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
   navigator.resolveSensitive = true;
 
   // Configure propagation with deactivated B-field
-  ConstantBField bField(Vector3(0., 0., 0.));
-  using Stepper = EigenStepper<ConstantBField>;
+  auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 0.));
+  using Stepper = EigenStepper<>;
   Stepper stepper(bField);
   using Propagator = Propagator<Stepper, Navigator>;
   Propagator propagator(stepper, navigator);

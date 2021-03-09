@@ -131,6 +131,16 @@ class StraightLineStepper {
 
   StraightLineStepper() = default;
 
+  template <typename charge_t>
+  State makeState(std::reference_wrapper<const GeometryContext> gctx,
+                  std::reference_wrapper<const MagneticFieldContext> mctx,
+                  const SingleBoundTrackParameters<charge_t>& par,
+                  NavigationDirection ndir = forward,
+                  double ssize = std::numeric_limits<double>::max(),
+                  double stolerance = s_onSurfaceTolerance) const {
+    return State{gctx, mctx, par, ndir, ssize, stolerance};
+  }
+
   /// @brief Resets the state
   ///
   /// @param [in, out] state State of the stepper
@@ -261,8 +271,8 @@ class StraightLineStepper {
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  BoundState boundState(State& state, const Surface& surface,
-                        bool transportCov = true) const;
+  Result<BoundState> boundState(State& state, const Surface& surface,
+                                bool transportCov = true) const;
 
   /// Create and return a curvilinear state at the current position
   ///

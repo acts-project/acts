@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,13 +9,10 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
-#include "ActsFatras/Physics/Scattering/GaussianMixture.hpp"
-#include "ActsFatras/Physics/Scattering/GeneralMixture.hpp"
-#include "ActsFatras/Physics/Scattering/Highland.hpp"
+#include "ActsFatras/Physics/ElectroMagnetic/Scattering.hpp"
 
 #include <limits>
 #include <random>

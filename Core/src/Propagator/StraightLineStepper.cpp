@@ -13,7 +13,7 @@
 
 namespace Acts {
 
-std::tuple<BoundTrackParameters, BoundMatrix, double>
+Result<std::tuple<BoundTrackParameters, BoundMatrix, double>>
 StraightLineStepper::boundState(State& state, const Surface& surface,
                                 bool transportCov) const {
   return detail::boundState(

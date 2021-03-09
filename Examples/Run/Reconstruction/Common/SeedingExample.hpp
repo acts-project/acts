@@ -19,6 +19,7 @@ class IBaseDetector;
 /// @param argc the number of argumetns of the call
 /// @param argv the argument list
 /// @param detector The detector descriptor instance
-int runSeedingExample(int argc, char* argv[],
-                      std::shared_ptr<ActsExamples::IBaseDetector> detector,
-                      std::vector<Acts::GeometryIdentifier> layersForSeeding);
+int runSeedingExample(
+    int argc, char* argv[],
+    std::shared_ptr<ActsExamples::IBaseDetector> detector,
+    std::vector<Acts::GeometryIdentifier> layersForSeeding = {});

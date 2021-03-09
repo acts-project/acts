@@ -39,12 +39,8 @@ ActsExamples::RootTrackParameterWriter::RootTrackParameterWriter(
                            level),
       m_cfg(cfg),
       m_outputFile(cfg.rootFile) {
-  if (m_cfg.inputTrackParametersSeedMap.empty()) {
-    throw std::invalid_argument(
-        "Missing parameters-to-seed map input collection");
-  }
-  if (m_cfg.inputSeeds.empty()) {
-    throw std::invalid_argument("Missing seeds input collection");
+  if (m_cfg.inputProtoTracks.empty()) {
+    throw std::invalid_argument("Missing proto tracks input collection");
   }
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
@@ -131,10 +127,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
   }
 
   // Read additional input collections
-  const auto& trackParametersSeedMap =
-      ctx.eventStore.get<TrackParametersSeedMap>(
-          m_cfg.inputTrackParametersSeedMap);
-  const auto& seeds = ctx.eventStore.get<SimSeedContainer>(m_cfg.inputSeeds);
+  const auto& protoTracks =
+      ctx.eventStore.get<ProtoTrackContainer>(m_cfg.inputProtoTracks);
   const auto& particles =
       ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
   const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
@@ -166,13 +160,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
     m_pt = m_p * std::sin(m_theta);
     m_eta = std::atanh(std::cos(m_theta));
 
-    // Get the seed via the estimated parameters to seed map
-    const auto& groupedSeedIdx = trackParametersSeedMap.at(iparams);
-    const auto& seed = seeds[groupedSeedIdx.regionIdx][groupedSeedIdx.seedIdx];
-    // check the seed quality
-    ProtoTrack ptrack{seed.sp()[0]->measurementIndex(),
-                      seed.sp()[1]->measurementIndex(),
-                      seed.sp()[2]->measurementIndex()};
+    // Get the proto track from which the track parameters are estimated
+    const auto& ptrack = protoTracks[iparams];
     std::vector<ParticleHitCount> particleHitCounts;
     identifyContributingParticles(hitParticlesMap, ptrack, particleHitCounts);
     m_truthMatched = false;
@@ -180,8 +169,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
       m_truthMatched = true;
     }
     // Get the index of the first space point
-    const auto& firstSP = seed.sp().front();
-    const auto& hitIdx = firstSP->measurementIndex();
+    const auto& hitIdx = ptrack.front();
     // Get the sim hits via the measurement to sim hits map
     auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
     auto [truthLocal, truthPos4, truthUnitDir] =

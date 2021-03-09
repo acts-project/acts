@@ -15,7 +15,7 @@ First we will need to extract the list of all the surfaces and volumes in our de
 
 .. code-block:: console
 
-  ./../build/bin/ActsExampleGeometryDD4hep -n1 -j1 --mat-output-file geometry-map  --dd4hep-input ../Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml --output-json true --mat-output-allmaterial true --mat-output-sensitive false
+  ./../build/bin/ActsExampleGeometryDD4hep -n1 -j1 --mat-output-file geometry-map  --dd4hep-input ../Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml --output-json --mat-output-allmaterial true --mat-output-sensitives false
 
 This algorithm is useful to obtain a visualisation of your detector using the different types of output available (``output-obj`` gives ``.obj`` with a 3D representation of the different subdetectors, for example). Here, we use ``output-json`` to obtain a map of all the surfaces and volumes in the detector with a ``ProtoSurfaceMaterial`` (or a ``ProtoVolumeMaterial``), ``mat-output-allmaterial`` ensure that a ``ProtoSurfaceMaterial`` (or a ``ProtoVolumeMaterial``) is associated to all the surfaces (or volumes), enforcing all of them to be written.
 Four types of surfaces exist:
@@ -58,7 +58,7 @@ The next step is to do a geantino scan of our detector. For this we will use the
 
 .. code-block:: console
 
-  ./../build/bin/ActsExampleGeantinoRecordingDD4hep -j1 --dd4hep-input ../Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml --output-root true -n10000
+  ./../build/bin/ActsExampleGeantinoRecordingDD4hep -j1 --dd4hep-input ../Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml --output-root -n10000
 
 
 The result of the geantino scan will be a root file containing material tracks. Those contain the direction and production vertex of the geantino, the total material accumulated and all the interaction points in the detector.
@@ -70,7 +70,7 @@ With the surfaces map and the material track we can finally do the material mapp
 
 .. code-block:: console
 
-  ./../build/bin/ActsExampleMaterialMappingDD4hep -j1 --input-root true --input-files geant-material-tracks.root --mat-input-type file --mat-input-file geometry-map.json --output-root true --output-json true --mat-mapping-collection material-tracks --mat-output-file material-maps --mat-mapping-surfaces true --mat-mapping-volumes true --mat-mapping-volume-stepsize 1 --dd4hep-input ../Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml
+  ./../build/bin/ActsExampleMaterialMappingDD4hep -j1 --input-root true --input-files geant-material-tracks.root --mat-input-type file --mat-input-file geometry-map.json --output-root --output-json --mat-mapping-collection material-tracks --mat-output-file material-maps --mat-mapping-surfaces true --mat-mapping-volumes true --mat-mapping-volume-stepsize 1 --dd4hep-input ../Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml
 
 
 As an output you will obtain the material map as a root and JSON file and a new material track collection in a root file. This new collection adds to each material interaction the associated surface during the mapping. This can be used for the control plots.
@@ -90,7 +90,7 @@ Now that the map has been written, you will want to validate it. First you can u
 
 .. code-block:: console
 
-  ./../build/bin/ActsExampleMaterialValidationDD4hep -n 1000 --mat-input-type file --mat-input-file material-maps.json --output-root true --mat-output-file val-mat-map --dd4hep-input ../Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml
+  ./../build/bin/ActsExampleMaterialValidationDD4hep -n 1000 --mat-input-type file --mat-input-file material-maps.json --output-root --mat-output-file val-mat-map --dd4hep-input ../Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml
 
 To do the validation, five root macros are available in ``scripts/MaterialMaping``:
 

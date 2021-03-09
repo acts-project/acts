@@ -14,7 +14,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
-#include "ActsFatras/Physics/PhotonConversion/PhotonConversion.hpp"
+#include "ActsFatras/Physics/ElectroMagnetic/PhotonConversion.hpp"
 
 #include <limits>
 #include <random>

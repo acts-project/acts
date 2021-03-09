@@ -26,19 +26,14 @@ A template algorithm file with an (almost) empty ```execute()``` method to be fi
 Open the file in your editor and let's start setting up the AMVF. We will start setting up all necessary components in the ```execute()``` method.
 *Note:* You would normally **not** want to do all the following setup steps in the ```execute()``` method (that is run on every single event), but rather in e.g. the constructor. For the sake of this tutorial, however, everything will be set up and run in the ```execute()``` method.
 
-### Setting up required tools: Magnetic field and propagator
+### Setting up required tools: Stepper and propagator
 
-Let's start with setting up a constant magnetic field:
-```cpp
-// Set up the magnetic field
- Acts::ConstantBField bField(m_cfg.bField);
-```
 We need the ```Acts::Propagator``` with the ```Acts::EigenStepper```:
 ```cpp
 // Set up EigenStepper
-Acts::EigenStepper<Acts::ConstantBField> stepper(bField);
+Acts::EigenStepper<> stepper(m_cfg.bField);
 // Set up the propagator
-using Propagator = Acts::Propagator<Acts::EigenStepper<Acts::ConstantBField>>;
+using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
 auto propagator = std::make_shared<Propagator>(stepper);
 ```
 
@@ -48,14 +43,14 @@ Now, set up an impact point estimator...
 ```cpp
 // Set up ImpactPointEstimator
 using IPEstimator = Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
-IPEstimator::Config ipEstimatorCfg(bField, propagator);
+IPEstimator::Config ipEstimatorCfg(m_cfg.bField, propagator);
 IPEstimator ipEstimator(ipEstimatorCfg);
 ```
 ... and track linearizer for helical track parameters:
 ```cpp
 // Set up the helical track linearizer
 using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
-Linearizer::Config ltConfig(bField, propagator);
+Linearizer::Config ltConfig(m_cfg.bField, propagator);
 Linearizer linearizer(ltConfig);
 ```
 Now, for the sake of this example, let's specify a user-defined annealing scheme for the AVMF:
