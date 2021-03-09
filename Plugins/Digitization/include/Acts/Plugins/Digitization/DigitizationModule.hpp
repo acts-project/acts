@@ -103,7 +103,7 @@ class DigitizationModule {
   const SurfacePtrVector stepSurfaces(const Vector3& start,
                                       const Vector3& end) const;
 
-  /// Fill the associated digitsation cell from this start and end position,
+  /// Fill the associated digitization cell from this start and end position,
   /// correct for lorentz effect if needed
   ///
   /// @param start is the start position of the step

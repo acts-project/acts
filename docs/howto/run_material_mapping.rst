@@ -15,7 +15,7 @@ First we will need to extract the list of all the surfaces and volumes in our de
 
 .. code-block:: console
 
-  ./../build/bin/ActsExampleGeometryDD4hep -n1 -j1 --mat-output-file geometry-map  --dd4hep-input ../Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml --output-json true --mat-output-allmaterial true --mat-output-sensitive false
+  ./../build/bin/ActsExampleGeometryDD4hep -n1 -j1 --mat-output-file geometry-map  --dd4hep-input ../Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml --output-json --mat-output-allmaterial true --mat-output-sensitives false
 
 This algorithm is useful to obtain a visualisation of your detector using the different types of output available (``output-obj`` gives ``.obj`` with a 3D representation of the different subdetectors, for example). Here, we use ``output-json`` to obtain a map of all the surfaces and volumes in the detector with a ``ProtoSurfaceMaterial`` (or a ``ProtoVolumeMaterial``), ``mat-output-allmaterial`` ensure that a ``ProtoSurfaceMaterial`` (or a ``ProtoVolumeMaterial``) is associated to all the surfaces (or volumes), enforcing all of them to be written.
 Four types of surfaces exist:
@@ -27,7 +27,7 @@ Four types of surfaces exist:
 
 By default, all the surfaces will be written but one can turn a specific type off (for example the sensitive) by using the appropriate option : ``mat-output-XXX false``
 
-The JSON file can now be edited to select which surfaces and volumes you want to have material mapped on. The JSON file contains a list of volumes, in those volumes you can find boundaries and layers. The layers then contain approaches, representing and sensitives surfaces. Information of the surface such as their type, range, id and position are available. To add one surface to the material mapping, one simply needs to switch the ``mapMaterial`` variable to ``true``. The binning can then be changed by changing the number associated to ``bin0`` and ``bin1``, the type of bin can also be changed. For the volume, the same method can be applied, except that up to 3 bins can be associated.
+The JSON file can now be edited to select which surfaces and volumes you want to have material mapped on. The JSON file is comprise of two parts, the first one contain a list of volumes and the second a list of surfaces. Information of the surface and volumes such as their type, range, id and position are available. To add one surface to the material mapping, one simply needs to switch the ``mapMaterial`` variable to ``true``. The binning can then be changed by changing the number associated to ``bins``, the type of bin can also be changed. For the volume, the same method can be applied, except that up to 3 bins can be associated.
 
 .. warning::
   When mapping onto a surface, the material inside volumes with material (or ``ProtoMaterial``) will be ignored, you should thus avoid mapping material onto surfaces within material volumes. When mapping onto a volume, only the material within that volume will be used. If you have a large gap between the last material surface and the volume you might then want to also map material onto the boundary of the material volume.
@@ -43,13 +43,13 @@ The first one take as an input the surfaces map previously generated and will re
 
 .. code-block:: console
 
-  python3 ../acts-framework/scripts/MaterialMaping/writeMapConfig.py geometry-map.json config-map.json
+  python3 ../Examples/Scripts/MaterialMaping/writeMapConfig.py geometry-map.json config-map.json
 
 Then edit the config-map.json file
 
 .. code-block:: console
 
-  python3 ../acts-framework/scripts/MaterialMaping/configureMap.py geometry-map.json config-map.json
+  python3 ../Examples/Scripts/MaterialMaping/configureMap.py geometry-map.json config-map.json
 
 Geantino scan
 -------------
@@ -58,7 +58,7 @@ The next step is to do a geantino scan of our detector. For this we will use the
 
 .. code-block:: console
 
-  ./../build/bin/ActsSimGeantinoRecording -j1 --dd4hep-input ../Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml --output-root true -n10000
+  ./../build/bin/ActsExampleGeantinoRecordingDD4hep -j1 --dd4hep-input ../Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml --output-root -n10000
 
 
 The result of the geantino scan will be a root file containing material tracks. Those contain the direction and production vertex of the geantino, the total material accumulated and all the interaction points in the detector.
@@ -70,7 +70,7 @@ With the surfaces map and the material track we can finally do the material mapp
 
 .. code-block:: console
 
-  ./../build/bin/ActsExampleMaterialMappingDD4hep -j1 --input-root true --input-files geant-material-tracks.root --mat-input-type file --mat-input-file geometry-map.json --output-root true --output-json true --mat-mapping-collection material-tracks --mat-output-file material-maps --mat-mapping-surfaces true --mat-mapping-volumes true --mat-mapping-volume-stepsize 1 --dd4hep-input ../Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml
+  ./../build/bin/ActsExampleMaterialMappingDD4hep -j1 --input-root true --input-files geant-material-tracks.root --mat-input-type file --mat-input-file geometry-map.json --output-root --output-json --mat-mapping-collection material-tracks --mat-output-file material-maps --mat-mapping-surfaces true --mat-mapping-volumes true --mat-mapping-volume-stepsize 1 --dd4hep-input ../Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml
 
 
 As an output you will obtain the material map as a root and JSON file and a new material track collection in a root file. This new collection adds to each material interaction the associated surface during the mapping. This can be used for the control plots.
@@ -90,7 +90,7 @@ Now that the map has been written, you will want to validate it. First you can u
 
 .. code-block:: console
 
-  ./../build/bin/ActsExampleMaterialValidationDD4hep -n 1000 --mat-input-type file --mat-input-file material-maps.json --output-root true --mat-output-file val-mat-map --dd4hep-input ../Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml
+  ./../build/bin/ActsExampleMaterialValidationDD4hep -n 1000 --mat-input-type file --mat-input-file material-maps.json --output-root --mat-output-file val-mat-map --dd4hep-input ../Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml
 
 To do the validation, five root macros are available in ``scripts/MaterialMaping``:
 
@@ -104,7 +104,7 @@ To do the validation, five root macros are available in ``scripts/MaterialMaping
 
   mkdir Validation
 
-  root -l -b ../acts-framework/scripts/MaterialMaping/Mat_map.C'("propagation-material.root","material-maps_tracks.root","Validation")'
+  root -l -b ../Examples/Scripts/MaterialMaping/Mat_map.C'("propagation-material.root","material-maps_tracks.root","Validation")'
   .q
 
   mkdir Surfaces
@@ -116,11 +116,11 @@ To do the validation, five root macros are available in ``scripts/MaterialMaping
   mkdir 1D_plot
   cd ..
 
-  root -l -b ../acts-framework/scripts/MaterialMaping/Mat_map_surface_plot_ratio.C'("propagation-material.root","material-maps_tracks.root","geometry-map.json",100000,"Surfaces/ratio_plot","Surfaces/prop_plot","Surfaces/map_plot")'
+  root -l -b ../Examples/Scripts/MaterialMaping/Mat_map_surface_plot_ratio.C'("propagation-material.root","material-maps_tracks.root","geometry-map.json",100000,"Surfaces/ratio_plot","Surfaces/prop_plot","Surfaces/map_plot")'
   .q
-  root -l -b ../acts-framework/scripts/MaterialMaping/Mat_map_surface_plot_dist.C'("material-maps_tracks.root","geometry-map.json",-1,"Surfaces/dist_plot")'
+  root -l -b ../Examples/Scripts/MaterialMaping/Mat_map_surface_plot_dist.C'("material-maps_tracks.root","geometry-map.json",-1,"Surfaces/dist_plot")'
   .q
-  root -l -b ../acts-framework/scripts/MaterialMaping/Mat_map_surface_plot_1D.C'("material-maps_tracks.root","geometry-map.json",100000,"Surfaces/1D_plot")'
+  root -l -b ../Examples/Scripts/MaterialMaping/Mat_map_surface_plot_1D.C'("material-maps_tracks.root","geometry-map.json",100000,"Surfaces/1D_plot")'
   .q
 
 Using the validation plots you can then adapt the binning and the mapped surface to improve the mapping.

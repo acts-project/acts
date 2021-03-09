@@ -116,7 +116,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
       // The track entry indices container. One element here.
       std::vector<size_t> trackTips;
       trackTips.reserve(1);
-      trackTips.emplace_back(fitOutput.trackTip);
+      trackTips.emplace_back(fitOutput.lastMeasurementIndex);
       // The fitted parameters container. One element (at most) here.
       Trajectories::IndexedParameters indexedParams;
       if (fitOutput.fittedParameters) {
@@ -124,7 +124,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
         ACTS_VERBOSE("Fitted paramemeters for track " << itrack);
         ACTS_VERBOSE("  " << params.parameters().transpose());
         // Push the fitted parameters to the container
-        indexedParams.emplace(fitOutput.trackTip, std::move(params));
+        indexedParams.emplace(fitOutput.lastMeasurementIndex,
+                              std::move(params));
       } else {
         ACTS_DEBUG("No fitted paramemeters for track " << itrack);
       }

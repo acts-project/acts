@@ -13,10 +13,10 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
-#include "Acts/MagneticField/SharedBField.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
-#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
-#include "ActsExamples/Plugins/BField/ScalableBField.hpp"
+#include "ActsExamples/MagneticField/MagneticField.hpp"
 
 #include <functional>
 #include <memory>
@@ -29,21 +29,44 @@ class TrackingGeometry;
 
 namespace ActsExamples {
 
+/// Estimate track parameters for track seeds.
+///
+/// The algorithm takes the either directly the seeds or indirectly the proto
+/// tracks and space points, and source links container as input. The proto
+/// track is basically a seed and its space points info could be retrieved from
+/// the space point container. The source links container is necessary to
+/// retrieve the geometry identifier of the module at which a space point is
+/// located. It creates two additional container to the event store, i.e. the
+/// estimated track parameters container and the proto tracks container storing
+/// only those proto tracks with track parameters estimated.
 class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
     /// Input seeds collection.
     std::string inputSeeds;
+    /// Input space point collections.
+    ///
+    /// We allow multiple space point collections to allow different parts of
+    /// the detector to use different algorithms for space point construction,
+    /// e.g. single-hit space points for pixel-like detectors or double-hit
+    /// space points for strip-like detectors.
+    std::vector<std::string> inputSpacePoints;
+    /// Input reconstructed proto tracks collection.
+    std::string inputProtoTracks;
     /// Input source links collection.
     std::string inputSourceLinks;
     /// Output estimated track parameters collection.
     std::string outputTrackParameters;
-    /// Output estimated track parameters to seed map collection.
-    std::string outputTrackParametersSeedMap;
+    /// Output proto track collection.
+    std::string outputProtoTracks;
     /// Tracking geometry for surface lookup.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// Magnetic field variant.
-    Options::BFieldVariant magneticField;
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
+    /// Minimum deltaR between space points in a seed
+    float deltaRMin = 1. * Acts::UnitConstants::mm;
+    /// Maximum deltaR between space points in a seed
+    float deltaRMax = 100. * Acts::UnitConstants::mm;
     /// The minimum magnetic field to trigger the track parameters estimation
     double bFieldMin = 0.1 * Acts::UnitConstants::T;
     /// Constant term of the loc0 resolution.
@@ -79,24 +102,13 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
   /// track parameters for the moment)
   Acts::BoundSymMatrix m_covariance = Acts::BoundSymMatrix::Zero();
 
-  /// Get magnetic field at requested position
+  /// Create seeds from proto tracks and space points
   ///
-  /// @param position The global position
-  /// @return the magnetic field at the position
-  Acts::Vector3 getField(const Acts::Vector3& position) const;
+  /// @param protoTracks The proto tracks
+  /// @param spacePoints The existing space points
+  /// @return the created seeds
+  SimSeedContainer createSeeds(const ProtoTrackContainer& protoTracks,
+                               const SimSpacePointContainer& spacePoints) const;
 };
-
-inline Acts::Vector3 TrackParamsEstimationAlgorithm::getField(
-    const Acts::Vector3& position) const {
-  return std::visit(
-      [&](auto&& inputField) -> Acts::Vector3 {
-        using InputMagneticField =
-            typename std::decay_t<decltype(inputField)>::element_type;
-        using MagneticField = Acts::SharedBField<InputMagneticField>;
-        MagneticField field(std::move(inputField));
-        return field.getField(position);
-      },
-      std::move(m_cfg.magneticField));
-}
 
 }  // namespace ActsExamples

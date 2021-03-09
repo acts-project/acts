@@ -24,6 +24,7 @@ project(Acts VERSION ${_acts_version} LANGUAGES CXX)
 option(ACTS_BUILD_EVERYTHING "Build with most options enabled (except HepMC3 and documentation)" OFF)
 # core related options
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
+set(ACTS_LOG_FAILURE_THRESHOLD "" CACHE STRING "Log level above which an exception should be automatically thrown")
 # plugins related options
 option(ACTS_BUILD_PLUGIN_AUTODIFF "Build the autodiff plugin" OFF)
 option(ACTS_USE_SYSTEM_AUTODIFF "Use autodiff provided by the system instead of the bundled version" OFF)
@@ -39,6 +40,7 @@ option(ACTS_BUILD_PLUGIN_SYCL "Build SYCL plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TGEO "Build TGeo plugin" OFF)
 # fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
+option(ACTS_BUILD_FATRAS_GEANT4 "Build Geant4 Fatras package" OFF)
 # examples related options
 option(ACTS_BUILD_EXAMPLES "Build standalone examples" OFF)
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
@@ -63,6 +65,8 @@ set_option_if(ACTS_BUILD_EXAMPLES_DD4HEP ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_EXAMPLES_GEANT4 ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_EXAMPLES_HEPMC3 ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_EXAMPLES_PYTHIA8 ACTS_BUILD_EVERYTHING)
+set_option_if(ACTS_BUILD_FATRAS_GEANT4 ACTS_BUILD_EVERYTHING)
+set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_FATRAS_GEANT4)
 # any examples component activates the general examples option
 set_option_if(
   ACTS_BUILD_EXAMPLES
@@ -92,6 +96,20 @@ set_option_if(
   ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_PLUGIN_LEGACY ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_PLUGIN_AUTODIFF ACTS_BUILD_EVERYTHING)
+
+# feature tests
+include(CheckCXXSourceCompiles)
+
+# function that tests if the root installation is compatible (i.e., compiled with C++17)
+function(check_root_compatibility)
+  get_target_property(ROOT_INCLUDE_DIR ROOT::Core INTERFACE_INCLUDE_DIRECTORIES)
+  set(CMAKE_REQUIRED_FLAGS -std=c++17)
+  set(CMAKE_REQUIRED_INCLUDES ${ROOT_INCLUDE_DIR})
+  check_cxx_source_compiles("#include <string>\n#include <TString.h>\nint main(){}" ROOT_COMPATIBILITY_CHECK)
+  if(NOT ROOT_COMPATIBILITY_CHECK)
+    message(FATAL_ERROR "Root installation is misconfigured. Ensure that your Root installation was compiled with C++17.")
+  endif()
+endfunction()
 
 # additional configuration and tools
 include(GNUInstallDirs) # GNU-like installation paths, e.g. lib/, include/, ...
@@ -157,7 +175,7 @@ if(ACTS_BUILD_PLUGIN_CUDA)
   set(CMAKE_CUDA_FLAGS_DEBUG "-g -G")
 endif()
 if(ACTS_BUILD_PLUGIN_DD4HEP)
-  find_package(DD4hep ${_acts_dd4hep_version} REQUIRED CONFIG COMPONENTS DDCore)
+  find_package(DD4hep ${_acts_dd4hep_version} REQUIRED CONFIG COMPONENTS DDCore DDDetectors)
 endif()
 if(ACTS_BUILD_PLUGIN_JSON)
   if(ACTS_USE_SYSTEM_NLOHMANN_JSON)
@@ -177,6 +195,7 @@ if(ACTS_BUILD_PLUGIN_SYCL)
 endif()
 if(ACTS_BUILD_PLUGIN_TGEO)
   find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Geom)
+  check_root_compatibility()
 endif()
 # examples dependencies
 if(ACTS_BUILD_EXAMPLES)
@@ -184,6 +203,7 @@ if(ACTS_BUILD_EXAMPLES)
   find_package(Threads REQUIRED)
   # for simplicity always request all potentially required components.
   find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Core Geom GenVector Hist Tree TreePlayer)
+  check_root_compatibility()
   # newer DD4hep version require TBB and search interally for TBB in
   # config-only mode. to avoid missmatches we explicitely search using
   # config-only mode first to be sure that we find the same version.
@@ -195,9 +215,9 @@ if(ACTS_BUILD_EXAMPLES)
   add_subdirectory(thirdparty/dfelibs)
 endif()
 if(ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
-  find_package(DD4hep ${_acts_dd4hep_version} REQUIRED CONFIG COMPONENTS DDCore DDG4)
+  find_package(DD4hep ${_acts_dd4hep_version} REQUIRED CONFIG COMPONENTS DDCore DDG4 DDDetectors)
 elseif(ACTS_BUILD_EXAMPLES_DD4HEP)
-  find_package(DD4hep ${_acts_dd4hep_version} REQUIRED CONFIG COMPONENTS DDCore)
+  find_package(DD4hep ${_acts_dd4hep_version} REQUIRED CONFIG COMPONENTS DDCore DDDetectors)
 endif()
 if(ACTS_BUILD_EXAMPLES_GEANT4)
   find_package(Geant4 REQUIRED CONFIG COMPONENTS gdml)

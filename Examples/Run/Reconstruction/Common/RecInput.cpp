@@ -10,8 +10,10 @@
 #ifdef ACTS_PLUGIN_ONNX
 #include "Acts/Plugins/Onnx/MLTrackClassifier.hpp"
 #endif
-#include "ActsExamples/Digitization/HitSmearing.hpp"
+#include "ActsExamples/Digitization/DigitizationOptions.hpp"
+#include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
+#include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/SeedingPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
@@ -19,7 +21,6 @@
 #include "ActsExamples/Io/Root/RootTrajectoryParametersWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
-#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
@@ -42,8 +43,8 @@ ActsExamples::CsvSimHitReader::Config setupSimHitReading(
 
   // Read truth hits from CSV files
   auto simHitReaderCfg = Options::readCsvSimHitReaderConfig(vars);
-  simHitReaderCfg.inputStem = "simhits";
-  simHitReaderCfg.outputSimHits = "simhits";
+  simHitReaderCfg.inputStem = "hits";
+  simHitReaderCfg.outputSimHits = "hits";
   sequencer.addReader(
       std::make_shared<CsvSimHitReader>(simHitReaderCfg, logLevel));
 
@@ -68,7 +69,7 @@ ActsExamples::CsvParticleReader::Config setupParticleReading(
   return particleReader;
 }
 
-ActsExamples::HitSmearing::Config setupSimHitSmearing(
+ActsExamples::DigitizationConfig setupDigitization(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer,
     std::shared_ptr<const ActsExamples::RandomNumbers> rnd,
@@ -79,21 +80,22 @@ ActsExamples::HitSmearing::Config setupSimHitSmearing(
   // Read some standard options
   auto logLevel = Options::readLogLevel(vars);
 
-  // Create smeared measurements
-  HitSmearing::Config hitSmearingCfg;
-  hitSmearingCfg.inputSimHits = inputSimHits;
-  hitSmearingCfg.outputMeasurements = "measurements";
-  hitSmearingCfg.outputSourceLinks = "sourcelinks";
-  hitSmearingCfg.outputMeasurementParticlesMap = "measurement_particles_map";
-  hitSmearingCfg.outputMeasurementSimHitsMap = "measurement_simhits_map";
-  hitSmearingCfg.sigmaLoc0 = 25_um;
-  hitSmearingCfg.sigmaLoc1 = 100_um;
-  hitSmearingCfg.randomNumbers = rnd;
-  hitSmearingCfg.trackingGeometry = trackingGeometry;
+  auto digiCfg = ActsExamples::DigitizationConfig(
+      vars, ActsExamples::readDigiConfigFromJson(
+                vars["digi-config-file"].as<std::string>()));
+  // Common options for digitization
+  digiCfg.inputSimHits = inputSimHits;
+  digiCfg.randomNumbers = rnd;
+  digiCfg.trackingGeometry = trackingGeometry;
   sequencer.addAlgorithm(
-      std::make_shared<HitSmearing>(hitSmearingCfg, logLevel));
+      ActsExamples::createDigitizationAlgorithm(digiCfg, logLevel));
 
-  return hitSmearingCfg;
+  if (not vars["dump-digi-config"].as<std::string>().empty()) {
+    writeDigiConfigToJson(digiCfg.digitizationConfigs,
+                          vars["dump-digi-config"].as<std::string>());
+  }
+
+  return digiCfg;
 }
 
 ActsExamples::ParticleSmearing::Config setupParticleSmearing(

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,8 +8,9 @@
 
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/MagneticField/MagneticField.hpp"
+#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
-#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
 
 #include <string>
 
@@ -33,7 +34,7 @@ int main(int argc, char* argv[]) {
 
   // setup and parse options
   auto desc = ActsExamples::Options::makeDefaultOptions();
-  ActsExamples::Options::addBFieldOptions(desc);
+  ActsExamples::Options::addMagneticFieldOptions(desc);
   desc.add_options()("bf-file-out",
                      value<std::string>()->default_value("BFieldOut.root"),
                      "Set this name for an output root file.")(
@@ -69,20 +70,21 @@ int main(int argc, char* argv[]) {
     return EXIT_FAILURE;
   }
 
-  auto bFieldVar = ActsExamples::Options::readBField(vm);
+  auto bFieldVar = ActsExamples::Options::readMagneticField(vm);
 
-  return std::visit(
-      [&](auto& bField) -> int {
-        using field_type =
-            typename std::decay_t<decltype(bField)>::element_type;
-        if constexpr (!std::is_same_v<field_type, InterpolatedBFieldMap2D> &&
-                      !std::is_same_v<field_type, InterpolatedBFieldMap3D>) {
-          std::cout << "Bfield map could not be read. Exiting." << std::endl;
-          return EXIT_FAILURE;
-        } else {
-          ActsExamples::BField::writeField<field_type>(vm, bField);
-          return EXIT_SUCCESS;
-        }
-      },
-      bFieldVar);
+  if (auto bField2D = std::dynamic_pointer_cast<
+          const ActsExamples::detail::InterpolatedMagneticField2>(bFieldVar);
+      bField2D) {
+    ActsExamples::BField::writeField(vm, *bField2D);
+    return EXIT_SUCCESS;
+  } else if (auto bField3D = std::dynamic_pointer_cast<
+                 const ActsExamples::detail::InterpolatedMagneticField3>(
+                 bFieldVar);
+             bField3D) {
+    ActsExamples::BField::writeField(vm, *bField3D);
+    return EXIT_SUCCESS;
+  } else {
+    std::cout << "Bfield map could not be read. Exiting." << std::endl;
+    return EXIT_FAILURE;
+  }
 }

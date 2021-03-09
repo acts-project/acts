@@ -15,6 +15,7 @@
 #include "Acts/Seeding/Seedfinder.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <stdexcept>
@@ -106,34 +107,29 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   auto finder = Acts::Seedfinder<SimSpacePoint>(m_finderCfg);
 
   // run the seeding
-  std::vector<std::vector<Acts::Seed<SimSpacePoint>>> seeds;
+  SimSeedContainer seeds;
   auto group = spacePointsGrouping.begin();
   auto groupEnd = spacePointsGrouping.end();
   for (; !(group == groupEnd); ++group) {
-    seeds.push_back(finder.createSeedsForGroup(group.bottom(), group.middle(),
-                                               group.top()));
+    const auto& groupSeeds =
+        finder.createSeedsForGroup(group.bottom(), group.middle(), group.top());
+    std::copy(groupSeeds.begin(), groupSeeds.end(), std::back_inserter(seeds));
   }
 
   // extract proto tracks, i.e. groups of measurement indices, from tracks seeds
-  size_t nSeeds = 0;
-  for (const auto& regionSeeds : seeds) {
-    nSeeds += regionSeeds.size();
-  }
+  size_t nSeeds = seeds.size();
   ProtoTrackContainer protoTracks;
   protoTracks.reserve(nSeeds);
-  for (const auto& regionSeeds : seeds) {
-    for (const auto& seed : regionSeeds) {
-      ProtoTrack protoTrack;
-      protoTrack.reserve(seed.sp().size());
-      for (auto spacePointPtr : seed.sp()) {
-        protoTrack.push_back(spacePointPtr->measurementIndex());
-      }
-      protoTracks.push_back(std::move(protoTrack));
+  for (const auto& seed : seeds) {
+    ProtoTrack protoTrack;
+    protoTrack.reserve(seed.sp().size());
+    for (auto spacePointPtr : seed.sp()) {
+      protoTrack.push_back(spacePointPtr->measurementIndex());
     }
+    protoTracks.push_back(std::move(protoTrack));
   }
 
-  ACTS_DEBUG("Created " << protoTracks.size() << " track seeds in "
-                        << seeds.size() << " regions from "
+  ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePointPtrs.size() << " space points");
 
   ctx.eventStore.add(m_cfg.outputSeeds, std::move(seeds));

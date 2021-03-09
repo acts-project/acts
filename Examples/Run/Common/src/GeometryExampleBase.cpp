@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,6 +14,7 @@
 #include "ActsExamples/Io/Csv/CsvOptionsWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
 #include "ActsExamples/Io/Json/JsonMaterialWriter.hpp"
+#include "ActsExamples/Io/Json/JsonOptionsWriter.hpp"
 #include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
@@ -38,7 +39,11 @@ int processGeometry(int argc, char* argv[],
   ActsExamples::Options::addMaterialOptions(desc);
   ActsExamples::Options::addObjWriterOptions(desc);
   ActsExamples::Options::addCsvWriterOptions(desc);
-  ActsExamples::Options::addOutputOptions(desc);
+  ActsExamples::Options::addJsonWriterOptions(desc);
+  ActsExamples::Options::addOutputOptions(
+      desc,
+      ActsExamples::OutputFormat::Root | ActsExamples::OutputFormat::Json |
+          ActsExamples::OutputFormat::Csv | ActsExamples::OutputFormat::Obj);
 
   // Add specific options for this geometry
   detector.addOptions(desc);
@@ -117,7 +122,8 @@ int processGeometry(int argc, char* argv[],
 
     // JSON output
     if (vm["output-json"].as<bool>()) {
-      ActsExamples::JsonSurfacesWriter::Config sJsonWriterConfig;
+      auto sJsonWriterConfig =
+          ActsExamples::Options::readJsonSurfacesWriterConfig(vm);
       sJsonWriterConfig.trackingGeometry = tGeometry;
       sJsonWriterConfig.outputDir = outputDir;
       sJsonWriterConfig.writePerEvent = true;
@@ -143,8 +149,8 @@ int processGeometry(int argc, char* argv[],
       /// The name of the output file
       std::string fileName = vm["mat-output-file"].template as<std::string>();
       // the material writer
-      Acts::JsonGeometryConverter::Config jmConverterCfg(
-          "JsonGeometryConverter", Acts::Logging::INFO);
+      Acts::MaterialMapJsonConverter::Config jmConverterCfg(
+          "MaterialMapJsonConverter", Acts::Logging::INFO);
       jmConverterCfg.processSensitives =
           vm["mat-output-sensitives"].template as<bool>();
       jmConverterCfg.processApproaches =
@@ -157,7 +163,6 @@ int processGeometry(int argc, char* argv[],
           vm["mat-output-volumes"].template as<bool>();
       jmConverterCfg.processDenseVolumes =
           vm["mat-output-dense-volumes"].template as<bool>();
-      jmConverterCfg.writeData = vm["mat-output-data"].template as<bool>();
       jmConverterCfg.processNonMaterial =
           vm["mat-output-allmaterial"].template as<bool>();
       jmConverterCfg.context = context.geoContext;

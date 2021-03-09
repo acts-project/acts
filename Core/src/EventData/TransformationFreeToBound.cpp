@@ -13,7 +13,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-Acts::BoundVector Acts::detail::transformFreeToBoundParameters(
+Acts::Result<Acts::BoundVector> Acts::detail::transformFreeToBoundParameters(
     const FreeVector& freeParams, const Surface& surface,
     const GeometryContext& geoCtx) {
   // initialize the bound vector
@@ -22,24 +22,22 @@ Acts::BoundVector Acts::detail::transformFreeToBoundParameters(
   auto position = freeParams.segment<3>(eFreePos0);
   auto direction = freeParams.segment<3>(eFreeDir0);
   auto result = surface.globalToLocal(geoCtx, position, direction);
-  if (result.ok()) {
-    auto localPosition = result.value();
-    bp[eBoundLoc0] = localPosition[ePos0];
-    bp[eBoundLoc1] = localPosition[ePos1];
-  } else {
-    ACTS_LOCAL_LOGGER(
-        Acts::getDefaultLogger("ParameterTransformation", Logging::INFO));
-    ACTS_FATAL(
-        "Inconsistency in global to local transformation from free to bound.")
+  if (!result.ok()) {
+    return Result<Acts::BoundVector>::failure(result.error());
   }
+
+  auto localPosition = result.value();
+  bp[eBoundLoc0] = localPosition[ePos0];
+  bp[eBoundLoc1] = localPosition[ePos1];
+
   bp[eBoundTime] = freeParams[eFreeTime];
   bp[eBoundPhi] = VectorHelpers::phi(direction);
   bp[eBoundTheta] = VectorHelpers::theta(direction);
   bp[eBoundQOverP] = freeParams[eFreeQOverP];
-  return bp;
+  return Result<Acts::BoundVector>::success(bp);
 }
 
-Acts::BoundVector Acts::detail::transformFreeToBoundParameters(
+Acts::Result<Acts::BoundVector> Acts::detail::transformFreeToBoundParameters(
     const Acts::Vector3& position, ActsScalar time,
     const Acts::Vector3& direction, ActsScalar qOverP,
     const Acts::Surface& surface, const Acts::GeometryContext& geoCtx) {
@@ -47,21 +45,19 @@ Acts::BoundVector Acts::detail::transformFreeToBoundParameters(
   BoundVector bp = BoundVector::Zero();
   // convert global to local position on the surface
   auto result = surface.globalToLocal(geoCtx, position, direction);
-  if (result.ok()) {
-    auto localPosition = result.value();
-    bp[eBoundLoc0] = localPosition[ePos0];
-    bp[eBoundLoc1] = localPosition[ePos1];
-  } else {
-    ACTS_LOCAL_LOGGER(
-        Acts::getDefaultLogger("ParameterTransformation", Logging::INFO));
-    ACTS_FATAL(
-        "Inconsistency in global to local transformation from free to bound.")
+  if (!result.ok()) {
+    return Result<Acts::BoundVector>::failure(result.error());
   }
+
+  auto localPosition = result.value();
+  bp[eBoundLoc0] = localPosition[ePos0];
+  bp[eBoundLoc1] = localPosition[ePos1];
+
   bp[eBoundTime] = time;
   bp[eBoundPhi] = VectorHelpers::phi(direction);
   bp[eBoundTheta] = VectorHelpers::theta(direction);
   bp[eBoundQOverP] = qOverP;
-  return bp;
+  return Result<Acts::BoundVector>::success(bp);
 }
 
 Acts::BoundVector Acts::detail::transformFreeToCurvilinearParameters(

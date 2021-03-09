@@ -14,7 +14,7 @@ env:
 jobs:
   linux:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v9
+    container: ghcr.io/acts-project/${{ matrix.image }}:v11
     strategy:
       matrix:
         image:
@@ -39,12 +39,16 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_BUILD_EVERYTHING=on
+          -DACTS_LOG_FAILURE_THRESHOLD=WARNING
       - name: Build
         run: ${SETUP} && cmake --build build -- 
       - name: Unit tests
         run: ${SETUP} && cmake --build build -- test
       - name: Integration tests
         run: ${SETUP} && cmake --build build -- integrationtests
+      - name: Examples
+        if: contains(matrix.image, 'ubuntu')
+        run: ${SETUP} && ./CI/run_examples.sh
       - name: Install
         run: ${SETUP} && cmake --build build -- install
       - uses: actions/upload-artifact@v2
@@ -74,7 +78,8 @@ jobs:
           brew install cmake eigen ninja
           && sudo mkdir /usr/local/acts
           && sudo chown $USER /usr/local/acts
-          && curl -SL https://acts.web.cern.ch/ci/macOS/deps.43e0201.tar.gz | tar -xzC /usr/local/acts
+          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ci/macOS/deps.43e0201.tar.gz
+          && tar -xf deps.tar.gz -C /usr/local/acts
       - name: Configure
         # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
         # dd4hep CMake configuration that gets triggered on recent CMake
@@ -88,6 +93,7 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DCMAKE_PREFIX_PATH=/usr/local/acts
           -DACTS_BUILD_EVERYTHING=on
+          -DACTS_LOG_FAILURE_THRESHOLD=WARNING
       - name: Build
         run: cmake --build build  --
       - name: Unit tests

@@ -111,11 +111,11 @@ struct SurfaceObserver {
 using path_limit = PathLimitReached;
 
 using BFieldType = ConstantBField;
-using EigenStepperType = EigenStepper<BFieldType>;
+using EigenStepperType = EigenStepper<>;
 using EigenPropagatorType = Propagator<EigenStepperType>;
 
 const double Bz = 2_T;
-BFieldType bField(0, 0, Bz);
+auto bField = std::make_shared<BFieldType>(0, 0, Bz);
 EigenStepperType estepper(bField);
 EigenPropagatorType epropagator(std::move(estepper));
 

@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Detector/IBaseDetector.hpp"
-#include "ActsExamples/Digitization/HitSmearing.hpp"
+#include "ActsExamples/Digitization/DigitizationOptions.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
@@ -18,8 +18,8 @@
 #include "ActsExamples/Io/Performance/TrackFitterPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectoryParametersWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
+#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
-#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingOptions.hpp"
@@ -46,10 +46,11 @@ int runRecTruthTracks(int argc, char* argv[],
   Options::addGeometryOptions(desc);
   Options::addMaterialOptions(desc);
   Options::addInputOptions(desc);
-  Options::addOutputOptions(desc);
+  Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
   detector->addOptions(desc);
-  Options::addBFieldOptions(desc);
+  Options::addMagneticFieldOptions(desc);
   Options::addFittingOptions(desc);
+  Options::addDigitizationOptions(desc);
 
   auto vm = Options::parse(desc, argc, argv);
   if (vm.empty()) {
@@ -73,7 +74,7 @@ int runRecTruthTracks(int argc, char* argv[],
     sequencer.addContextDecorator(cdr);
   }
   // Setup the magnetic field
-  auto magneticField = Options::readBField(vm);
+  auto magneticField = Options::readMagneticField(vm);
 
   // Read the sim hits
   auto simHitReaderCfg = setupSimHitReading(vm, sequencer);
@@ -81,8 +82,8 @@ int runRecTruthTracks(int argc, char* argv[],
   auto particleReader = setupParticleReading(vm, sequencer);
 
   // Run the sim hits smearing
-  auto hitSmearingCfg = setupSimHitSmearing(
-      vm, sequencer, rnd, trackingGeometry, simHitReaderCfg.outputSimHits);
+  auto digiCfg = setupDigitization(vm, sequencer, rnd, trackingGeometry,
+                                   simHitReaderCfg.outputSimHits);
   // Run the particle selection
   // The pre-selection will select truth particles satisfying provided criteria
   // from all particles read in by particle reader for further processing. It
@@ -90,7 +91,7 @@ int runRecTruthTracks(int argc, char* argv[],
   TruthSeedSelector::Config particleSelectorCfg;
   particleSelectorCfg.inputParticles = particleReader.outputParticles;
   particleSelectorCfg.inputMeasurementParticlesMap =
-      hitSmearingCfg.outputMeasurementParticlesMap;
+      digiCfg.outputMeasurementParticlesMap;
   particleSelectorCfg.outputParticles = "particles_selected";
   particleSelectorCfg.nHitsMin = 1;
   sequencer.addAlgorithm(
@@ -110,7 +111,7 @@ int runRecTruthTracks(int argc, char* argv[],
   TruthTrackFinder::Config trackFinderCfg;
   trackFinderCfg.inputParticles = inputParticles;
   trackFinderCfg.inputMeasurementParticlesMap =
-      hitSmearingCfg.outputMeasurementParticlesMap;
+      digiCfg.outputMeasurementParticlesMap;
   trackFinderCfg.outputProtoTracks = "prototracks";
   sequencer.addAlgorithm(
       std::make_shared<TruthTrackFinder>(trackFinderCfg, logLevel));
@@ -119,8 +120,7 @@ int runRecTruthTracks(int argc, char* argv[],
   // Setup the surface sorter if running direct navigator
   sorterCfg.inputProtoTracks = trackFinderCfg.outputProtoTracks;
   sorterCfg.inputSimulatedHits = simHitReaderCfg.outputSimHits;
-  sorterCfg.inputMeasurementSimHitsMap =
-      hitSmearingCfg.outputMeasurementSimHitsMap;
+  sorterCfg.inputMeasurementSimHitsMap = digiCfg.outputMeasurementSimHitsMap;
   sorterCfg.outputProtoTracks = "sortedprototracks";
   if (dirNav) {
     sequencer.addAlgorithm(
@@ -129,8 +129,8 @@ int runRecTruthTracks(int argc, char* argv[],
 
   // setup the fitter
   TrackFittingAlgorithm::Config fitter;
-  fitter.inputMeasurements = hitSmearingCfg.outputMeasurements;
-  fitter.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
+  fitter.inputMeasurements = digiCfg.outputMeasurements;
+  fitter.inputSourceLinks = digiCfg.outputSourceLinks;
   fitter.inputProtoTracks = trackFinderCfg.outputProtoTracks;
   if (dirNav) {
     fitter.inputProtoTracks = sorterCfg.outputProtoTracks;
@@ -152,9 +152,9 @@ int runRecTruthTracks(int argc, char* argv[],
   trackStatesWriter.inputParticles = inputParticles;
   trackStatesWriter.inputSimHits = simHitReaderCfg.outputSimHits;
   trackStatesWriter.inputMeasurementParticlesMap =
-      hitSmearingCfg.outputMeasurementParticlesMap;
+      digiCfg.outputMeasurementParticlesMap;
   trackStatesWriter.inputMeasurementSimHitsMap =
-      hitSmearingCfg.outputMeasurementSimHitsMap;
+      digiCfg.outputMeasurementSimHitsMap;
   trackStatesWriter.outputDir = outputDir;
   trackStatesWriter.outputFilename = "trackstates_fitter.root";
   trackStatesWriter.outputTreename = "trackstates_fitter";
@@ -166,7 +166,7 @@ int runRecTruthTracks(int argc, char* argv[],
   trackParamsWriter.inputTrajectories = fitter.outputTrajectories;
   trackParamsWriter.inputParticles = inputParticles;
   trackParamsWriter.inputMeasurementParticlesMap =
-      hitSmearingCfg.outputMeasurementParticlesMap;
+      digiCfg.outputMeasurementParticlesMap;
   trackParamsWriter.outputDir = outputDir;
   trackParamsWriter.outputFilename = "trackparams_fitter.root";
   trackParamsWriter.outputTreename = "trackparams_fitter";
@@ -178,7 +178,7 @@ int runRecTruthTracks(int argc, char* argv[],
   perfFinder.inputProtoTracks = trackFinderCfg.outputProtoTracks;
   perfFinder.inputParticles = inputParticles;
   perfFinder.inputMeasurementParticlesMap =
-      hitSmearingCfg.outputMeasurementParticlesMap;
+      digiCfg.outputMeasurementParticlesMap;
   perfFinder.outputDir = outputDir;
   sequencer.addWriter(
       std::make_shared<TrackFinderPerformanceWriter>(perfFinder, logLevel));
@@ -186,7 +186,7 @@ int runRecTruthTracks(int argc, char* argv[],
   perfFitter.inputTrajectories = fitter.outputTrajectories;
   perfFitter.inputParticles = inputParticles;
   perfFitter.inputMeasurementParticlesMap =
-      hitSmearingCfg.outputMeasurementParticlesMap;
+      digiCfg.outputMeasurementParticlesMap;
   perfFitter.outputDir = outputDir;
   sequencer.addWriter(
       std::make_shared<TrackFitterPerformanceWriter>(perfFitter, logLevel));

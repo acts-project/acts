@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
   // Setup and parse options
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
-  Options::addOutputOptions(desc);
+  Options::addOutputOptions(desc, OutputFormat::Root);
   Options::addGeant4Options(desc);
   desc.add_options()(
       "gdml-file",

@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -31,6 +30,7 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 
 #include "VertexingHelpers.hpp"
 
@@ -53,9 +53,7 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   const auto& inputTrackPointers =
       makeTrackParametersPointerContainer(inputTrackParameters);
 
-  using MagneticField = Acts::ConstantBField;
-  using Stepper = Acts::EigenStepper<MagneticField>;
-  using Propagator = Acts::Propagator<Stepper>;
+  using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
   using PropagatorOptions = Acts::PropagatorOptions<>;
   using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
   using VertexFitter =
@@ -67,20 +65,21 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   using VertexFinderOptions =
       Acts::VertexingOptions<Acts::BoundTrackParameters>;
 
-  // Set up the magnetic field
-  MagneticField bField(m_cfg.bField);
+  // Set up EigenStepper
+  Acts::EigenStepper<> stepper(m_cfg.bField);
+
   // Set up propagator with void navigator
-  auto propagator = std::make_shared<Propagator>(Stepper(bField));
+  auto propagator = std::make_shared<Propagator>(stepper);
   PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext,
                                    Acts::LoggerWrapper{logger()});
   // Setup the vertex fitter
   VertexFitter::Config vertexFitterCfg;
   VertexFitter vertexFitter(std::move(vertexFitterCfg));
   // Setup the track linearizer
-  Linearizer::Config linearizerCfg(bField, propagator);
+  Linearizer::Config linearizerCfg(m_cfg.bField, propagator);
   Linearizer linearizer(std::move(linearizerCfg));
   // Setup the seed finder
-  ImpactPointEstimator::Config ipEstCfg(bField, propagator);
+  ImpactPointEstimator::Config ipEstCfg(m_cfg.bField, propagator);
   ImpactPointEstimator ipEst(std::move(ipEstCfg));
   VertexSeeder::Config seederCfg(ipEst);
   VertexSeeder seeder(std::move(seederCfg));
@@ -90,7 +89,7 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   finderCfg.maxVertices = 200;
   finderCfg.reassignTracksAfterFirstFit = true;
   VertexFinder finder(finderCfg);
-  VertexFinder::State state(ctx.magFieldContext);
+  VertexFinder::State state(*m_cfg.bField, ctx.magFieldContext);
   VertexFinderOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
 
   // find vertices

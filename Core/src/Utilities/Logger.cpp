@@ -19,9 +19,10 @@ bool LoggerWrapper::doPrint(const Logging::Level& lvl) const {
   return m_logger->doPrint(lvl);
 }
 
-Logging::OutStream LoggerWrapper::log(const Logging::Level& lvl) const {
+void LoggerWrapper::log(const Logging::Level& lvl,
+                        const std::string& input) const {
   assert(m_logger != nullptr);
-  return m_logger->log(lvl);
+  return m_logger->log(lvl, input);
 }
 
 const Logger& LoggerWrapper::operator()() const {

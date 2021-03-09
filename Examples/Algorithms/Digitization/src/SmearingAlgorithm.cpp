@@ -21,8 +21,8 @@
 #include <stdexcept>
 #include <type_traits>
 
-ActsExamples::SmearingAlgorithm::SmearingAlgorithm(
-    ActsExamples::SmearingAlgorithm::Config cfg, Acts::Logging::Level lvl)
+ActsExamples::SmearingAlgorithm::SmearingAlgorithm(DigitizationConfig cfg,
+                                                   Acts::Logging::Level lvl)
     : ActsExamples::BareAlgorithm("SmearingAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
   if (m_cfg.inputSimHits.empty()) {
@@ -48,25 +48,26 @@ ActsExamples::SmearingAlgorithm::SmearingAlgorithm(
   if (not m_cfg.randomNumbers) {
     throw std::invalid_argument("Missing random numbers tool");
   }
-  if (m_cfg.smearers.empty()) {
+  if (m_cfg.digitizationConfigs.empty()) {
     throw std::invalid_argument("Missing smearers configuration");
   }
   // create the smearers from the configuration
   std::vector<std::pair<Acts::GeometryIdentifier, Smearer>> smearersInput;
-  for (size_t i = 0; i < m_cfg.smearers.size(); ++i) {
-    Acts::GeometryIdentifier geoId = m_cfg.smearers.idAt(i);
+  for (size_t i = 0; i < m_cfg.digitizationConfigs.size(); ++i) {
+    Acts::GeometryIdentifier geoId = m_cfg.digitizationConfigs.idAt(i);
     // copy so we can sort in-place
-    SmearerConfig geoCfg = m_cfg.smearers.valueAt(i);
+    SmearingConfig geoCfg =
+        m_cfg.digitizationConfigs.valueAt(i).smearingDigiConfig;
 
     // make sure the configured input parameter indices are sorted and unique
     std::sort(geoCfg.begin(), geoCfg.end(),
-              [](const ParameterSmearerConfig& lhs,
-                 const ParameterSmearerConfig& rhs) {
+              [](const ParameterSmearingConfig& lhs,
+                 const ParameterSmearingConfig& rhs) {
                 return lhs.index < rhs.index;
               });
     auto dup = std::adjacent_find(geoCfg.begin(), geoCfg.end(),
-                                  [](const ParameterSmearerConfig& lhs,
-                                     const ParameterSmearerConfig& rhs) {
+                                  [](const ParameterSmearingConfig& lhs,
+                                     const ParameterSmearingConfig& rhs) {
                                     return lhs.index == rhs.index;
                                   });
     if (dup != geoCfg.end()) {

@@ -227,8 +227,8 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   rNavigator.resolveSensitive = true;
 
   // Configure propagation with deactivated B-field
-  ConstantBField bField(Vector3(0., 0., 0.));
-  using RecoStepper = EigenStepper<ConstantBField>;
+  auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 0.));
+  using RecoStepper = EigenStepper<>;
   RecoStepper rStepper(bField);
   using RecoPropagator = Propagator<RecoStepper, Navigator>;
   RecoPropagator rPropagator(rStepper, rNavigator);
@@ -282,9 +282,9 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   spcolor.offset = -0.04;
 
   EventDataView3D::drawMultiTrajectory(
-      helper, fittedTrack.fittedStates, fittedTrack.trackTip, tgContext,
-      momentumScale, localErrorScale, directionErrorScale, scolor, mcolor,
-      ppcolor, fpcolor, spcolor);
+      helper, fittedTrack.fittedStates, fittedTrack.lastMeasurementIndex,
+      tgContext, momentumScale, localErrorScale, directionErrorScale, scolor,
+      mcolor, ppcolor, fpcolor, spcolor);
 
   helper.write("EventData_MultiTrajectory");
   helper.write(ss);

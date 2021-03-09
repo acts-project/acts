@@ -14,7 +14,7 @@
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
-#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
+#include "ActsExamples/MagneticField/MagneticField.hpp"
 
 #include <functional>
 #include <vector>
@@ -40,7 +40,7 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   /// contains shared_ptr anyways.
   static TrackFinderFunction makeTrackFinderFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-      Options::BFieldVariant magneticField);
+      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
 
   struct Config {
     /// Input measurements collection.

@@ -1,19 +1,17 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
-#include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
-#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
 #include <random>
@@ -34,15 +32,15 @@ namespace po = boost::program_options;
 using UniformDist = std::uniform_real_distribution<double>;
 using RandomEngine = std::mt19937;
 
-template <typename field_t, typename field_context_t>
-void accessStepWise(field_t& bField, field_context_t& bFieldContext,
+void accessStepWise(const Acts::MagneticFieldProvider& bField,
+                    const Acts::MagneticFieldContext& bFieldContext,
                     size_t events, size_t theta_steps, double theta_0,
                     double theta_step, size_t phi_steps, double phi_0,
                     double phi_step, size_t access_steps, double access_step) {
   std::cout << "[>>>] Start: step-wise access pattern ... " << std::endl;
   size_t mismatched = 0;
   // initialize the field cache
-  typename field_t::Cache bCache(bFieldContext);
+  auto bCache = bField.makeCache(bFieldContext);
   // boost display
   size_t totalSteps = events * theta_steps * phi_steps * access_steps;
   boost::progress_display show_progress(totalSteps);
@@ -81,8 +79,8 @@ void accessStepWise(field_t& bField, field_context_t& bFieldContext,
   }
 }
 
-template <typename field_t, typename field_context_t>
-void accessRandom(field_t& bField, field_context_t& bFieldContext,
+void accessRandom(const Acts::MagneticFieldProvider& bField,
+                  const Acts::MagneticFieldContext& bFieldContext,
                   size_t totalSteps, double radius) {
   std::cout << "[>>>] Start: random access pattern ... " << std::endl;
   size_t mismatched = 0;
@@ -92,7 +90,7 @@ void accessRandom(field_t& bField, field_context_t& bFieldContext,
   UniformDist zDist(-radius, radius);
 
   // initialize the field cache
-  typename field_t::Cache bCache(bFieldContext);
+  auto bCache = bField.makeCache(bFieldContext);
   boost::progress_display show_progress(totalSteps);
 
   // the event loop
@@ -122,7 +120,7 @@ int main(int argc, char* argv[]) {
   // Declare the supported program options.
   auto desc = ActsExamples::Options::makeDefaultOptions();
   ActsExamples::Options::addSequencerOptions(desc);
-  ActsExamples::Options::addBFieldOptions(desc);
+  ActsExamples::Options::addMagneticFieldOptions(desc);
   desc.add_options()(
       "bf-phi-range",
       po::value<ActsExamples::Options::Reals<2>>()->default_value(
@@ -152,7 +150,7 @@ int main(int argc, char* argv[]) {
   // per-event access patterns this should be switched to a proper
   // Sequencer-based tool. Otherwise it should be removed.
   auto nEvents = ActsExamples::Options::readSequencerConfig(vm).events;
-  auto bFieldVar = ActsExamples::Options::readBField(vm);
+  auto bField = ActsExamples::Options::readMagneticField(vm);
 
   // Get the phi and eta range
   auto phir = vm["bf-phi-range"].as<ActsExamples::Options::Reals<2>>();
@@ -173,25 +171,11 @@ int main(int argc, char* argv[]) {
   double theta_step = theta_span / theta_steps;
   double access_step = track_length / access_steps;
 
-  return std::visit(
-      [&](auto& bField) -> int {
-        using field_type =
-            typename std::decay_t<decltype(bField)>::element_type;
-        if constexpr (!std::is_same_v<field_type, InterpolatedBFieldMap2D> &&
-                      !std::is_same_v<field_type, InterpolatedBFieldMap3D>) {
-          std::cout << "Bfield map could not be read. Exiting." << std::endl;
-          return EXIT_FAILURE;
-        } else {
-          // Step-wise access pattern
-          accessStepWise(*bField, magFieldContext, nEvents, theta_steps,
-                         thetar[0], theta_step, phi_steps, phir[0], phi_step,
-                         access_steps, access_step);
-          // Random access pattern
-          accessRandom(*bField, magFieldContext,
-                       nEvents * theta_steps * phi_steps * access_steps,
-                       track_length);
-          return EXIT_SUCCESS;
-        }
-      },
-      bFieldVar);
+  accessStepWise(*bField, magFieldContext, nEvents, theta_steps, thetar[0],
+                 theta_step, phi_steps, phir[0], phi_step, access_steps,
+                 access_step);
+
+  accessRandom(*bField, magFieldContext,
+               nEvents * theta_steps * phi_steps * access_steps, track_length);
+  return EXIT_SUCCESS;
 }

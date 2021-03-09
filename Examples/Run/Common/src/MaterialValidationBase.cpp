@@ -1,11 +1,12 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/MagneticField/SharedBField.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
@@ -13,16 +14,12 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
+#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
-#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
-#include "ActsExamples/Plugins/BField/ScalableBField.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagationOptions.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include <Acts/Geometry/TrackingGeometry.hpp>
-#include <Acts/MagneticField/ConstantBField.hpp>
-#include <Acts/MagneticField/InterpolatedBFieldMap.hpp>
-#include <Acts/MagneticField/SharedBField.hpp>
 #include <Acts/Propagator/EigenStepper.hpp>
 #include <Acts/Propagator/Navigator.hpp>
 #include <Acts/Propagator/Propagator.hpp>
@@ -46,9 +43,10 @@ namespace {
 /// @param tGeometry The TrackingGeometry object
 ///
 /// @return a process code
-template <typename bfield_t>
 ActsExamples::ProcessCode setupPropagation(
-    ActsExamples::Sequencer& sequencer, bfield_t bfield, po::variables_map& vm,
+    ActsExamples::Sequencer& sequencer,
+    std::shared_ptr<const Acts::MagneticFieldProvider> bfield,
+    po::variables_map& vm,
     std::shared_ptr<ActsExamples::RandomNumbers> randomNumberSvc,
     std::shared_ptr<const Acts::TrackingGeometry> tGeometry) {
   // Get the log level
@@ -62,7 +60,6 @@ ActsExamples::ProcessCode setupPropagation(
 
   // Resolve the bfield map template and create the propgator
   using Stepper = Acts::EigenStepper<
-      bfield_t,
       Acts::StepperExtensionList<Acts::DefaultExtension,
                                  Acts::DenseEnvironmentExtension>,
       Acts::detail::HighestValidAuctioneer>;
@@ -133,10 +130,11 @@ int materialValidationExample(int argc, char* argv[],
   ActsExamples::Options::addSequencerOptions(desc);
   ActsExamples::Options::addGeometryOptions(desc);
   ActsExamples::Options::addMaterialOptions(desc);
-  ActsExamples::Options::addBFieldOptions(desc);
+  ActsExamples::Options::addMagneticFieldOptions(desc);
   ActsExamples::Options::addRandomNumbersOptions(desc);
   ActsExamples::Options::addPropagationOptions(desc);
-  ActsExamples::Options::addOutputOptions(desc);
+  ActsExamples::Options::addOutputOptions(desc,
+                                          ActsExamples::OutputFormat::Root);
 
   // Add specific options for this geometry
   detector.addOptions(desc);
@@ -165,20 +163,14 @@ int materialValidationExample(int argc, char* argv[],
       std::make_shared<ActsExamples::RandomNumbers>(randomNumberSvcCfg);
 
   // Create BField service
-  auto bFieldVar = ActsExamples::Options::readBField(vm);
+  ActsExamples::Options::setupMagneticFieldServices(vm, sequencer);
+  auto bField = ActsExamples::Options::readMagneticField(vm);
 
   if (vm["prop-stepper"].template as<int>() == 0) {
     // Straight line stepper was chosen
     setupStraightLinePropagation(sequencer, vm, randomNumberSvc, tGeometry);
   } else {
-    std::visit(
-        [&](auto& bField) {
-          using field_type =
-              typename std::decay_t<decltype(bField)>::element_type;
-          Acts::SharedBField<field_type> fieldMap(bField);
-          setupPropagation(sequencer, fieldMap, vm, randomNumberSvc, tGeometry);
-        },
-        bFieldVar);
+    setupPropagation(sequencer, bField, vm, randomNumberSvc, tGeometry);
   }
 
   // ---------------------------------------------------------------------------------

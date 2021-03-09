@@ -64,14 +64,20 @@ struct BoundParametersSmearer {
                     const Acts::GeometryContext& geoCtx) const {
     // construct full bound parameters. they are probably not all needed, but it
     // is easier to just create them all and then select the requested ones.
-    Acts::BoundVector boundParams =
+    Acts::Result<Acts::BoundVector> boundParamsRes =
         Acts::detail::transformFreeToBoundParameters(hit.position(), hit.time(),
                                                      hit.unitDirection(), 0,
                                                      surface, geoCtx);
 
+    if (!boundParamsRes.ok()) {
+      return boundParamsRes.error();
+    }
+
+    const auto& boundParams = *boundParamsRes;
+
     ParametersVector par = ParametersVector::Zero();
     CovarianceMatrix cov = CovarianceMatrix::Zero();
-    for (size_t i = 0; i < kSize; ++i) {
+    for (int i = 0; i < static_cast<int>(kSize); ++i) {
       auto res = smearFunctions[i](boundParams[indices[i]], rng);
       if (not res.ok()) {
         return Result::failure(res.error());

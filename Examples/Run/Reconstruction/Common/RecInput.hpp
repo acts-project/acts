@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ActsExamples/Digitization/HitSmearing.hpp"
+#include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
@@ -25,7 +25,7 @@
 
 /// Setup sim hit csv reader
 ///
-/// @param variables The configuration variables
+/// @param vars The configuration variables
 /// @param sequencer The framework sequencer
 ///
 /// @return config for sim hits csv reader
@@ -35,7 +35,7 @@ ActsExamples::CsvSimHitReader::Config setupSimHitReading(
 
 /// Setup sim particle csv reader
 ///
-/// @param variables The configuration variables
+/// @param vars The configuration variables
 /// @param sequencer The framework sequencer
 ///
 /// @return config for sim particles csv reader
@@ -45,14 +45,14 @@ ActsExamples::CsvParticleReader::Config setupParticleReading(
 
 /// Setup sim hit smearing
 ///
-/// @param variables The configuration variables
+/// @param vars The configuration variables
 /// @param sequencer The framework sequencer
 /// @param randomNumbers The random number service
 /// @param trackingGeometry The TrackingGeometry for the tracking setup
 /// @param inputSimHits The input sim hit collection (e.g. from sim hit reader)
 ///
 /// @return config for hit smearing
-ActsExamples::HitSmearing::Config setupSimHitSmearing(
+ActsExamples::DigitizationConfig setupDigitization(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer,
     std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
@@ -61,7 +61,7 @@ ActsExamples::HitSmearing::Config setupSimHitSmearing(
 
 /// Setup particle smearing
 ///
-/// @param variables The configuration variables
+/// @param vars The configuration variables
 /// @param sequencer The framework sequencer
 /// @param randomNumbers The random number service
 /// @param inputParticles The input particle collection (e.g. from particle

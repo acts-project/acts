@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/Json/JsonGeometryConverter.hpp"
+#include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 
 #include <fstream>
@@ -22,10 +22,10 @@ BOOST_AUTO_TEST_CASE(RoundtripFromFile) {
   refFile >> refJson;
 
   // convert to the material map and back again
-  Acts::JsonGeometryConverter::Config converterCfg;
-  Acts::JsonGeometryConverter converter(converterCfg);
+  Acts::MaterialMapJsonConverter::Config converterCfg;
+  Acts::MaterialMapJsonConverter converter(converterCfg);
   auto materialMap = converter.jsonToMaterialMaps(refJson);
-  auto encodedJson = converter.materialMapsToJson(materialMap);
+  nlohmann::json encodedJson = converter.materialMapsToJson(materialMap);
 
   // verify identical encoded JSON values
   BOOST_CHECK_EQUAL(refJson, encodedJson);
