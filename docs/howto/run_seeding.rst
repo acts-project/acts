@@ -44,7 +44,9 @@ You can run the seeding example with a comand like this:
    $ <build>/bin/ActsExampleSeedingGeneric \
 	--input-dir=data/sim_generic/ttbar_pu200 \
 	--output-dir=output_generic_ttbar_pu200 \
-        --bf-constant-tesla=0:0:2
+        --bf-constant-tesla=0:0:2 \
+	--digi-smear \
+	--digi-config-file <source>/Examples/Algorithms/Digitization/share/default-smearing-config-generic.json
 
 After running this example, you should see something like this:
 
@@ -65,40 +67,6 @@ The plots below are examples of the efficiency plots produced using the ttbar sa
 
 .. image:: ../figures/performance/seeding/seeding_eff_vs_eta.png
    :width: 300
-
-
-Using a different detector
--------------------
-The example above uses the Generic Detector, but you can also try the seeding example with a DD4hep detector.
-To run the seeding example with the OpenData detector,
-
-.. code-block:: console
-
-   $ <build>/bin/ActsExampleSeedingDD4hep \
-    --dd4hep-input ../acts/Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml \
-    --input-dir=data/sim_dd4hep/ttbar_pu200 \
-    --output-dir=output_dd4_ttbar_pu200 \
-    --bf-constant-tesla=0:0:2
-
-The input dataset needs to be simulated with the same detector in advance.
-
-The detector volumes and layers used for seeding are set in ``acts/Examples/Run/Seeding/DD4hep/DD4hepSeedingExample.cpp`` as follows.
-
-.. code-block::
-		
-      // open detector barrel layers
-      // the selection intentionally contains duplicates to demonstrate the
-      // automatic selection normalization. setting only the volume already
-      // selects all layers within it. the explicit layers in the selection
-      // should have no effect.
-      Acts::GeometryIdentifier().setVolume(13),
-      // open detector positive endcap layers
-      Acts::GeometryIdentifier().setVolume(14),
-      // open detector negative endcap layers
-      Acts::GeometryIdentifier().setVolume(12),
-
-If you want to try a different detector geometry, you need to set the detector volumes and layers in this file.
-
 
 
 
