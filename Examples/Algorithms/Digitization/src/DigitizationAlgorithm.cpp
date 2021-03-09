@@ -23,6 +23,33 @@
 #include <string>
 #include <type_traits>
 
+// TODO make sure the moves actually avoid the copies down here
+namespace {
+using hit_t = std::pair<const ActsFatras::Hit*, size_t>;
+using cell_t = ActsFatras::Channelizer::ChannelSegment;
+
+struct Cluster {
+  std::vector<hit_t> simHits;
+  std::vector<cell_t> cells;
+
+  Cluster(const ActsFatras::Hit* hit, size_t hitIdx,
+          std::vector<cell_t> cells_ = {})
+      : simHits({hit_t(hit, hitIdx)}), cells(std::move(cells_)){};
+};
+
+struct DigitizedCluster {
+  std::vector<hit_t> simHits;
+  ActsExamples::DigitizedParameters params;
+
+  DigitizedCluster(std::vector<hit_t> hits)
+      : simHits(std::move(hits)), params(){};
+
+  const ActsFatras::Hit& hit_at(size_t i) { return *simHits.at(i).first; };
+  size_t hit_idx_at(size_t i) { return simHits.at(i).second; };
+};
+
+}  // namespace
+
 ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
     DigitizationConfig cfg, Acts::Logging::Level lvl)
     : ActsExamples::BareAlgorithm("DigitizationAlgorithm", lvl),
@@ -158,6 +185,8 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
     // visitor so we do not need to lookup the variant object per-hit.
     std::visit(
         [&](const auto& digitizer) {
+          std::vector<::Cluster> moduleClusters;
+
           for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
             const auto& simHit = *h;
             const auto simHitIdx = simHits.index_of(h);
@@ -178,30 +207,43 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
               }
               ACTS_VERBOSE("Activated " << channels.size()
                                         << " channels for this hit.");
-              dParameters = localParameters(digitizer.geometric, channels, rng);
+
+              moduleClusters.emplace_back(&simHit, simHitIdx, channels);
+            } else {
+              moduleClusters.emplace_back(&simHit, simHitIdx);
             }
+          }
+
+          // TODO optionally merge hits here
+
+          for (::Cluster& cluster : moduleClusters) {
+            DigitizedCluster dClus(std::move(cluster.simHits));
+            dClus.params =
+                localParameters(digitizer.geometric, cluster.cells, rng);
 
             // Smearing part - (optionally) rest
             if (not digitizer.smearing.indices.empty()) {
               ACTS_VERBOSE("Configured to smear "
                            << digitizer.smearing.indices.size()
                            << " parameters.");
-              auto res =
-                  digitizer.smearing(rng, simHit, *surfacePtr, ctx.geoContext);
+
+              // TODO handle case with many hits
+              auto res = digitizer.smearing(rng, dClus.hit_at(0), *surfacePtr,
+                                            ctx.geoContext);
               if (not res.ok()) {
                 ACTS_DEBUG("Problem in hit smearing, skipping this hit.")
                 continue;
               }
               const auto& [par, cov] = res.value();
               for (Eigen::Index ip = 0; ip < par.rows(); ++ip) {
-                dParameters.indices.push_back(digitizer.smearing.indices[ip]);
-                dParameters.values.push_back(par[ip]);
-                dParameters.variances.push_back(cov(ip, ip));
+                dClus.params.indices.push_back(digitizer.smearing.indices[ip]);
+                dClus.params.values.push_back(par[ip]);
+                dClus.params.variances.push_back(cov(ip, ip));
               }
             }
 
             // Check on success - threshold could have eliminated all channels
-            if (dParameters.values.empty()) {
+            if (dClus.params.values.empty()) {
               ACTS_VERBOSE(
                   "Parameter digitization did not yield a measurement.")
               continue;
@@ -218,15 +260,17 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
             // be added at the end.
             sourceLinks.emplace_hint(sourceLinks.end(), std::move(sourceLink));
             measurements.emplace_back(
-                createMeasurement(dParameters, sourceLink));
-            clusters.emplace_back(std::move(dParameters.cluster));
+                createMeasurement(dClus.params, sourceLink));
+            clusters.emplace_back(std::move(dClus.params.cluster));
+            // TODO handle case with many hits
             // this digitization does not do hit merging so there is only one
             // mapping entry for each digitized hit.
             measurementParticlesMap.emplace_hint(measurementParticlesMap.end(),
                                                  measurementIdx,
-                                                 simHit.particleId());
+                                                 dClus.hit_at(0).particleId());
             measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
-                                               measurementIdx, simHitIdx);
+                                               measurementIdx,
+                                               dClus.hit_idx_at(0));
           }
         },
         *digitizerItr);
