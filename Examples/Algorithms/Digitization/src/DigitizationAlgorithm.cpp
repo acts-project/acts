@@ -25,16 +25,17 @@
 
 // TODO make sure the moves actually avoid the copies down here
 namespace {
-using hit_t = std::pair<const ActsFatras::Hit*, size_t>;
+using hit_t =
+    ActsExamples::SimHitContainer::size_type;  // Only keep index into event
+                                               // simhit container
 using cell_t = ActsFatras::Channelizer::ChannelSegment;
 
 struct Cluster {
   std::vector<hit_t> simHits;
   std::vector<cell_t> cells;
 
-  Cluster(const ActsFatras::Hit* hit, size_t hitIdx,
-          std::vector<cell_t> cells_ = {})
-      : simHits({hit_t(hit, hitIdx)}), cells(std::move(cells_)){};
+  Cluster(size_t hitIdx, std::vector<cell_t> cells_ = {})
+      : simHits({hitIdx}), cells(std::move(cells_)){};
 };
 
 struct DigitizedCluster {
@@ -44,8 +45,7 @@ struct DigitizedCluster {
   DigitizedCluster(std::vector<hit_t> hits)
       : simHits(std::move(hits)), params(){};
 
-  const ActsFatras::Hit& hit_at(size_t i) { return *simHits.at(i).first; };
-  size_t hit_idx_at(size_t i) { return simHits.at(i).second; };
+  size_t hit_idx_at(size_t i) { return simHits.at(i); };
 };
 
 }  // namespace
@@ -191,8 +191,6 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
             const auto& simHit = *h;
             const auto simHitIdx = simHits.index_of(h);
 
-            DigitizedParameters dParameters;
-
             // Geometric part - 0, 1, 2 local parameters are possible
             if (not digitizer.geometric.indices.empty()) {
               ACTS_VERBOSE("Configured to geometric digitize "
@@ -208,9 +206,9 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
               ACTS_VERBOSE("Activated " << channels.size()
                                         << " channels for this hit.");
 
-              moduleClusters.emplace_back(&simHit, simHitIdx, channels);
+              moduleClusters.emplace_back(simHitIdx, channels);
             } else {
-              moduleClusters.emplace_back(&simHit, simHitIdx);
+              moduleClusters.emplace_back(simHitIdx);
             }
           }
 
@@ -228,8 +226,9 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
                            << " parameters.");
 
               // TODO handle case with many hits
-              auto res = digitizer.smearing(rng, dClus.hit_at(0), *surfacePtr,
-                                            ctx.geoContext);
+              auto res =
+                  digitizer.smearing(rng, *simHits.nth(dClus.hit_idx_at(0)),
+                                     *surfacePtr, ctx.geoContext);
               if (not res.ok()) {
                 ACTS_DEBUG("Problem in hit smearing, skipping this hit.")
                 continue;
@@ -265,9 +264,9 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
             // TODO handle case with many hits
             // this digitization does not do hit merging so there is only one
             // mapping entry for each digitized hit.
-            measurementParticlesMap.emplace_hint(measurementParticlesMap.end(),
-                                                 measurementIdx,
-                                                 dClus.hit_at(0).particleId());
+            measurementParticlesMap.emplace_hint(
+                measurementParticlesMap.end(), measurementIdx,
+                simHits.nth(dClus.hit_idx_at(0))->particleId());
             measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
                                                measurementIdx,
                                                dClus.hit_idx_at(0));
