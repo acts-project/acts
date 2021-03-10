@@ -50,21 +50,23 @@ std::pair<Assembly, DetElement> ODDModuleHelper::assembleTrapezoidalModule(
       double length = x_comp.length();
 
       // Create the subtraction
-      Tube tubeCutoutSeg1(x_tubs.rmin(), x_tubs.rmax(), length + x_tubs.dz(), -0.1, 2.1*M_PI);
-      Tube tubeCutoutSeg2(x_tubs.rmin(), x_tubs.rmax(), length + x_tubs.dz(), 0, 2*M_PI);
+      Tube tubeCutoutSeg1(x_tubs.rmin(), x_tubs.rmax(), length + x_tubs.dz(),
+                          -0.1, 2.1 * M_PI);
+      Tube tubeCutoutSeg2(x_tubs.rmin(), x_tubs.rmax(), length + x_tubs.dz(), 0,
+                          2 * M_PI);
       UnionSolid foamCutout(tubeCutoutSeg1, tubeCutoutSeg2);
 
-      componentVolume =
-          Volume(compName,
-                 SubtractionSolid(
-                     trapShape, foamCutout,
-                                 Position(x_sub.x_offset(), x_sub.y_offset(),
-                                          x_sub.z_offset())),
-                 oddd.material(x_comp.materialStr()));
+      componentVolume = Volume(
+          compName,
+          SubtractionSolid(
+              trapShape, foamCutout,
+              Position(x_sub.x_offset(), x_sub.y_offset(), x_sub.z_offset())),
+          oddd.material(x_comp.materialStr()));
       componentVolume.setVisAttributes(oddd, x_comp.visStr());
 
       // Create the cooling pipe
-      Tube coolingPipe(x_pipe.rmin(), x_pipe.rmax(), 0.5*length + x_pipe.dz());
+      Tube coolingPipe(x_pipe.rmin(), x_pipe.rmax(),
+                       0.5 * length + x_pipe.dz());
       Volume pipeVolume("CoolingPipe", coolingPipe,
                         oddd.material(x_pipe.materialStr()));
       pipeVolume.setVisAttributes(oddd, x_pipe.visStr());
@@ -72,11 +74,10 @@ std::pair<Assembly, DetElement> ODDModuleHelper::assembleTrapezoidalModule(
       // Place the pipe in the module
       moduleAssembly.placeVolume(
           pipeVolume,
-                                  Position(x_pipe.x_offset(), x_pipe.y_offset(),
-                                           x_pipe.z_offset()));
+          Position(x_pipe.x_offset(), x_pipe.y_offset(), x_pipe.z_offset()));
     }
 
-     // Place the component
+    // Place the component
     double stereoAlpha = x_comp.alpha();
     PlacedVolume placedComponent = moduleAssembly.placeVolume(
         componentVolume,
@@ -141,8 +142,10 @@ std::pair<Assembly, DetElement> ODDModuleHelper::assembleRectangularModule(
       double length = x_comp.dy();
 
       // Create the subtraction
-      Tube tubeCutoutSeg1(x_tubs.rmin(), x_tubs.rmax(), length + x_tubs.dz(), -0.1, 2.1*M_PI);
-      Tube tubeCutoutSeg2(x_tubs.rmin(), x_tubs.rmax(), length + x_tubs.dz(), 0, 2*M_PI);
+      Tube tubeCutoutSeg1(x_tubs.rmin(), x_tubs.rmax(), length + x_tubs.dz(),
+                          -0.1, 2.1 * M_PI);
+      Tube tubeCutoutSeg2(x_tubs.rmin(), x_tubs.rmax(), length + x_tubs.dz(), 0,
+                          2 * M_PI);
       UnionSolid foamCutout(tubeCutoutSeg1, tubeCutoutSeg2);
 
       componentVolume =
@@ -156,7 +159,8 @@ std::pair<Assembly, DetElement> ODDModuleHelper::assembleRectangularModule(
       componentVolume.setVisAttributes(oddd, x_comp.visStr());
 
       // Create the cooling pipe
-      Tube coolingPipe(x_pipe.rmin(), x_pipe.rmax(), 0.5*length + x_pipe.dz());
+      Tube coolingPipe(x_pipe.rmin(), x_pipe.rmax(),
+                       0.5 * length + x_pipe.dz());
       Volume pipeVolume("CoolingPipe", coolingPipe,
                         oddd.material(x_pipe.materialStr()));
       pipeVolume.setVisAttributes(oddd, x_pipe.visStr());

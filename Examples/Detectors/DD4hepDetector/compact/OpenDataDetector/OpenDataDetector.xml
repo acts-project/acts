@@ -21,7 +21,7 @@
         <constant name="world_z" value="world_size"/>
         <!--Dimensions of the beam pipe -->
         <constant name="bp_rmin" value="23.6*mm"/>
-        <constant name="bp_rmax" value="25.*mm"/>
+        <constant name="bp_rmax" value="24.4*mm"/>
         <constant name="bp_length" value="4.0*m"/>
         <!--Dimensions of the Pixel volume & sub volumes -->
         <constant name="pix_env_rmin" value="25.*mm"/>

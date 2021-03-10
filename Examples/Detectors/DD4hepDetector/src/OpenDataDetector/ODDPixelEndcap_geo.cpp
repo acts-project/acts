@@ -69,13 +69,13 @@ static Ref_t create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
     if (x_ring.hasChild(_U(module))) {
       xml_comp_t x_module = x_ring.child(_U(module));
       auto module =
-      ODDModuleHelper::assembleTrapezoidalModule(oddd, sens, x_module);
+          ODDModuleHelper::assembleTrapezoidalModule(oddd, sens, x_module);
 
       double r = x_ring.r();
       double phi0 = x_ring.phi0();
       unsigned int nModules = x_ring.nphi();
       double zgap = x_ring.gap();
-      double phiStep = 2. * M_PI / nModules;    
+      double phiStep = 2. * M_PI / nModules;
 
       // Loop over modules
       for (unsigned int modNum = 0; modNum < nModules; ++modNum) {
@@ -96,8 +96,8 @@ static Ref_t create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
         double angY = 0.5 * M_PI - phi;
 
         PlacedVolume placedModule = ringAssembly.placeVolume(
-                         module.first,
-                         Transform3D(RotationX(angX) * RotationY(angY), trans));
+            module.first,
+            Transform3D(RotationX(angX) * RotationY(angY), trans));
         placedModule.addPhysVolID("module", modNum);
         // Clone the detector element
         auto moduleElement = module.second.clone(moduleName, modNum);
