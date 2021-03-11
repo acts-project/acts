@@ -38,8 +38,7 @@ using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
 
 int runSeedingExample(int argc, char* argv[],
-                      std::shared_ptr<ActsExamples::IBaseDetector> detector,
-                      std::vector<Acts::GeometryIdentifier> layersForSeeding) {
+                      std::shared_ptr<ActsExamples::IBaseDetector> detector){
   // Setup and parse options
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
@@ -113,8 +112,6 @@ int runSeedingExample(int argc, char* argv[],
   spCfg.inputMeasurements = digiCfg.outputMeasurements;
   spCfg.outputSpacePoints = "spacepoints";
   spCfg.trackingGeometry = tGeometry;
-  if (not layersForSeeding.empty())
-    spCfg.geometrySelection = layersForSeeding;
   sequencer.addAlgorithm(std::make_shared<SpacePointMaker>(spCfg, logLevel));
 
   // Seeding algorithm
