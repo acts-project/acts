@@ -97,7 +97,8 @@ struct NuclearInteractionParameters {
 };
 
 /// Parametrisation of a single particle
-using NuclearInteractionParametrisation = std::vector<std::pair<float, NuclearInteractionParameters>>;
+using NuclearInteractionParametrisation =
+    std::vector<std::pair<float, NuclearInteractionParameters>>;
 /// Parametrisation of multiple particles
 using MultiParticleNuclearInteractionParametrisation =
     std::vector<std::pair<int, NuclearInteractionParametrisation>>;

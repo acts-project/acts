@@ -28,8 +28,8 @@ namespace Options {
 void addNuclearInteractionOptions(Description& desc);
 
 /// Reads the parametrisation and provides the parametrisation
-ActsFatras::detail::MultiParticleNuclearInteractionParametrisation readParametrisations(
-    const std::string& fileName);
+ActsFatras::detail::MultiParticleNuclearInteractionParametrisation
+readParametrisations(const std::string& fileName);
 
 /// Read Fatras options to create the algorithm config.
 ///

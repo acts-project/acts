@@ -35,7 +35,8 @@ namespace ActsFatras {
 struct NuclearInteraction {
   using Scalar = Particle::Scalar;
   /// The storage of the parameterisation
-  detail::MultiParticleNuclearInteractionParametrisation multiParticleParameterisation;
+  detail::MultiParticleNuclearInteractionParametrisation
+      multiParticleParameterisation;
   /// The number of trials to match momenta and inveriant masses
   //~ unsigned int nMatchingTrials = std::numeric_limits<unsigned int>::max();
   unsigned int nMatchingTrials = 100;
@@ -62,11 +63,12 @@ struct NuclearInteraction {
         std::uniform_real_distribution<double> uniformDistribution{0., 1.};
 
         // Get the parameters
-        const detail::NuclearInteractionParametrisation& singleParticleParametrisation =
-            particleParametrisation.second;
-        const detail::NuclearInteractionParameters& parametrisation = findParameters(
-            uniformDistribution(generator), singleParticleParametrisation,
-            particle.absoluteMomentum());
+        const detail::NuclearInteractionParametrisation&
+            singleParticleParametrisation = particleParametrisation.second;
+        const detail::NuclearInteractionParameters& parametrisation =
+            findParameters(uniformDistribution(generator),
+                           singleParticleParametrisation,
+                           particle.absoluteMomentum());
 
         // Set the L0 limit if not done already
         const auto& distribution =
@@ -104,11 +106,12 @@ struct NuclearInteraction {
         std::uniform_real_distribution<double> uniformDistribution{0., 1.};
 
         // Get the parameters
-        const detail::NuclearInteractionParametrisation& singleParticleParametrisation =
-            particleParametrisation.second;
-        const detail::NuclearInteractionParameters& parametrisation = findParameters(
-            uniformDistribution(generator), singleParticleParametrisation,
-            particle.absoluteMomentum());
+        const detail::NuclearInteractionParametrisation&
+            singleParticleParametrisation = particleParametrisation.second;
+        const detail::NuclearInteractionParameters& parametrisation =
+            findParameters(uniformDistribution(generator),
+                           singleParticleParametrisation,
+                           particle.absoluteMomentum());
 
         std::normal_distribution<double> normalDistribution{0., 1.};
         // Dice the interaction type
@@ -123,12 +126,14 @@ struct NuclearInteraction {
                          : parametrisation.hardMultiplicity);
 
         // Get the parameters for the kinematics
-        const std::vector<detail::NuclearInteractionParameters::ParametersWithFixedMultiplicity>&
+        const std::vector<detail::NuclearInteractionParameters::
+                              ParametersWithFixedMultiplicity>&
             parametrisationOfType =
                 interactSoft ? parametrisation.softKinematicParameters
                              : parametrisation.hardKinematicParameters;
-        const detail::NuclearInteractionParameters::ParametersWithFixedMultiplicity&
-            parametrisationOfMultiplicity = parametrisationOfType[multiplicity];
+        const detail::NuclearInteractionParameters::
+            ParametersWithFixedMultiplicity& parametrisationOfMultiplicity =
+                parametrisationOfType[multiplicity];
         if (!parametrisationOfMultiplicity.validParametrisation)
           return false;
 
@@ -169,7 +174,8 @@ struct NuclearInteraction {
   ///
   /// @return The parametrisation
   const detail::NuclearInteractionParameters& findParameters(
-      double rnd, const detail::NuclearInteractionParametrisation& parametrisation,
+      double rnd,
+      const detail::NuclearInteractionParametrisation& parametrisation,
       float particleMomentum) const;
 
   /// Estimates the interaction type
@@ -190,7 +196,8 @@ struct NuclearInteraction {
   /// @return The final state multiplicity
   unsigned int finalStateMultiplicity(
       double rnd,
-      const detail::NuclearInteractionParameters::CumulativeDistribution& distribution) const;
+      const detail::NuclearInteractionParameters::CumulativeDistribution&
+          distribution) const;
 
   /// Evaluates the final state PDG IDs
   ///
@@ -203,10 +210,10 @@ struct NuclearInteraction {
   ///
   /// @return Vector containing the PDG IDs
   template <typename generator_t>
-  std::vector<int> samplePdgIds(generator_t& generator,
-                                const detail::NuclearInteractionParameters::PdgMap& pdgMap,
-                                unsigned int multiplicity, int particlePdg,
-                                bool soft) const;
+  std::vector<int> samplePdgIds(
+      generator_t& generator,
+      const detail::NuclearInteractionParameters::PdgMap& pdgMap,
+      unsigned int multiplicity, int particlePdg, bool soft) const;
 
   /// Evaluates the final state invariant masses
   ///
@@ -218,8 +225,8 @@ struct NuclearInteraction {
   template <typename generator_t>
   Acts::ActsDynamicVector sampleInvariantMasses(
       generator_t& generator,
-      const detail::NuclearInteractionParameters::ParametersWithFixedMultiplicity&
-          parametrisation) const;
+      const detail::NuclearInteractionParameters::
+          ParametersWithFixedMultiplicity& parametrisation) const;
 
   /// Evaluates the final state momenta
   ///
@@ -231,8 +238,8 @@ struct NuclearInteraction {
   template <typename generator_t>
   Acts::ActsDynamicVector sampleMomenta(
       generator_t& generator,
-      const detail::NuclearInteractionParameters::ParametersWithFixedMultiplicity&
-          parametrisation,
+      const detail::NuclearInteractionParameters::
+          ParametersWithFixedMultiplicity& parametrisation,
       float initialMomentum) const;
 
   /// Tests whether the final state momenta and invariant masses are
@@ -258,10 +265,10 @@ struct NuclearInteraction {
   /// @return The final state momenta and invariant masses
   template <typename generator_t>
   std::optional<std::pair<Acts::ActsDynamicVector, Acts::ActsDynamicVector>>
-  sampleKinematics(
-      generator_t& generator,
-      const detail::NuclearInteractionParameters::ParametersWithFixedMultiplicity& parameters,
-      float momentum) const;
+  sampleKinematics(generator_t& generator,
+                   const detail::NuclearInteractionParameters::
+                       ParametersWithFixedMultiplicity& parameters,
+                   float momentum) const;
 
   /// Converts relative angles to absolute angles wrt the global
   /// coordinate system.
@@ -309,7 +316,8 @@ struct NuclearInteraction {
   /// @return The sampled value
   unsigned int sampleDiscreteValues(
       double rnd,
-      const detail::NuclearInteractionParameters::CumulativeDistribution& distribution) const;
+      const detail::NuclearInteractionParameters::CumulativeDistribution&
+          distribution) const;
 
   /// This function performs an inverse sampling to provide a continuous
   /// value from a distribition.
@@ -322,13 +330,15 @@ struct NuclearInteraction {
   /// @return The sampled value
   Scalar sampleContinuousValues(
       double rnd,
-      const detail::NuclearInteractionParameters::CumulativeDistribution& distribution,
+      const detail::NuclearInteractionParameters::CumulativeDistribution&
+          distribution,
       bool interpolate = false) const;
 };
 
 template <typename generator_t>
 std::vector<int> NuclearInteraction::samplePdgIds(
-    generator_t& generator, const detail::NuclearInteractionParameters::PdgMap& pdgMap,
+    generator_t& generator,
+    const detail::NuclearInteractionParameters::PdgMap& pdgMap,
     unsigned int multiplicity, int particlePdg, bool soft) const {
   // Fast exit in case of no final state particles
   if (multiplicity == 0)
@@ -384,8 +394,8 @@ std::vector<int> NuclearInteraction::samplePdgIds(
 template <typename generator_t>
 Acts::ActsDynamicVector NuclearInteraction::sampleInvariantMasses(
     generator_t& generator,
-    const detail::NuclearInteractionParameters::ParametersWithFixedMultiplicity& parametrisation)
-    const {
+    const detail::NuclearInteractionParameters::ParametersWithFixedMultiplicity&
+        parametrisation) const {
   // The resulting vector
   Acts::ActsDynamicVector parameters;
   const unsigned int size = parametrisation.eigenvaluesInvariantMass.size();
@@ -413,7 +423,8 @@ Acts::ActsDynamicVector NuclearInteraction::sampleInvariantMasses(
 template <typename generator_t>
 Acts::ActsDynamicVector NuclearInteraction::sampleMomenta(
     generator_t& generator,
-    const detail::NuclearInteractionParameters::ParametersWithFixedMultiplicity& parametrisation,
+    const detail::NuclearInteractionParameters::ParametersWithFixedMultiplicity&
+        parametrisation,
     float initialMomentum) const {
   // The resulting vector
   Acts::ActsDynamicVector parameters;
@@ -450,7 +461,8 @@ template <typename generator_t>
 std::optional<std::pair<Acts::ActsDynamicVector, Acts::ActsDynamicVector>>
 NuclearInteraction::sampleKinematics(
     generator_t& generator,
-    const detail::NuclearInteractionParameters::ParametersWithFixedMultiplicity& parameters,
+    const detail::NuclearInteractionParameters::ParametersWithFixedMultiplicity&
+        parameters,
     float momentum) const {
   unsigned int trials = 0;
   Acts::ActsDynamicVector invariantMasses =

@@ -49,8 +49,9 @@ Acts::ActsDynamicVector readVector(const std::string&& vectorName) {
   return Acts::ActsDynamicVector();
 }
 
-void readKinematicParameters(ActsFatras::detail::NuclearInteractionParameters& parameters,
-                             TObject* folder, bool softInteractionParameters) {
+void readKinematicParameters(
+    ActsFatras::detail::NuclearInteractionParameters& parameters,
+    TObject* folder, bool softInteractionParameters) {
   if (folder->IsFolder()) {
     // Find the momentum and invariant mass distributions
     const char* distributionName = folder->GetName();
@@ -94,12 +95,12 @@ void readKinematicParameters(ActsFatras::detail::NuclearInteractionParameters& p
         invariantMassEigenvectors.size() != 0 &&
         invariantMassMean.size() != 0) {
       // Prepare and store the kinematic parameters
-      ActsFatras::detail::NuclearInteractionParameters::ParametersWithFixedMultiplicity
-          kinematicParameters(momentumDistributions, momentumEigenvalues,
-                              momentumEigenvectors, momentumMean,
-                              invariantMassDistributions,
-                              invariantMassEigenvalues,
-                              invariantMassEigenvectors, invariantMassMean);
+      ActsFatras::detail::NuclearInteractionParameters::
+          ParametersWithFixedMultiplicity kinematicParameters(
+              momentumDistributions, momentumEigenvalues, momentumEigenvectors,
+              momentumMean, invariantMassDistributions,
+              invariantMassEigenvalues, invariantMassEigenvectors,
+              invariantMassMean);
       if (softInteractionParameters) {
         if (mult >= parameters.softKinematicParameters.size())
           parameters.softKinematicParameters.resize(mult + 1);
