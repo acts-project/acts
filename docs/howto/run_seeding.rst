@@ -38,6 +38,7 @@ The following parameters for the seed finding are set in ``/acts/Examples/Run/Se
 
 
 You can run the seeding example with a comand like this:
+The detector volumes and layers used in the space point maker are configured using a json file in the source code.
 
 .. code-block:: console
 
@@ -46,7 +47,8 @@ You can run the seeding example with a comand like this:
 	--output-dir=output_generic_ttbar_pu200 \
         --bf-constant-tesla=0:0:2 \
 	--digi-smear \
-	--digi-config-file <source>/Examples/Algorithms/Digitization/share/default-smearing-config-generic.json
+	--digi-config-file <source>/Examples/Algorithms/Digitization/share/default-smearing-config-generic.json \
+        --geo-selection-config-file <source>/Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json
 
 After running this example, you should see something like this:
 
