@@ -51,18 +51,20 @@ struct ParticleSimulator {
   hit_surface_selector_t selectHitSurface;
   /// Local logger for debug output.
   std::shared_ptr<const Acts::Logger> localLogger = nullptr;
-  /// External logger for debug output.
-  Acts::LoggerWrapper externalLogger;
+  /// Wrapped logger for debug output.
+  Acts::LoggerWrapper Logger;
 
   /// Construct the simulator with the underlying propagator.
   ParticleSimulator(propagator_t &&propagator_, Acts::Logging::Level lvl)
       : propagator(propagator_),
-        localLogger(Acts::getDefaultLogger("Simulator", lvl)) {}
+        Logger(Acts::LoggerWrapper{Acts::getDefaultLogger("Simulator", lvl)}), {
+    
+  }
 
   /// Alternatively construct the simulator with an external logger.
   ParticleSimulator(propagator_t &&propagator_, Acts::LoggerWrapper exLogger_)
       : propagator(propagator_),
-        externalLogger(exLogger_) {}
+        Logger(exLogger_) {}
 
   /// Provide access to the local logger instance, e.g. for logging macros.
   const Acts::Logger &logger() const { return *localLogger; }
@@ -92,10 +94,7 @@ struct ParticleSimulator {
     using PropagatorOptions = Acts::PropagatorOptions<Actions, Abort>;
 
     // Construct per-call options.
-    PropagatorOptions options;
-    if(localLogger) options = 
-      new PropagatorOptions(geoCtx, magCtx, Acts::LoggerWrapper{*localLogger});
-    else options = new PropagatorOptions(geoCtx, magCtx, externalLogger);
+    PropagatorOptions options(geoCtx, magCtx, Logger);
     options.absPdgCode = Acts::makeAbsolutePdgParticle(particle.pdg());
     options.mass = particle.mass();
     // setup the interactor as part of the propagator options
