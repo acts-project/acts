@@ -10,10 +10,10 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Fatras/FatrasAlgorithm.hpp"
+//~ #include "ActsExamples/Fatras/FatrasAlgorithm.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 #include "ActsFatras/Physics/NuclearInteraction/NuclearInteraction.hpp"
-#include "ActsFatras/Physics/NuclearInteraction/Parameters.hpp"
+#include "ActsFatras/Physics/NuclearInteraction/NuclearInteractionParameters.hpp"
 
 #include <utility>
 
@@ -28,7 +28,7 @@ namespace Options {
 void addNuclearInteractionOptions(Description& desc);
 
 /// Reads the parametrisation and provides the parametrisation
-ActsFatras::detail::MultiParticleParametrisation readParametrisations(
+ActsFatras::detail::MultiParticleNuclearInteractionParametrisation readParametrisations(
     const std::string& fileName);
 
 /// Read Fatras options to create the algorithm config.

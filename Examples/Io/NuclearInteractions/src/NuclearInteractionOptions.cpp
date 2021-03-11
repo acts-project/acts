@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Fatras/NuclearInteractionOptions.hpp"
+#include "ActsExamples/Io/NuclearInteractions/NuclearInteractionOptions.hpp"
 
 #include "ActsExamples/Utilities/Options.hpp"
 
@@ -49,7 +49,7 @@ Acts::ActsDynamicVector readVector(const std::string&& vectorName) {
   return Acts::ActsDynamicVector();
 }
 
-void readKinematicParameters(ActsFatras::detail::Parameters& parameters,
+void readKinematicParameters(ActsFatras::detail::NuclearInteractionParameters& parameters,
                              TObject* folder, bool softInteractionParameters) {
   if (folder->IsFolder()) {
     // Find the momentum and invariant mass distributions
@@ -94,7 +94,7 @@ void readKinematicParameters(ActsFatras::detail::Parameters& parameters,
         invariantMassEigenvectors.size() != 0 &&
         invariantMassMean.size() != 0) {
       // Prepare and store the kinematic parameters
-      ActsFatras::detail::Parameters::ParametersWithFixedMultiplicity
+      ActsFatras::detail::NuclearInteractionParameters::ParametersWithFixedMultiplicity
           kinematicParameters(momentumDistributions, momentumEigenvalues,
                               momentumEigenvectors, momentumMean,
                               invariantMassDistributions,
@@ -131,13 +131,13 @@ std::string ActsExamples::Options::readNuclearInteractionConfig(
       .as<std::string>();
 }
 
-ActsFatras::detail::MultiParticleParametrisation
+ActsFatras::detail::MultiParticleNuclearInteractionParametrisation
 ActsExamples::Options::readParametrisations(const std::string& fileName) {
   // The collection
-  ActsFatras::detail::MultiParticleParametrisation mpp;
+  ActsFatras::detail::MultiParticleNuclearInteractionParametrisation mpp;
 
   // Now read file
-  ActsFatras::detail::Parametrisation parametrisation;
+  ActsFatras::detail::NuclearInteractionParametrisation parametrisation;
   TFile tf(fileName.c_str(), "read");
   gDirectory->cd();
   auto listOfParticles = gDirectory->GetListOfKeys();
@@ -152,7 +152,7 @@ ActsExamples::Options::readParametrisations(const std::string& fileName) {
     auto initialMomentum = listOfMomenta->First();
     while (initialMomentum) {
       // Parameters for a fixed inital momentum
-      ActsFatras::detail::Parameters parameters;
+      ActsFatras::detail::NuclearInteractionParameters parameters;
       // Get the initial momentum
       char const* nameMomentum = initialMomentum->GetName();
       parameters.momentum = std::stof(nameMomentum);

@@ -37,7 +37,7 @@ class FatrasAlgorithm final : public BareAlgorithm {
     /// The simulated hits output collection.
     std::string outputSimHits;
     /// Parametrisation of nuclear interaction
-    std::string imputParametrisation = "parameters";
+    std::string imputParametrisationNuclearInteraction = "nuclearInteractionParameters";
     /// Random number service.
     std::shared_ptr<const RandomNumbers> randomNumbers;
     /// The tracking geometry that should be used.

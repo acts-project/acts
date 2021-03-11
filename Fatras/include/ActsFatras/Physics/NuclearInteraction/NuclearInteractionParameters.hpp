@@ -16,7 +16,7 @@ namespace ActsFatras {
 namespace detail {
 
 /// @brief Data storage of the parametrized nuclear interaction
-struct Parameters {
+struct NuclearInteractionParameters {
   using CumulativeDistribution =
       std::pair<std::vector<float>, std::vector<uint32_t>>;
   using Distributions = std::vector<CumulativeDistribution>;
@@ -97,9 +97,9 @@ struct Parameters {
 };
 
 /// Parametrisation of a single particle
-using Parametrisation = std::vector<std::pair<float, Parameters>>;
+using NuclearInteractionParametrisation = std::vector<std::pair<float, NuclearInteractionParameters>>;
 /// Parametrisation of multiple particles
-using MultiParticleParametrisation =
-    std::vector<std::pair<int, Parametrisation>>;
+using MultiParticleNuclearInteractionParametrisation =
+    std::vector<std::pair<int, NuclearInteractionParametrisation>>;
 }  // namespace detail
 }  // namespace ActsFatras

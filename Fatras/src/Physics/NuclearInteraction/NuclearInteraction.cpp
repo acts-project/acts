@@ -10,8 +10,8 @@
 
 namespace ActsFatras {
 
-const detail::Parameters& NuclearInteraction::findParameters(
-    double rnd, const detail::Parametrisation& parametrisation,
+const detail::NuclearInteractionParameters& NuclearInteraction::findParameters(
+    double rnd, const detail::NuclearInteractionParametrisation& parametrisation,
     float particleMomentum) const {
   // Return lowest/highest if momentum outside the boundary
   if (particleMomentum <= parametrisation.front().first)
@@ -22,7 +22,7 @@ const detail::Parameters& NuclearInteraction::findParameters(
   // Find the two neighbouring parametrisations
   const auto lowerBound = std::lower_bound(
       parametrisation.begin(), parametrisation.end(), particleMomentum,
-      [](const std::pair<const float, ActsFatras::detail::Parameters>& params,
+      [](const std::pair<const float, ActsFatras::detail::NuclearInteractionParameters>& params,
          const float mom) { return params.first < mom; });
   const float momentumUpperNeighbour = lowerBound->first;
   const float momentumLowerNeighbour = std::prev(lowerBound, 1)->first;
@@ -35,7 +35,7 @@ const detail::Parameters& NuclearInteraction::findParameters(
 
 unsigned int NuclearInteraction::sampleDiscreteValues(
     double rnd,
-    const detail::Parameters::CumulativeDistribution& distribution) const {
+    const detail::NuclearInteractionParameters::CumulativeDistribution& distribution) const {
   // Fast exit
   if (distribution.second.empty()) {
     return 0;
@@ -53,7 +53,7 @@ unsigned int NuclearInteraction::sampleDiscreteValues(
 }
 
 Particle::Scalar NuclearInteraction::sampleContinuousValues(
-    double rnd, const detail::Parameters::CumulativeDistribution& distribution,
+    double rnd, const detail::NuclearInteractionParameters::CumulativeDistribution& distribution,
     bool interpolate) const {
   // Fast exit
   if (distribution.second.empty()) {
@@ -84,7 +84,7 @@ Particle::Scalar NuclearInteraction::sampleContinuousValues(
 
 unsigned int NuclearInteraction::finalStateMultiplicity(
     double rnd,
-    const detail::Parameters::CumulativeDistribution& distribution) const {
+    const detail::NuclearInteractionParameters::CumulativeDistribution& distribution) const {
   return sampleDiscreteValues(rnd, distribution);
 }
 
