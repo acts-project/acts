@@ -22,7 +22,7 @@
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
-#include "ActsExamples/TrackFinding/SpacePointOptions.hpp"
+#include "ActsExamples/TrackFinding/SpacePointMakerOptions.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
@@ -48,7 +48,7 @@ int runSeedingExample(int argc, char* argv[],
   Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
   Options::addInputOptions(desc);
   Options::addMagneticFieldOptions(desc);
-  Options::addSpacePointOptions(desc);
+  Options::addSpacePointMakerOptions(desc);
   Options::addDigitizationOptions(desc);
   // Add specific options for this geometry
   detector->addOptions(desc);
@@ -107,7 +107,7 @@ int runSeedingExample(int argc, char* argv[],
   const auto& inputParticles = particleSelectorCfg.outputParticles;
 
   // Create space points
-  SpacePointMaker::Config spCfg = Options::readSpacePointConfig(vm);
+  SpacePointMaker::Config spCfg = Options::readSpacePointMakerConfig(vm);
   spCfg.inputSourceLinks = digiCfg.outputSourceLinks;
   spCfg.inputMeasurements = digiCfg.outputMeasurements;
   spCfg.outputSpacePoints = "spacepoints";

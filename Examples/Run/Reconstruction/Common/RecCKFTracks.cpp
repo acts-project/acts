@@ -25,7 +25,7 @@
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
-#include "ActsExamples/TrackFinding/SpacePointOptions.hpp"
+#include "ActsExamples/TrackFinding/SpacePointMakerOptions.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingOptions.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
@@ -73,7 +73,7 @@ int runRecCKFTracks(int argc, char* argv[],
   Options::addTrackFindingOptions(desc);
   addRecCKFOptions(desc);
   Options::addDigitizationOptions(desc);
-  Options::addSpacePointOptions(desc);
+  Options::addSpacePointMakerOptions(desc);
 
   auto vm = Options::parse(desc, argc, argv);
   if (vm.empty()) {
@@ -138,7 +138,7 @@ int runRecCKFTracks(int argc, char* argv[],
     outputTrackParameters = particleSmearingCfg.outputTrackParameters;
   } else {
     // Create space points
-    SpacePointMaker::Config spCfg = Options::readSpacePointConfig(vm);
+    SpacePointMaker::Config spCfg = Options::readSpacePointMakerConfig(vm);
     spCfg.inputSourceLinks = digiCfg.outputSourceLinks;
     spCfg.inputMeasurements = digiCfg.outputMeasurements;
     spCfg.outputSpacePoints = "spacepoints";

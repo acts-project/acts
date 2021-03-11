@@ -17,12 +17,12 @@ namespace Options {
 /// Add SpacePointMaker options.
 ///
 /// @param desc The options description to add options to
-void addSpacePointOptions(Description& desc);
+void addSpacePointMakerOptions(Description& desc);
 
 /// Read SpacePointMaker options to create the algorithm config.
 ///
 /// @param variables The variables to read from
-SpacePointMaker::Config readSpacePointConfig(const Variables& variables);
+SpacePointMaker::Config readSpacePointMakerConfig(const Variables& variables);
 
 }  // namespace Options
 }  // namespace ActsExamples

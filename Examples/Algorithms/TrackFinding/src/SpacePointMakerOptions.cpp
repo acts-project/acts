@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TrackFinding/SpacePointOptions.hpp"
+#include "ActsExamples/TrackFinding/SpacePointMakerOptions.hpp"
 
 #include "ActsExamples/Io/Json/JsonGeometryList.hpp"
 
@@ -14,7 +14,7 @@
 
 #include <boost/program_options.hpp>
 
-void ActsExamples::Options::addSpacePointOptions(
+void ActsExamples::Options::addSpacePointMakerOptions(
     ActsExamples::Options::Description& desc) {
   using boost::program_options::value;
 
@@ -24,7 +24,7 @@ void ActsExamples::Options::addSpacePointOptions(
 }
 
 ActsExamples::SpacePointMaker::Config
-ActsExamples::Options::readSpacePointConfig(
+ActsExamples::Options::readSpacePointMakerConfig(
     const ActsExamples::Options::Variables& variables) {
   SpacePointMaker::Config cfg;
   std::string path{variables["geo-selection-config-file"].as<std::string>()};
