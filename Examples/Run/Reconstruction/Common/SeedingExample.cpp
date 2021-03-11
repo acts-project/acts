@@ -38,7 +38,7 @@ using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
 
 int runSeedingExample(int argc, char* argv[],
-                      std::shared_ptr<ActsExamples::IBaseDetector> detector){
+                      std::shared_ptr<ActsExamples::IBaseDetector> detector) {
   // Setup and parse options
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
