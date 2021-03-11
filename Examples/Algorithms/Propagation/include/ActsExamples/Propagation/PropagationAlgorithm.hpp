@@ -71,7 +71,7 @@ class PropagationAlgorithm : public BareAlgorithm {
 
     /// proapgation mode
     int mode = 0;
-    /// Switch the logger to sterila
+    /// Switch the logger to sterile
     bool sterileLogger = false;
     /// debug output
     bool debugOutput = false;
