@@ -88,7 +88,6 @@ PropagationOutput PropagationAlgorithm<propagator_t>::executeTest(
     // Set a maximum step size
     options.maxStepSize = m_cfg.maxStepSize;
 
-
     // Propagate using the propagator
     auto result = m_cfg.propagator.propagate(startParameters, options);
     if (result.ok()) {
