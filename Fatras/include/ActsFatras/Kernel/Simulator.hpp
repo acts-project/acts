@@ -57,7 +57,7 @@ struct ParticleSimulator {
   /// Construct the simulator with the underlying propagator.
   ParticleSimulator(propagator_t &&propagator_, Acts::Logging::Level lvl)
       : propagator(propagator_),
-        Logger(Acts::LoggerWrapper{Acts::getDefaultLogger("Simulator", lvl)}), {
+        Logger(Acts::LoggerWrapper(*Acts::getDefaultLogger("Simulator", lvl))) {
     
   }
 
