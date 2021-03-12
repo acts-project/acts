@@ -344,7 +344,7 @@ ActsExamples::RootNuclearInteractionParametersWriter::
 
 ActsExamples::ProcessCode
 ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
-std::cout << "End Run called" << std::endl;
+  std::cout << "End Run called" << std::endl;
   namespace Parametrisation = detail::NuclearInteractionParametrisation;
   if (m_eventFractionCollection.empty())
     return ProcessCode::ABORT;
@@ -367,7 +367,7 @@ std::cout << "End Run called" << std::endl;
       std::to_string(m_eventFractionCollection[0].initialMomentum).c_str());
   gDirectory->mkdir("soft");
   gDirectory->mkdir("hard");
-  
+
   // Write the nuclear interaction probability
   ACTS_DEBUG("Starting parametrisation of nuclear interaction probability");
   const auto nuclearInteractionProbability =
@@ -438,14 +438,14 @@ std::cout << "End Run called" << std::endl;
   const auto multProbHard = buildMap(multiplicity.second);
   gDirectory->WriteObject(&multProbHard.first, "MultiplicityBinBorders");
   gDirectory->WriteObject(&multProbHard.second, "MultiplicityBinContents");
-  
+
   for (unsigned int i = 1; i <= m_cfg.multiplicityMax; i++) {
     ACTS_DEBUG("Starting parametrisation of final state kinematics for hard " +
                std::to_string(i) + " particle(s) final state");
     recordKinematicParametrisation(m_eventFractionCollection, false, i, m_cfg);
     ACTS_DEBUG("Parametrisation of final state kinematics for hard " +
                std::to_string(i) + " particle(s) final state finished");
-  }  
+  }
   gDirectory->cd();
   tf->Write();
   tf->Close();
@@ -456,7 +456,7 @@ ActsExamples::ProcessCode
 ActsExamples::RootNuclearInteractionParametersWriter::writeT(
     const AlgorithmContext& /*ctx*/,
     const ExtractedSimulationProcessContainer& event) {
-std::cout << "writeT called" << std::endl;
+  std::cout << "writeT called" << std::endl;
   // Convert the tuple to use additional categorisation variables
   std::vector<detail::NuclearInteractionParametrisation::EventFraction>
       eventFractions;

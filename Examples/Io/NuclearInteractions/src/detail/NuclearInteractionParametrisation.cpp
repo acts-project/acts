@@ -93,8 +93,8 @@ Parametrisation buildMomentumParameters(const EventCollection& events,
                                         unsigned int nBins) {
   // Strip off data
   auto momenta = prepareMomenta(events, multiplicity, soft);
-  if(momenta.empty())
-	return Parametrisation();
+  if (momenta.empty())
+    return Parametrisation();
 
   // Build histos
   ProbabilityDistributions histos = buildMomPerMult(momenta, nBins);
@@ -220,8 +220,8 @@ Parametrisation buildInvariantMassParameters(const EventCollection& events,
                                              bool soft, unsigned int nBins) {
   // Strip off data
   auto invariantMasses = prepareInvariantMasses(events, multiplicity, soft);
-  if(invariantMasses.empty())
-	return Parametrisation();
+  if (invariantMasses.empty())
+    return Parametrisation();
 
   // Build histos
   ProbabilityDistributions histos = buildMomPerMult(invariantMasses, nBins);
@@ -255,33 +255,30 @@ cumulativePDGprobability(const EventCollection& events) {
 
   // Build a cumulative distribution
   for (const auto& element : counter) {
-	  float sum = 0;
-	auto prevIt = counter[element.first].begin();
+    float sum = 0;
+    auto prevIt = counter[element.first].begin();
     for (auto it1 = counter[element.first].begin();
          it1 != counter[element.first].end(); it1++) {
-		float binEntry = 0;
-		if(it1 == counter[element.first].begin())
-		{
-			binEntry = it1->second;
-			prevIt = it1;
-		}
-		else
-		{
-			binEntry = it1->second - prevIt->second;
-			prevIt = it1;
-		}
+      float binEntry = 0;
+      if (it1 == counter[element.first].begin()) {
+        binEntry = it1->second;
+        prevIt = it1;
+      } else {
+        binEntry = it1->second - prevIt->second;
+        prevIt = it1;
+      }
       // Add content to next bins
       for (auto it2 = std::next(it1, 1); it2 != counter[element.first].end();
            it2++) {
-		it2->second += binEntry;
-		sum = it2->second;
+        it2->second += binEntry;
+        sum = it2->second;
       }
     }
-          // Normalise the entry
+    // Normalise the entry
     for (auto it1 = counter[element.first].begin();
          it1 != counter[element.first].end(); it1++) {
-			 it1->second /= sum;
-		 }
+      it1->second /= sum;
+    }
   }
   return counter;
 }
@@ -305,10 +302,12 @@ cumulativeMultiplicityProbability(const EventCollection& events,
   }
 
   // Build and fill the histograms
-  TH1F* softHisto = new TH1F("", "", std::min(maxSoft, multiplicityMax) + 1 - minSoft,
-                             minSoft, std::min(maxSoft, multiplicityMax) + 1);
-  TH1F* hardHisto = new TH1F("", "", std::min(maxHard, multiplicityMax) + 1 - minHard,
-                             minHard, std::min(maxHard, multiplicityMax) + 1);
+  TH1F* softHisto =
+      new TH1F("", "", std::min(maxSoft, multiplicityMax) + 1 - minSoft,
+               minSoft, std::min(maxSoft, multiplicityMax) + 1);
+  TH1F* hardHisto =
+      new TH1F("", "", std::min(maxHard, multiplicityMax) + 1 - minHard,
+               minHard, std::min(maxHard, multiplicityMax) + 1);
   for (const EventFraction& event : events) {
     if (event.multiplicity <= multiplicityMax) {
       if (event.soft)
