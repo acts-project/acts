@@ -83,7 +83,7 @@ PropagationOutput PropagationAlgorithm<propagator_t>::executeTest(
     mInteractor.recordInteractions = m_cfg.recordMaterialInteractions;
 
     // Switch the logger to sterile, e.g. for timing checks
-    auto sLogger = options.actionList.get<SteppingLogger>();
+    auto& sLogger = options.actionList.get<SteppingLogger>();
     sLogger.sterile = m_cfg.sterileLogger;
     // Set a maximum step size
     options.maxStepSize = m_cfg.maxStepSize;
