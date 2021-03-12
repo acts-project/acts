@@ -42,8 +42,7 @@ using namespace Acts::UnitLiterals;
 /// with s being the arc length of the track, q the charge of the particle,
 /// p the momentum magnitude and B the magnetic field
 ///
-template <typename bfield_t,
-          typename extensionlist_t = StepperExtensionList<DefaultExtension>,
+template <typename extensionlist_t = StepperExtensionList<DefaultExtension>,
           typename auctioneer_t = detail::VoidAuctioneer>
 class EigenStepper {
  public:
@@ -53,7 +52,6 @@ class EigenStepper {
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
-  using BField = bfield_t;
 
   /// @brief State for track parameter propagation
   ///
@@ -76,7 +74,7 @@ class EigenStepper {
     /// @note the covariance matrix is copied when needed
     template <typename charge_t>
     explicit State(const GeometryContext& gctx,
-                   const MagneticFieldContext& mctx,
+                   MagneticFieldProvider::Cache fieldCacheIn,
                    const SingleBoundTrackParameters<charge_t>& par,
                    NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max(),
@@ -85,9 +83,7 @@ class EigenStepper {
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
-          fieldCache(
-              MagneticFieldProvider::Cache::make<typename bfield_t::Cache>(
-                  mctx)),
+          fieldCache(std::move(fieldCacheIn)),
           geoContext(gctx) {
       pars.template segment<3>(eFreePos0) = par.position(gctx);
       pars.template segment<3>(eFreeDir0) = par.unitDirection();
@@ -169,7 +165,15 @@ class EigenStepper {
   };
 
   /// Constructor requires knowledge of the detector's magnetic field
-  EigenStepper(BField bField);
+  EigenStepper(std::shared_ptr<const MagneticFieldProvider> bField);
+
+  template <typename charge_t>
+  State makeState(std::reference_wrapper<const GeometryContext> gctx,
+                  std::reference_wrapper<const MagneticFieldContext> mctx,
+                  const SingleBoundTrackParameters<charge_t>& par,
+                  NavigationDirection ndir = forward,
+                  double ssize = std::numeric_limits<double>::max(),
+                  double stolerance = s_onSurfaceTolerance) const;
 
   /// @brief Resets the state
   ///
@@ -192,7 +196,7 @@ class EigenStepper {
   /// @param [in] pos is the field position
   Vector3 getField(State& state, const Vector3& pos) const {
     // get the field from the cell
-    return m_bField.getField(pos, state.fieldCache);
+    return m_bField->getField(pos, state.fieldCache);
   }
 
   /// Global particle position accessor
@@ -304,8 +308,8 @@ class EigenStepper {
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  BoundState boundState(State& state, const Surface& surface,
-                        bool transportCov = true) const;
+  Result<BoundState> boundState(State& state, const Surface& surface,
+                                bool transportCov = true) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -373,7 +377,7 @@ class EigenStepper {
 
  private:
   /// Magnetic field inside of the detector
-  BField m_bField;
+  std::shared_ptr<const MagneticFieldProvider> m_bField;
 
   /// Overstep limit: could/should be dynamic
   double m_overstepLimit = 100_um;

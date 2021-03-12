@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,6 +12,9 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
+#include "ActsFatras/Physics/ElectroMagnetic/detail/GaussianMixture.hpp"
+#include "ActsFatras/Physics/ElectroMagnetic/detail/GeneralMixture.hpp"
+#include "ActsFatras/Physics/ElectroMagnetic/detail/Highland.hpp"
 
 #include <array>
 #include <random>
@@ -23,7 +26,7 @@ namespace detail {
 ///
 /// @tparam scattering_model_t Model implementation to draw a scattering angle.
 template <typename scattering_model_t>
-struct Scattering {
+struct ScatteringImpl {
   /// The scattering formula
   scattering_model_t angle;
 
@@ -71,4 +74,10 @@ struct Scattering {
 };
 
 }  // namespace detail
+
+using GaussianMixtureScattering =
+    detail::ScatteringImpl<detail::GaussianMixture>;
+using GeneralMixtureScattering = detail::ScatteringImpl<detail::GeneralMixture>;
+using HighlandScattering = detail::ScatteringImpl<detail::Highland>;
+
 }  // namespace ActsFatras

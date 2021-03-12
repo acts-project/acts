@@ -50,10 +50,10 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
   /// contains shared_ptr anyways.
   static TrackFitterFunction makeTrackFitterFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-      MagneticField magneticField);
+      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
 
   static DirectedTrackFitterFunction makeTrackFitterFunction(
-      MagneticField magneticField);
+      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
 
   struct Config {
     /// Input measurements collection.

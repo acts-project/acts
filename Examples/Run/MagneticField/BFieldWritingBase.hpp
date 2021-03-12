@@ -18,7 +18,7 @@ namespace BField {
 
 template <typename bfield_t>
 void writeField(boost::program_options::variables_map vm,
-                std::shared_ptr<const bfield_t> bField) {
+                const bfield_t& bField) {
   using Writer = ActsExamples::RootBFieldWriter<bfield_t>;
   using Config = typename Writer::Config;
   using GridType = typename Writer::GridType;
@@ -32,7 +32,7 @@ void writeField(boost::program_options::variables_map vm,
   }
   writerConfig.treeName = vm["bf-map-out"].template as<std::string>();
   writerConfig.fileName = vm["bf-file-out"].template as<std::string>();
-  writerConfig.bField = bField;
+  writerConfig.bField = &bField;
   std::cout << "setting rBounds" << std::endl;
   if (vm.count("bf-rRange") && vm.count("bf-zRange")) {
     auto rBounds = vm["bf-rRange"].template as<Options::Reals<2>>();

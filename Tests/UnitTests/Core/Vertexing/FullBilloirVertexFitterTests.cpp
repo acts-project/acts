@@ -29,8 +29,7 @@ namespace Acts {
 namespace Test {
 
 using Covariance = BoundSymMatrix;
-using Linearizer =
-    HelicalTrackLinearizer<Propagator<EigenStepper<ConstantBField>>>;
+using Linearizer = HelicalTrackLinearizer<Propagator<EigenStepper<>>>;
 
 // Create a test context
 GeometryContext geoContext = GeometryContext();
@@ -40,14 +39,13 @@ MagneticFieldContext magFieldContext = MagneticFieldContext();
 ///
 BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
   // Set up constant B-Field
-  ConstantBField bField(0.0, 0.0, 1_T);
+  auto bField = std::make_shared<ConstantBField>(0.0, 0.0, 1_T);
 
   // Set up Eigenstepper
-  EigenStepper<ConstantBField> stepper(bField);
+  EigenStepper<> stepper(bField);
 
   // Set up propagator with void navigator
-  auto propagator =
-      std::make_shared<Propagator<EigenStepper<ConstantBField>>>(stepper);
+  auto propagator = std::make_shared<Propagator<EigenStepper<>>>(stepper);
 
   Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
@@ -57,7 +55,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
       FullBilloirVertexFitter<BoundTrackParameters, Linearizer>;
   VertexFitter::Config vertexFitterCfg;
   VertexFitter billoirFitter(vertexFitterCfg);
-  VertexFitter::State state(magFieldContext);
+  VertexFitter::State state(bField->makeCache(magFieldContext));
 
   // Constraint for vertex fit
   Vertex<BoundTrackParameters> myConstraint;
@@ -125,13 +123,12 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   int mySeed = 31415;
   std::mt19937 gen(mySeed);
   // Set up constant B-Field
-  ConstantBField bField(0.0, 0.0, 1_T);
+  auto bField = std::make_shared<ConstantBField>(0.0, 0.0, 1_T);
 
   // Set up Eigenstepper
-  EigenStepper<ConstantBField> stepper(bField);
+  EigenStepper<> stepper(bField);
   // Set up propagator with void navigator
-  auto propagator =
-      std::make_shared<Propagator<EigenStepper<ConstantBField>>>(stepper);
+  auto propagator = std::make_shared<Propagator<EigenStepper<>>>(stepper);
 
   Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
@@ -147,7 +144,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
         FullBilloirVertexFitter<BoundTrackParameters, Linearizer>;
     VertexFitter::Config vertexFitterCfg;
     VertexFitter billoirFitter(vertexFitterCfg);
-    VertexFitter::State state(magFieldContext);
+    VertexFitter::State state(bField->makeCache(magFieldContext));
     // Constraint for vertex fit
     Vertex<BoundTrackParameters> myConstraint;
     // Some abitrary values
@@ -255,14 +252,13 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
   std::mt19937 gen(mySeed);
 
   // Set up constant B-Field
-  ConstantBField bField(0.0, 0.0, 1_T);
+  auto bField = std::make_shared<ConstantBField>(0.0, 0.0, 1_T);
 
   // Set up Eigenstepper
-  EigenStepper<ConstantBField> stepper(bField);
+  EigenStepper<> stepper(bField);
 
   // Set up propagator with void navigator
-  auto propagator =
-      std::make_shared<Propagator<EigenStepper<ConstantBField>>>(stepper);
+  auto propagator = std::make_shared<Propagator<EigenStepper<>>>(stepper);
 
   Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
@@ -281,7 +277,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
     using VertexFitter = FullBilloirVertexFitter<InputTrack, Linearizer>;
     VertexFitter::Config vertexFitterCfg;
     VertexFitter billoirFitter(vertexFitterCfg, extractParameters);
-    VertexFitter::State state(magFieldContext);
+    VertexFitter::State state(bField->makeCache(magFieldContext));
 
     // Constraint for vertex fit
     Vertex<InputTrack> myConstraint;

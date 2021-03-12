@@ -21,8 +21,8 @@
 #include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/SimulationResult.hpp"
-#include "ActsFatras/Kernel/detail/Interactor.hpp"
-#include "ActsFatras/Kernel/detail/SimulatorError.hpp"
+#include "ActsFatras/Kernel/detail/SimulationActor.hpp"
+#include "ActsFatras/Kernel/detail/SimulationError.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -32,7 +32,7 @@
 
 namespace ActsFatras {
 
-/// Single particle simulator with a fixed propagator and physics list.
+/// Single particle simulation with fixed propagator, interactions, and decay.
 ///
 /// @tparam generator_t random number generator
 /// @tparam interactions_t interaction list
@@ -40,7 +40,7 @@ namespace ActsFatras {
 /// @tparam decay_t decay module
 template <typename propagator_t, typename interactions_t,
           typename hit_surface_selector_t, typename decay_t>
-struct ParticleSimulator {
+struct SingleParticleSimulation {
   /// How and within which geometry to propagate the particle.
   propagator_t propagator;
   /// Decay module.
@@ -55,7 +55,7 @@ struct ParticleSimulator {
   std::shared_ptr<const Acts::Logger> localLogger = nullptr;
 
   /// Construct the simulator with the underlying propagator.
-  ParticleSimulator(propagator_t &&propagator_, Acts::Logging::Level lvl)
+  SingleParticleSimulation(propagator_t &&propagator_, Acts::Logging::Level lvl)
       : propagator(propagator_),
         localLogger(Acts::getDefaultLogger("Simulation", lvl)) {
     Logger = Acts::LoggerWrapper(*localLogger);
@@ -70,25 +70,25 @@ struct ParticleSimulator {
 
   /// Simulate a single particle without secondaries.
   ///
+  /// @tparam generator_t is the type of the random number generator
+  ///
   /// @param geoCtx is the geometry context to access surface geometries
   /// @param magCtx is the magnetic field context to access field values
   /// @param generator is the random number generator
   /// @param particle is the initial particle state
-  /// @returns the result of the corresponding Interactor propagator action.
-  ///
-  /// @tparam generator_t is the type of the random number generator
+  /// @returns Simulated particle state, hits, and generated particles.
   template <typename generator_t>
   Acts::Result<SimulationResult> simulate(
       const Acts::GeometryContext &geoCtx,
       const Acts::MagneticFieldContext &magCtx, generator_t &generator,
       const Particle &particle) const {
     // propagator-related additional types
-    using Interactor = detail::Interactor<generator_t, decay_t, interactions_t,
+    using Actor = detail::SimulationActor<generator_t, decay_t, interactions_t,
                                           hit_surface_selector_t>;
-    using InteractorResult = typename Interactor::result_type;
-    using Actions = Acts::ActionList<Interactor>;
-    using Abort = Acts::AbortList<typename Interactor::ParticleNotAlive,
-                                  Acts::EndOfWorldReached>;
+    using Aborter = typename Actor::ParticleNotAlive;
+    using Result = typename Actor::result_type;
+    using Actions = Acts::ActionList<Actor>;
+    using Abort = Acts::AbortList<Aborter, Acts::EndOfWorldReached>;
     using PropagatorOptions = Acts::PropagatorOptions<Actions, Abort>;
 
     // Construct per-call options.
@@ -96,12 +96,12 @@ struct ParticleSimulator {
     options.absPdgCode = Acts::makeAbsolutePdgParticle(particle.pdg());
     options.mass = particle.mass();
     // setup the interactor as part of the propagator options
-    auto &interactor = options.actionList.template get<Interactor>();
-    interactor.generator = &generator;
-    interactor.decay = decay;
-    interactor.interactions = interactions;
-    interactor.selectHitSurface = selectHitSurface;
-    interactor.initialParticle = particle;
+    auto &actor = options.actionList.template get<Actor>();
+    actor.generator = &generator;
+    actor.decay = decay;
+    actor.interactions = interactions;
+    actor.selectHitSurface = selectHitSurface;
+    actor.initialParticle = particle;
     // use AnyCharge to be able to handle neutral and charged parameters
     Acts::SingleCurvilinearTrackParameters<Acts::AnyCharge> start(
         particle.fourPosition(), particle.unitDirection(),
@@ -110,7 +110,7 @@ struct ParticleSimulator {
     if (not result.ok()) {
       return result.error();
     }
-    auto &value = result.value().template get<InteractorResult>();
+    auto &value = result.value().template get<Result>();
 
     return std::move(value);
   }
@@ -128,22 +128,26 @@ struct FailedParticle {
   std::error_code error;
 };
 
-/// Multi-particle simulator.
+/// Multi-particle/event simulation.
 ///
 /// @tparam charged_selector_t Callable selector type for charged particles
 /// @tparam charged_simulator_t Single particle simulator for charged particles
 /// @tparam neutral_selector_t Callable selector type for neutral particles
 /// @tparam neutral_simulator_t Single particle simulator for neutral particles
+///
+/// The selector types for charged and neutral particles **do not** need to
+/// check for the particle charge. This is done automatically by the simulator
+/// to ensure consistency.
 template <typename charged_selector_t, typename charged_simulator_t,
           typename neutral_selector_t, typename neutral_simulator_t>
-struct Simulator {
+struct Simulation {
   charged_selector_t selectCharged;
   neutral_selector_t selectNeutral;
   charged_simulator_t charged;
   neutral_simulator_t neutral;
 
   /// Construct from the single charged/neutral particle simulators.
-  Simulator(charged_simulator_t &&charged_, neutral_simulator_t &&neutral_)
+  Simulation(charged_simulator_t &&charged_, neutral_simulator_t &&neutral_)
       : charged(std::move(charged_)), neutral(std::move(neutral_)) {}
 
   /// Simulate multiple particles and generated secondaries.
@@ -193,7 +197,7 @@ struct Simulator {
         (simulatedParticlesInitial.size() == simulatedParticlesFinal.size()) and
         "Inconsistent initial sizes of the simulated particle containers");
 
-    using ParticleSimulatorResult = Acts::Result<SimulationResult>;
+    using SingleParticleSimulationResult = Acts::Result<SimulationResult>;
 
     std::vector<FailedParticle> failedParticles;
 
@@ -205,7 +209,7 @@ struct Simulator {
       // required to allow correct particle id numbering for secondaries later
       if ((inputParticle.particleId().generation() != 0u) or
           (inputParticle.particleId().subParticle() != 0u)) {
-        return detail::SimulatorError::eInvalidInputParticleId;
+        return detail::SimulationError::eInvalidInputParticleId;
       }
 
       // Do a *depth-first* simulation of the particle and its secondaries,
@@ -222,10 +226,11 @@ struct Simulator {
       for (; iinitial < simulatedParticlesInitial.size(); ++iinitial) {
         const auto &initialParticle = simulatedParticlesInitial[iinitial];
 
-        // only simulatable particles are pushed to the container.
-        // they must therefore be either charged or neutral.
-        ParticleSimulatorResult result = ParticleSimulatorResult::success({});
-        if (selectCharged(initialParticle)) {
+        // only simulatable particles are pushed to the container and here we
+        // only need to switch between charged/neutral.
+        SingleParticleSimulationResult result =
+            SingleParticleSimulationResult::success({});
+        if (initialParticle.charge() != Particle::Scalar(0)) {
           result = charged.simulate(geoCtx, magCtx, generator, initialParticle);
         } else {
           result = neutral.simulate(geoCtx, magCtx, generator, initialParticle);
@@ -260,19 +265,15 @@ struct Simulator {
 
  private:
   /// Select if the particle should be simulated at all.
-  ///
-  /// This also enforces mutual-exclusivity of the two charge selections. If
-  /// both charge selections evaluate true, they are probably not setup
-  /// correctly and not simulating them at all is a reasonable fall-back.
   bool selectParticle(const Particle &particle) const {
-    const bool isValidCharged = selectCharged(particle);
-    const bool isValidNeutral = selectNeutral(particle);
-    assert(not(isValidCharged and isValidNeutral) and
-           "Charge selectors are not mutually exclusive");
-    return isValidCharged xor isValidNeutral;
+    if (particle.charge() != Particle::Scalar(0)) {
+      return selectCharged(particle);
+    } else {
+      return selectNeutral(particle);
+    }
   }
 
-  /// Copy Interactor results to output containers.
+  /// Copy results to output containers.
   ///
   /// @tparam particles_t is a SequenceContainer for particles
   /// @tparam hits_t is a SequenceContainer for hits

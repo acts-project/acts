@@ -144,11 +144,16 @@ struct PropagatorState {
       return state.stepSize.toString();
     }
 
-    BoundState boundState(State& state, const Surface& surface, bool /*unused*/
+    Result<BoundState> boundState(State& state, const Surface& surface,
+                                  bool /*unused*/
     ) const {
-      BoundTrackParameters parameters(surface.getSharedPtr(), tgContext,
-                                      state.pos4, state.dir, state.p, state.q);
-      BoundState bState{std::move(parameters), Jacobian::Identity(),
+      auto bound =
+          BoundTrackParameters::create(surface.getSharedPtr(), tgContext,
+                                       state.pos4, state.dir, state.p, state.q);
+      if (!bound.ok()) {
+        return bound.error();
+      }
+      BoundState bState{std::move(*bound), Jacobian::Identity(),
                         state.pathAccumulated};
       return bState;
     }

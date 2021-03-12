@@ -47,6 +47,8 @@ class CsvMeasurementReader final : public IReader {
     std::string outputMeasurements;
     /// Output measurement to sim hit collection.
     std::string outputMeasurementSimHitsMap;
+    /// Output source links collection.
+    std::string outputSourceLinks;
     /// Output cluster collection (optional).
     std::string outputClusters;
   };
