@@ -59,8 +59,27 @@ struct DigitizedCluster {
   DigitizedCluster(std::set<hit_t> hits)
       : simHits(std::move(hits)), params(){};
 
-  void addSmearedParams(const std::unordered_map<hit_t, ActsExamples::DigitizedParameters>& smearedMap) {
-    // TODO
+  template <typename T>
+  void addSmearedParams(const std::unordered_map<hit_t, ActsExamples::DigitizedParameters>& smearedMap, const T& smearIdx) {
+
+    std::vector<Acts::ActsScalar> values(smearIdx.size(), 0);
+    std::vector<Acts::ActsScalar> variances(smearIdx.size(), 0);
+    Acts::ActsScalar norm = 1.0 / simHits.size();
+
+    for (hit_t hit : simHits) {
+      auto parItr = smearedMap.find(hit);
+      if (parItr != smearedMap.end()) {
+	for (size_t i = 0; i < smearIdx.size(); i++) {
+	  values.at(i) += parItr->second.values.at(i) * norm;
+	  variances.at(i) += parItr->second.variances.at(i) * norm * norm;
+	}
+      }
+    }
+    for (size_t i = 0; i < smearIdx.size(); i++) {
+      params.indices.push_back(smearIdx.at(i));
+      params.values.push_back(values.at(i));
+      params.variances.push_back(values.at(i));
+    }
   }
 };
 
@@ -294,7 +313,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
             DigitizedCluster dClus(std::move(cluster.simHits));
             dClus.params =
                 localParameters(digitizer.geometric, cluster.cells, rng);
-	    dClus.addSmearedParams(smearedMap);
+	    dClus.addSmearedParams(smearedMap, digitizer.smearing.indices);
 
             // Check on success - threshold could have eliminated all channels
             if (dClus.params.values.empty()) {
