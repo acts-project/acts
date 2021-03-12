@@ -59,4 +59,6 @@ void ActsExamples::Options::addDigitizationOptions(Description& desc) {
       "Smearing Input: smear parameters depending on the smearing type, 1 "
       "parameter for simple gauss, 3 for all others (1 parameter, 2 range "
       "values.");
+  opt("digi-merge-clusters", bool_switch(),
+      "Switch on cluster merging (only relevant for geometric digitization).");
 }

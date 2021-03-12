@@ -62,7 +62,8 @@ makeSmearFunctionForType(SmearingTypes smearingType, const double* parameters) {
 ActsExamples::DigitizationConfig::DigitizationConfig(
     const Options::Variables& vars,
     Acts::GeometryHierarchyMap<DigiComponentsConfig>&& digiCfgs)
-    : isSimpleSmearer(vars["digi-smear"].as<bool>()) {
+    : isSimpleSmearer(vars["digi-smear"].as<bool>()),
+      mergeClusters(vars["digi-merge-clusters"].as<bool>()) {
   digitizationConfigs = std::move(digiCfgs);
   if (isSimpleSmearer)
     smearingConfig(vars);

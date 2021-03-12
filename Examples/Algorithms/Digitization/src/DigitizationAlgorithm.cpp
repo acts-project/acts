@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Plugins/Digitization/Clusterization.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -36,6 +37,18 @@ struct Cluster {
 
   Cluster(size_t hitIdx, std::vector<cell_t> cells_ = {})
       : simHits({hitIdx}), cells(std::move(cells_)){};
+
+  Cluster() : simHits(), cells(){};
+};
+
+struct SingleCell {
+  hit_t simHit;
+  cell_t value;
+
+  SingleCell(size_t hitIdx, cell_t cell)
+      : simHit(hitIdx), value(std::move(cell)){};
+
+  double depositedEnergy() { return value.activation; }
 };
 
 struct DigitizedCluster {
@@ -47,6 +60,35 @@ struct DigitizedCluster {
 
   size_t hit_idx_at(size_t i) { return simHits.at(i); };
 };
+
+// in-place
+void mergeClusters(std::vector<Cluster>& clusters,
+                   const ActsExamples::GeometricConfig& geoCfg) {
+  std::unordered_map<size_t, std::pair<SingleCell, bool>> cellMap;
+  for (Cluster& clus : clusters) {
+    // TODO validate that at this stage only one simhit per cluster
+    for (cell_t& cell : clus.cells) {
+      size_t index = cell.bin[0] + geoCfg.segmentation.bins(0) * cell.bin[1];
+      // TODO maybe cheaper way to do this?
+      cellMap.insert(
+          {index, {SingleCell(clus.simHits.at(0), std::move(cell)), false}});
+    }
+  }
+  std::vector<std::vector<SingleCell>> merged =
+      Acts::createClusters(cellMap, geoCfg.segmentation.bins(0));
+  clusters.clear();
+  for (std::vector<SingleCell>& cellv : merged) {
+    Cluster clus;
+    for (SingleCell& scell : cellv) {
+      // TODO a set would be more efficient
+      if (std::find(clus.simHits.begin(), clus.simHits.end(), scell.simHit) ==
+          clus.simHits.end())
+        clus.simHits.push_back(scell.simHit);
+      clus.cells.push_back(std::move(scell.value));
+    }
+    clusters.push_back(clus);
+  }
+}
 
 }  // namespace
 
@@ -212,7 +254,8 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
             }
           }
 
-          // TODO optionally merge hits here
+          if (m_cfg.mergeClusters)
+            mergeClusters(moduleClusters, digitizer.geometric);
 
           for (::Cluster& cluster : moduleClusters) {
             DigitizedCluster dClus(std::move(cluster.simHits));
@@ -261,15 +304,15 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
             measurements.emplace_back(
                 createMeasurement(dClus.params, sourceLink));
             clusters.emplace_back(std::move(dClus.params.cluster));
-            // TODO handle case with many hits
-            // this digitization does not do hit merging so there is only one
+            // this digitization does hit merging so there may be more than one
             // mapping entry for each digitized hit.
-            measurementParticlesMap.emplace_hint(
-                measurementParticlesMap.end(), measurementIdx,
-                simHits.nth(dClus.hit_idx_at(0))->particleId());
-            measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
-                                               measurementIdx,
-                                               dClus.hit_idx_at(0));
+            for (auto idx : dClus.simHits) {
+              measurementParticlesMap.emplace_hint(
+                  measurementParticlesMap.end(), measurementIdx,
+                  simHits.nth(idx)->particleId());
+              measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
+                                                 measurementIdx, idx);
+            }
           }
         },
         *digitizerItr);
