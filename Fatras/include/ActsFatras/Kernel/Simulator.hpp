@@ -58,13 +58,12 @@ struct ParticleSimulator {
   ParticleSimulator(propagator_t &&propagator_, Acts::Logging::Level lvl)
       : propagator(propagator_),
         localLogger(Acts::getDefaultLogger("Simulation", lvl)) {
-    Logger = Acts::LoggerWrapper(*localLogger); 
+    Logger = Acts::LoggerWrapper(*localLogger);
   }
 
   /// Alternatively construct the simulator with an external logger.
   ParticleSimulator(propagator_t &&propagator_, Acts::LoggerWrapper Logger_)
-      : propagator(propagator_),
-        Logger(Logger_) {}
+      : propagator(propagator_), Logger(Logger_) {}
 
   /// Provide access to the local logger instance, e.g. for logging macros.
   const Acts::Logger &logger() const { return *localLogger; }
@@ -83,7 +82,6 @@ struct ParticleSimulator {
       const Acts::GeometryContext &geoCtx,
       const Acts::MagneticFieldContext &magCtx, generator_t &generator,
       const Particle &particle) const {
-
     // propagator-related additional types
     using Interactor = detail::Interactor<generator_t, decay_t, interactions_t,
                                           hit_surface_selector_t>;
