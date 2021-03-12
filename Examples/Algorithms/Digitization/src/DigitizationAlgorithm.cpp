@@ -58,11 +58,16 @@ struct DigitizedCluster {
 
   DigitizedCluster(std::set<hit_t> hits)
       : simHits(std::move(hits)), params(){};
+
+  void addSmearedParams(const std::unordered_map<hit_t, ActsExamples::DigitizedParameters>& smearedMap) {
+    // TODO
+  }
 };
 
 // in-place
 void mergeClusters(std::vector<Cluster>& clusters,
-                   const ActsExamples::GeometricConfig& geoCfg) {
+                   const ActsExamples::GeometricConfig& geoCfg,
+		   std::unordered_map<hit_t, ActsExamples::DigitizedParameters> smearedMap) {
   std::unordered_map<size_t, std::pair<SingleCell, bool>> cellMap;
   for (Cluster& clus : clusters) {
     // TODO validate that at this stage only one simhit per cluster
@@ -84,6 +89,7 @@ void mergeClusters(std::vector<Cluster>& clusters,
       Acts::createClusters(cellMap, geoCfg.segmentation.bins(0));
   for (std::vector<SingleCell>& cellv : merged) {
     Cluster clus;
+    // TODO: Create clusters based on matching in the smearedMap as well
     for (SingleCell& scell : cellv) {
       clus.simHits.insert(scell.simHit);
       clus.cells.push_back(std::move(scell.value));
@@ -91,6 +97,7 @@ void mergeClusters(std::vector<Cluster>& clusters,
     clusters.push_back(clus);
   }
 }
+
 
 }  // namespace
 
@@ -230,6 +237,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
     std::visit(
         [&](const auto& digitizer) {
           std::vector<::Cluster> moduleClusters;
+	  std::unordered_map<hit_t, DigitizedParameters> smearedMap;
 
           for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
             const auto& simHit = *h;
@@ -254,17 +262,9 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
             } else {
               moduleClusters.emplace_back(simHitIdx);
             }
-          }
 
-          if (m_cfg.mergeClusters)
-            mergeClusters(moduleClusters, digitizer.geometric);
-
-          for (::Cluster& cluster : moduleClusters) {
-            DigitizedCluster dClus(std::move(cluster.simHits));
-            dClus.params =
-                localParameters(digitizer.geometric, cluster.cells, rng);
-
-            // Smearing part - (optionally) rest
+	    // Smearing part - (optionally) rest
+	    DigitizedParameters smeared;
             if (not digitizer.smearing.indices.empty()) {
               ACTS_VERBOSE("Configured to smear "
                            << digitizer.smearing.indices.size()
@@ -272,19 +272,29 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
 
               // TODO handle case with many hits
               auto res =
-		digitizer.smearing(rng, *simHits.nth(*dClus.simHits.begin()),
-                                     *surfacePtr, ctx.geoContext);
+		digitizer.smearing(rng, simHit, *surfacePtr, ctx.geoContext);
               if (not res.ok()) {
                 ACTS_DEBUG("Problem in hit smearing, skipping this hit.")
                 continue;
               }
               const auto& [par, cov] = res.value();
               for (Eigen::Index ip = 0; ip < par.rows(); ++ip) {
-                dClus.params.indices.push_back(digitizer.smearing.indices[ip]);
-                dClus.params.values.push_back(par[ip]);
-                dClus.params.variances.push_back(cov(ip, ip));
+                smeared.indices.push_back(digitizer.smearing.indices[ip]);
+                smeared.values.push_back(par[ip]);
+                smeared.variances.push_back(cov(ip, ip));
               }
             }
+	    smearedMap.insert({simHitIdx, smeared});
+          }
+
+          if (m_cfg.mergeClusters)
+            mergeClusters(moduleClusters, digitizer.geometric, smearedMap);
+
+          for (::Cluster& cluster : moduleClusters) {
+            DigitizedCluster dClus(std::move(cluster.simHits));
+            dClus.params =
+                localParameters(digitizer.geometric, cluster.cells, rng);
+	    dClus.addSmearedParams(smearedMap);
 
             // Check on success - threshold could have eliminated all channels
             if (dClus.params.values.empty()) {
