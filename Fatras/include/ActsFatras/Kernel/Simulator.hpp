@@ -50,19 +50,24 @@ struct ParticleSimulator {
   /// Selector for surfaces that should generate hits.
   hit_surface_selector_t selectHitSurface;
   /// Wrapped logger for debug output.
-  Acts::LoggerWrapper Logger;
+  Acts::LoggerWrapper Logger = Acts::getDummyLogger();
+  /// Local logger for debug output.
+  std::shared_ptr<const Acts::Logger> localLogger = nullptr;
 
   /// Construct the simulator with the underlying propagator.
   ParticleSimulator(propagator_t &&propagator_, Acts::Logging::Level lvl)
       : propagator(propagator_),
-        Logger(Acts::LoggerWrapper(*Acts::getDefaultLogger("Simulator", lvl))) {
-  //  Logger = Acts::LoggerWrapper(*Acts::getDefaultLogger("Simulator", lvl)); 
+        localLogger(Acts::getDefaultLogger("Simulation", lvl)) {
+    Logger = Acts::LoggerWrapper(*localLogger); 
   }
 
   /// Alternatively construct the simulator with an external logger.
   ParticleSimulator(propagator_t &&propagator_, Acts::LoggerWrapper exLogger_)
       : propagator(propagator_),
         Logger(exLogger_) {}
+
+  /// Provide access to the local logger instance, e.g. for logging macros.
+  const Acts::Logger &logger() const { return *localLogger; }
 
   /// Simulate a single particle without secondaries.
   ///
