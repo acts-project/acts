@@ -20,6 +20,7 @@
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
 #include <algorithm>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -32,11 +33,11 @@ using hit_t =
 using cell_t = ActsFatras::Channelizer::ChannelSegment;
 
 struct Cluster {
-  std::vector<hit_t> simHits;
+  std::set<hit_t> simHits;
   std::vector<cell_t> cells;
 
   Cluster(size_t hitIdx, std::vector<cell_t> cells_ = {})
-      : simHits({hitIdx}), cells(std::move(cells_)){};
+    : simHits{hitIdx}, cells(std::move(cells_)){};
 
   Cluster() : simHits(), cells(){};
 };
@@ -52,13 +53,11 @@ struct SingleCell {
 };
 
 struct DigitizedCluster {
-  std::vector<hit_t> simHits;
+  std::set<hit_t> simHits;
   ActsExamples::DigitizedParameters params;
 
-  DigitizedCluster(std::vector<hit_t> hits)
+  DigitizedCluster(std::set<hit_t> hits)
       : simHits(std::move(hits)), params(){};
-
-  size_t hit_idx_at(size_t i) { return simHits.at(i); };
 };
 
 // in-place
@@ -71,19 +70,22 @@ void mergeClusters(std::vector<Cluster>& clusters,
       size_t index = cell.bin[0] + geoCfg.segmentation.bins(0) * cell.bin[1];
       // TODO maybe cheaper way to do this?
       cellMap.insert(
-          {index, {SingleCell(clus.simHits.at(0), std::move(cell)), false}});
+	{index, {SingleCell(*clus.simHits.begin(), std::move(cell)), false}});
     }
   }
+
+  if (cellMap.empty())
+    return;
+
+  // Everything is now in the map
+  clusters.clear();
+
   std::vector<std::vector<SingleCell>> merged =
       Acts::createClusters(cellMap, geoCfg.segmentation.bins(0));
-  clusters.clear();
   for (std::vector<SingleCell>& cellv : merged) {
     Cluster clus;
     for (SingleCell& scell : cellv) {
-      // TODO a set would be more efficient
-      if (std::find(clus.simHits.begin(), clus.simHits.end(), scell.simHit) ==
-          clus.simHits.end())
-        clus.simHits.push_back(scell.simHit);
+      clus.simHits.insert(scell.simHit);
       clus.cells.push_back(std::move(scell.value));
     }
     clusters.push_back(clus);
@@ -270,7 +272,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
 
               // TODO handle case with many hits
               auto res =
-                  digitizer.smearing(rng, *simHits.nth(dClus.hit_idx_at(0)),
+		digitizer.smearing(rng, *simHits.nth(*dClus.simHits.begin()),
                                      *surfacePtr, ctx.geoContext);
               if (not res.ok()) {
                 ACTS_DEBUG("Problem in hit smearing, skipping this hit.")
