@@ -62,9 +62,9 @@ struct ParticleSimulator {
   }
 
   /// Alternatively construct the simulator with an external logger.
-  ParticleSimulator(propagator_t &&propagator_, Acts::LoggerWrapper exLogger_)
+  ParticleSimulator(propagator_t &&propagator_, Acts::LoggerWrapper Logger_)
       : propagator(propagator_),
-        Logger(exLogger_) {}
+        Logger(Logger_) {}
 
   /// Provide access to the local logger instance, e.g. for logging macros.
   const Acts::Logger &logger() const { return *localLogger; }
