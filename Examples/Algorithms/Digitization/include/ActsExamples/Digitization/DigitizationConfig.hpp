@@ -110,6 +110,8 @@ class DigitizationConfig {
   const bool isSimpleSmearer;
   /// Merge clusters or not
   const bool mergeClusters;
+  /// Distance parameter for merging smeared dimensions
+  const float nSigmaMerge;
   /// The digitizers per GeometryIdentifiers
   Acts::GeometryHierarchyMap<DigiComponentsConfig> digitizationConfigs;
 

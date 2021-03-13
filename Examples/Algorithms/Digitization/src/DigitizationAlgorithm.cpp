@@ -32,16 +32,6 @@ using hit_t =
                                                // simhit container
 using cell_t = ActsFatras::Channelizer::ChannelSegment;
 
-struct Cluster {
-  std::set<hit_t> simHits;
-  std::vector<cell_t> cells;
-
-  Cluster(size_t hitIdx, std::vector<cell_t> cells_ = {})
-    : simHits{hitIdx}, cells(std::move(cells_)){};
-
-  Cluster() : simHits(), cells(){};
-};
-
 struct SingleCell {
   hit_t simHit;
   cell_t value;
@@ -50,6 +40,27 @@ struct SingleCell {
       : simHit(hitIdx), value(std::move(cell)){};
 
   double depositedEnergy() { return value.activation; }
+};
+
+struct Cluster {
+  std::set<hit_t> simHits;
+  std::vector<cell_t> cells;
+
+  Cluster(size_t hitIdx, std::vector<cell_t> cells_ = {})
+    : simHits{hitIdx}, cells(std::move(cells_)){};
+
+  Cluster(SingleCell cell) : Cluster(cell.simHit, {cell.value}) {};
+
+  Cluster() : simHits(), cells(){};
+
+  void add(SingleCell& cell) {
+    simHits.insert(cell.simHit);
+    cells.push_back(cell.value);
+  }
+
+  void add(hit_t hit) {
+    simHits.insert(hit);
+  }
 };
 
 struct DigitizedCluster {
@@ -83,10 +94,82 @@ struct DigitizedCluster {
   }
 };
 
+auto findInMap(std::unordered_map<hit_t, ActsExamples::DigitizedParameters>& smearedMap, SingleCell& cell)
+{
+  return smearedMap.find(cell.simHit);
+}
+
+auto findInMap(std::unordered_map<hit_t, ActsExamples::DigitizedParameters>& smearedMap, hit_t hit)
+{
+  return smearedMap.find(hit);
+}
+
+template <typename T>
+void mergeSmeared(std::vector<Cluster>& clusters, std::vector<T>& cells, std::unordered_map<hit_t, ActsExamples::DigitizedParameters>& smearedMap, double nsigma)
+{
+  std::vector<bool> used(cells.size(), false);
+
+  for (size_t i = 0; i < cells.size(); i++) {
+    if (used.at(i))
+      continue;
+
+    // Cell has not yet been claimed, so claim it
+    clusters.push_back(Cluster(cells.at(i)));
+    used.at(i) = true;
+
+    // Cells previously visited by index `i' have already been added
+    // to a cluster or used to seed a new cluster, so start at the
+    // next unseen one
+    for (size_t j = i + 1; j < cells.size(); j++) {
+      // Still may have already been used, so check it
+      if (used.at(j))
+	continue;
+
+      // Now, iterate through hits matched to current cluster and see
+      // if any of them match the hit associated to the current cell
+      auto& [h1, dparams] = *findInMap(smearedMap, cells.at(j));
+      bool matched = false;
+      for (auto hitIdx : clusters.back().simHits) {
+	auto& [h2, dparams_2] = *smearedMap.find(hitIdx);
+
+	// Consider the cell matched to the currently considered
+	// simhit until we find evidence to the contrary. This way,
+	// merging still works when digitization is done by geometry
+	// only.
+	matched = true;
+
+	// Obvious match when simhits are the same so can skip some
+	// computations
+	if (h1 == h2) {
+	  break;
+	}
+
+	for (size_t k = 0; k < dparams.values.size() and matched; k++) {
+	  auto maxdist = nsigma * std::sqrt(dparams.variances.at(k));
+	  if (std::abs(dparams.values.at(k) - dparams_2.values.at(k)) > maxdist) {
+	    matched = false;
+	  }
+	}
+	if (matched) {
+	  // Cell matched at least one hit in the cluster, no need to
+	  // keep checking
+	  break;
+	}
+      } // loop over `k'
+      if (matched) {
+	// Claim cell `j'
+	used.at(j) = true;
+	clusters.back().add(cells.at(j));
+      }
+    } // loop over 'j'
+  } // loop over `i'
+}
+
+
 // in-place
 void mergeClusters(std::vector<Cluster>& clusters,
                    const ActsExamples::GeometricConfig& geoCfg,
-		   std::unordered_map<hit_t, ActsExamples::DigitizedParameters> smearedMap) {
+		   std::unordered_map<hit_t, ActsExamples::DigitizedParameters> smearedMap, double nsigma = 1.0) {
   std::unordered_map<size_t, std::pair<SingleCell, bool>> cellMap;
   for (Cluster& clus : clusters) {
     // TODO validate that at this stage only one simhit per cluster
@@ -98,26 +181,23 @@ void mergeClusters(std::vector<Cluster>& clusters,
     }
   }
 
-  if (cellMap.empty())
-    return;
-
-  // Everything is now in the map
-  clusters.clear();
-
-  std::vector<std::vector<SingleCell>> merged =
+  if (cellMap.empty()) {
+    // No clusters, so simply copy the simhits to a vector because the
+    // downstream computation will modify the clusters array
+    std::vector<hit_t> hits;
+    for (Cluster& clus : clusters)
+      hits.push_back(*clus.simHits.begin());
+    clusters.clear();
+    mergeSmeared(clusters, hits, smearedMap, nsigma);
+  } else {
+    clusters.clear();
+    std::vector<std::vector<SingleCell>> merged =
       Acts::createClusters(cellMap, geoCfg.segmentation.bins(0));
-  for (std::vector<SingleCell>& cellv : merged) {
-    Cluster clus;
-    // TODO: Create clusters based on matching in the smearedMap as well
-    for (SingleCell& scell : cellv) {
-      clus.simHits.insert(scell.simHit);
-      clus.cells.push_back(std::move(scell.value));
+    for (std::vector<SingleCell>& cellv : merged) {
+      mergeSmeared(clusters, cellv, smearedMap, nsigma);
     }
-    clusters.push_back(clus);
   }
 }
-
-
 }  // namespace
 
 ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
@@ -307,7 +387,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
           }
 
           if (m_cfg.mergeClusters)
-            mergeClusters(moduleClusters, digitizer.geometric, smearedMap);
+            mergeClusters(moduleClusters, digitizer.geometric, smearedMap, m_cfg.nSigmaMerge);
 
           for (::Cluster& cluster : moduleClusters) {
             DigitizedCluster dClus(std::move(cluster.simHits));
