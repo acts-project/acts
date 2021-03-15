@@ -72,6 +72,11 @@ int propagationExample(int argc, char* argv[],
   ActsExamples::Options::setupMagneticFieldServices(vm, sequencer);
   auto bField = ActsExamples::Options::readMagneticField(vm);
 
+  // Check what output exists, if none exists, the SteppingLogger
+  // will switch to sterile.
+  bool rootOutput = vm["output-root"].template as<bool>();
+  bool objOutput = vm["output-obj"].template as<bool>();
+
   auto setupPropagator = [&](auto&& stepper) {
     using Stepper = std::decay_t<decltype(stepper)>;
     using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
@@ -82,6 +87,7 @@ int propagationExample(int argc, char* argv[],
     auto pAlgConfig =
         ActsExamples::Options::readPropagationConfig(vm, propagator);
     pAlgConfig.randomNumberSvc = randomNumberSvc;
+    pAlgConfig.sterileLogger = not rootOutput and not objOutput;
     sequencer.addAlgorithm(
         std::make_shared<ActsExamples::PropagationAlgorithm<Propagator>>(
             pAlgConfig, logLevel));
@@ -101,7 +107,7 @@ int propagationExample(int argc, char* argv[],
   std::string outputDir = vm["output-dir"].template as<std::string>();
   auto psCollection = vm["prop-step-collection"].as<std::string>();
 
-  if (vm["output-root"].template as<bool>()) {
+  if (rootOutput) {
     // Write the propagation steps as ROOT TTree
     ActsExamples::RootPropagationStepsWriter::Config pstepWriterRootConfig;
     pstepWriterRootConfig.collection = psCollection;
@@ -112,7 +118,7 @@ int propagationExample(int argc, char* argv[],
             pstepWriterRootConfig));
   }
 
-  if (vm["output-obj"].template as<bool>()) {
+  if (objOutput) {
     using PropagationSteps = Acts::detail::Step;
     using ObjPropagationStepsWriter =
         ActsExamples::ObjPropagationStepsWriter<PropagationSteps>;

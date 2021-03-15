@@ -71,6 +71,8 @@ class PropagationAlgorithm : public BareAlgorithm {
 
     /// proapgation mode
     int mode = 0;
+    /// Switch the logger to sterile
+    bool sterileLogger = false;
     /// debug output
     bool debugOutput = false;
     /// Modify the behavior of the material interaction: energy loss
