@@ -32,7 +32,12 @@ static void completeStaveStructure(Detector& oddd, xml_comp_t& x_stave,
     Trapezoid foamShape(x_trd.x1(), x_trd.x2(), staveHlength + x_trd.dz(),
                         staveHlength + x_trd.dz(), x_trd.thickness());
 
-    Tube foamCutout(x_tubs.rmin(), x_tubs.rmax(), staveHlength + x_tubs.dz());
+    // Create the subtraction
+    Tube tubeCutoutSeg1(x_tubs.rmin(), x_tubs.rmax(),
+                        staveHlength + x_tubs.dz(), -0.1, 2.1 * M_PI);
+    Tube tubeCutoutSeg2(x_tubs.rmin(), x_tubs.rmax(),
+                        staveHlength + x_tubs.dz(), 0, 2 * M_PI);
+    UnionSolid foamCutout(tubeCutoutSeg1, tubeCutoutSeg2);
 
     // Create the subtraction
     Volume foamVolume("CarbonFoam",
@@ -46,7 +51,7 @@ static void completeStaveStructure(Detector& oddd, xml_comp_t& x_stave,
         Position(x_sub.x_offset(), x_sub.y_offset(), x_sub.z_offset()));
 
     Tube coolingPipe(x_pipe.rmin(), x_pipe.rmax(), staveHlength + x_pipe.dz());
-    // Create the subtraction
+    // Create the coolingpipe
     Volume pipeVolume("CoolingPipe", coolingPipe,
                       oddd.material(x_pipe.materialStr()));
     pipeVolume.setVisAttributes(oddd, x_pipe.visStr());
