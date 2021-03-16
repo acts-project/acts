@@ -54,10 +54,10 @@ After running this example, you should see something like this:
 
 .. code-block::
    
-   SeedingPerfo   INFO      Efficiency (nMatchedParticles / nAllParticles) = 0.865521
-   SeedingPerfo   INFO      Fake rate (nUnMatchedSeeds / nAllSeeds) = 0.332444
-   SeedingPerfo   INFO      Duplication rate (nDuplicatedMatchedParticles / nMatchedParticles) = 0.997516
-   SeedingPerfo   INFO      Average number of duplicated seeds ((nMatchedSeeds - nMatchedParticles) / nMatchedParticles) = 7.8082
+   SeedingPerfo   INFO      Efficiency (nMatchedParticles / nAllParticles) = 0.910987
+   SeedingPerfo   INFO      Fake rate (nUnMatchedSeeds / nAllSeeds) = 0.586774
+   SeedingPerfo   INFO      Duplication rate (nDuplicatedMatchedParticles / nMatchedParticles) = 0.778491
+   SeedingPerfo   INFO      Average number of duplicated seeds ((nMatchedSeeds - nMatchedParticles) / nMatchedParticles) = 7.59991
 
 This output shows the efficiency, fake rate, and duplicate rate for the selected particles.
 The example also generates output root files in the output directory.
