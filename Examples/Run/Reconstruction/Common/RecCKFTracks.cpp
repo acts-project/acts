@@ -25,6 +25,7 @@
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
+#include "ActsExamples/TrackFinding/SpacePointMakerOptions.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingOptions.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
@@ -72,6 +73,7 @@ int runRecCKFTracks(int argc, char* argv[],
   Options::addTrackFindingOptions(desc);
   addRecCKFOptions(desc);
   Options::addDigitizationOptions(desc);
+  Options::addSpacePointMakerOptions(desc);
 
   auto vm = Options::parse(desc, argc, argv);
   if (vm.empty()) {
@@ -136,29 +138,11 @@ int runRecCKFTracks(int argc, char* argv[],
     outputTrackParameters = particleSmearingCfg.outputTrackParameters;
   } else {
     // Create space points
-    SpacePointMaker::Config spCfg;
+    SpacePointMaker::Config spCfg = Options::readSpacePointMakerConfig(vm);
     spCfg.inputSourceLinks = digiCfg.outputSourceLinks;
     spCfg.inputMeasurements = digiCfg.outputMeasurements;
     spCfg.outputSpacePoints = "spacepoints";
     spCfg.trackingGeometry = trackingGeometry;
-    spCfg.geometrySelection = {
-        // barrel pixel layers
-        Acts::GeometryIdentifier().setVolume(8).setLayer(2),
-        Acts::GeometryIdentifier().setVolume(8).setLayer(4),
-        Acts::GeometryIdentifier().setVolume(8).setLayer(6),
-        Acts::GeometryIdentifier().setVolume(8).setLayer(8),
-        // positive endcap pixel layers
-        Acts::GeometryIdentifier().setVolume(9).setLayer(2),
-        Acts::GeometryIdentifier().setVolume(9).setLayer(4),
-        Acts::GeometryIdentifier().setVolume(9).setLayer(6),
-        Acts::GeometryIdentifier().setVolume(9).setLayer(8),
-        // negative endcap pixel layers
-        Acts::GeometryIdentifier().setVolume(7).setLayer(14),
-        Acts::GeometryIdentifier().setVolume(7).setLayer(12),
-        Acts::GeometryIdentifier().setVolume(7).setLayer(10),
-        Acts::GeometryIdentifier().setVolume(7).setLayer(8),
-
-    };
     sequencer.addAlgorithm(std::make_shared<SpacePointMaker>(spCfg, logLevel));
 
     // Create seeds (i.e. proto tracks) using either truth track finding or seed
@@ -184,7 +168,7 @@ int runRecCKFTracks(int argc, char* argv[],
       seedingCfg.outputSeeds = "seeds";
       seedingCfg.outputProtoTracks = "prototracks";
       seedingCfg.rMax = 200.;
-      seedingCfg.deltaRMax = 100.;
+      seedingCfg.deltaRMax = 60.;
       seedingCfg.collisionRegionMin = -250;
       seedingCfg.collisionRegionMax = 250.;
       seedingCfg.zMin = -2000.;
