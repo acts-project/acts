@@ -25,6 +25,7 @@ Currently, there are two configurable criteria to select compatible source links
 
 The digitization of the truth hits must also be configured. Since the command-line configuration of this step can get unwieldy,
 an example json configuration file for the smearing digitizer is provided with the source code.
+The detector volumes and layers used in the space point maker are also configured using another example json file in the source code.
 
 .. code-block:: console
 
@@ -35,7 +36,9 @@ an example json configuration file for the smearing digitizer is provided with t
        --ckf-selection-nmax 10 \
        --output-dir=data/reco_trackML/ttbar_mu200 \
        --digi-smear \
-       --digi-config-file <source>/Examples/Algorithms/Digitization/share/default-smearing-config-generic.json
+       --digi-config-file <source>/Examples/Algorithms/Digitization/share/default-smearing-config-generic.json \
+       --geo-selection-config-file <source>/Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json
+       
 
 The magnetic field setup should be consistent between simulation and CKF tracking.
 

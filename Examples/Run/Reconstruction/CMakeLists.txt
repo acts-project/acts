@@ -11,6 +11,16 @@ target_link_libraries(
     ActsExamplesRecTracksCommon 
     ActsExamplesDetectorGeneric)
 
+# Truth fitting for TGeo detector 
+add_executable(
+  ActsExampleTruthTracksTGeo
+  TGeoRecTruthTracks.cpp)
+target_link_libraries(
+  ActsExampleTruthTracksTGeo
+  PRIVATE
+    ActsExamplesRecTracksCommon 
+    ActsExamplesDetectorTGeo)
+
 # Truth fitting for Telescope detector
 add_executable(
   ActsExampleTruthTracksTelescope
@@ -30,6 +40,16 @@ target_link_libraries(
   PRIVATE
     ActsExamplesRecTracksCommon 
     ActsExamplesDetectorGeneric)
+
+# CKF reco for TGeo detector 
+add_executable(
+  ActsExampleCKFTracksTGeo
+  TGeoRecCKFTracks.cpp)
+target_link_libraries(
+  ActsExampleCKFTracksTGeo
+  PRIVATE
+    ActsExamplesRecTracksCommon 
+    ActsExamplesDetectorTGeo)
 
 # CKF reco for Telescope detector 
 add_executable(
@@ -52,13 +72,27 @@ target_link_libraries(
     ActsExamplesDetectorGeneric
 )
 
+# Seeding for TGeo detector
+add_executable(
+  ActsExampleSeedingTGeo
+  TGeoSeedingExample.cpp)
+target_link_libraries(
+  ActsExampleSeedingTGeo
+  PRIVATE
+    ActsExamplesRecTracksCommon
+    ActsExamplesDetectorTGeo
+)
+
 install(
   TARGETS
     ActsExampleTruthTracksGeneric
+    ActsExampleTruthTracksTGeo
     ActsExampleTruthTracksTelescope
     ActsExampleCKFTracksGeneric
+    ActsExampleCKFTracksTGeo
     ActsExampleCKFTracksTelescope
-    ActsExampleSeedingGeneric 
+    ActsExampleSeedingGeneric
+    ActsExampleSeedingTGeo
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_subdirectory_if(DD4hep ACTS_BUILD_EXAMPLES_DD4HEP)
