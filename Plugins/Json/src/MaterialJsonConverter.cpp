@@ -276,7 +276,7 @@ void Acts::from_json(const nlohmann::json& j, volumeMaterialPointer& material) {
     }
     if (key == Acts::jsonKey().datakey and not value.empty()) {
       for (const auto& bin : value) {
-	Acts::Material mat(bin["material"].get<Acts::Material>());
+        Acts::Material mat(bin["material"].get<Acts::Material>());
         mmat.push_back(mat);
       }
     }
