@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -30,7 +30,8 @@ ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
     Acts::Logging::Level lvl)
     : WriterT(cfg.inputProtoTracks, "SeedingPerformanceWriter", lvl),
       m_cfg(std::move(cfg)),
-      m_effPlotTool(m_cfg.effPlotToolConfig, lvl) {
+      m_effPlotTool(m_cfg.effPlotToolConfig, lvl),
+      m_duplicationPlotTool(m_cfg.duplicationPlotToolConfig, lvl) {
   if (m_cfg.inputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument("Missing hit-particles map input collection");
   }
@@ -51,11 +52,12 @@ ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
   }
   // initialize the plot tools
   m_effPlotTool.book(m_effPlotCache);
+  m_duplicationPlotTool.book(m_duplicationPlotCache);
 }
 
 ActsExamples::SeedingPerformanceWriter::~SeedingPerformanceWriter() {
   m_effPlotTool.clear(m_effPlotCache);
-
+  m_duplicationPlotTool.clear(m_duplicationPlotCache);
   if (m_outputFile) {
     m_outputFile->Close();
   }
@@ -66,16 +68,29 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::endRun() {
   float fakeRate = float(m_nTotalSeeds - m_nTotalMatchedSeeds) / m_nTotalSeeds;
   float duplicationRate =
       float(m_nTotalDuplicatedParticles) / m_nTotalMatchedParticles;
+  float aveNDuplicatedSeeds =
+      float(m_nTotalMatchedSeeds - m_nTotalMatchedParticles) /
+      m_nTotalMatchedParticles;
+  ACTS_DEBUG("nTotalSeeds               = " << m_nTotalSeeds);
+  ACTS_DEBUG("nTotalMatchedSeeds        = " << m_nTotalMatchedSeeds);
+  ACTS_DEBUG("nTotalParticles           = " << m_nTotalParticles);
+  ACTS_DEBUG("nTotalMatchedParticles    = " << m_nTotalMatchedParticles);
+  ACTS_DEBUG("nTotalDuplicatedParticles = " << m_nTotalDuplicatedParticles);
 
   ACTS_INFO("Efficiency (nMatchedParticles / nAllParticles) = " << eff);
-  ACTS_INFO("Fake rate (nUnMatchedSeeds / nAllSeeds) =" << fakeRate);
+  ACTS_INFO("Fake rate (nUnMatchedSeeds / nAllSeeds) = " << fakeRate);
   ACTS_INFO(
-      "Duplication rate (nDuplicatedMatchedParticles / nMatchedParticles) ="
+      "Duplication rate (nDuplicatedMatchedParticles / nMatchedParticles) = "
       << duplicationRate);
+  ACTS_INFO(
+      "Average number of duplicated seeds ((nMatchedSeeds - nMatchedParticles) "
+      "/ nMatchedParticles) = "
+      << aveNDuplicatedSeeds);
 
   if (m_outputFile) {
     m_outputFile->cd();
     m_effPlotTool.write(m_effPlotCache);
+    m_duplicationPlotTool.write(m_duplicationPlotCache);
     ACTS_INFO("Wrote performance plots to '" << m_outputFile->GetPath() << "'");
   }
   return ProcessCode::SUCCESS;
@@ -123,9 +138,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
       }
     }
     m_effPlotTool.fill(m_effPlotCache, particle, isMatched);
+    m_duplicationPlotTool.fill(m_duplicationPlotCache, particle,
+                               nMatchedSeedsForParticle - 1);
   }
-
-  ACTS_INFO("Number of seeds: " << nSeeds);
+  ACTS_DEBUG("Number of seeds: " << nSeeds);
   m_nTotalSeeds += nSeeds;
   m_nTotalMatchedSeeds += nMatchedSeeds;
   m_nTotalParticles += particles.size();
