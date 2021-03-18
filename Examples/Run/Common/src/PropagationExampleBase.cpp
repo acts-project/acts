@@ -11,6 +11,7 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
+#include "ActsExamples/Io/Csv/CsvPropagationStepsWriter.hpp"
 #include "ActsExamples/Io/Root/RootPropagationStepsWriter.hpp"
 #include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
@@ -24,7 +25,6 @@
 #include <Acts/Propagator/Navigator.hpp>
 #include <Acts/Propagator/Propagator.hpp>
 #include <Acts/Propagator/StraightLineStepper.hpp>
-#include "ActsExamples/Io/Csv/CsvPropagationStepsWriter.hpp"
 
 #include <memory>
 
@@ -41,7 +41,8 @@ int propagationExample(int argc, char* argv[],
   ActsExamples::Options::addRandomNumbersOptions(desc);
   ActsExamples::Options::addPropagationOptions(desc);
   ActsExamples::Options::addOutputOptions(
-      desc, ActsExamples::OutputFormat::Root | ActsExamples::OutputFormat::Obj | ActsExamples::OutputFormat::Csv);
+      desc, ActsExamples::OutputFormat::Root | ActsExamples::OutputFormat::Obj |
+                ActsExamples::OutputFormat::Csv);
 
   // Add specific options for this geometry
   detector.addOptions(desc);
@@ -89,7 +90,8 @@ int propagationExample(int argc, char* argv[],
     auto pAlgConfig =
         ActsExamples::Options::readPropagationConfig(vm, propagator);
     pAlgConfig.randomNumberSvc = randomNumberSvc;
-    pAlgConfig.sterileLogger = not rootOutput and not objOutput and not csvOutput;
+    pAlgConfig.sterileLogger =
+        not rootOutput and not objOutput and not csvOutput;
     sequencer.addAlgorithm(
         std::make_shared<ActsExamples::PropagationAlgorithm<Propagator>>(
             pAlgConfig, logLevel));
@@ -108,7 +110,7 @@ int propagationExample(int argc, char* argv[],
   // Output directory
   std::string outputDir = vm["output-dir"].template as<std::string>();
   auto psCollection = vm["prop-step-collection"].as<std::string>();
-  
+
   // Csv Writer
   if (vm["output-csv"].template as<bool>()) {
     using Writer = ActsExamples::CsvPropagationStepsWriter;
@@ -143,7 +145,7 @@ int propagationExample(int argc, char* argv[],
     sequencer.addWriter(
         std::make_shared<ObjPropagationStepsWriter>(pstepWriterObjConfig));
   }
-  
+
   if (csvOutput) {
     using Writer = ActsExamples::CsvPropagationStepsWriter;
 

@@ -101,7 +101,8 @@ class GuidedNavigator {
     auto &navstate = state.navigation;
 
     // TODO Workaround since we don't have a currentVolume yet
-    // In the case of the trial&error surface provider this does not happen, since it stops if no surface is reachable
+    // In the case of the trial&error surface provider this does not happen,
+    // since it stops if no surface is reachable
     if (!navstate.worldVolume->inside(stepper.position(state.stepping))) {
       navstate.navigationBreak = true;
       navstate.currentVolume = nullptr;
