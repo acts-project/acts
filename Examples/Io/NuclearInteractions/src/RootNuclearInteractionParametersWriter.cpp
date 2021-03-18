@@ -344,7 +344,6 @@ ActsExamples::RootNuclearInteractionParametersWriter::
 
 ActsExamples::ProcessCode
 ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
-  std::cout << "End Run called" << std::endl;
   namespace Parametrisation = detail::NuclearInteractionParametrisation;
   if (m_eventFractionCollection.empty())
     return ProcessCode::ABORT;
@@ -456,7 +455,6 @@ ActsExamples::ProcessCode
 ActsExamples::RootNuclearInteractionParametersWriter::writeT(
     const AlgorithmContext& /*ctx*/,
     const ExtractedSimulationProcessContainer& event) {
-  std::cout << "writeT called" << std::endl;
   // Convert the tuple to use additional categorisation variables
   std::vector<detail::NuclearInteractionParametrisation::EventFraction>
       eventFractions;
