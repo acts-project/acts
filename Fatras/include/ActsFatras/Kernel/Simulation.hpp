@@ -50,7 +50,7 @@ struct SingleParticleSimulation {
   /// Selector for surfaces that should generate hits.
   hit_surface_selector_t selectHitSurface;
   /// Wrapped logger for debug output.
-  Acts::LoggerWrapper Logger = Acts::getDummyLogger();
+  Acts::LoggerWrapper loggerWrapper = Acts::getDummyLogger();
   /// Local logger for debug output.
   std::shared_ptr<const Acts::Logger> localLogger = nullptr;
 
@@ -58,13 +58,13 @@ struct SingleParticleSimulation {
   SingleParticleSimulation(propagator_t &&propagator_, Acts::Logging::Level lvl)
       : propagator(propagator_),
         localLogger(Acts::getDefaultLogger("Simulation", lvl)) {
-    Logger = Acts::LoggerWrapper(*localLogger);
+    loggerWrapper = Acts::LoggerWrapper(*localLogger);
   }
 
   /// Alternatively construct the simulator with an external logger.
   SingleParticleSimulation(propagator_t &&propagator_,
-                           Acts::LoggerWrapper Logger_)
-      : propagator(propagator_), Logger(Logger_) {}
+                           Acts::LoggerWrapper loggerWrapper_)
+      : propagator(propagator_), loggerWrapper(loggerWrapper_) {}
 
   /// Provide access to the local logger instance, e.g. for logging macros.
   const Acts::Logger &logger() const { return *localLogger; }
@@ -93,7 +93,7 @@ struct SingleParticleSimulation {
     using PropagatorOptions = Acts::PropagatorOptions<Actions, Abort>;
 
     // Construct per-call options.
-    PropagatorOptions options(geoCtx, magCtx, Logger);
+    PropagatorOptions options(geoCtx, magCtx, loggerWrapper);
     options.absPdgCode = Acts::makeAbsolutePdgParticle(particle.pdg());
     options.mass = particle.mass();
     // setup the interactor as part of the propagator options
