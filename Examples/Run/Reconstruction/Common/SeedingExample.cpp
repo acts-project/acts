@@ -22,6 +22,7 @@
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
+#include "ActsExamples/TrackFinding/SpacePointMakerOptions.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
@@ -47,6 +48,7 @@ int runSeedingExample(int argc, char* argv[],
   Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
   Options::addInputOptions(desc);
   Options::addMagneticFieldOptions(desc);
+  Options::addSpacePointMakerOptions(desc);
   Options::addDigitizationOptions(desc);
   // Add specific options for this geometry
   detector->addOptions(desc);
@@ -95,6 +97,8 @@ int runSeedingExample(int argc, char* argv[],
       digiCfg.outputMeasurementParticlesMap;
   particleSelectorCfg.outputParticles = "particles_selected";
   particleSelectorCfg.ptMin = 1_GeV;
+  particleSelectorCfg.etaMax = 2.5;
+  particleSelectorCfg.etaMin = -2.5;
   particleSelectorCfg.nHitsMin = 9;
   sequencer.addAlgorithm(
       std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));
@@ -103,28 +107,11 @@ int runSeedingExample(int argc, char* argv[],
   const auto& inputParticles = particleSelectorCfg.outputParticles;
 
   // Create space points
-  SpacePointMaker::Config spCfg;
+  SpacePointMaker::Config spCfg = Options::readSpacePointMakerConfig(vm);
   spCfg.inputSourceLinks = digiCfg.outputSourceLinks;
   spCfg.inputMeasurements = digiCfg.outputMeasurements;
   spCfg.outputSpacePoints = "spacepoints";
   spCfg.trackingGeometry = tGeometry;
-  spCfg.geometrySelection = {
-      // barrel pixel layers
-      Acts::GeometryIdentifier().setVolume(8).setLayer(2),
-      Acts::GeometryIdentifier().setVolume(8).setLayer(4),
-      Acts::GeometryIdentifier().setVolume(8).setLayer(6),
-      Acts::GeometryIdentifier().setVolume(8).setLayer(8),
-      // positive endcap pixel layers
-      Acts::GeometryIdentifier().setVolume(9).setLayer(2),
-      Acts::GeometryIdentifier().setVolume(9).setLayer(4),
-      Acts::GeometryIdentifier().setVolume(9).setLayer(6),
-      Acts::GeometryIdentifier().setVolume(9).setLayer(8),
-      // negative endcap pixel layers
-      Acts::GeometryIdentifier().setVolume(7).setLayer(14),
-      Acts::GeometryIdentifier().setVolume(7).setLayer(12),
-      Acts::GeometryIdentifier().setVolume(7).setLayer(10),
-      Acts::GeometryIdentifier().setVolume(7).setLayer(8),
-  };
   sequencer.addAlgorithm(std::make_shared<SpacePointMaker>(spCfg, logLevel));
 
   // Seeding algorithm
@@ -135,7 +122,7 @@ int runSeedingExample(int argc, char* argv[],
   seedingCfg.outputSeeds = "seeds";
   seedingCfg.outputProtoTracks = "prototracks";
   seedingCfg.rMax = 200.;
-  seedingCfg.deltaRMax = 100.;
+  seedingCfg.deltaRMax = 60.;
   seedingCfg.collisionRegionMin = -250;
   seedingCfg.collisionRegionMax = 250.;
   seedingCfg.zMin = -2000.;

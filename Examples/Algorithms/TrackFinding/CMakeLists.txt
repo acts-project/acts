@@ -2,6 +2,7 @@ add_library(
   ActsExamplesTrackFinding SHARED
   src/SeedingAlgorithm.cpp
   src/SpacePointMaker.cpp
+  src/SpacePointMakerOptions.cpp
   src/TrackFindingAlgorithm.cpp
   src/TrackFindingAlgorithmFunction.cpp
   src/TrackFindingOptions.cpp
@@ -13,7 +14,9 @@ target_link_libraries(
   ActsExamplesTrackFinding
   PUBLIC
     ActsCore
-    ActsExamplesFramework ActsExamplesMagneticField
+    ActsExamplesFramework
+    ActsExamplesIoJson
+    ActsExamplesMagneticField
     Boost::program_options)
 
 install(
