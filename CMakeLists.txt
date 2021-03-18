@@ -128,7 +128,7 @@ set(_acts_dd4hep_version 1.11)
 set(_acts_doxygen_version 1.8.15)
 set(_acts_eigen3_version 3.3.7)
 set(_acts_hepmc3_version 3.2.1)
-set(_acts_nlohmanjson_version 3.2.0)
+set(_acts_nlohmanjson_version 3.9.1)
 set(_acts_root_version 6.20)
 set(_acts_tbb_version 2020.1)
 
