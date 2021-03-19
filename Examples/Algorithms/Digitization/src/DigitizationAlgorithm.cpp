@@ -59,6 +59,17 @@ struct TruthCluster {
   }
 
   void add(hit_t hit) { simHits.insert(hit); }
+
+  void add(TruthCluster clus) {
+    for (hit_t hit : clus.simHits) {
+      simHits.insert(hit);
+    }
+    for (cell_t& cell : clus.cells) {
+      cells.push_back(std::move(cell));
+    }
+    clus.simHits.clear();
+    clus.cells.clear();
+  }
 };
 
 struct DigitizedCluster {
@@ -99,18 +110,26 @@ auto findInMap(std::unordered_map<hit_t, ActsExamples::DigitizedParameters>&
   return measurementMap.find(cell.simHit);
 }
 
+// Return first match
 auto findInMap(std::unordered_map<hit_t, ActsExamples::DigitizedParameters>&
                    measurementMap,
-               hit_t hit) {
-  return measurementMap.find(hit);
+               TruthCluster& clus) {
+  auto end = measurementMap.end();
+  for (hit_t hit : clus.simHits) {
+    auto it = measurementMap.find(hit);
+    if (it != end)
+      return it;
+  }
+  return end;
 }
 
 template <typename T>
-void mergeMeasurements(
-    std::vector<TruthCluster>& clusters, std::vector<T>& cells,
+std::vector<TruthCluster> mergeMeasurements(
+    std::vector<T>& cells,
     std::unordered_map<hit_t, ActsExamples::DigitizedParameters>&
         measurementMap,
     double nsigma) {
+  std::vector<TruthCluster> clusters;
   std::vector<bool> used(cells.size(), false);
 
   for (size_t i = 0; i < cells.size(); i++) {
@@ -164,15 +183,17 @@ void mergeMeasurements(
       if (matched) {
         // Claim cell `j'
         used.at(j) = true;
-        clusters.back().add(cells.at(j));
+        clusters.back().add(std::move(cells.at(j)));
       }
     }  // loop over 'j'
   }    // loop over `i'
+  return clusters;
 }
 
 // in-place
 void mergeClusters(
-    std::vector<TruthCluster>& clusters, const ActsExamples::GeometricConfig& geoCfg,
+    std::vector<TruthCluster>& clusters,
+    const ActsExamples::GeometricConfig& geoCfg,
     std::unordered_map<hit_t, ActsExamples::DigitizedParameters> measurementMap,
     double nsigma = 1.0) {
   std::unordered_map<size_t, std::pair<SingleCell, bool>> cellMap;
@@ -187,19 +208,13 @@ void mergeClusters(
   }
 
   if (cellMap.empty()) {
-    // No clusters, so simply copy the simhits to a vector because the
-    // downstream computation will modify the clusters array
-    std::vector<hit_t> hits;
-    for (TruthCluster& clus : clusters)
-      hits.push_back(*clus.simHits.begin());
-    clusters.clear();
-    mergeMeasurements(clusters, hits, measurementMap, nsigma);
+    clusters = mergeMeasurements(clusters, measurementMap, nsigma);
   } else {
     clusters.clear();
     std::vector<std::vector<SingleCell>> merged =
         Acts::createClusters(cellMap, geoCfg.segmentation.bins(0));
     for (std::vector<SingleCell>& cellv : merged) {
-      mergeMeasurements(clusters, cellv, measurementMap, nsigma);
+      clusters = mergeMeasurements(cellv, measurementMap, nsigma);
     }
   }
 }
@@ -382,12 +397,12 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
               }
               const auto& [par, cov] = res.value();
               for (Eigen::Index ip = 0; ip < par.rows(); ++ip) {
-		meas.indices.push_back(digitizer.smearing.indices[ip]);
+                meas.indices.push_back(digitizer.smearing.indices[ip]);
                 meas.values.push_back(par[ip]);
                 meas.variances.push_back(cov(ip, ip));
               }
             }
-	    measurementMap.insert({simHitIdx, meas});
+            measurementMap.insert({simHitIdx, meas});
           }
 
           if (m_cfg.mergeClusters)
