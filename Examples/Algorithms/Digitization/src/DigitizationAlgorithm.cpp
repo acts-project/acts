@@ -42,16 +42,16 @@ struct SingleCell {
   double depositedEnergy() { return value.activation; }
 };
 
-struct Cluster {
+struct TruthCluster {
   std::set<hit_t> simHits;
   std::vector<cell_t> cells;
 
-  Cluster(size_t hitIdx, std::vector<cell_t> cells_ = {})
+  TruthCluster(size_t hitIdx, std::vector<cell_t> cells_ = {})
       : simHits{hitIdx}, cells(std::move(cells_)){};
 
-  Cluster(SingleCell cell) : Cluster(cell.simHit, {cell.value}){};
+  TruthCluster(SingleCell cell) : TruthCluster(cell.simHit, {cell.value}){};
 
-  Cluster() : simHits(), cells(){};
+  TruthCluster() : simHits(), cells(){};
 
   void add(SingleCell& cell) {
     simHits.insert(cell.simHit);
@@ -107,7 +107,7 @@ auto findInMap(std::unordered_map<hit_t, ActsExamples::DigitizedParameters>&
 
 template <typename T>
 void mergeMeasurements(
-    std::vector<Cluster>& clusters, std::vector<T>& cells,
+    std::vector<TruthCluster>& clusters, std::vector<T>& cells,
     std::unordered_map<hit_t, ActsExamples::DigitizedParameters>&
         measurementMap,
     double nsigma) {
@@ -118,7 +118,7 @@ void mergeMeasurements(
       continue;
 
     // Cell has not yet been claimed, so claim it
-    clusters.push_back(Cluster(cells.at(i)));
+    clusters.push_back(TruthCluster(cells.at(i)));
     used.at(i) = true;
 
     // Cells previously visited by index `i' have already been added
@@ -172,11 +172,11 @@ void mergeMeasurements(
 
 // in-place
 void mergeClusters(
-    std::vector<Cluster>& clusters, const ActsExamples::GeometricConfig& geoCfg,
+    std::vector<TruthCluster>& clusters, const ActsExamples::GeometricConfig& geoCfg,
     std::unordered_map<hit_t, ActsExamples::DigitizedParameters> measurementMap,
     double nsigma = 1.0) {
   std::unordered_map<size_t, std::pair<SingleCell, bool>> cellMap;
-  for (Cluster& clus : clusters) {
+  for (TruthCluster& clus : clusters) {
     // TODO validate that at this stage only one simhit per cluster
     for (cell_t& cell : clus.cells) {
       size_t index = cell.bin[0] + geoCfg.segmentation.bins(0) * cell.bin[1];
@@ -190,7 +190,7 @@ void mergeClusters(
     // No clusters, so simply copy the simhits to a vector because the
     // downstream computation will modify the clusters array
     std::vector<hit_t> hits;
-    for (Cluster& clus : clusters)
+    for (TruthCluster& clus : clusters)
       hits.push_back(*clus.simHits.begin());
     clusters.clear();
     mergeMeasurements(clusters, hits, measurementMap, nsigma);
@@ -340,7 +340,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
     // visitor so we do not need to lookup the variant object per-hit.
     std::visit(
         [&](const auto& digitizer) {
-          std::vector<::Cluster> moduleClusters;
+          std::vector<::TruthCluster> moduleClusters;
           std::unordered_map<hit_t, DigitizedParameters> measurementMap;
 
           for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
@@ -395,7 +395,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
             mergeClusters(moduleClusters, digitizer.geometric, measurementMap,
                           m_cfg.nSigmaMerge);
 
-          for (::Cluster& cluster : moduleClusters) {
+          for (::TruthCluster& cluster : moduleClusters) {
             DigitizedCluster dClus(std::move(cluster.simHits));
             dClus.params =
                 localParameters(digitizer.geometric, cluster.cells, rng);
