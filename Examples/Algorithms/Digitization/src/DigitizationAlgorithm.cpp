@@ -25,7 +25,7 @@
 #include <string>
 #include <type_traits>
 
-// TODO make sure the moves actually avoid the copies down here
+// Anonymous namespace that contains types and code for hit merging
 namespace {
 using hit_t =
     ActsExamples::SimHitContainer::size_type;  // Only keep index into event
@@ -150,10 +150,10 @@ std::vector<TruthCluster> mergeMeasurements(
 
       // Now, iterate through hits matched to current cluster and see
       // if any of them match the hit associated to the current cell
-      auto& [h1, dparams] = *findInMap(measurementMap, cells.at(j));
+      auto& [h1, dparams] = *findInMap(measurementMap, cells.at(j)); // TODO check
       bool matched = false;
       for (auto hitIdx : clusters.back().simHits) {
-        auto& [h2, dparams_2] = *measurementMap.find(hitIdx);
+        auto& [h2, dparams_2] = *measurementMap.find(hitIdx); // TODO check
 
         // Consider the cell matched to the currently considered
         // simhit until we find evidence to the contrary. This way,
@@ -167,6 +167,9 @@ std::vector<TruthCluster> mergeMeasurements(
           break;
         }
 
+	// Loop over smeared directions Important note: we assume that
+	// at this point the digitized parameters do not containt
+	// dimensions that will be computed from the cluster
         for (size_t k = 0; k < dparams.values.size() and matched; k++) {
           auto maxdist = nsigma * std::sqrt(dparams.variances.at(k));
           if (std::abs(dparams.values.at(k) - dparams_2.values.at(k)) >
@@ -179,7 +182,7 @@ std::vector<TruthCluster> mergeMeasurements(
           // keep checking
           break;
         }
-      }  // loop over `k'
+      }  // loop over `k' (dimensions)
       if (matched) {
         // Claim cell `j'
         used.at(j) = true;
@@ -190,32 +193,44 @@ std::vector<TruthCluster> mergeMeasurements(
   return clusters;
 }
 
-// in-place
 void mergeClusters(
     std::vector<TruthCluster>& clusters,
     const ActsExamples::GeometricConfig& geoCfg,
     std::unordered_map<hit_t, ActsExamples::DigitizedParameters> measurementMap,
     double nsigma = 1.0) {
+
+  // Start by merging actual clusters when there are any. To do so,
+  // first the cell map used by the clusterization code has to be
+  // filled
   std::unordered_map<size_t, std::pair<SingleCell, bool>> cellMap;
   for (TruthCluster& clus : clusters) {
-    // TODO validate that at this stage only one simhit per cluster
+    // TODO validate that at this stage only one simhit per cluster?
     for (cell_t& cell : clus.cells) {
       size_t index = cell.bin[0] + geoCfg.segmentation.bins(0) * cell.bin[1];
-      // TODO maybe cheaper way to do this?
+      // FIXME handle the cases where many hits pass through the same cell
       cellMap.insert(
           {index, {SingleCell(*clus.simHits.begin(), std::move(cell)), false}});
     }
   }
-
-  if (cellMap.empty()) {
-    clusters = mergeMeasurements(clusters, measurementMap, nsigma);
-  } else {
-    clusters.clear();
+  if (not cellMap.empty()) {
+    // Case where we actually have geometric clusters; use the
+    // clusterization code from the digitization plugin
     std::vector<std::vector<SingleCell>> merged =
         Acts::createClusters(cellMap, geoCfg.segmentation.bins(0));
     for (std::vector<SingleCell>& cellv : merged) {
+      // At this stage, the cellv vector contains cells that form a
+      // consistent cluster based on a connected component analysis
+      // only. Still have to check if they match based on the smeared
+      // indices (a good example of this would a for a timing
+      // detector). At this stage, the measurement map contains
+      // parameters from smeared dimensions only, so re-merge based on
+      // that.
       clusters = mergeMeasurements(cellv, measurementMap, nsigma);
     }
+  } else {
+    // Smeared measurements only -- merge based on that. There are no
+    // cells, so merge the TruthClusters directly.
+    clusters = mergeMeasurements(clusters, measurementMap, nsigma);
   }
 }
 }  // namespace
@@ -355,7 +370,14 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
     // visitor so we do not need to lookup the variant object per-hit.
     std::visit(
         [&](const auto& digitizer) {
+	  // Use TruthCluster objects to keep simhits
+	  // association with clusters and/or cells since they can be
+	  // merged downstream
           std::vector<::TruthCluster> moduleClusters;
+
+	  // This map will hold initial smeared measurments associated
+	  // to all hits on the module. When smearing is not
+	  // requested, the map will hold an empty measurement
           std::unordered_map<hit_t, DigitizedParameters> measurementMap;
 
           for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
@@ -379,6 +401,9 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
 
               moduleClusters.emplace_back(simHitIdx, channels);
             } else {
+	      // In this case, geometric digitization is not performed
+	      // so create a pseudo-cluster, i.e. associate the hit
+	      // with an empty cell list
               moduleClusters.emplace_back(simHitIdx);
             }
 
@@ -402,6 +427,8 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
                 meas.variances.push_back(cov(ip, ip));
               }
             }
+	    // Unconditionaly associate a parameter set to each hit,
+	    // even if empty
             measurementMap.insert({simHitIdx, meas});
           }
 
@@ -411,6 +438,8 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
 
           for (::TruthCluster& cluster : moduleClusters) {
             DigitizedCluster dClus(std::move(cluster.simHits));
+	    // N.B.: mergeClusters() assumes it runs before we create
+	    // measurements from the cluster with localParameters()
             dClus.params =
                 localParameters(digitizer.geometric, cluster.cells, rng);
             dClus.addSmearedParams(measurementMap, digitizer.smearing.indices);
