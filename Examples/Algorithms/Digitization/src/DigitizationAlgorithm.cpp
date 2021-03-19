@@ -368,13 +368,12 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
             }
 
             // Smearing part - (optionally) rest
-            DigitizedParameters smeared;
+            DigitizedParameters meas;
             if (not digitizer.smearing.indices.empty()) {
               ACTS_VERBOSE("Configured to smear "
                            << digitizer.smearing.indices.size()
                            << " parameters.");
 
-              // TODO handle case with many hits
               auto res =
                   digitizer.smearing(rng, simHit, *surfacePtr, ctx.geoContext);
               if (not res.ok()) {
@@ -383,12 +382,12 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
               }
               const auto& [par, cov] = res.value();
               for (Eigen::Index ip = 0; ip < par.rows(); ++ip) {
-                smeared.indices.push_back(digitizer.smearing.indices[ip]);
-                smeared.values.push_back(par[ip]);
-                smeared.variances.push_back(cov(ip, ip));
+		meas.indices.push_back(digitizer.smearing.indices[ip]);
+                meas.values.push_back(par[ip]);
+                meas.variances.push_back(cov(ip, ip));
               }
             }
-            measurementMap.insert({simHitIdx, smeared});
+	    measurementMap.insert({simHitIdx, meas});
           }
 
           if (m_cfg.mergeClusters)
