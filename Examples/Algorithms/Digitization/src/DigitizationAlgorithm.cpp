@@ -70,15 +70,15 @@ struct DigitizedCluster {
   template <typename T>
   void addSmearedParams(
       const std::unordered_map<hit_t, ActsExamples::DigitizedParameters>&
-          smearedMap,
+          measurementMap,
       const T& smearIdx) {
     std::vector<Acts::ActsScalar> values(smearIdx.size(), 0);
     std::vector<Acts::ActsScalar> variances(smearIdx.size(), 0);
     Acts::ActsScalar norm = 1.0 / simHits.size();
 
     for (hit_t hit : simHits) {
-      auto parItr = smearedMap.find(hit);
-      if (parItr != smearedMap.end()) {
+      auto parItr = measurementMap.find(hit);
+      if (parItr != measurementMap.end()) {
         for (size_t i = 0; i < smearIdx.size(); i++) {
           values.at(i) += parItr->second.values.at(i) * norm;
           variances.at(i) += parItr->second.variances.at(i) * norm * norm;
@@ -93,22 +93,23 @@ struct DigitizedCluster {
   }
 };
 
-auto findInMap(
-    std::unordered_map<hit_t, ActsExamples::DigitizedParameters>& smearedMap,
-    SingleCell& cell) {
-  return smearedMap.find(cell.simHit);
+auto findInMap(std::unordered_map<hit_t, ActsExamples::DigitizedParameters>&
+                   measurementMap,
+               SingleCell& cell) {
+  return measurementMap.find(cell.simHit);
 }
 
-auto findInMap(
-    std::unordered_map<hit_t, ActsExamples::DigitizedParameters>& smearedMap,
-    hit_t hit) {
-  return smearedMap.find(hit);
+auto findInMap(std::unordered_map<hit_t, ActsExamples::DigitizedParameters>&
+                   measurementMap,
+               hit_t hit) {
+  return measurementMap.find(hit);
 }
 
 template <typename T>
-void mergeSmeared(
+void mergeMeasurements(
     std::vector<Cluster>& clusters, std::vector<T>& cells,
-    std::unordered_map<hit_t, ActsExamples::DigitizedParameters>& smearedMap,
+    std::unordered_map<hit_t, ActsExamples::DigitizedParameters>&
+        measurementMap,
     double nsigma) {
   std::vector<bool> used(cells.size(), false);
 
@@ -130,10 +131,10 @@ void mergeSmeared(
 
       // Now, iterate through hits matched to current cluster and see
       // if any of them match the hit associated to the current cell
-      auto& [h1, dparams] = *findInMap(smearedMap, cells.at(j));
+      auto& [h1, dparams] = *findInMap(measurementMap, cells.at(j));
       bool matched = false;
       for (auto hitIdx : clusters.back().simHits) {
-        auto& [h2, dparams_2] = *smearedMap.find(hitIdx);
+        auto& [h2, dparams_2] = *measurementMap.find(hitIdx);
 
         // Consider the cell matched to the currently considered
         // simhit until we find evidence to the contrary. This way,
@@ -172,7 +173,7 @@ void mergeSmeared(
 // in-place
 void mergeClusters(
     std::vector<Cluster>& clusters, const ActsExamples::GeometricConfig& geoCfg,
-    std::unordered_map<hit_t, ActsExamples::DigitizedParameters> smearedMap,
+    std::unordered_map<hit_t, ActsExamples::DigitizedParameters> measurementMap,
     double nsigma = 1.0) {
   std::unordered_map<size_t, std::pair<SingleCell, bool>> cellMap;
   for (Cluster& clus : clusters) {
@@ -192,13 +193,13 @@ void mergeClusters(
     for (Cluster& clus : clusters)
       hits.push_back(*clus.simHits.begin());
     clusters.clear();
-    mergeSmeared(clusters, hits, smearedMap, nsigma);
+    mergeMeasurements(clusters, hits, measurementMap, nsigma);
   } else {
     clusters.clear();
     std::vector<std::vector<SingleCell>> merged =
         Acts::createClusters(cellMap, geoCfg.segmentation.bins(0));
     for (std::vector<SingleCell>& cellv : merged) {
-      mergeSmeared(clusters, cellv, smearedMap, nsigma);
+      mergeMeasurements(clusters, cellv, measurementMap, nsigma);
     }
   }
 }
@@ -340,7 +341,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
     std::visit(
         [&](const auto& digitizer) {
           std::vector<::Cluster> moduleClusters;
-          std::unordered_map<hit_t, DigitizedParameters> smearedMap;
+          std::unordered_map<hit_t, DigitizedParameters> measurementMap;
 
           for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
             const auto& simHit = *h;
@@ -387,18 +388,18 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
                 smeared.variances.push_back(cov(ip, ip));
               }
             }
-            smearedMap.insert({simHitIdx, smeared});
+            measurementMap.insert({simHitIdx, smeared});
           }
 
           if (m_cfg.mergeClusters)
-            mergeClusters(moduleClusters, digitizer.geometric, smearedMap,
+            mergeClusters(moduleClusters, digitizer.geometric, measurementMap,
                           m_cfg.nSigmaMerge);
 
           for (::Cluster& cluster : moduleClusters) {
             DigitizedCluster dClus(std::move(cluster.simHits));
             dClus.params =
                 localParameters(digitizer.geometric, cluster.cells, rng);
-            dClus.addSmearedParams(smearedMap, digitizer.smearing.indices);
+            dClus.addSmearedParams(measurementMap, digitizer.smearing.indices);
 
             // Check on success - threshold could have eliminated all channels
             if (dClus.params.values.empty()) {
