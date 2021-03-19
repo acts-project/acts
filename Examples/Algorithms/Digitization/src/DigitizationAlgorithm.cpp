@@ -150,10 +150,16 @@ std::vector<TruthCluster> mergeMeasurements(
 
       // Now, iterate through hits matched to current cluster and see
       // if any of them match the hit associated to the current cell
-      auto& [h1, dparams] = *findInMap(measurementMap, cells.at(j)); // TODO check
+      auto it1 = findInMap(measurementMap, cells.at(j));
+      if (it1 == measurementMap.end())
+	throw std::runtime_error("hit not found in measurement map!");
+      auto& [h1, dparams] = *it1;
       bool matched = false;
       for (auto hitIdx : clusters.back().simHits) {
-        auto& [h2, dparams_2] = *measurementMap.find(hitIdx); // TODO check
+	auto it2 = measurementMap.find(hitIdx);
+	if (it2 == measurementMap.end())
+	  throw std::runtime_error("hit not found in measurement map!");
+        auto& [h2, dparams_2] = *it2;
 
         // Consider the cell matched to the currently considered
         // simhit until we find evidence to the contrary. This way,
