@@ -158,10 +158,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
         h2 * ((sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>() +
               std::abs(sd.kQoP[0] - sd.kQoP[1] - sd.kQoP[2] + sd.kQoP[3])),
         1e-20);
-if(error_estimate <= state.options.tolerance && state.stepping.stepSize.currentType() == ConstrainedStep::Type::accuracy)
-{
-	std::cout << "Error: " << error_estimate << " " << state.options.tolerance << " | " << h << std::endl;
-}
+
     return (error_estimate <= state.options.tolerance);
   };
 
@@ -170,14 +167,9 @@ if(error_estimate <= state.options.tolerance && state.stepping.stepSize.currentT
   // Select and adjust the appropriate Runge-Kutta step size as given
   // ATL-SOFT-PUB-2009-001
   while (!tryRungeKuttaStep(state.stepping.stepSize)) {
-if(state.stepping.stepSize.currentType() == ConstrainedStep::Type::accuracy)
-std::cout << "StepSize adjustment: " << stepSizeScaling << " | " << error_estimate << " | " << std::min(std::max(0.25, std::pow((state.options.tolerance /
-                                          std::abs(error_estimate)),
-                                         0.25)),
-                 4.) << std::endl;
     stepSizeScaling =
         std::min(std::max(0.25, std::pow((state.options.tolerance /
-                                          std::abs(error_estimate)),
+                                          std::abs(2. * error_estimate)),
                                          0.25)),
                  4.);
 
@@ -234,13 +226,6 @@ std::cout << "StepSize adjustment: " << stepSizeScaling << " | " << error_estima
   state.stepping.pathAccumulated += h;
   if(state.stepping.stepSize.currentType() == ConstrainedStep::Type::accuracy)
   {
-	  std::cout << "Final scaling: " << state.stepping.stepSize << " " << std::min(std::max(0.25, std::pow((state.options.tolerance /
-                                          std::abs(error_estimate)),
-                                         0.25)),
-                 4.) << " -> " << state.stepping.stepSize * std::min(std::max(0.25, std::pow((state.options.tolerance /
-                                          std::abs(error_estimate)),
-                                         0.25)),
-                 4.) << std::endl;
     state.stepping.stepSize = state.stepping.stepSize * std::min(std::max(0.25, std::pow((state.options.tolerance /
                                           std::abs(error_estimate)),
                                          0.25)),
