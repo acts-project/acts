@@ -224,9 +224,11 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     state.stepping.derivative.template segment<3>(4) = sd.k4;
   }
   state.stepping.pathAccumulated += h;
-  if(state.stepping.stepSize.currentType() == ConstrainedStep::Type::accuracy)
-  {
-    state.stepping.stepSize = state.stepping.stepSize * std::min(std::max(0.25, std::pow((state.options.tolerance /
+  if (state.stepping.stepSize.currentType() ==
+      ConstrainedStep::Type::accuracy) {
+    state.stepping.stepSize =
+        state.stepping.stepSize *
+        std::min(std::max(0.25, std::pow((state.options.tolerance /
                                           std::abs(error_estimate)),
                                          0.25)),
                  4.);
