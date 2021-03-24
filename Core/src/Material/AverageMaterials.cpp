@@ -22,6 +22,10 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   // material. It is unclear if the latter can be computed in a general fashion,
   // so we stick to the purely geometric averages for now.
 
+  // NOTE 2021-03-24 corentin
+  // In the case of the atomic number, the averaging is based on the log
+  // to properly account for the energy loss in multiple material.
+
   // use double for (intermediate) computations to avoid precision loss
 
   // the thickness properties are purely additive
@@ -58,7 +62,6 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   // of
   //
   //     A = (N1*A1 + N2*A2) / (N1+N2) = (N1/N)*A1 + (N2/N)*A2 = W1*A1 + W2*A2
-  //     Z = (N1*Z1 + N2*Z2) / (N1+N2) = (N1/N)*Z1 + (N2/N)*Z2 = W1*Z1 * W2*Z2
   //
   // the number of atoms/molecues in a given volume V with molar density rho is
   //
@@ -70,10 +73,34 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   //        = (Vi*rhoi) / (V1*rho1 + V2*rho2)
   //
   // which can be computed from the molar amount-of-substance above.
-  double weight1 = molarAmount1 / molarAmount;
-  double weight2 = molarAmount2 / molarAmount;
-  float ar = weight1 * mat1.Ar() + weight2 * mat2.Ar();
-  float z = weight1 * mat1.Z() + weight2 * mat2.Z();
+
+  double molarWeight1 = molarAmount1 / molarAmount;
+  double molarWeight2 = molarAmount2 / molarAmount;
+  float ar = molarWeight1 * mat1.Ar() + molarWeight2 * mat2.Ar();
+
+  // In the case of the atomic number, its main use is the computation
+  // of the mean excitation energy approximated in ATL-SOFT-PUB-2008-003 as :
+  //     I = 16 eV * Z^(0.9)
+  // This mean excitation energy will then be used to compute energy loss
+  // which will be proportional to :
+  //     Eloss ~ ln(1/I)*thickness
+  // In the case of two sucessive material :
+  //     Eloss = El1 + El2
+  //           ~ ln(Z1)*t1 + ln(Z2)*t2
+  //           ~ ln(Z)*t
+  // To respect this the average atomic number thus need to be defined as :
+  //     ln(Z)*t = ln(Z1)*t1 + ln(Z2)*t2
+  //           Z = Exp( ln(Z1)*t1/t + ln(Z2)*t2/t )
+
+  double thicknessWeight1 = slab1.thickness() / thickness;
+  double thicknessWeight2 = slab2.thickness() / thickness;
+  float z;
+  if (mat1.Z() != 0 && mat2.Z()) {
+    z = exp(thicknessWeight1 * log(mat1.Z()) +
+            thicknessWeight2 * log(mat2.Z()));
+  } else {
+    z = thicknessWeight1 * mat1.Z() + thicknessWeight2 * mat2.Z();
+  }
 
   return {Material::fromMolarDensity(x0, l0, ar, z, molarDensity),
           static_cast<float>(thickness)};
