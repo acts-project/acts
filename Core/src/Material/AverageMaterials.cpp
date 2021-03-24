@@ -31,6 +31,13 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   // the thickness properties are purely additive
   double thickness = static_cast<double>(slab1.thickness()) +
                      static_cast<double>(slab2.thickness());
+
+  // if the two materials are the same there is not need for aditional
+  // computation
+  if (mat1 == mat2) {
+    return {mat1, static_cast<float>(thickness)};
+  }
+
   double thicknessInX0 = static_cast<double>(slab1.thicknessInX0()) +
                          static_cast<double>(slab2.thicknessInX0());
   double thicknessInL0 = static_cast<double>(slab1.thicknessInL0()) +
