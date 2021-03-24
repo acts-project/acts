@@ -99,8 +99,7 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
     z = exp(thicknessWeight1 * log(mat1.Z()) +
             thicknessWeight2 * log(mat2.Z()));
   } else {
-    // if one of the material is vaccum the atomic number is unchanged
-    z = mat1.Z() + mat2.Z();
+    z = thicknessWeight1 * mat1.Z() + thicknessWeight2 * mat2.Z();
   }
 
   return {Material::fromMolarDensity(x0, l0, ar, z, molarDensity),
