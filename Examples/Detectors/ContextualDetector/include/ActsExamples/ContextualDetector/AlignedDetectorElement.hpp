@@ -16,6 +16,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
 
+#include <iostream>
+#include <map>
 #include <memory>
 
 namespace ActsExamples {
@@ -72,20 +74,23 @@ class AlignedDetectorElement : public Generic::GenericDetectorElement {
                            unsigned int iov);
 
   /// Return the set of alignment transforms in flight
-  const std::vector<std::unique_ptr<Acts::Transform3>>& alignedTransforms()
-      const;
+  const std::map<unsigned int, std::unique_ptr<Acts::Transform3>>&
+  alignedTransforms() const;
 
  private:
-  std::vector<std::unique_ptr<Acts::Transform3>> m_alignedTransforms;
+  std::map<unsigned int, std::unique_ptr<Acts::Transform3>> m_alignedTransforms;
 };
 
 inline const Acts::Transform3& AlignedDetectorElement::transform(
     const Acts::GeometryContext& gctx) const {
   // Check if a different transform than the nominal exists
-  if (m_alignedTransforms.size()) {
+  if (not m_alignedTransforms.empty()) {
     // cast into the right context object
     auto alignContext = gctx.get<ContextType>();
-    return (*m_alignedTransforms[alignContext.iov].get());
+    auto aTransform = m_alignedTransforms.find(alignContext.iov);
+    if (aTransform != m_alignedTransforms.end()) {
+      return (*aTransform->second.get());
+    }
   }
   // Return the standard transform if not found
   return nominalTransform(gctx);
@@ -98,15 +103,10 @@ inline const Acts::Transform3& AlignedDetectorElement::nominalTransform(
 
 inline void AlignedDetectorElement::addAlignedTransform(
     std::unique_ptr<Acts::Transform3> alignedTransform, unsigned int iov) {
-  // most standard case, it's just a new one:
-  auto cios = m_alignedTransforms.size();
-  for (unsigned int ic = cios; ic <= iov; ++ic) {
-    m_alignedTransforms.push_back(nullptr);
-  }
   m_alignedTransforms[iov] = std::move(alignedTransform);
 }
 
-inline const std::vector<std::unique_ptr<Acts::Transform3>>&
+inline const std::map<unsigned int, std::unique_ptr<Acts::Transform3>>&
 AlignedDetectorElement::alignedTransforms() const {
   return m_alignedTransforms;
 }
