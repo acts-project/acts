@@ -54,17 +54,10 @@ struct SingleParticleSimulation {
   /// Local logger for debug output.
   std::shared_ptr<const Acts::Logger> localLogger = nullptr;
 
-  /// Construct the simulator with the underlying propagator.
-  SingleParticleSimulation(propagator_t &&propagator_, Acts::Logging::Level lvl)
-      : propagator(propagator_),
-        localLogger(Acts::getDefaultLogger("Simulation", lvl)) {
-    loggerWrapper = Acts::LoggerWrapper(*localLogger);
-  }
-
   /// Alternatively construct the simulator with an external logger.
   SingleParticleSimulation(propagator_t &&propagator_,
-                           Acts::LoggerWrapper loggerWrapper_)
-      : propagator(propagator_), loggerWrapper(loggerWrapper_) {}
+                           std::shared_ptr<const Acts::Logger> localLogger_)
+      : propagator(propagator_), localLogger(localLogger_) {}
 
   /// Provide access to the local logger instance, e.g. for logging macros.
   const Acts::Logger &logger() const { return *localLogger; }
@@ -83,6 +76,7 @@ struct SingleParticleSimulation {
       const Acts::GeometryContext &geoCtx,
       const Acts::MagneticFieldContext &magCtx, generator_t &generator,
       const Particle &particle) const {
+    assert(localLogger and "Missing local logger");
     // propagator-related additional types
     using Actor = detail::SimulationActor<generator_t, decay_t, interactions_t,
                                           hit_surface_selector_t>;
@@ -93,7 +87,8 @@ struct SingleParticleSimulation {
     using PropagatorOptions = Acts::PropagatorOptions<Actions, Abort>;
 
     // Construct per-call options.
-    PropagatorOptions options(geoCtx, magCtx, loggerWrapper);
+    PropagatorOptions options(geoCtx, magCtx,
+                              Acts::LoggerWrapper{*localLogger});
     options.absPdgCode = Acts::makeAbsolutePdgParticle(particle.pdg());
     options.mass = particle.mass();
     // setup the interactor as part of the propagator options

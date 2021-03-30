@@ -14,6 +14,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
@@ -106,10 +107,10 @@ struct FatrasAlgorithmSimulationT final
       : simulation(ChargedSimulation(
                        ChargedPropagator(ChargedStepper(cfg.magneticField),
                                          cfg.trackingGeometry),
-                       lvl),
+                       Acts::getDefaultLogger("Simulation", lvl)),
                    NeutralSimulation(NeutralPropagator(NeutralStepper(),
                                                        cfg.trackingGeometry),
-                                     lvl)) {
+                       Acts::getDefaultLogger("Simulation", lvl))) {
     using namespace ActsFatras;
     using namespace ActsFatras::detail;
     // apply the configuration
