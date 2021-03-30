@@ -49,6 +49,18 @@ constexpr std::size_t align_down(std::size_t v, std::size_t align_bytes) noexcep
 	return v & ~(align_bytes - 1);
 }
 
+//@param[in] v value to check for alignment
+//@param[in] alignment amount, in bytes, must be a power of 2
+//
+//@return true if aligned
+constexpr bool is_aligned(std::size_t v, std::size_t align_bytes) noexcept {
+	//if the alignment is not support, the program will end
+	assert(is_suppored_aligment(align_bytes));
+	return v == align_down(v, align_bytes);
+}
+
+
+
 } //namespace detail
 } //namespace Nmm
 } //namespace Acts
