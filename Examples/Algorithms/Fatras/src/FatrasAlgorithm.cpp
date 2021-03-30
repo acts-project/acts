@@ -104,13 +104,14 @@ struct FatrasAlgorithmSimulationT final
 
   FatrasAlgorithmSimulationT(const ActsExamples::FatrasAlgorithm::Config &cfg,
                              Acts::Logging::Level lvl)
-      : simulation(ChargedSimulation(
-                       ChargedPropagator(ChargedStepper(cfg.magneticField),
-                                         cfg.trackingGeometry),
-                       Acts::getDefaultLogger("Simulation", lvl)),
-                   NeutralSimulation(NeutralPropagator(NeutralStepper(),
-                                                       cfg.trackingGeometry),
-                       Acts::getDefaultLogger("Simulation", lvl))) {
+      : simulation(
+            ChargedSimulation(
+                ChargedPropagator(ChargedStepper(cfg.magneticField),
+                                  cfg.trackingGeometry),
+                Acts::getDefaultLogger("Simulation", lvl)),
+            NeutralSimulation(
+                NeutralPropagator(NeutralStepper(), cfg.trackingGeometry),
+                Acts::getDefaultLogger("Simulation", lvl))) {
     using namespace ActsFatras;
     using namespace ActsFatras::detail;
     // apply the configuration

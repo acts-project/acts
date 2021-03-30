@@ -170,12 +170,12 @@ BOOST_DATA_TEST_CASE(FatrasSimulation, dataset, pdg, phi, eta, p,
   NeutralPropagator neutralPropagator(NeutralStepper(), navigator);
 
   // construct the simulator
-  ChargedSimulation simulatorCharged(std::move(chargedPropagator), 
-                                     Acts::getDefaultLogger("ChargedSimulation",
-                                                      logLevel));
-  NeutralSimulation simulatorNeutral(std::move(neutralPropagator), 
-                                     Acts::getDefaultLogger("NeutralSimulation",
-                                                      logLevel));
+  ChargedSimulation simulatorCharged(
+      std::move(chargedPropagator),
+      Acts::getDefaultLogger("ChargedSimulation", logLevel));
+  NeutralSimulation simulatorNeutral(
+      std::move(neutralPropagator),
+      Acts::getDefaultLogger("NeutralSimulation", logLevel));
   Simulation simulator(std::move(simulatorCharged),
                        std::move(simulatorNeutral));
 
