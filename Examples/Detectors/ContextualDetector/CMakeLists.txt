@@ -3,7 +3,9 @@ add_library(
   src/AlignedDetector.cpp
   src/AlignmentDecorator.cpp
   src/PayloadDecorator.cpp
-  src/PayloadDetector.cpp)
+  src/PayloadDetector.cpp
+  src/PrealignedDecorator.cpp
+  src/PrealignedDetector.cpp)
 target_include_directories(
   ActsExamplesDetectorContextual
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)

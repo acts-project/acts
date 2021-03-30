@@ -33,6 +33,14 @@ target_link_libraries(
   ActsExamplePropagationAligned
   PRIVATE ${_common_libraries} ActsExamplesDetectorContextual)
 
+# Generic detector with IOV based alignment - preloaded
+add_executable(
+  ActsExamplePropagationPrealigned
+  PrealignedPropagationExample.cpp)
+target_link_libraries(
+  ActsExamplePropagationPrealigned
+  PRIVATE ${_common_libraries} ActsExamplesDetectorContextual)
+
 # Generic detector with Payload based alignment
 add_executable(
   ActsExamplePropagationPayload

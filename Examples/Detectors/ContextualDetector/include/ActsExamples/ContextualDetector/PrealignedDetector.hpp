@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,17 +8,18 @@
 
 #pragma once
 
-#include "ActsExamples/ContextualDetector/AlignedDetectorElement.hpp"
+#include "ActsExamples/ContextualDetector/PrealignedDecorator.hpp"
+#include "ActsExamples/ContextualDetector/PrealignedDetectorElement.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 #include <memory>
 #include <vector>
 
-struct AlignedDetector : public ActsExamples::IBaseDetector {
-  using DetectorElement = ActsExamples::Contextual::AlignedDetectorElement;
+struct PrealignedDetector : public ActsExamples::IBaseDetector {
+  using DetectorElement = ActsExamples::Contextual::PrealignedDetectorElement;
   using DetectorElementPtr = std::shared_ptr<DetectorElement>;
-  using Decorator = ActsExamples::Contextual::AlignmentDecorator;
+  using Decorator = ActsExamples::Contextual::PrealignedDecorator;
   using DetectorStore = std::vector<std::vector<DetectorElementPtr>>;
 
   /// The Store of the detector elements (lifetime: job)
