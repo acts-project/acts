@@ -204,6 +204,7 @@ ProcessCode CsvTrackingGeometryWriter::endRun() {
       joinPaths(m_cfg.outputDir, "surface-grids.csv"), m_cfg.outputPrecision);
 
   writeVolume(sfWriter, sfGridWriter, *m_world, m_cfg.writeSensitive,
-              m_cfg.writeSensitive, m_cfg.writeSurfaceGrid, Acts::GeometryContext());
+              m_cfg.writeSensitive, m_cfg.writeSurfaceGrid,
+              Acts::GeometryContext());
   return ProcessCode::SUCCESS;
 }
