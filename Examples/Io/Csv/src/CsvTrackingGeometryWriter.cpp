@@ -50,7 +50,7 @@ std::string CsvTrackingGeometryWriter::name() const {
 namespace {
 
 using SurfaceWriter = dfe::NamedTupleCsvWriter<SurfaceData>;
-using SurfaceGridWriter = dfe::NamedTupleCsvWriter<SurfaceGrid>;
+using SurfaceGridWriter = dfe::NamedTupleCsvWriter<SurfaceGridData>;
 using BoundarySurface = Acts::BoundarySurfaceT<Acts::TrackingVolume>;
 
 /// Write a single surface.
@@ -118,7 +118,7 @@ void writeBoundarySurface(SurfaceWriter& writer,
 /// Write all child surfaces and descend into confined volumes.
 void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
                  const Acts::TrackingVolume& volume, bool writeSensitive,
-                 bool writeBoundary, bool writeGrid,
+                 bool writeBoundary, bool writeSurfaceGrid,
                  const Acts::GeometryContext& geoCtx) {
   // process all layers that are directly stored within this volume
   if (volume.confinedLayers()) {
@@ -131,8 +131,8 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
       if (layer->surfaceArray()) {
         auto sfArray = layer->surfaceArray();
 
-        if (writeGrid) {
-          SurfaceGrid sfGrid;
+        if (writeSurfaceGrid) {
+          SurfaceGridData sfGrid;
           sfGrid.geometry_id = layer->geometryId().value();
           sfGrid.volume_id = layer->geometryId().volume();
           sfGrid.layer_id = layer->geometryId().layer();
@@ -175,7 +175,7 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
   if (volume.confinedVolumes()) {
     for (auto confined : volume.confinedVolumes()->arrayObjects()) {
       writeVolume(sfWriter, sfGridWriter, *confined.get(), writeSensitive,
-                  writeBoundary, writeGrid, geoCtx);
+                  writeBoundary, writeSurfaceGrid, geoCtx);
     }
   }
 }
@@ -193,7 +193,7 @@ ProcessCode CsvTrackingGeometryWriter::write(const AlgorithmContext& ctx) {
       m_cfg.outputPrecision);
 
   writeVolume(sfWriter, sfGridWriter, *m_world, m_cfg.writeSensitive,
-              m_cfg.writeSensitive, m_cfg.writeGrid, ctx.geoContext);
+              m_cfg.writeSensitive, m_cfg.writeSurfaceGrid, ctx.geoContext);
   return ProcessCode::SUCCESS;
 }
 
@@ -204,6 +204,6 @@ ProcessCode CsvTrackingGeometryWriter::endRun() {
       joinPaths(m_cfg.outputDir, "surface-grids.csv"), m_cfg.outputPrecision);
 
   writeVolume(sfWriter, sfGridWriter, *m_world, m_cfg.writeSensitive,
-              m_cfg.writeSensitive, m_cfg.writeGrid, Acts::GeometryContext());
+              m_cfg.writeSensitive, m_cfg.writeSurfaceGrid, Acts::GeometryContext());
   return ProcessCode::SUCCESS;
 }
