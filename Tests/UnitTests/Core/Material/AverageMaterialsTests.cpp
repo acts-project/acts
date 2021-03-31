@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsEqualThicknessVacuum) {
     // atomic mass and nuclear charge are per atom, adding any amount vacuum
     // does not change the average atom properties only their density
     BOOST_CHECK_EQUAL(slab.material().Ar(), mat.Ar());
-    BOOST_CHECK_EQUAL(slab.material().Z(), mat.Z());
+    BOOST_CHECK_EQUAL(slab.material().Z(), 0.5 * mat.Z());
     // we have the same type of interactions just spread over twice the length
     CHECK_CLOSE_REL(slab.material().X0(), 2.0f * mat.X0(), eps);
     CHECK_CLOSE_REL(slab.material().L0(), 2.0f * mat.L0(), eps);
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsEqualThicknessVacuum) {
     // atomic mass and nuclear charge are per atom, adding any amount vacuum
     // does not change the average atom properties only their density
     BOOST_CHECK_EQUAL(slab.material().Ar(), mat.Ar());
-    BOOST_CHECK_EQUAL(slab.material().Z(), mat.Z());
+    BOOST_CHECK_EQUAL(slab.material().Z(), 0.5 * mat.Z());
     // we have the same type of interactions just spread over twice the length
     CHECK_CLOSE_REL(slab.material().X0(), 2.0f * mat.X0(), eps);
     CHECK_CLOSE_REL(slab.material().L0(), 2.0f * mat.L0(), eps);
@@ -235,7 +235,9 @@ BOOST_AUTO_TEST_CASE(CombineSlabs) {
     BOOST_CHECK_EQUAL(slab.material().X0(), 1.5f);
     BOOST_CHECK_EQUAL(slab.material().L0(), 1.5f);
     BOOST_CHECK_EQUAL(slab.material().Ar(), 3.0f);
-    BOOST_CHECK_EQUAL(slab.material().Z(), 7.0f);
+    BOOST_CHECK_EQUAL(slab.material().Z(),
+                      static_cast<float>(
+                          exp((0.5 / 1.5) * log(12.0) + (1.0 / 1.5) * log(6))));
     BOOST_CHECK_EQUAL(slab.material().molarDensity(), 4.0f);
   }
   // reverse input order
@@ -248,7 +250,9 @@ BOOST_AUTO_TEST_CASE(CombineSlabs) {
     BOOST_CHECK_EQUAL(slab.material().X0(), 1.5f);
     BOOST_CHECK_EQUAL(slab.material().L0(), 1.5f);
     BOOST_CHECK_EQUAL(slab.material().Ar(), 3.0f);
-    BOOST_CHECK_EQUAL(slab.material().Z(), 7.0f);
+    BOOST_CHECK_EQUAL(slab.material().Z(),
+                      static_cast<float>(
+                          exp((0.5 / 1.5) * log(12.0) + (1.0 / 1.5) * log(6))));
     BOOST_CHECK_EQUAL(slab.material().molarDensity(), 4.0f);
   }
 }
