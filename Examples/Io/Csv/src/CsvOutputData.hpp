@@ -181,4 +181,22 @@ struct SurfaceData {
                  bound_param5, bound_param6);
 };
 
+struct SurfaceGridData {
+  /// Surface identifier. Not available in the TrackML datasets.
+  uint64_t geometry_id;
+  /// Partially decoded surface identifier components.
+  uint32_t volume_id, layer_id, surface_id;
+  /// The number of bins in loc 0 / 1
+  int type_loc0 = -1;
+  int nbins_loc0 = -1;
+  float min_loc0, max_loc0;
+  int type_loc1 = -1;
+  int nbins_loc1 = -1;
+  float min_loc1, max_loc1;
+
+  DFE_NAMEDTUPLE(SurfaceGridData, geometry_id, volume_id, layer_id, surface_id,
+                 type_loc0, nbins_loc0, min_loc0, max_loc0, type_loc1,
+                 nbins_loc1, min_loc1, max_loc1);
+};
+
 }  // namespace ActsExamples
