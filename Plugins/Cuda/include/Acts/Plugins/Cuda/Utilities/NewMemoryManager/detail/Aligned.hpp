@@ -59,7 +59,62 @@ constexpr bool is_aligned(std::size_t v, std::size_t align_bytes) noexcept {
 	return v == align_down(v, align_bytes);
 }
 
+// This function allocates sufficiente memory to satisfy the requested
+// size `bytes` with alignment `alignment` using the unary callable `alloc`
+// to allocate memory
+//
+// Allocations returned from `aligned_allocate` MUST be free by calling
+// `aligned_deallocate` with the same arguments for `bytes` and `alignment` with 
+// a compatible unary `dealloc` callable capable of freeing the memory returned
+// from `alloc`
+//
+// @tparam Alloc a unary callabe type that allocate memory
+// @param[in] bytes the size of the allocation
+// @param[in] alignment desired alignment of allocation
+// @param[in] alloc Unary callable given a size `n` will allocate at least 
+// `n` bytes of host memory
+// 
+// @return void* pointer into allocation of at least `bytes` with desired 
+// `alignment`
+template <typename Alloc>
+void *aligned_allocate(std::size_t bytes, std::size_t alignment, Alloc alloc) {
+	assert(is_pow2(alignment));
 
+	std::size_t padded_allocation_size{bytes + alignment + sizeof(std::ptrdiff_t)};
+
+	char *const original = static_cast<char *>(alloc(padded_allocation_size));
+
+	void *aligned{original + sizeof(std::ptrdiff_t)};
+
+	std::align(alignment, bytes, aligned, padded_allocation_size);
+
+	std::ptrdiff_t offset = static_cast<char *>(aligned) - original;
+
+	*(static_cast<std::ptrdiff_t *>(aligned) - 1) = offset;
+
+	return aligned;
+}
+
+// This funciton frees an allocation from `aligned_allocate`, so have to be 
+// called with the same arguments for `bytes` and `alignment` with a compatible
+// unary `dealloc` callable capable of freeing the memory returned
+//
+// @tparam Dealloc a unary callable type that deallocates memory
+// @param[in] p the aligned pointer to deallocate
+// @param[in] bytes the number of bytes requestedfrom `aligned_allocate`
+// @param[in] alignment the alignment required from `aligned_allocate`
+// @param[in] dealloc a unvary callable capable of freeing memory returned from
+// `alloc` in `aligned_allocate` 
+template <typename Dealloc>
+void aligned_deallocate(void *p, std::size_t bytes, std::size_t alignment, Dealloc dealloc){
+	(void)alignment;
+
+	std::ptrdiff_t const offset = *(reinterpret_cast<std::ptrdiff_t *>(p) - 1);
+
+	void *const original = static_cast<char *>(p) - offset;
+
+	dealloc(original)
+}
 
 } //namespace detail
 } //namespace Nmm
