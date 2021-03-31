@@ -11,6 +11,7 @@
 #include <Acts/Geometry/TrackingGeometry.hpp>
 
 #include <random>
+#include <thread>
 
 ActsExamples::Contextual::AlignmentDecorator::AlignmentDecorator(
     const ActsExamples::Contextual::AlignmentDecorator::Config& cfg,
@@ -25,6 +26,10 @@ ActsExamples::Contextual::AlignmentDecorator::decorate(
 
   // In which iov batch are we?
   unsigned int iov = context.eventNumber / m_cfg.iovSize;
+
+  ACTS_VERBOSE("IOV handling in thread " << std::this_thread::get_id() << ".");
+  ACTS_VERBOSE("IOV resolved to " << iov << " - from event "
+                                  << context.eventNumber << ".");
 
   if (m_cfg.randomNumberSvc != nullptr) {
     // Detect if we have a new alignment range
