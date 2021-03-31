@@ -32,6 +32,7 @@ int runDigitizationConfigExample(
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
   Options::addGeometryOptions(desc);
+  Options::addMaterialOptions(desc);
   Options::addDigitizationOptions(desc);
 
   // Add specific options for this geometry
@@ -51,11 +52,17 @@ int runDigitizationConfigExample(
   // Build a parser and visit the geometry
   ActsExamples::detail::DigitizationConfigurator digiConfigurator;
   digiConfigurator.inputDigiComponents = inputConfig;
+  digiConfigurator.outputDigiComponents =
+      std::make_shared<ActsExamples::detail::DigitizationConfigurator::
+                           CollectedOutputComponents>();
 
   geometry.first->visitSurfaces(digiConfigurator);
 
+  Acts::GeometryHierarchyMap<DigiComponentsConfig> outputConfig(
+      *digiConfigurator.outputDigiComponents);
+
   if (not vm["dump-digi-config"].as<std::string>().empty()) {
-    writeDigiConfigToJson(digiConfigurator.outputDigiComponents,
+    writeDigiConfigToJson(outputConfig,
                           vm["dump-digi-config"].as<std::string>());
   }
 

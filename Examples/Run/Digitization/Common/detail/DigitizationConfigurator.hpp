@@ -24,6 +24,8 @@
 #include "ActsExamples/Digitization/DigitizationOptions.hpp"
 #include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 
+#include <memory>
+
 namespace ActsExamples {
 namespace detail {
 
@@ -41,18 +43,18 @@ namespace detail {
 struct DigitizationConfigurator {
   /// Simplified input components for digitization
   Acts::GeometryHierarchyMap<DigiComponentsConfig> inputDigiComponents;
+
+  using CollectedOutputComponents =
+      std::vector<std::pair<Acts::GeometryIdentifier, DigiComponentsConfig>>;
+
   /// Full output components for digitization
-  Acts::GeometryHierarchyMap<DigiComponentsConfig> outputDigiComponents;
+  std::shared_ptr<CollectedOutputComponents> outputDigiComponents = nullptr;
 
   /// The visitor call for the geometry
   void operator()(const Acts::Surface* surface) {
-    std::vector<std::pair<Acts::GeometryIdentifier, DigiComponentsConfig>>
-        components;
-
     if (surface->associatedDetectorElement() != nullptr) {
       Acts::GeometryIdentifier geoId = surface->geometryId();
       auto dInputConfig = inputDigiComponents.find((geoId));
-
       if (dInputConfig != inputDigiComponents.end()) {
         // The output config, copy over the smearing part
         DigiComponentsConfig dOutputConfig;
@@ -235,14 +237,10 @@ struct DigitizationConfigurator {
           // Set the adapted segmentation class
           dOutputConfig.geometricDigiConfig.segmentation = outputSegmentation;
         }
-        // Insert into the output map
-        components.push_back({geoId, dOutputConfig});
+        // Insert into the output list
+        outputDigiComponents->push_back({geoId, dOutputConfig});
       }
-
     }
-    // Create the output map
-    outputDigiComponents =
-        Acts::GeometryHierarchyMap<DigiComponentsConfig>(components);
   }
 };
 }  // namespace detail
