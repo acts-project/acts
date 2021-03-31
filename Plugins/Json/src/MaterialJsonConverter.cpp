@@ -49,7 +49,7 @@ void Acts::to_json(nlohmann::json& j, const MaterialSlab& t) {
 }
 
 void Acts::from_json(const nlohmann::json& j, MaterialSlab& t) {
-  Material mat(j["material"].get<Material>());
+  Material mat(j.at("material"));
   t = Acts::MaterialSlab(mat, j.at("thickness").get<float>());
 }
 
@@ -276,7 +276,7 @@ void Acts::from_json(const nlohmann::json& j, volumeMaterialPointer& material) {
     }
     if (key == Acts::jsonKey().datakey and not value.empty()) {
       for (const auto& bin : value) {
-        Acts::Material mat(bin.get<Acts::Material>());
+        Acts::Material mat(bin);
         mmat.push_back(mat);
       }
     }

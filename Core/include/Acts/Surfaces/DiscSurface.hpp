@@ -213,7 +213,7 @@ class DiscSurface : public Surface {
   /// @param boundParams is the bound parameters vector
   ///
   /// @return Jacobian from local to global
-  BoundToFreeMatrix jacobianLocalToGlobal(
+  BoundToFreeMatrix boundToFreeJacobian(
       const GeometryContext& gctx, const BoundVector& boundParams) const final;
 
   /// Calculate the jacobian from global to local which the surface knows best,
@@ -223,7 +223,7 @@ class DiscSurface : public Surface {
   /// @param parameters is the free parameters
   ///
   /// @return Jacobian from global to local
-  FreeToBoundMatrix jacobianGlobalToLocal(
+  FreeToBoundMatrix freeToBoundJacobian(
       const GeometryContext& gctx, const FreeVector& parameters) const final;
 
   /// Path correction due to incident of the track

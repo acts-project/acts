@@ -42,7 +42,7 @@ void Acts::EigenStepper<E, A>::resetState(State& state,
 
   // Reinitialize the stepping jacobian
   state.jacToGlobal =
-      surface.jacobianLocalToGlobal(state.geoContext, boundParams);
+      surface.boundToFreeJacobian(state.geoContext, boundParams);
   state.jacobian = BoundMatrix::Identity();
   state.jacTransport = FreeMatrix::Identity();
   state.derivative = FreeVector::Zero();
@@ -87,18 +87,19 @@ void Acts::EigenStepper<E, A>::update(State& state, const Vector3& uposition,
 }
 
 template <typename E, typename A>
-void Acts::EigenStepper<E, A>::covarianceTransport(State& state) const {
-  detail::covarianceTransport(state.cov, state.jacobian, state.jacTransport,
-                              state.derivative, state.jacToGlobal,
-                              direction(state));
+void Acts::EigenStepper<E, A>::transportCovarianceToCurvilinear(
+    State& state) const {
+  detail::transportCovarianceToCurvilinear(state.cov, state.jacobian,
+                                           state.jacTransport, state.derivative,
+                                           state.jacToGlobal, direction(state));
 }
 
 template <typename E, typename A>
-void Acts::EigenStepper<E, A>::covarianceTransport(
+void Acts::EigenStepper<E, A>::transportCovarianceToBound(
     State& state, const Surface& surface) const {
-  detail::covarianceTransport(state.geoContext.get(), state.cov, state.jacobian,
-                              state.jacTransport, state.derivative,
-                              state.jacToGlobal, state.pars, surface);
+  detail::transportCovarianceToBound(
+      state.geoContext.get(), state.cov, state.jacobian, state.jacTransport,
+      state.derivative, state.jacToGlobal, state.pars, surface);
 }
 
 template <typename E, typename A>

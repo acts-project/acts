@@ -50,7 +50,6 @@ std::string CsvTrackingGeometryWriter::name() const {
 namespace {
 
 using SurfaceWriter = dfe::NamedTupleCsvWriter<SurfaceData>;
-using SurfaceGridWriter = dfe::NamedTupleCsvWriter<SurfaceGridData>;
 using BoundarySurface = Acts::BoundarySurfaceT<Acts::TrackingVolume>;
 
 /// Write a single surface.
@@ -99,11 +98,11 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
 }
 
 /// Write a single surface.
-void writeSurface(SurfaceWriter& sfWriter, const Acts::Surface& surface,
+void writeSurface(SurfaceWriter& writer, const Acts::Surface& surface,
                   const Acts::GeometryContext& geoCtx) {
   SurfaceData data;
   fillSurfaceData(data, surface, geoCtx);
-  sfWriter.append(data);
+  writer.append(data);
 }
 
 /// Write a single surface.
@@ -116,9 +115,8 @@ void writeBoundarySurface(SurfaceWriter& writer,
 }
 
 /// Write all child surfaces and descend into confined volumes.
-void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
-                 const Acts::TrackingVolume& volume, bool writeSensitive,
-                 bool writeBoundary, bool writeSurfaceGrid,
+void writeVolume(SurfaceWriter& writer, const Acts::TrackingVolume& volume,
+                 bool writeSensitive, bool writeBoundary,
                  const Acts::GeometryContext& geoCtx) {
   // process all layers that are directly stored within this volume
   if (volume.confinedLayers()) {
@@ -128,38 +126,10 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
         continue;
       }
       // check for sensitive surfaces
-      if (layer->surfaceArray()) {
-        auto sfArray = layer->surfaceArray();
-
-        if (writeSurfaceGrid) {
-          SurfaceGridData sfGrid;
-          sfGrid.geometry_id = layer->geometryId().value();
-          sfGrid.volume_id = layer->geometryId().volume();
-          sfGrid.layer_id = layer->geometryId().layer();
-
-          // Draw the grid itself
-          auto binning = sfArray->binningValues();
-          auto axes = sfArray->getAxes();
-          if (not binning.empty() and binning.size() == 2 and
-              axes.size() == 2) {
-            auto loc0Values = axes[0]->getBinEdges();
-            sfGrid.nbins_loc0 = loc0Values.size();
-            sfGrid.min_loc0 = loc0Values[0];
-            sfGrid.max_loc0 = loc0Values[loc0Values.size() - 1];
-            auto loc1Values = axes[1]->getBinEdges();
-            sfGrid.nbins_loc1 = loc1Values.size();
-            sfGrid.min_loc1 = loc1Values[0];
-            sfGrid.max_loc1 = loc1Values[loc1Values.size() - 1];
-          }
-
-          sfGridWriter.append(sfGrid);
-        }
-
-        if (writeSensitive) {
-          for (auto surface : sfArray->surfaces()) {
-            if (surface) {
-              writeSurface(sfWriter, *surface, geoCtx);
-            }
+      if (layer->surfaceArray() and writeSensitive) {
+        for (auto surface : layer->surfaceArray()->surfaces()) {
+          if (surface) {
+            writeSurface(writer, *surface, geoCtx);
           }
         }
       }
@@ -167,15 +137,15 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
     // This is a navigation volume, write the boundaries
     if (writeBoundary) {
       for (auto bsurface : volume.boundarySurfaces()) {
-        writeBoundarySurface(sfWriter, *bsurface, geoCtx);
+        writeBoundarySurface(writer, *bsurface, geoCtx);
       }
     }
   }
   // step down into hierarchy to process all child volumnes
   if (volume.confinedVolumes()) {
     for (auto confined : volume.confinedVolumes()->arrayObjects()) {
-      writeVolume(sfWriter, sfGridWriter, *confined.get(), writeSensitive,
-                  writeBoundary, writeSurfaceGrid, geoCtx);
+      writeVolume(writer, *confined.get(), writeSensitive, writeBoundary,
+                  geoCtx);
     }
   }
 }
@@ -185,26 +155,18 @@ ProcessCode CsvTrackingGeometryWriter::write(const AlgorithmContext& ctx) {
   if (not m_cfg.writePerEvent) {
     return ProcessCode::SUCCESS;
   }
-  SurfaceWriter sfWriter(
+  SurfaceWriter writer(
       perEventFilepath(m_cfg.outputDir, "detectors.csv", ctx.eventNumber),
       m_cfg.outputPrecision);
-  SurfaceGridWriter sfGridWriter(
-      perEventFilepath(m_cfg.outputDir, "surface-grids.csv", ctx.eventNumber),
-      m_cfg.outputPrecision);
-
-  writeVolume(sfWriter, sfGridWriter, *m_world, m_cfg.writeSensitive,
-              m_cfg.writeSensitive, m_cfg.writeSurfaceGrid, ctx.geoContext);
+  writeVolume(writer, *m_world, m_cfg.writeSensitive, m_cfg.writeSensitive,
+              ctx.geoContext);
   return ProcessCode::SUCCESS;
 }
 
 ProcessCode CsvTrackingGeometryWriter::endRun() {
-  SurfaceWriter sfWriter(joinPaths(m_cfg.outputDir, "detectors.csv"),
-                         m_cfg.outputPrecision);
-  SurfaceGridWriter sfGridWriter(
-      joinPaths(m_cfg.outputDir, "surface-grids.csv"), m_cfg.outputPrecision);
-
-  writeVolume(sfWriter, sfGridWriter, *m_world, m_cfg.writeSensitive,
-              m_cfg.writeSensitive, m_cfg.writeSurfaceGrid,
+  SurfaceWriter writer(joinPaths(m_cfg.outputDir, "detectors.csv"),
+                       m_cfg.outputPrecision);
+  writeVolume(writer, *m_world, m_cfg.writeSensitive, m_cfg.writeSensitive,
               Acts::GeometryContext());
   return ProcessCode::SUCCESS;
 }
