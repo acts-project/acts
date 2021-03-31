@@ -9,50 +9,17 @@
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
-<<<<<<< HEAD
-=======
 #include "Acts/Utilities/Helpers.hpp"
->>>>>>> origin/feat-stepper-covariance-transport
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
 
-<<<<<<< HEAD
-namespace {
-
-/// @brief Fast evaluation of trigonomic functions.
-///
-/// @param direction for this evaluation
-///
-/// @return cos(phi), sin(phi), cos(theta), sin(theta), 1/sin(theta)
-const std::array<ActsScalar, 5> evaluateTrigonomics(const Vector3& direction) {
-  const ActsScalar x = direction(0);  // == cos(phi) * sin(theta)
-  const ActsScalar y = direction(1);  // == sin(phi) * sin(theta)
-  const ActsScalar z = direction(2);  // == cos(theta)
-  // can be turned into cosine/sine
-  const ActsScalar cosTheta = z;
-  const ActsScalar sinTheta = std::sqrt(x * x + y * y);
-  const ActsScalar invSinTheta = 1. / sinTheta;
-  const ActsScalar cosPhi = x * invSinTheta;
-  const ActsScalar sinPhi = y * invSinTheta;
-
-  return {cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta};
-}
-}  // namespace
-
-namespace detail {
-
-FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction) {
-  auto& [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
-      evaluateTrigonomics(direction);
-=======
 namespace detail {
 
 FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction) {
   auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
       VectorHelpers::evaluateTrigonimics(direction);
->>>>>>> origin/feat-stepper-covariance-transport
   // Prepare the jacobian to curvilinear
   FreeToBoundMatrix freeToCurvJacobian = FreeToBoundMatrix::Zero();
   if (std::abs(cosTheta) < s_curvilinearProjTolerance) {
@@ -90,13 +57,8 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction) {
 }
 
 BoundToFreeMatrix curvilinearToFreeJacobian(const Vector3& direction) {
-<<<<<<< HEAD
-  auto& [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
-      evaluateTrigonomics(direction);
-=======
   auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
       VectorHelpers::evaluateTrigonimics(direction);
->>>>>>> origin/feat-stepper-covariance-transport
 
   // Prepare the jacobian to free
   BoundToFreeMatrix curvToFreeJacobian = BoundToFreeMatrix::Zero();
@@ -122,13 +84,8 @@ BoundToFreeMatrix curvilinearToFreeJacobian(const Vector3& direction) {
 ActsMatrix<8, 7> anglesToDirectionJacobian(const Vector3& direction) {
   ActsMatrix<8, 7> jacobian = ActsMatrix<8, 7>::Zero();
 
-<<<<<<< HEAD
-  auto& [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
-      evaluateTrigonomics(direction);
-=======
   auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
       VectorHelpers::evaluateTrigonimics(direction);
->>>>>>> origin/feat-stepper-covariance-transport
 
   jacobian(0, 0) = 1.;
   jacobian(1, 1) = 1.;
@@ -147,13 +104,8 @@ ActsMatrix<8, 7> anglesToDirectionJacobian(const Vector3& direction) {
 ActsMatrix<7, 8> directionToAnglesJacobian(const Vector3& direction) {
   ActsMatrix<7, 8> jacobian = ActsMatrix<7, 8>::Zero();
 
-<<<<<<< HEAD
-  auto& [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
-      evaluateTrigonomics(direction);
-=======
   auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
       VectorHelpers::evaluateTrigonimics(direction);
->>>>>>> origin/feat-stepper-covariance-transport
 
   jacobian(0, 0) = 1.;
   jacobian(1, 1) = 1.;
@@ -210,11 +162,7 @@ BoundToFreeMatrix boundToFreeTransportJacobian(
     const BoundToFreeMatrix& boundToFreeJacobian,
     const FreeMatrix& freeTransportJacobian) {
   // Calculate the full jacobian, in this case simple a product of
-<<<<<<< HEAD
-  // jacobian(bound->free) * jacobian(transport in free)
-=======
   // jacobian(transport in free) * jacobian(bound to free)
->>>>>>> origin/feat-stepper-covariance-transport
   return (freeTransportJacobian * boundToFreeJacobian);
 }
 
@@ -242,10 +190,6 @@ FreeToBoundMatrix freeToCurvilinearTransportJacobian(
     const ActsMatrix<8, 7>& anglesToDirectionJacobian,
     const FreeMatrix& freeTransportJacobian,
     const FreeVector& freeToPathDerivatives) {
-<<<<<<< HEAD
-  // const ActsRowVector<3> normVec(direction);
-=======
->>>>>>> origin/feat-stepper-covariance-transport
   const ActsMatrix<8, 7> transport =
       freeTransportJacobian * anglesToDirectionJacobian;
   auto sfactors =
@@ -258,8 +202,6 @@ FreeToBoundMatrix freeToCurvilinearTransportJacobian(
          directionToAnglesJacobian;
 }
 
-<<<<<<< HEAD
-=======
 FreeMatrix freeToFreeTransportJacobian(
     const ActsMatrix<7, 8>& directionToAnglesJacobian,
     const ActsMatrix<8, 7>& anglesToDirectionJacobian,
@@ -268,6 +210,5 @@ FreeMatrix freeToFreeTransportJacobian(
          directionToAnglesJacobian;
 }
 
->>>>>>> origin/feat-stepper-covariance-transport
 }  // namespace detail
 }  // namespace Acts
