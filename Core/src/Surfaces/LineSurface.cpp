@@ -169,7 +169,7 @@ Acts::SurfaceIntersection Acts::LineSurface::intersect(
           this};
 }
 
-Acts::BoundToFreeMatrix Acts::LineSurface::jacobianLocalToGlobal(
+Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
     const GeometryContext& gctx, const BoundVector& boundParams) const {
   // Transform from bound to free parameters
   FreeVector freeParams =

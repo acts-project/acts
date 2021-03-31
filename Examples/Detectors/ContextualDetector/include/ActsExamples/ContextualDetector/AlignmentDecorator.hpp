@@ -85,7 +85,7 @@ class AlignmentDecorator : public IContextDecorator {
   std::unique_ptr<const Acts::Logger> m_logger;  ///!< the logging instance
   std::string m_name = "AlignmentDecorator";
 
-  ///< Protect multiple alignments to be loaded at once
+  ///< protect multiple alignments to be loaded at once
   std::mutex m_alignmentMutex;
   std::vector<bool> m_iovStatus;
   std::vector<bool> m_flushStatus;

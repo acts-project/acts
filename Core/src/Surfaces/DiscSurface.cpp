@@ -196,7 +196,7 @@ Acts::Vector2 Acts::DiscSurface::localCartesianToPolar(
                  atan2(lcart[eBoundLoc1], lcart[eBoundLoc0]));
 }
 
-Acts::BoundToFreeMatrix Acts::DiscSurface::jacobianLocalToGlobal(
+Acts::BoundToFreeMatrix Acts::DiscSurface::boundToFreeJacobian(
     const GeometryContext& gctx, const BoundVector& boundParams) const {
   // Transform from bound to free parameters
   FreeVector freeParams =
@@ -237,7 +237,7 @@ Acts::BoundToFreeMatrix Acts::DiscSurface::jacobianLocalToGlobal(
   return jacToGlobal;
 }
 
-Acts::FreeToBoundMatrix Acts::DiscSurface::jacobianGlobalToLocal(
+Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
     const GeometryContext& gctx, const FreeVector& parameters) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
