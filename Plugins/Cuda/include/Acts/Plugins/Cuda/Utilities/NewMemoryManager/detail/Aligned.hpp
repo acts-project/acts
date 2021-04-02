@@ -27,7 +27,7 @@ static constexpr std::size_t NMM_DEFAULT_HOST_ALIGNMENT{alignof(std::max_align_t
 constexpr bool is_pow2(std::size_t n) { return (0 == (n & (n - 1)));} 
 
 //@return if `alignment` is a valid memory alignment
-constexpr bool is_suppored_aligment(std::size_t alignment) { return is_pow2(alignment)}
+constexpr bool is_suppored_aligment(std::size_t alignment) { return is_pow2(alignment);}
 
 //@param[in] v value to align
 //@param[in] alignment amount, in bytes, must be a power of 2
@@ -113,7 +113,7 @@ void aligned_deallocate(void *p, std::size_t bytes, std::size_t alignment, Deall
 
 	void *const original = static_cast<char *>(p) - offset;
 
-	dealloc(original)
+	dealloc(original);
 }
 
 } //namespace detail
