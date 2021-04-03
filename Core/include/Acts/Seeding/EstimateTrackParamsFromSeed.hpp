@@ -239,6 +239,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // The projection of the top space point on the transverse plane of the new
   // frame
   ActsScalar rn = local2.x() * local2.x() + local2.y() * local2.y();
+
   // The (1/tanTheta) of momentum in the new frame,
   ActsScalar invTanTheta =
       local2.z() * std::sqrt(1. / rn) / (1. + rho * rho * rn);
@@ -295,6 +296,13 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
     params[eBoundTime] = spGlobalPositions[0].norm() / v;
   }
 
+  if (params.hasNaN()) {
+    ACTS_ERROR(
+        "The NaN value exists at the estimated track parameters from seed with"
+        << "\nbottom sp: " << spGlobalPositions[0] << "\nmiddle sp: "
+        << spGlobalPositions[1] << "\ntop sp: " << spGlobalPositions[2]);
+    return std::nullopt;
+  }
   return params;
 }
 
