@@ -214,6 +214,7 @@ int runRecCKFTracks(int argc, char* argv[],
     paramsEstimationCfg.magneticField = magneticField;
     paramsEstimationCfg.bFieldMin = 0.1_T;
     paramsEstimationCfg.deltaRMax = 100._mm;
+    paramsEstimationCfg.deltaRMin = 10._mm;
     paramsEstimationCfg.sigmaLoc0 = 25._um;
     paramsEstimationCfg.sigmaLoc1 = 100._um;
     paramsEstimationCfg.sigmaPhi = 0.005_degree;
@@ -280,8 +281,8 @@ int runRecCKFTracks(int argc, char* argv[],
   perfWriterCfg.inputTrajectories = trackFindingCfg.outputTrajectories;
   perfWriterCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
-  // The bottom seed on a pixel detector 'eats' one or two measurements?
-  perfWriterCfg.nMeasurementsMin = particleSelectorCfg.nHitsMin - 2;
+  // The bottom seed could be the first, second or third hits on the truth track
+  perfWriterCfg.nMeasurementsMin = particleSelectorCfg.nHitsMin - 3;
   perfWriterCfg.outputDir = outputDir;
 #ifdef ACTS_PLUGIN_ONNX
   // Onnx plugin related options
