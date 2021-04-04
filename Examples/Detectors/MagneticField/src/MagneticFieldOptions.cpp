@@ -78,15 +78,15 @@ void ActsExamples::Options::addMagneticFieldOptions(Description& desc) {
       "The radius of the solenoid magnetic field in `mm`.");
   opt("bf-solenoid-ncoils", value<size_t>()->default_value(4),
       "Number of coils for the solenoid magnetic field.");
-  opt("bf-solenoid-rlim",
+  opt("bf-solenoid-map-rlim",
       value<Interval>()->value_name("MIN:MAX")->default_value({0, 1200}),
       "The length bounds of the grid created from the analytical solenoid "
       "field in `mm`.");
-  opt("bf-solenoid-zlim",
+  opt("bf-solenoid-map-zlim",
       value<Interval>()->value_name("MIN:MAX")->default_value({-3000, 3000}),
       "The radius bounds of the grid created from the analytical solenoid "
       "field in `mm`.");
-  opt("bf-solenoid-nbins", value<Reals<2>>()->default_value({{100, 100}}),
+  opt("bf-solenoid-map-nbins", value<Reals<2>>()->default_value({{100, 100}}),
       "The number of bins in r-z directions for the grid created from the "
       "analytical solenoid field.");
 }
@@ -206,8 +206,7 @@ ActsExamples::Options::readMagneticField(const Variables& vars) {
         vars["bf-solenoid-length"].as<double>() * Acts::UnitConstants::mm;
     solenoidConfig.radius =
         vars["bf-solenoid-radius"].as<double>() * Acts::UnitConstants::mm;
-    solenoidConfig.nCoils =
-        vars["bf-solenoid-ncoils"].as<size_t>() * Acts::UnitConstants::mm;
+    solenoidConfig.nCoils = vars["bf-solenoid-ncoils"].as<size_t>();
     solenoidConfig.bMagCenter =
         vars["bf-solenoid-mag-tesla"].as<double>() * Acts::UnitConstants::T;
     ACTS_INFO("Use solenoid magnetic field with magnitude "
@@ -220,11 +219,11 @@ ActsExamples::Options::readMagneticField(const Variables& vars) {
       upper = interval.upper.value() * unit;
     };
     std::pair<double, double> rlim, zlim;
-    getRange("bf-solenoid-rlim", Acts::UnitConstants::mm, rlim.first,
+    getRange("bf-solenoid-map-rlim", Acts::UnitConstants::mm, rlim.first,
              rlim.second);
-    getRange("bf-solenoid-zlim", Acts::UnitConstants::mm, zlim.first,
+    getRange("bf-solenoid-map-zlim", Acts::UnitConstants::mm, zlim.first,
              zlim.second);
-    const auto nbins = vars["bf-solenoid-nbins"].as<Reals<2>>();
+    const auto nbins = vars["bf-solenoid-map-nbins"].as<Reals<2>>();
     auto mapper = Acts::solenoidFieldMapper(rlim, zlim, {nbins[0], nbins[1]},
                                             solenoidField);
     InterpolatedMagneticField2::Config cfg(std::move(mapper));
