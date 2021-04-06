@@ -16,6 +16,8 @@
 #include <cstddef>
 #include <cstdint>
 
+namespace Acts {
+namespace Cuda {
 namespace Nmm {
 
 	class CudaStreamView {
@@ -53,3 +55,5 @@ namespace Nmm {
 	};
 
 } // namespace Nmm
+} // namespace Cuda
+} // namespace Acts
