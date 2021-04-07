@@ -76,7 +76,7 @@ void ActsExamples::Options::addMagneticFieldOptions(Description& desc) {
       "The length of the solenoid magnetic field in `mm`.");
   opt("bf-solenoid-radius", value<double>()->default_value(1200),
       "The radius of the solenoid magnetic field in `mm`.");
-  opt("bf-solenoid-ncoils", value<size_t>()->default_value(4),
+  opt("bf-solenoid-ncoils", value<size_t>()->default_value(1194),
       "Number of coils for the solenoid magnetic field.");
   opt("bf-solenoid-map-rlim",
       value<Interval>()->value_name("MIN:MAX")->default_value({0, 1200}),
