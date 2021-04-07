@@ -8,6 +8,10 @@
 
 #pragma once	
 
+// CUDA plugin include(s).
+//utiliti/cuda/plugin/acts/include
+#include "../../../../../../src/Utilities/ErrorCheck.cuh"
+
 // CUDA include(s).
 #include <cuda_runtime_api.h>
 
@@ -63,7 +67,7 @@ class CudaStreamView {
 
 		// Synchronize the viewed CUDA stream
 		void synchronize() const {
-			cudaStreamSynchronize(stream_);
+			ACTS_CUDA_ERROR_CHECK(cudaStreamSynchronize(stream_));
 		}
 
 		// Synchronize the viewed CUDA stream, don't throw if there is an error
