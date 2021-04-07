@@ -86,7 +86,7 @@ void ActsExamples::Options::addMagneticFieldOptions(Description& desc) {
       value<Interval>()->value_name("MIN:MAX")->default_value({-3000, 3000}),
       "The radius bounds of the grid created from the analytical solenoid "
       "field in `mm`.");
-  opt("bf-solenoid-map-nbins", value<Reals<2>>()->default_value({{100, 100}}),
+  opt("bf-solenoid-map-nbins", value<Reals<2>>()->default_value({{150, 200}}),
       "The number of bins in r-z directions for the grid created from the "
       "analytical solenoid field.");
 }
