@@ -55,6 +55,8 @@ ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
   m_outputTree->Branch("layer_id", &m_layerID);
   m_outputTree->Branch("approach_id", &m_approachID);
   m_outputTree->Branch("sensitive_id", &m_sensitiveID);
+  m_outputTree->Branch("l_0", &m_l0);
+  m_outputTree->Branch("l_1", &m_l1);
   m_outputTree->Branch("g_x", &m_x);
   m_outputTree->Branch("g_y", &m_y);
   m_outputTree->Branch("g_z", &m_z);
@@ -101,6 +103,8 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
     m_layerID.clear();
     m_approachID.clear();
     m_sensitiveID.clear();
+    m_l0.clear();
+    m_l1.clear();
     m_x.clear();
     m_y.clear();
     m_z.clear();
@@ -121,20 +125,34 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       Acts::GeometryIdentifier::Value layerID = 0;
       Acts::GeometryIdentifier::Value approachID = 0;
       Acts::GeometryIdentifier::Value sensitiveID = 0;
+
+      auto direction = step.momentum.normalized();
+
       // get the identification from the surface first
-      if (step.surface) {
+      if (step.surface != nullptr) {
         auto geoID = step.surface->geometryId();
         volumeID = geoID.volume();
         boundaryID = geoID.boundary();
         layerID = geoID.layer();
         approachID = geoID.approach();
         sensitiveID = geoID.sensitive();
+
+        auto g2lResult = step.surface->globalToLocal(context.geoContext,
+                                                     step.position, direction);
+        if (g2lResult.ok()) {
+          const auto& local = g2lResult.value();
+          m_l0.push_back(local[0]);
+          m_l1.push_back(local[1]);
+        }
+      } else {
+        m_l0.push_back(0.);
+        m_l1.push_back(0.);
       }
       // a current volume overwrites the surface tagged one
       if (step.volume) {
         volumeID = step.volume->geometryId().volume();
       }
-      // now fill
+
       m_sensitiveID.push_back(sensitiveID);
       m_approachID.push_back(approachID);
       m_layerID.push_back(layerID);
@@ -145,7 +163,6 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       m_x.push_back(step.position.x());
       m_y.push_back(step.position.y());
       m_z.push_back(step.position.z());
-      auto direction = step.momentum.normalized();
       m_dx.push_back(direction.x());
       m_dy.push_back(direction.y());
       m_dz.push_back(direction.z());

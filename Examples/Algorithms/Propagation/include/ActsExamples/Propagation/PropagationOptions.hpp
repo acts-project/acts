@@ -82,7 +82,9 @@ void addPropagationOptions(aopt_t& opt) {
       "prop-max-stepsize", po::value<double>()->default_value(3_m),
       "Maximum step size for the propagation [in mm].")(
       "prop-pt-loopers", po::value<double>()->default_value(500_MeV),
-      "Transverse momentum below which loops are being detected [in GeV].");
+      "Transverse momentum below which loops are being detected [in GeV].")(
+      "prop-search-tolerance", po::value<double>()->default_value(0_mm),
+      "Tolerance within sensitive surfaces are searched for [in mm].");
 }
 
 /// Read the pgropagator options and return a Config file
@@ -125,6 +127,8 @@ readPropagationConfig(const vmap_t& vm, propagator_t propagator) {
   pAlgConfig.etaRange = {ietar[0], ietar[1]};
   pAlgConfig.ptRange = {iptr[0] * 1_GeV, iptr[1] * 1_GeV};
   pAlgConfig.ptLoopers = vm["prop-pt-loopers"].template as<double>() * 1_GeV;
+  pAlgConfig.searchTolerance =
+      vm["prop-search-tolerance"].template as<double>() * 1_mm;
   pAlgConfig.maxStepSize = vm["prop-max-stepsize"].template as<double>() * 1_mm;
 
   pAlgConfig.propagationStepCollection =

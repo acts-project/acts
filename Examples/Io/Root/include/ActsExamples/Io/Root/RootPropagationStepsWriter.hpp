@@ -75,6 +75,8 @@ class RootPropagationStepsWriter
   std::vector<int> m_layerID;      ///< layer identifier if
   std::vector<int> m_approachID;   ///< surface identifier
   std::vector<int> m_sensitiveID;  ///< surface identifier
+  std::vector<float> m_l0;         ///< local0 of the step, 0 if not defined
+  std::vector<float> m_l1;         ///< local1 of the step, 0 if not defined
   std::vector<float> m_x;          ///< global x
   std::vector<float> m_y;          ///< global y
   std::vector<float> m_z;          ///< global z

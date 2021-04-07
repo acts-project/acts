@@ -67,6 +67,7 @@ struct DenseStepperPropagatorOptions
     eoptions.pathLimit = this->pathLimit;
     eoptions.loopProtection = this->loopProtection;
     eoptions.loopFraction = this->loopFraction;
+    eoptions.boundaryCheck = this->boundaryCheck;
 
     // Stepper options
     eoptions.tolerance = this->tolerance;

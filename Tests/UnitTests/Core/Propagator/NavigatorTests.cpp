@@ -200,6 +200,8 @@ struct PropagatorState {
     size_t debugMsgWidth = 50;
 
     LoggerWrapper logger{getDummyLogger()};
+
+    BoundaryCheck boundaryCheck = true;
   };
 
   /// Navigation cache: the start surface

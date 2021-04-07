@@ -86,6 +86,9 @@ struct PropagatorPlainOptions {
   /// Required tolerance to reach target (surface, pathlength)
   double targetTolerance = s_onSurfaceTolerance;
 
+  /// BoundaryCheck for search options of sensitives
+  BoundaryCheck boundaryCheck = true;
+
   /// Loop protection step, it adapts the pathLimit
   bool loopProtection = true;
   double loopFraction = 0.5;  ///< Allowed loop fraction, 1 is a full loop
@@ -134,6 +137,7 @@ struct PropagatorOptions : public PropagatorPlainOptions {
       extended_aborter_list_t aborters) const {
     PropagatorOptions<action_list_t, extended_aborter_list_t> eoptions(
         geoContext, magFieldContext, logger);
+
     // Copy the options over
     eoptions.direction = direction;
     eoptions.absPdgCode = absPdgCode;
@@ -145,6 +149,7 @@ struct PropagatorOptions : public PropagatorPlainOptions {
     eoptions.pathLimit = direction * std::abs(pathLimit);
     eoptions.loopProtection = loopProtection;
     eoptions.loopFraction = loopFraction;
+    eoptions.boundaryCheck = boundaryCheck;
 
     // Stepper options
     eoptions.tolerance = tolerance;
@@ -171,6 +176,7 @@ struct PropagatorOptions : public PropagatorPlainOptions {
     pathLimit = direction * std::abs(pOptions.pathLimit);
     loopProtection = pOptions.loopProtection;
     loopFraction = pOptions.loopFraction;
+    boundaryCheck = pOptions.boundaryCheck;
     tolerance = pOptions.tolerance;
     stepSizeCutOff = pOptions.stepSizeCutOff;
   }

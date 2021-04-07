@@ -73,6 +73,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
     ACTS_ERROR("Propagation reached the step count limit of "
                << state.options.maxSteps << " (did " << result.steps
                << " steps)");
+    ACTS_ERROR("Last step size was = " << state.stepping.stepSize.toString());
     return PropagatorError::StepCountLimitReached;
   }
 

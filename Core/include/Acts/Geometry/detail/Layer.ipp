@@ -143,7 +143,7 @@ std::vector<SurfaceIntersection> Layer::compatibleSurfaces(
     if (!acceptSurface(sf, sensitive)) {
       return;
     }
-    bool boundaryCheck = options.boundaryCheck;
+    BoundaryCheck boundaryCheck = options.boundaryCheck;
     if (std::find(options.externalSurfaces.begin(),
                   options.externalSurfaces.end(),
                   sf.geometryId()) != options.externalSurfaces.end()) {

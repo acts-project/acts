@@ -6,7 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <Acts/Utilities/Helpers.hpp>
+#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <random>
 
@@ -71,6 +72,11 @@ PropagationOutput PropagationAlgorithm<propagator_t>::executeTest(
     PropagatorOptions options(context.geoContext, context.magFieldContext,
                               Acts::LoggerWrapper{logger()});
     options.pathLimit = pathLength;
+    options.boundaryCheck = true;
+    if (m_cfg.searchTolerance > 0.) {
+      options.boundaryCheck = Acts::BoundaryCheck(
+          true, true, m_cfg.searchTolerance, m_cfg.searchTolerance);
+    }
 
     // Activate loop protection at some pt value
     options.loopProtection =

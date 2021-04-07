@@ -41,6 +41,7 @@ struct NavigationOptions {
   NavigationDirection navDir = forward;
 
   /// The boundary check directive
+  /// - this is for contained surfaces only
   BoundaryCheck boundaryCheck = true;
 
   // How to resolve the geometry
@@ -81,7 +82,7 @@ struct NavigationOptions {
                     bool resolvep = false, const object_t* sobject = nullptr,
                     const object_t* eobject = nullptr)
       : navDir(ndir),
-        boundaryCheck(std::move(bcheck)),
+        boundaryCheck(bcheck),
         resolveSensitive(resolves),
         resolveMaterial(resolvem),
         resolvePassive(resolvep),
@@ -286,8 +287,9 @@ class Navigator {
       state.navigation.navigationStage = Stage::surfaceTarget;
       ACTS_VERBOSE(volInfo(state) << "Staying focussed on surface.");
       // Try finding status of layer
+      // - force boundary check to true
     } else if (status(state, stepper, state.navigation.navLayers,
-                      state.navigation.navLayerIter)) {
+                      state.navigation.navLayerIter, true)) {
       ACTS_VERBOSE(volInfo(state) << "Status: in layer handling.");
       if (state.navigation.currentSurface != nullptr) {
         ACTS_VERBOSE(volInfo(state) << "On layer: update layer information.");
@@ -302,8 +304,9 @@ class Navigator {
         ACTS_VERBOSE(volInfo(state) << "Staying focussed on layer.");
       }
       // Try finding status of boundaries
+      // - force boundary check to true
     } else if (status(state, stepper, state.navigation.navBoundaries,
-                      state.navigation.navBoundaryIter)) {
+                      state.navigation.navBoundaryIter, true)) {
       ACTS_VERBOSE(volInfo(state) << "Status: in boundary handling.");
 
       // Are we on the boundary - then overwrite the stage
@@ -509,13 +512,15 @@ class Navigator {
   /// @param [in] stepper Stepper in use
   /// @param [in] navSurfaces is the navigation status objects
   /// @param [in] navIter test surface fore the status test
+  /// @param [in] requireInside force boundary checking (for portals, layers)
   ///
   /// @return boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t,
             typename navigation_surfaces_t, typename navigation_iter_t>
   bool status(propagator_state_t& state, const stepper_t& stepper,
               navigation_surfaces_t& navSurfaces,
-              const navigation_iter_t& navIter) const {
+              const navigation_iter_t& navIter,
+              bool requireInside = false) const {
     const auto& logger = state.options.logger;
 
     // No surfaces, status check will be done on layer
@@ -524,11 +529,16 @@ class Navigator {
     }
     // Take the current surface
     auto surface = navIter->representation;
-    // Check if we are at a surface
+    // Check if we are at a surface with the adequate boundary check
+    BoundaryCheck boundaryCheck = true;
+    if (not requireInside) {
+      boundaryCheck = state.options.boundaryCheck;
+    }
+
     // If we are on the surface pointed at by the iterator, we can make
     // it the current one to pass it to the other actors
     auto surfaceStatus =
-        stepper.updateSurfaceStatus(state.stepping, *surface, true);
+        stepper.updateSurfaceStatus(state.stepping, *surface, boundaryCheck);
     if (surfaceStatus == Intersection3D::Status::onSurface) {
       ACTS_VERBOSE(volInfo(state)
                    << "Status Surface successfully hit, storing it.");
@@ -611,15 +621,26 @@ class Navigator {
       // Screen output which surface you are on
       ACTS_VERBOSE(volInfo(state) << "Next surface candidate will be "
                                   << surface->geometryId());
-      // Estimate the surface status
-      bool boundaryCheck = true;
+
+      // Estimate the boundary surface check:
+      // - for external: use false (required to try them at akk costs)
+      // - for passive surfaces (material): use true
+      // - for sensitive surfaces (on search): use the configured version
+      BoundaryCheck boundaryCheck = state.options.boundaryCheck;
+      bool isExternal = false;
       for (auto it = externalSurfaceRange.first;
            it != externalSurfaceRange.second; it++) {
         if (surface->geometryId() == it->second) {
           boundaryCheck = false;
+          isExternal = true;
           break;
         }
       }
+      // Overwrite if it is not a sensitive surface
+      if (not isExternal and surface->geometryId().sensitive() == 0) {
+        boundaryCheck = true;
+      }
+
       auto surfaceStatus =
           stepper.updateSurfaceStatus(state.stepping, *surface, boundaryCheck);
       if (surfaceStatus == Intersection3D::Status::reachable) {
@@ -691,6 +712,7 @@ class Navigator {
       // check if current volume has BVH, or layers
       if (state.navigation.currentVolume->hasBoundingVolumeHierarchy()) {
         // has hierarchy, use that, skip layer resolution
+        // - boundary check is forced to be true
         NavigationOptions<Surface> navOpts(
             state.stepping.navDir, true, resolveSensitive, resolveMaterial,
             resolvePassive, nullptr, state.navigation.targetSurface);
@@ -868,7 +890,8 @@ class Navigator {
 
     // Helper function to find boundaries
     auto findBoundaries = [&]() -> bool {
-      // The navigation options
+      // The navigation options for boundaries
+      // - boundary check is forced true
       NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
       navOpts.pathLimit =
           state.stepping.stepSize.value(ConstrainedStep::aborter);
@@ -1053,10 +1076,12 @@ class Navigator {
     // are we on the start layer
     bool onStart = (navLayer == state.navigation.startLayer);
     auto startSurface = onStart ? state.navigation.startSurface : layerSurface;
-    // Use navigation parameters and NavigationOptions
+    // Use navigation parameters and NavigationOptions on layer:
+    // - use boundary check directive from propagation options
     NavigationOptions<Surface> navOpts(
-        state.stepping.navDir, true, resolveSensitive, resolveMaterial,
-        resolvePassive, startSurface, state.navigation.targetSurface);
+        state.stepping.navDir, state.options.boundaryCheck, resolveSensitive,
+        resolveMaterial, resolvePassive, startSurface,
+        state.navigation.targetSurface);
 
     std::vector<GeometryIdentifier> externalSurfaces;
     if (!state.navigation.externalSurfaces.empty()) {
@@ -1135,6 +1160,7 @@ class Navigator {
             : nullptr;
     // Create the navigation options
     // - and get the compatible layers, start layer will be excluded
+    // - boundary check is forced to be true
     NavigationOptions<Layer> navOpts(state.stepping.navDir, true,
                                      resolveSensitive, resolveMaterial,
                                      resolvePassive, startLayer, nullptr);
