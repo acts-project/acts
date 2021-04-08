@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <set>
 #include <vector>
 
 #include "Acts/Utilities/BinUtility.hpp"
@@ -27,9 +28,7 @@ public:
     {}
 
   void add(DigitizedParameters params, simhit_t simhit);
-  void merge() { std::cerr << "NOT IMPLEMENTED!" << std::endl;}
-
-  std::vector<std::pair<DigitizedParameters, std::vector<simhit_t>>> digitizedParameters();
+  std::vector<std::pair<DigitizedParameters, std::set<simhit_t>>> digitizedParameters();
 
 private:
 
@@ -38,7 +37,16 @@ private:
     std::vector<Acts::ActsScalar> paramValues = {};
     std::vector<Acts::ActsScalar> paramVariances = {};
     std::variant<Cluster, Cluster::Cell> value;
-    std::vector<simhit_t> sources = {};
+    std::set<simhit_t> sources = {};
+  };
+
+  // Type to deal with activations from different particles in a
+  // single cell
+  struct ModuleValueAmbi {
+    std::vector<ModuleValue> values;
+    ModuleValueAmbi(ModuleValue val) { add(std::move(val)); }
+    void add(ModuleValue val) {values.push_back(std::move(val)); }
+    double depositedEnergy();
   };
 
 
@@ -46,6 +54,10 @@ private:
   std::vector<Acts::BoundIndices> m_geoIndices;
   bool m_merge;
   std::vector<ModuleValue> m_moduleValues;
+
+  std::unordered_map<size_t, std::pair<ModuleClusters::ModuleValueAmbi, bool>> createCellMap();
+  void merge();
+  ModuleValue squash(std::vector<ModuleValue>& values);
 
 };
 }

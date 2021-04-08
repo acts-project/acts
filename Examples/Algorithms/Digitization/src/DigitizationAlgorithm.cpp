@@ -160,7 +160,8 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
     std::visit(
         [&](const auto& digitizer) {
 	  ModuleClusters moduleClusters(digitizer.geometric.segmentation,
-					digitizer.geometric.indices);
+					digitizer.geometric.indices,
+					m_cfg.doMerge);
 
           for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
             const auto& simHit = *h;
@@ -215,9 +216,6 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
 	    // TODO: move those values when safe to do so
 	    moduleClusters.add(dParameters, simHitIdx);
 	  }
-
-	  // TODO: merge here
-	  //...
 
 	  for (auto& [dParameters, simhits] : moduleClusters.digitizedParameters()) {
             // The measurement container is unordered and the index under which

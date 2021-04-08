@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Plugins/Digitization/Clusterization.hpp"
+
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
 
 namespace ActsExamples {
@@ -30,13 +32,13 @@ void ModuleClusters::add(DigitizedParameters params, simhit_t simhit)
   }
 }
 
-std::vector<std::pair<DigitizedParameters, std::vector<ModuleClusters::simhit_t>>>
+std::vector<std::pair<DigitizedParameters, std::set<ModuleClusters::simhit_t>>>
 ModuleClusters::digitizedParameters()
 {
   if (m_merge) { // (re-)build the clusters
     merge();
   }
-  std::vector<std::pair<DigitizedParameters, std::vector<simhit_t>>> retv;
+  std::vector<std::pair<DigitizedParameters, std::set<simhit_t>>> retv;
   for (ModuleValue& mval : m_moduleValues) {
     if (std::holds_alternative<Cluster::Cell>(mval.value)) {
       // Should never happen! Either the cluster should have
@@ -54,5 +56,184 @@ ModuleClusters::digitizedParameters()
   return retv;
 }
 
+
+std::unordered_map<size_t, std::pair<ModuleClusters::ModuleValueAmbi, bool>>
+ModuleClusters::createCellMap()
+{
+  std::unordered_map<size_t, std::pair<ModuleValueAmbi, bool>> cellMap;
+  for (ModuleValue& mval : m_moduleValues) {
+    if (std::holds_alternative<Cluster::Cell>(mval.value)) {
+      Cluster::Cell cell = std::get<Cluster::Cell>(mval.value);
+      size_t index = cell.bin[0] + m_segmentation.bins(0) * cell.bin[1];
+      auto [it, dup] =
+	cellMap.insert({index, {ModuleValueAmbi(std::move(mval)), false}});
+      if (dup) {
+	it->second.first.add(std::move(mval));
+      }
+    } else {
+      // For now, assume that when we merge we only have bare
+      // cells. So treat this branch as a bug
+      throw std::runtime_error("Invalid cell!");
+    }
+  }
+  return cellMap;
+}
+
+void ModuleClusters::merge()
+{
+  std::unordered_map<size_t, std::pair<ModuleClusters::ModuleValueAmbi, bool>>
+    cellMap = createCellMap();
+
+  std::vector<ModuleValue> newVals;
+
+  if (not cellMap.empty()) {
+    // Case where we actually have geometric clusters; use the
+    // clusterization code from the digitization plugin
+    std::vector<std::vector<ModuleValueAmbi>> merged =
+      Acts::createClusters(cellMap, m_segmentation.bins(0));
+    for (std::vector<ModuleValueAmbi>& cellv : merged) {
+      // At this stage, the cellv vector contains cells that form a
+      // consistent cluster based on a connected component analysis
+      // only. Still have to check if they match based on the other
+      // indices (a good example of this would a for a timing
+      // detector).
+
+      // Since we don't need to care about geometric cells anymore,
+      // unpack the individual cells
+      std::vector<ModuleValue> cellv1;
+      for (auto& sc : cellv) {
+        for (auto& sce : sc.values)
+          cellv1.push_back(std::move(sce));
+      }
+      newVals.push_back(squash(cellv1));
+    }
+    m_moduleValues = std::move(newVals);
+  } else {
+    // no geo clusters
+  }
+}
+
+ModuleClusters::ModuleValue
+ModuleClusters::squash(std::vector<ModuleClusters::ModuleValue>& values)
+{
+  ModuleValue mval;
+  Acts::ActsScalar tot = 0;
+  Acts::ActsScalar tot2 = 0;
+  std::vector<Acts::ActsScalar> weights;
+
+  // First, start by computing cell weights
+  for (ModuleValue& other : values) {
+    if (std::holds_alternative<Cluster::Cell>(other.value)) {
+      weights.push_back(std::get<Cluster::Cell>(other.value).activation);
+    } else {
+      weights.push_back(1);
+    }
+    tot += weights.back();
+    tot2 += weights.back() * weights.back();
+  }
+
+  // Now, go over the non-geometric indices
+  for (size_t i = 0; i < values.size(); i++) {
+    ModuleValue& other = values.at(i);
+    for (size_t j = 0; j < other.paramIndices.size(); j++) {
+      auto idx = other.paramIndices.at(j);
+      if (std::find(m_geoIndices.begin(), m_geoIndices.end(), idx) == m_geoIndices.end()) {
+	mval.paramIndices.push_back(idx);
+	if (mval.paramValues.size() < j) {
+	  mval.paramValues.push_back(0);
+	  mval.paramVariances.push_back(0);
+	}
+	Acts::ActsScalar f = weights.at(i) / (tot > 0? tot : 1);
+	Acts::ActsScalar f2 = weights.at(i) * weights.at(i) / (tot2 > 0? tot2 : 1);
+	mval.paramValues.at(j) += f * other.paramValues.at(j);
+	mval.paramVariances.at(j) += f2 * other.paramVariances.at(j);
+      }
+    }
+  }
+
+  // Now do the geometric indices
+  Cluster clus;
+
+  const auto& binningData = m_segmentation.binningData();
+  Acts::Vector2 pos(0., 0.);
+  Acts::Vector2 var(0., 0.);
+
+  size_t b0min = SIZE_MAX;
+  size_t b0max = 0;
+  size_t b1min = SIZE_MAX;
+  size_t b1max = 0;
+
+  for (size_t i = 0; i < values.size(); i++) {
+    ModuleValue& other = values.at(i);
+    if (not std::holds_alternative<Cluster::Cell>(other.value)) {
+      continue;
+    }
+
+    Cluster::Cell ch = std::get<Cluster::Cell>(other.value);
+    auto bin = ch.bin;
+
+    size_t b0 = bin[0];
+    size_t b1 = bin[1];
+
+    b0min = std::min(b0min, b0);
+    b0max = std::max(b0max, b0);
+    b1min = std::min(b1min, b1);
+    b1max = std::max(b1max, b1);
+
+    float p0 = binningData[0].center(b0);
+    float w0 = binningData[0].width(b0);
+    float p1 = binningData[1].center(b1);
+    float w1 = binningData[1].width(b1);
+
+    pos += Acts::Vector2(weights.at(i) * p0, weights.at(i) * p1);
+    // Assume uniform distribution to compute error
+    var += Acts::Vector2(weights.at(i) * weights.at(i) * w0 * w0 / 12,
+			 weights.at(i) * weights.at(i) * w1 * w1 / 12);
+
+    clus.channels.push_back(std::move(ch));
+
+    // Will have the right value at last interation Do it here to
+    // avoid having bogus values when there are no clusters
+    clus.sizeLoc0 = b0max - b0min + 1;
+    clus.sizeLoc1 = b1max - b1min + 1;
+  }
+
+  if (tot > 0) {
+    pos /= tot;
+    var /= tot2;
+  }
+
+  for (auto idx : m_geoIndices) {
+    mval.paramIndices.push_back(idx);
+    mval.paramValues.push_back(pos[idx]);
+    mval.paramVariances.push_back(var[idx]);
+  }
+
+  mval.value = std::move(clus);
+
+  // Finally do the hit association
+  for (ModuleValue& other : values) {
+    mval.sources.merge(other.sources);
+  }
+
+  return mval;
+}
+
+double ModuleClusters::ModuleValueAmbi::depositedEnergy()
+{
+  double acc = 0;
+  for (ModuleValue& mval : values) {
+    if (std::holds_alternative<Cluster>(mval.value)) {
+      Cluster &clus = std::get<Cluster>(mval.value);
+      for (Cluster::Cell& cell : clus.channels) {
+	acc += cell.activation;
+      }
+    } else {
+      Cluster::Cell &cell = std::get<Cluster::Cell>(mval.value);
+      acc += cell.activation;
+    }
+  }
+  return acc;
+}
 
 } // namespace ActsExamples

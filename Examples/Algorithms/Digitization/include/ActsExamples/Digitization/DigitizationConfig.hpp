@@ -108,6 +108,8 @@ class DigitizationConfig {
   std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
   /// Was the simple smearer requested
   const bool isSimpleSmearer;
+  /// Do we merge hits or not
+  const bool doMerge;
   /// The digitizers per GeometryIdentifiers
   Acts::GeometryHierarchyMap<DigiComponentsConfig> digitizationConfigs;
 
