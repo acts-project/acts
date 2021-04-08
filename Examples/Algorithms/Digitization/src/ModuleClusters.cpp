@@ -6,36 +6,34 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Digitization/Clusterization.hpp"
-
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
+
+#include "Acts/Plugins/Digitization/Clusterization.hpp"
 
 namespace ActsExamples {
 
-void ModuleClusters::add(DigitizedParameters params, simhit_t simhit)
-{
+void ModuleClusters::add(DigitizedParameters params, simhit_t simhit) {
   ModuleValue mval;
   mval.paramIndices = std::move(params.indices);
-  mval.paramValues =  std::move(params.values);
+  mval.paramValues = std::move(params.values);
   mval.paramVariances = std::move(params.variances);
   mval.sources = {simhit};
 
-  if (m_merge) { // Break-up the cluster
+  if (m_merge) {  // Break-up the cluster
     for (auto cell : params.cluster.channels) {
       ModuleValue mval_cell = mval;
       mval_cell.value = cell;
       m_moduleValues.push_back(std::move(mval_cell));
     }
-  } else { // pass-through mode
+  } else {  // pass-through mode
     mval.value = std::move(params.cluster);
     m_moduleValues.push_back(std::move(mval));
   }
 }
 
 std::vector<std::pair<DigitizedParameters, std::set<ModuleClusters::simhit_t>>>
-ModuleClusters::digitizedParameters()
-{
-  if (m_merge) { // (re-)build the clusters
+ModuleClusters::digitizedParameters() {
+  if (m_merge) {  // (re-)build the clusters
     merge();
   }
   std::vector<std::pair<DigitizedParameters, std::set<simhit_t>>> retv;
@@ -56,19 +54,17 @@ ModuleClusters::digitizedParameters()
   return retv;
 }
 
-
 std::unordered_map<size_t, std::pair<ModuleClusters::ModuleValueAmbi, bool>>
-ModuleClusters::createCellMap()
-{
+ModuleClusters::createCellMap() {
   std::unordered_map<size_t, std::pair<ModuleValueAmbi, bool>> cellMap;
   for (ModuleValue& mval : m_moduleValues) {
     if (std::holds_alternative<Cluster::Cell>(mval.value)) {
       Cluster::Cell cell = std::get<Cluster::Cell>(mval.value);
       size_t index = cell.bin[0] + m_segmentation.bins(0) * cell.bin[1];
       auto [it, dup] =
-	cellMap.insert({index, {ModuleValueAmbi(std::move(mval)), false}});
+          cellMap.insert({index, {ModuleValueAmbi(std::move(mval)), false}});
       if (dup) {
-	it->second.first.add(std::move(mval));
+        it->second.first.add(std::move(mval));
       }
     } else {
       // For now, assume that when we merge we only have bare
@@ -79,10 +75,9 @@ ModuleClusters::createCellMap()
   return cellMap;
 }
 
-void ModuleClusters::merge()
-{
+void ModuleClusters::merge() {
   std::unordered_map<size_t, std::pair<ModuleClusters::ModuleValueAmbi, bool>>
-    cellMap = createCellMap();
+      cellMap = createCellMap();
 
   std::vector<ModuleValue> newVals;
 
@@ -90,7 +85,7 @@ void ModuleClusters::merge()
     // Case where we actually have geometric clusters; use the
     // clusterization code from the digitization plugin
     std::vector<std::vector<ModuleValueAmbi>> merged =
-      Acts::createClusters(cellMap, m_segmentation.bins(0));
+        Acts::createClusters(cellMap, m_segmentation.bins(0));
     for (std::vector<ModuleValueAmbi>& cellv : merged) {
       // At this stage, the cellv vector contains cells that form a
       // consistent cluster based on a connected component analysis
@@ -106,25 +101,25 @@ void ModuleClusters::merge()
           cellv1.push_back(std::move(sce));
       }
       for (std::vector<ModuleValue>& remerged : mergeParameters(cellv1))
-	newVals.push_back(squash(remerged));
+        newVals.push_back(squash(remerged));
     }
     m_moduleValues = std::move(newVals);
   } else {
     // no geo clusters
     for (std::vector<ModuleValue>& merged : mergeParameters(m_moduleValues))
-	newVals.push_back(squash(merged));
+      newVals.push_back(squash(merged));
   }
 }
 
 // ATTN: returns vector of index into `indices'
-std::vector<size_t>
-ModuleClusters::nonGeoEntries(std::vector<Acts::BoundIndices>& indices)
-{
+std::vector<size_t> ModuleClusters::nonGeoEntries(
+    std::vector<Acts::BoundIndices>& indices) {
   std::vector<size_t> retv;
   for (size_t i = 0; i < indices.size(); i++) {
     auto idx = indices.at(i);
-    if (std::find(m_geoIndices.begin(), m_geoIndices.end(), idx) == m_geoIndices.end()) {
-	retv.push_back(i);
+    if (std::find(m_geoIndices.begin(), m_geoIndices.end(), idx) ==
+        m_geoIndices.end()) {
+      retv.push_back(i);
     }
   }
   return retv;
@@ -132,8 +127,8 @@ ModuleClusters::nonGeoEntries(std::vector<Acts::BoundIndices>& indices)
 
 // Merging based on parameters
 std::vector<std::vector<ModuleClusters::ModuleValue>>
-ModuleClusters::mergeParameters(std::vector<ModuleClusters::ModuleValue> values)
-{
+ModuleClusters::mergeParameters(
+    std::vector<ModuleClusters::ModuleValue> values) {
   std::vector<std::vector<ModuleValue>> retv;
 
   std::vector<bool> used(values.size(), false);
@@ -166,50 +161,47 @@ ModuleClusters::mergeParameters(std::vector<ModuleClusters::ModuleValue> values)
       // associated value at this point, so we have to consider them
       // all
       for (ModuleValue& thisval : thisvec) {
+        // Loop over non-geometric dimensions
+        for (auto k : nonGeoEntries(thisval.paramIndices)) {
+          Acts::ActsScalar p_i = thisval.paramValues.at(k);
+          Acts::ActsScalar p_j = values.at(j).paramValues.at(k);
+          Acts::ActsScalar v_i = thisval.paramVariances.at(k);
+          Acts::ActsScalar v_j = values.at(j).paramVariances.at(k);
 
-	// Loop over non-geometric dimensions
-	for (auto k : nonGeoEntries(thisval.paramIndices)) {
-	  Acts::ActsScalar p_i = thisval.paramValues.at(k);
-	  Acts::ActsScalar p_j = values.at(j).paramValues.at(k);
-	  Acts::ActsScalar v_i = thisval.paramVariances.at(k);
-	  Acts::ActsScalar v_j = values.at(j).paramVariances.at(k);
-
-	  Acts::ActsScalar left, right;
-	  if (p_i < p_j) {
-	    left = p_i + m_nsigma * std::sqrt(v_i);
-	    right = p_j - m_nsigma * std::sqrt(v_j);
-	  } else {
-	    left = p_j + m_nsigma * std::sqrt(v_j);
-	    right = p_i - m_nsigma * std::sqrt(v_i);
-	  }
-	  if (left < right) {
-	    // We know these two don't match, so break out of the
-	    // dimension loop
-	    matched = false;
-	    break;
-	  }
-	} // Loop over `k' (non-geo dimensions)
-	if (matched) {
-	  // The value under consideration matched at least one
-	  // associated to the current cluster so no need to keep
-	  // checking others in current cluster
-	  break;
-	}
-      } // Loop on current cluster
+          Acts::ActsScalar left, right;
+          if (p_i < p_j) {
+            left = p_i + m_nsigma * std::sqrt(v_i);
+            right = p_j - m_nsigma * std::sqrt(v_j);
+          } else {
+            left = p_j + m_nsigma * std::sqrt(v_j);
+            right = p_i - m_nsigma * std::sqrt(v_i);
+          }
+          if (left < right) {
+            // We know these two don't match, so break out of the
+            // dimension loop
+            matched = false;
+            break;
+          }
+        }  // Loop over `k' (non-geo dimensions)
+        if (matched) {
+          // The value under consideration matched at least one
+          // associated to the current cluster so no need to keep
+          // checking others in current cluster
+          break;
+        }
+      }  // Loop on current cluster
       if (matched) {
-	// Claim value `j'
-	used.at(j) = true;
-	thisvec.push_back(std::move(values.at(j)));
+        // Claim value `j'
+        used.at(j) = true;
+        thisvec.push_back(std::move(values.at(j)));
       }
-    } // Loop on `j'
-  } // Loop on `i'
+    }  // Loop on `j'
+  }    // Loop on `i'
   return retv;
 }
 
-
-ModuleClusters::ModuleValue
-ModuleClusters::squash(std::vector<ModuleClusters::ModuleValue>& values)
-{
+ModuleClusters::ModuleValue ModuleClusters::squash(
+    std::vector<ModuleClusters::ModuleValue>& values) {
   ModuleValue mval;
   Acts::ActsScalar tot = 0;
   Acts::ActsScalar tot2 = 0;
@@ -231,16 +223,18 @@ ModuleClusters::squash(std::vector<ModuleClusters::ModuleValue>& values)
     ModuleValue& other = values.at(i);
     for (size_t j = 0; j < other.paramIndices.size(); j++) {
       auto idx = other.paramIndices.at(j);
-      if (std::find(m_geoIndices.begin(), m_geoIndices.end(), idx) == m_geoIndices.end()) {
-	mval.paramIndices.push_back(idx);
-	if (mval.paramValues.size() < j) {
-	  mval.paramValues.push_back(0);
-	  mval.paramVariances.push_back(0);
-	}
-	Acts::ActsScalar f = weights.at(i) / (tot > 0? tot : 1);
-	Acts::ActsScalar f2 = weights.at(i) * weights.at(i) / (tot2 > 0? tot2 : 1);
-	mval.paramValues.at(j) += f * other.paramValues.at(j);
-	mval.paramVariances.at(j) += f2 * other.paramVariances.at(j);
+      if (std::find(m_geoIndices.begin(), m_geoIndices.end(), idx) ==
+          m_geoIndices.end()) {
+        mval.paramIndices.push_back(idx);
+        if (mval.paramValues.size() < j) {
+          mval.paramValues.push_back(0);
+          mval.paramVariances.push_back(0);
+        }
+        Acts::ActsScalar f = weights.at(i) / (tot > 0 ? tot : 1);
+        Acts::ActsScalar f2 =
+            weights.at(i) * weights.at(i) / (tot2 > 0 ? tot2 : 1);
+        mval.paramValues.at(j) += f * other.paramValues.at(j);
+        mval.paramVariances.at(j) += f2 * other.paramVariances.at(j);
       }
     }
   }
@@ -282,7 +276,7 @@ ModuleClusters::squash(std::vector<ModuleClusters::ModuleValue>& values)
     pos += Acts::Vector2(weights.at(i) * p0, weights.at(i) * p1);
     // Assume uniform distribution to compute error
     var += Acts::Vector2(weights.at(i) * weights.at(i) * w0 * w0 / 12,
-			 weights.at(i) * weights.at(i) * w1 * w1 / 12);
+                         weights.at(i) * weights.at(i) * w1 * w1 / 12);
 
     clus.channels.push_back(std::move(ch));
 
@@ -313,21 +307,20 @@ ModuleClusters::squash(std::vector<ModuleClusters::ModuleValue>& values)
   return mval;
 }
 
-double ModuleClusters::ModuleValueAmbi::depositedEnergy()
-{
+double ModuleClusters::ModuleValueAmbi::depositedEnergy() {
   double acc = 0;
   for (ModuleValue& mval : values) {
     if (std::holds_alternative<Cluster>(mval.value)) {
-      Cluster &clus = std::get<Cluster>(mval.value);
+      Cluster& clus = std::get<Cluster>(mval.value);
       for (Cluster::Cell& cell : clus.channels) {
-	acc += cell.activation;
+        acc += cell.activation;
       }
     } else {
-      Cluster::Cell &cell = std::get<Cluster::Cell>(mval.value);
+      Cluster::Cell& cell = std::get<Cluster::Cell>(mval.value);
       acc += cell.activation;
     }
   }
   return acc;
 }
 
-} // namespace ActsExamples
+}  // namespace ActsExamples

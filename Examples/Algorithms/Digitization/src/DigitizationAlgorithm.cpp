@@ -159,10 +159,9 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
     // visitor so we do not need to lookup the variant object per-hit.
     std::visit(
         [&](const auto& digitizer) {
-	  ModuleClusters moduleClusters(digitizer.geometric.segmentation,
-					digitizer.geometric.indices,
-					m_cfg.doMerge,
-					m_cfg.mergeNsigma);
+          ModuleClusters moduleClusters(digitizer.geometric.segmentation,
+                                        digitizer.geometric.indices,
+                                        m_cfg.doMerge, m_cfg.mergeNsigma);
 
           for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
             const auto& simHit = *h;
@@ -175,9 +174,9 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
               ACTS_VERBOSE("Configured to geometric digitize "
                            << digitizer.geometric.indices.size()
                            << " parameters.");
-	      // TODO: need move here?
+              // TODO: need move here?
               auto channels = channelizing(digitizer.geometric, simHit,
-				      *surfacePtr, ctx.geoContext, rng);
+                                           *surfacePtr, ctx.geoContext, rng);
               if (channels.empty()) {
                 ACTS_DEBUG(
                     "Geometric channelization did not work, skipping this hit.")
@@ -207,18 +206,19 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
               }
             }
 
-	    // Check on success - threshold could have eliminated all channels
+            // Check on success - threshold could have eliminated all channels
             if (dParameters.values.empty()) {
               ACTS_VERBOSE(
                   "Parameter digitization did not yield a measurement.")
               continue;
             }
 
-	    // TODO: move those values when safe to do so
-	    moduleClusters.add(dParameters, simHitIdx);
-	  }
+            // TODO: move those values when safe to do so
+            moduleClusters.add(dParameters, simHitIdx);
+          }
 
-	  for (auto& [dParameters, simhits] : moduleClusters.digitizedParameters()) {
+          for (auto& [dParameters, simhits] :
+               moduleClusters.digitizedParameters()) {
             // The measurement container is unordered and the index under which
             // the measurement will be stored is known before adding it.
             Index measurementIdx = measurements.size();
@@ -234,13 +234,13 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
             clusters.emplace_back(std::move(dParameters.cluster));
             // this digitization does hit merging so there can be more than one
             // mapping entry for each digitized hit.
-	    for (auto simHitIdx : simhits) {
-	      measurementParticlesMap.emplace_hint(measurementParticlesMap.end(),
-						   measurementIdx,
-						   simHits.nth(simHitIdx)->particleId());
-	      measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
-						 measurementIdx, simHitIdx);
-	    }
+            for (auto simHitIdx : simhits) {
+              measurementParticlesMap.emplace_hint(
+                  measurementParticlesMap.end(), measurementIdx,
+                  simHits.nth(simHitIdx)->particleId());
+              measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
+                                                 measurementIdx, simHitIdx);
+            }
           }
         },
         *digitizerItr);

@@ -8,31 +8,31 @@
 
 #pragma once
 
-#include <set>
-#include <vector>
-
 #include "Acts/Utilities/BinUtility.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 
+#include <set>
+#include <vector>
 
 namespace ActsExamples {
 class ModuleClusters {
-public:
+ public:
   using simhit_t = SimHitContainer::size_type;
 
-  ModuleClusters(Acts::BinUtility segmentation, std::vector<Acts::BoundIndices> geoIndices, bool merge, double nsigma) :
-    m_segmentation(std::move(segmentation)),
-    m_geoIndices(std::move(geoIndices)),
-    m_merge(merge),
-    m_nsigma(nsigma)
-    {}
+  ModuleClusters(Acts::BinUtility segmentation,
+                 std::vector<Acts::BoundIndices> geoIndices, bool merge,
+                 double nsigma)
+      : m_segmentation(std::move(segmentation)),
+        m_geoIndices(std::move(geoIndices)),
+        m_merge(merge),
+        m_nsigma(nsigma) {}
 
   void add(DigitizedParameters params, simhit_t simhit);
-  std::vector<std::pair<DigitizedParameters, std::set<simhit_t>>> digitizedParameters();
+  std::vector<std::pair<DigitizedParameters, std::set<simhit_t>>>
+  digitizedParameters();
 
-private:
-
+ private:
   struct ModuleValue {
     std::vector<Acts::BoundIndices> paramIndices = {};
     std::vector<Acts::ActsScalar> paramValues = {};
@@ -46,10 +46,9 @@ private:
   struct ModuleValueAmbi {
     std::vector<ModuleValue> values;
     ModuleValueAmbi(ModuleValue val) { add(std::move(val)); }
-    void add(ModuleValue val) {values.push_back(std::move(val)); }
+    void add(ModuleValue val) { values.push_back(std::move(val)); }
     double depositedEnergy();
   };
-
 
   Acts::BinUtility m_segmentation;
   std::vector<Acts::BoundIndices> m_geoIndices;
@@ -57,11 +56,12 @@ private:
   bool m_merge;
   double m_nsigma;
 
-  std::unordered_map<size_t, std::pair<ModuleClusters::ModuleValueAmbi, bool>> createCellMap();
+  std::unordered_map<size_t, std::pair<ModuleClusters::ModuleValueAmbi, bool>>
+  createCellMap();
   void merge();
   ModuleValue squash(std::vector<ModuleValue>& values);
   std::vector<size_t> nonGeoEntries(std::vector<Acts::BoundIndices>& indices);
-  std::vector<std::vector<ModuleValue>> mergeParameters(std::vector<ModuleValue> values);
-
+  std::vector<std::vector<ModuleValue>> mergeParameters(
+      std::vector<ModuleValue> values);
 };
-}
+}  // namespace ActsExamples

@@ -274,7 +274,8 @@ class BinningData {
   float center(size_t bin) const {
     const std::vector<float>& bvals = boundaries();
     // take the center between bin boundaries
-    float value = bin < (bvals.size() - 1) ? 0.5 * (bvals[bin] + bvals[bin + 1]) : 0.;
+    float value =
+        bin < (bvals.size() - 1) ? 0.5 * (bvals[bin] + bvals[bin + 1]) : 0.;
     return value;
   }
 
@@ -290,7 +291,7 @@ class BinningData {
     return value;
   }
 
-   /// Check if bin is inside from Vector3
+  /// Check if bin is inside from Vector3
   ///
   /// @param position is the search position in global coordinated
   ///
