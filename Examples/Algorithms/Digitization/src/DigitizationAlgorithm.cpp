@@ -161,7 +161,8 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
         [&](const auto& digitizer) {
 	  ModuleClusters moduleClusters(digitizer.geometric.segmentation,
 					digitizer.geometric.indices,
-					m_cfg.doMerge);
+					m_cfg.doMerge,
+					m_cfg.mergeNsigma);
 
           for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
             const auto& simHit = *h;

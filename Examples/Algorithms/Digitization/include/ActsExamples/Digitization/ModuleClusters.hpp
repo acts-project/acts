@@ -21,10 +21,11 @@ class ModuleClusters {
 public:
   using simhit_t = SimHitContainer::size_type;
 
-  ModuleClusters(Acts::BinUtility segmentation, std::vector<Acts::BoundIndices> geoIndices, bool merge = false) :
+  ModuleClusters(Acts::BinUtility segmentation, std::vector<Acts::BoundIndices> geoIndices, bool merge, double nsigma) :
     m_segmentation(std::move(segmentation)),
     m_geoIndices(std::move(geoIndices)),
-    m_merge(merge)
+    m_merge(merge),
+    m_nsigma(nsigma)
     {}
 
   void add(DigitizedParameters params, simhit_t simhit);
@@ -52,12 +53,15 @@ private:
 
   Acts::BinUtility m_segmentation;
   std::vector<Acts::BoundIndices> m_geoIndices;
-  bool m_merge;
   std::vector<ModuleValue> m_moduleValues;
+  bool m_merge;
+  double m_nsigma;
 
   std::unordered_map<size_t, std::pair<ModuleClusters::ModuleValueAmbi, bool>> createCellMap();
   void merge();
   ModuleValue squash(std::vector<ModuleValue>& values);
+  std::vector<size_t> nonGeoEntries(std::vector<Acts::BoundIndices>& indices);
+  std::vector<std::vector<ModuleValue>> mergeParameters(std::vector<ModuleValue> values);
 
 };
 }

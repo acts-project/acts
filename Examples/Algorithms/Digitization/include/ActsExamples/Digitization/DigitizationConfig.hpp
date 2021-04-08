@@ -110,6 +110,8 @@ class DigitizationConfig {
   const bool isSimpleSmearer;
   /// Do we merge hits or not
   const bool doMerge;
+  /// How close do parameters have to be to consider merged
+  const double mergeNsigma;
   /// The digitizers per GeometryIdentifiers
   Acts::GeometryHierarchyMap<DigiComponentsConfig> digitizationConfigs;
 

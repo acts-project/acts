@@ -105,13 +105,107 @@ void ModuleClusters::merge()
         for (auto& sce : sc.values)
           cellv1.push_back(std::move(sce));
       }
-      newVals.push_back(squash(cellv1));
+      for (std::vector<ModuleValue>& remerged : mergeParameters(cellv1))
+	newVals.push_back(squash(remerged));
     }
     m_moduleValues = std::move(newVals);
   } else {
     // no geo clusters
+    for (std::vector<ModuleValue>& merged : mergeParameters(m_moduleValues))
+	newVals.push_back(squash(merged));
   }
 }
+
+// ATTN: returns vector of index into `indices'
+std::vector<size_t>
+ModuleClusters::nonGeoEntries(std::vector<Acts::BoundIndices>& indices)
+{
+  std::vector<size_t> retv;
+  for (size_t i = 0; i < indices.size(); i++) {
+    auto idx = indices.at(i);
+    if (std::find(m_geoIndices.begin(), m_geoIndices.end(), idx) == m_geoIndices.end()) {
+	retv.push_back(i);
+    }
+  }
+  return retv;
+}
+
+// Merging based on parameters
+std::vector<std::vector<ModuleClusters::ModuleValue>>
+ModuleClusters::mergeParameters(std::vector<ModuleClusters::ModuleValue> values)
+{
+  std::vector<std::vector<ModuleValue>> retv;
+
+  std::vector<bool> used(values.size(), false);
+  for (size_t i = 0; i < values.size(); i++) {
+    if (used.at(i))
+      continue;
+
+    retv.emplace_back();
+    std::vector<ModuleValue>& thisvec = retv.back();
+
+    // Value has not yet been claimed, so claim it
+    thisvec.push_back(std::move(values.at(i)));
+    used.at(i) = true;
+
+    // Values previously visited by index `i' have already been added
+    // to a cluster or used to seed a new cluster, so start at the
+    // next unseen one
+    for (size_t j = i + 1; j < values.size(); j++) {
+      // Still may have already been used, so check it
+      if (used.at(j))
+        continue;
+
+      // Now look for a match between current cluster and value `j' Consider
+      // them matched until we find evidence to the contrary. This
+      // way, merging still works when digitization is done by
+      // clusters only
+      bool matched = true;
+
+      // The cluster to be merged into can have more than one
+      // associated value at this point, so we have to consider them
+      // all
+      for (ModuleValue& thisval : thisvec) {
+
+	// Loop over non-geometric dimensions
+	for (auto k : nonGeoEntries(thisval.paramIndices)) {
+	  Acts::ActsScalar p_i = thisval.paramValues.at(k);
+	  Acts::ActsScalar p_j = values.at(j).paramValues.at(k);
+	  Acts::ActsScalar v_i = thisval.paramVariances.at(k);
+	  Acts::ActsScalar v_j = values.at(j).paramVariances.at(k);
+
+	  Acts::ActsScalar left, right;
+	  if (p_i < p_j) {
+	    left = p_i + m_nsigma * std::sqrt(v_i);
+	    right = p_j - m_nsigma * std::sqrt(v_j);
+	  } else {
+	    left = p_j + m_nsigma * std::sqrt(v_j);
+	    right = p_i - m_nsigma * std::sqrt(v_i);
+	  }
+	  if (left < right) {
+	    // We know these two don't match, so break out of the
+	    // dimension loop
+	    matched = false;
+	    break;
+	  }
+	} // Loop over `k' (non-geo dimensions)
+	if (matched) {
+	  // The value under consideration matched at least one
+	  // associated to the current cluster so no need to keep
+	  // checking others in current cluster
+	  break;
+	}
+      } // Loop on current cluster
+      if (matched) {
+	// Claim value `j'
+	used.at(j) = true;
+	thisvec.push_back(std::move(values.at(j)));
+      }
+    } // Loop on `j'
+  } // Loop on `i'
+  return retv;
+}
+
 
 ModuleClusters::ModuleValue
 ModuleClusters::squash(std::vector<ModuleClusters::ModuleValue>& values)
