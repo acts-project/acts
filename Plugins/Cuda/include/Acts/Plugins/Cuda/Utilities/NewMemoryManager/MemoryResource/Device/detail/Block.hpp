@@ -30,57 +30,57 @@ namespace MemoryRecource {
 namespace detail {
 namespace Arena {
 
-// Minimum size of a superblock (256 KiB)
-constexpr std::size_t minimumSuperblockSize = 1u << 18u;
+// Minimum size of a superBlock (256 KiB)
+constexpr std::size_t minimumSuperBlockSize = 1u << 18u;
 
 class Block {
 
 	public:
-		// construct a default block.
-		block() = default;
+		// construct a default Block.
+		Block() = default;
 
-		// construct a block given a pointer and size.
+		// construct a Block given a pointer and size.
 		// 
-		// @param[in] pointer the address for the beginning of the block.
-		// @param[in] size the size of the block
-		block(char* pointer, std::size_t size) : pointer_(pointer), size_(size) {}
+		// @param[in] pointer the address for the beginning of the Block.
+		// @param[in] size the size of the Block
+		Block(char* pointer, std::size_t size) : pointer_(pointer), size_(size) {}
 
-		// construct a block given a pointer and size.
+		// construct a Block given a pointer and size.
 		// 
-		// @param[in] pointer the address for the beginning of the block.
-		// @param[in] size the size of the block
-		block(void* pointer, std::size_t size) : pointer_(static_cast<char*>(pointer)), size_(size){}
+		// @param[in] pointer the address for the beginning of the Block.
+		// @param[in] size the size of the Block
+		Block(void* pointer, std::size_t size) : pointer_(static_cast<char*>(pointer)), size_(size){}
 
 		// returns the underlying pointer
 		void* pointer() const { return pointer_; }
 
-		// returns the size of the block
+		// returns the size of the Block
 		std::size_t size() const { return size_; }
 
-		// returns true if this block is valid (non-null), false otherwise
+		// returns true if this Block is valid (non-null), false otherwise
 		bool isValid() const { return pointer_ != nullptr; }
 
-		// returns true if this block is a superblock, false otherwise
-		bool isSuperblock() const { return size_ >= minimumSuperblockSize; }
+		// returns true if this Block is a superBlock, false otherwise
+		bool isSuperBlock() const { return size_ >= minimumSuperBlockSize; }
 
-		// verifies wheter this block can be merged to the beginning of block b
+		// verifies wheter this Block can be merged to the beginning of Block b
 		//
-		// @param[in] b the block to check for contiguity
-		// @return true if this block's `pointer` + `size` == `b.ptr`, and `not b.isHead`,
+		// @param[in] b the Block to check for contiguity
+		// @return true if this Block's `pointer` + `size` == `b.ptr`, and `not b.isHead`,
 		// false otherwise 
-		bool isContiguousBefore(block const& b) const { return pointer_ + size_ == b.pointer_; }
+		bool isContiguousBefore(Block const& b) const { return pointer_ + size_ == b.pointer_; }
 
-		// is this block large enough to fit that size of bytes?
+		// is this Block large enough to fit that size of bytes?
 		//
 		// @param[in] sizeOfBytes the size in bytes to check for fit
-		// @return true if this block is at least sizeOfBytes
-		bool fits(std::size_t sizeOfBytes) const { return size_ >= size; }
+		// @return true if this Block is at least sizeOfBytes
+		bool fits(std::size_t sizeOfBytes) const { return size_ >= sizeOfBytes; }
 
-		// split this block into two by the given size
+		// split this Block into two by the given size
 		//
-		// @param[in] size the size in bytes of the first block
-		// @return std::pair<block, block> a pair of blocks split by size
-		std::pair<block, block> split(std::size_t size) const {
+		// @param[in] size the size in bytes of the first Block
+		// @return std::pair<Block, Block> a pair of Blocks split by size
+		std::pair<Block, Block> split(std::size_t size) const {
 			//assert condition of size_ >= size
 			if(size_ > size) {
 				return {{pointer_, size}, {pointer_ + size, size_ - size}};
@@ -89,18 +89,18 @@ class Block {
 			}
 		}
 
-		// coalesce two contiguos blocks into one, this->isContiguousBefore(b) 
+		// coalesce two contiguos Blocks into one, this->isContiguousBefore(b) 
 		// must be true
 		// 
-		// @param[in] b block to merge
-		// @return block the merged block
-		block merge(block const& b) const {
+		// @param[in] b Block to merge
+		// @return Block the merged Block
+		Block merge(Block const& b) const {
 			//assert condition isContiguousBefore(b)
-			return {pointer_, size_ + b.size};
+			return {pointer_, size_ + b.size_};
 		}
 
-		// used by std::set to compare blocks
-		bool operator<(block const& b) const { return pointer_ < b.pointer_; }
+		// used by std::set to compare Blocks
+		bool operator<(Block const& b) const { return pointer_ < b.pointer_; }
 
 	private:
 		char* pointer_;      // raw memory pointer
