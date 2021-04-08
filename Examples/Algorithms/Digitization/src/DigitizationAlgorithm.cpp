@@ -174,7 +174,6 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
               ACTS_VERBOSE("Configured to geometric digitize "
                            << digitizer.geometric.indices.size()
                            << " parameters.");
-              // TODO: need move here?
               auto channels = channelizing(digitizer.geometric, simHit,
                                            *surfacePtr, ctx.geoContext, rng);
               if (channels.empty()) {
@@ -213,8 +212,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
               continue;
             }
 
-            // TODO: move those values when safe to do so
-            moduleClusters.add(dParameters, simHitIdx);
+            moduleClusters.add(std::move(dParameters), simHitIdx);
           }
 
           for (auto& [dParameters, simhits] :
