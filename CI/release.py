@@ -11,6 +11,7 @@ import http
 import aiohttp
 from gidgethub.aiohttp import GitHubAPI
 from gidgethub import InvalidField
+import gidgethub
 from semantic_release.history import angular_parser, get_new_version
 from semantic_release.errors import UnknownCommitMessageStyleError
 from semantic_release.history.logs import LEVELS
