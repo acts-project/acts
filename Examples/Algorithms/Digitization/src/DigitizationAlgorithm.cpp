@@ -55,7 +55,7 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
     throw std::invalid_argument("Missing digitization configuration");
   }
 
-  // create the smearers from the configuration
+  // Create the digitizers from the configuration
   std::vector<std::pair<Acts::GeometryIdentifier, Digitizer>> digitizerInput;
 
   for (size_t i = 0; i < m_cfg.digitizationConfigs.size(); ++i) {

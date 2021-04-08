@@ -19,6 +19,21 @@ install(
 
 # Digitization for TGeo detector
 add_executable(
+  ActsExampleDigitizationConfigTGeo
+  TGeoDigitizationConfigExample.cpp)
+target_link_libraries(
+  ActsExampleDigitizationConfigTGeo
+  PRIVATE
+    ActsExamplesDigitizationCommon
+    ActsExamplesDetectorTGeo
+)
+
+install(
+  TARGETS
+    ActsExampleDigitizationConfigTGeo 
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+add_executable(
   ActsExampleDigitizationTGeo
   TGeoDigitizationExample.cpp)
 target_link_libraries(

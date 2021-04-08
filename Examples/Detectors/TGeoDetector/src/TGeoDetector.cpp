@@ -29,7 +29,7 @@ auto TGeoDetector::finalize(
                                             mdecorator);
 
   ContextDecorators tgeoContextDeocrators = {};
-  // return the pair of geometry and empty decorators
+  // Return the pair of geometry and empty decorators
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
       std::move(tgeoTrackingGeometry), std::move(tgeoContextDeocrators));
 }
