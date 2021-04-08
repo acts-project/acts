@@ -9,12 +9,9 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
-#include "ActsFatras/Physics/EnergyLoss/BetheBloch.hpp"
-#include "ActsFatras/Physics/EnergyLoss/BetheHeitler.hpp"
+#include "ActsFatras/Physics/ElectroMagnetic/BetheHeitler.hpp"
 
 #include <random>
 
@@ -22,25 +19,8 @@
 
 using Generator = std::ranlux48;
 
-BOOST_AUTO_TEST_SUITE(FatrasEnergyLoss)
-
-BOOST_DATA_TEST_CASE(BetheBloch, Dataset::parameters, pdg, phi, lambda, p,
-                     seed) {
-  Generator gen(seed);
-  ActsFatras::Particle before = Dataset::makeParticle(pdg, phi, lambda, p);
-  ActsFatras::Particle after = before;
-
-  ActsFatras::BetheBloch process;
-  const auto outgoing = process(gen, Acts::Test::makeUnitSlab(), after);
-  // energy loss changes momentum and energy
-  BOOST_CHECK_LT(after.absoluteMomentum(), before.absoluteMomentum());
-  BOOST_CHECK_LT(after.energy(), before.energy());
-  // energy loss creates no new particles
-  BOOST_CHECK(outgoing.empty());
-}
-
 BOOST_DATA_TEST_CASE(
-    BetheHeitler,
+    FatrasBetheHeitler,
     Dataset::momentumPhi* Dataset::momentumLambda* Dataset::momentumAbs ^
         Dataset::rngSeed,
     phi, lambda, p, seed) {
@@ -75,5 +55,3 @@ BOOST_DATA_TEST_CASE(
                   p0.template segment<3>(Acts::eMom0).norm();
   CHECK_CLOSE_OR_SMALL(s, s0, 1e-2, 1e-2);
 }
-
-BOOST_AUTO_TEST_SUITE_END()

@@ -148,7 +148,9 @@ BOOST_AUTO_TEST_CASE(UpdateFromBound) {
 
   // example surface and bound parameters at the updated position
   auto plane = Surface::makeShared<PlaneSurface>(newPos, newUnitDir);
-  BoundTrackParameters params(plane, geoCtx, newPos4, newUnitDir, charge, cov);
+  auto params = BoundTrackParameters::create(plane, geoCtx, newPos4, newUnitDir,
+                                             charge, cov)
+                    .value();
   FreeVector freeParams;
   freeParams[eFreePos0] = newPos4[ePos0];
   freeParams[eFreePos1] = newPos4[ePos1];
@@ -201,7 +203,7 @@ BOOST_AUTO_TEST_CASE(BuildBound) {
   // example surface at the current state position
   auto plane = Surface::makeShared<PlaneSurface>(pos, unitDir);
 
-  auto&& [pars, jac, pathLength] = stepper.boundState(state, *plane);
+  auto&& [pars, jac, pathLength] = stepper.boundState(state, *plane).value();
   // check parameters
   CHECK_CLOSE_ABS(pars.position(geoCtx), pos, eps);
   CHECK_CLOSE_ABS(pars.time(), time, eps);
@@ -447,8 +449,10 @@ BOOST_AUTO_TEST_CASE(Reset) {
   newCov = 10.9 * Covariance::Identity();
   Transform3 trafo = Transform3::Identity();
   auto disc = Surface::makeShared<DiscSurface>(trafo);
-  BoundTrackParameters boundDisc(disc, geoCtx, makeVector4(newPos, newTime),
-                                 unitDir, newAbsMom, newCharge, newCov);
+  auto boundDisc =
+      BoundTrackParameters::create(disc, geoCtx, makeVector4(newPos, newTime),
+                                   unitDir, newAbsMom, newCharge, newCov)
+          .value();
 
   // Reset the state and test
   Stepper::State stateDisc = copyState(*magneticField, state.stepping);
@@ -466,9 +470,10 @@ BOOST_AUTO_TEST_CASE(Reset) {
   newCharge = 1.;
   newCov = 8.7 * Covariance::Identity();
   auto perigee = Surface::makeShared<PerigeeSurface>(trafo);
-  BoundTrackParameters boundPerigee(perigee, geoCtx,
-                                    makeVector4(newPos, newTime), unitDir,
-                                    newAbsMom, newCharge, newCov);
+  auto boundPerigee = BoundTrackParameters::create(
+                          perigee, geoCtx, makeVector4(newPos, newTime),
+                          unitDir, newAbsMom, newCharge, newCov)
+                          .value();
 
   // Reset the state and test
   Stepper::State statePerigee = copyState(*magneticField, state.stepping);
@@ -482,8 +487,10 @@ BOOST_AUTO_TEST_CASE(Reset) {
   // 3) Straw surface
   // Use the same parameters as for previous Perigee surface
   auto straw = Surface::makeShared<StrawSurface>(trafo);
-  BoundTrackParameters boundStraw(straw, geoCtx, makeVector4(newPos, newTime),
-                                  unitDir, newAbsMom, newCharge, newCov);
+  auto boundStraw =
+      BoundTrackParameters::create(straw, geoCtx, makeVector4(newPos, newTime),
+                                   unitDir, newAbsMom, newCharge, newCov)
+          .value();
 
   // Reset the state and test
   Stepper::State stateStraw = copyState(*magneticField, state.stepping);

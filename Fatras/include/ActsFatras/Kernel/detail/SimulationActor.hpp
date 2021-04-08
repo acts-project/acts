@@ -27,9 +27,8 @@ namespace detail {
 /// This actor must be added to the action list of the propagator and is the
 /// equivalent to the `MaterialInteractor` for the reconstruction. This
 /// implements surface-based simulation of particle interactions with matter
-/// using a configurable interaction list as well as some parts of the decay
-/// simulation. The interactions are simulated for every surface with valid
-/// material.
+/// using a configurable interaction list as well as the decay simulation. The
+/// interactions are simulated for every surface with valid material.
 ///
 /// @tparam generator_t random number generator
 /// @tparam decay_t decay module
@@ -37,13 +36,14 @@ namespace detail {
 /// @tparam hit_surface_selector_t selector for hit surfaces
 template <typename generator_t, typename decay_t, typename interactions_t,
           typename hit_surface_selector_t>
-struct Interactor {
+struct SimulationActor {
   using result_type = SimulationResult;
 
   /// Abort if the particle was killed during a previous interaction.
   struct ParticleNotAlive {
-    // This references the Interactor to automatically access its result type.
-    using action_type = Interactor;
+    // This references the SimulationActor to automatically access its result
+    // type.
+    using action_type = SimulationActor;
 
     template <typename propagator_state_t, typename stepper_t>
     constexpr bool operator()(propagator_state_t &, const stepper_t &,
@@ -244,11 +244,11 @@ struct Interactor {
         result.isAlive = false;
         retval = true;
       }
-      // the Interactor is in charge of keeping track of the material. since the
-      // accumulated material is stored in the particle it could (but should
-      // not) be modified by a physics process. to avoid issues, the material is
-      // updated only after process simulation has occured. this intentionally
-      // overwrites any material updates made by the process.
+      // the SimulationActor is in charge of keeping track of the material.
+      // since the accumulated material is stored in the particle it could (but
+      // should not) be modified by a physics process. to avoid issues, the
+      // material is updated only after process simulation has occured. this
+      // intentionally overwrites any material updates made by the process.
       result.particle.setMaterialPassed(x0, l0);
       return retval;
     };

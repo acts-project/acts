@@ -82,6 +82,9 @@ PropagationOutput PropagationAlgorithm<propagator_t>::executeTest(
     mInteractor.energyLoss = m_cfg.energyLoss;
     mInteractor.recordInteractions = m_cfg.recordMaterialInteractions;
 
+    // Switch the logger to sterile, e.g. for timing checks
+    auto& sLogger = options.actionList.get<SteppingLogger>();
+    sLogger.sterile = m_cfg.sterileLogger;
     // Set a maximum step size
     options.maxStepSize = m_cfg.maxStepSize;
 
@@ -172,7 +175,7 @@ ProcessCode PropagationAlgorithm<propagator_t>::execute(
       sMomentum = startParameters.momentum();
       pOutput = executeTest(context, startParameters);
     } else {
-      // execute the test for neeutral particles
+      // execute the test for neutral particles
       Acts::NeutralBoundTrackParameters neutralParameters(
           surface, std::move(pars), std::move(cov));
       sPosition = neutralParameters.position(context.geoContext);

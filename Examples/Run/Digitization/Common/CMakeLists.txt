@@ -1,5 +1,6 @@
 add_library(
   ActsExamplesDigitizationCommon SHARED
+  DigitizationConfigExample.cpp
   DigitizationExample.cpp
   DigitizationInput.cpp)
 target_include_directories(

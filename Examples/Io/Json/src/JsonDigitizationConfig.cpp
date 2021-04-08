@@ -12,6 +12,7 @@
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 
+#include <fstream>
 #include <functional>
 
 void ActsExamples::to_json(nlohmann::json& j,
@@ -87,8 +88,8 @@ void ActsExamples::from_json(const nlohmann::json& j,
   }
 }
 
-void ActsExamples::to_json(
-    nlohmann::json& j, const ActsExamples::GeometricDigitizationConfig& gdc) {
+void ActsExamples::to_json(nlohmann::json& j,
+                           const ActsExamples::GeometricConfig& gdc) {
   std::vector<size_t> indices;
   for (const auto& idx : gdc.indices) {
     indices.push_back(static_cast<size_t>(idx));
@@ -101,7 +102,7 @@ void ActsExamples::to_json(
 }
 
 void ActsExamples::from_json(const nlohmann::json& j,
-                             ActsExamples::GeometricDigitizationConfig& gdc) {
+                             ActsExamples::GeometricConfig& gdc) {
   for (const auto& jidx : j["indices"]) {
     gdc.indices.push_back(static_cast<Acts::BoundIndices>(jidx));
   }
@@ -128,7 +129,7 @@ void ActsExamples::from_json(const nlohmann::json& j,
 }
 
 void ActsExamples::to_json(nlohmann::json& j,
-                           const ActsExamples::DigitizationConfig& dc) {
+                           const ActsExamples::DigiComponentsConfig& dc) {
   if (not dc.geometricDigiConfig.indices.empty()) {
     j["geometric"] = nlohmann::json(dc.geometricDigiConfig);
   }
@@ -138,7 +139,7 @@ void ActsExamples::to_json(nlohmann::json& j,
 }
 
 void ActsExamples::from_json(const nlohmann::json& j,
-                             ActsExamples::DigitizationConfig& dc) {
+                             ActsExamples::DigiComponentsConfig& dc) {
   if (j.find("geometric") != j.end()) {
     nlohmann::json jgdc = j["geometric"];
     from_json(jgdc, dc.geometricDigiConfig);
@@ -147,4 +148,27 @@ void ActsExamples::from_json(const nlohmann::json& j,
     nlohmann::json jsdc = j["smearing"];
     from_json(jsdc, dc.smearingDigiConfig);
   }
+}
+
+Acts::GeometryHierarchyMap<ActsExamples::DigiComponentsConfig>
+ActsExamples::readDigiConfigFromJson(const std::string& path) {
+  nlohmann::json djson;
+  if (path.empty()) {
+    return Acts::GeometryHierarchyMap<ActsExamples::DigiComponentsConfig>();
+  }
+  std::ifstream infile(path, std::ifstream::in | std::ifstream::binary);
+  // rely on exception for error handling
+  infile.exceptions(std::ofstream::failbit | std::ofstream::badbit);
+  infile >> djson;
+  return DigiConfigConverter("digitization-configuration").fromJson(djson);
+}
+
+void ActsExamples::writeDigiConfigToJson(
+    const Acts::GeometryHierarchyMap<DigiComponentsConfig>& cfg,
+    const std::string& path) {
+  std::ofstream outfile(path, std::ofstream::out | std::ofstream::binary);
+  // rely on exception for error handling
+  outfile.exceptions(std::ofstream::failbit | std::ofstream::badbit);
+  outfile
+      << DigiConfigConverter("digitization-configuration").toJson(cfg).dump(2);
 }

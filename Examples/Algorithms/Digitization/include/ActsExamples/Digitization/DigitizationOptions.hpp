@@ -18,18 +18,12 @@ namespace Options {
 /// Add Digitization options.
 ///
 /// @param desc The options description to add options to
-void addDigitizationOptions(Description& desc);
+void addDigitizationOptions(Description &desc);
 
 /// Read SmearingAlgorithm Config from the options.
 ///
 /// @param variables The variables to read from
-SmearingAlgorithm::Config readSmearingConfig(const Variables& variables);
-
-/// Read Digitization Config from the options.
-///
-/// @param variables The variables to read from
-DigitizationAlgorithm::Config readDigitizationConfig(
-    const Variables& variables);
+DigitizationConfig readSmearingConfig(const Variables &variables);
 
 }  // namespace Options
 }  // namespace ActsExamples

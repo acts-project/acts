@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,14 +19,19 @@
 
 #include <TFile.h>
 
+namespace {
+using SimParticleContainer = ActsExamples::SimParticleContainer;
 using HitParticlesMap = ActsExamples::IndexMultimap<ActsFatras::Barcode>;
+using ProtoTrackContainer = ActsExamples::ProtoTrackContainer;
+}  // namespace
 
 ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
     ActsExamples::SeedingPerformanceWriter::Config cfg,
     Acts::Logging::Level lvl)
-    : WriterT(cfg.inputSeeds, "SeedingPerformanceWriter", lvl),
+    : WriterT(cfg.inputProtoTracks, "SeedingPerformanceWriter", lvl),
       m_cfg(std::move(cfg)),
-      m_effPlotTool(m_cfg.effPlotToolConfig, lvl) {
+      m_effPlotTool(m_cfg.effPlotToolConfig, lvl),
+      m_duplicationPlotTool(m_cfg.duplicationPlotToolConfig, lvl) {
   if (m_cfg.inputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument("Missing hit-particles map input collection");
   }
@@ -47,11 +52,12 @@ ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
   }
   // initialize the plot tools
   m_effPlotTool.book(m_effPlotCache);
+  m_duplicationPlotTool.book(m_duplicationPlotCache);
 }
 
 ActsExamples::SeedingPerformanceWriter::~SeedingPerformanceWriter() {
   m_effPlotTool.clear(m_effPlotCache);
-
+  m_duplicationPlotTool.clear(m_duplicationPlotCache);
   if (m_outputFile) {
     m_outputFile->Close();
   }
@@ -62,53 +68,57 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::endRun() {
   float fakeRate = float(m_nTotalSeeds - m_nTotalMatchedSeeds) / m_nTotalSeeds;
   float duplicationRate =
       float(m_nTotalDuplicatedParticles) / m_nTotalMatchedParticles;
+  float aveNDuplicatedSeeds =
+      float(m_nTotalMatchedSeeds - m_nTotalMatchedParticles) /
+      m_nTotalMatchedParticles;
+  ACTS_DEBUG("nTotalSeeds               = " << m_nTotalSeeds);
+  ACTS_DEBUG("nTotalMatchedSeeds        = " << m_nTotalMatchedSeeds);
+  ACTS_DEBUG("nTotalParticles           = " << m_nTotalParticles);
+  ACTS_DEBUG("nTotalMatchedParticles    = " << m_nTotalMatchedParticles);
+  ACTS_DEBUG("nTotalDuplicatedParticles = " << m_nTotalDuplicatedParticles);
 
   ACTS_INFO("Efficiency (nMatchedParticles / nAllParticles) = " << eff);
-  ACTS_INFO("Fake rate (nUnMatchedSeeds / nAllSeeds) =" << fakeRate);
+  ACTS_INFO("Fake rate (nUnMatchedSeeds / nAllSeeds) = " << fakeRate);
   ACTS_INFO(
-      "Duplication rate (nDuplicatedMatchedParticles / nMatchedParticles) ="
+      "Duplication rate (nDuplicatedMatchedParticles / nMatchedParticles) = "
       << duplicationRate);
+  ACTS_INFO(
+      "Average number of duplicated seeds ((nMatchedSeeds - nMatchedParticles) "
+      "/ nMatchedParticles) = "
+      << aveNDuplicatedSeeds);
 
   if (m_outputFile) {
     m_outputFile->cd();
     m_effPlotTool.write(m_effPlotCache);
+    m_duplicationPlotTool.write(m_duplicationPlotCache);
     ACTS_INFO("Wrote performance plots to '" << m_outputFile->GetPath() << "'");
   }
   return ProcessCode::SUCCESS;
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
-    const AlgorithmContext& ctx,
-    const std::vector<std::vector<Acts::Seed<SimSpacePoint>>>& seedVector) {
+    const AlgorithmContext& ctx, const ProtoTrackContainer& tracks) {
   // Read truth information collections
   const auto& particles =
       ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
   const auto& hitParticlesMap =
       ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
 
-  size_t nSeeds = 0;
+  size_t nSeeds = tracks.size();
   size_t nMatchedSeeds = 0;
   // Map from particles to how many times they were successfully found by a seed
   std::unordered_map<ActsFatras::Barcode, std::size_t> truthCount;
 
-  for (auto& regionVec : seedVector) {
-    nSeeds += regionVec.size();
-    for (size_t i = 0; i < regionVec.size(); i++) {
-      const Acts::Seed<SimSpacePoint>* seed = &regionVec[i];
-      ProtoTrack ptrack{seed->sp()[0]->measurementIndex(),
-                        seed->sp()[1]->measurementIndex(),
-                        seed->sp()[2]->measurementIndex()};
-      std::vector<ParticleHitCount> particleHitCounts;
-      identifyContributingParticles(hitParticlesMap, ptrack, particleHitCounts);
-
-      if (particleHitCounts.size() == 1) {
-        auto prt = particleHitCounts.at(0);
-        if (prt.hitCount == 3) {
-          auto it = truthCount.try_emplace(prt.particleId, 0u).first;
-          it->second += 1;
-          nMatchedSeeds++;
-        }
-      }
+  for (size_t itrack = 0; itrack < tracks.size(); ++itrack) {
+    const auto& track = tracks[itrack];
+    std::vector<ParticleHitCount> particleHitCounts;
+    identifyContributingParticles(hitParticlesMap, track, particleHitCounts);
+    // All hits matched to the same particle
+    if (particleHitCounts.size() == 1) {
+      auto prt = particleHitCounts.at(0);
+      auto it = truthCount.try_emplace(prt.particleId, 0u).first;
+      it->second += 1;
+      nMatchedSeeds++;
     }
   }
 
@@ -128,9 +138,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
       }
     }
     m_effPlotTool.fill(m_effPlotCache, particle, isMatched);
+    m_duplicationPlotTool.fill(m_duplicationPlotCache, particle,
+                               nMatchedSeedsForParticle - 1);
   }
-
-  ACTS_INFO("Number of seeds: " << nSeeds);
+  ACTS_DEBUG("Number of seeds: " << nSeeds);
   m_nTotalSeeds += nSeeds;
   m_nTotalMatchedSeeds += nMatchedSeeds;
   m_nTotalParticles += particles.size();

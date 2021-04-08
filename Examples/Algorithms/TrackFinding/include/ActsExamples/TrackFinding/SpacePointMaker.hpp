@@ -50,30 +50,10 @@ class SpacePointMaker final : public BareAlgorithm {
     ///
     /// Only volumes and layers can be set. Zero values can be used as wildcards
     /// to select larger parts of the hierarchy, i.e. setting only the volume
-    /// selects alls measurements within that volume. Adding a single identifier
+    /// selects all measurements within that volume. Adding a single identifier
     /// with all components set to zero selects all available measurements. The
     /// selection must not have duplicates.
-    std::vector<Acts::GeometryIdentifier> geometrySelection = {
-        // generic detector barrel layers
-        // the selection intentionally contains duplicates to demonstrate the
-        // automatic selection normalization. setting only the volume already
-        // selects all layers within it. the explicit layers in the selection
-        // should have no effect.
-        Acts::GeometryIdentifier().setVolume(8),
-        Acts::GeometryIdentifier().setVolume(8).setLayer(2),
-        Acts::GeometryIdentifier().setVolume(8).setLayer(4),
-        Acts::GeometryIdentifier().setVolume(8).setLayer(6),
-        // generic detector positive endcap layers
-        Acts::GeometryIdentifier().setVolume(9).setLayer(2),
-        Acts::GeometryIdentifier().setVolume(9).setLayer(4),
-        Acts::GeometryIdentifier().setVolume(9).setLayer(6),
-        Acts::GeometryIdentifier().setVolume(9).setLayer(8),
-        // generic detector negative endcap layers
-        Acts::GeometryIdentifier().setVolume(7).setLayer(14),
-        Acts::GeometryIdentifier().setVolume(7).setLayer(12),
-        Acts::GeometryIdentifier().setVolume(7).setLayer(10),
-        Acts::GeometryIdentifier().setVolume(7).setLayer(8),
-    };
+    std::vector<Acts::GeometryIdentifier> geometrySelection;
   };
 
   /// Construct the space point maker.

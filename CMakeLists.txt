@@ -97,6 +97,20 @@ set_option_if(
 set_option_if(ACTS_BUILD_PLUGIN_LEGACY ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_PLUGIN_AUTODIFF ACTS_BUILD_EVERYTHING)
 
+# feature tests
+include(CheckCXXSourceCompiles)
+
+# function that tests if the root installation is compatible (i.e., compiled with C++17)
+function(check_root_compatibility)
+  get_target_property(ROOT_INCLUDE_DIR ROOT::Core INTERFACE_INCLUDE_DIRECTORIES)
+  set(CMAKE_REQUIRED_FLAGS -std=c++17)
+  set(CMAKE_REQUIRED_INCLUDES ${ROOT_INCLUDE_DIR})
+  check_cxx_source_compiles("#include <string>\n#include <TString.h>\nint main(){}" ROOT_COMPATIBILITY_CHECK)
+  if(NOT ROOT_COMPATIBILITY_CHECK)
+    message(FATAL_ERROR "Root installation is misconfigured. Ensure that your Root installation was compiled with C++17.")
+  endif()
+endfunction()
+
 # additional configuration and tools
 include(GNUInstallDirs) # GNU-like installation paths, e.g. lib/, include/, ...
 include(ActsCompilerOptions) # default compile options
@@ -114,7 +128,7 @@ set(_acts_dd4hep_version 1.11)
 set(_acts_doxygen_version 1.8.15)
 set(_acts_eigen3_version 3.3.7)
 set(_acts_hepmc3_version 3.2.1)
-set(_acts_nlohmanjson_version 3.2.0)
+set(_acts_nlohmanjson_version 3.9.1)
 set(_acts_root_version 6.20)
 set(_acts_tbb_version 2020.1)
 
@@ -181,6 +195,7 @@ if(ACTS_BUILD_PLUGIN_SYCL)
 endif()
 if(ACTS_BUILD_PLUGIN_TGEO)
   find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Geom)
+  check_root_compatibility()
 endif()
 # examples dependencies
 if(ACTS_BUILD_EXAMPLES)
@@ -188,6 +203,7 @@ if(ACTS_BUILD_EXAMPLES)
   find_package(Threads REQUIRED)
   # for simplicity always request all potentially required components.
   find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Core Geom GenVector Hist Tree TreePlayer)
+  check_root_compatibility()
   # newer DD4hep version require TBB and search interally for TBB in
   # config-only mode. to avoid missmatches we explicitely search using
   # config-only mode first to be sure that we find the same version.

@@ -51,7 +51,7 @@ void Acts::EigenStepper<E, A>::resetState(State& state,
 template <typename E, typename A>
 auto Acts::EigenStepper<E, A>::boundState(State& state, const Surface& surface,
                                           bool transportCov) const
-    -> BoundState {
+    -> Result<BoundState> {
   return detail::boundState(
       state.geoContext, state.cov, state.jacobian, state.jacTransport,
       state.derivative, state.jacToGlobal, state.pars,
@@ -158,6 +158,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
         h2 * ((sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>() +
               std::abs(sd.kQoP[0] - sd.kQoP[1] - sd.kQoP[2] + sd.kQoP[3])),
         1e-20);
+
     return (error_estimate <= state.options.tolerance);
   };
 
@@ -223,5 +224,14 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     state.stepping.derivative.template segment<3>(4) = sd.k4;
   }
   state.stepping.pathAccumulated += h;
+  if (state.stepping.stepSize.currentType() ==
+      ConstrainedStep::Type::accuracy) {
+    state.stepping.stepSize =
+        state.stepping.stepSize *
+        std::min(std::max(0.25, std::pow((state.options.tolerance /
+                                          std::abs(error_estimate)),
+                                         0.25)),
+                 4.);
+  }
   return h;
 }

@@ -260,8 +260,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   PropState ps(std::move(esState));
 
   ps.stepping.covTransport = false;
-  double h = es.step(ps).value();
-  BOOST_CHECK_EQUAL(ps.stepping.stepSize, h);
+  es.step(ps).value();
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, eps);
   BOOST_CHECK_NE(es.position(ps.stepping).norm(), newPos.norm());
   BOOST_CHECK_NE(es.direction(ps.stepping), newMom.normalized());
@@ -271,8 +270,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(ps.stepping.jacTransport, FreeMatrix::Identity());
 
   ps.stepping.covTransport = true;
-  double h2 = es.step(ps).value();
-  BOOST_CHECK_EQUAL(h2, h);
+  es.step(ps).value();
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, eps);
   BOOST_CHECK_NE(es.position(ps.stepping).norm(), newPos.norm());
   BOOST_CHECK_NE(es.direction(ps.stepping), newMom.normalized());
@@ -404,8 +402,10 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   /// Repeat with surface related methods
   auto plane = Surface::makeShared<PlaneSurface>(pos, dir.normalized());
-  BoundTrackParameters bp(plane, tgContext, makeVector4(pos, time), dir,
-                          charge / absMom, cov);
+  auto bp =
+      BoundTrackParameters::create(plane, tgContext, makeVector4(pos, time),
+                                   dir, charge / absMom, cov)
+          .value();
   esState = EigenStepper<>::State(tgContext, bField->makeCache(mfContext), cp,
                                   ndir, stepSize, tolerance);
 
@@ -432,7 +432,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_ABS(esState.stepSize, 2., eps);
 
   // Test the bound state construction
-  auto boundState = es.boundState(esState, *plane);
+  auto boundState = es.boundState(esState, *plane).value();
   auto boundPars = std::get<0>(boundState);
   CHECK_CLOSE_ABS(boundPars.position(tgContext), bp.position(tgContext), eps);
   CHECK_CLOSE_ABS(boundPars.momentum(), bp.momentum(), 1e-7);

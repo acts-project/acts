@@ -82,7 +82,8 @@ class SingleBoundTrackParameters {
     normalizePhiTheta();
   }
 
-  /// Construct from four-position, direction, absolute momentum, and charge.
+  /// Factory to construct from four-position, direction, absolute momentum, and
+  /// charge.
   ///
   /// @param surface Reference surface the parameters are defined on
   /// @param geoCtx Geometry context for the local-to-global transformation
@@ -91,22 +92,27 @@ class SingleBoundTrackParameters {
   /// @param p Absolute momentum
   /// @param q Particle charge
   /// @param cov Bound parameters covariance matrix
-  SingleBoundTrackParameters(std::shared_ptr<const Surface> surface,
-                             const GeometryContext& geoCtx, const Vector4& pos4,
-                             const Vector3& dir, Scalar p, Scalar q,
-                             std::optional<CovarianceMatrix> cov = std::nullopt)
-      : m_params(detail::transformFreeToBoundParameters(
-            pos4.segment<3>(ePos0), pos4[eTime], dir,
-            (q != Scalar(0)) ? (q / p) : (1 / p), *surface, geoCtx)),
-        m_cov(std::move(cov)),
-        m_surface(std::move(surface)),
-        m_chargeInterpreter(std::abs(q)) {
-    assert((0 <= p) and "Absolute momentum must be positive");
-    assert(m_surface);
-    // free-to-bound transform always return phi/theta within bounds
+  ///
+  /// @note The returned result indicates whether the free parameters could
+  /// successfully be converted to on-surface parameters.
+  static Result<SingleBoundTrackParameters<charge_t>> create(
+      std::shared_ptr<const Surface> surface, const GeometryContext& geoCtx,
+      const Vector4& pos4, const Vector3& dir, Scalar p, Scalar q,
+      std::optional<CovarianceMatrix> cov = std::nullopt) {
+    Result<BoundVector> bound = detail::transformFreeToBoundParameters(
+        pos4.segment<3>(ePos0), pos4[eTime], dir,
+        (q != Scalar(0)) ? (q / p) : (1 / p), *surface, geoCtx);
+
+    if (!bound.ok()) {
+      return bound.error();
+    }
+
+    return SingleBoundTrackParameters<charge_t>{std::move(surface), *bound, q,
+                                                std::move(cov)};
   }
 
-  /// Construct from four-position, direction, and charge-over-momentum.
+  /// Factory to construct from four-position, direction, and
+  /// charge-over-momentum.
   ///
   /// @param surface Reference surface the parameters are defined on
   /// @param geoCtx Geometry context for the local-to-global transformation
@@ -115,22 +121,25 @@ class SingleBoundTrackParameters {
   /// @param qOverP Charge-over-momentum-like parameter
   /// @param cov Bound parameters covariance matrix
   ///
-  /// This constructor is only available if there are no potential charge
-  /// ambiguities, i.e. the charge type is default-constructible. The position
-  /// must be located on the surface.
+  /// @note This factory is only available if there are no potential charge
+  /// ambiguities, i.e. the charge type is default-constructible. The
+  /// position must be located on the surface.
+  /// @note The returned result indicates whether the free parameters could
+  /// successfully be converted to on-surface parameters.
   template <typename T = charge_t,
             std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
-  SingleBoundTrackParameters(std::shared_ptr<const Surface> surface,
-                             const GeometryContext& geoCtx, const Vector4& pos4,
-                             const Vector3& dir, Scalar qOverP,
-                             std::optional<CovarianceMatrix> cov = std::nullopt)
-      : m_params(detail::transformFreeToBoundParameters(
-            pos4.segment<3>(ePos0), pos4[eTime], dir, qOverP, *surface,
-            geoCtx)),
-        m_cov(std::move(cov)),
-        m_surface(std::move(surface)) {
-    assert(m_surface);
-    // free-to-bound transform always return phi/theta within bounds
+  static Result<SingleBoundTrackParameters<charge_t>> create(
+      std::shared_ptr<const Surface> surface, const GeometryContext& geoCtx,
+      const Vector4& pos4, const Vector3& dir, Scalar qOverP,
+      std::optional<CovarianceMatrix> cov = std::nullopt) {
+    Result<BoundVector> bound = detail::transformFreeToBoundParameters(
+        pos4.segment<3>(ePos0), pos4[eTime], dir, qOverP, *surface, geoCtx);
+    if (!bound.ok()) {
+      return bound.error();
+    }
+
+    return SingleBoundTrackParameters<charge_t>{std::move(surface), *bound,
+                                                std::move(cov)};
   }
 
   /// Parameters are not default constructible due to the charge type.
@@ -157,12 +166,13 @@ class SingleBoundTrackParameters {
 
   /// Space-time position four-vector.
   ///
-  /// @param[in] geoCtx Geometry context for the local-to-global transformation
+  /// @param[in] geoCtx Geometry context for the local-to-global
+  /// transformation
   ///
-  /// This uses the associated surface to transform the local position on the
-  /// surface to globalcoordinates. This requires a geometry context to select
-  /// the appropriate transformation and might be a computationally expensive
-  /// operation.
+  /// This uses the associated surface to transform the local position on
+  /// the surface to globalcoordinates. This requires a geometry context to
+  /// select the appropriate transformation and might be a computationally
+  /// expensive operation.
   Vector4 fourPosition(const GeometryContext& geoCtx) const {
     const Vector2 loc(m_params[eBoundLoc0], m_params[eBoundLoc1]);
     const Vector3 dir = makeDirectionUnitFromPhiTheta(m_params[eBoundPhi],
@@ -174,12 +184,13 @@ class SingleBoundTrackParameters {
   }
   /// Spatial position three-vector.
   ///
-  /// @param[in] geoCtx Geometry context for the local-to-global transformation
+  /// @param[in] geoCtx Geometry context for the local-to-global
+  /// transformation
   ///
-  /// This uses the associated surface to transform the local position on the
-  /// surface to globalcoordinates. This requires a geometry context to select
-  /// the appropriate transformation and might be a computationally expensive
-  /// operation.
+  /// This uses the associated surface to transform the local position on
+  /// the surface to globalcoordinates. This requires a geometry context to
+  /// select the appropriate transformation and might be a computationally
+  /// expensive operation.
   Vector3 position(const GeometryContext& geoCtx) const {
     const Vector2 loc(m_params[eBoundLoc0], m_params[eBoundLoc1]);
     const Vector3 dir = makeDirectionUnitFromPhiTheta(m_params[eBoundPhi],
@@ -189,7 +200,8 @@ class SingleBoundTrackParameters {
   /// Time coordinate.
   Scalar time() const { return m_params[eBoundTime]; }
 
-  /// Unit direction three-vector, i.e. the normalized momentum three-vector.
+  /// Unit direction three-vector, i.e. the normalized momentum
+  /// three-vector.
   Vector3 unitDirection() const {
     return makeDirectionUnitFromPhiTheta(m_params[eBoundPhi],
                                          m_params[eBoundTheta]);
@@ -206,7 +218,7 @@ class SingleBoundTrackParameters {
   Vector3 momentum() const { return absoluteMomentum() * unitDirection(); }
 
   /// Particle electric charge.
-  constexpr Scalar charge() const {
+  Scalar charge() const {
     return m_chargeInterpreter.extractCharge(get<eBoundQOverP>());
   }
 
@@ -214,11 +226,12 @@ class SingleBoundTrackParameters {
   const Surface& referenceSurface() const { return *m_surface; }
   /// Reference frame in which the local error is defined.
   ///
-  /// @param[in] geoCtx Geometry context for the local-to-global transformation
+  /// @param[in] geoCtx Geometry context for the local-to-global
+  /// transformation
   ///
-  /// For planar surfaces, this is the transformation local-to-global rotation
-  /// matrix. For non-planar surfaces, it is the local-to-global rotation matrix
-  /// of the tangential plane at the track position.
+  /// For planar surfaces, this is the transformation local-to-global
+  /// rotation matrix. For non-planar surfaces, it is the local-to-global
+  /// rotation matrix of the tangential plane at the track position.
   RotationMatrix3 referenceFrame(const GeometryContext& geoCtx) const {
     return m_surface->referenceFrame(geoCtx, position(geoCtx), momentum());
   }
@@ -241,13 +254,14 @@ class SingleBoundTrackParameters {
 
   /// Compare two bound track parameters for bitwise equality.
   ///
-  /// @note Comparing track parameters for bitwise equality is not a good idea.
-  ///   Depending on the context you might want to compare only the parameter
-  ///   values, or compare them for compability instead of equality; you might
-  ///   also have different (floating point) thresholds of equality in different
-  ///   contexts. None of that can be handled by this operator. Users should
-  ///   think really hard if this is what they want and we might decided that we
-  ///   will remove this in the future.
+  /// @note Comparing track parameters for bitwise equality is not a good
+  /// idea.
+  ///   Depending on the context you might want to compare only the
+  ///   parameter values, or compare them for compability instead of
+  ///   equality; you might also have different (floating point) thresholds
+  ///   of equality in different contexts. None of that can be handled by
+  ///   this operator. Users should think really hard if this is what they
+  ///   want and we might decided that we will remove this in the future.
   friend bool operator==(const SingleBoundTrackParameters<charge_t>& lhs,
                          const SingleBoundTrackParameters<charge_t>& rhs) {
     return (lhs.m_params == rhs.m_params) and (lhs.m_cov == rhs.m_cov) and
