@@ -13,6 +13,7 @@
 #include "ActsExamples/EventData/SimHit.hpp"
 
 #include <set>
+#include <unordered_map>
 #include <vector>
 
 namespace ActsExamples {
