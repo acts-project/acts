@@ -1,0 +1,884 @@
+<materials>
+ <element Z="89" formula="Ac" name="Ac" >
+  <atom type="A" unit="g/mol" value="227.028" />
+ </element>
+ <material formula="Ac" name="Actinium" state="solid" >
+  <RL type="X0" unit="cm" value="0.601558" />
+  <NIL type="lambda" unit="cm" value="21.2048" />
+  <D type="density" unit="g/cm3" value="10.07" />
+  <composite n="1" ref="Ac" />
+ </material>
+ <element Z="47" formula="Ag" name="Ag" >
+  <atom type="A" unit="g/mol" value="107.868" />
+ </element>
+ <material formula="Ag" name="Silver" state="solid" >
+  <RL type="X0" unit="cm" value="0.854292" />
+  <NIL type="lambda" unit="cm" value="15.8546" />
+  <D type="density" unit="g/cm3" value="10.5" />
+  <composite n="1" ref="Ag" />
+ </material>
+ <element Z="13" formula="Al" name="Al" >
+  <atom type="A" unit="g/mol" value="26.9815" />
+ </element>
+ <material formula="Al" name="Aluminum" state="solid" >
+  <RL type="X0" unit="cm" value="8.89632" />
+  <NIL type="lambda" unit="cm" value="38.8766" />
+  <D type="density" unit="g/cm3" value="2.699" />
+  <composite n="1" ref="Al" />
+ </material>
+ <element Z="95" formula="Am" name="Am" >
+  <atom type="A" unit="g/mol" value="243.061" />
+ </element>
+ <material formula="Am" name="Americium" state="solid" >
+  <RL type="X0" unit="cm" value="0.42431" />
+  <NIL type="lambda" unit="cm" value="15.9812" />
+  <D type="density" unit="g/cm3" value="13.67" />
+  <composite n="1" ref="Am" />
+ </material>
+ <element Z="18" formula="Ar" name="Ar" >
+  <atom type="A" unit="g/mol" value="39.9477" />
+ </element>
+ <material formula="Ar" name="Argon" state="gas" >
+  <RL type="X0" unit="cm" value="11762.1" />
+  <NIL type="lambda" unit="cm" value="71926" />
+  <D type="density" unit="g/cm3" value="0.00166201" />
+  <composite n="1" ref="Ar" />
+ </material>
+ <element Z="33" formula="As" name="As" >
+  <atom type="A" unit="g/mol" value="74.9216" />
+ </element>
+ <material formula="As" name="Arsenic" state="solid" >
+  <RL type="X0" unit="cm" value="2.0838" />
+  <NIL type="lambda" unit="cm" value="25.7324" />
+  <D type="density" unit="g/cm3" value="5.73" />
+  <composite n="1" ref="As" />
+ </material>
+ <element Z="85" formula="At" name="At" >
+  <atom type="A" unit="g/mol" value="209.987" />
+ </element>
+ <material formula="At" name="Astatine" state="solid" >
+  <RL type="X0" unit="cm" value="0.650799" />
+  <NIL type="lambda" unit="cm" value="22.3202" />
+  <D type="density" unit="g/cm3" value="9.32" />
+  <composite n="1" ref="At" />
+ </material>
+ <element Z="79" formula="Au" name="Au" >
+  <atom type="A" unit="g/mol" value="196.967" />
+ </element>
+ <material formula="Au" name="Gold" state="solid" >
+  <RL type="X0" unit="cm" value="0.334436" />
+  <NIL type="lambda" unit="cm" value="10.5393" />
+  <D type="density" unit="g/cm3" value="19.32" />
+  <composite n="1" ref="Au" />
+ </material>
+ <element Z="5" formula="B" name="B" >
+  <atom type="A" unit="g/mol" value="10.811" />
+ </element>
+ <material formula="B" name="Boron" state="solid" >
+  <RL type="X0" unit="cm" value="22.2307" />
+  <NIL type="lambda" unit="cm" value="32.2793" />
+  <D type="density" unit="g/cm3" value="2.37" />
+  <composite n="1" ref="B" />
+ </material>
+ <element Z="56" formula="Ba" name="Ba" >
+  <atom type="A" unit="g/mol" value="137.327" />
+ </element>
+ <material formula="Ba" name="Barium" state="solid" >
+  <RL type="X0" unit="cm" value="2.37332" />
+  <NIL type="lambda" unit="cm" value="51.6743" />
+  <D type="density" unit="g/cm3" value="3.5" />
+  <composite n="1" ref="Ba" />
+ </material>
+ <element Z="4" formula="Be" name="Be" >
+  <atom type="A" unit="g/mol" value="9.01218" />
+ </element>
+ <material formula="Be" name="Beryllium" state="solid" >
+  <RL type="X0" unit="cm" value="35.276" />
+  <NIL type="lambda" unit="cm" value="39.4488" />
+  <D type="density" unit="g/cm3" value="1.848" />
+  <composite n="1" ref="Be" />
+ </material>
+ <element Z="83" formula="Bi" name="Bi" >
+  <atom type="A" unit="g/mol" value="208.98" />
+ </element>
+ <material formula="Bi" name="Bismuth" state="solid" >
+  <RL type="X0" unit="cm" value="0.645388" />
+  <NIL type="lambda" unit="cm" value="21.3078" />
+  <D type="density" unit="g/cm3" value="9.747" />
+  <composite n="1" ref="Bi" />
+ </material>
+ <element Z="97" formula="Bk" name="Bk" >
+  <atom type="A" unit="g/mol" value="247.07" />
+ </element>
+ <material formula="Bk" name="Berkelium" state="solid" >
+  <RL type="X0" unit="cm" value="0.406479" />
+  <NIL type="lambda" unit="cm" value="15.6902" />
+  <D type="density" unit="g/cm3" value="14" />
+  <composite n="1" ref="Bk" />
+ </material>
+ <element Z="35" formula="Br" name="Br" >
+  <atom type="A" unit="g/mol" value="79.9035" />
+ </element>
+ <material formula="Br" name="Bromine" state="gas" >
+  <RL type="X0" unit="cm" value="1615.12" />
+  <NIL type="lambda" unit="cm" value="21299" />
+  <D type="density" unit="g/cm3" value="0.0070721" />
+  <composite n="1" ref="Br" />
+ </material>
+ <element Z="6" formula="C" name="C" >
+  <atom type="A" unit="g/mol" value="12.0107" />
+ </element>
+ <material formula="C" name="Carbon" state="solid" >
+  <RL type="X0" unit="cm" value="21.3485" />
+  <NIL type="lambda" unit="cm" value="40.1008" />
+  <D type="density" unit="g/cm3" value="2" />
+  <composite n="1" ref="C" />
+ </material>
+ <element Z="20" formula="Ca" name="Ca" >
+  <atom type="A" unit="g/mol" value="40.078" />
+ </element>
+ <material formula="Ca" name="Calcium" state="solid" >
+  <RL type="X0" unit="cm" value="10.4151" />
+  <NIL type="lambda" unit="cm" value="77.3754" />
+  <D type="density" unit="g/cm3" value="1.55" />
+  <composite n="1" ref="Ca" />
+ </material>
+ <element Z="48" formula="Cd" name="Cd" >
+  <atom type="A" unit="g/mol" value="112.411" />
+ </element>
+ <material formula="Cd" name="Cadmium" state="solid" >
+  <RL type="X0" unit="cm" value="1.03994" />
+  <NIL type="lambda" unit="cm" value="19.46" />
+  <D type="density" unit="g/cm3" value="8.65" />
+  <composite n="1" ref="Cd" />
+ </material>
+ <element Z="58" formula="Ce" name="Ce" >
+  <atom type="A" unit="g/mol" value="140.115" />
+ </element>
+ <material formula="Ce" name="Cerium" state="solid" >
+  <RL type="X0" unit="cm" value="1.19506" />
+  <NIL type="lambda" unit="cm" value="27.3227" />
+  <D type="density" unit="g/cm3" value="6.657" />
+  <composite n="1" ref="Ce" />
+ </material>
+ <element Z="98" formula="Cf" name="Cf" >
+  <atom type="A" unit="g/mol" value="251.08" />
+ </element>
+ <material formula="Cf" name="Californium" state="solid" >
+  <RL type="X0" unit="cm" value="0.568328" />
+  <NIL type="lambda" unit="cm" value="22.085" />
+  <D type="density" unit="g/cm3" value="10" />
+  <composite n="1" ref="Cf" />
+ </material>
+ <element Z="17" formula="Cl" name="Cl" >
+  <atom type="A" unit="g/mol" value="35.4526" />
+ </element>
+ <material formula="Cl" name="Chlorine" state="gas" >
+  <RL type="X0" unit="cm" value="6437.34" />
+  <NIL type="lambda" unit="cm" value="38723.9" />
+  <D type="density" unit="g/cm3" value="0.00299473" />
+  <composite n="1" ref="Cl" />
+ </material>
+ <element Z="96" formula="Cm" name="Cm" >
+  <atom type="A" unit="g/mol" value="247.07" />
+ </element>
+ <material formula="Cm" name="Curium" state="solid" >
+  <RL type="X0" unit="cm" value="0.428706" />
+  <NIL type="lambda" unit="cm" value="16.2593" />
+  <D type="density" unit="g/cm3" value="13.51" />
+  <composite n="1" ref="Cm" />
+ </material>
+ <element Z="27" formula="Co" name="Co" >
+  <atom type="A" unit="g/mol" value="58.9332" />
+ </element>
+ <material formula="Co" name="Cobalt" state="solid" >
+  <RL type="X0" unit="cm" value="1.53005" />
+  <NIL type="lambda" unit="cm" value="15.2922" />
+  <D type="density" unit="g/cm3" value="8.9" />
+  <composite n="1" ref="Co" />
+ </material>
+ <element Z="24" formula="Cr" name="Cr" >
+  <atom type="A" unit="g/mol" value="51.9961" />
+ </element>
+ <material formula="Cr" name="Chromium" state="solid" >
+  <RL type="X0" unit="cm" value="2.0814" />
+  <NIL type="lambda" unit="cm" value="18.1933" />
+  <D type="density" unit="g/cm3" value="7.18" />
+  <composite n="1" ref="Cr" />
+ </material>
+ <element Z="55" formula="Cs" name="Cs" >
+  <atom type="A" unit="g/mol" value="132.905" />
+ </element>
+ <material formula="Cs" name="Cesium" state="solid" >
+  <RL type="X0" unit="cm" value="4.4342" />
+  <NIL type="lambda" unit="cm" value="95.317" />
+  <D type="density" unit="g/cm3" value="1.873" />
+  <composite n="1" ref="Cs" />
+ </material>
+ <element Z="29" formula="Cu" name="Cu" >
+  <atom type="A" unit="g/mol" value="63.5456" />
+ </element>
+ <material formula="Cu" name="Copper" state="solid" >
+  <RL type="X0" unit="cm" value="1.43558" />
+  <NIL type="lambda" unit="cm" value="15.5141" />
+  <D type="density" unit="g/cm3" value="8.96" />
+  <composite n="1" ref="Cu" />
+ </material>
+ <element Z="66" formula="Dy" name="Dy" >
+  <atom type="A" unit="g/mol" value="162.497" />
+ </element>
+ <material formula="Dy" name="Dysprosium" state="solid" >
+  <RL type="X0" unit="cm" value="0.85614" />
+  <NIL type="lambda" unit="cm" value="22.2923" />
+  <D type="density" unit="g/cm3" value="8.55" />
+  <composite n="1" ref="Dy" />
+ </material>
+ <element Z="68" formula="Er" name="Er" >
+  <atom type="A" unit="g/mol" value="167.256" />
+ </element>
+ <material formula="Er" name="Erbium" state="solid" >
+  <RL type="X0" unit="cm" value="0.788094" />
+  <NIL type="lambda" unit="cm" value="21.2923" />
+  <D type="density" unit="g/cm3" value="9.066" />
+  <composite n="1" ref="Er" />
+ </material>
+ <element Z="63" formula="Eu" name="Eu" >
+  <atom type="A" unit="g/mol" value="151.964" />
+ </element>
+ <material formula="Eu" name="Europium" state="solid" >
+  <RL type="X0" unit="cm" value="1.41868" />
+  <NIL type="lambda" unit="cm" value="35.6178" />
+  <D type="density" unit="g/cm3" value="5.243" />
+  <composite n="1" ref="Eu" />
+ </material>
+ <element Z="9" formula="F" name="F" >
+  <atom type="A" unit="g/mol" value="18.9984" />
+ </element>
+ <material formula="F" name="Fluorine" state="gas" >
+  <RL type="X0" unit="cm" value="20838.2" />
+  <NIL type="lambda" unit="cm" value="59094.3" />
+  <D type="density" unit="g/cm3" value="0.00158029" />
+  <composite n="1" ref="F" />
+ </material>
+ <element Z="26" formula="Fe" name="Fe" >
+  <atom type="A" unit="g/mol" value="55.8451" />
+ </element>
+ <material formula="Fe" name="Iron" state="solid" >
+  <RL type="X0" unit="cm" value="1.75749" />
+  <NIL type="lambda" unit="cm" value="16.959" />
+  <D type="density" unit="g/cm3" value="7.874" />
+  <composite n="1" ref="Fe" />
+ </material>
+ <element Z="87" formula="Fr" name="Fr" >
+  <atom type="A" unit="g/mol" value="223.02" />
+ </element>
+ <material formula="Fr" name="Francium" state="solid" >
+  <RL type="X0" unit="cm" value="6.18826" />
+  <NIL type="lambda" unit="cm" value="212.263" />
+  <D type="density" unit="g/cm3" value="1" />
+  <composite n="1" ref="Fr" />
+ </material>
+ <element Z="31" formula="Ga" name="Ga" >
+  <atom type="A" unit="g/mol" value="69.7231" />
+ </element>
+ <material formula="Ga" name="Gallium" state="solid" >
+  <RL type="X0" unit="cm" value="2.1128" />
+  <NIL type="lambda" unit="cm" value="24.3351" />
+  <D type="density" unit="g/cm3" value="5.904" />
+  <composite n="1" ref="Ga" />
+ </material>
+ <element Z="64" formula="Gd" name="Gd" >
+  <atom type="A" unit="g/mol" value="157.252" />
+ </element>
+ <material formula="Gd" name="Gadolinium" state="solid" >
+  <RL type="X0" unit="cm" value="0.947208" />
+  <NIL type="lambda" unit="cm" value="23.9377" />
+  <D type="density" unit="g/cm3" value="7.9004" />
+  <composite n="1" ref="Gd" />
+ </material>
+ <element Z="32" formula="Ge" name="Ge" >
+  <atom type="A" unit="g/mol" value="72.6128" />
+ </element>
+ <material formula="Ge" name="Germanium" state="solid" >
+  <RL type="X0" unit="cm" value="2.3013" />
+  <NIL type="lambda" unit="cm" value="27.3344" />
+  <D type="density" unit="g/cm3" value="5.323" />
+  <composite n="1" ref="Ge" />
+ </material>
+ <element Z="1" formula="H" name="H" >
+  <atom type="A" unit="g/mol" value="1.00794" />
+ </element>
+ <material formula="H" name="Hydrogen" state="gas" >
+  <RL type="X0" unit="cm" value="752776" />
+  <NIL type="lambda" unit="cm" value="421239" />
+  <D type="density" unit="g/cm3" value="8.3748e-05" />
+  <composite n="1" ref="H" />
+ </material>
+ <element Z="2" formula="He" name="He" >
+  <atom type="A" unit="g/mol" value="4.00264" />
+ </element>
+ <material formula="He" name="Helium" state="gas" >
+  <RL type="X0" unit="cm" value="567113" />
+  <NIL type="lambda" unit="cm" value="334266" />
+  <D type="density" unit="g/cm3" value="0.000166322" />
+  <composite n="1" ref="He" />
+ </material>
+ <element Z="72" formula="Hf" name="Hf" >
+  <atom type="A" unit="g/mol" value="178.485" />
+ </element>
+ <material formula="Hf" name="Hafnium" state="solid" >
+  <RL type="X0" unit="cm" value="0.517717" />
+  <NIL type="lambda" unit="cm" value="14.7771" />
+  <D type="density" unit="g/cm3" value="13.31" />
+  <composite n="1" ref="Hf" />
+ </material>
+ <element Z="80" formula="Hg" name="Hg" >
+  <atom type="A" unit="g/mol" value="200.599" />
+ </element>
+ <material formula="Hg" name="Mercury" state="solid" >
+  <RL type="X0" unit="cm" value="0.475241" />
+  <NIL type="lambda" unit="cm" value="15.105" />
+  <D type="density" unit="g/cm3" value="13.546" />
+  <composite n="1" ref="Hg" />
+ </material>
+ <element Z="67" formula="Ho" name="Ho" >
+  <atom type="A" unit="g/mol" value="164.93" />
+ </element>
+ <material formula="Ho" name="Holmium" state="solid" >
+  <RL type="X0" unit="cm" value="0.822447" />
+  <NIL type="lambda" unit="cm" value="21.8177" />
+  <D type="density" unit="g/cm3" value="8.795" />
+  <composite n="1" ref="Ho" />
+ </material>
+ <element Z="53" formula="I" name="I" >
+  <atom type="A" unit="g/mol" value="126.904" />
+ </element>
+ <material formula="I" name="Iodine" state="solid" >
+  <RL type="X0" unit="cm" value="1.72016" />
+  <NIL type="lambda" unit="cm" value="35.6583" />
+  <D type="density" unit="g/cm3" value="4.93" />
+  <composite n="1" ref="I" />
+ </material>
+ <element Z="49" formula="In" name="In" >
+  <atom type="A" unit="g/mol" value="114.818" />
+ </element>
+ <material formula="In" name="Indium" state="solid" >
+  <RL type="X0" unit="cm" value="1.21055" />
+  <NIL type="lambda" unit="cm" value="23.2468" />
+  <D type="density" unit="g/cm3" value="7.31" />
+  <composite n="1" ref="In" />
+ </material>
+ <element Z="77" formula="Ir" name="Ir" >
+  <atom type="A" unit="g/mol" value="192.216" />
+ </element>
+ <material formula="Ir" name="Iridium" state="solid" >
+  <RL type="X0" unit="cm" value="0.294142" />
+  <NIL type="lambda" unit="cm" value="9.01616" />
+  <D type="density" unit="g/cm3" value="22.42" />
+  <composite n="1" ref="Ir" />
+ </material>
+ <element Z="19" formula="K" name="K" >
+  <atom type="A" unit="g/mol" value="39.0983" />
+ </element>
+ <material formula="K" name="Potassium" state="solid" >
+  <RL type="X0" unit="cm" value="20.0871" />
+  <NIL type="lambda" unit="cm" value="138.041" />
+  <D type="density" unit="g/cm3" value="0.862" />
+  <composite n="1" ref="K" />
+ </material>
+ <element Z="36" formula="Kr" name="Kr" >
+  <atom type="A" unit="g/mol" value="83.7993" />
+ </element>
+ <material formula="Kr" name="Krypton" state="gas" >
+  <RL type="X0" unit="cm" value="3269.44" />
+  <NIL type="lambda" unit="cm" value="43962.9" />
+  <D type="density" unit="g/cm3" value="0.00347832" />
+  <composite n="1" ref="Kr" />
+ </material>
+ <element Z="57" formula="La" name="La" >
+  <atom type="A" unit="g/mol" value="138.905" />
+ </element>
+ <material formula="La" name="Lanthanum" state="solid" >
+  <RL type="X0" unit="cm" value="1.32238" />
+  <NIL type="lambda" unit="cm" value="29.441" />
+  <D type="density" unit="g/cm3" value="6.154" />
+  <composite n="1" ref="La" />
+ </material>
+ <element Z="3" formula="Li" name="Li" >
+  <atom type="A" unit="g/mol" value="6.94003" />
+ </element>
+ <material formula="Li" name="Lithium" state="solid" >
+  <RL type="X0" unit="cm" value="154.997" />
+  <NIL type="lambda" unit="cm" value="124.305" />
+  <D type="density" unit="g/cm3" value="0.534" />
+  <composite n="1" ref="Li" />
+ </material>
+ <element Z="71" formula="Lu" name="Lu" >
+  <atom type="A" unit="g/mol" value="174.967" />
+ </element>
+ <material formula="Lu" name="Lutetium" state="solid" >
+  <RL type="X0" unit="cm" value="0.703651" />
+  <NIL type="lambda" unit="cm" value="19.8916" />
+  <D type="density" unit="g/cm3" value="9.84" />
+  <composite n="1" ref="Lu" />
+ </material>
+ <element Z="12" formula="Mg" name="Mg" >
+  <atom type="A" unit="g/mol" value="24.305" />
+ </element>
+ <material formula="Mg" name="Magnesium" state="solid" >
+  <RL type="X0" unit="cm" value="14.3859" />
+  <NIL type="lambda" unit="cm" value="58.7589" />
+  <D type="density" unit="g/cm3" value="1.74" />
+  <composite n="1" ref="Mg" />
+ </material>
+ <element Z="25" formula="Mn" name="Mn" >
+  <atom type="A" unit="g/mol" value="54.938" />
+ </element>
+ <material formula="Mn" name="Manganese" state="solid" >
+  <RL type="X0" unit="cm" value="1.96772" />
+  <NIL type="lambda" unit="cm" value="17.8701" />
+  <D type="density" unit="g/cm3" value="7.44" />
+  <composite n="1" ref="Mn" />
+ </material>
+ <element Z="42" formula="Mo" name="Mo" >
+  <atom type="A" unit="g/mol" value="95.9313" />
+ </element>
+ <material formula="Mo" name="Molybdenum" state="solid" >
+  <RL type="X0" unit="cm" value="0.959107" />
+  <NIL type="lambda" unit="cm" value="15.6698" />
+  <D type="density" unit="g/cm3" value="10.22" />
+  <composite n="1" ref="Mo" />
+ </material>
+ <element Z="7" formula="N" name="N" >
+  <atom type="A" unit="g/mol" value="14.0068" />
+ </element>
+ <material formula="N" name="Nitrogen" state="gas" >
+  <RL type="X0" unit="cm" value="32602.2" />
+  <NIL type="lambda" unit="cm" value="72430.3" />
+  <D type="density" unit="g/cm3" value="0.0011652" />
+  <composite n="1" ref="N" />
+ </material>
+ <element Z="11" formula="Na" name="Na" >
+  <atom type="A" unit="g/mol" value="22.9898" />
+ </element>
+ <material formula="Na" name="Sodium" state="solid" >
+  <RL type="X0" unit="cm" value="28.5646" />
+  <NIL type="lambda" unit="cm" value="102.463" />
+  <D type="density" unit="g/cm3" value="0.971" />
+  <composite n="1" ref="Na" />
+ </material>
+ <element Z="41" formula="Nb" name="Nb" >
+  <atom type="A" unit="g/mol" value="92.9064" />
+ </element>
+ <material formula="Nb" name="Niobium" state="solid" >
+  <RL type="X0" unit="cm" value="1.15783" />
+  <NIL type="lambda" unit="cm" value="18.4846" />
+  <D type="density" unit="g/cm3" value="8.57" />
+  <composite n="1" ref="Nb" />
+ </material>
+ <element Z="60" formula="Nd" name="Nd" >
+  <atom type="A" unit="g/mol" value="144.236" />
+ </element>
+ <material formula="Nd" name="Neodymium" state="solid" >
+  <RL type="X0" unit="cm" value="1.11667" />
+  <NIL type="lambda" unit="cm" value="26.6308" />
+  <D type="density" unit="g/cm3" value="6.9" />
+  <composite n="1" ref="Nd" />
+ </material>
+ <element Z="10" formula="Ne" name="Ne" >
+  <atom type="A" unit="g/mol" value="20.18" />
+ </element>
+ <material formula="Ne" name="Neon" state="gas" >
+  <RL type="X0" unit="cm" value="34504.8" />
+  <NIL type="lambda" unit="cm" value="114322" />
+  <D type="density" unit="g/cm3" value="0.000838505" />
+  <composite n="1" ref="Ne" />
+ </material>
+ <element Z="28" formula="Ni" name="Ni" >
+  <atom type="A" unit="g/mol" value="58.6933" />
+ </element>
+ <material formula="Ni" name="Nickel" state="solid" >
+  <RL type="X0" unit="cm" value="1.42422" />
+  <NIL type="lambda" unit="cm" value="15.2265" />
+  <D type="density" unit="g/cm3" value="8.902" />
+  <composite n="1" ref="Ni" />
+ </material>
+ <element Z="93" formula="Np" name="Np" >
+  <atom type="A" unit="g/mol" value="237.048" />
+ </element>
+ <material formula="Np" name="Neptunium" state="solid" >
+  <RL type="X0" unit="cm" value="0.289676" />
+  <NIL type="lambda" unit="cm" value="10.6983" />
+  <D type="density" unit="g/cm3" value="20.25" />
+  <composite n="1" ref="Np" />
+ </material>
+ <element Z="8" formula="O" name="O" >
+  <atom type="A" unit="g/mol" value="15.9994" />
+ </element>
+ <material formula="O" name="Oxygen" state="gas" >
+  <RL type="X0" unit="cm" value="25713.8" />
+  <NIL type="lambda" unit="cm" value="66233.9" />
+  <D type="density" unit="g/cm3" value="0.00133151" />
+  <composite n="1" ref="O" />
+ </material>
+ <element Z="76" formula="Os" name="Os" >
+  <atom type="A" unit="g/mol" value="190.225" />
+ </element>
+ <material formula="Os" name="Osmium" state="solid" >
+  <RL type="X0" unit="cm" value="0.295861" />
+  <NIL type="lambda" unit="cm" value="8.92553" />
+  <D type="density" unit="g/cm3" value="22.57" />
+  <composite n="1" ref="Os" />
+ </material>
+ <element Z="15" formula="P" name="P" >
+  <atom type="A" unit="g/mol" value="30.9738" />
+ </element>
+ <material formula="P" name="Phosphorus" state="solid" >
+  <RL type="X0" unit="cm" value="9.63879" />
+  <NIL type="lambda" unit="cm" value="49.9343" />
+  <D type="density" unit="g/cm3" value="2.2" />
+  <composite n="1" ref="P" />
+ </material>
+ <element Z="91" formula="Pa" name="Pa" >
+  <atom type="A" unit="g/mol" value="231.036" />
+ </element>
+ <material formula="Pa" name="Protactinium" state="solid" >
+  <RL type="X0" unit="cm" value="0.38607" />
+  <NIL type="lambda" unit="cm" value="13.9744" />
+  <D type="density" unit="g/cm3" value="15.37" />
+  <composite n="1" ref="Pa" />
+ </material>
+ <element Z="82" formula="Pb" name="Pb" >
+  <atom type="A" unit="g/mol" value="207.217" />
+ </element>
+ <material formula="Pb" name="Lead" state="solid" >
+  <RL type="X0" unit="cm" value="0.561253" />
+  <NIL type="lambda" unit="cm" value="18.2607" />
+  <D type="density" unit="g/cm3" value="11.35" />
+  <composite n="1" ref="Pb" />
+ </material>
+ <element Z="46" formula="Pd" name="Pd" >
+  <atom type="A" unit="g/mol" value="106.415" />
+ </element>
+ <material formula="Pd" name="Palladium" state="solid" >
+  <RL type="X0" unit="cm" value="0.765717" />
+  <NIL type="lambda" unit="cm" value="13.7482" />
+  <D type="density" unit="g/cm3" value="12.02" />
+  <composite n="1" ref="Pd" />
+ </material>
+ <element Z="61" formula="Pm" name="Pm" >
+  <atom type="A" unit="g/mol" value="144.913" />
+ </element>
+ <material formula="Pm" name="Promethium" state="solid" >
+  <RL type="X0" unit="cm" value="1.04085" />
+  <NIL type="lambda" unit="cm" value="25.4523" />
+  <D type="density" unit="g/cm3" value="7.22" />
+  <composite n="1" ref="Pm" />
+ </material>
+ <element Z="84" formula="Po" name="Po" >
+  <atom type="A" unit="g/mol" value="208.982" />
+ </element>
+ <material formula="Po" name="Polonium" state="solid" >
+  <RL type="X0" unit="cm" value="0.661092" />
+  <NIL type="lambda" unit="cm" value="22.2842" />
+  <D type="density" unit="g/cm3" value="9.32" />
+  <composite n="1" ref="Po" />
+ </material>
+ <element Z="59" formula="Pr" name="Pr" >
+  <atom type="A" unit="g/mol" value="140.908" />
+ </element>
+ <material formula="Pr" name="Praseodymium" state="solid" >
+  <RL type="X0" unit="cm" value="1.1562" />
+  <NIL type="lambda" unit="cm" value="27.1312" />
+  <D type="density" unit="g/cm3" value="6.71" />
+  <composite n="1" ref="Pr" />
+ </material>
+ <element Z="78" formula="Pt" name="Pt" >
+  <atom type="A" unit="g/mol" value="195.078" />
+ </element>
+ <material formula="Pt" name="Platinum" state="solid" >
+  <RL type="X0" unit="cm" value="0.305053" />
+  <NIL type="lambda" unit="cm" value="9.46584" />
+  <D type="density" unit="g/cm3" value="21.45" />
+  <composite n="1" ref="Pt" />
+ </material>
+ <element Z="94" formula="Pu" name="Pu" >
+  <atom type="A" unit="g/mol" value="244.064" />
+ </element>
+ <material formula="Pu" name="Plutonium" state="solid" >
+  <RL type="X0" unit="cm" value="0.298905" />
+  <NIL type="lambda" unit="cm" value="11.0265" />
+  <D type="density" unit="g/cm3" value="19.84" />
+  <composite n="1" ref="Pu" />
+ </material>
+ <element Z="88" formula="Ra" name="Ra" >
+  <atom type="A" unit="g/mol" value="226.025" />
+ </element>
+ <material formula="Ra" name="Radium" state="solid" >
+  <RL type="X0" unit="cm" value="1.22987" />
+  <NIL type="lambda" unit="cm" value="42.6431" />
+  <D type="density" unit="g/cm3" value="5" />
+  <composite n="1" ref="Ra" />
+ </material>
+ <element Z="37" formula="Rb" name="Rb" >
+  <atom type="A" unit="g/mol" value="85.4677" />
+ </element>
+ <material formula="Rb" name="Rubidium" state="solid" >
+  <RL type="X0" unit="cm" value="7.19774" />
+  <NIL type="lambda" unit="cm" value="100.218" />
+  <D type="density" unit="g/cm3" value="1.532" />
+  <composite n="1" ref="Rb" />
+ </material>
+ <element Z="75" formula="Re" name="Re" >
+  <atom type="A" unit="g/mol" value="186.207" />
+ </element>
+ <material formula="Re" name="Rhenium" state="solid" >
+  <RL type="X0" unit="cm" value="0.318283" />
+  <NIL type="lambda" unit="cm" value="9.5153" />
+  <D type="density" unit="g/cm3" value="21.02" />
+  <composite n="1" ref="Re" />
+ </material>
+ <element Z="45" formula="Rh" name="Rh" >
+  <atom type="A" unit="g/mol" value="102.906" />
+ </element>
+ <material formula="Rh" name="Rhodium" state="solid" >
+  <RL type="X0" unit="cm" value="0.746619" />
+  <NIL type="lambda" unit="cm" value="13.2083" />
+  <D type="density" unit="g/cm3" value="12.41" />
+  <composite n="1" ref="Rh" />
+ </material>
+ <element Z="86" formula="Rn" name="Rn" >
+  <atom type="A" unit="g/mol" value="222.018" />
+ </element>
+ <material formula="Rn" name="Radon" state="gas" >
+  <RL type="X0" unit="cm" value="697.777" />
+  <NIL type="lambda" unit="cm" value="23532" />
+  <D type="density" unit="g/cm3" value="0.00900662" />
+  <composite n="1" ref="Rn" />
+ </material>
+ <element Z="44" formula="Ru" name="Ru" >
+  <atom type="A" unit="g/mol" value="101.065" />
+ </element>
+ <material formula="Ru" name="Ruthenium" state="solid" >
+  <RL type="X0" unit="cm" value="0.764067" />
+  <NIL type="lambda" unit="cm" value="13.1426" />
+  <D type="density" unit="g/cm3" value="12.41" />
+  <composite n="1" ref="Ru" />
+ </material>
+ <element Z="16" formula="S" name="S" >
+  <atom type="A" unit="g/mol" value="32.0661" />
+ </element>
+ <material formula="S" name="Sulfur" state="solid" >
+  <RL type="X0" unit="cm" value="9.74829" />
+  <NIL type="lambda" unit="cm" value="55.6738" />
+  <D type="density" unit="g/cm3" value="2" />
+  <composite n="1" ref="S" />
+ </material>
+ <element Z="51" formula="Sb" name="Sb" >
+  <atom type="A" unit="g/mol" value="121.76" />
+ </element>
+ <material formula="Sb" name="Antimony" state="solid" >
+  <RL type="X0" unit="cm" value="1.30401" />
+  <NIL type="lambda" unit="cm" value="25.8925" />
+  <D type="density" unit="g/cm3" value="6.691" />
+  <composite n="1" ref="Sb" />
+ </material>
+ <element Z="21" formula="Sc" name="Sc" >
+  <atom type="A" unit="g/mol" value="44.9559" />
+ </element>
+ <material formula="Sc" name="Scandium" state="solid" >
+  <RL type="X0" unit="cm" value="5.53545" />
+  <NIL type="lambda" unit="cm" value="41.609" />
+  <D type="density" unit="g/cm3" value="2.989" />
+  <composite n="1" ref="Sc" />
+ </material>
+ <element Z="34" formula="Se" name="Se" >
+  <atom type="A" unit="g/mol" value="78.9594" />
+ </element>
+ <material formula="Se" name="Selenium" state="solid" >
+  <RL type="X0" unit="cm" value="2.64625" />
+  <NIL type="lambda" unit="cm" value="33.356" />
+  <D type="density" unit="g/cm3" value="4.5" />
+  <composite n="1" ref="Se" />
+ </material>
+ <element Z="14" formula="Si" name="Si" >
+  <atom type="A" unit="g/mol" value="28.0854" />
+ </element>
+ <material formula="Si" name="Silicon" state="solid" >
+  <RL type="X0" unit="cm" value="9.36607" />
+  <NIL type="lambda" unit="cm" value="45.7531" />
+  <D type="density" unit="g/cm3" value="2.33" />
+  <composite n="1" ref="Si" />
+ </material>
+ <element Z="62" formula="Sm" name="Sm" >
+  <atom type="A" unit="g/mol" value="150.366" />
+ </element>
+ <material formula="Sm" name="Samarium" state="solid" >
+  <RL type="X0" unit="cm" value="1.01524" />
+  <NIL type="lambda" unit="cm" value="24.9892" />
+  <D type="density" unit="g/cm3" value="7.46" />
+  <composite n="1" ref="Sm" />
+ </material>
+ <element Z="50" formula="Sn" name="Sn" >
+  <atom type="A" unit="g/mol" value="118.71" />
+ </element>
+ <material formula="Sn" name="Tin" state="solid" >
+  <RL type="X0" unit="cm" value="1.20637" />
+  <NIL type="lambda" unit="cm" value="23.4931" />
+  <D type="density" unit="g/cm3" value="7.31" />
+  <composite n="1" ref="Sn" />
+ </material>
+ <element Z="38" formula="Sr" name="Sr" >
+  <atom type="A" unit="g/mol" value="87.6166" />
+ </element>
+ <material formula="Sr" name="Strontium" state="solid" >
+  <RL type="X0" unit="cm" value="4.237" />
+  <NIL type="lambda" unit="cm" value="61.0238" />
+  <D type="density" unit="g/cm3" value="2.54" />
+  <composite n="1" ref="Sr" />
+ </material>
+ <element Z="73" formula="Ta" name="Ta" >
+  <atom type="A" unit="g/mol" value="180.948" />
+ </element>
+ <material formula="Ta" name="Tantalum" state="solid" >
+  <RL type="X0" unit="cm" value="0.409392" />
+  <NIL type="lambda" unit="cm" value="11.8846" />
+  <D type="density" unit="g/cm3" value="16.654" />
+  <composite n="1" ref="Ta" />
+ </material>
+ <element Z="65" formula="Tb" name="Tb" >
+  <atom type="A" unit="g/mol" value="158.925" />
+ </element>
+ <material formula="Tb" name="Terbium" state="solid" >
+  <RL type="X0" unit="cm" value="0.893977" />
+  <NIL type="lambda" unit="cm" value="23.0311" />
+  <D type="density" unit="g/cm3" value="8.229" />
+  <composite n="1" ref="Tb" />
+ </material>
+ <element Z="43" formula="Tc" name="Tc" >
+  <atom type="A" unit="g/mol" value="97.9072" />
+ </element>
+ <material formula="Tc" name="Technetium" state="solid" >
+  <RL type="X0" unit="cm" value="0.833149" />
+  <NIL type="lambda" unit="cm" value="14.0185" />
+  <D type="density" unit="g/cm3" value="11.5" />
+  <composite n="1" ref="Tc" />
+ </material>
+ <element Z="52" formula="Te" name="Te" >
+  <atom type="A" unit="g/mol" value="127.603" />
+ </element>
+ <material formula="Te" name="Tellurium" state="solid" >
+  <RL type="X0" unit="cm" value="1.41457" />
+  <NIL type="lambda" unit="cm" value="28.1797" />
+  <D type="density" unit="g/cm3" value="6.24" />
+  <composite n="1" ref="Te" />
+ </material>
+ <element Z="90" formula="Th" name="Th" >
+  <atom type="A" unit="g/mol" value="232.038" />
+ </element>
+ <material formula="Th" name="Thorium" state="solid" >
+  <RL type="X0" unit="cm" value="0.51823" />
+  <NIL type="lambda" unit="cm" value="18.353" />
+  <D type="density" unit="g/cm3" value="11.72" />
+  <composite n="1" ref="Th" />
+ </material>
+ <element Z="22" formula="Ti" name="Ti" >
+  <atom type="A" unit="g/mol" value="47.8667" />
+ </element>
+ <material formula="Ti" name="Titanium" state="solid" >
+  <RL type="X0" unit="cm" value="3.5602" />
+  <NIL type="lambda" unit="cm" value="27.9395" />
+  <D type="density" unit="g/cm3" value="4.54" />
+  <composite n="1" ref="Ti" />
+ </material>
+ <element Z="81" formula="Tl" name="Tl" >
+  <atom type="A" unit="g/mol" value="204.383" />
+ </element>
+ <material formula="Tl" name="Thallium" state="solid" >
+  <RL type="X0" unit="cm" value="0.547665" />
+  <NIL type="lambda" unit="cm" value="17.6129" />
+  <D type="density" unit="g/cm3" value="11.72" />
+  <composite n="1" ref="Tl" />
+ </material>
+ <element Z="69" formula="Tm" name="Tm" >
+  <atom type="A" unit="g/mol" value="168.934" />
+ </element>
+ <material formula="Tm" name="Thulium" state="solid" >
+  <RL type="X0" unit="cm" value="0.754428" />
+  <NIL type="lambda" unit="cm" value="20.7522" />
+  <D type="density" unit="g/cm3" value="9.321" />
+  <composite n="1" ref="Tm" />
+ </material>
+ <element Z="92" formula="U" name="U" >
+  <atom type="A" unit="g/mol" value="238.029" />
+ </element>
+ <material formula="U" name="Uranium" state="solid" >
+  <RL type="X0" unit="cm" value="0.31663" />
+  <NIL type="lambda" unit="cm" value="11.4473" />
+  <D type="density" unit="g/cm3" value="18.95" />
+  <composite n="1" ref="U" />
+ </material>
+ <element Z="23" formula="V" name="V" >
+  <atom type="A" unit="g/mol" value="50.9415" />
+ </element>
+ <material formula="V" name="Vanadium" state="solid" >
+  <RL type="X0" unit="cm" value="2.59285" />
+  <NIL type="lambda" unit="cm" value="21.2187" />
+  <D type="density" unit="g/cm3" value="6.11" />
+  <composite n="1" ref="V" />
+ </material>
+ <element Z="74" formula="W" name="W" >
+  <atom type="A" unit="g/mol" value="183.842" />
+ </element>
+ <material formula="W" name="Tungsten" state="solid" >
+  <RL type="X0" unit="cm" value="0.350418" />
+  <NIL type="lambda" unit="cm" value="10.3057" />
+  <D type="density" unit="g/cm3" value="19.3" />
+  <composite n="1" ref="W" />
+ </material>
+ <element Z="54" formula="Xe" name="Xe" >
+  <atom type="A" unit="g/mol" value="131.292" />
+ </element>
+ <material formula="Xe" name="Xenon" state="gas" >
+  <RL type="X0" unit="cm" value="1546.2" />
+  <NIL type="lambda" unit="cm" value="32477.9" />
+  <D type="density" unit="g/cm3" value="0.00548536" />
+  <composite n="1" ref="Xe" />
+ </material>
+ <element Z="39" formula="Y" name="Y" >
+  <atom type="A" unit="g/mol" value="88.9058" />
+ </element>
+ <material formula="Y" name="Yttrium" state="solid" >
+  <RL type="X0" unit="cm" value="2.32943" />
+  <NIL type="lambda" unit="cm" value="34.9297" />
+  <D type="density" unit="g/cm3" value="4.469" />
+  <composite n="1" ref="Y" />
+ </material>
+ <element Z="70" formula="Yb" name="Yb" >
+  <atom type="A" unit="g/mol" value="173.038" />
+ </element>
+ <material formula="Yb" name="Ytterbium" state="solid" >
+  <RL type="X0" unit="cm" value="1.04332" />
+  <NIL type="lambda" unit="cm" value="28.9843" />
+  <D type="density" unit="g/cm3" value="6.73" />
+  <composite n="1" ref="Yb" />
+ </material>
+ <element Z="30" formula="Zn" name="Zn" >
+  <atom type="A" unit="g/mol" value="65.3955" />
+ </element>
+ <material formula="Zn" name="Zinc" state="solid" >
+  <RL type="X0" unit="cm" value="1.74286" />
+  <NIL type="lambda" unit="cm" value="19.8488" />
+  <D type="density" unit="g/cm3" value="7.133" />
+  <composite n="1" ref="Zn" />
+ </material>
+ <element Z="40" formula="Zr" name="Zr" >
+  <atom type="A" unit="g/mol" value="91.2236" />
+ </element>
+ <material formula="Zr" name="Zirconium" state="solid" >
+  <RL type="X0" unit="cm" value="1.56707" />
+  <NIL type="lambda" unit="cm" value="24.2568" />
+  <D type="density" unit="g/cm3" value="6.506" />
+  <composite n="1" ref="Zr" />
+ </material>
+</materials>
