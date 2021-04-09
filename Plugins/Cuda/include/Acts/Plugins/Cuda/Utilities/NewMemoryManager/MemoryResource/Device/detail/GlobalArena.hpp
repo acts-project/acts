@@ -40,22 +40,22 @@ class GlobalArena final {
 		// blocks for the pool
 		// @param[in] initialSize minimum size, in bytes, of the initial global arena. 
 		// Defaults to all the available memory on the current device.
-		// @param[in] maiximumSize maximum size, in bytes, that the global arena can grow to. 
+		// @param[in] maximumSize maximum size, in bytes, that the global arena can grow to. 
 		// Defaults to all of the available memory on the current device
-		GlobalArena(Upstream* upstreamMemoryResource, std::size_t initialSize, std::size_t maiximumSize)
-			: upstreamMemoryResource_(upstreamMemoryResource), maiximumSize_{maiximumSize} {
+		GlobalArena(Upstream* upstreamMemoryResource, std::size_t initialSize, std::size_t maximumSize)
+			: upstreamMemoryResource_(upstreamMemoryResource), maximumSize_{maximumSize} {
 				// assert unexpected null upstream pointer
 				// assert initial arena size required to be a multiple of 256 bytes
 				// assert maximum arena size required to be a multiple of 256 bytes
 
-				if(initialSize == defaultInitialSize || maiximumSize == defaultMaximumSize) {
+				if(initialSize == defaultInitialSize || maximumSize == defaultMaximumSize) {
 					std::size_t free{}, total{};
 					//cuda try cudaMemGetInfo(&free, &total);
 					if(initialSize == defaultInitialSize) {
 						initialSize = alignUp(std::min(free, total / 2));
 					}
-					if(maiximumSize == defaultMaximumSize) {
-						maiximumSize_ = alignDown(free) - reserverdSize;
+					if(maximumSize == defaultMaximumSize) {
+						maximumSize_ = alignDown(free) - reserverdSize;
 					}
 				}
 				// initial size exceeds the maxium pool size
@@ -64,26 +64,97 @@ class GlobalArena final {
 
 		// Destroy the gloabl arean and deallocate all memory using the upstream resource
 		~GlobalArena() {
-			lock_guard lock(mtx_);
+			lockGuard lock(mtx_);
 			for(auto const& b : upstreamBlocks_) {
 				upstreamMemoryResource_->deallocate(b.pointer(), b.size());
 			}
 		}
 
-		Block allocate(std::size_t bytes) {
-			lock_guard lock(mtx_);
+		// Allocates memory of size at least `sizeOfbytes`
+		//
+		// @param[in] sizeOfBytes the size in bytes of the allocation
+		// @retyrb block pointer to the newly allocated memory
+		Block allocate(std::size_t sizeOfbytes) {
+			lockGuard lock(mtx_);
 			return getBlock(bytes);
 		}
 
+		// Deallocate memory pointer to by the block b
+		// 
+		// @param[in] b pointer of block to be deallocated
 		void deallocate(Block const& b) {
-			lock_guard lock(mtx_);
+			lockGuard lock(mtx_);
 			coalesceBlock(freeBlocks_, b);
 		}
 
+		// Deallocate memory of a set of blocks
+		//
+		// @param[in] freeBlocks set of block to be free
 		void deallocate(std::set<block> const& freeBlocks) {
-			lock_guard lock(mtx_);
+			lockGuard lock(mtx_);
 			for(auto const& b : freeBlocks) {
 				coalesceBlock(freeBlocks_, b);
 			}
 		}
-}
+
+	private:
+		using lockGuard = std::lock_guard<std::mutex>;
+
+		// Get an available memory block of at least `size` bytes
+		//
+		// @param[in] size the number of bytes to allocate
+		// @return a block of memory of at least `size` bytes
+		Block getBlock(std::size_t size) {
+			auto const b = firstFit(freeBlocks_, size);
+			if(b.valid()) return b;
+
+			auto const upstreamBlock = expandArena(sizeToGrow(size));
+			coalesceBlock(freeBlocks_, upstreamBlock);
+			return firstFit(freeBlocks_, size);
+		}
+
+		// Get the size to grow the global arena given the requested `size` bytes
+		//
+		// @param[in] size the number of bytes required
+		// @return the size for the arena to grow
+		constexpr std::size_t sizeToGrow(std::size_t size) const {
+			/*
+			case if maximum pool size exceeded
+			if(currentSize_ + size > maximumSize_) {
+		
+			}
+			*/
+			return maximumSize_ - currentSize_;
+		}
+
+		// Allocate space from upstream to supply the arena and return a sufficiently 
+		// sized block.
+		//
+		// @param[in] size the minimum size to allocate
+		// @return a bock of at least `size` bytes
+		Block expandArena(std::size_t size) {
+			upstreamBlocks_.push_back({upstreamMemoryResource_->allocate(size), size});
+			currentSize_ += size;
+			return upstreamBlocks_.back();
+		}
+
+		// The upstream resource to allocate memory from
+		Upstream* upstreamMemoryResource_;
+		// The maximum size of the global arena
+		std::size_t maximumSize_;
+		// The current size of the global arena
+		std::size_t currentSize_{};
+		// Address-ordered set of free blocks
+		std::set<Block> freeBlocks_;
+		// blocks allocated from upstreamso that they can be quickly freed
+		std::vector<Block> upstreamBlocks_;
+		// mutex for exclusive lock
+		mutable std::mutex mtx_;
+};// class GlobalArena
+
+} // namaspace Arena
+} // namaspace detail
+} // namaspace MemoryRecource
+} // namaspace Nmm
+} // namaspace Cuda
+} // namaspace Acts
