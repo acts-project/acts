@@ -30,8 +30,8 @@ namespace MemoryRecource {
 namespace detail {
 namespace Arena {
 
-// Minimum size of a superBlock (256 KiB)
-constexpr std::size_t minimumSuperBlockSize = 1u << 18u;
+// Minimum size of a Superblock (256 KiB)
+constexpr std::size_t minimumSuperblockSize = 1u << 18u;
 
 class Block {
 
@@ -60,8 +60,8 @@ class Block {
 		// returns true if this Block is valid (non-null), false otherwise
 		bool isValid() const { return pointer_ != nullptr; }
 
-		// returns true if this Block is a superBlock, false otherwise
-		bool isSuperBlock() const { return size_ >= minimumSuperBlockSize; }
+		// returns true if this Block is a Superblock, false otherwise
+		bool isSuperblock() const { return size_ >= minimumSuperblockSize; }
 
 		// verifies wheter this Block can be merged to the beginning of Block b
 		//
