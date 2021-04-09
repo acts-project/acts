@@ -8,7 +8,7 @@ set -euo pipefail
 NUM_EVENTS=100
 SRC_DIR=`pwd`
 BUILD_DIR=`pwd`/build
-DD4HEP_INPUT="--dd4hep-input file:${SRC_DIR}/Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml"
+DD4HEP_INPUT="--dd4hep-input file:${SRC_DIR}/thirdparty/OpenDataDetector/xml/OpenDataDetector.xml"
 timed_run() {
     echo ""
     echo "=== Running $* ==="
