@@ -11,7 +11,7 @@
 // CUDA plugin include(s).
 #include "Acts/Plugins/Cuda/Utilities/NewMemoryManager/detail/Aligned.hpp"
 #include "Acts/Plugins/Cuda/Utilities/NewMemoryManager/CudaStreamView.hpp"
-#include "Acts/Plugins/Cuda/Utilities/NewMemoryManager/MemoryResource/Device/detail/GlobalArena.hpp"
+#include "Acts/Plugins/Cuda/Utilities/NewMemoryManager/MemoryResource/Device/detail/Methods.hpp"
 
 namespace Acts {
 namespace Cuda {
@@ -24,11 +24,11 @@ template <typename Upstream>
 class GlobalArena final {
 	public:
 		// default initial size for the global arena
-		static constexpr std::size_t defaultInitialSize = std::numeriLimits<std::size_t>::max();
+		static constexpr std::size_t defaultInitialSize = std::numeric_limits<std::size_t>::max();
 		// default maximum size for the global arena
-		static constexpr std::size_t defaultMaximumSize = std::numeriLimits<std::size_t>::max();
+		static constexpr std::size_t defaultMaximumSize = std::numeric_limits<std::size_t>::max();
 		// reserved memory that should not be allocated (64 MiB)
-		static constexpr std::size_t reserverdSize = std::numeriLimits<std::size_t>::max();
+		static constexpr std::size_t reserverdSize = 1u << 26u;
 		
 		// Disable copy (and move) semantics
 		GlobalArena(const GlobalArena&) = delete;
@@ -76,7 +76,7 @@ class GlobalArena final {
 		// @retyrb block pointer to the newly allocated memory
 		Block allocate(std::size_t sizeOfbytes) {
 			lockGuard lock(mtx_);
-			return getBlock(bytes);
+			return getBlock(sizeOfbytes);
 		}
 
 		// Deallocate memory pointer to by the block b
@@ -90,7 +90,7 @@ class GlobalArena final {
 		// Deallocate memory of a set of blocks
 		//
 		// @param[in] freeBlocks set of block to be free
-		void deallocate(std::set<block> const& freeBlocks) {
+		void deallocate(std::set<Block> const& freeBlocks) {
 			lockGuard lock(mtx_);
 			for(auto const& b : freeBlocks) {
 				coalesceBlock(freeBlocks_, b);
@@ -106,7 +106,7 @@ class GlobalArena final {
 		// @return a block of memory of at least `size` bytes
 		Block getBlock(std::size_t size) {
 			auto const b = firstFit(freeBlocks_, size);
-			if(b.valid()) return b;
+			if(b.isValid()) return b;
 
 			auto const upstreamBlock = expandArena(sizeToGrow(size));
 			coalesceBlock(freeBlocks_, upstreamBlock);
