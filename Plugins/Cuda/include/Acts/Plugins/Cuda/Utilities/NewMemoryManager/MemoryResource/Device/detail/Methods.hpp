@@ -88,14 +88,14 @@ inline Block coalesceBlock(std::set<Block>& freeBlocks, Block const&b){
 	if(!b.isValid()) return b;
 
 	// find the right place (in ascending address order) to insert the block
-	auto const next = freeBlocks.lowerBound(b);
-	auto const previous = next == freeBlocks.cend() ? next = std::prev(next);
+	auto const next = freeBlocks.lower_bound(b);
+	auto const previous = next == freeBlocks.cend() ? next : std::prev(next);
 
 	// coalesce with neighboring blocks
 	bool const mergePrev = previous->isContiguousBefore(b);
 	bool const mergeNext = next != freeBlocks.cend() && b.isContiguousBefore(*next);
 
-	Block merge{};
+	Block merged{};
 	if(mergePrev && mergeNext) {
 		// if can merge with prev and next neighbors
 		merged = previous->merge(b).merge(*next);
