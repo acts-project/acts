@@ -210,7 +210,8 @@ ActsExamples::Options::readMagneticField(const Variables& vars) {
     solenoidConfig.bMagCenter =
         vars["bf-solenoid-mag-tesla"].as<double>() * Acts::UnitConstants::T;
     ACTS_INFO("Use solenoid magnetic field with magnitude "
-              << solenoidConfig.bMagCenter << " Tesla at the center.");
+              << solenoidConfig.bMagCenter / Acts::UnitConstants::T
+              << " Tesla at the center.");
     const auto solenoidField = Acts::SolenoidBField(solenoidConfig);
     // The parameters for creating a field map
     auto getRange = [&](const char* name, auto unit, auto& lower, auto& upper) {
