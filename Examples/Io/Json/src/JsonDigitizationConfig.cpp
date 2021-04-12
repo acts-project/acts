@@ -169,5 +169,6 @@ void ActsExamples::writeDigiConfigToJson(
   std::ofstream outfile(path, std::ofstream::out | std::ofstream::binary);
   // rely on exception for error handling
   outfile.exceptions(std::ofstream::failbit | std::ofstream::badbit);
-  outfile << DigiConfigConverter("digitization-configuration").toJson(cfg);
+  outfile
+      << DigiConfigConverter("digitization-configuration").toJson(cfg).dump(2);
 }
