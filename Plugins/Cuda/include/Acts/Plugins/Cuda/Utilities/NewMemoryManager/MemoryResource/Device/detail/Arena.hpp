@@ -43,7 +43,7 @@ class Arena {
 		// Construct an `Arena`
 		//
 		// @param[in] GlobalArena the global arena from withc to allocate superblocks
-		explicit arena(GlobalArena<Upstream>& globalArena) : globalArena_{globalArena} {}
+		explicit Arena(GlobalArena<Upstream>& globalArena) : globalArena_{globalArena} {}
 
 		// Allocates memory of size at least `bytes`
 		//
@@ -58,7 +58,7 @@ class Arena {
 			return b.pointer();
 		}
 
-		bool deallocate(void* p, size::size_t bytes, CudaStreamView stream) {
+		bool deallocate(void* p, std::size_t bytes, CudaStreamView stream) {
 			lockGuard lock(mtx_);
 
 			auto const b = freeBlock(p, bytes);
