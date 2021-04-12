@@ -19,7 +19,7 @@
 namespace Acts {
 namespace Cuda {
 namespace Nmm {
-namespace MemoryRecource {
+namespace MemoryResource {
 
 class DeviceMemoryResource {
 	public:
@@ -58,7 +58,7 @@ class DeviceMemoryResource {
 
 };// class DeviceMemoryResource
 
-} // namaspace MemoryRecource
+} // namaspace MemoryResource
 } // namaspace Nmm
 } // namaspace Cuda
 } // namaspace Acts

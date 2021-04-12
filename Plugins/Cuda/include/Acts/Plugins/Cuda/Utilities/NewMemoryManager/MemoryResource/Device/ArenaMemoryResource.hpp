@@ -9,7 +9,8 @@
 #pragma once
 
 // CUDA plugin include(s).
-#include "Acts/Plugins/Cuda/Utilities/NewMemoryManager/MemoryResource/Device/DeciceMemoryResource.hpp"
+#include "Acts/Plugins/Cuda/Utilities/NewMemoryManager/MemoryResource/Device/DeviceMemoryResource.hpp"
+#include "Acts/Plugins/Cuda/Utilities/NewMemoryManager/MemoryResource/Device/detail/ArenaCleaner.hpp"
 #include "Acts/Plugins/Cuda/Utilities/NewMemoryManager/CudaStreamView.hpp"
 
 // CUDA include(s).
@@ -18,31 +19,32 @@
 // System include(s)
 #include <map>
 #include <shared_mutex>
+#include <thread>
 
 namespace Acts {
 namespace Cuda {
 namespace Nmm {
-namespace MemoryRecource {
+namespace MemoryResource {
 
 template <typename Upstream>
 class ArenaMemoryResource final : public DeviceMemoryResource {
 	public:
-		explicit ArenaMemoryResource(Upstrean* upstreamMemoryResource, std::size_t initialSize = GlobalArena::defaultInitialSize, std::size_t maximumSize = GlobalArena::defaultMaximumSize)
-			: globalArena_{upstreamMemoryResource,initialSize, maximumSize}
+		explicit ArenaMemoryResource(Upstream* upstreamMemoryResource, std::size_t initialSize = globalArena::defaultInitialSize, std::size_t maximumSize = globalArena::defaultMaximumSize)
+			: globalArena_{upstreamMemoryResource, initialSize, maximumSize}
 			{}
 
 		ArenaMemoryResource(ArenaMemoryResource const&) = delete;
-		ArenaMemoryResource& operator=(ArenaMemoryResource const&) delete;
+		ArenaMemoryResource& operator=(ArenaMemoryResource const&) = delete;
 
 		bool supportsStreams() const noexcept override { return true; }
 
 		bool supportsGetMemInfo() const noexcept override { return false; }
 
 	private:
-		using globalArena = detail::Arena::GlobalArena<Upstrean>;
-		using arena = detail::Arena::Arena<Upstrean>;
-		using readLock = std::shared_lock<std::shared_time_mutex>;
-		using writeLock = std::lock_guard<std::shared_time_mutex>;
+		using globalArena = detail::Arena::GlobalArena<Upstream>;
+		using arena = detail::Arena::Arena<Upstream>;
+		using readLock = std::shared_lock<std::shared_timed_mutex>;
+		using writeLock = std::lock_guard<std::shared_timed_mutex>;
 
 		void* doAllocate(std::size_t bytes, CudaStreamView stream) override {
 			if(bytes <= 0) return nullptr;
@@ -78,7 +80,7 @@ class ArenaMemoryResource final : public DeviceMemoryResource {
 			globalArena_.deallocate({p, bytes});
 		}
 
-		getArena(CudaStreamView stream) {
+		arena& getArena(CudaStreamView stream) {
 			if(usePerThreadArena(stream)){
 				return getThreadArena();
 			} else {
@@ -86,32 +88,32 @@ class ArenaMemoryResource final : public DeviceMemoryResource {
 			}
 		}
 
-		Arena& getThreadArena() {
+		arena& getThreadArena() {
 			auto const id = std::this_thread::get_id();
 			
-			readLock lock(mtx_);
+			readLock lockRead(mtx_);
 			auto const it = threadArenas_.find(id);
 			if(it != threadArenas_.end()) {
 				return *it->second;
 			}
 
-			writeLock lock(mtx_);
-			auto a = std::make_shared<Arena>(globalArena_);
+			writeLock lockWrite(mtx_);
+			auto a = std::make_shared<arena>(globalArena_);
 			threadArenas_.emplace(id, a);
-			thread_local detail::Arena::ArenaCleaner<Upstrean> cleaner{a};
+			thread_local detail::Arena::ArenaCleaner<Upstream> cleaner{a};
 			return *a;
 		}
 
-		Arena& getStreamArena(CudaStreamView stream) {
+		arena& getStreamArena(CudaStreamView stream) {
 			if(usePerThreadArena(stream)){
 
-				read_lock lock(mtx_);
-				auto const it = stream_arenas_.find(stream.value());
-				if (it != stream_arenas_.end()) { return it->second; }
+				readLock lockRead(mtx_);
+				auto const it = streamArenas_.find(stream.value());
+				if (it != streamArenas_.end()) { return it->second; }
 
-				write_lock lock(mtx_);
-				stream_arenas_.emplace(stream.value(), global_arena_);
-				return stream_arenas_.at(stream.value());
+				writeLock lockWrite(mtx_);
+				streamArenas_.emplace(stream.value(), globalArena_);
+				return streamArenas_.at(stream.value());
 			}
 		}
 
@@ -120,16 +122,16 @@ class ArenaMemoryResource final : public DeviceMemoryResource {
 		}
 
 		static bool usePerThreadArena(CudaStreamView stream) {
-			return stream.isPerThreadDefault();
+			return stream.is_per_thread_default();
 		}
 
-		GlobalArena globalArena_;
-		std::map<std::thread::id, std::shared_ptr<Arena>> threadArenas_;
+		globalArena globalArena_;
+		std::map<std::thread::id, std::shared_ptr<arena>> threadArenas_;
 		std::map<cudaStream_t, arena> streamArenas_;
 		mutable std::shared_timed_mutex mtx_;
 };// class ArenaMemoryResource
 
-} // namaspace MemoryRecource
+} // namaspace MemoryResource
 } // namaspace Nmm
 } // namaspace Cuda
 } // namaspace Acts
