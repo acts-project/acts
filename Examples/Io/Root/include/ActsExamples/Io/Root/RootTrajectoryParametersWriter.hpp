@@ -80,36 +80,36 @@ class RootTrajectoryParametersWriter final
   TFile* m_outputFile{nullptr};   ///< The output file
   TTree* m_outputTree{nullptr};   ///< The output tree
   unsigned int m_eventNr{0};      ///< the event number
-  unsigned int m_multiTrajNr{0};  ///< the multi-trajectory number
-  unsigned int m_subTrajNr{0};  ///< the multi-trajectory sub-trajectory number
+  std::vector<unsigned int> m_multiTrajNr;  ///< the multi-trajectory number
+  std::vector<unsigned int> m_subTrajNr;  ///< the multi-trajectory sub-trajectory number
 
-  unsigned long m_t_barcode{0};  ///< Truth particle barcode
-  int m_t_charge{0};             ///< Truth particle charge
-  float m_t_time{0};             ///< Truth particle time
-  float m_t_vx{-99.};            ///< Truth particle vertex x
-  float m_t_vy{-99.};            ///< Truth particle vertex y
-  float m_t_vz{-99.};            ///< Truth particle vertex z
-  float m_t_px{-99.};            ///< Truth particle initial momentum px
-  float m_t_py{-99.};            ///< Truth particle initial momentum py
-  float m_t_pz{-99.};            ///< Truth particle initial momentum pz
-  float m_t_theta{-99.};         ///< Truth particle initial momentum theta
-  float m_t_phi{-99.};           ///< Truth particle initial momentum phi
-  float m_t_pT{-99.};            ///< Truth particle initial momentum pT
-  float m_t_eta{-99.};           ///< Truth particle initial momentum eta
+  std::vector<unsigned long> m_t_barcode;  ///< Truth particle barcode
+  std::vector<int> m_t_charge;           ///< Truth particle charge
+  std::vector<float> m_t_time;           ///< Truth particle time
+  std::vector<float> m_t_vx;            ///< Truth particle vertex x
+  std::vector<float> m_t_vy;            ///< Truth particle vertex y
+  std::vector<float> m_t_vz;            ///< Truth particle vertex z
+  std::vector<float> m_t_px;            ///< Truth particle initial momentum px
+  std::vector<float> m_t_py;            ///< Truth particle initial momentum py
+  std::vector<float> m_t_pz;            ///< Truth particle initial momentum pz
+  std::vector<float> m_t_theta;         ///< Truth particle initial momentum theta
+  std::vector<float> m_t_phi;           ///< Truth particle initial momentum phi
+  std::vector<float> m_t_pT;            ///< Truth particle initial momentum pT
+  std::vector<float> m_t_eta;           ///< Truth particle initial momentum eta
 
-  bool m_hasFittedParams;        ///< if the track has fitted parameter
-  float m_eLOC0_fit{-99.};       ///< fitted parameter eBoundLoc0
-  float m_eLOC1_fit{-99.};       ///< fitted parameter eBoundLoc1
-  float m_ePHI_fit{-99.};        ///< fitted parameter ePHI
-  float m_eTHETA_fit{-99.};      ///< fitted parameter eTHETA
-  float m_eQOP_fit{-99.};        ///< fitted parameter eQOP
-  float m_eT_fit{-99.};          ///< fitted parameter eT
-  float m_err_eLOC0_fit{-99.};   ///< fitted parameter eLOC err
-  float m_err_eLOC1_fit{-99.};   ///< fitted parameter eBoundLoc1 err
-  float m_err_ePHI_fit{-99.};    ///< fitted parameter ePHI err
-  float m_err_eTHETA_fit{-99.};  ///< fitted parameter eTHETA err
-  float m_err_eQOP_fit{-99.};    ///< fitted parameter eQOP err
-  float m_err_eT_fit{-99.};      ///< fitted parameter eT err
+  std::vector<bool> m_hasFittedParams;        ///< if the track has fitted parameter
+  std::vector<float> m_eLOC0_fit;       ///< fitted parameter eBoundLoc0
+  std::vector<float> m_eLOC1_fit;       ///< fitted parameter eBoundLoc1
+  std::vector<float> m_ePHI_fit;        ///< fitted parameter ePHI
+  std::vector<float> m_eTHETA_fit;      ///< fitted parameter eTHETA
+  std::vector<float> m_eQOP_fit;        ///< fitted parameter eQOP
+  std::vector<float> m_eT_fit;          ///< fitted parameter eT
+  std::vector<float> m_err_eLOC0_fit;   ///< fitted parameter eLOC err
+  std::vector<float> m_err_eLOC1_fit;   ///< fitted parameter eBoundLoc1 err
+  std::vector<float> m_err_ePHI_fit;    ///< fitted parameter ePHI err
+  std::vector<float> m_err_eTHETA_fit;  ///< fitted parameter eTHETA err
+  std::vector<float> m_err_eQOP_fit;    ///< fitted parameter eQOP err
+  std::vector<float> m_err_eT_fit;      ///< fitted parameter eT err
 };
 
 }  // namespace ActsExamples
