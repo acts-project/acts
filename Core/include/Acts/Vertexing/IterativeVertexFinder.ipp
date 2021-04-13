@@ -383,7 +383,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillPerigeesToFit(
       }
 
       double error =
-          sqrt((*(sTrackParams.covariance()))(eBoundLoc0, eBoundLoc0) + // FIXME (std::optional)
+          sqrt((*(sTrackParams.covariance()))(eBoundLoc0, eBoundLoc0) +
                (*(sTrackParams.covariance()))(eBoundLoc1, eBoundLoc1));
 
       if (error == 0.) {
