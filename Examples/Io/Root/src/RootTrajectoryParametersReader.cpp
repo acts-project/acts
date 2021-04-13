@@ -108,7 +108,6 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersReader::read(
     const ActsExamples::AlgorithmContext& context) {
   ACTS_DEBUG("Trying to read recorded tracks.");
 
-  std::cout << "Trying to read recorded tracks now." << std::endl;
   // read in the material track
   if (m_inputChain && context.eventNumber < m_events) {
     // lock the mutex
@@ -124,7 +123,6 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersReader::read(
   
     // Read the correct entry: batch size * event_number + ib
     m_inputChain->GetEntry(context.eventNumber);
-    std::cout << "Reading track from event " << m_eventNr << std::endl;
     ACTS_VERBOSE("Reading entry: " << context.eventNumber);
 
     unsigned int nTracks = m_eLOC0_fit->size();
@@ -132,8 +130,6 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersReader::read(
 
       Acts::BoundVector paramVec;
       paramVec << (*m_eLOC0_fit)[i], (*m_eLOC1_fit)[i], (*m_ePHI_fit)[i], (*m_eTHETA_fit)[i], (*m_eQOP_fit)[i], (*m_eT_fit)[i];
-
-      //std::cout << "param vector:  " <<  paramVec << std::endl;
 
       // Resolutions
       double resD0 = (*m_err_eLOC0_fit)[i];
@@ -160,18 +156,14 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersReader::read(
 
       truthParticle.setPosition4((*m_t_vx)[i], (*m_t_vy)[i], (*m_t_vz)[i], (*m_t_time)[i]);
       truthParticle.setDirection((*m_t_px)[i], (*m_t_py)[i], (*m_t_pz)[i]);
+      truthParticle.setParticleId((*m_t_barcode)[i]);
 
       mTruthParticleCollection.push_back(truthParticle);
     }
-
-    std::cout << "event done... writing " << mtrackCollection.size() << "/" << mTruthParticleCollection.size() << " tracks/particles to whiteboard..." << std::endl;
-    
-
     // Write the collections to the EventStore
     context.eventStore.add(m_cfg.trackCollection, std::move(mtrackCollection));
     context.eventStore.add(m_cfg.particleCollection, std::move(mTruthParticleCollection));
   }
-  std::cout << "exiting read method.."<< std::endl;
   // Return success flag
   return ActsExamples::ProcessCode::SUCCESS;
 }

@@ -88,7 +88,7 @@ class RootTrajectoryParametersReader : public IReader {
   std::vector<unsigned int>* m_multiTrajNr = new std::vector<unsigned int>;  ///< the multi-trajectory number
   std::vector<unsigned int>* m_subTrajNr = new std::vector<unsigned int>;  ///< the multi-trajectory sub-trajectory number
 
-  std::vector<unsigned long>* m_t_barcode = new std::vector<unsigned long>;  ///< Truth particle barcode
+  std::vector<unsigned long>* m_t_barcode = new std::vector<long unsigned int>;  ///< Truth particle barcode
   std::vector<int>* m_t_charge = new std::vector<int>;             ///< Truth particle charge
   std::vector<float>* m_t_time = new std::vector<float>;             ///< Truth particle time
   std::vector<float>* m_t_vx = new std::vector<float>;            ///< Truth particle vertex x
