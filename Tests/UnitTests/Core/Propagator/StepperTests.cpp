@@ -326,7 +326,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // Reset all possible parameters
   EigenStepper<>::State esStateCopy(copyState(*bField, ps.stepping));
-  es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),  // FIXME (std::optional)
+  BOOST_CHECK(cp2.covariance().has_value());
+  es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface(), ndir, stepSize2);
   // Test all components
   BOOST_CHECK_NE(esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -351,7 +352,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // Reset all possible parameters except the step size
   esStateCopy = copyState(*bField, ps.stepping);
-  es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),  // FIXME (std::optional)
+  es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface(), ndir);
   // Test all components
   BOOST_CHECK_NE(esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -377,7 +378,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // Reset the least amount of parameters
   esStateCopy = copyState(*bField, ps.stepping);
-  es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),  // FIXME (std::optional)
+  es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface());
   // Test all components
   BOOST_CHECK_NE(esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -458,7 +459,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   freeParams[eFreeTime] *= 2;
   freeParams[eFreeQOverP] *= -0.5;
 
-  es.update(esState, freeParams, 2 * (*bp.covariance()));  // FIXME (std::optional)
+  es.update(esState, freeParams, 2 * (*bp.covariance()));
   CHECK_CLOSE_OR_SMALL(es.position(esState), 2. * pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(es.direction(esState), dir, eps, eps);
   CHECK_CLOSE_REL(es.momentum(esState), 2 * absMom, eps);
