@@ -530,10 +530,10 @@ class KalmanFitter {
 
         // Fill the track state
         trackStateProxy.predicted() = std::move(boundParams.parameters());
-	if (boundParams.covariance().has_value()) {
-	  trackStateProxy.predictedCovariance() =
-	    std::move(*boundParams.covariance());
-	}
+        if (boundParams.covariance().has_value()) {
+          trackStateProxy.predictedCovariance() =
+              std::move(*boundParams.covariance());
+        }
         trackStateProxy.jacobian() = std::move(jacobian);
         trackStateProxy.pathLength() = std::move(pathLength);
 
@@ -639,10 +639,10 @@ class KalmanFitter {
 
             // Fill the track state
             trackStateProxy.predicted() = std::move(boundParams.parameters());
-	    if (boundParams.covariance().has_value()) {
-	      trackStateProxy.predictedCovariance() =
-		std::move(*boundParams.covariance());
-	    }
+            if (boundParams.covariance().has_value()) {
+              trackStateProxy.predictedCovariance() =
+                  std::move(*boundParams.covariance());
+            }
             trackStateProxy.jacobian() = std::move(jacobian);
             trackStateProxy.pathLength() = std::move(pathLength);
           } else if (surface->surfaceMaterial() != nullptr) {
@@ -656,10 +656,10 @@ class KalmanFitter {
             // Fill the track state
             trackStateProxy.predicted() =
                 std::move(curvilinearParams.parameters());
-	    if (curvilinearParams.covariance().has_value()) {
-	      trackStateProxy.predictedCovariance() =
-		std::move(*curvilinearParams.covariance());
-	    }
+            if (curvilinearParams.covariance().has_value()) {
+              trackStateProxy.predictedCovariance() =
+                  std::move(*curvilinearParams.covariance());
+            }
             trackStateProxy.jacobian() = std::move(jacobian);
             trackStateProxy.pathLength() = std::move(pathLength);
           }
@@ -736,10 +736,10 @@ class KalmanFitter {
 
         // Fill the track state
         trackStateProxy.predicted() = std::move(boundParams.parameters());
-	if (boundParams.covariance().has_value()) {
-	  trackStateProxy.predictedCovariance() =
-	    std::move(*boundParams.covariance());
-	}
+        if (boundParams.covariance().has_value()) {
+          trackStateProxy.predictedCovariance() =
+              std::move(*boundParams.covariance());
+        }
         trackStateProxy.jacobian() = std::move(jacobian);
         trackStateProxy.pathLength() = std::move(pathLength);
 

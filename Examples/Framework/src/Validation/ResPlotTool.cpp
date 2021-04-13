@@ -187,20 +187,20 @@ void ActsExamples::ResPlotTool::fill(
     if (fittedParamters.covariance().has_value()) {
       auto covariance = *fittedParamters.covariance();
       if (covariance(parID, parID) > 0) {
-	float pull = residual / sqrt(covariance(parID, parID));
-	PlotHelpers::fillHisto(resPlotCache.pull[parName], pull);
-	PlotHelpers::fillHisto(resPlotCache.pull_vs_eta.at(parName), truthEta,
-			       pull);
-	PlotHelpers::fillHisto(resPlotCache.pull_vs_pT.at(parName), truthPt,
-			       pull);
+        float pull = residual / sqrt(covariance(parID, parID));
+        PlotHelpers::fillHisto(resPlotCache.pull[parName], pull);
+        PlotHelpers::fillHisto(resPlotCache.pull_vs_eta.at(parName), truthEta,
+                               pull);
+        PlotHelpers::fillHisto(resPlotCache.pull_vs_pT.at(parName), truthPt,
+                               pull);
       } else {
-	ACTS_WARNING("Fitted track parameter :" << parName
-						<< " has negative covariance = "
-						<< covariance(parID, parID));
+        ACTS_WARNING("Fitted track parameter :" << parName
+                                                << " has negative covariance = "
+                                                << covariance(parID, parID));
       }
     } else {
       ACTS_WARNING("Fitted track parameter :" << parName
-		   << " has no covariance");
+                                              << " has no covariance");
     }
   }
 }

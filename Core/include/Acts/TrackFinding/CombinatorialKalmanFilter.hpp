@@ -785,9 +785,9 @@ class CombinatorialKalmanFilter {
         trackStateProxy.data().ipredicted = neighborState.data().ipredicted;
       } else {
         trackStateProxy.predicted() = boundParams.parameters();
-	if (boundParams.covariance().has_value()) {
-	  trackStateProxy.predictedCovariance() = *boundParams.covariance();
-	}
+        if (boundParams.covariance().has_value()) {
+          trackStateProxy.predictedCovariance() = *boundParams.covariance();
+        }
       }
       trackStateProxy.jacobian() = jacobian;
       trackStateProxy.pathLength() = pathLength;
@@ -880,7 +880,7 @@ class CombinatorialKalmanFilter {
       // Fill the track state
       trackStateProxy.predicted() = boundParams.parameters();
       if (boundParams.covariance().has_value()) {
-	trackStateProxy.predictedCovariance() = *boundParams.covariance();
+        trackStateProxy.predictedCovariance() = *boundParams.covariance();
       }
       trackStateProxy.jacobian() = jacobian;
       trackStateProxy.pathLength() = pathLength;
@@ -928,7 +928,7 @@ class CombinatorialKalmanFilter {
       // Fill the track state
       trackStateProxy.predicted() = curvilinearParams.parameters();
       if (curvilinearParams.covariance().has_value()) {
-	trackStateProxy.predictedCovariance() = *curvilinearParams.covariance();
+        trackStateProxy.predictedCovariance() = *curvilinearParams.covariance();
       }
       trackStateProxy.jacobian() = jacobian;
       trackStateProxy.pathLength() = pathLength;
