@@ -785,7 +785,7 @@ class CombinatorialKalmanFilter {
         trackStateProxy.data().ipredicted = neighborState.data().ipredicted;
       } else {
         trackStateProxy.predicted() = boundParams.parameters();
-        trackStateProxy.predictedCovariance() = *boundParams.covariance();
+        trackStateProxy.predictedCovariance() = *boundParams.covariance(); // FIXME (std::optional)
       }
       trackStateProxy.jacobian() = jacobian;
       trackStateProxy.pathLength() = pathLength;
@@ -877,7 +877,7 @@ class CombinatorialKalmanFilter {
       const auto& [boundParams, jacobian, pathLength] = boundState;
       // Fill the track state
       trackStateProxy.predicted() = boundParams.parameters();
-      trackStateProxy.predictedCovariance() = *boundParams.covariance();
+      trackStateProxy.predictedCovariance() = *boundParams.covariance(); // FIXME (std::optional)
       trackStateProxy.jacobian() = jacobian;
       trackStateProxy.pathLength() = pathLength;
       // Set the surface
@@ -923,7 +923,7 @@ class CombinatorialKalmanFilter {
       const auto& [curvilinearParams, jacobian, pathLength] = curvilinearState;
       // Fill the track state
       trackStateProxy.predicted() = curvilinearParams.parameters();
-      trackStateProxy.predictedCovariance() = *curvilinearParams.covariance();
+      trackStateProxy.predictedCovariance() = *curvilinearParams.covariance(); // FIXME (std::optional)
       trackStateProxy.jacobian() = jacobian;
       trackStateProxy.pathLength() = pathLength;
       // Set the surface; reuse the existing curvilinear surface

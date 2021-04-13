@@ -106,7 +106,7 @@ class AtlasStepper {
       // prepare the jacobian if we have a covariance
       if (pars.covariance()) {
         // copy the covariance matrix
-        covariance = new BoundSymMatrix(*pars.covariance());
+        covariance = new BoundSymMatrix(*pars.covariance()); // FIXME (std::optional)
         covTransport = true;
         useJacobian = true;
         const auto transform = pars.referenceSurface().referenceFrame(

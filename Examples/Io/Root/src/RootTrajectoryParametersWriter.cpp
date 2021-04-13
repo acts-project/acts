@@ -201,7 +201,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersWriter::writeT(
         m_hasFittedParams = true;
         const auto& boundParam = traj.trackParameters(trackTip);
         const auto& parameter = boundParam.parameters();
-        const auto& covariance = *boundParam.covariance();
+        const auto& covariance = *boundParam.covariance(); // FIXME (std::optional)
         m_eLOC0_fit = parameter[Acts::eBoundLoc0];
         m_eLOC1_fit = parameter[Acts::eBoundLoc1];
         m_ePHI_fit = parameter[Acts::eBoundPhi];

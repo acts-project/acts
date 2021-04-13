@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_ABS(curvPars.charge(), cp.charge(), 1e-6);
   CHECK_CLOSE_ABS(curvPars.time(), cp.time(), 1e-6);
   BOOST_CHECK(curvPars.covariance().has_value());
-  BOOST_CHECK_NE(*curvPars.covariance(), cov);
+  BOOST_CHECK_NE(*curvPars.covariance(), cov); // FIXME (std::optional)
   CHECK_CLOSE_COVARIANCE(std::get<1>(curvState),
                          BoundMatrix(BoundMatrix::Identity()), 1e-6);
   CHECK_CLOSE_ABS(std::get<2>(curvState), 0., 1e-6);
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   // Reset all possible parameters
   StraightLineStepper::State slsStateCopy(ps.stepping);
-  sls.resetState(slsStateCopy, cp2.parameters(), *cp2.covariance(),
+  sls.resetState(slsStateCopy, cp2.parameters(), *cp2.covariance(), // FIXME (std::optional)
                  cp2.referenceSurface(), ndir, stepSize2);
   // Test all components
   BOOST_CHECK_NE(slsStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   // Reset all possible parameters except the step size
   slsStateCopy = ps.stepping;
-  sls.resetState(slsStateCopy, cp2.parameters(), *cp2.covariance(),
+  sls.resetState(slsStateCopy, cp2.parameters(), *cp2.covariance(), // FIXME (std::optional)
                  cp2.referenceSurface(), ndir);
   // Test all components
   BOOST_CHECK_NE(slsStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   // Reset the least amount of parameters
   slsStateCopy = ps.stepping;
-  sls.resetState(slsStateCopy, cp2.parameters(), *cp2.covariance(),
+  sls.resetState(slsStateCopy, cp2.parameters(), *cp2.covariance(), // FIXME (std::optional)
                  cp2.referenceSurface());
   // Test all components
   BOOST_CHECK_NE(slsStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   freeParams.segment<3>(eFreePos0) *= 2;
   freeParams[eFreeTime] *= 2;
 
-  sls.update(slsState, freeParams, 2 * (*bp.covariance()));
+  sls.update(slsState, freeParams, 2 * (*bp.covariance()));  // FIXME (std::optional)
   CHECK_CLOSE_OR_SMALL(sls.position(slsState), 2. * pos, eps, eps);
   BOOST_CHECK_EQUAL(sls.charge(slsState), 1. * charge);
   CHECK_CLOSE_OR_SMALL(sls.time(slsState), 2. * time, eps, eps);

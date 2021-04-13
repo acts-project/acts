@@ -96,7 +96,7 @@ class EigenStepper {
         const auto& surface = par.referenceSurface();
         // set the covariance transport flag to true and copy
         covTransport = true;
-        cov = BoundSymMatrix(*par.covariance());
+        cov = BoundSymMatrix(*par.covariance());  // FIXME (std::optional)
         jacToGlobal = surface.jacobianLocalToGlobal(gctx, par.parameters());
       }
     }

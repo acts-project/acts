@@ -531,7 +531,7 @@ class KalmanFitter {
         // Fill the track state
         trackStateProxy.predicted() = std::move(boundParams.parameters());
         trackStateProxy.predictedCovariance() =
-            std::move(*boundParams.covariance());
+		std::move(*boundParams.covariance()); // FIXME (std::optional)
         trackStateProxy.jacobian() = std::move(jacobian);
         trackStateProxy.pathLength() = std::move(pathLength);
 
@@ -638,7 +638,7 @@ class KalmanFitter {
             // Fill the track state
             trackStateProxy.predicted() = std::move(boundParams.parameters());
             trackStateProxy.predictedCovariance() =
-                std::move(*boundParams.covariance());
+		    std::move(*boundParams.covariance()); // FIXME (std::optional)
             trackStateProxy.jacobian() = std::move(jacobian);
             trackStateProxy.pathLength() = std::move(pathLength);
           } else if (surface->surfaceMaterial() != nullptr) {
@@ -653,7 +653,7 @@ class KalmanFitter {
             trackStateProxy.predicted() =
                 std::move(curvilinearParams.parameters());
             trackStateProxy.predictedCovariance() =
-                std::move(*curvilinearParams.covariance());
+		    std::move(*curvilinearParams.covariance()); // FIXME (std::optional)
             trackStateProxy.jacobian() = std::move(jacobian);
             trackStateProxy.pathLength() = std::move(pathLength);
           }
@@ -731,7 +731,7 @@ class KalmanFitter {
         // Fill the track state
         trackStateProxy.predicted() = std::move(boundParams.parameters());
         trackStateProxy.predictedCovariance() =
-            std::move(*boundParams.covariance());
+		std::move(*boundParams.covariance());// FIXME (std::optional)
         trackStateProxy.jacobian() = std::move(jacobian);
         trackStateProxy.pathLength() = std::move(pathLength);
 

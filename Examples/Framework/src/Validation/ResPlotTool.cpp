@@ -144,7 +144,7 @@ void ActsExamples::ResPlotTool::fill(
 
   // get the fitted parameter (at perigee surface) and its error
   auto trackParameter = fittedParamters.parameters();
-  auto covariance = *fittedParamters.covariance();
+  auto covariance = *fittedParamters.covariance(); // FIXME (std::optional)
 
   // get the perigee surface
   auto pSurface = &fittedParamters.referenceSurface();

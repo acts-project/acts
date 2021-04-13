@@ -78,7 +78,7 @@ void Acts::GaussianTrackDensity<input_track_t>::addTracks(
     const double d0 = boundParams.parameters()[BoundIndices::eBoundLoc0];
     const double z0 = boundParams.parameters()[BoundIndices::eBoundLoc1];
     // Get track covariance
-    const auto perigeeCov = *(boundParams.covariance());
+    const auto perigeeCov = *(boundParams.covariance()); // FIXME (std::optional)
     const double covDD =
         perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc0);
     const double covZZ =

@@ -115,7 +115,7 @@ class MeasurementSelector {
             // Take the projector (measurement mapping function)
             const auto& H = meas.projector();
             // Take the parameter covariance
-            const auto& predictedCovariance = *predictedParams.covariance();
+            const auto& predictedCovariance = *predictedParams.covariance(); // FIXME (std::optional)
             // Get the residuals
             const auto& res = meas.residuals(predictedParams.parameters());
             // Get the chi2

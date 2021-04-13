@@ -159,7 +159,7 @@ struct EventDataView3D {
       auto lposition = paramVec.template block<2, 1>(0, 0);
 
       // Draw the local covariance
-      const auto& covariance = *parameters.covariance();
+      const auto& covariance = *parameters.covariance(); // FIXME (std::optional)
       drawCovarianceCartesian(helper, lposition,
                               covariance.template block<2, 2>(0, 0),
                               parameters.referenceSurface().transform(gctx),
