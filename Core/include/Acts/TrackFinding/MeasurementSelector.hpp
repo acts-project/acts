@@ -85,6 +85,11 @@ class MeasurementSelector {
       return CombinatorialKalmanFilterError::MeasurementSelectionFailed;
     }
 
+    // Need covariance to compute chi2
+    if (not predictedParams.covariance().has_value()) {
+      return CombinatorialKalmanFilterError::MeasurementSelectionFailed;
+    }
+
     // Get geoID of this surface
     auto surface = &predictedParams.referenceSurface();
     auto geoID = surface->geometryId();
@@ -115,7 +120,7 @@ class MeasurementSelector {
             // Take the projector (measurement mapping function)
             const auto& H = meas.projector();
             // Take the parameter covariance
-            const auto& predictedCovariance = *predictedParams.covariance(); // FIXME (std::optional)
+            const auto& predictedCovariance = *predictedParams.covariance();
             // Get the residuals
             const auto& res = meas.residuals(predictedParams.parameters());
             // Get the chi2
