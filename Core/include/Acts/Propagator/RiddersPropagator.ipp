@@ -47,7 +47,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
   }
   if (start.covariance()) {
     auto cov =
-        calculateCovariance(derivatives, *start.covariance(), deviations); // FIXME (std::optional)
+        calculateCovariance(derivatives, *start.covariance(), deviations);
     // replace the covariance of the nominal result w/ the ridders covariance
     auto& nom = *nominalResult.endParameters;
     nom = CurvilinearTrackParameters(
@@ -121,7 +121,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
     }
     // use nominal parameters and Ridders covariance
     auto cov =
-        calculateCovariance(derivatives, *start.covariance(), deviations); // FIXME (std::optional)
+        calculateCovariance(derivatives, *start.covariance(), deviations);
     auto& nom = *nominalResult.endParameters;
     nom = BoundTrackParameters(nom.referenceSurface().getSharedPtr(),
                                nom.parameters(), nom.charge(), std::move(cov));
