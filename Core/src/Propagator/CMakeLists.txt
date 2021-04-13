@@ -2,6 +2,7 @@ target_sources(
   ActsCore
   PRIVATE
     EigenStepperError.cpp
+    DenseMaterialInteractor.cpp
     PropagatorError.cpp
     StraightLineStepper.cpp
     detail/PointwiseMaterialInteraction.cpp
