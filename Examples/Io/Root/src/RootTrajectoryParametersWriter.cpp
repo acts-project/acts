@@ -71,7 +71,7 @@ ActsExamples::RootTrajectoryParametersWriter::RootTrajectoryParametersWriter(
     m_outputTree->Branch("event_nr", &m_eventNr);
     m_outputTree->Branch("multiTraj_nr", &m_multiTrajNr);
     m_outputTree->Branch("subTraj_nr", &m_subTrajNr);
-    m_outputTree->Branch("t_barcode", &m_t_barcode, "t_barcode/l");
+    m_outputTree->Branch("t_barcode", &m_t_barcode);
     m_outputTree->Branch("t_charge", &m_t_charge);
     m_outputTree->Branch("t_time", &m_t_time);
     m_outputTree->Branch("t_vx", &m_t_vx);
@@ -169,7 +169,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersWriter::writeT(
                                     particleHitCounts);
       if (not particleHitCounts.empty()) {
         // Get the barcode of the majority truth particle
-        auto barcode = particleHitCounts.front().particleId.value();
+        long unsigned int barcode = particleHitCounts.front().particleId.value();
         m_t_barcode.push_back(barcode);
         // Find the truth particle via the barcode
         auto ip = particles.find(barcode);
