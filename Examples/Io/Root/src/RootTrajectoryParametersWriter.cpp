@@ -201,21 +201,24 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersWriter::writeT(
         m_hasFittedParams = true;
         const auto& boundParam = traj.trackParameters(trackTip);
         const auto& parameter = boundParam.parameters();
-        const auto& covariance = *boundParam.covariance(); // FIXME (std::optional)
         m_eLOC0_fit = parameter[Acts::eBoundLoc0];
         m_eLOC1_fit = parameter[Acts::eBoundLoc1];
         m_ePHI_fit = parameter[Acts::eBoundPhi];
         m_eTHETA_fit = parameter[Acts::eBoundTheta];
         m_eQOP_fit = parameter[Acts::eBoundQOverP];
         m_eT_fit = parameter[Acts::eBoundTime];
-        m_err_eLOC0_fit = sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0));
-        m_err_eLOC1_fit = sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1));
-        m_err_ePHI_fit = sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi));
-        m_err_eTHETA_fit =
+
+	if (boundParam.covariance().has_value()) {
+	  const auto& covariance = *boundParam.covariance();
+	  m_err_eLOC0_fit = sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0));
+	  m_err_eLOC1_fit = sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1));
+	  m_err_ePHI_fit = sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi));
+	  m_err_eTHETA_fit =
             sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta));
-        m_err_eQOP_fit =
+	  m_err_eQOP_fit =
             sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP));
-        m_err_eT_fit = sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime));
+	  m_err_eT_fit = sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime));
+	}
       }
 
       // fill the variables for one track to tree
