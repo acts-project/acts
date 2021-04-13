@@ -11,7 +11,7 @@
 #include "Acts/Material/Interactions.hpp"
  
   void 
-  Acts::DenseScatteringInteractor::reset(Acts::ActsScalar q, Acts::ActsScalar momentum, Acts::ActsScalar time, Vector3 direction, result_type& result) const {
+  Acts::DenseMaterialInteractor::reset(Acts::ActsScalar q, Acts::ActsScalar momentum, Acts::ActsScalar time, Vector3 direction, result_type& result) const {
 	  	result.s = 0.;
 		result.qop0 = (q == 0. ? 1. : q) / momentum;
 		result.t0 = time;
@@ -20,7 +20,7 @@
   }
 
   Acts::BoundSymMatrix 
-  Acts::DenseScatteringInteractor::evaluateMultipleScattering(int pdg, float mass, float q, Acts::ActsScalar momentum, Acts::ActsScalar time,
+  Acts::DenseMaterialInteractor::evaluateMultipleScattering(int pdg, float mass, float q, Acts::ActsScalar momentum, Acts::ActsScalar time,
                     result_type& result) const {
 	/// The content of this method follows the derivations in ATL-SOFT-PUB-2008-003 Eq. (18). While in this matrix the scattering contribution from a given layer expressed at a point at a path length d away from the actual interaction, the formalism is modified in this context. The actual contribution is evaluated within this actor at the end of the volume material or whenever a covariance transport occured. Hence, d becomes zero and some addends vanish.
 	/// Since this paper did not consider time propagation, the corresponding term has been added using the derivation for q/p (named lambda in the paper).

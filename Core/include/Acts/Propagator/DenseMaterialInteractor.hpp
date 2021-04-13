@@ -14,7 +14,7 @@
 namespace Acts {
 
 /// This actor allows to include the scattering contributions to the covariance matrix in dense environment.
-struct DenseScatteringInteractor {
+struct DenseMaterialInteractor {
 	/// Storage variables to track the contribution
   struct Result {
 	  /// The path length in the environment
@@ -65,7 +65,7 @@ struct DenseScatteringInteractor {
 		// Reset the tracker variables
 		reset(stepper.charge(state.stepping), stepper.momentum(state.stepping), stepper.time(state.stepping), stepper.direction(state.stepping), result);
 	} else {
-	
+
 	// Same volume with material: accumulate path
 	if(result.currentVolume != nullptr && result.currentVolume->volumeMaterial() != nullptr)
 	{
@@ -74,13 +74,23 @@ struct DenseScatteringInteractor {
 		result.sInX0 += deltaS / result.currentVolume->volumeMaterial()->material(result.previousPos).X0();
 	}
 	
-	// If the covariance matrix was transported then the scattering part is added
-	if(state.stepping.jacTransport == FreeMatrix::Identity() || state.navigation.targetReached)
+	// Test for recorded path length
+	if(result.s != 0.)
 	{
-		BoundSymMatrix msCovariance = evaluateMultipleScattering(state.options.absPdgCode, state.options.mass, stepper.charge(state.stepping), 
-		stepper.momentum(state.stepping), stepper.time(state.stepping), result);
-			state.stepping.cov += msCovariance;
-		reset(stepper.charge(state.stepping), stepper.momentum(state.stepping), stepper.time(state.stepping), stepper.direction(state.stepping), result);
+		// Transport and add the contributions if the target is reached
+		if(state.navigation.targetReached)
+		{
+			stepper.covarianceTransport(state.stepping);
+		}
+		// Add the contribution whenever a transport occured
+		// TODO: Replace this check, depends on #763
+		if(state.stepping.jacTransport == FreeMatrix::Identity())
+		{
+			BoundSymMatrix msCovariance = evaluateMultipleScattering(state.options.absPdgCode, state.options.mass, stepper.charge(state.stepping), 
+			stepper.momentum(state.stepping), stepper.time(state.stepping), result);
+				state.stepping.cov += msCovariance;
+			reset(stepper.charge(state.stepping), stepper.momentum(state.stepping), stepper.time(state.stepping), stepper.direction(state.stepping), result);
+		}
 	}
 }
 	result.sAccumulated = state.stepping.pathAccumulated;
