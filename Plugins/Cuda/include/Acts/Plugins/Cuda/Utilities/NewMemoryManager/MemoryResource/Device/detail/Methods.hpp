@@ -27,7 +27,7 @@
 namespace Acts {
 namespace Cuda {
 namespace Nmm {
-namespace MemoryRecource {
+namespace MemoryResource {
 namespace detail {
 namespace Arena {
 
@@ -127,7 +127,7 @@ inline Block coalesceBlock(std::set<Block>& freeBlocks, Block const&b){
 
 } // namaspace Arena
 } // namaspace detail
-} // namaspace MemoryRecource
+} // namaspace MemoryResource
 } // namaspace Nmm
 } // namaspace Cuda
 } // namaspace Acts

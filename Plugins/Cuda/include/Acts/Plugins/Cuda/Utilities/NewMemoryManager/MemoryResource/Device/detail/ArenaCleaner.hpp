@@ -27,7 +27,7 @@
 namespace Acts {
 namespace Cuda {
 namespace Nmm {
-namespace MemoryRecource {
+namespace MemoryResource {
 namespace detail {
 namespace Arena {
 
@@ -55,7 +55,7 @@ class ArenaCleaner {
 
 } // namaspace Arena
 } // namaspace detail
-} // namaspace MemoryRecource
+} // namaspace MemoryResource
 } // namaspace Nmm
 } // namaspace Cuda
 } // namaspace Acts
