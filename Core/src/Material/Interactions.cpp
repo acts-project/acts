@@ -490,6 +490,27 @@ inline float theta0RossiGreisen(float xOverX0, float momentumInv,
 
 }  // namespace
 
+float Acts::computeMultipleScatteringTheta0(float x0, int pdg,
+                                            float m, float qOverP, float q) {
+  ASSERT_INPUTS(m, qOverP, q)
+
+  // return early in case of vacuum or zero thickness
+  if (x0 == 0.) {
+    return 0.0f;
+  }
+
+  // 1/p = q/(pq) = (q/p)/q
+  const auto momentumInv = std::abs(qOverP / q);
+  // q²/beta²; a smart compiler should be able to remove the unused computations
+  const auto q2OverBeta2 = RelativisticQuantities(m, qOverP, q).q2OverBeta2;
+
+  if ((pdg == PdgParticle::eElectron) or (pdg == PdgParticle::ePositron)) {
+    return theta0RossiGreisen(x0, momentumInv, q2OverBeta2);
+  } else {
+    return theta0Highland(x0, momentumInv, q2OverBeta2);
+  }
+}
+
 float Acts::computeMultipleScatteringTheta0(const MaterialSlab& slab, int pdg,
                                             float m, float qOverP, float q) {
   ASSERT_INPUTS(m, qOverP, q)
@@ -501,14 +522,6 @@ float Acts::computeMultipleScatteringTheta0(const MaterialSlab& slab, int pdg,
 
   // relative radiation length
   const auto xOverX0 = slab.thicknessInX0();
-  // 1/p = q/(pq) = (q/p)/q
-  const auto momentumInv = std::abs(qOverP / q);
-  // q²/beta²; a smart compiler should be able to remove the unused computations
-  const auto q2OverBeta2 = RelativisticQuantities(m, qOverP, q).q2OverBeta2;
-
-  if ((pdg == PdgParticle::eElectron) or (pdg == PdgParticle::ePositron)) {
-    return theta0RossiGreisen(xOverX0, momentumInv, q2OverBeta2);
-  } else {
-    return theta0Highland(xOverX0, momentumInv, q2OverBeta2);
-  }
+  // Compute the scattering in theta
+  return computeMultipleScatteringTheta0(xOverX0, pdg, m, qOverP, q);
 }
