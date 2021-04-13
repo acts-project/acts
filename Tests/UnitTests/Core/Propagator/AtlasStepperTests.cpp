@@ -164,7 +164,8 @@ BOOST_AUTO_TEST_CASE(UpdateFromBound) {
   // WARNING for some reason there seems to be an additional flag that makes
   //         the update method not do anything when it is set. Why?
   state.state_ready = false;
-  stepper.update(state, freeParams, *params.covariance());  // FIXME (std::optional)
+  BOOST_CHECK(params.covariance().has_value());
+  stepper.update(state, freeParams, *params.covariance());
   CHECK_CLOSE_ABS(stepper.position(state), newPos, eps);
   CHECK_CLOSE_ABS(stepper.time(state), newTime, eps);
   CHECK_CLOSE_ABS(stepper.direction(state), newUnitDir, eps);
@@ -374,7 +375,8 @@ BOOST_AUTO_TEST_CASE(Reset) {
 
   // Reset all possible parameters
   Stepper::State stateCopy(copyState(*magneticField, state.stepping));
-  stepper.resetState(stateCopy, cp.parameters(), *cp.covariance(),  // FIXME (std::optional)
+  BOOST_CHECK(cp.covariance().has_value());
+  stepper.resetState(stateCopy, cp.parameters(), *cp.covariance(),
                      cp.referenceSurface(), ndir, stepSize);
   // Test all components
   BOOST_CHECK(stateCopy.covTransport);
@@ -396,7 +398,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
 
   // Reset all possible parameters except the step size
   stateCopy = copyState(*magneticField, state.stepping);
-  stepper.resetState(stateCopy, cp.parameters(), *cp.covariance(),  // FIXME (std::optional)
+  stepper.resetState(stateCopy, cp.parameters(), *cp.covariance(),
                      cp.referenceSurface(), ndir);
   // Test all components
   BOOST_CHECK(stateCopy.covTransport);
@@ -419,7 +421,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
 
   // Reset the least amount of parameters
   stateCopy = copyState(*magneticField, state.stepping);
-  stepper.resetState(stateCopy, cp.parameters(), *cp.covariance(),  // FIXME (std::optional)
+  stepper.resetState(stateCopy, cp.parameters(), *cp.covariance(),
                      cp.referenceSurface());
   // Test all components
   BOOST_CHECK(stateCopy.covTransport);
@@ -456,7 +458,8 @@ BOOST_AUTO_TEST_CASE(Reset) {
 
   // Reset the state and test
   Stepper::State stateDisc = copyState(*magneticField, state.stepping);
-  stepper.resetState(stateDisc, boundDisc.parameters(), *boundDisc.covariance(),  // FIXME (std::optional)
+  BOOST_CHECK(boundDisc.covariance().has_value());
+  stepper.resetState(stateDisc, boundDisc.parameters(), *boundDisc.covariance(),
                      boundDisc.referenceSurface());
 
   CHECK_NE_COLLECTIONS(stateDisc.pVector, stateCopy.pVector);
@@ -477,8 +480,9 @@ BOOST_AUTO_TEST_CASE(Reset) {
 
   // Reset the state and test
   Stepper::State statePerigee = copyState(*magneticField, state.stepping);
+  BOOST_CHECK(boundPerigee.covariance().has_value());
   stepper.resetState(statePerigee, boundPerigee.parameters(),
-                     *boundPerigee.covariance(),  // FIXME (std::optional)
+                     *boundPerigee.covariance(),
                      boundPerigee.referenceSurface());
   CHECK_NE_COLLECTIONS(statePerigee.pVector, stateCopy.pVector);
   CHECK_NE_COLLECTIONS(statePerigee.pVector, state.stepping.pVector);
@@ -494,8 +498,9 @@ BOOST_AUTO_TEST_CASE(Reset) {
 
   // Reset the state and test
   Stepper::State stateStraw = copyState(*magneticField, state.stepping);
+  BOOST_CHECK(boundStraw.covariance().has_value());
   stepper.resetState(stateStraw, boundStraw.parameters(),
-                     *boundStraw.covariance(), boundStraw.referenceSurface()); // FIXME (std::optional)
+                     *boundStraw.covariance(), boundStraw.referenceSurface());
   CHECK_NE_COLLECTIONS(stateStraw.pVector, stateCopy.pVector);
   CHECK_NE_COLLECTIONS(stateStraw.pVector, state.stepping.pVector);
   CHECK_NE_COLLECTIONS(stateStraw.pVector, stateDisc.pVector);
