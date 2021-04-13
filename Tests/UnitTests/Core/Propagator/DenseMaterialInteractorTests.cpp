@@ -29,7 +29,7 @@ struct StepperState {
   ActsScalar pathAccumulated;
   FreeMatrix jacTransport;
 
-  ActsScalar charge;
+  ActsScalar charge = 1_e;
   ActsScalar momentum;
   ActsScalar time;
   Vector3 direction;
@@ -47,7 +47,7 @@ struct State {
 
   struct {
     int absPdgCode;
-    ActsScalar mass;
+    ActsScalar mass = 42_GeV;
   } options;
 };
 
@@ -160,7 +160,6 @@ BOOST_AUTO_TEST_CASE(test_material_collector) {
   // Configure the states
   result.s = 0.;
   result.currentVolume = nullptr;
-  state.stepping.charge = 1_e;
   state.stepping.momentum = 42_GeV;
   state.stepping.time = 1337_s;
   state.stepping.direction = Vector3(1., 2.5, 33.33).normalized();
