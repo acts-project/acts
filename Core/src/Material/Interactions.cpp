@@ -490,8 +490,8 @@ inline float theta0RossiGreisen(float xOverX0, float momentumInv,
 
 }  // namespace
 
-float Acts::computeMultipleScatteringTheta0(float x0, int pdg,
-                                            float m, float qOverP, float q) {
+float Acts::computeMultipleScatteringTheta0(float x0, int pdg, float m,
+                                            float qOverP, float q) {
   ASSERT_INPUTS(m, qOverP, q)
 
   // return early in case of vacuum or zero thickness

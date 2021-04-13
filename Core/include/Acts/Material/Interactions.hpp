@@ -125,10 +125,9 @@ float deriveEnergyLossModeQOverP(const MaterialSlab& slab, int pdg, float m,
 /// @param m         Particle mass
 /// @param qOverP    Particle charge divided by absolute momentum
 /// @param q         Particle charge, only the magnitude is considered
-float computeMultipleScatteringTheta0(float x0, int pdg,
-                                      float m, float qOverP,
+float computeMultipleScatteringTheta0(float x0, int pdg, float m, float qOverP,
                                       float q = UnitConstants::e);
-                                      
+
 /// Compute the core width of the projected planar scattering distribution.
 ///
 /// @param slab      The traversed material and its properties
