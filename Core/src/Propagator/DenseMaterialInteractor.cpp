@@ -22,9 +22,13 @@
   Acts::BoundSymMatrix 
   Acts::DenseScatteringInteractor::evaluateMultipleScattering(int pdg, float mass, float q, Acts::ActsScalar momentum, Acts::ActsScalar time,
                     result_type& result) const {
+	/// The content of this method follows the derivations in ATL-SOFT-PUB-2008-003 Eq. (18). While in this matrix the scattering contribution from a given layer expressed at a point at a path length d away from the actual interaction, the formalism is modified in this context. The actual contribution is evaluated within this actor at the end of the volume material or whenever a covariance transport occured. Hence, d becomes zero and some addends vanish.
+	/// Since this paper did not consider time propagation, the corresponding term has been added using the derivation for q/p (named lambda in the paper).
+	
 	float qOverP = result.qop0;
 	float x0 = result.sInX0;
-							
+	
+	// Evaluate the standard deviation in theta			
 	const auto theta0 =
         computeMultipleScatteringTheta0(x0, pdg, mass, qOverP, q);
 	const auto varTheta0 = theta0 * theta0;
@@ -35,6 +39,7 @@
 	const ActsScalar deltaQop = qop - result.qop0;
 	const ActsScalar deltaT = time - result.t0;
 	
+	// Build the covariance matrix
 	BoundSymMatrix msCovariance = BoundSymMatrix::Zero();
 	msCovariance(eBoundLoc0, eBoundLoc0) = s2 / 3.;
 	msCovariance(eBoundLoc0, eBoundPhi) = result.s * invSinTheta * 0.5;
