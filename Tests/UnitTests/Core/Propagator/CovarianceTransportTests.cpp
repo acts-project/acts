@@ -22,8 +22,6 @@ namespace Test {
 BOOST_AUTO_TEST_CASE(covariance_transport_invalid) {
   CovarianceCache covCache;
   BOOST_CHECK(covCache.applyTransport == false);
-
-
 }
 
 BOOST_AUTO_TEST_CASE(covariance_transport_bound_start) {

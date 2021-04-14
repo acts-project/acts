@@ -255,7 +255,7 @@ Acts::BoundToFreeMatrix Acts::Surface::boundToFreeJacobian(
   const Vector3 direction = freeParams.segment<3>(eFreeDir0);
   // Use fast evaluation function of sin/cos
   auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
-      VectorHelpers::evaluateTrigonimics(direction);
+      VectorHelpers::evaluateTrigonomics(direction);
   // retrieve the reference frame
   const auto rframe = referenceFrame(gctx, position, direction);
   // Initialize the jacobian from local to global
@@ -282,7 +282,7 @@ Acts::FreeToBoundMatrix Acts::Surface::freeToBoundJacobian(
   const auto direction = parameters.segment<3>(eFreeDir0);
   // Use fast evaluation function of sin/cos
   auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
-      VectorHelpers::evaluateTrigonimics(direction);
+      VectorHelpers::evaluateTrigonomics(direction);
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
       referenceFrame(gctx, position, direction).transpose();

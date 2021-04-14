@@ -123,7 +123,7 @@ void boundToBoundJacobian(const GeometryContext& geoContext,
 /// projection onto a curvilinear surface is considered. Since a variation of
 /// the start parameters within a given uncertainty would lead to a variation of
 /// the end parameters, these need to be propagated onto the target surface.
-/// This an approximated approach to treat the (assumed) small change.
+/// This is an approximated approach to treat the (assumed) small change.
 ///
 /// @param [in] direction Normalised direction vector
 /// @param [in] boundToFreeJacobian The projection jacobian from local start

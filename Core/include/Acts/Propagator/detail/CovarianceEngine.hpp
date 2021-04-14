@@ -86,7 +86,7 @@ std::tuple<CurvilinearTrackParameters, BoundMatrix, double> curvilinearState(
     BoundToFreeMatrix& jacToGlobal, const FreeVector& parameters,
     bool covTransport, double accumulatedPath);
 
-/// @brief Method for on-demand covariance transport of a bound/curvilinearr to
+/// @brief Method for on-demand covariance transport of a bound/curvilinear to
 /// another bound representation.
 ///
 /// @param [in] geoContext The geometry context

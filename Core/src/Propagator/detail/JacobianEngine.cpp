@@ -19,7 +19,7 @@ namespace detail {
 
 FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction) {
   auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
-      VectorHelpers::evaluateTrigonimics(direction);
+      VectorHelpers::evaluateTrigonomics(direction);
   // Prepare the jacobian to curvilinear
   FreeToBoundMatrix freeToCurvJacobian = FreeToBoundMatrix::Zero();
   if (std::abs(cosTheta) < s_curvilinearProjTolerance) {
@@ -58,7 +58,7 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction) {
 
 BoundToFreeMatrix curvilinearToFreeJacobian(const Vector3& direction) {
   auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
-      VectorHelpers::evaluateTrigonimics(direction);
+      VectorHelpers::evaluateTrigonomics(direction);
 
   // Prepare the jacobian to free
   BoundToFreeMatrix curvToFreeJacobian = BoundToFreeMatrix::Zero();
@@ -85,7 +85,7 @@ ActsMatrix<8, 7> anglesToDirectionJacobian(const Vector3& direction) {
   ActsMatrix<8, 7> jacobian = ActsMatrix<8, 7>::Zero();
 
   auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
-      VectorHelpers::evaluateTrigonimics(direction);
+      VectorHelpers::evaluateTrigonomics(direction);
 
   jacobian(0, 0) = 1.;
   jacobian(1, 1) = 1.;
@@ -105,7 +105,7 @@ ActsMatrix<7, 8> directionToAnglesJacobian(const Vector3& direction) {
   ActsMatrix<7, 8> jacobian = ActsMatrix<7, 8>::Zero();
 
   auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
-      VectorHelpers::evaluateTrigonimics(direction);
+      VectorHelpers::evaluateTrigonomics(direction);
 
   jacobian(0, 0) = 1.;
   jacobian(1, 1) = 1.;

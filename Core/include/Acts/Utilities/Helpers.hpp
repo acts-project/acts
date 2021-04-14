@@ -127,7 +127,7 @@ double theta(const Eigen::MatrixBase<Derived>& v) noexcept {
 /// @param direction for this evaluatoin
 ///
 /// @return cos(phi), sin(phi), cos(theta), sin(theta), 1/sin(theta)
-static inline const std::array<ActsScalar, 5> evaluateTrigonimics(
+static inline const std::array<ActsScalar, 5> evaluateTrigonomics(
     const Vector3& direction) {
   const ActsScalar x = direction(0);  // == cos(phi) * sin(theta)
   const ActsScalar y = direction(1);  // == sin(phi) * sin(theta)
