@@ -15,6 +15,8 @@
 #include "ACTFW/Generators/Pythia8ProcessGenerator.hpp"
 #include "ACTFW/Io/Csv/CsvParticleWriter.hpp"
 #include "ACTFW/Io/Root/RootParticleWriter.hpp"
+#include "ACTFW/Io/Root/RootRecVertexWriter.hpp"
+#include "ACTFW/Io/Root/RootVertexAndTracksWriter.hpp"
 #include "ACTFW/Options/CommonOptions.hpp"
 #include "ACTFW/Options/Pythia8Options.hpp"
 #include "ACTFW/TruthTracking/TrackSelector.hpp"
@@ -88,9 +90,19 @@ int main(int argc, char* argv[]) {
   // Add the finding algorithm
   FWE::AdaptiveMultiVertexFinderAlgorithm::Config vertexFindingCfg;
   vertexFindingCfg.trackCollection = selectorConfig.output;
+  vertexFindingCfg.outputProtoVertices = "vertices_reco";
   sequencer.addAlgorithm(
       std::make_shared<FWE::AdaptiveMultiVertexFinderAlgorithm>(
           vertexFindingCfg, logLevel));
+
+  auto outputDir = ensureWritableDirectory(vm["output-dir"].as<std::string>());
+
+  RootRecVertexWriter::Config RecVertexWriterCfg;
+  RecVertexWriterCfg.collection = vertexFindingCfg.outputProtoVertices;
+  RecVertexWriterCfg.filePath =
+      joinPaths(outputDir, vertexFindingCfg.outputProtoVertices + ".root");
+  sequencer.addWriter(
+      std::make_shared<RootRecVertexWriter>(RecVertexWriterCfg, logLevel));
 
   return sequencer.run();
 }

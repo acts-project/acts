@@ -119,10 +119,25 @@ FW::ProcessCode FWE::AdaptiveMultiVertexFinderAlgorithm::execute(
                      << "(" << vtx.position().x() << "," << vtx.position().y()
                      << "," << vtx.position().z() << ") with "
                      << vtx.tracks().size() << " tracks.");
+      /// test print out info
+      // ACTS_INFO("\t vertex" << count << "\n track d0 info");
+      // for (auto& track : vtx.tracks()) {
+      //   std::cout << "original"
+      //             <<
+      //             track.originalParams->parameters()[Acts::ParDef::eLOC_D0]
+      //             << "\t";
+      //   std::cout << "original"
+      //             << track.fittedParams.parameters()[Acts::ParDef::eLOC_D0]
+      //             << std::endl;
+      //}
     }
   } else {
     ACTS_ERROR("Error in vertex finder: " << res.error().message());
   }
+
+  // store proto vertices extracted from the found vertices
+  // Mimic other scripts, not sure if it works or just copy a pointer ,,
+  ctx.eventStore.add(m_cfg.outputProtoVertices, std::move(*res));
 
   return FW::ProcessCode::SUCCESS;
 }

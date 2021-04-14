@@ -24,6 +24,9 @@ class AdaptiveMultiVertexFinderAlgorithm : public FW::BareAlgorithm {
   struct Config {
     /// Input track collection
     std::string trackCollection;
+
+    /// Output proto vertex collection
+    std::string outputProtoVertices;
   };
 
   /// Constructor

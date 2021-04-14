@@ -10,9 +10,12 @@
 #include <memory>
 
 #include "ACTFW/Framework/Sequencer.hpp"
+#include "ACTFW/Io/Root/RootRecVertexWriter.hpp"
 #include "ACTFW/Io/Root/RootVertexAndTracksReader.hpp"
 #include "ACTFW/Options/CommonOptions.hpp"
+#include "ACTFW/TruthTracking/VertexAndTracks.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
+#include "ACTFW/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
 #include "ACTFW/Vertexing/IterativeVertexFinderAlgorithm.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 
@@ -50,12 +53,14 @@ int main(int argc, char* argv[]) {
   vtxAndTracksReaderCfg.fileList.push_back(fileString);
 
   // Set magnetic field
-  Acts::Vector3D bField(0., 0., 2. * Acts::units::_T);
+  // No need for AMVF
+  // Acts::Vector3D bField(0., 0., 2. * Acts::units::_T);
 
   // Add the finding algorithm
-  FWE::IterativeVertexFinderAlgorithm::Config vertexFindingCfg;
+  FWE::AdaptiveMultiVertexFinderAlgorithm::Config vertexFindingCfg;
   vertexFindingCfg.trackCollection = vtxAndTracksReaderCfg.outputCollection;
-  vertexFindingCfg.bField = bField;
+  vertexFindingCfg.outputProtoVertices = "vertices_reco";
+  // vertexFindingCfg.bField = bField;
 
   Sequencer::Config sequencerCfg = Options::readSequencerConfig(vm);
   Sequencer sequencer(sequencerCfg);
@@ -63,8 +68,17 @@ int main(int argc, char* argv[]) {
   sequencer.addReader(std::make_shared<RootVertexAndTracksReader>(
       vtxAndTracksReaderCfg, logLevel));
 
-  sequencer.addAlgorithm(std::make_shared<FWE::IterativeVertexFinderAlgorithm>(
-      vertexFindingCfg, logLevel));
+  sequencer.addAlgorithm(
+      std::make_shared<FWE::AdaptiveMultiVertexFinderAlgorithm>(
+          vertexFindingCfg, logLevel));
+
+  auto outputDir = ensureWritableDirectory(vm["output-dir"].as<std::string>());
+  RootRecVertexWriter::Config RecVertexWriterCfg;
+  RecVertexWriterCfg.collection = vertexFindingCfg.outputProtoVertices;
+  RecVertexWriterCfg.filePath =
+      joinPaths(outputDir, vertexFindingCfg.outputProtoVertices + ".root");
+  sequencer.addWriter(
+      std::make_shared<RootRecVertexWriter>(RecVertexWriterCfg, logLevel));
 
   return sequencer.run();
 }
