@@ -217,23 +217,21 @@ FW::ProcessCode FW::RootRecVertexWriter::writeT(
   // Get the event number
   m_eventNr = context.eventNumber;
 
-  ACTS_INFO("Found " << vertexCollection.size() << " vertices in event.");
+  ACTS_INFO("Store " << vertexCollection.size() << " vertices in event "
+                     << m_eventNr);
 
-  unsigned int count = 0;
+  // unsigned int count = 0;
   for (const auto& vtx : vertexCollection) {
-    ACTS_INFO("\t" << ++count << ". vertex at "
-                   << "(" << vtx.position().x() << "," << vtx.position().y()
-                   << "," << vtx.position().z() << ") with "
-                   << vtx.tracks().size() << " tracks.");
+    // ACTS_INFO("\t" << ++count << ". vertex at "
+    //                << "(" << vtx.position().x() << "," << vtx.position().y()
+    //                << "," << vtx.position().z() << ") with "
+    //                << vtx.tracks().size() << " tracks.");
 
     // Collect the vertex information
     m_vx.push_back(vtx.position().x());
     m_vy.push_back(vtx.position().y());
     m_vz.push_back(vtx.position().z());
     m_vtx_fitquality.push_back(vtx.fitQuality());
-    // std::cout << vtx.position().z() << "\t" << vtx.fitQuality().first<<
-    // std::endl;
-    std::cout << "fit size:" << m_vtx_fitquality.size() << std::endl;
 
     Acts::SpacePointSymMatrix vtx_cov = vtx.fullCovariance();
     m_vtx_cov11.push_back(vtx_cov(0, 0));
@@ -315,8 +313,6 @@ FW::ProcessCode FW::RootRecVertexWriter::writeT(
       m_trk_cov66.push_back((*cov)(5, 5));
     }
   }
-  std::cout << "fit size:" << m_vtx_fitquality.size() << std::endl;
-  std::cout << "vtx cov size:" << m_vtx_cov11.size() << std::endl;
 
   m_outputTree->Fill();
 
