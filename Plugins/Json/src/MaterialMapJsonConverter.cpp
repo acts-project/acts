@@ -332,6 +332,6 @@ void Acts::MaterialMapJsonConverter::convertToHierarchy(
             {bssfRep.geometryId(),
              defaultSurfaceMaterial(bssfRep.getSharedPtr())});
       }
-    } 
+    }
   }
 }
