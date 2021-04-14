@@ -181,20 +181,20 @@ nlohmann::ordered_json Acts::MaterialMapJsonConverter::materialMapsToJson(
   for (auto it = volumeMap.begin(); it != volumeMap.end(); it++) {
     mapVolumeInit.push_back({it->first, it->second.get()});
   }
-  GeometryHierarchyMap<const IVolumeMaterial*> HierarchyVolumeMap(
+  GeometryHierarchyMap<const IVolumeMaterial*> hierarchyVolumeMap(
       mapVolumeInit);
   nlohmann::ordered_json materialVolume =
-      m_volumeMaterialConverter.toJson(HierarchyVolumeMap);
+      m_volumeMaterialConverter.toJson(hierarchyVolumeMap);
   SurfaceMaterialMap surfaceMap = maps.first;
   std::vector<std::pair<GeometryIdentifier, const ISurfaceMaterial*>>
       mapSurfaceInit;
   for (auto it = surfaceMap.begin(); it != surfaceMap.end(); it++) {
     mapSurfaceInit.push_back({it->first, it->second.get()});
   }
-  GeometryHierarchyMap<const ISurfaceMaterial*> HierarchySurfaceMap(
+  GeometryHierarchyMap<const ISurfaceMaterial*> hierarchySurfaceMap(
       mapSurfaceInit);
   nlohmann::ordered_json materialSurface =
-      m_surfaceMaterialConverter.toJson(HierarchySurfaceMap);
+      m_surfaceMaterialConverter.toJson(hierarchySurfaceMap);
   nlohmann::ordered_json materialMap;
   materialMap["Volumes"] = materialVolume;
   materialMap["Surfaces"] = materialSurface;
@@ -205,22 +205,22 @@ Acts::MaterialMapJsonConverter::DetectorMaterialMaps
 Acts::MaterialMapJsonConverter::jsonToMaterialMaps(
     const nlohmann::json& materialmap) {
   nlohmann::json materialVolume = materialmap["Volumes"];
-  GeometryHierarchyMap<const IVolumeMaterial*> HierarchyVolumeMap =
+  GeometryHierarchyMap<const IVolumeMaterial*> hierarchyVolumeMap =
       m_volumeMaterialConverter.fromJson(materialVolume);
   VolumeMaterialMap volumeMap;
-  for (size_t i = 0; i < HierarchyVolumeMap.size(); i++) {
+  for (size_t i = 0; i < hierarchyVolumeMap.size(); i++) {
     std::shared_ptr<const IVolumeMaterial> volumePointer(
-        HierarchyVolumeMap.valueAt(i));
-    volumeMap.insert({HierarchyVolumeMap.idAt(i), std::move(volumePointer)});
+        hierarchyVolumeMap.valueAt(i));
+    volumeMap.insert({hierarchyVolumeMap.idAt(i), std::move(volumePointer)});
   }
   nlohmann::json materialSurface = materialmap["Surfaces"];
-  GeometryHierarchyMap<const ISurfaceMaterial*> HierarchySurfaceMap =
+  GeometryHierarchyMap<const ISurfaceMaterial*> hierarchySurfaceMap =
       m_surfaceMaterialConverter.fromJson(materialSurface);
   SurfaceMaterialMap surfaceMap;
-  for (size_t i = 0; i < HierarchySurfaceMap.size(); i++) {
+  for (size_t i = 0; i < hierarchySurfaceMap.size(); i++) {
     std::shared_ptr<const ISurfaceMaterial> surfacePointer(
-        HierarchySurfaceMap.valueAt(i));
-    surfaceMap.insert({HierarchySurfaceMap.idAt(i), std::move(surfacePointer)});
+        hierarchySurfaceMap.valueAt(i));
+    surfaceMap.insert({hierarchySurfaceMap.idAt(i), std::move(surfacePointer)});
   }
 
   Acts::MaterialMapJsonConverter::DetectorMaterialMaps maps = {surfaceMap,
@@ -238,14 +238,14 @@ nlohmann::ordered_json Acts::MaterialMapJsonConverter::trackingGeometryToJson(
       surfaceHierarchy;
   convertToHierarchy(volumeHierarchy, surfaceHierarchy,
                      tGeometry.highestTrackingVolume());
-  GeometryHierarchyMap<Acts::TrackingVolumeAndMaterial> HierarchyVolumeMap(
+  GeometryHierarchyMap<Acts::TrackingVolumeAndMaterial> hierarchyVolumeMap(
       volumeHierarchy);
   nlohmann::ordered_json jsonVolumes =
-      m_volumeConverter.toJson(HierarchyVolumeMap);
-  GeometryHierarchyMap<Acts::SurfaceAndMaterial> HierarchySurfaceMap(
+      m_volumeConverter.toJson(hierarchyVolumeMap);
+  GeometryHierarchyMap<Acts::SurfaceAndMaterial> hierarchySurfaceMap(
       surfaceHierarchy);
   nlohmann::ordered_json jsonSurfaces =
-      m_surfaceConverter.toJson(HierarchySurfaceMap);
+      m_surfaceConverter.toJson(hierarchySurfaceMap);
   nlohmann::ordered_json hierarchyMap;
   hierarchyMap["Volumes"] = jsonVolumes;
   hierarchyMap["Surfaces"] = jsonSurfaces;
@@ -332,6 +332,6 @@ void Acts::MaterialMapJsonConverter::convertToHierarchy(
             {bssfRep.geometryId(),
              defaultSurfaceMaterial(bssfRep.getSharedPtr())});
       }
-    }
+    } 
   }
 }

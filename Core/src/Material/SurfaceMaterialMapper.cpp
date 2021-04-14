@@ -208,7 +208,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
       ActionList<MaterialSurfaceCollector, MaterialVolumeCollector>;
   using AbortList = AbortList<EndOfWorldReached>;
 
-  auto propLogger = getDefaultLogger("SufMatMapProp", Logging::INFO);
+  auto propLogger = getDefaultLogger("SurfMatMapProp", Logging::INFO);
   PropagatorOptions<ActionList, AbortList> options(
       mState.geoContext, mState.magFieldContext, LoggerWrapper{*propLogger});
 
