@@ -67,8 +67,17 @@ class RootVertexPerformanceWriter final
   std::vector<float> m_diffy;
   std::vector<float> m_diffz;
 
-  int m_nrecoVtx = -1;
-  int m_ntrueVtx = -1;
+  std::vector<float> m_recoVtxx;
+  std::vector<float> m_recoVtxy;
+  std::vector<float> m_recoVtxz;
+
+  std::vector<float> m_trueVtxx;
+  std::vector<float> m_trueVtxy;
+  std::vector<float> m_trueVtxz;
+
+  int m_nrecoVtx = -1;              ///< Number of reconstructed vertices
+  int m_ntrueVtx = -1;              ///< Number of true vertices
+  int m_nmaxAcceptanceVtx = -1;     ///< Number of max. vertices in acceptance
 };
 
 }  // namespace ActsExamples

@@ -66,8 +66,15 @@ ActsExamples::RootVertexPerformanceWriter::RootVertexPerformanceWriter(
     m_outputTree->Branch("diffx", &m_diffx);
     m_outputTree->Branch("diffy", &m_diffy);
     m_outputTree->Branch("diffz", &m_diffz);
+    m_outputTree->Branch("recoVtxx", &m_recoVtxx);
+    m_outputTree->Branch("recoVtxy", &m_recoVtxy);
+    m_outputTree->Branch("recoVtxz", &m_recoVtxz);
+    m_outputTree->Branch("trueVtxx", &m_trueVtxx);
+    m_outputTree->Branch("trueVtxy", &m_trueVtxy);
+    m_outputTree->Branch("trueVtxz", &m_trueVtxz);
     m_outputTree->Branch("nRecoVtx", &m_nrecoVtx);
     m_outputTree->Branch("nTrueVtx", &m_ntrueVtx);
+    m_outputTree->Branch("nMaxAcceptanceVtx", &m_nmaxAcceptanceVtx);
   }
 }
 
@@ -99,8 +106,6 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
       ctx.eventStore.get<std::vector<ActsFatras::Particle>>(m_cfg.inputTruthParticles);
 
   std::vector<Acts::Vector3> truePosVec;
-  
-
   int oldVtxId = -1;
   std::vector<int> allPriVtxIds;
   for(const auto& p : truthParticles){
@@ -108,38 +113,36 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
     int priVtxId = p.particleId().vertexPrimary();
     int secVtxId = p.particleId().vertexSecondary();
 
-    // std::cout << "truthParticle primary vtx id: " << priVtxId << std::endl;
-    // std::cout << "truthParticle secondary vtx id: " <<secVtxId << std::endl;
-
     if(secVtxId != 0){
       // truthparticle from secondary vtx
       continue;
     }
 
     if(priVtxId != oldVtxId){
-      truePosVec.push_back(p.position());
+      const auto& truePos = p.position();
+      truePosVec.push_back(truePos);
       oldVtxId = priVtxId;
       allPriVtxIds.push_back(priVtxId);
+
+      m_trueVtxx.push_back(truePos[0]);
+      m_trueVtxy.push_back(truePos[1]);
+      m_trueVtxz.push_back(truePos[2]);
+
     }
   }
 
-
-  int maxVtxId = *std::max_element(allPriVtxIds.begin(), allPriVtxIds.end());
-
-  std::cout << "total number of truth vertices: " << maxVtxId << std::endl;
-
-
-
-
   std::vector<int> usedIdxs;
-
   for(const auto& rv : vertices){
     const auto& recoPos = rv.position();
 
+    m_recoVtxx.push_back(recoPos[0]);
+    m_recoVtxy.push_back(recoPos[1]);
+    m_recoVtxz.push_back(recoPos[2]);
+
     int clostestIdx = -1;
     double minDist = std::numeric_limits<double>::max();
-    for(int i = 0; i<truePosVec.size(); i++){
-      if(std::find(usedIdxs.begin(), usedIdxs.end(), clostestIdx) != usedIdxs.end()) {
+    for(unsigned int i = 0; i<truePosVec.size(); i++){
+      if(std::find(usedIdxs.begin(), usedIdxs.end(), i) != usedIdxs.end()) {
         // True vertex has already been used
         continue;
       } 
@@ -161,22 +164,19 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
   }
 
   m_nrecoVtx = vertices.size();
-  m_ntrueVtx = truePosVec.size();
+  m_nmaxAcceptanceVtx = truePosVec.size();
+  m_ntrueVtx = *std::max_element(allPriVtxIds.begin(), allPriVtxIds.end());
+
+  ACTS_DEBUG("Number of truth vertices in event: " << m_ntrueVtx);
+  ACTS_DEBUG("Number of max. vertices in acceptance in event: " << m_nmaxAcceptanceVtx);
+  ACTS_DEBUG("Number of reco vertices in event: " << m_ntrueVtx);
 
   // fill the variables
   m_outputTree->Fill();
 
   m_diffx.clear();
   m_diffy.clear();
-  m_diffz.clear();
-
-  ACTS_DEBUG("Number of truth vertices in event: " << truePosVec.size());
-  std::cout << "Found n truth vertices: " << truePosVec.size() << std::endl;
-
-
-  std::cout << "Writer: received nvertices: " << vertices.size() << std::endl;
-  std::cout << "Writer: received ntruthparticles: " << truthParticles.size() << std::endl;
-
+  m_diffz.clear(); 
 
   return ProcessCode::SUCCESS;
 }
