@@ -97,6 +97,9 @@ ActsExamples::RootVertexPerformanceWriter::endRun() {
 ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const std::vector<Acts::Vertex<Acts::BoundTrackParameters>>& vertices) {
 
+  // Exclusive access to the tree while writing
+  std::lock_guard<std::mutex> lock(m_writeMutex);
+
   ACTS_DEBUG("Number of reco vertices in event: " << vertices.size());
   if (m_outputFile == nullptr)
     return ProcessCode::SUCCESS;

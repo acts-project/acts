@@ -34,6 +34,7 @@ class RootTrajectoryParametersReader : public IReader {
     std::string particleCollection = "particleCollection";   ///< track collection to read
     std::string treeName = "trackparams_fitter";  ///< name of the output tree
     std::string inputFile;         ///< The name of the input file
+    std::string inputDir;         ///< The name of the input dir
 
     /// The default logger
     std::shared_ptr<const Acts::Logger> logger;

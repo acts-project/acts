@@ -49,6 +49,7 @@ int main(int argc, char* argv[]) {
       std::make_shared<RandomNumbers>(Options::readRandomNumbersConfig(vars));
   Sequencer sequencer(Options::readSequencerConfig(vars));
 
+  auto inputDir = vars["input-dir"].as<std::string>();
   auto outputDir = ensureWritableDirectory(vars["output-dir"].as<std::string>());
 
   // Setup the magnetic field
@@ -57,7 +58,8 @@ int main(int argc, char* argv[]) {
   RootTrajectoryParametersReader::Config trackParamsReader;
   trackParamsReader.trackCollection = "fittedTrackParameters";
   trackParamsReader.particleCollection = "truthParticles";
-  trackParamsReader.inputFile = "./data/reco_generic_new/ttbar_mu200/trackparams_fitter.root";
+  trackParamsReader.inputFile = "trackparams_fitter.root";
+  trackParamsReader.inputDir = inputDir;
   sequencer.addReader(std::make_shared<RootTrajectoryParametersReader>(
       trackParamsReader));
 

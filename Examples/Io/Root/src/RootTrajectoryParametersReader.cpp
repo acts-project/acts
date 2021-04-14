@@ -11,6 +11,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
 
 #include <iostream>
 
@@ -21,6 +22,13 @@ ActsExamples::RootTrajectoryParametersReader::RootTrajectoryParametersReader(
     const ActsExamples::RootTrajectoryParametersReader::Config& cfg)
     : ActsExamples::IReader(), m_cfg(cfg), m_events(0), m_inputChain(nullptr) {
   m_inputChain = new TChain(m_cfg.treeName.c_str());
+
+  if (m_cfg.inputFile.empty()) {
+    throw std::invalid_argument("Missing input filename");
+  }
+  if (m_cfg.inputDir.empty()) {
+    throw std::invalid_argument("Missing input directory");
+  }
 
   // Set the branches
   m_inputChain->SetBranchAddress("event_nr", &m_eventNr);
@@ -54,9 +62,11 @@ ActsExamples::RootTrajectoryParametersReader::RootTrajectoryParametersReader(
   m_inputChain->SetBranchAddress("err_eQOP_fit", &m_err_eQOP_fit);
   m_inputChain->SetBranchAddress("err_eT_fit", &m_err_eT_fit);
 
+  auto path = joinPaths(m_cfg.inputDir, m_cfg.inputFile);
+
   // add file to the input chain
-  m_inputChain->Add(m_cfg.inputFile.c_str());
-  ACTS_DEBUG("Adding File " << m_cfg.inputFile << " to tree '" << m_cfg.treeName
+  m_inputChain->Add(path.c_str());
+  ACTS_DEBUG("Adding File " << path << " to tree '" << m_cfg.treeName
                             << "'.");
 
 
