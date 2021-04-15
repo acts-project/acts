@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // The covariance transport
   esState.cov = cov;
-  es.covarianceTransport(esState);
+  es.transportCovarianceToCurvilinear(esState);
   BOOST_CHECK_NE(esState.cov, cov);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
@@ -445,7 +445,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_ABS(std::get<2>(boundState), 0., eps);
 
   // Transport the covariance in the context of a surface
-  es.covarianceTransport(esState, *plane);
+  es.transportCovarianceToBound(esState, *plane);
   BOOST_CHECK_NE(esState.cov, cov);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());

@@ -513,7 +513,7 @@ class CombinatorialKalmanFilter {
                                             << " detected.");
 
         // Transport the covariance to the surface
-        stepper.covarianceTransport(state.stepping, *surface);
+        stepper.transportCovarianceToBound(state.stepping, *surface);
 
         // Update state and stepper with pre material effects
         materialInteractor(surface, state, stepper, preUpdate);
