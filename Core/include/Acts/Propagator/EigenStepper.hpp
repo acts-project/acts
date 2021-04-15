@@ -97,7 +97,7 @@ class EigenStepper {
         // set the covariance transport flag to true and copy
         covTransport = true;
         cov = BoundSymMatrix(*par.covariance());
-        jacToGlobal = surface.jacobianLocalToGlobal(gctx, par.parameters());
+        jacToGlobal = surface.boundToFreeJacobian(gctx, par.parameters());
       }
     }
 
@@ -349,7 +349,7 @@ class EigenStepper {
   /// @param [in,out] state State of the stepper
   ///
   /// @return the full transport jacobian
-  void covarianceTransport(State& state) const;
+  void transportCovarianceToCurvilinear(State& state) const;
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current position,
@@ -360,7 +360,7 @@ class EigenStepper {
   /// @param [in,out] state State of the stepper
   /// @param [in] surface is the surface to which the covariance is forwarded to
   /// @note no check is done if the position is actually on the surface
-  void covarianceTransport(State& state, const Surface& surface) const;
+  void transportCovarianceToBound(State& state, const Surface& surface) const;
 
   /// Perform a Runge-Kutta track parameter propagation step
   ///

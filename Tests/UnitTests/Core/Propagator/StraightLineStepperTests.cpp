@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   // The covariance transport
   slsState.cov = cov;
-  sls.covarianceTransport(slsState);
+  sls.transportCovarianceToCurvilinear(slsState);
   BOOST_CHECK_NE(slsState.cov, cov);
   BOOST_CHECK_NE(slsState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_EQUAL(slsState.jacTransport, FreeMatrix::Identity());
@@ -343,7 +343,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_ABS(std::get<2>(boundState), 0., 1e-6);
 
   // Transport the covariance in the context of a surface
-  sls.covarianceTransport(slsState, *plane);
+  sls.transportCovarianceToBound(slsState, *plane);
   BOOST_CHECK_NE(slsState.cov, cov);
   BOOST_CHECK_NE(slsState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_EQUAL(slsState.jacTransport, FreeMatrix::Identity());
