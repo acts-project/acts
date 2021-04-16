@@ -42,7 +42,7 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
 
   // setup the branches
   m_outputTree->Branch("event_id", &m_eventId);
-  m_outputTree->Branch("particle_id", &m_particleId, "particle_id/l");
+  m_outputTree->Branch("particle_id", &m_particleId);
   m_outputTree->Branch("particle_type", &m_particleType);
   m_outputTree->Branch("process", &m_process);
   m_outputTree->Branch("vx", &m_vx);
@@ -57,6 +57,7 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
   m_outputTree->Branch("eta", &m_eta);
   m_outputTree->Branch("phi", &m_phi);
   m_outputTree->Branch("pt", &m_pt);
+  m_outputTree->Branch("p", &m_p);
   m_outputTree->Branch("vertex_primary", &m_vertexPrimary);
   m_outputTree->Branch("vertex_secondary", &m_vertexSecondary);
   m_outputTree->Branch("particle", &m_particle);
@@ -102,6 +103,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     m_vt.push_back(particle.fourPosition().w() / Acts::UnitConstants::ns);
     // momentum
     const auto p = particle.absoluteMomentum() / Acts::UnitConstants::GeV;
+    m_p.push_back(p);
     m_px.push_back(p * particle.unitDirection().x());
     m_py.push_back(p * particle.unitDirection().y());
     m_pz.push_back(p * particle.unitDirection().z());
@@ -122,7 +124,6 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
 
   m_outputTree->Fill();
 
-  m_eventId.clear();
   m_particleId.clear();
   m_particleType.clear();
   m_process.clear();
@@ -130,6 +131,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
   m_vy.clear();
   m_vz.clear();
   m_vt.clear();
+  m_p.clear();
   m_px.clear();
   m_py.clear();
   m_pz.clear();
