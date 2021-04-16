@@ -108,6 +108,10 @@ class Particle {
     m_absMomentum = absMomentum;
     return *this;
   }
+
+  /// Set the particle charge.
+  Particle &setCharge(Scalar charge) { return m_charge = charge, *this; }
+
   /// Change the energy by the given amount.
   ///
   /// Energy loss corresponds to a negative change. If the updated energy
