@@ -29,12 +29,14 @@ class RootParticleReader : public IReader {
  public:
   /// @brief The nested configuration struct
   struct Config {
-    std::string particleCollection = "particleCollection";   ///< particle collection to read
-    std::string vertexPrimaryCollection;                    ///< primary vertex collection to read
-    std::string vertexSecondaryCollection;                  ///< secondary vertex collection to read
-    std::string treeName;  ///< name of the output tree
-    std::string inputFile;         ///< The name of the input file
-    std::string inputDir;         ///< The name of the input dir
+    std::string particleCollection =
+        "particleCollection";             ///< particle collection to read
+    std::string vertexPrimaryCollection;  ///< primary vertex collection to read
+    std::string
+        vertexSecondaryCollection;  ///< secondary vertex collection to read
+    std::string treeName;           ///< name of the output tree
+    std::string inputFile;          ///< The name of the input file
+    std::string inputDir;           ///< The name of the input dir
 
     /// The default logger
     std::shared_ptr<const Acts::Logger> logger;

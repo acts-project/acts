@@ -22,7 +22,6 @@
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
-
 #include <ios>
 #include <stdexcept>
 
@@ -40,7 +39,6 @@ ActsExamples::RootVertexPerformanceWriter::RootVertexPerformanceWriter(
     : WriterT(cfg.inputVertices, "RootVertexPerformanceWriter", lvl),
       m_cfg(cfg),
       m_outputFile(cfg.rootFile) {
-
   if (cfg.outputFilename.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
@@ -51,10 +49,12 @@ ActsExamples::RootVertexPerformanceWriter::RootVertexPerformanceWriter(
     throw std::invalid_argument("Collection with all truth particles missing");
   }
   if (m_cfg.inputSelectedTruthParticles.empty()) {
-    throw std::invalid_argument("Collection with selected truth particles missing");
+    throw std::invalid_argument(
+        "Collection with selected truth particles missing");
   }
   if (m_cfg.inputAssociatedTruthParticles.empty()) {
-    throw std::invalid_argument("Collection with track-associated truth particles missing");
+    throw std::invalid_argument(
+        "Collection with track-associated truth particles missing");
   }
 
   // Setup ROOT I/O
@@ -88,15 +88,13 @@ ActsExamples::RootVertexPerformanceWriter::RootVertexPerformanceWriter(
   }
 }
 
-ActsExamples::RootVertexPerformanceWriter::
-    ~RootVertexPerformanceWriter() {
+ActsExamples::RootVertexPerformanceWriter::~RootVertexPerformanceWriter() {
   if (m_outputFile) {
     m_outputFile->Close();
   }
 }
 
-ActsExamples::ProcessCode
-ActsExamples::RootVertexPerformanceWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::endRun() {
   if (m_outputFile) {
     m_outputFile->cd();
     m_outputTree->Write();
@@ -104,46 +102,44 @@ ActsExamples::RootVertexPerformanceWriter::endRun() {
   return ProcessCode::SUCCESS;
 }
 
-int ActsExamples::RootVertexPerformanceWriter::getNumberOfReconstructableVertices(const SimParticleContainer& collection) const
-{
-    // map for finding frequency
-    std::map<int,int>fmap;
-    
-    std::vector<int> reconstructableTruthVertices;
-   
-    // traverse the array for frequency
-    for(const auto& p : collection){
-      int secVtxId = p.particleId().vertexSecondary();
-      if(secVtxId != 0){
-       // truthparticle from secondary vtx
-        continue;
-      }
-      int priVtxId = p.particleId().vertexPrimary();
-      fmap[priVtxId]++;
+int ActsExamples::RootVertexPerformanceWriter::
+    getNumberOfReconstructableVertices(
+        const SimParticleContainer& collection) const {
+  // map for finding frequency
+  std::map<int, int> fmap;
+
+  std::vector<int> reconstructableTruthVertices;
+
+  // traverse the array for frequency
+  for (const auto& p : collection) {
+    int secVtxId = p.particleId().vertexSecondary();
+    if (secVtxId != 0) {
+      // truthparticle from secondary vtx
+      continue;
     }
-   
-    // iterate over the map
-    for(auto it:fmap)
-    {
-        // Require at least 2 tracks
-        if(it.second > 1)
-        {
-            reconstructableTruthVertices.push_back(it.first);
-        }
+    int priVtxId = p.particleId().vertexPrimary();
+    fmap[priVtxId]++;
+  }
+
+  // iterate over the map
+  for (auto it : fmap) {
+    // Require at least 2 tracks
+    if (it.second > 1) {
+      reconstructableTruthVertices.push_back(it.first);
     }
-    
-    return reconstructableTruthVertices.size();
+  }
+
+  return reconstructableTruthVertices.size();
 }
 
-int ActsExamples::RootVertexPerformanceWriter::getNumberOfTruePriVertices(const SimParticleContainer& collection) const
-{
+int ActsExamples::RootVertexPerformanceWriter::getNumberOfTruePriVertices(
+    const SimParticleContainer& collection) const {
   // Vector to store indices of all primary vertices
   std::set<int> allPriVtxIds;
-  for(const auto& p : collection){
-
+  for (const auto& p : collection) {
     int priVtxId = p.particleId().vertexPrimary();
     int secVtxId = p.particleId().vertexSecondary();
-    if(secVtxId != 0){
+    if (secVtxId != 0) {
       // truthparticle from secondary vtx
       continue;
     }
@@ -152,12 +148,11 @@ int ActsExamples::RootVertexPerformanceWriter::getNumberOfTruePriVertices(const 
   }
   // Size of set corresponds to total number of primary vertices
   return allPriVtxIds.size();
-  
 }
 
 ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
-    const AlgorithmContext& ctx, const std::vector<Acts::Vertex<Acts::BoundTrackParameters>>& vertices) {
-
+    const AlgorithmContext& ctx,
+    const std::vector<Acts::Vertex<Acts::BoundTrackParameters>>& vertices) {
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
@@ -173,43 +168,50 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
   // Get number of true primary vertices
   m_ntrueVtx = getNumberOfTruePriVertices(allTruthParticles);
 
-  ACTS_INFO("Total number of generated truth particles in event : " << allTruthParticles.size());
-  ACTS_INFO("Total number of generated truth primary vertices : " << m_ntrueVtx);
+  ACTS_INFO("Total number of generated truth particles in event : "
+            << allTruthParticles.size());
+  ACTS_INFO(
+      "Total number of generated truth primary vertices : " << m_ntrueVtx);
 
   // Read selected truth particle input collection
-  const auto& allSelectedParticles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputSelectedTruthParticles);
+  const auto& allSelectedParticles = ctx.eventStore.get<SimParticleContainer>(
+      m_cfg.inputSelectedTruthParticles);
   // Get number of true primary vertices
   m_nVtxDetAcceptance = getNumberOfTruePriVertices(allSelectedParticles);
 
-  ACTS_INFO("Total number of selected truth particles in event : " << allSelectedParticles.size());
-  ACTS_INFO("Total number of detector-accepted truth primary vertices : " << m_nVtxDetAcceptance);
+  ACTS_INFO("Total number of selected truth particles in event : "
+            << allSelectedParticles.size());
+  ACTS_INFO("Total number of detector-accepted truth primary vertices : "
+            << m_nVtxDetAcceptance);
 
   // Read track-associated truth particle input collection
   const auto& allAssociatedTruthParticles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputAssociatedTruthParticles);
+      ctx.eventStore.get<SimParticleContainer>(
+          m_cfg.inputAssociatedTruthParticles);
   // Get number of true primary vertices
-  m_nVtxReconstructable = getNumberOfReconstructableVertices(allAssociatedTruthParticles);
+  m_nVtxReconstructable =
+      getNumberOfReconstructableVertices(allAssociatedTruthParticles);
 
-  ACTS_INFO("Total number of reco track-associated truth particles in event : " << allAssociatedTruthParticles.size());
-  ACTS_INFO("Total number of reco track-associated truth primary vertices : " << m_nVtxReconstructable);
+  ACTS_INFO("Total number of reco track-associated truth particles in event : "
+            << allAssociatedTruthParticles.size());
+  ACTS_INFO("Total number of reco track-associated truth primary vertices : "
+            << m_nVtxReconstructable);
 
   // Collect all true primary vertex positions
   std::vector<Acts::Vector3> truePosVec;
   int oldVtxId = -1;
   // Loop over all truth particles associated to
   // fitted tracks
-  for(const auto& p : allTruthParticles){
-
+  for (const auto& p : allTruthParticles) {
     int priVtxId = p.particleId().vertexPrimary();
     int secVtxId = p.particleId().vertexSecondary();
 
-    if(secVtxId != 0){
+    if (secVtxId != 0) {
       // truthparticle from secondary vtx
       continue;
     }
 
-    if(priVtxId != oldVtxId){
+    if (priVtxId != oldVtxId) {
       const auto& truePos = p.position();
       truePosVec.push_back(truePos);
       oldVtxId = priVtxId;
@@ -217,14 +219,13 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
       m_trueVtxx.push_back(truePos[0]);
       m_trueVtxy.push_back(truePos[1]);
       m_trueVtxz.push_back(truePos[2]);
-
     }
   }
 
   // Delta-r matching between reco and truth vertices
   // Indices of already used truth vertices
   std::vector<int> usedIdxs;
-  for(const auto& rv : vertices){
+  for (const auto& rv : vertices) {
     const auto& recoPos = rv.position();
 
     m_recoVtxx.push_back(recoPos[0]);
@@ -233,19 +234,19 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
 
     int clostestIdx = -1;
     double minDist = std::numeric_limits<double>::max();
-    for(unsigned int i = 0; i<truePosVec.size(); i++){
-      if(std::find(usedIdxs.begin(), usedIdxs.end(), i) != usedIdxs.end()) {
+    for (unsigned int i = 0; i < truePosVec.size(); i++) {
+      if (std::find(usedIdxs.begin(), usedIdxs.end(), i) != usedIdxs.end()) {
         // True vertex has already been used
         continue;
-      } 
+      }
 
       double dist = (recoPos - truePosVec[i]).norm();
-      if(dist < minDist){
+      if (dist < minDist) {
         clostestIdx = i;
         minDist = dist;
       }
     }
-    if(clostestIdx == -1){
+    if (clostestIdx == -1) {
       ACTS_WARNING("No matching true vertex found.");
       continue;
     }
@@ -255,13 +256,12 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
     m_diffz.push_back(recoPos[2] - truePosVec[clostestIdx][2]);
   }
 
-
   // fill the variables
   m_outputTree->Fill();
 
   m_diffx.clear();
   m_diffy.clear();
-  m_diffz.clear(); 
+  m_diffz.clear();
 
   return ProcessCode::SUCCESS;
 }

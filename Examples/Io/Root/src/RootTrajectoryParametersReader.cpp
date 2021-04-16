@@ -7,10 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Root/RootTrajectoryParametersReader.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <iostream>
@@ -66,9 +67,7 @@ ActsExamples::RootTrajectoryParametersReader::RootTrajectoryParametersReader(
 
   // add file to the input chain
   m_inputChain->Add(path.c_str());
-  ACTS_DEBUG("Adding File " << path << " to tree '" << m_cfg.treeName
-                            << "'.");
-
+  ACTS_DEBUG("Adding File " << path << " to tree '" << m_cfg.treeName << "'.");
 
   m_events = m_inputChain->GetEntries();
   ACTS_DEBUG("The full chain has " << m_events << " entries.");
@@ -83,7 +82,8 @@ ActsExamples::RootTrajectoryParametersReader::availableEvents() const {
   return {0u, m_events};
 }
 
-ActsExamples::RootTrajectoryParametersReader::~RootTrajectoryParametersReader() {
+ActsExamples::RootTrajectoryParametersReader::
+    ~RootTrajectoryParametersReader() {
   delete m_multiTrajNr;
   delete m_subTrajNr;
   delete m_t_barcode;
@@ -125,21 +125,22 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersReader::read(
     // now read
 
     std::shared_ptr<Acts::PerigeeSurface> perigeeSurface =
-        Acts::Surface::makeShared<Acts::PerigeeSurface>(Acts::Vector3(0., 0., 0.));
+        Acts::Surface::makeShared<Acts::PerigeeSurface>(
+            Acts::Vector3(0., 0., 0.));
 
     // The collection to be written
     std::vector<Acts::BoundTrackParameters> mtrackCollection;
     SimParticleContainer mTruthParticleCollection;
-  
+
     // Read the correct entry: batch size * event_number + ib
     m_inputChain->GetEntry(context.eventNumber);
     ACTS_VERBOSE("Reading entry: " << context.eventNumber);
 
     unsigned int nTracks = m_eLOC0_fit->size();
-    for(unsigned int i = 0; i < nTracks; i++){
-
+    for (unsigned int i = 0; i < nTracks; i++) {
       Acts::BoundVector paramVec;
-      paramVec << (*m_eLOC0_fit)[i], (*m_eLOC1_fit)[i], (*m_ePHI_fit)[i], (*m_eTHETA_fit)[i], (*m_eQOP_fit)[i], (*m_eT_fit)[i];
+      paramVec << (*m_eLOC0_fit)[i], (*m_eLOC1_fit)[i], (*m_ePHI_fit)[i],
+          (*m_eTHETA_fit)[i], (*m_eQOP_fit)[i], (*m_eT_fit)[i];
 
       // Resolutions
       double resD0 = (*m_err_eLOC0_fit)[i];
@@ -147,32 +148,36 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersReader::read(
       double resPh = (*m_err_ePHI_fit)[i];
       double resTh = (*m_err_eTHETA_fit)[i];
       double resQp = (*m_err_eQOP_fit)[i];
-      double resT  = (*m_err_eT_fit)[i];
+      double resT = (*m_err_eT_fit)[i];
 
       // Fill vector of track objects with simple covariance matrix
       Acts::BoundSymMatrix covMat;
 
       covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
-          0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., resT*resT;
-   
-      
-      mtrackCollection.push_back(Acts::BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat)));
+          0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0.,
+          resT * resT;
+
+      mtrackCollection.push_back(Acts::BoundTrackParameters(
+          perigeeSurface, paramVec, std::move(covMat)));
     }
 
     unsigned int nTruthParticles = m_t_vx->size();
-    for(unsigned int i = 0; i < nTruthParticles; i++){
+    for (unsigned int i = 0; i < nTruthParticles; i++) {
       ActsFatras::Particle truthParticle;
 
-      truthParticle.setPosition4((*m_t_vx)[i], (*m_t_vy)[i], (*m_t_vz)[i], (*m_t_time)[i]);
+      truthParticle.setPosition4((*m_t_vx)[i], (*m_t_vy)[i], (*m_t_vz)[i],
+                                 (*m_t_time)[i]);
       truthParticle.setDirection((*m_t_px)[i], (*m_t_py)[i], (*m_t_pz)[i]);
       truthParticle.setParticleId((*m_t_barcode)[i]);
 
-      mTruthParticleCollection.insert(mTruthParticleCollection.end(), truthParticle);
+      mTruthParticleCollection.insert(mTruthParticleCollection.end(),
+                                      truthParticle);
     }
     // Write the collections to the EventStore
     context.eventStore.add(m_cfg.trackCollection, std::move(mtrackCollection));
-    context.eventStore.add(m_cfg.particleCollection, std::move(mTruthParticleCollection));
+    context.eventStore.add(m_cfg.particleCollection,
+                           std::move(mTruthParticleCollection));
   }
   // Return success flag
   return ActsExamples::ProcessCode::SUCCESS;

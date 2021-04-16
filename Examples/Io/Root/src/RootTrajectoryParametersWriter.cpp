@@ -169,7 +169,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersWriter::writeT(
                                     particleHitCounts);
       if (not particleHitCounts.empty()) {
         // Get the barcode of the majority truth particle
-        long unsigned int barcode = particleHitCounts.front().particleId.value();
+        long unsigned int barcode =
+            particleHitCounts.front().particleId.value();
         m_t_barcode.push_back(barcode);
         // Find the truth particle via the barcode
         auto ip = particles.find(barcode);
@@ -209,14 +210,18 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersWriter::writeT(
         m_eTHETA_fit.push_back(parameter[Acts::eBoundTheta]);
         m_eQOP_fit.push_back(parameter[Acts::eBoundQOverP]);
         m_eT_fit.push_back(parameter[Acts::eBoundTime]);
-        m_err_eLOC0_fit.push_back(sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
-        m_err_eLOC1_fit.push_back(sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
-        m_err_ePHI_fit.push_back(sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
+        m_err_eLOC0_fit.push_back(
+            sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
+        m_err_eLOC1_fit.push_back(
+            sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+        m_err_ePHI_fit.push_back(
+            sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
         m_err_eTHETA_fit.push_back(
             sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
         m_err_eQOP_fit.push_back(
             sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
-        m_err_eT_fit.push_back(sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
+        m_err_eT_fit.push_back(
+            sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
       }
 
       m_hasFittedParams.push_back(hasFittedParams);
@@ -226,30 +231,30 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersWriter::writeT(
   // fill the variables
   m_outputTree->Fill();
 
-  m_multiTrajNr.clear();  
-  m_subTrajNr.clear();  
-  m_t_barcode.clear();   
-  m_t_charge.clear();            
-  m_t_time.clear();            
-  m_t_vx.clear();             
-  m_t_vy.clear();             
-  m_t_vz.clear();             
-  m_t_px.clear();             
-  m_t_py.clear();             
-  m_t_pz.clear();             
-  m_t_theta.clear();          
-  m_t_phi.clear();            
-  m_t_pT.clear();            
-  m_t_eta.clear();            
-  m_hasFittedParams.clear();        
+  m_multiTrajNr.clear();
+  m_subTrajNr.clear();
+  m_t_barcode.clear();
+  m_t_charge.clear();
+  m_t_time.clear();
+  m_t_vx.clear();
+  m_t_vy.clear();
+  m_t_vz.clear();
+  m_t_px.clear();
+  m_t_py.clear();
+  m_t_pz.clear();
+  m_t_theta.clear();
+  m_t_phi.clear();
+  m_t_pT.clear();
+  m_t_eta.clear();
+  m_hasFittedParams.clear();
   m_eLOC0_fit.clear();
   m_eLOC1_fit.clear();
-  m_ePHI_fit.clear();        
-  m_eTHETA_fit.clear();      
-  m_eQOP_fit.clear();        
-  m_eT_fit.clear();          
-  m_err_eLOC0_fit.clear(); 
-  m_err_eLOC1_fit.clear(); 
+  m_ePHI_fit.clear();
+  m_eTHETA_fit.clear();
+  m_eQOP_fit.clear();
+  m_eT_fit.clear();
+  m_err_eLOC0_fit.clear();
+  m_err_eLOC1_fit.clear();
   m_err_ePHI_fit.clear();
   m_err_eTHETA_fit.clear();
   m_err_eQOP_fit.clear();

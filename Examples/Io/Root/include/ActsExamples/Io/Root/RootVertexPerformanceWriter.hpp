@@ -9,10 +9,10 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
-#include "ActsExamples/Framework/WriterT.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/WriterT.hpp"
 
 #include <mutex>
 #include <vector>
@@ -60,13 +60,16 @@ class RootVertexPerformanceWriter final
  protected:
   /// @brief Write method called by the base class
   /// @param [in] ctx is the algorithm context for event information
-  ProcessCode writeT(const AlgorithmContext& ctx, const std::vector<Acts::Vertex<Acts::BoundTrackParameters>>& vertices) final override;
+  ProcessCode writeT(
+      const AlgorithmContext& ctx,
+      const std::vector<Acts::Vertex<Acts::BoundTrackParameters>>& vertices)
+      final override;
 
  private:
   Config m_cfg;             ///< The config class
   std::mutex m_writeMutex;  ///< Mutex used to protect multi-threaded writes
-  TFile* m_outputFile{nullptr};   ///< The output file
-  TTree* m_outputTree{nullptr};   ///< The output tree
+  TFile* m_outputFile{nullptr};  ///< The output file
+  TTree* m_outputTree{nullptr};  ///< The output tree
 
   std::vector<float> m_diffx;
   std::vector<float> m_diffy;
@@ -80,12 +83,15 @@ class RootVertexPerformanceWriter final
   std::vector<float> m_trueVtxy;
   std::vector<float> m_trueVtxz;
 
-  int m_nrecoVtx = -1;              ///< Number of reconstructed vertices
-  int m_ntrueVtx = -1;              ///< Number of true vertices
-  int m_nVtxDetAcceptance = -1;     ///< Number of vertices in detector acceptance
-  int m_nVtxReconstructable = -1;   ///< Max. number of reconstructable vertices (detector acceptance + tracking efficiency)
+  int m_nrecoVtx = -1;           ///< Number of reconstructed vertices
+  int m_ntrueVtx = -1;           ///< Number of true vertices
+  int m_nVtxDetAcceptance = -1;  ///< Number of vertices in detector acceptance
+  int m_nVtxReconstructable =
+      -1;  ///< Max. number of reconstructable vertices (detector acceptance +
+           ///< tracking efficiency)
 
-  int getNumberOfReconstructableVertices(const SimParticleContainer& collection) const;
+  int getNumberOfReconstructableVertices(
+      const SimParticleContainer& collection) const;
 
   int getNumberOfTruePriVertices(const SimParticleContainer& collection) const;
 };

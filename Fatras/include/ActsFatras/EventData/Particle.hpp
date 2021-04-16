@@ -69,7 +69,9 @@ class Particle {
   /// Set the process type that generated this particle.
   Particle &setProcess(ProcessType proc) { return m_process = proc, *this; }
   /// Set the particle ID.
-  Particle &setParticleId(Barcode barcode) { return m_particleId = barcode, *this; }
+  Particle &setParticleId(Barcode barcode) {
+    return m_particleId = barcode, *this;
+  }
   /// Set the space-time position four-vector.
   Particle &setPosition4(const Vector4 &pos4) {
     m_position4 = pos4;

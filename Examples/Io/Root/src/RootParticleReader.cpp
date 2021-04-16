@@ -7,10 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <iostream>
@@ -61,8 +62,7 @@ ActsExamples::RootParticleReader::RootParticleReader(
 
   // add file to the input chain
   m_inputChain->Add(path.c_str());
-  ACTS_DEBUG("Adding File " << path << " to tree '" << m_cfg.treeName
-                            << "'.");
+  ACTS_DEBUG("Adding File " << path << " to tree '" << m_cfg.treeName << "'.");
 
   m_events = m_inputChain->GetEntries();
   ACTS_DEBUG("The full chain has " << m_events << " entries.");
@@ -72,8 +72,8 @@ std::string ActsExamples::RootParticleReader::name() const {
   return m_cfg.name;
 }
 
-std::pair<size_t, size_t>
-ActsExamples::RootParticleReader::availableEvents() const {
+std::pair<size_t, size_t> ActsExamples::RootParticleReader::availableEvents()
+    const {
   return {0u, m_events};
 }
 
@@ -125,12 +125,12 @@ ActsExamples::ProcessCode ActsExamples::RootParticleReader::read(
 
     unsigned int nParticles = m_particleId->size();
 
-    for(unsigned int i = 0; i < nParticles; i++){
+    for (unsigned int i = 0; i < nParticles; i++) {
       SimParticle p;
 
       p.setParticleId((*m_particleId)[i]);
-      p.setPosition4((*m_vx)[i],(*m_vy)[i],(*m_vz)[i],(*m_vt)[i]);
-      p.setDirection((*m_px)[i],(*m_py)[i],(*m_pz)[i]);
+      p.setPosition4((*m_vx)[i], (*m_vy)[i], (*m_vz)[i], (*m_vt)[i]);
+      p.setDirection((*m_px)[i], (*m_py)[i], (*m_pz)[i]);
       p.setAbsoluteMomentum((*m_p)[i]);
       p.setCharge((*m_q)[i]);
 
@@ -138,18 +138,20 @@ ActsExamples::ProcessCode ActsExamples::RootParticleReader::read(
       priVtxCollection.push_back((*m_vertexPrimary)[i]);
       secVtxCollection.push_back((*m_vertexSecondary)[i]);
     }
-    
+
     // Write the collections to the EventStore
-    context.eventStore.add(m_cfg.particleCollection, std::move(particleContainer));
+    context.eventStore.add(m_cfg.particleCollection,
+                           std::move(particleContainer));
 
     if (not m_cfg.vertexPrimaryCollection.empty()) {
-      context.eventStore.add(m_cfg.vertexPrimaryCollection, std::move(priVtxCollection));
+      context.eventStore.add(m_cfg.vertexPrimaryCollection,
+                             std::move(priVtxCollection));
     }
 
     if (not m_cfg.vertexSecondaryCollection.empty()) {
-      context.eventStore.add(m_cfg.vertexSecondaryCollection, std::move(secVtxCollection));
+      context.eventStore.add(m_cfg.vertexSecondaryCollection,
+                             std::move(secVtxCollection));
     }
-
   }
   // Return success flag
   return ActsExamples::ProcessCode::SUCCESS;

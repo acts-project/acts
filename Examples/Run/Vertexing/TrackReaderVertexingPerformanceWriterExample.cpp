@@ -14,17 +14,17 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/Io/Root/RootParticleReader.hpp"
+#include "ActsExamples/Io/Root/RootTrajectoryParametersReader.hpp"
+#include "ActsExamples/Io/Root/RootVertexPerformanceWriter.hpp"
 #include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Printers/TrackParametersPrinter.hpp"
+#include "ActsExamples/TruthTracking/ParticleSelector.hpp"
+#include "ActsExamples/TruthTracking/TrackSelector.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/VertexingOptions.hpp"
-#include "ActsExamples/Io/Root/RootTrajectoryParametersReader.hpp"
-#include "ActsExamples/Io/Root/RootParticleReader.hpp"
-#include "ActsExamples/Io/Root/RootVertexPerformanceWriter.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
-#include "ActsExamples/TruthTracking/TrackSelector.hpp"
-#include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 
 #include <memory>
 
@@ -53,7 +53,8 @@ int main(int argc, char* argv[]) {
   Sequencer sequencer(Options::readSequencerConfig(vars));
 
   auto inputDir = vars["input-dir"].as<std::string>();
-  auto outputDir = ensureWritableDirectory(vars["output-dir"].as<std::string>());
+  auto outputDir =
+      ensureWritableDirectory(vars["output-dir"].as<std::string>());
 
   // Setup the magnetic field
   auto magneticField = Options::readMagneticField(vars);
@@ -61,10 +62,10 @@ int main(int argc, char* argv[]) {
   RootParticleReader::Config particleReaderConfig;
   particleReaderConfig.particleCollection = "allTruthParticles";
   particleReaderConfig.inputFile = "particles.root";
-  particleReaderConfig.treeName  = "particles";
+  particleReaderConfig.treeName = "particles";
   particleReaderConfig.inputDir = inputDir;
-  sequencer.addReader(std::make_shared<RootParticleReader>(
-      particleReaderConfig));
+  sequencer.addReader(
+      std::make_shared<RootParticleReader>(particleReaderConfig));
 
   // add additional particle selection
   auto select = ActsExamples::ParticleSelector::readConfig(vars);
@@ -78,8 +79,8 @@ int main(int argc, char* argv[]) {
   trackParamsReader.particleCollection = "associatedTruthParticles";
   trackParamsReader.inputFile = "trackparams_fitter.root";
   trackParamsReader.inputDir = inputDir;
-  sequencer.addReader(std::make_shared<RootTrajectoryParametersReader>(
-      trackParamsReader));
+  sequencer.addReader(
+      std::make_shared<RootTrajectoryParametersReader>(trackParamsReader));
 
   // Apply some primary vertexing selection cuts
   TrackSelector::Config trackSelectorConfig;
@@ -103,16 +104,17 @@ int main(int argc, char* argv[]) {
 
   // write track parameters from fitting
   RootVertexPerformanceWriter::Config vertexWriterConfig;
-  vertexWriterConfig.inputAllTruthParticles = particleReaderConfig.particleCollection;
+  vertexWriterConfig.inputAllTruthParticles =
+      particleReaderConfig.particleCollection;
   vertexWriterConfig.inputSelectedTruthParticles = select.outputParticles;
-  vertexWriterConfig.inputAssociatedTruthParticles = trackParamsReader.particleCollection;
+  vertexWriterConfig.inputAssociatedTruthParticles =
+      trackParamsReader.particleCollection;
   vertexWriterConfig.inputVertices = findVertices.outputVertices;
   vertexWriterConfig.outputFilename = "vertexperformance_AMVF.root";
   vertexWriterConfig.outputTreename = "amvf";
   vertexWriterConfig.outputDir = outputDir;
   sequencer.addWriter(std::make_shared<RootVertexPerformanceWriter>(
       vertexWriterConfig, logLevel));
-
 
   return sequencer.run();
 }

@@ -124,7 +124,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   ACTS_INFO("Found " << vertices.size() << " vertices in event");
   for (const auto& vtx : vertices) {
     ACTS_DEBUG("Found vertex at " << vtx.fullPosition().transpose() << " with "
-                                 << vtx.tracks().size() << " tracks.");
+                                  << vtx.tracks().size() << " tracks.");
   }
 
   // store proto vertices extracted from the found vertices

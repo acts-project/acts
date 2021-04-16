@@ -77,27 +77,28 @@ class RootTrajectoryParametersWriter final
  private:
   Config m_cfg;             ///< The config class
   std::mutex m_writeMutex;  ///< Mutex used to protect multi-threaded writes
-  TFile* m_outputFile{nullptr};   ///< The output file
-  TTree* m_outputTree{nullptr};   ///< The output tree
-  unsigned int m_eventNr{0};      ///< the event number
+  TFile* m_outputFile{nullptr};             ///< The output file
+  TTree* m_outputTree{nullptr};             ///< The output tree
+  unsigned int m_eventNr{0};                ///< the event number
   std::vector<unsigned int> m_multiTrajNr;  ///< the multi-trajectory number
-  std::vector<unsigned int> m_subTrajNr;  ///< the multi-trajectory sub-trajectory number
+  std::vector<unsigned int>
+      m_subTrajNr;  ///< the multi-trajectory sub-trajectory number
 
   std::vector<unsigned long> m_t_barcode;  ///< Truth particle barcode
-  std::vector<int> m_t_charge;           ///< Truth particle charge
-  std::vector<float> m_t_time;           ///< Truth particle time
-  std::vector<float> m_t_vx;            ///< Truth particle vertex x
-  std::vector<float> m_t_vy;            ///< Truth particle vertex y
-  std::vector<float> m_t_vz;            ///< Truth particle vertex z
-  std::vector<float> m_t_px;            ///< Truth particle initial momentum px
-  std::vector<float> m_t_py;            ///< Truth particle initial momentum py
-  std::vector<float> m_t_pz;            ///< Truth particle initial momentum pz
-  std::vector<float> m_t_theta;         ///< Truth particle initial momentum theta
-  std::vector<float> m_t_phi;           ///< Truth particle initial momentum phi
-  std::vector<float> m_t_pT;            ///< Truth particle initial momentum pT
-  std::vector<float> m_t_eta;           ///< Truth particle initial momentum eta
+  std::vector<int> m_t_charge;             ///< Truth particle charge
+  std::vector<float> m_t_time;             ///< Truth particle time
+  std::vector<float> m_t_vx;               ///< Truth particle vertex x
+  std::vector<float> m_t_vy;               ///< Truth particle vertex y
+  std::vector<float> m_t_vz;               ///< Truth particle vertex z
+  std::vector<float> m_t_px;     ///< Truth particle initial momentum px
+  std::vector<float> m_t_py;     ///< Truth particle initial momentum py
+  std::vector<float> m_t_pz;     ///< Truth particle initial momentum pz
+  std::vector<float> m_t_theta;  ///< Truth particle initial momentum theta
+  std::vector<float> m_t_phi;    ///< Truth particle initial momentum phi
+  std::vector<float> m_t_pT;     ///< Truth particle initial momentum pT
+  std::vector<float> m_t_eta;    ///< Truth particle initial momentum eta
 
-  std::vector<bool> m_hasFittedParams;        ///< if the track has fitted parameter
+  std::vector<bool> m_hasFittedParams;  ///< if the track has fitted parameter
   std::vector<float> m_eLOC0_fit;       ///< fitted parameter eBoundLoc0
   std::vector<float> m_eLOC1_fit;       ///< fitted parameter eBoundLoc1
   std::vector<float> m_ePHI_fit;        ///< fitted parameter ePHI
