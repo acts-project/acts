@@ -103,6 +103,7 @@ class RootParticleReader : public IReader {
   std::vector<float>* m_eta = new std::vector<float>;
   std::vector<float>* m_phi = new std::vector<float>;
   std::vector<float>* m_pt = new std::vector<float>;
+  std::vector<float>* m_p = new std::vector<float>;
   std::vector<uint32_t>* m_vertexPrimary = new std::vector<uint32_t>;
   std::vector<uint32_t>* m_vertexSecondary = new std::vector<uint32_t>;
   std::vector<uint32_t>* m_particle = new std::vector<uint32_t>;

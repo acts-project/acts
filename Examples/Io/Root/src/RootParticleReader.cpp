@@ -42,6 +42,7 @@ ActsExamples::RootParticleReader::RootParticleReader(
   m_inputChain->SetBranchAddress("vy", &m_vy);
   m_inputChain->SetBranchAddress("vz", &m_vz);
   m_inputChain->SetBranchAddress("vt", &m_vt);
+  m_inputChain->SetBranchAddress("p", &m_p);
   m_inputChain->SetBranchAddress("px", &m_px);
   m_inputChain->SetBranchAddress("py", &m_py);
   m_inputChain->SetBranchAddress("pz", &m_pz);
@@ -84,6 +85,7 @@ ActsExamples::RootParticleReader::~RootParticleReader() {
   delete m_vy;
   delete m_vz;
   delete m_vt;
+  delete m_p;
   delete m_px;
   delete m_py;
   delete m_pz;
@@ -110,7 +112,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleReader::read(
     // now read
 
     // The particle collection to be written
-    std::vector<SimParticle> particleContainer;
+    SimParticleContainer particleContainer;
 
     // Primary vertex collection
     std::vector<uint32_t> priVtxCollection;
@@ -127,11 +129,12 @@ ActsExamples::ProcessCode ActsExamples::RootParticleReader::read(
       SimParticle p;
 
       p.setParticleId((*m_particleId)[i]);
-
       p.setPosition4((*m_vx)[i],(*m_vy)[i],(*m_vz)[i],(*m_vt)[i]);
       p.setDirection((*m_px)[i],(*m_py)[i],(*m_pz)[i]);
+      p.setAbsoluteMomentum((*m_p)[i]);
+      p.setCharge((*m_q)[i]);
 
-      particleContainer.push_back(p);
+      particleContainer.insert(particleContainer.end(), p);
       priVtxCollection.push_back((*m_vertexPrimary)[i]);
       secVtxCollection.push_back((*m_vertexSecondary)[i]);
     }
