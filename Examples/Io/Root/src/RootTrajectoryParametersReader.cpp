@@ -10,7 +10,7 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <iostream>
@@ -129,7 +129,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersReader::read(
 
     // The collection to be written
     std::vector<Acts::BoundTrackParameters> mtrackCollection;
-    std::vector<ActsFatras::Particle> mTruthParticleCollection;
+    SimParticleContainer mTruthParticleCollection;
   
     // Read the correct entry: batch size * event_number + ib
     m_inputChain->GetEntry(context.eventNumber);
@@ -168,7 +168,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersReader::read(
       truthParticle.setDirection((*m_t_px)[i], (*m_t_py)[i], (*m_t_pz)[i]);
       truthParticle.setParticleId((*m_t_barcode)[i]);
 
-      mTruthParticleCollection.push_back(truthParticle);
+      mTruthParticleCollection.insert(mTruthParticleCollection.end(), truthParticle);
     }
     // Write the collections to the EventStore
     context.eventStore.add(m_cfg.trackCollection, std::move(mtrackCollection));

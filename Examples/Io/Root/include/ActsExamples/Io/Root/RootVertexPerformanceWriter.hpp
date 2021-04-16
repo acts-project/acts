@@ -12,6 +12,7 @@
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 
 #include <mutex>
 #include <vector>
@@ -26,8 +27,12 @@ class RootVertexPerformanceWriter final
     : public WriterT<std::vector<Acts::Vertex<Acts::BoundTrackParameters>>> {
  public:
   struct Config {
-    /// Input truth trajectories collection
-    std::string inputTruthParticles;
+    /// All input truth particle collection
+    std::string inputAllTruthParticles;
+    /// Selected input truth particle collection
+    std::string inputSelectedTruthParticles;
+    /// Truth particles associated to fitted tracks
+    std::string inputAssociatedTruthParticles;
     /// Input vertex collection.
     std::string inputVertices;
     /// output directory.
@@ -77,7 +82,12 @@ class RootVertexPerformanceWriter final
 
   int m_nrecoVtx = -1;              ///< Number of reconstructed vertices
   int m_ntrueVtx = -1;              ///< Number of true vertices
-  int m_nmaxAcceptanceVtx = -1;     ///< Number of max. vertices in acceptance
+  int m_nVtxDetAcceptance = -1;     ///< Number of vertices in detector acceptance
+  int m_nVtxReconstructable = -1;   ///< Max. number of reconstructable vertices (detector acceptance + tracking efficiency)
+
+  int getNumberOfReconstructableVertices(const SimParticleContainer& collection) const;
+
+  int getNumberOfTruePriVertices(const SimParticleContainer& collection) const;
 };
 
 }  // namespace ActsExamples
