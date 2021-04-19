@@ -16,6 +16,8 @@
 #include <map>
 #include <mutex>
 
+namespace Acts {
+namespace Cuda {
 namespace Nmm {
 
 struct CudaDeviceId {
@@ -27,7 +29,7 @@ struct CudaDeviceId {
 
 	private:
 		valueType id_;
-}
+};
 
 namespace MemoryResource {
 namespace detail {
@@ -44,6 +46,7 @@ inline std::mutex& mapLock() {
 
 inline auto& getMap() {
 	static std::map<CudaDeviceId::valueType, DeviceMemoryResource*> deviceIdToResource;
+	return deviceIdToResource;
 }
 
 inline CudaDeviceId currentDevice() {
@@ -58,12 +61,7 @@ inline DeviceMemoryResource* getPerDeviceResource(CudaDeviceId id) {
 
 	auto const found = map.find(id.value());
 
-	if(found == map.end()) {
-		map[id.value()] = detail::initialResource();
-		return map[id.value].second;
-	} else {
-		return found->second;
-	}
+	return (found == map.end()) ? (map[id.value()] = detail::initialResource()) : found->second;
 }
 
 inline DeviceMemoryResource* setPerDeviceResource(CudaDeviceId id, DeviceMemoryResource* newMemoryResource) {
@@ -72,7 +70,7 @@ inline DeviceMemoryResource* setPerDeviceResource(CudaDeviceId id, DeviceMemoryR
 	auto const oldItr = map.find(id.value());
 
 	auto oldMemoryResource = (oldItr == map.end()) ? detail::initialResource() : oldItr->second;
-	map[id.value()] = (newMemoryResource == nullptr) ? detail:initialResource() : newMemoryResource;
+	map[id.value()] = (newMemoryResource == nullptr) ? detail::initialResource() : newMemoryResource;
 	return oldMemoryResource;
 }
 
@@ -84,6 +82,8 @@ inline DeviceMemoryResource* setCurrentDeviceResource(DeviceMemoryResource* newM
 	return setPerDeviceResource(detail::currentDevice(), newMemoryResource);
 }
 
-} // namespace MemoryResource
 } // namespace detail
+} // namespace MemoryResource
 } // namespace Nmm
+} // namespace Cuda
+} // namespace Acts
