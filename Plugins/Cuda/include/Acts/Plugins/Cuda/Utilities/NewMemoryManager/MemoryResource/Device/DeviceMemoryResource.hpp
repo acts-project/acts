@@ -48,7 +48,7 @@ class DeviceMemoryResource {
 	private:
 		virtual void* doAllocate(std::size_t bytes, CudaStreamView stream) = 0;
 
-		virtual void* doDeallocate(void* p, std::size_t bytes, CudaStreamView stream) = 0;
+		virtual void doDeallocate(void* p, std::size_t bytes, CudaStreamView stream) = 0;
 
 		virtual bool doIsEqual(DeviceMemoryResource const& other) const noexcept {
 			return this == &other;
