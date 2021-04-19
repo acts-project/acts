@@ -39,8 +39,6 @@ class TrackingGeometry;
 /// @brief selector for finding surface
 struct MaterialSurface {
   bool operator()(const Surface& sf) const {
-    std::cout << " - checking for SurfaceMaterial " << sf.surfaceMaterial()
-              << std::endl;
     return (sf.surfaceMaterial() != nullptr);
   }
 };
