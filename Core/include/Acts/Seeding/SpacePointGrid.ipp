@@ -53,7 +53,7 @@ Acts::SpacePointGridCreator::createGrid(
   int zBins;
   // for pseudorapidity == 0, create 100 phi-bins
   if (zBinSize <= 0) {
-    zBins = 100
+    zBins = 100;
   } else {
     zBins = std::floor((config.zMax - config.zMin) / zBinSize);
   }
