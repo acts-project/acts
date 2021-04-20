@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,8 +16,8 @@ Acts::SpacePointGridCreator::createGrid(
     const Acts::SpacePointGridConfig& config) {
   int phiBins;
   // for no (or bogus) magnetic field, create 100 phi-bins
-  if (config.bFieldInZ <= 0){
-      phiBins = 100;
+  if (config.bFieldInZ <= 0) {
+    phiBins = 100;
   } else {
     // calculate circle intersections of helix and max detector radius
     float minHelixRadius = config.minPt / (300. * config.bFieldInZ);  // in mm
@@ -25,8 +25,8 @@ Acts::SpacePointGridCreator::createGrid(
     float xOuter = maxR2 / (2 * minHelixRadius);
     float yOuter = std::sqrt(maxR2 - xOuter * xOuter);
     float outerAngle = std::atan(xOuter / yOuter);
-    // intersection of helix and max detector radius minus maximum R distance from
-    // middle SP to top SP
+    // intersection of helix and max detector radius minus maximum R distance
+    // from middle SP to top SP
     float innerAngle = 0;
     if (config.rMax > config.deltaRMax) {
       float innerCircleR2 =
@@ -52,7 +52,7 @@ Acts::SpacePointGridCreator::createGrid(
   float zBinSize = config.cotThetaMax * config.deltaRMax;
   int zBins;
   // for pseudorapidity == 0, create 100 phi-bins
-  if (zBinSize <= 0){
+  if (zBinSize <= 0) {
     zBins = 100
   } else {
     zBins = std::floor((config.zMax - config.zMin) / zBinSize);
