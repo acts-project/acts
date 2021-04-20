@@ -118,6 +118,9 @@ int materialMappingExample(int argc, char* argv[],
   if (mapSurface) {
     // Get a Navigator
     Acts::Navigator navigator(tGeometry);
+    navigator.resolveSensitive = true;
+    navigator.resolveMaterial = true;
+    navigator.resolvePassive = true;
     // Make stepper and propagator
     SlStepper stepper;
     Propagator propagator(std::move(stepper), std::move(navigator));
