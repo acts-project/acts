@@ -198,19 +198,22 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
 
     // an now loop over the material
     for (auto& mint : mtrack.second.materialInteractions) {
+      auto direction = mint.direction.normalized();
+
       // The material step position information
       m_step_x.push_back(mint.position.x());
       m_step_y.push_back(mint.position.y());
       m_step_z.push_back(mint.position.z());
-      m_step_dx.push_back(mint.direction.x());
-      m_step_dy.push_back(mint.direction.y());
-      m_step_dz.push_back(mint.direction.z());
+      m_step_dx.push_back(direction.x());
+      m_step_dy.push_back(direction.y());
+      m_step_dz.push_back(direction.z());
 
       if (m_cfg.prePostStep) {
         Acts::Vector3 prePos =
-            mint.position - 0.5 * mint.pathCorrection * mint.direction;
+            mint.position - 0.5 * mint.pathCorrection * direction;
         Acts::Vector3 posPos =
-            mint.position + 0.5 * mint.pathCorrection * mint.direction;
+            mint.position + 0.5 * mint.pathCorrection * direction;
+
         m_step_sx.push_back(prePos.x());
         m_step_sy.push_back(prePos.y());
         m_step_sz.push_back(prePos.z());
