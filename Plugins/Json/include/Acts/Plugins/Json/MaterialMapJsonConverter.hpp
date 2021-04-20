@@ -97,8 +97,7 @@ class MaterialMapJsonConverter {
   /// Can be used to initialise the material mapping process.
   ///
   /// @param tGeometry is the tracking geometry
-  nlohmann::json trackingGeometryToJson(
-      const TrackingGeometry& tGeometry);
+  nlohmann::json trackingGeometryToJson(const TrackingGeometry& tGeometry);
 
   /// Go through a volume to find subvolume, layers and surfaces.
   /// Store volumes and surfaces in two vector used to initialised the geometry
