@@ -47,7 +47,11 @@ FW::RootRecVertexWriter::RootRecVertexWriter(
     m_outputTree->Branch("vx", &m_ptrVx);
     m_outputTree->Branch("vy", &m_ptrVy);
     m_outputTree->Branch("vz", &m_ptrVz);
-    m_outputTree->Branch("fitquality", &m_ptr_vtx_fitquality);
+    // m_outputTree->Branch("fitquality", &m_ptr_vtx_fitquality);
+    m_outputTree->Branch("fitquality_chiSquared",
+                         &m_ptr_vtx_fitquality_chiSquared);
+    m_outputTree->Branch("fitquality_numberDoF",
+                         &m_ptr_vtx_fitquality_numberDoF);
 
     m_outputTree->Branch("d0", &m_ptrD0);
     m_outputTree->Branch("z0", &m_ptrZ0);
@@ -138,7 +142,10 @@ void FW::RootRecVertexWriter::ClearAll() {
   m_vx.clear();
   m_vy.clear();
   m_vz.clear();
-  m_vtx_fitquality.clear();
+  // m_vtx_fitquality.clear();
+  m_vtx_fitquality_chiSquared.clear();
+  m_vtx_fitquality_numberDoF.clear();
+
   m_d0.clear();
   m_z0.clear();
   m_phi.clear();
@@ -231,7 +238,8 @@ FW::ProcessCode FW::RootRecVertexWriter::writeT(
     m_vx.push_back(vtx.position().x());
     m_vy.push_back(vtx.position().y());
     m_vz.push_back(vtx.position().z());
-    m_vtx_fitquality.push_back(vtx.fitQuality());
+    m_vtx_fitquality_chiSquared.push_back(vtx.fitQuality().first);
+    m_vtx_fitquality_numberDoF.push_back(vtx.fitQuality().first);
 
     Acts::SpacePointSymMatrix vtx_cov = vtx.fullCovariance();
     m_vtx_cov11.push_back(vtx_cov(0, 0));
@@ -265,7 +273,7 @@ FW::ProcessCode FW::RootRecVertexWriter::writeT(
       m_qp.push_back(track.fittedParams.parameters()[Acts::ParDef::eQOP]);
       m_time.push_back(track.fittedParams.parameters()[Acts::ParDef::eT]);
       // Current vertex index as vertex ID
-      m_vtxID.push_back(vtx.tracks().size() - 1);
+      m_vtxID.push_back(m_vx.size() - 1);
 
       // // Save track covariance
       auto cov = track.fittedParams.covariance();

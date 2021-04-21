@@ -80,7 +80,9 @@ class RootRecVertexWriter final
   std::vector<double> m_vy;
   std::vector<double> m_vz;
 
-  std::vector<std::pair<double, double>> m_vtx_fitquality;
+  // std::vector<std::pair<double, double>> m_vtx_fitquality;
+  std::vector<double> m_vtx_fitquality_chiSquared;
+  std::vector<double> m_vtx_fitquality_numberDoF;
 
   /// The vertex covariance matrix
   std::vector<double> m_vtx_cov11;
@@ -159,8 +161,13 @@ class RootRecVertexWriter final
   std::vector<double>* m_ptrVx = &m_vx;
   std::vector<double>* m_ptrVy = &m_vy;
   std::vector<double>* m_ptrVz = &m_vz;
-  std::vector<std::pair<double, double>>* m_ptr_vtx_fitquality =
-      &m_vtx_fitquality;
+  // std::vector<std::pair<double, double>>* m_ptr_vtx_fitquality =
+  //     &m_vtx_fitquality;
+
+  std::vector<double>* m_ptr_vtx_fitquality_chiSquared =
+      &m_vtx_fitquality_chiSquared;
+  std::vector<double>* m_ptr_vtx_fitquality_numberDoF =
+      &m_vtx_fitquality_numberDoF;
 
   std::vector<double>* m_ptrD0 = &m_d0;
   std::vector<double>* m_ptrZ0 = &m_z0;

@@ -96,7 +96,6 @@ int main(int argc, char* argv[]) {
           vertexFindingCfg, logLevel));
 
   auto outputDir = ensureWritableDirectory(vm["output-dir"].as<std::string>());
-
   RootRecVertexWriter::Config RecVertexWriterCfg;
   RecVertexWriterCfg.collection = vertexFindingCfg.outputProtoVertices;
   RecVertexWriterCfg.filePath =
