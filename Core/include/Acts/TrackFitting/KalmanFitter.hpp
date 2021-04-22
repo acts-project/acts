@@ -502,7 +502,7 @@ class KalmanFitter {
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
         // Transport the covariance to the surface
-        stepper.covarianceTransport(state.stepping, *surface);
+        stepper.transportCovarianceToBound(state.stepping, *surface);
 
         // Update state and stepper with pre material effects
         materialInteractor(surface, state, stepper, preUpdate);
@@ -709,7 +709,7 @@ class KalmanFitter {
         }
 
         // Transport the covariance to the surface
-        stepper.covarianceTransport(state.stepping, *surface);
+        stepper.transportCovarianceToBound(state.stepping, *surface);
 
         // Update state and stepper with pre material effects
         materialInteractor(surface, state, stepper, preUpdate);
@@ -797,13 +797,13 @@ class KalmanFitter {
           ACTS_VERBOSE("Detected hole on " << surface->geometryId()
                                            << " in reversed filtering");
           if (state.stepping.covTransport) {
-            stepper.covarianceTransport(state.stepping, *surface);
+            stepper.transportCovarianceToBound(state.stepping, *surface);
           }
         } else if (surface->surfaceMaterial() != nullptr) {
           ACTS_VERBOSE("Detected in-sensitive surface "
                        << surface->geometryId() << " in reversed filtering");
           if (state.stepping.covTransport) {
-            stepper.covarianceTransport(state.stepping);
+            stepper.transportCovarianceToCurvilinear(state.stepping);
           }
         }
         // Not creating bound state here, so need manually reinitialize

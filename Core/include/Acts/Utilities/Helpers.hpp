@@ -14,6 +14,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
+#include <array>
 #include <bitset>
 #include <cassert>
 #include <cmath>
@@ -119,6 +120,26 @@ double theta(const Eigen::MatrixBase<Derived>& v) noexcept {
   }
 
   return std::atan2(std::sqrt(v[0] * v[0] + v[1] * v[1]), v[2]);
+}
+
+/// @brief Fast evaluation of trigonomic functions.
+///
+/// @param direction for this evaluatoin
+///
+/// @return cos(phi), sin(phi), cos(theta), sin(theta), 1/sin(theta)
+static inline const std::array<ActsScalar, 5> evaluateTrigonomics(
+    const Vector3& direction) {
+  const ActsScalar x = direction(0);  // == cos(phi) * sin(theta)
+  const ActsScalar y = direction(1);  // == sin(phi) * sin(theta)
+  const ActsScalar z = direction(2);  // == cos(theta)
+  // can be turned into cosine/sine
+  const ActsScalar cosTheta = z;
+  const ActsScalar sinTheta = std::sqrt(x * x + y * y);
+  const ActsScalar invSinTheta = 1. / sinTheta;
+  const ActsScalar cosPhi = x * invSinTheta;
+  const ActsScalar sinPhi = y * invSinTheta;
+
+  return {cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta};
 }
 
 /// Calculate the pseudorapidity for a vector.

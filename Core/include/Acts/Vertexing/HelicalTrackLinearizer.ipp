@@ -77,7 +77,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   double rho;
   // Curvature is infinite w/o b field
   if (Bz == 0. || std::abs(qOvP) < m_cfg.minQoP) {
-    rho = m_cfg.maxRho;
+    rho = sgnH * m_cfg.maxRho;
   } else {
     rho = sinTh * (1. / qOvP) / Bz;
   }

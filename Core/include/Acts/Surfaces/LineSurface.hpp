@@ -122,7 +122,7 @@ class LineSurface : public Surface {
   /// @param boundParams is the bound parameters vector
   ///
   /// @return Jacobian from local to global
-  BoundToFreeMatrix jacobianLocalToGlobal(
+  BoundToFreeMatrix boundToFreeJacobian(
       const GeometryContext& gctx, const BoundVector& boundParams) const final;
 
   /// Calculate the derivative of path length at the geometry constraint or
