@@ -76,9 +76,12 @@ class RootVertexPerformanceWriter final
   TFile* m_outputFile{nullptr};  ///< The output file
   TTree* m_outputTree{nullptr};  ///< The output tree
 
-  std::vector<float> m_diffx;    ///< Difference in x positon between reco and true vtx
-  std::vector<float> m_diffy;    ///< Difference in y positon between reco and true vtx
-  std::vector<float> m_diffz;    ///< Difference in z positon between reco and true vtx
+  std::vector<float>
+      m_diffx;  ///< Difference in x positon between reco and true vtx
+  std::vector<float>
+      m_diffy;  ///< Difference in y positon between reco and true vtx
+  std::vector<float>
+      m_diffz;  ///< Difference in z positon between reco and true vtx
 
   int m_nrecoVtx = -1;           ///< Number of reconstructed vertices
   int m_ntrueVtx = -1;           ///< Number of true vertices
