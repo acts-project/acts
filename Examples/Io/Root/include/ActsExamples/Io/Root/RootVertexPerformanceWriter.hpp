@@ -33,6 +33,8 @@ class RootVertexPerformanceWriter final
     std::string inputSelectedTruthParticles;
     /// Truth particles associated to fitted tracks
     std::string inputAssociatedTruthParticles;
+    /// All event fitted tracks
+    std::string allFittedTracks;
     /// Input vertex collection.
     std::string inputVertices;
     /// output directory.
@@ -45,6 +47,9 @@ class RootVertexPerformanceWriter final
     std::string fileMode = "RECREATE";
     /// common root file.
     TFile* rootFile = nullptr;
+    /// Minimum fraction of tracks matched between truth
+    /// and reco vertices to be matched for resolution plots
+    double minTrackVtxMatchFraction = 0.5;
   };
 
   /// Constructor
@@ -71,17 +76,9 @@ class RootVertexPerformanceWriter final
   TFile* m_outputFile{nullptr};  ///< The output file
   TTree* m_outputTree{nullptr};  ///< The output tree
 
-  std::vector<float> m_diffx;
-  std::vector<float> m_diffy;
-  std::vector<float> m_diffz;
-
-  std::vector<float> m_recoVtxx;
-  std::vector<float> m_recoVtxy;
-  std::vector<float> m_recoVtxz;
-
-  std::vector<float> m_trueVtxx;
-  std::vector<float> m_trueVtxy;
-  std::vector<float> m_trueVtxz;
+  std::vector<float> m_diffx;    ///< Difference in x positon between reco and true vtx
+  std::vector<float> m_diffy;    ///< Difference in y positon between reco and true vtx
+  std::vector<float> m_diffz;    ///< Difference in z positon between reco and true vtx
 
   int m_nrecoVtx = -1;           ///< Number of reconstructed vertices
   int m_ntrueVtx = -1;           ///< Number of true vertices
