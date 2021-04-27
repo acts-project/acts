@@ -220,6 +220,13 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersWriter::writeT(
           m_err_eQOP_fit =
               sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP));
           m_err_eT_fit = sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime));
+        } else {
+          m_err_eLOC0_fit = NaNfloat;
+          m_err_eLOC1_fit = NaNfloat;
+          m_err_ePHI_fit = NaNfloat;
+          m_err_eTHETA_fit = NaNfloat;
+          m_err_eQOP_fit = NaNfloat;
+          m_err_eT_fit = NaNfloat;
         }
       }
 
