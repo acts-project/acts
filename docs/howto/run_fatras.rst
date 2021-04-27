@@ -40,7 +40,7 @@ directory.
        --output-csv \
        --gen-phi-degree=0:90 \
        --gen-eta=-2:2 \
-       --gen-p-gev=1:5 \
+       --gen-mom-gev=1:5 \
        --gen-pdg=13 \
        --gen-randomize-charge \
        --gen-nparticles=4

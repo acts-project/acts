@@ -63,7 +63,7 @@ ActsExamples::ParametricParticleGenerator::operator()(RandomEngine& rng) const {
     const double phi = phiDist(rng);
     const double cosTheta = cosThetaDist(rng);
     const double sinTheta = std::sqrt(1 - cosTheta * cosTheta);
-    const double p = pDist(rng);
+    double p = pDist(rng);
 
     // we already have sin/cos theta. they can be used directly to
     Acts::Vector3 dir;
@@ -74,6 +74,7 @@ ActsExamples::ParametricParticleGenerator::operator()(RandomEngine& rng) const {
     // construct the particle;
     ActsFatras::Particle particle(pid, pdg, q, m_mass);
     particle.setDirection(dir);
+    p *= m_cfg.pTransverse ? 1. / sinTheta : 1.;
     particle.setAbsoluteMomentum(p);
 
     // generated particle ids are already ordered and should end up at the end
