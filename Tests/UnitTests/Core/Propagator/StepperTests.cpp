@@ -326,6 +326,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // Reset all possible parameters
   EigenStepper<>::State esStateCopy(copyState(*bField, ps.stepping));
+  BOOST_CHECK(cp2.covariance().has_value());
   es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface(), ndir, stepSize2);
   // Test all components
