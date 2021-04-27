@@ -97,7 +97,7 @@ jobID=0
          eta=$(echo "${etaBin}*0.5 + 0.25"|bc) 
 
          # Run sim
-         sim="${exe_dir}/ActsExampleFatras${detector} ${dd4hep_input} ${bField} -n ${numEvents} --gen-nparticles ${numTracksPerEvent} --gen-p-gev ${pt}:${pt} --gen-eta ${etaLow}:${etaUp} --output-csv=1 --output-dir=data/sim_${detector}/e${numEvents}_t${numTracksPerEvent}_eta${eta}_pt${pt}"
+         sim="${exe_dir}/ActsExampleFatras${detector} ${dd4hep_input} ${bField} -n ${numEvents} --gen-nparticles ${numTracksPerEvent} --gen-mom-gev ${pt}:${pt} --gen-eta ${etaLow}:${etaUp} --output-csv=1 --output-dir=data/sim_${detector}/e${numEvents}_t${numTracksPerEvent}_eta${eta}_pt${pt}"
          echo "Run sim with '${sim}'"
          eval ${sim}
        
