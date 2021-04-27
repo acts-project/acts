@@ -115,6 +115,9 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
                       vertexLocPlane.dot(yDirPlane)};
 
   // track covariance
+  if (not trkParams->covariance().has_value()) {
+    return VertexingError::NoCovariance;
+  }
   auto cov = trkParams->covariance();
   SymMatrix2 myWeightXY = cov->block<2, 2>(0, 0).inverse();
 
@@ -286,6 +289,9 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   SymMatrix2 vrtXYCov = vtx.covariance().template block<2, 2>(0, 0);
 
   // Covariance of perigee parameters after propagation to perigee surface
+  if (not propRes.endParameters->covariance().has_value()) {
+    return VertexingError::NoCovariance;
+  }
   const auto& perigeeCov = *(propRes.endParameters->covariance());
 
   Vector2 d0JacXY(-sinPhi, cosPhi);

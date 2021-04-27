@@ -115,14 +115,17 @@ void fillTrackState(const TestTrackState& pc, TrackStatePropMask mask,
 
   if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Predicted)) {
     ts.predicted() = pc.predicted.parameters();
+    BOOST_CHECK(pc.predicted.covariance().has_value());
     ts.predictedCovariance() = *(pc.predicted.covariance());
   }
   if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Filtered)) {
     ts.filtered() = pc.filtered.parameters();
+    BOOST_CHECK(pc.filtered.covariance().has_value());
     ts.filteredCovariance() = *(pc.filtered.covariance());
   }
   if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Smoothed)) {
     ts.smoothed() = pc.smoothed.parameters();
+    BOOST_CHECK(pc.smoothed.covariance().has_value());
     ts.smoothedCovariance() = *(pc.smoothed.covariance());
   }
   if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Jacobian)) {
@@ -524,12 +527,15 @@ BOOST_DATA_TEST_CASE(TrackStateProxyStorage, bd::make({1u, 2u}),
   // check that the track parameters are set
   BOOST_CHECK(ts.hasPredicted());
   BOOST_CHECK_EQUAL(ts.predicted(), pc.predicted.parameters());
+  BOOST_CHECK(pc.predicted.covariance().has_value());
   BOOST_CHECK_EQUAL(ts.predictedCovariance(), *pc.predicted.covariance());
   BOOST_CHECK(ts.hasFiltered());
   BOOST_CHECK_EQUAL(ts.filtered(), pc.filtered.parameters());
+  BOOST_CHECK(pc.filtered.covariance().has_value());
   BOOST_CHECK_EQUAL(ts.filteredCovariance(), *pc.filtered.covariance());
   BOOST_CHECK(ts.hasSmoothed());
   BOOST_CHECK_EQUAL(ts.smoothed(), pc.smoothed.parameters());
+  BOOST_CHECK(pc.smoothed.covariance().has_value());
   BOOST_CHECK_EQUAL(ts.smoothedCovariance(), *pc.smoothed.covariance());
 
   // check that the jacobian is set
