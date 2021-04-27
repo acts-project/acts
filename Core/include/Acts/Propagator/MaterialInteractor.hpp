@@ -139,7 +139,7 @@ struct MaterialInteractor {
       // To integrate process noise, we need to transport
       // the covariance to the current position in space
       if (d.performCovarianceTransport) {
-        stepper.covarianceTransport(state.stepping);
+        stepper.transportCovarianceToCurvilinear(state.stepping);
       }
       // Apply the material interactions
       d.updateState(state, stepper);

@@ -4,7 +4,7 @@
     xs:noNamespaceSchemaLocation="http://www.lcsim.org/schemas/compact/1.0/compact.xsd">
     
     <includes>
-        <gdmlFile ref="../elements.xml"/>
+        <gdmlFile ref="elements.xml"/>
         <gdmlFile ref="OpenDataMaterials.xml"/>
     </includes>
     

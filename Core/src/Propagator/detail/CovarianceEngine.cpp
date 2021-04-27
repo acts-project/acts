@@ -17,7 +17,7 @@ namespace Acts {
 namespace {
 /// Some type defs
 using Jacobian = BoundMatrix;
-using Covariance = BoundSymMatrix;
+
 using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
 using CurvilinearState =
     std::tuple<CurvilinearTrackParameters, Jacobian, double>;
@@ -81,36 +81,39 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction) {
 /// approximated approach to treat the (assumed) small change.
 ///
 /// @param [in] geoContext The geometry Context
-/// @param [in] parameters Free, nominal parametrisation
-/// @param [in] jacToGlobal The projection jacobian from start local
+/// @param [in] freeParameters Free, nominal parametrisation
+/// @param [in] boundToFreeJacobian The projection jacobian from start local
 /// to start free parameters
-/// @param [in] transportJacobian The transport jacobian from start free to
+/// @param [in] freeTransportJacobian The transport jacobian from start free to
 /// final free parameters
-/// @param [in] derivatives Path length derivatives of the final free
+/// @param [in] freeToPathDerivatives Path length derivatives of the final free
 /// parameters
-/// @param [in, out] jacFull The full jacobian from start local to bound
-/// parameters at the final surface
+/// @param [in, out] fullTransportJacobian The full jacobian from start local to
+/// bound parameters at the final surface
 /// @param [in] surface The final surface onto which the projection should be
 /// performed
-void jacobianLocalToLocal(const GeometryContext& geoContext,
-                          const FreeVector& parameters,
-                          const BoundToFreeMatrix& jacToGlobal,
-                          const FreeMatrix& transportJacobian,
-                          const FreeVector& derivatives, Jacobian& jacFull,
+void boundToBoundJacobian(const GeometryContext& geoContext,
+                          const FreeVector& freeParameters,
+                          const BoundToFreeMatrix& boundToFreeJacobian,
+                          const FreeMatrix& freeTransportJacobian,
+                          const FreeVector& freeToPathDerivatives,
+                          BoundMatrix& fullTransportJacobian,
                           const Surface& surface) {
   // Calculate the derivative of path length at the final surface or the
   // point-of-closest approach w.r.t. free parameters
   const FreeToPathMatrix freeToPath =
-      surface.freeToPathDerivative(geoContext, parameters);
-  // Calculate the jacobian from global to local at the final surface
-  FreeToBoundMatrix jacToLocal =
-      surface.jacobianGlobalToLocal(geoContext, parameters);
-  // Calculate the full jocobian from the local parameters at the start surface
-  // to local parameters at the final surface
+      surface.freeToPathDerivative(geoContext, freeParameters);
+  // Calculate the jacobian from free to bound at the final surface
+  FreeToBoundMatrix freeToBoundJacobian =
+      surface.freeToBoundJacobian(geoContext, freeParameters);
+  // Calculate the full jacobian from the local/bound parameters at the start
+  // surface to local/bound parameters at the final surface
   // @note jac(locA->locB) = jac(gloB->locB)*(1+
   // pathCorrectionFactor(gloB))*jacTransport(gloA->gloB) *jac(locA->gloA)
-  jacFull = jacToLocal * (FreeMatrix::Identity() + derivatives * freeToPath) *
-            transportJacobian * jacToGlobal;
+  fullTransportJacobian =
+      freeToBoundJacobian *
+      (FreeMatrix::Identity() + freeToPathDerivatives * freeToPath) *
+      freeTransportJacobian * boundToFreeJacobian;
 }
 
 /// @brief This function calculates the full jacobian from local parameters at
@@ -120,14 +123,14 @@ void jacobianLocalToLocal(const GeometryContext& geoContext,
 /// projection onto a curvilinear surface is considered. Since a variation of
 /// the start parameters within a given uncertainty would lead to a variation of
 /// the end parameters, these need to be propagated onto the target surface.
-/// This an approximated approach to treat the (assumed) small change.
+/// This is an approximated approach to treat the (assumed) small change.
 ///
 /// @param [in] direction Normalised direction vector
-/// @param [in] jacToGlobal The projection jacobian from local start
+/// @param [in] boundToFreeJacobian The projection jacobian from local start
 /// to global final parameters
-/// @param [in] transportJacobian The transport jacobian from start free to
+/// @param [in] freeTransportJacobian The transport jacobian from start free to
 /// final free parameters
-/// @param [in] derivatives Path length derivatives of the final free
+/// @param [in] freeToPathDerivatives Path length derivatives of the final free
 /// parameters
 /// @param [in, out] jacFull The full jacobian from start local to curvilinear
 /// parameters
@@ -135,52 +138,55 @@ void jacobianLocalToLocal(const GeometryContext& geoContext,
 /// @note The parameter @p surface is only required if projected to bound
 /// parameters. In the case of curvilinear parameters the geometry and the
 /// position is known and the calculation can be simplified
-void jacobianLocalToLocal(const Vector3& direction,
-                          const BoundToFreeMatrix& jacToGlobal,
-                          const FreeMatrix& transportJacobian,
-                          const FreeVector& derivatives, Jacobian& jacFull) {
+void boundToCurvilinearJacobian(const Vector3& direction,
+                                const BoundToFreeMatrix& boundToFreeJacobian,
+                                const FreeMatrix& freeTransportJacobian,
+                                const FreeVector& freeToPathDerivatives,
+                                BoundMatrix& fullTransportJacobian) {
   // Calculate the derivative of path length at the the curvilinear surface
   // w.r.t. free parameters
   FreeToPathMatrix freeToPath = FreeToPathMatrix::Zero();
   freeToPath.segment<3>(eFreePos0) = -1.0 * direction;
   // Calculate the jacobian from global to local at the curvilinear surface
-  FreeToBoundMatrix jacToLocal = freeToCurvilinearJacobian(direction);
+  FreeToBoundMatrix freeToBoundJacobian = freeToCurvilinearJacobian(direction);
   // Calculate the full jocobian from the local parameters at the start surface
   // to curvilinear parameters
   // @note jac(locA->locB) = jac(gloB->locB)*(1+
   // pathCorrectionFactor(gloB))*jacTransport(gloA->gloB) *jac(locA->gloA)
-  jacFull = jacToLocal * (FreeMatrix::Identity() + derivatives * freeToPath) *
-            transportJacobian * jacToGlobal;
+  fullTransportJacobian =
+      freeToBoundJacobian *
+      (FreeMatrix::Identity() + freeToPathDerivatives * freeToPath) *
+      freeTransportJacobian * boundToFreeJacobian;
 }
 
 /// @brief This function reinitialises the state members required for the
 /// covariance transport
 ///
 /// @param [in] geoContext The geometry context
-/// @param [in, out] transportJacobian The transport jacobian from start free to
-/// final free parameters
-/// @param [in, out] derivatives Path length derivatives of the free, nominal
-/// parameters
-/// @param [in, out] jacToGlobal Projection jacobian of the last bound
+/// @param [in, out] freeTransportJacobian The transport jacobian from start
+/// free to final free parameters
+/// @param [in, out] freeToPathDerivatives Path length derivatives of the free,
+/// nominal parameters
+/// @param [in, out] boundToFreeJacobian Projection jacobian of the last bound
 /// parametrisation to free parameters
-/// @param [in] freeParams Free, nominal parametrisation
+/// @param [in] freeParameters Free, nominal parametrisation
 /// @param [in] surface The reference surface of the local parametrisation
 Result<void> reinitializeJacobians(const GeometryContext& geoContext,
-                                   FreeMatrix& transportJacobian,
-                                   FreeVector& derivatives,
-                                   BoundToFreeMatrix& jacToGlobal,
-                                   const FreeVector& freeParams,
+                                   FreeMatrix& freeTransportJacobian,
+                                   FreeVector& freeToPathDerivatives,
+                                   BoundToFreeMatrix& boundToFreeJacobian,
+                                   const FreeVector& freeParameters,
                                    const Surface& surface) {
   using VectorHelpers::phi;
   using VectorHelpers::theta;
 
   // Reset the jacobians
-  transportJacobian = FreeMatrix::Identity();
-  derivatives = FreeVector::Zero();
+  freeTransportJacobian = FreeMatrix::Identity();
+  freeToPathDerivatives = FreeVector::Zero();
 
   // Get the local position
-  const Vector3 position = freeParams.segment<3>(eFreePos0);
-  const Vector3 direction = freeParams.segment<3>(eFreeDir0);
+  const Vector3 position = freeParameters.segment<3>(eFreePos0);
+  const Vector3 direction = freeParameters.segment<3>(eFreeDir0);
   auto lpResult = surface.globalToLocal(geoContext, position, direction);
   if (not lpResult.ok()) {
     ACTS_LOCAL_LOGGER(
@@ -189,34 +195,35 @@ Result<void> reinitializeJacobians(const GeometryContext& geoContext,
         "Inconsistency in global to local transformation during propagation.")
   }
   // Transform from free to bound parameters
-  Result<BoundVector> boundParams =
-      detail::transformFreeToBoundParameters(freeParams, surface, geoContext);
-  if (!boundParams.ok()) {
-    return boundParams.error();
+  Result<BoundVector> boundParameters = detail::transformFreeToBoundParameters(
+      freeParameters, surface, geoContext);
+  if (!boundParameters.ok()) {
+    return boundParameters.error();
   }
   // Reset the jacobian from local to global
-  jacToGlobal = surface.jacobianLocalToGlobal(geoContext, *boundParams);
+  boundToFreeJacobian =
+      surface.boundToFreeJacobian(geoContext, *boundParameters);
   return Result<void>::success();
 }
 
 /// @brief This function reinitialises the state members required for the
 /// covariance transport
 ///
-/// @param [in, out] transportJacobian The transport jacobian from start free to
-/// final free parameters
+/// @param [in, out] freeTransportJacobian The transport jacobian from start
+/// free to final free parameters
 /// @param [in, out] derivatives Path length derivatives of the free, nominal
 /// parameters
-/// @param [in, out] jacToGlobal Projection jacobian of the last bound
+/// @param [in, out] boundToFreeJacobian Projection jacobian of the last bound
 /// parametrisation to free parameters
 /// @param [in] direction Normalised direction vector
-void reinitializeJacobians(FreeMatrix& transportJacobian,
-                           FreeVector& derivatives,
-                           BoundToFreeMatrix& jacToGlobal,
+void reinitializeJacobians(FreeMatrix& freeTransportJacobian,
+                           FreeVector& freeToPathDerivatives,
+                           BoundToFreeMatrix& boundToFreeJacobian,
                            const Vector3& direction) {
   // Reset the jacobians
-  transportJacobian = FreeMatrix::Identity();
-  derivatives = FreeVector::Zero();
-  jacToGlobal = BoundToFreeMatrix::Zero();
+  freeTransportJacobian = FreeMatrix::Identity();
+  freeToPathDerivatives = FreeVector::Zero();
+  boundToFreeJacobian = BoundToFreeMatrix::Zero();
 
   // Optimized trigonometry on the propagation direction
   const double x = direction(0);  // == cos(phi) * sin(theta)
@@ -229,41 +236,42 @@ void reinitializeJacobians(FreeMatrix& transportJacobian,
   const double cosPhi = x * invSinTheta;
   const double sinPhi = y * invSinTheta;
 
-  jacToGlobal(eFreePos0, eBoundLoc0) = -sinPhi;
-  jacToGlobal(eFreePos0, eBoundLoc1) = -cosPhi * cosTheta;
-  jacToGlobal(eFreePos1, eBoundLoc0) = cosPhi;
-  jacToGlobal(eFreePos1, eBoundLoc1) = -sinPhi * cosTheta;
-  jacToGlobal(eFreePos2, eBoundLoc1) = sinTheta;
-  jacToGlobal(eFreeTime, eBoundTime) = 1;
-  jacToGlobal(eFreeDir0, eBoundPhi) = -sinTheta * sinPhi;
-  jacToGlobal(eFreeDir0, eBoundTheta) = cosTheta * cosPhi;
-  jacToGlobal(eFreeDir1, eBoundPhi) = sinTheta * cosPhi;
-  jacToGlobal(eFreeDir1, eBoundTheta) = cosTheta * sinPhi;
-  jacToGlobal(eFreeDir2, eBoundTheta) = -sinTheta;
-  jacToGlobal(eFreeQOverP, eBoundQOverP) = 1;
+  boundToFreeJacobian(eFreePos0, eBoundLoc0) = -sinPhi;
+  boundToFreeJacobian(eFreePos0, eBoundLoc1) = -cosPhi * cosTheta;
+  boundToFreeJacobian(eFreePos1, eBoundLoc0) = cosPhi;
+  boundToFreeJacobian(eFreePos1, eBoundLoc1) = -sinPhi * cosTheta;
+  boundToFreeJacobian(eFreePos2, eBoundLoc1) = sinTheta;
+  boundToFreeJacobian(eFreeTime, eBoundTime) = 1;
+  boundToFreeJacobian(eFreeDir0, eBoundPhi) = -sinTheta * sinPhi;
+  boundToFreeJacobian(eFreeDir0, eBoundTheta) = cosTheta * cosPhi;
+  boundToFreeJacobian(eFreeDir1, eBoundPhi) = sinTheta * cosPhi;
+  boundToFreeJacobian(eFreeDir1, eBoundTheta) = cosTheta * sinPhi;
+  boundToFreeJacobian(eFreeDir2, eBoundTheta) = -sinTheta;
+  boundToFreeJacobian(eFreeQOverP, eBoundQOverP) = 1;
 }
 }  // namespace
 
 namespace detail {
 
 Result<BoundState> boundState(const GeometryContext& geoContext,
-                              Covariance& covarianceMatrix, Jacobian& jacobian,
+                              BoundSymMatrix& covarianceMatrix,
+                              BoundMatrix& jacobian,
                               FreeMatrix& transportJacobian,
                               FreeVector& derivatives,
-                              BoundToFreeMatrix& jacToGlobal,
+                              BoundToFreeMatrix& boundToFreeJacobian,
                               const FreeVector& parameters, bool covTransport,
                               double accumulatedPath, const Surface& surface) {
   // Covariance transport
   std::optional<BoundSymMatrix> cov = std::nullopt;
   if (covTransport) {
     // Initialize the jacobian from start local to final local
-    jacobian = Jacobian::Identity();
+    jacobian = BoundMatrix::Identity();
     // Calculate the jacobian and transport the covarianceMatrix to final local.
     // Then reinitialize the transportJacobian, derivatives and the
-    // jacToGlobal
-    covarianceTransport(geoContext, covarianceMatrix, jacobian,
-                        transportJacobian, derivatives, jacToGlobal, parameters,
-                        surface);
+    // boundToFreeJacobian
+    transportCovarianceToBound(geoContext, covarianceMatrix, jacobian,
+                               transportJacobian, derivatives,
+                               boundToFreeJacobian, parameters, surface);
   }
   if (covarianceMatrix != BoundSymMatrix::Zero()) {
     cov = covarianceMatrix;
@@ -281,11 +289,11 @@ Result<BoundState> boundState(const GeometryContext& geoContext,
       jacobian, accumulatedPath);
 }
 
-CurvilinearState curvilinearState(Covariance& covarianceMatrix,
-                                  Jacobian& jacobian,
+CurvilinearState curvilinearState(BoundSymMatrix& covarianceMatrix,
+                                  BoundMatrix& jacobian,
                                   FreeMatrix& transportJacobian,
                                   FreeVector& derivatives,
-                                  BoundToFreeMatrix& jacToGlobal,
+                                  BoundToFreeMatrix& boundToFreeJacobian,
                                   const FreeVector& parameters,
                                   bool covTransport, double accumulatedPath) {
   const Vector3& direction = parameters.segment<3>(eFreeDir0);
@@ -294,12 +302,13 @@ CurvilinearState curvilinearState(Covariance& covarianceMatrix,
   std::optional<BoundSymMatrix> cov = std::nullopt;
   if (covTransport) {
     // Initialize the jacobian from start local to final local
-    jacobian = Jacobian::Identity();
+    jacobian = BoundMatrix::Identity();
     // Calculate the jacobian and transport the covarianceMatrix to final local.
     // Then reinitialize the transportJacobian, derivatives and the
-    // jacToGlobal
-    covarianceTransport(covarianceMatrix, jacobian, transportJacobian,
-                        derivatives, jacToGlobal, direction);
+    // boundToFreeJacobian
+    transportCovarianceToCurvilinear(covarianceMatrix, jacobian,
+                                     transportJacobian, derivatives,
+                                     boundToFreeJacobian, direction);
   }
   if (covarianceMatrix != BoundSymMatrix::Zero()) {
     cov = covarianceMatrix;
@@ -318,47 +327,55 @@ CurvilinearState curvilinearState(Covariance& covarianceMatrix,
                          accumulatedPath);
 }
 
-void covarianceTransport(Covariance& covarianceMatrix, Jacobian& jacobian,
-                         FreeMatrix& transportJacobian, FreeVector& derivatives,
-                         BoundToFreeMatrix& jacToGlobal,
-                         const Vector3& direction) {
-  // Calculate the full jacobian from local parameters at the start surface to
-  // current curvilinear parameters
-  jacobianLocalToLocal(direction, jacToGlobal, transportJacobian, derivatives,
-                       jacobian);
-
-  // Apply the actual covariance transport to get covariance of the current
-  // curvilinear parameters
-  covarianceMatrix = jacobian * covarianceMatrix * jacobian.transpose();
-
-  // Reinitialize jacobian components:
-  // ->The transportJacobian is reinitialized to Identity
-  // ->The derivatives is reinitialized to Zero
-  // ->The jacToGlobal is reinitialized to that at the current
-  // curvilinear surface
-  reinitializeJacobians(transportJacobian, derivatives, jacToGlobal, direction);
-}
-
-void covarianceTransport(const GeometryContext& geoContext,
-                         Covariance& covarianceMatrix, Jacobian& jacobian,
-                         FreeMatrix& transportJacobian, FreeVector& derivatives,
-                         BoundToFreeMatrix& jacToGlobal,
-                         const FreeVector& parameters, const Surface& surface) {
+void transportCovarianceToBound(
+    const GeometryContext& geoContext, BoundSymMatrix& boundCovariance,
+    BoundMatrix& fullTransportJacobian, FreeMatrix& freeTransportJacobian,
+    FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
+    const FreeVector& freeParameters, const Surface& surface) {
   // Calculate the full jacobian from local parameters at the start surface to
   // current bound parameters
-  jacobianLocalToLocal(geoContext, parameters, jacToGlobal, transportJacobian,
-                       derivatives, jacobian, surface);
+  boundToBoundJacobian(geoContext, freeParameters, boundToFreeJacobian,
+                       freeTransportJacobian, freeToPathDerivatives,
+                       fullTransportJacobian, surface);
 
   // Apply the actual covariance transport to get covariance of the current
   // bound parameters
-  covarianceMatrix = jacobian * covarianceMatrix * jacobian.transpose();
+  boundCovariance = fullTransportJacobian * boundCovariance *
+                    fullTransportJacobian.transpose();
 
   // Reinitialize jacobian components:
   // ->The transportJacobian is reinitialized to Identity
   // ->The derivatives is reinitialized to Zero
-  // ->The jacToGlobal is initialized to that at the current surface
-  reinitializeJacobians(geoContext, transportJacobian, derivatives, jacToGlobal,
-                        parameters, surface);
+  // ->The boundToFreeJacobian is initialized to that at the current surface
+  reinitializeJacobians(geoContext, freeTransportJacobian,
+                        freeToPathDerivatives, boundToFreeJacobian,
+                        freeParameters, surface);
+}
+
+void transportCovarianceToCurvilinear(BoundSymMatrix& boundCovariance,
+                                      BoundMatrix& fullTransportJacobian,
+                                      FreeMatrix& freeTransportJacobian,
+                                      FreeVector& freeToPathDerivatives,
+                                      BoundToFreeMatrix& boundToFreeJacobian,
+                                      const Vector3& direction) {
+  // Calculate the full jacobian from local parameters at the start surface to
+  // current curvilinear parameters
+  boundToCurvilinearJacobian(direction, boundToFreeJacobian,
+                             freeTransportJacobian, freeToPathDerivatives,
+                             fullTransportJacobian);
+
+  // Apply the actual covariance transport to get covariance of the current
+  // curvilinear parameters
+  boundCovariance = fullTransportJacobian * boundCovariance *
+                    fullTransportJacobian.transpose();
+
+  // Reinitialize jacobian components:
+  // ->The free transportJacobian is reinitialized to Identity
+  // ->The path derivatives is reinitialized to Zero
+  // ->The boundToFreeJacobian is reinitialized to that at the current
+  // curvilinear surface
+  reinitializeJacobians(freeTransportJacobian, freeToPathDerivatives,
+                        boundToFreeJacobian, direction);
 }
 
 }  // namespace detail
