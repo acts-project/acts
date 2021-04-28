@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Digitization/DigitizationOptions.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
@@ -28,7 +29,6 @@
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include <Acts/Definitions/Units.hpp>
 
 #include <memory>
 
@@ -39,8 +39,10 @@ using namespace ActsExamples;
 
 int runRecTruthTracks(int argc, char* argv[],
                       std::shared_ptr<ActsExamples::IBaseDetector> detector) {
+  using boost::program_options::value;
+
   // setup and parse options
-  auto desc = ActsExamples::Options::makeDefaultOptions();
+  auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
   Options::addRandomNumbersOptions(desc);
   Options::addGeometryOptions(desc);
@@ -51,6 +53,7 @@ int runRecTruthTracks(int argc, char* argv[],
   Options::addMagneticFieldOptions(desc);
   Options::addFittingOptions(desc);
   Options::addDigitizationOptions(desc);
+  TruthSeedSelector::addOptions(desc);
 
   auto vm = Options::parse(desc, argc, argv);
   if (vm.empty()) {
@@ -88,12 +91,12 @@ int runRecTruthTracks(int argc, char* argv[],
   // The pre-selection will select truth particles satisfying provided criteria
   // from all particles read in by particle reader for further processing. It
   // has no impact on the truth hits read-in by the cluster reader.
-  TruthSeedSelector::Config particleSelectorCfg;
+  TruthSeedSelector::Config particleSelectorCfg =
+      TruthSeedSelector::readConfig(vm);
   particleSelectorCfg.inputParticles = particleReader.outputParticles;
   particleSelectorCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
   particleSelectorCfg.outputParticles = "particles_selected";
-  particleSelectorCfg.nHitsMin = 1;
   sequencer.addAlgorithm(
       std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));
 
