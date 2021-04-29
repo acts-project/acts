@@ -25,7 +25,8 @@ int main(int argc, char* argv[]) {
   desc.add_options()(
       "gdml-to-gm-plugin",
       boost::program_options::value<std::string>()->default_value(""),
-      "Path to libGDMLtoGM.so. Note: The gdml file has to be named gdmlfile.xml.");
+      "Path to libGDMLtoGM.so. Note: The gdml file has to be named "
+      "gdmlfile.xml.");
 
   auto vm = Options::parse(desc, argc, argv);
 
