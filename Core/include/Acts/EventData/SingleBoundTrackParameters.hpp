@@ -218,7 +218,7 @@ class SingleBoundTrackParameters {
   Vector3 momentum() const { return absoluteMomentum() * unitDirection(); }
 
   /// Particle electric charge.
-  constexpr Scalar charge() const {
+  Scalar charge() const {
     return m_chargeInterpreter.extractCharge(get<eBoundQOverP>());
   }
 

@@ -334,7 +334,7 @@ class Surface : public virtual GeometryObject,
   /// @param boundParams is the bound parameters vector
   ///
   /// @return Jacobian from local to global
-  virtual BoundToFreeMatrix jacobianLocalToGlobal(
+  virtual BoundToFreeMatrix boundToFreeJacobian(
       const GeometryContext& gctx, const BoundVector& boundParams) const;
 
   /// Calculate the jacobian from global to local which the surface knows best,
@@ -351,7 +351,7 @@ class Surface : public virtual GeometryObject,
   /// @param parameters is the free parameters
   ///
   /// @return Jacobian from global to local
-  virtual FreeToBoundMatrix jacobianGlobalToLocal(
+  virtual FreeToBoundMatrix freeToBoundJacobian(
       const GeometryContext& gctx, const FreeVector& parameters) const;
 
   /// Calculate the derivative of path length at the geometry constraint or

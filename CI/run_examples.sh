@@ -8,7 +8,7 @@ set -euo pipefail
 NUM_EVENTS=100
 SRC_DIR=`pwd`
 BUILD_DIR=`pwd`/build
-DD4HEP_INPUT="--dd4hep-input file:${SRC_DIR}/Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml"
+DD4HEP_INPUT="--dd4hep-input file:${SRC_DIR}/thirdparty/OpenDataDetector/xml/OpenDataDetector.xml"
 timed_run() {
     echo ""
     echo "=== Running $* ==="
@@ -84,7 +84,7 @@ run_example ActsExampleParticleGun \
                 --output-csv \
                 --gen-phi-degree=0:90 \
                 --gen-eta=-2:2 \
-                --gen-p-gev=1:5 \
+                --gen-mom-gev=1:5 \
                 --gen-pdg=13 \
                 --gen-randomize-charge \
                 --gen-nparticles=4

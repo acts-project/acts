@@ -77,13 +77,15 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
           detElement.placement().ptr()->GetVolume()->GetShape();
       // create the proto layer
       ProtoLayer pl(gctx, layerSurfaces);
-      if (detExtension->hasValue("r", "envelope") &&
-          detExtension->hasValue("z", "envelope")) {
+      if (detExtension->hasValue("r_min", "envelope") &&
+          detExtension->hasValue("r_max", "envelope") &&
+          detExtension->hasValue("z_min", "envelope") &&
+          detExtension->hasValue("z_max", "envelope")) {
         // set the values of the proto layer in case enevelopes are handed over
-        pl.envelope[Acts::binR] = {detExtension->getValue("r", "envelope"),
-                                   detExtension->getValue("r", "envelope")};
-        pl.envelope[Acts::binZ] = {detExtension->getValue("z", "envelope"),
-                                   detExtension->getValue("z", "envelope")};
+        pl.envelope[Acts::binR] = {detExtension->getValue("r_min", "envelope"),
+                                   detExtension->getValue("r_max", "envelope")};
+        pl.envelope[Acts::binZ] = {detExtension->getValue("z_min", "envelope"),
+                                   detExtension->getValue("z_max", "envelope")};
       } else if (geoShape != nullptr) {
         TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
         if (tube == nullptr) {
@@ -199,13 +201,16 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
           detElement.placement().ptr()->GetVolume()->GetShape();
       // create the proto layer
       ProtoLayer pl(gctx, layerSurfaces);
-      if (detExtension->hasValue("r", "envelope") &&
-          detExtension->hasValue("z", "envelope")) {
+
+      if (detExtension->hasValue("r_min", "envelope") &&
+          detExtension->hasValue("r_max", "envelope") &&
+          detExtension->hasValue("z_min", "envelope") &&
+          detExtension->hasValue("z_max", "envelope")) {
         // set the values of the proto layer in case enevelopes are handed over
-        pl.envelope[Acts::binR] = {detExtension->getValue("r", "envelope"),
-                                   detExtension->getValue("r", "envelope")};
-        pl.envelope[Acts::binZ] = {detExtension->getValue("z", "envelope"),
-                                   detExtension->getValue("z", "envelope")};
+        pl.envelope[Acts::binR] = {detExtension->getValue("r_min", "envelope"),
+                                   detExtension->getValue("r_max", "envelope")};
+        pl.envelope[Acts::binZ] = {detExtension->getValue("z_min", "envelope"),
+                                   detExtension->getValue("z_max", "envelope")};
       } else if (geoShape != nullptr) {
         TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
         if (tube == nullptr)

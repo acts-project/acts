@@ -45,17 +45,17 @@ void StraightLineStepper::update(State& state, const Vector3& uposition,
   state.pars[eFreeQOverP] = (state.q != 0. ? state.q / up : 1. / up);
 }
 
-void StraightLineStepper::covarianceTransport(State& state) const {
-  detail::covarianceTransport(state.cov, state.jacobian, state.jacTransport,
-                              state.derivative, state.jacToGlobal,
-                              state.pars.template segment<3>(eFreeDir0));
+void StraightLineStepper::transportCovarianceToCurvilinear(State& state) const {
+  detail::transportCovarianceToCurvilinear(
+      state.cov, state.jacobian, state.jacTransport, state.derivative,
+      state.jacToGlobal, state.pars.template segment<3>(eFreeDir0));
 }
 
-void StraightLineStepper::covarianceTransport(State& state,
-                                              const Surface& surface) const {
-  detail::covarianceTransport(state.geoContext, state.cov, state.jacobian,
-                              state.jacTransport, state.derivative,
-                              state.jacToGlobal, state.pars, surface);
+void StraightLineStepper::transportCovarianceToBound(
+    State& state, const Surface& surface) const {
+  detail::transportCovarianceToBound(
+      state.geoContext, state.cov, state.jacobian, state.jacTransport,
+      state.derivative, state.jacToGlobal, state.pars, surface);
 }
 
 void StraightLineStepper::resetState(State& state,
@@ -75,7 +75,7 @@ void StraightLineStepper::resetState(State& state,
 
   // Reinitialize the stepping jacobian
   state.jacToGlobal =
-      surface.jacobianLocalToGlobal(state.geoContext, boundParams);
+      surface.boundToFreeJacobian(state.geoContext, boundParams);
   state.jacobian = BoundMatrix::Identity();
   state.jacTransport = FreeMatrix::Identity();
   state.derivative = FreeVector::Zero();

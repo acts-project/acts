@@ -42,7 +42,7 @@ void Acts::EigenStepper<E, A>::resetState(State& state,
 
   // Reinitialize the stepping jacobian
   state.jacToGlobal =
-      surface.jacobianLocalToGlobal(state.geoContext, boundParams);
+      surface.boundToFreeJacobian(state.geoContext, boundParams);
   state.jacobian = BoundMatrix::Identity();
   state.jacTransport = FreeMatrix::Identity();
   state.derivative = FreeVector::Zero();
@@ -87,18 +87,19 @@ void Acts::EigenStepper<E, A>::update(State& state, const Vector3& uposition,
 }
 
 template <typename E, typename A>
-void Acts::EigenStepper<E, A>::covarianceTransport(State& state) const {
-  detail::covarianceTransport(state.cov, state.jacobian, state.jacTransport,
-                              state.derivative, state.jacToGlobal,
-                              direction(state));
+void Acts::EigenStepper<E, A>::transportCovarianceToCurvilinear(
+    State& state) const {
+  detail::transportCovarianceToCurvilinear(state.cov, state.jacobian,
+                                           state.jacTransport, state.derivative,
+                                           state.jacToGlobal, direction(state));
 }
 
 template <typename E, typename A>
-void Acts::EigenStepper<E, A>::covarianceTransport(
+void Acts::EigenStepper<E, A>::transportCovarianceToBound(
     State& state, const Surface& surface) const {
-  detail::covarianceTransport(state.geoContext.get(), state.cov, state.jacobian,
-                              state.jacTransport, state.derivative,
-                              state.jacToGlobal, state.pars, surface);
+  detail::transportCovarianceToBound(
+      state.geoContext.get(), state.cov, state.jacobian, state.jacTransport,
+      state.derivative, state.jacToGlobal, state.pars, surface);
 }
 
 template <typename E, typename A>
@@ -158,6 +159,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
         h2 * ((sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>() +
               std::abs(sd.kQoP[0] - sd.kQoP[1] - sd.kQoP[2] + sd.kQoP[3])),
         1e-20);
+
     return (error_estimate <= state.options.tolerance);
   };
 
@@ -223,5 +225,14 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     state.stepping.derivative.template segment<3>(4) = sd.k4;
   }
   state.stepping.pathAccumulated += h;
+  if (state.stepping.stepSize.currentType() ==
+      ConstrainedStep::Type::accuracy) {
+    state.stepping.stepSize =
+        state.stepping.stepSize *
+        std::min(std::max(0.25, std::pow((state.options.tolerance /
+                                          std::abs(error_estimate)),
+                                         0.25)),
+                 4.);
+  }
   return h;
 }
