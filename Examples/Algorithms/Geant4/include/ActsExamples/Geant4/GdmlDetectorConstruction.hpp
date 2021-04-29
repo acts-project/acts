@@ -11,6 +11,8 @@
 #include <G4VUserDetectorConstruction.hh>
 #include <globals.hh>
 
+class GeoPhysVol;
+
 namespace ActsExamples {
 
 /// Construct the Geant4 detector from a Gdml file.
@@ -24,6 +26,7 @@ class GdmlDetectorConstruction final : public G4VUserDetectorConstruction {
 
  private:
   std::string m_path;
+  GeoPhysVol* CreateTheWorld(GeoPhysVol* world);
 };
 
 }  // namespace ActsExamples
