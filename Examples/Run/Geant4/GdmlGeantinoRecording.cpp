@@ -23,16 +23,16 @@ int main(int argc, char* argv[]) {
   Options::addOutputOptions(desc, OutputFormat::Root);
   Options::addGeant4Options(desc);
   desc.add_options()(
-      "gdml-file",
+      "gdml-to-gm-plugin",
       boost::program_options::value<std::string>()->default_value(""),
-      "GDML detector file.");
+      "Path to libGDMLtoGM.so. Note: The gdml file has to be named gdmlfile.xml.");
 
   auto vm = Options::parse(desc, argc, argv);
 
   if (vm.empty()) {
     return EXIT_FAILURE;
   }
-  auto gdmlFile = vm["gdml-file"].as<std::string>();
+  auto gdmlFile = vm["gdml-to-gm-plugin"].as<std::string>();
 
   // Setup the GDML detector
   auto g4detector = std::make_unique<GdmlDetectorConstruction>(gdmlFile);

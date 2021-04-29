@@ -135,7 +135,7 @@ set(_acts_tbb_version 2020.1)
 # required packages
 # NOTE we use boost::filesystem instead of std::filesystem since the later
 #   is not uniformly supported even on compilers that nominally support C++17 
-find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS filesystem program_options unit_test_framework)
+find_package(Boost ${_acts_boost_version} REQUIRED CONFIG COMPONENTS filesystem program_options unit_test_framework)
 find_package(Eigen3 ${_acts_eigen3_version} REQUIRED CONFIG)
 
 # the `<project_name>_VERSION` variables set by `setup(... VERSION ...)` have
@@ -234,8 +234,8 @@ if(ACTS_BUILD_DOCS)
   find_package(Sphinx REQUIRED)
 endif()
 
-find_package( GeoModelCore REQUIRED ${GeoModel_VERSION} )
-find_package( GeoModelG4 REQUIRED ${GeoModel_VERSION} )
+find_package( GeoModelCore PATHS /afs/cern.ch/work/f/fklimpel/install/ REQUIRED ${GeoModel_VERSION} )
+find_package( GeoModelG4 PATHS /afs/cern.ch/work/f/fklimpel/install/ REQUIRED ${GeoModel_VERSION} )
 
 if(ACTS_CUSTOM_SCALARTYPE)
     message(STATUS "Building Acts with custom scalar type: ${ACTS_CUSTOM_SCALARTYPE}")

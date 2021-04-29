@@ -8,6 +8,7 @@ target_link_libraries(
     ActsExamplesDetectorDD4hep
     ActsExamplesFramework
     ActsExamplesGeant4
+    ActsExamplesGeant4GeoModel
     ActsExamplesIoRoot
     Boost::program_options)
 

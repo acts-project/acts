@@ -27,47 +27,27 @@ GdmlDetectorConstruction::GdmlDetectorConstruction(std::string path)
     : G4VUserDetectorConstruction(), m_path(std::move(path)) {}
 
 G4VPhysicalVolume* GdmlDetectorConstruction::Construct() {
-//   G4GDMLParser parser;
-//   // TODO how to handle errors
-//   parser.Read(m_path,false);
-//   G4VPhysicalVolume * fWorld = (G4VPhysicalVolume *)parser.GetWorldVolume();
-//   fWorld->GetLogicalVolume()->SetVisAttributes(G4VisAttributes::Invisible);
-// //   parser.Write("test.gdml", fWorld->GetLogicalVolume());
-//   return (G4VPhysicalVolume *)fWorld;
   
-  std::cout<< "Bulding the detector from a plugin: "<<m_path<<std::endl;
+  // Load and build the geometry from GeoModel
+  GeoPhysVol* world = CreateTheWorld();
   GeoGeometryPluginLoader loader;
   GeoVGeometryPlugin *factory=loader.load(m_path);
-  if (!factory) {
-    std::cout<<"Error!Cannot load geometry from factory. Exiting!"<<std::endl;
-    exit(0);
-  }
-
-  GeoPhysVol* world = CreateTheWorld(nullptr);
   factory->create(world);
-
-  std::cout << "ReadGeoModel::buildGeoModel() done." << std::endl;
-  std::cout << "First step done. GeoModelTree built from the gdml file." << std::endl;
   
   // build the Geant4 geometry and get an hanlde to the world' volume
   ExtParameterisedVolumeBuilder* builder = new ExtParameterisedVolumeBuilder("ATLAS");
-  
-  std::cout << "Building G4 geometry."<<std::endl;
   G4LogicalVolume* envelope = builder->Build(world);
-  
   G4VPhysicalVolume* physWorld= new G4PVPlacement(0,G4ThreeVector(),envelope,envelope->GetName(),0,false,0,false);
   
   G4VPhysicalVolume* fWorld = physWorld;
   fWorld->GetLogicalVolume()->SetVisAttributes(G4VisAttributes::Invisible);
   
-  std::cout << "Second step done. Geant4 geometry created from GeoModeltree "<< std::endl;
   return fWorld;  
 }
 
-GeoPhysVol*  GdmlDetectorConstruction::CreateTheWorld(GeoPhysVol* world)
+GeoPhysVol*  GdmlDetectorConstruction::CreateTheWorld()
 {
-  if (world == nullptr)
-  {
+	GeoPhysVol* world = nullptr;
     // Setup the 'World' volume from which everything else will be suspended
     // Get the materials that we shall use.
     // -------------------------------------//
@@ -80,8 +60,7 @@ GeoPhysVol*  GdmlDetectorConstruction::CreateTheWorld(GeoPhysVol* world)
     Air->lock();
     const GeoBox* worldBox = new GeoBox(2000*SYSTEM_OF_UNITS::cm, 2000*SYSTEM_OF_UNITS::cm, 4000*SYSTEM_OF_UNITS::cm);
     const GeoLogVol* worldLog = new GeoLogVol("WorldLog", worldBox, Air);
-    //const GeoLogVol* worldLog = new GeoLogVol("WorldLog", worldBox, Ether);
     world = new GeoPhysVol(worldLog);
-  }
+
   return world;
 }

@@ -26,7 +26,9 @@ class GdmlDetectorConstruction final : public G4VUserDetectorConstruction {
 
  private:
   std::string m_path;
-  GeoPhysVol* CreateTheWorld(GeoPhysVol* world);
+  
+  /// Construct a GeoModel world volume
+  GeoPhysVol* CreateTheWorld();
 };
 
 }  // namespace ActsExamples
