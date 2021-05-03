@@ -79,38 +79,38 @@ class RootTrajectoryParametersWriter final
   std::mutex m_writeMutex;  ///< Mutex used to protect multi-threaded writes
   TFile* m_outputFile{nullptr};             ///< The output file
   TTree* m_outputTree{nullptr};             ///< The output tree
-  unsigned int m_eventNr{0};                ///< the event number
-  std::vector<unsigned int> m_multiTrajNr;  ///< the multi-trajectory number
+  unsigned int m_eventNr{0};                ///< The event number
+  std::vector<unsigned int> m_multiTrajNr;  ///< The multi-trajectory numbers in event
   std::vector<unsigned int>
-      m_subTrajNr;  ///< the multi-trajectory sub-trajectory number
+      m_subTrajNr;  ///< The multi-trajectory sub-trajectory number in event
 
-  std::vector<unsigned long> m_t_barcode;  ///< Truth particle barcode
-  std::vector<int> m_t_charge;             ///< Truth particle charge
-  std::vector<float> m_t_time;             ///< Truth particle time
-  std::vector<float> m_t_vx;               ///< Truth particle vertex x
-  std::vector<float> m_t_vy;               ///< Truth particle vertex y
-  std::vector<float> m_t_vz;               ///< Truth particle vertex z
-  std::vector<float> m_t_px;     ///< Truth particle initial momentum px
-  std::vector<float> m_t_py;     ///< Truth particle initial momentum py
-  std::vector<float> m_t_pz;     ///< Truth particle initial momentum pz
-  std::vector<float> m_t_theta;  ///< Truth particle initial momentum theta
-  std::vector<float> m_t_phi;    ///< Truth particle initial momentum phi
-  std::vector<float> m_t_pT;     ///< Truth particle initial momentum pT
-  std::vector<float> m_t_eta;    ///< Truth particle initial momentum eta
+  std::vector<unsigned long> m_t_barcode;  ///< barcode of all truth particles in event
+  std::vector<int> m_t_charge;             ///< charge of all truth particles in event
+  std::vector<float> m_t_time;             ///< time of all truth particles in event
+  std::vector<float> m_t_vx;               ///< vertex x positions of all truth particles in event
+  std::vector<float> m_t_vy;               ///< vertex y positions of all truth particles in event
+  std::vector<float> m_t_vz;               ///< vertex z positions of all truth particles in event
+  std::vector<float> m_t_px;     ///< initial momenta px of all truth particle in event
+  std::vector<float> m_t_py;     ///< initial momenta py of all truth particle in event
+  std::vector<float> m_t_pz;     ///< initial momenta pz of all truth particle in event
+  std::vector<float> m_t_theta;  ///< initial momenta theta of all truth particle in event
+  std::vector<float> m_t_phi;    ///< initial momenta phi of all truth particle in event
+  std::vector<float> m_t_pT;     ///< initial momenta pT of all truth particle in event
+  std::vector<float> m_t_eta;    ///< initial momenta eta of all truth particle in event
 
   std::vector<bool> m_hasFittedParams;  ///< if the track has fitted parameter
-  std::vector<float> m_eLOC0_fit;       ///< fitted parameter eBoundLoc0
-  std::vector<float> m_eLOC1_fit;       ///< fitted parameter eBoundLoc1
-  std::vector<float> m_ePHI_fit;        ///< fitted parameter ePHI
-  std::vector<float> m_eTHETA_fit;      ///< fitted parameter eTHETA
-  std::vector<float> m_eQOP_fit;        ///< fitted parameter eQOP
-  std::vector<float> m_eT_fit;          ///< fitted parameter eT
-  std::vector<float> m_err_eLOC0_fit;   ///< fitted parameter eLOC err
-  std::vector<float> m_err_eLOC1_fit;   ///< fitted parameter eBoundLoc1 err
-  std::vector<float> m_err_ePHI_fit;    ///< fitted parameter ePHI err
-  std::vector<float> m_err_eTHETA_fit;  ///< fitted parameter eTHETA err
-  std::vector<float> m_err_eQOP_fit;    ///< fitted parameter eQOP err
-  std::vector<float> m_err_eT_fit;      ///< fitted parameter eT err
+  std::vector<float> m_eLOC0_fit;       ///< fitted parameters eBoundLoc0 of all tracks in event
+  std::vector<float> m_eLOC1_fit;       ///< fitted parameters eBoundLoc1 of all tracks in event
+  std::vector<float> m_ePHI_fit;        ///< fitted parameters ePHI of all tracks in event
+  std::vector<float> m_eTHETA_fit;      ///< fitted parameters eTHETA of all tracks in event
+  std::vector<float> m_eQOP_fit;        ///< fitted parameters eQOP of all tracks in event
+  std::vector<float> m_eT_fit;          ///< fitted parameters eT of all tracks in event
+  std::vector<float> m_err_eLOC0_fit;   ///< fitted parameters eLOC err of all tracks in event
+  std::vector<float> m_err_eLOC1_fit;   ///< fitted parameters eBoundLoc1 err of all tracks in event
+  std::vector<float> m_err_ePHI_fit;    ///< fitted parameters ePHI err of all tracks in event
+  std::vector<float> m_err_eTHETA_fit;  ///< fitted parameters eTHETA err of all tracks in event
+  std::vector<float> m_err_eQOP_fit;    ///< fitted parameters eQOP err of all tracks in event
+  std::vector<float> m_err_eT_fit;      ///< fitted parameters eT err of all tracks in event
 };
 
 }  // namespace ActsExamples
