@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -118,7 +118,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersReader::read(
     const ActsExamples::AlgorithmContext& context) {
   ACTS_DEBUG("Trying to read recorded tracks.");
 
-  // read in the material track
+  // read in the fitted track parameters and particles 
   if (m_inputChain && context.eventNumber < m_events) {
     // lock the mutex
     std::lock_guard<std::mutex> lock(m_read_mutex);
@@ -129,8 +129,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersReader::read(
             Acts::Vector3(0., 0., 0.));
 
     // The collection to be written
-    std::vector<Acts::BoundTrackParameters> mtrackCollection;
-    SimParticleContainer mTruthParticleCollection;
+    std::vector<Acts::BoundTrackParameters> trackParameterCollection;
+    SimParticleContainer truthParticleCollection;
 
     // Read the correct entry: batch size * event_number + ib
     m_inputChain->GetEntry(context.eventNumber);
@@ -158,7 +158,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersReader::read(
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0.,
           resT * resT;
 
-      mtrackCollection.push_back(Acts::BoundTrackParameters(
+      trackParameterCollection.push_back(Acts::BoundTrackParameters(
           perigeeSurface, paramVec, std::move(covMat)));
     }
 
@@ -171,13 +171,16 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersReader::read(
       truthParticle.setDirection((*m_t_px)[i], (*m_t_py)[i], (*m_t_pz)[i]);
       truthParticle.setParticleId((*m_t_barcode)[i]);
 
-      mTruthParticleCollection.insert(mTruthParticleCollection.end(),
+      truthParticleCollection.insert(truthParticleCollection.end(),
                                       truthParticle);
     }
     // Write the collections to the EventStore
-    context.eventStore.add(m_cfg.trackCollection, std::move(mtrackCollection));
+    context.eventStore.add(m_cfg.trackCollection, std::move(trackParameterCollection));
     context.eventStore.add(m_cfg.particleCollection,
-                           std::move(mTruthParticleCollection));
+                           std::move(truthParticleCollection));
+  }
+  else{
+    ACTS_WARNING("Could not read in event.");
   }
   // Return success flag
   return ActsExamples::ProcessCode::SUCCESS;
