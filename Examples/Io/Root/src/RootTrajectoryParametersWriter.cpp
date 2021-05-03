@@ -214,17 +214,17 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersWriter::writeT(
         if (boundParam.covariance().has_value()) {
           const auto& covariance = *boundParam.covariance();
           m_err_eLOC0_fit.push_back(
-            sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
-        m_err_eLOC1_fit.push_back(
-            sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
-        m_err_ePHI_fit.push_back(
-            sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
-        m_err_eTHETA_fit.push_back(
-            sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
-        m_err_eQOP_fit.push_back(
-            sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
-        m_err_eT_fit.push_back(
-            sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
+              sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
+          m_err_eLOC1_fit.push_back(
+              sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+          m_err_ePHI_fit.push_back(
+              sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
+          m_err_eTHETA_fit.push_back(
+              sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
+          m_err_eQOP_fit.push_back(
+              sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
+          m_err_eT_fit.push_back(
+              sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
         } else {
           m_err_eLOC0_fit.push_back(NaNfloat);
           m_err_eLOC1_fit.push_back(NaNfloat);
