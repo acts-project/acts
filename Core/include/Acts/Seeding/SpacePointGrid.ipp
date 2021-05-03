@@ -20,7 +20,8 @@ Acts::SpacePointGridCreator::createGrid(
     phiBins = 100;
   } else {
     // calculate circle intersections of helix and max detector radius
-    float minHelixRadius = config.minPt / (300. * std::abs(config.bFieldInZ));  // in mm
+    float minHelixRadius =
+        config.minPt / (300. * std::abs(config.bFieldInZ));  // in mm
     float maxR2 = config.rMax * config.rMax;
     float xOuter = maxR2 / (2 * minHelixRadius);
     float yOuter = std::sqrt(maxR2 - xOuter * xOuter);
