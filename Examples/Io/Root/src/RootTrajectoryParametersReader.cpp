@@ -118,7 +118,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersReader::read(
     const ActsExamples::AlgorithmContext& context) {
   ACTS_DEBUG("Trying to read recorded tracks.");
 
-  // read in the fitted track parameters and particles 
+  // read in the fitted track parameters and particles
   if (m_inputChain && context.eventNumber < m_events) {
     // lock the mutex
     std::lock_guard<std::mutex> lock(m_read_mutex);
@@ -172,14 +172,14 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersReader::read(
       truthParticle.setParticleId((*m_t_barcode)[i]);
 
       truthParticleCollection.insert(truthParticleCollection.end(),
-                                      truthParticle);
+                                     truthParticle);
     }
     // Write the collections to the EventStore
-    context.eventStore.add(m_cfg.trackCollection, std::move(trackParameterCollection));
+    context.eventStore.add(m_cfg.trackCollection,
+                           std::move(trackParameterCollection));
     context.eventStore.add(m_cfg.particleCollection,
                            std::move(truthParticleCollection));
-  }
-  else{
+  } else {
     ACTS_WARNING("Could not read in event.");
   }
   // Return success flag
