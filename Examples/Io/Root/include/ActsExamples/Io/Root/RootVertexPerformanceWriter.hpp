@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -43,15 +43,15 @@ class RootVertexPerformanceWriter final
     std::string allFittedTracks;
     /// Input vertex collection.
     std::string inputVertices;
-    /// output directory.
+    /// Output directory.
     std::string outputDir;
-    /// output filename.
+    /// Output filename.
     std::string outputFilename = "vertexingperformance.root";
-    /// name of the output tree.
+    /// Name of the output tree.
     std::string outputTreename = "vertextree";
-    /// file access mode.
+    /// File access mode.
     std::string fileMode = "RECREATE";
-    /// common root file.
+    /// Common root file.
     TFile* rootFile = nullptr;
     /// Minimum fraction of tracks matched between truth
     /// and reco vertices to be matched for resolution plots
