@@ -43,7 +43,7 @@ struct PointwiseMaterialInteraction {
   /// The effective, passed material properties including the path correction.
   MaterialSlab slab;
   /// The path correction factor due to non-zero incidence on the surface.
-  double pathCorrection;
+  double pathCorrection = 0.;
   /// Expected phi variance due to the interactions.
   double variancePhi = 0.;
   /// Expected theta variance due to the interactions.

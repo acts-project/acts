@@ -139,10 +139,10 @@ class GaussianTrackDensity {
   /// @param trackList All input tracks
   /// @param extractParameters Function extracting BoundTrackParameters from
   /// InputTrack
-  void addTracks(State& state,
-                 const std::vector<const input_track_t*>& trackList,
-                 const std::function<BoundTrackParameters(input_track_t)>&
-                     extractParameters) const;
+  Result<void> addTracks(
+      State& state, const std::vector<const input_track_t*>& trackList,
+      const std::function<BoundTrackParameters(input_track_t)>&
+          extractParameters) const;
 
   /// @brief Evaluate the density function and its two first
   /// derivatives at the specified coordinate along the beamline
@@ -197,5 +197,6 @@ class GaussianTrackDensity {
   };
 };
 
-#include "Acts/Vertexing/GaussianTrackDensity.ipp"
 }  // namespace Acts
+
+#include "Acts/Vertexing/GaussianTrackDensity.ipp"

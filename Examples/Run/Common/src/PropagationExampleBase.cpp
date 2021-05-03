@@ -6,7 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/SharedBField.hpp"
+#include "Acts/Propagator/AtlasStepper.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
@@ -18,12 +24,6 @@
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagationOptions.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include <Acts/Geometry/TrackingGeometry.hpp>
-#include <Acts/Propagator/AtlasStepper.hpp>
-#include <Acts/Propagator/EigenStepper.hpp>
-#include <Acts/Propagator/Navigator.hpp>
-#include <Acts/Propagator/Propagator.hpp>
-#include <Acts/Propagator/StraightLineStepper.hpp>
 
 #include <memory>
 
@@ -81,6 +81,11 @@ int propagationExample(int argc, char* argv[],
     using Stepper = std::decay_t<decltype(stepper)>;
     using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
     Acts::Navigator navigator(tGeometry);
+    navigator.resolveMaterial = vm["prop-resolve-material"].template as<bool>();
+    navigator.resolvePassive = vm["prop-resolve-passive"].template as<bool>();
+    navigator.resolveSensitive =
+        vm["prop-resolve-sensitive"].template as<bool>();
+
     Propagator propagator(std::move(stepper), std::move(navigator));
 
     // Read the propagation config and create the algorithms

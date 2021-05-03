@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -203,14 +203,17 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersWriter::writeT(
         hasFittedParams = true;
         const auto& boundParam = traj.trackParameters(trackTip);
         const auto& parameter = boundParam.parameters();
-        const auto& covariance = *boundParam.covariance();
+
         m_eLOC0_fit.push_back(parameter[Acts::eBoundLoc0]);
         m_eLOC1_fit.push_back(parameter[Acts::eBoundLoc1]);
         m_ePHI_fit.push_back(parameter[Acts::eBoundPhi]);
         m_eTHETA_fit.push_back(parameter[Acts::eBoundTheta]);
         m_eQOP_fit.push_back(parameter[Acts::eBoundQOverP]);
         m_eT_fit.push_back(parameter[Acts::eBoundTime]);
-        m_err_eLOC0_fit.push_back(
+
+        if (boundParam.covariance().has_value()) {
+          const auto& covariance = *boundParam.covariance();
+          m_err_eLOC0_fit.push_back(
             sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
         m_err_eLOC1_fit.push_back(
             sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
@@ -222,6 +225,14 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersWriter::writeT(
             sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
         m_err_eT_fit.push_back(
             sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
+        } else {
+          m_err_eLOC0_fit.push_back(NaNfloat);
+          m_err_eLOC1_fit.push_back(NaNfloat);
+          m_err_ePHI_fit.push_back(NaNfloat);
+          m_err_eTHETA_fit.push_back(NaNfloat);
+          m_err_eQOP_fit.push_back(NaNfloat);
+          m_err_eT_fit.push_back(NaNfloat);
+        }
       }
 
       m_hasFittedParams.push_back(hasFittedParams);

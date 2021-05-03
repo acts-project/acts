@@ -164,6 +164,7 @@ BOOST_AUTO_TEST_CASE(UpdateFromBound) {
   // WARNING for some reason there seems to be an additional flag that makes
   //         the update method not do anything when it is set. Why?
   state.state_ready = false;
+  BOOST_CHECK(params.covariance().has_value());
   stepper.update(state, freeParams, *params.covariance());
   CHECK_CLOSE_ABS(stepper.position(state), newPos, eps);
   CHECK_CLOSE_ABS(stepper.time(state), newTime, eps);
@@ -374,6 +375,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
 
   // Reset all possible parameters
   Stepper::State stateCopy(copyState(*magneticField, state.stepping));
+  BOOST_CHECK(cp.covariance().has_value());
   stepper.resetState(stateCopy, cp.parameters(), *cp.covariance(),
                      cp.referenceSurface(), ndir, stepSize);
   // Test all components
@@ -456,6 +458,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
 
   // Reset the state and test
   Stepper::State stateDisc = copyState(*magneticField, state.stepping);
+  BOOST_CHECK(boundDisc.covariance().has_value());
   stepper.resetState(stateDisc, boundDisc.parameters(), *boundDisc.covariance(),
                      boundDisc.referenceSurface());
 
@@ -477,6 +480,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
 
   // Reset the state and test
   Stepper::State statePerigee = copyState(*magneticField, state.stepping);
+  BOOST_CHECK(boundPerigee.covariance().has_value());
   stepper.resetState(statePerigee, boundPerigee.parameters(),
                      *boundPerigee.covariance(),
                      boundPerigee.referenceSurface());
@@ -494,6 +498,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
 
   // Reset the state and test
   Stepper::State stateStraw = copyState(*magneticField, state.stepping);
+  BOOST_CHECK(boundStraw.covariance().has_value());
   stepper.resetState(stateStraw, boundStraw.parameters(),
                      *boundStraw.covariance(), boundStraw.referenceSurface());
   CHECK_NE_COLLECTIONS(stateStraw.pVector, stateCopy.pVector);

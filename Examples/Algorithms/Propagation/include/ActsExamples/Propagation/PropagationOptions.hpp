@@ -50,7 +50,13 @@ void addPropagationOptions(aopt_t& opt) {
       po::value<std::string>()->default_value("propagation-material"),
       "Propagation material collection.")(
       "prop-ntests", po::value<size_t>()->default_value(1000),
-      "Number of tests performed.")(
+      "Number of tests performed.")("prop-resolve-material",
+                                    po::value<bool>()->default_value(true),
+                                    "Resolve all smaterial surfaces.")(
+      "prop-resolve-passive", po::value<bool>()->default_value(false),
+      "Resolve all passive surfaces.")("prop-resolve-sensitive",
+                                       po::value<bool>()->default_value(true),
+                                       "Resolve all sensitive surfaces.")(
       "prop-d0-sigma", po::value<double>()->default_value(15_um),
       "Sigma of the transverse impact parameter [in mm].")(
       "prop-z0-sigma", po::value<double>()->default_value(55_mm),
