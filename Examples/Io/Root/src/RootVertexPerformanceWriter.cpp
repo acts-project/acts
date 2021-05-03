@@ -56,7 +56,7 @@ ActsExamples::RootVertexPerformanceWriter::RootVertexPerformanceWriter(
     throw std::invalid_argument(
         "Collection with track-associated truth particles missing");
   }
-  if (m_cfg.allFittedTracks.empty()) {
+  if (m_cfg.inputFittedTracks.empty()) {
     throw std::invalid_argument(
         "Collection with all fitted track parameters missing");
   }
@@ -199,9 +199,9 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
   // Matching tracks at vertex to fitted tracks that are in turn matched
   // to truth particles. Match reco and true vtx if >50% of tracks match
 
-  const auto& allFittedTracks =
+  const auto& inputFittedTracks =
       ctx.eventStore.get<std::vector<Acts::BoundTrackParameters>>(
-          m_cfg.allFittedTracks);
+          m_cfg.inputFittedTracks);
 
   // Loop over all reco vertices and find associated truth particles
   std::vector<SimParticleContainer> truthParticlesAtVtxContainer;
@@ -218,7 +218,7 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
       // Find associated truth particle now
       int idx = 0;
       for (const auto& particle : allAssociatedTruthParticles) {
-        if (origTrack.parameters() == allFittedTracks[idx].parameters()) {
+        if (origTrack.parameters() == inputFittedTracks[idx].parameters()) {
           particleAtVtx.insert(particleAtVtx.end(), particle);
 
           int priVtxId = particle.particleId().vertexPrimary();

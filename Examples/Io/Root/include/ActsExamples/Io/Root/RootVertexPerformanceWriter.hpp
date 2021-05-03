@@ -40,7 +40,7 @@ class RootVertexPerformanceWriter final
     /// Truth particles associated to fitted tracks
     std::string inputAssociatedTruthParticles;
     /// All event fitted tracks
-    std::string allFittedTracks;
+    std::string inputFittedTracks;
     /// Input vertex collection.
     std::string inputVertices;
     /// Output directory.
