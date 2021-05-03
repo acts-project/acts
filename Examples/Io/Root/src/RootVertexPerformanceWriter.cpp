@@ -163,7 +163,7 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
   // Read truth particle input collection
   const auto& allTruthParticles =
       ctx.eventStore.get<SimParticleContainer>(m_cfg.inputAllTruthParticles);
-  // Get number of true primary vertices
+  // Get number of generated true primary vertices
   m_ntrueVtx = getNumberOfTruePriVertices(allTruthParticles);
 
   ACTS_INFO("Total number of generated truth particles in event : "
@@ -172,26 +172,26 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
       "Total number of generated truth primary vertices : " << m_ntrueVtx);
 
   // Read selected truth particle input collection
-  const auto& allSelectedParticles = ctx.eventStore.get<SimParticleContainer>(
+  const auto& selectedTruthParticles = ctx.eventStore.get<SimParticleContainer>(
       m_cfg.inputSelectedTruthParticles);
-  // Get number of true primary vertices
-  m_nVtxDetAcceptance = getNumberOfTruePriVertices(allSelectedParticles);
+  // Get number of detector-accepted true primary vertices
+  m_nVtxDetAcceptance = getNumberOfTruePriVertices(selectedTruthParticles);
 
   ACTS_INFO("Total number of selected truth particles in event : "
-            << allSelectedParticles.size());
+            << selectedTruthParticles.size());
   ACTS_INFO("Total number of detector-accepted truth primary vertices : "
             << m_nVtxDetAcceptance);
 
   // Read track-associated truth particle input collection
-  const auto& allAssociatedTruthParticles =
+  const auto& associatedTruthParticles =
       ctx.eventStore.get<SimParticleContainer>(
           m_cfg.inputAssociatedTruthParticles);
-  // Get number of true primary vertices
+  // Get number of track-associated true primary vertices
   m_nVtxReconstructable =
-      getNumberOfReconstructableVertices(allAssociatedTruthParticles);
+      getNumberOfReconstructableVertices(associatedTruthParticles);
 
   ACTS_INFO("Total number of reco track-associated truth particles in event : "
-            << allAssociatedTruthParticles.size());
+            << associatedTruthParticles.size());
   ACTS_INFO("Total number of reco track-associated truth primary vertices : "
             << m_nVtxReconstructable);
 
@@ -202,6 +202,11 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
   const auto& inputFittedTracks =
       ctx.eventStore.get<std::vector<Acts::BoundTrackParameters>>(
           m_cfg.inputFittedTracks);
+
+  if(associatedTruthParticles.size() != inputFittedTracks.size()){
+    ACTS_WARNING("Number of fitted tracks and associated truth particles do not match. Not able to match fitted tracks at reconstructed vertex to truth vertex.");
+  }
+  else{
 
   // Loop over all reco vertices and find associated truth particles
   std::vector<SimParticleContainer> truthParticlesAtVtxContainer;
@@ -217,7 +222,7 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
 
       // Find associated truth particle now
       int idx = 0;
-      for (const auto& particle : allAssociatedTruthParticles) {
+      for (const auto& particle : associatedTruthParticles) {
         if (origTrack.parameters() == inputFittedTracks[idx].parameters()) {
           particleAtVtx.insert(particleAtVtx.end(), particle);
 
@@ -246,7 +251,7 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
     // Match reco to truth vertex if at least 50% of tracks match
     if ((double)fmap[maxOccurrenceId] / tracks.size() >
         m_cfg.minTrackVtxMatchFraction) {
-      for (const auto& particle : allAssociatedTruthParticles) {
+      for (const auto& particle : associatedTruthParticles) {
         int priVtxId = particle.particleId().vertexPrimary();
         int secVtxId = particle.particleId().vertexSecondary();
 
@@ -268,6 +273,8 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
       }
     }
   }  // end loop vertices
+
+}
 
   // fill the variables
   m_outputTree->Fill();
