@@ -103,9 +103,9 @@ ActsExamples::RootParticleReader::~RootParticleReader() {
 
 ActsExamples::ProcessCode ActsExamples::RootParticleReader::read(
     const ActsExamples::AlgorithmContext& context) {
-  ACTS_DEBUG("Trying to read recorded tracks.");
+  ACTS_DEBUG("Trying to read recorded particles.");
 
-  // read in the material track
+  // read in the particle
   if (m_inputChain && context.eventNumber < m_events) {
     // lock the mutex
     std::lock_guard<std::mutex> lock(m_read_mutex);
