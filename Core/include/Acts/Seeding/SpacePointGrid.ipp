@@ -15,13 +15,12 @@ std::unique_ptr<Acts::SpacePointGrid<SpacePoint>>
 Acts::SpacePointGridCreator::createGrid(
     const Acts::SpacePointGridConfig& config) {
   int phiBins;
-  // for no (or bogus) magnetic field, create 100 phi-bins
-  config.bFieldInZ = std::abs(config.bFieldInZ);
+  // for no magnetic field, create 100 phi-bins
   if (config.bFieldInZ == 0) {
     phiBins = 100;
   } else {
     // calculate circle intersections of helix and max detector radius
-    float minHelixRadius = config.minPt / (300. * config.bFieldInZ);  // in mm
+    float minHelixRadius = config.minPt / (300. * std::abs(config.bFieldInZ));  // in mm
     float maxR2 = config.rMax * config.rMax;
     float xOuter = maxR2 / (2 * minHelixRadius);
     float yOuter = std::sqrt(maxR2 - xOuter * xOuter);
