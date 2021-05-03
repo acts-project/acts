@@ -16,7 +16,8 @@ Acts::SpacePointGridCreator::createGrid(
     const Acts::SpacePointGridConfig& config) {
   int phiBins;
   // for no (or bogus) magnetic field, create 100 phi-bins
-  if (config.bFieldInZ <= 0) {
+  config.bFieldInZ = std::abs(config.bFieldInZ);
+  if (config.bFieldInZ == 0) {
     phiBins = 100;
   } else {
     // calculate circle intersections of helix and max detector radius
@@ -52,10 +53,11 @@ Acts::SpacePointGridCreator::createGrid(
   float zBinSize = config.cotThetaMax * config.deltaRMax;
   int zBins;
   // for pseudorapidity == 0, create 100 phi-bins
-  if (zBinSize <= 0) {
+  if (zBinSize == 0) {
     zBins = 100;
   } else {
     zBins = std::floor((config.zMax - config.zMin) / zBinSize);
+    zBins = zBins < 1 ? 1 : zBins;
   }
   detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Bound>
       zAxis(config.zMin, config.zMax, zBins);
