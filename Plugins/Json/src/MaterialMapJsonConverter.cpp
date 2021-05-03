@@ -24,6 +24,7 @@
 #include <Acts/Surfaces/RadialBounds.hpp>
 #include <Acts/Surfaces/SurfaceBounds.hpp>
 
+#include <algorithm>
 #include <map>
 
 namespace {
@@ -173,7 +174,7 @@ Acts::MaterialMapJsonConverter::MaterialMapJsonConverter(
 
 /// Convert method
 ///
-nlohmann::ordered_json Acts::MaterialMapJsonConverter::materialMapsToJson(
+nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
     const DetectorMaterialMaps& maps) {
   VolumeMaterialMap volumeMap = maps.second;
   std::vector<std::pair<GeometryIdentifier, const IVolumeMaterial*>>
@@ -181,21 +182,21 @@ nlohmann::ordered_json Acts::MaterialMapJsonConverter::materialMapsToJson(
   for (auto it = volumeMap.begin(); it != volumeMap.end(); it++) {
     mapVolumeInit.push_back({it->first, it->second.get()});
   }
-  GeometryHierarchyMap<const IVolumeMaterial*> HierarchyVolumeMap(
+  GeometryHierarchyMap<const IVolumeMaterial*> hierarchyVolumeMap(
       mapVolumeInit);
-  nlohmann::ordered_json materialVolume =
-      m_volumeMaterialConverter.toJson(HierarchyVolumeMap);
+  nlohmann::json materialVolume =
+      m_volumeMaterialConverter.toJson(hierarchyVolumeMap);
   SurfaceMaterialMap surfaceMap = maps.first;
   std::vector<std::pair<GeometryIdentifier, const ISurfaceMaterial*>>
       mapSurfaceInit;
   for (auto it = surfaceMap.begin(); it != surfaceMap.end(); it++) {
     mapSurfaceInit.push_back({it->first, it->second.get()});
   }
-  GeometryHierarchyMap<const ISurfaceMaterial*> HierarchySurfaceMap(
+  GeometryHierarchyMap<const ISurfaceMaterial*> hierarchySurfaceMap(
       mapSurfaceInit);
-  nlohmann::ordered_json materialSurface =
-      m_surfaceMaterialConverter.toJson(HierarchySurfaceMap);
-  nlohmann::ordered_json materialMap;
+  nlohmann::json materialSurface =
+      m_surfaceMaterialConverter.toJson(hierarchySurfaceMap);
+  nlohmann::json materialMap;
   materialMap["Volumes"] = materialVolume;
   materialMap["Surfaces"] = materialSurface;
   return materialMap;
@@ -205,22 +206,22 @@ Acts::MaterialMapJsonConverter::DetectorMaterialMaps
 Acts::MaterialMapJsonConverter::jsonToMaterialMaps(
     const nlohmann::json& materialmap) {
   nlohmann::json materialVolume = materialmap["Volumes"];
-  GeometryHierarchyMap<const IVolumeMaterial*> HierarchyVolumeMap =
+  GeometryHierarchyMap<const IVolumeMaterial*> hierarchyVolumeMap =
       m_volumeMaterialConverter.fromJson(materialVolume);
   VolumeMaterialMap volumeMap;
-  for (size_t i = 0; i < HierarchyVolumeMap.size(); i++) {
+  for (size_t i = 0; i < hierarchyVolumeMap.size(); i++) {
     std::shared_ptr<const IVolumeMaterial> volumePointer(
-        HierarchyVolumeMap.valueAt(i));
-    volumeMap.insert({HierarchyVolumeMap.idAt(i), std::move(volumePointer)});
+        hierarchyVolumeMap.valueAt(i));
+    volumeMap.insert({hierarchyVolumeMap.idAt(i), std::move(volumePointer)});
   }
   nlohmann::json materialSurface = materialmap["Surfaces"];
-  GeometryHierarchyMap<const ISurfaceMaterial*> HierarchySurfaceMap =
+  GeometryHierarchyMap<const ISurfaceMaterial*> hierarchySurfaceMap =
       m_surfaceMaterialConverter.fromJson(materialSurface);
   SurfaceMaterialMap surfaceMap;
-  for (size_t i = 0; i < HierarchySurfaceMap.size(); i++) {
+  for (size_t i = 0; i < hierarchySurfaceMap.size(); i++) {
     std::shared_ptr<const ISurfaceMaterial> surfacePointer(
-        HierarchySurfaceMap.valueAt(i));
-    surfaceMap.insert({HierarchySurfaceMap.idAt(i), std::move(surfacePointer)});
+        hierarchySurfaceMap.valueAt(i));
+    surfaceMap.insert({hierarchySurfaceMap.idAt(i), std::move(surfacePointer)});
   }
 
   Acts::MaterialMapJsonConverter::DetectorMaterialMaps maps = {surfaceMap,
@@ -230,7 +231,7 @@ Acts::MaterialMapJsonConverter::jsonToMaterialMaps(
   return maps;
 }
 
-nlohmann::ordered_json Acts::MaterialMapJsonConverter::trackingGeometryToJson(
+nlohmann::json Acts::MaterialMapJsonConverter::trackingGeometryToJson(
     const Acts::TrackingGeometry& tGeometry) {
   std::vector<std::pair<GeometryIdentifier, Acts::TrackingVolumeAndMaterial>>
       volumeHierarchy;
@@ -238,15 +239,13 @@ nlohmann::ordered_json Acts::MaterialMapJsonConverter::trackingGeometryToJson(
       surfaceHierarchy;
   convertToHierarchy(volumeHierarchy, surfaceHierarchy,
                      tGeometry.highestTrackingVolume());
-  GeometryHierarchyMap<Acts::TrackingVolumeAndMaterial> HierarchyVolumeMap(
+  GeometryHierarchyMap<Acts::TrackingVolumeAndMaterial> hierarchyVolumeMap(
       volumeHierarchy);
-  nlohmann::ordered_json jsonVolumes =
-      m_volumeConverter.toJson(HierarchyVolumeMap);
-  GeometryHierarchyMap<Acts::SurfaceAndMaterial> HierarchySurfaceMap(
+  nlohmann::json jsonVolumes = m_volumeConverter.toJson(hierarchyVolumeMap);
+  GeometryHierarchyMap<Acts::SurfaceAndMaterial> hierarchySurfaceMap(
       surfaceHierarchy);
-  nlohmann::ordered_json jsonSurfaces =
-      m_surfaceConverter.toJson(HierarchySurfaceMap);
-  nlohmann::ordered_json hierarchyMap;
+  nlohmann::json jsonSurfaces = m_surfaceConverter.toJson(hierarchySurfaceMap);
+  nlohmann::json hierarchyMap;
   hierarchyMap["Volumes"] = jsonVolumes;
   hierarchyMap["Surfaces"] = jsonSurfaces;
   return hierarchyMap;
@@ -258,6 +257,16 @@ void Acts::MaterialMapJsonConverter::convertToHierarchy(
     std::vector<std::pair<GeometryIdentifier, Acts::SurfaceAndMaterial>>&
         surfaceHierarchy,
     const Acts::TrackingVolume* tVolume) {
+  auto sameId =
+      [tVolume](
+          std::pair<GeometryIdentifier, Acts::TrackingVolumeAndMaterial> pair) {
+        return (tVolume->geometryId() == pair.first);
+      };
+  if (std::find_if(volumeHierarchy.begin(), volumeHierarchy.end(), sameId) !=
+      volumeHierarchy.end()) {
+    // this volume was already visited
+    return;
+  }
   if ((tVolume->volumeMaterial() != nullptr ||
        m_cfg.processNonMaterial == true) &&
       m_cfg.processVolumes == true) {

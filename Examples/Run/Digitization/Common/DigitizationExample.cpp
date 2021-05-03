@@ -125,7 +125,8 @@ int runDigitizationExample(
   if (vm["output-root"].template as<bool>()) {
     RootMeasurementWriter::Config measWriterRoot;
     measWriterRoot.inputMeasurements = digiCfg.outputMeasurements;
-    measWriterRoot.inputClusters = digiCfg.outputClusters;
+    measWriterRoot.inputClusters =
+        digiCfg.isSimpleSmearer ? std::string("") : digiCfg.outputClusters;
     measWriterRoot.inputSimHits = simHitReaderCfg.outputSimHits;
     measWriterRoot.inputMeasurementSimHitsMap =
         digiCfg.outputMeasurementSimHitsMap;

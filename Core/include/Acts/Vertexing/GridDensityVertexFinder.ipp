@@ -107,6 +107,9 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::
   const double d0 = trk.parameters()[BoundIndices::eBoundLoc0];
   const double z0 = trk.parameters()[BoundIndices::eBoundLoc1];
   // Get track covariance
+  if (not trk.covariance().has_value()) {
+    return false;
+  }
   const auto perigeeCov = *(trk.covariance());
   const double covDD =
       perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc0);

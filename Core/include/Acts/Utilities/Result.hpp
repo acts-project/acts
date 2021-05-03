@@ -295,14 +295,14 @@ class Result<void, E> {
    * @note If `res.ok()` this method will abort (noexcept)
    * @return Reference to the error
    */
-  E& error() & noexcept { return *m_opt; }
+  E& error() & noexcept { return m_opt.value(); }
 
   /**
    * Returns the error by-value.
    * @note If `res.ok()` this method will abort (noexcept)
    * @return Reference to the error
    */
-  E error() && noexcept { return std::move(*m_opt); }
+  E error() && noexcept { return std::move(m_opt.value()); }
 
  private:
   std::optional<E> m_opt;

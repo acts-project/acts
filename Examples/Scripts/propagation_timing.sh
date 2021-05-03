@@ -31,7 +31,7 @@ for pt in 0.1 0.5 1.0 2.0 5.0 10.0 100.0 ; do
   for stepper in {0..2} ; do
     
     # Compute the name of the example executable
-    executable="ActsExample$1Example -n$2  ${magfield} --prop-ntests $3 -j $4 --prop-pt-range ${pt} ${pt} --prop-stepper ${stepper} --output-root true"
+    executable="ActsExamplePropagation$1 -n$2  ${magfield} --prop-ntests $3 -j $4 --prop-pt-range ${pt} ${pt} --prop-stepper ${stepper} --output-root"
 
     echo "${jobID}, ${stepper}, ${pt}" >> ${output_file}
     eval ${executable}
