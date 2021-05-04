@@ -64,7 +64,7 @@ int runRecTruthTracks(int argc, char* argv[],
   auto outputDir = ensureWritableDirectory(vm["output-dir"].as<std::string>());
   auto rnd = std::make_shared<const ActsExamples::RandomNumbers>(
       Options::readRandomNumbersConfig(vm));
-  auto dirNav = vm["directed-navigation"].as<bool>();
+  auto dirNav = vm["fit-directed-navigation"].as<bool>();
 
   // Setup detector geometry
   auto geometry = Geometry::build(vm, *detector);
@@ -139,6 +139,9 @@ int runRecTruthTracks(int argc, char* argv[],
       particleSmearingCfg.outputTrackParameters;
   fitter.outputTrajectories = "trajectories";
   fitter.directNavigation = dirNav;
+  fitter.multipleScattering =
+      vm["fit-multiple-scattering-correction"].as<bool>();
+  fitter.energyLoss = vm["fit-energy-loss-correction"].as<bool>();
   fitter.trackingGeometry = trackingGeometry;
   fitter.dFit = TrackFittingAlgorithm::makeTrackFitterFunction(magneticField);
   fitter.fit = TrackFittingAlgorithm::makeTrackFitterFunction(trackingGeometry,

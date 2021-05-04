@@ -73,6 +73,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
                 Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(),
                 &(*pSurface));
 
+  kfOptions.multipleScattering = m_cfg.multipleScattering;
+  kfOptions.energyLoss = m_cfg.energyLoss;
+
   // Perform the fit for each input track
   std::vector<IndexSourceLink> trackSourceLinks;
   std::vector<const Acts::Surface*> surfSequence;
