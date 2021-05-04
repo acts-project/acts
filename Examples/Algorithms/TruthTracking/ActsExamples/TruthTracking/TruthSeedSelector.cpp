@@ -61,7 +61,7 @@ ActsExamples::TruthSeedSelector::readConfig(const Options::Variables& vars) {
 
   Config cfg;
   extractInterval("select-rho-mm", 1_mm, cfg.rhoMin, cfg.rhoMax);
-  extractInterval("select-absz-mm", 1_mm, cfg.zMin, cfg.zMax);
+  extractInterval("select-z-mm", 1_mm, cfg.zMin, cfg.zMax);
   extractInterval("select-phi-degree", 1_degree, cfg.phiMin, cfg.phiMax);
   extractInterval("select-eta", 1.0, cfg.etaMin, cfg.etaMax);
   extractInterval("select-abseta", 1.0, cfg.absEtaMin, cfg.absEtaMax);
