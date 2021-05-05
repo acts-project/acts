@@ -67,7 +67,7 @@ contribute. If you have any questions, feel free to ask `acts-developers@cern
 
 Please always fork the Acts repository you want to work on and create branches
 only in your own fork. Once you want to share your work, create a Pull Request
-(PR) (for gitlab users: equivalent to merge request) to the master branch of the
+(PR) (for gitlab users: equivalent to merge request) to the main branch of the
 upstream acts-project repository. If it is not yet ready to be merged in, please
 create a draft pull request (by clicking on the small arrow on the green "create
 pull request" button) to mark it work in progress. Once you want your branch to
@@ -120,7 +120,7 @@ familiar with development process in the Acts project.
    an "official" branch. As all branches are equal in git, the
    definition of "official" branch is quite subjective. In the Acts
    project you should not work directly on branches which are
-   **protected** in the repository. Usually, these are the *master* and
+   **protected** in the repository. Usually, these are the *main* and
    *release/X.Y.Z* branches. The benefit of this strategy is that you
    will never have problems to update your fork. Any git merge in your
    local repository on such an "official" branch will always be a
@@ -226,7 +226,7 @@ for handling this situation is the following:
 
 #. Get into a clean state of your working directory on your feature
    branch (either by commiting open changes or by stashing them).
-#. Checkout the branch the bugfix should be merged into (either *master*
+#. Checkout the branch the bugfix should be merged into (either *main*
    or *release/X.Y.Z*) and get the most recent version.
 #. Create a new branch for the bugfix.
 #. Fix the bug, write a test, update documentation etc.
@@ -234,23 +234,23 @@ for handling this situation is the following:
 #. Switch back to your feature branch.
 #. Merge your local bugfix branch into the feature branch. Continue your
    feature development.
-#. Eventually, the bugfix will be merged into *master*. Then, you can
-   rebase your feature branch on master which will remove all duplicate
+#. Eventually, the bugfix will be merged into *main*. Then, you can
+   rebase your feature branch on main which will remove all duplicate
    commits related to the bugfix.
 
 Example: Backporting a feature or bugfix
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Suppose you have a bugfix or feature branch that is eventually going to
-be merged in ``master``. You might want to have the feature/bugfix
+be merged in ``main``. You might want to have the feature/bugfix
 avilable in a patch (say ``0.25.1``) tag. To to that, find the
 corresponding release branch, for this example that would be
 ``release/v0.25.X``. You must create a dedicated branch that **only**
 contains the commits that relate to your feature/bugfix, otherwise the
-PR will contain all other commits that were merged into master since the
+PR will contain all other commits that were merged into main since the
 release was branched off. With that branch, open a PR to that branch,
 and make it clear that it is a backport, also linking to a potential
-equivalent PR that targets ``master``.
+equivalent PR that targets ``main``.
 
 Tips for users migrating from GitLab
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -296,15 +296,15 @@ Merging a pull request
 ~~~~~~~~~~~~~~~~~~~~~~
 
 If you have been granted write access on the Acts repository, you can
-merge a pull request into the Acts master branch after it has been
+merge a pull request into the Acts main branch after it has been
 approved.
 
 GitHub may warn you that a "Fast-forward merge is not possible". This
 warning means that the pull request has fallen behind the current Acts
-master branch, and should be updated through a rebase. Please notify the
-pull request author in order to make sure that the latest master changes
+main branch, and should be updated through a rebase. Please notify the
+pull request author in order to make sure that the latest main changes
 do not affect the pull request, and to have it updated as appropriate.
 
-For a PR that is behind master, a button "Update branch" may appear.
+For a PR that is behind main, a button "Update branch" may appear.
 This should NOT be used as it merges instead of rebasing, which is not
 our workflow.
