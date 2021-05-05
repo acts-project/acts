@@ -149,7 +149,7 @@ int main(int argc, char* argv[]) {
   // Why does this need number-of-events? If it really does emulate
   // per-event access patterns this should be switched to a proper
   // Sequencer-based tool. Otherwise it should be removed.
-  auto nEvents = ActsExamples::Options::readSequencerConfig(vm).events;
+  auto nEvents = ActsExamples::Options::readSequencerConfig(vm).events.value();
   auto bField = ActsExamples::Options::readMagneticField(vm);
 
   // Get the phi and eta range
