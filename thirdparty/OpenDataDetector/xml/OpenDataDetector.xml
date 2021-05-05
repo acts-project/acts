@@ -63,32 +63,32 @@
         <constant name="mat_bp_bPhi" value="1"/>
         <constant name="mat_bp_bZ" value="10"/>
         <!-- pixel section -->
-        <constant name="mat_pix_barrel_bPhi" value="1"/>
+        <constant name="mat_pix_barrel_bPhi" value="72"/>
         <constant name="mat_pix_barrel_bZ" value="200"/>
-        <constant name="mat_pix_endcap_bPhi" value="1"/>
-        <constant name="mat_pix_endcap_bR" value="25"/>
-        <constant name="mat_pix_outer_bPhi" value="1"/>
+        <constant name="mat_pix_endcap_bPhi" value="72"/>
+        <constant name="mat_pix_endcap_bR" value="150"/>
+        <constant name="mat_pix_outer_bPhi" value="72"/>
         <constant name="mat_pix_outer_bZ" value="250"/>
-        <constant name="mat_pix_inter_bR" value="25"/>
-        <constant name="mat_pix_inter_bPhi" value="1"/>
+        <constant name="mat_pix_inter_bR" value="50"/>
+        <constant name="mat_pix_inter_bPhi" value="72"/>
         <!-- short strip section -->
-        <constant name="mat_sst_barrel_bPhi" value="1"/>
+        <constant name="mat_sst_barrel_bPhi" value="72"/>
         <constant name="mat_sst_barrel_bZ" value="150"/>
-        <constant name="mat_sst_endcap_bPhi" value="1"/>
-        <constant name="mat_sst_endcap_bR" value="25"/>
+        <constant name="mat_sst_endcap_bPhi" value="72"/>
+        <constant name="mat_sst_endcap_bR" value="150"/>
         <constant name="mat_sst_outer_bZ" value="150"/>
-        <constant name="mat_sst_outer_bPhi" value="1"/>
+        <constant name="mat_sst_outer_bPhi" value="72"/>
         <constant name="mat_sst_inter_bR" value="25"/>
-        <constant name="mat_sst_inter_bPhi" value="1"/>
+        <constant name="mat_sst_inter_bPhi" value="72"/>
         <!-- long strip section -->
-        <constant name="mat_lst_barrel_bPhi" value="1"/>
-        <constant name="mat_lst_barrel_bZ" value="100"/>
-        <constant name="mat_lst_endcap_bPhi" value="1"/>
-        <constant name="mat_lst_endcap_bR" value="25"/>
+        <constant name="mat_lst_barrel_bPhi" value="72"/>
+        <constant name="mat_lst_barrel_bZ" value="250"/>
+        <constant name="mat_lst_endcap_bPhi" value="72"/>
+        <constant name="mat_lst_endcap_bR" value="100"/>
         <constant name="mat_lst_outer_bZ" value="75"/>
-        <constant name="mat_lst_outer_bPhi" value="1"/>
-        <constant name="mat_lst_inter_bR" value="25"/>
-        <constant name="mat_lst_inter_bPhi" value="1"/>
+        <constant name="mat_lst_outer_bPhi" value="72"/>
+        <constant name="mat_lst_inter_bR" value="100"/>
+        <constant name="mat_lst_inter_bPhi" value="72"/>
     </define>
             
     <display>
