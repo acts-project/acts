@@ -13,6 +13,7 @@
 #include <vector>
 
 #include <TCanvas.h>
+#include <TColor.h>
 #include <TDirectory.h>
 #include <TF1.h>
 #include <TFile.h>
@@ -43,6 +44,27 @@ void setHistStyle(hist_t* hist, short color = 1) {
   // hist->SetTitle("");
   hist->SetLineColor(color);
   hist->SetMarkerColor(color);
+}
+
+// Helper function:
+// set color pallette
+template <typename hist_t>
+void adaptColorPalette(hist_t* h, float rmin, float rmax, float rgood,
+                       float rwindow, int n) {
+  // min - max is the range of the axis
+  float rel_good = (rgood - rmin) / (rmax - rmin);
+  float rel_window = rwindow / (rmax - rmin);
+
+  // Stops are
+  const int number = 5;
+  double red[number] = {0., 0., 0., 1., 1.};
+  double green[number] = {0., 1., 1., 1., 0.};
+  double blue[number] = {1., 1., 0., 0., 0.};
+  double stops[number] = {0., rel_good - rel_window, rel_good,
+                          rel_good + rel_window, 1.};
+  h->SetContour(n);
+
+  TColor::CreateGradientColorTable(number, stops, red, green, blue, n);
 }
 
 // loc1, phi, theta, q/p, t) at all track states from root file produced by the
@@ -458,12 +480,12 @@ void boundParamResolution(const std::string& inFile,
   }
 
   // Resiudal / Pull histograms
-  std::map<string, TH1F*> res_prt;
-  std::map<string, TH1F*> res_flt;
-  std::map<string, TH1F*> res_smt;
-  std::map<string, TH1F*> pull_prt;
-  std::map<string, TH1F*> pull_flt;
-  std::map<string, TH1F*> pull_smt;
+  std::map<std::string, TH1F*> res_prt;
+  std::map<std::string, TH1F*> res_flt;
+  std::map<std::string, TH1F*> res_smt;
+  std::map<std::string, TH1F*> pull_prt;
+  std::map<std::string, TH1F*> pull_flt;
+  std::map<std::string, TH1F*> pull_smt;
 
   // - per layer (identified by vol, lay)
   // - per volume (identified by vol, -1)
@@ -577,7 +599,7 @@ void boundParamResolution(const std::string& inFile,
         p2d_pull_flt[2]->Fill(z_flt, r_flt, pull_PHI_flt->at(i));
         p2d_pull_flt[3]->Fill(z_flt, r_flt, pull_THETA_flt->at(i));
         p2d_pull_flt[4]->Fill(z_flt, r_flt, pull_QOP_flt->at(i));
-        p2d_pull_flt[5]->Fill(z_flt, r_flt, pull_T_flt->at(i));        
+        p2d_pull_flt[5]->Fill(z_flt, r_flt, pull_T_flt->at(i));
       }
       if (smoothed->at(i)) {
         float x_smt = g_x_smt->at(i);
@@ -676,10 +698,10 @@ void boundParamResolution(const std::string& inFile,
     for (size_t ipar = 0; ipar < paramNames.size(); ++ipar) {
       respull_mean_prf->cd(ipar + 1);
 
-       if (res_pull == "pull"){
-          profiles[ipar]->GetZaxis()->SetRangeUser(-1.*pullRange,pullRange);
+      if (res_pull == "pull") {
+        profiles[ipar]->GetZaxis()->SetRangeUser(-1. * pullRange, pullRange);
       }
-
+      adaptColorPalette(profiles[ipar], -1. * pullRange, pullRange, 0., 0.25, 104);
       profiles[ipar]->Draw("colz");
       profiles[ipar]->Write();
     }
@@ -694,31 +716,32 @@ void boundParamResolution(const std::string& inFile,
     // Variance
     for (size_t ipar = 0; ipar < paramNames.size(); ++ipar) {
       respull_var_prf->cd(ipar + 1);
-      auto prof_clone = dynamic_cast<TProfile2D*>(profiles[ipar]->Clone());
       auto zAxis = profiles[ipar]->GetXaxis();
       auto rAxis = profiles[ipar]->GetYaxis();
       int binsZ = zAxis->GetNbins();
       int binsR = rAxis->GetNbins();
-      std::string hist_name  = "all_";
-                  hist_name += res_pull;
-                  hist_name += "_";
-                  hist_name += paramNames[ipar];
-                  hist_name += "_";
-                  hist_name += type;
-      TH2F* var = new TH2F(hist_name.c_str(), (res_pull+std::string(" ")+paramNames[ipar]).c_str(),
-                           binsZ, zAxis->GetXmin(), zAxis->GetXmax(),
-                           binsR, rAxis->GetXmin(), rAxis->GetXmax());
+      std::string hist_name = "all_";
+      hist_name += res_pull;
+      hist_name += "_";
+      hist_name += paramNames[ipar];
+      hist_name += "_";
+      hist_name += type;
+      TH2F* var =
+          new TH2F(hist_name.c_str(),
+                   (res_pull + std::string(" ") + paramNames[ipar]).c_str(),
+                   binsZ, zAxis->GetXmin(), zAxis->GetXmax(), binsR,
+                   rAxis->GetXmin(), rAxis->GetXmax());
       for (int iz = 1; iz <= binsZ; ++iz) {
         for (int ir = 1; ir <= binsR; ++ir) {
-          if (profiles[ipar]->GetBinContent(iz, ir) != 0.) {          
+          if (profiles[ipar]->GetBinContent(iz, ir) != 0.) {
             var->SetBinContent(iz, ir, profiles[ipar]->GetBinError(iz, ir));
           }
         }
       }
-      if (res_pull == "pull"){
-          var->GetZaxis()->SetRangeUser(0.,pullRange);
+      if (res_pull == "pull") {
+        var->GetZaxis()->SetRangeUser(0., pullRange);
       }
-
+      adaptColorPalette(var, 0., pullRange, 1., 0.5, 104);
       var->Draw("colz");
       var->Write();
     }
@@ -825,3 +848,5 @@ void boundParamResolution(const std::string& inFile,
 
   // out->Close();
 }
+
+
