@@ -61,9 +61,9 @@ ModuleClusters::createCellMap() {
     if (std::holds_alternative<Cluster::Cell>(mval.value)) {
       Cluster::Cell cell = std::get<Cluster::Cell>(mval.value);
       size_t index = cell.bin[0] + m_segmentation.bins(0) * cell.bin[1];
-      auto [it, dup] =
+      auto [it, uniq] =
           cellMap.insert({index, {ModuleValueAmbi(std::move(mval)), false}});
-      if (dup) {
+      if (!uniq) {
         it->second.first.add(std::move(mval));
       }
     } else {
