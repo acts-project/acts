@@ -9,6 +9,7 @@
 #pragma once
 
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 namespace ActsExamples {
 
@@ -35,9 +36,11 @@ class TruthSeedSelector final : public BareAlgorithm {
     /// The output proto tracks collection.
     std::string outputParticles;
     /// Maximum distance from the origin in the transverse plane
+    double rhoMin = 0.;
     double rhoMax = std::numeric_limits<double>::max();
-    /// Maximum absolute distance from the origin along z
-    double absZMax = std::numeric_limits<double>::max();
+    /// Minimum/Maximum absolute distance from the origin along z
+    double zMin = std::numeric_limits<double>::lowest();
+    double zMax = std::numeric_limits<double>::max();
     // Truth particle kinematic cuts
     double phiMin = std::numeric_limits<double>::lowest();
     double phiMax = std::numeric_limits<double>::max();
@@ -58,6 +61,12 @@ class TruthSeedSelector final : public BareAlgorithm {
   TruthSeedSelector(const Config& cfg, Acts::Logging::Level lvl);
 
   ProcessCode execute(const AlgorithmContext& ctx) const override final;
+
+  /// Add options for the particle selector.
+  static void addOptions(Options::Description& desc);
+
+  /// Construct particle selector config from user variables.
+  static Config readConfig(const Options::Variables& vars);
 
  private:
   Config m_cfg;
