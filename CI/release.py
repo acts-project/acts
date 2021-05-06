@@ -13,7 +13,7 @@ from rich import print
 
 from util import Spinner
 
-default_branch_name = "master"
+default_branch_name = "main"
 
 def get_current_branch():
   return git("rev-parse", "--abbrev-ref", "HEAD").strip()

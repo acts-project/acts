@@ -147,17 +147,20 @@ ActsExamples::Sequencer::determineEventsRange() const {
     return kInvalidEventsRange;
   }
   // events range was not defined by either the readers or user command line.
-  if ((beg == 0u) and (end == SIZE_MAX) and (m_cfg.events == SIZE_MAX)) {
+  if ((beg == 0u) and (end == SIZE_MAX) and (!m_cfg.events.has_value())) {
     ACTS_ERROR("Could not determine number of events");
     return kInvalidEventsRange;
   }
 
   // take user selection into account
   auto begSelected = saturatedAdd(beg, m_cfg.skip);
-  auto endRequested = saturatedAdd(begSelected, m_cfg.events);
-  auto endSelected = std::min(end, endRequested);
-  if (end < endRequested) {
-    ACTS_INFO("Restrict requested number of events to available ones");
+  auto endSelected = end;
+  if (m_cfg.events.has_value()) {
+    auto endRequested = saturatedAdd(begSelected, m_cfg.events.value());
+    endSelected = std::min(end, endRequested);
+    if (end < endRequested) {
+      ACTS_INFO("Restrict requested number of events to available ones");
+    }
   }
 
   return {begSelected, endSelected};
