@@ -145,7 +145,7 @@ int runRecTruthTracks(int argc, char* argv[],
   fitter.multipleScattering =
       vm["fit-multiple-scattering-correction"].as<bool>();
   fitter.energyLoss = vm["fit-energy-loss-correction"].as<bool>();
-  fitter.pickTrack = vm["fit-pick-track"].template as<int>();
+  fitter.pickTrack = vm["fit-pick-track"].as<int>();
   fitter.trackingGeometry = trackingGeometry;
   fitter.dFit = TrackFittingAlgorithm::makeTrackFitterFunction(magneticField);
   fitter.fit = TrackFittingAlgorithm::makeTrackFitterFunction(trackingGeometry,
