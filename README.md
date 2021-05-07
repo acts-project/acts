@@ -4,7 +4,7 @@ or *A Common Tracking Software* if you do not like recursive acronyms
 
 [![10.5281/zenodo.3606011](https://badgen.net/badge/DOI/10.5281%2Fzenodo.3606011/blue)](https://doi.org/10.5281/zenodo.3606011)
 [![Chat on Mattermost](https://badgen.net/badge/chat/on%20mattermost/cyan)](https://mattermost.web.cern.ch/acts/)
-[![coverage](https://badgen.net/codecov/c/github/acts-project/acts/master)](https://codecov.io/gh/acts-project/acts/branch/master)
+[![coverage](https://badgen.net/codecov/c/github/acts-project/acts/main)](https://codecov.io/gh/acts-project/acts/branch/main)
 [![Latest release](https://badgen.net/github/release/acts-project/acts)](https://github.com/acts-project/acts/releases)
 [![Status](https://badgen.net/github/status/acts-project/acts)](https://github.com/acts-project/acts/actions)
 
