@@ -165,6 +165,9 @@ jobs:
         run: >
           apt-get install -y doxygen
           && pip3 install -r docs/requirements.txt
+      - name: Info
+        run: >
+          doxygen --version
       - name: Configure
         run: cmake -B build -S . -GNinja -DACTS_BUILD_DOCS=on
       - name: Build
