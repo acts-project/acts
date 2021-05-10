@@ -164,19 +164,19 @@ jobs:
       - name: Install dependencies
         run: >
           apt-get install -y doxygen
-          && pip3 install --upgrade pip
+          && pip install --upgrade pip
           && which pip3 && pip3 --version
           && which pip && pip --version
-          && pip3 install -r docs/requirements.txt
+          && pip install -r docs/requirements.txt
       - name: Info
         run: >
           doxygen --version
-          && pip3 freeze
-      # - name: Configure
-      #   run: cmake -B build -S . -GNinja -DACTS_BUILD_DOCS=on
-      # - name: Build
-      #   run: cmake --build build -- docs-with-api
-      # - uses: actions/upload-artifact@v2
-      #   with:
-      #     name: acts-docs
-      #     path: docs/_build/html/
+          && pip freeze
+      - name: Configure
+        run: cmake -B build -S . -GNinja -DACTS_BUILD_DOCS=on
+      - name: Build
+        run: cmake --build build -- docs-with-api
+      - uses: actions/upload-artifact@v2
+        with:
+          name: acts-docs
+          path: docs/_build/html/
