@@ -275,6 +275,8 @@ ModuleClusters::ModuleValue ModuleClusters::squash(
 
     pos += Acts::Vector2(weights.at(i) * p0, weights.at(i) * p1);
     // Assume uniform distribution to compute error
+    // N.B. This will overestimate the variance
+    // but it's better than nothing for now
     var += Acts::Vector2(weights.at(i) * weights.at(i) * w0 * w0 / 12,
                          weights.at(i) * weights.at(i) * w1 * w1 / 12);
 
@@ -288,7 +290,7 @@ ModuleClusters::ModuleValue ModuleClusters::squash(
 
   if (tot > 0) {
     pos /= tot;
-    var /= tot2;
+    var /= (tot * tot);
   }
 
   for (auto idx : m_geoIndices) {
