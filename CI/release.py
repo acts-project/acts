@@ -18,6 +18,9 @@ from semantic_release.history.logs import LEVELS
 from semantic_release.history.parser_helpers import ParsedCommit
 import sh
 import click
+from dotenv import load_dotenv
+
+load_dotenv()
 
 git = sh.git
 
