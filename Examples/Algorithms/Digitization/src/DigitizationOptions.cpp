@@ -62,4 +62,6 @@ void ActsExamples::Options::addDigitizationOptions(Description& desc) {
   opt("digi-merge", bool_switch(), "Turn on hit merging");
   opt("digi-merge-nsigma", value<double>()->default_value(1.0),
       "Defines how close smeared parameters have to be when merging");
+  opt("digi-merge-common-corner", bool_switch(),
+      "Merge clusters which share a corner (8-cell connectivity)");
 }

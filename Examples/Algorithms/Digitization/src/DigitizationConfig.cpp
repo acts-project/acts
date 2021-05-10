@@ -64,7 +64,8 @@ ActsExamples::DigitizationConfig::DigitizationConfig(
     Acts::GeometryHierarchyMap<DigiComponentsConfig>&& digiCfgs)
     : isSimpleSmearer(vars["digi-smear"].as<bool>()),
       doMerge(vars["digi-merge"].as<bool>()),
-      mergeNsigma(vars["digi-merge-nsigma"].as<double>()) {
+      mergeNsigma(vars["digi-merge-nsigma"].as<double>()),
+      mergeCommonCorner(vars["digi-merge-common-corner"].as<bool>()) {
   digitizationConfigs = std::move(digiCfgs);
   if (isSimpleSmearer)
     smearingConfig(vars);

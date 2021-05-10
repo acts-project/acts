@@ -85,7 +85,7 @@ void ModuleClusters::merge() {
     // Case where we actually have geometric clusters; use the
     // clusterization code from the digitization plugin
     std::vector<std::vector<ModuleValueAmbi>> merged =
-        Acts::createClusters(cellMap, m_segmentation.bins(0));
+        Acts::createClusters(cellMap, m_segmentation.bins(0), m_commonCorner);
     for (std::vector<ModuleValueAmbi>& cellv : merged) {
       // At this stage, the cellv vector contains cells that form a
       // consistent cluster based on a connected component analysis

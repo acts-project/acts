@@ -23,11 +23,12 @@ class ModuleClusters {
 
   ModuleClusters(Acts::BinUtility segmentation,
                  std::vector<Acts::BoundIndices> geoIndices, bool merge,
-                 double nsigma)
+                 double nsigma, bool commonCorner)
       : m_segmentation(std::move(segmentation)),
         m_geoIndices(std::move(geoIndices)),
         m_merge(merge),
-        m_nsigma(nsigma) {}
+        m_nsigma(nsigma),
+        m_commonCorner(commonCorner) {}
 
   void add(DigitizedParameters params, simhit_t simhit);
   std::vector<std::pair<DigitizedParameters, std::set<simhit_t>>>
@@ -56,6 +57,7 @@ class ModuleClusters {
   std::vector<ModuleValue> m_moduleValues;
   bool m_merge;
   double m_nsigma;
+  bool m_commonCorner;
 
   std::unordered_map<size_t, std::pair<ModuleClusters::ModuleValueAmbi, bool>>
   createCellMap();

@@ -112,6 +112,8 @@ class DigitizationConfig {
   const bool doMerge;
   /// How close do parameters have to be to consider merged
   const double mergeNsigma;
+  /// Consider clusters that share a corner as merged (8-cell connectivity)
+  const bool mergeCommonCorner;
   /// The digitizers per GeometryIdentifiers
   Acts::GeometryHierarchyMap<DigiComponentsConfig> digitizationConfigs;
 

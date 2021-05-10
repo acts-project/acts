@@ -159,9 +159,9 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
     // visitor so we do not need to lookup the variant object per-hit.
     std::visit(
         [&](const auto& digitizer) {
-          ModuleClusters moduleClusters(digitizer.geometric.segmentation,
-                                        digitizer.geometric.indices,
-                                        m_cfg.doMerge, m_cfg.mergeNsigma);
+          ModuleClusters moduleClusters(
+              digitizer.geometric.segmentation, digitizer.geometric.indices,
+              m_cfg.doMerge, m_cfg.mergeNsigma, m_cfg.mergeCommonCorner);
 
           for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
             const auto& simHit = *h;
