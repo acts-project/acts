@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
 #include <bitset>
@@ -79,15 +80,8 @@ using TupleFilter = typename TupleFilterImpl<predicate_t, tuple_t,
 /// Check if the given type is a point-like process.
 ///
 /// Only checks for the existence of the templated `generatePathLimits` method
-/// using the method described in https://stackoverflow.com/a/257382 .
 template <typename process_t>
 class IsPointLikeProcess {
-  struct OneByte {
-    char x[1];
-  };
-  struct TwoByte {
-    char y[2];
-  };
   struct MockUniformRandomBitGenerator {
     using result_type = unsigned int;
 
@@ -96,15 +90,16 @@ class IsPointLikeProcess {
     constexpr result_type operator()() { return 0u; }
   };
 
-  template <typename T>
-  static OneByte test(
-      decltype(&T::template generatePathLimits<MockUniformRandomBitGenerator>));
-  template <typename T>
-  static TwoByte test(...);
+  METHOD_TRAIT(generatePathLimits_method_t, generatePathLimits);
+
+  using scalar_pair_t = std::pair<Particle::Scalar, Particle::Scalar>;
 
  public:
-  static constexpr bool value = (sizeof(test<process_t>(0)) == sizeof(OneByte));
+  static constexpr bool value = Acts::Concepts::has_method<
+      const process_t, scalar_pair_t, generatePathLimits_method_t,
+      MockUniformRandomBitGenerator&, const Particle&>;
 };
+
 template <typename process_t>
 struct IsContinuousProcess {
   static constexpr bool value = not IsPointLikeProcess<process_t>::value;
