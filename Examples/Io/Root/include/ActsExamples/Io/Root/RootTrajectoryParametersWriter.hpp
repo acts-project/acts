@@ -26,9 +26,8 @@ namespace ActsExamples {
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
 ///
-/// Each entry in the TTree corresponds to fitted track parameters of one
-/// trajectory for optimum writing speed. The event number is part of the
-/// written data.
+/// Each entry in the TTree corresponds to all fitted track parameters of
+/// one single event. The event number is part of the written data.
 ///
 /// A common file can be provided for to the writer to attach his TTree,
 /// this is done by setting the Config::rootFile pointer to an existing
