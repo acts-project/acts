@@ -30,10 +30,10 @@ class RootTrajectoryParametersReader : public IReader {
  public:
   /// @brief The nested configuration struct
   struct Config {
-    std::string trackCollection =
-        "trackCollection";  ///< track collection to read
-    std::string particleCollection =
-        "particleCollection";                     ///< track collection to read
+    std::string outputTracks =
+        "outputTracks";  ///< track collection to read
+    std::string outputParticles =
+        "outputParticles";                     ///< track collection to read
     std::string treeName = "trackparams_fitter";  ///< name of the output tree
     std::string inputFile;  ///< The name of the input file
     std::string inputDir;   ///< The name of the input dir

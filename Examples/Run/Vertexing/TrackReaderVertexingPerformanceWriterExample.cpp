@@ -75,8 +75,8 @@ int main(int argc, char* argv[]) {
       std::make_shared<ActsExamples::ParticleSelector>(select, logLevel));
 
   RootTrajectoryParametersReader::Config trackParamsReader;
-  trackParamsReader.trackCollection = "fittedTrackParameters";
-  trackParamsReader.particleCollection = "associatedTruthParticles";
+  trackParamsReader.outputTracks = "fittedTrackParameters";
+  trackParamsReader.outputParticles = "associatedTruthParticles";
   trackParamsReader.inputFile = "trackparams_fitter.root";
   trackParamsReader.inputDir = inputDir;
   sequencer.addReader(
@@ -84,7 +84,7 @@ int main(int argc, char* argv[]) {
 
   // Apply some primary vertexing selection cuts
   TrackSelector::Config trackSelectorConfig;
-  trackSelectorConfig.inputTrackParameters = trackParamsReader.trackCollection;
+  trackSelectorConfig.inputTrackParameters = trackParamsReader.outputTracks;
   trackSelectorConfig.outputTrackParameters = "selectedTracks";
   trackSelectorConfig.outputTrackIndices = "outputTrackIndices";
   trackSelectorConfig.removeNeutral = true;
@@ -108,8 +108,8 @@ int main(int argc, char* argv[]) {
       particleReaderConfig.particleCollection;
   vertexWriterConfig.inputSelectedTruthParticles = select.outputParticles;
   vertexWriterConfig.inputAssociatedTruthParticles =
-      trackParamsReader.particleCollection;
-  vertexWriterConfig.inputFittedTracks = trackParamsReader.trackCollection;
+      trackParamsReader.outputParticles;
+  vertexWriterConfig.inputFittedTracks = trackParamsReader.outputTracks;
   vertexWriterConfig.inputVertices = findVertices.outputVertices;
   vertexWriterConfig.outputFilename = "vertexperformance_AMVF.root";
   vertexWriterConfig.outputTreename = "amvf";

@@ -175,9 +175,9 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersReader::read(
                                      truthParticle);
     }
     // Write the collections to the EventStore
-    context.eventStore.add(m_cfg.trackCollection,
+    context.eventStore.add(m_cfg.outputTracks,
                            std::move(trackParameterCollection));
-    context.eventStore.add(m_cfg.particleCollection,
+    context.eventStore.add(m_cfg.outputParticles,
                            std::move(truthParticleCollection));
   } else {
     ACTS_WARNING("Could not read in event.");
