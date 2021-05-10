@@ -164,6 +164,7 @@ jobs:
       - name: Install dependencies
         run: >
           apt-get install -y doxygen
+          && pip3 install --upgrade pip
           && pip3 install -r docs/requirements.txt
       - name: Info
         run: >
