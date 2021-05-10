@@ -67,7 +67,7 @@ void adaptColorPalette(hist_t* h, float rmin, float rmax, float rgood,
   TColor::CreateGradientColorTable(number, stops, red, green, blue, n);
 }
 
-// loc1, phi, theta, q/p, t) at all track states from root file produced by the
+// (loc1, phi, theta, q/p, t) at all track states from root file produced by the
 // RootTrajectoryStatesWriter
 //
 void boundParamResolution(const std::string& inFile,
@@ -407,76 +407,77 @@ void boundParamResolution(const std::string& inFile,
 
   // Book histograms (with adapted range):
   //
-  // Global profile histograms
-  std::array<TProfile2D*, 6> p2d_res_prt;
-  std::array<TProfile2D*, 6> p2d_res_flt;
-  std::array<TProfile2D*, 6> p2d_res_smt;
-  std::array<TProfile2D*, 6> p2d_pull_prt;
-  std::array<TProfile2D*, 6> p2d_pull_flt;
-  std::array<TProfile2D*, 6> p2d_pull_smt;
+  // Global profile histograms : residuals/pulls
+  std::array<TProfile2D*, 6> p2d_res_zr_prt;
+  std::array<TProfile2D*, 6> p2d_res_zr_flt;
+  std::array<TProfile2D*, 6> p2d_res_zr_smt;
+  std::array<TProfile2D*, 6> p2d_pull_zr_prt;
+  std::array<TProfile2D*, 6> p2d_pull_zr_flt;
+  std::array<TProfile2D*, 6> p2d_pull_zr_smt;
 
   for (unsigned int ipar = 0; ipar < paramNames.size(); ++ipar) {
     const auto& par = paramNames[ipar];
-    p2d_res_prt[ipar] =
+    p2d_res_zr_prt[ipar] =
         new TProfile2D(Form("all_prof_res_prt_%s", par.c_str()),
                        Form("residual profile of %s", par.c_str()), 100,
                        -detectorZ, detectorZ, 50, 0., detectorR);
-    p2d_res_flt[ipar] =
+    p2d_res_zr_flt[ipar] =
         new TProfile2D(Form("all_prof_res_flt_%s", par.c_str()),
                        Form("residual profile of %s", par.c_str()), 100,
                        -detectorZ, detectorZ, 50, 0., detectorR);
-    p2d_res_smt[ipar] =
+    p2d_res_zr_smt[ipar] =
         new TProfile2D(Form("all_prof_res_smt_%s", par.c_str()),
                        Form("residual profile of %s", par.c_str()), 100,
                        -detectorZ, detectorZ, 50, 0., detectorR);
-    p2d_pull_prt[ipar] =
+
+    p2d_pull_zr_prt[ipar] =
         new TProfile2D(Form("all_prof_pull_prt_%s", par.c_str()),
-                       Form("residual profile of %s", par.c_str()), 100,
+                       Form("pull profile of %s", par.c_str()), 100,
                        -detectorZ, detectorZ, 50, 0., detectorR);
-    p2d_pull_flt[ipar] =
+    p2d_pull_zr_flt[ipar] =
         new TProfile2D(Form("all_prof_pull_flt_%s", par.c_str()),
-                       Form("residual profile of %s", par.c_str()), 100,
+                       Form("pull profile of %s", par.c_str()), 100,
                        -detectorZ, detectorZ, 50, 0., detectorR);
-    p2d_pull_smt[ipar] =
+    p2d_pull_zr_smt[ipar] =
         new TProfile2D(Form("all_prof_pull_smt_%s", par.c_str()),
-                       Form("residual profile of %s", par.c_str()), 100,
+                       Form("pull profile of %s", par.c_str()), 100,
                        -detectorZ, detectorZ, 50, 0., detectorR);
 
-    p2d_res_prt[ipar]->SetErrorOption("s");
-    p2d_res_flt[ipar]->SetErrorOption("s");
-    p2d_res_smt[ipar]->SetErrorOption("s");
-    p2d_pull_prt[ipar]->SetErrorOption("s");
-    p2d_pull_flt[ipar]->SetErrorOption("s");
-    p2d_pull_smt[ipar]->SetErrorOption("s");
+    p2d_res_zr_prt[ipar]->SetErrorOption("s");
+    p2d_res_zr_flt[ipar]->SetErrorOption("s");
+    p2d_res_zr_smt[ipar]->SetErrorOption("s");
+    p2d_pull_zr_prt[ipar]->SetErrorOption("s");
+    p2d_pull_zr_flt[ipar]->SetErrorOption("s");
+    p2d_pull_zr_smt[ipar]->SetErrorOption("s");
 
-    p2d_res_prt[ipar]->GetXaxis()->SetTitle("z [mm]");
-    p2d_res_prt[ipar]->GetYaxis()->SetTitle("R [mm]");
-    p2d_res_prt[ipar]->GetZaxis()->SetTitle(Form("r_{%s}", par.c_str()));
-    p2d_res_flt[ipar]->GetXaxis()->SetTitle("z [mm]");
-    p2d_res_flt[ipar]->GetYaxis()->SetTitle("R [mm]");
-    p2d_res_flt[ipar]->GetZaxis()->SetTitle(Form("r_{%s}", par.c_str()));
-    p2d_res_smt[ipar]->GetXaxis()->SetTitle("z [mm]");
-    p2d_res_smt[ipar]->GetYaxis()->SetTitle("R [mm]");
-    p2d_res_smt[ipar]->GetZaxis()->SetTitle(Form("r_{%s}", par.c_str()));
+    p2d_res_zr_prt[ipar]->GetXaxis()->SetTitle("z [mm]");
+    p2d_res_zr_prt[ipar]->GetYaxis()->SetTitle("R [mm]");
+    p2d_res_zr_prt[ipar]->GetZaxis()->SetTitle(Form("r_{%s}", par.c_str()));
+    p2d_res_zr_flt[ipar]->GetXaxis()->SetTitle("z [mm]");
+    p2d_res_zr_flt[ipar]->GetYaxis()->SetTitle("R [mm]");
+    p2d_res_zr_flt[ipar]->GetZaxis()->SetTitle(Form("r_{%s}", par.c_str()));
+    p2d_res_zr_smt[ipar]->GetXaxis()->SetTitle("z [mm]");
+    p2d_res_zr_smt[ipar]->GetYaxis()->SetTitle("R [mm]");
+    p2d_res_zr_smt[ipar]->GetZaxis()->SetTitle(Form("r_{%s}", par.c_str()));
 
-    p2d_pull_prt[ipar]->GetXaxis()->SetTitle("z [mm]");
-    p2d_pull_prt[ipar]->GetYaxis()->SetTitle("R [mm]");
-    p2d_pull_prt[ipar]->GetZaxis()->SetTitle(Form("pull_{%s}", par.c_str()));
-    p2d_pull_flt[ipar]->GetXaxis()->SetTitle("z [mm]");
-    p2d_pull_flt[ipar]->GetYaxis()->SetTitle("R [mm]");
-    p2d_pull_prt[ipar]->GetZaxis()->SetTitle(Form("pull_{%s}", par.c_str()));
-    p2d_pull_smt[ipar]->GetXaxis()->SetTitle("z [mm]");
-    p2d_pull_smt[ipar]->GetYaxis()->SetTitle("R [mm]");
-    p2d_pull_prt[ipar]->GetZaxis()->SetTitle(Form("pull_{%s}", par.c_str()));
+    p2d_pull_zr_prt[ipar]->GetXaxis()->SetTitle("z [mm]");
+    p2d_pull_zr_prt[ipar]->GetYaxis()->SetTitle("R [mm]");
+    p2d_pull_zr_prt[ipar]->GetZaxis()->SetTitle(Form("pull_{%s}", par.c_str()));
+    p2d_pull_zr_flt[ipar]->GetXaxis()->SetTitle("z [mm]");
+    p2d_pull_zr_flt[ipar]->GetYaxis()->SetTitle("R [mm]");
+    p2d_pull_zr_prt[ipar]->GetZaxis()->SetTitle(Form("pull_{%s}", par.c_str()));
+    p2d_pull_zr_smt[ipar]->GetXaxis()->SetTitle("z [mm]");
+    p2d_pull_zr_smt[ipar]->GetYaxis()->SetTitle("R [mm]");
+    p2d_pull_zr_prt[ipar]->GetZaxis()->SetTitle(Form("pull_{%s}", par.c_str()));
 
     // set style
-    setHistStyle(p2d_res_prt[ipar], 1);
-    setHistStyle(p2d_res_flt[ipar], 2);
-    setHistStyle(p2d_res_smt[ipar], 4);
+    setHistStyle(p2d_res_zr_prt[ipar], 1);
+    setHistStyle(p2d_res_zr_flt[ipar], 2);
+    setHistStyle(p2d_res_zr_smt[ipar], 4);
 
-    setHistStyle(p2d_pull_prt[ipar], 1);
-    setHistStyle(p2d_pull_flt[ipar], 2);
-    setHistStyle(p2d_pull_smt[ipar], 4);
+    setHistStyle(p2d_pull_zr_prt[ipar], 1);
+    setHistStyle(p2d_pull_zr_flt[ipar], 2);
+    setHistStyle(p2d_pull_zr_smt[ipar], 4);
   }
 
   // Resiudal / Pull histograms
@@ -556,7 +557,7 @@ void boundParamResolution(const std::string& inFile,
     }
   }
 
-  // Section: Histogram filling
+  // Section 4: Histogram filling
   //
   // - Running through the entries and filling the histograms
   int entries = tree->GetEntries();
@@ -570,54 +571,54 @@ void boundParamResolution(const std::string& inFile,
         float y_prt = g_y_prt->at(i);
         float r_prt = std::sqrt(x_prt * x_prt + y_prt * y_prt);
         float z_prt = g_z_prt->at(i);
-        p2d_res_prt[0]->Fill(z_prt, r_prt, res_LOC0_prt->at(i));
-        p2d_res_prt[1]->Fill(z_prt, r_prt, res_LOC1_prt->at(i));
-        p2d_res_prt[2]->Fill(z_prt, r_prt, res_PHI_prt->at(i));
-        p2d_res_prt[3]->Fill(z_prt, r_prt, res_THETA_prt->at(i));
-        p2d_res_prt[4]->Fill(z_prt, r_prt, res_QOP_prt->at(i));
-        p2d_res_prt[5]->Fill(z_prt, r_prt, res_T_prt->at(i));
-        p2d_pull_prt[0]->Fill(z_prt, r_prt, pull_LOC0_prt->at(i));
-        p2d_pull_prt[1]->Fill(z_prt, r_prt, pull_LOC1_prt->at(i));
-        p2d_pull_prt[2]->Fill(z_prt, r_prt, pull_PHI_prt->at(i));
-        p2d_pull_prt[3]->Fill(z_prt, r_prt, pull_THETA_prt->at(i));
-        p2d_pull_prt[4]->Fill(z_prt, r_prt, pull_QOP_prt->at(i));
-        p2d_pull_prt[5]->Fill(z_prt, r_prt, pull_T_prt->at(i));
+        p2d_res_zr_prt[0]->Fill(z_prt, r_prt, res_LOC0_prt->at(i));
+        p2d_res_zr_prt[1]->Fill(z_prt, r_prt, res_LOC1_prt->at(i));
+        p2d_res_zr_prt[2]->Fill(z_prt, r_prt, res_PHI_prt->at(i));
+        p2d_res_zr_prt[3]->Fill(z_prt, r_prt, res_THETA_prt->at(i));
+        p2d_res_zr_prt[4]->Fill(z_prt, r_prt, res_QOP_prt->at(i));
+        p2d_res_zr_prt[5]->Fill(z_prt, r_prt, res_T_prt->at(i));
+        p2d_pull_zr_prt[0]->Fill(z_prt, r_prt, pull_LOC0_prt->at(i));
+        p2d_pull_zr_prt[1]->Fill(z_prt, r_prt, pull_LOC1_prt->at(i));
+        p2d_pull_zr_prt[2]->Fill(z_prt, r_prt, pull_PHI_prt->at(i));
+        p2d_pull_zr_prt[3]->Fill(z_prt, r_prt, pull_THETA_prt->at(i));
+        p2d_pull_zr_prt[4]->Fill(z_prt, r_prt, pull_QOP_prt->at(i));
+        p2d_pull_zr_prt[5]->Fill(z_prt, r_prt, pull_T_prt->at(i));
       }
       if (filtered->at(i)) {
         float x_flt = g_x_flt->at(i);
         float y_flt = g_y_flt->at(i);
         float r_flt = std::sqrt(x_flt * x_flt + y_flt * y_flt);
         float z_flt = g_z_flt->at(i);
-        p2d_res_flt[0]->Fill(z_flt, r_flt, res_LOC0_flt->at(i));
-        p2d_res_flt[1]->Fill(z_flt, r_flt, res_LOC1_flt->at(i));
-        p2d_res_flt[2]->Fill(z_flt, r_flt, res_PHI_flt->at(i));
-        p2d_res_flt[3]->Fill(z_flt, r_flt, res_THETA_flt->at(i));
-        p2d_res_flt[4]->Fill(z_flt, r_flt, res_QOP_flt->at(i));
-        p2d_res_flt[5]->Fill(z_flt, r_flt, res_T_flt->at(i));
-        p2d_pull_flt[0]->Fill(z_flt, r_flt, pull_LOC0_flt->at(i));
-        p2d_pull_flt[1]->Fill(z_flt, r_flt, pull_LOC1_flt->at(i));
-        p2d_pull_flt[2]->Fill(z_flt, r_flt, pull_PHI_flt->at(i));
-        p2d_pull_flt[3]->Fill(z_flt, r_flt, pull_THETA_flt->at(i));
-        p2d_pull_flt[4]->Fill(z_flt, r_flt, pull_QOP_flt->at(i));
-        p2d_pull_flt[5]->Fill(z_flt, r_flt, pull_T_flt->at(i));
+        p2d_res_zr_flt[0]->Fill(z_flt, r_flt, res_LOC0_flt->at(i));
+        p2d_res_zr_flt[1]->Fill(z_flt, r_flt, res_LOC1_flt->at(i));
+        p2d_res_zr_flt[2]->Fill(z_flt, r_flt, res_PHI_flt->at(i));
+        p2d_res_zr_flt[3]->Fill(z_flt, r_flt, res_THETA_flt->at(i));
+        p2d_res_zr_flt[4]->Fill(z_flt, r_flt, res_QOP_flt->at(i));
+        p2d_res_zr_flt[5]->Fill(z_flt, r_flt, res_T_flt->at(i));
+        p2d_pull_zr_flt[0]->Fill(z_flt, r_flt, pull_LOC0_flt->at(i));
+        p2d_pull_zr_flt[1]->Fill(z_flt, r_flt, pull_LOC1_flt->at(i));
+        p2d_pull_zr_flt[2]->Fill(z_flt, r_flt, pull_PHI_flt->at(i));
+        p2d_pull_zr_flt[3]->Fill(z_flt, r_flt, pull_THETA_flt->at(i));
+        p2d_pull_zr_flt[4]->Fill(z_flt, r_flt, pull_QOP_flt->at(i));
+        p2d_pull_zr_flt[5]->Fill(z_flt, r_flt, pull_T_flt->at(i));
       }
       if (smoothed->at(i)) {
         float x_smt = g_x_smt->at(i);
         float y_smt = g_y_smt->at(i);
         float r_smt = std::sqrt(x_smt * x_smt + y_smt * y_smt);
         float z_smt = g_z_smt->at(i);
-        p2d_res_smt[0]->Fill(z_smt, r_smt, res_LOC0_smt->at(i));
-        p2d_res_smt[1]->Fill(z_smt, r_smt, res_LOC1_smt->at(i));
-        p2d_res_smt[2]->Fill(z_smt, r_smt, res_PHI_smt->at(i));
-        p2d_res_smt[3]->Fill(z_smt, r_smt, res_THETA_smt->at(i));
-        p2d_res_smt[4]->Fill(z_smt, r_smt, res_QOP_smt->at(i));
-        p2d_res_smt[5]->Fill(z_smt, r_smt, res_T_smt->at(i));
-        p2d_pull_smt[0]->Fill(z_smt, r_smt, pull_LOC0_smt->at(i));
-        p2d_pull_smt[1]->Fill(z_smt, r_smt, pull_LOC1_smt->at(i));
-        p2d_pull_smt[2]->Fill(z_smt, r_smt, pull_PHI_smt->at(i));
-        p2d_pull_smt[3]->Fill(z_smt, r_smt, pull_THETA_smt->at(i));
-        p2d_pull_smt[4]->Fill(z_smt, r_smt, pull_QOP_smt->at(i));
-        p2d_pull_smt[5]->Fill(z_smt, r_smt, pull_T_smt->at(i));
+        p2d_res_zr_smt[0]->Fill(z_smt, r_smt, res_LOC0_smt->at(i));
+        p2d_res_zr_smt[1]->Fill(z_smt, r_smt, res_LOC1_smt->at(i));
+        p2d_res_zr_smt[2]->Fill(z_smt, r_smt, res_PHI_smt->at(i));
+        p2d_res_zr_smt[3]->Fill(z_smt, r_smt, res_THETA_smt->at(i));
+        p2d_res_zr_smt[4]->Fill(z_smt, r_smt, res_QOP_smt->at(i));
+        p2d_res_zr_smt[5]->Fill(z_smt, r_smt, res_T_smt->at(i));
+        p2d_pull_zr_smt[0]->Fill(z_smt, r_smt, pull_LOC0_smt->at(i));
+        p2d_pull_zr_smt[1]->Fill(z_smt, r_smt, pull_LOC1_smt->at(i));
+        p2d_pull_zr_smt[2]->Fill(z_smt, r_smt, pull_PHI_smt->at(i));
+        p2d_pull_zr_smt[3]->Fill(z_smt, r_smt, pull_THETA_smt->at(i));
+        p2d_pull_zr_smt[4]->Fill(z_smt, r_smt, pull_QOP_smt->at(i));
+        p2d_pull_zr_smt[5]->Fill(z_smt, r_smt, pull_T_smt->at(i));
       }
 
       int vol = volume_id->at(i);
@@ -678,7 +679,7 @@ void boundParamResolution(const std::string& inFile,
     }
   }
 
-  // Section: Histogram plotting
+  // Section 5: Histogram plotting
 
   // Plotting global profiles
   TCanvas* respull_mean_prf =
@@ -755,12 +756,12 @@ void boundParamResolution(const std::string& inFile,
   };
 
   // Plotting profiles: res/pulls
-  plotProfiles(p2d_res_prt, "res", "prt");
-  plotProfiles(p2d_res_flt, "res", "flt");
-  plotProfiles(p2d_res_smt, "res", "smt");
-  plotProfiles(p2d_pull_prt, "pull", "prt");
-  plotProfiles(p2d_pull_flt, "pull", "flt");
-  plotProfiles(p2d_pull_smt, "pull", "smt");
+  plotProfiles(p2d_res_zr_prt, "res", "prt");
+  plotProfiles(p2d_res_zr_flt, "res", "flt");
+  plotProfiles(p2d_res_zr_smt, "res", "smt");
+  plotProfiles(p2d_pull_zr_prt, "pull", "prt");
+  plotProfiles(p2d_pull_zr_flt, "pull", "flt");
+  plotProfiles(p2d_pull_zr_smt, "pull", "smt");
 
   // Plotting residual
   TCanvas* residuals =
