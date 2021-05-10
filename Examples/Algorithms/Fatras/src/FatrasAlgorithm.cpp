@@ -224,9 +224,11 @@ ActsExamples::ProcessCode ActsExamples::FatrasAlgorithm::execute(
   SimParticleContainer particlesInitial;
   SimParticleContainer particlesFinal;
   SimHitContainer simHits;
-  particlesInitial.adopt_sequence(std::move(particlesInitialUnordered));
-  particlesFinal.adopt_sequence(std::move(particlesFinalUnordered));
-  simHits.adopt_sequence(std::move(simHitsUnordered));
+  particlesInitial.insert(particlesInitialUnordered.begin(),
+                          particlesInitialUnordered.end());
+  particlesFinal.insert(particlesFinalUnordered.begin(),
+                        particlesFinalUnordered.end());
+  simHits.insert(simHitsUnordered.begin(), simHitsUnordered.end());
   // store ordered output containers
   ctx.eventStore.add(m_cfg.outputParticlesInitial, std::move(particlesInitial));
   ctx.eventStore.add(m_cfg.outputParticlesFinal, std::move(particlesFinal));
