@@ -168,7 +168,7 @@ jobs:
       - name: Info
         run: >
           doxygen --version
-          pip3 freeze
+          && pip3 freeze
       - name: Configure
         run: cmake -B build -S . -GNinja -DACTS_BUILD_DOCS=on
       - name: Build
