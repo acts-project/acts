@@ -74,6 +74,8 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
     DirectedTrackFitterFunction dFit;
     /// Tracking geometry for surface lookup
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
+    /// Pick a single track for debugging (-1 process all tracks)
+    int pickTrack = -1;
   };
 
   /// Constructor of the fitting algorithm
