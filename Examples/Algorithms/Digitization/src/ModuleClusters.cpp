@@ -19,13 +19,15 @@ void ModuleClusters::add(DigitizedParameters params, simhit_t simhit) {
   mval.paramVariances = std::move(params.variances);
   mval.sources = {simhit};
 
-  if (m_merge) {  // Break-up the cluster
+  if (m_merge and not params.cluster.channels.empty()) {
+    // Break-up the cluster
     for (auto cell : params.cluster.channels) {
       ModuleValue mval_cell = mval;
       mval_cell.value = cell;
       m_moduleValues.push_back(std::move(mval_cell));
     }
-  } else {  // pass-through mode
+  } else {
+    // pass-through mode or smeared indices only
     mval.value = std::move(params.cluster);
     m_moduleValues.push_back(std::move(mval));
   }
@@ -66,10 +68,6 @@ ModuleClusters::createCellMap() {
       if (!uniq) {
         it->second.first.add(std::move(mval));
       }
-    } else {
-      // For now, assume that when we merge we only have bare
-      // cells. So treat this branch as a bug
-      throw std::runtime_error("Invalid cell!");
     }
   }
   return cellMap;
@@ -106,8 +104,10 @@ void ModuleClusters::merge() {
     m_moduleValues = std::move(newVals);
   } else {
     // no geo clusters
-    for (std::vector<ModuleValue>& merged : mergeParameters(m_moduleValues))
+    for (std::vector<ModuleValue>& merged : mergeParameters(m_moduleValues)) {
       newVals.push_back(squash(merged));
+    }
+    m_moduleValues = std::move(newVals);
   }
 }
 
@@ -225,8 +225,10 @@ ModuleClusters::ModuleValue ModuleClusters::squash(
       auto idx = other.paramIndices.at(j);
       if (std::find(m_geoIndices.begin(), m_geoIndices.end(), idx) ==
           m_geoIndices.end()) {
-        mval.paramIndices.push_back(idx);
-        if (mval.paramValues.size() < j) {
+        if (std::find(mval.paramIndices.begin(), mval.paramIndices.end(),
+                      idx) == mval.paramIndices.end())
+          mval.paramIndices.push_back(idx);
+        if (mval.paramValues.size() < (j + 1)) {
           mval.paramValues.push_back(0);
           mval.paramVariances.push_back(0);
         }
