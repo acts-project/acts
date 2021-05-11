@@ -295,6 +295,13 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
     params[eBoundTime] = spGlobalPositions[0].norm() / v;
   }
 
+  if (params.hasNaN()) {
+    ACTS_ERROR(
+        "The NaN value exists at the estimated track parameters from seed with"
+        << "\nbottom sp: " << spGlobalPositions[0] << "\nmiddle sp: "
+        << spGlobalPositions[1] << "\ntop sp: " << spGlobalPositions[2]);
+    return std::nullopt;
+  }
   return params;
 }
 
