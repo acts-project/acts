@@ -217,8 +217,8 @@ int runRecCKFTracks(int argc, char* argv[],
     paramsEstimationCfg.deltaRMin = 10._mm;
     paramsEstimationCfg.sigmaLoc0 = 25._um;
     paramsEstimationCfg.sigmaLoc1 = 100._um;
-    paramsEstimationCfg.sigmaPhi = 0.005_degree;
-    paramsEstimationCfg.sigmaTheta = 0.001_degree;
+    paramsEstimationCfg.sigmaPhi = 0.02_degree;
+    paramsEstimationCfg.sigmaTheta = 0.02_degree;
     paramsEstimationCfg.sigmaQOverP = 0.1 / 1._GeV;
     paramsEstimationCfg.sigmaT0 = 1400._s;
     sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
