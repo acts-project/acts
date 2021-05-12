@@ -42,6 +42,9 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
   if (m_cfg.outputProtoVertices.empty()) {
     throw std::invalid_argument("Missing output proto vertices collection");
   }
+  if (m_cfg.outputVertices.empty()) {
+    throw std::invalid_argument("Missing output vertices collection");
+  }
 }
 
 ActsExamples::ProcessCode
@@ -120,13 +123,17 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   // show some debug output
   ACTS_INFO("Found " << vertices.size() << " vertices in event");
   for (const auto& vtx : vertices) {
-    ACTS_INFO("Found vertex at " << vtx.fullPosition().transpose() << " with "
-                                 << vtx.tracks().size() << " tracks.");
+    ACTS_DEBUG("Found vertex at " << vtx.fullPosition().transpose() << " with "
+                                  << vtx.tracks().size() << " tracks.");
   }
 
   // store proto vertices extracted from the found vertices
   ctx.eventStore.add(m_cfg.outputProtoVertices,
                      makeProtoVertices(inputTrackParameters, vertices));
+
+  std::vector<Acts::Vertex<Acts::BoundTrackParameters>> verticesOut = vertices;
+  // store found vertices
+  ctx.eventStore.add(m_cfg.outputVertices, std::move(vertices));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
