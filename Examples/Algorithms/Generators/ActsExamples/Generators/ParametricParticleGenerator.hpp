@@ -27,18 +27,20 @@ namespace ActsExamples {
 class ParametricParticleGenerator {
  public:
   struct Config {
-    // Low, high (exclusive) for the transverse direction angle.
+    /// Low, high (exclusive) for the transverse direction angle.
     double phiMin = -M_PI;
     double phiMax = M_PI;
-    // Low, high (inclusive) for  the longitudinal direction angle.
-    //
-    // This intentionally uses theta instead of eta so it can represent the
-    // full direction space with finite values.
+    /// Low, high (inclusive) for  the longitudinal direction angle.
+    ///
+    /// This intentionally uses theta instead of eta so it can represent the
+    /// full direction space with finite values.
     double thetaMin = 0.0;
     double thetaMax = M_PI;
-    // Low, high (exclusive) for absolute momentum.
+    /// Low, high (exclusive) for absolute/transverse momentum.
     double pMin = 1 * Acts::UnitConstants::GeV;
     double pMax = 10 * Acts::UnitConstants::GeV;
+    /// Indicate if the momentum referse to transverse momentum
+    bool pTransverse = false;
     /// (Absolute) PDG particle number to identify the particle type.
     Acts::PdgParticle pdg = Acts::PdgParticle::eMuon;
     /// Randomize the charge and flip the PDG particle number sign accordingly.
