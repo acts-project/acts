@@ -42,6 +42,7 @@ components:
 -   [ROOT](https://root.cern.ch) >= 6.20 for the TGeo plugin and the examples
 -   [Sphinx](https://www.sphinx-doc.org) >= 2.0 with [Breathe](https://breathe.readthedocs.io/en/latest/), [Exhale](https://exhale.readthedocs.io/en/latest/), and [recommonmark](https://recommonmark.readthedocs.io/en/latest/index.html) extensions for the documentation
 -   [SYCL](https://www.khronos.org/sycl/) for the SYCL plugin
+-   [GeoModel](https://gitlab.cern.ch/GeoModelDev/GeoModel) for the Geant4GeoModel examples
 
 There are some additional dependencies that are automatically provided as part of
 the build system.
@@ -252,6 +253,7 @@ components.
 | ACTS_BUILD_EXAMPLES_GEANT4            | Build Geant4-based code in the examples |
 | ACTS_BUILD_EXAMPLES_HEPMC3            | Build HepMC3-based code in the examples |
 | ACTS_BUILD_EXAMPLES_PYTHIA8           | Build Pythia8-based code in the examples |
+| ACTS_BUILD_EXAMPLES_GEOMODEL          | Build GeoModel-based code in the examples |
 | ACTS_BUILD_BENCHMARKS                 | Build benchmarks |
 | ACTS_BUILD_INTEGRATIONTESTS           | Build integration tests |
 | ACTS_BUILD_UNITTESTS                  | Build unit tests |
@@ -294,6 +296,9 @@ The following environment variables might be useful.
 | DD4hep_DIR           | Search path for the DD4hep installation |
 | HepMC3_DIR           | Search path for the HepMC3 installation |
 | Pythia8_DIR          | Search path for the Pythia8 installation |
+| GeoModelCore_DIR     | Search path for the GeoModelCore installation |
+| GeoModelG4_DIR      | Search path for the GeoModelG4 installation |
+
 
 ## Using Acts
 
