@@ -35,6 +35,9 @@ FW::ProcessCode FW::TrackSelector::execute(
   const auto& input =
       ctx.eventStore.get<std::vector<VertexAndTracks>>(m_cfg.input);
 
+  ACTS_DEBUG("event: " << ctx.eventNumber
+                       << "\n input size:  " << input.size());
+
   auto within = [](double x, double min, double max) {
     return (min <= x) and (x < max);
   };

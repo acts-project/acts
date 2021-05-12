@@ -101,6 +101,8 @@ FW::ProcessCode FW::ParticleSelector::execute(
   const auto& input = ctx.eventStore.get<SimEvent>(m_cfg.inputEvent);
   SimEvent selected;
 
+  ACTS_DEBUG("event=" << ctx.eventNumber << " event size =" << input.size());
+
   auto within = [](double x, double min, double max) {
     return (min <= x) and (x < max);
   };
@@ -148,6 +150,16 @@ FW::ProcessCode FW::ParticleSelector::execute(
 
   ACTS_DEBUG("event " << ctx.eventNumber << " selected " << selectedParticles
                       << " from " << allParticles << " particles");
+
+  ACTS_DEBUG("event=" << ctx.eventNumber
+                      << " event size after selected =" << selected.size());
+
+  for (unsigned i = 0; i < selected.size(); i++) {
+    ACTS_DEBUG("event=" << ctx.eventNumber << "  " << i << "-th Vertex: "
+                        << " x: " << selected[i].position4(0)
+                        << " y: " << selected[i].position4(1)
+                        << " z: " << selected[i].position4(2));
+  }
 
   ctx.eventStore.add(m_cfg.outputEvent, std::move(selected));
   return ProcessCode::SUCCESS;

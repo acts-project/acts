@@ -63,6 +63,7 @@ FW::ProcessCode FW::TruthVerticesToTracksAlgorithm::execute(
   // Vector to store VertexAndTracks extracted from event
   std::vector<VertexAndTracks> vertexAndTracksCollection;
 
+  ACTS_DEBUG(" vertexCollection size:  " << vertexCollection.size());
   // Start looping over all vertices in current event
   for (auto& vtx : vertexCollection) {
     // Create VertexAndTracks object
@@ -143,7 +144,8 @@ FW::ProcessCode FW::TruthVerticesToTracksAlgorithm::execute(
     vertexAndTracksCollection.push_back(vertexAndTracks);
 
   }  // end iteration over all vertices
-
+  ACTS_DEBUG(
+      " vertexAndTracksCollection size:  " << vertexAndTracksCollection.size());
   // VertexAndTracks objects to the EventStore
   context.eventStore.add(m_cfg.output, std::move(vertexAndTracksCollection));
 

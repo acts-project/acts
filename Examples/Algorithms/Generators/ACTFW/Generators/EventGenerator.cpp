@@ -59,6 +59,11 @@ FW::ProcessCode FW::EventGenerator::read(const AlgorithmContext& ctx) {
 
       // generate primary vertex position
       auto vertex = generate.vertex(rng);
+
+      ACTS_DEBUG("event=" << ctx.eventNumber << "  " << nPrimaryVertices
+                          << "-th PV: "
+                          << " x: " << vertex(0) << " y: " << vertex(1)
+                          << " z: " << vertex(2));
       // generate associated process vertices
       // by convention the first process vertex should contain the
       // particles associated directly to the primary vertex itself.
@@ -81,6 +86,12 @@ FW::ProcessCode FW::EventGenerator::read(const AlgorithmContext& ctx) {
           // this changes the particle identity; must reassign.
           particle = particle.withParticleId(pid).setPosition4(pos4);
         };
+
+        ACTS_DEBUG("event=" << ctx.eventNumber << "  " << nSecondaryVertices
+                            << "-th SV: "
+                            << " x: " << processVertex.position4(0)
+                            << " y: " << processVertex.position4(1)
+                            << " z: " << processVertex.position4(2));
 
         for (auto& particle : processVertex.incoming) {
           updateParticleInPlace(particle);
@@ -105,14 +116,16 @@ FW::ProcessCode FW::EventGenerator::read(const AlgorithmContext& ctx) {
   }
   // TODO should this reassign the vertex ids?
   // if not, what is the purpose? can it be removed altogether?
-  if (m_cfg.shuffle) {
-    std::shuffle(event.begin(), event.end(), rng);
-  }
+  // if (m_cfg.shuffle) {
+  //   std::shuffle(event.begin(), event.end(), rng);
+  // }
 
   ACTS_DEBUG("event=" << ctx.eventNumber
                       << " n_primary_vertices=" << nPrimaryVertices
                       << " n_secondary_vertices=" << event.size()
                       << " n_particles=" << nParticles);
+
+  ACTS_DEBUG("event=" << ctx.eventNumber << " event size =" << event.size());
 
   // move generated event to the store
   ctx.eventStore.add(m_cfg.output, std::move(event));

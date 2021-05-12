@@ -239,7 +239,7 @@ FW::ProcessCode FW::RootRecVertexWriter::writeT(
     m_vy.push_back(vtx.position().y());
     m_vz.push_back(vtx.position().z());
     m_vtx_fitquality_chiSquared.push_back(vtx.fitQuality().first);
-    m_vtx_fitquality_numberDoF.push_back(vtx.fitQuality().first);
+    m_vtx_fitquality_numberDoF.push_back(vtx.fitQuality().second);
 
     Acts::SpacePointSymMatrix vtx_cov = vtx.fullCovariance();
     m_vtx_cov11.push_back(vtx_cov(0, 0));
