@@ -68,6 +68,10 @@ class Particle {
 
   /// Set the process type that generated this particle.
   Particle &setProcess(ProcessType proc) { return m_process = proc, *this; }
+  /// Set the particle ID.
+  Particle &setParticleId(Barcode barcode) {
+    return m_particleId = barcode, *this;
+  }
   /// Set the space-time position four-vector.
   Particle &setPosition4(const Vector4 &pos4) {
     m_position4 = pos4;
@@ -106,6 +110,10 @@ class Particle {
     m_absMomentum = absMomentum;
     return *this;
   }
+
+  /// Set the particle charge.
+  Particle &setCharge(Scalar charge) { return m_charge = charge, *this; }
+
   /// Change the energy by the given amount.
   ///
   /// Energy loss corresponds to a negative change. If the updated energy

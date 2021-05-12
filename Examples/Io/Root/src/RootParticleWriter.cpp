@@ -42,7 +42,7 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
 
   // setup the branches
   m_outputTree->Branch("event_id", &m_eventId);
-  m_outputTree->Branch("particle_id", &m_particleId, "particle_id/l");
+  m_outputTree->Branch("particle_id", &m_particleId);
   m_outputTree->Branch("particle_type", &m_particleType);
   m_outputTree->Branch("process", &m_process);
   m_outputTree->Branch("vx", &m_vx);
@@ -57,6 +57,7 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
   m_outputTree->Branch("eta", &m_eta);
   m_outputTree->Branch("phi", &m_phi);
   m_outputTree->Branch("pt", &m_pt);
+  m_outputTree->Branch("p", &m_p);
   m_outputTree->Branch("vertex_primary", &m_vertexPrimary);
   m_outputTree->Branch("vertex_secondary", &m_vertexSecondary);
   m_outputTree->Branch("particle", &m_particle);
@@ -92,34 +93,58 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
 
   m_eventId = ctx.eventNumber;
   for (const auto& particle : particles) {
-    m_particleId = particle.particleId().value();
-    m_particleType = particle.pdg();
-    m_process = static_cast<decltype(m_process)>(particle.process());
+    m_particleId.push_back(particle.particleId().value());
+    m_particleType.push_back(particle.pdg());
+    m_process.push_back(static_cast<uint32_t>(particle.process()));
     // position
-    m_vx = particle.fourPosition().x() / Acts::UnitConstants::mm;
-    m_vy = particle.fourPosition().y() / Acts::UnitConstants::mm;
-    m_vz = particle.fourPosition().z() / Acts::UnitConstants::mm;
-    m_vt = particle.fourPosition().w() / Acts::UnitConstants::ns;
+    m_vx.push_back(particle.fourPosition().x() / Acts::UnitConstants::mm);
+    m_vy.push_back(particle.fourPosition().y() / Acts::UnitConstants::mm);
+    m_vz.push_back(particle.fourPosition().z() / Acts::UnitConstants::mm);
+    m_vt.push_back(particle.fourPosition().w() / Acts::UnitConstants::ns);
     // momentum
     const auto p = particle.absoluteMomentum() / Acts::UnitConstants::GeV;
-    m_px = p * particle.unitDirection().x();
-    m_py = p * particle.unitDirection().y();
-    m_pz = p * particle.unitDirection().z();
+    m_p.push_back(p);
+    m_px.push_back(p * particle.unitDirection().x());
+    m_py.push_back(p * particle.unitDirection().y());
+    m_pz.push_back(p * particle.unitDirection().z());
     // particle constants
-    m_m = particle.mass() / Acts::UnitConstants::GeV;
-    m_q = particle.charge() / Acts::UnitConstants::e;
+    m_m.push_back(particle.mass() / Acts::UnitConstants::GeV);
+    m_q.push_back(particle.charge() / Acts::UnitConstants::e);
     // derived kinematic quantities
-    m_eta = Acts::VectorHelpers::eta(particle.unitDirection());
-    m_phi = Acts::VectorHelpers::phi(particle.unitDirection());
-    m_pt = p * Acts::VectorHelpers::perp(particle.unitDirection());
+    m_eta.push_back(Acts::VectorHelpers::eta(particle.unitDirection()));
+    m_phi.push_back(Acts::VectorHelpers::phi(particle.unitDirection()));
+    m_pt.push_back(p * Acts::VectorHelpers::perp(particle.unitDirection()));
     // decoded barcode components
-    m_vertexPrimary = particle.particleId().vertexPrimary();
-    m_vertexSecondary = particle.particleId().vertexSecondary();
-    m_particle = particle.particleId().particle();
-    m_generation = particle.particleId().generation();
-    m_subParticle = particle.particleId().subParticle();
-    m_outputTree->Fill();
+    m_vertexPrimary.push_back(particle.particleId().vertexPrimary());
+    m_vertexSecondary.push_back(particle.particleId().vertexSecondary());
+    m_particle.push_back(particle.particleId().particle());
+    m_generation.push_back(particle.particleId().generation());
+    m_subParticle.push_back(particle.particleId().subParticle());
   }
+
+  m_outputTree->Fill();
+
+  m_particleId.clear();
+  m_particleType.clear();
+  m_process.clear();
+  m_vx.clear();
+  m_vy.clear();
+  m_vz.clear();
+  m_vt.clear();
+  m_p.clear();
+  m_px.clear();
+  m_py.clear();
+  m_pz.clear();
+  m_m.clear();
+  m_q.clear();
+  m_eta.clear();
+  m_phi.clear();
+  m_pt.clear();
+  m_vertexPrimary.clear();
+  m_vertexSecondary.clear();
+  m_particle.clear();
+  m_generation.clear();
+  m_subParticle.clear();
 
   return ProcessCode::SUCCESS;
 }

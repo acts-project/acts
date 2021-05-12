@@ -1,0 +1,158 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#include "ActsExamples/Io/Root/RootParticleReader.hpp"
+
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
+
+#include <iostream>
+
+#include <TChain.h>
+#include <TFile.h>
+
+ActsExamples::RootParticleReader::RootParticleReader(
+    const ActsExamples::RootParticleReader::Config& cfg)
+    : ActsExamples::IReader(), m_cfg(cfg), m_events(0), m_inputChain(nullptr) {
+  m_inputChain = new TChain(m_cfg.treeName.c_str());
+
+  if (m_cfg.inputFile.empty()) {
+    throw std::invalid_argument("Missing input filename");
+  }
+  if (m_cfg.treeName.empty()) {
+    throw std::invalid_argument("Missing tree name");
+  }
+  if (m_cfg.inputDir.empty()) {
+    throw std::invalid_argument("Missing input directory");
+  }
+
+  // Set the branches
+  m_inputChain->SetBranchAddress("event_id", &m_eventId);
+  m_inputChain->SetBranchAddress("particle_id", &m_particleId);
+  m_inputChain->SetBranchAddress("particle_type", &m_particleType);
+  m_inputChain->SetBranchAddress("process", &m_process);
+  m_inputChain->SetBranchAddress("vx", &m_vx);
+  m_inputChain->SetBranchAddress("vy", &m_vy);
+  m_inputChain->SetBranchAddress("vz", &m_vz);
+  m_inputChain->SetBranchAddress("vt", &m_vt);
+  m_inputChain->SetBranchAddress("p", &m_p);
+  m_inputChain->SetBranchAddress("px", &m_px);
+  m_inputChain->SetBranchAddress("py", &m_py);
+  m_inputChain->SetBranchAddress("pz", &m_pz);
+  m_inputChain->SetBranchAddress("m", &m_m);
+  m_inputChain->SetBranchAddress("q", &m_q);
+  m_inputChain->SetBranchAddress("eta", &m_eta);
+  m_inputChain->SetBranchAddress("phi", &m_phi);
+  m_inputChain->SetBranchAddress("pt", &m_pt);
+  m_inputChain->SetBranchAddress("vertex_primary", &m_vertexPrimary);
+  m_inputChain->SetBranchAddress("vertex_secondary", &m_vertexSecondary);
+  m_inputChain->SetBranchAddress("particle", &m_particle);
+  m_inputChain->SetBranchAddress("generation", &m_generation);
+  m_inputChain->SetBranchAddress("sub_particle", &m_subParticle);
+
+  auto path = joinPaths(m_cfg.inputDir, m_cfg.inputFile);
+
+  // add file to the input chain
+  m_inputChain->Add(path.c_str());
+  ACTS_DEBUG("Adding File " << path << " to tree '" << m_cfg.treeName << "'.");
+
+  m_events = m_inputChain->GetEntries();
+  ACTS_DEBUG("The full chain has " << m_events << " entries.");
+}
+
+std::string ActsExamples::RootParticleReader::name() const {
+  return m_cfg.name;
+}
+
+std::pair<size_t, size_t> ActsExamples::RootParticleReader::availableEvents()
+    const {
+  return {0u, m_events};
+}
+
+ActsExamples::RootParticleReader::~RootParticleReader() {
+  delete m_particleId;
+  delete m_particleType;
+  delete m_process;
+  delete m_vx;
+  delete m_vy;
+  delete m_vz;
+  delete m_vt;
+  delete m_p;
+  delete m_px;
+  delete m_py;
+  delete m_pz;
+  delete m_m;
+  delete m_q;
+  delete m_eta;
+  delete m_phi;
+  delete m_pt;
+  delete m_vertexPrimary;
+  delete m_vertexSecondary;
+  delete m_particle;
+  delete m_generation;
+  delete m_subParticle;
+}
+
+ActsExamples::ProcessCode ActsExamples::RootParticleReader::read(
+    const ActsExamples::AlgorithmContext& context) {
+  ACTS_DEBUG("Trying to read recorded particles.");
+
+  // read in the particle
+  if (m_inputChain && context.eventNumber < m_events) {
+    // lock the mutex
+    std::lock_guard<std::mutex> lock(m_read_mutex);
+    // now read
+
+    // The particle collection to be written
+    SimParticleContainer particleContainer;
+
+    // Primary vertex collection
+    std::vector<uint32_t> priVtxCollection;
+    // Secondary vertex collection
+    std::vector<uint32_t> secVtxCollection;
+
+    // Read the correct entry: batch size * event_number + ib
+    m_inputChain->GetEntry(context.eventNumber);
+    ACTS_VERBOSE("Reading entry: " << context.eventNumber);
+
+    unsigned int nParticles = m_particleId->size();
+
+    for (unsigned int i = 0; i < nParticles; i++) {
+      SimParticle p;
+
+      p.setParticleId((*m_particleId)[i]);
+      p.setPosition4((*m_vx)[i], (*m_vy)[i], (*m_vz)[i], (*m_vt)[i]);
+      p.setDirection((*m_px)[i], (*m_py)[i], (*m_pz)[i]);
+      p.setAbsoluteMomentum((*m_p)[i]);
+      p.setCharge((*m_q)[i]);
+
+      particleContainer.insert(particleContainer.end(), p);
+      priVtxCollection.push_back((*m_vertexPrimary)[i]);
+      secVtxCollection.push_back((*m_vertexSecondary)[i]);
+    }
+
+    // Write the collections to the EventStore
+    context.eventStore.add(m_cfg.particleCollection,
+                           std::move(particleContainer));
+
+    if (not m_cfg.vertexPrimaryCollection.empty()) {
+      context.eventStore.add(m_cfg.vertexPrimaryCollection,
+                             std::move(priVtxCollection));
+    }
+
+    if (not m_cfg.vertexSecondaryCollection.empty()) {
+      context.eventStore.add(m_cfg.vertexSecondaryCollection,
+                             std::move(secVtxCollection));
+    }
+  }
+  // Return success flag
+  return ActsExamples::ProcessCode::SUCCESS;
+}

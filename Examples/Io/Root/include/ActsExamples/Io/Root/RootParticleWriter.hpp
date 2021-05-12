@@ -69,34 +69,40 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   /// Event identifier.
   uint32_t m_eventId;
   /// Event-unique particle identifier a.k.a barcode.
-  uint64_t m_particleId;
+  std::vector<uint64_t> m_particleId;
   /// Particle type a.k.a. PDG particle number
-  int32_t m_particleType;
+  std::vector<int32_t> m_particleType;
   /// Production process type, i.e. what generated the particle.
-  uint32_t m_process;
+  std::vector<uint32_t> m_process;
   /// Production position components in mm.
-  float m_vx, m_vy, m_vz;
+  std::vector<float> m_vx;
+  std::vector<float> m_vy;
+  std::vector<float> m_vz;
   // Production time in ns.
-  float m_vt;
+  std::vector<float> m_vt;
+  /// Total momentum in GeV
+  std::vector<float> m_p;
   /// Momentum components in GeV.
-  float m_px, m_py, m_pz;
+  std::vector<float> m_px;
+  std::vector<float> m_py;
+  std::vector<float> m_pz;
   /// Mass in GeV.
-  float m_m;
+  std::vector<float> m_m;
   /// Charge in e.
-  float m_q;
+  std::vector<float> m_q;
   // Derived kinematic quantities
   /// Direction pseudo-rapidity.
-  float m_eta;
+  std::vector<float> m_eta;
   /// Direction angle in the transverse plane.
-  float m_phi;
+  std::vector<float> m_phi;
   /// Transverse momentum in GeV.
-  float m_pt;
+  std::vector<float> m_pt;
   // Decoded particle identifier; see Barcode definition for details.
-  uint32_t m_vertexPrimary;
-  uint32_t m_vertexSecondary;
-  uint32_t m_particle;
-  uint32_t m_generation;
-  uint32_t m_subParticle;
+  std::vector<uint32_t> m_vertexPrimary;
+  std::vector<uint32_t> m_vertexSecondary;
+  std::vector<uint32_t> m_particle;
+  std::vector<uint32_t> m_generation;
+  std::vector<uint32_t> m_subParticle;
 };
 
 }  // namespace ActsExamples
