@@ -82,6 +82,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
   // The number of majority particle hits and fitted track parameters
   using RecoTrackInfo = std::pair<size_t, Acts::BoundTrackParameters>;
+  using Acts::VectorHelpers::perp;
 
   // Read truth input collections
   const auto& particles =
@@ -133,6 +134,12 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
         continue;
       }
       const auto& fittedParameters = traj.trackParameters(trackTip);
+      // Requirement on the pT of the track
+      const auto& momentum = fittedParameters.momentum();
+      const auto pT = perp(momentum);
+      if (pT < m_cfg.ptMin) {
+        continue;
+      }
       // Fill the trajectory summary info
       m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
                                   trajState.nStates, trajState.nMeasurements,
@@ -211,6 +218,9 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
   // Loop over all truth particle seeds for efficiency plots and reco details.
   // These are filled w.r.t. truth particle seed info
   for (const auto& particle : particles) {
+    if (particle.transverseMomentum() < m_cfg.ptMin) {
+      continue;
+    }
     auto particleId = particle.particleId();
     // Investigate the truth-matched tracks
     size_t nMatchedTracks = 0;

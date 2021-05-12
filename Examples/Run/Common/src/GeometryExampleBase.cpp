@@ -54,7 +54,8 @@ int processGeometry(int argc, char* argv[],
 
   // Now read the standard options
   auto logLevel = ActsExamples::Options::readLogLevel(vm);
-  auto nEvents = ActsExamples::Options::readSequencerConfig(vm).events;
+  size_t nEvents =
+      ActsExamples::Options::readSequencerConfig(vm).events.value_or(1);
 
   // The geometry, material and decoration
   auto geometry = ActsExamples::Geometry::build(vm, detector);

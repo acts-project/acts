@@ -12,6 +12,14 @@ using namespace boost::program_options;
 
 void ActsExamples::Options::addFittingOptions(
     boost::program_options::options_description& opt) {
-  opt.add_options()("directed-navigation", value<bool>()->default_value(false),
+  opt.add_options()("fit-directed-navigation", bool_switch(),
                     "Fit tracks with DirectNavigator");
+  opt.add_options()("fit-multiple-scattering-correction",
+                    value<bool>()->default_value(true),
+                    "Correct for multiple scattering effects.");
+  opt.add_options()("fit-energy-loss-correction",
+                    value<bool>()->default_value(true),
+                    "Correct for energyloss effects.");
+  opt.add_options()("fit-pick-track", value<int>()->default_value(-1),
+                    "Pick a single track by track number (-1 for all tracks)");
 }

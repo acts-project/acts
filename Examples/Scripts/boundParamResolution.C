@@ -24,7 +24,8 @@ setHistStyle(TH1F* hist, short color);
 //
 void
 boundParamResolution(const std::string& inFile,
-          const std::string& treeName)
+          const std::string& treeName,
+          bool fitPulls = false)
 {
   gStyle->SetOptFit(0000);
   gStyle->SetOptStat(0000);
@@ -388,6 +389,12 @@ boundParamResolution(const std::string& inFile,
     pull_smt[paramNames.at(ipar)]->Draw("");
     pull_prt[paramNames.at(ipar)]->Draw("same");
     pull_flt[paramNames.at(ipar)]->Draw("same");
+
+    // Fitting the pulls if required to do so
+    if (fitPulls){
+        pull_smt[paramNames.at(ipar)]->Fit("gaus");
+        auto fitFnc = pull_smt[paramNames.at(ipar)]->GetFunction("gaus");
+    }
 
     int binmax     = pull_smt[paramNames.at(ipar)]->GetMaximumBin();
     int bincontent = pull_smt[paramNames.at(ipar)]->GetBinContent(binmax);
