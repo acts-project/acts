@@ -74,6 +74,12 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
     DirectedTrackFitterFunction dFit;
     /// Tracking geometry for surface lookup
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
+    /// Some more detailed steering - mainly for debugging, correct for MCS
+    bool multipleScattering = true;
+    /// Some more detailed steering - correct for e-loss
+    bool energyLoss = true;
+    /// Pick a single track for debugging (-1 process all tracks)
+    int pickTrack = -1;
   };
 
   /// Constructor of the fitting algorithm

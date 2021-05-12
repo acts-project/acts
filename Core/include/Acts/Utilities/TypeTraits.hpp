@@ -399,11 +399,11 @@ constexpr bool has_member = identical_to<V, M, T>;
       static constexpr bool value = false;                                     \
     };                                                                         \
     template <typename T_>                                                     \
-    struct tv<T_, std::enable_if_t<                                            \
-                      is_detected_exact<R, qual_ret, T_, Arguments...>::value, \
-                      int>> {                                                  \
+    struct tv<T_, std::enable_if_t<Acts::Concepts::is_detected_exact<          \
+                                       R, qual_ret, T_, Arguments...>::value,  \
+                                   int>> {                                     \
       /* This is only ever evaluate if the method exists!*/                    \
       static constexpr bool value =                                            \
-          is_detected<fptr_meta_t, T, Arguments...>::value;                    \
+          Acts::Concepts::is_detected<fptr_meta_t, T, Arguments...>::value;    \
     };                                                                         \
   }
