@@ -44,6 +44,7 @@ option(ACTS_BUILD_FATRAS_GEANT4 "Build Geant4 Fatras package" OFF)
 # examples related options
 option(ACTS_BUILD_EXAMPLES "Build standalone examples" OFF)
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
+option(ACTS_BUILD_EXAMPLES_GEOMODEL "Build GeoModel-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HEPMC3 "Build HepMC3-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
@@ -135,7 +136,7 @@ set(_acts_tbb_version 2020.1)
 # required packages
 # NOTE we use boost::filesystem instead of std::filesystem since the later
 #   is not uniformly supported even on compilers that nominally support C++17 
-find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS filesystem program_options unit_test_framework)
+find_package(Boost ${_acts_boost_version} REQUIRED CONFIG COMPONENTS filesystem program_options unit_test_framework)
 find_package(Eigen3 ${_acts_eigen3_version} REQUIRED CONFIG)
 
 # the `<project_name>_VERSION` variables set by `setup(... VERSION ...)` have
@@ -222,6 +223,10 @@ endif()
 if(ACTS_BUILD_EXAMPLES_GEANT4)
   find_package(Geant4 REQUIRED CONFIG COMPONENTS gdml)
 endif()
+if(ACTS_BUILD_EXAMPLES_GEOMODEL)
+  find_package( GeoModelCore PATHS /afs/cern.ch/work/f/fklimpel/install/ REQUIRED ${GeoModel_VERSION} )
+  find_package( GeoModelG4 PATHS /afs/cern.ch/work/f/fklimpel/install/ REQUIRED ${GeoModel_VERSION} )
+endif()
 if(ACTS_BUILD_EXAMPLES_HEPMC3)
   find_package(HepMC3 ${_acts_hepmc3_version} REQUIRED CONFIG)
 endif()
@@ -234,8 +239,6 @@ if(ACTS_BUILD_DOCS)
   find_package(Sphinx REQUIRED)
 endif()
 
-find_package( GeoModelCore REQUIRED ${GeoModel_VERSION} )
-find_package( GeoModelG4 REQUIRED ${GeoModel_VERSION} )
 
 if(ACTS_CUSTOM_SCALARTYPE)
     message(STATUS "Building Acts with custom scalar type: ${ACTS_CUSTOM_SCALARTYPE}")

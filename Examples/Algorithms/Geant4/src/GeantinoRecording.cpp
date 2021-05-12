@@ -16,7 +16,6 @@
 #include <FTFP_BERT.hh>
 #include <G4RunManager.hh>
 #include <G4VUserDetectorConstruction.hh>
-#include <Randomize.hh>
 
 #include "EventAction.hpp"
 #include "RunAction.hpp"
@@ -38,10 +37,7 @@ GeantinoRecording::GeantinoRecording(GeantinoRecording::Config&& cfg,
 
   m_cfg.generationConfig.particleName = "geantino";
   m_cfg.generationConfig.energy = 1000.;
-  
-  G4Random::setTheEngine(new CLHEP::MixMaxRng);
-  G4Random::setTheSeed(12345678);
-  
+
   m_runManager->SetUserInitialization(m_cfg.detectorConstruction.release());
   m_runManager->SetUserInitialization(new FTFP_BERT);
   m_runManager->SetUserAction(new RunAction());
