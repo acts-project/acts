@@ -64,33 +64,34 @@ int main(int argc, char* argv[]) {
   sequencer.addAlgorithm(
       std::make_shared<ParticleSelector>(selectParticles, logLevel));
 
-  TruthVerticesToTracksAlgorithm::Config trkConvConfig;
-  trkConvConfig.input = selectParticles.outputEvent;
-  trkConvConfig.output = "tracks";
-  trkConvConfig.doSmearing = true;
-  trkConvConfig.randomNumberSvc = rnd;
-  trkConvConfig.bField = {0_T, 0_T, 1_T};
-  sequencer.addAlgorithm(std::make_shared<TruthVerticesToTracksAlgorithm>(
-      trkConvConfig, logLevel));
+  //   TruthVerticesToTracksAlgorithm::Config trkConvConfig;
+  //   trkConvConfig.input = selectParticles.outputEvent;
+  //   trkConvConfig.output = "tracks";
+  //   trkConvConfig.doSmearing = true;
+  //   trkConvConfig.randomNumberSvc = rnd;
+  //   trkConvConfig.bField = {0_T, 0_T, 1_T};
+  //   sequencer.addAlgorithm(std::make_shared<TruthVerticesToTracksAlgorithm>(
+  //       trkConvConfig, logLevel));
 
-  // Set up track selector
-  TrackSelector::Config selectorConfig;
-  selectorConfig.input = trkConvConfig.output;
-  selectorConfig.output = "tracks_selected";
-  selectorConfig.absEtaMax = 2.5;
-  selectorConfig.rhoMax = 4_mm;
-  selectorConfig.ptMin = 400_MeV;
-  selectorConfig.keepNeutral = false;
-  sequencer.addAlgorithm(
-      std::make_shared<TrackSelector>(selectorConfig, logLevel));
+  //   // Set up track selector
+  //   TrackSelector::Config selectorConfig;
+  //   selectorConfig.input = trkConvConfig.output;
+  //   selectorConfig.output = "tracks_selected";
+  //   selectorConfig.absEtaMax = 2.5;
+  //   selectorConfig.rhoMax = 4_mm;
+  //   selectorConfig.ptMin = 400_MeV;
+  //   selectorConfig.keepNeutral = false;
+  //   sequencer.addAlgorithm(
+  //       std::make_shared<TrackSelector>(selectorConfig, logLevel));
 
-  auto outputDir = ensureWritableDirectory(vm["output-dir"].as<std::string>());
+  //   auto outputDir =
+  //   ensureWritableDirectory(vm["output-dir"].as<std::string>());
 
-  RootVertexAndTracksWriter::Config writerCfg;
-  writerCfg.collection = selectorConfig.output;
-  writerCfg.filePath = joinPaths(outputDir, selectorConfig.output + ".root");
-  sequencer.addWriter(
-      std::make_shared<RootVertexAndTracksWriter>(writerCfg, logLevel));
+  //   RootVertexAndTracksWriter::Config writerCfg;
+  //   writerCfg.collection = selectorConfig.output;
+  //   writerCfg.filePath = joinPaths(outputDir, selectorConfig.output +
+  //   ".root"); sequencer.addWriter(
+  //       std::make_shared<RootVertexAndTracksWriter>(writerCfg, logLevel));
 
   return sequencer.run();
 }

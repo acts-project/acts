@@ -96,12 +96,16 @@ FW::ParticleSelector::ParticleSelector(const Config& cfg,
 FW::ProcessCode FW::ParticleSelector::execute(
     const FW::AlgorithmContext& ctx) const {
   using SimEvent = std::vector<SimVertex>;
+  using List_SimEvent = std::vector<std::vector<SimVertex>>;
 
   // prepare input/ output types
-  const auto& input = ctx.eventStore.get<SimEvent>(m_cfg.inputEvent);
-  SimEvent selected;
+  // const auto& input = ctx.eventStore.get<SimEvent>(m_cfg.inputEvent);
+  const auto& list_input = ctx.eventStore.get<List_SimEvent>(m_cfg.inputEvent);
 
-  ACTS_DEBUG("event=" << ctx.eventNumber << " event size =" << input.size());
+  List_SimEvent list_selected;
+
+  // ACTS_DEBUG("event=" << ctx.eventNumber << " event size =" << input.size());
+  ACTS_DEBUG("event=" << ctx.eventNumber << " PV size =" << list_input.size());
 
   auto within = [](double x, double min, double max) {
     return (min <= x) and (x < max);
@@ -126,41 +130,83 @@ FW::ProcessCode FW::ParticleSelector::execute(
   std::size_t allParticles = 0;
   std::size_t selectedParticles = 0;
 
-  selected.reserve(input.size());
-  for (const auto& inputVertex : input) {
-    allParticles += inputVertex.incoming.size();
-    allParticles += inputVertex.outgoing.size();
+  // selected.reserve(input.size());
+  list_selected.reserve(list_input.size());
 
-    SimVertex vertex(inputVertex.position4, inputVertex.process);
-    // copy selected particles over
-    std::copy_if(inputVertex.incoming.begin(), inputVertex.incoming.end(),
-                 std::back_inserter(vertex.incoming), isValidParticle);
-    std::copy_if(inputVertex.outgoing.begin(), inputVertex.outgoing.end(),
-                 std::back_inserter(vertex.outgoing), isValidParticle);
+  for (const auto& input : list_input) {
+    SimEvent selected;
+    for (const auto& inputVertex : input) {
+      allParticles += inputVertex.incoming.size();
+      allParticles += inputVertex.outgoing.size();
 
-    // only retain vertex if it still contains particles
-    if (vertex.incoming.empty() and vertex.outgoing.empty()) {
-      continue;
+      SimVertex vertex(inputVertex.position4, inputVertex.process);
+      // copy selected particles over
+      std::copy_if(inputVertex.incoming.begin(), inputVertex.incoming.end(),
+                   std::back_inserter(vertex.incoming), isValidParticle);
+      std::copy_if(inputVertex.outgoing.begin(), inputVertex.outgoing.end(),
+                   std::back_inserter(vertex.outgoing), isValidParticle);
+
+      // only retain vertex if it still contains particles
+      if (vertex.incoming.empty() and vertex.outgoing.empty()) {
+        continue;
+      }
+      selectedParticles += vertex.incoming.size();
+      selectedParticles += vertex.outgoing.size();
+      selected.push_back(std::move(vertex));
     }
-
-    selectedParticles += vertex.incoming.size();
-    selectedParticles += vertex.outgoing.size();
-    selected.push_back(std::move(vertex));
+    list_selected.push_back(selected);
   }
+  for (unsigned i = 0; i < list_selected.size(); i++) {
+    if (list_selected[i].size() == 0) {
+      ACTS_DEBUG("PV_selected_list[" << i
+                                     << "], size: " << list_selected[i].size());
+    } else {
+      ACTS_DEBUG("PV_selected_list[" << i
+                                     << "], size: " << list_selected[i].size());
+      for (size_t j = 0; j < list_selected[i].size(); j++) {
+        ACTS_DEBUG("\t"
+                   << " x: " << list_selected[i][j].position4(0)
+                   << " y: " << list_selected[i][j].position4(1)
+                   << " z: " << list_selected[i][j].position4(2));
+      }
+    }
+  }
+
+  // for (const auto& inputVertex : input) {
+  //   allParticles += inputVertex.incoming.size();
+  //   allParticles += inputVertex.outgoing.size();
+
+  //   SimVertex vertex(inputVertex.position4, inputVertex.process);
+  //   // copy selected particles over
+  //   std::copy_if(inputVertex.incoming.begin(), inputVertex.incoming.end(),
+  //                std::back_inserter(vertex.incoming), isValidParticle);
+  //   std::copy_if(inputVertex.outgoing.begin(), inputVertex.outgoing.end(),
+  //                std::back_inserter(vertex.outgoing), isValidParticle);
+
+  //   // only retain vertex if it still contains particles
+  //   if (vertex.incoming.empty() and vertex.outgoing.empty()) {
+  //     continue;
+  //   }
+
+  //   selectedParticles += vertex.incoming.size();
+  //   selectedParticles += vertex.outgoing.size();
+  //   selected.push_back(std::move(vertex));
+  // }
 
   ACTS_DEBUG("event " << ctx.eventNumber << " selected " << selectedParticles
                       << " from " << allParticles << " particles");
 
-  ACTS_DEBUG("event=" << ctx.eventNumber
-                      << " event size after selected =" << selected.size());
+  // ACTS_DEBUG("event=" << ctx.eventNumber
+  //                     << " event size after selected =" <<
+  //                     selected.size());
 
-  for (unsigned i = 0; i < selected.size(); i++) {
-    ACTS_DEBUG("event=" << ctx.eventNumber << "  " << i << "-th Vertex: "
-                        << " x: " << selected[i].position4(0)
-                        << " y: " << selected[i].position4(1)
-                        << " z: " << selected[i].position4(2));
-  }
+  // for (unsigned i = 0; i < selected.size(); i++) {
+  //   ACTS_DEBUG("event=" << ctx.eventNumber << "  " << i << "-th Vertex: "
+  //                       << " x: " << selected[i].position4(0)
+  //                       << " y: " << selected[i].position4(1)
+  //                       << " z: " << selected[i].position4(2));
+  // }
 
-  ctx.eventStore.add(m_cfg.outputEvent, std::move(selected));
+  ctx.eventStore.add(m_cfg.outputEvent, std::move(list_selected));
   return ProcessCode::SUCCESS;
 }

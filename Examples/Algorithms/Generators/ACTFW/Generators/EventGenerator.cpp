@@ -37,7 +37,7 @@ std::pair<size_t, size_t> FW::EventGenerator::availableEvents() const {
 
 FW::ProcessCode FW::EventGenerator::read(const AlgorithmContext& ctx) {
   std::vector<SimVertex> event;
-
+  std::vector<std::vector<SimVertex>> PV_list;
   auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
   // number of primary vertices within event
   size_t nPrimaryVertices = 0;
@@ -50,7 +50,9 @@ FW::ProcessCode FW::EventGenerator::read(const AlgorithmContext& ctx) {
 
   for (size_t iGenerate = 0; iGenerate < m_cfg.generators.size(); ++iGenerate) {
     auto& generate = m_cfg.generators[iGenerate];
-
+    // std::cout << "generate.multiplicity(rng): " << generate.multiplicity(rng)
+    //           << std::endl;
+    // event1.resize(generate.multiplicity(rng));
     // generate the number of primary vertices from this generator
     for (size_t n = generate.multiplicity(rng); 0 < n; --n) {
       nPrimaryVertices += 1;
@@ -87,11 +89,11 @@ FW::ProcessCode FW::EventGenerator::read(const AlgorithmContext& ctx) {
           particle = particle.withParticleId(pid).setPosition4(pos4);
         };
 
-        ACTS_DEBUG("event=" << ctx.eventNumber << "  " << nSecondaryVertices
-                            << "-th SV: "
-                            << " x: " << processVertex.position4(0)
-                            << " y: " << processVertex.position4(1)
-                            << " z: " << processVertex.position4(2));
+        // ACTS_DEBUG("event=" << ctx.eventNumber << "  " << nSecondaryVertices
+        //                     << "-th SV: "
+        //                     << " x: " << processVertex.position4(0)
+        //                     << " y: " << processVertex.position4(1)
+        //                     << " z: " << processVertex.position4(2));
 
         for (auto& particle : processVertex.incoming) {
           updateParticleInPlace(particle);
@@ -102,11 +104,17 @@ FW::ProcessCode FW::EventGenerator::read(const AlgorithmContext& ctx) {
           nParticlesVertex += 1;
         }
       }
-      nParticles += nParticlesVertex;
 
+      ACTS_DEBUG("event=" << ctx.eventNumber << " PV " << n
+                          << "-th : # of SVs :" << nSecondaryVertices);
+      nParticles += nParticlesVertex;
+      PV_list.push_back(processVertices);
       // append all process vertices to the full event
       std::move(processVertices.begin(), processVertices.end(),
                 std::back_inserter(event));
+
+      // std::move(processVertices.begin(), processVertices.end(),
+      //           std::back_inserter(event1[n - 1]));
 
       ACTS_VERBOSE("event=" << ctx.eventNumber << " generator=" << iGenerate
                             << " primary_vertex=" << nPrimaryVertices
@@ -114,6 +122,14 @@ FW::ProcessCode FW::EventGenerator::read(const AlgorithmContext& ctx) {
                             << " n_particles=" << nParticlesVertex);
     }
   }
+
+  for (unsigned i = 0; i < PV_list.size(); i++) {
+    ACTS_DEBUG("PV_list[" << i << "], size: " << PV_list[i].size()
+                          << ", x: " << PV_list[i][0].position4(0)
+                          << " y: " << PV_list[i][0].position4(1)
+                          << " z: " << PV_list[i][0].position4(2));
+  }
+
   // TODO should this reassign the vertex ids?
   // if not, what is the purpose? can it be removed altogether?
   // if (m_cfg.shuffle) {
@@ -128,6 +144,9 @@ FW::ProcessCode FW::EventGenerator::read(const AlgorithmContext& ctx) {
   ACTS_DEBUG("event=" << ctx.eventNumber << " event size =" << event.size());
 
   // move generated event to the store
-  ctx.eventStore.add(m_cfg.output, std::move(event));
+  // ctx.eventStore.add(m_cfg.output, std::move(event));
+
+  ctx.eventStore.add(m_cfg.output, std::move(PV_list));
+  ACTS_DEBUG("OK");
   return FW::ProcessCode::SUCCESS;
 }
