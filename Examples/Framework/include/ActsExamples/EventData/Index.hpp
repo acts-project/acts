@@ -48,7 +48,7 @@ inline boost::container::flat_multimap<value_t, Index> invertIndexMultimap(
 
   // adopting the unordered sequence will reestablish the correct order
   InverseMultimap inverse;
-  inverse.adopt_sequence(std::move(unordered));
+  inverse.insert(unordered.begin(), unordered.end());
   return inverse;
 }
 
