@@ -14,6 +14,7 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
+#include "ActsExamples/Io/Csv/CsvMultiTrajectoryWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
@@ -56,6 +57,8 @@ void addRecCKFOptions(ActsExamples::Options::Description& desc) {
       "Use track parameters smeared from truth particles for steering CKF");
   opt("ckf-truth-estimated-seeds", bool_switch(),
       "Use track parameters estimated from truth tracks for steering CKF");
+  opt("output-csv", bool_switch(),
+      "Use track parameters smeared from truth particles for steering CKF");
 }
 
 int runRecCKFTracks(int argc, char* argv[],
@@ -304,5 +307,15 @@ int runRecCKFTracks(int argc, char* argv[],
   sequencer.addWriter(
       std::make_shared<CKFPerformanceWriter>(perfWriterCfg, logLevel));
 
+  if (vm["output-csv"].template as<bool>()) {
+    // Write the CKF track as Csv
+    CsvMultiTrajectoryWriter::Config trackWriterCsvConfig;
+    trackWriterCsvConfig.inputTrajectories = trackFindingCfg.outputTrajectories;
+    trackWriterCsvConfig.outputDir = outputDir;
+    trackWriterCsvConfig.inputMeasurementParticlesMap = digiCfg.outputMeasurementParticlesMap;
+    sequencer.addWriter(std::make_shared<CsvMultiTrajectoryWriter>(
+								   trackWriterCsvConfig, logLevel));
+  }
+  
   return sequencer.run();
 }
