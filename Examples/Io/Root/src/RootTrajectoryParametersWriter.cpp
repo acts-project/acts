@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -71,7 +71,7 @@ ActsExamples::RootTrajectoryParametersWriter::RootTrajectoryParametersWriter(
     m_outputTree->Branch("event_nr", &m_eventNr);
     m_outputTree->Branch("multiTraj_nr", &m_multiTrajNr);
     m_outputTree->Branch("subTraj_nr", &m_subTrajNr);
-    m_outputTree->Branch("t_barcode", &m_t_barcode, "t_barcode/l");
+    m_outputTree->Branch("t_barcode", &m_t_barcode);
     m_outputTree->Branch("t_charge", &m_t_charge);
     m_outputTree->Branch("t_time", &m_t_time);
     m_outputTree->Branch("t_vx", &m_t_vx);
@@ -152,7 +152,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersWriter::writeT(
     }
 
     // The trajectory index
-    m_multiTrajNr = itraj;
+    m_multiTrajNr.push_back(itraj);
 
     // The trajectory entry indices and the multiTrajectory
     const auto& trackTips = traj.tips();
@@ -160,7 +160,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersWriter::writeT(
     // Loop over the entry indices for the subtrajectories
     for (unsigned int isubtraj = 0; isubtraj < trackTips.size(); ++isubtraj) {
       // The subtrajectory index
-      m_subTrajNr = isubtraj;
+      m_subTrajNr.push_back(isubtraj);
       // The entry index for this subtrajectory
       const auto& trackTip = trackTips[isubtraj];
 
@@ -169,71 +169,107 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersWriter::writeT(
                                     particleHitCounts);
       if (not particleHitCounts.empty()) {
         // Get the barcode of the majority truth particle
-        m_t_barcode = particleHitCounts.front().particleId.value();
+        long unsigned int barcode =
+            particleHitCounts.front().particleId.value();
+        m_t_barcode.push_back(barcode);
         // Find the truth particle via the barcode
-        auto ip = particles.find(m_t_barcode);
+        auto ip = particles.find(barcode);
         if (ip != particles.end()) {
           const auto& particle = *ip;
-          ACTS_DEBUG("Find the truth particle with barcode = " << m_t_barcode);
+          ACTS_DEBUG("Find the truth particle with barcode = " << barcode);
           // Get the truth particle info at vertex
           const auto p = particle.absoluteMomentum();
-          m_t_charge = particle.charge();
-          m_t_time = particle.time();
-          m_t_vx = particle.position().x();
-          m_t_vy = particle.position().y();
-          m_t_vz = particle.position().z();
-          m_t_px = p * particle.unitDirection().x();
-          m_t_py = p * particle.unitDirection().y();
-          m_t_pz = p * particle.unitDirection().z();
-          m_t_theta = theta(particle.unitDirection());
-          m_t_phi = phi(particle.unitDirection());
-          m_t_eta = eta(particle.unitDirection());
-          m_t_pT = p * perp(particle.unitDirection());
+          m_t_charge.push_back(particle.charge());
+          m_t_time.push_back(particle.time());
+          m_t_vx.push_back(particle.position().x());
+          m_t_vy.push_back(particle.position().y());
+          m_t_vz.push_back(particle.position().z());
+          m_t_px.push_back(p * particle.unitDirection().x());
+          m_t_py.push_back(p * particle.unitDirection().y());
+          m_t_pz.push_back(p * particle.unitDirection().z());
+          m_t_theta.push_back(theta(particle.unitDirection()));
+          m_t_phi.push_back(phi(particle.unitDirection()));
+          m_t_eta.push_back(eta(particle.unitDirection()));
+          m_t_pT.push_back(p * perp(particle.unitDirection()));
         } else {
-          ACTS_WARNING("Truth particle with barcode = " << m_t_barcode
+          ACTS_WARNING("Truth particle with barcode = " << barcode
                                                         << " not found!");
         }
       }
 
       // Get the fitted track parameter
-      m_hasFittedParams = false;
+      bool hasFittedParams = false;
       if (traj.hasTrackParameters(trackTip)) {
-        m_hasFittedParams = true;
+        hasFittedParams = true;
         const auto& boundParam = traj.trackParameters(trackTip);
         const auto& parameter = boundParam.parameters();
-        m_eLOC0_fit = parameter[Acts::eBoundLoc0];
-        m_eLOC1_fit = parameter[Acts::eBoundLoc1];
-        m_ePHI_fit = parameter[Acts::eBoundPhi];
-        m_eTHETA_fit = parameter[Acts::eBoundTheta];
-        m_eQOP_fit = parameter[Acts::eBoundQOverP];
-        m_eT_fit = parameter[Acts::eBoundTime];
+
+        m_eLOC0_fit.push_back(parameter[Acts::eBoundLoc0]);
+        m_eLOC1_fit.push_back(parameter[Acts::eBoundLoc1]);
+        m_ePHI_fit.push_back(parameter[Acts::eBoundPhi]);
+        m_eTHETA_fit.push_back(parameter[Acts::eBoundTheta]);
+        m_eQOP_fit.push_back(parameter[Acts::eBoundQOverP]);
+        m_eT_fit.push_back(parameter[Acts::eBoundTime]);
 
         if (boundParam.covariance().has_value()) {
           const auto& covariance = *boundParam.covariance();
-          m_err_eLOC0_fit =
-              sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0));
-          m_err_eLOC1_fit =
-              sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1));
-          m_err_ePHI_fit = sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi));
-          m_err_eTHETA_fit =
-              sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta));
-          m_err_eQOP_fit =
-              sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP));
-          m_err_eT_fit = sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime));
+          m_err_eLOC0_fit.push_back(
+              sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
+          m_err_eLOC1_fit.push_back(
+              sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+          m_err_ePHI_fit.push_back(
+              sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
+          m_err_eTHETA_fit.push_back(
+              sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
+          m_err_eQOP_fit.push_back(
+              sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
+          m_err_eT_fit.push_back(
+              sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
         } else {
-          m_err_eLOC0_fit = NaNfloat;
-          m_err_eLOC1_fit = NaNfloat;
-          m_err_ePHI_fit = NaNfloat;
-          m_err_eTHETA_fit = NaNfloat;
-          m_err_eQOP_fit = NaNfloat;
-          m_err_eT_fit = NaNfloat;
+          m_err_eLOC0_fit.push_back(NaNfloat);
+          m_err_eLOC1_fit.push_back(NaNfloat);
+          m_err_ePHI_fit.push_back(NaNfloat);
+          m_err_eTHETA_fit.push_back(NaNfloat);
+          m_err_eQOP_fit.push_back(NaNfloat);
+          m_err_eT_fit.push_back(NaNfloat);
         }
       }
 
-      // fill the variables for one track to tree
-      m_outputTree->Fill();
+      m_hasFittedParams.push_back(hasFittedParams);
     }  // all subtrajectories
   }    // all trajectories
+
+  // fill the variables
+  m_outputTree->Fill();
+
+  m_multiTrajNr.clear();
+  m_subTrajNr.clear();
+  m_t_barcode.clear();
+  m_t_charge.clear();
+  m_t_time.clear();
+  m_t_vx.clear();
+  m_t_vy.clear();
+  m_t_vz.clear();
+  m_t_px.clear();
+  m_t_py.clear();
+  m_t_pz.clear();
+  m_t_theta.clear();
+  m_t_phi.clear();
+  m_t_pT.clear();
+  m_t_eta.clear();
+  m_hasFittedParams.clear();
+  m_eLOC0_fit.clear();
+  m_eLOC1_fit.clear();
+  m_ePHI_fit.clear();
+  m_eTHETA_fit.clear();
+  m_eQOP_fit.clear();
+  m_eT_fit.clear();
+  m_err_eLOC0_fit.clear();
+  m_err_eLOC1_fit.clear();
+  m_err_ePHI_fit.clear();
+  m_err_eTHETA_fit.clear();
+  m_err_eQOP_fit.clear();
+  m_err_eT_fit.clear();
 
   return ProcessCode::SUCCESS;
 }
