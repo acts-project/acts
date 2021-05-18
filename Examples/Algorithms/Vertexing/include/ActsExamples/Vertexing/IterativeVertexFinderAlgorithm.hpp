@@ -25,6 +25,8 @@ class IterativeVertexFinderAlgorithm final : public BareAlgorithm {
     std::string inputTrackParameters;
     /// Output proto vertex collection
     std::string outputProtoVertices;
+    /// Output reconstruction time in ms
+    std::string outputTime = "time";
     /// The magnetic field
     std::shared_ptr<Acts::MagneticFieldProvider> bField;
   };
