@@ -45,7 +45,10 @@ ActsExamples::IterativeVertexFinderAlgorithm::IterativeVertexFinderAlgorithm(
   if (m_cfg.outputProtoVertices.empty()) {
     throw std::invalid_argument("Missing output proto vertices collection");
   }
-  if (m_cfg.outputTime.empty()) {
+  if (m_cfg.outputVertices.empty()) {
+    throw std::invalid_argument("Missing output vertices collection");
+  }
+   if (m_cfg.outputTime.empty()) {
     throw std::invalid_argument("Missing output reconstruction time");
   }
 }
@@ -118,6 +121,9 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   // store proto vertices extracted from the found vertices
   ctx.eventStore.add(m_cfg.outputProtoVertices,
                      makeProtoVertices(inputTrackParameters, vertices));
+
+  // store found vertices
+  ctx.eventStore.add(m_cfg.outputVertices, std::move(vertices));
 
   // time in milliseconds
   int timeMS =

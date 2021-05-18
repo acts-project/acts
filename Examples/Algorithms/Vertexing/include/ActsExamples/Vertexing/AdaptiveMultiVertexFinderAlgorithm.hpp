@@ -26,7 +26,7 @@ class AdaptiveMultiVertexFinderAlgorithm final : public BareAlgorithm {
     /// Output proto vertex collection
     std::string outputProtoVertices;
     /// Output vertex collection
-    std::string outputVertices;
+    std::string outputVertices = "vertices";
     /// Output reconstruction time in ms
     std::string outputTime = "time";
     /// The magnetic field
