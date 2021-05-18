@@ -48,7 +48,7 @@ ActsExamples::IterativeVertexFinderAlgorithm::IterativeVertexFinderAlgorithm(
   if (m_cfg.outputVertices.empty()) {
     throw std::invalid_argument("Missing output vertices collection");
   }
-   if (m_cfg.outputTime.empty()) {
+  if (m_cfg.outputTime.empty()) {
     throw std::invalid_argument("Missing output reconstruction time");
   }
 }
