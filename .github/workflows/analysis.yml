@@ -90,4 +90,8 @@ jobs:
           ssh-add - <<< "${{ secrets.METRIC_DEPLOY_SSH_KEY }}"
           git clone git@github.com:acts-project/metrics.git
           hdw collect CI/headwind.yml
+          cd metrics
+          git add -A
+          git commit -m"update metrics"
+          git push
 
