@@ -79,14 +79,15 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install dependencies
         run: pip3 install git+https://github.com/paulgessinger/headwind.git@3746c02
-      - name: Clone destination storage
+      - uses: actions/download-artifact@v2
+        with:
+          name: cmakeperf
+      - name: Run collection
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
         run: |
           ssh-agent -a $SSH_AUTH_SOCK > /dev/null
           ssh-add - <<< "${{ secrets.METRIC_DEPLOY_SSH_KEY }}"
           git clone git@github.com:acts-project/metrics.git
-      - uses: actions/download-artifact@v2
-        with:
-          name: cmakeperf
+          hdw collect CI/headwind.yml
 
