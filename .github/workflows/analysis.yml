@@ -90,8 +90,8 @@ jobs:
         run: |
           ssh-agent -a $SSH_AUTH_SOCK > /dev/null
           ssh-add - <<< "${{ secrets.METRIC_DEPLOY_SSH_KEY }}"
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
           git clone git@github.com:acts-project/metrics.git
           hdw collect CI/headwind.yml --commit $(git log --pretty=format:'%H' -1)
           cd metrics
