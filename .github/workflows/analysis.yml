@@ -65,6 +65,8 @@ jobs:
           -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
       # - name: Measure
       #   run: cmakeperf collect build/compile_commands.json -o perf.csv
+      - name: Measure (Debug)
+        run: cp perf_debug.csv perf.csv
       - name: Results
         run: cmakeperf print perf.csv
       - uses: actions/upload-artifact@v2
