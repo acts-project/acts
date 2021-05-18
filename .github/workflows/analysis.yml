@@ -81,6 +81,10 @@ jobs:
         run: pip3 install git+https://github.com/paulgessinger/headwind.git@3746c02
       - name: Clone destination storage
         run: |
+          mkdir .ssh
           echo "${{ secrets.METRIC_DEPLOY_SSH_KEY }}" > .ssh/deploy
           git clone git@github.com:acts-project/metrics.git
+      - uses: actions/download-artifact@v2
+        with:
+          name: cmakeperf
 
