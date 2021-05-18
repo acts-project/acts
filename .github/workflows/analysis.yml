@@ -88,7 +88,9 @@ jobs:
         run: |
           ssh-agent -a $SSH_AUTH_SOCK > /dev/null
           ssh-add - <<< "${{ secrets.METRIC_DEPLOY_SSH_KEY }}"
+          git log -n1
           git clone git@github.com:acts-project/metrics.git
+          git log -n1
           hdw collect CI/headwind.yml --commit $(git log --pretty=format:'%H' -1)
           cd metrics
           git add -A
