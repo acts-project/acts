@@ -28,9 +28,10 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
-#include "VertexingHelpers.hpp"
 
 #include <chrono>
+
+#include "VertexingHelpers.hpp"
 
 ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
     AdaptiveMultiVertexFinderAlgorithm(const Config& cfg,
@@ -143,7 +144,8 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   ctx.eventStore.add(m_cfg.outputVertices, std::move(vertices));
 
   // time in milliseconds
-  int timeMS = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+  int timeMS =
+      std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   // store reconstruction time
   ctx.eventStore.add(m_cfg.outputTime, std::move(timeMS));
 

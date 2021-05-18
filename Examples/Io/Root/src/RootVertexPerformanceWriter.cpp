@@ -61,8 +61,7 @@ ActsExamples::RootVertexPerformanceWriter::RootVertexPerformanceWriter(
         "Collection with all fitted track parameters missing");
   }
   if (m_cfg.inputTime.empty()) {
-    throw std::invalid_argument(
-        "Input reconstruction time missing");
+    throw std::invalid_argument("Input reconstruction time missing");
   }
 
   // Setup ROOT I/O
@@ -282,9 +281,7 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
   }
 
   // Retrieve and set reconstruction time
-  const auto& reconstructionTimeMS =
-      ctx.eventStore.get<int>(
-          m_cfg.inputTime);
+  const auto& reconstructionTimeMS = ctx.eventStore.get<int>(m_cfg.inputTime);
   m_timeMS = reconstructionTimeMS;
 
   // fill the variables
