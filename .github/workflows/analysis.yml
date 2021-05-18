@@ -80,7 +80,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
-        run: pip3 install git+https://github.com/paulgessinger/headwind.git@3746c02
+        run: pip3 install git+https://github.com/paulgessinger/headwind.git@eeeaa80
       - uses: actions/download-artifact@v2
         with:
           name: cmakeperf
@@ -90,9 +90,7 @@ jobs:
         run: |
           ssh-agent -a $SSH_AUTH_SOCK > /dev/null
           ssh-add - <<< "${{ secrets.METRIC_DEPLOY_SSH_KEY }}"
-          git log -n1
           git clone git@github.com:acts-project/metrics.git
-          git log -n1
           hdw collect CI/headwind.yml --commit $(git log --pretty=format:'%H' -1)
           cd metrics
           git add -A
