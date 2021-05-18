@@ -139,7 +139,6 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   ctx.eventStore.add(m_cfg.outputProtoVertices,
                      makeProtoVertices(inputTrackParameters, vertices));
 
-  std::vector<Acts::Vertex<Acts::BoundTrackParameters>> verticesOut = vertices;
   // store found vertices
   ctx.eventStore.add(m_cfg.outputVertices, std::move(vertices));
 
