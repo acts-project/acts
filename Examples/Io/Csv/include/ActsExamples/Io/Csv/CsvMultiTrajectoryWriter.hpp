@@ -12,6 +12,8 @@
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
+using namespace Acts::UnitLiterals;
+
 namespace ActsExamples {
     
     /// @class CsvMultiTrajectoryWriter
@@ -35,6 +37,8 @@ namespace ActsExamples {
 	std::string inputMeasurementParticlesMap;
 	size_t outputPrecision = 6;     ///< floating point precision
 	size_t nMeasurementsMin = 9;    ///< Min number of measurements
+	double truthMatchProbMin = 0.5;
+	double ptMin = 1_GeV;
       };
 
       /// constructor
