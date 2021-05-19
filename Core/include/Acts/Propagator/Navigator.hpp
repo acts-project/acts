@@ -18,6 +18,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Propagator/NavigationOptions.hpp"
 
 #include <iomanip>
 #include <iterator>

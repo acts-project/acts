@@ -10,7 +10,7 @@
 
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Units.hpp"
 
 #include <limits>
 
@@ -44,8 +44,16 @@ struct NavigationOptions {
 
   /// Target surface to exclude
   const Surface* targetSurface = nullptr;
+  /// External surface identifier for which the boundary check is ignored
+  std::vector<GeometryIdentifier> externalSurfaces = {};
 
+  /// The maximum path limit for this navigation step
   double pathLimit = std::numeric_limits<double>::max();
+
+  /// The overstep tolerance for this navigation step
+  /// @note must be negative as it describes overstepping
+  /// @todo could be dynamic in the future (pT dependent)
+  double overstepLimit = -1 * UnitConstants::um;
 
   /// Constructor
   ///
@@ -65,6 +73,7 @@ struct NavigationOptions {
         resolvePassive(resolvep),
         startObject(sobject),
         endObject(eobject),
-        pathLimit(ndir * std::numeric_limits<double>::max()) {}
+        pathLimit(ndir * std::numeric_limits<double>::max()),
+        overstepLimit(-1 * UnitConstants::um) {}
 };
 }  // namespace Acts

@@ -10,9 +10,8 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/NavigationOptions.hpp"
-#include "Acts/Propagator/detail/ConstrainedStep.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/FiniteStateMachine.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -86,30 +85,30 @@ class FSMNavigator {
    private:
     std::string volstr(const TrackingVolume& tv) const {
       std::stringstream ss;
-      ss << tv.volumeName() << " " << tv.geoID().toString();
+      ss << tv.volumeName() << " " << tv.geometryId();
       return ss.str();
     }
 
-    template <typename propagator_state_t, typename corrector_t>
-    void updateStep(propagator_state_t& state, const corrector_t& /*navCorr*/,
-                    double navigationStep, bool release = false) const {
-      //  update the step
-      state.stepping.stepSize.update(navigationStep,
-                                     detail::ConstrainedStep::actor, release);
-      ACTS_DEBUG("Navigation stepSize " << (release ? "released and " : "")
-                                        << "updated to "
-                                        << state.stepping.stepSize.toString());
-      ///// If we have an initial step and are configured to modify it
-      // if (state.stepping.pathAccumulated == 0.
-      // and navCorr(state.stepping.stepSize)) {
-      // debugLog(state, [&] {
-      // std::stringstream dstream;
-      // dstream << "Initial navigation step modified to ";
-      // dstream << state.stepping.stepSize.toString();
-      // return dstream.str();
-      //});
-      //}
-    }
+    // template <typename propagator_state_t, typename corrector_t>
+    // void updateStep(propagator_state_t& state, const corrector_t&
+    // [>navCorr<], double navigationStep, bool release = false) const {
+    // //  update the step
+    // state.stepping.stepSize.update(navigationStep,
+    // detail::ConstrainedStep::actor, release);
+    // ACTS_DEBUG("Navigation stepSize " << (release ? "released and " : "")
+    // << "updated to "
+    // << state.stepping.stepSize.toString());
+    ///// If we have an initial step and are configured to modify it
+    // if (state.stepping.pathAccumulated == 0.
+    // and navCorr(state.stepping.stepSize)) {
+    // debugLog(state, [&] {
+    // std::stringstream dstream;
+    // dstream << "Initial navigation step modified to ";
+    // dstream << state.stepping.stepSize.toString();
+    // return dstream.str();
+    //});
+    //}
+    // }
 
     // Finite State event handlers and state enter/exit callbacks
 
@@ -125,7 +124,7 @@ class FSMNavigator {
       state.navigation.currentSurface = state.navigation.startSurface;
       if (state.navigation.currentSurface != nullptr) {
         ACTS_DEBUG("Current surface set to start surface: "
-                   << state.navigation.currentSurface->geoID().toString());
+                   << state.navigation.currentSurface->geometryId());
       }
 
       // we need to figure out the current volume.
@@ -160,7 +159,7 @@ class FSMNavigator {
         if (state.navigation.startVolume) {
           ACTS_DEBUG("Start volume resolved: "
                      << state.navigation.startVolume->volumeName() << " "
-                     << state.navigation.startVolume->geoID().toString());
+                     << state.navigation.startVolume->geometryId());
         }
       }
 
@@ -177,7 +176,7 @@ class FSMNavigator {
       // do we have a target surface?
       if (state.navigation.targetSurface != nullptr) {
         ACTS_DEBUG("Target surface is given: "
-                   << state.navigation.targetSurface->geoID().toString());
+                   << state.navigation.targetSurface->geometryId());
       } else {
         ACTS_DEBUG("No target surface given");
       }
@@ -190,7 +189,7 @@ class FSMNavigator {
                   propagator_state_t& state, const stepper_t& stepper) {
       ACTS_DEBUG("Entering volume: "
                  << state.navigation.currentVolume->volumeName() << " "
-                 << state.navigation.currentVolume->geoID().toString());
+                 << state.navigation.currentVolume->geometryId());
 
       // figure out the volume type, currently, we only support layer based
       // volumes
@@ -209,14 +208,12 @@ class FSMNavigator {
           navigator.m_cfg.resolveMaterial, navigator.m_cfg.resolvePassive,
           startLayer, nullptr);
       navOpts.pathLimit =
-          state.stepping.stepSize.value(detail::ConstrainedStep::aborter);
-
-      auto navCorr = stepper.corrector(state.stepping);
+          state.stepping.stepSize.value(ConstrainedStep::aborter);
 
       state.navigation.navLayers =
           state.navigation.currentVolume->compatibleLayers(
               state.geoContext, stepper.position(state.stepping),
-              stepper.direction(state.stepping), navOpts, navCorr);
+              stepper.direction(state.stepping), navOpts);
 
       ACTS_DEBUG("Found " << state.navigation.navLayers.size()
                           << " layer candidates");
@@ -233,24 +230,31 @@ class FSMNavigator {
         ACTS_DEBUG(ss.str());
       }
 
-      updateStep(state, navCorr,
-                 state.navigation.navLayerIter->intersection.pathLength);
+      // updateStep(state, navCorr,
+      //            state.navigation.navLayerIter->intersection.pathLength);
+
+      stepper.updateStepSize(state.stepping, *state.navigation.navLayerIter,
+                             true);
 
       return states::LayerToLayer{};
     }
 
     template <typename propagator_state_t, typename stepper_t>
     event_return on_event(const states::LayerToLayer&, const events::Status&,
-                          const FSMNavigator& navigator,
+                          const FSMNavigator& /*navigator*/,
                           propagator_state_t& state, const stepper_t& stepper) {
       // did we hit the layer?
       const Surface* layerSurface =
           state.navigation.navLayerIter->representation;
-      if (stepper.surfaceReached(state.stepping, layerSurface)) {
+
+      auto targetStatus =
+          stepper.updateSurfaceStatus(state.stepping, *layerSurface, true);
+
+      if (targetStatus == Intersection3D::Status::onSurface) {
         state.navigation.currentSurface = layerSurface;
         if (layerSurface != nullptr) {
           ACTS_DEBUG("Layer hit, current surface is now"
-                     << layerSurface->geoID().toString());
+                     << layerSurface->geometryId());
         }
         return std::nullopt;  // stay in state
       } else {
@@ -261,35 +265,34 @@ class FSMNavigator {
 
     template <typename propagator_state_t, typename stepper_t>
     event_return on_event(const states::LayerToLayer&, const events::Target&,
-                          const FSMNavigator& navigator,
+                          const FSMNavigator& /*navigator*/,
                           propagator_state_t& state, const stepper_t& stepper) {
       // did we hit the layer?
       auto& [init_ix, layer, surface, dir] = *state.navigation.navLayerIter;
       if (surface == state.navigation.currentSurface) {
         // hm?
       } else {
-        auto navCorr = stepper.corrector(state.stepping);
         NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
 
         while (state.navigation.navLayerIter !=
                state.navigation.navLayers.end()) {
           const Surface* layerSurface =
               state.navigation.navLayerIter->representation;
-          auto ix = layerSurface->surfaceIntersectionEstimate(
-              state.geoContext, stepper.position(state.stepping),
-              stepper.direction(state.stepping), navOpts, navCorr);
 
-          if (!ix) {
-            ACTS_DEBUG("During approach of layer" << layer->geoID().toString()
+          auto layerStatus =
+              stepper.updateSurfaceStatus(state.stepping, *layerSurface, true);
+          if (layerStatus != Intersection3D::Status::reachable) {
+            ACTS_DEBUG("During approach of layer" << layer->geometryId()
                                                   << " intersection");
-            ACTS_DEBUG("estimate became invalid => skipping layer candidate");
+            ACTS_DEBUG("became unreachable => skipping layer candidate");
             ++state.navigation.navLayerIter;
             continue;
           } else {
             // update straight line estimation
-            ACTS_DEBUG(
-                "Proceeding towards layer: " << ix.object->geoID().toString());
-            updateStep(state, navCorr, ix.intersection.pathLength);
+            ACTS_DEBUG("Proceeding towards layer: "
+                       << layerSurface->geometryId() << ", updated step size: "
+                       << stepper.outputStepSize(state.stepping));
+            // updateStep(state, navCorr, ix.intersection.pathLength);
             break;
           }
         }
@@ -313,19 +316,19 @@ class FSMNavigator {
     // Logging methods
 
     template <typename S, typename E, typename S2>
-    void log(const S&, const E&, const S2&) {
+    void on_process(const S&, const E&, const S2&) {
       ACTS_VERBOSE("FSM: transition: [" << S::name << "] + <" << E::name
                                         << "> = " << S2::name);
     }
 
     template <typename S, typename E>
-    void log(const S&, const E&) {
+    void on_process(const S&, const E&) {
       ACTS_VERBOSE("FSM: internal transition: [" << S::name << "] + <"
                                                  << E::name << ">");
     }
 
     template <typename E>
-    void log(const E&) {
+    void on_process(const E&) {
       ACTS_VERBOSE("FSM: process_event: <" << E::name << ">");
     }
 
