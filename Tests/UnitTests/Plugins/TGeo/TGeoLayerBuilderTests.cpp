@@ -20,6 +20,8 @@
 
 #include "TGeoManager.h"
 
+using namespace Acts::UnitLiterals;
+
 namespace Acts {
 
 namespace Test {
