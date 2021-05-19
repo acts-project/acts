@@ -157,16 +157,11 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(const AlgorithmContext& context,
 	        return lhs.first.nMajorityHits > rhs.first.nMajorityHits;
 	      }); 
 
-    int counter = 0;
-
     for (size_t itrack = 0; itrack < matchedTracks.size(); itrack++) {
       const auto& [Hits, trackID] = matchedTracks.at(itrack);   
 
-      if (itrack != 0) {
-	if (Hits.nMajorityHits < matchedTracks.front().first.nMajorityHits)
-	  listDuplicates.insert( trackID );
-	counter++;
-      }
+      if (itrack != 0)
+	listDuplicates.insert( trackID );
     }
 
   }
