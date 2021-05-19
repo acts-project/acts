@@ -34,6 +34,14 @@ class FSMNavigator {
     struct LayerToLayer {
       constexpr static std::string_view name = "LayerToLayer";
     };
+
+    struct SurfaceToSurface {
+      constexpr static std::string_view name = "SurfaceToSurface";
+    };
+
+    struct ToBoundarySurface {
+      constexpr static std::string_view name = "ToBoundarySurface";
+    };
   };
 
   struct events {
@@ -46,11 +54,30 @@ class FSMNavigator {
     struct ResolveLayers {
       constexpr static std::string_view name = "ResolveLayers";
     };
+    struct ResolveSurfaces {
+      constexpr static std::string_view name = "ResolveSurfaces";
+    };
+    struct ResolveBoundarySurfaces {
+      constexpr static std::string_view name = "ResolveBoundarySurfaces";
+    };
   };
 
  public:
-  struct State : FiniteStateMachine<State, states::Init, states::VolumeToVolume,
-                                    states::LayerToLayer> {
+  using NavigationSurfaces = std::vector<SurfaceIntersection>;
+  using NavigationSurfaceIter = NavigationSurfaces::iterator;
+
+  using NavigationLayers = std::vector<LayerIntersection>;
+  using NavigationLayerIter = NavigationLayers::iterator;
+
+  using NavigationBoundaries = std::vector<BoundaryIntersection>;
+  using NavigationBoundaryIter = NavigationBoundaries::iterator;
+
+  using ExternalSurfaces = std::multimap<uint64_t, GeometryIdentifier>;
+
+  struct State
+      : FiniteStateMachine<State, states::Init, states::VolumeToVolume,
+                           states::LayerToLayer, states::SurfaceToSurface,
+                           states::ToBoundarySurface> {
     /// Externally provided surfaces - these are tried to be hit
     std::multimap<const Layer*, const Surface*> externalSurfaces = {};
 
@@ -68,14 +95,41 @@ class FSMNavigator {
     /// Navigation state: the current volume
     const TrackingVolume* currentVolume = nullptr;
     /// Navigation state: the target volume
-    // const TrackingVolume* targetVolume = nullptr;
+    const TrackingVolume* targetVolume = nullptr;
     /// Navigation state: the target layer
-    // const Layer* targetLayer = nullptr;
+    const Layer* targetLayer = nullptr;
     /// Navigation state: the target surface
     const Surface* targetSurface = nullptr;
 
-    std::vector<LayerIntersection> navLayers;
-    std::vector<LayerIntersection>::iterator navLayerIter;
+    /// Indicator for start layer treatment
+    bool startLayerResolved = false;
+    /// Indicator if the target is reached
+    bool targetReached = false;
+    /// Indicator that the last VolumeHierarchy surface was reached
+    /// skip the next layer targeting to the next boundary/volume
+    bool lastHierarchySurfaceReached = false;
+    /// Navigation state : a break has been detected
+    bool navigationBreak = false;
+    // The navigation stage (@todo: integrate break, target)
+    // Stage navigationStage = Stage::undefined;
+
+    // Navigation on surface level
+    /// the vector of navigation surfaces to work through
+    NavigationSurfaces navSurfaces = {};
+    /// the current surface iterator of the navigation state
+    NavigationSurfaceIter navSurfaceIter = navSurfaces.end();
+
+    // Navigation on layer level
+    /// the vector of navigation layers to work through
+    NavigationLayers navLayers = {};
+    /// the current layer iterator of the navigation state
+    NavigationLayerIter navLayerIter = navLayers.end();
+
+    // Navigation on volume level
+    /// the vector of boundary surfaces to work through
+    NavigationBoundaries navBoundaries = {};
+    /// the current boundary iterator of the navigation state
+    NavigationBoundaryIter navBoundaryIter = navBoundaries.end();
 
     friend FSMNavigator;
     friend fsm_base;
@@ -116,6 +170,10 @@ class FSMNavigator {
     event_return on_event(const states::Init&, const events::Status&,
                           const FSMNavigator& navigator,
                           propagator_state_t& state, const stepper_t& stepper) {
+      if (!navigator.m_cfg.trackingGeometry) {
+        return std::nullopt;
+      }
+
       // get the world volume
       state.navigation.worldVolume =
           navigator.m_cfg.trackingGeometry->highestTrackingVolume();
@@ -160,6 +218,9 @@ class FSMNavigator {
           ACTS_DEBUG("Start volume resolved: "
                      << state.navigation.startVolume->volumeName() << " "
                      << state.navigation.startVolume->geometryId());
+        } else {
+          ACTS_ERROR("Unable to resolve start volume");
+          return Terminated{};
         }
       }
 
@@ -218,6 +279,10 @@ class FSMNavigator {
       ACTS_DEBUG("Found " << state.navigation.navLayers.size()
                           << " layer candidates");
 
+      if (state.navigation.navLayers.empty()) {
+        return states::ToBoundarySurface{};
+      }
+
       state.navigation.navLayerIter = state.navigation.navLayers.begin();
 
       if (logger().doPrint(Logging::DEBUG)) {
@@ -229,9 +294,6 @@ class FSMNavigator {
         }
         ACTS_DEBUG(ss.str());
       }
-
-      // updateStep(state, navCorr,
-      //            state.navigation.navLayerIter->intersection.pathLength);
 
       stepper.updateStepSize(state.stepping, *state.navigation.navLayerIter,
                              true);
@@ -252,10 +314,10 @@ class FSMNavigator {
 
       if (targetStatus == Intersection3D::Status::onSurface) {
         state.navigation.currentSurface = layerSurface;
-        if (layerSurface != nullptr) {
-          ACTS_DEBUG("Layer hit, current surface is now"
-                     << layerSurface->geometryId());
-        }
+        // if (layerSurface != nullptr) {
+        ACTS_DEBUG("Layer hit, current surface is now: "
+                   << layerSurface->geometryId());
+        // }
         return std::nullopt;  // stay in state
       } else {
         ACTS_DEBUG("Layer not hit. Continue");
@@ -270,7 +332,7 @@ class FSMNavigator {
       // did we hit the layer?
       auto& [init_ix, layer, surface, dir] = *state.navigation.navLayerIter;
       if (surface == state.navigation.currentSurface) {
-        // hm?
+        return states::SurfaceToSurface{};
       } else {
         NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
 
@@ -282,9 +344,10 @@ class FSMNavigator {
           auto layerStatus =
               stepper.updateSurfaceStatus(state.stepping, *layerSurface, true);
           if (layerStatus != Intersection3D::Status::reachable) {
-            ACTS_DEBUG("During approach of layer" << layer->geometryId()
-                                                  << " intersection");
-            ACTS_DEBUG("became unreachable => skipping layer candidate");
+            ACTS_DEBUG("During approach of layer "
+                       << layer->geometryId()
+                       << " intersection became unreachable => skipping layer "
+                          "candidate");
             ++state.navigation.navLayerIter;
             continue;
           } else {
@@ -292,19 +355,291 @@ class FSMNavigator {
             ACTS_DEBUG("Proceeding towards layer: "
                        << layerSurface->geometryId() << ", updated step size: "
                        << stepper.outputStepSize(state.stepping));
-            // updateStep(state, navCorr, ix.intersection.pathLength);
-            break;
+            return std::nullopt;  // stay in state
           }
         }
+
+        if (state.navigation.navLayerIter == state.navigation.navLayers.end()) {
+          ACTS_DEBUG("No further layers in volume, target boundary surfaces");
+          // state.navigation.navLayers.clear();
+          // state.navigation.navLayerIter = stat.navigation.navLayers.end();
+          return states::ToBoundarySurface{};
+        }
+
+        // we shouldn't get here
+        return Terminated{};
       }
-      return std::nullopt;  // stay in state
     }
 
     template <typename propagator_state_t, typename stepper_t>
-    void on_enter(const states::LayerToLayer&,
-                  const FSMNavigator& /*navigator*/,
-                  propagator_state_t& /*state*/, const stepper_t& /*stepper*/) {
-      // ACTS_VERBOSE("Entering LayerToLayer loop: resolving layers!");
+    void on_enter(const states::LayerToLayer&, const FSMNavigator& navigator,
+                  propagator_state_t& state, const stepper_t& stepper) {
+      ACTS_DEBUG("Entering layer to layer");
+
+      if (state.navigation.navLayerIter == state.navigation.navLayers.end()) {
+        ACTS_DEBUG("No further layers in volume, target boundary surfaces");
+        // state.navigation.navLayers.clear();
+        // state.navigation.navLayerIter = stat.navigation.navLayers.end();
+        // @TODO: This needs to transition to ToBoundarySurface right away
+        dispatch(states::ToBoundarySurface{}, navigator, state, stepper);
+      }
+
+      // dispatch(events::ResolveSurfaces{}, navigator, state, stepper);
+    }
+
+    template <typename propagator_state_t, typename stepper_t>
+    void on_enter(const states::SurfaceToSurface&,
+                  const FSMNavigator& navigator, propagator_state_t& state,
+                  const stepper_t& stepper) {
+      ACTS_DEBUG("Entering surface to surface on layer "
+                 << state.navigation.currentSurface->geometryId());
+
+      dispatch(events::ResolveSurfaces{}, navigator, state, stepper);
+    }
+
+    template <typename propagator_state_t, typename stepper_t>
+    event_return on_event(const states::SurfaceToSurface&,
+                          const events::ResolveSurfaces&,
+                          const FSMNavigator& navigator,
+                          propagator_state_t& state, const stepper_t& stepper) {
+      ACTS_DEBUG("Resolving surfaces for layer: "
+                 << state.navigation.currentSurface->geometryId());
+
+      const Layer* navLayer = state.navigation.navLayerIter->object;
+
+      const Surface* layerSurface = state.navigation.currentSurface;
+
+      // are we on the start layer
+      bool onStart = (navLayer == state.navigation.startLayer);
+
+      NavigationOptions<Surface> navOpts(
+          state.stepping.navDir, true, navigator.config().resolveSensitive,
+          navigator.config().resolveMaterial, navigator.config().resolvePassive,
+          layerSurface, state.navigation.targetSurface);
+
+      // Check the limit
+      navOpts.pathLimit =
+          state.stepping.stepSize.value(ConstrainedStep::aborter);
+
+      // No overstepping on start layer, otherwise ask the stepper
+      navOpts.overstepLimit = onStart ? s_onSurfaceTolerance
+                                      : stepper.overstepLimit(state.stepping);
+
+      state.navigation.navSurfaces = navLayer->compatibleSurfaces(
+          state.geoContext, stepper.position(state.stepping),
+          stepper.direction(state.stepping), navOpts);
+
+      stepper.releaseStepSize(state.stepping);
+
+      // the number of layer candidates
+      if (!state.navigation.navSurfaces.empty()) {
+        if (logger().doPrint(Logging::VERBOSE)) {
+          std::ostringstream os;
+          os << state.navigation.navSurfaces.size();
+          os << " surface candidates found at path(s): ";
+          for (auto& sfc : state.navigation.navSurfaces) {
+            os << sfc.intersection.pathLength << "  ";
+          }
+          logger().log(Logging::VERBOSE, os.str());
+        }
+
+        // set the iterator
+        state.navigation.navSurfaceIter = state.navigation.navSurfaces.begin();
+        // The stepper updates the step size ( single / multi component)
+        stepper.updateStepSize(state.stepping, *state.navigation.navSurfaceIter,
+                               true);
+        ACTS_VERBOSE(volstr(*state.navigation.currentVolume)
+                     << ": Navigation stepSize updated to "
+                     << stepper.outputStepSize(state.stepping));
+        return std::nullopt;  // stay in layer to layer
+
+      } else {
+        state.navigation.navSurfaceIter = state.navigation.navSurfaces.end();
+        ACTS_VERBOSE(volstr(*state.navigation.currentVolume)
+                     << ": No surface candidates found.");
+        // state.navigation.navSurfaces.clear();
+        // state.navigation.navSurfaceIter = state.navigation.navSurfaces.end();
+        // advance layer iteration
+        ++state.navigation.navLayerIter;
+        return states::LayerToLayer{};  // nothing to do for this layer
+      }
+    }
+
+    template <typename propagator_state_t, typename stepper_t>
+    event_return on_event(const states::SurfaceToSurface&,
+                          const events::Status&,
+                          const FSMNavigator& /*navigator*/,
+                          propagator_state_t& /*state*/,
+                          const stepper_t& /*stepper*/) {
+      return std::nullopt;
+    }
+
+    template <typename propagator_state_t, typename stepper_t>
+    event_return on_event(const states::SurfaceToSurface&,
+                          const events::Target&,
+                          const FSMNavigator& /*navigator*/,
+                          propagator_state_t& /*state*/,
+                          const stepper_t& /*stepper*/) {
+      return std::nullopt;
+    }
+
+    template <typename propagator_state_t, typename stepper_t>
+    void on_enter(const states::ToBoundarySurface&,
+                  const FSMNavigator& navigator, propagator_state_t& state,
+                  const stepper_t& stepper) {
+      ACTS_DEBUG(volstr(*state.navigation.currentVolume)
+                 << ": Targeting boundary surfaces");
+
+      dispatch(events::ResolveBoundarySurfaces{}, navigator, state, stepper);
+    }
+
+    template <typename propagator_state_t, typename stepper_t>
+    event_return on_event(const states::ToBoundarySurface&,
+                          const events::ResolveBoundarySurfaces&,
+                          const FSMNavigator& /*navigator*/,
+                          propagator_state_t& state, const stepper_t& stepper) {
+      ACTS_DEBUG(volstr(*state.navigation.currentVolume)
+                 << ": Resolving boundary surfaces");
+
+      // The navigation options
+      NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
+      navOpts.pathLimit =
+          state.stepping.stepSize.value(ConstrainedStep::aborter);
+      navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
+
+      state.navigation.navBoundaries =
+          state.navigation.currentVolume->compatibleBoundaries(
+              state.geoContext, stepper.position(state.stepping),
+              stepper.direction(state.stepping), navOpts,
+              LoggerWrapper{logger()});
+
+      // The number of boundary candidates
+      if (logger().doPrint(Logging::VERBOSE)) {
+        std::ostringstream os;
+        os << state.navigation.navBoundaries.size();
+        os << " boundary candidates found at path(s): ";
+        for (auto& bc : state.navigation.navBoundaries) {
+          os << bc.intersection.pathLength << "  ";
+        }
+        logger().log(Logging::VERBOSE, os.str());
+      }
+      // Set the begin iterator
+      state.navigation.navBoundaryIter = state.navigation.navBoundaries.begin();
+      if (not state.navigation.navBoundaries.empty()) {
+        // Set to the first and return to the stepper
+        stepper.updateStepSize(state.stepping,
+                               *state.navigation.navBoundaryIter, true);
+        ACTS_VERBOSE(volstr(*state.navigation.currentVolume)
+                     << ": Navigation stepSize updated to "
+                     << stepper.outputStepSize(state.stepping));
+
+        return std::nullopt;
+      } else {
+        ACTS_VERBOSE(volstr(*state.navigation.currentVolume)
+                     << ": No further bounding surfaces, is this bad?");
+        return Terminated{};
+      }
+    }
+
+    template <typename propagator_state_t, typename stepper_t>
+    event_return on_event(const states::ToBoundarySurface&,
+                          const events::Status&,
+                          const FSMNavigator& /*navigator*/,
+                          propagator_state_t& state, const stepper_t& stepper) {
+      ACTS_VERBOSE("ToBoundarySurface STATUS");
+      // did we hit the boundary?
+      const Surface* boundarySurface =
+          state.navigation.navBoundaryIter->representation;
+
+      auto targetStatus =
+          stepper.updateSurfaceStatus(state.stepping, *boundarySurface, true);
+
+      // @TODO: Check if we are in target volume
+
+      if (targetStatus == Intersection3D::Status::onSurface) {
+        state.navigation.currentSurface = boundarySurface;
+        if (boundarySurface != nullptr) {
+          ACTS_DEBUG("Boundary surface hit, current surface is now: "
+                     << boundarySurface->geometryId());
+        }
+        return std::nullopt;  // stay in state
+      } else {
+        ACTS_DEBUG("Boundary not hit. Continue");
+        // @TODO: Implement continuing if the first boundary is not hit
+        return std::nullopt;  // stay in state
+      }
+    }
+
+    template <typename propagator_state_t, typename stepper_t>
+    event_return on_event(const states::ToBoundarySurface&,
+                          const events::Target&,
+                          const FSMNavigator& /*navigator*/,
+                          propagator_state_t& state, const stepper_t& stepper) {
+      ACTS_VERBOSE("ToBoundarySurface TARGET");
+      auto& [init_ix, boundary, surface, dir] =
+          *state.navigation.navBoundaryIter;
+
+      if (state.navigation.currentSurface == surface) {
+        ACTS_DEBUG("Transition to volume connected by boundary surface")
+        auto* nextVolume = boundary->attachedVolume(
+            state.geoContext, stepper.position(state.stepping),
+            stepper.direction(state.stepping), state.stepping.navDir);
+
+        if (nextVolume == nullptr) {
+          ACTS_VERBOSE(
+              volstr(*state.navigation.currentVolume)
+              << ": No more volume to progress to, stopping navigation.");
+          state.navigation.currentVolume = nullptr;
+          state.navigation.navigationBreak = true;
+          stepper.releaseStepSize(state.stepping);
+          return std::nullopt;  // done, the standard EndOfWorldReached aborter
+                                // should terminate
+        }
+
+        state.navigation.currentVolume = nextVolume;
+        ACTS_VERBOSE(volstr(*state.navigation.currentVolume)
+                     << ": Volume updated.");
+
+        return states::VolumeToVolume{};
+      }
+
+      // not there yet, (re)set target
+
+      // Loop over the boundary surface
+      while (state.navigation.navBoundaryIter !=
+             state.navigation.navBoundaries.end()) {
+        // That is the current boundary surface
+        auto boundarySurface = state.navigation.navBoundaryIter->representation;
+        // Step towards the boundary surfrace
+        auto boundaryStatus =
+            stepper.updateSurfaceStatus(state.stepping, *boundarySurface, true);
+        if (boundaryStatus == Intersection3D::Status::reachable) {
+          ACTS_VERBOSE(volstr(*state.navigation.currentVolume)
+                       << ": Boundary reachable, step size updated to "
+                       << stepper.outputStepSize(state.stepping));
+          return std::nullopt;
+        } else {
+          if (logger().doPrint(Logging::VERBOSE)) {
+            std::ostringstream os;
+            os << "Boundary ";
+            os << std::distance(state.navigation.navBoundaryIter,
+                                state.navigation.navBoundaries.end());
+            os << " out of " << state.navigation.navBoundaries.size();
+            os << " not reachable anymore, switching to next.";
+            logger().log(Logging::VERBOSE, os.str());
+          }
+
+          // Increase the iterator to the next one
+          ++state.navigation.navBoundaryIter;
+          return std::nullopt;
+        }
+      }
+
+      // if (state.navigation.navBoundaryIter ==
+      //     state.navigation.navBoundaries.end()) {
+      ACTS_ERROR("Failed to reach a boundary surface");
+      return Terminated{};
+      // }
     }
 
     // terminate enter handler: throw exception
@@ -354,7 +689,7 @@ class FSMNavigator {
 
   struct Config {
     /// Tracking Geometry for this Navigator
-    std::shared_ptr<const TrackingGeometry> trackingGeometry;
+    std::shared_ptr<const TrackingGeometry> trackingGeometry{nullptr};
 
     /// The tolerance used to defined "reached"
     double tolerance = s_onSurfaceTolerance;
@@ -385,6 +720,8 @@ class FSMNavigator {
     state.navigation.m_logger = m_logger.get();
     state.navigation.dispatch(events::Target{}, *this, state, stepper);
   }
+
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
