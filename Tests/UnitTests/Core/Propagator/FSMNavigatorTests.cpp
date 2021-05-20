@@ -287,18 +287,42 @@ BOOST_AUTO_TEST_CASE(Navigation) {
 
   // do the first step
   step(0.5);
+  BOOST_CHECK_EQUAL(state.navigation.currentSurface, nullptr);
   step(1.0);
-
-  // no layers or surfaces in beam pipe, should be in boundary surface mode now
-  step(0.5);
-  step(1.0);
-
-  step(0.5);
-  step(1.0);
-
-  // have resolved surfaces
+  // we're on the beampipe layer now
+  BOOST_CHECK_EQUAL(state.navigation.currentSurface->geometryId(),
+                    GeometryIdentifier{}.setVolume(2).setLayer(2));
 
   step(0.5);
+  BOOST_CHECK_EQUAL(state.navigation.currentSurface, nullptr);
+  step(1.0);
+  BOOST_CHECK_EQUAL(state.navigation.currentSurface->geometryId(),
+                    GeometryIdentifier{}.setVolume(3).setBoundary(4));
+
+  step(0.5);
+  BOOST_CHECK_EQUAL(state.navigation.currentSurface, nullptr);
+  step(1.0);
+  BOOST_CHECK_EQUAL(
+      state.navigation.currentSurface->geometryId(),
+      GeometryIdentifier{}.setVolume(3).setLayer(2).setApproach(1));
+
+  step(0.5);
+  BOOST_CHECK_EQUAL(state.navigation.currentSurface, nullptr);
+  step(1.0);
+
+  // // we're on the first surface now
+  BOOST_CHECK_EQUAL(
+      state.navigation.currentSurface->geometryId(),
+      GeometryIdentifier{}.setVolume(3).setLayer(2).setSensitive(122));
+
+  step(0.5);
+  BOOST_CHECK_EQUAL(state.navigation.currentSurface, nullptr);
+  step(1.0);
+
+  // we're on the second surface now
+  BOOST_CHECK_EQUAL(
+      state.navigation.currentSurface->geometryId(),
+      GeometryIdentifier{}.setVolume(3).setLayer(2).setSensitive(123));
 }
 
 // the debug boolean
