@@ -252,6 +252,8 @@ class FSMNavigator {
                  << state.navigation.currentVolume->volumeName() << " "
                  << state.navigation.currentVolume->geometryId());
 
+      stepper.releaseStepSize(state.stepping);
+
       // figure out the volume type, currently, we only support layer based
       // volumes
       dispatch(events::ResolveLayers{}, navigator, state, stepper);
@@ -264,17 +266,27 @@ class FSMNavigator {
                           propagator_state_t& state, const stepper_t& stepper) {
       ACTS_DEBUG("Resolving layers for volume "
                  << volstr(*state.navigation.currentVolume));
+
+      // Check if we are in the start volume
+      auto _startLayer =
+          (state.navigation.currentVolume == state.navigation.startVolume)
+              ? state.navigation.startLayer
+              : nullptr;
+
+      // Create the navigation options
+      // - and get the compatible layers, start layer will be excluded
       NavigationOptions<Layer> navOpts(
           state.stepping.navDir, true, navigator.m_cfg.resolveSensitive,
           navigator.m_cfg.resolveMaterial, navigator.m_cfg.resolvePassive,
-          startLayer, nullptr);
+          _startLayer, nullptr);
       navOpts.pathLimit =
           state.stepping.stepSize.value(ConstrainedStep::aborter);
 
       state.navigation.navLayers =
           state.navigation.currentVolume->compatibleLayers(
               state.geoContext, stepper.position(state.stepping),
-              stepper.direction(state.stepping), navOpts);
+              stepper.direction(state.stepping), navOpts,
+              LoggerWrapper{logger()});
 
       ACTS_DEBUG("Found " << state.navigation.navLayers.size()
                           << " layer candidates");
@@ -381,7 +393,8 @@ class FSMNavigator {
         // state.navigation.navLayers.clear();
         // state.navigation.navLayerIter = stat.navigation.navLayers.end();
         // @TODO: This needs to transition to ToBoundarySurface right away
-        dispatch(states::ToBoundarySurface{}, navigator, state, stepper);
+        // dispatch(states::ToBoundarySurface{}, navigator, state, stepper);
+        setState(states::ToBoundarySurface{}, navigator, state, stepper);
       }
 
       // dispatch(events::ResolveSurfaces{}, navigator, state, stepper);

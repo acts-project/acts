@@ -564,17 +564,46 @@ Acts::TrackingVolume::compatibleBoundaries(
 boost::container::small_vector<Acts::LayerIntersection, 10>
 Acts::TrackingVolume::compatibleLayers(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const NavigationOptions<Layer>& options) const {
+    const Vector3& direction, const NavigationOptions<Layer>& options,
+    LoggerWrapper logger) const {
+  ACTS_VERBOSE(volumeName()
+               << " [" << geometryId() << "]: "
+               << "Finding compatible layers, position: "
+               << position.transpose() << ", dir: " << direction.transpose());
+  ACTS_VERBOSE(" -> r,z: " << VectorHelpers::perp(position) << ","
+                           << position[eFreePos2]);
   // the layer intersections which are valid
   boost::container::small_vector<Acts::LayerIntersection, 10> lIntersections;
 
   // the confinedLayers
   if (m_confinedLayers != nullptr) {
+    ACTS_VERBOSE("Have confined layers");
     // start layer given or not - test layer
+    ACTS_VERBOSE("startObject: " << options.startObject);
+    ACTS_VERBOSE("associatedLayer: " << associatedLayer(gctx, position));
     const Layer* tLayer = options.startObject != nullptr
                               ? options.startObject
                               : associatedLayer(gctx, position);
+
+    if (logger.doPrint(Logging::Level::VERBOSE)) {
+      const auto& allLayers = m_confinedLayers->arrayObjects();
+      ACTS_VERBOSE("Have total number of layers: " << allLayers.size());
+      unsigned int i = 0;
+      for (const auto& layer : allLayers) {
+        std::stringstream ss;
+        ss << "#" << i << ", type: " << layer->layerType()
+           << ", addr: " << layer.get() << std::endl;
+        i++;
+        layer->surfaceRepresentation().toStream(gctx, ss);
+        ACTS_VERBOSE(ss.str());
+      }
+    }
+
     while (tLayer != nullptr) {
+      ACTS_VERBOSE("Checking layer: " << tLayer);
+      std::stringstream ss;
+      tLayer->surfaceRepresentation().toStream(gctx, ss);
+      ACTS_VERBOSE(ss.str());
       // check if the layer needs resolving
       // - resolveSensitive -> always take layer if it has a surface array
       // - resolveMaterial -> always take layer if it has material
@@ -588,9 +617,13 @@ Acts::TrackingVolume::compatibleLayers(
         auto path = atIntersection.intersection.pathLength;
         bool withinLimit =
             (path * path <= options.pathLimit * options.pathLimit);
+
+        ACTS_VERBOSE("Path: " << path << ", within limits: "
+                              << (withinLimit ? "yes" : "no"));
         // Intersection is ok - take it (move to surface on appraoch)
         if (atIntersection &&
             (atIntersection.object != options.targetSurface) && withinLimit) {
+          ACTS_VERBOSE("Layer intersection is accepted");
           // create a layer intersection
           lIntersections.push_back(LayerIntersection(
               atIntersection.intersection, tLayer, atIntersection.object));
@@ -608,6 +641,8 @@ Acts::TrackingVolume::compatibleLayers(
     } else {
       std::sort(lIntersections.begin(), lIntersections.end(), std::greater<>());
     }
+  } else {
+    ACTS_VERBOSE("Have NO confined layers");
   }
   // and return
   return lIntersections;
