@@ -18,6 +18,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "TMath.h"
+
 using namespace ActsExamples;
 
 CsvMultiTrajectoryWriter::CsvMultiTrajectoryWriter(const CsvMultiTrajectoryWriter::Config& cfg,
@@ -47,13 +49,14 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(const AlgorithmContext& context,
 
   struct trackInfo {
     size_t track_id;
+    ActsFatras::Barcode particleId;
     size_t nMeasurements;
     size_t nOutliers;
     size_t nHoles;
     double chi2Sum;
     size_t NDF;
     size_t nMajorityHits;
-    size_t trackType;
+    std::string trackType;
     double truthMatchProb;
     const TrackParameters* fitterParameters;
   };
@@ -62,7 +65,6 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(const AlgorithmContext& context,
   // Counter of truth-matched reco tracks
   using RecoTrackInfo = std::pair< trackInfo, size_t>; 
   std::map<ActsFatras::Barcode, std::vector<RecoTrackInfo>> matched;
-
 
 
   size_t track_id = 0;
@@ -107,15 +109,22 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(const AlgorithmContext& context,
         continue;
       }
 
+      // Requirement on the pT of the track
+      const auto& momentum = traj.trackParameters(trackTip).momentum();
+      const auto pT = Acts::VectorHelpers::perp(momentum);
+      if (pT < m_cfg.ptMin) { continue; }
+
       // Get the majority particle counts
       ActsFatras::Barcode majorityParticleId =
 	particleHitCount.front().particleId;
       // n Majority hits
-      size_t nMajorityHits = particleHitCount.front().hitCount;
+      size_t nMajorityHits = 
+	particleHitCount.front().hitCount;
 
       // track info
       trackInfo toAdd;
       toAdd.track_id = track_id;
+      toAdd.particleId = majorityParticleId;
       toAdd.nMajorityHits = nMajorityHits;
       toAdd.nMeasurements = trajState.nMeasurements;
       toAdd.nOutliers = trajState.nOutliers;
@@ -124,21 +133,16 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(const AlgorithmContext& context,
       toAdd.NDF = trajState.NDF;
       toAdd.truthMatchProb = toAdd.nMajorityHits * 1. / trajState.nMeasurements;
       toAdd.fitterParameters = &traj.trackParameters(trackTip);
-      toAdd.trackType = -1;
-
-      // Requirement on the pT of the track
-      const auto& momentum = toAdd.fitterParameters->momentum();
-      const auto pT = Acts::VectorHelpers::perp(momentum);
-      if (pT < m_cfg.ptMin) {
-        continue;
-      }
+      toAdd.trackType = "unknown";
 
       // Check if the trajectory is matched with truth.
       if ( toAdd.truthMatchProb >= m_cfg.truthMatchProbMin) {
-        matched[majorityParticleId].push_back( {toAdd, track_id} ); 
+        matched[toAdd.particleId].push_back( {toAdd, toAdd.track_id} ); 
+      } else { // FIX ME 
+	toAdd.trackType = "fake";	
       }
 
-      infoMap[ track_id ] = toAdd;
+      infoMap[ toAdd.track_id ] = toAdd;
 
       track_id++;
     }  // end of one trajectory
@@ -149,47 +153,48 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(const AlgorithmContext& context,
 
 
   // Find duplicates
-  std::unordered_set< size_t > listDuplicates;
+  std::unordered_set< size_t > listGoodTracks;
   for (auto& [particleId, matchedTracks] : matched) {   
 
     std::sort(matchedTracks.begin(), matchedTracks.end(), 
 	      [](const RecoTrackInfo& lhs, const RecoTrackInfo& rhs) {
-	        return lhs.first.nMajorityHits > rhs.first.nMajorityHits;
+		// sort by nMajorityHits
+	        if( lhs.first.nMajorityHits > rhs.first.nMajorityHits ) return true;
+		if( lhs.first.nMajorityHits < rhs.first.nMajorityHits ) return false;
+		// sort by nOutliers
+		return (lhs.first.nOutliers < rhs.first.nOutliers);
 	      }); 
 
-    for (size_t itrack = 0; itrack < matchedTracks.size(); itrack++) {
-      const auto& [Hits, trackID] = matchedTracks.at(itrack);   
-
-      if (itrack != 0)
-	listDuplicates.insert( trackID );
-    }
-
+    listGoodTracks.insert( matchedTracks.front().first.track_id );
   }
 
 
 
 
   // write csv header
-  mos << "track_id, nMajorityHits, nMeasurements, nOutliers, nHoles, chi2, ndf, chi2/ndf, pT,"
-    "truthMatchProbability, good/duplicate/fake";
+  mos << "track_id,particleId,"
+      << "nMajorityHits,nMeasurements,nOutliers,nHoles,"
+      << "chi2,ndf,chi2/ndf,Prob,"
+      << "pT," 
+      << "truthMatchProbability,good/duplicate/fake";
+
   mos << '\n';
   mos << std::setprecision(m_cfg.outputPrecision);
   
   // good/duplicate/fake = 0/1/2
-  for (auto key : infoMap) {
+  for (auto& key : infoMap) {
     auto ID = key.first;
-    auto trajState = key.second;
+    auto& trajState = key.second;
 
-    if (trajState.truthMatchProb < m_cfg.truthMatchProbMin) {
-      trajState.trackType = 2;
-    } else if (listDuplicates.find(ID) != listDuplicates.end()) {
-      trajState.trackType = 1;
-    } else { 
-      trajState.trackType = 0;
+    if (listGoodTracks.find(ID)!=listGoodTracks.end()) {
+      trajState.trackType = "good";
+    } else {
+      trajState.trackType = "duplicate";
     }
-    
+
     // write the track info
     mos << trajState.track_id << ",";
+    mos << trajState.particleId << ",";
     mos << trajState.nMajorityHits << ","; 
     mos << trajState.nMeasurements << ",";
     mos << trajState.nOutliers << ",";
@@ -197,12 +202,12 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(const AlgorithmContext& context,
     mos << trajState.chi2Sum * 1.0 << ",";
     mos << trajState.NDF << ",";
     mos << trajState.chi2Sum * 1.0 / trajState.NDF << ",";
+    mos << ((trajState.chi2Sum < 0)? -1 : TMath::Prob(trajState.chi2Sum*1.,trajState.NDF)) <<",";
     mos << Acts::VectorHelpers::perp(trajState.fitterParameters->momentum()) << ",";
     mos << trajState.truthMatchProb << ",";
     mos << trajState.trackType ;
     mos << '\n';
   }
-
 
   return ProcessCode::SUCCESS;
 }
