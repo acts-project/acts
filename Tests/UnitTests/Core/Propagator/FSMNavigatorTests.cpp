@@ -296,7 +296,9 @@ BOOST_AUTO_TEST_CASE(Navigation) {
   step(0.5);
   step(1.0);
 
-  // BOOST_CHECK_EQUAL(state.navigation.currentVolume, nullptr);
+  // have resolved surfaces
+
+  step(0.5);
 }
 
 // the debug boolean

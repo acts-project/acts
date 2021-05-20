@@ -482,9 +482,70 @@ class FSMNavigator {
     event_return on_event(const states::SurfaceToSurface&,
                           const events::Status&,
                           const FSMNavigator& /*navigator*/,
-                          propagator_state_t& /*state*/,
-                          const stepper_t& /*stepper*/) {
-      return std::nullopt;
+                          propagator_state_t& state, const stepper_t& stepper) {
+      // did we hit the layer?
+      const Surface* surface = state.navigation.navSurfaceIter->representation;
+
+      auto targetStatus =
+          stepper.updateSurfaceStatus(state.stepping, *surface, true);
+
+      if (targetStatus == Intersection3D::Status::onSurface) {
+        state.navigation.currentSurface = surface;
+        ACTS_DEBUG(
+            "Surface hit, current surface is now: " << surface->geometryId());
+        return std::nullopt;  // stay in state
+      } else {
+        ACTS_DEBUG("Surface not hit. Continue");
+        return std::nullopt;  // stay in state
+      }
+
+      // did we hit the surface?
+      // auto& [init_ix, obj, surface, alt] = *state.navigation.navSurfaceIter;
+      // auto& [init_ix, layer, surface, dir] = *state.navigation.navS;
+      // if (surface == state.navigation.currentSurface) {
+      //   // we're on the surface
+      //   return std::nullopt;
+      // }
+      //   NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
+
+      //   while (state.navigation.navLayerIter !=
+      //          state.navigation.navLayers.end()) {
+      //     const Surface* layerSurface =
+      //         state.navigation.navLayerIter->representation;
+
+      //     auto layerStatus =
+      //         stepper.updateSurfaceStatus(state.stepping, *layerSurface,
+      //         true);
+      //     if (layerStatus != Intersection3D::Status::reachable) {
+      //       ACTS_DEBUG("During approach of layer "
+      //                  << layer->geometryId()
+      //                  << " intersection became unreachable => skipping layer
+      //                  "
+      //                     "candidate");
+      //       ++state.navigation.navLayerIter;
+      //       continue;
+      //     } else {
+      //       // update straight line estimation
+      //       ACTS_DEBUG("Proceeding towards layer: "
+      //                  << layerSurface->geometryId() << ", updated step size:
+      //                  "
+      //                  << stepper.outputStepSize(state.stepping));
+      //       return std::nullopt;  // stay in state
+      //     }
+      //   }
+
+      //   if (state.navigation.navLayerIter ==
+      //   state.navigation.navLayers.end()) {
+      //     ACTS_DEBUG("No further layers in volume, target boundary
+      //     surfaces");
+      //     // state.navigation.navLayers.clear();
+      //     // state.navigation.navLayerIter = stat.navigation.navLayers.end();
+      //     return states::ToBoundarySurface{};
+      //   }
+
+      //   // we shouldn't get here
+      //   return Terminated{};
+      // }
     }
 
     template <typename propagator_state_t, typename stepper_t>
