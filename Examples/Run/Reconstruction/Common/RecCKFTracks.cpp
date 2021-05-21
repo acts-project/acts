@@ -221,6 +221,9 @@ int runRecCKFTracks(int argc, char* argv[],
     paramsEstimationCfg.sigmaTheta = 0.02_degree;
     paramsEstimationCfg.sigmaQOverP = 0.1 / 1._GeV;
     paramsEstimationCfg.sigmaT0 = 1400._s;
+    paramsEstimationCfg.initialVarInflation =
+        variables["ckf-initial-variance-inflation"].template as<double>();
+
     sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
         paramsEstimationCfg, logLevel));
 

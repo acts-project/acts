@@ -24,6 +24,8 @@ void ActsExamples::Options::addTrackFindingOptions(
   opt("ckf-selection-nmax", value<size_t>()->default_value(10),
       "Global criteria of maximum number of measurement candidates on a "
       "surface for CKF measurement selection");
+  opt("ckf-initial-variance-inflation", value<double>()->default_value(1.),
+      "Inflation factor for the initial covariance.");
 }
 
 ActsExamples::TrackFindingAlgorithm::Config
