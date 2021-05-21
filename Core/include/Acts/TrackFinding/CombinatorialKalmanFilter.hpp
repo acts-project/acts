@@ -140,8 +140,17 @@ struct CombinatorialKalmanFilterResult {
   // Fitted states that the actor has handled.
   MultiTrajectory<source_link_t> fittedStates;
 
-  // The indices of the 'tip' of the tracks stored in multitrajectory.
-  std::vector<size_t> trackTips;
+  // This is the index of the 'tip' of the track stored in multitrajectory.
+  // This correspond to the last measurment state in the multitrajectory.
+  // Since this KF only stores one trajectory, it is unambiguous.
+  // SIZE_MAX is the start of a trajectory.
+  std::vector<size_t> lastMeasurementIndex;
+
+  // This is the index of the 'tip' of the states stored in multitrajectory.
+  // This correspond to the last state in the multitrajectory.
+  // Since this KF only stores one trajectory, it is
+  // unambiguous. SIZE_MAX is the start of a trajectory.
+  std::vector<size_t> lastTrackIndex;
 
   // The Parameters at the provided surface for separate tracks
   std::unordered_map<size_t, BoundTrackParameters> fittedParameters;
@@ -309,7 +318,8 @@ class CombinatorialKalmanFilter {
         // splitting.
         // -> Call branch stopper to justify each branch
         // -> If there is non-outlier state, update stepper information
-        // 2) The surface is not in the measurement map but with material
+        // 2) The surface is not in the measurement map but with material or is
+        // an active surface
         // -> Add a hole or passive material state in multitrajectory
         // -> Call branch stopper to justify the branch
         // 3) The surface is neither in the measurement map nor with material
@@ -350,7 +360,22 @@ class CombinatorialKalmanFilter {
                            << tipState.nMeasurements
                            << ", nOutliers = " << tipState.nOutliers
                            << ", nHoles = " << tipState.nHoles << " on track");
-              result.trackTips.emplace_back(currentTip);
+              result.lastTrackIndex.emplace_back(currentTip);
+              // Set the lastMeasurementIndex to the last measurement
+              // to ignore the states after it in the rest of the algorithm
+              auto lastMeasurementIndex = currentTip;
+              bool isMeasurement =
+                  result.fittedStates.getTrackState(lastMeasurementIndex)
+                      .typeFlags()
+                      .test(TrackStateFlag::MeasurementFlag);
+              while (!isMeasurement) {
+                auto lastMeasurementState =
+                    result.fittedStates.getTrackState(lastMeasurementIndex);
+                lastMeasurementIndex = lastMeasurementState.previous();
+                isMeasurement = lastMeasurementState.typeFlags().test(
+                    TrackStateFlag::MeasurementFlag);
+              }
+              result.lastMeasurementIndex.emplace_back(lastMeasurementIndex);
             }
             // Remove the tip from list of active tips
             result.activeTips.erase(result.activeTips.end() - 1);
@@ -359,7 +384,7 @@ class CombinatorialKalmanFilter {
         // If no more active tip, done with filtering; Otherwise, reset
         // propagation state to track state at last tip of active tips
         if (result.activeTips.empty()) {
-          ACTS_VERBOSE("Kalman filtering finds " << result.trackTips.size()
+          ACTS_VERBOSE("Kalman filtering finds " << result.lastTrackIndex.size()
                                                  << " tracks");
           result.filtered = true;
         } else {
@@ -372,7 +397,7 @@ class CombinatorialKalmanFilter {
       // Post-processing after filtering phase
       if (result.filtered) {
         // Return error if filtering finds no tracks
-        if (result.trackTips.empty()) {
+        if (result.lastTrackIndex.empty()) {
           result.result =
               Result<void>(CombinatorialKalmanFilterError::NoTrackFound);
         } else {
@@ -388,7 +413,7 @@ class CombinatorialKalmanFilter {
             if (not result.smoothed) {
               ACTS_VERBOSE(
                   "Finalize/run smoothing for track with entry index = "
-                  << result.trackTips.at(result.iSmoothed));
+                  << result.lastMeasurementIndex.at(result.iSmoothed));
               // --> Search the starting state to run the smoothing
               // --> Call the smoothing
               // --> Set a stop condition when all track states have been
@@ -405,7 +430,7 @@ class CombinatorialKalmanFilter {
             if (result.smoothed and
                 targetReached(state, stepper, *targetSurface)) {
               ACTS_VERBOSE("Completing the track with entry index = "
-                           << result.trackTips.at(result.iSmoothed));
+                           << result.lastMeasurementIndex.at(result.iSmoothed));
               // Transport & bind the parameter to the final surface
               auto res = stepper.boundState(state.stepping, *targetSurface);
               if (!res.ok()) {
@@ -417,13 +442,13 @@ class CombinatorialKalmanFilter {
               auto fittedState = *res;
               // Assign the fitted parameters
               result.fittedParameters.emplace(
-                  result.trackTips.at(result.iSmoothed),
+                  result.lastMeasurementIndex.at(result.iSmoothed),
                   std::get<BoundTrackParameters>(fittedState));
               // If there are more trajectories to handle:
               // -> set the targetReached status to false
               // -> set the smoothed status to false
               // -> update the index of track to be smoothed
-              if (result.iSmoothed < result.trackTips.size() - 1) {
+              if (result.iSmoothed < result.lastMeasurementIndex.size() - 1) {
                 state.navigation.targetReached = false;
                 result.smoothed = false;
                 result.iSmoothed++;
@@ -643,7 +668,8 @@ class CombinatorialKalmanFilter {
         }
         // Update state and stepper with post material effects
         materialInteractor(surface, state, stepper, postUpdate);
-      } else if (surface->surfaceMaterial() != nullptr) {
+      } else if (surface->associatedDetectorElement() != nullptr ||
+                 surface->surfaceMaterial() != nullptr) {
         // No splitting on the surface without source links. Set it to one
         // first, but could be changed later
         nBranchesOnSurface = 1;
@@ -696,7 +722,7 @@ class CombinatorialKalmanFilter {
                 addHoleState(stateMask, boundState, result, prevTip, logger);
             // Incremet of number of holes
             tipState.nHoles++;
-          } else {
+          } else if (surface->surfaceMaterial() != nullptr) {
             // Transport & get curvilinear state instead of bound state
             const auto curvilinearState =
                 stepper.curvilinearState(state.stepping);
@@ -715,8 +741,10 @@ class CombinatorialKalmanFilter {
             nBranchesOnSurface = 0;
           }
         }
-        // Update state and stepper with material effects
-        materialInteractor(surface, state, stepper, fullUpdate);
+        if (surface->surfaceMaterial() != nullptr) {
+          // Update state and stepper with material effects
+          materialInteractor(surface, state, stepper, fullUpdate);
+        }
       } else {
         // Neither measurement nor material on surface, this branch is still
         // valid. Count the branch on current surface
@@ -732,8 +760,9 @@ class CombinatorialKalmanFilter {
                        << result.activeTips.back().first);
           reset(state, stepper, result);
         } else {
-          ACTS_VERBOSE("Stop Kalman filtering with " << result.trackTips.size()
-                                                     << " found tracks");
+          ACTS_VERBOSE("Stop Kalman filtering with "
+                       << result.lastMeasurementIndex.size()
+                       << " found tracks");
           result.filtered = true;
         }
       }
@@ -815,7 +844,9 @@ class CombinatorialKalmanFilter {
 
       // Get and set the type flags
       auto& typeFlags = trackStateProxy.typeFlags();
-      typeFlags.set(TrackStateFlag::MaterialFlag);
+      if (trackStateProxy.referenceSurface().surfaceMaterial() != nullptr) {
+        typeFlags.set(TrackStateFlag::MaterialFlag);
+      }
       typeFlags.set(TrackStateFlag::ParameterFlag);
 
       // Increment of number of processedState and passed sensitive surfaces
@@ -870,12 +901,6 @@ class CombinatorialKalmanFilter {
       // now get track state proxy back
       auto trackStateProxy = result.fittedStates.getTrackState(currentTip);
 
-      // Set the track state flags
-      auto& typeFlags = trackStateProxy.typeFlags();
-      typeFlags.set(TrackStateFlag::MaterialFlag);
-      typeFlags.set(TrackStateFlag::ParameterFlag);
-      typeFlags.set(TrackStateFlag::HoleFlag);
-
       const auto& [boundParams, jacobian, pathLength] = boundState;
       // Fill the track state
       trackStateProxy.predicted() = boundParams.parameters();
@@ -889,6 +914,15 @@ class CombinatorialKalmanFilter {
           boundParams.referenceSurface().getSharedPtr());
       // Set the filtered parameter index to be the same with predicted
       // parameter
+
+      // Set the track state flags
+      auto& typeFlags = trackStateProxy.typeFlags();
+      if (trackStateProxy.referenceSurface().surfaceMaterial() != nullptr) {
+        typeFlags.set(TrackStateFlag::MaterialFlag);
+      }
+      typeFlags.set(TrackStateFlag::ParameterFlag);
+      typeFlags.set(TrackStateFlag::HoleFlag);
+
       trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
 
       return currentTip;
@@ -1010,7 +1044,7 @@ class CombinatorialKalmanFilter {
                           result_type& result) const {
       const auto& logger = state.options.logger;
       // The tip of the track being smoothed
-      const auto& currentTip = result.trackTips.at(result.iSmoothed);
+      const auto& currentTip = result.lastMeasurementIndex.at(result.iSmoothed);
 
       // Get the indices of measurement states;
       std::vector<size_t> measurementIndices;
