@@ -76,7 +76,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       // Create a Trajectories result struct
       trajectories.emplace_back(
           std::move(trackFindingOutput.fittedStates),
-          std::move(trackFindingOutput.lastMeasurementIndex),
+          std::move(trackFindingOutput.lastMeasurementIndices),
           std::move(trackFindingOutput.fittedParameters));
     } else {
       ACTS_WARNING("Track finding failed for seed " << iseed << " with error"

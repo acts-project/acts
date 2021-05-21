@@ -140,17 +140,11 @@ struct CombinatorialKalmanFilterResult {
   // Fitted states that the actor has handled.
   MultiTrajectory<source_link_t> fittedStates;
 
-  // This is the index of the 'tip' of the track stored in multitrajectory.
-  // This correspond to the last measurment state in the multitrajectory.
-  // Since this KF only stores one trajectory, it is unambiguous.
-  // SIZE_MAX is the start of a trajectory.
-  std::vector<size_t> lastMeasurementIndex;
+  // This is the indices of the 'tip' of the tracks stored in multitrajectory.
+  std::vector<size_t> lastMeasurementIndices;
 
-  // This is the index of the 'tip' of the states stored in multitrajectory.
-  // This correspond to the last state in the multitrajectory.
-  // Since this KF only stores one trajectory, it is
-  // unambiguous. SIZE_MAX is the start of a trajectory.
-  std::vector<size_t> lastTrackIndex;
+  // This is the indices of the 'tip' of the tracks stored in multitrajectory.
+  std::vector<size_t> lastTrackIndices;
 
   // The Parameters at the provided surface for separate tracks
   std::unordered_map<size_t, BoundTrackParameters> fittedParameters;
@@ -360,7 +354,7 @@ class CombinatorialKalmanFilter {
                            << tipState.nMeasurements
                            << ", nOutliers = " << tipState.nOutliers
                            << ", nHoles = " << tipState.nHoles << " on track");
-              result.lastTrackIndex.emplace_back(currentTip);
+              result.lastTrackIndices.emplace_back(currentTip);
               // Set the lastMeasurementIndex to the last measurement
               // to ignore the states after it in the rest of the algorithm
               auto lastMeasurementIndex = currentTip;
@@ -375,7 +369,7 @@ class CombinatorialKalmanFilter {
                 isMeasurement = lastMeasurementState.typeFlags().test(
                     TrackStateFlag::MeasurementFlag);
               }
-              result.lastMeasurementIndex.emplace_back(lastMeasurementIndex);
+              result.lastMeasurementIndices.emplace_back(lastMeasurementIndex);
             }
             // Remove the tip from list of active tips
             result.activeTips.erase(result.activeTips.end() - 1);
@@ -384,8 +378,8 @@ class CombinatorialKalmanFilter {
         // If no more active tip, done with filtering; Otherwise, reset
         // propagation state to track state at last tip of active tips
         if (result.activeTips.empty()) {
-          ACTS_VERBOSE("Kalman filtering finds " << result.lastTrackIndex.size()
-                                                 << " tracks");
+          ACTS_VERBOSE("Kalman filtering finds "
+                       << result.lastTrackIndices.size() << " tracks");
           result.filtered = true;
         } else {
           ACTS_VERBOSE("Propagation jumps to branch with tip = "
@@ -397,7 +391,7 @@ class CombinatorialKalmanFilter {
       // Post-processing after filtering phase
       if (result.filtered) {
         // Return error if filtering finds no tracks
-        if (result.lastTrackIndex.empty()) {
+        if (result.lastTrackIndices.empty()) {
           result.result =
               Result<void>(CombinatorialKalmanFilterError::NoTrackFound);
         } else {
@@ -413,7 +407,7 @@ class CombinatorialKalmanFilter {
             if (not result.smoothed) {
               ACTS_VERBOSE(
                   "Finalize/run smoothing for track with entry index = "
-                  << result.lastMeasurementIndex.at(result.iSmoothed));
+                  << result.lastMeasurementIndices.at(result.iSmoothed));
               // --> Search the starting state to run the smoothing
               // --> Call the smoothing
               // --> Set a stop condition when all track states have been
@@ -429,8 +423,9 @@ class CombinatorialKalmanFilter {
             // track parameters for found track indexed with iSmoothed
             if (result.smoothed and
                 targetReached(state, stepper, *targetSurface)) {
-              ACTS_VERBOSE("Completing the track with entry index = "
-                           << result.lastMeasurementIndex.at(result.iSmoothed));
+              ACTS_VERBOSE(
+                  "Completing the track with entry index = "
+                  << result.lastMeasurementIndices.at(result.iSmoothed));
               // Transport & bind the parameter to the final surface
               auto res = stepper.boundState(state.stepping, *targetSurface);
               if (!res.ok()) {
@@ -442,13 +437,13 @@ class CombinatorialKalmanFilter {
               auto fittedState = *res;
               // Assign the fitted parameters
               result.fittedParameters.emplace(
-                  result.lastMeasurementIndex.at(result.iSmoothed),
+                  result.lastMeasurementIndices.at(result.iSmoothed),
                   std::get<BoundTrackParameters>(fittedState));
               // If there are more trajectories to handle:
               // -> set the targetReached status to false
               // -> set the smoothed status to false
               // -> update the index of track to be smoothed
-              if (result.iSmoothed < result.lastMeasurementIndex.size() - 1) {
+              if (result.iSmoothed < result.lastMeasurementIndices.size() - 1) {
                 state.navigation.targetReached = false;
                 result.smoothed = false;
                 result.iSmoothed++;
@@ -761,7 +756,7 @@ class CombinatorialKalmanFilter {
           reset(state, stepper, result);
         } else {
           ACTS_VERBOSE("Stop Kalman filtering with "
-                       << result.lastMeasurementIndex.size()
+                       << result.lastMeasurementIndices.size()
                        << " found tracks");
           result.filtered = true;
         }
@@ -1044,7 +1039,8 @@ class CombinatorialKalmanFilter {
                           result_type& result) const {
       const auto& logger = state.options.logger;
       // The tip of the track being smoothed
-      const auto& currentTip = result.lastMeasurementIndex.at(result.iSmoothed);
+      const auto& currentTip =
+          result.lastMeasurementIndices.at(result.iSmoothed);
 
       // Get the indices of measurement states;
       std::vector<size_t> measurementIndices;

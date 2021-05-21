@@ -122,9 +122,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
       // Get the fit output object
       const auto& fitOutput = result.value();
       // The track entry indices container. One element here.
-      std::vector<size_t> lastMeasurementIndex;
-      lastMeasurementIndex.reserve(1);
-      lastMeasurementIndex.emplace_back(fitOutput.lastMeasurementIndex);
+      std::vector<size_t> trackTips;
+      trackTips.reserve(1);
+      trackTips.emplace_back(fitOutput.lastMeasurementIndex);
       // The fitted parameters container. One element (at most) here.
       Trajectories::IndexedParameters indexedParams;
       if (fitOutput.fittedParameters) {
@@ -139,8 +139,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
       }
       // store the result
       trajectories.emplace_back(std::move(fitOutput.fittedStates),
-                                std::move(lastMeasurementIndex),
-                                std::move(indexedParams));
+                                std::move(trackTips), std::move(indexedParams));
     } else {
       ACTS_WARNING("Fit failed for track " << itrack << " with error"
                                            << result.error());
