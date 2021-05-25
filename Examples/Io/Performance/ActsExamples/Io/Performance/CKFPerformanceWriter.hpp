@@ -21,8 +21,6 @@
 class TFile;
 class TTree;
 
-using namespace Acts::UnitLiterals;
-
 namespace ActsExamples {
 
 /// Write out the performance of CombinatorialKalmanFilter (CKF), e.g.
@@ -56,7 +54,7 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
     /// Min number of measurements
     size_t nMeasurementsMin = 9;
     /// Min transverse momentum
-    double ptMin = 1_GeV;
+    double ptMin = 1 * Acts::UnitConstants::GeV;
     /// function to check if neural network predicted track label is duplicate
     std::function<bool(std::vector<float>&)> duplicatedPredictor = nullptr;
   };

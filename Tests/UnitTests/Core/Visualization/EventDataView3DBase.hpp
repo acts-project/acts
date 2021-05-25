@@ -106,6 +106,7 @@ static inline std::string testBoundTrackParameters(IVisualization3D& helper) {
 }
 
 static inline std::string testMultiTrajectory(IVisualization3D& helper) {
+  using namespace UnitLiterals;
   std::stringstream ss;
 
   // Create a test context
