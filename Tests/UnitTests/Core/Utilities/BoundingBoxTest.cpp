@@ -1201,13 +1201,12 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(ostream_operator)
-{
-    Object o;
-    using Box = Acts::AxisAlignedBoundingBox<Object, BoundingBoxScalar, 2>;
-    Box bb(&o, {-1, -1}, {2, 2});
-    
-    BOOST_TEST_MESSAGE("ostream operator test: " << bb);
+BOOST_AUTO_TEST_CASE(ostream_operator) {
+  Object o;
+  using Box = Acts::AxisAlignedBoundingBox<Object, BoundingBoxScalar, 2>;
+  Box bb(&o, {-1, -1}, {2, 2});
+
+  BOOST_TEST_MESSAGE("ostream operator test: " << bb);
 }
 
 }  // namespace Test
