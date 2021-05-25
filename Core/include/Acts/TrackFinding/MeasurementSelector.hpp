@@ -157,7 +157,7 @@ class MeasurementSelector {
     if (nFinalCandidates == 0) {
       measCandidateIndices.resize(1);
       measCandidateIndices.at(0) = minIndex;
-      ACTS_DEBUG("No measurement candidate. Return an outlier measurement.");
+      ACTS_VERBOSE("No measurement candidate. Return an outlier measurement.");
       isOutlier = true;
       return Result<void>::success();
     }

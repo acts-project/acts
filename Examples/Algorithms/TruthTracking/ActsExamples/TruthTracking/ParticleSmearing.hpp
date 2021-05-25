@@ -48,6 +48,8 @@ class ParticleSmearing final : public BareAlgorithm {
     double sigmaTheta = 1 * Acts::UnitConstants::degree;
     /// Relative momentum resolution.
     double sigmaPRel = 0.001;
+    /// Inflate the initial covariance matrix
+    double initialVarInflation = 1.;
     /// Random numbers service.
     std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
   };

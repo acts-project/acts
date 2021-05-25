@@ -22,4 +22,7 @@ void ActsExamples::Options::addFittingOptions(
                     "Correct for energyloss effects.");
   opt.add_options()("fit-pick-track", value<int>()->default_value(-1),
                     "Pick a single track by track number (-1 for all tracks)");
+  opt.add_options()("fit-initial-variance-inflation",
+                    value<double>()->default_value(1.),
+                    "Inflation factor for the initial covariance for the KF");
 }

@@ -25,7 +25,7 @@ void ActsExamples::Options::addTrackFindingOptions(
       "Global criteria of maximum number of measurement candidates on a "
       "surface for CKF measurement selection");
   opt("ckf-initial-variance-inflation", value<double>()->default_value(1.),
-      "Inflation factor for the initial covariance.");
+      "Inflation factor for the initial covariance for the CKF.");
 }
 
 ActsExamples::TrackFindingAlgorithm::Config

@@ -125,6 +125,8 @@ ActsExamples::ParticleSmearing::Config setupParticleSmearing(
   particleSmearingCfg.sigmaTheta = 1_degree;
   particleSmearingCfg.sigmaPRel = 0.01;
   particleSmearingCfg.sigmaT0 = 1_ns;
+  particleSmearingCfg.initialVarInflation =
+      vars["fit-initial-variance-inflation"].template as<double>();
   sequencer.addAlgorithm(
       std::make_shared<ParticleSmearing>(particleSmearingCfg, logLevel));
 
