@@ -13,6 +13,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -454,7 +455,10 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
                                         truthLOC0);
             m_res_eLOC1[ipar].push_back(parameters[Acts::eBoundLoc1] -
                                         truthLOC1);
-            m_res_ePHI[ipar].push_back(parameters[Acts::eBoundPhi] - truthPHI);
+            float resPhi = Acts::detail::difference_periodic<float>(
+                parameters[Acts::eBoundPhi], truthPHI,
+                static_cast<float>(2 * M_PI));
+            m_res_ePHI[ipar].push_back(resPhi);
             m_res_eTHETA[ipar].push_back(parameters[Acts::eBoundTheta] -
                                          truthTHETA);
             m_res_eQOP[ipar].push_back(parameters[Acts::eBoundQOverP] -
@@ -483,8 +487,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
                 (parameters[Acts::eBoundLoc1] - truthLOC1) /
                 sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
             m_pull_ePHI[ipar].push_back(
-                (parameters[Acts::eBoundPhi] - truthPHI) /
-                sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
+                resPhi / sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
             m_pull_eTHETA[ipar].push_back(
                 (parameters[Acts::eBoundTheta] - truthTHETA) /
                 sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
