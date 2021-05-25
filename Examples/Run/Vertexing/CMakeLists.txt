@@ -7,15 +7,23 @@ set(_common_libraries
   Boost::program_options)
 
 add_executable(
-  ActsExampleVertexFinderReader
-  VertexFinderReaderExample.cpp)
+  ActsExampleVertexFinderParticleReader
+  ParticleReaderVertexingExample.cpp)
 target_link_libraries(
-  ActsExampleVertexFinderReader
+  ActsExampleVertexFinderParticleReader
   PRIVATE ${_common_libraries} ActsExamplesIoCsv ActsExamplesPrinters)
+
+  add_executable(
+  ActsExampleVertexFinderTrackReaderPerformanceWriter
+  TrackReaderVertexingPerformanceWriterExample.cpp)
+target_link_libraries(
+  ActsExampleVertexFinderTrackReaderPerformanceWriter
+  PRIVATE ${_common_libraries} ActsExamplesIoRoot ActsExamplesPrinters)
 
 install(
   TARGETS
-    ActsExampleVertexFinderReader
+    ActsExampleVertexFinderParticleReader
+    ActsExampleVertexFinderTrackReaderPerformanceWriter
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_subdirectory_if(Pythia8 ACTS_BUILD_EXAMPLES_PYTHIA8)

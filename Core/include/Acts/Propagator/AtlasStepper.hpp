@@ -30,8 +30,6 @@
 // This is based original stepper code from the ATLAS RungeKuttePropagagor
 namespace Acts {
 
-using namespace Acts::UnitLiterals;
-
 /// @brief the AtlasStepper implementation for the
 class AtlasStepper {
  public:
@@ -1355,7 +1353,7 @@ class AtlasStepper {
   std::shared_ptr<const MagneticFieldProvider> m_bField;
 
   /// Overstep limit: could/should be dynamic
-  double m_overstepLimit = -50_um;
+  double m_overstepLimit = -50 * UnitConstants::um;
 };
 
 }  // namespace Acts

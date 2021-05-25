@@ -97,6 +97,8 @@ int runRecTruthTracks(int argc, char* argv[],
   particleSelectorCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
   particleSelectorCfg.outputParticles = "particles_selected";
+  particleSelectorCfg.nHitsMin = 9;
+  particleSelectorCfg.ptMin = 500._MeV;
   sequencer.addAlgorithm(
       std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));
 
@@ -142,7 +144,10 @@ int runRecTruthTracks(int argc, char* argv[],
       particleSmearingCfg.outputTrackParameters;
   fitter.outputTrajectories = "trajectories";
   fitter.directNavigation = dirNav;
-  fitter.pickTrack = vm["fit-pick-track"].template as<int>();
+  fitter.multipleScattering =
+      vm["fit-multiple-scattering-correction"].as<bool>();
+  fitter.energyLoss = vm["fit-energy-loss-correction"].as<bool>();
+  fitter.pickTrack = vm["fit-pick-track"].as<int>();
   fitter.trackingGeometry = trackingGeometry;
   fitter.dFit = TrackFittingAlgorithm::makeTrackFitterFunction(magneticField);
   fitter.fit = TrackFittingAlgorithm::makeTrackFitterFunction(trackingGeometry,
