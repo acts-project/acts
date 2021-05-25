@@ -149,7 +149,7 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
     /// Helper method for layer volume writing
     ///
     /// @param lv the layer volume to be written
-    /// @param transform the layer transform 
+    /// @param transform the layer transform
     /// @param representingBoundValues [in,out] the bound values
     /// @param last is the last layer
     auto writeCylinderLayerVolume =
@@ -260,7 +260,7 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
         }
 
         auto sfArray = layer->surfaceArray();
-        // Write the surface grid 
+        // Write the surface grid
         if (writeSurfaceGrid) {
           SurfaceGridData sfGrid;
           sfGrid.geometry_id = layer->geometryId().value();
@@ -295,22 +295,21 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
       } else {
         writeSurface(sfWriter, layer->surfaceRepresentation(), geoCtx);
         // Layer volume definition of passive layers
-        if (writeLayerVolume){
-          if (volume.volumeBounds().type() == Acts::VolumeBounds::eCylinder){
-             // Only one passive layer present - write volume directly
-             if (layers.size() == 3){
-               LayerVolumeData plvDims;
-               plvDims.geometry_id = layer->geometryId().value();
-               plvDims.volume_id = layer->geometryId().volume();
-               plvDims.layer_id = layer->geometryId().layer();
-               plvDims.min_v0 = volumeBoundValues[0];
-               plvDims.max_v0 = volumeBoundValues[1];
-               plvDims.min_v1 = volumeBoundValues[2];
-               plvDims.max_v1 = volumeBoundValues[3];
-               lvWriter.append(plvDims);
-             }
+        if (writeLayerVolume) {
+          if (volume.volumeBounds().type() == Acts::VolumeBounds::eCylinder) {
+            // Only one passive layer present - write volume directly
+            if (layers.size() == 3) {
+              LayerVolumeData plvDims;
+              plvDims.geometry_id = layer->geometryId().value();
+              plvDims.volume_id = layer->geometryId().volume();
+              plvDims.layer_id = layer->geometryId().layer();
+              plvDims.min_v0 = volumeBoundValues[0];
+              plvDims.max_v0 = volumeBoundValues[1];
+              plvDims.min_v1 = volumeBoundValues[2];
+              plvDims.max_v1 = volumeBoundValues[3];
+              lvWriter.append(plvDims);
+            }
           }
-
         }
       }
       ++layerIdx;
