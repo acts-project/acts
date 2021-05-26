@@ -163,7 +163,7 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
           return implRef(std::integral_constant<int, N - 1>{}, implRef);
 
         // Continue as long as evaluations are 'true'
-        if (std::get<N - 1>(tuple()).finalize(state, stepper, h, D)) {
+        if (std::get<N - 1>(this->tuple()).finalize(state, stepper, h, D)) {
           return implRef(std::integral_constant<int, N - 1>{}, implRef);
         } else {
           // Break at false
@@ -193,7 +193,7 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
           return implRef(std::integral_constant<int, N - 1>{}, implRef);
 
         // Continue as long as evaluations are 'true'
-        if (std::get<N - 1>(tuple()).finalize(state, stepper, h)) {
+        if (std::get<N - 1>(this->tuple()).finalize(state, stepper, h)) {
           return implRef(std::integral_constant<int, N - 1>{}, implRef);
         } else {
           // Break at false
