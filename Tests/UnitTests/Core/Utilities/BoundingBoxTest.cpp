@@ -1206,7 +1206,10 @@ BOOST_AUTO_TEST_CASE(ostream_operator) {
   using Box = Acts::AxisAlignedBoundingBox<Object, BoundingBoxScalar, 2>;
   Box bb(&o, {-1, -1}, {2, 2});
 
-  BOOST_TEST_MESSAGE("ostream operator test: " << bb);
+  std::stringstream ss;
+  ss << bb;
+  
+  BOOST_CHECK(ss.str() == "AABB(ctr=(0.5, 0.5) vmin=(-1, -1) vmax=(2, 2))");
 }
 
 }  // namespace Test
