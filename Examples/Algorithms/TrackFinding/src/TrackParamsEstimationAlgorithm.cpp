@@ -101,8 +101,13 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
                 return std::hypot(lhs->r(), lhs->z()) <
                        std::hypot(rhs->r(), rhs->z());
               });
-    // Loop over the found space points to find seeds with simple selection
+
+    // Loop over the found space points to find the seed with maxium deltaR
+    // betweent the bottom and top space point
     // @todo add the check of deltaZ
+    bool seedFound = false;
+    std::array<size_t, 3> bestSPIndices;
+    double maxDeltaR = std::numeric_limits<double>::min();
     for (size_t ib = 0; ib < spacePointsOnTrack.size() - 2; ++ib) {
       for (size_t im = ib + 1; im < spacePointsOnTrack.size() - 1; ++im) {
         for (size_t it = im + 1; it < spacePointsOnTrack.size(); ++it) {
@@ -112,12 +117,21 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
                                      spacePointsOnTrack[im]->r());
           if (bmDeltaR >= m_cfg.deltaRMin and bmDeltaR <= m_cfg.deltaRMax and
               mtDeltaR >= m_cfg.deltaRMin and mtDeltaR <= m_cfg.deltaRMax) {
-            seeds.emplace_back(*spacePointsOnTrack[ib], *spacePointsOnTrack[im],
-                               *spacePointsOnTrack[it],
-                               spacePointsOnTrack[im]->z());
+            if ((bmDeltaR + mtDeltaR) > maxDeltaR) {
+              maxDeltaR = bmDeltaR + mtDeltaR;
+              bestSPIndices = {ib, im, it};
+              seedFound = true;
+            }
           }
         }
       }
+    }
+
+    if (seedFound) {
+      seeds.emplace_back(*spacePointsOnTrack[bestSPIndices[0]],
+                         *spacePointsOnTrack[bestSPIndices[1]],
+                         *spacePointsOnTrack[bestSPIndices[2]],
+                         spacePointsOnTrack[bestSPIndices[1]]->z());
     }
   }
   return seeds;

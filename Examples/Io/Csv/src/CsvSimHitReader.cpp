@@ -82,7 +82,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitReader::read(
 
   // write the ordered data to the EventStore (according to geometry_id).
   SimHitContainer simHits;
-  simHits.adopt_sequence(std::move(unordered));
+  simHits.insert(unordered.begin(), unordered.end());
   ctx.eventStore.add(m_cfg.outputSimHits, std::move(simHits));
 
   return ActsExamples::ProcessCode::SUCCESS;

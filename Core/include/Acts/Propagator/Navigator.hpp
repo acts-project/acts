@@ -28,8 +28,6 @@
 
 namespace Acts {
 
-using namespace Acts::UnitLiterals;
-
 /// @brief struct for the Navigation options that are forwarded to
 ///        the geometry
 ///
@@ -67,7 +65,7 @@ struct NavigationOptions {
   /// The overstep tolerance for this navigation step
   /// @note must be negative as it describes overstepping
   /// @todo could be dynamic in the future (pT dependent)
-  double overstepLimit = -1_um;
+  double overstepLimit = -1 * UnitConstants::um;
 
   /// Constructor
   ///
@@ -88,7 +86,7 @@ struct NavigationOptions {
         startObject(sobject),
         endObject(eobject),
         pathLimit(ndir * std::numeric_limits<double>::max()),
-        overstepLimit(-1_um) {}
+        overstepLimit(-1 * UnitConstants::um) {}
 };
 
 /// Navigator class
@@ -676,6 +674,7 @@ class Navigator {
   /// @return boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t>
   bool targetLayers(propagator_state_t& state, const stepper_t& stepper) const {
+    using namespace UnitLiterals;
     const auto& logger = state.options.logger;
 
     if (state.navigation.navigationBreak ||

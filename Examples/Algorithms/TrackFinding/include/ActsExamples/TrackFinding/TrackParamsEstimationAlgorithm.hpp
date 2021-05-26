@@ -74,9 +74,9 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
     /// Constant term of the loc1 resolution.
     double sigmaLoc1 = 100 * Acts::UnitConstants::um;
     /// Phi angular resolution.
-    double sigmaPhi = 0.005 * Acts::UnitConstants::degree;
+    double sigmaPhi = 0.02 * Acts::UnitConstants::degree;
     /// Theta angular resolution.
-    double sigmaTheta = 0.001 * Acts::UnitConstants::degree;
+    double sigmaTheta = 0.02 * Acts::UnitConstants::degree;
     /// q/p resolution.
     double sigmaQOverP = 0.1 / Acts::UnitConstants::GeV;
     /// Time resolution.

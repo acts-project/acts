@@ -33,6 +33,11 @@ struct SterileContinuousProcess {
   }
 };
 
+static_assert(detail::IsContinuousProcess<SterileContinuousProcess>::value,
+              "Is not a continuous process");
+static_assert(!detail::IsPointLikeProcess<SterileContinuousProcess>::value,
+              "Is a point-like process");
+
 /// Continuous process that DOES trigger a break
 struct FatalContinuousProcess {
   template <typename generator_t>
@@ -41,6 +46,10 @@ struct FatalContinuousProcess {
     return true;
   }
 };
+static_assert(detail::IsContinuousProcess<FatalContinuousProcess>::value,
+              "Is not a continuous process");
+static_assert(!detail::IsPointLikeProcess<FatalContinuousProcess>::value,
+              "Is a point-like process");
 
 /// EM-like point-like process that triggers on X0 and keeps the particle alive.
 ///
@@ -60,6 +69,11 @@ struct X0PointLikeProcess {
     return false;
   }
 };
+
+static_assert(!detail::IsContinuousProcess<X0PointLikeProcess>::value,
+              "Is a continuous process");
+static_assert(detail::IsPointLikeProcess<X0PointLikeProcess>::value,
+              "Is not a point-like process");
 
 /// Nuclear-like point-like process that triggers on L0 and kills the particle.
 ///
@@ -81,6 +95,11 @@ struct L0PointLikeProcess {
     return true;
   }
 };
+
+static_assert(!detail::IsContinuousProcess<L0PointLikeProcess>::value,
+              "Is a continuous process");
+static_assert(detail::IsPointLikeProcess<L0PointLikeProcess>::value,
+              "Is not a point-like process");
 
 struct Fixture {
   std::ranlux48 rng{23};
