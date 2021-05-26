@@ -1208,7 +1208,7 @@ BOOST_AUTO_TEST_CASE(ostream_operator) {
 
   std::stringstream ss;
   ss << bb;
-  
+
   BOOST_CHECK(ss.str() == "AABB(ctr=(0.5, 0.5) vmin=(-1, -1) vmax=(2, 2))");
 }
 
