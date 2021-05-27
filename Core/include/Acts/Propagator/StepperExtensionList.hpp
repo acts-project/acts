@@ -88,9 +88,9 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
         return true;
       } else {
         // If element is invalid: continue
-        if (!std::get<N - 1>(validExtensions))
+        if (!std::get<N - 1>(validExtensions)) {
           return implRef(std::integral_constant<int, N - 1>{}, implRef);
-
+        }
         // Continue as long as evaluations are 'true'
         if (std::get<N - 1>(this->tuple())
                 .template k(state, stepper, knew, bField, kQoP, i, h, kprev)) {
@@ -159,9 +159,9 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
         return true;
       } else {
         // If element is invalid: continue
-        if (!std::get<N - 1>(validExtensions))
+        if (!std::get<N - 1>(validExtensions)) {
           return implRef(std::integral_constant<int, N - 1>{}, implRef);
-
+        }
         // Continue as long as evaluations are 'true'
         if (std::get<N - 1>(this->tuple()).finalize(state, stepper, h, D)) {
           return implRef(std::integral_constant<int, N - 1>{}, implRef);
