@@ -2,3 +2,4 @@ python-semantic-release
 sh
 aiohttp
 gidgethub
+python-dotenv
