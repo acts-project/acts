@@ -14,8 +14,6 @@
 
 #include "GeantinoRecording.hpp"
 
-using namespace Acts::UnitLiterals;
-
 namespace ActsExamples {
 
 namespace Options {

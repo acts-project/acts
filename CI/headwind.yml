@@ -1,7 +1,7 @@
 collectors:
   - type: command
     arg: "CI/perf_headwind.py perf.csv"
-storage_dir: ../metrics
+storage_dir: ../metrics/metrics
 report_filter: |
   def func(metric, df):
     import pandas as pd
