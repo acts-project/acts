@@ -82,7 +82,7 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
          const int i, const double h = 0., const Vector3& kprev = Vector3{}) {
     // TODO replace with integer-templated lambda with C++20
     auto impl = [&, i, h](auto intType, auto& implRef) {
-      constexpr static int N = decltype(intType)::value;
+      constexpr int N = decltype(intType)::value;
 
       if constexpr (N == 0) {
         return true;
@@ -153,7 +153,7 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
                 const double h, FreeMatrix& D) {
     // TODO replace with integer-templated lambda with C++20
     auto impl = [&, h](auto intType, auto& implRef) {
-      constexpr static int N = decltype(intType)::value;
+      constexpr int N = decltype(intType)::value;
 
       if constexpr (N == 0) {
         return true;
@@ -183,14 +183,15 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
                 const double h) {
     // TODO replace with integer-templated lambda with C++20
     auto impl = [&, h](auto intType, auto& implRef) {
-      constexpr static int N = decltype(intType)::value;
+      constexpr int N = decltype(intType)::value;
 
       if constexpr (N == 0) {
         return true;
       } else {
         // If element is invalid: continue
-        if (!std::get<N - 1>(validExtensions))
+        if (!std::get<N - 1>(validExtensions)) {
           return implRef(std::integral_constant<int, N - 1>{}, implRef);
+        }
 
         // Continue as long as evaluations are 'true'
         if (std::get<N - 1>(this->tuple()).finalize(state, stepper, h)) {
