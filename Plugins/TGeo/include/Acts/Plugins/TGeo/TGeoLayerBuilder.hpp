@@ -31,8 +31,6 @@ namespace Acts {
 class TGeoDetectorElement;
 class Surface;
 
-using namespace Acts::UnitLiterals;
-
 /// @class TGeoLayerBuilder
 ///
 /// This parses the gGeoManager and looks for a defined combination
@@ -63,7 +61,8 @@ class TGeoLayerBuilder : public ILayerBuilder {
     /// Layer splitting: parameter and tolerance
     std::vector<SplitConfig> splitConfigs = {};
     /// The envelope to be built around the layer
-    std::pair<double, double> envelope = {0_mm, 0_mm};
+    std::pair<double, double> envelope = {0 * UnitConstants::mm,
+                                          0 * UnitConstants::mm};
     /// Binning setup in l0: nbins (-1 -> automated), axis binning type
     std::tuple<int, BinningType> binning0 = {-1, equidistant};
     /// Binning setup in l1: nbins (-1 -> automated), axis binning type
@@ -74,7 +73,8 @@ class TGeoLayerBuilder : public ILayerBuilder {
         : volumeName(""),
           sensorNames({}),
           localAxes("XZY"),
-          envelope(std::pair<double, double>(1_mm, 1_mm)) {}
+          envelope(std::pair<double, double>(1 * UnitConstants::mm,
+                                             1 * UnitConstants::mm)) {}
   };
 
   /// @struct Config
@@ -83,7 +83,7 @@ class TGeoLayerBuilder : public ILayerBuilder {
     /// String based identification
     std::string configurationName = "undefined";
     /// Unit conversion
-    double unit = 1_cm;
+    double unit = 1 * UnitConstants::cm;
     /// Create an indentifier from TGeoNode
     std::shared_ptr<const ITGeoIdentifierProvider> identifierProvider = nullptr;
     /// Layer creator

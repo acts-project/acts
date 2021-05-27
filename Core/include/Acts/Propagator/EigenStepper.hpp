@@ -28,8 +28,6 @@
 
 namespace Acts {
 
-using namespace Acts::UnitLiterals;
-
 /// @brief Runge-Kutta-Nystroem stepper based on Eigen implementation
 /// for the following ODE:
 ///
@@ -380,7 +378,7 @@ class EigenStepper {
   std::shared_ptr<const MagneticFieldProvider> m_bField;
 
   /// Overstep limit: could/should be dynamic
-  double m_overstepLimit = 100_um;
+  double m_overstepLimit = 100 * UnitConstants::um;
 };
 }  // namespace Acts
 

@@ -548,8 +548,10 @@ class KalmanFitter {
 
         // Get and set the type flags
         auto& typeFlags = trackStateProxy.typeFlags();
-        typeFlags.set(TrackStateFlag::MaterialFlag);
         typeFlags.set(TrackStateFlag::ParameterFlag);
+        if (surface->surfaceMaterial() != nullptr) {
+          typeFlags.set(TrackStateFlag::MaterialFlag);
+        }
 
         // Check if the state is an outlier.
         // If not, run Kalman update, tag it as a
@@ -582,6 +584,7 @@ class KalmanFitter {
               "be an outlier. Stepping state is not updated.")
           // Set the outlier type flag
           typeFlags.set(TrackStateFlag::OutlierFlag);
+          trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
         }
 
         // Update state and stepper with post material effects
