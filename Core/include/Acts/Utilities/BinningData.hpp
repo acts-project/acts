@@ -274,7 +274,20 @@ class BinningData {
   float center(size_t bin) const {
     const std::vector<float>& bvals = boundaries();
     // take the center between bin boundaries
-    float value = bin < bvals.size() ? 0.5 * (bvals[bin] + bvals[bin + 1]) : 0.;
+    float value =
+        bin < (bvals.size() - 1) ? 0.5 * (bvals[bin] + bvals[bin + 1]) : 0.;
+    return value;
+  }
+
+  /// Get the width of a bin
+  ///
+  /// @param bin is the bin for which the width is requested
+  ///
+  /// @return float value of width
+  float width(size_t bin) const {
+    const std::vector<float>& bvals = boundaries();
+    // take the center between bin boundaries
+    float value = bin < (bvals.size() - 1) ? bvals[bin + 1] - bvals[bin] : 0.;
     return value;
   }
 

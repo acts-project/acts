@@ -22,8 +22,6 @@ class TGeoVolume;
 
 namespace Acts {
 
-using namespace UnitLiterals;
-
 /// @brief TGeoParser is a helper struct that
 /// walks recursively through a TGeometry and selects by
 /// string comparison the TGeoNodes that match the criteria
@@ -67,7 +65,7 @@ struct TGeoParser {
     /// The local axis definition of TGeo object wrt Acts::Surface
     std::string localAxes = "XYZ";
     /// Scaling from TGeo to ROOT
-    double unit = 1_cm;
+    double unit = 1 * UnitConstants::cm;
     /// Parse restrictions, several can apply
     std::vector<std::pair<BinningValue, ParseRange> > parseRanges = {};
   };

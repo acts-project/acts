@@ -16,9 +16,6 @@
 
 #include "PropagationAlgorithm.hpp"
 
-namespace po = boost::program_options;
-using namespace Acts::UnitLiterals;
-
 namespace ActsExamples {
 
 namespace Options {
@@ -28,6 +25,8 @@ namespace Options {
 /// @tparam aopt_t Type of the options class from boost
 template <typename aopt_t>
 void addPropagationOptions(aopt_t& opt) {
+  namespace po = boost::program_options;
+  using namespace Acts::UnitLiterals;
   opt.add_options()(
       "prop-debug", po::value<bool>()->default_value(false),
       "Run in debug mode, will create propagation screen output.")(
@@ -97,6 +96,7 @@ void addPropagationOptions(aopt_t& opt) {
 template <typename vmap_t, typename propagator_t>
 typename ActsExamples::PropagationAlgorithm<propagator_t>::Config
 readPropagationConfig(const vmap_t& vm, propagator_t propagator) {
+  using namespace Acts::UnitLiterals;
   typename ActsExamples::PropagationAlgorithm<propagator_t>::Config pAlgConfig(
       std::move(propagator));
 
