@@ -75,7 +75,7 @@ ActsExamples::ProcessCode ActsExamples::CsvParticleReader::read(
 
   // write ordered particles container to the EventStore
   SimParticleContainer particles;
-  particles.adopt_sequence(std::move(unordered));
+  particles.insert(unordered.begin(), unordered.end());
   ctx.eventStore.add(m_cfg.outputParticles, std::move(particles));
 
   return ProcessCode::SUCCESS;

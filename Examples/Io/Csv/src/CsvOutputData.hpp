@@ -181,6 +181,24 @@ struct SurfaceData {
                  bound_param5, bound_param6);
 };
 
+struct LayerVolumeData {
+  /// Surface identifier. Not available in the TrackML datasets.
+  uint64_t geometry_id;
+  /// Partially decoded surface identifier components.
+  uint32_t volume_id, layer_id;
+  /// The type of the surface bpounds object, determines the parameters filled
+  int volume_type;
+  float min_v0 = -1.f;
+  float max_v0 = -1.f;
+  float min_v1 = -1.f;
+  float max_v1 = -1.f;
+  float min_v2 = -1.f;
+  float max_v2 = -1.f;
+
+  DFE_NAMEDTUPLE(LayerVolumeData, geometry_id, volume_id, layer_id, min_v0,
+                 max_v0, min_v1, max_v1, min_v2, max_v2);
+};
+
 struct SurfaceGridData {
   /// Surface identifier. Not available in the TrackML datasets.
   uint64_t geometry_id;

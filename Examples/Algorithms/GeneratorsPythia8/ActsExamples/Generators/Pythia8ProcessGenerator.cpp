@@ -127,6 +127,6 @@ ActsExamples::SimParticleContainer ActsExamples::Pythia8Generator::operator()(
   }
 
   SimParticleContainer out;
-  out.adopt_sequence(std::move(generated));
+  out.insert(generated.begin(), generated.end());
   return out;
 }
