@@ -207,19 +207,20 @@ class FiniteStateMachine {
   event_return process_event(Event&& event, Args&&... args) {
     Derived& child = static_cast<Derived&>(*this);
 
-    child.on_process(event);
+    child.on_process(event, args...);
 
     auto new_state = std::visit(
         [&](auto& s) -> std::optional<StateVariant> {
-          auto s2 = child.on_event(s, std::forward<Event>(event),
-                                   std::forward<Args>(args)...);
+          auto s2 = child.on_event(s, event, args...);
 
           if (s2) {
-            std::visit([&](auto& s2_) { child.on_process(s, event, s2_); },
-                       *s2);
+            std::visit(
+                [&](auto& s2_) { child.on_process(s, event, s2_, args...); },
+                *s2);
           } else {
-            child.on_process(s, event);
+            child.on_process(s, event, args...);
           }
+
           return s2;
         },
         m_state);
