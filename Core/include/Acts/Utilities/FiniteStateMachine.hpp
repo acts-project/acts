@@ -153,6 +153,21 @@ class FiniteStateMachine {
     child.on_enter(std::get<State>(m_state), std::forward<Args>(args)...);
   }
 
+  /// Sets the state to a given one. Triggers `on_exit` and `on_enter` for the
+  /// given states.
+  /// @tparam Args Additional arguments passed through callback overloads.
+  /// @param state Instance of the target state, type erased as variant
+  /// @param args The additional arguments
+  template <typename... Args>
+  void setState(StateVariant state, Args&&... args) {
+    Derived& child = static_cast<Derived&>(*this);
+    std::visit(
+        [&](auto& s) {
+          child.setState(std::move(s), std::forward<Args>(args)...);
+        },
+        state);
+  }
+
   /// Returns whether the FSM is in the specified state
   /// @tparam State type to check against
   /// @param state State instance to check against

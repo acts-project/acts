@@ -394,6 +394,37 @@ class FSMNavigator {
         // @TODO: This needs to transition to ToBoundarySurface right away
         // dispatch(states::ToBoundarySurface{}, navigator, state, stepper);
         setState(states::ToBoundarySurface{}, navigator, state, stepper);
+      } else {
+        // make sure we're targeting that one
+        NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
+
+        while (state.navigation.navLayerIter !=
+               state.navigation.navLayers.end()) {
+          auto& [init_ix, layer, layerSurface, dir] =
+              *state.navigation.navLayerIter;
+
+          auto layerStatus =
+              stepper.updateSurfaceStatus(state.stepping, *layerSurface, true);
+          if (layerStatus != Intersection3D::Status::reachable) {
+            ACTS_DEBUG("During approach of layer "
+                       << layer->geometryId()
+                       << " intersection became unreachable => skipping layer "
+                          "candidate");
+            ++state.navigation.navLayerIter;
+            continue;
+          } else {
+            // update straight line estimation
+            ACTS_DEBUG("Proceeding towards layer: "
+                       << layerSurface->geometryId() << ", updated step size: "
+                       << stepper.outputStepSize(state.stepping));
+            return;  // stay in state
+          }
+        }
+
+        if (state.navigation.navLayerIter == state.navigation.navLayers.end()) {
+          ACTS_DEBUG("No further layers in volume, target boundary surfaces");
+          setState(states::ToBoundarySurface{}, navigator, state, stepper);
+        }
       }
 
       // dispatch(events::ResolveSurfaces{}, navigator, state, stepper);
@@ -404,7 +435,7 @@ class FSMNavigator {
                   const FSMNavigator& navigator, propagator_state_t& state,
                   const stepper_t& stepper) {
       ACTS_DEBUG("Entering surface to surface on layer "
-                 << state.navigation.currentSurface->geometryId());
+                 << state.navigation.navLayerIter->object->geometryId());
 
       dispatch(events::ResolveSurfaces{}, navigator, state, stepper);
     }
@@ -414,10 +445,9 @@ class FSMNavigator {
                           const events::ResolveSurfaces&,
                           const FSMNavigator& navigator,
                           propagator_state_t& state, const stepper_t& stepper) {
-      ACTS_DEBUG("Resolving surfaces for layer: "
-                 << state.navigation.currentSurface->geometryId());
-
       const Layer* navLayer = state.navigation.navLayerIter->object;
+
+      ACTS_DEBUG("Resolving surfaces for layer: " << navLayer->geometryId());
 
       const Surface* layerSurface = state.navigation.currentSurface;
 
@@ -448,9 +478,10 @@ class FSMNavigator {
         if (logger().doPrint(Logging::VERBOSE)) {
           std::ostringstream os;
           os << state.navigation.navSurfaces.size();
-          os << " surface candidates found at path(s): ";
+          os << " surface candidates found at path(s): \n";
           for (auto& sfc : state.navigation.navSurfaces) {
-            os << sfc.intersection.pathLength << "  ";
+            os << " - " << sfc.object->geometryId() << " at "
+               << sfc.intersection.pathLength << "\n ";
           }
           logger().log(Logging::VERBOSE, os.str());
         }
@@ -466,7 +497,7 @@ class FSMNavigator {
         ACTS_VERBOSE(volstr(*state.navigation.currentVolume)
                      << ": Navigation stepSize updated to "
                      << stepper.outputStepSize(state.stepping));
-        return std::nullopt;  // stay in layer to layer
+        return std::nullopt;  // stay in surface to surface
 
       } else {
         state.navigation.navSurfaceIter = state.navigation.navSurfaces.end();
@@ -545,6 +576,7 @@ class FSMNavigator {
       if (state.navigation.navSurfaceIter ==
           state.navigation.navSurfaces.end()) {
         ACTS_DEBUG("No further surfaces in layer, back to layer to layer");
+        ++state.navigation.navLayerIter;
         // state.navigation.navLayers.clear();
         // state.navigation.navLayerIter = stat.navigation.navLayers.end();
         return states::LayerToLayer{};
