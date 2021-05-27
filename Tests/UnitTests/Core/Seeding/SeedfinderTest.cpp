@@ -143,9 +143,9 @@ int main(int argc, char** argv) {
   Acts::Seedfinder<SpacePoint> a(config);
 
   // covariance tool, sets covariances per spacepoint as required
-  auto ct = [=](const SpacePoint& sp, float, float, float) 
-    -> std::pair<Acts::Vector3,Acts::Vector2> {
-    Acts::Vector3 position(sp.x(),sp.y(),sp.z());
+  auto ct = [=](const SpacePoint& sp, float, float,
+                float) -> std::pair<Acts::Vector3, Acts::Vector2> {
+    Acts::Vector3 position(sp.x(), sp.y(), sp.z());
     Acts::Vector2 covariance(sp.varianceR, sp.varianceZ);
     return std::make_pair(position, covariance);
   };
