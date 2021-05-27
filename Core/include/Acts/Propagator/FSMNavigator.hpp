@@ -359,43 +359,7 @@ class FSMNavigator {
       if (surface == state.navigation.currentSurface) {
         return states::SurfaceToSurface{};
       } else {
-        NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
-
-        while (state.navigation.navLayerIter !=
-               state.navigation.navLayers.end()) {
-          const Surface* layerSurface =
-              state.navigation.navLayerIter->representation;
-
-          auto layerStatus =
-              stepper.updateSurfaceStatus(state.stepping, *layerSurface, true);
-          if (layerStatus != Intersection3D::Status::reachable) {
-            ACTS_DEBUG(volInfo(state)
-                       << "During approach of layer " << layer->geometryId()
-                       << " intersection became unreachable => skipping layer "
-                          "candidate");
-            ++state.navigation.navLayerIter;
-            continue;
-          } else {
-            // update straight line estimation
-            ACTS_DEBUG(volInfo(state)
-                       << "Proceeding towards layer: "
-                       << layerSurface->geometryId() << ", updated step size: "
-                       << stepper.outputStepSize(state.stepping));
-            return std::nullopt;  // stay in state
-          }
-        }
-
-        if (state.navigation.navLayerIter == state.navigation.navLayers.end()) {
-          ACTS_DEBUG(
-              volInfo(state)
-              << "No further layers in volume, target boundary surfaces");
-          // state.navigation.navLayers.clear();
-          // state.navigation.navLayerIter = stat.navigation.navLayers.end();
-          return states::ToBoundarySurface{};
-        }
-
-        // we shouldn't get here
-        return Terminated{};
+        return retargetLayer(state, stepper);
       }
     }
 
@@ -407,48 +371,14 @@ class FSMNavigator {
       if (state.navigation.navLayerIter == state.navigation.navLayers.end()) {
         ACTS_DEBUG(volInfo(state)
                    << "No further layers in volume, target boundary surfaces");
-        // state.navigation.navLayers.clear();
-        // state.navigation.navLayerIter = stat.navigation.navLayers.end();
-        // @TODO: This needs to transition to ToBoundarySurface right away
-        // dispatch(states::ToBoundarySurface{}, navigator, state, stepper);
         setState(states::ToBoundarySurface{}, navigator, state, stepper);
       } else {
         // make sure we're targeting that one
-        NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
 
-        while (state.navigation.navLayerIter !=
-               state.navigation.navLayers.end()) {
-          auto& [init_ix, layer, layerSurface, dir] =
-              *state.navigation.navLayerIter;
-
-          auto layerStatus =
-              stepper.updateSurfaceStatus(state.stepping, *layerSurface, true);
-          if (layerStatus != Intersection3D::Status::reachable) {
-            ACTS_DEBUG(volInfo(state)
-                       << "During approach of layer " << layer->geometryId()
-                       << " intersection became unreachable => skipping layer "
-                          "candidate");
-            ++state.navigation.navLayerIter;
-            continue;
-          } else {
-            // update straight line estimation
-            ACTS_DEBUG(volInfo(state)
-                       << "Proceeding towards layer: "
-                       << layerSurface->geometryId() << ", updated step size: "
-                       << stepper.outputStepSize(state.stepping));
-            return;  // stay in state
-          }
-        }
-
-        if (state.navigation.navLayerIter == state.navigation.navLayers.end()) {
-          ACTS_DEBUG(
-              volInfo(state)
-              << "No further layers in volume, target boundary surfaces");
-          setState(states::ToBoundarySurface{}, navigator, state, stepper);
+        if (auto next = retargetLayer(state, stepper); next) {
+          setState(*next, navigator, state, stepper);
         }
       }
-
-      // dispatch(events::ResolveSurfaces{}, navigator, state, stepper);
     }
 
     template <typename propagator_state_t, typename stepper_t>
@@ -794,6 +724,45 @@ class FSMNavigator {
       ACTS_VERBOSE(volInfo(state) << "FSM process_event: <" << E::name << ">");
     }
 
+    template <typename propagator_state_t, typename stepper_t>
+    event_return retargetLayer(propagator_state_t& state,
+                               const stepper_t& stepper) {
+      NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
+
+      while (state.navigation.navLayerIter !=
+             state.navigation.navLayers.end()) {
+        auto& [init_ix, layer, layerSurface, dir] =
+            *state.navigation.navLayerIter;
+
+        auto layerStatus =
+            stepper.updateSurfaceStatus(state.stepping, *layerSurface, true);
+        if (layerStatus != Intersection3D::Status::reachable) {
+          ACTS_DEBUG(volInfo(state)
+                     << "During approach of layer " << layer->geometryId()
+                     << " intersection became unreachable => skipping layer "
+                        "candidate");
+          ++state.navigation.navLayerIter;
+          continue;
+        } else {
+          // update straight line estimation
+          ACTS_DEBUG(volInfo(state)
+                     << "Proceeding towards layer: "
+                     << layerSurface->geometryId() << ", updated step size: "
+                     << stepper.outputStepSize(state.stepping));
+          return std::nullopt;  // stay in state
+        }
+      }
+
+      if (state.navigation.navLayerIter == state.navigation.navLayers.end()) {
+        ACTS_DEBUG(volInfo(state)
+                   << "No further layers in volume, target boundary surfaces");
+        return states::ToBoundarySurface{};
+      }
+
+      // we shouldn't get here, that's an error
+      return Terminated{};
+    }
+
     // catch all handlers
 
     template <typename S, typename E, typename... Args>
@@ -855,6 +824,6 @@ class FSMNavigator {
   std::unique_ptr<const Logger> m_logger;
 
   const Logger& logger() const { return *m_logger; }
-};
+};  // namespace Acts
 
 }  // namespace Acts
