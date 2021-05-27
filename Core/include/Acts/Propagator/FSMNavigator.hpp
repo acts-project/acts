@@ -22,6 +22,7 @@
 namespace Acts {
 
 class FSMNavigator {
+ public:
   struct states {
     struct Init {
       constexpr static std::string_view name = "Init";
@@ -41,6 +42,10 @@ class FSMNavigator {
 
     struct ToBoundarySurface {
       constexpr static std::string_view name = "ToBoundarySurface";
+    };
+
+    struct Finished {
+      constexpr static std::string_view name = "Finished";
     };
   };
 
@@ -62,7 +67,6 @@ class FSMNavigator {
     };
   };
 
- public:
   using NavigationSurfaces = std::vector<SurfaceIntersection>;
   using NavigationSurfaceIter = NavigationSurfaces::iterator;
 
@@ -77,7 +81,7 @@ class FSMNavigator {
   struct State
       : FiniteStateMachine<State, states::Init, states::VolumeToVolume,
                            states::LayerToLayer, states::SurfaceToSurface,
-                           states::ToBoundarySurface> {
+                           states::ToBoundarySurface, states::Finished> {
     /// Externally provided surfaces - these are tried to be hit
     std::multimap<const Layer*, const Surface*> externalSurfaces = {};
 
@@ -694,8 +698,8 @@ class FSMNavigator {
           state.navigation.currentVolume = nullptr;
           state.navigation.navigationBreak = true;
           stepper.releaseStepSize(state.stepping);
-          return std::nullopt;  // done, the standard EndOfWorldReached
-                                // aborter should terminate
+          return states::Finished{};  // done, the standard EndOfWorldReached
+                                      // aborter should terminate
         }
 
         state.navigation.currentVolume = nextVolume;

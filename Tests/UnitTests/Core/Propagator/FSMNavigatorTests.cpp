@@ -260,6 +260,8 @@ BOOST_AUTO_TEST_CASE(Navigation) {
   PropagatorState state;
 
   commonNavigatorSequenceTest(stepper, state, navigator);
+
+  BOOST_CHECK(state.navigation.is<FSMNavigator::states::Finished>());
 }
 
 }  // namespace Test
