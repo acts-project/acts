@@ -9,7 +9,7 @@
 #include <TColor.h>
 
 // Helper function:
-// function to set up the histgram style
+// function to set up the histogram style
 template <typename hist_t>
 void setHistStyle(hist_t* hist, short color = 1) {
   hist->GetXaxis()->SetTitleSize(0.05);
