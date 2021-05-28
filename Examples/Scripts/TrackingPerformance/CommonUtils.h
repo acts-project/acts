@@ -28,7 +28,7 @@ void setHistStyle(hist_t* hist, short color = 1) {
 }
 
 // Helper function:
-// function to set up the efficiency histgram style
+// function to set up the efficiency histogram style
 template <typename eff_t>
 void setEffStyle(eff_t* eff, short color = 1) {
   eff->SetMarkerStyle(20);
