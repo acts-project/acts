@@ -59,14 +59,8 @@ void accessStepWise(const Acts::MagneticFieldProvider& bField,
         // now step through the magnetic field
         for (size_t istep = 0; istep < access_steps; ++istep) {
           Acts::Vector3 position = currentStep * dir;
-          // access the field directly
-          auto field_direct = bField.getField(position);
           // access the field with the cell
           auto field_from_cache = bField.getField(position, bCache);
-          // check
-          if (!field_direct.isApprox(field_from_cache)) {
-            ++mismatched;
-          }
           // increase the step
           currentStep += access_step;
           // show the progress bar
@@ -74,8 +68,7 @@ void accessStepWise(const Acts::MagneticFieldProvider& bField,
         }
       }
     }
-    std::cout << "[<<<] End result : " << mismatched << "/" << totalSteps
-              << " mismatches" << std::endl;
+    std::cout << "[<<<] End result: total steps:" << totalSteps << std::endl;
   }
 }
 
@@ -97,19 +90,12 @@ void accessRandom(const Acts::MagneticFieldProvider& bField,
   // loop over the events - @todo move to parallel for
   for (size_t istep = 0; istep < totalSteps; ++istep) {
     Acts::Vector3 position(xDist(rng), yDist(rng), zDist(rng));
-    // access the field directly
-    auto field_direct = bField.getField(position);
     // access the field with the cell
     auto field_from_cache = bField.getField(position, bCache);
-    // check
-    if (!field_direct.isApprox(field_from_cache)) {
-      ++mismatched;
-    }
     // show the progress bar
     ++show_progress;
   }
-  std::cout << "[<<<] End result : " << mismatched << "/" << totalSteps
-            << " mismatches" << std::endl;
+  std::cout << "[<<<] End result: total steps: " << totalSteps << std::endl;
 }
 
 /// @brief main executable

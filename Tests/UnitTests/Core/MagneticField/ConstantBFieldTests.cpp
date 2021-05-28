@@ -47,25 +47,7 @@ BOOST_DATA_TEST_CASE(ConstantBField_components,
 
     auto bCache = BField.makeCache(mfContext);
 
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(pos));
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0)));
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos));
-
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(pos, bCache));
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0), bCache));
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos, bCache));
-  }
-
-  BOOST_TEST_CONTEXT("C-array initialised - Eigen retrieved") {
-    const ConstantBField BField(bx, by, bz);
-    const Vector3 Btrue(bx, by, bz);
-    const Vector3 pos(x, y, z);
-
-    auto bCache = BField.makeCache(mfContext);
-
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(pos));
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0)));
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos));
+    BOOST_CHECK_EQUAL(Btrue, BField.getField());
 
     BOOST_CHECK_EQUAL(Btrue, BField.getField(pos, bCache));
     BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0), bCache));
@@ -92,29 +74,11 @@ BOOST_DATA_TEST_CASE(ConstantBField_update,
   BOOST_TEST_CONTEXT("Eigen interface") {
     const Vector3 Btrue(bx, by, bz);
     const Vector3 pos(x, y, z);
-    BField.setField(Btrue);
-
-    auto bCache = BField.makeCache(mfContext);
-
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(pos));
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0)));
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos));
-
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(pos, bCache));
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0), bCache));
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos, bCache));
-  }
-
-  BOOST_TEST_CONTEXT("C-array initialised - Eigen retrieved") {
-    const Vector3 Btrue(bx, by, bz);
-    const Vector3 pos(x, y, z);
     BField.setField(bx, by, bz);
 
     auto bCache = BField.makeCache(mfContext);
 
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(pos));
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0)));
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos));
+    BOOST_CHECK_EQUAL(Btrue, BField.getField());
 
     BOOST_CHECK_EQUAL(Btrue, BField.getField(pos, bCache));
     BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0), bCache));
