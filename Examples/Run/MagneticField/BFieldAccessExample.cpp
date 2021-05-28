@@ -38,7 +38,6 @@ void accessStepWise(const Acts::MagneticFieldProvider& bField,
                     double theta_step, size_t phi_steps, double phi_0,
                     double phi_step, size_t access_steps, double access_step) {
   std::cout << "[>>>] Start: step-wise access pattern ... " << std::endl;
-  size_t mismatched = 0;
   // initialize the field cache
   auto bCache = bField.makeCache(bFieldContext);
   // boost display
@@ -61,6 +60,7 @@ void accessStepWise(const Acts::MagneticFieldProvider& bField,
           Acts::Vector3 position = currentStep * dir;
           // access the field with the cell
           auto field_from_cache = bField.getField(position, bCache);
+          (void)field_from_cache;  // we don't use this explicitly
           // increase the step
           currentStep += access_step;
           // show the progress bar
@@ -76,7 +76,6 @@ void accessRandom(const Acts::MagneticFieldProvider& bField,
                   const Acts::MagneticFieldContext& bFieldContext,
                   size_t totalSteps, double radius) {
   std::cout << "[>>>] Start: random access pattern ... " << std::endl;
-  size_t mismatched = 0;
   RandomEngine rng;
   UniformDist xDist(-radius, radius);
   UniformDist yDist(-radius, radius);
@@ -92,6 +91,7 @@ void accessRandom(const Acts::MagneticFieldProvider& bField,
     Acts::Vector3 position(xDist(rng), yDist(rng), zDist(rng));
     // access the field with the cell
     auto field_from_cache = bField.getField(position, bCache);
+    (void)field_from_cache;  // we don't use this explicitly
     // show the progress bar
     ++show_progress;
   }
