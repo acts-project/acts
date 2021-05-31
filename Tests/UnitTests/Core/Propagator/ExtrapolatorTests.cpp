@@ -55,7 +55,7 @@ using EigenStepperType = EigenStepper<>;
 using EigenPropagatorType = Propagator<EigenStepperType, Navigator>;
 using Covariance = BoundSymMatrix;
 
-auto bField = std::make_shared<BFieldType>(0, 0, 2_T);
+auto bField = std::make_shared<BFieldType>(Vector3{0, 0, 2_T});
 EigenStepperType estepper(bField);
 EigenPropagatorType epropagator(std::move(estepper), std::move(navigator));
 

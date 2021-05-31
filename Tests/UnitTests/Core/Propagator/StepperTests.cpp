@@ -737,7 +737,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   ////////////////////////////////////////////////////////////////////
 
   // Re-launch the configuration with magnetic field
-  bField->setField(0., 1_T, 0.);
+  bField->setField(Vector3{0., 1_T, 0.});
   EigenStepper<
       StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
       detail::HighestValidAuctioneer>

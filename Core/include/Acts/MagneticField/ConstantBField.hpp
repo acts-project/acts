@@ -30,14 +30,6 @@ class ConstantBField final : public MagneticFieldProvider {
   /// @param [in] B magnetic field vector in global coordinate system
   explicit ConstantBField(Vector3 B) : m_BField(std::move(B)) {}
 
-  /// @brief construct constant magnetic field from components
-  ///
-  /// @param [in] Bx magnetic field component in global x-direction
-  /// @param [in] By magnetic field component in global y-direction
-  /// @param [in] Bz magnetic field component in global z-direction
-  ConstantBField(double Bx = 0., double By = 0., double Bz = 0.)
-      : m_BField(Bx, By, Bz) {}
-
   /// @brief Get the B field at a position
   Vector3 getField() const { return m_BField; }
 
@@ -77,13 +69,6 @@ class ConstantBField final : public MagneticFieldProvider {
   ///         otherwise @c false
   /// @note The method will always return true for the constant B-Field
   bool isInside(const Vector3& /*position*/) const { return true; }
-
-  /// @brief update magnetic field vector from components
-  ///
-  /// @param [in] Bx magnetic field component in global x-direction
-  /// @param [in] By magnetic field component in global y-direction
-  /// @param [in] Bz magnetic field component in global z-direction
-  void setField(double Bx, double By, double Bz) { m_BField << Bx, By, Bz; }
 
   /// @brief update magnetic field vector
   ///

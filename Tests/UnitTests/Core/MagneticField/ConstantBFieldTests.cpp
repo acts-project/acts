@@ -40,19 +40,17 @@ BOOST_DATA_TEST_CASE(ConstantBField_components,
                          bdata::random(-10_m, 10_m) ^ bdata::xrange(10),
                      x, y, z, bx, by, bz, index) {
   (void)index;
-  BOOST_TEST_CONTEXT("Eigen interface") {
-    const Vector3 Btrue(bx, by, bz);
-    const Vector3 pos(x, y, z);
-    const ConstantBField BField(Btrue);
+  const Vector3 Btrue(bx, by, bz);
+  const Vector3 pos(x, y, z);
+  const ConstantBField BField(Btrue);
 
-    auto bCache = BField.makeCache(mfContext);
+  auto bCache = BField.makeCache(mfContext);
 
-    BOOST_CHECK_EQUAL(Btrue, BField.getField());
+  BOOST_CHECK_EQUAL(Btrue, BField.getField());
 
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(pos, bCache));
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0), bCache));
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos, bCache));
-  }
+  BOOST_CHECK_EQUAL(Btrue, BField.getField(pos, bCache));
+  BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0), bCache));
+  BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos, bCache));
 }
 
 /// @brief unit test for update of constant magnetic field
@@ -69,21 +67,19 @@ BOOST_DATA_TEST_CASE(ConstantBField_update,
                          bdata::random(-10_m, 10_m) ^ bdata::xrange(10),
                      x, y, z, bx, by, bz, index) {
   (void)index;
-  ConstantBField BField(0, 0, 0);
 
-  BOOST_TEST_CONTEXT("Eigen interface") {
-    const Vector3 Btrue(bx, by, bz);
-    const Vector3 pos(x, y, z);
-    BField.setField(bx, by, bz);
+  ConstantBField BField{Vector3{0, 0, 0}};
+  const Vector3 Btrue(bx, by, bz);
+  const Vector3 pos(x, y, z);
+  BField.setField(Vector3{bx, by, bz});
 
-    auto bCache = BField.makeCache(mfContext);
+  auto bCache = BField.makeCache(mfContext);
 
-    BOOST_CHECK_EQUAL(Btrue, BField.getField());
+  BOOST_CHECK_EQUAL(Btrue, BField.getField());
 
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(pos, bCache));
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0), bCache));
-    BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos, bCache));
-  }
+  BOOST_CHECK_EQUAL(Btrue, BField.getField(pos, bCache));
+  BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0), bCache));
+  BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos, bCache));
 }
 
 }  // namespace Test
