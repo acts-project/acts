@@ -152,17 +152,20 @@ auto main(int argc, char** argv) -> int {
           cmdlTool.deviceName,
           Acts::getDefaultLogger("Sycl::QueueWrapper", logLvl)));
   Acts::Seedfinder<SpacePoint> normalSeedfinder(config);
-  auto covarianceTool = [=](const SpacePoint& sp, float /*unused*/,
-                            float /*unused*/,
-                            float_t /*unused*/) -> Acts::Vector2 {
-    return {sp.varianceR, sp.varianceZ};
+  auto globalTool =
+      [=](const SpacePoint& sp, float /*unused*/, float /*unused*/,
+          float_t /*unused*/) -> std::pair<Acts::Vector3, Acts::Vector2> {
+    Acts::Vector3 position(sp.x(), sp.y(), sp.z());
+    Acts::Vector2 covariance(sp.varianceR, sp.varianceZ);
+    return std::make_pair(position, covariance);
   };
+
   std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
       Acts::SpacePointGridCreator::createGrid<SpacePoint>(
           setupSpacePointGridConfig(config));
 
   auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
-      spVec.begin(), spVec.end(), covarianceTool, bottomBinFinder, topBinFinder,
+      spVec.begin(), spVec.end(), globalTool, bottomBinFinder, topBinFinder,
       std::move(grid), config);
 
   auto end_prep = std::chrono::system_clock::now();
