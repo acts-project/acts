@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "ActsExamples/Digitization/ModuleClusters.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -158,6 +159,10 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
     // visitor so we do not need to lookup the variant object per-hit.
     std::visit(
         [&](const auto& digitizer) {
+          ModuleClusters moduleClusters(
+              digitizer.geometric.segmentation, digitizer.geometric.indices,
+              m_cfg.doMerge, m_cfg.mergeNsigma, m_cfg.mergeCommonCorner);
+
           for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
             const auto& simHit = *h;
             const auto simHitIdx = simHits.index_of(h);
@@ -207,6 +212,11 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
               continue;
             }
 
+            moduleClusters.add(std::move(dParameters), simHitIdx);
+          }
+
+          for (auto& [dParameters, simhits] :
+               moduleClusters.digitizedParameters()) {
             // The measurement container is unordered and the index under which
             // the measurement will be stored is known before adding it.
             Index measurementIdx = measurements.size();
@@ -220,13 +230,15 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
             measurements.emplace_back(
                 createMeasurement(dParameters, sourceLink));
             clusters.emplace_back(std::move(dParameters.cluster));
-            // this digitization does not do hit merging so there is only one
+            // this digitization does hit merging so there can be more than one
             // mapping entry for each digitized hit.
-            measurementParticlesMap.emplace_hint(measurementParticlesMap.end(),
-                                                 measurementIdx,
-                                                 simHit.particleId());
-            measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
-                                               measurementIdx, simHitIdx);
+            for (auto simHitIdx : simhits) {
+              measurementParticlesMap.emplace_hint(
+                  measurementParticlesMap.end(), measurementIdx,
+                  simHits.nth(simHitIdx)->particleId());
+              measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
+                                                 measurementIdx, simHitIdx);
+            }
           }
         },
         *digitizerItr);
