@@ -41,9 +41,9 @@ void ActsExamples::Options::addSequencerOptions(
                     "The number of events to process. If not given, all "
                     "available events will be processed.")(
       "skip", value<size_t>()->default_value(0),
-      "The number of events to skip")("jobs,j", value<int>()->default_value(-1),
-                                      "Number of parallel jobs, negative for "
-                                      "automatic.");
+      "The number of events to skip")(
+      "jobs,j", value<int>()->default_value(-1),
+      "Number of parallel jobs, negative for automatic.");
 }
 
 void ActsExamples::Options::addRandomNumbersOptions(
@@ -57,12 +57,9 @@ void ActsExamples::Options::addGeometryOptions(
   opt.add_options()("geo-surface-loglevel", value<size_t>()->default_value(3),
                     "The outoput log level for the surface building.")(
       "geo-layer-loglevel", value<size_t>()->default_value(3),
-      "The output log level for the layer building.")("geo-volume-loglevel",
-                                                      value<size_t>()
-                                                          ->default_value(3),
-                                                      "The output log level "
-                                                      "for the volume "
-                                                      "building.");
+      "The output log level for the layer building.")(
+      "geo-volume-loglevel", value<size_t>()->default_value(3),
+      "The output log level for the volume building.");
 }
 
 void ActsExamples::Options::addMaterialOptions(
