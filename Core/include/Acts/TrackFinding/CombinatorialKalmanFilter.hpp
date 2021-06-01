@@ -408,7 +408,7 @@ class CombinatorialKalmanFilter {
             // -> first run smoothing for found track indexed with iSmoothed
             if (not result.smoothed) {
               ACTS_VERBOSE(
-                  "Finalize/run smoothing for track with entry index = "
+                  "Finalize/run smoothing for track with last measurement index = "
                   << result.lastMeasurementIndices.at(result.iSmoothed));
               // --> Search the starting state to run the smoothing
               // --> Call the smoothing
@@ -426,7 +426,7 @@ class CombinatorialKalmanFilter {
             if (result.smoothed and
                 targetReached(state, stepper, *targetSurface)) {
               ACTS_VERBOSE(
-                  "Completing the track with entry index = "
+                  "Completing the track with last measurement index = "
                   << result.lastMeasurementIndices.at(result.iSmoothed));
               // Transport & bind the parameter to the final surface
               auto res = stepper.boundState(state.stepping, *targetSurface);
