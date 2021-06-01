@@ -892,7 +892,7 @@ class KalmanFitter {
       result.smoothed = true;
 
       // Get the indices of the first measurement states;
-      size_t firstMeasurementIndex;
+      size_t firstMeasurementIndex = result.lastMeasurementIndex;
       // Count track states to be smoothed
       size_t nStates = 0;
       result.fittedStates.applyBackwards(
