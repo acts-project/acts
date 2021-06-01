@@ -12,6 +12,7 @@
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
+#include <array>
 #include <limits>
 #include <string>
 
@@ -49,7 +50,7 @@ class ParticleSmearing final : public BareAlgorithm {
     /// Relative momentum resolution.
     double sigmaPRel = 0.001;
     /// Inflate the initial covariance matrix
-    double initialVarInflation = 1.;
+    std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
     /// Random numbers service.
     std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
   };

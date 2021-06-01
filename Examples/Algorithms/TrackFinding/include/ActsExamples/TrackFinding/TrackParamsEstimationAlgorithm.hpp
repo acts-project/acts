@@ -82,7 +82,7 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
     /// Time resolution.
     double sigmaT0 = 1400 * Acts::UnitConstants::s;
     /// Inflate tracks
-    double initialVarInflation = 1.;
+    std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
   };
 
   /// Construct the track parameters making algorithm.

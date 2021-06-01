@@ -9,7 +9,6 @@ add_library(
   src/RootParticleWriter.cpp
   src/RootParticleReader.cpp
   src/RootPropagationStepsWriter.cpp
-  src/RootSeedingPerformanceWriter.cpp
   src/RootSimHitWriter.cpp
   src/RootTrackParameterWriter.cpp
   src/RootTrajectoryStatesWriter.cpp

@@ -51,17 +51,23 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
 
   // Set up the track parameters covariance (the same for all tracks)
   m_covariance(Acts::eBoundLoc0, Acts::eBoundLoc0) =
-      m_cfg.initialVarInflation * cfg.sigmaLoc0 * m_cfg.sigmaLoc0;
+      m_cfg.initialVarInflation[Acts::eBoundLoc0] * cfg.sigmaLoc0 *
+      m_cfg.sigmaLoc0;
   m_covariance(Acts::eBoundLoc1, Acts::eBoundLoc1) =
-      m_cfg.initialVarInflation * cfg.sigmaLoc1 * m_cfg.sigmaLoc1;
+      m_cfg.initialVarInflation[Acts::eBoundLoc1] * cfg.sigmaLoc1 *
+      m_cfg.sigmaLoc1;
   m_covariance(Acts::eBoundPhi, Acts::eBoundPhi) =
-      m_cfg.initialVarInflation * cfg.sigmaPhi * m_cfg.sigmaPhi;
+      m_cfg.initialVarInflation[Acts::eBoundPhi] * cfg.sigmaPhi *
+      m_cfg.sigmaPhi;
   m_covariance(Acts::eBoundTheta, Acts::eBoundTheta) =
-      m_cfg.initialVarInflation * cfg.sigmaTheta * m_cfg.sigmaTheta;
+      m_cfg.initialVarInflation[Acts::eBoundTheta] * cfg.sigmaTheta *
+      m_cfg.sigmaTheta;
   m_covariance(Acts::eBoundQOverP, Acts::eBoundQOverP) =
-      m_cfg.initialVarInflation * cfg.sigmaQOverP * m_cfg.sigmaQOverP;
+      m_cfg.initialVarInflation[Acts::eBoundQOverP] * cfg.sigmaQOverP *
+      m_cfg.sigmaQOverP;
   m_covariance(Acts::eBoundTime, Acts::eBoundTime) =
-      m_cfg.initialVarInflation * m_cfg.sigmaT0 * m_cfg.sigmaT0;
+      m_cfg.initialVarInflation[Acts::eBoundTime] * m_cfg.sigmaT0 *
+      m_cfg.sigmaT0;
 }
 
 ActsExamples::SimSeedContainer
