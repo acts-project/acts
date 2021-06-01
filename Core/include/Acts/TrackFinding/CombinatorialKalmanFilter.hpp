@@ -141,9 +141,11 @@ struct CombinatorialKalmanFilterResult {
   MultiTrajectory<source_link_t> fittedStates;
 
   // This is the indices of the 'tip' of the tracks stored in multitrajectory.
+  // This correspond to the last measurment state in the multitrajectory.
   std::vector<size_t> lastMeasurementIndices;
 
   // This is the indices of the 'tip' of the tracks stored in multitrajectory.
+  // This correspond to the last state in the multitrajectory.
   std::vector<size_t> lastTrackIndices;
 
   // The Parameters at the provided surface for separate tracks
