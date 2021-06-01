@@ -408,7 +408,8 @@ class CombinatorialKalmanFilter {
             // -> first run smoothing for found track indexed with iSmoothed
             if (not result.smoothed) {
               ACTS_VERBOSE(
-                  "Finalize/run smoothing for track with last measurement index = "
+                  "Finalize/run smoothing for track with last measurement "
+                  "index = "
                   << result.lastMeasurementIndices.at(result.iSmoothed));
               // --> Search the starting state to run the smoothing
               // --> Call the smoothing
@@ -1040,32 +1041,25 @@ class CombinatorialKalmanFilter {
     Result<void> finalize(propagator_state_t& state, const stepper_t& stepper,
                           result_type& result) const {
       const auto& logger = state.options.logger;
-      // The tip of the track being smoothed
-      const auto& currentTip =
+      // The measurement tip of the track being smoothed
+      const auto& lastMeasurementIndex =
           result.lastMeasurementIndices.at(result.iSmoothed);
 
-      // Get the indices of measurement states;
-      std::vector<size_t> measurementIndices;
+      // Get the indices of the first measurement states;
+      size_t firstMeasurementIndex;
       // Count track states to be smoothed
       size_t nStates = 0;
-      result.fittedStates.applyBackwards(currentTip, [&](auto st) {
+      result.fittedStates.applyBackwards(lastMeasurementIndex, [&](auto st) {
         bool isMeasurement =
             st.typeFlags().test(TrackStateFlag::MeasurementFlag);
         if (isMeasurement) {
-          measurementIndices.emplace_back(st.index());
-        } else if (measurementIndices.empty()) {
-          // No smoothed parameter if the last measurment state has not been
-          // found yet
-          st.data().ismoothed = detail_lt::IndexData::kInvalid;
+          firstMeasurementIndex = st.index();
         }
-        // Start count when the last measurement state is found
-        if (not measurementIndices.empty()) {
-          nStates++;
-        }
+        nStates++;
       });
       // Return error if the track has no measurement states (but this should
       // not happen)
-      if (measurementIndices.empty()) {
+      if (nStates == 0) {
         ACTS_ERROR("Smoothing for a track without measurements.");
         return CombinatorialKalmanFilterError::SmoothFailed;
       }
@@ -1074,7 +1068,7 @@ class CombinatorialKalmanFilter {
                                          << " filtered track states.");
       // Smooth the track states
       auto smoothRes = m_smoother(state.geoContext, result.fittedStates,
-                                  measurementIndices.front());
+                                  lastMeasurementIndex);
       if (!smoothRes.ok()) {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
         return smoothRes.error();
@@ -1087,9 +1081,9 @@ class CombinatorialKalmanFilter {
 
       // Obtain the smoothed parameters at first/last measurement state
       auto firstCreatedMeasurement =
-          result.fittedStates.getTrackState(measurementIndices.back());
+          result.fittedStates.getTrackState(firstMeasurementIndex);
       auto lastCreatedMeasurement =
-          result.fittedStates.getTrackState(measurementIndices.front());
+          result.fittedStates.getTrackState(lastMeasurementIndex);
 
       // Lambda to get the intersection of the free params on the target surface
       auto target = [&](const FreeVector& freeVector) -> SurfaceIntersection {
