@@ -300,8 +300,10 @@ class InterpolatedBFieldMap final : public MagneticFieldProvider {
     return MagneticFieldProvider::Cache::make<Cache>(mctx);
   }
 
-  /// @copydoc MagneticFieldProvider::getField(const Vector3&)
-  Vector3 getField(const Vector3& position) const override {
+  /// @brief Get the B field at a position
+  ///
+  /// @param position The position to query at
+  Vector3 getField(const Vector3& position) const {
     return m_config.mapper.getField(position);
   }
 
@@ -314,16 +316,6 @@ class InterpolatedBFieldMap final : public MagneticFieldProvider {
       cache.fieldCell = getFieldCell(position);
     }
     return (*cache.fieldCell).getField(position);
-  }
-
-  /// @copydoc MagneticFieldProvider::getFieldGradient(const
-  /// Vector3&,ActsMatrix<3,3>&)
-  ///
-  /// @note currently the derivative is not calculated
-  /// @todo return derivative
-  Vector3 getFieldGradient(const Vector3& position,
-                           ActsMatrix<3, 3>& /*derivative*/) const override {
-    return m_config.mapper.getField(position);
   }
 
   /// @copydoc MagneticFieldProvider::getFieldGradient(const

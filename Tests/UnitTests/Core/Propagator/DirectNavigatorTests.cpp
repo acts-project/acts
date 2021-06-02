@@ -49,7 +49,7 @@ using ReferencePropagator = Propagator<Stepper, Navigator>;
 using DirectPropagator = Propagator<Stepper, DirectNavigator>;
 
 const double Bz = 2_T;
-auto bField = std::make_shared<BField>(0, 0, Bz);
+auto bField = std::make_shared<BField>(Vector3{0, 0, Bz});
 Stepper estepper(bField);
 Stepper dstepper(bField);
 

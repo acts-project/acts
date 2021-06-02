@@ -33,8 +33,10 @@ class SharedBField final : public MagneticFieldProvider {
   /// @tparam bField is the shared BField to be stored
   SharedBField(std::shared_ptr<const BField> bField) : m_bField(bField) {}
 
-  /// @copydoc MagneticFieldProvider::getField(const Vector3&)
-  Vector3 getField(const Vector3& position) const override {
+  /// @brief Get the B field at a position
+  ///
+  /// @param position The position to query at
+  Vector3 getField(const Vector3& position) const {
     return m_bField->getField(position);
   }
 
@@ -48,7 +50,7 @@ class SharedBField final : public MagneticFieldProvider {
   /// @copydoc MagneticFieldProvider::getFieldGradient(const
   /// Vector3&,ActsMatrix<3,3>&)
   Vector3 getFieldGradient(const Vector3& position,
-                           ActsMatrix<3, 3>& derivative) const override {
+                           ActsMatrix<3, 3>& derivative) const {
     return m_bField->getFieldGradient(position, derivative);
   }
 
