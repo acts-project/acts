@@ -104,6 +104,7 @@ ActsExamples::ParticleSmearing::Config setupParticleSmearing(
     std::shared_ptr<const ActsExamples::RandomNumbers> rnd,
     const std::string& inputParticles) {
   using namespace ActsExamples;
+  using namespace Acts::UnitLiterals;
 
   // Read some standard options
   auto logLevel = Options::readLogLevel(vars);

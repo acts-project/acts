@@ -92,17 +92,21 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
 
   // construct the seeding tools
   // covariance tool, extracts covariances per spacepoint as required
-  auto extractCovariance = [=](const SimSpacePoint& sp, float, float,
-                               float) -> Acts::Vector2 {
-    return {sp.varianceR(), sp.varianceZ()};
+  auto extractGlobalQuantities =
+      [=](const SimSpacePoint& sp, float, float,
+          float) -> std::pair<Acts::Vector3, Acts::Vector2> {
+    Acts::Vector3 position{sp.x(), sp.y(), sp.z()};
+    Acts::Vector2 covariance{sp.varianceR(), sp.varianceZ()};
+    return std::make_pair(position, covariance);
   };
+
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
       Acts::BinFinder<SimSpacePoint>());
   auto topBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
       Acts::BinFinder<SimSpacePoint>());
   auto grid = Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(m_gridCfg);
   auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
-      spacePointPtrs.begin(), spacePointPtrs.end(), extractCovariance,
+      spacePointPtrs.begin(), spacePointPtrs.end(), extractGlobalQuantities,
       bottomBinFinder, topBinFinder, std::move(grid), m_finderCfg);
   auto finder = Acts::Seedfinder<SimSpacePoint>(m_finderCfg);
 

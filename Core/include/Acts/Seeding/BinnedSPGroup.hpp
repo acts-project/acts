@@ -240,9 +240,8 @@ class BinnedSPGroup {
   template <typename spacepoint_iterator_t>
   BinnedSPGroup<external_spacepoint_t>(
       spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
-      std::function<Acts::Vector2(const external_spacepoint_t&, float, float,
-                                  float)>
-          covTool,
+      std::function<std::pair<Acts::Vector3, Acts::Vector2>(
+          const external_spacepoint_t&, float, float, float)>,
       std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
       std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
       std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
