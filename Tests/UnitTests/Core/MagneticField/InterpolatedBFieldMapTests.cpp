@@ -82,10 +82,10 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   // test the cache interface
   auto bCacheAny = b.makeCache(mfContext);
   BField_t::Cache& bCache = bCacheAny.get<BField_t::Cache>();
-  CHECK_CLOSE_REL(b.getField(pos, bCacheAny),
+  CHECK_CLOSE_REL(b.getField(pos, bCacheAny).value(),
                   BField::value({{perp(pos), pos.z()}}), 1e-6);
 
-  CHECK_CLOSE_REL(b.getField(pos, bCacheAny),
+  CHECK_CLOSE_REL(b.getField(pos, bCacheAny).value(),
                   BField::value({{perp(pos), pos.z()}}), 1e-6);
   auto& c = *bCache.fieldCell;
   BOOST_CHECK(c.isInside(pos));
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   pos << 0, 1.5, -2.5;
   bCacheAny = b.makeCache(mfContext);
   BField_t::Cache& bCache2 = bCacheAny.get<BField_t::Cache>();
-  CHECK_CLOSE_REL(b.getField(pos, bCacheAny),
+  CHECK_CLOSE_REL(b.getField(pos, bCacheAny).value(),
                   BField::value({{perp(pos), pos.z()}}), 1e-6);
   c = *bCache2.fieldCell;
   BOOST_CHECK(c.isInside(pos));
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   pos << 2, 3, -4;
   bCacheAny = b.makeCache(mfContext);
   BField_t::Cache& bCache3 = bCacheAny.get<BField_t::Cache>();
-  CHECK_CLOSE_REL(b.getField(pos, bCacheAny),
+  CHECK_CLOSE_REL(b.getField(pos, bCacheAny).value(),
                   BField::value({{perp(pos), pos.z()}}), 1e-6);
   c = *bCache3.fieldCell;
   BOOST_CHECK(c.isInside(pos));
