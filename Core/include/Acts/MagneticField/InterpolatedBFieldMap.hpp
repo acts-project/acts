@@ -86,8 +86,8 @@ struct InterpolatedBFieldMapper {
     bool isInside(const Vector3& position) const {
       const auto& gridCoordinates = m_transformPos(position);
       for (unsigned int i = 0; i < DIM_POS; ++i) {
-        if (gridCoordinates[i] < m_lowerLeft.at(i) ||
-            gridCoordinates[i] >= m_upperRight.at(i)) {
+        if (gridCoordinates[i] < m_lowerLeft[i] ||
+            gridCoordinates[i] >= m_upperRight[i]) {
           return false;
         }
       }
@@ -125,8 +125,12 @@ struct InterpolatedBFieldMapper {
       Grid_t grid)
       : m_transformPos(std::move(transformPos)),
         m_transformBField(std::move(transformBField)),
-        m_grid(std::move(grid)),
-        m_numGridIndices{m_grid.numLocalBins()} {}
+        m_grid(std::move(grid)) {
+    typename Grid_t::index_t minBin{};
+    minBin.fill(1);
+    m_lowerLeft = m_grid.lowerLeftBinEdge(minBin);
+    m_upperRight = m_grid.lowerLeftBinEdge(m_grid.numLocalBins());
+  }
 
   /// @brief retrieve field at given position
   ///
@@ -136,13 +140,8 @@ struct InterpolatedBFieldMapper {
   /// @pre The given @c position must lie within the range of the underlying
   ///      magnetic field map.
   Result<Vector3> getField(const Vector3& position) const {
-    const auto& gridPosition = m_transformPos(position);
-    const auto& indices = m_grid.localBinsFromPosition(gridPosition);
-
-    for (size_t d = 0; d < DIM_POS; d++) {
-      if (indices[d] > m_numGridIndices[d]) {
-        return Result<Vector3>::failure(MagneticFieldError::OutOfBounds);
-      }
+    if (!isInside(position)) {
+      return Result<Vector3>::failure(MagneticFieldError::OutOfBounds);
     }
 
     return Result<Vector3>::success(m_transformBField(
@@ -167,10 +166,8 @@ struct InterpolatedBFieldMapper {
     std::array<Vector3, nCorners> neighbors{Vector3{0.0, 0.0, 0.0}};
     const auto& cornerIndices = m_grid.closestPointsIndices(gridPosition);
 
-    for (size_t d = 0; d < DIM_POS; d++) {
-      if (indices[d] > m_numGridIndices[d]) {
-        return MagneticFieldError::OutOfBounds;
-      }
+    if (!isInside(position)) {
+      return MagneticFieldError::OutOfBounds;
     }
 
     size_t i = 0;
@@ -194,16 +191,14 @@ struct InterpolatedBFieldMapper {
   ///
   /// @return vector returning the minima of all field map axes
   std::vector<double> getMin() const {
-    auto minArray = m_grid.minPosition();
-    return std::vector<double>(minArray.begin(), minArray.end());
+    return std::vector<double>(m_lowerLeft.begin(), m_lowerLeft.end());
   }
 
   /// @brief get the maximum value of all axes of the field map
   ///
   /// @return vector returning the maxima of all field map axes
   std::vector<double> getMax() const {
-    auto maxArray = m_grid.maxPosition();
-    return std::vector<double>(maxArray.begin(), maxArray.end());
+    return std::vector<double>(m_upperRight.begin(), m_upperRight.end());
   }
 
   /// @brief check whether given 3D position is inside look-up domain
@@ -212,7 +207,14 @@ struct InterpolatedBFieldMapper {
   /// @return @c true if position is inside the defined look-up grid,
   ///         otherwise @c false
   bool isInside(const Vector3& position) const {
-    return m_grid.isInside(m_transformPos(position));
+    const auto& gridPosition = m_transformPos(position);
+    for (unsigned int i = 0; i < DIM_POS; ++i) {
+      if (gridPosition[i] < m_lowerLeft[i] ||
+          gridPosition[i] >= m_upperRight[i]) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /// @brief Get a const reference on the underlying grid structure
@@ -230,7 +232,8 @@ struct InterpolatedBFieldMapper {
   /// grid storing magnetic field values
   Grid_t m_grid;
 
-  typename Grid_t::index_t m_numGridIndices;
+  typename Grid_t::point_t m_lowerLeft;
+  typename Grid_t::point_t m_upperRight;
 };
 
 /// @ingroup MagneticField
@@ -349,8 +352,8 @@ class InterpolatedBFieldMap final : public MagneticFieldProvider {
   /// @todo return derivative
   Result<Vector3> getFieldGradient(
       const Vector3& position, ActsMatrix<3, 3>& /*derivative*/,
-      MagneticFieldProvider::Cache& /*cache*/) const override {
-    return m_config.mapper.getField(position);
+      MagneticFieldProvider::Cache& cache) const override {
+    return getField(position, cache);
   }
 
  private:

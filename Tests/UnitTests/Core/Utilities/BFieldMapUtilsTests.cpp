@@ -26,14 +26,14 @@ namespace Test {
 
 BOOST_AUTO_TEST_CASE(bfield_creation) {
   // create grid values
-  std::vector<double> rPos = {0., 1., 2.};
-  std::vector<double> xPos = {0., 1., 2.};
-  std::vector<double> yPos = {0., 1., 2.};
-  std::vector<double> zPos = {0., 1., 2.};
+  std::vector<double> rPos = {0., 1., 2., 3.};
+  std::vector<double> xPos = {0., 1., 2., 3.};
+  std::vector<double> yPos = {0., 1., 2., 3.};
+  std::vector<double> zPos = {0., 1., 2., 3.};
 
   // create b field in rz
   std::vector<Acts::Vector2> bField_rz;
-  for (int i = 0; i < 9; i++) {
+  for (int i = 0; i < 27; i++) {
     bField_rz.push_back(Acts::Vector2(i, i));
   }
 
@@ -56,17 +56,22 @@ BOOST_AUTO_TEST_CASE(bfield_creation) {
   // always assigned to the left boundary)
   BOOST_CHECK(mapper_rz.getMax() == maxima_rz);
 
-  // create b field in xyz
-  std::vector<Acts::Vector3> bField_xyz;
-  for (int i = 0; i < 27; i++) {
-    bField_xyz.push_back(Acts::Vector3(i, i, i));
-  }
-
   auto localToGlobalBin_xyz = [](std::array<size_t, 3> binsXYZ,
                                  std::array<size_t, 3> nBinsXYZ) {
     return (binsXYZ.at(0) * (nBinsXYZ.at(1) * nBinsXYZ.at(2)) +
             binsXYZ.at(1) * nBinsXYZ.at(2) + binsXYZ.at(2));
   };
+
+  rPos = {0., 1., 2., 3.};
+  xPos = {0., 1., 2., 3.};
+  yPos = {0., 1., 2., 3.};
+  zPos = {0., 1., 2., 3.};
+
+  // create b field in xyz
+  std::vector<Acts::Vector3> bField_xyz;
+  for (int i = 0; i < 81; i++) {
+    bField_xyz.push_back(Acts::Vector3(i, i, i));
+  }
 
   // create b field mapper in xyz
   auto mapper_xyz = Acts::fieldMapperXYZ(localToGlobalBin_xyz, xPos, yPos, zPos,
@@ -156,7 +161,7 @@ BOOST_AUTO_TEST_CASE(bfield_symmetry) {
   // check number of bins, minima & maxima
   std::vector<size_t> nBins_rz = {rPos.size(), 2 * zPos.size() - 1};
   std::vector<double> minima_rz = {0., -2.};
-  std::vector<double> maxima_rz = {3., 3.};
+  std::vector<double> maxima_rz = {2., 2.};
   BOOST_CHECK(mapper_rz.getNBins() == nBins_rz);
   auto vec = mapper_rz.getNBins();
   auto vec0 = mapper_rz.getMin();
@@ -184,7 +189,7 @@ BOOST_AUTO_TEST_CASE(bfield_symmetry) {
   std::vector<size_t> nBins_xyz = {2 * xPos.size() - 1, 2 * yPos.size() - 1,
                                    2 * zPos.size() - 1};
   std::vector<double> minima_xyz = {-2., -2., -2.};
-  std::vector<double> maxima_xyz = {3., 3., 3.};
+  std::vector<double> maxima_xyz = {2., 2., 2.};
   BOOST_CHECK(mapper_xyz.getNBins() == nBins_xyz);
   // check minimum (should be first value because bin values are always
   // assigned to the left boundary)
@@ -280,7 +285,7 @@ BOOST_DATA_TEST_CASE(
   // check number of bins, minima & maxima
   std::vector<size_t> nBins_rz = {rPos.size(), 2 * zPos.size() - 1};
   std::vector<double> minima_rz = {0., -((nBins - 1) * stepZ)};
-  std::vector<double> maxima_rz = {nBins * stepR, nBins * stepZ};
+  std::vector<double> maxima_rz = {(nBins - 1) * stepR, (nBins - 1) * stepZ};
   BOOST_CHECK(mapper_rz.getNBins() == nBins_rz);
   // check minimum (should be first value because bin values are always
   // assigned to the left boundary)
@@ -306,8 +311,8 @@ BOOST_DATA_TEST_CASE(
                                    2 * zPos.size() - 1};
   std::vector<double> minima_xyz = {
       -((nBins - 1) * stepR), -((nBins - 1) * stepR), -((nBins - 1) * stepZ)};
-  std::vector<double> maxima_xyz = {nBins * stepR, nBins * stepR,
-                                    nBins * stepZ};
+  std::vector<double> maxima_xyz = {(nBins - 1) * stepR, (nBins - 1) * stepR,
+                                    (nBins - 1) * stepZ};
   BOOST_CHECK(mapper_xyz.getNBins() == nBins_xyz);
   // check minimum (should be first value because bin values are always
   // assigned to the left boundary)
