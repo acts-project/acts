@@ -116,9 +116,10 @@ class RootBFieldWriter {
     auto grid = mapper.getGrid();
 
     // Access the minima and maxima of all axes
+    auto grid = cfg.bField->getGrid();
     auto minima = grid.minPosition();
     auto maxima = grid.maxPosition();
-    auto nBins = mapper.getNBins();
+    auto nBins = cfg.bField->getNBins();
 
     if (cfg.gridType == GridType::xyz) {
       ACTS_INFO("Map will be written out in cartesian coordinates (x,y,z).");
