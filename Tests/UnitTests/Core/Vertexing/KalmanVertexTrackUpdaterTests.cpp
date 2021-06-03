@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
   std::mt19937 gen(mySeed);
 
   // Set up constant B-Field
-  auto bField = std::make_shared<ConstantBField>(0.0, 0.0, 1_T);
+  auto bField = std::make_shared<ConstantBField>(Vector3{0.0, 0.0, 1_T});
 
   // Set up Eigenstepper
   EigenStepper<> stepper(bField);

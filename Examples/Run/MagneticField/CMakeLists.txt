@@ -10,15 +10,15 @@ target_link_libraries(
     Boost::program_options)
 
 add_executable(
-  ActsExampleMagneticFieldAcess
+  ActsExampleMagneticFieldAccess
   BFieldAccessExample.cpp)
 target_link_libraries(
-  ActsExampleMagneticFieldAcess
+  ActsExampleMagneticFieldAccess
   PRIVATE
     ActsCore
     ActsExamplesFramework ActsExamplesCommon
     ActsExamplesMagneticField ActsExamplesIoRoot Boost::program_options)
 
 install(
-  TARGETS ActsExampleMagneticField ActsExampleMagneticFieldAcess
+  TARGETS ActsExampleMagneticField ActsExampleMagneticFieldAccess
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

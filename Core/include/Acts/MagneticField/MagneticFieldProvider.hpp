@@ -35,23 +35,6 @@ class MagneticFieldProvider {
   /// @return magnetic field vector at given position
   virtual Vector3 getField(const Vector3& position, Cache& cache) const = 0;
 
-  /// @brief retrieve magnetic field value
-  ///
-  /// @param [in] position global 3D position
-  /// @param [in,out] cache Cache object. Contains field cell used for
-  /// interpolation
-  ///
-  /// @return magnetic field vector at given position
-  virtual Vector3 getField(const Vector3& position) const = 0;
-
-  /// @brief retrieve magnetic field value & its gradient
-  ///
-  /// @param [in]  position   global 3D position
-  /// @param [out] derivative gradient of magnetic field vector as (3x3) matrix
-  /// @return magnetic field vector
-  virtual Vector3 getFieldGradient(const Vector3& position,
-                                   ActsMatrix<3, 3>& derivative) const = 0;
-
   /// @brief retrieve magnetic field value & its gradient
   ///
   /// @param [in]  position   global 3D position

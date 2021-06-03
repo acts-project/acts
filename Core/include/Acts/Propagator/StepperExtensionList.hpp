@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Propagator/detail/Auctioneer.hpp"
-#include "Acts/Propagator/detail/stepper_extension_list_implementation.hpp"
 #include "Acts/Utilities/detail/Extendable.hpp"
 #include "Acts/Utilities/detail/MPL/all_of.hpp"
 #include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
@@ -44,8 +43,6 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   // Access to all extensions
   using detail::Extendable<extensions...>::tuple;
 
-  using impl = detail::stepper_extension_list_impl<nExtensions>;
-
   // Vector of valid extensions for a step
   std::array<bool, nExtensions> validExtensions;
 
@@ -63,14 +60,49 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   template <typename propagator_state_t, typename stepper_t>
   bool validExtensionForStep(const propagator_state_t& state,
                              const stepper_t& stepper) {
-    std::array<int, nExtensions> bids;
-    // Ask all extensions for a boolean statement of their validity
-    impl::bid(tuple(), state, stepper, bids);
-    // Post-process the vector in an auctioneer
+    const auto bids = std::apply(
+        [&](const auto&... ext) {
+          return std::array<int, nExtensions>{ext.bid(state, stepper)...};
+        },
+        tuple());
+
     validExtensions = state.stepping.auctioneer(std::move(bids));
 
     return (std::find(validExtensions.begin(), validExtensions.end(), true) !=
             validExtensions.end());
+  }
+
+  /// @brief This functions broadcasts the call for evaluating a generic k. It
+  /// collects all arguments and extensions, test their validity for the
+  /// evaluation and passes them forward for evaluation and returns a boolean as
+  /// indicator if the evaluation is valid.
+  template <typename propagator_state_t, typename stepper_t>
+  bool k(const propagator_state_t& state, const stepper_t& stepper,
+         Vector3& knew, const Vector3& bField, std::array<double, 4>& kQoP,
+         const int i, const double h = 0., const Vector3& kprev = Vector3{}) {
+    // TODO replace with integer-templated lambda with C++20
+    auto impl = [&, i, h](auto intType, auto& implRef) {
+      constexpr int N = decltype(intType)::value;
+
+      if constexpr (N == 0) {
+        return true;
+      } else {
+        // If element is invalid: continue
+        if (!std::get<N - 1>(validExtensions)) {
+          return implRef(std::integral_constant<int, N - 1>{}, implRef);
+        }
+        // Continue as long as evaluations are 'true'
+        if (std::get<N - 1>(this->tuple())
+                .template k(state, stepper, knew, bField, kQoP, i, h, kprev)) {
+          return implRef(std::integral_constant<int, N - 1>{}, implRef);
+        } else {
+          // Break at false
+          return false;
+        }
+      }
+    };
+
+    return impl(std::integral_constant<int, nExtensions>{}, impl);
   }
 
   /// @brief This functions broadcasts the call for evaluating k1. It collects
@@ -80,8 +112,7 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   template <typename propagator_state_t, typename stepper_t>
   bool k1(const propagator_state_t& state, const stepper_t& stepper,
           Vector3& knew, const Vector3& bField, std::array<double, 4>& kQoP) {
-    return impl::k(tuple(), state, stepper, knew, bField, kQoP,
-                   validExtensions);
+    return k(state, stepper, knew, bField, kQoP, 0);
   }
 
   /// @brief This functions broadcasts the call for evaluating k2. It collects
@@ -91,8 +122,7 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   bool k2(const propagator_state_t& state, const stepper_t& stepper,
           Vector3& knew, const Vector3& bField, std::array<double, 4>& kQoP,
           const double h, const Vector3& kprev) {
-    return impl::k(tuple(), state, stepper, knew, bField, kQoP, validExtensions,
-                   1, h, kprev);
+    return k(state, stepper, knew, bField, kQoP, 1, h, kprev);
   }
 
   /// @brief This functions broadcasts the call for evaluating k3. It collects
@@ -102,8 +132,7 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   bool k3(const propagator_state_t& state, const stepper_t& stepper,
           Vector3& knew, const Vector3& bField, std::array<double, 4>& kQoP,
           const double h, const Vector3& kprev) {
-    return impl::k(tuple(), state, stepper, knew, bField, kQoP, validExtensions,
-                   2, h, kprev);
+    return k(state, stepper, knew, bField, kQoP, 2, h, kprev);
   }
 
   /// @brief This functions broadcasts the call for evaluating k4. It collects
@@ -113,8 +142,7 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   bool k4(const propagator_state_t& state, const stepper_t& stepper,
           Vector3& knew, const Vector3& bField, std::array<double, 4>& kQoP,
           const double h, const Vector3& kprev) {
-    return impl::k(tuple(), state, stepper, knew, bField, kQoP, validExtensions,
-                   3, h, kprev);
+    return k(state, stepper, knew, bField, kQoP, 3, h, kprev);
   }
 
   /// @brief This functions broadcasts the call of the method finalize(). It
@@ -123,7 +151,28 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   template <typename propagator_state_t, typename stepper_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
                 const double h, FreeMatrix& D) {
-    return impl::finalize(tuple(), state, stepper, h, D, validExtensions);
+    // TODO replace with integer-templated lambda with C++20
+    auto impl = [&, h](auto intType, auto& implRef) {
+      constexpr int N = decltype(intType)::value;
+
+      if constexpr (N == 0) {
+        return true;
+      } else {
+        // If element is invalid: continue
+        if (!std::get<N - 1>(validExtensions)) {
+          return implRef(std::integral_constant<int, N - 1>{}, implRef);
+        }
+        // Continue as long as evaluations are 'true'
+        if (std::get<N - 1>(this->tuple()).finalize(state, stepper, h, D)) {
+          return implRef(std::integral_constant<int, N - 1>{}, implRef);
+        } else {
+          // Break at false
+          return false;
+        }
+      }
+    };
+
+    return impl(std::integral_constant<int, nExtensions>{}, impl);
   }
 
   /// @brief This functions broadcasts the call of the method finalize(). It
@@ -132,7 +181,29 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   template <typename propagator_state_t, typename stepper_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
                 const double h) {
-    return impl::finalize(tuple(), state, stepper, h, validExtensions);
+    // TODO replace with integer-templated lambda with C++20
+    auto impl = [&, h](auto intType, auto& implRef) {
+      constexpr int N = decltype(intType)::value;
+
+      if constexpr (N == 0) {
+        return true;
+      } else {
+        // If element is invalid: continue
+        if (!std::get<N - 1>(validExtensions)) {
+          return implRef(std::integral_constant<int, N - 1>{}, implRef);
+        }
+
+        // Continue as long as evaluations are 'true'
+        if (std::get<N - 1>(this->tuple()).finalize(state, stepper, h)) {
+          return implRef(std::integral_constant<int, N - 1>{}, implRef);
+        } else {
+          // Break at false
+          return false;
+        }
+      }
+    };
+
+    return impl(std::integral_constant<int, nExtensions>{}, impl);
   }
 };
 
