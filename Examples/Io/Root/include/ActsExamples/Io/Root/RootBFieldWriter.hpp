@@ -111,10 +111,6 @@ class RootBFieldWriter {
     double Bz;
     outputTree->Branch("Bz", &Bz);
 
-    // Get the underlying mapper of the InterpolatedBFieldMap
-    auto mapper = cfg.bField->getMapper();
-    auto grid = mapper.getGrid();
-
     // Access the minima and maxima of all axes
     auto grid = cfg.bField->getGrid();
     auto minima = grid.minPosition();

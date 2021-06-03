@@ -1,7 +1,7 @@
 add_library(
   ActsExamplesMagneticField SHARED
-  src/FieldMapperRootIo.cpp
-  src/FieldMapperTextIo.cpp
+  src/FieldMapRootIo.cpp
+  src/FieldMapTextIo.cpp
   src/MagneticFieldOptions.cpp
   src/ScalableBFieldService.cpp)
 target_include_directories(
