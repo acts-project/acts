@@ -12,6 +12,7 @@
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
+#include <array>
 #include <limits>
 #include <string>
 
@@ -48,6 +49,8 @@ class ParticleSmearing final : public BareAlgorithm {
     double sigmaTheta = 1 * Acts::UnitConstants::degree;
     /// Relative momentum resolution.
     double sigmaPRel = 0.001;
+    /// Inflate the initial covariance matrix
+    std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
     /// Random numbers service.
     std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
   };
