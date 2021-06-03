@@ -213,6 +213,11 @@ class InterpolatedBFieldMap : public MagneticFieldProvider {
     return isInsideLocal(m_cfg.transformPos(position));
   }
 
+  /// @brief check whether given 3D position is inside look-up domain
+  ///
+  /// @param [in] position local N-D position
+  /// @return @c true if position is inside the defined look-up grid,
+  ///         otherwise @c false
   bool isInsideLocal(const ActsVector<DIM_POS>& gridPosition) const {
     for (unsigned int i = 0; i < DIM_POS; ++i) {
       if (gridPosition[i] < m_lowerLeft[i] ||
@@ -228,7 +233,6 @@ class InterpolatedBFieldMap : public MagneticFieldProvider {
   /// @return grid reference
   const Grid& getGrid() const { return m_cfg.grid; }
 
- public:
   /// @copydoc MagneticFieldProvider::makeCache(const MagneticFieldContext&)
   MagneticFieldProvider::Cache makeCache(
       const MagneticFieldContext& mctx) const override {
