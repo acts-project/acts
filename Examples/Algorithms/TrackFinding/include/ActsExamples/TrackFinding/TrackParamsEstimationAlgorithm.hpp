@@ -81,6 +81,8 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
     double sigmaQOverP = 0.1 / Acts::UnitConstants::GeV;
     /// Time resolution.
     double sigmaT0 = 1400 * Acts::UnitConstants::s;
+    /// Inflate tracks
+    std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
   };
 
   /// Construct the track parameters making algorithm.

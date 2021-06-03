@@ -86,6 +86,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
     }
   }
 
+  ACTS_DEBUG("Finalized track finding with " << trajectories.size()
+                                             << " track candidates.");
+
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
   return ActsExamples::ProcessCode::SUCCESS;
 }
