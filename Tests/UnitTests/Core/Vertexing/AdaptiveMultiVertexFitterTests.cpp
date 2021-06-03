@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   std::mt19937 gen(mySeed);
 
   // Set up constant B-Field
-  auto bField = std::make_shared<ConstantBField>(0.0, 0.0, 1_T);
+  auto bField = std::make_shared<ConstantBField>(Vector3{0.0, 0.0, 1_T});
 
   // Set up EigenStepper
   EigenStepper<> stepper(bField);
@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   // Set debug mode
   bool debugMode = false;
   // Set up constant B-Field
-  auto bField = std::make_shared<ConstantBField>(0.0, 0.0, 2_T);
+  auto bField = std::make_shared<ConstantBField>(Vector3{0.0, 0.0, 2_T});
 
   // Set up EigenStepper
   // EigenStepper<> stepper(bField);

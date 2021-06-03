@@ -73,7 +73,8 @@ int main(int argc, char* argv[]) {
   using Propagator_type = Propagator<Stepper_type>;
   using Covariance = BoundSymMatrix;
 
-  auto bField = std::make_shared<BField_type>(0, 0, BzInT * UnitConstants::T);
+  auto bField =
+      std::make_shared<BField_type>(Vector3{0, 0, BzInT * UnitConstants::T});
   Stepper_type atlas_stepper(std::move(bField));
   Propagator_type propagator(std::move(atlas_stepper));
 

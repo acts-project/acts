@@ -10,9 +10,9 @@ template <typename external_spacepoint_t>
 template <typename spacepoint_iterator_t>
 Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
-    std::function<Acts::Vector2(const external_spacepoint_t&, float, float,
-                                float)>
-        covTool,
+    std::function<std::pair<Acts::Vector3, Acts::Vector2>(
+        const external_spacepoint_t&, float, float, float)>
+        globTool,
     std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
     std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
     std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
@@ -42,9 +42,12 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
       continue;
     }
     const external_spacepoint_t& sp = **it;
-    float spX = sp.x();
-    float spY = sp.y();
-    float spZ = sp.z();
+    const auto& [spPosition, variance] =
+        globTool(sp, config.zAlign, config.rAlign, config.sigmaError);
+
+    float spX = spPosition[0];
+    float spY = spPosition[1];
+    float spZ = spPosition[2];
 
     if (spZ > zMax || spZ < zMin) {
       continue;
@@ -54,10 +57,6 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
       continue;
     }
 
-    // 2D variance tool provided by user
-    Acts::Vector2 variance =
-        covTool(sp, config.zAlign, config.rAlign, config.sigmaError);
-    Acts::Vector3 spPosition(spX, spY, spZ);
     auto isp =
         std::make_unique<const InternalSpacePoint<external_spacepoint_t>>(
             sp, spPosition, config.beamPos, variance);

@@ -1,267 +1,258 @@
 #!/usr/bin/env python3
-
-from pathlib import Path
-import io
-
-import click
-import github
-from github import Github
-import yaml
+import os
+import asyncio
+import subprocess
+from typing import List, Optional
 import re
-from sh import git
-from rich import print
+from pathlib import Path
+import sys
+import http
 
-from util import Spinner
+import aiohttp
+from gidgethub.aiohttp import GitHubAPI
+from gidgethub import InvalidField
+import gidgethub
+from semantic_release.history import angular_parser, get_new_version
+from semantic_release.errors import UnknownCommitMessageStyleError
+from semantic_release.history.logs import LEVELS
+from semantic_release.history.parser_helpers import ParsedCommit
+import sh
+import click
+from dotenv import load_dotenv
 
-default_branch_name = "main"
+load_dotenv()
 
-def get_current_branch():
-  return git("rev-parse", "--abbrev-ref", "HEAD").strip()
-
-def split_version(version):
-    version_ex = re.compile(r"^v?(\d+)\.(\d{1,2})\.(\d{1,2})$")
-    m = version_ex.match(version)
-    assert m is not None, f"Version {version} is not in valid format"
-    return tuple((int(m.group(i)) for i in range(1, 4)))
-
-def format_version(version):
-    return "v{:d}.{:>2d}.{:>02d}".format(*version)
-
-def check_branch_exists(branch):
-    with Spinner(f"Checking for {branch} branch"):
-      all_branches = [l.strip() for l in git.branch(all=True, _tty_out=False).strip().split("\n")]
-      for b in all_branches:
-        if b.endswith(branch):
-          return True
-    return False
-
-@click.group()
-@click.option("--token", "-T", required=True, envvar="GITHUB_TOKEN")
-@click.option("--repository", "-R", required=True, envvar="GITHUB_REPOSITORY")
-@click.option("--retry", default=3)
-@click.pass_context
-def main(ctx, token, repository, retry):
-    gh = Github(token, retry=retry)
-    repo = gh.get_repo(repository)
-
-    ctx.obj = gh, repo
+git = sh.git
 
 
-def confirm(*args, yes=False, **kwargs):
-  if yes == True:
-    return True
-  return click.confirm(*args, **kwargs)
-
-@main.command()
-@click.argument("tag_name")
-@click.option("--remote", default="origin")
-@click.option("--yes", "-y", is_flag=True, default=False)
-@click.pass_obj
-def tag(obj, tag_name, remote, yes):
-  current_branch = get_current_branch()
-  remote_url = git.remote("get-url", remote).strip()
-
-  gh, repo = obj
+def run(cmd):
+    return subprocess.check_output(cmd).decode("utf-8").strip()
 
 
-  tag = split_version(tag_name)
-  tag_name = format_version(tag)
-  major, minor, fix = tag
+def get_repo():
+    # origin = run(["git", "remote", "get-url", "origin"])
+    repo = os.environ.get("GITHUB_REPOSITORY", None)
+    if repo is not None:
+        return repo
 
-  with Spinner(f"Checking for milestone for tag {tag_name}"):
-      tag_milestone = None
-      for ms in repo.get_milestones(state="all"):
-          if ms.title == tag_name:
-              tag_milestone = ms
-              break
-      assert tag_milestone is not None, "Did not find milestone for tag"
-
-  release_branch_name = f"release/v{major}.{minor:>02}.X"
-
-  with Spinner("Refreshing branches"):
-    git.fetch(all=True, prune=True)
-
-  if fix == 0:
-    # new minor release
-    with Spinner(f"Checking out and updating {default_branch_name}"):
-      git.checkout(default_branch_name)
-      git.pull()
+    origin = git.remote("get-url", "origin")
+    _, loc = origin.split(":", 1)
+    repo, _ = loc.split(".", 1)
+    return repo
 
 
-    assert not check_branch_exists(release_branch_name), "For new minor: release branch CANNOT exist yet"
-
-    with Spinner(f"Creating {release_branch_name}"):
-      git.checkout("-b", release_branch_name)
-  else:
-    assert check_branch_exists(release_branch_name), "For new fix: release brunch MUST exist"
-
-    with Spinner(f"Checking out {release_branch_name}"):
-      git.checkout(release_branch_name)
-
-  # we are not on release branch
-
-  version_file = Path("version_number")
-  assert version_file.exists(), "Version number file not found"
-
-  current_version_string = version_file.read_text()
-  print(f"Current version: [bold]{current_version_string}[/bold]")
-
-  if fix == 0:
-    assert current_version_string == "9.9.9", "Unexpected current version string found"
-  else:
-    assert current_version_string != f"{major}.{minor}.{fix-1}", "Unexpected current version string found"
-
-  version_string = f"{major}.{minor}.{fix}"
-  with Spinner(f"Bumping version number in '{version_file}' to '{version_string}'"):
-    with version_file.open("w") as fh:
-      fh.write(version_string)
-
-  with Spinner("Comitting"):
-    git.add(version_file)
-    git.commit(m=f"Bump version number to {version_string}")
-
-  with Spinner(f"Creating tag {tag_name}"):
-    git.tag(tag_name)
-
-  print(f"I will now: push tag [bold green]{tag_name}[/bold green] and branch [bold green]{release_branch_name}[/bold green] to [bold]{remote_url}[/bold]")
-  if not confirm("Continue?", yes=yes):
-    raise SystemExit("Aborting")
-
-  with Spinner(f"Pushing branch {release_branch_name}"):
-    git.push("-u", remote, release_branch_name)
-
-  with Spinner(f"Pushing tag {tag_name}"):
-    git.push(remote, tag_name)
+def get_current_version():
+    raw = git.describe().split("-")[0]
+    m = re.match(r"v(\d+\.\d+\.\d+)", raw)
+    return m.group(1)
 
 
-@main.command()
-@click.argument("tag_name")
-@click.option("--draft/--publish", default=True)
-@click.option("--yes", "-y", is_flag=True, default=False)
-@click.pass_obj
-def notes(obj, tag_name, draft, yes):
-    gh, repo = obj
+class Commit:
+    sha: str
+    message: str
 
-    label_file = repo.get_contents(".labels.yml", ref=default_branch_name).decoded_content
-    labels = yaml.safe_load(io.BytesIO(label_file))["labels"]
+    def __init__(self, sha: str, message: str):
+        self.sha = sha
+        self.message = self._normalize(message)
 
-    with Spinner(f"Finding tag {tag_name}"):
-        tag = None
-        for t in repo.get_tags():
-            if t.name == tag_name:
-                tag = t
-                break
-        assert tag is not None, "Did not find tag"
+    @staticmethod
+    def _normalize(message):
+        message = message.replace("\r", "\n")
+        return message
 
-    with Spinner(f"Loading milestone for tag {tag_name}"):
-        tag_milestone = None
-        for ms in repo.get_milestones(state="all"):
-            if ms.title == tag_name:
-                tag_milestone = ms
-                break
-        assert tag_milestone is not None, "Did not find milestone for tag"
+    def __str__(self):
+        message = self.message.split("\n")[0]
+        return f"Commit(sha='{self.sha[:8]}', message='{message}')"
 
-    with Spinner(f"Getting PRs for milestone {tag_milestone.title}"):
-        
-        prs = list(
-            gh.search_issues(
-              "", milestone=tag_milestone.title, repo=repo.full_name, type="pr", **{"is": "merged"}
-            )
-        )
 
-    assert not any(
-        [pr.state == "open" for pr in prs]
-    ), "PRs assigned to milestone that are still open!"
+_default_parser = angular_parser
 
-    click.echo("Have " + click.style(str(len(prs)), bold=True) + " PRs, all closed.")
 
-    body = ""
+def evaluate_version_bump(
+    commits: List[Commit], commit_parser=_default_parser
+) -> Optional[str]:
+    """
+    Adapted from: https://github.com/relekang/python-semantic-release/blob/master/semantic_release/history/logs.py#L22
+    """
+    bump = None
 
-    groups = {l: [] for l in sorted(labels)}
-    groups["Uncategorized"] = []
+    changes = []
+    commit_count = 0
 
-    for pr in prs:
-        pr_labels = [l.name for l in pr.labels]
-
-        assigned = False
-        for label in labels:
-            if label in pr_labels:
-                groups[label].append(pr)
-                assigned = True
-                break
-        if not assigned:
-          groups["Uncategorized"].append(pr)
-
-    for group, prs in groups.items():
-        if len(prs) == 0:
-            continue
-        name = group
-        if name.lower() == "bug":
-          name = "Bug Fixes"
-        body += f"#### {name}:\n\n"
-        for pr in prs:
-            body += f"- {pr.title} [#{pr.number}]({pr.html_url})\n"
-        body += "\n"
-
-    body = body.strip()
-
-    width, _ = click.get_terminal_size()
-
-    print()
-    click.secho(
-        "\n".join([l.ljust(width) for l in [""] + body.split("\n") + [""]]),
-        fg="black",
-        bg="white",
-    )
-    print()
-
-    release = None
-    with Spinner("Getting release"):
+    for commit in commits:
+        commit_count += 1
         try:
-            release = repo.get_release(tag.name)
-
-        except github.UnknownObjectException:
+            message = commit_parser(commit.message)
+            changes.append(message.bump)
+        except UnknownCommitMessageStyleError as err:
             pass
 
-    if release is not None:
-        # existing release, update
-
-        click.echo(
-            "Existing release {} is at {}".format(
-                click.style(release.title, bold=True),
-                click.style(release.html_url, bold=True),
-            )
-        )
-        if confirm(f"Update release {release.title}?", yes=yes):
-            with Spinner(f"Updating release {release.title}"):
-                release.update_release(name=release.title, message=body)
-            click.echo(
-                "Updated release is at {}".format(
-                    click.style(release.html_url, bold=True)
-                )
-            )
-
-    else:
-        # new release
-        if confirm(f"Create release for tag {tag.name} (draft: {draft})?", yes=yes):
-            with Spinner(f"Creating release {tag.name}"):
-                release = repo.create_git_release(
-                    tag=tag.name, name=tag.name, message=body, draft=draft
-                )
-            click.echo(
-                "Created release is at {}".format(
-                    click.style(release.html_url, bold=True)
-                )
-            )
+    if changes:
+        level = max(changes)
+        if level in LEVELS:
+            bump = LEVELS[level]
         else:
-          print("Not creating a release")
+            print(f"Unknown bump level {level}")
 
-    if tag_milestone.state == "open":
-        if confirm(f"Do you want me to close milestone {tag_milestone.title}?", yes=yes):
-            with Spinner(f"Closing milestone {tag_milestone.title}"):
-                tag_milestone.edit(title=tag_milestone.title, state="closed")
-        else:
-          print("Not closing milestone")
+    return bump
 
 
-main()
+def generate_changelog(commits, commit_parser=_default_parser) -> dict:
+    """
+    Modified from: https://github.com/relekang/python-semantic-release/blob/48972fb761ed9b0fb376fa3ad7028d65ff407ee6/semantic_release/history/logs.py#L78
+    """
+    changes: dict = {"breaking": []}
+
+    for commit in commits:
+        try:
+            message: ParsedCommit = commit_parser(commit.message)
+            if message.type not in changes:
+                changes[message.type] = list()
+
+            capital_message = (
+                message.descriptions[0][0].upper() + message.descriptions[0][1:]
+            )
+            changes[message.type].append((commit.sha, capital_message))
+
+            if message.breaking_descriptions:
+                for paragraph in message.breaking_descriptions:
+                    changes["breaking"].append((commit.sha, paragraph))
+            elif message.bump == 3:
+                changes["breaking"].append((commit.sha, message.descriptions[0]))
+
+        except UnknownCommitMessageStyleError as err:
+            pass
+
+    return changes
+
+
+def markdown_changelog(version: str, changelog: dict, header: bool = False) -> str:
+    output = f"## v{version}\n" if header else ""
+
+    for section, items in changelog.items():
+        if len(items) == 0:
+            continue
+        output += "\n### {0}\n".format(section.capitalize())
+
+        for item in items:
+            output += "* {0} ({1})\n".format(item[1], item[0])
+
+    return output
+
+
+async def main(draft, dry_run):
+    token = os.environ["GH_TOKEN"]
+    async with aiohttp.ClientSession(loop=asyncio.get_event_loop()) as session:
+        gh = GitHubAPI(session, __name__, oauth_token=token)
+
+        version_file = Path("version_number")
+        current_version = version_file.read_text()
+
+        tag_hash = str(git("rev-list", "-n", "1", f"v{current_version}").strip())
+        print("current_version:", current_version, "[" + tag_hash[:8] + "]")
+
+        sha = git("rev-parse", "HEAD").strip()
+        print("sha:", sha)
+
+        repo = get_repo()
+        print("repo:", repo)
+
+        commits_iter = gh.getiter(f"/repos/{repo}/commits?sha={sha}")
+
+        commits = []
+
+        try:
+          async for item in commits_iter:
+              commit_hash = item["sha"]
+              commit_message = item["commit"]["message"]
+              if commit_hash == tag_hash:
+                  break
+
+              try:
+                  _default_parser(commit_message)
+                  # if this succeeds, do nothing
+              except UnknownCommitMessageStyleError as err:
+                print("Unkown commit message style:")
+                print(commit_message)
+                if sys.stdout.isatty() and click.confirm("Edit effective message?"):
+                  commit_message = click.edit(commit_message)
+                  _default_parser(commit_message)
+
+              commit = Commit(commit_hash, commit_message)
+              commits.append(commit)
+              print("-", commit)
+        except gidgethub.BadRequest:
+          print("BadRequest for commit retrieval. That is most likely because you forgot to push the merge commit.")
+          return
+
+        if len(commits) > 100:
+            print(len(commits), "are a lot. Aborting!")
+            sys.exit(1)
+
+        bump = evaluate_version_bump(commits)
+        print("bump:", bump)
+        if bump is None:
+            print("-> nothing to do")
+            return
+        next_version = get_new_version(current_version, bump)
+        print("next version:", next_version)
+        next_tag = f"v{next_version}"
+
+        changes = generate_changelog(commits)
+        md = markdown_changelog(next_version, changes, header=False)
+
+        print(md)
+
+        if not dry_run:
+          version_file.write_text(next_version)
+
+          git.add(version_file)
+          git.commit(m=f"Bump to version {next_tag}")
+
+          # git.tag(next_tag)
+          target_hash = str(git("rev-parse", "HEAD")).strip()
+          print("target_hash:", target_hash)
+
+          git.push()
+
+          commit_ok = False
+          print("Waiting for commit", target_hash[:8], "to be received")
+          for _ in range(10):
+              try:
+                url = f"/repos/{repo}/commits/{target_hash}"
+                await gh.getitem(url)
+                commit_ok = True
+                break
+              except InvalidField as e:
+                  print("Commit", target_hash[:8], "not received yet")
+                  pass # this is what we want
+              await asyncio.sleep(0.5)
+
+          if not commit_ok:
+              print("Commit", target_hash[:8], "was not created on remote")
+              sys.exit(1)
+
+          print("Commit", target_hash[:8], "received")
+
+          await gh.post(
+              f"/repos/{repo}/releases",
+              data={
+                  "body": md,
+                  "tag_name": next_tag,
+                  "name": next_tag,
+                  "draft": draft,
+                  "target_commitish": target_hash,
+              },
+          )
+
+
+@click.command()
+@click.option("--draft/--no-draft", default=True)
+@click.option("--dry-run/--no-dry-run", default=False)
+def main_sync(*args, **kwargs):
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main(*args, **kwargs))
+
+
+if __name__ == "__main__":
+    main_sync()

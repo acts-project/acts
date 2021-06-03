@@ -173,7 +173,7 @@ BOOST_DATA_TEST_CASE(
   double q = -1 + 2 * charge;
 
   const double Bz = 2_T;
-  auto bField = std::make_shared<BField>(0, 0, Bz);
+  auto bField = std::make_shared<BField>(Vector3{0, 0, Bz});
   EigenStepper estepper(bField);
   EigenPropagator epropagator(std::move(estepper));
 

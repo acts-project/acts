@@ -55,11 +55,6 @@ Acts::Vector2 Acts::SolenoidBField::getField(const Vector2& position) const {
 }
 
 Acts::Vector3 Acts::SolenoidBField::getFieldGradient(
-    const Vector3& position, ActsMatrix<3, 3>& /*derivative*/) const {
-  return getField(position);
-}
-
-Acts::Vector3 Acts::SolenoidBField::getFieldGradient(
     const Vector3& position, ActsMatrix<3, 3>& /*derivative*/,
     MagneticFieldProvider::Cache& /*cache*/) const {
   return getField(position);

@@ -115,7 +115,7 @@ using EigenStepperType = EigenStepper<>;
 using EigenPropagatorType = Propagator<EigenStepperType>;
 
 const double Bz = 2_T;
-auto bField = std::make_shared<BFieldType>(0, 0, Bz);
+auto bField = std::make_shared<BFieldType>(Vector3{0, 0, Bz});
 EigenStepperType estepper(bField);
 EigenPropagatorType epropagator(std::move(estepper));
 

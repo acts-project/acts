@@ -168,6 +168,8 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
   trackParameters.reserve(seeds.size());
   tracks.reserve(seeds.size());
 
+  auto bCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
+
   // Loop over all found seeds to estimate track parameters
   for (size_t iseed = 0; iseed < seeds.size(); ++iseed) {
     const auto& seed = seeds[iseed];
@@ -185,7 +187,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
 
     // Get the magnetic field at the bottom space point
     Acts::Vector3 field = m_cfg.magneticField->getField(
-        {bottomSP->x(), bottomSP->y(), bottomSP->z()});
+        {bottomSP->x(), bottomSP->y(), bottomSP->z()}, bCache);
     // Estimate the track parameters from seed
     auto optParams = Acts::estimateTrackParamsFromSeed(
         ctx.geoContext, seed.sp().begin(), seed.sp().end(), *surface, field,
