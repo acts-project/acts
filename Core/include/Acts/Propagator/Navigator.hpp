@@ -136,25 +136,21 @@ class Navigator {
     boundaryTarget = 3
   };
 
-  /// Constructor with shared tracking geometry
-  ///
-  /// @param tGeometry The tracking geometry for the navigator
-  Navigator(std::shared_ptr<const TrackingGeometry> tGeometry = nullptr)
-      : trackingGeometry(std::move(tGeometry)) {}
+  struct Config {
+    /// Tracking Geometry for this Navigator
+    std::shared_ptr<const TrackingGeometry> trackingGeometry{nullptr};
 
-  /// Tracking Geometry for this Navigator
-  std::shared_ptr<const TrackingGeometry> trackingGeometry;
+    /// Configuration for this Navigator
+    /// stop at every sensitive surface (whether it has material or not)
+    bool resolveSensitive = true;
+    /// stop at every material surface (whether it is passive or not)
+    bool resolveMaterial = true;
+    /// stop at every surface regardless what it is
+    bool resolvePassive = false;
 
-  /// The tolerance used to defined "reached"
-  double tolerance = s_onSurfaceTolerance;
-
-  /// Configuration for this Navigator
-  /// stop at every sensitive surface (whether it has material or not)
-  bool resolveSensitive = true;
-  /// stop at every material surface (whether it is passive or not)
-  bool resolveMaterial = true;
-  /// stop at every surface regardless what it is
-  bool resolvePassive = false;
+    /// The tolerance used to defined "reached"
+    double tolerance = s_onSurfaceTolerance;
+  };
 
   /// Nested State struct
   ///
@@ -215,6 +211,11 @@ class Navigator {
     // The navigation stage (@todo: integrate break, target)
     Stage navigationStage = Stage::undefined;
   };
+
+  /// Constructor with configuration object
+  ///
+  /// @param cfg The navigator configuration
+  explicit Navigator(Config cfg) : m_cfg{std::move(cfg)} {}
 
   /// @brief Navigator status call, will be called in two modes
   ///
@@ -428,7 +429,8 @@ class Navigator {
     ACTS_VERBOSE(volInfo(state) << "Initialization.");
     // Set the world volume if it is not set
     if (not state.navigation.worldVolume) {
-      state.navigation.worldVolume = trackingGeometry->highestTrackingVolume();
+      state.navigation.worldVolume =
+          m_cfg.trackingGeometry->highestTrackingVolume();
     }
 
     // We set the current surface to the start surface
@@ -475,8 +477,9 @@ class Navigator {
                      << toString(stepper.position(state.stepping))
                      << " and direction "
                      << toString(stepper.direction(state.stepping)));
-        state.navigation.startVolume = trackingGeometry->lowestTrackingVolume(
-            state.geoContext, stepper.position(state.stepping));
+        state.navigation.startVolume =
+            m_cfg.trackingGeometry->lowestTrackingVolume(
+                state.geoContext, stepper.position(state.stepping));
         state.navigation.startLayer =
             state.navigation.startVolume
                 ? state.navigation.startVolume->associatedLayer(
@@ -691,8 +694,9 @@ class Navigator {
       if (state.navigation.currentVolume->hasBoundingVolumeHierarchy()) {
         // has hierarchy, use that, skip layer resolution
         NavigationOptions<Surface> navOpts(
-            state.stepping.navDir, true, resolveSensitive, resolveMaterial,
-            resolvePassive, nullptr, state.navigation.targetSurface);
+            state.stepping.navDir, true, m_cfg.resolveSensitive,
+            m_cfg.resolveMaterial, m_cfg.resolvePassive, nullptr,
+            state.navigation.targetSurface);
         navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
         double opening_angle = 0;
 
@@ -714,7 +718,8 @@ class Navigator {
           } else {
             s = state.stepping.stepSize.min();
           }
-          opening_angle = std::atan((1 - std::cos(s * ir)) / std::sin(s * ir));
+          opening_angle = std::atan((1 - std::cos(s * ir)) / std::sin(s *
+        ir));
         }
 
         ACTS_VERBOSE(volInfo(state) << "Estimating opening angle for frustum
@@ -789,8 +794,8 @@ class Navigator {
       ++state.navigation.navLayerIter;
     }
 
-    // Re-initialize target at last layer, only in case it is the target volume
-    // This avoids a wrong target volume estimation
+    // Re-initialize target at last layer, only in case it is the target
+    // volume This avoids a wrong target volume estimation
     if (state.navigation.currentVolume == state.navigation.targetVolume) {
       initializeTarget(state, stepper);
     }
@@ -1016,7 +1021,8 @@ class Navigator {
         /// get the target volume from the intersection
         auto tPosition = targetIntersection.intersection.position;
         state.navigation.targetVolume =
-            trackingGeometry->lowestTrackingVolume(state.geoContext, tPosition);
+            m_cfg.trackingGeometry->lowestTrackingVolume(state.geoContext,
+                                                         tPosition);
         state.navigation.targetLayer =
             state.navigation.targetVolume
                 ? state.navigation.targetVolume->associatedLayer(
@@ -1054,8 +1060,9 @@ class Navigator {
     auto startSurface = onStart ? state.navigation.startSurface : layerSurface;
     // Use navigation parameters and NavigationOptions
     NavigationOptions<Surface> navOpts(
-        state.stepping.navDir, true, resolveSensitive, resolveMaterial,
-        resolvePassive, startSurface, state.navigation.targetSurface);
+        state.stepping.navDir, true, m_cfg.resolveSensitive,
+        m_cfg.resolveMaterial, m_cfg.resolvePassive, startSurface,
+        state.navigation.targetSurface);
 
     std::vector<GeometryIdentifier> externalSurfaces;
     if (!state.navigation.externalSurfaces.empty()) {
@@ -1134,9 +1141,9 @@ class Navigator {
             : nullptr;
     // Create the navigation options
     // - and get the compatible layers, start layer will be excluded
-    NavigationOptions<Layer> navOpts(state.stepping.navDir, true,
-                                     resolveSensitive, resolveMaterial,
-                                     resolvePassive, startLayer, nullptr);
+    NavigationOptions<Layer> navOpts(
+        state.stepping.navDir, true, m_cfg.resolveSensitive,
+        m_cfg.resolveMaterial, m_cfg.resolvePassive, startLayer, nullptr);
     // Set also the target surface
     navOpts.targetSurface = state.navigation.targetSurface;
     navOpts.pathLimit = state.stepping.stepSize.value(ConstrainedStep::aborter);
@@ -1203,11 +1210,12 @@ class Navigator {
     const auto& logger = state.options.logger;
 
     // Void behavior in case no tracking geometry is present
-    if (!trackingGeometry) {
+    if (!m_cfg.trackingGeometry) {
       return true;
     }
     // turn the navigator into void when you are intructed to do nothing
-    if (!resolveSensitive && !resolveMaterial && !resolvePassive) {
+    if (!m_cfg.resolveSensitive && !m_cfg.resolveMaterial &&
+        !m_cfg.resolvePassive) {
       return true;
     }
 
@@ -1246,6 +1254,8 @@ class Navigator {
                 : "No Volume") +
            " | ";
   }
+
+  Config m_cfg;
 };
 
 }  // namespace Acts
