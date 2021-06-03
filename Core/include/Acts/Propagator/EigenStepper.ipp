@@ -148,8 +148,6 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     }
     sd.B_middle = *field;
 
-    std::cout << "B middle at " << pos1.transpose() << ": "
-              << sd.B_middle.transpose() << std::endl;
     if (!state.stepping.extension.k2(state, *this, sd.k2, sd.B_middle, sd.kQoP,
                                      half_h, sd.k1)) {
       return success(false);
