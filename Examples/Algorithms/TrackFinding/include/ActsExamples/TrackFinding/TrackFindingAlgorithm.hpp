@@ -23,6 +23,8 @@ namespace ActsExamples {
 
 class TrackFindingAlgorithm final : public BareAlgorithm {
  public:
+  using InputMeasurementContainer =
+      std::unordered_multimap<Acts::GeometryIdentifier, IndexSourceLink>;
   /// Track finder function that takes input measurements, initial trackstate
   /// and track finder options and returns some track-finder-specific result.
   using TrackFinderOptions =
@@ -31,7 +33,7 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   using TrackFinderResult = std::vector<
       Acts::Result<Acts::CombinatorialKalmanFilterResult<IndexSourceLink>>>;
   using TrackFinderFunction = std::function<TrackFinderResult(
-      const IndexSourceLinkContainer&, const TrackParametersContainer&,
+      const InputMeasurementContainer&, const TrackParametersContainer&,
       const TrackFinderOptions&)>;
 
   /// Create the track finder function implementation.

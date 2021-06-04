@@ -95,7 +95,7 @@ struct Fixture {
   std::vector<Acts::CurvilinearTrackParameters> endParameters;
 
   // generated measurements
-  std::vector<TestSourceLink> sourceLinks;
+  std::multimap<Acts::GeometryIdentifier, TestSourceLink> sourceLinks;
 
   // CKF implementation to be tested
   CombinatorialKalmanFilter ckf;
@@ -148,7 +148,7 @@ struct Fixture {
           measPropagator, geoCtx, magCtx, startParameters[trackId],
           detector.resolutions, rng, trackId);
       for (auto& sl : measurements.sourceLinks) {
-        sourceLinks.emplace_back(std::move(sl));
+        sourceLinks.emplace(std::move(sl.geometryId()), std::move(sl));
       }
     }
   }
