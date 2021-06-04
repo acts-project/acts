@@ -113,10 +113,11 @@ class RootBFieldWriter {
 
     // Get the underlying mapper of the InterpolatedBFieldMap
     auto mapper = cfg.bField->getMapper();
+    auto grid = mapper.getGrid();
 
     // Access the minima and maxima of all axes
-    auto minima = mapper.getMin();
-    auto maxima = mapper.getMax();
+    auto minima = grid.minPosition();
+    auto maxima = grid.maxPosition();
     auto nBins = mapper.getNBins();
 
     if (cfg.gridType == GridType::xyz) {
@@ -208,7 +209,7 @@ class RootBFieldWriter {
             double raw_z = minZ + k * stepZ;
             Acts::Vector3 position(raw_x, raw_y, raw_z);
             if (cfg.bField->isInside(position)) {
-              auto bField = cfg.bField->getField(position);
+              auto bField = cfg.bField->getField(position).value();
 
               x = raw_x / Acts::UnitConstants::mm;
               y = raw_y / Acts::UnitConstants::mm;
@@ -296,7 +297,7 @@ class RootBFieldWriter {
             double raw_r = minR + j * stepR;
             Acts::Vector3 position(raw_r * cos(phi), raw_r * sin(phi), raw_z);
             if (cfg.bField->isInside(position)) {
-              auto bField = cfg.bField->getField(position, bCache);
+              auto bField = cfg.bField->getField(position, bCache).value();
               z = raw_z / Acts::UnitConstants::mm;
               r = raw_r / Acts::UnitConstants::mm;
               Bz = bField.z() / Acts::UnitConstants::T;
