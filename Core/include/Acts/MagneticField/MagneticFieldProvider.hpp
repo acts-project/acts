@@ -46,6 +46,10 @@ class MagneticFieldProvider {
   virtual Result<Vector3> getFieldGradient(const Vector3& position,
                                            ActsMatrix<3, 3>& derivative,
                                            Cache& cache) const = 0;
+
+  virtual ~MagneticFieldProvider();
 };
+
+inline MagneticFieldProvider::~MagneticFieldProvider() = default;
 
 }  // namespace Acts
