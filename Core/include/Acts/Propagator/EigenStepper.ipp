@@ -117,7 +117,11 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   auto dir = direction(state.stepping);
 
   // First Runge-Kutta point (at current position)
-  sd.B_first = getField(state.stepping, pos);
+  auto fieldRes = getField(state.stepping, pos);
+  if (!fieldRes.ok()) {
+    return fieldRes.error();
+  }
+  sd.B_first = *fieldRes;
   if (!state.stepping.extension.validExtensionForStep(state, *this) ||
       !state.stepping.extension.k1(state, *this, sd.k1, sd.B_first, sd.kQoP)) {
     return 0.;
@@ -127,31 +131,44 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   // size, going up to the point where it can return an estimate of the local
   // integration error. The results are stated in the local variables above,
   // allowing integration to continue once the error is deemed satisfactory
-  const auto tryRungeKuttaStep = [&](const ConstrainedStep& h) -> bool {
+  const auto tryRungeKuttaStep = [&](const ConstrainedStep& h) -> Result<bool> {
+    // helpers because bool and std::error_code are ambiguous
+    constexpr auto success = &Result<bool>::success;
+    constexpr auto failure = &Result<bool>::failure;
+
     // State the square and half of the step size
     h2 = h * h;
     half_h = h * 0.5;
 
     // Second Runge-Kutta point
     const Vector3 pos1 = pos + half_h * dir + h2 * 0.125 * sd.k1;
-    sd.B_middle = getField(state.stepping, pos1);
+    auto field = getField(state.stepping, pos1);
+    if (!field.ok()) {
+      return failure(field.error());
+    }
+    sd.B_middle = *field;
+
     if (!state.stepping.extension.k2(state, *this, sd.k2, sd.B_middle, sd.kQoP,
                                      half_h, sd.k1)) {
-      return false;
+      return success(false);
     }
 
     // Third Runge-Kutta point
     if (!state.stepping.extension.k3(state, *this, sd.k3, sd.B_middle, sd.kQoP,
                                      half_h, sd.k2)) {
-      return false;
+      return success(false);
     }
 
     // Last Runge-Kutta point
     const Vector3 pos2 = pos + h * dir + h2 * 0.5 * sd.k3;
-    sd.B_last = getField(state.stepping, pos2);
+    field = getField(state.stepping, pos2);
+    if (!field.ok()) {
+      return failure(field.error());
+    }
+    sd.B_last = *field;
     if (!state.stepping.extension.k4(state, *this, sd.k4, sd.B_last, sd.kQoP, h,
                                      sd.k3)) {
-      return false;
+      return success(false);
     }
 
     // Compute and check the local integration error estimate
@@ -160,14 +177,22 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
               std::abs(sd.kQoP[0] - sd.kQoP[1] - sd.kQoP[2] + sd.kQoP[3])),
         1e-20);
 
-    return (error_estimate <= state.options.tolerance);
+    return success(error_estimate <= state.options.tolerance);
   };
 
   double stepSizeScaling = 1.;
   size_t nStepTrials = 0;
   // Select and adjust the appropriate Runge-Kutta step size as given
   // ATL-SOFT-PUB-2009-001
-  while (!tryRungeKuttaStep(state.stepping.stepSize)) {
+  while (true) {
+    auto res = tryRungeKuttaStep(state.stepping.stepSize);
+    if (!res.ok()) {
+      return res.error();
+    }
+    if (!!res.value()) {
+      break;
+    }
+
     stepSizeScaling =
         std::min(std::max(0.25, std::pow((state.options.tolerance /
                                           std::abs(2. * error_estimate)),

@@ -119,7 +119,7 @@ BOOST_DATA_TEST_CASE(
 
   Vector3 pos(r * std::cos(phi), r * std::sin(phi), z);
   Vector3 B = bSolenoidField.getField(pos) / Acts::UnitConstants::T;
-  Vector3 Bm = bFieldMap.getField(pos, bCache) / Acts::UnitConstants::T;
+  Vector3 Bm = bFieldMap.getField(pos, bCache).value() / Acts::UnitConstants::T;
 
   // test less than 5% deviation
   if (std::abs(r - R) > 10 && (std::abs(z) < L / 3. || r > 20)) {

@@ -211,7 +211,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_ABS(es.charge(esState), charge, eps);
   CHECK_CLOSE_ABS(es.time(esState), time, eps);
   //~ BOOST_CHECK_EQUAL(es.overstepLimit(esState), tolerance);
-  BOOST_CHECK_EQUAL(es.getField(esState, pos), bField->getField(pos, bCache));
+  BOOST_CHECK_EQUAL(es.getField(esState, pos).value(),
+                    bField->getField(pos, bCache).value());
 
   // Step size modifies
   const std::string originalStepSize = esState.stepSize.toString();

@@ -72,8 +72,12 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   Vector3 momentumAtPCA(phiV, th, qOvP);
 
   // get B-field z-component at current position
-  double Bz = m_cfg.bField->getField(VectorHelpers::position(positionAtPCA),
-                                     state.fieldCache)[eZ];
+  auto field = m_cfg.bField->getField(VectorHelpers::position(positionAtPCA),
+                                      state.fieldCache);
+  if (!field.ok()) {
+    return field.error();
+  }
+  double Bz = (*field)[eZ];
   double rho;
   // Curvature is infinite w/o b field
   if (Bz == 0. || std::abs(qOvP) < m_cfg.minQoP) {
