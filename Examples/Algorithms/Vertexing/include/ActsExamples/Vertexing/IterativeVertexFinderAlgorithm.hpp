@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -25,6 +25,10 @@ class IterativeVertexFinderAlgorithm final : public BareAlgorithm {
     std::string inputTrackParameters;
     /// Output proto vertex collection
     std::string outputProtoVertices;
+    /// Output vertex collection
+    std::string outputVertices = "vertices";
+    /// Output reconstruction time in ms
+    std::string outputTime = "time";
     /// The magnetic field
     std::shared_ptr<Acts::MagneticFieldProvider> bField;
   };
