@@ -43,6 +43,8 @@ class RootVertexPerformanceWriter final
     std::string inputFittedTracks;
     /// Input vertex collection.
     std::string inputVertices;
+    /// Input reconstruction time.
+    std::string inputTime;
     /// Output directory.
     std::string outputDir;
     /// Output filename.
@@ -95,6 +97,7 @@ class RootVertexPerformanceWriter final
   int m_nVtxReconstructable =
       -1;  ///< Max. number of reconstructable vertices (detector acceptance +
            ///< tracking efficiency)
+  int m_timeMS = -1;  ///< Reconstruction time in ms
 
   int getNumberOfReconstructableVertices(
       const SimParticleContainer& collection) const;
