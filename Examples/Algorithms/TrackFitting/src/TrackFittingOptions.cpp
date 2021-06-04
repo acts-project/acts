@@ -8,6 +8,8 @@
 
 #include "ActsExamples/TrackFitting/TrackFittingOptions.hpp"
 
+#include "ActsExamples/Utilities/Options.hpp"
+
 using namespace boost::program_options;
 
 void ActsExamples::Options::addFittingOptions(
@@ -22,4 +24,9 @@ void ActsExamples::Options::addFittingOptions(
                     "Correct for energyloss effects.");
   opt.add_options()("fit-pick-track", value<int>()->default_value(-1),
                     "Pick a single track by track number (-1 for all tracks)");
+  opt.add_options()(
+      "fit-initial-variance-inflation",
+      value<Reals<6>>()->default_value({{1., 1., 1., 1., 1., 1.}}),
+      "Inflation factor for the initial covariance for the Kalman filter, 6 "
+      "values are required in the form of i:j:k:l:m:n.");
 }

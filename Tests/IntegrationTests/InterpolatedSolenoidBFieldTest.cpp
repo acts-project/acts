@@ -86,6 +86,7 @@ auto makeFieldMap(const SolenoidBField& field) {
 
 Acts::SolenoidBField bSolenoidField({R, L, nCoils, bMagCenter});
 auto bFieldMap = makeFieldMap(bSolenoidField);
+auto bCache = bFieldMap.makeCache(Acts::MagneticFieldContext{});
 
 struct StreamWrapper {
   StreamWrapper(std::ofstream ofstr) : m_ofstr(std::move(ofstr)) {
@@ -118,7 +119,7 @@ BOOST_DATA_TEST_CASE(
 
   Vector3 pos(r * std::cos(phi), r * std::sin(phi), z);
   Vector3 B = bSolenoidField.getField(pos) / Acts::UnitConstants::T;
-  Vector3 Bm = bFieldMap.getField(pos) / Acts::UnitConstants::T;
+  Vector3 Bm = bFieldMap.getField(pos, bCache).value() / Acts::UnitConstants::T;
 
   // test less than 5% deviation
   if (std::abs(r - R) > 10 && (std::abs(z) < L / 3. || r > 20)) {

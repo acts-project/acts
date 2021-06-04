@@ -128,6 +128,7 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
                                      std::abs(zMax - pl.max(Acts::binZ))};
           pl.envelope[Acts::binR] = {std::abs(rMin - pl.min(Acts::binR)),
                                      std::abs(rMax - pl.max(Acts::binR))};
+          pl.extent.ranges[Acts::binR] = {rMin, rMax};
         }
       } else {
         throw std::logic_error(
