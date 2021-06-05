@@ -68,6 +68,28 @@ struct Detector {
       : store(geoCtx), geometry(store()) {}
 };
 
+/// The map(-like) container accessor
+template <typename container_t>
+struct TestContainerAccessor {
+  using key_type = typename container_t::key_type;
+  using value_type = typename container_t::mapped_type;
+  using iterator_type = typename container_t::const_iterator;
+
+  // count the number of elements with requested key
+  size_t count(const container_t& container, const key_type& key) const {
+    return container.count(key);
+  }
+
+  // get the range of elements with requested key
+  std::pair<iterator_type, iterator_type> equal_range(
+      const container_t& container, const key_type& a) const {
+    return container.equal_range(a);
+  }
+
+  // get the element using the iterator
+  value_type at(const iterator_type& it) const { return (*it).second; }
+};
+
 struct Fixture {
   using StraightPropagator =
       Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
@@ -80,8 +102,12 @@ struct Fixture {
   using CombinatorialKalmanFilter =
       Acts::CombinatorialKalmanFilter<ConstantFieldPropagator, KalmanUpdater,
                                       KalmanSmoother>;
+  using TestSourceLinkContainer =
+      std::unordered_multimap<Acts::GeometryIdentifier, TestSourceLink>;
+  using TestSourceLinkAccessor = TestContainerAccessor<TestSourceLinkContainer>;
   using CombinatorialKalmanFilterOptions =
-      Acts::CombinatorialKalmanFilterOptions<TestSourceLinkCalibrator,
+      Acts::CombinatorialKalmanFilterOptions<TestSourceLinkAccessor,
+                                             TestSourceLinkCalibrator,
                                              Acts::MeasurementSelector>;
 
   Acts::GeometryContext geoCtx;
@@ -95,7 +121,7 @@ struct Fixture {
   std::vector<Acts::CurvilinearTrackParameters> endParameters;
 
   // generated measurements
-  std::multimap<Acts::GeometryIdentifier, TestSourceLink> sourceLinks;
+  TestSourceLinkContainer sourceLinks;
 
   // CKF implementation to be tested
   CombinatorialKalmanFilter ckf;
@@ -148,7 +174,7 @@ struct Fixture {
           measPropagator, geoCtx, magCtx, startParameters[trackId],
           detector.resolutions, rng, trackId);
       for (auto& sl : measurements.sourceLinks) {
-        sourceLinks.emplace(std::move(sl.geometryId()), std::move(sl));
+        sourceLinks.emplace(sl.geometryId(), std::move(sl));
       }
     }
   }
@@ -179,7 +205,8 @@ struct Fixture {
 
   CombinatorialKalmanFilterOptions makeCkfOptions() const {
     return CombinatorialKalmanFilterOptions(
-        geoCtx, magCtx, calCtx, TestSourceLinkCalibrator(),
+        geoCtx, magCtx, calCtx, TestSourceLinkAccessor(),
+        TestSourceLinkCalibrator(),
         Acts::MeasurementSelector(measurementSelectorCfg),
         Acts::LoggerWrapper{*logger}, Acts::PropagatorPlainOptions());
   }
