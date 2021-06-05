@@ -234,7 +234,6 @@ class CombinatorialKalmanFilter {
   ///
   /// @tparam source_link_container_t The type of source link container
   /// @tparam source_link_accessor_t The type of source link accessor
-  /// @tparam source_link_t is an type fulfilling the @c SourceLinkConcept
   /// @tparam parameters_t The type of parameters used for "local" paremeters.
   /// @tparam calibrator_t The type of source link calibrator.
   /// @tparam measurement_selector_t The type of the measurement selector.
@@ -247,16 +246,18 @@ class CombinatorialKalmanFilter {
   /// The CombinatorialKalmanFilter Actor does not rely on the measurements to
   /// be sorted along the track.
   template <typename source_link_container_t, typename source_link_accessor_t,
-            typename source_link_t, typename parameters_t,
-            typename calibrator_t, typename measurement_selector_t>
+            typename parameters_t, typename calibrator_t,
+            typename measurement_selector_t>
   class Actor {
    public:
     using TipState = CombinatorialKalmanFilterTipState;
     using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, double>;
     using CurvilinearState =
         std::tuple<CurvilinearTrackParameters, BoundMatrix, double>;
+    // The SourceLink type fulfilling the @c SourceLinkConcept
+    using SourceLink = typename source_link_accessor_t::value_type;
     /// Broadcast the result_type
-    using result_type = CombinatorialKalmanFilterResult<source_link_t>;
+    using result_type = CombinatorialKalmanFilterResult<SourceLink>;
 
     /// The target surface
     const Surface* targetSurface = nullptr;
@@ -546,7 +547,7 @@ class CombinatorialKalmanFilter {
             *inputMeasurements, surface->geometryId());
         // Calibrate all the source links on the surface since the selection has
         // to be done based on calibrated measurement
-        std::vector<BoundVariantMeasurement<source_link_t>> measurements;
+        std::vector<BoundVariantMeasurement<SourceLink>> measurements;
         measurements.reserve(nSourcelinks);
         for (auto it = lower_it; it != upper_it; ++it) {
           measurements.emplace_back(
@@ -775,9 +776,9 @@ class CombinatorialKalmanFilter {
     /// @return The tip of added state and its state
     Result<std::pair<size_t, TipState>> addSourcelinkState(
         const TrackStatePropMask& stateMask, const BoundState& boundState,
-        const source_link_t& sourcelink,
-        const BoundVariantMeasurement<source_link_t>& measurement,
-        bool isOutlier, result_type& result, const GeometryContext& geoContext,
+        const SourceLink& sourcelink,
+        const BoundVariantMeasurement<SourceLink>& measurement, bool isOutlier,
+        result_type& result, const GeometryContext& geoContext,
         const size_t& prevTip, const TipState& prevTipState,
         size_t neighborTip = SIZE_MAX, size_t sharedTip = SIZE_MAX,
         LoggerWrapper logger = getDummyLogger()) const {
@@ -1158,14 +1159,14 @@ class CombinatorialKalmanFilter {
   };
 
   template <typename source_link_container_t, typename source_link_accessor_t,
-            typename source_link_t, typename parameters_t,
-            typename calibrator_t, typename measurement_selector_t>
+            typename parameters_t, typename calibrator_t,
+            typename measurement_selector_t>
   class Aborter {
    public:
     /// Broadcast the result_type
     using action_type =
-        Actor<source_link_container_t, source_link_accessor_t, source_link_t,
-              parameters_t, calibrator_t, measurement_selector_t>;
+        Actor<source_link_container_t, source_link_accessor_t, parameters_t,
+              calibrator_t, measurement_selector_t>;
 
     template <typename propagator_state_t, typename stepper_t,
               typename result_t>
@@ -1227,11 +1228,11 @@ class CombinatorialKalmanFilter {
 
     // Create the ActionList and AbortList
     using CombinatorialKalmanFilterAborter =
-        Aborter<source_link_container_t, source_link_accessor_t, SourceLink,
-                parameters_t, calibrator_t, measurement_selector_t>;
+        Aborter<source_link_container_t, source_link_accessor_t, parameters_t,
+                calibrator_t, measurement_selector_t>;
     using CombinatorialKalmanFilterActor =
-        Actor<source_link_container_t, source_link_accessor_t, SourceLink,
-              parameters_t, calibrator_t, measurement_selector_t>;
+        Actor<source_link_container_t, source_link_accessor_t, parameters_t,
+              calibrator_t, measurement_selector_t>;
     using CombinatorialKalmanFilterResult =
         typename CombinatorialKalmanFilterActor::result_type;
     using Actors = ActionList<CombinatorialKalmanFilterActor>;
