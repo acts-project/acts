@@ -205,4 +205,31 @@ groupByModule(const GeometryIdMultiset<T>& container) {
   return makeGroupBy(container, detail::GeometryIdGetter());
 }
 
+/// The accessor for the GeometryIdMultiset container
+///
+/// It wraps up a few lookup methods to be used in the Combinatorial Kalman
+/// Filter
+template <typename T>
+struct GeometryIdMultisetAccessor {
+  using key_type = Acts::GeometryIdentifier;
+  using value_type = typename GeometryIdMultiset<T>::value_type;
+  using iterator_type = typename GeometryIdMultiset<T>::const_iterator;
+
+  // count the number of elements with requested geoId
+  size_t count(const GeometryIdMultiset<T>& container,
+               const Acts::GeometryIdentifier& geoId) const {
+    return container.count(geoId);
+  }
+
+  // get the range of elements with requested geoId
+  std::pair<iterator_type, iterator_type> equal_range(
+      const GeometryIdMultiset<T>& container,
+      const Acts::GeometryIdentifier& geoId) const {
+    return container.equal_range(geoId);
+  }
+
+  // get the element using the iterator
+  value_type at(const iterator_type& it) const { return *it; }
+};
+
 }  // namespace ActsExamples
