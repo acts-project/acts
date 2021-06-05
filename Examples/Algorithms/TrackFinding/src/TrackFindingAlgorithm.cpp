@@ -58,21 +58,14 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   // Set the CombinatorialKalmanFilter options
   ActsExamples::TrackFindingAlgorithm::TrackFinderOptions options(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
-      MeasurementCalibrator(measurements),
+      IndexSourceLinkAccessor(), MeasurementCalibrator(measurements),
       Acts::MeasurementSelector(m_cfg.measurementSelectorCfg),
       Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
-
-  // Store the source links in map
-  InputMeasurementContainer inputMeasurements;
-  for (const auto& sl : sourceLinks) {
-    inputMeasurements.emplace(sl.geometryId(), sl);
-  }
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
                                           << " seeds.");
-  auto results =
-      m_cfg.findTracks(inputMeasurements, initialParameters, options);
+  auto results = m_cfg.findTracks(sourceLinks, initialParameters, options);
   // Loop over the track finding results for all initial parameters
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
     // The result for this seed
