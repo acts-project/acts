@@ -35,26 +35,35 @@ METHOD_TRAIT(at_t, at);
       struct SourceLinkAccessorConcept {
         constexpr static bool container_type_exists = exists<container_t, S>;
         static_assert(container_type_exists, "Container type not found");
-        constexpr static bool key_type_exists = exists<key_t, S>;
+  
+  	constexpr static bool key_type_exists = exists<key_t, S>;
         static_assert(key_type_exists, "Key type not found");
-        constexpr static bool value_type_exists = exists<value_t, S>;
+   
+   	constexpr static bool value_type_exists = exists<value_t, S>;
         static_assert(value_type_exists, "Value type not found");
-        constexpr static bool const_iterator_exists = exists<const_iterator_t, S>;
+   
+   	constexpr static bool const_iterator_exists = exists<const_iterator_t, S>;
         static_assert(const_iterator_exists, "Const iterator not found");
         
-        constexpr static bool count_exists = has_method<const S, size_t, count_t, const typename S::container_type&, const typename S::key_type&>;
+        constexpr static bool count_exists = has_method<const S,
+          size_t, count_t, const typename S::container_type&, const typename S::key_type&>;
         static_assert(count_exists, "count method not found");
-        constexpr static bool equal_range_exists = has_method<const S, std::pair<typename S::const_iterator, typename S::const_iterator>, equal_range_t, const typename S::container_type&, const typename S::key_type&>;
+     
+     	constexpr static bool equal_range_exists = has_method<const S,
+          std::pair<typename S::const_iterator, typename S::const_iterator>, 
+          equal_range_t, const typename S::container_type&, const typename S::key_type&>;
         static_assert(equal_range_exists, "equal_range method not found");
-        constexpr static bool at_exists = has_method<const S, const typename S::value_type&, at_t, const typename S::const_iterator&>;
+   
+   	constexpr static bool at_exists = has_method<const S,
+          const typename S::value_type&, at_t, const typename S::const_iterator&>;
         static_assert(at_exists, "at method not found");
 
         constexpr static bool value = require<container_type_exists,
                                               key_type_exists,
-					      value_type_exists,
-					      const_iterator_exists,
-					      count_exists,
-					      equal_range_exists,
+                                              value_type_exists,
+                                              const_iterator_exists,
+                                              count_exists,
+                                              equal_range_exists,
                                               at_exists>;
       };
 // clang-format on
