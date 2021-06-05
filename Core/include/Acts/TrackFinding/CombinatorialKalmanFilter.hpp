@@ -74,10 +74,10 @@ struct CombinatorialKalmanFilterOptions {
 
   /// PropagatorOptions with context
   ///
-  /// @param gctx The goemetry context for this track finding/fitting
+  /// @param gctx The geometry context for this track finding/fitting
   /// @param mctx The magnetic context for this track finding/fitting
   /// @param cctx The calibration context for this track finding/fitting
-  /// @param accessor_ The source link container accessor
+  /// @param accessor_ The source link accessor
   /// @param calibrator_ The source link calibrator
   /// @param measurementSelector_ The measurement selector
   /// @param logger_ The logger wrapper
@@ -116,7 +116,7 @@ struct CombinatorialKalmanFilterOptions {
   /// context object for the calibration
   std::reference_wrapper<const CalibrationContext> calibrationContext;
 
-  /// The source link container accessor
+  /// The source link accessor
   SourceLinkAccessor sourcelinkAccessor;
 
   /// The source link calibrator
@@ -158,7 +158,8 @@ struct CombinatorialKalmanFilterResult {
   // The indices of the 'tip' of the unfinished tracks
   std::vector<std::pair<size_t, CombinatorialKalmanFilterTipState>> activeTips;
 
-  // The indices of source links in multitrajectory
+  // The indices of track states and corresponding source links on different
+  // surfaces
   std::unordered_map<const Surface*, std::unordered_map<size_t, size_t>>
       sourcelinkTips;
 
@@ -231,6 +232,8 @@ class CombinatorialKalmanFilter {
 
   /// @brief Propagator Actor plugin for the CombinatorialKalmanFilter
   ///
+  /// @tparam source_link_container_t The type of source link container
+  /// @tparam source_link_accessor_t The type of source link accessor
   /// @tparam source_link_t is an type fulfilling the @c SourceLinkConcept
   /// @tparam parameters_t The type of parameters used for "local" paremeters.
   /// @tparam calibrator_t The type of source link calibrator.
@@ -258,7 +261,8 @@ class CombinatorialKalmanFilter {
     /// The target surface
     const Surface* targetSurface = nullptr;
 
-    /// Allows retrieving measurements for a surface
+    /// The input measurements which should have the geometry identifier as the
+    /// key type and are accessed with the help of the accessor
     const source_link_container_t* inputMeasurements;
 
     /// Whether to consider multiple scattering.
@@ -514,8 +518,8 @@ class CombinatorialKalmanFilter {
       // Initialize the number of branches on current surface
       size_t nBranchesOnSurface = 0;
 
-      // Try to find the surface in the measurement surfaces
-      auto nSourcelinks =
+      // Count the number of source links on the surface
+      size_t nSourcelinks =
           m_sourcelinkAccessor.count(*inputMeasurements, surface->geometryId());
       if (nSourcelinks) {
         // Screen output message
@@ -1140,7 +1144,7 @@ class CombinatorialKalmanFilter {
     /// The source link accesor
     source_link_accessor_t m_sourcelinkAccessor;
 
-    /// The measurement calibrator
+    /// The source link calibrator
     calibrator_t m_calibrator;
 
     /// The measurement selector
@@ -1179,6 +1183,7 @@ class CombinatorialKalmanFilter {
   /// and smoother
   ///
   /// @tparam source_link_container_t Type of the source link container
+  /// @tparam source_link_accessor_t Type of the source link accessor
   /// @tparam start_parameters_container_t Type of the initial parameters
   /// container
   /// @tparam calibrator_t Type of the source link calibrator
@@ -1210,6 +1215,11 @@ class CombinatorialKalmanFilter {
     using SourceLink = typename source_link_accessor_t::value_type;
     static_assert(SourceLinkConcept<SourceLink>,
                   "Source link does not fulfill SourceLinkConcept");
+    static_assert(
+        std::is_same<GeometryIdentifier,
+                     typename source_link_accessor_t::key_type>::value,
+        "The source link container does not have GeometryIdentifier as the key "
+        "type");
 
     const auto& logger = tfOptions.logger;
 
