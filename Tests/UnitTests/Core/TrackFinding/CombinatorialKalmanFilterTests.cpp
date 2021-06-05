@@ -71,23 +71,24 @@ struct Detector {
 /// The map(-like) container accessor
 template <typename container_t>
 struct TestContainerAccessor {
+  using container_type = container_t;
   using key_type = typename container_t::key_type;
   using value_type = typename container_t::mapped_type;
-  using iterator_type = typename container_t::const_iterator;
+  using const_iterator = typename container_t::const_iterator;
 
   // count the number of elements with requested key
-  size_t count(const container_t& container, const key_type& key) const {
+  size_t count(const container_type& container, const key_type& key) const {
     return container.count(key);
   }
 
   // get the range of elements with requested key
-  std::pair<iterator_type, iterator_type> equal_range(
-      const container_t& container, const key_type& a) const {
+  std::pair<const_iterator, const_iterator> equal_range(
+      const container_type& container, const key_type& a) const {
     return container.equal_range(a);
   }
 
   // get the element using the iterator
-  value_type at(const iterator_type& it) const { return (*it).second; }
+  const value_type& at(const const_iterator& it) const { return (*it).second; }
 };
 
 struct Fixture {
