@@ -31,11 +31,10 @@ The detector volumes and layers used in the space point maker are also configure
 
    $ <build>/bin/ActsExampleCKFTracksGeneric \
        --input-dir=data/sim_trackML/ttbar_mu200 \
-       --bf-value=0 0 2 \
+       --bf-constant-tesla=0:0:2 \
        --ckf-selection-chi2max 15 \
        --ckf-selection-nmax 10 \
        --output-dir=data/reco_trackML/ttbar_mu200 \
-       --digi-smear \
        --digi-config-file <source>/Examples/Algorithms/Digitization/share/default-smearing-config-generic.json \
        --geo-selection-config-file <source>/Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json
        
