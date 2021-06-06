@@ -138,7 +138,7 @@ particles.
 
 The output file structure will be the same as discussed above.
 
-Simulate an Open Data detector
+Simulate a DD4hep based detector
 --------------------------------
 
 Similar to the simulation of the generic detector, another example detector called *Open Data Detector* (ODD) based on the DD4hep description can be simulated with the ``ACTS_BUILD_DD4HEP_PLUGIN`` option enabled. For the DD4hep based detector, a xml file for the geometry description must be specified by the option ``--dd4hep-input``. In addition, a material mapping file must be provided via the option ``--mat-input-file`` in order to take into account the material effects in simulation. 
