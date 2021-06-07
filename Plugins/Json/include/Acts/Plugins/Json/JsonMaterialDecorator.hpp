@@ -47,7 +47,14 @@ class JsonMaterialDecorator : public IMaterialDecorator {
 
     std::ifstream ifj(jFileName.c_str());
     nlohmann::json jin;
-    ifj >> jin;
+
+    if (jFileName.find(".cbor") != std::string::npos) {
+      std::vector<std::uint8_t> iCbor((std::istreambuf_iterator<char>(ifj)),
+                                      std::istreambuf_iterator<char>());
+      jin = nlohmann::json::from_cbor(iCbor);
+    } else {
+      ifj >> jin;
+    }
 
     auto maps = jmConverter.jsonToMaterialMaps(jin);
     m_surfaceMaterialMap = maps.first;

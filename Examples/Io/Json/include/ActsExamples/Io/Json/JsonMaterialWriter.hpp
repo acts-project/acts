@@ -39,11 +39,21 @@ namespace ActsExamples {
 /// using the Json Geometry converter
 class JsonMaterialWriter {
  public:
+  struct Config {
+    /// The config class of the converter
+    Acts::MaterialMapJsonConverter::Config converterCfg;
+    /// Output file name
+    std::string fileName = "material";
+    /// Write the material map as a Json file
+    bool writeJson = true;
+    /// Write the material map as a CBOR file
+    bool writeCbor = false;
+  };
+
   /// Constructor
   ///
-  /// @param cfg The configuration struct of the converter
-  JsonMaterialWriter(const Acts::MaterialMapJsonConverter::Config& cfg,
-                     const std::string& fileName);
+  /// @param cfg The configuration struct of the writer
+  JsonMaterialWriter(const Config& cfg);
 
   /// Virtual destructor
   ~JsonMaterialWriter();
@@ -59,14 +69,11 @@ class JsonMaterialWriter {
   void write(const Acts::TrackingGeometry& tGeometry);
 
  private:
-  /// The config class of the converter
-  Acts::MaterialMapJsonConverter::Config m_cfg;
-
-  /// The file name
-  std::string m_fileName;
+  /// The config of the writer
+  Config m_cfg;
 
   /// Private access to the logging instance
-  const Acts::Logger& logger() const { return *m_cfg.logger; }
+  const Acts::Logger& logger() const { return *m_cfg.converterCfg.logger; }
 };
 
 }  // namespace ActsExamples
