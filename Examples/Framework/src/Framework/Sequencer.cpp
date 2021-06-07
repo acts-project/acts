@@ -23,9 +23,10 @@
 #include <tbb/tbb.h>
 
 ActsExamples::Sequencer::Sequencer(const Sequencer::Config& cfg)
-    : m_cfg(cfg)
-    , m_taskArena((m_cfg.numThreads < 0) ? tbb::task_arena::automatic : m_cfg.numThreads)
-    , m_logger(Acts::getDefaultLogger("Sequencer", m_cfg.logLevel)) {
+    : m_cfg(cfg),
+      m_taskArena((m_cfg.numThreads < 0) ? tbb::task_arena::automatic
+                                         : m_cfg.numThreads),
+      m_logger(Acts::getDefaultLogger("Sequencer", m_cfg.logLevel)) {
   ROOT::EnableThreadSafety();
 }
 
