@@ -51,17 +51,23 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
 
   // Set up the track parameters covariance (the same for all tracks)
   m_covariance(Acts::eBoundLoc0, Acts::eBoundLoc0) =
-      cfg.sigmaLoc0 * m_cfg.sigmaLoc0;
+      m_cfg.initialVarInflation[Acts::eBoundLoc0] * cfg.sigmaLoc0 *
+      m_cfg.sigmaLoc0;
   m_covariance(Acts::eBoundLoc1, Acts::eBoundLoc1) =
-      cfg.sigmaLoc1 * m_cfg.sigmaLoc1;
+      m_cfg.initialVarInflation[Acts::eBoundLoc1] * cfg.sigmaLoc1 *
+      m_cfg.sigmaLoc1;
   m_covariance(Acts::eBoundPhi, Acts::eBoundPhi) =
-      cfg.sigmaPhi * m_cfg.sigmaPhi;
+      m_cfg.initialVarInflation[Acts::eBoundPhi] * cfg.sigmaPhi *
+      m_cfg.sigmaPhi;
   m_covariance(Acts::eBoundTheta, Acts::eBoundTheta) =
-      cfg.sigmaTheta * m_cfg.sigmaTheta;
+      m_cfg.initialVarInflation[Acts::eBoundTheta] * cfg.sigmaTheta *
+      m_cfg.sigmaTheta;
   m_covariance(Acts::eBoundQOverP, Acts::eBoundQOverP) =
-      cfg.sigmaQOverP * m_cfg.sigmaQOverP;
+      m_cfg.initialVarInflation[Acts::eBoundQOverP] * cfg.sigmaQOverP *
+      m_cfg.sigmaQOverP;
   m_covariance(Acts::eBoundTime, Acts::eBoundTime) =
-      m_cfg.sigmaT0 * m_cfg.sigmaT0;
+      m_cfg.initialVarInflation[Acts::eBoundTime] * m_cfg.sigmaT0 *
+      m_cfg.sigmaT0;
 }
 
 ActsExamples::SimSeedContainer
@@ -162,6 +168,8 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
   trackParameters.reserve(seeds.size());
   tracks.reserve(seeds.size());
 
+  auto bCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
+
   // Loop over all found seeds to estimate track parameters
   for (size_t iseed = 0; iseed < seeds.size(); ++iseed) {
     const auto& seed = seeds[iseed];
@@ -178,8 +186,14 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     }
 
     // Get the magnetic field at the bottom space point
-    Acts::Vector3 field = m_cfg.magneticField->getField(
-        {bottomSP->x(), bottomSP->y(), bottomSP->z()});
+    auto fieldRes = m_cfg.magneticField->getField(
+        {bottomSP->x(), bottomSP->y(), bottomSP->z()}, bCache);
+    if (!fieldRes.ok()) {
+      ACTS_ERROR("Field lookup error: " << fieldRes.error());
+      return ProcessCode::ABORT;
+    }
+    Acts::Vector3 field = *fieldRes;
+
     // Estimate the track parameters from seed
     auto optParams = Acts::estimateTrackParamsFromSeed(
         ctx.geoContext, seed.sp().begin(), seed.sp().end(), *surface, field,

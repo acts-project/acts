@@ -187,6 +187,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   double stepSize = 123.;
   double tolerance = 234.;
   auto bField = std::make_shared<ConstantBField>(Vector3(1., 2.5, 33.33));
+  auto bCache = bField->makeCache(mfContext);
 
   // Construct the parameters
   Vector3 pos(1., 2., 3.);
@@ -210,7 +211,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_ABS(es.charge(esState), charge, eps);
   CHECK_CLOSE_ABS(es.time(esState), time, eps);
   //~ BOOST_CHECK_EQUAL(es.overstepLimit(esState), tolerance);
-  BOOST_CHECK_EQUAL(es.getField(esState, pos), bField->getField(pos));
+  BOOST_CHECK_EQUAL(es.getField(esState, pos).value(),
+                    bField->getField(pos, bCache).value());
 
   // Step size modifies
   const std::string originalStepSize = esState.stepSize.toString();
@@ -736,7 +738,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   ////////////////////////////////////////////////////////////////////
 
   // Re-launch the configuration with magnetic field
-  bField->setField(0., 1_T, 0.);
+  bField->setField(Vector3{0., 1_T, 0.});
   EigenStepper<
       StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
       detail::HighestValidAuctioneer>
