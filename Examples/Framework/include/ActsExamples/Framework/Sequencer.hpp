@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-#include "tbb/task_arena.h"
+#include <tbb/task_arena.h>
 
 namespace ActsExamples {
 
