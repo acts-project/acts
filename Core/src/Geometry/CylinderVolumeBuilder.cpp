@@ -544,6 +544,7 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
             std::min(lConfig.rMin, rMinD - m_cfg.layerEnvelopeR.first);
         lConfig.rMax =
             std::max(lConfig.rMax, rMaxD + m_cfg.layerEnvelopeR.second);
+        lConfig.rMin = std::max(0.0, lConfig.rMin);
         lConfig.zMin = std::min(lConfig.zMin, zMinD - m_cfg.layerEnvelopeZ);
         lConfig.zMax = std::max(lConfig.zMax, zMaxD + m_cfg.layerEnvelopeZ);
       }
