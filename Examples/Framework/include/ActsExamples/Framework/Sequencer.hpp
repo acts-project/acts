@@ -22,6 +22,8 @@
 #include <utility>
 #include <vector>
 
+#include "tbb/task_arena.h"
+
 namespace ActsExamples {
 
 /// A simple algorithm sequencer for event processing.
@@ -108,6 +110,7 @@ class Sequencer {
   std::vector<std::shared_ptr<IAlgorithm>> m_algorithms;
   std::vector<std::shared_ptr<IWriter>> m_writers;
   std::unique_ptr<const Acts::Logger> m_logger;
+  tbb::task_arena m_taskArena;
 
   const Acts::Logger& logger() const { return *m_logger; }
 };
