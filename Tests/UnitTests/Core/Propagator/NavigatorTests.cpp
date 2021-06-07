@@ -180,9 +180,9 @@ struct PropagatorState {
     void transportCovarianceToBound(State& /*unused*/,
                                     const Surface& /*surface*/) const {}
 
-    Vector3 getField(State& /*state*/, const Vector3& /*pos*/) const {
+    Result<Vector3> getField(State& /*state*/, const Vector3& /*pos*/) const {
       // get the field from the cell
-      return Vector3(0., 0., 0.);
+      return Result<Vector3>::success({0., 0., 0.});
     }
   };
 
