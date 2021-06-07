@@ -21,10 +21,11 @@ information to group simulated hits into tracks) and fits them.
 
    $ <build>/bin/ActsExampleTruthTracksGeneric \
        --input-dir=data/sim_trackML/ttbar_mu200 \
-       --bf-value=0 0 2 \
+       --digi-config-file <source>/Examples/Algorithms/Digitization/share/default-smearing-config-generic.json
+       --bf-constant-tesla=0:0:2 \
        --output-dir=data/reco_trackML/ttbar_mu200
 
-The magnetic field setup should be consistent between simulation and truth tracking. 
+The ``--digi-config-file`` specifies the path for the digitization configuration file. The magnetic field setup should be consistent between simulation and truth tracking. 
 
 Look at the truth tracking performance
 ----------------------
