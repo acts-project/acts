@@ -104,13 +104,13 @@ class Sequencer {
   std::pair<size_t, size_t> determineEventsRange() const;
 
   Config m_cfg;
+  tbb::task_arena m_taskArena;
   std::vector<std::shared_ptr<IService>> m_services;
   std::vector<std::shared_ptr<IContextDecorator>> m_decorators;
   std::vector<std::shared_ptr<IReader>> m_readers;
   std::vector<std::shared_ptr<IAlgorithm>> m_algorithms;
   std::vector<std::shared_ptr<IWriter>> m_writers;
   std::unique_ptr<const Acts::Logger> m_logger;
-  tbb::task_arena m_taskArena;
 
   const Acts::Logger& logger() const { return *m_logger; }
 };
