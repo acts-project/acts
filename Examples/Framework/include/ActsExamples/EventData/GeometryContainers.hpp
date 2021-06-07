@@ -211,12 +211,13 @@ groupByModule(const GeometryIdMultiset<T>& container) {
 /// Filter
 template <typename T>
 struct GeometryIdMultisetAccessor {
-  using container_type = GeometryIdMultiset<T>;
-  using key_type = Acts::GeometryIdentifier;
-  using value_type = typename GeometryIdMultiset<T>::value_type;
-  using const_iterator = typename GeometryIdMultiset<T>::const_iterator;
+  using Container = GeometryIdMultiset<T>;
+  using Key = Acts::GeometryIdentifier;
+  using Value = typename GeometryIdMultiset<T>::value_type;
+  using Iterator = typename GeometryIdMultiset<T>::const_iterator;
 
-  const GeometryIdMultiset<T>* container = nullptr;
+  // pointer to the container
+  const Container* container = nullptr;
 
   // count the number of elements with requested geoId
   size_t count(const Acts::GeometryIdentifier& geoId) const {
@@ -225,14 +226,14 @@ struct GeometryIdMultisetAccessor {
   }
 
   // get the range of elements with requested geoId
-  std::pair<const_iterator, const_iterator> range(
+  std::pair<Iterator, Iterator> range(
       const Acts::GeometryIdentifier& geoId) const {
     assert(container != nullptr);
     return container->equal_range(geoId);
   }
 
   // get the element using the iterator
-  const value_type& at(const const_iterator& it) const { return *it; }
+  const Value& at(const Iterator& it) const { return *it; }
 };
 
 }  // namespace ActsExamples

@@ -254,9 +254,9 @@ class CombinatorialKalmanFilter {
     using CurvilinearState =
         std::tuple<CurvilinearTrackParameters, BoundMatrix, double>;
     // The source link container type
-    using SourceLinkContainer = typename source_link_accessor_t::container_type;
+    using SourceLinkContainer = typename source_link_accessor_t::Container;
     // The SourceLink type fulfilling the @c SourceLinkConcept
-    using SourceLink = typename source_link_accessor_t::value_type;
+    using SourceLink = typename source_link_accessor_t::Value;
     /// Broadcast the result_type
     using result_type = CombinatorialKalmanFilterResult<SourceLink>;
 
@@ -1199,9 +1199,9 @@ class CombinatorialKalmanFilter {
             typename start_parameters_container_t, typename calibrator_t,
             typename measurement_selector_t,
             typename parameters_t = BoundTrackParameters>
-  std::vector<Result<CombinatorialKalmanFilterResult<
-      typename source_link_accessor_t::value_type>>>
-  findTracks(const typename source_link_accessor_t::container_type& sourcelinks,
+  std::vector<Result<
+      CombinatorialKalmanFilterResult<typename source_link_accessor_t::Value>>>
+  findTracks(const typename source_link_accessor_t::Container& sourcelinks,
              const start_parameters_container_t& initialParameters,
              const CombinatorialKalmanFilterOptions<
                  source_link_accessor_t, calibrator_t, measurement_selector_t>&
@@ -1209,12 +1209,12 @@ class CombinatorialKalmanFilter {
     static_assert(
         SourceLinkAccessorConcept<source_link_accessor_t>,
         "The source link accessor does not fullfill SourceLinkAccessorConcept");
-    using SourceLink = typename source_link_accessor_t::value_type;
+    using SourceLink = typename source_link_accessor_t::Value;
     static_assert(SourceLinkConcept<SourceLink>,
                   "Source link does not fulfill SourceLinkConcept");
     static_assert(
         std::is_same_v<GeometryIdentifier,
-                       typename source_link_accessor_t::key_type>,
+                       typename source_link_accessor_t::Key>,
         "The source link container does not have GeometryIdentifier as the key "
         "type");
 

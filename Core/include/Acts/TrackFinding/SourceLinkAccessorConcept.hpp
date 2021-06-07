@@ -18,13 +18,13 @@ namespace Concepts {
 namespace SourceLinkAccessor {
 
 template <typename T>
-using container_t = typename T::container_type;
+using container_t = typename T::Container;
 template <typename T>
-using key_t = typename T::key_type;
+using key_t = typename T::Key;
 template <typename T>
-using value_t = typename T::value_type;
+using value_t = typename T::Value;
 template <typename T>
-using const_iterator_t = typename T::const_iterator;
+using iterator_t = typename T::Iterator;
 
 METHOD_TRAIT(count_t, count);
 METHOD_TRAIT(range_t, range);
@@ -33,35 +33,35 @@ METHOD_TRAIT(at_t, at);
 // clang-format off
     template <typename S>
       struct SourceLinkAccessorConcept {
-        constexpr static bool container_type_exists = exists<container_t, S>;
-        static_assert(container_type_exists, "Container type not found");
-        constexpr static bool key_type_exists = exists<key_t, S>;
-        static_assert(key_type_exists, "Key type not found");
-        constexpr static bool value_type_exists = exists<value_t, S>;
-        static_assert(value_type_exists, "Value type not found");
-        constexpr static bool const_iterator_exists = exists<const_iterator_t, S>;
-        static_assert(const_iterator_exists, "Const iterator not found");
+        constexpr static bool container_exists = exists<container_t, S>;
+        static_assert(container_exists, "Container type not found");
+        constexpr static bool key_exists = exists<key_t, S>;
+        static_assert(key_exists, "Key type not found");
+        constexpr static bool value_exists = exists<value_t, S>;
+        static_assert(value_exists, "Value type not found");
+        constexpr static bool iterator_exists = exists<iterator_t, S>;
+        static_assert(iterator_exists, "Iterator type not found");
         
         constexpr static bool container_pointer_exists =
           std::is_same_v<std::decay_t<decltype(*(std::declval<S>().container))>, container_t<S>>;
         static_assert(container_pointer_exists, "Pointer to container not found");
 
         constexpr static bool count_exists = has_method<const S,
-          size_t, count_t, const typename S::key_type&>;
+          size_t, count_t, const typename S::Key&>;
         static_assert(count_exists, "count method not found");
         constexpr static bool range_exists = has_method<const S,
-          std::pair<typename S::const_iterator, typename S::const_iterator>,
-          range_t, const typename S::key_type&>;
+          std::pair<typename S::Iterator, typename S::Iterator>,
+          range_t, const typename S::Key&>;
         static_assert(range_exists, "range method not found");
         constexpr static bool at_exists = has_method<const S,
-          const typename S::value_type&, at_t, const typename S::const_iterator&>;
+          const typename S::Value&, at_t, const typename S::Iterator&>;
         static_assert(at_exists, "at method not found");
 
-        constexpr static bool value = require<container_type_exists,
-                                              key_type_exists,
-                                              value_type_exists,
+        constexpr static bool value = require<container_exists,
+                                              key_exists,
+                                              value_exists,
                                               container_pointer_exists,
-                                              const_iterator_exists,
+                                              iterator_exists,
                                               count_exists,
                                               range_exists,
                                               at_exists>;
