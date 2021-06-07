@@ -27,7 +27,7 @@ template <typename T>
 using const_iterator_t = typename T::const_iterator;
 
 METHOD_TRAIT(count_t, count);
-METHOD_TRAIT(equal_range_t, equal_range);
+METHOD_TRAIT(range_t, range);
 METHOD_TRAIT(at_t, at);
 
 // clang-format off
@@ -41,14 +41,18 @@ METHOD_TRAIT(at_t, at);
         static_assert(value_type_exists, "Value type not found");
         constexpr static bool const_iterator_exists = exists<const_iterator_t, S>;
         static_assert(const_iterator_exists, "Const iterator not found");
+        
+        constexpr static bool container_pointer_exists =
+          std::is_same_v<std::decay_t<decltype(*(std::declval<S>().container))>, container_t<S>>;
+        static_assert(container_pointer_exists, "Pointer to container not found");
 
         constexpr static bool count_exists = has_method<const S,
-          size_t, count_t, const typename S::container_type&, const typename S::key_type&>;
+          size_t, count_t, const typename S::key_type&>;
         static_assert(count_exists, "count method not found");
-        constexpr static bool equal_range_exists = has_method<const S,
+        constexpr static bool range_exists = has_method<const S,
           std::pair<typename S::const_iterator, typename S::const_iterator>,
-          equal_range_t, const typename S::container_type&, const typename S::key_type&>;
-        static_assert(equal_range_exists, "equal_range method not found");
+          range_t, const typename S::key_type&>;
+        static_assert(range_exists, "range method not found");
         constexpr static bool at_exists = has_method<const S,
           const typename S::value_type&, at_t, const typename S::const_iterator&>;
         static_assert(at_exists, "at method not found");
@@ -56,9 +60,10 @@ METHOD_TRAIT(at_t, at);
         constexpr static bool value = require<container_type_exists,
                                               key_type_exists,
                                               value_type_exists,
+                                              container_pointer_exists,
                                               const_iterator_exists,
                                               count_exists,
-                                              equal_range_exists,
+                                              range_exists,
                                               at_exists>;
       };
 // clang-format on

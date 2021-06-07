@@ -263,10 +263,6 @@ class CombinatorialKalmanFilter {
     /// The target surface
     const Surface* targetSurface = nullptr;
 
-    /// The input measurements which should have the geometry identifier as the
-    /// key type and are accessed with the help of the accessor
-    const SourceLinkContainer* inputMeasurements;
-
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
 
@@ -521,8 +517,7 @@ class CombinatorialKalmanFilter {
       size_t nBranchesOnSurface = 0;
 
       // Count the number of source links on the surface
-      size_t nSourcelinks =
-          m_sourcelinkAccessor.count(*inputMeasurements, surface->geometryId());
+      size_t nSourcelinks = m_sourcelinkAccessor.count(surface->geometryId());
       if (nSourcelinks) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
@@ -544,8 +539,8 @@ class CombinatorialKalmanFilter {
         const auto& boundParams = std::get<BoundTrackParameters>(boundState);
 
         // Get all source links on the surface
-        auto [lower_it, upper_it] = m_sourcelinkAccessor.equal_range(
-            *inputMeasurements, surface->geometryId());
+        auto [lower_it, upper_it] =
+            m_sourcelinkAccessor.range(surface->geometryId());
         // Calibrate all the source links on the surface since the selection has
         // to be done based on calibrated measurement
         std::vector<BoundVariantMeasurement<SourceLink>> measurements;
@@ -1246,10 +1241,9 @@ class CombinatorialKalmanFilter {
     // Set the trivial propagator options
     propOptions.setPlainOptions(tfOptions.propagatorPlainOptions);
 
-    // Catch the actor and set the measurements
+    // Catch the actor
     auto& combKalmanActor =
         propOptions.actionList.template get<CombinatorialKalmanFilterActor>();
-    combKalmanActor.inputMeasurements = &sourcelinks;
     combKalmanActor.targetSurface = tfOptions.referenceSurface;
     combKalmanActor.multipleScattering = tfOptions.multipleScattering;
     combKalmanActor.energyLoss = tfOptions.energyLoss;
@@ -1257,6 +1251,8 @@ class CombinatorialKalmanFilter {
 
     // copy source link accessor, calibrator and measurement selector
     combKalmanActor.m_sourcelinkAccessor = tfOptions.sourcelinkAccessor;
+    // set the pointer to the source links
+    combKalmanActor.m_sourcelinkAccessor.container = &sourcelinks;
     combKalmanActor.m_calibrator = tfOptions.calibrator;
     combKalmanActor.m_measurementSelector = tfOptions.measurementSelector;
 

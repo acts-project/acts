@@ -76,15 +76,18 @@ struct TestContainerAccessor {
   using value_type = typename container_t::mapped_type;
   using const_iterator = typename container_t::const_iterator;
 
+  const container_t* container = nullptr;
+
   // count the number of elements with requested key
-  size_t count(const container_type& container, const key_type& key) const {
-    return container.count(key);
+  size_t count(const key_type& key) const {
+    assert(container != nullptr);
+    return container->count(key);
   }
 
   // get the range of elements with requested key
-  std::pair<const_iterator, const_iterator> equal_range(
-      const container_type& container, const key_type& a) const {
-    return container.equal_range(a);
+  std::pair<const_iterator, const_iterator> range(const key_type& a) const {
+    assert(container != nullptr);
+    return container->equal_range(a);
   }
 
   // get the element using the iterator
