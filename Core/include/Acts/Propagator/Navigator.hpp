@@ -718,8 +718,7 @@ class Navigator {
           } else {
             s = state.stepping.stepSize.min();
           }
-          opening_angle = std::atan((1 - std::cos(s * ir)) / std::sin(s *
-        ir));
+          opening_angle = std::atan((1 - std::cos(s * ir)) / std::sin(s * ir));
         }
 
         ACTS_VERBOSE(volInfo(state) << "Estimating opening angle for frustum
@@ -794,8 +793,8 @@ class Navigator {
       ++state.navigation.navLayerIter;
     }
 
-    // Re-initialize target at last layer, only in case it is the target
-    // volume This avoids a wrong target volume estimation
+    // Re-initialize target at last layer, only in case it is the target volume
+    // This avoids a wrong target volume estimation
     if (state.navigation.currentVolume == state.navigation.targetVolume) {
       initializeTarget(state, stepper);
     }
