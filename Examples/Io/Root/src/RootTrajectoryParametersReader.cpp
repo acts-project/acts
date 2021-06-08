@@ -132,9 +132,22 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersReader::read(
     std::vector<Acts::BoundTrackParameters> trackParameterCollection;
     SimParticleContainer truthParticleCollection;
 
+    // Function to find the entry that has the event number as executed
+    auto getEntry = [&]() -> unsigned int {
+      for (unsigned int j = 0; j < m_inputChain->GetEntries(); ++j) {
+        m_inputChain->GetEntry(j);
+        if (m_eventNr == context.eventNumber) {
+          return j;
+        }
+      }
+      return context.eventNumber;
+    };
+
     // Read the correct entry: batch size * event_number + ib
-    m_inputChain->GetEntry(context.eventNumber);
-    ACTS_VERBOSE("Reading entry: " << context.eventNumber);
+    auto entry = getEntry();
+    m_inputChain->GetEntry(entry);
+    ACTS_INFO("Reading event: " << context.eventNumber << " stored as entry "
+                                << entry << " of the input tree");
 
     unsigned int nTracks = m_eLOC0_fit->size();
     for (unsigned int i = 0; i < nTracks; i++) {
