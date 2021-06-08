@@ -55,8 +55,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
 
   using Grid_t =
       detail::Grid<Vector3, detail::EquidistantAxis, detail::EquidistantAxis>;
-  using Mapper_t = InterpolatedBFieldMapper<Grid_t>;
-  using BField_t = InterpolatedBFieldMap<Mapper_t>;
+  using BField_t = InterpolatedBFieldMap<Grid_t>;
 
   Grid_t g(std::make_tuple(std::move(r), std::move(z)));
 
@@ -69,13 +68,9 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
     }
   }
 
-  // create field mapping
-  Mapper_t mapper(transformPos, transformBField, std::move(g));
-  BField_t::Config config(std::move(mapper));
-  config.scale = 1.;
-
   // create BField service
-  BField_t b(std::move(config));
+  BField_t b{{transformPos, transformBField, std::move(g)}};
+
   auto bCacheAny = b.makeCache(mfContext);
   BField_t::Cache& bCache = bCacheAny.get<BField_t::Cache>();
 
@@ -117,8 +112,9 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
                   BField::value({{perp(pos), pos.z()}}), 1e-6);
 
   auto& c = *bCache.fieldCell;
-  BOOST_CHECK(c.isInside(pos));
-  CHECK_CLOSE_REL(c.getField(pos), BField::value({{perp(pos), pos.z()}}), 1e-6);
+  BOOST_CHECK(c.isInside(transformPos(pos)));
+  CHECK_CLOSE_REL(c.getField(transformPos(pos)),
+                  BField::value({{perp(pos), pos.z()}}), 1e-6);
 
   ActsMatrix<3, 3> deriv;
 
@@ -139,8 +135,9 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   CHECK_CLOSE_REL(b.getField(pos, bCacheAny).value(),
                   BField::value({{perp(pos), pos.z()}}), 1e-6);
   c = *bCache2.fieldCell;
-  BOOST_CHECK(c.isInside(pos));
-  CHECK_CLOSE_REL(c.getField(pos), BField::value({{perp(pos), pos.z()}}), 1e-6);
+  BOOST_CHECK(c.isInside(transformPos(pos)));
+  CHECK_CLOSE_REL(c.getField(transformPos(pos)),
+                  BField::value({{perp(pos), pos.z()}}), 1e-6);
 
   pos << 2, 3, -4;
   BOOST_CHECK(!b.isInside(pos));
@@ -152,15 +149,16 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   CHECK_CLOSE_REL(b.getField(pos, bCacheAny).value(),
                   BField::value({{perp(pos), pos.z()}}), 1e-6);
   c = *bCache3.fieldCell;
-  BOOST_CHECK(c.isInside(pos));
-  CHECK_CLOSE_REL(c.getField(pos), BField::value({{perp(pos), pos.z()}}), 1e-6);
+  BOOST_CHECK(c.isInside(transformPos(pos)));
+  CHECK_CLOSE_REL(c.getField(transformPos(pos)),
+                  BField::value({{perp(pos), pos.z()}}), 1e-6);
 
   // some field cell tests
-  BOOST_CHECK(not c.isInside((pos << 3, 2, -3.7).finished()));
-  BOOST_CHECK(not c.isInside((pos << -2, 3, -4.7).finished()));
-  BOOST_CHECK(not c.isInside((pos << -2, 3, 4.7).finished()));
-  BOOST_CHECK(c.isInside((pos << 0, 2, -4.7).finished()));
-  BOOST_CHECK(not c.isInside((pos << 5, 2, 14.).finished()));
+  BOOST_CHECK(not c.isInside(transformPos((pos << 3, 2, -3.7).finished())));
+  BOOST_CHECK(not c.isInside(transformPos((pos << -2, 3, -4.7).finished())));
+  BOOST_CHECK(not c.isInside(transformPos((pos << -2, 3, 4.7).finished())));
+  BOOST_CHECK(c.isInside(transformPos((pos << 0, 2, -4.7).finished())));
+  BOOST_CHECK(not c.isInside(transformPos((pos << 5, 2, 14.).finished())));
 }
 }  // namespace Test
 

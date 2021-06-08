@@ -22,20 +22,30 @@
 
 namespace Acts {
 
-/// @brief struct for mapping global 3D positions to field values
+/// @ingroup MagneticField
+/// @brief interpolate magnetic field value from field values on a given grid
 ///
-/// @tparam DIM_POS Dimensionality of position in magnetic field map
-/// @tparam DIM_BFIELD Dimensionality of BField in magnetic field map
+/// This class implements a magnetic field service which is initialized by a
+/// field map defined by:
+/// - a list of field values on a regular grid in some n-Dimensional space,
+/// - a transformation of global 3D coordinates onto this n-Dimensional
+/// space.
+/// - a transformation of local n-Dimensional magnetic field coordinates into
+/// global (cartesian) 3D coordinates
 ///
-/// Global 3D positions are transformed into a @c DIM_POS Dimensional
-/// vector which
-/// is used to look up the magnetic field value in the underlying field map.
-template <typename G>
-struct InterpolatedBFieldMapper {
+/// The magnetic field value for a given global position is then determined by:
+/// - mapping the position onto the grid,
+/// - looking up the magnetic field values on the closest grid points,
+/// - doing a linear interpolation of these magnetic field values.
+///
+/// @tparam grid_t The Grid type which provides the field storage and
+/// interpolation
+template <typename grid_t>
+class InterpolatedBFieldMap : public MagneticFieldProvider {
  public:
-  using Grid_t = G;
-  using FieldType = typename Grid_t::value_type;
-  static constexpr size_t DIM_POS = Grid_t::DIM;
+  using Grid = grid_t;
+  using FieldType = typename Grid::value_type;
+  static constexpr size_t DIM_POS = Grid::DIM;
 
   /// @brief struct representing smallest grid unit in magnetic field grid
   ///
@@ -48,7 +58,6 @@ struct InterpolatedBFieldMapper {
    public:
     /// @brief default constructor
     ///
-    /// @param [in] transform   mapping of global 3D coordinates onto grid space
     /// @param [in] lowerLeft   generalized lower-left corner of hyper box
     ///                         (containing the minima of the hyper box along
     ///                         each Dimension)
@@ -57,12 +66,10 @@ struct InterpolatedBFieldMapper {
     ///                         each Dimension)
     /// @param [in] fieldValues field values at the hyper box corners sorted in
     ///                         the canonical order defined in Acts::interpolate
-    FieldCell(std::function<ActsVector<DIM_POS>(const Vector3&)> transformPos,
-              std::array<double, DIM_POS> lowerLeft,
+    FieldCell(std::array<double, DIM_POS> lowerLeft,
               std::array<double, DIM_POS> upperRight,
               std::array<Vector3, N> fieldValues)
-        : m_transformPos(std::move(transformPos)),
-          m_lowerLeft(std::move(lowerLeft)),
+        : m_lowerLeft(std::move(lowerLeft)),
           m_upperRight(std::move(upperRight)),
           m_fieldValues(std::move(fieldValues)) {}
 
@@ -72,10 +79,9 @@ struct InterpolatedBFieldMapper {
     /// @return magnetic field value at the given position
     ///
     /// @pre The given @c position must lie within the current field cell.
-    Vector3 getField(const Vector3& position) const {
+    Vector3 getField(const ActsVector<DIM_POS>& position) const {
       // defined in Interpolation.hpp
-      return interpolate(m_transformPos(position), m_lowerLeft, m_upperRight,
-                         m_fieldValues);
+      return interpolate(position, m_lowerLeft, m_upperRight, m_fieldValues);
     }
 
     /// @brief check whether given 3D position is inside this field cell
@@ -83,11 +89,9 @@ struct InterpolatedBFieldMapper {
     /// @param [in] position global 3D position
     /// @return @c true if position is inside the current field cell,
     ///         otherwise @c false
-    bool isInside(const Vector3& position) const {
-      const auto& gridCoordinates = m_transformPos(position);
+    bool isInside(const ActsVector<DIM_POS>& position) const {
       for (unsigned int i = 0; i < DIM_POS; ++i) {
-        if (gridCoordinates[i] < m_lowerLeft[i] ||
-            gridCoordinates[i] >= m_upperRight[i]) {
+        if (position[i] < m_lowerLeft[i] || position[i] >= m_upperRight[i]) {
           return false;
         }
       }
@@ -95,9 +99,6 @@ struct InterpolatedBFieldMapper {
     }
 
    private:
-    /// geometric transformation applied to global 3D positions
-    std::function<ActsVector<DIM_POS>(const Vector3&)> m_transformPos;
-
     /// generalized lower-left corner of the confining hyper-box
     std::array<double, DIM_POS> m_lowerLeft;
 
@@ -111,41 +112,44 @@ struct InterpolatedBFieldMapper {
     std::array<Vector3, N> m_fieldValues;
   };
 
+  struct Cache {
+    /// @brief Constructor with magnetic field context
+    ///
+    /// @param mcfg the magnetic field context
+    Cache(const MagneticFieldContext& /*mcfg*/) {}
+
+    std::optional<FieldCell> fieldCell;
+    bool initialized = false;
+  };
+
+  /// @brief  Config structure for the interpolated B field map
+  struct Config {
+    /// @brief mapping of global 3D coordinates (cartesian)
+    /// onto grid space
+    std::function<ActsVector<DIM_POS>(const Vector3&)> transformPos;
+
+    /// @brief calculating the global 3D coordinates
+    /// (cartesian) of the magnetic field with the local n dimensional field and
+    /// the global 3D position as input
+    std::function<Vector3(const FieldType&, const Vector3&)> transformBField;
+
+    /// @brief grid storing magnetic field values
+    Grid grid;
+
+    /// @brief global B-field scaling factor
+    ///
+    /// @note Negative values for @p scale are accepted and will invert the
+    ///       direction of the magnetic field.
+    double scale = 1.;
+  };
+
   /// @brief default constructor
   ///
-  /// @param [in] transformPos mapping of global 3D coordinates (cartesian)
-  /// onto grid space
-  /// @param [in] transformBField calculating the global 3D coordinates
-  /// (cartesian) of the magnetic field with the local n dimensional field and
-  /// the global 3D position as input
-  /// @param [in] grid      grid storing magnetic field values
-  InterpolatedBFieldMapper(
-      std::function<ActsVector<DIM_POS>(const Vector3&)> transformPos,
-      std::function<Vector3(const FieldType&, const Vector3&)> transformBField,
-      Grid_t grid)
-      : m_transformPos(std::move(transformPos)),
-        m_transformBField(std::move(transformBField)),
-        m_grid(std::move(grid)) {
-    typename Grid_t::index_t minBin{};
+  InterpolatedBFieldMap(Config cfg) : m_cfg{std::move(cfg)} {
+    typename Grid::index_t minBin{};
     minBin.fill(1);
-    m_lowerLeft = m_grid.lowerLeftBinEdge(minBin);
-    m_upperRight = m_grid.lowerLeftBinEdge(m_grid.numLocalBins());
-  }
-
-  /// @brief retrieve field at given position
-  ///
-  /// @param [in] position global 3D position
-  /// @return magnetic field value at the given position
-  ///
-  /// @pre The given @c position must lie within the range of the underlying
-  ///      magnetic field map.
-  Result<Vector3> getField(const Vector3& position) const {
-    if (!isInside(position)) {
-      return Result<Vector3>::failure(MagneticFieldError::OutOfBounds);
-    }
-
-    return Result<Vector3>::success(m_transformBField(
-        m_grid.interpolate(m_transformPos(position)), position));
+    m_lowerLeft = m_cfg.grid.lowerLeftBinEdge(minBin);
+    m_upperRight = m_cfg.grid.lowerLeftBinEdge(m_cfg.grid.numLocalBins());
   }
 
   /// @brief retrieve field cell for given position
@@ -156,34 +160,33 @@ struct InterpolatedBFieldMapper {
   /// @pre The given @c position must lie within the range of the underlying
   ///      magnetic field map.
   Result<FieldCell> getFieldCell(const Vector3& position) const {
-    const auto& gridPosition = m_transformPos(position);
-    const auto& indices = m_grid.localBinsFromPosition(gridPosition);
-    const auto& lowerLeft = m_grid.lowerLeftBinEdge(indices);
-    const auto& upperRight = m_grid.upperRightBinEdge(indices);
+    const auto& gridPosition = m_cfg.transformPos(position);
+    const auto& indices = m_cfg.grid.localBinsFromPosition(gridPosition);
+    const auto& lowerLeft = m_cfg.grid.lowerLeftBinEdge(indices);
+    const auto& upperRight = m_cfg.grid.upperRightBinEdge(indices);
 
     // loop through all corner points
     constexpr size_t nCorners = 1 << DIM_POS;
     std::array<Vector3, nCorners> neighbors{Vector3{0.0, 0.0, 0.0}};
-    const auto& cornerIndices = m_grid.closestPointsIndices(gridPosition);
+    const auto& cornerIndices = m_cfg.grid.closestPointsIndices(gridPosition);
 
-    if (!isInside(position)) {
+    if (!isInsideLocal(gridPosition)) {
       return MagneticFieldError::OutOfBounds;
     }
 
     size_t i = 0;
     for (size_t index : cornerIndices) {
-      neighbors.at(i++) = m_transformBField(m_grid.at(index), position);
+      neighbors.at(i++) = m_cfg.transformBField(m_cfg.grid.at(index), position);
     }
 
-    return FieldCell(m_transformPos, lowerLeft, upperRight,
-                     std::move(neighbors));
+    return FieldCell(lowerLeft, upperRight, std::move(neighbors));
   }
 
   /// @brief get the number of bins for all axes of the field map
   ///
   /// @return vector returning number of bins for all field map axes
   std::vector<size_t> getNBins() const {
-    auto nBinsArray = m_grid.numLocalBins();
+    auto nBinsArray = m_cfg.grid.numLocalBins();
     return std::vector<size_t>(nBinsArray.begin(), nBinsArray.end());
   }
 
@@ -207,7 +210,15 @@ struct InterpolatedBFieldMapper {
   /// @return @c true if position is inside the defined look-up grid,
   ///         otherwise @c false
   bool isInside(const Vector3& position) const {
-    const auto& gridPosition = m_transformPos(position);
+    return isInsideLocal(m_cfg.transformPos(position));
+  }
+
+  /// @brief check whether given 3D position is inside look-up domain
+  ///
+  /// @param [in] position local N-D position
+  /// @return @c true if position is inside the defined look-up grid,
+  ///         otherwise @c false
+  bool isInsideLocal(const ActsVector<DIM_POS>& gridPosition) const {
     for (unsigned int i = 0; i < DIM_POS; ++i) {
       if (gridPosition[i] < m_lowerLeft[i] ||
           gridPosition[i] >= m_upperRight[i]) {
@@ -220,112 +231,29 @@ struct InterpolatedBFieldMapper {
   /// @brief Get a const reference on the underlying grid structure
   ///
   /// @return grid reference
-  const Grid_t& getGrid() const { return m_grid; }
+  const Grid& getGrid() const { return m_cfg.grid; }
 
- private:
-  /// geometric transformation applied to global 3D positions
-  std::function<ActsVector<DIM_POS>(const Vector3&)> m_transformPos;
-  /// Transformation calculating the global 3D coordinates (cartesian) of the
-  /// magnetic field with the local n dimensional field and the global 3D
-  /// position as input
-  std::function<Vector3(const FieldType&, const Vector3&)> m_transformBField;
-  /// grid storing magnetic field values
-  Grid_t m_grid;
-
-  typename Grid_t::point_t m_lowerLeft;
-  typename Grid_t::point_t m_upperRight;
-};
-
-/// @ingroup MagneticField
-/// @brief interpolate magnetic field value from field values on a given grid
-///
-/// This class implements a magnetic field service which is initialized by a
-/// field map defined by:
-/// - a list of field values on a regular grid in some n-Dimensional space,
-/// - a transformation of global 3D coordinates onto this n-Dimensional
-/// space.
-/// - a transformation of local n-Dimensional magnetic field coordinates into
-/// global (cartesian) 3D coordinates
-///
-/// The magnetic field value for a given global position is then determined by:
-/// - mapping the position onto the grid,
-/// - looking up the magnetic field values on the closest grid points,
-/// - doing a linear interpolation of these magnetic field values.
-template <typename Mapper_t>
-class InterpolatedBFieldMap final : public MagneticFieldProvider {
- public:
-  /// @brief configuration object for magnetic field interpolation
-  struct Config {
-    Config(Mapper_t m) : mapper(m) {}
-
-    /// @brief global B-field scaling factor
-    ///
-    /// @note Negative values for @p scale are accepted and will invert the
-    ///       direction of the magnetic field.
-    double scale = 1.;
-
-    /// @brief object for global coordinate transformation and interpolation
-    ///
-    /// This object performs the mapping of the global 3D coordinates onto the
-    /// field grid and the interpolation of the field values on close-by grid
-    /// points.
-    Mapper_t mapper;
-  };
-
-  struct Cache {
-    /// @brief Constructor with magnetic field context
-    ///
-    /// @param mcfg the magnetic field context
-    Cache(const MagneticFieldContext& /*mcfg*/) {}
-
-    std::optional<typename Mapper_t::FieldCell> fieldCell;
-    bool initialized = false;
-  };
-
-  /// @brief create interpolated magnetic field map
-  ///
-  /// @param [in] config configuration object
-  InterpolatedBFieldMap(Config config) : m_config(std::move(config)) {}
-
-  /// @brief get configuration object
-  ///
-  /// @return copy of the internal configuration object
-  Config getConfiguration() const { return m_config; }
-
-  /// @brief get global scaling factor for magnetic field
-  ///
-  /// @return global factor for scaling the magnetic field
-  double getScale() const { return m_config.scale; }
-
-  /// @brief convenience method to access underlying field mapper
-  ///
-  /// @return the field mapper
-  Mapper_t getMapper() const { return m_config.mapper; }
-
-  /// @brief check whether given 3D position is inside look-up domain
-  ///
-  /// @param [in] position global 3D position
-  /// @return @c true if position is inside the defined BField map,
-  ///         otherwise @c false
-  bool isInside(const Vector3& position) const {
-    return m_config.mapper.isInside(position);
-  }
-
-  /// @brief update configuration
-  ///
-  /// @param [in] config new configuration object
-  void setConfiguration(const Config& config) { m_config = config; }
-
- public:
   /// @copydoc MagneticFieldProvider::makeCache(const MagneticFieldContext&)
   MagneticFieldProvider::Cache makeCache(
       const MagneticFieldContext& mctx) const override {
     return MagneticFieldProvider::Cache::make<Cache>(mctx);
   }
 
-  /// @copydoc MagneticFieldProvider::getField(const Vector3&)
+  /// @brief retrieve field at given position
+  ///
+  /// @param [in] position global 3D position
+  /// @return magnetic field value at the given position
+  ///
+  /// @pre The given @c position must lie within the range of the underlying
+  ///      magnetic field map.
   Result<Vector3> getField(const Vector3& position) const {
-    return m_config.mapper.getField(position);
+    const auto gridPosition = m_cfg.transformPos(position);
+    if (!isInsideLocal(gridPosition)) {
+      return Result<Vector3>::failure(MagneticFieldError::OutOfBounds);
+    }
+
+    return Result<Vector3>::success(
+        m_cfg.transformBField(m_cfg.grid.interpolate(gridPosition), position));
   }
 
   /// @copydoc MagneticFieldProvider::getField(const
@@ -334,14 +262,15 @@ class InterpolatedBFieldMap final : public MagneticFieldProvider {
       const Vector3& position,
       MagneticFieldProvider::Cache& gcache) const override {
     Cache& cache = gcache.get<Cache>();
-    if (!cache.fieldCell || !(*cache.fieldCell).isInside(position)) {
+    const auto gridPosition = m_cfg.transformPos(position);
+    if (!cache.fieldCell || !(*cache.fieldCell).isInside(gridPosition)) {
       auto res = getFieldCell(position);
       if (!res.ok()) {
         return Result<Vector3>::failure(res.error());
       }
       cache.fieldCell = *res;
     }
-    return Result<Vector3>::success((*cache.fieldCell).getField(position));
+    return Result<Vector3>::success((*cache.fieldCell).getField(gridPosition));
   }
 
   /// @copydoc MagneticFieldProvider::getFieldGradient(const
@@ -357,20 +286,10 @@ class InterpolatedBFieldMap final : public MagneticFieldProvider {
   }
 
  private:
-  /// @brief retrieve field cell for given position
-  ///
-  /// @param [in] position global 3D position
-  /// @return field cell containing the given global position
-  ///
-  /// @pre The given @c position must lie within the range of the underlying
-  ///      magnetic field map.
-  Result<typename Mapper_t::FieldCell> getFieldCell(
-      const Vector3& position) const {
-    return m_config.mapper.getFieldCell(position);
-  }
+  Config m_cfg;
 
-  /// @brief configuration object
-  Config m_config;
+  typename Grid::point_t m_lowerLeft;
+  typename Grid::point_t m_upperRight;
 };
 
 }  // namespace Acts

@@ -24,8 +24,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
-#include "FieldMapperRootIo.hpp"
-#include "FieldMapperTextIo.hpp"
+#include "FieldMapRootIo.hpp"
+#include "FieldMapTextIo.hpp"
 
 void ActsExamples::Options::addMagneticFieldOptions(Description& desc) {
   using boost::program_options::bool_switch;
@@ -156,18 +156,16 @@ ActsExamples::Options::readMagneticField(const Variables& vars) {
 
       ACTS_INFO("Use XYZ field map");
       if (readRoot) {
-        auto mapper = makeMagneticFieldMapperXyzFromRoot(
+        auto map = makeMagneticFieldMapXyzFromRoot(
             std::move(mapBins), file.native(), tree, lengthUnit, fieldUnit,
             useOctantOnly);
-        InterpolatedMagneticField3::Config cfg(std::move(mapper));
-        return std::make_shared<InterpolatedMagneticField3>(std::move(cfg));
+        return std::make_shared<InterpolatedMagneticField3>(std::move(map));
 
       } else {
-        auto mapper = makeMagneticFieldMapperXyzFromText(
-            std::move(mapBins), file.native(), lengthUnit, fieldUnit,
-            useOctantOnly);
-        InterpolatedMagneticField3::Config cfg(std::move(mapper));
-        return std::make_shared<InterpolatedMagneticField3>(std::move(cfg));
+        auto map = makeMagneticFieldMapXyzFromText(std::move(mapBins),
+                                                   file.native(), lengthUnit,
+                                                   fieldUnit, useOctantOnly);
+        return std::make_shared<InterpolatedMagneticField3>(std::move(map));
       }
 
     } else if (type == "rz") {
@@ -178,18 +176,16 @@ ActsExamples::Options::readMagneticField(const Variables& vars) {
 
       ACTS_INFO("Use RZ field map");
       if (readRoot) {
-        auto mapper = makeMagneticFieldMapperRzFromRoot(
+        auto map = makeMagneticFieldMapRzFromRoot(
             std::move(mapBins), file.native(), tree, lengthUnit, fieldUnit,
             useOctantOnly);
-        InterpolatedMagneticField2::Config cfg(std::move(mapper));
-        return std::make_shared<InterpolatedMagneticField2>(std::move(cfg));
+        return std::make_shared<InterpolatedMagneticField2>(std::move(map));
 
       } else {
-        auto mapper = makeMagneticFieldMapperRzFromText(
-            std::move(mapBins), file.native(), lengthUnit, fieldUnit,
-            useOctantOnly);
-        InterpolatedMagneticField2::Config cfg(std::move(mapper));
-        return std::make_shared<InterpolatedMagneticField2>(std::move(cfg));
+        auto map = makeMagneticFieldMapRzFromText(std::move(mapBins),
+                                                  file.native(), lengthUnit,
+                                                  fieldUnit, useOctantOnly);
+        return std::make_shared<InterpolatedMagneticField2>(std::move(map));
       }
 
     } else {
@@ -225,10 +221,9 @@ ActsExamples::Options::readMagneticField(const Variables& vars) {
     getRange("bf-solenoid-map-zlim", Acts::UnitConstants::mm, zlim.first,
              zlim.second);
     const auto nbins = vars["bf-solenoid-map-nbins"].as<Reals<2>>();
-    auto mapper = Acts::solenoidFieldMapper(rlim, zlim, {nbins[0], nbins[1]},
-                                            solenoidField);
-    InterpolatedMagneticField2::Config cfg(std::move(mapper));
-    return std::make_shared<InterpolatedMagneticField2>(std::move(cfg));
+    auto map =
+        Acts::solenoidFieldMap(rlim, zlim, {nbins[0], nbins[1]}, solenoidField);
+    return std::make_shared<InterpolatedMagneticField2>(std::move(map));
   }
 
   // default option: no field
