@@ -48,12 +48,8 @@ int main(int argc, char* argv[]) {
 
   Acts::SolenoidBField bSolenoidField({R, L, nCoils, bMagCenter});
   std::cout << "Building interpolated field map" << std::endl;
-  auto mapper = Acts::solenoidFieldMapper({rMin, rMax}, {zMin, zMax},
+  auto bFieldMap = Acts::solenoidFieldMap({rMin, rMax}, {zMin, zMax},
                                           {nBinsR, nBinsZ}, bSolenoidField);
-  using BField_t = Acts::InterpolatedBFieldMap<decltype(mapper)>;
-
-  BField_t::Config cfg(std::move(mapper));
-  auto bFieldMap = BField_t(std::move(cfg));
   Acts::MagneticFieldContext mctx{};
 
   std::minstd_rand rng;
