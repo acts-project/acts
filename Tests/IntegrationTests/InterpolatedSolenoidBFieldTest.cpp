@@ -54,16 +54,15 @@ auto makeFieldMap(const SolenoidBField& field) {
   std::cout << "zMin = " << zMin << std::endl;
   std::cout << "zMax = " << zMax << std::endl;
 
-  auto mapper =
-      solenoidFieldMapper({rMin, rMax}, {zMin, zMax}, {nBinsR, nBinsZ}, field);
+  auto map =
+      solenoidFieldMap({rMin, rMax}, {zMin, zMax}, {nBinsR, nBinsZ}, field);
   // I know this is the correct grid type
   using Grid_t =
       Acts::detail::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
                          Acts::detail::EquidistantAxis>;
-  const Grid_t& grid = mapper.getGrid();
+  const Grid_t& grid = map.getGrid();
   using index_t = Grid_t::index_t;
   using point_t = Grid_t::point_t;
-  using BField_t = Acts::InterpolatedBFieldMap<decltype(mapper)>;
 
   for (size_t i = 0; i <= nBinsR + 1; i++) {
     for (size_t j = 0; j <= nBinsZ + 1; j++) {
@@ -80,8 +79,7 @@ auto makeFieldMap(const SolenoidBField& field) {
     }
   }
 
-  BField_t::Config cfg(std::move(mapper));
-  return BField_t(std::move(cfg));
+  return map;
 }
 
 Acts::SolenoidBField bSolenoidField({R, L, nCoils, bMagCenter});
