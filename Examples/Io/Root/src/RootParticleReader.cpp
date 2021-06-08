@@ -130,11 +130,10 @@ ActsExamples::ProcessCode ActsExamples::RootParticleReader::read(
       return context.eventNumber;
     };
 
-    // Read the correct entry: batch size * event_number + ib
+    // Read the correct entry
     auto entry = getEntry();
     m_inputChain->GetEntry(entry);
-
-    ACTS_INFO("Reading event: " << context.eventNumber << " stored as entry "
+    ACTS_INFO("Reading event: " << context.eventNumber << " stored as entry: "
                                 << entry << " of the input tree");
 
     unsigned int nParticles = m_particleId->size();

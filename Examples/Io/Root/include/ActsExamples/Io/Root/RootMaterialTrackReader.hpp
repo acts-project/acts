@@ -88,6 +88,9 @@ class RootMaterialTrackReader : public IReader {
   /// The input tree name
   TChain* m_inputChain = nullptr;
 
+  /// Event identifier.
+  uint32_t m_eventId;
+
   float m_v_x;    ///< start global x
   float m_v_y;    ///< start global y
   float m_v_z;    ///< start global z

@@ -21,6 +21,7 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
   m_inputChain = new TChain(m_cfg.treeName.c_str());
 
   // Set the branches
+  m_inputChain->SetBranchAddress("event_id", &m_eventId);
   m_inputChain->SetBranchAddress("v_x", &m_v_x);
   m_inputChain->SetBranchAddress("v_y", &m_v_y);
   m_inputChain->SetBranchAddress("v_z", &m_v_z);
@@ -89,11 +90,24 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
     // The collection to be written
     std::vector<Acts::RecordedMaterialTrack> mtrackCollection;
 
+    // Function to find the first entry that has the event number as executed
+    auto getEntry = [&]() -> unsigned int {
+      for (unsigned int j = 0; j < m_inputChain->GetEntries(); ++j) {
+        m_inputChain->GetEntry(j);
+        if (m_eventId == context.eventNumber) {
+          return j;
+        }
+      }
+      return m_cfg.batchSize * context.eventNumber;
+    };
+
+    auto eventFirstEntry = getEntry();
     for (size_t ib = 0; ib < m_cfg.batchSize; ++ib) {
-      // Read the correct entry: batch size * event_number + ib
-      m_inputChain->GetEntry(m_cfg.batchSize * context.eventNumber + ib);
-      ACTS_VERBOSE("Reading entry: " << m_cfg.batchSize * context.eventNumber +
-                                            ib);
+      // Read the correct entry: eventFirstEntry + ib
+      m_inputChain->GetEntry(eventFirstEntry + ib);
+      ACTS_VERBOSE("Reading event: "
+                   << context.eventNumber << " with stored entry: "
+                   << eventFirstEntry + ib << " of the input tree");
 
       Acts::RecordedMaterialTrack rmTrack;
       // Fill the position and momentum

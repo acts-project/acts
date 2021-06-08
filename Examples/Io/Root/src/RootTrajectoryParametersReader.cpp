@@ -143,10 +143,10 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersReader::read(
       return context.eventNumber;
     };
 
-    // Read the correct entry: batch size * event_number + ib
+    // Read the correct entry
     auto entry = getEntry();
     m_inputChain->GetEntry(entry);
-    ACTS_INFO("Reading event: " << context.eventNumber << " stored as entry "
+    ACTS_INFO("Reading event: " << context.eventNumber << " stored as entry: "
                                 << entry << " of the input tree");
 
     unsigned int nTracks = m_eLOC0_fit->size();
