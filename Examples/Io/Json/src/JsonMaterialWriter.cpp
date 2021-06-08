@@ -33,11 +33,11 @@ void ActsExamples::JsonMaterialWriter::write(
   Acts::MaterialMapJsonConverter jmConverter(m_cfg.converterCfg);
   auto jOut = jmConverter.materialMapsToJson(detMaterial);
   // And write the file(s)
-  if (m_cfg.writeJson) {
+  if (ACTS_CHECK_BIT(m_cfg.writeFormat, ActsExamples::JsonFormat::Json)) {
     std::ofstream ofj(m_cfg.fileName + ".json");
     ofj << std::setw(4) << jOut << std::endl;
   }
-  if (m_cfg.writeCbor) {
+  if (ACTS_CHECK_BIT(m_cfg.writeFormat, ActsExamples::JsonFormat::Cbor)) {
     std::vector<uint8_t> cborOut = nlohmann::json::to_cbor(jOut);
     std::ofstream ofj(m_cfg.fileName + ".cbor",
                       std::ios::out | std::ios::binary);
@@ -51,11 +51,11 @@ void ActsExamples::JsonMaterialWriter::write(
   Acts::MaterialMapJsonConverter jmConverter(m_cfg.converterCfg);
   auto jOut = jmConverter.trackingGeometryToJson(tGeometry);
   // And write the file(s)
-  if (m_cfg.writeJson) {
+  if (ACTS_CHECK_BIT(m_cfg.writeFormat, ActsExamples::JsonFormat::Json)) {
     std::ofstream ofj(m_cfg.fileName + ".json");
     ofj << std::setw(4) << jOut << std::endl;
   }
-  if (m_cfg.writeCbor) {
+  if (ACTS_CHECK_BIT(m_cfg.writeFormat, ActsExamples::JsonFormat::Cbor)) {
     std::vector<uint8_t> cborOut = nlohmann::json::to_cbor(jOut);
     std::ofstream ofj(m_cfg.fileName + ".cbor",
                       std::ios::out | std::ios::binary);

@@ -173,8 +173,14 @@ int processGeometry(int argc, char* argv[],
       ActsExamples::JsonMaterialWriter::Config jmWriterCfg;
       jmWriterCfg.converterCfg = std::move(jmConverterCfg);
       jmWriterCfg.fileName = materialFileName;
-      jmWriterCfg.writeJson = vm["output-json"].template as<bool>();
-      jmWriterCfg.writeCbor = vm["output-cbor"].template as<bool>();
+      ActsExamples::JsonFormat format = ActsExamples::JsonFormat::NoOutput;
+      if (vm["output-json"].template as<bool>()) {
+        format = format | ActsExamples::JsonFormat::Json;
+      }
+      if (vm["output-cbor"].template as<bool>()) {
+        format = format | ActsExamples::JsonFormat::Cbor;
+      }
+      jmWriterCfg.writeFormat = format;
 
       ActsExamples::JsonMaterialWriter jmwImpl(std::move(jmWriterCfg));
 

@@ -13,6 +13,7 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
+#include "Acts/Utilities/EnumBitwiseOperators.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
@@ -33,6 +34,15 @@ using DetectorMaterialMaps = std::pair<SurfaceMaterialMap, VolumeMaterialMap>;
 
 namespace ActsExamples {
 
+enum class JsonFormat : uint8_t {
+  NoOutput = 0,
+  Json = 1,
+  Cbor = 2,
+  All = std::numeric_limits<uint8_t>::max()
+};
+
+ACTS_DEFINE_ENUM_BITWISE_OPERATORS(JsonFormat)
+
 /// @class Json Material writer
 ///
 /// @brief Writes out Detector material maps
@@ -44,10 +54,8 @@ class JsonMaterialWriter {
     Acts::MaterialMapJsonConverter::Config converterCfg;
     /// Output file name
     std::string fileName = "material";
-    /// Write the material map as a Json file
-    bool writeJson = true;
-    /// Write the material map as a CBOR file
-    bool writeCbor = false;
+    /// Output format of the file
+    JsonFormat writeFormat = JsonFormat::Json;
   };
 
   /// Constructor
