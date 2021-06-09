@@ -75,6 +75,7 @@ ActsExamples::RootTrajectoryParametersReader::RootTrajectoryParametersReader(
 
   // If the events are not in order, get the entry numbers for ordered events
   if (not m_cfg.orderedEvents) {
+    m_entryNumbers.resize(m_events);
     m_inputChain->Draw("event_nr", "", "goff");
     // Sort to get the entry numbers of the ordered events
     TMath::Sort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
