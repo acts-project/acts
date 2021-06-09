@@ -43,7 +43,8 @@ build(const boost::program_options::variables_map& vm,
     // Retrieve the filename
     auto fileName = vm["mat-input-file"].template as<std::string>();
     // json or root based decorator
-    if (fileName.find(".json") != std::string::npos) {
+    if (fileName.find(".json") != std::string::npos ||
+        fileName.find(".cbor") != std::string::npos) {
       // Set up the converter first
       Acts::MaterialMapJsonConverter::Config jsonGeoConvConfig;
       // Set up the json-based decorator
