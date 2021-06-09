@@ -14,6 +14,7 @@
 
 #include <TChain.h>
 #include <TFile.h>
+#include <TMath.h>
 
 ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
     const ActsExamples::RootMaterialTrackReader::Config& cfg)
@@ -55,6 +56,14 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
 
   m_events = m_inputChain->GetEntries();
   ACTS_DEBUG("The full chain has " << m_events << " entries.");
+
+  // If the events are not in order, find the entry numbers for ordered events
+  if (not m_cfg.orderedEvents) {
+    m_inputChain->Draw("event_id", "", "goff");
+    // Get the indices of the events in increasing order
+    TMath::Sort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
+                m_entryNumbers.data(), false);
+  }
 }
 
 ActsExamples::RootMaterialTrackReader::~RootMaterialTrackReader() {
@@ -90,24 +99,14 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
     // The collection to be written
     std::vector<Acts::RecordedMaterialTrack> mtrackCollection;
 
-    // Function to find the first entry that has the event number as executed
-    auto getEntry = [&]() -> unsigned int {
-      for (unsigned int j = 0; j < m_inputChain->GetEntries(); ++j) {
-        m_inputChain->GetEntry(j);
-        if (m_eventId == context.eventNumber) {
-          return j;
-        }
-      }
-      return m_cfg.batchSize * context.eventNumber;
-    };
-
-    auto eventFirstEntry = getEntry();
     for (size_t ib = 0; ib < m_cfg.batchSize; ++ib) {
-      // Read the correct entry: eventFirstEntry + ib
-      m_inputChain->GetEntry(eventFirstEntry + ib);
-      ACTS_VERBOSE("Reading event: "
-                   << context.eventNumber << " with stored entry: "
-                   << eventFirstEntry + ib << " of the input tree");
+      // Read the correct entry: batch size * event_number + ib
+      auto entry = m_cfg.batchSize * context.eventNumber + ib;
+      if (not m_cfg.orderedEvents and entry < m_entryNumbers.size()) {
+        entry = m_entryNumbers[entry];
+      }
+      m_inputChain->GetEntry(entry);
+      ACTS_VERBOSE("Reading entry: " << entry);
 
       Acts::RecordedMaterialTrack rmTrack;
       // Fill the position and momentum

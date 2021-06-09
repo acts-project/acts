@@ -18,6 +18,7 @@
 
 #include <TChain.h>
 #include <TFile.h>
+#include <TMath.h>
 
 ActsExamples::RootParticleReader::RootParticleReader(
     const ActsExamples::RootParticleReader::Config& cfg)
@@ -66,6 +67,14 @@ ActsExamples::RootParticleReader::RootParticleReader(
 
   m_events = m_inputChain->GetEntries();
   ACTS_DEBUG("The full chain has " << m_events << " entries.");
+
+  // If the events are not in order, find the entry numbers for ordered events
+  if (not m_cfg.orderedEvents) {
+    m_inputChain->Draw("event_id", "", "goff");
+    // Get the indices of the events in increasing order
+    TMath::Sort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
+                m_entryNumbers.data(), false);
+  }
 }
 
 std::string ActsExamples::RootParticleReader::name() const {
@@ -119,19 +128,11 @@ ActsExamples::ProcessCode ActsExamples::RootParticleReader::read(
     // Secondary vertex collection
     std::vector<uint32_t> secVtxCollection;
 
-    // Function to find the entry that has the event number as executed
-    auto getEntry = [&]() -> unsigned int {
-      for (unsigned int j = 0; j < m_inputChain->GetEntries(); ++j) {
-        m_inputChain->GetEntry(j);
-        if (m_eventId == context.eventNumber) {
-          return j;
-        }
-      }
-      return context.eventNumber;
-    };
-
     // Read the correct entry
-    auto entry = getEntry();
+    auto entry = context.eventNumber;
+    if (not m_cfg.orderedEvents and entry < m_entryNumbers.size()) {
+      entry = m_entryNumbers[entry];
+    }
     m_inputChain->GetEntry(entry);
     ACTS_INFO("Reading event: " << context.eventNumber << " stored as entry: "
                                 << entry << " of the input tree");

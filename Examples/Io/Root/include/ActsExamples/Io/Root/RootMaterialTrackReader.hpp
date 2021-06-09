@@ -37,6 +37,9 @@ class RootMaterialTrackReader : public IReader {
     std::string treeName = "material-tracks";  ///< name of the output tree
     std::vector<std::string> fileList;         ///< The name of the input file
 
+    /// Whether the events are ordered or not
+    bool orderedEvents = true;
+
     unsigned int batchSize = 1;  ///!< The number of tracks per event
 
     /// The default logger
@@ -90,6 +93,10 @@ class RootMaterialTrackReader : public IReader {
 
   /// Event identifier.
   uint32_t m_eventId;
+
+  /// The entry numbers for accessing events in increased order (there could be
+  /// multiple entries corresponding to one event number)
+  std::vector<long long> m_entryNumbers = {};
 
   float m_v_x;    ///< start global x
   float m_v_y;    ///< start global y
