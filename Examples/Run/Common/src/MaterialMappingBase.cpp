@@ -118,10 +118,7 @@ int materialMappingExample(int argc, char* argv[],
   ActsExamples::MaterialMapping::Config mmAlgConfig(geoContext, mfContext);
   if (mapSurface) {
     // Get a Navigator
-    Acts::Navigator navigator(tGeometry);
-    navigator.resolveSensitive = true;
-    navigator.resolveMaterial = true;
-    navigator.resolvePassive = true;
+    Acts::Navigator navigator({tGeometry, true, true, true});
     // Make stepper and propagator
     SlStepper stepper;
     Propagator propagator(std::move(stepper), std::move(navigator));
@@ -134,7 +131,7 @@ int materialMappingExample(int argc, char* argv[],
   }
   if (mapVolume) {
     // Get a Navigator
-    Acts::Navigator navigator(tGeometry);
+    Acts::Navigator navigator({tGeometry});
     // Make stepper and propagator
     SlStepper stepper;
     Propagator propagator(std::move(stepper), std::move(navigator));

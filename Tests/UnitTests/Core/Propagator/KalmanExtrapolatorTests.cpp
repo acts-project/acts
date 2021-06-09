@@ -105,10 +105,11 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
   auto detector = cGeometry();
 
   // The Navigator through the detector geometry
-  Navigator navigator(detector);
-  navigator.resolvePassive = false;
-  navigator.resolveMaterial = true;
-  navigator.resolveSensitive = true;
+  Navigator::Config cfg{detector};
+  cfg.resolvePassive = false;
+  cfg.resolveMaterial = true;
+  cfg.resolveSensitive = true;
+  Navigator navigator(cfg);
 
   // Configure propagation with deactivated B-field
   auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 0.));

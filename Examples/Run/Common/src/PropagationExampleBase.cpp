@@ -80,11 +80,11 @@ int propagationExample(int argc, char* argv[],
   auto setupPropagator = [&](auto&& stepper) {
     using Stepper = std::decay_t<decltype(stepper)>;
     using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
-    Acts::Navigator navigator(tGeometry);
-    navigator.resolveMaterial = vm["prop-resolve-material"].template as<bool>();
-    navigator.resolvePassive = vm["prop-resolve-passive"].template as<bool>();
-    navigator.resolveSensitive =
-        vm["prop-resolve-sensitive"].template as<bool>();
+    Acts::Navigator::Config navCfg{tGeometry};
+    navCfg.resolveMaterial = vm["prop-resolve-material"].template as<bool>();
+    navCfg.resolvePassive = vm["prop-resolve-passive"].template as<bool>();
+    navCfg.resolveSensitive = vm["prop-resolve-sensitive"].template as<bool>();
+    Acts::Navigator navigator(navCfg);
 
     Propagator propagator(std::move(stepper), std::move(navigator));
 
