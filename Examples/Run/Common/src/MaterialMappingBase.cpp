@@ -43,9 +43,10 @@ int materialMappingExample(int argc, char* argv[],
   ActsExamples::Options::addMaterialMappingOptions(desc);
   ActsExamples::Options::addPropagationOptions(desc);
   ActsExamples::Options::addInputOptions(desc);
-  ActsExamples::Options::addOutputOptions(
-      desc,
-      ActsExamples::OutputFormat::Root | ActsExamples::OutputFormat::Json);
+  ActsExamples::Options::addOutputOptions(desc,
+                                          ActsExamples::OutputFormat::Root |
+                                              ActsExamples::OutputFormat::Json |
+                                              ActsExamples::OutputFormat::Cbor);
 
   // Add specific options for this geometry
   detector.addOptions(desc);
@@ -173,7 +174,8 @@ int materialMappingExample(int argc, char* argv[],
     }
   }
 
-  if (!materialFileName.empty() and vm["output-json"].template as<bool>()) {
+  if (!materialFileName.empty() and (vm["output-json"].template as<bool>() or
+                                     vm["output-cbor"].template as<bool>())) {
     /// The name of the output file
     std::string fileName = vm["mat-output-file"].template as<std::string>();
     // the material writer
@@ -191,8 +193,21 @@ int materialMappingExample(int argc, char* argv[],
         vm["mat-output-volumes"].template as<bool>();
     jmConverterCfg.context = geoContext;
     // The writer
-    ActsExamples::JsonMaterialWriter jmwImpl(jmConverterCfg,
-                                             materialFileName + ".json");
+    ActsExamples::JsonMaterialWriter::Config jmWriterCfg;
+    jmWriterCfg.converterCfg = std::move(jmConverterCfg);
+    jmWriterCfg.fileName = materialFileName;
+
+    ActsExamples::JsonFormat format = ActsExamples::JsonFormat::NoOutput;
+    if (vm["output-json"].template as<bool>()) {
+      format = format | ActsExamples::JsonFormat::Json;
+    }
+    if (vm["output-cbor"].template as<bool>()) {
+      format = format | ActsExamples::JsonFormat::Cbor;
+    }
+    jmWriterCfg.writeFormat = format;
+
+    ActsExamples::JsonMaterialWriter jmwImpl(std::move(jmWriterCfg));
+
     // Fullfill the IMaterialWriter interface
     using JsonWriter =
         ActsExamples::MaterialWriterT<ActsExamples::JsonMaterialWriter>;

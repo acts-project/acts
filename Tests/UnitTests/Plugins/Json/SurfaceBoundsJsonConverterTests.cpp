@@ -8,6 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/SurfaceBoundsJsonConverter.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -15,8 +16,6 @@
 
 #include <fstream>
 #include <iostream>
-
-#include <nlohmann/json.hpp>
 
 using namespace Acts;
 
