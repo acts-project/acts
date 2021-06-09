@@ -40,7 +40,7 @@ CylindricalTrackingGeometry cGeometry(tgContext);
 auto tGeometry = cGeometry();
 
 // Create a navigator for this tracking geometry
-Navigator navigator(tGeometry);
+Navigator navigator({tGeometry});
 DirectNavigator dnavigator;
 
 using BField = ConstantBField;

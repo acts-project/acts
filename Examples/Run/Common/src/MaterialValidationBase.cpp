@@ -53,10 +53,12 @@ ActsExamples::ProcessCode setupPropagation(
   auto logLevel = ActsExamples::Options::readLogLevel(vm);
 
   // Get a Navigator
-  Acts::Navigator navigator(tGeometry);
-  navigator.resolvePassive = true;
-  navigator.resolveMaterial = true;
-  navigator.resolveSensitive = true;
+  Acts::Navigator::Config cfg;
+  cfg.trackingGeometry = tGeometry;
+  cfg.resolvePassive = true;
+  cfg.resolveMaterial = true;
+  cfg.resolveSensitive = true;
+  Acts::Navigator navigator(cfg);
 
   // Resolve the bfield map template and create the propgator
   using Stepper = Acts::EigenStepper<
@@ -98,7 +100,7 @@ ActsExamples::ProcessCode setupStraightLinePropagation(
   auto logLevel = ActsExamples::Options::readLogLevel(vm);
 
   // Get a Navigator
-  Acts::Navigator navigator(tGeometry);
+  Acts::Navigator navigator({tGeometry});
 
   // Straight line stepper
   using SlStepper = Acts::StraightLineStepper;
