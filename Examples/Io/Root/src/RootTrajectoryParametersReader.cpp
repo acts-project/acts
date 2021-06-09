@@ -73,10 +73,10 @@ ActsExamples::RootTrajectoryParametersReader::RootTrajectoryParametersReader(
   m_events = m_inputChain->GetEntries();
   ACTS_DEBUG("The full chain has " << m_events << " entries.");
 
-  // If the events are not in order, find the entry numbers for ordered events
+  // If the events are not in order, get the entry numbers for ordered events
   if (not m_cfg.orderedEvents) {
     m_inputChain->Draw("event_nr", "", "goff");
-    // Get the indices of the events in increasing order
+    // Sort to get the entry numbers of the ordered events
     TMath::Sort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
                 m_entryNumbers.data(), false);
   }
