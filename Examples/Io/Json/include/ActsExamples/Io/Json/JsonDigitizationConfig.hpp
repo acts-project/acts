@@ -8,10 +8,9 @@
 
 #pragma once
 
+#include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/GeometryHierarchyMapJsonConverter.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
-
-#include <nlohmann/json.hpp>
 
 namespace ActsExamples {
 
