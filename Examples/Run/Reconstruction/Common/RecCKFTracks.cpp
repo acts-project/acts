@@ -312,10 +312,11 @@ int runRecCKFTracks(int argc, char* argv[],
     CsvMultiTrajectoryWriter::Config trackWriterCsvConfig;
     trackWriterCsvConfig.inputTrajectories = trackFindingCfg.outputTrajectories;
     trackWriterCsvConfig.outputDir = outputDir;
-    trackWriterCsvConfig.inputMeasurementParticlesMap = digiCfg.outputMeasurementParticlesMap;
+    trackWriterCsvConfig.inputMeasurementParticlesMap =
+        digiCfg.outputMeasurementParticlesMap;
     sequencer.addWriter(std::make_shared<CsvMultiTrajectoryWriter>(
-								   trackWriterCsvConfig, logLevel));
+        trackWriterCsvConfig, logLevel));
   }
-  
+
   return sequencer.run();
 }
