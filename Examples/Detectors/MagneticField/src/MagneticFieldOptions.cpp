@@ -9,7 +9,9 @@
 #include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/MagneticField/BFieldMapUtils.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/MagneticField/ScalableBFieldService.hpp"
@@ -22,8 +24,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
-#include "FieldMapperRootIo.hpp"
-#include "FieldMapperTextIo.hpp"
+#include "FieldMapRootIo.hpp"
+#include "FieldMapTextIo.hpp"
 
 void ActsExamples::Options::addMagneticFieldOptions(Description& desc) {
   using boost::program_options::bool_switch;
@@ -66,6 +68,27 @@ void ActsExamples::Options::addMagneticFieldOptions(Description& desc) {
       "option only needs to be set if the field value unit in the field map "
       "file is not `Tesla`. The value must scale from the stored unit to the "
       "equvalent value in `Tesla`.");
+  opt("bf-solenoid-mag-tesla", value<double>()->default_value(0.),
+      "The magnitude of a solenoid magnetic field in the center in `Tesla`. "
+      "Only used "
+      "if neither constant field nor a magnetic field map is given.");
+  opt("bf-solenoid-length", value<double>()->default_value(6000),
+      "The length of the solenoid magnetic field in `mm`.");
+  opt("bf-solenoid-radius", value<double>()->default_value(1200),
+      "The radius of the solenoid magnetic field in `mm`.");
+  opt("bf-solenoid-ncoils", value<size_t>()->default_value(1194),
+      "Number of coils for the solenoid magnetic field.");
+  opt("bf-solenoid-map-rlim",
+      value<Interval>()->value_name("MIN:MAX")->default_value({0, 1200}),
+      "The length bounds of the grid created from the analytical solenoid "
+      "field in `mm`.");
+  opt("bf-solenoid-map-zlim",
+      value<Interval>()->value_name("MIN:MAX")->default_value({-3000, 3000}),
+      "The radius bounds of the grid created from the analytical solenoid "
+      "field in `mm`.");
+  opt("bf-solenoid-map-nbins", value<Reals<2>>()->default_value({{150, 200}}),
+      "The number of bins in r-z directions for the grid created from the "
+      "analytical solenoid field.");
 }
 
 void ActsExamples::Options::setupMagneticFieldServices(const Variables& vars,
@@ -133,18 +156,16 @@ ActsExamples::Options::readMagneticField(const Variables& vars) {
 
       ACTS_INFO("Use XYZ field map");
       if (readRoot) {
-        auto mapper = makeMagneticFieldMapperXyzFromRoot(
+        auto map = makeMagneticFieldMapXyzFromRoot(
             std::move(mapBins), file.native(), tree, lengthUnit, fieldUnit,
             useOctantOnly);
-        InterpolatedMagneticField3::Config cfg(std::move(mapper));
-        return std::make_shared<InterpolatedMagneticField3>(std::move(cfg));
+        return std::make_shared<InterpolatedMagneticField3>(std::move(map));
 
       } else {
-        auto mapper = makeMagneticFieldMapperXyzFromText(
-            std::move(mapBins), file.native(), lengthUnit, fieldUnit,
-            useOctantOnly);
-        InterpolatedMagneticField3::Config cfg(std::move(mapper));
-        return std::make_shared<InterpolatedMagneticField3>(std::move(cfg));
+        auto map = makeMagneticFieldMapXyzFromText(std::move(mapBins),
+                                                   file.native(), lengthUnit,
+                                                   fieldUnit, useOctantOnly);
+        return std::make_shared<InterpolatedMagneticField3>(std::move(map));
       }
 
     } else if (type == "rz") {
@@ -155,24 +176,54 @@ ActsExamples::Options::readMagneticField(const Variables& vars) {
 
       ACTS_INFO("Use RZ field map");
       if (readRoot) {
-        auto mapper = makeMagneticFieldMapperRzFromRoot(
+        auto map = makeMagneticFieldMapRzFromRoot(
             std::move(mapBins), file.native(), tree, lengthUnit, fieldUnit,
             useOctantOnly);
-        InterpolatedMagneticField2::Config cfg(std::move(mapper));
-        return std::make_shared<InterpolatedMagneticField2>(std::move(cfg));
+        return std::make_shared<InterpolatedMagneticField2>(std::move(map));
 
       } else {
-        auto mapper = makeMagneticFieldMapperRzFromText(
-            std::move(mapBins), file.native(), lengthUnit, fieldUnit,
-            useOctantOnly);
-        InterpolatedMagneticField2::Config cfg(std::move(mapper));
-        return std::make_shared<InterpolatedMagneticField2>(std::move(cfg));
+        auto map = makeMagneticFieldMapRzFromText(std::move(mapBins),
+                                                  file.native(), lengthUnit,
+                                                  fieldUnit, useOctantOnly);
+        return std::make_shared<InterpolatedMagneticField2>(std::move(map));
       }
 
     } else {
       ACTS_ERROR("'" << type << "' is an unknown magnetic field map type");
       throw std::runtime_error("Unknown magnetic field map type");
     }
+  }
+
+  // third option: create a solenoid field
+  if (vars["bf-solenoid-mag-tesla"].as<double>() > 0) {
+    // Construct a solenoid field
+    Acts::SolenoidBField::Config solenoidConfig;
+    solenoidConfig.length =
+        vars["bf-solenoid-length"].as<double>() * Acts::UnitConstants::mm;
+    solenoidConfig.radius =
+        vars["bf-solenoid-radius"].as<double>() * Acts::UnitConstants::mm;
+    solenoidConfig.nCoils = vars["bf-solenoid-ncoils"].as<size_t>();
+    solenoidConfig.bMagCenter =
+        vars["bf-solenoid-mag-tesla"].as<double>() * Acts::UnitConstants::T;
+    ACTS_INFO("Use solenoid magnetic field with magnitude "
+              << solenoidConfig.bMagCenter / Acts::UnitConstants::T
+              << " Tesla at the center.");
+    const auto solenoidField = Acts::SolenoidBField(solenoidConfig);
+    // The parameters for creating a field map
+    auto getRange = [&](const char* name, auto unit, auto& lower, auto& upper) {
+      auto interval = vars[name].as<Options::Interval>();
+      lower = interval.lower.value() * unit;
+      upper = interval.upper.value() * unit;
+    };
+    std::pair<double, double> rlim, zlim;
+    getRange("bf-solenoid-map-rlim", Acts::UnitConstants::mm, rlim.first,
+             rlim.second);
+    getRange("bf-solenoid-map-zlim", Acts::UnitConstants::mm, zlim.first,
+             zlim.second);
+    const auto nbins = vars["bf-solenoid-map-nbins"].as<Reals<2>>();
+    auto map =
+        Acts::solenoidFieldMap(rlim, zlim, {nbins[0], nbins[1]}, solenoidField);
+    return std::make_shared<InterpolatedMagneticField2>(std::move(map));
   }
 
   // default option: no field

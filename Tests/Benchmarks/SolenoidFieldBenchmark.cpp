@@ -48,12 +48,8 @@ int main(int argc, char* argv[]) {
 
   Acts::SolenoidBField bSolenoidField({R, L, nCoils, bMagCenter});
   std::cout << "Building interpolated field map" << std::endl;
-  auto mapper = Acts::solenoidFieldMapper({rMin, rMax}, {zMin, zMax},
+  auto bFieldMap = Acts::solenoidFieldMap({rMin, rMax}, {zMin, zMax},
                                           {nBinsR, nBinsZ}, bSolenoidField);
-  using BField_t = Acts::InterpolatedBFieldMap<decltype(mapper)>;
-
-  BField_t::Config cfg(std::move(mapper));
-  auto bFieldMap = BField_t(std::move(cfg));
   Acts::MagneticFieldContext mctx{};
 
   std::minstd_rand rng;
@@ -124,7 +120,7 @@ int main(int argc, char* argv[]) {
               << std::flush;
     auto cache = bFieldMap.makeCache(mctx);
     const auto map_cached_result_cache = Acts::Test::microBenchmark(
-        [&] { return bFieldMap.getField(fixedPos, cache); }, iters_map);
+        [&] { return bFieldMap.getField(fixedPos, cache).value(); }, iters_map);
     std::cout << map_cached_result_cache << std::endl;
     csv("interp_cache_fixed", map_cached_result_cache);
   }
@@ -138,7 +134,8 @@ int main(int argc, char* argv[]) {
               << std::flush;
     auto cache2 = bFieldMap.makeCache(mctx);
     const auto map_rand_result_cache = Acts::Test::microBenchmark(
-        [&] { return bFieldMap.getField(genPos(), cache2); }, iters_map);
+        [&] { return bFieldMap.getField(genPos(), cache2).value(); },
+        iters_map);
     std::cout << map_rand_result_cache << std::endl;
     csv("interp_cache_random", map_rand_result_cache);
   }
@@ -181,7 +178,7 @@ int main(int argc, char* argv[]) {
     const auto map_adv_result_cache = Acts::Test::microBenchmark(
         [&] {
           pos += dir * h;
-          return bFieldMap.getField(pos, cache);
+          return bFieldMap.getField(pos, cache).value();
         },
         iters_map);
     std::cout << map_adv_result_cache << std::endl;

@@ -30,6 +30,7 @@
 #include "ActsExamples/TrackFitting/TrackFittingOptions.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 
 #include "RecInput.hpp"
 
@@ -104,6 +105,7 @@ ActsExamples::ParticleSmearing::Config setupParticleSmearing(
     std::shared_ptr<const ActsExamples::RandomNumbers> rnd,
     const std::string& inputParticles) {
   using namespace ActsExamples;
+  using namespace Acts::UnitLiterals;
 
   // Read some standard options
   auto logLevel = Options::readLogLevel(vars);
@@ -124,6 +126,8 @@ ActsExamples::ParticleSmearing::Config setupParticleSmearing(
   particleSmearingCfg.sigmaTheta = 1_degree;
   particleSmearingCfg.sigmaPRel = 0.01;
   particleSmearingCfg.sigmaT0 = 1_ns;
+  particleSmearingCfg.initialVarInflation =
+      vars["fit-initial-variance-inflation"].template as<Options::Reals<6>>();
   sequencer.addAlgorithm(
       std::make_shared<ParticleSmearing>(particleSmearingCfg, logLevel));
 

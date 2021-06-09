@@ -187,6 +187,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   double stepSize = 123.;
   double tolerance = 234.;
   auto bField = std::make_shared<ConstantBField>(Vector3(1., 2.5, 33.33));
+  auto bCache = bField->makeCache(mfContext);
 
   // Construct the parameters
   Vector3 pos(1., 2., 3.);
@@ -210,7 +211,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_ABS(es.charge(esState), charge, eps);
   CHECK_CLOSE_ABS(es.time(esState), time, eps);
   //~ BOOST_CHECK_EQUAL(es.overstepLimit(esState), tolerance);
-  BOOST_CHECK_EQUAL(es.getField(esState, pos), bField->getField(pos));
+  BOOST_CHECK_EQUAL(es.getField(esState, pos).value(),
+                    bField->getField(pos, bCache).value());
 
   // Step size modifies
   const std::string originalStepSize = esState.stepSize.toString();
@@ -249,7 +251,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // The covariance transport
   esState.cov = cov;
-  es.covarianceTransport(esState);
+  es.transportCovarianceToCurvilinear(esState);
   BOOST_CHECK_NE(esState.cov, cov);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
@@ -260,8 +262,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   PropState ps(std::move(esState));
 
   ps.stepping.covTransport = false;
-  double h = es.step(ps).value();
-  BOOST_CHECK_EQUAL(ps.stepping.stepSize, h);
+  es.step(ps).value();
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, eps);
   BOOST_CHECK_NE(es.position(ps.stepping).norm(), newPos.norm());
   BOOST_CHECK_NE(es.direction(ps.stepping), newMom.normalized());
@@ -271,8 +272,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(ps.stepping.jacTransport, FreeMatrix::Identity());
 
   ps.stepping.covTransport = true;
-  double h2 = es.step(ps).value();
-  BOOST_CHECK_EQUAL(h2, h);
+  es.step(ps).value();
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, eps);
   BOOST_CHECK_NE(es.position(ps.stepping).norm(), newPos.norm());
   BOOST_CHECK_NE(es.direction(ps.stepping), newMom.normalized());
@@ -328,6 +328,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // Reset all possible parameters
   EigenStepper<>::State esStateCopy(copyState(*bField, ps.stepping));
+  BOOST_CHECK(cp2.covariance().has_value());
   es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface(), ndir, stepSize2);
   // Test all components
@@ -447,7 +448,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_ABS(std::get<2>(boundState), 0., eps);
 
   // Transport the covariance in the context of a surface
-  es.covarianceTransport(esState, *plane);
+  es.transportCovarianceToBound(esState, *plane);
   BOOST_CHECK_NE(esState.cov, cov);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
@@ -737,7 +738,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   ////////////////////////////////////////////////////////////////////
 
   // Re-launch the configuration with magnetic field
-  bField->setField(0., 1_T, 0.);
+  bField->setField(Vector3{0., 1_T, 0.});
   EigenStepper<
       StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
       detail::HighestValidAuctioneer>

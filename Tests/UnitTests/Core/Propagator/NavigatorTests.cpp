@@ -175,14 +175,14 @@ struct PropagatorState {
                 const Vector3& /*udirection*/, double /*up*/,
                 double /*time*/) const {}
 
-    void covarianceTransport(State& /*state*/) const {}
+    void transportCovarianceToCurvilinear(State& /*state*/) const {}
 
-    void covarianceTransport(State& /*unused*/,
-                             const Surface& /*surface*/) const {}
+    void transportCovarianceToBound(State& /*unused*/,
+                                    const Surface& /*surface*/) const {}
 
-    Vector3 getField(State& /*state*/, const Vector3& /*pos*/) const {
+    Result<Vector3> getField(State& /*state*/, const Vector3& /*pos*/) const {
       // get the field from the cell
-      return Vector3(0., 0., 0.);
+      return Result<Vector3>::success({0., 0., 0.});
     }
   };
 

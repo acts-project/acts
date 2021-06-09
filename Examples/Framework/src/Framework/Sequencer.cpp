@@ -24,11 +24,9 @@
 
 ActsExamples::Sequencer::Sequencer(const Sequencer::Config& cfg)
     : m_cfg(cfg),
+      m_taskArena((m_cfg.numThreads < 0) ? tbb::task_arena::automatic
+                                         : m_cfg.numThreads),
       m_logger(Acts::getDefaultLogger("Sequencer", m_cfg.logLevel)) {
-  // automatically determine the number of concurrent threads to use
-  if (m_cfg.numThreads < 0) {
-    m_cfg.numThreads = tbb::task_scheduler_init::default_num_threads();
-  }
   ROOT::EnableThreadSafety();
 }
 
@@ -147,17 +145,20 @@ ActsExamples::Sequencer::determineEventsRange() const {
     return kInvalidEventsRange;
   }
   // events range was not defined by either the readers or user command line.
-  if ((beg == 0u) and (end == SIZE_MAX) and (m_cfg.events == SIZE_MAX)) {
+  if ((beg == 0u) and (end == SIZE_MAX) and (!m_cfg.events.has_value())) {
     ACTS_ERROR("Could not determine number of events");
     return kInvalidEventsRange;
   }
 
   // take user selection into account
   auto begSelected = saturatedAdd(beg, m_cfg.skip);
-  auto endRequested = saturatedAdd(begSelected, m_cfg.events);
-  auto endSelected = std::min(end, endRequested);
-  if (end < endRequested) {
-    ACTS_INFO("Restrict requested number of events to available ones");
+  auto endSelected = end;
+  if (m_cfg.events.has_value()) {
+    auto endRequested = saturatedAdd(begSelected, m_cfg.events.value());
+    endSelected = std::min(end, endRequested);
+    if (end < endRequested) {
+      ACTS_INFO("Restrict requested number of events to available ones");
+    }
   }
 
   return {begSelected, endSelected};
@@ -260,75 +261,76 @@ int ActsExamples::Sequencer::run() {
   // execute the parallel event loop
   std::atomic<size_t> nProcessedEvents = 0;
   size_t nTotalEvents = eventsRange.second - eventsRange.first;
-  tbb::task_scheduler_init init(m_cfg.numThreads);
-  tbb::parallel_for(
-      tbb::blocked_range<size_t>(eventsRange.first, eventsRange.second),
-      [&](const tbb::blocked_range<size_t>& r) {
-        std::vector<Duration> localClocksAlgorithms(names.size(),
-                                                    Duration::zero());
+  m_taskArena.execute([&] {
+    tbb::parallel_for(
+        tbb::blocked_range<size_t>(eventsRange.first, eventsRange.second),
+        [&](const tbb::blocked_range<size_t>& r) {
+          std::vector<Duration> localClocksAlgorithms(names.size(),
+                                                      Duration::zero());
 
-        for (size_t event = r.begin(); event != r.end(); ++event) {
-          // Use per-event store
-          WhiteBoard eventStore(Acts::getDefaultLogger(
-              "EventStore#" + std::to_string(event), m_cfg.logLevel));
-          // If we ever wanted to run algorithms in parallel, this needs to be
-          // changed to Algorithm context copies
-          AlgorithmContext context(0, event, eventStore);
-          size_t ialgo = 0;
+          for (size_t event = r.begin(); event != r.end(); ++event) {
+            // Use per-event store
+            WhiteBoard eventStore(Acts::getDefaultLogger(
+                "EventStore#" + std::to_string(event), m_cfg.logLevel));
+            // If we ever wanted to run algorithms in parallel, this needs to be
+            // changed to Algorithm context copies
+            AlgorithmContext context(0, event, eventStore);
+            size_t ialgo = 0;
 
-          // Prepare event store w/ service information
-          for (auto& service : m_services) {
-            StopWatch sw(localClocksAlgorithms[ialgo++]);
-            service->prepare(++context);
-          }
-          /// Decorate the context
-          for (auto& cdr : m_decorators) {
-            StopWatch sw(localClocksAlgorithms[ialgo++]);
-            if (cdr->decorate(++context) != ProcessCode::SUCCESS) {
-              throw std::runtime_error("Failed to decorate event context");
+            // Prepare event store w/ service information
+            for (auto& service : m_services) {
+              StopWatch sw(localClocksAlgorithms[ialgo++]);
+              service->prepare(++context);
             }
-          }
-          // Read everything in
-          for (auto& rdr : m_readers) {
-            StopWatch sw(localClocksAlgorithms[ialgo++]);
-            if (rdr->read(++context) != ProcessCode::SUCCESS) {
-              throw std::runtime_error("Failed to read input data");
+            /// Decorate the context
+            for (auto& cdr : m_decorators) {
+              StopWatch sw(localClocksAlgorithms[ialgo++]);
+              if (cdr->decorate(++context) != ProcessCode::SUCCESS) {
+                throw std::runtime_error("Failed to decorate event context");
+              }
             }
-          }
-          // Execute all algorithms
-          for (auto& alg : m_algorithms) {
-            StopWatch sw(localClocksAlgorithms[ialgo++]);
-            if (alg->execute(++context) != ProcessCode::SUCCESS) {
-              throw std::runtime_error("Failed to process event data");
+            // Read everything in
+            for (auto& rdr : m_readers) {
+              StopWatch sw(localClocksAlgorithms[ialgo++]);
+              if (rdr->read(++context) != ProcessCode::SUCCESS) {
+                throw std::runtime_error("Failed to read input data");
+              }
             }
-          }
-          // Write out results
-          for (auto& wrt : m_writers) {
-            StopWatch sw(localClocksAlgorithms[ialgo++]);
-            if (wrt->write(++context) != ProcessCode::SUCCESS) {
-              throw std::runtime_error("Failed to write output data");
+            // Execute all algorithms
+            for (auto& alg : m_algorithms) {
+              StopWatch sw(localClocksAlgorithms[ialgo++]);
+              if (alg->execute(++context) != ProcessCode::SUCCESS) {
+                throw std::runtime_error("Failed to process event data");
+              }
+            }
+            // Write out results
+            for (auto& wrt : m_writers) {
+              StopWatch sw(localClocksAlgorithms[ialgo++]);
+              if (wrt->write(++context) != ProcessCode::SUCCESS) {
+                throw std::runtime_error("Failed to write output data");
+              }
+            }
+
+            nProcessedEvents++;
+            if (nTotalEvents <= 100) {
+              ACTS_INFO("finished event " << event);
+            } else {
+              if (nProcessedEvents % 100 == 0) {
+                ACTS_INFO(nProcessedEvents << " / " << nTotalEvents
+                                           << " events processed");
+              }
             }
           }
 
-          nProcessedEvents++;
-          if (nTotalEvents <= 100) {
-            ACTS_INFO("finished event " << event);
-          } else {
-            if (nProcessedEvents % 100 == 0) {
-              ACTS_INFO(nProcessedEvents << " / " << nTotalEvents
-                                         << " events processed");
+          // add timing info to global information
+          {
+            tbb::queuing_mutex::scoped_lock lock(clocksAlgorithmsMutex);
+            for (size_t i = 0; i < clocksAlgorithms.size(); ++i) {
+              clocksAlgorithms[i] += localClocksAlgorithms[i];
             }
           }
-        }
-
-        // add timing info to global information
-        {
-          tbb::queuing_mutex::scoped_lock lock(clocksAlgorithmsMutex);
-          for (size_t i = 0; i < clocksAlgorithms.size(); ++i) {
-            clocksAlgorithms[i] += localClocksAlgorithms[i];
-          }
-        }
-      });
+        });
+  });
 
   // run end-of-run hooks
   for (auto& wrt : m_writers) {

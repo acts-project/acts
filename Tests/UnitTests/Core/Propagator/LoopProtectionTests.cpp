@@ -57,9 +57,10 @@ struct Stepper {
   ///                 the magnetic field cell is used (and potentially
   ///                 updated)
   /// @param [in] pos is the field position
-  Vector3 getField(SteppingState& /*unused*/, const Vector3& /*unused*/) const {
+  Result<Vector3> getField(SteppingState& /*unused*/,
+                           const Vector3& /*unused*/) const {
     // get the field from the cell
-    return field;
+    return Result<Vector3>::success(field);
   }
 
   /// Access method - position
@@ -173,7 +174,7 @@ BOOST_DATA_TEST_CASE(
   double q = -1 + 2 * charge;
 
   const double Bz = 2_T;
-  auto bField = std::make_shared<BField>(0, 0, Bz);
+  auto bField = std::make_shared<BField>(Vector3{0, 0, Bz});
   EigenStepper estepper(bField);
   EigenPropagator epropagator(std::move(estepper));
 

@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFinding/TrackFindingOptions.hpp"
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 
 #include <string>
 
@@ -24,6 +25,10 @@ void ActsExamples::Options::addTrackFindingOptions(
   opt("ckf-selection-nmax", value<size_t>()->default_value(10),
       "Global criteria of maximum number of measurement candidates on a "
       "surface for CKF measurement selection");
+  opt("ckf-initial-variance-inflation",
+      value<Reals<6>>()->default_value({{1., 1., 1., 1., 1., 1.}}),
+      "Inflation factor for the initial variances in the CKF search, must be "
+      "of form i:j:k:l:m:n.");
 }
 
 ActsExamples::TrackFindingAlgorithm::Config

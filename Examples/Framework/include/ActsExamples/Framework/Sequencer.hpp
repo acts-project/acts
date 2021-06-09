@@ -17,9 +17,12 @@
 
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
+
+#include <tbb/task_arena.h>
 
 namespace ActsExamples {
 
@@ -34,7 +37,7 @@ class Sequencer {
     /// number of events to skip at the beginning
     size_t skip = 0;
     /// number of events to process, SIZE_MAX to process all available events
-    size_t events = SIZE_MAX;
+    std::optional<size_t> events = std::nullopt;
     /// logging level
     Acts::Logging::Level logLevel = Acts::Logging::INFO;
     /// number of parallel threads to run, negative for automatic determination
@@ -101,6 +104,7 @@ class Sequencer {
   std::pair<size_t, size_t> determineEventsRange() const;
 
   Config m_cfg;
+  tbb::task_arena m_taskArena;
   std::vector<std::shared_ptr<IService>> m_services;
   std::vector<std::shared_ptr<IContextDecorator>> m_decorators;
   std::vector<std::shared_ptr<IReader>> m_readers;

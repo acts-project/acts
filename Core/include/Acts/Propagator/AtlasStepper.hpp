@@ -30,8 +30,6 @@
 // This is based original stepper code from the ATLAS RungeKuttePropagagor
 namespace Acts {
 
-using namespace Acts::UnitLiterals;
-
 /// @brief the AtlasStepper implementation for the
 class AtlasStepper {
  public:
@@ -476,10 +474,13 @@ class AtlasStepper {
   /// @param [in,out] state is the stepper state associated with the track
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
-  Vector3 getField(State& state, const Vector3& pos) const {
+  Result<Vector3> getField(State& state, const Vector3& pos) const {
     // get the field from the cell
-    state.field = m_bField->getField(pos, state.fieldCache);
-    return state.field;
+    auto res = m_bField->getField(pos, state.fieldCache);
+    if (res.ok()) {
+      state.field = *res;
+    }
+    return res;
   }
 
   Vector3 position(const State& state) const {
@@ -592,7 +593,7 @@ class AtlasStepper {
     // The transport of the covariance
     std::optional<Covariance> covOpt = std::nullopt;
     if (state.covTransport && transportCov) {
-      covarianceTransport(state, surface);
+      transportCovarianceToBound(state, surface);
     }
     if (state.cov != Covariance::Zero()) {
       covOpt = state.cov;
@@ -638,7 +639,7 @@ class AtlasStepper {
 
     std::optional<Covariance> covOpt = std::nullopt;
     if (state.covTransport && transportCov) {
-      covarianceTransport(state);
+      transportCovarianceToCurvilinear(state);
     }
     if (state.cov != Covariance::Zero()) {
       covOpt = state.cov;
@@ -707,7 +708,7 @@ class AtlasStepper {
   /// @param [in,out] state State of the stepper
   ///
   /// @return the full transport jacobian
-  void covarianceTransport(State& state) const {
+  void transportCovarianceToCurvilinear(State& state) const {
     double P[60];
     for (unsigned int i = 0; i < 60; ++i) {
       P[i] = state.pVector[i];
@@ -857,7 +858,7 @@ class AtlasStepper {
   ///
   /// @param [in,out] state State of the stepper
   /// @param [in] surface is the surface to which the covariance is forwarded to
-  void covarianceTransport(State& state, const Surface& surface) const {
+  void transportCovarianceToBound(State& state, const Surface& surface) const {
     Acts::Vector3 gp(state.pVector[0], state.pVector[1], state.pVector[2]);
     Acts::Vector3 mom(state.pVector[4], state.pVector[5], state.pVector[6]);
     mom /= std::abs(state.pVector[7]);
@@ -1129,7 +1130,11 @@ class AtlasStepper {
     if (state.stepping.newfield) {
       const Vector3 pos(R[0], R[1], R[2]);
       // This is sd.B_first in EigenStepper
-      f0 = getField(state.stepping, pos);
+      auto fRes = getField(state.stepping, pos);
+      if (!fRes.ok()) {
+        return fRes.error();
+      }
+      f0 = *fRes;
     } else {
       f0 = state.stepping.field;
     }
@@ -1164,7 +1169,11 @@ class AtlasStepper {
         // This is pos1 in EigenStepper
         const Vector3 pos(R[0] + A1 * S4, R[1] + B1 * S4, R[2] + C1 * S4);
         // This is sd.B_middle in EigenStepper
-        f = getField(state.stepping, pos);
+        auto fRes = getField(state.stepping, pos);
+        if (!fRes.ok()) {
+          return fRes.error();
+        }
+        f = *fRes;
       } else {
         f = f0;
       }
@@ -1190,7 +1199,11 @@ class AtlasStepper {
         // This is pos2 in EigenStepper
         const Vector3 pos(R[0] + h * A4, R[1] + h * B4, R[2] + h * C4);
         // This is sd.B_last in Eigen stepper
-        f = getField(state.stepping, pos);
+        auto fRes = getField(state.stepping, pos);
+        if (!fRes.ok()) {
+          return fRes.error();
+        }
+        f = *fRes;
       } else {
         f = f0;
       }
@@ -1355,7 +1368,7 @@ class AtlasStepper {
   std::shared_ptr<const MagneticFieldProvider> m_bField;
 
   /// Overstep limit: could/should be dynamic
-  double m_overstepLimit = -50_um;
+  double m_overstepLimit = -50 * UnitConstants::um;
 };
 
 }  // namespace Acts

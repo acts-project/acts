@@ -28,8 +28,6 @@
 
 namespace Acts {
 
-using namespace Acts::UnitLiterals;
-
 /// @brief Runge-Kutta-Nystroem stepper based on Eigen implementation
 /// for the following ODE:
 ///
@@ -97,7 +95,7 @@ class EigenStepper {
         // set the covariance transport flag to true and copy
         covTransport = true;
         cov = BoundSymMatrix(*par.covariance());
-        jacToGlobal = surface.jacobianLocalToGlobal(gctx, par.parameters());
+        jacToGlobal = surface.boundToFreeJacobian(gctx, par.parameters());
       }
     }
 
@@ -194,7 +192,7 @@ class EigenStepper {
   /// @param [in,out] state is the propagation state associated with the track
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
-  Vector3 getField(State& state, const Vector3& pos) const {
+  Result<Vector3> getField(State& state, const Vector3& pos) const {
     // get the field from the cell
     return m_bField->getField(pos, state.fieldCache);
   }
@@ -349,7 +347,7 @@ class EigenStepper {
   /// @param [in,out] state State of the stepper
   ///
   /// @return the full transport jacobian
-  void covarianceTransport(State& state) const;
+  void transportCovarianceToCurvilinear(State& state) const;
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current position,
@@ -360,7 +358,7 @@ class EigenStepper {
   /// @param [in,out] state State of the stepper
   /// @param [in] surface is the surface to which the covariance is forwarded to
   /// @note no check is done if the position is actually on the surface
-  void covarianceTransport(State& state, const Surface& surface) const;
+  void transportCovarianceToBound(State& state, const Surface& surface) const;
 
   /// Perform a Runge-Kutta track parameter propagation step
   ///
@@ -380,7 +378,7 @@ class EigenStepper {
   std::shared_ptr<const MagneticFieldProvider> m_bField;
 
   /// Overstep limit: could/should be dynamic
-  double m_overstepLimit = 100_um;
+  double m_overstepLimit = 100 * UnitConstants::um;
 };
 }  // namespace Acts
 

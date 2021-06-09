@@ -73,10 +73,18 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
                 Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(),
                 &(*pSurface));
 
+  kfOptions.multipleScattering = m_cfg.multipleScattering;
+  kfOptions.energyLoss = m_cfg.energyLoss;
+
   // Perform the fit for each input track
   std::vector<IndexSourceLink> trackSourceLinks;
   std::vector<const Acts::Surface*> surfSequence;
   for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
+    // Check if you are not in picking mode
+    if (m_cfg.pickTrack > 0 and m_cfg.pickTrack != static_cast<int>(itrack)) {
+      continue;
+    }
+
     // The list of hits and the initial start parameters
     const auto& protoTrack = protoTracks[itrack];
     const auto& initialParams = initialParameters[itrack];

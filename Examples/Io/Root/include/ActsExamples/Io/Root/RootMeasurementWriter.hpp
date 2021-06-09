@@ -85,6 +85,7 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
 
     /// Reconstruction information
     float recBound[Acts::eBoundSize];
+    float varBound[Acts::eBoundSize];
 
     /// Cluster information comprised of
     /// nch :  number of channels
@@ -146,6 +147,7 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
     /// @param i the bound index in question
     void setupBoundRecBranch(Acts::BoundIndices i) {
       tree->Branch(std::string("rec_" + bNames[i]).c_str(), &recBound[i]);
+      tree->Branch(std::string("var_" + bNames[i]).c_str(), &varBound[i]);
     }
 
     /// Setup the cluster related branch
@@ -209,6 +211,19 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
       recBound[Acts::eBoundPhi] = fullVect[Acts::eBoundPhi];
       recBound[Acts::eBoundTheta] = fullVect[Acts::eBoundTheta];
       recBound[Acts::eBoundTime] = fullVect[Acts::eBoundTime];
+
+      Acts::BoundSymMatrix fullVar =
+          m.expander() * m.covariance() * m.expander().transpose();
+      varBound[Acts::eBoundLoc0] =
+          std::sqrt(fullVar(Acts::eBoundLoc0, Acts::eBoundLoc0));
+      varBound[Acts::eBoundLoc1] =
+          std::sqrt(fullVar(Acts::eBoundLoc1, Acts::eBoundLoc1));
+      varBound[Acts::eBoundPhi] =
+          std::sqrt(fullVar(Acts::eBoundPhi, Acts::eBoundPhi));
+      varBound[Acts::eBoundTheta] =
+          std::sqrt(fullVar(Acts::eBoundTheta, Acts::eBoundTheta));
+      varBound[Acts::eBoundTime] =
+          std::sqrt(fullVar(Acts::eBoundTime, Acts::eBoundTime));
     }
 
     /// Convenience function to fill the cluster information

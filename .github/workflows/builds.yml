@@ -4,7 +4,7 @@ on:
   push:
   pull_request:
     branches:
-      - master
+      - main
       - 'release/**'
 
 env:
@@ -164,7 +164,8 @@ jobs:
       - name: Install dependencies
         run: >
           apt-get install -y doxygen
-          && pip3 install -r docs/requirements.txt
+          && pip3 install --upgrade pip
+          && pip install -r docs/requirements.txt
       - name: Configure
         run: cmake -B build -S . -GNinja -DACTS_BUILD_DOCS=on
       - name: Build

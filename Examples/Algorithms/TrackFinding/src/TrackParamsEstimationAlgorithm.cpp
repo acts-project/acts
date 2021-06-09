@@ -51,17 +51,23 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
 
   // Set up the track parameters covariance (the same for all tracks)
   m_covariance(Acts::eBoundLoc0, Acts::eBoundLoc0) =
-      cfg.sigmaLoc0 * m_cfg.sigmaLoc0;
+      m_cfg.initialVarInflation[Acts::eBoundLoc0] * cfg.sigmaLoc0 *
+      m_cfg.sigmaLoc0;
   m_covariance(Acts::eBoundLoc1, Acts::eBoundLoc1) =
-      cfg.sigmaLoc1 * m_cfg.sigmaLoc1;
+      m_cfg.initialVarInflation[Acts::eBoundLoc1] * cfg.sigmaLoc1 *
+      m_cfg.sigmaLoc1;
   m_covariance(Acts::eBoundPhi, Acts::eBoundPhi) =
-      cfg.sigmaPhi * m_cfg.sigmaPhi;
+      m_cfg.initialVarInflation[Acts::eBoundPhi] * cfg.sigmaPhi *
+      m_cfg.sigmaPhi;
   m_covariance(Acts::eBoundTheta, Acts::eBoundTheta) =
-      cfg.sigmaTheta * m_cfg.sigmaTheta;
+      m_cfg.initialVarInflation[Acts::eBoundTheta] * cfg.sigmaTheta *
+      m_cfg.sigmaTheta;
   m_covariance(Acts::eBoundQOverP, Acts::eBoundQOverP) =
-      cfg.sigmaQOverP * m_cfg.sigmaQOverP;
+      m_cfg.initialVarInflation[Acts::eBoundQOverP] * cfg.sigmaQOverP *
+      m_cfg.sigmaQOverP;
   m_covariance(Acts::eBoundTime, Acts::eBoundTime) =
-      m_cfg.sigmaT0 * m_cfg.sigmaT0;
+      m_cfg.initialVarInflation[Acts::eBoundTime] * m_cfg.sigmaT0 *
+      m_cfg.sigmaT0;
 }
 
 ActsExamples::SimSeedContainer
@@ -101,8 +107,13 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
                 return std::hypot(lhs->r(), lhs->z()) <
                        std::hypot(rhs->r(), rhs->z());
               });
-    // Loop over the found space points to find seeds with simple selection
+
+    // Loop over the found space points to find the seed with maxium deltaR
+    // betweent the bottom and top space point
     // @todo add the check of deltaZ
+    bool seedFound = false;
+    std::array<size_t, 3> bestSPIndices;
+    double maxDeltaR = std::numeric_limits<double>::min();
     for (size_t ib = 0; ib < spacePointsOnTrack.size() - 2; ++ib) {
       for (size_t im = ib + 1; im < spacePointsOnTrack.size() - 1; ++im) {
         for (size_t it = im + 1; it < spacePointsOnTrack.size(); ++it) {
@@ -112,12 +123,21 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
                                      spacePointsOnTrack[im]->r());
           if (bmDeltaR >= m_cfg.deltaRMin and bmDeltaR <= m_cfg.deltaRMax and
               mtDeltaR >= m_cfg.deltaRMin and mtDeltaR <= m_cfg.deltaRMax) {
-            seeds.emplace_back(*spacePointsOnTrack[ib], *spacePointsOnTrack[im],
-                               *spacePointsOnTrack[it],
-                               spacePointsOnTrack[im]->z());
+            if ((bmDeltaR + mtDeltaR) > maxDeltaR) {
+              maxDeltaR = bmDeltaR + mtDeltaR;
+              bestSPIndices = {ib, im, it};
+              seedFound = true;
+            }
           }
         }
       }
+    }
+
+    if (seedFound) {
+      seeds.emplace_back(*spacePointsOnTrack[bestSPIndices[0]],
+                         *spacePointsOnTrack[bestSPIndices[1]],
+                         *spacePointsOnTrack[bestSPIndices[2]],
+                         spacePointsOnTrack[bestSPIndices[1]]->z());
     }
   }
   return seeds;
@@ -148,6 +168,8 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
   trackParameters.reserve(seeds.size());
   tracks.reserve(seeds.size());
 
+  auto bCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
+
   // Loop over all found seeds to estimate track parameters
   for (size_t iseed = 0; iseed < seeds.size(); ++iseed) {
     const auto& seed = seeds[iseed];
@@ -164,8 +186,14 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     }
 
     // Get the magnetic field at the bottom space point
-    Acts::Vector3 field = m_cfg.magneticField->getField(
-        {bottomSP->x(), bottomSP->y(), bottomSP->z()});
+    auto fieldRes = m_cfg.magneticField->getField(
+        {bottomSP->x(), bottomSP->y(), bottomSP->z()}, bCache);
+    if (!fieldRes.ok()) {
+      ACTS_ERROR("Field lookup error: " << fieldRes.error());
+      return ProcessCode::ABORT;
+    }
+    Acts::Vector3 field = *fieldRes;
+
     // Estimate the track parameters from seed
     auto optParams = Acts::estimateTrackParamsFromSeed(
         ctx.geoContext, seed.sp().begin(), seed.sp().end(), *surface, field,

@@ -29,6 +29,7 @@
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingOptions.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
+#include "ActsExamples/TrackFitting/TrackFittingOptions.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
@@ -70,6 +71,7 @@ int runRecCKFTracks(int argc, char* argv[],
   Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
   detector->addOptions(desc);
   Options::addMagneticFieldOptions(desc);
+  Options::addFittingOptions(desc);
   Options::addTrackFindingOptions(desc);
   addRecCKFOptions(desc);
   Options::addDigitizationOptions(desc);
@@ -120,7 +122,7 @@ int runRecCKFTracks(int argc, char* argv[],
   particleSelectorCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
   particleSelectorCfg.outputParticles = "particles_selected";
-  particleSelectorCfg.ptMin = 1_GeV;
+  particleSelectorCfg.ptMin = 500_MeV;
   particleSelectorCfg.nHitsMin = 9;
   sequencer.addAlgorithm(
       std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));
@@ -214,12 +216,16 @@ int runRecCKFTracks(int argc, char* argv[],
     paramsEstimationCfg.magneticField = magneticField;
     paramsEstimationCfg.bFieldMin = 0.1_T;
     paramsEstimationCfg.deltaRMax = 100._mm;
+    paramsEstimationCfg.deltaRMin = 10._mm;
     paramsEstimationCfg.sigmaLoc0 = 25._um;
     paramsEstimationCfg.sigmaLoc1 = 100._um;
-    paramsEstimationCfg.sigmaPhi = 0.005_degree;
-    paramsEstimationCfg.sigmaTheta = 0.001_degree;
+    paramsEstimationCfg.sigmaPhi = 0.02_degree;
+    paramsEstimationCfg.sigmaTheta = 0.02_degree;
     paramsEstimationCfg.sigmaQOverP = 0.1 / 1._GeV;
     paramsEstimationCfg.sigmaT0 = 1400._s;
+    paramsEstimationCfg.initialVarInflation =
+        vm["ckf-initial-variance-inflation"].template as<Options::Reals<6>>();
+
     sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
         paramsEstimationCfg, logLevel));
 
@@ -280,8 +286,9 @@ int runRecCKFTracks(int argc, char* argv[],
   perfWriterCfg.inputTrajectories = trackFindingCfg.outputTrajectories;
   perfWriterCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
-  // The bottom seed on a pixel detector 'eats' one or two measurements?
-  perfWriterCfg.nMeasurementsMin = particleSelectorCfg.nHitsMin - 2;
+  // The bottom seed could be the first, second or third hits on the truth track
+  perfWriterCfg.nMeasurementsMin = particleSelectorCfg.nHitsMin - 3;
+  perfWriterCfg.ptMin = 0.4_GeV;
   perfWriterCfg.outputDir = outputDir;
 #ifdef ACTS_PLUGIN_ONNX
   // Onnx plugin related options

@@ -33,30 +33,18 @@ class SharedBField final : public MagneticFieldProvider {
   /// @tparam bField is the shared BField to be stored
   SharedBField(std::shared_ptr<const BField> bField) : m_bField(bField) {}
 
-  /// @copydoc MagneticFieldProvider::getField(const Vector3&)
-  Vector3 getField(const Vector3& position) const override {
-    return m_bField->getField(position);
-  }
-
   /// @copydoc MagneticFieldProvider::getField(const
   /// Vector3&,MagneticFieldProvider::Cache&)
-  Vector3 getField(const Vector3& position,
-                   MagneticFieldProvider::Cache& cache) const override {
+  Result<Vector3> getField(const Vector3& position,
+                           MagneticFieldProvider::Cache& cache) const override {
     return m_bField->getField(position, cache);
   }
 
   /// @copydoc MagneticFieldProvider::getFieldGradient(const
-  /// Vector3&,ActsMatrix<3,3>&)
-  Vector3 getFieldGradient(const Vector3& position,
-                           ActsMatrix<3, 3>& derivative) const override {
-    return m_bField->getFieldGradient(position, derivative);
-  }
-
-  /// @copydoc MagneticFieldProvider::getFieldGradient(const
   /// Vector3&,ActsMatrix<3,3>&,MagneticFieldProvider::Cache&)
-  Vector3 getFieldGradient(const Vector3& position,
-                           ActsMatrix<3, 3>& derivative,
-                           MagneticFieldProvider::Cache& cache) const override {
+  Result<Vector3> getFieldGradient(
+      const Vector3& position, ActsMatrix<3, 3>& derivative,
+      MagneticFieldProvider::Cache& cache) const override {
     return m_bField->getFieldGradient(position, derivative, cache);
   }
 

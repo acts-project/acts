@@ -16,6 +16,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/Kernel/InteractionList.hpp"
 #include "ActsFatras/Kernel/Simulation.hpp"
@@ -164,13 +165,17 @@ BOOST_DATA_TEST_CASE(FatrasSimulation, dataset, pdg, phi, eta, p,
   // construct the propagators
   Navigator navigator(trackingGeometry);
   ChargedStepper chargedStepper(
-      std::make_shared<Acts::ConstantBField>(0, 0, 1_T));
+      std::make_shared<Acts::ConstantBField>(Acts::Vector3{0, 0, 1_T}));
   ChargedPropagator chargedPropagator(std::move(chargedStepper), navigator);
   NeutralPropagator neutralPropagator(NeutralStepper(), navigator);
 
   // construct the simulator
-  ChargedSimulation simulatorCharged(std::move(chargedPropagator), logLevel);
-  NeutralSimulation simulatorNeutral(std::move(neutralPropagator), logLevel);
+  ChargedSimulation simulatorCharged(
+      std::move(chargedPropagator),
+      Acts::getDefaultLogger("ChargedSimulation", logLevel));
+  NeutralSimulation simulatorNeutral(
+      std::move(neutralPropagator),
+      Acts::getDefaultLogger("NeutralSimulation", logLevel));
   Simulation simulator(std::move(simulatorCharged),
                        std::move(simulatorNeutral));
 

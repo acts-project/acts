@@ -502,7 +502,7 @@ class KalmanFitter {
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
         // Transport the covariance to the surface
-        stepper.covarianceTransport(state.stepping, *surface);
+        stepper.transportCovarianceToBound(state.stepping, *surface);
 
         // Update state and stepper with pre material effects
         materialInteractor(surface, state, stepper, preUpdate);
@@ -530,8 +530,10 @@ class KalmanFitter {
 
         // Fill the track state
         trackStateProxy.predicted() = std::move(boundParams.parameters());
-        trackStateProxy.predictedCovariance() =
-            std::move(*boundParams.covariance());
+        if (boundParams.covariance().has_value()) {
+          trackStateProxy.predictedCovariance() =
+              std::move(*boundParams.covariance());
+        }
         trackStateProxy.jacobian() = std::move(jacobian);
         trackStateProxy.pathLength() = std::move(pathLength);
 
@@ -546,8 +548,10 @@ class KalmanFitter {
 
         // Get and set the type flags
         auto& typeFlags = trackStateProxy.typeFlags();
-        typeFlags.set(TrackStateFlag::MaterialFlag);
         typeFlags.set(TrackStateFlag::ParameterFlag);
+        if (surface->surfaceMaterial() != nullptr) {
+          typeFlags.set(TrackStateFlag::MaterialFlag);
+        }
 
         // Check if the state is an outlier.
         // If not, run Kalman update, tag it as a
@@ -580,6 +584,7 @@ class KalmanFitter {
               "be an outlier. Stepping state is not updated.")
           // Set the outlier type flag
           typeFlags.set(TrackStateFlag::OutlierFlag);
+          trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
         }
 
         // Update state and stepper with post material effects
@@ -637,8 +642,10 @@ class KalmanFitter {
 
             // Fill the track state
             trackStateProxy.predicted() = std::move(boundParams.parameters());
-            trackStateProxy.predictedCovariance() =
-                std::move(*boundParams.covariance());
+            if (boundParams.covariance().has_value()) {
+              trackStateProxy.predictedCovariance() =
+                  std::move(*boundParams.covariance());
+            }
             trackStateProxy.jacobian() = std::move(jacobian);
             trackStateProxy.pathLength() = std::move(pathLength);
           } else if (surface->surfaceMaterial() != nullptr) {
@@ -652,8 +659,10 @@ class KalmanFitter {
             // Fill the track state
             trackStateProxy.predicted() =
                 std::move(curvilinearParams.parameters());
-            trackStateProxy.predictedCovariance() =
-                std::move(*curvilinearParams.covariance());
+            if (curvilinearParams.covariance().has_value()) {
+              trackStateProxy.predictedCovariance() =
+                  std::move(*curvilinearParams.covariance());
+            }
             trackStateProxy.jacobian() = std::move(jacobian);
             trackStateProxy.pathLength() = std::move(pathLength);
           }
@@ -703,7 +712,7 @@ class KalmanFitter {
         }
 
         // Transport the covariance to the surface
-        stepper.covarianceTransport(state.stepping, *surface);
+        stepper.transportCovarianceToBound(state.stepping, *surface);
 
         // Update state and stepper with pre material effects
         materialInteractor(surface, state, stepper, preUpdate);
@@ -730,8 +739,10 @@ class KalmanFitter {
 
         // Fill the track state
         trackStateProxy.predicted() = std::move(boundParams.parameters());
-        trackStateProxy.predictedCovariance() =
-            std::move(*boundParams.covariance());
+        if (boundParams.covariance().has_value()) {
+          trackStateProxy.predictedCovariance() =
+              std::move(*boundParams.covariance());
+        }
         trackStateProxy.jacobian() = std::move(jacobian);
         trackStateProxy.pathLength() = std::move(pathLength);
 
@@ -789,13 +800,13 @@ class KalmanFitter {
           ACTS_VERBOSE("Detected hole on " << surface->geometryId()
                                            << " in reversed filtering");
           if (state.stepping.covTransport) {
-            stepper.covarianceTransport(state.stepping, *surface);
+            stepper.transportCovarianceToBound(state.stepping, *surface);
           }
         } else if (surface->surfaceMaterial() != nullptr) {
           ACTS_VERBOSE("Detected in-sensitive surface "
                        << surface->geometryId() << " in reversed filtering");
           if (state.stepping.covTransport) {
-            stepper.covarianceTransport(state.stepping);
+            stepper.transportCovarianceToCurvilinear(state.stepping);
           }
         }
         // Not creating bound state here, so need manually reinitialize
@@ -880,9 +891,8 @@ class KalmanFitter {
       // Remember you smoothed the track states
       result.smoothed = true;
 
-      // Get the indices of measurement states;
-      std::vector<size_t> measurementIndices;
-      measurementIndices.reserve(result.measurementStates);
+      // Get the indices of the first measurement states;
+      size_t firstMeasurementIndex = result.lastMeasurementIndex;
       // Count track states to be smoothed
       size_t nStates = 0;
       result.fittedStates.applyBackwards(
@@ -890,20 +900,13 @@ class KalmanFitter {
             bool isMeasurement =
                 st.typeFlags().test(TrackStateFlag::MeasurementFlag);
             if (isMeasurement) {
-              measurementIndices.emplace_back(st.index());
-            } else if (measurementIndices.empty()) {
-              // No smoothed parameters if the last measurement state has not
-              // been found yet
-              st.data().ismoothed = detail_lt::IndexData::kInvalid;
+              firstMeasurementIndex = st.index();
             }
-            // Start count when the last measurement state is found
-            if (not measurementIndices.empty()) {
-              nStates++;
-            }
+            nStates++;
           });
       // Return error if the track has no measurement states (but this should
       // not happen)
-      if (measurementIndices.empty()) {
+      if (nStates == 0) {
         ACTS_ERROR("Smoothing for a track without measurements.");
         return KalmanFitterError::SmoothFailed;
       }
@@ -915,7 +918,7 @@ class KalmanFitter {
 
       // Smooth the track states
       auto smoothRes = m_smoother(state.geoContext, result.fittedStates,
-                                  measurementIndices.front(), logger);
+                                  result.lastMeasurementIndex, logger);
       if (!smoothRes.ok()) {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
         return smoothRes.error();
@@ -928,9 +931,9 @@ class KalmanFitter {
 
       // Obtain the smoothed parameters at first/last measurement state
       auto firstCreatedMeasurement =
-          result.fittedStates.getTrackState(measurementIndices.back());
+          result.fittedStates.getTrackState(firstMeasurementIndex);
       auto lastCreatedMeasurement =
-          result.fittedStates.getTrackState(measurementIndices.front());
+          result.fittedStates.getTrackState(result.lastMeasurementIndex);
 
       // Lambda to get the intersection of the free params on the target surface
       auto target = [&](const FreeVector& freeVector) -> SurfaceIntersection {

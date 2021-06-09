@@ -181,4 +181,40 @@ struct SurfaceData {
                  bound_param5, bound_param6);
 };
 
+struct LayerVolumeData {
+  /// Surface identifier. Not available in the TrackML datasets.
+  uint64_t geometry_id;
+  /// Partially decoded surface identifier components.
+  uint32_t volume_id, layer_id;
+  /// The type of the surface bpounds object, determines the parameters filled
+  int volume_type;
+  float min_v0 = -1.f;
+  float max_v0 = -1.f;
+  float min_v1 = -1.f;
+  float max_v1 = -1.f;
+  float min_v2 = -1.f;
+  float max_v2 = -1.f;
+
+  DFE_NAMEDTUPLE(LayerVolumeData, geometry_id, volume_id, layer_id, min_v0,
+                 max_v0, min_v1, max_v1, min_v2, max_v2);
+};
+
+struct SurfaceGridData {
+  /// Surface identifier. Not available in the TrackML datasets.
+  uint64_t geometry_id;
+  /// Partially decoded surface identifier components.
+  uint32_t volume_id, layer_id, surface_id;
+  /// The number of bins in loc 0 / 1
+  int type_loc0 = -1;
+  int nbins_loc0 = -1;
+  float min_loc0, max_loc0;
+  int type_loc1 = -1;
+  int nbins_loc1 = -1;
+  float min_loc1, max_loc1;
+
+  DFE_NAMEDTUPLE(SurfaceGridData, geometry_id, volume_id, layer_id, surface_id,
+                 type_loc0, nbins_loc0, min_loc0, max_loc0, type_loc1,
+                 nbins_loc1, min_loc1, max_loc1);
+};
+
 }  // namespace ActsExamples

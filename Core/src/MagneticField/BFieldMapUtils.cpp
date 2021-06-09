@@ -20,15 +20,15 @@
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-Acts::InterpolatedBFieldMapper<
+Acts::InterpolatedBFieldMap<
     Acts::detail::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
                        Acts::detail::EquidistantAxis>>
-Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
-                                               std::array<size_t, 2> nBinsRZ)>&
-                        localToGlobalBin,
-                    std::vector<double> rPos, std::vector<double> zPos,
-                    std::vector<Acts::Vector2> bField, double lengthUnit,
-                    double BFieldUnit, bool firstQuadrant) {
+Acts::fieldMapRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
+                                            std::array<size_t, 2> nBinsRZ)>&
+                     localToGlobalBin,
+                 std::vector<double> rPos, std::vector<double> zPos,
+                 std::vector<Acts::Vector2> bField, double lengthUnit,
+                 double BFieldUnit, bool firstQuadrant) {
   // [1] Create Grid
   // sort the values
   std::sort(rPos.begin(), rPos.end());
@@ -124,20 +124,19 @@ Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
 
   // [5] Create the mapper & BField Service
   // create field mapping
-  return Acts::InterpolatedBFieldMapper<Grid_t>(transformPos, transformBField,
-                                                std::move(grid));
+  return Acts::InterpolatedBFieldMap<Grid_t>(
+      {transformPos, transformBField, std::move(grid)});
 }
 
-Acts::InterpolatedBFieldMapper<Acts::detail::Grid<
+Acts::InterpolatedBFieldMap<Acts::detail::Grid<
     Acts::Vector3, Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis,
     Acts::detail::EquidistantAxis>>
-Acts::fieldMapperXYZ(
-    const std::function<size_t(std::array<size_t, 3> binsXYZ,
-                               std::array<size_t, 3> nBinsXYZ)>&
-        localToGlobalBin,
-    std::vector<double> xPos, std::vector<double> yPos,
-    std::vector<double> zPos, std::vector<Acts::Vector3> bField,
-    double lengthUnit, double BFieldUnit, bool firstOctant) {
+Acts::fieldMapXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
+                                             std::array<size_t, 3> nBinsXYZ)>&
+                      localToGlobalBin,
+                  std::vector<double> xPos, std::vector<double> yPos,
+                  std::vector<double> zPos, std::vector<Acts::Vector3> bField,
+                  double lengthUnit, double BFieldUnit, bool firstOctant) {
   // [1] Create Grid
   // Sort the values
   std::sort(xPos.begin(), xPos.end());
@@ -244,17 +243,17 @@ Acts::fieldMapperXYZ(
 
   // [5] Create the mapper & BField Service
   // create field mapping
-  return Acts::InterpolatedBFieldMapper<Grid_t>(transformPos, transformBField,
-                                                std::move(grid));
+  return Acts::InterpolatedBFieldMap<Grid_t>(
+      {transformPos, transformBField, std::move(grid)});
 }
 
-Acts::InterpolatedBFieldMapper<
+Acts::InterpolatedBFieldMap<
     Acts::detail::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
                        Acts::detail::EquidistantAxis>>
-Acts::solenoidFieldMapper(std::pair<double, double> rlim,
-                          std::pair<double, double> zlim,
-                          std::pair<size_t, size_t> nbins,
-                          const SolenoidBField& field) {
+Acts::solenoidFieldMap(std::pair<double, double> rlim,
+                       std::pair<double, double> zlim,
+                       std::pair<size_t, size_t> nbins,
+                       const SolenoidBField& field) {
   double rMin, rMax, zMin, zMax;
   std::tie(rMin, rMax) = rlim;
   std::tie(zMin, zMax) = zlim;
@@ -322,7 +321,7 @@ Acts::solenoidFieldMapper(std::pair<double, double> rlim,
 
   // Create the mapper & BField Service
   // create field mapping
-  Acts::InterpolatedBFieldMapper<Grid_t> mapper(transformPos, transformBField,
-                                                std::move(grid));
-  return mapper;
+  Acts::InterpolatedBFieldMap<Grid_t> map(
+      {transformPos, transformBField, std::move(grid)});
+  return map;
 }

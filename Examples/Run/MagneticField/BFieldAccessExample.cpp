@@ -38,7 +38,6 @@ void accessStepWise(const Acts::MagneticFieldProvider& bField,
                     double theta_step, size_t phi_steps, double phi_0,
                     double phi_step, size_t access_steps, double access_step) {
   std::cout << "[>>>] Start: step-wise access pattern ... " << std::endl;
-  size_t mismatched = 0;
   // initialize the field cache
   auto bCache = bField.makeCache(bFieldContext);
   // boost display
@@ -59,14 +58,9 @@ void accessStepWise(const Acts::MagneticFieldProvider& bField,
         // now step through the magnetic field
         for (size_t istep = 0; istep < access_steps; ++istep) {
           Acts::Vector3 position = currentStep * dir;
-          // access the field directly
-          auto field_direct = bField.getField(position);
           // access the field with the cell
           auto field_from_cache = bField.getField(position, bCache);
-          // check
-          if (!field_direct.isApprox(field_from_cache)) {
-            ++mismatched;
-          }
+          (void)field_from_cache;  // we don't use this explicitly
           // increase the step
           currentStep += access_step;
           // show the progress bar
@@ -74,8 +68,7 @@ void accessStepWise(const Acts::MagneticFieldProvider& bField,
         }
       }
     }
-    std::cout << "[<<<] End result : " << mismatched << "/" << totalSteps
-              << " mismatches" << std::endl;
+    std::cout << "[<<<] End result: total steps:" << totalSteps << std::endl;
   }
 }
 
@@ -83,7 +76,6 @@ void accessRandom(const Acts::MagneticFieldProvider& bField,
                   const Acts::MagneticFieldContext& bFieldContext,
                   size_t totalSteps, double radius) {
   std::cout << "[>>>] Start: random access pattern ... " << std::endl;
-  size_t mismatched = 0;
   RandomEngine rng;
   UniformDist xDist(-radius, radius);
   UniformDist yDist(-radius, radius);
@@ -97,19 +89,13 @@ void accessRandom(const Acts::MagneticFieldProvider& bField,
   // loop over the events - @todo move to parallel for
   for (size_t istep = 0; istep < totalSteps; ++istep) {
     Acts::Vector3 position(xDist(rng), yDist(rng), zDist(rng));
-    // access the field directly
-    auto field_direct = bField.getField(position);
     // access the field with the cell
     auto field_from_cache = bField.getField(position, bCache);
-    // check
-    if (!field_direct.isApprox(field_from_cache)) {
-      ++mismatched;
-    }
+    (void)field_from_cache;  // we don't use this explicitly
     // show the progress bar
     ++show_progress;
   }
-  std::cout << "[<<<] End result : " << mismatched << "/" << totalSteps
-            << " mismatches" << std::endl;
+  std::cout << "[<<<] End result: total steps: " << totalSteps << std::endl;
 }
 
 /// @brief main executable
@@ -149,7 +135,7 @@ int main(int argc, char* argv[]) {
   // Why does this need number-of-events? If it really does emulate
   // per-event access patterns this should be switched to a proper
   // Sequencer-based tool. Otherwise it should be removed.
-  auto nEvents = ActsExamples::Options::readSequencerConfig(vm).events;
+  auto nEvents = ActsExamples::Options::readSequencerConfig(vm).events.value();
   auto bField = ActsExamples::Options::readMagneticField(vm);
 
   // Get the phi and eta range

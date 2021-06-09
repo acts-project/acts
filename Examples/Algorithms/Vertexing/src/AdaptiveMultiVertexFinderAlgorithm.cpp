@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -29,6 +29,8 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
+#include <chrono>
+
 #include "VertexingHelpers.hpp"
 
 ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
@@ -41,6 +43,12 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
   }
   if (m_cfg.outputProtoVertices.empty()) {
     throw std::invalid_argument("Missing output proto vertices collection");
+  }
+  if (m_cfg.outputVertices.empty()) {
+    throw std::invalid_argument("Missing output vertices collection");
+  }
+  if (m_cfg.outputTime.empty()) {
+    throw std::invalid_argument("Missing output reconstruction time");
   }
 }
 
@@ -109,8 +117,11 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   using VertexingOptions = Acts::VertexingOptions<Acts::BoundTrackParameters>;
   VertexingOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
 
-  // find vertices
+  // find vertices and measure elapsed time
+  auto t1 = std::chrono::high_resolution_clock::now();
   auto result = finder.find(inputTrackPointers, finderOpts, state);
+  auto t2 = std::chrono::high_resolution_clock::now();
+
   if (not result.ok()) {
     ACTS_ERROR("Error in vertex finder: " << result.error().message());
     return ProcessCode::ABORT;
@@ -120,13 +131,22 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   // show some debug output
   ACTS_INFO("Found " << vertices.size() << " vertices in event");
   for (const auto& vtx : vertices) {
-    ACTS_INFO("Found vertex at " << vtx.fullPosition().transpose() << " with "
-                                 << vtx.tracks().size() << " tracks.");
+    ACTS_DEBUG("Found vertex at " << vtx.fullPosition().transpose() << " with "
+                                  << vtx.tracks().size() << " tracks.");
   }
 
   // store proto vertices extracted from the found vertices
   ctx.eventStore.add(m_cfg.outputProtoVertices,
                      makeProtoVertices(inputTrackParameters, vertices));
+
+  // store found vertices
+  ctx.eventStore.add(m_cfg.outputVertices, std::move(vertices));
+
+  // time in milliseconds
+  int timeMS =
+      std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+  // store reconstruction time
+  ctx.eventStore.add(m_cfg.outputTime, std::move(timeMS));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

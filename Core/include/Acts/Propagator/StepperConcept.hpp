@@ -45,7 +45,9 @@ METHOD_TRAIT(overstep_t, overstepLimit);
 METHOD_TRAIT(bound_state_method_t, boundState);
 METHOD_TRAIT(curvilinear_state_method_t, curvilinearState);
 METHOD_TRAIT(update_t, update);
-METHOD_TRAIT(covariance_transport_t, covarianceTransport);
+METHOD_TRAIT(covariance_transport_bound_t, transportCovarianceToBound);
+METHOD_TRAIT(covariance_transport_curvilinear_t,
+             transportCovarianceToCurvilinear);
 METHOD_TRAIT(step_t, step);
 METHOD_TRAIT(update_surface_status_t, updateSurfaceStatus);
 METHOD_TRAIT(set_step_size_t, setStepSize);
@@ -89,7 +91,7 @@ using step_size_t = decltype(std::declval<T>().stepSize);
         static_assert(curvilinear_state_exists, "CurvilinearState type not found");
         constexpr static bool reset_state_exists = has_method<const S, void, reset_state_t, state&, const BoundVector&, const BoundSymMatrix&, const Surface&, const NavigationDirection, const double>;
         static_assert(reset_state_exists, "resetState method not found");
-        constexpr static bool get_field_exists = has_method<const S, Vector3, get_field_t, state&, const Vector3&>;
+        constexpr static bool get_field_exists = has_method<const S, Result<Vector3>, get_field_t, state&, const Vector3&>;
         static_assert(get_field_exists, "getField method not found");
         constexpr static bool position_exists = has_method<const S, Vector3, position_t, const state&>;
         static_assert(position_exists, "position method not found");
@@ -110,8 +112,8 @@ using step_size_t = decltype(std::declval<T>().stepSize);
         constexpr static bool update_method_exists = require<has_method<const S, void, update_t, state&, const FreeVector&, const BoundSymMatrix&>,
                                                              has_method<const S, void, update_t, state&, const Vector3&, const Vector3&, double, double>>;
         static_assert(update_method_exists, "update method not found");
-        constexpr static bool covariance_transport_exists = require<has_method<const S, void, covariance_transport_t, state&>,
-                                                                    has_method<const S, void, covariance_transport_t, state&, const Surface&>>;
+        constexpr static bool covariance_transport_exists = require<has_method<const S, void, covariance_transport_curvilinear_t, state&>,
+                                                                    has_method<const S, void, covariance_transport_bound_t, state&, const Surface&>>;
         static_assert(covariance_transport_exists, "covarianceTransport method not found");
         constexpr static bool update_surface_exists = has_method<const S, Intersection3D::Status, update_surface_status_t, state&, const Surface&, const BoundaryCheck&>;
         static_assert(update_surface_exists, "updateSurfaceStatus method not found");

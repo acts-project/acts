@@ -58,7 +58,7 @@ Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
   // 2) Calculate the derivative of path length w.r.t. alignment parameters
   const auto alignToPath = alignmentToPathDerivative(gctx, parameters);
   // 3) Calculate the jacobian from free parameters to bound parameters
-  FreeToBoundMatrix jacToLocal = jacobianGlobalToLocal(gctx, parameters);
+  FreeToBoundMatrix jacToLocal = freeToBoundJacobian(gctx, parameters);
   // 4) The derivative of bound parameters w.r.t. alignment
   // parameters is alignToBoundWithoutCorrection +
   // jacToLocal*pathDerivative*alignToPath
@@ -244,7 +244,7 @@ Acts::RotationMatrix3 Acts::Surface::referenceFrame(
   return transform(gctx).matrix().block<3, 3>(0, 0);
 }
 
-Acts::BoundToFreeMatrix Acts::Surface::jacobianLocalToGlobal(
+Acts::BoundToFreeMatrix Acts::Surface::boundToFreeJacobian(
     const GeometryContext& gctx, const BoundVector& boundParams) const {
   // Transform from bound to free parameters
   FreeVector freeParams =
@@ -253,11 +253,9 @@ Acts::BoundToFreeMatrix Acts::Surface::jacobianLocalToGlobal(
   const Vector3 position = freeParams.segment<3>(eFreePos0);
   // The direction
   const Vector3 direction = freeParams.segment<3>(eFreeDir0);
-  // Get the sines and cosines directly
-  const double cos_theta = std::cos(boundParams[eBoundTheta]);
-  const double sin_theta = std::sin(boundParams[eBoundTheta]);
-  const double cos_phi = std::cos(boundParams[eBoundPhi]);
-  const double sin_phi = std::sin(boundParams[eBoundPhi]);
+  // Use fast evaluation function of sin/cos
+  auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
+      VectorHelpers::evaluateTrigonomics(direction);
   // retrieve the reference frame
   const auto rframe = referenceFrame(gctx, position, direction);
   // Initialize the jacobian from local to global
@@ -267,31 +265,24 @@ Acts::BoundToFreeMatrix Acts::Surface::jacobianLocalToGlobal(
   // the time component
   jacToGlobal(eFreeTime, eBoundTime) = 1;
   // the momentum components
-  jacToGlobal(eFreeDir0, eBoundPhi) = (-sin_theta) * sin_phi;
-  jacToGlobal(eFreeDir0, eBoundTheta) = cos_theta * cos_phi;
-  jacToGlobal(eFreeDir1, eBoundPhi) = sin_theta * cos_phi;
-  jacToGlobal(eFreeDir1, eBoundTheta) = cos_theta * sin_phi;
-  jacToGlobal(eFreeDir2, eBoundTheta) = (-sin_theta);
+  jacToGlobal(eFreeDir0, eBoundPhi) = (-sinTheta) * sinPhi;
+  jacToGlobal(eFreeDir0, eBoundTheta) = cosTheta * cosPhi;
+  jacToGlobal(eFreeDir1, eBoundPhi) = sinTheta * cosPhi;
+  jacToGlobal(eFreeDir1, eBoundTheta) = cosTheta * sinPhi;
+  jacToGlobal(eFreeDir2, eBoundTheta) = (-sinTheta);
   jacToGlobal(eFreeQOverP, eBoundQOverP) = 1;
   return jacToGlobal;
 }
 
-Acts::FreeToBoundMatrix Acts::Surface::jacobianGlobalToLocal(
+Acts::FreeToBoundMatrix Acts::Surface::freeToBoundJacobian(
     const GeometryContext& gctx, const FreeVector& parameters) const {
   // The global position
   const auto position = parameters.segment<3>(eFreePos0);
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
-  // Optimized trigonometry on the propagation direction
-  const double x = direction(0);  // == cos(phi) * sin(theta)
-  const double y = direction(1);  // == sin(phi) * sin(theta)
-  const double z = direction(2);  // == cos(theta)
-  // can be turned into cosine/sine
-  const double cosTheta = z;
-  const double sinTheta = sqrt(x * x + y * y);
-  const double invSinTheta = 1. / sinTheta;
-  const double cosPhi = x * invSinTheta;
-  const double sinPhi = y * invSinTheta;
+  // Use fast evaluation function of sin/cos
+  auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
+      VectorHelpers::evaluateTrigonomics(direction);
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
       referenceFrame(gctx, position, direction).transpose();
@@ -322,7 +313,7 @@ Acts::FreeToPathMatrix Acts::Surface::freeToPathDerivative(
   // The measurement frame z axis
   const Vector3 refZAxis = rframe.col(2);
   // Cosine of angle between momentum direction and measurement frame z axis
-  const double dz = refZAxis.dot(direction);
+  const ActsScalar dz = refZAxis.dot(direction);
   // Initialize the derivative
   FreeToPathMatrix freeToPath = FreeToPathMatrix::Zero();
   freeToPath.segment<3>(eFreePos0) = -1.0 * refZAxis.transpose() / dz;

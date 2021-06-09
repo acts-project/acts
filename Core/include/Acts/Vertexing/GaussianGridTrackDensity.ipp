@@ -57,7 +57,7 @@ std::pair<int, typename Acts::GaussianGridTrackDensity<
                    mainGridSize, trkGridSize>::TrackGridVector>
 Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
     const Acts::BoundTrackParameters& trk, MainGridVector& mainGrid) const {
-  SymMatrix2 cov = trk.covariance()->block<2, 2>(0, 0);
+  SymMatrix2 cov = trk.covariance().value().block<2, 2>(0, 0);
   float d0 = trk.parameters()[0];
   float z0 = trk.parameters()[1];
 

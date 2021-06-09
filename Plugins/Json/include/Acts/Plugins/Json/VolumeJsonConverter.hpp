@@ -9,11 +9,10 @@
 #pragma once
 
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Plugins/Json/ActsJson.hpp"
 
 #include <string>
 #include <vector>
-
-#include <nlohmann/json.hpp>
 
 // Custom Json encoder/decoders. Naming is mandated by nlohman::json and thus
 // can not match our naming guidelines.

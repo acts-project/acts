@@ -85,6 +85,11 @@ class MeasurementSelector {
       return CombinatorialKalmanFilterError::MeasurementSelectionFailed;
     }
 
+    // Need covariance to compute chi2
+    if (not predictedParams.covariance().has_value()) {
+      return CombinatorialKalmanFilterError::MeasurementSelectionFailed;
+    }
+
     // Get geoID of this surface
     auto surface = &predictedParams.referenceSurface();
     auto geoID = surface->geometryId();
@@ -152,7 +157,7 @@ class MeasurementSelector {
     if (nFinalCandidates == 0) {
       measCandidateIndices.resize(1);
       measCandidateIndices.at(0) = minIndex;
-      ACTS_DEBUG("No measurement candidate. Return an outlier measurement.");
+      ACTS_VERBOSE("No measurement candidate. Return an outlier measurement.");
       isOutlier = true;
       return Result<void>::success();
     }

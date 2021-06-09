@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Plugins/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Plugins/Digitization/DigitizationModule.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
@@ -50,6 +51,8 @@ std::string CsvTrackingGeometryWriter::name() const {
 namespace {
 
 using SurfaceWriter = dfe::NamedTupleCsvWriter<SurfaceData>;
+using SurfaceGridWriter = dfe::NamedTupleCsvWriter<SurfaceGridData>;
+using LayerVolumeWriter = dfe::NamedTupleCsvWriter<LayerVolumeData>;
 using BoundarySurface = Acts::BoundarySurfaceT<Acts::TrackingVolume>;
 
 /// Write a single surface.
@@ -98,11 +101,11 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
 }
 
 /// Write a single surface.
-void writeSurface(SurfaceWriter& writer, const Acts::Surface& surface,
+void writeSurface(SurfaceWriter& sfWriter, const Acts::Surface& surface,
                   const Acts::GeometryContext& geoCtx) {
   SurfaceData data;
   fillSurfaceData(data, surface, geoCtx);
-  writer.append(data);
+  sfWriter.append(data);
 }
 
 /// Write a single surface.
@@ -115,37 +118,216 @@ void writeBoundarySurface(SurfaceWriter& writer,
 }
 
 /// Write all child surfaces and descend into confined volumes.
-void writeVolume(SurfaceWriter& writer, const Acts::TrackingVolume& volume,
-                 bool writeSensitive, bool writeBoundary,
-                 const Acts::GeometryContext& geoCtx) {
+void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
+                 LayerVolumeWriter& lvWriter,
+                 const Acts::TrackingVolume& volume, bool writeSensitive,
+                 bool writeBoundary, bool writeSurfaceGrid,
+                 bool writeLayerVolume, const Acts::GeometryContext& geoCtx) {
   // process all layers that are directly stored within this volume
   if (volume.confinedLayers()) {
-    for (auto layer : volume.confinedLayers()->arrayObjects()) {
-      // We jump navigation layers
-      if (layer->layerType() == Acts::navigation) {
-        continue;
+    const auto& vTransform = volume.transform();
+
+    // Get the values of the volume boundaries
+    std::vector<Acts::ActsScalar> volumeBoundValues =
+        volume.volumeBounds().values();
+    std::vector<Acts::ActsScalar> lastBoundValues;
+    if (volume.volumeBounds().type() == Acts::VolumeBounds::eCylinder) {
+      auto vTranslation = vTransform.translation();
+      // change volume Bound values to r min , r max , z min, z max, phi min ,
+      // phi max
+      volumeBoundValues = {
+          volumeBoundValues[0],
+          volumeBoundValues[1],
+          vTranslation.z() - volumeBoundValues[2],
+          vTranslation.z() + volumeBoundValues[2],
+          volumeBoundValues[4] - volumeBoundValues[3],
+          volumeBoundValues[4] + volumeBoundValues[3],
+      };
+      lastBoundValues = volumeBoundValues;
+    }
+
+    /// Helper method for layer volume writing
+    ///
+    /// @param lv the layer volume to be written
+    /// @param transform the layer transform
+    /// @param representingBoundValues [in,out] the bound values
+    /// @param last is the last layer
+    auto writeCylinderLayerVolume =
+        [&](const Acts::Layer& lv, const Acts::Transform3& transform,
+            std::vector<Acts::ActsScalar>& representingBoundValues,
+            bool last) -> void {
+      // The layer volume to be written
+      LayerVolumeData lvDims;
+      lvDims.geometry_id = lv.geometryId().value();
+      lvDims.volume_id = lv.geometryId().volume();
+      lvDims.layer_id = lv.geometryId().layer();
+      bool isCylinderLayer = (lv.surfaceRepresentation().bounds().type() ==
+                              Acts::SurfaceBounds::eCylinder);
+
+      auto lTranslation = transform.translation();
+      // Change volume Bound values to r min , r max , z min, z max, phi min ,
+      // phi max
+      representingBoundValues = {
+          representingBoundValues[0],
+          representingBoundValues[1],
+          lTranslation.z() - representingBoundValues[2],
+          lTranslation.z() + representingBoundValues[2],
+          representingBoundValues[4] - representingBoundValues[3],
+          representingBoundValues[4] + representingBoundValues[3]};
+
+      // Synchronize
+      lvDims.min_v0 =
+          isCylinderLayer ? representingBoundValues[0] : volumeBoundValues[0];
+      lvDims.max_v0 =
+          isCylinderLayer ? representingBoundValues[1] : volumeBoundValues[1];
+      lvDims.min_v1 =
+          isCylinderLayer ? volumeBoundValues[2] : representingBoundValues[2];
+      lvDims.max_v1 =
+          isCylinderLayer ? volumeBoundValues[3] : representingBoundValues[3];
+      lvDims.min_v2 = representingBoundValues[4];
+      lvDims.max_v2 = representingBoundValues[5];
+
+      // Write the prior navigation layer
+      LayerVolumeData nlvDims;
+      nlvDims.geometry_id = lv.geometryId().value();
+      nlvDims.volume_id = lv.geometryId().volume();
+      nlvDims.layer_id = lv.geometryId().layer() - 1;
+      if (isCylinderLayer) {
+        nlvDims.min_v0 = lastBoundValues[0];
+        nlvDims.max_v0 = representingBoundValues[0];
+        nlvDims.min_v1 = lastBoundValues[2];
+        nlvDims.max_v1 = lastBoundValues[3];
+        // Reset the r min boundary
+        lastBoundValues[0] = representingBoundValues[1];
+      } else {
+        nlvDims.min_v0 = lastBoundValues[0];
+        nlvDims.max_v0 = lastBoundValues[1];
+        nlvDims.min_v1 = lastBoundValues[2];
+        nlvDims.max_v1 = representingBoundValues[2];
+        // Reset the r min boundary
+        lastBoundValues[2] = representingBoundValues[3];
       }
-      // check for sensitive surfaces
-      if (layer->surfaceArray() and writeSensitive) {
-        for (auto surface : layer->surfaceArray()->surfaces()) {
-          if (surface) {
-            writeSurface(writer, *surface, geoCtx);
+      nlvDims.min_v2 = representingBoundValues[4];
+      nlvDims.max_v2 = representingBoundValues[5];
+      lvWriter.append(nlvDims);
+      // Write the volume dimensions for the sensitive layer
+      lvWriter.append(lvDims);
+
+      // Write last if needed
+      if (last) {
+        // Write the last navigation layer volume
+        LayerVolumeData llvDims;
+        llvDims.geometry_id = lv.geometryId().value();
+        llvDims.volume_id = lv.geometryId().volume();
+        llvDims.layer_id = lv.geometryId().layer() + 1;
+        llvDims.min_v0 = lastBoundValues[0];
+        llvDims.max_v0 = lastBoundValues[1];
+        llvDims.min_v1 = lastBoundValues[2];
+        llvDims.max_v1 = lastBoundValues[3];
+        llvDims.min_v2 = representingBoundValues[4];
+        llvDims.max_v2 = representingBoundValues[5];
+        // Close up volume
+        lvWriter.append(llvDims);
+      }
+    };
+
+    unsigned int layerIdx = 0;
+    const auto& layers = volume.confinedLayers()->arrayObjects();
+    for (auto layer : layers) {
+      // We jump navigation layers - they will be written last
+      if (layer->layerType() == Acts::navigation) {
+        ++layerIdx;
+        // For a correct layer volume setup, we need the navigation layers
+        if (writeLayerVolume) {
+          writeSurface(sfWriter, layer->surfaceRepresentation(), geoCtx);
+        }
+        continue;
+
+      } else if (layer->surfaceArray()) {
+        // Get the representing volume
+        const auto* rVolume = layer->representingVolume();
+        // Write the layer volume
+        if (rVolume != nullptr and writeLayerVolume) {
+          // Get the values of the representing volume
+          std::vector<Acts::ActsScalar> representingBoundValues =
+              rVolume->volumeBounds().values();
+          if (rVolume->volumeBounds().type() == Acts::VolumeBounds::eCylinder) {
+            bool last = (layerIdx + 2 ==
+                         volume.confinedLayers()->arrayObjects().size());
+            writeCylinderLayerVolume(*layer, rVolume->transform(),
+                                     representingBoundValues, last);
+          }
+        }
+
+        auto sfArray = layer->surfaceArray();
+        // Write the surface grid
+        if (writeSurfaceGrid) {
+          SurfaceGridData sfGrid;
+          sfGrid.geometry_id = layer->geometryId().value();
+          sfGrid.volume_id = layer->geometryId().volume();
+          sfGrid.layer_id = layer->geometryId().layer();
+
+          // Draw the grid itself
+          auto binning = sfArray->binningValues();
+          auto axes = sfArray->getAxes();
+          if (not binning.empty() and binning.size() == 2 and
+              axes.size() == 2) {
+            auto loc0Values = axes[0]->getBinEdges();
+            sfGrid.nbins_loc0 = loc0Values.size();
+            sfGrid.min_loc0 = loc0Values[0];
+            sfGrid.max_loc0 = loc0Values[loc0Values.size() - 1];
+            auto loc1Values = axes[1]->getBinEdges();
+            sfGrid.nbins_loc1 = loc1Values.size();
+            sfGrid.min_loc1 = loc1Values[0];
+            sfGrid.max_loc1 = loc1Values[loc1Values.size() - 1];
+          }
+
+          sfGridWriter.append(sfGrid);
+        }
+
+        if (writeSensitive) {
+          for (auto surface : sfArray->surfaces()) {
+            if (surface) {
+              writeSurface(sfWriter, *surface, geoCtx);
+            }
+          }
+        }
+      } else {
+        writeSurface(sfWriter, layer->surfaceRepresentation(), geoCtx);
+        // Layer volume definition of passive layers
+        if (writeLayerVolume) {
+          if (volume.volumeBounds().type() == Acts::VolumeBounds::eCylinder) {
+            // Only one passive layer present - write volume directly
+            if (layers.size() == 3) {
+              LayerVolumeData plvDims;
+              plvDims.geometry_id = layer->geometryId().value();
+              plvDims.volume_id = layer->geometryId().volume();
+              plvDims.layer_id = layer->geometryId().layer();
+              plvDims.min_v0 = volumeBoundValues[0];
+              plvDims.max_v0 = volumeBoundValues[1];
+              plvDims.min_v1 = volumeBoundValues[2];
+              plvDims.max_v1 = volumeBoundValues[3];
+              lvWriter.append(plvDims);
+            }
           }
         }
       }
-    }
+      ++layerIdx;
+    }  // enf of layer loop
+
     // This is a navigation volume, write the boundaries
     if (writeBoundary) {
       for (auto bsurface : volume.boundarySurfaces()) {
-        writeBoundarySurface(writer, *bsurface, geoCtx);
+        writeBoundarySurface(sfWriter, *bsurface, geoCtx);
       }
     }
   }
   // step down into hierarchy to process all child volumnes
   if (volume.confinedVolumes()) {
     for (auto confined : volume.confinedVolumes()->arrayObjects()) {
-      writeVolume(writer, *confined.get(), writeSensitive, writeBoundary,
-                  geoCtx);
+      writeVolume(sfWriter, sfGridWriter, lvWriter, *confined.get(),
+                  writeSensitive, writeBoundary, writeSurfaceGrid,
+                  writeLayerVolume, geoCtx);
     }
   }
 }
@@ -155,18 +337,36 @@ ProcessCode CsvTrackingGeometryWriter::write(const AlgorithmContext& ctx) {
   if (not m_cfg.writePerEvent) {
     return ProcessCode::SUCCESS;
   }
-  SurfaceWriter writer(
+
+  SurfaceWriter sfWriter(
       perEventFilepath(m_cfg.outputDir, "detectors.csv", ctx.eventNumber),
       m_cfg.outputPrecision);
-  writeVolume(writer, *m_world, m_cfg.writeSensitive, m_cfg.writeSensitive,
-              ctx.geoContext);
+
+  SurfaceGridWriter sfGridWriter(
+      perEventFilepath(m_cfg.outputDir, "surface-grids.csv", ctx.eventNumber),
+      m_cfg.outputPrecision);
+
+  LayerVolumeWriter lvWriter(
+      perEventFilepath(m_cfg.outputDir, "layer-volumes.csv", ctx.eventNumber),
+      m_cfg.outputPrecision);
+
+  writeVolume(sfWriter, sfGridWriter, lvWriter, *m_world, m_cfg.writeSensitive,
+              m_cfg.writeBoundary, m_cfg.writeSurfaceGrid,
+              m_cfg.writeLayerVolume, ctx.geoContext);
   return ProcessCode::SUCCESS;
 }
 
 ProcessCode CsvTrackingGeometryWriter::endRun() {
-  SurfaceWriter writer(joinPaths(m_cfg.outputDir, "detectors.csv"),
-                       m_cfg.outputPrecision);
-  writeVolume(writer, *m_world, m_cfg.writeSensitive, m_cfg.writeSensitive,
-              Acts::GeometryContext());
+  SurfaceWriter sfWriter(joinPaths(m_cfg.outputDir, "detectors.csv"),
+                         m_cfg.outputPrecision);
+  SurfaceGridWriter sfGridWriter(
+      joinPaths(m_cfg.outputDir, "surface-grids.csv"), m_cfg.outputPrecision);
+
+  LayerVolumeWriter lvWriter(joinPaths(m_cfg.outputDir, "layer-volumes.csv"),
+                             m_cfg.outputPrecision);
+
+  writeVolume(sfWriter, sfGridWriter, lvWriter, *m_world, m_cfg.writeSensitive,
+              m_cfg.writeBoundary, m_cfg.writeSurfaceGrid,
+              m_cfg.writeLayerVolume, Acts::GeometryContext());
   return ProcessCode::SUCCESS;
 }

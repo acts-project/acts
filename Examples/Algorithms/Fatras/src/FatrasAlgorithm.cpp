@@ -14,6 +14,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
@@ -103,13 +104,14 @@ struct FatrasAlgorithmSimulationT final
 
   FatrasAlgorithmSimulationT(const ActsExamples::FatrasAlgorithm::Config &cfg,
                              Acts::Logging::Level lvl)
-      : simulation(ChargedSimulation(
-                       ChargedPropagator(ChargedStepper(cfg.magneticField),
-                                         cfg.trackingGeometry),
-                       lvl),
-                   NeutralSimulation(NeutralPropagator(NeutralStepper(),
-                                                       cfg.trackingGeometry),
-                                     lvl)) {
+      : simulation(
+            ChargedSimulation(
+                ChargedPropagator(ChargedStepper(cfg.magneticField),
+                                  cfg.trackingGeometry),
+                Acts::getDefaultLogger("Simulation", lvl)),
+            NeutralSimulation(
+                NeutralPropagator(NeutralStepper(), cfg.trackingGeometry),
+                Acts::getDefaultLogger("Simulation", lvl))) {
     using namespace ActsFatras;
     using namespace ActsFatras::detail;
     // apply the configuration
@@ -222,9 +224,11 @@ ActsExamples::ProcessCode ActsExamples::FatrasAlgorithm::execute(
   SimParticleContainer particlesInitial;
   SimParticleContainer particlesFinal;
   SimHitContainer simHits;
-  particlesInitial.adopt_sequence(std::move(particlesInitialUnordered));
-  particlesFinal.adopt_sequence(std::move(particlesFinalUnordered));
-  simHits.adopt_sequence(std::move(simHitsUnordered));
+  particlesInitial.insert(particlesInitialUnordered.begin(),
+                          particlesInitialUnordered.end());
+  particlesFinal.insert(particlesFinalUnordered.begin(),
+                        particlesFinalUnordered.end());
+  simHits.insert(simHitsUnordered.begin(), simHitsUnordered.end());
   // store ordered output containers
   ctx.eventStore.add(m_cfg.outputParticlesInitial, std::move(particlesInitial));
   ctx.eventStore.add(m_cfg.outputParticlesFinal, std::move(particlesFinal));

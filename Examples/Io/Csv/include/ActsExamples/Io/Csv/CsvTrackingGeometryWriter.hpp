@@ -44,6 +44,10 @@ class CsvTrackingGeometryWriter : public IWriter {
     bool writeSensitive = true;
     /// Write boundary surfaces
     bool writeBoundary = false;
+    /// Write the surface grid information
+    bool writeSurfaceGrid = true;
+    /// Write the layer volume representation
+    bool writeLayerVolume = true;
     /// Whether to write the per-event file.
     bool writePerEvent = false;
   };

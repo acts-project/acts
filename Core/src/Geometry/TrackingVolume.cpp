@@ -392,7 +392,7 @@ void Acts::TrackingVolume::closeGeometry(
     // now assign to the boundary surface
     auto& mutableBSurface = *(const_cast<Surface*>(&bSurface));
     mutableBSurface.assignGeometryId(boundaryID);
-    // assign the material if you have a decorator
+    // Assigne material if you have a decorator
     if (materialDecorator != nullptr) {
       materialDecorator->decorate(mutableBSurface);
     }
