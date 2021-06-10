@@ -60,7 +60,7 @@ std::array<size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
 void Acts::AccumulatedSurfaceMaterial::trackAverage(const Vector3& gp,
                                                     bool emptyHit) {
   if (m_binUtility.dimensions() == 0) {
-    m_accumulatedMaterial[0][0].trackAverage();
+    m_accumulatedMaterial[0][0].trackAverage(emptyHit);
     return;
   }
 
