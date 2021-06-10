@@ -38,6 +38,9 @@ class RootParticleReader : public IReader {
     std::string inputFile;          ///< The name of the input file
     std::string inputDir;           ///< The name of the input dir
 
+    /// Whether the events are ordered or not
+    bool orderedEvents = true;
+
     /// The default logger
     std::shared_ptr<const Acts::Logger> logger;
 
@@ -89,6 +92,10 @@ class RootParticleReader : public IReader {
 
   /// Event identifier.
   uint32_t m_eventId;
+
+  /// The entry numbers for accessing events in increased order (there could be
+  /// multiple entries corresponding to one event number)
+  std::vector<long long> m_entryNumbers = {};
 
   std::vector<uint64_t>* m_particleId = new std::vector<uint64_t>;
   std::vector<int32_t>* m_particleType = new std::vector<int32_t>;

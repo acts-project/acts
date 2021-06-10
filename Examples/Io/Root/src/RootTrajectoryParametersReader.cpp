@@ -18,6 +18,7 @@
 
 #include <TChain.h>
 #include <TFile.h>
+#include <TMath.h>
 
 ActsExamples::RootTrajectoryParametersReader::RootTrajectoryParametersReader(
     const ActsExamples::RootTrajectoryParametersReader::Config& cfg)
@@ -71,6 +72,15 @@ ActsExamples::RootTrajectoryParametersReader::RootTrajectoryParametersReader(
 
   m_events = m_inputChain->GetEntries();
   ACTS_DEBUG("The full chain has " << m_events << " entries.");
+
+  // If the events are not in order, get the entry numbers for ordered events
+  if (not m_cfg.orderedEvents) {
+    m_entryNumbers.resize(m_events);
+    m_inputChain->Draw("event_nr", "", "goff");
+    // Sort to get the entry numbers of the ordered events
+    TMath::Sort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
+                m_entryNumbers.data(), false);
+  }
 }
 
 std::string ActsExamples::RootTrajectoryParametersReader::name() const {
@@ -132,9 +142,14 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersReader::read(
     std::vector<Acts::BoundTrackParameters> trackParameterCollection;
     SimParticleContainer truthParticleCollection;
 
-    // Read the correct entry: batch size * event_number + ib
-    m_inputChain->GetEntry(context.eventNumber);
-    ACTS_VERBOSE("Reading entry: " << context.eventNumber);
+    // Read the correct entry
+    auto entry = context.eventNumber;
+    if (not m_cfg.orderedEvents and entry < m_entryNumbers.size()) {
+      entry = m_entryNumbers[entry];
+    }
+    m_inputChain->GetEntry(entry);
+    ACTS_INFO("Reading event: " << context.eventNumber
+                                << " stored as entry: " << entry);
 
     unsigned int nTracks = m_eLOC0_fit->size();
     for (unsigned int i = 0; i < nTracks; i++) {
