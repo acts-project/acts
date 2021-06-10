@@ -345,8 +345,8 @@ class Navigator {
       }
     } else if (state.navigation.currentVolume ==
                state.navigation.targetVolume) {
-      ACTS_VERBOSE(volInfo(state)
-                   << "No further navigation action, proceed to target.");
+      ACTS_WARNING(volInfo(state) << "No further navigation action, proceed to "
+                                     "target. This is very likely an error");
       // Set navigation break and release the navigation step size
       state.navigation.navigationBreak = true;
       stepper.releaseStepSize(state.stepping);
@@ -529,7 +529,7 @@ class Navigator {
     // If we are on the surface pointed at by the iterator, we can make
     // it the current one to pass it to the other actors
     auto surfaceStatus =
-        stepper.updateSurfaceStatus(state.stepping, *surface, true);
+        stepper.updateSurfaceStatus(state.stepping, *surface, true, logger);
     if (surfaceStatus == Intersection3D::Status::onSurface) {
       ACTS_VERBOSE(volInfo(state)
                    << "Status Surface successfully hit, storing it.");
@@ -621,8 +621,8 @@ class Navigator {
           break;
         }
       }
-      auto surfaceStatus =
-          stepper.updateSurfaceStatus(state.stepping, *surface, boundaryCheck);
+      auto surfaceStatus = stepper.updateSurfaceStatus(state.stepping, *surface,
+                                                       boundaryCheck, logger);
       if (surfaceStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << "Surface reachable, step size updated to "
@@ -781,8 +781,8 @@ class Navigator {
         }
       }
       // Try to step towards it
-      auto layerStatus =
-          stepper.updateSurfaceStatus(state.stepping, *layerSurface, true);
+      auto layerStatus = stepper.updateSurfaceStatus(
+          state.stepping, *layerSurface, true, logger);
       if (layerStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state) << "Layer reachable, step size updated to "
                                     << stepper.outputStepSize(state.stepping));
@@ -924,8 +924,8 @@ class Navigator {
       // That is the current boundary surface
       auto boundarySurface = state.navigation.navBoundaryIter->representation;
       // Step towards the boundary surfrace
-      auto boundaryStatus =
-          stepper.updateSurfaceStatus(state.stepping, *boundarySurface, true);
+      auto boundaryStatus = stepper.updateSurfaceStatus(
+          state.stepping, *boundarySurface, true, logger);
       if (boundaryStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << "Boundary reachable, step size updated to "
@@ -939,6 +939,10 @@ class Navigator {
                               state.navigation.navBoundaries.end());
           os << " out of " << state.navigation.navBoundaries.size();
           os << " not reachable anymore, switching to next.";
+          logger.log(Logging::VERBOSE, os.str());
+          os.str("");
+          os << "Targeted boundary surface was: \n";
+          boundarySurface->toStream(state.geoContext, os);
           logger.log(Logging::VERBOSE, os.str());
         }
       }
@@ -1230,7 +1234,7 @@ class Navigator {
         return true;
       }
       auto targetStatus = stepper.updateSurfaceStatus(
-          state.stepping, *state.navigation.targetSurface, true);
+          state.stepping, *state.navigation.targetSurface, true, logger);
       // the only advance could have been to the target
       if (targetStatus == Intersection3D::Status::onSurface) {
         // set the target surface
