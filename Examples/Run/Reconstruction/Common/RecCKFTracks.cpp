@@ -16,6 +16,7 @@
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Csv/CsvMultiTrajectoryWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
+#include "ActsExamples/Io/Csv/CsvOptionsWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
@@ -57,8 +58,6 @@ void addRecCKFOptions(ActsExamples::Options::Description& desc) {
       "Use track parameters smeared from truth particles for steering CKF");
   opt("ckf-truth-estimated-seeds", bool_switch(),
       "Use track parameters estimated from truth tracks for steering CKF");
-  opt("output-csv", bool_switch(),
-      "Use track parameters smeared from truth particles for steering CKF");
 }
 
 int runRecCKFTracks(int argc, char* argv[],
@@ -70,13 +69,15 @@ int runRecCKFTracks(int argc, char* argv[],
   Options::addGeometryOptions(desc);
   Options::addMaterialOptions(desc);
   Options::addInputOptions(desc);
-  Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
+  Options::addOutputOptions(desc,
+                            OutputFormat::Csv | OutputFormat::DirectoryOnly);
   detector->addOptions(desc);
   Options::addMagneticFieldOptions(desc);
   Options::addTrackFindingOptions(desc);
   addRecCKFOptions(desc);
   Options::addDigitizationOptions(desc);
   Options::addSpacePointMakerOptions(desc);
+  Options::addCsvWriterOptions(desc);
 
   auto vm = Options::parse(desc, argc, argv);
   if (vm.empty()) {

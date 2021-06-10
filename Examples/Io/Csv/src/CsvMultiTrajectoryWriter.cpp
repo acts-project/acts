@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Io/Csv/CsvMultiTrajectoryWriter.hpp"
 
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
@@ -46,26 +45,13 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
   const auto& hitParticlesMap = context.eventStore.get<HitParticlesMap>(
       m_cfg.inputMeasurementParticlesMap);
 
-  struct trackInfo {
-    size_t track_id;
-    ActsFatras::Barcode particleId;
-    size_t nMeasurements;
-    size_t nOutliers;
-    size_t nHoles;
-    double chi2Sum;
-    size_t NDF;
-    size_t nMajorityHits;
-    std::string trackType;
-    double truthMatchProb;
-    const TrackParameters* fitterParameters;
-  };
   std::unordered_map<size_t, trackInfo> infoMap;
 
   // Counter of truth-matched reco tracks
   using RecoTrackInfo = std::pair<trackInfo, size_t>;
   std::map<ActsFatras::Barcode, std::vector<RecoTrackInfo>> matched;
 
-  size_t track_id = 0;
+  size_t trackId = 0;
   for (const auto& traj : trajectories) {
     // The trajectory entry indices and the multiTrajectory
     const auto& trackTips = traj.tips();
@@ -122,13 +108,14 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
 
       // track info
       trackInfo toAdd;
-      toAdd.track_id = track_id;
+      toAdd.trackId = trackId;
       toAdd.particleId = majorityParticleId;
+      toAdd.nStates = trajState.nStates;
       toAdd.nMajorityHits = nMajorityHits;
       toAdd.nMeasurements = trajState.nMeasurements;
       toAdd.nOutliers = trajState.nOutliers;
       toAdd.nHoles = trajState.nHoles;
-      toAdd.chi2Sum = trajState.chi2Sum * 1.;
+      toAdd.chi2Sum = trajState.chi2Sum;
       toAdd.NDF = trajState.NDF;
       toAdd.truthMatchProb = toAdd.nMajorityHits * 1. / trajState.nMeasurements;
       toAdd.fitterParameters = &traj.trackParameters(trackTip);
@@ -136,14 +123,14 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
 
       // Check if the trajectory is matched with truth.
       if (toAdd.truthMatchProb >= m_cfg.truthMatchProbMin) {
-        matched[toAdd.particleId].push_back({toAdd, toAdd.track_id});
-      } else {  // FIX ME
+        matched[toAdd.particleId].push_back({toAdd, toAdd.trackId});
+      } else {
         toAdd.trackType = "fake";
       }
 
-      infoMap[toAdd.track_id] = toAdd;
+      infoMap[toAdd.trackId] = toAdd;
 
-      track_id++;
+      trackId++;
     }  // end of one trajectory
   }    // end of multi-trajectory
 
@@ -161,12 +148,12 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
                 return (lhs.first.nOutliers < rhs.first.nOutliers);
               });
 
-    listGoodTracks.insert(matchedTracks.front().first.track_id);
+    listGoodTracks.insert(matchedTracks.front().first.trackId);
   }
 
   // write csv header
   mos << "track_id,particleId,"
-      << "nMajorityHits,nMeasurements,nOutliers,nHoles,"
+      << "nStates,nMajorityHits,nMeasurements,nOutliers,nHoles,"
       << "chi2,ndf,chi2/ndf,"
       << "pT,"
       << "truthMatchProbability,"
@@ -176,24 +163,22 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
   mos << std::setprecision(m_cfg.outputPrecision);
 
   // good/duplicate/fake = 0/1/2
-  for (auto& key : infoMap) {
-    auto ID = key.first;
-    auto& trajState = key.second;
-
-    if (listGoodTracks.find(ID) != listGoodTracks.end()) {
+  for (auto& [id, trajState] : infoMap) {
+    if (listGoodTracks.find(id) != listGoodTracks.end()) {
       trajState.trackType = "good";
     } else {
       trajState.trackType = "duplicate";
     }
 
     // write the track info
-    mos << trajState.track_id << ",";
+    mos << trajState.trackId << ",";
     mos << trajState.particleId << ",";
+    mos << trajState.nStates << ",";
     mos << trajState.nMajorityHits << ",";
     mos << trajState.nMeasurements << ",";
     mos << trajState.nOutliers << ",";
     mos << trajState.nHoles << ",";
-    mos << trajState.chi2Sum * 1.0 << ",";
+    mos << trajState.chi2Sum << ",";
     mos << trajState.NDF << ",";
     mos << trajState.chi2Sum * 1.0 / trajState.NDF << ",";
     mos << Acts::VectorHelpers::perp(trajState.fitterParameters->momentum())
