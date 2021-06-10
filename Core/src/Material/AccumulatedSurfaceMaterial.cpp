@@ -61,7 +61,9 @@ void Acts::AccumulatedSurfaceMaterial::trackAverage(const Vector3& gp,
                                                     bool emptyHit) {
   if (m_binUtility.dimensions() == 0) {
     m_accumulatedMaterial[0][0].trackAverage();
+    return;
   }
+
   std::array<size_t, 3> bTriple = m_binUtility.binTriple(gp);
   std::vector<std::array<size_t, 3>> trackBins = {bTriple};
   trackAverage(trackBins, emptyHit);
