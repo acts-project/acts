@@ -148,8 +148,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersReader::read(
       entry = m_entryNumbers[entry];
     }
     m_inputChain->GetEntry(entry);
-    ACTS_INFO("Reading event: " << context.eventNumber << " stored as entry: "
-                                << entry << " of the input tree");
+    ACTS_INFO("Reading event: " << context.eventNumber
+                                << " stored as entry: " << entry);
 
     unsigned int nTracks = m_eLOC0_fit->size();
     for (unsigned int i = 0; i < nTracks; i++) {

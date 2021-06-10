@@ -135,8 +135,8 @@ ActsExamples::ProcessCode ActsExamples::RootParticleReader::read(
       entry = m_entryNumbers[entry];
     }
     m_inputChain->GetEntry(entry);
-    ACTS_INFO("Reading event: " << context.eventNumber << " stored as entry: "
-                                << entry << " of the input tree");
+    ACTS_INFO("Reading event: " << context.eventNumber
+                                << " stored as entry: " << entry);
 
     unsigned int nParticles = m_particleId->size();
 
