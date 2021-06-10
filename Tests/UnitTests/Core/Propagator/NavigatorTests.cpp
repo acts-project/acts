@@ -115,11 +115,12 @@ struct PropagatorState {
       return s_onSurfaceTolerance;
     }
 
-    Intersection3D::Status updateSurfaceStatus(
-        State& state, const Surface& surface,
-        const BoundaryCheck& bcheck) const {
+    Intersection3D::Status updateSurfaceStatus(State& state,
+                                               const Surface& surface,
+                                               const BoundaryCheck& bcheck,
+                                               LoggerWrapper logger) const {
       return detail::updateSingleSurfaceStatus<Stepper>(*this, state, surface,
-                                                        bcheck);
+                                                        bcheck, logger);
     }
 
     template <typename object_intersection_t>

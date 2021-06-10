@@ -91,6 +91,9 @@ class RootMaterialTrackWriter
   /// The output tree name
   TTree* m_outputTree;
 
+  /// Event identifier.
+  uint32_t m_eventId;
+
   float m_v_x;    ///< start global x
   float m_v_y;    ///< start global y
   float m_v_z;    ///< start global z
