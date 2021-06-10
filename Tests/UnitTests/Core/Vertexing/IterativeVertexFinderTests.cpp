@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
 
   for (unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
     // Set up constant B-Field
-    auto bField = std::make_shared<ConstantBField>(0.0, 0.0, 1_T);
+    auto bField = std::make_shared<ConstantBField>(Vector3{0.0, 0.0, 1_T});
 
     // Set up Eigenstepper
     EigenStepper<> stepper(bField);
@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
 
   for (unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
     // Set up constant B-Field
-    auto bField = std::make_shared<ConstantBField>(0.0, 0.0, 1_T);
+    auto bField = std::make_shared<ConstantBField>(Vector3{0.0, 0.0, 1_T});
 
     // Set up Eigenstepper
     EigenStepper<> stepper(bField);
@@ -526,7 +526,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
 ///
 BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   // Set up constant B-Field
-  auto bField = std::make_shared<ConstantBField>(0.0, 0.0, 2_T);
+  auto bField = std::make_shared<ConstantBField>(Vector3{0.0, 0.0, 2_T});
 
   // Set up Eigenstepper
   EigenStepper<> stepper(bField);

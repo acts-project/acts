@@ -37,6 +37,9 @@ class RootTrajectoryParametersReader : public IReader {
     std::string inputFile;  ///< The name of the input file
     std::string inputDir;   ///< The name of the input dir
 
+    /// Whether the events are ordered or not
+    bool orderedEvents = true;
+
     /// The default logger
     std::shared_ptr<const Acts::Logger> logger;
 
@@ -92,6 +95,10 @@ class RootTrajectoryParametersReader : public IReader {
   std::vector<unsigned int>* m_subTrajNr =
       new std::vector<unsigned int>;  ///< the multi-trajectory sub-trajectory
                                       ///< number
+
+  /// The entry numbers for accessing events in increased order (there could be
+  /// multiple entries corresponding to one event number)
+  std::vector<long long> m_entryNumbers = {};
 
   std::vector<unsigned long>* m_t_barcode =
       new std::vector<long unsigned int>;  ///< Truth particle barcode

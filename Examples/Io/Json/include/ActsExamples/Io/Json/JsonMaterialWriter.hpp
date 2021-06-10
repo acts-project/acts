@@ -13,6 +13,7 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
+#include "Acts/Utilities/EnumBitwiseOperators.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
@@ -33,17 +34,34 @@ using DetectorMaterialMaps = std::pair<SurfaceMaterialMap, VolumeMaterialMap>;
 
 namespace ActsExamples {
 
+enum class JsonFormat : uint8_t {
+  NoOutput = 0,
+  Json = 1,
+  Cbor = 2,
+  All = std::numeric_limits<uint8_t>::max()
+};
+
+ACTS_DEFINE_ENUM_BITWISE_OPERATORS(JsonFormat)
+
 /// @class Json Material writer
 ///
 /// @brief Writes out Detector material maps
 /// using the Json Geometry converter
 class JsonMaterialWriter {
  public:
+  struct Config {
+    /// The config class of the converter
+    Acts::MaterialMapJsonConverter::Config converterCfg;
+    /// Output file name
+    std::string fileName = "material";
+    /// Output format of the file
+    JsonFormat writeFormat = JsonFormat::Json;
+  };
+
   /// Constructor
   ///
-  /// @param cfg The configuration struct of the converter
-  JsonMaterialWriter(const Acts::MaterialMapJsonConverter::Config& cfg,
-                     const std::string& fileName);
+  /// @param cfg The configuration struct of the writer
+  JsonMaterialWriter(const Config& cfg);
 
   /// Virtual destructor
   ~JsonMaterialWriter();
@@ -59,14 +77,11 @@ class JsonMaterialWriter {
   void write(const Acts::TrackingGeometry& tGeometry);
 
  private:
-  /// The config class of the converter
-  Acts::MaterialMapJsonConverter::Config m_cfg;
-
-  /// The file name
-  std::string m_fileName;
+  /// The config of the writer
+  Config m_cfg;
 
   /// Private access to the logging instance
-  const Acts::Logger& logger() const { return *m_cfg.logger; }
+  const Acts::Logger& logger() const { return *m_cfg.converterCfg.logger; }
 };
 
 }  // namespace ActsExamples

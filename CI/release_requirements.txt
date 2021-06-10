@@ -1,0 +1,4 @@
+python-semantic-release
+aiohttp
+gidgethub
+python-dotenv

@@ -8,10 +8,9 @@
 
 #pragma once
 
+#include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningData.hpp"
-
-#include <nlohmann/json.hpp>
 
 // Custom Json encoder/decoders. Naming is mandated by nlohman::json and thus
 // can not match our naming guidelines.

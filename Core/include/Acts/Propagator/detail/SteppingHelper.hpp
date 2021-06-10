@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
 
@@ -31,7 +32,9 @@ namespace detail {
 template <typename stepper_t>
 Acts::Intersection3D::Status updateSingleSurfaceStatus(
     const stepper_t& stepper, typename stepper_t::State& state,
-    const Surface& surface, const BoundaryCheck& bcheck) {
+    const Surface& surface, const BoundaryCheck& bcheck, LoggerWrapper logger) {
+  ACTS_VERBOSE("Update single surface status for surface: " << &surface);
+
   auto sIntersection =
       surface.intersect(state.geoContext, stepper.position(state),
                         state.navDir * stepper.direction(state), bcheck);
@@ -40,6 +43,7 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
   if (sIntersection.intersection.status == Intersection3D::Status::onSurface) {
     // Release navigation step size
     state.stepSize.release(ConstrainedStep::actor);
+    ACTS_VERBOSE("Intersection: state is ON SURFACE");
     return Intersection3D::Status::onSurface;
   } else if (sIntersection.intersection or sIntersection.alternative) {
     // Path and overstep limit checking
@@ -47,19 +51,40 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
     double oLimit = stepper.overstepLimit(state);
     auto checkIntersection = [&](const Intersection3D& intersection) -> bool {
       double cLimit = intersection.pathLength;
+      ACTS_VERBOSE(" -> pLimit, oLimit, cLimit: " << pLimit << ", " << oLimit
+                                                  << ", " << cLimit);
       bool accept = (cLimit > oLimit and cLimit * cLimit < pLimit * pLimit);
       if (accept) {
+        ACTS_VERBOSE("Intersection is WITHIN limit");
         stepper.setStepSize(state, state.navDir * cLimit);
       }
+
+      else {
+        ACTS_VERBOSE("Intersection is OUTSIDE limit because: ");
+        if (cLimit <= oLimit) {
+          ACTS_VERBOSE("- intersection path length "
+                       << cLimit << " <= overstep limit " << oLimit);
+        }
+        if (cLimit * cLimit > pLimit * pLimit + s_onSurfaceTolerance) {
+          ACTS_VERBOSE("- intersection path length "
+                       << std::abs(cLimit) << " is over the path limit "
+                       << (std::abs(pLimit) + s_onSurfaceTolerance)
+                       << " (including tolerance of "
+                       << s_curvilinearProjTolerance << ")");
+        }
+      }
+
       return accept;
     };
     // If either of the two intersections are viable return reachable
     if (checkIntersection(sIntersection.intersection) or
         (sIntersection.alternative and
          checkIntersection(sIntersection.alternative))) {
+      ACTS_VERBOSE("Surface is reachable");
       return Intersection3D::Status::reachable;
     }
   }
+  ACTS_VERBOSE("Surface is NOT reachable");
   return Intersection3D::Status::unreachable;
 }
 

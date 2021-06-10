@@ -11,12 +11,16 @@ import http
 import aiohttp
 from gidgethub.aiohttp import GitHubAPI
 from gidgethub import InvalidField
+import gidgethub
 from semantic_release.history import angular_parser, get_new_version
 from semantic_release.errors import UnknownCommitMessageStyleError
 from semantic_release.history.logs import LEVELS
 from semantic_release.history.parser_helpers import ParsedCommit
 import sh
 import click
+from dotenv import load_dotenv
+
+load_dotenv()
 
 git = sh.git
 
@@ -157,14 +161,29 @@ async def main(draft, dry_run):
 
         commits = []
 
-        async for item in commits_iter:
-            commit_hash = item["sha"]
-            commit_message = item["commit"]["message"]
-            if commit_hash == tag_hash:
-                break
-            commit = Commit(commit_hash, commit_message)
-            commits.append(commit)
-            print("-", commit)
+        try:
+          async for item in commits_iter:
+              commit_hash = item["sha"]
+              commit_message = item["commit"]["message"]
+              if commit_hash == tag_hash:
+                  break
+
+              try:
+                  _default_parser(commit_message)
+                  # if this succeeds, do nothing
+              except UnknownCommitMessageStyleError as err:
+                print("Unkown commit message style:")
+                print(commit_message)
+                if sys.stdout.isatty() and click.confirm("Edit effective message?"):
+                  commit_message = click.edit(commit_message)
+                  _default_parser(commit_message)
+
+              commit = Commit(commit_hash, commit_message)
+              commits.append(commit)
+              print("-", commit)
+        except gidgethub.BadRequest:
+          print("BadRequest for commit retrieval. That is most likely because you forgot to push the merge commit.")
+          return
 
         if len(commits) > 100:
             print(len(commits), "are a lot. Aborting!")

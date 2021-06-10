@@ -79,10 +79,12 @@ std::default_random_engine rng(42);
 BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
   // Construct a propagator with the cylinderal geometry and a constant magnetic
   // field along z
-  Acts::Navigator navigator(geometry);
-  navigator.resolvePassive = false;
-  navigator.resolveMaterial = true;
-  navigator.resolveSensitive = true;
+  Acts::Navigator navigator({
+      geometry,
+      true,  // sensitive
+      true,  // material
+      false  // passive
+  });
   auto field =
       std::make_shared<Acts::ConstantBField>(Acts::Vector3(0.0, 0.0, 2._T));
   ConstantFieldStepper stepper(std::move(field));
