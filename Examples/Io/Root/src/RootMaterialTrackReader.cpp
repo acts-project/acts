@@ -107,8 +107,8 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
     size_t startEntry = m_inputChain->GetEntries(findStartEntry.c_str());
     size_t batchSize = m_inputChain->GetEntries(findBatchSize.c_str());
     ACTS_VERBOSE("The event has " << batchSize
-                                  << " entries with the start entry " <<
-                 startEntry);
+                                  << " entries with the start entry "
+                                  << startEntry);
 
     // Loop over the entries for this event
     for (size_t ib = 0; ib < batchSize; ++ib) {
