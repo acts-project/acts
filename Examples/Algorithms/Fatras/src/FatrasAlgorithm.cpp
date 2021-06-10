@@ -107,10 +107,11 @@ struct FatrasAlgorithmSimulationT final
       : simulation(
             ChargedSimulation(
                 ChargedPropagator(ChargedStepper(cfg.magneticField),
-                                  cfg.trackingGeometry),
+                                  Acts::Navigator{{cfg.trackingGeometry}}),
                 Acts::getDefaultLogger("Simulation", lvl)),
             NeutralSimulation(
-                NeutralPropagator(NeutralStepper(), cfg.trackingGeometry),
+                NeutralPropagator(NeutralStepper(),
+                                  Acts::Navigator{{cfg.trackingGeometry}}),
                 Acts::getDefaultLogger("Simulation", lvl))) {
     using namespace ActsFatras;
     using namespace ActsFatras::detail;

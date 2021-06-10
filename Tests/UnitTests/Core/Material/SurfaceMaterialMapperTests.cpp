@@ -99,7 +99,7 @@ namespace Test {
 /// Test the filling and conversion
 BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   /// We need a Navigator, Stepper to build a Propagator
-  Navigator navigator(tGeometry);
+  Navigator navigator({tGeometry});
   StraightLineStepper stepper;
   SurfaceMaterialMapper::StraightLinePropagator propagator(
       std::move(stepper), std::move(navigator));

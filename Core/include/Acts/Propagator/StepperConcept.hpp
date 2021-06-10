@@ -92,7 +92,7 @@ using step_size_t = decltype(std::declval<T>().stepSize);
         static_assert(curvilinear_state_exists, "CurvilinearState type not found");
         constexpr static bool reset_state_exists = has_method<const S, void, reset_state_t, state&, const BoundVector&, const BoundSymMatrix&, const Surface&, const NavigationDirection, const double>;
         static_assert(reset_state_exists, "resetState method not found");
-        constexpr static bool get_field_exists = has_method<const S, Vector3, get_field_t, state&, const Vector3&>;
+        constexpr static bool get_field_exists = has_method<const S, Result<Vector3>, get_field_t, state&, const Vector3&>;
         static_assert(get_field_exists, "getField method not found");
         constexpr static bool position_exists = has_method<const S, Vector3, position_t, const state&>;
         static_assert(position_exists, "position method not found");

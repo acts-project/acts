@@ -8,13 +8,12 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/GeometryHierarchyMapJsonConverter.hpp"
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 
 #include <fstream>
 #include <ostream>
-
-#include <nlohmann/json.hpp>
 
 namespace {
 

@@ -48,9 +48,9 @@ BOOST_DATA_TEST_CASE(ConstantBField_components,
 
   BOOST_CHECK_EQUAL(Btrue, BField.getField());
 
-  BOOST_CHECK_EQUAL(Btrue, BField.getField(pos, bCache));
-  BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0), bCache));
-  BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos, bCache));
+  BOOST_CHECK_EQUAL(Btrue, BField.getField(pos, bCache).value());
+  BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0), bCache).value());
+  BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos, bCache).value());
 }
 
 /// @brief unit test for update of constant magnetic field
@@ -77,9 +77,9 @@ BOOST_DATA_TEST_CASE(ConstantBField_update,
 
   BOOST_CHECK_EQUAL(Btrue, BField.getField());
 
-  BOOST_CHECK_EQUAL(Btrue, BField.getField(pos, bCache));
-  BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0), bCache));
-  BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos, bCache));
+  BOOST_CHECK_EQUAL(Btrue, BField.getField(pos, bCache).value());
+  BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3(0, 0, 0), bCache).value());
+  BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos, bCache).value());
 }
 
 }  // namespace Test

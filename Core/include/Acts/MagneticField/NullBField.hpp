@@ -30,9 +30,10 @@ class NullBField final : public MagneticFieldProvider {
   ///
   /// @note The @p position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
-  Vector3 getField(const Vector3& /*position*/,
-                   MagneticFieldProvider::Cache& /*cache*/) const override {
-    return m_BField;
+  Result<Vector3> getField(
+      const Vector3& /*position*/,
+      MagneticFieldProvider::Cache& /*cache*/) const override {
+    return Result<Vector3>::success(m_BField);
   }
 
   /// @copydoc MagneticFieldProvider::getFieldGradient(const
@@ -42,10 +43,10 @@ class NullBField final : public MagneticFieldProvider {
   ///       a consistent interface with other magnetic field services.
   /// @note currently the derivative is not calculated
   /// @todo return derivative
-  Vector3 getFieldGradient(
+  Result<Vector3> getFieldGradient(
       const Vector3& /*position*/, ActsMatrix<3, 3>& /*derivative*/,
       MagneticFieldProvider::Cache& /*cache*/) const override {
-    return m_BField;
+    return Result<Vector3>::success(m_BField);
   }
 
   /// @copydoc MagneticFieldProvider::makeCache(const MagneticFieldContext&)

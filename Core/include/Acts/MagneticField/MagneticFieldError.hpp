@@ -8,15 +8,20 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/Json/ActsJson.hpp"
+#include <system_error>
 
-// Custom Json encoder/decoders. Naming is mandated by nlohman::json and thus
-// can not match our naming guidelines.
 namespace Acts {
 
-void to_json(nlohmann::json& j, const Transform3& t);
+enum class MagneticFieldError {
+  OutOfBounds = 1,
+};
 
-void from_json(const nlohmann::json& j, Transform3& t);
+std::error_code make_error_code(Acts::MagneticFieldError e);
 
 }  // namespace Acts
+
+namespace std {
+// register with STL
+template <>
+struct is_error_code_enum<Acts::MagneticFieldError> : std::true_type {};
+}  // namespace std
