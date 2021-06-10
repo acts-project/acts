@@ -38,9 +38,7 @@ class RootMaterialTrackReader : public IReader {
     std::vector<std::string> fileList;         ///< The name of the input file
 
     /// Whether the events are ordered or not
-    bool orderedEvents = true;
-
-    unsigned int batchSize = 1;  ///!< The number of tracks per event
+    bool orderedEvents = false;
 
     /// The default logger
     std::shared_ptr<const Acts::Logger> logger;

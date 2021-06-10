@@ -100,14 +100,26 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
     // The collection to be written
     std::vector<Acts::RecordedMaterialTrack> mtrackCollection;
 
-    for (size_t ib = 0; ib < m_cfg.batchSize; ++ib) {
-      // Read the correct entry: batch size * event_number + ib
-      auto entry = m_cfg.batchSize * context.eventNumber + ib;
+    // Find the start entry and the batch size for this event
+    std::string eventNumberStr = std::to_string(context.eventNumber);
+    std::string findStartEntry = "event_id<" + eventNumberStr;
+    std::string findBatchSize = "event_id==" + eventNumberStr;
+    size_t startEntry = m_inputChain->GetEntries(findStartEntry.c_str());
+    size_t batchSize = m_inputChain->GetEntries(findBatchSize.c_str());
+    ACTS_VERBOSE("The event has " << batchSize
+                                  << " entries with the start entry " <<
+                 startEntry);
+
+    // Loop over the entries for this event
+    for (size_t ib = 0; ib < batchSize; ++ib) {
+      // Read the correct entry: startEntry + ib
+      auto entry = startEntry + ib;
       if (not m_cfg.orderedEvents and entry < m_entryNumbers.size()) {
         entry = m_entryNumbers[entry];
       }
+      ACTS_VERBOSE("Reading event: " << context.eventNumber
+                                     << " with stored entry: " << entry);
       m_inputChain->GetEntry(entry);
-      ACTS_VERBOSE("Reading entry: " << entry);
 
       Acts::RecordedMaterialTrack rmTrack;
       // Fill the position and momentum
