@@ -118,7 +118,7 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
       toAdd.chi2Sum = trajState.chi2Sum;
       toAdd.NDF = trajState.NDF;
       toAdd.truthMatchProb = toAdd.nMajorityHits * 1. / trajState.nMeasurements;
-      toAdd.fitterParameters = &traj.trackParameters(trackTip);
+      toAdd.fittedParameters = &traj.trackParameters(trackTip);
       toAdd.trackType = "unknown";
 
       // Check if the trajectory is matched with truth.
@@ -181,7 +181,7 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
     mos << trajState.chi2Sum << ",";
     mos << trajState.NDF << ",";
     mos << trajState.chi2Sum * 1.0 / trajState.NDF << ",";
-    mos << Acts::VectorHelpers::perp(trajState.fitterParameters->momentum())
+    mos << Acts::VectorHelpers::perp(trajState.fittedParameters->momentum())
         << ",";
     mos << trajState.truthMatchProb << ",";
     mos << trajState.trackType;

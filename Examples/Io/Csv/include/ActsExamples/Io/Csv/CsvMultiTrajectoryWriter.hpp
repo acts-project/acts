@@ -19,18 +19,6 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 
-/// @brief Struct for brief trajectory summary info
-/// @TODO: add nSharedHits
-///
-struct trackInfo : public Acts::MultiTrajectoryHelpers::TrajectoryState {
-  size_t trackId;
-  ActsFatras::Barcode particleId;
-  size_t nMajorityHits;
-  std::string trackType;
-  double truthMatchProb;
-  const TrackParameters* fitterParameters;
-};
-
 /// @class CsvMultiTrajectoryWriter
 ///
 /// Write out the tracks reconstructed using Combinatorial Kalman Filter in
@@ -72,6 +60,17 @@ class CsvMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
 
  private:
   Config m_cfg;  //!< Nested configuration struct
+
+  /// @brief Struct for brief trajectory summary info
+  ///
+  struct trackInfo : public Acts::MultiTrajectoryHelpers::TrajectoryState {
+    size_t trackId;
+    ActsFatras::Barcode particleId;
+    size_t nMajorityHits;
+    std::string trackType;
+    double truthMatchProb;
+    const TrackParameters* fittedParameters;
+  };  // trackInfo struct
 };
 
 }  // namespace ActsExamples
