@@ -14,6 +14,7 @@
 
 #include <TChain.h>
 #include <TFile.h>
+#include <TMath.h>
 
 ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
     const ActsExamples::RootMaterialTrackReader::Config& cfg)
@@ -21,6 +22,7 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
   m_inputChain = new TChain(m_cfg.treeName.c_str());
 
   // Set the branches
+  m_inputChain->SetBranchAddress("event_id", &m_eventId);
   m_inputChain->SetBranchAddress("v_x", &m_v_x);
   m_inputChain->SetBranchAddress("v_y", &m_v_y);
   m_inputChain->SetBranchAddress("v_z", &m_v_z);
@@ -54,6 +56,15 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
 
   m_events = m_inputChain->GetEntries();
   ACTS_DEBUG("The full chain has " << m_events << " entries.");
+
+  // If the events are not in order, get the entry numbers for ordered events
+  if (not m_cfg.orderedEvents) {
+    m_entryNumbers.resize(m_events);
+    m_inputChain->Draw("event_id", "", "goff");
+    // Sort to get the entry numbers of the ordered events
+    TMath::Sort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
+                m_entryNumbers.data(), false);
+  }
 }
 
 ActsExamples::RootMaterialTrackReader::~RootMaterialTrackReader() {
@@ -89,11 +100,26 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
     // The collection to be written
     std::vector<Acts::RecordedMaterialTrack> mtrackCollection;
 
-    for (size_t ib = 0; ib < m_cfg.batchSize; ++ib) {
-      // Read the correct entry: batch size * event_number + ib
-      m_inputChain->GetEntry(m_cfg.batchSize * context.eventNumber + ib);
-      ACTS_VERBOSE("Reading entry: " << m_cfg.batchSize * context.eventNumber +
-                                            ib);
+    // Find the start entry and the batch size for this event
+    std::string eventNumberStr = std::to_string(context.eventNumber);
+    std::string findStartEntry = "event_id<" + eventNumberStr;
+    std::string findBatchSize = "event_id==" + eventNumberStr;
+    size_t startEntry = m_inputChain->GetEntries(findStartEntry.c_str());
+    size_t batchSize = m_inputChain->GetEntries(findBatchSize.c_str());
+    ACTS_VERBOSE("The event has " << batchSize
+                                  << " entries with the start entry "
+                                  << startEntry);
+
+    // Loop over the entries for this event
+    for (size_t ib = 0; ib < batchSize; ++ib) {
+      // Read the correct entry: startEntry + ib
+      auto entry = startEntry + ib;
+      if (not m_cfg.orderedEvents and entry < m_entryNumbers.size()) {
+        entry = m_entryNumbers[entry];
+      }
+      ACTS_VERBOSE("Reading event: " << context.eventNumber
+                                     << " with stored entry: " << entry);
+      m_inputChain->GetEntry(entry);
 
       Acts::RecordedMaterialTrack rmTrack;
       // Fill the position and momentum
