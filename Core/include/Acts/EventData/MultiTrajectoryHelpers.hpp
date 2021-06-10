@@ -29,6 +29,7 @@ struct TrajectoryState {
   size_t nOutliers = 0;
   size_t nHoles = 0;
   double chi2Sum = 0;
+  std::vector<double> chi2OnMeasurements = {};
   size_t NDF = 0;
 };
 
@@ -51,11 +52,12 @@ TrajectoryState trajectoryState(
   TrajectoryState trajState;
   multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
     trajState.nStates++;
-    trajState.chi2Sum += state.chi2();
-    trajState.NDF += state.calibratedSize();
     auto typeFlags = state.typeFlags();
     if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
       trajState.nMeasurements++;
+      trajState.chi2Sum += state.chi2();
+      trajState.chi2OnMeasurements.push_back(state.chi2());
+      trajState.NDF += state.calibratedSize();
     } else if (typeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
       trajState.nOutliers++;
     } else if (typeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
@@ -94,11 +96,12 @@ VolumeTrajectoryStateContainer trajectoryState(
     // The trajectory state for this volume
     auto& trajState = trajStateContainer[volume];
     trajState.nStates++;
-    trajState.chi2Sum += state.chi2();
-    trajState.NDF += state.calibratedSize();
     auto typeFlags = state.typeFlags();
     if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
       trajState.nMeasurements++;
+      trajState.chi2Sum += state.chi2();
+      trajState.chi2OnMeasurements.push_back(state.chi2());
+      trajState.NDF += state.calibratedSize();
     } else if (typeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
       trajState.nOutliers++;
     } else if (typeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
