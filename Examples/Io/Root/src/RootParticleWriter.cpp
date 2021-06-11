@@ -22,6 +22,9 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
     Acts::Logging::Level lvl)
     : WriterT(cfg.inputParticles, "RootParticleWriter", lvl), m_cfg(cfg) {
   // inputParticles is already checked by base constructor
+  if (m_cfg.inputMeasurementParticlesMap.empty()) {
+    throw std::invalid_argument("Missing hit-particles map input collection");
+  }
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing file path");
   }
@@ -63,6 +66,7 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
   m_outputTree->Branch("particle", &m_particle);
   m_outputTree->Branch("generation", &m_generation);
   m_outputTree->Branch("sub_particle", &m_subParticle);
+  m_outputTree->Branch("nHits", &m_nHits);
 }
 
 ActsExamples::RootParticleWriter::~RootParticleWriter() {
@@ -87,6 +91,13 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     ACTS_ERROR("Missing output file");
     return ProcessCode::ABORT;
   }
+
+  // Read additional input collections
+  const auto& hitParticlesMap =
+      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
+  // compute particle_id -> {hit_id...} map from the
+  // hit_id -> {particle_id...} map on the fly.
+  const auto& particleHitsMap = invertIndexMultimap(hitParticlesMap);
 
   // ensure exclusive access to tree/file while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
@@ -120,6 +131,11 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     m_particle.push_back(particle.particleId().particle());
     m_generation.push_back(particle.particleId().generation());
     m_subParticle.push_back(particle.particleId().subParticle());
+    // find the corresponding hits for this particle
+    const auto& hits =
+        makeRange(particleHitsMap.equal_range(particle.particleId()));
+    // number of recorded hits
+    m_nHits.push_back(hits.size());
   }
 
   m_outputTree->Fill();
@@ -145,6 +161,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
   m_particle.clear();
   m_generation.clear();
   m_subParticle.clear();
+  m_nHits.clear();
 
   return ProcessCode::SUCCESS;
 }

@@ -103,6 +103,8 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   std::vector<uint32_t> m_particle;
   std::vector<uint32_t> m_generation;
   std::vector<uint32_t> m_subParticle;
+  // The number of truth hits corresponding to the particle
+  std::vector<uint32_t> m_nHits;
 };
 
 }  // namespace ActsExamples
