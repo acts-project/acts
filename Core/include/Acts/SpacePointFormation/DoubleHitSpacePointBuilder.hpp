@@ -103,4 +103,4 @@ class SpacePointBuilder<SpacePoint<Cluster>> {
                                           const Cluster& cluster) const;
 };
 }  // namespace Acts
-#include "Acts/Plugins/Digitization/detail/DoubleHitSpacePointBuilder.ipp"
+#include "Acts/SpacePointFormation/detail/DoubleHitSpacePointBuilder.ipp"

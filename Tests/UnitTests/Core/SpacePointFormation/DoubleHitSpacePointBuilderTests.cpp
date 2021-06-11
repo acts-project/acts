@@ -12,7 +12,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
-#include "Acts/SpacePointFormation/Digitization/DoubleHitSpacePointBuilder.hpp"
+#include "Acts/SpacePointFormation/DoubleHitSpacePointBuilder.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
