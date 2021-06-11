@@ -34,8 +34,7 @@
 ///
 void defineReconstructionPerformance(
     const std::string& inputTrackSummaryFileName = "tracksummary_ckf.root",
-    const std::string& inputSimParticleFileName =
-        "performance_track_finder.root",
+    const std::string& inputSimParticleFileName = "performance_track_finder.root",
     const std::string& trackSummaryTreeName = "tracksummary_ckf",
     const std::string& simParticleTreeName = "track_finder_particles",
     unsigned int nHitsMin = 9, unsigned int nMeasurementsMin = 6,
@@ -54,21 +53,17 @@ void defineReconstructionPerformance(
 
   // Define the efficiency plots
   TEfficiency* trackEff_vs_eta = new TEfficiency(
-      "trackeff_vs_eta", "Tracking efficiency;Truth #eta [GeV/c];Efficiency",
-      40, -4, 4);
+      "trackeff_vs_eta", "Tracking efficiency;Truth #eta [GeV/c];Efficiency", 40, -4, 4);
   TEfficiency* fakeRate_vs_eta = new TEfficiency(
       "fakerate_vs_eta", "Fake rate;#eta [GeV/c];fake rate", 40, -4, 4);
-  TEfficiency* duplicateRate_vs_eta =
-      new TEfficiency("duplicaterate_vs_eta",
-                      "Duplicate rate;#eta [GeV/c];Duplicate rate", 40, -4, 4);
+  TEfficiency* duplicateRate_vs_eta = new TEfficiency(
+      "duplicaterate_vs_eta", "Duplicate rate;#eta [GeV/c];Duplicate rate", 40, -4, 4);
   TEfficiency* trackEff_vs_pt = new TEfficiency(
-      "trackeff_vs_pt", "Tracking efficiency;Truth pt [GeV/c];Efficiency", 40,
-      0, 100);
+      "trackeff_vs_pt", "Tracking efficiency;Truth pt [GeV/c];Efficiency", 40, 0, 100);
   TEfficiency* fakeRate_vs_pt = new TEfficiency(
       "fakerate_vs_pt", "Fake rate;pt [GeV/c];fake rate", 40, 0, 100);
-  TEfficiency* duplicateRate_vs_pt =
-      new TEfficiency("duplicaterate_vs_pt",
-                      "Duplicate rate;pt [GeV/c];Duplicate rate", 40, 0, 100);
+  TEfficiency* duplicateRate_vs_pt = new TEfficiency(
+      "duplicaterate_vs_pt", "Duplicate rate;pt [GeV/c];Duplicate rate", 40, 0, 100);
 
   // Set styles
   setEffStyle(trackEff_vs_eta, 1);
@@ -87,7 +82,7 @@ void defineReconstructionPerformance(
   // Loop over the events to fill plots
   for (size_t i = 0; i < nEvents; ++i) {
     if (i % 10 == 0) {
-      std::cout << "Processing event: " << i << std::endl;
+      std::cout << "Processed events: " << i << std::endl;
     }
 
     // Get the tracks
@@ -192,6 +187,7 @@ void defineReconstructionPerformance(
 
     matchedParticles.clear();
   }  // end of all events
+  std::cout<<"All good. Now plotting..."<< std::endl;
 
   // Now draw the plots
   TCanvas* c1 = new TCanvas("recoPerf", " ", 1500, 800);
