@@ -9,8 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/Digitization/CartesianSegmentation.hpp"
-#include "Acts/Plugins/Digitization/SpacePointBuilder.hpp"
+#include "Acts/SpacePointFormation/SpacePointBuilder.hpp"
 
 namespace Acts {
 
