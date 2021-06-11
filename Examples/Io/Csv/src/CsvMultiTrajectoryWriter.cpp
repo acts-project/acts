@@ -166,7 +166,7 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
   for (auto& [id, trajState] : infoMap) {
     if (listGoodTracks.find(id) != listGoodTracks.end()) {
       trajState.trackType = "good";
-    } else {
+    } else if (trajState.trackType != "fake") {
       trajState.trackType = "duplicate";
     }
 
