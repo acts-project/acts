@@ -32,6 +32,8 @@ struct ParticleInfo {
   UShort_t nHits = 0;
 };
 
+/// Helper for reading tree
+///
 struct TreeReader {
   // The constructor
   TreeReader(TTree* tree_) : tree(tree_){};
@@ -298,10 +300,14 @@ struct TrackSummaryReader : public TreeReader {
     tree->SetBranchAddress("nOutliers", &nOutliers);
     tree->SetBranchAddress("nHoles", &nHoles);
     tree->SetBranchAddress("chi2Sum", &chi2Sum);
-    tree->SetBranchAddress("chi2OnMeasurements", &chi2OnMeasurements);
+    tree->SetBranchAddress("measurementChi2", &measurementChi2);
+    tree->SetBranchAddress("NDF", &NDF);
+    tree->SetBranchAddress("measurementVolume", &measurementVolume);
+    tree->SetBranchAddress("measurementLayer", &measurementLayer);
+    tree->SetBranchAddress("outlierVolume", &outlierVolume);
+    tree->SetBranchAddress("outlierLayer", &outlierLayer);
     tree->SetBranchAddress("nMajorityHits", &nMajorityHits);
     tree->SetBranchAddress("majorityParticleId", &majorityParticleId);
-    tree->SetBranchAddress("NDF", &NDF);
 
     tree->SetBranchAddress("hasFittedParams", &hasFittedParams);
     tree->SetBranchAddress("eLOC0_fit", &eLOC0_fit);
@@ -335,9 +341,19 @@ struct TrackSummaryReader : public TreeReader {
   std::vector<unsigned int>* nOutliers = new std::vector<unsigned int>;
   std::vector<unsigned int>* nHoles = new std::vector<unsigned int>;
   std::vector<float>* chi2Sum = new std::vector<float>;
-  std::vector<std::vector<double>>* chi2OnMeasurements =
-      new std::vector<std::vector<double>>;
   std::vector<unsigned int>* NDF = new std::vector<unsigned int>;
+  std::vector<std::vector<double>>* measurementChi2 =
+      new std::vector<std::vector<double>>;
+  std::vector<std::vector<double>>* outlierChi2 =
+      new std::vector<std::vector<double>>;
+  std::vector<std::vector<double>>* measurementVolume =
+      new std::vector<std::vector<double>>;
+  std::vector<std::vector<double>>* measurementLayer =
+      new std::vector<std::vector<double>>;
+  std::vector<std::vector<double>>* outlierVolume =
+      new std::vector<std::vector<double>>;
+  std::vector<std::vector<double>>* outlierLayer =
+      new std::vector<std::vector<double>>;
   std::vector<unsigned int>* nMajorityHits = new std::vector<unsigned int>;
   std::vector<uint64_t>* majorityParticleId = new std::vector<uint64_t>;
 

@@ -74,10 +74,15 @@ ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
     m_outputTree->Branch("nOutliers", &m_nOutliers);
     m_outputTree->Branch("nHoles", &m_nHoles);
     m_outputTree->Branch("chi2Sum", &m_chi2Sum);
-    m_outputTree->Branch("chi2OnMeasurements", &m_chi2OnMeasurements);
+    m_outputTree->Branch("NDF", &m_NDF);
+    m_outputTree->Branch("measurementChi2", &m_measurementChi2);
+    m_outputTree->Branch("outlierChi2", &m_outlierChi2);
+    m_outputTree->Branch("measurementVolume", &m_measurementVolume);
+    m_outputTree->Branch("measurementLayer", &m_measurementLayer);
+    m_outputTree->Branch("outlierVolume", &m_outlierVolume);
+    m_outputTree->Branch("outlierLayer", &m_outlierLayer);
     m_outputTree->Branch("nMajorityHits", &m_nMajorityHits);
     m_outputTree->Branch("majorityParticleId", &m_majorityParticleId);
-    m_outputTree->Branch("NDF", &m_NDF);
 
     m_outputTree->Branch("hasFittedParams", &m_hasFittedParams);
     m_outputTree->Branch("eLOC0_fit", &m_eLOC0_fit);
@@ -163,8 +168,19 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       m_nOutliers.push_back(trajState.nOutliers);
       m_nHoles.push_back(trajState.nHoles);
       m_chi2Sum.push_back(trajState.chi2Sum);
-      m_chi2OnMeasurements.push_back(trajState.chi2OnMeasurements);
       m_NDF.push_back(trajState.NDF);
+      m_measurementChi2.push_back(trajState.measurementChi2);
+      m_outlierChi2.push_back(trajState.measurementChi2);
+      // They are stored as double (as the vector of vector of int is not known
+      // to ROOT)
+      m_measurementVolume.emplace_back(trajState.measurementVolume.begin(),
+                                       trajState.measurementVolume.end());
+      m_measurementLayer.emplace_back(trajState.measurementLayer.begin(),
+                                      trajState.measurementLayer.end());
+      m_outlierVolume.emplace_back(trajState.outlierVolume.begin(),
+                                   trajState.outlierVolume.end());
+      m_outlierLayer.emplace_back(trajState.outlierLayer.begin(),
+                                  trajState.outlierLayer.end());
 
       // Get the majority truth particle to this track
       identifyContributingParticles(hitParticlesMap, traj, trackTip,
@@ -233,8 +249,13 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
   m_nOutliers.clear();
   m_nHoles.clear();
   m_chi2Sum.clear();
-  m_chi2OnMeasurements.clear();
   m_NDF.clear();
+  m_measurementChi2.clear();
+  m_outlierChi2.clear();
+  m_measurementVolume.clear();
+  m_measurementLayer.clear();
+  m_outlierVolume.clear();
+  m_outlierLayer.clear();
   m_nMajorityHits.clear();
   m_majorityParticleId.clear();
 

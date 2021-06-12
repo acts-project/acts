@@ -207,11 +207,11 @@ void defineReconstructionPerformance(
           auto eta = matchedTracks[k].eta;
           auto pt = matchedTracks[k].pt;
           if (k == 0) {
-            duplicateRate_vs_eta[ifile]->Fill(true, eta);
-            duplicateRate_vs_pt[ifile]->Fill(true, pt);
-          } else {
             duplicateRate_vs_eta[ifile]->Fill(false, eta);
             duplicateRate_vs_pt[ifile]->Fill(false, pt);
+          } else {
+            duplicateRate_vs_eta[ifile]->Fill(true, eta);
+            duplicateRate_vs_pt[ifile]->Fill(true, pt);
           }
         }
       }  // end of all selected truth-matched tracks

@@ -84,17 +84,26 @@ class RootTrajectorySummaryWriter final
   std::vector<unsigned int>
       m_subTrajNr;  ///< The multi-trajectory sub-trajectory number in event
 
-  std::vector<unsigned int> m_nStates;  ///< The number of states of the track
+  std::vector<unsigned int> m_nStates;        ///< The number of states
+  std::vector<unsigned int> m_nMeasurements;  ///< The number of measurements
+  std::vector<unsigned int> m_nOutliers;      ///< The number of outliers
+  std::vector<unsigned int> m_nHoles;         ///< The number of holes
+  std::vector<float> m_chi2Sum;               ///< The total chi2
   std::vector<unsigned int>
-      m_nMeasurements;  ///< The number of measurements of the track
-  std::vector<unsigned int>
-      m_nOutliers;                     ///< The number of outliers of the track
-  std::vector<unsigned int> m_nHoles;  ///< The number of holes of the track
-  std::vector<float> m_chi2Sum;        ///< The total chi2 of the track
+      m_NDF;  ///< The number of ndf of the measurements+outliers
   std::vector<std::vector<double>>
-      m_chi2OnMeasurements;  ///< The chi2 on all measurement states of the
-                             ///< track
-  std::vector<unsigned int> m_NDF;  ///< The number of ndf of the measurements
+      m_measurementChi2;  ///< The chi2 on all measurement states
+  std::vector<std::vector<double>>
+      m_outlierChi2;  ///< The chi2 on all outlier states
+  std::vector<std::vector<double>>
+      m_measurementVolume;  ///< The volume id of the measurements
+  std::vector<std::vector<double>>
+      m_measurementLayer;  ///< The layer id of the measurements
+  std::vector<std::vector<double>>
+      m_outlierVolume;  ///< The volume id of the outliers
+  std::vector<std::vector<double>>
+      m_outlierLayer;  ///< The layer id of the outliers
+
   std::vector<unsigned int>
       m_nMajorityHits;  ///< The number of hits from majority particle
   std::vector<uint64_t>
