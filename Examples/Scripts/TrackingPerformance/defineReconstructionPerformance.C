@@ -74,7 +74,7 @@ void defineReconstructionPerformance(
   // Define variables for tree reading (turn on the events sorting since we have more than one root files to read)
   ParticleReader pReader(
       (TTree*)particleFile->Get(simParticleTreeName.c_str()), true);
-  std::vector<TrackReader> tReaders;
+  std::vector<TrackSummaryReader> tReaders;
   tReaders.reserve(nTrackFiles);
   for (const auto& trackFile : trackFiles) {
     tReaders.emplace_back((TTree*)trackFile->Get(trackSummaryTreeName.c_str()), true);
@@ -132,12 +132,6 @@ void defineReconstructionPerformance(
     // The container from track-particle matching info (Flushed per event)
     std::map<uint64_t, std::vector<RecoTrackInfo>> matchedParticles;
 
-    // Get the sorted entry numbers
-    const auto& tEntryNumbers = tReaders[ifile].entryNumbers;
-    if(tEntryNumbers.empty()){
-      throw std::runtime_error("Zero entry numbers is not expected if the events are already sorted!");
-    }
-
     // Loop over the events to fill plots
     for (size_t i = 0; i < nEvents[ifile]; ++i) {
       if (i % 10 == 0) {
@@ -145,8 +139,7 @@ void defineReconstructionPerformance(
       }
 
       // Get the tracks
-      auto tEntry = tEntryNumbers[i];
-      tReaders[ifile].tree->GetEvent(tEntry);
+      tReaders[ifile].getEntry(i);
 
       // Get the particles (do nothing if the particles for this event already
       // read)
