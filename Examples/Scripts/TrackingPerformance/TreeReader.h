@@ -54,7 +54,7 @@ struct TrackReader : public TreeReader {
   TrackReader() = delete;
 
   // The constructor
-  TrackReader(TTree* tree_) : TreeReader(tree_) {
+  TrackReader(TTree* tree_, bool sortEvents) : TreeReader(tree_) {
     tree->SetBranchAddress("event_nr", &eventId);
     tree->SetBranchAddress("nStates", &nStates);
     tree->SetBranchAddress("nMeasurements", &nMeasurements);
@@ -80,11 +80,13 @@ struct TrackReader : public TreeReader {
     tree->SetBranchAddress("err_eQOP_fit", &err_eQOP_fit);
     tree->SetBranchAddress("err_eT_fit", &err_eT_fit);
 
-    // It might not be necessary, but we still do it to be sure
+    if(sortEvents){
+    // It's not necessary if you just need to read one file, but please do it to synchronize events if multiple root files are read 
     entryNumbers.resize(tree->GetEntries());
     tree->Draw("event_nr", "", "goff");
     // Sort to get the entry numbers of the ordered events
     TMath::Sort(tree->GetEntries(), tree->GetV1(), entryNumbers.data(), false);
+    } 
   }
 
   // The variables
@@ -123,7 +125,7 @@ struct ParticleReader : public TreeReader {
   ParticleReader() = delete;
 
   // The constructor
-  ParticleReader(TTree* tree_) : TreeReader(tree_) {
+  ParticleReader(TTree* tree_, bool sortEvents) : TreeReader(tree_) {
     tree->SetBranchAddress("event_id", &eventId);
     tree->SetBranchAddress("particle_id", &particleId);
     tree->SetBranchAddress("particle_type", &particleType);
@@ -140,11 +142,13 @@ struct ParticleReader : public TreeReader {
     tree->SetBranchAddress("ntracks", &nTracks);
     tree->SetBranchAddress("ntracks_majority", &nTracksMajority);
 
-    // It might not be necessary, but we still do it to be sure
+    if(sortEvents){
+    // It's not necessary if you just need to read one file, but please do it to synchronize events if multiple root files are read 
     entryNumbers.resize(tree->GetEntries());
     tree->Draw("event_id", "", "goff");
     // Sort to get the entry numbers of the ordered events
     TMath::Sort(tree->GetEntries(), tree->GetV1(), entryNumbers.data(), false);
+    }
   }
 
   // Get all the particles with requested event id
@@ -162,7 +166,8 @@ struct ParticleReader : public TreeReader {
     std::vector<ParticleInfo> particles;
     particles.reserve(nParticles);
     for (unsigned int i = 0; i < nParticles; ++i) {
-      tree->GetEvent(entryNumbers[startEntry + i]);
+      auto entry = (entryNumbers.size() > startEntry + i)? entryNumbers[startEntry + i] : startEntry + i;
+      tree->GetEvent(entry);
       auto pt = std::hypot(px, py);
       auto p = std::hypot(pt, pz);
       auto eta = std::atanh(pz / p * 1.);
