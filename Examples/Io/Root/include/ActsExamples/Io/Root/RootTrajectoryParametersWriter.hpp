@@ -78,8 +78,8 @@ class RootTrajectoryParametersWriter final
   std::mutex m_writeMutex;  ///< Mutex used to protect multi-threaded writes
   TFile* m_outputFile{nullptr};  ///< The output file
   TTree* m_outputTree{nullptr};  ///< The output tree
-  unsigned int m_eventNr{0};     ///< The event number
-  std::vector<unsigned int>
+  uint32_t m_eventNr{0};         ///< The event number
+  std::vector<uint32_t>
       m_multiTrajNr;  ///< The multi-trajectory numbers in event
   std::vector<unsigned int>
       m_subTrajNr;  ///< The multi-trajectory sub-trajectory number in event

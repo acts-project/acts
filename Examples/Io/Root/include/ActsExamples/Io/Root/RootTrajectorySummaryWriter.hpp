@@ -81,7 +81,7 @@ class RootTrajectorySummaryWriter final
   uint32_t m_eventNr{0};         ///< The event number
   std::vector<uint32_t>
       m_multiTrajNr;  ///< The multi-trajectory numbers in event
-  std::vector<uint32_t>
+  std::vector<unsigned int>
       m_subTrajNr;  ///< The multi-trajectory sub-trajectory number in event
 
   std::vector<unsigned int> m_nStates;  ///< The number of states of the track
