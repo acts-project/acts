@@ -60,3 +60,17 @@ void adaptColorPalette(hist_t* h, float rmin, float rmax, float rgood,
 
   TColor::CreateGradientColorTable(number, stops, red, green, blue, n);
 }
+
+// Helper function:
+// increase eff range by a scale factor. Note that it assumes the eff has already been drawn 
+template <typename eff_t>
+void adaptEffRange(eff_t* eff, float minScale = 1, float maxScale = 1.1) {
+  gPad->Update();
+  auto ymin = gPad->GetUymin();
+  auto ymax = gPad->GetUymax();
+  auto graph = eff->GetPaintedGraph(); 
+  graph->SetMinimum(ymin*minScale);
+  graph->SetMaximum(ymax*maxScale); 
+  gPad->Modified();
+  gPad->Update();
+}

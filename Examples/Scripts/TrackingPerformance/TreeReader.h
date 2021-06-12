@@ -34,9 +34,9 @@ struct ParticleInfo {
 };
 
 
-struct TreeVars {
+struct TreeReader {
   // The constructor
-  TreeVars(TTree* tree_) : tree(tree_){};
+  TreeReader(TTree* tree_) : tree(tree_){};
 
   // The tree being read
   TTree* tree = nullptr;
@@ -46,12 +46,15 @@ struct TreeVars {
   std::vector<long long> entryNumbers = {};
 };
 
-struct TrackVars : public TreeVars {
+
+/// Struct used for reading tracks written out by the RootTrajectorySummaryWriter
+///
+struct TrackReader : public TreeReader {
   // Delete the default constructor
-  TrackVars() = delete;
+  TrackReader() = delete;
 
   // The constructor
-  TrackVars(TTree* tree_) : TreeVars(tree_) {
+  TrackReader(TTree* tree_) : TreeReader(tree_) {
     tree->SetBranchAddress("event_nr", &eventId);
     tree->SetBranchAddress("nStates", &nStates);
     tree->SetBranchAddress("nMeasurements", &nMeasurements);
@@ -112,12 +115,15 @@ struct TrackVars : public TreeVars {
   std::vector<float>* err_eT_fit = new std::vector<float>;
 };
 
-struct ParticleVars : public TreeVars {
+
+/// Struct used for reading particles written out by the TrackFinderPerformanceWriter 
+///
+struct ParticleReader : public TreeReader {
   // Delete the default constructor
-  ParticleVars() = delete;
+  ParticleReader() = delete;
 
   // The constructor
-  ParticleVars(TTree* tree_) : TreeVars(tree_) {
+  ParticleReader(TTree* tree_) : TreeReader(tree_) {
     tree->SetBranchAddress("event_id", &eventId);
     tree->SetBranchAddress("particle_id", &particleId);
     tree->SetBranchAddress("particle_type", &particleType);
