@@ -371,14 +371,14 @@ class CombinatorialKalmanFilter {
               // Set the lastMeasurementIndex to the last measurement
               // to ignore the states after it in the rest of the algorithm
               auto lastMeasurementIndex = currentTip;
-              bool isMeasurement =
-                  result.fittedStates.getTrackState(lastMeasurementIndex)
-                      .typeFlags()
-                      .test(TrackStateFlag::MeasurementFlag);
+              auto lastMeasurementState =
+                  result.fittedStates.getTrackState(lastMeasurementIndex);
+              bool isMeasurement = lastMeasurementState.typeFlags().test(
+                  TrackStateFlag::MeasurementFlag);
               while (!isMeasurement) {
-                auto lastMeasurementState =
-                    result.fittedStates.getTrackState(lastMeasurementIndex);
                 lastMeasurementIndex = lastMeasurementState.previous();
+                lastMeasurementState =
+                    result.fittedStates.getTrackState(lastMeasurementIndex);
                 isMeasurement = lastMeasurementState.typeFlags().test(
                     TrackStateFlag::MeasurementFlag);
               }
