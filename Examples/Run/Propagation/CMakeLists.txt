@@ -48,6 +48,14 @@ add_executable(
 target_link_libraries(
   ActsExamplePropagationTGeo
   PRIVATE ${_common_libraries} ActsExamplesDetectorTGeo)
+  
+# Trial And Error Propagator
+add_executable(
+  ActsExamplePropagationTrialAndErrorNavigator
+  TrialAndErrorNavigatorExample.cpp)
+target_link_libraries(
+  ActsExamplePropagationTrialAndErrorNavigator
+  PRIVATE ${_common_libraries} ActsExamplesDetectorGeneric)
 
 install(
   TARGETS
