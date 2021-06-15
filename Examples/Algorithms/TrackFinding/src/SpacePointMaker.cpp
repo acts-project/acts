@@ -98,78 +98,9 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
   const auto& measurements =
       ctx.eventStore.get<MeasurementContainer>(m_cfg.inputMeasurements);
 
-  // -------- test -----------------------
-  for (const auto& slink : sourceLinks) {
-    // const auto geoId = slink.geometryId();
-    // const auto volumeId = geoId.volume();
-    // const auto layerId = geoId.layer();
-
-    const auto [localPos, localCov] = std::visit(
-        [](const auto& meas) {
-          auto expander = meas.expander();
-          Acts::BoundVector par = expander * meas.parameters();
-          Acts::BoundSymMatrix cov =
-              expander * meas.covariance() * expander.transpose();
-          // extract local position
-          Acts::Vector2 lpar(par[Acts::eBoundLoc0], par[Acts::eBoundLoc1]);
-          // extract local position covariance.
-          Acts::SymMatrix2 lcov =
-              cov.block<2, 2>(Acts::eBoundLoc0, Acts::eBoundLoc0);
-          return std::make_pair(lpar, lcov);
-        },
-        measurements[slink.index()]);
-
-    // std::cout << volumeId << " " << localPos[0] << std::endl;
-  }
-
-  for (const auto& meas : measurements) {
-    auto [localPos, localCov] = std::visit(
-        [](const auto& meas) {
-          auto expander = meas.expander();
-          // const auto& surf = meas.referenceSurface();
-          Acts::BoundVector par = expander * meas.parameters();
-          Acts::BoundSymMatrix cov =
-              expander * meas.covariance() * expander.transpose();
-          // extract local position
-          Acts::Vector2 lpar(par[Acts::eBoundLoc0], par[Acts::eBoundLoc1]);
-          // extract local position covariance.
-          Acts::SymMatrix2 lcov =
-              cov.block<2, 2>(Acts::eBoundLoc0, Acts::eBoundLoc0);
-          return std::make_pair(lpar, lcov);
-        },
-        meas);
-  }
-  // --------------------------------------
-
-  // for(const auto& meas: measurements ){
-  //  const auto& surface = meas.expandar();
-
-  // const auto surface = meas.referenceObject();
-  //  const auto& geoId = surface.geometryId();
-  //  unsigned into volumeId = geoId.voluem();
-  //  unsigned int layerId = geoId.layer();
-
-  //}
-  // const auto& clusters =
-  // ctx.eventStore.get<ActsExamples::ClusterContainer>(m_cfg.inputClusters);
-
-  // std::vector<Acts::SpacePoint<ActsExamples::Cluster>> newSpacePoints;
-  // std::cout << clusters.size() << std::endl;
-
-  // std::vector<const ActsExamples::Cluster*> selectedClusters;
-  // for (const auto cluster : clusters){
-  //  const ActsExamples::Cluster* clus = &cluster;
-  //  selectedClusters.emplace_back(clus);
-  //  }
-  // m_spBuilder.calculateSpacePoints(ctx.geoContext,selectedClusters,newSpacePoints);
-
-  // m_spBuilder.calculateSpacePoints(ctx.geoContext, measurements,
-  // spacePoints);
-  // std::vector<IndexSourceLink> selectedSourceLinks;
   std::vector<ActsExamples::Measurement> selectedMeasurements;
 
   for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) {
-    // std::cout << geoId.volume() << " " << geoId.layer() << std::endl;
     // select volume/layer depending on what is set in the geometry id
     auto range = selectLowestNonZeroGeometryObject(sourceLinks, geoId);
     // groupByModule only works with geometry containers, not with an
@@ -178,102 +109,16 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
 
     for (auto [moduleGeoId, moduleSourceLinks] : groupedByModule) {
       // find corresponding surface
-      //std::cout << moduleGeoId.volume() << " " << moduleGeoId.layer() << " " << moduleGeoId.sensitive() << std::endl;
       for (auto slink : moduleSourceLinks) {
-        // selectedSourceLinks.emplace_back(slink);
         selectedMeasurements.emplace_back(measurements[slink.index()]);
       }
     }
   }
-  SimSpacePointContainer outputSpacePoints;
-  m_spBuilder.calculateSpacePoints(ctx.geoContext, selectedMeasurements,
-                                   outputSpacePoints);
-
-  //================== original ======================
-
   SimSpacePointContainer spacePoints;
-  spacePoints.reserve(sourceLinks.size());
-
-  for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) {
-    // std::cout << geoId.volume() << " " << geoId.layer() << std::endl;
-    // select volume/layer depending on what is set in the geometry id
-    auto range = selectLowestNonZeroGeometryObject(sourceLinks, geoId);
-    // groupByModule only works with geometry containers, not with an
-    // arbitrary range. do the equivalent grouping manually
-    auto groupedByModule = makeGroupBy(range, detail::GeometryIdGetter());
-
-    for (auto [moduleGeoId, moduleSourceLinks] : groupedByModule) {
-      // find corresponding surface
-
-      const Acts::Surface* surface =
-          m_cfg.trackingGeometry->findSurface(moduleGeoId);
-      if (not surface) {
-        ACTS_ERROR("Could not find surface " << moduleGeoId);
-        return ProcessCode::ABORT;
-      }
-
-      for (auto sourceLink : moduleSourceLinks) {
-        // extract a local position/covariance independent from the concrecte
-        // measurement content. since we do not know if and where the local
-        // parameters are contained in the measurement parameters vector, they
-        // are transformed to the bound space where we do know their location.
-        // if the local parameters are not measured, this results in a
-        // zero location, which is a reasonable default fall-back.
-        auto [localPos, localCov] = std::visit(
-            [](const auto& meas) {
-              auto expander = meas.expander();
-              Acts::BoundVector par = expander * meas.parameters();
-              Acts::BoundSymMatrix cov =
-                  expander * meas.covariance() * expander.transpose();
-              // extract local position
-              Acts::Vector2 lpar(par[Acts::eBoundLoc0], par[Acts::eBoundLoc1]);
-              // extract local position covariance.
-              Acts::SymMatrix2 lcov =
-                  cov.block<2, 2>(Acts::eBoundLoc0, Acts::eBoundLoc0);
-              return std::make_pair(lpar, lcov);
-            },
-            measurements[sourceLink.index()]);
-
-        // transform local position to global coordinates
-        Acts::Vector3 globalFakeMom(1, 1, 1);
-        Acts::Vector3 globalPos =
-            surface->localToGlobal(ctx.geoContext, localPos, globalFakeMom);
-        Acts::RotationMatrix3 rotLocalToGlobal =
-            surface->referenceFrame(ctx.geoContext, globalPos, globalFakeMom);
-
-        // the space point requires only the variance of the transverse and
-        // longitudinal position. reduce computations by transforming the
-        // covariance directly from local to rho/z.
-        //
-        // compute Jacobian from global coordinates to rho/z
-        //
-        //         rho = sqrt(x² + y²)
-        // drho/d{x,y} = (1 / sqrt(x² + y²)) * 2 * {x,y}
-        //             = 2 * {x,y} / r
-        //       dz/dz = 1 (duuh!)
-        //
-        auto x = globalPos[Acts::ePos0];
-        auto y = globalPos[Acts::ePos1];
-        auto scale = 2 / std::hypot(x, y);
-        Acts::ActsMatrix<2, 3> jacXyzToRhoZ = Acts::ActsMatrix<2, 3>::Zero();
-        jacXyzToRhoZ(0, Acts::ePos0) = scale * x;
-        jacXyzToRhoZ(0, Acts::ePos1) = scale * y;
-        jacXyzToRhoZ(1, Acts::ePos2) = 1;
-        // compute Jacobian from local coordinates to rho/z
-        Acts::ActsMatrix<2, 2> jac =
-            jacXyzToRhoZ *
-            rotLocalToGlobal.block<3, 2>(Acts::ePos0, Acts::ePos0);
-        // compute rho/z variance
-        Acts::ActsVector<2> var = (jac * localCov * jac.transpose()).diagonal();
-
-        // construct space point in global coordinates
-        spacePoints.emplace_back(globalPos, var[0], var[1], sourceLink.index());
-      }
-    }
-  }
+  m_spBuilder.calculateSpacePoints(ctx.geoContext, selectedMeasurements,
+                                   spacePoints);
   spacePoints.shrink_to_fit();
 
-  ACTS_DEBUG("Created " << spacePoints.size() << " space points");
   ctx.eventStore.add(m_cfg.outputSpacePoints, std::move(spacePoints));
 
   return ActsExamples::ProcessCode::SUCCESS;

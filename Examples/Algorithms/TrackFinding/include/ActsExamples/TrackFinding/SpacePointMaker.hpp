@@ -10,9 +10,7 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/SpacePointFormation/SingleHitSpacePointBuilder.hpp"
-#include "Acts/SpacePointFormation/SpacePointBuilder.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.h"
-#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
@@ -50,8 +48,6 @@ class SpacePointMaker final : public BareAlgorithm {
     std::string inputSourceLinks;
     /// Input measurements collection.
     std::string inputMeasurements;
-    /// Input cluster collection
-    std::string inputClusters;
     /// Output space points collection.
     std::string outputSpacePoints;
     /// Tracking geometry for transformation lookup.
