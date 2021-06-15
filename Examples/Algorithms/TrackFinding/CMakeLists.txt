@@ -17,6 +17,7 @@ target_link_libraries(
     ActsExamplesFramework
     ActsExamplesIoJson
     ActsExamplesMagneticField
+    ActsPluginDigitization
     Boost::program_options)
 
 install(

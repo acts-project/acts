@@ -21,6 +21,9 @@
 #include <stdexcept>
 #include <utility>
 
+using ConcreteMeasurement =
+    Acts::Measurement<ActsExamples::IndexSourceLink, Acts::BoundIndices, 2>;
+
 ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
                                                Acts::Logging::Level lvl)
     : BareAlgorithm("SpacePointMaker", lvl), m_cfg(std::move(cfg)) {
@@ -81,6 +84,11 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
   for (const auto& geoId : m_cfg.geometrySelection) {
     ACTS_INFO("  " << geoId);
   }
+  auto spBuilderConfig = Acts::SpacePointBuilderConfig();
+  spBuilderConfig.trackingGeometry = m_cfg.trackingGeometry;
+  m_spBuilder =
+      Acts::SingleHitSpacePointBuilder<SimSpacePoint, IndexSourceLink>(
+          spBuilderConfig);
 }
 
 ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
@@ -90,10 +98,78 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
   const auto& measurements =
       ctx.eventStore.get<MeasurementContainer>(m_cfg.inputMeasurements);
 
-  SimSpacePointContainer spacePoints;
-  spacePoints.reserve(sourceLinks.size());
+  // -------- test -----------------------
+  for (const auto& slink : sourceLinks) {
+    // const auto geoId = slink.geometryId();
+    // const auto volumeId = geoId.volume();
+    // const auto layerId = geoId.layer();
+
+    const auto [localPos, localCov] = std::visit(
+        [](const auto& meas) {
+          auto expander = meas.expander();
+          Acts::BoundVector par = expander * meas.parameters();
+          Acts::BoundSymMatrix cov =
+              expander * meas.covariance() * expander.transpose();
+          // extract local position
+          Acts::Vector2 lpar(par[Acts::eBoundLoc0], par[Acts::eBoundLoc1]);
+          // extract local position covariance.
+          Acts::SymMatrix2 lcov =
+              cov.block<2, 2>(Acts::eBoundLoc0, Acts::eBoundLoc0);
+          return std::make_pair(lpar, lcov);
+        },
+        measurements[slink.index()]);
+
+    // std::cout << volumeId << " " << localPos[0] << std::endl;
+  }
+
+  for (const auto& meas : measurements) {
+    auto [localPos, localCov] = std::visit(
+        [](const auto& meas) {
+          auto expander = meas.expander();
+          // const auto& surf = meas.referenceSurface();
+          Acts::BoundVector par = expander * meas.parameters();
+          Acts::BoundSymMatrix cov =
+              expander * meas.covariance() * expander.transpose();
+          // extract local position
+          Acts::Vector2 lpar(par[Acts::eBoundLoc0], par[Acts::eBoundLoc1]);
+          // extract local position covariance.
+          Acts::SymMatrix2 lcov =
+              cov.block<2, 2>(Acts::eBoundLoc0, Acts::eBoundLoc0);
+          return std::make_pair(lpar, lcov);
+        },
+        meas);
+  }
+  // --------------------------------------
+
+  // for(const auto& meas: measurements ){
+  //  const auto& surface = meas.expandar();
+
+  // const auto surface = meas.referenceObject();
+  //  const auto& geoId = surface.geometryId();
+  //  unsigned into volumeId = geoId.voluem();
+  //  unsigned int layerId = geoId.layer();
+
+  //}
+  // const auto& clusters =
+  // ctx.eventStore.get<ActsExamples::ClusterContainer>(m_cfg.inputClusters);
+
+  // std::vector<Acts::SpacePoint<ActsExamples::Cluster>> newSpacePoints;
+  // std::cout << clusters.size() << std::endl;
+
+  // std::vector<const ActsExamples::Cluster*> selectedClusters;
+  // for (const auto cluster : clusters){
+  //  const ActsExamples::Cluster* clus = &cluster;
+  //  selectedClusters.emplace_back(clus);
+  //  }
+  // m_spBuilder.calculateSpacePoints(ctx.geoContext,selectedClusters,newSpacePoints);
+
+  // m_spBuilder.calculateSpacePoints(ctx.geoContext, measurements,
+  // spacePoints);
+  // std::vector<IndexSourceLink> selectedSourceLinks;
+  std::vector<ActsExamples::Measurement> selectedMeasurements;
 
   for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) {
+    // std::cout << geoId.volume() << " " << geoId.layer() << std::endl;
     // select volume/layer depending on what is set in the geometry id
     auto range = selectLowestNonZeroGeometryObject(sourceLinks, geoId);
     // groupByModule only works with geometry containers, not with an
@@ -102,6 +178,33 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
 
     for (auto [moduleGeoId, moduleSourceLinks] : groupedByModule) {
       // find corresponding surface
+      //std::cout << moduleGeoId.volume() << " " << moduleGeoId.layer() << " " << moduleGeoId.sensitive() << std::endl;
+      for (auto slink : moduleSourceLinks) {
+        // selectedSourceLinks.emplace_back(slink);
+        selectedMeasurements.emplace_back(measurements[slink.index()]);
+      }
+    }
+  }
+  SimSpacePointContainer outputSpacePoints;
+  m_spBuilder.calculateSpacePoints(ctx.geoContext, selectedMeasurements,
+                                   outputSpacePoints);
+
+  //================== original ======================
+
+  SimSpacePointContainer spacePoints;
+  spacePoints.reserve(sourceLinks.size());
+
+  for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) {
+    // std::cout << geoId.volume() << " " << geoId.layer() << std::endl;
+    // select volume/layer depending on what is set in the geometry id
+    auto range = selectLowestNonZeroGeometryObject(sourceLinks, geoId);
+    // groupByModule only works with geometry containers, not with an
+    // arbitrary range. do the equivalent grouping manually
+    auto groupedByModule = makeGroupBy(range, detail::GeometryIdGetter());
+
+    for (auto [moduleGeoId, moduleSourceLinks] : groupedByModule) {
+      // find corresponding surface
+
       const Acts::Surface* surface =
           m_cfg.trackingGeometry->findSurface(moduleGeoId);
       if (not surface) {

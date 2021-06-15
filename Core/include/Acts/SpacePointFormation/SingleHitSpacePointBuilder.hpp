@@ -8,8 +8,13 @@
 
 #pragma once
 
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/Measurement.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilder.hpp"
+#include "Acts/SpacePointFormation/SpacePointBuilderConfig.h"
+#include "Acts/Surfaces/Surface.hpp"
 
 namespace Acts {
 
@@ -20,39 +25,50 @@ namespace Acts {
 /// the digitized clusters on a pixel detector element and provides the
 /// corresponding space point.
 ///
-template <typename Cluster>
-class SpacePointBuilder<SpacePoint<Cluster>> {
+template <typename spacepoint_t, typename source_link_t>
+class SingleHitSpacePointBuilder {
  public:
-  /// Default constructor
-  SpacePointBuilder<SpacePoint<Cluster>>() = default;
+  struct Config {
+    // Tracking geometry for transformation lookup.
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
+  };
+
+  // Constructor
+  SingleHitSpacePointBuilder(SpacePointBuilderConfig cfg);
+  ///// Default constructor
+  SingleHitSpacePointBuilder() = default;
 
   /// @brief Calculates the space points out of a given collection of clusters
   /// and stores the results
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param cluster vector of clusters
+  /// @param measurements vector of measurements
   /// @param spacePointStorage storage of the results
   void calculateSpacePoints(
-      const GeometryContext& gctx, const std::vector<const Cluster*>& clusters,
-      std::vector<SpacePoint<Cluster>>& spacePointStorage) const;
+      const GeometryContext& gctx,
+      const std::vector<BoundVariantMeasurement<source_link_t>>& measurements,
+      std::vector<spacepoint_t>& spacePointStorage) const;
 
  protected:
   /// @brief Getter method for the local coordinates of a cluster
   /// on its corresponding surface
   ///
-  /// @param cluster object related to the cluster that holds the necessary
+  /// @param meas object related to the measurement that holds the necessary
   /// information
   /// @return vector of the local coordinates of the cluster on the surface
-  Vector2 localCoords(const Cluster& cluster) const;
+  Vector2 localCoords(const BoundVariantMeasurement<source_link_t>& meas) const;
 
   /// @brief Getter method for the global coordinates of a cluster
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param cluster object related to the cluster that holds the necessary
+  /// @param meas object related to the measurement that holds the necessary
   /// information
   /// @return vector of the global coordinates of the cluster
-  Vector3 globalCoords(const GeometryContext& gctx,
-                       const Cluster& cluster) const;
+  std::pair<Vector3, Vector2> globalCoords(
+      const GeometryContext& gctx,
+      const BoundVariantMeasurement<source_link_t>& meas) const;
+
+  SpacePointBuilderConfig m_config;
 };
 }  // namespace Acts
 #include "Acts/SpacePointFormation/detail/SingleHitSpacePointBuilder.ipp"
