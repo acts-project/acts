@@ -548,8 +548,10 @@ class KalmanFitter {
 
         // Get and set the type flags
         auto& typeFlags = trackStateProxy.typeFlags();
-        typeFlags.set(TrackStateFlag::MaterialFlag);
         typeFlags.set(TrackStateFlag::ParameterFlag);
+        if (surface->surfaceMaterial() != nullptr) {
+          typeFlags.set(TrackStateFlag::MaterialFlag);
+        }
 
         // Check if the state is an outlier.
         // If not, run Kalman update, tag it as a
@@ -582,6 +584,7 @@ class KalmanFitter {
               "be an outlier. Stepping state is not updated.")
           // Set the outlier type flag
           typeFlags.set(TrackStateFlag::OutlierFlag);
+          trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
         }
 
         // Update state and stepper with post material effects
@@ -888,9 +891,8 @@ class KalmanFitter {
       // Remember you smoothed the track states
       result.smoothed = true;
 
-      // Get the indices of measurement states;
-      std::vector<size_t> measurementIndices;
-      measurementIndices.reserve(result.measurementStates);
+      // Get the indices of the first measurement states;
+      size_t firstMeasurementIndex = result.lastMeasurementIndex;
       // Count track states to be smoothed
       size_t nStates = 0;
       result.fittedStates.applyBackwards(
@@ -898,20 +900,13 @@ class KalmanFitter {
             bool isMeasurement =
                 st.typeFlags().test(TrackStateFlag::MeasurementFlag);
             if (isMeasurement) {
-              measurementIndices.emplace_back(st.index());
-            } else if (measurementIndices.empty()) {
-              // No smoothed parameters if the last measurement state has not
-              // been found yet
-              st.data().ismoothed = detail_lt::IndexData::kInvalid;
+              firstMeasurementIndex = st.index();
             }
-            // Start count when the last measurement state is found
-            if (not measurementIndices.empty()) {
-              nStates++;
-            }
+            nStates++;
           });
       // Return error if the track has no measurement states (but this should
       // not happen)
-      if (measurementIndices.empty()) {
+      if (nStates == 0) {
         ACTS_ERROR("Smoothing for a track without measurements.");
         return KalmanFitterError::SmoothFailed;
       }
@@ -923,7 +918,7 @@ class KalmanFitter {
 
       // Smooth the track states
       auto smoothRes = m_smoother(state.geoContext, result.fittedStates,
-                                  measurementIndices.front(), logger);
+                                  result.lastMeasurementIndex, logger);
       if (!smoothRes.ok()) {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
         return smoothRes.error();
@@ -936,9 +931,9 @@ class KalmanFitter {
 
       // Obtain the smoothed parameters at first/last measurement state
       auto firstCreatedMeasurement =
-          result.fittedStates.getTrackState(measurementIndices.back());
+          result.fittedStates.getTrackState(firstMeasurementIndex);
       auto lastCreatedMeasurement =
-          result.fittedStates.getTrackState(measurementIndices.front());
+          result.fittedStates.getTrackState(result.lastMeasurementIndex);
 
       // Lambda to get the intersection of the free params on the target surface
       auto target = [&](const FreeVector& freeVector) -> SurfaceIntersection {

@@ -48,7 +48,8 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
         result.pathLength += s;
         ACTS_VERBOSE("Step with size = " << s << " performed");
       } else {
-        ACTS_ERROR("Step failed: " << res.error());
+        ACTS_ERROR("Step failed with " << res.error() << ": "
+                                       << res.error().message());
         // pass error to caller
         return res.error();
       }

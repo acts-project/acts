@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
 
   RootParticleReader::Config particleReaderConfig;
   particleReaderConfig.particleCollection = "allTruthParticles";
-  particleReaderConfig.inputFile = "particles.root";
+  particleReaderConfig.inputFile = "particles_initial.root";
   particleReaderConfig.treeName = "particles";
   particleReaderConfig.inputDir = inputDir;
   sequencer.addReader(
@@ -99,6 +99,7 @@ int main(int argc, char* argv[]) {
   findVertices.inputTrackParameters = trackSelectorConfig.outputTrackParameters;
   findVertices.outputProtoVertices = "fittedProtoVertices";
   findVertices.outputVertices = "fittedVertices";
+  findVertices.outputTime = "recoTimeMS";
   sequencer.addAlgorithm(std::make_shared<AdaptiveMultiVertexFinderAlgorithm>(
       findVertices, logLevel));
 
@@ -111,6 +112,7 @@ int main(int argc, char* argv[]) {
       trackParamsReader.outputParticles;
   vertexWriterConfig.inputFittedTracks = trackParamsReader.outputTracks;
   vertexWriterConfig.inputVertices = findVertices.outputVertices;
+  vertexWriterConfig.inputTime = findVertices.outputTime;
   vertexWriterConfig.outputFilename = "vertexperformance_AMVF.root";
   vertexWriterConfig.outputTreename = "amvf";
   vertexWriterConfig.outputDir = outputDir;

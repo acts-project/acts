@@ -6,7 +6,8 @@ or *A Common Tracking Software* if you do not like recursive acronyms
 [![Chat on Mattermost](https://badgen.net/badge/chat/on%20mattermost/cyan)](https://mattermost.web.cern.ch/acts/)
 [![coverage](https://badgen.net/codecov/c/github/acts-project/acts/main)](https://codecov.io/gh/acts-project/acts/branch/main)
 [![Latest release](https://badgen.net/github/release/acts-project/acts)](https://github.com/acts-project/acts/releases)
-[![Status](https://badgen.net/github/status/acts-project/acts)](https://github.com/acts-project/acts/actions)
+[![Status](https://badgen.net/github/checks/acts-project/acts/main)](https://github.com/acts-project/acts/actions)
+[![Metrics](https://badgen.net/badge/metric/tracker/purple)](https://acts-project.github.io/metrics/)
 
 Acts is an experiment-independent toolkit for (charged) particle track
 reconstruction in (high energy) physics experiments implemented in modern C++.

@@ -106,22 +106,19 @@ muons in a reasonable kinematic range are generated.
        --output-dir=data/sim_generic/single_muon \
        --output-csv \
        --events=100 \
-       --bf-value=0 0 2
+       --bf-constant-tesla=0:0:2
 
 For each event, the following files will be created
 
 -   ``event<number>-particles_initial.csv``
 -   ``event<number>-particles_final.csv``
--   ``event<number>-truth.csv``
 -   ``event<number>-hits.csv``
--   ``event<number>-cells.csv``
 
 where ``<number>`` is the event number. The first two files contain the
 initital and final states of simulated particles. The
 simulated particles can differ from the generated input particles: particles might not have been
 simulated due to kinematic cuts or additional particles might have been
-generated due to interactions. The truth contains the true intersection with all
-surfaces, while the hits and the cells describe the simulated detector readout.
+generated due to interactions. The hits describe the simulated detector readout.
 
 To use some of the previously generated truth datasets, the ``--input-dir``
 option must be set. The following command reads the previously generated
@@ -137,6 +134,41 @@ particles.
        --select-eta=-3:3 \
        --select-pt=0.5: \
        --remove-neutral \
-       --bf-value=0 0 2
+       --bf-constant-tesla=0:0:2 
 
 The output file structure will be the same as discussed above.
+
+Simulate a DD4hep based detector
+--------------------------------
+
+Similar to the simulation of the generic detector, another example detector called *Open Data Detector* (ODD) based on the DD4hep description can be simulated with the ``ACTS_BUILD_DD4HEP_PLUGIN`` option enabled. For the DD4hep based detector, a xml file for the geometry description must be specified by the option ``--dd4hep-input``. In addition, a material mapping file must be provided via the option ``--mat-input-file`` in order to take into account the material effects in simulation. 
+
+The following command simulates 100 single muon events for the ODD in a 2T magnetic field.
+
+.. code-block:: console
+
+   $ <build>/bin/ActsExampleFatrasDD4hep \
+       --dd4hep-input <source>/thirdparty/OpenDataDetector/xml/OpenDataDetector.xml \ 
+       --mat-input-type file \
+       --mat-input-file <source>/thirdparty/OpenDataDetector/config/odd-material-mapping.config \
+       --output-dir=data/sim_ODD/single_muon \
+       --output-csv \
+       --events=100 \
+       --bf-constant-tesla=0:0:2
+
+The following command simulates the top-pair events based on the previously generated
+top-pair sample for the ODD in a 2T magnetic field.
+
+.. code-block:: console
+
+   $ <build>/bin/ActsExampleFatrasDD4hep \
+       --dd4hep-input <source>/thirdparty/OpenDataDetector/xml/OpenDataDetector.xml \ 
+       --mat-input-type file \
+       --mat-input-file <source>/thirdparty/OpenDataDetector/config/odd-material-mapping.config \
+       --input-dir=data/gen/ttbar_mu140 \
+       --output-dir=data/sim_generic/ttbar_mu140 \
+       --output-csv \
+       --select-eta=-3:3 \
+       --select-pt=0.5: \
+       --remove-neutral \
+       --bf-constant-tesla=0:0:2

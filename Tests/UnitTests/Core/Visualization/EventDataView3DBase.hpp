@@ -106,6 +106,7 @@ static inline std::string testBoundTrackParameters(IVisualization3D& helper) {
 }
 
 static inline std::string testMultiTrajectory(IVisualization3D& helper) {
+  using namespace UnitLiterals;
   std::stringstream ss;
 
   // Create a test context
@@ -221,10 +222,11 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
 
   // The KalmanFitter - we use the eigen stepper for covariance transport
   std::cout << "Construct KalmanFitter and perform fit" << std::endl;
-  Navigator rNavigator(detector);
-  rNavigator.resolvePassive = false;
-  rNavigator.resolveMaterial = true;
-  rNavigator.resolveSensitive = true;
+  Navigator::Config cfg{detector};
+  cfg.resolvePassive = false;
+  cfg.resolveMaterial = true;
+  cfg.resolveSensitive = true;
+  Navigator rNavigator(cfg);
 
   // Configure propagation with deactivated B-field
   auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 0.));

@@ -30,8 +30,6 @@
 // This is based original stepper code from the ATLAS RungeKuttePropagagor
 namespace Acts {
 
-using namespace Acts::UnitLiterals;
-
 /// @brief the AtlasStepper implementation for the
 class AtlasStepper {
  public:
@@ -476,10 +474,13 @@ class AtlasStepper {
   /// @param [in,out] state is the stepper state associated with the track
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
-  Vector3 getField(State& state, const Vector3& pos) const {
+  Result<Vector3> getField(State& state, const Vector3& pos) const {
     // get the field from the cell
-    state.field = m_bField->getField(pos, state.fieldCache);
-    return state.field;
+    auto res = m_bField->getField(pos, state.fieldCache);
+    if (res.ok()) {
+      state.field = *res;
+    }
+    return res;
   }
 
   Vector3 position(const State& state) const {
@@ -518,9 +519,10 @@ class AtlasStepper {
   /// @param surface [in] The surface provided
   /// @param bcheck [in] The boundary check for this status update
   Intersection3D::Status updateSurfaceStatus(
-      State& state, const Surface& surface, const BoundaryCheck& bcheck) const {
-    return detail::updateSingleSurfaceStatus<AtlasStepper>(*this, state,
-                                                           surface, bcheck);
+      State& state, const Surface& surface, const BoundaryCheck& bcheck,
+      LoggerWrapper logger = getDummyLogger()) const {
+    return detail::updateSingleSurfaceStatus<AtlasStepper>(
+        *this, state, surface, bcheck, logger);
   }
 
   /// Update step size
@@ -1129,7 +1131,11 @@ class AtlasStepper {
     if (state.stepping.newfield) {
       const Vector3 pos(R[0], R[1], R[2]);
       // This is sd.B_first in EigenStepper
-      f0 = getField(state.stepping, pos);
+      auto fRes = getField(state.stepping, pos);
+      if (!fRes.ok()) {
+        return fRes.error();
+      }
+      f0 = *fRes;
     } else {
       f0 = state.stepping.field;
     }
@@ -1164,7 +1170,11 @@ class AtlasStepper {
         // This is pos1 in EigenStepper
         const Vector3 pos(R[0] + A1 * S4, R[1] + B1 * S4, R[2] + C1 * S4);
         // This is sd.B_middle in EigenStepper
-        f = getField(state.stepping, pos);
+        auto fRes = getField(state.stepping, pos);
+        if (!fRes.ok()) {
+          return fRes.error();
+        }
+        f = *fRes;
       } else {
         f = f0;
       }
@@ -1190,7 +1200,11 @@ class AtlasStepper {
         // This is pos2 in EigenStepper
         const Vector3 pos(R[0] + h * A4, R[1] + h * B4, R[2] + h * C4);
         // This is sd.B_last in Eigen stepper
-        f = getField(state.stepping, pos);
+        auto fRes = getField(state.stepping, pos);
+        if (!fRes.ok()) {
+          return fRes.error();
+        }
+        f = *fRes;
       } else {
         f = f0;
       }
@@ -1355,7 +1369,7 @@ class AtlasStepper {
   std::shared_ptr<const MagneticFieldProvider> m_bField;
 
   /// Overstep limit: could/should be dynamic
-  double m_overstepLimit = -50_um;
+  double m_overstepLimit = -50 * UnitConstants::um;
 };
 
 }  // namespace Acts

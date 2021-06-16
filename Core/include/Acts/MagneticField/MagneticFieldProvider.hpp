@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/detail/SmallObjectCache.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 #include <array>
 #include <memory>
@@ -33,34 +34,22 @@ class MagneticFieldProvider {
   /// @param [in] position global 3D position
   ///
   /// @return magnetic field vector at given position
-  virtual Vector3 getField(const Vector3& position, Cache& cache) const = 0;
-
-  /// @brief retrieve magnetic field value
-  ///
-  /// @param [in] position global 3D position
-  /// @param [in,out] cache Cache object. Contains field cell used for
-  /// interpolation
-  ///
-  /// @return magnetic field vector at given position
-  virtual Vector3 getField(const Vector3& position) const = 0;
-
-  /// @brief retrieve magnetic field value & its gradient
-  ///
-  /// @param [in]  position   global 3D position
-  /// @param [out] derivative gradient of magnetic field vector as (3x3) matrix
-  /// @return magnetic field vector
-  virtual Vector3 getFieldGradient(const Vector3& position,
-                                   ActsMatrix<3, 3>& derivative) const = 0;
-
-  /// @brief retrieve magnetic field value & its gradient
-  ///
-  /// @param [in]  position   global 3D position
-  /// @param [out] derivative gradient of magnetic field vector as (3x3) matrix
-  /// @param [in,out] cache Cache object. Contains field cell used for
-  /// @return magnetic field vector
-  virtual Vector3 getFieldGradient(const Vector3& position,
-                                   ActsMatrix<3, 3>& derivative,
+  virtual Result<Vector3> getField(const Vector3& position,
                                    Cache& cache) const = 0;
+
+  /// @brief retrieve magnetic field value & its gradient
+  ///
+  /// @param [in]  position   global 3D position
+  /// @param [out] derivative gradient of magnetic field vector as (3x3) matrix
+  /// @param [in,out] cache Cache object. Contains field cell used for
+  /// @return magnetic field vector
+  virtual Result<Vector3> getFieldGradient(const Vector3& position,
+                                           ActsMatrix<3, 3>& derivative,
+                                           Cache& cache) const = 0;
+
+  virtual ~MagneticFieldProvider();
 };
+
+inline MagneticFieldProvider::~MagneticFieldProvider() = default;
 
 }  // namespace Acts
