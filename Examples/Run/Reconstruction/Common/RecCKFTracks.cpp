@@ -14,7 +14,9 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
+#include "ActsExamples/Io/Csv/CsvMultiTrajectoryWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
+#include "ActsExamples/Io/Csv/CsvOptionsWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
@@ -68,7 +70,8 @@ int runRecCKFTracks(int argc, char* argv[],
   Options::addGeometryOptions(desc);
   Options::addMaterialOptions(desc);
   Options::addInputOptions(desc);
-  Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
+  Options::addOutputOptions(desc,
+                            OutputFormat::Csv | OutputFormat::DirectoryOnly);
   detector->addOptions(desc);
   Options::addMagneticFieldOptions(desc);
   Options::addFittingOptions(desc);
@@ -76,6 +79,7 @@ int runRecCKFTracks(int argc, char* argv[],
   addRecCKFOptions(desc);
   Options::addDigitizationOptions(desc);
   Options::addSpacePointMakerOptions(desc);
+  Options::addCsvWriterOptions(desc);
 
   auto vm = Options::parse(desc, argc, argv);
   if (vm.empty()) {
@@ -308,6 +312,17 @@ int runRecCKFTracks(int argc, char* argv[],
 #endif
   sequencer.addWriter(
       std::make_shared<CKFPerformanceWriter>(perfWriterCfg, logLevel));
+
+  if (vm["output-csv"].template as<bool>()) {
+    // Write the CKF track as Csv
+    CsvMultiTrajectoryWriter::Config trackWriterCsvConfig;
+    trackWriterCsvConfig.inputTrajectories = trackFindingCfg.outputTrajectories;
+    trackWriterCsvConfig.outputDir = outputDir;
+    trackWriterCsvConfig.inputMeasurementParticlesMap =
+        digiCfg.outputMeasurementParticlesMap;
+    sequencer.addWriter(std::make_shared<CsvMultiTrajectoryWriter>(
+        trackWriterCsvConfig, logLevel));
+  }
 
   return sequencer.run();
 }
