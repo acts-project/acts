@@ -20,36 +20,36 @@ class TTree;
 
 namespace ActsExamples {
 
-/// @class RootTrajectoryParametersWriter
+/// @class RootTrajectorySummaryWriter
 ///
-/// Write out the fitted track parameters of trajectories into a TTree
+/// Write out the information (including number of measurements, outliers, holes
+/// etc. and fitted track parameters) of the reconstructed trajectories into a
+/// TTree
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
 ///
-/// Each entry in the TTree corresponds to all fitted track parameters of
-/// one single event. The event number is part of the written data.
+/// Each entry in the TTree corresponds to all reconstructed trajectories in one
+/// single event. The event number is part of the written data.
 ///
 /// A common file can be provided for to the writer to attach his TTree,
 /// this is done by setting the Config::rootFile pointer to an existing
 /// file
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
-class RootTrajectoryParametersWriter final
+class RootTrajectorySummaryWriter final
     : public WriterT<TrajectoriesContainer> {
  public:
   struct Config {
     /// Input (fitted) trajectories collection
     std::string inputTrajectories;
-    /// Input particles collection.
-    std::string inputParticles;
     /// Input hit-particles map collection.
     std::string inputMeasurementParticlesMap;
     /// output directory.
     std::string outputDir;
     /// output filename.
-    std::string outputFilename = "trackparameters.root";
+    std::string outputFilename = "tracksummary.root";
     /// name of the output tree.
-    std::string outputTreename = "trackparameters";
+    std::string outputTreename = "tracksummary";
     /// file access mode.
     std::string fileMode = "RECREATE";
     /// common root file.
@@ -60,8 +60,8 @@ class RootTrajectoryParametersWriter final
   ///
   /// @param cfg Configuration struct
   /// @param level Message level declaration
-  RootTrajectoryParametersWriter(const Config& cfg, Acts::Logging::Level lvl);
-  ~RootTrajectoryParametersWriter() final override;
+  RootTrajectorySummaryWriter(const Config& cfg, Acts::Logging::Level lvl);
+  ~RootTrajectorySummaryWriter() final override;
 
   /// End-of-run hook
   ProcessCode endRun() final override;
@@ -84,32 +84,32 @@ class RootTrajectoryParametersWriter final
   std::vector<unsigned int>
       m_subTrajNr;  ///< The multi-trajectory sub-trajectory number in event
 
-  std::vector<unsigned long>
-      m_t_barcode;              ///< Barcode of all truth particles in event
-  std::vector<int> m_t_charge;  ///< Charge of all truth particles in event
-  std::vector<float> m_t_time;  ///< Time of all truth particles in event
-  std::vector<float>
-      m_t_vx;  ///< Vertex x positions of all truth particles in event
-  std::vector<float>
-      m_t_vy;  ///< Vertex y positions of all truth particles in event
-  std::vector<float>
-      m_t_vz;  ///< Vertex z positions of all truth particles in event
-  std::vector<float>
-      m_t_px;  ///< Initial momenta px of all truth particle in event
-  std::vector<float>
-      m_t_py;  ///< Initial momenta py of all truth particle in event
-  std::vector<float>
-      m_t_pz;  ///< Initial momenta pz of all truth particle in event
-  std::vector<float>
-      m_t_theta;  ///< Initial momenta theta of all truth particle in event
-  std::vector<float>
-      m_t_phi;  ///< Initial momenta phi of all truth particle in event
-  std::vector<float>
-      m_t_pT;  ///< Initial momenta pT of all truth particle in event
-  std::vector<float>
-      m_t_eta;  ///< Initial momenta eta of all truth particle in event
+  std::vector<unsigned int> m_nStates;        ///< The number of states
+  std::vector<unsigned int> m_nMeasurements;  ///< The number of measurements
+  std::vector<unsigned int> m_nOutliers;      ///< The number of outliers
+  std::vector<unsigned int> m_nHoles;         ///< The number of holes
+  std::vector<float> m_chi2Sum;               ///< The total chi2
+  std::vector<unsigned int>
+      m_NDF;  ///< The number of ndf of the measurements+outliers
+  std::vector<std::vector<double>>
+      m_measurementChi2;  ///< The chi2 on all measurement states
+  std::vector<std::vector<double>>
+      m_outlierChi2;  ///< The chi2 on all outlier states
+  std::vector<std::vector<double>>
+      m_measurementVolume;  ///< The volume id of the measurements
+  std::vector<std::vector<double>>
+      m_measurementLayer;  ///< The layer id of the measurements
+  std::vector<std::vector<double>>
+      m_outlierVolume;  ///< The volume id of the outliers
+  std::vector<std::vector<double>>
+      m_outlierLayer;  ///< The layer id of the outliers
 
-  std::vector<bool> m_hasFittedParams;  ///< Ff the track has fitted parameter
+  std::vector<unsigned int>
+      m_nMajorityHits;  ///< The number of hits from majority particle
+  std::vector<uint64_t>
+      m_majorityParticleId;  ///< The particle Id of the majority particle
+
+  std::vector<bool> m_hasFittedParams;  ///< If the track has fitted parameter
   std::vector<float>
       m_eLOC0_fit;  ///< Fitted parameters eBoundLoc0 of all tracks in event
   std::vector<float>
