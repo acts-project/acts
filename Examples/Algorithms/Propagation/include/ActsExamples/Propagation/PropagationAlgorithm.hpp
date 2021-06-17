@@ -34,6 +34,8 @@
 
 namespace ActsExamples {
 
+class PropagatorInterface;
+
 /// Using some short hands for Recorded Material
 using RecordedMaterial = Acts::MaterialInteractor::result_type;
 
@@ -52,21 +54,14 @@ using PropagationOutput =
 ///
 /// If the propagator is equipped appropriately, it can
 /// also be used to test the Extrapolator within the geomtetry
-///
-/// @tparam propagator_t Type of the Propagator to be tested
-template <typename propagator_t>
 class PropagationAlgorithm : public BareAlgorithm {
  public:
   struct Config {
-    // create a config object with the propagator
-    Config(propagator_t prop) : propagator(std::move(prop)) {}
-
-    /// the propagors to be tested
-    propagator_t propagator;
+    /// Instance of a propagator wrapper that performs the actual propagation
+    std::shared_ptr<PropagatorInterface> propagatorImpl = nullptr;
 
     /// how to set it up
     std::shared_ptr<RandomNumbers> randomNumberSvc = nullptr;
-
     /// proapgation mode
     int mode = 0;
     /// Switch the logger to sterile
@@ -126,7 +121,7 @@ class PropagationAlgorithm : public BareAlgorithm {
   /// Constructor
   /// @param [in] cnf is the configuration struct
   /// @param [in] loglevel is the loggin level
-  PropagationAlgorithm(const Config& cnf, Acts::Logging::Level loglevel);
+  PropagationAlgorithm(const Config& cnf, Acts::Logging::Level level);
 
   /// Framework execute method
   /// @param [in] the algorithm context for event consistency
@@ -143,21 +138,6 @@ class PropagationAlgorithm : public BareAlgorithm {
   std::optional<Acts::BoundSymMatrix> generateCovariance(
       ActsExamples::RandomEngine& rnd,
       std::normal_distribution<double>& gauss) const;
-
-  /// Templated execute test method for
-  /// charged and netural particles
-  ///
-  // @tparam parameters_t type of the parameters objects (charged/neutra;)
-  ///
-  /// @param [in] context The Context for this call
-  /// @param [in] startParameters the start parameters
-  /// @param [in] pathLengthe the path limit of this propagation
-  ///
-  /// @return collection of Propagation steps for further analysis
-  template <typename parameters_t>
-  PropagationOutput executeTest(
-      const AlgorithmContext& context, const parameters_t& startParameters,
-      double pathLength = std::numeric_limits<double>::max()) const;
 };
 
 #include "PropagationAlgorithm.ipp"
