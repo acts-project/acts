@@ -5,7 +5,6 @@ target_link_libraries(
   ActsExampleGeantinoRecordingGdml
   PRIVATE
     ActsExamplesCommon
-    ActsExamplesDetectorDD4hep
     ActsExamplesFramework
     ActsExamplesGeant4
     ActsExamplesIoRoot
