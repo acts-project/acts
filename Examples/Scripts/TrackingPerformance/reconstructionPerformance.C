@@ -18,6 +18,11 @@
 
 #include "CommonUtils.h"
 
+/// This script allows a fast reading and replotting of the existing performance plots, e.g. 'trackeff_vs_*' and 'nMeasurements_vs_*', 
+/// from the root file 'performance_track_fitter.root' or 'performance_ckf.root'. 
+/// Note that redefinition of the tracking efficiency etc. is not possible with this script. 
+/// If you want to define your own efficiency etc., please refer to 'defineReconstructionPerformance.C'.
+/// 
 void reconstructionPerformance(std::vector<std::string> inputFileNames) {
   std::array<TCanvas*, 3> emho = {nullptr, nullptr, nullptr};
   std::vector<std::string> tags = {"eta", "pT"};

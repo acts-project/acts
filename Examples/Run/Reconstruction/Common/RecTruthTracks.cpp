@@ -19,12 +19,12 @@
 #include "ActsExamples/Io/Performance/TrackFitterPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectoryParametersWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrajectorySummaryWriter.hpp"
 #include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingOptions.hpp"
-#include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
@@ -182,6 +182,18 @@ int runRecTruthTracks(int argc, char* argv[],
   sequencer.addWriter(std::make_shared<RootTrajectoryParametersWriter>(
       trackParamsWriter, logLevel));
 
+  // write track summary from CKF
+  RootTrajectorySummaryWriter::Config trackSummaryWriter;
+  trackSummaryWriter.inputTrajectories = fitter.outputTrajectories;
+  trackSummaryWriter.inputMeasurementParticlesMap =
+      digiCfg.outputMeasurementParticlesMap;
+  trackSummaryWriter.outputDir = outputDir;
+  trackSummaryWriter.outputFilename = "tracksummary_fitter.root";
+  trackSummaryWriter.outputTreename = "tracksummary_fitter";
+  sequencer.addWriter(std::make_shared<RootTrajectorySummaryWriter>(
+      trackSummaryWriter, logLevel));
+
+  // Write CKF performance data
   // write reconstruction performance data
   TrackFinderPerformanceWriter::Config perfFinder;
   perfFinder.inputProtoTracks = trackFinderCfg.outputProtoTracks;

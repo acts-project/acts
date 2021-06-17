@@ -14,6 +14,7 @@ add_library(
   src/RootTrajectoryStatesWriter.cpp
   src/RootTrajectoryParametersReader.cpp
   src/RootTrajectoryParametersWriter.cpp
+  src/RootTrajectorySummaryWriter.cpp
   src/RootVertexPerformanceWriter.cpp
 )
 target_include_directories(
