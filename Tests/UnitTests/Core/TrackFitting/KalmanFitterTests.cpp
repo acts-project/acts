@@ -183,7 +183,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
   // check the output status flags
   BOOST_CHECK(val.smoothed);
   BOOST_CHECK(not val.reversed);
-  BOOST_CHECK(not val.reset);
   BOOST_CHECK(val.finished);
   BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
 }
@@ -217,7 +216,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
     // check the output status flags
     BOOST_CHECK(val.smoothed);
     BOOST_CHECK(not val.reversed);
-    BOOST_CHECK(not val.reset);
     BOOST_CHECK(val.finished);
     BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
   }
@@ -233,7 +231,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
     // check the output status flags
     BOOST_CHECK(not val.smoothed);
     BOOST_CHECK(val.reversed);
-    BOOST_CHECK(not val.reset);
     BOOST_CHECK(val.finished);
     BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
     BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
@@ -279,7 +276,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
     // check the output status flags
     BOOST_CHECK(val.smoothed);
     BOOST_CHECK(not val.reversed);
-    BOOST_CHECK(not val.reset);
     BOOST_CHECK(val.finished);
     BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
   }
@@ -296,7 +292,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
     // check the output status flags
     BOOST_CHECK(not val.smoothed);
     BOOST_CHECK(val.reversed);
-    BOOST_CHECK(not val.reset);
     BOOST_CHECK(val.finished);
     BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
     // count the number of `smoothed` states
@@ -335,7 +330,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceAtExit) {
   // check the output status flags
   BOOST_CHECK(val.smoothed);
   BOOST_CHECK(not val.reversed);
-  BOOST_CHECK(not val.reset);
   BOOST_CHECK(val.finished);
   BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
 }
@@ -367,7 +361,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldShuffled) {
     // check the output status flags
     BOOST_CHECK(val.smoothed);
     BOOST_CHECK(not val.reversed);
-    BOOST_CHECK(not val.reset);
     BOOST_CHECK(val.finished);
     BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
   }
@@ -387,7 +380,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldShuffled) {
     // check the output status flags
     BOOST_CHECK(val.smoothed);
     BOOST_CHECK(not val.reversed);
-    BOOST_CHECK(not val.reset);
     BOOST_CHECK(val.finished);
     BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
   }
@@ -424,7 +416,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithHole) {
     // check the output status flags
     BOOST_CHECK(val.smoothed);
     BOOST_CHECK(not val.reversed);
-    BOOST_CHECK(not val.reset);
     BOOST_CHECK(val.finished);
     BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 1u);
   }
@@ -470,7 +461,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
     // check the output status flags
     BOOST_CHECK(val.smoothed);
     BOOST_CHECK(not val.reversed);
-    BOOST_CHECK(not val.reset);
     BOOST_CHECK(val.finished);
     BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
   }

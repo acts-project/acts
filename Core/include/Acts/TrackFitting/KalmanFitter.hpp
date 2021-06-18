@@ -153,9 +153,6 @@ struct KalmanFitterResult {
   // Indicator if smoothing has been done.
   bool smoothed = false;
 
-  // Indicator if the propagation state has been reset
-  bool reset = false;
-
   // Indicator if navigation direction has been reversed
   bool reversed = false;
 
@@ -407,8 +404,6 @@ class KalmanFitter {
                  result_type& result) const {
       // Remember the navigation direciton has been reversed
       result.reversed = true;
-      // The reset is used for resetting the navigation
-      result.reset = true;
 
       // Reverse navigation direction
       state.stepping.navDir =
@@ -427,19 +422,19 @@ class KalmanFitter {
         auto st =
             result.fittedStates.getTrackState(result.lastMeasurementIndex);
 
-        const Surface* startSurface = nullptr;
-        const Layer* startLayer = nullptr;
-        const TrackingVolume* startVolume = nullptr;
-        startSurface = &st.referenceSurface();
-        if (startSurface->associatedLayer() != nullptr) {
-          startLayer = startSurface->associatedLayer();
-        }
-        if (startLayer->trackingVolume() != nullptr) {
-          startVolume = startLayer->trackingVolume();
-        }
-
         // Reset navigation state
         {
+          const Surface* startSurface = nullptr;
+          const Layer* startLayer = nullptr;
+          const TrackingVolume* startVolume = nullptr;
+          startSurface = &st.referenceSurface();
+          if (startSurface->associatedLayer() != nullptr) {
+            startLayer = startSurface->associatedLayer();
+          }
+          if (startLayer->trackingVolume() != nullptr) {
+            startVolume = startLayer->trackingVolume();
+          }
+
           state.navigation = typename propagator_t::NavigatorState();
           // Reset the start, current and target objects
           state.navigation.startSurface = startSurface;
