@@ -91,9 +91,10 @@ Material Validation
 
 Now that the map has been written, you will want to validate it. First you can use the ``MaterialValidation`` example. This will perform propagation throughout the detector once it has been decorated with the material map. It will then output material tracks with the same format as the one obtain with the Geantino.
 
+By default, the Geantino scan is performed with no spread in z0 and d0, while the validation has a spread of 55 mm, to obtain meaningful result used the same spread for both (in our example a spread of 0). Another difference between the scan and the validation is that the first use a flat distribution in theta while the second use a flat distribution in eta, some reweighing might be necessary when comparing some of the distributions.
 .. code-block:: console
 
-  ./../build/bin/ActsExampleMaterialValidationDD4hep -n 1000 --mat-input-type file --mat-input-file material-maps.json --output-root --mat-output-file val-mat-map --dd4hep-input ../thirdparty/OpenDataDetector/xml/OpenDataDetector.xml
+  ./../build/bin/ActsExampleMaterialValidationDD4hep -n 1000 --mat-input-type file --mat-input-file material-maps.json --output-root --mat-output-file val-mat-map --dd4hep-input ../thirdparty/OpenDataDetector/xml/OpenDataDetector.xml --prop-z0-sigma 0.0 --prop-d0-sigma 0.0
 
 To do the validation, five root macros are available in ``scripts/MaterialMaping``:
 
