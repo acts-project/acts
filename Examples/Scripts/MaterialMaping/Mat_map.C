@@ -178,7 +178,7 @@ void Mat_map(std::string Val = "", std::string geantino = "", std::string name =
 
     // X0 as function of Phi for Validation input
     TCanvas *VM_X0_Phi = new TCanvas("VM_X0_Phi","Validation X0 Phi") ;
-    Val_file->Draw("t_X0:v_phi>>Val_X0_Phi","","profile");
+    Val_file->Draw("t_X0:v_phi>>Val_X0_Phi","exp(-v_eta)/(1+exp(-2*v_eta))","profile");
     Val_X0_Phi->SetMarkerStyle(7);
     Val_X0_Phi->Draw("HIST PC");
     Val_X0_Phi->GetXaxis()->SetTitle("Phi");
@@ -187,7 +187,7 @@ void Mat_map(std::string Val = "", std::string geantino = "", std::string name =
 
     // X0 as function of Phi for Validation input
     TCanvas *VM_X0_Phi_spread = new TCanvas("VM_X0_Phi_spread","Validation X0 Phi") ;
-    Val_file->Draw("t_X0:v_phi>>Val_X0_Phi_spread","","");
+    Val_file->Draw("t_X0:v_phi>>Val_X0_Phi_spread","exp(-v_eta)/(1+exp(-2*v_eta))","");
     Val_X0_Phi_spread->GetXaxis()->SetTitle("Phi");
     Val_X0_Phi_spread->GetYaxis()->SetTitle("X0");
     VM_X0_Phi_spread->Print( (name+"/Val_mat_Phi_X0_spread.pdf").c_str());
