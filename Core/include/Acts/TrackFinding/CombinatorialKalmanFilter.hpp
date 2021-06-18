@@ -475,37 +475,10 @@ class CombinatorialKalmanFilter {
           result.fittedStates.getTrackState(result.activeTips.back().first);
 
       // Reset the navigation state
-      {
-        const Surface* startSurface = nullptr;
-        const Layer* startLayer = nullptr;
-        const TrackingVolume* startVolume = nullptr;
-        startSurface = &currentState.referenceSurface();
-        if (startSurface->associatedLayer() != nullptr) {
-          startLayer = startSurface->associatedLayer();
-        }
-        if (startLayer->trackingVolume() != nullptr) {
-          startVolume = startLayer->trackingVolume();
-        }
-
-        state.navigation = typename propagator_t::NavigatorState();
-        // Reset the start, current and target objects
-        state.navigation.startSurface = startSurface;
-        state.navigation.startLayer = startLayer;
-        state.navigation.startVolume = startVolume;
-        state.navigation.currentSurface = startSurface;
-        state.navigation.currentVolume = startVolume;
-        state.navigation.targetSurface = targetSurface;
-
-        // Get the compatible layers (including the current layer)
-        NavigationOptions<Layer> navOpts(state.stepping.navDir, true, true,
-                                         true, true, nullptr, nullptr);
-        state.navigation.navLayers =
-            state.navigation.currentVolume->compatibleLayers(
-                state.geoContext, stepper.position(state.stepping),
-                stepper.direction(state.stepping), navOpts);
-        // Set the iterator to the first
-        state.navigation.navLayerIter = state.navigation.navLayers.begin();
-      }
+      state.navigation.reset(state.geoContext, stepper.position(state.stepping),
+                             stepper.direction(state.stepping),
+                             state.stepping.navDir,
+                             &currentState.referenceSurface(), targetSurface);
 
       // Update the stepping state
       stepper.resetState(state.stepping, currentState.filtered(),

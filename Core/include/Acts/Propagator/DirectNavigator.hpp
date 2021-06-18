@@ -101,12 +101,6 @@ class DirectNavigator {
     /// Iterator the the next surface
     SurfaceIter navSurfaceIter = navSurfaces.begin();
 
-    // Navigation on layer level
-    /// the vector of navigation layers to work through
-    NavigationLayers navLayers = {};
-    /// the current layer iterator of the navigation state
-    NavigationLayerIter navLayerIter = navLayers.end();
-
     /// Navigation state - external interface: the start surface
     const Surface* startSurface = nullptr;
     /// Navigation state - external interface: the current surface
@@ -128,6 +122,15 @@ class DirectNavigator {
     bool targetReached = false;
     /// Navigation state - external interface: a break has been detected
     bool navigationBreak = false;
+
+    /// Reset state
+    ///
+    void reset(const GeometryContext& /*geoContext*/, const Vector3& /*pos*/,
+               const Vector3& /*dir*/, const NavigationDirection /*navDir*/,
+               const Surface* ssurface, const Surface* tsurface) {
+      startSurface = ssurface;
+      targetSurface = tsurface;
+    }
   };
 
   /// @brief Navigator status call
