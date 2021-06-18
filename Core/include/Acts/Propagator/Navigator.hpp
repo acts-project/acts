@@ -214,35 +214,13 @@ class Navigator {
     Stage navigationStage = Stage::undefined;
 
     /// Reset state
-    ///
     void reset(const GeometryContext& geoContext, const Vector3& pos,
                const Vector3& dir, const NavigationDirection navDir,
                const Surface* ssurface, const Surface* tsurface) {
       // Reset everything first
-      navSurfaces = {};
-      navSurfaceIter = navSurfaces.end();
-      navLayers = {};
-      navLayerIter = navLayers.end();
-      navBoundaries = {};
-      navBoundaryIter = navBoundaries.end();
-      externalSurfaces = {};
-      worldVolume = nullptr;
-      startVolume = nullptr;
-      startLayer = nullptr;
-      startSurface = nullptr;
-      currentSurface = nullptr;
-      currentVolume = nullptr;
-      targetVolume = nullptr;
-      targetLayer = nullptr;
-      targetSurface = nullptr;
+      *this = State();
 
-      startLayerResolved = false;
-      targetReached = false;
-      lastHierarchySurfaceReached = false;
-      navigationBreak = false;
-      navigationStage = Stage::undefined;
-
-      // set the start, current and target objects
+      // Set the start, current and target objects
       startSurface = ssurface;
       if (ssurface->associatedLayer() != nullptr) {
         startLayer = ssurface->associatedLayer();

@@ -124,11 +124,19 @@ class DirectNavigator {
     bool navigationBreak = false;
 
     /// Reset state
-    ///
     void reset(const GeometryContext& /*geoContext*/, const Vector3& /*pos*/,
                const Vector3& /*dir*/, const NavigationDirection /*navDir*/,
                const Surface* ssurface, const Surface* tsurface) {
+      // Reset everything except the navSurfaces
+      State newState = State();
+      newState.navSurfaces = this->navSurfaces;
+      *this = newState;
+
+      // Reset others
+      navSurfaceIter =
+          std::find(navSurfaces.begin(), navSurfaces.end(), ssurface);
       startSurface = ssurface;
+      currentSurface = ssurface;
       targetSurface = tsurface;
     }
   };

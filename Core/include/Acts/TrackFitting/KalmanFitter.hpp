@@ -318,7 +318,11 @@ class KalmanFitter {
             // Reverse navigation direction and reset navigation and stepping
             // state to last measurement
             ACTS_VERBOSE("Reverse navigation direction.");
-            reverse(state, stepper, result);
+            auto res = reverse(state, stepper, result);
+            if (!res.ok()) {
+              ACTS_ERROR("Error in reversing navigation: " << res.error());
+              result.result = res.error();
+            }
           } else {
             // --> Search the starting state to run the smoothing
             // --> Call the smoothing
@@ -400,8 +404,16 @@ class KalmanFitter {
     /// @param stepper The stepper in use
     /// @param result is the mutable result state objecte
     template <typename propagator_state_t, typename stepper_t>
-    void reverse(propagator_state_t& state, stepper_t& stepper,
-                 result_type& result) const {
+    Result<void> reverse(propagator_state_t& state, stepper_t& stepper,
+                         result_type& result) const {
+      const auto& logger = state.options.logger;
+
+      // Check if there is a measurement on track
+      if (result.lastMeasurementIndex == SIZE_MAX) {
+        ACTS_ERROR("No point to reverse for a track without measurements.");
+        return KalmanFitterError::ReverseNavigationFailed;
+      }
+
       // Remember the navigation direciton has been reversed
       result.reversed = true;
 
@@ -418,30 +430,29 @@ class KalmanFitter {
 
       // Get the last measurement state and reset navigation&stepping state
       // based on information on this state
-      if (result.lastMeasurementIndex != SIZE_MAX) {
-        auto st =
-            result.fittedStates.getTrackState(result.lastMeasurementIndex);
+      auto st = result.fittedStates.getTrackState(result.lastMeasurementIndex);
 
-        // Reset navigation state
-        state.navigation.reset(
-            state.geoContext, stepper.position(state.stepping),
-            stepper.direction(state.stepping), state.stepping.navDir,
-            &st.referenceSurface(), targetSurface);
+      // Reset navigation state
+      state.navigation.reset(state.geoContext, stepper.position(state.stepping),
+                             stepper.direction(state.stepping),
+                             state.stepping.navDir, &st.referenceSurface(),
+                             targetSurface);
 
-        // Update the stepping state
-        stepper.resetState(state.stepping, st.filtered(),
-                           st.filteredCovariance(), st.referenceSurface(),
-                           state.stepping.navDir, state.options.maxStepSize);
+      // Update the stepping state
+      stepper.resetState(state.stepping, st.filtered(), st.filteredCovariance(),
+                         st.referenceSurface(), state.stepping.navDir,
+                         state.options.maxStepSize);
 
-        // For the last measurement state, smoothed is filtered
-        st.smoothed() = st.filtered();
-        st.smoothedCovariance() = st.filteredCovariance();
-        result.passedAgainSurfaces.push_back(&st.referenceSurface());
+      // For the last measurement state, smoothed is filtered
+      st.smoothed() = st.filtered();
+      st.smoothedCovariance() = st.filteredCovariance();
+      result.passedAgainSurfaces.push_back(&st.referenceSurface());
 
-        // Update material effects for last measurement state in reversed
-        // direction
-        materialInteractor(state.navigation.currentSurface, state, stepper);
-      }
+      // Update material effects for last measurement state in reversed
+      // direction
+      materialInteractor(state.navigation.currentSurface, state, stepper);
+
+      return Result<void>::success();
     }
 
     /// @brief Kalman actor operation : update
