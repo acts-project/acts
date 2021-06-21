@@ -124,6 +124,13 @@ class DirectNavigator {
     bool navigationBreak = false;
 
     /// Reset state
+    ///
+    /// @param geoContext is the geometry context
+    /// @param pos is the global position
+    /// @param dir is the momentum direction
+    /// @param navDir is the navigation direction
+    /// @param ssurface is the new starting surface
+    /// @param tsurface is the target surface
     void reset(const GeometryContext& /*geoContext*/, const Vector3& /*pos*/,
                const Vector3& /*dir*/, const NavigationDirection /*navDir*/,
                const Surface* ssurface, const Surface* tsurface) {

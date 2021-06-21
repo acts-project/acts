@@ -432,12 +432,6 @@ class KalmanFitter {
       // based on information on this state
       auto st = result.fittedStates.getTrackState(result.lastMeasurementIndex);
 
-      // Reset navigation state
-      state.navigation.reset(state.geoContext, stepper.position(state.stepping),
-                             stepper.direction(state.stepping),
-                             state.stepping.navDir, &st.referenceSurface(),
-                             targetSurface);
-
       // Update the stepping state
       stepper.resetState(state.stepping, st.filtered(), st.filteredCovariance(),
                          st.referenceSurface(), state.stepping.navDir,
@@ -447,6 +441,12 @@ class KalmanFitter {
       st.smoothed() = st.filtered();
       st.smoothedCovariance() = st.filteredCovariance();
       result.passedAgainSurfaces.push_back(&st.referenceSurface());
+
+      // Reset navigation state
+      state.navigation.reset(state.geoContext, stepper.position(state.stepping),
+                             stepper.direction(state.stepping),
+                             state.stepping.navDir, &st.referenceSurface(),
+                             targetSurface);
 
       // Update material effects for last measurement state in reversed
       // direction

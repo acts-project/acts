@@ -474,21 +474,21 @@ class CombinatorialKalmanFilter {
       auto currentState =
           result.fittedStates.getTrackState(result.activeTips.back().first);
 
-      // Reset the navigation state
-      state.navigation.reset(state.geoContext, stepper.position(state.stepping),
-                             stepper.direction(state.stepping),
-                             state.stepping.navDir,
-                             &currentState.referenceSurface(), targetSurface);
-
       // Update the stepping state
       stepper.resetState(state.stepping, currentState.filtered(),
                          currentState.filteredCovariance(),
                          currentState.referenceSurface(), state.stepping.navDir,
                          state.options.maxStepSize);
 
+      // Reset the navigation state
+      state.navigation.reset(state.geoContext, stepper.position(state.stepping),
+                             stepper.direction(state.stepping),
+                             state.stepping.navDir,
+                             &currentState.referenceSurface(), targetSurface);
+
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here
-      materialInteractor(state.navigation.startSurface, state, stepper);
+      materialInteractor(state.navigation.currentSurface, state, stepper);
     }
 
     /// @brief CombinatorialKalmanFilter actor operation :

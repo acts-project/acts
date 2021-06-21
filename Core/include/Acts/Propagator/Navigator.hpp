@@ -214,6 +214,13 @@ class Navigator {
     Stage navigationStage = Stage::undefined;
 
     /// Reset state
+    ///
+    /// @param geoContext is the geometry context
+    /// @param pos is the global position
+    /// @param dir is the momentum direction
+    /// @param navDir is the navigation direction
+    /// @param ssurface is the new starting surface
+    /// @param tsurface is the target surface
     void reset(const GeometryContext& geoContext, const Vector3& pos,
                const Vector3& dir, const NavigationDirection navDir,
                const Surface* ssurface, const Surface* tsurface) {
@@ -237,6 +244,7 @@ class Navigator {
                                        nullptr);
       navLayers =
           currentVolume->compatibleLayers(geoContext, pos, dir, navOpts);
+
       // Set the iterator to the first
       navLayerIter = navLayers.begin();
     }
@@ -409,9 +417,12 @@ class Navigator {
 
     // Call the navigation helper prior to actual navigation
     ACTS_VERBOSE(volInfo(state) << "Entering navigator::target.");
-
+    if (state.navigation.targetVolume) {
+      std::cout << "state.navigation.targetVolume is not null " << std::endl;
+    }
     // Initialize the target and target volume
     if (state.navigation.targetSurface and not state.navigation.targetVolume) {
+      std::cout << "initializeTarget in target " << std::endl;
       // Find out about the target as much as you can
       initializeTarget(state, stepper);
     }
@@ -790,6 +801,7 @@ class Navigator {
       }
 
       if (resolveLayers(state, stepper)) {
+        std::cout << "to resolveLayers " << std::endl;
         // The layer resolving worked
         return true;
       }
@@ -1066,6 +1078,9 @@ class Navigator {
                        << "Target volume estimated : "
                        << state.navigation.targetVolume->volumeName());
         }
+      }
+      if (state.navigation.targetVolume) {
+        std::cout << "state.navigation.targetVolume is set " << std::endl;
       }
     }
   }
