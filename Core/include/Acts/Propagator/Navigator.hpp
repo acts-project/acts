@@ -417,12 +417,9 @@ class Navigator {
 
     // Call the navigation helper prior to actual navigation
     ACTS_VERBOSE(volInfo(state) << "Entering navigator::target.");
-    if (state.navigation.targetVolume) {
-      std::cout << "state.navigation.targetVolume is not null " << std::endl;
-    }
+
     // Initialize the target and target volume
     if (state.navigation.targetSurface and not state.navigation.targetVolume) {
-      std::cout << "initializeTarget in target " << std::endl;
       // Find out about the target as much as you can
       initializeTarget(state, stepper);
     }
@@ -801,7 +798,6 @@ class Navigator {
       }
 
       if (resolveLayers(state, stepper)) {
-        std::cout << "to resolveLayers " << std::endl;
         // The layer resolving worked
         return true;
       }
@@ -1078,9 +1074,6 @@ class Navigator {
                        << "Target volume estimated : "
                        << state.navigation.targetVolume->volumeName());
         }
-      }
-      if (state.navigation.targetVolume) {
-        std::cout << "state.navigation.targetVolume is set " << std::endl;
       }
     }
   }
