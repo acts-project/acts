@@ -38,9 +38,6 @@ class DirectNavigator {
   using SurfaceSequence = std::vector<const Surface*>;
   using SurfaceIter = std::vector<const Surface*>::iterator;
 
-  using NavigationLayers = std::vector<LayerIntersection>;
-  using NavigationLayerIter = NavigationLayers::iterator;
-
   /// Defaulted Constructed
   DirectNavigator() = default;
 
