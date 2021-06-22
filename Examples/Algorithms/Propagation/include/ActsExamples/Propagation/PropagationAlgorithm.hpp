@@ -140,6 +140,4 @@ class PropagationAlgorithm : public BareAlgorithm {
       std::normal_distribution<double>& gauss) const;
 };
 
-#include "PropagationAlgorithm.ipp"
-
 }  // namespace ActsExamples
