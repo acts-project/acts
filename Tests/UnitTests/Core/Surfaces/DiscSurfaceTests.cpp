@@ -315,6 +315,13 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceBinningPosition) {
 
     bp = disc->binningPosition(tgContext, binPhi);
     BOOST_CHECK_EQUAL(bp, exp);
+
+    for (auto b : {binX, binY, binZ, binEta, binRPhi, binH, binMag}) {
+      BOOST_TEST_CONTEXT("binValue: " << b) {
+        BOOST_CHECK_EQUAL(disc->binningPosition(tgContext, b),
+                          disc->center(tgContext));
+      }
+    }
   }
 
   {
@@ -337,6 +344,13 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceBinningPosition) {
 
     bp = disc->binningPosition(tgContext, binPhi);
     BOOST_CHECK_EQUAL(bp, exp);
+
+    for (auto b : {binX, binY, binZ, binEta, binRPhi, binH, binMag}) {
+      BOOST_TEST_CONTEXT("binValue: " << b) {
+        BOOST_CHECK_EQUAL(disc->binningPosition(tgContext, b),
+                          disc->center(tgContext));
+      }
+    }
   }
 }
 
