@@ -11,6 +11,7 @@
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <chrono>
 #include <fstream>
@@ -152,35 +153,33 @@ int main(int argc, char* argv[]) {
     Acts::Vector3 dir{};
     dir.setRandom();
     double h = 1e-3;
+    std::vector<Acts::Vector3> steps;
+    steps.reserve(iters_map);
+    for (size_t i = 0; i < iters_map; i++) {
+      pos += dir * h;
+      double z = pos[Acts::eFreePos2];
+      if (Acts::VectorHelpers::perp(pos) > rMax || z >= zMax || z < zMin) {
+        break;
+      }
+      steps.push_back(pos);
+    }
     const auto map_adv_result = Acts::Test::microBenchmark(
-        [&] {
-          pos += dir * h;
-          return bFieldMap.getField(pos);
-        },
-        iters_map);
+        [&](const auto& s) { return bFieldMap.getField(s); }, steps);
     std::cout << map_adv_result << std::endl;
     csv("interp_nocache_adv", map_adv_result);
-  }
 
-  // - This variation of the fourth benchmark advances in a straight line, but
-  //   also uses the cache infrastructure. As subsequent positions are close to
-  //   one another, the cache will be valid for a certain number of points,
-  //   before becoming invalid. This means we expect performance to improve over
-  //   the uncached straight line advance.
-  {
+    // - This variation of the fourth benchmark advances in a straight line, but
+    //   also uses the cache infrastructure. As subsequent positions are close
+    //   to one another, the cache will be valid for a certain number of points,
+    //   before becoming invalid. This means we expect performance to improve
+    //   over the uncached straight line advance.
+
     std::cout << "Benchmarking cached advancing interpolated field lookup: "
               << std::flush;
     auto cache = bFieldMap.makeCache(mctx);
-    Acts::Vector3 pos{0, 0, 0};
-    Acts::Vector3 dir{};
-    dir.setRandom();
-    double h = 1e-3;
     const auto map_adv_result_cache = Acts::Test::microBenchmark(
-        [&] {
-          pos += dir * h;
-          return bFieldMap.getField(pos, cache).value();
-        },
-        iters_map);
+        [&](const auto& s) { return bFieldMap.getField(s, cache).value(); },
+        steps);
     std::cout << map_adv_result_cache << std::endl;
     csv("interp_cache_adv", map_adv_result_cache);
   }
