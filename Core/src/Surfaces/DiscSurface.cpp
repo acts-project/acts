@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -341,10 +341,10 @@ Acts::Vector3 Acts::DiscSurface::normal(const GeometryContext& gctx,
 
 Acts::Vector3 Acts::DiscSurface::binningPosition(const GeometryContext& gctx,
                                                  BinningValue bValue) const {
-  if (bValue == binR) {
+  if (bValue == binR || bValue == binPhi) {
     double r = m_bounds->binningValueR();
     double phi = m_bounds->binningValuePhi();
-    return Vector3(r * cos(phi), r * sin(phi), center(gctx).z());
+    return localToGlobal(gctx, Vector2{r, phi}, Vector3{});
   }
   return center(gctx);
 }
