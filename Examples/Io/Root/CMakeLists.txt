@@ -12,8 +12,8 @@ add_library(
   src/RootSimHitWriter.cpp
   src/RootTrackParameterWriter.cpp
   src/RootTrajectoryStatesWriter.cpp
-  src/RootTrajectoryParametersReader.cpp
   src/RootTrajectoryParametersWriter.cpp
+  src/RootTrajectorySummaryReader.cpp
   src/RootTrajectorySummaryWriter.cpp
   src/RootVertexPerformanceWriter.cpp
 )
