@@ -211,6 +211,21 @@ class BinningData {
   BinningData() = default;
   ~BinningData() = default;
 
+  /// Equality operator
+  ///
+  /// @param bData is the binning data to be checked against
+  ///
+  /// @return a boolean indicating if they are the same
+  bool operator==(const BinningData& bData) const {
+    return (type == bData.type and option == bData.option and
+            binvalue == bData.binvalue and min == bData.min and
+            max == bData.max and step == bData.step and zdim == bData.zdim and
+            ((subBinningData == nullptr and bData.subBinningData == nullptr) ||
+             (subBinningData != nullptr and bData.subBinningData != nullptr and
+              (*subBinningData == *bData.subBinningData))) and
+            subBinningAdditive == bData.subBinningAdditive);
+  }
+
   /// Return the number of bins - including sub bins
   size_t bins() const { return m_totalBins; }
 

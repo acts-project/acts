@@ -150,8 +150,8 @@ BOOST_AUTO_TEST_CASE(type_collector_test) {
                 "Didn't find expected results");
 
   // check unpack
-  using found_results_tuple = decltype(
-      hana::unpack(found_results, hana::template_<tuple_helper>))::type::tuple;
+  using found_results_tuple = decltype(hana::unpack(
+      found_results, hana::template_<tuple_helper>))::type::tuple;
   using expected_results_tuple = std::tuple<int, bool>;
   static_assert(
       std::is_same<found_results_tuple, expected_results_tuple>::value,
@@ -166,8 +166,8 @@ BOOST_AUTO_TEST_CASE(type_collector_test) {
                 "Didn't find expected actions");
 
   // check unpack
-  using found_actions_tuple = decltype(
-      hana::unpack(found_actions, hana::template_<tuple_helper>))::type::tuple;
+  using found_actions_tuple = decltype(hana::unpack(
+      found_actions, hana::template_<tuple_helper>))::type::tuple;
   using expected_actions_tuple = std::tuple<char, float>;
   static_assert(
       std::is_same<found_actions_tuple, expected_actions_tuple>::value,
