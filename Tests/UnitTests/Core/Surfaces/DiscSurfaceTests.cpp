@@ -312,9 +312,13 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceBinningPosition) {
     exp = trf * exp;
 
     BOOST_CHECK_EQUAL(bp, exp);
+    BOOST_CHECK_EQUAL(disc->binningPositionValue(tgContext, binR),
+                      VectorHelpers::perp(exp));
 
     bp = disc->binningPosition(tgContext, binPhi);
     BOOST_CHECK_EQUAL(bp, exp);
+    BOOST_CHECK_EQUAL(disc->binningPositionValue(tgContext, binPhi),
+                      VectorHelpers::phi(exp));
 
     for (auto b : {binX, binY, binZ, binEta, binRPhi, binH, binMag}) {
       BOOST_TEST_CONTEXT("binValue: " << b) {

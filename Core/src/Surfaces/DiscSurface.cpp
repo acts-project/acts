@@ -351,10 +351,13 @@ Acts::Vector3 Acts::DiscSurface::binningPosition(const GeometryContext& gctx,
 
 double Acts::DiscSurface::binningPositionValue(const GeometryContext& gctx,
                                                BinningValue bValue) const {
-  // only modify binR
   if (bValue == binR) {
-    return VectorHelpers::perp(center(gctx)) + m_bounds->binningValueR();
+    return VectorHelpers::perp(binningPosition(gctx, bValue));
   }
+  if (bValue == binPhi) {
+    return VectorHelpers::phi(binningPosition(gctx, bValue));
+  }
+
   return GeometryObject::binningPositionValue(gctx, bValue);
 }
 
