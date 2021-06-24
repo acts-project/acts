@@ -70,30 +70,29 @@ struct Destruct : public Base {
 };
 
 BOOST_AUTO_TEST_CASE(TestDestruction) {
-  // {
-  //   bool destroyed = false;
+  {
+    bool destroyed = false;
 
-  //   std::optional<PolymorphicValue<Base>> pvOpt =
-  //       std::make_optional<PolymorphicValue<Base>>(
-  //           std::in_place_type_t<Destruct>(), &destroyed);
+    std::optional<PolymorphicValue<Base>> pvOpt =
+        PolymorphicValue<Base>{std::in_place_type_t<Destruct>(), &destroyed};
 
-  //   BOOST_CHECK(!destroyed);
-  //   BOOST_CHECK_EQUAL((*pvOpt)->value(), 0);
-  //   pvOpt = std::nullopt;
-  //   BOOST_CHECK(!!destroyed);
-  // }
+    BOOST_CHECK(!destroyed);
+    BOOST_CHECK_EQUAL((*pvOpt)->value(), 0);
+    pvOpt = std::nullopt;
+    BOOST_CHECK(!!destroyed);
+  }
 
-  // {
-  //   bool destroyed = false;
+  {
+    bool destroyed = false;
 
-  //   PolymorphicValue<Base> pv{std::in_place_type_t<Destruct>(), &destroyed};
+    PolymorphicValue<Base> pv{std::in_place_type_t<Destruct>(), &destroyed};
 
-  //   BOOST_CHECK(!destroyed);
-  //   BOOST_CHECK_EQUAL(pv->value(), 0);
-  //   pv.reset();
-  //   BOOST_CHECK(!!destroyed);
-  //   BOOST_CHECK(!pv);
-  // }
+    BOOST_CHECK(!destroyed);
+    BOOST_CHECK_EQUAL(pv->value(), 0);
+    pv.reset();
+    BOOST_CHECK(!!destroyed);
+    BOOST_CHECK(!pv);
+  }
 }
 
 struct Base1 {
