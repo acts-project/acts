@@ -77,11 +77,11 @@ void Initialise_hist(std::vector<TH2F*>& detector_hist){
   TH2F * Map_scale;
 
   Map_X0    = new TH2F("Map_X0_detector","Map_X0_detector",
-                       100,-6,6,50,-3.2,3.2);
+                       100,-4,4,50,-3.2,3.2);
   Map_L0    = new TH2F("Map_L0_detector","Map_L0_detector",
-                       100,-6,6,50,-3.2,3.2);
+                       100,-4,4,50,-3.2,3.2);
   Map_scale = new TH2F("Map_Scale_detector","Map_Scale_detector",
-                       100,-6,6,50,-3.2,3.2);
+                       100,-4,4,50,-3.2,3.2);
   Map_X0->GetXaxis()->SetTitle("Eta");
   Map_X0->GetYaxis()->SetTitle("Phi");
   Map_X0->GetZaxis()->SetTitle("X0");
