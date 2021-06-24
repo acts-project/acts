@@ -95,7 +95,32 @@ BOOST_AUTO_TEST_CASE(TestDestruction) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(TestRelease) {
+  {
+    bool destroyed = false;
+
+    std::optional<PolymorphicValue<Base>> pvOpt =
+        PolymorphicValue<Base>{std::in_place_type_t<Destruct>(), &destroyed};
+
+    BOOST_CHECK(!destroyed);
+    BOOST_CHECK_EQUAL((*pvOpt)->value(), 0);
+
+    BOOST_CHECK((*pvOpt));
+    BOOST_CHECK_NE((*pvOpt).pointer(), nullptr);
+    Base* p = (*pvOpt).release();
+    BOOST_CHECK(!(*pvOpt));
+    BOOST_CHECK_EQUAL((*pvOpt).pointer(), nullptr);
+
+    pvOpt = std::nullopt;
+    BOOST_CHECK(!destroyed);
+
+    delete p;
+    BOOST_CHECK(destroyed);
+  }
+}
+
 struct Base1 {
+  virtual ~Base1() = default;
   virtual int value() = 0;
 };
 
@@ -335,6 +360,63 @@ BOOST_AUTO_TEST_CASE(TestConstructionDifferentBase) {
     BOOST_CHECK_EQUAL(pv1.pointer(), nullptr);
     BOOST_CHECK_NE(pv2.pointer(), nullptr);
   }
+}
+
+struct Destruct2 : public Base2 {
+  bool* m_destroyed;
+  Destruct2(bool* d) : m_destroyed{d} {}
+
+  int value() override { return 0; }
+  ~Destruct2() { (*m_destroyed) = true; }
+};
+
+BOOST_AUTO_TEST_CASE(TestDestroyDelegate) {
+  bool destroyed = false;
+  std::optional<PolymorphicValue<Base2>> pvOpt2{
+      PolymorphicValue<Base2>{std::in_place_type_t<Destruct2>(), &destroyed}};
+
+  BOOST_CHECK(!destroyed);
+  BOOST_CHECK_EQUAL((*pvOpt2)->value(), 0);
+
+  std::optional<PolymorphicValue<Base1>> pvOpt1{std::move(*pvOpt2)};
+  BOOST_CHECK(!destroyed);
+
+  pvOpt2 = std::nullopt;
+  BOOST_CHECK(!destroyed);
+
+  BOOST_CHECK_EQUAL((*pvOpt1)->value(), 0);
+
+  pvOpt1 = std::nullopt;
+  BOOST_CHECK(destroyed);
+}
+
+BOOST_AUTO_TEST_CASE(TestReleaseDelegate) {
+  bool destroyed = false;
+  std::optional<PolymorphicValue<Base2>> pvOpt2{
+      PolymorphicValue<Base2>{std::in_place_type_t<Destruct2>(), &destroyed}};
+
+  BOOST_CHECK(!destroyed);
+  BOOST_CHECK_EQUAL((*pvOpt2)->value(), 0);
+
+  std::optional<PolymorphicValue<Base1>> pvOpt1{std::move(*pvOpt2)};
+  BOOST_CHECK(!destroyed);
+
+  pvOpt2 = std::nullopt;
+  BOOST_CHECK(!destroyed);
+
+  BOOST_CHECK_EQUAL((*pvOpt1)->value(), 0);
+
+  BOOST_CHECK((*pvOpt1));
+  BOOST_CHECK_NE((*pvOpt1).pointer(), nullptr);
+  Base1* p = (*pvOpt1).release();
+  BOOST_CHECK(!(*pvOpt1));
+  BOOST_CHECK_EQUAL((*pvOpt1).pointer(), nullptr);
+
+  pvOpt1 = std::nullopt;
+  BOOST_CHECK(!destroyed);
+
+  delete p;
+  BOOST_CHECK(destroyed);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

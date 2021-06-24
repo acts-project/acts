@@ -78,9 +78,6 @@ class PolymorphicValue {
  public:
   PolymorphicValue() {}
 
-  //   template <typename U>
-  //   explicit PolymorphicValue(U value) {}
-
   template <
       typename U, typename _U = U, typename _T = T,
       typename = std::enable_if_t<
