@@ -52,6 +52,9 @@ BinningData hData_eq(open, binH, 5, 0., 10.);
 // | -2.5 | -1.5 | -0.5 | 0.5 | 1.5 | 2.5 |
 BinningData etaData_eq(open, binEta, 5, -2.5, 2.5);
 
+// Fest equality operator
+BinningData xData_eq_copy(open, binX, 10, 0., 10.);
+
 // the binnings - arbitrary
 std::vector<float> values = {0., 1., 2., 3., 4., 10.};
 // bin boundaries
@@ -108,6 +111,9 @@ BOOST_AUTO_TEST_CASE(BinningData_BinningValue) {
   // | 0 | 1 | 1.5 | 2 |  3 | 4 | 5 |
   BOOST_CHECK_EQUAL(xData_add.bins(), size_t(6));
   BOOST_CHECK_EQUAL(xData_arb_binary.bins(), nBins_binary);
+
+  BOOST_CHECK(xData_eq_copy == xData_eq_copy);
+  BOOST_CHECK(not (xData_eq == yData_eq));
 
   /// check the global position requests
   BOOST_CHECK_EQUAL(xData_eq.value(xyzPosition), 0.5);
