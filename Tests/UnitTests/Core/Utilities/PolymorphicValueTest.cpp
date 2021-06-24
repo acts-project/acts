@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(TestConstruction) {
   {
     PolymorphicValue<Base> pv;
     BOOST_CHECK(!pv);
-    BOOST_CHECK_EQUAL(pv.pointer(), nullptr);
+    BOOST_CHECK_EQUAL(pv.get(), nullptr);
     // BOOST_CHECK_THROW(PolymorphicValue<Base>{D{}}, std::invalid_argument);
     // BOOST_CHECK_THROW(pv = D{}, std::invalid_argument);
   }
@@ -44,20 +44,35 @@ BOOST_AUTO_TEST_CASE(TestConstruction) {
     BOOST_CHECK(!pv);
     pv = A{6};
     BOOST_CHECK(!!pv);
-    BOOST_CHECK_NE(pv.pointer(), nullptr);
+    BOOST_CHECK_NE(pv.get(), nullptr);
     BOOST_CHECK_EQUAL(pv->value(), 6);
   }
 
   {
     PolymorphicValue<Base> pv{A{8}};
     BOOST_CHECK(!!pv);
-    BOOST_CHECK_NE(pv.pointer(), nullptr);
+    BOOST_CHECK_NE(pv.get(), nullptr);
     BOOST_CHECK_EQUAL(pv->value(), 8);
 
     pv = A{9};
     BOOST_CHECK(!!pv);
-    BOOST_CHECK_NE(pv.pointer(), nullptr);
+    BOOST_CHECK_NE(pv.get(), nullptr);
     BOOST_CHECK_EQUAL(pv->value(), 9);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(TestMakePolymorphicValue) {
+  {
+    PolymorphicValue<Base> pv{makePolymorphicValue<Base, A>(19)};
+    BOOST_CHECK(pv);
+    BOOST_CHECK_EQUAL(pv->value(), 19);
+  }
+  {
+    PolymorphicValue<Base> pv;
+    BOOST_CHECK(!pv);
+    pv = makePolymorphicValue<A>(37);
+    BOOST_CHECK(pv);
+    BOOST_CHECK_EQUAL(pv->value(), 37);
   }
 }
 
@@ -106,10 +121,10 @@ BOOST_AUTO_TEST_CASE(TestRelease) {
     BOOST_CHECK_EQUAL((*pvOpt)->value(), 0);
 
     BOOST_CHECK((*pvOpt));
-    BOOST_CHECK_NE((*pvOpt).pointer(), nullptr);
+    BOOST_CHECK_NE((*pvOpt).get(), nullptr);
     Base* p = (*pvOpt).release();
     BOOST_CHECK(!(*pvOpt));
-    BOOST_CHECK_EQUAL((*pvOpt).pointer(), nullptr);
+    BOOST_CHECK_EQUAL((*pvOpt).get(), nullptr);
 
     pvOpt = std::nullopt;
     BOOST_CHECK(!destroyed);
@@ -142,16 +157,16 @@ BOOST_AUTO_TEST_CASE(TestAssignmentSameBase) {
     PolymorphicValue<Base1> pv2{F{2}};
 
     BOOST_CHECK_EQUAL(pv1->value(), 8);
-    BOOST_CHECK_NE(dynamic_cast<E*>(pv1.pointer()), nullptr);
-    BOOST_CHECK_EQUAL(dynamic_cast<F*>(pv1.pointer()), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<E*>(pv1.get()), nullptr);
+    BOOST_CHECK_EQUAL(dynamic_cast<F*>(pv1.get()), nullptr);
 
     BOOST_CHECK_EQUAL(pv2->value(), 2);
-    BOOST_CHECK_NE(dynamic_cast<F*>(pv2.pointer()), nullptr);
-    BOOST_CHECK_EQUAL(dynamic_cast<E*>(pv2.pointer()), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<F*>(pv2.get()), nullptr);
+    BOOST_CHECK_EQUAL(dynamic_cast<E*>(pv2.get()), nullptr);
 
-    BOOST_CHECK_NE(pv1.pointer(), pv2.pointer());
+    BOOST_CHECK_NE(pv1.get(), pv2.get());
 
-    Base1* pre = pv2.pointer();
+    Base1* pre = pv2.get();
 
     pv1 = pv2;
 
@@ -159,18 +174,18 @@ BOOST_AUTO_TEST_CASE(TestAssignmentSameBase) {
     BOOST_CHECK(pv2);
 
     BOOST_CHECK_EQUAL(pv2->value(), 2);
-    BOOST_CHECK_NE(dynamic_cast<F*>(pv2.pointer()), nullptr);
-    BOOST_CHECK_EQUAL(dynamic_cast<E*>(pv2.pointer()), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<F*>(pv2.get()), nullptr);
+    BOOST_CHECK_EQUAL(dynamic_cast<E*>(pv2.get()), nullptr);
 
     BOOST_CHECK_EQUAL(pv1->value(), 2);
-    BOOST_CHECK_NE(dynamic_cast<F*>(pv1.pointer()), nullptr);
-    BOOST_CHECK_EQUAL(dynamic_cast<E*>(pv1.pointer()), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<F*>(pv1.get()), nullptr);
+    BOOST_CHECK_EQUAL(dynamic_cast<E*>(pv1.get()), nullptr);
 
-    BOOST_CHECK_NE(pv1.pointer(), pv2.pointer());
-    BOOST_CHECK_NE(pv1.pointer(), nullptr);
-    BOOST_CHECK_NE(pv2.pointer(), nullptr);
+    BOOST_CHECK_NE(pv1.get(), pv2.get());
+    BOOST_CHECK_NE(pv1.get(), nullptr);
+    BOOST_CHECK_NE(pv2.get(), nullptr);
 
-    BOOST_CHECK_NE(pv1.pointer(), pre);
+    BOOST_CHECK_NE(pv1.get(), pre);
   }
 
   {  // MOVE
@@ -178,16 +193,16 @@ BOOST_AUTO_TEST_CASE(TestAssignmentSameBase) {
     PolymorphicValue<Base1> pv2{F{2}};
 
     BOOST_CHECK_EQUAL(pv1->value(), 8);
-    BOOST_CHECK_NE(dynamic_cast<E*>(pv1.pointer()), nullptr);
-    BOOST_CHECK_EQUAL(dynamic_cast<F*>(pv1.pointer()), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<E*>(pv1.get()), nullptr);
+    BOOST_CHECK_EQUAL(dynamic_cast<F*>(pv1.get()), nullptr);
 
     BOOST_CHECK_EQUAL(pv2->value(), 2);
-    BOOST_CHECK_NE(dynamic_cast<F*>(pv2.pointer()), nullptr);
-    BOOST_CHECK_EQUAL(dynamic_cast<E*>(pv2.pointer()), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<F*>(pv2.get()), nullptr);
+    BOOST_CHECK_EQUAL(dynamic_cast<E*>(pv2.get()), nullptr);
 
-    BOOST_CHECK_NE(pv1.pointer(), pv2.pointer());
+    BOOST_CHECK_NE(pv1.get(), pv2.get());
 
-    Base1* pre = pv2.pointer();
+    Base1* pre = pv2.get();
 
     pv1 = std::move(pv2);
 
@@ -195,14 +210,14 @@ BOOST_AUTO_TEST_CASE(TestAssignmentSameBase) {
     BOOST_CHECK(!pv2);
 
     BOOST_CHECK_EQUAL(pv1->value(), 2);
-    BOOST_CHECK_NE(dynamic_cast<F*>(pv1.pointer()), nullptr);
-    BOOST_CHECK_EQUAL(dynamic_cast<E*>(pv1.pointer()), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<F*>(pv1.get()), nullptr);
+    BOOST_CHECK_EQUAL(dynamic_cast<E*>(pv1.get()), nullptr);
 
-    BOOST_CHECK_NE(pv1.pointer(), pv2.pointer());
-    BOOST_CHECK_NE(pv1.pointer(), nullptr);
-    BOOST_CHECK_EQUAL(pv2.pointer(), nullptr);
+    BOOST_CHECK_NE(pv1.get(), pv2.get());
+    BOOST_CHECK_NE(pv1.get(), nullptr);
+    BOOST_CHECK_EQUAL(pv2.get(), nullptr);
 
-    BOOST_CHECK_EQUAL(pv1.pointer(), pre);
+    BOOST_CHECK_EQUAL(pv1.get(), pre);
   }
 }
 
@@ -211,7 +226,7 @@ BOOST_AUTO_TEST_CASE(TestConstructionSameBase) {
     PolymorphicValue<Base1> pv1{E{8}};
 
     BOOST_CHECK_EQUAL(pv1->value(), 8);
-    BOOST_CHECK_NE(dynamic_cast<E*>(pv1.pointer()), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<E*>(pv1.get()), nullptr);
 
     PolymorphicValue<Base1> pv2{pv1};
 
@@ -219,18 +234,18 @@ BOOST_AUTO_TEST_CASE(TestConstructionSameBase) {
     BOOST_CHECK(pv2);
 
     BOOST_CHECK_EQUAL(pv2->value(), 8);
-    BOOST_CHECK_NE(dynamic_cast<E*>(pv2.pointer()), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<E*>(pv2.get()), nullptr);
 
-    BOOST_CHECK_NE(pv1.pointer(), pv2.pointer());
-    BOOST_CHECK_NE(pv1.pointer(), nullptr);
-    BOOST_CHECK_NE(pv2.pointer(), nullptr);
+    BOOST_CHECK_NE(pv1.get(), pv2.get());
+    BOOST_CHECK_NE(pv1.get(), nullptr);
+    BOOST_CHECK_NE(pv2.get(), nullptr);
   }
 
   {  // MOVE
     PolymorphicValue<Base1> pv1{E{8}};
 
     BOOST_CHECK_EQUAL(pv1->value(), 8);
-    BOOST_CHECK_NE(dynamic_cast<E*>(pv1.pointer()), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<E*>(pv1.get()), nullptr);
 
     PolymorphicValue<Base1> pv2{std::move(pv1)};
 
@@ -238,11 +253,11 @@ BOOST_AUTO_TEST_CASE(TestConstructionSameBase) {
     BOOST_CHECK(pv2);
 
     BOOST_CHECK_EQUAL(pv2->value(), 8);
-    BOOST_CHECK_NE(dynamic_cast<E*>(pv2.pointer()), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<E*>(pv2.get()), nullptr);
 
-    BOOST_CHECK_NE(pv1.pointer(), pv2.pointer());
-    BOOST_CHECK_EQUAL(pv1.pointer(), nullptr);
-    BOOST_CHECK_NE(pv2.pointer(), nullptr);
+    BOOST_CHECK_NE(pv1.get(), pv2.get());
+    BOOST_CHECK_EQUAL(pv1.get(), nullptr);
+    BOOST_CHECK_NE(pv2.get(), nullptr);
   }
 }
 
@@ -259,34 +274,34 @@ BOOST_AUTO_TEST_CASE(TestAssignmentDifferentBase) {
     PolymorphicValue<Base2> pv2{G{3}};
 
     BOOST_CHECK_EQUAL(pv1->value(), 8);
-    BOOST_CHECK_NE(dynamic_cast<E*>(pv1.pointer()), nullptr);
-    BOOST_CHECK_EQUAL(dynamic_cast<G*>(pv1.pointer()), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<E*>(pv1.get()), nullptr);
+    BOOST_CHECK_EQUAL(dynamic_cast<G*>(pv1.get()), nullptr);
 
     BOOST_CHECK_EQUAL(pv2->value(), 3);
-    BOOST_CHECK_NE(dynamic_cast<G*>(pv2.pointer()), nullptr);
-    BOOST_CHECK_EQUAL(dynamic_cast<E*>(pv2.pointer()), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<G*>(pv2.get()), nullptr);
+    BOOST_CHECK_EQUAL(dynamic_cast<E*>(pv2.get()), nullptr);
 
-    BOOST_CHECK_NE(pv1.pointer(), pv2.pointer());
+    BOOST_CHECK_NE(pv1.get(), pv2.get());
 
-    Base1* pre = pv2.pointer();
+    Base1* pre = pv2.get();
     pv1 = pv2;
 
     BOOST_CHECK(pv1);
     BOOST_CHECK(pv2);
 
     BOOST_CHECK_EQUAL(pv2->value(), 3);
-    BOOST_CHECK_NE(dynamic_cast<G*>(pv2.pointer()), nullptr);
-    BOOST_CHECK_EQUAL(dynamic_cast<E*>(pv2.pointer()), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<G*>(pv2.get()), nullptr);
+    BOOST_CHECK_EQUAL(dynamic_cast<E*>(pv2.get()), nullptr);
 
     BOOST_CHECK_EQUAL(pv1->value(), 3);
-    BOOST_CHECK_NE(dynamic_cast<G*>(pv1.pointer()), nullptr);
-    BOOST_CHECK_EQUAL(dynamic_cast<E*>(pv1.pointer()), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<G*>(pv1.get()), nullptr);
+    BOOST_CHECK_EQUAL(dynamic_cast<E*>(pv1.get()), nullptr);
 
-    BOOST_CHECK_NE(pv1.pointer(), pv2.pointer());
-    BOOST_CHECK_NE(pv1.pointer(), nullptr);
-    BOOST_CHECK_NE(pv2.pointer(), nullptr);
+    BOOST_CHECK_NE(pv1.get(), pv2.get());
+    BOOST_CHECK_NE(pv1.get(), nullptr);
+    BOOST_CHECK_NE(pv2.get(), nullptr);
 
-    BOOST_CHECK_NE(pv1.pointer(), pre);
+    BOOST_CHECK_NE(pv1.get(), pre);
   }
 
   {  // MOVE
@@ -294,30 +309,30 @@ BOOST_AUTO_TEST_CASE(TestAssignmentDifferentBase) {
     PolymorphicValue<Base2> pv2{G{3}};
 
     BOOST_CHECK_EQUAL(pv1->value(), 8);
-    BOOST_CHECK_NE(dynamic_cast<E*>(pv1.pointer()), nullptr);
-    BOOST_CHECK_EQUAL(dynamic_cast<G*>(pv1.pointer()), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<E*>(pv1.get()), nullptr);
+    BOOST_CHECK_EQUAL(dynamic_cast<G*>(pv1.get()), nullptr);
 
     BOOST_CHECK_EQUAL(pv2->value(), 3);
-    BOOST_CHECK_NE(dynamic_cast<G*>(pv2.pointer()), nullptr);
-    BOOST_CHECK_EQUAL(dynamic_cast<E*>(pv2.pointer()), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<G*>(pv2.get()), nullptr);
+    BOOST_CHECK_EQUAL(dynamic_cast<E*>(pv2.get()), nullptr);
 
-    BOOST_CHECK_NE(pv1.pointer(), pv2.pointer());
+    BOOST_CHECK_NE(pv1.get(), pv2.get());
 
-    Base1* pre = pv2.pointer();
+    Base1* pre = pv2.get();
     pv1 = std::move(pv2);
 
     BOOST_CHECK(pv1);
     BOOST_CHECK(!pv2);
 
     BOOST_CHECK_EQUAL(pv1->value(), 3);
-    BOOST_CHECK_NE(dynamic_cast<G*>(pv1.pointer()), nullptr);
-    BOOST_CHECK_EQUAL(dynamic_cast<E*>(pv1.pointer()), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<G*>(pv1.get()), nullptr);
+    BOOST_CHECK_EQUAL(dynamic_cast<E*>(pv1.get()), nullptr);
 
-    BOOST_CHECK_NE(pv1.pointer(), pv2.pointer());
-    BOOST_CHECK_NE(pv1.pointer(), nullptr);
-    BOOST_CHECK_EQUAL(pv2.pointer(), nullptr);
+    BOOST_CHECK_NE(pv1.get(), pv2.get());
+    BOOST_CHECK_NE(pv1.get(), nullptr);
+    BOOST_CHECK_EQUAL(pv2.get(), nullptr);
 
-    BOOST_CHECK_EQUAL(pv1.pointer(), pre);
+    BOOST_CHECK_EQUAL(pv1.get(), pre);
   }
 }
 
@@ -327,7 +342,7 @@ BOOST_AUTO_TEST_CASE(TestConstructionDifferentBase) {
     PolymorphicValue<Base2> pv1{G{8}};
 
     BOOST_CHECK_EQUAL(pv1->value(), 8);
-    BOOST_CHECK_NE(dynamic_cast<G*>(pv1.pointer()), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<G*>(pv1.get()), nullptr);
 
     PolymorphicValue<Base1> pv2{pv1};
 
@@ -335,18 +350,18 @@ BOOST_AUTO_TEST_CASE(TestConstructionDifferentBase) {
     BOOST_CHECK(pv2);
 
     BOOST_CHECK_EQUAL(pv2->value(), 8);
-    BOOST_CHECK_NE(dynamic_cast<G*>(pv2.pointer()), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<G*>(pv2.get()), nullptr);
 
-    BOOST_CHECK_NE(pv1.pointer(), pv2.pointer());
-    BOOST_CHECK_NE(pv1.pointer(), nullptr);
-    BOOST_CHECK_NE(pv2.pointer(), nullptr);
+    BOOST_CHECK_NE(pv1.get(), pv2.get());
+    BOOST_CHECK_NE(pv1.get(), nullptr);
+    BOOST_CHECK_NE(pv2.get(), nullptr);
   }
 
   {  // MOVE
     PolymorphicValue<Base2> pv1{G{8}};
 
     BOOST_CHECK_EQUAL(pv1->value(), 8);
-    BOOST_CHECK_NE(dynamic_cast<G*>(pv1.pointer()), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<G*>(pv1.get()), nullptr);
 
     PolymorphicValue<Base1> pv2{std::move(pv1)};
 
@@ -354,11 +369,11 @@ BOOST_AUTO_TEST_CASE(TestConstructionDifferentBase) {
     BOOST_CHECK(pv2);
 
     BOOST_CHECK_EQUAL(pv2->value(), 8);
-    BOOST_CHECK_NE(dynamic_cast<G*>(pv2.pointer()), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<G*>(pv2.get()), nullptr);
 
-    BOOST_CHECK_NE(pv1.pointer(), pv2.pointer());
-    BOOST_CHECK_EQUAL(pv1.pointer(), nullptr);
-    BOOST_CHECK_NE(pv2.pointer(), nullptr);
+    BOOST_CHECK_NE(pv1.get(), pv2.get());
+    BOOST_CHECK_EQUAL(pv1.get(), nullptr);
+    BOOST_CHECK_NE(pv2.get(), nullptr);
   }
 }
 
@@ -407,10 +422,10 @@ BOOST_AUTO_TEST_CASE(TestReleaseDelegate) {
   BOOST_CHECK_EQUAL((*pvOpt1)->value(), 0);
 
   BOOST_CHECK((*pvOpt1));
-  BOOST_CHECK_NE((*pvOpt1).pointer(), nullptr);
+  BOOST_CHECK_NE((*pvOpt1).get(), nullptr);
   Base1* p = (*pvOpt1).release();
   BOOST_CHECK(!(*pvOpt1));
-  BOOST_CHECK_EQUAL((*pvOpt1).pointer(), nullptr);
+  BOOST_CHECK_EQUAL((*pvOpt1).get(), nullptr);
 
   pvOpt1 = std::nullopt;
   BOOST_CHECK(!destroyed);

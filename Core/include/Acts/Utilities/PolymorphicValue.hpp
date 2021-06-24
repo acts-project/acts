@@ -75,25 +75,26 @@ class PolymorphicValue {
   template <typename U>
   friend class PolymorphicValue;
 
+  template <typename U, typename... Args>
+  friend PolymorphicValue<U> makePolymorphicValue(Args&&... args);
+
  public:
   PolymorphicValue() {}
 
-  template <
-      typename U, typename _U = U, typename _T = T,
-      typename = std::enable_if_t<
-          !std::is_same_v<_U, _T> && std::is_copy_constructible_v<_U> &&
-          std::is_convertible_v<_U*, _T*> && !IsPolymorphicValue<_U>::value>>
+  template <typename U, typename _U = U, typename _T = T,
+            typename = std::enable_if_t<std::is_copy_constructible_v<_U> &&
+                                        std::is_convertible_v<_U*, _T*> &&
+                                        !IsPolymorphicValue<_U>::value>>
   explicit PolymorphicValue(U&& u)
       : m_controlBlock{std::make_unique<detail::ControlBlock<T, U>>(
             std::make_unique<U>(u))},
         m_pointer{m_controlBlock->pointer()} {}
 
-  template <
-      typename U, typename _U = U, typename _T = T,
-      typename = std::enable_if_t<
-          !std::is_same_v<_U, _T> && std::is_copy_constructible_v<_U> &&
-          std::is_convertible_v<_U*, _T*> && !IsPolymorphicValue<_U>::value>,
-      typename... Args>
+  template <typename U, typename _U = U, typename _T = T,
+            typename = std::enable_if_t<std::is_copy_constructible_v<_U> &&
+                                        std::is_convertible_v<_U*, _T*> &&
+                                        !IsPolymorphicValue<_U>::value>,
+            typename... Args>
   explicit PolymorphicValue(std::in_place_type_t<U>, Args&&... args)
       : m_controlBlock{std::make_unique<detail::ControlBlock<T, U>>(
             std::make_unique<U>(std::forward<Args>(args)...))},
@@ -102,7 +103,7 @@ class PolymorphicValue {
   template <typename U, typename _U = U, typename _T = T,
             typename = std::enable_if_t<!std::is_same_v<_U, _T> &&
                                         std::is_convertible_v<_U*, _T*>>>
-  explicit PolymorphicValue(const PolymorphicValue<U>& other) {
+  PolymorphicValue(const PolymorphicValue<U>& other) {
     auto cbTmp = std::move(m_controlBlock);
     m_controlBlock = std::make_unique<detail::DelegatingControlBlock<T, U>>(
         other.m_controlBlock->clone());
@@ -112,7 +113,7 @@ class PolymorphicValue {
   template <typename U, typename _U = U, typename _T = T,
             typename = std::enable_if_t<!std::is_same_v<_U, _T> &&
                                         std::is_convertible_v<_U*, _T*>>>
-  explicit PolymorphicValue(PolymorphicValue<U>&& other) {
+  PolymorphicValue(PolymorphicValue<U>&& other) {
     auto cbTmp = std::move(m_controlBlock);
     m_controlBlock = std::make_unique<detail::DelegatingControlBlock<T, U>>(
         std::move(other.m_controlBlock));
@@ -235,12 +236,24 @@ class PolymorphicValue {
     return m_pointer;
   }
 
-  T* pointer() { return m_pointer; }
-  const T* pointer() const { return m_pointer; }
+  T* get() { return m_pointer; }
+  const T* get() const { return m_pointer; }
 
  private:
   std::unique_ptr<detail::ControlBlockBase<T>> m_controlBlock{nullptr};
   T* m_pointer{nullptr};
 };
+
+template <typename T, typename U, typename... Args>
+PolymorphicValue<T> makePolymorphicValue(Args&&... args) {
+  return PolymorphicValue<T>{std::in_place_type_t<U>(),
+                             std::forward<Args>(args)...};
+}
+
+template <typename T, typename... Args>
+PolymorphicValue<T> makePolymorphicValue(Args&&... args) {
+  return PolymorphicValue<T>{std::in_place_type_t<T>(),
+                             std::forward<Args>(args)...};
+}
 
 }  // namespace Acts
