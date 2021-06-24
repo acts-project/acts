@@ -1334,6 +1334,38 @@ class CombinatorialKalmanFilter {
       // Emplace back the successful result
       ckfResults.emplace_back(combKalmanResult);
     }
+
+    // Compute nSharedhits and Update ckf results
+    // hit index -> list of multi traj indexes [traj, meas]
+    std::unordered_map<std::size_t, std::vector< std::size_t > > recordedHits;
+
+    for (unsigned int iresult(0); iresult<ckfResults.size(); iresult++) {
+      CombinatorialKalmanFilterResult& ckfResult = ckfResults.at(iresult).value();
+      if (not ckfResult.result.ok()) 
+	continue;
+
+      auto& mj = ckfResult.fittedStates;
+      for (auto imeas : ckfResult.lastMeasurementIndices) {
+	auto& measState = mj.getTrackState(imeas);
+	if (not measState.test(TrackStateFlag::MeasurementFlag))
+	  continue;
+	
+	if (recordedHits.find(imeas) == recordedHits.end())
+	  recordedHits[imeas] = std::vector< std::size_t >();
+	recordedHits[imeas].push_back(iresult);
+      }
+    }
+    
+    for (const auto& [hitIndex, trackIndexArray] : recordedHits) {
+      if (trackIndexArray.size() < 2) 
+	continue;
+      for (auto iresult : trackIndexArray) {
+	auto& ckfResult = ckfResults.at(iresult);
+	auto& mj = ckfResult.fittedStates;
+	mj.getTrackState(hitIndex).set(TrackStateFlag::SharedHitFlag);
+      }
+    }
+
     return ckfResults;
   }
 
