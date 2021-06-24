@@ -73,6 +73,7 @@ BOOST_AUTO_TEST_CASE(TestDestruction) {
         PolymorphicValue<Base>{std::in_place_type_t<Destruct>(), &destroyed};
 
     BOOST_CHECK(!destroyed);
+    BOOST_CHECK_EQUAL((*pvOpt)->value(), 0);
     pvOpt = std::nullopt;
     BOOST_CHECK(!!destroyed);
   }
@@ -83,11 +84,14 @@ BOOST_AUTO_TEST_CASE(TestDestruction) {
     PolymorphicValue<Base> pv{std::in_place_type_t<Destruct>(), &destroyed};
 
     BOOST_CHECK(!destroyed);
+    BOOST_CHECK_EQUAL(pv->value(), 0);
     pv.reset();
     BOOST_CHECK(!!destroyed);
     BOOST_CHECK(!pv);
   }
 }
+
+// @TODO: Conversion / assignment between PV
 
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Test
