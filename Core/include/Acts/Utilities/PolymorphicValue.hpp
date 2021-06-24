@@ -136,7 +136,6 @@ class PolymorphicValue {
 
   template <typename U, typename _U = U, typename _T = T,
             typename = std::enable_if_t<!std::is_same_v<_U, _T> &&
-                                        std::is_copy_constructible_v<_U> &&
                                         std::is_convertible_v<_U*, _T*>>>
   PolymorphicValue(const PolymorphicValue<U>& other) {
     auto cbTmp = std::move(m_controlBlock);

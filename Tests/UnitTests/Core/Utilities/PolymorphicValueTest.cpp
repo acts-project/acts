@@ -78,11 +78,54 @@ BOOST_AUTO_TEST_CASE(TestMakePolymorphicValue) {
 
 struct Destruct : public Base {
   bool* m_destroyed;
-  Destruct(bool* d) : m_destroyed{d} {}
+  int m_value;
+  Destruct(bool* d, int v = 0) : m_destroyed{d}, m_value{v} {}
 
-  int value() override { return 0; }
+  int value() override { return m_value; }
   ~Destruct() { (*m_destroyed) = true; }
 };
+
+BOOST_AUTO_TEST_CASE(TestConstructFromPointer) {
+  {
+    bool destroyed = false;
+    Destruct* p = new Destruct(&destroyed, 62);
+
+    PolymorphicValue<Destruct> pv{p};
+    BOOST_CHECK(pv);
+    BOOST_CHECK(!destroyed);
+    BOOST_CHECK_EQUAL(pv->value(), 62);
+    BOOST_CHECK_EQUAL(pv.get(), p);
+
+    auto pv2 = pv;  // copy
+    BOOST_CHECK_NE(pv2.get(), pv.get());
+
+    pv.reset();
+    BOOST_CHECK(!pv);
+    BOOST_CHECK(destroyed);
+    BOOST_CHECK_EQUAL(pv.get(), nullptr);
+  }
+
+  {
+    bool destroyed = false;
+    // this is pointer to base, we can't copy this
+    Base* p = new Destruct(&destroyed, 62);
+
+    PolymorphicValue<Base> pv{p};
+    BOOST_CHECK(pv);
+    BOOST_CHECK(!destroyed);
+    BOOST_CHECK_EQUAL(pv->value(), 62);
+    BOOST_CHECK_EQUAL(pv.get(), p);
+
+    // copy is not possible, when PV was constructed, we only got Base* so we
+    // couldn't figure out how copying works
+    BOOST_CHECK_THROW(auto pv2 = pv, std::runtime_error);
+
+    pv.reset();
+    BOOST_CHECK(!pv);
+    BOOST_CHECK(destroyed);
+    BOOST_CHECK_EQUAL(pv.get(), nullptr);
+  }
+}
 
 BOOST_AUTO_TEST_CASE(TestDestruction) {
   {
