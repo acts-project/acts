@@ -83,7 +83,7 @@ class PolymorphicValue {
 
   template <
       typename U, typename _U = U, typename _T = T,
-      typename = std::enable_if<
+      typename = std::enable_if_t<
           !std::is_same_v<_U, _T> && std::is_copy_constructible_v<_U> &&
           std::is_convertible_v<_U*, _T*> && !IsPolymorphicValue<_U>::value>>
   explicit PolymorphicValue(U&& u)
@@ -92,7 +92,7 @@ class PolymorphicValue {
 
   template <
       typename U, typename _U = U, typename _T = T,
-      typename = std::enable_if<
+      typename = std::enable_if_t<
           !std::is_same_v<_U, _T> && std::is_copy_constructible_v<_U> &&
           std::is_convertible_v<_U*, _T*> && !IsPolymorphicValue<_U>::value>,
       typename... Args>
@@ -101,9 +101,8 @@ class PolymorphicValue {
             std::make_unique<U>(std::forward<Args>(args)...))} {}
 
   template <typename U, typename _U = U, typename _T = T,
-            typename = std::enable_if<!std::is_same_v<_U, _T> &&
-                                      std::is_copy_constructible_v<_U> &&
-                                      std::is_convertible_v<_U*, _T*>>>
+            typename = std::enable_if_t<!std::is_same_v<_U, _T> &&
+                                        std::is_convertible_v<_U*, _T*>>>
   explicit PolymorphicValue(const PolymorphicValue<U>& other) {
     auto cbTmp = std::move(m_controlBlock);
     m_controlBlock = std::make_unique<detail::DelegatingControlBlock<T, U>>(
@@ -111,9 +110,8 @@ class PolymorphicValue {
   }
 
   template <typename U, typename _U = U, typename _T = T,
-            typename = std::enable_if<!std::is_same_v<_U, _T> &&
-                                      std::is_copy_constructible_v<_U> &&
-                                      std::is_convertible_v<_U*, _T*>>>
+            typename = std::enable_if_t<!std::is_same_v<_U, _T> &&
+                                        std::is_convertible_v<_U*, _T*>>>
   explicit PolymorphicValue(PolymorphicValue<U>&& other) {
     auto cbTmp = std::move(m_controlBlock);
     m_controlBlock = std::make_unique<detail::DelegatingControlBlock<T, U>>(
@@ -122,7 +120,7 @@ class PolymorphicValue {
 
   template <
       typename U, typename _U = U, typename _T = T,
-      typename = std::enable_if<
+      typename = std::enable_if_t<
           !std::is_same_v<_U, _T> && std::is_copy_constructible_v<_U> &&
           std::is_convertible_v<_U*, _T*> && !IsPolymorphicValue<_U>::value>>
   PolymorphicValue& operator=(const U& u) {
@@ -134,9 +132,9 @@ class PolymorphicValue {
   }
 
   template <typename U, typename _U = U, typename _T = T,
-            typename = std::enable_if<std::is_copy_constructible_v<_U> &&
-                                      std::is_convertible_v<_U*, _T*> &&
-                                      !IsPolymorphicValue<_U>::value>>
+            typename = std::enable_if_t<std::is_copy_constructible_v<_U> &&
+                                        std::is_convertible_v<_U*, _T*> &&
+                                        !IsPolymorphicValue<_U>::value>>
   PolymorphicValue& operator=(U&& u) {
     auto cbTmp =
         std::move(m_controlBlock);  // extend lifetime until after operation
@@ -146,9 +144,8 @@ class PolymorphicValue {
   }
 
   template <typename U, typename _U = U, typename _T = T,
-            typename = std::enable_if<!std::is_same_v<_U, _T> &&
-                                      std::is_copy_constructible_v<_U> &&
-                                      std::is_convertible_v<_U*, _T*>>>
+            typename = std::enable_if_t<!std::is_same_v<_U, _T> &&
+                                        std::is_convertible_v<_U*, _T*>>>
   PolymorphicValue& operator=(const PolymorphicValue<U>& other) {
     auto cbTmp = std::move(m_controlBlock);
     m_controlBlock = std::make_unique<detail::DelegatingControlBlock<T, U>>(
@@ -157,9 +154,8 @@ class PolymorphicValue {
   }
 
   template <typename U, typename _U = U, typename _T = T,
-            typename = std::enable_if<!std::is_same_v<_U, _T> &&
-                                      std::is_copy_constructible_v<_U> &&
-                                      std::is_convertible_v<_U*, _T*>>>
+            typename = std::enable_if_t<!std::is_same_v<_U, _T> &&
+                                        std::is_convertible_v<_U*, _T*>>>
   PolymorphicValue& operator=(PolymorphicValue<U>&& other) {
     auto cbTmp = std::move(m_controlBlock);
     m_controlBlock = std::make_unique<detail::DelegatingControlBlock<T, U>>(
@@ -200,8 +196,8 @@ class PolymorphicValue {
   }
 
   template <typename U, typename _U = U, typename _T = T,
-            typename = std::enable_if<std::is_copy_constructible_v<_U> &&
-                                      std::is_convertible_v<_U*, _T*>>>
+            typename = std::enable_if_t<std::is_copy_constructible_v<_U> &&
+                                        std::is_convertible_v<_U*, _T*>>>
   void reset(U* u) {
     auto cbTmp =
         std::move(m_controlBlock);  // extend lifetime until after operation
