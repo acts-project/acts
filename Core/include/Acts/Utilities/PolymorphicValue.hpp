@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include <memory>
+#include <type_traits>
+
 namespace Acts {
 
 namespace detail {
@@ -59,6 +62,25 @@ struct DelegatingControlBlock : public ControlBlockBase<T> {
   std::unique_ptr<ControlBlockBase<U>> m_delegate;
 };
 
+template <typename T, typename U>
+struct NonCopyableControlBlock : public ControlBlockBase<T> {
+  static_assert(std::is_convertible_v<U*, T*>, "Types must be convertible");
+
+  explicit NonCopyableControlBlock(std::unique_ptr<U> u)
+      : m_value{std::move(u)} {}
+
+  std::unique_ptr<ControlBlockBase<T>> clone() const override {
+    throw std::runtime_error{"Stored PolymorphicValue is not copyable"};
+  }
+
+  T* pointer() override { return m_value.get(); }
+  const T* pointer() const override { return m_value.get(); }
+
+  T* releaseValue() override { return m_value.release(); }
+
+  std::unique_ptr<U> m_value;
+};
+
 }  // namespace detail
 
 template <class T>
@@ -82,8 +104,7 @@ class PolymorphicValue {
   PolymorphicValue() {}
 
   template <typename U, typename _U = U, typename _T = T,
-            typename = std::enable_if_t<std::is_copy_constructible_v<_U> &&
-                                        std::is_convertible_v<_U*, _T*> &&
+            typename = std::enable_if_t<std::is_convertible_v<_U*, _T*> &&
                                         !IsPolymorphicValue<_U>::value>>
   explicit PolymorphicValue(U&& u)
       : m_controlBlock{std::make_unique<detail::ControlBlock<T, U>>(
@@ -91,8 +112,21 @@ class PolymorphicValue {
         m_pointer{m_controlBlock->pointer()} {}
 
   template <typename U, typename _U = U, typename _T = T,
-            typename = std::enable_if_t<std::is_copy_constructible_v<_U> &&
-                                        std::is_convertible_v<_U*, _T*> &&
+            typename = std::enable_if_t<std::is_convertible_v<_U*, _T*> &&
+                                        !IsPolymorphicValue<_U>::value>>
+  explicit PolymorphicValue(U* u) {
+    if constexpr (std::is_copy_constructible_v<U>) {
+      m_controlBlock =
+          std::make_unique<detail::ControlBlock<T, U>>(std::unique_ptr<U>(u));
+    } else {
+      m_controlBlock = std::make_unique<detail::NonCopyableControlBlock<T, U>>(
+          std::unique_ptr<U>(u));
+    }
+    m_pointer = m_controlBlock->pointer();
+  }
+
+  template <typename U, typename _U = U, typename _T = T,
+            typename = std::enable_if_t<std::is_convertible_v<_U*, _T*> &&
                                         !IsPolymorphicValue<_U>::value>,
             typename... Args>
   explicit PolymorphicValue(std::in_place_type_t<U>, Args&&... args)
@@ -102,6 +136,7 @@ class PolymorphicValue {
 
   template <typename U, typename _U = U, typename _T = T,
             typename = std::enable_if_t<!std::is_same_v<_U, _T> &&
+                                        std::is_copy_constructible_v<_U> &&
                                         std::is_convertible_v<_U*, _T*>>>
   PolymorphicValue(const PolymorphicValue<U>& other) {
     auto cbTmp = std::move(m_controlBlock);
@@ -121,11 +156,10 @@ class PolymorphicValue {
     other.m_pointer = nullptr;
   }
 
-  template <
-      typename U, typename _U = U, typename _T = T,
-      typename = std::enable_if_t<
-          !std::is_same_v<_U, _T> && std::is_copy_constructible_v<_U> &&
-          std::is_convertible_v<_U*, _T*> && !IsPolymorphicValue<_U>::value>>
+  template <typename U, typename _U = U, typename _T = T,
+            typename = std::enable_if_t<!std::is_same_v<_U, _T> &&
+                                        std::is_convertible_v<_U*, _T*> &&
+                                        !IsPolymorphicValue<_U>::value>>
   PolymorphicValue& operator=(const U& u) {
     auto cbTmp =
         std::move(m_controlBlock);  // extend lifetime until after operation
@@ -136,12 +170,10 @@ class PolymorphicValue {
   }
 
   template <typename U, typename _U = U, typename _T = T,
-            typename = std::enable_if_t<std::is_copy_constructible_v<_U> &&
-                                        std::is_convertible_v<_U*, _T*> &&
+            typename = std::enable_if_t<std::is_convertible_v<_U*, _T*> &&
                                         !IsPolymorphicValue<_U>::value>>
   PolymorphicValue& operator=(U&& u) {
-    auto cbTmp =
-        std::move(m_controlBlock);  // extend lifetime until after operation
+    auto cbTmp = std::move(m_controlBlock);
     m_controlBlock = std::make_unique<detail::ControlBlock<T, U>>(
         std::make_unique<U>(std::move(u)));
     m_pointer = m_controlBlock->pointer();
