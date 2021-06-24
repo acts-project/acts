@@ -62,17 +62,15 @@ Acts::CylinderSurface& Acts::CylinderSurface::operator=(
 // return the binning position for ordering in the BinnedArray
 Acts::Vector3 Acts::CylinderSurface::binningPosition(
     const GeometryContext& gctx, BinningValue bValue) const {
-  const Acts::Vector3& sfCenter = center(gctx);
   // special binning type for R-type methods
   if (bValue == Acts::binR || bValue == Acts::binRPhi) {
     double R = bounds().get(CylinderBounds::eR);
     double phi = bounds().get(CylinderBounds::eAveragePhi);
-    return Vector3(sfCenter.x() + R * cos(phi), sfCenter.y() + R * sin(phi),
-                   sfCenter.z());
+    return localToGlobal(gctx, Vector2{phi * R, 0}, Vector3{});
   }
   // give the center as default for all of these binning types
   // binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta
-  return sfCenter;
+  return center(gctx);
 }
 
 // return the measurement frame: it's the tangential plane
