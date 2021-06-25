@@ -35,8 +35,9 @@ BOOST_AUTO_TEST_CASE(TestConstruction) {
     PolymorphicValue<Base> pv;
     BOOST_CHECK(!pv);
     BOOST_CHECK_EQUAL(pv.get(), nullptr);
-    // BOOST_CHECK_THROW(PolymorphicValue<Base>{D{}}, std::invalid_argument);
-    // BOOST_CHECK_THROW(pv = D{}, std::invalid_argument);
+
+    BOOST_CHECK(IsPolymorphicValue<decltype(pv)>::value);
+    BOOST_CHECK(!IsPolymorphicValue<A>::value);
   }
 
   {
@@ -46,6 +47,7 @@ BOOST_AUTO_TEST_CASE(TestConstruction) {
     BOOST_CHECK(!!pv);
     BOOST_CHECK_NE(pv.get(), nullptr);
     BOOST_CHECK_EQUAL(pv->value(), 6);
+    BOOST_CHECK_EQUAL((*pv).value(), 6);
   }
 
   {
@@ -132,7 +134,7 @@ BOOST_AUTO_TEST_CASE(TestDestruction) {
     bool destroyed = false;
 
     std::optional<PolymorphicValue<Base>> pvOpt =
-        PolymorphicValue<Base>{std::in_place_type_t<Destruct>(), &destroyed};
+        makePolymorphicValue<Destruct>(&destroyed);
 
     BOOST_CHECK(!destroyed);
     BOOST_CHECK_EQUAL((*pvOpt)->value(), 0);
@@ -143,7 +145,7 @@ BOOST_AUTO_TEST_CASE(TestDestruction) {
   {
     bool destroyed = false;
 
-    PolymorphicValue<Base> pv{std::in_place_type_t<Destruct>(), &destroyed};
+    PolymorphicValue<Base> pv{makePolymorphicValue<Destruct>(&destroyed)};
 
     BOOST_CHECK(!destroyed);
     BOOST_CHECK_EQUAL(pv->value(), 0);
@@ -158,7 +160,7 @@ BOOST_AUTO_TEST_CASE(TestRelease) {
     bool destroyed = false;
 
     std::optional<PolymorphicValue<Base>> pvOpt =
-        PolymorphicValue<Base>{std::in_place_type_t<Destruct>(), &destroyed};
+        makePolymorphicValue<Destruct>(&destroyed);
 
     BOOST_CHECK(!destroyed);
     BOOST_CHECK_EQUAL((*pvOpt)->value(), 0);
@@ -431,7 +433,7 @@ struct Destruct2 : public Base2 {
 BOOST_AUTO_TEST_CASE(TestDestroyDelegate) {
   bool destroyed = false;
   std::optional<PolymorphicValue<Base2>> pvOpt2{
-      PolymorphicValue<Base2>{std::in_place_type_t<Destruct2>(), &destroyed}};
+      makePolymorphicValue<Destruct2>(&destroyed)};
 
   BOOST_CHECK(!destroyed);
   BOOST_CHECK_EQUAL((*pvOpt2)->value(), 0);
@@ -451,7 +453,7 @@ BOOST_AUTO_TEST_CASE(TestDestroyDelegate) {
 BOOST_AUTO_TEST_CASE(TestReleaseDelegate) {
   bool destroyed = false;
   std::optional<PolymorphicValue<Base2>> pvOpt2{
-      PolymorphicValue<Base2>{std::in_place_type_t<Destruct2>(), &destroyed}};
+      makePolymorphicValue<Destruct2>(&destroyed)};
 
   BOOST_CHECK(!destroyed);
   BOOST_CHECK_EQUAL((*pvOpt2)->value(), 0);
