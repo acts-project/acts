@@ -14,7 +14,7 @@
 template <typename cell_t>
 std::vector<std::vector<cell_t>> Acts::createClusters(
     std::unordered_map<size_t, std::pair<cell_t, bool>>& cellMap, size_t nBins0,
-    bool commonCorner, double energyCut) {
+    bool commonCorner, double threshold) {
   static_assert(CellConcept<cell_t>, "malformed cell type");
   // the output
   std::vector<std::vector<cell_t>> mergedCells;
@@ -22,7 +22,7 @@ std::vector<std::vector<cell_t>> Acts::createClusters(
   for (auto& cell : cellMap) {
     // check if the cell was already used
     if (!(cell.second.second) &&
-        (cell.second.first.depositedEnergy() >= energyCut)) {
+        (cell.second.first.activation() >= threshold)) {
       // create new cluster
       mergedCells.push_back(std::vector<cell_t>());
       // add current cell to current cluster
@@ -31,7 +31,7 @@ std::vector<std::vector<cell_t>> Acts::createClusters(
       cell.second.second = true;
       // fill all cells belonging to that cluster
       fillCluster(mergedCells, cellMap, cell.first, nBins0, commonCorner,
-                  energyCut);
+                  threshold);
     }
   }
   // return the grouped together cells
@@ -42,7 +42,7 @@ template <typename cell_t>
 void Acts::fillCluster(
     std::vector<std::vector<cell_t>>& mergedCells,
     std::unordered_map<size_t, std::pair<cell_t, bool>>& cellMap, size_t index,
-    size_t nBins0, bool commonCorner, double energyCut) {
+    size_t nBins0, bool commonCorner, double threshold) {
   static_assert(CellConcept<cell_t>, "malformed cell type");
   // go recursively through all neighbours of this cell, if present
   // calculate neighbour indices first
@@ -87,15 +87,14 @@ void Acts::fillCluster(
       auto currentCell = search->second.first;
       // if cell was not already added to cluster & deposited energy is higher
       // than the energy threshold, add it to the cluster
-      if (!search->second.second &&
-          currentCell.depositedEnergy() >= energyCut) {
+      if (!search->second.second && currentCell.activation() >= threshold) {
         // add current cell to current cluster
         mergedCells.back().push_back(currentCell);
         // set cell to be used already
         search->second.second = true;
         // add all neighbours to cluster
         fillCluster(mergedCells, cellMap, newIndex, nBins0, commonCorner,
-                    energyCut);
+                    threshold);
       }  // check if was used already
     }    // check if neighbour is there
   }      // go through neighbour indics

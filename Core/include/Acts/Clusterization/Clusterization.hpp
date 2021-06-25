@@ -18,10 +18,8 @@ namespace Concepts {
 template <typename T>
 struct CellConceptImpl {
   constexpr static bool value = std::is_convertible<
-      std::decay_t<decltype(std::declval<T>().depositedEnergy())>,
-      double>::value;
-  static_assert(value,
-                "depositedEnergy return type must be convertible to double");
+      std::decay_t<decltype(std::declval<T>().activation())>, double>::value;
+  static_assert(value, "activation return type must be convertible to double");
 };
 }  // namespace Concepts
 
@@ -41,13 +39,13 @@ namespace Acts {
 /// @param [in] nBins0 number of bins in direction 0
 /// @param [in] commonCorner flag indicating if also cells sharing a common
 /// corner should be merged into one cluster
-/// @param [in] energyCut possible energy cut to be applied
+/// @param [in] threshold possible activation threshold to be applied
 /// @return vector (the different clusters) of vector of digitization cells (the
 /// cells which belong to each cluster)
 template <typename cell_t>
 std::vector<std::vector<cell_t>> createClusters(
     std::unordered_map<size_t, std::pair<cell_t, bool>>& cellMap, size_t nBins0,
-    bool commonCorner = true, double energyCut = 0.);
+    bool commonCorner = true, double threshold = 0.);
 
 /// @brief fillCluster
 /// This function is a helper function internally used by Acts::createClusters.
@@ -66,12 +64,12 @@ std::vector<std::vector<cell_t>> createClusters(
 /// @param [in] nBins0 number of bins in direction 0
 /// @param [in] commonCorner flag indicating if also cells sharing a common
 /// corner should be merged into one cluster
-/// @param [in] energyCut possible energy cut to be applied
+/// @param [in] threshold possible activation threshold to be applied
 template <typename cell_t>
 void fillCluster(std::vector<std::vector<cell_t>>& mergedCells,
                  std::unordered_map<size_t, std::pair<cell_t, bool>>& cellMap,
                  size_t index, size_t nBins0, bool commonCorner = true,
-                 double energyCut = 0.);
+                 double activation = 0.);
 }  // namespace Acts
 
 #include "Acts/Clusterization/Clusterization.ipp"
