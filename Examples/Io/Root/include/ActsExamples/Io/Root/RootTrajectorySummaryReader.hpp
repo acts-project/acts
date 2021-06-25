@@ -32,7 +32,7 @@ class RootTrajectorySummaryReader : public IReader {
   struct Config {
     std::string outputTracks = "outputTracks";  ///< track collection to read
     std::string outputParticles =
-        "outputParticles";                  ///< track collection to read
+        "outputParticles";                  ///< particle collection to read
     std::string treeName = "tracksummary";  ///< name of the input tree
     std::string inputFile;                  ///< The name of the input file
     std::string inputDir;                   ///< The name of the input dir
