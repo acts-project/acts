@@ -8,7 +8,7 @@
 
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
 
-#include "Acts/Plugins/Digitization/Clusterization.hpp"
+#include "Acts/Clusterization/Clusterization.hpp"
 
 namespace ActsExamples {
 

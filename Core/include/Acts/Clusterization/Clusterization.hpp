@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "Acts/Plugins/Digitization/DigitizationCell.hpp"
-
 #include <unordered_map>
 #include <vector>
 
@@ -21,9 +19,9 @@ namespace Acts {
 /// This function recieves digitization cells and bundles the neighbouring to
 /// create clusters later and does cell merging. Furthermore an energy
 /// cut (excluding cells which fall below threshold) can be applied. The
-/// function is templated on the digitization cell type to allow users to use
-/// their own implementation of Acts::DigitizationCell.
-/// @tparam Cell the digitization cell
+/// function is templated on the cell type to allow users to use
+/// their own implementation
+/// @tparam Cell the digitizated cell
 /// @param [in] cellMap map of all cells per cell ID on module
 /// @param [in] nBins0 number of bins in direction 0
 /// @param [in] commonCorner flag indicating if also cells sharing a common
@@ -41,9 +39,8 @@ std::vector<std::vector<cell_t>> createClusters(
 /// It does connected component labelling using a hash map in order to find out
 /// which cells are neighbours. This function is called recursively by all
 /// neighbours of the current cell. The function is templated on the
-/// digitization cell type to allow users to use their own implementation
-/// inheriting from Acts::DigitizationCell.
-/// @tparam Cell the digitization cell
+/// cell type to allow users to use their own implementation
+/// @tparam Cell the digitizated cell
 /// @param [in,out] mergedCells the final vector of cells to which cells of one
 /// cluster should be added
 /// @param [in,out] cellMap the hashmap of all present cells + a flag indicating
@@ -62,4 +59,4 @@ void fillCluster(std::vector<std::vector<cell_t>>& mergedCells,
                  double energyCut = 0.);
 }  // namespace Acts
 
-#include "Acts/Plugins/Digitization/detail/Clusterization.ipp"
+#include "Acts/Clusterization/Clusterization.ipp"
