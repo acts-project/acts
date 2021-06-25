@@ -8,10 +8,25 @@
 
 #pragma once
 
+#include <type_traits>
 #include <unordered_map>
 #include <vector>
 
 #include <boost/config.hpp>
+
+namespace Concepts {
+template <typename T>
+struct CellConceptImpl {
+  constexpr static bool value = std::is_convertible<
+      std::decay_t<decltype(std::declval<T>().depositedEnergy())>,
+      double>::value;
+  static_assert(value,
+                "depositedEnergy return type must be convertible to double");
+};
+}  // namespace Concepts
+
+template <typename T>
+constexpr bool CellConcept = Concepts::CellConceptImpl<T>::value;
 
 namespace Acts {
 
