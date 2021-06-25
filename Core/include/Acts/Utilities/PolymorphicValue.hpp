@@ -76,6 +76,11 @@ struct DelegatingControlBlock : public ControlBlockBase<T> {
   std::unique_ptr<ControlBlockBase<U>> m_delegate;
 };
 
+/// @brief Control block which throws a runtime exception when the contained
+/// value is to be cloned
+///
+/// @tparam T The returnable type
+/// @tparam U The concrete type
 template <typename T, typename U>
 struct NonCopyableControlBlock : public ControlBlockBase<T> {
   static_assert(std::is_convertible_v<U*, T*>, "Types must be convertible");
