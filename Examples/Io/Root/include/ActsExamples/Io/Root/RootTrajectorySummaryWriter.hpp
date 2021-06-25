@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -23,8 +23,8 @@ namespace ActsExamples {
 /// @class RootTrajectorySummaryWriter
 ///
 /// Write out the information (including number of measurements, outliers, holes
-/// etc. and fitted track parameters) of the reconstructed trajectories into a
-/// TTree
+/// etc. , fitted track parameters and corresponding majority truth particle
+/// info) of the reconstructed trajectories into a TTree
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
 ///
@@ -42,17 +42,19 @@ class RootTrajectorySummaryWriter final
   struct Config {
     /// Input (fitted) trajectories collection
     std::string inputTrajectories;
+    /// Input particles collection.
+    std::string inputParticles;
     /// Input hit-particles map collection.
     std::string inputMeasurementParticlesMap;
-    /// output directory.
+    /// Output directory.
     std::string outputDir;
-    /// output filename.
+    /// Output filename.
     std::string outputFilename = "tracksummary.root";
-    /// name of the output tree.
+    /// Name of the output tree.
     std::string outputTreename = "tracksummary";
-    /// file access mode.
+    /// File access mode.
     std::string fileMode = "RECREATE";
-    /// common root file.
+    /// Common root file.
     TFile* rootFile = nullptr;
   };
 
@@ -104,35 +106,39 @@ class RootTrajectorySummaryWriter final
   std::vector<std::vector<double>>
       m_outlierLayer;  ///< The layer id of the outliers
 
+  // The majority truth particle info
   std::vector<unsigned int>
       m_nMajorityHits;  ///< The number of hits from majority particle
   std::vector<uint64_t>
-      m_majorityParticleId;  ///< The particle Id of the majority particle
+      m_majorityParticleId;      ///< The particle Id of the majority particle
+  std::vector<int> m_t_charge;   ///< Charge of majority particle
+  std::vector<float> m_t_time;   ///< Time of majority particle
+  std::vector<float> m_t_vx;     ///< Vertex x positions of majority particle
+  std::vector<float> m_t_vy;     ///< Vertex y positions of majority particle
+  std::vector<float> m_t_vz;     ///< Vertex z positions of majority particle
+  std::vector<float> m_t_px;     ///< Initial momenta px of majority particle
+  std::vector<float> m_t_py;     ///< Initial momenta py of majority particle
+  std::vector<float> m_t_pz;     ///< Initial momenta pz of majority particle
+  std::vector<float> m_t_theta;  ///< Initial momenta theta of majority particle
+  std::vector<float> m_t_phi;    ///< Initial momenta phi of majority particle
+  std::vector<float> m_t_pT;     ///< Initial momenta pT of majority particle
+  std::vector<float> m_t_eta;    ///< Initial momenta eta of majority particle
 
   std::vector<bool> m_hasFittedParams;  ///< If the track has fitted parameter
+  std::vector<float> m_eLOC0_fit;   ///< Fitted parameters eBoundLoc0 of track
+  std::vector<float> m_eLOC1_fit;   ///< Fitted parameters eBoundLoc1 of track
+  std::vector<float> m_ePHI_fit;    ///< Fitted parameters ePHI of track
+  std::vector<float> m_eTHETA_fit;  ///< Fitted parameters eTHETA of track
+  std::vector<float> m_eQOP_fit;    ///< Fitted parameters eQOP of track
+  std::vector<float> m_eT_fit;      ///< Fitted parameters eT of track
+  std::vector<float> m_err_eLOC0_fit;  ///< Fitted parameters eLOC err of track
   std::vector<float>
-      m_eLOC0_fit;  ///< Fitted parameters eBoundLoc0 of all tracks in event
+      m_err_eLOC1_fit;  ///< Fitted parameters eBoundLoc1 err of track
+  std::vector<float> m_err_ePHI_fit;  ///< Fitted parameters ePHI err of track
   std::vector<float>
-      m_eLOC1_fit;  ///< Fitted parameters eBoundLoc1 of all tracks in event
-  std::vector<float>
-      m_ePHI_fit;  ///< Fitted parameters ePHI of all tracks in event
-  std::vector<float>
-      m_eTHETA_fit;  ///< Fitted parameters eTHETA of all tracks in event
-  std::vector<float>
-      m_eQOP_fit;  ///< Fitted parameters eQOP of all tracks in event
-  std::vector<float> m_eT_fit;  ///< Fitted parameters eT of all tracks in event
-  std::vector<float>
-      m_err_eLOC0_fit;  ///< Fitted parameters eLOC err of all tracks in event
-  std::vector<float> m_err_eLOC1_fit;  ///< Fitted parameters eBoundLoc1 err of
-                                       ///< all tracks in event
-  std::vector<float>
-      m_err_ePHI_fit;  ///< Fitted parameters ePHI err of all tracks in event
-  std::vector<float> m_err_eTHETA_fit;  ///< Fitted parameters eTHETA err of all
-                                        ///< tracks in event
-  std::vector<float>
-      m_err_eQOP_fit;  ///< Fitted parameters eQOP err of all tracks in event
-  std::vector<float>
-      m_err_eT_fit;  ///< Fitted parameters eT err of all tracks in event
+      m_err_eTHETA_fit;               ///< Fitted parameters eTHETA err of track
+  std::vector<float> m_err_eQOP_fit;  ///< Fitted parameters eQOP err of track
+  std::vector<float> m_err_eT_fit;    ///< Fitted parameters eT err of track
 };
 
 }  // namespace ActsExamples
