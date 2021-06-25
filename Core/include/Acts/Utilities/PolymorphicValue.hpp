@@ -14,6 +14,8 @@
 namespace Acts {
 
 namespace detail {
+namespace PolymorphicValue {
+
 template <typename T>
 struct ControlBlockBase {
   virtual ~ControlBlockBase() = default;
@@ -81,6 +83,7 @@ struct NonCopyableControlBlock : public ControlBlockBase<T> {
   std::unique_ptr<U> m_value;
 };
 
+}  // namespace PolymorphicValue
 }  // namespace detail
 
 template <class T>
@@ -107,7 +110,8 @@ class PolymorphicValue {
             typename = std::enable_if_t<std::is_convertible_v<_U*, _T*> &&
                                         !IsPolymorphicValue<_U>::value>>
   explicit PolymorphicValue(U&& u)
-      : m_controlBlock{std::make_unique<detail::ControlBlock<T, U>>(
+      : m_controlBlock{std::make_unique<
+            detail::PolymorphicValue::ControlBlock<T, U>>(
             std::make_unique<U>(u))},
         m_pointer{m_controlBlock->pointer()} {}
 
@@ -119,7 +123,8 @@ class PolymorphicValue {
       m_controlBlock =
           std::make_unique<detail::ControlBlock<T, U>>(std::unique_ptr<U>(u));
     } else {
-      m_controlBlock = std::make_unique<detail::NonCopyableControlBlock<T, U>>(
+      m_controlBlock = std::make_unique<
+          detail::PolymorphicValue::NonCopyableControlBlock<T, U>>(
           std::unique_ptr<U>(u));
     }
     m_pointer = m_controlBlock->pointer();
@@ -130,7 +135,8 @@ class PolymorphicValue {
                                         !IsPolymorphicValue<_U>::value>,
             typename... Args>
   explicit PolymorphicValue(std::in_place_type_t<U>, Args&&... args)
-      : m_controlBlock{std::make_unique<detail::ControlBlock<T, U>>(
+      : m_controlBlock{std::make_unique<
+            detail::PolymorphicValue::ControlBlock<T, U>>(
             std::make_unique<U>(std::forward<Args>(args)...))},
         m_pointer{m_controlBlock->pointer()} {}
 
@@ -139,7 +145,8 @@ class PolymorphicValue {
                                         std::is_convertible_v<_U*, _T*>>>
   PolymorphicValue(const PolymorphicValue<U>& other) {
     auto cbTmp = std::move(m_controlBlock);
-    m_controlBlock = std::make_unique<detail::DelegatingControlBlock<T, U>>(
+    m_controlBlock = std::make_unique<
+        detail::PolymorphicValue::DelegatingControlBlock<T, U>>(
         other.m_controlBlock->clone());
     m_pointer = m_controlBlock->pointer();
   }
@@ -149,7 +156,8 @@ class PolymorphicValue {
                                         std::is_convertible_v<_U*, _T*>>>
   PolymorphicValue(PolymorphicValue<U>&& other) {
     auto cbTmp = std::move(m_controlBlock);
-    m_controlBlock = std::make_unique<detail::DelegatingControlBlock<T, U>>(
+    m_controlBlock = std::make_unique<
+        detail::PolymorphicValue::DelegatingControlBlock<T, U>>(
         std::move(other.m_controlBlock));
     m_pointer = m_controlBlock->pointer();
     other.m_pointer = nullptr;
@@ -163,7 +171,8 @@ class PolymorphicValue {
     auto cbTmp =
         std::move(m_controlBlock);  // extend lifetime until after operation
     m_controlBlock =
-        std::make_unique<detail::ControlBlock<T, U>>(std::make_unique<U>(u));
+        std::make_unique<detail::PolymorphicValue::ControlBlock<T, U>>(
+            std::make_unique<U>(u));
     m_pointer = m_controlBlock->pointer();
     return *this;
   }
@@ -173,8 +182,9 @@ class PolymorphicValue {
                                         !IsPolymorphicValue<_U>::value>>
   PolymorphicValue& operator=(U&& u) {
     auto cbTmp = std::move(m_controlBlock);
-    m_controlBlock = std::make_unique<detail::ControlBlock<T, U>>(
-        std::make_unique<U>(std::move(u)));
+    m_controlBlock =
+        std::make_unique<detail::PolymorphicValue::ControlBlock<T, U>>(
+            std::make_unique<U>(std::move(u)));
     m_pointer = m_controlBlock->pointer();
     return *this;
   }
@@ -184,7 +194,8 @@ class PolymorphicValue {
                                         std::is_convertible_v<_U*, _T*>>>
   PolymorphicValue& operator=(const PolymorphicValue<U>& other) {
     auto cbTmp = std::move(m_controlBlock);
-    m_controlBlock = std::make_unique<detail::DelegatingControlBlock<T, U>>(
+    m_controlBlock = std::make_unique<
+        detail::PolymorphicValue::DelegatingControlBlock<T, U>>(
         other.m_controlBlock->clone());
     m_pointer = m_controlBlock->pointer();
     return *this;
@@ -195,7 +206,8 @@ class PolymorphicValue {
                                         std::is_convertible_v<_U*, _T*>>>
   PolymorphicValue& operator=(PolymorphicValue<U>&& other) {
     auto cbTmp = std::move(m_controlBlock);
-    m_controlBlock = std::make_unique<detail::DelegatingControlBlock<T, U>>(
+    m_controlBlock = std::make_unique<
+        detail::PolymorphicValue::DelegatingControlBlock<T, U>>(
         std::move(other.m_controlBlock));
     m_pointer = m_controlBlock->pointer();
     other.m_pointer = nullptr;
@@ -248,7 +260,8 @@ class PolymorphicValue {
     auto cbTmp =
         std::move(m_controlBlock);  // extend lifetime until after operation
     m_controlBlock =
-        std::make_unique<detail::ControlBlock<T, U>>(std::unique_ptr<U>(u));
+        std::make_unique<detail::PolymorphicValue::ControlBlock<T, U>>(
+            std::unique_ptr<U>(u));
     m_pointer = m_controlBlock->pointer();
   }
 
@@ -271,7 +284,8 @@ class PolymorphicValue {
   const T* get() const { return m_pointer; }
 
  private:
-  std::unique_ptr<detail::ControlBlockBase<T>> m_controlBlock{nullptr};
+  std::unique_ptr<detail::PolymorphicValue::ControlBlockBase<T>> m_controlBlock{
+      nullptr};
   T* m_pointer{nullptr};
 };
 
