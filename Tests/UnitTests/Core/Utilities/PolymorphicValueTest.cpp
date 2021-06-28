@@ -10,6 +10,8 @@
 
 #include "Acts/Utilities/PolymorphicValue.hpp"
 
+#include <optional>
+
 namespace Acts {
 
 namespace Test {
