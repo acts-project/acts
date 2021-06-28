@@ -220,7 +220,7 @@ class BinningData {
     return (type == bData.type and option == bData.option and
             binvalue == bData.binvalue and min == bData.min and
             max == bData.max and step == bData.step and zdim == bData.zdim and
-            ((subBinningData == nullptr and bData.subBinningData == nullptr) ||
+            ((subBinningData == nullptr and bData.subBinningData == nullptr) or
              (subBinningData != nullptr and bData.subBinningData != nullptr and
               (*subBinningData == *bData.subBinningData))) and
             subBinningAdditive == bData.subBinningAdditive);
