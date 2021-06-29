@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,7 +11,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -287,6 +289,73 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceAlignment) {
   ActsMatrix<2, 3> expLoc3DToLocBound = ActsMatrix<2, 3>::Zero();
   expLoc3DToLocBound << 0, 1, 0, -1.0 / 3, 0, 0;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
+}
+
+BOOST_AUTO_TEST_CASE(DiscSurfaceBinningPosition) {
+  using namespace Acts::UnitLiterals;
+  Vector3 s{5_mm, 7_mm, 10_cm};
+  Transform3 trf;
+  trf = Translation3(s) * AngleAxis3{0.5, Vector3::UnitZ()};
+
+  double minR = 300;
+  double maxR = 330;
+
+  {
+    // Radial Bounds
+    auto bounds = std::make_shared<RadialBounds>(minR, maxR, M_PI / 8, 0.1);
+    auto disc = Acts::Surface::makeShared<Acts::DiscSurface>(trf, bounds);
+
+    Vector3 bp = disc->binningPosition(tgContext, binR);
+    double r = (bounds->rMax() + bounds->rMin()) / 2.0;
+    double phi = bounds->get(RadialBounds::eAveragePhi);
+    Vector3 exp = Vector3{r * std::cos(phi), r * std::sin(phi), 0};
+    exp = trf * exp;
+
+    BOOST_CHECK_EQUAL(bp, exp);
+    BOOST_CHECK_EQUAL(disc->binningPositionValue(tgContext, binR),
+                      VectorHelpers::perp(exp));
+
+    bp = disc->binningPosition(tgContext, binPhi);
+    BOOST_CHECK_EQUAL(bp, exp);
+    BOOST_CHECK_EQUAL(disc->binningPositionValue(tgContext, binPhi),
+                      VectorHelpers::phi(exp));
+
+    for (auto b : {binX, binY, binZ, binEta, binRPhi, binH, binMag}) {
+      BOOST_TEST_CONTEXT("binValue: " << b) {
+        BOOST_CHECK_EQUAL(disc->binningPosition(tgContext, b),
+                          disc->center(tgContext));
+      }
+    }
+  }
+
+  {
+    // Annulus Bounds
+    double minPhiRel = -0.3;
+    double maxPhiRel = 0.2;
+    Vector2 origin{5_mm, 5_mm};
+    auto bounds = std::make_shared<AnnulusBounds>(minR, maxR, minPhiRel,
+                                                  maxPhiRel, origin);
+
+    auto disc = Acts::Surface::makeShared<Acts::DiscSurface>(trf, bounds);
+
+    Vector3 bp = disc->binningPosition(tgContext, binR);
+    double r = (bounds->rMax() + bounds->rMin()) / 2.0;
+    double phi = bounds->get(AnnulusBounds::eAveragePhi);
+    Vector3 exp = Vector3{r * std::cos(phi), r * std::sin(phi), 0};
+    exp = trf * exp;
+
+    BOOST_CHECK_EQUAL(bp, exp);
+
+    bp = disc->binningPosition(tgContext, binPhi);
+    BOOST_CHECK_EQUAL(bp, exp);
+
+    for (auto b : {binX, binY, binZ, binEta, binRPhi, binH, binMag}) {
+      BOOST_TEST_CONTEXT("binValue: " << b) {
+        BOOST_CHECK_EQUAL(disc->binningPosition(tgContext, b),
+                          disc->center(tgContext));
+      }
+    }
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
