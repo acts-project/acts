@@ -9,8 +9,7 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/Digitization/Clusterization.hpp"
-#include "Acts/Plugins/Digitization/DigitizationCell.hpp"
+#include "Acts/Clusterization/Clusterization.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
@@ -26,6 +25,21 @@ namespace tt = boost::test_tools;
 namespace Acts {
 
 namespace Test {
+
+struct Cell {
+  Cell(size_t c0, size_t c1, float act)
+      : channel0(c0), channel1(c1), data(act) {}
+
+  void addCell(const Cell& c, bool analogue) {
+    if (analogue)
+      data += c.data;
+  }
+  double activation() const { return data; }
+
+  size_t channel0;
+  size_t channel1;
+  double data;
+};
 
 /// This test tests the clusterization of cells which belong to the same
 /// cluster for 8-cell/4-cell merging, digital/analogue readout and with a
@@ -55,130 +69,71 @@ BOOST_AUTO_TEST_CASE(create_Clusters1) {
     return (a + nBins0 * b);
   };
 
-  std::unordered_map<size_t, std::pair<Acts::DigitizationCell, bool>> testCells;
+  std::unordered_map<size_t, std::pair<Cell, bool>> testCells;
   // add cells covering all cases
-  testCells.insert(
-      {globalIndex(0, 0), {Acts::DigitizationCell(0, 0, 1), false}});
-  testCells.insert(
-      {globalIndex(0, 3), {Acts::DigitizationCell(0, 3, 1), false}});
-  testCells.insert(
-      {globalIndex(0, 4), {Acts::DigitizationCell(0, 4, 1), false}});
-  testCells.insert(
-      {globalIndex(0, 8), {Acts::DigitizationCell(0, 8, 1), false}});
-  testCells.insert(
-      {globalIndex(1, 1), {Acts::DigitizationCell(1, 1, 1), false}});
-  testCells.insert(
-      {globalIndex(1, 8), {Acts::DigitizationCell(1, 8, 1), false}});
-  testCells.insert(
-      {globalIndex(2, 5), {Acts::DigitizationCell(2, 5, 1), false}});
-  testCells.insert(
-      {globalIndex(2, 8), {Acts::DigitizationCell(2, 8, 1), false}});
-  testCells.insert(
-      {globalIndex(3, 1), {Acts::DigitizationCell(3, 1, 1), false}});
-  testCells.insert(
-      {globalIndex(3, 4), {Acts::DigitizationCell(3, 4, 1), false}});
-  testCells.insert(
-      {globalIndex(3, 6), {Acts::DigitizationCell(3, 6, 1), false}});
-  testCells.insert(
-      {globalIndex(4, 0), {Acts::DigitizationCell(4, 0, 1), false}});
-  testCells.insert(
-      {globalIndex(4, 6), {Acts::DigitizationCell(4, 6, 1), false}});
-  testCells.insert(
-      {globalIndex(5, 3), {Acts::DigitizationCell(5, 3, 1), false}});
-  testCells.insert(
-      {globalIndex(5, 5), {Acts::DigitizationCell(5, 5, 1), false}});
-  testCells.insert(
-      {globalIndex(5, 4), {Acts::DigitizationCell(5, 4, 1), false}});
-  testCells.insert(
-      {globalIndex(5, 5), {Acts::DigitizationCell(5, 5, 1), false}});
-  testCells.insert(
-      {globalIndex(7, 1), {Acts::DigitizationCell(7, 1, 1), false}});
-  testCells.insert(
-      {globalIndex(7, 2), {Acts::DigitizationCell(7, 2, 1), false}});
-  testCells.insert(
-      {globalIndex(7, 5), {Acts::DigitizationCell(7, 5, 1), false}});
-  testCells.insert(
-      {globalIndex(7, 6), {Acts::DigitizationCell(7, 6, 1), false}});
-  testCells.insert(
-      {globalIndex(8, 2), {Acts::DigitizationCell(8, 2, 1), false}});
-  testCells.insert(
-      {globalIndex(8, 7), {Acts::DigitizationCell(8, 7, 1), false}});
-  testCells.insert(
-      {globalIndex(9, 0), {Acts::DigitizationCell(9, 0, 1), false}});
-  testCells.insert(
-      {globalIndex(9, 1), {Acts::DigitizationCell(9, 1, 1), false}});
-  testCells.insert(
-      {globalIndex(9, 2), {Acts::DigitizationCell(9, 2, 1), false}});
-  testCells.insert(
-      {globalIndex(9, 4), {Acts::DigitizationCell(9, 4, 1), false}});
-  testCells.insert(
-      {globalIndex(9, 5), {Acts::DigitizationCell(9, 5, 1), false}});
-  testCells.insert(
-      {globalIndex(9, 6), {Acts::DigitizationCell(9, 6, 1), false}});
+  testCells.insert({globalIndex(0, 0), {Cell(0, 0, 1), false}});
+  testCells.insert({globalIndex(0, 3), {Cell(0, 3, 1), false}});
+  testCells.insert({globalIndex(0, 4), {Cell(0, 4, 1), false}});
+  testCells.insert({globalIndex(0, 8), {Cell(0, 8, 1), false}});
+  testCells.insert({globalIndex(1, 1), {Cell(1, 1, 1), false}});
+  testCells.insert({globalIndex(1, 8), {Cell(1, 8, 1), false}});
+  testCells.insert({globalIndex(2, 5), {Cell(2, 5, 1), false}});
+  testCells.insert({globalIndex(2, 8), {Cell(2, 8, 1), false}});
+  testCells.insert({globalIndex(3, 1), {Cell(3, 1, 1), false}});
+  testCells.insert({globalIndex(3, 4), {Cell(3, 4, 1), false}});
+  testCells.insert({globalIndex(3, 6), {Cell(3, 6, 1), false}});
+  testCells.insert({globalIndex(4, 0), {Cell(4, 0, 1), false}});
+  testCells.insert({globalIndex(4, 6), {Cell(4, 6, 1), false}});
+  testCells.insert({globalIndex(5, 3), {Cell(5, 3, 1), false}});
+  testCells.insert({globalIndex(5, 5), {Cell(5, 5, 1), false}});
+  testCells.insert({globalIndex(5, 4), {Cell(5, 4, 1), false}});
+  testCells.insert({globalIndex(5, 5), {Cell(5, 5, 1), false}});
+  testCells.insert({globalIndex(7, 1), {Cell(7, 1, 1), false}});
+  testCells.insert({globalIndex(7, 2), {Cell(7, 2, 1), false}});
+  testCells.insert({globalIndex(7, 5), {Cell(7, 5, 1), false}});
+  testCells.insert({globalIndex(7, 6), {Cell(7, 6, 1), false}});
+  testCells.insert({globalIndex(8, 2), {Cell(8, 2, 1), false}});
+  testCells.insert({globalIndex(8, 7), {Cell(8, 7, 1), false}});
+  testCells.insert({globalIndex(9, 0), {Cell(9, 0, 1), false}});
+  testCells.insert({globalIndex(9, 1), {Cell(9, 1, 1), false}});
+  testCells.insert({globalIndex(9, 2), {Cell(9, 2, 1), false}});
+  testCells.insert({globalIndex(9, 4), {Cell(9, 4, 1), false}});
+  testCells.insert({globalIndex(9, 5), {Cell(9, 5, 1), false}});
+  testCells.insert({globalIndex(9, 6), {Cell(9, 6, 1), false}});
 
   size_t nCellsWithoutDuplicates = testCells.size();
 
-  std::unordered_map<size_t, std::pair<Acts::DigitizationCell, bool>>
-      testCells1;
+  std::unordered_map<size_t, std::pair<Cell, bool>> testCells1;
   // add cells covering all cases
-  testCells1.insert(
-      {globalIndex(0, 0), {Acts::DigitizationCell(0, 0, 1), false}});
-  testCells1.insert(
-      {globalIndex(0, 3), {Acts::DigitizationCell(0, 3, 2), false}});
-  testCells1.insert(
-      {globalIndex(0, 4), {Acts::DigitizationCell(0, 4, 1), false}});
-  testCells1.insert(
-      {globalIndex(0, 8), {Acts::DigitizationCell(0, 8, 1), false}});
-  testCells1.insert(
-      {globalIndex(1, 1), {Acts::DigitizationCell(1, 1, 2), false}});
-  testCells1.insert(
-      {globalIndex(1, 8), {Acts::DigitizationCell(1, 8, 2), false}});
-  testCells1.insert(
-      {globalIndex(2, 5), {Acts::DigitizationCell(2, 5, 2), false}});
-  testCells1.insert(
-      {globalIndex(2, 8), {Acts::DigitizationCell(2, 8, 2), false}});
-  testCells1.insert(
-      {globalIndex(3, 1), {Acts::DigitizationCell(3, 1, 1), false}});
-  testCells1.insert(
-      {globalIndex(3, 4), {Acts::DigitizationCell(3, 4, 1), false}});
-  testCells1.insert(
-      {globalIndex(3, 6), {Acts::DigitizationCell(3, 6, 1), false}});
-  testCells1.insert(
-      {globalIndex(4, 0), {Acts::DigitizationCell(4, 0, 2), false}});
-  testCells1.insert(
-      {globalIndex(4, 6), {Acts::DigitizationCell(4, 6, 1), false}});
-  testCells1.insert(
-      {globalIndex(5, 3), {Acts::DigitizationCell(5, 3, 1), false}});
-  testCells1.insert(
-      {globalIndex(5, 5), {Acts::DigitizationCell(5, 5, 1), false}});
-  testCells1.insert(
-      {globalIndex(5, 4), {Acts::DigitizationCell(5, 4, 2), false}});
-  testCells1.insert(
-      {globalIndex(5, 5), {Acts::DigitizationCell(5, 5, 1), false}});
-  testCells1.insert(
-      {globalIndex(7, 1), {Acts::DigitizationCell(7, 1, 2), false}});
-  testCells1.insert(
-      {globalIndex(7, 2), {Acts::DigitizationCell(7, 2, 1), false}});
-  testCells1.insert(
-      {globalIndex(7, 5), {Acts::DigitizationCell(7, 5, 1), false}});
-  testCells1.insert(
-      {globalIndex(7, 6), {Acts::DigitizationCell(7, 6, 2), false}});
-  testCells1.insert(
-      {globalIndex(8, 2), {Acts::DigitizationCell(8, 2, 1), false}});
-  testCells1.insert(
-      {globalIndex(8, 7), {Acts::DigitizationCell(8, 7, 2), false}});
-  testCells1.insert(
-      {globalIndex(9, 0), {Acts::DigitizationCell(9, 0, 2), false}});
-  testCells1.insert(
-      {globalIndex(9, 1), {Acts::DigitizationCell(9, 1, 2), false}});
-  testCells1.insert(
-      {globalIndex(9, 2), {Acts::DigitizationCell(9, 2, 2), false}});
-  testCells1.insert(
-      {globalIndex(9, 4), {Acts::DigitizationCell(9, 4, 2), false}});
-  testCells1.insert(
-      {globalIndex(9, 5), {Acts::DigitizationCell(9, 5, 1), false}});
-  testCells1.insert(
-      {globalIndex(9, 6), {Acts::DigitizationCell(9, 6, 1), false}});
+  testCells1.insert({globalIndex(0, 0), {Cell(0, 0, 1), false}});
+  testCells1.insert({globalIndex(0, 3), {Cell(0, 3, 2), false}});
+  testCells1.insert({globalIndex(0, 4), {Cell(0, 4, 1), false}});
+  testCells1.insert({globalIndex(0, 8), {Cell(0, 8, 1), false}});
+  testCells1.insert({globalIndex(1, 1), {Cell(1, 1, 2), false}});
+  testCells1.insert({globalIndex(1, 8), {Cell(1, 8, 2), false}});
+  testCells1.insert({globalIndex(2, 5), {Cell(2, 5, 2), false}});
+  testCells1.insert({globalIndex(2, 8), {Cell(2, 8, 2), false}});
+  testCells1.insert({globalIndex(3, 1), {Cell(3, 1, 1), false}});
+  testCells1.insert({globalIndex(3, 4), {Cell(3, 4, 1), false}});
+  testCells1.insert({globalIndex(3, 6), {Cell(3, 6, 1), false}});
+  testCells1.insert({globalIndex(4, 0), {Cell(4, 0, 2), false}});
+  testCells1.insert({globalIndex(4, 6), {Cell(4, 6, 1), false}});
+  testCells1.insert({globalIndex(5, 3), {Cell(5, 3, 1), false}});
+  testCells1.insert({globalIndex(5, 5), {Cell(5, 5, 1), false}});
+  testCells1.insert({globalIndex(5, 4), {Cell(5, 4, 2), false}});
+  testCells1.insert({globalIndex(5, 5), {Cell(5, 5, 1), false}});
+  testCells1.insert({globalIndex(7, 1), {Cell(7, 1, 2), false}});
+  testCells1.insert({globalIndex(7, 2), {Cell(7, 2, 1), false}});
+  testCells1.insert({globalIndex(7, 5), {Cell(7, 5, 1), false}});
+  testCells1.insert({globalIndex(7, 6), {Cell(7, 6, 2), false}});
+  testCells1.insert({globalIndex(8, 2), {Cell(8, 2, 1), false}});
+  testCells1.insert({globalIndex(8, 7), {Cell(8, 7, 2), false}});
+  testCells1.insert({globalIndex(9, 0), {Cell(9, 0, 2), false}});
+  testCells1.insert({globalIndex(9, 1), {Cell(9, 1, 2), false}});
+  testCells1.insert({globalIndex(9, 2), {Cell(9, 2, 2), false}});
+  testCells1.insert({globalIndex(9, 4), {Cell(9, 4, 2), false}});
+  testCells1.insert({globalIndex(9, 5), {Cell(9, 5, 1), false}});
+  testCells1.insert({globalIndex(9, 6), {Cell(9, 6, 1), false}});
 
   // add duplicates
 
@@ -191,8 +146,7 @@ BOOST_AUTO_TEST_CASE(create_Clusters1) {
 
   // Common Corner, digital,no energy cut
   // createClusters
-  auto mergedCells1 =
-      Acts::createClusters<Acts::DigitizationCell>(testCells, nBins0, true, 0.);
+  auto mergedCells1 = Acts::createClusters<Cell>(testCells, nBins0, true, 0.);
   // check number of clusters
   BOOST_CHECK_EQUAL(mergedCells1.size(), nClusters);
 
@@ -215,8 +169,7 @@ BOOST_AUTO_TEST_CASE(create_Clusters1) {
 
   // Common Edge, digital,no energy cut
   // createClusters
-  auto mergedCells2 = Acts::createClusters<Acts::DigitizationCell>(
-      testCells2, nBins0, false, 0.);
+  auto mergedCells2 = Acts::createClusters<Cell>(testCells2, nBins0, false, 0.);
   // check number of clusters
   BOOST_CHECK_EQUAL(mergedCells2.size(), nClustersEdge);
 
@@ -240,8 +193,7 @@ BOOST_AUTO_TEST_CASE(create_Clusters1) {
 
   // Common Corner, analogue,no energy cut
   // createClusters
-  auto mergedCells3 = Acts::createClusters<Acts::DigitizationCell>(
-      testCells3, nBins0, true, 0.);
+  auto mergedCells3 = Acts::createClusters<Cell>(testCells3, nBins0, true, 0.);
   // check number of clusters
   BOOST_CHECK_EQUAL(mergedCells3.size(), nClusters);
 
@@ -264,8 +216,7 @@ BOOST_AUTO_TEST_CASE(create_Clusters1) {
 
   // Common Corner, analogue, energy cut
   // createClusters
-  auto mergedCells4 = Acts::createClusters<Acts::DigitizationCell>(
-      testCells4, nBins0, true, 1.5);
+  auto mergedCells4 = Acts::createClusters<Cell>(testCells4, nBins0, true, 1.5);
   // check number of clusters
 
   BOOST_CHECK_EQUAL(mergedCells4.size(), nClustersCut);
@@ -292,8 +243,7 @@ BOOST_AUTO_TEST_CASE(create_Clusters1) {
 /// cluster for 8-cell/4-cell merging, digital/analogue readout and with a
 /// possible energy cut applied and a bigger grid than in create_Clusters1
 BOOST_AUTO_TEST_CASE(create_Clusters2) {
-  std::unordered_map<size_t, std::pair<Acts::DigitizationCell, bool>>
-      testCells1;
+  std::unordered_map<size_t, std::pair<Cell, bool>> testCells1;
 
   size_t nCells = 99;
   size_t delta = 3;
@@ -312,9 +262,9 @@ BOOST_AUTO_TEST_CASE(create_Clusters2) {
   // -----
   for (size_t i = 0; i < nCells; i += delta) {
     for (size_t j = 0; j < nCells; j += delta) {
-      auto cellA = Acts::DigitizationCell(i, j, 1);
-      auto cellB = Acts::DigitizationCell(i, j + 1, 1);
-      auto cellC = Acts::DigitizationCell(i + 1, j + 1, 1);
+      auto cellA = Cell(i, j, 1);
+      auto cellB = Cell(i, j + 1, 1);
+      auto cellC = Cell(i + 1, j + 1, 1);
 
       auto insertCellA = testCells1.insert({globalIndex(i, j), {cellA, false}});
       if (!insertCellA.second) {
@@ -349,12 +299,10 @@ BOOST_AUTO_TEST_CASE(create_Clusters2) {
   // Now we should have the same number of cluster for common corner and
   // common edge case
   // common edge
-  auto mergedCells1 = Acts::createClusters<Acts::DigitizationCell>(
-      testCells1, nCells, true, 0.);
+  auto mergedCells1 = Acts::createClusters<Cell>(testCells1, nCells, true, 0.);
   BOOST_CHECK_EQUAL(mergedCells1.size(), nClustersNoTouch);
   // common corner
-  auto mergedCells2 = Acts::createClusters<Acts::DigitizationCell>(
-      testCells2, nCells, false, 0.);
+  auto mergedCells2 = Acts::createClusters<Cell>(testCells2, nCells, false, 0.);
   BOOST_CHECK_EQUAL(mergedCells2.size(), nClustersNoTouch);
 
   // now test merging - there is no merging at the moment
@@ -387,7 +335,7 @@ BOOST_AUTO_TEST_CASE(create_Clusters2) {
 
   for (size_t i = 2; i < nCells; i += delta2) {
     for (size_t j = 2; j < nCells; j += delta2) {
-      auto cell = Acts::DigitizationCell(i, j, 1);
+      auto cell = Cell(i, j, 1);
       auto insertCell = testCells3.insert({globalIndex(i, j), {cell, false}});
       if (!insertCell.second) {
         // check if there is already a cell at same position and merge in that
@@ -399,19 +347,17 @@ BOOST_AUTO_TEST_CASE(create_Clusters2) {
   auto testCells4 = testCells3;
 
   // common corner
-  auto mergedCells3 = Acts::createClusters<Acts::DigitizationCell>(
-      testCells3, nCells, true, 0.);
+  auto mergedCells3 = Acts::createClusters<Cell>(testCells3, nCells, true, 0.);
   BOOST_CHECK_EQUAL(mergedCells3.size(), nClusters_merged);
 
   // common edge
-  auto mergedCells4 = Acts::createClusters<Acts::DigitizationCell>(
-      testCells4, nCells, false, 0.);
+  auto mergedCells4 = Acts::createClusters<Cell>(testCells4, nCells, false, 0.);
   BOOST_CHECK_EQUAL(mergedCells4.size(), nClustersNoTouch + nCornerCells);
 
   // now we add some cells which lead to merging also for edge case
   for (size_t i = 2; i < nCells; i += delta2) {
     for (size_t j = 2; j < nCells; j += delta2) {
-      auto cellA = Acts::DigitizationCell(i, j - 1, 1);
+      auto cellA = Cell(i, j - 1, 1);
       auto insertCellA =
           testCells5.insert({globalIndex(i, j - 1), {cellA, false}});
       if (!insertCellA.second) {
@@ -419,7 +365,7 @@ BOOST_AUTO_TEST_CASE(create_Clusters2) {
         // case
         insertCellA.first->second.first.addCell(cellA, false);
       }
-      auto cellB = Acts::DigitizationCell(i + 1, j, 1);
+      auto cellB = Cell(i + 1, j, 1);
       auto insertCellB =
           testCells5.insert({globalIndex(i + 1, j), {cellB, false}});
       if (!insertCellB.second) {
@@ -432,21 +378,19 @@ BOOST_AUTO_TEST_CASE(create_Clusters2) {
   auto testCells6 = testCells5;
 
   // common corner
-  auto mergedCells5 = Acts::createClusters<Acts::DigitizationCell>(
-      testCells5, nCells, true, 0.);
+  auto mergedCells5 = Acts::createClusters<Cell>(testCells5, nCells, true, 0.);
   BOOST_CHECK_EQUAL(mergedCells5.size(), nClusters_merged);
 
   // common edge
-  auto mergedCells6 = Acts::createClusters<Acts::DigitizationCell>(
-      testCells6, nCells, false, 0.);
+  auto mergedCells6 = Acts::createClusters<Cell>(testCells6, nCells, false, 0.);
   BOOST_CHECK_EQUAL(mergedCells6.size(), nClusters_merged);
 
   // now adding the same cells again on two positions of clusters - digital
   // readout
   for (size_t i = 0; i < nCells; i += delta) {
     for (size_t j = 0; j < nCells; j += delta) {
-      auto cellA = Acts::DigitizationCell(i, j, 1);
-      auto cellB = Acts::DigitizationCell(i, j + 1, 1);
+      auto cellA = Cell(i, j, 1);
+      auto cellB = Cell(i, j + 1, 1);
 
       auto insertCellA = testCells7.insert({globalIndex(i, j), {cellA, false}});
       if (!insertCellA.second) {
@@ -482,8 +426,7 @@ BOOST_AUTO_TEST_CASE(create_Clusters2) {
       nClustersNoTouch * 3 + nClustersNoTouch * 2;
 
   // digital readout
-  auto mergedCells7 = Acts::createClusters<Acts::DigitizationCell>(
-      testCells7, nCells, true, 0.);
+  auto mergedCells7 = Acts::createClusters<Cell>(testCells7, nCells, true, 0.);
   BOOST_CHECK_EQUAL(mergedCells7.size(), nClustersNoTouch);
   float data7 = 0;
   for (auto& cells : mergedCells7) {
@@ -495,8 +438,7 @@ BOOST_AUTO_TEST_CASE(create_Clusters2) {
   CHECK_CLOSE_REL(data7, nCellsInClusters, 1e-5);
 
   // analougue readout
-  auto mergedCells8 = Acts::createClusters<Acts::DigitizationCell>(
-      testCells8, nCells, true, 0.);
+  auto mergedCells8 = Acts::createClusters<Cell>(testCells8, nCells, true, 0.);
   BOOST_CHECK_EQUAL(mergedCells8.size(), nClustersNoTouch);
   float data8 = 0;
   for (auto& cells : mergedCells8) {
@@ -508,8 +450,7 @@ BOOST_AUTO_TEST_CASE(create_Clusters2) {
   CHECK_CLOSE_REL(data8, nCellsInClustersDuplicated, 1e-5);
 
   // analougue readout & energy cut
-  auto mergedCells9 = Acts::createClusters<Acts::DigitizationCell>(
-      testCells9, nCells, true, 1.5);
+  auto mergedCells9 = Acts::createClusters<Cell>(testCells9, nCells, true, 1.5);
   BOOST_CHECK_EQUAL(mergedCells9.size(), nClustersNoTouch);
   float data9 = 0;
   for (auto& cells : mergedCells9) {
