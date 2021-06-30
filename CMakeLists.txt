@@ -208,7 +208,7 @@ if(ACTS_BUILD_EXAMPLES)
   # newer DD4hep version require TBB and search interally for TBB in
   # config-only mode. to avoid missmatches we explicitely search using
   # config-only mode first to be sure that we find the same version.
-  find_package(TBB ${_acts_tbb_version} CONFIG)
+  find_package(TBB ${_acts_tbb_version} REQUIRED CONFIG)
   if(NOT TBB_FOUND)
     # no version check possible when using the find module
     find_package(TBB MODULE REQUIRED)
