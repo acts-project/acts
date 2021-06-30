@@ -13,8 +13,9 @@
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 // clang-format on
 
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+
 #include <functional>
 
 namespace Acts {
