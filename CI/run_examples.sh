@@ -30,6 +30,7 @@ curl $G4_DATA_URL \
 #
 mkdir -p $G4_DATA_DIR
 tar xf G4.data.tar.xz --strip-components 1 -C $G4_DATA_DIR
+rm G4.data.tar.xz
 #
 export G4ENSDFSTATEDATA=$G4_DATA_DIR/G4ENSDFSTATE
 export G4LEVELGAMMADATA=$G4_DATA_DIR/G4LEVELGAMMA

@@ -81,6 +81,8 @@ class RootBFieldWriter {
     using namespace Acts;
     ACTS_LOCAL_LOGGER(std::move(p_logger))
 
+    Acts::MagneticFieldContext bFieldContext;
+
     // Check basic configuration
     if (cfg.treeName.empty()) {
       throw std::invalid_argument("Missing tree name");
@@ -109,13 +111,11 @@ class RootBFieldWriter {
     double Bz;
     outputTree->Branch("Bz", &Bz);
 
-    // Get the underlying mapper of the InterpolatedBFieldMap
-    auto mapper = cfg.bField->getMapper();
-
     // Access the minima and maxima of all axes
-    auto minima = mapper.getMin();
-    auto maxima = mapper.getMax();
-    auto nBins = mapper.getNBins();
+    auto grid = cfg.bField->getGrid();
+    auto minima = grid.minPosition();
+    auto maxima = grid.maxPosition();
+    auto nBins = cfg.bField->getNBins();
 
     if (cfg.gridType == GridType::xyz) {
       ACTS_INFO("Map will be written out in cartesian coordinates (x,y,z).");
@@ -206,7 +206,7 @@ class RootBFieldWriter {
             double raw_z = minZ + k * stepZ;
             Acts::Vector3 position(raw_x, raw_y, raw_z);
             if (cfg.bField->isInside(position)) {
-              auto bField = cfg.bField->getField(position);
+              auto bField = cfg.bField->getField(position).value();
 
               x = raw_x / Acts::UnitConstants::mm;
               y = raw_y / Acts::UnitConstants::mm;
@@ -285,6 +285,7 @@ class RootBFieldWriter {
       stepZ = fabs(minZ - maxZ) / nBinsZ;
       double stepPhi = (2 * M_PI) / nBinsPhi;
 
+      auto bCache = cfg.bField->makeCache(bFieldContext);
       for (size_t i = 0; i < nBinsPhi; i++) {
         double phi = minPhi + i * stepPhi;
         for (size_t k = 0; k < nBinsZ; k++) {
@@ -293,7 +294,7 @@ class RootBFieldWriter {
             double raw_r = minR + j * stepR;
             Acts::Vector3 position(raw_r * cos(phi), raw_r * sin(phi), raw_z);
             if (cfg.bField->isInside(position)) {
-              auto bField = cfg.bField->getField(position);
+              auto bField = cfg.bField->getField(position, bCache).value();
               z = raw_z / Acts::UnitConstants::mm;
               r = raw_r / Acts::UnitConstants::mm;
               Bz = bField.z() / Acts::UnitConstants::T;

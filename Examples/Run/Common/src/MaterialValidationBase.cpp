@@ -18,6 +18,7 @@
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagationOptions.hpp"
+#include "ActsExamples/Propagation/PropagatorInterface.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include <Acts/Geometry/TrackingGeometry.hpp>
 #include <Acts/Propagator/EigenStepper.hpp>
@@ -53,10 +54,12 @@ ActsExamples::ProcessCode setupPropagation(
   auto logLevel = ActsExamples::Options::readLogLevel(vm);
 
   // Get a Navigator
-  Acts::Navigator navigator(tGeometry);
-  navigator.resolvePassive = true;
-  navigator.resolveMaterial = true;
-  navigator.resolveSensitive = true;
+  Acts::Navigator::Config cfg;
+  cfg.trackingGeometry = tGeometry;
+  cfg.resolvePassive = true;
+  cfg.resolveMaterial = true;
+  cfg.resolveSensitive = true;
+  Acts::Navigator navigator(cfg);
 
   // Resolve the bfield map template and create the propgator
   using Stepper = Acts::EigenStepper<
@@ -68,13 +71,16 @@ ActsExamples::ProcessCode setupPropagation(
   Propagator propagator(std::move(stepper), std::move(navigator));
 
   // Read the propagation config and create the algorithms
-  auto pAlgConfig =
-      ActsExamples::Options::readPropagationConfig(vm, propagator);
+  auto pAlgConfig = ActsExamples::Options::readPropagationConfig(vm);
   pAlgConfig.randomNumberSvc = randomNumberSvc;
   pAlgConfig.recordMaterialInteractions = true;
-  auto propagationAlg =
-      std::make_shared<ActsExamples::PropagationAlgorithm<Propagator>>(
-          pAlgConfig, logLevel);
+
+  pAlgConfig.propagatorImpl =
+      std::make_shared<ActsExamples::ConcretePropagator<Propagator>>(
+          std::move(propagator));
+
+  auto propagationAlg = std::make_shared<ActsExamples::PropagationAlgorithm>(
+      pAlgConfig, logLevel);
 
   // Add the propagation algorithm
   sequencer.addAlgorithm({propagationAlg});
@@ -98,7 +104,7 @@ ActsExamples::ProcessCode setupStraightLinePropagation(
   auto logLevel = ActsExamples::Options::readLogLevel(vm);
 
   // Get a Navigator
-  Acts::Navigator navigator(tGeometry);
+  Acts::Navigator navigator({tGeometry});
 
   // Straight line stepper
   using SlStepper = Acts::StraightLineStepper;
@@ -108,12 +114,14 @@ ActsExamples::ProcessCode setupStraightLinePropagation(
   Propagator propagator(std::move(stepper), std::move(navigator));
 
   // Read the propagation config and create the algorithms
-  auto pAlgConfig =
-      ActsExamples::Options::readPropagationConfig(vm, propagator);
+  auto pAlgConfig = ActsExamples::Options::readPropagationConfig(vm);
+
   pAlgConfig.randomNumberSvc = randomNumberSvc;
-  auto propagationAlg =
-      std::make_shared<ActsExamples::PropagationAlgorithm<Propagator>>(
-          pAlgConfig, logLevel);
+  pAlgConfig.propagatorImpl =
+      std::make_shared<ActsExamples::ConcretePropagator<Propagator>>(
+          std::move(propagator));
+  auto propagationAlg = std::make_shared<ActsExamples::PropagationAlgorithm>(
+      pAlgConfig, logLevel);
 
   // Add the propagation algorithm
   sequencer.addAlgorithm({propagationAlg});

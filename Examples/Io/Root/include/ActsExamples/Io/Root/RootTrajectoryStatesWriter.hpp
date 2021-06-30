@@ -80,11 +80,11 @@ class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
  private:
   Config m_cfg;             ///< The config class
   std::mutex m_writeMutex;  ///< Mutex used to protect multi-threaded writes
-  TFile* m_outputFile{nullptr};   ///< The output file
-  TTree* m_outputTree{nullptr};   ///< The output tree
-  unsigned int m_eventNr{0};      ///< the event number
-  unsigned int m_multiTrajNr{0};  ///< the multi-trajectory number
-  unsigned int m_subTrajNr{0};  ///< the multi-trajectory sub-trajectory number
+  TFile* m_outputFile{nullptr};  ///< The output file
+  TTree* m_outputTree{nullptr};  ///< The output tree
+  uint32_t m_eventNr{0};         ///< the event number
+  uint32_t m_multiTrajNr{0};     ///< the multi-trajectory number
+  unsigned int m_subTrajNr{0};   ///< the multi-trajectory sub-trajectory number
 
   std::vector<float> m_t_x;  ///< Global truth hit position x
   std::vector<float> m_t_y;  ///< Global truth hit position y

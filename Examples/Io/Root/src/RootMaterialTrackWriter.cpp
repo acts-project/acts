@@ -51,6 +51,7 @@ ActsExamples::RootMaterialTrackWriter::RootMaterialTrackWriter(
     throw std::bad_alloc();
 
   // Set the branches
+  m_outputTree->Branch("event_id", &m_eventId);
   m_outputTree->Branch("v_x", &m_v_x);
   m_outputTree->Branch("v_y", &m_v_y);
   m_outputTree->Branch("v_z", &m_v_z);
@@ -114,6 +115,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
+  m_eventId = ctx.eventNumber;
   // Loop over the material tracks and write them out
   for (auto& mtrack : materialTracks) {
     // Clearing the vector first

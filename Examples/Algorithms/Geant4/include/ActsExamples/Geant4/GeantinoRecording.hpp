@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/PolymorphicValue.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Geant4/PrimaryGeneratorAction.hpp"
@@ -40,7 +41,7 @@ class GeantinoRecording final : public BareAlgorithm {
     /// Output collection for the generated material tracks.
     std::string outputMaterialTracks = "geant-material-tracks";
     /// Detector construction object.
-    std::unique_ptr<G4VUserDetectorConstruction> detectorConstruction;
+    Acts::PolymorphicValue<G4VUserDetectorConstruction> detectorConstruction;
     /// The number of tracks per event.
     size_t tracksPerEvent = 0;
     /// Configuration of the generator action

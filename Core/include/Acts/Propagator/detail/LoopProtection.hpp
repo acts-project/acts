@@ -29,8 +29,16 @@ struct LoopProtection {
     // Estimate the loop protection limit
     if (state.options.loopProtection) {
       // Get the field at the start position
-      Vector3 field =
+      auto fieldRes =
           stepper.getField(state.stepping, stepper.position(state.stepping));
+      if (!fieldRes.ok()) {
+        // there's no great way to return the error here, so resort to warning
+        // and not applying the loop protection in this case
+        ACTS_WARNING(
+            "Field lookup was unsuccessful, this is very likely an error");
+        return;
+      }
+      Vector3 field = *fieldRes;
       const double B = field.norm();
       if (B != 0.) {
         // Transverse component at start is taken for the loop protection

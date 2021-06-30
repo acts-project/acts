@@ -17,14 +17,13 @@
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFitterPerformanceWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrajectoryParametersWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrajectorySummaryWriter.hpp"
 #include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingOptions.hpp"
-#include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
@@ -166,22 +165,21 @@ int runRecTruthTracks(int argc, char* argv[],
       digiCfg.outputMeasurementSimHitsMap;
   trackStatesWriter.outputDir = outputDir;
   trackStatesWriter.outputFilename = "trackstates_fitter.root";
-  trackStatesWriter.outputTreename = "trackstates_fitter";
   sequencer.addWriter(std::make_shared<RootTrajectoryStatesWriter>(
       trackStatesWriter, logLevel));
 
-  // write track parameters from fitting
-  RootTrajectoryParametersWriter::Config trackParamsWriter;
-  trackParamsWriter.inputTrajectories = fitter.outputTrajectories;
-  trackParamsWriter.inputParticles = inputParticles;
-  trackParamsWriter.inputMeasurementParticlesMap =
+  // write track summary from CKF
+  RootTrajectorySummaryWriter::Config trackSummaryWriter;
+  trackSummaryWriter.inputTrajectories = fitter.outputTrajectories;
+  trackSummaryWriter.inputParticles = inputParticles;
+  trackSummaryWriter.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
-  trackParamsWriter.outputDir = outputDir;
-  trackParamsWriter.outputFilename = "trackparams_fitter.root";
-  trackParamsWriter.outputTreename = "trackparams_fitter";
-  sequencer.addWriter(std::make_shared<RootTrajectoryParametersWriter>(
-      trackParamsWriter, logLevel));
+  trackSummaryWriter.outputDir = outputDir;
+  trackSummaryWriter.outputFilename = "tracksummary_fitter.root";
+  sequencer.addWriter(std::make_shared<RootTrajectorySummaryWriter>(
+      trackSummaryWriter, logLevel));
 
+  // Write CKF performance data
   // write reconstruction performance data
   TrackFinderPerformanceWriter::Config perfFinder;
   perfFinder.inputProtoTracks = trackFinderCfg.outputProtoTracks;

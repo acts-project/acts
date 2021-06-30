@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   std::shared_ptr<const TrackingGeometry> tGeometry = tgb.trackingGeometry(gc);
 
   /// We need a Navigator, Stepper to build a Propagator
-  Navigator navigator(tGeometry);
+  Navigator navigator({tGeometry});
   StraightLineStepper stepper;
   VolumeMaterialMapper::StraightLinePropagator propagator(std::move(stepper),
                                                           std::move(navigator));
@@ -231,7 +231,9 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
 
   // Construct a simple propagation through the detector
   StraightLineStepper sls;
-  Navigator nav(std::move(detector));
+  Navigator::Config navCfg;
+  navCfg.trackingGeometry = std::move(detector);
+  Navigator nav(navCfg);
   Propagator<StraightLineStepper, Navigator> prop(sls, nav);
 
   // Set some start parameters

@@ -48,43 +48,16 @@ class ScalableBField final : public Acts::MagneticFieldProvider {
   /// @brief retrieve magnetic field value
   ///
   /// @param [in] position global position
-  /// @return magnetic field vector
-  ///
-  /// @note The @p position is ignored and only kept as argument to provide
-  ///       a consistent interface with other magnetic field services.
-  Acts::Vector3 getField(const Acts::Vector3& /*position*/) const override {
-    return m_BField;
-  }
-
-  /// @brief retrieve magnetic field value
-  ///
-  /// @param [in] position global position
   /// @param [in] cache Cache object (is ignored)
   /// @return magnetic field vector
   ///
   /// @note The @p position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
-  Acts::Vector3 getField(const Acts::Vector3& /*position*/,
-                         MagneticFieldProvider::Cache& gCache) const override {
-    Cache& cache = gCache.get<Cache>();
-    return m_BField * cache.scalor;
-  }
-
-  /// @brief retrieve magnetic field value & its gradient
-  ///
-  /// @param [in]  position   global position
-  /// @param [out] derivative gradient of magnetic field vector as (3x3)
-  /// matrix
-  /// @return magnetic field vector
-  ///
-  /// @note The @p position is ignored and only kept as argument to provide
-  ///       a consistent interface with other magnetic field services.
-  /// @note currently the derivative is not calculated
-  /// @todo return derivative
-  Acts::Vector3 getFieldGradient(
+  Acts::Result<Acts::Vector3> getField(
       const Acts::Vector3& /*position*/,
-      Acts::ActsMatrix<3, 3>& /*derivative*/) const override {
-    return m_BField;
+      MagneticFieldProvider::Cache& gCache) const override {
+    Cache& cache = gCache.get<Cache>();
+    return Acts::Result<Acts::Vector3>::success(m_BField * cache.scalor);
   }
 
   /// @brief retrieve magnetic field value & its gradient
@@ -99,11 +72,11 @@ class ScalableBField final : public Acts::MagneticFieldProvider {
   ///       a consistent interface with other magnetic field services.
   /// @note currently the derivative is not calculated
   /// @todo return derivative
-  Acts::Vector3 getFieldGradient(
+  Acts::Result<Acts::Vector3> getFieldGradient(
       const Acts::Vector3& /*position*/, Acts::ActsMatrix<3, 3>& /*derivative*/,
       MagneticFieldProvider::Cache& gCache) const override {
     Cache& cache = gCache.get<Cache>();
-    return m_BField * cache.scalor;
+    return Acts::Result<Acts::Vector3>::success(m_BField * cache.scalor);
   }
 
   Acts::MagneticFieldProvider::Cache makeCache(

@@ -192,7 +192,7 @@ class EigenStepper {
   /// @param [in,out] state is the propagation state associated with the track
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
-  Vector3 getField(State& state, const Vector3& pos) const {
+  Result<Vector3> getField(State& state, const Vector3& pos) const {
     // get the field from the cell
     return m_bField->getField(pos, state.fieldCache);
   }
@@ -237,9 +237,10 @@ class EigenStepper {
   /// @param surface [in] The surface provided
   /// @param bcheck [in] The boundary check for this status update
   Intersection3D::Status updateSurfaceStatus(
-      State& state, const Surface& surface, const BoundaryCheck& bcheck) const {
-    return detail::updateSingleSurfaceStatus<EigenStepper>(*this, state,
-                                                           surface, bcheck);
+      State& state, const Surface& surface, const BoundaryCheck& bcheck,
+      LoggerWrapper logger = getDummyLogger()) const {
+    return detail::updateSingleSurfaceStatus<EigenStepper>(
+        *this, state, surface, bcheck, logger);
   }
 
   /// Update step size

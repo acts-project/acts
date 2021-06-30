@@ -48,14 +48,14 @@ CylindricalTrackingGeometry cGeometry(tgContext);
 auto tGeometry = cGeometry();
 
 // Get the navigator and provide the TrackingGeometry
-Navigator navigator(tGeometry);
+Navigator navigator({tGeometry});
 
 using BFieldType = ConstantBField;
 using EigenStepperType = EigenStepper<>;
 using EigenPropagatorType = Propagator<EigenStepperType, Navigator>;
 using Covariance = BoundSymMatrix;
 
-auto bField = std::make_shared<BFieldType>(0, 0, 2_T);
+auto bField = std::make_shared<BFieldType>(Vector3{0, 0, 2_T});
 EigenStepperType estepper(bField);
 EigenPropagatorType epropagator(std::move(estepper), std::move(navigator));
 
@@ -272,8 +272,10 @@ BOOST_DATA_TEST_CASE(
   const auto& status = epropagator.propagate(start, options).value();
   // this test assumes state.options.loopFraction = 0.5
   // maximum momentum allowed
-  double pmax = options.pathLimit *
-                bField->getField(start.position(tgContext)).norm() / M_PI;
+  auto bCache = bField->makeCache(mfContext);
+  double pmax =
+      options.pathLimit *
+      bField->getField(start.position(tgContext), bCache).value().norm() / M_PI;
   if (p < pmax) {
     BOOST_CHECK_LT(status.pathLength, options.pathLimit);
   } else {
