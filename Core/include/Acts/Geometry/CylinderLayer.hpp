@@ -71,10 +71,10 @@ class CylinderLayer : public CylinderSurface, public Layer {
   /// Private constructor for CylinderLayer, called by create(args*) factory
   ///
   /// @param transform is the 3D transform that places the layer in 3D space
-  /// @param cbounds are the cylindrical bounds of the layer
+  /// @param cBounds The cylindrical bounds of the layer
   /// @param surfaceArray is the Binned Array that holds the sensitive surfaces
   /// @param thickness is the layer thickness (along the normal)
-  /// @param ad is the approach descriptor for approaching the layer
+  /// @param ades are the approach descriptors for approaching the layer
   /// @param laytyp is the layer type
   /// @todo change ApproachDescriptor to unique_ptr
   ///

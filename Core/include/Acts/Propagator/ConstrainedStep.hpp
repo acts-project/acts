@@ -45,6 +45,7 @@ struct ConstrainedStep {
   ///
   /// @param value is the new value to be updated
   /// @param type is the constraint type
+  /// @param releaseStep Allow step size to increase again
   void update(const Scalar& value, Type type, bool releaseStep = false) {
     if (releaseStep) {
       release(type);
@@ -67,7 +68,7 @@ struct ConstrainedStep {
   }
 
   /// constructor from double
-  /// @paramn value is the user given initial value
+  /// @param value is the user given initial value
   ConstrainedStep(Scalar value) : direction(value > 0. ? forward : backward) {
     values[accuracy] *= direction;
     values[actor] *= direction;

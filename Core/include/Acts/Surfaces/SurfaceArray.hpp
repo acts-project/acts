@@ -358,33 +358,38 @@ class SurfaceArray {
     /// @brief Lookup, always returns @c element
     /// @param position is ignored
     /// @return reference to vector containing only @c element
-    SurfaceVector& lookup(const Vector3& /*position*/) override {
+    SurfaceVector& lookup(const Vector3& position) override {
+      (void)position;
       return m_element;
     }
 
     /// @brief Lookup, always returns @c element
     /// @param position is ignored
     /// @return reference to vector containing only @c element
-    const SurfaceVector& lookup(const Vector3& /*position*/) const override {
+    const SurfaceVector& lookup(const Vector3& position) const override {
+      (void)position;
       return m_element;
     }
 
     /// @brief Lookup, always returns @c element
     /// @param bin is ignored
     /// @return reference to vector containing only @c element
-    SurfaceVector& lookup(size_t /*bin*/) override { return m_element; }
+    SurfaceVector& lookup([[maybe_unused]] size_t bin) override {
+      return m_element;
+    }
 
     /// @brief Lookup, always returns @c element
     /// @param bin is ignored
     /// @return reference to vector containing only @c element
-    const SurfaceVector& lookup(size_t /*bin*/) const override {
+    const SurfaceVector& lookup([[maybe_unused]] size_t bin) const override {
       return m_element;
     }
 
     /// @brief Lookup, always returns @c element
     /// @param position is ignored
     /// @return reference to vector containing only @c element
-    const SurfaceVector& neighbors(const Vector3& /*position*/) const override {
+    const SurfaceVector& neighbors(const Vector3& position) const override {
+      (void)position;
       return m_element;
     }
 
@@ -395,7 +400,7 @@ class SurfaceArray {
     /// @brief Gets the bin center, but always returns (0, 0, 0)
     /// @param bin is ignored
     /// @return (0, 0, 0)
-    Vector3 getBinCenter(size_t /*bin*/) const override {
+    Vector3 getBinCenter([[maybe_unused]] size_t bin) const override {
       return Vector3(0, 0, 0);
     }
 
@@ -422,7 +427,7 @@ class SurfaceArray {
     /// @brief Returns if the bin is valid (it is)
     /// @param bin is ignored
     /// @return always true
-    bool isValidBin(size_t /*bin*/) const override { return true; }
+    bool isValidBin([[maybe_unused]] size_t bin) const override { return true; }
 
    private:
     SurfaceVector m_element;
@@ -439,15 +444,7 @@ class SurfaceArray {
                std::vector<std::shared_ptr<const Surface>> surfaces,
                const Transform3& transform = Transform3::Identity());
 
-  /// @brief Constructor which takes concrete type SurfaceGridLookup
-  /// @param gridLookup The grid storage. Is static casted to ISurfaceGridLookup
-  /// @param surfaces The input vector of surfaces. This is only for
-  /// bookkeeping, so we can ask
-  /// @param transform Optional additional transform for this SurfaceArray
-  /// @note the transform parameter is ONLY used for the serialization.
-  ///       Apart from that, the SGL handles the transforms.
-  /// @brief Convenience constructor for single element mode. Uses the @c
-  /// SingleElementLookup
+  /// @brief Constructor with a single surface
   /// @param srf The one and only surface
   SurfaceArray(std::shared_ptr<const Surface> srf);
 
@@ -480,7 +477,6 @@ class SurfaceArray {
 
   /// @brief Get all surfaces in bin at @p pos and its neighbors
   /// @param position The position to lookup as nominal
-  /// @param size How many neighbors we want in each direction. (default: 1)
   /// @return Merged @c SurfaceVector of neighbors and nominal
   /// @note The @c SurfaceVector will be combined. For technical reasons, the
   ///       different bin content vectors have to be copied, so the resulting

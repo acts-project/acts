@@ -67,7 +67,7 @@ class IterativeVertexFinder {
   using InputTrack_t = typename vfitter_t::InputTrack_t;
   using IPEstimator = ImpactPointEstimator<InputTrack_t, Propagator_t>;
 
-  /// @struct Config Configuration struct
+  /// Configuration struct
   struct Config {
     /// @brief Config constructor
     ///
@@ -107,7 +107,7 @@ class IterativeVertexFinder {
     double cutOffTrackWeight = 0.01;
   };
 
-  /// @struct State State struct
+  /// State struct
   struct State {
     State(const MagneticFieldProvider& field,
           const Acts::MagneticFieldContext& magContext)
@@ -263,8 +263,6 @@ class IterativeVertexFinder {
   /// @brief Counts all tracks that are significant for a vertex
   ///
   /// @param vtx The vertex
-  /// @param weightThreshold Threshold to count all tracks with weights >
-  /// weightThreshold
   ///
   /// @return Number of significant tracks
   int countSignificantTracks(const Vertex<InputTrack_t>& vtx) const;

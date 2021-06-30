@@ -31,7 +31,7 @@ class GainMatrixUpdater {
   /// @param[in] logger Where to write logging information to
   template <typename source_link_t, size_t kMeasurementSizeMax>
   Result<void> operator()(
-      const GeometryContext& /*gctx*/,
+      [[maybe_unused]] const GeometryContext& gctx,
       detail_lt::TrackStateProxy<source_link_t, kMeasurementSizeMax, false>&
           trackState,
       const NavigationDirection& direction = forward,

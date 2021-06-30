@@ -36,7 +36,7 @@ class PlaneSurface : public Surface {
  protected:
   /// Copy Constructor
   ///
-  /// @param psf is the source surface for the copy
+  /// @param other is the source surface for the copy
   PlaneSurface(const PlaneSurface& other);
 
   /// Copy constructor - with shift
@@ -137,6 +137,7 @@ class PlaneSurface : public Surface {
 
   /// Method that calculates the correction due to incident angle
   ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param direction global 3D momentum direction (ignored for PlaneSurface)

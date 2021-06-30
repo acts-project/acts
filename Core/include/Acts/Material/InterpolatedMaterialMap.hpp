@@ -252,7 +252,7 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   /// @brief Create interpolated map
   ///
   /// @param [in] mapper Material map
-  /// @param [in] BinUtility
+  /// @param [in] bu @c BinUtility for build from
   InterpolatedMaterialMap(Mapper_t&& mapper, BinUtility bu)
       : m_mapper(std::move(mapper)), m_binUtility(bu) {}
 
@@ -297,8 +297,9 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   ///
   /// @note Currently the derivative is not calculated
   /// @todo return derivative
-  Material getMaterialGradient(const Vector3& position,
-                               ActsMatrix<5, 5>& /*derivative*/) const {
+  Material getMaterialGradient(
+      const Vector3& position,
+      [[maybe_unused]] ActsMatrix<5, 5>& derivative) const {
     return m_mapper.getMaterial(position);
   }
 
@@ -313,8 +314,8 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   /// @note Cache is not used currently
   /// @todo return derivative
   Material getMaterialGradient(const Vector3& position,
-                               ActsMatrix<5, 5>& /*derivative*/,
-                               Cache& /*cache*/) const {
+                               [[maybe_unused]] ActsMatrix<5, 5>& derivative,
+                               [[maybe_unused]] Cache& cache) const {
     return m_mapper.getMaterial(position);
   }
 

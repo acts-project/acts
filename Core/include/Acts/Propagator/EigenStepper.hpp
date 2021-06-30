@@ -63,7 +63,7 @@ class EigenStepper {
     /// @tparam charge_t Type of the bound parameter charge
     ///
     /// @param [in] gctx is the context object for the geometry
-    /// @param [in] mctx is the context object for the magnetic field
+    /// @param [in] fieldCacheIn is the cache object for the magnetic field
     /// @param [in] par The track parameters at start
     /// @param [in] ndir The navigation direciton w.r.t momentum
     /// @param [in] ssize is the maximum step size
@@ -233,9 +233,10 @@ class EigenStepper {
   /// It checks the status to the reference surface & updates
   /// the step size accordingly
   ///
-  /// @param state [in,out] The stepping state (thread-local cache)
-  /// @param surface [in] The surface provided
-  /// @param bcheck [in] The boundary check for this status update
+  /// @param [in,out] state The stepping state (thread-local cache)
+  /// @param [in] surface The surface provided
+  /// @param [in] bcheck The boundary check for this status update
+  /// @param [in] logger A @c LoggerWrapper instance
   Intersection3D::Status updateSurfaceStatus(
       State& state, const Surface& surface, const BoundaryCheck& bcheck,
       LoggerWrapper logger = getDummyLogger()) const {
@@ -285,8 +286,6 @@ class EigenStepper {
   }
 
   /// Overstep limit
-  ///
-  /// @param state [in] The stepping state (thread-local cache)
   double overstepLimit(const State& /*state*/) const {
     // A dynamic overstep limit could sit here
     return -m_overstepLimit;
@@ -328,7 +327,8 @@ class EigenStepper {
   /// Method to update a stepper state to the some parameters
   ///
   /// @param [in,out] state State object that will be updated
-  /// @param [in] pars Parameters that will be written into @p state
+  /// @param [in] parameters Parameters that will be written into @p state
+  /// @param [in] covariance The covariance that will be written into @p state
   void update(State& state, const FreeVector& parameters,
               const Covariance& covariance) const;
 
@@ -338,6 +338,7 @@ class EigenStepper {
   /// @param [in] uposition the updated position
   /// @param [in] udirection the updated direction
   /// @param [in] up the updated momentum value
+  /// @param [in] time the updated time value
   void update(State& state, const Vector3& uposition, const Vector3& udirection,
               double up, double time) const;
 

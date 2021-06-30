@@ -32,7 +32,7 @@ class GainMatrixSmoother {
   /// @param[in] entryIndex The index of state to start the smoothing
   /// @param[in] logger Where to write logging information to
   template <typename source_link_t>
-  Result<void> operator()(const GeometryContext& /* gctx */,
+  Result<void> operator()([[maybe_unused]] const GeometryContext& gctx,
                           MultiTrajectory<source_link_t>& trajectory,
                           size_t entryIndex,
                           LoggerWrapper logger = getDummyLogger()) const {

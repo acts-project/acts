@@ -72,10 +72,8 @@ class BoundaryCheck {
   /// Check if the point is inside a box aligned with the local axes.
   ///
   /// @param point   Test point
-  /// @param loc0Min Lower bound along first axis
-  /// @param loc0Max Upper bound along first axis
-  /// @param loc1Min Lower bound along second axis
-  /// @param loc1Max Upper bound along second axis
+  /// @param lowerLeft Minimal vertex of the box
+  /// @param upperRight Maximal vertex of the box
   ///
   /// The check takes into account whether tolerances or covariances are defined
   /// for the boundary check.
@@ -99,10 +97,8 @@ class BoundaryCheck {
   /// Calculate the signed, weighted, closest distance to an aligned box.
   ///
   /// @param point Test point
-  /// @param loc0Min Minimal value along the first local axis
-  /// @param loc0Max Maximal value along the first local axis
-  /// @param loc1Min Minimal value along the first local axis
-  /// @param loc1Max Maximal value along the first local axis
+  /// @param lowerLeft Minimal vertex of the box
+  /// @param upperRight Maximal vertex of the box
   /// @return Negative value if inside, positive if outside
   ///
   /// If a covariance is defined, the distance is the corresponding Mahalanobis

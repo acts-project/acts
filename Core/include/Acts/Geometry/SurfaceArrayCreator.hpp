@@ -50,8 +50,8 @@ using AxisScalar = Vector3::Scalar;
 /// @todo write more documentation on how this is done
 class SurfaceArrayCreator {
  public:
-  friend Acts::Test::SurfaceArrayCreatorFixture;
-  friend Acts::SurfaceArray;
+  friend class Acts::Test::SurfaceArrayCreatorFixture;
+  friend class Acts::SurfaceArray;
 
   struct ProtoAxis {
     BinningType bType;
@@ -215,8 +215,7 @@ class SurfaceArrayCreator {
   /// @param [in] bins2 is the number of bins in the orthogonal direction to @p
   /// bValue
   /// @param [in] bValue Direction of the aligned surfaces
-  /// @param [in] bTypePhi the binning type in phi direction
-  /// (equidistant/aribtrary)
+  /// @param [in] protoLayerOpt Optional @c ProtoLayer instance
   /// @param [in] transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
@@ -335,6 +334,7 @@ class SurfaceArrayCreator {
   /// (currently possible: binPhi, binR, binZ)
   /// @param protoLayer Instance of @c ProtoLayer holding generic layer info
   /// @param transform is the (optional) additional transform applied
+  /// @param nBins Number of bins to use, 0 means determine automatically
   /// @return Instance of @c ProtoAxis containing determined properties
   /// @note This only creates the @c ProtoAxis, this needs to be turned
   ///       into an actual @c Axis object to be used

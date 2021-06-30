@@ -254,6 +254,7 @@ class AdaptiveMultiVertexFitter {
   /// in order to later faster estimate compatibilities of track
   /// with different vertices
   ///
+  /// @param state The state to operate on
   /// @param vtx The vertex object
   /// @param vertexingOptions Vertexing options
   Result<void> prepareVertexForFit(

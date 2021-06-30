@@ -74,7 +74,7 @@ class LineSurface : public Surface {
 
   /// Assignment operator
   ///
-  /// @param slsf is the source surface dor copying
+  /// @param other is the source surface dor copying
   LineSurface& operator=(const LineSurface& other);
 
   /// Normal vector return
