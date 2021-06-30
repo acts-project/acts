@@ -29,6 +29,7 @@ class Surface;
 /// @todo write more documentation on how this is done
 class ProtoLayerHelper {
  public:
+/// typedef
   using SortingConfig = std::pair<BinningValue, double>;
 
   struct Config {};

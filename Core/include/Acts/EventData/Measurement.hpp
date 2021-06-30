@@ -54,6 +54,7 @@ class Measurement {
   using Subspace = detail::FixedSizeSubspace<kFullSize, kSize>;
 
  public:
+/// typedef
   using Scalar = ActsScalar;
   /// Vector type containing for measured parameter values.
   using ParametersVector = ActsVector<kSize>;
@@ -61,7 +62,9 @@ class Measurement {
   using CovarianceMatrix = ActsSymMatrix<kSize>;
   /// Vector type containing all parameters in the same space.
   using FullParametersVector = ActsVector<kFullSize>;
+/// typedef
   using ProjectionMatrix = ActsMatrix<kSize, kFullSize>;
+/// typedef
   using ExpansionMatrix = ActsMatrix<kFullSize, kSize>;
 
   /// Construct from source link, subset indices, and measured data.

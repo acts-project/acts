@@ -28,6 +28,7 @@ namespace Acts {
 ///
 class GeometryIdentifier {
  public:
+/// typedef
   using Value = uint64_t;
 
   /// Construct from an already encoded value.

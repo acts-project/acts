@@ -36,8 +36,11 @@ class FullBilloirVertexFitter {
                 "Linearizer does not fulfill linearizer concept.");
 
  public:
+/// typedef
   using InputTrack_t = input_track_t;
+/// typedef
   using Propagator_t = typename linearizer_t::Propagator_t;
+/// typedef
   using Linearizer_t = linearizer_t;
 
   struct State {

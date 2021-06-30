@@ -25,8 +25,11 @@ namespace ActsFatras {
 /// Also stores some simulation-specific properties.
 class Particle {
  public:
+/// typedef
   using Scalar = Acts::ActsScalar;
+/// typedef
   using Vector3 = Acts::ActsVector<3>;
+/// typedef
   using Vector4 = Acts::ActsVector<4>;
 
   /// Construct a default particle with invalid identity.

@@ -23,6 +23,7 @@ namespace Acts {
 /// conform to.
 class IVisualization3D {
  public:
+/// typedef
   using FaceType = std::vector<size_t>;
 
   /// Draw a vertex at a given location and a color.

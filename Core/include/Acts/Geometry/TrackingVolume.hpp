@@ -39,8 +39,10 @@ struct NavigationOptions;
 using TrackingVolumePtr = std::shared_ptr<const TrackingVolume>;
 using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
 
+/// typedef
 using TrackingVolumeBoundaryPtr =
     std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>;
+/// typedef
 using TrackingVolumeBoundaries = std::vector<TrackingVolumeBoundaryPtr>;
 
 // possible contained
@@ -51,6 +53,7 @@ using LayerArray = BinnedArray<LayerPtr>;
 using LayerVector = std::vector<LayerPtr>;
 
 // Intersection with Layer
+/// typedef
 using LayerIntersection = ObjectIntersection<Layer, Surface>;
 
 /// BoundarySurface of a volume

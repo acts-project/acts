@@ -71,6 +71,7 @@ struct MaterialInteractor {
     /// This one is only filled when recordInteractions is switched on
     std::vector<MaterialInteraction> materialInteractions;
   };
+/// typedef
   using result_type = Result;
 
   /// @brief Interaction with detector material for the ActionList

@@ -27,6 +27,7 @@ namespace Acts {
 template <typename G>
 struct MaterialMapper {
  public:
+/// typedef
   using Grid_t = G;
   static constexpr size_t DIM_POS = Grid_t::DIM;
 

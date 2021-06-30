@@ -21,6 +21,7 @@
 
 namespace Acts {
 
+/// typedef
 using Range = std::pair<double, double>;
 
 // @brief Extent in space

@@ -113,8 +113,10 @@ class FiniteStateMachine {
   using StateVariant = std::variant<Terminated, States...>;
 
  protected:
+/// typedef
   using fsm_base = FiniteStateMachine<Derived, States...>;
 
+/// typedef
   using event_return = std::optional<StateVariant>;
 
  public:

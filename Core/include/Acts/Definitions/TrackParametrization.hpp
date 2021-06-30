@@ -114,18 +114,27 @@ static_assert(eFreeDir1 == eFreeDir0 + 1u, "Direction must be continous");
 static_assert(eFreeDir2 == eFreeDir0 + 2u, "Direction must be continous");
 
 // Shorthand vector/matrix types related to bound track parameters.
+/// typedef
 using BoundVector = ActsVector<eBoundSize>;
+/// typedef
 using BoundMatrix = ActsMatrix<eBoundSize, eBoundSize>;
+/// typedef
 using BoundSymMatrix = ActsSymMatrix<eBoundSize>;
 // Mapping from bound track parameters.
+/// typedef
 using BoundToFreeMatrix = ActsMatrix<eFreeSize, eBoundSize>;
 
 // Shorthand vector/matrix types related to free track parameters.
+/// typedef
 using FreeVector = ActsVector<eFreeSize>;
+/// typedef
 using FreeMatrix = ActsMatrix<eFreeSize, eFreeSize>;
+/// typedef
 using FreeSymMatrix = ActsSymMatrix<eFreeSize>;
 // Mapping from free track parameters.
+/// typedef
 using FreeToBoundMatrix = ActsMatrix<eBoundSize, eFreeSize>;
+/// typedef
 using FreeToPathMatrix = ActsMatrix<1, eFreeSize>;
 
 }  // namespace Acts

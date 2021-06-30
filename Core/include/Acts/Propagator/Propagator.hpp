@@ -109,7 +109,9 @@ struct PropagatorPlainOptions {
 template <typename action_list_t = ActionList<>,
           typename aborter_list_t = AbortList<>>
 struct PropagatorOptions : public PropagatorPlainOptions {
+/// typedef
   using action_list_type = action_list_t;
+/// typedef
   using aborter_list_type = aborter_list_t;
 
   /// Delete default contructor

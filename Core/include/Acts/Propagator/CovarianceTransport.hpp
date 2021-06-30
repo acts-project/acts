@@ -19,8 +19,10 @@
 
 namespace Acts {
 
+/// typedef
 using VariantCovariance = std::variant<BoundSymMatrix, FreeSymMatrix>;
 
+/// typedef
 using VariantTransportJacobian =
     std::variant<BoundMatrix, BoundToFreeMatrix, FreeToBoundMatrix, FreeMatrix>;
 

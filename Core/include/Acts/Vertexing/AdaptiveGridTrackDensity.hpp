@@ -34,6 +34,7 @@ class AdaptiveGridTrackDensity {
   static_assert(trkGridSize % 2);
 
  public:
+/// typedef
   using TrackGridVector = Eigen::Matrix<float, trkGridSize, 1>;
 
   /// The configuration struct

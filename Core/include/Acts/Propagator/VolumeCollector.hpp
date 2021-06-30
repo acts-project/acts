@@ -73,6 +73,7 @@ struct VolumeCollector {
     std::vector<VolumeHit> collected;
   };
 
+/// typedef
   using result_type = this_result;
 
   /// Collector action for the ActionList of the Propagator

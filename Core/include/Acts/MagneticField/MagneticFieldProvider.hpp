@@ -21,6 +21,7 @@ namespace Acts {
 /// Base class for all magnetic field providers
 class MagneticFieldProvider {
  public:
+/// typedef
   using Cache = detail::SmallObjectCache;
 
   /// @brief Make an opaque cache for the magnetic field

@@ -78,6 +78,7 @@ struct MaterialVolume {
 ///
 class SurfaceMaterialMapper {
  public:
+/// typedef
   using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 
   /// @struct Config

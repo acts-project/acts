@@ -26,6 +26,7 @@ namespace ActsFatras {
 /// interaction itself.
 class PhotonConversion {
  public:
+/// typedef
   using Scalar = ActsFatras::Particle::Scalar;
 
   /// Scaling factor of children energy

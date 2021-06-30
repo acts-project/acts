@@ -25,6 +25,7 @@ namespace Acts {
 template <typename external_spacepoint_t>
 class NeighborhoodIterator {
  public:
+/// typedef
   using sp_it_t = typename std::vector<std::unique_ptr<
       const InternalSpacePoint<external_spacepoint_t>>>::const_iterator;
 

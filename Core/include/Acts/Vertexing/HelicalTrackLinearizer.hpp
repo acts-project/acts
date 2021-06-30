@@ -44,6 +44,7 @@ template <typename propagator_t,
           typename propagator_options_t = PropagatorOptions<>>
 class HelicalTrackLinearizer {
  public:
+/// typedef
   using Propagator_t = propagator_t;
 
   /// State struct

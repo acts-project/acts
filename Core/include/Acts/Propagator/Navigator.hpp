@@ -116,18 +116,27 @@ struct NavigationOptions {
 ///
 class Navigator {
  public:
+/// typedef
   using Surfaces = std::vector<const Surface*>;
+/// typedef
   using SurfaceIter = std::vector<const Surface*>::iterator;
 
+/// typedef
   using NavigationSurfaces = std::vector<SurfaceIntersection>;
+/// typedef
   using NavigationSurfaceIter = NavigationSurfaces::iterator;
 
+/// typedef
   using NavigationLayers = std::vector<LayerIntersection>;
+/// typedef
   using NavigationLayerIter = NavigationLayers::iterator;
 
+/// typedef
   using NavigationBoundaries = std::vector<BoundaryIntersection>;
+/// typedef
   using NavigationBoundaryIter = NavigationBoundaries::iterator;
 
+/// typedef
   using ExternalSurfaces = std::multimap<uint64_t, GeometryIdentifier>;
 
   /// The navigation stage

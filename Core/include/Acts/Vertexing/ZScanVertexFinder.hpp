@@ -37,6 +37,7 @@ class ZScanVertexFinder {
   using Propagator_t = typename vfitter_t::Propagator_t;
 
  public:
+/// typedef
   using InputTrack_t = typename vfitter_t::InputTrack_t;
 
   /// Configuration struct

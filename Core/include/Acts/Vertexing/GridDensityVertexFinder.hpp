@@ -42,7 +42,9 @@ class GridDensityVertexFinder {
   using GridDensity = GaussianGridTrackDensity<mainGridSize, trkGridSize>;
 
  public:
+/// typedef
   using MainGridVector = typename GridDensity::MainGridVector;
+/// typedef
   using TrackGridVector = typename GridDensity::TrackGridVector;
 
   /// @brief The Config struct

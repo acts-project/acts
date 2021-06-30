@@ -44,6 +44,7 @@ struct MaterialCollector {
     double materialInL0 = 0.;
   };
 
+/// typedef
   using result_type = this_result;
 
   /// Collector action for the ActionList of the Propagator

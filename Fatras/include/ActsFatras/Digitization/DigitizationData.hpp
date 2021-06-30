@@ -51,8 +51,11 @@ struct Channel {
 /// @tparam kSize Number of cluster coordinates
 template <typename signal_t, size_t kSize>
 struct Cluster {
+/// typedef
   using Scalar = Acts::ActsScalar;
+/// typedef
   using ParametersVector = Acts::ActsVector<kSize>;
+/// typedef
   using CovarianceMatrix = Acts::ActsSymMatrix<kSize>;
 
   /// Measured parameters.

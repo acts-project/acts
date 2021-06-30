@@ -28,8 +28,11 @@ namespace Acts {
 template <class charge_t>
 class SingleFreeTrackParameters {
  public:
+/// typedef
   using Scalar = ActsScalar;
+/// typedef
   using ParametersVector = FreeVector;
+/// typedef
   using CovarianceMatrix = FreeSymMatrix;
 
   /// Construct from a parameters vector and and particle charge.

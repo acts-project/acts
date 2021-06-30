@@ -39,6 +39,7 @@ struct AbortList : public detail::Extendable<aborters_t...> {
 
  public:
   // This uses the type collector
+/// typedef
   using result_type = typename decltype(hana::unpack(
       detail::type_collector_t<detail::action_type_extractor, aborters_t...>,
       hana::template_<AbortList>))::type;

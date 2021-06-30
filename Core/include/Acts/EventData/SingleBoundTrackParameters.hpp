@@ -35,8 +35,11 @@ namespace Acts {
 template <class charge_t>
 class SingleBoundTrackParameters {
  public:
+/// typedef
   using Scalar = ActsScalar;
+/// typedef
   using ParametersVector = BoundVector;
+/// typedef
   using CovarianceMatrix = BoundSymMatrix;
 
   /// Construct from a parameters vector on the surface and particle charge.

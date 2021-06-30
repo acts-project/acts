@@ -33,6 +33,7 @@ namespace ActsFatras {
 /// interaction. Either the initial particle survives (soft) or it gets
 /// destroyed (hard) by this process.
 struct NuclearInteraction {
+/// typedef
   using Scalar = Particle::Scalar;
   /// The storage of the parameterisation
   detail::MultiParticleNuclearInteractionParametrisation

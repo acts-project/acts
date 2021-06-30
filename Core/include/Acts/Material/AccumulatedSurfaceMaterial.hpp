@@ -30,7 +30,9 @@ class ISurfaceMaterial;
 /// a new SurfaceMaterial object as a unique_ptr after finalisation
 class AccumulatedSurfaceMaterial {
  public:
+/// typedef
   using AccumulatedVector = std::vector<AccumulatedMaterialSlab>;
+/// typedef
   using AccumulatedMatrix = std::vector<AccumulatedVector>;
 
   /// Default Constructor - for homogeneous material

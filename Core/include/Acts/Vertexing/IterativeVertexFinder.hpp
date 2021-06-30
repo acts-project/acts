@@ -64,7 +64,9 @@ class IterativeVertexFinder {
   using Linearizer_t = typename vfitter_t::Linearizer_t;
 
  public:
+/// typedef
   using InputTrack_t = typename vfitter_t::InputTrack_t;
+/// typedef
   using IPEstimator = ImpactPointEstimator<InputTrack_t, Propagator_t>;
 
   /// Configuration struct

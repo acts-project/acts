@@ -34,11 +34,16 @@ namespace Acts {
 /// used for simple material mapping, navigation validation
 class StraightLineStepper {
  public:
+/// typedef
   using Jacobian = BoundMatrix;
+/// typedef
   using Covariance = BoundSymMatrix;
+/// typedef
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+/// typedef
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
+/// typedef
   using BField = NullBField;
 
   /// State for track parameter propagation

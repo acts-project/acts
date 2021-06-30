@@ -33,10 +33,15 @@ enum AlignmentIndices : unsigned int {
 };
 
 // Shorthand vector/matrix types related to alignment parameters.
+/// typedef
 using AlignmentVector = ActsVector<eAlignmentSize>;
+/// typedef
 using AlignmentMatrix = ActsMatrix<eAlignmentSize, eAlignmentSize>;
+/// typedef
 using AlignmentToPositionMatrix = ActsMatrix<3, eAlignmentSize>;
+/// typedef
 using AlignmentToBoundMatrix = ActsMatrix<eBoundSize, eAlignmentSize>;
+/// typedef
 using AlignmentToPathMatrix = ActsMatrix<1, eAlignmentSize>;
 
 }  // namespace Acts

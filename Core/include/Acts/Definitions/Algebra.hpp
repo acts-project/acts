@@ -51,16 +51,21 @@ using ActsScalar = double;
 #endif
 
 template <unsigned int kSize>
+/// typedef
 using ActsVector = Eigen::Matrix<ActsScalar, kSize, 1>;
 
 template <unsigned int kRows, unsigned int kCols>
+/// typedef
 using ActsMatrix = Eigen::Matrix<ActsScalar, kRows, kCols>;
 
 template <unsigned int kSize>
+/// typedef
 using ActsSymMatrix = Eigen::Matrix<ActsScalar, kSize, kSize>;
 
+/// typedef
 using ActsDynamicVector = Eigen::Matrix<ActsScalar, Eigen::Dynamic, 1>;
 
+/// typedef
 using ActsDynamicMatrix =
     Eigen::Matrix<ActsScalar, Eigen::Dynamic, Eigen::Dynamic>;
 
@@ -75,30 +80,43 @@ using ActsDynamicMatrix =
 /// @{
 
 // coordinate vectors
+/// typedef
 using Vector2 = ActsVector<2>;
+/// typedef
 using Vector3 = ActsVector<3>;
+/// typedef
 using Vector4 = ActsVector<4>;
 
 // symmetric matrices e.g. for coordinate covariance matrices
+/// typedef
 using SymMatrix2 = ActsSymMatrix<2>;
+/// typedef
 using SymMatrix3 = ActsSymMatrix<3>;
+/// typedef
 using SymMatrix4 = ActsSymMatrix<4>;
 
 // pure translation transformations
+/// typedef
 using Translation2 = Eigen::Translation<ActsScalar, 2>;
+/// typedef
 using Translation3 = Eigen::Translation<ActsScalar, 3>;
 
 // linear (rotation) matrices
+/// typedef
 using RotationMatrix2 = ActsMatrix<2, 2>;
+/// typedef
 using RotationMatrix3 = ActsMatrix<3, 3>;
 
 // pure rotation defined by a rotation angle around a rotation axis
+/// typedef
 using AngleAxis3 = Eigen::AngleAxis<ActsScalar>;
 
 // combined affine transformations. types are chosen for better data alignment:
 // - 2d affine compact stored as 2x3 matrix
 // - 3d affine stored as 4x4 matrix
+/// typedef
 using Transform2 = Eigen::Transform<ActsScalar, 2, Eigen::AffineCompact>;
+/// typedef
 using Transform3 = Eigen::Transform<ActsScalar, 3, Eigen::Affine>;
 
 /// @}
