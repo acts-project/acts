@@ -53,8 +53,9 @@ using LayerVector = std::vector<LayerPtr>;
 // Intersection with Layer
 using LayerIntersection = ObjectIntersection<Layer, Surface>;
 
-// Full intersection with surface
+/// BoundarySurface of a volume
 using BoundarySurface = BoundarySurfaceT<TrackingVolume>;
+/// Intersection with a @c BoundarySurface
 using BoundaryIntersection = ObjectIntersection<BoundarySurface, Surface>;
 
 /// @class TrackingVolume
