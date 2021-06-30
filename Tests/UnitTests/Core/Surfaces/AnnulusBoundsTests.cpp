@@ -9,7 +9,7 @@
 // clang-format off
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
-#include <boost/test/output_test_stream.hpp>
+#include <boost/test/tools/output_test_stream.hpp>
 // clang-format on
 
 #include <limits>
