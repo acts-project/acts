@@ -44,8 +44,8 @@ BOOST_AUTO_TEST_CASE(BinUtility_equidistant_binning) {
 
   // check equality operator
   BinUtility xUtil_eq_copy(10, 0., 10., open, binX);
-  BOOST_CHECK(xUtil_eq_copy == xUtil_eq);
-  BOOST_CHECK(not(yUtil_eq == xUtil_eq));
+  BOOST_CHECK_EQUAL(xUtil_eq_copy, xUtil_eq);
+  BOOST_CHECK_NE(yUtil_eq, xUtil_eq);
 
   // bin triples and clusters
   auto xTriple = xUtil_eq.binTriple(xyzPosition);

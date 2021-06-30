@@ -251,32 +251,35 @@ struct DigitizationConfigurator {
           dOutputConfig.geometricDigiConfig.segmentation = outputSegmentation;
         }
 
-        // Check for a representing volume configuration, insert if not present
-        Acts::GeometryIdentifier volGeoId =
-            Acts::GeometryIdentifier().setVolume(geoId.volume());
-        auto volRep = volumeLayerComponents.find(volGeoId);
-        if (compactify and volRep != volumeLayerComponents.end()) {
-          // return if the volume representation already covers this one
-          if (dOutputConfig == volRep->second) {
-            return;
-          }
-        } else if (compactify) {
-          volumeLayerComponents[volGeoId] = dOutputConfig;
-          outputDigiComponents->push_back({volGeoId, dOutputConfig});
-        }
+        // Compactify the output map where possible
+        if (compactify) {
+          // Check for a representing volume configuration, insert if not
+          // present
+          Acts::GeometryIdentifier volGeoId =
+              Acts::GeometryIdentifier().setVolume(geoId.volume());
 
-        // Check for a representing layer configuration, insert if not present
-        Acts::GeometryIdentifier volLayGeoId =
-            Acts::GeometryIdentifier(volGeoId).setLayer(geoId.layer());
-        auto volLayRep = volumeLayerComponents.find(volLayGeoId);
-        if (compactify and volLayRep != volumeLayerComponents.end()) {
-          // return if the layer representation already covers this one
-          if (dOutputConfig == volLayRep->second) {
+          auto volRep = volumeLayerComponents.find(volGeoId);
+          if (volRep != volumeLayerComponents.end() and
+              dOutputConfig == volRep->second) {
+            // return if the volume representation already covers this one
             return;
+          } else {
+            volumeLayerComponents[volGeoId] = dOutputConfig;
+            outputDigiComponents->push_back({volGeoId, dOutputConfig});
           }
-        } else if (compactify) {
-          volumeLayerComponents[volLayGeoId] = dOutputConfig;
-          outputDigiComponents->push_back({volLayGeoId, dOutputConfig});
+
+          // Check for a representing layer configuration, insert if not present
+          Acts::GeometryIdentifier volLayGeoId =
+              Acts::GeometryIdentifier(volGeoId).setLayer(geoId.layer());
+          auto volLayRep = volumeLayerComponents.find(volLayGeoId);
+
+          if (volLayRep != volumeLayerComponents.end() and
+              dOutputConfig == volLayRep->second) {
+            return;
+          } else {
+            volumeLayerComponents[volLayGeoId] = dOutputConfig;
+            outputDigiComponents->push_back({volLayGeoId, dOutputConfig});
+          }
         }
 
         // Insert into the output list
