@@ -57,8 +57,10 @@ class RootMaterialWriter {
     /// Steering to handle volume data
     bool processVolumes = true;
 
-    /// The name of the output tree
-    std::string folderNameBase = "Material";
+    /// The name of the output surface tree
+    std::string folderSurfaceNameBase = "SurfaceMaterial";
+    /// The name of the output volume tree
+    std::string folderVolumeNameBase = "VolumeMaterial";
     /// The volume identification string
     std::string voltag = "_vol";
     /// The boundary identification string
