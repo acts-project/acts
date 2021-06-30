@@ -347,8 +347,6 @@ class EigenStepper {
   /// or direction of the state
   ///
   /// @param [in,out] state State of the stepper
-  ///
-  /// @return the full transport jacobian
   void transportCovarianceToCurvilinear(State& state) const;
 
   /// Method for on-demand transport of the covariance

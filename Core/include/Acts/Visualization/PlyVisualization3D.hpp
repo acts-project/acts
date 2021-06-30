@@ -65,6 +65,8 @@ class PlyVisualization3D : public IVisualization3D {
   std::vector<std::pair<std::pair<size_t, size_t>, ColorRGB>> m_edges;
 };
 
+#ifndef DOXYGEN
 #include "detail/PlyVisualization3D.ipp"
+#endif
 
 }  // namespace Acts

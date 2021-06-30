@@ -72,8 +72,6 @@ class PlaneLayer : virtual public PlaneSurface, public Layer {
   /// @param thickness is the thickness of the layer (normal direction to plane)
   /// @param ades is the approach descriptor for describing the approach surface
   /// @param laytyp is the layer type
-  ///
-  /// @return shared pointer to a PlaneLayer
   PlaneLayer(const Transform3& transform,
              std::shared_ptr<const PlanarBounds>& pbounds,
              std::unique_ptr<SurfaceArray> surfaceArray = nullptr,

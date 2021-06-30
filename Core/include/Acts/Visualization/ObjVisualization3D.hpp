@@ -89,6 +89,8 @@ class ObjVisualization3D : public IVisualization3D {
   std::map<size_t, ColorRGB> m_faceColors;
 };
 
+#ifndef DOXYGEN
 #include "detail/ObjVisualization3D.ipp"
+#endif
 
 }  // namespace Acts

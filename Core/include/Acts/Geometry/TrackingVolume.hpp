@@ -506,6 +506,8 @@ inline bool TrackingVolume::hasBoundingVolumeHierarchy() const {
   return m_bvhTop != nullptr;
 }
 
+#ifndef DOXYGEN
 #include "Acts/Geometry/detail/TrackingVolume.ipp"
+#endif
 
 }  // namespace Acts

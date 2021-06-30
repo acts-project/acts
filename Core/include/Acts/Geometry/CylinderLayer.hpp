@@ -77,8 +77,6 @@ class CylinderLayer : public CylinderSurface, public Layer {
   /// @param ades are the approach descriptors for approaching the layer
   /// @param laytyp is the layer type
   /// @todo change ApproachDescriptor to unique_ptr
-  ///
-  /// @return The return object is a shared poiter to the layer.
   CylinderLayer(const Transform3& transform,
                 const std::shared_ptr<const CylinderBounds>& cBounds,
                 std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
@@ -90,8 +88,6 @@ class CylinderLayer : public CylinderSurface, public Layer {
   ///
   /// @param cla is the source cylinder layer for the copy
   /// @param shift is the additional transform applied after cloning
-  ///
-  /// @return The return object is a shared pointer to the layer.
   CylinderLayer(const CylinderLayer& cla, const Transform3& shift);
 };
 

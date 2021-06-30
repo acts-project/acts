@@ -20,16 +20,16 @@ array in ``entries`` that contains the values.
      "entries": [
        {
          "_comment": "global default entry w/o identifier",
-         "value": ...
+         "value": "..."
        },
        {
          "volume": 1,
          "layer": 2,
-         "value": ...
+         "value": "..."
        },
        {
          "volume": 3,
-         "value": ...
+         "value": "..."
        }
      ]
    }
@@ -43,12 +43,12 @@ zero.
 .. code-block:: json
 
    {
-     "volume": <integer>,
-     "boundary": <integer>,
-     "layer": <integer>,
-     "approach": <interger>,
-     "sensitive": <integer>,
-     "value": ...
+     "volume": "<integer>",
+     "boundary": "<integer>",
+     "layer": "<integer>",
+     "approach": "<interger>",
+     "sensitive": "<integer>",
+     "value": "..."
    }
 
 The representation of the value is not specified and depends on the specific

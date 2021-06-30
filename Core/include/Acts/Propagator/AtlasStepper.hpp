@@ -709,8 +709,6 @@ class AtlasStepper {
   /// or direction of the state
   ///
   /// @param [in,out] state State of the stepper
-  ///
-  /// @return the full transport jacobian
   void transportCovarianceToCurvilinear(State& state) const {
     double P[60];
     for (unsigned int i = 0; i < 60; ++i) {
