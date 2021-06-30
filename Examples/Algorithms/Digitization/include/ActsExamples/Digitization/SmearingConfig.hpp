@@ -17,10 +17,19 @@
 namespace ActsExamples {
 
 struct ParameterSmearingConfig {
-  // Which parameter does this apply to.
+  /// Which parameter does this apply to.
   Acts::BoundIndices index = Acts::eBoundSize;
-  // The smearing function for this parameter.
+  /// The smearing function for this parameter.
   ActsFatras::SingleParameterSmearFunction<RandomEngine> smearFunction;
+
+  /// Check if the smearing configuration is the same
+  /// at least the index is checked
+  /// @param other is the one to be checked against
+  ///
+  /// @return boolean to indicate equality
+  bool operator==(const ParameterSmearingConfig& other) const {
+    return (index == other.index);
+  }
 };
 
 // The configured indices must be unique, i.e. each one can only appear once

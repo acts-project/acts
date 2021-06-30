@@ -44,13 +44,25 @@ struct DigitizationConfigurator {
   /// Simplified input components for digitization
   Acts::GeometryHierarchyMap<DigiComponentsConfig> inputDigiComponents;
 
+  /// Final collection of output components
   using CollectedOutputComponents =
       std::vector<std::pair<Acts::GeometryIdentifier, DigiComponentsConfig>>;
+
+  /// This tries to compactify the output map
+  bool compactify = false;
+
+  /// High level reference configurations for compactification
+  std::map<Acts::GeometryIdentifier, DigiComponentsConfig>
+      volumeLayerComponents;
 
   /// Full output components for digitization
   std::shared_ptr<CollectedOutputComponents> outputDigiComponents = nullptr;
 
   /// The visitor call for the geometry
+  ///
+  /// @param surface is the surfaces that is visited
+  ///
+  /// it adds an appropriate entry into the digitisation configuration
   void operator()(const Acts::Surface* surface) {
     if (surface->associatedDetectorElement() != nullptr) {
       Acts::GeometryIdentifier geoId = surface->geometryId();
@@ -90,8 +102,8 @@ struct DigitizationConfigurator {
                     boundValues[Acts::RectangleBounds::eMinX];
                 Acts::ActsScalar maxX =
                     boundValues[Acts::RectangleBounds::eMaxX];
-                unsigned int nBins =
-                    (maxX - minX) / inputSegmentation.binningData()[0].step;
+                unsigned int nBins = std::round(
+                    (maxX - minX) / inputSegmentation.binningData()[0].step);
                 outputSegmentation +=
                     Acts::BinUtility(nBins, minX, maxX, Acts::open, Acts::binX);
               }
@@ -104,8 +116,8 @@ struct DigitizationConfigurator {
                 Acts::ActsScalar maxY =
                     boundValues[Acts::RectangleBounds::eMaxY];
                 unsigned int nBins =
-                    (maxY - minY) /
-                    inputSegmentation.binningData()[accessBin].step;
+                    std::round((maxY - minY) /
+                               inputSegmentation.binningData()[accessBin].step);
                 outputSegmentation +=
                     Acts::BinUtility(nBins, minY, maxY, Acts::open, Acts::binY);
               }
@@ -117,8 +129,8 @@ struct DigitizationConfigurator {
                 Acts::ActsScalar maxX = std::max(
                     boundValues[Acts::TrapezoidBounds::eHalfLengthXnegY],
                     boundValues[Acts::TrapezoidBounds::eHalfLengthXposY]);
-                unsigned int nBins =
-                    2 * maxX / inputSegmentation.binningData()[0].step;
+                unsigned int nBins = std::round(
+                    2 * maxX / inputSegmentation.binningData()[0].step);
                 outputSegmentation += Acts::BinUtility(nBins, -maxX, maxX,
                                                        Acts::open, Acts::binX);
               }
@@ -129,8 +141,8 @@ struct DigitizationConfigurator {
                 Acts::ActsScalar maxY =
                     boundValues[Acts::TrapezoidBounds::eHalfLengthY];
                 unsigned int nBins =
-                    (2 * maxY) /
-                    inputSegmentation.binningData()[accessBin].step;
+                    std::round((2 * maxY) /
+                               inputSegmentation.binningData()[accessBin].step);
                 outputSegmentation += Acts::BinUtility(nBins, -maxY, maxY,
                                                        Acts::open, Acts::binY);
               }
@@ -141,8 +153,8 @@ struct DigitizationConfigurator {
               if (inputSegmentation.binningData()[0].binvalue == Acts::binR) {
                 Acts::ActsScalar minR = boundValues[Acts::AnnulusBounds::eMinR];
                 Acts::ActsScalar maxR = boundValues[Acts::AnnulusBounds::eMaxR];
-                unsigned int nBins =
-                    (maxR - minR) / inputSegmentation.binningData()[0].step;
+                unsigned int nBins = std::round(
+                    (maxR - minR) / inputSegmentation.binningData()[0].step);
                 outputSegmentation +=
                     Acts::BinUtility(nBins, minR, maxR, Acts::open, Acts::binR);
               }
@@ -157,8 +169,8 @@ struct DigitizationConfigurator {
                 Acts::ActsScalar maxPhi =
                     averagePhi + boundValues[Acts::AnnulusBounds::eMaxPhiRel];
                 unsigned int nBins =
-                    (maxPhi - minPhi) /
-                    inputSegmentation.binningData()[accessBin].step;
+                    std::round((maxPhi - minPhi) /
+                               inputSegmentation.binningData()[accessBin].step);
                 outputSegmentation += Acts::BinUtility(
                     nBins, minPhi, maxPhi, Acts::open, Acts::binPhi);
               }
@@ -173,8 +185,8 @@ struct DigitizationConfigurator {
                   boundValues[Acts::DiscTrapezoidBounds::eMaxR];
 
               if (inputSegmentation.binningData()[0].binvalue == Acts::binR) {
-                unsigned int nBins =
-                    (maxR - minR) / inputSegmentation.binningData()[0].step;
+                unsigned int nBins = std::round(
+                    (maxR - minR) / inputSegmentation.binningData()[0].step);
                 outputSegmentation +=
                     Acts::BinUtility(nBins, minR, maxR, Acts::open, Acts::binR);
               }
@@ -193,7 +205,8 @@ struct DigitizationConfigurator {
                 Acts::ActsScalar alphaMaxR = std::atan2(maxR, hxMaxR);
                 Acts::ActsScalar alpha = std::max(alphaMinR, alphaMaxR);
                 unsigned int nBins =
-                    2 * alpha / inputSegmentation.binningData()[accessBin].step;
+                    std::round(2 * alpha /
+                               inputSegmentation.binningData()[accessBin].step);
                 outputSegmentation += Acts::BinUtility(
                     nBins, averagePhi - alpha, averagePhi + alpha, Acts::open,
                     Acts::binPhi);
@@ -205,8 +218,8 @@ struct DigitizationConfigurator {
               if (inputSegmentation.binningData()[0].binvalue == Acts::binR) {
                 Acts::ActsScalar minR = boundValues[Acts::RadialBounds::eMinR];
                 Acts::ActsScalar maxR = boundValues[Acts::RadialBounds::eMaxR];
-                unsigned int nBins =
-                    (maxR - minR) / inputSegmentation.binningData()[0].step;
+                unsigned int nBins = std::round(
+                    (maxR - minR) / inputSegmentation.binningData()[0].step);
                 outputSegmentation +=
                     Acts::BinUtility(nBins, minR, maxR, Acts::open, Acts::binR);
               }
@@ -223,8 +236,8 @@ struct DigitizationConfigurator {
                 Acts::ActsScalar maxPhi = averagePhi + halfPhiSector;
 
                 unsigned int nBins =
-                    (maxPhi - minPhi) /
-                    inputSegmentation.binningData()[accessBin].step;
+                    std::round((maxPhi - minPhi) /
+                               inputSegmentation.binningData()[accessBin].step);
                 outputSegmentation += Acts::BinUtility(
                     nBins, minPhi, maxPhi, Acts::open, Acts::binPhi);
               }
@@ -237,6 +250,38 @@ struct DigitizationConfigurator {
           // Set the adapted segmentation class
           dOutputConfig.geometricDigiConfig.segmentation = outputSegmentation;
         }
+
+        // Compactify the output map where possible
+        if (compactify) {
+          // Check for a representing volume configuration, insert if not
+          // present
+          Acts::GeometryIdentifier volGeoId =
+              Acts::GeometryIdentifier().setVolume(geoId.volume());
+
+          auto volRep = volumeLayerComponents.find(volGeoId);
+          if (volRep != volumeLayerComponents.end() and
+              dOutputConfig == volRep->second) {
+            // return if the volume representation already covers this one
+            return;
+          } else {
+            volumeLayerComponents[volGeoId] = dOutputConfig;
+            outputDigiComponents->push_back({volGeoId, dOutputConfig});
+          }
+
+          // Check for a representing layer configuration, insert if not present
+          Acts::GeometryIdentifier volLayGeoId =
+              Acts::GeometryIdentifier(volGeoId).setLayer(geoId.layer());
+          auto volLayRep = volumeLayerComponents.find(volLayGeoId);
+
+          if (volLayRep != volumeLayerComponents.end() and
+              dOutputConfig == volLayRep->second) {
+            return;
+          } else {
+            volumeLayerComponents[volLayGeoId] = dOutputConfig;
+            outputDigiComponents->push_back({volLayGeoId, dOutputConfig});
+          }
+        }
+
         // Insert into the output list
         outputDigiComponents->push_back({geoId, dOutputConfig});
       }
