@@ -3,6 +3,21 @@ add_subdirectory(Common)
 
 # Digitization for Generic detector
 add_executable(
+  ActsExampleDigitizationConfigGeneric
+  GenericDigitizationConfigExample.cpp)
+target_link_libraries(
+  ActsExampleDigitizationConfigGeneric
+  PRIVATE
+    ActsExamplesDigitizationCommon
+    ActsExamplesDetectorGeneric
+)
+
+install(
+  TARGETS
+  ActsExampleDigitizationConfigGeneric 
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+add_executable(
   ActsExampleDigitizationGeneric
   GenericDigitizationExample.cpp)
 target_link_libraries(
