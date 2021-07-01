@@ -26,9 +26,9 @@ struct VoidKalmanComponents {
   ///
   /// @return void-calibrated measurement
   template <typename measurement_t, typename parameters_t>
-  Result<measurement_t> operator()(
-      measurement_t measurement,
-      [[maybe_unused]] const parameters_t& parameters) const {
+  Result<measurement_t> operator()(measurement_t measurement,
+                                   const parameters_t& parameters) const {
+    (void)parameters;
     return measurement;
   }
 };
@@ -45,8 +45,9 @@ struct VoidKalmanUpdater {
   ///
   /// @return The copied predicted parameters
   template <typename track_state_t, typename predicted_state_t>
-  auto operator()([[maybe_unused]] track_state_t& trackState,
+  auto operator()(track_state_t& trackState,
                   const predicted_state_t& predicted) const {
+    (void)trackState;
     return &(predicted.parameters);
   }
 };

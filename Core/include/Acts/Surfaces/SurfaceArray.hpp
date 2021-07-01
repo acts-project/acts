@@ -374,14 +374,16 @@ class SurfaceArray {
     /// @brief Lookup, always returns @c element
     /// @param bin is ignored
     /// @return reference to vector containing only @c element
-    SurfaceVector& lookup([[maybe_unused]] size_t bin) override {
+    SurfaceVector& lookup(size_t bin) override {
+      (void)bin;
       return m_element;
     }
 
     /// @brief Lookup, always returns @c element
     /// @param bin is ignored
     /// @return reference to vector containing only @c element
-    const SurfaceVector& lookup([[maybe_unused]] size_t bin) const override {
+    const SurfaceVector& lookup(size_t bin) const override {
+      (void)bin;
       return m_element;
     }
 
@@ -400,7 +402,8 @@ class SurfaceArray {
     /// @brief Gets the bin center, but always returns (0, 0, 0)
     /// @param bin is ignored
     /// @return (0, 0, 0)
-    Vector3 getBinCenter([[maybe_unused]] size_t bin) const override {
+    Vector3 getBinCenter(size_t bin) const override {
+      (void)bin;
       return Vector3(0, 0, 0);
     }
 
@@ -427,7 +430,10 @@ class SurfaceArray {
     /// @brief Returns if the bin is valid (it is)
     /// @param bin is ignored
     /// @return always true
-    bool isValidBin([[maybe_unused]] size_t bin) const override { return true; }
+    bool isValidBin(size_t bin) const override {
+      (void)bin;
+      return true;
+    }
 
    private:
     SurfaceVector m_element;

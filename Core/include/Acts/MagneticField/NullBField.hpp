@@ -29,9 +29,10 @@ class NullBField final : public MagneticFieldProvider {
   ///
   /// @note The @p position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
-  Result<Vector3> getField(
-      [[maybe_unused]] const Vector3& position,
-      [[maybe_unused]] MagneticFieldProvider::Cache& cache) const override {
+  Result<Vector3> getField(const Vector3& position,
+                           MagneticFieldProvider::Cache& cache) const override {
+    (void)position;
+    (void)cache;
     return Result<Vector3>::success(m_BField);
   }
 
@@ -42,9 +43,11 @@ class NullBField final : public MagneticFieldProvider {
   /// @note currently the derivative is not calculated
   /// @todo return derivative
   Result<Vector3> getFieldGradient(
-      [[maybe_unused]] const Vector3& position,
-      [[maybe_unused]] ActsMatrix<3, 3>& derivative,
-      [[maybe_unused]] MagneticFieldProvider::Cache& cache) const override {
+      const Vector3& position, ActsMatrix<3, 3>& derivative,
+      MagneticFieldProvider::Cache& cache) const override {
+    (void)position;
+    (void)derivative;
+    (void)cache;
     return Result<Vector3>::success(m_BField);
   }
 
@@ -60,7 +63,10 @@ class NullBField final : public MagneticFieldProvider {
   /// @return @c true if position is inside the defined look-up grid,
   ///         otherwise @c false
   /// @note The method will always return true for the null B-Field
-  bool isInside([[maybe_unused]] const Vector3& position) const { return true; }
+  bool isInside(const Vector3& position) const {
+    (void)position;
+    return true;
+  }
 
  private:
   /// magnetic field vector

@@ -31,11 +31,12 @@ class GainMatrixUpdater {
   /// @param[in] logger Where to write logging information to
   template <typename source_link_t, size_t kMeasurementSizeMax>
   Result<void> operator()(
-      [[maybe_unused]] const GeometryContext& gctx,
+      const GeometryContext& gctx,
       detail_lt::TrackStateProxy<source_link_t, kMeasurementSizeMax, false>&
           trackState,
       const NavigationDirection& direction = forward,
       LoggerWrapper logger = getDummyLogger()) const {
+    (void)gctx;
     ACTS_VERBOSE("Invoked GainMatrixUpdater");
 
     // we should definitely have an uncalibrated measurement here

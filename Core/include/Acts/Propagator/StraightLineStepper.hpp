@@ -60,7 +60,7 @@ class StraightLineStepper {
     /// @note the covariance matrix is copied when needed
     template <typename charge_t>
     explicit State(const GeometryContext& gctx,
-                   [[maybe_unused]] const MagneticFieldContext& mctx,
+                   const MagneticFieldContext& mctx,
                    const SingleBoundTrackParameters<charge_t>& par,
                    NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max(),
@@ -70,6 +70,7 @@ class StraightLineStepper {
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
           geoContext(gctx) {
+      (void)mctx;
       pars.template segment<3>(eFreePos0) = par.position(gctx);
       pars.template segment<3>(eFreeDir0) = par.unitDirection();
       pars[eFreeTime] = par.time();
@@ -159,8 +160,9 @@ class StraightLineStepper {
   /// @param [in,out] state is the propagation state associated with the track
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
-  Result<Vector3> getField([[mayeb_unused]] State& state,
-                           [[mayeb_unused]] const Vector3& pos) const {
+  Result<Vector3> getField(State& state, const Vector3& pos) const {
+    (void)state;
+    (void)pos;
     // get the field from the cell
     return Result<Vector3>::success({0., 0., 0.});
   }
@@ -199,7 +201,8 @@ class StraightLineStepper {
   /// Overstep limit
   ///
   /// @param state The stepping state (thread-local cache)
-  double overstepLimit([[maybe_unused]] const State& state) const {
+  double overstepLimit(const State& state) const {
+    (void)state;
     return s_onSurfaceTolerance;
   }
 

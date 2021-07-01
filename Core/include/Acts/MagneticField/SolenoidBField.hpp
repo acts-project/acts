@@ -71,7 +71,7 @@ class SolenoidBField final : public MagneticFieldProvider {
     /// @brief Constructor with magnetic field context
     ///
     /// @param mctx the magnetic field context
-    Cache([[maybe_unused]] const MagneticFieldContext& mctx) {}
+    Cache(const MagneticFieldContext& mctx) { (void)mctx; }
   };
 
   /// Config struct for the SolenoidBfield.
