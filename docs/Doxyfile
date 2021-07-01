@@ -774,7 +774,17 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = ../Core/include \
-                         ../Fatras/include
+                         ../Fatras/include \
+                         ../Plugins/Autodiff/include \
+                         ../Plugins/Cuda/include \
+                         ../Plugins/DD4hep/include \
+                         ../Plugins/Digitization/include \
+                         ../Plugins/Identification/include \
+                         ../Plugins/Json/include \
+                         ../Plugins/Legacy/include \
+                         ../Plugins/Onnx/include \
+                         ../Plugins/Sycl/include \
+                         ../Plugins/TGeo/include
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -799,8 +809,7 @@ INPUT_ENCODING         = UTF-8
 # *.m, *.markdown, *.md, *.mm, *.dox, *.py, *.pyw, *.f90, *.f, *.for, *.tcl,
 # *.vhd, *.vhdl, *.ucf, *.qsf, *.as and *.js.
 
-FILE_PATTERNS          = *.hpp \
-                         *.ipp
+FILE_PATTERNS          = *.hpp
 
 # The RECURSIVE tag can be used to specify whether or not subdirectories should
 # be searched for input files as well.
