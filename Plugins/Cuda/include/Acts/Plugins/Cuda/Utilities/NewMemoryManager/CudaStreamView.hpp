@@ -9,11 +9,11 @@
 #pragma once	
 
 // CUDA plugin include(s).
-//utiliti/cuda/plugin/acts/include
 #include "../../../../../../src/Utilities/ErrorCheck.cuh"
 
 // CUDA include(s).
-#include <cuda_runtime_api.h>
+#include "cuda.h"
+#include "cuda_runtime.h"
 
 // System include(s).
 #include <atomic>
