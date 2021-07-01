@@ -48,11 +48,12 @@ class DigitizationModule {
  public:
   /// Constructor from a Segmentation descriptor
   ///
-  /// @param gctx The current geometry context object, e.g. alignment
   /// @param moduleSegmentation is the segmentation descriptions
   /// @param halfThickness is the half thickness of the module
   /// @param readoutDirection is the readout drift direction
   /// @param lorentzAngle is the lorentz drift angle
+  /// @param energyThreshold Optional energy threshold for digitization
+  /// @param analogue Run analogue digitization (defaults to false)
   DigitizationModule(std::shared_ptr<const Segmentation> moduleSegmentation,
                      double halfThickness, int readoutDirection,
                      double lorentzAngle, double energyThreshold = 0.,
@@ -64,7 +65,6 @@ class DigitizationModule {
   /// Return the internal test segmentation surfaces to test between entry
   /// and exit given by their cell id's - the boundaries are not given
   ///
-  /// @param gctx The current geometry context object, e.g. alignment
   /// @param entryCids are the entry digitisation cell ids
   /// @param exitCids are the exit digitisation cell ids
   ///
@@ -74,6 +74,8 @@ class DigitizationModule {
       const DigitizationCell& exitCids) const;
 
   /// Get the digitization cell from a position
+  /// @param position The position to query
+  /// @return
   const DigitizationCell cell(const Vector2& position) const;
 
   /// Return the module thickness
@@ -100,16 +102,16 @@ class DigitizationModule {
   /// @param end is the end position of the step
   ///
   /// @return stepSurfaces are the surfaces to test
-  const SurfacePtrVector stepSurfaces(const Vector3& start,
-                                      const Vector3& end) const;
+  SurfacePtrVector stepSurfaces(const Vector3& start, const Vector3& end) const;
 
   /// Fill the associated digitization cell from this start and end position,
   /// correct for lorentz effect if needed
   ///
   /// @param start is the start position of the step
   /// @param end is the end position of the step
-  const DigitizationStep digitizationStep(const Vector3& start,
-                                          const Vector3& end) const;
+  /// @return the digitization step
+  DigitizationStep digitizationStep(const Vector3& start,
+                                    const Vector3& end) const;
 
   /// Return the bounding surfaces inlcuding top and bottom
   const SurfacePtrVector& boundarySurfaces() const;
@@ -181,7 +183,7 @@ inline const SurfacePtrVector& DigitizationModule::segmentationSurfacesY()
   return m_segmentationSurfacesY;
 }
 
-inline const DigitizationStep DigitizationModule::digitizationStep(
+inline DigitizationStep DigitizationModule::digitizationStep(
     const Vector3& start, const Vector3& end) const {
   return m_segmentation->digitizationStep(start, end, m_halfThickness,
                                           m_readoutDirection, m_lorentzAngle);
