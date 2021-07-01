@@ -50,7 +50,7 @@ using AxisScalar = Vector3::Scalar;
 /// @todo write more documentation on how this is done
 class SurfaceArrayCreator {
  public:
-  friend class Acts::Test::SurfaceArrayCreatorFixture;
+  friend struct Acts::Test::SurfaceArrayCreatorFixture;
   friend class Acts::SurfaceArray;
 
   struct ProtoAxis {
