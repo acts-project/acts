@@ -17,7 +17,6 @@
 #include "Acts/Plugins/Cuda/Utilities/CudaVector.cu"
 #include "Acts/Plugins/Cuda/Utilities/UsmMatrix.cu"
 #include "Acts/Plugins/Cuda/Utilities/UsmScalar.cu"
-#include "Acts/Plugins/Cuda/Utilities/NewMemoryManager.hpp"
 
 namespace Acts {
 class Cuda;
