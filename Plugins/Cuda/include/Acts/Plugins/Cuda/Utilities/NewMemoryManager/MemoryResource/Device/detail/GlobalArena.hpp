@@ -16,7 +16,6 @@
 #include <vector>
 
 namespace Acts {
-namespace Cuda {
 namespace Nmm {
 namespace MemoryResource {
 namespace detail {
@@ -158,5 +157,4 @@ class GlobalArena final {
 } // namaspace detail
 } // namaspace MemoryResource
 } // namaspace Nmm
-} // namaspace Cuda
 } // namaspace Acts

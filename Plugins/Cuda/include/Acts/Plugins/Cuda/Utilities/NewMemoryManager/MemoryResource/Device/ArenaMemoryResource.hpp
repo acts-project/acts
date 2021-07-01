@@ -23,7 +23,6 @@
 #include <thread>
 
 namespace Acts {
-namespace Cuda {
 namespace Nmm {
 namespace MemoryResource {
 
@@ -31,5 +30,4 @@ namespace MemoryResource {
 
 } // namaspace MemoryResource
 } // namaspace Nmm
-} // namaspace Cuda
 } // namaspace Acts

@@ -13,7 +13,6 @@
 #include "Acts/Plugins/Cuda/Utilities/NewMemoryManager/CudaStreamView.hpp"
 
 namespace Acts {
-namespace Cuda {
 namespace Nmm {
 namespace MemoryResource {
 
@@ -21,5 +20,4 @@ namespace MemoryResource {
 
 } // namespace MemoryResource
 } // namespace Nmm
-} // namespace Cuda
 } // namespace Acts

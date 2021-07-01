@@ -25,7 +25,6 @@
 #include <unordered_map>
 
 namespace Acts {
-namespace Cuda {
 namespace Nmm {
 namespace MemoryResource {
 namespace detail {
@@ -57,5 +56,4 @@ class ArenaCleaner {
 } // namaspace detail
 } // namaspace MemoryResource
 } // namaspace Nmm
-} // namaspace Cuda
 } // namaspace Acts

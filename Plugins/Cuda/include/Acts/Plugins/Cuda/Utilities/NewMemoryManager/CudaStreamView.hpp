@@ -9,7 +9,7 @@
 #pragma once	
 
 // CUDA plugin include(s).
-#include "../../../../../../src/Utilities/ErrorCheck.cuh"
+//#include "../../../../../../src/Utilities/ErrorCheck.cuh"
 
 // CUDA include(s).
 #include "cuda.h"
@@ -22,7 +22,6 @@
 #include <iostream>
 
 namespace Acts {
-namespace Cuda {
 namespace Nmm {
 
 class CudaStreamView {
@@ -67,7 +66,7 @@ class CudaStreamView {
 
 		// Synchronize the viewed CUDA stream
 		void synchronize() const {
-			ACTS_CUDA_ERROR_CHECK(cudaStreamSynchronize(stream_));
+			cudaStreamSynchronize(stream_);
 		}
 
 		// Synchronize the viewed CUDA stream, don't throw if there is an error
@@ -118,5 +117,4 @@ inline std::ostream& operator<<(std::ostream& os, CudaStreamView sv) {
 }
 
 } // namespace Nmm
-} // namespace Cuda
 } // namespace Acts

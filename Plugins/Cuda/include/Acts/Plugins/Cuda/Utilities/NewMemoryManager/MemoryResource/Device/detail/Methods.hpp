@@ -25,7 +25,6 @@
 #include <unordered_map>
 
 namespace Acts {
-namespace Cuda {
 namespace Nmm {
 namespace MemoryResource {
 namespace detail {
@@ -129,5 +128,4 @@ inline Block coalesceBlock(std::set<Block>& freeBlocks, Block const&b){
 } // namaspace detail
 } // namaspace MemoryResource
 } // namaspace Nmm
-} // namaspace Cuda
 } // namaspace Acts

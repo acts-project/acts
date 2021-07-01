@@ -25,7 +25,6 @@
 #include <unordered_map>
 
 namespace Acts {
-namespace Cuda {
 namespace Nmm {
 namespace MemoryResource {
 namespace detail {
@@ -58,6 +57,12 @@ class Arena {
 			return b.pointer();
 		}
 
+		// Deallocate memory pointed to by `p`, and possibly return superblocks to upstream.
+		// return the block to the set that have the free blocks
+		//
+		// @param[in] p the pointer of the memory
+		// @param[in] bytes the size in bytes of the deallocation
+		// @return if the allocation was found, false otherwise
 		bool deallocate(void* p, std::size_t bytes, CudaStreamView stream) {
 			lockGuard lock(mtx_);
 
@@ -70,6 +75,14 @@ class Arena {
 			return b.isValid();
 		}
 
+		// Deallocate memory pointed to by `p`, and keeping all free superblocks.
+		// return the block to the set that have the free blocks. This method
+		// is used when deallocating from another arena, since we don't have access the
+		// respective CudaStreamView of the areana.
+		//
+		// @param[in] p the pointer of the memory
+		// @param[in] bytes the size in bytes of the deallocation
+		// @return if the allocation was found, false otherwise
 		bool deallocate(void* p, std::size_t bytes) {
 			lockGuard lock(mtx_);
 
@@ -81,6 +94,9 @@ class Arena {
 			return b.isValid();
 		}
 
+		// Clean the arena and deallocate free blocks from the global arena.
+	    //
+	    // This is only needed when a per-thread arena is about to die.
 		void clean() {
 			lockGuard lock(mtx_);
 			globalArena_.deallocate(freeBlocks_);
@@ -91,6 +107,10 @@ class Arena {
 	private:
 		using lockGuard = std::lock_guard<std::mutex>;
 
+		// @brief Get an available memory block of at least `size` bytes.
+		//
+		// @param[in] size The number of bytes to allocate.
+		// @return block A block of memory of at least `size` bytes.
 		Block getBlock(std::size_t size) {
 			if(size < minimumSuperblockSize) {
 				auto const b = firstFit(freeBlocks_, size);
@@ -104,11 +124,20 @@ class Arena {
 			return firstFit(freeBlocks_, size);
 		}
 
+		// Allocate space from upstream to supply the arena and return a superblock.
+		// 
+		// @return block A superblock.
 		Block expandArena(std::size_t size) {
 			auto const superblockSize = std::max(size, minimumSuperblockSize);
 			return globalArena_.allocate(superblockSize);
 		}
 
+		// Finds, frees and returns the block associated with pointer `p`.
+		//
+		// @param[in] p The pointer to the memory to free.
+		// @param[in] size The size of the memory to free. Must be equal to the original allocation size.
+		// return The (now freed) block associated with `p`. The caller is expected to return the block
+		// to the arena.
 		Block freeBlock(void* p, std::size_t size) noexcept {
 			auto const i = allocatedBlocks_.find(p);
 
@@ -123,6 +152,10 @@ class Arena {
 			return found;
 		}
 
+		// Shrink this arena by returning free superblocks to upstream.
+		//
+		// @param b The block that can be used to shrink the arena.
+		// @param stream Stream on which to perform shrinking.
 		void shrinkArena(Block const& b, CudaStreamView stream) {
 			if(!b.isSuperblock()) return;
 
@@ -138,9 +171,9 @@ class Arena {
 		mutable std::mutex mtx_;
 };// class Arena
 
+
 } // namaspace Arena
 } // namaspace detail
 } // namaspace MemoryResource
 } // namaspace Nmm
-} // namaspace Cuda
 } // namaspace Acts

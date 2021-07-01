@@ -17,7 +17,6 @@
 #include <mutex>
 
 namespace Acts {
-namespace Cuda {
 namespace Nmm {
 
 
@@ -25,5 +24,4 @@ namespace Nmm {
  // namespace detail
  // namespace MemoryResource
 } // namespace Nmm
-} // namespace Cuda
 } // namespace Acts

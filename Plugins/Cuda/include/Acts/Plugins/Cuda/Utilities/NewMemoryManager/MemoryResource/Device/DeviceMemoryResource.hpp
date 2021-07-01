@@ -21,7 +21,6 @@
 #include <thread>
 
 namespace Acts {
-namespace Cuda {
 namespace Nmm {
 
 struct CudaDeviceId {
@@ -270,5 +269,4 @@ inline DeviceMemoryResource* setCurrentDeviceResource(DeviceMemoryResource* newM
 }
 } // namaspace MemoryResource
 } // namaspace Nmm
-} // namaspace Cuda
 } // namaspace Acts

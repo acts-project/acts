@@ -13,7 +13,6 @@
 #include <utility>
 
 namespace Acts {
-namespace Cuda {
 namespace Nmm {
 namespace MemoryResource {
 
@@ -52,8 +51,7 @@ class HostMemoryResource {
   // @param bytes The size of the allocation
   // @param alignment Alignment of the allocation
   // @return void* Pointer to the newly allocated memory
-  void* allocate(std::size_t bytes, std::size_t alignment = alignof(std::max_align_t))
-  {
+  void* allocate(std::size_t bytes, std::size_t alignment = alignof(std::max_align_t)) {
     return doAllocate(bytes, alignment);
   }
   // Deallocate memory pointed to by `p`.
@@ -72,9 +70,12 @@ class HostMemoryResource {
   // value of `alignment` that was passed to the `allocate` call that returned
   // `p`.
   // @param stream Stream on which to perform deallocation
-  void deallocate(void* p, std::size_t bytes, std::size_t alignment = alignof(std::max_align_t))
-  {
-    doDeallocate(p, bytes, alignment);
+  //void deallocate(void* p, std::size_t bytes, std::size_t alignment = alignof(std::max_align_t)) {
+  //  doDeallocate(p, bytes, alignment);
+  //}
+
+  void deallocate(void* p, std::size_t alignment = alignof(std::max_align_t)) {
+    doDeallocate(p, alignment);
   }
 
   // Compare this resource to another.
@@ -121,9 +122,8 @@ class HostMemoryResource {
   // value of `alignment` that was passed to the `allocate` call that returned
   // `p`.
   // @param stream Stream on which to perform deallocation
-  virtual void doDeallocate(void* p,
-                             std::size_t bytes,
-                             std::size_t alignment = alignof(std::max_align_t)) = 0;
+  //virtual void doDeallocate(void* p, std::size_t bytes, std::size_t alignment = alignof(std::max_align_t)) = 0;
+  virtual void doDeallocate(void* p, std::size_t alignment = alignof(std::max_align_t)) = 0;
 
   // Compare this resource to another.
   // 
@@ -144,5 +144,4 @@ class HostMemoryResource {
 };// class HostMemoryResource
 } // namespace MemoryResource
 } // namespace Nmm
-} // namespace Cuda
 } // namespace Acts

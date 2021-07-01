@@ -18,7 +18,6 @@
 #include <iostream>
 
 namespace Acts {
-namespace Cuda {
 namespace Nmm {
 namespace MemoryResource {
 
@@ -54,10 +53,8 @@ class PinnedMemoryResource final : public HostMemoryResource {
 
     // If the requested alignment isn't supported, use default
     alignment =
-      (Nmm::detail::is_supported_alignment(alignment)) ? alignment : alignof(std::max_align_t);
-    std::cout << alignment << " ----TTT----";
-    return Nmm::detail::aligned_allocate(bytes, alignment, [](std::size_t size) {
-      std::cout << "size: " << size << " --";
+      (Nmm::detail::isSupportedAlignment(alignment)) ? alignment : alignof(std::max_align_t);
+    return Nmm::detail::alignedAllocate(bytes, alignment, [](std::size_t size) {
       void *p{nullptr};
       auto status = cudaMallocHost(&p, size);
       if (cudaSuccess != status) { throw std::bad_alloc{}; }
@@ -81,17 +78,15 @@ class PinnedMemoryResource final : public HostMemoryResource {
   // value of `alignment` that was passed to the `allocate` call that returned
   // `p`.
   // @param stream Stream on which to perform deallocation
-  void doDeallocate(void *p,
-                     std::size_t bytes,
-                     std::size_t alignment = alignof(std::max_align_t)) override
-  {
+  //void doDeallocate(void *p, std::size_t bytes, std::size_t alignment = alignof(std::max_align_t)) override {
+  void doDeallocate(void *p, std::size_t alignment = alignof(std::max_align_t)) override {
     (void)alignment;
     if (nullptr == p) { return; }
-    Nmm::detail::aligned_deallocate(
-      p, bytes, alignment, [](void *p) { cudaFreeHost(p); });
+    Nmm::detail::alignedDeallocate(
+      p, alignment, [](void *q) { cudaFreeHost(q); });
+      //p, bytes, alignment, [](void *q) { cudaFreeHost(q); });
   }
 };// class PinnedMemoryResource
 } // namespace MemoryResource
 } // namespace Nmm
-} // namespace Cuda
 } // namespace Acts
