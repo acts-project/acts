@@ -75,6 +75,8 @@ jobs:
         LCG: 
           - LCG_99/x86_64-centos7-gcc10-opt
           - LCG_100/x86_64-centos7-gcc10-opt
+    env:
+      INSTALL_DIR: ${{ github.workspace }}/install
     steps:
       - uses: actions/checkout@v2
       - uses: cvmfs-contrib/github-action-cvmfs@v2
