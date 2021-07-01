@@ -74,7 +74,7 @@ jobs:
       matrix:
         LCG: 
           - LCG_97apython3/x86_64-centos7-gcc9-opt
-          - LCG_98apython3/x86_64-centos7-gcc10-opt
+          - LCG_98python3/x86_64-centos7-gcc10-opt
           - LCG_99/x86_64-centos7-gcc10-opt
           - LCG_100/x86_64-centos7-gcc10-opt
     env:
