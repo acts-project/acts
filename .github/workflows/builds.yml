@@ -70,10 +70,11 @@ jobs:
 
   lcg:
     runs-on: ubuntu-latest
-    matrix:
-      LCG: 
-        - LCG_99/x86_64-centos7-gcc10-opt
-        - LCG_100/x86_64-centos7-gcc10-opt
+    strategy:
+      matrix:
+        LCG: 
+          - LCG_99/x86_64-centos7-gcc10-opt
+          - LCG_100/x86_64-centos7-gcc10-opt
     steps:
       - uses: actions/checkout@v2
       - uses: cvmfs-contrib/github-action-cvmfs@v2
