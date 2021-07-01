@@ -41,9 +41,7 @@ using SurfaceIntersection = ObjectIntersection<Surface>;
 // master typedef
 class Layer;
 using LayerPtr = std::shared_ptr<const Layer>;
-/// typedef
 using MutableLayerPtr = std::shared_ptr<Layer>;
-/// typedef
 using NextLayers = std::pair<const Layer*, const Layer*>;
 
 /// @enum LayerType

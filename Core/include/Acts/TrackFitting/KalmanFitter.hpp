@@ -46,9 +46,7 @@ namespace Acts {
 /// @tparam outlier_finder_t Outlier finder type, shoule be semiregular.
 template <typename calibrator_t, typename outlier_finder_t>
 struct KalmanFitterOptions {
-/// typedef
   using Calibrator = calibrator_t;
-/// typedef
   using OutlierFinder = outlier_finder_t;
 
   /// PropagatorOptions with context.

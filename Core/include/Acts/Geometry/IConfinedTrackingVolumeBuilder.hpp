@@ -13,9 +13,7 @@
 namespace Acts {
 
 class TrackingVolume;
-/// typedef
 using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
-/// typedef
 using MutableTrackingVolumeVector = std::vector<MutableTrackingVolumePtr>;
 
 /// @brief This is an interface class for constructing TrackingVolumes whose are

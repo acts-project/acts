@@ -23,9 +23,7 @@ namespace ActsFatras {
 /// "A Gaussian-mixture approximation of the Bethe–Heitler model of electron
 /// energy loss by bremsstrahlung" R. Frühwirth
 struct BetheHeitler {
-/// typedef
   using Scalar = Particle::Scalar;
-/// typedef
   using Vector3 = Particle::Vector3;
 
   /// A scaling factor to

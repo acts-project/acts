@@ -73,7 +73,6 @@ struct SurfaceCollector {
     std::vector<SurfaceHit> collected;
   };
 
-/// typedef
   using result_type = this_result;
 
   /// Collector action for the ActionList of the Propagator

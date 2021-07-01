@@ -62,7 +62,6 @@ class TrackingGeometry;
 
 class VolumeMaterialMapper {
  public:
-/// typedef
   using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 
   /// @struct Config

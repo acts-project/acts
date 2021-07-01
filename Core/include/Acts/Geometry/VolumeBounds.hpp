@@ -25,11 +25,8 @@ class Surface;
 class VolumeBounds;
 using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 
-/// typedef
 using SurfacePtr = std::shared_ptr<const Surface>;
-/// typedef
 using OrientedSurface = std::pair<SurfacePtr, NavigationDirection>;
-/// typedef
 using OrientedSurfaces = std::vector<OrientedSurface>;
 
 // Planar definitions to help construct the boundary surfaces

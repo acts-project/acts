@@ -26,11 +26,8 @@ template <typename input_track_t = BoundTrackParameters,
           typename linearizer_t = DummyTrackLinearizer>
 class DummyVertexFitter {
  public:
-/// typedef
   using InputTrack_t = input_track_t;
-/// typedef
   using Linearizer_t = linearizer_t;
-/// typedef
   using Propagator_t = void;
 
   // Do not allow an instance creation

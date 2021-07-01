@@ -36,7 +36,6 @@ class DirectNavigator {
  public:
   /// The sequentially crossed surfaces
   using SurfaceSequence = std::vector<const Surface*>;
-/// typedef
   using SurfaceIter = std::vector<const Surface*>::iterator;
 
   /// Defaulted Constructed
@@ -57,7 +56,6 @@ class DirectNavigator {
     struct this_result {
       bool initialized = false;
     };
-/// typedef
     using result_type = this_result;
 
     /// Defaulting the constructor

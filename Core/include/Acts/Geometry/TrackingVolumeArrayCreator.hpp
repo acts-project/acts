@@ -19,7 +19,6 @@
 
 namespace Acts {
 
-/// typedef
 using TrackingVolumeOrderPosition = std::pair<TrackingVolumePtr, Vector3>;
 
 ///@class TrackingVolumeArrayCreator

@@ -29,11 +29,8 @@ class SingleCurvilinearTrackParameters
   using Base = SingleBoundTrackParameters<charge_t>;
 
  public:
-/// typedef
   using Scalar = ActsScalar;
-/// typedef
   using ParametersVector = BoundVector;
-/// typedef
   using CovarianceMatrix = BoundSymMatrix;
 
   /// Construct from four-position, direction, absolute momentum, and charge.

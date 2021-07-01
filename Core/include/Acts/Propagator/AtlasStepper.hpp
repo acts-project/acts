@@ -33,13 +33,9 @@ namespace Acts {
 /// @brief the AtlasStepper implementation for the
 class AtlasStepper {
  public:
-/// typedef
   using Jacobian = BoundMatrix;
-/// typedef
   using Covariance = BoundSymMatrix;
-/// typedef
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
-/// typedef
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
 

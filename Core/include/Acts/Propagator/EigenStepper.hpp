@@ -46,11 +46,8 @@ class EigenStepper {
  public:
   /// Jacobian, Covariance and State defintions
   using Jacobian = BoundMatrix;
-/// typedef
   using Covariance = BoundSymMatrix;
-/// typedef
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
-/// typedef
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
 

@@ -21,7 +21,6 @@ namespace Acts {
 
 /// A constrained step class for the steppers
 struct ConstrainedStep {
-/// typedef
   using Scalar = ActsScalar;
 
   /// the types of constraints

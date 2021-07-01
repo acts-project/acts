@@ -125,7 +125,6 @@ class SurfaceArray {
     /// std::array<double, 1>
     using point_t =
         std::conditional_t<DIM == 1, std::array<double, 1>, ActsVector<DIM>>;
-/// typedef
     using Grid_t = detail::Grid<SurfaceVector, Axes...>;
 
     /// @brief Default constructor

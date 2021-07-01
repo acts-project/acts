@@ -26,11 +26,8 @@ namespace ActsFatras {
 /// thus stored as two separate four-vectors.
 class Hit {
  public:
-/// typedef
   using Scalar = Acts::ActsScalar;
-/// typedef
   using Vector3 = Acts::ActsVector<3>;
-/// typedef
   using Vector4 = Acts::ActsVector<4>;
 
   /// Construct default hit with (mostly) invalid information.

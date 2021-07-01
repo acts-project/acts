@@ -25,7 +25,6 @@ namespace Acts {
 /// that need to be connected to form a face.
 /// This allows the @c objString method to produce a ready-to-go obj output.
 struct Polyhedron {
-/// typedef
   using FaceType = std::vector<size_t>;
 
   /// Default constructor

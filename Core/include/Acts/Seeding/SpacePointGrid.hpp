@@ -37,7 +37,6 @@ struct SpacePointGridConfig {
   float cotThetaMax;
 };
 template <typename external_spacepoint_t>
-/// typedef
 using SpacePointGrid =
     detail::Grid<std::vector<std::unique_ptr<
                      const InternalSpacePoint<external_spacepoint_t>>>,

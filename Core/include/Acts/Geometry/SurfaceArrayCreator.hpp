@@ -32,21 +32,15 @@ namespace Test {
 struct SurfaceArrayCreatorFixture;
 }
 
-/// typedef
 using SurfaceMatcher = std::function<bool(
     const GeometryContext& gctx, BinningValue, const Surface*, const Surface*)>;
 
-/// typedef
 using SurfaceVector = std::vector<const Surface*>;
-/// typedef
 using SurfaceMatrix = std::vector<SurfaceVector>;
 
-/// typedef
 using V3Vector = std::vector<Vector3>;
-/// typedef
 using V3Matrix = std::vector<V3Vector>;
 
-/// typedef
 using AxisScalar = Vector3::Scalar;
 
 /// @class SurfaceArrayCreator

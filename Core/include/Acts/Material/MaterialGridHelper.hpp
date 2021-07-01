@@ -25,18 +25,13 @@ namespace Acts {
 
 class MaterialSlab;
 
-/// typedef
 using EAxis = Acts::detail::EquidistantAxis;
-/// typedef
 using Grid2D =
     Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
-/// typedef
 using Grid3D =
     Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
-/// typedef
 using MaterialGrid2D =
     Acts::detail::Grid<Acts::Material::ParametersVector, EAxis, EAxis>;
-/// typedef
 using MaterialGrid3D =
     Acts::detail::Grid<Acts::Material::ParametersVector, EAxis, EAxis, EAxis>;
 

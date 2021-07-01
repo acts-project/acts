@@ -83,9 +83,7 @@ class MaterialSlab {
 std::ostream& operator<<(std::ostream& os, const MaterialSlab& materialSlab);
 
 // Useful typedefs
-/// typedef
 using MaterialSlabVector = std::vector<MaterialSlab>;
-/// typedef
 using MaterialSlabMatrix = std::vector<MaterialSlabVector>;
 
 /// list of point used in the mapping of a volume

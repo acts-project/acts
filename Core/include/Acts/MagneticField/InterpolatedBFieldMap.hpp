@@ -43,9 +43,7 @@ namespace Acts {
 template <typename grid_t>
 class InterpolatedBFieldMap : public MagneticFieldProvider {
  public:
-/// typedef
   using Grid = grid_t;
-/// typedef
   using FieldType = typename Grid::value_type;
   static constexpr size_t DIM_POS = Grid::DIM;
 

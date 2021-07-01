@@ -34,9 +34,7 @@ class GaussianGridTrackDensity {
   static_assert(mainGridSize > trkGridSize);
 
  public:
-/// typedef
   using MainGridVector = Eigen::Matrix<float, mainGridSize, 1>;
-/// typedef
   using TrackGridVector = Eigen::Matrix<float, trkGridSize, 1>;
 
   /// The configuration struct

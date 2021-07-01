@@ -18,12 +18,10 @@
 namespace Acts {
 
 class AbstractVolume;
-/// typedef
 using BoundarySurfacePtr =
     std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>;
 
 class VolumeBounds;
-/// typedef
 using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 
 /// @class AbstractVolume

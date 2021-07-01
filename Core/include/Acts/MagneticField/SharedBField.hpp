@@ -23,7 +23,6 @@ namespace Acts {
 template <typename BField>
 class SharedBField final : public MagneticFieldProvider {
  public:
-/// typedef
   using Cache = typename BField::Cache;
 
   /// Disallow construction without a valid underlying field.

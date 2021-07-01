@@ -19,12 +19,9 @@ extern template class SingleBoundTrackParameters<Neutral>;
 extern template class SingleCurvilinearTrackParameters<Neutral>;
 extern template class SingleFreeTrackParameters<Neutral>;
 
-/// typedef
 using NeutralBoundTrackParameters = SingleBoundTrackParameters<Neutral>;
-/// typedef
 using NeutralCurvilinearTrackParameters =
     SingleCurvilinearTrackParameters<Neutral>;
-/// typedef
 using NeutralFreeTrackParameters = SingleFreeTrackParameters<Neutral>;
 
 }  // namespace Acts

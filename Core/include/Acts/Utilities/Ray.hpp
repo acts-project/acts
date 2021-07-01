@@ -78,7 +78,6 @@ std::ostream& operator<<(std::ostream& os, const Ray<T, D>& ray) {
   return os;
 }
 
-/// typedef
 using Ray3D = Ray<ActsScalar, 3>;
 
 }  // namespace Acts

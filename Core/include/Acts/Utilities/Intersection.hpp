@@ -82,10 +82,8 @@ struct Intersection {
   }
 };
 
-/// typedef
 using Intersection2D = Intersection<2>;
 
-/// typedef
 using Intersection3D = Intersection<3>;
 
 /// @brief class extensions to return also the object and a representation

@@ -69,11 +69,8 @@ struct CombinatorialKalmanFilterTipState {
 template <typename source_link_accessor_t, typename calibrator_t,
           typename measurement_selector_t>
 struct CombinatorialKalmanFilterOptions {
-/// typedef
   using SourceLinkAccessor = source_link_accessor_t;
-/// typedef
   using Calibrator = calibrator_t;
-/// typedef
   using MeasurementSelector = measurement_selector_t;
 
   /// PropagatorOptions with context

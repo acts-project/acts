@@ -37,7 +37,6 @@ enum TrackStateFlag {
   NumTrackStateFlags = 5
 };
 
-/// typedef
 using TrackStateType = std::bitset<TrackStateFlag::NumTrackStateFlags>;
 
 // forward declarations
@@ -603,15 +602,11 @@ class MultiTrajectory {
   enum {
     MeasurementSizeMax = eBoundSize,
   };
-/// typedef
   using SourceLink = source_link_t;
-/// typedef
   using ConstTrackStateProxy =
       detail_lt::TrackStateProxy<SourceLink, MeasurementSizeMax, true>;
-/// typedef
   using TrackStateProxy =
       detail_lt::TrackStateProxy<SourceLink, MeasurementSizeMax, false>;
-/// typedef
   using ProjectorBitset = std::bitset<eBoundSize * MeasurementSizeMax>;
 
   /// Create an empty trajectory.

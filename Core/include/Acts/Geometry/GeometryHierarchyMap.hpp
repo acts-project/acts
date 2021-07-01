@@ -63,11 +63,8 @@ class GeometryHierarchyMap {
  public:
   /// Combined geometry identifier and value element. Only used for input.
   using InputElement = typename std::pair<GeometryIdentifier, value_t>;
-/// typedef
   using Iterator = typename std::vector<value_t>::const_iterator;
-/// typedef
   using Size = typename std::vector<value_t>::size_type;
-/// typedef
   using Value = value_t;
 
   /// Construct the container from the given elements.

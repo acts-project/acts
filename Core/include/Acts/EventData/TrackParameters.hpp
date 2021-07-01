@@ -19,12 +19,9 @@ extern template class SingleBoundTrackParameters<SinglyCharged>;
 extern template class SingleCurvilinearTrackParameters<SinglyCharged>;
 extern template class SingleFreeTrackParameters<SinglyCharged>;
 
-/// typedef
 using BoundTrackParameters = SingleBoundTrackParameters<SinglyCharged>;
-/// typedef
 using CurvilinearTrackParameters =
     SingleCurvilinearTrackParameters<SinglyCharged>;
-/// typedef
 using FreeTrackParameters = SingleFreeTrackParameters<SinglyCharged>;
 
 }  // namespace Acts
