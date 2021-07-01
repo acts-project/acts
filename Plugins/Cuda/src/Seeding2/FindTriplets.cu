@@ -822,6 +822,7 @@ std::vector<std::vector<Triplet>> findTriplets(
   }
   
   // Free host array
+  /*
   Cuda::Nmm::MemoryResource::HostMemoryResource *hmr = Cuda::getCPUmmr();
   hmr->deallocate(static_cast<void*>(objectCountsHostNull.get()), NObjectCountTypes);
   hmr->deallocate(static_cast<void*>(objectCountsHost.get()), NObjectCountTypes);
@@ -831,7 +832,7 @@ std::vector<std::vector<Triplet>> findTriplets(
   hmr->deallocate(static_cast<void*>(filteredTripletCountsHost.get()), nParallelMiddleSPs);
   hmr->deallocate(static_cast<void*>(middleBottomCountsHost.get()), nMiddleSPs);
   hmr->deallocate(static_cast<void*>(middleTopCountsHost.get()), nMiddleSPs);
-
+  */
   // Return the indices of all identified triplets.
   assert(result.size() == nMiddleSPs);
   return result;

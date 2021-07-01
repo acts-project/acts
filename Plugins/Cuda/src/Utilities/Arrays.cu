@@ -40,7 +40,7 @@ void HostArrayDeleter::operator()(void* ptr) {
 
   // Free the host memory.
   //free(ptr);
-  //Cuda::hmr->deallocate(ptr);
+  Acts::getCPUmmr()->deallocate(ptr);
   return;
 }
 
@@ -51,10 +51,10 @@ device_array<T> make_device_array(std::size_t size) {
   // Allocate the memory.
   T* ptr = nullptr;
   if (size != 0) {
-    if(Cuda::getGPUmmr() == nullptr){
+    if(Acts::getGPUmmr() == nullptr){
       ptr = static_cast<T*>(MemoryManager::instance().allocate(size * sizeof(T)));
     } else {
-      ptr = static_cast<T*>(Cuda::getGPUmmr()->allocate(size * sizeof(T)));
+      ptr = static_cast<T*>(Acts::getGPUmmr()->allocate(size * sizeof(T)));
     }
   }
   // Create the smart pointer.
@@ -67,7 +67,7 @@ host_array<T> make_host_array(std::size_t size) {
   //Acts::Cuda::Nmm::MemoryResource::HostMemoryResource *hmr = new Acts::Cuda::Nmm::MemoryResource::CPUMemoryResource();
   T* ptr = nullptr;
   if (size != 0) {
-    ptr = static_cast<T*>(Cuda::getCPUmmr()->allocate(size * sizeof(T)));
+    ptr = static_cast<T*>(Acts::getCPUmmr()->allocate(size * sizeof(T)));
   }
   // Create the smart pointer.
   //delete hmr;

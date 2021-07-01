@@ -142,10 +142,11 @@ DubletCounts countDublets(
         std::max(dubletCountsHost.get()[i].maxTriplets, result.maxTriplets);
   }
 
-  
+  /*
   Cuda::Nmm::MemoryResource::HostMemoryResource *hmr = Cuda::getCPUmmr();
   hmr->deallocate(static_cast<void*>(dubletCountsHost.get()), numBlocks);
-  
+  */
+
   return result;
 }
 
