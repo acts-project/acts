@@ -41,9 +41,9 @@ void ActsExamples::Options::addSequencerOptions(
                     "The number of events to process. If not given, all "
                     "available events will be processed.")(
       "skip", value<size_t>()->default_value(0),
-      "The number of events to skip")(
-      "jobs,j", value<int>()->default_value(-1),
-      "Number of parallel jobs, negative for automatic.");
+      "The number of events to skip")("jobs,j", value<int>()->default_value(-1),
+                                      "Number of parallel jobs, negative for "
+                                      "automatic.");
 }
 
 void ActsExamples::Options::addRandomNumbersOptions(
@@ -59,7 +59,9 @@ void ActsExamples::Options::addGeometryOptions(
       "geo-layer-loglevel", value<size_t>()->default_value(3),
       "The output log level for the layer building.")(
       "geo-volume-loglevel", value<size_t>()->default_value(3),
-      "The output log level for the volume building.");
+      "The output log level "
+      "for the volume "
+      "building.");
 }
 
 void ActsExamples::Options::addMaterialOptions(
@@ -68,9 +70,9 @@ void ActsExamples::Options::addMaterialOptions(
       "mat-input-type", value<std::string>()->default_value("build"),
       "The way material is loaded: 'none', 'build', 'proto', 'file'.")(
       "mat-input-file", value<std::string>()->default_value(""),
-      "Name of the material map input file, supported: '.json' or '.root'.")(
-      "mat-output-file", value<std::string>()->default_value(""),
-      "Name of the material map output file (without extension).")(
+      "Name of the material map input file, supported: '.json', '.cbor' or "
+      "'.root'.")("mat-output-file", value<std::string>()->default_value(""),
+                  "Name of the material map output file (without extension).")(
       "mat-output-sensitives", value<bool>()->default_value(true),
       "Write material information of sensitive surfaces.")(
       "mat-output-approaches", value<bool>()->default_value(true),
@@ -110,6 +112,10 @@ void ActsExamples::Options::addOutputOptions(
     opt.add_options()("output-json", bool_switch(),
                       "Switch on to write '.json' ouput file(s).");
 
+  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Cbor))
+    opt.add_options()("output-cbor", bool_switch(),
+                      "Switch on to write '.cbor' ouput file(s).");
+
   if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Txt))
     opt.add_options()("output-txt", bool_switch(),
                       "Switch on to write '.txt' ouput file(s).");
@@ -129,7 +135,9 @@ void ActsExamples::Options::addInputOptions(
                                            value<bool>()->default_value(false),
                                            "Switch on to read '.obj' file(s).")(
       "input-json", value<bool>()->default_value(false),
-      "Switch on to read '.json' file(s).");
+      "Switch on to read '.json' file(s).")(
+      "input-cbor", value<bool>()->default_value(false),
+      "Switch on to read '.cbor' file(s).");
 }
 
 boost::program_options::variables_map ActsExamples::Options::parse(

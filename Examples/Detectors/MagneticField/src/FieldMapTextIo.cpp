@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "FieldMapperTextIo.hpp"
+#include "FieldMapTextIo.hpp"
 
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 
@@ -18,8 +18,8 @@ namespace {
 constexpr size_t kDefaultSize = 1 << 15;
 }
 
-ActsExamples::detail::InterpolatedMagneticFieldMapper2
-ActsExamples::makeMagneticFieldMapperRzFromText(
+ActsExamples::detail::InterpolatedMagneticField2
+ActsExamples::makeMagneticFieldMapRzFromText(
     std::function<size_t(std::array<size_t, 2> binsRZ,
                          std::array<size_t, 2> nBinsRZ)>
         localToGlobalBin,
@@ -56,12 +56,12 @@ ActsExamples::makeMagneticFieldMapperRzFromText(
   zPos.shrink_to_fit();
   bField.shrink_to_fit();
   /// [2] use helper function in core
-  return Acts::fieldMapperRZ(localToGlobalBin, rPos, zPos, bField, lengthUnit,
-                             BFieldUnit, firstQuadrant);
+  return Acts::fieldMapRZ(localToGlobalBin, rPos, zPos, bField, lengthUnit,
+                          BFieldUnit, firstQuadrant);
 }
 
-ActsExamples::detail::InterpolatedMagneticFieldMapper3
-ActsExamples::makeMagneticFieldMapperXyzFromText(
+ActsExamples::detail::InterpolatedMagneticField3
+ActsExamples::makeMagneticFieldMapXyzFromText(
     std::function<size_t(std::array<size_t, 3> binsXYZ,
                          std::array<size_t, 3> nBinsXYZ)>
         localToGlobalBin,
@@ -101,6 +101,6 @@ ActsExamples::makeMagneticFieldMapperXyzFromText(
   yPos.shrink_to_fit();
   zPos.shrink_to_fit();
   bField.shrink_to_fit();
-  return Acts::fieldMapperXYZ(localToGlobalBin, xPos, yPos, zPos, bField,
-                              lengthUnit, BFieldUnit, firstOctant);
+  return Acts::fieldMapXYZ(localToGlobalBin, xPos, yPos, zPos, bField,
+                           lengthUnit, BFieldUnit, firstOctant);
 }

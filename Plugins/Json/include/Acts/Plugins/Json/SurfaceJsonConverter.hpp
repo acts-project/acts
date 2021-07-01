@@ -9,14 +9,13 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Plugins/Json/SurfaceBoundsJsonConverter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <string>
 #include <vector>
-
-#include <nlohmann/json.hpp>
 
 // Custom Json encoder/decoders. Naming is mandated by nlohman::json and thus
 // can not match our naming guidelines.

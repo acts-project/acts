@@ -58,7 +58,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   // Set the CombinatorialKalmanFilter options
   ActsExamples::TrackFindingAlgorithm::TrackFinderOptions options(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
-      MeasurementCalibrator(measurements),
+      IndexSourceLinkAccessor(), MeasurementCalibrator(measurements),
       Acts::MeasurementSelector(m_cfg.measurementSelectorCfg),
       Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
 
@@ -74,9 +74,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       // Get the track finding output object
       const auto& trackFindingOutput = result.value();
       // Create a Trajectories result struct
-      trajectories.emplace_back(std::move(trackFindingOutput.fittedStates),
-                                std::move(trackFindingOutput.trackTips),
-                                std::move(trackFindingOutput.fittedParameters));
+      trajectories.emplace_back(
+          std::move(trackFindingOutput.fittedStates),
+          std::move(trackFindingOutput.lastMeasurementIndices),
+          std::move(trackFindingOutput.fittedParameters));
     } else {
       ACTS_WARNING("Track finding failed for seed " << iseed << " with error"
                                                     << result.error());
@@ -85,6 +86,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       trajectories.push_back(Trajectories());
     }
   }
+
+  ACTS_DEBUG("Finalized track finding with " << trajectories.size()
+                                             << " track candidates.");
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
   return ActsExamples::ProcessCode::SUCCESS;

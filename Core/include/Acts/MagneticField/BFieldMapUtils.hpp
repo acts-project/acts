@@ -26,7 +26,7 @@ namespace Acts {
 
 class SolenoidBField;
 
-/// Method to setup the FieldMapper
+/// Method to setup the FieldMap
 /// @param localToGlobalBin Function mapping the local bins of r,z to the global
 /// bin of the map magnetic field value
 ///
@@ -66,18 +66,18 @@ class SolenoidBField;
 /// e.g. we have the grid values r={0,1} with BFieldValues={2,3} on the r axis.
 /// If the flag is set to true the r-axis grid values will be set to {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
-Acts::InterpolatedBFieldMapper<
+Acts::InterpolatedBFieldMap<
     Acts::detail::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
                        Acts::detail::EquidistantAxis>>
-fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
-                                         std::array<size_t, 2> nBinsRZ)>&
-                  localToGlobalBin,
-              std::vector<double> rPos, std::vector<double> zPos,
-              std::vector<Acts::Vector2> bField,
-              double lengthUnit = UnitConstants::mm,
-              double BFieldUnit = UnitConstants::T, bool firstQuadrant = false);
+fieldMapRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
+                                      std::array<size_t, 2> nBinsRZ)>&
+               localToGlobalBin,
+           std::vector<double> rPos, std::vector<double> zPos,
+           std::vector<Acts::Vector2> bField,
+           double lengthUnit = UnitConstants::mm,
+           double BFieldUnit = UnitConstants::T, bool firstQuadrant = false);
 
-/// Method to setup the FieldMapper
+/// Method to setup the FieldMap
 /// @param localToGlobalBin Function mapping the local bins of x,y,z to the
 /// global bin of the map magnetic field value
 ///
@@ -127,16 +127,16 @@ fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
 /// e.g. we have the grid values z={0,1} with BFieldValues={2,3} on the r axis.
 /// If the flag is set to true the z-axis grid values will be set to {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
-Acts::InterpolatedBFieldMapper<Acts::detail::Grid<
+Acts::InterpolatedBFieldMap<Acts::detail::Grid<
     Acts::Vector3, Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis,
     Acts::detail::EquidistantAxis>>
-fieldMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
-                                          std::array<size_t, 3> nBinsXYZ)>&
-                   localToGlobalBin,
-               std::vector<double> xPos, std::vector<double> yPos,
-               std::vector<double> zPos, std::vector<Acts::Vector3> bField,
-               double lengthUnit = UnitConstants::mm,
-               double BFieldUnit = UnitConstants::T, bool firstOctant = false);
+fieldMapXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
+                                       std::array<size_t, 3> nBinsXYZ)>&
+                localToGlobalBin,
+            std::vector<double> xPos, std::vector<double> yPos,
+            std::vector<double> zPos, std::vector<Acts::Vector3> bField,
+            double lengthUnit = UnitConstants::mm,
+            double BFieldUnit = UnitConstants::T, bool firstOctant = false);
 
 /// Function which takes an existing SolenoidBField instance and
 /// creates a field mapper by sampling grid points from the analytical
@@ -148,12 +148,10 @@ fieldMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
 /// @param field the solenoid field instance
 ///
 /// @return A field mapper instance for use in interpolation.
-Acts::InterpolatedBFieldMapper<
+Acts::InterpolatedBFieldMap<
     Acts::detail::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
                        Acts::detail::EquidistantAxis>>
-solenoidFieldMapper(std::pair<double, double> rlim,
-                    std::pair<double, double> zlim,
-                    std::pair<size_t, size_t> nbins,
-                    const SolenoidBField& field);
+solenoidFieldMap(std::pair<double, double> rlim, std::pair<double, double> zlim,
+                 std::pair<size_t, size_t> nbins, const SolenoidBField& field);
 
 }  // namespace Acts

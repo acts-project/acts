@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
-#include <ActsExamples/Framework/WriterT.hpp>
+#include "ActsExamples/Framework/WriterT.hpp"
 
 #include <mutex>
 

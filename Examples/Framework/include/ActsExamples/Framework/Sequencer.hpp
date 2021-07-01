@@ -22,6 +22,8 @@
 #include <utility>
 #include <vector>
 
+#include <tbb/task_arena.h>
+
 namespace ActsExamples {
 
 /// A simple algorithm sequencer for event processing.
@@ -102,6 +104,7 @@ class Sequencer {
   std::pair<size_t, size_t> determineEventsRange() const;
 
   Config m_cfg;
+  tbb::task_arena m_taskArena;
   std::vector<std::shared_ptr<IService>> m_services;
   std::vector<std::shared_ptr<IContextDecorator>> m_decorators;
   std::vector<std::shared_ptr<IReader>> m_readers;

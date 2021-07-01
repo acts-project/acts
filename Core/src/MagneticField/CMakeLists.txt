@@ -3,4 +3,5 @@ target_sources(
   PRIVATE
     BFieldMapUtils.cpp
     SolenoidBField.cpp
+    MagneticFieldError.cpp
 )

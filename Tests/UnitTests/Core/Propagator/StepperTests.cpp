@@ -211,7 +211,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_ABS(es.charge(esState), charge, eps);
   CHECK_CLOSE_ABS(es.time(esState), time, eps);
   //~ BOOST_CHECK_EQUAL(es.overstepLimit(esState), tolerance);
-  BOOST_CHECK_EQUAL(es.getField(esState, pos), bField->getField(pos, bCache));
+  BOOST_CHECK_EQUAL(es.getField(esState, pos).value(),
+                    bField->getField(pos, bCache).value());
 
   // Step size modifies
   const std::string originalStepSize = esState.stepSize.toString();
@@ -529,10 +530,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
       tgb.trackingGeometry(tgContext);
 
   // Build navigator
-  Navigator naviVac(vacuum);
-  naviVac.resolvePassive = true;
-  naviVac.resolveMaterial = true;
-  naviVac.resolveSensitive = true;
+  Navigator naviVac({vacuum, true, true, true});
 
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
@@ -638,10 +636,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
       tgb.trackingGeometry(tgContext);
 
   // Build navigator
-  Navigator naviMat(material);
-  naviMat.resolvePassive = true;
-  naviMat.resolveMaterial = true;
-  naviMat.resolveSensitive = true;
+  Navigator naviMat({material, true, true, true});
 
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
@@ -805,10 +800,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   std::shared_ptr<const TrackingGeometry> det = tgb.trackingGeometry(tgContext);
 
   // Build navigator
-  Navigator naviDet(det);
-  naviDet.resolvePassive = true;
-  naviDet.resolveMaterial = true;
-  naviDet.resolveSensitive = true;
+  Navigator naviDet({det, true, true, true});
 
   // Set initial parameters for the particle track
   CurvilinearTrackParameters sbtp(Vector4::Zero(), 0_degree, 90_degree, 5_GeV,
@@ -1051,10 +1043,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
       tgb.trackingGeometry(tgContext);
 
   // Build navigator
-  Navigator naviVac(detector);
-  naviVac.resolvePassive = true;
-  naviVac.resolveMaterial = true;
-  naviVac.resolveSensitive = true;
+  Navigator naviVac({detector, true, true, true});
 
   // Set initial parameters for the particle track
   CurvilinearTrackParameters sbtp(Vector4::Zero(), 0_degree, 90_degree,

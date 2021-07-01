@@ -64,10 +64,11 @@ ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField) {
   Stepper stepper(std::move(magneticField));
-  Acts::Navigator navigator(trackingGeometry);
-  navigator.resolvePassive = false;
-  navigator.resolveMaterial = true;
-  navigator.resolveSensitive = true;
+  Acts::Navigator::Config cfg{trackingGeometry};
+  cfg.resolvePassive = false;
+  cfg.resolveMaterial = true;
+  cfg.resolveSensitive = true;
+  Acts::Navigator navigator(cfg);
   Propagator propagator(std::move(stepper), std::move(navigator));
   Fitter trackFitter(std::move(propagator));
 

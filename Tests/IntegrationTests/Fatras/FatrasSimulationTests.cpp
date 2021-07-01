@@ -163,7 +163,7 @@ BOOST_DATA_TEST_CASE(FatrasSimulation, dataset, pdg, phi, eta, p,
   auto trackingGeometry = geoBuilder();
 
   // construct the propagators
-  Navigator navigator(trackingGeometry);
+  Navigator navigator({trackingGeometry});
   ChargedStepper chargedStepper(
       std::make_shared<Acts::ConstantBField>(Acts::Vector3{0, 0, 1_T}));
   ChargedPropagator chargedPropagator(std::move(chargedStepper), navigator);

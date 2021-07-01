@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
@@ -25,8 +26,6 @@
 
 #include <fstream>
 #include <iostream>
-
-#include <nlohmann/json.hpp>
 
 using namespace Acts;
 

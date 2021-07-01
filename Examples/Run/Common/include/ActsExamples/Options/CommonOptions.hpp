@@ -25,7 +25,8 @@ enum class OutputFormat : uint8_t {
   Csv = 2,
   Obj = 4,
   Json = 8,
-  Txt = 16,
+  Cbor = 16,
+  Txt = 32,
   All = std::numeric_limits<uint8_t>::max()
 };
 
