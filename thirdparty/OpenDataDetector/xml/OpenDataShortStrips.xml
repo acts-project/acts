@@ -4,8 +4,8 @@
         <dimensions name="ShortStripEndcapShape" rmin="ss_env_rmin" rmax="ss_env_rmax" dz="ss_e_dz" z="ss_e_nz"/>
         <ring name="Ring0" r="318*mm" nphi="42" reflect="true" phi0="0." gap="2.5*mm" z_offset="5.*mm"> 
           <module name="ShortStripEndcapModuleR0" vis="invisible">
-            <module_component name="Sensor" alpha="0." x1="18.4*mm" x2="30.2*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
-            <module_component name="Board" alpha="0." x1="19.2*mm" x2="31.*mm" length="78.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-0.375*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+            <module_component name="Sensor" alpha="0." x1="18.4*mm" x2="32.2*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+            <module_component name="Board" alpha="0." x1="19.2*mm" x2="33.*mm" length="78.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-0.375*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
             <module_component name="Connector" alpha="0." x1="10.2*mm" x2="15.*mm" length="44.8*mm" thickness="0.2*mm" x_offset="0.*mm" y_offset="-0.7*mm" z_offset="0.*mm" material="Al" vis="red" sensitive="false"/>
           </module>
           <support name="SupportRing0" rmin="220.*mm" rmax="270.*mm" dz="2.*mm" z_offset="0.*mm" material="CarbonFiber" vis="CarbonFiber"/>
@@ -14,17 +14,17 @@
           <support name="SupportRing1" rmin="370.*mm" rmax="430.*mm" dz="2.*mm" z_offset="0.*mm" material="CarbonFiber" vis="CarbonFiber"/>
           <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="432.*mm" gap="21.3*mm" nphi="32" z_offset="0.*mm" material="Ti" vis="orange"/>
         </ring>
-        <ring name="Ring1" r="470*mm" nphi="50" reflect="true" phi0="0." gap="2.5*mm" z_offset="-5.*mm">
+        <ring name="Ring1" r="470*mm" nphi="42" reflect="true" phi0="0.0748*rad" gap="2.5*mm" z_offset="-5.*mm">
           <module name="ShortStripEndcapModuleR1" vis="invisible">
-            <module_component name="Sensor" alpha="0." x1="25.2*mm" x2="36.2*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
-            <module_component name="Board" alpha="0." x1="26.0*mm" x2="37.*mm" length="78.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-0.475*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+            <module_component name="Sensor" alpha="0." x1="30.2*mm" x2="44.0*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+            <module_component name="Board" alpha="0." x1="31.0*mm" x2="44.8*mm" length="78.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-0.475*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
             <module_component name="Connector" alpha="0." x1="15.2*mm" x2="22.*mm" length="44.8*mm" thickness="0.2*mm" x_offset="0.*mm" y_offset="-0.7*mm" z_offset="0.*mm" material="Al" vis="red" sensitive="false"/>
           </module>
         </ring>
-        <ring name="Ring2" r="622*mm" nphi="60" reflect="true" phi0="0." gap="2.5*mm" z_offset="5.*mm">
+        <ring name="Ring2" r="622*mm" nphi="42" reflect="true" phi0="0." gap="2.5*mm" z_offset="5.*mm">
           <module name="ShortStripEndcapModuleR2" vis="invisible">
-            <module_component name="Sensor" alpha="0." x1="32.2*mm" x2="38.*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
-            <module_component name="Board" alpha="0." x1="33.0*mm" x2="38.8*mm" length="78.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-0.375*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+            <module_component name="Sensor" alpha="0." x1="40.8*mm" x2="56.4*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+            <module_component name="Board" alpha="0." x1="41.6*mm" x2="57.2*mm" length="78.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-0.375*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
             <module_component name="Connector" alpha="0." x1="22.2*mm" x2="28.*mm" length="44.8*mm" thickness="0.2*mm" x_offset="0.*mm" y_offset="-0.75*mm" z_offset="0.*mm" material="Al" vis="red" sensitive="false"/>
           </module>
           <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="504.*mm" gap="19.5*mm" nphi="42" z_offset="0.*mm" material="Ti" vis="orange"/>
@@ -113,8 +113,8 @@
         <dimensions name="ShortStripEndcapShape" rmin="ss_env_rmin" rmax="ss_env_rmax" dz="ss_e_dz" z="ss_e_pz"/>
         <ring name="Ring0" r="318*mm" nphi="42" reflect="true" phi0="0." gap="2.5*mm" z_offset="-5.*mm"> 
           <module name="ShortStripEndcapModuleR0" vis="invisible">
-            <module_component name="Sensor" alpha="0." x1="18.4*mm" x2="30.2*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
-            <module_component name="Board" alpha="0." x1="19.2*mm" x2="31.*mm" length="78.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-0.275*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+            <module_component name="Sensor" alpha="0." x1="18.4*mm" x2="32.2*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+            <module_component name="Board" alpha="0." x1="19.2*mm" x2="33.*mm" length="78.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-0.275*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
             <module_component name="Connector" alpha="0." x1="10.2*mm" x2="15.*mm" length="44.8*mm" thickness="0.2*mm" x_offset="0.*mm" y_offset="-0.7*mm" z_offset="0.*mm" material="Al" vis="red" sensitive="false"/>
           </module>
           <support name="SupportRing0" rmin="220.*mm" rmax="270.*mm" dz="2.1*mm" z_offset="0.*mm" material="CarbonFiber" vis="CarbonFiber"/>
@@ -123,17 +123,17 @@
           <support name="SupportRing1" rmin="370.*mm" rmax="430.*mm" dz="2.*mm" z_offset="0.*mm" material="CarbonFiber" vis="CarbonFiber"/>
           <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="432.*mm" gap="21.3*mm" nphi="32" z_offset="0.*mm" material="Ti" vis="orange"/>
         </ring>
-        <ring name="Ring1" r="470*mm" nphi="50" reflect="true" phi0="0." gap="2.5*mm" z_offset="+5.*mm">
+        <ring name="Ring1" r="470*mm" nphi="42" reflect="true" phi0="0.0748*rad" gap="2.5*mm" z_offset="+5.*mm">
           <module name="ShortStripEndcapModuleR1" vis="invisible">
-            <module_component name="Sensor" alpha="0." x1="25.2*mm" x2="36.2*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
-            <module_component name="Board" alpha="0." x1="26.0*mm" x2="37.*mm" length="78.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-0.475*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+            <module_component name="Sensor" alpha="0." x1="30.2*mm" x2="44.*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+            <module_component name="Board" alpha="0." x1="31.0*mm" x2="44.8*mm" length="78.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-0.475*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
             <module_component name="Connector" alpha="0." x1="15.2*mm" x2="22.*mm" length="44.8*mm" thickness="0.2*mm" x_offset="0.*mm" y_offset="-0.7*mm" z_offset="0.*mm" material="Al" vis="red" sensitive="false"/>
           </module>
         </ring>
-        <ring name="Ring2" r="622*mm" nphi="60" reflect="true" phi0="0." gap="2.5*mm" z_offset="-5.*mm">
+        <ring name="Ring2" r="622*mm" nphi="42" reflect="true" phi0="0." gap="2.5*mm" z_offset="-5.*mm">
           <module name="ShortStripEndcapModuleR2" vis="invisible">
-            <module_component name="Sensor" alpha="0." x1="32.2*mm" x2="38.*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
-            <module_component name="Board" alpha="0." x1="33.0*mm" x2="38.8*mm" length="78.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-0.375*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+            <module_component name="Sensor" alpha="0." x1="40.8*mm" x2="56.4*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+            <module_component name="Board" alpha="0." x1="41.4*mm" x2="57.2*mm" length="78.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-0.375*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
             <module_component name="Connector" alpha="0." x1="22.2*mm" x2="28.*mm" length="44.8*mm" thickness="0.2*mm" x_offset="0.*mm" y_offset="-0.75*mm" z_offset="0.*mm" material="Al" vis="red" sensitive="false"/>
           </module>
           <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="504.*mm" gap="19.5*mm" nphi="42" z_offset="0.*mm" material="Ti" vis="orange"/>
