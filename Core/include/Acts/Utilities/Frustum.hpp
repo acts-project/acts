@@ -95,8 +95,7 @@ class Frustum {
 
   /// Getter for the normal vectors of the planes defining this frustum.
   /// @return Array containing the normal vectors for all planes.
-  /// @note The size of the array that is returned is fixed to `number of sides
-  /// + 1`
+  /// @note The size of the array that is returned is fixed to `number of sides + 1`
   const std::array<VertexType, SIDES + 1>& normals() const { return m_normals; }
 
   /// Transforms this frustum using a given transform and returns a new instance

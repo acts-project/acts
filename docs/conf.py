@@ -78,10 +78,10 @@ breathe_domain_by_extension = {
     "hpp": "cpp",
     "ipp": "cpp",
 }
-breathe_default_members = [
+breathe_default_members = (
     "members",
     "undoc-members",
-]
+)
 
 # -- Automatic API documentation generation with Exhale -----------------------
 
@@ -90,7 +90,6 @@ exhale_args = {
     "rootFileName": "api.rst",
     "rootFileTitle": "API",
     "createTreeView": True,
-    "exhaleUseDoxyfile": True,
     # note: OUTPUT_DIRECTORY in Doxyfile must match breathe default project path
     # note: this must match STRIP_FROM_PATH in Doxyfile
     "doxygenStripFromPath": "..",
@@ -105,6 +104,9 @@ elif tags.has("use_exhale"):
     # if exhale is requested manually, we expect the Doxygen has been run for us
     extensions.append("exhale")
     exhale_args["exhaleExecutesDoxygen"] = False
+
+if exhale_args["exhaleExecutesDoxygen"]:
+    exhale_args["exhaleUseDoxyfile"] = True
 
 # -- Markdown bridge setup hook (must come last, not sure why) ----------------
 

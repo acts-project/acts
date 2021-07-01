@@ -541,6 +541,7 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
   ///
   /// @param [in] gctx the geometry context for this building
   /// @param [in] lVector is the vector of layers that are parsed
+  /// @param [in] mtvVector Vector of mutable tracking volumes to analyze
   ///
   /// @return a VolumeConfig representing this layer
   VolumeConfig analyzeContent(

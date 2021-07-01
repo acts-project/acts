@@ -37,7 +37,7 @@ class SeedFinder {
   /// @param tripletFilterConfig Configuration for the GPU based triplet
   ///        filtering
   /// @param device The identifier of the CUDA device to run on
-  /// @param loggerLevel Output level of messages coming from the object
+  /// @param logger A @c Logger instance
   ///
   SeedFinder(SeedfinderConfig<external_spacepoint_t> commonConfig,
              const SeedFilterConfig& seedFilterConfig,
@@ -47,9 +47,9 @@ class SeedFinder {
 
   /// Create all seeds from the space points in the three iterators.
   /// Can be used to parallelize the seed creation
-  /// @param bottom group of space points to be used as innermost SP in a seed.
-  /// @param middle group of space points to be used as middle SP in a seed.
-  /// @param top group of space points to be used as outermost SP in a seed.
+  /// @param bottomSPs group of space points to be used as innermost SP in a seed.
+  /// @param middleSPs group of space points to be used as middle SP in a seed.
+  /// @param topSPs group of space points to be used as outermost SP in a seed.
   /// Ranges must return pointers.
   /// Ranges must be separate objects for each parallel call.
   /// @return vector in which all found seeds for this group are stored.

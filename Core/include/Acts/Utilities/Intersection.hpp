@@ -41,7 +41,7 @@ struct Intersection {
   ///
   /// @param sinter is the position of the intersection
   /// @param slength is the path length to the intersection
-  /// @param svalid is a boolean indicating if intersection is valid
+  /// @param sstatus is an enum indicating the status of the intersection
   Intersection(const ActsVector<DIM>& sinter, double slength, Status sstatus)
       : position(sinter), pathLength(slength), status(sstatus) {}
 
@@ -107,7 +107,6 @@ class ObjectIntersection {
   ///
   /// @param sInter is the intersection
   /// @param sObject is the object to be instersected
-  /// @param sRepresentation is the object represenatation
   template <typename T = representation_t,
             std::enable_if_t<std::is_same<T, object_t>::value, int> = 0>
   ObjectIntersection(const Intersection3D& sInter, const object_t* sObject)

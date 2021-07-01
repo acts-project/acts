@@ -135,7 +135,7 @@ class AnnulusBounds : public DiscBounds {
   /// @param lseg the number of segments used to approximate
   /// and eventually curved line
   ///
-  /// @note that that if @param lseg > 0, the extrema points are given,
+  /// @note that that if @c lseg > 0, the extrema points are given,
   ///  which may slightly alter the number of segments returned
   ///
   /// @return vector for vertices in 2D
@@ -191,8 +191,8 @@ class AnnulusBounds : public DiscBounds {
   /// Transform the strip cartesien
   /// into the module polar system
   ///
-  /// @param vStripXy the position in the cartesian strip system
-  /// @return the poistion in the module polar coordiante system
+  /// @param vStripXY the position in the cartesian strip system
+  /// @return the position in the module polar coordinate system
   Vector2 stripXYToModulePC(const Vector2& vStripXY) const;
 
   /// Private helper method

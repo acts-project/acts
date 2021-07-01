@@ -65,7 +65,7 @@ class ProtoSurfaceMaterial : public ISurfaceMaterial {
 
   /// Scale operator
   ///
-  /// @param
+  /// @param scale The value to scale this material by
   ProtoSurfaceMaterial& operator*=(double scale) final;
 
   /// Return the BinUtility
