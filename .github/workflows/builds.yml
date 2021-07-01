@@ -12,61 +12,61 @@ env:
   HOMEBREW_NO_INSTALL_CLEANUP: 1
 
 jobs:
-  linux:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v11
-    strategy:
-      matrix:
-        image:
-          - centos7-lcg97apython3-gcc9
-          - centos7-lcg98python3-gcc10
-          - ubuntu2004
-    env:
-      SETUP: true
-      SETUP_LCG: source /opt/lcg_view/setup.sh
-      INSTALL_DIR: ${{ github.workspace }}/install
-    steps:
-      - uses: actions/checkout@v2
-      - name: Define setup script
-        if: contains(matrix.image, 'lcg')
-        run: echo "SETUP=${SETUP_LCG}" >> $GITHUB_ENV
-      - name: Configure
-        run: >
-          ${SETUP} &&
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DACTS_BUILD_EVERYTHING=on
-          -DACTS_LOG_FAILURE_THRESHOLD=WARNING
-      - name: Build
-        run: ${SETUP} && cmake --build build -- 
-      - name: Unit tests
-        run: ${SETUP} && cmake --build build -- test
-      - name: Integration tests
-        run: ${SETUP} && cmake --build build -- integrationtests
-      - name: Examples
-        if: contains(matrix.image, 'ubuntu')
-        run: ${SETUP} && ./CI/run_examples.sh
-      - name: Install
-        run: ${SETUP} && cmake --build build -- install
-      - uses: actions/upload-artifact@v2
-        with:
-          name: acts-${{ matrix.image }}
-          path: ${{ env.INSTALL_DIR }}
-      - name: Downstream configure
-        run: >
-          ${SETUP} &&
-          cmake -B build-downstream -S Tests/DownstreamProject
-          -GNinja
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
-      - name: Downstream build
-        run: ${SETUP} && cmake --build build-downstream --
-      - name: Downstream run
-        run: ${SETUP} && ./build-downstream/bin/ShowActsVersion
+  # linux:
+  #   runs-on: ubuntu-latest
+  #   container: ghcr.io/acts-project/${{ matrix.image }}:v11
+  #   strategy:
+  #     matrix:
+  #       image:
+  #         - centos7-lcg97apython3-gcc9
+  #         - centos7-lcg98python3-gcc10
+  #         - ubuntu2004
+  #   env:
+  #     SETUP: true
+  #     SETUP_LCG: source /opt/lcg_view/setup.sh
+  #     INSTALL_DIR: ${{ github.workspace }}/install
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: Define setup script
+  #       if: contains(matrix.image, 'lcg')
+  #       run: echo "SETUP=${SETUP_LCG}" >> $GITHUB_ENV
+  #     - name: Configure
+  #       run: >
+  #         ${SETUP} &&
+  #         cmake -B build -S .
+  #         -GNinja
+  #         -DCMAKE_BUILD_TYPE=Release
+  #         -DCMAKE_CXX_FLAGS=-Werror
+  #         -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+  #         -DACTS_BUILD_EVERYTHING=on
+  #         -DACTS_LOG_FAILURE_THRESHOLD=WARNING
+  #     - name: Build
+  #       run: ${SETUP} && cmake --build build -- 
+  #     - name: Unit tests
+  #       run: ${SETUP} && cmake --build build -- test
+  #     - name: Integration tests
+  #       run: ${SETUP} && cmake --build build -- integrationtests
+  #     - name: Examples
+  #       if: contains(matrix.image, 'ubuntu')
+  #       run: ${SETUP} && ./CI/run_examples.sh
+  #     - name: Install
+  #       run: ${SETUP} && cmake --build build -- install
+  #     - uses: actions/upload-artifact@v2
+  #       with:
+  #         name: acts-${{ matrix.image }}
+  #         path: ${{ env.INSTALL_DIR }}
+  #     - name: Downstream configure
+  #       run: >
+  #         ${SETUP} &&
+  #         cmake -B build-downstream -S Tests/DownstreamProject
+  #         -GNinja
+  #         -DCMAKE_BUILD_TYPE=Release
+  #         -DCMAKE_CXX_FLAGS=-Werror
+  #         -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+  #     - name: Downstream build
+  #       run: ${SETUP} && cmake --build build-downstream --
+  #     - name: Downstream run
+  #       run: ${SETUP} && ./build-downstream/bin/ShowActsVersion
 
   lcg:
     runs-on: ubuntu-latest
