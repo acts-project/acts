@@ -13,6 +13,8 @@
 #include "Acts/Plugins/Cuda/Utilities/NewMemoryManager/CudaStreamView.hpp"
 #include "Acts/Plugins/Cuda/Utilities/NewMemoryManager/MemoryResource/Device/detail/Methods.hpp"
 
+#include <vector>
+
 namespace Acts {
 namespace Cuda {
 namespace Nmm {
@@ -43,14 +45,14 @@ class GlobalArena final {
 		// @param[in] maximumSize maximum size, in bytes, that the global arena can grow to. 
 		// Defaults to all of the available memory on the current device
 		GlobalArena(Upstream* upstreamMemoryResource, std::size_t initialSize, std::size_t maximumSize)
-			: upstreamMemoryResource_(upstreamMemoryResource), maximumSize_{maximumSize} {
+			: upstreamMemoryResource_{upstreamMemoryResource}, maximumSize_{maximumSize} {
 				// assert unexpected null upstream pointer
 				// assert initial arena size required to be a multiple of 256 bytes
 				// assert maximum arena size required to be a multiple of 256 bytes
 
 				if(initialSize == defaultInitialSize || maximumSize == defaultMaximumSize) {
 					std::size_t free{}, total{};
-					//cuda try cudaMemGetInfo(&free, &total);
+					cudaMemGetInfo(&free, &total);
 					if(initialSize == defaultInitialSize) {
 						initialSize = alignUp(std::min(free, total / 2));
 					}
@@ -146,9 +148,9 @@ class GlobalArena final {
 		std::size_t currentSize_{};
 		// Address-ordered set of free blocks
 		std::set<Block> freeBlocks_;
-		// blocks allocated from upstreamso that they can be quickly freed
+		// Blocks allocated from upstream so that they can be quickly freed
 		std::vector<Block> upstreamBlocks_;
-		// mutex for exclusive lock
+		// Mutex for exclusive lock
 		mutable std::mutex mtx_;
 };// class GlobalArena
 
