@@ -55,7 +55,7 @@ class MeasurementSelector {
   /// @brief Constructor with config and (non-owning) logger
   ///
   /// @param config a config instance
-  MeasurementSelector(Config config) : m_config(std::move(cfg)) {}
+  MeasurementSelector(Config config) : m_config(std::move(config)) {}
 
   /// @brief Operater that select the measurements compatible with
   /// the given track parameter on a surface
