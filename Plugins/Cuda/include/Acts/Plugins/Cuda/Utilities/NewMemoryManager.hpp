@@ -22,14 +22,14 @@
 #include "Acts/Plugins/Cuda/Utilities/NewMemoryManager/MemoryResource/Host/PinnedMemoryResource.hpp"
 
 namespace Acts {
-namespace Cuda {
 
 // return the memory resource for the CPU
 Nmm::MemoryResource::HostMemoryResource* getCPUmmr();
 
-
 // return the memory resource for the GPU
 Nmm::MemoryResource::DeviceMemoryResource* getGPUmmr();
 
-} // namespace Cuda
+// return the memory resource for pinned memory
+Nmm::MemoryResource::HostMemoryResource* getPinnedmmr();
+
 } // namespace Acts
