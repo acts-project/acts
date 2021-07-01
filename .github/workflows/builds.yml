@@ -77,6 +77,7 @@ jobs:
           - LCG_98python3/x86_64-centos7-gcc10-opt
           - LCG_99/x86_64-centos7-gcc10-opt
           - LCG_100/x86_64-centos7-gcc10-opt
+          - LCG_100/x86_64-centos8-gcc10-opt
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
     steps:
@@ -87,7 +88,6 @@ jobs:
           release-platform: ${{ matrix.LCG }}
           run: |
             export INSTALL_DIR=${{ github.workspace }}/install
-            echo $INSTALL_DIR
             cmake -B build -S . \
               -GNinja \
               -DCMAKE_BUILD_TYPE=Release \
