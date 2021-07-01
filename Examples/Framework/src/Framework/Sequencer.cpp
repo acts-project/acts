@@ -20,7 +20,8 @@
 #include <TROOT.h>
 #include <dfe/dfe_io_dsv.hpp>
 #include <dfe/dfe_namedtuple.hpp>
-#include <tbb/tbb.h>
+#include <tbb/parallel_for.h>
+#include <tbb/queuing_mutex.h>
 
 ActsExamples::Sequencer::Sequencer(const Sequencer::Config& cfg)
     : m_cfg(cfg),

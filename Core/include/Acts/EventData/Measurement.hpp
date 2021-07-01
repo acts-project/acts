@@ -193,6 +193,8 @@ auto makeMeasurement(source_link_t source,
 }
 
 namespace detail {
+/// @cond
+
 // Recursive construction of the measurement variant. `kN` is counted down until
 // zero while the sizes are accumulated in the parameter pack.
 //
@@ -213,6 +215,8 @@ template <typename source_link_t, typename indices_t, size_t... kSizes>
 struct VariantMeasurementGenerator<source_link_t, indices_t, 0u, kSizes...> {
   using Type = std::variant<Measurement<source_link_t, indices_t, kSizes>...>;
 };
+
+/// @endcond
 }  // namespace detail
 
 /// Variant that can contain all possible measurements in a parameter space.

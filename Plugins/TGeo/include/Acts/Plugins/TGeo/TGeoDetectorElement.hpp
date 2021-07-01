@@ -61,8 +61,6 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   ///       should be translated to a disc surface. Per default it will be
   ///       translated into a cylindrical surface.
   /// @param material Possible material of detector element
-  /// @param digitizationModule Shared pointer to the geometric digitization
-  /// description
   TGeoDetectorElement(
       const Identifier& identifier, const TGeoNode& tGeoNode,
       const TGeoMatrix& tGeoMatrix = TGeoIdentity(),

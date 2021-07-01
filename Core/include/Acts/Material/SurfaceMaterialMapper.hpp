@@ -96,7 +96,8 @@ class SurfaceMaterialMapper {
   ///
   /// Nested State struct which is used for the mapping prococess
   struct State {
-    /// Constructor of the Sate with contexts
+    /// @param [in] gctx The geometry context to use
+    /// @param [in] mctx The magnetic field context to use
     State(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : geoContext(gctx), magFieldContext(mctx) {}
 
@@ -126,7 +127,7 @@ class SurfaceMaterialMapper {
   ///
   /// @param cfg Configuration struct
   /// @param propagator The straight line propagator
-  /// @param log The logger
+  /// @param slogger The logger
   SurfaceMaterialMapper(const Config& cfg, StraightLinePropagator propagator,
                         std::unique_ptr<const Logger> slogger =
                             getDefaultLogger("SurfaceMaterialMapper",
@@ -134,6 +135,8 @@ class SurfaceMaterialMapper {
 
   /// @brief helper method that creates the cache for the mapping
   ///
+  /// @param [in] gctx The geometry context to use
+  /// @param [in] mctx The magnetic field context to use
   /// @param[in] tGeometry The geometry which should be mapped
   ///
   /// This method takes a TrackingGeometry,
@@ -173,13 +176,13 @@ class SurfaceMaterialMapper {
   ///
   /// @param mState is the map to be filled
   /// @param surface is the surface to be checked for a Proxy
-  void checkAndInsert(State& /*mState*/, const Surface& surface) const;
+  void checkAndInsert(State& mState, const Surface& surface) const;
 
   /// @brief check and insert
   ///
   /// @param mState is the map to be filled
-  /// @param surface is the surface to be checked for a Proxy
-  void collectMaterialVolumes(State& /*mState*/,
+  /// @param tVolume is the volume collect from
+  void collectMaterialVolumes(State& mState,
                               const TrackingVolume& tVolume) const;
 
   /// Standard logger method

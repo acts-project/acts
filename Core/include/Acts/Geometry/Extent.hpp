@@ -43,7 +43,7 @@ struct Extent {
 
   /// Check if it intersects
   /// @param other The source Extent
-  /// @param bValue The binning value for the check (binValues for all)
+  /// @param bVal The binning value for the check (binValues for all)
   /// @param tolerance An additional tolerance for the intersection check
   bool intersects(const Extent& other, BinningValue bVal = binValues,
                   double tolerance = s_epsilon) {

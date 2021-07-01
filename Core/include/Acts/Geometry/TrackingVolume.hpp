@@ -53,8 +53,9 @@ using LayerVector = std::vector<LayerPtr>;
 // Intersection with Layer
 using LayerIntersection = ObjectIntersection<Layer, Surface>;
 
-// Full intersection with surface
+/// BoundarySurface of a volume
 using BoundarySurface = BoundarySurfaceT<TrackingVolume>;
+/// Intersection with a @c BoundarySurface
 using BoundaryIntersection = ObjectIntersection<BoundarySurface, Surface>;
 
 /// @class TrackingVolume
@@ -110,11 +111,11 @@ class TrackingVolume : public Volume {
   ///
   /// @param transform is the global 3D transform to position the volume in
   /// space
-  /// @param volBounds is the description of the volume boundaries
+  /// @param volbounds is the description of the volume boundaries
   /// @param boxStore Vector owning the contained bounding boxes
   /// @param descendants Vector owning the child volumes
   /// @param top The top of the hierarchy (top node)
-  /// @param matprop is are materials of the tracking volume
+  /// @param volumeMaterial is the materials of the tracking volume
   /// @param volumeName is a string identifier
   ///
   /// @return shared pointer to a new TrackingVolume
@@ -136,9 +137,10 @@ class TrackingVolume : public Volume {
   /// @param transform is the global 3D transform to position the volume in
   /// space
   /// @param volumeBounds is the description of the volume boundaries
-  /// @param matprop is are materials of the tracking volume
+  /// @param volumeMaterial is are materials of the tracking volume
   /// @param containedLayers is the confined layer array (optional)
   /// @param containedVolumes is the confined volume array (optional)
+  /// @param denseVolumes is the array of dense volulmes (optional)
   /// @param volumeName is a string identifier
   ///
   /// @return shared pointer to a new TrackingVolume
@@ -188,7 +190,7 @@ class TrackingVolume : public Volume {
   /// @param position The position for searching
   /// @param direction The direction for searching
   /// @param options The templated navigation options
-  /// @param sorter Sorter of the boundary surfaces
+  /// @param logger A @c LoggerWrapper instance
   ///
   /// @return is the templated boundary intersection
   std::vector<BoundaryIntersection> compatibleBoundaries(
@@ -260,7 +262,8 @@ class TrackingVolume : public Volume {
   /// a framework given source. As various volumes could potentially share the
   /// the same material description, it is provided as a shared object
   ///
-  /// @param material Material description of this volume
+  /// @param surfaceMaterial Material description of this volume
+  /// @param bsFace Specifies which boundary surface to assign the material to
   void assignBoundaryMaterial(
       std::shared_ptr<const ISurfaceMaterial> surfaceMaterial,
       BoundarySurfaceFace bsFace);
@@ -504,6 +507,8 @@ inline bool TrackingVolume::hasBoundingVolumeHierarchy() const {
   return m_bvhTop != nullptr;
 }
 
-#include "detail/TrackingVolume.ipp"
+#ifndef DOXYGEN
+#include "Acts/Geometry/detail/TrackingVolume.ipp"
+#endif
 
 }  // namespace Acts

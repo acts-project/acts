@@ -36,8 +36,10 @@ class SeedFilter {
   /// @param bottomSP fixed bottom space point
   /// @param middleSP fixed middle space point
   /// @param topSpVec vector containing all space points that may be compatible
-  /// with both bottom and middle space point
-  /// @param origin on the z axis as defined by bottom and middle space point
+  ///                 with both bottom and middle space point
+  /// @param invHelixDiameterVec vector containing 1/(2*r) values where r is the helix radius
+  /// @param impactParametersVec vector containing the impact parameters
+  /// @param zOrigin on the z axis as defined by bottom and middle space point
   /// @return vector of pairs containing seed weight and seed for all valid
   /// created seeds
   virtual std::vector<std::pair<
@@ -51,6 +53,7 @@ class SeedFilter {
 
   /// Filter seeds once all seeds for one middle space point have been created
   /// @param seedsPerSpM vector of pairs containing weight and seed for all
+  /// @param outVec output seeds
   /// for all seeds with the same middle space point
   /// @return vector of all InternalSeeds that not filtered out
   virtual void filterSeeds_1SpFixed(
