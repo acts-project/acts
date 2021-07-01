@@ -10,7 +10,6 @@
 #include "Acts/Plugins/Cuda/Utilities/NewMemoryManager.hpp"
 
 namespace Acts {
-namespace Cuda {
 
 Nmm::MemoryResource::HostMemoryResource* getCPUmmr() {
   // Create a simple CPU memory resource for now
@@ -18,17 +17,22 @@ Nmm::MemoryResource::HostMemoryResource* getCPUmmr() {
   return hmr;
 }
 
+Nmm::MemoryResource::HostMemoryResource* getPinnedmmr() {
+  // Create a simple CPU memory resource for now
+  static Nmm::MemoryResource::HostMemoryResource *hmr = new Nmm::MemoryResource::PinnedMemoryResource();
+  return hmr;
+}
+
 Nmm::MemoryResource::DeviceMemoryResource* getGPUmmr() {
   // Create an upstream type, Cuda for now
   static Nmm::MemoryResource::CudaMemoryResource upstream;
   // Create an arena memory resource (in this part of the program will be setteable for the user in whenever it appears more memory resource)
-  static Nmm::MemoryResource::ArenaMemoryResource< Acts::Cuda::Nmm::MemoryResource::CudaMemoryResource > arenaMr{&upstream};
+  static Nmm::MemoryResource::ArenaMemoryResource< Nmm::MemoryResource::CudaMemoryResource > arenaMr{&upstream};
   // Set this new memory resource, because in the strat is by default a Cuda memory resource
-  static Nmm::MemoryResource::DeviceMemoryResource *dmrOld = Acts::Cuda::Nmm::MemoryResource::detail::setCurrentDeviceResource(&arenaMr);
+  static Nmm::MemoryResource::DeviceMemoryResource *dmrOld = Nmm::MemoryResource::detail::setCurrentDeviceResource(&arenaMr);
   // Get the arena memory resource just set
-  static Nmm::MemoryResource::DeviceMemoryResource *dmr = Acts::Cuda::Nmm::MemoryResource::detail::getCurrentDeviceResource();
+  static Nmm::MemoryResource::DeviceMemoryResource *dmr = Nmm::MemoryResource::detail::getCurrentDeviceResource();
   return dmr;
 }
 
-} // namespace Cuda
 } // namespace Acts
