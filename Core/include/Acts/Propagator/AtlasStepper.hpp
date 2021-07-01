@@ -46,13 +46,13 @@ class AtlasStepper {
 
     /// Constructor
     ///
-    /// @tparams Type of TrackParameters
+    /// @tparam Type of TrackParameters
     ///
-    /// @param[in] gctx The geometry contex tof this call
-    /// @param[in] mctx The magnetic field context of this call
-    /// @param[in] pars Input parameters
-    /// @param[in] ndir The navigation direction w.r.t. parameters
-    /// @param[in] ssize the steps size limitation
+    /// @param [in] gctx The geometry contex tof this call
+    /// @param [in] fieldCacheIn The magnetic field cache for this call
+    /// @param [in] pars Input parameters
+    /// @param [in] ndir The navigation direction w.r.t. parameters
+    /// @param [in] ssize the steps size limitation
     /// @param [in] stolerance is the stepping tolerance
     template <typename Parameters>
     State(const GeometryContext& gctx,
@@ -315,8 +315,8 @@ class AtlasStepper {
   ///
   /// @param [in, out] state State of the stepper
   /// @param [in] boundParams Parameters in bound parametrisation
-  /// @param [in] freeParams Parameters in free parametrisation
   /// @param [in] cov Covariance matrix
+  /// @param [in] surface Reset state will be on this surface
   /// @param [in] navDir Navigation direction
   /// @param [in] stepSize Step size
   void resetState(
@@ -501,8 +501,6 @@ class AtlasStepper {
   }
 
   /// Overstep limit
-  ///
-  /// @param state [in] The stepping state (thread-local cache)
   double overstepLimit(const State& /*state*/) const { return m_overstepLimit; }
 
   /// Time access
@@ -515,9 +513,10 @@ class AtlasStepper {
   /// returns the status of the intersection to trigger onSurface in case
   /// the surface is reached.
   ///
-  /// @param state [in,out] The stepping state (thread-local cache)
-  /// @param surface [in] The surface provided
-  /// @param bcheck [in] The boundary check for this status update
+  /// @param [in,out] state The stepping state (thread-local cache)
+  /// @param [in] surface The surface provided
+  /// @param [in] bcheck The boundary check for this status update
+  /// @param [in] logger Logger instance to use
   Intersection3D::Status updateSurfaceStatus(
       State& state, const Surface& surface, const BoundaryCheck& bcheck,
       LoggerWrapper logger = getDummyLogger()) const {
@@ -541,9 +540,9 @@ class AtlasStepper {
 
   /// Set Step size - explicitely with a double
   ///
-  /// @param state [in,out] The stepping state (thread-local cache)
-  /// @param stepSize [in] The step size value
-  /// @param stype [in] The step size type to be set
+  /// @param [in,out] state The stepping state (thread-local cache)
+  /// @param [in] stepSize The step size value
+  /// @param [in] stype The step size type to be set
   void setStepSize(State& state, double stepSize,
                    ConstrainedStep::Type stype = ConstrainedStep::actor) const {
     state.previousStepSize = state.stepSize;
@@ -552,14 +551,14 @@ class AtlasStepper {
 
   /// Release the Step size
   ///
-  /// @param state [in,out] The stepping state (thread-local cache)
+  /// @param [in,out] state The stepping state (thread-local cache)
   void releaseStepSize(State& state) const {
     state.stepSize.release(ConstrainedStep::actor);
   }
 
   /// Output the Step Size - single component
   ///
-  /// @param state [in,out] The stepping state (thread-local cache)
+  /// @param [in,out] state The stepping state (thread-local cache)
   std::string outputStepSize(const State& state) const {
     return state.stepSize.toString();
   }
@@ -655,7 +654,8 @@ class AtlasStepper {
   /// The state update method
   ///
   /// @param [in,out] state The stepper state for
-  /// @param [in] pars The new track parameters at start
+  /// @param [in] parameters The new track parameters at start
+  /// @param [in] covariance The updated covariance matrix
   void update(State& state, const FreeVector& parameters,
               const Covariance& covariance) const {
     Vector3 direction = parameters.template segment<3>(eFreeDir0).normalized();
@@ -686,9 +686,11 @@ class AtlasStepper {
 
   /// Method to update momentum, direction and p
   ///
+  /// @param state The state object
   /// @param uposition the updated position
   /// @param udirection the updated direction
-  /// @param p the updated momentum value
+  /// @param up the updated momentum value
+  /// @param time the update time
   void update(State& state, const Vector3& uposition, const Vector3& udirection,
               double up, double time) const {
     // update the vector
@@ -707,8 +709,6 @@ class AtlasStepper {
   /// or direction of the state
   ///
   /// @param [in,out] state State of the stepper
-  ///
-  /// @return the full transport jacobian
   void transportCovarianceToCurvilinear(State& state) const {
     double P[60];
     for (unsigned int i = 0; i < 60; ++i) {

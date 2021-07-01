@@ -43,7 +43,6 @@ struct TrackAtVertex {
 
   /// @brief Constructor with default chi2
   ///
-  /// @param chi2perTrack Chi2 of track
   /// @param paramsAtVertex Fitted perigee parameter
   /// @param originalTrack Original perigee parameter
   TrackAtVertex(const BoundTrackParameters& paramsAtVertex,

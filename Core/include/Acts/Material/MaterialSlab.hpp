@@ -86,4 +86,8 @@ std::ostream& operator<<(std::ostream& os, const MaterialSlab& materialSlab);
 using MaterialSlabVector = std::vector<MaterialSlab>;
 using MaterialSlabMatrix = std::vector<MaterialSlabVector>;
 
+/// list of point used in the mapping of a volume
+using RecordedMaterialVolumePoint =
+    std::vector<std::pair<Acts::MaterialSlab, std::vector<Acts::Vector3>>>;
+
 }  // namespace Acts

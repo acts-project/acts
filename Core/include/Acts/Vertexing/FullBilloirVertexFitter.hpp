@@ -43,7 +43,7 @@ class FullBilloirVertexFitter {
   struct State {
     /// @brief The state constructor
     ///
-    /// @param mctx The magnetic field context
+    /// @param fieldCache The magnetic field cache
     State(MagneticFieldProvider::Cache fieldCache)
         : linearizerState(std::move(fieldCache)) {}
     /// The linearizer state
