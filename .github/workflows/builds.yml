@@ -86,14 +86,16 @@ jobs:
         with:
           release-platform: ${{ matrix.LCG }}
           run: >
-            cmake -B build -S .
-            -GNinja
-            -DCMAKE_BUILD_TYPE=Release
-            -DCMAKE_CXX_STANDARD=17
-            -DCMAKE_CXX_FLAGS=-Werror
-            -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-            -DACTS_BUILD_EVERYTHING=on
-            -DACTS_LOG_FAILURE_THRESHOLD=WARNING
+            export INSTALL_DIR=${{ github.workspace }}/install
+            && echo $INSTALL_DIR
+            && cmake -B build -S .
+               -GNinja
+               -DCMAKE_BUILD_TYPE=Release
+               -DCMAKE_CXX_STANDARD=17
+               -DCMAKE_CXX_FLAGS=-Werror
+               -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+               -DACTS_BUILD_EVERYTHING=on
+               -DACTS_LOG_FAILURE_THRESHOLD=WARNING
             && cmake --build build -- 
             && cmake --build build -- test
             && cmake --build build -- integrationtests
