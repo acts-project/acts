@@ -96,8 +96,8 @@ class Layer : public virtual GeometryObject {
 
   /// Assignment operator - forbidden, layer assignment must not be ambiguous
   ///
-  /// @param lay is the source layer for assignment
-  Layer& operator=(const Layer&) = delete;
+  /// @param layer is the source layer for assignment
+  Layer& operator=(const Layer& layer) = delete;
 
   /// Return the entire SurfaceArray, returns a nullptr if no SurfaceArray
   const SurfaceArray* surfaceArray() const;
@@ -162,8 +162,8 @@ class Layer : public virtual GeometryObject {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position Position parameter for searching
-  /// @param momentum Momentum parameter for searching
-  /// @param options The templated naivation options
+  /// @param direction Direction of the parameters for searching
+  /// @param options The templated navigation options
   ///
   /// @return list of intersection of surfaces on the layer
   template <typename options_t>
@@ -239,7 +239,7 @@ class Layer : public virtual GeometryObject {
   NextLayers m_nextLayers;
 
   /// A binutility to find the next layer
-  /// @TODO check if this is needed
+  /// @todo check if this is needed
   const BinUtility* m_nextLayerUtility = nullptr;
 
   /// SurfaceArray on this layer Surface

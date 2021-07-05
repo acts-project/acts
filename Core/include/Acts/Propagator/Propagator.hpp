@@ -263,6 +263,7 @@ class Propagator final {
     ///
     /// @param start The start parameters, used to initialize stepping state
     /// @param topts The options handed over by the propagate call
+    /// @param steppingIn Stepper state instance to begin with
     template <typename parameters_t>
     State(const parameters_t& start, const propagator_options_t& topts,
           StepperState steppingIn)
@@ -333,10 +334,9 @@ class Propagator final {
   /// @tparam result_t Type of the result object for this propagation
   /// @tparam propagator_state_t Type of of propagator state with options
   ///
-  /// @param [in,out] result of the propagation
   /// @param [in,out] state the propagator state object
   ///
-  /// @return Propagation PropagatorStatus
+  /// @return Propagation result
   template <typename result_t, typename propagator_state_t>
   Result<result_t> propagate_impl(propagator_state_t& state) const;
 

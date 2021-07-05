@@ -150,6 +150,7 @@ struct Simulation {
   ///
   /// @param geoCtx is the geometry context to access surface geometries
   /// @param magCtx is the magnetic field context to access field values
+  /// @param generator is the random number generator
   /// @param inputParticles contains all particles that should be simulated
   /// @param simulatedParticlesInitial contains initial particle states
   /// @param simulatedParticlesFinal contains final particle states

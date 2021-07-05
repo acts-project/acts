@@ -295,7 +295,7 @@ inline std::string toString(const Eigen::MatrixBase<derived_t>& matrix,
 }
 
 /// Print out a translation in a structured way.
-/// @param matrix The translation to print
+/// @param translation The translation to print
 /// @param precision Numeric output precision
 /// @return The printed string
 inline std::string toString(const Acts::Translation3& translation,
@@ -308,7 +308,7 @@ inline std::string toString(const Acts::Translation3& translation,
 }
 
 /// Print out a transform in a structured way.
-/// @param matrix The transform to print
+/// @param transform The transform to print
 /// @param precision Numeric output precision
 /// @param offset Offset in front of matrix lines
 /// @return The printed string

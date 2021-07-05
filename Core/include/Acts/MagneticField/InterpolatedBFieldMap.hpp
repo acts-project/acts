@@ -115,8 +115,8 @@ class InterpolatedBFieldMap : public MagneticFieldProvider {
   struct Cache {
     /// @brief Constructor with magnetic field context
     ///
-    /// @param mcfg the magnetic field context
-    Cache(const MagneticFieldContext& /*mcfg*/) {}
+    /// @param mctx the magnetic field context
+    Cache(const MagneticFieldContext& mctx) { (void)mctx; }
 
     std::optional<FieldCell> fieldCell;
     bool initialized = false;
@@ -215,7 +215,7 @@ class InterpolatedBFieldMap : public MagneticFieldProvider {
 
   /// @brief check whether given 3D position is inside look-up domain
   ///
-  /// @param [in] position local N-D position
+  /// @param [in] gridPosition local N-D position
   /// @return @c true if position is inside the defined look-up grid,
   ///         otherwise @c false
   bool isInsideLocal(const ActsVector<DIM_POS>& gridPosition) const {
@@ -233,7 +233,7 @@ class InterpolatedBFieldMap : public MagneticFieldProvider {
   /// @return grid reference
   const Grid& getGrid() const { return m_cfg.grid; }
 
-  /// @copydoc MagneticFieldProvider::makeCache(const MagneticFieldContext&)
+  /// @copydoc MagneticFieldProvider::makeCache(const MagneticFieldContext&) const
   MagneticFieldProvider::Cache makeCache(
       const MagneticFieldContext& mctx) const override {
     return MagneticFieldProvider::Cache::make<Cache>(mctx);
@@ -256,32 +256,30 @@ class InterpolatedBFieldMap : public MagneticFieldProvider {
         m_cfg.transformBField(m_cfg.grid.interpolate(gridPosition), position));
   }
 
-  /// @copydoc MagneticFieldProvider::getField(const
-  /// Vector3&,MagneticFieldProvider::Cache&)
-  Result<Vector3> getField(
-      const Vector3& position,
-      MagneticFieldProvider::Cache& gcache) const override {
-    Cache& cache = gcache.get<Cache>();
+  /// @copydoc MagneticFieldProvider::getField(const Vector3&,MagneticFieldProvider::Cache&) const
+  Result<Vector3> getField(const Vector3& position,
+                           MagneticFieldProvider::Cache& cache) const override {
+    Cache& lcache = cache.get<Cache>();
     const auto gridPosition = m_cfg.transformPos(position);
-    if (!cache.fieldCell || !(*cache.fieldCell).isInside(gridPosition)) {
+    if (!lcache.fieldCell || !(*lcache.fieldCell).isInside(gridPosition)) {
       auto res = getFieldCell(position);
       if (!res.ok()) {
         return Result<Vector3>::failure(res.error());
       }
-      cache.fieldCell = *res;
+      lcache.fieldCell = *res;
     }
-    return Result<Vector3>::success((*cache.fieldCell).getField(gridPosition));
+    return Result<Vector3>::success((*lcache.fieldCell).getField(gridPosition));
   }
 
-  /// @copydoc MagneticFieldProvider::getFieldGradient(const
-  /// Vector3&,ActsMatrix<3,3>&,MagneticFieldProvider::Cache&)
+  /// @copydoc MagneticFieldProvider::getFieldGradient(const Vector3&,ActsMatrix<3,3>&,MagneticFieldProvider::Cache&) const
   ///
   /// @note currently the derivative is not calculated
   /// @note Cache is not used currently
   /// @todo return derivative
   Result<Vector3> getFieldGradient(
-      const Vector3& position, ActsMatrix<3, 3>& /*derivative*/,
+      const Vector3& position, ActsMatrix<3, 3>& derivative,
       MagneticFieldProvider::Cache& cache) const override {
+    (void)derivative;
     return getField(position, cache);
   }
 

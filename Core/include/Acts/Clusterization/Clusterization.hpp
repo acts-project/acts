@@ -60,11 +60,10 @@ std::vector<std::vector<cell_t>> createClusters(
 /// if they have been added to a cluster already, with the key being the global
 /// grid index
 /// @param [in] index the current global grid index of the cell
-/// @param [in] cellA the current cell
 /// @param [in] nBins0 number of bins in direction 0
 /// @param [in] commonCorner flag indicating if also cells sharing a common
 /// corner should be merged into one cluster
-/// @param [in] threshold possible activation threshold to be applied
+/// @param [in] activation possible activation threshold to be applied
 template <typename cell_t>
 void fillCluster(std::vector<std::vector<cell_t>>& mergedCells,
                  std::unordered_map<size_t, std::pair<cell_t, bool>>& cellMap,

@@ -34,7 +34,7 @@ class Hit {
   Hit() = default;
   /// Construct from four-position and four-momenta.
   ///
-  /// @param geoId      Geometry identifier of the surface
+  /// @param geometryId      Geometry identifier of the surface
   /// @param particleId Particle identifier of the particle that created the hit
   /// @param pos4       Particle space-time four-vector on the surface
   /// @param before4    Particle four-momentum before the interaction

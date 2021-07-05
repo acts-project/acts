@@ -31,7 +31,7 @@ class SpacePointBuilder<SpacePoint<Cluster>> {
   /// and stores the results
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param cluster vector of clusters
+  /// @param clusters vector of clusters
   /// @param spacePointStorage storage of the results
   void calculateSpacePoints(
       const GeometryContext& gctx, const std::vector<const Cluster*>& clusters,

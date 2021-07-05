@@ -2,19 +2,19 @@
     <!--EndcapN-->
     <detector id="101" name="PixelEndcapN" type="ODDPixelEndcap" readout="PixelEndcapReadout" vis="invisible">
         <dimensions name="PixelEndcapShape" rmin="pix_env_rmin" rmax="pix_env_rmax" dz="pix_e_dz" z="pix_e_nz"/>
-        <ring id="0" r="76.*mm" nphi="40" z_offset="3.5*mm" phi0="0." gap="0.6*mm" vis="invisible">
+        <ring id="0" r="76.*mm" nphi="24" z_offset="3.5*mm" phi0="0." gap="0.6*mm" vis="invisible">
           <module name="PixelEndcapModule" vis="invisible">
-          <module_component name="Sensor" alpha="0." x1="3.64*mm" x2="9.3*mm" length="36.*mm" thickness="0.125*mm" x_offset="0." y_offset="-0.03" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
-          <module_component name="Board"  alpha="0." x1="3.64*mm" x2="9.3*mm" length="36.*mm" thickness="0.25*mm" x_offset="0." y_offset="0." z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
-          <module_component name="Connector" alpha="0." x1=".6*mm" x2=".6*mm" length="36.*mm" thickness="0.15*mm" x_offset="0.*mm" y_offset="0.3*mm" z_offset="0.*mm" material="Al" vis="red" sensitive="false"/>
+          <module_component name="Sensor" alpha="0." x1="8.5*mm" x2="14.5*mm" length="34.*mm" thickness="0.125*mm" x_offset="0." y_offset="-0.03" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+          <module_component name="Board"  alpha="0." x1="8.5*mm" x2="14.5*mm" length="34.*mm" thickness="0.25*mm" x_offset="0." y_offset="0." z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+          <module_component name="Connector" alpha="0." x1="1.6*mm" x2="1.6*mm" length="34.*mm" thickness="0.15*mm" x_offset="0.*mm" y_offset="0.3*mm" z_offset="0.*mm" material="Al" vis="red" sensitive="false"/>
           </module>
         </ring>
 
-        <ring id="1" r="144.*mm" nphi="68" z_offset="-3.5*mm" phi0="0." gap="0.6*mm" vis="invisible">
+        <ring id="1" r="144.*mm" nphi="36" z_offset="-3.5*mm" phi0="0." gap="0.6*mm" vis="invisible">
           <module name="PixelEndcapModule" vis="invisible">
-          <module_component name="Sensor" alpha="0." x1="5.3*mm" x2="8.63*mm" length="36.*mm" thickness="0.125*mm" x_offset="0." y_offset="0.03" z_offset="-5.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
-          <module_component name="Board"  alpha="0." x1="5.3*mm" x2="8.63*mm" length="36.*mm" thickness="0.25*mm" x_offset="0." y_offset="0." z_offset="-5.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
-          <module_component name="Connector" alpha="0." x1=".6*mm" x2=".6*mm" length="36.*mm" thickness="0.15*mm" x_offset="0.*mm" y_offset="-0.3*mm" z_offset="-5.*mm" material="Al" vis="red" sensitive="false"/>
+          <module_component name="Sensor" alpha="0." x1="10.5*mm" x2="16.5*mm" length="34.*mm" thickness="0.125*mm" x_offset="0." y_offset="0.03" z_offset="-5.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+          <module_component name="Board"  alpha="0." x1="10.5*mm" x2="16.5*mm" length="34.*mm" thickness="0.25*mm" x_offset="0." y_offset="0." z_offset="-5.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+          <module_component name="Connector" alpha="0." x1="1.6*mm" x2="1.6*mm" length="34.*mm" thickness="0.15*mm" x_offset="0.*mm" y_offset="-0.3*mm" z_offset="-5.*mm" material="Al" vis="red" sensitive="false"/>
           </module>
         </ring>
         <ring_support rmin="36.*mm" rmax="176.*mm" dz="2*mm" material="CarbonFiber" vis="CarbonFiber"/>
@@ -109,18 +109,18 @@
     <!--EndcapP-->
     <detector id="102" name="PixelEndcapP" type="ODDPixelEndcap" readout="PixelEndcapReadout" vis="invisible">
         <dimensions name="PixelEndcapShape" rmin="pix_env_rmin" rmax="pix_env_rmax" dz="pix_e_dz" z="pix_e_pz"/>
-        <ring id="0" r="76.*mm" nphi="40" z_offset="-3.5*mm" phi0="0." gap="0.6*mm" vis="invisible">
+        <ring id="0" r="76.*mm" nphi="24" z_offset="-3.5*mm" phi0="0." gap="0.6*mm" vis="invisible">
           <module name="PixelEndcapModule" vis="invisible">
-          <module_component name="Sensor" alpha="0." x1="3.64*mm" x2="9.3*mm" length="36.*mm" thickness="0.125*mm" x_offset="0." y_offset="0.03" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
-          <module_component name="Board"  alpha="0." x1="3.64*mm" x2="9.3*mm" length="36.*mm" thickness="0.25*mm" x_offset="0." y_offset="0." z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
-          <module_component name="Connector" alpha="0." x1=".6*mm" x2=".6*mm" length="36.*mm" thickness="0.15*mm" x_offset="0.*mm" y_offset="-0.3*mm" z_offset="0.*mm" material="Al" vis="red" sensitive="false"/>
+          <module_component name="Sensor" alpha="0." x1="8.5*mm" x2="14.5*mm" length="34.*mm" thickness="0.125*mm" x_offset="0." y_offset="-0.03" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+          <module_component name="Board"  alpha="0." x1="8.5*mm" x2="14.5*mm" length="34.*mm" thickness="0.25*mm" x_offset="0." y_offset="0." z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+          <module_component name="Connector" alpha="0." x1="1.6*mm" x2="1.6*mm" length="34.*mm" thickness="0.15*mm" x_offset="0.*mm" y_offset="0.3*mm" z_offset="0.*mm" material="Al" vis="red" sensitive="false"/>
           </module>
         </ring>
-        <ring id="1" r="144.*mm" nphi="68" z_offset="3.5*mm" phi0="0." gap="0.6*mm" vis="invisible">
+        <ring id="1" r="144.*mm" nphi="36" z_offset="3.5*mm" phi0="0." gap="0.6*mm" vis="invisible">
           <module name="PixelEndcapModule" vis="invisible">
-          <module_component name="Sensor" alpha="0." x1="5.3*mm" x2="8.63*mm" length="36.*mm" thickness="0.125*mm" x_offset="0." y_offset="-0.03" z_offset="-5.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
-          <module_component name="Board"  alpha="0." x1="5.3*mm" x2="8.63*mm" length="36.*mm" thickness="0.25*mm" x_offset="0." y_offset="0." z_offset="-5.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
-          <module_component name="Connector" alpha="0." x1=".6*mm" x2=".6*mm" length="36.*mm" thickness="0.15*mm" x_offset="0.*mm" y_offset="0.3*mm" z_offset="-5.*mm" material="Al" vis="red" sensitive="false"/>
+          <module_component name="Sensor" alpha="0." x1="10.5*mm" x2="16.5*mm" length="34.*mm" thickness="0.125*mm" x_offset="0." y_offset="0.03" z_offset="-5.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+          <module_component name="Board"  alpha="0." x1="10.5*mm" x2="16.5*mm" length="34.*mm" thickness="0.25*mm" x_offset="0." y_offset="0." z_offset="-5.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+          <module_component name="Connector" alpha="0." x1="1.6*mm" x2="1.6*mm" length="34.*mm" thickness="0.15*mm" x_offset="0.*mm" y_offset="-0.3*mm" z_offset="-5.*mm" material="Al" vis="red" sensitive="false"/>
           </module>
         </ring>
         <ring_support rmin="36.*mm" rmax="176.*mm" dz="2*mm" material="CarbonFiber" vis="CarbonFiber"/> 

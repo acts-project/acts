@@ -108,14 +108,14 @@ class CylinderVolumeBounds : public VolumeBounds {
 
   /// Constructor - extruded from cylinder bounds and thickness
   ///
-  /// @param cbounds the cylinder bounds
+  /// @param cBounds the cylinder bounds
   /// @param thickness of the extrusion
   CylinderVolumeBounds(const CylinderBounds& cBounds,
                        double thickness) noexcept(false);
 
   /// Constructor - extruded from radial bounds and thickness
   ///
-  /// @param rbounds the Radial bounds
+  /// @param rBounds the Radial bounds
   /// @param thickness
   CylinderVolumeBounds(const RadialBounds& rBounds,
                        double thickness) noexcept(false);

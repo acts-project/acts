@@ -28,18 +28,13 @@ information to group simulated hits into tracks) and fits them.
 The ``--digi-config-file`` specifies the path for the digitization configuration file. The magnetic field setup should be consistent between simulation and truth tracking. 
 
 Look at the truth tracking performance
-----------------------
+--------------------------------------
 
 The truth tracking will generate three root files (the name of those root files are currently not configurable via the command line) in the ``data/reco_trackML/ttbar_mu200``:
 
-*   ``tracks.root``
-This includes a tree with one entry representing one trajectory. From this file, one could check the information of every measurement track state on the trajectory.
-
-*  ``performace_track_finder.root``
-This includes a tree showing performance of the truth track finding.
-
-*  ``performance_track_fitter.root``
-This includes a few histograms showing the residual and pull of the fitted perigee track parameters and efficiency plots showing the fitting efficiency etc.
+*  ``tracks.root`` This includes a tree with one entry representing one trajectory. From this file, one could check the information of every measurement track state on the trajectory.
+*  ``performace_track_finder.root`` This includes a tree showing performance of the truth track finding.
+*  ``performance_track_fitter.root`` This includes a few histograms showing the residual and pull of the fitted perigee track parameters and efficiency plots showing the fitting efficiency etc.
 
 Example plots to show the fitting efficiency versus eta and pT for ttbar sample generated above:
 

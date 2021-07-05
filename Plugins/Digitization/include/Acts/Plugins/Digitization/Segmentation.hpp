@@ -75,10 +75,10 @@ class Segmentation {
 
   /// Calculate the cell Position from the Id
   ///
-  /// @param cId is the digitization cell
+  /// @param dCell the digitization cell
   ///
   /// @return the center position of the associated cell
-  virtual Vector2 cellPosition(const DigitizationCell& cId) const = 0;
+  virtual Vector2 cellPosition(const DigitizationCell& dCell) const = 0;
 
   /// Fill the associated digitization cell from the start and end position in
   /// 3D correct for lorentz effect if needed
