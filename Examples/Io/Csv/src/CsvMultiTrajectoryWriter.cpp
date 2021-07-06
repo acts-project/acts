@@ -171,6 +171,7 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
       trajState.trackType = "duplicate";
     }
 
+    std::cout<<">>> Shared Hits: " << trajState.nSharedHits << " [" << trajState.trackType  << "]" << std::endl;
     // write the track info
     mos << trajState.trackId << ",";
     mos << trajState.particleId << ",";

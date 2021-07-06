@@ -1340,14 +1340,14 @@ class CombinatorialKalmanFilter {
     std::unordered_map<std::size_t, std::vector< std::size_t > > recordedHits;
 
     for (unsigned int iresult(0); iresult<ckfResults.size(); iresult++) {
-      CombinatorialKalmanFilterResult& ckfResult = ckfResults.at(iresult).value();
-      if (not ckfResult.result.ok()) 
+      if (not ckfResults.at(iresult).ok()) 
 	continue;
 
+      CombinatorialKalmanFilterResult& ckfResult = ckfResults.at(iresult).value();
       auto& mj = ckfResult.fittedStates;
       for (auto imeas : ckfResult.lastMeasurementIndices) {
-	auto& measState = mj.getTrackState(imeas);
-	if (not measState.test(TrackStateFlag::MeasurementFlag))
+	auto measState = mj.getTrackState(imeas);
+	if (not measState.typeFlags().test(TrackStateFlag::MeasurementFlag))
 	  continue;
 	
 	if (recordedHits.find(imeas) == recordedHits.end())
@@ -1359,13 +1359,14 @@ class CombinatorialKalmanFilter {
     for (const auto& [hitIndex, trackIndexArray] : recordedHits) {
       if (trackIndexArray.size() < 2) 
 	continue;
-      for (auto iresult : trackIndexArray) {
-	auto& ckfResult = ckfResults.at(iresult);
+
+      for (std::size_t iresult : trackIndexArray) {
+	CombinatorialKalmanFilterResult& ckfResult = ckfResults.at(iresult).value();
 	auto& mj = ckfResult.fittedStates;
-	mj.getTrackState(hitIndex).set(TrackStateFlag::SharedHitFlag);
+	mj.getTrackState(hitIndex).typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
       }
     }
-
+    
     return ckfResults;
   }
 
