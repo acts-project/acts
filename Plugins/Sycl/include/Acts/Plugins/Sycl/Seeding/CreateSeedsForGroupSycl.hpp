@@ -25,8 +25,12 @@ namespace Acts::Sycl {
 /// parameters for the algorithm
 /// @param[in] deviceCuts is an experiment specific object with customizable
 /// seed weight altering and seed cutting member functions
-/// @param[in] {bottom, middle, top} SPs are arrays of simplified internal space
-/// point structures of {bottom, middle, top} space points
+/// @param[in] bottomSPs an array of simplified internal space
+///                      point structures of bottom space points
+/// @param[in] middleSPs an array of simplified internal space
+///                      point structures of middle space points
+/// @param[in] topSPs an array of simplified internal space
+///                      point structures of top space points
 /// @param[out] seeds holds of the generated seed indices and weight
 void createSeedsForGroupSycl(
     const QueueWrapper& wrappedQueue,

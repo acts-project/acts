@@ -28,12 +28,14 @@ class PlanarModuleCluster
  public:
   /// Constructor from DigitizationCells
   ///
+  /// @param [in] surface The surface the cluster is on
   /// @param [in] sourceLink is the link to the truth information
   /// @param [in] cov is the covariance matrix
   /// @param [in] loc0 is the local position in the first coordinate
   /// @param [in] loc1 is the local position in the second coordinate
   /// @param [in] t Timestamp of the cluster
   /// @param [in] dCells is the vector of digitization cells
+  /// @param [in] dModule an optional pointer to a digitization configuration
   PlanarModuleCluster(std::shared_ptr<const Surface> surface,
                       DigitizationSourceLink sourceLink,
                       Base::CovarianceMatrix cov, double loc0, double loc1,

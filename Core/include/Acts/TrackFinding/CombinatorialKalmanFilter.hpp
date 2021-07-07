@@ -48,7 +48,7 @@ namespace Acts {
 ///
 /// This could be used to decide if a track is to be recorded when the
 /// filtering is done or to be terminated due to its bad quality
-/// @Todo: add other useful info, e.g. chi2
+/// @todo: add other useful info, e.g. chi2
 struct CombinatorialKalmanFilterTipState {
   // Number of passed sensitive surfaces
   size_t nSensitiveSurfaces = 0;
@@ -793,6 +793,8 @@ class CombinatorialKalmanFilter {
     /// @param isOutlier Indicator for outlier or not
     /// @param result is the mutable result state object
     /// @param geoContext The geometry context (needed for Kalman update)
+    /// @param prevTip Previous tip index
+    /// @param prevTipState Previous tip state
     /// @param neighborTip The neighbor state tip on this surface (the predicted
     /// parameters could be shared between neighbors)
     /// @param sharedTip The tip of state with shared source link

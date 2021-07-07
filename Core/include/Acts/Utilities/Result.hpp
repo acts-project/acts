@@ -121,7 +121,7 @@ class Result {
 
   /**
    * Static helper factory which forces assignment as an error.
-   * @param value The error to assign. Will not be converted to T.
+   * @param error The error to assign. Will not be converted to T.
    * @return Initialized result object
    */
   static Result<T, E> failure(E error) {

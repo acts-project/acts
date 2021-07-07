@@ -49,7 +49,7 @@ class ModuleClusters {
     std::vector<ModuleValue> values;
     ModuleValueAmbi(ModuleValue val) { add(std::move(val)); }
     void add(ModuleValue val) { values.push_back(std::move(val)); }
-    double depositedEnergy();
+    double activation();
   };
 
   Acts::BinUtility m_segmentation;

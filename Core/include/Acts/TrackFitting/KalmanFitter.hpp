@@ -54,10 +54,10 @@ struct KalmanFitterOptions {
   /// @param gctx The goemetry context for this fit
   /// @param mctx The magnetic context for this fit
   /// @param cctx The calibration context for this fit
-  /// @param calibrator_t The source link calibrator
+  /// @param calibrator_ The source link calibrator
   /// @param outlierFinder_ The outlier finder
   /// @param logger_ The logger wrapper
-  /// @param pOPtions The plain propagator options
+  /// @param pOptions The plain propagator options
   /// @param rSurface The reference surface for the fit to be expressed at
   /// @param mScattering Whether to include multiple scattering
   /// @param eLoss Whether to include energy loss

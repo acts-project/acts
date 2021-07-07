@@ -21,7 +21,7 @@ namespace Acts {
 namespace MultiTrajectoryHelpers {
 
 /// @brief Struct for brief trajectory summary info
-/// @TODO: add nSharedHits
+/// @todo add nSharedHits
 ///
 struct TrajectoryState {
   size_t nStates = 0;
