@@ -39,6 +39,8 @@
 #include <functional>
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
+#include <tuple>
 
 namespace Acts {
 
@@ -1337,36 +1339,42 @@ class CombinatorialKalmanFilter {
 
     // Compute nSharedhits and Update ckf results
     // hit index -> list of multi traj indexes [traj, meas]
-    std::unordered_map<std::size_t, std::vector< std::size_t > > recordedHits;
+    std::unordered_map<std::size_t, std::vector< std::pair<std::size_t, std::size_t> > > recordedHits;
 
     for (unsigned int iresult(0); iresult<ckfResults.size(); iresult++) {
       if (not ckfResults.at(iresult).ok()) 
 	continue;
 
       CombinatorialKalmanFilterResult& ckfResult = ckfResults.at(iresult).value();
-      auto& mj = ckfResult.fittedStates;
-      for (auto imeas : ckfResult.lastMeasurementIndices) {
-	auto measState = mj.getTrackState(imeas);
-	if (not measState.typeFlags().test(TrackStateFlag::MeasurementFlag))
-	  continue;
-	
-	if (recordedHits.find(imeas) == recordedHits.end())
-	  recordedHits[imeas] = std::vector< std::size_t >();
-	recordedHits[imeas].push_back(iresult);
+      auto& measIndexes = ckfResults.at(iresult).value().lastMeasurementIndices;
+
+      for (auto measIndex : measIndexes) {
+	ckfResult.fittedStates.visitBackwards(measIndex,
+					      [&](const auto& state){
+						if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag))
+						  return;
+
+						const SourceLink sl = state.uncalibrated();
+						std::size_t hitIndex = sl.index();
+
+						if (recordedHits.find(hitIndex) == recordedHits.end())
+						  recordedHits[hitIndex] = std::vector< std::pair<std::size_t, std::size_t> >();
+						recordedHits[hitIndex].push_back(std::make_pair(iresult, state.index()));
+					      });
       }
     }
-    
+
     for (const auto& [hitIndex, trackIndexArray] : recordedHits) {
       if (trackIndexArray.size() < 2) 
 	continue;
 
-      for (std::size_t iresult : trackIndexArray) {
+      for (const auto& [iresult, imeas] : trackIndexArray) {
 	CombinatorialKalmanFilterResult& ckfResult = ckfResults.at(iresult).value();
 	auto& mj = ckfResult.fittedStates;
-	mj.getTrackState(hitIndex).typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
+	mj.getTrackState(imeas).typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
       }
     }
-    
+
     return ckfResults;
   }
 
