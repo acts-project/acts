@@ -156,7 +156,7 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
   mos << "track_id,particleId,"
       << "nStates,nMajorityHits,nMeasurements,nOutliers,nHoles,nSharedHits,"
       << "chi2,ndf,chi2/ndf,"
-      << "pT,"
+      << "pT,eta,phi,"
       << "truthMatchProbability,"
       << "good/duplicate/fake";
 
@@ -171,7 +171,6 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
       trajState.trackType = "duplicate";
     }
 
-    std::cout<<">>> Shared Hits: " << trajState.nSharedHits << " [" << trajState.trackType  << "]" << std::endl;
     // write the track info
     mos << trajState.trackId << ",";
     mos << trajState.particleId << ",";
@@ -185,6 +184,10 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
     mos << trajState.NDF << ",";
     mos << trajState.chi2Sum * 1.0 / trajState.NDF << ",";
     mos << Acts::VectorHelpers::perp(trajState.fittedParameters->momentum())
+        << ",";
+    mos << Acts::VectorHelpers::eta(trajState.fittedParameters->momentum())
+        << ",";
+    mos << Acts::VectorHelpers::phi(trajState.fittedParameters->momentum())
         << ",";
     mos << trajState.truthMatchProb << ",";
     mos << trajState.trackType;
