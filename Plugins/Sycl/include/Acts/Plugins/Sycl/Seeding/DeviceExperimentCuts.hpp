@@ -12,7 +12,7 @@
 #include "Acts/Plugins/Sycl/Seeding/detail/Types.hpp"
 
 namespace Acts::Sycl {
-/// @class DeviceExperimentCuts can be used to increase or decrease seed weights
+/// @c DeviceExperimentCuts can be used to increase or decrease seed weights
 /// based on the space points used in a seed. Seed weights are also
 /// influenced by the SeedFilter default implementation. This tool is also used
 /// to decide if a seed passes a seed weight cut. As the weight is stored in
@@ -25,8 +25,9 @@ class DeviceExperimentCuts {
   /// @param top top space point of the current seed
   /// @return seed weight to be added to the seed's weight
   float seedWeight(const detail::DeviceSpacePoint& bottom,
-                   const detail::DeviceSpacePoint& /*middle*/,
+                   const detail::DeviceSpacePoint& middle,
                    const detail::DeviceSpacePoint& top) const {
+    (void)middle;
     float weight = 0;
     if (bottom.r > 150.f) {
       weight = 400.f;
@@ -43,8 +44,10 @@ class DeviceExperimentCuts {
   /// @return true if the seed should be kept, false if the seed should be
   /// discarded
   bool singleSeedCut(float weight, const detail::DeviceSpacePoint& bottom,
-                     const detail::DeviceSpacePoint& /*middle*/,
-                     const detail::DeviceSpacePoint& /*top*/) const {
+                     const detail::DeviceSpacePoint& middle,
+                     const detail::DeviceSpacePoint& top) const {
+    (void)middle;
+    (void)top;
     return !(bottom.r > 150.f && weight < 380.f);
   };
 };

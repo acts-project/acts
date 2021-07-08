@@ -46,11 +46,11 @@ class HelicalTrackLinearizer {
  public:
   using Propagator_t = propagator_t;
 
-  /// @struct State struct
+  /// State struct
   struct State {
     /// @brief The state constructor
     ///
-    /// @param mctx The magnetic field context
+    /// @param fieldCacheIn The magnetic field cache
     State(MagneticFieldProvider::Cache fieldCacheIn)
         : fieldCache(std::move(fieldCacheIn)) {}
     /// Magnetic field cache

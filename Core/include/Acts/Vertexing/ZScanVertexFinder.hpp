@@ -39,7 +39,7 @@ class ZScanVertexFinder {
  public:
   using InputTrack_t = typename vfitter_t::InputTrack_t;
 
-  /// @struct Config Configuration struct
+  /// Configuration struct
   struct Config {
     /// @brief Finder configuration
     ///
@@ -70,7 +70,7 @@ class ZScanVertexFinder {
     double minWeight = 0.01;
   };
 
-  /// @struct State State struct for fulfilling interface
+  /// State struct for fulfilling interface
   struct State {};
 
   /// @brief Constructor used if InputTrack_t type == BoundTrackParameters

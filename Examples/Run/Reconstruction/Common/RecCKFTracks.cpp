@@ -21,7 +21,6 @@
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrajectoryParametersWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectorySummaryWriter.hpp"
 #include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
@@ -264,34 +263,23 @@ int runRecCKFTracks(int argc, char* argv[],
       digiCfg.outputMeasurementSimHitsMap;
   trackStatesWriter.outputDir = outputDir;
   trackStatesWriter.outputFilename = "trackstates_ckf.root";
-  trackStatesWriter.outputTreename = "trackstates_ckf";
+  trackStatesWriter.outputTreename = "trackstates";
   sequencer.addWriter(std::make_shared<RootTrajectoryStatesWriter>(
       trackStatesWriter, logLevel));
-
-  // write track parameters from CKF
-  RootTrajectoryParametersWriter::Config trackParamsWriter;
-  trackParamsWriter.inputTrajectories = trackFindingCfg.outputTrajectories;
-  // @note The full particles collection is used here to avoid lots of warnings
-  // since the unselected CKF track might have a majority particle not in the
-  // filtered particle collection. This could be avoided when a seperate track
-  // selection algorithm is used.
-  trackParamsWriter.inputParticles = particleReader.outputParticles;
-  trackParamsWriter.inputMeasurementParticlesMap =
-      digiCfg.outputMeasurementParticlesMap;
-  trackParamsWriter.outputDir = outputDir;
-  trackParamsWriter.outputFilename = "trackparams_ckf.root";
-  trackParamsWriter.outputTreename = "trackparams_ckf";
-  sequencer.addWriter(std::make_shared<RootTrajectoryParametersWriter>(
-      trackParamsWriter, logLevel));
 
   // write track summary from CKF
   RootTrajectorySummaryWriter::Config trackSummaryWriter;
   trackSummaryWriter.inputTrajectories = trackFindingCfg.outputTrajectories;
+  // @note The full particles collection is used here to avoid lots of warnings
+  // since the unselected CKF track might have a majority particle not in the
+  // filtered particle collection. This could be avoided when a seperate track
+  // selection algorithm is used.
+  trackSummaryWriter.inputParticles = particleReader.outputParticles;
   trackSummaryWriter.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
   trackSummaryWriter.outputDir = outputDir;
   trackSummaryWriter.outputFilename = "tracksummary_ckf.root";
-  trackSummaryWriter.outputTreename = "tracksummary_ckf";
+  trackSummaryWriter.outputTreename = "tracksummary";
   sequencer.addWriter(std::make_shared<RootTrajectorySummaryWriter>(
       trackSummaryWriter, logLevel));
 

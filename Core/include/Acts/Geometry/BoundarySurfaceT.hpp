@@ -101,7 +101,7 @@ class BoundarySurfaceT {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param pos The global position on surface
   /// @param mom The direction on the surface
-  /// @param dir is an aditional direction corrective
+  /// @param pdir is an aditional direction corrective
   ///
   /// @return The attached volume at that position
   virtual const volume_t* attachedVolume(const GeometryContext& gctx,
@@ -125,7 +125,6 @@ class BoundarySurfaceT {
   /// Helper method: attach a Volume to this BoundarySurfaceT
   /// this is done during the geometry construction.
   ///
-  /// @param gctx The current geometry context object, e.g. alignment
   /// @param volume The volume to be attached
   /// @param navDir The navigation direction for attaching
   void attachVolume(const volume_t* volume, NavigationDirection navDir);

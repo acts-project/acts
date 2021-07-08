@@ -25,7 +25,7 @@
 /// @param detector The detector descriptor instance
 inline int runGeantinoRecording(
     const boost::program_options::variables_map& vm,
-    std::unique_ptr<G4VUserDetectorConstruction> g4detector) {
+    Acts::PolymorphicValue<G4VUserDetectorConstruction> g4detector) {
   using namespace ActsExamples;
   Sequencer sequencer(Options::readSequencerConfig(vm));
   auto logLevel = Options::readLogLevel(vm);

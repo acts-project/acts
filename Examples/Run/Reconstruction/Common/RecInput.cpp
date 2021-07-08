@@ -18,7 +18,6 @@
 #include "ActsExamples/Io/Performance/SeedingPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFitterPerformanceWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrajectoryParametersWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"

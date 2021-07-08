@@ -67,23 +67,20 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   /// @param hsm is the source material
   bool operator==(const HomogeneousSurfaceMaterial& hsm) const;
 
-  /// @copydoc SurfaceMaterial::materialSlab(const Vector2&)
+  /// @copydoc ISurfaceMaterial::materialSlab(const Vector2&) const
   ///
   /// @note the input parameter is ignored
   const MaterialSlab& materialSlab(const Vector2& lp) const final;
 
-  /// @copydoc SurfaceMaterial::materialSlab(const Vector3&)
+  /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
   ///
   /// @note the input parameter is ignored
   const MaterialSlab& materialSlab(const Vector3& gp) const final;
 
-  /// @copydoc SurfaceMaterial::materialSlab(size_t, size_t)
+  /// @copydoc ISurfaceMaterial::materialSlab(size_t, size_t) const
   ///
-  /// @param ib0 The bin at local 0 for retrieving the material
-  /// @param ib1 The bin at local 1 for retrieving the material
-  ///
-  /// @note the input parameter is ignored
-  const MaterialSlab& materialSlab(size_t ib0, size_t ib1) const final;
+  /// @note the input parameters are ignored
+  const MaterialSlab& materialSlab(size_t bin0, size_t bin1) const final;
 
   /// The inherited methods - for MaterialSlab access
   using ISurfaceMaterial::materialSlab;

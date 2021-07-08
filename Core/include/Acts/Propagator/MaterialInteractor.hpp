@@ -209,7 +209,8 @@ struct MaterialInteractor {
 
   /// @brief This function update the previous material step
   ///
-  /// @param [in] d Data cache container
+  /// @param [in,out] state The state object
+  /// @param [in] stepper The stepper instance
   /// @param [in, out] result Result storage
   template <typename propagator_state_t, typename stepper_t>
   void UpdateResult(propagator_state_t& state, const stepper_t& stepper,

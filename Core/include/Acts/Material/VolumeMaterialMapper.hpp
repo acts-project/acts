@@ -36,10 +36,6 @@ class ISurfaceMaterial;
 class IVolumeMaterial;
 class TrackingGeometry;
 
-/// list of point used in the mapping of a volume
-using RecordedMaterialVolumePoint =
-    std::vector<std::pair<Acts::MaterialSlab, std::vector<Acts::Vector3>>>;
-
 //
 /// @brief VolumeMaterialMapper
 ///
@@ -112,13 +108,15 @@ class VolumeMaterialMapper {
   ///
   /// @param cfg Configuration struct
   /// @param propagator The straight line propagator
-  /// @param log The logger
+  /// @param slogger The logger
   VolumeMaterialMapper(const Config& cfg, StraightLinePropagator propagator,
                        std::unique_ptr<const Logger> slogger = getDefaultLogger(
                            "VolumeMaterialMapper", Logging::INFO));
 
   /// @brief helper method that creates the cache for the mapping
   ///
+  /// @param[in] gctx The geometry context to use
+  /// @param[in] mctx The magnetic field context to use
   /// @param[in] tGeometry The geometry which should be mapped
   ///
   /// This method takes a TrackingGeometry,
@@ -172,13 +170,13 @@ class VolumeMaterialMapper {
   ///
   /// @param mState is the map to be filled
   /// @param volume is the surface to be checked for a Proxy
-  void checkAndInsert(State& /*mState*/, const TrackingVolume& volume) const;
+  void checkAndInsert(State& mState, const TrackingVolume& volume) const;
 
   /// @brief check and insert
   ///
   /// @param mState is the map to be filled
-  /// @param volume is the surface to be checked for a Proxy
-  void collectMaterialSurfaces(State& /*mState*/,
+  /// @param tVolume is the surface to collect from
+  void collectMaterialSurfaces(State& mState,
                                const TrackingVolume& tVolume) const;
 
   /// Create extra material point for the mapping

@@ -25,6 +25,7 @@ namespace ActsExamples {
 /// NaN values for TTree variables
 constexpr double NaNdouble = std::numeric_limits<double>::quiet_NaN();
 constexpr float NaNfloat = std::numeric_limits<float>::quiet_NaN();
+constexpr float NaNint = std::numeric_limits<int>::quiet_NaN();
 
 /// A helper class for users to implement framework writers.
 ///

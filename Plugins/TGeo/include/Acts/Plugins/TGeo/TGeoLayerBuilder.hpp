@@ -165,7 +165,7 @@ class TGeoLayerBuilder : public ILayerBuilder {
 
   /// Private helper method : build layers
   ///
-  /// @param gcts the geometry context of this call
+  /// @param gctx the geometry context of this call
   /// @param layers is goint to be filled
   /// @param type is the indication which ones to build -1 | 0 | 1
   void buildLayers(const GeometryContext& gctx, LayerVector& layers,

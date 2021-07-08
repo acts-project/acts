@@ -40,6 +40,9 @@ ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
       m_cfg(cfg),
       m_outputFile(cfg.rootFile) {
   // trajectories collection name is already checked by base ctor
+  if (cfg.inputParticles.empty()) {
+    throw std::invalid_argument("Missing particles input collection");
+  }
   if (cfg.inputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument("Missing hit-particles map input collection");
   }
@@ -81,8 +84,21 @@ ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
     m_outputTree->Branch("measurementLayer", &m_measurementLayer);
     m_outputTree->Branch("outlierVolume", &m_outlierVolume);
     m_outputTree->Branch("outlierLayer", &m_outlierLayer);
+
     m_outputTree->Branch("nMajorityHits", &m_nMajorityHits);
     m_outputTree->Branch("majorityParticleId", &m_majorityParticleId);
+    m_outputTree->Branch("t_charge", &m_t_charge);
+    m_outputTree->Branch("t_time", &m_t_time);
+    m_outputTree->Branch("t_vx", &m_t_vx);
+    m_outputTree->Branch("t_vy", &m_t_vy);
+    m_outputTree->Branch("t_vz", &m_t_vz);
+    m_outputTree->Branch("t_px", &m_t_px);
+    m_outputTree->Branch("t_py", &m_t_py);
+    m_outputTree->Branch("t_pz", &m_t_pz);
+    m_outputTree->Branch("t_theta", &m_t_theta);
+    m_outputTree->Branch("t_phi", &m_t_phi);
+    m_outputTree->Branch("t_eta", &m_t_eta);
+    m_outputTree->Branch("t_pT", &m_t_pT);
 
     m_outputTree->Branch("hasFittedParams", &m_hasFittedParams);
     m_outputTree->Branch("eLOC0_fit", &m_eLOC0_fit);
@@ -125,6 +141,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
     return ProcessCode::SUCCESS;
 
   // Read additional input collections
+  const auto& particles =
+      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
   const auto& hitParticlesMap =
       ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
 
@@ -185,16 +203,59 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       // Get the majority truth particle to this track
       identifyContributingParticles(hitParticlesMap, traj, trackTip,
                                     particleHitCounts);
+      bool foundMajorityParticle = false;
       if (not particleHitCounts.empty()) {
         // Get the barcode of the majority truth particle
         long unsigned int barcode =
             particleHitCounts.front().particleId.value();
         auto nMajorityHits = particleHitCounts.front().hitCount;
-        m_majorityParticleId.push_back(barcode);
-        m_nMajorityHits.push_back(nMajorityHits);
-      } else {
-        m_majorityParticleId.push_back(0);
-        m_nMajorityHits.push_back(0);
+
+        // Find the truth particle via the barcode
+        auto ip = particles.find(barcode);
+        if (ip != particles.end()) {
+          foundMajorityParticle = true;
+          m_majorityParticleId.push_back(barcode);
+          m_nMajorityHits.push_back(nMajorityHits);
+
+          const auto& particle = *ip;
+          ACTS_DEBUG("Find the truth particle with barcode = " << barcode);
+          // Get the truth particle info at vertex
+          const auto p = particle.absoluteMomentum();
+          m_t_charge.push_back(particle.charge());
+          m_t_time.push_back(particle.time());
+          m_t_vx.push_back(particle.position().x());
+          m_t_vy.push_back(particle.position().y());
+          m_t_vz.push_back(particle.position().z());
+          m_t_px.push_back(p * particle.unitDirection().x());
+          m_t_py.push_back(p * particle.unitDirection().y());
+          m_t_pz.push_back(p * particle.unitDirection().z());
+          m_t_theta.push_back(theta(particle.unitDirection()));
+          m_t_phi.push_back(phi(particle.unitDirection()));
+          m_t_eta.push_back(eta(particle.unitDirection()));
+          m_t_pT.push_back(p * perp(particle.unitDirection()));
+        } else {
+          ACTS_WARNING("Truth particle with barcode = "
+                       << barcode << " not found in the input collection!");
+        }
+      }
+      // Still push back even if majority particle not found
+      if (not foundMajorityParticle) {
+        ACTS_WARNING("Truth particle for mj " << itraj << " subtraj "
+                                              << isubtraj << " not found!");
+        m_majorityParticleId.push_back(NaNint);
+        m_nMajorityHits.push_back(NaNint);
+        m_t_charge.push_back(NaNint);
+        m_t_time.push_back(NaNfloat);
+        m_t_vx.push_back(NaNfloat);
+        m_t_vy.push_back(NaNfloat);
+        m_t_vz.push_back(NaNfloat);
+        m_t_px.push_back(NaNfloat);
+        m_t_py.push_back(NaNfloat);
+        m_t_pz.push_back(NaNfloat);
+        m_t_theta.push_back(NaNfloat);
+        m_t_phi.push_back(NaNfloat);
+        m_t_eta.push_back(NaNfloat);
+        m_t_pT.push_back(NaNfloat);
       }
 
       // Get the fitted track parameter
@@ -256,8 +317,21 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
   m_measurementLayer.clear();
   m_outlierVolume.clear();
   m_outlierLayer.clear();
+
   m_nMajorityHits.clear();
   m_majorityParticleId.clear();
+  m_t_charge.clear();
+  m_t_time.clear();
+  m_t_vx.clear();
+  m_t_vy.clear();
+  m_t_vz.clear();
+  m_t_px.clear();
+  m_t_py.clear();
+  m_t_pz.clear();
+  m_t_theta.clear();
+  m_t_phi.clear();
+  m_t_pT.clear();
+  m_t_eta.clear();
 
   m_hasFittedParams.clear();
   m_eLOC0_fit.clear();

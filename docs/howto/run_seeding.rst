@@ -10,7 +10,7 @@ The event generation and fatras simulation are explained in :ref:`simulate-Track
 
 
 Run the seeding example
-----------------------
+-----------------------
 
 
 Suppose the generated ttbar sample is available at ``data/sim_generic/ttbar_pu200``.
