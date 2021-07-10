@@ -60,7 +60,7 @@ struct TestSourceLink {
   TestSourceLink(TestSourceLink&&) = default;
   TestSourceLink& operator=(const TestSourceLink&) = default;
   TestSourceLink& operator=(TestSourceLink&&) = default;
-
+  constexpr size_t index() const { return sourceId; }
   constexpr GeometryIdentifier geometryId() const { return geoId; }
 };
 

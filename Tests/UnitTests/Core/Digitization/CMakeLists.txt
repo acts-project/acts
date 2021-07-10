@@ -1,4 +1,3 @@
-set(unittest_extra_libraries ActsPluginDigitization)
 
 add_unittest(CartesianSegmentation CartesianSegmentationTests.cpp)
 add_unittest(PlanarModuleStepper PlanarModuleStepperTests.cpp)
