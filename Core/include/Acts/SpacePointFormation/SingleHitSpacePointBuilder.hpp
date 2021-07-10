@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -33,7 +32,7 @@ class SingleHitSpacePointBuilder {
   };
 
   // Constructor
-  SingleHitSpacePointBuilder(SpacePointBuilderConfig cfg);
+  SingleHitSpacePointBuilder(SingleHitSpacePointBuilderConfig cfg);
   ///// Default constructor
   SingleHitSpacePointBuilder() = default;
 
@@ -67,7 +66,7 @@ class SingleHitSpacePointBuilder {
       const GeometryContext& gctx,
       const BoundVariantMeasurement<source_link_t>& meas) const;
 
-  SpacePointBuilderConfig m_config;
+  SingleHitSpacePointBuilderConfig m_config;
 };
 }  // namespace Acts
 #include "Acts/SpacePointFormation/detail/SingleHitSpacePointBuilder.ipp"

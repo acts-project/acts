@@ -19,7 +19,7 @@ Acts::SingleHitSpacePointBuilder<spacepoint_t, source_link_t>::localCoords(
 
 template <typename spacepoint_t, typename source_link_t>
 Acts::SingleHitSpacePointBuilder<spacepoint_t, source_link_t>::
-    SingleHitSpacePointBuilder(Acts::SpacePointBuilderConfig cfg)
+    SingleHitSpacePointBuilder(Acts::SingleHitSpacePointBuilderConfig cfg)
     : m_config(cfg) {}
 
 template <typename spacepoint_t, typename source_link_t>
@@ -49,6 +49,7 @@ Acts::SingleHitSpacePointBuilder<spacepoint_t, source_link_t>::globalCoords(
 
   // transform local position to global coordinates
   Acts::Vector3 globalFakeMom(1, 1, 1);
+
   Acts::Vector3 globalPos =
       surface->localToGlobal(gctx, localPos, globalFakeMom);
   Acts::RotationMatrix3 rotLocalToGlobal =

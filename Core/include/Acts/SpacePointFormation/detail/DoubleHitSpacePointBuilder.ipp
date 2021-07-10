@@ -44,20 +44,22 @@ struct SpacePointParameters {
   double limitExtended = 0.;
 };
 
-/// @brief Calculates (Delta theta)^2 + (Delta phi)^2 between two clusters
+/// @brief Calculates (Delta theta)^2 + (Delta phi)^2 between two measurements
 ///
-/// @param [in] pos1 position of the first cluster
-/// @param [in] pos2 position the second cluster
-/// @param [in] maxDistance Maximum distance between two clusters
-/// @param [in] maxAngleTheta2 Maximum squared theta angle between two clusters
-/// @param [in] maxAnglePhi2 Maximum squared phi angle between two clusters
+/// @param [in] pos1 position of the first measurement
+/// @param [in] pos2 position the second measurement
+/// @param [in] maxDistance Maximum distance between two measurements
+/// @param [in] maxAngleTheta2 Maximum squared theta angle between two
+/// measurements
+/// @param [in] maxAnglePhi2 Maximum squared phi angle between two measurements
 ///
 /// @return The squared sum within configuration parameters, otherwise -1
-double differenceOfClustersChecked(const Vector3& pos1, const Vector3& pos2,
-                                   const Vector3& posVertex,
-                                   const double maxDistance,
-                                   const double maxAngleTheta2,
-                                   const double maxAnglePhi2) {
+inline double differenceOfMeasurementsChecked(const Vector3& pos1,
+                                              const Vector3& pos2,
+                                              const Vector3& posVertex,
+                                              const double maxDistance,
+                                              const double maxAngleTheta2,
+                                              const double maxAnglePhi2) {
   // Check if measurements are close enough to each other
   if ((pos1 - pos2).norm() > maxDistance) {
     return -1.;
@@ -89,17 +91,17 @@ double differenceOfClustersChecked(const Vector3& pos1, const Vector3& pos2,
 /// @brief This function finds the top and bottom end of a detector segment in
 /// local coordinates
 ///
-/// @param [in] local Local position of the cluster
+/// @param [in] local Local position of the Measurement
 /// @param [in] segment Segmentation of the detector element
 ///
 /// @return Pair containing the top and bottom end
-std::pair<Vector2, Vector2> findLocalTopAndBottomEnd(
+inline std::pair<Vector2, Vector2> findLocalTopAndBottomEnd(
     const Vector2& local, const CartesianSegmentation* segment) {
   auto& binData = segment->binUtility().binningData();
   auto& boundariesX = binData[0].boundaries();
   auto& boundariesY = binData[1].boundaries();
 
-  // Search the x-/y-bin of the cluster
+  // Search the x-/y-bin of the Measurement
   size_t binX = binData[0].searchLocal(local);
   size_t binY = binData[1].searchLocal(local);
 
@@ -121,6 +123,9 @@ std::pair<Vector2, Vector2> findLocalTopAndBottomEnd(
                              (boundariesY[binY] + boundariesY[binY + 1]) / 2};
   }
   return topBottomLocal;
+
+  // Vector2 tmp(0,0);
+  // return std::make_pair(tmp,tmp);
 }
 
 /// @brief Calculates a space point whithout using the vertex
@@ -133,8 +138,8 @@ std::pair<Vector2, Vector2> findLocalTopAndBottomEnd(
 /// 1. if it failed
 /// @note The meaning of the parameter is explained in more detail in the
 /// function body
-double calcPerpendicularProjection(const Vector3& a, const Vector3& c,
-                                   const Vector3& q, const Vector3& r) {
+inline double calcPerpendicularProjection(const Vector3& a, const Vector3& c,
+                                          const Vector3& q, const Vector3& r) {
   /// This approach assumes that no vertex is available. This option aims to
   /// approximate the space points from cosmic data.
   /// The underlying assumption is that the best point is given by the closest
@@ -168,8 +173,8 @@ double calcPerpendicularProjection(const Vector3& a, const Vector3& c,
 /// between strip detector elements
 ///
 /// @return indicator if the test was successful
-bool recoverSpacePoint(SpacePointParameters& spaPoPa,
-                       double stripLengthGapTolerance) {
+inline bool recoverSpacePoint(SpacePointParameters& spaPoPa,
+                              double stripLengthGapTolerance) {
   /// Consider some cases that would allow an easy exit
   // Check if the limits are allowed to be increased
   if (stripLengthGapTolerance <= 0.) {
@@ -260,24 +265,24 @@ bool recoverSpacePoint(SpacePointParameters& spaPoPa,
 /// detector element length
 ///
 /// @return Boolean statement whether the space point calculation was succesful
-bool calculateSpacePoint(const std::pair<Vector3, Vector3>& stripEnds1,
-                         const std::pair<Vector3, Vector3>& stripEnds2,
-                         const Vector3& posVertex,
-                         SpacePointParameters& spaPoPa,
-                         const double stripLengthTolerance) {
+inline bool calculateSpacePoint(const std::pair<Vector3, Vector3>& stripEnds1,
+                                const std::pair<Vector3, Vector3>& stripEnds2,
+                                const Vector3& posVertex,
+                                SpacePointParameters& spaPoPa,
+                                const double stripLengthTolerance) {
   /// The following algorithm is meant for finding the position on the first
-  /// strip if there is a corresponding cluster on the second strip. The
+  /// strip if there is a corresponding Measurement on the second strip. The
   /// resulting point is a point x on the first surfaces. This point is
   /// along a line between the points a (top end of the strip)
   /// and b (bottom end of the strip). The location can be parametrized as
   /// 	2 * x = (1 + m) a + (1 - m) b
   /// as function of the scalar m. m is a parameter in the interval
   /// -1 < m < 1 since the hit was on the strip. Furthermore, the vector
-  /// from the vertex to the cluster on the second strip y is needed to be a
+  /// from the vertex to the Measurement on the second strip y is needed to be a
   /// multiple k of the vector from vertex to the hit on the first strip x.
   /// As a consequence of this demand y = k * x needs to be on the
   /// connecting line between the top (c) and bottom (d) end of
-  /// the second strip. If both clusters correspond to each other, the
+  /// the second strip. If both measurements correspond to each other, the
   /// condition
   /// 	y * (c X d) = k * x (c X d) = 0 ("X" represents a cross product)
   /// needs to be fulfilled. Inserting the first equation into this
@@ -301,6 +306,8 @@ bool calculateSpacePoint(const std::pair<Vector3, Vector3>& stripEnds1,
   return (fabs(spaPoPa.m) <= spaPoPa.limit &&
           fabs(spaPoPa.n = -spaPoPa.t.dot(spaPoPa.qs) /
                            spaPoPa.r.dot(spaPoPa.qs)) <= spaPoPa.limit);
+
+  return true;
 }
 }  // namespace detail
 }  // namespace Acts
@@ -308,116 +315,127 @@ bool calculateSpacePoint(const std::pair<Vector3, Vector3>& stripEnds1,
 ///
 /// @note Used abbreviation: "Strip Detector Element" -> SDE
 ///
-template <typename Cluster>
-Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::SpacePointBuilder(
-    DoubleHitSpacePointConfig cfg)
+template <typename spacepoint_t, typename source_link_t>
+Acts::DoubleHitSpacePointBuilder<spacepoint_t, source_link_t>::
+    DoubleHitSpacePointBuilder(DoubleHitSpacePointBuilderConfig cfg)
     : m_cfg(std::move(cfg)) {}
 
-template <typename Cluster>
-Acts::Vector2 Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::localCoords(
-    const Cluster& cluster) const {
+template <typename spacepoint_t, typename source_link_t>
+Acts::Vector2
+Acts::DoubleHitSpacePointBuilder<spacepoint_t, source_link_t>::localCoords(
+    const Measurement& measurement) const {
   // Local position information
-  auto par = cluster.parameters();
+  auto par = measurement.parameters();
   Acts::Vector2 local(par[Acts::BoundIndices::eBoundLoc0],
                       par[Acts::BoundIndices::eBoundLoc1]);
   return local;
 }
 
-template <typename Cluster>
-Acts::Vector3 Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
-    const GeometryContext& gctx, const Cluster& cluster) const {
-  // Receive corresponding surface
-  auto& clusterSurface = cluster.referenceObject();
+template <typename spacepoint_t, typename source_link_t>
+Acts::Vector3
+Acts::DoubleHitSpacePointBuilder<spacepoint_t, source_link_t>::globalCoords(
+    const Acts::GeometryContext& gctx, const Measurement& measurement) const {
+  // // Receive corresponding surface
+  // auto& measurementSurface = measurement;
 
-  // Transform local into global position information
-  Vector3 mom(1., 1., 1.);
-  return clusterSurface.localToGlobal(gctx, localCoords(cluster), mom);
+  // // Transform local into global position information
+  // Vector3 mom(1., 1., 1.);
+  // return measurementSurface.localToGlobal(gctx, localCoords(measurement),
+  // mom);
+
+  Acts::Vector3 tmp(1, 1, 1);
+  return tmp;
 }
 
-template <typename Cluster>
-void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::makeClusterPairs(
-    const GeometryContext& gctx,
-    const std::vector<const Cluster*>& clustersFront,
-    const std::vector<const Cluster*>& clustersBack,
-    std::vector<std::pair<const Cluster*, const Cluster*>>& clusterPairs)
-    const {
-  // Return if no clusters are given in a vector
-  if (clustersFront.empty() || clustersBack.empty()) {
+template <typename spacepoint_t, typename source_link_t>
+void Acts::DoubleHitSpacePointBuilder<spacepoint_t, source_link_t>::
+    makeMeasurementPairs(
+        const Acts::GeometryContext& gctx,
+        const std::vector<const Measurement*>& measurementsFront,
+        const std::vector<const Measurement*>& measurementsBack,
+        std::vector<std::pair<const Measurement*, const Measurement*>>&
+            measurementPairs) const {
+  // Return if no Measurements are given in a vector
+  if (measurementsFront.empty() || measurementsBack.empty()) {
     return;
   }
 
   // Declare helper variables
   double currentDiff;
   double diffMin;
-  unsigned int clusterMinDist;
+  unsigned int measurementMinDist;
 
-  // Walk through all clusters on both surfaces
-  for (unsigned int iClustersFront = 0; iClustersFront < clustersFront.size();
-       iClustersFront++) {
+  // Walk through all Measurements on both surfaces
+  for (unsigned int iMeasurementsFront = 0;
+       iMeasurementsFront < measurementsFront.size(); iMeasurementsFront++) {
     // Set the closest distance to the maximum of double
     diffMin = std::numeric_limits<double>::max();
-    // Set the corresponding index to an element not in the list of clusters
-    clusterMinDist = clustersBack.size();
-    for (unsigned int iClustersBack = 0; iClustersBack < clustersBack.size();
-         iClustersBack++) {
+    // Set the corresponding index to an element not in the list of Measurements
+    measurementMinDist = measurementsBack.size();
+    for (unsigned int iMeasurementsBack = 0;
+         iMeasurementsBack < measurementsBack.size(); iMeasurementsBack++) {
       // Calculate the distances between the hits
-      currentDiff = detail::differenceOfClustersChecked(
-          globalCoords(gctx, *(clustersFront[iClustersFront])),
-          globalCoords(gctx, *(clustersBack[iClustersBack])), m_cfg.vertex,
-          m_cfg.diffDist, m_cfg.diffPhi2, m_cfg.diffTheta2);
-      // Store the closest clusters (distance and index) calculated so far
+      currentDiff = detail::differenceOfMeasurementsChecked(
+          globalCoords(gctx, *(measurementsFront[iMeasurementsFront])),
+          globalCoords(gctx, *(measurementsBack[iMeasurementsBack])),
+          m_cfg.vertex, m_cfg.diffDist, m_cfg.diffPhi2, m_cfg.diffTheta2);
+      // Store the closest Measurements (distance and index) calculated so far
       if (currentDiff < diffMin && currentDiff >= 0.) {
         diffMin = currentDiff;
-        clusterMinDist = iClustersBack;
+        measurementMinDist = iMeasurementsBack;
       }
     }
 
     // Store the best (=closest) result
-    if (clusterMinDist < clustersBack.size()) {
-      std::pair<const Cluster*, const Cluster*> clusterPair;
-      clusterPair = std::make_pair(clustersFront[iClustersFront],
-                                   clustersBack[clusterMinDist]);
-      clusterPairs.push_back(clusterPair);
+    if (measurementMinDist < measurementsBack.size()) {
+      std::pair<const Measurement*, const Measurement*> measurementPair;
+      measurementPair = std::make_pair(measurementsFront[iMeasurementsFront],
+                                       measurementsBack[measurementMinDist]);
+      measurementPairs.push_back(measurementPair);
     }
   }
 }
 
-template <typename Cluster>
+template <typename spacepoint_t, typename source_link_t>
 std::pair<Acts::Vector3, Acts::Vector3>
-Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::endsOfStrip(
-    const GeometryContext& gctx, const Cluster& cluster) const {
-  // Calculate the local coordinates of the cluster
-  const Acts::Vector2 local = localCoords(cluster);
+Acts::DoubleHitSpacePointBuilder<spacepoint_t, source_link_t>::endsOfStrip(
+    const Acts::GeometryContext& gctx, const Measurement& Measurement) const {
+  // Calculate the local coordinates of the Measurement
+  const Acts::Vector2 local = localCoords(Measurement);
 
   // Receive the binning
   auto segment = dynamic_cast<const Acts::CartesianSegmentation*>(
-      &(cluster.digitizationModule()->segmentation()));
+      &(Measurement.digitizationModule()->segmentation()));
 
   std::pair<Vector2, Vector2> topBottomLocal =
       detail::findLocalTopAndBottomEnd(local, segment);
 
   // Calculate the global coordinates of the top and bottom end of the strip
   Acts::Vector3 mom(1., 1., 1);  // mom is a dummy variable
-  const auto* sur = &cluster.referenceObject();
+  const auto* sur = &Measurement.referenceObject();
   Acts::Vector3 topGlobal = sur->localToGlobal(gctx, topBottomLocal.first, mom);
   Acts::Vector3 bottomGlobal =
       sur->localToGlobal(gctx, topBottomLocal.second, mom);
 
   // Return the top and bottom end of the strip in global coordinates
   return std::make_pair(topGlobal, bottomGlobal);
+  // Acts::Vector3 tmp(0,0,0);
+  // return std::make_pair(tmp,tmp);
 }
 
-template <typename Cluster>
-void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
-    const GeometryContext& gctx,
-    const std::vector<std::pair<const Cluster*, const Cluster*>>& clusterPairs,
-    std::vector<Acts::SpacePoint<Cluster>>& spacePoints) const {
+template <typename spacepoint_t, typename source_link_t>
+void Acts::DoubleHitSpacePointBuilder<spacepoint_t, source_link_t>::
+    calculateSpacePoints(
+        const Acts::GeometryContext& gctx,
+        const std::vector<std::pair<const Measurement*, const Measurement*>>&
+            measurementPairs,
+        std::vector<spacepoint_t>& spacePoints) const {
   /// Source of algorithm: Athena, SiSpacePointMakerTool::makeSCT_SpacePoint()
 
   detail::SpacePointParameters spaPoPa;
 
   // Walk over every found candidate pair
-  for (const auto& cp : clusterPairs) {
+  for (const auto& cp : measurementPairs) {
     // Calculate the ends of the SDEs
     const auto& ends1 = endsOfStrip(gctx, *(cp.first));
     const auto& ends2 = endsOfStrip(gctx, *(cp.second));
@@ -431,9 +449,9 @@ void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
       resultPerpProj = detail::calcPerpendicularProjection(
           ends1.first, ends2.first, spaPoPa.q, spaPoPa.r);
       if (resultPerpProj <= 0.) {
-        Acts::SpacePoint<Cluster> sp;
-        sp.clusterModule.push_back(cp.first);
-        sp.clusterModule.push_back(cp.second);
+        spacepoint_t sp;
+        sp.MeasurementModule.push_back(cp.first);
+        sp.MeasurementModule.push_back(cp.second);
         Vector3 pos = ends1.first + resultPerpProj * spaPoPa.q;
         sp.vector = pos;
         spacePoints.push_back(std::move(sp));
@@ -444,11 +462,11 @@ void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
     if (calculateSpacePoint(ends1, ends2, m_cfg.vertex, spaPoPa,
                             m_cfg.stripLengthTolerance)) {
       // Store the space point
-      Acts::SpacePoint<Cluster> sp;
-      sp.clusterModule.push_back(cp.first);
-      sp.clusterModule.push_back(cp.second);
+      spacepoint_t sp;
+      sp.MeasurementModule.push_back(cp.first);
+      sp.MeasurementModule.push_back(cp.second);
       Vector3 pos = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
-      // TODO: Clusters should deliver timestamp
+      // TODO: Measurements should deliver timestamp
       sp.vector = pos;
       spacePoints.push_back(std::move(sp));
     } else {
@@ -460,9 +478,9 @@ void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
       /// position.
       // Check if a recovery the point(s) and store them if successful
       if (detail::recoverSpacePoint(spaPoPa, m_cfg.stripLengthGapTolerance)) {
-        Acts::SpacePoint<Cluster> sp;
-        sp.clusterModule.push_back(cp.first);
-        sp.clusterModule.push_back(cp.second);
+        spacepoint_t sp;
+        sp.MeasurementModule.push_back(cp.first);
+        sp.MeasurementModule.push_back(cp.second);
         Vector3 pos =
             0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
         sp.vector = pos;
