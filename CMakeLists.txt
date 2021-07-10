@@ -54,6 +54,7 @@ option(ACTS_BUILD_INTEGRATIONTESTS "Build integration tests" OFF)
 option(ACTS_BUILD_UNITTESTS "Build unit tests" OFF)
 # other options
 option(ACTS_BUILD_DOCS "Build documentation" OFF)
+option(ACTS_USE_SYSTEM_BOOST "Use a system-provided boost" ON)
 
 # handle option inter-dependencies and the everything flag
 # NOTE: ordering is important here. dependencies must come before dependees
@@ -124,7 +125,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR
 # they can be easily upgraded, although they might not be used if the
 # dependency is included via `add_subdirectory(...)`.
 set(_acts_autodiff_version 0.5.11)
-set(_acts_boost_version 1.71)
+set(_acts_boost_version 1.72.0)
 set(_acts_dd4hep_version 1.11)
 set(_acts_doxygen_version 1.8.15)
 set(_acts_eigen3_version 3.3.7)
@@ -134,9 +135,16 @@ set(_acts_root_version 6.20)
 set(_acts_tbb_version 2020.1)
 
 # required packages
-# NOTE we use boost::filesystem instead of std::filesystem since the later
-#   is not uniformly supported even on compilers that nominally support C++17 
-find_package(Boost ${_acts_boost_version} REQUIRED CONFIG COMPONENTS filesystem program_options unit_test_framework)
+
+if (ACTS_USE_SYSTEM_BOOST)
+  # NOTE we use boost::filesystem instead of std::filesystem since the later
+  # is not uniformly supported even on compilers that nominally support C++17
+  find_package(Boost ${_acts_boost_version} REQUIRED CONFIG COMPONENTS filesystem program_options unit_test_framework)
+else()
+  add_subdirectory(thirdparty/boost)
+endif()
+
+
 find_package(Eigen3 ${_acts_eigen3_version} REQUIRED CONFIG)
 
 # the `<project_name>_VERSION` variables set by `setup(... VERSION ...)` have
@@ -255,6 +263,7 @@ endif()
 
 # documentation
 add_subdirectory_if(docs ACTS_BUILD_DOCS)
+
 
 # create cmake configuration files and environment setup script
 include(ActsCreatePackageConfig)

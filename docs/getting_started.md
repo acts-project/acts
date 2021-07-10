@@ -25,7 +25,7 @@ The following dependencies are required to build the Acts core library:
 
 -   A C++17 compatible compiler (recent versions of either gcc and clang should work)
 -   [CMake](https://cmake.org) >= 3.14
--   [Boost](http://boost.org) >= 1.71 with `filesystem`, `program_options`, and `unit_test_framework`
+-   [Boost](http://boost.org) >= 1.72 with `filesystem`, `program_options`, and `unit_test_framework`
 -   [Eigen](http://eigen.tuxfamily.org) >= 3.3.7
 
 The following dependencies are optional and are needed to build additional
@@ -50,6 +50,7 @@ These are usually not available through the system package manager and can be fo
 All external dependencies must be provided prior to building Acts. Compatible
 versions of all dependencies are provided e.g. by the [LCG
 releases](http://lcginfo.cern.ch/) starting from [LCG 97apython3](http://lcginfo.cern.ch/release/97apython3/).
+For convenience, it is possible to build the required boost dependencies using the ACTS build system; see [Build options](#build-options).
 Other options are also
 available and are discussed in the [Building Acts](#building-acts) section.
 
@@ -260,6 +261,7 @@ components.
 | ACTS_PARAMETER_DEFINITIONS_HEADER     | Use a different (track) parameter definitions header |
 | ACTS_USE_SYSTEM_AUTODIFF              | Use autodiff provided by the system instead of the bundled version |
 | ACTS_USE_SYSTEM_NLOHMANN_JSON         | Use nlohmann::json provided by the system instead of the bundled version |
+| ACTS_USE_SYSTEM_BOOST                 | Use the system boost libraries (defaults to ON) |
 
 All Acts-specific options are disabled or empty by default and must be
 specifically requested. Some of the options have interdependencies that are
