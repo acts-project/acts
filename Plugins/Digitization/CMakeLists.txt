@@ -1,6 +1,5 @@
 add_library(
   ActsPluginDigitization SHARED
-  src/CartesianSegmentation.cpp
   src/DigitizationModule.cpp
   src/PlanarModuleStepper.cpp)
 target_include_directories(
