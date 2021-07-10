@@ -125,7 +125,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR
 # they can be easily upgraded, although they might not be used if the
 # dependency is included via `add_subdirectory(...)`.
 set(_acts_autodiff_version 0.5.11)
-set(_acts_boost_version 1.72.0)
+set(_acts_boost_version 1.71.0)
 set(_acts_dd4hep_version 1.11)
 set(_acts_doxygen_version 1.8.15)
 set(_acts_eigen3_version 3.3.7)

@@ -8,6 +8,8 @@ set(Boost_LIBRARY_LIST "filesystem,program_options,test")
 set(Boost_SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/boost-prefix/src/boost)
 set(Boost_INCLUDE_DIR ${Boost_SOURCE_DIR})
 set(Boost_LIBRARY_DIR ${Boost_SOURCE_DIR}/stage/lib)
+set(Boost_B2_CXXFLAGS -std=c++17\ -fPIC\ -O3)
+set(Boost_B2_FLAGS variant=release threading=multi runtime-link=shared link=shared cxxflags=${Boost_B2_CXXFLAGS})
 
 # Target for boost headers
 
@@ -22,9 +24,9 @@ ExternalProject_Add(
   INSTALL_COMMAND ""
 )
 
-include_directories(${Boost_INCLUDE_DIR})
 add_library(Boost::boost INTERFACE IMPORTED GLOBAL)
 add_dependencies(Boost::boost boost)
+target_include_directories(Boost::boost INTERFACE ${Boost_INCLUDE_DIR})
 
 # Target for bootstrap step
 
@@ -55,7 +57,7 @@ ExternalProject_Add(
   boost_build_filesystem
   DOWNLOAD_COMMAND ""
   CONFIGURE_COMMAND ""
-  BUILD_COMMAND ./b2 --with-filesystem
+  BUILD_COMMAND ./b2 ${Boost_B2_FLAGS} --with-filesystem
   INSTALL_COMMAND ""
   DEPENDS boost_bootstrap
   SOURCE_DIR ${Boost_SOURCE_DIR}
@@ -75,7 +77,7 @@ ExternalProject_Add(
   boost_build_program_options
   DOWNLOAD_COMMAND ""
   CONFIGURE_COMMAND ""
-  BUILD_COMMAND ./b2 --with-program_options
+  BUILD_COMMAND ./b2 ${Boost_B2_FLAGS} --with-program_options
   INSTALL_COMMAND ""
   DEPENDS boost_bootstrap
   SOURCE_DIR ${Boost_SOURCE_DIR}
@@ -95,7 +97,7 @@ ExternalProject_Add(
   boost_build_unit_test_framework
   DOWNLOAD_COMMAND ""
   CONFIGURE_COMMAND ""
-  BUILD_COMMAND ./b2 --with-test
+  BUILD_COMMAND ./b2 ${Boost_B2_FLAGS} --with-test
   INSTALL_COMMAND ""
   DEPENDS boost_bootstrap
   SOURCE_DIR ${Boost_SOURCE_DIR}

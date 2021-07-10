@@ -44,7 +44,7 @@ removed except the following ones:
 ## boost
 
 For convenience, it's possible to use the ACTS build system to build the minimum
-required version of [boost](https://www.boost.org/) (currently 1.72.0).  No source is
+required version of [boost](https://www.boost.org/) (currently 1.71.0).  No source is
 bundled here, and if requested via "-DACTS_USE_SYSTEM_BOOST=OFF", only the filesystem,
 program_options, and test libraries will be built.
 
