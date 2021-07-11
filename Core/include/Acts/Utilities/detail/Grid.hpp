@@ -416,8 +416,9 @@ class Grid final {
       return std::accumulate(
           nBinsArray.begin(), nBinsArray.end(), 1,
           [](const size_t& a, const size_t& b) { return a * (b + 2); });
-      // ignore under-and overflow bins for each axis and multiply all bins
-    } else {
+    }
+    // ignore under-and overflow bins for each axis and multiply all bins
+    else {
       return std::accumulate(
           nBinsArray.begin(), nBinsArray.end(), 1,
           [](const size_t& a, const size_t& b) { return a * b; });
