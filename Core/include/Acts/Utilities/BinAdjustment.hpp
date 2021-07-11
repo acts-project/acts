@@ -27,6 +27,7 @@ namespace Acts {
 ///
 /// @param bu BinUtility at source
 /// @param rBounds the Radial bounds to adjust to
+/// @param transform Transform for the adjusted @c BinUtility
 ///
 /// @return new updated BinUtiltiy
 BinUtility adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds,
@@ -75,6 +76,7 @@ BinUtility adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds,
 ///
 /// @param bu BinUtility at source
 /// @param cBounds the Cylinder bounds to adjust to
+/// @param transform Transform for the adjusted @c BinUtility
 ///
 /// @return new updated BinUtiltiy
 BinUtility adjustBinUtility(const BinUtility& bu, const CylinderBounds& cBounds,
@@ -127,6 +129,7 @@ BinUtility adjustBinUtility(const BinUtility& bu, const CylinderBounds& cBounds,
 ///
 /// @param bu BinUtility at source
 /// @param pBounds the Rectangle bounds to adjust to
+/// @param transform Transform for the adjusted @c BinUtility
 ///
 /// @return new updated BinUtiltiy
 BinUtility adjustBinUtility(const BinUtility& bu,
@@ -175,7 +178,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
 /// @brief adjust the BinUtility bu to a surface
 ///
 /// @param bu BinUtility at source
-/// @param Surface to which the adjustment is being done
+/// @param surface Surface to which the adjustment is being done
 ///
 /// @return new updated BinUtiltiy
 BinUtility adjustBinUtility(const BinUtility& bu, const Surface& surface) {

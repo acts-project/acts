@@ -28,7 +28,7 @@ std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
   std::vector<DigitizationStep> cSteps;
 
   // get the test surfaces for bin intersections
-  auto& stepSurfaces = dmodule.stepSurfaces(startPoint, endPoint);
+  auto stepSurfaces = dmodule.stepSurfaces(startPoint, endPoint);
 
   // the track direction
   Vector3 trackDirection((endPoint - startPoint).normalized());

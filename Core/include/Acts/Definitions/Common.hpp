@@ -78,6 +78,4 @@ enum CoordinateIndices : unsigned int {
   eZ = ePos2,
 };
 
-/// @}
-
 }  // namespace Acts

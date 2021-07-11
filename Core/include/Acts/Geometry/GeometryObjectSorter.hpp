@@ -26,13 +26,12 @@ class ObjectSorterT : public std::binary_function<T, T, bool> {
   /// Constructor from a binning value
   ///
   /// @param bValue is the value in which the binning is done
-  /// @param transform is an optional transform to be performed
   ObjectSorterT(BinningValue bValue) : m_binningValue(bValue) {}
 
   /// Comparison operator
   ///
-  /// @tparam one first object
-  /// @tparam two second object
+  /// @param one first object
+  /// @param two second object
   ///
   /// @return boolen indicator
   bool operator()(T one, T two) const {
@@ -165,6 +164,7 @@ class GeometryObjectSorterT : public std::binary_function<T, T, bool> {
  public:
   /// Constructor from a binning value
   ///
+  /// @param gctx The geometry context to use
   /// @param bValue is the value in which the binning is done
   /// @param transform is an optional transform to be performed
   GeometryObjectSorterT(const GeometryContext& gctx, BinningValue bValue,

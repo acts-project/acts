@@ -49,19 +49,19 @@ class Material {
 
   /// Construct from material parameters using the molar density.
   ///
-  /// @param X0 is the radiation length
-  /// @param L0 is the nuclear interaction length
-  /// @param Ar is the relative atomic mass
-  /// @param Z is the nuclear charge number
+  /// @param x0 is the radiation length
+  /// @param l0 is the nuclear interaction length
+  /// @param ar is the relative atomic mass
+  /// @param z is the nuclear charge number
   /// @param molarRho is the molar density
   static Material fromMolarDensity(float x0, float l0, float ar, float z,
                                    float molarRho);
   /// Construct from material parameters using the mass density.
   ///
-  /// @param X0 is the radiation length
-  /// @param L0 is the nuclear interaction length
-  /// @param Ar is the relative atomic mass
-  /// @param Z is the nuclear charge number
+  /// @param x0 is the radiation length
+  /// @param l0 is the nuclear interaction length
+  /// @param ar is the relative atomic mass
+  /// @param z is the nuclear charge number
   /// @param massRho is the mass density
   ///
   /// @warning Due to the choice of native mass units, using the mass density

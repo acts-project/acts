@@ -138,11 +138,13 @@ class PolymorphicValue {
   template <typename U>
   friend class PolymorphicValue;
 
+  /// @cond
   template <typename U, typename... Args>
   friend PolymorphicValue<U> makePolymorphicValue(Args&&... args);
 
   template <typename U, typename V, typename... Args>
   friend PolymorphicValue<U> makePolymorphicValue(Args&&... args);
+  /// @endcond
 
   /// @brief Private constructor to construct a new Polymorphic Value object in
   /// place

@@ -67,7 +67,7 @@ class TrackingGeometry {
 
   /// Forward the associated Layer information
   ///
-  /// @paramn gctx is the context for this request (e.g. alignment)
+  /// @param gctx is the context for this request (e.g. alignment)
   /// @param gp is the global position of the call
   ///
   /// @return plain pointer to assocaiated layer
