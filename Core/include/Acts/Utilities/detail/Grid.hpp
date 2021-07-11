@@ -409,12 +409,19 @@ class Grid final {
   /// @return total number of bins in the grid
   ///
   /// @note This number contains under-and overflow bins along all axes.
-  size_t size() const {
+  size_t size(bool fullCounter = true) const {
     index_t nBinsArray = numLocalBins();
     // add under-and overflow bins for each axis and multiply all bins
-    return std::accumulate(
-        nBinsArray.begin(), nBinsArray.end(), 1,
-        [](const size_t& a, const size_t& b) { return a * (b + 2); });
+    if (fullCounter) {
+      return std::accumulate(
+          nBinsArray.begin(), nBinsArray.end(), 1,
+          [](const size_t& a, const size_t& b) { return a * (b + 2); });
+      // ignore under-and overflow bins for each axis and multiply all bins
+    } else {
+      return std::accumulate(
+          nBinsArray.begin(), nBinsArray.end(), 1,
+          [](const size_t& a, const size_t& b) { return a * b; });
+    }
   }
 
   std::array<const IAxis*, DIM> axes() const {
