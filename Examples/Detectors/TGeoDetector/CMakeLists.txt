@@ -1,5 +1,6 @@
 add_library(
   ActsExamplesDetectorTGeo SHARED
+  src/BuildTGeoDetector.cpp
   src/TGeoDetector.cpp
   src/TGeoDetectorOptions.cpp)
 target_include_directories(

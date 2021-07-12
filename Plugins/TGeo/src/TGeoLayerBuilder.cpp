@@ -200,7 +200,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
                 (m_cfg.detectorElementSplitter == nullptr)
                     ? std::vector<std::shared_ptr<
                           const Acts::TGeoDetectorElement>>{tgElement}
-                    : m_cfg.detectorElementSplitter->split(gctx, *tgElement);
+                    : m_cfg.detectorElementSplitter->split(gctx, tgElement);
 
         for (auto tge : tgElements) {
           m_elementStore.push_back(tge);

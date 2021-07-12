@@ -25,8 +25,10 @@ class ITGeoDetectorElementSplitter {
   ///
   /// @param gctx is a geometry context object
   /// @param tgnode is a TGeoNode that is translated
+  ///
+  /// @note If no split is performed the unsplit detector element is returned 
   virtual std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> split(
-      const GeometryContext& gctx, const Acts::TGeoDetectorElement&) const = 0;
+      const GeometryContext& gctx, std::shared_ptr<const Acts::TGeoDetectorElement> tgde) const = 0;
 };
 
 }  // namespace Acts
