@@ -29,6 +29,7 @@ class TGeoNode;
 namespace Acts {
 
 class TGeoDetectorElement;
+class ITGeoDetectorElementSplitter;
 class Surface;
 
 /// @class TGeoLayerBuilder
@@ -86,6 +87,9 @@ class TGeoLayerBuilder : public ILayerBuilder {
     double unit = 1 * UnitConstants::cm;
     /// Create an indentifier from TGeoNode
     std::shared_ptr<const ITGeoIdentifierProvider> identifierProvider = nullptr;
+    /// Split TGeoElement if a splitter is provided
+    std::shared_ptr<const ITGeoDetectorElementSplitter>
+        detectorElementSplitter = nullptr;
     /// Layer creator
     std::shared_ptr<const LayerCreator> layerCreator = nullptr;
     /// ProtoLayer helper

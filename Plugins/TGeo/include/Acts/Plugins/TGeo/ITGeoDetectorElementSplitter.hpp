@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,17 +13,20 @@ class TGeoNode;
 
 namespace Acts {
 
-/// @brief ITGeoIdentierProvider
+class TGeoDetectorElement;
+
+/// @brief ITGeoElementSplitter
 ///
-/// Interface class that provides an Indentifier from a TGeoNode
-class ITGeoIdentifierProvider {
+/// Interface class that allows to define splitting of TGeoElements into
+/// sub-elements
+class ITGeoDetectorElementSplitter {
  public:
-  /// Take a geometry context and a TGeoNode and provide an identifier
+  /// Take a geometry context and TGeoElement and split it into sub elements
   ///
   /// @param gctx is a geometry context object
   /// @param tgnode is a TGeoNode that is translated
-  virtual Identifier identify(const GeometryContext& gctx,
-                              const TGeoNode& tgnode) const = 0;
+  virtual std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> split(
+      const GeometryContext& gctx, const Acts::TGeoDetectorElement&) const = 0;
 };
 
 }  // namespace Acts

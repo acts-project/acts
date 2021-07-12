@@ -9,6 +9,7 @@
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 
 #include "Acts/Geometry/ProtoLayer.hpp"
+#include "Acts/Plugins/TGeo/ITGeoDetectorElementSplitter.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Plugins/TGeo/TGeoParser.hpp"
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
@@ -181,7 +182,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
 
       TGeoParser::select(tgpState, tgpOptions);
 
-      ACTS_DEBUG("- number of selsected nodes found : "
+      ACTS_DEBUG("- number of selected nodes found : "
                  << tgpState.selectedNodes.size());
 
       for (auto& snode : tgpState.selectedNodes) {
@@ -193,8 +194,18 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
         auto tgElement = std::make_shared<const Acts::TGeoDetectorElement>(
             identifier, *snode.node, *snode.transform, layerCfg.localAxes,
             m_cfg.unit);
-        m_elementStore.push_back(tgElement);
-        layerSurfaces.push_back(tgElement->surface().getSharedPtr());
+
+        std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
+            tgElements =
+                (m_cfg.detectorElementSplitter == nullptr)
+                    ? std::vector<std::shared_ptr<
+                          const Acts::TGeoDetectorElement>>{tgElement}
+                    : m_cfg.detectorElementSplitter->split(gctx, *tgElement);
+
+        for (auto tge : tgElements) {
+          m_elementStore.push_back(tge);
+          layerSurfaces.push_back(tge->surface().getSharedPtr());
+        }
       }
 
       ACTS_DEBUG("- created TGeoDetectorElements : " << layerSurfaces.size());
@@ -206,9 +217,11 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
         ACTS_DEBUG("- splitting into " << protoLayers.size() << " layers.");
         for (auto& pLayer : protoLayers) {
           layerSurfaces.clear();
+
           for (const auto& lsurface : pLayer.surfaces()) {
             layerSurfaces.push_back(lsurface->getSharedPtr());
           }
+
           fillLayer(layerSurfaces, layerCfg);
         }
       } else {
