@@ -222,7 +222,7 @@ class Navigator {
     /// @param ssurface is the new starting surface
     /// @param tsurface is the target surface
     void reset(const GeometryContext& geoContext, const Vector3& pos,
-               const Vector3& dir, const NavigationDirection& navDir,
+               const Vector3& dir, NavigationDirection navDir,
                const Surface* ssurface, const Surface* tsurface) {
       // Reset everything first
       *this = State();
