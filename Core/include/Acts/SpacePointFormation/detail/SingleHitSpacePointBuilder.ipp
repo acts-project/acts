@@ -33,11 +33,11 @@ Acts::SingleHitSpacePointBuilder<spacepoint_t, source_link_t>::globalCoords(
   const Acts::Surface* surface = m_config.trackingGeometry->findSurface(geoId);
 
   auto [localPos, localCov] = std::visit(
-      [](const auto& meas) {
-        auto expander = meas.expander();
-        Acts::BoundVector par = expander * meas.parameters();
+      [](const auto& measurement) {
+        auto expander = measurement.expander();
+        Acts::BoundVector par = expander * measurement.parameters();
         Acts::BoundSymMatrix cov =
-            expander * meas.covariance() * expander.transpose();
+            expander * measurement.covariance() * expander.transpose();
         // extract local position
         Acts::Vector2 lpar(par[Acts::eBoundLoc0], par[Acts::eBoundLoc1]);
         // extract local position covariance.
