@@ -9,13 +9,12 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+//#include "Acts/SpacePointFormation/DoubleHitSpacePointBuilder.hpp"
 #include "Acts/SpacePointFormation/SingleHitSpacePointBuilder.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.h"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
-//#include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
-//#include "ActsExamples/Digitization/ModuleClusters.hpp"
 
 #include <memory>
 #include <string>
@@ -77,8 +76,12 @@ class SpacePointMaker final : public BareAlgorithm {
  private:
   Config m_cfg;
 
-  Acts::SpacePointBuilderConfig m_spBuilderCfg;
-  Acts::SingleHitSpacePointBuilder<SimSpacePoint, IndexSourceLink> m_spBuilder;
+  Acts::SingleHitSpacePointBuilderConfig m_singleSPBuilderCfg;
+  Acts::SingleHitSpacePointBuilder<SimSpacePoint, IndexSourceLink>
+      m_singleSPBuilder;
+  // Acts::DoubleHitSpacePointBuilderConfig m_doubleSPBuilderCfg;
+  // Acts::DoubleHitSpacePointBuilder<SimSpacePoint, IndexSourceLink>
+  //    m_doubleSPBuilder;
 };
 
 }  // namespace ActsExamples

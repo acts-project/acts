@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/Digitization/DigitizationCell.hpp"
 #include "Acts/EventData/Measurement.hpp"
-#include "Acts/Plugins/Digitization/DigitizationCell.hpp"
 #include "Acts/Plugins/Digitization/DigitizationModule.hpp"
 #include "Acts/Plugins/Digitization/DigitizationSourceLink.hpp"
 

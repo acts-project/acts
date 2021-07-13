@@ -8,8 +8,8 @@
 
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/Digitization/DigitizationCell.hpp"
-#include "Acts/Plugins/Digitization/Segmentation.hpp"
+#include "Acts/Digitization/DigitizationCell.hpp"
+#include "Acts/Digitization/Segmentation.hpp"
 
 #include <memory>
 

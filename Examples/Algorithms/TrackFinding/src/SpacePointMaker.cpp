@@ -21,9 +21,6 @@
 #include <stdexcept>
 #include <utility>
 
-using ConcreteMeasurement =
-    Acts::Measurement<ActsExamples::IndexSourceLink, Acts::BoundIndices, 2>;
-
 ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
                                                Acts::Logging::Level lvl)
     : BareAlgorithm("SpacePointMaker", lvl), m_cfg(std::move(cfg)) {
@@ -84,9 +81,9 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
   for (const auto& geoId : m_cfg.geometrySelection) {
     ACTS_INFO("  " << geoId);
   }
-  auto spBuilderConfig = Acts::SpacePointBuilderConfig();
+  auto spBuilderConfig = Acts::SingleHitSpacePointBuilderConfig();
   spBuilderConfig.trackingGeometry = m_cfg.trackingGeometry;
-  m_spBuilder =
+  m_singleSPBuilder =
       Acts::SingleHitSpacePointBuilder<SimSpacePoint, IndexSourceLink>(
           spBuilderConfig);
 }
@@ -115,8 +112,8 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
     }
   }
   SimSpacePointContainer spacePoints;
-  m_spBuilder.calculateSpacePoints(ctx.geoContext, selectedMeasurements,
-                                   spacePoints);
+  m_singleSPBuilder.calculateSpacePoints(ctx.geoContext, selectedMeasurements,
+                                         spacePoints);
   spacePoints.shrink_to_fit();
 
   ctx.eventStore.add(m_cfg.outputSpacePoints, std::move(spacePoints));

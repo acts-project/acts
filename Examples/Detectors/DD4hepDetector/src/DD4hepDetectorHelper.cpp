@@ -9,7 +9,7 @@
 #include "ActsExamples/DD4hepDetector/DD4hepDetectorHelper.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/Digitization/CartesianSegmentation.hpp"
+#include "Acts/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 

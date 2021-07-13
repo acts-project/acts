@@ -9,10 +9,10 @@
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Plugins/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Plugins/Digitization/DigitizationModule.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"

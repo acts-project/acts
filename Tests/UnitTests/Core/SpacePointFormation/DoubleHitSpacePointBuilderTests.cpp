@@ -10,7 +10,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/Digitization/CartesianSegmentation.hpp"
+#include "Acts/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/SpacePointFormation/DoubleHitSpacePointBuilder.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
