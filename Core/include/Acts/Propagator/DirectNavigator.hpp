@@ -119,6 +119,26 @@ class DirectNavigator {
     bool targetReached = false;
     /// Navigation state - external interface: a break has been detected
     bool navigationBreak = false;
+
+    /// Reset state
+    ///
+    /// @param ssurface is the new starting surface
+    /// @param tsurface is the target surface
+    void reset(const GeometryContext& /*geoContext*/, const Vector3& /*pos*/,
+               const Vector3& /*dir*/, NavigationDirection /*navDir*/,
+               const Surface* ssurface, const Surface* tsurface) {
+      // Reset everything except the navSurfaces
+      State newState = State();
+      newState.navSurfaces = this->navSurfaces;
+      *this = newState;
+
+      // Reset others
+      navSurfaceIter =
+          std::find(navSurfaces.begin(), navSurfaces.end(), ssurface);
+      startSurface = ssurface;
+      currentSurface = ssurface;
+      targetSurface = tsurface;
+    }
   };
 
   /// @brief Navigator status call
