@@ -153,9 +153,6 @@ struct KalmanFitterResult {
   // Indicator if smoothing has been done.
   bool smoothed = false;
 
-  // Indicator if the propagation state has been reset
-  bool reset = false;
-
   // Indicator if navigation direction has been reversed
   bool reversed = false;
 
@@ -275,27 +272,6 @@ class KalmanFitter {
         }
       }
 
-      // This following is added due to the fact that the navigation
-      // reinitialization in reverse call cannot guarantee the navigator to
-      // target for extra layers in the reversed-propagation starting volume.
-      // Currently, manually set navigation stage to allow for targeting layers
-      // after all the surfaces on the reversed-propagation starting layer has
-      // been processed. Otherwise, the navigation stage will be
-      // Stage::boundaryTarget after navigator status call which means the extra
-      // layers on the reversed-propagation starting volume won't be targeted.
-      // @Todo: Let the navigator do all the re-initialization
-      if constexpr (not isDirectNavigator) {
-        if (result.reset and state.navigation.navSurfaceIter ==
-                                 state.navigation.navSurfaces.end()) {
-          // So the navigator target call will target layers
-          state.navigation.navigationStage =
-              KalmanNavigator::Stage::layerTarget;
-          // We only do this after the backward-propagation
-          // starting layer has been processed
-          result.reset = false;
-        }
-      }
-
       // Update:
       // - Waiting for a current surface
       auto surface = state.navigation.currentSurface;
@@ -342,7 +318,11 @@ class KalmanFitter {
             // Reverse navigation direction and reset navigation and stepping
             // state to last measurement
             ACTS_VERBOSE("Reverse navigation direction.");
-            reverse(state, stepper, result);
+            auto res = reverse(state, stepper, result);
+            if (!res.ok()) {
+              ACTS_ERROR("Error in reversing navigation: " << res.error());
+              result.result = res.error();
+            }
           } else {
             // --> Search the starting state to run the smoothing
             // --> Call the smoothing
@@ -424,12 +404,18 @@ class KalmanFitter {
     /// @param stepper The stepper in use
     /// @param result is the mutable result state objecte
     template <typename propagator_state_t, typename stepper_t>
-    void reverse(propagator_state_t& state, stepper_t& stepper,
-                 result_type& result) const {
+    Result<void> reverse(propagator_state_t& state, stepper_t& stepper,
+                         result_type& result) const {
+      const auto& logger = state.options.logger;
+
+      // Check if there is a measurement on track
+      if (result.lastMeasurementIndex == SIZE_MAX) {
+        ACTS_ERROR("No point to reverse for a track without measurements.");
+        return KalmanFitterError::ReverseNavigationFailed;
+      }
+
       // Remember the navigation direciton has been reversed
       result.reversed = true;
-      // The reset is used for resetting the navigation
-      result.reset = true;
 
       // Reverse navigation direction
       state.stepping.navDir =
@@ -442,44 +428,31 @@ class KalmanFitter {
       state.options.pathLimit =
           state.stepping.navDir * std::abs(state.options.pathLimit);
 
-      // Reset stepping&navigation state using last measurement track state on
-      // sensitive surface
-      state.navigation = typename propagator_t::NavigatorState();
-      result.fittedStates.applyBackwards(
-          result.lastMeasurementIndex, [&](auto st) {
-            if (st.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-              // Set the navigation state
-              state.navigation.startSurface = &st.referenceSurface();
-              if (state.navigation.startSurface->associatedLayer() != nullptr) {
-                state.navigation.startLayer =
-                    state.navigation.startSurface->associatedLayer();
-              }
-              state.navigation.startVolume =
-                  state.navigation.startLayer->trackingVolume();
-              state.navigation.targetSurface = targetSurface;
-              state.navigation.currentSurface = state.navigation.startSurface;
-              state.navigation.currentVolume = state.navigation.startVolume;
+      // Get the last measurement state and reset navigation&stepping state
+      // based on information on this state
+      auto st = result.fittedStates.getTrackState(result.lastMeasurementIndex);
 
-              // Update the stepping state
-              stepper.resetState(state.stepping, st.filtered(),
-                                 st.filteredCovariance(), st.referenceSurface(),
-                                 state.stepping.navDir,
-                                 state.options.maxStepSize);
+      // Update the stepping state
+      stepper.resetState(state.stepping, st.filtered(), st.filteredCovariance(),
+                         st.referenceSurface(), state.stepping.navDir,
+                         state.options.maxStepSize);
 
-              // For the last measurement state, smoothed is filtered
-              st.smoothed() = st.filtered();
-              st.smoothedCovariance() = st.filteredCovariance();
-              result.passedAgainSurfaces.push_back(&st.referenceSurface());
+      // For the last measurement state, smoothed is filtered
+      st.smoothed() = st.filtered();
+      st.smoothedCovariance() = st.filteredCovariance();
+      result.passedAgainSurfaces.push_back(&st.referenceSurface());
 
-              // Update material effects for last measurement state in reversed
-              // direction
-              materialInteractor(state.navigation.currentSurface, state,
-                                 stepper);
+      // Reset navigation state
+      state.navigation.reset(state.geoContext, stepper.position(state.stepping),
+                             stepper.direction(state.stepping),
+                             state.stepping.navDir, &st.referenceSurface(),
+                             targetSurface);
 
-              return false;  // abort execution
-            }
-            return true;  // continue execution
-          });
+      // Update material effects for last measurement state in reversed
+      // direction
+      materialInteractor(state.navigation.currentSurface, state, stepper);
+
+      return Result<void>::success();
     }
 
     /// @brief Kalman actor operation : update
