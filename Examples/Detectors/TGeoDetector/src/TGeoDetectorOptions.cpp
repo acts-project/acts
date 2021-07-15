@@ -9,6 +9,7 @@
 #include "ActsExamples/TGeoDetector/TGeoDetectorOptions.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
 #include <cstdlib>
@@ -22,6 +23,9 @@ void ActsExamples::Options::addTGeoGeometryOptions(Description& desc) {
   // due to the way program options handles options that can occur multiple
   // times, all options of a logical block must always be present.
   //
+  //   --geo-tgeo-cyl-disc-split # boolean switch to split cylinder/disc
+  //   elements
+  //
   // each detector volume configuration is one logical block which can
   // be repeated as many times as there are usable detector volumes.
   //
@@ -34,6 +38,13 @@ void ActsExamples::Options::addTGeoGeometryOptions(Description& desc) {
   //   --geo-tgeo-nlayers 0  # boolean switch whether there are negative layers
   //   --geo-tgeo-clayers 1  # boolean switch whether there are central layers
   //   --geo-tgeo-players 0  # boolean switch whether there are positive layers
+  //
+  //  In case cylinder / disc splitting is on:
+  //
+  //   --geo-tgeo-cyl-nz-segs # number of z segments for cylinder splitting
+  //   --geo-tgeo-cyl-nphi-segs # number of phi segments for cylinder splitting
+  //   --geo-tgeo-disc-nr-segs # number of r segments for disc splitting
+  //   --geo-tgeo-disc-nphi-segs # number of phi segments for disc splitting
   //
   // within each volume there can be negative/central/positive layers depending
   // on the which `--geo-tgeo-{n,c,p}layers` flags are set to true. if any of
@@ -74,6 +85,8 @@ void ActsExamples::Options::addTGeoGeometryOptions(Description& desc) {
   opt("geo-tgeo-beampipe-parameters", value<Reals<3>>(),
       "Beam pipe parameters {r, z, t} in [mm]. Beam pipe is automatically "
       "created if the parameters are present.");
+  opt("geo-tgeo-cyl-disc-split", boost::program_options::bool_switch(),
+      "Switch cylindrical / disc TGeo elements.");
   // required per-volume options that can be present more than once
   opt("geo-tgeo-volume", value<std::vector<std::string>>(),
       "Detector volume name");
@@ -83,6 +96,20 @@ void ActsExamples::Options::addTGeoGeometryOptions(Description& desc) {
       "Tolerance interval in phi [rad] for automated surface binning.");
   opt("geo-tgeo-sfbin-z-tolerance", value<std::vector<Interval>>(),
       "Tolerance interval in z [mm] for automated surface binning.");
+  // required per-volume IF 'geo-tgeo-cyl-disc-split' is set
+  opt("geo-tgeo-cyl-nz-segs", value<std::vector<int>>(),
+      "Conditional on geo-tgeo-cyl-disc-split: "
+      "number of z segments for cylinder splitting.");
+  opt("geo-tgeo-cyl-nphi-segs", value<std::vector<int>>(),
+      "Conditional on geo-tgeo-cyl-disc-split: "
+      "number of phi segments for cylinder splitting.");
+  opt("geo-tgeo-disc-nr-segs", value<std::vector<int>>(),
+      "Conditional on geo-tgeo-cyl-disc-split: "
+      "number of r segments for disc splitting.");
+  opt("geo-tgeo-disc-nphi-segs", value<std::vector<int>>(),
+      "Conditional on geo-tgeo-cyl-disc-split: "
+      "number of phi segments for disc splitting.");
+
   // optional per-volume layer options that can be present once.
   // `geo-tgeo-{n,c,p}-layers` must be present for each volume and if it is
   // non-zero, all other layer options with the same prefix must be present as
@@ -164,6 +191,10 @@ ActsExamples::Options::readTGeoLayerBuilderConfigs(const Variables& vm) {
       vm["geo-tgeo-sfbin-z-tolerance"].template as<std::vector<Interval>>();
   auto binTolerancePhi =
       vm["geo-tgeo-sfbin-phi-tolerance"].template as<std::vector<Interval>>();
+
+  // Check if layer builders are suggested to split cylinder / disk modules
+  bool cylDiscSplit = vm["geo-tgeo-cyl-disc-split"].as<bool>();
+
   // Whether any layers should be configured for a volume
   std::array<std::vector<bool>, 3> layers = {
       vm["geo-tgeo-nlayers"].template as<std::vector<bool>>(),
@@ -211,6 +242,24 @@ ActsExamples::Options::readTGeoLayerBuilderConfigs(const Variables& vm) {
       vm["geo-tgeo-clayer-z-split"].template as<std::vector<double>>(),
       vm["geo-tgeo-player-z-split"].template as<std::vector<double>>(),
   };
+
+  std::vector<int> cylZsegements =
+      {};  // vm["geo-tgeo-cyl-nz-segs"].template as<std::vector<int>>();
+  std::vector<int> cylPhiSegements =
+      {};  // vm["geo-tgeo-cyl-nphi-segs"].template as<std::vector<int>>();
+  std::vector<int> discRsegements =
+      {};  // vm["geo-tgeo-disc-nr-segs"].template as<std::vector<int>>();
+  std::vector<int> discPhiSegements =
+      {};  // vm["geo-tgeo-disc-nphi-segs"].template as<std::vector<int>>();
+  if (cylDiscSplit) {
+    cylZsegements = vm["geo-tgeo-cyl-nz-segs"].template as<std::vector<int>>();
+    cylPhiSegements =
+        vm["geo-tgeo-cyl-nphi-segs"].template as<std::vector<int>>();
+    discRsegements =
+        vm["geo-tgeo-disc-nr-segs"].template as<std::vector<int>>();
+    discPhiSegements =
+        vm["geo-tgeo-disc-nphi-segs"].template as<std::vector<int>>();
+  }
 
   // Split the sensor names if there are mulitple ones
   auto splitAtOr =
@@ -288,6 +337,17 @@ ActsExamples::Options::readTGeoLayerBuilderConfigs(const Variables& vm) {
       }
 
       layerBuilderConfig.layerConfigurations[ncp].push_back(lConfig);
+    }
+
+    // Perform splitting of cylinders and discs
+    if (cylDiscSplit) {
+      Acts::TGeoCylinderDiscSplitter::Config cdsConfig;
+      cdsConfig.cylinderPhiSegments = cylPhiSegements.at(iVol);
+      cdsConfig.cylinderLongitudinalSegments = cylZsegements.at(iVol);
+      cdsConfig.discPhiSegments = discPhiSegements.at(iVol);
+      cdsConfig.discRadialSegments = discRsegements.at(iVol);
+      layerBuilderConfig.detectorElementSplitter =
+          std::make_shared<const Acts::TGeoCylinderDiscSplitter>(cdsConfig);
     }
 
     detLayerConfigs.push_back(layerBuilderConfig);

@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "ActsExamples/TGeoDetector/BuildTGeoDetector.hpp"
+
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -19,10 +21,9 @@
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
+#include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "ActsExamples/TGeoDetector/BuildTGeoDetector.hpp"
 #include "ActsExamples/TGeoDetector/BuildTGeoDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetectorOptions.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
@@ -41,8 +42,10 @@
 /// @tparam variable_map_t is the variable map
 ///
 /// @param vm is the variable map from the options
-std::shared_ptr<const Acts::TrackingGeometry> ActsExamples::TGeo::buildTGeoDetector(
-    const boost::program_options::variables_map& vm, const Acts::GeometryContext& context,
+std::shared_ptr<const Acts::TrackingGeometry>
+ActsExamples::TGeo::buildTGeoDetector(
+    const boost::program_options::variables_map& vm,
+    const Acts::GeometryContext& context,
     std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>&
         detElementStore,
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) {
@@ -123,13 +126,13 @@ std::shared_ptr<const Acts::TrackingGeometry> ActsExamples::TGeo::buildTGeoDetec
     volumeBuilders.push_back(beamPipeVolumeBuilder);
   }
 
-  // import the file from
+  // Import the file from
   TGeoManager::Import(rootFileName.c_str());
 
   auto layerBuilderConfigs =
       ActsExamples::Options::readTGeoLayerBuilderConfigs(vm);
 
-  // remember the layer builders to collect the detector elements
+  // Remember the layer builders to collect the detector elements
   std::vector<std::shared_ptr<const Acts::TGeoLayerBuilder>> tgLayerBuilders;
 
   for (auto& lbc : layerBuilderConfigs) {
@@ -166,14 +169,6 @@ std::shared_ptr<const Acts::TrackingGeometry> ActsExamples::TGeo::buildTGeoDetec
         (layerCreatorLB != nullptr) ? layerCreatorLB : layerCreator;
     lbc.protoLayerHelper =
         (protoLayerHelperLB != nullptr) ? protoLayerHelperLB : protoLayerHelper;
-
-
-    // @TODO Make configurable 
-    Acts::TGeoCylinderDiscSplitter::Config cdsConfig;
-    cdsConfig.circularSegments = 32;
-    cdsConfig.regularSegments = 6;
-    lbc.detectorElementSplitter 
-        = std::make_shared<const Acts::TGeoCylinderDiscSplitter>(cdsConfig);
 
     auto layerBuilder = std::make_shared<const Acts::TGeoLayerBuilder>(
         lbc, Acts::getDefaultLogger(lbc.configurationName + "LayerBuilder",

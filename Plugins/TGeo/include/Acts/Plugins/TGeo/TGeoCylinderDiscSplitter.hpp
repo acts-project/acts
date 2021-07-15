@@ -25,20 +25,27 @@ class TGeoDetectorElement;
 /// Split Cylinder and disks into submodules
 class TGeoCylinderDiscSplitter : public ITGeoDetectorElementSplitter {
  public:
-
-  /// Nested configuration struct 
+  /// Nested configuration struct
   struct Config {
-      int circularSegments = -1;
-      int regularSegments = -1;
+    /// Number of segments in phi for a disc
+    int cylinderPhiSegments = -1;
+    /// Number of segments in r for a disk
+    int cylinderLongitudinalSegments = -1;
+
+    /// Number of segments in phi for a disc
+    int discPhiSegments = -1;
+    /// Number of segments in r for a disk
+    int discRadialSegments = -1;
   };
 
-  /// Constructor 
+  /// Constructor
   ///
   /// @param cfg the configuration struct
   /// @param logger the logging object
-  TGeoCylinderDiscSplitter(const Config& cfg,
-                   std::unique_ptr<const Acts::Logger> logger =
-                       Acts::getDefaultLogger("TGeoCylinderDiscSplitter", Acts::Logging::INFO)); 
+  TGeoCylinderDiscSplitter(
+      const Config& cfg,
+      std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
+          "TGeoCylinderDiscSplitter", Acts::Logging::INFO));
 
   virtual ~TGeoCylinderDiscSplitter() = default;
 
@@ -47,19 +54,19 @@ class TGeoCylinderDiscSplitter : public ITGeoDetectorElementSplitter {
   /// @param gctx is a geometry context object
   /// @param tgde is the detector element to be split
   ///
-  /// @note If no split is performed the unsplit detector element is returned 
+  /// @note If no split is performed the unsplit detector element is returned
   std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> split(
-      const GeometryContext& gctx, std::shared_ptr<const Acts::TGeoDetectorElement> tgde) const;
+      const GeometryContext& gctx,
+      std::shared_ptr<const Acts::TGeoDetectorElement> tgde) const;
 
-  private:
-   Config m_cfg;
+ private:
+  Config m_cfg;
 
-    /// Private access to the logger
-    const Acts::Logger& logger() const { return *m_logger; }
+  /// Private access to the logger
+  const Acts::Logger& logger() const { return *m_logger; }
 
-    /// Logging instance
-    std::unique_ptr<const Acts::Logger> m_logger;
-
+  /// Logging instance
+  std::unique_ptr<const Acts::Logger> m_logger;
 };
 
 }  // namespace Acts

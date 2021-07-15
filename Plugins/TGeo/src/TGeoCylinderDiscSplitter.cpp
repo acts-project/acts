@@ -9,6 +9,7 @@
 #include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
 
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -25,7 +26,7 @@ Acts::TGeoCylinderDiscSplitter::split(
     const GeometryContext& gctx,
     std::shared_ptr<const Acts::TGeoDetectorElement> tgde) const {
   // Segments are detected, attempt a split
-  if (m_cfg.circularSegments > 0 or m_cfg.regularSegments > 0) {
+  if (m_cfg.discPhiSegments > 0 or m_cfg.discRadialSegments > 0) {
     const Acts::Surface& sf = tgde->surface();
 
     // Thickness
@@ -33,13 +34,15 @@ Acts::TGeoCylinderDiscSplitter::split(
     const TGeoNode& tgNode = tgde->tgeoNode();
     ActsScalar tgThickness = tgde->thickness();
 
-    // Splitting for discs
+    // Splitting for discs detected
     if (sf.type() == Acts::Surface::Disc and
         sf.bounds().type() == Acts::SurfaceBounds::eDisc) {
+      ACTS_INFO("- splitting detected for a Disc shaped sensor.");
+
       std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
           tgDetectorElements = {};
-      tgDetectorElements.reserve(std::abs(m_cfg.circularSegments) *
-                                 std::abs(m_cfg.regularSegments));
+      tgDetectorElements.reserve(std::abs(m_cfg.discPhiSegments) *
+                                 std::abs(m_cfg.discRadialSegments));
 
       const Acts::Vector3 discCenter = sf.center(gctx);
 
@@ -47,15 +50,15 @@ Acts::TGeoCylinderDiscSplitter::split(
       ActsScalar discMinR = boundValues[Acts::RadialBounds::eMinR];
       ActsScalar discMaxR = boundValues[Acts::RadialBounds::eMaxR];
 
-      ActsScalar phiStep = 2 * M_PI / m_cfg.circularSegments;
+      ActsScalar phiStep = 2 * M_PI / m_cfg.discPhiSegments;
       ActsScalar cosPhiHalf = std::cos(0.5 * phiStep);
       ActsScalar sinPhiHalf = std::sin(0.5 * phiStep);
 
       std::vector<ActsScalar> radialValues = {};
-      if (m_cfg.regularSegments > 1) {
-        ActsScalar rStep = (discMaxR - discMinR) / m_cfg.regularSegments;
-        radialValues.reserve(m_cfg.regularSegments);
-        for (int ir = 0; ir <= m_cfg.regularSegments; ++ir) {
+      if (m_cfg.discRadialSegments > 1) {
+        ActsScalar rStep = (discMaxR - discMinR) / m_cfg.discRadialSegments;
+        radialValues.reserve(m_cfg.discRadialSegments);
+        for (int ir = 0; ir <= m_cfg.discRadialSegments; ++ir) {
           radialValues.push_back(discMinR + ir * rStep);
         }
       } else {
@@ -77,9 +80,9 @@ Acts::TGeoCylinderDiscSplitter::split(
         auto tgTrapezoid =
             std::make_shared<Acts::TrapezoidBounds>(hXminY, hXmaxY, hY);
 
-        for (int im = 0; im < m_cfg.circularSegments; ++im) {
+        for (int im = 0; im < m_cfg.discPhiSegments; ++im) {
           // Get the moduleTransform
-          double phi = -M_PI + im * phiStep;
+          ActsScalar phi = -M_PI + im * phiStep;
           auto tgTransform =
               Transform3(Translation3(hR * std::cos(phi), hR * std::sin(phi),
                                       discCenter.z()) *
@@ -93,6 +96,89 @@ Acts::TGeoCylinderDiscSplitter::split(
         }
       }
 
+      return tgDetectorElements;
+
+    } else if (sf.type() == Acts::Surface::Cylinder and
+               sf.bounds().type() == Acts::SurfaceBounds::eCylinder) {
+      ACTS_INFO("- splitting detected for a Cylinder shaped sensor.");
+
+      std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
+          tgDetectorElements = {};
+      tgDetectorElements.reserve(std::abs(m_cfg.cylinderPhiSegments) *
+                                 std::abs(m_cfg.cylinderLongitudinalSegments));
+
+      const auto& boundValues = sf.bounds().values();
+      ActsScalar cylinderR = boundValues[Acts::CylinderBounds::eR];
+      ActsScalar cylinderHalfZ =
+          boundValues[Acts::CylinderBounds::eHalfLengthZ];
+
+      ActsScalar phiStep = 2 * M_PI / m_cfg.cylinderPhiSegments;
+      ActsScalar cosPhiHalf = std::cos(0.5 * phiStep);
+      ActsScalar sinPhiHalf = std::sin(0.5 * phiStep);
+
+      std::vector<ActsScalar> zValues = {};
+      if (m_cfg.cylinderLongitudinalSegments > 1) {
+        ActsScalar zStep =
+            2 * cylinderHalfZ / m_cfg.cylinderLongitudinalSegments;
+        zValues.reserve(m_cfg.cylinderLongitudinalSegments);
+        for (int ir = 0; ir <= m_cfg.cylinderLongitudinalSegments; ++ir) {
+          zValues.push_back(-cylinderHalfZ + ir * zStep);
+        }
+      } else {
+        zValues = {-cylinderHalfZ, cylinderHalfZ};
+      }
+
+      ActsScalar planeR = cylinderR * cosPhiHalf;
+      ActsScalar planeHalfX = cylinderR * sinPhiHalf;
+
+      std::cout << "[ TGeoCylinderDiscSplitter ] R ( cyl ) = " << cylinderR
+                << std::endl;
+      std::cout << "[ TGeoCylinderDiscSplitter ] R (plane) = " << planeR
+                << std::endl;
+      std::cout << "[ TGeoCylinderDiscSplitter ] hX        = " << planeHalfX
+                << std::endl;
+
+      for (size_t iz = 1; iz < zValues.size(); ++iz) {
+        ActsScalar minZ = zValues[iz - 1];
+        ActsScalar maxZ = zValues[iz];
+
+        ActsScalar planeZ = 0.5 * (minZ + maxZ);
+        ActsScalar planeHalfY = 0.5 * (maxZ - minZ);
+
+        auto tgRectangle =
+            std::make_shared<Acts::RectangleBounds>(planeHalfX, planeHalfY);
+
+        for (int im = 0; im < m_cfg.cylinderPhiSegments; ++im) {
+          // Get the moduleTransform
+          ActsScalar phi = -M_PI + im * phiStep;
+          ActsScalar cosPhi = std::cos(phi);
+          ActsScalar sinPhi = std::sin(phi);
+          ActsScalar planeX = planeR * cosPhi;
+          ActsScalar planeY = planeR * sinPhi;
+
+          Acts::Vector3 planeCenter(planeX, planeY, planeZ);
+          Acts::Vector3 planeAxisZ = {cosPhi, sinPhi, 0.};
+          Acts::Vector3 planeAxisY{0., 0., 1.};
+          Acts::Vector3 planeAxisX = planeAxisY.cross(planeAxisZ);
+
+          RotationMatrix3 planeRotation;
+          planeRotation.col(0) = planeAxisX;
+          planeRotation.col(1) = planeAxisY;
+          planeRotation.col(2) = planeAxisZ;
+
+          // curvilinear surfaces are boundless
+          Transform3 planeTransform{planeRotation};
+          planeTransform.pretranslate(planeCenter);
+
+          Transform3 tgTransform = planeTransform;
+
+          // Create a new detector element per split
+          auto tgDetectorElement = std::make_shared<Acts::TGeoDetectorElement>(
+              tgIdentifier, tgNode, tgTransform, tgRectangle, tgThickness);
+
+          tgDetectorElements.push_back(tgDetectorElement);
+        }
+      }
       return tgDetectorElements;
     }
   }

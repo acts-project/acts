@@ -8,14 +8,14 @@
 
 #pragma once
 
-
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "ActsExamples/TGeoDetector/TGeoDetectorOptions.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
-#include <boost/program_options.hpp>
+#include "ActsExamples/TGeoDetector/TGeoDetectorOptions.hpp"
 
-#include <vector>
 #include <memory>
+#include <vector>
+
+#include <boost/program_options.hpp>
 
 namespace ActsExamples {
 namespace TGeo {
@@ -30,7 +30,8 @@ namespace TGeo {
 ///
 /// @param vm is the variable map from the options
 std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
-    const boost::program_options::variables_map& vm, const Acts::GeometryContext& context,
+    const boost::program_options::variables_map& vm,
+    const Acts::GeometryContext& context,
     std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>&
         detElementStore,
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);

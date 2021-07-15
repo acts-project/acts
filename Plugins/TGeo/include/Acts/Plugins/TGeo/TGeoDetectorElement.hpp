@@ -73,7 +73,7 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
 
   /// Constructor with pre-computed surface
   ///
-  /// @note this detector element constructor needs everything 
+  /// @note this detector element constructor needs everything
   /// pre-computed.
   ///
   /// @param identifier is the detector identifier
@@ -81,12 +81,10 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   /// @param tgTransform the transform of this detector element
   /// @param tgBounds the bounds of this surface
   /// @param tgThickness the thickness of this detector element
-  TGeoDetectorElement(
-      const Identifier& identifier, 
-      const TGeoNode& tGeoNode,
-      const Transform3& tgTransform,
-      std::shared_ptr<const PlanarBounds> tgBounds,
-      double tgThickness=0.);
+  TGeoDetectorElement(const Identifier& identifier, const TGeoNode& tGeoNode,
+                      const Transform3& tgTransform,
+                      std::shared_ptr<const PlanarBounds> tgBounds,
+                      double tgThickness = 0.);
 
   ~TGeoDetectorElement() override;
 
@@ -110,9 +108,7 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   double thickness() const final;
 
   /// Return the TGeoNode for back navigation
-  const TGeoNode& tgeoNode() const {
-    return *m_detElement;
-  }
+  const TGeoNode& tgeoNode() const { return *m_detElement; }
 
  private:
   /// Pointer to TGeoNode (not owned)
