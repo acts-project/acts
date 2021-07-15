@@ -37,7 +37,7 @@ Acts::TGeoCylinderDiscSplitter::split(
     // Splitting for discs detected
     if (sf.type() == Acts::Surface::Disc and
         sf.bounds().type() == Acts::SurfaceBounds::eDisc) {
-      ACTS_INFO("- splitting detected for a Disc shaped sensor.");
+      ACTS_DEBUG("- splitting detected for a Disc shaped sensor.");
 
       std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
           tgDetectorElements = {};
@@ -100,7 +100,7 @@ Acts::TGeoCylinderDiscSplitter::split(
 
     } else if (sf.type() == Acts::Surface::Cylinder and
                sf.bounds().type() == Acts::SurfaceBounds::eCylinder) {
-      ACTS_INFO("- splitting detected for a Cylinder shaped sensor.");
+      ACTS_DEBUG("- splitting detected for a Cylinder shaped sensor.");
 
       std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
           tgDetectorElements = {};
@@ -130,13 +130,6 @@ Acts::TGeoCylinderDiscSplitter::split(
 
       ActsScalar planeR = cylinderR * cosPhiHalf;
       ActsScalar planeHalfX = cylinderR * sinPhiHalf;
-
-      std::cout << "[ TGeoCylinderDiscSplitter ] R ( cyl ) = " << cylinderR
-                << std::endl;
-      std::cout << "[ TGeoCylinderDiscSplitter ] R (plane) = " << planeR
-                << std::endl;
-      std::cout << "[ TGeoCylinderDiscSplitter ] hX        = " << planeHalfX
-                << std::endl;
 
       for (size_t iz = 1; iz < zValues.size(); ++iz) {
         ActsScalar minZ = zValues[iz - 1];

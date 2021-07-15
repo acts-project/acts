@@ -13,6 +13,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
+#include <vector>
 
 class TGeoNode;
 
