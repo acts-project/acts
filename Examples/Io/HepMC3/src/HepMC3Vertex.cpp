@@ -35,10 +35,11 @@ HepMC3::GenParticlePtr actsParticleToGen(
   const auto mom = actsParticle->fourMomentum();
   const HepMC3::FourVector vec(mom[0], mom[1], mom[2], mom[3]);
   // Create HepMC3::GenParticle
-  HepMC3::GenParticle genParticle(vec, actsParticle->pdg());
-  genParticle.set_generated_mass(actsParticle->mass());
+  auto genParticle =
+      std::make_shared<HepMC3::GenParticle>(vec, actsParticle->pdg());
+  genParticle->set_generated_mass(actsParticle->mass());
 
-  return std::shared_ptr<HepMC3::GenParticle>(&genParticle);
+  return genParticle;
 }
 
 /// @brief Finds a HepMC3::GenParticle from a list that matches an
