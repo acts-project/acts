@@ -15,7 +15,7 @@
 #include <G4Material.hh>
 #include <G4Step.hh>
 
-using namespace ActsExamples;
+namespace ActsExamples::Geant4 {
 
 SteppingAction* SteppingAction::s_instance = nullptr;
 
@@ -136,3 +136,5 @@ void SteppingAction::clear() {
   m_materialSteps.clear();
   m_trackSteps.clear();
 }
+
+}  // namespace ActsExamples::Geant4
