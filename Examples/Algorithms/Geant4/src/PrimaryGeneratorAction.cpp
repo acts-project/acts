@@ -18,7 +18,7 @@
 #include <G4UnitsTable.hh>
 #include <Randomize.hh>
 
-using namespace ActsExamples;
+namespace ActsExamples::Geant4 {
 
 PrimaryGeneratorAction* PrimaryGeneratorAction::s_instance = nullptr;
 
@@ -84,3 +84,5 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
   m_particleGun->SetParticlePosition(m_position);
   m_particleGun->GeneratePrimaryVertex(anEvent);
 }
+
+}  // namespace ActsExamples::Geant4

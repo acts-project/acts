@@ -16,7 +16,7 @@
 #include <HepMC3/GenEvent.h>
 #include <globals.hh>
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4::HepMC3 {
 
 /// The EventAction class is the realization of the Geant4 class
 /// G4UserEventAction and is writing out the collected RecordedMaterialTrack
@@ -44,14 +44,14 @@ class EventAction final : public G4UserEventAction {
   void clear();
 
   /// Getter of the created HepMC3 event
-  HepMC3::GenEvent& event();
+  ::HepMC3::GenEvent& event();
 
  private:
   /// Instance of the EventAction
   static EventAction* s_instance;
   /// The current HepMC3 event
-  HepMC3::GenEvent m_event;
+  ::HepMC3::GenEvent m_event;
   /// List of processes that can be combined to a single vertex
   std::vector<std::string> m_processFilter;
 };
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4::HepMC3

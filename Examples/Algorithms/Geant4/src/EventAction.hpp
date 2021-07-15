@@ -16,7 +16,7 @@
 #include <G4UserEventAction.hh>
 #include <globals.hh>
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 class SteppingAction;
 
@@ -64,4 +64,4 @@ class EventAction final : public G4UserEventAction {
   std::vector<Acts::RecordedMaterialTrack> m_materialTracks;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4
