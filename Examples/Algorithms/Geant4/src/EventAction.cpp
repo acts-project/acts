@@ -17,7 +17,7 @@
 
 #include "SteppingAction.hpp"
 
-using namespace ActsExamples;
+namespace ActsExamples::Geant4 {
 
 EventAction* EventAction::s_instance = nullptr;
 
@@ -71,3 +71,5 @@ const std::vector<Acts::RecordedMaterialTrack>& EventAction::materialTracks()
     const {
   return m_materialTracks;
 }
+
+}  // namespace ActsExamples::Geant4
