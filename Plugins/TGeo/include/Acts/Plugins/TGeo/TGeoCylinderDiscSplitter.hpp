@@ -53,9 +53,11 @@ class TGeoCylinderDiscSplitter : public ITGeoDetectorElementSplitter {
   /// Take a geometry context and TGeoElement and split it into sub elements
   ///
   /// @param gctx is a geometry context object
-  /// @param tgde is the detector element to be split
+  /// @param tgde is a TGeoDetectorElement that is eventually split
   ///
   /// @note If no split is performed the unsplit detector element is returned
+  ///
+  /// @return a vector of TGeoDetectorElement objects
   std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> split(
       const GeometryContext& gctx,
       std::shared_ptr<const Acts::TGeoDetectorElement> tgde) const;

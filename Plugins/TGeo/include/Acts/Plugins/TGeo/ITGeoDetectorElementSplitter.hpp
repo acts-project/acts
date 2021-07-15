@@ -27,9 +27,11 @@ class ITGeoDetectorElementSplitter {
   /// Take a geometry context and TGeoElement and split it into sub elements
   ///
   /// @param gctx is a geometry context object
-  /// @param tgnode is a TGeoNode that is translated
+  /// @param tgde is a TGeoDetectorElement that is eventually split
   ///
   /// @note If no split is performed the unsplit detector element is returned
+  ///
+  /// @return a vector of TGeoDetectorElement objects
   virtual std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> split(
       const GeometryContext& gctx,
       std::shared_ptr<const Acts::TGeoDetectorElement> tgde) const = 0;
