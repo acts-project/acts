@@ -18,7 +18,7 @@
 class G4ParticleGun;
 class G4Event;
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 /// @class PrimaryGeneratorAction
 ///
@@ -91,4 +91,4 @@ class PrimaryGeneratorAction final : public G4VUserPrimaryGeneratorAction {
   G4ThreeVector m_direction;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4

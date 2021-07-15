@@ -14,7 +14,7 @@
 
 #include "EventAction.hpp"
 
-using namespace ActsExamples;
+namespace ActsExamples::Geant4::HepMC3 {
 
 RunAction* RunAction::s_instance = nullptr;
 
@@ -40,3 +40,5 @@ void RunAction::BeginOfRunAction(const G4Run* /*unused*/) {
 }
 
 void RunAction::EndOfRunAction(const G4Run* /*unused*/) {}
+
+}  // namespace ActsExamples::Geant4::HepMC3

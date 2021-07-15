@@ -15,7 +15,7 @@
 #include <HepMC3/GenVertex.h>
 #include <globals.hh>
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4::HepMC3 {
 
 /// Collects the particles history.
 class SteppingAction : public G4UserSteppingAction {
@@ -40,10 +40,10 @@ class SteppingAction : public G4UserSteppingAction {
   /// Instance of the SteppingAction
   static SteppingAction* s_instance;
   /// The end vertex of the previous step
-  std::shared_ptr<HepMC3::GenVertex> m_previousVertex = nullptr;
+  std::shared_ptr<::HepMC3::GenVertex> m_previousVertex = nullptr;
   /// List to veto events with certain processes
   std::vector<std::string> m_eventRejectionProcess;
   /// States whether an event was aborted
   bool m_eventAborted = false;
 };
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4::HepMC3
