@@ -16,7 +16,6 @@
 #include "Acts/Geometry/PassiveLayerBuilder.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/SurfaceBinningMatcher.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Material/Material.hpp"
