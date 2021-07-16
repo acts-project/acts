@@ -62,8 +62,8 @@ class TGeoLayerBuilder : public ILayerBuilder {
     /// Layer splitting: parameter and tolerance
     std::vector<SplitConfig> splitConfigs = {};
     /// The envelope to be built around the layer
-    std::pair<double, double> envelope = {0 * UnitConstants::mm,
-                                          0 * UnitConstants::mm};
+    std::pair<double, double> envelope = {1 * UnitConstants::mm,
+                                          1 * UnitConstants::mm};
     /// Binning setup in l0: nbins (-1 -> automated), axis binning type
     std::tuple<int, BinningType> binning0 = {-1, equidistant};
     /// Binning setup in l1: nbins (-1 -> automated), axis binning type
