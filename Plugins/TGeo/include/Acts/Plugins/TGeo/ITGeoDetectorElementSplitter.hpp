@@ -24,7 +24,6 @@ class TGeoDetectorElement;
 /// sub-elements
 class ITGeoDetectorElementSplitter {
  public:
-
   virtual ~ITGeoDetectorElementSplitter() = default;
 
   /// Take a geometry context and TGeoElement and split it into sub elements
