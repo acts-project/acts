@@ -170,6 +170,14 @@ static Ref_t create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
     layerExtension->addValue(10, "r_max", "envelope");
     layerExtension->addValue(10, "z_min", "envelope");
     layerExtension->addValue(10, "z_max", "envelope");
+
+    // Check if the disk has a surface binning instruction
+    if (x_layer.hasChild("surface_binning")){
+      xml_comp_t sfBinning = x_layer.child(_Unicode(surface_binning));
+      layerExtension->addValue(sfBinning.attr<int>("nr"), "n_r", "surface_binning");
+      layerExtension->addValue(sfBinning.attr<int>("nphi"), "n_phi", "surface_binning");
+    }
+
     layerElement.addExtension<Acts::ActsExtension>(layerExtension);
 
     // Add the proto layer material
