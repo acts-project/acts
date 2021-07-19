@@ -83,7 +83,11 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install dependencies
         run: >
-          dnf -y install ninja-build
+          dnf -y install ninja-build wget &&
+          wget https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz &&
+          tar xf eigen-3.3.7.tar.gz
+          && ls
+          && pwd
       - name: Configure
         run: >
           cmake -B build -S .
@@ -93,6 +97,8 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_BUILD_EVERYTHING=on
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
+          -DACTS_USE_SYSTEM_BOOST=off
+          -DEigen3_DIR=./eigen-3.3.7/cmake
       - name: Build
         run: ${SETUP} && cmake --build build --
       - name: Unit tests
