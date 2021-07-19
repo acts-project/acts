@@ -41,7 +41,7 @@ removed except the following ones:
 -   cmake
 -   CMakeLists.txt
 
-## boost
+## boost 
 
 For convenience, it's possible to use the ACTS build system to build the minimum
 required version of [boost](https://www.boost.org/) (currently 1.71.0).  No source is
@@ -50,3 +50,11 @@ program_options, and test libraries will be built.
 
 Warning: during installation, the built boost libraries will be installed alongside the
 ACTS libraries, with a version suffix. This location may be known to the system linker.
+
+## eigen3
+
+For convenience, it's possible to use the ACTS build system to build
+the minimum required version of [Eigen](https://eigen.tuxfamily.org)
+(currently 3.3.7), with "-DACTS_USE_SYSTEM_BOOST=OFF".
+
+Note that the headers are _not_ installed.

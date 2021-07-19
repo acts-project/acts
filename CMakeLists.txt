@@ -55,6 +55,7 @@ option(ACTS_BUILD_UNITTESTS "Build unit tests" OFF)
 # other options
 option(ACTS_BUILD_DOCS "Build documentation" OFF)
 option(ACTS_USE_SYSTEM_BOOST "Use a system-provided boost" ON)
+option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" ON)
 
 # handle option inter-dependencies and the everything flag
 # NOTE: ordering is important here. dependencies must come before dependees
@@ -144,8 +145,11 @@ else()
   add_subdirectory(thirdparty/boost)
 endif()
 
-
-find_package(Eigen3 ${_acts_eigen3_version} REQUIRED CONFIG)
+if (ACTS_USE_SYSTEM_EIGEN3)
+  find_package(Eigen3 ${_acts_eigen3_version} REQUIRED CONFIG)
+else()
+  add_subdirectory(thirdparty/eigen3)
+endif()
 
 # the `<project_name>_VERSION` variables set by `setup(... VERSION ...)` have
 # only local scope, i.e. they are not accessible her for dependencies added
