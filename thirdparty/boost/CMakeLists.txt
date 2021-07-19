@@ -63,6 +63,7 @@ ExternalProject_Add(
   SOURCE_DIR ${Boost_SOURCE_DIR}
   LOG_BUILD true
   BUILD_IN_SOURCE true
+  BUILD_BYPRODUCTS ${Boost_LIBRARY_DIR}/libboost_filesystem.so.${_acts_boost_version}
 )
 
 add_library(boost_filesystem SHARED IMPORTED GLOBAL)
@@ -83,6 +84,7 @@ ExternalProject_Add(
   SOURCE_DIR ${Boost_SOURCE_DIR}
   LOG_BUILD true
   BUILD_IN_SOURCE true
+  BUILD_BYPRODUCTS ${Boost_LIBRARY_DIR}/libboost_program_options.so.${_acts_boost_version}
 )
 
 add_library(boost_program_options SHARED IMPORTED GLOBAL)
@@ -103,6 +105,7 @@ ExternalProject_Add(
   SOURCE_DIR ${Boost_SOURCE_DIR}
   LOG_BUILD true
   BUILD_IN_SOURCE true
+  BUILD_BYPRODUCTS ${Boost_LIBRARY_DIR}/libboost_unit_test_framework.so.${_acts_boost_version}
 )
 
 add_library(boost_unit_test_framework SHARED IMPORTED GLOBAL)
