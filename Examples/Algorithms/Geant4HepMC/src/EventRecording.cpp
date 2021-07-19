@@ -16,6 +16,8 @@
 #include <stdexcept>
 
 #include <FTFP_BERT.hh>
+#include <G4RunManager.hh>
+#include <G4VUserDetectorConstruction.hh>
 #include <HepMC3/GenParticle.h>
 
 #include "EventAction.hpp"
@@ -46,13 +48,14 @@ ActsExamples::EventRecording::EventRecording(
   /// Now set up the Geant4 simulation
   m_runManager->SetUserInitialization(m_cfg.detectorConstruction.release());
   m_runManager->SetUserInitialization(new FTFP_BERT);
-  m_runManager->SetUserAction(new ActsExamples::RunAction());
+  m_runManager->SetUserAction(new ActsExamples::Geant4::HepMC3::RunAction());
   m_runManager->SetUserAction(
-      new ActsExamples::EventAction(m_cfg.processesCombine));
+      new ActsExamples::Geant4::HepMC3::EventAction(m_cfg.processesCombine));
   m_runManager->SetUserAction(
-      new ActsExamples::PrimaryGeneratorAction(m_cfg.seed1, m_cfg.seed2));
+      new ActsExamples::Geant4::HepMC3::PrimaryGeneratorAction(m_cfg.seed1,
+                                                               m_cfg.seed2));
   m_runManager->SetUserAction(
-      new ActsExamples::SteppingAction(m_cfg.processesReject));
+      new ActsExamples::Geant4::HepMC3::SteppingAction(m_cfg.processesReject));
   m_runManager->Initialize();
 }
 
@@ -72,18 +75,20 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
 
   for (const auto& part : initialParticles) {
     // Prepare the particle gun
-    ActsExamples::PrimaryGeneratorAction::instance()->prepareParticleGun(part);
+    ActsExamples::Geant4::HepMC3::PrimaryGeneratorAction::instance()
+        ->prepareParticleGun(part);
 
     // Begin with the simulation
     m_runManager->BeamOn(1);
 
     // Test if the event was aborted
-    if (SteppingAction::instance()->eventAborted()) {
+    if (Geant4::HepMC3::SteppingAction::instance()->eventAborted()) {
       continue;
     }
 
     // Set event start time
-    HepMC3::GenEvent event = ActsExamples::EventAction::instance()->event();
+    HepMC3::GenEvent event =
+        ActsExamples::Geant4::HepMC3::EventAction::instance()->event();
     HepMC3::FourVector shift(0., 0., 0., part.time() / Acts::UnitConstants::mm);
     event.shift_position_by(shift);
 
