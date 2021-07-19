@@ -22,9 +22,11 @@
 #if ((BOOST_VERSION / 100) % 1000) <= 71
 // Boost <=1.71 and lower do not have progress_display.hpp as a replacement yet
 #include <boost/progress.hpp>
+using progress_display = boost::progress_display;
 #else
 // Boost >=1.72 can use this as a replacement
 #include <boost/timer/progress_display.hpp>
+using progress_display = boost::timer::progress_display;
 #endif
 
 /// The main executable
@@ -49,7 +51,7 @@ void accessStepWise(const Acts::MagneticFieldProvider& bField,
   auto bCache = bField.makeCache(bFieldContext);
   // boost display
   size_t totalSteps = events * theta_steps * phi_steps * access_steps;
-  boost::timer::progress_display show_progress(totalSteps);
+  progress_display show_progress(totalSteps);
   // the event loop
   // loop over the events - @todo move to parallel for
   for (size_t ievt = 0; ievt < events; ++ievt) {
@@ -90,7 +92,7 @@ void accessRandom(const Acts::MagneticFieldProvider& bField,
 
   // initialize the field cache
   auto bCache = bField.makeCache(bFieldContext);
-  boost::timer::progress_display show_progress(totalSteps);
+  progress_display show_progress(totalSteps);
 
   // the event loop
   // loop over the events - @todo move to parallel for
