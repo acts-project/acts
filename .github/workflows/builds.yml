@@ -110,16 +110,16 @@ jobs:
           path: ${{ env.INSTALL_DIR }}
       - name: Downstream configure
         run: >
-          ${SETUP} &&
-          cmake -B build-downstream -S Tests/DownstreamProject
+          cmake -B build-downstream-nodeps -S Tests/DownstreamProjectNodeps
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
       - name: Downstream build
-        run: ${SETUP} && cmake --build build-downstream --
+        run: cmake --build build-downstream-nodeps --
       - name: Downstream run
-        run: ${SETUP} && ./build-downstream/bin/ShowActsVersion
+        run: ./build-downstream-nodeps/bin/ShowActsVersion
+             && CI/check_boost_eigen_versions.sh ./build-downstream-nodeps/bin/ShowActsVersion
 
   lcg:
     runs-on: ubuntu-latest
