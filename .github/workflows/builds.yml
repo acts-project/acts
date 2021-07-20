@@ -85,6 +85,7 @@ jobs:
       # official centos8 repo, but to save hundreds of MB's of package
       # download we simply use lcg for this one package.
       SETUP: source /opt/lcg/ROOT/v6.24.00-e7098/x86_64-centos8-gcc10-opt/bin/thisroot.sh
+      PRELOAD: export LD_PRELOAD=/opt/lcg/gcc/10/x86_64-centos8/lib64/libstdc++.so.6
       INSTALL_DIR: ${{ github.workspace }}/install
     steps:
       - uses: actions/checkout@v2
@@ -110,7 +111,7 @@ jobs:
       - name: Build
         run: ${SETUP} && cmake --build build --
       - name: Unit tests
-        run: ${SETUP} && cmake --build build -- test
+        run: ${SETUP} && ${PRELOAD} && cmake --build build -- test
       - name: Integration tests
         run: ${SETUP} && cmake --build build -- integrationtests
       - name: Install
@@ -118,7 +119,7 @@ jobs:
       - name: Example
         # Run a single example to be sure that the boost dependencies
         # got linked correctly
-        run: ${SETUP} && LD_PRELOAD=/opt/lcg/gcc/10/x86_64-centos8/lib64/libstdc++.so.6 ./build/bin/ActsExampleHelloWorld -n 1
+        run: ${SETUP} && ${PRELOAD} && ./build/bin/ActsExampleHelloWorld -n 1
       - name: Downstream configure
         run: >
           ${SETUP} &&
