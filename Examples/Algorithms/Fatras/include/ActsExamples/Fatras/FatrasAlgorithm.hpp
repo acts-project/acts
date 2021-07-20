@@ -91,6 +91,8 @@ class FatrasAlgorithm final : public BareAlgorithm {
   ActsExamples::ProcessCode execute(
       const AlgorithmContext& ctx) const final override;
 
+  const Config& config() const { return m_cfg; }
+
  private:
   Config m_cfg;
   std::unique_ptr<detail::FatrasAlgorithmSimulation> m_sim;

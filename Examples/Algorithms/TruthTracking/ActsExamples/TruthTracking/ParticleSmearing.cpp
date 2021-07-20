@@ -85,6 +85,22 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       const double newP = std::max(0.0, p + sigmaP * stdNormal(rng));
       params[Acts::eBoundQOverP] = (q != 0) ? (q / newP) : (1 / newP);
 
+      ACTS_VERBOSE("Smearing particle (pos, time, phi, theta, q/p):");
+      ACTS_VERBOSE(" from: " << particle.position().transpose() << ", " << time
+                             << "," << phi << "," << theta << ","
+                             << (q != 0 ? q / p : 1 / p));
+      ACTS_VERBOSE("   to: " << perigee
+                                    ->localToGlobal(
+                                        ctx.geoContext,
+                                        Acts::Vector2{params[Acts::eBoundLoc0],
+                                                      params[Acts::eBoundLoc1]},
+                                        particle.unitDirection() * p)
+                                    .transpose()
+                             << ", " << params[Acts::eBoundTime] << ","
+                             << params[Acts::eBoundPhi] << ","
+                             << params[Acts::eBoundTheta] << ","
+                             << params[Acts::eBoundQOverP]);
+
       // build the track covariance matrix using the smearing sigmas
       Acts::BoundSymMatrix cov = Acts::BoundSymMatrix::Zero();
       cov(Acts::eBoundLoc0, Acts::eBoundLoc0) =

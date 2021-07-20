@@ -34,25 +34,40 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
       Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder>;
   using TrackFitterResult =
       Acts::Result<Acts::KalmanFitterResult<IndexSourceLink>>;
-  using TrackFitterFunction = std::function<TrackFitterResult(
-      const std::vector<IndexSourceLink>&, const TrackParameters&,
-      const TrackFitterOptions&)>;
+
+  /// Fit function that takes the above parameters and runs a fit
+  /// @note This is separated into a virtual interface to keep compilation units
+  /// small
+  class TrackFitterFunction {
+   public:
+    virtual ~TrackFitterFunction() = default;
+    virtual TrackFitterResult operator()(const std::vector<IndexSourceLink>&,
+                                         const TrackParameters&,
+                                         const TrackFitterOptions&) const = 0;
+  };
 
   /// Fit function that takes the above parameters plus a sorted surface
   /// sequence for the DirectNavigator to follow
-  using DirectedTrackFitterFunction = std::function<TrackFitterResult(
-      const std::vector<IndexSourceLink>&, const TrackParameters&,
-      const TrackFitterOptions&, const std::vector<const Acts::Surface*>&)>;
+  /// @note This is separated into a virtual interface to keep compilation units
+  /// small
+  class DirectedTrackFitterFunction {
+   public:
+    virtual ~DirectedTrackFitterFunction() = default;
+    virtual TrackFitterResult operator()(
+        const std::vector<IndexSourceLink>&, const TrackParameters&,
+        const TrackFitterOptions&,
+        const std::vector<const Acts::Surface*>&) const = 0;
+  };
 
   /// Create the track fitter function implementation.
   ///
   /// The magnetic field is intentionally given by-value since the variant
   /// contains shared_ptr anyways.
-  static TrackFitterFunction makeTrackFitterFunction(
+  static std::shared_ptr<TrackFitterFunction> makeTrackFitterFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
 
-  static DirectedTrackFitterFunction makeTrackFitterFunction(
+  static std::shared_ptr<DirectedTrackFitterFunction> makeTrackFitterFunction(
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
 
   struct Config {
@@ -69,9 +84,9 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
     /// Output fitted trajectories collection.
     std::string outputTrajectories;
     /// Type erased fitter function.
-    TrackFitterFunction fit;
+    std::shared_ptr<TrackFitterFunction> fit;
     /// Type erased direct navigation fitter function
-    DirectedTrackFitterFunction dFit;
+    std::shared_ptr<DirectedTrackFitterFunction> dFit;
     /// Tracking geometry for surface lookup
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// Some more detailed steering - mainly for debugging, correct for MCS
@@ -86,13 +101,16 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
   ///
   /// @param cfg is the config struct to configure the algorihtm
   /// @param level is the logging level
-  TrackFittingAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  TrackFittingAlgorithm(Config cfg, Acts::Logging::Level level);
 
   /// Framework execute method of the fitting algorithm
   ///
   /// @param ctx is the algorithm context that holds event-wise information
   /// @return a process code to steer the algporithm flow
   ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const final;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   /// Helper function to call correct FitterFunction
@@ -113,10 +131,10 @@ ActsExamples::TrackFittingAlgorithm::fitTrack(
                                     Acts::VoidOutlierFinder>& options,
     const std::vector<const Acts::Surface*>& surfSequence) const {
   if (m_cfg.directNavigation) {
-    return m_cfg.dFit(sourceLinks, initialParameters, options, surfSequence);
+    return (*m_cfg.dFit)(sourceLinks, initialParameters, options, surfSequence);
   }
 
-  return m_cfg.fit(sourceLinks, initialParameters, options);
+  return (*m_cfg.fit)(sourceLinks, initialParameters, options);
 }
 
 }  // namespace ActsExamples

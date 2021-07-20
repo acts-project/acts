@@ -32,9 +32,9 @@ class HepMC3AsciiWriter final : public WriterT<std::vector<HepMC3::GenEvent>> {
 
   /// Construct the writer.
   ///
-  /// @param [in] cfg Config of the writer
-  /// @param [in] lvl The level of the logger
-  HepMC3AsciiWriter(const Config&& cfg, Acts::Logging::Level lvl);
+  /// @param [in] config Config of the writer
+  /// @param [in] level The level of the logger
+  HepMC3AsciiWriter(const Config& config, Acts::Logging::Level level);
 
   /// Writing events to file.
   ///

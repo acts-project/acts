@@ -36,3 +36,13 @@ G4VPhysicalVolume* DD4hepDetectorConstruction::Construct() {
   g4map.volumeManager();
   return m_world;
 }
+
+DD4hepDetectorConstructionFactory::DD4hepDetectorConstructionFactory(
+    dd4hep::Detector& detector)
+    : m_detector{detector} {}
+
+std::unique_ptr<G4VUserDetectorConstruction>
+
+DD4hepDetectorConstructionFactory::operator()() const {
+  return std::make_unique<DD4hepDetectorConstruction>(m_detector);
+}

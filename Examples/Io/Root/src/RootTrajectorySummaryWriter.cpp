@@ -34,36 +34,32 @@ using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
 
 ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
-    const ActsExamples::RootTrajectorySummaryWriter::Config& cfg,
-    Acts::Logging::Level lvl)
-    : WriterT(cfg.inputTrajectories, "RootTrajectorySummaryWriter", lvl),
-      m_cfg(cfg),
-      m_outputFile(cfg.rootFile) {
+    const ActsExamples::RootTrajectorySummaryWriter::Config& config,
+    Acts::Logging::Level level)
+    : WriterT(config.inputTrajectories, "RootTrajectorySummaryWriter", level),
+      m_cfg(config) {
   // trajectories collection name is already checked by base ctor
-  if (cfg.inputParticles.empty()) {
+  if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
   }
-  if (cfg.inputMeasurementParticlesMap.empty()) {
+  if (m_cfg.inputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument("Missing hit-particles map input collection");
   }
-  if (cfg.outputFilename.empty()) {
+  if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
-  if (m_cfg.outputTreename.empty()) {
+  if (m_cfg.treeName.empty()) {
     throw std::invalid_argument("Missing tree name");
   }
 
   // Setup ROOT I/O
+  auto path = m_cfg.filePath;
+  m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
   if (m_outputFile == nullptr) {
-    auto path = joinPaths(m_cfg.outputDir, m_cfg.outputFilename);
-    m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
-    if (m_outputFile == nullptr) {
-      throw std::ios_base::failure("Could not open '" + path);
-    }
+    throw std::ios_base::failure("Could not open '" + path);
   }
   m_outputFile->cd();
-  m_outputTree =
-      new TTree(m_cfg.outputTreename.c_str(), m_cfg.outputTreename.c_str());
+  m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
   if (m_outputTree == nullptr)
     throw std::bad_alloc();
   else {
@@ -116,19 +112,15 @@ ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
   }
 }
 
-ActsExamples::RootTrajectorySummaryWriter::~RootTrajectorySummaryWriter() {
-  if (m_outputFile) {
-    m_outputFile->Close();
-  }
-}
+ActsExamples::RootTrajectorySummaryWriter::~RootTrajectorySummaryWriter() {}
 
 ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::endRun() {
   if (m_outputFile) {
     m_outputFile->cd();
     m_outputTree->Write();
     ACTS_INFO("Write parameters of trajectories to tree '"
-              << m_cfg.outputTreename << "' in '"
-              << joinPaths(m_cfg.outputDir, m_cfg.outputFilename) << "'");
+              << m_cfg.treeName << "' in '" << m_cfg.filePath << "'");
+    m_outputFile->Close();
   }
   return ProcessCode::SUCCESS;
 }

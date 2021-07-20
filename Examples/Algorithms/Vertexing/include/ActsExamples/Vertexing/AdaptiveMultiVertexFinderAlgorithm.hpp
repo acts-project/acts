@@ -19,8 +19,6 @@ namespace ActsExamples {
 class AdaptiveMultiVertexFinderAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
-    Config(std::shared_ptr<Acts::MagneticFieldProvider> magneticField)
-        : bField(magneticField) {}
     /// Input track parameters collection
     std::string inputTrackParameters;
     /// Output proto vertex collection
@@ -34,13 +32,16 @@ class AdaptiveMultiVertexFinderAlgorithm final : public BareAlgorithm {
   };
 
   AdaptiveMultiVertexFinderAlgorithm(const Config& cfg,
-                                     Acts::Logging::Level lvl);
+                                     Acts::Logging::Level level);
 
   /// Find vertices using the adapative multi vertex finder algorithm.
   ///
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
   ProcessCode execute(const AlgorithmContext& ctx) const final;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;

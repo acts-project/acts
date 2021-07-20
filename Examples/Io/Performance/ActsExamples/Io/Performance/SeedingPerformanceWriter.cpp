@@ -26,27 +26,27 @@ using ProtoTrackContainer = ActsExamples::ProtoTrackContainer;
 }  // namespace
 
 ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
-    ActsExamples::SeedingPerformanceWriter::Config cfg,
-    Acts::Logging::Level lvl)
-    : WriterT(cfg.inputProtoTracks, "SeedingPerformanceWriter", lvl),
-      m_cfg(std::move(cfg)),
-      m_effPlotTool(m_cfg.effPlotToolConfig, lvl),
-      m_duplicationPlotTool(m_cfg.duplicationPlotToolConfig, lvl) {
+    ActsExamples::SeedingPerformanceWriter::Config config,
+    Acts::Logging::Level level)
+    : WriterT(config.inputProtoTracks, "SeedingPerformanceWriter", level),
+      m_cfg(std::move(config)),
+      m_effPlotTool(m_cfg.effPlotToolConfig, level),
+      m_duplicationPlotTool(m_cfg.duplicationPlotToolConfig, level) {
   if (m_cfg.inputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument("Missing hit-particles map input collection");
   }
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input particles collection");
   }
-  if (m_cfg.outputFilename.empty()) {
+  if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
 
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
   // must always be opened internally
-  auto path = joinPaths(m_cfg.outputDir, m_cfg.outputFilename);
-  m_outputFile = TFile::Open(path.c_str(), "RECREATE");
+  auto path = m_cfg.filePath;
+  m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
   if (not m_outputFile) {
     throw std::invalid_argument("Could not open '" + path + "'");
   }

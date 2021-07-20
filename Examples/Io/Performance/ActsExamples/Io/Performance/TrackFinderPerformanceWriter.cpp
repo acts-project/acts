@@ -89,21 +89,20 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
     if (cfg.inputParticles.empty()) {
       throw std::invalid_argument("Missing particles input collection");
     }
-    if (cfg.outputFilename.empty()) {
+    if (cfg.filePath.empty()) {
       throw std::invalid_argument("Missing output filename");
     }
 
     // the output file can not be given externally since TFile accesses to the
     // same file from multiple threads are unsafe.
     // must always be opened internally
-    auto path = joinPaths(cfg.outputDir, cfg.outputFilename);
-    file = TFile::Open(path.c_str(), "RECREATE");
+    file = TFile::Open(cfg.filePath.c_str(), cfg.fileMode.c_str());
     if (not file) {
-      throw std::invalid_argument("Could not open '" + path + "'");
+      throw std::invalid_argument("Could not open '" + cfg.filePath + "'");
     }
 
     // construct trees
-    trkTree = new TTree("track_finder_tracks", "");
+    trkTree = new TTree(cfg.treeName.c_str(), cfg.treeName.c_str());
     trkTree->SetDirectory(file);
     trkTree->Branch("event_id", &trkEventId);
     trkTree->Branch("track_id", &trkTrackId);
@@ -236,10 +235,10 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
 };
 
 ActsExamples::TrackFinderPerformanceWriter::TrackFinderPerformanceWriter(
-    ActsExamples::TrackFinderPerformanceWriter::Config cfg,
-    Acts::Logging::Level lvl)
-    : WriterT(cfg.inputProtoTracks, "TrackFinderPerformanceWriter", lvl),
-      m_impl(std::make_unique<Impl>(std::move(cfg), logger())) {}
+    ActsExamples::TrackFinderPerformanceWriter::Config config,
+    Acts::Logging::Level level)
+    : WriterT(config.inputProtoTracks, "TrackFinderPerformanceWriter", level),
+      m_impl(std::make_unique<Impl>(std::move(config), logger())) {}
 
 ActsExamples::TrackFinderPerformanceWriter::~TrackFinderPerformanceWriter() {
   // explicit destructor needed for pimpl idiom to work

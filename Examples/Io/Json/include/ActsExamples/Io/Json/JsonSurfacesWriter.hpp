@@ -56,9 +56,9 @@ class JsonSurfacesWriter : public IWriter {
 
   /// Construct the geometry writer.
   ///
-  /// @param cfg is the configuration object
-  /// @param lvl is the logging level
-  JsonSurfacesWriter(const Config& cfg, Acts::Logging::Level lvl);
+  /// @param config is the configuration object
+  /// @param level is the logging level
+  JsonSurfacesWriter(const Config& config, Acts::Logging::Level level);
 
   std::string name() const final override;
 
@@ -67,6 +67,9 @@ class JsonSurfacesWriter : public IWriter {
 
   /// Write geometry using the default context.
   ProcessCode endRun() final override;
+
+  /// Readonly access to config
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;

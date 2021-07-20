@@ -8,27 +8,23 @@
 
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 #include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 
 #include <string>
 
 #include <boost/program_options.hpp>
 
-#include "BFieldWritingBase.hpp"
-
 namespace po = boost::program_options;
-
-template <class T>
-struct always_false : std::false_type {};
 
 /// The main executable
 ///
 /// Creates an InterpolatedBFieldMap from a txt or csv file and writes out the
 /// grid points and values of the map into root format. The Field can then be
 /// displayed using the root script printBField.cpp
-
 int main(int argc, char* argv[]) {
   using boost::program_options::value;
 
@@ -72,19 +68,45 @@ int main(int argc, char* argv[]) {
 
   auto bFieldVar = ActsExamples::Options::readMagneticField(vm);
 
-  if (auto bField2D = std::dynamic_pointer_cast<
-          const ActsExamples::detail::InterpolatedMagneticField2>(bFieldVar);
-      bField2D) {
-    ActsExamples::BField::writeField(vm, *bField2D);
-    return EXIT_SUCCESS;
-  } else if (auto bField3D = std::dynamic_pointer_cast<
-                 const ActsExamples::detail::InterpolatedMagneticField3>(
-                 bFieldVar);
-             bField3D) {
-    ActsExamples::BField::writeField(vm, *bField3D);
-    return EXIT_SUCCESS;
-  } else {
+  auto bField =
+      std::dynamic_pointer_cast<const Acts::InterpolatedMagneticField>(
+          bFieldVar);
+  if (!bField) {
     std::cout << "Bfield map could not be read. Exiting." << std::endl;
     return EXIT_FAILURE;
   }
+
+  using GridType = ActsExamples::RootBFieldWriter::GridType;
+
+  // Write the interpolated magnetic field
+  ActsExamples::RootBFieldWriter::Config writerConfig;
+  if (vm["bf-out-rz"].template as<bool>()) {
+    writerConfig.gridType = GridType::rz;
+  } else {
+    writerConfig.gridType = GridType::xyz;
+  }
+  writerConfig.treeName = vm["bf-map-out"].template as<std::string>();
+  writerConfig.fileName = vm["bf-file-out"].template as<std::string>();
+  writerConfig.bField = bField;
+  std::cout << "setting rBounds" << std::endl;
+  if (vm.count("bf-rRange") && vm.count("bf-zRange")) {
+    auto rBounds =
+        vm["bf-rRange"].template as<ActsExamples::Options::Reals<2>>();
+    auto zBounds =
+        vm["bf-zRange"].template as<ActsExamples::Options::Reals<2>>();
+
+    rBounds[0] *= Acts::UnitConstants::mm;
+    rBounds[1] *= Acts::UnitConstants::mm;
+
+    zBounds[0] *= Acts::UnitConstants::mm;
+    zBounds[1] *= Acts::UnitConstants::mm;
+
+    writerConfig.rBounds = rBounds;
+    writerConfig.zBounds = zBounds;
+  }
+  writerConfig.rBins = vm["bf-rBins"].template as<size_t>();
+  writerConfig.zBins = vm["bf-ZBins"].template as<size_t>();
+  writerConfig.phiBins = vm["bf-PhiBins"].template as<size_t>();
+
+  ActsExamples::RootBFieldWriter::run(writerConfig);
 }

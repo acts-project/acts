@@ -26,11 +26,10 @@
 #include <TTree.h>
 
 ActsExamples::RootPlanarClusterWriter::RootPlanarClusterWriter(
-    const ActsExamples::RootPlanarClusterWriter::Config& cfg,
-    Acts::Logging::Level lvl)
-    : WriterT(cfg.inputClusters, "RootPlanarClusterWriter", lvl),
-      m_cfg(cfg),
-      m_outputFile(cfg.rootFile) {
+    const ActsExamples::RootPlanarClusterWriter::Config& config,
+    Acts::Logging::Level level)
+    : WriterT(config.inputClusters, "RootPlanarClusterWriter", level),
+      m_cfg(config) {
   // inputClusters is already checked by base constructor
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
@@ -42,15 +41,12 @@ ActsExamples::RootPlanarClusterWriter::RootPlanarClusterWriter(
     throw std::invalid_argument("Missing tracking geometry");
   }
   // Setup ROOT I/O
+  m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
   if (m_outputFile == nullptr) {
-    m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
-    if (m_outputFile == nullptr) {
-      throw std::ios_base::failure("Could not open '" + m_cfg.filePath);
-    }
+    throw std::ios_base::failure("Could not open '" + m_cfg.filePath);
   }
   m_outputFile->cd();
-  m_outputTree =
-      new TTree(m_cfg.treeName.c_str(), "TTree from RootPlanarClusterWriter");
+  m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
   if (m_outputTree == nullptr)
     throw std::bad_alloc();
 
@@ -81,12 +77,7 @@ ActsExamples::RootPlanarClusterWriter::RootPlanarClusterWriter(
   m_outputTree->Branch("truth_barcode", &m_t_barcode, "truth_barcode/l");
 }
 
-ActsExamples::RootPlanarClusterWriter::~RootPlanarClusterWriter() {
-  /// Close the file if it's yours
-  if (m_cfg.rootFile == nullptr) {
-    m_outputFile->Close();
-  }
-}
+ActsExamples::RootPlanarClusterWriter::~RootPlanarClusterWriter() {}
 
 ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::endRun() {
   // Write the tree
@@ -94,6 +85,7 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::endRun() {
   m_outputTree->Write();
   ACTS_INFO("Wrote clusters to tree '" << m_cfg.treeName << "' in '"
                                        << m_cfg.filePath << "'");
+  m_outputFile->Close();
   return ProcessCode::SUCCESS;
 }
 

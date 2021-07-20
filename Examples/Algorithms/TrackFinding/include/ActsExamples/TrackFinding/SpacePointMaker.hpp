@@ -68,6 +68,8 @@ class SpacePointMaker final : public BareAlgorithm {
   /// @return a process code indication success or failure
   ProcessCode execute(const AlgorithmContext& ctx) const final override;
 
+  const Config& config() const { return m_cfg; }
+
  private:
   Config m_cfg;
 };

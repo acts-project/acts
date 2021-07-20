@@ -21,15 +21,17 @@
 #include <TMath.h>
 
 ActsExamples::RootTrajectorySummaryReader::RootTrajectorySummaryReader(
-    const ActsExamples::RootTrajectorySummaryReader::Config& cfg)
-    : ActsExamples::IReader(), m_cfg(cfg), m_events(0), m_inputChain(nullptr) {
+    const ActsExamples::RootTrajectorySummaryReader::Config& config,
+    Acts::Logging::Level level)
+    : ActsExamples::IReader(),
+      m_logger{Acts::getDefaultLogger(name(), level)},
+      m_cfg(config),
+      m_events(0),
+      m_inputChain(nullptr) {
   m_inputChain = new TChain(m_cfg.treeName.c_str());
 
-  if (m_cfg.inputFile.empty()) {
+  if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing input filename");
-  }
-  if (m_cfg.inputDir.empty()) {
-    throw std::invalid_argument("Missing input directory");
   }
 
   // Set the branches
@@ -80,7 +82,7 @@ ActsExamples::RootTrajectorySummaryReader::RootTrajectorySummaryReader(
   m_inputChain->SetBranchAddress("err_eQOP_fit", &m_err_eQOP_fit);
   m_inputChain->SetBranchAddress("err_eT_fit", &m_err_eT_fit);
 
-  auto path = joinPaths(m_cfg.inputDir, m_cfg.inputFile);
+  auto path = m_cfg.filePath;
 
   // add file to the input chain
   m_inputChain->Add(path.c_str());
@@ -97,10 +99,6 @@ ActsExamples::RootTrajectorySummaryReader::RootTrajectorySummaryReader(
     TMath::Sort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
                 m_entryNumbers.data(), false);
   }
-}
-
-std::string ActsExamples::RootTrajectorySummaryReader::name() const {
-  return m_cfg.name;
 }
 
 std::pair<size_t, size_t>

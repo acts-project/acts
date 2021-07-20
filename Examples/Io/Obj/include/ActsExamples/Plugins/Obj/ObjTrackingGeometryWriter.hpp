@@ -35,27 +35,21 @@ class ObjTrackingGeometryWriter {
   // The nested config class
   class Config {
    public:
-    std::shared_ptr<const Acts::Logger> logger;
-
-    std::string name = "";
-
     double outputScalor = 1.0;   ///< scale output values
     size_t outputPrecision = 6;  ///< floating point precision
+    std::string outputDir = ".";
 
     Acts::ViewConfig containerView = Acts::ViewConfig({220, 220, 220});
     Acts::ViewConfig volumeView = Acts::ViewConfig({220, 220, 0});
     Acts::ViewConfig sensitiveView = Acts::ViewConfig({0, 180, 240});
     Acts::ViewConfig passiveView = Acts::ViewConfig({240, 280, 0});
     Acts::ViewConfig gridView = Acts::ViewConfig({220, 0, 0});
-
-    Config(const std::string& lname = "ObjTrackingGeometryWriter",
-           Acts::Logging::Level lvl = Acts::Logging::INFO)
-        : logger(Acts::getDefaultLogger(lname, lvl)), name(lname) {}
   };
 
   /// Constructor
-  /// @param cfg is the configuration class
-  ObjTrackingGeometryWriter(const Config& cfg);
+  /// @param config is the configuration class
+  /// @param level the log level
+  ObjTrackingGeometryWriter(const Config& config, Acts::Logging::Level level);
 
   /// Framework name() method
   /// @return the name of the tool
@@ -69,6 +63,8 @@ class ObjTrackingGeometryWriter {
                                   const Acts::TrackingGeometry& tGeometry);
 
  private:
+  std::unique_ptr<const Acts::Logger> m_logger;  ///< the logger instance
+
   Config m_cfg;  ///< the config class
 
   /// process this volume
@@ -78,7 +74,7 @@ class ObjTrackingGeometryWriter {
              const Acts::TrackingVolume& tVolume);
 
   /// Private access to the logging instance
-  const Acts::Logger& logger() const { return *m_cfg.logger; }
+  const Acts::Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace ActsExamples

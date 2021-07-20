@@ -61,57 +61,77 @@ auto AlignedDetector::finalize(
   // --------------------------------------------------------------------------------
   DetectorElement::ContextType nominalContext;
 
-  auto buildLevel = vm["geo-generic-buildlevel"].template as<size_t>();
+  Config cfg;
+
+  cfg.buildLevel = vm["geo-generic-buildlevel"].template as<size_t>();
   // set geometry building logging level
-  Acts::Logging::Level surfaceLogLevel =
+  cfg.surfaceLogLevel =
       Acts::Logging::Level(vm["geo-surface-loglevel"].template as<size_t>());
-  Acts::Logging::Level layerLogLevel =
+  cfg.layerLogLevel =
       Acts::Logging::Level(vm["geo-layer-loglevel"].template as<size_t>());
-  Acts::Logging::Level volumeLogLevel =
+  cfg.volumeLogLevel =
       Acts::Logging::Level(vm["geo-volume-loglevel"].template as<size_t>());
 
-  bool buildProto =
-      (vm["mat-input-type"].template as<std::string>() == "proto");
+  cfg.buildProto = (vm["mat-input-type"].template as<std::string>() == "proto");
+
+  cfg.decoratorLogLevel =
+      Acts::Logging::Level(vm["align-loglevel"].template as<size_t>());
+
+  cfg.seed = vm["align-seed"].template as<size_t>();
+  cfg.iovSize = vm["align-iovsize"].template as<size_t>();
+  cfg.flushSize = vm["align-flushsize"].template as<size_t>();
+
+  // The misalingments
+  cfg.sigmaInPlane = vm["align-sigma-iplane"].template as<double>();
+  cfg.sigmaOutPlane = vm["align-sigma-oplane"].template as<double>();
+  cfg.sigmaInRot = vm["align-sigma-irot"].template as<double>();
+  cfg.sigmaOutRot = vm["align-sigma-orot"].template as<double>();
+  cfg.firstIovNominal = vm["align-firstnominal"].template as<bool>();
+
+  return finalize(cfg, mdecorator);
+}
+
+auto AlignedDetector::finalize(
+    const Config& cfg,
+    std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
+    -> std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr,
+                 ContextDecorators> {
+  DetectorElement::ContextType nominalContext;
 
   /// return the generic detector - with aligned context decorator
   TrackingGeometryPtr aTrackingGeometry =
-      ActsExamples::Generic::buildDetector<DetectorElement>(
-          nominalContext, detectorStore, buildLevel, std::move(mdecorator),
-          buildProto, surfaceLogLevel, layerLogLevel, volumeLogLevel);
 
-  Acts::Logging::Level decoratorLogLevel =
-      Acts::Logging::Level(vm["align-loglevel"].template as<size_t>());
+      ActsExamples::Generic::buildDetector<DetectorElement>(
+          nominalContext, detectorStore, cfg.buildLevel, std::move(mdecorator),
+          cfg.buildProto, cfg.surfaceLogLevel, cfg.layerLogLevel,
+          cfg.volumeLogLevel);
 
   // Let's create a reandom number service
   ActsExamples::RandomNumbers::Config randomNumberConfig;
-  randomNumberConfig.seed = vm["align-seed"].template as<size_t>();
+  randomNumberConfig.seed = cfg.seed;
   auto randomNumberSvc =
       std::make_shared<ActsExamples::RandomNumbers>(randomNumberConfig);
 
   // Alignment decorator service
   Decorator::Config agcsConfig;
   agcsConfig.detectorStore = detectorStore;
-  agcsConfig.iovSize = vm["align-iovsize"].template as<size_t>();
-  agcsConfig.flushSize = vm["align-flushsize"].template as<size_t>();
+  agcsConfig.iovSize = cfg.iovSize;
+  agcsConfig.flushSize = cfg.flushSize;
 
   // The misalingments
-  double sigmaIp = vm["align-sigma-iplane"].template as<double>();
-  double sigmaOp = vm["align-sigma-oplane"].template as<double>();
-  double sigmaIr = vm["align-sigma-irot"].template as<double>();
-  double sigmaOr = vm["align-sigma-orot"].template as<double>();
-  agcsConfig.gSigmaX = sigmaIp * Acts::UnitConstants::um;
-  agcsConfig.gSigmaY = sigmaIp * Acts::UnitConstants::um;
-  agcsConfig.gSigmaZ = sigmaOp * Acts::UnitConstants::um;
-  agcsConfig.aSigmaX = sigmaOr * 0.001;  // millirad
-  agcsConfig.aSigmaY = sigmaOr * 0.001;  // millirad
-  agcsConfig.aSigmaZ = sigmaIr * 0.001;  // millirad
+  agcsConfig.gSigmaX = cfg.sigmaInPlane;
+  agcsConfig.gSigmaY = cfg.sigmaInPlane;
+  agcsConfig.gSigmaZ = cfg.sigmaOutPlane;
+  agcsConfig.aSigmaX = cfg.sigmaOutRot;
+  agcsConfig.aSigmaY = cfg.sigmaOutRot;
+  agcsConfig.aSigmaZ = cfg.sigmaInRot;
   agcsConfig.randomNumberSvc = randomNumberSvc;
-  agcsConfig.firstIovNominal = vm["align-firstnominal"].template as<bool>();
+  agcsConfig.firstIovNominal = cfg.firstIovNominal;
 
   // Now create the alignment decorator
   ContextDecorators aContextDecorators = {std::make_shared<Decorator>(
       agcsConfig,
-      Acts::getDefaultLogger("AlignmentDecorator", decoratorLogLevel))};
+      Acts::getDefaultLogger("AlignmentDecorator", cfg.decoratorLogLevel))};
 
   // return the pair of geometry and the alignment decorator(s)
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(

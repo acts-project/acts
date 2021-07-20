@@ -25,11 +25,10 @@ using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
 ActsExamples::RootMaterialTrackWriter::RootMaterialTrackWriter(
-    const ActsExamples::RootMaterialTrackWriter::Config& cfg,
+    const ActsExamples::RootMaterialTrackWriter::Config& config,
     Acts::Logging::Level level)
-    : WriterT(cfg.collection, "RootMaterialTrackWriter", level),
-      m_cfg(cfg),
-      m_outputFile(cfg.rootFile) {
+    : WriterT(config.collection, "RootMaterialTrackWriter", level),
+      m_cfg(config) {
   // An input collection name and tree name must be specified
   if (m_cfg.collection.empty()) {
     throw std::invalid_argument("Missing input collection");
@@ -38,12 +37,11 @@ ActsExamples::RootMaterialTrackWriter::RootMaterialTrackWriter(
   }
 
   // Setup ROOT I/O
+  m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
   if (m_outputFile == nullptr) {
-    m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
-    if (m_outputFile == nullptr) {
-      throw std::ios_base::failure("Could not open '" + m_cfg.filePath);
-    }
+    throw std::ios_base::failure("Could not open '" + m_cfg.filePath);
   }
+
   m_outputFile->cd();
   m_outputTree =
       new TTree(m_cfg.treeName.c_str(), "TTree from RootMaterialTrackWriter");
@@ -97,15 +95,14 @@ ActsExamples::RootMaterialTrackWriter::RootMaterialTrackWriter(
   }
 }
 
-ActsExamples::RootMaterialTrackWriter::~RootMaterialTrackWriter() {
-  m_outputFile->Close();
-}
+ActsExamples::RootMaterialTrackWriter::~RootMaterialTrackWriter() {}
 
 ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::endRun() {
   // write the tree and close the file
   ACTS_INFO("Writing ROOT output File : " << m_cfg.filePath);
   m_outputFile->cd();
   m_outputTree->Write();
+  m_outputFile->Close();
   return ActsExamples::ProcessCode::SUCCESS;
 }
 

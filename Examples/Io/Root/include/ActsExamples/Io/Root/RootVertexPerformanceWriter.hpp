@@ -45,16 +45,12 @@ class RootVertexPerformanceWriter final
     std::string inputVertices;
     /// Input reconstruction time.
     std::string inputTime;
-    /// Output directory.
-    std::string outputDir;
     /// Output filename.
-    std::string outputFilename = "vertexingperformance.root";
+    std::string filePath = "vertexingperformance.root";
     /// Name of the output tree.
-    std::string outputTreename = "vertextree";
+    std::string treeName = "vertextree";
     /// File access mode.
     std::string fileMode = "RECREATE";
-    /// Common root file.
-    TFile* rootFile = nullptr;
     /// Minimum fraction of tracks matched between truth
     /// and reco vertices to be matched for resolution plots
     double minTrackVtxMatchFraction = 0.5;
@@ -62,9 +58,10 @@ class RootVertexPerformanceWriter final
 
   /// Constructor
   ///
-  /// @param cfg Configuration struct
+  /// @param config Configuration struct
   /// @param level Message level declaration
-  RootVertexPerformanceWriter(const Config& cfg, Acts::Logging::Level lvl);
+  RootVertexPerformanceWriter(const Config& config, Acts::Logging::Level level);
+
   ~RootVertexPerformanceWriter() final override;
 
   /// End-of-run hook

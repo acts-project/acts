@@ -10,7 +10,7 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesIoJson
-  PUBLIC ActsCore ActsPluginJson ActsExamplesDigitization ActsExamplesFramework Boost::program_options)
+  PUBLIC ActsCore ActsPluginJson ActsExamplesDigitization ActsExamplesFramework ActsExamplesMaterialMapping Boost::program_options)
 
 install(
   TARGETS ActsExamplesIoJson

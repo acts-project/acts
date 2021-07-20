@@ -17,8 +17,12 @@
 #include <TMath.h>
 
 ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
-    const ActsExamples::RootMaterialTrackReader::Config& cfg)
-    : ActsExamples::IReader(), m_cfg(cfg), m_events(0), m_inputChain(nullptr) {
+    const Config& config, Acts::Logging::Level level)
+    : ActsExamples::IReader(),
+      m_logger{Acts::getDefaultLogger(name(), level)},
+      m_cfg(config),
+      m_events(0),
+      m_inputChain(nullptr) {
   m_inputChain = new TChain(m_cfg.treeName.c_str());
 
   // Set the branches
@@ -45,6 +49,10 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
   m_inputChain->SetBranchAddress("mat_A", &m_step_A);
   m_inputChain->SetBranchAddress("mat_Z", &m_step_Z);
   m_inputChain->SetBranchAddress("mat_rho", &m_step_rho);
+
+  if (m_cfg.fileList.empty()) {
+    throw std::invalid_argument{"No input files given"};
+  }
 
   // loop over the input files
   for (auto inputFile : m_cfg.fileList) {
@@ -80,7 +88,7 @@ ActsExamples::RootMaterialTrackReader::~RootMaterialTrackReader() {
 }
 
 std::string ActsExamples::RootMaterialTrackReader::name() const {
-  return m_cfg.name;
+  return "RootMaterialTrackReader";
 }
 
 std::pair<size_t, size_t>

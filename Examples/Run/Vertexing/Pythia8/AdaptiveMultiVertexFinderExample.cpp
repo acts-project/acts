@@ -72,7 +72,8 @@ int main(int argc, char* argv[]) {
       std::make_shared<ParticleSmearing>(smearParticles, logLevel));
 
   // find vertices
-  AdaptiveMultiVertexFinderAlgorithm::Config findVertices(magneticField);
+  AdaptiveMultiVertexFinderAlgorithm::Config findVertices;
+  findVertices.bField = magneticField;
   findVertices.inputTrackParameters = smearParticles.outputTrackParameters;
   findVertices.outputProtoVertices = "protovertices";
   sequencer.addAlgorithm(std::make_shared<AdaptiveMultiVertexFinderAlgorithm>(

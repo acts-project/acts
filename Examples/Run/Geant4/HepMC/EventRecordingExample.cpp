@@ -59,15 +59,14 @@ int main(int argc, char* argv[]) {
   auto dd4hepCfg = ActsExamples::Options::readDD4hepConfig(vm);
   auto geometrySvc =
       std::make_shared<ActsExamples::DD4hep::DD4hepGeometryService>(dd4hepCfg);
-  std::unique_ptr<G4VUserDetectorConstruction> g4detector =
-      std::make_unique<ActsExamples::DD4hepDetectorConstruction>(
-          *geometrySvc->lcdd());
 
   // Prepare the recording
   ActsExamples::EventRecording::Config erConfig;
   erConfig.inputParticles = particleReader.outputParticles;
   erConfig.outputHepMcTracks = "geant-event";
-  erConfig.detectorConstruction = std::move(g4detector);
+  erConfig.detectorConstructionFactory =
+      std::make_unique<ActsExamples::DD4hepDetectorConstructionFactory>(
+          *geometrySvc->lcdd());
   erConfig.seed1 = vm["g4-rnd-seed1"].as<unsigned int>();
   erConfig.seed2 = vm["g4-rnd-seed2"].as<unsigned int>();
 

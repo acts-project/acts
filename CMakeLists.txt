@@ -36,6 +36,7 @@ option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
 option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" OFF)
 option(ACTS_BUILD_PLUGIN_LEGACY "Build legacy plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ONNX "Build ONNX plugin" OFF)
+option(ACTS_BUILD_PLUGIN_PYTHON "Build python plugin" OFF)
 option(ACTS_BUILD_PLUGIN_SYCL "Build SYCL plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TGEO "Build TGeo plugin" OFF)
 # fatras related options
@@ -156,6 +157,9 @@ endmacro()
 # the same package twice. This avoids having complex if/else trees to sort out
 # when a particular package is actually needed.
 # plugin dependencies
+if(ACTS_BUILD_PLUGIN_PYTHON)
+    add_subdirectory(thirdparty/pybind11)
+endif()
 if(ACTS_BUILD_PLUGIN_AUTODIFF)
   if(ACTS_USE_SYSTEM_AUTODIFF)
     find_package(autodiff ${_acts_autodiff_version} CONFIG REQUIRED)
@@ -206,7 +210,7 @@ if(ACTS_BUILD_EXAMPLES)
   find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Core Geom GenVector Hist Tree TreePlayer)
   check_root_compatibility()
   # newer DD4hep version require TBB and search interally for TBB in
-  # config-only mode. to avoid missmatches we explicitely search using
+  # config-only mode. to avoid mismatches we explicitely search using
   # config-only mode first to be sure that we find the same version.
   find_package(TBB ${_acts_tbb_version} CONFIG)
   if(NOT TBB_FOUND)
@@ -246,6 +250,7 @@ add_component_if(Fatras Fatras ACTS_BUILD_FATRAS)
 
 # examples
 add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
+
 
 # automated tests and benchmarks
 if(ACTS_BUILD_BENCHMARKS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_UNITTESTS)

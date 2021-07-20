@@ -18,6 +18,7 @@
 #include <Acts/Surfaces/Surface.hpp>
 
 #include <map>
+#include <memory>
 
 namespace Acts {
 
@@ -43,12 +44,8 @@ class MaterialMapJsonConverter {
   /// Configuration of the Converter
   class Config {
    public:
-    /// The default logger
-    std::shared_ptr<const Logger> logger;
     /// Default geometry context to extract surface tranforms
     GeometryContext context = GeometryContext();
-    /// The name of the writer
-    std::string name = "";
 
     /// Steering to handle sensitive data
     bool processSensitives = true;
@@ -64,20 +61,13 @@ class MaterialMapJsonConverter {
     bool processDenseVolumes = false;
     /// Add proto material to all surfaces
     bool processNonMaterial = false;
-
-    /// Constructor
-    ///
-    /// @param lname Name of the writer tool
-    /// @param lvl The output logging level
-    Config(const std::string& lname = "MaterialMapJsonConverter",
-           Logging::Level lvl = Logging::INFO)
-        : logger(getDefaultLogger(lname, lvl)), name(lname) {}
   };
 
   /// Constructor
   ///
-  /// @param cfg configuration struct for the reader
-  MaterialMapJsonConverter(const Config& cfg);
+  /// @param config configuration struct for the reader
+  /// @param level The log level
+  MaterialMapJsonConverter(const Config& config, Acts::Logging::Level level);
 
   /// Destructor
   ~MaterialMapJsonConverter() = default;
@@ -116,6 +106,9 @@ class MaterialMapJsonConverter {
   /// The config class
   Config m_cfg;
 
+  /// The logger instance
+  std::unique_ptr<const Logger> m_logger{nullptr};
+
   /// Name of the volume hierarchy
   std::string m_volumeName = "Material Volume Map";
   /// Geometry hierarchy writer for volume material.
@@ -135,7 +128,7 @@ class MaterialMapJsonConverter {
       m_surfaceConverter;
 
   /// Private access to the logging instance
-  const Logger& logger() const { return *m_cfg.logger; }
+  const Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace Acts

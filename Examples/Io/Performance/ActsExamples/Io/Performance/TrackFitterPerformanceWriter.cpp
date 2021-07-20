@@ -22,13 +22,13 @@
 using Acts::VectorHelpers::eta;
 
 ActsExamples::TrackFitterPerformanceWriter::TrackFitterPerformanceWriter(
-    ActsExamples::TrackFitterPerformanceWriter::Config cfg,
-    Acts::Logging::Level lvl)
-    : WriterT(cfg.inputTrajectories, "TrackFitterPerformanceWriter", lvl),
-      m_cfg(std::move(cfg)),
-      m_resPlotTool(m_cfg.resPlotToolConfig, lvl),
-      m_effPlotTool(m_cfg.effPlotToolConfig, lvl),
-      m_trackSummaryPlotTool(m_cfg.trackSummaryPlotToolConfig, lvl)
+    ActsExamples::TrackFitterPerformanceWriter::Config config,
+    Acts::Logging::Level level)
+    : WriterT(config.inputTrajectories, "TrackFitterPerformanceWriter", level),
+      m_cfg(std::move(config)),
+      m_resPlotTool(m_cfg.resPlotToolConfig, level),
+      m_effPlotTool(m_cfg.effPlotToolConfig, level),
+      m_trackSummaryPlotTool(m_cfg.trackSummaryPlotToolConfig, level)
 
 {
   // trajectories collection name is already checked by base ctor
@@ -38,14 +38,14 @@ ActsExamples::TrackFitterPerformanceWriter::TrackFitterPerformanceWriter(
   if (m_cfg.inputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument("Missing hit-particles map input collection");
   }
-  if (m_cfg.outputFilename.empty()) {
+  if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
 
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
   // must always be opened internally
-  auto path = joinPaths(m_cfg.outputDir, m_cfg.outputFilename);
+  auto path = m_cfg.filePath;
   m_outputFile = TFile::Open(path.c_str(), "RECREATE");
   if (not m_outputFile) {
     throw std::invalid_argument("Could not open '" + path + "'");

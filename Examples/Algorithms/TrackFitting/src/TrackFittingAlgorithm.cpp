@@ -97,6 +97,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
       continue;
     }
 
+    ACTS_VERBOSE("Initial parameters: "
+                 << initialParams.fourPosition(ctx.geoContext).transpose()
+                 << " -> " << initialParams.unitDirection().transpose());
+
     // Clear & reserve the right size
     trackSourceLinks.clear();
     trackSourceLinks.reserve(protoTrack.size());
@@ -141,8 +145,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
       trajectories.emplace_back(std::move(fitOutput.fittedStates),
                                 std::move(trackTips), std::move(indexedParams));
     } else {
-      ACTS_WARNING("Fit failed for track " << itrack << " with error"
-                                           << result.error());
+      ACTS_WARNING("Fit failed for track "
+                   << itrack << " with error: " << result.error() << ", "
+                   << result.error().message());
       // Fit failed. Add an empty result so the output container has
       // the same number of entries as the input.
       trajectories.push_back(Trajectories());

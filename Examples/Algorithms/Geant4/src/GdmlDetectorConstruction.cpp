@@ -21,3 +21,12 @@ G4VPhysicalVolume* GdmlDetectorConstruction::Construct() {
   parser.Read(m_path);
   return parser.GetWorldVolume();
 }
+
+GdmlDetectorConstructionFactory::GdmlDetectorConstructionFactory(
+    const std::string& path)
+    : m_path{path} {}
+
+std::unique_ptr<G4VUserDetectorConstruction>
+GdmlDetectorConstructionFactory::operator()() const {
+  return std::make_unique<GdmlDetectorConstruction>(m_path);
+}

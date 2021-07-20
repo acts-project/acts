@@ -24,12 +24,12 @@
 #include "CsvOutputData.hpp"
 
 ActsExamples::CsvParticleReader::CsvParticleReader(
-    const ActsExamples::CsvParticleReader::Config& cfg,
-    Acts::Logging::Level lvl)
-    : m_cfg(cfg),
+    const ActsExamples::CsvParticleReader::Config& config,
+    Acts::Logging::Level level)
+    : m_cfg(config),
       m_eventsRange(
-          determineEventFilesRange(cfg.inputDir, cfg.inputStem + ".csv")),
-      m_logger(Acts::getDefaultLogger("CsvParticleReader", lvl)) {
+          determineEventFilesRange(m_cfg.inputDir, m_cfg.inputStem + ".csv")),
+      m_logger(Acts::getDefaultLogger("CsvParticleReader", level)) {
   if (m_cfg.inputStem.empty()) {
     throw std::invalid_argument("Missing input filename stem");
   }

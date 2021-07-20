@@ -8,8 +8,8 @@ target_link_libraries(
     ActsExamplesDetectorDD4hep
     ActsExamplesEventRecording
     ActsExamplesFramework
-    ActsExamplesGeant4
-    ActsExamplesGeant4DD4hep
+    # ActsExamplesGeant4 
+    ActsExamplesGeant4DD4hep # @TODO: Linking against this makes the executable not work
     ActsExamplesIoHepMC3
     Boost::program_options)
     

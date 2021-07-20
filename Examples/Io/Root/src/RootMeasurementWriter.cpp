@@ -28,9 +28,10 @@
 #include <TString.h>
 
 ActsExamples::RootMeasurementWriter::RootMeasurementWriter(
-    const ActsExamples::RootMeasurementWriter::Config& cfg,
-    Acts::Logging::Level lvl)
-    : WriterT(cfg.inputMeasurements, "RootMeasurementWriter", lvl), m_cfg(cfg) {
+    const ActsExamples::RootMeasurementWriter::Config& config,
+    Acts::Logging::Level level)
+    : WriterT(config.inputMeasurements, "RootMeasurementWriter", level),
+      m_cfg(config) {
   // Input container for measurements is already checked by base constructor
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
@@ -77,7 +78,9 @@ ActsExamples::RootMeasurementWriter::RootMeasurementWriter(
       std::move(dTrees));
 }
 
-ActsExamples::RootMeasurementWriter::~RootMeasurementWriter() {
+ActsExamples::RootMeasurementWriter::~RootMeasurementWriter() {}
+
+ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::endRun() {
   /// Close the file if it's yours
   m_outputFile->cd();
   for (auto dTree = m_outputTrees.begin(); dTree != m_outputTrees.end();
@@ -85,10 +88,7 @@ ActsExamples::RootMeasurementWriter::~RootMeasurementWriter() {
     (*dTree)->tree->Write();
   }
   m_outputFile->Close();
-}
 
-ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::endRun() {
-  // Write the tree
   return ProcessCode::SUCCESS;
 }
 

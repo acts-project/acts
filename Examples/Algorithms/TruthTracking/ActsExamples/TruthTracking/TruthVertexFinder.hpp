@@ -28,9 +28,12 @@ class TruthVertexFinder final : public BareAlgorithm {
     bool separateSecondaries = false;
   };
 
-  TruthVertexFinder(const Config& cfg, Acts::Logging::Level lvl);
+  TruthVertexFinder(const Config& cfg, Acts::Logging::Level level);
 
   ProcessCode execute(const AlgorithmContext& ctx) const final;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;

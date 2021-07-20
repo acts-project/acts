@@ -18,12 +18,13 @@
 #include "CsvOutputData.hpp"
 
 ActsExamples::CsvSimHitReader::CsvSimHitReader(
-    const ActsExamples::CsvSimHitReader::Config& cfg, Acts::Logging::Level lvl)
-    : m_cfg(cfg),
+    const ActsExamples::CsvSimHitReader::Config& config,
+    Acts::Logging::Level level)
+    : m_cfg(config),
       // TODO check that all files (hits,cells,truth) exists
       m_eventsRange(
-          determineEventFilesRange(cfg.inputDir, cfg.inputStem + ".csv")),
-      m_logger(Acts::getDefaultLogger("CsvSimHitReader", lvl)) {
+          determineEventFilesRange(m_cfg.inputDir, m_cfg.inputStem + ".csv")),
+      m_logger(Acts::getDefaultLogger("CsvSimHitReader", level)) {
   if (m_cfg.inputStem.empty()) {
     throw std::invalid_argument("Missing input filename stem");
   }

@@ -35,8 +35,8 @@
 
 ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
     AdaptiveMultiVertexFinderAlgorithm(const Config& cfg,
-                                       Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("AdaptiveMultiVertexFinder", lvl),
+                                       Acts::Logging::Level level)
+    : ActsExamples::BareAlgorithm("AdaptiveMultiVertexFinder", level),
       m_cfg(cfg) {
   if (m_cfg.inputTrackParameters.empty()) {
     throw std::invalid_argument("Missing input track parameters collection");

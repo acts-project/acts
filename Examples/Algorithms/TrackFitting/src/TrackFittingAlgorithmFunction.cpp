@@ -30,7 +30,8 @@ using Fitter = Acts::KalmanFitter<Propagator, Updater, Smoother>;
 using DirectPropagator = Acts::Propagator<Stepper, Acts::DirectNavigator>;
 using DirectFitter = Acts::KalmanFitter<DirectPropagator, Updater, Smoother>;
 
-struct TrackFitterFunctionImpl {
+struct TrackFitterFunctionImpl
+    : public ActsExamples::TrackFittingAlgorithm::TrackFitterFunction {
   Fitter trackFitter;
 
   TrackFitterFunctionImpl(Fitter&& f) : trackFitter(std::move(f)) {}
@@ -39,12 +40,13 @@ struct TrackFitterFunctionImpl {
       const std::vector<ActsExamples::IndexSourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingAlgorithm::TrackFitterOptions& options)
-      const {
+      const override {
     return trackFitter.fit(sourceLinks, initialParameters, options);
   };
 };
 
-struct DirectedFitterFunctionImpl {
+struct DirectedFitterFunctionImpl
+    : public ActsExamples::TrackFittingAlgorithm::DirectedTrackFitterFunction {
   DirectFitter fitter;
   DirectedFitterFunctionImpl(DirectFitter&& f) : fitter(std::move(f)) {}
 
@@ -52,14 +54,14 @@ struct DirectedFitterFunctionImpl {
       const std::vector<ActsExamples::IndexSourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingAlgorithm::TrackFitterOptions& options,
-      const std::vector<const Acts::Surface*>& sSequence) const {
+      const std::vector<const Acts::Surface*>& sSequence) const override {
     return fitter.fit(sourceLinks, initialParameters, options, sSequence);
   };
 };
 
 }  // namespace
 
-ActsExamples::TrackFittingAlgorithm::TrackFitterFunction
+std::shared_ptr<ActsExamples::TrackFittingAlgorithm::TrackFitterFunction>
 ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField) {
@@ -73,10 +75,11 @@ ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
   Fitter trackFitter(std::move(propagator));
 
   // build the fitter functions. owns the fitter object.
-  return TrackFitterFunctionImpl(std::move(trackFitter));
+  return std::make_shared<TrackFitterFunctionImpl>(std::move(trackFitter));
 }
 
-ActsExamples::TrackFittingAlgorithm::DirectedTrackFitterFunction
+std::shared_ptr<
+    ActsExamples::TrackFittingAlgorithm::DirectedTrackFitterFunction>
 ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField) {
   // construct all components for the fitter
@@ -86,5 +89,5 @@ ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
   DirectFitter fitter(std::move(propagator));
 
   // build the fitter functions. owns the fitter object.
-  return DirectedFitterFunctionImpl(std::move(fitter));
+  return std::make_shared<DirectedFitterFunctionImpl>(std::move(fitter));
 }

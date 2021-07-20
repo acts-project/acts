@@ -56,9 +56,9 @@ class CsvMeasurementWriter final : public WriterT<MeasurementContainer> {
   };
 
   /// Constructor with
-  /// @param cfg configuration struct
-  /// @param output logging level
-  CsvMeasurementWriter(const Config& cfg, Acts::Logging::Level lvl);
+  /// @param config configuration struct
+  /// @param level logging level
+  CsvMeasurementWriter(const Config& config, Acts::Logging::Level level);
 
   /// Virtual destructor
   ~CsvMeasurementWriter() final override;

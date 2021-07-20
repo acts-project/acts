@@ -71,6 +71,8 @@ void ObjVisualization3D<T>::faces(const std::vector<Vector3>& vtxs,
 template <typename T>
 void ObjVisualization3D<T>::write(const std::string& path) const {
   std::ofstream os;
+  os.exceptions(os.exceptions() | std::ios::failbit);
+
   std::string objectpath = path;
   if (not IVisualization3D::hasExtension(objectpath)) {
     objectpath += std::string(".obj");

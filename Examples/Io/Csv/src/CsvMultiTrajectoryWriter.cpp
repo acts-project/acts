@@ -21,10 +21,10 @@
 using namespace ActsExamples;
 
 CsvMultiTrajectoryWriter::CsvMultiTrajectoryWriter(
-    const CsvMultiTrajectoryWriter::Config& cfg, Acts::Logging::Level level)
-    : WriterT<TrajectoriesContainer>(cfg.inputTrajectories,
+    const CsvMultiTrajectoryWriter::Config& config, Acts::Logging::Level level)
+    : WriterT<TrajectoriesContainer>(config.inputTrajectories,
                                      "CsvMultiTrajectoryWriter", level),
-      m_cfg(cfg) {
+      m_cfg(config) {
   if (m_cfg.inputTrajectories.empty()) {
     throw std::invalid_argument("Missing input trajectories collection");
   }

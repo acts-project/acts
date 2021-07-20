@@ -18,8 +18,8 @@
 #include <vector>
 
 ActsExamples::TruthVertexFinder::TruthVertexFinder(const Config& cfg,
-                                                   Acts::Logging::Level lvl)
-    : BareAlgorithm("TruthVertexFinder", lvl), m_cfg(cfg) {
+                                                   Acts::Logging::Level level)
+    : BareAlgorithm("TruthVertexFinder", level), m_cfg(cfg) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input truth particles collection");
   }

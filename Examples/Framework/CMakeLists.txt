@@ -32,3 +32,7 @@ target_compile_features(
 install(
   TARGETS ActsExamplesFramework
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+# if(ACTS_BUILD_PLUGIN_PYTHON)
+# pybind11_add_module()
+# endif()

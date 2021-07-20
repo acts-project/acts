@@ -79,24 +79,12 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
     std::string rhotag = "rho";
     /// The name of the output file
     std::string fileName = "material-maps.root";
-    /// The default logger
-    std::shared_ptr<const Acts::Logger> logger;
-    // The name of the writer
-    std::string name = "";
-
-    /// Constructor
-    ///
-    /// @param lname Name of the writer tool
-    /// @param lvl The output logging level
-    Config(const std::string& lname = "MaterialReader",
-           Acts::Logging::Level lvl = Acts::Logging::INFO)
-        : logger(Acts::getDefaultLogger(lname, lvl)), name(lname) {}
   };
 
   /// Constructor
   ///
   /// @param cfg configuration struct for the reader
-  RootMaterialDecorator(const Config& cfg);
+  RootMaterialDecorator(const Config& config, Acts::Logging::Level level);
 
   /// Destructor
   ~RootMaterialDecorator();
@@ -135,6 +123,8 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
   /// The config class
   Config m_cfg;
 
+  std::unique_ptr<const Acts::Logger> m_logger{nullptr};
+
   /// The input file
   TFile* m_inputFile{nullptr};
 
@@ -147,7 +137,7 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
   bool m_clearSurfaceMaterial{true};
 
   /// Private access to the logging instance
-  const Acts::Logger& logger() const { return *m_cfg.logger; }
+  const Acts::Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace ActsExamples

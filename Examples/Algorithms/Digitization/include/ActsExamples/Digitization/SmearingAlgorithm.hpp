@@ -34,7 +34,7 @@ class SmearingAlgorithm final : public BareAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  SmearingAlgorithm(DigitizationConfig cfg, Acts::Logging::Level lvl);
+  SmearingAlgorithm(DigitizationConfig config, Acts::Logging::Level level);
 
   /// Build measurement from simulation hits at input.
   ///

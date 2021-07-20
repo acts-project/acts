@@ -57,9 +57,12 @@ class ParticleSelector final : public BareAlgorithm {
   /// Construct particle selector config from user variables.
   static Config readConfig(const Options::Variables& vars);
 
-  ParticleSelector(const Config& cfg, Acts::Logging::Level lvl);
+  ParticleSelector(const Config& cfg, Acts::Logging::Level level);
 
   ProcessCode execute(const AlgorithmContext& ctx) const final;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;

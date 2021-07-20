@@ -46,10 +46,13 @@ class CsvMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
   };
 
   /// constructor
-  /// @param cfg is the configuration object
-  /// @parm level is the output logging level
-  CsvMultiTrajectoryWriter(const Config& cfg,
+  /// @param config is the configuration object
+  /// @param level is the output logging level
+  CsvMultiTrajectoryWriter(const Config& config,
                            Acts::Logging::Level level = Acts::Logging::INFO);
+
+  /// Readonly access to the config
+  const Config& config() const { return m_cfg; }
 
  protected:
   /// @brief Write method called by the base class

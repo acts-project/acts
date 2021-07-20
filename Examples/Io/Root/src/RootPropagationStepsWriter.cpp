@@ -68,12 +68,7 @@ ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
   m_outputTree->Branch("step_usr", &m_step_usr);
 }
 
-ActsExamples::RootPropagationStepsWriter::~RootPropagationStepsWriter() {
-  /// Close the file if it's yours
-  if (m_cfg.rootFile == nullptr) {
-    m_outputFile->Close();
-  }
-}
+ActsExamples::RootPropagationStepsWriter::~RootPropagationStepsWriter() {}
 
 ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::endRun() {
   // Write the tree
@@ -81,6 +76,10 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::endRun() {
   m_outputTree->Write();
   ACTS_VERBOSE("Wrote particles to tree '" << m_cfg.treeName << "' in '"
                                            << m_cfg.filePath << "'");
+  /// Close the file if it's yours
+  if (m_cfg.rootFile == nullptr) {
+    m_outputFile->Close();
+  }
   return ProcessCode::SUCCESS;
 }
 

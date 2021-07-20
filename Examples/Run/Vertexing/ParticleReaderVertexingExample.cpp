@@ -88,7 +88,8 @@ int main(int argc, char* argv[]) {
       std::make_shared<TrackParametersPrinter>(printTracks, logLevel));
 
   // find vertices
-  IterativeVertexFinderAlgorithm::Config findVertices(magneticField);
+  IterativeVertexFinderAlgorithm::Config findVertices;
+  findVertices.bField = magneticField;
   findVertices.inputTrackParameters = smearParticles.outputTrackParameters;
   findVertices.outputProtoVertices = "protovertices";
   sequencer.addAlgorithm(

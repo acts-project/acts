@@ -223,6 +223,10 @@ class PolymorphicValue {
             typename = std::enable_if_t<!std::is_same_v<_U, _T> &&
                                         std::is_convertible_v<_U*, _T*>>>
   PolymorphicValue(const PolymorphicValue<U>& other) {
+    if (!other.m_controlBlock) {
+      reset();
+      return;
+    }
     auto cbTmp = std::move(m_controlBlock);
     m_controlBlock = std::make_unique<
         detail::PolymorphicValue::DelegatingControlBlock<T, U>>(
@@ -242,6 +246,10 @@ class PolymorphicValue {
             typename = std::enable_if_t<!std::is_same_v<_U, _T> &&
                                         std::is_convertible_v<_U*, _T*>>>
   PolymorphicValue(PolymorphicValue<U>&& other) {
+    if (!other.m_controlBlock) {
+      reset();
+      return;
+    }
     auto cbTmp = std::move(m_controlBlock);
     m_controlBlock = std::make_unique<
         detail::PolymorphicValue::DelegatingControlBlock<T, U>>(
@@ -302,6 +310,10 @@ class PolymorphicValue {
             typename = std::enable_if_t<!std::is_same_v<_U, _T> &&
                                         std::is_convertible_v<_U*, _T*>>>
   PolymorphicValue& operator=(const PolymorphicValue<U>& other) {
+    if (!other.m_controlBlock) {
+      reset();
+      return *this;
+    }
     auto cbTmp = std::move(m_controlBlock);
     m_controlBlock = std::make_unique<
         detail::PolymorphicValue::DelegatingControlBlock<T, U>>(
@@ -322,6 +334,10 @@ class PolymorphicValue {
             typename = std::enable_if_t<!std::is_same_v<_U, _T> &&
                                         std::is_convertible_v<_U*, _T*>>>
   PolymorphicValue& operator=(PolymorphicValue<U>&& other) {
+    if (!other.m_controlBlock) {
+      reset();
+      return *this;
+    }
     auto cbTmp = std::move(m_controlBlock);
     m_controlBlock = std::make_unique<
         detail::PolymorphicValue::DelegatingControlBlock<T, U>>(
@@ -336,6 +352,10 @@ class PolymorphicValue {
   ///
   /// @param other The other polymocphic value
   PolymorphicValue(const PolymorphicValue& other) {
+    if (!other.m_controlBlock) {
+      reset();
+      return;
+    }
     auto cbTmp = std::move(m_controlBlock);
     m_controlBlock = other.m_controlBlock->clone();
     m_pointer = m_controlBlock->pointer();
@@ -346,6 +366,10 @@ class PolymorphicValue {
   ///
   /// @param other The other polymocphic value
   PolymorphicValue& operator=(const PolymorphicValue& other) {
+    if (!other.m_controlBlock) {
+      reset();
+      return *this;
+    }
     auto cbTmp = std::move(m_controlBlock);
     m_controlBlock = other.m_controlBlock->clone();
     m_pointer = m_controlBlock->pointer();
@@ -357,6 +381,10 @@ class PolymorphicValue {
   ///
   /// @param other The other polymocphic value
   PolymorphicValue(PolymorphicValue&& other) {
+    if (!other.m_controlBlock) {
+      reset();
+      return;
+    }
     auto cbTmp = std::move(m_controlBlock);
     m_controlBlock = std::move(other.m_controlBlock);
     m_pointer = m_controlBlock->pointer();
@@ -368,6 +396,10 @@ class PolymorphicValue {
   ///
   /// @param other The other polymocphic value
   PolymorphicValue& operator=(PolymorphicValue&& other) {
+    if (!other.m_controlBlock) {
+      reset();
+      return *this;
+    }
     auto cbTmp = std::move(m_controlBlock);
     m_controlBlock = std::move(other.m_controlBlock);
     m_pointer = m_controlBlock->pointer();

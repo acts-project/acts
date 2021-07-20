@@ -98,11 +98,10 @@ int processGeometry(int argc, char* argv[],
     if (vm["output-obj"].as<bool>()) {
       // Configure the tracking geometry writer
       auto tgObjWriterConfig =
-          ActsExamples::Options::readObjTrackingGeometryWriterConfig(
-              vm, "ObjTrackingGeometryWriter", volumeLogLevel);
+          ActsExamples::Options::readObjTrackingGeometryWriterConfig(vm);
       auto tgObjWriter =
           std::make_shared<ActsExamples::ObjTrackingGeometryWriter>(
-              tgObjWriterConfig);
+              tgObjWriterConfig, volumeLogLevel);
       // Write the tracking geometry object
       tgObjWriter->write(context, *tGeometry);
     }
@@ -141,19 +140,16 @@ int processGeometry(int argc, char* argv[],
 
     if (!materialFileName.empty() and vm["output-root"].template as<bool>()) {
       // The writer of the indexed material
-      ActsExamples::RootMaterialWriter::Config rmwConfig("MaterialWriter");
-      rmwConfig.fileName = materialFileName + ".root";
-      ActsExamples::RootMaterialWriter rmwImpl(rmwConfig);
+      ActsExamples::RootMaterialWriter::Config rmwConfig;
+      rmwConfig.filePath = materialFileName + ".root";
+      ActsExamples::RootMaterialWriter rmwImpl(rmwConfig, logLevel);
       rmwImpl.write(*tGeometry);
     }
 
     if (!materialFileName.empty() and (vm["output-json"].template as<bool>() or
                                        vm["output-cbor"].template as<bool>())) {
-      /// The name of the output file
-      std::string fileName = vm["mat-output-file"].template as<std::string>();
       // the material writer
-      Acts::MaterialMapJsonConverter::Config jmConverterCfg(
-          "MaterialMapJsonConverter", Acts::Logging::INFO);
+      Acts::MaterialMapJsonConverter::Config jmConverterCfg;
       jmConverterCfg.processSensitives =
           vm["mat-output-sensitives"].template as<bool>();
       jmConverterCfg.processApproaches =
@@ -182,7 +178,8 @@ int processGeometry(int argc, char* argv[],
       }
       jmWriterCfg.writeFormat = format;
 
-      ActsExamples::JsonMaterialWriter jmwImpl(std::move(jmWriterCfg));
+      ActsExamples::JsonMaterialWriter jmwImpl(std::move(jmWriterCfg),
+                                               logLevel);
 
       jmwImpl.write(*tGeometry);
     }

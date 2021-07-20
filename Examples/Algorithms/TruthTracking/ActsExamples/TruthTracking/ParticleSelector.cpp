@@ -73,8 +73,8 @@ ActsExamples::ParticleSelector::readConfig(const Options::Variables& vars) {
 }
 
 ActsExamples::ParticleSelector::ParticleSelector(const Config& cfg,
-                                                 Acts::Logging::Level lvl)
-    : BareAlgorithm("ParticleSelector", lvl), m_cfg(cfg) {
+                                                 Acts::Logging::Level level)
+    : BareAlgorithm("ParticleSelector", level), m_cfg(cfg) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input particles collection");
   }

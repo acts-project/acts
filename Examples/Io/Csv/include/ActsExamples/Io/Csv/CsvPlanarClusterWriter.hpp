@@ -53,9 +53,12 @@ class CsvPlanarClusterWriter final
 
   /// Construct the cluster writer.
   ///
-  /// @params cfg is the configuration object
-  /// @params lvl is the logging level
-  CsvPlanarClusterWriter(const Config& cfg, Acts::Logging::Level lvl);
+  /// @param config is the configuration object
+  /// @param level is the logging level
+  CsvPlanarClusterWriter(const Config& config, Acts::Logging::Level level);
+
+  /// Readonly access to the config
+  const Config& config() const { return m_cfg; }
 
  protected:
   /// Type-specific write implementation.

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
@@ -25,6 +26,14 @@ struct GenericDetector : public ActsExamples::IBaseDetector {
   using DetectorElementPtr = std::shared_ptr<DetectorElement>;
   using DetectorStore = std::vector<std::vector<DetectorElementPtr>>;
 
+  struct Config {
+    size_t buildLevel{3};
+    Acts::Logging::Level surfaceLogLevel{Acts::Logging::INFO};
+    Acts::Logging::Level layerLogLevel{Acts::Logging::INFO};
+    Acts::Logging::Level volumeLogLevel{Acts::Logging::INFO};
+    bool buildProto{false};
+  };
+
   /// The Store of the detector elements (lifetime: job)
   DetectorStore detectorStore;
 
@@ -34,4 +43,8 @@ struct GenericDetector : public ActsExamples::IBaseDetector {
   std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
   finalize(const boost::program_options::variables_map& vm,
            std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) override;
+
+  std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
+  finalize(const Config& cfg,
+           std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
 };

@@ -37,15 +37,19 @@ class JsonMaterialDecorator : public IMaterialDecorator {
 
   JsonMaterialDecorator(const MaterialMapJsonConverter::Config& rConfig,
                         const std::string& jFileName,
+                        Acts::Logging::Level level,
                         bool clearSurfaceMaterial = true,
                         bool clearVolumeMaterial = true)
       : m_readerConfig(rConfig),
         m_clearSurfaceMaterial(clearSurfaceMaterial),
         m_clearVolumeMaterial(clearVolumeMaterial) {
     // the material reader
-    Acts::MaterialMapJsonConverter jmConverter(rConfig);
+    Acts::MaterialMapJsonConverter jmConverter(rConfig, level);
 
     std::ifstream ifj(jFileName.c_str());
+    if (!ifj.good()) {
+      throw std::runtime_error{"Unable to open input JSON material file"};
+    }
     nlohmann::json jin;
 
     if (jFileName.find(".cbor") != std::string::npos) {

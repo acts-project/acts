@@ -30,9 +30,10 @@
 #include "CsvOutputData.hpp"
 
 ActsExamples::CsvMeasurementWriter::CsvMeasurementWriter(
-    const ActsExamples::CsvMeasurementWriter::Config& cfg,
-    Acts::Logging::Level lvl)
-    : WriterT(cfg.inputMeasurements, "CsvMeasurementWriter", lvl), m_cfg(cfg) {
+    const ActsExamples::CsvMeasurementWriter::Config& config,
+    Acts::Logging::Level level)
+    : WriterT(config.inputMeasurements, "CsvMeasurementWriter", level),
+      m_cfg(config) {
   // Input container for measurements is already checked by base constructor
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");

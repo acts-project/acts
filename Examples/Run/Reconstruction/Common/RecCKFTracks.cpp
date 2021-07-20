@@ -200,8 +200,7 @@ int runRecCKFTracks(int argc, char* argv[],
     tfPerfCfg.inputParticles = inputParticles;
     tfPerfCfg.inputMeasurementParticlesMap =
         digiCfg.outputMeasurementParticlesMap;
-    tfPerfCfg.outputDir = outputDir;
-    tfPerfCfg.outputFilename = "performance_seeding_trees.root";
+    tfPerfCfg.filePath = outputDir + "/performance_seeding_trees.root";
     sequencer.addWriter(
         std::make_shared<TrackFinderPerformanceWriter>(tfPerfCfg, logLevel));
 
@@ -261,9 +260,8 @@ int runRecCKFTracks(int argc, char* argv[],
       digiCfg.outputMeasurementParticlesMap;
   trackStatesWriter.inputMeasurementSimHitsMap =
       digiCfg.outputMeasurementSimHitsMap;
-  trackStatesWriter.outputDir = outputDir;
-  trackStatesWriter.outputFilename = "trackstates_ckf.root";
-  trackStatesWriter.outputTreename = "trackstates";
+  trackStatesWriter.filePath = outputDir + "/trackstates_ckf.root";
+  trackStatesWriter.treeName = "trackstates";
   sequencer.addWriter(std::make_shared<RootTrajectoryStatesWriter>(
       trackStatesWriter, logLevel));
 
@@ -277,9 +275,8 @@ int runRecCKFTracks(int argc, char* argv[],
   trackSummaryWriter.inputParticles = particleReader.outputParticles;
   trackSummaryWriter.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
-  trackSummaryWriter.outputDir = outputDir;
-  trackSummaryWriter.outputFilename = "tracksummary_ckf.root";
-  trackSummaryWriter.outputTreename = "tracksummary";
+  trackSummaryWriter.filePath = outputDir + "/tracksummary_ckf.root";
+  trackSummaryWriter.treeName = "tracksummary";
   sequencer.addWriter(std::make_shared<RootTrajectorySummaryWriter>(
       trackSummaryWriter, logLevel));
 

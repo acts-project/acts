@@ -34,9 +34,6 @@ int main(int argc, char* argv[]) {
   }
   auto gdmlFile = vm["gdml-file"].as<std::string>();
 
-  // Setup the GDML detector
-  Acts::PolymorphicValue<G4VUserDetectorConstruction> g4detector =
-      Acts::makePolymorphicValue<GdmlDetectorConstruction>(gdmlFile);
-
-  return runGeantinoRecording(vm, std::move(g4detector));
+  return runGeantinoRecording(
+      vm, std::make_unique<GdmlDetectorConstructionFactory>(gdmlFile));
 }

@@ -27,12 +27,13 @@
 #include "CsvOutputData.hpp"
 
 ActsExamples::CsvMeasurementReader::CsvMeasurementReader(
-    const ActsExamples::CsvMeasurementReader::Config& cfg,
-    Acts::Logging::Level lvl)
-    : m_cfg(cfg),
+    const ActsExamples::CsvMeasurementReader::Config& config,
+    Acts::Logging::Level level)
+    : m_cfg(config),
       // TODO check that all files (hits,cells,truth) exists
-      m_eventsRange(determineEventFilesRange(cfg.inputDir, "measurements.csv")),
-      m_logger(Acts::getDefaultLogger("CsvMeasurementReader", lvl)) {
+      m_eventsRange(
+          determineEventFilesRange(m_cfg.inputDir, "measurements.csv")),
+      m_logger(Acts::getDefaultLogger("CsvMeasurementReader", level)) {
   if (m_cfg.outputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurement output collection");
   }

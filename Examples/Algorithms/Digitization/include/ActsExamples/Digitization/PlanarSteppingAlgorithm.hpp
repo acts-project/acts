@@ -52,15 +52,18 @@ class PlanarSteppingAlgorithm final : public BareAlgorithm {
 
   /// Construct the digitization algorithm.
   ///
-  /// @param cfg is the algorithm configuration
-  /// @param lvl is the logging level
-  PlanarSteppingAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  /// @param config is the algorithm configuration
+  /// @param level is the logging level
+  PlanarSteppingAlgorithm(Config config, Acts::Logging::Level level);
 
   /// Build clusters from input simulation hits.
   ///
   /// @param txt is the algorithm context with event information
   /// @return a process code indication success or failure
   ProcessCode execute(const AlgorithmContext& ctx) const final override;
+
+  /// Readonly access to the config
+  const Config& config() const { return m_cfg; }
 
  private:
   struct Digitizable {

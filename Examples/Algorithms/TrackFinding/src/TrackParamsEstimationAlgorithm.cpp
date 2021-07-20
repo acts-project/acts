@@ -145,6 +145,7 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
 
 ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
+  ACTS_VERBOSE("TrackParamsEstimationAlgorithm::execute");
   // Read source links (necesary for retrieving the geometry identifer)
   const auto& sourceLinks =
       ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
@@ -153,6 +154,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
   SimSpacePointContainer spacePoints;
   if (not m_cfg.inputSeeds.empty()) {
     seeds = ctx.eventStore.get<SimSeedContainer>(m_cfg.inputSeeds);
+    ACTS_VERBOSE("Read " << seeds.size() << " seeds");
   } else {
     const auto& protoTracks =
         ctx.eventStore.get<ProtoTrackContainer>(m_cfg.inputProtoTracks);
@@ -161,6 +163,8 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       std::copy(sps.begin(), sps.end(), std::back_inserter(spacePoints));
     }
     seeds = createSeeds(protoTracks, spacePoints);
+    ACTS_VERBOSE("Read " << protoTracks.size() << " proto tracks, and created "
+                         << seeds.size() << " seeds");
   }
 
   TrackParametersContainer trackParameters;
@@ -216,6 +220,9 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       tracks.emplace_back(track);
     }
   }
+  ACTS_VERBOSE("Estimated " << trackParameters.size()
+                            << " track parameters and " << tracks.size()
+                            << " tracks");
 
   ctx.eventStore.add(m_cfg.outputTrackParameters, std::move(trackParameters));
   ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(tracks));
