@@ -9,7 +9,7 @@
 /// @file MagneticFieldInterfaceConsistencyTests.cpp
 
 #include <boost/test/data/test_case.hpp>
-#include <boost/test/floating_point_comparison.hpp>
+#include <boost/test/tools/floating_point_comparison.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
