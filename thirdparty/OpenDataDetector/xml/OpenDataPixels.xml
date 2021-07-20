@@ -25,7 +25,7 @@
         <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="145.*mm" gap="7.2*mm" nphi="32" z_offset="+6.1*mm" material="Ti" vis="orange"/>
         <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="170.*mm" gap="8.4*mm" nphi="32" z_offset="+4.*mm" material="Ti" vis="orange"/>
         <layer id="0" name="PixelEndcapN0" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="-620.*mm" vis="invisible">
-          <surface_binning nr=2 nphi=36/>
+          <surface_binning nr="2" nphi="36"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
         </layer>
         <layer id="1" name="PixelEndcapN1" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="-720.*mm" vis="invisible">
@@ -139,7 +139,7 @@
         <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="145.*mm" gap="7.2*mm" nphi="32" z_offset="-6.1*mm" material="Ti" vis="orange"/>
         <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="170.*mm" gap="8.4*mm" nphi="32" z_offset="-4.*mm" material="Ti" vis="orange"/>
         <layer id="0" name="PixelEndcapP0" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="620.*mm" vis="invisible">
-          <surface_binning nr=2 nphi=36/>
+          <surface_binning nr="2" nphi="36"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
         </layer>
         <layer id="1" name="PixelEndcapP1" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="720.*mm" vis="invisible">
