@@ -551,7 +551,8 @@ void collectSubDetectors_dd4hep(dd4hep::DetElement& detElement,
     }
     if ((detExtension != nullptr) &&
         (detExtension->hasType("barrel", "detector") ||
-         detExtension->hasType("beampipe", "layer"))) {
+         detExtension->hasType("beampipe", "layer") ||
+         detExtension->hasType("passive cylinder", "layer"))) {
       subdetectors.push_back(childDetElement);
       continue;
     }
