@@ -50,6 +50,7 @@ ExternalProject_Add(
   LOG_BUILD true
   SOURCE_DIR ${Boost_SOURCE_DIR}
   BUILD_IN_SOURCE true
+  EXCLUDE_FROM_ALL true
 )
 
 # Target for Boost::filesystem
@@ -65,13 +66,14 @@ ExternalProject_Add(
   LOG_BUILD true
   BUILD_IN_SOURCE true
   BUILD_BYPRODUCTS ${Boost_LIBRARY_DIR}/libboost_filesystem.so.${_acts_boost_version}
+  EXCLUDE_FROM_ALL true
 )
 
 add_library(boost_filesystem SHARED IMPORTED GLOBAL)
 set_target_properties(boost_filesystem PROPERTIES IMPORTED_LOCATION ${Boost_LIBRARY_DIR}/libboost_filesystem.so.${_acts_boost_version})
 add_dependencies(boost_filesystem boost_build_filesystem)
 add_library(Boost::filesystem ALIAS boost_filesystem)
-install(FILES ${Boost_LIBRARY_DIR}/libboost_filesystem.so.${_acts_boost_version} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES ${Boost_LIBRARY_DIR}/libboost_filesystem.so.${_acts_boost_version} DESTINATION ${CMAKE_INSTALL_LIBDIR} OPTIONAL)
 
 # Target for Boost::program_options
 
@@ -86,13 +88,14 @@ ExternalProject_Add(
   LOG_BUILD true
   BUILD_IN_SOURCE true
   BUILD_BYPRODUCTS ${Boost_LIBRARY_DIR}/libboost_program_options.so.${_acts_boost_version}
+  EXCLUDE_FROM_ALL true
 )
 
 add_library(boost_program_options SHARED IMPORTED GLOBAL)
 set_target_properties(boost_program_options PROPERTIES IMPORTED_LOCATION ${Boost_LIBRARY_DIR}/libboost_program_options.so.${_acts_boost_version})
 add_dependencies(boost_program_options boost_build_program_options)
 add_library(Boost::program_options ALIAS boost_program_options)
-install(FILES ${Boost_LIBRARY_DIR}/libboost_program_options.so.${_acts_boost_version} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES ${Boost_LIBRARY_DIR}/libboost_program_options.so.${_acts_boost_version} DESTINATION ${CMAKE_INSTALL_LIBDIR} OPTIONAL)
 
 # Target for Boost::unit_test_framework
 
@@ -107,11 +110,12 @@ ExternalProject_Add(
   LOG_BUILD true
   BUILD_IN_SOURCE true
   BUILD_BYPRODUCTS ${Boost_LIBRARY_DIR}/libboost_unit_test_framework.so.${_acts_boost_version}
+  EXCLUDE_FROM_ALL true
 )
 
 add_library(boost_unit_test_framework SHARED IMPORTED GLOBAL)
 set_target_properties(boost_unit_test_framework PROPERTIES IMPORTED_LOCATION ${Boost_LIBRARY_DIR}/libboost_unit_test_framework.so.${_acts_boost_version})
 add_dependencies(boost_unit_test_framework boost_build_unit_test_framework)
 add_library(Boost::unit_test_framework ALIAS boost_unit_test_framework)
-install(FILES ${Boost_LIBRARY_DIR}/libboost_unit_test_framework.so.${_acts_boost_version} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES ${Boost_LIBRARY_DIR}/libboost_unit_test_framework.so.${_acts_boost_version} DESTINATION ${CMAKE_INSTALL_LIBDIR} OPTIONAL)
 
