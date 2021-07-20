@@ -27,6 +27,7 @@ ExternalProject_Add(
 add_library(Boost::boost INTERFACE IMPORTED GLOBAL)
 add_dependencies(Boost::boost boost)
 target_include_directories(Boost::boost INTERFACE ${Boost_INCLUDE_DIR})
+install(DIRECTORY ${Boost_INCLUDE_DIR}/boost DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 # Target for bootstrap step
 
