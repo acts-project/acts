@@ -193,7 +193,7 @@ void writeCylinderLayerVolume(
     // Close up volume
     lvWriter.append(llvDims);
   }
-};
+}
 
 /// Write a single surface.
 void writeBoundarySurface(SurfaceWriter& writer,
