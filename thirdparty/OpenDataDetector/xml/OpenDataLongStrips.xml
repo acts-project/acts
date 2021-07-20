@@ -37,27 +37,27 @@
           <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="1092.*mm" gap="23.85*mm" nphi="72" z_offset="0.*mm" material="Ti" vis="orange"/>
         </ring>
         <layer id="0" name="LongStripEndcapN0" rmin="720.*mm" rmax="1095.*mm" dz="100.*mm" z_offset="-1300.*mm" vis="invisible">
-           <surface_binning nr=2 nphi=48/>
+           <surface_binning nr="2" nphi="48"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_lst_endcap_bR"/>
         </layer>
         <layer id="1" name="LongStripEndcapN2" rmin="720.*mm" rmax="1095.*mm" dz="100.*mm" z_offset="-1600.*mm" vis="invisible">
-           <surface_binning nr=2 nphi=48/>
+           <surface_binning nr="2" nphi="48"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_lst_endcap_bR"/>
         </layer>
         <layer id="2" name="LongStripEndcapN3" rmin="720.*mm" rmax="1095.*mm" dz="100.*mm" z_offset="-1900.*mm" vis="invisible">
-           <surface_binning nr=2 nphi=48/>
+           <surface_binning nr="2" nphi="48"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_lst_endcap_bR"/>
         </layer>
         <layer id="2" name="LongStripEndcapN4" rmin="720.*mm" rmax="1095.*mm" dz="100.*mm" z_offset="-2250.*mm" vis="invisible">
-           <surface_binning nr=2 nphi=48/>
+           <surface_binning nr="2" nphi="48"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_lst_endcap_bR"/>
         </layer>
         <layer id="3" name="LongStripEndcapN5" rmin="720.*mm" rmax="1095.*mm" dz="100.*mm" z_offset="-2600.*mm" vis="invisible">
-           <surface_binning nr=2 nphi=48/>
+           <surface_binning nr="2" nphi="48"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_lst_endcap_bR"/>
         </layer>
         <layer id="4" name="LongStripEndcapN6" rmin="720.*mm" rmax="1095.*mm" dz="100.*mm" z_offset="-3000.*mm" vis="invisible">
-           <surface_binning nr=2 nphi=48/>
+           <surface_binning nr="2" nphi="48"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_lst_endcap_bR"/>
         </layer>
         <services>
@@ -156,27 +156,27 @@
           <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="1092.*mm" gap="23.85*mm" nphi="72" z_offset="0.*mm" material="Ti" vis="orange"/>
         </ring>
         <layer id="0" name="LongStripEndcapP0" rmin="720.*mm" rmax="1095.*mm" dz="100.*mm" z_offset="1300.*mm" vis="invisible">
-           <surface_binning nr=2 nphi=48/>
+           <surface_binning nr="2" nphi="48"/>
            <layer_material surface="representing" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_lst_endcap_bR"/>
         </layer>
         <layer id="1" name="LongStripEndcapP2" rmin="720.*mm" rmax="1095.*mm" dz="100.*mm" z_offset="1600.*mm" vis="invisible">
-           <surface_binning nr=2 nphi=48/>
+           <surface_binning nr="2" nphi="48"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_lst_endcap_bR"/>
         </layer>
         <layer id="2" name="LongStripEndcapP3" rmin="720.*mm" rmax="1095.*mm" dz="100.*mm" z_offset="1900.*mm" vis="invisible">
-           <surface_binning nr=2 nphi=48/>
+           <surface_binning nr="2" nphi="48"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_lst_endcap_bR"/>
         </layer>
         <layer id="2" name="LongStripEndcapP4" rmin="720.*mm" rmax="1095.*mm" dz="100.*mm" z_offset="2250.*mm" vis="invisible">
-           <surface_binning nr=2 nphi=48/>
+           <surface_binning nr="2" nphi="48"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_lst_endcap_bR"/>
         </layer>
         <layer id="3" name="LongStripEndcapP5" rmin="720.*mm" rmax="1095.*mm" dz="100.*mm" z_offset="2600.*mm" vis="invisible">
-           <surface_binning nr=2 nphi=48/>
+           <surface_binning nr="2" nphi="48"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_lst_endcap_bR"/>
         </layer>
         <layer id="4" name="LongStripEndcapP6" rmin="720.*mm" rmax="1095.*mm" dz="100.*mm" z_offset="3000.*mm" vis="invisible">
-           <surface_binning nr=2 nphi=48/>
+           <surface_binning nr="2" nphi="48"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_lst_endcap_bR"/>
         </layer>
         <services>

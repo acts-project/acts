@@ -34,27 +34,27 @@
           <support name="SupportRing1" rmin="670.*mm" rmax="710.*mm" dz="2.*mm" z_offset="0.*mm" material="CarbonFiber" vis="CarbonFiber"/>
         </ring>
         <layer id="0" name="ShortStripEndcapN0" rmin="210.*mm" rmax="715.*mm" dz="50.*mm" z_offset="-1300.*mm" vis="invisible">
-          <surface_binning nr=3 nphi=42/>
+          <surface_binning nr="3" nphi="42"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
         </layer>
         <layer id="1" name="ShortStripEndcapN2" rmin="210.*mm" rmax="715.*mm" dz="50.*mm" z_offset="-1550.*mm" vis="invisible">
-          <surface_binning nr=3 nphi=42/>
+          <surface_binning nr="3" nphi="42"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
         </layer>
         <layer id="2" name="ShortStripEndcapN3" rmin="210.*mm" rmax="715.*mm" dz="50.*mm" z_offset="-1850.*mm" vis="invisible">
-          <surface_binning nr=3 nphi=42/>
+          <surface_binning nr="3" nphi="42"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
         </layer>
         <layer id="3" name="ShortStripEndcapN4" rmin="210.*mm" rmax="715.*mm" dz="50.*mm" z_offset="-2200.*mm" vis="invisible">
-          <surface_binning nr=3 nphi=42/>
+          <surface_binning nr="3" nphi="42"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
         </layer>
         <layer id="4" name="ShortStripEndcapN5" rmin="210.*mm" rmax="715.*mm" dz="50.*mm" z_offset="-2550.*mm" vis="invisible">
-          <surface_binning nr=3 nphi=42/>
+          <surface_binning nr="3" nphi="42"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
         </layer>
         <layer id="5" name="ShortStripEndcapN6" rmin="210.*mm" rmax="715.*mm" dz="50.*mm" z_offset="-2950.*mm" vis="invisible">
-          <surface_binning nr=3 nphi=42/>
+          <surface_binning nr="3" nphi="42"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
         </layer>
         <services>
@@ -149,27 +149,27 @@
           <support name="SupportRing1" rmin="670.*mm" rmax="710.*mm" dz="2.*mm" z_offset="0.*mm" material="CarbonFiber" vis="CarbonFiber"/>
         </ring>
         <layer id="0" name="ShortStripEndcapP0" rmin="210.*mm" rmax="715.*mm" dz="50.*mm" z_offset="1300.*mm" vis="invisible">
-          <surface_binning nr=3 nphi=42/>
+          <surface_binning nr="3" nphi="42"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
         </layer>
         <layer id="1" name="ShortStripEndcapP2" rmin="210.*mm" rmax="715.*mm" dz="50.*mm" z_offset="1550.*mm" vis="invisible">
-          <surface_binning nr=3 nphi=42/>
+          <surface_binning nr="3" nphi="42"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
         </layer>
         <layer id="2" name="ShortStripEndcapP3" rmin="210.*mm" rmax="715.*mm" dz="50.*mm" z_offset="1850.*mm" vis="invisible">
-          <surface_binning nr=3 nphi=42/>
+          <surface_binning nr="3" nphi="42"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
         </layer>
         <layer id="2" name="ShortStripEndcapP4" rmin="210.*mm" rmax="715.*mm" dz="50.*mm" z_offset="2200.*mm" vis="invisible">
-          <surface_binning nr=3 nphi=42/>
+          <surface_binning nr="3" nphi="42"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
         </layer>
         <layer id="3" name="ShortStripEndcapP5" rmin="210.*mm" rmax="715.*mm" dz="50.*mm" z_offset="2550.*mm" vis="invisible">
-          <surface_binning nr=3 nphi=42/>
+          <surface_binning nr="3" nphi="42"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
         </layer>
         <layer id="4" name="ShortStripEndcapP6" rmin="210.*mm" rmax="715.*mm" dz="50.*mm" z_offset="2950.*mm" vis="invisible">
-          <surface_binning nr=3 nphi=42/>
+          <surface_binning nr="3" nphi="42"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
         </layer>
         <services>

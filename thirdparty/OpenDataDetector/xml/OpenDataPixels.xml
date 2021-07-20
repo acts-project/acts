@@ -29,31 +29,31 @@
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
         </layer>
         <layer id="1" name="PixelEndcapN1" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="-720.*mm" vis="invisible">
-          <surface_binning nr=2 nphi=36/>
+          <surface_binning nr="2" nphi="36"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
         </layer>
         <layer id="2" name="PixelEndcapN2" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="-840.*mm" vis="invisible">
-          <surface_binning nr=2 nphi=36/>
+          <surface_binning nr="2" nphi="36"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
         </layer>
         <layer id="3" name="PixelEndcapN3" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="-980.*mm" vis="invisible">
-          <surface_binning nr=2 nphi=36/>
+          <surface_binning nr="2" nphi="36"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
         </layer>
         <layer id="4" name="PixelEndcapN4" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="-1120.*mm" vis="invisible">
-          <surface_binning nr=2 nphi=36/>
+          <surface_binning nr="2" nphi="36"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
         </layer>
         <layer id="5" name="PixelEndcapN5" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="-1320.*mm" vis="invisible">
-          <surface_binning nr=2 nphi=36/>
+          <surface_binning nr="2" nphi="36"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
         </layer>
         <layer id="6" name="PixelEndcapN6" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="-1520.*mm" vis="invisible">
-          <surface_binning nr=2 nphi=36/>
+          <surface_binning nr="2" nphi="36"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
         </layer>
         <disk name="PixelEndplate" z_offset="-1950.*mm" rmin="40.*mm" rmax="189.*mm" dz="5*mm" material="CarbonFiber" vis="CarbonFiber">
-          <surface_binning nr=2 nphi=36/>
+          <surface_binning nr="2" nphi="36"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
         </disk>
         <support name="InnerSupportRail" rmin="190.*mm" rmax="200.*mm" dz="10.*mm" material="CarbonFiber" z_offset="000.*mm" nsides="1" vis="CarbonFiber"/>
@@ -143,31 +143,31 @@
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
         </layer>
         <layer id="1" name="PixelEndcapP1" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="720.*mm" vis="invisible">
-          <surface_binning nr=2 nphi=36/>
+          <surface_binning nr="2" nphi="36"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
         </layer>
         <layer id="2" name="PixelEndcapP2" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="840.*mm" vis="invisible">
-          <surface_binning nr=2 nphi=36/>
+          <surface_binning nr="2" nphi="36"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
         </layer>
         <layer id="3" name="PixelEndcapP3" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="980.*mm" vis="invisible">
-          <surface_binning nr=2 nphi=36/>
+          <surface_binning nr="2" nphi="36"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
         </layer>
         <layer id="4" name="PixelEndcapP4" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="1120.*mm" vis="invisible">
-          <surface_binning nr=2 nphi=36/>
+          <surface_binning nr="2" nphi="36"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
         </layer>
         <layer id="5" name="PixelEndcapP5" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="1320.*mm" vis="invisible">
-          <surface_binning nr=2 nphi=36/>
+          <surface_binning nr="2" nphi="36"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
         </layer>
         <layer id="6" name="PixelEndcapP6" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="1520.*mm" vis="invisible">
-          <surface_binning nr=2 nphi=36/>
+          <surface_binning nr="2" nphi="36"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
         </layer>
         <disk name="PixelEndplate" z_offset="1950.*mm" rmin="40.*mm" rmax="189.*mm" dz="5*mm" material="CarbonFiber" vis="CarbonFiber">
-          <surface_binning nr=2 nphi=36/>
+          <surface_binning nr="2" nphi="36"/>
           <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
         </disk>
         <support name="InnerSupportRail" rmin="190.*mm" rmax="200.*mm" dz="10.*mm" material="CarbonFiber" z_offset="000.*mm" nsides="1" vis="CarbonFiber"/>
