@@ -9,4 +9,6 @@ target_link_libraries(
   ActsExamplesPropagation
   PUBLIC ActsCore ActsExamplesFramework)
 
-# interface libraries do not exist in the filesystem; no installation needed
+install(
+  TARGETS ActsExamplesPropagation
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

@@ -52,8 +52,12 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/Modules)
 # `find_dependency` is a wrapper around `find_package` that automatically
 # handles QUIET and REQUIRED parameters.
 include(CMakeFindDependencyMacro)
-find_dependency(Boost @Boost_VERSION_STRING@ CONFIG EXACT)
-find_dependency(Eigen3 @Eigen3_VERSION@ CONFIG EXACT)
+if(@ACTS_USE_SYSTEM_BOOST@)
+  find_dependency(Boost @Boost_VERSION_STRING@ CONFIG EXACT)
+endif()
+if(@ACTS_USE_SYSTEM_EIGEN3@)
+  find_dependency(Eigen3 @Eigen3_VERSION@ CONFIG EXACT)
+endif()
 if(PluginAutodiff IN_LIST Acts_COMPONENTS)
   find_dependency(autodiff @autodiff_VERSION@ CONFIG EXACT)
 endif()
@@ -66,6 +70,18 @@ endif()
 if(PluginTGeo IN_LIST Acts_COMPONENTS)
   find_dependency(ROOT @ROOT_VERSION@ CONFIG EXACT)
 endif()
+
+# dependencies that we have built ourselves but cannot be
+# straightforwardly handed to cmake
+if(NOT @ACTS_USE_SYSTEM_BOOST@)
+  add_library(Boost::boost INTERFACE IMPORTED GLOBAL)
+  target_include_directories(Boost::boost INTERFACE "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
+endif()
+if(NOT @ACTS_USE_SYSTEM_EIGEN3@)
+  add_library(Eigen3::Eigen INTERFACE IMPORTED GLOBAL)
+  target_include_directories(Eigen3::Eigen INTERFACE "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
+endif()
+
 
 # dependencies which cannot be searched in CONFIG mode
 if(PluginOnnx IN_LIST Acts_COMPONENTS)
