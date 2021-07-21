@@ -1,7 +1,9 @@
 add_library(
   ActsExamplesDetectorTGeo SHARED
+  src/BuildTGeoDetector.cpp
   src/TGeoDetector.cpp
   src/TGeoDetectorOptions.cpp)
+  
 target_include_directories(
   ActsExamplesDetectorTGeo
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)

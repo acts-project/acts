@@ -109,7 +109,7 @@ class BinUtility {
     return (*this);
   }
 
-  /// Operator++ to make multidimensional BinUtility
+  /// Operator+= to make multidimensional BinUtility
   ///
   /// @param gbu is the additional BinUtility to be chosen
   BinUtility& operator+=(const BinUtility& gbu) {
@@ -126,6 +126,12 @@ class BinUtility {
 
   /// Virtual Destructor
   ~BinUtility() = default;
+
+  /// Equality operator
+  bool operator==(const BinUtility& other) const {
+    return (m_transform.isApprox(other.m_transform) and
+            m_binningData == other.binningData());
+  }
 
   /// Return the binning data vector
   const std::vector<BinningData>& binningData() const { return m_binningData; }

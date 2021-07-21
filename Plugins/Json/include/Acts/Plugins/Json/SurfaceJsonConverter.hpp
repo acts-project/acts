@@ -63,7 +63,7 @@ void toJson(nlohmann::json& j, std::shared_ptr<const Surface> surface,
 /// @param j the read-in json object
 ///
 /// @return a shared_ptr to a surface object for type polymorphism
-std::shared_ptr<Surface> surfaceFromJson(const nlohmann::json&);
+std::shared_ptr<Surface> surfaceFromJson(const nlohmann::json& j);
 
 /// Converstion to Surface from json in correct type
 ///

@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Root/RootTrajectoryParametersWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrajectorySummaryWriter.hpp"
 
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
@@ -33,10 +33,10 @@ using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
 
-ActsExamples::RootTrajectoryParametersWriter::RootTrajectoryParametersWriter(
-    const ActsExamples::RootTrajectoryParametersWriter::Config& cfg,
+ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
+    const ActsExamples::RootTrajectorySummaryWriter::Config& cfg,
     Acts::Logging::Level lvl)
-    : WriterT(cfg.inputTrajectories, "RootTrajectoryParametersWriter", lvl),
+    : WriterT(cfg.inputTrajectories, "RootTrajectorySummaryWriter", lvl),
       m_cfg(cfg),
       m_outputFile(cfg.rootFile) {
   // trajectories collection name is already checked by base ctor
@@ -71,7 +71,22 @@ ActsExamples::RootTrajectoryParametersWriter::RootTrajectoryParametersWriter(
     m_outputTree->Branch("event_nr", &m_eventNr);
     m_outputTree->Branch("multiTraj_nr", &m_multiTrajNr);
     m_outputTree->Branch("subTraj_nr", &m_subTrajNr);
-    m_outputTree->Branch("t_barcode", &m_t_barcode);
+
+    m_outputTree->Branch("nStates", &m_nStates);
+    m_outputTree->Branch("nMeasurements", &m_nMeasurements);
+    m_outputTree->Branch("nOutliers", &m_nOutliers);
+    m_outputTree->Branch("nHoles", &m_nHoles);
+    m_outputTree->Branch("chi2Sum", &m_chi2Sum);
+    m_outputTree->Branch("NDF", &m_NDF);
+    m_outputTree->Branch("measurementChi2", &m_measurementChi2);
+    m_outputTree->Branch("outlierChi2", &m_outlierChi2);
+    m_outputTree->Branch("measurementVolume", &m_measurementVolume);
+    m_outputTree->Branch("measurementLayer", &m_measurementLayer);
+    m_outputTree->Branch("outlierVolume", &m_outlierVolume);
+    m_outputTree->Branch("outlierLayer", &m_outlierLayer);
+
+    m_outputTree->Branch("nMajorityHits", &m_nMajorityHits);
+    m_outputTree->Branch("majorityParticleId", &m_majorityParticleId);
     m_outputTree->Branch("t_charge", &m_t_charge);
     m_outputTree->Branch("t_time", &m_t_time);
     m_outputTree->Branch("t_vx", &m_t_vx);
@@ -101,15 +116,13 @@ ActsExamples::RootTrajectoryParametersWriter::RootTrajectoryParametersWriter(
   }
 }
 
-ActsExamples::RootTrajectoryParametersWriter::
-    ~RootTrajectoryParametersWriter() {
+ActsExamples::RootTrajectorySummaryWriter::~RootTrajectorySummaryWriter() {
   if (m_outputFile) {
     m_outputFile->Close();
   }
 }
 
-ActsExamples::ProcessCode
-ActsExamples::RootTrajectoryParametersWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::endRun() {
   if (m_outputFile) {
     m_outputFile->cd();
     m_outputTree->Write();
@@ -120,7 +133,7 @@ ActsExamples::RootTrajectoryParametersWriter::endRun() {
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersWriter::writeT(
+ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
 
@@ -155,6 +168,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersWriter::writeT(
     m_multiTrajNr.push_back(itraj);
 
     // The trajectory entry indices and the multiTrajectory
+    const auto& mj = traj.multiTrajectory();
     const auto& trackTips = traj.tips();
 
     // Loop over the entry indices for the subtrajectories
@@ -164,17 +178,45 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersWriter::writeT(
       // The entry index for this subtrajectory
       const auto& trackTip = trackTips[isubtraj];
 
+      // Collect the trajectory summary info
+      auto trajState =
+          Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
+      m_nStates.push_back(trajState.nStates);
+      m_nMeasurements.push_back(trajState.nMeasurements);
+      m_nOutliers.push_back(trajState.nOutliers);
+      m_nHoles.push_back(trajState.nHoles);
+      m_chi2Sum.push_back(trajState.chi2Sum);
+      m_NDF.push_back(trajState.NDF);
+      m_measurementChi2.push_back(trajState.measurementChi2);
+      m_outlierChi2.push_back(trajState.measurementChi2);
+      // They are stored as double (as the vector of vector of int is not known
+      // to ROOT)
+      m_measurementVolume.emplace_back(trajState.measurementVolume.begin(),
+                                       trajState.measurementVolume.end());
+      m_measurementLayer.emplace_back(trajState.measurementLayer.begin(),
+                                      trajState.measurementLayer.end());
+      m_outlierVolume.emplace_back(trajState.outlierVolume.begin(),
+                                   trajState.outlierVolume.end());
+      m_outlierLayer.emplace_back(trajState.outlierLayer.begin(),
+                                  trajState.outlierLayer.end());
+
       // Get the majority truth particle to this track
       identifyContributingParticles(hitParticlesMap, traj, trackTip,
                                     particleHitCounts);
+      bool foundMajorityParticle = false;
       if (not particleHitCounts.empty()) {
         // Get the barcode of the majority truth particle
         long unsigned int barcode =
             particleHitCounts.front().particleId.value();
-        m_t_barcode.push_back(barcode);
+        auto nMajorityHits = particleHitCounts.front().hitCount;
+
         // Find the truth particle via the barcode
         auto ip = particles.find(barcode);
         if (ip != particles.end()) {
+          foundMajorityParticle = true;
+          m_majorityParticleId.push_back(barcode);
+          m_nMajorityHits.push_back(nMajorityHits);
+
           const auto& particle = *ip;
           ACTS_DEBUG("Find the truth particle with barcode = " << barcode);
           // Get the truth particle info at vertex
@@ -192,9 +234,28 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersWriter::writeT(
           m_t_eta.push_back(eta(particle.unitDirection()));
           m_t_pT.push_back(p * perp(particle.unitDirection()));
         } else {
-          ACTS_WARNING("Truth particle with barcode = " << barcode
-                                                        << " not found!");
+          ACTS_WARNING("Truth particle with barcode = "
+                       << barcode << " not found in the input collection!");
         }
+      }
+      // Still push back even if majority particle not found
+      if (not foundMajorityParticle) {
+        ACTS_WARNING("Truth particle for mj " << itraj << " subtraj "
+                                              << isubtraj << " not found!");
+        m_majorityParticleId.push_back(NaNint);
+        m_nMajorityHits.push_back(NaNint);
+        m_t_charge.push_back(NaNint);
+        m_t_time.push_back(NaNfloat);
+        m_t_vx.push_back(NaNfloat);
+        m_t_vy.push_back(NaNfloat);
+        m_t_vz.push_back(NaNfloat);
+        m_t_px.push_back(NaNfloat);
+        m_t_py.push_back(NaNfloat);
+        m_t_pz.push_back(NaNfloat);
+        m_t_theta.push_back(NaNfloat);
+        m_t_phi.push_back(NaNfloat);
+        m_t_eta.push_back(NaNfloat);
+        m_t_pT.push_back(NaNfloat);
       }
 
       // Get the fitted track parameter
@@ -244,7 +305,21 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersWriter::writeT(
 
   m_multiTrajNr.clear();
   m_subTrajNr.clear();
-  m_t_barcode.clear();
+  m_nStates.clear();
+  m_nMeasurements.clear();
+  m_nOutliers.clear();
+  m_nHoles.clear();
+  m_chi2Sum.clear();
+  m_NDF.clear();
+  m_measurementChi2.clear();
+  m_outlierChi2.clear();
+  m_measurementVolume.clear();
+  m_measurementLayer.clear();
+  m_outlierVolume.clear();
+  m_outlierLayer.clear();
+
+  m_nMajorityHits.clear();
+  m_majorityParticleId.clear();
   m_t_charge.clear();
   m_t_time.clear();
   m_t_vx.clear();
@@ -257,6 +332,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersWriter::writeT(
   m_t_phi.clear();
   m_t_pT.clear();
   m_t_eta.clear();
+
   m_hasFittedParams.clear();
   m_eLOC0_fit.clear();
   m_eLOC1_fit.clear();

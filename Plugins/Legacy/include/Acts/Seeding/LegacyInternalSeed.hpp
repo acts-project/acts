@@ -51,6 +51,8 @@ class InternalSeed {
   float m_q;
 };
 
+/// @cond
+
 /////////////////////////////////////////////////////////////////////////////////
 // Inline methods
 /////////////////////////////////////////////////////////////////////////////////
@@ -165,6 +167,8 @@ inline bool InternalSeed<SpacePoint>::setQuality(float q) {
   }
   return false;
 }
+
+/// @endcond
 
 }  // namespace Legacy
 }  // namespace Acts

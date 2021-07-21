@@ -48,7 +48,7 @@ CylindricalTrackingGeometry cGeometry(tgContext);
 auto tGeometry = cGeometry();
 
 // Get the navigator and provide the TrackingGeometry
-Navigator navigator(tGeometry);
+Navigator navigator({tGeometry});
 
 using BFieldType = ConstantBField;
 using EigenStepperType = EigenStepper<>;

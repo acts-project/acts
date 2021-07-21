@@ -211,7 +211,7 @@ if(ACTS_BUILD_EXAMPLES)
   find_package(TBB ${_acts_tbb_version} CONFIG)
   if(NOT TBB_FOUND)
     # no version check possible when using the find module
-    find_package(TBB MODULE REQUIRED)
+    find_package(TBB ${_acts_tbb_version} MODULE REQUIRED)
   endif()
   add_subdirectory(thirdparty/dfelibs)
 endif()

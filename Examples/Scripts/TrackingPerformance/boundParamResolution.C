@@ -26,6 +26,7 @@
 #include <TTree.h>
 
 #include "CommonUtils.h"
+#include "TreeReader.h"
 
 using namespace ROOT;
 
@@ -107,211 +108,9 @@ void boundParamResolution(const std::string& inFile,
 
   // Section 2: Branch assignment
   //
-  // Assign branches to the input tree
-  std::vector<float>* LOC0_prt =
-      new std::vector<float>;  ///< predicted parameter local x
-  std::vector<float>* LOC1_prt =
-      new std::vector<float>;  ///< predicted parameter local y
-  std::vector<float>* PHI_prt =
-      new std::vector<float>;  ///< predicted parameter phi
-  std::vector<float>* THETA_prt =
-      new std::vector<float>;  ///< predicted parameter theta
-  std::vector<float>* QOP_prt =
-      new std::vector<float>;  ///< predicted parameter q/p
-  std::vector<float>* T_prt =
-      new std::vector<float>;  ///< predicted parameter t
-  std::vector<float>* LOC0_flt =
-      new std::vector<float>;  ///< filtered parameter local x
-  std::vector<float>* LOC1_flt =
-      new std::vector<float>;  ///< filtered parameter local y
-  std::vector<float>* PHI_flt =
-      new std::vector<float>;  ///< filtered parameter phi
-  std::vector<float>* THETA_flt =
-      new std::vector<float>;  ///< filtered parameter theta
-  std::vector<float>* QOP_flt =
-      new std::vector<float>;  ///< filtered parameter q/p
-  std::vector<float>* T_flt = new std::vector<float>;  ///< filtered parameter t
-  std::vector<float>* LOC0_smt =
-      new std::vector<float>;  ///< smoothed parameter local x
-  std::vector<float>* LOC1_smt =
-      new std::vector<float>;  ///< smoothed parameter local y
-  std::vector<float>* PHI_smt =
-      new std::vector<float>;  ///< smoothed parameter phi
-  std::vector<float>* THETA_smt =
-      new std::vector<float>;  ///< smoothed parameter theta
-  std::vector<float>* QOP_smt =
-      new std::vector<float>;  ///< smoothed parameter q/p
-  std::vector<float>* T_smt = new std::vector<float>;  ///< smoothed parameter t
+  // Helper for assigning branches to the input tree
+  TrackStatesReader tsReader(tree, false);
 
-  std::vector<float>* res_LOC0_prt =
-      new std::vector<float>;  ///< residual of predicted parameter local x
-  std::vector<float>* res_LOC1_prt =
-      new std::vector<float>;  ///< residual of predicted parameter local y
-  std::vector<float>* res_PHI_prt =
-      new std::vector<float>;  ///< residual of predicted parameter phi
-  std::vector<float>* res_THETA_prt =
-      new std::vector<float>;  ///< residual of predicted parameter theta
-  std::vector<float>* res_QOP_prt =
-      new std::vector<float>;  ///< residual of predicted parameter q/p
-  std::vector<float>* res_T_prt =
-      new std::vector<float>;  ///< residual of predicted parameter t
-  std::vector<float>* res_LOC0_flt =
-      new std::vector<float>;  ///< residual of filtered parameter local x
-  std::vector<float>* res_LOC1_flt =
-      new std::vector<float>;  ///< residual of filtered parameter local y
-  std::vector<float>* res_PHI_flt =
-      new std::vector<float>;  ///< residual of filtered parameter phi
-  std::vector<float>* res_THETA_flt =
-      new std::vector<float>;  ///< residual of filtered parameter theta
-  std::vector<float>* res_QOP_flt =
-      new std::vector<float>;  ///< residual of filtered parameter q/p
-  std::vector<float>* res_T_flt =
-      new std::vector<float>;  ///< residual of filtered parameter t
-  std::vector<float>* res_LOC0_smt =
-      new std::vector<float>;  ///< residual of smoothed parameter local x
-  std::vector<float>* res_LOC1_smt =
-      new std::vector<float>;  ///< residual of smoothed parameter local y
-  std::vector<float>* res_PHI_smt =
-      new std::vector<float>;  ///< residual of smoothed parameter phi
-  std::vector<float>* res_THETA_smt =
-      new std::vector<float>;  ///< residual of smoothed parameter theta
-  std::vector<float>* res_QOP_smt =
-      new std::vector<float>;  ///< residual of smoothed parameter q/p
-  std::vector<float>* res_T_smt =
-      new std::vector<float>;  ///< residual of smoothed parameter t
-
-  std::vector<float>* pull_LOC0_prt =
-      new std::vector<float>;  ///< pull of predicted parameter local x
-  std::vector<float>* pull_LOC1_prt =
-      new std::vector<float>;  ///< pull of predicted parameter local y
-  std::vector<float>* pull_PHI_prt =
-      new std::vector<float>;  ///< pull of predicted parameter phi
-  std::vector<float>* pull_THETA_prt =
-      new std::vector<float>;  ///< pull of predicted parameter theta
-  std::vector<float>* pull_QOP_prt =
-      new std::vector<float>;  ///< pull of predicted parameter q/p
-  std::vector<float>* pull_T_prt =
-      new std::vector<float>;  ///< pull of predicted parameter t
-  std::vector<float>* pull_LOC0_flt =
-      new std::vector<float>;  ///< pull of filtered parameter local x
-  std::vector<float>* pull_LOC1_flt =
-      new std::vector<float>;  ///< pull of filtered parameter local y
-  std::vector<float>* pull_PHI_flt =
-      new std::vector<float>;  ///< pull of filtered parameter phi
-  std::vector<float>* pull_THETA_flt =
-      new std::vector<float>;  ///< pull of filtered parameter theta
-  std::vector<float>* pull_QOP_flt =
-      new std::vector<float>;  ///< pull of filtered parameter q/p
-  std::vector<float>* pull_T_flt =
-      new std::vector<float>;  ///< pull of filtered parameter t
-  std::vector<float>* pull_LOC0_smt =
-      new std::vector<float>;  ///< pull of smoothed parameter local x
-  std::vector<float>* pull_LOC1_smt =
-      new std::vector<float>;  ///< pull of smoothed parameter local y
-  std::vector<float>* pull_PHI_smt =
-      new std::vector<float>;  ///< pull of smoothed parameter phi
-  std::vector<float>* pull_THETA_smt =
-      new std::vector<float>;  ///< pull of smoothed parameter theta
-  std::vector<float>* pull_QOP_smt =
-      new std::vector<float>;  ///< pull of smoothed parameter q/p
-  std::vector<float>* pull_T_smt =
-      new std::vector<float>;  ///< pull of smoothed parameter t
-
-  std::vector<float>* g_x_prt = new std::vector<float>;
-  std::vector<float>* g_y_prt = new std::vector<float>;
-  std::vector<float>* g_z_prt = new std::vector<float>;
-  std::vector<float>* g_x_flt = new std::vector<float>;
-  std::vector<float>* g_y_flt = new std::vector<float>;
-  std::vector<float>* g_z_flt = new std::vector<float>;
-  std::vector<float>* g_x_smt = new std::vector<float>;
-  std::vector<float>* g_y_smt = new std::vector<float>;
-  std::vector<float>* g_z_smt = new std::vector<float>;
-
-  std::vector<int>* volume_id = new std::vector<int>;  ///< volume_id
-  std::vector<int>* layer_id = new std::vector<int>;   ///< layer_id
-  std::vector<int>* module_id = new std::vector<int>;  ///< module_id
-
-  std::vector<bool>* predicted = new std::vector<bool>;  ///< prediction status
-  std::vector<bool>* filtered = new std::vector<bool>;   ///< filtering status
-  std::vector<bool>* smoothed = new std::vector<bool>;   ///< smoothing status
-
-  unsigned int nStates, nMeasurements;
-
-  tree->SetBranchAddress("eLOC0_prt", &LOC0_prt);
-  tree->SetBranchAddress("eLOC1_prt", &LOC1_prt);
-  tree->SetBranchAddress("ePHI_prt", &PHI_prt);
-  tree->SetBranchAddress("eTHETA_prt", &THETA_prt);
-  tree->SetBranchAddress("eQOP_prt", &QOP_prt);
-  tree->SetBranchAddress("eT_prt", &T_prt);
-  tree->SetBranchAddress("eLOC0_flt", &LOC0_flt);
-  tree->SetBranchAddress("eLOC1_flt", &LOC1_flt);
-  tree->SetBranchAddress("ePHI_flt", &PHI_flt);
-  tree->SetBranchAddress("eTHETA_flt", &THETA_flt);
-  tree->SetBranchAddress("eQOP_flt", &QOP_flt);
-  tree->SetBranchAddress("eT_flt", &T_flt);
-  tree->SetBranchAddress("eLOC0_smt", &LOC0_smt);
-  tree->SetBranchAddress("eLOC1_smt", &LOC1_smt);
-  tree->SetBranchAddress("ePHI_smt", &PHI_smt);
-  tree->SetBranchAddress("eTHETA_smt", &THETA_smt);
-  tree->SetBranchAddress("eQOP_smt", &QOP_smt);
-  tree->SetBranchAddress("eT_smt", &T_smt);
-
-  tree->SetBranchAddress("res_eLOC0_prt", &res_LOC0_prt);
-  tree->SetBranchAddress("res_eLOC1_prt", &res_LOC1_prt);
-  tree->SetBranchAddress("res_ePHI_prt", &res_PHI_prt);
-  tree->SetBranchAddress("res_eTHETA_prt", &res_THETA_prt);
-  tree->SetBranchAddress("res_eQOP_prt", &res_QOP_prt);
-  tree->SetBranchAddress("res_eT_prt", &res_T_prt);
-  tree->SetBranchAddress("res_eLOC0_flt", &res_LOC0_flt);
-  tree->SetBranchAddress("res_eLOC1_flt", &res_LOC1_flt);
-  tree->SetBranchAddress("res_ePHI_flt", &res_PHI_flt);
-  tree->SetBranchAddress("res_eTHETA_flt", &res_THETA_flt);
-  tree->SetBranchAddress("res_eQOP_flt", &res_QOP_flt);
-  tree->SetBranchAddress("res_eT_flt", &res_T_flt);
-  tree->SetBranchAddress("res_eLOC0_smt", &res_LOC0_smt);
-  tree->SetBranchAddress("res_eLOC1_smt", &res_LOC1_smt);
-  tree->SetBranchAddress("res_ePHI_smt", &res_PHI_smt);
-  tree->SetBranchAddress("res_eTHETA_smt", &res_THETA_smt);
-  tree->SetBranchAddress("res_eQOP_smt", &res_QOP_smt);
-  tree->SetBranchAddress("res_eT_smt", &res_T_smt);
-
-  tree->SetBranchAddress("pull_eLOC0_prt", &pull_LOC0_prt);
-  tree->SetBranchAddress("pull_eLOC1_prt", &pull_LOC1_prt);
-  tree->SetBranchAddress("pull_ePHI_prt", &pull_PHI_prt);
-  tree->SetBranchAddress("pull_eTHETA_prt", &pull_THETA_prt);
-  tree->SetBranchAddress("pull_eQOP_prt", &pull_QOP_prt);
-  tree->SetBranchAddress("pull_eT_prt", &pull_T_prt);
-  tree->SetBranchAddress("pull_eLOC0_flt", &pull_LOC0_flt);
-  tree->SetBranchAddress("pull_eLOC1_flt", &pull_LOC1_flt);
-  tree->SetBranchAddress("pull_ePHI_flt", &pull_PHI_flt);
-  tree->SetBranchAddress("pull_eTHETA_flt", &pull_THETA_flt);
-  tree->SetBranchAddress("pull_eQOP_flt", &pull_QOP_flt);
-  tree->SetBranchAddress("pull_eT_flt", &pull_T_flt);
-  tree->SetBranchAddress("pull_eLOC0_smt", &pull_LOC0_smt);
-  tree->SetBranchAddress("pull_eLOC1_smt", &pull_LOC1_smt);
-  tree->SetBranchAddress("pull_ePHI_smt", &pull_PHI_smt);
-  tree->SetBranchAddress("pull_eTHETA_smt", &pull_THETA_smt);
-  tree->SetBranchAddress("pull_eQOP_smt", &pull_QOP_smt);
-  tree->SetBranchAddress("pull_eT_smt", &pull_T_smt);
-
-  tree->SetBranchAddress("g_x_prt", &g_x_prt);
-  tree->SetBranchAddress("g_y_prt", &g_y_prt);
-  tree->SetBranchAddress("g_z_prt", &g_z_prt);
-  tree->SetBranchAddress("g_x_flt", &g_x_flt);
-  tree->SetBranchAddress("g_y_flt", &g_y_flt);
-  tree->SetBranchAddress("g_z_flt", &g_z_flt);
-  tree->SetBranchAddress("g_x_smt", &g_x_smt);
-  tree->SetBranchAddress("g_y_smt", &g_y_smt);
-  tree->SetBranchAddress("g_z_smt", &g_z_smt);
-
-  tree->SetBranchAddress("nStates", &nStates);
-  tree->SetBranchAddress("nMeasurements", &nMeasurements);
-  tree->SetBranchAddress("volume_id", &volume_id);
-  tree->SetBranchAddress("layer_id", &layer_id);
-  tree->SetBranchAddress("module_id", &module_id);
-  tree->SetBranchAddress("predicted", &predicted);
-  tree->SetBranchAddress("filtered", &filtered);
-  tree->SetBranchAddress("smoothed", &smoothed);
 
   // Section 3: Histogram booking
   TCanvas* rangeCanvas =
@@ -524,67 +323,67 @@ void boundParamResolution(const std::string& inFile,
   // - Running through the entries and filling the histograms
   int entries = tree->GetEntries();
   for (int j = 0; j < entries; j++) {
-    tree->GetEvent(j);
+    tsReader.getEntry(j);
 
-    for (unsigned int i = 0; i < nMeasurements; i++) {
+    for (unsigned int i = 0; i < tsReader.nMeasurements; i++) {
       // global profile filling
-      if (predicted->at(i)) {
-        float x_prt = g_x_prt->at(i);
-        float y_prt = g_y_prt->at(i);
+      if (tsReader.predicted->at(i)) {
+        float x_prt = tsReader.g_x_prt->at(i);
+        float y_prt = tsReader.g_y_prt->at(i);
         float r_prt = std::sqrt(x_prt * x_prt + y_prt * y_prt);
-        float z_prt = g_z_prt->at(i);
-        p2d_res_zr_prt[0]->Fill(z_prt, r_prt, res_LOC0_prt->at(i));
-        p2d_res_zr_prt[1]->Fill(z_prt, r_prt, res_LOC1_prt->at(i));
-        p2d_res_zr_prt[2]->Fill(z_prt, r_prt, res_PHI_prt->at(i));
-        p2d_res_zr_prt[3]->Fill(z_prt, r_prt, res_THETA_prt->at(i));
-        p2d_res_zr_prt[4]->Fill(z_prt, r_prt, res_QOP_prt->at(i));
-        p2d_res_zr_prt[5]->Fill(z_prt, r_prt, res_T_prt->at(i));
-        p2d_pull_zr_prt[0]->Fill(z_prt, r_prt, pull_LOC0_prt->at(i));
-        p2d_pull_zr_prt[1]->Fill(z_prt, r_prt, pull_LOC1_prt->at(i));
-        p2d_pull_zr_prt[2]->Fill(z_prt, r_prt, pull_PHI_prt->at(i));
-        p2d_pull_zr_prt[3]->Fill(z_prt, r_prt, pull_THETA_prt->at(i));
-        p2d_pull_zr_prt[4]->Fill(z_prt, r_prt, pull_QOP_prt->at(i));
-        p2d_pull_zr_prt[5]->Fill(z_prt, r_prt, pull_T_prt->at(i));
+        float z_prt = tsReader.g_z_prt->at(i);
+        p2d_res_zr_prt[0]->Fill(z_prt, r_prt, tsReader.res_LOC0_prt->at(i));
+        p2d_res_zr_prt[1]->Fill(z_prt, r_prt, tsReader.res_LOC1_prt->at(i));
+        p2d_res_zr_prt[2]->Fill(z_prt, r_prt, tsReader.res_PHI_prt->at(i));
+        p2d_res_zr_prt[3]->Fill(z_prt, r_prt, tsReader.res_THETA_prt->at(i));
+        p2d_res_zr_prt[4]->Fill(z_prt, r_prt, tsReader.res_QOP_prt->at(i));
+        p2d_res_zr_prt[5]->Fill(z_prt, r_prt, tsReader.res_T_prt->at(i));
+        p2d_pull_zr_prt[0]->Fill(z_prt, r_prt, tsReader.pull_LOC0_prt->at(i));
+        p2d_pull_zr_prt[1]->Fill(z_prt, r_prt, tsReader.pull_LOC1_prt->at(i));
+        p2d_pull_zr_prt[2]->Fill(z_prt, r_prt, tsReader.pull_PHI_prt->at(i));
+        p2d_pull_zr_prt[3]->Fill(z_prt, r_prt, tsReader.pull_THETA_prt->at(i));
+        p2d_pull_zr_prt[4]->Fill(z_prt, r_prt, tsReader.pull_QOP_prt->at(i));
+        p2d_pull_zr_prt[5]->Fill(z_prt, r_prt, tsReader.pull_T_prt->at(i));
       }
-      if (filtered->at(i)) {
-        float x_flt = g_x_flt->at(i);
-        float y_flt = g_y_flt->at(i);
+      if (tsReader.filtered->at(i)) {
+        float x_flt = tsReader.g_x_flt->at(i);
+        float y_flt = tsReader.g_y_flt->at(i);
         float r_flt = std::sqrt(x_flt * x_flt + y_flt * y_flt);
-        float z_flt = g_z_flt->at(i);
-        p2d_res_zr_flt[0]->Fill(z_flt, r_flt, res_LOC0_flt->at(i));
-        p2d_res_zr_flt[1]->Fill(z_flt, r_flt, res_LOC1_flt->at(i));
-        p2d_res_zr_flt[2]->Fill(z_flt, r_flt, res_PHI_flt->at(i));
-        p2d_res_zr_flt[3]->Fill(z_flt, r_flt, res_THETA_flt->at(i));
-        p2d_res_zr_flt[4]->Fill(z_flt, r_flt, res_QOP_flt->at(i));
-        p2d_res_zr_flt[5]->Fill(z_flt, r_flt, res_T_flt->at(i));
-        p2d_pull_zr_flt[0]->Fill(z_flt, r_flt, pull_LOC0_flt->at(i));
-        p2d_pull_zr_flt[1]->Fill(z_flt, r_flt, pull_LOC1_flt->at(i));
-        p2d_pull_zr_flt[2]->Fill(z_flt, r_flt, pull_PHI_flt->at(i));
-        p2d_pull_zr_flt[3]->Fill(z_flt, r_flt, pull_THETA_flt->at(i));
-        p2d_pull_zr_flt[4]->Fill(z_flt, r_flt, pull_QOP_flt->at(i));
-        p2d_pull_zr_flt[5]->Fill(z_flt, r_flt, pull_T_flt->at(i));
+        float z_flt = tsReader.g_z_flt->at(i);
+        p2d_res_zr_flt[0]->Fill(z_flt, r_flt, tsReader.res_LOC0_flt->at(i));
+        p2d_res_zr_flt[1]->Fill(z_flt, r_flt, tsReader.res_LOC1_flt->at(i));
+        p2d_res_zr_flt[2]->Fill(z_flt, r_flt, tsReader.res_PHI_flt->at(i));
+        p2d_res_zr_flt[3]->Fill(z_flt, r_flt, tsReader.res_THETA_flt->at(i));
+        p2d_res_zr_flt[4]->Fill(z_flt, r_flt, tsReader.res_QOP_flt->at(i));
+        p2d_res_zr_flt[5]->Fill(z_flt, r_flt, tsReader.res_T_flt->at(i));
+        p2d_pull_zr_flt[0]->Fill(z_flt, r_flt, tsReader.pull_LOC0_flt->at(i));
+        p2d_pull_zr_flt[1]->Fill(z_flt, r_flt, tsReader.pull_LOC1_flt->at(i));
+        p2d_pull_zr_flt[2]->Fill(z_flt, r_flt, tsReader.pull_PHI_flt->at(i));
+        p2d_pull_zr_flt[3]->Fill(z_flt, r_flt, tsReader.pull_THETA_flt->at(i));
+        p2d_pull_zr_flt[4]->Fill(z_flt, r_flt, tsReader.pull_QOP_flt->at(i));
+        p2d_pull_zr_flt[5]->Fill(z_flt, r_flt, tsReader.pull_T_flt->at(i));
       }
-      if (smoothed->at(i)) {
-        float x_smt = g_x_smt->at(i);
-        float y_smt = g_y_smt->at(i);
+      if (tsReader.smoothed->at(i)) {
+        float x_smt = tsReader.g_x_smt->at(i);
+        float y_smt = tsReader.g_y_smt->at(i);
         float r_smt = std::sqrt(x_smt * x_smt + y_smt * y_smt);
-        float z_smt = g_z_smt->at(i);
-        p2d_res_zr_smt[0]->Fill(z_smt, r_smt, res_LOC0_smt->at(i));
-        p2d_res_zr_smt[1]->Fill(z_smt, r_smt, res_LOC1_smt->at(i));
-        p2d_res_zr_smt[2]->Fill(z_smt, r_smt, res_PHI_smt->at(i));
-        p2d_res_zr_smt[3]->Fill(z_smt, r_smt, res_THETA_smt->at(i));
-        p2d_res_zr_smt[4]->Fill(z_smt, r_smt, res_QOP_smt->at(i));
-        p2d_res_zr_smt[5]->Fill(z_smt, r_smt, res_T_smt->at(i));
-        p2d_pull_zr_smt[0]->Fill(z_smt, r_smt, pull_LOC0_smt->at(i));
-        p2d_pull_zr_smt[1]->Fill(z_smt, r_smt, pull_LOC1_smt->at(i));
-        p2d_pull_zr_smt[2]->Fill(z_smt, r_smt, pull_PHI_smt->at(i));
-        p2d_pull_zr_smt[3]->Fill(z_smt, r_smt, pull_THETA_smt->at(i));
-        p2d_pull_zr_smt[4]->Fill(z_smt, r_smt, pull_QOP_smt->at(i));
-        p2d_pull_zr_smt[5]->Fill(z_smt, r_smt, pull_T_smt->at(i));
+        float z_smt = tsReader.g_z_smt->at(i);
+        p2d_res_zr_smt[0]->Fill(z_smt, r_smt, tsReader.res_LOC0_smt->at(i));
+        p2d_res_zr_smt[1]->Fill(z_smt, r_smt, tsReader.res_LOC1_smt->at(i));
+        p2d_res_zr_smt[2]->Fill(z_smt, r_smt, tsReader.res_PHI_smt->at(i));
+        p2d_res_zr_smt[3]->Fill(z_smt, r_smt, tsReader.res_THETA_smt->at(i));
+        p2d_res_zr_smt[4]->Fill(z_smt, r_smt, tsReader.res_QOP_smt->at(i));
+        p2d_res_zr_smt[5]->Fill(z_smt, r_smt, tsReader.res_T_smt->at(i));
+        p2d_pull_zr_smt[0]->Fill(z_smt, r_smt, tsReader.pull_LOC0_smt->at(i));
+        p2d_pull_zr_smt[1]->Fill(z_smt, r_smt, tsReader.pull_LOC1_smt->at(i));
+        p2d_pull_zr_smt[2]->Fill(z_smt, r_smt, tsReader.pull_PHI_smt->at(i));
+        p2d_pull_zr_smt[3]->Fill(z_smt, r_smt, tsReader.pull_THETA_smt->at(i));
+        p2d_pull_zr_smt[4]->Fill(z_smt, r_smt, tsReader.pull_QOP_smt->at(i));
+        p2d_pull_zr_smt[5]->Fill(z_smt, r_smt, tsReader.pull_T_smt->at(i));
       }
 
-      int vol = volume_id->at(i);
-      int lay = layer_id->at(i);
+      int vol = tsReader.volume_id->at(i);
+      int lay = tsReader.layer_id->at(i);
 
       /// Always fill (-1,-1), (vol, -1), (vol, lay)
       std::vector<std::array<int, 2>> fillIds = {
@@ -593,49 +392,49 @@ void boundParamResolution(const std::string& inFile,
       for (const auto& fid : fillIds) {
         auto vlID = volLayIdCut(fid[0], fid[1])[0];
         // Fill predicated parameters
-        if (predicted->at(i)) {
-          res_prt[vlID + paramNames[0]]->Fill(res_LOC0_prt->at(i), 1);
-          res_prt[vlID + paramNames[1]]->Fill(res_LOC1_prt->at(i), 1);
-          res_prt[vlID + paramNames[2]]->Fill(res_PHI_prt->at(i), 1);
-          res_prt[vlID + paramNames[3]]->Fill(res_THETA_prt->at(i), 1);
-          res_prt[vlID + paramNames[4]]->Fill(res_QOP_prt->at(i), 1);
-          res_prt[vlID + paramNames[5]]->Fill(res_T_prt->at(i), 1);
-          pull_prt[vlID + paramNames[0]]->Fill(pull_LOC0_prt->at(i), 1);
-          pull_prt[vlID + paramNames[1]]->Fill(pull_LOC1_prt->at(i), 1);
-          pull_prt[vlID + paramNames[2]]->Fill(pull_PHI_prt->at(i), 1);
-          pull_prt[vlID + paramNames[3]]->Fill(pull_THETA_prt->at(i), 1);
-          pull_prt[vlID + paramNames[4]]->Fill(pull_QOP_prt->at(i), 1);
-          pull_prt[vlID + paramNames[5]]->Fill(pull_T_prt->at(i), 1);
+        if (tsReader.predicted->at(i)) {
+          res_prt[vlID + paramNames[0]]->Fill(tsReader.res_LOC0_prt->at(i), 1);
+          res_prt[vlID + paramNames[1]]->Fill(tsReader.res_LOC1_prt->at(i), 1);
+          res_prt[vlID + paramNames[2]]->Fill(tsReader.res_PHI_prt->at(i), 1);
+          res_prt[vlID + paramNames[3]]->Fill(tsReader.res_THETA_prt->at(i), 1);
+          res_prt[vlID + paramNames[4]]->Fill(tsReader.res_QOP_prt->at(i), 1);
+          res_prt[vlID + paramNames[5]]->Fill(tsReader.res_T_prt->at(i), 1);
+          pull_prt[vlID + paramNames[0]]->Fill(tsReader.pull_LOC0_prt->at(i), 1);
+          pull_prt[vlID + paramNames[1]]->Fill(tsReader.pull_LOC1_prt->at(i), 1);
+          pull_prt[vlID + paramNames[2]]->Fill(tsReader.pull_PHI_prt->at(i), 1);
+          pull_prt[vlID + paramNames[3]]->Fill(tsReader.pull_THETA_prt->at(i), 1);
+          pull_prt[vlID + paramNames[4]]->Fill(tsReader.pull_QOP_prt->at(i), 1);
+          pull_prt[vlID + paramNames[5]]->Fill(tsReader.pull_T_prt->at(i), 1);
         }
         // Fill filtered parameters
-        if (filtered->at(i)) {
-          res_flt[vlID + paramNames[0]]->Fill(res_LOC0_flt->at(i), 1);
-          res_flt[vlID + paramNames[1]]->Fill(res_LOC1_flt->at(i), 1);
-          res_flt[vlID + paramNames[2]]->Fill(res_PHI_flt->at(i), 1);
-          res_flt[vlID + paramNames[3]]->Fill(res_THETA_flt->at(i), 1);
-          res_flt[vlID + paramNames[4]]->Fill(res_QOP_flt->at(i), 1);
-          res_flt[vlID + paramNames[5]]->Fill(res_T_flt->at(i), 1);
-          pull_flt[vlID + paramNames[0]]->Fill(pull_LOC0_flt->at(i), 1);
-          pull_flt[vlID + paramNames[1]]->Fill(pull_LOC1_flt->at(i), 1);
-          pull_flt[vlID + paramNames[2]]->Fill(pull_PHI_flt->at(i), 1);
-          pull_flt[vlID + paramNames[3]]->Fill(pull_THETA_flt->at(i), 1);
-          pull_flt[vlID + paramNames[4]]->Fill(pull_QOP_flt->at(i), 1);
-          pull_flt[vlID + paramNames[5]]->Fill(pull_T_flt->at(i), 1);
+        if (tsReader.filtered->at(i)) {
+          res_flt[vlID + paramNames[0]]->Fill(tsReader.res_LOC0_flt->at(i), 1);
+          res_flt[vlID + paramNames[1]]->Fill(tsReader.res_LOC1_flt->at(i), 1);
+          res_flt[vlID + paramNames[2]]->Fill(tsReader.res_PHI_flt->at(i), 1);
+          res_flt[vlID + paramNames[3]]->Fill(tsReader.res_THETA_flt->at(i), 1);
+          res_flt[vlID + paramNames[4]]->Fill(tsReader.res_QOP_flt->at(i), 1);
+          res_flt[vlID + paramNames[5]]->Fill(tsReader.res_T_flt->at(i), 1);
+          pull_flt[vlID + paramNames[0]]->Fill(tsReader.pull_LOC0_flt->at(i), 1);
+          pull_flt[vlID + paramNames[1]]->Fill(tsReader.pull_LOC1_flt->at(i), 1);
+          pull_flt[vlID + paramNames[2]]->Fill(tsReader.pull_PHI_flt->at(i), 1);
+          pull_flt[vlID + paramNames[3]]->Fill(tsReader.pull_THETA_flt->at(i), 1);
+          pull_flt[vlID + paramNames[4]]->Fill(tsReader.pull_QOP_flt->at(i), 1);
+          pull_flt[vlID + paramNames[5]]->Fill(tsReader.pull_T_flt->at(i), 1);
         }
         // Fill smoothed parameters
-        if (smoothed->at(i)) {
-          res_smt[vlID + paramNames[0]]->Fill(res_LOC0_smt->at(i), 1);
-          res_smt[vlID + paramNames[1]]->Fill(res_LOC1_smt->at(i), 1);
-          res_smt[vlID + paramNames[2]]->Fill(res_PHI_smt->at(i), 1);
-          res_smt[vlID + paramNames[3]]->Fill(res_THETA_smt->at(i), 1);
-          res_smt[vlID + paramNames[4]]->Fill(res_QOP_smt->at(i), 1);
-          res_smt[vlID + paramNames[5]]->Fill(res_T_smt->at(i), 1);
-          pull_smt[vlID + paramNames[0]]->Fill(pull_LOC0_smt->at(i), 1);
-          pull_smt[vlID + paramNames[1]]->Fill(pull_LOC1_smt->at(i), 1);
-          pull_smt[vlID + paramNames[2]]->Fill(pull_PHI_smt->at(i), 1);
-          pull_smt[vlID + paramNames[3]]->Fill(pull_THETA_smt->at(i), 1);
-          pull_smt[vlID + paramNames[4]]->Fill(pull_QOP_smt->at(i), 1);
-          pull_smt[vlID + paramNames[5]]->Fill(pull_T_smt->at(i), 1);
+        if (tsReader.smoothed->at(i)) {
+          res_smt[vlID + paramNames[0]]->Fill(tsReader.res_LOC0_smt->at(i), 1);
+          res_smt[vlID + paramNames[1]]->Fill(tsReader.res_LOC1_smt->at(i), 1);
+          res_smt[vlID + paramNames[2]]->Fill(tsReader.res_PHI_smt->at(i), 1);
+          res_smt[vlID + paramNames[3]]->Fill(tsReader.res_THETA_smt->at(i), 1);
+          res_smt[vlID + paramNames[4]]->Fill(tsReader.res_QOP_smt->at(i), 1);
+          res_smt[vlID + paramNames[5]]->Fill(tsReader.res_T_smt->at(i), 1);
+          pull_smt[vlID + paramNames[0]]->Fill(tsReader.pull_LOC0_smt->at(i), 1);
+          pull_smt[vlID + paramNames[1]]->Fill(tsReader.pull_LOC1_smt->at(i), 1);
+          pull_smt[vlID + paramNames[2]]->Fill(tsReader.pull_PHI_smt->at(i), 1);
+          pull_smt[vlID + paramNames[3]]->Fill(tsReader.pull_THETA_smt->at(i), 1);
+          pull_smt[vlID + paramNames[4]]->Fill(tsReader.pull_QOP_smt->at(i), 1);
+          pull_smt[vlID + paramNames[5]]->Fill(tsReader.pull_T_smt->at(i), 1);
         }
       }
     }

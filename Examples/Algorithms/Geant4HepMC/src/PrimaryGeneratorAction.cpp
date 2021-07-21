@@ -19,11 +19,12 @@
 #include <G4UnitsTable.hh>
 #include <Randomize.hh>
 
-ActsExamples::PrimaryGeneratorAction*
-    ActsExamples::PrimaryGeneratorAction::s_instance = nullptr;
+namespace ActsExamples::Geant4::HepMC3 {
 
-ActsExamples::PrimaryGeneratorAction::PrimaryGeneratorAction(G4int randomSeed1,
-                                                             G4int randomSeed2)
+PrimaryGeneratorAction* PrimaryGeneratorAction::s_instance = nullptr;
+
+PrimaryGeneratorAction::PrimaryGeneratorAction(G4int randomSeed1,
+                                               G4int randomSeed2)
     : G4VUserPrimaryGeneratorAction(), m_particleGun(nullptr) {
   // Configure the run
   if (s_instance) {
@@ -43,17 +44,16 @@ ActsExamples::PrimaryGeneratorAction::PrimaryGeneratorAction(G4int randomSeed1,
   CLHEP::HepRandom::getTheEngine()->setSeed(randomSeed1, randomSeed2);
 }
 
-ActsExamples::PrimaryGeneratorAction::~PrimaryGeneratorAction() {
+PrimaryGeneratorAction::~PrimaryGeneratorAction() {
   s_instance = nullptr;
 }
 
-ActsExamples::PrimaryGeneratorAction*
-ActsExamples::PrimaryGeneratorAction::instance() {
+PrimaryGeneratorAction* PrimaryGeneratorAction::instance() {
   // Static acces function via G4RunManager
   return s_instance;
 }
 
-void ActsExamples::PrimaryGeneratorAction::prepareParticleGun(
+void PrimaryGeneratorAction::prepareParticleGun(
     const ActsExamples::SimParticle& part) {
   constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
   constexpr double convertEnergy = CLHEP::GeV / Acts::UnitConstants::GeV;
@@ -69,7 +69,9 @@ void ActsExamples::PrimaryGeneratorAction::prepareParticleGun(
   m_particleGun->SetParticleMomentumDirection({dir[0], dir[1], dir[2]});
 }
 
-void ActsExamples::PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
+void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
   // Produce the event
   m_particleGun->GeneratePrimaryVertex(anEvent);
 }
+
+}  // namespace ActsExamples::Geant4::HepMC3

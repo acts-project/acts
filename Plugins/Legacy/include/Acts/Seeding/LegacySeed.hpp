@@ -43,6 +43,8 @@ class Seed {
   double m_zvertex;
 };
 
+/// @cond
+
 /////////////////////////////////////////////////////////////////////////////////
 // Inline methods
 /////////////////////////////////////////////////////////////////////////////////
@@ -104,5 +106,8 @@ Seed<SpacePoint>::Seed(const SpacePoint* b, const SpacePoint* m,
 
 template <typename SpacePoint>
 Seed<SpacePoint>::~Seed() {}
+
+/// @endcond
+
 }  // namespace Legacy
 }  // namespace Acts

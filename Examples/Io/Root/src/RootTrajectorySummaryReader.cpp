@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Root/RootTrajectoryParametersReader.hpp"
+#include "ActsExamples/Io/Root/RootTrajectorySummaryReader.hpp"
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
@@ -18,9 +18,10 @@
 
 #include <TChain.h>
 #include <TFile.h>
+#include <TMath.h>
 
-ActsExamples::RootTrajectoryParametersReader::RootTrajectoryParametersReader(
-    const ActsExamples::RootTrajectoryParametersReader::Config& cfg)
+ActsExamples::RootTrajectorySummaryReader::RootTrajectorySummaryReader(
+    const ActsExamples::RootTrajectorySummaryReader::Config& cfg)
     : ActsExamples::IReader(), m_cfg(cfg), m_events(0), m_inputChain(nullptr) {
   m_inputChain = new TChain(m_cfg.treeName.c_str());
 
@@ -35,7 +36,23 @@ ActsExamples::RootTrajectoryParametersReader::RootTrajectoryParametersReader(
   m_inputChain->SetBranchAddress("event_nr", &m_eventNr);
   m_inputChain->SetBranchAddress("multiTraj_nr", &m_multiTrajNr);
   m_inputChain->SetBranchAddress("subTraj_nr", &m_subTrajNr);
-  m_inputChain->SetBranchAddress("t_barcode", &m_t_barcode);
+
+  // These info is not really stored in the event store, but still read in
+  m_inputChain->SetBranchAddress("nStates", &m_nStates);
+  m_inputChain->SetBranchAddress("nMeasurements", &m_nMeasurements);
+  m_inputChain->SetBranchAddress("nOutliers", &m_nOutliers);
+  m_inputChain->SetBranchAddress("nHoles", &m_nHoles);
+  m_inputChain->SetBranchAddress("chi2Sum", &m_chi2Sum);
+  m_inputChain->SetBranchAddress("NDF", &m_NDF);
+  m_inputChain->SetBranchAddress("measurementChi2", &m_measurementChi2);
+  m_inputChain->SetBranchAddress("outlierChi2", &m_outlierChi2);
+  m_inputChain->SetBranchAddress("measurementVolume", &m_measurementVolume);
+  m_inputChain->SetBranchAddress("measurementLayer", &m_measurementLayer);
+  m_inputChain->SetBranchAddress("outlierVolume", &m_outlierVolume);
+  m_inputChain->SetBranchAddress("outlierLayer", &m_outlierLayer);
+
+  m_inputChain->SetBranchAddress("majorityParticleId", &m_majorityParticleId);
+  m_inputChain->SetBranchAddress("nMajorityHits", &m_nMajorityHits);
   m_inputChain->SetBranchAddress("t_charge", &m_t_charge);
   m_inputChain->SetBranchAddress("t_time", &m_t_time);
   m_inputChain->SetBranchAddress("t_vx", &m_t_vx);
@@ -71,22 +88,43 @@ ActsExamples::RootTrajectoryParametersReader::RootTrajectoryParametersReader(
 
   m_events = m_inputChain->GetEntries();
   ACTS_DEBUG("The full chain has " << m_events << " entries.");
+
+  // If the events are not in order, get the entry numbers for ordered events
+  if (not m_cfg.orderedEvents) {
+    m_entryNumbers.resize(m_events);
+    m_inputChain->Draw("event_nr", "", "goff");
+    // Sort to get the entry numbers of the ordered events
+    TMath::Sort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
+                m_entryNumbers.data(), false);
+  }
 }
 
-std::string ActsExamples::RootTrajectoryParametersReader::name() const {
+std::string ActsExamples::RootTrajectorySummaryReader::name() const {
   return m_cfg.name;
 }
 
 std::pair<size_t, size_t>
-ActsExamples::RootTrajectoryParametersReader::availableEvents() const {
+ActsExamples::RootTrajectorySummaryReader::availableEvents() const {
   return {0u, m_events};
 }
 
-ActsExamples::RootTrajectoryParametersReader::
-    ~RootTrajectoryParametersReader() {
+ActsExamples::RootTrajectorySummaryReader::~RootTrajectorySummaryReader() {
   delete m_multiTrajNr;
   delete m_subTrajNr;
-  delete m_t_barcode;
+  delete m_nStates;
+  delete m_nMeasurements;
+  delete m_nOutliers;
+  delete m_nHoles;
+  delete m_chi2Sum;
+  delete m_NDF;
+  delete m_measurementChi2;
+  delete m_outlierChi2;
+  delete m_measurementVolume;
+  delete m_measurementLayer;
+  delete m_outlierVolume;
+  delete m_outlierLayer;
+  delete m_majorityParticleId;
+  delete m_nMajorityHits;
   delete m_t_charge;
   delete m_t_time;
   delete m_t_vx;
@@ -114,7 +152,7 @@ ActsExamples::RootTrajectoryParametersReader::
   delete m_err_eT_fit;
 }
 
-ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersReader::read(
+ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryReader::read(
     const ActsExamples::AlgorithmContext& context) {
   ACTS_DEBUG("Trying to read recorded tracks.");
 
@@ -132,9 +170,14 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersReader::read(
     std::vector<Acts::BoundTrackParameters> trackParameterCollection;
     SimParticleContainer truthParticleCollection;
 
-    // Read the correct entry: batch size * event_number + ib
-    m_inputChain->GetEntry(context.eventNumber);
-    ACTS_VERBOSE("Reading entry: " << context.eventNumber);
+    // Read the correct entry
+    auto entry = context.eventNumber;
+    if (not m_cfg.orderedEvents and entry < m_entryNumbers.size()) {
+      entry = m_entryNumbers[entry];
+    }
+    m_inputChain->GetEntry(entry);
+    ACTS_INFO("Reading event: " << context.eventNumber
+                                << " stored as entry: " << entry);
 
     unsigned int nTracks = m_eLOC0_fit->size();
     for (unsigned int i = 0; i < nTracks; i++) {
@@ -169,7 +212,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersReader::read(
       truthParticle.setPosition4((*m_t_vx)[i], (*m_t_vy)[i], (*m_t_vz)[i],
                                  (*m_t_time)[i]);
       truthParticle.setDirection((*m_t_px)[i], (*m_t_py)[i], (*m_t_pz)[i]);
-      truthParticle.setParticleId((*m_t_barcode)[i]);
+      truthParticle.setParticleId((*m_majorityParticleId)[i]);
 
       truthParticleCollection.insert(truthParticleCollection.end(),
                                      truthParticle);

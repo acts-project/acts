@@ -37,11 +37,12 @@ class GaussianGridTrackDensity {
   using MainGridVector = Eigen::Matrix<float, mainGridSize, 1>;
   using TrackGridVector = Eigen::Matrix<float, trkGridSize, 1>;
 
-  /// @struct Config The configuration struct
+  /// The configuration struct
   struct Config {
-    /// @param zMinMax The minimum and maximum z-values (in mm) that
-    /// should be covered by the main 1-dim density grid along the z-axis
-    /// Note: This value together with 'mainGridSize' determines the
+    /// @param zMinMax_ The minimum and maximum z-values (in mm) that
+    ///                 should be covered by the main 1-dim density grid along
+    ///                 the z-axis
+    /// @note The value of @p zMinMax_ together with @p mainGridSize determines the
     /// overall bin size to be used as seen below
     Config(float zMinMax_ = 100) : zMinMax(zMinMax_) {
       binSize = 2. * zMinMax / mainGridSize;
@@ -143,7 +144,7 @@ class GaussianGridTrackDensity {
   /// the maximum density peak
   ///
   /// @param mainGrid The main 1-dim density grid along the z-axis
-  /// @maxZ z-position of the maximum density value
+  /// @param maxZ z-position of the maximum density value
   ///
   /// @return The width
   Result<float> estimateSeedWidth(MainGridVector& mainGrid, float maxZ) const;
@@ -164,7 +165,7 @@ class GaussianGridTrackDensity {
   /// @brief Calculates the density sum of a z-bin and its two neighboring bins
   /// as needed for 'getHighestSumZPosition'
   ///
-  /// @parem mainGrid The main 1-dim density grid along the z-axis
+  /// @param mainGrid The main 1-dim density grid along the z-axis
   /// @param pos The center z-bin positon
   ///
   /// @return The sum

@@ -41,18 +41,35 @@ class RiddersPropagator {
   /// here to allow a look'n'feel of this class like the Propagator itself
   ///
 
-  /// @copydoc Propagator::result_type_helper
+  /// @brief Helper struct determining the result's type
+  ///
+  /// @tparam parameters_t Type of final track parameters
+  /// @tparam action_list_t    List of propagation action types
+  ///
+  /// This helper struct provides type definitions to extract the correct
+  /// propagation result type from a given TrackParameter type and an
+  /// ActionList.
+  ///
   template <typename parameters_t, typename action_list_t>
   struct result_type_helper {
-    /// @copydoc Propagator::result_type_helper::this_result_type
+    /// @brief Propagation result type for an arbitrary list of additional
+    ///        propagation results
+    ///
+    /// @tparam args Parameter pack specifying additional propagation results
+    ///
     template <typename... args>
     using this_result_type = PropagatorResult<parameters_t, args...>;
 
-    /// @copydoc Propagator::result_type_helper::type
+    /// @brief Propagation result type derived from a given action list
     using type = typename action_list_t::template result_type<this_result_type>;
   };
 
-  /// @copydoc Propagator::action_list_t_result_t
+  /// @brief Short-hand type definition for propagation result derived from
+  ///        an action list
+  ///
+  /// @tparam parameters_t Type of the final track parameters
+  /// @tparam action_list_t List of propagation action types
+  ///
   template <typename parameters_t, typename action_list_t>
   using action_list_t_result_t =
       typename result_type_helper<parameters_t, action_list_t>::type;
@@ -96,6 +113,7 @@ class RiddersPropagator {
   /// @tparam propagator_options_t Type of the propagator options
   ///
   /// @param [in] start Start parameters
+  /// @param [in] target The target surface
   /// @param [in] options Options of the propagations
   ///
   /// @return Result of the propagation
@@ -128,10 +146,11 @@ class RiddersPropagator {
   /// @tparam parameters+t Type of the parameters to start the propagation with
   ///
   /// @param [in] options Options do define how to wiggle
-  /// @param [in] startPart Start parameters that are modified
+  /// @param [in] startPars Start parameters that are modified
   /// @param [in] param Index to get the parameter that will be modified
   /// @param [in] target Target surface
   /// @param [in] nominal Nominal end parameters
+  /// @param [in] deviations Vector of deviations
   ///
   /// @return Vector containing each slope
   template <typename options_t, typename parameters_t>
@@ -144,6 +163,7 @@ class RiddersPropagator {
   ///
   /// @param [in] derivatives Slopes of each modification of the parameters
   /// @param [in] startCov Starting covariance
+  /// @param [in] deviations Vector of deviations
   ///
   /// @return Propagated covariance matrix
   Covariance calculateCovariance(
@@ -154,6 +174,7 @@ class RiddersPropagator {
   /// parametrisations
   ///
   /// @param [in] values Vector containing the final state parametrisations
+  /// @param [in] deviations Vector of deviations
   ///
   /// @return Vector containing the linear fit
   BoundVector fitLinear(const std::vector<BoundVector>& values,

@@ -405,7 +405,7 @@ struct WrappingConfig {
     // for screen output
     std::stringstream sl;
     if (containerVolumeConfig) {
-      sl << "New contaienr built with       configuration: "
+      sl << "New container built with       configuration: "
          << containerVolumeConfig.toString() << '\n';
     }
     // go throug the new new ones first
@@ -541,6 +541,7 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
   ///
   /// @param [in] gctx the geometry context for this building
   /// @param [in] lVector is the vector of layers that are parsed
+  /// @param [in] mtvVector Vector of mutable tracking volumes to analyze
   ///
   /// @return a VolumeConfig representing this layer
   VolumeConfig analyzeContent(

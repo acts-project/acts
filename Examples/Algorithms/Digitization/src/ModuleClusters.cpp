@@ -8,7 +8,7 @@
 
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
 
-#include "Acts/Plugins/Digitization/Clusterization.hpp"
+#include "Acts/Clusterization/Clusterization.hpp"
 
 namespace ActsExamples {
 
@@ -311,7 +311,7 @@ ModuleClusters::ModuleValue ModuleClusters::squash(
   return mval;
 }
 
-double ModuleClusters::ModuleValueAmbi::depositedEnergy() {
+double ModuleClusters::ModuleValueAmbi::activation() {
   double acc = 0;
   for (ModuleValue& mval : values) {
     if (std::holds_alternative<Cluster>(mval.value)) {

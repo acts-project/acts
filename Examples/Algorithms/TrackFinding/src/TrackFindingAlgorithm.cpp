@@ -58,7 +58,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   // Set the CombinatorialKalmanFilter options
   ActsExamples::TrackFindingAlgorithm::TrackFinderOptions options(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
-      MeasurementCalibrator(measurements),
+      IndexSourceLinkAccessor(), MeasurementCalibrator(measurements),
       Acts::MeasurementSelector(m_cfg.measurementSelectorCfg),
       Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
 
