@@ -22,10 +22,11 @@ HepMC3::GenParticlePtr actsParticleToGen(
   const auto mom4 = actsParticle->fourMomentum();
   const HepMC3::FourVector vec(mom4[0], mom4[1], mom4[2], mom4[3]);
   // Create HepMC3::GenParticle
-  HepMC3::GenParticle genParticle(vec, actsParticle->pdg());
-  genParticle.set_generated_mass(actsParticle->mass());
+  auto genParticle =
+      std::make_shared<HepMC3::GenParticle>(vec, actsParticle->pdg());
+  genParticle->set_generated_mass(actsParticle->mass());
 
-  return std::shared_ptr<HepMC3::GenParticle>(&genParticle);
+  return genParticle;
 }
 
 /// @brief Converts an Acts vertex to a HepMC3::GenVertexPtr
@@ -39,21 +40,21 @@ HepMC3::GenVertexPtr createGenVertex(
       actsVertex->position4[2], actsVertex->position4[3]);
 
   // Create vertex
-  HepMC3::GenVertex genVertex(vec);
+  auto genVertex = std::make_shared<HepMC3::GenVertex>(vec);
 
   // Store incoming particles
   for (auto& particle : actsVertex->incoming) {
     HepMC3::GenParticlePtr genParticle = actsParticleToGen(
         std::make_shared<ActsExamples::SimParticle>(particle));
-    genVertex.add_particle_in(genParticle);
+    genVertex->add_particle_in(genParticle);
   }
   // Store outgoing particles
   for (auto& particle : actsVertex->outgoing) {
     HepMC3::GenParticlePtr genParticle = actsParticleToGen(
         std::make_shared<ActsExamples::SimParticle>(particle));
-    genVertex.add_particle_out(genParticle);
+    genVertex->add_particle_out(genParticle);
   }
-  return std::shared_ptr<HepMC3::GenVertex>(&genVertex);
+  return genVertex;
 }
 
 /// @brief Compares an Acts vertex with a HepMC3::GenVertex

@@ -14,7 +14,7 @@
 
 #include "EventAction.hpp"
 
-using namespace ActsExamples;
+namespace ActsExamples::Geant4 {
 
 RunAction* RunAction::s_instance = nullptr;
 
@@ -50,3 +50,5 @@ void RunAction::EndOfRunAction(const G4Run* aRun) {
          << "\n------------------------------------------------------------\n"
          << G4endl;
 }
+
+}  // namespace ActsExamples::Geant4

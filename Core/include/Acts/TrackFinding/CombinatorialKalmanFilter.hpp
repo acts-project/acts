@@ -178,9 +178,6 @@ struct CombinatorialKalmanFilterResult {
   // The index for the current smoothing track
   size_t iSmoothed = 0;
 
-  // Indicator if the propagation state has been reset
-  bool reset = false;
-
   // Indicator if track finding has been done
   bool finished = false;
 
@@ -295,23 +292,6 @@ class CombinatorialKalmanFilter {
       }
 
       ACTS_VERBOSE("CombinatorialKalmanFilter step");
-
-      // This following is added due to the fact that the navigation
-      // reinitialization in reset call cannot guarantee the navigator to target
-      // for extra layers in the reset volume.
-      // Currently, manually set navigation stage to allow for targeting layers
-      // after all the surfaces on the reset layer has been processed.
-      // Otherwise, the navigation stage will be Stage::boundaryTarget after
-      // navigator status call which means the extra layers on the reset volume
-      // won't be targeted.
-      // @Todo: Let the navigator do all the re-initialization
-      if (result.reset and state.navigation.navSurfaceIter ==
-                               state.navigation.navSurfaces.end()) {
-        // So the navigator target call will target layers
-        state.navigation.navigationStage = KalmanNavigator::Stage::layerTarget;
-        // We only do this after the reset layer has been processed
-        result.reset = false;
-      }
 
       // Update:
       // - Waiting for a current surface
@@ -491,23 +471,8 @@ class CombinatorialKalmanFilter {
     template <typename propagator_state_t, typename stepper_t>
     void reset(propagator_state_t& state, stepper_t& stepper,
                result_type& result) const {
-      // Remember the propagation state has been reset
-      result.reset = true;
       auto currentState =
           result.fittedStates.getTrackState(result.activeTips.back().first);
-
-      // Reset the navigation state
-      state.navigation = typename propagator_t::NavigatorState();
-      state.navigation.startSurface = &currentState.referenceSurface();
-      if (state.navigation.startSurface->associatedLayer() != nullptr) {
-        state.navigation.startLayer =
-            state.navigation.startSurface->associatedLayer();
-      }
-      state.navigation.startVolume =
-          state.navigation.startLayer->trackingVolume();
-      state.navigation.targetSurface = targetSurface;
-      state.navigation.currentSurface = state.navigation.startSurface;
-      state.navigation.currentVolume = state.navigation.startVolume;
 
       // Update the stepping state
       stepper.resetState(state.stepping, currentState.filtered(),
@@ -515,9 +480,15 @@ class CombinatorialKalmanFilter {
                          currentState.referenceSurface(), state.stepping.navDir,
                          state.options.maxStepSize);
 
+      // Reset the navigation state
+      state.navigation.reset(state.geoContext, stepper.position(state.stepping),
+                             stepper.direction(state.stepping),
+                             state.stepping.navDir,
+                             &currentState.referenceSurface(), targetSurface);
+
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here
-      materialInteractor(state.navigation.startSurface, state, stepper);
+      materialInteractor(state.navigation.currentSurface, state, stepper);
     }
 
     /// @brief CombinatorialKalmanFilter actor operation :

@@ -109,11 +109,13 @@ struct NonCopyableControlBlock : public ControlBlockBase<T> {
 template <class T>
 class PolymorphicValue;
 
+/// @cond
 /// @brief Base specialization: false
 ///
 /// @tparam T The type to check
 template <class T>
 struct IsPolymorphicValue : std::false_type {};
+/// @endcond
 
 ///@brief The true specialization
 ///
@@ -460,6 +462,7 @@ class PolymorphicValue {
   T* m_pointer{nullptr};
 };
 
+/// @cond
 /// @brief Factory function for a polymorphic value from constructor arguments
 ///
 /// @tparam T The base type of the returned polymorphic value
@@ -472,6 +475,7 @@ PolymorphicValue<T> makePolymorphicValue(Args&&... args) {
   return PolymorphicValue<T>{std::in_place_type_t<U>(),
                              std::forward<Args>(args)...};
 }
+/// @endcond
 
 /// @brief Factory function for a polymorphic value from constructor arguments
 ///

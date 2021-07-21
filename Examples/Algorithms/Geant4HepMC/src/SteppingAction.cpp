@@ -18,16 +18,16 @@
 
 #include "EventAction.hpp"
 
-ActsExamples::SteppingAction* ActsExamples::SteppingAction::s_instance =
-    nullptr;
+namespace ActsExamples::Geant4::HepMC3 {
 
-ActsExamples::SteppingAction* ActsExamples::SteppingAction::instance() {
+SteppingAction* SteppingAction::s_instance = nullptr;
+
+SteppingAction* SteppingAction::instance() {
   // Static acces function via G4RunManager
   return s_instance;
 }
 
-ActsExamples::SteppingAction::SteppingAction(
-    std::vector<std::string> eventRejectionProcess)
+SteppingAction::SteppingAction(std::vector<std::string> eventRejectionProcess)
     : G4UserSteppingAction(),
       m_eventRejectionProcess(std::move(eventRejectionProcess)) {
   if (s_instance) {
@@ -37,11 +37,11 @@ ActsExamples::SteppingAction::SteppingAction(
   }
 }
 
-ActsExamples::SteppingAction::~SteppingAction() {
+SteppingAction::~SteppingAction() {
   s_instance = nullptr;
 }
 
-void ActsExamples::SteppingAction::UserSteppingAction(const G4Step* step) {
+void SteppingAction::UserSteppingAction(const G4Step* step) {
   // Test if the event should be aborted
   if (std::find(m_eventRejectionProcess.begin(), m_eventRejectionProcess.end(),
                 step->GetPostStepPoint()
@@ -60,9 +60,9 @@ void ActsExamples::SteppingAction::UserSteppingAction(const G4Step* step) {
   /// along the step. In total the entire event is represented by vertices which
   /// describe each step in Geant4.
 
-  HepMC3::GenEvent& event = EventAction::instance()->event();
+  ::HepMC3::GenEvent& event = EventAction::instance()->event();
 
-  // Unit conversions G4->HepMC3
+  // Unit conversions G4->::HepMC3
   constexpr double convertLength = 1. / CLHEP::mm;
   constexpr double convertEnergy = 1. / CLHEP::GeV;
   constexpr double convertTime = 1. / CLHEP::s;
@@ -72,13 +72,13 @@ void ActsExamples::SteppingAction::UserSteppingAction(const G4Step* step) {
   const std::string trackId = std::to_string(track->GetTrackID());
   auto postStepMomentum = track->GetMomentum() * convertEnergy;
   auto postStepEnergy = track->GetTotalEnergy() * convertEnergy;
-  HepMC3::FourVector mom4{postStepMomentum[0], postStepMomentum[1],
-                          postStepMomentum[2], postStepEnergy};
-  auto postParticle = std::make_shared<HepMC3::GenParticle>(
+  ::HepMC3::FourVector mom4{postStepMomentum[0], postStepMomentum[1],
+                            postStepMomentum[2], postStepEnergy};
+  auto postParticle = std::make_shared<::HepMC3::GenParticle>(
       mom4, track->GetDynamicParticle()->GetPDGcode());
 
   // The process the led to the current state
-  auto process = std::make_shared<HepMC3::StringAttribute>(
+  auto process = std::make_shared<::HepMC3::StringAttribute>(
       step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName());
 
   // Assign particle to a production vertex
@@ -87,12 +87,12 @@ void ActsExamples::SteppingAction::UserSteppingAction(const G4Step* step) {
     auto* preStep = step->GetPreStepPoint();
     auto prePosition = preStep->GetPosition() * convertLength;
     auto preTime = preStep->GetGlobalTime() * convertTime;
-    HepMC3::FourVector prePos{prePosition[0], prePosition[1], prePosition[2],
-                              preTime};
+    ::HepMC3::FourVector prePos{prePosition[0], prePosition[1], prePosition[2],
+                                preTime};
 
     // Handle the first step: No vertices exist
     if (event.vertices().empty()) {
-      auto vertex = std::make_shared<HepMC3::GenVertex>(prePos);
+      auto vertex = std::make_shared<::HepMC3::GenVertex>(prePos);
       vertex->add_particle_out(postParticle);
       event.add_vertex(vertex);
       vertex->set_status(1);
@@ -108,7 +108,7 @@ void ActsExamples::SteppingAction::UserSteppingAction(const G4Step* step) {
               step->GetPreStepPoint()->GetMomentum() * convertEnergy;
           auto preStepEnergy =
               step->GetPreStepPoint()->GetTotalEnergy() * convertEnergy;
-          auto preMom4 = std::make_shared<HepMC3::VectorDoubleAttribute>(
+          auto preMom4 = std::make_shared<::HepMC3::VectorDoubleAttribute>(
               std::vector<double>{preStepMomentum[0], preStepMomentum[1],
                                   preStepMomentum[2], preStepEnergy});
           vertex->add_attribute("InitialParametersOf-" + trackId, preMom4);
@@ -117,7 +117,7 @@ void ActsExamples::SteppingAction::UserSteppingAction(const G4Step* step) {
     if (track->GetCreatorProcess())
       postParticle->add_attribute(
           "CreatorProcessOf-" + trackId,
-          std::make_shared<HepMC3::StringAttribute>(
+          std::make_shared<::HepMC3::StringAttribute>(
               track->GetCreatorProcess()->GetProcessName()));
   } else {
     // Add particle from same track to vertex
@@ -129,9 +129,9 @@ void ActsExamples::SteppingAction::UserSteppingAction(const G4Step* step) {
   auto* postStep = step->GetPostStepPoint();
   auto postPosition = postStep->GetPosition() * convertLength;
   auto postTime = postStep->GetGlobalTime() * convertTime;
-  HepMC3::FourVector postPos{postPosition[0], postPosition[1], postPosition[2],
-                             postTime};
-  m_previousVertex = std::make_shared<HepMC3::GenVertex>(postPos);
+  ::HepMC3::FourVector postPos{postPosition[0], postPosition[1],
+                               postPosition[2], postTime};
+  m_previousVertex = std::make_shared<::HepMC3::GenVertex>(postPos);
 
   // Add particle to the vertex
   m_previousVertex->add_particle_in(postParticle);
@@ -141,30 +141,33 @@ void ActsExamples::SteppingAction::UserSteppingAction(const G4Step* step) {
 
   // Store additional data in the particle
   postParticle->add_attribute(
-      "TrackID", std::make_shared<HepMC3::IntAttribute>(track->GetTrackID()));
+      "TrackID", std::make_shared<::HepMC3::IntAttribute>(track->GetTrackID()));
   postParticle->add_attribute(
-      "ParentID", std::make_shared<HepMC3::IntAttribute>(track->GetParentID()));
+      "ParentID",
+      std::make_shared<::HepMC3::IntAttribute>(track->GetParentID()));
   const double X0 = track->GetMaterial()->GetRadlen() * convertLength;
   const double L0 =
       track->GetMaterial()->GetNuclearInterLength() * convertLength;
   const double stepLength = track->GetStepLength();
   postParticle->add_attribute("NextX0",
-                              std::make_shared<HepMC3::DoubleAttribute>(X0));
+                              std::make_shared<::HepMC3::DoubleAttribute>(X0));
   postParticle->add_attribute("NextL0",
-                              std::make_shared<HepMC3::DoubleAttribute>(L0));
+                              std::make_shared<::HepMC3::DoubleAttribute>(L0));
   postParticle->add_attribute(
-      "StepLength", std::make_shared<HepMC3::DoubleAttribute>(stepLength));
+      "StepLength", std::make_shared<::HepMC3::DoubleAttribute>(stepLength));
   postParticle->set_status(1);
 
   // Stop tracking the vertex if the particle dies
   if (track->GetTrackStatus() != fAlive) {
-    process = std::make_shared<HepMC3::StringAttribute>("Death");
+    process = std::make_shared<::HepMC3::StringAttribute>("Death");
     m_previousVertex->add_attribute("NextProcessOf-" + trackId, process);
     m_previousVertex = nullptr;
   }
 }
 
-void ActsExamples::SteppingAction::clear() {
+void SteppingAction::clear() {
   m_previousVertex = nullptr;
   m_eventAborted = false;
 }
+
+}  // namespace ActsExamples::Geant4::HepMC3

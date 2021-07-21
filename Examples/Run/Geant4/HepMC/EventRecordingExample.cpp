@@ -33,6 +33,7 @@ int main(int argc, char* argv[]) {
   ActsExamples::Options::addSequencerOptions(desc);
   ActsExamples::Options::addOutputOptions(
       desc, ActsExamples::OutputFormat::DirectoryOnly);
+  ActsExamples::Options::addInputOptions(desc);
   ActsExamples::Options::addDD4hepOptions(desc);
   ActsExamples::Options::addGeant4Options(desc);
   ActsExamples::Options::addHepMC3WriterOptions(desc);
