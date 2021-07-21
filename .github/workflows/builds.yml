@@ -95,7 +95,6 @@ jobs:
           dnf -y install ninja-build tbb-devel
       - name: Configure
         run: >
-          ${SETUP} &&
           cmake -B build -S .
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
@@ -103,11 +102,10 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_BUILD_UNITTESTS=ON
           -DACTS_BUILD_INTEGRATIONTESTS=ON
-          -DACTS_BUILD_EXAMPLES=ON
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
           -DACTS_USE_SYSTEM_BOOST=off
           -DACTS_USE_SYSTEM_EIGEN3=off
-          -DTBB_DIR=/opt/lcg/tbb/2020_U2-daa7e/x86_64-centos8-gcc10-opt/lib/cmake/
+          -DACTS_BUILD_PLUGIN_JSON=on
       - name: Build
         run: ${SETUP} && cmake --build build --
       - name: Unit tests
@@ -116,10 +114,29 @@ jobs:
         run: ${SETUP} && cmake --build build -- integrationtests
       - name: Install
         run: ${SETUP} && cmake --build build -- install
-      - name: Example
+      # For some reasons, this version of ROOT complains that it
+      # cannot find the nlohmann::json config before we even installed
+      # it. So we have to do the examples in separate step.
+      - name: Configure Examples
+        run: >
+          ${SETUP} &&
+          cmake -B build -S .
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
+          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+          -DACTS_LOG_FAILURE_THRESHOLD=WARNING
+          -DACTS_USE_SYSTEM_BOOST=off
+          -DACTS_USE_SYSTEM_EIGEN3=off        
+          -DACTS_BUILD_EXAMPLES=ON
+      - name: Build Examples
+        run: ${SETUP} && cmake --build build --
+      - name: Install Examples
+        run: ${SETUP} && cmake --build build -- install
+      - name: Run Examples
         # Run a single example to be sure that the boost dependencies
         # got linked correctly
-        run: ${SETUP} && ${PRELOAD} && ./build/bin/ActsExampleHelloWorld -n 1
+        run: ${SETUP} && ${PRELOAD} && "${INSTALL_DIR}/bin/ActsExampleHelloWorld" -n 1
       - name: Downstream configure
         run: >
           ${SETUP} &&
