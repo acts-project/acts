@@ -1339,39 +1339,44 @@ class CombinatorialKalmanFilter {
 
     // Compute nSharedhits and Update ckf results
     // hit index -> list of multi traj indexes [traj, meas]
-    std::unordered_map<std::size_t, std::vector< std::pair<std::size_t, std::size_t> > > recordedHits;
+    // @todo put shared hit computation in ad-hoc method
+    std::unordered_map<std::size_t,
+                       std::vector<std::pair<std::size_t, std::size_t>>>
+        recordedHits;
 
-    for (unsigned int iresult(0); iresult<ckfResults.size(); iresult++) {
-      if (not ckfResults.at(iresult).ok()) 
-	continue;
+    for (unsigned int iresult(0); iresult < ckfResults.size(); iresult++) {
+      if (not ckfResults.at(iresult).ok())
+        continue;
 
-      CombinatorialKalmanFilterResult& ckfResult = ckfResults.at(iresult).value();
-      auto& measIndexes = ckfResults.at(iresult).value().lastMeasurementIndices;
+      auto& ckfResult = ckfResults.at(iresult).value();
+      auto& measIndexes = ckfResult.lastMeasurementIndices;
 
       for (auto measIndex : measIndexes) {
-	ckfResult.fittedStates.visitBackwards(measIndex,
-					      [&](const auto& state){
-						if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag))
-						  return;
+        ckfResult.fittedStates.visitBackwards(
+            measIndex, [&](const auto& state) {
+              if (not state.typeFlags().test(
+                      Acts::TrackStateFlag::MeasurementFlag))
+                return;
 
-						const SourceLink sl = state.uncalibrated();
-						std::size_t hitIndex = sl.index();
+              std::size_t hitIndex = state.uncalibrated().index();
 
-						if (recordedHits.find(hitIndex) == recordedHits.end())
-						  recordedHits[hitIndex] = std::vector< std::pair<std::size_t, std::size_t> >();
-						recordedHits[hitIndex].push_back(std::make_pair(iresult, state.index()));
-					      });
+              if (recordedHits.find(hitIndex) == recordedHits.end())
+                recordedHits[hitIndex] =
+                    std::vector<std::pair<std::size_t, std::size_t>>();
+              recordedHits[hitIndex].push_back(
+                  std::make_pair(iresult, state.index()));
+            });
       }
     }
 
     for (const auto& [hitIndex, trackIndexArray] : recordedHits) {
-      if (trackIndexArray.size() < 2) 
-	continue;
+      if (trackIndexArray.size() < 2)
+        continue;
 
       for (const auto& [iresult, imeas] : trackIndexArray) {
-	CombinatorialKalmanFilterResult& ckfResult = ckfResults.at(iresult).value();
-	auto& mj = ckfResult.fittedStates;
-	mj.getTrackState(imeas).typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
+        auto& mj = ckfResults.at(iresult).value().fittedStates;
+        mj.getTrackState(imeas).typeFlags().set(
+            Acts::TrackStateFlag::SharedHitFlag);
       }
     }
 
