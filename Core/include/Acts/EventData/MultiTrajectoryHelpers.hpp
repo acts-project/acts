@@ -21,7 +21,6 @@ namespace Acts {
 namespace MultiTrajectoryHelpers {
 
 /// @brief Struct for brief trajectory summary info
-/// @todo add nSharedHits
 ///
 struct TrajectoryState {
   size_t nStates = 0;
@@ -118,6 +117,8 @@ VolumeTrajectoryStateContainer trajectoryState(
     trajState.NDF += state.calibratedSize();
     auto typeFlags = state.typeFlags();
     if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
+      if (typeFlags.test(Acts::TrackStateFlag::SharedHitFlag))
+        trajState.nSharedHits++;
       trajState.nMeasurements++;
       trajState.measurementChi2.push_back(state.chi2());
       trajState.measurementVolume.push_back(volume);
