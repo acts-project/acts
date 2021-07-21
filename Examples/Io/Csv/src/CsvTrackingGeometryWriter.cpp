@@ -253,7 +253,7 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
 
     // Now loop over the layer and write them
     for (auto layer : layers) {
-      // We jump navigation layers from layer volume writing
+      // We skip over navigation layers for layer volume writing
       // they will be written with the sensitive/passive parts for
       // synchronization
       if (layer->layerType() == Acts::navigation) {
