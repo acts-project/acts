@@ -56,5 +56,3 @@ ACTS libraries, with a version suffix. This location may be known to the system 
 For convenience, it's possible to use the ACTS build system to build
 the minimum required version of [Eigen](https://eigen.tuxfamily.org)
 (currently 3.3.7), with "-DACTS_USE_SYSTEM_EIGEN3=OFF".
-
-Note that the headers are _not_ installed.
