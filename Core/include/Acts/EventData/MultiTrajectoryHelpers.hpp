@@ -65,8 +65,8 @@ TrajectoryState trajectoryState(
     trajState.NDF += state.calibratedSize();
     auto typeFlags = state.typeFlags();
     if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
-      if (typeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) 
-	trajState.nSharedHits++;
+      if (typeFlags.test(Acts::TrackStateFlag::SharedHitFlag))
+        trajState.nSharedHits++;
       trajState.nMeasurements++;
       trajState.measurementChi2.push_back(state.chi2());
       trajState.measurementVolume.push_back(volume);
@@ -79,7 +79,7 @@ TrajectoryState trajectoryState(
     } else if (typeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
       trajState.nHoles++;
     }
-    });
+  });
   return trajState;
 }
 

@@ -143,8 +143,8 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
       // Fill the trajectory summary info
       m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
                                   trajState.nStates, trajState.nMeasurements,
-                                  trajState.nOutliers, trajState.nHoles, 
-				  trajState.nSharedHits);
+                                  trajState.nOutliers, trajState.nHoles,
+                                  trajState.nSharedHits);
 
       // Get the majority truth particle to this track
       identifyContributingParticles(hitParticlesMap, traj, trackTip,
