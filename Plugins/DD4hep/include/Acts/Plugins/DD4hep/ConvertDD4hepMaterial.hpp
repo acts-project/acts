@@ -27,8 +27,6 @@ class Layer;
 /// @param detElement the DD4hep detector element (source)
 /// @param cylinderLayer the Layer to be decorated (target)
 /// @param loggingLevel is the output level for the conversion
-///
-/// @return a map of the identification string and a surface material
 void addCylinderLayerProtoMaterial(
     dd4hep::DetElement detElement, Layer& cylinderLayer,
     Logging::Level loggingLevel = Logging::Level::INFO);
@@ -40,8 +38,6 @@ void addCylinderLayerProtoMaterial(
 /// @param detElement the DD4hep detector element (source)
 /// @param discLayer the Layer to be decorated (target)
 /// @param loggingLevel is the output level for the conversion
-///
-/// @return a map of the identification string and a surface material
 void addDiscLayerProtoMaterial(
     dd4hep::DetElement detElement, Layer& discLayer,
     Logging::Level loggingLevel = Logging::Level::INFO);
