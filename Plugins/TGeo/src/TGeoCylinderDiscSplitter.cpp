@@ -25,7 +25,7 @@ std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
 Acts::TGeoCylinderDiscSplitter::split(
     const GeometryContext& gctx,
     std::shared_ptr<const Acts::TGeoDetectorElement> tgde) const {
-    const Acts::Surface& sf = tgde->surface();
+  const Acts::Surface& sf = tgde->surface();
   // Thickness
   auto tgIdentifier = tgde->identifier();
   const TGeoNode& tgNode = tgde->tgeoNode();
