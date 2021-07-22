@@ -25,6 +25,7 @@
 #include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Plugins/Obj/ObjPropagationStepsWriter.hpp"
+#include "ActsExamples/Propagation/PropagatorInterface.hpp"
 #include "ActsExamples/Propagation/PropagationOptions.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
@@ -86,11 +87,16 @@ int main(int argc, char** argv) {
 
     // Read the propagation config and create the algorithms
     auto pAlgConfig =
-        ActsExamples::Options::readPropagationConfig(vm, propagator);
+        ActsExamples::Options::readPropagationConfig(vm);
+
+    pAlgConfig.sterileLogger = false;
     pAlgConfig.randomNumberSvc = randomNumberSvc;
-    sequencer.addAlgorithm(
-        std::make_shared<ActsExamples::PropagationAlgorithm<Propagator>>(
-            pAlgConfig, logLevel));
+    pAlgConfig.propagatorImpl =
+        std::make_shared<ActsExamples::ConcretePropagator<Propagator>>(
+            std::move(propagator));
+
+    sequencer.addAlgorithm(std::make_shared<ActsExamples::PropagationAlgorithm>(
+        pAlgConfig, logLevel));
   };
 
   Acts::GuidedNavigator<Acts::TrialAndErrorSurfaceProvider> navigator(

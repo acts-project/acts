@@ -1,0 +1,2 @@
+add_executable(TestGuidedNavigator2 TestGuidedNavigator2.cpp)
+target_link_libraries(TestGuidedNavigator2 ActsCore ActsExamplesDetectorTelescope)
