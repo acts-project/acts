@@ -46,7 +46,7 @@ void addDiscLayerProtoMaterial(
 ///
 /// For both, cylinder and disc, the closed binning value is "binPhi"
 ///
-/// @param aExtension the ActsExtension for the binning parameters
+/// @param actsExtension the ActsExtension for the binning parameters
 /// @param layer the Layer to assign the proto material (target)
 /// @param binning the Binning prescription for the ActsExtension
 void addLayerProtoMaterial(
