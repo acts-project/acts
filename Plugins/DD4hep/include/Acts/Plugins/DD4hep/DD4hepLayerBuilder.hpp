@@ -131,8 +131,6 @@ class DD4hepLayerBuilder : public ILayerBuilder {
   /// Private helper method to be called for endcap layers
   ///
   /// @param gctx the geometry context for this build call
-  /// @param dendcapLayers Vector of detector elements for the endcap layers
-  /// @param side Which endcap side it is
   ///
   /// @return  the layers for either endcap side
   const LayerVector endcapLayers(
@@ -142,6 +140,7 @@ class DD4hepLayerBuilder : public ILayerBuilder {
 
   /// Private helper function collecting all sensitive detector elements of a
   /// layer
+  /// @param gctx the geometry context of this call
   /// @param detElement the DD4hep::DetElement of the layer
   /// @param surfaces the vector of surfaces which should be filled with the
   /// sensitive detector elements

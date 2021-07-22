@@ -6,10 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// ActsExtension.hpp, Acts project, DD4hepDetector plugin
-///////////////////////////////////////////////////////////////////
-
 #pragma once
 
 #include <string>
@@ -45,7 +41,6 @@ class ActsExtension {
   /// Copy constructor with element for DD4hep::DetElement::clone
   ///
   /// @param ext the source extension
-  /// @param elem the detector element
   ActsExtension(const ActsExtension& ext, const dd4hep::DetElement& elem);
 
   /// Destructor
@@ -54,7 +49,7 @@ class ActsExtension {
   /// Get the value
   ///
   /// @param tag the entry identifier in the value store
-  /// @param category the (optional) category in the value store
+  /// @param type the (optional) category in the value store
   double getValue(const std::string& tag,
                   const std::string& category = "") const noexcept(false);
 
@@ -62,27 +57,32 @@ class ActsExtension {
   ///
   /// @param value the value to be added
   /// @param tag the entry identifier in the value store
-  /// @param category the (optional) category in the value store
+  /// @param type the (optional) category in the value store
   void addValue(double value, const std::string& tag,
                 const std::string& category = "");
 
   /// Check if the ActsExtension has a value (with optional category)
   ///
-  /// @param tag the primary identifier in the flag store
+  /// @param category the category in the flag store
+  bool hasCategory(const std::string& category) const;
+
+  /// Check if the ActsExtension has a value (with optional category)
+  ///
+  /// @param type the primary identifier in the flag store
   /// @param category the (optional) category in the flag store
   bool hasValue(const std::string& tag, const std::string& category = "") const;
 
   /// Check if the ActsExtension has a value (with optional category)
   ///
   /// @param type the primary identifier in the flag store
-  /// @param category the (optional) category in the flag store
+  /// @param type the (optional) category in the flag store
   bool hasType(const std::string& type, const std::string& category = "") const;
 
   /// Add the characteristics
   ///
   /// @param type the primary identifier in the flag store
   /// @param category the (optional) category in the flag store
-  /// @param word the word to be stored
+  /// @param the word to be stored
   void addType(const std::string& type, const std::string& category = "",
                const std::string& word = "");
 

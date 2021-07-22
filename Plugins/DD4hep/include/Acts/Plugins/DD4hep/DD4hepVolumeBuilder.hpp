@@ -63,7 +63,7 @@ class DD4hepVolumeBuilder : public IConfinedTrackingVolumeBuilder {
   const std::string& identification() const final;
 
   /// Set the configuration object
-  /// @param [in] config is the configuration struct
+  /// @param [in] Config is the configuration struct
   void setConfiguration(const Config& config);
 
   /// Get the configuration object

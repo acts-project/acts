@@ -209,6 +209,9 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
           collectLayers_dd4hep(volumeDetElement, negativeLayers);
           // Fill the volume material for barrel case
           if (volumeExtension->hasType("boundary_material")) {
+            ACTS_VERBOSE(
+                "      -> boundary_material flag detected, creating proto "
+                "material.");
             if (volumeExtension->hasValue("boundary_material_negative")) {
               cvbConfig.boundaryMaterial[2] = Acts::createProtoMaterial(
                   *volumeExtension, "boundary_material_negative",
@@ -233,6 +236,9 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
           collectLayers_dd4hep(volumeDetElement, positiveLayers);
           // Fill the volume material for barrel case
           if (volumeExtension->hasType("boundary_material")) {
+            ACTS_VERBOSE(
+                "      -> boundary_material flag detected, creating proto "
+                "material.");
             if (volumeExtension->hasValue("boundary_material_negative")) {
               cvbConfig.boundaryMaterial[4] = Acts::createProtoMaterial(
                   *volumeExtension, "boundary_material_negative",
@@ -260,6 +266,9 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
         collectLayers_dd4hep(volumeDetElement, centralLayers);
         // Fill the volume material for barrel case
         if (volumeExtension->hasType("boundary_material")) {
+          ACTS_VERBOSE(
+              "      -> boundary_material flag detected, creating proto "
+              "material.");
           if (volumeExtension->hasValue("boundary_material_negative")) {
             cvbConfig.boundaryMaterial[3] = Acts::createProtoMaterial(
                 *volumeExtension, "boundary_material_negative",
@@ -282,6 +291,9 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
 
       // Fill the volume material for the inner / outer cover
       if (volumeExtension->hasType("boundary_material")) {
+        ACTS_VERBOSE(
+            "      -> boundary_material flag detected, creating proto "
+            "material.");
         if (volumeExtension->hasValue("boundary_material_inner")) {
           cvbConfig.boundaryMaterial[0] = Acts::createProtoMaterial(
               *volumeExtension, "boundary_material_inner",
@@ -399,6 +411,22 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     cvbConfig.layerEnvelopeR = {layerEnvelopeR, layerEnvelopeR};
     cvbConfig.layerEnvelopeZ = layerEnvelopeZ;
     cvbConfig.buildToRadiusZero = subDetExtension->hasType("beampipe", "layer");
+
+    // Fill the volume material for the inner / outer cover
+    if (subDetExtension->hasType("boundary_material")) {
+      ACTS_VERBOSE(
+          "      -> boundary_material flag detected, creating proto material.");
+      if (subDetExtension->hasValue("boundary_material_inner")) {
+        cvbConfig.boundaryMaterial[0] = Acts::createProtoMaterial(
+            *subDetExtension, "boundary_material_inner",
+            {{"binPhi", Acts::closed}, {"binZ", Acts::open}});
+      }
+      if (subDetExtension->hasValue("boundary_material_outer")) {
+        cvbConfig.boundaryMaterial[1] = Acts::createProtoMaterial(
+            *subDetExtension, "boundary_material_outer",
+            {{"binPhi", Acts::closed}, {"binZ", Acts::open}});
+      }
+    }
 
     // beam pipe / passive cylinder volume builder
     auto pcVolumeBuilder = std::make_shared<const Acts::CylinderVolumeBuilder>(
