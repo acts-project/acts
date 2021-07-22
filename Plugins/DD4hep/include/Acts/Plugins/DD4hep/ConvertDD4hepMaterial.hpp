@@ -24,8 +24,9 @@ class Layer;
 ///
 /// This is used to assign proto material to Cylinder Layers
 ///
-/// @param detElement the DD4hep detector element (source)
-/// @param cylinderLayer the Layer to be decorated (target)
+/// @param detElement the DD4hep detector element for which this material is
+///                   assigned
+/// @param cylinderLayer is the target layer
 /// @param loggingLevel is the output level for the conversion
 void addCylinderLayerProtoMaterial(
     dd4hep::DetElement detElement, Layer& cylinderLayer,
@@ -35,8 +36,9 @@ void addCylinderLayerProtoMaterial(
 ///
 /// Thisis used to assign proto material to Disc Layers
 ///
-/// @param detElement the DD4hep detector element (source)
-/// @param discLayer the Layer to be decorated (target)
+/// @param detElement the DD4hep detector element for which this material is
+/// assigned
+/// @param discLayer is the target layer
 /// @param loggingLevel is the output level for the conversion
 void addDiscLayerProtoMaterial(
     dd4hep::DetElement detElement, Layer& discLayer,
@@ -47,7 +49,7 @@ void addDiscLayerProtoMaterial(
 /// For both, cylinder and disc, the closed binning value is "binPhi"
 ///
 /// @param actsExtension the ActsExtension for the binning parameters
-/// @param layer the Layer to assign the proto material (target)
+/// @param layer the Layer to assign the proto material
 /// @param binning the Binning prescription for the ActsExtension
 void addLayerProtoMaterial(
     const ActsExtension& actsExtension, Layer& layer,
@@ -59,7 +61,6 @@ void addLayerProtoMaterial(
 ///
 /// @param actsExtension the ActExtension to be checked
 /// @param valueTag the xml tag for to ActsExtension to be parsed
-/// @param firstBinning string lookup for first bin
 /// @param binning the Binning prescription for the ActsExtension
 std::shared_ptr<Acts::ProtoSurfaceMaterial> createProtoMaterial(
     const ActsExtension& actsExtension, const std::string& valueTag,
