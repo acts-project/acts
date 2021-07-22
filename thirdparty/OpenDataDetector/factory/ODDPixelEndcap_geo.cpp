@@ -171,7 +171,7 @@ static Ref_t create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
     layerExtension->addValue(10., "z_min", "envelope");
     layerExtension->addValue(10., "z_max", "envelope");
     // Check if the disk has a surface binning instruction
-    if (x_layer.hasChild("surface_binning")) {
+    if (x_layer.hasChild(_Unicode("surface_binning"))) {
       xml_comp_t sfBinning = x_layer.child(_Unicode(surface_binning));
       layerExtension->addValue(sfBinning.attr<int>("nr"), "n_r",
                                "surface_binning");
