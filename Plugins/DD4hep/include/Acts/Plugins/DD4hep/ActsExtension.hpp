@@ -74,7 +74,7 @@ class ActsExtension {
   /// @param category the (optional) category in the flag store
   bool hasType(const std::string& type, const std::string& category = "") const;
 
-  /// Check if the ActsExtension has a value (with optional category)
+  /// Check if the ActsExtension has a category
   ///
   /// @param category the category in the flag store
   bool hasCategory(const std::string& category) const;

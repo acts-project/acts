@@ -174,7 +174,7 @@
           <composite name="LongStripEndcapP"/>
       </detector>
       <detector id="5" name="Solenoid" type="ODDCylinder" beampipe="false" vis="Aluminum">
-            <boundary_material surface="inner" binning="binPhi,binZ" bins0="mat_sol_bPhi" bins1="mat_sol_bZ"/>å
+            <boundary_material surface="inner" binning="binPhi,binZ" bins0="mat_sol_bPhi" bins1="mat_sol_bZ"/>
             <tubs name="Solenoid" rmin="sol_rmin" rmax="sol_rmax" dz="sol_hlength" material="Aluminum">
               <layer_material surface="representing" binning="binPhi,binZ" bins0="mat_sol_bPhi" bins1="mat_sol_bZ"/>
             </tubs>
