@@ -38,7 +38,7 @@ class PhotonConversion {
   ///
   /// @tparam generator_t Type of the random number generator
   /// @param [in, out] generator The random number generator
-  /// @param [in] momentum The momentum of the particle
+  /// @param [in] particle The particle
   ///
   /// @return valid X0 limit and no limit on L0
   template <typename generator_t>

@@ -11,6 +11,7 @@
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <chrono>
 #include <fstream>
@@ -48,12 +49,8 @@ int main(int argc, char* argv[]) {
 
   Acts::SolenoidBField bSolenoidField({R, L, nCoils, bMagCenter});
   std::cout << "Building interpolated field map" << std::endl;
-  auto mapper = Acts::solenoidFieldMapper({rMin, rMax}, {zMin, zMax},
+  auto bFieldMap = Acts::solenoidFieldMap({rMin, rMax}, {zMin, zMax},
                                           {nBinsR, nBinsZ}, bSolenoidField);
-  using BField_t = Acts::InterpolatedBFieldMap<decltype(mapper)>;
-
-  BField_t::Config cfg(std::move(mapper));
-  auto bFieldMap = BField_t(std::move(cfg));
   Acts::MagneticFieldContext mctx{};
 
   std::minstd_rand rng;
@@ -124,7 +121,7 @@ int main(int argc, char* argv[]) {
               << std::flush;
     auto cache = bFieldMap.makeCache(mctx);
     const auto map_cached_result_cache = Acts::Test::microBenchmark(
-        [&] { return bFieldMap.getField(fixedPos, cache); }, iters_map);
+        [&] { return bFieldMap.getField(fixedPos, cache).value(); }, iters_map);
     std::cout << map_cached_result_cache << std::endl;
     csv("interp_cache_fixed", map_cached_result_cache);
   }
@@ -138,7 +135,8 @@ int main(int argc, char* argv[]) {
               << std::flush;
     auto cache2 = bFieldMap.makeCache(mctx);
     const auto map_rand_result_cache = Acts::Test::microBenchmark(
-        [&] { return bFieldMap.getField(genPos(), cache2); }, iters_map);
+        [&] { return bFieldMap.getField(genPos(), cache2).value(); },
+        iters_map);
     std::cout << map_rand_result_cache << std::endl;
     csv("interp_cache_random", map_rand_result_cache);
   }
@@ -155,35 +153,33 @@ int main(int argc, char* argv[]) {
     Acts::Vector3 dir{};
     dir.setRandom();
     double h = 1e-3;
+    std::vector<Acts::Vector3> steps;
+    steps.reserve(iters_map);
+    for (size_t i = 0; i < iters_map; i++) {
+      pos += dir * h;
+      double z = pos[Acts::eFreePos2];
+      if (Acts::VectorHelpers::perp(pos) > rMax || z >= zMax || z < zMin) {
+        break;
+      }
+      steps.push_back(pos);
+    }
     const auto map_adv_result = Acts::Test::microBenchmark(
-        [&] {
-          pos += dir * h;
-          return bFieldMap.getField(pos);
-        },
-        iters_map);
+        [&](const auto& s) { return bFieldMap.getField(s); }, steps);
     std::cout << map_adv_result << std::endl;
     csv("interp_nocache_adv", map_adv_result);
-  }
 
-  // - This variation of the fourth benchmark advances in a straight line, but
-  //   also uses the cache infrastructure. As subsequent positions are close to
-  //   one another, the cache will be valid for a certain number of points,
-  //   before becoming invalid. This means we expect performance to improve over
-  //   the uncached straight line advance.
-  {
+    // - This variation of the fourth benchmark advances in a straight line, but
+    //   also uses the cache infrastructure. As subsequent positions are close
+    //   to one another, the cache will be valid for a certain number of points,
+    //   before becoming invalid. This means we expect performance to improve
+    //   over the uncached straight line advance.
+
     std::cout << "Benchmarking cached advancing interpolated field lookup: "
               << std::flush;
     auto cache = bFieldMap.makeCache(mctx);
-    Acts::Vector3 pos{0, 0, 0};
-    Acts::Vector3 dir{};
-    dir.setRandom();
-    double h = 1e-3;
     const auto map_adv_result_cache = Acts::Test::microBenchmark(
-        [&] {
-          pos += dir * h;
-          return bFieldMap.getField(pos, cache);
-        },
-        iters_map);
+        [&](const auto& s) { return bFieldMap.getField(s, cache).value(); },
+        steps);
     std::cout << map_adv_result_cache << std::endl;
     csv("interp_cache_adv", map_adv_result_cache);
   }

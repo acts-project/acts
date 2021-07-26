@@ -1,10 +1,12 @@
-add_library(
-  ActsExamplesPropagation INTERFACE)
+add_library(ActsExamplesPropagation SHARED 
+  src/PropagationAlgorithm.cpp)
+
 target_include_directories(
   ActsExamplesPropagation
-  INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+
 target_link_libraries(
   ActsExamplesPropagation
-  INTERFACE ActsCore ActsExamplesFramework)
+  PUBLIC ActsCore ActsExamplesFramework)
 
 # interface libraries do not exist in the filesystem; no installation needed

@@ -68,6 +68,33 @@ struct Detector {
       : store(geoCtx), geometry(store()) {}
 };
 
+/// The map(-like) container accessor
+template <typename container_t>
+struct TestContainerAccessor {
+  using Container = container_t;
+  using Key = typename container_t::key_type;
+  using Value = typename container_t::mapped_type;
+  using Iterator = typename container_t::const_iterator;
+
+  // pointer to the container
+  const Container* container = nullptr;
+
+  // count the number of elements with requested key
+  size_t count(const Key& key) const {
+    assert(container != nullptr);
+    return container->count(key);
+  }
+
+  // get the range of elements with requested key
+  std::pair<Iterator, Iterator> range(const Key& key) const {
+    assert(container != nullptr);
+    return container->equal_range(key);
+  }
+
+  // get the element using the iterator
+  const Value& at(const Iterator& it) const { return (*it).second; }
+};
+
 struct Fixture {
   using StraightPropagator =
       Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
@@ -80,8 +107,12 @@ struct Fixture {
   using CombinatorialKalmanFilter =
       Acts::CombinatorialKalmanFilter<ConstantFieldPropagator, KalmanUpdater,
                                       KalmanSmoother>;
+  using TestSourceLinkContainer =
+      std::unordered_multimap<Acts::GeometryIdentifier, TestSourceLink>;
+  using TestSourceLinkAccessor = TestContainerAccessor<TestSourceLinkContainer>;
   using CombinatorialKalmanFilterOptions =
-      Acts::CombinatorialKalmanFilterOptions<TestSourceLinkCalibrator,
+      Acts::CombinatorialKalmanFilterOptions<TestSourceLinkAccessor,
+                                             TestSourceLinkCalibrator,
                                              Acts::MeasurementSelector>;
 
   Acts::GeometryContext geoCtx;
@@ -95,7 +126,7 @@ struct Fixture {
   std::vector<Acts::CurvilinearTrackParameters> endParameters;
 
   // generated measurements
-  std::vector<TestSourceLink> sourceLinks;
+  TestSourceLinkContainer sourceLinks;
 
   // CKF implementation to be tested
   CombinatorialKalmanFilter ckf;
@@ -148,7 +179,7 @@ struct Fixture {
           measPropagator, geoCtx, magCtx, startParameters[trackId],
           detector.resolutions, rng, trackId);
       for (auto& sl : measurements.sourceLinks) {
-        sourceLinks.emplace_back(std::move(sl));
+        sourceLinks.emplace(sl.geometryId(), std::move(sl));
       }
     }
   }
@@ -156,10 +187,11 @@ struct Fixture {
   // Construct a straight-line propagator.
   static StraightPropagator makeStraightPropagator(
       std::shared_ptr<const Acts::TrackingGeometry> geo) {
-    Acts::Navigator navigator(std::move(geo));
-    navigator.resolvePassive = false;
-    navigator.resolveMaterial = true;
-    navigator.resolveSensitive = true;
+    Acts::Navigator::Config cfg{geo};
+    cfg.resolvePassive = false;
+    cfg.resolveMaterial = true;
+    cfg.resolveSensitive = true;
+    Acts::Navigator navigator{cfg};
     Acts::StraightLineStepper stepper;
     return StraightPropagator(std::move(stepper), std::move(navigator));
   }
@@ -167,10 +199,11 @@ struct Fixture {
   // Construct a propagator using a constant magnetic field along z.
   static ConstantFieldPropagator makeConstantFieldPropagator(
       std::shared_ptr<const Acts::TrackingGeometry> geo, double bz) {
-    Acts::Navigator navigator(std::move(geo));
-    navigator.resolvePassive = false;
-    navigator.resolveMaterial = true;
-    navigator.resolveSensitive = true;
+    Acts::Navigator::Config cfg{geo};
+    cfg.resolvePassive = false;
+    cfg.resolveMaterial = true;
+    cfg.resolveSensitive = true;
+    Acts::Navigator navigator{cfg};
     auto field =
         std::make_shared<Acts::ConstantBField>(Acts::Vector3(0.0, 0.0, bz));
     ConstantFieldStepper stepper(std::move(field));
@@ -179,7 +212,8 @@ struct Fixture {
 
   CombinatorialKalmanFilterOptions makeCkfOptions() const {
     return CombinatorialKalmanFilterOptions(
-        geoCtx, magCtx, calCtx, TestSourceLinkCalibrator(),
+        geoCtx, magCtx, calCtx, TestSourceLinkAccessor(),
+        TestSourceLinkCalibrator(),
         Acts::MeasurementSelector(measurementSelectorCfg),
         Acts::LoggerWrapper{*logger}, Acts::PropagatorPlainOptions());
   }
@@ -220,13 +254,13 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
     auto val = *res;
     // with the given measurement selection cuts, only one trajectory for the
     // given input parameters should be found.
-    BOOST_CHECK_EQUAL(val.trackTips.size(), 1u);
+    BOOST_CHECK_EQUAL(val.lastMeasurementIndices.size(), 1u);
     // check purity of first found track
     // find the number of hits not originating from the right track
     size_t numHits = 0u;
     size_t numMissmatchedHits = 0u;
     val.fittedStates.visitBackwards(
-        val.trackTips.front(), [&](const auto& trackState) {
+        val.lastMeasurementIndices.front(), [&](const auto& trackState) {
           numHits += 1u;
           numMissmatchedHits += (trackId != trackState.uncalibrated().sourceId);
         });
@@ -265,13 +299,13 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
     auto val = *res;
     // with the given measurement selection cuts, only one trajectory for the
     // given input parameters should be found.
-    BOOST_CHECK_EQUAL(val.trackTips.size(), 1u);
+    BOOST_CHECK_EQUAL(val.lastMeasurementIndices.size(), 1u);
     // check purity of first found track
     // find the number of hits not originating from the right track
     size_t numHits = 0u;
     size_t numMissmatchedHits = 0u;
     val.fittedStates.visitBackwards(
-        val.trackTips.front(), [&](const auto& trackState) {
+        val.lastMeasurementIndices.front(), [&](const auto& trackState) {
           numHits += 1u;
           numMissmatchedHits += (trackId != trackState.uncalibrated().sourceId);
         });

@@ -128,6 +128,7 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
                                      std::abs(zMax - pl.max(Acts::binZ))};
           pl.envelope[Acts::binR] = {std::abs(rMin - pl.min(Acts::binR)),
                                      std::abs(rMax - pl.max(Acts::binR))};
+          pl.extent.ranges[Acts::binR] = {rMin, rMax};
         }
       } else {
         throw std::logic_error(
@@ -138,6 +139,23 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
       }
 
       std::shared_ptr<Layer> endcapLayer = nullptr;
+
+      // Check if DD4hep pre-defines the surface binning
+      bool hasSurfaceBinning = detExtension->hasCategory("surface_binning");
+      size_t nPhi = 1;
+      size_t nR = 1;
+      if (hasSurfaceBinning) {
+        if (detExtension->hasValue("n_phi", "surface_binning")) {
+          nPhi = static_cast<size_t>(
+              detExtension->getValue("n_phi", "surface_binning"));
+        }
+        if (detExtension->hasValue("n_r", "surface_binning")) {
+          nR = static_cast<size_t>(
+              detExtension->getValue("n_r", "surface_binning"));
+        }
+        hasSurfaceBinning = nR * nPhi > 1;
+      }
+
       // In case the layer is sensitive
       if (detElement.volume().isSensitive()) {
         // Create the sensitive surface
@@ -154,7 +172,12 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
         endcapLayer = DiscLayer::create(transform, dBounds, std::move(sArray),
                                         thickness, nullptr, Acts::active);
 
+      } else if (hasSurfaceBinning) {
+        // This method uses the binning from DD4hep/xml
+        endcapLayer = m_cfg.layerCreator->discLayer(
+            gctx, layerSurfaces, nR, nPhi, pl, transform, nullptr);
       } else {
+        // This method determines the binning automatically
         endcapLayer = m_cfg.layerCreator->discLayer(
             gctx, layerSurfaces, m_cfg.bTypeR, m_cfg.bTypePhi, pl, transform,
             nullptr);

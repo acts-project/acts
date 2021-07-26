@@ -36,7 +36,7 @@ class AdaptiveGridTrackDensity {
  public:
   using TrackGridVector = Eigen::Matrix<float, trkGridSize, 1>;
 
-  /// @struct Config The configuration struct
+  /// The configuration struct
   struct Config {
     /// @param binSize_ The binSize in mm
     Config(float binSize_ = 0.1) : binSize(binSize_) {}
@@ -128,8 +128,8 @@ class AdaptiveGridTrackDensity {
   ///
   /// @param mainGridDensity The main 1-dim density grid along the z-axis
   /// @param mainGridZValues The corresponding z-bin values of the track
-  /// densities along the z-axis
-  /// @maxZ z-position of the maximum density value
+  ///                        densities along the z-axis
+  /// @param maxZ z-position of the maximum density value
   ///
   /// @return The width
   Result<float> estimateSeedWidth(const std::vector<float>& mainGridDensity,

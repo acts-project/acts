@@ -23,6 +23,7 @@
 #include "ActsExamples/Plugins/Obj/ObjPropagationStepsWriter.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagationOptions.hpp"
+#include "ActsExamples/Propagation/PropagatorInterface.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <memory>
@@ -80,22 +81,25 @@ int propagationExample(int argc, char* argv[],
   auto setupPropagator = [&](auto&& stepper) {
     using Stepper = std::decay_t<decltype(stepper)>;
     using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
-    Acts::Navigator navigator(tGeometry);
-    navigator.resolveMaterial = vm["prop-resolve-material"].template as<bool>();
-    navigator.resolvePassive = vm["prop-resolve-passive"].template as<bool>();
-    navigator.resolveSensitive =
-        vm["prop-resolve-sensitive"].template as<bool>();
+    Acts::Navigator::Config navCfg{tGeometry};
+    navCfg.resolveMaterial = vm["prop-resolve-material"].template as<bool>();
+    navCfg.resolvePassive = vm["prop-resolve-passive"].template as<bool>();
+    navCfg.resolveSensitive = vm["prop-resolve-sensitive"].template as<bool>();
+    Acts::Navigator navigator(navCfg);
 
     Propagator propagator(std::move(stepper), std::move(navigator));
 
     // Read the propagation config and create the algorithms
-    auto pAlgConfig =
-        ActsExamples::Options::readPropagationConfig(vm, propagator);
+    auto pAlgConfig = ActsExamples::Options::readPropagationConfig(vm);
     pAlgConfig.randomNumberSvc = randomNumberSvc;
     pAlgConfig.sterileLogger = not rootOutput and not objOutput;
-    sequencer.addAlgorithm(
-        std::make_shared<ActsExamples::PropagationAlgorithm<Propagator>>(
-            pAlgConfig, logLevel));
+
+    pAlgConfig.propagatorImpl =
+        std::make_shared<ActsExamples::ConcretePropagator<Propagator>>(
+            std::move(propagator));
+
+    sequencer.addAlgorithm(std::make_shared<ActsExamples::PropagationAlgorithm>(
+        pAlgConfig, logLevel));
   };
 
   // translate option to variant

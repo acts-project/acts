@@ -9,8 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-
-#include <nlohmann/json.hpp>
+#include "Acts/Plugins/Json/ActsJson.hpp"
 
 // Custom Json encoder/decoders. Naming is mandated by nlohman::json and thus
 // can not match our naming guidelines.

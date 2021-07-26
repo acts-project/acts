@@ -70,8 +70,8 @@ class SolenoidBField final : public MagneticFieldProvider {
   struct Cache {
     /// @brief Constructor with magnetic field context
     ///
-    /// @param mcfg the magnetic field context
-    Cache(const MagneticFieldContext& /*mcfg*/) {}
+    /// @param mctx the magnetic field context
+    Cache(const MagneticFieldContext& mctx) { (void)mctx; }
   };
 
   /// Config struct for the SolenoidBfield.
@@ -98,34 +98,26 @@ class SolenoidBField final : public MagneticFieldProvider {
   /// @param [in] position local 2D position
   Vector2 getField(const Vector2& position) const;
 
-  /// @copydoc MagneticFieldProvider::makeCache(const MagneticFieldContext&)
+  /// @copydoc MagneticFieldProvider::makeCache(const MagneticFieldContext&) const
   MagneticFieldProvider::Cache makeCache(
       const MagneticFieldContext& mctx) const override;
 
-  /// @copydoc MagneticFieldProvider::getField(const Vector3&)
-  Vector3 getField(const Vector3& position) const override;
+  /// @brief Get the B field at a position
+  ///
+  /// @param position The position to query at
+  Vector3 getField(const Vector3& position) const;
 
-  /// @copydoc MagneticFieldProvider::getField(const
-  /// Vector3&,MagneticFieldProvider::Cache&)
-  Vector3 getField(const Vector3& position,
-                   MagneticFieldProvider::Cache& /*cache*/) const override;
+  /// @copydoc MagneticFieldProvider::getField(const Vector3&,MagneticFieldProvider::Cache&) const
+  Result<Vector3> getField(const Vector3& position,
+                           MagneticFieldProvider::Cache& cache) const override;
 
-  /// @copydoc MagneticFieldProvider::getFieldGradient(const
-  /// Vector3&,ActsMatrix<3,3>&)
+  /// @copydoc MagneticFieldProvider::getFieldGradient(const Vector3&,ActsMatrix<3,3>&,MagneticFieldProvider::Cache&) const
   ///
   /// @note currently the derivative is not calculated
   /// @todo return derivative
-  Vector3 getFieldGradient(const Vector3& position,
-                           ActsMatrix<3, 3>& /*derivative*/) const override;
-
-  /// @copydoc MagneticFieldProvider::getFieldGradient(const
-  /// Vector3&,ActsMatrix<3,3>&,MagneticFieldProvider::Cache&)
-  ///
-  /// @note currently the derivative is not calculated
-  /// @todo return derivative
-  Vector3 getFieldGradient(
-      const Vector3& position, ActsMatrix<3, 3>& /*derivative*/,
-      MagneticFieldProvider::Cache& /*cache*/) const override;
+  Result<Vector3> getFieldGradient(
+      const Vector3& position, ActsMatrix<3, 3>& derivative,
+      MagneticFieldProvider::Cache& cache) const override;
 
  private:
   Config m_cfg;

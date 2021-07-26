@@ -47,7 +47,7 @@ class AdaptiveMultiVertexFinder {
       : std::true_type {};
 
  public:
-  /// @struct Config Configuration struct
+  /// Configuration struct
   struct Config {
     /// @brief Config constructor
     ///
@@ -55,6 +55,7 @@ class AdaptiveMultiVertexFinder {
     /// @param sfinder The seed finder
     /// @param ipEst ImpactPointEstimator
     /// @param lin Track linearizer
+    /// @param bIn Input magnetic field
     Config(vfitter_t fitter, const sfinder_t& sfinder,
            const ImpactPointEstimator<InputTrack_t, Propagator_t>& ipEst,
            const Linearizer_t& lin, std::shared_ptr<MagneticFieldProvider> bIn)
@@ -160,7 +161,7 @@ class AdaptiveMultiVertexFinder {
 
   };  // Config struct
 
-  /// @struct State State struct for fulfilling interface
+  /// State struct for fulfilling interface
   struct State {};
 
   /// @brief Constructor used if InputTrack_t type == BoundTrackParameters

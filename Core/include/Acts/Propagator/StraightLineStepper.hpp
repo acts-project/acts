@@ -60,7 +60,7 @@ class StraightLineStepper {
     /// @note the covariance matrix is copied when needed
     template <typename charge_t>
     explicit State(const GeometryContext& gctx,
-                   const MagneticFieldContext& /*mctx*/,
+                   const MagneticFieldContext& mctx,
                    const SingleBoundTrackParameters<charge_t>& par,
                    NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max(),
@@ -70,6 +70,7 @@ class StraightLineStepper {
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
           geoContext(gctx) {
+      (void)mctx;
       pars.template segment<3>(eFreePos0) = par.position(gctx);
       pars.template segment<3>(eFreeDir0) = par.unitDirection();
       pars[eFreeTime] = par.time();
@@ -145,8 +146,8 @@ class StraightLineStepper {
   ///
   /// @param [in, out] state State of the stepper
   /// @param [in] boundParams Parameters in bound parametrisation
-  /// @param [in] freeParams Parameters in free parametrisation
   /// @param [in] cov Covariance matrix
+  /// @param [in] surface The reset @c State will be on this surface
   /// @param [in] navDir Navigation direction
   /// @param [in] stepSize Step size
   void resetState(
@@ -159,9 +160,11 @@ class StraightLineStepper {
   /// @param [in,out] state is the propagation state associated with the track
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
-  Vector3 getField(State& /*state*/, const Vector3& /*pos*/) const {
+  Result<Vector3> getField(State& state, const Vector3& pos) const {
+    (void)state;
+    (void)pos;
     // get the field from the cell
-    return Vector3(0., 0., 0.);
+    return Result<Vector3>::success({0., 0., 0.});
   }
 
   /// Global particle position accessor
@@ -198,7 +201,8 @@ class StraightLineStepper {
   /// Overstep limit
   ///
   /// @param state The stepping state (thread-local cache)
-  double overstepLimit(const State& /*state*/) const {
+  double overstepLimit(const State& state) const {
+    (void)state;
     return s_onSurfaceTolerance;
   }
 
@@ -209,13 +213,15 @@ class StraightLineStepper {
   /// returns the status of the intersection to trigger onSurface in case
   /// the surface is reached.
   ///
-  /// @param state [in,out] The stepping state (thread-local cache)
-  /// @param surface [in] The surface provided
-  /// @param bcheck [in] The boundary check for this status update
+  /// @param [in,out] state The stepping state (thread-local cache)
+  /// @param [in] surface The surface provided
+  /// @param [in] bcheck The boundary check for this status update
+  /// @param [in] logger A logger instance
   Intersection3D::Status updateSurfaceStatus(
-      State& state, const Surface& surface, const BoundaryCheck& bcheck) const {
+      State& state, const Surface& surface, const BoundaryCheck& bcheck,
+      LoggerWrapper logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<StraightLineStepper>(
-        *this, state, surface, bcheck);
+        *this, state, surface, bcheck, logger);
   }
 
   /// Update step size
@@ -291,7 +297,8 @@ class StraightLineStepper {
   /// Method to update a stepper state to the some parameters
   ///
   /// @param [in,out] state State object that will be updated
-  /// @param [in] pars Parameters that will be written into @p state
+  /// @param [in] parameters Parameters that will be written into @p state
+  /// @param [in] covariance Covariance that willl be written into @p state
   void update(State& state, const FreeVector& parameters,
               const Covariance& covariance) const;
 

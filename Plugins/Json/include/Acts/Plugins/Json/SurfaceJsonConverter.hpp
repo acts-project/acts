@@ -9,14 +9,13 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Plugins/Json/SurfaceBoundsJsonConverter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <string>
 #include <vector>
-
-#include <nlohmann/json.hpp>
 
 // Custom Json encoder/decoders. Naming is mandated by nlohman::json and thus
 // can not match our naming guidelines.
@@ -64,7 +63,7 @@ void toJson(nlohmann::json& j, std::shared_ptr<const Surface> surface,
 /// @param j the read-in json object
 ///
 /// @return a shared_ptr to a surface object for type polymorphism
-std::shared_ptr<Surface> surfaceFromJson(const nlohmann::json&);
+std::shared_ptr<Surface> surfaceFromJson(const nlohmann::json& j);
 
 /// Converstion to Surface from json in correct type
 ///

@@ -56,7 +56,7 @@ class StrawSurface : public LineSurface {
 
   /// Copy constructor
   ///
-  /// @param slsf is the source surface for copying
+  /// @param other is the source surface for copying
   StrawSurface(const StrawSurface& other);
 
   /// Copy constructor - with shift

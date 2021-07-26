@@ -55,6 +55,7 @@ ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
   m_outputTree->Branch("layer_id", &m_layerID);
   m_outputTree->Branch("approach_id", &m_approachID);
   m_outputTree->Branch("sensitive_id", &m_sensitiveID);
+  m_outputTree->Branch("material", &m_material);
   m_outputTree->Branch("g_x", &m_x);
   m_outputTree->Branch("g_y", &m_y);
   m_outputTree->Branch("g_z", &m_z);
@@ -101,6 +102,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
     m_layerID.clear();
     m_approachID.clear();
     m_sensitiveID.clear();
+    m_material.clear();
     m_x.clear();
     m_y.clear();
     m_z.clear();
@@ -121,6 +123,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       Acts::GeometryIdentifier::Value layerID = 0;
       Acts::GeometryIdentifier::Value approachID = 0;
       Acts::GeometryIdentifier::Value sensitiveID = 0;
+      int material = 0;
       // get the identification from the surface first
       if (step.surface) {
         auto geoID = step.surface->geometryId();
@@ -129,6 +132,9 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
         layerID = geoID.layer();
         approachID = geoID.approach();
         sensitiveID = geoID.sensitive();
+        if (step.surface->surfaceMaterial() != nullptr) {
+          material = 1;
+        }
       }
       // a current volume overwrites the surface tagged one
       if (step.volume) {
@@ -140,6 +146,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       m_layerID.push_back(layerID);
       m_boundaryID.push_back(boundaryID);
       m_volumeID.push_back(volumeID);
+      m_material.push_back(material);
 
       // kinematic information
       m_x.push_back(step.position.x());

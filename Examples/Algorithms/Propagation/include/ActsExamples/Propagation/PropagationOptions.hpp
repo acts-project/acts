@@ -14,6 +14,8 @@
 
 #include <iostream>
 
+#include <boost/program_options.hpp>
+
 #include "PropagationAlgorithm.hpp"
 
 namespace ActsExamples {
@@ -23,8 +25,8 @@ namespace Options {
 /// @brief PropagationAlgorithm options
 ///
 /// @tparam aopt_t Type of the options class from boost
-template <typename aopt_t>
-void addPropagationOptions(aopt_t& opt) {
+inline void addPropagationOptions(
+    boost::program_options::options_description& opt) {
   namespace po = boost::program_options;
   using namespace Acts::UnitLiterals;
   opt.add_options()(
@@ -89,16 +91,11 @@ void addPropagationOptions(aopt_t& opt) {
 /// @tparam vmap_t is the Type of the Parameter map to be read out
 /// @tparam propagator_t is the Type of the Propagator used
 ///
-/// @param vm is the parameter map for the options
-/// @param propagator is the propagator to be used in this job
-///
 /// @returns a Config object for the PropagationAlgorithm
-template <typename vmap_t, typename propagator_t>
-typename ActsExamples::PropagationAlgorithm<propagator_t>::Config
-readPropagationConfig(const vmap_t& vm, propagator_t propagator) {
+inline ActsExamples::PropagationAlgorithm::Config readPropagationConfig(
+    const boost::program_options::variables_map& vm) {
   using namespace Acts::UnitLiterals;
-  typename ActsExamples::PropagationAlgorithm<propagator_t>::Config pAlgConfig(
-      std::move(propagator));
+  ActsExamples::PropagationAlgorithm::Config pAlgConfig;
 
   auto iphir = vm["prop-phi-range"].template as<Reals<2>>();
   auto ietar = vm["prop-eta-range"].template as<Reals<2>>();

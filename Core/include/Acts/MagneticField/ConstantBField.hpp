@@ -30,58 +30,36 @@ class ConstantBField final : public MagneticFieldProvider {
   /// @param [in] B magnetic field vector in global coordinate system
   explicit ConstantBField(Vector3 B) : m_BField(std::move(B)) {}
 
-  /// @brief construct constant magnetic field from components
-  ///
-  /// @param [in] Bx magnetic field component in global x-direction
-  /// @param [in] By magnetic field component in global y-direction
-  /// @param [in] Bz magnetic field component in global z-direction
-  ConstantBField(double Bx = 0., double By = 0., double Bz = 0.)
-      : m_BField(Bx, By, Bz) {}
+  /// @brief Get the B field at a position
+  Vector3 getField() const { return m_BField; }
 
-  /// @copydoc MagneticFieldProvider::getField(const Vector3&)
+  /// @copydoc MagneticFieldProvider::getField(const Vector3&,MagneticFieldProvider::Cache&) const
   ///
   /// @note The @p position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
-  Vector3 getField(const Vector3& /*position*/) const override {
-    return m_BField;
+  Result<Vector3> getField(const Vector3& position,
+                           MagneticFieldProvider::Cache& cache) const override {
+    (void)position;
+    (void)cache;
+    return Result<Vector3>::success(m_BField);
   }
 
-  /// @copydoc MagneticFieldProvider::getField(const
-  /// Vector3&,MagneticFieldProvider::Cache&)
-  ///
-  /// @note The @p position is ignored and only kept as argument to provide
-  ///       a consistent interface with other magnetic field services.
-  Vector3 getField(const Vector3& /*position*/,
-                   MagneticFieldProvider::Cache& /*cache*/) const override {
-    return m_BField;
-  }
-
-  /// @copydoc MagneticFieldProvider::getFieldGradient(const
-  /// Vector3&,ActsMatrix<3,3>&)
+  /// @copydoc MagneticFieldProvider::getFieldGradient(const Vector3&,ActsMatrix<3,3>&,MagneticFieldProvider::Cache&) const
   ///
   /// @note The @p position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
   /// @note currently the derivative is not calculated
   /// @todo return derivative
-  Vector3 getFieldGradient(const Vector3& /*position*/,
-                           ActsMatrix<3, 3>& /*derivative*/) const override {
-    return m_BField;
+  Result<Vector3> getFieldGradient(
+      const Vector3& position, ActsMatrix<3, 3>& derivative,
+      MagneticFieldProvider::Cache& cache) const override {
+    (void)position;
+    (void)derivative;
+    (void)cache;
+    return Result<Vector3>::success(m_BField);
   }
 
-  /// @copydoc MagneticFieldProvider::getFieldGradient(const
-  /// Vector3&,ActsMatrix<3,3>&,MagneticFieldProvider::Cache&)
-  ///
-  /// @note The @p position is ignored and only kept as argument to provide
-  ///       a consistent interface with other magnetic field services.
-  /// @note currently the derivative is not calculated
-  /// @todo return derivative
-  Vector3 getFieldGradient(
-      const Vector3& /*position*/, ActsMatrix<3, 3>& /*derivative*/,
-      MagneticFieldProvider::Cache& /*cache*/) const override {
-    return m_BField;
-  }
-
-  /// @copydoc MagneticFieldProvider::makeCache(const MagneticFieldContext&)
+  /// @copydoc MagneticFieldProvider::makeCache(const MagneticFieldContext&) const
   Acts::MagneticFieldProvider::Cache makeCache(
       const Acts::MagneticFieldContext& mctx) const override {
     return Acts::MagneticFieldProvider::Cache::make<Cache>(mctx);
@@ -90,17 +68,11 @@ class ConstantBField final : public MagneticFieldProvider {
   /// @brief check whether given 3D position is inside look-up domain
   ///
   /// @param [in] position global 3D position
-  /// @return @c true if position is inside the defined look-up grid,
-  ///         otherwise @c false
-  /// @note The method will always return true for the constant B-Field
-  bool isInside(const Vector3& /*position*/) const { return true; }
-
-  /// @brief update magnetic field vector from components
-  ///
-  /// @param [in] Bx magnetic field component in global x-direction
-  /// @param [in] By magnetic field component in global y-direction
-  /// @param [in] Bz magnetic field component in global z-direction
-  void setField(double Bx, double By, double Bz) { m_BField << Bx, By, Bz; }
+  /// @return Always true for constant magnetic field
+  bool isInside(const Vector3& position) const {
+    (void)position;
+    return true;
+  }
 
   /// @brief update magnetic field vector
   ///

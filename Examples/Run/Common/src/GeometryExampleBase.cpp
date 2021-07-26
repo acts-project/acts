@@ -43,7 +43,8 @@ int processGeometry(int argc, char* argv[],
   ActsExamples::Options::addOutputOptions(
       desc,
       ActsExamples::OutputFormat::Root | ActsExamples::OutputFormat::Json |
-          ActsExamples::OutputFormat::Csv | ActsExamples::OutputFormat::Obj);
+          ActsExamples::OutputFormat::Cbor | ActsExamples::OutputFormat::Csv |
+          ActsExamples::OutputFormat::Obj);
 
   // Add specific options for this geometry
   detector.addOptions(desc);
@@ -146,7 +147,8 @@ int processGeometry(int argc, char* argv[],
       rmwImpl.write(*tGeometry);
     }
 
-    if (!materialFileName.empty() and vm["output-json"].template as<bool>()) {
+    if (!materialFileName.empty() and (vm["output-json"].template as<bool>() or
+                                       vm["output-cbor"].template as<bool>())) {
       /// The name of the output file
       std::string fileName = vm["mat-output-file"].template as<std::string>();
       // the material writer
@@ -168,8 +170,19 @@ int processGeometry(int argc, char* argv[],
           vm["mat-output-allmaterial"].template as<bool>();
       jmConverterCfg.context = context.geoContext;
       // The writer
-      ActsExamples::JsonMaterialWriter jmwImpl(std::move(jmConverterCfg),
-                                               materialFileName + ".json");
+      ActsExamples::JsonMaterialWriter::Config jmWriterCfg;
+      jmWriterCfg.converterCfg = std::move(jmConverterCfg);
+      jmWriterCfg.fileName = materialFileName;
+      ActsExamples::JsonFormat format = ActsExamples::JsonFormat::NoOutput;
+      if (vm["output-json"].template as<bool>()) {
+        format = format | ActsExamples::JsonFormat::Json;
+      }
+      if (vm["output-cbor"].template as<bool>()) {
+        format = format | ActsExamples::JsonFormat::Cbor;
+      }
+      jmWriterCfg.writeFormat = format;
+
+      ActsExamples::JsonMaterialWriter jmwImpl(std::move(jmWriterCfg));
 
       jmwImpl.write(*tGeometry);
     }

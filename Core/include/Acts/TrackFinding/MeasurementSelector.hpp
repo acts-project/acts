@@ -55,8 +55,7 @@ class MeasurementSelector {
   /// @brief Constructor with config and (non-owning) logger
   ///
   /// @param config a config instance
-  /// @param logger a logger instance
-  MeasurementSelector(Config cfg) : m_config(std::move(cfg)) {}
+  MeasurementSelector(Config config) : m_config(std::move(config)) {}
 
   /// @brief Operater that select the measurements compatible with
   /// the given track parameter on a surface
@@ -157,7 +156,7 @@ class MeasurementSelector {
     if (nFinalCandidates == 0) {
       measCandidateIndices.resize(1);
       measCandidateIndices.at(0) = minIndex;
-      ACTS_DEBUG("No measurement candidate. Return an outlier measurement.");
+      ACTS_VERBOSE("No measurement candidate. Return an outlier measurement.");
       isOutlier = true;
       return Result<void>::success();
     }

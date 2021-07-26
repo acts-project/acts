@@ -18,7 +18,16 @@
 #include <string>
 
 #include <boost/program_options.hpp>
+
+#if ((BOOST_VERSION / 100) % 1000) <= 71
+// Boost <=1.71 and lower do not have progress_display.hpp as a replacement yet
 #include <boost/progress.hpp>
+using progress_display = boost::progress_display;
+#else
+// Boost >=1.72 can use this as a replacement
+#include <boost/timer/progress_display.hpp>
+using progress_display = boost::timer::progress_display;
+#endif
 
 /// The main executable
 ///
@@ -38,12 +47,11 @@ void accessStepWise(const Acts::MagneticFieldProvider& bField,
                     double theta_step, size_t phi_steps, double phi_0,
                     double phi_step, size_t access_steps, double access_step) {
   std::cout << "[>>>] Start: step-wise access pattern ... " << std::endl;
-  size_t mismatched = 0;
   // initialize the field cache
   auto bCache = bField.makeCache(bFieldContext);
   // boost display
   size_t totalSteps = events * theta_steps * phi_steps * access_steps;
-  boost::progress_display show_progress(totalSteps);
+  progress_display show_progress(totalSteps);
   // the event loop
   // loop over the events - @todo move to parallel for
   for (size_t ievt = 0; ievt < events; ++ievt) {
@@ -59,14 +67,9 @@ void accessStepWise(const Acts::MagneticFieldProvider& bField,
         // now step through the magnetic field
         for (size_t istep = 0; istep < access_steps; ++istep) {
           Acts::Vector3 position = currentStep * dir;
-          // access the field directly
-          auto field_direct = bField.getField(position);
           // access the field with the cell
           auto field_from_cache = bField.getField(position, bCache);
-          // check
-          if (!field_direct.isApprox(field_from_cache)) {
-            ++mismatched;
-          }
+          (void)field_from_cache;  // we don't use this explicitly
           // increase the step
           currentStep += access_step;
           // show the progress bar
@@ -74,8 +77,7 @@ void accessStepWise(const Acts::MagneticFieldProvider& bField,
         }
       }
     }
-    std::cout << "[<<<] End result : " << mismatched << "/" << totalSteps
-              << " mismatches" << std::endl;
+    std::cout << "[<<<] End result: total steps:" << totalSteps << std::endl;
   }
 }
 
@@ -83,7 +85,6 @@ void accessRandom(const Acts::MagneticFieldProvider& bField,
                   const Acts::MagneticFieldContext& bFieldContext,
                   size_t totalSteps, double radius) {
   std::cout << "[>>>] Start: random access pattern ... " << std::endl;
-  size_t mismatched = 0;
   RandomEngine rng;
   UniformDist xDist(-radius, radius);
   UniformDist yDist(-radius, radius);
@@ -91,25 +92,19 @@ void accessRandom(const Acts::MagneticFieldProvider& bField,
 
   // initialize the field cache
   auto bCache = bField.makeCache(bFieldContext);
-  boost::progress_display show_progress(totalSteps);
+  progress_display show_progress(totalSteps);
 
   // the event loop
   // loop over the events - @todo move to parallel for
   for (size_t istep = 0; istep < totalSteps; ++istep) {
     Acts::Vector3 position(xDist(rng), yDist(rng), zDist(rng));
-    // access the field directly
-    auto field_direct = bField.getField(position);
     // access the field with the cell
     auto field_from_cache = bField.getField(position, bCache);
-    // check
-    if (!field_direct.isApprox(field_from_cache)) {
-      ++mismatched;
-    }
+    (void)field_from_cache;  // we don't use this explicitly
     // show the progress bar
     ++show_progress;
   }
-  std::cout << "[<<<] End result : " << mismatched << "/" << totalSteps
-            << " mismatches" << std::endl;
+  std::cout << "[<<<] End result: total steps: " << totalSteps << std::endl;
 }
 
 /// @brief main executable

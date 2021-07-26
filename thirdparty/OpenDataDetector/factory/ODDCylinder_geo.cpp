@@ -27,6 +27,14 @@ static Ref_t create_element(Detector& oddd, xml_h xml,
 
   // add Extension to Detlement for the RecoGeometry
   Acts::ActsExtension* pcExtension = new Acts::ActsExtension();
+
+  // Add the proto boundary material
+  for (xml_coll_t bmat(x_det, _Unicode(boundary_material)); bmat; ++bmat) {
+    xml_comp_t x_boundary_material = bmat;
+    xmlToProtoSurfaceMaterial(x_boundary_material, *pcExtension,
+                              "boundary_material");
+  }
+
   bool isBeamPipe = x_det.hasChild(_U(beampipe));
   pcExtension->addType("passive cylinder", "layer");
   if (isBeamPipe) {
@@ -37,6 +45,7 @@ static Ref_t create_element(Detector& oddd, xml_h xml,
     xml_comp_t x_layer_material = lmat;
     xmlToProtoSurfaceMaterial(x_layer_material, *pcExtension, "layer_material");
   }
+
   cylinderElement.addExtension<Acts::ActsExtension>(pcExtension);
 
   string shapeName = x_det_tubs.nameStr();

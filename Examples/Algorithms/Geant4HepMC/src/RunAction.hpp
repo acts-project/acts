@@ -15,7 +15,7 @@
 
 class G4Run;
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4::HepMC3 {
 
 /// The RunAction class is the implementation of the
 /// Geant4 class G4UserRunAction. It initiates the run
@@ -41,4 +41,4 @@ class RunAction final : public G4UserRunAction {
   static RunAction* s_instance;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4::HepMC3

@@ -34,11 +34,11 @@ struct PlanarSurfaceDrift {
   /// @param thickness The emulated module/depletion thickness
   /// @param pos The position in global coordinates
   /// @param dir The direciton in global coordinates
-  /// @param driftDir The drift direction in local (surface) coordinates
-  ///        @note a drift direction of (0,0,0) is drift to central plane
-  ///              any other a drift direction with driftDir.z() != 0.
-  ///              will result on a readout on either + 0.5*depletion
-  ///              or -0.5*depletion
+  /// @param driftdir The drift direction in local (surface) coordinates
+  /// @note a drift direction of (0,0,0) is drift to central plane
+  ///       any other a drift direction with driftDir.z() != 0.
+  ///       will result on a readout on either + 0.5*depletion
+  ///       or -0.5*depletion
   ///
   /// @return a Segment on the readout surface @note without masking
   Segment2D toReadout(const Acts::GeometryContext& gctx,

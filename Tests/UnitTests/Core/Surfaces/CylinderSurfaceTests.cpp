@@ -11,6 +11,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
@@ -275,6 +276,41 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceAlignment) {
   ActsMatrix<2, 3> expLoc3DToLocBound = ActsMatrix<2, 3>::Zero();
   expLoc3DToLocBound << -1, 0, 0, 0, 0, 1;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
+}
+
+BOOST_AUTO_TEST_CASE(CylinderSurfaceBinningPosition) {
+  using namespace Acts::UnitLiterals;
+  Vector3 s{5_mm, 7_mm, 10_cm};
+  Transform3 trf;
+  trf = Translation3(s) * AngleAxis3{0.5, Vector3::UnitZ()};
+
+  double r = 300;
+  double halfZ = 330;
+  double averagePhi = 0.1;
+
+  auto bounds =
+      std::make_shared<CylinderBounds>(r, halfZ, M_PI / 8, averagePhi);
+  auto cylinder = Acts::Surface::makeShared<CylinderSurface>(trf, bounds);
+
+  Vector3 exp = Vector3{r * std::cos(averagePhi), r * std::sin(averagePhi), 0};
+  exp = trf * exp;
+
+  Vector3 bp = cylinder->binningPosition(testContext, binR);
+  BOOST_CHECK_EQUAL(bp, exp);
+  BOOST_CHECK_EQUAL(cylinder->binningPositionValue(testContext, binR),
+                    VectorHelpers::perp(exp));
+
+  bp = cylinder->binningPosition(testContext, binRPhi);
+  BOOST_CHECK_EQUAL(bp, exp);
+  BOOST_CHECK_EQUAL(cylinder->binningPositionValue(testContext, binRPhi),
+                    VectorHelpers::phi(exp) * VectorHelpers::perp(exp));
+
+  for (auto b : {binX, binY, binZ, binEta, binH, binMag}) {
+    BOOST_TEST_CONTEXT("binValue: " << b) {
+      BOOST_CHECK_EQUAL(cylinder->binningPosition(testContext, b),
+                        cylinder->center(testContext));
+    }
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
