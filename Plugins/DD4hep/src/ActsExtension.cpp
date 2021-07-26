@@ -27,6 +27,15 @@ void Acts::ActsExtension::addValue(double value, const std::string& tag,
   addT(m_values, value, tag, category, 0.0);
 }
 
+bool Acts::ActsExtension::hasCategory(const std::string& category) const {
+  for (auto [key, value] : m_values) {
+    if (key.find(category) != std::string::npos) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool Acts::ActsExtension::hasValue(const std::string& tag,
                                    const std::string& category) const {
   return hasT(m_values, tag, category);

@@ -163,9 +163,9 @@ static Ref_t create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
     Acts::ActsExtension* layerExtension = new Acts::ActsExtension();
     layerExtension->addType("sensitive cylinder", "layer");
     layerExtension->addValue(10., "r_min", "envelope");
-    layerExtension->addValue(25., "r_max", "envelope");   
+    layerExtension->addValue(25., "r_max", "envelope");
     layerExtension->addValue(10., "z_min", "envelope");
-    layerExtension->addValue(10., "z_max", "envelope");     
+    layerExtension->addValue(10., "z_max", "envelope");
     layerElement.addExtension<Acts::ActsExtension>(layerExtension);
     // Add the proto layer material
     for (xml_coll_t lmat(x_layer, _Unicode(layer_material)); lmat; ++lmat) {
