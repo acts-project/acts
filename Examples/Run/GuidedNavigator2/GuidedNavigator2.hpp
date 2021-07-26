@@ -46,7 +46,7 @@ class GuidedNavigator2 {
   /// The tolerance used to define "surface reached"
   double tolerance = s_onSurfaceTolerance;
 
-  Guider m_guider;
+  Guider guider;
 
   /// Nested Actor struct, called Initializer
   ///
@@ -179,7 +179,7 @@ class GuidedNavigator2 {
                      << state.navigation.currentSurface->geometryId())
         // Move the sequence to the next surface
 //         ++state.navigation.navSurfaceIter;
-        m_guider.updateOnSurface(state, stepper);
+        guider.updateOnSurface(state, stepper);
         if (state.navigation.navSurfaceIter !=
             state.navigation.navSurfaces.end()) {
           ACTS_VERBOSE("Next surface candidate is  "
@@ -224,7 +224,7 @@ class GuidedNavigator2 {
             "Surface not reachable anymore, switching to next one in "
             "sequence");
         // Move the sequence to the next surface
-        m_guider.updateUnreachable(state, stepper);
+        ++state.navigation.navSurfaceIter;
       } else {
         ACTS_VERBOSE("Navigation stepSize set to "
                      << stepper.outputStepSize(state.stepping));

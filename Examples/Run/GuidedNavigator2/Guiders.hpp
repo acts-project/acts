@@ -4,16 +4,9 @@
 
 #include <vector>
 
-
-
 namespace Acts {
 
 struct DirectGuider {
-  template <typename propagator_state_t, typename stepper_t>
-  void updateUnreachable(propagator_state_t &state, const stepper_t &) const {
-    ++state.navigation.navSurfaceIter;
-  }
-
   template <typename propagator_state_t, typename stepper_t>
   void updateOnSurface(propagator_state_t &state, const stepper_t &) const {
     ++state.navigation.navSurfaceIter;
@@ -21,29 +14,26 @@ struct DirectGuider {
 };
 
 struct TrialAndErrorGuider {
-  std::vector<const Surface *> m_possibleSurfaces;
+  std::vector<const Surface *> possibleSurfaces;
 
   template <typename propagator_state_t, typename stepper_t>
-  void updateUnreachable(propagator_state_t &state, const stepper_t &) const {
-    ++state.navigation.navSurfaceIter;
-  }
-
-  template <typename propagator_state_t, typename stepper_t>
-  void updateOnSurface(propagator_state_t &state, const stepper_t &) const {
+  void updateOnSurface(propagator_state_t &state,
+                       const stepper_t &stepper) const {
     const auto &logger = state.options.logger;
 
     // Important parameters
     const FreeVector &params = state.stepping.pars;
     const GeometryContext &gctx = state.geoContext;
-    //     const double olimit = stepper.overstepLimit(state.stepping);
+    const double oLimit = stepper.overstepLimit(state.stepping);
+    const double pLimit = state.options.pathLimit;
 
     ACTS_VERBOSE("updateOnSurface at "
                  << params.segment<3>(eFreePos0).transpose() << " with dir "
                  << params.segment<3>(eFreeDir0).transpose());
 
     // Make intersection objects
-    std::vector<SurfaceIntersection> sfis(m_possibleSurfaces.size());
-    std::transform(m_possibleSurfaces.begin(), m_possibleSurfaces.end(),
+    std::vector<SurfaceIntersection> sfis(possibleSurfaces.size());
+    std::transform(possibleSurfaces.begin(), possibleSurfaces.end(),
                    sfis.begin(), [&](auto s) {
                      return s->intersect(
                          gctx, params.segment<3>(eFreePos0),
@@ -53,26 +43,24 @@ struct TrialAndErrorGuider {
 
     ACTS_VERBOSE("have " << sfis.size() << " candidate intersections");
 
-    // TODO overstepLimit etc. missing here
-    sfis.erase(
-        std::remove_if(sfis.begin(), sfis.end(),
-                       [](auto sfi) {
-                         return sfi.intersection.status !=
-                                    Acts::Intersection3D::Status::reachable ||
-                                sfi.intersection.pathLength < 0;
-                       }),
-        sfis.end());
+    // Filter out intersections which are not valid
+    auto isIntersectionValid = [&](const SurfaceIntersection &sfi) {
+      const double sfiPath = sfi.intersection.pathLength;
+      return sfi.intersection.status == Intersection3D::Status::reachable &&
+             sfiPath > oLimit && sfiPath * sfiPath <= pLimit * pLimit;
+    };
+
+    sfis.erase(std::remove_if(sfis.begin(), sfis.end(),
+                              [&](const auto &sfi) {
+                                return not isIntersectionValid(sfi);
+                              }),
+               sfis.end());
 
     ACTS_VERBOSE("after remove " << sfis.size() << " candidates remain");
 
-    for (const auto &s : sfis)
-      std::cout << s.intersection.pathLength
-                << "\tsurface: " << s.object->center(gctx).transpose() << "\n";
-
-    if (state.stepping.navDir == forward) {
-      std::sort(sfis.begin(), sfis.end());
-    } else {
-      std::sort(sfis.begin(), sfis.end(), std::greater<>());
+    std::sort(sfis.begin(), sfis.end());
+    for(auto &sfi : sfis) {
+      sfi.intersection.pathLength *= std::copysign(1., state.stepping.navDir);
     }
 
     // Transform back to vector of surface pointers
@@ -81,11 +69,6 @@ struct TrialAndErrorGuider {
     for (const auto &si : sfis) {
       finalSurfaces.push_back(si.representation);
     }
-
-    std::cout << "SURFACE CANDIDATES:\n";
-    for (const auto s : finalSurfaces)
-      std::cout << s->geometryId() << "\t" << s->center(gctx).transpose()
-                << "\n";
 
     state.navigation.navSurfaces = std::move(finalSurfaces);
     state.navigation.navSurfaceIter = state.navigation.navSurfaces.begin();

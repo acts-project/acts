@@ -146,7 +146,7 @@ int main() {
   {
     using Navigator = Acts::GuidedNavigator2<Acts::TrialAndErrorGuider>;
     Navigator navigator;
-    navigator.m_guider.m_possibleSurfaces = surfaceSequence;
+    navigator.guider.possibleSurfaces = surfaceSequence;
 
     using Propagator = Acts::Propagator<Stepper, Navigator>;
     Propagator prop(Stepper(magField), navigator);
@@ -165,5 +165,27 @@ int main() {
     auto res = prop.propagate(startPars, *targetSurface, propOptions);
 
     r[2] = (*res).get<Acts::detail::SteppingLogger::result_type>().steps;
+  }
+  
+  std::cout << "\nStandard navigator\t\tDirect-Guided navigator\t\tTrial&Error navigator\n";
+  std::cout << "------------------------------------------------------------------------\n";
+  
+  for(const auto &step : r[0])
+  {
+    if( !step.surface )
+        continue;
+    
+    std::cout << step.surface->geometryId() << "\t\t";
+      
+    const auto inDirect = std::find_if(r[1].begin(), r[1].end(), [&](const auto &s){ return s.surface && step.surface->geometryId() == s.surface->geometryId(); });
+    const auto inTrialError = std::find_if(r[2].begin(), r[2].end(), [&](const auto &s){ return s.surface && step.surface->geometryId() == s.surface->geometryId(); });
+    
+    if( inDirect != r[1].end() && inDirect->surface)
+        std::cout << inDirect->surface->geometryId() << "\t\t";
+    
+    if( inDirect != r[2].end() && inTrialError->surface)
+        std::cout << inTrialError->surface->geometryId();
+    
+    std::cout << "\n";
   }
 }
