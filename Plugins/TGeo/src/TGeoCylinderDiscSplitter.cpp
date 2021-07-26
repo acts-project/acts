@@ -25,15 +25,14 @@ std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
 Acts::TGeoCylinderDiscSplitter::split(
     const GeometryContext& gctx,
     std::shared_ptr<const Acts::TGeoDetectorElement> tgde) const {
-  // Segments are detected, attempt a split
+  const Acts::Surface& sf = tgde->surface();
+  // Thickness
+  auto tgIdentifier = tgde->identifier();
+  const TGeoNode& tgNode = tgde->tgeoNode();
+  ActsScalar tgThickness = tgde->thickness();
+
+  // Disc segments are detected, attempt a split
   if (m_cfg.discPhiSegments > 0 or m_cfg.discRadialSegments > 0) {
-    const Acts::Surface& sf = tgde->surface();
-
-    // Thickness
-    auto tgIdentifier = tgde->identifier();
-    const TGeoNode& tgNode = tgde->tgeoNode();
-    ActsScalar tgThickness = tgde->thickness();
-
     // Splitting for discs detected
     if (sf.type() == Acts::Surface::Disc and
         sf.bounds().type() == Acts::SurfaceBounds::eDisc) {
@@ -97,9 +96,13 @@ Acts::TGeoCylinderDiscSplitter::split(
       }
 
       return tgDetectorElements;
+    }
+  }
 
-    } else if (sf.type() == Acts::Surface::Cylinder and
-               sf.bounds().type() == Acts::SurfaceBounds::eCylinder) {
+  // Cylinder segments are detected, attempt a split
+  if (m_cfg.cylinderPhiSegments > 0 or m_cfg.cylinderLongitudinalSegments > 0) {
+    if (sf.type() == Acts::Surface::Cylinder and
+        sf.bounds().type() == Acts::SurfaceBounds::eCylinder) {
       ACTS_DEBUG("- splitting detected for a Cylinder shaped sensor.");
 
       std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>

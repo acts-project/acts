@@ -75,6 +75,7 @@ class RootPropagationStepsWriter
   std::vector<int> m_layerID;      ///< layer identifier if
   std::vector<int> m_approachID;   ///< surface identifier
   std::vector<int> m_sensitiveID;  ///< surface identifier
+  std::vector<int> m_material;     ///< flag material if present
   std::vector<float> m_x;          ///< global x
   std::vector<float> m_y;          ///< global y
   std::vector<float> m_z;          ///< global z
