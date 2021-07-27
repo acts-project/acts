@@ -74,8 +74,8 @@ void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,
       if (layer->surfaceArray() and writeSensitive) {
         for (auto surface : layer->surfaceArray()->surfaces()) {
           if (surface) {
-            cSurfaces.push_back(
-                SurfaceContainer::InputElement{surface->geometryId(), surface});
+            cSurfaces.push_back(SurfaceContainer::InputElement{
+                surface->geometryId(), surface->getSharedPtr()});
           }
         }
       }
