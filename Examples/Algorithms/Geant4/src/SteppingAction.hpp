@@ -16,7 +16,7 @@
 #include <G4UserSteppingAction.hh>
 #include <globals.hh>
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 /// @class SteppingAction
 ///
@@ -62,4 +62,4 @@ class SteppingAction final : public G4UserSteppingAction {
   ActsExamples::SimHitContainer::sequence_type m_trackSteps;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4

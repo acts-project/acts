@@ -17,8 +17,9 @@
 #include <memory>
 #include <mutex>
 
-#include <G4VUserDetectorConstruction.hh>
 #include <HepMC3/GenEvent.h>
+
+#include "G4VUserDetectorConstruction.hh"
 
 class G4RunManager;
 
