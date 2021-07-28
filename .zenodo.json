@@ -1,6 +1,6 @@
 {
   "description": "Experiment-independent toolkit for (charged) particle track reconstruction in (high energy) physics experiments implemented in modern C++ ",
-  "license": "MPLv2",
+  "license": "MPL-2.0",
   "title": "acts-project/acts: v11.0.0",
   "version": "v11.0.0",
   "upload_type": "software",
