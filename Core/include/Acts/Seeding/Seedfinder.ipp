@@ -134,6 +134,11 @@ Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       float ErB = lb.Er;
       float iDeltaRB = lb.iDeltaR;
 
+      // Compute the sign of the difference between the Z coordinate of the
+      // middle and bottom space points. If this is true, the Z coordinate
+      // increases. If it is false, the Z coordinate decreases.
+      bool bmSign = std::signbit(spM->z() - compatBottomSP[b]->z());
+
       // 1+(cot^2(theta)) = 1/sin^2(theta)
       float iSinTheta2 = (1. + cotThetaB * cotThetaB);
       // calculate max scattering for min momentum at the seed's theta angle
@@ -156,6 +161,14 @@ Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       impactParameters.clear();
       for (size_t t = 0; t < numTopSP; t++) {
         auto lt = linCircleTop[t];
+
+        // Check if the sign of the difference in Z is the same between the
+        // middle and top spacepoint as it is between the middle and top
+        // spacepoint. If not, the Z coordinate is not monotonic between the
+        // points, and the seed is unlikely to be useful.
+        if (std::signbit(compatTopSP[t]->z() - spM->z()) != bmSign) {
+          continue;
+        }
 
         // add errors of spB-spM and spM-spT pairs and add the correlation term
         // for errors on spM
