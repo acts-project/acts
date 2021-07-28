@@ -1,0 +1,112 @@
+{
+  "description": "Experiment-independent toolkit for (charged) particle track reconstruction in (high energy) physics experiments implemented in modern C++ ",
+  "license": "MPLv2",
+  "title": "acts-project/acts: v11.0.0",
+  "version": "v11.0.0",
+  "upload_type": "software",
+  "creators": [
+    {
+      "affiliation": "CERN",
+      "name": "Andreas Salzburger"
+    },
+    {
+      "affiliation": "CERN",
+      "name": "Paul Gessinger"
+    },
+    {
+      "affiliation": "CERN / TUM Muenchen",
+      "name": "Fabian Klimpel"
+    },
+    {
+      "affiliation": "CERN",
+      "name": "Moritz Kiehn"
+    },
+    {
+      "affiliation": "CERN / JGU Mainz",
+      "name": "Bastian Schlag"
+    },
+    {
+      "affiliation": "Universite Paris-Saclay / CNRS/IN2P3",
+      "name": "Hadrien G."
+    },
+    {
+      "affiliation": "University of Massachussets",
+      "name": "Robert Langenberg"
+    },
+    {
+      "affiliation": "CERN",
+      "name": "Corentin Allaire"
+    },
+    {
+      "affiliation": "DESY Hamburg",
+      "name": "Xiaocong Ai"
+    },
+    {
+      "affiliation": "Universitaet Freiburg",
+      "name": "Benjamin Huth"
+    },
+    {
+      "affiliation": "UC Berkeley",
+      "name": "Louis-Guillaume Gagnon"
+    },
+    {
+      "affiliation": "CERN",
+      "name": "Noemi Calace"
+    },
+    {
+      "affiliation": "CERN",
+      "name": "Attila Krasznahorkay"
+    },
+    {
+      "affiliation": "UC Berkeley",
+      "name": "Beomki Yeo"
+    },
+    {
+      "affiliation": "LBNL",
+      "name": "Charles Leggett"
+    },
+    {
+      "affiliation": "Eotvos Lorand University",
+      "name": "Czirkos Angela"
+    },
+    {
+      "affiliation": "UC Berkeley",
+      "name": "Tomohiro Yamazaki"
+    },
+    {
+      "affiliation": "CERN",
+      "name": "Joana Niermann"
+    },
+    {
+      "affiliation": "UC Berkeley",
+      "name": "Irina Ene"
+    },
+    {
+      "affiliation": "Oak Ridge National Laboratory",
+      "name": "Joe Osborn"
+    },
+    {
+      "affiliation": "Stanford University",
+      "name": "Rocky Bala Garg"
+    }
+  ],
+  "access_right": "open",
+  "related_identifiers": [
+    {
+      "scheme": "url",
+      "identifier": "https://github.com/acts-project/acts/tree/v10.0.0",
+      "relation": "isSupplementTo"
+    },
+    {
+      "scheme": "doi",
+      "identifier": "10.5281/zenodo.4818137",
+      "relation": "obsoletes",
+      "resource_type": "software"
+    },
+    {
+      "scheme": "doi",
+      "identifier": "10.5281/zenodo.5141418",
+      "relation": "isVersionOf"
+    }
+  ]
+}
