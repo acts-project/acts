@@ -166,7 +166,8 @@ Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         // middle and top spacepoint as it is between the middle and top
         // spacepoint. If not, the Z coordinate is not monotonic between the
         // points, and the seed is unlikely to be useful.
-        if (std::signbit(compatTopSP[t]->z() - spM->z()) != bmSign) {
+        if (m_config.requireMonotonicZ &&
+            std::signbit(compatTopSP[t]->z() - spM->z()) != bmSign) {
           continue;
         }
 

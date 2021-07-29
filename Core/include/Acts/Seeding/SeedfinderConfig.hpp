@@ -69,6 +69,10 @@ struct SeedfinderConfig {
   // which will make seeding very slow!
   float rMin = 33;
 
+  // If enabled, seed candidates for which the z-coordinate between the space
+  // points does not increase or decrease monotonically will be rejected.
+  bool requireMonotonicZ = false;
+
   // Unit in kiloTesla
   // FIXME: Acts units
   float bFieldInZ = 0.00208;
