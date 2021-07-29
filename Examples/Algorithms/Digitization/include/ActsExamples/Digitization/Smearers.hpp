@@ -15,7 +15,6 @@
 
 #include <cmath>
 #include <limits>
-#include <mutex>
 #include <random>
 #include <string>
 #include <tuple>
