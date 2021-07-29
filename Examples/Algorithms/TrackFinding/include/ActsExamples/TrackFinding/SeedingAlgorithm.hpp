@@ -49,6 +49,7 @@ class SeedingAlgorithm final : public BareAlgorithm {
     float beamPosX = 0;
     float beamPosY = 0;
     float impactMax = 3.;
+    bool requireMonotonicZ = false;
   };
 
   /// Construct the seeding algorithm.

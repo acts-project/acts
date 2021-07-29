@@ -136,6 +136,7 @@ int runSeedingExample(int argc, char* argv[],
   seedingCfg.beamPosX = 0;
   seedingCfg.beamPosY = 0;
   seedingCfg.impactMax = 3.;
+  seedingCfg.requireMonotonicZ = true;
   sequencer.addAlgorithm(
       std::make_shared<SeedingAlgorithm>(seedingCfg, logLevel));
 

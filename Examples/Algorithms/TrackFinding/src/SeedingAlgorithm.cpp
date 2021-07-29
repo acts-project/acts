@@ -68,6 +68,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   m_finderCfg.bFieldInZ = m_cfg.bFieldInZ;
   m_finderCfg.beamPos = Acts::Vector2(m_cfg.beamPosX, m_cfg.beamPosY);
   m_finderCfg.impactMax = m_cfg.impactMax;
+  m_finderCfg.requireMonotonicZ = m_cfg.requireMonotonicZ;
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
