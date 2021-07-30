@@ -177,10 +177,9 @@ class TrackingVolume : public Volume {
   /// @param options The templated navigation options
   ///
   /// @return vector of compatible intersections with layers
-  void compatibleLayers(const GeometryContext& gctx,
-                        std::vector<LayerIntersection>& intersections,
-                        const Vector3& position, const Vector3& direction,
-                        const NavigationOptions<Layer>& options) const;
+  std::vector<LayerIntersection> compatibleLayers(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const NavigationOptions<Layer>& options) const;
 
   /// @brief Returns all boundary surfaces sorted by the user.
   ///
