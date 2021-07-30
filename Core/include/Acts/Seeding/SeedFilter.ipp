@@ -20,18 +20,15 @@ SeedFilter<external_spacepoint_t>::SeedFilter(
 // middle-spacepoint.
 // return vector must contain weight of each seed
 template <typename external_spacepoint_t>
-std::vector<std::pair<
-    float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
-SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
+void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     const InternalSpacePoint<external_spacepoint_t>& bottomSP,
     const InternalSpacePoint<external_spacepoint_t>& middleSP,
     std::vector<const InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
     std::vector<float>& invHelixDiameterVec,
-    std::vector<float>& impactParametersVec, float zOrigin) const {
-  std::vector<std::pair<
-      float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
-      selectedSeeds;
-
+    std::vector<float>& impactParametersVec, float zOrigin,
+    std::back_insert_iterator<std::vector<std::pair<
+        float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>>
+        outIt) const {
   for (size_t i = 0; i < topSpVec.size(); i++) {
     // if two compatible seeds with high distance in r are found, compatible
     // seeds span 5 layers
@@ -93,11 +90,10 @@ SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         continue;
       }
     }
-    selectedSeeds.push_back(std::make_pair(
+    outIt = std::make_pair(
         weight, std::make_unique<const InternalSeed<external_spacepoint_t>>(
-                    bottomSP, middleSP, *topSpVec[i], zOrigin)));
+                    bottomSP, middleSP, *topSpVec[i], zOrigin));
   }
-  return selectedSeeds;
 }
 
 // after creating all seeds with a common middle space point, filter again

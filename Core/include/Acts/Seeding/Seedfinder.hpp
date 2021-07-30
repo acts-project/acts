@@ -37,6 +37,31 @@ class Seedfinder {
   ///////////////////////////////////////////////////////////////////
 
  public:
+  struct State {
+    // bottom space point
+    std::vector<const InternalSpacePoint<external_spacepoint_t>*>
+        compatBottomSP;
+    std::vector<const InternalSpacePoint<external_spacepoint_t>*> compatTopSP;
+    // contains parameters required to calculate circle with linear equation
+    // ...for bottom-middle
+    std::vector<LinCircle> linCircleBottom;
+    // ...for middle-top
+    std::vector<LinCircle> linCircleTop;
+
+    // create vectors here to avoid reallocation in each loop
+    std::vector<const InternalSpacePoint<external_spacepoint_t>*> topSpVec;
+    std::vector<float> curvatures;
+    std::vector<float> impactParameters;
+
+    std::vector<std::pair<
+        float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
+        seedsPerSpM;
+
+    std::vector<std::pair<
+        float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
+        sameTrackSeeds;
+  };
+
   /// The only constructor. Requires a config object.
   /// @param config the configuration for the Seedfinder
   Seedfinder(Acts::SeedfinderConfig<external_spacepoint_t> config);
@@ -59,6 +84,7 @@ class Seedfinder {
   /// @return vector in which all found seeds for this group are stored.
   template <typename sp_range_t>
   void createSeedsForGroup(
+      State& state,
       std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt,
       sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
 

@@ -113,10 +113,12 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   // run the seeding
   static thread_local SimSeedContainer seeds;
   seeds.clear();
+  static thread_local decltype(finder)::State state;
+
   auto group = spacePointsGrouping.begin();
   auto groupEnd = spacePointsGrouping.end();
   for (; !(group == groupEnd); ++group) {
-    finder.createSeedsForGroup(std::back_inserter(seeds), group.bottom(),
+    finder.createSeedsForGroup(state, std::back_inserter(seeds), group.bottom(),
                                group.middle(), group.top());
   }
 
