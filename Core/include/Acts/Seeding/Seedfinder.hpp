@@ -58,7 +58,8 @@ class Seedfinder {
   /// @note Ranges must be separate objects for each parallel call.
   /// @return vector in which all found seeds for this group are stored.
   template <typename sp_range_t>
-  std::vector<Seed<external_spacepoint_t>> createSeedsForGroup(
+  void createSeedsForGroup(
+      std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt,
       sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
 
  private:

@@ -624,12 +624,11 @@ Acts::TrackingVolume::compatibleBoundaries(
   return bIntersections;
 }
 
-std::vector<Acts::LayerIntersection> Acts::TrackingVolume::compatibleLayers(
-    const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const NavigationOptions<Layer>& options) const {
-  // the layer intersections which are valid
-  std::vector<LayerIntersection> lIntersections;
-
+void Acts::TrackingVolume::compatibleLayers(
+    const GeometryContext& gctx, std::vector<LayerIntersection>& intersections,
+    const Vector3& position, const Vector3& direction,
+    const NavigationOptions<Layer>& options) const {
+  intersections.clear();
   // the confinedLayers
   if (m_confinedLayers != nullptr) {
     // start layer given or not - test layer
@@ -654,7 +653,7 @@ std::vector<Acts::LayerIntersection> Acts::TrackingVolume::compatibleLayers(
         if (atIntersection &&
             (atIntersection.object != options.targetSurface) && withinLimit) {
           // create a layer intersection
-          lIntersections.push_back(LayerIntersection(
+          intersections.push_back(LayerIntersection(
               atIntersection.intersection, tLayer, atIntersection.object));
         }
       }
@@ -666,13 +665,11 @@ std::vector<Acts::LayerIntersection> Acts::TrackingVolume::compatibleLayers(
     }
     // sort them accordingly to the navigation direction
     if (options.navDir == forward) {
-      std::sort(lIntersections.begin(), lIntersections.end());
+      std::sort(intersections.begin(), intersections.end());
     } else {
-      std::sort(lIntersections.begin(), lIntersections.end(), std::greater<>());
+      std::sort(intersections.begin(), intersections.end(), std::greater<>());
     }
   }
-  // and return
-  return lIntersections;
 }
 
 namespace {

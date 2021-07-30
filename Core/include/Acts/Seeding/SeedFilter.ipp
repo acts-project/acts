@@ -106,7 +106,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     std::vector<std::pair<
         float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
         seedsPerSpM,
-    std::vector<Seed<external_spacepoint_t>>& outVec) const {
+    std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
+    const {
   // sort by weight and iterate only up to configured max number of seeds per
   // middle SP
   std::sort((seedsPerSpM.begin()), (seedsPerSpM.end()),
@@ -144,9 +145,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
   // ordering by weight by filterSeeds_2SpFixed means these are the lowest
   // weight seeds
   for (; it < itBegin + maxSeeds; ++it) {
-    outVec.push_back(Seed<external_spacepoint_t>(
+    outIt = Seed<external_spacepoint_t>{
         (*it).second->sp[0]->sp(), (*it).second->sp[1]->sp(),
-        (*it).second->sp[2]->sp(), (*it).second->z()));
+        (*it).second->sp[2]->sp(), (*it).second->z()};
   }
 }
 

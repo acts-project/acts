@@ -13,13 +13,23 @@
 #include "Acts/Utilities/detail/Axis.hpp"
 
 #include <array>
+#include <iostream>
 #include <set>
 #include <tuple>
 #include <utility>
 
+#include <boost/container/static_vector.hpp>
+
 namespace Acts {
 
 namespace detail {
+
+template <typename T>
+constexpr T ipow(T num, unsigned int pow) {
+  return (pow >= sizeof(unsigned int) * 8)
+             ? 0
+             : pow == 0 ? 1 : num * ipow(num, pow - 1);
+}
 
 // This object can be iterated to produce the (ordered) set of global indices
 // associated with a neighborhood around a certain point on a grid.
@@ -122,12 +132,17 @@ class GlobalNeighborHoodIndices {
     return result;
   }
 
-  // Collect the sequence of indices into an std::vector
-  std::vector<size_t> collect() const {
-    std::vector<size_t> result;
+  // Collect the sequence of indices into an vector
+  auto collect() const {
+    boost::container::static_vector<size_t, ipow(3, DIM)> result;
     result.reserve(this->size());
     for (size_t idx : *this) {
       result.push_back(idx);
+      // if (result.internal_capacity() < result.size()) {
+      //   std::cout << "ic: " << result.internal_capacity()
+      //             << " sz: " << result.size() << std::endl;
+      //   throw std::runtime_error{"Capacity exceeded"};
+      // }
     }
     return result;
   }

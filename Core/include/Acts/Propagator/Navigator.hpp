@@ -242,8 +242,7 @@ class Navigator {
       // Get the compatible layers (including the current layer)
       NavigationOptions<Layer> navOpts(navDir, true, true, true, true, nullptr,
                                        nullptr);
-      navLayers =
-          currentVolume->compatibleLayers(geoContext, pos, dir, navOpts);
+      currentVolume->compatibleLayers(geoContext, navLayers, pos, dir, navOpts);
 
       // Set the iterator to the first
       navLayerIter = navLayers.begin();
@@ -1190,10 +1189,10 @@ class Navigator {
     navOpts.pathLimit = state.stepping.stepSize.value(ConstrainedStep::aborter);
     navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
     // Request the compatible layers
-    state.navigation.navLayers =
-        state.navigation.currentVolume->compatibleLayers(
-            state.geoContext, stepper.position(state.stepping),
-            stepper.direction(state.stepping), navOpts);
+    state.navigation.currentVolume->compatibleLayers(
+        state.geoContext, state.navigation.navLayers,
+        stepper.position(state.stepping), stepper.direction(state.stepping),
+        navOpts);
 
     // Layer candidates have been found
     if (!state.navigation.navLayers.empty()) {

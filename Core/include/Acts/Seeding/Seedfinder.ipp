@@ -36,10 +36,9 @@ Seedfinder<external_spacepoint_t, platform_t>::Seedfinder(
 
 template <typename external_spacepoint_t, typename platform_t>
 template <typename sp_range_t>
-std::vector<Seed<external_spacepoint_t>>
-Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
+void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
+    std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt,
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
-  std::vector<Seed<external_spacepoint_t>> outputVec;
   for (auto spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
@@ -246,9 +245,8 @@ Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
                            std::make_move_iterator(sameTrackSeeds.end()));
       }
     }
-    m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, outputVec);
+    m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, outIt);
   }
-  return outputVec;
 }
 
 template <typename external_spacepoint_t, typename platform_t>
