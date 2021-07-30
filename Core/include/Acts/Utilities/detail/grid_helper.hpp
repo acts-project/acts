@@ -18,7 +18,7 @@
 #include <tuple>
 #include <utility>
 
-#include <boost/container/static_vector.hpp>
+#include <boost/container/small_vector.hpp>
 
 namespace Acts {
 
@@ -134,17 +134,17 @@ class GlobalNeighborHoodIndices {
 
   // Collect the sequence of indices into an vector
   auto collect() const {
-    boost::container::static_vector<size_t, ipow(3, DIM)> result;
+    boost::container::small_vector<size_t, ipow(3, DIM)> result;
     result.reserve(this->size());
     for (size_t idx : *this) {
       result.push_back(idx);
-      // if (result.internal_capacity() < result.size()) {
-      //   std::cout << "ic: " << result.internal_capacity()
-      //             << " sz: " << result.size() << std::endl;
-      //   throw std::runtime_error{"Capacity exceeded"};
-      // }
     }
     return result;
+  }
+
+  std::vector<size_t> collectVector() const {
+    auto result = collect();
+    return {result.begin(), result.end()};
   }
 
  private:
