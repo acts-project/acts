@@ -289,7 +289,7 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
                 bottomSP, middleSP, topSP, Zob)));
       }
 
-      m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, outputVec);
+      m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, std::back_inserter(outputVec));
     }
   }
   ACTS_CUDA_ERROR_CHECK(cudaStreamDestroy(cuStream));
