@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// ActsExtension.hpp, Acts project, DD4hepDetector plugin
-///////////////////////////////////////////////////////////////////
 
 #pragma once
 
@@ -77,6 +73,11 @@ class ActsExtension {
   /// @param type the primary identifier in the flag store
   /// @param category the (optional) category in the flag store
   bool hasType(const std::string& type, const std::string& category = "") const;
+
+  /// Check if the ActsExtension has a category
+  ///
+  /// @param category the category in the flag store
+  bool hasCategory(const std::string& category) const;
 
   /// Add the characteristics
   ///

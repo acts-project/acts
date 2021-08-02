@@ -120,14 +120,16 @@ void followOutgoingParticles(HepMC3::GenEvent& event,
 }
 }  // namespace
 
-ActsExamples::EventAction* ActsExamples::EventAction::s_instance = nullptr;
+namespace ActsExamples::Geant4::HepMC3 {
 
-ActsExamples::EventAction* ActsExamples::EventAction::instance() {
+EventAction* EventAction::s_instance = nullptr;
+
+EventAction* EventAction::instance() {
   // Static acces function via G4RunManager
   return s_instance;
 }
 
-ActsExamples::EventAction::EventAction(std::vector<std::string> processFilter)
+EventAction::EventAction(std::vector<std::string> processFilter)
     : G4UserEventAction(), m_processFilter(std::move(processFilter)) {
   if (s_instance) {
     throw std::logic_error("Attempted to duplicate a singleton");
@@ -136,17 +138,17 @@ ActsExamples::EventAction::EventAction(std::vector<std::string> processFilter)
   }
 }
 
-ActsExamples::EventAction::~EventAction() {
+EventAction::~EventAction() {
   s_instance = nullptr;
 }
 
-void ActsExamples::EventAction::BeginOfEventAction(const G4Event*) {
+void EventAction::BeginOfEventAction(const G4Event*) {
   SteppingAction::instance()->clear();
-  m_event = HepMC3::GenEvent(HepMC3::Units::GEV, HepMC3::Units::MM);
-  m_event.add_beam_particle(std::make_shared<HepMC3::GenParticle>());
+  m_event = ::HepMC3::GenEvent(::HepMC3::Units::GEV, ::HepMC3::Units::MM);
+  m_event.add_beam_particle(std::make_shared<::HepMC3::GenParticle>());
 }
 
-void ActsExamples::EventAction::EndOfEventAction(const G4Event*) {
+void EventAction::EndOfEventAction(const G4Event*) {
   // Fast exit if the event is empty
   if (m_event.vertices().empty()) {
     return;
@@ -156,10 +158,11 @@ void ActsExamples::EventAction::EndOfEventAction(const G4Event*) {
   followOutgoingParticles(m_event, currentVertex, m_processFilter);
 }
 
-void ActsExamples::EventAction::clear() {
+void EventAction::clear() {
   SteppingAction::instance()->clear();
 }
 
-HepMC3::GenEvent& ActsExamples::EventAction::event() {
+::HepMC3::GenEvent& EventAction::event() {
   return m_event;
 }
+}  // namespace ActsExamples::Geant4::HepMC3

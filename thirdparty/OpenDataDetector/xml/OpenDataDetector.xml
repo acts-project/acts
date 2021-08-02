@@ -33,7 +33,7 @@
         <constant name="pix_e_pz" value="1.480*m"/>                
         <constant name="pix_e_dz" value="0.9*m"/> 
         <!--Dimensions of the Pixel Support tube -->
-        <constant name="pst_rmin" value="200.*mm"/>
+        <constant name="pst_rmin" value="202.*mm"/>
         <constant name="pst_rmax" value="204.*mm"/>
         <constant name="pst_length" value="2.0*m"/>        
         <!--Dimensions of the Short Strips volume & sub volumes -->
@@ -55,7 +55,7 @@
         <constant name="ls_e_pz" value="2.175*m"/>                
         <constant name="ls_e_dz" value="0.975*m"/>   
         <!--Dimensions of the Solenoid -->
-        <constant name="sol_rmin" value="1140.*mm"/>
+        <constant name="sol_rmin" value="1160.*mm"/>
         <constant name="sol_rmax" value="1200.*mm"/>
         <constant name="sol_hlength" value="3.0*m"/>  
         <!-- Material binning section -->
@@ -71,6 +71,9 @@
         <constant name="mat_pix_outer_bZ" value="250"/>
         <constant name="mat_pix_inter_bR" value="50"/>
         <constant name="mat_pix_inter_bPhi" value="72"/>
+        <!-- PST section -->
+        <constant name="mat_pst_bPhi" value="1"/>
+        <constant name="mat_pst_bZ" value="100"/>
         <!-- short strip section -->
         <constant name="mat_sst_barrel_bPhi" value="72"/>
         <constant name="mat_sst_barrel_bZ" value="150"/>
@@ -89,6 +92,9 @@
         <constant name="mat_lst_outer_bPhi" value="72"/>
         <constant name="mat_lst_inter_bR" value="100"/>
         <constant name="mat_lst_inter_bPhi" value="72"/>
+        <!-- Solenoid section -->
+        <constant name="mat_sol_bPhi" value="1"/>
+        <constant name="mat_sol_bZ" value="100"/>
     </define>
             
     <display>
@@ -97,6 +103,7 @@
         <vis name="Kapton" r="0.1328125" g="0.55859375" b="0.02734375" alpha="1" showDaugthers="true" visible="true" drawingStyle="solid"/>
         <vis name="CarbonFiber" r="0.4" g="0.4"  b="0.4" alpha="1" showDaugthers="true" visible="true" drawingStyle="solid"/>
         <vis name="CarbonFoam" r="0.5" g="0.5"  b="0.5" alpha="1" showDaugthers="true" visible="true" drawingStyle="solid"/>
+        <vis name="Aluminum" r="0.7" g="0.7"  b="0.7" alpha="1" showDaugthers="true" visible="true" drawingStyle="solid"/> 
         <vis name="violet" r="0.4" g="0." b="0.4" alpha="1" showDaugthers="true" visible="true" drawingStyle="solid"/>
         <vis name="red" r="0.6" g="0." b="0." alpha="1" showDaugthers="true" visible="true" drawingStyle="solid"/>
         <vis name="yellow" r="0.65" g="0.65" b="0." alpha="1" showDaugthers="true" visible="true" drawingStyle="solid"/>
@@ -150,7 +157,9 @@
           <composite name="PixelEndcapP"/>
       </detector>
       <detector id="2" name="PST" type="ODDCylinder" beampipe="false" vis="CarbonFiber">
-            <tubs name="PixelSupportCylinder" rmin="pst_rmin" rmax="pst_rmax" dz="pst_length" material="CarbonFiber"/>
+            <tubs name="PixelSupportCylinder" rmin="pst_rmin" rmax="pst_rmax" dz="pst_length" material="CarbonFiber">
+              <layer_material surface="representing" binning="binPhi,binZ" bins0="mat_pst_bPhi" bins1="mat_pst_bZ"/>
+            </tubs>
       </detector>
       <detector id="3" name="ShortStrips" type="DD4hep_SubdetectorAssembly" vis="invisible">
           <shape name="ShortStripVolume" type="Tube" rmin="ss_env_rmin" rmax="ss_env_rmax" dz="ss_env_dz" material="Air"/>
@@ -164,8 +173,11 @@
           <composite name="LongStripBarrel"/>
           <composite name="LongStripEndcapP"/>
       </detector>
-      <detector id="5" name="Solenoid" type="ODDCylinder" beampipe="false" vis="grey">
-            <tubs name="Solenoid" rmin="sol_rmin" rmax="sol_rmax" dz="sol_hlength" material="CarbonFiber"/>
+      <detector id="5" name="Solenoid" type="ODDCylinder" beampipe="false" vis="Aluminum">
+            <boundary_material surface="inner" binning="binPhi,binZ" bins0="mat_sol_bPhi" bins1="mat_sol_bZ"/>
+            <tubs name="Solenoid" rmin="sol_rmin" rmax="sol_rmax" dz="sol_hlength" material="Aluminum">
+              <layer_material surface="representing" binning="binPhi,binZ" bins0="mat_sol_bPhi" bins1="mat_sol_bZ"/>
+            </tubs>
       </detector>
     </detectors>
 </lccdd>

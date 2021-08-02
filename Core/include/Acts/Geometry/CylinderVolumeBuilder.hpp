@@ -405,7 +405,7 @@ struct WrappingConfig {
     // for screen output
     std::stringstream sl;
     if (containerVolumeConfig) {
-      sl << "New contaienr built with       configuration: "
+      sl << "New container built with       configuration: "
          << containerVolumeConfig.toString() << '\n';
     }
     // go throug the new new ones first
