@@ -27,37 +27,66 @@ class TGeoDetectorElement;
 ///
 /// Split Itk modules into submodules, depending on the sensor type
 class TGeoItkModuleSplitter : public ITGeoDetectorElementSplitter {
- public:
+  public:
   /// Nested configuration struct
   struct Config {
-      // Map the nodes name to the splitting parameters
-      std::map<std::string, std::vector<unsigned int>> paramMap = {};
+    // Map the nodes name to the splitting parameters
+    std::map<std::string, unsigned int> paramMap = {};
   };
 
   /// Constructor
   ///
   /// @param cfg the configuration struct
   /// @param logger the logging object
-  TGeoItkModuleSplitter(
-      const Config& cfg,
+  TGeoItkModuleSplitter(const Config& cfg,
       std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
           "TGeoItkModuleSplitter", Acts::Logging::INFO));
 
   virtual ~TGeoItkModuleSplitter() = default;
 
-  /// Take a geometry context and TGeoElement and split it into sub elements
+  /// Take a geometry context and TGeoElement and find the correct splitting 
+  /// method for the module type.
   ///
   /// @param gctx is a geometry context object
-  /// @param tgde is a TGeoDetectorElement that is eventually split
+  /// @param detElement is a TGeoDetectorElement that is eventually split
   ///
   /// @note If no split is performed the unsplit detector element is returned
   ///
   /// @return a vector of TGeoDetectorElement objects
   std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> split(
       const GeometryContext& gctx,
-      std::shared_ptr<const Acts::TGeoDetectorElement> tgde) const;
+      std::shared_ptr<const Acts::TGeoDetectorElement> detElement) const;
 
  private:
+
+  /// Take a geometry context and TGeoElement in the Itk barrel region 
+  /// and split it into sub elements.
+  ///
+  /// @param gctx is a geometry context object
+  /// @param detElement is a TGeoDetectorElement that is eventually split
+  ///
+  /// @note If no split is performed the unsplit detector element is returned
+  ///
+  /// @return a vector of TGeoDetectorElement objects
+  std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> splitBarrelModule(
+      std::shared_ptr<const Acts::TGeoDetectorElement> detElement,
+      unsigned int nSegments) const;
+
+  /// Take a geometry context and TGeoElement in the Itk disks and split it 
+  /// into sub elements.
+  ///
+  /// @param gctx is a geometry context object
+  /// @param detElement is a TGeoDetectorElement that is eventually split
+  ///
+  /// @note If no split is performed the unsplit detector element is returned
+  ///
+  /// @return a vector of TGeoDetectorElement objects
+  /*std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> splitDiskModule(
+      std::shared_ptr<const Acts::TGeoDetectorElement> detElement,
+      std::vector<double>& params) const;*/
+
+
+  /// Contains the splitting parameters, sorted by sensor type
   Config m_cfg;
 
   /// Private access to the logger
