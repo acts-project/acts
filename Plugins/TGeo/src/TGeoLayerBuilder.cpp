@@ -194,7 +194,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
         auto tgElement = std::make_shared<const Acts::TGeoDetectorElement>(
             identifier, *snode.node, *snode.transform, layerCfg.localAxes,
             m_cfg.unit);
-
+        std::cout << snode.node->GetName() << std::endl;
         std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
             tgElements =
                 (m_cfg.detectorElementSplitter == nullptr)

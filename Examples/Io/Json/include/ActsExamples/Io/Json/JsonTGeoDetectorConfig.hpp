@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
+#include "Acts/Plugins/TGeo/TGeoItkModuleSplitter.hpp"
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
@@ -28,6 +29,10 @@ std::vector<double> readBeampipeBuilderParam(const std::string& path);
 /// Read config for cylinder/disc module splitter
 void from_json(const nlohmann::json& j,
                              Acts::TGeoCylinderDiscSplitter::Config& msc);
+
+/// Read config for dedicated itk module splitter
+void from_json(const nlohmann::json& j,
+                             Acts::TGeoItkModuleSplitter::Config& msc);
 
 /// Read nested layer config for TGeoLayerbuilder
 void from_json(const nlohmann::json& j,

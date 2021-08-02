@@ -147,6 +147,10 @@ void ActsExamples::Options::from_json(const nlohmann::json& j,
 }
 
 void ActsExamples::Options::from_json(const nlohmann::json& j,
+                             Acts::TGeoItkModuleSplitter::Config& msc) {
+}
+
+void ActsExamples::Options::from_json(const nlohmann::json& j,
                              Acts::TGeoLayerBuilder::LayerConfig& psc) {
 
   psc.volumeName  = j["geo-tgeo-volume-name"];
@@ -226,6 +230,12 @@ ActsExamples::Options::readTGeoLayerBuilderConfigs(const std::string& path) {
         Acts::TGeoCylinderDiscSplitter::Config cdConfig;
         from_json(cdSplitter, cdConfig);
         layerBuilderConfig.detectorElementSplitter = std::make_shared<Acts::TGeoCylinderDiscSplitter>(cdConfig);
+      }
+
+      for (const auto& itkSplitter : splitter["Itk"]) {
+        Acts::TGeoItkModuleSplitter::Config itkConfig;
+        from_json(itkSplitter, itkConfig);
+        layerBuilderConfig.detectorElementSplitter = std::make_shared<Acts::TGeoItkModuleSplitter>(itkConfig);
       }
     }
 
