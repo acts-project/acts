@@ -76,12 +76,13 @@ class Seedfinder {
 
   /// Create all seeds from the space points in the three iterators.
   /// Can be used to parallelize the seed creation
+  /// @param state State object that holds memory used
+  /// @param outIt Output iterator for the seeds in the group
   /// @param bottomSPs group of space points to be used as innermost SP in a seed.
   /// @param middleSPs group of space points to be used as middle SP in a seed.
   /// @param topSPs group of space points to be used as outermost SP in a seed.
   /// @note Ranges must return pointers.
   /// @note Ranges must be separate objects for each parallel call.
-  /// @return vector in which all found seeds for this group are stored.
   template <typename sp_range_t>
   void createSeedsForGroup(
       State& state,
