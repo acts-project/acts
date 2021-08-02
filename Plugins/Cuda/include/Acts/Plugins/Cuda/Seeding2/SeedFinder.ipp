@@ -204,7 +204,8 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
           std::make_unique<const InternalSeed<external_spacepoint_t>>(
               bottomSP, middleSP, topSP, 0)));
     }
-    m_commonConfig.seedFilter->filterSeeds_1SpFixed(seedsPerSPM, std::back_inserter(outputVec));
+    m_commonConfig.seedFilter->filterSeeds_1SpFixed(
+        seedsPerSPM, std::back_inserter(outputVec));
   }
 
   // Free up all allocated device memory.

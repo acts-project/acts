@@ -253,7 +253,8 @@ int main(int argc, char** argv) {
     for (int i_s = 0; i_s < skip; i_s++)
       ++groupIt;
     for (; !(groupIt == spGroup.end()); ++groupIt) {
-      seedfinder_cpu.createSeedsForGroup(state, std::back_inserter(seedVector_cpu.emplace_back()),
+      seedfinder_cpu.createSeedsForGroup(
+          state, std::back_inserter(seedVector_cpu.emplace_back()),
           groupIt.bottom(), groupIt.middle(), groupIt.top());
       group_count++;
       if (allgroup == false) {

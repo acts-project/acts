@@ -191,7 +191,8 @@ auto main(int argc, char** argv) -> int {
     decltype(normalSeedfinder)::State state;
     for (auto groupIt = spGroup.begin(); !(groupIt == spGroup.end());
          ++groupIt) {
-      normalSeedfinder.createSeedsForGroup(state, std::back_inserter(seedVector_cpu.emplace_back()),
+      normalSeedfinder.createSeedsForGroup(
+          state, std::back_inserter(seedVector_cpu.emplace_back()),
           groupIt.bottom(), groupIt.middle(), groupIt.top());
       group_count++;
       if (!cmdlTool.allgroup && group_count >= cmdlTool.groups) {

@@ -159,9 +159,10 @@ int main(int argc, char* argv[]) {
     for (std::size_t i = 0;
          spGroup_itr != spGroup_end && i < cmdl.groupsToIterate;
          ++i, ++spGroup_itr) {
-           auto& group = seeds_host.emplace_back();
-          seedfinder_host.createSeedsForGroup(state, std::back_inserter(group),
-          spGroup_itr.bottom(), spGroup_itr.middle(), spGroup_itr.top());
+      auto& group = seeds_host.emplace_back();
+      seedfinder_host.createSeedsForGroup(
+          state, std::back_inserter(group), spGroup_itr.bottom(),
+          spGroup_itr.middle(), spGroup_itr.top());
     }
   }
 
