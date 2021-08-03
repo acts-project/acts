@@ -140,7 +140,9 @@ set(_acts_tbb_version 2020.1)
 if (ACTS_USE_SYSTEM_BOOST)
   # NOTE we use boost::filesystem instead of std::filesystem since the later
   # is not uniformly supported even on compilers that nominally support C++17
-  find_package(Boost ${_acts_boost_version} REQUIRED CONFIG COMPONENTS filesystem program_options unit_test_framework)
+  # NOTE FindBoost in the newest cmake searhes first in CONFIG mode and later in MODULE mode, 
+  # so for a better portability CONFIG keyword should not be used.
+  find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS filesystem program_options unit_test_framework)
 else()
   add_subdirectory(thirdparty/boost)
 endif()
