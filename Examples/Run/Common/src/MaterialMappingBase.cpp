@@ -115,7 +115,7 @@ int materialMappingExample(int argc, char* argv[],
   }
 
   /// The material mapping algorithm
-  ActsExamples::MaterialMapping::Config mmAlgConfig(geoContext, mfContext);
+  ActsExamples::MaterialMapping::Config mmAlgConfig{geoContext, mfContext};
   if (mapSurface) {
     // Get a Navigator
     Acts::Navigator navigator({tGeometry, true, true, true});
@@ -150,14 +150,13 @@ int materialMappingExample(int argc, char* argv[],
 
   if (!materialFileName.empty() and vm["output-root"].template as<bool>()) {
     // The writer of the indexed material
-    ActsExamples::RootMaterialWriter::Config rmwConfig("MaterialWriter");
-    rmwConfig.fileName = materialFileName + ".root";
-    ActsExamples::RootMaterialWriter rmwImpl(rmwConfig);
+    ActsExamples::RootMaterialWriter::Config rmwConfig;
+    rmwConfig.filePath = materialFileName + ".root";
     // Fullfill the IMaterialWriter interface
-    using RootWriter =
-        ActsExamples::MaterialWriterT<ActsExamples::RootMaterialWriter>;
-    mmAlgConfig.materialWriters.push_back(
-        std::make_shared<RootWriter>(std::move(rmwImpl)));
+
+    auto rmw =
+        std::make_shared<ActsExamples::RootMaterialWriter>(rmwConfig, logLevel);
+    mmAlgConfig.materialWriters.push_back(rmw);
 
     if (mapSurface) {
       // Write the propagation steps as ROOT TTree
@@ -179,8 +178,7 @@ int materialMappingExample(int argc, char* argv[],
     /// The name of the output file
     std::string fileName = vm["mat-output-file"].template as<std::string>();
     // the material writer
-    Acts::MaterialMapJsonConverter::Config jmConverterCfg(
-        "MaterialMapJsonConverter", Acts::Logging::INFO);
+    Acts::MaterialMapJsonConverter::Config jmConverterCfg;
     jmConverterCfg.processSensitives =
         vm["mat-output-sensitives"].template as<bool>();
     jmConverterCfg.processApproaches =
@@ -206,13 +204,10 @@ int materialMappingExample(int argc, char* argv[],
     }
     jmWriterCfg.writeFormat = format;
 
-    ActsExamples::JsonMaterialWriter jmwImpl(std::move(jmWriterCfg));
+    auto jmw = std::make_shared<ActsExamples::JsonMaterialWriter>(
+        std::move(jmWriterCfg), Acts::Logging::INFO);
 
-    // Fullfill the IMaterialWriter interface
-    using JsonWriter =
-        ActsExamples::MaterialWriterT<ActsExamples::JsonMaterialWriter>;
-    mmAlgConfig.materialWriters.push_back(
-        std::make_shared<JsonWriter>(std::move(jmwImpl)));
+    mmAlgConfig.materialWriters.push_back(jmw);
   }
 
   // Create the material mapping
