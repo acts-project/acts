@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
@@ -21,4 +22,8 @@ struct DD4hepDetector : public ActsExamples::IBaseDetector {
   std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
   finalize(const boost::program_options::variables_map& vm,
            std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) override;
+
+  std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
+  finalize(ActsExamples::DD4hep::DD4hepGeometryService::Config cfg,
+           std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
 };
