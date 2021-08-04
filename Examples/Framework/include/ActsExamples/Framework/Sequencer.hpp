@@ -26,6 +26,8 @@
 
 namespace ActsExamples {
 
+using IterationCallback = void (*)();
+
 /// A simple algorithm sequencer for event processing.
 ///
 /// This is the backbone of the framework. It reads events from file,
@@ -44,6 +46,7 @@ class Sequencer {
     int numThreads = -1;
     /// output directory for timing information, empty for working directory
     std::string outputDir;
+    IterationCallback iterationCallback = []() {};
   };
 
   Sequencer(const Config& cfg);
