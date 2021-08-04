@@ -22,6 +22,33 @@
 
 namespace Acts {
 
+class InterpolatedMagneticField : public MagneticFieldProvider {
+ public:
+  /// @brief get the number of bins for all axes of the field map
+  ///
+  /// @return vector returning number of bins for all field map axes
+  virtual std::vector<size_t> getNBins() const = 0;
+
+  /// @brief get the minimum value of all axes of the field map
+  ///
+  /// @return vector returning the minima of all field map axes
+  virtual std::vector<double> getMin() const = 0;
+
+  /// @brief get the maximum value of all axes of the field map
+  ///
+  /// @return vector returning the maxima of all field map axes
+  virtual std::vector<double> getMax() const = 0;
+
+  /// @brief check whether given 3D position is inside look-up domain
+  ///
+  /// @param [in] position global 3D position
+  /// @return @c true if position is inside the defined look-up grid,
+  ///         otherwise @c false
+  virtual bool isInside(const Vector3& position) const = 0;
+
+  virtual Vector3 getFieldUnchecked(const Vector3& position) const = 0;
+};
+
 /// @ingroup MagneticField
 /// @brief interpolate magnetic field value from field values on a given grid
 ///
@@ -41,7 +68,7 @@ namespace Acts {
 /// @tparam grid_t The Grid type which provides the field storage and
 /// interpolation
 template <typename grid_t>
-class InterpolatedBFieldMap : public MagneticFieldProvider {
+class InterpolatedBFieldMap : public InterpolatedMagneticField {
  public:
   using Grid = grid_t;
   using FieldType = typename Grid::value_type;
@@ -185,7 +212,7 @@ class InterpolatedBFieldMap : public MagneticFieldProvider {
   /// @brief get the number of bins for all axes of the field map
   ///
   /// @return vector returning number of bins for all field map axes
-  std::vector<size_t> getNBins() const {
+  std::vector<size_t> getNBins() const override {
     auto nBinsArray = m_cfg.grid.numLocalBins();
     return std::vector<size_t>(nBinsArray.begin(), nBinsArray.end());
   }
@@ -193,14 +220,14 @@ class InterpolatedBFieldMap : public MagneticFieldProvider {
   /// @brief get the minimum value of all axes of the field map
   ///
   /// @return vector returning the minima of all field map axes
-  std::vector<double> getMin() const {
+  std::vector<double> getMin() const override {
     return std::vector<double>(m_lowerLeft.begin(), m_lowerLeft.end());
   }
 
   /// @brief get the maximum value of all axes of the field map
   ///
   /// @return vector returning the maxima of all field map axes
-  std::vector<double> getMax() const {
+  std::vector<double> getMax() const override {
     return std::vector<double>(m_upperRight.begin(), m_upperRight.end());
   }
 
@@ -209,7 +236,7 @@ class InterpolatedBFieldMap : public MagneticFieldProvider {
   /// @param [in] position global 3D position
   /// @return @c true if position is inside the defined look-up grid,
   ///         otherwise @c false
-  bool isInside(const Vector3& position) const {
+  bool isInside(const Vector3& position) const override {
     return isInsideLocal(m_cfg.transformPos(position));
   }
 
@@ -254,6 +281,12 @@ class InterpolatedBFieldMap : public MagneticFieldProvider {
 
     return Result<Vector3>::success(
         m_cfg.transformBField(m_cfg.grid.interpolate(gridPosition), position));
+  }
+
+  Vector3 getFieldUnchecked(const Vector3& position) const override {
+    const auto gridPosition = m_cfg.transformPos(position);
+    return m_cfg.transformBField(m_cfg.grid.interpolate(gridPosition),
+                                 position);
   }
 
   /// @copydoc MagneticFieldProvider::getField(const Vector3&,MagneticFieldProvider::Cache&) const
