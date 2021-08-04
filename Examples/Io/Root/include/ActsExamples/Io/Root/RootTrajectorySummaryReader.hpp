@@ -34,35 +34,22 @@ class RootTrajectorySummaryReader : public IReader {
     std::string outputParticles =
         "outputParticles";                  ///< particle collection to read
     std::string treeName = "tracksummary";  ///< name of the input tree
-    std::string inputFile;                  ///< The name of the input file
-    std::string inputDir;                   ///< The name of the input dir
+    std::string filePath;                   ///< The name of the input file
 
     /// Whether the events are ordered or not
     bool orderedEvents = true;
-
-    /// The default logger
-    std::shared_ptr<const Acts::Logger> logger;
-
-    /// The name of the service
-    std::string name;
-
-    /// Constructor
-    /// @param lname The name of the reader
-    /// @parqam lvl The log level for the logger
-    Config(const std::string& lname = "TrackSummaryReader",
-           Acts::Logging::Level lvl = Acts::Logging::INFO)
-        : logger(Acts::getDefaultLogger(lname, lvl)), name(lname) {}
   };
 
   /// Constructor
-  /// @param cfg The Configuration struct
-  RootTrajectorySummaryReader(const Config& cfg);
+  /// @param config The Configuration struct
+  /// @param level The log level
+  RootTrajectorySummaryReader(const Config& config, Acts::Logging::Level level);
 
   /// Destructor
   ~RootTrajectorySummaryReader();
 
   /// Framework name() method
-  std::string name() const final override;
+  std::string name() const final override { return "RootTrackSummaryReader"; }
 
   /// Return the available events range.
   std::pair<size_t, size_t> availableEvents() const final override;
@@ -73,9 +60,15 @@ class RootTrajectorySummaryReader : public IReader {
   ProcessCode read(
       const ActsExamples::AlgorithmContext& context) final override;
 
+  /// Readonly access to the config
+  const Config& config() const { return m_cfg; }
+
  private:
+  /// The logger
+  std::unique_ptr<const Acts::Logger> m_logger;
+
   /// Private access to the logging instance
-  const Acts::Logger& logger() const { return *m_cfg.logger; }
+  const Acts::Logger& logger() const { return *m_logger; }
 
   /// The config class
   Config m_cfg;

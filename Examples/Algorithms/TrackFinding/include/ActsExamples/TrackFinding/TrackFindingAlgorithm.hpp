@@ -60,9 +60,9 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
 
   /// Constructor of the track finding algorithm
   ///
-  /// @param cfg is the config struct to configure the algorithm
+  /// @param config is the config struct to configure the algorithm
   /// @param level is the logging level
-  TrackFindingAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  TrackFindingAlgorithm(Config config, Acts::Logging::Level level);
 
   /// Framework execute method of the track finding algorithm
   ///
@@ -70,6 +70,9 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   /// @return a process code to steer the algorithm flow
   ActsExamples::ProcessCode execute(
       const ActsExamples::AlgorithmContext& ctx) const final;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;

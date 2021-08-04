@@ -30,9 +30,12 @@ class TruthTrackFinder final : public BareAlgorithm {
     std::string outputProtoTracks;
   };
 
-  TruthTrackFinder(const Config& cfg, Acts::Logging::Level lvl);
+  TruthTrackFinder(const Config& config, Acts::Logging::Level level);
 
   ProcessCode execute(const AlgorithmContext& ctx) const override final;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;

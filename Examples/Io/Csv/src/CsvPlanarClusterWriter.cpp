@@ -23,9 +23,10 @@
 #include "CsvOutputData.hpp"
 
 ActsExamples::CsvPlanarClusterWriter::CsvPlanarClusterWriter(
-    const ActsExamples::CsvPlanarClusterWriter::Config& cfg,
-    Acts::Logging::Level lvl)
-    : WriterT(cfg.inputClusters, "CsvPlanarClusterWriter", lvl), m_cfg(cfg) {
+    const ActsExamples::CsvPlanarClusterWriter::Config& config,
+    Acts::Logging::Level level)
+    : WriterT(config.inputClusters, "CsvPlanarClusterWriter", level),
+      m_cfg(config) {
   // inputClusters is already checked by base constructor
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
