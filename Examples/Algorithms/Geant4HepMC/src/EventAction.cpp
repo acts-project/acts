@@ -155,6 +155,7 @@ void EventAction::EndOfEventAction(const G4Event*) {
   }
   // Filter irrelevant processes
   auto currentVertex = m_event.vertices()[0];
+  for (auto& bp: m_event.beams()) if (!bp->end_vertex()) currentVertex->add_particle_in(bp);
   followOutgoingParticles(m_event, currentVertex, m_processFilter);
   // Remove vertices w/o outgoing particles and particles w/o production vertices
   while (true) {
