@@ -9,6 +9,7 @@
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
+#include "ActsExamples/Digitization/DigitizationConfigurator.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
@@ -21,7 +22,6 @@
 #include <boost/program_options.hpp>
 
 #include "DigitizationInput.hpp"
-#include "detail/DigitizationConfigurator.hpp"
 
 using namespace ActsExamples;
 
@@ -55,17 +55,14 @@ int runDigitizationConfigExample(
   auto geometry = Geometry::build(vm, *detector);
 
   // Build a parser and visit the geometry
-  ActsExamples::detail::DigitizationConfigurator digiConfigurator;
+  ActsExamples::DigitizationConfigurator digiConfigurator;
   digiConfigurator.compactify = vm["digi-compactify-output"].as<bool>();
   digiConfigurator.inputDigiComponents = inputConfig;
-  digiConfigurator.outputDigiComponents =
-      std::make_shared<ActsExamples::detail::DigitizationConfigurator::
-                           CollectedOutputComponents>();
 
   geometry.first->visitSurfaces(digiConfigurator);
 
   Acts::GeometryHierarchyMap<DigiComponentsConfig> outputConfig(
-      *digiConfigurator.outputDigiComponents);
+      digiConfigurator.outputDigiComponents);
 
   if (not vm["dump-digi-config"].as<std::string>().empty()) {
     writeDigiConfigToJson(outputConfig,
