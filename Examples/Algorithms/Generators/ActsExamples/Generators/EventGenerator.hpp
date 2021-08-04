@@ -44,13 +44,30 @@ class EventGenerator final : public ActsExamples::IReader {
   /// The process generator is responsible for defining all components of the
   /// particle barcode except the primary vertex. The primary vertex will be
   /// set/overwritten by the event generator.
-  using MultiplicityGenerator = std::function<size_t(RandomEngine&)>;
-  using VertexGenerator = std::function<Acts::Vector4(RandomEngine&)>;
-  using ParticlesGenerator = std::function<SimParticleContainer(RandomEngine&)>;
+  // using MultiplicityGenerator = std::function<size_t(RandomEngine&)>;
+  // using VertexGenerator = std::function<Acts::Vector4(RandomEngine&)>;
+  // using ParticlesGenerator =
+  // std::function<SimParticleContainer(RandomEngine&)>;
+
+  struct MultiplicityGenerator {
+    virtual ~MultiplicityGenerator() = default;
+    virtual size_t operator()(RandomEngine& rng) const = 0;
+  };
+
+  struct VertexGenerator {
+    virtual ~VertexGenerator() = default;
+    virtual Acts::Vector4 operator()(RandomEngine& rng) const = 0;
+  };
+
+  struct ParticlesGenerator {
+    virtual ~ParticlesGenerator() = default;
+    virtual SimParticleContainer operator()(RandomEngine& rng) = 0;
+  };
+
   struct Generator {
-    MultiplicityGenerator multiplicity = nullptr;
-    VertexGenerator vertex = nullptr;
-    ParticlesGenerator particles = nullptr;
+    std::shared_ptr<MultiplicityGenerator> multiplicity = nullptr;
+    std::shared_ptr<VertexGenerator> vertex = nullptr;
+    std::shared_ptr<ParticlesGenerator> particles = nullptr;
   };
 
   struct Config {
