@@ -82,11 +82,11 @@ class TGeoItkModuleSplitter : public ITGeoDetectorElementSplitter {
   /// @note If no split is performed the unsplit detector element is returned
   ///
   /// @return a vector of TGeoDetectorElement objects
-  /*std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> splitDiskModule(
+  std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> 
+  splitDiskModule(
       const GeometryContext& gctx,
       std::shared_ptr<const Acts::TGeoDetectorElement> detElement,
-      std::vector<double>& params) const;*/
-
+      unsigned int nSegments) const;
 
   /// Contains the splitting parameters, sorted by sensor type
   Config m_cfg;
