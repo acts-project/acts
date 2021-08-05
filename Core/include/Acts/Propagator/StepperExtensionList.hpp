@@ -79,7 +79,8 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   template <typename propagator_state_t, typename stepper_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
          Vector3& knew, const Vector3& bField, std::array<double, 4>& kQoP,
-         const int i, const double h = 0., const Vector3& kprev = Vector3{}) {
+         const int i, const double h = 0.,
+         const Vector3& kprev = Vector3::Zero()) {
     // TODO replace with integer-templated lambda with C++20
     auto impl = [&, i, h](auto intType, auto& implRef) {
       constexpr int N = decltype(intType)::value;
