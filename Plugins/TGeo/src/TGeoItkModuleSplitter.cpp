@@ -21,15 +21,17 @@ Acts::TGeoItkModuleSplitter::TGeoItkModuleSplitter(
 
 /// If applicable, returns a split detector element 
 inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> Acts::TGeoItkModuleSplitter::split(
-  const GeometryContext& /*gctx*/,
+  const GeometryContext& gctx,
   std::shared_ptr<const Acts::TGeoDetectorElement> detElement) const {
 
   // Is the current node covered by this splitter?
   const TGeoNode& node = detElement->tgeoNode();
   auto sensorName = std::string(node.GetName());
-  if(sensorName.find("Brl") != std::string::npos) {
+  
+  if(sensorName.find("BRL") != std::string::npos) {
+    std::cout << sensorName << std::endl;
     // First parameter for every node is the splitting multiplicity
-    return Acts::TGeoItkModuleSplitter::splitBarrelModule(detElement, m_cfg.paramMap.at("Brl"));
+    return Acts::TGeoItkModuleSplitter::splitBarrelModule(gctx, detElement, m_cfg.paramMap.at("BRL"));
   }
 
   ACTS_DEBUG("Node not found in splitting config.");
@@ -38,7 +40,8 @@ inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> Acts::TGeoI
 
 /// If applicable, returns a split detector element 
 inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> Acts::TGeoItkModuleSplitter::splitBarrelModule(
-  std::shared_ptr<const Acts::TGeoDetectorElement> detElement, 
+  const GeometryContext& gctx,
+  std::shared_ptr<const Acts::TGeoDetectorElement> detElement,
   unsigned int nSegments) const {
 
   // Retrive the surface
@@ -46,39 +49,45 @@ inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> Acts::TGeoI
   const Surface& surface = detElement->surface();
   const SurfaceBounds& bounds = surface.bounds();
   if (bounds.type() != SurfaceBounds::eRectangle or nSegments <= 1u) {
-    ACTS_DEBUG("Invalid splitting config for node");
+    ACTS_WARNING("Invalid splitting config for node");
     return {detElement};
   }
 
-  std::cout << nSegments << std::endl;
-  // Get the geometric information
-  double thickness = detElement->thickness();
-  const Transform3& transform = surface.transform({});
-
-  // Determine the new bounds (Y should be along global z)
-  const std::vector<double> boundsValues = bounds.values();
-  double lengthY = boundsValues[RectangleBounds::eMaxY] 
-                  - boundsValues[RectangleBounds::eMinY];
-  double lengthX = (boundsValues[RectangleBounds::eMaxX] 
-                  - boundsValues[RectangleBounds::eMinX]) / nSegments;
   // Add the translation for every new surface to the transform
   std::vector<std::shared_ptr<const TGeoDetectorElement>> detElements = {};
+  detElements.reserve(nSegments);
 
-  auto localTranslation = Vector3(-nSegments*lengthX, 0., 0.);
-  const auto step = Vector3(lengthX, 0., 0.);
+  // Get the geometric information
+  double thickness = detElement->thickness();
+  const Transform3& transform = surface.transform(gctx);
+  // Determine the new bounds
+  const std::vector<double> boundsValues = bounds.values();
+  double lengthX = boundsValues[RectangleBounds::eMaxX] 
+                  - boundsValues[RectangleBounds::eMinX];
+  double lengthY = (boundsValues[RectangleBounds::eMaxY] 
+                  - boundsValues[RectangleBounds::eMinY]) / nSegments;
+  auto rectBounds = std::make_shared<RectangleBounds>(0.5*lengthX,
+                                                      0.5*lengthY);
+  // Translation for every subelement
+  auto localTranslation = Vector2(0., -0.5*lengthY * (nSegments - 1));
+  const auto step = Vector2(0., lengthY);
+
   for (size_t i = 0; i < nSegments; i++) {
-    auto rectBounds = std::make_shared<RectangleBounds>(lengthX, lengthY);
-    auto elemTransform = Transform3(transform).translate(localTranslation);
-    localTranslation += step;
-
+    Vector3 globalTranslation = surface.localToGlobal(gctx, localTranslation,
+                                                      {})
+                                - transform.translation();
+    auto elemTransform = Transform3(transform).pretranslate(globalTranslation);
     auto element = std::make_shared<const TGeoDetectorElement>(identifier, detElement->tgeoNode(), elemTransform, rectBounds, thickness);
-    detElements.push_back(element);
+    detElements.push_back(std::move(element));
+
+    localTranslation += step;
   }
   return detElements;
 }
 
 /// If applicable, returns a split detector element 
 /*inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> Acts::TGeoItkModuleSplitter::splitDiskModule(
+    const GeometryContext& gctx,
     std::shared_ptr<const Acts::TGeoDetectorElement> detElement, std::vector<double>& params) const {
     return {detElement};
   }*/

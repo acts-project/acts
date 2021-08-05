@@ -69,6 +69,7 @@ class TGeoItkModuleSplitter : public ITGeoDetectorElementSplitter {
   ///
   /// @return a vector of TGeoDetectorElement objects
   std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> splitBarrelModule(
+      const GeometryContext& gctx,
       std::shared_ptr<const Acts::TGeoDetectorElement> detElement,
       unsigned int nSegments) const;
 
@@ -82,6 +83,7 @@ class TGeoItkModuleSplitter : public ITGeoDetectorElementSplitter {
   ///
   /// @return a vector of TGeoDetectorElement objects
   /*std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> splitDiskModule(
+      const GeometryContext& gctx,
       std::shared_ptr<const Acts::TGeoDetectorElement> detElement,
       std::vector<double>& params) const;*/
 
