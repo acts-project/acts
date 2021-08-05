@@ -28,10 +28,10 @@ namespace Digitization {
 /// @note This smearer will smear over module boundaries
 /// it has no notion of a parameter range is assumed
 struct Gauss {
-  std::normal_distribution<> dist{0., 1.};
+  double sigma;
 
   /// Construct with a @param sigma standard deviation
-  Gauss(double sigma) : dist(std::normal_distribution<>(0., sigma)) {}
+  Gauss(double sigma_) : sigma{sigma_} {}
 
   /// Call operator for the SmearFunction caller interface.
   ///
@@ -40,9 +40,9 @@ struct Gauss {
   ///
   /// @return a Result that is always ok()
   Acts::Result<std::pair<double, double>> operator()(double value,
-                                                     RandomEngine& rnd) {
-    return Acts::Result<std::pair<double, double>>(
-        std::make_pair<double, double>(value + dist(rnd), dist.stddev()));
+                                                     RandomEngine& rnd) const {
+    std::normal_distribution<> dist{0, sigma};
+    return std::pair{value + dist(rnd), dist.stddev()};
   }
 };
 
@@ -51,14 +51,13 @@ struct Gauss {
 /// In case a hit is smeared outside the range, a DigitizationError
 /// indicating the truncation
 struct GaussTrunc {
-  std::normal_distribution<> dist{0., 1.};
-
+  double sigma;
   std::pair<double, double> range = {std::numeric_limits<double>::lowest(),
                                      std::numeric_limits<double>::max()};
 
   /// Construct with a @param sigma standard deviation and @param range
-  GaussTrunc(double sigma, const std::pair<double, double>& range_)
-      : dist(std::normal_distribution<>(0., sigma)), range(range_) {}
+  GaussTrunc(double sigma_, const std::pair<double, double>& range_)
+      : sigma{sigma_}, range(range_) {}
 
   /// Call operator for the SmearFunction caller interface.
   ///
@@ -67,11 +66,11 @@ struct GaussTrunc {
   ///
   /// @return a Result that is ok() when inside range, other DigitizationError
   Acts::Result<std::pair<double, double>> operator()(double value,
-                                                     RandomEngine& rnd) {
+                                                     RandomEngine& rnd) const {
+    std::normal_distribution<> dist{0., sigma};
     double svalue = value + dist(rnd);
     if (svalue >= range.first and svalue <= range.second) {
-      return Acts::Result<std::pair<double, double>>(
-          std::pair<double, double>(svalue, dist.stddev()));
+      return std::pair{svalue, dist.stddev()};
     }
     return ActsFatras::DigitizationError::SmearingOutOfRange;
   }
@@ -82,7 +81,7 @@ struct GaussTrunc {
 /// In case a hit is smeared outside the range, the smearing will be
 /// repeated, until a maximum attempt number is reached
 struct GaussClipped {
-  std::normal_distribution<> dist{0., 1.};
+  double sigma;
 
   size_t maxAttemps = 1000;
 
@@ -90,8 +89,8 @@ struct GaussClipped {
                                      std::numeric_limits<double>::max()};
 
   /// Construct with a @param sigma standard deviation and @param range
-  GaussClipped(double sigma, const std::pair<double, double>& range_)
-      : dist(std::normal_distribution<>(0., sigma)), range(range_) {}
+  GaussClipped(double sigma_, const std::pair<double, double>& range_)
+      : sigma{sigma_}, range(range_) {}
 
   /// Call operator for the SmearFunction caller interface.
   ///
@@ -102,12 +101,12 @@ struct GaussClipped {
   ///
   /// @return a Result that is ok() when inside range, other DigitizationError
   Acts::Result<std::pair<double, double>> operator()(double value,
-                                                     RandomEngine& rnd) {
+                                                     RandomEngine& rnd) const {
+    std::normal_distribution<> dist{0., sigma};
     for (size_t attempt = 0; attempt < maxAttemps; ++attempt) {
       double svalue = value + dist(rnd);
       if (svalue >= range.first and svalue <= range.second) {
-        return Acts::Result<std::pair<double, double>>(
-            std::pair<double, double>(svalue, dist.stddev()));
+        return std::pair{svalue, dist.stddev()};
       }
     }
     return ActsFatras::DigitizationError::SmearingError;
@@ -119,8 +118,6 @@ struct GaussClipped {
 /// It estimates the bin borders and smears uniformly between them
 struct Uniform {
   Acts::BinningData binningData;
-
-  std::uniform_real_distribution<> dist{0., 1.};
 
   /// Construct with a @param pitch standard deviation and @param range
   Uniform(double pitch, const std::pair<double, double>& range_)
@@ -140,14 +137,14 @@ struct Uniform {
   ///
   /// @return a Result is uniformly distributed between bin borders
   Acts::Result<std::pair<double, double>> operator()(double value,
-                                                     RandomEngine& rnd) {
+                                                     RandomEngine& rnd) const {
     if (binningData.min < value and binningData.max > value) {
       auto bin = binningData.search(value);
       auto lower = binningData.boundaries()[bin];
       auto higher = binningData.boundaries()[bin + 1];
+      std::uniform_real_distribution<> dist{0., 1.};
       double svalue = lower + (higher - lower) * dist(rnd);
-      return Acts::Result<std::pair<double, double>>(
-          std::pair<double, double>(svalue, (higher - lower) / std::sqrt(12.)));
+      return std::pair{svalue, (higher - lower) / std::sqrt(12.)};
     }
     return ActsFatras::DigitizationError::SmearingError;
   }
@@ -176,15 +173,14 @@ struct Digital {
   /// @param rnd random generator to be used for the call (unused)
   ///
   /// @return a Result is uniformly distributed between bin borders
-  Acts::Result<std::pair<double, double>> operator()(double value,
-                                                     RandomEngine& /*unused*/) {
+  Acts::Result<std::pair<double, double>> operator()(
+      double value, RandomEngine& /*unused*/) const {
     if (binningData.min < value and binningData.max > value) {
       auto bin = binningData.search(value);
       auto lower = binningData.boundaries()[bin];
       auto higher = binningData.boundaries()[bin + 1];
       double svalue = 0.5 * (lower + higher);
-      return Acts::Result<std::pair<double, double>>(
-          std::pair<double, double>(svalue, (higher - lower) / std::sqrt(12.)));
+      return std::pair{svalue, (higher - lower) / std::sqrt(12.)};
     }
     return ActsFatras::DigitizationError::SmearingError;
   }

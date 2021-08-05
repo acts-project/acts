@@ -23,16 +23,16 @@ void ActsExamples::to_json(nlohmann::json& j,
       psc.smearFunction.target<const Digitization::Gauss>();
   if (gauss != nullptr) {
     j["type"] = "Gauss";
-    j["mean"] = gauss->dist.mean();
-    j["stddev"] = gauss->dist.stddev();
+    j["mean"] = 0;
+    j["stddev"] = gauss->sigma;
   }
   // Truncated gauss:
   const Digitization::GaussTrunc* gaussT =
       psc.smearFunction.target<const Digitization::GaussTrunc>();
   if (gaussT != nullptr) {
     j["type"] = "GaussTrunc";
-    j["mean"] = gaussT->dist.mean();
-    j["stddev"] = gaussT->dist.stddev();
+    j["mean"] = 0;
+    j["stddev"] = gaussT->sigma;
     j["range"] = gaussT->range;
   }
   // Clipped gauss:
@@ -40,8 +40,8 @@ void ActsExamples::to_json(nlohmann::json& j,
       psc.smearFunction.target<const Digitization::GaussClipped>();
   if (gaussC != nullptr) {
     j["type"] = "GaussClipped";
-    j["mean"] = gaussC->dist.mean();
-    j["stddev"] = gaussC->dist.stddev();
+    j["mean"] = 0;
+    j["stddev"] = gaussC->sigma;
     j["range"] = gaussC->range;
     j["max_attempts"] = gaussC->maxAttemps;
   }
