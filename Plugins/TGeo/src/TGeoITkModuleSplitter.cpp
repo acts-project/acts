@@ -11,54 +11,54 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
-#include "Acts/Plugins/TGeo/TGeoItkModuleSplitter.hpp"
+#include "Acts/Plugins/TGeo/TGeoITkModuleSplitter.hpp"
 
 
-Acts::TGeoItkModuleSplitter::TGeoItkModuleSplitter(
-    const TGeoItkModuleSplitter::Config& cfg,
+Acts::TGeoITkModuleSplitter::TGeoITkModuleSplitter(
+    const TGeoITkModuleSplitter::Config& cfg,
     std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(cfg), m_logger(std::move(logger)) {}
 
 /// If applicable, returns a split detector element 
-inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> Acts::TGeoItkModuleSplitter::split(
+inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> Acts::TGeoITkModuleSplitter::split(
   const GeometryContext& gctx,
   std::shared_ptr<const Acts::TGeoDetectorElement> detElement) const {
 
   // Is the current node covered by this splitter?
   const TGeoNode& node = detElement->tgeoNode();
   auto sensorName = std::string(node.GetName());
-  std::cout << sensorName << std::endl;
+  
   if(sensorName.find("BRL") != std::string::npos) {
     if(sensorName.find("MS") != std::string::npos) {
-      return Acts::TGeoItkModuleSplitter::splitBarrelModule(gctx, detElement,m_cfg.paramMap.at("MS"));
+      return Acts::TGeoITkModuleSplitter::splitBarrelModule(gctx, detElement,m_cfg.paramMap.at("MS"));
     }
     if(sensorName.find("SS") != std::string::npos) {
-      return Acts::TGeoItkModuleSplitter::splitBarrelModule(gctx, detElement,m_cfg.paramMap.at("SS"));
+      return Acts::TGeoITkModuleSplitter::splitBarrelModule(gctx, detElement,m_cfg.paramMap.at("SS"));
     }
   }
   if(sensorName.find("EC") != std::string::npos) {
     if(sensorName.find("Sensor0") != std::string::npos) {
-      return Acts::TGeoItkModuleSplitter::splitDiskModule(gctx, detElement,
+      return Acts::TGeoITkModuleSplitter::splitDiskModule(gctx, detElement,
       m_cfg.paramMap.at("EC0"));
     }
     if(sensorName.find("Sensor1") != std::string::npos) {
-      return Acts::TGeoItkModuleSplitter::splitDiskModule(gctx, detElement,
+      return Acts::TGeoITkModuleSplitter::splitDiskModule(gctx, detElement,
       m_cfg.paramMap.at("EC1"));
     }
     if(sensorName.find("Sensor2") != std::string::npos) {
-      return Acts::TGeoItkModuleSplitter::splitDiskModule(gctx, detElement,
+      return Acts::TGeoITkModuleSplitter::splitDiskModule(gctx, detElement,
       m_cfg.paramMap.at("EC2"));
     }
     if(sensorName.find("Sensor3") != std::string::npos) {
-      return Acts::TGeoItkModuleSplitter::splitDiskModule(gctx, detElement,
+      return Acts::TGeoITkModuleSplitter::splitDiskModule(gctx, detElement,
       m_cfg.paramMap.at("EC3"));
     }
     if(sensorName.find("Sensor4") != std::string::npos) {
-      return Acts::TGeoItkModuleSplitter::splitDiskModule(gctx, detElement,
+      return Acts::TGeoITkModuleSplitter::splitDiskModule(gctx, detElement,
       m_cfg.paramMap.at("EC4"));
     }
     if(sensorName.find("Sensor5") != std::string::npos) {
-      return Acts::TGeoItkModuleSplitter::splitDiskModule(gctx, detElement,
+      return Acts::TGeoITkModuleSplitter::splitDiskModule(gctx, detElement,
       m_cfg.paramMap.at("EC5"));
     }
   }
@@ -67,7 +67,7 @@ inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> Acts::TGeoI
 }
 
 /// If applicable, returns a split detector element 
-inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> Acts::TGeoItkModuleSplitter::splitBarrelModule(
+inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> Acts::TGeoITkModuleSplitter::splitBarrelModule(
   const GeometryContext& gctx,
   std::shared_ptr<const Acts::TGeoDetectorElement> detElement,
   unsigned int nSegments) const {
@@ -116,7 +116,7 @@ inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> Acts::TGeoI
 }
 
 /// If applicable, returns a split detector element 
-inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> Acts::TGeoItkModuleSplitter::splitDiskModule(
+inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> Acts::TGeoITkModuleSplitter::splitDiskModule(
     const GeometryContext& gctx,
     std::shared_ptr<const Acts::TGeoDetectorElement> detElement,
       unsigned int nSegments) const {

@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
-#include "Acts/Plugins/TGeo/TGeoItkModuleSplitter.hpp"
+#include "Acts/Plugins/TGeo/TGeoITkModuleSplitter.hpp"
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
@@ -32,7 +32,7 @@ void from_json(const nlohmann::json& j,
 
 /// Read config for dedicated itk module splitter
 void from_json(const nlohmann::json& j,
-                             Acts::TGeoItkModuleSplitter::Config& msc);
+                             Acts::TGeoITkModuleSplitter::Config& msc);
 
 /// Read nested layer config for TGeoLayerbuilder
 void from_json(const nlohmann::json& j,

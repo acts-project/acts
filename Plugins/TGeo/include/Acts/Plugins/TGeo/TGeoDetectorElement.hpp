@@ -11,8 +11,6 @@
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Plugins/Identification/Identifier.hpp"
 
-#include <iostream>
-
 #include "TGeoManager.h"
 
 namespace Acts {

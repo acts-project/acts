@@ -23,10 +23,10 @@ namespace Acts {
 
 class TGeoDetectorElement;
 
-/// @brief TGeoItkModuleSplitter
+/// @brief TGeoITkModuleSplitter
 ///
 /// Split Itk modules into submodules, depending on the sensor type
-class TGeoItkModuleSplitter : public ITGeoDetectorElementSplitter {
+class TGeoITkModuleSplitter : public ITGeoDetectorElementSplitter {
   public:
   /// Nested configuration struct
   struct Config {
@@ -38,11 +38,11 @@ class TGeoItkModuleSplitter : public ITGeoDetectorElementSplitter {
   ///
   /// @param cfg the configuration struct
   /// @param logger the logging object
-  TGeoItkModuleSplitter(const Config& cfg,
+  TGeoITkModuleSplitter(const Config& cfg,
       std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
-          "TGeoItkModuleSplitter", Acts::Logging::INFO));
+          "TGeoITkModuleSplitter", Acts::Logging::INFO));
 
-  virtual ~TGeoItkModuleSplitter() = default;
+  virtual ~TGeoITkModuleSplitter() = default;
 
   /// Take a geometry context and TGeoElement and find the correct splitting 
   /// method for the module type.

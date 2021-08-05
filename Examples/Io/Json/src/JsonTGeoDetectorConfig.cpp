@@ -147,7 +147,7 @@ void ActsExamples::Options::from_json(const nlohmann::json& j,
 }
 
 void ActsExamples::Options::from_json(const nlohmann::json& j,
-                             Acts::TGeoItkModuleSplitter::Config& msc) {
+                             Acts::TGeoITkModuleSplitter::Config& msc) {
   msc.paramMap = j["geo-tgeo-node-map"].get<std::map<std::string, unsigned int>>();
 }
 
@@ -234,9 +234,9 @@ ActsExamples::Options::readTGeoLayerBuilderConfigs(const std::string& path) {
       }
 
       for (const auto& itkSplitter : splitter["Itk"]) {
-        Acts::TGeoItkModuleSplitter::Config itkConfig;
+        Acts::TGeoITkModuleSplitter::Config itkConfig;
         from_json(itkSplitter, itkConfig);
-        layerBuilderConfig.detectorElementSplitter = std::make_shared<Acts::TGeoItkModuleSplitter>(itkConfig);
+        layerBuilderConfig.detectorElementSplitter = std::make_shared<Acts::TGeoITkModuleSplitter>(itkConfig);
       }
     }
 
