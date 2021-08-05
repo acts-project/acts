@@ -99,6 +99,7 @@ ActsExamples::RootTrajectoryStatesWriter::RootTrajectoryStatesWriter(
     m_outputTree->Branch("volume_id", &m_volumeID);
     m_outputTree->Branch("layer_id", &m_layerID);
     m_outputTree->Branch("module_id", &m_moduleID);
+    m_outputTree->Branch("pathLength", &m_pathLength);
     m_outputTree->Branch("l_x_hit", &m_lx_hit);
     m_outputTree->Branch("l_y_hit", &m_ly_hit);
     m_outputTree->Branch("g_x_hit", &m_x_hit);
@@ -373,6 +374,9 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
         m_layerID.push_back(geoID.layer());
         m_moduleID.push_back(geoID.sensitive());
 
+        // get the path length
+        m_pathLength.push_back(state.pathLength());
+
         // expand the local measurements into the full bound space
         Acts::BoundVector meas =
             state.projector().transpose() * state.calibrated();
@@ -589,6 +593,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
       m_volumeID.clear();
       m_layerID.clear();
       m_moduleID.clear();
+      m_pathLength.clear();
       m_lx_hit.clear();
       m_ly_hit.clear();
       m_x_hit.clear();
