@@ -61,7 +61,6 @@ auto AlignedDetector::finalize(
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
   // --------------------------------------------------------------------------------
-  DetectorElement::ContextType nominalContext;
 
   Config cfg;
 
@@ -102,7 +101,6 @@ auto AlignedDetector::finalize(
 
   /// return the generic detector - with aligned context decorator
   TrackingGeometryPtr aTrackingGeometry =
-
       ActsExamples::Generic::buildDetector<DetectorElement>(
           nominalContext, detectorStore, cfg.buildLevel, std::move(mdecorator),
           cfg.buildProto, cfg.surfaceLogLevel, cfg.layerLogLevel,
