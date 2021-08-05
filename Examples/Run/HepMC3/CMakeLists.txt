@@ -1,8 +1,8 @@
 add_executable(
-  ActsExampleHepMC3
+  ActsExampleHepMC3Exe
   HepMC3Example.cpp)
 target_link_libraries(
-  ActsExampleHepMC3
+  ActsExampleHepMC3Exe
   PRIVATE
     ActsCore ActsFatras 
     ActsExamplesCommon ActsExamplesFramework ActsExamplesIoHepMC3)
@@ -14,10 +14,10 @@ target_link_libraries(
   ActsExampleHepMC3Histogram
   PRIVATE
     ActsCore ActsExamplesCommon
-    ActsExamplesFramework ActsExamplesIoHepMC3 ActsExamplesHepMC ActsExamplesIoNuclearInteractions
+    ActsExamplesFramework ActsExamplesIoHepMC3 ActsExamplesHepMC3 ActsExamplesIoNuclearInteractions
     Boost::program_options)
     
 install(
-  TARGETS ActsExampleHepMC3 ActsExampleHepMC3Histogram
+  TARGETS ActsExampleHepMC3Exe ActsExampleHepMC3Histogram
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
   
