@@ -148,7 +148,9 @@ void ActsExamples::Options::from_json(const nlohmann::json& j,
 
 void ActsExamples::Options::from_json(const nlohmann::json& j,
                              Acts::TGeoITkModuleSplitter::Config& msc) {
-  msc.paramMap = j["geo-tgeo-node-map"].get<std::map<std::string, unsigned int>>();
+
+  msc.barrelMap = j["geo-tgeo-barrel-map"].get<std::map<std::string, unsigned int>>();
+  msc.discMap = j["geo-tgeo-disc-map"].get<std::map<std::string, std::vector<std::pair<double, double>>>>();
 }
 
 void ActsExamples::Options::from_json(const nlohmann::json& j,

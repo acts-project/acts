@@ -28,10 +28,14 @@ class TGeoDetectorElement;
 /// Split Itk modules into submodules, depending on the sensor type
 class TGeoITkModuleSplitter : public ITGeoDetectorElementSplitter {
   public:
+
+  using SplitRange = std::pair<double, double>;
+
   /// Nested configuration struct
   struct Config {
     // Map the nodes name to the splitting parameters
-    std::map<std::string, unsigned int> paramMap = {};
+    std::map<std::string, unsigned int> barrelMap = {};
+    std::map<std::string, std::vector<SplitRange>> discMap = {};
   };
 
   /// Constructor
@@ -64,6 +68,7 @@ class TGeoITkModuleSplitter : public ITGeoDetectorElementSplitter {
   ///
   /// @param gctx is a geometry context object
   /// @param detElement is a TGeoDetectorElement that is eventually split
+  /// @param nSegments is the number of submodules
   ///
   /// @note If no split is performed the unsplit detector element is returned
   ///
@@ -78,15 +83,16 @@ class TGeoITkModuleSplitter : public ITGeoDetectorElementSplitter {
   ///
   /// @param gctx is a geometry context object
   /// @param detElement is a TGeoDetectorElement that is eventually split
+  /// @param splitRange are the ranges in r for the submodules
   ///
   /// @note If no split is performed the unsplit detector element is returned
   ///
   /// @return a vector of TGeoDetectorElement objects
   std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> 
-  splitDiskModule(
+  splitDiscModule(
       const GeometryContext& gctx,
       std::shared_ptr<const Acts::TGeoDetectorElement> detElement,
-      unsigned int nSegments) const;
+      const std::vector<SplitRange>& splitRanges) const;
 
   /// Contains the splitting parameters, sorted by sensor type
   Config m_cfg;
