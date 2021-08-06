@@ -71,7 +71,9 @@ class EventGenerator final : public ActsExamples::IReader {
   struct ParticlesGenerator {
     /// @brief Virtual destructor required
     virtual ~ParticlesGenerator() = default;
-    /// @brief
+    /// @brief Generate particles for a vertex
+    /// @note This method cannot be `const` because the Pythia8 generator
+    ///       uses the Pythia8 interfaces, which is non-const
     ///
     /// @param rng Shared random number generator instance
     /// @return SimParticleContainer The populated particle container for the vertex
