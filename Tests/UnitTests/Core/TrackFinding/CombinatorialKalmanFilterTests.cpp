@@ -258,14 +258,14 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
     // check purity of first found track
     // find the number of hits not originating from the right track
     size_t numHits = 0u;
-    size_t numMissmatchedHits = 0u;
+    size_t nummismatchedHits = 0u;
     val.fittedStates.visitBackwards(
         val.lastMeasurementIndices.front(), [&](const auto& trackState) {
           numHits += 1u;
-          numMissmatchedHits += (trackId != trackState.uncalibrated().sourceId);
+          nummismatchedHits += (trackId != trackState.uncalibrated().sourceId);
         });
     BOOST_CHECK_EQUAL(numHits, f.detector.numMeasurements);
-    BOOST_CHECK_EQUAL(numMissmatchedHits, 0u);
+    BOOST_CHECK_EQUAL(nummismatchedHits, 0u);
   }
 }
 
@@ -303,14 +303,14 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
     // check purity of first found track
     // find the number of hits not originating from the right track
     size_t numHits = 0u;
-    size_t numMissmatchedHits = 0u;
+    size_t nummismatchedHits = 0u;
     val.fittedStates.visitBackwards(
         val.lastMeasurementIndices.front(), [&](const auto& trackState) {
           numHits += 1u;
-          numMissmatchedHits += (trackId != trackState.uncalibrated().sourceId);
+          nummismatchedHits += (trackId != trackState.uncalibrated().sourceId);
         });
     BOOST_CHECK_EQUAL(numHits, f.detector.numMeasurements);
-    BOOST_CHECK_EQUAL(numMissmatchedHits, 0u);
+    BOOST_CHECK_EQUAL(nummismatchedHits, 0u);
   }
 }
 
