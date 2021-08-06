@@ -65,7 +65,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
                                           << " seeds.");
-  auto results = m_cfg.findTracks(sourceLinks, initialParameters, options);
+  auto results = (*m_cfg.findTracks)(sourceLinks, initialParameters, options);
   // Loop over the track finding results for all initial parameters
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
     // The result for this seed
