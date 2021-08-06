@@ -169,7 +169,7 @@ BOOST_DATA_TEST_CASE(CovarianceCurvilinear,
       epsDir, epsMom, epsCov);
 }
 
-// limit theta to ignore the covariance missmatches at high theta for now
+// limit theta to ignore the covariance mismatches at high theta for now
 BOOST_DATA_TEST_CASE(CovarianceToCylinderAlongZ,
                      ds::phiWithoutAmbiguity* ds::thetaCentral* ds::absMomentum*
                          ds::chargeNonZero* ds::pathLength* ds::magneticField,
@@ -206,7 +206,7 @@ BOOST_DATA_TEST_CASE(CovarianceToPlane,
       PlaneSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
 }
 
-// limit theta to ignore the covariance missmatches at high theta for now
+// limit theta to ignore the covariance mismatches at high theta for now
 BOOST_DATA_TEST_CASE(CovarianceToStrawAlongZ,
                      ds::phiWithoutAmbiguity* ds::thetaCentral* ds::absMomentum*
                          ds::chargeNonZero* ds::pathLength* ds::magneticField,
