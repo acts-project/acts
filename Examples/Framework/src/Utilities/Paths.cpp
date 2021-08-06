@@ -61,7 +61,7 @@ std::pair<size_t, size_t> ActsExamples::determineEventFilesRange(
   using boost::filesystem::path;
 
   ACTS_LOCAL_LOGGER(
-      Acts::getDefaultLogger("EventFilesRange", Acts::Logging::VERBOSE));
+      Acts::getDefaultLogger("EventFilesRange", Acts::Logging::INFO));
 
   // ensure directory path is valid
   auto dir_path = dir.empty() ? current_path() : path(dir);
