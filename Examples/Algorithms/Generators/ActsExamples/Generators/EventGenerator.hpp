@@ -75,7 +75,7 @@ class EventGenerator final : public ActsExamples::IReader {
     ///
     /// @param rng Shared random number generator instance
     /// @return SimParticleContainer The populated particle container for the vertex
-    virtual SimParticleContainer operator()(RandomEngine& rng) = 0;
+    virtual SimParticleContainer operator()(RandomEngine& rng) const = 0;
   };
 
   /// @brief Combined struct which contains all generator components
