@@ -31,15 +31,23 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
                                              Acts::MeasurementSelector>;
   using TrackFinderResult = std::vector<
       Acts::Result<Acts::CombinatorialKalmanFilterResult<IndexSourceLink>>>;
-  using TrackFinderFunction = std::function<TrackFinderResult(
-      const IndexSourceLinkContainer&, const TrackParametersContainer&,
-      const TrackFinderOptions&)>;
+
+  /// Find function that takes the above parameters
+  /// @note This is separated into a virtual interface to keep compilation units
+  /// small
+  class TrackFinderFunction {
+   public:
+    virtual ~TrackFinderFunction() = default;
+    virtual TrackFinderResult operator()(const IndexSourceLinkContainer&,
+                                         const TrackParametersContainer&,
+                                         const TrackFinderOptions&) const = 0;
+  };
 
   /// Create the track finder function implementation.
   ///
   /// The magnetic field is intentionally given by-value since the variant
   /// contains shared_ptr anyways.
-  static TrackFinderFunction makeTrackFinderFunction(
+  static std::shared_ptr<TrackFinderFunction> makeTrackFinderFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
 
@@ -53,7 +61,7 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
     /// Output find trajectories collection.
     std::string outputTrajectories;
     /// Type erased track finder function.
-    TrackFinderFunction findTracks;
+    std::shared_ptr<TrackFinderFunction> findTracks;
     /// CKF measurement selector config
     Acts::MeasurementSelector::Config measurementSelectorCfg;
   };
