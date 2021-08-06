@@ -62,6 +62,9 @@ inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> Acts::TGeoI
       m_cfg.discMap.at("EC5"));
     }
   }
+  ACTS_DEBUG("No matching configuration found. Node " 
+             + std::string(detElement->tgeoNode().GetName())
+             + " will not be split.");
 
   return {detElement};
 }
@@ -101,6 +104,9 @@ inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> Acts::TGeoI
   // Translation for every subelement
   auto localTranslation = Vector2(0., -0.5*lengthY * (nSegments - 1));
   const auto step = Vector2(0., lengthY);
+  ACTS_DEBUG("Rectangle bounds for new node (half length): "
+             + std::to_string(rectBounds->halfLengthX()) + ", "
+             + std::to_string(rectBounds->halfLengthY()));
 
   for (size_t i = 0; i < nSegments; i++) {
     Vector3 globalTranslation = surface.localToGlobal(gctx, localTranslation,
@@ -126,6 +132,18 @@ inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> Acts::TGeoI
   const Surface& surface = detElement->surface();
   const SurfaceBounds& bounds = surface.bounds();
 
+  // Check annulus bounds origin
+  auto printOrigin = [&](const Surface& sf) 
+  { 
+    Vector3 discOrigin = sf.localToGlobal(gctx, Vector2(0., 0.), {});
+    std::string out = "Disc surface origin at: " 
+                      + std::to_string(discOrigin[0]) + ", " 
+                      + std::to_string(discOrigin[1]) + ", " 
+                      + std::to_string(discOrigin[2]);
+    return out;
+  };
+  ACTS_DEBUG(printOrigin(surface));
+
   if (bounds.type() != SurfaceBounds::eAnnulus or splitRanges.empty()) {
     ACTS_WARNING("Invalid splitting config for disk node: " 
                  + std::string(detElement->tgeoNode().GetName())
@@ -150,6 +168,9 @@ inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> Acts::TGeoI
     values[AnnulusBounds::eMinR] = splitRanges[i].first;
     values[AnnulusBounds::eMaxR] = splitRanges[i].second;
     auto annulusBounds = std::make_shared<AnnulusBounds>(values);
+    ACTS_DEBUG("New r bounds for node: "
+               + std::to_string(annulusBounds->rMin()) + ", "
+               + std::to_string(annulusBounds->rMax()));
 
     auto element = std::make_shared<const TGeoDetectorElement>(identifier, detElement->tgeoNode(), transform, annulusBounds, thickness);
     detElements.push_back(std::move(element));
