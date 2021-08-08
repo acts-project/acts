@@ -297,10 +297,13 @@ class StraightLineStepper {
   /// Method to update a stepper state to the some parameters
   ///
   /// @param [in,out] state State object that will be updated
-  /// @param [in] parameters Parameters that will be written into @p state
+  /// @param [in] freeParams Free parameters that will be written into @p state
+  /// @param [in] boundParams Corresponding bound parameters used to update jacToGlobal in @p state
   /// @param [in] covariance Covariance that willl be written into @p state
-  void update(State& state, const FreeVector& parameters,
-              const Covariance& covariance) const;
+  /// @param [in] surface The surface used to update the jacToGlobal
+  void update(State& state, const FreeVector& freeParams,
+              const BoundVector& boundParams, const Covariance& covariance,
+              const Surface& surface) const;
 
   /// Method to update momentum, direction and p
   ///

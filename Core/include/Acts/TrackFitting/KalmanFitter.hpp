@@ -547,7 +547,8 @@ class KalmanFitter {
           stepper.update(state.stepping,
                          MultiTrajectoryHelpers::freeFiltered(
                              state.options.geoContext, trackStateProxy),
-                         trackStateProxy.filteredCovariance());
+                         trackStateProxy.filtered(),
+                         trackStateProxy.filteredCovariance(), *surface);
           // We count the state with measurement
           ++result.measurementStates;
         } else {
@@ -761,7 +762,8 @@ class KalmanFitter {
           stepper.update(state.stepping,
                          MultiTrajectoryHelpers::freeFiltered(
                              state.options.geoContext, trackStateProxy),
-                         trackStateProxy.filteredCovariance());
+                         trackStateProxy.filtered(),
+                         trackStateProxy.filteredCovariance(), *surface);
 
           // Update state and stepper with post material effects
           materialInteractor(surface, state, stepper, postUpdate);
@@ -939,11 +941,15 @@ class KalmanFitter {
            std::abs(lastIntersection.intersection.pathLength));
       if (closerToFirstCreatedMeasurement) {
         stepper.update(state.stepping, firstParams,
-                       firstCreatedMeasurement.smoothedCovariance());
+                       firstCreatedMeasurement.smoothed(),
+                       firstCreatedMeasurement.smoothedCovariance(),
+                       firstCreatedMeasurement.referenceSurface());
         reverseDirection = (firstIntersection.intersection.pathLength < 0);
       } else {
         stepper.update(state.stepping, lastParams,
-                       lastCreatedMeasurement.smoothedCovariance());
+                       lastCreatedMeasurement.smoothed(),
+                       lastCreatedMeasurement.smoothedCovariance(),
+                       lastCreatedMeasurement.referenceSurface());
         reverseDirection = (lastIntersection.intersection.pathLength < 0);
       }
       const auto& surface = closerToFirstCreatedMeasurement
