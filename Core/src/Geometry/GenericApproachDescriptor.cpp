@@ -25,9 +25,8 @@ Acts::ObjectIntersection<Acts::Surface>
 Acts::GenericApproachDescriptor::approachSurface(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryCheck& bcheck) const {
-  // std::vector<ObjectIntersection<Surface>> sIntersections;
-  // sIntersections.reserve(m_surfaceCache.size());
-  ObjectIntersection<Surface> closest;
+  std::vector<ObjectIntersection<Surface>> sIntersections;
+  sIntersections.reserve(m_surfaceCache.size());
   for (auto& sf : m_surfaceCache) {
     auto sfIntersection = sf->intersect(gctx, position, direction, bcheck);
     // Overstepping is not allowed for approach surfaces
@@ -35,12 +34,11 @@ Acts::GenericApproachDescriptor::approachSurface(
         sfIntersection.alternative.pathLength > 0.) {
       std::swap(sfIntersection.intersection, sfIntersection.alternative);
     }
-    closest = std::min(closest, sfIntersection);
+    sIntersections.push_back(sfIntersection);
   }
-  // // Sort them & return the closest
-  // std::sort(sIntersections.begin(), sIntersections.end());
-  // return (*sIntersections.begin());
-  return closest;
+  // Sort them & return the closest
+  std::sort(sIntersections.begin(), sIntersections.end());
+  return (*sIntersections.begin());
 }
 
 const std::vector<const Acts::Surface*>&
