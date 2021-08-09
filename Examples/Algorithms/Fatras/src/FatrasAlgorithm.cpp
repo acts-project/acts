@@ -170,6 +170,21 @@ ActsExamples::FatrasAlgorithm::FatrasAlgorithm(Config cfg,
   ACTS_DEBUG("hits on material surfaces: " << m_cfg.generateHitsOnMaterial);
   ACTS_DEBUG("hits on passive surfaces: " << m_cfg.generateHitsOnPassive);
 
+  if (!m_cfg.generateHitsOnSensitive && !m_cfg.generateHitsOnMaterial &&
+      !m_cfg.generateHitsOnPassive) {
+    ACTS_WARNING("FatrasAlgorithm not configured to generate any hits!");
+  }
+
+  if (!m_cfg.trackingGeometry) {
+    throw std::invalid_argument{"Missing tracking geometry"};
+  }
+  if (!m_cfg.magneticField) {
+    throw std::invalid_argument{"Missing magnetic field"};
+  }
+  if (!m_cfg.randomNumbers) {
+    throw std::invalid_argument("Missing random numbers tool");
+  }
+
   // construct the simulation for the specific magnetic field
   m_sim = std::make_unique<FatrasAlgorithmSimulationT>(m_cfg, lvl);
 }

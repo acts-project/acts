@@ -29,10 +29,8 @@ class RootNuclearInteractionParametersWriter final
   struct Config {
     /// Input collection to map measured hits to simulated hits.
     std::string inputSimulationProcesses;
-    /// output directory.
-    std::string outputDir;
     /// output filename.
-    std::string outputFilename = "parameters.root";
+    std::string filePath = "parameters.root";
     /// file access mode.
     std::string fileMode = "RECREATE";
 
@@ -52,10 +50,10 @@ class RootNuclearInteractionParametersWriter final
 
   /// Constructor
   ///
-  /// @param cfg Configuration struct
+  /// @param config Configuration struct
   /// @param level Message level declaration
-  RootNuclearInteractionParametersWriter(const Config& cfg,
-                                         Acts::Logging::Level lvl);
+  RootNuclearInteractionParametersWriter(const Config& config,
+                                         Acts::Logging::Level level);
   ~RootNuclearInteractionParametersWriter() final override;
 
   /// End-of-run hook

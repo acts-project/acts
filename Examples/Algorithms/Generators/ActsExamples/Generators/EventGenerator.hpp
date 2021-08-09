@@ -71,6 +71,9 @@ class EventGenerator final : public ActsExamples::IReader {
   /// Generate an event.
   ProcessCode read(const AlgorithmContext& context) final;
 
+  /// Const access to the config
+  const Config& config() const { return m_cfg; }
+
  private:
   const Acts::Logger& logger() const { return *m_logger; }
 

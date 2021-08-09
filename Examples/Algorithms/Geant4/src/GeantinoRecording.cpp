@@ -25,10 +25,10 @@
 using namespace ActsExamples;
 using namespace ActsExamples::Geant4;
 
-GeantinoRecording::GeantinoRecording(GeantinoRecording::Config&& cfg,
-                                     Acts::Logging::Level lvl)
-    : BareAlgorithm("GeantinoRecording", lvl),
-      m_cfg(std::move(cfg)),
+GeantinoRecording::GeantinoRecording(GeantinoRecording::Config config,
+                                     Acts::Logging::Level level)
+    : BareAlgorithm("GeantinoRecording", level),
+      m_cfg(std::move(config)),
       m_runManager(std::make_unique<G4RunManager>()) {
   if (m_cfg.outputMaterialTracks.empty()) {
     throw std::invalid_argument("Missing output material tracks collection");
