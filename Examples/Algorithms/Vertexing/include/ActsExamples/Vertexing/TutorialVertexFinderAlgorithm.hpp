@@ -19,8 +19,6 @@ namespace ActsExamples {
 class TutorialVertexFinderAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
-    Config(std::shared_ptr<Acts::MagneticFieldProvider> magneticField)
-        : bField(magneticField) {}
     /// Input track parameters collection
     std::string inputTrackParameters;
     /// Output proto vertex collection
@@ -36,6 +34,9 @@ class TutorialVertexFinderAlgorithm final : public BareAlgorithm {
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
   ProcessCode execute(const AlgorithmContext& ctx) const final;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;

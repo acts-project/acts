@@ -25,12 +25,12 @@
 #include "CsvOutputData.hpp"
 
 ActsExamples::CsvPlanarClusterReader::CsvPlanarClusterReader(
-    const ActsExamples::CsvPlanarClusterReader::Config& cfg,
-    Acts::Logging::Level lvl)
-    : m_cfg(cfg),
+    const ActsExamples::CsvPlanarClusterReader::Config& config,
+    Acts::Logging::Level level)
+    : m_cfg(config),
       // TODO check that all files (hits,cells,truth) exists
-      m_eventsRange(determineEventFilesRange(cfg.inputDir, "hits.csv")),
-      m_logger(Acts::getDefaultLogger("CsvPlanarClusterReader", lvl)) {
+      m_eventsRange(determineEventFilesRange(config.inputDir, "hits.csv")),
+      m_logger(Acts::getDefaultLogger("CsvPlanarClusterReader", level)) {
   if (m_cfg.outputClusters.empty()) {
     throw std::invalid_argument("Missing cluster output collection");
   }
