@@ -14,8 +14,6 @@
 
 #include <iostream>
 
-namespace po = boost::program_options;
-
 namespace ActsExamples {
 
 namespace Options {
@@ -25,8 +23,8 @@ namespace Options {
 /// @tparam aopt_t Type of the options object (from BOOST)
 ///
 /// @param opt The options object, where string based options are attached
-template <typename aopt_t>
-void addObjWriterOptions(aopt_t& opt) {
+void addObjWriterOptions(boost::program_options::options_description& opt) {
+  namespace po = boost::program_options;
   opt.add_options()("obj-precision", po::value<int>()->default_value(6),
                     "Floating number output precission.")(
       "obj-scalor", po::value<double>()->default_value(1.),
@@ -59,12 +57,11 @@ void addObjWriterOptions(aopt_t& opt) {
 }
 
 /// read the evgen options and return a Config file
-template <class amap_t>
 ActsExamples::ObjTrackingGeometryWriter::Config
 readObjTrackingGeometryWriterConfig(
-    const amap_t& vm, const std::string& name,
-    Acts::Logging::Level loglevel = Acts::Logging::INFO) {
-  ActsExamples::ObjTrackingGeometryWriter::Config objTgConfig(name, loglevel);
+    const boost::program_options::variables_map& vm) {
+  namespace po = boost::program_options;
+  ActsExamples::ObjTrackingGeometryWriter::Config objTgConfig;
 
   objTgConfig.outputPrecision = vm["obj-precision"].template as<int>();
   objTgConfig.outputScalor = vm["obj-scalor"].template as<double>();

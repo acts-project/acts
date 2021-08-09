@@ -99,15 +99,18 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
 
   /// Constructor of the fitting algorithm
   ///
-  /// @param cfg is the config struct to configure the algorihtm
+  /// @param config is the config struct to configure the algorihtm
   /// @param level is the logging level
-  TrackFittingAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  TrackFittingAlgorithm(Config config, Acts::Logging::Level level);
 
   /// Framework execute method of the fitting algorithm
   ///
   /// @param ctx is the algorithm context that holds event-wise information
   /// @return a process code to steer the algporithm flow
   ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const final;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   /// Helper function to call correct FitterFunction

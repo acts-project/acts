@@ -48,23 +48,20 @@ class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
     std::string inputMeasurementParticlesMap;
     /// Input collection to map measured hits to simulated hits.
     std::string inputMeasurementSimHitsMap;
-    /// output directory.
-    std::string outputDir;
     /// output filename.
-    std::string outputFilename = "trackstates.root";
+    std::string filePath = "trackstates.root";
     /// name of the output tree.
-    std::string outputTreename = "trackstates";
+    std::string treeName = "trackstates";
     /// file access mode.
     std::string fileMode = "RECREATE";
-    /// common root file.
-    TFile* rootFile = nullptr;
   };
 
   /// Constructor
   ///
-  /// @param cfg Configuration struct
+  /// @param config Configuration struct
   /// @param level Message level declaration
-  RootTrajectoryStatesWriter(const Config& cfg, Acts::Logging::Level lvl);
+  RootTrajectoryStatesWriter(const Config& config, Acts::Logging::Level level);
+
   ~RootTrajectoryStatesWriter() final override;
 
   /// End-of-run hook

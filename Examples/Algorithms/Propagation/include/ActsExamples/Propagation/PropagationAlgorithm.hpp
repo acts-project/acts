@@ -69,11 +69,11 @@ class PropagationAlgorithm : public BareAlgorithm {
     /// debug output
     bool debugOutput = false;
     /// Modify the behavior of the material interaction: energy loss
-    bool energyLoss = false;
+    bool energyLoss = true;
     /// Modify the behavior of the material interaction: scattering
-    bool multipleScattering = false;
+    bool multipleScattering = true;
     /// Modify the behavior of the material interaction: record
-    bool recordMaterialInteractions = false;
+    bool recordMaterialInteractions = true;
 
     /// number of particles
     size_t ntests = 100;
@@ -82,11 +82,11 @@ class PropagationAlgorithm : public BareAlgorithm {
     /// z0 gaussian sigma
     double z0Sigma = 55 * Acts::UnitConstants::mm;
     /// phi gaussian sigma (used for covariance transport)
-    double phiSigma = 0.0001;
+    double phiSigma = 0.001;
     /// theta gaussian sigma (used for covariance transport)
-    double thetaSigma = 0.0001;
+    double thetaSigma = 0.001;
     /// qp gaussian sigma (used for covariance transport)
-    double qpSigma = 0.00001 / 1 * Acts::UnitConstants::GeV;
+    double qpSigma = 0.0001 / 1 * Acts::UnitConstants::GeV;
     /// t gaussian sigma (used for covariance transport)
     double tSigma = 1 * Acts::UnitConstants::ns;
     /// phi range
@@ -128,6 +128,9 @@ class PropagationAlgorithm : public BareAlgorithm {
   /// @return is a process code indicating succes or not
   ActsExamples::ProcessCode execute(
       const AlgorithmContext& context) const final override;
+
+  /// Get const access to the config
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;  ///< the config class
