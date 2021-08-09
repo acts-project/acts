@@ -61,11 +61,10 @@ int main(int argc, char* argv[]) {
 
   RootParticleReader::Config particleReaderConfig;
   particleReaderConfig.particleCollection = "allTruthParticles";
-  particleReaderConfig.inputFile = "particles_initial.root";
+  particleReaderConfig.filePath = inputDir + "/particles_initial.root";
   particleReaderConfig.treeName = "particles";
-  particleReaderConfig.inputDir = inputDir;
-  sequencer.addReader(
-      std::make_shared<RootParticleReader>(particleReaderConfig));
+  sequencer.addReader(std::make_shared<RootParticleReader>(
+      particleReaderConfig, Acts::Logging::INFO));
 
   // add additional particle selection
   auto select = ActsExamples::ParticleSelector::readConfig(vars);
@@ -77,10 +76,9 @@ int main(int argc, char* argv[]) {
   RootTrajectorySummaryReader::Config trackSummaryReader;
   trackSummaryReader.outputTracks = "fittedTrackParameters";
   trackSummaryReader.outputParticles = "associatedTruthParticles";
-  trackSummaryReader.inputFile = "tracksummary_fitter.root";
-  trackSummaryReader.inputDir = inputDir;
-  sequencer.addReader(
-      std::make_shared<RootTrajectorySummaryReader>(trackSummaryReader));
+  trackSummaryReader.filePath = inputDir + "/tracksummary_fitter.root";
+  sequencer.addReader(std::make_shared<RootTrajectorySummaryReader>(
+      trackSummaryReader, logLevel));
 
   // Apply some primary vertexing selection cuts
   TrackSelector::Config trackSelectorConfig;
@@ -95,7 +93,8 @@ int main(int argc, char* argv[]) {
       std::make_shared<TrackSelector>(trackSelectorConfig, logLevel));
 
   // find vertices
-  AdaptiveMultiVertexFinderAlgorithm::Config findVertices(magneticField);
+  AdaptiveMultiVertexFinderAlgorithm::Config findVertices;
+  findVertices.bField = magneticField;
   findVertices.inputTrackParameters = trackSelectorConfig.outputTrackParameters;
   findVertices.outputProtoVertices = "fittedProtoVertices";
   findVertices.outputVertices = "fittedVertices";
@@ -113,9 +112,8 @@ int main(int argc, char* argv[]) {
   vertexWriterConfig.inputFittedTracks = trackSummaryReader.outputTracks;
   vertexWriterConfig.inputVertices = findVertices.outputVertices;
   vertexWriterConfig.inputTime = findVertices.outputTime;
-  vertexWriterConfig.outputFilename = "vertexperformance_AMVF.root";
-  vertexWriterConfig.outputTreename = "amvf";
-  vertexWriterConfig.outputDir = outputDir;
+  vertexWriterConfig.filePath = outputDir + "/vertexperformance_AMVF.root";
+  vertexWriterConfig.treeName = "amvf";
   sequencer.addWriter(std::make_shared<RootVertexPerformanceWriter>(
       vertexWriterConfig, logLevel));
 

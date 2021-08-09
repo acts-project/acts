@@ -98,11 +98,10 @@ int processGeometry(int argc, char* argv[],
     if (vm["output-obj"].as<bool>()) {
       // Configure the tracking geometry writer
       auto tgObjWriterConfig =
-          ActsExamples::Options::readObjTrackingGeometryWriterConfig(
-              vm, "ObjTrackingGeometryWriter", volumeLogLevel);
+          ActsExamples::Options::readObjTrackingGeometryWriterConfig(vm);
       auto tgObjWriter =
           std::make_shared<ActsExamples::ObjTrackingGeometryWriter>(
-              tgObjWriterConfig);
+              tgObjWriterConfig, volumeLogLevel);
       // Write the tracking geometry object
       tgObjWriter->write(context, *tGeometry);
     }
