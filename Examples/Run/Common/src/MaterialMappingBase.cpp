@@ -110,7 +110,7 @@ int materialMappingExample(int argc, char* argv[],
     matTrackReaderRootConfig.fileList = intputFiles;
     auto matTrackReaderRoot =
         std::make_shared<ActsExamples::RootMaterialTrackReader>(
-            matTrackReaderRootConfig);
+            matTrackReaderRootConfig, logLevel);
     sequencer.addReader(matTrackReaderRoot);
   }
 

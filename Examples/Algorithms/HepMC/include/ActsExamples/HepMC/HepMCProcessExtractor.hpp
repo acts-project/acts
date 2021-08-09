@@ -45,7 +45,9 @@ class HepMCProcessExtractor final : public ActsExamples::BareAlgorithm {
   };
 
   /// Constructor
-  HepMCProcessExtractor(Config cfg, Acts::Logging::Level level);
+  /// @param config the configuration
+  /// @param level the log level
+  HepMCProcessExtractor(Config config, Acts::Logging::Level level);
   ~HepMCProcessExtractor();
 
   ActsExamples::ProcessCode execute(

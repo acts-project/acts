@@ -27,7 +27,8 @@ using Navigator = Acts::Navigator;
 using Propagator = Acts::Propagator<Stepper, Navigator>;
 using CKF = Acts::CombinatorialKalmanFilter<Propagator, Updater, Smoother>;
 
-struct TrackFinderFunctionImpl {
+struct TrackFinderFunctionImpl
+    : public ActsExamples::TrackFindingAlgorithm::TrackFinderFunction {
   CKF trackFinder;
 
   TrackFinderFunctionImpl(CKF&& f) : trackFinder(std::move(f)) {}
@@ -36,14 +37,14 @@ struct TrackFinderFunctionImpl {
       const ActsExamples::IndexSourceLinkContainer& sourcelinks,
       const ActsExamples::TrackParametersContainer& initialParameters,
       const ActsExamples::TrackFindingAlgorithm::TrackFinderOptions& options)
-      const {
+      const override {
     return trackFinder.findTracks(sourcelinks, initialParameters, options);
   };
 };
 
 }  // namespace
 
-ActsExamples::TrackFindingAlgorithm::TrackFinderFunction
+std::shared_ptr<ActsExamples::TrackFindingAlgorithm::TrackFinderFunction>
 ActsExamples::TrackFindingAlgorithm::makeTrackFinderFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField) {
@@ -57,5 +58,5 @@ ActsExamples::TrackFindingAlgorithm::makeTrackFinderFunction(
   CKF trackFinder(std::move(propagator));
 
   // build the track finder functions. owns the track finder object.
-  return TrackFinderFunctionImpl(std::move(trackFinder));
+  return std::make_shared<TrackFinderFunctionImpl>(std::move(trackFinder));
 }
