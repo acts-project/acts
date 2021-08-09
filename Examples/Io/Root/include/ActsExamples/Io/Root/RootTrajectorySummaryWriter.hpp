@@ -46,23 +46,19 @@ class RootTrajectorySummaryWriter final
     std::string inputParticles;
     /// Input hit-particles map collection.
     std::string inputMeasurementParticlesMap;
-    /// Output directory.
-    std::string outputDir;
     /// Output filename.
-    std::string outputFilename = "tracksummary.root";
+    std::string filePath = "tracksummary.root";
     /// Name of the output tree.
-    std::string outputTreename = "tracksummary";
+    std::string treeName = "tracksummary";
     /// File access mode.
     std::string fileMode = "RECREATE";
-    /// Common root file.
-    TFile* rootFile = nullptr;
   };
 
   /// Constructor
   ///
-  /// @param cfg Configuration struct
+  /// @param config Configuration struct
   /// @param level Message level declaration
-  RootTrajectorySummaryWriter(const Config& cfg, Acts::Logging::Level lvl);
+  RootTrajectorySummaryWriter(const Config& config, Acts::Logging::Level level);
   ~RootTrajectorySummaryWriter() final override;
 
   /// End-of-run hook

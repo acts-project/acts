@@ -100,6 +100,9 @@ class Sequencer {
   /// the end-of-run hook for all configured writers.
   int run();
 
+  /// Get const access to the config
+  const Config& config() const { return m_cfg; }
+
  private:
   /// List of all configured algorithm names.
   std::vector<std::string> listAlgorithmNames() const;

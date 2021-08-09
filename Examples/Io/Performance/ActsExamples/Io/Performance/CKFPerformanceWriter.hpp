@@ -40,10 +40,10 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
     std::string inputParticles;
     /// Input hit-particles map collection.
     std::string inputMeasurementParticlesMap;
-    /// Output directory.
-    std::string outputDir;
     /// Output filename.
-    std::string outputFilename = "performance_ckf.root";
+    std::string filePath = "performance_ckf.root";
+    /// Output filemode
+    std::string fileMode = "RECREATE";
     /// Plot tool configurations.
     EffPlotTool::Config effPlotToolConfig;
     FakeRatePlotTool::Config fakeRatePlotToolConfig;

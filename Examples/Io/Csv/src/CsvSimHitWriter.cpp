@@ -21,8 +21,9 @@
 #include "CsvOutputData.hpp"
 
 ActsExamples::CsvSimHitWriter::CsvSimHitWriter(
-    const ActsExamples::CsvSimHitWriter::Config& cfg, Acts::Logging::Level lvl)
-    : WriterT(cfg.inputSimHits, "CsvSimHitWriter", lvl), m_cfg(cfg) {
+    const ActsExamples::CsvSimHitWriter::Config& config,
+    Acts::Logging::Level level)
+    : WriterT(config.inputSimHits, "CsvSimHitWriter", level), m_cfg(config) {
   // inputSimHits is already checked by base constructor
   if (m_cfg.outputStem.empty()) {
     throw std::invalid_argument("Missing ouput filename stem");
