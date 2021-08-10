@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(RoundtripFromFile) {
 
   // convert to the material map and back again
   Acts::MaterialMapJsonConverter::Config converterCfg;
-  Acts::MaterialMapJsonConverter converter(converterCfg);
+  Acts::MaterialMapJsonConverter converter(converterCfg, Acts::Logging::INFO);
   auto materialMap = converter.jsonToMaterialMaps(refJson);
   nlohmann::json encodedJson = converter.materialMapsToJson(materialMap);
 
