@@ -81,7 +81,8 @@ int main(int argc, char* argv[]) {
       std::make_shared<TruthVertexFinder>(findVertices, logLevel));
 
   // fit vertices using the Billoir fitter
-  VertexFitterAlgorithm::Config fitVertices(magneticField);
+  VertexFitterAlgorithm::Config fitVertices;
+  fitVertices.bField = magneticField;
   fitVertices.inputTrackParameters = smearParticles.outputTrackParameters;
   fitVertices.inputProtoVertices = findVertices.outputProtoVertices;
   sequencer.addAlgorithm(

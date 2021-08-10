@@ -40,9 +40,9 @@ class CsvSimHitReader final : public IReader {
 
   /// Construct the simhit reader.
   ///
-  /// @params cfg is the configuration object
-  /// @params lvl is the logging level
-  CsvSimHitReader(const Config& cfg, Acts::Logging::Level lvl);
+  /// @param config is the configuration object
+  /// @param level is the logging level
+  CsvSimHitReader(const Config& config, Acts::Logging::Level level);
 
   std::string name() const final override;
 
@@ -51,6 +51,9 @@ class CsvSimHitReader final : public IReader {
 
   /// Read out data from the input stream.
   ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final override;
+
+  /// Readonly access to the config
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
