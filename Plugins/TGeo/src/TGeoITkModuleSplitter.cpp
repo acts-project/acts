@@ -95,15 +95,15 @@ inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> Acts::TGeoI
   const Transform3& transform = surface.transform(gctx);
   // Determine the new bounds
   const std::vector<double> boundsValues = bounds.values();
-  double lengthX = boundsValues[RectangleBounds::eMaxX] 
-                  - boundsValues[RectangleBounds::eMinX];
-  double lengthY = (boundsValues[RectangleBounds::eMaxY] 
-                  - boundsValues[RectangleBounds::eMinY]) / nSegments;
+  double lengthX = (boundsValues[RectangleBounds::eMaxX] 
+                  - boundsValues[RectangleBounds::eMinX]) / nSegments;
+  double lengthY = boundsValues[RectangleBounds::eMaxY] 
+                  - boundsValues[RectangleBounds::eMinY];
   auto rectBounds = std::make_shared<RectangleBounds>(0.5*lengthX,
                                                       0.5*lengthY);
   // Translation for every subelement
-  auto localTranslation = Vector2(0., -0.5*lengthY * (nSegments - 1));
-  const auto step = Vector2(0., lengthY);
+  auto localTranslation = Vector2(-0.5*lengthX * (nSegments - 1), 0.);
+  const auto step = Vector2(lengthX, 0.);
   ACTS_DEBUG("Rectangle bounds for new node (half length): "
              + std::to_string(rectBounds->halfLengthX()) + ", "
              + std::to_string(rectBounds->halfLengthY()));
