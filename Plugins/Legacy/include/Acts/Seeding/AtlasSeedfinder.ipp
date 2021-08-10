@@ -92,7 +92,7 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::AtlasSeedfinder() {
 // Destructor
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-Acts::Legacy::AtlasSeedfinder<SpacePoint>::~AtlasSeedfinder() {
+Acts::Legacy::AtlasSeedfinder<SpacePoint>::~AtlasSeedfinder<SpacePoint>() {
   if (r_index) {
     delete[] r_index;
   }
