@@ -29,13 +29,21 @@ class TrackFinderPerformanceWriter final : public WriterT<ProtoTrackContainer> {
     std::string inputMeasurementParticlesMap;
     /// Input particles collection.
     std::string inputParticles;
-    /// Output directory.
-    std::string outputDir;
     /// Output filename.
-    std::string outputFilename = "performance_track_finder.root";
+    std::string filePath = "performance_track_finder.root";
+    /// Output file mode
+    std::string fileMode = "RECREATE";
+    /// Output tree name for the tracks
+    std::string treeNameTracks = "track_finder_tracks";
+    /// Output tree name for the particles
+    std::string treeNameParticles = "track_finder_particles";
   };
 
-  TrackFinderPerformanceWriter(Config cfg, Acts::Logging::Level lvl);
+  /// Constructor
+  /// @param config the configuration
+  /// @param level The log level
+  TrackFinderPerformanceWriter(Config config, Acts::Logging::Level level);
+
   ~TrackFinderPerformanceWriter() final override;
 
   ProcessCode endRun() final override;

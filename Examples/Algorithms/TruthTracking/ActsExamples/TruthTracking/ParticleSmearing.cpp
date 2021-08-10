@@ -18,9 +18,9 @@
 #include <cmath>
 #include <vector>
 
-ActsExamples::ParticleSmearing::ParticleSmearing(const Config& cfg,
-                                                 Acts::Logging::Level lvl)
-    : BareAlgorithm("ParticleSmearing", lvl), m_cfg(cfg) {
+ActsExamples::ParticleSmearing::ParticleSmearing(const Config& config,
+                                                 Acts::Logging::Level level)
+    : BareAlgorithm("ParticleSmearing", level), m_cfg(config) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input truth particles collection");
   }
@@ -84,6 +84,22 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       // compute smeared absolute momentum vector
       const double newP = std::max(0.0, p + sigmaP * stdNormal(rng));
       params[Acts::eBoundQOverP] = (q != 0) ? (q / newP) : (1 / newP);
+
+      ACTS_VERBOSE("Smearing particle (pos, time, phi, theta, q/p):");
+      ACTS_VERBOSE(" from: " << particle.position().transpose() << ", " << time
+                             << "," << phi << "," << theta << ","
+                             << (q != 0 ? q / p : 1 / p));
+      ACTS_VERBOSE("   to: " << perigee
+                                    ->localToGlobal(
+                                        ctx.geoContext,
+                                        Acts::Vector2{params[Acts::eBoundLoc0],
+                                                      params[Acts::eBoundLoc1]},
+                                        particle.unitDirection() * p)
+                                    .transpose()
+                             << ", " << params[Acts::eBoundTime] << ","
+                             << params[Acts::eBoundPhi] << ","
+                             << params[Acts::eBoundTheta] << ","
+                             << params[Acts::eBoundQOverP]);
 
       // build the track covariance matrix using the smearing sigmas
       Acts::BoundSymMatrix cov = Acts::BoundSymMatrix::Zero();
