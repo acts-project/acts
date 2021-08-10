@@ -16,6 +16,7 @@
 #include "Acts/Utilities/EnumBitwiseOperators.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 
 #include <mutex>
 
@@ -47,7 +48,7 @@ ACTS_DEFINE_ENUM_BITWISE_OPERATORS(JsonFormat)
 ///
 /// @brief Writes out Detector material maps
 /// using the Json Geometry converter
-class JsonMaterialWriter {
+class JsonMaterialWriter : public IMaterialWriter {
  public:
   struct Config {
     /// The config class of the converter
@@ -60,8 +61,9 @@ class JsonMaterialWriter {
 
   /// Constructor
   ///
-  /// @param cfg The configuration struct of the writer
-  JsonMaterialWriter(const Config& cfg);
+  /// @param config The configuration struct of the writer
+  /// @param level The log level
+  JsonMaterialWriter(const Config& config, Acts::Logging::Level level);
 
   /// Virtual destructor
   ~JsonMaterialWriter();
@@ -69,19 +71,27 @@ class JsonMaterialWriter {
   /// Write out the material map
   ///
   /// @param detMaterial is the SurfaceMaterial and VolumeMaterial maps
-  void write(const Acts::DetectorMaterialMaps& detMaterial);
+  void writeMaterial(const Acts::DetectorMaterialMaps& detMaterial) override;
 
   /// Write out the material map from Geometry
   ///
   /// @param tGeometry is the TrackingGeometry
   void write(const Acts::TrackingGeometry& tGeometry);
 
+  /// Readonly access to the config
+  const Config& config() const { return m_cfg; }
+
  private:
+  const Acts::Logger& logger() const { return *m_logger; }
+
+  /// The logger instance
+  std::unique_ptr<const Acts::Logger> m_logger{nullptr};
+
   /// The config of the writer
   Config m_cfg;
 
-  /// Private access to the logging instance
-  const Acts::Logger& logger() const { return *m_cfg.converterCfg.logger; }
+  /// The material converter
+  std::unique_ptr<Acts::MaterialMapJsonConverter> m_converter{nullptr};
 };
 
 }  // namespace ActsExamples
