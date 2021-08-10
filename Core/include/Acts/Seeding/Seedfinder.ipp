@@ -35,20 +35,18 @@ Seedfinder<external_spacepoint_t, platform_t>::Seedfinder(
 }
 
 template <typename external_spacepoint_t, typename platform_t>
-template <typename sp_range_t>
-std::vector<Seed<external_spacepoint_t>>
-Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
+template <template <typename...> typename container_t, typename sp_range_t>
+void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
+    State& state,
+    std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
-  std::vector<Seed<external_spacepoint_t>> outputVec;
   for (auto spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
     float varianceRM = spM->varianceR();
     float varianceZM = spM->varianceZ();
 
-    // bottom space point
-    std::vector<const InternalSpacePoint<external_spacepoint_t>*>
-        compatBottomSP;
+    state.compatBottomSP.clear();
 
     for (auto bottomSP : bottomSPs) {
       float rB = bottomSP->radius();
@@ -72,14 +70,14 @@ Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           zOrigin > m_config.collisionRegionMax) {
         continue;
       }
-      compatBottomSP.push_back(bottomSP);
+      state.compatBottomSP.push_back(bottomSP);
     }
     // no bottom SP found -> try next spM
-    if (compatBottomSP.empty()) {
+    if (state.compatBottomSP.empty()) {
       continue;
     }
 
-    std::vector<const InternalSpacePoint<external_spacepoint_t>*> compatTopSP;
+    state.compatTopSP.clear();
 
     for (auto topSP : topSPs) {
       float rT = topSP->radius();
@@ -101,32 +99,29 @@ Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           zOrigin > m_config.collisionRegionMax) {
         continue;
       }
-      compatTopSP.push_back(topSP);
+      state.compatTopSP.push_back(topSP);
     }
-    if (compatTopSP.empty()) {
+    if (state.compatTopSP.empty()) {
       continue;
     }
-    // contains parameters required to calculate circle with linear equation
-    // ...for bottom-middle
-    std::vector<LinCircle> linCircleBottom;
-    // ...for middle-top
-    std::vector<LinCircle> linCircleTop;
-    transformCoordinates(compatBottomSP, *spM, true, linCircleBottom);
-    transformCoordinates(compatTopSP, *spM, false, linCircleTop);
 
-    // create vectors here to avoid reallocation in each loop
-    std::vector<const InternalSpacePoint<external_spacepoint_t>*> topSpVec;
-    std::vector<float> curvatures;
-    std::vector<float> impactParameters;
+    state.linCircleBottom.clear();
+    state.linCircleTop.clear();
 
-    std::vector<std::pair<
-        float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
-        seedsPerSpM;
-    size_t numBotSP = compatBottomSP.size();
-    size_t numTopSP = compatTopSP.size();
+    transformCoordinates(state.compatBottomSP, *spM, true,
+                         state.linCircleBottom);
+    transformCoordinates(state.compatTopSP, *spM, false, state.linCircleTop);
+
+    state.topSpVec.clear();
+    state.curvatures.clear();
+    state.impactParameters.clear();
+    state.seedsPerSpM.clear();
+
+    size_t numBotSP = state.compatBottomSP.size();
+    size_t numTopSP = state.compatTopSP.size();
 
     for (size_t b = 0; b < numBotSP; b++) {
-      auto lb = linCircleBottom[b];
+      auto lb = state.linCircleBottom[b];
       float Zob = lb.Zo;
       float cotThetaB = lb.cotTheta;
       float Vb = lb.V;
@@ -151,11 +146,11 @@ Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           m_config.sigmaScattering * m_config.sigmaScattering;
 
       // clear all vectors used in each inner for loop
-      topSpVec.clear();
-      curvatures.clear();
-      impactParameters.clear();
+      state.topSpVec.clear();
+      state.curvatures.clear();
+      state.impactParameters.clear();
       for (size_t t = 0; t < numTopSP; t++) {
-        auto lt = linCircleTop[t];
+        auto lt = state.linCircleTop[t];
 
         // add errors of spB-spM and spM-spT pairs and add the correlation term
         // for errors on spM
@@ -227,28 +222,27 @@ Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         float Im = std::abs((A - B * rM) * rM);
 
         if (Im <= m_config.impactMax) {
-          topSpVec.push_back(compatTopSP[t]);
+          state.topSpVec.push_back(state.compatTopSP[t]);
           // inverse diameter is signed depending if the curvature is
           // positive/negative in phi
-          curvatures.push_back(B / std::sqrt(S2));
-          impactParameters.push_back(Im);
+          state.curvatures.push_back(B / std::sqrt(S2));
+          state.impactParameters.push_back(Im);
         }
       }
-      if (!topSpVec.empty()) {
-        std::vector<std::pair<
-            float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
-            sameTrackSeeds;
-        sameTrackSeeds = std::move(m_config.seedFilter->filterSeeds_2SpFixed(
-            *compatBottomSP[b], *spM, topSpVec, curvatures, impactParameters,
-            Zob));
-        seedsPerSpM.insert(seedsPerSpM.end(),
-                           std::make_move_iterator(sameTrackSeeds.begin()),
-                           std::make_move_iterator(sameTrackSeeds.end()));
+      if (!state.topSpVec.empty()) {
+        state.sameTrackSeeds.clear();
+        m_config.seedFilter->filterSeeds_2SpFixed(
+            *state.compatBottomSP[b], *spM, state.topSpVec, state.curvatures,
+            state.impactParameters, Zob,
+            std::back_inserter(state.sameTrackSeeds));
+        state.seedsPerSpM.insert(
+            state.seedsPerSpM.end(),
+            std::make_move_iterator(state.sameTrackSeeds.begin()),
+            std::make_move_iterator(state.sameTrackSeeds.end()));
       }
     }
-    m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, outputVec);
+    m_config.seedFilter->filterSeeds_1SpFixed(state.seedsPerSpM, outIt);
   }
-  return outputVec;
 }
 
 template <typename external_spacepoint_t, typename platform_t>
