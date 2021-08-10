@@ -135,14 +135,14 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
       // Remove vertices w/o outgoing particles and particles w/o production vertices
         while (true) {
           bool sane = true;
-          for (auto v: m_event.vertices()) {
+          for (auto v: event.vertices()) {
             if (!v) continue;
             if (v->particles_out().empty()) {
               event.remove_vertex(v);
               sane = false;
             }
           }
-          for (auto p: m_event.particles()) {
+          for (auto p: event.particles()) {
             if (!p) continue;
             if (!p->production_vertex()) {
               event.remove_particle(p);
