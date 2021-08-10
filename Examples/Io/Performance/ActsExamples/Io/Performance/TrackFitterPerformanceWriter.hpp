@@ -39,10 +39,8 @@ class TrackFitterPerformanceWriter final
     std::string inputParticles;
     /// Input hit-particles map collection.
     std::string inputMeasurementParticlesMap;
-    /// Output directory.
-    std::string outputDir;
     /// Output filename.
-    std::string outputFilename = "performance_track_fitter.root";
+    std::string filePath = "performance_track_fitter.root";
     /// Plot tool configurations.
     ResPlotTool::Config resPlotToolConfig;
     EffPlotTool::Config effPlotToolConfig;
@@ -50,7 +48,10 @@ class TrackFitterPerformanceWriter final
   };
 
   /// Construct from configuration and log level.
-  TrackFitterPerformanceWriter(Config cfg, Acts::Logging::Level lvl);
+  /// @param config The configuration
+  /// @param level The logger level
+  TrackFitterPerformanceWriter(Config config, Acts::Logging::Level level);
+
   ~TrackFitterPerformanceWriter() final override;
 
   /// Finalize plots.

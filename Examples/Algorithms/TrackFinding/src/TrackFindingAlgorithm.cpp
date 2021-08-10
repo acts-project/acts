@@ -16,9 +16,9 @@
 #include <stdexcept>
 
 ActsExamples::TrackFindingAlgorithm::TrackFindingAlgorithm(
-    Config cfg, Acts::Logging::Level level)
+    Config config, Acts::Logging::Level level)
     : ActsExamples::BareAlgorithm("TrackFindingAlgorithm", level),
-      m_cfg(std::move(cfg)) {
+      m_cfg(std::move(config)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements input collection");
   }

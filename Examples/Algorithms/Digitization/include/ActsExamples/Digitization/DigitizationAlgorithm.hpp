@@ -41,15 +41,18 @@ class DigitizationAlgorithm final : public BareAlgorithm {
  public:
   /// Construct the smearing algorithm.
   ///
-  /// @param cfg is the algorithm configuration
-  /// @param lvl is the logging level
-  DigitizationAlgorithm(DigitizationConfig cfg, Acts::Logging::Level lvl);
+  /// @param config is the algorithm configuration
+  /// @param level is the logging level
+  DigitizationAlgorithm(DigitizationConfig config, Acts::Logging::Level level);
 
   /// Build measurement from simulation hits at input.
   ///
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
   ProcessCode execute(const AlgorithmContext& ctx) const final override;
+
+  /// Get const access to the config
+  const DigitizationConfig& config() const { return m_cfg; }
 
  private:
   /// Helper method for the geometric channelizing part
