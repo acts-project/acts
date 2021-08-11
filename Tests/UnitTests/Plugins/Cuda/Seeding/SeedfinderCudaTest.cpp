@@ -249,11 +249,13 @@ int main(int argc, char** argv) {
   groupIt = spGroup.begin();
 
   if (do_cpu) {
+    decltype(seedfinder_cpu)::State state;
     for (int i_s = 0; i_s < skip; i_s++)
       ++groupIt;
     for (; !(groupIt == spGroup.end()); ++groupIt) {
-      seedVector_cpu.push_back(seedfinder_cpu.createSeedsForGroup(
-          groupIt.bottom(), groupIt.middle(), groupIt.top()));
+      seedfinder_cpu.createSeedsForGroup(
+          state, std::back_inserter(seedVector_cpu.emplace_back()),
+          groupIt.bottom(), groupIt.middle(), groupIt.top());
       group_count++;
       if (allgroup == false) {
         if (group_count >= nGroupToIterate)
