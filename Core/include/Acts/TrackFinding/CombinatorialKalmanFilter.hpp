@@ -1318,9 +1318,12 @@ class CombinatorialKalmanFilter {
     // Compute nSharedhits and Update ckf results
     // hit index -> list of multi traj indexes [traj, meas]
     // @todo put shared hit computation in ad-hoc method
-    std::unordered_map<std::size_t,
-                       std::vector<std::pair<std::size_t, std::size_t>>>
-        recordedHits;
+    std::vector<std::vector<
+		  std::pair<std::size_t, std::size_t>>> recordedHits;
+    recordedHits.resize(sourcelinks.size());
+    for (auto& el : recordedHits)
+      el.reserve(64);
+
 
     for (unsigned int iresult(0); iresult < ckfResults.size(); iresult++) {
       if (not ckfResults.at(iresult).ok())
@@ -1337,19 +1340,15 @@ class CombinatorialKalmanFilter {
                 return;
 
               std::size_t hitIndex = state.uncalibrated().index();
-
-              if (recordedHits.find(hitIndex) == recordedHits.end())
-                recordedHits[hitIndex] =
-                    std::vector<std::pair<std::size_t, std::size_t>>();
-              recordedHits[hitIndex].push_back(
-                  std::make_pair(iresult, state.index()));
+	      recordedHits.at(hitIndex).push_back(std::make_pair(iresult, state.index()));
             });
       }
     }
 
-    for (const auto& [hitIndex, trackIndexArray] : recordedHits) {
+    for (unsigned int measIndex(0); measIndex<recordedHits.size(); measIndex++) {
+      const auto& trackIndexArray = recordedHits.at(measIndex);
       if (trackIndexArray.size() < 2)
-        continue;
+	continue;
 
       for (const auto& [iresult, imeas] : trackIndexArray) {
         auto& mj = ckfResults.at(iresult).value().fittedStates;
