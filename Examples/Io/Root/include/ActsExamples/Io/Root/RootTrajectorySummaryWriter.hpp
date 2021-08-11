@@ -119,6 +119,10 @@ class RootTrajectorySummaryWriter final
   std::vector<float> m_t_phi;    ///< Initial momenta phi of majority particle
   std::vector<float> m_t_pT;     ///< Initial momenta pT of majority particle
   std::vector<float> m_t_eta;    ///< Initial momenta eta of majority particle
+  std::vector<float>
+      m_t_d0;  ///< The extrapolated truth transverse impact parameter
+  std::vector<float>
+      m_t_z0;  ///< The extrapolated truth longitudinal impact parameter
 
   std::vector<bool> m_hasFittedParams;  ///< If the track has fitted parameter
   std::vector<float> m_eLOC0_fit;   ///< Fitted parameters eBoundLoc0 of track
