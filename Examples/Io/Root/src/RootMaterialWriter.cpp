@@ -21,32 +21,30 @@
 #include <TH2F.h>
 
 ActsExamples::RootMaterialWriter::RootMaterialWriter(
-    const ActsExamples::RootMaterialWriter::Config& cfg)
-    : m_cfg(cfg) {
+    const ActsExamples::RootMaterialWriter::Config& config,
+    Acts::Logging::Level level)
+    : m_cfg(config),
+      m_logger{Acts::getDefaultLogger("RootMaterialWriter", level)} {
   // Validate the configuration
   if (m_cfg.folderSurfaceNameBase.empty()) {
     throw std::invalid_argument("Missing surface folder name base");
   } else if (m_cfg.folderVolumeNameBase.empty()) {
     throw std::invalid_argument("Missing volume folder name base");
-  } else if (m_cfg.fileName.empty()) {
+  } else if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing file name");
-  } else if (!m_cfg.logger) {
-    throw std::invalid_argument("Missing logger");
-  } else if (m_cfg.name.empty()) {
-    throw std::invalid_argument("Missing service name");
+  }
+
+  // Setup ROOT I/O
+  m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
+  if (!m_outputFile) {
+    throw std::ios_base::failure("Could not open '" + m_cfg.filePath);
   }
 }
 
-void ActsExamples::RootMaterialWriter::write(
+void ActsExamples::RootMaterialWriter::writeMaterial(
     const Acts::DetectorMaterialMaps& detMaterial) {
-  // Setup ROOT I/O
-  TFile* outputFile = TFile::Open(m_cfg.fileName.c_str(), "recreate");
-  if (!outputFile) {
-    throw std::ios_base::failure("Could not open '" + m_cfg.fileName);
-  }
-
   // Change to the output file
-  outputFile->cd();
+  m_outputFile->cd();
 
   auto& surfaceMaps = detMaterial.first;
   for (auto& [key, value] : surfaceMaps) {
@@ -69,8 +67,8 @@ void ActsExamples::RootMaterialWriter::write(
     tdName += m_cfg.apptag + std::to_string(gappID);
     tdName += m_cfg.sentag + std::to_string(gsenID);
     // create a new directory
-    outputFile->mkdir(tdName.c_str());
-    outputFile->cd(tdName.c_str());
+    m_outputFile->mkdir(tdName.c_str());
+    m_outputFile->cd(tdName.c_str());
 
     ACTS_VERBOSE("Writing out map at " << tdName);
 
@@ -177,8 +175,8 @@ void ActsExamples::RootMaterialWriter::write(
     tdName += m_cfg.voltag + std::to_string(gvolID);
 
     // create a new directory
-    outputFile->mkdir(tdName.c_str());
-    outputFile->cd(tdName.c_str());
+    m_outputFile->mkdir(tdName.c_str());
+    m_outputFile->cd(tdName.c_str());
 
     ACTS_VERBOSE("Writing out map at " << tdName);
 
@@ -297,7 +295,12 @@ void ActsExamples::RootMaterialWriter::write(
     Z->Write();
     rho->Write();
   }
-  outputFile->Close();
+}
+
+ActsExamples::RootMaterialWriter::~RootMaterialWriter() {
+  if (m_outputFile) {
+    m_outputFile->Close();
+  }
 }
 
 void ActsExamples::RootMaterialWriter::write(
@@ -309,7 +312,7 @@ void ActsExamples::RootMaterialWriter::write(
     collectMaterial(*hVolume, detMatMap);
   }
   // Write the resulting map to the file
-  write(detMatMap);
+  writeMaterial(detMatMap);
 }
 
 void ActsExamples::RootMaterialWriter::collectMaterial(
