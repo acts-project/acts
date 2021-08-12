@@ -24,15 +24,14 @@ struct SeedfinderConfig {
   std::shared_ptr<Acts::SeedFilter<SpacePoint>> seedFilter;
 
   // Seed Cuts
-  // lower cutoff for seeds in MeV
-  // FIXME: Acts units
+  // lower cutoff for seeds
   float minPt = 400. * Acts::UnitConstants::MeV;
   // cot of maximum theta angle
   // equivalent to 2.7 eta (pseudorapidity)
   float cotThetaMax = 7.40627;
-  // minimum distance in mm in r between two measurements within one seed
+  // minimum distancein r between two measurements within one seed
   float deltaRMin = 5 * Acts::UnitConstants::mm;
-  // maximum distance in mm in r between two measurements within one seed
+  // maximum distance in r between two measurements within one seed
   float deltaRMax = 270 * Acts::UnitConstants::mm;
 
   // FIXME: this is not used yet
@@ -43,8 +42,7 @@ struct SeedfinderConfig {
   // leads to this value being the cutoff. unit is 1/mm. default value
   // of 0.00003 leads to all helices with radius>33m to be considered compatible
 
-  // impact parameter in mm
-  // FIXME: Acts units
+  // impact parameter
   float impactMax = 20. * Acts::UnitConstants::mm;
 
   // how many sigmas of scattering angle should be considered?
@@ -70,8 +68,6 @@ struct SeedfinderConfig {
   // which will make seeding very slow!
   float rMin = 33 * Acts::UnitConstants::mm;
 
-  // Unit in kiloTesla
-  // FIXME: Acts units
   float bFieldInZ = 2.08 * Acts::UnitConstants::T;
   // location of beam in x,y plane.
   // used as offset for Space Points
