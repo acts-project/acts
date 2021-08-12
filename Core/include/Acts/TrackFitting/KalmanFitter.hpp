@@ -604,41 +604,28 @@ class KalmanFitter {
 
             // Count the missed surface
             result.missedActiveSurfaces.push_back(surface);
-
-            // Transport & bind the state to the current surface
-            auto res = stepper.boundState(state.stepping, *surface);
-            if (!res.ok()) {
-              ACTS_ERROR("Propagate to hole surface failed: " << res.error());
-              return res.error();
-            }
-            auto& [boundParams, jacobian, pathLength] = *res;
-
-            // Fill the track state
-            trackStateProxy.predicted() = std::move(boundParams.parameters());
-            if (boundParams.covariance().has_value()) {
-              trackStateProxy.predictedCovariance() =
-                  std::move(*boundParams.covariance());
-            }
-            trackStateProxy.jacobian() = std::move(jacobian);
-            trackStateProxy.pathLength() = std::move(pathLength);
           } else if (surface->surfaceMaterial() != nullptr) {
             ACTS_VERBOSE("Detected in-sensitive surface "
                          << surface->geometryId());
-
-            // Transport & get curvilinear state instead of bound state
-            auto [curvilinearParams, jacobian, pathLength] =
-                stepper.curvilinearState(state.stepping);
-
-            // Fill the track state
-            trackStateProxy.predicted() =
-                std::move(curvilinearParams.parameters());
-            if (curvilinearParams.covariance().has_value()) {
-              trackStateProxy.predictedCovariance() =
-                  std::move(*curvilinearParams.covariance());
-            }
-            trackStateProxy.jacobian() = std::move(jacobian);
-            trackStateProxy.pathLength() = std::move(pathLength);
           }
+
+          // Transport & bind the state to the current surface
+          auto res = stepper.boundState(state.stepping, *surface);
+          if (!res.ok()) {
+            ACTS_ERROR("Propagate to surface " << surface->geometryId()
+                                               << " failed: " << res.error());
+            return res.error();
+          }
+          auto& [boundParams, jacobian, pathLength] = *res;
+
+          // Fill the track state
+          trackStateProxy.predicted() = std::move(boundParams.parameters());
+          if (boundParams.covariance().has_value()) {
+            trackStateProxy.predictedCovariance() =
+                std::move(*boundParams.covariance());
+          }
+          trackStateProxy.jacobian() = std::move(jacobian);
+          trackStateProxy.pathLength() = std::move(pathLength);
 
           // Set the filtered parameter index to be the same with predicted
           // parameter
