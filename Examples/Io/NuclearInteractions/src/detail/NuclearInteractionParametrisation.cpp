@@ -244,6 +244,8 @@ cumulativePDGprobability(const EventCollection& events) {
 
   // Count how many and which particles were created by which particle
   for (const EventFraction& event : events) {
+    if (event.finalParticles.empty())
+      continue;
     if (!event.soft) {
       counter[event.initialParticle.pdg()][event.finalParticles[0].pdg()]++;
     }
