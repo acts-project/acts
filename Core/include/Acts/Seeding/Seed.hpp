@@ -10,6 +10,8 @@
 
 #include <vector>
 
+#include <boost/container/small_vector.hpp>
+
 namespace Acts {
 template <typename SpacePoint>
 class Seed {
@@ -23,11 +25,11 @@ class Seed {
   Seed(const Seed&) = default;
   Seed& operator=(const Seed&) = default;
 
-  const std::vector<const SpacePoint*>& sp() const { return m_spacepoints; }
+  const auto& sp() const { return m_spacepoints; }
   double z() const { return m_zvertex; }
 
  private:
-  std::vector<const SpacePoint*> m_spacepoints;
+  boost::container::small_vector<const SpacePoint*, 3> m_spacepoints;
   float m_zvertex;
 };
 

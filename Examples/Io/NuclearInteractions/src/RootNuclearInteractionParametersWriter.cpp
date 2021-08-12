@@ -326,15 +326,16 @@ inline void recordKinematicParametrisation(
 
 ActsExamples::RootNuclearInteractionParametersWriter::
     RootNuclearInteractionParametersWriter(
-        const ActsExamples::RootNuclearInteractionParametersWriter::Config& cfg,
-        Acts::Logging::Level lvl)
-    : WriterT(cfg.inputSimulationProcesses,
-              "RootNuclearInteractionParametersWriter", lvl),
-      m_cfg(cfg) {
+        const ActsExamples::RootNuclearInteractionParametersWriter::Config&
+            config,
+        Acts::Logging::Level level)
+    : WriterT(config.inputSimulationProcesses,
+              "RootNuclearInteractionParametersWriter", level),
+      m_cfg(config) {
   if (m_cfg.inputSimulationProcesses.empty()) {
     throw std::invalid_argument("Missing input collection");
   }
-  if (m_cfg.outputFilename.empty()) {
+  if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename for parameters");
   }
 }
@@ -352,7 +353,7 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
   // The file
-  TFile* tf = TFile::Open(m_cfg.outputFilename.c_str(), m_cfg.fileMode.c_str());
+  TFile* tf = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
   gDirectory->cd();
   gDirectory->mkdir(
       std::to_string(m_eventFractionCollection[0].initialParticle.pdg())

@@ -72,7 +72,8 @@ int main(int argc, char* argv[]) {
       std::make_shared<ParticleSmearing>(smearParticles, logLevel));
 
   // find vertices
-  TutorialVertexFinderAlgorithm::Config findVertices(magneticField);
+  TutorialVertexFinderAlgorithm::Config findVertices;
+  findVertices.bField = magneticField;
   findVertices.inputTrackParameters = smearParticles.outputTrackParameters;
   findVertices.outputProtoVertices = "protovertices";
   sequencer.addAlgorithm(
