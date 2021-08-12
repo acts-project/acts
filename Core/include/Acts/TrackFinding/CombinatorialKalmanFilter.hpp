@@ -1318,12 +1318,8 @@ class CombinatorialKalmanFilter {
     // Compute nSharedhits and Update ckf results
     // hit index -> list of multi traj indexes [traj, meas]
     // @todo put shared hit computation in ad-hoc method
-    std::vector<std::vector<
-		  std::pair<std::size_t, std::size_t>>> recordedHits;
-    recordedHits.resize(sourcelinks.size());
-    for (auto& el : recordedHits)
-      el.reserve(64);
-
+    std::vector<int> firstTrackOnTheHit(sourcelinks.size(), -1);
+    std::vector<int> firstStateOnTheHit(sourcelinks.size(), -1);
 
     for (unsigned int iresult(0); iresult < ckfResults.size(); iresult++) {
       if (not ckfResults.at(iresult).ok())
@@ -1340,20 +1336,22 @@ class CombinatorialKalmanFilter {
                 return;
 
               std::size_t hitIndex = state.uncalibrated().index();
-	      recordedHits.at(hitIndex).push_back(std::make_pair(iresult, state.index()));
+	      
+	      // Check if hit not already used
+	      if (firstTrackOnTheHit.at(hitIndex) == -1) {
+		firstTrackOnTheHit.at(hitIndex) = iresult;
+		firstStateOnTheHit.at(hitIndex) = state.index();
+		return;
+	      }
+
+	      // if already used, control if first track state has been marked as shared
+	      int indexFirstTrack = firstTrackOnTheHit.at(hitIndex);
+	      int indexFirstState = firstStateOnTheHit.at(hitIndex);
+	      if (not ckfResults.at(indexFirstTrack).value().fittedStates.getTrackState(indexFirstState).typeFlags().test(Acts::TrackStateFlag::SharedHitFlag)) 
+		ckfResults.at(indexFirstTrack).value().fittedStates.getTrackState(indexFirstState).typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
+
+	      state.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
             });
-      }
-    }
-
-    for (unsigned int measIndex(0); measIndex<recordedHits.size(); measIndex++) {
-      const auto& trackIndexArray = recordedHits.at(measIndex);
-      if (trackIndexArray.size() < 2)
-	continue;
-
-      for (const auto& [iresult, imeas] : trackIndexArray) {
-        auto& mj = ckfResults.at(iresult).value().fittedStates;
-        mj.getTrackState(imeas).typeFlags().set(
-            Acts::TrackStateFlag::SharedHitFlag);
       }
     }
 
