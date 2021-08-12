@@ -96,7 +96,7 @@ int runRecTruthTracks(int argc, char* argv[],
   particleSelectorCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
   particleSelectorCfg.outputParticles = "particles_selected";
-  particleSelectorCfg.nHitsMin = 3;
+  particleSelectorCfg.nHitsMin = 9;
   particleSelectorCfg.ptMin = 500._MeV;
   sequencer.addAlgorithm(
       std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));
