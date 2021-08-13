@@ -66,6 +66,61 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
                                           << " seeds.");
   auto results = m_cfg.findTracks(sourceLinks, initialParameters, options);
+  // Compute shared hits from all the reconstructed tracks
+  // Compute nSharedhits and Update ckf results
+  // hit index -> list of multi traj indexes [traj, meas]
+  // @todo put shared hit computation in ad-hoc method
+  std::vector<int> firstTrackOnTheHit(sourceLinks.size(), -1);
+  std::vector<int> firstStateOnTheHit(sourceLinks.size(), -1);
+
+  for (unsigned int iresult(0); iresult < results.size(); iresult++) {
+    if (not results.at(iresult).ok())
+      continue;
+
+    auto& ckfResult = results.at(iresult).value();
+    auto& measIndexes = ckfResult.lastMeasurementIndices;
+
+    for (auto measIndex : measIndexes) {
+      ckfResult.fittedStates.visitBackwards(
+	 measIndex, [&](const auto& state) {
+	   if (not state.typeFlags().test(
+		   Acts::TrackStateFlag::MeasurementFlag))
+	     return;
+	   
+	   std::size_t hitIndex = state.uncalibrated().index();
+	   
+	   // Check if hit not already used
+	   if (firstTrackOnTheHit.at(hitIndex) == -1) {
+	     firstTrackOnTheHit.at(hitIndex) = iresult;
+	     firstStateOnTheHit.at(hitIndex) = state.index();
+	     return;
+	   }
+	   
+	   // if already used, control if first track state has been marked
+	   // as shared
+	   int indexFirstTrack = firstTrackOnTheHit.at(hitIndex);
+	   int indexFirstState = firstStateOnTheHit.at(hitIndex);
+	   if (not results.at(indexFirstTrack)
+	       .value()
+	       .fittedStates.getTrackState(indexFirstState)
+	       .typeFlags()
+	       .test(Acts::TrackStateFlag::SharedHitFlag))
+	     results.at(indexFirstTrack)
+	       .value()
+	       .fittedStates.getTrackState(indexFirstState)
+	       .typeFlags()
+	       .set(Acts::TrackStateFlag::SharedHitFlag);
+
+	   // Decorate this track	   
+	   results.at(iresult)
+	     .value()
+	     .fittedStates.getTrackState(state.index())
+	     .typeFlags()
+	     .set(Acts::TrackStateFlag::SharedHitFlag);
+	 });
+    }
+  }
+  
   // Loop over the track finding results for all initial parameters
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
     // The result for this seed
