@@ -35,17 +35,16 @@ ActsExamples::CKFPerformanceWriter::CKFPerformanceWriter(
   if (m_cfg.inputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument("Missing hit-particles map input collection");
   }
-  if (m_cfg.outputFilename.empty()) {
+  if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
 
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
   // must always be opened internally
-  auto path = joinPaths(m_cfg.outputDir, m_cfg.outputFilename);
-  m_outputFile = TFile::Open(path.c_str(), "RECREATE");
+  m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
   if (not m_outputFile) {
-    throw std::invalid_argument("Could not open '" + path + "'");
+    throw std::invalid_argument("Could not open '" + m_cfg.filePath + "'");
   }
 
   // initialize the plot tools

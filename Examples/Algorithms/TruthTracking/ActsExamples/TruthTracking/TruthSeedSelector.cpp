@@ -70,9 +70,9 @@ ActsExamples::TruthSeedSelector::readConfig(const Options::Variables& vars) {
   return cfg;
 }
 
-TruthSeedSelector::TruthSeedSelector(const Config& cfg,
-                                     Acts::Logging::Level lvl)
-    : BareAlgorithm("TruthSeedSelector", lvl), m_cfg(cfg) {
+TruthSeedSelector::TruthSeedSelector(const Config& config,
+                                     Acts::Logging::Level level)
+    : BareAlgorithm("TruthSeedSelector", level), m_cfg(config) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input truth particles collection");
   }

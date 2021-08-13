@@ -37,8 +37,9 @@
 #include "VertexingHelpers.hpp"
 
 ActsExamples::IterativeVertexFinderAlgorithm::IterativeVertexFinderAlgorithm(
-    const Config& cfg, Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("IterativeVertexFinder", lvl), m_cfg(cfg) {
+    const Config& config, Acts::Logging::Level level)
+    : ActsExamples::BareAlgorithm("IterativeVertexFinder", level),
+      m_cfg(config) {
   if (m_cfg.inputTrackParameters.empty()) {
     throw std::invalid_argument("Missing input track parameters collection");
   }

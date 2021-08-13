@@ -101,7 +101,7 @@ struct GenericDenseEnvironmentExtension {
   bool k(const propagator_state_t& state, const stepper_t& stepper,
          ThisVector3& knew, const Vector3& bField, std::array<Scalar, 4>& kQoP,
          const int i = 0, const double h = 0.,
-         const ThisVector3& kprev = ThisVector3()) {
+         const ThisVector3& kprev = ThisVector3::Zero()) {
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
       // Set up container for energy loss

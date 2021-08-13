@@ -99,7 +99,7 @@ inline const T& ActsExamples::WhiteBoard::get(const std::string& name) const {
   }
   const IHolder* holder = it->second.get();
   if (typeid(T) != holder->type()) {
-    throw std::out_of_range("Type missmatch for object '" + name + "'");
+    throw std::out_of_range("Type mismatch for object '" + name + "'");
   }
   ACTS_VERBOSE("Retrieved object '" << name << "'");
   return reinterpret_cast<const HolderT<T>*>(holder)->value;

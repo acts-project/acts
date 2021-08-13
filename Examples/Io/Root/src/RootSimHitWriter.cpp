@@ -17,8 +17,9 @@
 #include <TTree.h>
 
 ActsExamples::RootSimHitWriter::RootSimHitWriter(
-    const ActsExamples::RootSimHitWriter::Config& cfg, Acts::Logging::Level lvl)
-    : WriterT(cfg.inputSimHits, "RootSimHitWriter", lvl), m_cfg(cfg) {
+    const ActsExamples::RootSimHitWriter::Config& config,
+    Acts::Logging::Level level)
+    : WriterT(config.inputSimHits, "RootSimHitWriter", level), m_cfg(config) {
   // inputParticles is already checked by base constructor
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing file path");
@@ -62,11 +63,7 @@ ActsExamples::RootSimHitWriter::RootSimHitWriter(
   m_outputTree->Branch("sensitive_id", &m_sensitiveId);
 }
 
-ActsExamples::RootSimHitWriter::~RootSimHitWriter() {
-  if (m_outputFile) {
-    m_outputFile->Close();
-  }
-}
+ActsExamples::RootSimHitWriter::~RootSimHitWriter() {}
 
 ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::endRun() {
   if (m_outputFile) {
@@ -74,6 +71,7 @@ ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::endRun() {
     m_outputTree->Write();
     ACTS_VERBOSE("Wrote hits to tree '" << m_cfg.treeName << "' in '"
                                         << m_cfg.filePath << "'");
+    m_outputFile->Close();
   }
   return ProcessCode::SUCCESS;
 }
