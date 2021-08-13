@@ -1349,8 +1349,8 @@ class CombinatorialKalmanFilter {
 	      int indexFirstState = firstStateOnTheHit.at(hitIndex);
 	      if (not ckfResults.at(indexFirstTrack).value().fittedStates.getTrackState(indexFirstState).typeFlags().test(Acts::TrackStateFlag::SharedHitFlag)) 
 		ckfResults.at(indexFirstTrack).value().fittedStates.getTrackState(indexFirstState).typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
-
-	      state.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
+	      
+	      ckfResults.at(iresult).value().fittedStates.getTrackState(state.index()).typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
             });
       }
     }
