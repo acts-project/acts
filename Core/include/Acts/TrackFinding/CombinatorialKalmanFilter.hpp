@@ -40,8 +40,6 @@
 #include <memory>
 #include <unordered_map>
 
-
-
 namespace Acts {
 
 /// Track quality summary for one trajectory.
@@ -1331,21 +1329,34 @@ class CombinatorialKalmanFilter {
                 return;
 
               std::size_t hitIndex = state.uncalibrated().index();
-	      
-	      // Check if hit not already used
-	      if (firstTrackOnTheHit.at(hitIndex) == -1) {
-		firstTrackOnTheHit.at(hitIndex) = iresult;
-		firstStateOnTheHit.at(hitIndex) = state.index();
-		return;
-	      }
 
-	      // if already used, control if first track state has been marked as shared
-	      int indexFirstTrack = firstTrackOnTheHit.at(hitIndex);
-	      int indexFirstState = firstStateOnTheHit.at(hitIndex);
-	      if (not ckfResults.at(indexFirstTrack).value().fittedStates.getTrackState(indexFirstState).typeFlags().test(Acts::TrackStateFlag::SharedHitFlag)) 
-		ckfResults.at(indexFirstTrack).value().fittedStates.getTrackState(indexFirstState).typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
-	      
-	      ckfResults.at(iresult).value().fittedStates.getTrackState(state.index()).typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
+              // Check if hit not already used
+              if (firstTrackOnTheHit.at(hitIndex) == -1) {
+                firstTrackOnTheHit.at(hitIndex) = iresult;
+                firstStateOnTheHit.at(hitIndex) = state.index();
+                return;
+              }
+
+              // if already used, control if first track state has been marked
+              // as shared
+              int indexFirstTrack = firstTrackOnTheHit.at(hitIndex);
+              int indexFirstState = firstStateOnTheHit.at(hitIndex);
+              if (not ckfResults.at(indexFirstTrack)
+                          .value()
+                          .fittedStates.getTrackState(indexFirstState)
+                          .typeFlags()
+                          .test(Acts::TrackStateFlag::SharedHitFlag))
+                ckfResults.at(indexFirstTrack)
+                    .value()
+                    .fittedStates.getTrackState(indexFirstState)
+                    .typeFlags()
+                    .set(Acts::TrackStateFlag::SharedHitFlag);
+
+              ckfResults.at(iresult)
+                  .value()
+                  .fittedStates.getTrackState(state.index())
+                  .typeFlags()
+                  .set(Acts::TrackStateFlag::SharedHitFlag);
             });
       }
     }
