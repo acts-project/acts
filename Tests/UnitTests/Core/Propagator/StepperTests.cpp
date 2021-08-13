@@ -461,7 +461,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   freeParams[eFreeTime] *= 2;
   freeParams[eFreeQOverP] *= -0.5;
 
-  es.update(esState, freeParams, 2 * (*bp.covariance()));
+  es.update(esState, freeParams, bp.parameters(), 2 * (*bp.covariance()),
+            *plane);
   CHECK_CLOSE_OR_SMALL(es.position(esState), 2. * pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(es.direction(esState), dir, eps, eps);
   CHECK_CLOSE_REL(es.momentum(esState), 2 * absMom, eps);
