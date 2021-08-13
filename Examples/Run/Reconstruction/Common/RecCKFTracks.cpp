@@ -243,6 +243,7 @@ int runRecCKFTracks(int argc, char* argv[],
   trackFindingCfg.inputSourceLinks = digiCfg.outputSourceLinks;
   trackFindingCfg.inputInitialTrackParameters = outputTrackParameters;
   trackFindingCfg.outputTrajectories = "trajectories";
+  trackFindingCfg.computeSharedHits = true;
   trackFindingCfg.findTracks = TrackFindingAlgorithm::makeTrackFinderFunction(
       trackingGeometry, magneticField);
   sequencer.addAlgorithm(
