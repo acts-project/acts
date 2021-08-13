@@ -58,7 +58,7 @@ class TruthSeedSelector final : public BareAlgorithm {
     size_t nHitsMax = std::numeric_limits<size_t>::max();
   };
 
-  TruthSeedSelector(const Config& cfg, Acts::Logging::Level lvl);
+  TruthSeedSelector(const Config& config, Acts::Logging::Level level);
 
   ProcessCode execute(const AlgorithmContext& ctx) const override final;
 
@@ -67,6 +67,9 @@ class TruthSeedSelector final : public BareAlgorithm {
 
   /// Construct particle selector config from user variables.
   static Config readConfig(const Options::Variables& vars);
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;

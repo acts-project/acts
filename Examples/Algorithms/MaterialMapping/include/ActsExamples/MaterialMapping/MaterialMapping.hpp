@@ -55,10 +55,11 @@ class MaterialMapping : public ActsExamples::BareAlgorithm {
   /// @class nested Config class
   /// of the MaterialMapping algorithm
   struct Config {
-    /// Constructor with geometry and magnetic field contexts
-    Config(std::reference_wrapper<const Acts::GeometryContext> gctx,
-           std::reference_wrapper<const Acts::MagneticFieldContext> mctx)
-        : geoContext(gctx), magFieldContext(mctx) {}
+    // Geometry context for the state creation
+    std::reference_wrapper<const Acts::GeometryContext> geoContext;
+
+    // MagneticField  context for the state creation
+    std::reference_wrapper<const Acts::MagneticFieldContext> magFieldContext;
 
     /// Input collection
     std::string collection = "material-tracks";
@@ -74,16 +75,10 @@ class MaterialMapping : public ActsExamples::BareAlgorithm {
     std::shared_ptr<Acts::VolumeMaterialMapper> materialVolumeMapper = nullptr;
 
     /// The writer of the material
-    std::vector<std::shared_ptr<IMaterialWriter>> materialWriters;
+    std::vector<std::shared_ptr<IMaterialWriter>> materialWriters{};
 
     /// The TrackingGeometry to be mapped on
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr;
-
-    // Geometry context for the state creation
-    std::reference_wrapper<const Acts::GeometryContext> geoContext;
-
-    // MagneticField  context for the state creation
-    std::reference_wrapper<const Acts::MagneticFieldContext> magFieldContext;
   };
 
   /// Constructor
@@ -102,6 +97,9 @@ class MaterialMapping : public ActsExamples::BareAlgorithm {
   /// @param context The algorithm context for event consistency
   ActsExamples::ProcessCode execute(
       const AlgorithmContext& context) const final override;
+
+  /// Readonly access to the config
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;  //!< internal config object

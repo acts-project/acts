@@ -641,7 +641,7 @@ class CombinatorialKalmanFilter {
           stepper.update(state.stepping,
                          MultiTrajectoryHelpers::freeFiltered(
                              state.options.geoContext, ts),
-                         ts.filteredCovariance());
+                         ts.filtered(), ts.filteredCovariance(), *surface);
           ACTS_VERBOSE("Stepping state is updated with filtered parameter: \n"
                        << ts.filtered().transpose()
                        << " of track state with tip = "
@@ -691,26 +691,20 @@ class CombinatorialKalmanFilter {
           tipState.nStates++;
           size_t currentTip = SIZE_MAX;
           if (isSensitive) {
-            // Transport & bind the state to the current surface
-            auto res = stepper.boundState(state.stepping, *surface);
-            if (!res.ok()) {
-              ACTS_ERROR("Error in filter: " << res.error());
-              return res.error();
-            }
-            const auto boundState = *res;
-            // Add a hole track state to the multitrajectory
-            currentTip =
-                addHoleState(stateMask, boundState, result, prevTip, logger);
             // Incremet of number of holes
             tipState.nHoles++;
-          } else if (surface->surfaceMaterial() != nullptr) {
-            // Transport & get curvilinear state instead of bound state
-            const auto curvilinearState =
-                stepper.curvilinearState(state.stepping);
-            // Add a passive material track state to the multitrajectory
-            currentTip = addPassiveState(stateMask, curvilinearState, result,
-                                         prevTip, logger);
           }
+
+          // Transport & bind the state to the current surface
+          auto res = stepper.boundState(state.stepping, *surface);
+          if (!res.ok()) {
+            ACTS_ERROR("Error in filter: " << res.error());
+            return res.error();
+          }
+          const auto boundState = *res;
+          // Add a hole track state to the multitrajectory
+          currentTip = addNonSourcelinkState(stateMask, boundState, result,
+                                             prevTip, logger);
 
           // Check the branch
           if (not m_branchStopper(tipState)) {
@@ -873,10 +867,10 @@ class CombinatorialKalmanFilter {
     /// @param logger The logger wrapper
     ///
     /// @return The tip of added state
-    size_t addHoleState(const TrackStatePropMask& stateMask,
-                        const BoundState& boundState, result_type& result,
-                        size_t prevTip = SIZE_MAX,
-                        LoggerWrapper logger = getDummyLogger()) const {
+    size_t addNonSourcelinkState(
+        const TrackStatePropMask& stateMask, const BoundState& boundState,
+        result_type& result, size_t prevTip = SIZE_MAX,
+        LoggerWrapper logger = getDummyLogger()) const {
       // Add a track state
       auto currentTip = result.fittedStates.addTrackState(stateMask, prevTip);
       ACTS_VERBOSE("Creating Hole track state with tip = " << currentTip);
@@ -906,54 +900,6 @@ class CombinatorialKalmanFilter {
       typeFlags.set(TrackStateFlag::ParameterFlag);
       typeFlags.set(TrackStateFlag::HoleFlag);
 
-      trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
-
-      return currentTip;
-    }
-
-    /// @brief CombinatorialKalmanFilter actor operation : add passive track
-    /// state
-    ///
-    /// @param stateMask The bitmask that instructs which components to allocate
-    /// @param curvilinearState The curvilinear state on in-sensive material
-    /// surface
-    /// @param result is the mutable result state object
-    /// and which to leave invalid
-    /// @param prevTip The index of the previous state
-    /// @param logger The logger wrapper
-    ///
-    /// @return The tip of added state
-    size_t addPassiveState(const TrackStatePropMask& stateMask,
-                           const CurvilinearState& curvilinearState,
-                           result_type& result, size_t prevTip = SIZE_MAX,
-                           LoggerWrapper logger = getDummyLogger()) const {
-      // Add a track state
-      auto currentTip = result.fittedStates.addTrackState(stateMask, prevTip);
-      ACTS_VERBOSE(
-          "Creating track state on in-sensitive material surface with tip = "
-          << currentTip);
-
-      // now get track state proxy back
-      auto trackStateProxy = result.fittedStates.getTrackState(currentTip);
-
-      // Set the track state flags
-      auto& typeFlags = trackStateProxy.typeFlags();
-      typeFlags.set(TrackStateFlag::MaterialFlag);
-      typeFlags.set(TrackStateFlag::ParameterFlag);
-
-      const auto& [curvilinearParams, jacobian, pathLength] = curvilinearState;
-      // Fill the track state
-      trackStateProxy.predicted() = curvilinearParams.parameters();
-      if (curvilinearParams.covariance().has_value()) {
-        trackStateProxy.predictedCovariance() = *curvilinearParams.covariance();
-      }
-      trackStateProxy.jacobian() = jacobian;
-      trackStateProxy.pathLength() = pathLength;
-      // Set the surface; reuse the existing curvilinear surface
-      trackStateProxy.setReferenceSurface(
-          curvilinearParams.referenceSurface().getSharedPtr());
-      // Set the filtered parameter index to be the same with predicted
-      // parameter
       trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
 
       return currentTip;
@@ -1101,11 +1047,15 @@ class CombinatorialKalmanFilter {
            std::abs(lastIntersection.intersection.pathLength));
       if (closerToFirstCreatedMeasurement) {
         stepper.update(state.stepping, firstParams,
-                       firstCreatedMeasurement.smoothedCovariance());
+                       firstCreatedMeasurement.smoothed(),
+                       firstCreatedMeasurement.smoothedCovariance(),
+                       firstCreatedMeasurement.referenceSurface());
         reverseDirection = (firstIntersection.intersection.pathLength < 0);
       } else {
         stepper.update(state.stepping, lastParams,
-                       lastCreatedMeasurement.smoothedCovariance());
+                       lastCreatedMeasurement.smoothed(),
+                       lastCreatedMeasurement.smoothedCovariance(),
+                       lastCreatedMeasurement.referenceSurface());
         reverseDirection = (lastIntersection.intersection.pathLength < 0);
       }
       const auto& surface = closerToFirstCreatedMeasurement

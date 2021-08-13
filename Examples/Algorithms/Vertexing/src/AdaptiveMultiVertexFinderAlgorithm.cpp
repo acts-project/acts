@@ -34,10 +34,10 @@
 #include "VertexingHelpers.hpp"
 
 ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
-    AdaptiveMultiVertexFinderAlgorithm(const Config& cfg,
-                                       Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("AdaptiveMultiVertexFinder", lvl),
-      m_cfg(cfg) {
+    AdaptiveMultiVertexFinderAlgorithm(const Config& config,
+                                       Acts::Logging::Level level)
+    : ActsExamples::BareAlgorithm("AdaptiveMultiVertexFinder", level),
+      m_cfg(config) {
   if (m_cfg.inputTrackParameters.empty()) {
     throw std::invalid_argument("Missing input track parameters collection");
   }

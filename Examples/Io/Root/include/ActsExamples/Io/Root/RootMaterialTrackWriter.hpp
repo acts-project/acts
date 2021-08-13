@@ -47,7 +47,6 @@ class RootMaterialTrackWriter
     std::string filePath = "";                 ///< path of the output file
     std::string fileMode = "RECREATE";         ///< file access mode
     std::string treeName = "material-tracks";  ///< name of the output tree
-    TFile* rootFile = nullptr;                 ///< common root file
 
     /// Re-calculate total values from individual steps (for cross-checks)
     bool recalculateTotals = false;
@@ -60,9 +59,9 @@ class RootMaterialTrackWriter
   };
 
   /// Constructor with
-  /// @param cfg configuration struct
-  /// @param output logging level
-  RootMaterialTrackWriter(const Config& cfg,
+  /// @param config configuration struct
+  /// @param level logging level
+  RootMaterialTrackWriter(const Config& config,
                           Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Virtual destructor
@@ -70,6 +69,9 @@ class RootMaterialTrackWriter
 
   /// Framework intialize method
   ActsExamples::ProcessCode endRun() final override;
+
+  /// Readonly access to the config
+  const Config& config() const { return m_cfg; }
 
  protected:
   // This implementation holds the actual writing method

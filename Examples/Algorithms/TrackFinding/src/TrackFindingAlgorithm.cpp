@@ -16,9 +16,9 @@
 #include <stdexcept>
 
 ActsExamples::TrackFindingAlgorithm::TrackFindingAlgorithm(
-    Config cfg, Acts::Logging::Level level)
+    Config config, Acts::Logging::Level level)
     : ActsExamples::BareAlgorithm("TrackFindingAlgorithm", level),
-      m_cfg(std::move(cfg)) {
+      m_cfg(std::move(config)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements input collection");
   }
@@ -65,7 +65,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
                                           << " seeds.");
-  auto results = m_cfg.findTracks(sourceLinks, initialParameters, options);
+  auto results = (*m_cfg.findTracks)(sourceLinks, initialParameters, options);
 
   // Compute shared hits from all the reconstructed tracks
   if (m_cfg.computeSharedHits)

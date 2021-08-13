@@ -34,36 +34,32 @@ using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
 
 ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
-    const ActsExamples::RootTrajectorySummaryWriter::Config& cfg,
-    Acts::Logging::Level lvl)
-    : WriterT(cfg.inputTrajectories, "RootTrajectorySummaryWriter", lvl),
-      m_cfg(cfg),
-      m_outputFile(cfg.rootFile) {
+    const ActsExamples::RootTrajectorySummaryWriter::Config& config,
+    Acts::Logging::Level level)
+    : WriterT(config.inputTrajectories, "RootTrajectorySummaryWriter", level),
+      m_cfg(config) {
   // trajectories collection name is already checked by base ctor
-  if (cfg.inputParticles.empty()) {
+  if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
   }
-  if (cfg.inputMeasurementParticlesMap.empty()) {
+  if (m_cfg.inputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument("Missing hit-particles map input collection");
   }
-  if (cfg.outputFilename.empty()) {
+  if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
-  if (m_cfg.outputTreename.empty()) {
+  if (m_cfg.treeName.empty()) {
     throw std::invalid_argument("Missing tree name");
   }
 
   // Setup ROOT I/O
+  auto path = m_cfg.filePath;
+  m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
   if (m_outputFile == nullptr) {
-    auto path = joinPaths(m_cfg.outputDir, m_cfg.outputFilename);
-    m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
-    if (m_outputFile == nullptr) {
-      throw std::ios_base::failure("Could not open '" + path);
-    }
+    throw std::ios_base::failure("Could not open '" + path);
   }
   m_outputFile->cd();
-  m_outputTree =
-      new TTree(m_cfg.outputTreename.c_str(), m_cfg.outputTreename.c_str());
+  m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
   if (m_outputTree == nullptr)
     throw std::bad_alloc();
   else {
@@ -100,6 +96,8 @@ ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
     m_outputTree->Branch("t_phi", &m_t_phi);
     m_outputTree->Branch("t_eta", &m_t_eta);
     m_outputTree->Branch("t_pT", &m_t_pT);
+    m_outputTree->Branch("t_d0", &m_t_d0);
+    m_outputTree->Branch("t_z0", &m_t_z0);
 
     m_outputTree->Branch("hasFittedParams", &m_hasFittedParams);
     m_outputTree->Branch("eLOC0_fit", &m_eLOC0_fit);
@@ -117,19 +115,15 @@ ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
   }
 }
 
-ActsExamples::RootTrajectorySummaryWriter::~RootTrajectorySummaryWriter() {
-  if (m_outputFile) {
-    m_outputFile->Close();
-  }
-}
+ActsExamples::RootTrajectorySummaryWriter::~RootTrajectorySummaryWriter() {}
 
 ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::endRun() {
   if (m_outputFile) {
     m_outputFile->cd();
     m_outputTree->Write();
     ACTS_INFO("Write parameters of trajectories to tree '"
-              << m_cfg.outputTreename << "' in '"
-              << joinPaths(m_cfg.outputDir, m_cfg.outputFilename) << "'");
+              << m_cfg.treeName << "' in '" << m_cfg.filePath << "'");
+    m_outputFile->Close();
   }
   return ProcessCode::SUCCESS;
 }
@@ -202,6 +196,13 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       m_outlierLayer.emplace_back(trajState.outlierLayer.begin(),
                                   trajState.outlierLayer.end());
 
+      // get the perigee surface
+      Acts::Surface* pSurface = nullptr;
+      if (traj.hasTrackParameters(trackTip)) {
+        const auto& boundParam = traj.trackParameters(trackTip);
+        pSurface = const_cast<Acts::Surface*>(&boundParam.referenceSurface());
+      }
+
       // Get the majority truth particle to this track
       identifyContributingParticles(hitParticlesMap, traj, trackTip,
                                     particleHitCounts);
@@ -235,6 +236,23 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           m_t_phi.push_back(phi(particle.unitDirection()));
           m_t_eta.push_back(eta(particle.unitDirection()));
           m_t_pT.push_back(p * perp(particle.unitDirection()));
+
+          if (pSurface) {
+            // get the truth perigee parameter
+            auto lpResult = pSurface->globalToLocal(
+                ctx.geoContext, particle.position(), particle.unitDirection());
+            if (lpResult.ok()) {
+              m_t_d0.push_back(
+                  lpResult.value()[Acts::BoundIndices::eBoundLoc0]);
+              m_t_z0.push_back(
+                  lpResult.value()[Acts::BoundIndices::eBoundLoc1]);
+            } else {
+              ACTS_ERROR("Global to local transformation did not succeed.");
+              m_t_d0.push_back(NaNfloat);
+              m_t_z0.push_back(NaNfloat);
+            }
+          }
+
         } else {
           ACTS_WARNING("Truth particle with barcode = "
                        << barcode << " not found in the input collection!");
@@ -335,6 +353,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
   m_t_phi.clear();
   m_t_pT.clear();
   m_t_eta.clear();
+  m_t_d0.clear();
+  m_t_z0.clear();
 
   m_hasFittedParams.clear();
   m_eLOC0_fit.clear();

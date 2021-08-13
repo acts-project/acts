@@ -32,15 +32,23 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
                                              Acts::MeasurementSelector>;
   using TrackFinderResult = std::vector<
       Acts::Result<Acts::CombinatorialKalmanFilterResult<IndexSourceLink>>>;
-  using TrackFinderFunction = std::function<TrackFinderResult(
-      const IndexSourceLinkContainer&, const TrackParametersContainer&,
-      const TrackFinderOptions&)>;
+
+  /// Find function that takes the above parameters
+  /// @note This is separated into a virtual interface to keep compilation units
+  /// small
+  class TrackFinderFunction {
+   public:
+    virtual ~TrackFinderFunction() = default;
+    virtual TrackFinderResult operator()(const IndexSourceLinkContainer&,
+                                         const TrackParametersContainer&,
+                                         const TrackFinderOptions&) const = 0;
+  };
 
   /// Create the track finder function implementation.
   ///
   /// The magnetic field is intentionally given by-value since the variant
   /// contains shared_ptr anyways.
-  static TrackFinderFunction makeTrackFinderFunction(
+  static std::shared_ptr<TrackFinderFunction> makeTrackFinderFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
 
@@ -54,7 +62,7 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
     /// Output find trajectories collection.
     std::string outputTrajectories;
     /// Type erased track finder function.
-    TrackFinderFunction findTracks;
+    std::shared_ptr<TrackFinderFunction> findTracks;
     /// CKF measurement selector config
     Acts::MeasurementSelector::Config measurementSelectorCfg;
     /// Compute shared hit information
@@ -63,9 +71,9 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
 
   /// Constructor of the track finding algorithm
   ///
-  /// @param cfg is the config struct to configure the algorithm
+  /// @param config is the config struct to configure the algorithm
   /// @param level is the logging level
-  TrackFindingAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  TrackFindingAlgorithm(Config config, Acts::Logging::Level level);
 
   /// Framework execute method of the track finding algorithm
   ///
@@ -73,6 +81,9 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   /// @return a process code to steer the algorithm flow
   ActsExamples::ProcessCode execute(
       const ActsExamples::AlgorithmContext& ctx) const final;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   template <typename source_link_accessor_container_t,

@@ -33,8 +33,11 @@
 #include <boost/algorithm/string/iter_find.hpp>
 
 ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
-    const ActsExamples::RootMaterialDecorator::Config& cfg)
-    : m_cfg(cfg), m_inputFile(nullptr) {
+    const ActsExamples::RootMaterialDecorator::Config& config,
+    Acts::Logging::Level level)
+    : m_cfg(config),
+      m_logger{Acts::getDefaultLogger("RootMaterialDecorator", level)},
+      m_inputFile(nullptr) {
   // Validate the configuration
   if (m_cfg.folderSurfaceNameBase.empty()) {
     throw std::invalid_argument("Missing surface folder name base");
@@ -42,10 +45,6 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
     throw std::invalid_argument("Missing volume folder name base");
   } else if (m_cfg.fileName.empty()) {
     throw std::invalid_argument("Missing file name");
-  } else if (!m_cfg.logger) {
-    throw std::invalid_argument("Missing logger");
-  } else if (m_cfg.name.empty()) {
-    throw std::invalid_argument("Missing service name");
   }
 
   // Setup ROOT I/O
