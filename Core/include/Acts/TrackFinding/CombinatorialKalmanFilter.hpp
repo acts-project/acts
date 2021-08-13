@@ -40,8 +40,6 @@
 #include <memory>
 #include <unordered_map>
 
-#include <time.h>
-#include <stdio.h>
 
 
 namespace Acts {
@@ -1312,9 +1310,6 @@ class CombinatorialKalmanFilter {
       ckfResults.emplace_back(combKalmanResult);
     }
 
-    struct timespec timespec_startTime, timespec_stopTime;
-    clock_gettime( CLOCK_PROCESS_CPUTIME_ID, &timespec_startTime );
-
     // Compute nSharedhits and Update ckf results
     // hit index -> list of multi traj indexes [traj, meas]
     // @todo put shared hit computation in ad-hoc method
@@ -1354,11 +1349,6 @@ class CombinatorialKalmanFilter {
             });
       }
     }
-
-
-    clock_gettime( CLOCK_PROCESS_CPUTIME_ID, &timespec_stopTime );
-    long int timing_time = (timespec_stopTime.tv_sec - timespec_startTime.tv_sec) * 1e9 + timespec_stopTime.tv_nsec - timespec_startTime.tv_nsec;
-    std::cout <<" >>> ELAPSED TIME: " << ckfResults.size() << " -> : " << timing_time << std::endl;
 
     return ckfResults;
   }
