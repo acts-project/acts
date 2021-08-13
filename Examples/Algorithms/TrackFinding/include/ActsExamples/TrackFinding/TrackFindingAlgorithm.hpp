@@ -56,6 +56,8 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
     TrackFinderFunction findTracks;
     /// CKF measurement selector config
     Acts::MeasurementSelector::Config measurementSelectorCfg;
+    /// Compute shared hit information
+    bool computeSharedHits = false;
   };
 
   /// Constructor of the track finding algorithm
