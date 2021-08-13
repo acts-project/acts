@@ -641,7 +641,7 @@ class CombinatorialKalmanFilter {
           stepper.update(state.stepping,
                          MultiTrajectoryHelpers::freeFiltered(
                              state.options.geoContext, ts),
-                         ts.filteredCovariance());
+                         ts.filtered(), ts.filteredCovariance(), *surface);
           ACTS_VERBOSE("Stepping state is updated with filtered parameter: \n"
                        << ts.filtered().transpose()
                        << " of track state with tip = "
@@ -1047,11 +1047,15 @@ class CombinatorialKalmanFilter {
            std::abs(lastIntersection.intersection.pathLength));
       if (closerToFirstCreatedMeasurement) {
         stepper.update(state.stepping, firstParams,
-                       firstCreatedMeasurement.smoothedCovariance());
+                       firstCreatedMeasurement.smoothed(),
+                       firstCreatedMeasurement.smoothedCovariance(),
+                       firstCreatedMeasurement.referenceSurface());
         reverseDirection = (firstIntersection.intersection.pathLength < 0);
       } else {
         stepper.update(state.stepping, lastParams,
-                       lastCreatedMeasurement.smoothedCovariance());
+                       lastCreatedMeasurement.smoothed(),
+                       lastCreatedMeasurement.smoothedCovariance(),
+                       lastCreatedMeasurement.referenceSurface());
         reverseDirection = (lastIntersection.intersection.pathLength < 0);
       }
       const auto& surface = closerToFirstCreatedMeasurement
