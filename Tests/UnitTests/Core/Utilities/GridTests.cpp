@@ -1018,55 +1018,55 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
 
   // clang-format off
     // 1D case
-    BOOST_CHECK(g1.neighborHoodIndices({{0}}, 1).collect()
+    BOOST_CHECK(g1.neighborHoodIndices({{0}}, 1).collectVector()
                 == bins_t({0, 1}));
-    BOOST_CHECK(g1.neighborHoodIndices({{0}}, 2).collect()
+    BOOST_CHECK(g1.neighborHoodIndices({{0}}, 2).collectVector()
                 == bins_t({0, 1, 2}));
-    BOOST_CHECK(g1.neighborHoodIndices({{1}}, 1).collect()
+    BOOST_CHECK(g1.neighborHoodIndices({{1}}, 1).collectVector()
                 == bins_t({0, 1, 2}));
-    BOOST_CHECK(g1.neighborHoodIndices({{1}}, 3).collect()
+    BOOST_CHECK(g1.neighborHoodIndices({{1}}, 3).collectVector()
                 == bins_t({0, 1, 2, 3, 4}));
-    BOOST_CHECK(g1.neighborHoodIndices({{4}}, 2).collect()
+    BOOST_CHECK(g1.neighborHoodIndices({{4}}, 2).collectVector()
                 == bins_t({2, 3, 4, 5, 6}));
-    BOOST_CHECK(g1.neighborHoodIndices({{9}}, 2).collect()
+    BOOST_CHECK(g1.neighborHoodIndices({{9}}, 2).collectVector()
                 == bins_t({7, 8, 9, 10, 11}));
-    BOOST_CHECK(g1.neighborHoodIndices({{10}}, 2).collect()
+    BOOST_CHECK(g1.neighborHoodIndices({{10}}, 2).collectVector()
                 == bins_t({8, 9, 10, 11}));
-    BOOST_CHECK(g1.neighborHoodIndices({{11}}, 2).collect()
+    BOOST_CHECK(g1.neighborHoodIndices({{11}}, 2).collectVector()
                 == bins_t({9, 10, 11}));
 
     // 2D case
-    BOOST_CHECK(g2.neighborHoodIndices({{0, 0}}, 1).collect()
+    BOOST_CHECK(g2.neighborHoodIndices({{0, 0}}, 1).collectVector()
                 == bins_t({0, 1, 12, 13}));
-    BOOST_CHECK(g2.neighborHoodIndices({{0, 1}}, 1).collect()
+    BOOST_CHECK(g2.neighborHoodIndices({{0, 1}}, 1).collectVector()
                 == bins_t({0, 1, 2, 12, 13, 14}));
-    BOOST_CHECK(g2.neighborHoodIndices({{1, 0}}, 1).collect()
+    BOOST_CHECK(g2.neighborHoodIndices({{1, 0}}, 1).collectVector()
                 == bins_t({0, 1, 12, 13, 24, 25}));
-    BOOST_CHECK(g2.neighborHoodIndices({{1, 1}}, 1).collect()
+    BOOST_CHECK(g2.neighborHoodIndices({{1, 1}}, 1).collectVector()
                 == bins_t({0, 1, 2, 12, 13, 14, 24, 25, 26}));
-    BOOST_CHECK(g2.neighborHoodIndices({{5, 5}}, 1).collect()
+    BOOST_CHECK(g2.neighborHoodIndices({{5, 5}}, 1).collectVector()
                 == bins_t({52, 53, 54, 64, 65, 66, 76, 77, 78}));
-    BOOST_CHECK(g2.neighborHoodIndices({{9, 10}}, 2).collect()
+    BOOST_CHECK(g2.neighborHoodIndices({{9, 10}}, 2).collectVector()
                 == bins_t({92, 93, 94, 95, 104, 105, 106, 107, 116, 117, 118,
                            119, 128, 129, 130, 131, 140, 141, 142, 143}));
 
     // 3D case
-    BOOST_CHECK(g3.neighborHoodIndices({{0, 0, 0}}, 1).collect()
+    BOOST_CHECK(g3.neighborHoodIndices({{0, 0, 0}}, 1).collectVector()
                 == bins_t({0, 1, 12, 13, 144, 145, 156, 157}));
-    BOOST_CHECK(g3.neighborHoodIndices({{0, 0, 1}}, 1).collect()
+    BOOST_CHECK(g3.neighborHoodIndices({{0, 0, 1}}, 1).collectVector()
                 == bins_t({0, 1, 2, 12, 13, 14, 144, 145, 146, 156, 157, 158}));
-    BOOST_CHECK(g3.neighborHoodIndices({{0, 1, 0}}, 1).collect()
+    BOOST_CHECK(g3.neighborHoodIndices({{0, 1, 0}}, 1).collectVector()
                 == bins_t({0, 1, 12, 13, 24, 25, 144, 145, 156, 157, 168, 169}));
-    BOOST_CHECK(g3.neighborHoodIndices({{1, 0, 0}}, 1).collect()
+    BOOST_CHECK(g3.neighborHoodIndices({{1, 0, 0}}, 1).collectVector()
                 == bins_t({0, 1, 12, 13, 144, 145, 156, 157, 288, 289, 300, 301}));
-    BOOST_CHECK(g3.neighborHoodIndices({{0, 1, 1}}, 1).collect()
+    BOOST_CHECK(g3.neighborHoodIndices({{0, 1, 1}}, 1).collectVector()
                 == bins_t({0, 1, 2, 12, 13, 14, 24, 25, 26, 144, 145, 146,
                            156, 157, 158, 168, 169, 170}));
-    BOOST_CHECK(g3.neighborHoodIndices({{1, 1, 1}}, 1).collect()
+    BOOST_CHECK(g3.neighborHoodIndices({{1, 1, 1}}, 1).collectVector()
                 == bins_t({0, 1, 2, 12, 13, 14, 24, 25, 26, 144, 145, 146,
                            156, 157, 158, 168, 169, 170, 288, 289, 290, 300,
                            301, 302, 312, 313, 314}));
-    BOOST_CHECK(g3.neighborHoodIndices({{11, 10, 9}}, 1).collect()
+    BOOST_CHECK(g3.neighborHoodIndices({{11, 10, 9}}, 1).collectVector()
                 == bins_t({1556, 1557, 1558, 1568, 1569, 1570, 1580, 1581,
                            1582, 1700, 1701, 1702, 1712, 1713, 1714, 1724,
                            1725, 1726}));
@@ -1077,13 +1077,13 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
   EAxisClosed d(0.0, 1.0, 10u);
 
   Grid1Closed_t g1Cl(std::make_tuple(std::move(d)));
-  BOOST_CHECK(g1Cl.neighborHoodIndices({{0}}, 1).collect() ==
+  BOOST_CHECK(g1Cl.neighborHoodIndices({{0}}, 1).collectVector() ==
               bins_t({}));  // underflow, makes no sense
-  BOOST_CHECK(g1Cl.neighborHoodIndices({{11}}, 1).collect() ==
+  BOOST_CHECK(g1Cl.neighborHoodIndices({{11}}, 1).collectVector() ==
               bins_t({}));  // overflow, makes no sense
-  BOOST_CHECK(g1Cl.neighborHoodIndices({{1}}, 1).collect() ==
+  BOOST_CHECK(g1Cl.neighborHoodIndices({{1}}, 1).collectVector() ==
               bins_t({10, 1, 2}));  // overflow, makes no sense
-  BOOST_CHECK(g1Cl.neighborHoodIndices({{5}}, 1).collect() ==
+  BOOST_CHECK(g1Cl.neighborHoodIndices({{5}}, 1).collectVector() ==
               bins_t({4, 5, 6}));  // overflow, makes no sense
 
   using Grid2Closed_t = Grid<double, EAxisClosed, EAxisClosed>;
@@ -1093,30 +1093,30 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
   EAxisClosed f(0.0, 1.0, 5u);
   EAxisClosed g(0.0, 1.0, 5u);
   Grid2Closed_t g2Cl(std::make_tuple(std::move(e), std::move(f)));
-  BOOST_CHECK(g2Cl.neighborHoodIndices({{3, 3}}, 1).collect() ==
+  BOOST_CHECK(g2Cl.neighborHoodIndices({{3, 3}}, 1).collectVector() ==
               bins_t({16, 17, 18, 23, 24, 25, 30, 31, 32}));
-  BOOST_CHECK(g2Cl.neighborHoodIndices({{1, 1}}, 1).collect() ==
+  BOOST_CHECK(g2Cl.neighborHoodIndices({{1, 1}}, 1).collectVector() ==
               bins_t({40, 36, 37, 12, 8, 9, 19, 15, 16}));
-  BOOST_CHECK(g2Cl.neighborHoodIndices({{1, 5}}, 1).collect() ==
+  BOOST_CHECK(g2Cl.neighborHoodIndices({{1, 5}}, 1).collectVector() ==
               bins_t({39, 40, 36, 11, 12, 8, 18, 19, 15}));
-  BOOST_CHECK(g2Cl.neighborHoodIndices({{5, 1}}, 1).collect() ==
+  BOOST_CHECK(g2Cl.neighborHoodIndices({{5, 1}}, 1).collectVector() ==
               bins_t({33, 29, 30, 40, 36, 37, 12, 8, 9}));
-  BOOST_CHECK(g2Cl.neighborHoodIndices({{5, 5}}, 1).collect() ==
+  BOOST_CHECK(g2Cl.neighborHoodIndices({{5, 5}}, 1).collectVector() ==
               bins_t({32, 33, 29, 39, 40, 36, 11, 12, 8}));
 
-  BOOST_CHECK(g2Cl.neighborHoodIndices({{3, 3}}, 2).collect() ==
+  BOOST_CHECK(g2Cl.neighborHoodIndices({{3, 3}}, 2).collectVector() ==
               bins_t({8,  9,  10, 11, 12, 15, 16, 17, 18, 19, 22, 23, 24,
                       25, 26, 29, 30, 31, 32, 33, 36, 37, 38, 39, 40}));
-  BOOST_CHECK(g2Cl.neighborHoodIndices({{1, 1}}, 2).collect() ==
+  BOOST_CHECK(g2Cl.neighborHoodIndices({{1, 1}}, 2).collectVector() ==
               bins_t({32, 33, 29, 30, 31, 39, 40, 36, 37, 38, 11, 12, 8,
                       9,  10, 18, 19, 15, 16, 17, 25, 26, 22, 23, 24}));
-  BOOST_CHECK(g2Cl.neighborHoodIndices({{1, 5}}, 2).collect() ==
+  BOOST_CHECK(g2Cl.neighborHoodIndices({{1, 5}}, 2).collectVector() ==
               bins_t({31, 32, 33, 29, 30, 38, 39, 40, 36, 37, 10, 11, 12,
                       8,  9,  17, 18, 19, 15, 16, 24, 25, 26, 22, 23}));
-  BOOST_CHECK(g2Cl.neighborHoodIndices({{5, 1}}, 2).collect() ==
+  BOOST_CHECK(g2Cl.neighborHoodIndices({{5, 1}}, 2).collectVector() ==
               bins_t({25, 26, 22, 23, 24, 32, 33, 29, 30, 31, 39, 40, 36,
                       37, 38, 11, 12, 8,  9,  10, 18, 19, 15, 16, 17}));
-  BOOST_CHECK(g2Cl.neighborHoodIndices({{5, 5}}, 2).collect() ==
+  BOOST_CHECK(g2Cl.neighborHoodIndices({{5, 5}}, 2).collectVector() ==
               bins_t({24, 25, 26, 22, 23, 31, 32, 33, 29, 30, 38, 39, 40,
                       36, 37, 10, 11, 12, 8,  9,  17, 18, 19, 15, 16}));
 
@@ -1158,21 +1158,21 @@ BOOST_AUTO_TEST_CASE(closestPoints) {
 
   // clang-format off
     // 1D case
-    BOOST_CHECK(g1.closestPointsIndices(Point({{0.52}})).collect()
+    BOOST_CHECK(g1.closestPointsIndices(Point({{0.52}})).collectVector()
                 == bins_t({6, 7}));
-    BOOST_CHECK(g1.closestPointsIndices(Point({{0.98}})).collect()
+    BOOST_CHECK(g1.closestPointsIndices(Point({{0.98}})).collectVector()
                 == bins_t({10, 11}));
 
     // 2D case
-    BOOST_CHECK(g2.closestPointsIndices(Point({{0.52, 0.08}})).collect()
+    BOOST_CHECK(g2.closestPointsIndices(Point({{0.52, 0.08}})).collectVector()
                 == bins_t({43, 44, 50, 51}));
-    BOOST_CHECK(g2.closestPointsIndices(Point({{0.05, 0.08}})).collect()
+    BOOST_CHECK(g2.closestPointsIndices(Point({{0.05, 0.08}})).collectVector()
                 == bins_t({8, 9, 15, 16}));
 
     // 3D case
-    BOOST_CHECK(g3.closestPointsIndices(Point({{0.23, 0.13, 0.61}})).collect()
+    BOOST_CHECK(g3.closestPointsIndices(Point({{0.23, 0.13, 0.61}})).collectVector()
                 == bins_t({112, 113, 117, 118, 147, 148, 152, 153}));
-    BOOST_CHECK(g3.closestPointsIndices(Point({{0.52, 0.35, 0.71}})).collect()
+    BOOST_CHECK(g3.closestPointsIndices(Point({{0.52, 0.35, 0.71}})).collectVector()
                 == bins_t({223, 224, 228, 229, 258, 259, 263, 264}));
 
     using EAxisClosed = Axis<AxisType::Equidistant, AxisBoundaryType::Closed>;
@@ -1186,21 +1186,21 @@ BOOST_AUTO_TEST_CASE(closestPoints) {
     Grid2Cl_t g2Cl(std::make_tuple(std::move(aCl), std::move(bCl)));
 
     // 1D case
-    BOOST_CHECK(g1Cl.closestPointsIndices(Point({{0.52}})).collect()
+    BOOST_CHECK(g1Cl.closestPointsIndices(Point({{0.52}})).collectVector()
                 == bins_t({6, 7}));
-    BOOST_CHECK(g1Cl.closestPointsIndices(Point({{0.98}})).collect()
+    BOOST_CHECK(g1Cl.closestPointsIndices(Point({{0.98}})).collectVector()
                 == bins_t({10, 1}));
 
     // 2D case
-    BOOST_CHECK(g2Cl.closestPointsIndices(Point({{0.52, 0.08}})).collect()
+    BOOST_CHECK(g2Cl.closestPointsIndices(Point({{0.52, 0.08}})).collectVector()
                 == bins_t({43, 44, 50, 51}));
-    BOOST_CHECK(g2Cl.closestPointsIndices(Point({{0.52, 0.68}})).collect()
+    BOOST_CHECK(g2Cl.closestPointsIndices(Point({{0.52, 0.68}})).collectVector()
                 == bins_t({46, 47, 53, 54}));
-    BOOST_CHECK(g2Cl.closestPointsIndices(Point({{0.52, 0.88}})).collect()
+    BOOST_CHECK(g2Cl.closestPointsIndices(Point({{0.52, 0.88}})).collectVector()
                 == bins_t({47, 43, 54, 50}));
-    BOOST_CHECK(g2Cl.closestPointsIndices(Point({{0.05, 0.08}})).collect()
+    BOOST_CHECK(g2Cl.closestPointsIndices(Point({{0.05, 0.08}})).collectVector()
                 == bins_t({8, 9, 15, 16}));
-    BOOST_CHECK(g2Cl.closestPointsIndices(Point({{0.9, 0.95}})).collect()
+    BOOST_CHECK(g2Cl.closestPointsIndices(Point({{0.9, 0.95}})).collectVector()
                 == bins_t({75, 71, 12, 8}));
 
     // @TODO: 3D checks would also be nice
@@ -1217,23 +1217,23 @@ BOOST_AUTO_TEST_CASE(closestPoints) {
     Grid2Op_t g2Op(std::make_tuple(std::move(aOp), std::move(bOp)));
 
     // 1D case
-    BOOST_CHECK(g1Op.closestPointsIndices(Point({{0.52}})).collect()
+    BOOST_CHECK(g1Op.closestPointsIndices(Point({{0.52}})).collectVector()
                 == bins_t({6, 7}));
-    BOOST_CHECK(g1Op.closestPointsIndices(Point({{0.98}})).collect()
+    BOOST_CHECK(g1Op.closestPointsIndices(Point({{0.98}})).collectVector()
                 == bins_t({10}));
-    BOOST_CHECK(g1Op.closestPointsIndices(Point({{0.88}})).collect()
+    BOOST_CHECK(g1Op.closestPointsIndices(Point({{0.88}})).collectVector()
                 == bins_t({9, 10}));
 
     // 2D case
-    BOOST_CHECK(g2Op.closestPointsIndices(Point({{0.52, 0.08}})).collect()
+    BOOST_CHECK(g2Op.closestPointsIndices(Point({{0.52, 0.08}})).collectVector()
                 == bins_t({43, 44, 50, 51}));
-    BOOST_CHECK(g2Op.closestPointsIndices(Point({{0.52, 0.68}})).collect()
+    BOOST_CHECK(g2Op.closestPointsIndices(Point({{0.52, 0.68}})).collectVector()
                 == bins_t({46, 47, 53, 54}));
-    BOOST_CHECK(g2Op.closestPointsIndices(Point({{0.52, 0.88}})).collect()
+    BOOST_CHECK(g2Op.closestPointsIndices(Point({{0.52, 0.88}})).collectVector()
                 == bins_t({47, 54}));
-    BOOST_CHECK(g2Op.closestPointsIndices(Point({{0.05, 0.1}})).collect()
+    BOOST_CHECK(g2Op.closestPointsIndices(Point({{0.05, 0.1}})).collectVector()
                 == bins_t({8, 9, 15, 16}));
-    BOOST_CHECK(g2Op.closestPointsIndices(Point({{0.95, 0.95}})).collect()
+    BOOST_CHECK(g2Op.closestPointsIndices(Point({{0.95, 0.95}})).collectVector()
                 == bins_t({75}));
     
     // @TODO: 3D checks would also be nice
