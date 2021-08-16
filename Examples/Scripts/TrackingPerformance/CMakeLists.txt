@@ -1,5 +1,5 @@
 add_executable(ActsExampleResidualsAndPulls ResidualsAndPulls.cpp)
-target_link_libraries(ActsExampleResidualsAndPulls ROOT::Core ROOT::Hist ROOT::Tree ROOT::TreePlayer)
+target_link_libraries(ActsExampleResidualsAndPulls ROOT::Core ROOT::Hist ROOT::Tree ROOT::TreePlayer Boost::program_options)
 
 install(
   TARGETS

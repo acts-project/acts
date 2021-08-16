@@ -24,19 +24,29 @@
 #include <TProfile2D.h>
 #include <TStyle.h>
 #include <TTree.h>
+#include <Terror.h>
 
 #include "CommonUtils.h"
 #include "TreeReader.h"
 
 using namespace ROOT;
 
-// (loc1, phi, theta, q/p, t) at all track states from root file produced by the
-// RootTrajectoryStatesWriter
-//
-void boundParamResolution(const std::string& inFile,
-                          const std::string& treeName,
-                          const std::string& outFile,
-                          const std::string& saveAs = "") {
+/// Plot the bound parameter resoltuions
+///
+/// (loc1, phi, theta, q/p, t) at all track states from root file produced by
+/// the RootTrajectoryStatesWriter
+///
+/// @param inFile the input root file
+/// @param treeNAme the input tree name (default: 'trackstates)
+/// @param outFile the output root file
+/// @param pTypes the track parameter types (prd, flt, smt)
+/// @param saveAs the plot saving type
+int boundParamResolution(const std::string& inFile, const std::string& treeName,
+                         const std::string& outFile, bool predicted = true,
+                         bool filtered = true, bool smoothed = true,
+                         bool fitSmoothed = true,
+                         const std::string& saveAs = "") {
+  // Some style options
   gStyle->SetOptFit(0000);
   gStyle->SetOptStat(0000);
   gStyle->SetPadLeftMargin(0.20);
@@ -44,8 +54,18 @@ void boundParamResolution(const std::string& inFile,
   gStyle->SetPadTopMargin(0.1);
   gStyle->SetPadBottomMargin(0.15);
 
-  // Pull range
-  double pullRange = 7;
+  // Pull range, residual ranges are automatically determined
+  double pullRange = 6;
+  //
+  // Residual ranges should be largest in predicted and smallest in smoothed,
+  // hence reverse the order.
+  //
+  std::string range_tag = "smt";
+  if (predicted) {
+    range_tag = "prt";
+  } else if (filtered) {
+    range_tag = "flt";
+  }
 
   // Section 0: file handling ---------------------------------------------
   //
@@ -53,8 +73,20 @@ void boundParamResolution(const std::string& inFile,
   // Create output root file
   std::cout << "Opening file: " << inFile << std::endl;
   TFile* file = TFile::Open(inFile.c_str(), "read");
+
+  // Bail out if no tree was found
+  if (file == nullptr) {
+    return -1;
+  }
+
   std::cout << "Reading tree: " << treeName << std::endl;
   TTree* tree = (TTree*)file->Get(treeName.c_str());
+
+  // Bail out if no tree was found
+  if (tree == nullptr) {
+    return -2;
+  }
+
   TFile* out = TFile::Open(outFile.c_str(), "recreate");
   out->cd();
 
@@ -75,7 +107,18 @@ void boundParamResolution(const std::string& inFile,
   h2_volID_layID->Write();
   // Geometry size
   geometryCanvas->cd(2);
-  tree->Draw("sqrt(g_x_smt*g_x_smt+g_y_smt*g_y_smt):g_z_smt>>geo_dim");
+  std::string rz_draw_string = "(sqrt(g_x_";
+  rz_draw_string += range_tag;
+  rz_draw_string += "*g_x_";
+  rz_draw_string += range_tag;
+  rz_draw_string += "+g_y_";
+  rz_draw_string += range_tag;
+  rz_draw_string += "*g_y_";
+  rz_draw_string += range_tag;
+  rz_draw_string += ")):g_z_";
+  rz_draw_string += range_tag;
+  rz_draw_string += ">>geo_dim";
+  tree->Draw(rz_draw_string.c_str());
   auto h2_geo_dim = dynamic_cast<TH2F*>(out->Get("geo_dim"));
   setHistStyle(h2_geo_dim, 2);
   float detectorZ = 1.15 * h2_geo_dim->GetXaxis()->GetXmax();
@@ -111,14 +154,18 @@ void boundParamResolution(const std::string& inFile,
   // Helper for assigning branches to the input tree
   TrackStatesReader tsReader(tree, false);
 
+  // Section 3: Histogram booking ...
 
-  // Section 3: Histogram booking
   TCanvas* rangeCanvas =
       new TCanvas("rangeCanvas", "Range Estimation", 10, 10, 900, 600);
   rangeCanvas->Divide(3, 2);
-  std::vector<std::string> res_smts = {"res_eLOC0_smt", "res_eLOC1_smt",
-                                       "res_ePHI_smt",  "res_eTHETA_smt",
-                                       "res_eQOP_smt",  "res_eT_smt"};
+
+  std::vector<std::string> res_ranges = {std::string("res_eLOC0_") + range_tag,
+                                         std::string("res_eLOC1_") + range_tag,
+                                         std::string("res_ePHI_") + range_tag,
+                                         std::string("res_eTHETA_") + range_tag,
+                                         std::string("res_eQOP_") + range_tag,
+                                         std::string("res_eT_") + range_tag};
 
   /// Helper method to make a volLayId string for identification & cut
   ///
@@ -146,9 +193,9 @@ void boundParamResolution(const std::string& inFile,
     std::array<float, 6> ranges = {0., 0., 0., 0., 0., 0.};
     for (unsigned int ir = 0; ir < 6; ++ir) {
       rangeCanvas->cd(ir + 1);
-      std::string drawString = res_smts[ir] + ">>";
+      std::string drawString = res_ranges[ir] + ">>";
       std::string histString =
-          vlIdCut[0] + std::string("range_") + res_smts[ir];
+          vlIdCut[0] + std::string("range_") + res_ranges[ir];
       tree->Draw((drawString + histString).c_str(), vlIdCut[1].c_str());
       auto h1_range = dynamic_cast<TH1F*>(out->Get(histString.c_str()));
       h1_range->Write();
@@ -178,67 +225,81 @@ void boundParamResolution(const std::string& inFile,
 
   for (unsigned int ipar = 0; ipar < paramNames.size(); ++ipar) {
     const auto& par = paramNames[ipar];
-    p2d_res_zr_prt[ipar] =
-        new TProfile2D(Form("all_prof_res_prt_%s", par.c_str()),
-                       Form("residual profile of %s", par.c_str()), 100,
-                       -detectorZ, detectorZ, 50, 0., detectorR);
-    p2d_res_zr_flt[ipar] =
-        new TProfile2D(Form("all_prof_res_flt_%s", par.c_str()),
-                       Form("residual profile of %s", par.c_str()), 100,
-                       -detectorZ, detectorZ, 50, 0., detectorR);
-    p2d_res_zr_smt[ipar] =
-        new TProfile2D(Form("all_prof_res_smt_%s", par.c_str()),
-                       Form("residual profile of %s", par.c_str()), 100,
-                       -detectorZ, detectorZ, 50, 0., detectorR);
 
-    p2d_pull_zr_prt[ipar] =
-        new TProfile2D(Form("all_prof_pull_prt_%s", par.c_str()),
-                       Form("pull profile of %s", par.c_str()), 100,
-                       -detectorZ, detectorZ, 50, 0., detectorR);
-    p2d_pull_zr_flt[ipar] =
-        new TProfile2D(Form("all_prof_pull_flt_%s", par.c_str()),
-                       Form("pull profile of %s", par.c_str()), 100,
-                       -detectorZ, detectorZ, 50, 0., detectorR);
-    p2d_pull_zr_smt[ipar] =
-        new TProfile2D(Form("all_prof_pull_smt_%s", par.c_str()),
-                       Form("pull profile of %s", par.c_str()), 100,
-                       -detectorZ, detectorZ, 50, 0., detectorR);
+    if (predicted) {
+      p2d_res_zr_prt[ipar] =
+          new TProfile2D(Form("all_prof_res_prt_%s", par.c_str()),
+                         Form("residual profile of %s", par.c_str()), 100,
+                         -detectorZ, detectorZ, 50, 0., detectorR);
 
-    p2d_res_zr_prt[ipar]->SetErrorOption("s");
-    p2d_res_zr_flt[ipar]->SetErrorOption("s");
-    p2d_res_zr_smt[ipar]->SetErrorOption("s");
-    p2d_pull_zr_prt[ipar]->SetErrorOption("s");
-    p2d_pull_zr_flt[ipar]->SetErrorOption("s");
-    p2d_pull_zr_smt[ipar]->SetErrorOption("s");
+      p2d_pull_zr_prt[ipar] =
+          new TProfile2D(Form("all_prof_pull_prt_%s", par.c_str()),
+                         Form("pull profile of %s", par.c_str()), 100,
+                         -detectorZ, detectorZ, 50, 0., detectorR);
 
-    p2d_res_zr_prt[ipar]->GetXaxis()->SetTitle("z [mm]");
-    p2d_res_zr_prt[ipar]->GetYaxis()->SetTitle("R [mm]");
-    p2d_res_zr_prt[ipar]->GetZaxis()->SetTitle(Form("r_{%s}", par.c_str()));
-    p2d_res_zr_flt[ipar]->GetXaxis()->SetTitle("z [mm]");
-    p2d_res_zr_flt[ipar]->GetYaxis()->SetTitle("R [mm]");
-    p2d_res_zr_flt[ipar]->GetZaxis()->SetTitle(Form("r_{%s}", par.c_str()));
-    p2d_res_zr_smt[ipar]->GetXaxis()->SetTitle("z [mm]");
-    p2d_res_zr_smt[ipar]->GetYaxis()->SetTitle("R [mm]");
-    p2d_res_zr_smt[ipar]->GetZaxis()->SetTitle(Form("r_{%s}", par.c_str()));
+      p2d_res_zr_prt[ipar]->SetErrorOption("s");
+      p2d_res_zr_prt[ipar]->GetXaxis()->SetTitle("z [mm]");
+      p2d_res_zr_prt[ipar]->GetYaxis()->SetTitle("R [mm]");
+      p2d_res_zr_prt[ipar]->GetZaxis()->SetTitle(Form("r_{%s}", par.c_str()));
+      setHistStyle(p2d_res_zr_prt[ipar], 1);
 
-    p2d_pull_zr_prt[ipar]->GetXaxis()->SetTitle("z [mm]");
-    p2d_pull_zr_prt[ipar]->GetYaxis()->SetTitle("R [mm]");
-    p2d_pull_zr_prt[ipar]->GetZaxis()->SetTitle(Form("pull_{%s}", par.c_str()));
-    p2d_pull_zr_flt[ipar]->GetXaxis()->SetTitle("z [mm]");
-    p2d_pull_zr_flt[ipar]->GetYaxis()->SetTitle("R [mm]");
-    p2d_pull_zr_prt[ipar]->GetZaxis()->SetTitle(Form("pull_{%s}", par.c_str()));
-    p2d_pull_zr_smt[ipar]->GetXaxis()->SetTitle("z [mm]");
-    p2d_pull_zr_smt[ipar]->GetYaxis()->SetTitle("R [mm]");
-    p2d_pull_zr_prt[ipar]->GetZaxis()->SetTitle(Form("pull_{%s}", par.c_str()));
+      p2d_pull_zr_prt[ipar]->SetErrorOption("s");
+      p2d_pull_zr_prt[ipar]->GetXaxis()->SetTitle("z [mm]");
+      p2d_pull_zr_prt[ipar]->GetYaxis()->SetTitle("R [mm]");
+      p2d_pull_zr_prt[ipar]->GetZaxis()->SetTitle(
+          Form("pull_{%s}", par.c_str()));
+      setHistStyle(p2d_pull_zr_prt[ipar], 1);
+    }
 
-    // set style
-    setHistStyle(p2d_res_zr_prt[ipar], 1);
-    setHistStyle(p2d_res_zr_flt[ipar], 2);
-    setHistStyle(p2d_res_zr_smt[ipar], 4);
+    if (filtered) {
+      p2d_res_zr_flt[ipar] =
+          new TProfile2D(Form("all_prof_res_flt_%s", par.c_str()),
+                         Form("residual profile of %s", par.c_str()), 100,
+                         -detectorZ, detectorZ, 50, 0., detectorR);
+      p2d_pull_zr_flt[ipar] =
+          new TProfile2D(Form("all_prof_pull_flt_%s", par.c_str()),
+                         Form("pull profile of %s", par.c_str()), 100,
+                         -detectorZ, detectorZ, 50, 0., detectorR);
 
-    setHistStyle(p2d_pull_zr_prt[ipar], 1);
-    setHistStyle(p2d_pull_zr_flt[ipar], 2);
-    setHistStyle(p2d_pull_zr_smt[ipar], 4);
+      p2d_res_zr_flt[ipar]->SetErrorOption("s");
+      p2d_res_zr_flt[ipar]->GetXaxis()->SetTitle("z [mm]");
+      p2d_res_zr_flt[ipar]->GetYaxis()->SetTitle("R [mm]");
+      p2d_res_zr_flt[ipar]->GetZaxis()->SetTitle(Form("r_{%s}", par.c_str()));
+      setHistStyle(p2d_res_zr_flt[ipar], 2);
+
+      p2d_pull_zr_flt[ipar]->SetErrorOption("s");
+      p2d_pull_zr_flt[ipar]->GetXaxis()->SetTitle("z [mm]");
+      p2d_pull_zr_flt[ipar]->GetYaxis()->SetTitle("R [mm]");
+      p2d_pull_zr_flt[ipar]->GetZaxis()->SetTitle(
+          Form("pull_{%s}", par.c_str()));
+      setHistStyle(p2d_pull_zr_flt[ipar], 2);
+    }
+
+    if (smoothed) {
+      p2d_res_zr_smt[ipar] =
+          new TProfile2D(Form("all_prof_res_smt_%s", par.c_str()),
+                         Form("residual profile of %s", par.c_str()), 100,
+                         -detectorZ, detectorZ, 50, 0., detectorR);
+
+      p2d_pull_zr_smt[ipar] =
+          new TProfile2D(Form("all_prof_pull_smt_%s", par.c_str()),
+                         Form("pull profile of %s", par.c_str()), 100,
+                         -detectorZ, detectorZ, 50, 0., detectorR);
+
+      p2d_res_zr_smt[ipar]->SetErrorOption("s");
+      p2d_pull_zr_smt[ipar]->SetErrorOption("s");
+
+      p2d_res_zr_smt[ipar]->GetXaxis()->SetTitle("z [mm]");
+      p2d_res_zr_smt[ipar]->GetYaxis()->SetTitle("R [mm]");
+      p2d_res_zr_smt[ipar]->GetZaxis()->SetTitle(Form("r_{%s}", par.c_str()));
+      setHistStyle(p2d_res_zr_smt[ipar], 4);
+
+      p2d_pull_zr_smt[ipar]->GetXaxis()->SetTitle("z [mm]");
+      p2d_pull_zr_smt[ipar]->GetYaxis()->SetTitle("R [mm]");
+      p2d_pull_zr_smt[ipar]->GetZaxis()->SetTitle(
+          Form("pull_{%s}", par.c_str()));
+      setHistStyle(p2d_pull_zr_smt[ipar], 4);
+    }
   }
 
   // Resiudal / Pull histograms
@@ -267,53 +328,68 @@ void boundParamResolution(const std::string& inFile,
       for (const auto& [par, resRange] : paramResidualRange) {
         // histogram creation
         std::string id_par = vlIdCut[0] + par;
-        // residual hists
-        res_prt[id_par] = new TH1F(
-            Form((vlIdCut[0] + std::string("res_prt_%s")).c_str(), par.c_str()),
-            Form("residual of %s", par.c_str()), 100, -1 * resRange, resRange);
-        res_flt[id_par] = new TH1F(
-            Form((vlIdCut[0] + std::string("res_flt_%s")).c_str(), par.c_str()),
-            Form("residual of %s", par.c_str()), 100, -1 * resRange, resRange);
-        res_smt[id_par] = new TH1F(
-            Form((vlIdCut[0] + std::string("res_smt_%s")).c_str(), par.c_str()),
-            Form("residual of %s", par.c_str()), 100, -1 * resRange, resRange);
 
-        // pull hists
-        pull_prt[id_par] = new TH1F(
-            Form((vlIdCut[0] + std::string("pull_prt_%s")).c_str(),
-                 par.c_str()),
-            Form("pull of %s", par.c_str()), 100, -1 * pullRange, pullRange);
-        pull_flt[id_par] = new TH1F(
-            Form((vlIdCut[0] + std::string("pull_flt_%s")).c_str(),
-                 par.c_str()),
-            Form("pull of %s", par.c_str()), 100, -1 * pullRange, pullRange);
-        pull_smt[id_par] = new TH1F(
-            Form((vlIdCut[0] + std::string("pull_smt_%s")).c_str(),
-                 par.c_str()),
-            Form("pull of %s", par.c_str()), 100, -1 * pullRange, pullRange);
+        if (predicted) {
+          res_prt[id_par] =
+              new TH1F(Form((vlIdCut[0] + std::string("res_prt_%s")).c_str(),
+                            par.c_str()),
+                       Form("residual of %s", par.c_str()), 100, -1 * resRange,
+                       resRange);
+          res_prt[id_par]->GetXaxis()->SetTitle(Form("r_{%s}", par.c_str()));
+          res_prt[id_par]->GetYaxis()->SetTitle("Entries");
+          setHistStyle(res_prt[id_par], 1);
 
-        res_prt[id_par]->GetXaxis()->SetTitle(Form("r_{%s}", par.c_str()));
-        res_prt[id_par]->GetYaxis()->SetTitle("Entries");
-        res_flt[id_par]->GetXaxis()->SetTitle(Form("r_{%s}", par.c_str()));
-        res_flt[id_par]->GetYaxis()->SetTitle("Entries");
-        res_smt[id_par]->GetXaxis()->SetTitle(Form("r_{%s}", par.c_str()));
-        res_smt[id_par]->GetYaxis()->SetTitle("Entries");
+          pull_prt[id_par] = new TH1F(
+              Form((vlIdCut[0] + std::string("pull_prt_%s")).c_str(),
+                   par.c_str()),
+              Form("pull of %s", par.c_str()), 100, -1 * pullRange, pullRange);
+          pull_prt[id_par]->GetXaxis()->SetTitle(
+              Form("pull_{%s}", par.c_str()));
+          pull_prt[id_par]->GetYaxis()->SetTitle("Entries");
+          setHistStyle(pull_smt[id_par], 4);
+        }
 
-        pull_prt[id_par]->GetXaxis()->SetTitle(Form("pull_{%s}", par.c_str()));
-        pull_prt[id_par]->GetYaxis()->SetTitle("Entries");
-        pull_flt[id_par]->GetXaxis()->SetTitle(Form("pull_{%s}", par.c_str()));
-        pull_flt[id_par]->GetYaxis()->SetTitle("Entries");
-        pull_smt[id_par]->GetXaxis()->SetTitle(Form("pull_{%s}", par.c_str()));
-        pull_smt[id_par]->GetYaxis()->SetTitle("Entries");
+        if (filtered) {
+          res_flt[id_par] =
+              new TH1F(Form((vlIdCut[0] + std::string("res_flt_%s")).c_str(),
+                            par.c_str()),
+                       Form("residual of %s", par.c_str()), 100, -1 * resRange,
+                       resRange);
+          res_flt[id_par]->GetXaxis()->SetTitle(Form("r_{%s}", par.c_str()));
+          res_flt[id_par]->GetYaxis()->SetTitle("Entries");
+          setHistStyle(res_flt[id_par], 2);
 
-        // set style
-        setHistStyle(res_prt[id_par], 1);
-        setHistStyle(res_flt[id_par], 2);
-        setHistStyle(res_smt[id_par], 4);
+          pull_flt[id_par] = new TH1F(
+              Form((vlIdCut[0] + std::string("pull_flt_%s")).c_str(),
+                   par.c_str()),
+              Form("pull of %s", par.c_str()), 100, -1 * pullRange, pullRange);
+          pull_flt[id_par]->GetXaxis()->SetTitle(
+              Form("pull_{%s}", par.c_str()));
+          pull_flt[id_par]->GetYaxis()->SetTitle("Entries");
+          setHistStyle(pull_flt[id_par], 2);
+        }
 
-        setHistStyle(pull_prt[id_par], 1);
-        setHistStyle(pull_flt[id_par], 2);
-        setHistStyle(pull_smt[id_par], 4);
+        if (smoothed) {
+          res_smt[id_par] =
+              new TH1F(Form((vlIdCut[0] + std::string("res_smt_%s")).c_str(),
+                            par.c_str()),
+                       Form("residual of %s", par.c_str()), 100, -1 * resRange,
+                       resRange);
+
+          res_smt[id_par]->GetXaxis()->SetTitle(Form("r_{%s}", par.c_str()));
+          res_smt[id_par]->GetYaxis()->SetTitle("Entries");
+          setHistStyle(res_smt[id_par], 4);
+
+          pull_smt[id_par] = new TH1F(
+              Form((vlIdCut[0] + std::string("pull_smt_%s")).c_str(),
+                   par.c_str()),
+              Form("pull of %s", par.c_str()), 100, -1 * pullRange, pullRange);
+
+          pull_smt[id_par]->GetXaxis()->SetTitle(
+              Form("pull_{%s}", par.c_str()));
+          pull_smt[id_par]->GetYaxis()->SetTitle("Entries");
+          setHistStyle(pull_smt[id_par], 1);
+        }
       }
     }
   }
@@ -327,7 +403,7 @@ void boundParamResolution(const std::string& inFile,
 
     for (unsigned int i = 0; i < tsReader.nMeasurements; i++) {
       // global profile filling
-      if (tsReader.predicted->at(i)) {
+      if (predicted and tsReader.predicted->at(i)) {
         float x_prt = tsReader.g_x_prt->at(i);
         float y_prt = tsReader.g_y_prt->at(i);
         float r_prt = std::sqrt(x_prt * x_prt + y_prt * y_prt);
@@ -345,7 +421,7 @@ void boundParamResolution(const std::string& inFile,
         p2d_pull_zr_prt[4]->Fill(z_prt, r_prt, tsReader.pull_QOP_prt->at(i));
         p2d_pull_zr_prt[5]->Fill(z_prt, r_prt, tsReader.pull_T_prt->at(i));
       }
-      if (tsReader.filtered->at(i)) {
+      if (filtered and tsReader.filtered->at(i)) {
         float x_flt = tsReader.g_x_flt->at(i);
         float y_flt = tsReader.g_y_flt->at(i);
         float r_flt = std::sqrt(x_flt * x_flt + y_flt * y_flt);
@@ -363,7 +439,7 @@ void boundParamResolution(const std::string& inFile,
         p2d_pull_zr_flt[4]->Fill(z_flt, r_flt, tsReader.pull_QOP_flt->at(i));
         p2d_pull_zr_flt[5]->Fill(z_flt, r_flt, tsReader.pull_T_flt->at(i));
       }
-      if (tsReader.smoothed->at(i)) {
+      if (smoothed and tsReader.smoothed->at(i)) {
         float x_smt = tsReader.g_x_smt->at(i);
         float y_smt = tsReader.g_y_smt->at(i);
         float r_smt = std::sqrt(x_smt * x_smt + y_smt * y_smt);
@@ -392,47 +468,56 @@ void boundParamResolution(const std::string& inFile,
       for (const auto& fid : fillIds) {
         auto vlID = volLayIdCut(fid[0], fid[1])[0];
         // Fill predicated parameters
-        if (tsReader.predicted->at(i)) {
+        if (predicted and tsReader.predicted->at(i)) {
           res_prt[vlID + paramNames[0]]->Fill(tsReader.res_LOC0_prt->at(i), 1);
           res_prt[vlID + paramNames[1]]->Fill(tsReader.res_LOC1_prt->at(i), 1);
           res_prt[vlID + paramNames[2]]->Fill(tsReader.res_PHI_prt->at(i), 1);
           res_prt[vlID + paramNames[3]]->Fill(tsReader.res_THETA_prt->at(i), 1);
           res_prt[vlID + paramNames[4]]->Fill(tsReader.res_QOP_prt->at(i), 1);
           res_prt[vlID + paramNames[5]]->Fill(tsReader.res_T_prt->at(i), 1);
-          pull_prt[vlID + paramNames[0]]->Fill(tsReader.pull_LOC0_prt->at(i), 1);
-          pull_prt[vlID + paramNames[1]]->Fill(tsReader.pull_LOC1_prt->at(i), 1);
+          pull_prt[vlID + paramNames[0]]->Fill(tsReader.pull_LOC0_prt->at(i),
+                                               1);
+          pull_prt[vlID + paramNames[1]]->Fill(tsReader.pull_LOC1_prt->at(i),
+                                               1);
           pull_prt[vlID + paramNames[2]]->Fill(tsReader.pull_PHI_prt->at(i), 1);
-          pull_prt[vlID + paramNames[3]]->Fill(tsReader.pull_THETA_prt->at(i), 1);
+          pull_prt[vlID + paramNames[3]]->Fill(tsReader.pull_THETA_prt->at(i),
+                                               1);
           pull_prt[vlID + paramNames[4]]->Fill(tsReader.pull_QOP_prt->at(i), 1);
           pull_prt[vlID + paramNames[5]]->Fill(tsReader.pull_T_prt->at(i), 1);
         }
         // Fill filtered parameters
-        if (tsReader.filtered->at(i)) {
+        if (filtered and tsReader.filtered->at(i)) {
           res_flt[vlID + paramNames[0]]->Fill(tsReader.res_LOC0_flt->at(i), 1);
           res_flt[vlID + paramNames[1]]->Fill(tsReader.res_LOC1_flt->at(i), 1);
           res_flt[vlID + paramNames[2]]->Fill(tsReader.res_PHI_flt->at(i), 1);
           res_flt[vlID + paramNames[3]]->Fill(tsReader.res_THETA_flt->at(i), 1);
           res_flt[vlID + paramNames[4]]->Fill(tsReader.res_QOP_flt->at(i), 1);
           res_flt[vlID + paramNames[5]]->Fill(tsReader.res_T_flt->at(i), 1);
-          pull_flt[vlID + paramNames[0]]->Fill(tsReader.pull_LOC0_flt->at(i), 1);
-          pull_flt[vlID + paramNames[1]]->Fill(tsReader.pull_LOC1_flt->at(i), 1);
+          pull_flt[vlID + paramNames[0]]->Fill(tsReader.pull_LOC0_flt->at(i),
+                                               1);
+          pull_flt[vlID + paramNames[1]]->Fill(tsReader.pull_LOC1_flt->at(i),
+                                               1);
           pull_flt[vlID + paramNames[2]]->Fill(tsReader.pull_PHI_flt->at(i), 1);
-          pull_flt[vlID + paramNames[3]]->Fill(tsReader.pull_THETA_flt->at(i), 1);
+          pull_flt[vlID + paramNames[3]]->Fill(tsReader.pull_THETA_flt->at(i),
+                                               1);
           pull_flt[vlID + paramNames[4]]->Fill(tsReader.pull_QOP_flt->at(i), 1);
           pull_flt[vlID + paramNames[5]]->Fill(tsReader.pull_T_flt->at(i), 1);
         }
         // Fill smoothed parameters
-        if (tsReader.smoothed->at(i)) {
+        if (smoothed and tsReader.smoothed->at(i)) {
           res_smt[vlID + paramNames[0]]->Fill(tsReader.res_LOC0_smt->at(i), 1);
           res_smt[vlID + paramNames[1]]->Fill(tsReader.res_LOC1_smt->at(i), 1);
           res_smt[vlID + paramNames[2]]->Fill(tsReader.res_PHI_smt->at(i), 1);
           res_smt[vlID + paramNames[3]]->Fill(tsReader.res_THETA_smt->at(i), 1);
           res_smt[vlID + paramNames[4]]->Fill(tsReader.res_QOP_smt->at(i), 1);
           res_smt[vlID + paramNames[5]]->Fill(tsReader.res_T_smt->at(i), 1);
-          pull_smt[vlID + paramNames[0]]->Fill(tsReader.pull_LOC0_smt->at(i), 1);
-          pull_smt[vlID + paramNames[1]]->Fill(tsReader.pull_LOC1_smt->at(i), 1);
+          pull_smt[vlID + paramNames[0]]->Fill(tsReader.pull_LOC0_smt->at(i),
+                                               1);
+          pull_smt[vlID + paramNames[1]]->Fill(tsReader.pull_LOC1_smt->at(i),
+                                               1);
           pull_smt[vlID + paramNames[2]]->Fill(tsReader.pull_PHI_smt->at(i), 1);
-          pull_smt[vlID + paramNames[3]]->Fill(tsReader.pull_THETA_smt->at(i), 1);
+          pull_smt[vlID + paramNames[3]]->Fill(tsReader.pull_THETA_smt->at(i),
+                                               1);
           pull_smt[vlID + paramNames[4]]->Fill(tsReader.pull_QOP_smt->at(i), 1);
           pull_smt[vlID + paramNames[5]]->Fill(tsReader.pull_T_smt->at(i), 1);
         }
@@ -463,7 +548,8 @@ void boundParamResolution(const std::string& inFile,
       if (res_pull == "pull") {
         profiles[ipar]->GetZaxis()->SetRangeUser(-1. * pullRange, pullRange);
       }
-      adaptColorPalette(profiles[ipar], -1. * pullRange, pullRange, 0., 0.25, 104);
+      adaptColorPalette(profiles[ipar], -1. * pullRange, pullRange, 0., 0.25,
+                        104);
       profiles[ipar]->Draw("colz");
       profiles[ipar]->Write();
     }
@@ -517,12 +603,18 @@ void boundParamResolution(const std::string& inFile,
   };
 
   // Plotting profiles: res/pulls
-  plotProfiles(p2d_res_zr_prt, "res", "prt");
-  plotProfiles(p2d_res_zr_flt, "res", "flt");
-  plotProfiles(p2d_res_zr_smt, "res", "smt");
-  plotProfiles(p2d_pull_zr_prt, "pull", "prt");
-  plotProfiles(p2d_pull_zr_flt, "pull", "flt");
-  plotProfiles(p2d_pull_zr_smt, "pull", "smt");
+  if (predicted) {
+    plotProfiles(p2d_res_zr_prt, "res", "prt");
+    plotProfiles(p2d_pull_zr_prt, "pull", "prt");
+  }
+  if (filtered) {
+    plotProfiles(p2d_res_zr_flt, "res", "flt");
+    plotProfiles(p2d_pull_zr_flt, "pull", "flt");
+  }
+  if (smoothed) {
+    plotProfiles(p2d_res_zr_smt, "res", "smt");
+    plotProfiles(p2d_pull_zr_smt, "pull", "smt");
+  }
 
   // Plotting residual
   TCanvas* residuals =
@@ -539,28 +631,32 @@ void boundParamResolution(const std::string& inFile,
       // Residual plotting
       for (size_t ipar = 0; ipar < paramNames.size(); ipar++) {
         residuals->cd(ipar + 1);
-        // Draw them
-        res_smt[vlID + paramNames.at(ipar)]->Draw("");
-        res_prt[vlID + paramNames.at(ipar)]->Draw("same");
-        res_flt[vlID + paramNames.at(ipar)]->Draw("same");
-        // Write them
-        pull_smt[vlID + paramNames.at(ipar)]->Write();
-        pull_prt[vlID + paramNames.at(ipar)]->Write();
-        pull_flt[vlID + paramNames.at(ipar)]->Write();
 
-        int binmax = res_smt[vlID + paramNames.at(ipar)]->GetMaximumBin();
-        int bincontent =
-            res_smt[vlID + paramNames.at(ipar)]->GetBinContent(binmax);
-
-        res_smt[vlID + paramNames.at(ipar)]->GetYaxis()->SetRangeUser(
-            0, bincontent * 1.2);
         TLegend* legend = new TLegend(0.7, 0.7, 0.9, 0.9);
-        legend->AddEntry(res_prt[vlID + paramNames.at(ipar)], "prediction",
-                         "lp");
-        legend->AddEntry(res_flt[vlID + paramNames.at(ipar)], "filtering",
-                         "lp");
-        legend->AddEntry(res_smt[vlID + paramNames.at(ipar)], "smoothing",
-                         "lp");
+
+        // Draw them
+        if (smoothed) {
+          res_smt[vlID + paramNames.at(ipar)]->DrawNormalized("");
+          res_smt[vlID + paramNames.at(ipar)]->Write();
+          legend->AddEntry(res_smt[vlID + paramNames.at(ipar)], "smoothed",
+                           "lp");
+        }
+        if (filtered) {
+          std::string drawOptions = smoothed ? "same" : "";
+          res_flt[vlID + paramNames.at(ipar)]->DrawNormalized(
+              drawOptions.c_str());
+          res_flt[vlID + paramNames.at(ipar)]->Write();
+          legend->AddEntry(res_flt[vlID + paramNames.at(ipar)], "filtered",
+                           "lp");
+        }
+        if (predicted) {
+          std::string drawOptions = (smoothed or filtered) ? "same" : "";
+          res_prt[vlID + paramNames.at(ipar)]->DrawNormalized("same");
+          res_prt[vlID + paramNames.at(ipar)]->Write();
+          legend->AddEntry(res_prt[vlID + paramNames.at(ipar)], "predicted",
+                           "lp");
+        }
+
         legend->SetBorderSize(0);
         legend->SetFillStyle(0);
         legend->SetTextFont(42);
@@ -573,28 +669,69 @@ void boundParamResolution(const std::string& inFile,
       // Pull plotting & writing
       for (size_t ipar = 0; ipar < paramNames.size(); ipar++) {
         pulls->cd(ipar + 1);
-        // Draw them
-        pull_smt[vlID + paramNames.at(ipar)]->Draw("");
-        pull_prt[vlID + paramNames.at(ipar)]->Draw("same");
-        pull_flt[vlID + paramNames.at(ipar)]->Draw("same");
-        // Write them
-        pull_smt[vlID + paramNames.at(ipar)]->Write();
-        pull_prt[vlID + paramNames.at(ipar)]->Write();
-        pull_flt[vlID + paramNames.at(ipar)]->Write();
 
-        int binmax = pull_smt[vlID + paramNames.at(ipar)]->GetMaximumBin();
-        int bincontent =
-            pull_smt[vlID + paramNames.at(ipar)]->GetBinContent(binmax);
-
-        pull_smt[vlID + paramNames.at(ipar)]->GetYaxis()->SetRangeUser(
-            0, bincontent * 1.2);
         TLegend* legend = new TLegend(0.7, 0.7, 0.9, 0.9);
-        legend->AddEntry(pull_prt[vlID + paramNames.at(ipar)], "prediction",
-                         "lp");
-        legend->AddEntry(pull_flt[vlID + paramNames.at(ipar)], "filtering",
-                         "lp");
-        legend->AddEntry(pull_smt[vlID + paramNames.at(ipar)], "smoothing",
-                         "lp");
+        // Fit the smoothed distribution
+        if (smoothed) {
+          Double_t scale =
+              1. / pull_smt[vlID + paramNames.at(ipar)]->Integral();
+          pull_smt[vlID + paramNames.at(ipar)]->Sumw2();
+          pull_smt[vlID + paramNames.at(ipar)]->Scale(scale);
+          pull_smt[vlID + paramNames.at(ipar)]->Draw("pe");
+          pull_smt[vlID + paramNames.at(ipar)]->Write();
+
+          legend->AddEntry(pull_smt[vlID + paramNames.at(ipar)], "smoothed",
+                           "pe");
+
+          if (fitSmoothed) {
+            pull_smt[vlID + paramNames.at(ipar)]->Fit("gaus", "q");
+            TF1* gauss =
+                pull_smt[vlID + paramNames.at(ipar)]->GetFunction("gaus");
+            float mu = gauss->GetParameter(1);
+            float sigma = gauss->GetParameter(2);
+
+            // Draw the sigma
+            TString mu_info;
+            mu_info += mu;
+            TString sigma_info;
+            sigma_info += sigma;
+
+            TString mfit_info = "#mu = ";
+            mfit_info += mu_info(0, 5);
+
+            TString sfit_info = "#sigma = ";
+            sfit_info += sigma_info(0, 5);
+
+            legend->AddEntry(gauss,
+                             sfit_info.Data(), "l");
+            legend->AddEntry(pull_smt[vlID + paramNames.at(ipar)],
+                             mfit_info.Data(), "");
+
+          }
+        }
+
+        if (filtered) {
+          std::string drawOptions = smoothed ? "same" : "";
+
+          pull_flt[vlID + paramNames.at(ipar)]->DrawNormalized(
+              drawOptions.c_str());
+          pull_flt[vlID + paramNames.at(ipar)]->Write();
+
+          legend->AddEntry(pull_flt[vlID + paramNames.at(ipar)], "filtered",
+                           "lp");
+        }
+
+        if (predicted) {
+          std::string drawOptions = (smoothed or filtered) ? "same" : "";
+
+          pull_prt[vlID + paramNames.at(ipar)]->DrawNormalized(
+              drawOptions.c_str());
+          pull_prt[vlID + paramNames.at(ipar)]->Write();
+
+          legend->AddEntry(pull_prt[vlID + paramNames.at(ipar)], "predicted",
+                           "lp");
+        }
+
         legend->SetBorderSize(0);
         legend->SetFillStyle(0);
         legend->SetTextFont(42);
@@ -609,6 +746,5 @@ void boundParamResolution(const std::string& inFile,
   }
 
   // out->Close();
+  return 0;
 }
-
-
