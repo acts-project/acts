@@ -29,7 +29,7 @@ struct SeedfinderConfig {
   // cot of maximum theta angle
   // equivalent to 2.7 eta (pseudorapidity)
   float cotThetaMax = 7.40627;
-  // minimum distancein r between two measurements within one seed
+  // minimum distance in r between two measurements within one seed
   float deltaRMin = 5 * Acts::UnitConstants::mm;
   // maximum distance in r between two measurements within one seed
   float deltaRMax = 270 * Acts::UnitConstants::mm;
