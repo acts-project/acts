@@ -169,8 +169,9 @@ struct PropagatorState {
       return curvState;
     }
 
-    void update(State& /*state*/, const FreeVector& /*pars*/,
-                const Covariance& /*cov*/) const {}
+    void update(State& /*state*/, const FreeVector& /*freePars*/,
+                const BoundVector& /*boundPars*/, const Covariance& /*cov*/,
+                const Surface& /*surface*/) const {}
 
     void update(State& /*state*/, const Vector3& /*uposition*/,
                 const Vector3& /*udirection*/, double /*up*/,
