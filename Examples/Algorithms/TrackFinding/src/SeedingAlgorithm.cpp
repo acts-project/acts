@@ -43,6 +43,10 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config rMax");
   }
 
+  if (m_cfg.seedFilterConfig.deltaRMin != m_cfg.seedFinderConfig.deltaRMin) {
+    throw std::invalid_argument("Inconsistent config deltaRMin");
+  }
+
   if (m_cfg.gridConfig.deltaRMax != m_cfg.seedFinderConfig.deltaRMax) {
     throw std::invalid_argument("Inconsistent config deltaRMax");
   }
