@@ -59,7 +59,7 @@ class TGeoITkModuleSplitter : public ITGeoDetectorElementSplitter {
   /// @return a vector of TGeoDetectorElement objects
   std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> split(
       const GeometryContext& gctx,
-      std::shared_ptr<const Acts::TGeoDetectorElement> detElement) const;
+      std::shared_ptr<const Acts::TGeoDetectorElement> detElement) const override;
 
  private:
 
