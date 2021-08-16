@@ -83,7 +83,7 @@ class TGeoITkModuleSplitter : public ITGeoDetectorElementSplitter {
   ///
   /// @param gctx is a geometry context object
   /// @param detElement is a TGeoDetectorElement that is eventually split
-  /// @param splitRange are the ranges in r for the submodules
+  /// @param splitRanges are the ranges in r for the submodules
   ///
   /// @note If no split is performed the unsplit detector element is returned
   ///
