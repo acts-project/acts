@@ -40,23 +40,19 @@ class RootTrackParameterWriter final : public TrackParameterWriter {
     std::string inputMeasurementParticlesMap;
     /// Input collection to map measured hits to simulated hits.
     std::string inputMeasurementSimHitsMap;
-    /// output directory.
-    std::string outputDir;
     /// output filename.
-    std::string outputFilename = "estimatedparams.root";
+    std::string filePath = "estimatedparams.root";
     /// name of the output tree.
-    std::string outputTreename = "estimatedparams";
+    std::string treeName = "estimatedparams";
     /// file access mode.
     std::string fileMode = "RECREATE";
-    /// common root file.
-    TFile* rootFile = nullptr;
   };
 
   /// Constructor
   ///
-  /// @param cfg Configuration struct
+  /// @param config Configuration struct
   /// @param level Message level declaration
-  RootTrackParameterWriter(const Config& cfg,
+  RootTrackParameterWriter(const Config& config,
                            Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Virtual destructor
