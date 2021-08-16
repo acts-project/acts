@@ -55,7 +55,8 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
   gStyle->SetPadBottomMargin(0.15);
 
   // Pull range, residual ranges are automatically determined
-  double pullRange = 6;
+  double pullRange = 5;
+  
   //
   // Residual ranges should be largest in predicted and smallest in smoothed,
   // hence reverse the order.
@@ -320,14 +321,24 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
       auto ranges = histRanges(vlIdCut);
 
       // Residual range
-      std::map<std::string, double> paramResidualRange = {
-          {"loc0", ranges[0]},   {"loc1", ranges[1]}, {"#phi", ranges[2]},
-          {"#theta", ranges[3]}, {"q/p", ranges[4]},  {"t", ranges[5]}};
+      std::map<std::pair<std::string,std::string>, double> paramResidualRange = {
+          {{"loc0", "l_{0}"}, ranges[0]}, 
+          {{"loc1", "l_{1}"}, ranges[1]}, 
+          {{"#phi", "#phi"}, ranges[2]},
+          {{"#theta","#theta"}, ranges[3]}, 
+          {{"q/p","q/p"}, ranges[4]},  
+          {{"t","t"}, ranges[5]}};
 
       // Create the hists and set up for them
-      for (const auto& [par, resRange] : paramResidualRange) {
+      for (const auto& [partwin, resRange] : paramResidualRange) {
         // histogram creation
+        std::string par = partwin.first;
         std::string id_par = vlIdCut[0] + par;
+
+        TString par_string(partwin.second.c_str());
+        TString res_string = par_string + TString("^{rec} - ") + par_string + TString("^{true}");
+        
+        TString pull_string = TString("(") + res_string + TString(")/#sigma_{")+par_string+TString("}");
 
         if (predicted) {
           res_prt[id_par] =
@@ -335,18 +346,17 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
                             par.c_str()),
                        Form("residual of %s", par.c_str()), 100, -1 * resRange,
                        resRange);
-          res_prt[id_par]->GetXaxis()->SetTitle(Form("r_{%s}", par.c_str()));
+          res_prt[id_par]->GetXaxis()->SetTitle(res_string.Data());
           res_prt[id_par]->GetYaxis()->SetTitle("Entries");
-          setHistStyle(res_prt[id_par], 1);
+          setHistStyle(res_prt[id_par], kRed);
 
           pull_prt[id_par] = new TH1F(
               Form((vlIdCut[0] + std::string("pull_prt_%s")).c_str(),
                    par.c_str()),
               Form("pull of %s", par.c_str()), 100, -1 * pullRange, pullRange);
-          pull_prt[id_par]->GetXaxis()->SetTitle(
-              Form("pull_{%s}", par.c_str()));
-          pull_prt[id_par]->GetYaxis()->SetTitle("Entries");
-          setHistStyle(pull_smt[id_par], 4);
+          pull_prt[id_par]->GetXaxis()->SetTitle(pull_string.Data());
+          pull_prt[id_par]->GetYaxis()->SetTitle("Arb. Units");
+          setHistStyle(pull_prt[id_par], kRed);
         }
 
         if (filtered) {
@@ -355,18 +365,17 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
                             par.c_str()),
                        Form("residual of %s", par.c_str()), 100, -1 * resRange,
                        resRange);
-          res_flt[id_par]->GetXaxis()->SetTitle(Form("r_{%s}", par.c_str()));
+          res_flt[id_par]->GetXaxis()->SetTitle(res_string.Data());
           res_flt[id_par]->GetYaxis()->SetTitle("Entries");
-          setHistStyle(res_flt[id_par], 2);
+          setHistStyle(res_flt[id_par], kBlue);
 
           pull_flt[id_par] = new TH1F(
               Form((vlIdCut[0] + std::string("pull_flt_%s")).c_str(),
                    par.c_str()),
               Form("pull of %s", par.c_str()), 100, -1 * pullRange, pullRange);
-          pull_flt[id_par]->GetXaxis()->SetTitle(
-              Form("pull_{%s}", par.c_str()));
-          pull_flt[id_par]->GetYaxis()->SetTitle("Entries");
-          setHistStyle(pull_flt[id_par], 2);
+          pull_flt[id_par]->GetXaxis()->SetTitle(pull_string.Data());
+          pull_flt[id_par]->GetYaxis()->SetTitle("Arb. Units");
+          setHistStyle(pull_flt[id_par], kBlue);
         }
 
         if (smoothed) {
@@ -376,19 +385,18 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
                        Form("residual of %s", par.c_str()), 100, -1 * resRange,
                        resRange);
 
-          res_smt[id_par]->GetXaxis()->SetTitle(Form("r_{%s}", par.c_str()));
+          res_smt[id_par]->GetXaxis()->SetTitle(res_string.Data());
           res_smt[id_par]->GetYaxis()->SetTitle("Entries");
-          setHistStyle(res_smt[id_par], 4);
+          setHistStyle(res_smt[id_par], kBlack);
 
           pull_smt[id_par] = new TH1F(
               Form((vlIdCut[0] + std::string("pull_smt_%s")).c_str(),
                    par.c_str()),
               Form("pull of %s", par.c_str()), 100, -1 * pullRange, pullRange);
 
-          pull_smt[id_par]->GetXaxis()->SetTitle(
-              Form("pull_{%s}", par.c_str()));
-          pull_smt[id_par]->GetYaxis()->SetTitle("Entries");
-          setHistStyle(pull_smt[id_par], 1);
+          pull_smt[id_par]->GetXaxis()->SetTitle(pull_string.Data());
+          pull_smt[id_par]->GetYaxis()->SetTitle("Arb. Units");
+          setHistStyle(pull_smt[id_par], kBlack);
         }
       }
     }
@@ -639,7 +647,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
           res_smt[vlID + paramNames.at(ipar)]->DrawNormalized("");
           res_smt[vlID + paramNames.at(ipar)]->Write();
           legend->AddEntry(res_smt[vlID + paramNames.at(ipar)], "smoothed",
-                           "lp");
+                           "l");
         }
         if (filtered) {
           std::string drawOptions = smoothed ? "same" : "";
@@ -647,14 +655,14 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
               drawOptions.c_str());
           res_flt[vlID + paramNames.at(ipar)]->Write();
           legend->AddEntry(res_flt[vlID + paramNames.at(ipar)], "filtered",
-                           "lp");
+                           "l");
         }
         if (predicted) {
           std::string drawOptions = (smoothed or filtered) ? "same" : "";
           res_prt[vlID + paramNames.at(ipar)]->DrawNormalized("same");
           res_prt[vlID + paramNames.at(ipar)]->Write();
           legend->AddEntry(res_prt[vlID + paramNames.at(ipar)], "predicted",
-                           "lp");
+                           "l");
         }
 
         legend->SetBorderSize(0);
@@ -745,6 +753,8 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
     }
   }
 
-  // out->Close();
+  if (out != nullptr) {
+    out->Close();
+  }
   return 0;
 }
