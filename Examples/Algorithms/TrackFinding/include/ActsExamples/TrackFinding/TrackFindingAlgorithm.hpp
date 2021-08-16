@@ -114,8 +114,9 @@ void TrackFindingAlgorithm::computeSharedHits(
   std::vector<int> firstStateOnTheHit(sourceLinks.size(), -1);
 
   for (unsigned int iresult(0); iresult < results.size(); iresult++) {
-    if (not results.at(iresult).ok())
+    if (not results.at(iresult).ok()) {
       continue;
+    }
 
     auto& ckfResult = results.at(iresult).value();
     auto& measIndexes = ckfResult.lastMeasurementIndices;
