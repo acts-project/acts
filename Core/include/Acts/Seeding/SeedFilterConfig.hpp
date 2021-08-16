@@ -34,7 +34,7 @@ struct SeedFilterConfig {
   size_t compatSeedLimit = 2;
   // Tool to apply experiment specific cuts on collected middle space points
 
-  SeedFilterConfig toInternalUnits() {
+  SeedFilterConfig toInternalUnits() const {
     using namespace Acts::UnitLiterals;
     SeedFilterConfig config = *this;
     config.deltaRMin /= 1_mm;
