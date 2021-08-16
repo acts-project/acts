@@ -140,7 +140,8 @@ set(_acts_tbb_version 2020.1)
 if (ACTS_USE_SYSTEM_BOOST)
   # NOTE we use boost::filesystem instead of std::filesystem since the later
   # is not uniformly supported even on compilers that nominally support C++17
-  find_package(Boost ${_acts_boost_version} REQUIRED CONFIG COMPONENTS filesystem program_options unit_test_framework)
+  # NOTE FindBoost.cmake looks for BoostConfig.cmake first, before running it's own logic.
+  find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS filesystem program_options unit_test_framework)
 else()
   add_subdirectory(thirdparty/boost)
 endif()
@@ -218,7 +219,7 @@ if(ACTS_BUILD_EXAMPLES)
   find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Core Geom GenVector Hist Tree TreePlayer)
   check_root_compatibility()
   # newer DD4hep version require TBB and search interally for TBB in
-  # config-only mode. to avoid missmatches we explicitely search using
+  # config-only mode. to avoid mismatches we explicitely search using
   # config-only mode first to be sure that we find the same version.
   find_package(TBB ${_acts_tbb_version} CONFIG)
   if(NOT TBB_FOUND)

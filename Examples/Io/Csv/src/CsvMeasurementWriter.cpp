@@ -30,9 +30,10 @@
 #include "CsvOutputData.hpp"
 
 ActsExamples::CsvMeasurementWriter::CsvMeasurementWriter(
-    const ActsExamples::CsvMeasurementWriter::Config& cfg,
-    Acts::Logging::Level lvl)
-    : WriterT(cfg.inputMeasurements, "CsvMeasurementWriter", lvl), m_cfg(cfg) {
+    const ActsExamples::CsvMeasurementWriter::Config& config,
+    Acts::Logging::Level level)
+    : WriterT(config.inputMeasurements, "CsvMeasurementWriter", level),
+      m_cfg(config) {
   // Input container for measurements is already checked by base constructor
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
@@ -56,22 +57,27 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
       m_cfg.inputMeasurementSimHitsMap);
 
   ClusterContainer clusters;
-  if (not m_cfg.inputClusters.empty()) {
-    clusters = ctx.eventStore.get<ClusterContainer>(m_cfg.inputClusters);
-  }
 
   // Open per-event file for all components
   std::string pathMeasurements =
       perEventFilepath(m_cfg.outputDir, "measurements.csv", ctx.eventNumber);
-  std::string pathCells =
-      perEventFilepath(m_cfg.outputDir, "cells.csv", ctx.eventNumber);
   std::string pathMeasurementSimHitMap = perEventFilepath(
       m_cfg.outputDir, "measurement-simhit-map.csv", ctx.eventNumber);
 
   dfe::NamedTupleCsvWriter<MeasurementData> writerMeasurements(
       pathMeasurements, m_cfg.outputPrecision);
-  dfe::NamedTupleCsvWriter<CellData> writerCells(pathCells,
-                                                 m_cfg.outputPrecision);
+
+  std::optional<dfe::NamedTupleCsvWriter<CellData>> writerCells{std::nullopt};
+  if (not m_cfg.inputClusters.empty()) {
+    ACTS_VERBOSE(
+        "Set up writing of clusters from collection: " << m_cfg.inputClusters);
+    clusters = ctx.eventStore.get<ClusterContainer>(m_cfg.inputClusters);
+    std::string pathCells =
+        perEventFilepath(m_cfg.outputDir, "cells.csv", ctx.eventNumber);
+    writerCells =
+        dfe::NamedTupleCsvWriter<CellData>{pathCells, m_cfg.outputPrecision};
+  }
+
   dfe::NamedTupleCsvWriter<MeasurementSimHitLink> writerMeasurementSimHitMap(
       pathMeasurementSimHitMap, m_cfg.outputPrecision);
 
@@ -82,7 +88,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
   meas.measurement_id = 0;
 
   ACTS_VERBOSE("Writing " << measurements.size()
-                          << " measurments in this event.");
+                          << " measurements in this event.");
 
   for (Index hitIdx = 0u; hitIdx < measurements.size(); ++hitIdx) {
     const auto& measurement = measurements[hitIdx];
@@ -124,7 +130,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
           writerMeasurements.append(meas);
 
           // CLUSTER / channel information ------------------------------
-          if (not clusters.empty()) {
+          if (not clusters.empty() && writerCells) {
             auto cluster = clusters[hitIdx];
             cell.geometry_id = meas.geometry_id;
             cell.hit_id = meas.measurement_id;
@@ -134,7 +140,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
               // TODO store digitial timestamp once added to the cell definition
               cell.timestamp = 0;
               cell.value = c.activation;
-              writerCells.append(cell);
+              writerCells->append(cell);
             }
           }
           // Increase counter

@@ -17,11 +17,12 @@
 #include <iostream>
 
 ActsExamples::ObjTrackingGeometryWriter::ObjTrackingGeometryWriter(
-    const ActsExamples::ObjTrackingGeometryWriter::Config& cfg)
-    : m_cfg(cfg) {}
+    const ActsExamples::ObjTrackingGeometryWriter::Config& config,
+    Acts::Logging::Level level)
+    : m_logger{Acts::getDefaultLogger(name(), level)}, m_cfg(config) {}
 
 std::string ActsExamples::ObjTrackingGeometryWriter::name() const {
-  return m_cfg.name;
+  return "ObjTrackingGeometryWriter";
 }
 
 ActsExamples::ProcessCode ActsExamples::ObjTrackingGeometryWriter::write(
