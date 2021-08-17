@@ -11,12 +11,11 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
+#include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetectorOptions.hpp"
 
 #include <memory>
 #include <vector>
-
-#include <boost/program_options.hpp>
 
 namespace ActsExamples {
 namespace TGeo {
@@ -27,15 +26,22 @@ namespace TGeo {
 /// It does *currently* not translate the material, this has
 /// to be done with a material mapping stage
 ///
-/// @tparam variable_map_t is the variable map
+/// @tparam config is the geometry configuration
 ///
 /// @param vm is the variable map from the options
 std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
-    const boost::program_options::variables_map& vm,
-    const Acts::GeometryContext& context,
+    const TGeoDetector::Config& config, const Acts::GeometryContext& context,
     std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>&
         detElementStore,
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
+
+/// @brief Global method that constructs a set of layer builder
+///        configs from a central @c TGeoDetector config.
+///
+/// @param config The input config
+/// @return Vector of layer builder configs
+std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
+    const TGeoDetector::Config& config);
 
 }  // namespace TGeo
 }  // namespace ActsExamples

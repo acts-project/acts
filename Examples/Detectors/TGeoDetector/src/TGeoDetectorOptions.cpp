@@ -10,6 +10,8 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
+#include "ActsExamples/TGeoDetector/BuildTGeoDetector.hpp"
+#include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
 #include <cstdlib>
@@ -273,6 +275,9 @@ ActsExamples::Options::readTGeoLayerBuilderConfigs(const Variables& vm) {
     return sensors;
   };
 
+  TGeoDetector::Config config;
+  config.unitScalor = unitScalor;
+
   // iterate over all configured detector volumes
   //
   // current index within the negative/central/positive layers configuration
@@ -280,25 +285,12 @@ ActsExamples::Options::readTGeoLayerBuilderConfigs(const Variables& vm) {
   // number of layers (or none at all) for each n/c/p configuration.
   std::array<size_t, 3> iLayers = {0, 0, 0};
   for (size_t iVol = 0; iVol < subDetectors.size(); ++iVol) {
-    Acts::TGeoLayerBuilder::Config layerBuilderConfig;
-    layerBuilderConfig.configurationName = subDetectors.at(iVol);
-    layerBuilderConfig.unit = unitScalor;
+    auto& volume = config.volumes.emplace_back();
+    volume.name = subDetectors.at(iVol);
 
-    // configure surface autobinning
-    auto tolR = binToleranceR.at(iVol);
-    auto tolPhi = binTolerancePhi.at(iVol);
-    auto tolZ = binToleranceZ.at(iVol);
-    std::vector<std::pair<double, double>> binTolerances(
-        static_cast<size_t>(Acts::binValues), {0., 0.});
-    binTolerances[Acts::binR] = {tolR.lower.value_or(0.),
-                                 tolR.upper.value_or(0.)};
-    binTolerances[Acts::binZ] = {tolZ.lower.value_or(0.),
-                                 tolZ.upper.value_or(0.)};
-    binTolerances[Acts::binPhi] = {tolPhi.lower.value_or(0.),
-                                   tolPhi.upper.value_or(0.)};
-    layerBuilderConfig.autoSurfaceBinning = true;
-    layerBuilderConfig.surfaceBinMatcher =
-        Acts::SurfaceBinningMatcher(binTolerances);
+    volume.binToleranceR = binToleranceR.at(iVol);
+    volume.binTolerancePhi = binTolerancePhi.at(iVol);
+    volume.binToleranceZ = binToleranceZ.at(iVol);
 
     // loop over the negative/central/positive layer configurations
     for (size_t ncp = 0; ncp < 3; ++ncp) {
@@ -309,48 +301,32 @@ ActsExamples::Options::readTGeoLayerBuilderConfigs(const Variables& vm) {
       // layer config position in the configuration vectors
       size_t iLayer = iLayers[ncp]++;
 
-      Acts::TGeoLayerBuilder::LayerConfig lConfig;
-      lConfig.volumeName = volumeName[ncp].at(iLayer);
-      lConfig.sensorNames = splitAtOr(sensitiveNames[ncp].at(iLayer));
-      lConfig.localAxes = sensitiveAxes[ncp].at(iLayer);
+      TGeoDetector::Config::SubVolume eNcp{ncp};
+
+      volume.layers.at(eNcp) = true;
+      volume.subVolumeName.at(eNcp) = volumeName[ncp].at(iLayer);
+      volume.sensitiveNames.at(eNcp) =
+          splitAtOr(sensitiveNames[ncp].at(iLayer));
+      volume.sensitiveAxes.at(eNcp) = sensitiveAxes[ncp].at(iLayer);
 
       // Fill the parsing restrictions in r/z
-      auto rR = rRange[ncp].at(iLayer);
-      auto rMin = rR.lower.value_or(0.);
-      auto rMax = rR.upper.value_or(std::numeric_limits<double>::max());
-      auto zR = zRange[ncp].at(iLayer);
-      auto zMin = zR.lower.value_or(-std::numeric_limits<double>::max());
-      auto zMax = zR.upper.value_or(std::numeric_limits<double>::max());
-      lConfig.parseRanges = {
-          {Acts::binR, {rMin, rMax}},
-          {Acts::binZ, {zMin, zMax}},
-      };
+      volume.rRange.at(eNcp) = rRange[ncp].at(iLayer);
+      volume.zRange.at(eNcp) = zRange[ncp].at(iLayer);
 
       // Fill the layer splitting parameters in r/z
-      auto str = splitTolR[ncp].at(iLayer);
-      auto stz = splitTolZ[ncp].at(iLayer);
-      if (0 < str) {
-        lConfig.splitConfigs.emplace_back(Acts::binR, str);
-      }
-      if (0 < stz) {
-        lConfig.splitConfigs.emplace_back(Acts::binZ, stz);
-      }
-
-      layerBuilderConfig.layerConfigurations[ncp].push_back(lConfig);
+      volume.splitTolR.at(eNcp) = splitTolR[ncp].at(iLayer);
+      volume.splitTolZ.at(eNcp) = splitTolZ[ncp].at(iLayer);
     }
 
     // Perform splitting of cylinders and discs
     if (cylDiscSplit) {
-      Acts::TGeoCylinderDiscSplitter::Config cdsConfig;
-      cdsConfig.cylinderPhiSegments = cylPhiSegements.at(iVol);
-      cdsConfig.cylinderLongitudinalSegments = cylZsegements.at(iVol);
-      cdsConfig.discPhiSegments = discPhiSegements.at(iVol);
-      cdsConfig.discRadialSegments = discRsegements.at(iVol);
-      layerBuilderConfig.detectorElementSplitter =
-          std::make_shared<const Acts::TGeoCylinderDiscSplitter>(cdsConfig);
+      volume.cylinderDiscSplit = true;
+      volume.cylinderNPhiSegments = cylPhiSegements.at(iVol);
+      volume.cylinderNZSegments = cylZsegements.at(iVol);
+      volume.discNPhiSegments = discPhiSegements.at(iVol);
+      volume.discNRSegments = discRsegements.at(iVol);
     }
-
-    detLayerConfigs.push_back(layerBuilderConfig);
   }
-  return detLayerConfigs;
+
+  return TGeo::makeLayerBuilderConfigs(config);
 }
