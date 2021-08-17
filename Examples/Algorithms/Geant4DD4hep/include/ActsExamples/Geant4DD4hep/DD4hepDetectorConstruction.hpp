@@ -34,8 +34,14 @@ class DD4hepDetectorConstruction final : public G4VUserDetectorConstruction {
 
 class DD4hepDetectorConstructionFactory : public G4DetectorConstructionFactory {
  public:
+  /// @brief Construct a new DD4hep detector factory
+  ///
+  /// @param detector DD4hep detector instance to construct G4 geometry from
   DD4hepDetectorConstructionFactory(dd4hep::Detector& detector);
 
+  /// @brief Main factory method
+  ///
+  /// @return Detector construction based on a DD4hep geometry
   std::unique_ptr<G4VUserDetectorConstruction> operator()() const override;
 
  private:

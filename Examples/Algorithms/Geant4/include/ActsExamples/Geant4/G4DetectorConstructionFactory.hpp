@@ -13,9 +13,16 @@
 #include "G4VUserDetectorConstruction.hh"
 
 namespace ActsExamples {
+
+/// @brief Class to construct a G4DetectorConstruction
+///
 class G4DetectorConstructionFactory {
  public:
+  /// Virtual destructor for memory safety.
   virtual ~G4DetectorConstructionFactory() = default;
+
+  /// The main virtual method to create a detector construction
+  /// @return Unique pointer to the detector construction
   virtual std::unique_ptr<G4VUserDetectorConstruction> operator()() const = 0;
 };
 }  // namespace ActsExamples

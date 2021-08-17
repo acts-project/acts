@@ -30,8 +30,14 @@ class GdmlDetectorConstruction final : public G4VUserDetectorConstruction {
 
 class GdmlDetectorConstructionFactory : public G4DetectorConstructionFactory {
  public:
+  /// @brief Construct a new GDML Detector Factory
+  ///
+  /// @param path The input GDML file path
   GdmlDetectorConstructionFactory(const std::string& path);
 
+  /// @brief Main factory method following the interface
+  ///
+  /// @return Detector construction based on GDML.
   std::unique_ptr<G4VUserDetectorConstruction> operator()() const override;
 
  private:
