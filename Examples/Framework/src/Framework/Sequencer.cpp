@@ -270,6 +270,7 @@ int ActsExamples::Sequencer::run() {
                                                       Duration::zero());
 
           for (size_t event = r.begin(); event != r.end(); ++event) {
+            m_cfg.iterationCallback();
             // Use per-event store
             WhiteBoard eventStore(Acts::getDefaultLogger(
                 "EventStore#" + std::to_string(event), m_cfg.logLevel));
@@ -286,27 +287,34 @@ int ActsExamples::Sequencer::run() {
             /// Decorate the context
             for (auto& cdr : m_decorators) {
               StopWatch sw(localClocksAlgorithms[ialgo++]);
+              ACTS_VERBOSE("Execute context decorator: " << cdr->name());
               if (cdr->decorate(++context) != ProcessCode::SUCCESS) {
                 throw std::runtime_error("Failed to decorate event context");
               }
             }
-            // Read everything in
+
+            ACTS_VERBOSE("Execute readers");
             for (auto& rdr : m_readers) {
               StopWatch sw(localClocksAlgorithms[ialgo++]);
+              ACTS_VERBOSE("Execute reader: " << rdr->name());
               if (rdr->read(++context) != ProcessCode::SUCCESS) {
                 throw std::runtime_error("Failed to read input data");
               }
             }
-            // Execute all algorithms
+
+            ACTS_VERBOSE("Execute algorithms");
             for (auto& alg : m_algorithms) {
               StopWatch sw(localClocksAlgorithms[ialgo++]);
+              ACTS_VERBOSE("Execute algorithm: " << alg->name());
               if (alg->execute(++context) != ProcessCode::SUCCESS) {
                 throw std::runtime_error("Failed to process event data");
               }
             }
-            // Write out results
+
+            ACTS_VERBOSE("Execute writers");
             for (auto& wrt : m_writers) {
               StopWatch sw(localClocksAlgorithms[ialgo++]);
+              ACTS_VERBOSE("Execute writer: " << wrt->name());
               if (wrt->write(++context) != ProcessCode::SUCCESS) {
                 throw std::runtime_error("Failed to write output data");
               }
