@@ -95,6 +95,8 @@ ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
     m_outputTree->Branch("t_phi", &m_t_phi);
     m_outputTree->Branch("t_eta", &m_t_eta);
     m_outputTree->Branch("t_pT", &m_t_pT);
+    m_outputTree->Branch("t_d0", &m_t_d0);
+    m_outputTree->Branch("t_z0", &m_t_z0);
 
     m_outputTree->Branch("hasFittedParams", &m_hasFittedParams);
     m_outputTree->Branch("eLOC0_fit", &m_eLOC0_fit);
@@ -192,6 +194,13 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       m_outlierLayer.emplace_back(trajState.outlierLayer.begin(),
                                   trajState.outlierLayer.end());
 
+      // get the perigee surface
+      Acts::Surface* pSurface = nullptr;
+      if (traj.hasTrackParameters(trackTip)) {
+        const auto& boundParam = traj.trackParameters(trackTip);
+        pSurface = const_cast<Acts::Surface*>(&boundParam.referenceSurface());
+      }
+
       // Get the majority truth particle to this track
       identifyContributingParticles(hitParticlesMap, traj, trackTip,
                                     particleHitCounts);
@@ -225,6 +234,23 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           m_t_phi.push_back(phi(particle.unitDirection()));
           m_t_eta.push_back(eta(particle.unitDirection()));
           m_t_pT.push_back(p * perp(particle.unitDirection()));
+
+          if (pSurface) {
+            // get the truth perigee parameter
+            auto lpResult = pSurface->globalToLocal(
+                ctx.geoContext, particle.position(), particle.unitDirection());
+            if (lpResult.ok()) {
+              m_t_d0.push_back(
+                  lpResult.value()[Acts::BoundIndices::eBoundLoc0]);
+              m_t_z0.push_back(
+                  lpResult.value()[Acts::BoundIndices::eBoundLoc1]);
+            } else {
+              ACTS_ERROR("Global to local transformation did not succeed.");
+              m_t_d0.push_back(NaNfloat);
+              m_t_z0.push_back(NaNfloat);
+            }
+          }
+
         } else {
           ACTS_WARNING("Truth particle with barcode = "
                        << barcode << " not found in the input collection!");
@@ -324,6 +350,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
   m_t_phi.clear();
   m_t_pT.clear();
   m_t_eta.clear();
+  m_t_d0.clear();
+  m_t_z0.clear();
 
   m_hasFittedParams.clear();
   m_eLOC0_fit.clear();
