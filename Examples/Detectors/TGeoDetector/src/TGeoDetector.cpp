@@ -176,11 +176,9 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
     /// configure the beam pipe layer builder
     Acts::PassiveLayerBuilder::Config bplConfig;
     bplConfig.layerIdentification = "BeamPipe";
-    bplConfig.centralLayerRadii = std::vector<double>(1, config.beamPipeRadius);
-    bplConfig.centralLayerHalflengthZ =
-        std::vector<double>(1, config.beamPipeHalflengthZ);
-    bplConfig.centralLayerThickness =
-        std::vector<double>(1, config.beamPipeLayerThickness);
+    bplConfig.centralLayerRadii = {config.beamPipeRadius};
+    bplConfig.centralLayerHalflengthZ = {config.beamPipeHalflengthZ};
+    bplConfig.centralLayerThickness = {config.beamPipeLayerThickness};
     auto beamPipeBuilder = std::make_shared<const Acts::PassiveLayerBuilder>(
         bplConfig,
         Acts::getDefaultLogger("BeamPipeLayerBuilder", config.layerLogLevel));
@@ -381,14 +379,10 @@ void readTGeoLayerBuilderConfigs(const Variables& vm,
       vm["geo-tgeo-player-z-split"].template as<std::vector<double>>(),
   };
 
-  std::vector<int> cylZsegements =
-      {};  // vm["geo-tgeo-cyl-nz-segs"].template as<std::vector<int>>();
-  std::vector<int> cylPhiSegements =
-      {};  // vm["geo-tgeo-cyl-nphi-segs"].template as<std::vector<int>>();
-  std::vector<int> discRsegements =
-      {};  // vm["geo-tgeo-disc-nr-segs"].template as<std::vector<int>>();
-  std::vector<int> discPhiSegements =
-      {};  // vm["geo-tgeo-disc-nphi-segs"].template as<std::vector<int>>();
+  std::vector<int> cylZsegements = {};
+  std::vector<int> cylPhiSegements = {};
+  std::vector<int> discRsegements = {};
+  std::vector<int> discPhiSegements = {};
   if (cylDiscSplit) {
     cylZsegements = vm["geo-tgeo-cyl-nz-segs"].template as<std::vector<int>>();
     cylPhiSegements =
