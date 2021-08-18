@@ -92,8 +92,8 @@ if on_readthedocs:
     cwd = os.path.dirname(__file__)
     print("Executing doxygen in ", cwd)
     sys.stdout.flush()
-    subprocess.check_call(["doxygen", "--version"], stdout=subprocess.PIPE, cwd=cwd)
-    subprocess.check_call("doxygen", stdout=subprocess.PIPE, cwd=cwd)
+    print(subprocess.check_output(["doxygen", "--version"]))
+    subprocess.check_call(["doxygen", "Doxyfile"], stdout=subprocess.PIPE, cwd=cwd)
     subprocess.check_call(
         ["python", "-m", "breathe.apidoc", "_build/doxygen-xml", "-o", "api"],
         stdout=subprocess.PIPE,
