@@ -30,7 +30,7 @@ Key features:
    integration/integration
    howto/howto
    formats/formats
-   api/*
+   api/api
    contributionguide
    codeguide
    authors
