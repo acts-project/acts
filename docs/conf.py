@@ -87,17 +87,24 @@ breathe_default_members = (
 
 # -- Automatic API documentation ---------------------------------------------
 
-if on_readthedocs:
+env = os.environ.copy()
+env["DOXYGEN_WARN_AS_ERROR"] = "NO"
+cwd = os.path.dirname(__file__)
+
+if on_readthedocs or tags.has("run_doxygen"):
     # if we are running on RTD Doxygen must be run as part of the build
-    cwd = os.path.dirname(__file__)
-    print("Executing doxygen in ", cwd)
-    print(subprocess.check_output(["doxygen", "--version"]))
+    print("Executing doxygen in", cwd)
+    print(
+        "Doxygen version:",
+        subprocess.check_output(["doxygen", "--version"], encoding="utf-8"),
+    )
     sys.stdout.flush()
-    env = os.environ.copy()
-    env["DOXYGEN_WARN_AS_ERROR"] = "OFF"
     subprocess.check_call(
         ["doxygen", "Doxyfile"], stdout=subprocess.PIPE, cwd=cwd, env=env
     )
+
+if on_readthedocs or tags.has("run_apidoc"):
+    print("Executing breathe apidoc in", cwd)
     subprocess.check_call(
         ["python", "-m", "breathe.apidoc", "_build/doxygen-xml", "-o", "api"],
         stdout=subprocess.PIPE,
