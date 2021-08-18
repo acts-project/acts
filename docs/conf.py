@@ -91,13 +91,18 @@ if on_readthedocs:
     # if we are running on RTD Doxygen must be run as part of the build
     cwd = os.path.dirname(__file__)
     print("Executing doxygen in ", cwd)
-    sys.stdout.flush()
     print(subprocess.check_output(["doxygen", "--version"]))
-    subprocess.check_call(["doxygen", "Doxyfile"], stdout=subprocess.PIPE, cwd=cwd)
+    sys.stdout.flush()
+    env = os.environ.copy()
+    env["DOXYGEN_WARN_AS_ERROR"] = "OFF"
+    subprocess.check_call(
+        ["doxygen", "Doxyfile"], stdout=subprocess.PIPE, cwd=cwd, env=env
+    )
     subprocess.check_call(
         ["python", "-m", "breathe.apidoc", "_build/doxygen-xml", "-o", "api"],
         stdout=subprocess.PIPE,
         cwd=cwd,
+        env=env,
     )
 
 # -- Markdown bridge setup hook (must come last, not sure why) ----------------
