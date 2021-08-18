@@ -1,6 +1,7 @@
 # Configuration file for the Sphinx documentation builder.
 
 import os
+import subprocess
 
 from m2r import MdInclude
 from recommonmark.transform import AutoStructify
@@ -83,30 +84,11 @@ breathe_default_members = (
     "undoc-members",
 )
 
-# -- Automatic API documentation generation with Exhale -----------------------
-
-exhale_args = {
-    "containmentFolder": "api",
-    "rootFileName": "api.rst",
-    "rootFileTitle": "API",
-    "createTreeView": True,
-    # note: OUTPUT_DIRECTORY in Doxyfile must match breathe default project path
-    # note: this must match STRIP_FROM_PATH in Doxyfile
-    "doxygenStripFromPath": "..",
-}
+# -- Automatic API documentation ---------------------------------------------
 
 if on_readthedocs:
     # if we are running on RTD Doxygen must be run as part of the build
-    # let exhale handle the doxygen execution
-    extensions.append("exhale")
-    exhale_args["exhaleExecutesDoxygen"] = True
-elif tags.has("use_exhale"):
-    # if exhale is requested manually, we expect the Doxygen has been run for us
-    extensions.append("exhale")
-    exhale_args["exhaleExecutesDoxygen"] = False
-
-if exhale_args["exhaleExecutesDoxygen"]:
-    exhale_args["exhaleUseDoxyfile"] = True
+    subprocess.call("doxygen", cwd=os.path.dirname(__file__))
 
 # -- Markdown bridge setup hook (must come last, not sure why) ----------------
 
