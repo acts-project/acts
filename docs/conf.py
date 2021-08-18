@@ -88,11 +88,13 @@ breathe_default_members = (
 
 if on_readthedocs:
     # if we are running on RTD Doxygen must be run as part of the build
-    subprocess.call("doxygen", stdout=subprocess.PIPE, cwd=os.path.dirname(__file__))
+    cwd = os.path.dirname(__file__)
+    print("Executing doxygen in ", cwd)
+    subprocess.call("doxygen", stdout=subprocess.PIPE, cwd=cwd)
     subprocess.call(
         ["python", "-m", "breathe.apidoc", "_build/doxygen-xml", "-o", "api"],
         stdout=subprocess.PIPE,
-        cwd=os.path.dirname(__file__),
+        cwd=cwd,
     )
 
 # -- Markdown bridge setup hook (must come last, not sure why) ----------------
