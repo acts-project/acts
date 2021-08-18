@@ -1,6 +1,7 @@
 # Configuration file for the Sphinx documentation builder.
 
 import os
+import sys
 import subprocess
 
 from m2r import MdInclude
@@ -90,8 +91,9 @@ if on_readthedocs:
     # if we are running on RTD Doxygen must be run as part of the build
     cwd = os.path.dirname(__file__)
     print("Executing doxygen in ", cwd)
-    subprocess.call("doxygen", stdout=subprocess.PIPE, cwd=cwd)
-    subprocess.call(
+    sys.stdout.flush()
+    subprocess.check_call("doxygen", stdout=subprocess.PIPE, cwd=cwd)
+    subprocess.check_call(
         ["python", "-m", "breathe.apidoc", "_build/doxygen-xml", "-o", "api"],
         stdout=subprocess.PIPE,
         cwd=cwd,
