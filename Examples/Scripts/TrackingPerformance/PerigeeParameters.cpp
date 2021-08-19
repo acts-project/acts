@@ -13,12 +13,12 @@
 #include <TApplication.h>
 #include <boost/program_options.hpp>
 
-#include "boundParamResolution.C"
+#include "perigeeParamResolution.C"
 
 using namespace boost::program_options;
 
 int main(int argc, char** argv) {
-  std::cout << "*** ACTS Residual and Pull plotting " << std::endl;
+  std::cout << "*** ACTS Perigee parameter plotting" << std::endl;
 
   try {
     options_description description("*** Usage:");
@@ -29,13 +29,6 @@ int main(int argc, char** argv) {
     ao("silent,s", bool_switch(), "Silent mode (without X-window/display).");
     ao("input,i", value<std::string>()->default_value(""),
        "Input ROOT file containing the input TTree.");
-    ao("tree,t", value<std::string>()->default_value("trackstates"),
-       "Input TTree name.");
-    ao("output,o", value<std::string>()->default_value(""),
-       "Output ROOT file with histograms");
-    ao("predicted", bool_switch(), "Analyze the predicted parameters.");
-    ao("filtered", bool_switch(), "Analyze the filtered parameters.");
-    ao("smoothed", bool_switch(), "Analyze the smoothed parameters.");
     ao("fit", bool_switch(), "Fit the smoothed parameters.");
     ao("save", value<std::string>()->default_value("png"),
        "Output save format (to be interpreted by ROOT).");
@@ -51,8 +44,6 @@ int main(int argc, char** argv) {
 
     // Parse the parameters
     auto iFile = vm["input"].as<std::string>();
-    auto iTree = vm["tree"].as<std::string>();
-    auto oFile = vm["output"].as<std::string>();
     auto saveAs = vm["save"].as<std::string>();
 
     TApplication* tApp = vm["silent"].as<bool>()
@@ -60,16 +51,9 @@ int main(int argc, char** argv) {
                              : new TApplication("ResidualAndPulls", 0, 0);
 
     // Run the actual resolution estimation
-    switch (boundParamResolution(
-        iFile, iTree, oFile, vm["predicted"].as<bool>(),
-        vm["filtered"].as<bool>(), vm["smoothed"].as<bool>(),
-        vm["fit"].as<bool>(), saveAs)) {
+    switch (perigeeParamResolution(iFile, vm["fit"].as<bool>())) {
       case -1: {
         std::cout << "*** Input file could not be opened, check name/path."
-                  << std::endl;
-      } break;
-      case -2: {
-        std::cout << "*** Input tree could not be found, check name."
                   << std::endl;
       } break;
       default: {
