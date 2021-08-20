@@ -460,8 +460,6 @@ void readTGeoLayerBuilderConfigs(const Variables& vm,
 
 }  // namespace
 
-namespace ActsExamples {
-
 void TGeoDetector::addOptions(
     boost::program_options::options_description& desc) const {
   using boost::program_options::value;
