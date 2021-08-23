@@ -194,7 +194,6 @@ class FiniteStateMachine {
   /// @return Whether the FSM is in the terminated state.
   bool terminated() const noexcept { return is<Terminated>(); }
 
- protected:
   /// Handles processing of an event.
   /// @note This should only be called from inside the class Deriving from FSM.
   /// @tparam Event Type of the event being processed
@@ -207,10 +206,9 @@ class FiniteStateMachine {
   event_return process_event(Event&& event, Args&&... args) {
     Derived& child = static_cast<Derived&>(*this);
 
-    child.on_process(event, args...);
-
     auto new_state = std::visit(
         [&](auto& s) -> std::optional<StateVariant> {
+          child.on_process(s, event, args...);
           auto s2 = child.on_event(s, event, args...);
 
           if (s2) {
@@ -218,7 +216,7 @@ class FiniteStateMachine {
                 [&](auto& s2_) { child.on_process(s, event, s2_, args...); },
                 *s2);
           } else {
-            child.on_process(s, event, args...);
+            child.on_process(s, event, s, args...);
           }
 
           return s2;

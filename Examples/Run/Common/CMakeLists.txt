@@ -7,7 +7,8 @@ add_library(
   src/CommonMaterialMapping.cpp
   src/MaterialValidationBase.cpp
   src/PropagationExampleBase.cpp
-  src/ReconstructionBase.cpp)
+  src/ReconstructionBase.cpp
+  src/NavigationValidationBase.cpp)
 target_include_directories(
   ActsExamplesCommon
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)

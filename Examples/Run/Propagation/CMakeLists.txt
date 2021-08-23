@@ -25,6 +25,13 @@ target_link_libraries(
   ActsExamplePropagationGeneric
   PRIVATE ${_common_libraries} ActsExamplesDetectorGeneric)
 
+add_executable(
+  ActsExampleNavigationValidation
+  GenericNavigationValidation.cpp)
+target_link_libraries(
+  ActsExampleNavigationValidation
+  PRIVATE ${_common_libraries} ActsExamplesDetectorGeneric)
+
 # Generic detector with alignment
 add_executable(
   ActsExamplePropagationAligned
