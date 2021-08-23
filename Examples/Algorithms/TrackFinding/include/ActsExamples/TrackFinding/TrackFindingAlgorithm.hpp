@@ -110,8 +110,10 @@ void TrackFindingAlgorithm::computeSharedHits(
   static_assert(Acts::SourceLinkConcept<source_link_accessor_value_t>,
                 "Source link does not fulfill SourceLinkConcept");
 
-  std::vector<int> firstTrackOnTheHit(sourceLinks.size(), -1);
-  std::vector<int> firstStateOnTheHit(sourceLinks.size(), -1);
+  std::vector<std::size_t> firstTrackOnTheHit(
+      sourceLinks.size(), std::numeric_limits<std::size_t>::max());
+  std::vector<std::size_t> firstStateOnTheHit(
+      sourceLinks.size(), std::numeric_limits<std::size_t>::max());
 
   for (unsigned int iresult(0); iresult < results.size(); iresult++) {
     if (not results.at(iresult).ok()) {
@@ -129,7 +131,8 @@ void TrackFindingAlgorithm::computeSharedHits(
         std::size_t hitIndex = state.uncalibrated().index();
 
         // Check if hit not already used
-        if (firstTrackOnTheHit.at(hitIndex) == -1) {
+        if (firstTrackOnTheHit.at(hitIndex) ==
+            std::numeric_limits<std::size_t>::max()) {
           firstTrackOnTheHit.at(hitIndex) = iresult;
           firstStateOnTheHit.at(hitIndex) = state.index();
           return;
