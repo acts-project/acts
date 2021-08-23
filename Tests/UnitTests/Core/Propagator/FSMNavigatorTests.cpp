@@ -135,9 +135,10 @@ struct PseudoStepper {
   }
 
   Intersection3D::Status updateSurfaceStatus(
-      State& state, const Surface& surface, const BoundaryCheck& bcheck) const {
-    return detail::updateSingleSurfaceStatus<PseudoStepper>(*this, state,
-                                                            surface, bcheck);
+      State& state, const Surface& surface, const BoundaryCheck& bcheck,
+      LoggerWrapper logger = getDummyLogger()) const {
+    return detail::updateSingleSurfaceStatus<PseudoStepper>(
+        *this, state, surface, bcheck, logger);
   }
 
   template <typename object_intersection_t>
@@ -185,7 +186,8 @@ struct PseudoStepper {
   }
 
   void update(State& /*state*/, const FreeVector& /*pars*/,
-              const Covariance& /*cov*/) const {}
+              const BoundVector& /*boundParams*/, const Covariance& /*cov*/,
+              const Surface& /*surface*/) const {}
 
   void update(State& /*state*/, const Vector3& /*uposition*/,
               const Vector3& /*udirection*/, double /*up*/,
@@ -196,9 +198,9 @@ struct PseudoStepper {
   void transportCovarianceToBound(State& /*unused*/,
                                   const Surface& /*surface*/) const {}
 
-  Vector3 getField(State& /*state*/, const Vector3& /*pos*/) const {
+  Result<Vector3> getField(State& /*state*/, const Vector3& /*pos*/) const {
     // get the field from the cell
-    return Vector3(0., 0., 0.);
+    return Result<Vector3>::success({0., 0., 0.});
   }
 };
 

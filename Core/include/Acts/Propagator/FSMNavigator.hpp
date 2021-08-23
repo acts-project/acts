@@ -361,9 +361,9 @@ class FSMNavigator {
       }
 
       // did we hit the layer?
-      auto& [init_ix, layer, layerSurface, dir] =
+      auto& [_init_ix, _layer, initLayerSurface, _dir] =
           *state.navigation.navLayerIter;
-      if (layerSurface == state.navigation.currentSurface) {
+      if (initLayerSurface == state.navigation.currentSurface) {
         return states::SurfaceToSurface{};
       } else {
         NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
