@@ -76,6 +76,13 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
     const ActsExamples::SimSpacePointContainer& spacePoints) const {
   SimSeedContainer seeds;
   seeds.reserve(protoTracks.size());
+
+  std::unordered_map<Index, const SimSpacePoint*> spMap;
+
+  for (const SimSpacePoint& i : spacePoints) {
+    spMap.emplace(i.measurementIndex(), &i);
+  }
+
   for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
     // The list of hits and the initial start parameters
     const auto& protoTrack = protoTracks[itrack];
@@ -88,13 +95,9 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
     spacePointsOnTrack.reserve(protoTrack.size());
     // Loop over the hit index on the proto track to find the space points
     for (const auto& hitIndex : protoTrack) {
-      auto it =
-          std::find_if(spacePoints.begin(), spacePoints.end(),
-                       [&](const SimSpacePoint& spacePoint) {
-                         return (spacePoint.measurementIndex() == hitIndex);
-                       });
-      if (it != spacePoints.end()) {
-        spacePointsOnTrack.push_back(&(*it));
+      auto it = spMap.find(hitIndex);
+      if (it != spMap.end()) {
+        spacePointsOnTrack.push_back(it->second);
       }
     }
     // At least three space points are required
