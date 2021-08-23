@@ -576,7 +576,8 @@ class KalmanFitter {
                  surface->surfaceMaterial() != nullptr) {
         // We only create track states here if there is already measurement
         // detected
-        if (result.measurementStates > 0) {
+        if (result.measurementStates > 0 ||
+            surface->surfaceMaterial() != nullptr) {
           // No source links on surface, add either hole or passive material
           // TrackState entry multi trajectory. No storage allocation for
           // uncalibrated/calibrated measurement and filtered parameter
@@ -861,7 +862,8 @@ class KalmanFitter {
           result.lastMeasurementIndex, [&](auto st) {
             bool isMeasurement =
                 st.typeFlags().test(TrackStateFlag::MeasurementFlag);
-            if (isMeasurement) {
+            bool isMaterial = st.typeFlags().test(TrackStateFlag::MaterialFlag);
+            if (isMeasurement || isMaterial) {
               firstMeasurementIndex = st.index();
             }
             nStates++;

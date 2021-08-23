@@ -665,6 +665,7 @@ class CombinatorialKalmanFilter {
 
         // The surface could be either sensitive or passive
         bool isSensitive = (surface->associatedDetectorElement() != nullptr);
+        bool isMaterial = (surface->surfaceMaterial() != nullptr);
         std::string type = isSensitive ? "sensitive" : "passive";
         ACTS_VERBOSE("Detected " << type
                                  << " surface: " << surface->geometryId());
@@ -676,10 +677,11 @@ class CombinatorialKalmanFilter {
         // For in-sensitive surface, only add state when smoothing is
         // required
         if (tipState.nMeasurements > 0 and
-            (isSensitive or (not isSensitive and smoothing))) {
+            (isSensitive or (not isSensitive and smoothing) or isMaterial)) {
           // New state is to be added. Remove the last tip from active tips now
-          result.activeTips.erase(result.activeTips.end() - 1);
-
+          if (not result.activeTips.empty()) {
+            result.activeTips.erase(result.activeTips.end() - 1);
+          }
           // No source links on surface, add either hole or passive material
           // TrackState. No storage allocation for uncalibrated/calibrated
           // measurement and filtered parameter
@@ -983,7 +985,8 @@ class CombinatorialKalmanFilter {
       result.fittedStates.applyBackwards(lastMeasurementIndex, [&](auto st) {
         bool isMeasurement =
             st.typeFlags().test(TrackStateFlag::MeasurementFlag);
-        if (isMeasurement) {
+        bool isMaterial = st.typeFlags().test(TrackStateFlag::MaterialFlag);
+        if (isMeasurement || isMaterial) {
           firstMeasurementIndex = st.index();
         }
         nStates++;
