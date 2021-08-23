@@ -160,17 +160,14 @@ Acts::TrackingVolumeAndMaterial defaultVolumeMaterial(
 }  // namespace
 
 Acts::MaterialMapJsonConverter::MaterialMapJsonConverter(
-    const Acts::MaterialMapJsonConverter::Config& cfg)
-    : m_cfg(std::move(cfg)),
+    const Acts::MaterialMapJsonConverter::Config& config,
+    Acts::Logging::Level level)
+    : m_cfg(std::move(config)),
+      m_logger{getDefaultLogger("MaterialMapJsonConverter", level)},
       m_volumeMaterialConverter(m_volumeName),
       m_volumeConverter(m_volumeName),
       m_surfaceMaterialConverter(m_surfaceName),
-      m_surfaceConverter(m_surfaceName) {
-  // Validate the configuration
-  if (!m_cfg.logger) {
-    throw std::invalid_argument("Missing logger");
-  }
-}
+      m_surfaceConverter(m_surfaceName) {}
 
 /// Convert method
 ///
@@ -321,9 +318,12 @@ void Acts::MaterialMapJsonConverter::convertToHierarchy(
         for (auto& ssf : lay->surfaceArray()->surfaces()) {
           if (ssf->surfaceMaterial() != nullptr ||
               m_cfg.processNonMaterial == true) {
-            surfaceHierarchy.push_back(
-                {ssf->geometryId(),
-                 defaultSurfaceMaterial(ssf->getSharedPtr())});
+            auto sp = ssf->getSharedPtr();
+            auto sm = defaultSurfaceMaterial(sp);
+            auto id = ssf->geometryId();
+
+            std::pair p{id, sm};
+            surfaceHierarchy.push_back(p);
           }
         }
       }

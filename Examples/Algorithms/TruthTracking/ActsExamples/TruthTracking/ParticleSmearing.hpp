@@ -55,9 +55,12 @@ class ParticleSmearing final : public BareAlgorithm {
     std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
   };
 
-  ParticleSmearing(const Config& cfg, Acts::Logging::Level lvl);
+  ParticleSmearing(const Config& config, Acts::Logging::Level level);
 
   ProcessCode execute(const AlgorithmContext& ctx) const final override;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;

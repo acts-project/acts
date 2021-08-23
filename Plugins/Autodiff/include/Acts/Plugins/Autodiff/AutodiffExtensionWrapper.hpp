@@ -49,7 +49,7 @@ struct AutodiffExtensionWrapper {
   bool k(const propagator_state_t& state, const stepper_t& stepper,
          Vector3& knew, const Vector3& bField, std::array<double, 4>& kQoP,
          const int i = 0, const double h = 0.,
-         const Vector3& kprev = Vector3()) {
+         const Vector3& kprev = Vector3::Zero()) {
     return m_doubleExtension.k(state, stepper, knew, bField, kQoP, i, h, kprev);
   }
 

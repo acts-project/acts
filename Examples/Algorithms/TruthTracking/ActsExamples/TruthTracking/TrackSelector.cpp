@@ -16,9 +16,9 @@
 #include <stdexcept>
 #include <vector>
 
-ActsExamples::TrackSelector::TrackSelector(const Config& cfg,
-                                           Acts::Logging::Level lvl)
-    : BareAlgorithm("TrackSelector", lvl), m_cfg(cfg) {
+ActsExamples::TrackSelector::TrackSelector(const Config& config,
+                                           Acts::Logging::Level level)
+    : BareAlgorithm("TrackSelector", level), m_cfg(config) {
   if (m_cfg.inputTrackParameters.empty()) {
     throw std::invalid_argument("Missing input track parameters collection");
   }

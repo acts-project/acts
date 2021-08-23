@@ -30,10 +30,14 @@ StraightLineStepper::curvilinearState(State& state, bool transportCov) const {
       state.pathAccumulated);
 }
 
-void StraightLineStepper::update(State& state, const FreeVector& parameters,
-                                 const Covariance& covariance) const {
-  state.pars = parameters;
+void StraightLineStepper::update(State& state, const FreeVector& freeParams,
+                                 const BoundVector& boundParams,
+                                 const Covariance& covariance,
+                                 const Surface& surface) const {
+  state.pars = freeParams;
   state.cov = covariance;
+  state.jacToGlobal =
+      surface.boundToFreeJacobian(state.geoContext, boundParams);
 }
 
 void StraightLineStepper::update(State& state, const Vector3& uposition,
@@ -68,7 +72,7 @@ void StraightLineStepper::resetState(State& state,
   update(state,
          detail::transformBoundToFreeParameters(surface, state.geoContext,
                                                 boundParams),
-         cov);
+         boundParams, cov, surface);
   state.navDir = navDir;
   state.stepSize = ConstrainedStep(stepSize);
   state.pathAccumulated = 0.;

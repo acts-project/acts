@@ -50,6 +50,7 @@ These are usually not available through the system package manager and can be fo
 All external dependencies must be provided prior to building Acts. Compatible
 versions of all dependencies are provided e.g. by the [LCG
 releases](http://lcginfo.cern.ch/) starting from [LCG 97apython3](http://lcginfo.cern.ch/release/97apython3/).
+For convenience, it is possible to build the required boost and eigen3 dependencies using the ACTS build system; see [Build options](#build-options).
 Other options are also
 available and are discussed in the [Building Acts](#building-acts) section.
 
@@ -260,6 +261,8 @@ components.
 | ACTS_PARAMETER_DEFINITIONS_HEADER     | Use a different (track) parameter definitions header |
 | ACTS_USE_SYSTEM_AUTODIFF              | Use autodiff provided by the system instead of the bundled version |
 | ACTS_USE_SYSTEM_NLOHMANN_JSON         | Use nlohmann::json provided by the system instead of the bundled version |
+| ACTS_USE_SYSTEM_BOOST                 | Use the system boost libraries (defaults to ON) |
+| ACTS_USE_SYSTEM_EIGEN3                 | Use the system eigen3 libraries (defaults to ON) |
 
 All Acts-specific options are disabled or empty by default and must be
 specifically requested. Some of the options have interdependencies that are

@@ -35,7 +35,7 @@ void Acts::EigenStepper<E, A>::resetState(State& state,
   update(state,
          detail::transformBoundToFreeParameters(surface, state.geoContext,
                                                 boundParams),
-         cov);
+         boundParams, cov, surface);
   state.navDir = navDir;
   state.stepSize = ConstrainedStep(stepSize);
   state.pathAccumulated = 0.;
@@ -70,10 +70,14 @@ auto Acts::EigenStepper<E, A>::curvilinearState(State& state,
 
 template <typename E, typename A>
 void Acts::EigenStepper<E, A>::update(State& state,
-                                      const FreeVector& parameters,
-                                      const Covariance& covariance) const {
-  state.pars = parameters;
+                                      const FreeVector& freeParams,
+                                      const BoundVector& boundParams,
+                                      const Covariance& covariance,
+                                      const Surface& surface) const {
+  state.pars = freeParams;
   state.cov = covariance;
+  state.jacToGlobal =
+      surface.boundToFreeJacobian(state.geoContext, boundParams);
 }
 
 template <typename E, typename A>

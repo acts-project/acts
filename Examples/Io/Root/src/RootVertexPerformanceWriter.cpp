@@ -34,15 +34,14 @@ using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
 
 ActsExamples::RootVertexPerformanceWriter::RootVertexPerformanceWriter(
-    const ActsExamples::RootVertexPerformanceWriter::Config& cfg,
-    Acts::Logging::Level lvl)
-    : WriterT(cfg.inputVertices, "RootVertexPerformanceWriter", lvl),
-      m_cfg(cfg),
-      m_outputFile(cfg.rootFile) {
-  if (cfg.outputFilename.empty()) {
+    const ActsExamples::RootVertexPerformanceWriter::Config& config,
+    Acts::Logging::Level level)
+    : WriterT(config.inputVertices, "RootVertexPerformanceWriter", level),
+      m_cfg(config) {
+  if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
-  if (m_cfg.outputTreename.empty()) {
+  if (m_cfg.treeName.empty()) {
     throw std::invalid_argument("Missing tree name");
   }
   if (m_cfg.inputAllTruthParticles.empty()) {
@@ -60,21 +59,15 @@ ActsExamples::RootVertexPerformanceWriter::RootVertexPerformanceWriter(
     throw std::invalid_argument(
         "Collection with all fitted track parameters missing");
   }
-  if (m_cfg.inputTime.empty()) {
-    throw std::invalid_argument("Input reconstruction time missing");
-  }
 
   // Setup ROOT I/O
+  auto path = m_cfg.filePath;
+  m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
   if (m_outputFile == nullptr) {
-    auto path = joinPaths(m_cfg.outputDir, m_cfg.outputFilename);
-    m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
-    if (m_outputFile == nullptr) {
-      throw std::ios_base::failure("Could not open '" + path);
-    }
+    throw std::ios_base::failure("Could not open '" + path);
   }
   m_outputFile->cd();
-  m_outputTree =
-      new TTree(m_cfg.outputTreename.c_str(), m_cfg.outputTreename.c_str());
+  m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
   if (m_outputTree == nullptr)
     throw std::bad_alloc();
   else {
@@ -90,16 +83,13 @@ ActsExamples::RootVertexPerformanceWriter::RootVertexPerformanceWriter(
   }
 }
 
-ActsExamples::RootVertexPerformanceWriter::~RootVertexPerformanceWriter() {
-  if (m_outputFile) {
-    m_outputFile->Close();
-  }
-}
+ActsExamples::RootVertexPerformanceWriter::~RootVertexPerformanceWriter() {}
 
 ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::endRun() {
   if (m_outputFile) {
     m_outputFile->cd();
     m_outputTree->Write();
+    m_outputFile->Close();
   }
   return ProcessCode::SUCCESS;
 }
@@ -207,6 +197,9 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
       ctx.eventStore.get<std::vector<Acts::BoundTrackParameters>>(
           m_cfg.inputFittedTracks);
 
+  ACTS_INFO(
+      "Total number of reconstructed tracks : " << inputFittedTracks.size());
+
   if (associatedTruthParticles.size() != inputFittedTracks.size()) {
     ACTS_WARNING(
         "Number of fitted tracks and associated truth particles do not match. "
@@ -281,8 +274,12 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
   }
 
   // Retrieve and set reconstruction time
-  const auto& reconstructionTimeMS = ctx.eventStore.get<int>(m_cfg.inputTime);
-  m_timeMS = reconstructionTimeMS;
+  if (!m_cfg.inputTime.empty()) {
+    const auto& reconstructionTimeMS = ctx.eventStore.get<int>(m_cfg.inputTime);
+    m_timeMS = reconstructionTimeMS;
+  } else {
+    m_timeMS = -1;
+  }
 
   // fill the variables
   m_outputTree->Fill();

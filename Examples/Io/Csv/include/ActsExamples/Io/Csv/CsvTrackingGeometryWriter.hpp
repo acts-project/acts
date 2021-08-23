@@ -54,9 +54,9 @@ class CsvTrackingGeometryWriter : public IWriter {
 
   /// Construct the geometry writer.
   ///
-  /// @param cfg is the configuration object
-  /// @param lvl is the logging level
-  CsvTrackingGeometryWriter(const Config& cfg, Acts::Logging::Level lvl);
+  /// @param config is the configuration object
+  /// @param level is the logging level
+  CsvTrackingGeometryWriter(const Config& config, Acts::Logging::Level level);
 
   std::string name() const final override;
 
