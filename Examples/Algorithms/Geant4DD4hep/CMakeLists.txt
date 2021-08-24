@@ -12,7 +12,9 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesGeant4DD4hep
-  PUBLIC ${Geant4_LIBRARIES})
+  PUBLIC 
+  ActsExamplesGeant4 
+  ${Geant4_LIBRARIES})
 
 if(${DD4hep_VERSION} VERSION_LESS 1.11)
   target_include_directories(
