@@ -33,9 +33,7 @@ int main(int argc, char* argv[]) {
   auto dd4hepCfg = Options::readDD4hepConfig<po::variables_map>(vm);
   auto geometrySvc = std::make_shared<DD4hep::DD4hepGeometryService>(dd4hepCfg);
 
-  Acts::PolymorphicValue<G4VUserDetectorConstruction> g4detector =
-      Acts::makePolymorphicValue<DD4hepDetectorConstruction>(
-          *geometrySvc->lcdd());
-
-  return runGeantinoRecording(vm, std::move(g4detector));
+  return runGeantinoRecording(
+      vm, std::make_unique<DD4hepDetectorConstructionFactory>(
+              *geometrySvc->lcdd()));
 }
