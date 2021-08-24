@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "ActsExamples/Geant4/G4DetectorConstructionFactory.hpp"
+
 #include <G4VUserDetectorConstruction.hh>
 #include <globals.hh>
 
@@ -21,6 +23,22 @@ class GdmlDetectorConstruction final : public G4VUserDetectorConstruction {
 
   /// Read the file and parse it to construct the Geant4 description.
   G4VPhysicalVolume* Construct() final override;
+
+ private:
+  std::string m_path;
+};
+
+class GdmlDetectorConstructionFactory : public G4DetectorConstructionFactory {
+ public:
+  /// @brief Construct a new GDML Detector Factory
+  ///
+  /// @param path The input GDML file path
+  GdmlDetectorConstructionFactory(const std::string& path);
+
+  /// @brief Main factory method following the interface
+  ///
+  /// @return Detector construction based on GDML.
+  std::unique_ptr<G4VUserDetectorConstruction> operator()() const override;
 
  private:
   std::string m_path;

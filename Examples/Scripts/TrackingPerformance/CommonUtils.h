@@ -24,7 +24,7 @@ void setHistStyle(hist_t* hist, short color = 1) {
   hist->SetMarkerStyle(20);
   hist->SetMarkerSize(0.8);
   hist->SetLineWidth(2);
-  // hist->SetTitle("");
+  hist->SetTitle("");
   hist->SetLineColor(color);
   hist->SetMarkerColor(color);
 }
