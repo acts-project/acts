@@ -22,6 +22,9 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
+#include <limits.h>
+#include <unistd.h>
+
 namespace {
 std::string joinPaths(const std::string& a, const std::string& b) {
   if (b.substr(0, 1) == "/" || a.empty()) {
@@ -34,6 +37,13 @@ std::string joinPaths(const std::string& a, const std::string& b) {
 
   return a + "/" + b;
 }
+
+std::string getWorkingDirectory() {
+  char buffer[PATH_MAX];
+  return (getcwd(buffer, sizeof(buffer)) ? std::string(buffer)
+                                         : std::string(""));
+}
+
 }  // namespace
 
 void Acts::GeometryView3D::drawPolyhedron(IVisualization3D& helper,
@@ -66,7 +76,9 @@ void Acts::GeometryView3D::drawSurfaceArray(
     IVisualization3D& helper, const SurfaceArray& surfaceArray,
     const GeometryContext& gctx, const Transform3& transform,
     const ViewConfig& sensitiveConfig, const ViewConfig& passiveConfig,
-    const ViewConfig& gridConfig, const std::string& outputDir) {
+    const ViewConfig& gridConfig, const std::string& _outputDir) {
+  std::string outputDir =
+      _outputDir == "." ? getWorkingDirectory() : _outputDir;
   // Draw all the surfaces
   Extent arrayExtent;
   for (const auto& sf : surfaceArray.surfaces()) {
@@ -161,7 +173,10 @@ void Acts::GeometryView3D::drawVolume(IVisualization3D& helper,
 void Acts::GeometryView3D::drawLayer(
     IVisualization3D& helper, const Layer& layer, const GeometryContext& gctx,
     const ViewConfig& layerConfig, const ViewConfig& sensitiveConfig,
-    const ViewConfig& gridConfig, const std::string& outputDir) {
+    const ViewConfig& gridConfig, const std::string& _outputDir) {
+  std::string outputDir =
+      _outputDir == "." ? getWorkingDirectory() : _outputDir;
+
   if (layerConfig.visible) {
     auto layerVolume = layer.representingVolume();
     if (layerVolume != nullptr) {
@@ -192,7 +207,9 @@ void Acts::GeometryView3D::drawTrackingVolume(
     const GeometryContext& gctx, const ViewConfig& containerView,
     const ViewConfig& volumeView, const ViewConfig& layerView,
     const ViewConfig& sensitiveView, const ViewConfig& gridView, bool writeIt,
-    const std::string& tag, const std::string& outputDir) {
+    const std::string& tag, const std::string& _outputDir) {
+  std::string outputDir =
+      _outputDir == "." ? getWorkingDirectory() : _outputDir;
   if (tVolume.confinedVolumes() != nullptr) {
     const auto& subVolumes = tVolume.confinedVolumes()->arrayObjects();
     for (const auto& tv : subVolumes) {
