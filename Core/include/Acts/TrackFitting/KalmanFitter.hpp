@@ -855,7 +855,7 @@ class KalmanFitter {
       result.smoothed = true;
 
       // Get the indices of the first measurement states;
-      size_t firstMeasurementIndex = result.lastMeasurementIndex;
+      size_t firstStateIndex = result.lastMeasurementIndex;
       // Count track states to be smoothed
       size_t nStates = 0;
       result.fittedStates.applyBackwards(
@@ -864,7 +864,7 @@ class KalmanFitter {
                 st.typeFlags().test(TrackStateFlag::MeasurementFlag);
             bool isMaterial = st.typeFlags().test(TrackStateFlag::MaterialFlag);
             if (isMeasurement || isMaterial) {
-              firstMeasurementIndex = st.index();
+              firstStateIndex = st.index();
             }
             nStates++;
           });
@@ -894,8 +894,8 @@ class KalmanFitter {
       }
 
       // Obtain the smoothed parameters at first/last measurement state
-      auto firstCreatedMeasurement =
-          result.fittedStates.getTrackState(firstMeasurementIndex);
+      auto firstCreatedState =
+          result.fittedStates.getTrackState(firstStateIndex);
       auto lastCreatedMeasurement =
           result.fittedStates.getTrackState(result.lastMeasurementIndex);
 
@@ -908,7 +908,7 @@ class KalmanFitter {
 
       // The smoothed free params at the first/last measurement state
       auto firstParams = MultiTrajectoryHelpers::freeSmoothed(
-          state.options.geoContext, firstCreatedMeasurement);
+          state.options.geoContext, firstCreatedState);
       auto lastParams = MultiTrajectoryHelpers::freeSmoothed(
           state.options.geoContext, lastCreatedMeasurement);
       // Get the intersections of the smoothed free parameters with the target
@@ -925,14 +925,14 @@ class KalmanFitter {
       // smoothed measurement state. Also, whether the intersection is on
       // surface is not checked here.
       bool reverseDirection = false;
-      bool closerToFirstCreatedMeasurement =
+      bool closerTofirstCreatedState =
           (std::abs(firstIntersection.intersection.pathLength) <=
            std::abs(lastIntersection.intersection.pathLength));
-      if (closerToFirstCreatedMeasurement) {
+      if (closerTofirstCreatedState) {
         stepper.update(state.stepping, firstParams,
-                       firstCreatedMeasurement.smoothed(),
-                       firstCreatedMeasurement.smoothedCovariance(),
-                       firstCreatedMeasurement.referenceSurface());
+                       firstCreatedState.smoothed(),
+                       firstCreatedState.smoothedCovariance(),
+                       firstCreatedState.referenceSurface());
         reverseDirection = (firstIntersection.intersection.pathLength < 0);
       } else {
         stepper.update(state.stepping, lastParams,
@@ -941,8 +941,8 @@ class KalmanFitter {
                        lastCreatedMeasurement.referenceSurface());
         reverseDirection = (lastIntersection.intersection.pathLength < 0);
       }
-      const auto& surface = closerToFirstCreatedMeasurement
-                                ? firstCreatedMeasurement.referenceSurface()
+      const auto& surface = closerTofirstCreatedState
+                                ? firstCreatedState.referenceSurface()
                                 : lastCreatedMeasurement.referenceSurface();
       ACTS_VERBOSE(
           "Smoothing successful, updating stepping state to smoothed "
