@@ -24,7 +24,7 @@ target_link_libraries(
   ActsExamplesIoRoot
   PUBLIC
     ActsCore ActsPluginDigitization ActsPluginIdentification ActsExamplesDigitization
-    ActsExamplesFramework ActsExamplesPropagation ActsExamplesTruthTracking
+    ActsExamplesFramework ActsExamplesPropagation ActsExamplesTruthTracking ActsExamplesMaterialMapping
     Threads::Threads
   PRIVATE ROOT::Core ROOT::Hist ROOT::Tree)
 

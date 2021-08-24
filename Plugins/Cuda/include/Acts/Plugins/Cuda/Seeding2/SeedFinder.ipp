@@ -34,8 +34,8 @@ SeedFinder<external_spacepoint_t>::SeedFinder(
     const SeedFilterConfig& seedFilterConfig,
     const TripletFilterConfig& tripletFilterConfig, int device,
     std::unique_ptr<const Logger> incomingLogger)
-    : m_commonConfig(std::move(commonConfig)),
-      m_seedFilterConfig(seedFilterConfig),
+    : m_commonConfig(commonConfig.toInternalUnits()),
+      m_seedFilterConfig(seedFilterConfig.toInternalUnits()),
       m_tripletFilterConfig(tripletFilterConfig),
       m_device(device),
       m_logger(std::move(incomingLogger)) {
@@ -204,7 +204,8 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
           std::make_unique<const InternalSeed<external_spacepoint_t>>(
               bottomSP, middleSP, topSP, 0)));
     }
-    m_commonConfig.seedFilter->filterSeeds_1SpFixed(seedsPerSPM, outputVec);
+    m_commonConfig.seedFilter->filterSeeds_1SpFixed(
+        seedsPerSPM, std::back_inserter(outputVec));
   }
 
   // Free up all allocated device memory.

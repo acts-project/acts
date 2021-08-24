@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "ActsExamples/Geant4/G4DetectorConstructionFactory.hpp"
+
 #include <G4VUserDetectorConstruction.hh>
 
 namespace dd4hep {
@@ -25,6 +27,22 @@ class DD4hepDetectorConstruction final : public G4VUserDetectorConstruction {
   /// Transfers ownership of the created object as all volumes (including world)
   /// are deleted in ~G4PhysicalVolumeStore().
   G4VPhysicalVolume* Construct() final override;
+
+ private:
+  dd4hep::Detector& m_detector;
+};
+
+class DD4hepDetectorConstructionFactory : public G4DetectorConstructionFactory {
+ public:
+  /// @brief Construct a new DD4hep detector factory
+  ///
+  /// @param detector DD4hep detector instance to construct G4 geometry from
+  DD4hepDetectorConstructionFactory(dd4hep::Detector& detector);
+
+  /// @brief Main factory method
+  ///
+  /// @return Detector construction based on a DD4hep geometry
+  std::unique_ptr<G4VUserDetectorConstruction> operator()() const override;
 
  private:
   dd4hep::Detector& m_detector;

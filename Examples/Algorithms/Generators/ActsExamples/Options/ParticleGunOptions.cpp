@@ -43,7 +43,9 @@ void ActsExamples::Options::addParticleGunOptions(Description& desc) {
   opt("gen-randomize-charge", bool_switch(),
       "Flip the charge and change the PDG number accordingly.");
   opt("gen-nparticles", value<size_t>()->default_value(1u),
-      "Number of generated particles");
+      "Number of generated particles per vertex");
+  opt("gen-nvertices", value<size_t>()->default_value(1u),
+      "Number of generated vertices");
 }
 
 ActsExamples::EventGenerator::Config
@@ -80,9 +82,20 @@ ActsExamples::Options::readParticleGunOptions(const Variables& vars) {
   pgCfg.randomizeCharge = vars["gen-randomize-charge"].template as<bool>();
   pgCfg.numParticles = vars["gen-nparticles"].as<size_t>();
 
+  if (pgCfg.numParticles > std::pow(2, ActsFatras::Barcode::bits(2))) {
+    throw std::runtime_error{
+        "Too many particles per vertex requested for Fatras Barcode"};
+  }
+
+  size_t nVertices = vars["gen-nvertices"].as<size_t>();
+
+  if (nVertices > std::pow(2, ActsFatras::Barcode::bits(0))) {
+    throw std::runtime_error{"Too many vertices requested for Fatras Barcode"};
+  }
+
   EventGenerator::Config cfg;
   cfg.generators = {
-      {FixedMultiplicityGenerator{1}, std::move(vertexGen),
+      {FixedMultiplicityGenerator{nVertices}, std::move(vertexGen),
        ParametricParticleGenerator(pgCfg)},
   };
 
