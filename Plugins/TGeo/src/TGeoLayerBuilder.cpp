@@ -140,7 +140,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
     if (not layerCfg.parseRanges.empty()) {
       for (const auto& pRange : layerCfg.parseRanges) {
         ACTS_DEBUG("- layer parsing restricted in "
-                   << binningValueNames[pRange.first] << " to ["
+                   << binningValueNames()[pRange.first] << " to ["
                    << pRange.second.first << "/" << pRange.second.second
                    << "].");
       }
@@ -148,7 +148,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
     if (not layerCfg.splitConfigs.empty()) {
       for (const auto& sConfig : layerCfg.splitConfigs) {
         ACTS_DEBUG("- layer splitting attempt in "
-                   << binningValueNames[sConfig.first] << " with tolerance "
+                   << binningValueNames()[sConfig.first] << " with tolerance "
                    << sConfig.second << ".");
       }
     }
@@ -175,7 +175,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
       ACTS_DEBUG("- applying  " << layerCfg.parseRanges.size()
                                 << " search restrictions.");
       for (const auto& prange : layerCfg.parseRanges) {
-        ACTS_VERBOSE(" - range " << binningValueNames[prange.first]
+        ACTS_VERBOSE(" - range " << binningValueNames()[prange.first]
                                  << " within [ " << prange.second.first << ", "
                                  << prange.second.second << "]");
       }
