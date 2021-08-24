@@ -27,6 +27,12 @@ jobs:
       INSTALL_DIR: ${{ github.workspace }}/install
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: true
+        if: "!contains(matrix.image, 'lcg')"
+      - uses: actions/checkout@v2
+        if: contains(matrix.image, 'lcg')
+
       - name: Define setup script
         if: contains(matrix.image, 'lcg')
         run: echo "SETUP=${SETUP_LCG}" >> $GITHUB_ENV
