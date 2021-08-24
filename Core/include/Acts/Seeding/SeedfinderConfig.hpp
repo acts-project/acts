@@ -51,7 +51,7 @@ struct SeedfinderConfig {
   float maxPtScattering = 10 * Acts::UnitConstants::GeV;
 
   // for how many seeds can one SpacePoint be the middle SpacePoint?
-  int maxSeedsPerSpM = 5;
+  unsigned int maxSeedsPerSpM = 5;
 
   // Geometry Settings
   // Detector ROI
