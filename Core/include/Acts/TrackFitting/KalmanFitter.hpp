@@ -575,7 +575,8 @@ class KalmanFitter {
       } else if (surface->associatedDetectorElement() != nullptr ||
                  surface->surfaceMaterial() != nullptr) {
         // We only create track states here if there is already measurement
-        // detected
+        // detected or if the surface has material (no holes before the first
+        // measurement)
         if (result.measurementStates > 0 ||
             surface->surfaceMaterial() != nullptr) {
           // No source links on surface, add either hole or passive material
@@ -854,7 +855,8 @@ class KalmanFitter {
       // Remember you smoothed the track states
       result.smoothed = true;
 
-      // Get the indices of the first measurement states;
+      // Get the indices of the first states (can be either a measurement or
+      // material);
       size_t firstStateIndex = result.lastMeasurementIndex;
       // Count track states to be smoothed
       size_t nStates = 0;
@@ -906,7 +908,8 @@ class KalmanFitter {
             state.stepping.navDir * freeVector.segment<3>(eFreeDir0), true);
       };
 
-      // The smoothed free params at the first/last measurement state
+      // The smoothed free params at the first/last measurement state.
+      // (the first state can also be a material state)
       auto firstParams = MultiTrajectoryHelpers::freeSmoothed(
           state.options.geoContext, firstCreatedState);
       auto lastParams = MultiTrajectoryHelpers::freeSmoothed(

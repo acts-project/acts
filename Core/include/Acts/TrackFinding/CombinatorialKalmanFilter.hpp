@@ -978,7 +978,8 @@ class CombinatorialKalmanFilter {
       const auto& lastMeasurementIndex =
           result.lastMeasurementIndices.at(result.iSmoothed);
 
-      // Get the indices of the first measurement states;
+      // Get the indices of the first states (can be either a measurement or
+      // material);
       size_t firstStateIndex = lastMeasurementIndex;
       // Count track states to be smoothed
       size_t nStates = 0;
@@ -1013,7 +1014,8 @@ class CombinatorialKalmanFilter {
         return Result<void>::success();
       }
 
-      // Obtain the smoothed parameters at first/last measurement state
+      // Obtain the smoothed parameters at first/last measurement state.
+      // The first state can also be a material state
       auto firstCreatedState =
           result.fittedStates.getTrackState(firstStateIndex);
       auto lastCreatedMeasurement =
