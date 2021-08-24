@@ -23,7 +23,7 @@ Acts::TrackingVolumeArrayCreator::trackingVolumeArray(
     const GeometryContext& gctx, const TrackingVolumeVector& tVolumes,
     BinningValue bValue) const {
   // MSG_VERBOSE("Create VolumeArray of "<< tVolumes.size() << " TrackingVolumes
-  // with binning in : " << binningValueNames[bValue] );
+  // with binning in : " << binningValueNames()[bValue] );
   // let's copy and sort
   TrackingVolumeVector volumes(tVolumes);
   // sort it accordingly to the binning value
