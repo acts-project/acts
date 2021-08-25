@@ -31,9 +31,9 @@ std::shared_ptr<Acts::ProtoSurfaceMaterial> Acts::createProtoMaterial(
   // Loop over the bins
   for (auto& bin : binning) {
     // finding the iterator position to determine the binning value
-    auto bit = std::find(Acts::binningValueNames.begin(),
-                         Acts::binningValueNames.end(), bin.first);
-    size_t indx = std::distance(Acts::binningValueNames.begin(), bit);
+    auto bit = std::find(Acts::binningValueNames().begin(),
+                         Acts::binningValueNames().end(), bin.first);
+    size_t indx = std::distance(Acts::binningValueNames().begin(), bit);
     Acts::BinningValue bval = Acts::BinningValue(indx);
     Acts::BinningOption bopt = bin.second;
     double min = 0.;
