@@ -29,7 +29,7 @@
 
 void Acts::to_json(nlohmann::json& j,
                    const Acts::SurfaceAndMaterialWithContext& surface) {
-  toJson(j, std::get<0>(surface), *(std::get<2>(surface)));
+  toJson(j, std::get<0>(surface), std::get<2>(surface));
   to_json(j, std::get<1>(surface).get());
 }
 

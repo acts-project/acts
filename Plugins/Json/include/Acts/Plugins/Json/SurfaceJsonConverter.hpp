@@ -24,7 +24,7 @@ namespace Acts {
 using SurfaceAndMaterialWithContext =
     std::tuple<std::shared_ptr<const Acts::Surface>,
                std::shared_ptr<const Acts::ISurfaceMaterial>,
-               const Acts::GeometryContext*>;
+               Acts::GeometryContext>;
 
 static std::vector<std::string> surfaceTypes = {
     "ConeSurface",  "CylinderSurface", "DiscSurface",       "PerigeeSurface",

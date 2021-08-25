@@ -23,6 +23,7 @@
 #include <Acts/Surfaces/CylinderBounds.hpp>
 #include <Acts/Surfaces/RadialBounds.hpp>
 #include <Acts/Surfaces/SurfaceBounds.hpp>
+#include <Acts/Surfaces/TrapezoidBounds.hpp>
 
 #include <algorithm>
 #include <map>
@@ -33,7 +34,7 @@ Acts::SurfaceAndMaterialWithContext defaultSurfaceMaterial(
     std::shared_ptr<const Acts::Surface> surface,
     const Acts::GeometryContext& context) {
   if (surface->surfaceMaterialSharedPtr() != nullptr) {
-    return {surface, surface->surfaceMaterialSharedPtr(), &(context)};
+    return {surface, surface->surfaceMaterialSharedPtr(), context};
   }
   Acts::BinUtility bUtility;
   // Check which type of bounds is associated to the surface
@@ -46,6 +47,8 @@ Acts::SurfaceAndMaterialWithContext defaultSurfaceMaterial(
       dynamic_cast<const Acts::AnnulusBounds*>(&surfaceBounds);
   const Acts::RectangleBounds* rectangleBounds =
       dynamic_cast<const Acts::RectangleBounds*>(&surfaceBounds);
+  const Acts::TrapezoidBounds* trapezoidBounds =
+      dynamic_cast<const Acts::TrapezoidBounds*>(&surfaceBounds);
 
   if (radialBounds != nullptr) {
     bUtility += Acts::BinUtility(
@@ -97,8 +100,19 @@ Acts::SurfaceAndMaterialWithContext defaultSurfaceMaterial(
                          rectangleBounds->get(Acts::RectangleBounds::eMaxY),
                          Acts::open, Acts::binY);
   }
+  if (trapezoidBounds != nullptr) {
+    double halfLengthX =
+        std::max(trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthXnegY),
+                 trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthXposY));
+    bUtility += Acts::BinUtility(1, -1 * halfLengthX, halfLengthX, Acts::open,
+                                 Acts::binX);
+    bUtility += Acts::BinUtility(
+        1, -1 * trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthY),
+        trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthY), Acts::open,
+        Acts::binY);
+  }
   return {surface, std::make_shared<Acts::ProtoSurfaceMaterial>(bUtility),
-          &(context)};
+          context};
 }
 
 Acts::TrackingVolumeAndMaterial defaultVolumeMaterial(

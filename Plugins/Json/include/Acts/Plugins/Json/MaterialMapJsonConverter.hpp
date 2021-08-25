@@ -25,7 +25,7 @@ namespace Acts {
 using SurfaceAndMaterialWithContext =
     std::tuple<std::shared_ptr<const Acts::Surface>,
                std::shared_ptr<const Acts::ISurfaceMaterial>,
-               const Acts::GeometryContext*>;
+               Acts::GeometryContext>;
 using TrackingVolumeAndMaterial =
     std::pair<const Acts::TrackingVolume*,
               std::shared_ptr<const Acts::IVolumeMaterial>>;
