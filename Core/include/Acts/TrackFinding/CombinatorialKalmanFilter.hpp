@@ -677,7 +677,13 @@ class CombinatorialKalmanFilter {
         // For in-sensitive surface, only add state when smoothing is
         // required
         if (tipState.nMeasurements > 0 and
-            (isSensitive or (not isSensitive and smoothing) or isMaterial)) {
+          bool createState = false;
+          if (smoothing){
+             createState = (tipState.nMeasurements > 0 or isMaterial);
+          } else {
+             createState = (tipState.nMeasurements > 0 and isSensitive);
+          }
+          if(createState){
           // New state is to be added. Remove the last tip from active tips now
           if (not result.activeTips.empty()) {
             result.activeTips.erase(result.activeTips.end() - 1);
