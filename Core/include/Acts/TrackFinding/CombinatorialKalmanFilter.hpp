@@ -665,6 +665,7 @@ class CombinatorialKalmanFilter {
 
         // The surface could be either sensitive or passive
         bool isSensitive = (surface->associatedDetectorElement() != nullptr);
+        bool isMaterial = (surface->surfaceMaterial() != nullptr);
         std::string type = isSensitive ? "sensitive" : "passive";
         ACTS_VERBOSE("Detected " << type
                                  << " surface: " << surface->geometryId());
@@ -675,11 +676,17 @@ class CombinatorialKalmanFilter {
         // Add state if there is already measurement detected on this branch
         // For in-sensitive surface, only add state when smoothing is
         // required
-        if (tipState.nMeasurements > 0 and
-            (isSensitive or (not isSensitive and smoothing))) {
+        bool createState = false;
+        if (smoothing) {
+          createState = (tipState.nMeasurements > 0 or isMaterial);
+        } else {
+          createState = (tipState.nMeasurements > 0 and isSensitive);
+        }
+        if (createState) {
           // New state is to be added. Remove the last tip from active tips now
-          result.activeTips.erase(result.activeTips.end() - 1);
-
+          if (not result.activeTips.empty()) {
+            result.activeTips.erase(result.activeTips.end() - 1);
+          }
           // No source links on surface, add either hole or passive material
           // TrackState. No storage allocation for uncalibrated/calibrated
           // measurement and filtered parameter
@@ -976,15 +983,17 @@ class CombinatorialKalmanFilter {
       const auto& lastMeasurementIndex =
           result.lastMeasurementIndices.at(result.iSmoothed);
 
-      // Get the indices of the first measurement states;
-      size_t firstMeasurementIndex = lastMeasurementIndex;
+      // Get the indices of the first states (can be either a measurement or
+      // material);
+      size_t firstStateIndex = lastMeasurementIndex;
       // Count track states to be smoothed
       size_t nStates = 0;
       result.fittedStates.applyBackwards(lastMeasurementIndex, [&](auto st) {
         bool isMeasurement =
             st.typeFlags().test(TrackStateFlag::MeasurementFlag);
-        if (isMeasurement) {
-          firstMeasurementIndex = st.index();
+        bool isMaterial = st.typeFlags().test(TrackStateFlag::MaterialFlag);
+        if (isMeasurement || isMaterial) {
+          firstStateIndex = st.index();
         }
         nStates++;
       });
@@ -1010,9 +1019,10 @@ class CombinatorialKalmanFilter {
         return Result<void>::success();
       }
 
-      // Obtain the smoothed parameters at first/last measurement state
-      auto firstCreatedMeasurement =
-          result.fittedStates.getTrackState(firstMeasurementIndex);
+      // Obtain the smoothed parameters at first/last measurement state.
+      // The first state can also be a material state
+      auto firstCreatedState =
+          result.fittedStates.getTrackState(firstStateIndex);
       auto lastCreatedMeasurement =
           result.fittedStates.getTrackState(lastMeasurementIndex);
 
@@ -1025,7 +1035,7 @@ class CombinatorialKalmanFilter {
 
       // The smoothed free params at the first/last measurement state
       auto firstParams = MultiTrajectoryHelpers::freeSmoothed(
-          state.options.geoContext, firstCreatedMeasurement);
+          state.options.geoContext, firstCreatedState);
       auto lastParams = MultiTrajectoryHelpers::freeSmoothed(
           state.options.geoContext, lastCreatedMeasurement);
       // Get the intersections of the smoothed free parameters with the target
@@ -1042,14 +1052,14 @@ class CombinatorialKalmanFilter {
       // smoothed measurement state. Also, whether the intersection is on
       // surface is not checked here.
       bool reverseDirection = false;
-      bool closerToFirstCreatedMeasurement =
+      bool closerTofirstCreatedState =
           (std::abs(firstIntersection.intersection.pathLength) <=
            std::abs(lastIntersection.intersection.pathLength));
-      if (closerToFirstCreatedMeasurement) {
+      if (closerTofirstCreatedState) {
         stepper.update(state.stepping, firstParams,
-                       firstCreatedMeasurement.smoothed(),
-                       firstCreatedMeasurement.smoothedCovariance(),
-                       firstCreatedMeasurement.referenceSurface());
+                       firstCreatedState.smoothed(),
+                       firstCreatedState.smoothedCovariance(),
+                       firstCreatedState.referenceSurface());
         reverseDirection = (firstIntersection.intersection.pathLength < 0);
       } else {
         stepper.update(state.stepping, lastParams,
@@ -1058,8 +1068,8 @@ class CombinatorialKalmanFilter {
                        lastCreatedMeasurement.referenceSurface());
         reverseDirection = (lastIntersection.intersection.pathLength < 0);
       }
-      const auto& surface = closerToFirstCreatedMeasurement
-                                ? firstCreatedMeasurement.referenceSurface()
+      const auto& surface = closerTofirstCreatedState
+                                ? firstCreatedState.referenceSurface()
                                 : lastCreatedMeasurement.referenceSurface();
       ACTS_VERBOSE(
           "Smoothing successful, updating stepping state to smoothed "

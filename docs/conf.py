@@ -1,6 +1,8 @@
 # Configuration file for the Sphinx documentation builder.
 
 import os
+import sys
+import subprocess
 
 from m2r import MdInclude
 from recommonmark.transform import AutoStructify
@@ -83,30 +85,32 @@ breathe_default_members = (
     "undoc-members",
 )
 
-# -- Automatic API documentation generation with Exhale -----------------------
+# -- Automatic API documentation ---------------------------------------------
 
-exhale_args = {
-    "containmentFolder": "api",
-    "rootFileName": "api.rst",
-    "rootFileTitle": "API",
-    "createTreeView": True,
-    # note: OUTPUT_DIRECTORY in Doxyfile must match breathe default project path
-    # note: this must match STRIP_FROM_PATH in Doxyfile
-    "doxygenStripFromPath": "..",
-}
+env = os.environ.copy()
+env["DOXYGEN_WARN_AS_ERROR"] = "NO"
+cwd = os.path.dirname(__file__)
 
-if on_readthedocs:
+if on_readthedocs or tags.has("run_doxygen"):
     # if we are running on RTD Doxygen must be run as part of the build
-    # let exhale handle the doxygen execution
-    extensions.append("exhale")
-    exhale_args["exhaleExecutesDoxygen"] = True
-elif tags.has("use_exhale"):
-    # if exhale is requested manually, we expect the Doxygen has been run for us
-    extensions.append("exhale")
-    exhale_args["exhaleExecutesDoxygen"] = False
+    print("Executing doxygen in", cwd)
+    print(
+        "Doxygen version:",
+        subprocess.check_output(["doxygen", "--version"], encoding="utf-8"),
+    )
+    sys.stdout.flush()
+    subprocess.check_call(
+        ["doxygen", "Doxyfile"], stdout=subprocess.PIPE, cwd=cwd, env=env
+    )
 
-if exhale_args["exhaleExecutesDoxygen"]:
-    exhale_args["exhaleUseDoxyfile"] = True
+if on_readthedocs or tags.has("run_apidoc"):
+    print("Executing breathe apidoc in", cwd)
+    subprocess.check_call(
+        ["python", "-m", "breathe.apidoc", "_build/doxygen-xml", "-o", "api"],
+        stdout=subprocess.PIPE,
+        cwd=cwd,
+        env=env,
+    )
 
 # -- Markdown bridge setup hook (must come last, not sure why) ----------------
 
