@@ -65,11 +65,7 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
   m_outputTree->Branch("sub_particle", &m_subParticle);
 }
 
-ActsExamples::RootParticleWriter::~RootParticleWriter() {
-  if (m_outputFile) {
-    m_outputFile->Close();
-  }
-}
+ActsExamples::RootParticleWriter::~RootParticleWriter() {}
 
 ActsExamples::ProcessCode ActsExamples::RootParticleWriter::endRun() {
   if (m_outputFile) {
@@ -78,6 +74,11 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::endRun() {
     ACTS_INFO("Wrote particles to tree '" << m_cfg.treeName << "' in '"
                                           << m_cfg.filePath << "'");
   }
+
+  if (m_outputFile) {
+    m_outputFile->Close();
+  }
+
   return ProcessCode::SUCCESS;
 }
 

@@ -11,9 +11,9 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/PolymorphicValue.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Geant4/G4DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4/PrimaryGeneratorAction.hpp"
 
 #include <memory>
@@ -41,18 +41,21 @@ class GeantinoRecording final : public BareAlgorithm {
     /// Output collection for the generated material tracks.
     std::string outputMaterialTracks = "geant-material-tracks";
     /// Detector construction object.
-    Acts::PolymorphicValue<G4VUserDetectorConstruction> detectorConstruction;
+    std::shared_ptr<G4DetectorConstructionFactory> detectorConstructionFactory;
     /// The number of tracks per event.
     size_t tracksPerEvent = 0;
     /// Configuration of the generator action
     Geant4::PrimaryGeneratorAction::Config generationConfig;
   };
 
-  GeantinoRecording(Config&& cfg, Acts::Logging::Level lvl);
+  GeantinoRecording(Config config, Acts::Logging::Level level);
   ~GeantinoRecording();
 
   ActsExamples::ProcessCode execute(
       const ActsExamples::AlgorithmContext& ctx) const final override;
+
+  /// Readonly access to the configuration
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;

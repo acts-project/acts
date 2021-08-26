@@ -24,10 +24,10 @@
 #include "ActsExamples/Digitization/DigitizationOptions.hpp"
 #include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 
+#include <map>
 #include <memory>
 
 namespace ActsExamples {
-namespace detail {
 
 /// Helper configurator that takes a simplified (per volume, per layer)
 /// Input digitization file and creates a full fletched per module
@@ -45,8 +45,8 @@ struct DigitizationConfigurator {
   Acts::GeometryHierarchyMap<DigiComponentsConfig> inputDigiComponents;
 
   /// Final collection of output components
-  using CollectedOutputComponents =
-      std::vector<std::pair<Acts::GeometryIdentifier, DigiComponentsConfig>>;
+  std::vector<std::pair<Acts::GeometryIdentifier, DigiComponentsConfig>>
+      outputDigiComponents;
 
   /// This tries to compactify the output map
   bool compactify = false;
@@ -54,9 +54,6 @@ struct DigitizationConfigurator {
   /// High level reference configurations for compactification
   std::map<Acts::GeometryIdentifier, DigiComponentsConfig>
       volumeLayerComponents;
-
-  /// Full output components for digitization
-  std::shared_ptr<CollectedOutputComponents> outputDigiComponents = nullptr;
 
   /// The visitor call for the geometry
   ///
@@ -265,7 +262,7 @@ struct DigitizationConfigurator {
             return;
           } else {
             volumeLayerComponents[volGeoId] = dOutputConfig;
-            outputDigiComponents->push_back({volGeoId, dOutputConfig});
+            outputDigiComponents.push_back({volGeoId, dOutputConfig});
           }
 
           // Check for a representing layer configuration, insert if not present
@@ -278,15 +275,14 @@ struct DigitizationConfigurator {
             return;
           } else {
             volumeLayerComponents[volLayGeoId] = dOutputConfig;
-            outputDigiComponents->push_back({volLayGeoId, dOutputConfig});
+            outputDigiComponents.push_back({volLayGeoId, dOutputConfig});
           }
         }
 
         // Insert into the output list
-        outputDigiComponents->push_back({geoId, dOutputConfig});
+        outputDigiComponents.push_back({geoId, dOutputConfig});
       }
     }
   }
 };
-}  // namespace detail
 }  // namespace ActsExamples

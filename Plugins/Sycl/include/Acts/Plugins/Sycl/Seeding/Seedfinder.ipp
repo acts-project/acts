@@ -25,7 +25,7 @@ Seedfinder<external_spacepoint_t>::Seedfinder(
     Acts::SeedfinderConfig<external_spacepoint_t> config,
     const Acts::Sycl::DeviceExperimentCuts& cuts,
     Acts::Sycl::QueueWrapper wrappedQueue)
-    : m_config(config),
+    : m_config(config.toInternalUnits()),
       m_deviceCuts(cuts),
       m_wrappedQueue(std::move(wrappedQueue)) {
   // init m_config
@@ -127,7 +127,8 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
           weight, std::make_unique<const InternalSeed<external_spacepoint_t>>(
                       bottomSP, middleSP, topSP, 0)));
     }
-    m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSPM, outputVec);
+    m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSPM,
+                                              std::back_inserter(outputVec));
   }
   return outputVec;
 }

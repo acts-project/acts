@@ -11,6 +11,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 
 #include <map>
+#include <memory>
 
 namespace Acts {
 
@@ -42,28 +43,4 @@ class IMaterialWriter {
   virtual void writeMaterial(const Acts::DetectorMaterialMaps& detMaterial) = 0;
 };
 
-/// @class MaterialWriterT
-///
-/// @tparam writer_t is the actual implementation
-template <typename writer_t>
-class MaterialWriterT : virtual public IMaterialWriter {
- public:
-  /// Constructor
-  ///
-  /// @tparam writer_t the templated writer implementation
-  ///
-  /// @param impl the actaul implementation of the writer
-  MaterialWriterT(writer_t impl) : m_impl(std::move(impl)) {}
-
-  /// The single wirter class
-  ///
-  /// @param detMaterial the detector material maps
-  void writeMaterial(const Acts::DetectorMaterialMaps& detMaterial) {
-    m_impl.write(detMaterial);
-  }
-
- private:
-  /// The writer implementation
-  writer_t m_impl;
-};
 }  // namespace ActsExamples

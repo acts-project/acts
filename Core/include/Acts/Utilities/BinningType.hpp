@@ -46,7 +46,10 @@ enum BinningValue : int {
 };
 
 /// @brief screen output option
-static const std::vector<std::string> binningValueNames = {
-    "binX",    "binY", "binZ",   "binR",  "binPhi",
-    "binRPhi", "binH", "binEta", "binMag"};
+inline const std::vector<std::string>& binningValueNames() {
+  static const std::vector<std::string> _binningValueNames = {
+      "binX",    "binY", "binZ",   "binR",  "binPhi",
+      "binRPhi", "binH", "binEta", "binMag"};
+  return _binningValueNames;
+}
 }  // namespace Acts

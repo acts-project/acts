@@ -35,11 +35,10 @@ using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
 
 ActsExamples::RootTrajectoryStatesWriter::RootTrajectoryStatesWriter(
-    const ActsExamples::RootTrajectoryStatesWriter::Config& cfg,
-    Acts::Logging::Level lvl)
-    : WriterT(cfg.inputTrajectories, "RootTrajectoryStatesWriter", lvl),
-      m_cfg(cfg),
-      m_outputFile(cfg.rootFile) {
+    const ActsExamples::RootTrajectoryStatesWriter::Config& config,
+    Acts::Logging::Level level)
+    : WriterT(config.inputTrajectories, "RootTrajectoryStatesWriter", level),
+      m_cfg(config) {
   // trajectories collection name is already checked by base ctor
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
@@ -54,24 +53,21 @@ ActsExamples::RootTrajectoryStatesWriter::RootTrajectoryStatesWriter(
     throw std::invalid_argument(
         "Missing hit-simulated-hits map input collection");
   }
-  if (m_cfg.outputFilename.empty()) {
+  if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
-  if (m_cfg.outputTreename.empty()) {
+  if (m_cfg.treeName.empty()) {
     throw std::invalid_argument("Missing tree name");
   }
 
   // Setup ROOT I/O
+  auto path = m_cfg.filePath;
+  m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
   if (m_outputFile == nullptr) {
-    auto path = joinPaths(m_cfg.outputDir, m_cfg.outputFilename);
-    m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
-    if (m_outputFile == nullptr) {
-      throw std::ios_base::failure("Could not open '" + path);
-    }
+    throw std::ios_base::failure("Could not open '" + path);
   }
   m_outputFile->cd();
-  m_outputTree =
-      new TTree(m_cfg.outputTreename.c_str(), m_cfg.outputTreename.c_str());
+  m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
   if (m_outputTree == nullptr)
     throw std::bad_alloc();
   else {
@@ -99,6 +95,7 @@ ActsExamples::RootTrajectoryStatesWriter::RootTrajectoryStatesWriter(
     m_outputTree->Branch("volume_id", &m_volumeID);
     m_outputTree->Branch("layer_id", &m_layerID);
     m_outputTree->Branch("module_id", &m_moduleID);
+    m_outputTree->Branch("pathLength", &m_pathLength);
     m_outputTree->Branch("l_x_hit", &m_lx_hit);
     m_outputTree->Branch("l_y_hit", &m_ly_hit);
     m_outputTree->Branch("g_x_hit", &m_x_hit);
@@ -221,19 +218,15 @@ ActsExamples::RootTrajectoryStatesWriter::RootTrajectoryStatesWriter(
   }
 }
 
-ActsExamples::RootTrajectoryStatesWriter::~RootTrajectoryStatesWriter() {
-  if (m_outputFile) {
-    m_outputFile->Close();
-  }
-}
+ActsExamples::RootTrajectoryStatesWriter::~RootTrajectoryStatesWriter() {}
 
 ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::endRun() {
   if (m_outputFile) {
     m_outputFile->cd();
     m_outputTree->Write();
     ACTS_INFO("Write states of trajectories to tree '"
-              << m_cfg.outputTreename << "' in '"
-              << joinPaths(m_cfg.outputDir, m_cfg.outputFilename) << "'");
+              << m_cfg.treeName << "' in '" << m_cfg.treeName << "'");
+    m_outputFile->Close();
   }
   return ProcessCode::SUCCESS;
 }
@@ -372,6 +365,9 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
         m_volumeID.push_back(geoID.volume());
         m_layerID.push_back(geoID.layer());
         m_moduleID.push_back(geoID.sensitive());
+
+        // get the path length
+        m_pathLength.push_back(state.pathLength());
 
         // expand the local measurements into the full bound space
         Acts::BoundVector meas =
@@ -589,6 +585,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
       m_volumeID.clear();
       m_layerID.clear();
       m_moduleID.clear();
+      m_pathLength.clear();
       m_lx_hit.clear();
       m_ly_hit.clear();
       m_x_hit.clear();

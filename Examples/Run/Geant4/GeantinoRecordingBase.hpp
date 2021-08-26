@@ -10,6 +10,7 @@
 
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/Geant4/G4DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4/Geant4Options.hpp"
 #include "ActsExamples/Geant4/GeantinoRecording.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
@@ -25,7 +26,8 @@
 /// @param detector The detector descriptor instance
 inline int runGeantinoRecording(
     const boost::program_options::variables_map& vm,
-    Acts::PolymorphicValue<G4VUserDetectorConstruction> g4detector) {
+    std::shared_ptr<ActsExamples::G4DetectorConstructionFactory>
+        g4DetectorFactory) {
   using namespace ActsExamples;
   Sequencer sequencer(Options::readSequencerConfig(vm));
   auto logLevel = Options::readLogLevel(vm);
@@ -34,7 +36,7 @@ inline int runGeantinoRecording(
   // Setup the Geant4 algorithm
   auto g4Config = Options::readGeantinoRecordingConfig(vm);
   auto outputMaterialTracks = g4Config.outputMaterialTracks;
-  g4Config.detectorConstruction = std::move(g4detector);
+  g4Config.detectorConstructionFactory = std::move(g4DetectorFactory);
   sequencer.addAlgorithm(
       std::make_shared<GeantinoRecording>(std::move(g4Config), logLevel));
 
