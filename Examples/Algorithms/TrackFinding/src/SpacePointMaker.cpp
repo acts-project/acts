@@ -21,6 +21,12 @@
 #include <stdexcept>
 #include <utility>
 
+// using pixelMeasurement =
+// Acts::Measurement<ActsExamples::IndexSourceLink,Acts::BoundIndices,2>;
+// using stripMeasurement =
+// Acts::Measurement<IndexSourceLink,std::array<size_t,1>,1>;
+
+using Cluster = ActsExamples::ModuleCluster<ActsExamples::Measurement>;
 ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
                                                Acts::Logging::Level lvl)
     : BareAlgorithm("SpacePointMaker", lvl), m_cfg(std::move(cfg)) {
@@ -84,8 +90,7 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
   auto spBuilderConfig = Acts::SingleHitSpacePointBuilderConfig();
   spBuilderConfig.trackingGeometry = m_cfg.trackingGeometry;
   m_singleSPBuilder =
-      Acts::SingleHitSpacePointBuilder<SimSpacePoint, IndexSourceLink>(
-          spBuilderConfig);
+      Acts::SingleHitSpacePointBuilder<SimSpacePoint, Cluster>(spBuilderConfig);
 }
 
 ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
@@ -95,7 +100,10 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
   const auto& measurements =
       ctx.eventStore.get<MeasurementContainer>(m_cfg.inputMeasurements);
 
-  std::vector<ActsExamples::Measurement> selectedMeasurements;
+  //  std::vector<ActsExamples::Measurement> selectedMeasurements;
+  // std::vector<pixelMeasurement> selectedMeasurements;
+  std::vector<Cluster> selectedClusters;
+  // TODO; Support strip measurements
 
   for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) {
     // select volume/layer depending on what is set in the geometry id
@@ -107,12 +115,20 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
     for (auto [moduleGeoId, moduleSourceLinks] : groupedByModule) {
       // find corresponding surface
       for (auto slink : moduleSourceLinks) {
-        selectedMeasurements.emplace_back(measurements[slink.index()]);
+        auto param = measurements[slink.index()];
+        // std::cout << param << std::endl;
+        // auto meas =
+        // pixelMeasurement(slink.index(),{Acts::eBoundLoc0,Acts::eBoundLoc1},)
+        auto cluster = Cluster(measurements[slink.index()]);
+        // auto meas = makeMeasurement(slink,
+        // param,cov,Acts::eBoundLoc0,Acts::eBoundLoc1);
+        // selectedMeasurements.emplace_back(measurements[slink.index()]);
+        selectedClusters.emplace_back(cluster);
       }
     }
   }
   SimSpacePointContainer spacePoints;
-  m_singleSPBuilder.calculateSpacePoints(ctx.geoContext, selectedMeasurements,
+  m_singleSPBuilder.calculateSpacePoints(ctx.geoContext, selectedClusters,
                                          spacePoints);
   spacePoints.shrink_to_fit();
 

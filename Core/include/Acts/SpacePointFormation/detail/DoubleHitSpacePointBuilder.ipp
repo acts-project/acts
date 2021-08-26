@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Utilities/Helpers.hpp"
-
+#include <iostream> // just for tests
 #include <cmath>
 #include <limits>
 
@@ -97,6 +97,7 @@ inline double differenceOfMeasurementsChecked(const Vector3& pos1,
 /// @return Pair containing the top and bottom end
 inline std::pair<Vector2, Vector2> findLocalTopAndBottomEnd(
     const Vector2& local, const CartesianSegmentation* segment) {
+      std::cout << "findLocalTopAndBottomEnd" << std::endl;
   auto& binData = segment->binUtility().binningData();
   auto& boundariesX = binData[0].boundaries();
   auto& boundariesY = binData[1].boundaries();
@@ -107,25 +108,55 @@ inline std::pair<Vector2, Vector2> findLocalTopAndBottomEnd(
 
   // Storage of the local top (first) and bottom (second) end
   std::pair<Vector2, Vector2> topBottomLocal;
+  // topBottomLocal.first;
+  // topBottomLocal.second;
+  Vector2 topLocal = Vector2(0,0);
+  Vector2 bottomLocal = Vector2(0,0);
+  //std::cout << "boundary size p" << boundariesX.size() << " "
+            //<< boundariesY.size() << std::endl;
 
-  if (boundariesX[binX + 1] - boundariesX[binX] <
-      boundariesY[binY + 1] - boundariesY[binY]) {
+  //std::cout << boundariesX.at(0) << std::endl;
+  //std::cout << " " << boundariesX[1] << std::endl;
+  //std::cout << boundariesY[0] << " " << boundariesY[1] << std::endl;
+  ///std::cout << binX << binY << std::endl;
+  if (boundariesX[binX + 1] - boundariesX[binX] < boundariesY[binY + 1] - boundariesY[binY]) {
     // Set the top and bottom end of the strip in local coordinates
-    topBottomLocal.first = {(boundariesX[binX] + boundariesX[binX + 1]) / 2,
-                            boundariesY[binY + 1]};
-    topBottomLocal.second = {(boundariesX[binX] + boundariesX[binX + 1]) / 2,
-                             boundariesY[binY]};
+  //  std::cout << "check01" << std::endl;
+  //  std::cout << boundariesX[0] << std::endl;
+  //  std::cout << boundariesX[1] << std::endl;
+  //  std::cout << boundariesY[0] << std::endl;
+  //  std::cout << boundariesY[1] << std::endl;
+    topLocal = Vector2((boundariesX[binX] + boundariesX[binX + 1]) / 2, boundariesY[binY]);
+    bottomLocal = Vector2((boundariesX[binX] + boundariesX[binX + 1]) / 2,
+                          boundariesY[binY + 1]);
+//    std::cout << "check1" << std::endl;
+    // topBottomLocal = std::make_pair(topLocal,bottomLocal);
+//    std::cout << "check1.1" << std::endl;
+    // topBottomLocal.first = Vector2((boundariesX[binX] + boundariesX[binX +
+    // 1]) / 2,
+    //                        boundariesY[binY + 1]);
+    //                        std::cout << "check0" << std::endl;
+    // topBottomLocal.second = {(boundariesX[binX] + boundariesX[binX + 1]) / 2,
+    //                       boundariesY[binY]};
+    //std::cout << "check1" << std::endl;
   } else {
     // Set the top and bottom end of the strip in local coordinates
-    topBottomLocal.first = {boundariesX[binX],
-                            (boundariesY[binY] + boundariesY[binY + 1]) / 2};
-    topBottomLocal.second = {boundariesX[binX + 1],
-                             (boundariesY[binY] + boundariesY[binY + 1]) / 2};
+    //std::cout << "check2" << std::endl;
+    /*     topBottomLocal.first = {boundariesX[binX],
+                                (boundariesY[binY] + boundariesY[binY + 1]) /
+       2}; std::cout << "check3" << std::endl; topBottomLocal.second =
+       {boundariesX[binX + 1],
+                                 (boundariesY[binY] + boundariesY[binY + 1]) /
+       2}; */
   }
-  return topBottomLocal;
 
-  // Vector2 tmp(0,0);
-  // return std::make_pair(tmp,tmp);
+  // std::pair<Vector2, Vector2> topBottomLocal =
+  // std::make_pair(topLocal,bottomLocal); std::cout  << "topbottom local" <<
+  // topBottomLocal.first << " " << topBottomLocal.second << std::endl;
+  std::cout << topLocal[0] << " " << topLocal[1] << std::endl;
+  //std::cout << bottomLocal[0] << " " << bottomLocal[1] << std::endl;
+  //return {topLocal, bottomLocal};
+  return topBottomLocal;
 }
 
 /// @brief Calculates a space point whithout using the vertex
@@ -315,119 +346,202 @@ inline bool calculateSpacePoint(const std::pair<Vector3, Vector3>& stripEnds1,
 ///
 /// @note Used abbreviation: "Strip Detector Element" -> SDE
 ///
-template <typename spacepoint_t, typename source_link_t>
-Acts::DoubleHitSpacePointBuilder<spacepoint_t, source_link_t>::
+template <typename spacepoint_t, typename cluster_t>
+Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
     DoubleHitSpacePointBuilder(DoubleHitSpacePointBuilderConfig cfg)
     : m_cfg(std::move(cfg)) {}
 
-template <typename spacepoint_t, typename source_link_t>
+template <typename spacepoint_t, typename cluster_t>
 Acts::Vector2
-Acts::DoubleHitSpacePointBuilder<spacepoint_t, source_link_t>::localCoords(
-    const Measurement& measurement) const {
+Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::localCoords(
+    const cluster_t& cluster) const {
   // Local position information
-  auto par = measurement.parameters();
-  Acts::Vector2 local(par[Acts::BoundIndices::eBoundLoc0],
-                      par[Acts::BoundIndices::eBoundLoc1]);
-  return local;
+  const auto meas = cluster.measurement();
+  // auto par = meas.parameters();
+
+  Acts::Vector2 localPos = std::visit(
+      [](const auto& x) {
+        // double local = std::visit([](const auto &x){
+        Acts::BoundVector par = x.expander() * x.parameters();
+        // Acts::Vector2 pos(par[0],par[1]);
+        return Acts::Vector2(par[0], par[1]);
+      },
+      meas);
+  // return par[1];},meas);
+
+  // Acts::BoundVector par = std::visit([](const auto& x) { return
+  // x.parameters(); }, meas); Acts::Vector2
+  // local(par[Acts::BoundIndices::eBoundLoc0],
+  // par[Acts::BoundIndices::eBoundLoc1]);
+  // Acts::Vector2 local(par[0],par[1]);
+
+  // return local;
+  // Acts::Vector2 localPos(0,0);
+  return localPos;
 }
 
-template <typename spacepoint_t, typename source_link_t>
-Acts::Vector3
-Acts::DoubleHitSpacePointBuilder<spacepoint_t, source_link_t>::globalCoords(
-    const Acts::GeometryContext& gctx, const Measurement& measurement) const {
+template <typename spacepoint_t, typename cluster_t>
+// Acts::Vector3
+std::pair<Acts::Vector3, Acts::Vector2>
+Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::globalCoords(
+    const Acts::GeometryContext& gctx, const cluster_t& clus) const {
   // // Receive corresponding surface
   // auto& measurementSurface = measurement;
+  auto meas = clus.measurement();
+  auto slink = std::visit([](const auto& x) { return x.sourceLink(); }, meas);
+  // auto slink = meas.sourceLink();
+  // auto slink  = meas.measurement().sourceLink();
+  const auto geoId = slink.geometryId();
 
-  // // Transform local into global position information
-  // Vector3 mom(1., 1., 1.);
-  // return measurementSurface.localToGlobal(gctx, localCoords(measurement),
-  // mom);
 
-  Acts::Vector3 tmp(1, 1, 1);
-  return tmp;
+  const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
+
+  auto [localPos, localCov] = std::visit(
+      [](const auto& measurement) {
+        auto expander = measurement.expander();
+        // auto indices = measurement.indices();
+        Acts::BoundVector par = expander * measurement.parameters();
+        //std::cout << "measurement parameters" << std::endl << par << std::endl;
+        Acts::BoundSymMatrix cov =
+            expander * measurement.covariance() * expander.transpose();
+        // extract local position
+        Acts::Vector2 lpar(par[Acts::eBoundLoc0], par[Acts::eBoundLoc1]);
+        // extract local position covariance.
+        Acts::SymMatrix2 lcov =
+            cov.block<2, 2>(Acts::eBoundLoc0, Acts::eBoundLoc0);
+        return std::make_pair(lpar, lcov);
+      },
+      meas);
+  // std::cout << "local pos:" << std::endl << localPos << std::endl;
+  // transform local position to global coordinates
+  Acts::Vector3 globalFakeMom(1, 1, 1);
+
+  Acts::Vector3 globalPos =
+      surface->localToGlobal(gctx, localPos, globalFakeMom);
+  Acts::RotationMatrix3 rotLocalToGlobal =
+      surface->referenceFrame(gctx, globalPos, globalFakeMom);
+
+  auto x = globalPos[Acts::ePos0];
+  auto y = globalPos[Acts::ePos1];
+  auto scale = 2 / std::hypot(x, y);
+  Acts::ActsMatrix<2, 3> jacXyzToRhoZ = Acts::ActsMatrix<2, 3>::Zero();
+  jacXyzToRhoZ(0, Acts::ePos0) = scale * x;
+  jacXyzToRhoZ(0, Acts::ePos1) = scale * y;
+  jacXyzToRhoZ(1, Acts::ePos2) = 1;
+  // compute Jacobian from local coordinates to rho/z
+  Acts::ActsMatrix<2, 2> jac =
+      jacXyzToRhoZ * rotLocalToGlobal.block<3, 2>(Acts::ePos0, Acts::ePos0);
+  // compute rho/z variance
+  Acts::ActsVector<2> var = (jac * localCov * jac.transpose()).diagonal();
+
+  auto gcov = Acts::Vector2(var[0], var[1]);
+  return std::make_pair(globalPos, gcov);
 }
 
-template <typename spacepoint_t, typename source_link_t>
-void Acts::DoubleHitSpacePointBuilder<spacepoint_t, source_link_t>::
+template <typename spacepoint_t, typename cluster_t>
+void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
     makeMeasurementPairs(
         const Acts::GeometryContext& gctx,
-        const std::vector<const Measurement*>& measurementsFront,
-        const std::vector<const Measurement*>& measurementsBack,
-        std::vector<std::pair<const Measurement*, const Measurement*>>&
-            measurementPairs) const {
+        const std::vector<const cluster_t>& clustersFront,
+        const std::vector<const cluster_t>& clustersBack,
+        std::vector<std::pair<const cluster_t*, const cluster_t*>>&
+            clusterPairs) const {
   // Return if no Measurements are given in a vector
-  if (measurementsFront.empty() || measurementsBack.empty()) {
+  if (clustersFront.empty() || clustersBack.empty()) {
     return;
   }
+  // std::cout << "clusters front in DHPB" << std::endl;
+  // std::cout << "size " << clustersFront.size() << std::endl;
+  // auto clus = clustersFront[0];
+  // auto meas = clus.measurement();
+
+  // auto slink = std::visit([](const auto& x) { return x.sourceLink(); },
+  // meas); std::cout << slink.geometryId() << std::endl; auto [gPos,gCov] =
+  // globalCoords(gctx,meas); std::cout << gPos << std::endl;
 
   // Declare helper variables
   double currentDiff;
   double diffMin;
-  unsigned int measurementMinDist;
+  unsigned int clusterMinDist;
 
   // Walk through all Measurements on both surfaces
-  for (unsigned int iMeasurementsFront = 0;
-       iMeasurementsFront < measurementsFront.size(); iMeasurementsFront++) {
+  for (unsigned int iClustersFront = 0; iClustersFront < clustersFront.size();
+       iClustersFront++) {
     // Set the closest distance to the maximum of double
     diffMin = std::numeric_limits<double>::max();
     // Set the corresponding index to an element not in the list of Measurements
-    measurementMinDist = measurementsBack.size();
-    for (unsigned int iMeasurementsBack = 0;
-         iMeasurementsBack < measurementsBack.size(); iMeasurementsBack++) {
+    clusterMinDist = clustersBack.size();
+    for (unsigned int iClustersBack = 0; iClustersBack < clustersBack.size();
+         iClustersBack++) {
       // Calculate the distances between the hits
+      auto gpos_front = globalCoords(gctx, clustersFront[iClustersFront]);
+      auto gpos_back = globalCoords(gctx, clustersFront[iClustersFront]);
       currentDiff = detail::differenceOfMeasurementsChecked(
-          globalCoords(gctx, *(measurementsFront[iMeasurementsFront])),
-          globalCoords(gctx, *(measurementsBack[iMeasurementsBack])),
-          m_cfg.vertex, m_cfg.diffDist, m_cfg.diffPhi2, m_cfg.diffTheta2);
+          gpos_front.first, gpos_back.first, m_cfg.vertex, m_cfg.diffDist,
+          m_cfg.diffPhi2, m_cfg.diffTheta2);
       // Store the closest Measurements (distance and index) calculated so far
       if (currentDiff < diffMin && currentDiff >= 0.) {
         diffMin = currentDiff;
-        measurementMinDist = iMeasurementsBack;
+        clusterMinDist = iClustersBack;
       }
     }
 
     // Store the best (=closest) result
-    if (measurementMinDist < measurementsBack.size()) {
-      std::pair<const Measurement*, const Measurement*> measurementPair;
-      measurementPair = std::make_pair(measurementsFront[iMeasurementsFront],
-                                       measurementsBack[measurementMinDist]);
-      measurementPairs.push_back(measurementPair);
+    if (clusterMinDist < clustersBack.size()) {
+      std::pair<const cluster_t*, const cluster_t*> clusterPair;
+      clusterPair = std::make_pair(&clustersFront[iClustersFront],
+                                   &clustersBack[clusterMinDist]);
+      clusterPairs.push_back(clusterPair);
     }
   }
 }
 
-template <typename spacepoint_t, typename source_link_t>
+template <typename spacepoint_t, typename cluster_t>
 std::pair<Acts::Vector3, Acts::Vector3>
-Acts::DoubleHitSpacePointBuilder<spacepoint_t, source_link_t>::endsOfStrip(
-    const Acts::GeometryContext& gctx, const Measurement& Measurement) const {
+Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::endsOfStrip(
+    const Acts::GeometryContext& gctx, const cluster_t& cluster) const {
   // Calculate the local coordinates of the Measurement
-  const Acts::Vector2 local = localCoords(Measurement);
+  const Acts::Vector2 local = localCoords(cluster);
+  //std::cout << "local coords :" << local[0] << " " << local[1] << std::endl;
 
   // Receive the binning
-  auto segment = dynamic_cast<const Acts::CartesianSegmentation*>(
-      &(Measurement.digitizationModule()->segmentation()));
-
+  const auto segment = dynamic_cast<const Acts::CartesianSegmentation*>(
+      &(cluster.segmentation()));
+  //&(measurement.digitizationModule()->segmentation()));
+  
+  //std::cout << std::endl;
+//detail::findLocalTopAndBottomEnd(local, segment);
+///std::cout << "check2" << std::endl;
   std::pair<Vector2, Vector2> topBottomLocal =
       detail::findLocalTopAndBottomEnd(local, segment);
-
+  std::cout << "topbottom local calculated " ;
   // Calculate the global coordinates of the top and bottom end of the strip
-  Acts::Vector3 mom(1., 1., 1);  // mom is a dummy variable
-  const auto* sur = &Measurement.referenceObject();
-  Acts::Vector3 topGlobal = sur->localToGlobal(gctx, topBottomLocal.first, mom);
+  
+  
+  Acts::Vector3 fakeMom(1,1,1);
+  fakeMom << 3., 2., 1.;  // mom is a dummy variable
+  // const auto* sur = &measurement.referenceObject();
+  auto meas = cluster.measurement();
+  auto slink = std::visit([](const auto& x) { return x.sourceLink(); }, meas);
+  const auto geoId = slink.geometryId();
+  // const auto* sur = &meas.referenceObject();
+  const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
+  Acts::Vector3 topGlobal =
+      surface->localToGlobal(gctx, topBottomLocal.first, fakeMom);
   Acts::Vector3 bottomGlobal =
-      sur->localToGlobal(gctx, topBottomLocal.second, mom);
+      surface->localToGlobal(gctx, topBottomLocal.second, fakeMom);
 
   // Return the top and bottom end of the strip in global coordinates
   return std::make_pair(topGlobal, bottomGlobal);
-  // Acts::Vector3 tmp(0,0,0);
-  // return std::make_pair(tmp,tmp);
+  //Acts::Vector3 tmp(0,0,0);
+  //return std::make_pair(tmp,tmp);
 }
 
-template <typename spacepoint_t, typename source_link_t>
-void Acts::DoubleHitSpacePointBuilder<spacepoint_t, source_link_t>::
+template <typename spacepoint_t, typename cluster_t>
+void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
     calculateSpacePoints(
         const Acts::GeometryContext& gctx,
-        const std::vector<std::pair<const Measurement*, const Measurement*>>&
+        const std::vector<std::pair<const cluster_t*, const cluster_t*>>&
             measurementPairs,
         std::vector<spacepoint_t>& spacePoints) const {
   /// Source of algorithm: Athena, SiSpacePointMakerTool::makeSCT_SpacePoint()
@@ -449,11 +563,14 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, source_link_t>::
       resultPerpProj = detail::calcPerpendicularProjection(
           ends1.first, ends2.first, spaPoPa.q, spaPoPa.r);
       if (resultPerpProj <= 0.) {
-        spacepoint_t sp;
-        sp.MeasurementModule.push_back(cp.first);
-        sp.MeasurementModule.push_back(cp.second);
+        // spacepoint_t sp;
+        // sp.MeasurementModule.push_back(cp.first);
+        // sp.MeasurementModule.push_back(cp.second);
         Vector3 pos = ends1.first + resultPerpProj * spaPoPa.q;
-        sp.vector = pos;
+        double varRho = -1.;  // TODO impriment variance rho and z
+        double varZ = -1;
+        size_t measurementIndex = 0;  // should be indices
+        auto sp = spacepoint_t(pos, varRho, varZ, measurementIndex);
         spacePoints.push_back(std::move(sp));
         continue;
       }
@@ -462,13 +579,18 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, source_link_t>::
     if (calculateSpacePoint(ends1, ends2, m_cfg.vertex, spaPoPa,
                             m_cfg.stripLengthTolerance)) {
       // Store the space point
-      spacepoint_t sp;
-      sp.MeasurementModule.push_back(cp.first);
-      sp.MeasurementModule.push_back(cp.second);
+      // spacepoint_t sp;
+      // sp.MeasurementModule.push_back(cp.first);
+      // sp.MeasurementModule.push_back(cp.second);
       Vector3 pos = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
-      // TODO: Measurements should deliver timestamp
-      sp.vector = pos;
+      double varRho = -1.;  // TODO impriment variance rho and z
+      double varZ = -1;
+      size_t measurementIndex = 0;  // should be indices
+      auto sp = spacepoint_t(pos, varRho, varZ, measurementIndex);
       spacePoints.push_back(std::move(sp));
+      // TODO: Measurements should deliver timestamp
+      /// sp.vector = pos;
+      // spacePoints.push_back(std::move(sp));
     } else {
       /// If this point is reached then it was not possible to resolve both
       /// points such that they are on their SDEs
@@ -478,13 +600,18 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, source_link_t>::
       /// position.
       // Check if a recovery the point(s) and store them if successful
       if (detail::recoverSpacePoint(spaPoPa, m_cfg.stripLengthGapTolerance)) {
-        spacepoint_t sp;
-        sp.MeasurementModule.push_back(cp.first);
-        sp.MeasurementModule.push_back(cp.second);
+        // spacepoint_t sp;
+        // sp.MeasurementModule.push_back(cp.first);
+        // sp.MeasurementModule.push_back(cp.second);
         Vector3 pos =
             0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
-        sp.vector = pos;
+        double varRho = -1.;  // TODO impriment variance rho and z
+        double varZ = -1;
+        size_t measurementIndex = 0;  // should be indices
+        auto sp = spacepoint_t(pos, varRho, varZ, measurementIndex);
         spacePoints.push_back(std::move(sp));
+        // sp.vector = pos;
+        // spacePoints.push_back(std::move(sp));
       }
     }
   }

@@ -30,7 +30,7 @@ using SurfacePtrVector = std::vector<SurfacePtr>;
 ///
 /// Since the segmentation description might be identical for many elements
 /// while the lorentz angle may change, lorentzAngle and readoutDirection
-/// are provided and th the segmenation class only creates the surfaces for the
+/// are provided and the segmenation class only creates the surfaces for the
 /// module,
 /// but hosts the binning information.
 ///

@@ -6,36 +6,38 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-template <typename spacepoint_t, typename source_link_t>
+template <typename spacepoint_t, typename cluster_t>
 Acts::Vector2
-Acts::SingleHitSpacePointBuilder<spacepoint_t, source_link_t>::localCoords(
-    const BoundVariantMeasurement<source_link_t>& meas) const {
+Acts::SingleHitSpacePointBuilder<spacepoint_t, cluster_t>::localCoords(
+    const cluster_t& clus) const {
   // Local position information
-  auto par = meas.parameters();
+  auto par = clus.parameters();
   Acts::Vector2 local(par[Acts::BoundIndices::eBoundLoc0],
                       par[Acts::BoundIndices::eBoundLoc1]);
   return local;
 }
 
-template <typename spacepoint_t, typename source_link_t>
-Acts::SingleHitSpacePointBuilder<spacepoint_t, source_link_t>::
+template <typename spacepoint_t, typename cluster_t>
+Acts::SingleHitSpacePointBuilder<spacepoint_t, cluster_t>::
     SingleHitSpacePointBuilder(Acts::SingleHitSpacePointBuilderConfig cfg)
     : m_config(cfg) {}
 
-template <typename spacepoint_t, typename source_link_t>
+template <typename spacepoint_t, typename cluster_t>
 std::pair<Acts::Vector3, Acts::Vector2>
-Acts::SingleHitSpacePointBuilder<spacepoint_t, source_link_t>::globalCoords(
-    const GeometryContext& gctx,
-    const BoundVariantMeasurement<source_link_t>& meas) const {
+Acts::SingleHitSpacePointBuilder<spacepoint_t, cluster_t>::globalCoords(
+    const GeometryContext& gctx, const cluster_t& clus) const {
+  auto meas = clus.measurement();
   auto slink = std::visit([](const auto& x) { return x.sourceLink(); }, meas);
-
+  // auto slink  = meas.measurement().sourceLink();
   const auto geoId = slink.geometryId();
   const Acts::Surface* surface = m_config.trackingGeometry->findSurface(geoId);
-
+  std::cout << geoId << std::endl;
   auto [localPos, localCov] = std::visit(
       [](const auto& measurement) {
         auto expander = measurement.expander();
+        // auto indices = measurement.indices();
         Acts::BoundVector par = expander * measurement.parameters();
+        std::cout << "measurement parameters" << std::endl << par << std::endl;
         Acts::BoundSymMatrix cov =
             expander * measurement.covariance() * expander.transpose();
         // extract local position
@@ -46,7 +48,7 @@ Acts::SingleHitSpacePointBuilder<spacepoint_t, source_link_t>::globalCoords(
         return std::make_pair(lpar, lcov);
       },
       meas);
-
+  // std::cout << "local pos:" << std::endl << localPos << std::endl;
   // transform local position to global coordinates
   Acts::Vector3 globalFakeMom(1, 1, 1);
 
@@ -83,16 +85,20 @@ Acts::SingleHitSpacePointBuilder<spacepoint_t, source_link_t>::globalCoords(
   return std::make_pair(globalPos, gcov);
 }
 
-template <typename spacepoint_t, typename source_link_t>
-void Acts::SingleHitSpacePointBuilder<spacepoint_t, source_link_t>::
-    calculateSpacePoints(
-        const GeometryContext& gctx,
-        const std::vector<BoundVariantMeasurement<source_link_t>>& measurements,
-        std::vector<spacepoint_t>& spacePointStorage) const {
+template <typename spacepoint_t, typename cluster_t>
+void Acts::SingleHitSpacePointBuilder<spacepoint_t, cluster_t>::
+    calculateSpacePoints(const GeometryContext& gctx,
+                         const std::vector<cluster_t>& clusters,
+                         std::vector<spacepoint_t>& spacePointStorage) const {
   // Set the space point for all stored hits
-  for (const auto& meas : measurements) {
-    auto [gPos, gCov] = globalCoords(gctx, meas);
-    auto slink = std::visit([](const auto& x) { return x.sourceLink(); }, meas);
+  for (const auto& clus : clusters) {
+    auto measurement = clus.measurement();
+    auto [gPos, gCov] = globalCoords(gctx, measurement);
+    // std::cout << "global coordinates : " << gPos[0] << " " << gPos[1] << " "
+    // << gPos[2] << std::endl;
+    // std::cout << "global coordinates : " << std::endl <<  gPos << std::endl;
+    auto slink =
+        std::visit([](const auto& x) { return x.sourceLink(); }, measurement);
 
     spacePointStorage.emplace_back(gPos, gCov[0], gCov[1], slink.index());
   }

@@ -1,3 +1,9 @@
-set(unittest_extra_libraries ActsPluginDigitization)
+#set(unittest_extra_libraries ActsPluginDigitization)
 add_unittest(SingleHitSpacePointBuilder SingleHitSpacePointBuilderTests.cpp)
-# add_unittest(DoubleHitSpacePointBuilder DoubleHitSpacePointBuilderTests.cpp)
+add_unittest(SimpleHitSpacePointBuilder simple.cpp)
+add_unittest(DoubleTestHitSpacePointBuilder double.cpp)
+add_unittest(DoubleHitSpacePointBuilder DoubleHitSpacePointBuilderTests.cpp)
+#add_unittest(testSpacePointBuilder test.cpp)
+
+
+add_unittest(OrigSingleHitSpacePointBuilder OrigSingleHitSpacePointBuilderTests.cpp)

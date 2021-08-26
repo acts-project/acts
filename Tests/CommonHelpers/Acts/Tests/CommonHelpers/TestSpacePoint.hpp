@@ -38,7 +38,7 @@ class TestSpacePoint {
         m_measurementIndex(measurementIndex) {
     EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(position_t, 3);
   }
-
+  TestSpacePoint() = default;
   constexpr float x() const { return m_x; }
   constexpr float y() const { return m_y; }
   constexpr float z() const { return m_z; }

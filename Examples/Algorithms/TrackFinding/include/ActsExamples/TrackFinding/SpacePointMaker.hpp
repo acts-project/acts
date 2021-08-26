@@ -13,6 +13,7 @@
 #include "Acts/SpacePointFormation/SingleHitSpacePointBuilder.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.h"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/ModuleCluster.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 
@@ -77,7 +78,8 @@ class SpacePointMaker final : public BareAlgorithm {
   Config m_cfg;
 
   Acts::SingleHitSpacePointBuilderConfig m_singleSPBuilderCfg;
-  Acts::SingleHitSpacePointBuilder<SimSpacePoint, IndexSourceLink>
+  Acts::SingleHitSpacePointBuilder<
+      SimSpacePoint, ActsExamples::ModuleCluster<ActsExamples::Measurement>>
       m_singleSPBuilder;
   // Acts::DoubleHitSpacePointBuilderConfig m_doubleSPBuilderCfg;
   // Acts::DoubleHitSpacePointBuilder<SimSpacePoint, IndexSourceLink>

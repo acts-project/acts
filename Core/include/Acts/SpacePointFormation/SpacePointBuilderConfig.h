@@ -13,15 +13,16 @@
 
 namespace Acts {
 struct SingleHitSpacePointBuilderConfig{
-
+   // Tracking geometry
    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry; 
 
-   
    SingleHitSpacePointBuilderConfig()=default;
 };
 
 
  struct DoubleHitSpacePointBuilderConfig {
+  // Tracking geometry
+  std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry; 
   /// Accepted squared difference in theta for two clusters
   double diffTheta2 = 1.;
   /// Accepted squared difference in phi for two clusters
@@ -36,6 +37,8 @@ struct SingleHitSpacePointBuilderConfig{
   Vector3 vertex = {0., 0., 0.};
   /// Perform the perpendicular projection for space point finding
   bool usePerpProj = false;
+
+  DoubleHitSpacePointBuilderConfig()=default;
 };
 
 
