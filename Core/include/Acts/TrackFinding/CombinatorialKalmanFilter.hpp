@@ -641,7 +641,7 @@ class CombinatorialKalmanFilter {
           stepper.update(state.stepping,
                          MultiTrajectoryHelpers::freeFiltered(
                              state.options.geoContext, ts),
-                         ts.filteredCovariance());
+                         ts.filtered(), ts.filteredCovariance(), *surface);
           ACTS_VERBOSE("Stepping state is updated with filtered parameter: \n"
                        << ts.filtered().transpose()
                        << " of track state with tip = "
@@ -665,6 +665,7 @@ class CombinatorialKalmanFilter {
 
         // The surface could be either sensitive or passive
         bool isSensitive = (surface->associatedDetectorElement() != nullptr);
+        bool isMaterial = (surface->surfaceMaterial() != nullptr);
         std::string type = isSensitive ? "sensitive" : "passive";
         ACTS_VERBOSE("Detected " << type
                                  << " surface: " << surface->geometryId());
@@ -675,11 +676,17 @@ class CombinatorialKalmanFilter {
         // Add state if there is already measurement detected on this branch
         // For in-sensitive surface, only add state when smoothing is
         // required
-        if (tipState.nMeasurements > 0 and
-            (isSensitive or (not isSensitive and smoothing))) {
+        bool createState = false;
+        if (smoothing) {
+          createState = (tipState.nMeasurements > 0 or isMaterial);
+        } else {
+          createState = (tipState.nMeasurements > 0 and isSensitive);
+        }
+        if (createState) {
           // New state is to be added. Remove the last tip from active tips now
-          result.activeTips.erase(result.activeTips.end() - 1);
-
+          if (not result.activeTips.empty()) {
+            result.activeTips.erase(result.activeTips.end() - 1);
+          }
           // No source links on surface, add either hole or passive material
           // TrackState. No storage allocation for uncalibrated/calibrated
           // measurement and filtered parameter
@@ -691,26 +698,20 @@ class CombinatorialKalmanFilter {
           tipState.nStates++;
           size_t currentTip = SIZE_MAX;
           if (isSensitive) {
-            // Transport & bind the state to the current surface
-            auto res = stepper.boundState(state.stepping, *surface);
-            if (!res.ok()) {
-              ACTS_ERROR("Error in filter: " << res.error());
-              return res.error();
-            }
-            const auto boundState = *res;
-            // Add a hole track state to the multitrajectory
-            currentTip =
-                addHoleState(stateMask, boundState, result, prevTip, logger);
             // Incremet of number of holes
             tipState.nHoles++;
-          } else if (surface->surfaceMaterial() != nullptr) {
-            // Transport & get curvilinear state instead of bound state
-            const auto curvilinearState =
-                stepper.curvilinearState(state.stepping);
-            // Add a passive material track state to the multitrajectory
-            currentTip = addPassiveState(stateMask, curvilinearState, result,
-                                         prevTip, logger);
           }
+
+          // Transport & bind the state to the current surface
+          auto res = stepper.boundState(state.stepping, *surface);
+          if (!res.ok()) {
+            ACTS_ERROR("Error in filter: " << res.error());
+            return res.error();
+          }
+          const auto boundState = *res;
+          // Add a hole track state to the multitrajectory
+          currentTip = addNonSourcelinkState(stateMask, boundState, result,
+                                             prevTip, logger);
 
           // Check the branch
           if (not m_branchStopper(tipState)) {
@@ -873,10 +874,10 @@ class CombinatorialKalmanFilter {
     /// @param logger The logger wrapper
     ///
     /// @return The tip of added state
-    size_t addHoleState(const TrackStatePropMask& stateMask,
-                        const BoundState& boundState, result_type& result,
-                        size_t prevTip = SIZE_MAX,
-                        LoggerWrapper logger = getDummyLogger()) const {
+    size_t addNonSourcelinkState(
+        const TrackStatePropMask& stateMask, const BoundState& boundState,
+        result_type& result, size_t prevTip = SIZE_MAX,
+        LoggerWrapper logger = getDummyLogger()) const {
       // Add a track state
       auto currentTip = result.fittedStates.addTrackState(stateMask, prevTip);
       ACTS_VERBOSE("Creating Hole track state with tip = " << currentTip);
@@ -906,54 +907,6 @@ class CombinatorialKalmanFilter {
       typeFlags.set(TrackStateFlag::ParameterFlag);
       typeFlags.set(TrackStateFlag::HoleFlag);
 
-      trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
-
-      return currentTip;
-    }
-
-    /// @brief CombinatorialKalmanFilter actor operation : add passive track
-    /// state
-    ///
-    /// @param stateMask The bitmask that instructs which components to allocate
-    /// @param curvilinearState The curvilinear state on in-sensive material
-    /// surface
-    /// @param result is the mutable result state object
-    /// and which to leave invalid
-    /// @param prevTip The index of the previous state
-    /// @param logger The logger wrapper
-    ///
-    /// @return The tip of added state
-    size_t addPassiveState(const TrackStatePropMask& stateMask,
-                           const CurvilinearState& curvilinearState,
-                           result_type& result, size_t prevTip = SIZE_MAX,
-                           LoggerWrapper logger = getDummyLogger()) const {
-      // Add a track state
-      auto currentTip = result.fittedStates.addTrackState(stateMask, prevTip);
-      ACTS_VERBOSE(
-          "Creating track state on in-sensitive material surface with tip = "
-          << currentTip);
-
-      // now get track state proxy back
-      auto trackStateProxy = result.fittedStates.getTrackState(currentTip);
-
-      // Set the track state flags
-      auto& typeFlags = trackStateProxy.typeFlags();
-      typeFlags.set(TrackStateFlag::MaterialFlag);
-      typeFlags.set(TrackStateFlag::ParameterFlag);
-
-      const auto& [curvilinearParams, jacobian, pathLength] = curvilinearState;
-      // Fill the track state
-      trackStateProxy.predicted() = curvilinearParams.parameters();
-      if (curvilinearParams.covariance().has_value()) {
-        trackStateProxy.predictedCovariance() = *curvilinearParams.covariance();
-      }
-      trackStateProxy.jacobian() = jacobian;
-      trackStateProxy.pathLength() = pathLength;
-      // Set the surface; reuse the existing curvilinear surface
-      trackStateProxy.setReferenceSurface(
-          curvilinearParams.referenceSurface().getSharedPtr());
-      // Set the filtered parameter index to be the same with predicted
-      // parameter
       trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
 
       return currentTip;
@@ -1030,15 +983,17 @@ class CombinatorialKalmanFilter {
       const auto& lastMeasurementIndex =
           result.lastMeasurementIndices.at(result.iSmoothed);
 
-      // Get the indices of the first measurement states;
-      size_t firstMeasurementIndex = lastMeasurementIndex;
+      // Get the indices of the first states (can be either a measurement or
+      // material);
+      size_t firstStateIndex = lastMeasurementIndex;
       // Count track states to be smoothed
       size_t nStates = 0;
       result.fittedStates.applyBackwards(lastMeasurementIndex, [&](auto st) {
         bool isMeasurement =
             st.typeFlags().test(TrackStateFlag::MeasurementFlag);
-        if (isMeasurement) {
-          firstMeasurementIndex = st.index();
+        bool isMaterial = st.typeFlags().test(TrackStateFlag::MaterialFlag);
+        if (isMeasurement || isMaterial) {
+          firstStateIndex = st.index();
         }
         nStates++;
       });
@@ -1064,9 +1019,10 @@ class CombinatorialKalmanFilter {
         return Result<void>::success();
       }
 
-      // Obtain the smoothed parameters at first/last measurement state
-      auto firstCreatedMeasurement =
-          result.fittedStates.getTrackState(firstMeasurementIndex);
+      // Obtain the smoothed parameters at first/last measurement state.
+      // The first state can also be a material state
+      auto firstCreatedState =
+          result.fittedStates.getTrackState(firstStateIndex);
       auto lastCreatedMeasurement =
           result.fittedStates.getTrackState(lastMeasurementIndex);
 
@@ -1079,7 +1035,7 @@ class CombinatorialKalmanFilter {
 
       // The smoothed free params at the first/last measurement state
       auto firstParams = MultiTrajectoryHelpers::freeSmoothed(
-          state.options.geoContext, firstCreatedMeasurement);
+          state.options.geoContext, firstCreatedState);
       auto lastParams = MultiTrajectoryHelpers::freeSmoothed(
           state.options.geoContext, lastCreatedMeasurement);
       // Get the intersections of the smoothed free parameters with the target
@@ -1096,20 +1052,24 @@ class CombinatorialKalmanFilter {
       // smoothed measurement state. Also, whether the intersection is on
       // surface is not checked here.
       bool reverseDirection = false;
-      bool closerToFirstCreatedMeasurement =
+      bool closerTofirstCreatedState =
           (std::abs(firstIntersection.intersection.pathLength) <=
            std::abs(lastIntersection.intersection.pathLength));
-      if (closerToFirstCreatedMeasurement) {
+      if (closerTofirstCreatedState) {
         stepper.update(state.stepping, firstParams,
-                       firstCreatedMeasurement.smoothedCovariance());
+                       firstCreatedState.smoothed(),
+                       firstCreatedState.smoothedCovariance(),
+                       firstCreatedState.referenceSurface());
         reverseDirection = (firstIntersection.intersection.pathLength < 0);
       } else {
         stepper.update(state.stepping, lastParams,
-                       lastCreatedMeasurement.smoothedCovariance());
+                       lastCreatedMeasurement.smoothed(),
+                       lastCreatedMeasurement.smoothedCovariance(),
+                       lastCreatedMeasurement.referenceSurface());
         reverseDirection = (lastIntersection.intersection.pathLength < 0);
       }
-      const auto& surface = closerToFirstCreatedMeasurement
-                                ? firstCreatedMeasurement.referenceSurface()
+      const auto& surface = closerTofirstCreatedState
+                                ? firstCreatedState.referenceSurface()
                                 : lastCreatedMeasurement.referenceSurface();
       ACTS_VERBOSE(
           "Smoothing successful, updating stepping state to smoothed "

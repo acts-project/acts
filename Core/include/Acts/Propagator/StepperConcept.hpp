@@ -110,7 +110,7 @@ using step_size_t = decltype(std::declval<T>().stepSize);
         static_assert(bound_state_method_exists, "boundState method not found");
         constexpr static bool curvilinear_state_method_exists = has_method<const S, typename S::CurvilinearState, curvilinear_state_method_t, state&, bool>;
         static_assert(curvilinear_state_method_exists, "curvilinearState method not found");
-        constexpr static bool update_method_exists = require<has_method<const S, void, update_t, state&, const FreeVector&, const BoundSymMatrix&>,
+        constexpr static bool update_method_exists = require<has_method<const S, void, update_t, state&, const FreeVector&, const BoundVector&, const BoundSymMatrix&, const Surface&>,
                                                              has_method<const S, void, update_t, state&, const Vector3&, const Vector3&, double, double>>;
         static_assert(update_method_exists, "update method not found");
         constexpr static bool covariance_transport_exists = require<has_method<const S, void, covariance_transport_curvilinear_t, state&>,

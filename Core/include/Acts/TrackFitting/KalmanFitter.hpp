@@ -547,7 +547,8 @@ class KalmanFitter {
           stepper.update(state.stepping,
                          MultiTrajectoryHelpers::freeFiltered(
                              state.options.geoContext, trackStateProxy),
-                         trackStateProxy.filteredCovariance());
+                         trackStateProxy.filtered(),
+                         trackStateProxy.filteredCovariance(), *surface);
           // We count the state with measurement
           ++result.measurementStates;
         } else {
@@ -574,8 +575,10 @@ class KalmanFitter {
       } else if (surface->associatedDetectorElement() != nullptr ||
                  surface->surfaceMaterial() != nullptr) {
         // We only create track states here if there is already measurement
-        // detected
-        if (result.measurementStates > 0) {
+        // detected or if the surface has material (no holes before the first
+        // measurement)
+        if (result.measurementStates > 0 ||
+            surface->surfaceMaterial() != nullptr) {
           // No source links on surface, add either hole or passive material
           // TrackState entry multi trajectory. No storage allocation for
           // uncalibrated/calibrated measurement and filtered parameter
@@ -604,41 +607,28 @@ class KalmanFitter {
 
             // Count the missed surface
             result.missedActiveSurfaces.push_back(surface);
-
-            // Transport & bind the state to the current surface
-            auto res = stepper.boundState(state.stepping, *surface);
-            if (!res.ok()) {
-              ACTS_ERROR("Propagate to hole surface failed: " << res.error());
-              return res.error();
-            }
-            auto& [boundParams, jacobian, pathLength] = *res;
-
-            // Fill the track state
-            trackStateProxy.predicted() = std::move(boundParams.parameters());
-            if (boundParams.covariance().has_value()) {
-              trackStateProxy.predictedCovariance() =
-                  std::move(*boundParams.covariance());
-            }
-            trackStateProxy.jacobian() = std::move(jacobian);
-            trackStateProxy.pathLength() = std::move(pathLength);
           } else if (surface->surfaceMaterial() != nullptr) {
             ACTS_VERBOSE("Detected in-sensitive surface "
                          << surface->geometryId());
-
-            // Transport & get curvilinear state instead of bound state
-            auto [curvilinearParams, jacobian, pathLength] =
-                stepper.curvilinearState(state.stepping);
-
-            // Fill the track state
-            trackStateProxy.predicted() =
-                std::move(curvilinearParams.parameters());
-            if (curvilinearParams.covariance().has_value()) {
-              trackStateProxy.predictedCovariance() =
-                  std::move(*curvilinearParams.covariance());
-            }
-            trackStateProxy.jacobian() = std::move(jacobian);
-            trackStateProxy.pathLength() = std::move(pathLength);
           }
+
+          // Transport & bind the state to the current surface
+          auto res = stepper.boundState(state.stepping, *surface);
+          if (!res.ok()) {
+            ACTS_ERROR("Propagate to surface " << surface->geometryId()
+                                               << " failed: " << res.error());
+            return res.error();
+          }
+          auto& [boundParams, jacobian, pathLength] = *res;
+
+          // Fill the track state
+          trackStateProxy.predicted() = std::move(boundParams.parameters());
+          if (boundParams.covariance().has_value()) {
+            trackStateProxy.predictedCovariance() =
+                std::move(*boundParams.covariance());
+          }
+          trackStateProxy.jacobian() = std::move(jacobian);
+          trackStateProxy.pathLength() = std::move(pathLength);
 
           // Set the filtered parameter index to be the same with predicted
           // parameter
@@ -761,7 +751,8 @@ class KalmanFitter {
           stepper.update(state.stepping,
                          MultiTrajectoryHelpers::freeFiltered(
                              state.options.geoContext, trackStateProxy),
-                         trackStateProxy.filteredCovariance());
+                         trackStateProxy.filtered(),
+                         trackStateProxy.filteredCovariance(), *surface);
 
           // Update state and stepper with post material effects
           materialInteractor(surface, state, stepper, postUpdate);
@@ -864,16 +855,18 @@ class KalmanFitter {
       // Remember you smoothed the track states
       result.smoothed = true;
 
-      // Get the indices of the first measurement states;
-      size_t firstMeasurementIndex = result.lastMeasurementIndex;
+      // Get the indices of the first states (can be either a measurement or
+      // material);
+      size_t firstStateIndex = result.lastMeasurementIndex;
       // Count track states to be smoothed
       size_t nStates = 0;
       result.fittedStates.applyBackwards(
           result.lastMeasurementIndex, [&](auto st) {
             bool isMeasurement =
                 st.typeFlags().test(TrackStateFlag::MeasurementFlag);
-            if (isMeasurement) {
-              firstMeasurementIndex = st.index();
+            bool isMaterial = st.typeFlags().test(TrackStateFlag::MaterialFlag);
+            if (isMeasurement || isMaterial) {
+              firstStateIndex = st.index();
             }
             nStates++;
           });
@@ -903,8 +896,8 @@ class KalmanFitter {
       }
 
       // Obtain the smoothed parameters at first/last measurement state
-      auto firstCreatedMeasurement =
-          result.fittedStates.getTrackState(firstMeasurementIndex);
+      auto firstCreatedState =
+          result.fittedStates.getTrackState(firstStateIndex);
       auto lastCreatedMeasurement =
           result.fittedStates.getTrackState(result.lastMeasurementIndex);
 
@@ -915,9 +908,10 @@ class KalmanFitter {
             state.stepping.navDir * freeVector.segment<3>(eFreeDir0), true);
       };
 
-      // The smoothed free params at the first/last measurement state
+      // The smoothed free params at the first/last measurement state.
+      // (the first state can also be a material state)
       auto firstParams = MultiTrajectoryHelpers::freeSmoothed(
-          state.options.geoContext, firstCreatedMeasurement);
+          state.options.geoContext, firstCreatedState);
       auto lastParams = MultiTrajectoryHelpers::freeSmoothed(
           state.options.geoContext, lastCreatedMeasurement);
       // Get the intersections of the smoothed free parameters with the target
@@ -934,20 +928,24 @@ class KalmanFitter {
       // smoothed measurement state. Also, whether the intersection is on
       // surface is not checked here.
       bool reverseDirection = false;
-      bool closerToFirstCreatedMeasurement =
+      bool closerTofirstCreatedState =
           (std::abs(firstIntersection.intersection.pathLength) <=
            std::abs(lastIntersection.intersection.pathLength));
-      if (closerToFirstCreatedMeasurement) {
+      if (closerTofirstCreatedState) {
         stepper.update(state.stepping, firstParams,
-                       firstCreatedMeasurement.smoothedCovariance());
+                       firstCreatedState.smoothed(),
+                       firstCreatedState.smoothedCovariance(),
+                       firstCreatedState.referenceSurface());
         reverseDirection = (firstIntersection.intersection.pathLength < 0);
       } else {
         stepper.update(state.stepping, lastParams,
-                       lastCreatedMeasurement.smoothedCovariance());
+                       lastCreatedMeasurement.smoothed(),
+                       lastCreatedMeasurement.smoothedCovariance(),
+                       lastCreatedMeasurement.referenceSurface());
         reverseDirection = (lastIntersection.intersection.pathLength < 0);
       }
-      const auto& surface = closerToFirstCreatedMeasurement
-                                ? firstCreatedMeasurement.referenceSurface()
+      const auto& surface = closerTofirstCreatedState
+                                ? firstCreatedState.referenceSurface()
                                 : lastCreatedMeasurement.referenceSurface();
       ACTS_VERBOSE(
           "Smoothing successful, updating stepping state to smoothed "

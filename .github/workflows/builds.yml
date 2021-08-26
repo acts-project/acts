@@ -27,6 +27,12 @@ jobs:
       INSTALL_DIR: ${{ github.workspace }}/install
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: true
+        if: "!contains(matrix.image, 'lcg')"
+      - uses: actions/checkout@v2
+        if: contains(matrix.image, 'lcg')
+
       - name: Define setup script
         if: contains(matrix.image, 'lcg')
         run: echo "SETUP=${SETUP_LCG}" >> $GITHUB_ENV
@@ -283,6 +289,8 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004:v9
+    env:
+        DOXYGEN_WARN_AS_ERROR: YES
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies

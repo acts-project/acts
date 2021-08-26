@@ -327,7 +327,7 @@ class AtlasStepper {
     update(state,
            detail::transformBoundToFreeParameters(surface, state.geoContext,
                                                   boundParams),
-           cov);
+           boundParams, cov, surface);
     state.navDir = navDir;
     state.stepSize = ConstrainedStep(stepSize);
     state.pathAccumulated = 0.;
@@ -654,10 +654,11 @@ class AtlasStepper {
   /// The state update method
   ///
   /// @param [in,out] state The stepper state for
-  /// @param [in] parameters The new track parameters at start
+  /// @param [in] parameters The new free track parameters at start
   /// @param [in] covariance The updated covariance matrix
   void update(State& state, const FreeVector& parameters,
-              const Covariance& covariance) const {
+              const BoundVector& /*unused*/, const Covariance& covariance,
+              const Surface& /*unused*/) const {
     Vector3 direction = parameters.template segment<3>(eFreeDir0).normalized();
     state.pVector[0] = parameters[eFreePos0];
     state.pVector[1] = parameters[eFreePos1];

@@ -56,10 +56,6 @@ class Seedfinder {
     std::vector<std::pair<
         float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
         seedsPerSpM;
-
-    std::vector<std::pair<
-        float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
-        sameTrackSeeds;
   };
 
   /// The only constructor. Requires a config object.
