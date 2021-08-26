@@ -32,62 +32,22 @@ namespace Acts {
 ///
 /// This can either be used as a validation tool, for truth
 /// tracking, or track refitting
-template<typename guider_t>
-class GuidedNavigator2 {
+class DirectNavigator {
  public:
   /// The sequentially crossed surfaces
-  using Guider = guider_t;
   using SurfaceSequence = std::vector<const Surface*>;
   using SurfaceIter = std::vector<const Surface*>::iterator;
 
   /// Defaulted Constructed
-  GuidedNavigator2() = default;
+  DirectNavigator() = default;
 
   /// The tolerance used to define "surface reached"
   double tolerance = s_onSurfaceTolerance;
-
-  Guider guider;
 
   /// Nested Actor struct, called Initializer
   ///
   /// This is needed for the initialization of the
   /// surface sequence
-  struct Initializer {
-    /// The Surface sequence
-    SurfaceSequence navSurfaces = {};
-
-    /// Actor result / state
-    struct this_result {
-      bool initialized = false;
-    };
-    using result_type = this_result;
-
-    /// Defaulting the constructor
-    Initializer() = default;
-
-    /// Actor operator call
-    /// @tparam statet Type of the full propagator state
-    /// @tparam stepper_t Type of the stepper
-    ///
-    /// @param state the entire propagator state
-    /// @param r the result of this Actor
-    template <typename propagator_state_t, typename stepper_t>
-    void operator()(propagator_state_t& state, const stepper_t& /*unused*/,
-                    result_type& r) const {
-      // Only act once
-      if (not r.initialized) {
-        // Initialize the surface sequence
-        state.navigation.navSurfaces = navSurfaces;
-        state.navigation.navSurfaceIter = state.navigation.navSurfaces.begin();
-        r.initialized = true;
-      }
-    }
-
-    /// Actor operator call - resultless, unused
-    template <typename propagator_state_t, typename stepper_t>
-    void operator()(propagator_state_t& /*unused*/,
-                    const stepper_t& /*unused*/) const {}
-  };
 
   /// Nested State struct
   ///
@@ -171,15 +131,13 @@ class GuidedNavigator2 {
       // Establish the surface status
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, **state.navigation.navSurfaceIter, false);
-
       if (surfaceStatus == Intersection3D::Status::onSurface) {
         // Set the current surface
         state.navigation.currentSurface = *state.navigation.navSurfaceIter;
         ACTS_VERBOSE("Current surface set to  "
                      << state.navigation.currentSurface->geometryId())
         // Move the sequence to the next surface
-//         ++state.navigation.navSurfaceIter;
-        guider.updateOnSurface(state, stepper);
+        ++state.navigation.navSurfaceIter;
         if (state.navigation.navSurfaceIter !=
             state.navigation.navSurfaces.end()) {
           ACTS_VERBOSE("Next surface candidate is  "
@@ -218,7 +176,6 @@ class GuidedNavigator2 {
       // Establish & update the surface status
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, **state.navigation.navSurfaceIter, false);
-
       if (surfaceStatus == Intersection3D::Status::unreachable) {
         ACTS_VERBOSE(
             "Surface not reachable anymore, switching to next one in "
