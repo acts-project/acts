@@ -19,6 +19,8 @@
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 
+#include <fstream>
+
 #include "PropagationDatasets.hpp"
 
 namespace ds = ActsTests::PropagationDatasets;
@@ -28,6 +30,76 @@ using Stepper = Acts::EigenStepper<>;
 const Acts::GeometryContext gctx;
 const Acts::MagneticFieldContext mctx;
 const auto logger = Acts::getDefaultLogger("Logger", Acts::Logging::INFO);
+
+enum class NavigatorType { standard, trialAndError };
+
+const std::string datestring = []() {
+  char text[100];
+  time_t now = std::time(nullptr);
+  std::tm* t = std::localtime(&now);
+  std::strftime(text, sizeof(text), "-%Y%m%d-%H%M%S", t);
+  return std::string(text);
+}();
+
+auto export_track_to_csv(const std::vector<Acts::detail::Step>& steps,
+                         NavigatorType type) {
+  static int count_standard = 0;
+  static int count_trialerror = 0;
+
+  auto file = [&]() {
+    if (type == NavigatorType::standard) {
+      const auto filename = std::to_string(count_standard++) +
+                            std::string("-standard") + datestring + ".csv";
+      return std::ofstream(filename, std::ios_base::trunc);
+    } else {
+      const auto filename = std::to_string(count_trialerror++) +
+                            std::string("-trialerror") + datestring + ".csv";
+      return std::ofstream(filename, std::ios_base::trunc);
+    }
+  }();
+
+  file << "surface,x,y,z\n";
+
+  for (const auto& step : steps) {
+    file << step.surface->geometryId().value() << "," << step.position[0] << ","
+         << step.position[1] << "," << step.position[2] << "\n";
+  }
+}
+
+void print_difference(const std::vector<Acts::detail::Step>& standard,
+                      const std::vector<Acts::detail::Step>& trialAndError) {
+  std::vector<Acts::GeometryIdentifier> standardIds;
+  for (const auto& step : standard) {
+    standardIds.push_back(step.surface->geometryId());
+  }
+
+  std::vector<Acts::GeometryIdentifier> trialErrorFound(
+      standardIds.size(), Acts::GeometryIdentifier{});
+  std::vector<Acts::GeometryIdentifier> trialErrorNotFound;
+
+  for (const auto& step : trialAndError) {
+    const auto found =
+        std::find(standardIds.begin(), standardIds.end(), step.surface->geometryId());
+
+    if (found == standardIds.end()) {
+      trialErrorNotFound.push_back(step.surface->geometryId());
+    } else {
+      const auto i = std::distance(standardIds.begin(), found);
+      trialErrorFound[i] = step.surface->geometryId();
+    }
+  }
+
+  std::cout << "Standard\tTrial&Error\n";
+  for (auto i = 0ul; i < standardIds.size(); ++i) {
+    std::cout << standardIds[i] << "\t" << trialErrorFound[i] << "\n";
+  }
+
+  std::cout << "\nNot found: ";
+  for (const auto& geoid : trialErrorNotFound) {
+    std::cout << geoid << ",  ";
+  }
+  std::cout << std::endl;
+}
 
 auto getGenericTrackingGeometry() {
   static std::shared_ptr<const Acts::TrackingGeometry> geometry;
@@ -120,6 +192,12 @@ void compareNavigation(
         std::find_if(normal_it, normalStepLog.cend(), [&](const auto& s) {
           return s.surface->geometryId() == tae_step.surface->geometryId();
         });
+
+    if (normal_it == normalStepLog.end()) {
+      export_track_to_csv(normalStepLog, NavigatorType::standard);
+      export_track_to_csv(trialAndErrorStepLog, NavigatorType::trialAndError);
+      print_difference(normalStepLog, trialAndErrorStepLog);
+    }
 
     BOOST_REQUIRE(normal_it != normalStepLog.end());
   }
