@@ -193,11 +193,11 @@ void compareNavigation(
           return s.surface->geometryId() == tae_step.surface->geometryId();
         });
 
-    if (normal_it == normalStepLog.end()) {
-      export_track_to_csv(normalStepLog, NavigatorType::standard);
-      export_track_to_csv(trialAndErrorStepLog, NavigatorType::trialAndError);
+//     if (normal_it == normalStepLog.end()) {
+//       export_track_to_csv(normalStepLog, NavigatorType::standard);
+//       export_track_to_csv(trialAndErrorStepLog, NavigatorType::trialAndError);
       print_difference(normalStepLog, trialAndErrorStepLog);
-    }
+//     }
 
     BOOST_REQUIRE(normal_it != normalStepLog.end());
   }
