@@ -6,13 +6,6 @@ Prerequisites
 -------------
 First you will need to build the ACTS with the Examples, Geant4 and the JSON plugin (``ACTS_BUILD_EXAMPLES``, ``ACTS_BUILD_EXAMPLES_GEANT4`` and ``ACTS_BUILD_PLUGIN_JSON``), please refer to the general how-to ACTS guide. Depending on the type of detector you want to map you will need to use some additional packages, in our case ``ACTS_BUILD_EXAMPLES_DD4HEP`` and ``ACTS_BUILD_PLUGIN_TGEO`` are needed.
 
-For this particular example the ODD will also be need. To use it, don't forget to get the corresponding submodule and the recompile the ACTS code.
-
-.. code-block:: console
-  
-  git submodule init
-  git submodule update
-
 Once Acts has been built we can start the mapping. The mapping is divided in two aspects: the surface mapping in which the material is mapped onto the closest surfaces (following the propagation direction) and the volume mapping in which the material is mapped onto a 3D (or 2D) grid associated to a volume. The first step is to select which surfaces and volumes we will want to map material onto. This is done by association a ``Acts::ProtoSurfaceMaterial`` (or a ``Acts::ProtoVolumeMaterial``) to the surfaces (or volumes) of interest. In the case of the ODD and some other DD4hep detectors this is done at the building step. For other detectors, or if one wants to be able to control precisely which layer will be mapped on and with which binning, an additional step is required.
 
 Mapping and configuration
@@ -99,7 +92,6 @@ Material Validation
 Now that the map has been written, you will want to validate it. First you can use the ``MaterialValidation`` example. This will perform propagation throughout the detector once it has been decorated with the material map. It will then output material tracks with the same format as the one obtain with the Geantino.
 
 By default, the Geantino scan is performed with no spread in :math:`z_0` and :math:`d_0`, while the validation has a spread of 55 mm, to obtain meaningful results, use the same spread for both (in our example a spread of 0). Another difference between the scan and the validation is that the first uses a flat distribution in :math:`\theta` while the second uses a flat distribution in :math:`\eta`, so some reweighing might be necessary when comparing some of the distributions.
-
 .. code-block:: console
 
   ./../build/bin/ActsExampleMaterialValidationDD4hep -n 1000 --mat-input-type file --mat-input-file material-maps.json --output-root --mat-output-file val-mat-map --dd4hep-input ../thirdparty/OpenDataDetector/xml/OpenDataDetector.xml --prop-z0-sigma 0.0 --prop-d0-sigma 0.0
@@ -138,7 +130,6 @@ To do the validation, five root macros are available in ``scripts/MaterialMaping
 Using the validation plots you can then adapt the binning and the mapped surface to improve the mapping.
 
 On top of those plots : 
-
 .. code-block:: console
   root -l -b ../Examples/Scripts/MaterialMaping/Mat_map_detector_plot_ratio.C'("propagation-material.root","material-maps_tracks.root",{X,Y,Z},100000,"Det_ratio","Det_Acts","Det_G4")'
   .q
