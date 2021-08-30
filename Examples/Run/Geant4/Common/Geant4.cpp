@@ -49,7 +49,7 @@ void setupGeant4Simulation(const ActsExamples::Options::Variables& vars,
                            std::vector<G4UserSteppingAction*> steppingActions,
                            bool materialRecording) {
   // Create an event Store registry
-  EventStoreRegistry esRegistry(vars["events"].as<size_t>());
+  EventStoreRegistry esRegistry;
 
   auto g4loglevel =
       Acts::Logging::Level(vars["g4-loglevel"].as<unsigned int>());
@@ -148,7 +148,9 @@ int runMaterialRecording(
         materialTrackWriter, logLevel));
   }
 
-  return sequencer.run();
+  auto result = sequencer.run();
+  delete runManager;
+  return result;
 }
 
 }  // namespace ActsExamples

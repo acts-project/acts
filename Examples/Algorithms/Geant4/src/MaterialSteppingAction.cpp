@@ -30,6 +30,9 @@ void ActsExamples::MaterialSteppingAction::UserSteppingAction(
   auto g4RunManager = G4RunManager::GetRunManager();
   unsigned int eventNr = g4RunManager->GetCurrentEvent()->GetEventID();
 
+  // Get the event data
+  auto& eventData = EventStoreRegistry::eventData[eventNr];
+
   // Get the material & check if it is present
   G4Material* material = step->GetPreStepPoint()->GetMaterial();
   if (material == nullptr) {
@@ -93,13 +96,13 @@ void ActsExamples::MaterialSteppingAction::UserSteppingAction(
   mInteraction.pathCorrection = (step->GetStepLength() / CLHEP::mm);
 
   size_t trackID = step->GetTrack()->GetTrackID();
-  auto& recordedMaterial = EventStoreRegistry::recordedMaterial[eventNr];
-  if (recordedMaterial.size() < trackID) {
+  auto& materialTracks = eventData.materialTracks;
+  if (materialTracks.size() < trackID) {
     Acts::RecordedMaterialTrack rmTrack;
     rmTrack.second.materialInteractions.push_back(mInteraction);
-    recordedMaterial.push_back(rmTrack);
+    materialTracks.push_back(rmTrack);
   } else {
-    recordedMaterial[trackID - 1].second.materialInteractions.push_back(
+    materialTracks[trackID - 1].second.materialInteractions.push_back(
         mInteraction);
   }
 }

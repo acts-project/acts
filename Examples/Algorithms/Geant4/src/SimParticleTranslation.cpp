@@ -42,7 +42,8 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
 
   ACTS_DEBUG("Primary Generator Action for Event: " << eventID);
 
-  WhiteBoard* eventStore = EventStoreRegistry::boards[eventID];
+  auto& eventData = EventStoreRegistry::eventData[eventID];
+  WhiteBoard* eventStore = eventData.store;
   if (eventStore == nullptr) {
     ACTS_WARNING("No EventStore instance could be found for this event!");
     return;
@@ -53,12 +54,11 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
       eventStore->get<ActsExamples::SimParticleContainer>(m_cfg.inputParticles);
 
   // Feserve appropriate resources for initial/final particles
-  EventStoreRegistry::particlesInitial[eventID].reserve(inputParticles.size());
-  EventStoreRegistry::particlesFinal[eventID].reserve(inputParticles.size());
+  eventData.particlesInitial.reserve(inputParticles.size());
+  eventData.particlesFinal.reserve(inputParticles.size());
 
   // Reserve hopefully enough hit space
-  EventStoreRegistry::hits[eventID].reserve(inputParticles.size() *
-                                            m_cfg.reserveHitsPerParticle);
+  eventData.hits.reserve(inputParticles.size() * m_cfg.reserveHitsPerParticle);
 
   // Default particle kinematic
   G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();

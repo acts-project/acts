@@ -12,6 +12,7 @@
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 
+#include <map>
 #include <vector>
 
 namespace ActsExamples {
@@ -26,22 +27,24 @@ class WhiteBoard;
 /// @note multiple threads within an event could lead to conflicts
 class EventStoreRegistry {
  public:
-  /// Constructore with arguments
-  /// @param nevents is the number of events to be processed
-  EventStoreRegistry(size_t nevents);
+  /// Nested containers struct to give access to the
+  /// shared event data.
+  struct Access {
+    /// The current event store
+    WhiteBoard* store = nullptr;
+    /// Initial and final particle collections
+    SimParticleContainer::sequence_type particlesInitial;
+    SimParticleContainer::sequence_type particlesFinal;
+    /// The hits in sensitive detectors
+    SimHitContainer::sequence_type hits;
+    /// Tracks recorded in material mapping
+    std::vector<Acts::RecordedMaterialTrack> materialTracks;
+  };
+
+  EventStoreRegistry() = default;
   virtual ~EventStoreRegistry() = default;
 
-  static std::vector<WhiteBoard*> boards;
-  static std::vector<SimHitContainer::sequence_type> hits;
-  static std::vector<SimParticleContainer::sequence_type> particlesInitial;
-  static std::vector<SimParticleContainer::sequence_type> particlesFinal;
-
-  static std::vector<std::vector<Acts::RecordedMaterialTrack>> recordedMaterial;
-
-  /// Static method to clear a specific event
-  ///
-  /// @param event is the event number to be cleared
-  static void clearEvent(size_t event);
+  static std::map<unsigned int, Access> eventData;
 };
 
 }  // namespace ActsExamples

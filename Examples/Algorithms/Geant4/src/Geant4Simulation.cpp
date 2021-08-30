@@ -97,9 +97,14 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
   // Ensure exclusive access to the geant run manager
   std::lock_guard<std::mutex> guard(m_runManagerLock);
 
+  // Create and re-reference
+  EventStoreRegistry::eventData[ctx.eventNumber] = EventStoreRegistry::Access{};
+  EventStoreRegistry::Access& eventData =
+      EventStoreRegistry::eventData[ctx.eventNumber];
+
   // Register the current event store to the registry
   // this will allow access from the User*Actions
-  EventStoreRegistry::boards[ctx.eventNumber] = &(ctx.eventStore);
+  eventData.store = &(ctx.eventStore);
 
   ACTS_DEBUG("Sending Geant RunManager the BeamOn() command.");
   // Start simulation. each track is simulated as a separate Geant4 event.
@@ -110,19 +115,15 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
       not m_cfg.outputParticlesFinal.empty()) {
     // Initial state of partciles
     SimParticleContainer outputParticlesInitial;
-    outputParticlesInitial.insert(
-        EventStoreRegistry::particlesInitial[ctx.eventNumber].begin(),
-        EventStoreRegistry::particlesInitial[ctx.eventNumber].end());
-    EventStoreRegistry::particlesInitial[ctx.eventNumber].clear();
+    outputParticlesInitial.insert(eventData.particlesInitial.begin(),
+                                  eventData.particlesInitial.end());
     // Register to the event store
     ctx.eventStore.add(m_cfg.outputParticlesInitial,
                        std::move(outputParticlesInitial));
     // Final state of partciles
     SimParticleContainer outputParticlesFinal;
-    outputParticlesFinal.insert(
-        EventStoreRegistry::particlesFinal[ctx.eventNumber].begin(),
-        EventStoreRegistry::particlesFinal[ctx.eventNumber].end());
-    EventStoreRegistry::particlesFinal[ctx.eventNumber].clear();
+    outputParticlesFinal.insert(eventData.particlesFinal.begin(),
+                                eventData.particlesFinal.end());
     // Register to the event store
     ctx.eventStore.add(m_cfg.outputParticlesFinal,
                        std::move(outputParticlesFinal));
@@ -131,22 +132,19 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
   // Output handling: Simulated hits
   if (not m_cfg.outputSimHits.empty()) {
     SimHitContainer simHits;
-    simHits.insert(EventStoreRegistry::hits[ctx.eventNumber].begin(),
-                   EventStoreRegistry::hits[ctx.eventNumber].end());
-    EventStoreRegistry::hits[ctx.eventNumber].clear();
+    simHits.insert(eventData.hits.begin(), eventData.hits.end());
     // Register to the event store
     ctx.eventStore.add(m_cfg.outputSimHits, std::move(simHits));
   }
 
   // Output handling: Material tracks
   if (not m_cfg.outputMaterialTracks.empty()) {
-    ctx.eventStore.add(
-        m_cfg.outputMaterialTracks,
-        std::move(EventStoreRegistry::recordedMaterial[ctx.eventNumber]));
+    ctx.eventStore.add(m_cfg.outputMaterialTracks,
+                       std::move(eventData.materialTracks));
   }
 
   // Clear the EventStoreRegistry
-  EventStoreRegistry::clearEvent(ctx.eventNumber);
+  EventStoreRegistry::eventData.erase(ctx.eventNumber);
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
