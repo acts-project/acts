@@ -230,6 +230,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
 ///
 /// @param bu BinUtility at source
 /// @param surface Surface to which the adjustment is being done
+/// @param gctx Geometry context to get the surfaces transform
 ///
 /// @return new updated BinUtiltiy
 BinUtility adjustBinUtility(const BinUtility& bu, const Surface& surface,
