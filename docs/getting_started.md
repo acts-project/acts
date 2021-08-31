@@ -9,7 +9,7 @@ following commands will clone the repository, configure, and build the core
 library:
 
 ```console
-$ git clone https://github.com/acts-project/acts <source-dir>
+$ git clone --recursive https://github.com/acts-project/acts <source-dir>
 $ cmake -B <build-dir> -S <source-dir>
 $ cmake --build <build-dir>
 ```
