@@ -69,7 +69,7 @@ void setupGeant4Simulation(const ActsExamples::Options::Variables& vars,
     g4Cfg.outputMaterialTracks = Simulation::kMaterialTracks;
   }
 
-  // Set teh primarty generator
+  // Set the primarty generator
   g4Cfg.primaryGeneratorAction = new SimParticleTranslation(
       g4PrCfg, Acts::getDefaultLogger("SimParticleTranslation", g4loglevel));
   g4Cfg.detectorConstruction = std::move(detector);
