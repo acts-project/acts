@@ -219,7 +219,7 @@ async def get_parsed_commit_range(
                 unparsed_commits.append(commit)
 
             print("-", commit)
-            if len(commits) > 100:
+            if len(commits) > 200:
                 raise RuntimeError(f"{len(commits)} are a lot. Aborting!")
         return commits, unparsed_commits
     except gidgethub.BadRequest:
