@@ -29,6 +29,9 @@ load_dotenv()
 
 git = sh.git
 
+RETRY_COUNT = 10
+RETRY_INTERVAL = 0.5  # seconds
+
 
 def run(cmd):
     return subprocess.check_output(cmd).decode("utf-8").strip()
@@ -291,7 +294,7 @@ async def make_release(
 
             commit_ok = False
             print("Waiting for commit", target_hash[:8], "to be received")
-            for _ in range(10):
+            for _ in range(RETRY_COUNT):
                 try:
                     url = f"/repos/{repo}/commits/{target_hash}"
                     await gh.getitem(url)
@@ -300,7 +303,7 @@ async def make_release(
                 except InvalidField as e:
                     print("Commit", target_hash[:8], "not received yet")
                     pass  # this is what we want
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(RETRY_INTERVAL)
 
             if not commit_ok:
                 print("Commit", target_hash[:8], "was not created on remote")
@@ -338,11 +341,11 @@ async def get_tag_hash(tag: str, repo: str, gh: GitHubAPI) -> str:
 
 
 async def get_merge_commit_sha(pr: int, repo: str, gh: GitHubAPI) -> str:
-    for _ in range(10):
+    for _ in range(RETRY_COUNT):
         pull = await gh.getitem(f"repos/{repo}/pulls/{pr}")
         if pull["mergeable"] is None:
             # no merge commit yet, wait a bit
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(RETRY_INTERVAL)
             continue
         if not pull["mergeable"]:
             raise RuntimeError("Pull request is not mergeable, can't continue")
