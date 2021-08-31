@@ -77,7 +77,7 @@ With the surfaces map and the material track we can finally do the material mapp
 
 .. code-block:: console
 
-  ./../build/bin/ActsExampleMaterialMappingDD4hep -j1 --input-root true --input-files geant4_material_tracks.root --mat-input-type file --mat-input-file geometry-map.json --output-root --output-json --output-cbor --mat-mapping-collection material-tracks --mat-output-file material-maps --mat-mapping-surfaces true --mat-mapping-volumes true --mat-mapping-volume-stepsize 1 --dd4hep-input ../thirdparty/OpenDataDetector/xml/OpenDataDetector.xml
+  ./../build/bin/ActsExampleMaterialMappingDD4hep -j1 --input-root true --input-files geant4_material_tracks.root --mat-input-type file --mat-input-file geometry-map.json --output-root --output-json --output-cbor --mat-output-file material-maps --mat-mapping-surfaces true --mat-mapping-volumes true --mat-mapping-volume-stepsize 1 --dd4hep-input ../thirdparty/OpenDataDetector/xml/OpenDataDetector.xml
 
 
 As an output you will obtain the material map as a root and JSON file and a new material track collection in a root file. This new collection adds to each material interaction the associated surface during the mapping. This can be used for the control plots.
