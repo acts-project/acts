@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 import os
 import asyncio
-import subprocess
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import re
 from pathlib import Path
 import sys
 import http
+import json
+import yaml
+import datetime
+import typer
+import base64
 
 import aiohttp
 from gidgethub.aiohttp import GitHubAPI
@@ -17,20 +21,18 @@ from semantic_release.errors import UnknownCommitMessageStyleError
 from semantic_release.history.logs import LEVELS
 from semantic_release.history.parser_helpers import ParsedCommit
 import sh
-import click
 from dotenv import load_dotenv
+import functools
 
 load_dotenv()
 
 git = sh.git
 
-
-def run(cmd):
-    return subprocess.check_output(cmd).decode("utf-8").strip()
+RETRY_COUNT = 10
+RETRY_INTERVAL = 0.5  # seconds
 
 
 def get_repo():
-    # origin = run(["git", "remote", "get-url", "origin"])
     repo = os.environ.get("GITHUB_REPOSITORY", None)
     if repo is not None:
         return repo
@@ -140,8 +142,98 @@ def markdown_changelog(version: str, changelog: dict, header: bool = False) -> s
     return output
 
 
-async def main(draft, dry_run):
-    token = os.environ["GH_TOKEN"]
+def update_zenodo(zenodo_file: Path, repo: str, next_version):
+    data = json.loads(zenodo_file.read_text())
+    data["title"] = f"{repo}: v{next_version}"
+    data["version"] = f"v{next_version}"
+    zenodo_file.write_text(json.dumps(data, indent=2))
+
+
+def update_zenodo(zenodo_file: Path, repo: str, next_version):
+    data = json.loads(zenodo_file.read_text())
+    data["title"] = f"{repo}: v{next_version}"
+    data["version"] = f"v{next_version}"
+    zenodo_file.write_text(json.dumps(data, indent=2))
+
+
+def update_citation(citation_file: Path, next_version):
+    with citation_file.open() as fh:
+        data = yaml.safe_load(fh)
+    data["version"] = f"v{next_version}"
+    data["date-released"] = datetime.date.today().strftime("%Y-%m-%d")
+    with citation_file.open("w") as fh:
+        yaml.dump(data, fh, indent=2)
+
+
+def make_sync(fn):
+    @functools.wraps(fn)
+    def wrapped(*args, **kwargs):
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(fn(*args, **kwargs))
+
+    return wrapped
+
+
+app = typer.Typer()
+
+
+async def get_parsed_commit_range(
+    start: str, end: str, repo: str, gh: GitHubAPI, edit: bool = False
+) -> Tuple[List[Commit], List[Commit]]:
+    commits_iter = gh.getiter(f"/repos/{repo}/commits?sha={start}")
+
+    commits = []
+    unparsed_commits = []
+
+    try:
+        async for item in commits_iter:
+            commit_hash = item["sha"]
+            commit_message = item["commit"]["message"]
+            if commit_hash == end:
+                break
+
+            invalid_message = False
+            try:
+                _default_parser(commit_message)
+                # if this succeeds, do nothing
+            except UnknownCommitMessageStyleError as err:
+                print("Unknown commit message style!")
+                if not commit_message.startswith("Merge"):
+                    invalid_message = True
+            if (
+                (invalid_message or edit)
+                and sys.stdout.isatty()
+                and False
+                and typer.confirm(f"Edit effective message '{commit_message}'?")
+            ):
+                commit_message = typer.edit(commit_message)
+                _default_parser(commit_message)
+
+            commit = Commit(commit_hash, commit_message)
+            commits.append(commit)
+
+            if invalid_message:
+                unparsed_commits.append(commit)
+
+            print("-", commit)
+            if len(commits) > 200:
+                raise RuntimeError(f"{len(commits)} are a lot. Aborting!")
+        return commits, unparsed_commits
+    except gidgethub.BadRequest:
+        print(
+            "BadRequest for commit retrieval. That is most likely because you forgot to push the merge commit."
+        )
+        return
+
+
+@app.command()
+@make_sync
+async def make_release(
+    token: str = typer.Argument(..., envvar="GH_TOKEN"),
+    draft: bool = True,
+    dry_run: bool = False,
+    edit: bool = False,
+):
     async with aiohttp.ClientSession(loop=asyncio.get_event_loop()) as session:
         gh = GitHubAPI(session, __name__, oauth_token=token)
 
@@ -157,37 +249,9 @@ async def main(draft, dry_run):
         repo = get_repo()
         print("repo:", repo)
 
-        commits_iter = gh.getiter(f"/repos/{repo}/commits?sha={sha}")
-
-        commits = []
-
-        try:
-          async for item in commits_iter:
-              commit_hash = item["sha"]
-              commit_message = item["commit"]["message"]
-              if commit_hash == tag_hash:
-                  break
-
-              try:
-                  _default_parser(commit_message)
-                  # if this succeeds, do nothing
-              except UnknownCommitMessageStyleError as err:
-                print("Unkown commit message style:")
-                print(commit_message)
-                if sys.stdout.isatty() and click.confirm("Edit effective message?"):
-                  commit_message = click.edit(commit_message)
-                  _default_parser(commit_message)
-
-              commit = Commit(commit_hash, commit_message)
-              commits.append(commit)
-              print("-", commit)
-        except gidgethub.BadRequest:
-          print("BadRequest for commit retrieval. That is most likely because you forgot to push the merge commit.")
-          return
-
-        if len(commits) > 100:
-            print(len(commits), "are a lot. Aborting!")
-            sys.exit(1)
+        commits, _ = await get_parsed_commit_range(
+            start=sha, end=tag_hash, repo=repo, gh=gh, edit=edit
+        )
 
         bump = evaluate_version_bump(commits)
         print("bump:", bump)
@@ -204,55 +268,228 @@ async def main(draft, dry_run):
         print(md)
 
         if not dry_run:
-          version_file.write_text(next_version)
+            version_file.write_text(next_version)
+            git.add(version_file)
 
-          git.add(version_file)
-          git.commit(m=f"Bump to version {next_tag}")
+            zenodo_file = Path(".zenodo.json")
+            update_zenodo(zenodo_file, repo, next_version)
+            git.add(zenodo_file)
 
-          # git.tag(next_tag)
-          target_hash = str(git("rev-parse", "HEAD")).strip()
-          print("target_hash:", target_hash)
+            citation_file = Path("CITATION.cff")
+            update_citation(citation_file, next_version)
+            git.add(citation_file)
 
-          git.push()
+            git.commit(m=f"Bump to version {next_tag}")
 
-          commit_ok = False
-          print("Waiting for commit", target_hash[:8], "to be received")
-          for _ in range(10):
-              try:
-                url = f"/repos/{repo}/commits/{target_hash}"
-                await gh.getitem(url)
-                commit_ok = True
-                break
-              except InvalidField as e:
-                  print("Commit", target_hash[:8], "not received yet")
-                  pass # this is what we want
-              await asyncio.sleep(0.5)
+            target_hash = str(git("rev-parse", "HEAD")).strip()
+            print("target_hash:", target_hash)
 
-          if not commit_ok:
-              print("Commit", target_hash[:8], "was not created on remote")
-              sys.exit(1)
+            git.push()
 
-          print("Commit", target_hash[:8], "received")
+            commit_ok = False
+            print("Waiting for commit", target_hash[:8], "to be received")
+            for _ in range(RETRY_COUNT):
+                try:
+                    url = f"/repos/{repo}/commits/{target_hash}"
+                    await gh.getitem(url)
+                    commit_ok = True
+                    break
+                except InvalidField as e:
+                    print("Commit", target_hash[:8], "not received yet")
+                    pass  # this is what we want
+                await asyncio.sleep(RETRY_INTERVAL)
 
-          await gh.post(
-              f"/repos/{repo}/releases",
-              data={
-                  "body": md,
-                  "tag_name": next_tag,
-                  "name": next_tag,
-                  "draft": draft,
-                  "target_commitish": target_hash,
-              },
-          )
+            if not commit_ok:
+                print("Commit", target_hash[:8], "was not created on remote")
+                sys.exit(1)
+
+            print("Commit", target_hash[:8], "received")
+
+            await gh.post(
+                f"/repos/{repo}/releases",
+                data={
+                    "body": md,
+                    "tag_name": next_tag,
+                    "name": next_tag,
+                    "draft": draft,
+                    "target_commitish": target_hash,
+                },
+            )
 
 
-@click.command()
-@click.option("--draft/--no-draft", default=True)
-@click.option("--dry-run/--no-dry-run", default=False)
-def main_sync(*args, **kwargs):
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main(*args, **kwargs))
+async def get_release_branch_version(
+    repo: str, target_branch: str, gh: GitHubAPI
+) -> str:
+    content = await gh.getitem(
+        f"repos/{repo}/contents/version_number?ref={target_branch}"
+    )
+    assert content["type"] == "file"
+    return base64.b64decode(content["content"]).decode("utf-8")
+
+
+async def get_tag_hash(tag: str, repo: str, gh: GitHubAPI) -> str:
+    async for item in gh.getiter(f"repos/{repo}/tags"):
+        if item["name"] == tag:
+            return item["commit"]["sha"]
+    raise ValueError(f"Tag {tag} not found")
+
+
+async def get_merge_commit_sha(pr: int, repo: str, gh: GitHubAPI) -> str:
+    for _ in range(RETRY_COUNT):
+        pull = await gh.getitem(f"repos/{repo}/pulls/{pr}")
+        if pull["mergeable"] is None:
+            # no merge commit yet, wait a bit
+            await asyncio.sleep(RETRY_INTERVAL)
+            continue
+        if not pull["mergeable"]:
+            raise RuntimeError("Pull request is not mergeable, can't continue")
+        return pull["merge_commit_sha"]
+    raise RuntimeError("Timeout waiting for pull request merge status")
+
+
+async def get_tag(tag: str, repo: str, gh: GitHubAPI):
+    async for item in gh.getiter(f"repos/{repo}/tags"):
+        if item["name"] == tag:
+            return item
+    return None
+
+
+async def get_release(tag: str, repo: str, gh: GitHubAPI):
+    existing_release = None
+    try:
+        existing_release = await gh.getitem(f"repos/{repo}/releases/tags/v{tag}")
+    except gidgethub.BadRequest as e:
+        if e.status_code == http.HTTPStatus.NOT_FOUND:
+            pass  # this is what we want
+        else:
+            raise e
+    return existing_release
+
+
+@app.command()
+@make_sync
+async def pr_action(
+    fail: bool = False,
+    pr: int = None,
+    token: Optional[str] = typer.Option(None, envvar="GH_TOKEN"),
+    repo: Optional[str] = typer.Option(None, envvar="GH_REPO"),
+):
+
+    print("::group::Information")
+
+    context = os.environ.get("GITHUB_CONTEXT")
+
+    if context is not None:
+        context = json.loads(context)
+        repo = context["repository"]
+        token = context["token"]
+    else:
+        if token is None or repo is None:
+            raise ValueError("No context, need token and repo")
+        if pr is None:
+            raise ValueError("No context, need explicit PR to run on")
+
+    async with aiohttp.ClientSession(loop=asyncio.get_event_loop()) as session:
+        gh = GitHubAPI(session, __name__, oauth_token=token)
+
+        if pr is not None:
+            pr = await gh.getitem(f"repos/{repo}/pulls/{pr}")
+        else:
+            pr = context["event"]["pull_request"]
+
+        target_branch = pr["base"]["ref"]
+        print("Target branch:", target_branch)
+        sha = pr["head"]["sha"]
+        print("Source hash:", sha)
+
+        merge_commit_sha = await get_merge_commit_sha(
+            pr["number"],
+            repo,
+            gh,
+        )
+        print("Merge commit sha:", merge_commit_sha)
+
+        # Get current version from target branch
+        current_version = await get_release_branch_version(repo, target_branch, gh)
+        tag_hash = await get_tag_hash(f"v{current_version}", repo, gh)
+        print("current_version:", current_version, "[" + tag_hash[:8] + "]")
+
+        commits, unparsed_commits = await get_parsed_commit_range(
+            start=merge_commit_sha, end=tag_hash, repo=repo, gh=gh
+        )
+
+        bump = evaluate_version_bump(commits)
+        print("bump:", bump)
+        next_version = get_new_version(current_version, bump)
+        print("next version:", next_version)
+        next_tag = f"v{next_version}"
+
+        print("::endgroup::")
+
+        changes = generate_changelog(commits)
+        md = markdown_changelog(next_version, changes, header=False)
+
+        body = ""
+        title = f"Release: {current_version} -> {next_version}"
+
+        existing_release = await get_release(next_tag, repo, gh)
+        existing_tag = await get_tag(next_tag, repo, gh)
+
+        body += f"# `v{current_version}` -> `v{next_version}`\n"
+
+        exit_code = 0
+
+        if existing_release is not None or existing_tag is not None:
+
+            if current_version == next_version:
+                body += (
+                    "## :no_entry_sign: Merging this will not result in a new version (no `fix`, "
+                    "`feat` or breaking changes). I recommend **delaying** this PR until more changes accumulate.\n"
+                )
+                print("::warning::Merging this will not result in a new version")
+
+            else:
+                exit_code = 1
+                title = f":no_entry_sign: {title}"
+                if existing_release is not None:
+                    body += f"## :warning: **WARNING**: A release for '{next_tag}' already exists"
+                    body += f"[here]({existing_release['html_url']})** :warning:"
+                    print(f"::error::A release for tag '{next_tag}' already exists")
+                else:
+                    body += (
+                        f"## :warning: **WARNING**: A tag '{next_tag}' already exists"
+                    )
+                    print(f"::error::A tag '{next_tag}' already exists")
+
+                body += "\n"
+                body += ":no_entry_sign: I recommend to **NOT** merge this and double check the target branch!\n\n"
+
+        else:
+            body += f"## Merging this PR will create a new release `v{next_version}`\n"
+
+        if len(unparsed_commits) > 0:
+            body += "\n" * 3
+            body += "## :warning: This PR contains commits which are not parseable:"
+            for commit in unparsed_commits:
+                msg, _ = commit.message.split("\n", 1)
+                body += f"\n - {msg} {commit.sha})"
+            body += "\n **Make sure these commits do not contain changes which affect the bump version!**"
+
+        body += "\n\n"
+
+        body += "### Changelog"
+
+        body += md
+
+        print("::group::PR message")
+        print(body)
+        print("::endgroup::")
+
+        await gh.post(pr["url"], data={"body": body, "title": title})
+
+        if fail:
+            sys.exit(exit_code)
 
 
 if __name__ == "__main__":
-    main_sync()
+    app()
