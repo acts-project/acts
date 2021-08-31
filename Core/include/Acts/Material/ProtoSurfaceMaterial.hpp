@@ -48,8 +48,6 @@ class ProtoSurfaceMaterial : public ISurfaceMaterial {
   ProtoSurfaceMaterial(ProtoSurfaceMaterial&& smproxy) = default;
 
   /// Destructor
-  ///
-  /// @param smproxy The source proxy
   ~ProtoSurfaceMaterial() override = default;
 
   /// Assignment operator

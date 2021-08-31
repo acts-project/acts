@@ -108,6 +108,9 @@ class DigitizationConfig {
       const Options::Variables &vars,
       Acts::GeometryHierarchyMap<DigiComponentsConfig> &&digiCfgs);
 
+  DigitizationConfig(
+      Acts::GeometryHierarchyMap<DigiComponentsConfig> &&digiCfgs);
+
   /// Input collection of simulated hits.
   std::string inputSimHits = "simhits";
   /// Output source links collection.
@@ -137,7 +140,7 @@ class DigitizationConfig {
 
   std::vector<
       std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
-  getBoundIndices();
+  getBoundIndices() const;
 
  private:
   // Private initializer for SmearingAlgorithm

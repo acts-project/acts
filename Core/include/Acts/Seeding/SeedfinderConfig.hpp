@@ -51,7 +51,7 @@ struct SeedfinderConfig {
   float maxPtScattering = 10 * Acts::UnitConstants::GeV;
 
   // for how many seeds can one SpacePoint be the middle SpacePoint?
-  int maxSeedsPerSpM = 5;
+  unsigned int maxSeedsPerSpM = 5;
 
   // Geometry Settings
   // Detector ROI
@@ -111,8 +111,8 @@ struct SeedfinderConfig {
     config.deltaRMax /= 1_mm;
     config.impactMax /= 1_mm;
     config.maxPtScattering /= 1_MeV;  // correct?
-    config.collisionRegionMin /= 1_MeV;
-    config.collisionRegionMax /= 1_MeV;
+    config.collisionRegionMin /= 1_mm;
+    config.collisionRegionMax /= 1_mm;
     config.zMin /= 1_mm;
     config.zMax /= 1_mm;
     config.rMax /= 1_mm;

@@ -230,15 +230,9 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         }
       }
       if (!state.topSpVec.empty()) {
-        state.sameTrackSeeds.clear();
         m_config.seedFilter->filterSeeds_2SpFixed(
             *state.compatBottomSP[b], *spM, state.topSpVec, state.curvatures,
-            state.impactParameters, Zob,
-            std::back_inserter(state.sameTrackSeeds));
-        state.seedsPerSpM.insert(
-            state.seedsPerSpM.end(),
-            std::make_move_iterator(state.sameTrackSeeds.begin()),
-            std::make_move_iterator(state.sameTrackSeeds.end()));
+            state.impactParameters, Zob, std::back_inserter(state.seedsPerSpM));
       }
     }
     m_config.seedFilter->filterSeeds_1SpFixed(state.seedsPerSpM, outIt);
