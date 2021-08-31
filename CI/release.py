@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 import asyncio
-import subprocess
 from typing import List, Optional, Tuple
 import re
 from pathlib import Path
@@ -33,12 +32,7 @@ RETRY_COUNT = 10
 RETRY_INTERVAL = 0.5  # seconds
 
 
-def run(cmd):
-    return subprocess.check_output(cmd).decode("utf-8").strip()
-
-
 def get_repo():
-    # origin = run(["git", "remote", "get-url", "origin"])
     repo = os.environ.get("GITHUB_REPOSITORY", None)
     if repo is not None:
         return repo
