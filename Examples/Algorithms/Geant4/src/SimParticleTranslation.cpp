@@ -53,7 +53,7 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
   const auto inputParticles =
       eventStore->get<ActsExamples::SimParticleContainer>(m_cfg.inputParticles);
 
-  // Feserve appropriate resources for initial/final particles
+  // Reserve appropriate resources for initial/final particles
   eventData.particlesInitial.reserve(inputParticles.size());
   eventData.particlesFinal.reserve(inputParticles.size());
 
