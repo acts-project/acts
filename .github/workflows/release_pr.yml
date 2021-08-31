@@ -23,4 +23,3 @@ jobs:
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
         run: CI/release.py pr-action --fail
-

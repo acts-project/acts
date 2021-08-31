@@ -284,7 +284,6 @@ async def make_release(
 
             git.commit(m=f"Bump to version {next_tag}")
 
-            # git.tag(next_tag)
             target_hash = str(git("rev-parse", "HEAD")).strip()
             print("target_hash:", target_hash)
 
