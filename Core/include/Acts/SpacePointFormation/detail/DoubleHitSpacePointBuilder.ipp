@@ -10,6 +10,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include <iostream> // just for tests
 #include <cmath>
 #include <limits>
@@ -422,8 +423,8 @@ if (surface == nullptr) std::cout << "surface is null" << std::endl;
   Acts::Vector3 globalFakeMom(1, 1, 1);
   //std::cout << "tmp" << std::endl;
   //std::cout << geoId << std::endl;
-  auto stype = surface->type();
-  std::cout << "surface type " << stype << std::endl;
+  //auto stype = surface->type();
+  //std::cout << "surface type " << stype << std::endl;
 
   Acts::Vector3 globalPos = surface->localToGlobal(gctx, localPos, globalFakeMom);
   Acts::RotationMatrix3 rotLocalToGlobal =
@@ -491,6 +492,10 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
 auto meas = clus.measurement();
 int cidx = clus.index();
 std::cout << "cluster index " << cidx << std::endl;
+      //auto tmp = typeid(meas).name();
+      //std::cout << tmp << std::endl;
+//    auto slink = std::visit([](const
+
 
   auto slink = std::visit([](const auto& x) { 
     auto sl = x.sourceLink();
@@ -548,19 +553,20 @@ Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::endsOfStrip(
   std::cout << "topbottom local calculated " ;
   // Calculate the global coordinates of the top and bottom end of the strip
   
-  
-  Acts::Vector3 fakeMom(1,1,1);
-  fakeMom << 3., 2., 1.;  // mom is a dummy variable
+  Acts::Vector3 globalFakeMom(1, 1, 1);
+  //Acts::Vector3 fakeMom(1,1,1);
+  //fakeMom << 3., 2., 1.;  // mom is a dummy variable
   // const auto* sur = &measurement.referenceObject();
+  std::cout << "fake mom " << std::endl;
   auto meas = cluster.measurement();
   auto slink = std::visit([](const auto& x) { return x.sourceLink(); }, meas);
   const auto geoId = slink.geometryId();
   // const auto* sur = &meas.referenceObject();
   const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
   Acts::Vector3 topGlobal =
-      surface->localToGlobal(gctx, topBottomLocal.first, fakeMom);
+      surface->localToGlobal(gctx, topBottomLocal.first, globalFakeMom);
   Acts::Vector3 bottomGlobal =
-      surface->localToGlobal(gctx, topBottomLocal.second, fakeMom);
+      surface->localToGlobal(gctx, topBottomLocal.second, globalFakeMom);
 
   // Return the top and bottom end of the strip in global coordinates
   return std::make_pair(topGlobal, bottomGlobal);

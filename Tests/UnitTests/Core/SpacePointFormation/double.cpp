@@ -163,7 +163,8 @@ BOOST_DATA_TEST_CASE(DoubleHitSpacePointBuilder_basic, bdata::xrange(1),
     const auto slink = meas.sourceLink();
     //    auto slink = std::visit([](const auto& x) { return x.sourceLink(); },
     //    meas);
-
+  auto tmp = typeid(meas).name();
+      std::cout << tmp << std::endl;
     std::cout << slink.geometryId() << std::endl;
 auto slid = sl.index();
 std::cout << "slink index original " << slid << std::endl;
@@ -199,9 +200,11 @@ std::cout << "slink index original " << slid << std::endl;
       // SP
       // auto clus = Cluster(meas, segmentation);
 
-      const Cluster clus = Cluster(meas, segmentation,3);
-      const auto mmm = clus.measurement();
+      const Cluster* clus = new Cluster(meas, segmentation,3);
+      const auto mmm = clus->measurement();
       //const auto sll = mmm.sourceLink();
+      auto tmp = typeid(mmm).name();
+      std::cout << tmp << std::endl;
       auto sll = std::visit([](const auto& x) { return x.sourceLink(); }, mmm); // OK!!
       std::cout << "geoiddddd " << sll.geometryId() << std::endl;
       //std::shared_ptr<Cluster> clus(new Cluster(meas, segmentation));
@@ -210,10 +213,10 @@ std::cout << "slink index original " << slid << std::endl;
         std::cout << "1d-loc0" << std::endl;
         // cluster on the front strip layer
         // clusters_front.emplace_back(&clus);
-        clusters_front.emplace_back(std::move(&clus));
+        clusters_front.emplace_back(std::move(clus));
       } else if (index0 == Acts::eBoundLoc1) {
         std::cout << "1d-loc1" << std::endl;
-        clusters_back.emplace_back(std::move(&clus));
+        clusters_back.emplace_back(std::move(clus));
         // cluster on the back strip layer
       }
 
@@ -233,9 +236,18 @@ std::cout << "slink index original " << slid << std::endl;
       std::cout<< " tomohiro check2" << std::endl;
       auto cidx = clus.index();
       std::cout<< " tomohiro check3" << std::endl;
-      auto slink = std::visit([](const auto& x) { return x.sourceLink(); }, meas4);
+      //std::cout << 
+      //auto tmp = typeid(meas4).name();
+      ///std::cout << tmp << std::endl;
+//    auto slink = std::visit([](const auto& x) { 
+    //    auto tt = typeid(x);
+    //    std::cout << tt << std::endl;
+//        return x.sourceLink()
+//return 1;
+        //; 
+//      }, meas4);
 
-      std::cout << "geoid check 0 " << slink.geometryId() << std::endl;
+    //  std::cout << "geoid check 0 " << slink.geometryId() << std::endl;
     }
     // std::cout << "meas parameters " << std::endl << meas.parameters() <<
     // std::endl; auto par = meas.expander() * meas.parameters(); std::cout <<
@@ -308,7 +320,7 @@ std::cout << "slink index original " << slid << std::endl;
                                        clusterPairs);
   //std::cout << "number of cluster pairs :" << clusterPairs.size() << std::endl;
   //BOOST_CHECK_NE(clusterPairs.size(), 0);
-  //doubleSPBuilder.calculateSpacePoints(tgContext, clusterPairs, spacePoints);
+  doubleSPBuilder.calculateSpacePoints(tgContext, clusterPairs, spacePoints);
   // dhsp.makeClusterPairs(tgContext, {&pmc}, {&pmc3}, clusterPairs);
   //  //     singleSPBuilder.calculateSpacePoints(geoCtx, testMeasurements,
   //  //     spacePoints);
