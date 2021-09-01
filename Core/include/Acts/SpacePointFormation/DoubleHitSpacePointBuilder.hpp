@@ -11,6 +11,8 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.h"
 
 namespace Acts {
@@ -49,8 +51,8 @@ class DoubleHitSpacePointBuilder {
   /// meant to be measurements[Independent clusters on a single surface]
   void makeMeasurementPairs(
       const GeometryContext& gctx,
-      const std::vector<const cluster_t>& clustersFront,
-      const std::vector<const cluster_t>& clustersBack,
+      const std::vector<const cluster_t*>& clustersFront,
+      const std::vector<const cluster_t*>& clustersBack,
       std::vector<std::pair<const cluster_t*, const cluster_t*>>& clusterPairs)
       const;
 

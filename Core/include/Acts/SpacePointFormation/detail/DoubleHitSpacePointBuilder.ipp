@@ -7,9 +7,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/ConeSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include <iostream> // just for tests
 #include <cmath>
 #include <limits>
+#include <variant>
 
 namespace Acts {
 namespace detail {
@@ -395,7 +399,8 @@ Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::globalCoords(
 
 
   const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
-
+if (surface == nullptr) std::cout << "surface is null" << std::endl;
+  
   auto [localPos, localCov] = std::visit(
       [](const auto& measurement) {
         auto expander = measurement.expander();
@@ -415,9 +420,12 @@ Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::globalCoords(
   // std::cout << "local pos:" << std::endl << localPos << std::endl;
   // transform local position to global coordinates
   Acts::Vector3 globalFakeMom(1, 1, 1);
+  //std::cout << "tmp" << std::endl;
+  //std::cout << geoId << std::endl;
+  auto stype = surface->type();
+  std::cout << "surface type " << stype << std::endl;
 
-  Acts::Vector3 globalPos =
-      surface->localToGlobal(gctx, localPos, globalFakeMom);
+  Acts::Vector3 globalPos = surface->localToGlobal(gctx, localPos, globalFakeMom);
   Acts::RotationMatrix3 rotLocalToGlobal =
       surface->referenceFrame(gctx, globalPos, globalFakeMom);
 
@@ -442,8 +450,8 @@ template <typename spacepoint_t, typename cluster_t>
 void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
     makeMeasurementPairs(
         const Acts::GeometryContext& gctx,
-        const std::vector<const cluster_t>& clustersFront,
-        const std::vector<const cluster_t>& clustersBack,
+        const std::vector<const cluster_t*>& clustersFront,
+        const std::vector<const cluster_t*>& clustersBack,
         std::vector<std::pair<const cluster_t*, const cluster_t*>>&
             clusterPairs) const {
   // Return if no Measurements are given in a vector
@@ -474,8 +482,31 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
     for (unsigned int iClustersBack = 0; iClustersBack < clustersBack.size();
          iClustersBack++) {
       // Calculate the distances between the hits
-      auto gpos_front = globalCoords(gctx, clustersFront[iClustersFront]);
-      auto gpos_back = globalCoords(gctx, clustersFront[iClustersFront]);
+
+
+      // 
+      auto clus = *clustersFront[iClustersFront];
+      if (clustersFront[iClustersFront] == nullptr) std::cout << "cluster is null" << std::endl;
+      else std::cout << "cluster is not null" << std::endl;
+auto meas = clus.measurement();
+int cidx = clus.index();
+std::cout << "cluster index " << cidx << std::endl;
+
+  auto slink = std::visit([](const auto& x) { 
+    auto sl = x.sourceLink();
+    auto slid = sl.index();
+    std::cout << "slink index " << slid << std::endl;
+    auto ggg = sl.geometryId();
+    std::cout << "ggg " << ggg << std::endl;
+    return x.sourceLink(); 
+    }, meas);
+  // auto slink = meas.sourceLink();
+  // auto slink  = meas.measurement().sourceLink();
+  const auto geoId = slink.geometryId();
+  std::cout << iClustersFront << " " << geoId << std::endl;
+      ///
+      auto gpos_front = globalCoords(gctx, *clustersFront[iClustersFront]);
+      auto gpos_back = globalCoords(gctx, *clustersFront[iClustersFront]);
       currentDiff = detail::differenceOfMeasurementsChecked(
           gpos_front.first, gpos_back.first, m_cfg.vertex, m_cfg.diffDist,
           m_cfg.diffPhi2, m_cfg.diffTheta2);
@@ -489,8 +520,8 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
     // Store the best (=closest) result
     if (clusterMinDist < clustersBack.size()) {
       std::pair<const cluster_t*, const cluster_t*> clusterPair;
-      clusterPair = std::make_pair(&clustersFront[iClustersFront],
-                                   &clustersBack[clusterMinDist]);
+      clusterPair = std::make_pair(clustersFront[iClustersFront],
+                                   clustersBack[clusterMinDist]);
       clusterPairs.push_back(clusterPair);
     }
   }

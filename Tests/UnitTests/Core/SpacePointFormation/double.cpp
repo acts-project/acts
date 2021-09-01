@@ -30,7 +30,18 @@
 #include "Acts/Tests/CommonHelpers/TestCluster.hpp"
 #include "Acts/Tests/CommonHelpers/TestSpacePoint.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 
+
+
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/ConeSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include <iostream> // just for tests
+#include <cmath>
+#include <limits>
+#include <variant>
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
 
@@ -135,8 +146,8 @@ BOOST_DATA_TEST_CASE(DoubleHitSpacePointBuilder_basic, bdata::xrange(1),
       testMeasurements;
   // std::cout << "sourcelinks" << std::endl;
   //std::vector<Cluster> clusters;
-  std::vector<const Cluster> clusters_front;
-  std::vector<const Cluster> clusters_back;
+  std::vector<const Cluster*> clusters_front;
+  std::vector<const Cluster*> clusters_back;
 
   for (auto& sl : sourceLinks) {
     std::cout << std::endl;
@@ -147,14 +158,15 @@ BOOST_DATA_TEST_CASE(DoubleHitSpacePointBuilder_basic, bdata::xrange(1),
     // eBoundLoc0);
     std::cout << "sourcelink id " << sl.index() << std::endl;
     std::cout << "geo ID from source link " << sl.geoId << std::endl;
-    auto meas = makeMeasurement(sl, sl.parameters, sl.covariance, sl.indices[0],
-                                sl.indices[1]);
-    auto slink = meas.sourceLink();
+    auto meas = makeMeasurement(sl, sl.parameters, sl.covariance, sl.indices[0], sl.indices[1]);
+    //std::shared_ptr<TestMeasurement> meas = &makeMeasurement(sl, sl.parameters, sl.covariance, sl.indices[0], sl.indices[1]);
+    const auto slink = meas.sourceLink();
     //    auto slink = std::visit([](const auto& x) { return x.sourceLink(); },
     //    meas);
 
     std::cout << slink.geometryId() << std::endl;
-
+auto slid = sl.index();
+std::cout << "slink index original " << slid << std::endl;
     auto index0 = sl.indices[0];
     auto index1 = sl.indices[1];
     std::cout << "indices:" << index0 << " " << index1 << std::endl;
@@ -187,21 +199,43 @@ BOOST_DATA_TEST_CASE(DoubleHitSpacePointBuilder_basic, bdata::xrange(1),
       // SP
       // auto clus = Cluster(meas, segmentation);
 
-      const Cluster clus = Cluster(meas, segmentation);
+      const Cluster clus = Cluster(meas, segmentation,3);
+      const auto mmm = clus.measurement();
+      //const auto sll = mmm.sourceLink();
+      auto sll = std::visit([](const auto& x) { return x.sourceLink(); }, mmm); // OK!!
+      std::cout << "geoiddddd " << sll.geometryId() << std::endl;
+      //std::shared_ptr<Cluster> clus(new Cluster(meas, segmentation));
+
       if (index0 == Acts::eBoundLoc0) {
         std::cout << "1d-loc0" << std::endl;
         // cluster on the front strip layer
         // clusters_front.emplace_back(&clus);
-        clusters_front.emplace_back(clus);
+        clusters_front.emplace_back(std::move(&clus));
       } else if (index0 == Acts::eBoundLoc1) {
         std::cout << "1d-loc1" << std::endl;
-        clusters_back.emplace_back(clus);
+        clusters_back.emplace_back(std::move(&clus));
         // cluster on the back strip layer
       }
 
     } else {
       std::cout << "2d measurement" << std::endl;
       continue;  // 2d measurement. i.e. pixel
+    }
+    //for(const auto cl : clusters_front){
+    //  cl
+
+    //}
+    std::cout<< " tomohiro check" << std::endl;
+    for (unsigned int i = 0; i < clusters_front.size(); i++){
+      const auto clus = *clusters_front[i];
+      std::cout<< " tomohiro check1" << std::endl;
+      auto meas4 = clus.measurement();
+      std::cout<< " tomohiro check2" << std::endl;
+      auto cidx = clus.index();
+      std::cout<< " tomohiro check3" << std::endl;
+      auto slink = std::visit([](const auto& x) { return x.sourceLink(); }, meas4);
+
+      std::cout << "geoid check 0 " << slink.geometryId() << std::endl;
     }
     // std::cout << "meas parameters " << std::endl << meas.parameters() <<
     // std::endl; auto par = meas.expander() * meas.parameters(); std::cout <<
@@ -232,6 +266,7 @@ BOOST_DATA_TEST_CASE(DoubleHitSpacePointBuilder_basic, bdata::xrange(1),
   TestSpacePointContainer spacePoints;
   std::cout << "number of front/back clusters " << clusters_front.size()
             << " / " << clusters_back.size() << std::endl;
+            std::cout << std::endl;
   // std::vector<Cluster> frontClusters;
   // std::vector<Cluster> ;
   // std::cout << "test" << std::endl;
@@ -251,11 +286,29 @@ BOOST_DATA_TEST_CASE(DoubleHitSpacePointBuilder_basic, bdata::xrange(1),
   // const Acts::Surface* surface = geometry->findSurface(geoId);
   // std::cout << "surface found" << std::endl;
   std::vector<std::pair<const Cluster*, const Cluster*>> clusterPairs;
+
+ // 
+  auto clus = *(clusters_front[0]);
+  const auto meas = clus.measurement();
+  std::cout << "cidx 0 " << clus.index() << std::endl;
+  std::cout << "check0" << std::endl;
+  //auto slink = std::visit([](const auto& x) { return x.sourceLink(); }, meas);
+  //auto slink = std::visit([](const auto x) { return 1; }, meas);
+  //const auto slink = meas.sourceLink();
+  //auto 
+  //Acts::Test::TestSourceLink slink = std::visit([](const auto& x) { return x.sourceLink(); }, meas);
+  // auto slink = meas.sourceLink();
+  // auto slink  = meas.measurement().sourceLink();
+  //const auto geoId = slink.geometryId();
+  //std::cout  << "geoid double " << geoId << std::endl;
+  std::cout << "check" << std::endl;
+
+
   doubleSPBuilder.makeMeasurementPairs(tgContext, clusters_front, clusters_back,
                                        clusterPairs);
-  std::cout << "number of cluster pairs :" << clusterPairs.size() << std::endl;
-  BOOST_CHECK_NE(clusterPairs.size(), 0);
-  doubleSPBuilder.calculateSpacePoints(tgContext, clusterPairs, spacePoints);
+  //std::cout << "number of cluster pairs :" << clusterPairs.size() << std::endl;
+  //BOOST_CHECK_NE(clusterPairs.size(), 0);
+  //doubleSPBuilder.calculateSpacePoints(tgContext, clusterPairs, spacePoints);
   // dhsp.makeClusterPairs(tgContext, {&pmc}, {&pmc3}, clusterPairs);
   //  //     singleSPBuilder.calculateSpacePoints(geoCtx, testMeasurements,
   //  //     spacePoints);
