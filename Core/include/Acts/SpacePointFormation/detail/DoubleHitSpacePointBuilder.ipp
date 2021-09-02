@@ -113,54 +113,24 @@ inline std::pair<Vector2, Vector2> findLocalTopAndBottomEnd(
 
   // Storage of the local top (first) and bottom (second) end
   std::pair<Vector2, Vector2> topBottomLocal;
-  // topBottomLocal.first;
-  // topBottomLocal.second;
-  Vector2 topLocal = Vector2(0,0);
-  Vector2 bottomLocal = Vector2(0,0);
-  //std::cout << "boundary size p" << boundariesX.size() << " "
-            //<< boundariesY.size() << std::endl;
 
-  //std::cout << boundariesX.at(0) << std::endl;
-  //std::cout << " " << boundariesX[1] << std::endl;
-  //std::cout << boundariesY[0] << " " << boundariesY[1] << std::endl;
-  ///std::cout << binX << binY << std::endl;
   if (boundariesX[binX + 1] - boundariesX[binX] < boundariesY[binY + 1] - boundariesY[binY]) {
-    // Set the top and bottom end of the strip in local coordinates
-  //  std::cout << "check01" << std::endl;
-  //  std::cout << boundariesX[0] << std::endl;
-  //  std::cout << boundariesX[1] << std::endl;
-  //  std::cout << boundariesY[0] << std::endl;
-  //  std::cout << boundariesY[1] << std::endl;
-    topLocal = Vector2((boundariesX[binX] + boundariesX[binX + 1]) / 2, boundariesY[binY]);
-    bottomLocal = Vector2((boundariesX[binX] + boundariesX[binX + 1]) / 2,
-                          boundariesY[binY + 1]);
-//    std::cout << "check1" << std::endl;
-    // topBottomLocal = std::make_pair(topLocal,bottomLocal);
-//    std::cout << "check1.1" << std::endl;
-    // topBottomLocal.first = Vector2((boundariesX[binX] + boundariesX[binX +
-    // 1]) / 2,
-    //                        boundariesY[binY + 1]);
-    //                        std::cout << "check0" << std::endl;
-    // topBottomLocal.second = {(boundariesX[binX] + boundariesX[binX + 1]) / 2,
-    //                       boundariesY[binY]};
-    //std::cout << "check1" << std::endl;
+     topBottomLocal.first = Vector2((boundariesX[binX] + boundariesX[binX +
+     1]) / 2,
+                            boundariesY[binY + 1]);
+                                 topBottomLocal.second = {(boundariesX[binX] + boundariesX[binX + 1]) / 2,
+                           boundariesY[binY]};
   } else {
     // Set the top and bottom end of the strip in local coordinates
-    //std::cout << "check2" << std::endl;
-    /*     topBottomLocal.first = {boundariesX[binX],
+         topBottomLocal.first = {boundariesX[binX],
                                 (boundariesY[binY] + boundariesY[binY + 1]) /
-       2}; std::cout << "check3" << std::endl; topBottomLocal.second =
+       2};
+                topBottomLocal.second =
        {boundariesX[binX + 1],
                                  (boundariesY[binY] + boundariesY[binY + 1]) /
-       2}; */
+       2}; 
   }
 
-  // std::pair<Vector2, Vector2> topBottomLocal =
-  // std::make_pair(topLocal,bottomLocal); std::cout  << "topbottom local" <<
-  // topBottomLocal.first << " " << topBottomLocal.second << std::endl;
-  std::cout << topLocal[0] << " " << topLocal[1] << std::endl;
-  //std::cout << bottomLocal[0] << " " << bottomLocal[1] << std::endl;
-  //return {topLocal, bottomLocal};
   return topBottomLocal;
 }
 
@@ -337,7 +307,10 @@ inline bool calculateSpacePoint(const std::pair<Vector3, Vector3>& stripEnds1,
   if (spaPoPa.limit == 1. && stripLengthTolerance != 0.) {
     spaPoPa.limit = 1. + stripLengthTolerance;
   }
-
+  std::cout << "sp calculation spaPoPa.m " << spaPoPa.m << std::endl;
+  std::cout << "sp calculation spaPoPa.n " << spaPoPa.n << std::endl;
+  std::cout << (fabs(spaPoPa.m) <= spaPoPa.limit) << std::endl;
+  std::cout << (fabs(spaPoPa.n = -spaPoPa.t.dot(spaPoPa.qs) /spaPoPa.r.dot(spaPoPa.qs)) <= spaPoPa.limit) << std::endl;
   // Check if m and n can be resolved in the interval (-1, 1)
   return (fabs(spaPoPa.m) <= spaPoPa.limit &&
           fabs(spaPoPa.n = -spaPoPa.t.dot(spaPoPa.qs) /
@@ -490,12 +463,6 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
       if (clustersFront[iClustersFront] == nullptr) std::cout << "cluster is null" << std::endl;
       else std::cout << "cluster is not null" << std::endl;
 auto meas = clus.measurement();
-int cidx = clus.index();
-std::cout << "cluster index " << cidx << std::endl;
-      //auto tmp = typeid(meas).name();
-      //std::cout << tmp << std::endl;
-//    auto slink = std::visit([](const
-
 
   auto slink = std::visit([](const auto& x) { 
     auto sl = x.sourceLink();
@@ -545,19 +512,18 @@ Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::endsOfStrip(
       &(cluster.segmentation()));
   //&(measurement.digitizationModule()->segmentation()));
   
-  //std::cout << std::endl;
-//detail::findLocalTopAndBottomEnd(local, segment);
-///std::cout << "check2" << std::endl;
   std::pair<Vector2, Vector2> topBottomLocal =
       detail::findLocalTopAndBottomEnd(local, segment);
-  std::cout << "topbottom local calculated " ;
+  std::cout << "topbottom local calculated "  << std::endl;
   // Calculate the global coordinates of the top and bottom end of the strip
   
+  Vector2 topLocal = topBottomLocal.first;
+  Vector2 bottomLocal = topBottomLocal.second;
+  std::cout << "top local " << std::endl << topLocal << std::endl;
+  std::cout << "bottom local " << std::endl << bottomLocal << std::endl;
+
   Acts::Vector3 globalFakeMom(1, 1, 1);
-  //Acts::Vector3 fakeMom(1,1,1);
-  //fakeMom << 3., 2., 1.;  // mom is a dummy variable
-  // const auto* sur = &measurement.referenceObject();
-  std::cout << "fake mom " << std::endl;
+    
   auto meas = cluster.measurement();
   auto slink = std::visit([](const auto& x) { return x.sourceLink(); }, meas);
   const auto geoId = slink.geometryId();
@@ -570,8 +536,7 @@ Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::endsOfStrip(
 
   // Return the top and bottom end of the strip in global coordinates
   return std::make_pair(topGlobal, bottomGlobal);
-  //Acts::Vector3 tmp(0,0,0);
-  //return std::make_pair(tmp,tmp);
+
 }
 
 template <typename spacepoint_t, typename cluster_t>
@@ -582,7 +547,8 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
             measurementPairs,
         std::vector<spacepoint_t>& spacePoints) const {
   /// Source of algorithm: Athena, SiSpacePointMakerTool::makeSCT_SpacePoint()
-
+std::cout << "calculate space points" << std::endl;
+std::cout << measurementPairs.size() << " pairs used" << std::endl;
   detail::SpacePointParameters spaPoPa;
 
   // Walk over every found candidate pair
@@ -593,9 +559,14 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
 
     spaPoPa.q = ends1.first - ends1.second;
     spaPoPa.r = ends2.first - ends2.second;
-
+    std::cout << "ends1  = " << std::endl << ends1.first << std::endl << ends1.second << std::endl;
+    std::cout << "ends2  = " << std::endl << ends2.first << std::endl << ends2.second << std::endl;
+//std::cout << "ends2  = " << ends2.first << " " << ends2.second << std::endl;    
+std::cout << "spaPoPa q = " << spaPoPa.q << std::endl;
+std::cout << "spaPoPa r = " << spaPoPa.r << std::endl;
     // Fast skipping if a perpendicular projection should be used
     double resultPerpProj;
+    std::cout << "use perp proj " << m_cfg.usePerpProj << std::endl;
     if (m_cfg.usePerpProj) {
       resultPerpProj = detail::calcPerpendicularProjection(
           ends1.first, ends2.first, spaPoPa.q, spaPoPa.r);
@@ -615,6 +586,8 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
 
     if (calculateSpacePoint(ends1, ends2, m_cfg.vertex, spaPoPa,
                             m_cfg.stripLengthTolerance)) {
+
+      std::cout << "case 1" << std::endl;                              
       // Store the space point
       // spacepoint_t sp;
       // sp.MeasurementModule.push_back(cp.first);
@@ -629,6 +602,7 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
       /// sp.vector = pos;
       // spacePoints.push_back(std::move(sp));
     } else {
+      std::cout << "case 2" << std::endl;
       /// If this point is reached then it was not possible to resolve both
       /// points such that they are on their SDEs
       /// The following code treats a possible recovery of points resolved

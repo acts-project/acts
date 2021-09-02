@@ -200,14 +200,7 @@ std::cout << "slink index original " << slid << std::endl;
       // SP
       // auto clus = Cluster(meas, segmentation);
 
-      const Cluster* clus = new Cluster(meas, segmentation,3);
-      const auto mmm = clus->measurement();
-      //const auto sll = mmm.sourceLink();
-      auto tmp = typeid(mmm).name();
-      std::cout << tmp << std::endl;
-      auto sll = std::visit([](const auto& x) { return x.sourceLink(); }, mmm); // OK!!
-      std::cout << "geoiddddd " << sll.geometryId() << std::endl;
-      //std::shared_ptr<Cluster> clus(new Cluster(meas, segmentation));
+      const Cluster* clus = new Cluster(meas, segmentation);
 
       if (index0 == Acts::eBoundLoc0) {
         std::cout << "1d-loc0" << std::endl;
@@ -227,44 +220,7 @@ std::cout << "slink index original " << slid << std::endl;
     //for(const auto cl : clusters_front){
     //  cl
 
-    //}
-    std::cout<< " tomohiro check" << std::endl;
-    for (unsigned int i = 0; i < clusters_front.size(); i++){
-      const auto clus = *clusters_front[i];
-      std::cout<< " tomohiro check1" << std::endl;
-      auto meas4 = clus.measurement();
-      std::cout<< " tomohiro check2" << std::endl;
-      auto cidx = clus.index();
-      std::cout<< " tomohiro check3" << std::endl;
-      //std::cout << 
-      //auto tmp = typeid(meas4).name();
-      ///std::cout << tmp << std::endl;
-//    auto slink = std::visit([](const auto& x) { 
-    //    auto tt = typeid(x);
-    //    std::cout << tt << std::endl;
-//        return x.sourceLink()
-//return 1;
-        //; 
-//      }, meas4);
-
-    //  std::cout << "geoid check 0 " << slink.geometryId() << std::endl;
-    }
-    // std::cout << "meas parameters " << std::endl << meas.parameters() <<
-    // std::endl; auto par = meas.expander() * meas.parameters(); std::cout <<
-    // "measurement parameters " << std::endl << par << std::endl;
-    // eBoundLoc1);
-    // std::cout << meas.parameters() << std::endl;
-    // std::cout << "" << std::endl;
-    // const auto param = sl.parameters;
-    // const auto gid = sl.geoId;
-
-    //  testMeasurements.emplace_back(meas);
-    // auto pars = meas.parameters();
-    // std::cout << pars << std::endl;
-    // std::cout << "" << std::endl;
-    // clusters.emplace_back(clus);//
-    // std::cout << gid << std::endl;
-    // std::cout << param << std::endl;
+  
   }
   //  // BOOST_CHECK_NE(testMeasurements.size(), 0);
 
@@ -302,9 +258,7 @@ std::cout << "slink index original " << slid << std::endl;
  // 
   auto clus = *(clusters_front[0]);
   const auto meas = clus.measurement();
-  std::cout << "cidx 0 " << clus.index() << std::endl;
-  std::cout << "check0" << std::endl;
-  //auto slink = std::visit([](const auto& x) { return x.sourceLink(); }, meas);
+    //auto slink = std::visit([](const auto& x) { return x.sourceLink(); }, meas);
   //auto slink = std::visit([](const auto x) { return 1; }, meas);
   //const auto slink = meas.sourceLink();
   //auto 
@@ -326,7 +280,8 @@ std::cout << "slink index original " << slid << std::endl;
   //  //     spacePoints);
   //  // singleSPBuilder.calculateSpacePoints(geoCtx, clusters, spacePoints);
 
-  //  // BOOST_REQUIRE_EQUAL(clusters.size(), spacePoints.size());
+   //BOOST_REQUIRE_EQUAL(clusters.size(), spacePoints.size());
+   std::cout << "Number of space points " << spacePoints.size() << std::endl;
   //  // BOOST_CHECK_NE(spacePoints[0].x(), 0);
 
   //  //     BOOST_CHECK_NE(data[0].vector, Vector3::Zero());
