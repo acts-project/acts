@@ -43,7 +43,7 @@ void setupInput(
     std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers) {
   auto logLevel = Options::readLogLevel(vars);
 
-  if (not vars["input-dir"].empty()) {    
+  if (not vars["input-dir"].empty()) {
     // read particle input from csv file
     CsvParticleReader::Config readParticles;
     readParticles.inputDir = vars["input-dir"].as<std::string>();
