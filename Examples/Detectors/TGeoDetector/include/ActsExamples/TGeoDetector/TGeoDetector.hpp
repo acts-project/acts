@@ -48,6 +48,8 @@ struct TGeoDetector : public ActsExamples::IBaseDetector {
       LayerTriplet() = default;
       LayerTriplet(T value)
           : negative{value}, central{value}, positive{value} {}
+      LayerTriplet(std::array<T, 3>&& values)
+          : negative{values[0]}, central{values[1]}, positive{values[2]} {}
 
       T negative;
       T central;
@@ -86,14 +88,14 @@ struct TGeoDetector : public ActsExamples::IBaseDetector {
       LayerTriplet<std::string> subVolumeName;
       LayerTriplet<std::vector<std::string>> sensitiveNames;
       LayerTriplet<std::string> sensitiveAxes;
-      LayerTriplet<Options::Interval> rRange;
-      LayerTriplet<Options::Interval> zRange;
+      LayerTriplet<std::pair<double, double>> rRange;
+      LayerTriplet<std::pair<double, double>> zRange;
       LayerTriplet<double> splitTolR{0};
       LayerTriplet<double> splitTolZ{0};
 
-      Options::Interval binToleranceR;
-      Options::Interval binTolerancePhi;
-      Options::Interval binToleranceZ;
+      std::pair<double, double> binToleranceR;
+      std::pair<double, double> binTolerancePhi;
+      std::pair<double, double> binToleranceZ;
 
       bool cylinderDiscSplit = false;
       unsigned int cylinderNZSegments;
