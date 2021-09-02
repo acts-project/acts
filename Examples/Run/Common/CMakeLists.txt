@@ -2,10 +2,12 @@ add_library(
   ActsExamplesCommon SHARED
   src/CommonGeometry.cpp
   src/CommonOptions.cpp
+  src/CommonSimulation.cpp
   src/GeometryExampleBase.cpp
-  src/MaterialMappingBase.cpp
+  src/CommonMaterialMapping.cpp
   src/MaterialValidationBase.cpp
-  src/PropagationExampleBase.cpp)
+  src/PropagationExampleBase.cpp
+  src/ReconstructionBase.cpp)
 target_include_directories(
   ActsExamplesCommon
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
@@ -14,9 +16,12 @@ target_link_libraries(
   PUBLIC
     ActsCore
     ActsExamplesFramework ActsExamplesMagneticField
-    ActsExamplesDetectorsCommon ActsExamplesPropagation
+    ActsExamplesDetectorsCommon ActsExamplesPropagation ActsExamplesGenerators
     ActsExamplesMaterialMapping ActsExamplesIoCsv ActsExamplesIoJson
-    ActsExamplesIoRoot ActsExamplesIoObj ActsExamplesIoPerformance)
+    ActsExamplesIoRoot ActsExamplesIoObj ActsExamplesIoPerformance
+    ActsExamplesDigitization ActsExamplesTrackFitting
+    ActsExamplesTrackFinding ActsExamplesTruthTracking
+    ActsExamplesIoCsv)
 
 install(
   TARGETS ActsExamplesCommon

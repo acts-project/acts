@@ -1,34 +1,29 @@
 name: Release
-
 on: 
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Tag to create'
-        required: true
+  push:
+    branches:
+      - 'releases'
+      - 'release/**'
 
 jobs:
   release:
+    name: Make release
     runs-on: ubuntu-latest
-    container: python:3.8-alpine
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - name: Git setup
-        run: |
-          apk add git
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
         with:
-          path: "clone"
-      - name: Setup
-        run: |
-          cp -r clone/CI .
-          pip install -r CI/requirements.txt
-      - name: Make release
-        run: |
-          export TAG_NAME=${{ github.event.inputs.tag }}
-          export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
-          cd clone
-          ../CI/release.py tag $TAG_NAME --yes
-          ../CI/release.py notes $TAG_NAME --yes
+          fetch-depth: 0
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      
+      - run: pip install -r CI/release_requirements.txt
 
+      - name: Create release
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          CI/release.py make-release
