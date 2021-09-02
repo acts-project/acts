@@ -100,39 +100,31 @@ inline double differenceOfMeasurementsChecked(const Vector3& pos1,
 /// @param [in] segment Segmentation of the detector element
 ///
 /// @return Pair containing the top and bottom end
-inline std::pair<Vector2, Vector2> findLocalTopAndBottomEnd(
-    const Vector2& local, const CartesianSegmentation* segment) {
-      std::cout << "findLocalTopAndBottomEnd" << std::endl;
-  auto& binData = segment->binUtility().binningData();
-  auto& boundariesX = binData[0].boundaries();
-  auto& boundariesY = binData[1].boundaries();
+  inline std::pair<Vector2, Vector2> findLocalTopAndBottomEnd(
+							      const Vector2& local, const CartesianSegmentation* segment) {
+    std::cout << "findLocalTopAndBottomEnd" << std::endl;
+    auto& binData = segment->binUtility().binningData();
+    auto& boundariesX = binData[0].boundaries();
+    auto& boundariesY = binData[1].boundaries();
 
-  // Search the x-/y-bin of the Measurement
-  size_t binX = binData[0].searchLocal(local);
-  size_t binY = binData[1].searchLocal(local);
+    // Search the x-/y-bin of the Measurement
+    size_t binX = binData[0].searchLocal(local);
+    size_t binY = binData[1].searchLocal(local);
 
-  // Storage of the local top (first) and bottom (second) end
-  std::pair<Vector2, Vector2> topBottomLocal;
+    // Storage of the local top (first) and bottom (second) end
+    std::pair<Vector2, Vector2> topBottomLocal;
 
-  if (boundariesX[binX + 1] - boundariesX[binX] < boundariesY[binY + 1] - boundariesY[binY]) {
-     topBottomLocal.first = Vector2((boundariesX[binX] + boundariesX[binX +
-     1]) / 2,
-                            boundariesY[binY + 1]);
-                                 topBottomLocal.second = {(boundariesX[binX] + boundariesX[binX + 1]) / 2,
-                           boundariesY[binY]};
-  } else {
-    // Set the top and bottom end of the strip in local coordinates
-         topBottomLocal.first = {boundariesX[binX],
-                                (boundariesY[binY] + boundariesY[binY + 1]) /
-       2};
-                topBottomLocal.second =
-       {boundariesX[binX + 1],
-                                 (boundariesY[binY] + boundariesY[binY + 1]) /
-       2}; 
+    if (boundariesX[binX + 1] - boundariesX[binX] < boundariesY[binY + 1] - boundariesY[binY]) {
+      topBottomLocal.first = Vector2((boundariesX[binX] + boundariesX[binX+1]) / 2,  boundariesY[binY + 1]);
+      topBottomLocal.second = {(boundariesX[binX] + boundariesX[binX + 1]) / 2, boundariesY[binY]};
+    } else {
+      // Set the top and bottom end of the strip in local coordinates
+      topBottomLocal.first = {boundariesX[binX],(boundariesY[binY] + boundariesY[binY + 1]) /	2};
+      topBottomLocal.second =	{boundariesX[binX + 1],	 (boundariesY[binY] + boundariesY[binY + 1]) /	 2}; 
+    }
+
+    return topBottomLocal;
   }
-
-  return topBottomLocal;
-}
 
 /// @brief Calculates a space point whithout using the vertex
 /// @note This is mostly to resolve space points from cosmic data
@@ -533,7 +525,8 @@ Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::endsOfStrip(
       surface->localToGlobal(gctx, topBottomLocal.first, globalFakeMom);
   Acts::Vector3 bottomGlobal =
       surface->localToGlobal(gctx, topBottomLocal.second, globalFakeMom);
-
+ std::cout << "top global " << std::endl << topGlobal << std::endl;
+  std::cout << "bottom global " << std::endl << bottomGlobal << std::endl;
   // Return the top and bottom end of the strip in global coordinates
   return std::make_pair(topGlobal, bottomGlobal);
 

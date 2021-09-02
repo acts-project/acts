@@ -74,13 +74,35 @@ struct CubicTrackingGeometry {
     translations.push_back({2_m - eps, 0., 0.});
     translations.push_back({2_m + eps, 0., 0.});
 
+    std::vector<double> rotAngle;
+    rotAngle.push_back(0.);
+    rotAngle.push_back(0.);
+    rotAngle.push_back(0.026);    
+    rotAngle.push_back(-0.026);    
+    rotAngle.push_back(0.026);    
+    rotAngle.push_back(-0.026);    
+  
+
     // Construct surfaces
     std::array<std::shared_ptr<const Surface>, 6> surfaces;
     unsigned int i;
     for (i = 0; i < translations.size(); i++) {
-      Transform3 trafo(Transform3::Identity() * rotation);
+     
+
+      RotationMatrix3 rotation_strip;
+      double angle = rotAngle[i];
+      Vector3 xPos(cos(angle),sin(angle),0.);
+      Vector3 yPos(-sin(angle),cos(angle),0.);
+      Vector3 zPos(0.,0.,1.);
+      rotation_strip.col(0) = xPos;      
+      rotation_strip.col(1) = yPos;      
+      rotation_strip.col(2) = zPos;
+
+      //Transform3 trafo(Transform3::Identity() * rotation_strip*rotation);
+      Transform3 trafo(Transform3::Identity() * rotation*rotation_strip);
       trafo.translation() = translations[i];
-      // Create the detector element
+
+            // Create the detector element
       auto detElement = std::make_unique<const DetectorElementStub>(
           trafo, rBounds, 1._um, surfaceMaterial);
       // And remember the surface

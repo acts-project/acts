@@ -196,6 +196,9 @@ std::cout << "slink index original " << slid << std::endl;
 
       std::shared_ptr<const Segmentation> segmentation(
           new CartesianSegmentation(buX, recBounds));
+
+
+
       // auto clus = Cluster(meas, nullptr);  // No segment is needed for pixel
       // SP
       // auto clus = Cluster(meas, segmentation);
