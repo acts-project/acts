@@ -41,7 +41,7 @@ namespace {
 
 // TGeoGeoDetector LayerTriplet type from json
 template<typename value_type>
-using Triplet = std::array<value_type, 3>;
+using Triplet = std::map<std::string, value_type>;
 // Use intervals from json
 template<typename value_type>
 using Interval = std::pair<value_type, value_type>;
@@ -361,8 +361,8 @@ void readTGeoLayerBuilderConfigs(const Variables& vm,
     vol.binTolerancePhi = 
         volume["geo-tgeo-sfbin-phi-tolerance"].get<Interval<double>>();
 
-    vol.layers = {volume["geo-tgeo-volume-layers"].get<Triplet<bool>>()};
-    // Read in all given values
+    vol.layers = 
+        {volume["geo-tgeo-volume-layers"].get<Triplet<bool>>()};
     vol.subVolumeName= 
         {volume["geo-tgeo-subvolume-names"].get<Triplet<std::string>>()};
     vol.sensitiveNames= 

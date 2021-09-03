@@ -12,6 +12,8 @@
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
+#include <array>
+#include <map>
 #include <memory>
 #include <vector>
 
@@ -46,10 +48,12 @@ struct TGeoDetector : public ActsExamples::IBaseDetector {
     template <typename T>
     struct LayerTriplet {
       LayerTriplet() = default;
+      
       LayerTriplet(T value)
           : negative{value}, central{value}, positive{value} {}
-      LayerTriplet(std::array<T, 3>&& values)
-          : negative{values[0]}, central{values[1]}, positive{values[2]} {}
+
+      LayerTriplet(std::map<std::string, T>&& values)
+          : negative{values.at("negative")}, central{values.at("central")}, positive{values.at("positive")} {}
 
       T negative;
       T central;
