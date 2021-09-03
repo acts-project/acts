@@ -114,6 +114,12 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
       cdsConfig.discRadialSegments = volume.discNRSegments;
       layerBuilderConfig.detectorElementSplitter =
           std::make_shared<const Acts::TGeoCylinderDiscSplitter>(cdsConfig);
+    } else if (volume.itkModuleSplit) {
+      Acts::TGeoITkModuleSplitter::Config itkConfig;
+      itkConfig.barrelMap = volume.barrelMap;
+      itkConfig.discMap = volume.discMap;
+      layerBuilderConfig.detectorElementSplitter =
+          std::make_shared<Acts::TGeoITkModuleSplitter>(itkConfig);
     }
 
     detLayerConfigs.push_back(layerBuilderConfig);
