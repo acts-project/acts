@@ -317,7 +317,6 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
 /// Read the TGeo layer builder configurations from the user configuration.
 void readTGeoLayerBuilderConfigs(const Variables& vm,
                                  TGeoDetector::Config& config) {
-
   const auto path = vm["geo-tgeo-jsonconfig"].template as<std::string>();
   nlohmann::json djson;
   if (path.empty()) {
@@ -330,7 +329,8 @@ void readTGeoLayerBuilderConfigs(const Variables& vm,
 
   config.buildBeamPipe = djson["geo-tgeo-build-beampipe"];
   if (config.buildBeamPipe) {
-    const auto beamPipeParameters = djson["geo-tgeo-beampipe-parameters"].get<std::array<double, 3>>();
+    const auto beamPipeParameters =
+        djson["geo-tgeo-beampipe-parameters"].get<std::array<double, 3>>();
     config.beamPipeRadius = beamPipeParameters[0];
     config.beamPipeHalflengthZ = beamPipeParameters[1];
     config.beamPipeLayerThickness = beamPipeParameters[2];
@@ -355,12 +355,13 @@ void writeTGeoDetectorConfig(const Variables& vm,
 
   djson["geo-tgeo-unit-scalor"] = config.unitScalor;
   djson["geo-tgeo-build-beampipe"] = config.buildBeamPipe;
-  djson["geo-tgeo-beampipe-parameters"] = std::array<double, 3> {config.beamPipeRadius,
-                                                                 config.beamPipeHalflengthZ,
-                                                                 config.beamPipeLayerThickness};
+  djson["geo-tgeo-beampipe-parameters"] =
+      std::array<double, 3>{config.beamPipeRadius, config.beamPipeHalflengthZ,
+                            config.beamPipeLayerThickness};
 
   // Enable empty volume dump
-  if (config.volumes.size() == 0) config.volumes.emplace_back();
+  if (config.volumes.size() == 0)
+    config.volumes.emplace_back();
   djson["Volumes"] = config.volumes;
 
   outfile << djson.dump(2) << std::endl;
@@ -398,7 +399,7 @@ void TGeoDetector::addOptions(
   //
   // optional per-volume layer options that can be present once.
   // `geo-tgeo-{n,c,p}-layers` must be present for each volume and if it is
-  // non-zero, all other layer options with the same tag ("negative", 
+  // non-zero, all other layer options with the same tag ("negative",
   // "central", "positive") must be set as well.
   //
   //  # boolean switch whether there are negative/central/positive layers
@@ -408,7 +409,7 @@ void TGeoDetector::addOptions(
   //      "central": true,
   //      "positive": true
   //    },
-  //  # 
+  //  #
   //  "geo-tgeo-subvolume-names": { "negative": , "central": , "positive": },
   //  # Name identifier of the volume for searching n,c,p layers
   //  "geo-tgeo-sensitive-names": { ... }
@@ -418,10 +419,10 @@ void TGeoDetector::addOptions(
   //  "geo-tgeo-layer-r-ranges": { ... }
   //  # Longitudinal range(s) for n,c,p layers to restrict the module parsing
   //  "geo-tgeo-layer-z-ranges": { ... }
-  //  # R-tolerances (if > 0.) that triggers splitting of collected surfaces 
+  //  # R-tolerances (if > 0.) that triggers splitting of collected surfaces
   //  # into different negative layers
   //  "geo-tgeo-layer-r-split": { ... }
-  //  # Z-tolerances (if > 0.) that triggers splitting of collected surfaces 
+  //  # Z-tolerances (if > 0.) that triggers splitting of collected surfaces
   //  # into different negative layers
   //  "geo-tgeo-layer-z-split": { ... }
   //
