@@ -11,6 +11,7 @@
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 
 // Namespace of the module splitters
 namespace Acts {
@@ -29,9 +30,9 @@ void from_json(const nlohmann::json& j,
 }
 
 /// Write config for cylinder/disc module splitter
-void to_json(nlohmann::json& j,
+void to_json(nlohmann::ordered_json& j,
              const Acts::TGeoCylinderDiscSplitter::Config& cdc) {
-  j = nlohmann::json{{"geo-tgeo-cyl-nphi-segs", cdc.cylinderPhiSegments},
+  j = nlohmann::ordered_json{{"geo-tgeo-cyl-nphi-segs", cdc.cylinderPhiSegments},
                      {"geo-tgeo-cyl-nz-segs", cdc.cylinderLongitudinalSegments},
                      {"geo-tgeo-disc-nphi-segs", cdc.discPhiSegments},
                      {"geo-tgeo-disc-nr-segs", cdc.discRadialSegments}};
@@ -50,13 +51,14 @@ void from_json(const nlohmann::json& j,
   interval.upper = j.at("upper");
 }
 
-/// Write config for cylinder/disc module splitter
-/*void to_json(nlohmann::json& j,
+/// Write value interval (no conversion from std::Optional to json)
+void to_json(nlohmann::ordered_json& j,
              const ActsExamples::Options::Interval& interval) {
-  j = nlohmann::json{{"lower", interval.lower}, {"upper", interval.upper}};
-}*/
-
+  j = nlohmann::ordered_json{{"lower", interval.lower.value_or(0)},
+                     {"upper", interval.upper.value_or(0)}};
 }
+
+} // namespace Options
 
 /// Read/Write for layer configuration triplets
 template<typename T>
@@ -68,8 +70,8 @@ void from_json(const nlohmann::json& j,
 }
 
 template<typename T>
-void to_json(nlohmann::json& j, const ActsExamples::TGeoDetector::Config::LayerTriplet<T>& ltr) {
-  j = nlohmann::json{{"negative", ltr.negative}, {"central", ltr.central}, {"positive", ltr.positive}};
+void to_json(nlohmann::ordered_json& j, const ActsExamples::TGeoDetector::Config::LayerTriplet<T>& ltr) {
+  j = nlohmann::ordered_json{{"negative", ltr.negative}, {"central", ltr.central}, {"positive", ltr.positive}};
 }
 
 /// Read volume struct
@@ -93,18 +95,41 @@ void from_json(const nlohmann::json& j,
   vol.splitTolR = j.at("geo-tgeo-layer-r-split"); 
   vol.splitTolZ = j.at("geo-tgeo-layer-z-split");
 
-  for (const auto& splitter : j.at("Splitters")) {
-    for (const auto& cdSplitter : splitter.at("CylinderDisk")) {
-      Acts::TGeoCylinderDiscSplitter::Config cdConfig;
-      cdConfig = cdSplitter;
-      vol.cylinderNZSegments = cdConfig.cylinderLongitudinalSegments;
-      vol.cylinderNPhiSegments = cdConfig.cylinderPhiSegments;
-      vol.discNRSegments = cdConfig.discRadialSegments;
-      vol.discNPhiSegments = cdConfig.discPhiSegments;
-    }
-  }
+  Acts::TGeoCylinderDiscSplitter::Config cdConfig = j.at("Splitters").at("CylinderDisk");
+  vol.cylinderNZSegments = cdConfig.cylinderLongitudinalSegments;
+  vol.cylinderNPhiSegments = cdConfig.cylinderPhiSegments;
+  vol.discNRSegments = cdConfig.discRadialSegments;
+  vol.discNPhiSegments = cdConfig.discPhiSegments;
 }
 
-void to_json(const nlohmann::json& j);
+void to_json(nlohmann::ordered_json& j,
+             const TGeoDetector::Config::Volume& vol) {
+
+  // subdetector selection
+  j["geo-tgeo-volume-name"] = vol.name;
+
+  // configure surface autobinning
+  j["geo-tgeo-sfbin-r-tolerance"] = vol.binToleranceR;
+  j["geo-tgeo-sfbin-z-tolerance"] = vol.binToleranceZ;
+  j["geo-tgeo-sfbin-phi-tolerance"] = vol.binTolerancePhi;
+
+  // Fill layer triplets
+  j["geo-tgeo-volume-layers"] = vol.layers;
+  j["geo-tgeo-subvolume-names"] = vol.subVolumeName;
+  j["geo-tgeo-sensitive-names"] = vol.sensitiveNames;
+  j["geo-tgeo-sensitive-axes"] = vol.sensitiveAxes;
+  j["geo-tgeo-layer-r-ranges"] = vol.rRange;
+  j["geo-tgeo-layer-z-ranges"] = vol.zRange;
+  j["geo-tgeo-layer-r-split"] = vol.splitTolR;
+  j["geo-tgeo-layer-z-split"] = vol.splitTolZ;
+
+  Acts::TGeoCylinderDiscSplitter::Config cdConfig;
+  cdConfig.cylinderLongitudinalSegments = vol.cylinderNZSegments;
+  cdConfig.cylinderPhiSegments = vol.cylinderNPhiSegments;
+  cdConfig.discRadialSegments = vol.discNRSegments;
+  cdConfig.discPhiSegments = vol.discNPhiSegments;
+
+  j["Splitters"]["CylinderDisk"] = cdConfig;
+}
 
 }  // namespace ActsExamples

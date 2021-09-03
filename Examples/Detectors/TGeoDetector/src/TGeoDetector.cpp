@@ -326,7 +326,6 @@ void readTGeoLayerBuilderConfigs(const Variables& vm,
   std::ifstream infile(path, std::ifstream::in | std::ifstream::binary);
   infile >> djson;
 
-  config.fileName = djson["geo-tgeo-filename"];
   config.unitScalor = djson["geo-tgeo-unit-scalor"];
 
   config.buildBeamPipe = djson["geo-tgeo-build-beampipe"];
@@ -342,6 +341,28 @@ void readTGeoLayerBuilderConfigs(const Variables& vm,
     auto& vol = config.volumes.emplace_back();
     vol = volume;
   }
+}
+
+void writeTGeoDetectorConfig(const Variables& vm,
+                             TGeoDetector::Config& config) {
+  const auto path = vm["geo-tgeo-dump-jsonconfig"].template as<std::string>();
+  nlohmann::ordered_json djson;
+  if (path.empty()) {
+    return;
+  }
+  std::ofstream outfile(path, std::ofstream::out | std::ofstream::binary);
+
+  djson["geo-tgeo-unit-scalor"] = config.unitScalor;
+  djson["geo-tgeo-build-beampipe"] = config.buildBeamPipe;
+  djson["geo-tgeo-beampipe-parameters"] = std::array<double, 3> {config.beamPipeRadius,
+                                                                 config.beamPipeHalflengthZ,
+                                                                 config.beamPipeLayerThickness};
+
+  // Enable empty volume dump
+  if (config.volumes.size() == 0) config.volumes.emplace_back();
+  djson["Volumes"] = config.volumes;
+
+  outfile << djson.dump(2) << std::endl;
 }
 
 }  // namespace
@@ -446,10 +467,12 @@ void TGeoDetector::addOptions(
 
   auto opt = desc.add_options();
   // required global options
+  opt("geo-tgeo-filename", value<std::string>()->default_value(""),
+      "Root file name.");
   opt("geo-tgeo-jsonconfig", value<std::string>()->default_value(""),
       "Json config file name.");
   opt("geo-tgeo-dump-jsonconfig",
-      value<std::string>()->default_value("config.json"),
+      value<std::string>()->default_value("empty_config.json"),
       "Json config file name.");
   // set log level
 }
@@ -459,12 +482,21 @@ auto TGeoDetector::finalize(
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
   Config config;
+
+  config.fileName = vm["geo-tgeo-filename"].as<std::string>();
+
   config.surfaceLogLevel =
       Acts::Logging::Level(vm["geo-surface-loglevel"].template as<size_t>());
   config.layerLogLevel =
       Acts::Logging::Level(vm["geo-layer-loglevel"].template as<size_t>());
   config.volumeLogLevel =
       Acts::Logging::Level(vm["geo-volume-loglevel"].template as<size_t>());
+
+  // No valid geometry configuration. Stop
+  if (vm["geo-tgeo-jsonconfig"].as<std::string>().empty()) {
+    writeTGeoDetectorConfig(vm, config);
+    std::exit(EXIT_SUCCESS);
+  }
 
   readTGeoLayerBuilderConfigs(vm, config);
 

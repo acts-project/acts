@@ -37,9 +37,9 @@ struct TGeoDetector : public ActsExamples::IBaseDetector {
 
     std::string fileName;
     bool buildBeamPipe = false;
-    double beamPipeRadius;
-    double beamPipeHalflengthZ;
-    double beamPipeLayerThickness;
+    double beamPipeRadius{0};
+    double beamPipeHalflengthZ{0};
+    double beamPipeLayerThickness{0};
 
     double unitScalor = 1.0;
 
@@ -84,25 +84,25 @@ struct TGeoDetector : public ActsExamples::IBaseDetector {
     };
 
     struct Volume {
-      std::string name;
+      std::string name{""};
       LayerTriplet<bool> layers{false};
-      LayerTriplet<std::string> subVolumeName;
-      LayerTriplet<std::vector<std::string>> sensitiveNames;
-      LayerTriplet<std::string> sensitiveAxes;
-      LayerTriplet<Options::Interval> rRange;
-      LayerTriplet<Options::Interval> zRange;
+      LayerTriplet<std::string> subVolumeName{""};
+      LayerTriplet<std::vector<std::string>> sensitiveNames{{""}};
+      LayerTriplet<std::string> sensitiveAxes{""};
+      LayerTriplet<Options::Interval> rRange{};
+      LayerTriplet<Options::Interval> zRange{};
       LayerTriplet<double> splitTolR{0};
       LayerTriplet<double> splitTolZ{0};
 
-      Options::Interval binToleranceR;
-      Options::Interval binTolerancePhi;
-      Options::Interval binToleranceZ;
+      Options::Interval binToleranceR{};
+      Options::Interval binTolerancePhi{};
+      Options::Interval binToleranceZ{};
 
       bool cylinderDiscSplit = false;
-      unsigned int cylinderNZSegments;
-      unsigned int cylinderNPhiSegments;
-      unsigned int discNRSegments;
-      unsigned int discNPhiSegments;
+      unsigned int cylinderNZSegments{0};
+      unsigned int cylinderNPhiSegments{0};
+      unsigned int discNRSegments{0};
+      unsigned int discNPhiSegments{0};
     };
 
     std::vector<Volume> volumes;
