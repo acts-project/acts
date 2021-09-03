@@ -335,7 +335,16 @@ void readTGeoLayerBuilderConfigs(const Variables& vm,
   std::ifstream infile(path, std::ifstream::in | std::ifstream::binary);
   infile >> djson;
 
+  config.fileName = djson["geo-tgeo-filename"];
   config.unitScalor = djson["geo-tgeo-unit-scalor"];
+
+  config.buildBeamPipe = djson["geo-tgeo-build-beampipe"];
+  if (config.buildBeamPipe) {
+    const auto beamPipeParameters = djson["geo-tgeo-beampipe-parameters"].get<std::array<double, 3>>();
+    config.beamPipeRadius = beamPipeParameters[0];
+    config.beamPipeHalflengthZ = beamPipeParameters[1];
+    config.beamPipeLayerThickness = beamPipeParameters[2];
+  }
 
   // Fill nested volume configs
   for (const auto& volume : djson["Volumes"]) {
@@ -504,17 +513,6 @@ auto TGeoDetector::finalize(
       Acts::Logging::Level(vm["geo-layer-loglevel"].template as<size_t>());
   config.volumeLogLevel =
       Acts::Logging::Level(vm["geo-volume-loglevel"].template as<size_t>());
-
-  config.fileName = vm["geo-tgeo-filename"].template as<std::string>();
-
-  config.buildBeamPipe = vm.count("geo-tgeo-beampipe-parameters") > 0;
-  if (config.buildBeamPipe) {
-    auto beamPipeParameters =
-        vm["geo-tgeo-beampipe-parameters"].template as<Options::Reals<3>>();
-    config.beamPipeRadius = beamPipeParameters[0];
-    config.beamPipeHalflengthZ = beamPipeParameters[1];
-    config.beamPipeLayerThickness = beamPipeParameters[2];
-  }
 
   readTGeoLayerBuilderConfigs(vm, config);
 
