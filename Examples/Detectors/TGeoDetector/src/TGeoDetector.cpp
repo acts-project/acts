@@ -26,11 +26,9 @@
 #include "ActsExamples/TGeoDetector/JsonTGeoDetectorConfig.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
-#include <array>
 #include <cstdlib>
 #include <fstream>
 #include <list>
-#include <utility>
 
 #include <boost/program_options.hpp>
 
@@ -38,13 +36,6 @@ namespace ActsExamples {
 using namespace Options;
 
 namespace {
-
-// TGeoGeoDetector LayerTriplet type from json
-template<typename value_type>
-using Triplet = std::map<std::string, value_type>;
-// Use intervals from json
-template<typename value_type>
-using Interval = std::pair<value_type, value_type>;
 
 /// @brief Function that constructs a set of layer builder
 ///        configs from a central @c TGeoDetector config.
@@ -64,12 +55,12 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
     // configure surface autobinning
     std::vector<std::pair<double, double>> binTolerances(
         static_cast<size_t>(Acts::binValues), {0., 0.});
-    binTolerances[Acts::binR] = 
-        {std::get<0>(volume.binToleranceR), std::get<1>(volume.binToleranceR)};
-    binTolerances[Acts::binZ] = 
-        {std::get<0>(volume.binToleranceZ), std::get<1>(volume.binToleranceZ)};
-    binTolerances[Acts::binPhi] =
-        {std::get<0>(volume.binTolerancePhi), std::get<1>(volume.binTolerancePhi)};
+    binTolerances[Acts::binR] = {volume.binToleranceR.lower.value_or(0.),
+                                 volume.binToleranceR.upper.value_or(0.)};
+    binTolerances[Acts::binZ] = {volume.binToleranceZ.lower.value_or(0.),
+                                 volume.binToleranceZ.upper.value_or(0.)};
+    binTolerances[Acts::binPhi] = {volume.binTolerancePhi.lower.value_or(0.),
+                                   volume.binTolerancePhi.upper.value_or(0.)};
 
     layerBuilderConfig.autoSurfaceBinning = true;
     layerBuilderConfig.surfaceBinMatcher =
@@ -91,11 +82,11 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
       lConfig.localAxes = volume.sensitiveAxes.at(ncp);
 
       auto rR = volume.rRange.at(ncp);
-      auto rMin = std::get<0>(rR);
-      auto rMax = std::get<1>(rR);
+      auto rMin = rR.lower.value_or(0.);
+      auto rMax = rR.upper.value_or(std::numeric_limits<double>::max());
       auto zR = volume.zRange.at(ncp);
-      auto zMin = std::get<0>(zR);
-      auto zMax = std::get<1>(zR);
+      auto zMin = zR.lower.value_or(-std::numeric_limits<double>::max());
+      auto zMax = zR.upper.value_or(std::numeric_limits<double>::max());
       lConfig.parseRanges = {
           {Acts::binR, {rMin, rMax}},
           {Acts::binZ, {zMin, zMax}},
@@ -349,45 +340,7 @@ void readTGeoLayerBuilderConfigs(const Variables& vm,
   // Fill nested volume configs
   for (const auto& volume : djson["Volumes"]) {
     auto& vol = config.volumes.emplace_back();
-
-    // subdetector selection
-    vol.name = volume["geo-tgeo-volume-name"].get<std::string>();
-
-    // configure surface autobinning
-    vol.binToleranceR =
-        volume["geo-tgeo-sfbin-r-tolerance"].get<Interval<double>>();
-    vol.binToleranceZ = 
-        volume["geo-tgeo-sfbin-z-tolerance"].get<Interval<double>>();
-    vol.binTolerancePhi = 
-        volume["geo-tgeo-sfbin-phi-tolerance"].get<Interval<double>>();
-
-    vol.layers = 
-        {volume["geo-tgeo-volume-layers"].get<Triplet<bool>>()};
-    vol.subVolumeName= 
-        {volume["geo-tgeo-subvolume-names"].get<Triplet<std::string>>()};
-    vol.sensitiveNames= 
-        {volume["geo-tgeo-sensitive-names"].get<Triplet<std::vector<std::string>>>()};
-    vol.sensitiveAxes = 
-        {volume["geo-tgeo-sensitive-axes"].get<Triplet<std::string>>()};
-    vol.rRange = 
-        {volume["geo-tgeo-layer-r-ranges"].get<Triplet<Interval<double>>>()};
-    vol.zRange = 
-        {volume["geo-tgeo-layer-z-ranges"].get<Triplet<Interval<double>>>()};
-    vol.splitTolR = 
-        {volume["geo-tgeo-layer-r-split"].get<Triplet<double>>()};
-    vol.splitTolZ = 
-        {volume["geo-tgeo-layer-z-split"].get<Triplet<double>>()};
-
-    for (const auto& splitter : volume["Splitters"]) {
-      for (const auto& cdSplitter : splitter["CylinderDisk"]) {
-        Acts::TGeoCylinderDiscSplitter::Config cdConfig;
-        from_json(cdSplitter, cdConfig);
-        vol.cylinderNZSegments = cdConfig.cylinderLongitudinalSegments;
-        vol.cylinderNPhiSegments = cdConfig.cylinderPhiSegments;
-        vol.discNRSegments = cdConfig.discRadialSegments;
-        vol.discNPhiSegments = cdConfig.discPhiSegments;
-      }
-    }
+    vol = volume;
   }
 }
 
@@ -493,13 +446,12 @@ void TGeoDetector::addOptions(
 
   auto opt = desc.add_options();
   // required global options
-  opt("geo-tgeo-filename", value<std::string>()->default_value(""),
-      "Root file name.");
   opt("geo-tgeo-jsonconfig", value<std::string>()->default_value(""),
       "Json config file name.");
   opt("geo-tgeo-dump-jsonconfig",
       value<std::string>()->default_value("config.json"),
       "Json config file name.");
+  // set log level
 }
 
 auto TGeoDetector::finalize(
