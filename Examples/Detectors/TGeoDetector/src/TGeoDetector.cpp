@@ -343,6 +343,7 @@ void readTGeoLayerBuilderConfigs(const Variables& vm,
   }
 }
 
+/// Dump TGeo Detector config to file.
 void writeTGeoDetectorConfig(const Variables& vm,
                              TGeoDetector::Config& config) {
   const auto path = vm["geo-tgeo-dump-jsonconfig"].template as<std::string>();
@@ -376,8 +377,6 @@ void TGeoDetector::addOptions(
   //
   //   # Unit scalor from ROOT to Acts.
   //   "geo-tgeo-unit-scalor": 1,
-  //   # Root world volume to start search from.
-  //   "geo-tgeo-worldvolume": "IDET",
   //   # Beam pipe parameters {r, z, t} in [mm]. Beam pipe is automatically
   //     created if the parameters are present.
   //   "geo-tgeo-beampipe-parameters": [29.0,3000.0,0.8]
@@ -386,79 +385,47 @@ void TGeoDetector::addOptions(
   // be repeated as many times as there are usable detector volumes.
   //
   // required per-volume options:
+  // In case intervals are required, a lower and an upper value must be passed.
   //
-  //   # Detector volume name
-  //   "geo-tgeo-volume": "InnerPixels",
-  //   # vTolerance interval in r [mm] for automated surface binninng.
-  //   "geo-tgeo-sfbin-r-tolerance": [5,5],
-  //   # Tolerance interval in phi [rad] for automated surface binning.
-  //   "geo-tgeo-sfbin-phi-tolerance": [0.025,0.025],
-  //   # Tolerance interval in z [mm] for automated surface binning.
-  //   "geo-tgeo-sfbin-z-tolerance": [5,5],
-  //   "geo-tgeo-nlayers" false,  # boolean switch whether there are negative
-  //   layers "geo-tgeo-clayers" true,  # boolean switch whether there are
-  //   central layers "geo-tgeo-players" false,  # boolean switch whether there
-  //   are positive layers
+  //  # Detector volume name
+  //  "geo-tgeo-volume": "InnerPixels",
+  //  # vTolerance interval in r [mm] for automated surface binninng.
+  //  "geo-tgeo-sfbin-r-tolerance": {"lower": 5, "upper": 5},
+  //  # Tolerance interval in phi [rad] for automated surface binning.
+  //  "geo-tgeo-sfbin-phi-tolerance": {"lower": 0.025, "upper": 0.025},
+  //  # Tolerance interval in z [mm] for automated surface binning.
+  //  "geo-tgeo-sfbin-z-tolerance": {"lower": 5, "upper": 5},
   //
-  // within each volume there can be negative/central/positive layers depending
-  // on the which `geo-tgeo-{n,c,p}layers` flags are set to true. If any of
-  // them are set, they must be followed by the corresponding layer options. If
-  // the `*layers` option is false, an empty json object must be present at the
-  // corresponding place in the "Layers" list to keep the ncp association
-  // correct.
+  // optional per-volume layer options that can be present once.
+  // `geo-tgeo-{n,c,p}-layers` must be present for each volume and if it is
+  // non-zero, all other layer options with the same tag ("negative", 
+  // "central", "positive") must be set as well.
   //
-  // examples: negative and central layers, but not positive layers
+  //  # boolean switch whether there are negative/central/positive layers
+  //  "geo-tgeo-volume-layers":
+  //    {
+  //      "negative": true,
+  //      "central": true,
+  //      "positive": true
+  //    },
+  //  # 
+  //  "geo-tgeo-subvolume-names": { "negative": , "central": , "positive": },
+  //  # Name identifier of the volume for searching n,c,p layers
+  //  "geo-tgeo-sensitive-names": { ... }
+  //  # Axes definition for n,c,p sensitive objects
+  //  "geo-tgeo-sensitive-axes": { ... }
+  //  # Radial range(s) for n,c,p layers to restrict the module parsing
+  //  "geo-tgeo-layer-r-ranges": { ... }
+  //  # Longitudinal range(s) for n,c,p layers to restrict the module parsing
+  //  "geo-tgeo-layer-z-ranges": { ... }
+  //  # R-tolerances (if > 0.) that triggers splitting of collected surfaces 
+  //  # into different negative layers
+  //  "geo-tgeo-layer-r-split": { ... }
+  //  # Z-tolerances (if > 0.) that triggers splitting of collected surfaces 
+  //  # into different negative layers
+  //  "geo-tgeo-layer-z-split": { ... }
   //
-  //   "geo-tgeo-nlayers": true,  # Are layers on the negative side?
-  //   "geo-tgeo-clayers": true,  # Are layers in the central region?
-  //   "geo-tgeo-players": false, # Are layers on the positive side?
-  //   "Layers": [
-  //       # Config for layers on the negative side
-  //       {
-  //           # Name identifier of the volume for searching negative layers.
-  //           "geo-tgeo-volume-name": "Pixel::Pixel",
-  //
-  //           # Name identifier for negative sensitive objects
-  //           "geo-tgeo-module-name": ["Pixel::siLog"],
-  //
-  //           # Axes definition for negative sensitive objects.
-  //           "geo-tgeo-module-axes": "YZX",
-  //
-  //           # Radial range(s) for negative layers to restrict the module
-  //           parsing. "geo-tgeo-layer-r-range": [0,135],
-  //
-  //           # R-tolerances (if > 0.) that triggers splitting
-  //             of collected surfaces into different negative layers.
-  //           "geo-tgeo-layer-z-range": [-3000,-250],
-  //
-  //           # Longitudinal range(s) for negative layers to restrict the
-  //           module
-  //             parsing.
-  //           "geo-tgeo-layer-r-split": -1.0,
-  //
-  //           # Z-tolerances (if > 0.) that triggers splitting of collected
-  //             surfaces into different negative layers.
-  //           "geo-tgeo-layer-z-split": 10.0
-  //       },
-  //       # Config for layers in the center
-  //       {
-  //           "geo-tgeo-volume-name": "Pixel::Pixel",
-  //           "geo-tgeo-module-name": ["Pixel::siLog"],
-  //           "geo-tgeo-module-axes": "YZX",
-  //           "geo-tgeo-layer-r-range": [0,135],
-  //           "geo-tgeo-layer-z-range": [-250,250],
-  //           "geo-tgeo-layer-r-split": 5.0,
-  //           "geo-tgeo-layer-z-split": -1.0
-  //       },
-  //       # Config for layers on the positive side
-  //       {
-  //       }
-  //   ]
-  //
-  //   "CylinderDisk" # Splitter of type TGeoCylinderDiscSplitter
-  //
-  //
-  //  In case cylinder / disc splitting is on:
+  //  In case cylinder / disc splitting is turned on:
   //
   //   "geo-tgeo-cyl-nz-segs"    # number of z segments for cylinder splitting
   //   "geo-tgeo-cyl-nphi-segs"  # number of phi segments for cylinder splitting
@@ -473,8 +440,7 @@ void TGeoDetector::addOptions(
       "Json config file name.");
   opt("geo-tgeo-dump-jsonconfig",
       value<std::string>()->default_value("empty_config.json"),
-      "Json config file name.");
-  // set log level
+      "Json file to dump empty config into.");
 }
 
 auto TGeoDetector::finalize(

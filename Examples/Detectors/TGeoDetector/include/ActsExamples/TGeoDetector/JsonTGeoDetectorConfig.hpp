@@ -44,23 +44,24 @@ namespace ActsExamples {
 
 namespace Options {
 
-/// Read config for cylinder/disc module splitter
+/// Read config for options interval
 void from_json(const nlohmann::json& j,
                ActsExamples::Options::Interval& interval) {
   interval.lower = j.at("lower");
   interval.upper = j.at("upper");
 }
 
-/// Write value interval (no conversion from std::Optional to json)
+/// Write config for options interval
 void to_json(nlohmann::ordered_json& j,
              const ActsExamples::Options::Interval& interval) {
+  // no direct conversion from std::optional to json
   j = nlohmann::ordered_json{{"lower", interval.lower.value_or(0)},
                      {"upper", interval.upper.value_or(0)}};
 }
 
 } // namespace Options
 
-/// Read/Write for layer configuration triplets
+/// Read layer configuration triplets
 template<typename T>
 void from_json(const nlohmann::json& j,
                ActsExamples::TGeoDetector::Config::LayerTriplet<T>& ltr) {
@@ -69,6 +70,7 @@ void from_json(const nlohmann::json& j,
   ltr.positive = j.at("positive").get<T>();
 }
 
+/// Write layer configuration triplets
 template<typename T>
 void to_json(nlohmann::ordered_json& j, const ActsExamples::TGeoDetector::Config::LayerTriplet<T>& ltr) {
   j = nlohmann::ordered_json{{"negative", ltr.negative}, {"central", ltr.central}, {"positive", ltr.positive}};
@@ -102,18 +104,16 @@ void from_json(const nlohmann::json& j,
   vol.discNPhiSegments = cdConfig.discPhiSegments;
 }
 
+/// Write volume struct
 void to_json(nlohmann::ordered_json& j,
              const TGeoDetector::Config::Volume& vol) {
 
-  // subdetector selection
   j["geo-tgeo-volume-name"] = vol.name;
 
-  // configure surface autobinning
   j["geo-tgeo-sfbin-r-tolerance"] = vol.binToleranceR;
   j["geo-tgeo-sfbin-z-tolerance"] = vol.binToleranceZ;
   j["geo-tgeo-sfbin-phi-tolerance"] = vol.binTolerancePhi;
 
-  // Fill layer triplets
   j["geo-tgeo-volume-layers"] = vol.layers;
   j["geo-tgeo-subvolume-names"] = vol.subVolumeName;
   j["geo-tgeo-sensitive-names"] = vol.sensitiveNames;
