@@ -12,9 +12,11 @@
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
+#include <utility>
 
 namespace Acts {
 class TGeoDetectorElement;
@@ -102,6 +104,10 @@ struct TGeoDetector : public ActsExamples::IBaseDetector {
       unsigned int cylinderNPhiSegments;
       unsigned int discNRSegments;
       unsigned int discNPhiSegments;
+
+      bool itkModuleSplit = false;
+      std::map<std::string, unsigned int> barrelMap;
+      std::map<std::string, std::vector<std::pair<double, double>>> discMap;
     };
 
     std::vector<Volume> volumes;

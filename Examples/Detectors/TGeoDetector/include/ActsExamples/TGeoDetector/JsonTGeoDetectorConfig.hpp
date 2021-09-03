@@ -10,23 +10,26 @@
 
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
+#include "Acts/Plugins/TGeo/TGeoITkModuleSplitter.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
+
+#include <map>
 
 // Namespace of the module splitters
 namespace Acts {
 
 /// Read config for cylinder/disc module splitter
 void from_json(const nlohmann::json& j,
-               Acts::TGeoCylinderDiscSplitter::Config& msc) {
+               Acts::TGeoCylinderDiscSplitter::Config& cdc) {
   /// Number of segments in phi for a disc
-  msc.cylinderPhiSegments = j.at("geo-tgeo-cyl-nphi-segs");
+  cdc.cylinderPhiSegments = j.at("geo-tgeo-cyl-nphi-segs");
   /// Number of segments in r for a disk
-  msc.cylinderLongitudinalSegments = j.at("geo-tgeo-cyl-nz-segs");
+  cdc.cylinderLongitudinalSegments = j.at("geo-tgeo-cyl-nz-segs");
   /// Number of segments in phi for a disc
-  msc.discPhiSegments = j.at("geo-tgeo-disc-nphi-segs");
+  cdc.discPhiSegments = j.at("geo-tgeo-disc-nphi-segs");
   /// Number of segments in r for a disk
-  msc.discRadialSegments = j.at("geo-tgeo-disc-nr-segs");
+  cdc.discRadialSegments = j.at("geo-tgeo-disc-nr-segs");
 }
 
 /// Write config for cylinder/disc module splitter
@@ -37,6 +40,20 @@ void to_json(nlohmann::ordered_json& j,
       {"geo-tgeo-cyl-nz-segs", cdc.cylinderLongitudinalSegments},
       {"geo-tgeo-disc-nphi-segs", cdc.discPhiSegments},
       {"geo-tgeo-disc-nr-segs", cdc.discRadialSegments}};
+}
+
+void from_json(const nlohmann::json& j,
+               Acts::TGeoITkModuleSplitter::Config& msc) {
+
+  msc.barrelMap = j["geo-tgeo-barrel-map"].get<std::map<std::string, unsigned int>>();
+  msc.discMap = j["geo-tgeo-disc-map"].get<std::map<std::string, std::vector<std::pair<double, double>>>>();
+}
+
+void to_json(nlohmann::ordered_json& j,
+             const Acts::TGeoITkModuleSplitter::Config& msc) {
+
+  j["geo-tgeo-barrel-map"] = msc.barrelMap;
+  j["geo-tgeo-disc-map"] = msc.discMap;
 }
 
 }  // namespace Acts
@@ -109,6 +126,14 @@ void from_json(const nlohmann::json& j, TGeoDetector::Config::Volume& vol) {
     vol.discNRSegments = cdConfig.discRadialSegments;
     vol.discNPhiSegments = cdConfig.discPhiSegments;
   }
+
+  vol.itkModuleSplit = j.at("geo-tgeo-itk-module-split");
+  if (vol.itkModuleSplit) {
+    Acts::TGeoITkModuleSplitter::Config itkConfig =
+        j.at("Splitters").at("ITk");
+    vol.barrelMap = itkConfig.barrelMap;
+    vol.discMap = itkConfig.discMap;
+  }
 }
 
 /// Write volume struct
@@ -130,13 +155,20 @@ void to_json(nlohmann::ordered_json& j,
   j["geo-tgeo-layer-z-split"] = vol.splitTolZ;
   j["geo-tgeo-cyl-disc-split"] = vol.cylinderDiscSplit;
 
+  j["geo-tgeo-cyl-disc-split"] = vol.cylinderDiscSplit;
+  j["geo-tgeo-itk-module-split"] = vol.itkModuleSplit;
+  
   Acts::TGeoCylinderDiscSplitter::Config cdConfig;
   cdConfig.cylinderLongitudinalSegments = vol.cylinderNZSegments;
   cdConfig.cylinderPhiSegments = vol.cylinderNPhiSegments;
   cdConfig.discRadialSegments = vol.discNRSegments;
   cdConfig.discPhiSegments = vol.discNPhiSegments;
-
   j["Splitters"]["CylinderDisk"] = cdConfig;
+
+  Acts::TGeoITkModuleSplitter::Config itkConfig;
+  itkConfig.barrelMap = vol.barrelMap;
+  itkConfig.discMap = vol.discMap;
+  j["Splitters"]["ITk"] = itkConfig;
 }
 
 }  // namespace ActsExamples
