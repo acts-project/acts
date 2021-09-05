@@ -100,12 +100,15 @@ void from_json(const nlohmann::json& j, TGeoDetector::Config::Volume& vol) {
   vol.splitTolR = j.at("geo-tgeo-layer-r-split");
   vol.splitTolZ = j.at("geo-tgeo-layer-z-split");
 
-  Acts::TGeoCylinderDiscSplitter::Config cdConfig =
-      j.at("Splitters").at("CylinderDisk");
-  vol.cylinderNZSegments = cdConfig.cylinderLongitudinalSegments;
-  vol.cylinderNPhiSegments = cdConfig.cylinderPhiSegments;
-  vol.discNRSegments = cdConfig.discRadialSegments;
-  vol.discNPhiSegments = cdConfig.discPhiSegments;
+  vol.cylinderDiscSplit = j.at("geo-tgeo-cyl-disc-split");
+  if (vol.cylinderDiscSplit) {
+    Acts::TGeoCylinderDiscSplitter::Config cdConfig =
+        j.at("Splitters").at("CylinderDisk");
+    vol.cylinderNZSegments = cdConfig.cylinderLongitudinalSegments;
+    vol.cylinderNPhiSegments = cdConfig.cylinderPhiSegments;
+    vol.discNRSegments = cdConfig.discRadialSegments;
+    vol.discNPhiSegments = cdConfig.discPhiSegments;
+  }
 }
 
 /// Write volume struct
@@ -125,6 +128,7 @@ void to_json(nlohmann::ordered_json& j,
   j["geo-tgeo-layer-z-ranges"] = vol.zRange;
   j["geo-tgeo-layer-r-split"] = vol.splitTolR;
   j["geo-tgeo-layer-z-split"] = vol.splitTolZ;
+  j["geo-tgeo-cyl-disc-split"] = vol.cylinderDiscSplit;
 
   Acts::TGeoCylinderDiscSplitter::Config cdConfig;
   cdConfig.cylinderLongitudinalSegments = vol.cylinderNZSegments;
