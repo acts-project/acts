@@ -37,13 +37,13 @@ class ParticleTrackingAction : public G4UserTrackingAction {
                                                     Acts::Logging::INFO));
   ~ParticleTrackingAction() override = default;
 
-  /// Action before the the track is processed in the
+  /// Action before the track is processed in the
   /// the simulation, this will record the initial particle
   ///
   /// @param aTrack the current Geant4 track
   void PreUserTrackingAction(const G4Track* aTrack) final;
 
-  /// Action before the the track is processed in the
+  /// Action after the track is processed in the
   /// the simulation, this will record the final particle
   ///
   /// @param aTrack the current Geant4 track

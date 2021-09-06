@@ -35,7 +35,7 @@ class SensitiveSurfaceMapper {
 
   /// Configuration struct for the surface mapper
   struct Config {
-    std::vector<std::string> materialMappings = {};
+    std::vector<std::string> materialMappings = {"Silicon"};
     std::vector<std::string> volumeMappings = {};
 
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr;
