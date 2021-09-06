@@ -17,6 +17,9 @@
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "Acts/Seeding/InternalSpacePoint.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <stdexcept>
 
@@ -105,7 +108,16 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   auto topBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
       Acts::BinFinder<SimSpacePoint>());
   auto grid = Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(m_gridCfg);
-  auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
+
+  auto get_grid = std::get<Acts::detail::Grid<std::vector<std::unique_ptr<
+                     const Acts::InternalSpacePoint<SimSpacePoint>>>,
+                 Acts::detail::Axis<Acts::detail::AxisType::Equidistant,
+                              Acts::detail::AxisBoundaryType::Closed>,
+                 Acts::detail::Axis<Acts::detail::AxisType::Variable,
+                              Acts::detail::AxisBoundaryType::Bound>>
+                              >(*grid);
+
+  auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint, Acts::detail::AxisType::Variable>(
       spacePointPtrs.begin(), spacePointPtrs.end(), extractGlobalQuantities,
       bottomBinFinder, topBinFinder, std::move(grid), m_finderCfg);
   auto finder = Acts::Seedfinder<SimSpacePoint>(m_finderCfg);

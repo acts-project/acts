@@ -9,7 +9,7 @@
 template <typename external_spacepoint_t>
 template <typename spacepoint_iterator_t>
 Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
-    spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
+    spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd, 
     std::function<std::pair<Acts::Vector3, Acts::Vector2>(
         const external_spacepoint_t&, float, float, float)>
         globTool,
@@ -69,8 +69,6 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     }
     rBins[rIndex].push_back(std::move(isp));
   }
-
-  std::visit(caller_atPosition, grid);
 
   // fill rbins into grid such that each grid bin is sorted in r
   // space points with delta r < rbin size can be out of order

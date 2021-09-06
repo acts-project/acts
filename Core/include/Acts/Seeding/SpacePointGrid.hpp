@@ -63,43 +63,6 @@ using SpacePointGrid = std::variant<
                               detail::AxisBoundaryType::Bound>>
                               >;
 
-/*
-template <typename external_spacepoint_t>
-struct caller_atPosition {
-  void operator()(const detail::Grid<std::vector<std::unique_ptr<
-                     const InternalSpacePoint<external_spacepoint_t>>>,
-                 detail::Axis<detail::AxisType::Equidistant,
-                              detail::AxisBoundaryType::Closed>,
-                 detail::Axis<detail::AxisType::Variable,
-                              detail::AxisBoundaryType::Bound>>& d) { d->atPosition(point); }
-  void operator()(const detail::Grid<std::vector<std::unique_ptr<
-                     const InternalSpacePoint<external_spacepoint_t>>>,
-                 detail::Axis<detail::AxisType::Equidistant,
-                              detail::AxisBoundaryType::Closed>,
-                 detail::Axis<detail::AxisType::Equidistant,
-                              detail::AxisBoundaryType::Bound>>& d) { d->atPosition(point); }
-
-  Acts::Vector2 point;
-};
-*/
-/*
-struct caller_atPosition {
-  void operator()(const auto&  d) { d->atPosition(point); }
-  void operator()(const auto&  d) { d->atPosition(point); }
-
-  Acts::Vector2 point;
-};
-/*                            
-/*
-auto caller_atPosition = [](const auto& obj) { 
-  obj->atPosition(); 
-};
-*/
-//auto caller_numLocalBins = [](const auto& obj) { obj.numLocalBins(); };
-
-//std::visit([](const auto& obj) { obj.atPosition(); }, grid);
-
-
 class SpacePointGridCreator {
  public:
   template <typename external_spacepoint_t>
