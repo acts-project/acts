@@ -15,6 +15,7 @@
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
+#include "ActsExamples/Io/Csv/CsvSpacePointReader.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
@@ -40,6 +41,16 @@ ActsExamples::CsvSimHitReader::Config setupSimHitReading(
 ///
 /// @return config for sim particles csv reader
 ActsExamples::CsvParticleReader::Config setupParticleReading(
+    const ActsExamples::Options::Variables& vars,
+    ActsExamples::Sequencer& sequencer);
+
+/// Setup space point csv reader
+///
+/// @param vars The configuration variables
+/// @param sequencer The framework sequencer
+///
+/// @return config for space points csv reader
+ActsExamples::CsvSpacePointReader::Config setupSpacePointReading(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer);
 

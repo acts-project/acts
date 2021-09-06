@@ -18,6 +18,7 @@
 #include "ActsExamples/Io/Performance/SeedingPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFitterPerformanceWriter.hpp"
+//#include "ActsExamples/Io/Root/RootTrajectoryParametersWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
@@ -67,6 +68,23 @@ ActsExamples::CsvParticleReader::Config setupParticleReading(
       std::make_shared<CsvParticleReader>(particleReader, logLevel));
 
   return particleReader;
+}
+
+ActsExamples::CsvSpacePointReader::Config setupSpacePointReading(
+    const ActsExamples::Options::Variables& vars,
+    ActsExamples::Sequencer& sequencer) {
+  using namespace ActsExamples;
+
+  // Read some standard options
+  auto logLevel = Options::readLogLevel(vars);
+
+  // Read truth hits from CSV files
+  auto spacePointReaderCfg = Options::readCsvSpacePointReaderConfig(vars);
+  spacePointReaderCfg.inputStem = "spacepoints";
+  sequencer.addReader(
+      std::make_shared<CsvSpacePointReader>(spacePointReaderCfg, logLevel));
+  
+  return spacePointReaderCfg;
 }
 
 ActsExamples::DigitizationConfig setupDigitization(
