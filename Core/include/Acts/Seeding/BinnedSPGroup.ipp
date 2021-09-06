@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-template <typename external_spacepoint_t>
+template <typename external_spacepoint_t, Acts::detail::AxisType axis_type>
 template <typename spacepoint_iterator_t>
-Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
+Acts::BinnedSPGroup<external_spacepoint_t, axis_type>::BinnedSPGroup(
     spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd, 
     std::function<std::pair<Acts::Vector3, Acts::Vector2>(
         const external_spacepoint_t&, float, float, float)>

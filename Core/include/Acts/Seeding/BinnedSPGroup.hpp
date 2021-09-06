@@ -232,13 +232,13 @@ class BinnedSPGroupIterator {
 /// @c BinnedSPGroup Provides access to begin and end BinnedSPGroupIterator
 /// for given BinFinders and SpacePointGrid.
 /// Fulfills the range_expression interface.
-template <typename external_spacepoint_t>
+template <typename external_spacepoint_t, Acts::detail::AxisType axis_type>
 class BinnedSPGroup {
  public:
   BinnedSPGroup() = delete;
 
   template <typename spacepoint_iterator_t>
-  BinnedSPGroup<external_spacepoint_t>(
+  BinnedSPGroup<external_spacepoint_t, axis_type>(
       spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
       std::function<std::pair<Acts::Vector3, Acts::Vector2>(
           const external_spacepoint_t&, float, float, float)>,
