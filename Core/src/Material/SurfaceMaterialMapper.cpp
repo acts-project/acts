@@ -17,6 +17,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
@@ -133,7 +134,7 @@ void Acts::SurfaceMaterialMapper::checkAndInsert(State& mState,
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - (proto) binning is " << *bu);
       // Now update
-      BinUtility buAdjusted = adjustBinUtility(*bu, surface);
+      BinUtility buAdjusted = adjustBinUtility(*bu, surface, mState.geoContext);
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - adjusted binning is " << buAdjusted);
       mState.accumulatedMaterial[geoID] =
