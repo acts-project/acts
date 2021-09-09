@@ -73,3 +73,13 @@ ActsExamples::ParticleSmearing::Config setupParticleSmearing(
     ActsExamples::Sequencer& sequencer,
     std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
     const std::string& inputParticles);
+
+/// Setup reading measurements
+///
+/// @param vars The configuration variables
+/// @param sequencer The framework sequencer
+///
+/// @return config for reading measurements
+ActsExamples::CsvMeasurementReader::Config setupMeasurementReading(
+    const ActsExamples::Options::Variables& vars,
+    ActsExamples::Sequencer& sequencer);
