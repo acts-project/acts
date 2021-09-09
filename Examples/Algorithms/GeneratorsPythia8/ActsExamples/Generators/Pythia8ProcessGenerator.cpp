@@ -117,8 +117,20 @@ ActsExamples::SimParticleContainer ActsExamples::Pythia8Generator::operator()(
         1_GeV);
 
     // find its parents
-    Acts::PdgParticle parent_pid = Acts::PdgParticle::eInvalid;
-    ACTS_INFO("mother: " << genParticle.mother1() << " " << genParticle.mother2());
+    int parent_pid = 0;
+    int mother_idx = genParticle.mother1();
+    if (mother_idx > 0) {
+      parent_pid =  m_pythia8->event[mother_idx].id();
+      // loop over parents until the pid changes
+      while (parent_pid == genParticle.id()) {
+        mother_idx = m_pythia8->event[mother_idx].mother1();
+        if (mother_idx > 0){
+          parent_pid = m_pythia8->event[mother_idx].id();
+        }
+      }
+      ACTS_VERBOSE("particle: " << genParticle.id() << ", with mother: " << parent_pid);
+    }
+    particle.setParentPDG((int32_t)parent_pid);
 
     generated.push_back(std::move(particle));
   }
