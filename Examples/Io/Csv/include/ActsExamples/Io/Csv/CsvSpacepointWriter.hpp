@@ -33,8 +33,8 @@ namespace ActsExamples {
 /// This writes one file per event containing information about the
 /// spacepoints
 ///
-///     event000000001-spacepoint.csv
-///     event000000002-spacepoint.csv
+///     event000000001-spacepoints.csv
+///     event000000002-spacepoints.csv
 ///     ...
 ///
 /// Intrinsically thread-safe as one file per event.

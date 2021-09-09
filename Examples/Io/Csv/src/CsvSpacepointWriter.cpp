@@ -40,7 +40,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacepointWriter::writeT(
 
   // Open per-event file for all components
   std::string pathSP =
-      perEventFilepath(m_cfg.outputDir, "spacepoint.csv", ctx.eventNumber);
+      perEventFilepath(m_cfg.outputDir, "spacepoints.csv", ctx.eventNumber);
 
   dfe::NamedTupleCsvWriter<SpacepointData> writerSP(pathSP, m_cfg.outputPrecision);
 
