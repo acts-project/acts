@@ -116,6 +116,10 @@ ActsExamples::SimParticleContainer ActsExamples::Pythia8Generator::operator()(
         std::hypot(genParticle.px(), genParticle.py(), genParticle.pz()) *
         1_GeV);
 
+    // find its parents
+    Acts::PdgParticle parent_pid = Acts::PdgParticle::eInvalid;
+    ACTS_INFO("mother: " << genParticle.mother1() << " " << genParticle.mother2());
+
     generated.push_back(std::move(particle));
   }
 
