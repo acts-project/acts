@@ -49,6 +49,8 @@ class SeedingAlgorithm final : public BareAlgorithm {
     float beamPosX = 0;
     float beamPosY = 0;
     float impactMax = 3.;
+    int numberOfPhiBins = 1;
+    std::vector < float > zBinEdges = {};
   };
 
   /// Construct the seeding algorithm.
