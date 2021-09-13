@@ -13,7 +13,6 @@
 #include "Acts/Utilities/detail/Grid.hpp"
 
 #include <memory>
-#include <variant>
 
 namespace Acts {
 

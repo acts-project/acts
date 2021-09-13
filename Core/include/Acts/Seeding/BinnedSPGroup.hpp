@@ -108,7 +108,7 @@ class NeighborhoodIterator {
   const Acts::SpacePointGrid<external_spacepoint_t>* m_grid;
 };
 
-/// @c Neighborhood Used to access iterators to access a group of bins
+///@class Neighborhood Used to access iterators to access a group of bins
 /// returned by a BinFinder.
 /// Fulfills the range_expression interface
 template <typename external_spacepoint_t>
@@ -135,7 +135,7 @@ class Neighborhood {
   const SpacePointGrid<external_spacepoint_t>* m_spgrid;
 };
 
-/// @c BinnedSPGroupIterator Allows to iterate over all groups of bins
+///@class BinnedSPGroupIterator Allows to iterate over all groups of bins
 /// a provided BinFinder can generate for each bin of a provided SPGrid
 template <typename external_spacepoint_t>
 class BinnedSPGroupIterator {
@@ -229,19 +229,20 @@ class BinnedSPGroupIterator {
   BinFinder<external_spacepoint_t>* m_topBinFinder;
 };
 
-/// @c BinnedSPGroup Provides access to begin and end BinnedSPGroupIterator
+///@class BinnedSPGroup Provides access to begin and end BinnedSPGroupIterator
 /// for given BinFinders and SpacePointGrid.
 /// Fulfills the range_expression interface.
-template <typename external_spacepoint_t, Acts::detail::AxisType axis_type>
+template <typename external_spacepoint_t>
 class BinnedSPGroup {
  public:
   BinnedSPGroup() = delete;
 
   template <typename spacepoint_iterator_t>
-  BinnedSPGroup<external_spacepoint_t, axis_type>(
+  BinnedSPGroup<external_spacepoint_t>(
       spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
-      std::function<std::pair<Acts::Vector3, Acts::Vector2>(
-          const external_spacepoint_t&, float, float, float)>,
+      std::function<Acts::Vector2(const external_spacepoint_t&, float, float,
+                                  float)>
+          covTool,
       std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
       std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
       std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
