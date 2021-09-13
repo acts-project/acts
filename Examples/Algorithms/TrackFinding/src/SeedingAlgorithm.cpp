@@ -17,9 +17,6 @@
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "Acts/Seeding/InternalSpacePoint.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <stdexcept>
 
@@ -95,30 +92,17 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
 
   // construct the seeding tools
   // covariance tool, extracts covariances per spacepoint as required
-  auto extractGlobalQuantities =
-      [=](const SimSpacePoint& sp, float, float,
-          float) -> std::pair<Acts::Vector3, Acts::Vector2> {
-    Acts::Vector3 position{sp.x(), sp.y(), sp.z()};
-    Acts::Vector2 covariance{sp.varianceR(), sp.varianceZ()};
-    return std::make_pair(position, covariance);
+  auto extractCovariance = [=](const SimSpacePoint& sp, float, float,
+                               float) -> Acts::Vector2 {
+    return {sp.varianceR(), sp.varianceZ()};
   };
-
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
       Acts::BinFinder<SimSpacePoint>());
   auto topBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
       Acts::BinFinder<SimSpacePoint>());
   auto grid = Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(m_gridCfg);
-
-  auto get_grid = std::get<Acts::detail::Grid<std::vector<std::unique_ptr<
-                     const Acts::InternalSpacePoint<SimSpacePoint>>>,
-                 Acts::detail::Axis<Acts::detail::AxisType::Equidistant,
-                              Acts::detail::AxisBoundaryType::Closed>,
-                 Acts::detail::Axis<Acts::detail::AxisType::Variable,
-                              Acts::detail::AxisBoundaryType::Bound>>
-                              >(*grid);
-
-  auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint, Acts::detail::AxisType::Variable>(
-      spacePointPtrs.begin(), spacePointPtrs.end(), extractGlobalQuantities,
+  auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
+      spacePointPtrs.begin(), spacePointPtrs.end(), extractCovariance,
       bottomBinFinder, topBinFinder, std::move(grid), m_finderCfg);
   auto finder = Acts::Seedfinder<SimSpacePoint>(m_finderCfg);
 
