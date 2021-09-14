@@ -17,7 +17,6 @@
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include <Acts/Seeding/SpacePointGrid.hpp>
 
 #include <stdexcept>
 
