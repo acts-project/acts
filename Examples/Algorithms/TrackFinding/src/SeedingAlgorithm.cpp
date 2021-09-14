@@ -9,7 +9,6 @@
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 
 #include "Acts/Seeding/BinFinder.hpp"
-#include <Acts/Seeding/SpacePointGrid.hpp>
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
@@ -18,6 +17,7 @@
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include <Acts/Seeding/SpacePointGrid.hpp>
 
 #include <stdexcept>
 
@@ -92,7 +92,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   }
   std::vector<const SimSpacePoint*> spacePointPtrs;
   spacePointPtrs.reserve(nSpacePoints);
-  size_t currentSpacePoints = 0;
   for (const auto& isp : m_cfg.inputSpacePoints) {
     for (const auto& spacePoint :
          ctx.eventStore.get<SimSpacePointContainer>(isp)) {
@@ -100,10 +99,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       // stable and we do not need to create local copies.
       spacePointPtrs.push_back(&spacePoint);
     }
-    ACTS_DEBUG("Retrieving " << (spacePointPtrs.size()-currentSpacePoints) 
-    << " space points from " << isp);
-    currentSpacePoints = spacePointPtrs.size();
-  }  
+  }
 
   // construct the seeding tools
   // covariance tool, extracts covariances per spacepoint as required

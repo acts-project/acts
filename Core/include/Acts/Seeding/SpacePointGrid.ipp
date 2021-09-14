@@ -23,13 +23,16 @@ Acts::SpacePointGridCreator::createGrid(
     phiBins = 100;
   } else {
     // calculate circle intersections of helix and max detector radius
-    float minHelixRadius = config.minPt / (300. * config.bFieldInZ);  // in mm -> R[mm] =pT[GeV] / (3·10−4×B[T]) =  pT[MeV] / (300 *Bz[kT])
+    float minHelixRadius =
+        config.minPt /
+        (300. * config.bFieldInZ);  // in mm -> R[mm] =pT[GeV] / (3·10−4×B[T]) =
+                                    // pT[MeV] / (300 *Bz[kT])
     float maxR2 = config.rMax * config.rMax;
     float xOuter = maxR2 / (2 * minHelixRadius);
     float yOuter = std::sqrt(maxR2 - xOuter * xOuter);
     float outerAngle = std::atan(xOuter / yOuter);
-    // intersection of helix and max detector radius minus maximum R distance from
-    // middle SP to top SP
+    // intersection of helix and max detector radius minus maximum R distance
+    // from middle SP to top SP
     float innerAngle = 0;
     float Rmin = config.rMax;
     if (config.rMax > config.deltaRMax) {
@@ -42,18 +45,22 @@ Acts::SpacePointGridCreator::createGrid(
     }
 
     // evaluating the azimutal deflection including the maximum impact parameter
-    float deltaAngleWithMaxD0 = std::abs(std::asin(config.impactMax/(Rmin)) - std::asin(config.impactMax/config.rMax));
-    
-    // evaluating delta Phi based on the inner and outer angle, and the azimutal deflection including the maximum impact parameter
-    float deltaPhi = (outerAngle - innerAngle + deltaAngleWithMaxD0)/float(config.numberOfPhiBins);
-    
+    float deltaAngleWithMaxD0 =
+        std::abs(std::asin(config.impactMax / (Rmin)) -
+                 std::asin(config.impactMax / config.rMax));
+
+    // evaluating delta Phi based on the inner and outer angle, and the azimutal
+    // deflection including the maximum impact parameter
+    float deltaPhi = (outerAngle - innerAngle + deltaAngleWithMaxD0) /
+                     float(config.numberOfPhiBins);
+
     // divide 2pi by angle delta to get number of phi-bins
     // size is always 2pi even for regions of interest
     phiBins = std::ceil(2 * M_PI / deltaPhi);
-    // need to scale the number of phi bins accordingly to the number of 
-    // consecutive phi bins in the seed making step. 
-    // Each individual bin should be approximately a fraction (depending on this number) 
-    // of the maximum expected azimutal deflection.
+    // need to scale the number of phi bins accordingly to the number of
+    // consecutive phi bins in the seed making step.
+    // Each individual bin should be approximately a fraction (depending on this
+    // number) of the maximum expected azimutal deflection.
   }
 
   Acts::detail::Axis<detail::AxisType::Equidistant,
@@ -71,9 +78,9 @@ Acts::SpacePointGridCreator::createGrid(
     // FIXME: zBinSize must include scattering
     float zBinSize = config.cotThetaMax * config.deltaRMax;
     int zBins = std::floor((config.zMax - config.zMin) / zBinSize);
-    
-    for (int bin=0; bin<=zBins; bin++){
-      AxisScalar edge = config.zMin + bin*zBinSize;
+
+    for (int bin = 0; bin <= zBins; bin++) {
+      AxisScalar edge = config.zMin + bin * zBinSize;
       zValues.push_back(edge);
     }
 
@@ -88,5 +95,5 @@ Acts::SpacePointGridCreator::createGrid(
   detail::Axis<detail::AxisType::Variable, detail::AxisBoundaryType::Bound>
       zAxis(zValues);
   return std::make_unique<Acts::SpacePointGrid<SpacePoint>>(
-      std::make_tuple(phiAxis, zAxis));  
+      std::make_tuple(phiAxis, zAxis));
 }
