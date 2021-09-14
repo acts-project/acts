@@ -320,7 +320,7 @@ class Surface : public virtual GeometryObject,
   /// Calculate the jacobian from local to global which the surface knows best,
   /// hence the calculation is done here.
   ///
-  /// @note In priciple, the input could also be a free parameters
+  /// @note In principle, the input could also be a free parameters
   /// vector as it could be transformed to a bound parameters. But the transform
   /// might fail in case the parameters is not on surface. To avoid the check
   /// inside this function, it takes directly the bound parameters as input

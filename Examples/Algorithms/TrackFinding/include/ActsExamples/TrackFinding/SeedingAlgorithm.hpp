@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
@@ -33,24 +34,10 @@ class SeedingAlgorithm final : public BareAlgorithm {
     std::string outputSeeds;
     /// Output proto track collection.
     std::string outputProtoTracks;
-    float rMax = 200.;
-    float deltaRMin = 1.;
-    float deltaRMax = 60.;
-    float collisionRegionMin = -250;
-    float collisionRegionMax = 250.;
-    float zMin = -2000.;
-    float zMax = 2000.;
-    float maxSeedsPerSpM = 1;
-    float cotThetaMax = 7.40627;  // 2.7 eta
-    float sigmaScattering = 50;
-    float radLengthPerSeed = 0.1;
-    float minPt = 500.;
-    float bFieldInZ = 0.00199724;
-    float beamPosX = 0;
-    float beamPosY = 0;
-    float impactMax = 3.;
-    int numberOfPhiBins = 1;
-    std::vector < float > zBinEdges = {};
+
+    Acts::SeedFilterConfig seedFilterConfig;
+    Acts::SeedfinderConfig<SimSpacePoint> seedFinderConfig;
+    Acts::SpacePointGridConfig gridConfig;
   };
 
   /// Construct the seeding algorithm.
@@ -65,10 +52,11 @@ class SeedingAlgorithm final : public BareAlgorithm {
   /// @return a process code indication success or failure
   ProcessCode execute(const AlgorithmContext& ctx) const final override;
 
+  /// Const access to the config
+  const Config& config() const { return m_cfg; }
+
  private:
   Config m_cfg;
-  Acts::SpacePointGridConfig m_gridCfg;
-  Acts::SeedfinderConfig<SimSpacePoint> m_finderCfg;
 };
 
 }  // namespace ActsExamples

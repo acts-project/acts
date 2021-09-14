@@ -41,6 +41,8 @@ option(ACTS_BUILD_PLUGIN_TGEO "Build TGeo plugin" OFF)
 # fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 option(ACTS_BUILD_FATRAS_GEANT4 "Build Geant4 Fatras package" OFF)
+# alignment related options
+option(ACTS_BUILD_ALIGNMENT "Build Alignment package" OFF)
 # examples related options
 option(ACTS_BUILD_EXAMPLES "Build standalone examples" OFF)
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
@@ -70,6 +72,7 @@ set_option_if(ACTS_BUILD_EXAMPLES_HEPMC3 ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_EXAMPLES_PYTHIA8 ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_FATRAS_GEANT4 ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_FATRAS_GEANT4)
+set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_EVERYTHING)
 # any examples component activates the general examples option
 set_option_if(
   ACTS_BUILD_EXAMPLES
@@ -140,7 +143,8 @@ set(_acts_tbb_version 2020.1)
 if (ACTS_USE_SYSTEM_BOOST)
   # NOTE we use boost::filesystem instead of std::filesystem since the later
   # is not uniformly supported even on compilers that nominally support C++17
-  find_package(Boost ${_acts_boost_version} REQUIRED CONFIG COMPONENTS filesystem program_options unit_test_framework)
+  # NOTE FindBoost.cmake looks for BoostConfig.cmake first, before running it's own logic.
+  find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS filesystem program_options unit_test_framework)
 else()
   add_subdirectory(thirdparty/boost)
 endif()
@@ -218,7 +222,7 @@ if(ACTS_BUILD_EXAMPLES)
   find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Core Geom GenVector Hist Tree TreePlayer)
   check_root_compatibility()
   # newer DD4hep version require TBB and search interally for TBB in
-  # config-only mode. to avoid missmatches we explicitely search using
+  # config-only mode. to avoid mismatches we explicitely search using
   # config-only mode first to be sure that we find the same version.
   find_package(TBB ${_acts_tbb_version} CONFIG)
   if(NOT TBB_FOUND)
@@ -255,6 +259,7 @@ endif()
 add_component(Core Core)
 add_subdirectory(Plugins)
 add_component_if(Fatras Fatras ACTS_BUILD_FATRAS)
+add_component_if(Alignment Alignment ACTS_BUILD_ALIGNMENT)
 
 # examples
 add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)

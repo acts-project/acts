@@ -31,9 +31,10 @@ ActsExamples::EventRecording::~EventRecording() {
 }
 
 ActsExamples::EventRecording::EventRecording(
-    ActsExamples::EventRecording::Config&& cnf, Acts::Logging::Level level)
+    const ActsExamples::EventRecording::Config& config,
+    Acts::Logging::Level level)
     : ActsExamples::BareAlgorithm("EventRecording", level),
-      m_cfg(std::move(cnf)),
+      m_cfg(config),
       m_runManager(std::make_unique<G4RunManager>()) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input particle collection");
@@ -41,12 +42,13 @@ ActsExamples::EventRecording::EventRecording(
   if (m_cfg.outputHepMcTracks.empty()) {
     throw std::invalid_argument("Missing output event collection");
   }
-  if (!m_cfg.detectorConstruction) {
-    throw std::invalid_argument("Missing detector construction object");
+  if (!m_cfg.detectorConstructionFactory) {
+    throw std::invalid_argument("Missing detector construction object factory");
   }
 
   /// Now set up the Geant4 simulation
-  m_runManager->SetUserInitialization(m_cfg.detectorConstruction.release());
+  m_runManager->SetUserInitialization(
+      (*m_cfg.detectorConstructionFactory)().release());
   m_runManager->SetUserInitialization(new FTFP_BERT);
   m_runManager->SetUserAction(new ActsExamples::Geant4::HepMC3::RunAction());
   m_runManager->SetUserAction(
@@ -132,12 +134,28 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
       }
       // Store the result
       if (storeEvent) {
-        // Remove vertices without outgoing particles
-        for (auto it = event.vertices().crbegin();
-             it != event.vertices().crend(); it++) {
-          if ((*it)->particles_out().empty()) {
-            event.remove_vertex(*it);
+        // Remove vertices w/o outgoing particles and particles w/o production
+        // vertices
+        while (true) {
+          bool sane = true;
+          for (auto v : event.vertices()) {
+            if (!v)
+              continue;
+            if (v->particles_out().empty()) {
+              event.remove_vertex(v);
+              sane = false;
+            }
           }
+          for (auto p : event.particles()) {
+            if (!p)
+              continue;
+            if (!p->production_vertex()) {
+              event.remove_particle(p);
+              sane = false;
+            }
+          }
+          if (sane)
+            break;
         }
         events.push_back(std::move(event));
       }

@@ -15,7 +15,7 @@ void Acts::to_json(nlohmann::json& j, const Acts::BinningData& bd) {
   j["min"] = bd.min;
   j["max"] = bd.max;
   j["option"] = (bd.option == Acts::open ? "open" : "closed");
-  j["value"] = Acts::binningValueNames[bd.binvalue];
+  j["value"] = Acts::binningValueNames()[bd.binvalue];
   int bins = bd.bins();
   // Write sub bin data if present
   if (bd.subBinningData != nullptr) {
@@ -46,10 +46,10 @@ void Acts::from_json(const nlohmann::json& j, Acts::BinningData& bd) {
   float max = j["max"];
   int bins = j["bins"];
   std::string valueName = j["value"];
-  auto valueIter = std::find(Acts::binningValueNames.begin(),
-                             Acts::binningValueNames.end(), valueName);
+  auto valueIter = std::find(Acts::binningValueNames().begin(),
+                             Acts::binningValueNames().end(), valueName);
   Acts::BinningValue bValue = static_cast<Acts::BinningValue>(
-      valueIter - Acts::binningValueNames.begin());
+      valueIter - Acts::binningValueNames().begin());
   if (bins == 1) {
     bd = Acts::BinningData(bValue, min, max);
     return;

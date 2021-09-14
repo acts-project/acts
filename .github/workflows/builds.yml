@@ -27,6 +27,12 @@ jobs:
       INSTALL_DIR: ${{ github.workspace }}/install
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: true
+        if: "!contains(matrix.image, 'lcg')"
+      - uses: actions/checkout@v2
+        if: contains(matrix.image, 'lcg')
+
       - name: Define setup script
         if: contains(matrix.image, 'lcg')
         run: echo "SETUP=${SETUP_LCG}" >> $GITHUB_ENV
@@ -155,10 +161,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        LCG: 
-          - LCG_97apython3/x86_64-centos7-gcc9-opt
-          - LCG_98python3/x86_64-centos7-gcc10-opt
-          - LCG_99/x86_64-centos7-gcc10-opt
+        LCG:
+          # Disable these jobs temporarily to relieve pressure on the CI
+          #- LCG_97apython3/x86_64-centos7-gcc9-opt
+          #- LCG_98python3/x86_64-centos7-gcc10-opt
+          #- LCG_99/x86_64-centos7-gcc10-opt
           - LCG_100/x86_64-centos7-gcc10-opt
           - LCG_100/x86_64-centos8-gcc10-opt
     env:
@@ -283,6 +290,8 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004:v9
+    env:
+        DOXYGEN_WARN_AS_ERROR: YES
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies

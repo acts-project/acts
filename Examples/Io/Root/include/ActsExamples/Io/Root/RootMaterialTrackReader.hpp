@@ -33,30 +33,17 @@ class RootMaterialTrackReader : public IReader {
   struct Config {
     std::string collection =
         "material-tracks";                     ///< material collection to read
-    std::string filePath = "";                 ///< path of the output file
     std::string treeName = "material-tracks";  ///< name of the output tree
-    std::vector<std::string> fileList;         ///< The name of the input file
+    std::vector<std::string> fileList;         ///< List of input files
 
     /// Whether the events are ordered or not
     bool orderedEvents = true;
-
-    /// The default logger
-    std::shared_ptr<const Acts::Logger> logger;
-
-    /// The name of the service
-    std::string name;
-
-    /// Constructor
-    /// @param lname The name of the Material reader
-    /// @parqam lvl The log level for the logger
-    Config(const std::string& lname = "MaterialReader",
-           Acts::Logging::Level lvl = Acts::Logging::INFO)
-        : logger(Acts::getDefaultLogger(lname, lvl)), name(lname) {}
   };
 
   /// Constructor
-  /// @param cfg The Configuration struct
-  RootMaterialTrackReader(const Config& cfg);
+  /// @param config The Configuration struct
+  /// @param level The log level
+  RootMaterialTrackReader(const Config& config, Acts::Logging::Level level);
 
   /// Destructor
   ~RootMaterialTrackReader();
@@ -73,9 +60,15 @@ class RootMaterialTrackReader : public IReader {
   ProcessCode read(
       const ActsExamples::AlgorithmContext& context) final override;
 
+  /// Readonly access to the config
+  const Config& config() const { return m_cfg; }
+
  private:
+  /// The logger
+  std::unique_ptr<const Acts::Logger> m_logger;
+
   /// Private access to the logging instance
-  const Acts::Logger& logger() const { return *m_cfg.logger; }
+  const Acts::Logger& logger() const { return *m_logger; }
 
   /// The config class
   Config m_cfg;

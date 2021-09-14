@@ -9,9 +9,9 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetectorOptions.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
+#include "ActsExamples/DDG4/DDG4DetectorConstruction.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Geant4/Geant4Options.hpp"
-#include "ActsExamples/Geant4DD4hep/DD4hepDetectorConstruction.hpp"
 #include "ActsExamples/Geant4HepMC/EventRecording.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
@@ -59,15 +59,14 @@ int main(int argc, char* argv[]) {
   auto dd4hepCfg = ActsExamples::Options::readDD4hepConfig(vm);
   auto geometrySvc =
       std::make_shared<ActsExamples::DD4hep::DD4hepGeometryService>(dd4hepCfg);
-  std::unique_ptr<G4VUserDetectorConstruction> g4detector =
-      std::make_unique<ActsExamples::DD4hepDetectorConstruction>(
-          *geometrySvc->lcdd());
 
   // Prepare the recording
   ActsExamples::EventRecording::Config erConfig;
   erConfig.inputParticles = particleReader.outputParticles;
   erConfig.outputHepMcTracks = "geant-event";
-  erConfig.detectorConstruction = std::move(g4detector);
+  erConfig.detectorConstructionFactory =
+      std::make_unique<ActsExamples::DDG4DetectorConstructionFactory>(
+          *geometrySvc->lcdd());
   erConfig.seed1 = vm["g4-rnd-seed1"].as<unsigned int>();
   erConfig.seed2 = vm["g4-rnd-seed2"].as<unsigned int>();
 
