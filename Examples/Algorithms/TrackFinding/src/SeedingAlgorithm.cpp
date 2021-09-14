@@ -126,7 +126,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       bottomBinFinder, topBinFinder, std::move(grid), m_cfg.seedFinderConfig);
   auto finder = Acts::Seedfinder<SimSpacePoint>(m_cfg.seedFinderConfig);
 
-
   // run the seeding
   static thread_local SimSeedContainer seeds;
   seeds.clear();

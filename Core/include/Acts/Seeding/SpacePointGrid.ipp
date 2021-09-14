@@ -13,7 +13,6 @@
 template <typename SpacePoint>
 std::unique_ptr<Acts::SpacePointGrid<SpacePoint>>
 Acts::SpacePointGridCreator::createGrid(
-
     const Acts::SpacePointGridConfig& _config) {
   Acts::SpacePointGridConfig config = _config.toInternalUnits();
   using AxisScalar = Acts::Vector3::Scalar;
