@@ -199,6 +199,22 @@ struct LayerVolumeData {
                  max_v0, min_v1, max_v1, min_v2, max_v2);
 };
 
+struct SpacePointData {
+  /// Event-unique measurement identifier. Each value can appear at most once.
+  uint64_t measurement_id;
+  /// Module identifier.
+  uint64_t module_idhash;
+  /// Space point type pixel, strip, strip overlap
+  int32_t sp_type;
+  /// Space point information
+  float sp_x, sp_y, sp_z, sp_radius;
+  float sp_covr, sp_covz;
+
+  DFE_NAMEDTUPLE(SpacePointData, measurement_id, sp_type, module_idhash, 
+                 sp_x, sp_y, sp_z, sp_radius, 
+                 sp_covr, sp_covz);
+};
+
 struct SurfaceGridData {
   /// Surface identifier. Not available in the TrackML datasets.
   uint64_t geometry_id;
