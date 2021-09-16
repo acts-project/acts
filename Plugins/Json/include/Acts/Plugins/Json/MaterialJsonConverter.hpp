@@ -30,7 +30,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(Acts::MappingType,
                                  {Acts::MappingType::PostMapping,
                                   "PostMapping"},
                                  {Acts::MappingType::Sensor, "Sensor"},
-                             });
+                             })
 
 void to_json(nlohmann::json& j, const Material& t);
 
