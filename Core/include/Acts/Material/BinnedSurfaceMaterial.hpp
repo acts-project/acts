@@ -42,7 +42,8 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @param splitFactor is the pre/post splitting directive
   BinnedSurfaceMaterial(const BinUtility& binUtility,
                         MaterialSlabVector fullProperties,
-                        double splitFactor = 0.);
+                        double splitFactor = 0.,
+                        MappingType mappingType = MappingType::Default);
 
   /// Explicit constructor with only full MaterialSlab,
   /// for two-dimensional binning.
@@ -57,7 +58,8 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @param splitFactor is the pre/post splitting directive
   BinnedSurfaceMaterial(const BinUtility& binUtility,
                         MaterialSlabMatrix fullProperties,
-                        double splitFactor = 0.);
+                        double splitFactor = 0.,
+                        MappingType mappingType = MappingType::Default);
 
   /// Copy Move Constructor
   ///
