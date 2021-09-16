@@ -163,7 +163,7 @@ void Acts::from_json(const nlohmann::json& j,
   // The bin utility and material
   Acts::BinUtility bUtility;
   Acts::MaterialSlabMatrix mpMatrix;
-  Acts::MappingType mapType;
+  Acts::MappingType mapType = Acts::MappingType::Default;
   for (auto& [key, value] : jMaterial.items()) {
     if (key == Acts::jsonKey().binkey and not value.empty()) {
       from_json(value, bUtility);
