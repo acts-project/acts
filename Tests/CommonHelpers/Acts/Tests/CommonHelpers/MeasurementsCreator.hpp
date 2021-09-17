@@ -89,13 +89,21 @@ struct MeasurementsCreator {
       ACTS_VERBOSE("Create no measurements on non-sensitive surface " << geoId);
       return;
     }
+
+
+    //std::cout << "geoId " << geoId << std::endl;
+    //    auto gpos = stepper.position(state.stepping);
+    //std::cout << "global position " << std::endl << gpos << std::endl;
+
+
     // only generate measurements if a resolution is configured
     auto found = resolutions.find(geoId);
     if (found == resolutions.end()) {
       ACTS_VERBOSE("No resolution configured for sensitive surface " << geoId);
       return;
     }
-    std::cout << "geoId " << geoId << std::endl;
+    //std::cout << "geoId " << geoId << std::endl;
+    //auto gpos = stepper.position(state.stepping);
     const MeasurementResolution& resolution = *found;
 
     // Apply global to local
@@ -104,7 +112,7 @@ struct MeasurementsCreator {
             .globalToLocal(state.geoContext, stepper.position(state.stepping),
                            stepper.direction(state.stepping))
             .value();
-    std::cout << "local position :" << std::endl << loc << std::endl;
+    //std::cout << "local position :" << std::endl << loc << std::endl;
     // std::cout <<  loc << std::endl;
     // The truth info
     BoundVector parameters = BoundVector::Zero();
@@ -125,7 +133,7 @@ struct MeasurementsCreator {
     SymMatrix2 cov = stddev.cwiseProduct(stddev).asDiagonal();
 
     if (resolution.type == MeasurementType::eLoc0) {
-      std::cout << "resolution type eLoc0" << std::endl;
+      //std::cout << "resolution type eLoc0" << std::endl;
       double val = loc[0] + stddev[0] * normalDist(*rng);
       double out = val + distanceOutlier;
       result.sourceLinks.emplace_back(eBoundLoc0, val, cov(0, 0), geoId,
@@ -133,7 +141,7 @@ struct MeasurementsCreator {
       result.outlierSourceLinks.emplace_back(eBoundLoc0, out, cov(0, 0), geoId,
                                              sourceId);
     } else if (resolution.type == MeasurementType::eLoc1) {
-      std::cout << "resolution type eLoc1" << std::endl;
+      //std::cout << "resolution type eLoc1" << std::endl;
       // yes, using stddev[0] and cov(0,0) is correct here. this accesses the
       // first configuration parameter not the first local coordinate.
       double val = loc[1] + stddev[0] * normalDist(*rng);
@@ -143,7 +151,7 @@ struct MeasurementsCreator {
       result.outlierSourceLinks.emplace_back(eBoundLoc1, out, cov(0, 0), geoId,
                                              sourceId);
     } else if (resolution.type == MeasurementType::eLoc01) {
-      std::cout << "resolution type eLoc01" << std::endl;
+      //std::cout << "resolution type eLoc01" << std::endl;
       Vector2 val = loc + stddev.cwiseProduct(
                               Vector2(normalDist(*rng), normalDist(*rng)));
       Vector2 out = val + Vector2(distanceOutlier, -distanceOutlier);

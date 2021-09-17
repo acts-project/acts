@@ -9,162 +9,47 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Digitization/CartesianSegmentation.hpp"
+#include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-//#include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/SpacePointFormation/DoubleHitSpacePointBuilder.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.h"
+#include "Acts/Surfaces/ConeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
+#include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
+#include "Acts/Tests/CommonHelpers/TestCluster.hpp"
 #include "Acts/Tests/CommonHelpers/TestSpacePoint.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
+#include <cmath>
+#include <iostream>  // just for tests
+#include <limits>
+#include <variant>
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
-using namespace Acts::UnitLiterals;
 
 namespace Acts {
 namespace Test {
 
-// // Create a test context
-// GeometryContext tgContext = GeometryContext();
-
-// /// Unit test for testing the main functions of DoubleHitSpacePointBuilder
-// /// 1) A pair of hits gets added and resolved.
-// /// 2) A pair of hits gets added and rejected.
-// BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1),
-//                      index) {
-//   (void)index;
-
-//   std::cout << "Create first hit" << std::endl;
-
-//   // Build Bounds
-//   auto recBounds = std::make_shared<RectangleBounds>(35_um, 25_mm);
-
-//   // Build binning and segmentation
-//   std::vector<float> boundariesX, boundariesY;
-//   boundariesX.push_back(-35_um);
-//   boundariesX.push_back(35_um);
-//   boundariesY.push_back(-25_mm);
-//   boundariesY.push_back(25_mm);
-
-//   BinningData binDataX(BinningOption::open, BinningValue::binX, boundariesX);
-//   std::shared_ptr<BinUtility> buX(new BinUtility(binDataX));
-//   BinningData binDataY(BinningOption::open, BinningValue::binY, boundariesY);
-//   std::shared_ptr<BinUtility> buY(new BinUtility(binDataY));
-//   (*buX) += (*buY);
-
-//   auto segmentation = std::make_shared<CartesianSegmentation>(buX,
-//   recBounds);
-
-//   // Build translation
-
-//   double rotation = 0.026;
-//   RotationMatrix3 rotationPos;
-//   Vector3 xPos(cos(rotation), sin(rotation), 0.);
-//   Vector3 yPos(-sin(rotation), cos(rotation), 0.);
-//   Vector3 zPos(0., 0., 1.);
-//   rotationPos.col(0) = xPos;
-//   rotationPos.col(1) = yPos;
-//   rotationPos.col(2) = zPos;
-//   Transform3 t3d(Transform3::Identity() * rotationPos);
-//   t3d.translation() = Vector3(0., 0., 10_m);
-
-//   // Build Digitization
-//   const DigitizationModule digMod(segmentation, 1., 1., 0.);
-//   DetectorElementStub detElem(t3d);
-//   auto pSur = Surface::makeShared<PlaneSurface>(recBounds, detElem);
-//   SymMatrix3 cov;
-//   cov << 0., 0., 0., 0., 0., 0., 0., 0., 0.;
-//   Vector2 local = {0.1, -0.1};
-
-//   // Build PlanarModuleCluster
-//   PlanarModuleCluster pmc(pSur, DigitizationSourceLink(pSur->geometryId(),
-//   {}),
-//                           cov, local[0], local[1], 0.,
-//                           {DigitizationCell(0, 0, 1.)}, &digMod);
-
-//   std::cout << "Create second hit" << std::endl;
-
-//   // Build second PlanarModuleCluster
-
-//   double rotation2 = -0.026;
-//   RotationMatrix3 rotationNeg;
-//   Vector3 xNeg(cos(rotation2), sin(rotation2), 0.);
-//   Vector3 yNeg(-sin(rotation2), cos(rotation2), 0.);
-//   Vector3 zNeg(0., 0., 1.);
-//   rotationNeg.col(0) = xNeg;
-//   rotationNeg.col(1) = yNeg;
-//   rotationNeg.col(2) = zNeg;
-//   Transform3 t3d2(Transform3::Identity() * rotationNeg);
-//   t3d2.translation() = Vector3(0., 0., 10.005_m);
-
-//   DetectorElementStub detElem2(t3d2);
-
-//   auto pSur2 = Surface::makeShared<PlaneSurface>(recBounds, detElem2);
-
-//   PlanarModuleCluster pmc2(
-//       pSur2, DigitizationSourceLink(pSur->geometryId(), {}), cov, local[0],
-//       local[1], 0., {DigitizationCell(0, 0, 1.)}, &digMod);
-
-//   std::cout << "Store both hits" << std::endl;
-
-//   std::vector<SpacePoint<PlanarModuleCluster>> resultSP;
-//   std::vector<std::pair<PlanarModuleCluster const*, PlanarModuleCluster
-//   const*>>
-//       clusterPairs;
-//   DoubleHitSpacePointConfig dhsp_cfg;
-
-//   // Combine two PlanarModuleClusters
-//   SpacePointBuilder<SpacePoint<PlanarModuleCluster>> dhsp(dhsp_cfg);
-//   dhsp.makeClusterPairs(tgContext, {&pmc}, {&pmc2}, clusterPairs);
-
-//   BOOST_CHECK_EQUAL(clusterPairs.size(), 1u);
-//   BOOST_CHECK_EQUAL(clusterPairs[0].first, &pmc);
-//   BOOST_CHECK_EQUAL(clusterPairs[0].second, &pmc2);
-
-//   std::cout << "Calculate space point" << std::endl;
-
-//   dhsp.calculateSpacePoints(tgContext, clusterPairs, resultSP);
-
-//   BOOST_CHECK_EQUAL(resultSP.size(), 1u);
-
-//   std::cout << "Create third hit" << std::endl;
-
-//   // Build third PlanarModuleCluster
-//   Transform3 t3d3(Transform3::Identity() * rotationNeg);
-//   t3d3.translation() = Vector3(0., 0., 10.005_m);
-
-//   DetectorElementStub detElem3(t3d3);
-//   auto pSur3 = Surface::makeShared<PlaneSurface>(recBounds, detElem3);
-
-//   PlanarModuleCluster pmc3(
-//       pSur3, DigitizationSourceLink(pSur->geometryId(), {}), cov, local[0],
-//       local[1], 0., {DigitizationCell(0, 0, 1.)}, &digMod);
-
-//   std::cout << "Try to store hits" << std::endl;
-
-//   // Combine points
-//   dhsp.makeClusterPairs(tgContext, {&pmc}, {&pmc3}, clusterPairs);
-
-//   // Test for rejecting unconnected hits
-//   BOOST_CHECK_EQUAL(resultSP.size(), 1u);
-// }
 using namespace Acts::UnitLiterals;
 
 using StraightPropagator =
     Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
 using TestMeasurement = Acts::BoundVariantMeasurement<TestSourceLink>;
+using Cluster = TestCluster<TestMeasurement>;
 using ConstantFieldStepper = Acts::EigenStepper<>;
 using ConstantFieldPropagator =
     Acts::Propagator<ConstantFieldStepper, Acts::Navigator>;
@@ -181,7 +66,7 @@ CurvilinearTrackParameters makeParameters(double phi, double theta, double p,
   stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
   BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // Let the particle starts from the origin
-  Vector4 mPos4(0., 0., 0., 0.);
+  Vector4 mPos4(-3_m, 0., 0., 0.);
   return CurvilinearTrackParameters(mPos4, phi, theta, p, q, cov);
 }
 
@@ -199,8 +84,10 @@ const auto geometry = geometryStore();
 // detector resolutions
 const MeasurementResolution resPixel = {MeasurementType::eLoc01,
                                         {25_um, 50_um}};
+const MeasurementResolution resStrip = {MeasurementType::eLoc01,
+                                        {100_um, 100_mm}};
 const MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {100_um}};
-const MeasurementResolution resStrip1 = {MeasurementType::eLoc1, {150_um}};
+const MeasurementResolution resStrip1 = {MeasurementType::eLoc0, {150_um}};
 const MeasurementResolutionMap resolutions = {
     {GeometryIdentifier().setVolume(2), resPixel},
     {GeometryIdentifier().setVolume(3).setLayer(2), resStrip0},
@@ -224,31 +111,15 @@ static StraightPropagator makeStraightPropagator(
 // simulation propagator
 const auto measPropagator = makeStraightPropagator(geometry);
 
-// Construct initial track parameters.
-Acts::CurvilinearTrackParameters makeParameters() {
-  // create covariance matrix from reasonable standard deviations
-  Acts::BoundVector stddev;
-  stddev[Acts::eBoundLoc0] = 100_um;
-  stddev[Acts::eBoundLoc1] = 100_um;
-  stddev[Acts::eBoundTime] = 25_ns;
-  stddev[Acts::eBoundPhi] = 2_degree;
-  stddev[Acts::eBoundTheta] = 2_degree;
-  stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
-  Acts::BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
-  // define a track in the transverse plane along x
-  Acts::Vector4 mPos4(-3_m, 0., 0., 42_ns);
-  return Acts::CurvilinearTrackParameters(mPos4, 0_degree, 90_degree, 1_GeV,
-                                          1_e, cov);
-}
-
 std::default_random_engine rng(42);
-/// Unit test for testing the main functions of OneHitSpacePointBuilder
-/// 1) A resolved dummy hit gets created and added.
-/// 2) A hit gets added and resolved.
-BOOST_AUTO_TEST_CASE(SingleHitSpacePointBuilder_basic) {
-  double phi = 20._degree;
-  double theta = 80._degree;
-  double p = 1.0_GeV;
+
+BOOST_DATA_TEST_CASE(DoubleHitSpacePointBuilder_basic, bdata::xrange(1),
+                     index) {
+  (void)index;
+
+  double phi = 5._degree;
+  double theta = 95._degree;
+  double p = 20._GeV;
   double q = 1;
 
   Acts::Navigator navigator({
@@ -263,37 +134,181 @@ BOOST_AUTO_TEST_CASE(SingleHitSpacePointBuilder_basic) {
 
   ConstantFieldPropagator propagator(std::move(stepper), std::move(navigator));
   auto start = makeParameters(phi, theta, p, q);
-
+  
   auto measurements =
       createMeasurements(propagator, geoCtx, magCtx, start, resolutions, rng);
 
-  const auto sourceLinks = measurements.sourceLinks;
+  auto sourceLinks = measurements.sourceLinks;
 
-  std::vector<TestMeasurement> testMeasurements;
+  std::vector<Acts::Measurement<TestSourceLink, Acts::BoundIndices, 2>>
+      testMeasurements;
+  // std::cout << "sourcelinks" << std::endl;
+  // std::vector<Cluster> clusters;
+  std::vector<const Cluster*> clusters_front;
+  std::vector<const Cluster*> clusters_back;
+
   for (auto& sl : sourceLinks) {
-    TestMeasurement meas = makeMeasurement(sl, sl.parameters, sl.covariance,
-                                           eBoundLoc0, eBoundLoc1);
-    testMeasurements.emplace_back(meas);
+    //std::cout << std::endl;
+    //    TestMeasurement meas = makeMeasurement(sl, sl.parameters,
+    //    sl.covariance,
+
+    // auto meas = makeMeasurement(sl, sl.parameters, sl.covariance,
+    // eBoundLoc0);
+    //std::cout << "sourcelink id " << sl.index() << std::endl;
+    //std::cout << "geo ID from source link " << sl.geoId << std::endl;
+
+
+    
+
+    //std::cout << "orig parameters " << std::endl << sl.parameters << std::endl;
+    //std::cout << "orig cov " << std::endl << sl.covariance << std::endl;
+
+    const auto geoId = sl.geoId;
+    //auto param_digi = sl.parameters;
+    if (geoId.volume() == 3) sl.parameters[1] = 0; // strip center is used for the second coordinate
+
+    auto meas = makeMeasurement(sl, sl.parameters, sl.covariance, sl.indices[0],
+                                sl.indices[1]);
+    // std::shared_ptr<TestMeasurement> meas = &makeMeasurement(sl,
+    // sl.parameters, sl.covariance, sl.indices[0], sl.indices[1]);
+    //const auto slink = meas.sourceLink();
+
+    //std::cout << slink.geometryId() << std::endl;
+
+    //auto slid = sl.index();
+    //std::cout << "slink index original " << slid << std::endl;
+    //auto index0 = sl.indices[0];
+    auto index1 = sl.indices[1];
+    //std::cout << "indices:" << index0 << " " << index1 << std::endl;
+    //std::cout << "localhit " << std::endl << meas.parameters() << std::endl;
+     if (index1 == Acts::eBoundSize) {  // eBoundSize is stored in the 2nd
+    // index
+    // for 1d measurements
+    //std::cout << "1d measurement" << std::endl;
+    //std::cout << "local measurement                                            "
+//                 "           "
+//              << sl.parameters[0] << std::endl;
+    double localHit = sl.parameters[0];
+    
+    
+    // Build bounds
+    std::shared_ptr<const RectangleBounds> recBounds(
+        new RectangleBounds(35_um, 50_cm));
+
+    // Build binning and segmentation
+    std::vector<float> boundariesX, boundariesY;
+    boundariesX.push_back(localHit - 35_um);
+    boundariesX.push_back(localHit + 35_um);
+    boundariesY.push_back(-50_cm);
+    boundariesY.push_back(50_cm);
+
+    BinningData binDataX(BinningOption::open, BinningValue::binX, boundariesX);
+    std::shared_ptr<BinUtility> buX(new BinUtility(binDataX));
+    BinningData binDataY(BinningOption::open, BinningValue::binY, boundariesY);
+    std::shared_ptr<BinUtility> buY(new BinUtility(binDataY));
+    (*buX) += (*buY);
+
+    std::shared_ptr<const Segmentation> segmentation(
+        new CartesianSegmentation(buX, recBounds));
+
+    const Cluster* clus = new Cluster(meas, segmentation);
+    // if( geoId.volume = 2 | geoId.volume == 4)
+
+    if (geoId.volume() == 3) {
+      const auto layerId = geoId.layer();
+      if (layerId == 2 || layerId == 6) {
+        clusters_front.emplace_back(std::move(clus));
+        // std::cout << " front" << std::endl;
+      } else if (layerId == 4 || layerId == 8) {
+        clusters_back.emplace_back(std::move(clus));
+      }
+    }
+    //if (index0 == Acts::eBoundLoc0) {
+    //       std::cout << "1d-loc0" << std::endl;
+    // cluster on the front strip layer
+    // clusters_front.emplace_back(&clus);
+    //       clusters_front.emplace_back(std::move(clus));
+    //     } else if (index0 == Acts::eBoundLoc1) {
+    //     std::cout << "1d-loc1" << std::endl;
+    //     clusters_back.emplace_back(std::move(clus));
+   //cluster on the back strip layer
+//     }
+
+} else {
+       // std::cout << "2d measurement" << std::endl;
+// continue;  // 2d measurement. i.e. pixel
+}
+ //for(const auto cl : clusters_front){
+    //  cl
   }
-  BOOST_CHECK_NE(testMeasurements.size(), 0);
+  //  // BOOST_CHECK_NE(testMeasurements.size(), 0);
 
   auto spBuilderConfig = DoubleHitSpacePointBuilderConfig();
   spBuilderConfig.trackingGeometry = geometry;
 
   auto doubleSPBuilder =
-      Acts::DoubleHitSpacePointBuilder<TestSpacePoint, TestMeasurement>(
+      Acts::DoubleHitSpacePointBuilder<TestSpacePoint, Cluster>(
           spBuilderConfig);
 
   TestSpacePointContainer spacePoints;
+  std::cout << "number of front/back clusters " << clusters_front.size()
+            << " / " << clusters_back.size() << std::endl;
+  //  std::cout << std::endl;
+  // std::vector<Cluster> frontClusters;
+  // std::vector<Cluster> ;
+  // std::cout << "test" << std::endl;
+  //  std::cout << "clusters front in DHPB" << std::endl;
+  //  std::cout << "size " << clusters_front.size() << std::endl;
+  // auto clus = clusters_front.at(0);
+  // auto meas = clus.measurement();
+  // auto slink = std::visit([](const auto& x) { return x.sourceLink(); },
+  // meas); auto slink = meas.sourceLink(); auto slink  =
+  // meas.measurement().sourceLink(); const auto geoId = slink.geometryId();
 
-  // singleSPBuilder.calculateSpacePoints(geoCtx, testMeasurements,
-  // spacePoints);
+  // std::cout << "finding surface" << std::endl;
+  /// std::cout << "sourcelink id in DSP " << slink.index() << std::endl;
+  // std::cout << geoId << std::endl;
+  // std::cout << "end test" << std::endl;
+  // std::cout << geometry << std::endl;
+  // const Acts::Surface* surface = geometry->findSurface(geoId);
+  // std::cout << "surface found" << std::endl;
+  std::vector<std::pair<const Cluster*, const Cluster*>> clusterPairs;
 
-  // BOOST_REQUIRE_EQUAL(testMeasurements.size(), spacePoints.size());
-  // BOOST_CHECK_NE(spacePoints[0].x(), 0);
+  //
+  //auto clus = *(clusters_front[0]);
+  //const auto meas = clus.measurement();
+  // auto slink = std::visit([](const auto& x) { return x.sourceLink(); },
+  // meas);
+  // auto slink = std::visit([](const auto x) { return 1; }, meas);
+  // const auto slink = meas.sourceLink();
+  // auto
+  // Acts::Test::TestSourceLink slink = std::visit([](const auto& x) { returnm
+  // x.sourceLink(); }, meas);
+  // auto slink = meas.sourceLink();
+  // auto slink  = meas.measurement().sourceLink();
+  // const auto geoId = slink.geometryId();
+  // std::cout  << "geoid double " << geoId << std::endl;
 
-  //     BOOST_CHECK_NE(data[0].vector, Vector3::Zero());
+  doubleSPBuilder.makeMeasurementPairs(tgContext, clusters_front, clusters_back,
+                                       clusterPairs);
+  // std::cout << "number of cluster pairs :" << clusterPairs.size() <<
+  // std::endl; BOOST_CHECK_NE(clusterPairs.size(), 0);
+  doubleSPBuilder.calculateSpacePoints(tgContext, clusterPairs, spacePoints);
+  // dhsp.makeClusterPairs(tgContext, {&pmc}, {&pmc3}, clusterPairs);
+  //  //     singleSPBuilder.calculateSpacePoints(geoCtx, testMeasurements,
+  //  //     spacePoints);
+  //  // singleSPBuilder.calculateSpacePoints(geoCtx, clusters, spacePoints);
 
+  // BOOST_REQUIRE_EQUAL(clusters.size(), spacePoints.size());
+  std::cout << "Number of space points " << spacePoints.size() << std::endl;
+  //  // BOOST_CHECK_NE(spacePoints[0].x(), 0);
+
+  for (auto& sp : spacePoints) {
+    std::cout << "space point (" << sp.x() << " " << sp.y() << " " << sp.z()
+              << ") var: " << sp.varianceR() << " " << sp.varianceZ()
+              << std::endl;
+    //  //     BOOST_CHECK_NE(data[0].vector, Vector3::Zero());
+  }
   std::cout << "Space point calculated" << std::endl;
 }
 
