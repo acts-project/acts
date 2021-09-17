@@ -1,0 +1,4 @@
+clang-format version 10.0.0-4ubuntu1 
+clang-format done
+ .../Acts/SpacePointFormation/detail/DoubleHitSpacePointBuilder.ipp    | 4 [32m++[m[31m--[m
+ 1 file changed, 2 insertions(+), 2 deletions(-)
