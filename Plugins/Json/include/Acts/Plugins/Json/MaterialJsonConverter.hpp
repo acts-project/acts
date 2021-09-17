@@ -22,16 +22,6 @@ namespace Acts {
 using volumeMaterialPointer = const Acts::IVolumeMaterial*;
 using surfaceMaterialPointer = const Acts::ISurfaceMaterial*;
 
-// This macro create a conversion for the mapping type enum
-NLOHMANN_JSON_SERIALIZE_ENUM(Acts::MappingType,
-                             {
-                                 {Acts::MappingType::PreMapping, "PreMapping"},
-                                 {Acts::MappingType::Default, "Default"},
-                                 {Acts::MappingType::PostMapping,
-                                  "PostMapping"},
-                                 {Acts::MappingType::Sensor, "Sensor"},
-                             })
-
 void to_json(nlohmann::json& j, const Material& t);
 
 void from_json(const nlohmann::json& j, Material& t);
@@ -49,5 +39,15 @@ void from_json(const nlohmann::json& j, volumeMaterialPointer& t);
 void to_json(nlohmann::json& j, const surfaceMaterialPointer& t);
 
 void from_json(const nlohmann::json& j, surfaceMaterialPointer& t);
+
+// This macro create a conversion for the mapping type enum
+NLOHMANN_JSON_SERIALIZE_ENUM(Acts::MappingType,
+                             {
+                                 {Acts::MappingType::PreMapping, "PreMapping"},
+                                 {Acts::MappingType::Default, "Default"},
+                                 {Acts::MappingType::PostMapping,
+                                  "PostMapping"},
+                                 {Acts::MappingType::Sensor, "Sensor"},
+                             })
 
 }  // namespace Acts
