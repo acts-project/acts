@@ -6,13 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Definitions/Algebra.hpp"
-#include <iostream> // just for tests
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+
 #include <cmath>
+#include <iostream>  // just for tests
 #include <limits>
 #include <variant>
 
@@ -82,19 +83,19 @@ inline double differenceOfMeasurementsChecked(const Vector3& pos1,
   if (diffTheta2 > maxAngleTheta2) {
     return -1.;
   }
-//std::cout << "diff calculation " << std::endl;
-//std::cout << pos1 << std::endl << pos2 << std::endl;
+  // std::cout << "diff calculation " << std::endl;
+  // std::cout << pos1 << std::endl << pos2 << std::endl;
   // Calculate the squared difference between the phi angles
   double diffPhi2 = (phi1 - phi2) * (phi1 - phi2);
   if (diffPhi2 > maxAnglePhi2) {
     return -1.;
   }
-  //std::cout << "phi1 " << phi1 << std::endl;
-  //std::cout << "phi2 " << phi2 << std::endl;
-//std::cout << "theta1 " << theta1 << std::endl;
-//std::cout << "theta2 " << theta2 << std::endl;
-//std::cout << "diff theta = " << diffTheta2 << std::endl;
-//std::cout << "diff phi = " << diffPhi2 << std::endl;
+  // std::cout << "phi1 " << phi1 << std::endl;
+  // std::cout << "phi2 " << phi2 << std::endl;
+  // std::cout << "theta1 " << theta1 << std::endl;
+  // std::cout << "theta2 " << theta2 << std::endl;
+  // std::cout << "diff theta = " << diffTheta2 << std::endl;
+  // std::cout << "diff phi = " << diffPhi2 << std::endl;
 
   // Return the squared distance between both vector
   return diffTheta2 + diffPhi2;
@@ -107,31 +108,36 @@ inline double differenceOfMeasurementsChecked(const Vector3& pos1,
 /// @param [in] segment Segmentation of the detector element
 ///
 /// @return Pair containing the top and bottom end
-  inline std::pair<Vector2, Vector2> findLocalTopAndBottomEnd(
-							      const Vector2& local, const CartesianSegmentation* segment) {
-    //std::cout << "findLocalTopAndBottomEnd" << std::endl;
-    auto& binData = segment->binUtility().binningData();
-    auto& boundariesX = binData[0].boundaries();
-    auto& boundariesY = binData[1].boundaries();
+inline std::pair<Vector2, Vector2> findLocalTopAndBottomEnd(
+    const Vector2& local, const CartesianSegmentation* segment) {
+  // std::cout << "findLocalTopAndBottomEnd" << std::endl;
+  auto& binData = segment->binUtility().binningData();
+  auto& boundariesX = binData[0].boundaries();
+  auto& boundariesY = binData[1].boundaries();
 
-    // Search the x-/y-bin of the Measurement
-    size_t binX = binData[0].searchLocal(local);
-    size_t binY = binData[1].searchLocal(local);
+  // Search the x-/y-bin of the Measurement
+  size_t binX = binData[0].searchLocal(local);
+  size_t binY = binData[1].searchLocal(local);
 
-    // Storage of the local top (first) and bottom (second) end
-    std::pair<Vector2, Vector2> topBottomLocal;
+  // Storage of the local top (first) and bottom (second) end
+  std::pair<Vector2, Vector2> topBottomLocal;
 
-    if (boundariesX[binX + 1] - boundariesX[binX] < boundariesY[binY + 1] - boundariesY[binY]) {
-      topBottomLocal.first = Vector2((boundariesX[binX] + boundariesX[binX+1]) / 2,  boundariesY[binY + 1]);
-      topBottomLocal.second = {(boundariesX[binX] + boundariesX[binX + 1]) / 2, boundariesY[binY]};
-    } else {
-      // Set the top and bottom end of the strip in local coordinates
-      topBottomLocal.first = {boundariesX[binX],(boundariesY[binY] + boundariesY[binY + 1]) /	2};
-      topBottomLocal.second =	{boundariesX[binX + 1],	 (boundariesY[binY] + boundariesY[binY + 1]) /	 2}; 
-    }
-
-    return topBottomLocal;
+  if (boundariesX[binX + 1] - boundariesX[binX] <
+      boundariesY[binY + 1] - boundariesY[binY]) {
+    topBottomLocal.first = Vector2(
+        (boundariesX[binX] + boundariesX[binX + 1]) / 2, boundariesY[binY + 1]);
+    topBottomLocal.second = {(boundariesX[binX] + boundariesX[binX + 1]) / 2,
+                             boundariesY[binY]};
+  } else {
+    // Set the top and bottom end of the strip in local coordinates
+    topBottomLocal.first = {boundariesX[binX],
+                            (boundariesY[binY] + boundariesY[binY + 1]) / 2};
+    topBottomLocal.second = {boundariesX[binX + 1],
+                             (boundariesY[binY] + boundariesY[binY + 1]) / 2};
   }
+
+  return topBottomLocal;
+}
 
 /// @brief Calculates a space point whithout using the vertex
 /// @note This is mostly to resolve space points from cosmic data
@@ -306,10 +312,11 @@ inline bool calculateSpacePoint(const std::pair<Vector3, Vector3>& stripEnds1,
   if (spaPoPa.limit == 1. && stripLengthTolerance != 0.) {
     spaPoPa.limit = 1. + stripLengthTolerance;
   }
-  //std::cout << "sp calculation spaPoPa.m " << spaPoPa.m << std::endl;
-  //std::cout << "sp calculation spaPoPa.n " << spaPoPa.n << std::endl;
-  //std::cout << (fabs(spaPoPa.m) <= spaPoPa.limit) << std::endl;
-  //std::cout << (fabs(spaPoPa.n = -spaPoPa.t.dot(spaPoPa.qs) /spaPoPa.r.dot(spaPoPa.qs)) <= spaPoPa.limit) << std::endl;
+  // std::cout << "sp calculation spaPoPa.m " << spaPoPa.m << std::endl;
+  // std::cout << "sp calculation spaPoPa.n " << spaPoPa.n << std::endl;
+  // std::cout << (fabs(spaPoPa.m) <= spaPoPa.limit) << std::endl;
+  // std::cout << (fabs(spaPoPa.n = -spaPoPa.t.dot(spaPoPa.qs)
+  // /spaPoPa.r.dot(spaPoPa.qs)) <= spaPoPa.limit) << std::endl;
   // Check if m and n can be resolved in the interval (-1, 1)
   return (fabs(spaPoPa.m) <= spaPoPa.limit &&
           fabs(spaPoPa.n = -spaPoPa.t.dot(spaPoPa.qs) /
@@ -365,22 +372,22 @@ Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::globalCoords(
   // // Receive corresponding surface
   // auto& measurementSurface = measurement;
   const auto meas = clus.measurement();
-  //const auto segment = dynamic_cast<const Acts::CartesianSegmentation*>(
+  // const auto segment = dynamic_cast<const Acts::CartesianSegmentation*>(
   //    &(clus.segmentation()));
   auto slink = std::visit([](const auto& x) { return x.sourceLink(); }, meas);
   // auto slink = meas.sourceLink();
   // auto slink  = meas.measurement().sourceLink();
   const auto geoId = slink.geometryId();
 
-
   const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
-  
+
   auto [localPos, localCov] = std::visit(
       [](const auto& measurement) {
         auto expander = measurement.expander();
         // auto indices = measurement.indices();
         Acts::BoundVector par = expander * measurement.parameters();
-        //std::cout << "measurement parameters" << std::endl << par << std::endl;
+        // std::cout << "measurement parameters" << std::endl << par <<
+        // std::endl;
         Acts::BoundSymMatrix cov =
             expander * measurement.covariance() * expander.transpose();
         // extract local position
@@ -394,12 +401,13 @@ Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::globalCoords(
   // std::cout << "local pos:" << std::endl << localPos << std::endl;
   // transform local position to global coordinates
   Acts::Vector3 globalFakeMom(1, 1, 1);
-  //std::cout << "tmp" << std::endl;
-  //std::cout << geoId << std::endl;
-  //auto stype = surface->type();
-  //std::cout << "surface type " << stype << std::endl;
-//std::cout << localPos << std::endl;
-  Acts::Vector3 globalPos = surface->localToGlobal(gctx, localPos, globalFakeMom);
+  // std::cout << "tmp" << std::endl;
+  // std::cout << geoId << std::endl;
+  // auto stype = surface->type();
+  // std::cout << "surface type " << stype << std::endl;
+  // std::cout << localPos << std::endl;
+  Acts::Vector3 globalPos =
+      surface->localToGlobal(gctx, localPos, globalFakeMom);
   Acts::RotationMatrix3 rotLocalToGlobal =
       surface->referenceFrame(gctx, globalPos, globalFakeMom);
 
@@ -457,37 +465,38 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
          iClustersBack++) {
       // Calculate the distances between the hits
 
-
-      // 
+      //
       auto clus = *clustersFront[iClustersFront];
-            
-const auto meas = clus.measurement();
-//const auto segment = dynamic_cast<const Acts::CartesianSegmentation*>(
-//      &(clus.segmentation()));
 
-  auto slink = std::visit([](const auto& x) { 
-    //auto sl = x.sourceLink();
-    //auto slid = sl.index();
-    //std::cout << "slink index " << slid << std::endl;
-    //auto ggg = sl.geometryId();
-    //std::cout << "ggg " << ggg << std::endl;
-    return x.sourceLink(); 
-    }, meas);
-  // auto slink = meas.sourceLink();
-  // auto slink  = meas.measurement().sourceLink();
-  const auto geoId = slink.geometryId();
-  
+      const auto meas = clus.measurement();
+      // const auto segment = dynamic_cast<const Acts::CartesianSegmentation*>(
+      //      &(clus.segmentation()));
+
+      auto slink = std::visit(
+          [](const auto& x) {
+            // auto sl = x.sourceLink();
+            // auto slid = sl.index();
+            // std::cout << "slink index " << slid << std::endl;
+            // auto ggg = sl.geometryId();
+            // std::cout << "ggg " << ggg << std::endl;
+            return x.sourceLink();
+          },
+          meas);
+      // auto slink = meas.sourceLink();
+      // auto slink  = meas.measurement().sourceLink();
+      const auto geoId = slink.geometryId();
+
       ///
       auto gpos_front = globalCoords(gctx, *clustersFront[iClustersFront]);
       auto gpos_back = globalCoords(gctx, *clustersBack[iClustersBack]);
 
-      
-      //std::cout << std::endl << "gpos front " << std::endl << gpos_front.first << std::endl;
-      //std::cout << std::endl << "gpos back " << std::endl << gpos_back.first << std::endl;
+      // std::cout << std::endl << "gpos front " << std::endl <<
+      // gpos_front.first << std::endl; std::cout << std::endl << "gpos back " <<
+      // std::endl << gpos_back.first << std::endl;
       currentDiff = detail::differenceOfMeasurementsChecked(
           gpos_front.first, gpos_back.first, m_cfg.vertex, m_cfg.diffDist,
           m_cfg.diffPhi2, m_cfg.diffTheta2);
-        //std::cout << "diff = " << currentDiff << std::endl << std::endl;
+      // std::cout << "diff = " << currentDiff << std::endl << std::endl;
       // Store the closest Measurements (distance and index) calculated so far
       if (currentDiff < diffMin && currentDiff >= 0.) {
         diffMin = currentDiff;
@@ -511,25 +520,25 @@ Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::endsOfStrip(
     const Acts::GeometryContext& gctx, const cluster_t& cluster) const {
   // Calculate the local coordinates of the Measurement
   const Acts::Vector2 local = localCoords(cluster);
-  //std::cout << "local coords :" << local[0] << " " << local[1] << std::endl;
+  // std::cout << "local coords :" << local[0] << " " << local[1] << std::endl;
 
   // Receive the binning
   const auto segment = dynamic_cast<const Acts::CartesianSegmentation*>(
       &(cluster.segmentation()));
   //&(measurement.digitizationModule()->segmentation()));
-  
+
   std::pair<Vector2, Vector2> topBottomLocal =
       detail::findLocalTopAndBottomEnd(local, segment);
-  //std::cout << "topbottom local calculated "  << std::endl;
+  // std::cout << "topbottom local calculated "  << std::endl;
   // Calculate the global coordinates of the top and bottom end of the strip
-  
-  //Vector2 topLocal = topBottomLocal.first;
-  //Vector2 bottomLocal = topBottomLocal.second;
-  //std::cout << "top local " << std::endl << topLocal << std::endl;
-  //std::cout << "bottom local " << std::endl << bottomLocal << std::endl;
+
+  // Vector2 topLocal = topBottomLocal.first;
+  // Vector2 bottomLocal = topBottomLocal.second;
+  // std::cout << "top local " << std::endl << topLocal << std::endl;
+  // std::cout << "bottom local " << std::endl << bottomLocal << std::endl;
 
   Acts::Vector3 globalFakeMom(1, 1, 1);
-    
+
   auto meas = cluster.measurement();
   auto slink = std::visit([](const auto& x) { return x.sourceLink(); }, meas);
   const auto geoId = slink.geometryId();
@@ -539,11 +548,11 @@ Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::endsOfStrip(
       surface->localToGlobal(gctx, topBottomLocal.first, globalFakeMom);
   Acts::Vector3 bottomGlobal =
       surface->localToGlobal(gctx, topBottomLocal.second, globalFakeMom);
-  //std::cout << "ends of strip -- top global " << std::endl << topGlobal << std::endl;
-  //std::cout << "ends of strip -- bottom global " << std::endl << bottomGlobal << std::endl;
+  // std::cout << "ends of strip -- top global " << std::endl << topGlobal <<
+  // std::endl; std::cout << "ends of strip -- bottom global " << std::endl <<
+  // bottomGlobal << std::endl;
   // Return the top and bottom end of the strip in global coordinates
   return std::make_pair(topGlobal, bottomGlobal);
-
 }
 
 template <typename spacepoint_t, typename cluster_t>
@@ -554,28 +563,29 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
             measurementPairs,
         std::vector<spacepoint_t>& spacePoints) const {
   /// Source of algorithm: Athena, SiSpacePointMakerTool::makeSCT_SpacePoint()
-//std::cout << "calculate space points" << std::endl;
-//std::cout << measurementPairs.size() << " pairs used" << std::endl;
+  // std::cout << "calculate space points" << std::endl;
+  // std::cout << measurementPairs.size() << " pairs used" << std::endl;
   detail::SpacePointParameters spaPoPa;
 
   // Walk over every found candidate pair
   for (const auto& cp : measurementPairs) {
     // Calculate the ends of the SDEs
-    //std::cout << "calculate ends1 " << std::endl << std::endl;
+    // std::cout << "calculate ends1 " << std::endl << std::endl;
     const auto& ends1 = endsOfStrip(gctx, *(cp.first));
-    //std::cout << "calculate ends2 " << std::endl << std::endl;
+    // std::cout << "calculate ends2 " << std::endl << std::endl;
     const auto& ends2 = endsOfStrip(gctx, *(cp.second));
 
     spaPoPa.q = ends1.first - ends1.second;
     spaPoPa.r = ends2.first - ends2.second;
-    //std::cout << "ends1  = " << std::endl << ends1.first << std::endl << ends1.second << std::endl;
-    //std::cout << "ends2  = " << std::endl << ends2.first << std::endl << ends2.second << std::endl;
-//std::cout << "ends2  = " << ends2.first << " " << ends2.second << std::endl;    
-//std::cout << "spaPoPa q = " << spaPoPa.q << std::endl;
-//std::cout << "spaPoPa r = " << spaPoPa.r << std::endl;
+    // std::cout << "ends1  = " << std::endl << ends1.first << std::endl <<
+    // ends1.second << std::endl; std::cout << "ends2  = " << std::endl <<
+    // ends2.first << std::endl << ends2.second << std::endl;
+    // std::cout << "ends2  = " << ends2.first << " " << ends2.second <<
+    // std::endl; std::cout << "spaPoPa q = " << spaPoPa.q << std::endl;
+    // std::cout << "spaPoPa r = " << spaPoPa.r << std::endl;
     // Fast skipping if a perpendicular projection should be used
     double resultPerpProj;
-    //std::cout << "use perp proj " << m_cfg.usePerpProj << std::endl;
+    // std::cout << "use perp proj " << m_cfg.usePerpProj << std::endl;
     if (m_cfg.usePerpProj) {
       resultPerpProj = detail::calcPerpendicularProjection(
           ends1.first, ends2.first, spaPoPa.q, spaPoPa.r);
@@ -595,8 +605,7 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
 
     if (calculateSpacePoint(ends1, ends2, m_cfg.vertex, spaPoPa,
                             m_cfg.stripLengthTolerance)) {
-
-      //std::cout << "case 1: found a good SP" << std::endl;                              
+      // std::cout << "case 1: found a good SP" << std::endl;
       // Store the space point
       // spacepoint_t sp;
       // sp.MeasurementModule.push_back(cp.first);
@@ -611,7 +620,7 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
       /// sp.vector = pos;
       // spacePoints.push_back(std::move(sp));
     } else {
-      //std::cout << "case 2: could not find a good SP" << std::endl;
+      // std::cout << "case 2: could not find a good SP" << std::endl;
       /// If this point is reached then it was not possible to resolve both
       /// points such that they are on their SDEs
       /// The following code treats a possible recovery of points resolved

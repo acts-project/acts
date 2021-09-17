@@ -25,16 +25,16 @@ class TestCluster {
   TestCluster(measurement_t meas,
               std::shared_ptr<const Acts::Segmentation> moduleSegmentation)
       : m_measurement(std::move(meas)),
-        m_segmentation(std::move(moduleSegmentation)){}
-          measurement_t measurement() const { return m_measurement; }
-    const Acts::Segmentation& segmentation() const {
+        m_segmentation(std::move(moduleSegmentation)) {}
+  measurement_t measurement() const { return m_measurement; }
+  const Acts::Segmentation& segmentation() const {
     return (*m_segmentation.get());
   }
-  
+
  private:
   measurement_t m_measurement;
   std::shared_ptr<const Acts::Segmentation> m_segmentation;
-  size_t m_index; // for test. remove this
+  size_t m_index;  // for test. remove this
 };
 
 }  // namespace Test

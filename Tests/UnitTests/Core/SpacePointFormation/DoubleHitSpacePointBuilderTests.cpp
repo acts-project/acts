@@ -134,7 +134,7 @@ BOOST_DATA_TEST_CASE(DoubleHitSpacePointBuilder_basic, bdata::xrange(1),
 
   ConstantFieldPropagator propagator(std::move(stepper), std::move(navigator));
   auto start = makeParameters(phi, theta, p, q);
-  
+
   auto measurements =
       createMeasurements(propagator, geoCtx, magCtx, start, resolutions, rng);
 
@@ -148,97 +148,97 @@ BOOST_DATA_TEST_CASE(DoubleHitSpacePointBuilder_basic, bdata::xrange(1),
   std::vector<const Cluster*> clusters_back;
 
   for (auto& sl : sourceLinks) {
-    //std::cout << std::endl;
+    // std::cout << std::endl;
     //    TestMeasurement meas = makeMeasurement(sl, sl.parameters,
     //    sl.covariance,
 
     // auto meas = makeMeasurement(sl, sl.parameters, sl.covariance,
     // eBoundLoc0);
-    //std::cout << "sourcelink id " << sl.index() << std::endl;
-    //std::cout << "geo ID from source link " << sl.geoId << std::endl;
+    // std::cout << "sourcelink id " << sl.index() << std::endl;
+    // std::cout << "geo ID from source link " << sl.geoId << std::endl;
 
-
-    
-
-    //std::cout << "orig parameters " << std::endl << sl.parameters << std::endl;
-    //std::cout << "orig cov " << std::endl << sl.covariance << std::endl;
+    // std::cout << "orig parameters " << std::endl << sl.parameters <<
+    // std::endl; std::cout << "orig cov " << std::endl << sl.covariance <<
+    // std::endl;
 
     const auto geoId = sl.geoId;
-    //auto param_digi = sl.parameters;
-    if (geoId.volume() == 3) sl.parameters[1] = 0; // strip center is used for the second coordinate
+    // auto param_digi = sl.parameters;
+    if (geoId.volume() == 3)
+      sl.parameters[1] = 0;  // strip center is used for the second coordinate
 
     auto meas = makeMeasurement(sl, sl.parameters, sl.covariance, sl.indices[0],
                                 sl.indices[1]);
     // std::shared_ptr<TestMeasurement> meas = &makeMeasurement(sl,
     // sl.parameters, sl.covariance, sl.indices[0], sl.indices[1]);
-    //const auto slink = meas.sourceLink();
+    // const auto slink = meas.sourceLink();
 
-    //std::cout << slink.geometryId() << std::endl;
+    // std::cout << slink.geometryId() << std::endl;
 
-    //auto slid = sl.index();
-    //std::cout << "slink index original " << slid << std::endl;
-    //auto index0 = sl.indices[0];
+    // auto slid = sl.index();
+    // std::cout << "slink index original " << slid << std::endl;
+    // auto index0 = sl.indices[0];
     auto index1 = sl.indices[1];
-    //std::cout << "indices:" << index0 << " " << index1 << std::endl;
-    //std::cout << "localhit " << std::endl << meas.parameters() << std::endl;
-     if (index1 == Acts::eBoundSize) {  // eBoundSize is stored in the 2nd
-    // index
-    // for 1d measurements
-    //std::cout << "1d measurement" << std::endl;
-    //std::cout << "local measurement                                            "
-//                 "           "
-//              << sl.parameters[0] << std::endl;
-    double localHit = sl.parameters[0];
-    
-    
-    // Build bounds
-    std::shared_ptr<const RectangleBounds> recBounds(
-        new RectangleBounds(35_um, 50_cm));
+    // std::cout << "indices:" << index0 << " " << index1 << std::endl;
+    // std::cout << "localhit " << std::endl << meas.parameters() << std::endl;
+    if (index1 == Acts::eBoundSize) {  // eBoundSize is stored in the 2nd
+      // index
+      // for 1d measurements
+      // std::cout << "1d measurement" << std::endl;
+      // std::cout << "local measurement "
+      //                 "           "
+      //              << sl.parameters[0] << std::endl;
+      double localHit = sl.parameters[0];
 
-    // Build binning and segmentation
-    std::vector<float> boundariesX, boundariesY;
-    boundariesX.push_back(localHit - 35_um);
-    boundariesX.push_back(localHit + 35_um);
-    boundariesY.push_back(-50_cm);
-    boundariesY.push_back(50_cm);
+      // Build bounds
+      std::shared_ptr<const RectangleBounds> recBounds(
+          new RectangleBounds(35_um, 50_cm));
 
-    BinningData binDataX(BinningOption::open, BinningValue::binX, boundariesX);
-    std::shared_ptr<BinUtility> buX(new BinUtility(binDataX));
-    BinningData binDataY(BinningOption::open, BinningValue::binY, boundariesY);
-    std::shared_ptr<BinUtility> buY(new BinUtility(binDataY));
-    (*buX) += (*buY);
+      // Build binning and segmentation
+      std::vector<float> boundariesX, boundariesY;
+      boundariesX.push_back(localHit - 35_um);
+      boundariesX.push_back(localHit + 35_um);
+      boundariesY.push_back(-50_cm);
+      boundariesY.push_back(50_cm);
 
-    std::shared_ptr<const Segmentation> segmentation(
-        new CartesianSegmentation(buX, recBounds));
+      BinningData binDataX(BinningOption::open, BinningValue::binX,
+                           boundariesX);
+      std::shared_ptr<BinUtility> buX(new BinUtility(binDataX));
+      BinningData binDataY(BinningOption::open, BinningValue::binY,
+                           boundariesY);
+      std::shared_ptr<BinUtility> buY(new BinUtility(binDataY));
+      (*buX) += (*buY);
 
-    const Cluster* clus = new Cluster(meas, segmentation);
-    // if( geoId.volume = 2 | geoId.volume == 4)
+      std::shared_ptr<const Segmentation> segmentation(
+          new CartesianSegmentation(buX, recBounds));
 
-    if (geoId.volume() == 3) {
-      const auto layerId = geoId.layer();
-      if (layerId == 2 || layerId == 6) {
-        clusters_front.emplace_back(std::move(clus));
-        // std::cout << " front" << std::endl;
-      } else if (layerId == 4 || layerId == 8) {
-        clusters_back.emplace_back(std::move(clus));
+      const Cluster* clus = new Cluster(meas, segmentation);
+      // if( geoId.volume = 2 | geoId.volume == 4)
+
+      if (geoId.volume() == 3) {
+        const auto layerId = geoId.layer();
+        if (layerId == 2 || layerId == 6) {
+          clusters_front.emplace_back(std::move(clus));
+          // std::cout << " front" << std::endl;
+        } else if (layerId == 4 || layerId == 8) {
+          clusters_back.emplace_back(std::move(clus));
+        }
       }
-    }
-    //if (index0 == Acts::eBoundLoc0) {
-    //       std::cout << "1d-loc0" << std::endl;
-    // cluster on the front strip layer
-    // clusters_front.emplace_back(&clus);
-    //       clusters_front.emplace_back(std::move(clus));
-    //     } else if (index0 == Acts::eBoundLoc1) {
-    //     std::cout << "1d-loc1" << std::endl;
-    //     clusters_back.emplace_back(std::move(clus));
-   //cluster on the back strip layer
-//     }
+      // if (index0 == Acts::eBoundLoc0) {
+      //       std::cout << "1d-loc0" << std::endl;
+      // cluster on the front strip layer
+      // clusters_front.emplace_back(&clus);
+      //       clusters_front.emplace_back(std::move(clus));
+      //     } else if (index0 == Acts::eBoundLoc1) {
+      //     std::cout << "1d-loc1" << std::endl;
+      //     clusters_back.emplace_back(std::move(clus));
+      // cluster on the back strip layer
+      //     }
 
-} else {
-       // std::cout << "2d measurement" << std::endl;
-// continue;  // 2d measurement. i.e. pixel
-}
- //for(const auto cl : clusters_front){
+    } else {
+      // std::cout << "2d measurement" << std::endl;
+      // continue;  // 2d measurement. i.e. pixel
+    }
+    // for(const auto cl : clusters_front){
     //  cl
   }
   //  // BOOST_CHECK_NE(testMeasurements.size(), 0);
@@ -275,8 +275,8 @@ BOOST_DATA_TEST_CASE(DoubleHitSpacePointBuilder_basic, bdata::xrange(1),
   std::vector<std::pair<const Cluster*, const Cluster*>> clusterPairs;
 
   //
-  //auto clus = *(clusters_front[0]);
-  //const auto meas = clus.measurement();
+  // auto clus = *(clusters_front[0]);
+  // const auto meas = clus.measurement();
   // auto slink = std::visit([](const auto& x) { return x.sourceLink(); },
   // meas);
   // auto slink = std::visit([](const auto x) { return 1; }, meas);

@@ -21,7 +21,6 @@
 #include <string>
 #include <vector>
 
-
 namespace Acts {
 class TrackingGeometry;
 }
@@ -82,11 +81,10 @@ class SpacePointMaker final : public BareAlgorithm {
   Acts::SingleHitSpacePointBuilder<
       SimSpacePoint, ActsExamples::ModuleCluster<ActsExamples::Measurement>>
       m_singleSPBuilder;
-  //Acts::DoubleHitSpacePointBuilderConfig m_doubleSPBuilderCfg;
-  //Acts::DoubleHitSpacePointBuilder<
+  // Acts::DoubleHitSpacePointBuilderConfig m_doubleSPBuilderCfg;
+  // Acts::DoubleHitSpacePointBuilder<
   //      SimSpacePoint, ActsExamples::ModuleCluster<ActsExamples::Measurement>>
   //    m_doubleSPBuilder;
-  
 };
 
 }  // namespace ActsExamples

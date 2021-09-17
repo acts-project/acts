@@ -11,9 +11,9 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/SpacePointFormation/SpacePointBuilderConfig.h"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/SpacePointFormation/SpacePointBuilderConfig.h"
 
 namespace Acts {
 
