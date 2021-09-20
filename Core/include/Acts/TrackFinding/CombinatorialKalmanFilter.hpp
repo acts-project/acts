@@ -481,10 +481,12 @@ class CombinatorialKalmanFilter {
                          state.options.maxStepSize);
 
       // Reset the navigation state
+      // Set targetSurface to nullptr for forward filtering; it's only needed
+      // after smoothing
       state.navigation.reset(state.geoContext, stepper.position(state.stepping),
                              stepper.direction(state.stepping),
                              state.stepping.navDir,
-                             &currentState.referenceSurface(), targetSurface);
+                             &currentState.referenceSurface(), nullptr);
 
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here
