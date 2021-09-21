@@ -16,8 +16,13 @@
 #include <TH1F.h>
 #include <TString.h>
 
-// Helper function:
-// function to set up the histogram style
+/// Helper function:
+/// function to set up the histogram style
+///
+/// @tparam hist_t the histogram type
+///
+/// @param hist the histogram
+/// @param color the color
 template <typename hist_t>
 void setHistStyle(hist_t* hist, short color = 1) {
   hist->GetXaxis()->SetTitleSize(0.05);
@@ -35,8 +40,13 @@ void setHistStyle(hist_t* hist, short color = 1) {
   hist->SetMarkerColor(color);
 }
 
-// Helper function:
-// function to set up the efficiency histogram style
+/// Helper function:
+/// function to set up the efficiency histogram style
+///
+/// @tparam eff_t the efficiency histogram type
+///
+/// @param eff the effiency histogram
+/// @param color the color to be set
 template <typename eff_t>
 void setEffStyle(eff_t* eff, short color = 1) {
   eff->SetMarkerStyle(20);
@@ -46,8 +56,16 @@ void setEffStyle(eff_t* eff, short color = 1) {
   eff->SetMarkerColor(color);
 }
 
-// Helper function:
-// set color pallette
+/// Helper function: set color pallette
+///
+/// @tparam type of the histogram 
+/// 
+/// @param h the histogram in question
+/// @param rmin the range min value
+/// @param rmax the range max value
+/// @param rgood the good value of the mistogram
+/// @param rwindow the window around the good value to be declared good
+/// @param n the number of divisions
 template <typename hist_t>
 void adaptColorPalette(hist_t* h, float rmin, float rmax, float rgood,
                        float rwindow, int n) {
@@ -67,9 +85,15 @@ void adaptColorPalette(hist_t* h, float rmin, float rmax, float rgood,
   TColor::CreateGradientColorTable(number, stops, red, green, blue, n);
 }
 
-// Helper function:
-// increase eff range by a scale factor. Note that it assumes the eff has
-// already been drawn
+/// Helper function:
+/// increase eff range by a scale factor. Note that it assumes the eff has
+/// already been drawn
+///
+/// @tparam eff_t the efficiency histogram type
+/// 
+/// @param eff the efficiency histogram
+/// @param minScale the minum of the scale
+/// @param maxScale the maximum of the scale 
 template <typename eff_t>
 void adaptEffRange(eff_t* eff, float minScale = 1, float maxScale = 1.1) {
   gPad->Update();
@@ -82,7 +106,14 @@ void adaptEffRange(eff_t* eff, float minScale = 1, float maxScale = 1.1) {
   gPad->Update();
 }
 
-struct ParameterHandle {
+
+/// A Parameter handle struct to deal with
+/// residuals and pulls.
+///
+/// This struct allows to define accessors and
+/// cuts for residual and pull analysis in order
+/// to be able to acces them in an ROOT event loop
+struct ResidualPullHandle {
   /// A tag name
   std::string tag = "";
 
@@ -119,7 +150,9 @@ struct ParameterHandle {
 
   ULong64_t accepted = 0;
 
-  // Fill the entry
+  /// Fill the entry
+  ///
+  /// @param entry is the current TTree entry to be processed
   void fill(unsigned int entry) {
     if (accept(entry)) {
       // Access the value, error
@@ -132,7 +165,9 @@ struct ParameterHandle {
   };
 };
 
-// This is a combined acceptor
+/// This is a combined accept struct
+///
+/// It allows to define muleiple accept struct in a chained way
 struct AcceptCombination {
   std::function<bool(ULong64_t)> one;
 
@@ -143,13 +178,14 @@ struct AcceptCombination {
   bool operator()(ULong64_t entry) { return (one(entry) and two(entry)); }
 };
 
-// This Struct is to accept all values
+/// This Struct is to accept all values - a placeholder
 struct AcceptAll {
   // Call operator always returns true
   bool operator()(ULong64_t /*event*/) { return true; }
 };
 
-// This Struct is to accept a certain range
+/// This Struct is to accept a certain range from a 
+/// TTree accessible value
 struct AcceptRange {
   std::vector<float>* value = nullptr;
 
@@ -166,18 +202,23 @@ struct AcceptRange {
   }
 };
 
-// This is a direct type accessor
+/// This is a direct type accessor
+///
+/// It simply forwards access to the underlying vector
+/// 
+template <typename primitive_t>
 struct DirectAccessor {
-  std::vector<float>* value = nullptr;
+  std::vector<primitive_t>* value = nullptr;
 
-  /// returns the calculated Residual
+  /// Gives direct acces to the underlying parameter
+  ///
   /// @param entry the entry in the tree
-  float operator()(ULong64_t entry) {
+  primitive_t operator()(ULong64_t entry) {
     if (value) {
-      float v = value->at(entry);
+      primitive_t v = value->at(entry);
       return v;
     }
-    return std::numeric_limits<float>::infinity();
+    return std::numeric_limits<primitive_t>::max();
   }
 };
 
@@ -187,7 +228,8 @@ struct ResidualAccessor {
 
   std::vector<float>* reference = nullptr;
 
-  /// returns the calculated Residual
+  /// @return the calculated Residual
+  ///
   /// @param entry the entry in the tree
   float operator()(ULong64_t entry) {
     if (value and reference) {
@@ -199,7 +241,7 @@ struct ResidualAccessor {
   }
 };
 
-// This is a  qop residual accessor
+// This is a  dedicated qop residual accessor
 struct QopResidualAccessor {
   std::vector<float>* qop_value = nullptr;
 
@@ -207,7 +249,8 @@ struct QopResidualAccessor {
 
   std::vector<float>* reference_p = nullptr;
 
-  /// returns the calculated Residual
+  /// @return the calculated Residual for q/p
+  ///
   /// @param entry the entry in the tree
   float operator()(ULong64_t entry) {
     if (qop_value and reference_charge and reference_p) {
@@ -220,7 +263,7 @@ struct QopResidualAccessor {
   }
 };
 
-/// This the pT residual accessor
+/// This the dedicted pT residual accessor
 struct PtResidualAccessor {
   std::vector<float>* qop_value = nullptr;
 
@@ -228,7 +271,8 @@ struct PtResidualAccessor {
 
   std::vector<float>* reference_pt = nullptr;
 
-  /// returns the calculated Residual
+  /// @return the calculated Residual
+  ///
   /// @param entry the entry in the tree
   float operator()(ULong64_t entry) {
     if (qop_value and theta_value and reference_pt) {
@@ -241,7 +285,7 @@ struct PtResidualAccessor {
   }
 };
 
-// This is a  qop residual accessor
+// This is a dedicated pT error accessor
 struct PtErrorAccessor {
   std::vector<float>* qop_value = nullptr;
   std::vector<float>* qop_error = nullptr;
@@ -249,7 +293,8 @@ struct PtErrorAccessor {
   std::vector<float>* theta_value = nullptr;
   std::vector<float>* theta_error = nullptr;
 
-  /// returns the calculated Residual
+  /// @return the calculated error on pT
+  ///
   /// @param entry the entry in the tree
   float operator()(ULong64_t entry) {
     if (qop_value and qop_error and theta_value and theta_error) {
@@ -264,9 +309,18 @@ struct PtErrorAccessor {
   }
 };
 
-/// Range estimation
+/// Range estimation for residuals
+///
+/// @tparam dir_t the type of the directory to change into for writing
+/// @tparam tree_t the type of the tree to Draw from
+///
+/// @param handle the residual/pull handle to be processed
+/// @param directory the writable directory
+/// @param tree the tree from which is drawn
+/// @param peakEntries the number of entries for the range peak
+/// @param hBarcode a temporary unqiue ROOT barcode for memory managements
 template <typename dir_t, typename tree_t>
-void estimateRange(ParameterHandle& handle, dir_t& directory, tree_t& tree,
+void estimateResiudalRange(ResidualPullHandle& handle, dir_t& directory, tree_t& tree,
                    unsigned long peakEntries, unsigned int hBarcode) {
   // Change into the Directory
   directory.cd();
@@ -288,7 +342,14 @@ void estimateRange(ParameterHandle& handle, dir_t& directory, tree_t& tree,
   }
 }
 
-void bookHistograms(ParameterHandle& handle, float pullRange,
+
+/// Helper mehtod to book residual and pull histograms
+///
+/// @param handle the residual/pull handle
+/// @param pullRange the symmetric pull range for plotting
+/// @param hBins the number of histograms bins
+/// @param hBarcoode a temporary unique barcode for ROOT memory management
+void bookHistograms(ResidualPullHandle& handle, float pullRange,
                     unsigned int hBins, unsigned int hBarcode) {
   // Residual histogram
   TString rName = std::string("res_") + handle.tag;

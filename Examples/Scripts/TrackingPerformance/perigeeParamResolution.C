@@ -83,12 +83,12 @@ int perigeeParamResolution(
   unsigned int nPtBins = ptBorders.size() - 1;
 
   // One time initialization of the parameter handles
-  using Handles = std::vector<ParameterHandle>;
+  using Handles = std::vector<ResidualPullHandle>;
   Handles baseHandles = {};
 
   if (parametersOn.test(0)) {
     // A standard d0Handle
-    ParameterHandle d0Handle;
+    ResidualPullHandle d0Handle;
     d0Handle.tag = "d0";
     d0Handle.residualStr = "d_{0}^{rec} - d_{0}^{true}";
     d0Handle.residualUnit = "[mm]";
@@ -96,7 +96,7 @@ int perigeeParamResolution(
     d0Handle.rangeDrawStr = "eLOC0_fit-t_d0";
     d0Handle.rangeMaxStr = "(1000,-10,10)";
     d0Handle.value = ResidualAccessor{tracks.eLOC0_fit, tracks.t_d0};
-    d0Handle.error = DirectAccessor{tracks.err_eLOC0_fit};
+    d0Handle.error = DirectAccessor<float>{tracks.err_eLOC0_fit};
     d0Handle.accept = AcceptAll{};
     // Push it
     baseHandles.push_back(d0Handle);
@@ -104,7 +104,7 @@ int perigeeParamResolution(
 
   if (parametersOn.test(1)) {
     // A standard z0Handle
-    ParameterHandle z0Handle;
+    ResidualPullHandle z0Handle;
     z0Handle.tag = "z0";
     z0Handle.residualStr = "z_{0}^{rec} - z_{0}^{true}";
     z0Handle.residualUnit = "[mm]";
@@ -112,7 +112,7 @@ int perigeeParamResolution(
     z0Handle.rangeDrawStr = "eLOC1_fit-t_z0";
     z0Handle.rangeMaxStr = "(1000,-10,10)";
     z0Handle.value = ResidualAccessor{tracks.eLOC1_fit, tracks.t_z0};
-    z0Handle.error = DirectAccessor{tracks.err_eLOC1_fit};
+    z0Handle.error = DirectAccessor<float>{tracks.err_eLOC1_fit};
     z0Handle.accept = AcceptAll{};
     // Push it
     baseHandles.push_back(z0Handle);
@@ -120,14 +120,14 @@ int perigeeParamResolution(
 
   if (parametersOn.test(2)) {
     // A standard phi0Handle
-    ParameterHandle phi0Handle;
+    ResidualPullHandle phi0Handle;
     phi0Handle.tag = "phi0";
     phi0Handle.residualStr = "#phi_{0}^{rec} - #phi_{0}^{true}";
     phi0Handle.errorStr = "#sigma(phi_{0})";
     phi0Handle.rangeDrawStr = "ePHI_fit-t_phi";
     phi0Handle.rangeMaxStr = "(1000,-0.01,0.01)";
     phi0Handle.value = ResidualAccessor{tracks.ePHI_fit, tracks.t_phi};
-    phi0Handle.error = DirectAccessor{tracks.err_ePHI_fit};
+    phi0Handle.error = DirectAccessor<float>{tracks.err_ePHI_fit};
     phi0Handle.accept = AcceptAll{};
     // Push it
     baseHandles.push_back(phi0Handle);
@@ -135,14 +135,14 @@ int perigeeParamResolution(
 
   if (parametersOn.test(3)) {
     // A standard theta0Handle
-    ParameterHandle theta0Handle;
+    ResidualPullHandle theta0Handle;
     theta0Handle.tag = "theta0";
     theta0Handle.residualStr = "#theta_{0}^{rec} - #theta_{0}^{true}";
     theta0Handle.errorStr = "#sigma(theta_{0})";
     theta0Handle.rangeDrawStr = "eTHETA_fit-t_theta";
     theta0Handle.rangeMaxStr = "(1000,-0.01,0.01)";
     theta0Handle.value = ResidualAccessor{tracks.eTHETA_fit, tracks.t_theta};
-    theta0Handle.error = DirectAccessor{tracks.err_eTHETA_fit};
+    theta0Handle.error = DirectAccessor<float>{tracks.err_eTHETA_fit};
     theta0Handle.accept = AcceptAll{};
     // Push it
     baseHandles.push_back(theta0Handle);
@@ -150,7 +150,7 @@ int perigeeParamResolution(
 
   if (parametersOn.test(4)) {
     // The standard qop Handle
-    ParameterHandle qopHandle;
+    ResidualPullHandle qopHandle;
     qopHandle.tag = "qop";
     qopHandle.residualStr = "q/p^{rec} - q/p^{true}";
     qopHandle.residualUnit = "[GeV^{-1}]";
@@ -159,7 +159,7 @@ int perigeeParamResolution(
     qopHandle.rangeMaxStr = "(1000,-0.1,0.1)";
     qopHandle.value =
         QopResidualAccessor{tracks.eQOP_fit, tracks.t_charge, tracks.t_p};
-    qopHandle.error = DirectAccessor{tracks.err_eQOP_fit};
+    qopHandle.error = DirectAccessor<float>{tracks.err_eQOP_fit};
     qopHandle.accept = AcceptAll{};
     // Push it
     baseHandles.push_back(qopHandle);
@@ -167,7 +167,7 @@ int perigeeParamResolution(
 
   if (parametersOn.test(5)) {
     // The pt measurement
-    ParameterHandle ptHandle;
+    ResidualPullHandle ptHandle;
     ptHandle.tag = "pt";
     ptHandle.residualStr = "p_{T}^{rec} - p_{T}^{true}";
     ptHandle.residualUnit = "[GeV]";
@@ -199,7 +199,7 @@ int perigeeParamResolution(
   /// @param handle the parameter handle in question
   /// @param handleTag the unique tangle tag
   /// @param peakEntries the number of entries used for range peaking
-  auto handleRange = [&](ParameterHandle& handle, const TString& handleTag,
+  auto handleRange = [&](ResidualPullHandle& handle, const TString& handleTag,
                          unsigned long peakEntries) -> void {
     bool rangeDetermined = false;
     if (not inConfig.empty()) {
@@ -210,7 +210,7 @@ int perigeeParamResolution(
       }
     }
     if (not rangeDetermined) {
-      estimateRange(handle, *rangeCanvas, *tracks.tree, peakEntries,
+      estimateResiudalRange(handle, *rangeCanvas, *tracks.tree, peakEntries,
                     ++histBarcode);
     }
 
@@ -226,9 +226,9 @@ int perigeeParamResolution(
   /// @param handle the parameter handle in question
   /// @param handleTag the unique tangle tag
   /// @param peakEntries the number of entries used for range peaking
-  auto handleRange = [&](ParameterHandle& handle, const TString& handleTag,
+  auto handleRange = [&](ResidualPullHandle& handle, const TString& handleTag,
                          unsigned long peakEntries) -> void {
-    estimateRange(handle, *rangeCanvas, *tracks.tree, peakEntries,
+    estimateResiudalRange(handle, *rangeCanvas, *tracks.tree, peakEntries,
                   ++histBarcode);
   };
 #endif
