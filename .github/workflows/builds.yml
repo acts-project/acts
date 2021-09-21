@@ -161,10 +161,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        LCG: 
-          - LCG_97apython3/x86_64-centos7-gcc9-opt
-          - LCG_98python3/x86_64-centos7-gcc10-opt
-          - LCG_99/x86_64-centos7-gcc10-opt
+        LCG:
+          # Disable these jobs temporarily to relieve pressure on the CI
+          #- LCG_97apython3/x86_64-centos7-gcc9-opt
+          #- LCG_98python3/x86_64-centos7-gcc10-opt
+          #- LCG_99/x86_64-centos7-gcc10-opt
           - LCG_100/x86_64-centos7-gcc10-opt
           - LCG_100/x86_64-centos8-gcc10-opt
     env:
