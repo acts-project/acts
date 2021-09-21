@@ -346,12 +346,6 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
       }
     }
 
-    // if (sfIter != mappingSurfaces.end() - 1 &&
-    //     (rmIter->position - sfIter->position).norm() >
-    //         (rmIter->position - (sfIter + 1)->position).norm()) {
-    //   // Switch to next assignment surface
-    //   ++sfIter;
-    // }
     // get the current Surface ID
     currentID = sfIter->surface->geometryId();
     // We have work to do: the assignemnt surface has changed
