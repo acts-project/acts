@@ -251,7 +251,7 @@ class BinnedSPGroup {
       std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
       const SeedfinderConfig<external_spacepoint_t>& _config);
 
-  size_t size() { return m_binnedSP.size(); }
+  size_t size() { return m_binnedSP->size(); }
 
   BinnedSPGroupIterator<external_spacepoint_t> begin() {
     return BinnedSPGroupIterator<external_spacepoint_t>(
