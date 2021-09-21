@@ -437,6 +437,8 @@ void TGeoDetector::addOptions(
   // required global options
   opt("geo-tgeo-filename", value<std::string>()->default_value(""),
       "Root file name.");
+  opt("geo-tgeo-worldvolume", value<std::string>()->default_value(""),
+      "Root world volume to start search from.");
   opt("geo-tgeo-jsonconfig", value<std::string>()->default_value(""),
       "Json config file name.");
   opt("geo-tgeo-dump-jsonconfig",
