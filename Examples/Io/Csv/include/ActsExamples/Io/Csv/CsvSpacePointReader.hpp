@@ -13,6 +13,7 @@
 #include "ActsExamples/Framework/IReader.hpp"
 
 #include <memory>
+#include <vector>
 #include <string>
 
 namespace ActsExamples {
@@ -34,8 +35,10 @@ public:
    std::string inputDir;
    /// Input filename stem.
    std::string inputStem;
+   /// Input space point collection.
+   std::string inputCollection;
    /// Output space point collections.
-   std::vector<std::string> outputSpacePoints;
+   std::string outputSpacePoints;
  };
 
  /// Construct the simhit reader.

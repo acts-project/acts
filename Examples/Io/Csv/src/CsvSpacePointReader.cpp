@@ -25,14 +25,15 @@
 
 ActsExamples::CsvSpacePointReader::CsvSpacePointReader(
     const ActsExamples::CsvSpacePointReader::Config& cfg,
-    Acts::Logging::Level lvl)
-    : m_cfg(cfg),
-      m_eventsRange(
-          determineEventFilesRange(cfg.inputDir, cfg.inputStem + ".csv")),
-      m_logger(Acts::getDefaultLogger("CsvSpacePointReader", lvl)) {
+    Acts::Logging::Level lvl){
+  m_cfg = cfg;
   if (m_cfg.inputStem.empty()) {
     throw std::invalid_argument("Missing input filename stem");
   }
+  auto& filename = m_cfg.inputCollection.empty() ? cfg.inputStem :
+                   cfg.inputStem+'_'+cfg.inputCollection;
+  m_eventsRange = determineEventFilesRange(cfg.inputDir, filename + ".csv");
+  m_logger = Acts::getDefaultLogger("CsvSpacePointReader", lvl);
 }
 
 std::string ActsExamples::CsvSpacePointReader::CsvSpacePointReader::name() const {
@@ -46,42 +47,29 @@ std::pair<size_t, size_t> ActsExamples::CsvSpacePointReader::availableEvents()
 
 ActsExamples::ProcessCode ActsExamples::CsvSpacePointReader::read(
     const ActsExamples::AlgorithmContext& ctx) {
-  SimSpacePointContainer spacePointsPixel;
-  SimSpacePointContainer spacePointsStrip;
-  SimSpacePointContainer spacePointsStripOverlap;
+  SimSpacePointContainer spacePoints;
   
-  auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
-                               ctx.eventNumber);
+  const auto& filename = m_cfg.inputCollection.empty() ? m_cfg.inputStem :
+                   m_cfg.inputStem+'_'+m_cfg.inputCollection;
+  const auto& path = perEventFilepath(m_cfg.inputDir, filename + ".csv", ctx.eventNumber);
 
   dfe::NamedTupleCsvReader<SpacePointData> reader(path);
   SpacePointData data;
 
   while (reader.read(data)) {
-    std::cout << data.measurement_id << ", " << data.sp_type << ", " << data.module_idhash << ", " << 
-    data.sp_x << ", " << data.sp_y << ", " << data.sp_z << ", " << data.sp_radius << ", " << 
-    data.sp_covr << ", " << data.sp_covz << std::endl;
-    
     Acts::Vector3 globalPos(data.sp_x, data.sp_y, data.sp_z);
     
-    if (data.sp_type==0)
-      spacePointsPixel.emplace_back(globalPos, data.sp_covr, data.sp_covz, data.measurement_id);
-    else if (data.sp_type==1)
-      spacePointsStrip.emplace_back(globalPos, data.sp_covr, data.sp_covz, data.measurement_id);
-    else if (data.sp_type==2)
-      spacePointsStripOverlap.emplace_back(globalPos, data.sp_covr, data.sp_covz, data.measurement_id);
+    if (m_cfg.inputCollection=="pixel" || m_cfg.inputCollection=="strip" || m_cfg.inputCollection=="overlap")
+      spacePoints.emplace_back(globalPos, data.sp_covr, data.sp_covz, data.measurement_id);
     else {
-      ACTS_ERROR("Invalid space point type " << data.sp_type);
+      ACTS_ERROR("Invalid space point type " << m_cfg.inputStem);
       return ProcessCode::ABORT;
     }
   }
 
-  ACTS_DEBUG("Created " << spacePointsPixel.size() << " pixel space points");
-  ACTS_DEBUG("Created " << spacePointsStrip.size() << " strip space points");
-  ACTS_DEBUG("Created " << spacePointsStripOverlap.size() << " overlap space points");
-  
-  ctx.eventStore.add("PixelSpacePoints", std::move(spacePointsPixel));
-  ctx.eventStore.add("StripSpacePoints", std::move(spacePointsStrip));
-  ctx.eventStore.add("OverlapSpacePoints", std::move(spacePointsStripOverlap));
-  
+
+  ACTS_DEBUG("Created " << spacePoints.size() << " " << m_cfg.inputCollection << " space points");
+  ctx.eventStore.add("PixelSpacePoints", std::move(spacePoints));
+
   return ProcessCode::SUCCESS;
 }
