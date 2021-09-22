@@ -137,25 +137,17 @@ void createSeedsForGroupSycl(
     // Create the output data of the duplet search - jagged vectors.
     std::unique_ptr<vecmem::data::jagged_vector_buffer<uint32_t>> midBotDupletBuffer;
     std::unique_ptr<vecmem::data::jagged_vector_buffer<uint32_t>> midTopDupletBuffer;
-    if (!device_resource) {
-      midBotDupletBuffer = std::make_unique<vecmem::data::jagged_vector_buffer<uint32_t>>
-                                                (std::vector<std::size_t>(M, 0),
-                                                  std::vector<std::size_t>(M,B),
-                                                  resource);
-      midTopDupletBuffer = std::make_unique<vecmem::data::jagged_vector_buffer<uint32_t>>
-                                                (std::vector<std::size_t>(M, 0),
-                                                  std::vector<std::size_t>(M, T),
-                                                  resource);
-    } else {
-      midBotDupletBuffer = std::make_unique<vecmem::data::jagged_vector_buffer<uint32_t>>
-                                                (std::vector<std::size_t>(M, 0),
-                                                  std::vector<std::size_t>(M,B),
-                                                  *device_resource, &resource);
-      midTopDupletBuffer = std::make_unique<vecmem::data::jagged_vector_buffer<uint32_t>>
-                                                (std::vector<std::size_t>(M, 0),
-                                                  std::vector<std::size_t>(M, T),
-                                                  *device_resource, &resource);
-    }
+
+    midBotDupletBuffer = std::make_unique<vecmem::data::jagged_vector_buffer<uint32_t>>
+                                          (std::vector<std::size_t>(M, 0),
+                                            std::vector<std::size_t>(M,B),
+                                            (device_resource ? *device_resource : resource),
+                                            (device_resource ? &resource : nullptr));
+    midTopDupletBuffer = std::make_unique<vecmem::data::jagged_vector_buffer<uint32_t>>
+                                              (std::vector<std::size_t>(M, 0),
+                                                std::vector<std::size_t>(M,T),
+                                                (device_resource ? *device_resource : resource),
+                                                (device_resource ? &resource : nullptr));
     copy.setup(*midBotDupletBuffer);
     copy.setup(*midTopDupletBuffer);
 
@@ -164,10 +156,9 @@ void createSeedsForGroupSycl(
         sycl::ONEAPI::atomic_accessor<uint32_t, 1,
                                       sycl::ONEAPI::memory_order::relaxed,
                                       sycl::ONEAPI::memory_scope::device>;
-  {
 
     // Perform the middle-bottom duplet search.
-    q->submit([&](cl::sycl::handler& h) {
+    auto middleBottomEvent = q->submit([&](cl::sycl::handler& h) {
       detail::DupletSearch<detail::SpacePointType::Bottom>
           kernel(middleSPsView, bottomSPsView,
                  *midBotDupletBuffer, seedfinderConfig);
@@ -176,13 +167,14 @@ void createSeedsForGroupSycl(
     });
 
     // Perform the middle-top duplet search.
-    q->submit([&](cl::sycl::handler& h) {
+    auto middleTopEvent = q->submit([&](cl::sycl::handler& h) {
       detail::DupletSearch<detail::SpacePointType::Top>
           kernel(middleSPsView, topSPsView,
                  *midTopDupletBuffer, seedfinderConfig);
       h.parallel_for<class DupletSearchTopKernel>(topDupletNDRange, kernel);
     });
-  }
+    middleBottomEvent.wait_and_throw();
+    middleTopEvent.wait_and_throw();
     //*********************************************//
     // *********** DUPLET SEARCH - END *********** //
     //*********************************************//
@@ -308,17 +300,12 @@ void createSeedsForGroupSycl(
       // Buffers for Flattening the jagged vectors
       std::unique_ptr<vecmem::data::vector_buffer<uint32_t>> indBotDupletBuffer;
       std::unique_ptr<vecmem::data::vector_buffer<uint32_t>> indTopDupletBuffer;
-      if (!device_resource){
-        indBotDupletBuffer = std::make_unique<vecmem::data::vector_buffer<uint32_t>>
-                                                              (edgesBottom, resource);
-        indTopDupletBuffer = std::make_unique<vecmem::data::vector_buffer<uint32_t>>
-                                                              (edgesTop, resource);
-      } else {
-        indBotDupletBuffer = std::make_unique<vecmem::data::vector_buffer<uint32_t>>
-                                                              (edgesBottom, *device_resource);
-        indTopDupletBuffer = std::make_unique<vecmem::data::vector_buffer<uint32_t>>
-                                                              (edgesTop, *device_resource);
-      }
+
+      indBotDupletBuffer = std::make_unique<vecmem::data::vector_buffer<uint32_t>>
+                                        (edgesBottom,(device_resource ? *device_resource : resource));
+      indTopDupletBuffer = std::make_unique<vecmem::data::vector_buffer<uint32_t>>
+                                        (edgesTop,(device_resource ? *device_resource : resource));  
+
       copy.setup(*indBotDupletBuffer);
       copy.setup(*indTopDupletBuffer);
 
@@ -410,17 +397,12 @@ void createSeedsForGroupSycl(
       // Create the output data of the linear transform
       std::unique_ptr<vecmem::data::vector_buffer<detail::DeviceLinEqCircle>> linearBotBuffer;
       std::unique_ptr<vecmem::data::vector_buffer<detail::DeviceLinEqCircle>> linearTopBuffer;
-      if (!device_resource){
-        linearBotBuffer = std::make_unique<vecmem::data::vector_buffer<detail::DeviceLinEqCircle>>
-                                                              (edgesBottom, resource);
-        linearTopBuffer = std::make_unique<vecmem::data::vector_buffer<detail::DeviceLinEqCircle>>
-                                                              (edgesTop, resource);
-      } else {
-        linearBotBuffer = std::make_unique<vecmem::data::vector_buffer<detail::DeviceLinEqCircle>>
-                                                              (edgesBottom, *device_resource);
-        linearTopBuffer = std::make_unique<vecmem::data::vector_buffer<detail::DeviceLinEqCircle>>
-                                                              (edgesTop, *device_resource);
-      }
+
+      linearBotBuffer = std::make_unique<vecmem::data::vector_buffer<detail::DeviceLinEqCircle>>
+                            (edgesBottom, (device_resource ? *device_resource : resource));
+      linearTopBuffer = std::make_unique<vecmem::data::vector_buffer<detail::DeviceLinEqCircle>>
+                            (edgesTop, (device_resource ? *device_resource : resource));          
+
       copy.setup(*linearBotBuffer);
       copy.setup(*linearTopBuffer);
 
@@ -540,17 +522,12 @@ void createSeedsForGroupSycl(
       std::unique_ptr<vecmem::data::vector_buffer
                                   <detail::SeedData>>
                                             seedArrayBuffer;
-      if (!device_resource){
-        curvImpactBuffer = std::make_unique<vecmem::data::vector_buffer<detail::DeviceTriplet>>
-                                                                  (maxMemoryAllocation, resource);
-        seedArrayBuffer = std::make_unique<vecmem::data::vector_buffer<detail::SeedData>>
-                                                                  (maxMemoryAllocation, 0, resource);                                                                  
-      } else {
-        curvImpactBuffer = std::make_unique<vecmem::data::vector_buffer<detail::DeviceTriplet>>
-                                                                  (maxMemoryAllocation, *device_resource);
-        seedArrayBuffer = std::make_unique<vecmem::data::vector_buffer<detail::SeedData>>
-                                                                  (maxMemoryAllocation, 0, *device_resource);
-      }                                                                 
+     
+      curvImpactBuffer = std::make_unique<vecmem::data::vector_buffer<detail::DeviceTriplet>>
+                                  (maxMemoryAllocation, (device_resource ? *device_resource : resource));
+      seedArrayBuffer = std::make_unique<vecmem::data::vector_buffer<detail::SeedData>>
+                                  (maxMemoryAllocation, 0, (device_resource ? *device_resource : resource)); 
+                                                                              
       copy.setup(*curvImpactBuffer);
       copy.setup(*seedArrayBuffer);
       // Reserve memory in advance for seed indices and weight

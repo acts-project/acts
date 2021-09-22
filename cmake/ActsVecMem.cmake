@@ -5,9 +5,10 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
 # Guard against multiple includes.
-include_guard( GLOBAL )
+if ( TARGET "vecmem::core")
+   return()
+endif()
 
 # Look for VecMem, quietly first time around. Since if it is not found (which is
 # likely), it prints multiple lines of warnings.
