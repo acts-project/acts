@@ -18,7 +18,10 @@
 #include <vector>
 
 class TGeoNode;
+
+namespace Acts {
 class TGeoDetectorElement;
+}
 
 namespace ActsExamples {
 
