@@ -105,4 +105,4 @@ class TGeoITkModuleSplitter : public Acts::ITGeoDetectorElementSplitter {
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
-}  // namespace Acts
+}  // namespace ActsExamples

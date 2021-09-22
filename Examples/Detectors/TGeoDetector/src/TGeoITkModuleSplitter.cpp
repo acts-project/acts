@@ -89,7 +89,8 @@ ActsExamples::TGeoITkModuleSplitter::splitBarrelModule(
   }
 
   // Output container for the submodules
-  std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> detElements = {};
+  std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> detElements =
+      {};
   detElements.reserve(nSegments);
 
   // Get the geometric information
@@ -115,7 +116,8 @@ ActsExamples::TGeoITkModuleSplitter::splitBarrelModule(
     Acts::Vector3 globalTranslation =
         surface.localToGlobal(gctx, localTranslation, {}) -
         transform.translation();
-    auto elemTransform = Acts::Transform3(transform).pretranslate(globalTranslation);
+    auto elemTransform =
+        Acts::Transform3(transform).pretranslate(globalTranslation);
     auto element = std::make_shared<const Acts::TGeoDetectorElement>(
         identifier, detElement->tgeoNode(), elemTransform, rectBounds,
         thickness);
@@ -131,8 +133,8 @@ inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
 ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
     const Acts::GeometryContext& gctx,
     std::shared_ptr<const Acts::TGeoDetectorElement> detElement,
-    const std::vector<ActsExamples::TGeoITkModuleSplitter::SplitRange>& splitRanges)
-    const {
+    const std::vector<ActsExamples::TGeoITkModuleSplitter::SplitRange>&
+        splitRanges) const {
   // Retrive the surface
   auto identifier = detElement->identifier();
   const Acts::Surface& surface = detElement->surface();
@@ -140,7 +142,8 @@ ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
 
   // Check annulus bounds origin
   auto printOrigin = [&](const Acts::Surface& sf) {
-    Acts::Vector3 discOrigin = sf.localToGlobal(gctx, Acts::Vector2(0., 0.), {});
+    Acts::Vector3 discOrigin =
+        sf.localToGlobal(gctx, Acts::Vector2(0., 0.), {});
     std::string out =
         "Disc surface origin at: " + std::to_string(discOrigin[0]) + ", " +
         std::to_string(discOrigin[1]) + ", " + std::to_string(discOrigin[2]);
@@ -158,7 +161,8 @@ ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
   auto nSegments = splitRanges.size();
 
   // Output container for the submodules
-  std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> detElements = {};
+  std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> detElements =
+      {};
   detElements.reserve(nSegments);
 
   // Get the geometric information

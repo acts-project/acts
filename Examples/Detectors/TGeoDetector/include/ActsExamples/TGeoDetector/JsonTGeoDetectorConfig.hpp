@@ -99,7 +99,8 @@ void to_json(nlohmann::ordered_json& j,
 }
 
 /// Read volume struct
-void from_json(const nlohmann::json& j, ActsExamples::TGeoDetector::Config::Volume& vol) {
+void from_json(const nlohmann::json& j,
+               ActsExamples::TGeoDetector::Config::Volume& vol) {
   // subdetector selection
   vol.name = j.at("geo-tgeo-volume-name");
 
@@ -130,7 +131,8 @@ void from_json(const nlohmann::json& j, ActsExamples::TGeoDetector::Config::Volu
 
   vol.itkModuleSplit = j.at("geo-tgeo-itk-module-split");
   if (vol.itkModuleSplit) {
-    ActsExamples::TGeoITkModuleSplitter::Config itkConfig = j.at("Splitters").at("ITk");
+    ActsExamples::TGeoITkModuleSplitter::Config itkConfig =
+        j.at("Splitters").at("ITk");
     vol.barrelMap = itkConfig.barrelMap;
     vol.discMap = itkConfig.discMap;
   }
