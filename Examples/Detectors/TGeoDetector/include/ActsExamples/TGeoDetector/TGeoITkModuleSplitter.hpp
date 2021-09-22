@@ -18,15 +18,14 @@
 #include <vector>
 
 class TGeoNode;
-
-namespace Acts {
-
 class TGeoDetectorElement;
+
+namespace ActsExamples {
 
 /// @brief TGeoITkModuleSplitter
 ///
 /// Split Itk modules into submodules, depending on the sensor type
-class TGeoITkModuleSplitter : public ITGeoDetectorElementSplitter {
+class TGeoITkModuleSplitter : public Acts::ITGeoDetectorElementSplitter {
  public:
   using SplitRange = std::pair<double, double>;
 
@@ -58,7 +57,7 @@ class TGeoITkModuleSplitter : public ITGeoDetectorElementSplitter {
   ///
   /// @return a vector of TGeoDetectorElement objects
   std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> split(
-      const GeometryContext& gctx,
+      const Acts::GeometryContext& gctx,
       std::shared_ptr<const Acts::TGeoDetectorElement> detElement)
       const override;
 
@@ -67,14 +66,14 @@ class TGeoITkModuleSplitter : public ITGeoDetectorElementSplitter {
   /// and split it into sub elements.
   ///
   /// @param gctx is a geometry context object
-  /// @param detElement is a TGeoDetectorElement that is eventually split
+  /// @param detElement is a TGeoDetectorElement that should be split
   /// @param nSegments is the number of submodules
   ///
   /// @note If no split is performed the unsplit detector element is returned
   ///
   /// @return a vector of TGeoDetectorElement objects
   std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
-  splitBarrelModule(const GeometryContext& gctx,
+  splitBarrelModule(const Acts::GeometryContext& gctx,
                     std::shared_ptr<const Acts::TGeoDetectorElement> detElement,
                     unsigned int nSegments) const;
 
@@ -82,14 +81,14 @@ class TGeoITkModuleSplitter : public ITGeoDetectorElementSplitter {
   /// into sub elements.
   ///
   /// @param gctx is a geometry context object
-  /// @param detElement is a TGeoDetectorElement that is eventually split
+  /// @param detElement is a TGeoDetectorElement that should be split
   /// @param splitRanges are the ranges in r for the submodules
   ///
   /// @note If no split is performed the unsplit detector element is returned
   ///
   /// @return a vector of TGeoDetectorElement objects
   std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> splitDiscModule(
-      const GeometryContext& gctx,
+      const Acts::GeometryContext& gctx,
       std::shared_ptr<const Acts::TGeoDetectorElement> detElement,
       const std::vector<SplitRange>& splitRanges) const;
 

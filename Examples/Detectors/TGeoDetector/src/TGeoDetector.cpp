@@ -23,6 +23,7 @@
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsExamples/TGeoDetector/TGeoITkModuleSplitter.hpp"
 #include "ActsExamples/TGeoDetector/JsonTGeoDetectorConfig.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
@@ -115,11 +116,11 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
       layerBuilderConfig.detectorElementSplitter =
           std::make_shared<const Acts::TGeoCylinderDiscSplitter>(cdsConfig);
     } else if (volume.itkModuleSplit) {
-      Acts::TGeoITkModuleSplitter::Config itkConfig;
+      ActsExamples::TGeoITkModuleSplitter::Config itkConfig;
       itkConfig.barrelMap = volume.barrelMap;
       itkConfig.discMap = volume.discMap;
       layerBuilderConfig.detectorElementSplitter =
-          std::make_shared<Acts::TGeoITkModuleSplitter>(itkConfig);
+          std::make_shared<ActsExamples::TGeoITkModuleSplitter>(itkConfig);
     }
 
     detLayerConfigs.push_back(layerBuilderConfig);

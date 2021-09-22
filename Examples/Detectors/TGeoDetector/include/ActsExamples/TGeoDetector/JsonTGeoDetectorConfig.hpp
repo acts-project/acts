@@ -10,8 +10,8 @@
 
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
-#include "Acts/Plugins/TGeo/TGeoITkModuleSplitter.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
+#include "ActsExamples/TGeoDetector/TGeoITkModuleSplitter.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
 #include <map>
@@ -42,21 +42,6 @@ void to_json(nlohmann::ordered_json& j,
       {"geo-tgeo-disc-nr-segs", cdc.discRadialSegments}};
 }
 
-void from_json(const nlohmann::json& j,
-               Acts::TGeoITkModuleSplitter::Config& msc) {
-  msc.barrelMap =
-      j["geo-tgeo-barrel-map"].get<std::map<std::string, unsigned int>>();
-  msc.discMap =
-      j["geo-tgeo-disc-map"]
-          .get<std::map<std::string, std::vector<std::pair<double, double>>>>();
-}
-
-void to_json(nlohmann::ordered_json& j,
-             const Acts::TGeoITkModuleSplitter::Config& msc) {
-  j["geo-tgeo-barrel-map"] = msc.barrelMap;
-  j["geo-tgeo-disc-map"] = msc.discMap;
-}
-
 }  // namespace Acts
 
 namespace ActsExamples {
@@ -80,6 +65,21 @@ void to_json(nlohmann::ordered_json& j,
 
 }  // namespace Options
 
+void from_json(const nlohmann::json& j,
+               ActsExamples::TGeoITkModuleSplitter::Config& msc) {
+  msc.barrelMap =
+      j["geo-tgeo-barrel-map"].get<std::map<std::string, unsigned int>>();
+  msc.discMap =
+      j["geo-tgeo-disc-map"]
+          .get<std::map<std::string, std::vector<std::pair<double, double>>>>();
+}
+
+void to_json(nlohmann::ordered_json& j,
+             const ActsExamples::TGeoITkModuleSplitter::Config& msc) {
+  j["geo-tgeo-barrel-map"] = msc.barrelMap;
+  j["geo-tgeo-disc-map"] = msc.discMap;
+}
+
 /// Read layer configuration triplets
 template <typename T>
 void from_json(const nlohmann::json& j,
@@ -99,7 +99,7 @@ void to_json(nlohmann::ordered_json& j,
 }
 
 /// Read volume struct
-void from_json(const nlohmann::json& j, TGeoDetector::Config::Volume& vol) {
+void from_json(const nlohmann::json& j, ActsExamples::TGeoDetector::Config::Volume& vol) {
   // subdetector selection
   vol.name = j.at("geo-tgeo-volume-name");
 
@@ -130,7 +130,7 @@ void from_json(const nlohmann::json& j, TGeoDetector::Config::Volume& vol) {
 
   vol.itkModuleSplit = j.at("geo-tgeo-itk-module-split");
   if (vol.itkModuleSplit) {
-    Acts::TGeoITkModuleSplitter::Config itkConfig = j.at("Splitters").at("ITk");
+    ActsExamples::TGeoITkModuleSplitter::Config itkConfig = j.at("Splitters").at("ITk");
     vol.barrelMap = itkConfig.barrelMap;
     vol.discMap = itkConfig.discMap;
   }
@@ -165,7 +165,7 @@ void to_json(nlohmann::ordered_json& j,
   cdConfig.discPhiSegments = vol.discNPhiSegments;
   j["Splitters"]["CylinderDisk"] = cdConfig;
 
-  Acts::TGeoITkModuleSplitter::Config itkConfig;
+  ActsExamples::TGeoITkModuleSplitter::Config itkConfig;
   itkConfig.barrelMap = vol.barrelMap;
   itkConfig.discMap = vol.discMap;
   j["Splitters"]["ITk"] = itkConfig;
