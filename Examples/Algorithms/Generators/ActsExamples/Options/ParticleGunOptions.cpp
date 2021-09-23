@@ -33,7 +33,7 @@ void ActsExamples::Options::addParticleGunOptions(Description& desc) {
   opt("gen-eta",
       value<Interval>()->value_name("MIN:MAX")->default_value({-4.0, 4.0}),
       "Pseudo-rapidity generation range");
-  opt("gen-sample-eta", bool_switch(),
+  opt("gen-eta-uniform", bool_switch(),
       "Sample eta directly and not cos(theta).");
   opt("gen-mom-gev",
       value<Interval>()->value_name("MIN:MAX")->default_value({1.0, 10.0}),
@@ -76,7 +76,7 @@ ActsExamples::Options::readParticleGunOptions(const Variables& vars) {
   double etaMin, etaMax;
   getRange("gen-eta", 1.0, etaMin, etaMax);
 
-  pgCfg.forceEtaGeneration = vars["gen-sample-eta"].template as<bool>();
+  pgCfg.forceEtaGeneration = vars["gen-eta-uniform"].template as<bool>();
   pgCfg.thetaMin = 2 * std::atan(std::exp(-etaMin));
   pgCfg.thetaMax = 2 * std::atan(std::exp(-etaMax));
   getRange("gen-mom-gev", 1_GeV, pgCfg.pMin, pgCfg.pMax);

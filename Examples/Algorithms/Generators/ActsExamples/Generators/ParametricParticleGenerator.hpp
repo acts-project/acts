@@ -38,11 +38,11 @@ class ParametricParticleGenerator : public EventGenerator::ParticlesGenerator {
     ///
     /// @note This is the standard generation, for detector performance
     /// classification, where a flat distribution in eta can be useful,
-    /// this can be set by the forceEtaGeneration flag;
+    /// this can be set by the etaUniform flag;
     ///
     double thetaMin = 0.0;
     double thetaMax = M_PI;
-    bool forceEtaGeneration = false;
+    bool etaUniform = false;
     /// Low, high (exclusive) for absolute/transverse momentum.
     double pMin = 1 * Acts::UnitConstants::GeV;
     double pMax = 10 * Acts::UnitConstants::GeV;
