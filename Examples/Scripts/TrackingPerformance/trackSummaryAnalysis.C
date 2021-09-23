@@ -20,6 +20,7 @@
 #include <TFile.h>
 #include <TH1F.h>
 #include <TH2F.h>
+#include <TH3F.h>
 #include <TLegend.h>
 #include <TMath.h>
 #include <TStyle.h>
@@ -31,8 +32,6 @@
 
 using namespace ROOT;
 
-void setHistStyle(TH1F* hist, short color);
-
 /// This ROOT script will plot the residual and pull of perigee track parameters
 /// (d0, z0, phi, theta, q/p, pT, t) from root file produced by the
 /// TrackFitterPerformanceWriter
@@ -42,8 +41,16 @@ void setHistStyle(TH1F* hist, short color);
 /// @param outFile the name of the output file
 /// @param inConfig the (optional) input configuration JSON file
 /// @param outConfig the (optional) output configuration JSON file
-/// @param parametersOn the bitset of the parameters set
-int perigeeParamResolution(
+/// @param residualPulls the bitset of the parameters set
+///
+///
+/// @note A lot of this could be done with creating appropriate TH3F histograms
+/// and chose the relevant projections, but this would need one loop through the
+/// entries per parameter and would create a very long analysis turn-around.
+/// That's why the data/histograms are prepared in handles and then filled in a
+/// single event analysis loop.
+///
+int trackSummaryAnalysis(
     const std::vector<std::string>& inFiles, const std::string& inTree,
     const std::string& outFile, const std::string& inConfig = "",
     const std::string& outConfig = "", unsigned long nEntries = 0,
@@ -53,7 +60,8 @@ int perigeeParamResolution(
     unsigned int nEtaBins = 10, const std::array<float, 2>& etaRange = {-3, 3},
     const std::vector<double>& ptBorders =
         {0., std::numeric_limits<double>::infinity()},
-    std::bitset<7> parametersOn = std::bitset<7>{"1111111"}) {
+    const std::bitset<7>& residualPulls = std::bitset<7>{"1111111"},
+    const std::bitset<5>& auxiliary = std::bitset<5>{"11111"}) {
   // Load the tree chain
   TChain* treeChain = new TChain(inTree.c_str());
   for (const auto& inFile : inFiles) {
@@ -63,7 +71,7 @@ int perigeeParamResolution(
   }
 
   if (treeChain->GetEntries() == 0) {
-    std::cout << "[x] No entries found ... " << std::endl;
+    std::cout << "xxx No entries found ... bailing out." << std::endl;
     return -1;
   }
 
@@ -82,11 +90,11 @@ int perigeeParamResolution(
   // Deduction
   unsigned int nPtBins = ptBorders.size() - 1;
 
-  // One time initialization of the parameter handles
-  using Handles = std::vector<ResidualPullHandle>;
-  Handles baseHandles = {};
+  // One time initialization of the residual and pull handles
+  using ResidualPulls = std::vector<ResidualPullHandle>;
+  ResidualPulls baseResidualPulls = {};
 
-  if (parametersOn.test(0)) {
+  if (residualPulls.test(0)) {
     // A standard d0Handle
     ResidualPullHandle d0Handle;
     d0Handle.tag = "d0";
@@ -99,10 +107,10 @@ int perigeeParamResolution(
     d0Handle.error = DirectAccessor<float>{tracks.err_eLOC0_fit};
     d0Handle.accept = AcceptAll{};
     // Push it
-    baseHandles.push_back(d0Handle);
+    baseResidualPulls.push_back(d0Handle);
   }
 
-  if (parametersOn.test(1)) {
+  if (residualPulls.test(1)) {
     // A standard z0Handle
     ResidualPullHandle z0Handle;
     z0Handle.tag = "z0";
@@ -115,10 +123,10 @@ int perigeeParamResolution(
     z0Handle.error = DirectAccessor<float>{tracks.err_eLOC1_fit};
     z0Handle.accept = AcceptAll{};
     // Push it
-    baseHandles.push_back(z0Handle);
+    baseResidualPulls.push_back(z0Handle);
   }
 
-  if (parametersOn.test(2)) {
+  if (residualPulls.test(2)) {
     // A standard phi0Handle
     ResidualPullHandle phi0Handle;
     phi0Handle.tag = "phi0";
@@ -130,10 +138,10 @@ int perigeeParamResolution(
     phi0Handle.error = DirectAccessor<float>{tracks.err_ePHI_fit};
     phi0Handle.accept = AcceptAll{};
     // Push it
-    baseHandles.push_back(phi0Handle);
+    baseResidualPulls.push_back(phi0Handle);
   }
 
-  if (parametersOn.test(3)) {
+  if (residualPulls.test(3)) {
     // A standard theta0Handle
     ResidualPullHandle theta0Handle;
     theta0Handle.tag = "theta0";
@@ -145,10 +153,10 @@ int perigeeParamResolution(
     theta0Handle.error = DirectAccessor<float>{tracks.err_eTHETA_fit};
     theta0Handle.accept = AcceptAll{};
     // Push it
-    baseHandles.push_back(theta0Handle);
+    baseResidualPulls.push_back(theta0Handle);
   }
 
-  if (parametersOn.test(4)) {
+  if (residualPulls.test(4)) {
     // The standard qop Handle
     ResidualPullHandle qopHandle;
     qopHandle.tag = "qop";
@@ -162,10 +170,26 @@ int perigeeParamResolution(
     qopHandle.error = DirectAccessor<float>{tracks.err_eQOP_fit};
     qopHandle.accept = AcceptAll{};
     // Push it
-    baseHandles.push_back(qopHandle);
+    baseResidualPulls.push_back(qopHandle);
   }
 
-  if (parametersOn.test(5)) {
+  if (residualPulls.test(5)) {
+    // The pt measurement
+    ResidualPullHandle tHandle;
+    tHandle.tag = "t";
+    tHandle.residualStr = "t^{rec} - t^{true}";
+    tHandle.residualUnit = "[ns]";
+    tHandle.errorStr = "#sigma(t})";
+    tHandle.rangeDrawStr = "eT_fit - t_time";
+    tHandle.rangeMaxStr = "(1000,-10.,10.)";
+    tHandle.value = ResidualAccessor{tracks.eT_fit, tracks.t_time};
+    tHandle.error = DirectAccessor<float>{tracks.err_eT_fit};
+    tHandle.accept = AcceptAll{};
+    // Push it
+    baseResidualPulls.push_back(tHandle);
+  }
+
+  if (residualPulls.test(6)) {
     // The pt measurement
     ResidualPullHandle ptHandle;
     ptHandle.tag = "pt";
@@ -180,7 +204,80 @@ int perigeeParamResolution(
                                      tracks.eTHETA_fit, tracks.err_eTHETA_fit};
     ptHandle.accept = AcceptAll{};
     // Push it
-    baseHandles.push_back(ptHandle);
+    baseResidualPulls.push_back(ptHandle);
+  }
+
+  using Auxiliaries = std::vector<SingleHandle>;
+  Auxiliaries baseAuxilaries;
+
+  if (auxiliary.test(0)) {
+    // Chi2/ndf
+    SingleHandle chi2ndf;
+    chi2ndf.tag = "chi2ndf";
+    chi2ndf.label = "#Chi^{2}/ndf";
+    chi2ndf.bins = nHistBins;
+    chi2ndf.range = {0., 5.};
+    chi2ndf.value =
+        DivisionAccessor<float, unsigned int>{tracks.chi2Sum, tracks.NDF};
+    chi2ndf.accept = AcceptAll{};
+    // Push it
+    baseAuxilaries.push_back(chi2ndf);
+  }
+
+  if (auxiliary.test(1)) {
+    // Measurements
+    SingleHandle measurements;
+    measurements.tag = "measurements";
+    measurements.label = "#(measurements)";
+    measurements.rangeDrawStr = "nMeasurements";
+    measurements.value = DirectAccessor<unsigned int>{tracks.nMeasurements};
+    measurements.accept = AcceptAll{};
+    estimateIntegerRange(measurements, *rangeCanvas, *tracks.tree, peakEntries,
+                         250, 5, ++histBarcode);
+    // Push it
+    baseAuxilaries.push_back(measurements);
+  }
+
+  if (auxiliary.test(2)) {
+    // Holes
+    SingleHandle holes;
+    holes.tag = "holes";
+    holes.label = "#(holes)";
+    holes.rangeDrawStr = "nHoles";
+    holes.value = DirectAccessor<unsigned int>{tracks.nHoles};
+    holes.accept = AcceptAll{};
+    estimateIntegerRange(holes, *rangeCanvas, *tracks.tree, peakEntries, 10, 2,
+                         ++histBarcode);
+    // Push it
+    baseAuxilaries.push_back(holes);
+  }
+
+  if (auxiliary.test(3)) {
+    // Holes
+    SingleHandle outliers;
+    outliers.tag = "outliers";
+    outliers.label = "#(outliers)";
+    outliers.rangeDrawStr = "nOutliers";
+    outliers.value = DirectAccessor<unsigned int>{tracks.nOutliers};
+    outliers.accept = AcceptAll{};
+    estimateIntegerRange(outliers, *rangeCanvas, *tracks.tree, peakEntries, 10,
+                         2, ++histBarcode);
+    // Push it
+    baseAuxilaries.push_back(outliers);
+  }
+
+  if (auxiliary.test(4)) {
+    // Holes
+    SingleHandle shared;
+    shared.tag = "shared";
+    shared.label = "#(shared)";
+    shared.rangeDrawStr = "nSharedHits";
+    shared.value = DirectAccessor<unsigned int>{tracks.nSharedHits};
+    shared.accept = AcceptAll{};
+    estimateIntegerRange(shared, *rangeCanvas, *tracks.tree, peakEntries, 10, 2,
+                         ++histBarcode);
+    // Push it
+    baseAuxilaries.push_back(shared);
   }
 
   // Preparation phase for handles
@@ -211,7 +308,7 @@ int perigeeParamResolution(
     }
     if (not rangeDetermined) {
       estimateResiudalRange(handle, *rangeCanvas, *tracks.tree, peakEntries,
-                    ++histBarcode);
+                            ++histBarcode);
     }
 
     if (not outConfig.empty()) {
@@ -229,14 +326,14 @@ int perigeeParamResolution(
   auto handleRange = [&](ResidualPullHandle& handle, const TString& handleTag,
                          unsigned long peakEntries) -> void {
     estimateResiudalRange(handle, *rangeCanvas, *tracks.tree, peakEntries,
-                  ++histBarcode);
+                          ++histBarcode);
   };
 #endif
 
   // Full Range handles - they accept all tracks
-  Handles fullRangeHandles = baseHandles;
+  ResidualPulls fullResidualPulls = baseResidualPulls;
   // Range Estimation and booking histogram
-  for (auto& fHandle : fullRangeHandles) {
+  for (auto& fHandle : fullResidualPulls) {
     // The full tag
     TString handleTag(fHandle.tag + std::string("_all"));
     handleRange(fHandle, handleTag, peakEntries);
@@ -253,16 +350,46 @@ int perigeeParamResolution(
   }
 
   // Regional/Binned  handles
-  using HandleVector = std::vector<Handles>;
-  using HandleMatrix = std::vector<HandleVector>;
+  using ResidualPullsVector = std::vector<ResidualPulls>;
+  using ResidualPullsMatrix = std::vector<ResidualPullsVector>;
 
-  // Eta-Pt handles
-  HandleVector ptHandles = HandleVector(nPtBins, baseHandles);
-  HandleMatrix etaPtHandles = HandleMatrix(nEtaBins, ptHandles);
+  // Eta-Pt residual/pull handles
+  ResidualPullsVector ptResidualPulls =
+      ResidualPullsVector(nPtBins, baseResidualPulls);
+  ResidualPullsMatrix etaPtResidualPulls =
+      ResidualPullsMatrix(nEtaBins, ptResidualPulls);
 
-  // Eta-Phi handles
-  HandleVector phiHandles = HandleVector(nPhiBins, baseHandles);
-  HandleMatrix etaPhiHandles = HandleMatrix(nEtaBins, phiHandles);
+  // Eta-Phi residual/pull handles
+  ResidualPullsVector phiResidualPulls =
+      ResidualPullsVector(nPhiBins, baseResidualPulls);
+  ResidualPullsMatrix etaPhiResidualPulls =
+      ResidualPullsMatrix(nEtaBins, phiResidualPulls);
+
+  Auxiliaries fullAuxiliaries = baseAuxilaries;
+
+  // Histogram booking for full range auxiliaries
+  for (auto& fAuxiliary : fullAuxiliaries) {
+    fAuxiliary.hist =
+        new TH1F(fAuxiliary.tag.c_str(), fAuxiliary.tag.c_str(),
+                 fAuxiliary.bins, fAuxiliary.range[0], fAuxiliary.range[1]);
+    fAuxiliary.hist->GetXaxis()->SetTitle(fAuxiliary.label.c_str());
+    fAuxiliary.hist->GetYaxis()->SetTitle("Entries");
+    setHistStyle(fAuxiliary.hist);
+  }
+
+  using AuxiliariesVector = std::vector<Auxiliaries>;
+  using AuxiliariesMatrix = std::vector<AuxiliariesVector>;
+
+  // Eta-Pt auxiliaries
+  AuxiliariesVector ptAuxiliaries = AuxiliariesVector(nPtBins, baseAuxilaries);
+  AuxiliariesMatrix etaPtAuxiliaries =
+      AuxiliariesMatrix(nEtaBins, ptAuxiliaries);
+
+  // Eta-Phi auxiliaries
+  AuxiliariesVector phiAuxiliaries =
+      AuxiliariesVector(nPhiBins, baseAuxilaries);
+  AuxiliariesMatrix etaPhiAuxiliaries =
+      AuxiliariesMatrix(nEtaBins, phiAuxiliaries);
 
   // Loop over the binned handles & fill the acceptors
   float phiStep = (phiRange[1] - phiRange[0]) / nPhiBins;
@@ -279,7 +406,7 @@ int perigeeParamResolution(
 #ifdef BOOST_AVAILABLE
   std::cout << "*** Handle Preparation: " << std::endl;
   boost::progress_display handle_preparation_progress(
-      nPhiBins * nEtaBins * nPtBins * baseHandles.size());
+      nPhiBins * nEtaBins * nPtBins * baseResidualPulls.size());
 #endif
 
   std::string land = " && ";
@@ -349,10 +476,11 @@ int perigeeParamResolution(
         // Combined eta/pt acceptance
         AcceptCombination etaPtBin{etaBin, ptBin};
 
-        for (unsigned int ipar = 0; ipar < baseHandles.size(); ++ipar) {
+        for (unsigned int iresp = 0; iresp < baseResidualPulls.size();
+             ++iresp) {
           // Eta-Pt handles -- restrict for iphi == 0
           if (iphi == 0) {
-            auto& etaPtHandle = etaPtHandles[ieta][ipt][ipar];
+            auto& etaPtHandle = etaPtResidualPulls[ieta][ipt][iresp];
             // Create the handle tag
             TString handleTag(etaPtHandle.tag + etaTag + ptTag);
             // Accept range and range cut
@@ -377,7 +505,7 @@ int perigeeParamResolution(
           }
           // Eta-Phi handles --- restrice for ipt == 0
           if (ipt == 0) {
-            auto& etaPhiHandle = etaPhiHandles[ieta][iphi][ipar];
+            auto& etaPhiHandle = etaPhiResidualPulls[ieta][iphi][iresp];
             // Create the handle tag
             TString handleTag(etaPhiHandle.tag + etaTag + phiTag);
             etaPhiHandle.accept = etaPhiBin;
@@ -403,6 +531,35 @@ int perigeeParamResolution(
 #ifdef BOOST_AVAILABLE
           ++handle_preparation_progress;
 #endif
+        }
+
+        // Auxiliary plots
+        for (unsigned int iaux = 0; iaux < baseAuxilaries.size(); ++iaux) {
+          // Eta-Pt handles - restrict to iphi == 0
+          if (iphi == 0) {
+            auto& etaPtAux = etaPtAuxiliaries[ieta][ipt][iaux];
+            etaPtAux.accept = etaPtBin;
+            TString handleTag(etaPtAux.tag + etaTag + ptTag);
+            etaPtAux.hist =
+                new TH1F(handleTag.Data(), etaPtAux.tag.c_str(), etaPtAux.bins,
+                         etaPtAux.range[0], etaPtAux.range[1]);
+            etaPtAux.hist->GetXaxis()->SetTitle(etaPtAux.label.c_str());
+            etaPtAux.hist->GetYaxis()->SetTitle("Entries");
+            setHistStyle(etaPtAux.hist);
+          }
+
+          // Eta-Phi handles - restrict to ipt == 0
+          if (ipt == 0) {
+            auto& etaPhiAux = etaPhiAuxiliaries[ieta][iphi][iaux];
+            etaPhiAux.accept = etaPhiBin;
+            TString handleTag(etaPhiAux.tag + etaTag + phiTag);
+            etaPhiAux.hist = new TH1F(handleTag.Data(), etaPhiAux.tag.c_str(),
+                                      etaPhiAux.bins, etaPhiAux.range[0],
+                                      etaPhiAux.range[1]);
+            etaPhiAux.hist->GetXaxis()->SetTitle(etaPhiAux.label.c_str());
+            etaPhiAux.hist->GetYaxis()->SetTitle("Entries");
+            setHistStyle(etaPhiAux.hist);
+          }
         }
       }
     }
@@ -431,13 +588,14 @@ int perigeeParamResolution(
     size_t nTracks = tracks.hasFittedParams->size();
     for (size_t it = 0; it < nTracks; ++it) {
       if (tracks.hasFittedParams->at(it)) {
+        // Residual handlesL
         // Full range handles
-        for (auto& fHandle : fullRangeHandles) {
+        for (auto& fHandle : fullResidualPulls) {
           fHandle.fill(it);
         }
 
         // Eta-Pt handles
-        for (auto& etaBatch : etaPtHandles) {
+        for (auto& etaBatch : etaPtResidualPulls) {
           for (auto& ptBatch : etaBatch) {
             for (auto& bHandle : ptBatch) {
               bHandle.fill(it);
@@ -446,11 +604,35 @@ int perigeeParamResolution(
         }
 
         // Eta-Phi handles
-        for (auto& etaBatch : etaPhiHandles) {
+        for (auto& etaBatch : etaPhiResidualPulls) {
           for (auto& phiBatch : etaBatch) {
             for (auto& bHandle : phiBatch) {
               bHandle.fill(it);
             }
+          }
+        }
+      }
+
+      // Auxiliary handles:
+      // Full range handles
+      for (auto& fAuxiliary : fullAuxiliaries) {
+        fAuxiliary.fill(it);
+      }
+
+      // Eta-Pt handles
+      for (auto& etaBatch : etaPtAuxiliaries) {
+        for (auto& ptBatch : etaBatch) {
+          for (auto& bHandle : ptBatch) {
+            bHandle.fill(it);
+          }
+        }
+      }
+
+      // Eta-Phi handles
+      for (auto& etaBatch : etaPhiAuxiliaries) {
+        for (auto& phiBatch : etaBatch) {
+          for (auto& bHandle : phiBatch) {
+            bHandle.fill(it);
           }
         }
       }
@@ -461,8 +643,8 @@ int perigeeParamResolution(
   auto output = TFile::Open(outFile.c_str(), "recreate");
   output->cd();
 
-  // Full range handles
-  for (auto& fHandle : fullRangeHandles) {
+  // Full range handles : residual and pulls
+  for (auto& fHandle : fullResidualPulls) {
     if (fHandle.rangeHist != nullptr) {
       fHandle.rangeHist->Write();
     }
@@ -470,15 +652,26 @@ int perigeeParamResolution(
     fHandle.pullHist->Write();
   }
 
+  // Full range handles : auxiliaries
+  for (auto& fAuxiliary : fullAuxiliaries) {
+    fAuxiliary.hist->SetName(fAuxiliary.hist->GetName() + TString("_all"));
+    fAuxiliary.hist->Write();
+  }
+
   struct SummaryHistograms {
+    TH2F* fillStats = nullptr;
+
     std::vector<TH2F*> residualRMS;
     std::vector<TH2F*> residualMean;
     std::vector<TH2F*> pullSigma;
     std::vector<TH2F*> pullMean;
+
+    std::vector<TH2F*> auxiliaries;
   };
 
   /// Helper method to analyse bins
-  /// @param handleMatrix the 2D matrix of handles
+  /// @param residualPullsMatrix the 2D matrix of handles
+  /// @param auxiliaryMatrix the 2D matrix of the auxiliary handles
   /// @param matrixTag the identification tag for the matrix
   /// @param outputBordres the border vector for the outer bins
   /// @param innerBorders the border vector for the inner bins
@@ -486,8 +679,9 @@ int perigeeParamResolution(
   /// @param sXTitle the title of the x axis of the second projection
   ///
   /// @note this is a void function
-  auto analyseBins = [&](HandleMatrix& handleMatrix, const TString& matrixTag,
-                         const TVectorF& outerBorders,
+  auto analyseBins = [&](ResidualPullsMatrix& residualPullsMatrix,
+                         AuxiliariesMatrix& auxiliaryMatrix,
+                         const TString& matrixTag, const TVectorF& outerBorders,
                          const TVectorF& innerBorders,
                          const TString& fXTitle = "#eta",
                          const TString& sXTitle = "#phi") -> void {
@@ -498,15 +692,18 @@ int perigeeParamResolution(
     unsigned int nOuterBins = outerBorders.GetNrows() - 1;
     auto outerValues = outerBorders.GetMatrixArray();
     unsigned int nInnerBins = innerBorders.GetNrows() - 1;
-    auto innerValuse = innerBorders.GetMatrixArray();
+    auto innerValues = innerBorders.GetMatrixArray();
+
+    TString statN = TString("entries") + matrixTag;
+    summary.fillStats =
+        new TH2F(statN, "", nOuterBins, outerValues, nInnerBins, innerValues);
 
 #ifdef BOOST_AVAILABLE
-    boost::progress_display analysis_progress(nOuterBins * nInnerBins *
-                                              baseHandles.size());
+    boost::progress_display analysis_progress(nOuterBins * nInnerBins);
 #endif
 
-    // Prepare by looping over the base bhandles
-    for (auto& bHandle : baseHandles) {
+    // Prepare by looping over the base bhandles - residuals
+    for (auto& bHandle : baseResidualPulls) {
       // Create a unique handle tag
       TString handleTag = TString(bHandle.tag) + matrixTag;
       // ... and names
@@ -516,13 +713,13 @@ int perigeeParamResolution(
       TString pullMeanN = TString("pull_mean_") + handleTag;
 
       TH2F* residualRMS = new TH2F(residualRMSN, "", nOuterBins, outerValues,
-                                   nInnerBins, innerValuse);
+                                   nInnerBins, innerValues);
       TH2F* residualMean = new TH2F(residualMeanN, "", nOuterBins, outerValues,
-                                    nInnerBins, innerValuse);
+                                    nInnerBins, innerValues);
       TH2F* pullSigma = new TH2F(pullSigmaN, "", nOuterBins, outerValues,
-                                 nInnerBins, innerValuse);
+                                 nInnerBins, innerValues);
       TH2F* pullMean = new TH2F(pullMeanN, "", nOuterBins, outerValues,
-                                nInnerBins, innerValuse);
+                                nInnerBins, innerValues);
       // Booked & ready
       summary.residualRMS.push_back(residualRMS);
       summary.residualMean.push_back(residualMean);
@@ -530,26 +727,41 @@ int perigeeParamResolution(
       summary.pullMean.push_back(pullMean);
     }
 
+    // Prepare by looping over the base handles - auxiliaries
+    for (auto& aHandle : baseAuxilaries) {
+      // Create a unique handle tag
+      TString auxiliaryTag = TString(aHandle.tag) + matrixTag;
+      TH2F* auxiliary = new TH2F(auxiliaryTag, auxiliaryTag, nOuterBins,
+                                 outerValues, nInnerBins, innerValues);
+      summary.auxiliaries.push_back(auxiliary);
+    }
+
     unsigned int io = 0;
-    for (auto& outerBatch : handleMatrix) {
+    for (auto& outerBatch : residualPullsMatrix) {
       unsigned int ii = 0;
       for (auto& innerBatch : outerBatch) {
-        unsigned int ipar = 0;
+        // residual/pull loop
+        unsigned int iresp = 0;
         for (auto& bHandle : innerBatch) {
           // Range estimates / could be empty if read from configuration
           if (bHandle.rangeHist != nullptr) {
             bHandle.rangeHist->Write();
           }
+          // Fill the stats
+          if (iresp == 0) {
+            summary.fillStats->SetBinContent(io + 1, ii + 1, bHandle.accepted);
+          }
+
           // Residuals
           // Get RMS/ RMSError
           float rrms = bHandle.residualHist->GetRMS();
           float rrerr = bHandle.residualHist->GetRMSError();
           float rmean = bHandle.residualHist->GetMean();
           float rmerr = bHandle.residualHist->GetMeanError();
-          summary.residualRMS[ipar]->SetBinContent(io + 1, ii + 1, rrms);
-          summary.residualRMS[ipar]->SetBinError(io + 1, ii + 1, rrerr);
-          summary.residualMean[ipar]->SetBinContent(io + 1, ii + 1, rmean);
-          summary.residualMean[ipar]->SetBinError(io + 1, ii + 1, rmerr);
+          summary.residualRMS[iresp]->SetBinContent(io + 1, ii + 1, rrms);
+          summary.residualRMS[iresp]->SetBinError(io + 1, ii + 1, rrerr);
+          summary.residualMean[iresp]->SetBinContent(io + 1, ii + 1, rmean);
+          summary.residualMean[iresp]->SetBinError(io + 1, ii + 1, rmerr);
           bHandle.residualHist->Write();
           // Pulls
           bHandle.pullHist->Fit("gaus", "q");
@@ -558,16 +770,30 @@ int perigeeParamResolution(
           float pmerr = gauss->GetParError(1);
           float psigma = gauss->GetParameter(2);
           float pserr = gauss->GetParError(2);
-          summary.pullSigma[ipar]->SetBinContent(io + 1, ii + 1, psigma);
-          summary.pullSigma[ipar]->SetBinError(io + 1, ii + 1, pserr);
-          summary.pullMean[ipar]->SetBinContent(io + 1, ii + 1, pmu);
-          summary.pullMean[ipar]->SetBinError(io + 1, ii + 1, pmerr);
+          summary.pullSigma[iresp]->SetBinContent(io + 1, ii + 1, psigma);
+          summary.pullSigma[iresp]->SetBinError(io + 1, ii + 1, pserr);
+          summary.pullMean[iresp]->SetBinContent(io + 1, ii + 1, pmu);
+          summary.pullMean[iresp]->SetBinError(io + 1, ii + 1, pmerr);
           bHandle.pullHist->Write();
-          ++ipar;
-#ifdef BOOST_AVAILABLE
-          ++analysis_progress;
-#endif
+
+          ++iresp;
         }
+
+        // auxilaiary loop
+        auto auxiliaryBatch = auxiliaryMatrix[io][ii];
+        unsigned int iaux = 0;
+        for (auto& aHandle : auxiliaryBatch) {
+          float value = aHandle.hist->GetMean();
+          float error = aHandle.hist->GetMeanError();
+          summary.auxiliaries[iaux]->SetBinContent(io + 1, ii + 1, value);
+          summary.auxiliaries[iaux]->SetBinError(io + 1, ii + 1, error);
+          aHandle.hist->Write();
+
+          ++iaux;
+        }
+#ifdef BOOST_AVAILABLE
+        ++analysis_progress;
+#endif
         ++ii;
       }
       ++io;
@@ -592,6 +818,7 @@ int perigeeParamResolution(
       if (fTag != "") {
         TH1D* pX =
             dynamic_cast<TH1D*>(h2.ProjectionX((h2.GetName() + fTag).Data()));
+        setHistStyle(pX);
         if (pX != nullptr) {
           pX->GetXaxis()->SetTitle(fXTitle.Data());
           pX->GetYaxis()->SetTitle(fYTitle.Data());
@@ -601,6 +828,7 @@ int perigeeParamResolution(
         for (unsigned int iy = 1; iy <= nBinsY; ++iy) {
           pX = dynamic_cast<TH1D*>(h2.ProjectionX(
               (h2.GetName() + fTag + sTag + (iy - 1)).Data(), iy, iy));
+          setHistStyle(pX);
           if (pX != nullptr) {
             pX->GetXaxis()->SetTitle(fXTitle.Data());
             pX->GetYaxis()->SetTitle(fYTitle.Data());
@@ -611,6 +839,7 @@ int perigeeParamResolution(
       if (sTag != "") {
         TH1D* pY =
             dynamic_cast<TH1D*>(h2.ProjectionY((h2.GetName() + sTag).Data()));
+        setHistStyle(pY);
         if (pY != nullptr) {
           pY->GetXaxis()->SetTitle(sXTitle.Data());
           pY->GetYaxis()->SetTitle(sYTitle.Data());
@@ -620,6 +849,7 @@ int perigeeParamResolution(
         for (unsigned int ix = 1; ix <= nBinsX; ++ix) {
           pY = dynamic_cast<TH1D*>(h2.ProjectionY(
               (h2.GetName() + sTag + fTag + (ix - 1)).Data(), ix, ix));
+          setHistStyle(pY);
           if (pY != nullptr) {
             pY->GetXaxis()->SetTitle(sXTitle.Data());
             pY->GetYaxis()->SetTitle(sYTitle.Data());
@@ -629,10 +859,13 @@ int perigeeParamResolution(
       }
     };
 
-    // Write
-    for (unsigned int ipar = 0; ipar < baseHandles.size(); ++ipar) {
+    setHistStyle(summary.fillStats);
+    summary.fillStats->Write();
+
+    // Write mapped residual/pull histograms and their projections
+    for (unsigned int iresp = 0; iresp < baseResidualPulls.size(); ++iresp) {
       // Get the handle for writing out
-      auto bHandle = baseHandles[ipar];
+      auto bHandle = baseResidualPulls[iresp];
 
       TString rrms = TString("RMS[") + bHandle.residualStr + TString("] ") +
                      bHandle.residualUnit;
@@ -645,31 +878,58 @@ int perigeeParamResolution(
                     bHandle.errorStr + TString("]");
 
       // 2D map histograms
-      summary.residualRMS[ipar]->GetXaxis()->SetTitle(fXTitle);
-      summary.residualRMS[ipar]->GetYaxis()->SetTitle(sXTitle);
-      summary.residualRMS[ipar]->GetZaxis()->SetTitle(rrms);
-      summary.residualRMS[ipar]->Write();
-      summary.residualMean[ipar]->GetXaxis()->SetTitle(fXTitle);
-      summary.residualMean[ipar]->GetYaxis()->SetTitle(sXTitle);
-      summary.residualMean[ipar]->GetZaxis()->SetTitle(rmu);
-      summary.residualMean[ipar]->Write();
-      summary.pullSigma[ipar]->GetXaxis()->SetTitle(fXTitle);
-      summary.pullSigma[ipar]->GetYaxis()->SetTitle(sXTitle);
-      summary.pullSigma[ipar]->GetZaxis()->SetTitle(psigma);
-      summary.pullSigma[ipar]->Write();
-      summary.pullMean[ipar]->GetXaxis()->SetTitle(fXTitle);
-      summary.pullMean[ipar]->GetYaxis()->SetTitle(sXTitle);
-      summary.pullMean[ipar]->GetZaxis()->SetTitle(pmu);
-      summary.pullMean[ipar]->Write();
+      setHistStyle(summary.residualRMS[iresp]);
+      summary.residualRMS[iresp]->GetXaxis()->SetTitle(fXTitle);
+      summary.residualRMS[iresp]->GetYaxis()->SetTitle(sXTitle);
+      summary.residualRMS[iresp]->GetZaxis()->SetTitle(rrms);
+      summary.residualRMS[iresp]->Write();
+
+      setHistStyle(summary.residualMean[iresp]);
+      summary.residualMean[iresp]->GetXaxis()->SetTitle(fXTitle);
+      summary.residualMean[iresp]->GetYaxis()->SetTitle(sXTitle);
+      summary.residualMean[iresp]->GetZaxis()->SetTitle(rmu);
+      summary.residualMean[iresp]->Write();
+
+      setHistStyle(summary.pullSigma[iresp]);
+      adaptColorPalette(summary.pullSigma[iresp], 0., 4., 1., 0.1, 104);
+      summary.pullSigma[iresp]->GetXaxis()->SetTitle(fXTitle);
+      summary.pullSigma[iresp]->GetYaxis()->SetTitle(sXTitle);
+      summary.pullSigma[iresp]->GetZaxis()->SetRangeUser(0., 4.);
+      summary.pullSigma[iresp]->GetZaxis()->SetTitle(psigma);
+      summary.pullSigma[iresp]->Write();
+
+      setHistStyle(summary.pullMean[iresp]);
+      adaptColorPalette(summary.pullMean[iresp], -1., 1., 0., 0.1, 104);
+      summary.pullMean[iresp]->GetXaxis()->SetTitle(fXTitle);
+      summary.pullMean[iresp]->GetYaxis()->SetTitle(sXTitle);
+      summary.pullMean[iresp]->GetZaxis()->SetRangeUser(-1., 1.);
+      summary.pullMean[iresp]->GetZaxis()->SetTitle(pmu);
+      summary.pullMean[iresp]->Write();
 
       // Write the projection histograms
-      writeProjections(*summary.residualRMS[ipar], fXTitle, rrms, sXTitle,
+      writeProjections(*summary.residualRMS[iresp], fXTitle, rrms, sXTitle,
                        rrms);
-      writeProjections(*summary.residualMean[ipar], fXTitle, rmu, sXTitle, rmu);
-      writeProjections(*summary.pullSigma[ipar], fXTitle, psigma, sXTitle,
+      writeProjections(*summary.residualMean[iresp], fXTitle, rmu, sXTitle,
+                       rmu);
+      writeProjections(*summary.pullSigma[iresp], fXTitle, psigma, sXTitle,
                        psigma);
-      writeProjections(*summary.pullMean[ipar], fXTitle, pmu, sXTitle, pmu);
+      writeProjections(*summary.pullMean[iresp], fXTitle, pmu, sXTitle, pmu);
     }
+
+    // Write mapped auxiliary histograms and their projections
+    for (unsigned int iaux = 0; iaux < baseAuxilaries.size(); ++iaux) {
+      setHistStyle(summary.auxiliaries[iaux]);
+      summary.auxiliaries[iaux]->GetXaxis()->SetTitle(fXTitle);
+      summary.auxiliaries[iaux]->GetYaxis()->SetTitle(sXTitle);
+      summary.auxiliaries[iaux]->GetZaxis()->SetTitle(
+          baseAuxilaries[iaux].label.c_str());
+      summary.auxiliaries[iaux]->Write();
+
+      writeProjections(*summary.auxiliaries[iaux], fXTitle,
+                       baseAuxilaries[iaux].label, sXTitle,
+                       baseAuxilaries[iaux].label);
+    }
+
     return;
   };
 
@@ -677,10 +937,10 @@ int perigeeParamResolution(
 #ifdef BOOST_AVAILABLE
   std::cout << "*** Bin/Projection Analysis: " << std::endl;
 #endif
-  analyseBins(etaPtHandles, TString("_eta_pt"), etaVals, ptVals, "#eta",
-              "p_{T} [GeV]");
-  analyseBins(etaPhiHandles, TString("_eta_phi"), etaVals, phiVals, "#eta",
-              "#phi");
+  analyseBins(etaPtResidualPulls, etaPtAuxiliaries, TString("_eta_pt"), etaVals,
+              ptVals, "#eta", "p_{T} [GeV]");
+  analyseBins(etaPhiResidualPulls, etaPhiAuxiliaries, TString("_eta_phi"),
+              etaVals, phiVals, "#eta", "#phi");
 
   output->Close();
 

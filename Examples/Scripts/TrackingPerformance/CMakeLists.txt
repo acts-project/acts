@@ -7,10 +7,10 @@ install(
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 
-add_executable(ActsAnalysisPerigeeParameters PerigeeParameters.cpp)
-target_link_libraries(ActsAnalysisPerigeeParameters ActsExamplesFramework ROOT::Core ROOT::Hist ROOT::Tree ROOT::TreePlayer Boost::program_options)
+add_executable(ActsAnalysisTrackSummary TrackSummary.cpp)
+target_link_libraries(ActsAnalysisTrackSummary ActsExamplesFramework ROOT::Core ROOT::Hist ROOT::Tree ROOT::TreePlayer Boost::program_options)
   
 install(
   TARGETS
-  ActsAnalysisPerigeeParameters
+  ActsAnalysisTrackSummary
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})  

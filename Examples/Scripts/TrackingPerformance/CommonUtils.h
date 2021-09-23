@@ -25,12 +25,12 @@
 /// @param color the color
 template <typename hist_t>
 void setHistStyle(hist_t* hist, short color = 1) {
-  hist->GetXaxis()->SetTitleSize(0.05);
-  hist->GetYaxis()->SetTitleSize(0.05);
-  hist->GetXaxis()->SetLabelSize(0.05);
-  hist->GetYaxis()->SetLabelSize(0.05);
-  hist->GetXaxis()->SetTitleOffset(1.);
-  hist->GetYaxis()->SetTitleOffset(1.8);
+  hist->GetXaxis()->SetTitleSize(0.04);
+  hist->GetYaxis()->SetTitleSize(0.04);
+  hist->GetXaxis()->SetLabelSize(0.04);
+  hist->GetYaxis()->SetLabelSize(0.04);
+  hist->GetXaxis()->SetTitleOffset(1.0);
+  hist->GetYaxis()->SetTitleOffset(1.0);
   hist->GetXaxis()->SetNdivisions(505);
   hist->SetMarkerStyle(20);
   hist->SetMarkerSize(0.8);
@@ -58,8 +58,8 @@ void setEffStyle(eff_t* eff, short color = 1) {
 
 /// Helper function: set color pallette
 ///
-/// @tparam type of the histogram 
-/// 
+/// @tparam type of the histogram
+///
 /// @param h the histogram in question
 /// @param rmin the range min value
 /// @param rmax the range max value
@@ -90,10 +90,10 @@ void adaptColorPalette(hist_t* h, float rmin, float rmax, float rgood,
 /// already been drawn
 ///
 /// @tparam eff_t the efficiency histogram type
-/// 
+///
 /// @param eff the efficiency histogram
 /// @param minScale the minum of the scale
-/// @param maxScale the maximum of the scale 
+/// @param maxScale the maximum of the scale
 template <typename eff_t>
 void adaptEffRange(eff_t* eff, float minScale = 1, float maxScale = 1.1) {
   gPad->Update();
@@ -105,7 +105,6 @@ void adaptEffRange(eff_t* eff, float minScale = 1, float maxScale = 1.1) {
   gPad->Modified();
   gPad->Update();
 }
-
 
 /// A Parameter handle struct to deal with
 /// residuals and pulls.
@@ -165,6 +164,44 @@ struct ResidualPullHandle {
   };
 };
 
+/// This is a s
+struct SingleHandle {
+  /// A tag name
+  std::string tag = "";
+
+  /// A label name
+  std::string label = "";
+
+  // Range draw string
+  std::string rangeDrawStr = "";
+
+  /// The number of bins for the booking
+  unsigned int bins = 1;
+
+  /// The range array
+  std::array<float, 2> range = {0., 0.};
+
+  /// Value function that allows to create
+  /// combined parameters
+  std::function<float(ULong64_t)> value;
+
+  /// The acceptance
+  std::function<bool(ULong64_t)> accept;
+
+  TH1F* hist = nullptr;
+
+  /// Fill the entry
+  ///
+  /// @param entry is the current TTree entry to be processed
+  void fill(unsigned int entry) {
+    if (accept(entry)) {
+      // Access the value, error
+      float v = value(entry);
+      hist->Fill(v);
+    }
+  }
+};
+
 /// This is a combined accept struct
 ///
 /// It allows to define muleiple accept struct in a chained way
@@ -184,7 +221,7 @@ struct AcceptAll {
   bool operator()(ULong64_t /*event*/) { return true; }
 };
 
-/// This Struct is to accept a certain range from a 
+/// This Struct is to accept a certain range from a
 /// TTree accessible value
 struct AcceptRange {
   std::vector<float>* value = nullptr;
@@ -205,7 +242,7 @@ struct AcceptRange {
 /// This is a direct type accessor
 ///
 /// It simply forwards access to the underlying vector
-/// 
+///
 template <typename primitive_t>
 struct DirectAccessor {
   std::vector<primitive_t>* value = nullptr;
@@ -219,6 +256,26 @@ struct DirectAccessor {
       return v;
     }
     return std::numeric_limits<primitive_t>::max();
+  }
+};
+
+// Division accessor
+template <typename primitive_one_t, typename primitive_two_t>
+struct DivisionAccessor {
+  std::vector<primitive_one_t>* one = nullptr;
+
+  std::vector<primitive_two_t>* two = nullptr;
+
+  /// Gives direct acces to the underlying parameter
+  ///
+  /// @param entry the entry in the tree
+  primitive_one_t operator()(ULong64_t entry) {
+    if (one and two) {
+      primitive_one_t vo = one->at(entry);
+      primitive_two_t vt = two->at(entry);
+      return vo / vt;
+    }
+    return std::numeric_limits<primitive_one_t>::max();
   }
 };
 
@@ -320,8 +377,9 @@ struct PtErrorAccessor {
 /// @param peakEntries the number of entries for the range peak
 /// @param hBarcode a temporary unqiue ROOT barcode for memory managements
 template <typename dir_t, typename tree_t>
-void estimateResiudalRange(ResidualPullHandle& handle, dir_t& directory, tree_t& tree,
-                   unsigned long peakEntries, unsigned int hBarcode) {
+void estimateResiudalRange(ResidualPullHandle& handle, dir_t& directory,
+                           tree_t& tree, unsigned long peakEntries,
+                           unsigned int hBarcode) {
   // Change into the Directory
   directory.cd();
   TString rangeHist = handle.rangeDrawStr;
@@ -342,6 +400,53 @@ void estimateResiudalRange(ResidualPullHandle& handle, dir_t& directory, tree_t&
   }
 }
 
+/// Range estimation for integer values
+///
+/// @tparam dir_t the type of the directory to change into for writing
+/// @tparam tree_t the type of the tree to Draw from
+///
+/// @param handle the residual/pull handle to be processed
+/// @param directory the writable directory
+/// @param tree the tree from which is drawn
+/// @param peakEntries the number of entries for the range peak
+/// @param hBarcode a temporary unqiue ROOT barcode for memory managements
+template <typename dir_t, typename tree_t>
+void estimateIntegerRange(SingleHandle& handle, dir_t& directory,
+                                  tree_t& tree, unsigned long peakEntries,
+                                  unsigned int startBins, unsigned int addBins,
+                                  unsigned int hBarcode) {
+  // Change into the Directory
+  directory.cd();
+  TString rangeHist = handle.rangeDrawStr;
+  rangeHist += ">>";
+  // Hist name snipped
+  TString rangeHN = "hrg_";
+  rangeHN += hBarcode;
+  // Full histogram
+  rangeHist += rangeHN;
+  rangeHist += "(";
+  rangeHist += startBins;
+  rangeHist += ",-0.5,";
+  rangeHist += static_cast<float>(startBins - 0.5);
+  rangeHist += ")";
+
+  unsigned int nBins = startBins;
+  // Do the drawing
+  tree.Draw(rangeHist.Data(), "", "", peakEntries);
+  auto rhist = dynamic_cast<TH1F*>(gDirectory->Get(rangeHN.Data()));
+  if (rhist != nullptr) {
+    for (unsigned int ib = 1; ib <= startBins; ++ib) {
+      if (rhist->GetBinContent(ib) > 0.) {
+        nBins = ib;
+      }
+    }
+    handle.bins = (nBins + addBins);
+    handle.range = { -0.5, static_cast<float>(handle.bins-0.5) };
+    return;
+  }
+  handle.bins = ( startBins );
+  handle.range = { -0.5, static_cast<float>(handle.bins-0.5) };
+}
 
 /// Helper mehtod to book residual and pull histograms
 ///
@@ -375,6 +480,8 @@ void bookHistograms(ResidualPullHandle& handle, float pullRange,
 }
 
 /// Helper method to get and opentially overwrite the entries to be processed
+///
+/// @tparam tree_t the type of the tree
 ///
 /// @param tree is the TTree/TChain in question
 /// @param configuredEntries is a configuraiton parameter

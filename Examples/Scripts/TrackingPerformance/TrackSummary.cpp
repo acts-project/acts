@@ -21,7 +21,7 @@
 #define NLOHMANN_AVAILABLE 1
 #include <nlohmann/json.hpp>
 
-#include "perigeeParamResolution.C"
+#include "trackSummaryAnalysis.C"
 
 using namespace boost::program_options;
 
@@ -68,6 +68,23 @@ int main(int argc, char** argv) {
        "Output histrogram configuration json file.");
     ao("config-input", value<std::string>()->default_value(""),
        "Input histrogram configuration json file.");
+    // Define all parameters (overwrites individual parameters)
+    ao("all", bool_switch(),
+       "Process all residual/pull and auxiliary parameters");
+    // Define the parameters for the residual/pull analysis
+    std::vector<std::string> resPullPars = {"d0",  "z0",   "phi0", "theta0",
+                                            "qop", "time", "pt"};
+    for (const auto& rp : resPullPars) {
+      ao(rp.c_str(), bool_switch(),
+         (std::string("Residual/pulls for ") + rp).c_str());
+    }
+    // Define the auxiliary track information
+    std::vector<std::string> auxPars = {"chi2ndf", "measurements", "holes",
+                                        "outliers", "shared"};
+    for (const auto& aux : auxPars) {
+      ao(aux.c_str(), bool_switch(),
+         (std::string("Auxiliary information for ") + aux).c_str());
+    }
 
     // Set up the variables map
     variables_map vm;
@@ -116,11 +133,31 @@ int main(int argc, char** argv) {
                              ? nullptr
                              : new TApplication("TrackSummary", 0, 0);
 
+    std::bitset<7> residualPulls;
+    std::bitset<5> auxiliaries;
+    if (vm["all"].as<bool>()) {
+      residualPulls = std::bitset<7>{"1111111"};
+      auxiliaries = std::bitset<5>{"11111"};
+    } else {
+      // Set the bit for the chosen parameters(s)
+      for (unsigned int iresp = 0; iresp < resPullPars.size(); ++iresp) {
+        if (vm[resPullPars[iresp]].as<bool>()) {
+          residualPulls.set(iresp);
+        }
+      }
+      // Set the bit for the chosen auxiliaries
+      for (unsigned int iaux = 0; iaux < auxPars.size(); ++iaux) {
+        if (vm[auxPars[iaux]].as<bool>()) {
+          auxiliaries.set(iaux);
+        }
+      }
+    }
+
     // Run the actual resolution estimation
-    switch (perigeeParamResolution(iFiles, iTree, oFile, configInput,
-                                   configOutput, nEntries, nPeakEntries,
-                                   pullRange, nHistBins, nPhiBins, phiRange,
-                                   nEtaBins, etaRange, ptBorders)) {
+    switch (trackSummaryAnalysis(
+        iFiles, iTree, oFile, configInput, configOutput, nEntries, nPeakEntries,
+        pullRange, nHistBins, nPhiBins, phiRange, nEtaBins, etaRange, ptBorders,
+        residualPulls, auxiliaries)) {
       case -1: {
         std::cout << "*** Input file could not be opened, check name/path."
                   << std::endl;

@@ -307,6 +307,7 @@ struct TrackSummaryReader : public TreeReader {
     tree->SetBranchAddress("outlierVolume", &outlierVolume);
     tree->SetBranchAddress("outlierLayer", &outlierLayer);
     tree->SetBranchAddress("nMajorityHits", &nMajorityHits);
+    tree->SetBranchAddress("nSharedHits", &nSharedHits);
     tree->SetBranchAddress("majorityParticleId", &majorityParticleId);
 
     tree->SetBranchAddress("hasFittedParams", &hasFittedParams);
@@ -319,7 +320,7 @@ struct TrackSummaryReader : public TreeReader {
     tree->SetBranchAddress("t_d0", &t_d0);
     tree->SetBranchAddress("t_z0", &t_z0);
     tree->SetBranchAddress("t_charge",&t_charge);
-tree->SetBranchAddress("t_time",&t_time);
+    tree->SetBranchAddress("t_time",&t_time);
 
     tree->SetBranchAddress("eLOC0_fit", &eLOC0_fit);
     tree->SetBranchAddress("eLOC1_fit", &eLOC1_fit);
@@ -351,6 +352,7 @@ tree->SetBranchAddress("t_time",&t_time);
   std::vector<unsigned int>* nMeasurements = new std::vector<unsigned int>;
   std::vector<unsigned int>* nOutliers = new std::vector<unsigned int>;
   std::vector<unsigned int>* nHoles = new std::vector<unsigned int>;
+  std::vector<unsigned int>* nSharedHits = new std::vector<unsigned int>;
   std::vector<float>* chi2Sum = new std::vector<float>;
   std::vector<unsigned int>* NDF = new std::vector<unsigned int>;
   std::vector<std::vector<double>>* measurementChi2 =
