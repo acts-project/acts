@@ -76,7 +76,7 @@ ActsExamples::Options::readParticleGunOptions(const Variables& vars) {
   double etaMin, etaMax;
   getRange("gen-eta", 1.0, etaMin, etaMax);
 
-  pgCfg.forceEtaGeneration = vars["gen-eta-uniform"].template as<bool>();
+  pgCfg.etaUniform = vars["gen-eta-uniform"].template as<bool>();
   pgCfg.thetaMin = 2 * std::atan(std::exp(-etaMin));
   pgCfg.thetaMax = 2 * std::atan(std::exp(-etaMax));
   getRange("gen-mom-gev", 1_GeV, pgCfg.pMin, pgCfg.pMax);
