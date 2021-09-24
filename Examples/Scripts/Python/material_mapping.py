@@ -7,6 +7,7 @@ from acts.examples import (
     AlgorithmContext,
     ProcessCode,
     RootMaterialTrackReader,
+    RootMaterialTrackWriter,
     MaterialMapping,
     JsonMaterialWriter,
     JsonFormat,
@@ -53,7 +54,7 @@ def runMaterialMapping(
         RootMaterialTrackReader(
             level=acts.logging.INFO,
             collection="material-tracks",
-            fileList=[os.path.join(inputDir, "geant-material-tracks.root")],
+            fileList=[os.path.join(inputDir, "geant4_material_tracks.root")],
         )
     )
 
@@ -95,8 +96,21 @@ def runMaterialMapping(
     jmw = JsonMaterialWriter(
         level=acts.logging.VERBOSE,
         converterCfg=jmConverterCfg,
-        fileName=os.path.join(outputDir, "material"),
+        fileName=os.path.join(outputDir, "material-map"),
         writeFormat=JsonFormat.Json,
+    )
+
+    s.addWriter(
+        RootMaterialTrackWriter(
+            level=acts.logging.INFO,
+            collection=mmAlgCfg.mappingMaterialCollection,
+            filePath=os.path.join(
+                outputDir,
+                "material-maps_tracks.root",
+            ),
+            storeSurface=True,
+            storeVolume=True,
+        )
     )
 
     mmAlgCfg.materialWriters = [jmw]
@@ -107,8 +121,8 @@ def runMaterialMapping(
 
 
 if "__main__" == __name__:
-    detector, trackingGeometry, decorators = getOpenDataDetector()
-    print(decorators)
+    matDeco = acts.IMaterialDecorator.fromFile("geometry-map.json")
+    detector, trackingGeometry, decorators = getOpenDataDetector(matDeco)
 
     runMaterialMapping(
         trackingGeometry, decorators, outputDir=os.getcwd(), inputDir=os.getcwd()

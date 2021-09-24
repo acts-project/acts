@@ -1,19 +1,16 @@
-import multiprocessing
+import subprocess
+import sys
 
 
 # Cannot conveniently catch linker errors, so we launch a suprocess to
 # try importing and see if it works in order to provide a useful error message
-def _import_test():
-    from acts import ActsPythonBindingsDD4hep
-
-
-p = multiprocessing.Process(target=_import_test)
-p.start()
-p.join()
-if p.exitcode != 0:
-    raise RuntimeError(
-        "Error encountered importing DD4hep. Likely you need to set LD_LIBRARY_PATH."
+try:
+    subprocess.check_call(
+        [sys.executable, "-c", "from acts import ActsPythonBindingsDD4hep"]
     )
+except subprocess.CalledProcessError as e:
+    print("Error encountered importing DD4hep. Likely you need to set LD_LIBRARY_PATH.")
+    sys.exit(1)
 
 from acts._adapter import _patch_config, _detector_create
 from acts import ActsPythonBindingsDD4hep

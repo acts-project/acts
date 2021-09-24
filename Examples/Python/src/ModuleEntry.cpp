@@ -108,12 +108,6 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   m.attr("__version__") =
       std::tuple{Acts::VersionMajor, Acts::VersionMinor, Acts::VersionPatch};
 
-  // {
-  //   py::class_<Acts::Logger, std::unique_ptr<Acts::Logger>>(m, "Logger");
-  //   m.def("getDefaultLogger", [](const std::string& name, Logging::Level lvl)
-  //   {return Acts::getDefaultLogger);
-  // }
-
   py::class_<ActsExamples::IWriter, std::shared_ptr<ActsExamples::IWriter>>(
       mex, "IWriter");
 
@@ -134,7 +128,6 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
       .def("exists", &WhiteBoard::exists);
 
   py::class_<Acts::GeometryContext>(m, "GeometryContext");
-  //   py::class_<Acts::MagneticFieldContext>(m, "MagneticFieldContext");
 
   py::class_<AlgorithmContext>(mex, "AlgorithmContext")
       .def(py::init<size_t, size_t, WhiteBoard&>())

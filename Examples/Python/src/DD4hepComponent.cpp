@@ -55,7 +55,4 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
                            std::shared_ptr<const Acts::IMaterialDecorator>>(
                            &DD4hepDetector::finalize));
   }
-
-  // auto parent = py::module::import("acts._adapter");
-  // parent.attr("_patch_config")(m);
 }

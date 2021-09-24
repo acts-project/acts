@@ -79,7 +79,7 @@ def runGeometry(
             jmw = JsonMaterialWriter(
                 level=acts.logging.VERBOSE,
                 converterCfg=jmConverterCfg,
-                fileName=os.path.join(outputDir, "json", "material"),
+                fileName=os.path.join(outputDir, "geometry-map"),
                 writeFormat=JsonFormat.Json,
             )
 
@@ -87,8 +87,8 @@ def runGeometry(
 
 
 if "__main__" == __name__:
-    detector, trackingGeometry, decorators = AlignedDetector.create()
+    # detector, trackingGeometry, decorators = AlignedDetector.create()
     # detector, trackingGeometry, decorators = GenericDetector.create()
-    # detector, trackingGeometry, decorators = getOpenDataDetector()
+    detector, trackingGeometry, decorators = getOpenDataDetector()
 
     runGeometry(trackingGeometry, decorators, outputDir=os.getcwd())

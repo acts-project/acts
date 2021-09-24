@@ -48,9 +48,7 @@ def runMaterialValidation(
         RootMaterialTrackWriter(
             level=acts.logging.INFO,
             collection=alg.config.propagationMaterialCollection,
-            filePath=os.path.join(
-                outputDir, f"{alg.config.propagationMaterialCollection}.root"
-            ),
+            filePath=os.path.join(outputDir, "propagation-material.root"),
             storeSurface=True,
             storeVolume=True,
         )
@@ -60,7 +58,7 @@ def runMaterialValidation(
 
 
 if "__main__" == __name__:
-    matDeco = acts.IMaterialDecorator.fromFile("material.json")
+    matDeco = acts.IMaterialDecorator.fromFile("material-map.json")
 
     detector, trackingGeometry, decorators = getOpenDataDetector(mdecorator=matDeco)
 

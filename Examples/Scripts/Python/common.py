@@ -1,9 +1,15 @@
 import acts
 import acts.examples
 
+from pathlib import Path
+
 
 def getOpenDataDetector(mdecorator=None):
     import acts.examples.dd4hep
+
+    odd_dir = (
+        Path(__file__).parent.parent.parent.parent / "thirdparty" / "OpenDataDetector"
+    )
 
     dd4hepConfig = acts.examples.dd4hep.DD4hepGeometryService.Config(
         xmlFileNames=["thirdparty/OpenDataDetector/xml/OpenDataDetector.xml"]

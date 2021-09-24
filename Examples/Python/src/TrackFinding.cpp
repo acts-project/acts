@@ -138,52 +138,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(seedFilterConfig);
     ACTS_PYTHON_MEMBER(seedFinderConfig);
     ACTS_PYTHON_MEMBER(gridConfig);
-    // ACTS_PYTHON_MEMBER(rMax);
-    // ACTS_PYTHON_MEMBER(deltaRMin);
-    // ACTS_PYTHON_MEMBER(deltaRMax);
-    // ACTS_PYTHON_MEMBER(collisionRegionMin);
-    // ACTS_PYTHON_MEMBER(collisionRegionMax);
-    // ACTS_PYTHON_MEMBER(zMin);
-    // ACTS_PYTHON_MEMBER(zMax);
-    // ACTS_PYTHON_MEMBER(maxSeedsPerSpM);
-    // ACTS_PYTHON_MEMBER(cotThetaMax);
-    // ACTS_PYTHON_MEMBER(sigmaScattering);
-    // ACTS_PYTHON_MEMBER(radLengthPerSeed);
-    // ACTS_PYTHON_MEMBER(minPt);
-    // ACTS_PYTHON_MEMBER(bFieldInZ);
-    // ACTS_PYTHON_MEMBER(beamPosX);
-    // ACTS_PYTHON_MEMBER(beamPosY);
-    // ACTS_PYTHON_MEMBER(impactMax);
     ACTS_PYTHON_STRUCT_END();
-
-    // c.def_property(
-    //     "deltaR",
-    //     [](Config& cfg) {
-    //       return std::pair{cfg.deltaRMin, cfg.deltaRMax};
-    //     },
-    //     [](Config& cfg, std::pair<double, double> values) {
-    //       cfg.deltaRMin = values.first;
-    //       cfg.deltaRMax = values.second;
-    //     });
-    // c.def_property(
-    //     "z",
-    //     [](Config& cfg) {
-    //       return std::pair{cfg.zMin, cfg.zMax};
-    //     },
-    //     [](Config& cfg, std::pair<double, double> values) {
-    //       cfg.zMin = values.first;
-    //       cfg.zMax = values.second;
-    //     });
-
-    // c.def_property(
-    //     "collisionRegion",
-    //     [](Config& cfg) {
-    //       return std::pair{cfg.collisionRegionMin, cfg.collisionRegionMax};
-    //     },
-    //     [](Config& cfg, std::pair<double, double> values) {
-    //       cfg.collisionRegionMin = values.first;
-    //       cfg.collisionRegionMax = values.second;
-    //     });
   }
 
   {

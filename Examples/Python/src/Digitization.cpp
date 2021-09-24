@@ -124,10 +124,6 @@ void addDigitization(Context& ctx) {
     using DC = DigitizationConfigurator;
     auto dc = py::class_<DC>(mex, "DigitizationConfigurator").def(py::init<>());
 
-    // py::class_<DC::CollectedOutputComponents,
-    //            std::shared_ptr<DC::CollectedOutputComponents>>(
-    //     dc, "CollectedOutputComponents");
-
     dc.def("__call__", &DC::operator());
 
     ACTS_PYTHON_STRUCT_BEGIN(dc, DC);

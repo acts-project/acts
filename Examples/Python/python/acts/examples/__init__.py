@@ -48,15 +48,6 @@ def _makeLayerTriplet(*args, **kwargs):
 
         _type = types[0]
 
-    # print(_type, negative, central, positive)
-
-    # type_map = {
-    #     bool: LayerTripletBool,
-    #     str: LayerTripletString,
-    #     list: LayerTripletVectorString,
-    #     tuple
-    # }
-
     def fill(obj):
         if negative is not None:
             obj.negative = negative
