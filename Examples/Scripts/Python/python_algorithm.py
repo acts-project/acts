@@ -27,16 +27,6 @@ class PyAlg1(acts.examples.IAlgorithm):
         return acts.examples.ProcessCode.SUCCESS
 
 
-# def add():
-#     alg = PyAlg(name="BA", level=acts.logging.INFO)
-#     # s.addAlgorithm(PyAlg(name="BA", level=acts.logging.INFO))
-#     s.addAlgorithm(alg)
-
-
-# add()
-
-# a1 = PyAlg1()
-# print(a1.name())
 s.addAlgorithm(PyAlg(name="blubb", level=acts.logging.INFO))
 
 print("alg go")
