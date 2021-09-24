@@ -766,16 +766,17 @@ int trackSummaryAnalysis(
           // Pulls
           bHandle.pullHist->Fit("gaus", "q");
           TF1* gauss = bHandle.pullHist->GetFunction("gaus");
-          float pmu = gauss->GetParameter(1);
-          float pmerr = gauss->GetParError(1);
-          float psigma = gauss->GetParameter(2);
-          float pserr = gauss->GetParError(2);
-          summary.pullSigma[iresp]->SetBinContent(io + 1, ii + 1, psigma);
-          summary.pullSigma[iresp]->SetBinError(io + 1, ii + 1, pserr);
-          summary.pullMean[iresp]->SetBinContent(io + 1, ii + 1, pmu);
-          summary.pullMean[iresp]->SetBinError(io + 1, ii + 1, pmerr);
+          if (gauss != nullptr) {
+            float pmu = gauss->GetParameter(1);
+            float pmerr = gauss->GetParError(1);
+            float psigma = gauss->GetParameter(2);
+            float pserr = gauss->GetParError(2);
+            summary.pullSigma[iresp]->SetBinContent(io + 1, ii + 1, psigma);
+            summary.pullSigma[iresp]->SetBinError(io + 1, ii + 1, pserr);
+            summary.pullMean[iresp]->SetBinContent(io + 1, ii + 1, pmu);
+            summary.pullMean[iresp]->SetBinError(io + 1, ii + 1, pmerr);
+          }
           bHandle.pullHist->Write();
-
           ++iresp;
         }
 
