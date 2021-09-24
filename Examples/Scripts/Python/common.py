@@ -12,7 +12,7 @@ def getOpenDataDetector(mdecorator=None):
     )
 
     dd4hepConfig = acts.examples.dd4hep.DD4hepGeometryService.Config(
-        xmlFileNames=["thirdparty/OpenDataDetector/xml/OpenDataDetector.xml"]
+        xmlFileNames=[str(odd_dir / "xml/OpenDataDetector.xml")]
     )
     detector = acts.examples.dd4hep.DD4hepDetector()
 
@@ -20,7 +20,7 @@ def getOpenDataDetector(mdecorator=None):
     if mdecorator is None:
         mdecorator = acts.JsonMaterialDecorator(
             rConfig=config,
-            jFileName="thirdparty/OpenDataDetector/config/odd-material-mapping-config.json",
+            jFileName=str(odd_dir / "config/odd-material-mapping-config.json"),
             level=acts.logging.WARNING,
         )
 
