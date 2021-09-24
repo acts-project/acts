@@ -73,7 +73,7 @@ void from_json(const nlohmann::json& j,
           .get<std::map<std::string, std::vector<std::pair<double, double>>>>();
 }
 
-void to_json(nlohmann::ordered_json& j,
+void to_json(nlohmann::json& j,
              const ActsExamples::TGeoITkModuleSplitter::Config& msc) {
   j["geo-tgeo-barrel-map"] = msc.barrelMap;
   j["geo-tgeo-disc-map"] = msc.discMap;
