@@ -35,8 +35,14 @@ class ParametricParticleGenerator : public EventGenerator::ParticlesGenerator {
     ///
     /// This intentionally uses theta instead of eta so it can represent the
     /// full direction space with finite values.
+    ///
+    /// @note This is the standard generation, for detector performance
+    /// classification, where a flat distribution in eta can be useful,
+    /// this can be set by the etaUniform flag;
+    ///
     double thetaMin = 0.0;
     double thetaMax = M_PI;
+    bool etaUniform = false;
     /// Low, high (exclusive) for absolute/transverse momentum.
     double pMin = 1 * Acts::UnitConstants::GeV;
     double pMax = 10 * Acts::UnitConstants::GeV;
@@ -62,6 +68,8 @@ class ParametricParticleGenerator : public EventGenerator::ParticlesGenerator {
   double m_mass;
   double m_cosThetaMin;
   double m_cosThetaMax;
+  double m_etaMin;
+  double m_etaMax;
 };
 
 }  // namespace ActsExamples

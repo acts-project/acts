@@ -25,7 +25,10 @@ ActsExamples::ParametricParticleGenerator::ParametricParticleGenerator(
       // ensure upper bound is included. see e.g.
       // https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
       m_cosThetaMax(std::nextafter(std::cos(m_cfg.thetaMax),
-                                   std::numeric_limits<double>::max())) {}
+                                   std::numeric_limits<double>::max())),
+      // in case we force uniform eta generation
+      m_etaMin(-std::log(std::tan(0.5 * m_cfg.thetaMin))),
+      m_etaMax(-std::log(std::tan(0.5 * m_cfg.thetaMax))) {}
 
 ActsExamples::SimParticleContainer
 ActsExamples::ParametricParticleGenerator::operator()(RandomEngine& rng) {
@@ -46,6 +49,7 @@ ActsExamples::ParametricParticleGenerator::operator()(RandomEngine& rng) {
   };
   UniformReal phiDist(m_cfg.phiMin, m_cfg.phiMax);
   UniformReal cosThetaDist(m_cosThetaMin, m_cosThetaMax);
+  UniformReal etaDist(m_etaMin, m_etaMax);
   UniformReal pDist(m_cfg.pMin, m_cfg.pMax);
 
   SimParticleContainer particles;
@@ -61,12 +65,21 @@ ActsExamples::ParametricParticleGenerator::operator()(RandomEngine& rng) {
     const Acts::PdgParticle pdg = pdgChoices[type];
     const double q = qChoices[type];
     const double phi = phiDist(rng);
-    const double cosTheta = cosThetaDist(rng);
-    const double sinTheta = std::sqrt(1 - cosTheta * cosTheta);
     double p = pDist(rng);
 
     // we already have sin/cos theta. they can be used directly to
     Acts::Vector3 dir;
+    double cosTheta = 0.;
+    double sinTheta = 0.;
+    if (not m_cfg.etaUniform) {
+      cosTheta = cosThetaDist(rng);
+      sinTheta = std::sqrt(1 - cosTheta * cosTheta);
+    } else {
+      const double eta = etaDist(rng);
+      const double theta = 2 * std::atan(std::exp(-eta));
+      sinTheta = std::sin(theta);
+      cosTheta = std::cos(theta);
+    }
     dir[Acts::eMom0] = sinTheta * std::cos(phi);
     dir[Acts::eMom1] = sinTheta * std::sin(phi);
     dir[Acts::eMom2] = cosTheta;
