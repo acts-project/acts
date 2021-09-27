@@ -103,17 +103,16 @@ if(ACTS_BUILD_EXAMPLES_GEANT4)
   list(APPEND py_files examples/geant4/__init__.py)
 
   if(ACTS_BUILD_PLUGIN_DD4HEP AND ACTS_BUILD_EXAMPLES_DD4HEP)
-    pybind11_add_module(ActsPythonBindingsGeant4DD4hep src/Geant4DD4hepComponent.cpp)
-    target_link_libraries(ActsPythonBindingsGeant4DD4hep PUBLIC 
+    pybind11_add_module(ActsPythonBindingsDDG4 src/Geant4DD4hepComponent.cpp)
+    target_link_libraries(ActsPythonBindingsDDG4 PUBLIC 
       ActsPythonUtilities
       ActsExamplesGeant4
-      ActsExamplesGeant4DD4hep 
       ActsExamplesDetectorDD4hep)
-    add_dependencies(ActsPythonBindings ActsPythonBindingsGeant4DD4hep)
+    add_dependencies(ActsPythonBindings ActsPythonBindingsDDG4)
 
-    install(TARGETS ActsPythonBindingsGeant4DD4hep DESTINATION .)
-    set_target_properties(ActsPythonBindingsGeant4DD4hep PROPERTIES INSTALL_RPATH "\$ORIGIN/${CMAKE_INSTALL_LIBDIR}")
-    set_target_properties(ActsPythonBindingsGeant4DD4hep PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts)
+    install(TARGETS ActsPythonBindingsDDG4 DESTINATION .)
+    set_target_properties(ActsPythonBindingsDDG4 PROPERTIES INSTALL_RPATH "\$ORIGIN/${CMAKE_INSTALL_LIBDIR}")
+    set_target_properties(ActsPythonBindingsDDG4 PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts)
     list(APPEND py_files examples/geant4/dd4hep.py)
   endif()
 

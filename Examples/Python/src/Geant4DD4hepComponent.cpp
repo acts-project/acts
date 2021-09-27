@@ -8,8 +8,8 @@
 
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetectorOptions.hpp"
+#include "ActsExamples/DDG4/DDG4DetectorConstruction.hpp"
 #include "ActsExamples/Geant4/G4DetectorConstructionFactory.hpp"
-#include "ActsExamples/Geant4DD4hep/DD4hepDetectorConstruction.hpp"
 
 #include <functional>
 #include <memory>
@@ -24,14 +24,20 @@ namespace py = pybind11;
 using namespace ActsExamples;
 using namespace Acts;
 
-PYBIND11_MODULE(ActsPythonBindingsGeant4DD4hep, m) {
+PYBIND11_MODULE(ActsPythonBindingsDDG4, m) {
   py::module_::import("acts.ActsPythonBindingsGeant4");
 
-  py::class_<DD4hepDetectorConstructionFactory, G4DetectorConstructionFactory,
-             std::shared_ptr<DD4hepDetectorConstructionFactory>>(
-      m, "DD4hepDetectorConstructionFactory")
-      .def(py::init([](DD4hep::DD4hepGeometryService& geometrySvc) {
-        return std::make_shared<DD4hepDetectorConstructionFactory>(
-            *geometrySvc.lcdd());
-      }));
+  m.def(
+      "DDG4DetectorConstruction",
+      [](DD4hep::DD4hepGeometryService& geometrySvc) {
+        return new DDG4DetectorConstruction(*geometrySvc.lcdd());
+      },
+      py::return_value_policy::reference);
+
+  // py::class_<DDG4DetectorConstructionFactory, G4DetectorConstructionFactory,
+  //            >(
+  //     m, "DDG4DetectorConstruction")
+  //     .def(py::init([](DD4hep::DD4hepGeometryService& geometrySvc) {
+  //       return new DDG4DetectorConstruction(*geometrySvc.lcdd());
+  //     }));
 }
