@@ -25,6 +25,7 @@ class G4UserRunAction;
 class G4UserEventAction;
 class G4UserTrackingAction;
 class G4UserSteppingAction;
+class G4VUserPhysicsList;
 
 namespace ActsExamples {
 
@@ -32,8 +33,8 @@ namespace ActsExamples {
 ///
 /// @param vars the parsed variables
 /// @param sequencer the event sequencer
-/// @param runManger the Geant4 run manager instance
 /// @param detector the detector to be used
+/// @param physicsList the physics list to use
 /// @param runActions the list of Geant4 user run action
 /// @param eventActions the list of Geant4 user event action
 /// @param trackingActions the list of Geant4 user tracking action

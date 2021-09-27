@@ -61,7 +61,6 @@ void setupGeant4Simulation(
 
   // Set the main Geant4 algorithm, primary generation, detector construction
   Geant4Simulation::Config g4Cfg;
-  g4Cfg.runManager = runManager;
 
   // Read the particle from the generator
   SimParticleTranslation::Config g4PrCfg;
@@ -79,6 +78,8 @@ void setupGeant4Simulation(
   g4Cfg.primaryGeneratorAction = new SimParticleTranslation(
       g4PrCfg, Acts::getDefaultLogger("SimParticleTranslation", g4loglevel));
   g4Cfg.detectorConstruction = detector.release();
+
+  g4Cfg.physicsList = physicsList;
 
   // Set the user actions
   g4Cfg.runActions = runActions;
@@ -137,11 +138,8 @@ int runMaterialRecording(
   evgen.randomNumbers = rnd;
   sequencer.addReader(std::make_shared<EventGenerator>(evgen, logLevel));
 
-  // The Genat4 run manager instance
-  G4RunManager* runManager = new G4RunManager();
-  // runManager->SetUserInitialization(new FTFP_BERT);
-  runManager->SetUserInitialization(new MaterialPhysicsList(
-      Acts::getDefaultLogger("MaterialPhysicsList", g4loglevel)));
+  auto* physicsList = new MaterialPhysicsList(
+      Acts::getDefaultLogger("MaterialPhysicsList", g4loglevel));
 
   // The Geant4 actions needed
   std::vector<G4UserRunAction*> runActions = {};
@@ -175,7 +173,6 @@ int runMaterialRecording(
   }
 
   auto result = sequencer.run();
-  delete runManager;
   return result;
 }
 
@@ -191,9 +188,7 @@ int runGeant4Simulation(
   auto g4loglevel =
       Acts::Logging::Level(vars["g4-loglevel"].as<unsigned int>());
 
-  // The Genat4 run manager instance
-  G4RunManager* runManager = new G4RunManager();
-  runManager->SetUserInitialization(new FTFP_BERT);
+  auto* physicsList = new FTFP_BERT();
 
   // The Geant4 actions needed
   std::vector<G4UserRunAction*> runActions = {};
@@ -225,7 +220,6 @@ int runGeant4Simulation(
   Simulation::setupOutput(vars, sequencer);
 
   auto result = sequencer.run();
-  delete runManager;
   return result;
 }
 

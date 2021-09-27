@@ -25,6 +25,7 @@ class G4UserEventAction;
 class G4UserTrackingAction;
 class G4UserSteppingAction;
 class G4MagneticField;
+class G4VUserPhysicsList;
 
 namespace ActsExamples {
 
@@ -59,11 +60,10 @@ class Geant4Simulation final : public BareAlgorithm {
     // Name of the output collection: material tracks
     std::string outputMaterialTracks = "";
 
-    /// The G4 run manager
-    G4RunManager* runManager = nullptr;
-
     /// User Action: Primary generator action of the simulation
     G4VUserPrimaryGeneratorAction* primaryGeneratorAction = nullptr;
+
+    G4VUserPhysicsList* physicsList = nullptr;
 
     /// User Actions: Run
     std::vector<G4UserRunAction*> runActions = {};
@@ -107,6 +107,8 @@ class Geant4Simulation final : public BareAlgorithm {
 
  private:
   Config m_cfg;
+
+  std::unique_ptr<G4RunManager> m_runManager;
 
   // Has to be mutable; algorithm interface enforces object constness
   mutable std::mutex m_runManagerLock;

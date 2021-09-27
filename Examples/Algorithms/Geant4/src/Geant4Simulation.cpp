@@ -28,6 +28,7 @@
 #include <G4UserSteppingAction.hh>
 #include <G4UserTrackingAction.hh>
 #include <G4VUserDetectorConstruction.hh>
+#include <G4VUserPhysicsList.hh>
 
 namespace {
 /// Helper method to add the user actions
@@ -47,30 +48,35 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
     const ActsExamples::Geant4Simulation::Config& config,
     Acts::Logging::Level level)
     : BareAlgorithm("Geant4Simulation", level), m_cfg(config) {
-  if (m_cfg.runManager == nullptr) {
-    throw std::invalid_argument("Missing G4 RunManager object");
-  }
   if (m_cfg.detectorConstruction == nullptr) {
     throw std::invalid_argument("Missing G4 DetectorConstruction object");
   }
   if (m_cfg.primaryGeneratorAction == nullptr) {
     throw std::invalid_argument("Missing G4 PrimaryGeneratorAction object");
   }
+  if (m_cfg.physicsList == nullptr) {
+    throw std::invalid_argument("Missing G4 PhysicsList object");
+  }
+
+  m_runManager = std::make_unique<G4RunManager>();
+
+  // Set the physics list
+  m_runManager->SetUserInitialization(m_cfg.physicsList);
 
   // Set the detector construction
-  m_cfg.runManager->SetUserInitialization(m_cfg.detectorConstruction);
+  m_runManager->SetUserInitialization(m_cfg.detectorConstruction);
 
   // Set the primary generator action
-  m_cfg.runManager->SetUserAction(m_cfg.primaryGeneratorAction);
+  m_runManager->SetUserAction(m_cfg.primaryGeneratorAction);
 
   // Set the configured user actions
-  setUserActions(*m_cfg.runManager, m_cfg.runActions);
-  setUserActions(*m_cfg.runManager, m_cfg.eventActions);
-  setUserActions(*m_cfg.runManager, m_cfg.trackingActions);
-  setUserActions(*m_cfg.runManager, m_cfg.steppingActions);
+  setUserActions(*m_runManager, m_cfg.runActions);
+  setUserActions(*m_runManager, m_cfg.eventActions);
+  setUserActions(*m_runManager, m_cfg.trackingActions);
+  setUserActions(*m_runManager, m_cfg.steppingActions);
 
   // Initialize the Geant4 run manager
-  m_cfg.runManager->Initialize();
+  m_runManager->Initialize();
 
   // Please note:
   // The following two blocks rely on the fact that the Acts
@@ -121,7 +127,7 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
 
   ACTS_DEBUG("Sending Geant RunManager the BeamOn() command.");
   // Start simulation. each track is simulated as a separate Geant4 event.
-  m_cfg.runManager->BeamOn(1);
+  m_runManager->BeamOn(1);
 
   // Output handling: Initial/Final particles
   if (not m_cfg.outputParticlesInitial.empty() and
