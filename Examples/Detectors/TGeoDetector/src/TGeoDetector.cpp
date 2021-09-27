@@ -354,7 +354,7 @@ void readTGeoLayerBuilderConfigs(const Variables& vm,
 void writeTGeoDetectorConfig(const Variables& vm,
                              TGeoDetector::Config& config) {
   const auto path = vm["geo-tgeo-dump-jsonconfig"].template as<std::string>();
-  nlohmann::ordered_json djson;
+  nlohmann::json djson;
   if (path.empty()) {
     return;
   }
