@@ -62,6 +62,7 @@ def runMaterialMapping(
 
     mmAlgCfg = MaterialMapping.Config(context.geoContext, context.magFieldContext)
     mmAlgCfg.trackingGeometry = trackingGeometry
+    mmAlgCfg.collection = "material-tracks"
 
     if mapSurface:
         navigator = Navigator(
