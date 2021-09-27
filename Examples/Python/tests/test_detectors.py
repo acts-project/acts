@@ -76,7 +76,6 @@ def test_tgeo_config_triplet(monkeypatch):
     c = TGeoDetector.Config
 
     def assert_combinations(value, _type):
-        # __tracebackhide__ = True
         t = LayerTriplet(value)
         assert t.negative == value and t.central == value and t.positive == value
         assert isinstance(t, _type)
@@ -136,12 +135,6 @@ def test_tgeo_config_volume(monkeypatch):
 
     v = Volume(name="blubb")
     assert v
-
-    # v = Volume(
-    #     binToleranceR=Interval(1, 2),
-    #     binToleranceZ=Interval(5 * u.mm, 5 * u.mm),
-    #     binTolerancePhi=Interval(0.025 * u.mm, 0.025 * u.mm),
-    # )
 
     for key in ("binToleranceR", "binToleranceZ", "binTolerancePhi"):
         v = Volume(**{key: Interval(4, 5)})
