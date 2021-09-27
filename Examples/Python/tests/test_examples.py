@@ -462,7 +462,7 @@ def test_geometry_example(geoFactory, nobj, tmp_path):
             with f.open() as fh:
                 data = json.load(fh)
                 assert data
-        material_file = json_dir / "material.json"
+        material_file = tmp_path / "geometry-map.json"
         assert material_file.exists()
         assert material_file.stat().st_size > 200
 
