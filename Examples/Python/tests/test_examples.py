@@ -85,6 +85,89 @@ def test_propagation(tmp_path, trk_geo, field, seq):
     assert len(list(obj.iterdir())) > 0
 
 
+@pytest.mark.slow
+@pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+def test_geantino_recording(tmp_path, geantino_recording):
+    # from geantino_recording import runGeantinoRecording
+    # from acts.examples.dd4hep import DD4hepGeometryService
+
+    root_files = [("geant-material-tracks.root", "material-tracks", 200)]
+
+    # dd4hepSvc = acts.examples.dd4hep.DD4hepGeometryService(
+    #     xmlFileNames=["thirdparty/OpenDataDetector/xml/OpenDataDetector.xml"]
+    # )
+    # dd4hepG4ConstructionFactory = (
+    #     acts.examples.geant4.dd4hep.DD4hepDetectorConstructionFactory(dd4hepSvc)
+    # )
+
+    # for fn, _, _ in root_files:
+    #     fp = tmp_path / fn
+    #     assert not fp.exists()
+
+    # s = Sequencer(events=2, numThreads=1)
+
+    # runGeantinoRecording(dd4hepG4ConstructionFactory, str(tmp_path), s=s)
+
+    # s.run()
+
+    # del s
+
+    for fn, tn, ee in root_files:
+        fp = geantino_recording / fn
+        assert fp.exists()
+        assert fp.stat().st_size > 2 ** 10 * 50
+        assert_entries(fp, tn, ee)
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(not hepmc3Enabled, reason="HepMC3 plugin not available")
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+@pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
+def test_event_recording(tmp_path):
+
+    script = (
+        Path(__file__).parent.parent.parent.parent
+        / "Examples"
+        / "Scripts"
+        / "Python"
+        / "event_recording.py"
+    )
+    assert script.exists()
+
+    env = os.environ.copy()
+    env["NEVENTS"] = "1"
+    subprocess.check_call([str(script)], cwd=tmp_path, env=env)
+
+    from acts.examples.hepmc3 import HepMC3AsciiReader
+
+    out_path = tmp_path / "hepmc3"
+    # out_path.mkdir()
+
+    assert len([f for f in out_path.iterdir() if f.name.endswith("events.hepmc3")]) > 0
+    assert all([f.stat().st_size > 100 for f in out_path.iterdir()])
+
+    s = Sequencer(numThreads=1)
+
+    s.addReader(
+        HepMC3AsciiReader(
+            level=acts.logging.INFO,
+            inputDir=str(out_path),
+            inputStem="events",
+            outputEvents="hepmc-events",
+        )
+    )
+
+    alg = AssertCollectionExistsAlg(
+        "hepmc-events", name="check_alg", level=acts.logging.INFO
+    )
+    s.addAlgorithm(alg)
+
+    s.run()
+
+    assert alg.events_seen == 1
+
+
 def test_particle_gun(tmp_path):
     from particle_gun import runParticleGun
 
@@ -106,6 +189,67 @@ def test_particle_gun(tmp_path):
 
     assert root_file.stat().st_size > 200
     assert_entries(root_file, "particles", 20)
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+def test_material_mapping(geantino_recording, tmp_path):
+
+    s = Sequencer(numThreads=1)
+
+    detector, trackingGeometry, decorators = getOpenDataDetector()
+
+    from material_mapping import runMaterialMapping
+
+    runMaterialMapping(
+        trackingGeometry,
+        decorators,
+        outputDir=str(tmp_path),
+        inputDir=geantino_recording,
+        s=s,
+    )
+
+    s.run()
+
+    # MaterialMapping alg only writes on destruct.
+    # See https://github.com/acts-project/acts/issues/881
+    del s
+
+    mat_file = tmp_path / "material.json"
+
+    assert mat_file.exists()
+    assert mat_file.stat().st_size > 10
+
+    with mat_file.open() as fh:
+        assert json.load(fh)
+
+    # test the validation as well
+
+    # we need to destroy the ODD to reload with material
+    # del trackingGeometry
+    # del detector
+
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
+    )
+
+    root_file = tmp_path / "RecordedMaterialTracks.root"
+    assert not root_file.exists()
+
+    from material_validation import runMaterialValidation
+
+    s = Sequencer(events=10, numThreads=1)
+
+    field = acts.NullBField()
+
+    runMaterialValidation(
+        trackingGeometry, decorators, field, outputDir=str(tmp_path), s=s
+    )
+
+    s.run()
+
+    assert root_file.exists()
+    assert_entries(root_file, "material-tracks", 10000)
 
 
 @pytest.mark.parametrize(
