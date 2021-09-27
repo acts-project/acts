@@ -7,5 +7,4 @@ following experimental reconstruction frameworks are currently being developed.
 .. toctree::
    :maxdepth: 1
 
-   atlas
    fcc
