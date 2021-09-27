@@ -33,13 +33,12 @@ void from_json(const nlohmann::json& j,
 }
 
 /// Write config for cylinder/disc module splitter
-void to_json(nlohmann::ordered_json& j,
+void to_json(nlohmann::json& j,
              const Acts::TGeoCylinderDiscSplitter::Config& cdc) {
-  j = nlohmann::ordered_json{
-      {"geo-tgeo-cyl-nphi-segs", cdc.cylinderPhiSegments},
-      {"geo-tgeo-cyl-nz-segs", cdc.cylinderLongitudinalSegments},
-      {"geo-tgeo-disc-nphi-segs", cdc.discPhiSegments},
-      {"geo-tgeo-disc-nr-segs", cdc.discRadialSegments}};
+  j = nlohmann::json{{"geo-tgeo-cyl-nphi-segs", cdc.cylinderPhiSegments},
+                     {"geo-tgeo-cyl-nz-segs", cdc.cylinderLongitudinalSegments},
+                     {"geo-tgeo-disc-nphi-segs", cdc.discPhiSegments},
+                     {"geo-tgeo-disc-nr-segs", cdc.discRadialSegments}};
 }
 
 }  // namespace Acts
@@ -56,11 +55,11 @@ void from_json(const nlohmann::json& j,
 }
 
 /// Write config for options interval
-void to_json(nlohmann::ordered_json& j,
+void to_json(nlohmann::json& j,
              const ActsExamples::Options::Interval& interval) {
   // no direct conversion from std::optional to json
-  j = nlohmann::ordered_json{{"lower", interval.lower.value_or(0)},
-                             {"upper", interval.upper.value_or(0)}};
+  j = nlohmann::json{{"lower", interval.lower.value_or(0)},
+                     {"upper", interval.upper.value_or(0)}};
 }
 
 }  // namespace Options
@@ -74,7 +73,7 @@ void from_json(const nlohmann::json& j,
           .get<std::map<std::string, std::vector<std::pair<double, double>>>>();
 }
 
-void to_json(nlohmann::ordered_json& j,
+void to_json(nlohmann::json& j,
              const ActsExamples::TGeoITkModuleSplitter::Config& msc) {
   j["geo-tgeo-barrel-map"] = msc.barrelMap;
   j["geo-tgeo-disc-map"] = msc.discMap;
@@ -91,11 +90,11 @@ void from_json(const nlohmann::json& j,
 
 /// Write layer configuration triplets
 template <typename T>
-void to_json(nlohmann::ordered_json& j,
+void to_json(nlohmann::json& j,
              const ActsExamples::TGeoDetector::Config::LayerTriplet<T>& ltr) {
-  j = nlohmann::ordered_json{{"negative", ltr.negative},
-                             {"central", ltr.central},
-                             {"positive", ltr.positive}};
+  j = nlohmann::json{{"negative", ltr.negative},
+                     {"central", ltr.central},
+                     {"positive", ltr.positive}};
 }
 
 /// Read volume struct
@@ -139,8 +138,7 @@ void from_json(const nlohmann::json& j,
 }
 
 /// Write volume struct
-void to_json(nlohmann::ordered_json& j,
-             const TGeoDetector::Config::Volume& vol) {
+void to_json(nlohmann::json& j, const TGeoDetector::Config::Volume& vol) {
   j["geo-tgeo-volume-name"] = vol.name;
 
   j["geo-tgeo-sfbin-r-tolerance"] = vol.binToleranceR;
