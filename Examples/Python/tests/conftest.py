@@ -63,12 +63,9 @@ def basic_prop_seq(rng):
             s = acts.examples.Sequencer(events=10, numThreads=1)
 
         nav = acts.Navigator(trackingGeometry=geo)
-        # field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
-        # stepper = acts.EigenStepper(field)
         stepper = acts.StraightLineStepper()
 
         prop = acts.examples.ConcretePropagator(acts.Propagator(stepper, nav))
-        # rnd = acts.examples.RandomNumbers(seed=42)
         alg = acts.examples.PropagationAlgorithm(
             propagatorImpl=prop,
             level=acts.logging.INFO,
@@ -83,45 +80,10 @@ def basic_prop_seq(rng):
     return _basic_prop_seq_factory
 
 
-# def pytest_generate_tests(metafunc):
-#     if "trk_geo" in metafunc.fixturenames:
-#         geometries = ["generic"]
-
-#         if helpers.dd4hepEnabled:
-#             geometries.append("dd4hep")
-
-#         metafunc.parametrize("trk_geo", geometries, indirect=True)
-
-
 @pytest.fixture
 def trk_geo(request):
     detector, geo, contextDecorators = acts.examples.GenericDetector.create()
     yield geo
-
-    # if request.param == "generic":
-    #     detector, geo, contextDecorators = acts.examples.GenericDetector.create()
-    #     request._detector = detector
-    #     return geo
-    # elif request.param == "dd4hep":
-    #     from acts.examples.dd4hep import DD4hepGeometryService, DD4hepDetector
-
-    #     dd4hepConfig = DD4hepGeometryService.Config(
-    #         xmlFileNames=["thirdparty/OpenDataDetector/xml/OpenDataDetector.xml"]
-    #     )
-    #     detector = DD4hepDetector()
-
-    #     config = acts.MaterialMapJsonConverter.Config()
-    #     matDeco = acts.JsonMaterialDecorator(
-    #         rConfig=config,
-    #         jFileName="thirdparty/OpenDataDetector/config/odd-material-mapping.config",
-    #         level=acts.logging.ERROR,
-    #     )
-
-    #     geo, _ = detector.finalize(dd4hepConfig, matDeco)
-    #     request._detector = detector
-    #     return geo
-    # else:
-    #     raise ValueError("Invalid detector parameter")
 
 
 @pytest.fixture
