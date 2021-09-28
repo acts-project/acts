@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "ActsExamples/Geant4/G4DetectorConstructionFactory.hpp"
-
 #include <G4VUserDetectorConstruction.hh>
 
 namespace ActsExamples {
@@ -31,22 +29,6 @@ class GdmlDetectorConstruction final : public G4VUserDetectorConstruction {
   std::string m_path;
   /// Cached worled volume
   G4VPhysicalVolume* m_world;
-};
-
-class GdmlDetectorConstructionFactory : public G4DetectorConstructionFactory {
- public:
-  /// @brief Construct a new GDML Detector Factory
-  ///
-  /// @param path The input GDML file path
-  GdmlDetectorConstructionFactory(const std::string& path);
-
-  /// @brief Main factory method following the interface
-  ///
-  /// @return Detector construction based on GDML.
-  std::unique_ptr<G4VUserDetectorConstruction> operator()() const override;
-
- private:
-  std::string m_path;
 };
 
 }  // namespace ActsExamples
