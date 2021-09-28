@@ -17,14 +17,14 @@ import acts.examples.geant4.dd4hep
 
 u = acts.UnitConstants
 
-_geantino_recording_executed = False
+_material_recording_executed = False
 
 
-def runGeantinoRecording(g4geo, outputDir, tracksPerEvent=10000, s=None):
-    global _geantino_recording_executed
-    if _geantino_recording_executed:
-        warnings.warn("Geantino recording already ran in this process. Expect crashes")
-    _geantino_recording_executed = True
+def runMaterialRecording(g4geo, outputDir, tracksPerEvent=10000, s=None):
+    global _material_recording_executed
+    if _material_recording_executed:
+        warnings.warn("Material recording already ran in this process. Expect crashes")
+    _material_recording_executed = True
 
     rnd = RandomNumbers(seed=228)
 
@@ -81,4 +81,4 @@ if "__main__" == __name__:
     )
     g4geo = acts.examples.geant4.dd4hep.DDG4DetectorConstruction(dd4hepSvc)
 
-    runGeantinoRecording(g4geo=g4geo, outputDir=os.getcwd()).run()
+    runMaterialRecording(g4geo=g4geo, outputDir=os.getcwd()).run()
