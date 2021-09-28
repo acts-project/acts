@@ -47,7 +47,6 @@ int main(int argc, char* argv[]) {
       uniqueTrackingGeometry.release());
 
   return runGeant4Simulation(
-      vars,
-      std::make_unique<DDG4DetectorConstructionFactory>(*geometrySvc->lcdd()),
+      vars, std::make_unique<DDG4DetectorConstruction>(*geometrySvc->lcdd()),
       trackingGeometry);
 }

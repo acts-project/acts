@@ -38,6 +38,5 @@ int main(int argc, char* argv[]) {
   auto geometrySvc = std::make_shared<DD4hep::DD4hepGeometryService>(dd4hepCfg);
 
   return runMaterialRecording(
-      vm,
-      std::make_unique<DDG4DetectorConstructionFactory>(*geometrySvc->lcdd()));
+      vm, std::make_unique<DDG4DetectorConstruction>(*geometrySvc->lcdd()));
 }
