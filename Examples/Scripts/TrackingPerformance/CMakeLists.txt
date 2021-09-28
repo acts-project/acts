@@ -1,16 +1,16 @@
-add_executable(ActsExampleResidualsAndPulls ResidualsAndPulls.cpp)
-target_link_libraries(ActsExampleResidualsAndPulls ROOT::Core ROOT::Hist ROOT::Tree ROOT::TreePlayer Boost::program_options)
+add_executable(ActsAnalysisResidualsAndPulls ResidualsAndPulls.cpp)
+target_link_libraries(ActsAnalysisResidualsAndPulls ROOT::Core ROOT::Hist ROOT::Tree ROOT::TreePlayer Boost::program_options)
 
 install(
   TARGETS
-  ActsExampleResidualsAndPulls
+  ActsAnalysisResidualsAndPulls
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 
-add_executable(ActsExamplePerigeeParameters PerigeeParameters.cpp)
-target_link_libraries(ActsExamplePerigeeParameters ROOT::Core ROOT::Hist ROOT::Tree ROOT::TreePlayer Boost::program_options)
+add_executable(ActsAnalysisTrackSummary TrackSummary.cpp)
+target_link_libraries(ActsAnalysisTrackSummary ActsExamplesFramework ROOT::Core ROOT::Hist ROOT::Tree ROOT::TreePlayer Boost::program_options)
   
 install(
   TARGETS
-  ActsExamplePerigeeParameters
+  ActsAnalysisTrackSummary
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})  

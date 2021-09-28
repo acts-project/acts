@@ -14,7 +14,7 @@ on_readthedocs = os.environ.get("READTHEDOCS", None) == "True"
 
 project = "Acts"
 author = "The Acts authors"
-copyright = "2014–2020 CERN for the benefit of the Acts project"
+copyright = "2014–2021 CERN for the benefit of the Acts project"
 # version = '@PROJECT_VERSION@'
 # release = '@PROJECT_VERSION@'
 
@@ -54,7 +54,7 @@ if not on_readthedocs:
 
 html_theme_options = {
     "collapse_navigation": False,
-    "navigation_depth": 2,
+    "navigation_depth": 3,
     "prev_next_buttons_location": None,  # no prev/next links
     "style_external_links": True,
 }
