@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
        "Range for the phi bins.");
     ao("pt-borders", value<VariableReals>(), "Transverse momentum borders.");
     ao("config-output", value<std::string>()->default_value(""),
-       "Output histrogram configuration json file.");
+       "(Optional) output histrogram configuration json file.");
     ao("config-input", value<std::string>()->default_value(""),
        "Input histrogram configuration json file.");
     // Define all parameters (overwrites individual parameters)
