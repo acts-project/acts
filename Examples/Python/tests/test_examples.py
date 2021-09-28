@@ -7,7 +7,6 @@ import subprocess
 import pytest
 
 from helpers import (
-    geant4Enabled,
     rootEnabled,
     dd4hepEnabled,
     hepmc3Enabled,

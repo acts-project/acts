@@ -32,7 +32,7 @@ from acts.examples import (
 )
 
 
-from helpers import geant4Enabled, hepmc3Enabled
+from helpers import hepmc3Enabled
 
 
 @pytest.mark.parametrize(
@@ -68,16 +68,6 @@ from helpers import geant4Enabled, hepmc3Enabled
 )
 def test_algorithm_interface(alg):
     assert hasattr(alg, "Config")
-
-
-@pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
-@pytest.mark.skipif(not hepmc3Enabled, reason="HepMC3 not set up")
-def test_g4_algorithms():
-    from acts.examples.geant4.hepmc3 import EventRecording
-    from acts.examples.geant4 import GeantinoRecording
-
-    for alg in (EventRecording, GeantinoRecording):
-        assert hasattr(alg, "Config")
 
 
 @pytest.mark.skipif(not hepmc3Enabled, reason="HepMC3 not set up")

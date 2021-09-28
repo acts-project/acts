@@ -10,7 +10,6 @@ import pytest
 from helpers import (
     dd4hepEnabled,
     hepmc3Enabled,
-    geant4Enabled,
     AssertCollectionExistsAlg,
 )
 
