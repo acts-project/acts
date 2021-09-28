@@ -34,7 +34,7 @@ using namespace ROOT;
 
 /// This ROOT script will plot the residual and pull of perigee track parameters
 /// (d0, z0, phi, theta, q/p, pT, t) from root file produced by the
-/// TrackFitterPerformanceWriter
+/// RootTrajectorySummaryWriter
 ///
 /// @param inFiles the list of input files
 /// @param inTree the name of the input tree
