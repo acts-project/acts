@@ -42,13 +42,12 @@ ActsExamples::EventRecording::EventRecording(
   if (m_cfg.outputHepMcTracks.empty()) {
     throw std::invalid_argument("Missing output event collection");
   }
-  if (!m_cfg.detectorConstructionFactory) {
-    throw std::invalid_argument("Missing detector construction object factory");
+  if (m_cfg.detectorConstruction == nullptr) {
+    throw std::invalid_argument("Missing detector construction object");
   }
 
   /// Now set up the Geant4 simulation
-  m_runManager->SetUserInitialization(
-      (*m_cfg.detectorConstructionFactory)().release());
+  m_runManager->SetUserInitialization(m_cfg.detectorConstruction);
   m_runManager->SetUserInitialization(new FTFP_BERT);
   m_runManager->SetUserAction(new ActsExamples::Geant4::HepMC3::RunAction());
   m_runManager->SetUserAction(

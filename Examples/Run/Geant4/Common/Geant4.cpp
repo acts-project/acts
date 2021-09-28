@@ -21,7 +21,6 @@
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Geant4/EventStoreRegistry.hpp"
-#include "ActsExamples/Geant4/G4DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 #include "ActsExamples/Geant4/MagneticFieldWrapper.hpp"
 #include "ActsExamples/Geant4/MaterialPhysicsList.hpp"
@@ -49,7 +48,7 @@ namespace ActsExamples {
 void setupGeant4Simulation(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer, G4RunManager* runManager,
-    G4VUserDetectorConstruction* detector,
+    std::unique_ptr<G4VUserDetectorConstruction> detector,
     std::vector<G4UserRunAction*> runActions,
     std::vector<G4UserEventAction*> eventActions,
     std::vector<G4UserTrackingAction*> trackingActions,
@@ -79,7 +78,7 @@ void setupGeant4Simulation(
   // Set the primarty generator
   g4Cfg.primaryGeneratorAction = new SimParticleTranslation(
       g4PrCfg, Acts::getDefaultLogger("SimParticleTranslation", g4loglevel));
-  g4Cfg.detectorConstruction = std::move(detector);
+  g4Cfg.detectorConstruction = detector.release();
 
   // Set the user actions
   g4Cfg.runActions = runActions;
@@ -117,8 +116,7 @@ void setupGeant4Simulation(
 
 int runMaterialRecording(
     const ActsExamples::Options::Variables& vars,
-    std::shared_ptr<ActsExamples::G4DetectorConstructionFactory>
-        g4DetectorFactory) {
+    std::unique_ptr<G4VUserDetectorConstruction> detector) {
   // Set up the sequencer
   Sequencer sequencer(Options::readSequencerConfig(vars));
   // Output level and log level
@@ -145,9 +143,6 @@ int runMaterialRecording(
   runManager->SetUserInitialization(new MaterialPhysicsList(
       Acts::getDefaultLogger("MaterialPhysicsList", g4loglevel)));
 
-  // Release the detector construction
-  G4VUserDetectorConstruction* detector = (*g4DetectorFactory)().release();
-
   // The Geant4 actions needed
   std::vector<G4UserRunAction*> runActions = {};
   std::vector<G4UserEventAction*> eventActions = {};
@@ -161,9 +156,9 @@ int runMaterialRecording(
           Acts::getDefaultLogger("MaterialSteppingAction", g4loglevel))};
 
   // Set up the Geant4 Simulation
-  setupGeant4Simulation(vars, sequencer, runManager, detector, runActions,
-                        eventActions, trackingActions, steppingActions, nullptr,
-                        nullptr, true);
+  setupGeant4Simulation(vars, sequencer, runManager, std::move(detector),
+                        runActions, eventActions, trackingActions,
+                        steppingActions, nullptr, nullptr, true);
 
   // setup the output writing
   if (vars["output-root"].as<bool>()) {
@@ -186,8 +181,7 @@ int runMaterialRecording(
 
 int runGeant4Simulation(
     const ActsExamples::Options::Variables& vars,
-    std::shared_ptr<ActsExamples::G4DetectorConstructionFactory>
-        g4DetectorFactory,
+    std::unique_ptr<G4VUserDetectorConstruction> detector,
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry) {
   // Basic services
   auto randomNumbers =
@@ -200,9 +194,6 @@ int runGeant4Simulation(
   // The Genat4 run manager instance
   G4RunManager* runManager = new G4RunManager();
   runManager->SetUserInitialization(new FTFP_BERT);
-
-  // Release the detector construction
-  G4VUserDetectorConstruction* detector = (*g4DetectorFactory)().release();
 
   // The Geant4 actions needed
   std::vector<G4UserRunAction*> runActions = {};
@@ -228,9 +219,9 @@ int runGeant4Simulation(
 
   // Setup algorithm chain: Input / Simulation / Output
   Simulation::setupInput(vars, sequencer, randomNumbers);
-  setupGeant4Simulation(vars, sequencer, runManager, detector, runActions,
-                        eventActions, trackingActions, steppingActions,
-                        trackingGeometry, magneticField);
+  setupGeant4Simulation(vars, sequencer, runManager, std::move(detector),
+                        runActions, eventActions, trackingActions,
+                        steppingActions, trackingGeometry, magneticField);
   Simulation::setupOutput(vars, sequencer);
 
   auto result = sequencer.run();
