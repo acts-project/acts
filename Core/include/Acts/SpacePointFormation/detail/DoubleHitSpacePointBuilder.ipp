@@ -491,7 +491,6 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
       auto gpos_front = globalCoords(gctx, *clustersFront[iClustersFront]);
       auto gpos_back = globalCoords(gctx, *clustersBack[iClustersBack]);
 
-      
       currentDiff = detail::differenceOfClustersChecked(
           gpos_front.first, gpos_back.first, m_cfg.vertex, m_cfg.diffDist,
           m_cfg.diffPhi2, m_cfg.diffTheta2);
