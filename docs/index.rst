@@ -27,8 +27,8 @@ Key features:
    versioning
    core/core
    plugins/plugins
+   examples/examples
    integration/integration
-   howto/howto
    formats/formats
    api/api
    contributionguide
