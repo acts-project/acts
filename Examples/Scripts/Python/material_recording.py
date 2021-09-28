@@ -28,16 +28,16 @@ def runGeantinoRecording(g4geo, outputDir, tracksPerEvent=10000, s=None):
 
     rnd = RandomNumbers(seed=228)
 
-    s = s or acts.examples.Sequencer(events=10, numThreads=1)
+    s = s or acts.examples.Sequencer(events=10, numThreads=-1)
 
     evGen = EventGenerator(
         level=acts.logging.INFO,
         generators=[
             EventGenerator.Generator(
                 multiplicity=FixedMultiplicityGenerator(n=1),
-                vertex=FixedVertexGenerator(stddev=acts.Vector4(0, 0, 0, 0)),
+                vertex=FixedVertexGenerator(fixed=acts.Vector4(0, 0, 0, 0)),
                 particles=ParametricParticleGenerator(
-                    p=(1 * u.GeV, 10 * u.GeV), eta=(-4, 4), numParticles=2
+                    p=(1 * u.GeV, 10 * u.GeV), eta=(-4, 4), numParticles=1
                 ),
             )
         ],
@@ -47,9 +47,14 @@ def runGeantinoRecording(g4geo, outputDir, tracksPerEvent=10000, s=None):
 
     s.addReader(evGen)
 
-    g4AlgCfg = acts.examples.geant4.Geant4Simulation.Config()
+    g4AlgCfg = acts.examples.geant4.materialRecordingConfig(
+        level=acts.logging.INFO,
+        detector=g4geo,
+        inputParticles=evGen.config.outputParticles,
+        outputMaterialTracks="material_tracks",
+    )
+
     g4AlgCfg.detectorConstruction = g4geo
-    g4AlgCfg.tracksPerEvent = tracksPerEvent
 
     g4Alg = acts.examples.geant4.Geant4Simulation(
         level=acts.logging.INFO, config=g4AlgCfg
@@ -61,8 +66,8 @@ def runGeantinoRecording(g4geo, outputDir, tracksPerEvent=10000, s=None):
         acts.examples.RootMaterialTrackWriter(
             prePostStep=True,
             recalculateTotals=True,
-            collection=g4Alg.config.outputMaterialTracks,
-            filePath=outputDir + "/" + g4Alg.config.outputMaterialTracks + ".root",
+            collection="material_tracks",
+            filePath=os.path.join(outputDir, "geant4_material_tracks.root"),
             level=acts.logging.INFO,
         )
     )
