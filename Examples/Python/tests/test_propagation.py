@@ -46,11 +46,6 @@ def test_steppers(conf_const, trk_geo):
             acts.Propagator(stepper=s, navigator=nav)
         )
 
-        # cfg = acts.examples.PropagationAlgorithm.Config()
-        # cfg.propagatorImpl = prop
-        # acts.examples.PropagationAlgorithm(level=acts.logging.INFO, config=cfg)
-        # acts.examples.PropagationAlgorithm(cfg, acts.logging.INFO)
-
         alg = conf_const(
             acts.examples.PropagationAlgorithm,
             level=acts.logging.WARNING,
