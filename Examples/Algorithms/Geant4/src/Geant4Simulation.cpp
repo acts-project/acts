@@ -54,29 +54,36 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
   if (m_cfg.primaryGeneratorAction == nullptr) {
     throw std::invalid_argument("Missing G4 PrimaryGeneratorAction object");
   }
-  if (m_cfg.physicsList == nullptr) {
-    throw std::invalid_argument("Missing G4 PhysicsList object");
+  if (!m_cfg.runManager) {
+    throw std::invalid_argument("Missing G4 RunManager object");
   }
 
-  m_runManager = std::make_unique<G4RunManager>();
-
-  // Set the physics list
-  m_runManager->SetUserInitialization(m_cfg.physicsList);
+  if (m_cfg.sensitiveSurfaceMapper) {
+    if (m_cfg.outputSimHits.empty()) {
+      ACTS_WARNING("No output sim hits collection configured");
+    }
+    if (m_cfg.outputParticlesInitial.empty()) {
+      ACTS_WARNING("No output initial particles collection configured");
+    }
+    if (m_cfg.outputParticlesFinal.empty()) {
+      ACTS_WARNING("No output final particles collection configured");
+    }
+  }
 
   // Set the detector construction
-  m_runManager->SetUserInitialization(m_cfg.detectorConstruction);
+  m_cfg.runManager->SetUserInitialization(m_cfg.detectorConstruction);
 
   // Set the primary generator action
-  m_runManager->SetUserAction(m_cfg.primaryGeneratorAction);
+  m_cfg.runManager->SetUserAction(m_cfg.primaryGeneratorAction);
 
   // Set the configured user actions
-  setUserActions(*m_runManager, m_cfg.runActions);
-  setUserActions(*m_runManager, m_cfg.eventActions);
-  setUserActions(*m_runManager, m_cfg.trackingActions);
-  setUserActions(*m_runManager, m_cfg.steppingActions);
+  setUserActions(*m_cfg.runManager, m_cfg.runActions);
+  setUserActions(*m_cfg.runManager, m_cfg.eventActions);
+  setUserActions(*m_cfg.runManager, m_cfg.trackingActions);
+  setUserActions(*m_cfg.runManager, m_cfg.steppingActions);
 
   // Initialize the Geant4 run manager
-  m_runManager->Initialize();
+  m_cfg.runManager->Initialize();
 
   // Please note:
   // The following two blocks rely on the fact that the Acts
@@ -127,7 +134,7 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
 
   ACTS_DEBUG("Sending Geant RunManager the BeamOn() command.");
   // Start simulation. each track is simulated as a separate Geant4 event.
-  m_runManager->BeamOn(1);
+  m_cfg.runManager->BeamOn(1);
 
   // Output handling: Initial/Final particles
   if (not m_cfg.outputParticlesInitial.empty() and

@@ -63,7 +63,8 @@ class Geant4Simulation final : public BareAlgorithm {
     /// User Action: Primary generator action of the simulation
     G4VUserPrimaryGeneratorAction* primaryGeneratorAction = nullptr;
 
-    G4VUserPhysicsList* physicsList = nullptr;
+    /// Run manager to use
+    std::shared_ptr<G4RunManager> runManager;
 
     /// User Actions: Run
     std::vector<G4UserRunAction*> runActions = {};
@@ -107,8 +108,6 @@ class Geant4Simulation final : public BareAlgorithm {
 
  private:
   Config m_cfg;
-
-  std::unique_ptr<G4RunManager> m_runManager;
 
   // Has to be mutable; algorithm interface enforces object constness
   mutable std::mutex m_runManagerLock;
