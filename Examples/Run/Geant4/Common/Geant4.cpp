@@ -48,8 +48,8 @@ namespace ActsExamples {
 void setupGeant4Simulation(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer,
-    std::unique_ptr<G4VUserDetectorConstruction> detector,
     std::shared_ptr<G4RunManager> runManager,
+    std::unique_ptr<G4VUserDetectorConstruction> detector,
     std::vector<G4UserRunAction*> runActions,
     std::vector<G4UserEventAction*> eventActions,
     std::vector<G4UserTrackingAction*> trackingActions,
@@ -158,7 +158,7 @@ int runMaterialRecording(
           Acts::getDefaultLogger("MaterialSteppingAction", g4loglevel))};
 
   // Set up the Geant4 Simulation
-  setupGeant4Simulation(vars, sequencer, std::move(detector), runManager,
+  setupGeant4Simulation(vars, sequencer, runManager, std::move(detector),
                         runActions, eventActions, trackingActions,
                         steppingActions, nullptr, nullptr, true);
 
@@ -219,7 +219,7 @@ int runGeant4Simulation(
 
   // Setup algorithm chain: Input / Simulation / Output
   Simulation::setupInput(vars, sequencer, randomNumbers);
-  setupGeant4Simulation(vars, sequencer, std::move(detector), runManager,
+  setupGeant4Simulation(vars, sequencer, runManager, std::move(detector),
                         runActions, eventActions, trackingActions,
                         steppingActions, trackingGeometry, magneticField);
   Simulation::setupOutput(vars, sequencer);

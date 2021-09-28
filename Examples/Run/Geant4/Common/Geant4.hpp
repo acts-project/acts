@@ -33,8 +33,8 @@ namespace ActsExamples {
 ///
 /// @param vars the parsed variables
 /// @param sequencer the event sequencer
-/// @param detector the detector to be used
 /// @param runManager the Geant4 runmanager to use
+/// @param detector the detector to be used
 /// @param runActions the list of Geant4 user run action
 /// @param eventActions the list of Geant4 user event action
 /// @param trackingActions the list of Geant4 user tracking action
@@ -46,8 +46,8 @@ namespace ActsExamples {
 void setupGeant4Simulation(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer,
-    std::unique_ptr<G4VUserDetectorConstruction> detector,
     std::shared_ptr<G4RunManager> runManager,
+    std::unique_ptr<G4VUserDetectorConstruction> detector,
     std::vector<G4UserRunAction*> runActions = {},
     std::vector<G4UserEventAction*> eventActions = {},
     std::vector<G4UserTrackingAction*> trackingActions = {},

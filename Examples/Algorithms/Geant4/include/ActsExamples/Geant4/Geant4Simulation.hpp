@@ -60,11 +60,11 @@ class Geant4Simulation final : public BareAlgorithm {
     // Name of the output collection: material tracks
     std::string outputMaterialTracks = "";
 
+    /// The G4 run manager
+    std::shared_ptr<G4RunManager> runManager;
+
     /// User Action: Primary generator action of the simulation
     G4VUserPrimaryGeneratorAction* primaryGeneratorAction = nullptr;
-
-    /// Run manager to use
-    std::shared_ptr<G4RunManager> runManager;
 
     /// User Actions: Run
     std::vector<G4UserRunAction*> runActions = {};
