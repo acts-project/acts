@@ -7,9 +7,6 @@ dependencies and are thus disabled by default.
 
 .. toctree::
    :maxdepth: 1
+   :glob:
 
-   dd4hep
-   digitization
-   identification
-   sycl
-   tgeo
+   *
