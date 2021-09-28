@@ -12,6 +12,7 @@
 #include "ActsExamples/Geant4/MaterialPhysicsList.hpp"
 #include "ActsExamples/Geant4/MaterialSteppingAction.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
+#include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 
 #include <memory>
 
@@ -77,32 +78,56 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_STRUCT_END();
   }
 
-  mod.def("materialRecordingConfig", [](Acts::Logging::Level level) {
-    // The Geant4 run manager instance
-    G4RunManager* runManager = new G4RunManager();
-    runManager->SetUserInitialization(new MaterialPhysicsList(
-        Acts::getDefaultLogger("MaterialPhysicsList", level)));
+  mod.def("materialRecordingConfig",
+          [](Acts::Logging::Level level, G4VUserDetectorConstruction* detector,
+             const std::string& inputParticles,
+             const std::string& outputMaterialTracks) {
+            auto* physicsList = new MaterialPhysicsList(
+                Acts::getDefaultLogger("MaterialPhysicsList", level));
 
-    // // Release the detector construction
-    // G4VUserDetectorConstruction* detector = (*g4DetectorFactory)().release();
+            // The Geant4 actions needed
+            std::vector<G4UserRunAction*> runActions = {};
+            std::vector<G4UserEventAction*> eventActions = {};
+            std::vector<G4UserTrackingAction*> trackingActions = {};
 
-    // // The Geant4 actions needed
-    // std::vector<G4UserRunAction*> runActions = {};
-    // std::vector<G4UserEventAction*> eventActions = {};
-    // std::vector<G4UserTrackingAction*> trackingActions = {};
+            MaterialSteppingAction::Config mStepCfg;
+            mStepCfg.excludeMaterials = {"Air", "Vacuum"};
+            std::vector<G4UserSteppingAction*> steppingActions = {
+                new MaterialSteppingAction(
+                    mStepCfg,
+                    Acts::getDefaultLogger("MaterialSteppingAction", level))};
 
-    // MaterialSteppingAction::Config mStepCfg;
-    // mStepCfg.excludeMaterials = {"Air", "Vacuum"};
-    // std::vector<G4UserSteppingAction*> steppingActions = {
-    //     new MaterialSteppingAction(
-    //         mStepCfg, Acts::getDefaultLogger("MaterialSteppingAction",
-    //         level))};
+            // Set up the Geant4 Simulation
 
-    // // Set up the Geant4 Simulation
-    // auto g4Cfg = setupGeant4Simulation(
-    //     g4loglevel, runManager, detector, runActions, eventActions,
-    //     trackingActions, steppingActions, nullptr, nullptr, true);
-  });
+            // Set the main Geant4 algorithm, primary generation, detector
+            // construction
+            Geant4Simulation::Config g4Cfg;
+
+            // Read the particle from the generator
+            SimParticleTranslation::Config g4PrCfg;
+            g4PrCfg.inputParticles = inputParticles;
+            g4PrCfg.forceParticle = true;
+            g4PrCfg.forcedMass = 0.;
+            g4PrCfg.forcedPdgCode = 999;
+            // Set the material tracks at output
+            g4Cfg.outputMaterialTracks = outputMaterialTracks;
+
+            // Set the primarty generator
+            g4Cfg.primaryGeneratorAction = new SimParticleTranslation(
+                g4PrCfg,
+                Acts::getDefaultLogger("SimParticleTranslation", level));
+            g4Cfg.detectorConstruction = detector;
+
+            g4Cfg.physicsList = physicsList;
+
+            // Set the user actions
+            g4Cfg.runActions = runActions;
+            g4Cfg.eventActions = eventActions;
+            g4Cfg.trackingActions = trackingActions;
+            g4Cfg.steppingActions = steppingActions;
+
+            return g4Cfg;
+          });
 
   Acts::Python::Context ctx;
   ctx.modules["geant4"] = &mod;
