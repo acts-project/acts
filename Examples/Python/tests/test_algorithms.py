@@ -81,7 +81,7 @@ def test_g4_algorithms():
 
 
 @pytest.mark.skipif(not hepmc3Enabled, reason="HepMC3 not set up")
-def test_g4_algorithms():
+def test_hepmc_algorithms():
     from acts.examples.hepmc3 import HepMCProcessExtractor
 
     assert hasattr(HepMCProcessExtractor, "Config")
