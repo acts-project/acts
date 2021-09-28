@@ -9,7 +9,6 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetectorOptions.hpp"
 #include "ActsExamples/DDG4/DDG4DetectorConstruction.hpp"
-#include "ActsExamples/Geant4/G4DetectorConstructionFactory.hpp"
 
 #include <functional>
 #include <memory>
@@ -27,17 +26,13 @@ using namespace Acts;
 PYBIND11_MODULE(ActsPythonBindingsDDG4, m) {
   py::module_::import("acts.ActsPythonBindingsGeant4");
 
+  py::class_<DDG4DetectorConstruction, G4VUserDetectorConstruction>(
+      m, "DD4DetectorConstructionImpl");
+
   m.def(
       "DDG4DetectorConstruction",
       [](DD4hep::DD4hepGeometryService& geometrySvc) {
         return new DDG4DetectorConstruction(*geometrySvc.lcdd());
       },
       py::return_value_policy::reference);
-
-  // py::class_<DDG4DetectorConstructionFactory, G4DetectorConstructionFactory,
-  //            >(
-  //     m, "DDG4DetectorConstruction")
-  //     .def(py::init([](DD4hep::DD4hepGeometryService& geometrySvc) {
-  //       return new DDG4DetectorConstruction(*geometrySvc.lcdd());
-  //     }));
 }

@@ -42,7 +42,7 @@ void addGeant4HepMC3(Context& ctx) {
     ACTS_PYTHON_STRUCT_BEGIN(c, Alg::Config);
     ACTS_PYTHON_MEMBER(inputParticles);
     ACTS_PYTHON_MEMBER(outputHepMcTracks);
-    ACTS_PYTHON_MEMBER(detectorConstructionFactory);
+    ACTS_PYTHON_MEMBER(detectorConstruction);
     ACTS_PYTHON_MEMBER(seed1);
     ACTS_PYTHON_MEMBER(seed2);
     ACTS_PYTHON_MEMBER(processesCombine);
