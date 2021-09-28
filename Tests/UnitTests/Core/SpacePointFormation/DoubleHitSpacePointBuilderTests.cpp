@@ -238,8 +238,8 @@ BOOST_DATA_TEST_CASE(DoubleHitSpacePointBuilder_basic, bdata::xrange(1),
       // std::cout << "2d measurement" << std::endl;
       // continue;  // 2d measurement. i.e. pixel
     }
-    // for(const auto cl : clusters_front){
-    //  cl
+    
+    
   }
   //  // BOOST_CHECK_NE(testMeasurements.size(), 0);
 
@@ -289,7 +289,7 @@ BOOST_DATA_TEST_CASE(DoubleHitSpacePointBuilder_basic, bdata::xrange(1),
   // const auto geoId = slink.geometryId();
   // std::cout  << "geoid double " << geoId << std::endl;
 
-  doubleSPBuilder.makeMeasurementPairs(tgContext, clusters_front, clusters_back,
+  doubleSPBuilder.makeClusterPairs(tgContext, clusters_front, clusters_back,
                                        clusterPairs);
   // std::cout << "number of cluster pairs :" << clusterPairs.size() <<
   // std::endl; BOOST_CHECK_NE(clusterPairs.size(), 0);

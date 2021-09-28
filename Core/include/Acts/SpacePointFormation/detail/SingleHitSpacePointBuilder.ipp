@@ -99,7 +99,9 @@ void Acts::SingleHitSpacePointBuilder<spacepoint_t, cluster_t>::
     // std::cout << "global coordinates : " << std::endl <<  gPos << std::endl;
     auto slink =
         std::visit([](const auto& x) { return x.sourceLink(); }, measurement);
+    std::vector<size_t> measurementIndices = {slink.index()};
 
+    //spacePointStorage.emplace_back(gPos, gCov[0], gCov[1], std::move(measurementIndices));
     spacePointStorage.emplace_back(gPos, gCov[0], gCov[1], slink.index());
   }
 }

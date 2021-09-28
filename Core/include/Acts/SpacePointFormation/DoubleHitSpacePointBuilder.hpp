@@ -32,7 +32,6 @@ namespace Acts {
 
 template <typename spacepoint_t, typename cluster_t>
 class DoubleHitSpacePointBuilder {
-  // using Measurement = BoundVariantMeasurement<cluster_t>;
 
  public:
   /// Constructor
@@ -47,9 +46,9 @@ class DoubleHitSpacePointBuilder {
   /// @param clustersFront vector of clusters on a surface
   /// @param clustersBack vector of clusters on another surface
   /// @param clusterPairs storage of the cluster pairs
-  /// @note The structure of @p measurementsFront and @p measurementsBack is
-  /// meant to be measurements[Independent clusters on a single surface]
-  void makeMeasurementPairs(
+  /// @note The structure of @p clustersFront and @p clustersBack is
+  /// meant to be clusters[Independent clusters on a single surface]
+  void makeClusterPairs(
       const GeometryContext& gctx,
       const std::vector<const cluster_t*>& clustersFront,
       const std::vector<const cluster_t*>& clustersBack,
@@ -57,44 +56,44 @@ class DoubleHitSpacePointBuilder {
       const;
 
   /// @brief Calculates the space points out of a given collection of
-  /// measurements on several strip detectors and stores the data
+  /// clusters on several strip detectors and stores the data
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param measurementPairs pairs of measurements that are space point
+  /// @param clusterPairs pairs of clusters that are space point
   /// candidates
   /// @param spacePoints storage of the results
   /// @note If no configuration is set, the default values will be used
   void calculateSpacePoints(
       const GeometryContext& gctx,
       const std::vector<std::pair<const cluster_t*, const cluster_t*>>&
-          measurementPairs,
+          clusterPairs,
       std::vector<spacepoint_t>& spacePoints) const;
 
  private:
   /// Config
   DoubleHitSpacePointBuilderConfig m_cfg;
 
-  /// @brief Getter method for the local coordinates of a measurement
+  /// @brief Getter method for the local coordinates of a cluster
   /// on its corresponding surface
-  /// @param measurement object related to the measurement that holds the
+  /// @param cluster object related to the cluster that holds the
   /// necessary information
-  /// @return vector of the local coordinates of the measurement on the surface
-  Vector2 localCoords(const cluster_t& measurement) const;
+  /// @return vector of the local coordinates of the cluster on the surface
+  std::pair<Vector2,SymMatrix2> localCoords(const cluster_t& cluster) const;
 
-  /// @brief Getter method for the global coordinates of a measurement
-  /// @param measurement object related to the measurement that holds the
+  /// @brief Getter method for the global coordinates of a cluster
+  /// @param cluster object related to the cluster that holds the
   /// necessary information
-  /// @return vector of the global coordinates of the measurement
+  /// @return vector of the global coordinates of the cluster
   // Vector3 globalCoords(const GeometryContext& gctx,
   std::pair<Vector3, Vector2> globalCoords(const GeometryContext& gctx,
-                                           const cluster_t& measurement) const;
+                                           const cluster_t& cluster) const;
 
   /// @brief Calculates the top and bottom ends of a SDE
   /// that corresponds to a given hit
-  /// @param measurement object that stores the information about the hit
+  /// @param cluster object that stores the information about the hit
   /// @return vectors to the top and bottom end of the SDE
   std::pair<Vector3, Vector3> endsOfStrip(const GeometryContext& gctx,
-                                          const cluster_t& measurement) const;
+                                          const cluster_t& cluster) const;
 };
 }  // namespace Acts
 #include "Acts/SpacePointFormation/detail/DoubleHitSpacePointBuilder.ipp"
