@@ -116,7 +116,8 @@ ActsExamples::SimParticleContainer ActsExamples::Pythia8Generator::operator()(
         std::hypot(genParticle.px(), genParticle.py(), genParticle.pz()) *
         1_GeV);
 
-    // find its parents
+    // find its parents...
+    // this code is very slow for pileup events, i.e. softQCD events.
     int parent_pid = 0;
     int mother_idx = genParticle.mother1();
     if (mother_idx > 0) {
@@ -126,7 +127,7 @@ ActsExamples::SimParticleContainer ActsExamples::Pythia8Generator::operator()(
         mother_idx = m_pythia8->event[mother_idx].mother1();
         if (mother_idx > 0){
           parent_pid = m_pythia8->event[mother_idx].id();
-        }
+        } else { break; }
       }
       ACTS_VERBOSE("particle: " << genParticle.id() << ", with mother: " << parent_pid);
     }
