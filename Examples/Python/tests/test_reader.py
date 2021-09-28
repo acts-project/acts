@@ -3,7 +3,7 @@ import inspect
 
 import pytest
 
-from helpers import AssertCollectionExistsAlg
+from helpers import geant4Enabled, AssertCollectionExistsAlg
 
 import acts
 
