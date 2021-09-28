@@ -26,9 +26,13 @@ using namespace Acts;
 PYBIND11_MODULE(ActsPythonBindingsDDG4, m) {
   py::module_::import("acts.ActsPythonBindingsGeant4");
 
+  // This is the actual class we're binding
   py::class_<DDG4DetectorConstruction, G4VUserDetectorConstruction>(
       m, "DD4DetectorConstructionImpl");
 
+  // This is a python-only factory method that returns the above class.
+  // We can apply a return value policy here so that python does NOT assume
+  // ownership of the returned pointer, and it is safe to pass to G4
   m.def(
       "DDG4DetectorConstruction",
       [](DD4hep::DD4hepGeometryService& geometrySvc) {

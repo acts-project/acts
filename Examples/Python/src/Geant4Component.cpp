@@ -9,6 +9,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 #include "ActsExamples/Geant4/MagneticFieldWrapper.hpp"
 #include "ActsExamples/Geant4/MaterialPhysicsList.hpp"
@@ -43,14 +44,21 @@ void addGeant4HepMC3(Context& ctx);
 }
 
 PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
-  // py::class_<G4RunManager>(mod, "G4RunManager");
-  // py::class_<G4VUserPrimaryGeneratorAction>(mod,
-  //                                           "G4VUserPrimaryGeneratorAction");
-  // py::class_<G4UserRunAction>(mod, "G4UserRunAction");
-  // py::class_<G4UserTrackingAction>(mod, "G4UserTrackingAction");
-  // py::class_<G4UserSteppingAction>(mod, "G4UserSteppingAction");
-  // py::class_<G4MagneticField>(mod, "G4MagneticField");
   py::class_<G4VUserDetectorConstruction>(mod, "G4VUserDetectorConstruction");
+
+  // This is the actual class we're binding
+  py::class_<GdmlDetectorConstruction, G4VUserDetectorConstruction>(
+      mod, "GdmlDetectorConstructionImpl");
+
+  // This is a python-only factory method that returns the above class.
+  // We can apply a return value policy here so that python does NOT assume
+  // ownership of the returned pointer, and it is safe to pass to G4
+  mod.def(
+      "GdmlDetectorConstruction",
+      [](const std::string& path) {
+        return new GdmlDetectorConstruction(path);
+      },
+      py::return_value_policy::reference);
 
   py::class_<SensitiveSurfaceMapper, std::shared_ptr<SensitiveSurfaceMapper>>(
       mod, "SensitiveSurfaceMapper");
