@@ -24,7 +24,7 @@
 #include <TProfile2D.h>
 #include <TStyle.h>
 #include <TTree.h>
-#include <Terror.h>
+#include <TError.h>
 
 #include "CommonUtils.h"
 #include "TreeReader.h"

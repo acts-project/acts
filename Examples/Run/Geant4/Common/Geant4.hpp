@@ -28,8 +28,6 @@ class G4UserSteppingAction;
 
 namespace ActsExamples {
 
-class G4DetectorConstructionFactory;
-
 /// Main function for running Geant4 with a specific detector.
 ///
 /// @param vars the parsed variables
@@ -47,7 +45,7 @@ class G4DetectorConstructionFactory;
 void setupGeant4Simulation(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer, G4RunManager* runManager,
-    G4VUserDetectorConstruction* detector,
+    std::unique_ptr<G4VUserDetectorConstruction> detector,
     std::vector<G4UserRunAction*> runActions = {},
     std::vector<G4UserEventAction*> eventActions = {},
     std::vector<G4UserTrackingAction*> trackingActions = {},
@@ -61,10 +59,8 @@ void setupGeant4Simulation(
 /// @param vars the parsed variables
 /// @param sequencer the event sequencer
 /// @param g4DetectorFactory is the detector to be used
-int runMaterialRecording(
-    const ActsExamples::Options::Variables& vars,
-    std::shared_ptr<ActsExamples::G4DetectorConstructionFactory>
-        g4DetectorFactory);
+int runMaterialRecording(const ActsExamples::Options::Variables& vars,
+                         std::unique_ptr<G4VUserDetectorConstruction> detector);
 
 /// Specific setup: Geant4 Simulation
 ///
@@ -74,8 +70,7 @@ int runMaterialRecording(
 /// @param trackingGeometry the tracking geometry for the sennsitive mapping
 int runGeant4Simulation(
     const ActsExamples::Options::Variables& vars,
-    std::shared_ptr<ActsExamples::G4DetectorConstructionFactory>
-        g4DetectorFactory,
+    std::unique_ptr<G4VUserDetectorConstruction> detector,
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry);
 
 }  // namespace ActsExamples
