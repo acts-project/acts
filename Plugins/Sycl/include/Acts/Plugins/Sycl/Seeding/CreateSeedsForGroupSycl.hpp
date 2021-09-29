@@ -26,6 +26,10 @@ namespace Acts::Sycl {
 /// @brief Seedfinding algorithm implemented in SYCL.
 ///
 /// @param[in] wrappedQueue is a wrapper object of the SYCL queue
+/// @param[in] resource is the host-accessible memory resource to use
+/// @param[in] device_resource is the optional device-accessible memory
+///                            resource, necessary if @c resource is not
+///                            device-accessible
 /// @param[in] seedfinderConfig includes the required configuration
 /// parameters for the algorithm
 /// @param[in] deviceCuts is an experiment specific object with customizable
