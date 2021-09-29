@@ -12,7 +12,7 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 
-// Custom Json encoder/decoders. Naming is mandated by nlohman::json and thus
+// Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus
 // can not match our naming guidelines.
 
 namespace Acts {
