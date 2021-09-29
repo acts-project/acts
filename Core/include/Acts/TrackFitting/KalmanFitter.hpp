@@ -43,8 +43,8 @@ namespace Acts {
 /// Combined options for the Kalman fitter.
 ///
 /// @tparam calibrator_t Source link type, should be semiregular.
-/// @tparam outlier_finder_t Outlier finder type, shoule be semiregular.
-/// @tparam reverse_filtering_logic_t type deciding whether to run filtering in reversed direction as smoothing, shoule be semiregular.
+/// @tparam outlier_finder_t Outlier finder type, should be semiregular.
+/// @tparam reverse_filtering_logic_t type deciding whether to run filtering in reversed direction as smoothing, should be semiregular.
 template <typename calibrator_t, typename outlier_finder_t,
           typename reverse_filtering_logic_t>
 struct KalmanFitterOptions {
