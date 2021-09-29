@@ -16,7 +16,7 @@
 #include <boost/program_options.hpp>
 
 #define BOOST_AVAILABLE 1
-#include <boost/progress.hpp>
+#include <boost/timer/progress_display.hpp>
 
 #define NLOHMANN_AVAILABLE 1
 #include <nlohmann/json.hpp>
