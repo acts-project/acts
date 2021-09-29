@@ -36,6 +36,7 @@ option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
 option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" OFF)
 option(ACTS_BUILD_PLUGIN_LEGACY "Build legacy plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ONNX "Build ONNX plugin" OFF)
+option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" OFF)
 option(ACTS_BUILD_PLUGIN_SYCL "Build SYCL plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TGEO "Build TGeo plugin" OFF)
 # fatras related options
@@ -58,7 +59,6 @@ option(ACTS_BUILD_UNITTESTS "Build unit tests" OFF)
 option(ACTS_BUILD_DOCS "Build documentation" OFF)
 option(ACTS_USE_SYSTEM_BOOST "Use a system-provided boost" ON)
 option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" ON)
-option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" OFF)
 
 # handle option inter-dependencies and the everything flag
 # NOTE: ordering is important here. dependencies must come before dependees
@@ -156,12 +156,6 @@ else()
   add_subdirectory(thirdparty/eigen3)
 endif()
 
-if (ACTS_USE_SYSTEM_VECMEM)
-  find_package(vecmem REQUIRED)
-else()
-  add_subdirectory(thirdparty/vecmem)
-endif()
-
 # the `<project_name>_VERSION` variables set by `setup(... VERSION ...)` have
 # only local scope, i.e. they are not accessible her for dependencies added
 # via `add_subdirectory`. this overrides the `project(...)` funcion for
@@ -216,6 +210,11 @@ if(ACTS_BUILD_PLUGIN_ONNX)
 endif()
 if(ACTS_BUILD_PLUGIN_SYCL)
   find_package(SYCL REQUIRED)
+  if (ACTS_USE_SYSTEM_VECMEM)
+    find_package(vecmem REQUIRED)
+  else()
+    add_subdirectory(thirdparty/vecmem)
+  endif()
 endif()
 if(ACTS_BUILD_PLUGIN_TGEO)
   find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Geom)

@@ -22,7 +22,5 @@ FetchContent_Declare( VecMem
    GIT_REPOSITORY "${ACTS_VECMEM_GIT_REPOSITORY}"
    GIT_TAG "${ACTS_VECMEM_GIT_TAG}" )
 
-# Get it into the current directory.
-FetchContent_Populate( VecMem )
-add_subdirectory( "${vecmem_SOURCE_DIR}" "${vecmem_BINARY_DIR}"
-   EXCLUDE_FROM_ALL )
+# Now set up its build.
+FetchContent_MakeAvailable( VecMem )
