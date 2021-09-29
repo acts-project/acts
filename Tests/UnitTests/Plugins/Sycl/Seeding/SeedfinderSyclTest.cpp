@@ -19,9 +19,6 @@
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include "vecmem/memory/sycl/device_memory_resource.hpp"
-#include "vecmem/memory/sycl/host_memory_resource.hpp"
-
 #include <chrono>
 #include <cmath>
 #include <ctime>
@@ -38,6 +35,8 @@
 #include "ATLASCuts.hpp"
 #include "CommandLineArguments.h"
 #include "SpacePoint.hpp"
+#include "vecmem/memory/sycl/device_memory_resource.hpp"
+#include "vecmem/memory/sycl/host_memory_resource.hpp"
 
 using namespace Acts::UnitLiterals;
 
@@ -151,9 +150,9 @@ auto main(int argc, char** argv) -> int {
 
   const Acts::Logging::Level logLvl =
       cmdlTool.csvFormat ? Acts::Logging::WARNING : Acts::Logging::INFO;
-  Acts::Sycl::QueueWrapper
-      queue(cmdlTool.deviceName,
-            Acts::getDefaultLogger("Sycl::QueueWrapper", logLvl));
+  Acts::Sycl::QueueWrapper queue(
+      cmdlTool.deviceName,
+      Acts::getDefaultLogger("Sycl::QueueWrapper", logLvl));
   vecmem::sycl::host_memory_resource resource(queue.getQueue());
   vecmem::sycl::device_memory_resource device_resource(queue.getQueue());
   Acts::Sycl::Seedfinder<SpacePoint> syclSeedfinder(

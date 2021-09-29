@@ -39,11 +39,12 @@ class LinearTransform {
 
  public:
   /// Constructor with all the necessary arguments
-  LinearTransform(vecmem::data::vector_view<const DeviceSpacePoint> middleSPs,
-                  vecmem::data::vector_view<const DeviceSpacePoint> otherSPs,
-                  vecmem::data::vector_view<uint32_t> middleIndexLUT,
-                  vecmem::data::vector_view<uint32_t> otherIndexLUT, uint32_t nEdges,
-                  vecmem::data::vector_view<detail::DeviceLinEqCircle> resultArray)
+  LinearTransform(
+      vecmem::data::vector_view<const DeviceSpacePoint> middleSPs,
+      vecmem::data::vector_view<const DeviceSpacePoint> otherSPs,
+      vecmem::data::vector_view<uint32_t> middleIndexLUT,
+      vecmem::data::vector_view<uint32_t> otherIndexLUT, uint32_t nEdges,
+      vecmem::data::vector_view<detail::DeviceLinEqCircle> resultArray)
       : m_middleSPs(middleSPs),
         m_otherSPs(otherSPs),
         m_middleIndexLUT(middleIndexLUT),
@@ -63,13 +64,11 @@ class LinearTransform {
     // Note that using asserts with the CUDA backend of dpc++ is not working
     // quite correctly at the moment. :-( So these checks may need to be
     // disabled if you need to build for an NVidia backend in Debug mode.
-    vecmem::device_vector<uint32_t> 
-                   middleIndexLUT(m_middleIndexLUT);
+    vecmem::device_vector<uint32_t> middleIndexLUT(m_middleIndexLUT);
     const uint32_t middleIndex = middleIndexLUT[idx];
     assert(middleIndex < m_middleSPs.size());
     (void)m_middleSPs.size();
-    vecmem::device_vector<uint32_t> 
-                  otherIndexLUT(m_otherIndexLUT);
+    vecmem::device_vector<uint32_t> otherIndexLUT(m_otherIndexLUT);
     const uint32_t otherIndex = otherIndexLUT[idx];
     assert(otherIndex < m_otherSPs.size());
     (void)m_otherSPs.size();
@@ -111,8 +110,7 @@ class LinearTransform {
         iDeltaR2;
 
     // Store the result in the result vector
-    vecmem::device_vector<detail::DeviceLinEqCircle>
-                          resultArray(m_resultArray);
+    vecmem::device_vector<detail::DeviceLinEqCircle> resultArray(m_resultArray);
     resultArray[idx] = result;
     return;
   }

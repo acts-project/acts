@@ -12,15 +12,14 @@
 #include <vector>
 
 // VecMem include(s).
+#include "vecmem/containers/jagged_vector.hpp"
 #include "vecmem/containers/vector.hpp"
 #include "vecmem/memory/memory_resource.hpp"
-#include "vecmem/containers/jagged_vector.hpp"
 
 // SYCL plugin include(s)
 #include "Acts/Plugins/Sycl/Seeding/DeviceExperimentCuts.hpp"
 #include "Acts/Plugins/Sycl/Seeding/detail/Types.hpp"
 #include "Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp"
-
 
 namespace Acts::Sycl {
 
@@ -39,8 +38,7 @@ namespace Acts::Sycl {
 ///                      point structures of top space points
 /// @param[out] seeds holds of the generated seed indices and weight
 void createSeedsForGroupSycl(
-    QueueWrapper wrappedQueue,
-    vecmem::memory_resource& resource,
+    QueueWrapper wrappedQueue, vecmem::memory_resource& resource,
     vecmem::memory_resource* device_resource,
     const detail::DeviceSeedfinderConfig& seedfinderConfig,
     const DeviceExperimentCuts& deviceCuts,

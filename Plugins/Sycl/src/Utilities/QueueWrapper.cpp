@@ -50,7 +50,8 @@ QueueWrapper::QueueWrapper(const std::string& deviceNameSubstring,
 
 QueueWrapper::QueueWrapper(cl::sycl::queue& queue,
                            std::unique_ptr<const Logger> incomingLogger)
-    : m_queue(&queue), m_ownsQueue(false),
+    : m_queue(&queue),
+      m_ownsQueue(false),
       m_logger(std::move(incomingLogger)) {}
 
 QueueWrapper::QueueWrapper(QueueWrapper&& parent) noexcept

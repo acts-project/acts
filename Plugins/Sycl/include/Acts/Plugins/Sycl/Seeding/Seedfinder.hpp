@@ -25,12 +25,11 @@ namespace Acts::Sycl {
 template <typename external_spacepoint_t>
 class Seedfinder {
  public:
-  Seedfinder(
-      Acts::SeedfinderConfig<external_spacepoint_t> config,
-      const Acts::Sycl::DeviceExperimentCuts& cuts,
-      Acts::Sycl::QueueWrapper wrappedQueue,
-      vecmem::memory_resource& resource,
-      vecmem::memory_resource* device_resource = nullptr);
+  Seedfinder(Acts::SeedfinderConfig<external_spacepoint_t> config,
+             const Acts::Sycl::DeviceExperimentCuts& cuts,
+             Acts::Sycl::QueueWrapper wrappedQueue,
+             vecmem::memory_resource& resource,
+             vecmem::memory_resource* device_resource = nullptr);
 
   ~Seedfinder() = default;
   Seedfinder() = delete;

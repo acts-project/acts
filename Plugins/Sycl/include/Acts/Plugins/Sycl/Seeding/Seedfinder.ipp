@@ -27,8 +27,7 @@ template <typename external_spacepoint_t>
 Seedfinder<external_spacepoint_t>::Seedfinder(
     Acts::SeedfinderConfig<external_spacepoint_t> config,
     const Acts::Sycl::DeviceExperimentCuts& cuts,
-    Acts::Sycl::QueueWrapper wrappedQueue,
-    vecmem::memory_resource& resource,
+    Acts::Sycl::QueueWrapper wrappedQueue, vecmem::memory_resource& resource,
     vecmem::memory_resource* device_resource)
     : m_config(config.toInternalUnits()),
       m_deviceCuts(cuts),
@@ -79,8 +78,8 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
   // that are easily comprehensible by the GPU. This allows us
   // less memory access operations than with simple (float) arrays.
 
-  // Creating VecMem vectors of the space points, linked to the host/shared memory resource
-  // They will be filled and passed to CreateSeedsForGroup().
+  // Creating VecMem vectors of the space points, linked to the host/shared
+  // memory resource They will be filled and passed to CreateSeedsForGroup().
   vecmem::vector<detail::DeviceSpacePoint> deviceBottomSPs(m_resource);
   vecmem::vector<detail::DeviceSpacePoint> deviceMiddleSPs(m_resource);
   vecmem::vector<detail::DeviceSpacePoint> deviceTopSPs(m_resource);
@@ -95,7 +94,8 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
     bottomSPvec.push_back(SP);
   }
   deviceBottomSPs.reserve(bottomSPvec.size());
-  for (const Acts::InternalSpacePoint<external_spacepoint_t>* SP : bottomSPvec) {
+  for (const Acts::InternalSpacePoint<external_spacepoint_t>* SP :
+       bottomSPvec) {
     deviceBottomSPs.push_back({SP->x(), SP->y(), SP->z(), SP->radius(),
                                SP->varianceR(), SP->varianceZ()});
   }
@@ -104,7 +104,8 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
     middleSPvec.push_back(SP);
   }
   deviceMiddleSPs.reserve(middleSPvec.size());
-  for (const Acts::InternalSpacePoint<external_spacepoint_t>* SP : middleSPvec) {
+  for (const Acts::InternalSpacePoint<external_spacepoint_t>* SP :
+       middleSPvec) {
     deviceMiddleSPs.push_back({SP->x(), SP->y(), SP->z(), SP->radius(),
                                SP->varianceR(), SP->varianceZ()});
   }
@@ -118,13 +119,13 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
                             SP->varianceR(), SP->varianceZ()});
   }
 
-  //std::vector<std::vector<detail::SeedData>> seeds;
+  // std::vector<std::vector<detail::SeedData>> seeds;
   std::vector<std::vector<detail::SeedData>> seeds;
 
   // Call the SYCL seeding algorithm
-  createSeedsForGroupSycl(m_wrappedQueue, *m_resource, m_device_resource, m_deviceConfig,
-                          m_deviceCuts, deviceBottomSPs, deviceMiddleSPs,
-                          deviceTopSPs, seeds);
+  createSeedsForGroupSycl(m_wrappedQueue, *m_resource, m_device_resource,
+                          m_deviceConfig, m_deviceCuts, deviceBottomSPs,
+                          deviceMiddleSPs, deviceTopSPs, seeds);
 
   // Iterate through seeds returned by the SYCL algorithm and perform the last
   // step of filtering for fixed middle SP.
@@ -143,7 +144,8 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
           weight, std::make_unique<const InternalSeed<external_spacepoint_t>>(
                       bottomSP, middleSP, topSP, 0)));
     }
-    m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSPM, std::back_inserter(outputVec));
+    m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSPM,
+                                              std::back_inserter(outputVec));
   }
   return outputVec;
 }

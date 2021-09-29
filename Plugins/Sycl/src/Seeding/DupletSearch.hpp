@@ -17,8 +17,8 @@
 // VecMem include(s).
 #include "vecmem/containers/data/jagged_vector_view.hpp"
 #include "vecmem/containers/data/vector_view.hpp"
-#include "vecmem/containers/jagged_device_vector.hpp"
 #include "vecmem/containers/device_vector.hpp"
+#include "vecmem/containers/jagged_device_vector.hpp"
 
 // SYCL include(s).
 #include <CL/sycl.hpp>
@@ -90,8 +90,8 @@ class DupletSearch {
         (zOrigin >= m_config.collisionRegionMin) &&
         (zOrigin <= m_config.collisionRegionMax)) {
       // Create device vector based on the view and push to it
-      vecmem::jagged_device_vector<uint32_t>
-          middleOtherSPIndices(m_middleOtherSPIndices);
+      vecmem::jagged_device_vector<uint32_t> middleOtherSPIndices(
+          m_middleOtherSPIndices);
       middleOtherSPIndices.at(middleIndex).push_back(otherIndex);
     }
   }
