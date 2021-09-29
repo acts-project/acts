@@ -22,7 +22,7 @@
 #if ((BOOST_VERSION / 100) % 1000) <= 71
 // Boost <=1.71 and lower do not have progress_display.hpp as a replacement yet
 #include <boost/progress.hpp>
-using progress_display = boost::timer::progress_display;
+using progress_display = boost::progress_display;
 #else
 // Boost >=1.72 can use this as a replacement
 #include <boost/timer/progress_display.hpp>

@@ -404,7 +404,7 @@ int trackSummaryAnalysis(
 
 #ifdef BOOST_AVAILABLE
   std::cout << "*** Handle Preparation: " << std::endl;
-  boost::timer::progress_display handle_preparation_progress(
+  progress_display handle_preparation_progress(
       nPhiBins * nEtaBins * nPtBins * baseResidualPulls.size());
 #endif
 
@@ -574,7 +574,7 @@ int trackSummaryAnalysis(
 
 #ifdef BOOST_AVAILABLE
   std::cout << "*** Event Loop: " << std::endl;
-  boost::timer::progress_display event_loop_progress(entries);
+  progress_display event_loop_progress(entries);
 #endif
 
   for (unsigned long ie = 0; ie < entries; ++ie) {
@@ -698,7 +698,7 @@ int trackSummaryAnalysis(
         new TH2F(statN, "", nOuterBins, outerValues, nInnerBins, innerValues);
 
 #ifdef BOOST_AVAILABLE
-    boost::timer::progress_display analysis_progress(nOuterBins * nInnerBins);
+    progress_display analysis_progress(nOuterBins * nInnerBins);
 #endif
 
     // Prepare by looping over the base bhandles - residuals
