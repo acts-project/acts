@@ -58,6 +58,7 @@ option(ACTS_BUILD_UNITTESTS "Build unit tests" OFF)
 option(ACTS_BUILD_DOCS "Build documentation" OFF)
 option(ACTS_USE_SYSTEM_BOOST "Use a system-provided boost" ON)
 option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" ON)
+option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" OFF)
 
 # handle option inter-dependencies and the everything flag
 # NOTE: ordering is important here. dependencies must come before dependees
@@ -153,6 +154,12 @@ if (ACTS_USE_SYSTEM_EIGEN3)
   find_package(Eigen3 ${_acts_eigen3_version} REQUIRED CONFIG)
 else()
   add_subdirectory(thirdparty/eigen3)
+endif()
+
+if (ACTS_USE_SYSTEM_VECMEM)
+  find_package(vecmem REQUIRED)
+else()
+  add_subdirectory(thirdparty/vecmem)
 endif()
 
 # the `<project_name>_VERSION` variables set by `setup(... VERSION ...)` have
