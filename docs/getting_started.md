@@ -37,7 +37,7 @@ components:
 -   [Geant4](http://geant4.org/) for some examples
 -   [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) >= 3.2.1 for some examples
 -   [Intel Threading Building Blocks](https://01.org/tbb) >= 2020.1 for the examples
--   [ONNX](https://onnx.ai) for the ONNX plugin and some examples
+-   [ONNX Runtime](https://onnxruntime.ai/) for the ONNX plugin and some examples
 -   [Pythia8](http://home.thep.lu.se/~torbjorn/Pythia.html) for some examples
 -   [ROOT](https://root.cern.ch) >= 6.20 for the TGeo plugin and the examples
 -   [Sphinx](https://www.sphinx-doc.org) >= 2.0 with [Breathe](https://breathe.readthedocs.io/en/latest/), [Exhale](https://exhale.readthedocs.io/en/latest/), and [recommonmark](https://recommonmark.readthedocs.io/en/latest/index.html) extensions for the documentation
@@ -235,34 +235,35 @@ options must be specified in subsequent calls to configure the project. The
 following options are available to configure the project and enable optional
 components.
 
-| Option                                | Description |
-|---------------------------------------|-------------|
-| ACTS_BUILD_EVERYTHING                 | Build with most options enabled (except HepMC3 and documentation) |
-| ACTS_BUILD_PLUGIN_CUDA                | Build CUDA plugin |
-| ACTS_BUILD_PLUGIN_DD4HEP              | Build DD4hep geometry plugin |
-| ACTS_BUILD_PLUGIN_DIGITIZATION        | Build Digitization plugin |
-| ACTS_BUILD_PLUGIN_IDENTIFICATION      | Build Identification plugin |
-| ACTS_BUILD_PLUGIN_JSON                | Build Json plugin |
-| ACTS_BUILD_PLUGIN_LEGACY              | Build legacy plugin |
-| ACTS_BUILD_PLUGIN_ONNX                | Build ONNX plugin |
-| ACTS_BUILD_PLUGIN_SYCL                | Build SYCL plugin |
-| ACTS_BUILD_PLUGIN_TGEO                | Build TGeo plugin |
-| ACTS_BUILD_FATRAS                     | Build FAst TRAcking Simulation package |
-| ACTS_BUILD_EXAMPLES                   | Build standalone examples |
-| ACTS_BUILD_EXAMPLES_DD4HEP            | Build DD4hep-based code in the examples |
-| ACTS_BUILD_EXAMPLES_GEANT4            | Build Geant4-based code in the examples |
-| ACTS_BUILD_EXAMPLES_HEPMC3            | Build HepMC3-based code in the examples |
-| ACTS_BUILD_EXAMPLES_PYTHIA8           | Build Pythia8-based code in the examples |
-| ACTS_BUILD_BENCHMARKS                 | Build benchmarks |
-| ACTS_BUILD_INTEGRATIONTESTS           | Build integration tests |
-| ACTS_BUILD_UNITTESTS                  | Build unit tests |
-| ACTS_BUILD_DOCS                       | Build documentation |
-| ACTS_LOG_FAILURE_THRESHOLD            | Automatically fail when a log above the specified debug level is emitted (useful for automated tests) |
-| ACTS_PARAMETER_DEFINITIONS_HEADER     | Use a different (track) parameter definitions header |
-| ACTS_USE_SYSTEM_AUTODIFF              | Use autodiff provided by the system instead of the bundled version |
-| ACTS_USE_SYSTEM_NLOHMANN_JSON         | Use nlohmann::json provided by the system instead of the bundled version |
-| ACTS_USE_SYSTEM_BOOST                 | Use the system boost libraries (defaults to ON) |
-| ACTS_USE_SYSTEM_EIGEN3                 | Use the system eigen3 libraries (defaults to ON) |
+| Option                              | Description                                                                                           |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| ACTS_BUILD_EVERYTHING               | Build with most options enabled (except HepMC3 and documentation)                                     |
+| ACTS_BUILD_PLUGIN_CUDA              | Build CUDA plugin                                                                                     |
+| ACTS_BUILD_PLUGIN_DD4HEP            | Build DD4hep geometry plugin                                                                          |
+| ACTS_BUILD_PLUGIN_DIGITIZATION      | Build Digitization plugin                                                                             |
+| ACTS_BUILD_PLUGIN_IDENTIFICATION    | Build Identification plugin                                                                           |
+| ACTS_BUILD_PLUGIN_JSON              | Build Json plugin                                                                                     |
+| ACTS_BUILD_PLUGIN_LEGACY            | Build legacy plugin                                                                                   |
+| ACTS_BUILD_PLUGIN_ONNX              | Build ONNX plugin                                                                                     |
+| ACTS_BUILD_PLUGIN_SYCL              | Build SYCL plugin                                                                                     |
+| ACTS_BUILD_PLUGIN_TGEO              | Build TGeo plugin                                                                                     |
+| ACTS_BUILD_FATRAS                   | Build FAst TRAcking Simulation package                                                                |
+| ACTS_BUILD_EXAMPLES                 | Build standalone examples                                                                             |
+| ACTS_BUILD_EXAMPLES_DD4HEP          | Build DD4hep-based code in the examples                                                               |
+| ACTS_BUILD_EXAMPLES_GEANT4          | Build Geant4-based code in the examples                                                               |
+| ACTS_BUILD_EXAMPLES_HEPMC3          | Build HepMC3-based code in the examples                                                               |
+| ACTS_BUILD_EXAMPLES_PYTHIA8         | Build Pythia8-based code in the examples                                                              |
+| ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS | Build python bindings for the examples                                                                |
+| ACTS_BUILD_BENCHMARKS               | Build benchmarks                                                                                      |
+| ACTS_BUILD_INTEGRATIONTESTS         | Build integration tests                                                                               |
+| ACTS_BUILD_UNITTESTS                | Build unit tests                                                                                      |
+| ACTS_BUILD_DOCS                     | Build documentation                                                                                   |
+| ACTS_LOG_FAILURE_THRESHOLD          | Automatically fail when a log above the specified debug level is emitted (useful for automated tests) |
+| ACTS_PARAMETER_DEFINITIONS_HEADER   | Use a different (track) parameter definitions header                                                  |
+| ACTS_USE_SYSTEM_AUTODIFF            | Use autodiff provided by the system instead of the bundled version                                    |
+| ACTS_USE_SYSTEM_NLOHMANN_JSON       | Use nlohmann::json provided by the system instead of the bundled version                              |
+| ACTS_USE_SYSTEM_BOOST               | Use the system boost libraries (defaults to ON)                                                       |
+| ACTS_USE_SYSTEM_EIGEN3              | Use the system eigen3 libraries (defaults to ON)                                                      |
 
 All Acts-specific options are disabled or empty by default and must be
 specifically requested. Some of the options have interdependencies that are
@@ -277,12 +278,12 @@ most common ones. For more details, have a look at the annotated list of [useful
 CMake variables](https://cmake.org/Wiki/CMake_Useful_Variables) or at the [CMake
 documentation](https://cmake.org/documentation/).
 
-| Option               | Description |
-|----------------------|-------------|
+| Option               | Description                                                                                                                       |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | CMAKE_BUILD_TYPE     | Build type, e.g. Debug or Release; affects compiler flags <br/> (if not specified **`RelWithDebInfo`** will be used as a default) |
-| CMAKE_CXX_COMPILER   | Which C++ compiler to use, e.g. g++ or clang++ |
-| CMAKE_INSTALL_PREFIX | Where to install Acts to |
-| CMAKE_PREFIX_PATH    | Search path for external packages |
+| CMAKE_CXX_COMPILER   | Which C++ compiler to use, e.g. g++ or clang++                                                                                    |
+| CMAKE_INSTALL_PREFIX | Where to install Acts to                                                                                                          |
+| CMAKE_PREFIX_PATH    | Search path for external packages                                                                                                 |
 
 The build is also affected by some environment variables. They can be set by prepending them to the configuration call:
 
@@ -292,10 +293,10 @@ $ DD4hep_DIR=<path/to/dd4hep> cmake -B <build-dir> -S <source-dir>
 
 The following environment variables might be useful.
 
-| Environment variable | Description |
-|----------------------|-------------|
-| DD4hep_DIR           | Search path for the DD4hep installation |
-| HepMC3_DIR           | Search path for the HepMC3 installation |
+| Environment variable | Description                              |
+| -------------------- | ---------------------------------------- |
+| DD4hep_DIR           | Search path for the DD4hep installation  |
+| HepMC3_DIR           | Search path for the HepMC3 installation  |
 | Pythia8_DIR          | Search path for the Pythia8 installation |
 
 ## Using Acts

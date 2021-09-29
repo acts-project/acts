@@ -12,8 +12,10 @@
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
+#include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace Acts {
@@ -50,6 +52,9 @@ struct TGeoDetector : public ActsExamples::IBaseDetector {
 
       LayerTriplet(T value)
           : negative{value}, central{value}, positive{value} {}
+
+      LayerTriplet(T _negative, T _central, T _positive)
+          : negative{_negative}, central{_central}, positive{_positive} {}
 
       T negative;
       T central;
@@ -102,6 +107,10 @@ struct TGeoDetector : public ActsExamples::IBaseDetector {
       unsigned int cylinderNPhiSegments;
       unsigned int discNRSegments;
       unsigned int discNPhiSegments;
+
+      bool itkModuleSplit = false;
+      std::map<std::string, unsigned int> barrelMap;
+      std::map<std::string, std::vector<std::pair<double, double>>> discMap;
     };
 
     std::vector<Volume> volumes;
