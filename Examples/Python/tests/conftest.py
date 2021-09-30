@@ -2,6 +2,7 @@ from pathlib import Path
 import sys
 import os
 import tempfile
+import shutil
 
 
 sys.path += [
@@ -156,7 +157,7 @@ def fatras(ptcl_gun, trk_geo, rng):
 
 
 @pytest.fixture(scope="session")
-def geantino_recording():
+def material_recording_session():
     if not helpers.geant4Enabled:
         pytest.skip("Geantino recording requested, but Geant4 is not set up")
 
@@ -168,21 +169,26 @@ def geantino_recording():
     dd4hepSvc = acts.examples.dd4hep.DD4hepGeometryService(
         xmlFileNames=["thirdparty/OpenDataDetector/xml/OpenDataDetector.xml"]
     )
-    dd4hepG4ConstructionFactory = (
-        acts.examples.geant4.dd4hep.DD4hepDetectorConstructionFactory(dd4hepSvc)
+    dd4hepG4Construction = acts.examples.geant4.dd4hep.DDG4DetectorConstruction(
+        dd4hepSvc
     )
 
     with tempfile.TemporaryDirectory() as d:
 
         s = acts.examples.Sequencer(events=2, numThreads=1)
 
-        runMaterialRecording(
-            dd4hepG4ConstructionFactory, str(d), tracksPerEvent=100, s=s
-        )
+        runMaterialRecording(dd4hepG4Construction, str(d), tracksPerEvent=100, s=s)
         s.run()
 
         del s
         del dd4hepSvc
-        del dd4hepG4ConstructionFactory
+        del dd4hepG4Construction
 
         yield Path(d)
+
+
+@pytest.fixture
+def material_recording(material_recording_session: Path, tmp_path: Path):
+    target = tmp_path / material_recording_session.name
+    shutil.copytree(material_recording_session, target)
+    yield target

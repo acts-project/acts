@@ -74,9 +74,9 @@ def test_algorithm_interface(alg):
 @pytest.mark.skipif(not hepmc3Enabled, reason="HepMC3 not set up")
 def test_g4_algorithms():
     from acts.examples.geant4.hepmc3 import EventRecording
-    from acts.examples.geant4 import GeantinoRecording
+    from acts.examples.geant4 import Geant4Simulation
 
-    for alg in (EventRecording, GeantinoRecording):
+    for alg in (EventRecording, Geant4Simulation):
         assert hasattr(alg, "Config")
 
 

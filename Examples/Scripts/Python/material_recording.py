@@ -4,7 +4,7 @@ import warnings
 
 import acts
 from acts.examples import (
-    FixedVertexGenerator,
+    GaussianVertexGenerator,
     ParametricParticleGenerator,
     FixedMultiplicityGenerator,
     EventGenerator,
@@ -28,16 +28,19 @@ def runMaterialRecording(g4geo, outputDir, tracksPerEvent=10000, s=None):
 
     rnd = RandomNumbers(seed=228)
 
-    s = s or acts.examples.Sequencer(events=10, numThreads=-1)
+    s = s or acts.examples.Sequencer(events=2, numThreads=1)
 
     evGen = EventGenerator(
         level=acts.logging.INFO,
         generators=[
             EventGenerator.Generator(
                 multiplicity=FixedMultiplicityGenerator(n=1),
-                vertex=FixedVertexGenerator(fixed=acts.Vector4(0, 0, 0, 0)),
+                vertex=GaussianVertexGenerator(
+                    stddev=acts.Vector4(0, 0, 0, 0),
+                    mean=acts.Vector4(0, 0, 0, 0),
+                ),
                 particles=ParametricParticleGenerator(
-                    p=(1 * u.GeV, 10 * u.GeV), eta=(-4, 4), numParticles=1
+                    p=(1 * u.GeV, 10 * u.GeV), eta=(-4, 4), numParticles=tracksPerEvent
                 ),
             )
         ],
@@ -81,4 +84,4 @@ if "__main__" == __name__:
     )
     g4geo = acts.examples.geant4.dd4hep.DDG4DetectorConstruction(dd4hepSvc)
 
-    runMaterialRecording(g4geo=g4geo, outputDir=os.getcwd()).run()
+    runMaterialRecording(g4geo=g4geo, tracksPerEvent=10, outputDir=os.getcwd()).run()

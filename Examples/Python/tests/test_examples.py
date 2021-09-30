@@ -89,11 +89,11 @@ def test_propagation(tmp_path, trk_geo, field, seq):
 @pytest.mark.slow
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
-def test_geantino_recording(tmp_path, geantino_recording):
+def test_material_recording(tmp_path, material_recording):
     # from geantino_recording import runGeantinoRecording
     # from acts.examples.dd4hep import DD4hepGeometryService
 
-    root_files = [("geant-material-tracks.root", "material-tracks", 200)]
+    root_files = [("geant4_material_tracks.root", "material-tracks", 200)]
 
     # dd4hepSvc = acts.examples.dd4hep.DD4hepGeometryService(
     #     xmlFileNames=["thirdparty/OpenDataDetector/xml/OpenDataDetector.xml"]
@@ -115,7 +115,7 @@ def test_geantino_recording(tmp_path, geantino_recording):
     # del s
 
     for fn, tn, ee in root_files:
-        fp = geantino_recording / fn
+        fp = material_recording / fn
         assert fp.exists()
         assert fp.stat().st_size > 2 ** 10 * 50
         assert_entries(fp, tn, ee)
