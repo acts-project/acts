@@ -57,6 +57,8 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
     throw std::invalid_argument("Missing G4 PrimaryGeneratorAction object");
   }
 
+  G4Random::setTheSeed(m_cfg.seed);
+
   // Set the detector construction
   m_cfg.runManager->SetUserInitialization(m_cfg.detectorConstruction);
 
