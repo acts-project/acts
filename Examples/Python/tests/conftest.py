@@ -163,7 +163,7 @@ def geantino_recording():
     if not helpers.dd4hepEnabled:
         pytest.skip("DD4hep recording requested, but Geant4 is not set up")
 
-    from geantino_recording import runGeantinoRecording
+    from material_recording import runMaterialRecording
 
     dd4hepSvc = acts.examples.dd4hep.DD4hepGeometryService(
         xmlFileNames=["thirdparty/OpenDataDetector/xml/OpenDataDetector.xml"]
@@ -176,7 +176,7 @@ def geantino_recording():
 
         s = acts.examples.Sequencer(events=2, numThreads=1)
 
-        runGeantinoRecording(
+        runMaterialRecording(
             dd4hepG4ConstructionFactory, str(d), tracksPerEvent=100, s=s
         )
         s.run()
