@@ -206,8 +206,7 @@ struct SpacePointData {
   float sp_x, sp_y, sp_z, sp_radius;
   float sp_covr, sp_covz;
 
-  DFE_NAMEDTUPLE(SpacePointData, measurement_id, 
-                 sp_x, sp_y, sp_z, sp_radius, 
+  DFE_NAMEDTUPLE(SpacePointData, measurement_id, sp_x, sp_y, sp_z, sp_radius,
                  sp_covr, sp_covz);
 };
 

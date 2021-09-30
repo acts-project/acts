@@ -53,7 +53,7 @@ ActsExamples::CsvParticleReader::Config setupParticleReading(
 ActsExamples::CsvSpacePointReader::Config setupSpacePointReading(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer,
-    const std::string& inputCollectionName="");
+    const std::string& inputCollectionName = "");
 
 /// Setup sim hit smearing
 ///

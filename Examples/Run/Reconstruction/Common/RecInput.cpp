@@ -95,7 +95,7 @@ ActsExamples::DigitizationConfig setupDigitization(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     const std::string& inputSimHits) {
   using namespace ActsExamples;
- 
+
   // Read some standard options
   auto logLevel = Options::readLogLevel(vars);
 

@@ -13,8 +13,8 @@
 #include "ActsExamples/Framework/IReader.hpp"
 
 #include <memory>
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace ActsExamples {
 
@@ -29,38 +29,38 @@ namespace ActsExamples {
 ///
 /// and each line in the file corresponds to one simhit.
 class CsvSpacePointReader final : public IReader {
-public:
- struct Config {
-   /// Where to read input files from.
-   std::string inputDir;
-   /// Input filename stem.
-   std::string inputStem;
-   /// Input space point collection.
-   std::string inputCollection;
-   /// Output space point collections.
-   std::string outputSpacePoints;
- };
+ public:
+  struct Config {
+    /// Where to read input files from.
+    std::string inputDir;
+    /// Input filename stem.
+    std::string inputStem;
+    /// Input space point collection.
+    std::string inputCollection;
+    /// Output space point collections.
+    std::string outputSpacePoints;
+  };
 
- /// Construct the simhit reader.
- ///
- /// @params cfg is the configuration object
- /// @params lvl is the logging level
- CsvSpacePointReader(const Config& cfg, Acts::Logging::Level lvl);
+  /// Construct the simhit reader.
+  ///
+  /// @params cfg is the configuration object
+  /// @params lvl is the logging level
+  CsvSpacePointReader(const Config& cfg, Acts::Logging::Level lvl);
 
- std::string name() const final override;
+  std::string name() const final override;
 
- /// Return the available events range.
- std::pair<size_t, size_t> availableEvents() const final override;
+  /// Return the available events range.
+  std::pair<size_t, size_t> availableEvents() const final override;
 
- /// Read out data from the input stream.
- ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final override;
+  /// Read out data from the input stream.
+  ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final override;
 
-private:
- Config m_cfg;
- std::pair<size_t, size_t> m_eventsRange;
- std::unique_ptr<const Acts::Logger> m_logger;
+ private:
+  Config m_cfg;
+  std::pair<size_t, size_t> m_eventsRange;
+  std::unique_ptr<const Acts::Logger> m_logger;
 
- const Acts::Logger& logger() const { return *m_logger; }
+  const Acts::Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace ActsExamples
