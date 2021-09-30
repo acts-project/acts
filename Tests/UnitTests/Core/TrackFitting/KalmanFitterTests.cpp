@@ -95,6 +95,7 @@ struct TestReverseFilteringLogic {
   bool operator()(const track_state_t& trackState) const {
     // can't determine an outlier w/o a measurement or predicted parameters
     auto momentum = fabs(1 / trackState.filtered()[Acts::eBoundQOverP]);
+    std::cout << "momentum : " << momentum << std::endl;
     return (momentum <= momentumMax);
   }
 };
@@ -513,14 +514,13 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithReverseFiltering) {
 
   // Case without reverse filtering
   {
-    // fitter options w/o target surface. Reverse filtering threshold set at 0.5
-    // GeV
+    // Reverse filtering threshold set at 0.5 GeV
     KalmanFitterOptions<TestSourceLinkCalibrator, VoidOutlierFinder,
                         TestReverseFilteringLogic>
         kfOptions(geoCtx, magCtx, calCtx, TestSourceLinkCalibrator(),
                   VoidOutlierFinder(), TestReverseFilteringLogic{0.1_GeV},
                   LoggerWrapper{*kfLogger}, PropagatorPlainOptions());
-    kfOptions.reversedFiltering = true;
+    kfOptions.reversedFiltering = false;
     kfOptions.referenceSurface = targetSurface.get();
 
     auto res = kfZero.fit(sourceLinks, start, kfOptions);
@@ -535,12 +535,31 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithReverseFiltering) {
   }
   // Case with Reverse filtering
   {
-    // fitter options w/o target surface. Reverse filtering threshold set at 10
-    // GeV
+    // Reverse filtering threshold set at 10 GeV
     KalmanFitterOptions<TestSourceLinkCalibrator, VoidOutlierFinder,
                         TestReverseFilteringLogic>
         kfOptions(geoCtx, magCtx, calCtx, TestSourceLinkCalibrator(),
                   VoidOutlierFinder(), TestReverseFilteringLogic{10_GeV},
+                  LoggerWrapper{*kfLogger}, PropagatorPlainOptions());
+    kfOptions.reversedFiltering = false;
+    kfOptions.referenceSurface = targetSurface.get();
+
+    auto res = kfZero.fit(sourceLinks, start, kfOptions);
+    BOOST_REQUIRE(res.ok());
+    const auto& val = res.value();
+
+    // Track of 1 GeV with a threshold set at 10 GeV, reversed filtering should
+    // be used
+    BOOST_CHECK(not val.smoothed);
+    BOOST_CHECK(val.reversed);
+    BOOST_CHECK(val.finished);
+  }
+  {
+    // Reverse filtering threshold set at 0.1 GeV forcing the reversed filtering
+    KalmanFitterOptions<TestSourceLinkCalibrator, VoidOutlierFinder,
+                        TestReverseFilteringLogic>
+        kfOptions(geoCtx, magCtx, calCtx, TestSourceLinkCalibrator(),
+                  VoidOutlierFinder(), TestReverseFilteringLogic{0.1_GeV},
                   LoggerWrapper{*kfLogger}, PropagatorPlainOptions());
     kfOptions.reversedFiltering = true;
     kfOptions.referenceSurface = targetSurface.get();
