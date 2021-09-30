@@ -32,7 +32,6 @@ namespace Acts {
 
 template <typename spacepoint_t, typename cluster_t>
 class DoubleHitSpacePointBuilder {
-
  public:
   /// Constructor
   /// @param cfg Specific config that will be used instead of the default values
@@ -78,7 +77,7 @@ class DoubleHitSpacePointBuilder {
   /// @param cluster object related to the cluster that holds the
   /// necessary information
   /// @return vector of the local coordinates of the cluster on the surface
-  std::pair<Vector2,SymMatrix2> localCoords(const cluster_t& cluster) const;
+  std::pair<Vector2, SymMatrix2> localCoords(const cluster_t& cluster) const;
 
   /// @brief Getter method for the global coordinates of a cluster
   /// @param cluster object related to the cluster that holds the
