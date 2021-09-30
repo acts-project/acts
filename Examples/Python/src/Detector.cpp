@@ -55,6 +55,7 @@ void addDetector(Context& ctx) {
   }
 
   {
+    using AlignedDetector = ActsExamples::Contextual::AlignedDetector;
     using Config = AlignedDetector::Config;
 
     auto d = py::class_<AlignedDetector, std::shared_ptr<AlignedDetector>>(
@@ -72,12 +73,19 @@ void addDetector(Context& ctx) {
     ACTS_PYTHON_MEMBER(seed);
     ACTS_PYTHON_MEMBER(iovSize);
     ACTS_PYTHON_MEMBER(flushSize);
+    ACTS_PYTHON_MEMBER(doGarbageCollection);
     ACTS_PYTHON_MEMBER(sigmaInPlane);
     ACTS_PYTHON_MEMBER(sigmaOutPlane);
     ACTS_PYTHON_MEMBER(sigmaInRot);
     ACTS_PYTHON_MEMBER(sigmaOutRot);
     ACTS_PYTHON_MEMBER(firstIovNominal);
+    ACTS_PYTHON_MEMBER(decoratorLogLevel);
+    ACTS_PYTHON_MEMBER(mode);
     ACTS_PYTHON_STRUCT_END();
+
+    py::enum_<Config::Mode>(c, "Mode")
+        .value("Internal", Config::Mode::Internal)
+        .value("External", Config::Mode::External);
   }
 
   {
