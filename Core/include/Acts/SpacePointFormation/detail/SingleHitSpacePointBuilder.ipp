@@ -28,14 +28,12 @@ Acts::SingleHitSpacePointBuilder<spacepoint_t, cluster_t>::globalCoords(
     const GeometryContext& gctx, const cluster_t& clus) const {
   auto meas = clus.measurement();
   auto slink = std::visit([](const auto& x) { return x.sourceLink(); }, meas);
-  // auto slink  = meas.measurement().sourceLink();
   const auto geoId = slink.geometryId();
   const Acts::Surface* surface = m_config.trackingGeometry->findSurface(geoId);
   std::cout << geoId << std::endl;
   auto [localPos, localCov] = std::visit(
       [](const auto& measurement) {
         auto expander = measurement.expander();
-        // auto indices = measurement.indices();
         Acts::BoundVector par = expander * measurement.parameters();
         std::cout << "measurement parameters" << std::endl << par << std::endl;
         Acts::BoundSymMatrix cov =
@@ -48,7 +46,6 @@ Acts::SingleHitSpacePointBuilder<spacepoint_t, cluster_t>::globalCoords(
         return std::make_pair(lpar, lcov);
       },
       meas);
-  // std::cout << "local pos:" << std::endl << localPos << std::endl;
   // transform local position to global coordinates
   Acts::Vector3 globalFakeMom(1, 1, 1);
 
@@ -94,15 +91,10 @@ void Acts::SingleHitSpacePointBuilder<spacepoint_t, cluster_t>::
   for (const auto& clus : clusters) {
     auto measurement = clus.measurement();
     auto [gPos, gCov] = globalCoords(gctx, measurement);
-    // std::cout << "global coordinates : " << gPos[0] << " " << gPos[1] << " "
-    // << gPos[2] << std::endl;
-    // std::cout << "global coordinates : " << std::endl <<  gPos << std::endl;
     auto slink =
         std::visit([](const auto& x) { return x.sourceLink(); }, measurement);
     std::vector<size_t> measurementIndices = {slink.index()};
 
-    // spacePointStorage.emplace_back(gPos, gCov[0], gCov[1],
-    // std::move(measurementIndices));
     spacePointStorage.emplace_back(gPos, gCov[0], gCov[1], slink.index());
   }
 }

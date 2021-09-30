@@ -333,22 +333,12 @@ Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::localCoords(
     const cluster_t& cluster) const {
   // Local position information
   const auto measurement = cluster.measurement();
-  // auto par = meas.parameters();
 
-  /*   Acts::Vector2 localPos = std::visit(
-        [](const auto& x) {
-          // double local = std::visit([](const auto &x){
-          Acts::BoundVector par = x.expander() * x.parameters();
-          // Acts::Vector2 pos(par[0],par[1]);
-          return Acts::Vector2(par[0], par[1]);
-        },
-        meas); */
   auto [localPos, localCov] = std::visit(
       [](const auto& meas) {
         auto expander = meas.expander();
-        // auto indices = measurement.indices();
         Acts::BoundVector par = expander * meas.parameters();
-        std::cout << "measurement parameters" << std::endl << par << std::endl;
+
         Acts::BoundSymMatrix cov =
             expander * meas.covariance() * expander.transpose();
         // extract local position
@@ -359,32 +349,16 @@ Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::localCoords(
         return std::make_pair(lpar, lcov);
       },
       measurement);
-  // return par[1];},meas);
-
-  // Acts::BoundVector par = std::visit([](const auto& x) { return
-  // x.parameters(); }, meas); Acts::Vector2
-  // local(par[Acts::BoundIndices::eBoundLoc0],
-  // par[Acts::BoundIndices::eBoundLoc1]);
-  // Acts::Vector2 local(par[0],par[1]);
-
-  // return local;
-  // Acts::Vector2 localPos(0,0);
   return std::make_pair(localPos, localCov);
 }
 
 template <typename spacepoint_t, typename cluster_t>
-// Acts::Vector3
 std::pair<Acts::Vector3, Acts::Vector2>
 Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::globalCoords(
     const Acts::GeometryContext& gctx, const cluster_t& clus) const {
-  // // Receive corresponding surface
-  // auto& measurementSurface = measurement;
+  // Receive corresponding surface
   const auto meas = clus.measurement();
-  // const auto segment = dynamic_cast<const Acts::CartesianSegmentation*>(
-  //    &(clus.segmentation()));
   auto slink = std::visit([](const auto& x) { return x.sourceLink(); }, meas);
-  // auto slink = meas.sourceLink();
-  // auto slink  = meas.measurement().sourceLink();
   const auto geoId = slink.geometryId();
 
   const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
@@ -392,10 +366,7 @@ Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::globalCoords(
   auto [localPos, localCov] = std::visit(
       [](const auto& measurement) {
         auto expander = measurement.expander();
-        // auto indices = measurement.indices();
         Acts::BoundVector par = expander * measurement.parameters();
-        // std::cout << "measurement parameters" << std::endl << par <<
-        // std::endl;
         Acts::BoundSymMatrix cov =
             expander * measurement.covariance() * expander.transpose();
         // extract local position
@@ -443,15 +414,6 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
   if (clustersFront.empty() || clustersBack.empty()) {
     return;
   }
-  // std::cout << "clusters front in DHPB" << std::endl;
-  // std::cout << "size " << clustersFront.size() << std::endl;
-  // auto clus = clustersFront[0];
-  // auto meas = clus.measurement();
-
-  // auto slink = std::visit([](const auto& x) { return x.sourceLink(); },
-  // meas); std::cout << slink.geometryId() << std::endl; auto [gPos,gCov] =
-  // globalCoords(gctx,meas); std::cout << gPos << std::endl;
-
   // Declare helper variables
   double currentDiff;
   double diffMin;
@@ -466,24 +428,6 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
     clusterMinDist = clustersBack.size();
     for (unsigned int iClustersBack = 0; iClustersBack < clustersBack.size();
          iClustersBack++) {
-      // Calculate the distances between the hits
-
-      //
-      /*
-      auto clus = *clustersFront[iClustersFront];
-
-      const auto meas = clus.measurement();
-      // const auto segment = dynamic_cast<const Acts::CartesianSegmentation*>(
-      //      &(clus.segmentation()));
-
-      auto slink = std::visit(
-          [](const auto& x) {
-
-            return x.sourceLink();
-          },
-          meas);
-      const auto geoId = slink.geometryId();
-*/
       auto gpos_front = globalCoords(gctx, *clustersFront[iClustersFront]);
       auto gpos_back = globalCoords(gctx, *clustersBack[iClustersBack]);
 
@@ -548,7 +492,7 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
         const std::vector<std::pair<const cluster_t*, const cluster_t*>>&
             clusterPairs,
         std::vector<spacepoint_t>& spacePoints) const {
-  /// Source of algorithm: Athena, SiSpacePointMakerTool::makeSCT_SpacePoint()
+  // Source of algorithm: Athena, SiSpacePointMakerTool::makeSCT_SpacePoint()
 
   detail::SpacePointParameters spaPoPa;
 
@@ -564,21 +508,16 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
     spaPoPa.r = ends2.first - ends2.second;
 
     double resultPerpProj;
-    // std::cout << "use perp proj " << m_cfg.usePerpProj << std::endl;
+
     if (m_cfg.usePerpProj) {
       resultPerpProj = detail::calcPerpendicularProjection(
           ends1.first, ends2.first, spaPoPa.q, spaPoPa.r);
       if (resultPerpProj <= 0.) {
-        // spacepoint_t sp;
-        // sp.MeasurementModule.push_back(cp.first);
-        // sp.MeasurementModule.push_back(cp.second);
         Vector3 pos = ends1.first + resultPerpProj * spaPoPa.q;
         double varRho = 0.;  // TODO implement variance rho and z
         double varZ = 0.;
         size_t measurementIndex = 0;  // should be indices
         std::vector<size_t> measurementIndices = {0, 1};
-        // auto sp = spacepoint_t(pos, varRho, varZ,
-        // std::move(measurementIndices));
         auto sp = spacepoint_t(pos, varRho, varZ, std::move(measurementIndex));
         spacePoints.push_back(std::move(sp));
         continue;
@@ -598,8 +537,7 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
       double varZ = 0.;
 
       std::vector<size_t> measurementIndices = {0, 1};  // Fix me
-      // auto sp = spacepoint_t(pos, varRho, varZ,
-      // std::move(measurementIndices));
+
       auto sp = spacepoint_t(pos, varRho, varZ, 0);
 
       double theta = acos(spaPoPa.q.dot(spaPoPa.r) /
@@ -609,52 +547,5 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
 
       spacePoints.push_back(std::move(sp));
     }
-
-    // if (calculateSpacePoint(ends1, ends2, m_cfg.vertex, spaPoPa,
-    //                         m_cfg.stripLengthTolerance)) {
-    //   // std::cout << "case 1: found a good SP" << std::endl;
-    //   // Store the space point
-    //   // spacepoint_t sp;
-    //   // sp.MeasurementModule.push_back(cp.first);
-    //   // sp.MeasurementModule.push_back(cp.second);
-    //   Vector3 pos = 0.5 * (ends1.first + ends1.second + spaPoPa.m *
-    //   spaPoPa.q); double varRho = -1.;  // TODO impriment variance rho and z
-    //   double varZ = -1;
-    //   size_t measurementIndex = 0;  // should be indices
-    //   auto sp = spacepoint_t(pos, varRho, varZ, measurementIndex);
-
-    //   double theta =
-    //   acos(spaPoPa.q.dot(spaPoPa.r)/(spaPoPa.q.norm()*spaPoPa.r.norm()));
-
-    //   std::cout << "theta " << theta << std::endl;
-
-    //   spacePoints.push_back(std::move(sp));
-    //   // TODO: Measurements should deliver timestamp
-    //   /// sp.vector = pos;
-    //   // spacePoints.push_back(std::move(sp));
-    // } else {
-    //   // std::cout << "case 2: could not find a good SP" << std::endl;
-    //   /// If this point is reached then it was not possible to resolve both
-    //   /// points such that they are on their SDEs
-    //   /// The following code treats a possible recovery of points resolved
-    //   /// slightly outside of the SDE.
-    //   /// @note This procedure is an indirect variation of the vertex
-    //   /// position.
-    //   // Check if a recovery the point(s) and store them if successful
-    //   if (detail::recoverSpacePoint(spaPoPa, m_cfg.stripLengthGapTolerance))
-    //   {
-    //     // spacepoint_t sp;
-    //     // sp.MeasurementModule.push_back(cp.first);
-    //     // sp.MeasurementModule.push_back(cp.second);
-    //     Vector3 pos =
-    //         0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
-    //     double varRho = -1.;  // TODO impriment variance rho and z
-    //     double varZ = -1;
-    //     size_t measurementIndex = 0;  // should be indices
-    //     auto sp = spacepoint_t(pos, varRho, varZ, measurementIndex);
-    //     spacePoints.push_back(std::move(sp));
-
-    //   }
-    // }
   }
 }

@@ -84,8 +84,6 @@ const auto geometry = geometryStore();
 // detector resolutions
 const MeasurementResolution resPixel = {MeasurementType::eLoc01,
                                         {25_um, 50_um}};
-const MeasurementResolution resStrip = {MeasurementType::eLoc01,
-                                        {100_um, 100_mm}};
 const MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {100_um}};
 const MeasurementResolution resStrip1 = {MeasurementType::eLoc0, {150_um}};
 const MeasurementResolutionMap resolutions = {
