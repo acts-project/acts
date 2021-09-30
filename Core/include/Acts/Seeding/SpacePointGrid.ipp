@@ -51,10 +51,12 @@ Acts::SpacePointGridCreator::createGrid(
 
     // evaluating delta Phi based on the inner and outer angle, and the azimutal
     // deflection including the maximum impact parameter
-    // The factor 3 we divide by is motivated by the fact that we combine sets of
-    // three consecutive phi bins in the seed making step. So each individual bin should 
-    // be approximately a third of the maximum expected azimutal deflection
-    float deltaPhi = (outerAngle - innerAngle + deltaAngleWithMaxD0)/config.phiBinStep;
+    // The factor 3 we divide by is motivated by the fact that we combine sets
+    // of three consecutive phi bins in the seed making step. So each individual
+    // bin should be approximately a third of the maximum expected azimutal
+    // deflection
+    float deltaPhi =
+        (outerAngle - innerAngle + deltaAngleWithMaxD0) / config.phiBinStep;
 
     // divide 2pi by angle delta to get number of phi-bins
     // size is always 2pi even for regions of interest
