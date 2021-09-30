@@ -15,6 +15,7 @@ sets up the particle propagation and runs a few events.
 
 .. code-block:: python
 
+   import acts
    import acts.examples
 
    detector, trackingGeometry, contextDecorators  = acts.examples.GenericDetector.create()
@@ -56,3 +57,30 @@ sets up the particle propagation and runs a few events.
    )
 
    s.run()
+
+Python based example scripts
+----------------------------
+
+The repository contains a set of example scripts that can be used to execute various workflows.
+They can be found in ``$REPO_ROOT/Examples/Scripts/Python``. Make sure you have run
+
+.. code-block:: console
+
+   source $BUILD_DIR/python/source.sh
+
+to make sure python can find the ``acts`` module.
+
+Python based unit tests
+-----------------------
+
+A number of unit tests based on the ``pytest`` library are shipped with the
+repository. They are located under ``$REPO_ROOT/Examples/Python/tests``, and
+intend to cover the public API of the python bindings. A set of tests also
+executed the standalone example scripts.
+
+To run these python based tests, ``pytest`` needs to be installed. It can be
+installed via ``pip install pytest``. It is recommended to install this package
+in `virtual environment`_. You can then simply run ``pytest`` from the
+repository root.
+
+.. _virtual environment: https://realpython.com/python-virtual-environments-a-primer/
