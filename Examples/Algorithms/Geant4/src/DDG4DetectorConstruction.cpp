@@ -36,12 +36,3 @@ G4VPhysicalVolume* ActsExamples::DDG4DetectorConstruction::Construct() {
   }
   return m_world;
 }
-
-ActsExamples::DDG4DetectorConstructionFactory::DDG4DetectorConstructionFactory(
-    dd4hep::Detector& detector)
-    : m_detector{detector} {}
-
-std::unique_ptr<G4VUserDetectorConstruction>
-ActsExamples::DDG4DetectorConstructionFactory::operator()() const {
-  return std::make_unique<ActsExamples::DDG4DetectorConstruction>(m_detector);
-}
