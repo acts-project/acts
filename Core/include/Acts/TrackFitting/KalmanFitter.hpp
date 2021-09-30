@@ -117,7 +117,8 @@ struct KalmanFitterOptions {
   /// Whether to consider energy loss
   bool energyLoss = true;
 
-  /// Whether to run filtering in reversed direction
+  /// Whether to run filtering in reversed direction overwrite the
+  /// ReverseFilteringLogic
   bool reversedFiltering = false;
 
   /// Logger
@@ -322,8 +323,8 @@ class KalmanFitter {
           result.missedActiveSurfaces.resize(result.measurementHoles);
           // now get track state proxy for the smoothing logic
           auto trackStateProxy =
-              result.fittedStates.getTrackState(result.lastTrackIndex);
-          if (m_reverseFilteringLogic(trackStateProxy, reversedFiltering)) {
+              result.fittedStates.getTrackState(result.lastMeasurementIndex);
+          if (reversedFiltering || m_reverseFilteringLogic(trackStateProxy)) {
             // Start to run reversed filtering:
             // Reverse navigation direction and reset navigation and stepping
             // state to last measurement

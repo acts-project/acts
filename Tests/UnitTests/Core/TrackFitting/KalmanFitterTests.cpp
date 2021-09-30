@@ -88,16 +88,12 @@ struct TestReverseFilteringLogic {
   /// Classify a measurement as a valid one or an outlier.
   ///
   /// @tparam track_state_t Type of the track state
-  /// @param state The track state to classify
-  /// @retval False if the measurement is not an outlier
-  /// @retval True if the measurement is an outlier
+  /// @param trackState The trackState of the last measurement
+  /// @retval False if we don't use the reverse filtering for the smoothing of the track
+  /// @retval True if we use the reverse filtering for the smoothing of the track
   template <typename track_state_t>
-  bool operator()(const track_state_t& trackState,
-                  const bool& reversedFiltering) const {
+  bool operator()(const track_state_t& trackState) const {
     // can't determine an outlier w/o a measurement or predicted parameters
-    if (!reversedFiltering) {
-      return false;
-    }
     auto momentum = fabs(1 / trackState.filtered()[Acts::eBoundQOverP]);
     return (momentum <= momentumMax);
   }
