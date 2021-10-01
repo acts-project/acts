@@ -141,12 +141,8 @@ def test_geometry_example(geoFactory, nobj, tmp_path):
         outputDir=str(tmp_path),
     )
 
-    if isinstance(detector, AlignedDetector):
-        with pytest.raises(RuntimeError):
-            runGeometry(outputJson=True, **kwargs)
-        runGeometry(outputJson=False, **kwargs)
-    else:
-        runGeometry(outputJson=True, **kwargs)
+    runGeometry(outputJson=True, **kwargs)
+    runGeometry(outputJson=False, **kwargs)
 
     assert len(list(obj_dir.iterdir())) == nobj
     assert all(f.stat().st_size > 200 for f in obj_dir.iterdir())
