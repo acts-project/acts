@@ -84,4 +84,20 @@ struct VoidOutlierFinder {
   }
 };
 
+/// @brief void smoothing logic
+struct VoidReverseFilteringLogic {
+  /// @brief Public call mimicking an outlier finder
+  ///
+  /// @tparam track_state_t Type of the track state
+  ///
+  /// @param trackState The trackState of the last measurement
+  ///
+  /// @return Whether to run filtering in reversed direction as smoothing or not
+  template <typename track_state_t>
+  constexpr bool operator()(const track_state_t& trackState) const {
+    (void)trackState;
+    return false;
+  }
+};
+
 }  // namespace Acts
