@@ -276,9 +276,11 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
   const auto& trajectories = createTrajectories(geometry, 10);
 
   // Construct the KalmanFitter options
-  KalmanFitterOptions<TestSourceLinkCalibrator, VoidOutlierFinder> kfOptions(
-      geoCtx, magCtx, calCtx, TestSourceLinkCalibrator(), VoidOutlierFinder(),
-      LoggerWrapper{*kfLogger}, PropagatorPlainOptions());
+  KalmanFitterOptions<TestSourceLinkCalibrator, VoidOutlierFinder,
+                      Acts::VoidReverseFilteringLogic>
+      kfOptions(geoCtx, magCtx, calCtx, TestSourceLinkCalibrator(),
+                VoidOutlierFinder(), Acts::VoidReverseFilteringLogic(),
+                LoggerWrapper{*kfLogger}, PropagatorPlainOptions());
 
   // Construct an non-updating alignment updater
   AlignedTransformUpdater voidAlignUpdater =
@@ -287,7 +289,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
 
   // Construct the alignment options
   AlignmentOptions<
-      KalmanFitterOptions<TestSourceLinkCalibrator, VoidOutlierFinder>>
+      KalmanFitterOptions<TestSourceLinkCalibrator, VoidOutlierFinder,
+                          Acts::VoidReverseFilteringLogic>>
       alignOptions(kfOptions, voidAlignUpdater, LoggerWrapper{*alignLogger});
   alignOptions.maxIterations = 1;
 
