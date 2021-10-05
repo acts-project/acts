@@ -14,7 +14,7 @@ env:
 jobs:
   linux:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v11
+    container: ghcr.io/acts-project/${{ matrix.image }}:v13
     strategy:
       matrix:
         image:
@@ -56,6 +56,16 @@ jobs:
       - name: Examples
         if: contains(matrix.image, 'ubuntu')
         run: ${SETUP} && ./CI/run_examples.sh
+      - name: Python level tests
+        if: contains(matrix.image, 'ubuntu')
+        shell: bash
+        run: >
+          ${SETUP} 
+          && source /usr/local/bin/thisroot.sh
+          && source /usr/local/bin/thisdd4hep_only.sh
+          && source build/python/setup.sh 
+          && pip3 install pytest
+          && pytest -rFs
       - name: Install
         run: ${SETUP} && cmake --build build -- install
       - uses: actions/upload-artifact@v2
