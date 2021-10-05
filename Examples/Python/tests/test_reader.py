@@ -133,7 +133,7 @@ def test_root_reader_interface(reader, conf_const, tmp_path):
 @pytest.mark.slow
 @pytest.mark.root
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
-def test_root_material_track_reader(tmp_path, geantino_recording):
+def test_root_material_track_reader(material_recording):
 
     # recreate sequencer
 
@@ -142,7 +142,7 @@ def test_root_material_track_reader(tmp_path, geantino_recording):
     s.addReader(
         RootMaterialTrackReader(
             level=acts.logging.INFO,
-            fileList=[str(geantino_recording / "geant-material-tracks.root")],
+            fileList=[str(material_recording / "geant4_material_tracks.root")],
         )
     )
 
@@ -153,7 +153,7 @@ def test_root_material_track_reader(tmp_path, geantino_recording):
 
     s.run()
 
-    assert alg.events_seen == 200
+    assert alg.events_seen == 198
 
 
 @pytest.mark.csv

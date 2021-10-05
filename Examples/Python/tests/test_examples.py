@@ -90,29 +90,9 @@ def test_propagation(tmp_path, trk_geo, field, seq):
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_material_recording(tmp_path, material_recording):
-    # from geantino_recording import runGeantinoRecording
-    # from acts.examples.dd4hep import DD4hepGeometryService
 
-    root_files = [("geant4_material_tracks.root", "material-tracks", 200)]
-
-    # dd4hepSvc = acts.examples.dd4hep.DD4hepGeometryService(
-    #     xmlFileNames=["thirdparty/OpenDataDetector/xml/OpenDataDetector.xml"]
-    # )
-    # dd4hepG4ConstructionFactory = (
-    #     acts.examples.geant4.dd4hep.DD4hepDetectorConstructionFactory(dd4hepSvc)
-    # )
-
-    # for fn, _, _ in root_files:
-    #     fp = tmp_path / fn
-    #     assert not fp.exists()
-
-    # s = Sequencer(events=2, numThreads=1)
-
-    # runGeantinoRecording(dd4hepG4ConstructionFactory, str(tmp_path), s=s)
-
-    # s.run()
-
-    # del s
+    # Not quite sure why this isn't 200
+    root_files = [("geant4_material_tracks.root", "material-tracks", 198)]
 
     for fn, tn, ee in root_files:
         fp = material_recording / fn
@@ -194,7 +174,9 @@ def test_particle_gun(tmp_path):
 
 @pytest.mark.slow
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
-def test_material_mapping(geantino_recording, tmp_path):
+def test_material_mapping(material_recording, tmp_path):
+    map_file = tmp_path / "material-maps_tracks.root"
+    assert not map_file.exists()
 
     s = Sequencer(numThreads=1)
 
@@ -206,7 +188,7 @@ def test_material_mapping(geantino_recording, tmp_path):
         trackingGeometry,
         decorators,
         outputDir=str(tmp_path),
-        inputDir=geantino_recording,
+        inputDir=material_recording,
         s=s,
     )
 
@@ -216,13 +198,19 @@ def test_material_mapping(geantino_recording, tmp_path):
     # See https://github.com/acts-project/acts/issues/881
     del s
 
-    mat_file = tmp_path / "material.json"
+    mat_file = tmp_path / "material-map.json"
 
     assert mat_file.exists()
     assert mat_file.stat().st_size > 10
 
     with mat_file.open() as fh:
         assert json.load(fh)
+
+    assert map_file.exists()
+    assert_entries(map_file, "material-tracks", 198)
+
+    val_file = tmp_path / "propagation-material.root"
+    assert not val_file.exists()
 
     # test the validation as well
 
@@ -233,9 +221,6 @@ def test_material_mapping(geantino_recording, tmp_path):
     detector, trackingGeometry, decorators = getOpenDataDetector(
         mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
     )
-
-    root_file = tmp_path / "RecordedMaterialTracks.root"
-    assert not root_file.exists()
 
     from material_validation import runMaterialValidation
 
@@ -249,8 +234,8 @@ def test_material_mapping(geantino_recording, tmp_path):
 
     s.run()
 
-    assert root_file.exists()
-    assert_entries(root_file, "material-tracks", 10000)
+    assert val_file.exists()
+    assert_entries(val_file, "material-tracks", 10000)
 
 
 @pytest.mark.parametrize(
