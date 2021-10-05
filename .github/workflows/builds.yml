@@ -14,7 +14,7 @@ env:
 jobs:
   linux:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v11
+    container: ghcr.io/acts-project/${{ matrix.image }}:v13
     strategy:
       matrix:
         image:
@@ -56,6 +56,16 @@ jobs:
       - name: Examples
         if: contains(matrix.image, 'ubuntu')
         run: ${SETUP} && ./CI/run_examples.sh
+      - name: Python level tests
+        if: contains(matrix.image, 'ubuntu')
+        shell: bash
+        run: >
+          ${SETUP} 
+          && source /usr/local/bin/thisroot.sh
+          && source /usr/local/bin/thisdd4hep_only.sh
+          && source build/python/setup.sh 
+          && pip3 install pytest
+          && pytest -rFs
       - name: Install
         run: ${SETUP} && cmake --build build -- install
       - uses: actions/upload-artifact@v2
@@ -158,47 +168,6 @@ jobs:
         run: ./build-downstream-nodeps/bin/ShowActsVersion
              && CI/check_boost_eigen_versions.sh ./build-downstream-nodeps/bin/ShowActsVersion
 
-  lcg:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        LCG:
-          # Disable these jobs temporarily to relieve pressure on the CI
-          #- LCG_97apython3/x86_64-centos7-gcc9-opt
-          #- LCG_98python3/x86_64-centos7-gcc10-opt
-          #- LCG_99/x86_64-centos7-gcc10-opt
-          - LCG_100/x86_64-centos7-gcc10-opt
-          - LCG_100/x86_64-centos8-gcc10-opt
-    env:
-      INSTALL_DIR: ${{ github.workspace }}/install
-    steps:
-      - uses: actions/checkout@v2
-      - uses: cvmfs-contrib/github-action-cvmfs@v2
-      - uses: aidasoft/run-lcg-view@v1
-        with:
-          release-platform: ${{ matrix.LCG }}
-          run: |
-            export INSTALL_DIR=${{ github.workspace }}/install
-            cmake -B build -S . \
-              -GNinja \
-              -DCMAKE_BUILD_TYPE=Release \
-              -DCMAKE_CXX_STANDARD=17 \
-              -DCMAKE_CXX_FLAGS=-Werror \
-              -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}" \
-              -DACTS_BUILD_EVERYTHING=on \
-              -DACTS_LOG_FAILURE_THRESHOLD=WARNING
-            cmake --build build -- 
-            cmake --build build -- test
-            cmake --build build -- integrationtests
-            cmake --build build -- install
-            cmake -B build-downstream -S Tests/DownstreamProject \
-              -GNinja \
-              -DCMAKE_BUILD_TYPE=Release \
-              -DCMAKE_CXX_FLAGS=-Werror \
-              -DCMAKE_CXX_STANDARD=17 \
-              -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
-            cmake --build build-downstream --
-            ./build-downstream/bin/ShowActsVersion
   macos:
     runs-on: macos-10.15
     env:

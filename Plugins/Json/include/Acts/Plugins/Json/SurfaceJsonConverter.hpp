@@ -17,7 +17,7 @@
 #include <string>
 #include <vector>
 
-// Custom Json encoder/decoders. Naming is mandated by nlohman::json and thus
+// Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus
 // can not match our naming guidelines.
 namespace Acts {
 
