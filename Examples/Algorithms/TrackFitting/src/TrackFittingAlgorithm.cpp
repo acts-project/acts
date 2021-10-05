@@ -67,9 +67,11 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
       Acts::Vector3{0., 0., 0.});
 
   // Set the KalmanFitter options
-  Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder>
+  Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder,
+                            Acts::VoidReverseFilteringLogic>
       kfOptions(ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
                 MeasurementCalibrator(measurements), Acts::VoidOutlierFinder(),
+                Acts::VoidReverseFilteringLogic(),
                 Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(),
                 &(*pSurface));
 

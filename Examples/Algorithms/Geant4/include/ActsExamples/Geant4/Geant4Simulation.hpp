@@ -60,6 +60,9 @@ class Geant4Simulation final : public BareAlgorithm {
     // Name of the output collection: material tracks
     std::string outputMaterialTracks = "";
 
+    // The Geant4 seed being used
+    std::size_t seed = 123;
+
     /// The G4 run manager
     std::shared_ptr<G4RunManager> runManager;
 
