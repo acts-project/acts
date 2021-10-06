@@ -97,8 +97,8 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
   TrackFitterOptions kfOptions(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
       MeasurementCalibrator(measurements), Acts::VoidOutlierFinder(),
-      Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(),
-      &(*pSurface));
+      Acts::VoidReverseFilteringLogic(), Acts::LoggerWrapper{logger()},
+      Acts::PropagatorPlainOptions(), &(*pSurface));
 
   // Set the alignment options
   ActsAlignment::AlignmentOptions<TrackFitterOptions> alignOptions(

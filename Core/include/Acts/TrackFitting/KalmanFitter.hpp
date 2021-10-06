@@ -43,11 +43,14 @@ namespace Acts {
 /// Combined options for the Kalman fitter.
 ///
 /// @tparam calibrator_t Source link type, should be semiregular.
-/// @tparam outlier_finder_t Outlier finder type, shoule be semiregular.
-template <typename calibrator_t, typename outlier_finder_t>
+/// @tparam outlier_finder_t Outlier finder type, should be semiregular.
+/// @tparam reverse_filtering_logic_t type deciding whether to run filtering in reversed direction as smoothing, should be semiregular.
+template <typename calibrator_t, typename outlier_finder_t,
+          typename reverse_filtering_logic_t>
 struct KalmanFitterOptions {
   using Calibrator = calibrator_t;
   using OutlierFinder = outlier_finder_t;
+  using ReverseFilteringLogic = reverse_filtering_logic_t;
 
   /// PropagatorOptions with context.
   ///
@@ -56,6 +59,7 @@ struct KalmanFitterOptions {
   /// @param cctx The calibration context for this fit
   /// @param calibrator_ The source link calibrator
   /// @param outlierFinder_ The outlier finder
+  /// @param reverseFilteringLogic_ The smoothing logic
   /// @param logger_ The logger wrapper
   /// @param pOptions The plain propagator options
   /// @param rSurface The reference surface for the fit to be expressed at
@@ -63,20 +67,19 @@ struct KalmanFitterOptions {
   /// @param eLoss Whether to include energy loss
   /// @param rFiltering Whether to run filtering in reversed direction as
   /// smoothing
-  KalmanFitterOptions(const GeometryContext& gctx,
-                      const MagneticFieldContext& mctx,
-                      std::reference_wrapper<const CalibrationContext> cctx,
-                      Calibrator calibrator_, OutlierFinder outlierFinder_,
-                      LoggerWrapper logger_,
-                      const PropagatorPlainOptions& pOptions,
-                      const Surface* rSurface = nullptr,
-                      bool mScattering = true, bool eLoss = true,
-                      bool rFiltering = false)
+  KalmanFitterOptions(
+      const GeometryContext& gctx, const MagneticFieldContext& mctx,
+      std::reference_wrapper<const CalibrationContext> cctx,
+      Calibrator calibrator_, OutlierFinder outlierFinder_,
+      ReverseFilteringLogic reverseFilteringLogic_, LoggerWrapper logger_,
+      const PropagatorPlainOptions& pOptions, const Surface* rSurface = nullptr,
+      bool mScattering = true, bool eLoss = true, bool rFiltering = false)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
         calibrator(std::move(calibrator_)),
         outlierFinder(std::move(outlierFinder_)),
+        reverseFilteringLogic(std::move(reverseFilteringLogic_)),
         propagatorPlainOptions(pOptions),
         referenceSurface(rSurface),
         multipleScattering(mScattering),
@@ -99,6 +102,9 @@ struct KalmanFitterOptions {
   /// The outlier finder.
   OutlierFinder outlierFinder;
 
+  /// The smoothing logic.
+  ReverseFilteringLogic reverseFilteringLogic;
+
   /// The trivial propagator options
   PropagatorPlainOptions propagatorPlainOptions;
 
@@ -111,7 +117,8 @@ struct KalmanFitterOptions {
   /// Whether to consider energy loss
   bool energyLoss = true;
 
-  /// Whether to run filtering in reversed direction
+  /// Whether to run filtering in reversed direction overwrite the
+  /// ReverseFilteringLogic
   bool reversedFiltering = false;
 
   /// Logger
@@ -218,7 +225,8 @@ class KalmanFitter {
   /// The KalmanActor does not rely on the measurements to be
   /// sorted along the track.
   template <typename source_link_t, typename parameters_t,
-            typename calibrator_t, typename outlier_finder_t>
+            typename calibrator_t, typename outlier_finder_t,
+            typename reverse_filtering_logic_t>
   class Actor {
    public:
     /// Broadcast the result_type
@@ -313,7 +321,10 @@ class KalmanFitter {
              state.navigation.navigationBreak)) {
           // Remove the missing surfaces that occur after the last measurement
           result.missedActiveSurfaces.resize(result.measurementHoles);
-          if (reversedFiltering) {
+          // now get track state proxy for the smoothing logic
+          auto trackStateProxy =
+              result.fittedStates.getTrackState(result.lastMeasurementIndex);
+          if (reversedFiltering || m_reverseFilteringLogic(trackStateProxy)) {
             // Start to run reversed filtering:
             // Reverse navigation direction and reset navigation and stepping
             // state to last measurement
@@ -346,7 +357,7 @@ class KalmanFitter {
           // If no target surface provided:
           // -> Return an error when using reversed filtering mode
           // -> Fitting is finished here
-          if (reversedFiltering) {
+          if (result.reversed) {
             ACTS_ERROR(
                 "The target surface needed for aborting reversed propagation "
                 "is not provided");
@@ -373,7 +384,7 @@ class KalmanFitter {
           result.fittedParameters = std::get<BoundTrackParameters>(fittedState);
 
           // Reset smoothed status of states missed in reversed filtering
-          if (reversedFiltering) {
+          if (result.reversed) {
             result.fittedStates.applyBackwards(
                 result.lastMeasurementIndex, [&](auto trackState) {
                   auto fSurface = &trackState.referenceSurface();
@@ -981,17 +992,21 @@ class KalmanFitter {
     /// The outlier finder
     outlier_finder_t m_outlierFinder;
 
+    /// The smoothing logic
+    reverse_filtering_logic_t m_reverseFilteringLogic;
+
     /// The Surface beeing
     SurfaceReached targetReached;
   };
 
   template <typename source_link_t, typename parameters_t,
-            typename calibrator_t, typename outlier_finder_t>
+            typename calibrator_t, typename outlier_finder_t,
+            typename reverse_filtering_logic_t>
   class Aborter {
    public:
     /// Broadcast the result_type
-    using action_type =
-        Actor<source_link_t, parameters_t, calibrator_t, outlier_finder_t>;
+    using action_type = Actor<source_link_t, parameters_t, calibrator_t,
+                              outlier_finder_t, reverse_filtering_logic_t>;
 
     template <typename propagator_state_t, typename stepper_t,
               typename result_t>
@@ -1012,6 +1027,7 @@ class KalmanFitter {
   /// @tparam start_parameters_t Type of the initial parameters
   /// @tparam calibrator_t Type of the source link calibrator
   /// @tparam outlier_finder_t Type of the outlier finder
+  /// @tparam reverse_filtering_logic_t Type of the smoothing logic
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
   /// @param sourcelinks The fittable uncalibrated measurements
@@ -1025,10 +1041,12 @@ class KalmanFitter {
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
             typename calibrator_t, typename outlier_finder_t,
+            typename reverse_filtering_logic_t,
             typename parameters_t = BoundTrackParameters>
   auto fit(const std::vector<source_link_t>& sourcelinks,
            const start_parameters_t& sParameters,
-           const KalmanFitterOptions<calibrator_t, outlier_finder_t>& kfOptions)
+           const KalmanFitterOptions<calibrator_t, outlier_finder_t,
+                                     reverse_filtering_logic_t>& kfOptions)
       const -> std::enable_if_t<!isDirectNavigator,
                                 Result<KalmanFitterResult<source_link_t>>> {
     const auto& logger = kfOptions.logger;
@@ -1045,10 +1063,10 @@ class KalmanFitter {
     }
 
     // Create the ActionList and AbortList
-    using KalmanAborter =
-        Aborter<source_link_t, parameters_t, calibrator_t, outlier_finder_t>;
-    using KalmanActor =
-        Actor<source_link_t, parameters_t, calibrator_t, outlier_finder_t>;
+    using KalmanAborter = Aborter<source_link_t, parameters_t, calibrator_t,
+                                  outlier_finder_t, reverse_filtering_logic_t>;
+    using KalmanActor = Actor<source_link_t, parameters_t, calibrator_t,
+                              outlier_finder_t, reverse_filtering_logic_t>;
     using KalmanResult = typename KalmanActor::result_type;
     using Actors = ActionList<KalmanActor>;
     using Aborters = AbortList<KalmanAborter>;
@@ -1069,6 +1087,7 @@ class KalmanFitter {
     kalmanActor.reversedFiltering = kfOptions.reversedFiltering;
     kalmanActor.m_calibrator = kfOptions.calibrator;
     kalmanActor.m_outlierFinder = kfOptions.outlierFinder;
+    kalmanActor.m_reverseFilteringLogic = kfOptions.reverseFilteringLogic;
 
     // Run the fitter
     auto result = m_propagator.template propagate(sParameters, kalmanOptions);
@@ -1107,6 +1126,7 @@ class KalmanFitter {
   /// @tparam start_parameters_t Type of the initial parameters
   /// @tparam calibrator_t Type of the source link calibrator
   /// @tparam outlier_finder_t Type of the outlier finder
+  /// @tparam reverse_filtering_logic_t Type of the smoothing logic
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
   /// @param sourcelinks The fittable uncalibrated measurements
@@ -1121,10 +1141,12 @@ class KalmanFitter {
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
             typename calibrator_t, typename outlier_finder_t,
+            typename reverse_filtering_logic_t,
             typename parameters_t = BoundTrackParameters>
   auto fit(const std::vector<source_link_t>& sourcelinks,
            const start_parameters_t& sParameters,
-           const KalmanFitterOptions<calibrator_t, outlier_finder_t>& kfOptions,
+           const KalmanFitterOptions<calibrator_t, outlier_finder_t,
+                                     reverse_filtering_logic_t>& kfOptions,
            const std::vector<const Surface*>& sSequence) const
       -> std::enable_if_t<isDirectNavigator,
                           Result<KalmanFitterResult<source_link_t>>> {
@@ -1141,10 +1163,10 @@ class KalmanFitter {
     }
 
     // Create the ActionList and AbortList
-    using KalmanAborter =
-        Aborter<source_link_t, parameters_t, calibrator_t, outlier_finder_t>;
-    using KalmanActor =
-        Actor<source_link_t, parameters_t, calibrator_t, outlier_finder_t>;
+    using KalmanAborter = Aborter<source_link_t, parameters_t, calibrator_t,
+                                  outlier_finder_t, reverse_filtering_logic_t>;
+    using KalmanActor = Actor<source_link_t, parameters_t, calibrator_t,
+                              outlier_finder_t, reverse_filtering_logic_t>;
     using KalmanResult = typename KalmanActor::result_type;
     using Actors = ActionList<DirectNavigator::Initializer, KalmanActor>;
     using Aborters = AbortList<KalmanAborter>;
@@ -1166,6 +1188,7 @@ class KalmanFitter {
     kalmanActor.m_calibrator = kfOptions.calibrator;
     // Set config for outlier finder
     kalmanActor.m_outlierFinder = kfOptions.outlierFinder;
+    kalmanActor.m_reverseFilteringLogic = kfOptions.reverseFilteringLogic;
 
     // Set the surface sequence
     auto& dInitializer =

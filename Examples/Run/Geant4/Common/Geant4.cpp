@@ -59,9 +59,12 @@ void setupGeant4Simulation(
   auto g4loglevel =
       Acts::Logging::Level(vars["g4-loglevel"].as<unsigned int>());
 
+  size_t seed = vars["g4-seed"].as<size_t>();
+
   // Set the main Geant4 algorithm, primary generation, detector construction
   Geant4Simulation::Config g4Cfg;
   g4Cfg.runManager = runManager;
+  g4Cfg.seed = seed;
 
   // Read the particle from the generator
   SimParticleTranslation::Config g4PrCfg;

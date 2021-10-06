@@ -295,9 +295,8 @@ int trackSummaryAnalysis(
   ///
   /// @param handle the parameter handle in question
   /// @param handleTag the unique tangle tag
-  /// @param peakEntries the number of entries used for range peaking
-  auto handleRange = [&](ResidualPullHandle& handle, const TString& handleTag,
-                         unsigned long peakEntries) -> void {
+  /// @param peakE the number of entries used for range peaking
+  auto handleRange = [&](ResidualPullHandle& handle, const TString& handleTag, unsigned int peakE) -> void {
     bool rangeDetermined = false;
     if (not inConfig.empty()) {
       if (handle_configs.contains((handleTag).Data())) {
@@ -307,7 +306,7 @@ int trackSummaryAnalysis(
       }
     }
     if (not rangeDetermined) {
-      estimateResiudalRange(handle, *rangeCanvas, *tracks.tree, peakEntries,
+      estimateResiudalRange(handle, *rangeCanvas, *tracks.tree, peakE,
                             ++histBarcode);
     }
 
@@ -405,7 +404,7 @@ int trackSummaryAnalysis(
 
 #ifdef BOOST_AVAILABLE
   std::cout << "*** Handle Preparation: " << std::endl;
-  boost::progress_display handle_preparation_progress(
+  progress_display handle_preparation_progress(
       nPhiBins * nEtaBins * nPtBins * baseResidualPulls.size());
 #endif
 
@@ -575,7 +574,7 @@ int trackSummaryAnalysis(
 
 #ifdef BOOST_AVAILABLE
   std::cout << "*** Event Loop: " << std::endl;
-  boost::progress_display event_loop_progress(entries);
+  progress_display event_loop_progress(entries);
 #endif
 
   for (unsigned long ie = 0; ie < entries; ++ie) {
@@ -699,7 +698,7 @@ int trackSummaryAnalysis(
         new TH2F(statN, "", nOuterBins, outerValues, nInnerBins, innerValues);
 
 #ifdef BOOST_AVAILABLE
-    boost::progress_display analysis_progress(nOuterBins * nInnerBins);
+    progress_display analysis_progress(nOuterBins * nInnerBins);
 #endif
 
     // Prepare by looping over the base bhandles - residuals
@@ -731,9 +730,9 @@ int trackSummaryAnalysis(
     for (auto& aHandle : baseAuxilaries) {
       // Create a unique handle tag
       TString auxiliaryTag = TString(aHandle.tag) + matrixTag;
-      TH2F* auxiliary = new TH2F(auxiliaryTag, auxiliaryTag, nOuterBins,
+      TH2F* auxHist = new TH2F(auxiliaryTag, auxiliaryTag, nOuterBins,
                                  outerValues, nInnerBins, innerValues);
-      summary.auxiliaries.push_back(auxiliary);
+      summary.auxiliaries.push_back(auxHist);
     }
 
     unsigned int io = 0;
@@ -807,10 +806,10 @@ int trackSummaryAnalysis(
     /// @param fYTitle the title of the y axis of the first projection
     /// @param sXTitle the title of the x axis of the second projection
     /// @param sYTitle the title of the y axis of the second projection
-    auto writeProjections = [](const TH2F& h2, const TString& fXTitle = "#eta",
-                               const TString& fYTitle = "sigma",
-                               const TString& sXTitle = "#phi",
-                               const TString& sYTitle = "sigma") -> void {
+    auto writeProjections = [](const TH2F& h2, const TString& fXTitleP = "#eta",
+                               const TString& fYTitleP = "sigma",
+                               const TString& sXTitleP = "#phi",
+                               const TString& sYTitleP = "sigma") -> void {
       const TString& fTag = "_pX";
       const TString& sTag = "_pY";
 
@@ -821,8 +820,8 @@ int trackSummaryAnalysis(
             dynamic_cast<TH1D*>(h2.ProjectionX((h2.GetName() + fTag).Data()));
         setHistStyle(pX);
         if (pX != nullptr) {
-          pX->GetXaxis()->SetTitle(fXTitle.Data());
-          pX->GetYaxis()->SetTitle(fYTitle.Data());
+          pX->GetXaxis()->SetTitle(fXTitleP.Data());
+          pX->GetYaxis()->SetTitle(fYTitleP.Data());
           pX->Write();
         }
         // Bin-wise projections
@@ -831,8 +830,8 @@ int trackSummaryAnalysis(
               (h2.GetName() + fTag + sTag + (iy - 1)).Data(), iy, iy));
           setHistStyle(pX);
           if (pX != nullptr) {
-            pX->GetXaxis()->SetTitle(fXTitle.Data());
-            pX->GetYaxis()->SetTitle(fYTitle.Data());
+            pX->GetXaxis()->SetTitle(fXTitleP.Data());
+            pX->GetYaxis()->SetTitle(fYTitleP.Data());
             pX->Write();
           }
         }
@@ -842,8 +841,8 @@ int trackSummaryAnalysis(
             dynamic_cast<TH1D*>(h2.ProjectionY((h2.GetName() + sTag).Data()));
         setHistStyle(pY);
         if (pY != nullptr) {
-          pY->GetXaxis()->SetTitle(sXTitle.Data());
-          pY->GetYaxis()->SetTitle(sYTitle.Data());
+          pY->GetXaxis()->SetTitle(sXTitleP.Data());
+          pY->GetYaxis()->SetTitle(sYTitleP.Data());
           pY->Write();
         }
         // Bin-wise projections
@@ -852,8 +851,8 @@ int trackSummaryAnalysis(
               (h2.GetName() + sTag + fTag + (ix - 1)).Data(), ix, ix));
           setHistStyle(pY);
           if (pY != nullptr) {
-            pY->GetXaxis()->SetTitle(sXTitle.Data());
-            pY->GetYaxis()->SetTitle(sYTitle.Data());
+            pY->GetXaxis()->SetTitle(sXTitleP.Data());
+            pY->GetYaxis()->SetTitle(sYTitleP.Data());
             pY->Write();
           }
         }
