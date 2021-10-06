@@ -458,6 +458,40 @@ def test_json_material_writer(tmp_path, fmt):
     assert out.stat().st_size > 1000
 
 
+@pytest.mark.csv
+def test_csv_multitrajectory_writer(tmp_path):
+    detector, trackingGeometry, decorators = GenericDetector.create()
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+    from truth_tracking import runTruthTracking
+
+    s = Sequencer(numThreads=1, events=10)
+    runTruthTracking(
+        trackingGeometry,
+        field,
+        digiConfigFile=Path(
+            "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+        ),
+        outputDir=tmp_path,
+        s=s,
+    )
+
+    csv_dir = tmp_path / "csv"
+    csv_dir.mkdir()
+    s.addWriter(
+        CsvMultiTrajectoryWriter(
+            level=acts.logging.INFO,
+            inputTrajectories="trajectories",
+            inputMeasurementParticlesMap="measurement_particles_map",
+            outputDir=str(csv_dir),
+        )
+    )
+    s.run()
+    del s
+    assert len([f for f in csv_dir.iterdir() if f.is_file()]) == 10
+    assert all(f.stat().st_size > 20 for f in csv_dir.iterdir())
+
+
 @pytest.fixture(scope="session")
 def hepmc_data_impl(tmp_path_factory):
 
