@@ -80,6 +80,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_MEMBER(outputParticlesInitial);
     ACTS_PYTHON_MEMBER(outputParticlesFinal);
     ACTS_PYTHON_MEMBER(outputMaterialTracks);
+    ACTS_PYTHON_MEMBER(seed);
     ACTS_PYTHON_MEMBER(runManager);
     ACTS_PYTHON_MEMBER(primaryGeneratorAction);
     ACTS_PYTHON_MEMBER(runActions);
