@@ -691,15 +691,17 @@ def test_vertex_fitting_reading(tmp_path, ptcl_gun, rng, finder, inputTracks, en
     alg = AssertCollectionExistsAlg(["fittedVertices"], name="check_alg")
     s3.addAlgorithm(alg)
 
-    if isCI and inputTracks:
-        # This is a workaround because in this configuration, the vertexing logs WARNING
-        # messages, which our CI is configured to fail on.
-        with pytest.raises(RuntimeError, match=".*ACTS_LOG_FAILURE_THRESHOLD.*"):
-            s3.run()
-    else:
-        s3.run()
+    ## I think this is fixed, keep this commented for now
+    # if isCI and inputTracks:
+    #     # This is a workaround because in this configuration, the vertexing logs WARNING
+    #     # messages, which our CI is configured to fail on.
+    #     with pytest.raises(RuntimeError, match=".*ACTS_LOG_FAILURE_THRESHOLD.*"):
+    #         s3.run()
+    # else:
 
-        vertexing_file = tmp_path / "performance_vertexing.root"
-        assert vertexing_file.exists()
+    s3.run()
 
-        assert_entries(vertexing_file, "vertexing", entries)
+    vertexing_file = tmp_path / "performance_vertexing.root"
+    assert vertexing_file.exists()
+
+    assert_entries(vertexing_file, "vertexing", entries)
