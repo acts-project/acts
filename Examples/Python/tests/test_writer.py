@@ -17,6 +17,8 @@ from helpers import (
 
 import acts
 
+from common import getOpenDataDetectorDirectory
+
 from acts import PlanarModuleStepper, UnitConstants as u
 
 
@@ -412,7 +414,7 @@ def test_root_material_writer(tmp_path):
     from acts.examples.dd4hep import DD4hepDetector
 
     detector, trackingGeometry, _ = DD4hepDetector.create(
-        xmlFileNames=["thirdparty/OpenDataDetector/xml/OpenDataDetector.xml"]
+        xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
     )
 
     out = tmp_path / "material.root"
@@ -434,7 +436,7 @@ def test_json_material_writer(tmp_path, fmt):
     from acts.examples.dd4hep import DD4hepDetector
 
     detector, trackingGeometry, _ = DD4hepDetector.create(
-        xmlFileNames=["thirdparty/OpenDataDetector/xml/OpenDataDetector.xml"]
+        xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
     )
 
     out = (tmp_path / "material").with_suffix("." + fmt.name.lower())

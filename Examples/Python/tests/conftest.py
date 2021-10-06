@@ -11,6 +11,7 @@ sys.path += [
 ]
 
 import helpers
+from common import getOpenDataDetectorDirectory
 
 import pytest
 
@@ -167,7 +168,7 @@ def material_recording_session():
     from material_recording import runMaterialRecording
 
     dd4hepSvc = acts.examples.dd4hep.DD4hepGeometryService(
-        xmlFileNames=["thirdparty/OpenDataDetector/xml/OpenDataDetector.xml"]
+        xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
     )
     dd4hepG4Construction = acts.examples.geant4.dd4hep.DDG4DetectorConstruction(
         dd4hepSvc

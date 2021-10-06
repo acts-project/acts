@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import warnings
+from pathlib import Path
 
 import acts
 from acts.examples import (
@@ -14,6 +15,7 @@ from acts.examples import (
 import acts.examples.dd4hep
 import acts.examples.geant4
 import acts.examples.geant4.dd4hep
+from common import getOpenDataDetectorDirectory
 
 u = acts.UnitConstants
 
@@ -79,8 +81,9 @@ def runMaterialRecording(g4geo, outputDir, tracksPerEvent=10000, s=None):
 
 
 if "__main__" == __name__:
+
     dd4hepSvc = acts.examples.dd4hep.DD4hepGeometryService(
-        xmlFileNames=["thirdparty/OpenDataDetector/xml/OpenDataDetector.xml"]
+        xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
     )
     g4geo = acts.examples.geant4.dd4hep.DDG4DetectorConstruction(dd4hepSvc)
 
