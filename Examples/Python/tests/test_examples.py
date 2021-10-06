@@ -172,3 +172,64 @@ def test_geometry_example(geoFactory, nobj, tmp_path):
         material_file = tmp_path / "geometry-map.json"
         assert material_file.exists()
         assert material_file.stat().st_size > 200
+
+
+def test_digitization_example(trk_geo, tmp_path):
+    from digitization import runDigitization
+
+    s = Sequencer(events=10, numThreads=1)
+
+    csv_dir = tmp_path / "csv"
+    root_file = tmp_path / "measurements.root"
+
+    assert not root_file.exists()
+    assert not csv_dir.exists()
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+    runDigitization(trk_geo, field, outputDir=tmp_path, s=s)
+
+    s.run()
+
+    assert root_file.exists()
+    assert csv_dir.exists()
+
+    assert len(list(csv_dir.iterdir())) == 3 * s.config.events
+    assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
+    for tn, nev in (
+        (8, 406),
+        (9, 0),
+        (12, 11),
+        (13, 375),
+        (14, 2),
+        (16, 25),
+        (17, 149),
+        (18, 9),
+    ):
+        assert_entries(root_file, f"vol{tn}", nev)
+
+
+def test_digitization_config_example(trk_geo, tmp_path):
+    from digitization_config import runDigitizationConfig
+
+    out_file = tmp_path / "output.json"
+    assert not out_file.exists()
+
+    input = (
+        Path(__file__).parent
+        / "../../../Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+    )
+    assert input.exists(), input.resolve()
+
+    runDigitizationConfig(trk_geo, input=input, output=out_file)
+
+    assert out_file.exists()
+
+    with out_file.open() as fh:
+        data = json.load(fh)
+    assert len(data.keys()) == 2
+    assert data["acts-geometry-hierarchy-map"]["format-version"] == 0
+    assert (
+        data["acts-geometry-hierarchy-map"]["value-identifier"]
+        == "digitization-configuration"
+    )
+    assert len(data["entries"]) == 27
