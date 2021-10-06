@@ -71,8 +71,8 @@ def test_seeding(tmp_path, trk_geo, field):
     seq = Sequencer(events=10, numThreads=1)
 
     root_files = [
-        ("estimatedparams.root", "estimatedparams", 362),
-        ("performance_seeding_trees.root", "track_finder_tracks", 362),
+        ("estimatedparams.root", "estimatedparams", 371),
+        ("performance_seeding_trees.root", "track_finder_tracks", 371),
         ("performance_seeding_hists.root", None, 0),
         ("evgen_particles.root", "particles", seq.config.events),
         ("fatras_particles_final.root", "particles", seq.config.events),

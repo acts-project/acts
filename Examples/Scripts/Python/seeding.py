@@ -27,7 +27,7 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
                 particles=acts.examples.ParametricParticleGenerator(
                     p=(1 * u.GeV, 10 * u.GeV),
                     eta=(-2, 2),
-                    phi=(0, 90 * u.degree),
+                    phi=(0, 360 * u.degree),
                     randomizeCharge=True,
                     numParticles=4,
                 ),
