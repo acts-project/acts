@@ -3,7 +3,7 @@ import inspect
 
 import pytest
 
-from helpers import AssertCollectionExistsAlg
+from helpers import geant4Enabled, AssertCollectionExistsAlg
 
 import acts
 
@@ -128,6 +128,32 @@ def test_root_reader_interface(reader, conf_const, tmp_path):
     kw = {"level": acts.logging.INFO, "filePath": str(tmp_path / "file.root")}
 
     assert conf_const(reader, **kw)
+
+
+@pytest.mark.slow
+@pytest.mark.root
+@pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
+def test_root_material_track_reader(material_recording):
+
+    # recreate sequencer
+
+    s = Sequencer(numThreads=1)
+
+    s.addReader(
+        RootMaterialTrackReader(
+            level=acts.logging.INFO,
+            fileList=[str(material_recording / "geant4_material_tracks.root")],
+        )
+    )
+
+    alg = AssertCollectionExistsAlg(
+        "material-tracks", "check_alg", acts.logging.WARNING
+    )
+    s.addAlgorithm(alg)
+
+    s.run()
+
+    assert alg.events_seen == 198
 
 
 @pytest.mark.csv
