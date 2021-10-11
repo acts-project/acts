@@ -61,6 +61,40 @@ def assert_entries(root_file, tree_name, exp):
     assert rf.Get(tree_name).GetEntries() == exp, f"{root_file}:{tree_name}"
 
 
+def test_fatras(trk_geo, tmp_path, field):
+    from fatras import runFatras
+
+    csv = tmp_path / "csv"
+    csv.mkdir()
+
+    nevents = 10
+
+    root_files = [
+        ("fatras_particles_final.root", "particles", nevents),
+        ("fatras_particles_initial.root", "particles", nevents),
+        ("hits.root", "hits", 115),
+    ]
+
+    assert len(list(csv.iterdir())) == 0
+    for rf, _, _ in root_files:
+        assert not (tmp_path / rf).exists()
+
+    seq = Sequencer(events=nevents)
+    runFatras(trk_geo, field, str(tmp_path), s=seq).run()
+
+    del seq
+
+    assert_csv_output(csv, "particles_final")
+    assert_csv_output(csv, "particles_initial")
+    assert_csv_output(csv, "hits")
+    for f, tn, exp_entries in root_files:
+        rfp = tmp_path / f
+        assert rfp.exists()
+        assert rfp.stat().st_size > 2 ** 10 * 10
+
+        assert_entries(rfp, tn, exp_entries)
+
+
 def test_propagation(tmp_path, trk_geo, field, seq):
     from propagation import runPropagation
 
