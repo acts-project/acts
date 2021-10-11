@@ -77,7 +77,7 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
     oSurfaces.push_back(OrientedSurface(std::move(cSurface), forward));
   }
 
-  // [4] & [5] - Sectoral planes (optional)
+  // [3] & [4] or [4] & [5] - Sectoral planes (optional)
   if (m_sectorPlaneBounds != nullptr) {
     // sectorPlane 1 (negative phi)
     const Transform3 sp1Transform = Transform3(

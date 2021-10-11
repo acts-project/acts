@@ -122,6 +122,7 @@ struct CylindricalTrackingGeometry {
   /// @param radialStagger The radial delta of modules next in z
   /// @param longitudinalOverlap The z overlap of modules next in z
   /// @param binningSchema The number of bins in phi/z
+  /// 
   ///
   /// @return A vector of Surfaces
   std::vector<const Surface*> surfacesCylinder(
@@ -178,7 +179,7 @@ struct CylindricalTrackingGeometry {
 
   /// Helper method for cylinder layer
   /// create the positions for module surfaces on a cylinder
-  std::vector<Vector3> modulePositionsCylinder(
+  static std::vector<Vector3> modulePositionsCylinder(
       double radius, double zStagger, double moduleHalfLength, double lOverlap,
       const std::pair<int, int>& binningSchema) {
     int nPhiBins = binningSchema.first;

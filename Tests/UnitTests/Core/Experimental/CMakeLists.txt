@@ -1,0 +1,5 @@
+add_unittest(CylindricalContainerHelper CylindricalContainerHelperTests.cpp)
+add_unittest(DetectorVolume DetectorVolumeTests.cpp)
+add_unittest(PortalLinks PortalLinksTests.cpp)
+add_unittest(SurfaceLinks SurfaceLinksTests.cpp)
+add_unittest(VolumeLinks VolumeLinksTests.cpp)

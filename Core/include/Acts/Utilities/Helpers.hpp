@@ -340,6 +340,38 @@ std::vector<T*> unpack_shared_vector(
 }
 
 /// Helper function to unpack a vector of @c shared_ptr into a vector of raw
+/// pointers
+/// @tparam T the stored type
+/// @param items The vector of @c shared_ptr
+/// @return The unpacked vector
+template <typename T>
+std::vector<const T*> unpack_ref_to_const_vector(
+    const std::vector<std::shared_ptr<T>>& items) {
+  std::vector<const T*> rawPtrs;
+  rawPtrs.reserve(items.size());
+  for (const std::shared_ptr<T>& item : items) {
+    rawPtrs.push_back(item.get());
+  }
+  return rawPtrs;
+}
+
+/// Helper function to unpack a vector of @c unique_ptr into a vector of raw
+/// pointers
+/// @tparam T the stored type
+/// @param items The vector of @c unique_ptr
+/// @return The unpacked vector
+template <typename T>
+std::vector<const T*> unpack_ref_to_const_vector(
+    const std::vector<std::unique_ptr<T>>& items) {
+  std::vector<const T*> rawPtrs;
+  rawPtrs.reserve(items.size());
+  for (const std::unique_ptr<T>& item : items) {
+    rawPtrs.push_back(item.get());
+  }
+  return rawPtrs;
+}
+
+/// Helper function to unpack a vector of @c shared_ptr into a vector of raw
 /// pointers (const version)
 /// @tparam T the stored type
 /// @param items The vector of @c shared_ptr
