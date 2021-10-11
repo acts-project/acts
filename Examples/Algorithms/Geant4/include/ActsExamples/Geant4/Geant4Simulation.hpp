@@ -25,6 +25,7 @@ class G4UserEventAction;
 class G4UserTrackingAction;
 class G4UserSteppingAction;
 class G4MagneticField;
+class G4VUserPhysicsList;
 
 namespace ActsExamples {
 
@@ -63,7 +64,7 @@ class Geant4Simulation final : public BareAlgorithm {
     std::size_t seed = 123;
 
     /// The G4 run manager
-    G4RunManager* runManager = nullptr;
+    std::shared_ptr<G4RunManager> runManager;
 
     /// User Action: Primary generator action of the simulation
     G4VUserPrimaryGeneratorAction* primaryGeneratorAction = nullptr;
