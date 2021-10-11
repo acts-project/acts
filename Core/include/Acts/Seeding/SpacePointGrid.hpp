@@ -35,6 +35,10 @@ struct SpacePointGridConfig {
   float deltaRMax;
   // maximum forward direction expressed as cot(theta)
   float cotThetaMax;
+  // maximum impact parameter in mm
+  float impactMax;
+  // enable non equidistant binning in z
+  std::vector<float> zBinEdges;
 
   SpacePointGridConfig toInternalUnits() const {
     using namespace Acts::UnitLiterals;
@@ -50,14 +54,14 @@ struct SpacePointGridConfig {
     return config;
   }
 };
+
 template <typename external_spacepoint_t>
-using SpacePointGrid =
-    detail::Grid<std::vector<std::unique_ptr<
-                     const InternalSpacePoint<external_spacepoint_t>>>,
-                 detail::Axis<detail::AxisType::Equidistant,
-                              detail::AxisBoundaryType::Closed>,
-                 detail::Axis<detail::AxisType::Equidistant,
-                              detail::AxisBoundaryType::Bound>>;
+using SpacePointGrid = detail::Grid<
+    std::vector<
+        std::unique_ptr<const InternalSpacePoint<external_spacepoint_t>>>,
+    detail::Axis<detail::AxisType::Equidistant,
+                 detail::AxisBoundaryType::Closed>,
+    detail::Axis<detail::AxisType::Variable, detail::AxisBoundaryType::Bound>>;
 
 class SpacePointGridCreator {
  public:

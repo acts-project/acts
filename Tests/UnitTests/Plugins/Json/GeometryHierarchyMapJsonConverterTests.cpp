@@ -37,8 +37,8 @@ struct Thing {
   }
 };
 
-// custom Json encoder/decoder. naming is mandated by nlohman::json and thus can
-// not match our naming guidelines.
+// custom Json encoder/decoder. naming is mandated by nlohmann::json and thus
+// can not match our naming guidelines.
 
 void to_json(json& j, const Thing& t) {
   j = json{{"x", t.x}, {"y", t.y}};

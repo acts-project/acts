@@ -29,7 +29,8 @@ class AlignmentAlgorithm final : public BareAlgorithm {
   /// trackstate and alignment options and returns some alignment-specific
   /// result.
   using TrackFitterOptions =
-      Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder>;
+      Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder,
+                                Acts::VoidReverseFilteringLogic>;
 
   /// Alignment function that takes the above parameters and runs alignment
   /// @note This is separated into a virtual interface to keep compilation units
