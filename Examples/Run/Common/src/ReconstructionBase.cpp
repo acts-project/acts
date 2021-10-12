@@ -84,7 +84,7 @@ ActsExamples::DigitizationConfig setupDigitization(
   digiCfg.randomNumbers = rnd;
   digiCfg.trackingGeometry = trackingGeometry;
   sequencer.addAlgorithm(
-	  std::make_shared<DigitizationAlgorithm>(digiCfg, logLevel));
+      std::make_shared<DigitizationAlgorithm>(digiCfg, logLevel));
 
   if (not vars["dump-digi-config"].as<std::string>().empty()) {
     writeDigiConfigToJson(digiCfg.digitizationConfigs,

@@ -117,7 +117,7 @@ int runDigitizationExample(
         std::make_shared<CsvMeasurementReader>(measReaderCfg, logLevel));
   } else {
     sequencer.addAlgorithm(
-	    std::make_shared<DigitizationAlgorithm>(digiCfg, logLevel));
+        std::make_shared<DigitizationAlgorithm>(digiCfg, logLevel));
   }
 
   // Write digitization output as ROOT files

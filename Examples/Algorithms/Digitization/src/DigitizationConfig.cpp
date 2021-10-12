@@ -50,9 +50,7 @@ ActsExamples::DigitizationConfig::DigitizationConfig(
 
 ActsExamples::DigitizationConfig::DigitizationConfig(
     Acts::GeometryHierarchyMap<DigiComponentsConfig>&& digiCfgs)
-    : doMerge(false),
-      mergeNsigma(1.0),
-      mergeCommonCorner(false) {
+    : doMerge(false), mergeNsigma(1.0), mergeCommonCorner(false) {
   digitizationConfigs = std::move(digiCfgs);
 }
 
@@ -68,8 +66,8 @@ ActsExamples::DigitizationConfig::getBoundIndices() const {
     const auto dCfg = digitizationConfigs.valueAt(ibi);
     std::vector<Acts::BoundIndices> boundIndices;
     boundIndices.insert(boundIndices.end(),
-			dCfg.geometricDigiConfig.indices.begin(),
-			dCfg.geometricDigiConfig.indices.end());
+                        dCfg.geometricDigiConfig.indices.begin(),
+                        dCfg.geometricDigiConfig.indices.end());
     bIndexInput.push_back({geoID, boundIndices});
   }
   return bIndexInput;
