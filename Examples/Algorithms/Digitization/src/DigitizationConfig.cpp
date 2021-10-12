@@ -42,8 +42,7 @@ constexpr size_t numConfigParametersForType(int type) {
 ActsExamples::DigitizationConfig::DigitizationConfig(
     const Options::Variables& vars,
     Acts::GeometryHierarchyMap<DigiComponentsConfig>&& digiCfgs)
-    : isSimpleSmearer(vars["digi-smear"].as<bool>()),
-      doMerge(vars["digi-merge"].as<bool>()),
+    : doMerge(vars["digi-merge"].as<bool>()),
       mergeNsigma(vars["digi-merge-nsigma"].as<double>()),
       mergeCommonCorner(vars["digi-merge-common-corner"].as<bool>()) {
   digitizationConfigs = std::move(digiCfgs);
@@ -51,8 +50,7 @@ ActsExamples::DigitizationConfig::DigitizationConfig(
 
 ActsExamples::DigitizationConfig::DigitizationConfig(
     Acts::GeometryHierarchyMap<DigiComponentsConfig>&& digiCfgs)
-    : isSimpleSmearer(false),
-      doMerge(false),
+    : doMerge(false),
       mergeNsigma(1.0),
       mergeCommonCorner(false) {
   digitizationConfigs = std::move(digiCfgs);
@@ -75,15 +73,9 @@ ActsExamples::DigitizationConfig::getBoundIndices() const {
     Acts::GeometryIdentifier geoID = digitizationConfigs.idAt(ibi);
     const auto dCfg = digitizationConfigs.valueAt(ibi);
     std::vector<Acts::BoundIndices> boundIndices;
-    if (isSimpleSmearer) {
-      for (const auto& sConfig : dCfg.smearingDigiConfig) {
-        boundIndices.push_back(sConfig.index);
-      }
-    } else {
-      boundIndices.insert(boundIndices.end(),
-                          dCfg.geometricDigiConfig.indices.begin(),
-                          dCfg.geometricDigiConfig.indices.end());
-    }
+    boundIndices.insert(boundIndices.end(),
+			dCfg.geometricDigiConfig.indices.begin(),
+			dCfg.geometricDigiConfig.indices.end());
     bIndexInput.push_back({geoID, boundIndices});
   }
   return bIndexInput;

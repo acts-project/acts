@@ -60,7 +60,6 @@ void addDigitization(Context& ctx) {
     ACTS_PYTHON_MEMBER(digitizationConfigs);
     ACTS_PYTHON_STRUCT_END();
 
-    c.def_readonly("isSimpleSmearer", &Config::isSimpleSmearer);
     c.def_readonly("doMerge", &Config::doMerge);
     c.def_readonly("mergeNsigma", &Config::mergeNsigma);
     c.def_readonly("mergeCommonCorner", &Config::mergeCommonCorner);
