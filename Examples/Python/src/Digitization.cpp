@@ -12,7 +12,6 @@
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/DigitizationConfigurator.hpp"
 #include "ActsExamples/Digitization/PlanarSteppingAlgorithm.hpp"
-#include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 
 #include <memory>
@@ -107,16 +106,6 @@ void addDigitization(Context& ctx) {
           return std::make_shared<PlanarModuleStepper>(
               getDefaultLogger("PlanarModuleStepper", level));
         }));
-  }
-
-  {
-    using Alg = ActsExamples::SmearingAlgorithm;
-
-    py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>(
-        mex, "SmearingAlgorithm")
-        .def(py::init<const ActsExamples::DigitizationConfig&,
-                      Acts::Logging::Level>(),
-             py::arg("config"), py::arg("level"));
   }
 
   {
