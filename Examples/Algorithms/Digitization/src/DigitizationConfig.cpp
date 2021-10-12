@@ -31,12 +31,6 @@ enum SmearingTypes : int {
   eDigital = 4,
 };
 
-constexpr size_t numConfigParametersForType(int type) {
-  // Gaussian smearing requires only a width/standard deviation parameter
-  // Everything else requires a width/pitch and a range
-  return (static_cast<SmearingTypes>(type) == eGauss) ? 1u : 3u;
-}
-
 }  // namespace
 
 ActsExamples::DigitizationConfig::DigitizationConfig(
