@@ -547,6 +547,15 @@ Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::endsOfStrip(
 }
 
 template <typename spacepoint_t, typename cluster_t>
+size_t Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::getMeasurementId(const cluster_t& clus)const {
+  const auto meas = clus.measurement();
+  auto slink =  std::visit([](const auto &x){return x.sourceLink();},meas);
+  return slink.index();
+}
+
+
+
+template <typename spacepoint_t, typename cluster_t>
 void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
     calculateSpacePoints(
         const Acts::GeometryContext& gctx,
@@ -567,11 +576,14 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
 
     spaPoPa.q = ends1.first - ends1.second;
     spaPoPa.r = ends2.first - ends2.second;
+    //const auto clus_front = (cp.first)->measurement();
+    //const auto clus_back = *(cp.second);
+    const auto id_front = getMeasurementId(*(cp.first));
+    const auto id_back = getMeasurementId(*(cp.first));
 
-
-    
+    std::vector<size_t> measurementIndices = {id_front,id_back};
     double resultPerpProj;
-    // std::cout << "use perp proj " << m_cfg.usePerpProj << std::endl;
+    
     if (m_cfg.usePerpProj) {
       resultPerpProj = detail::calcPerpendicularProjection(
           ends1.first, ends2.first, spaPoPa.q, spaPoPa.r);
@@ -582,10 +594,10 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
         Vector3 pos = ends1.first + resultPerpProj * spaPoPa.q;
         double varRho = 0.;  // TODO implement variance rho and z
         double varZ = 0.; 
-        size_t measurementIndex = 0;  // should be indices
-        std::vector<size_t> measurementIndices = {0,1};
-        //auto sp = spacepoint_t(pos, varRho, varZ, std::move(measurementIndices));
-        auto sp = spacepoint_t(pos, varRho, varZ, std::move(measurementIndex));
+        //size_t measurementIndex = 0;  // should be indices
+        
+        auto sp = spacepoint_t(pos, varRho, varZ, std::move(measurementIndices));
+        //auto sp = spacepoint_t(pos, varRho, varZ, std::move(measurementIndex));
         spacePoints.push_back(std::move(sp));
         continue;
       }
@@ -604,11 +616,8 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
       double varRho = 0.;  // TODO impriment variance rho and z
       double varZ = 0.;
       
-      std::vector<size_t> measurementIndices = {0,1}; // Fix me
-      //auto sp = spacepoint_t(pos, varRho, varZ, std::move(measurementIndices));
-      auto sp = spacepoint_t(pos, varRho, varZ, 0);
-
-
+      auto sp = spacepoint_t(pos, varRho, varZ, std::move(measurementIndices));
+      
       double theta = acos(spaPoPa.q.dot(spaPoPa.r)/(spaPoPa.q.norm()*spaPoPa.r.norm()));
 
       std::cout << "theta " << theta << std::endl;

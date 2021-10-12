@@ -29,14 +29,14 @@ class SimSpacePoint {
   /// @param measurementIndex Index of the underlying measurement
   template <typename position_t>
   SimSpacePoint(const Eigen::MatrixBase<position_t>& pos, float varRho,
-                float varZ, Index measurementIndex)
+                float varZ, std::vector<Index> measurementIndices)
       : m_x(pos[Acts::ePos0]),
         m_y(pos[Acts::ePos1]),
         m_z(pos[Acts::ePos2]),
         m_rho(std::hypot(m_x, m_y)),
         m_varianceRho(varRho),
         m_varianceZ(varZ),
-        m_measurementIndex(measurementIndex) {
+        m_measurementIndices(measurementIndices) {
     EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(position_t, 3);
   }
 
@@ -47,7 +47,8 @@ class SimSpacePoint {
   constexpr float varianceR() const { return m_varianceRho; }
   constexpr float varianceZ() const { return m_varianceZ; }
 
-  constexpr Index measurementIndex() const { return m_measurementIndex; }
+  //constexpr Index measurementIndex() const { return m_measurementIndex; }
+  const std::vector<Index>& measurementIndices() const { return m_measurementIndices; }
 
  private:
   // Global position
@@ -59,14 +60,17 @@ class SimSpacePoint {
   float m_varianceRho;
   float m_varianceZ;
   // Index of the corresponding measurement
-  Index m_measurementIndex;
+  //Index m_measurementIndex;
+  std::vector<Index> m_measurementIndices;
 };
 
-constexpr bool operator==(const SimSpacePoint& lhs, const SimSpacePoint& rhs) {
+inline bool operator==(const SimSpacePoint& lhs, const SimSpacePoint& rhs) {
   // TODO would it be sufficient to check just the index under the assumption
   //   that the same measurement index always produces the same space point?
   // no need to check r since it is fully defined by x/y
-  return (lhs.measurementIndex() == rhs.measurementIndex()) and
+//  return (std::equal(lhs.measurementIndices().begin(),
+//lhs.measurementIndices().end(),rhs.measurementIndices().begin())) and  
+  return ( lhs.measurementIndices() == rhs.measurementIndices()) and
          (lhs.x() == rhs.x()) and (lhs.y() == rhs.y()) and
          (lhs.z() == rhs.z()) and (lhs.varianceR() == rhs.varianceR()) and
          (lhs.varianceZ() == rhs.varianceZ());

@@ -94,6 +94,10 @@ class DoubleHitSpacePointBuilder {
   /// @return vectors to the top and bottom end of the SDE
   std::pair<Vector3, Vector3> endsOfStrip(const GeometryContext& gctx,
                                           const cluster_t& cluster) const;
+
+
+  size_t getMeasurementId(const cluster_t& cluster) const;
+
 };
 }  // namespace Acts
 #include "Acts/SpacePointFormation/detail/DoubleHitSpacePointBuilder.ipp"

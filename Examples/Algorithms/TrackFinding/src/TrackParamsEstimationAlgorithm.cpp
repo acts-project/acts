@@ -91,7 +91,8 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
       auto it =
           std::find_if(spacePoints.begin(), spacePoints.end(),
                        [&](const SimSpacePoint& spacePoint) {
-                         return (spacePoint.measurementIndex() == hitIndex);
+                        return (spacePoint.measurementIndices().size()>0 and 
+                          spacePoint.measurementIndices()[0] == hitIndex);
                        });
       if (it != spacePoints.end()) {
         spacePointsOnTrack.push_back(&(*it));
@@ -175,7 +176,11 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     const auto& seed = seeds[iseed];
     // Get the bottom space point and its reference surface
     const auto bottomSP = seed.sp().front();
-    const auto hitIdx = bottomSP->measurementIndex();
+    if (bottomSP->measurementIndices().size()==0){
+      ACTS_WARNING("Missing measurement index in the space point")
+      continue;
+    }
+    const auto hitIdx = bottomSP->measurementIndices()[0];
     const auto sourceLink = sourceLinks.nth(hitIdx);
     auto geoId = sourceLink->geometryId();
     const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
@@ -211,7 +216,11 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       ProtoTrack track;
       track.reserve(3);
       for (const auto& sp : seed.sp()) {
-        track.push_back(sp->measurementIndex());
+        if( sp->measurementIndices().size()==0){
+          ACTS_WARNING("Missing measurement index in the space point")
+          continue;
+        }
+        track.push_back(sp->measurementIndices()[0]);
       }
       tracks.emplace_back(track);
     }
