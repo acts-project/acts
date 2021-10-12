@@ -84,8 +84,6 @@ const auto geometry = geometryStore();
 // detector resolutions
 const MeasurementResolution resPixel = {MeasurementType::eLoc01,
                                         {25_um, 50_um}};
-const MeasurementResolution resStrip = {MeasurementType::eLoc01,
-                                        {100_um, 100_mm}};
 const MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {100_um}};
 const MeasurementResolution resStrip1 = {MeasurementType::eLoc0, {150_um}};
 const MeasurementResolutionMap resolutions = {
@@ -238,8 +236,6 @@ BOOST_DATA_TEST_CASE(DoubleHitSpacePointBuilder_basic, bdata::xrange(1),
       // std::cout << "2d measurement" << std::endl;
       // continue;  // 2d measurement. i.e. pixel
     }
-    
-    
   }
   //  // BOOST_CHECK_NE(testMeasurements.size(), 0);
 
@@ -290,7 +286,7 @@ BOOST_DATA_TEST_CASE(DoubleHitSpacePointBuilder_basic, bdata::xrange(1),
   // std::cout  << "geoid double " << geoId << std::endl;
 
   doubleSPBuilder.makeClusterPairs(tgContext, clusters_front, clusters_back,
-                                       clusterPairs);
+                                   clusterPairs);
   // std::cout << "number of cluster pairs :" << clusterPairs.size() <<
   // std::endl; BOOST_CHECK_NE(clusterPairs.size(), 0);
   doubleSPBuilder.calculateSpacePoints(tgContext, clusterPairs, spacePoints);
