@@ -140,8 +140,4 @@ class DigitizationConfig {
       std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
   getBoundIndices() const;
 };
-
-std::shared_ptr<ActsExamples::IAlgorithm> createDigitizationAlgorithm(
-    DigitizationConfig &cfg, Acts::Logging::Level lvl);
-
 }  // namespace ActsExamples

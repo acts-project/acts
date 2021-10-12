@@ -56,12 +56,6 @@ ActsExamples::DigitizationConfig::DigitizationConfig(
   digitizationConfigs = std::move(digiCfgs);
 }
 
-std::shared_ptr<ActsExamples::IAlgorithm>
-ActsExamples::createDigitizationAlgorithm(ActsExamples::DigitizationConfig& cfg,
-                                          Acts::Logging::Level lvl) {
-    return std::make_shared<DigitizationAlgorithm>(cfg, lvl);
-}
-
 std::vector<
     std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
 ActsExamples::DigitizationConfig::getBoundIndices() const {
