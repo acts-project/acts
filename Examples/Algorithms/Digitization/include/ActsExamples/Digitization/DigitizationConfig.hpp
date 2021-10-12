@@ -141,10 +141,6 @@ class DigitizationConfig {
   std::vector<
       std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
   getBoundIndices() const;
-
- private:
-  // Private initializer for SmearingAlgorithm
-  void smearingConfig(const Options::Variables &vars);
 };
 
 std::shared_ptr<ActsExamples::IAlgorithm> createDigitizationAlgorithm(
