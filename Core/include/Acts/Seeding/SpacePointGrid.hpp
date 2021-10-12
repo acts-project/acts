@@ -52,6 +52,7 @@ struct SpacePointGridConfig {
     config.zMax /= 1_mm;
     config.zMin /= 1_mm;
     config.deltaRMax /= 1_mm;
+    config.numPhiNeighbors /= 1;
 
     return config;
   }

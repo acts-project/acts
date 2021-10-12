@@ -45,9 +45,6 @@ struct SeedfinderConfig {
   // impact parameter
   float impactMax = 20. * Acts::UnitConstants::mm;
 
-  // sets of consecutive phi bins in the seed making step
-  int numPhiNeighbors = 1.;
-
   // how many sigmas of scattering angle should be considered?
   float sigmaScattering = 5;
   // Upper pt limit for scattering calculation
