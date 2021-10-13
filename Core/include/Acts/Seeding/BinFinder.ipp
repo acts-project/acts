@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <typename external_spacepoint_t>
-Acts::BinFinder<external_spacepoint_t>::BinFinder (std::vector < std::vector<int> > indices_vector) : indices_map(indices_vector) {
+Acts::BinFinder<external_spacepoint_t>::BinFinder (const std::vector < std::vector<int> >&& indicesVector) : m_indicesVector(std::move(indicesVector)) {
 }
 
 template <typename external_spacepoint_t>
@@ -18,22 +18,22 @@ Acts::BinFinder<external_spacepoint_t>::findBins(
      
     boost::container::small_vector<size_t, 9> indices;
     // if the map is not defined, get the indices using neighborHoodIndices
-    if (indices_map.empty()) {
+    if (m_indicesVector.empty()) {
         indices = binnedSP->neighborHoodIndices({phiBin, zBin}).collect();
     }
     // if the map is defined, get the indices from the map
     else {
         for (int phiBinIndex=-1; phiBinIndex<=+1; phiBinIndex++){
-            for (std::vector<int>::size_type zBinIndex=0; zBinIndex<indices_map[zBin-1].size(); zBinIndex++){
-                unsigned long zBinGlobalIndice = indices_map[zBin-1][zBinIndex];
-                auto phiBinGlobalIndice = phiBin+phiBinIndex;
-                if (phiBinGlobalIndice == 0) {
-                    phiBinGlobalIndice = (binnedSP->numLocalBins())[0];
+            for (std::vector<int>::size_type zBinIndex=0; zBinIndex<m_indicesVector[zBin-1].size(); zBinIndex++){
+                unsigned long zBinGlobalIndex = m_indicesVector[zBin-1][zBinIndex];
+                auto phiBinGlobalIndex = phiBin+phiBinIndex;
+                if (phiBinGlobalIndex == 0) {
+                    phiBinGlobalIndex = (binnedSP->numLocalBins())[0];
                 }
-                else if (phiBinGlobalIndice == 1+(binnedSP->numLocalBins())[0]) {
-                    phiBinGlobalIndice = 1;
+                else if (phiBinGlobalIndex == 1+(binnedSP->numLocalBins())[0]) {
+                    phiBinGlobalIndex = 1;
                 }
-                const std::array<size_t, 2> globalIndicesArray = {phiBinGlobalIndice, zBinGlobalIndice};
+                const std::array<size_t, 2> globalIndicesArray = {phiBinGlobalIndex, zBinGlobalIndex};
                 auto globalIndice = binnedSP->globalBinFromLocalBins(globalIndicesArray);
                 indices.push_back(globalIndice);
             }
