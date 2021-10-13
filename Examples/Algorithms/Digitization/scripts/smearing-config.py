@@ -1,3 +1,12 @@
+# This file is part of the Acts project.
+#
+# Copyright (C) 2021 CERN for the benefit of the Acts project
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http:#mozilla.org/MPL/2.0/.
+
+
 # each volume configuration is one logical block
 #
 #   --digi-smear-volume=8
@@ -21,6 +30,7 @@ import argparse
 import json
 import sys
 
+
 def add_switch(i, argv, current):
 
     fields = argv[i].split('=')
@@ -37,12 +47,12 @@ def add_switch(i, argv, current):
         i += 1
 
     else:
-        raise RuntimeError("Invalid argument: {}".format(argv[i]))
+        raise RuntimeError(f"Invalid argument: {argv[i]}")
 
     return i
 
+
 def get_args_blocks():
-    
     argv = sys.argv[1:]
     blocks = []
     current = []
@@ -57,14 +67,18 @@ def get_args_blocks():
     if current:
         blocks.append(current)
         current = []
-            
+
     return blocks
 
 
 def arg_parser():
     argp = argparse.ArgumentParser()
     argp.add_argument('--digi-smear-volume', help='Sensitive volume identifiers', required=True)
-    argp.add_argument('--digi-smear-indices', help='Smear parameter indices for this volume', required=True)
+    argp.add_argument(
+        '--digi-smear-indices',
+        help='Smear parameter indices for this volume',
+        required=True
+    )
     argp.add_argument(
         '--digi-smear-type',
         help='Smear function types as 0 (gauss), 1 (truncated gauss), 2 (clipped gauss), 3 (uniform), 4 (digital)',
@@ -76,7 +90,7 @@ def arg_parser():
         required=True
     )
     return argp
-    
+
 
 def get_args():
     return [arg_parser().parse_args(block) for block in get_args_blocks()]
@@ -85,8 +99,7 @@ def get_args():
 def get_n_params(type_id):
     if type_id == 0:
         return 1
-    else:
-        return 3
+    return 3
 
 
 def get_param_blocks(types_ids, params):
@@ -98,7 +111,7 @@ def get_param_blocks(types_ids, params):
         icur += n
     return blocks
 
-    
+
 def block_to_json(args):
     top_data = {
         'volume': int(args.digi_smear_volume),
@@ -138,7 +151,7 @@ def block_to_json(args):
                 high
             ]
         else:
-            raise RuntimeError("Unrecognized type: {}".format(t))
+            raise RuntimeError(f"Unrecognized type: {t}")
 
 
         top_data['value']['smearing'].append(data)
