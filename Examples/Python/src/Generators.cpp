@@ -123,6 +123,7 @@ void addGenerators(Context& ctx) {
         .def_readwrite("phiMax", &Config::phiMax)
         .def_readwrite("thetaMin", &Config::thetaMin)
         .def_readwrite("thetaMax", &Config::thetaMax)
+        .def_readwrite("etaUniform", &Config::etaUniform)
         .def_readwrite("pMin", &Config::pMin)
         .def_readwrite("pMax", &Config::pMax)
         .def_readwrite("pTransverse", &Config::pTransverse)
