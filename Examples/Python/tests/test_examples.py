@@ -175,7 +175,7 @@ def test_geometry_example(geoFactory, nobj, tmp_path):
 
 
 def test_digitization_example(trk_geo, tmp_path):
-    from digitization import runDigitization
+    from digitization import configureDigitization
 
     s = Sequencer(events=10, numThreads=1)
 
@@ -186,7 +186,7 @@ def test_digitization_example(trk_geo, tmp_path):
     assert not csv_dir.exists()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-    runDigitization(trk_geo, field, outputDir=tmp_path, s=s)
+    configureDigitization(trk_geo, field, outputDir=tmp_path, s=s)
 
     s.run()
 
@@ -196,14 +196,62 @@ def test_digitization_example(trk_geo, tmp_path):
     assert len(list(csv_dir.iterdir())) == 3 * s.config.events
     assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
     for tn, nev in (
-        (8, 406),
+        (8, 407),
         (9, 0),
         (12, 11),
         (13, 375),
         (14, 2),
         (16, 25),
-        (17, 149),
+        (17, 146),
         (18, 9),
+    ):
+        assert_entries(root_file, f"vol{tn}", nev)
+
+
+def test_digitization_example_input(trk_geo, tmp_path):
+    from particle_gun import runParticleGun
+    from digitization import configureDigitization
+
+    ptcl_dir = tmp_path / "ptcl"
+    ptcl_dir.mkdir()
+    pgs = Sequencer(events=20)
+    runParticleGun(str(ptcl_dir), s=pgs)
+    pgs.run()
+
+    s = Sequencer(numThreads=1)
+
+    csv_dir = tmp_path / "csv"
+    root_file = tmp_path / "measurements.root"
+
+    assert not root_file.exists()
+    assert not csv_dir.exists()
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+    configureDigitization(
+        trk_geo,
+        field,
+        outputDir=tmp_path,
+        particlesInput=ptcl_dir / "particles.root",
+        s=s,
+    )
+
+    s.run()
+
+    assert root_file.exists()
+    assert csv_dir.exists()
+
+    assert len(list(csv_dir.iterdir())) == 3 * pgs.config.events
+    assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
+    for tn, nev in (
+        (7, 0),
+        (8, 193),
+        (9, 0),
+        (12, 1),
+        (13, 183),
+        (14, 6),
+        (16, 3),
+        (17, 76),
+        (18, 10),
     ):
         assert_entries(root_file, f"vol{tn}", nev)
 

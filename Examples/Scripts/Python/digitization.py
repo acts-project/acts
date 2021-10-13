@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 from pathlib import Path
+from typing import Optional
 
 import acts
 import acts.examples
@@ -9,10 +10,11 @@ import acts.examples
 u = acts.UnitConstants
 
 
-def runDigitization(
+def configureDigitization(
     trackingGeometry,
     field,
     outputDir: Path,
+    particlesInput: Optional[Path] = None,
     outputRoot=True,
     outputCsv=True,
     s=None,
@@ -24,41 +26,42 @@ def runDigitization(
 
     # Input
     rnd = acts.examples.RandomNumbers(seed=42)
-    evGen = acts.examples.EventGenerator(
-        level=acts.logging.INFO,
-        generators=[
-            acts.examples.EventGenerator.Generator(
-                multiplicity=acts.examples.FixedMultiplicityGenerator(n=2),
-                vertex=acts.examples.GaussianVertexGenerator(
-                    stddev=acts.Vector4(0, 0, 0, 0), mean=acts.Vector4(0, 0, 0, 0)
-                ),
-                particles=acts.examples.ParametricParticleGenerator(
-                    p=(1 * u.GeV, 10 * u.GeV),
-                    eta=(-2, 2),
-                    phi=(0, 90 * u.degree),
-                    randomizeCharge=True,
-                    numParticles=4,
-                ),
-            )
-        ],
-        outputParticles="particles_input",
-        randomNumbers=rnd,
-    )
 
-    # Read input from input collection (e.g. Pythia8 output)
+    particleCollection = "particles_input"
+    if particlesInput is None:
+        evGen = acts.examples.EventGenerator(
+            level=acts.logging.INFO,
+            generators=[
+                acts.examples.EventGenerator.Generator(
+                    multiplicity=acts.examples.FixedMultiplicityGenerator(n=2),
+                    vertex=acts.examples.GaussianVertexGenerator(
+                        stddev=acts.Vector4(0, 0, 0, 0), mean=acts.Vector4(0, 0, 0, 0)
+                    ),
+                    particles=acts.examples.ParametricParticleGenerator(
+                        p=(1 * u.GeV, 10 * u.GeV),
+                        eta=(-2, 2),
+                        phi=(0, 360 * u.degree),
+                        randomizeCharge=True,
+                        numParticles=4,
+                    ),
+                )
+            ],
+            outputParticles=particleCollection,
+            randomNumbers=rnd,
+        )
+    else:
+        # Read input from input collection (e.g. Pythia8 output)
 
-    # evGen = acts.examples.RootParticleReader(
-    #     level=acts.logging.INFO,
-    #     particleCollection="particles_input",
-    #     inputDir="output",
-    #     inputFile="pythia8_particles.root",
-    # )
+        evGen = acts.examples.RootParticleReader(
+            level=acts.logging.INFO,
+            particleCollection=particleCollection,
+            filePath=str(particlesInput),
+        )
 
     # Simulation
     simAlg = acts.examples.FatrasSimulation(
         level=acts.logging.INFO,
-        inputParticles=evGen.config.outputParticles,
-        # inputParticles=evGen.config.particleCollection,
+        inputParticles=particleCollection,
         outputParticlesInitial="particles_initial",
         outputParticlesFinal="particles_final",
         outputSimHits="simhits",
@@ -125,4 +128,4 @@ if "__main__" == __name__:
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    runDigitization(trackingGeometry, field, outputDir=Path.cwd()).run()
+    configureDigitization(trackingGeometry, field, outputDir=Path.cwd()).run()
