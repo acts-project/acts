@@ -1,6 +1,6 @@
 # each volume configuration is one logical block
 #
-#   --digi-smear-volume-id=8
+#   --digi-smear-volume=8
 #   --digi-smear-indices=0:1:5 # loc0, loc1, and time
 #   --digi-smear-types=0:0:3   # loc{0,1} uses gaussian, time uses uniform
 #   # parameter 0: loc0 gaussian width
@@ -18,20 +18,26 @@
 
 
 import argparse
+import json
 import sys
 
 def add_switch(i, argv, current):
 
     fields = argv[i].split('=')
 
-    if len(fields) == 3:
-        current.append(argv[i])
-        i += 1
-
     if len(fields) == 1:
+        # --foo bar
         current.append(argv[i])
         current.append(argv[i + 1])
         i += 2
+
+    elif len(fields) == 2:
+        # --foo=bar
+        current.append(argv[i])
+        i += 1
+
+    else:
+        raise RuntimeError("Invalid argument: {}".format(argv[i]))
 
     return i
 
@@ -61,8 +67,7 @@ def arg_parser():
     argp.add_argument('--digi-smear-indices', help='Smear parameter indices for this volume', required=True)
     argp.add_argument(
         '--digi-smear-type',
-        help='Smear function types as 0 (gauss), 1 (truncated gauss), 2 (clipped gauss), 3 (uniform), 4 (digital)'
-        choices=[0,1,2,3,4],
+        help='Smear function types as 0 (gauss), 1 (truncated gauss), 2 (clipped gauss), 3 (uniform), 4 (digital)',
         required=True
     )
     argp.add_argument(
@@ -74,7 +79,7 @@ def arg_parser():
     
 
 def get_args():
-    return [argparser().parse_args(block) for block in get_args_blocks()]
+    return [arg_parser().parse_args(block) for block in get_args_blocks()]
 
 
 def get_n_params(type_id):
@@ -95,7 +100,7 @@ def get_param_blocks(types_ids, params):
 
     
 def block_to_json(args):
-    data = {
+    top_data = {
         'volume': int(args.digi_smear_volume),
         'value': {'smearing': []}
     }
@@ -105,9 +110,8 @@ def block_to_json(args):
     params = [float(x) for x in args.digi_smear_parameters.split(':')]
     param_blocks = get_param_blocks(types, params)
 
-    values
     for i, t, ps in zip(indices, types, param_blocks):
-        data = {'index' : i, 'type' : get_type_name(t)}
+        data = {'index' : i }
         if t == 0:
             data['type'] = 'Gauss'
             data['stddev'] = ps[0]
@@ -122,9 +126,9 @@ def block_to_json(args):
         elif t in [3, 4]:
             data['type'] = 'Uniform' if t == 3 else 'Digitial'
 
-            pitch = ps[1]
-            low = ps[2]
-            high = ps[3]
+            pitch = ps[0]
+            low = ps[1]
+            high = ps[2]
 
             data['bindata'] = [
                 0,  # Acts::Open,
@@ -133,11 +137,13 @@ def block_to_json(args):
                 low,
                 high
             ]
+        else:
+            raise RuntimeError("Unrecognized type: {}".format(t))
 
 
-        data['value']['smearing'].append(data)
+        top_data['value']['smearing'].append(data)
 
-    return data
+    return top_data
 
 
 def get_json_data():
