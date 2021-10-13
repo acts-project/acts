@@ -25,6 +25,7 @@ class G4UserRunAction;
 class G4UserEventAction;
 class G4UserTrackingAction;
 class G4UserSteppingAction;
+class G4VUserPhysicsList;
 
 namespace ActsExamples {
 
@@ -32,7 +33,7 @@ namespace ActsExamples {
 ///
 /// @param vars the parsed variables
 /// @param sequencer the event sequencer
-/// @param runManger the Geant4 run manager instance
+/// @param runManager the Geant4 runmanager to use
 /// @param detector the detector to be used
 /// @param runActions the list of Geant4 user run action
 /// @param eventActions the list of Geant4 user event action
@@ -44,7 +45,8 @@ namespace ActsExamples {
 ///
 void setupGeant4Simulation(
     const ActsExamples::Options::Variables& vars,
-    ActsExamples::Sequencer& sequencer, G4RunManager* runManager,
+    ActsExamples::Sequencer& sequencer,
+    std::shared_ptr<G4RunManager> runManager,
     std::unique_ptr<G4VUserDetectorConstruction> detector,
     std::vector<G4UserRunAction*> runActions = {},
     std::vector<G4UserEventAction*> eventActions = {},

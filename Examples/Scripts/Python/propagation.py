@@ -6,6 +6,8 @@ import acts.examples
 
 from acts.examples import GenericDetector, AlignedDetector
 
+from common import getOpenDataDetectorDirectory
+
 u = acts.UnitConstants
 
 
@@ -84,7 +86,7 @@ if "__main__" == __name__:
 
     ## Alternative: DD4hep detector
     # dd4hepCfg = acts.examples.DD4hepDetector.Config()
-    # dd4hepCfg.xmlFileNames = ["thirdparty/OpenDataDetector/xml/OpenDataDetector.xml"]
+    # dd4hepCfg.xmlFileNames = [str(getOpenDataDetectorDirectory()/"xml/OpenDataDetector.xml")]
     # detector = acts.examples.DD4hepDetector()
     # trackingGeometry, contextDecorators = detector.finalize(dd4hepCfg, None)
 

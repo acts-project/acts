@@ -3,6 +3,8 @@ from typing import List, Union
 
 from acts.examples import BareAlgorithm
 
+geant4Enabled = any(v.startswith("G4") for v in os.environ.keys())
+
 try:
     import ROOT
 
