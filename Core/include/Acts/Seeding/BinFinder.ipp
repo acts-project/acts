@@ -26,7 +26,7 @@ Acts::BinFinder<external_spacepoint_t>::findBins(
         for (int phiBinIndex=-1; phiBinIndex<=+1; phiBinIndex++){
             for (std::vector<int>::size_type zBinIndex=0; zBinIndex<indices_map[zBin-1].size(); zBinIndex++){
                 unsigned long zBinGlobalIndice = indices_map[zBin-1][zBinIndex];
-                auto phiBinGlobalIndice = phiBin+phiBinIndex;
+                auto phiBinGlobalIndex = phiBin+phiBinIndex;
                 if (phiBinGlobalIndice == 0) {
                     phiBinGlobalIndice = (binnedSP->numLocalBins())[0];
                 }
