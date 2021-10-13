@@ -492,6 +492,101 @@ size_t Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::getMeasurement
   return slink.index();
 }
 
+template <typename spacepoint_t, typename cluster_t>
+double Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::getLocVar(const cluster_t& clus)const {
+  const auto meas = clus.measurement();
+  auto cov =  std::visit([](const auto &x){
+
+    auto expander = x.expander();
+    Acts::BoundSymMatrix bcov =
+      expander * x.covariance() * expander.transpose();
+  
+    Acts::SymMatrix2 lcov =
+      bcov.block<2, 2>(Acts::eBoundLoc0, Acts::eBoundLoc0);
+
+    return lcov;},meas);
+  std::cout << "cov " << std::endl << cov  << std::endl;
+  
+  
+  //std::cout << cov[0] << std::endl;
+  
+  return cov(0,0);
+}
+template <typename spacepoint_t, typename cluster_t>
+std::pair<Acts::Vector3, Acts::Vector2> Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::localToGlobal(
+										const Acts::GeometryContext& gctx,
+                      const Acts::GeometryIdentifier& geoId,
+                      const Acts::Vector2& localPos, const Acts::SymMatrix2& localCov)const {
+
+                        Acts::Vector3 globalFakeMom(1, 1, 1);
+  const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
+
+  Acts::Vector3 globalPos =
+      surface->localToGlobal(gctx, localPos, globalFakeMom);
+  Acts::RotationMatrix3 rotLocalToGlobal =
+      surface->referenceFrame(gctx, globalPos, globalFakeMom);
+
+  auto x = globalPos[Acts::ePos0];
+  auto y = globalPos[Acts::ePos1];
+  auto scale = 2 / std::hypot(x, y);
+  Acts::ActsMatrix<2, 3> jacXyzToRhoZ = Acts::ActsMatrix<2, 3>::Zero();
+  jacXyzToRhoZ(0, Acts::ePos0) = scale * x;
+  jacXyzToRhoZ(0, Acts::ePos1) = scale * y;
+  jacXyzToRhoZ(1, Acts::ePos2) = 1;
+  // compute Jacobian from local coordinates to rho/z
+  Acts::ActsMatrix<2, 2> jac =
+      jacXyzToRhoZ * rotLocalToGlobal.block<3, 2>(Acts::ePos0, Acts::ePos0);
+  // compute rho/z variance
+  Acts::ActsVector<2> var = (jac * localCov * jac.transpose()).diagonal();
+
+  auto gcov = Acts::Vector2(var[0], var[1]);
+
+//Acts::Vector3 globalPos;
+//Acts::Vector2 globalCov;
+return std::make_pair(globalPos,gcov);
+                      }
+
+template <typename spacepoint_t, typename cluster_t>
+Acts::Vector2 Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::getGlobalVars(
+										const Acts::GeometryContext& gctx,
+										const cluster_t& clus_front,
+										const cluster_t& clus_back,
+										double theta)const {
+  const auto var1 = getLocVar(clus_front);
+  const auto var2 = getLocVar(clus_back);
+  // strip1 and strip2 are tilted at +/- theta/2
+ 
+  double sigma_x = std::hypot(var1,var2)/(2*sin(theta*0.5));
+  double sigma_y = std::hypot(var1,var2)/(2*cos(theta*0.5));
+
+  // projection to the surface with strip1.
+  double sig_x1 = sigma_x*cos(0.5*theta) + sigma_y*sin(0.5*theta);
+  double sig_y1 = sigma_y*cos(0.5*theta) + sigma_x*sin(0.5*theta);
+  Acts::SymMatrix2 lcov;
+  lcov << sig_x1,0, 0,sig_y1;
+  std::cout << lcov << std::endl;
+
+  auto [localPos, localCov] = localCoords(clus_front);
+  const auto meas = clus_front.measurement();
+
+  
+
+  const auto slink_clus1 = std::visit([](const auto& x){
+    return x.sourceLink();
+  },meas);
+
+  const auto geoId = slink_clus1.geometryId();
+  auto [gpos,gcov] = localToGlobal(gctx,geoId,localPos,lcov);
+
+  //Acts::Vector3 globalFakeMom(1, 1, 1);
+  //const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
+  //Acts:: Vector3 globalPos = surface->localToGlobal(gctx, localPos, globalFakeMom);
+  //Acts::RotationMatrix3 rotLocalToGlobal = surface->referenceFrame(gctx,globalPos,globalFakeMom);
+
+
+  return gcov;
+}
+
 
 
 template <typename spacepoint_t, typename cluster_t>
@@ -515,10 +610,11 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
 
     spaPoPa.q = ends1.first - ends1.second;
     spaPoPa.r = ends2.first - ends2.second;
-    //const auto clus_front = (cp.first)->measurement();
-    //const auto clus_back = *(cp.second);
+ 
     const auto id_front = getMeasurementId(*(cp.first));
-    const auto id_back = getMeasurementId(*(cp.first));
+    const auto id_back = getMeasurementId(*(cp.second));
+
+ 
 
     std::vector<size_t> measurementIndices = {id_front,id_back};
     double resultPerpProj;
@@ -558,8 +654,11 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
       auto sp = spacepoint_t(pos, varRho, varZ, std::move(measurementIndices));
       
       double theta = acos(spaPoPa.q.dot(spaPoPa.r)/(spaPoPa.q.norm()*spaPoPa.r.norm()));
+   
+      
+      getGlobalVars(gctx, *(cp.first),*(cp.second),theta);
 
-      std::cout << "theta " << theta << std::endl;
+      //std::cout << "theta " << theta << " sigx " << sigma_x << "  sigy " << sigma_y << std::endl;
 
       spacePoints.push_back(std::move(sp));
     }

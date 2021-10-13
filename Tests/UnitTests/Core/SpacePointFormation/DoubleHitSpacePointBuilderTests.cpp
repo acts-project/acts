@@ -85,7 +85,7 @@ const auto geometry = geometryStore();
 const MeasurementResolution resPixel = {MeasurementType::eLoc01,
                                         {25_um, 50_um}};
 const MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {100_um}};
-const MeasurementResolution resStrip1 = {MeasurementType::eLoc0, {150_um}};
+const MeasurementResolution resStrip1 = {MeasurementType::eLoc0, {100_um}};
 const MeasurementResolutionMap resolutions = {
     {GeometryIdentifier().setVolume(2), resPixel},
     {GeometryIdentifier().setVolume(3).setLayer(2), resStrip0},

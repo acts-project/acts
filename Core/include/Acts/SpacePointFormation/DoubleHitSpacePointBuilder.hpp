@@ -94,8 +94,16 @@ class DoubleHitSpacePointBuilder {
   std::pair<Vector3, Vector3> endsOfStrip(const GeometryContext& gctx,
                                           const cluster_t& cluster) const;
 
+std::pair<Vector3, Vector2> localToGlobal(const GeometryContext& gctx,
+    const GeometryIdentifier& geoId,
+    const Vector2& localPos, const SymMatrix2& localCov) const;
 
   size_t getMeasurementId(const cluster_t& cluster) const;
+
+  double getLocVar(const cluster_t& cluster) const;
+
+  Acts::Vector2 getGlobalVars(const GeometryContext& gctx,
+    const cluster_t& cluster_front,const cluster_t& cluster_back,double theta) const;
 
 };
 }  // namespace Acts
