@@ -88,12 +88,12 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
     spacePointsOnTrack.reserve(protoTrack.size());
     // Loop over the hit index on the proto track to find the space points
     for (const auto& hitIndex : protoTrack) {
-      auto it =
-          std::find_if(spacePoints.begin(), spacePoints.end(),
-                       [&](const SimSpacePoint& spacePoint) {
-                        return (spacePoint.measurementIndices().size()>0 and 
-                          spacePoint.measurementIndices()[0] == hitIndex);
-                       });
+      auto it = std::find_if(
+          spacePoints.begin(), spacePoints.end(),
+          [&](const SimSpacePoint& spacePoint) {
+            return (spacePoint.measurementIndices().size() > 0 and
+                    spacePoint.measurementIndices()[0] == hitIndex);
+          });
       if (it != spacePoints.end()) {
         spacePointsOnTrack.push_back(&(*it));
       }
@@ -176,7 +176,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     const auto& seed = seeds[iseed];
     // Get the bottom space point and its reference surface
     const auto bottomSP = seed.sp().front();
-    if (bottomSP->measurementIndices().size()==0){
+    if (bottomSP->measurementIndices().size() == 0) {
       ACTS_WARNING("Missing measurement index in the space point")
       continue;
     }
@@ -216,7 +216,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       ProtoTrack track;
       track.reserve(3);
       for (const auto& sp : seed.sp()) {
-        if( sp->measurementIndices().size()==0){
+        if (sp->measurementIndices().size() == 0) {
           ACTS_WARNING("Missing measurement index in the space point")
           continue;
         }

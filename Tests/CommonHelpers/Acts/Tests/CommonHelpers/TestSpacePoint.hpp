@@ -47,7 +47,9 @@ class TestSpacePoint {
   constexpr float varianceZ() const { return m_varianceZ; }
 
   constexpr size_t measurementIndex() const { return m_measurementIndex; }
-  const std::vector<size_t>& measurementIndices() const { return m_measurementIndices; }
+  const std::vector<size_t>& measurementIndices() const {
+    return m_measurementIndices;
+  }
 
  private:
   // Global position
@@ -63,8 +65,7 @@ class TestSpacePoint {
   std::vector<size_t> m_measurementIndices;
 };
 
-inline bool operator==(const TestSpacePoint& lhs,
-                       const TestSpacePoint& rhs) {
+inline bool operator==(const TestSpacePoint& lhs, const TestSpacePoint& rhs) {
   // TODO would it be sufficient to check just the index under the assumption
   //   that the same measurement index always produces the same space point?
   // no need to check r since it is fully defined by x/y

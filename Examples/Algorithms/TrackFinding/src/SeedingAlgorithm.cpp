@@ -129,13 +129,11 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     protoTrack.reserve(seed.sp().size());
     for (auto spacePointPtr : seed.sp()) {
       size_t measIdx = 0;
-      if(spacePointPtr->measurementIndices().size()>0){
+      if (spacePointPtr->measurementIndices().size() > 0) {
         // Use the first measurement
         protoTrack.push_back(spacePointPtr->measurementIndices()[0]);
-      }else
-          ACTS_WARNING("Missing measurement index");
-                        
-              
+      } else
+        ACTS_WARNING("Missing measurement index");
     }
     protoTracks.push_back(std::move(protoTrack));
   }

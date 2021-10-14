@@ -47,7 +47,7 @@ Acts::SingleHitSpacePointBuilder<spacepoint_t, cluster_t>::globalCoords(
       },
       meas);
 
-    // transform local position to global coordinates
+  // transform local position to global coordinates
   Acts::Vector3 globalFakeMom(1, 1, 1);
 
   Acts::Vector3 globalPos =
@@ -94,11 +94,9 @@ void Acts::SingleHitSpacePointBuilder<spacepoint_t, cluster_t>::
     auto [gPos, gCov] = globalCoords(gctx, measurement);
     auto slink =
         std::visit([](const auto& x) { return x.sourceLink(); }, measurement);
- 
-     auto sp = spacepoint_t(gPos,gCov[0],gCov[1],{slink.index()});
 
+    auto sp = spacepoint_t(gPos, gCov[0], gCov[1], {slink.index()});
 
-  spacePointStorage.emplace_back(sp);   
-    
+    spacePointStorage.emplace_back(sp);
   }
 }
