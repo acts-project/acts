@@ -95,6 +95,49 @@ def test_fatras(trk_geo, tmp_path, field):
         assert_entries(rfp, tn, exp_entries)
 
 
+def test_seeding(tmp_path, trk_geo, field):
+    from seeding import runSeeding
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
+
+    csv = tmp_path / "csv"
+    csv.mkdir()
+
+    seq = Sequencer(events=10, numThreads=1)
+
+    root_files = [
+        ("estimatedparams.root", "estimatedparams", 371),
+        ("performance_seeding_trees.root", "track_finder_tracks", 371),
+        ("performance_seeding_hists.root", None, 0),
+        ("evgen_particles.root", "particles", seq.config.events),
+        ("fatras_particles_final.root", "particles", seq.config.events),
+        ("fatras_particles_initial.root", "particles", seq.config.events),
+    ]
+
+    for fn, _, _ in root_files:
+        fp = tmp_path / fn
+        assert not fp.exists()
+
+    assert len(list(csv.iterdir())) == 0
+
+    runSeeding(trk_geo, field, outputDir=str(tmp_path), s=seq).run()
+
+    del seq
+
+    for fn, tn, exp_entries in root_files:
+        fp = tmp_path / fn
+        assert fp.exists()
+        assert fp.stat().st_size > 100
+
+        if tn is not None:
+            assert_entries(fp, tn, exp_entries)
+
+    assert_csv_output(csv, "evgen_particles")
+    assert_csv_output(csv, "evgen_particles")
+    assert_csv_output(csv, "fatras_particles_final")
+    assert_csv_output(csv, "fatras_particles_initial")
+
+
 def test_propagation(tmp_path, trk_geo, field, seq):
     from propagation import runPropagation
 
