@@ -94,6 +94,7 @@ class DoubleHitSpacePointBuilder {
   std::pair<Vector3, Vector3> endsOfStrip(const GeometryContext& gctx,
                                           const cluster_t& cluster) const;
 
+
 Vector2 globalCov(const GeometryContext& gctx,
     const GeometryIdentifier& geoId,
     const Vector2& localPos, const SymMatrix2& localCov) const;
@@ -103,8 +104,9 @@ Vector2 globalCov(const GeometryContext& gctx,
   double getLocVar(const cluster_t& cluster) const;
 
   Acts::Vector2 getGlobalVars(const GeometryContext& gctx,
-    const cluster_t& cluster_front,const cluster_t& cluster_back,double theta) const;
-
+                              const cluster_t& cluster_front,
+                              const cluster_t& cluster_back,
+                              double theta) const;
 };
 }  // namespace Acts
 #include "Acts/SpacePointFormation/detail/DoubleHitSpacePointBuilder.ipp"
