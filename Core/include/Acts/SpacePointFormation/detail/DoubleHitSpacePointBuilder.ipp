@@ -363,12 +363,12 @@ Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::globalPos(
 
   const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
 
-  auto localPos= std::visit(
+  auto localPos = std::visit(
       [](const auto& measurement) {
         auto expander = measurement.expander();
         Acts::BoundVector par = expander * measurement.parameters();
         Acts::Vector2 lpar(par[Acts::eBoundLoc0], par[Acts::eBoundLoc1]);
-          return lpar;
+        return lpar;
       },
       meas);
 
@@ -377,7 +377,7 @@ Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::globalPos(
 
   Acts::Vector3 globalPos =
       surface->localToGlobal(gctx, localPos, globalFakeMom);
- 
+
   return globalPos;
 }
 
@@ -410,8 +410,8 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
       auto gpos_back = globalPos(gctx, *clustersBack[iClustersBack]);
 
       currentDiff = detail::differenceOfClustersChecked(
-          gpos_front, gpos_back, m_cfg.vertex, m_cfg.diffDist,
-          m_cfg.diffPhi2, m_cfg.diffTheta2);
+          gpos_front, gpos_back, m_cfg.vertex, m_cfg.diffDist, m_cfg.diffPhi2,
+          m_cfg.diffTheta2);
 
       // Store the closest Clusters (distance and index) calculated so far
       if (currentDiff < diffMin && currentDiff >= 0.) {
@@ -477,26 +477,27 @@ double Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::getLocVar(
     const cluster_t& clus) const {
   const auto meas = clus.measurement();
 
-  auto cov =  std::visit([](const auto &x){
+  auto cov = std::visit(
+      [](const auto& x) {
+        auto expander = x.expander();
+        Acts::BoundSymMatrix bcov =
+            expander * x.covariance() * expander.transpose();
 
-    auto expander = x.expander();
-    Acts::BoundSymMatrix bcov =
-      expander * x.covariance() * expander.transpose();
-  
-    Acts::SymMatrix2 lcov =
-      bcov.block<2, 2>(Acts::eBoundLoc0, Acts::eBoundLoc0);
+        Acts::SymMatrix2 lcov =
+            bcov.block<2, 2>(Acts::eBoundLoc0, Acts::eBoundLoc0);
 
-    return lcov;},meas);
-    
-  return cov(0,0);
+        return lcov;
+      },
+      meas);
+
+  return cov(0, 0);
 }
 template <typename spacepoint_t, typename cluster_t>
-Acts::Vector2 Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::globalCov(
-										const Acts::GeometryContext& gctx,
-                      const Acts::GeometryIdentifier& geoId,
-                      const Acts::Vector2& localPos, const Acts::SymMatrix2& localCov)const {
-
-                        Acts::Vector3 globalFakeMom(1, 1, 1);
+Acts::Vector2
+Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::globalCov(
+    const Acts::GeometryContext& gctx, const Acts::GeometryIdentifier& geoId,
+    const Acts::Vector2& localPos, const Acts::SymMatrix2& localCov) const {
+  Acts::Vector3 globalFakeMom(1, 1, 1);
 
   const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
 
@@ -520,9 +521,8 @@ Acts::Vector2 Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::globalC
 
   auto gcov = Acts::Vector2(var[0], var[1]);
 
-
-return gcov;
-                      }
+  return gcov;
+}
 template <typename spacepoint_t, typename cluster_t>
 Acts::Vector2
 Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::getGlobalVars(
@@ -550,7 +550,7 @@ Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::getGlobalVars(
 
   const auto geoId = slink_clus1.geometryId();
 
-  auto gcov = globalCov(gctx,geoId,localPos,lcov);
+  auto gcov = globalCov(gctx, geoId, localPos, lcov);
 
   return gcov;
 }
@@ -588,15 +588,16 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
           ends1.first, ends2.first, spaPoPa.q, spaPoPa.r);
       if (resultPerpProj <= 0.) {
         Vector3 pos = ends1.first + resultPerpProj * spaPoPa.q;
-        double theta = acos(spaPoPa.q.dot(spaPoPa.r)/(spaPoPa.q.norm()*spaPoPa.r.norm()));
+        double theta = acos(spaPoPa.q.dot(spaPoPa.r) /
+                            (spaPoPa.q.norm() * spaPoPa.r.norm()));
 
         std::cout << "theta check " << theta << std::endl;
         double varRho = 0.;  // TODO implement variance rho and z
 
+        double varZ = 0.;
 
-        double varZ = 0.; 
-                
-        auto sp = spacepoint_t(pos, varRho, varZ, std::move(measurementIndices));
+        auto sp =
+            spacepoint_t(pos, varRho, varZ, std::move(measurementIndices));
         spacePoints.push_back(std::move(sp));
         continue;
       }
@@ -611,13 +612,11 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
 
     if (spFound) {
       Vector3 pos = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
-   
 
+      double theta = acos(spaPoPa.q.dot(spaPoPa.r) /
+                          (spaPoPa.q.norm() * spaPoPa.r.norm()));
 
-      double theta = acos(spaPoPa.q.dot(spaPoPa.r)/(spaPoPa.q.norm()*spaPoPa.r.norm()));
-   
-      
-      const auto gcov = getGlobalVars(gctx, *(cp.first),*(cp.second),theta);
+      const auto gcov = getGlobalVars(gctx, *(cp.first), *(cp.second), theta);
       double varRho = gcov[0];
       double varZ = gcov[1];
       auto sp = spacepoint_t(pos, varRho, varZ, std::move(measurementIndices));

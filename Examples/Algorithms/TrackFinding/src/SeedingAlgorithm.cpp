@@ -128,7 +128,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     ProtoTrack protoTrack;
     protoTrack.reserve(seed.sp().size());
     for (auto spacePointPtr : seed.sp()) {
-        if (spacePointPtr->measurementIndices().size() > 0) {
+      if (spacePointPtr->measurementIndices().size() > 0) {
         // Use the first measurement
         protoTrack.push_back(spacePointPtr->measurementIndices()[0]);
       } else

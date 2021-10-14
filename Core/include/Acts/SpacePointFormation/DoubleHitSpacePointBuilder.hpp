@@ -85,7 +85,7 @@ class DoubleHitSpacePointBuilder {
   /// @return vector of the global coordinates of the cluster
   // Vector3 globalCoords(const GeometryContext& gctx,
   Vector3 globalPos(const GeometryContext& gctx,
-                                           const cluster_t& cluster) const;
+                    const cluster_t& cluster) const;
 
   /// @brief Calculates the top and bottom ends of a SDE
   /// that corresponds to a given hit
@@ -94,10 +94,9 @@ class DoubleHitSpacePointBuilder {
   std::pair<Vector3, Vector3> endsOfStrip(const GeometryContext& gctx,
                                           const cluster_t& cluster) const;
 
-
-Vector2 globalCov(const GeometryContext& gctx,
-    const GeometryIdentifier& geoId,
-    const Vector2& localPos, const SymMatrix2& localCov) const;
+  Vector2 globalCov(const GeometryContext& gctx,
+                    const GeometryIdentifier& geoId, const Vector2& localPos,
+                    const SymMatrix2& localCov) const;
 
   size_t getMeasurementId(const cluster_t& cluster) const;
 
