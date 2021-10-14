@@ -42,6 +42,7 @@ Acts::CylindricalContainerHelper::containerInZ(
   DetectorVolume* fVolume = containerVolumes.begin()->get();
   const Transform3& fTransform = fVolume->transform();
   Vector3 fRef = fTransform.translation();
+
   Vector3 fAxisZ = fTransform.rotation().col(2);
   std::vector<ActsScalar> fValues = fVolume->volumeBounds().values();
 
@@ -108,7 +109,7 @@ Acts::CylindricalContainerHelper::containerInZ(
   // Create the z boundaries
   std::vector<ActsScalar> zBoundaries = {-0.5 * zLengthTotal};
   for (auto [i, zl] : enumerate(zLengths)) {
-    zBoundaries.push_back(zBoundaries[i - 1] + zl);
+    zBoundaries.push_back(zBoundaries[i] + zl);
   }
 
   // New halflength
@@ -167,23 +168,18 @@ Acts::CylindricalContainerHelper::containerInZ(
   VariableVolumeLink ozLink(detail::VariableAxis(zBoundaries), binZ);
   MultiplePortalLink oPortalMultiLink{oPortalLinks, std::move(ozLink)};
 
-  // Return the container
-  auto container =
-      DetectorVolume::makeShared(containerTransform, std::move(containerBounds),
-                                 std::move(containerVolumes), std::move(vzLink),
-                                 true, binZ, containerName);
-
   // Update the outer portal (always exists)
   outerPortal->updatePortalLink(oPortalMultiLink, backward);
-  container->updatePortalPtr(outerPortal, 2u);
   // Update the inner portal (optional)
   if (innerPortal != nullptr) {
     VariableVolumeLink izLink(detail::VariableAxis(zBoundaries), binZ);
     MultiplePortalLink iPortalMultiLink{iPortalLinks, std::move(izLink)};
     innerPortal->updatePortalLink(iPortalMultiLink, forward);
-    container->updatePortalPtr(innerPortal, 3u);
   }
-  return nullptr;
+  return DetectorVolume::makeShared(
+      containerTransform, std::move(containerBounds),
+      std::move(containerVolumes), std::move(vzLink), true, binZ,
+      containerName);
 }
 
 std::shared_ptr<Acts::DetectorVolume>
@@ -302,8 +298,9 @@ Acts::CylindricalContainerHelper::containerInR(
   nPortal->updatePortalLink(nPortalMultiLink, forward);
   pPortal->updatePortalLink(pPortalMultiLink, backward);
 
-  // Get the old volume links
-  for (auto& cv : containerVolumes) {
+  // Update to the new portal surface
+  for (auto [i, cv] : enumerate(containerVolumes)) {
+    // The side portals
     cv->updatePortalPtr(nPortal, 0u, false);
     cv->updatePortalPtr(pPortal, 1u, false);
   }

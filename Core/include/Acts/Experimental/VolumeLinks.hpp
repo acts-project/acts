@@ -35,11 +35,11 @@ struct BinnedLinkT {
   /// @param position the position for the request
   unsigned int operator()(const Transform3& transform,
                           const Vector3& position) const {
+
     // The position in the local frame
     Vector3 posInFrame = transform.inverse() * position;
     ActsScalar castedScalar = VectorHelpers::cast(posInFrame, bvalue);
     int bin = axis.getBin(castedScalar) - 1;
-
     return bin < 0 ? 0u
            : bin < static_cast<int>(axis.getNBins())
                ? static_cast<unsigned int>(bin)

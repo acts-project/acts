@@ -92,6 +92,14 @@ void Acts::DetectorVolume::createPortals(
       auto volume0 = ivolumes[0];
       auto volumeL = ivolumes[ivolumes.size() - 1];
       if (recastValue == binR) {
+        // Attach the inner/outer covers
+        for (auto [i, v] : enumerate(ivolumes)) {
+          if (i > 0) {
+            ivolumes[i - 1]->updatePortalPtr(v->m_portals.internal[3], 2u, true,
+                                             backward);
+          }
+        }
+        // Promote the portals to the container
         portalSurfaces.push_back(volume0->m_portals.internal[0]);
         portalSurfaces.push_back(volume0->m_portals.internal[1]);
         portalSurfaces.push_back(volumeL->m_portals.internal[2]);
@@ -100,6 +108,14 @@ void Acts::DetectorVolume::createPortals(
         }
         // @TODO include phi sectors
       } else if (recastValue == binZ) {
+        // Attach the negative/positive discs
+        for (auto [i, v] : enumerate(ivolumes)) {
+          if (i > 0) {
+            ivolumes[i - 1]->updatePortalPtr(v->m_portals.internal[0], 1u, true,
+                                             backward);
+          }
+        }
+        // Promote the portals to the container
         portalSurfaces.push_back(volume0->m_portals.internal[0]);
         portalSurfaces.push_back(volumeL->m_portals.internal[1]);
         portalSurfaces.push_back(volume0->m_portals.internal[2]);
@@ -133,6 +149,16 @@ void Acts::DetectorVolume::updatePortalPtr(
     updatedPortal->m_oppositeNormal =
         std::move(m_portals.internal[portal]->m_oppositeNormal);
   }
+
+  // Check recursively if any of the containerd volumes needs updating
+  for (auto& rv : m_volumes.internal){
+    for (auto [i, rp] : enumerate(rv->m_portals.internal)){
+      if (rp == m_portals.internal[portal]){
+        rv->updatePortalPtr(updatedPortal, portal, false);
+      }
+    }
+  }
+
   // Now overwrite the the portal
   m_portals.internal[portal] = updatedPortal;
   // Reninitalize the portal store
