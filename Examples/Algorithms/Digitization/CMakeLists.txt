@@ -4,7 +4,6 @@ add_library(
   src/DigitizationConfig.cpp
   src/MeasurementCreation.cpp
   src/PlanarSteppingAlgorithm.cpp
-  src/SmearingAlgorithm.cpp
   src/DigitizationOptions.cpp
   src/ModuleClusters.cpp)
 target_include_directories(

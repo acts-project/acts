@@ -162,9 +162,7 @@ def test_root_meas_writer(tmp_path, fatras, trk_geo):
 
     config = RootMeasurementWriter.Config(
         inputMeasurements=digiAlg.config.outputMeasurements,
-        inputClusters=""
-        if digiAlg.config.isSimpleSmearer
-        else digiAlg.config.outputClusters,
+        inputClusters=digiAlg.config.outputClusters,
         inputSimHits=simAlg.config.outputSimHits,
         inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
         filePath=str(out),
@@ -255,9 +253,7 @@ def test_csv_meas_writer(tmp_path, fatras, trk_geo, conf_const):
             CsvMeasurementWriter,
             level=acts.logging.INFO,
             inputMeasurements=digiAlg.config.outputMeasurements,
-            inputClusters=""
-            if digiAlg.config.isSimpleSmearer
-            else digiAlg.config.outputClusters,
+            inputClusters=digiAlg.config.outputClusters,
             inputSimHits=simAlg.config.outputSimHits,
             inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
             outputDir=str(out),
