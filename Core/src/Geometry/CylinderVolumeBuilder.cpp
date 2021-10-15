@@ -238,7 +238,6 @@ Acts::CylinderVolumeBuilder::trackingVolume(
         auto discBounds = dynamic_cast<const RadialBounds*>(
             &(elay->surfaceRepresentation().bounds()));
         if (discBounds != nullptr) {
-          ACTS_DEBUG("Have surface layer with radial bounds");
           double tolerance = m_cfg.ringTolerance;
           // Search for the rmin value  - and insert if necessary
           double rMin = discBounds->rMin();
@@ -266,14 +265,21 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       std::sort(innerRadii.begin(), innerRadii.end());
       std::sort(outerRadii.begin(), outerRadii.end());
 
-      ACTS_DEBUG("Inner radii:");
-      for (double f : innerRadii) {
-        ACTS_DEBUG("- " << f);
-      }
-      ACTS_DEBUG("Outer radii:");
-      for (double f : outerRadii) {
-        ACTS_DEBUG("- " << f);
-      }
+      ACTS_DEBUG("Inner radii:" << [&]() {
+        std::stringstream ss;
+        for (double f : innerRadii) {
+          ss << " " << f;
+        }
+        return ss.str();
+      }());
+
+      ACTS_DEBUG("Outer radii:" << [&]() {
+        std::stringstream ss;
+        for (double f : outerRadii) {
+          ss << " " << f;
+        }
+        return ss.str();
+      }());
       // Result of the parsing loop
       if (innerRadii.size() == outerRadii.size() and not innerRadii.empty()) {
         bool consistent = true;
