@@ -205,7 +205,6 @@ if "__main__" == __name__:
     args = p.parse_args()
     args.output_dir.mkdir(exist_ok=True, parents=True)
 
-    # assert len(sys.argv) == 1, "Please provide the detector example input directory"
     geo_example_dir = Path(args.geo_dir)
     assert geo_example_dir.exists(), "Detector example input directory missing"
 
