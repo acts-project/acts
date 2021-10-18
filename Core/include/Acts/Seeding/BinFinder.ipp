@@ -8,7 +8,7 @@
 
 template <typename external_spacepoint_t>
 Acts::BinFinder<external_spacepoint_t>::BinFinder(
-    const std::vector<std::vector<int> >&& indicesVector)
+    const std::vector<std::vector<size_t> >&& indicesVector)
     : m_indicesVector(std::move(indicesVector)) {}
 
 template <typename external_spacepoint_t>
@@ -26,7 +26,7 @@ Acts::BinFinder<external_spacepoint_t>::findBins(
     for (int phiBinIndex = -1; phiBinIndex <= +1; phiBinIndex++) {
       for (std::vector<int>::size_type zBinIndex = 0;
            zBinIndex < m_indicesVector[zBin - 1].size(); zBinIndex++) {
-        unsigned long zBinGlobalIndex = m_indicesVector[zBin - 1][zBinIndex];
+        auto zBinGlobalIndex = m_indicesVector[zBin - 1][zBinIndex];
         auto phiBinGlobalIndex = phiBin + phiBinIndex;
         if (phiBinGlobalIndex == 0) {
           phiBinGlobalIndex = (binnedSP->numLocalBins())[0];
