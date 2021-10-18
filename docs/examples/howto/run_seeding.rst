@@ -46,7 +46,6 @@ The detector volumes and layers used in the space point maker are configured usi
 	--input-dir=data/sim_generic/ttbar_pu200 \
 	--output-dir=output_generic_ttbar_pu200 \
         --bf-constant-tesla=0:0:2 \
-	--digi-smear \
 	--digi-config-file <source>/Examples/Algorithms/Digitization/share/default-smearing-config-generic.json \
         --geo-selection-config-file <source>/Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json
 
