@@ -125,8 +125,10 @@ struct PointwiseMaterialInteraction {
   ///
   /// @param [in] state State of the propagation
   /// @param [in] stepper Stepper in use
+  /// @param [in] updateMode The noise update mode (in default: add noise)
   template <typename propagator_state_t, typename stepper_t>
-  void updateState(propagator_state_t& state, const stepper_t& stepper) {
+  void updateState(propagator_state_t& state, const stepper_t& stepper,
+                   NoiseUpdateMode updateMode = addNoise) {
     // in forward(backward) propagation, energy decreases(increases) and
     // variances increase(decrease)
     const auto nextE = std::sqrt(mass * mass + momentum * momentum) -
@@ -135,14 +137,14 @@ struct PointwiseMaterialInteraction {
     nextP = (mass < nextE) ? std::sqrt(nextE * nextE - mass * mass) : 0;
     // update track parameters and covariance
     stepper.update(state.stepping, pos, dir, nextP, time);
-    // Update covariance matrix
-    NoiseUpdateMode mode = (nav == forward) ? addNoise : removeNoise;
     state.stepping.cov(eBoundPhi, eBoundPhi) = updateVariance(
-        state.stepping.cov(eBoundPhi, eBoundPhi), variancePhi, mode);
-    state.stepping.cov(eBoundTheta, eBoundTheta) = updateVariance(
-        state.stepping.cov(eBoundTheta, eBoundTheta), varianceTheta, mode);
-    state.stepping.cov(eBoundQOverP, eBoundQOverP) = updateVariance(
-        state.stepping.cov(eBoundQOverP, eBoundQOverP), varianceQoverP, mode);
+        state.stepping.cov(eBoundPhi, eBoundPhi), variancePhi, updateMode);
+    state.stepping.cov(eBoundTheta, eBoundTheta) =
+        updateVariance(state.stepping.cov(eBoundTheta, eBoundTheta),
+                       varianceTheta, updateMode);
+    state.stepping.cov(eBoundQOverP, eBoundQOverP) =
+        updateVariance(state.stepping.cov(eBoundQOverP, eBoundQOverP),
+                       varianceQoverP, updateMode);
   }
 
  private:
