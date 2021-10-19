@@ -7,6 +7,7 @@ import subprocess
 import pytest
 
 from helpers import (
+    geant4Enabled,
     rootEnabled,
     dd4hepEnabled,
     hepmc3Enabled,
@@ -84,6 +85,83 @@ def test_pythia8(tmp_path, seq):
     assert_csv_output(tmp_path / "csv", "particles")
 
 
+def test_fatras(trk_geo, tmp_path, field):
+    from fatras import runFatras
+
+    csv = tmp_path / "csv"
+    csv.mkdir()
+
+    nevents = 10
+
+    root_files = [
+        ("fatras_particles_final.root", "particles", nevents),
+        ("fatras_particles_initial.root", "particles", nevents),
+        ("hits.root", "hits", 115),
+    ]
+
+    assert len(list(csv.iterdir())) == 0
+    for rf, _, _ in root_files:
+        assert not (tmp_path / rf).exists()
+
+    seq = Sequencer(events=nevents)
+    runFatras(trk_geo, field, str(tmp_path), s=seq).run()
+
+    del seq
+
+    assert_csv_output(csv, "particles_final")
+    assert_csv_output(csv, "particles_initial")
+    assert_csv_output(csv, "hits")
+    for f, tn, exp_entries in root_files:
+        rfp = tmp_path / f
+        assert rfp.exists()
+        assert rfp.stat().st_size > 2 ** 10 * 10
+
+        assert_entries(rfp, tn, exp_entries)
+
+
+def test_seeding(tmp_path, trk_geo, field):
+    from seeding import runSeeding
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
+
+    csv = tmp_path / "csv"
+    csv.mkdir()
+
+    seq = Sequencer(events=10, numThreads=1)
+
+    root_files = [
+        ("estimatedparams.root", "estimatedparams", 371),
+        ("performance_seeding_trees.root", "track_finder_tracks", 371),
+        ("performance_seeding_hists.root", None, 0),
+        ("evgen_particles.root", "particles", seq.config.events),
+        ("fatras_particles_final.root", "particles", seq.config.events),
+        ("fatras_particles_initial.root", "particles", seq.config.events),
+    ]
+
+    for fn, _, _ in root_files:
+        fp = tmp_path / fn
+        assert not fp.exists()
+
+    assert len(list(csv.iterdir())) == 0
+
+    runSeeding(trk_geo, field, outputDir=str(tmp_path), s=seq).run()
+
+    del seq
+
+    for fn, tn, exp_entries in root_files:
+        fp = tmp_path / fn
+        assert fp.exists()
+        assert fp.stat().st_size > 100
+
+        if tn is not None:
+            assert_entries(fp, tn, exp_entries)
+
+    assert_csv_output(csv, "evgen_particles")
+    assert_csv_output(csv, "evgen_particles")
+    assert_csv_output(csv, "fatras_particles_final")
+    assert_csv_output(csv, "fatras_particles_initial")
+
+
 def test_propagation(tmp_path, trk_geo, field, seq):
     from propagation import runPropagation
 
@@ -109,6 +187,69 @@ def test_propagation(tmp_path, trk_geo, field, seq):
     assert len(list(obj.iterdir())) > 0
 
 
+@pytest.mark.slow
+@pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+def test_material_recording(tmp_path, material_recording):
+
+    # Not quite sure why this isn't 200
+    root_files = [("geant4_material_tracks.root", "material-tracks", 198)]
+
+    for fn, tn, ee in root_files:
+        fp = material_recording / fn
+        assert fp.exists()
+        assert fp.stat().st_size > 2 ** 10 * 50
+        assert_entries(fp, tn, ee)
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(not hepmc3Enabled, reason="HepMC3 plugin not available")
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+@pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
+def test_event_recording(tmp_path):
+
+    script = (
+        Path(__file__).parent.parent.parent.parent
+        / "Examples"
+        / "Scripts"
+        / "Python"
+        / "event_recording.py"
+    )
+    assert script.exists()
+
+    env = os.environ.copy()
+    env["NEVENTS"] = "1"
+    subprocess.check_call([str(script)], cwd=tmp_path, env=env)
+
+    from acts.examples.hepmc3 import HepMC3AsciiReader
+
+    out_path = tmp_path / "hepmc3"
+    # out_path.mkdir()
+
+    assert len([f for f in out_path.iterdir() if f.name.endswith("events.hepmc3")]) > 0
+    assert all([f.stat().st_size > 100 for f in out_path.iterdir()])
+
+    s = Sequencer(numThreads=1)
+
+    s.addReader(
+        HepMC3AsciiReader(
+            level=acts.logging.INFO,
+            inputDir=str(out_path),
+            inputStem="events",
+            outputEvents="hepmc-events",
+        )
+    )
+
+    alg = AssertCollectionExistsAlg(
+        "hepmc-events", name="check_alg", level=acts.logging.INFO
+    )
+    s.addAlgorithm(alg)
+
+    s.run()
+
+    assert alg.events_seen == 1
+
+
 def test_particle_gun(tmp_path):
     from particle_gun import runParticleGun
 
@@ -130,6 +271,72 @@ def test_particle_gun(tmp_path):
 
     assert root_file.stat().st_size > 200
     assert_entries(root_file, "particles", 20)
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+def test_material_mapping(material_recording, tmp_path):
+    map_file = tmp_path / "material-maps_tracks.root"
+    assert not map_file.exists()
+
+    s = Sequencer(numThreads=1)
+
+    detector, trackingGeometry, decorators = getOpenDataDetector()
+
+    from material_mapping import runMaterialMapping
+
+    runMaterialMapping(
+        trackingGeometry,
+        decorators,
+        outputDir=str(tmp_path),
+        inputDir=material_recording,
+        s=s,
+    )
+
+    s.run()
+
+    # MaterialMapping alg only writes on destruct.
+    # See https://github.com/acts-project/acts/issues/881
+    del s
+
+    mat_file = tmp_path / "material-map.json"
+
+    assert mat_file.exists()
+    assert mat_file.stat().st_size > 10
+
+    with mat_file.open() as fh:
+        assert json.load(fh)
+
+    assert map_file.exists()
+    assert_entries(map_file, "material-tracks", 198)
+
+    val_file = tmp_path / "propagation-material.root"
+    assert not val_file.exists()
+
+    # test the validation as well
+
+    # we need to destroy the ODD to reload with material
+    # del trackingGeometry
+    # del detector
+
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
+    )
+
+    from material_validation import runMaterialValidation
+
+    s = Sequencer(events=10, numThreads=1)
+
+    field = acts.NullBField()
+
+    runMaterialValidation(
+        trackingGeometry, decorators, field, outputDir=str(tmp_path), s=s
+    )
+
+    s.run()
+
+    assert val_file.exists()
+    assert_entries(val_file, "material-tracks", 10000)
 
 
 @pytest.mark.parametrize(
@@ -196,3 +403,166 @@ def test_geometry_example(geoFactory, nobj, tmp_path):
         material_file = tmp_path / "geometry-map.json"
         assert material_file.exists()
         assert material_file.stat().st_size > 200
+
+
+def test_ckf_tracks_example_full_seeding(tmp_path):
+    # the example as written is only compatible with the generic detector
+    detector, trackingGeometry, decorators = GenericDetector.create()
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+    events = 10
+    s = Sequencer(events=events, numThreads=1)  # Digitization is not thread-safe
+
+    root_files = [
+        ("performance_ckf.root", None, None),
+        ("performance_seeding_trees.root", "track_finder_tracks", 368),
+        ("performance_seeding_trees.root", "track_finder_particles", 80),
+        ("trackstates_ckf.root", "trackstates", 368),
+        ("tracksummary_ckf.root", "tracksummary", 10),
+    ]
+
+    csv = tmp_path / "csv"
+
+    assert not csv.exists()
+    for rf, _, _ in root_files:
+        assert not (tmp_path / rf).exists()
+
+    from ckf_tracks import runCKFTracks
+
+    runCKFTracks(
+        trackingGeometry,
+        decorators,
+        field=field,
+        geometrySelection=Path(
+            "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+        ),
+        digiConfigFile=Path(
+            "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+        ),
+        outputCsv=True,
+        outputDir=tmp_path,
+        truthSmearedSeeded=False,
+        truthEstimatedSeeded=False,
+        s=s,
+    )
+    s.run()
+
+    del s  # files are closed in destructors, not great
+
+    assert csv.exists()
+    for rf, tn, nume in root_files:
+        rp = tmp_path / rf
+        assert rp.exists()
+        if tn is not None and nume is not None:
+            assert_entries(rp, tn, nume)
+
+    assert len([f for f in csv.iterdir() if f.name.endswith("CKFtracks.csv")]) == events
+    assert all([f.stat().st_size > 300 for f in csv.iterdir()])
+
+
+def test_ckf_tracks_example_truth_estimate(tmp_path):
+    # the example as written is only compatible with the generic detector
+    detector, trackingGeometry, decorators = GenericDetector.create()
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+    events = 10
+    s = Sequencer(events=events, numThreads=1)  # Digitization is not thread-safe
+
+    root_files = [
+        ("performance_ckf.root", None, None),
+        ("performance_seeding_trees.root", "track_finder_tracks", 80),
+        ("performance_seeding_trees.root", "track_finder_particles", 80),
+        ("trackstates_ckf.root", "trackstates", 80),
+        ("tracksummary_ckf.root", "tracksummary", 10),
+    ]
+
+    csv = tmp_path / "csv"
+
+    assert not csv.exists()
+    for rf, _, _ in root_files:
+        assert not (tmp_path / rf).exists()
+
+    from ckf_tracks import runCKFTracks
+
+    runCKFTracks(
+        trackingGeometry,
+        decorators,
+        field=field,
+        geometrySelection=Path(
+            "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+        ),
+        digiConfigFile=Path(
+            "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+        ),
+        outputCsv=True,
+        outputDir=tmp_path,
+        truthSmearedSeeded=False,
+        truthEstimatedSeeded=True,
+        s=s,
+    )
+    s.run()
+
+    del s  # files are closed in destructors, not great
+
+    assert csv.exists()
+    for rf, tn, nume in root_files:
+        rp = tmp_path / rf
+        assert rp.exists()
+        if tn is not None and nume is not None:
+            assert_entries(rp, tn, nume)
+
+    assert len([f for f in csv.iterdir() if f.name.endswith("CKFtracks.csv")]) == events
+    assert all([f.stat().st_size > 100 for f in csv.iterdir()])
+
+
+def test_ckf_tracks_example_truth_smeared(tmp_path):
+    # the example as written is only compatible with the generic detector
+    detector, trackingGeometry, decorators = GenericDetector.create()
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+    events = 10
+    s = Sequencer(events=events, numThreads=1)  # Digitization is not thread-safe
+
+    root_files = [
+        ("performance_ckf.root", None, None),
+        ("trackstates_ckf.root", "trackstates", 80),
+        ("tracksummary_ckf.root", "tracksummary", 10),
+    ]
+
+    csv = tmp_path / "csv"
+
+    assert not csv.exists()
+    for rf, _, _ in root_files:
+        assert not (tmp_path / rf).exists()
+
+    from ckf_tracks import runCKFTracks
+
+    runCKFTracks(
+        trackingGeometry,
+        decorators,
+        field=field,
+        geometrySelection=Path(
+            "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+        ),
+        digiConfigFile=Path(
+            "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+        ),
+        outputCsv=True,
+        outputDir=tmp_path,
+        truthSmearedSeeded=True,
+        truthEstimatedSeeded=False,
+        s=s,
+    )
+    s.run()
+
+    del s  # files are closed in destructors, not great
+
+    assert csv.exists()
+    for rf, tn, nume in root_files:
+        rp = tmp_path / rf
+        assert rp.exists()
+        if tn is not None and nume is not None:
+            assert_entries(rp, tn, nume)
+
+    assert len([f for f in csv.iterdir() if f.name.endswith("CKFtracks.csv")]) == events
+    assert all([f.stat().st_size > 300 for f in csv.iterdir()])

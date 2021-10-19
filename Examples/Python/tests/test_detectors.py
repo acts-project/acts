@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from helpers import dd4hepEnabled
+from common import getOpenDataDetectorDirectory
 
 import acts.examples
 
@@ -34,7 +35,7 @@ def test_odd():
     from acts.examples.dd4hep import DD4hepGeometryService, DD4hepDetector
 
     dd4hepConfig = DD4hepGeometryService.Config(
-        xmlFileNames=["thirdparty/OpenDataDetector/xml/OpenDataDetector.xml"]
+        xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
     )
     detector = DD4hepDetector()
 

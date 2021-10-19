@@ -566,8 +566,10 @@ void createSeedsForGroupSycl(
         const auto numTripletSearchThreads =
             sumBotTopCombPrefix[lastMiddle] - sumBotTopCombPrefix[firstMiddle];
 
-        if (numTripletSearchThreads == 0)
+        if (numTripletSearchThreads == 0) {
+          ++lastMiddle;
           continue;
+        }
 
         deviceCountTriplets.resize(edgesBottom, 0);
         copy.setup(*seedArrayBuffer);
