@@ -127,8 +127,6 @@ class DigitizationConfig {
   std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr;
   /// Random numbers tool.
   std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
-  /// Was the simple smearer requested
-  const bool isSimpleSmearer;
   /// Do we merge hits or not
   const bool doMerge;
   /// How close do parameters have to be to consider merged
@@ -141,13 +139,5 @@ class DigitizationConfig {
   std::vector<
       std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
   getBoundIndices() const;
-
- private:
-  // Private initializer for SmearingAlgorithm
-  void smearingConfig(const Options::Variables &vars);
 };
-
-std::shared_ptr<ActsExamples::IAlgorithm> createDigitizationAlgorithm(
-    DigitizationConfig &cfg, Acts::Logging::Level lvl);
-
 }  // namespace ActsExamples
