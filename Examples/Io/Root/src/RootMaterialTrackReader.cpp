@@ -62,7 +62,7 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
                               << "'.");
   }
 
-  m_events = m_inputChain->GetEntries();
+  m_events = m_inputChain->GetMaximum("event_id");
   ACTS_DEBUG("The full chain has " << m_events << " entries.");
 
   // If the events are not in order, get the entry numbers for ordered events

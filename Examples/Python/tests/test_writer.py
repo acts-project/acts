@@ -10,11 +10,14 @@ import pytest
 from helpers import (
     dd4hepEnabled,
     hepmc3Enabled,
+    geant4Enabled,
     AssertCollectionExistsAlg,
 )
 
 
 import acts
+
+from common import getOpenDataDetectorDirectory
 
 from acts import PlanarModuleStepper, UnitConstants as u
 
@@ -159,9 +162,7 @@ def test_root_meas_writer(tmp_path, fatras, trk_geo):
 
     config = RootMeasurementWriter.Config(
         inputMeasurements=digiAlg.config.outputMeasurements,
-        inputClusters=""
-        if digiAlg.config.isSimpleSmearer
-        else digiAlg.config.outputClusters,
+        inputClusters=digiAlg.config.outputClusters,
         inputSimHits=simAlg.config.outputSimHits,
         inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
         filePath=str(out),
@@ -252,9 +253,7 @@ def test_csv_meas_writer(tmp_path, fatras, trk_geo, conf_const):
             CsvMeasurementWriter,
             level=acts.logging.INFO,
             inputMeasurements=digiAlg.config.outputMeasurements,
-            inputClusters=""
-            if digiAlg.config.isSimpleSmearer
-            else digiAlg.config.outputClusters,
+            inputClusters=digiAlg.config.outputClusters,
             inputSimHits=simAlg.config.outputSimHits,
             inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
             outputDir=str(out),
@@ -411,7 +410,7 @@ def test_root_material_writer(tmp_path):
     from acts.examples.dd4hep import DD4hepDetector
 
     detector, trackingGeometry, _ = DD4hepDetector.create(
-        xmlFileNames=["thirdparty/OpenDataDetector/xml/OpenDataDetector.xml"]
+        xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
     )
 
     out = tmp_path / "material.root"
@@ -433,7 +432,7 @@ def test_json_material_writer(tmp_path, fmt):
     from acts.examples.dd4hep import DD4hepDetector
 
     detector, trackingGeometry, _ = DD4hepDetector.create(
-        xmlFileNames=["thirdparty/OpenDataDetector/xml/OpenDataDetector.xml"]
+        xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
     )
 
     out = (tmp_path / "material").with_suffix("." + fmt.name.lower())
@@ -485,3 +484,48 @@ def hepmc_data(hepmc_data_impl: Path, tmp_path):
     shutil.copy(hepmc_data_impl, dest)
 
     return dest
+
+
+@pytest.mark.skipif(not hepmc3Enabled, reason="HepMC3 plugin not available")
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+@pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
+@pytest.mark.slow
+def test_hepmc3_histogram(hepmc_data, tmp_path):
+
+    from acts.examples.hepmc3 import (
+        HepMC3AsciiReader,
+        HepMCProcessExtractor,
+    )
+
+    s = Sequencer(numThreads=1)
+
+    s.addReader(
+        HepMC3AsciiReader(
+            level=acts.logging.INFO,
+            inputDir=str(hepmc_data.parent),
+            inputStem="events",
+            outputEvents="hepmc-events",
+        )
+    )
+
+    s.addAlgorithm(
+        HepMCProcessExtractor(
+            level=acts.logging.INFO,
+            inputEvents="hepmc-events",
+            extractionProcess="Inelastic",
+        )
+    )
+
+    # This segfaults, see https://github.com/acts-project/acts/issues/914
+    # s.addWriter(
+    #     RootNuclearInteractionParametersWriter(
+    #         level=acts.logging.INFO, inputSimulationProcesses="event-fraction"
+    #     )
+    # )
+
+    alg = AssertCollectionExistsAlg(
+        "hepmc-events", name="check_alg", level=acts.logging.INFO
+    )
+    s.addAlgorithm(alg)
+
+    s.run()

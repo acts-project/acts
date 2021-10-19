@@ -28,7 +28,7 @@ void ActsExamples::Options::addParticleGunOptions(Description& desc) {
   opt("gen-vertex-t-std-ns", value<double>()->default_value(0.0),
       "Temporal vertex standard deviation in ns");
   opt("gen-phi-degree",
-      value<Interval>()->value_name("MIN:MAX")->default_value({0.0, 360.0}),
+      value<Interval>()->value_name("MIN:MAX")->default_value({-180.0, 180.0}),
       "Transverse direction angle generation range in degree");
   opt("gen-eta",
       value<Interval>()->value_name("MIN:MAX")->default_value({-4.0, 4.0}),
