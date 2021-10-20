@@ -961,7 +961,7 @@ class CombinatorialKalmanFilter {
                        << "varianceQoverP = " << interaction.varianceQoverP);
 
           // Update the state and stepper with material effects
-          interaction.updateState(state, stepper);
+          interaction.updateState(state, stepper, addNoise);
         }
       }
 

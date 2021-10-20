@@ -166,9 +166,7 @@ def test_csv_meas_reader(tmp_path, fatras, trk_geo, conf_const):
 
     config = CsvMeasurementWriter.Config(
         inputMeasurements=digiAlg.config.outputMeasurements,
-        inputClusters=""
-        if digiAlg.config.isSimpleSmearer
-        else digiAlg.config.outputClusters,
+        inputClusters=digiAlg.config.outputClusters,
         inputSimHits=simAlg.config.outputSimHits,
         inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
         outputDir=str(out),
