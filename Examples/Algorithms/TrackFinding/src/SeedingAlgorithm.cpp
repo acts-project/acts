@@ -76,10 +76,6 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config bFieldInZ");
   }
 
-  if (m_cfg.gridConfig.numPhiNeighbors % 2 == 0) {
-    throw std::invalid_argument("numPhiNeighbors needs to be an odd number");
-  }
-
   m_cfg.seedFinderConfig.seedFilter =
       std::make_unique<Acts::SeedFilter<SimSpacePoint>>(m_cfg.seedFilterConfig);
 }

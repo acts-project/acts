@@ -26,7 +26,7 @@ Acts::BinFinder<external_spacepoint_t>::findBins(
   // if the map is defined get the indices from the map
   else {
     // loop over the phi range defined by m_numPhiNeighbors
-    int phiNeighborRange = (m_numPhiNeighbors - 1) / 2;
+    int phiNeighborRange = m_numPhiNeighbors;
     for (int phiBinIndex = -phiNeighborRange; phiBinIndex <= phiNeighborRange;
          phiBinIndex++) {
       // loop over the z bins inside indicesVector
@@ -35,18 +35,11 @@ Acts::BinFinder<external_spacepoint_t>::findBins(
         // get z bin local index from indicesVector
         auto zBinLocalIndex = m_indicesVector[zBin - 1][zBinIndex];
         // get phi bin local index
-        int phiBinLocalIndex = phiBin + phiBinIndex;
         int maxPhiBin = (binnedSP->numLocalBins())[0];
-        // check if phiBin + phiBinIndex is outside of the grid: If phiBin +
-        // phiBinIndex is smalle than the first bin, phiBinLocalIndex goes to
-        // the end of the grid. If phiBin + phiBinIndex is greater than the last
-        // bin, phiBinLocalIndex goes back to the first bins of the grid
-        if (phiBinLocalIndex < 1) {
-          phiBinLocalIndex += maxPhiBin;
-        } else if (phiBinLocalIndex > maxPhiBin) {
-          phiBinLocalIndex -= maxPhiBin;
-        }
-        const std::array<size_t, 2> localIndexArray = {(size_t)phiBinLocalIndex,
+        // wrap around phi
+        size_t phiBinLocalIndex =
+            1 + (phiBin + phiBinIndex + (maxPhiBin - 1)) % (maxPhiBin);
+        const std::array<size_t, 2> localIndexArray = {phiBinLocalIndex,
                                                        zBinLocalIndex};
         // get the global bin index from local bin index
         auto globalIndex = binnedSP->globalBinFromLocalBins(localIndexArray);
