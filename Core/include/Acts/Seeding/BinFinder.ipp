@@ -46,7 +46,7 @@ Acts::BinFinder<external_spacepoint_t>::findBins(
         } else if (phiBinLocalIndex > maxPhiBin) {
           phiBinLocalIndex -= maxPhiBin;
         }
-        const std::array<size_t, 2> localIndexArray = {(size_t)phiBinLocalIndex,
+        const std::array<size_t, 2> localIndexArray = {phiBinLocalIndex,
                                                        zBinLocalIndex};
         // get the global bin index from local bin index
         auto globalIndex = binnedSP->globalBinFromLocalBins(localIndexArray);
