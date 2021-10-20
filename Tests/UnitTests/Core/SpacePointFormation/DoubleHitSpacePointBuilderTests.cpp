@@ -144,7 +144,6 @@ BOOST_DATA_TEST_CASE(DoubleHitSpacePointBuilder_basic, bdata::xrange(1),
   std::vector<const Cluster*> clusters_back;
 
   for (auto& sl : sourceLinks) {
-
     const auto geoId = sl.geoId;
     if (geoId.volume() == 3)
       sl.parameters[1] = 0;  // strip center is used for the second coordinate
