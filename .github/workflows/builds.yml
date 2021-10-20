@@ -63,8 +63,8 @@ jobs:
           ${SETUP} 
           && source /usr/local/bin/thisroot.sh
           && source /usr/local/bin/thisdd4hep_only.sh
-          && source /usr/local/bin/geant4.sh
           && /usr/local/bin/download_geant4_data.sh
+          && source /usr/local/bin/geant4.sh
           && source build/python/setup.sh 
           && pip3 install pytest
           && pytest -rFs
