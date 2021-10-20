@@ -59,7 +59,7 @@ int runDigitizationConfigExample(
   digiConfigurator.compactify = vm["digi-compactify-output"].as<bool>();
   digiConfigurator.inputDigiComponents = inputConfig;
 
-  geometry.first->visitSurfaces(digiConfigurator);
+  geometry.first->visitSurfaces(std::ref(digiConfigurator));
 
   Acts::GeometryHierarchyMap<DigiComponentsConfig> outputConfig(
       digiConfigurator.outputDigiComponents);

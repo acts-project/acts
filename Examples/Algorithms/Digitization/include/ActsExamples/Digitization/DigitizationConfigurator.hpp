@@ -40,6 +40,15 @@ namespace ActsExamples {
 /// digitization, which is then used to calculate the number of bins with
 /// respect to the bounds range.
 struct DigitizationConfigurator {
+  /// Default constructible
+  DigitizationConfigurator() = default;
+
+  /// Avoid copies when passing the class as a visitor
+  DigitizationConfigurator(const DigitizationConfigurator&) = delete;
+
+  /// Avoid copies when passing the class as a visitor
+  DigitizationConfigurator& operator=(DigitizationConfigurator&) = delete;
+
   /// Simplified input components for digitization
   Acts::GeometryHierarchyMap<DigiComponentsConfig> inputDigiComponents;
 
