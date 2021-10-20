@@ -23,7 +23,7 @@ Acts::BinFinder<external_spacepoint_t>::findBins(
   if (m_indicesVector.empty()) {
     indices = binnedSP->neighborHoodIndices({phiBin, zBin}).collect();
   }
-  // if the map is defined get the indices from the map
+  // if the indicesVector is defined, get the indices from there
   else {
     // loop over the phi range defined by m_numPhiNeighbors
     int phiNeighborRange = (m_numPhiNeighbors - 1) / 2;
