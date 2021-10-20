@@ -84,8 +84,8 @@ class DoubleHitSpacePointBuilder {
   /// necessary information
   /// @return vector of the global coordinates of the cluster
   // Vector3 globalCoords(const GeometryContext& gctx,
-  std::pair<Vector3, Vector2> globalCoords(const GeometryContext& gctx,
-                                           const cluster_t& cluster) const;
+  Vector3 globalPos(const GeometryContext& gctx,
+                    const cluster_t& cluster) const;
 
   /// @brief Calculates the top and bottom ends of a SDE
   /// that corresponds to a given hit
@@ -93,6 +93,19 @@ class DoubleHitSpacePointBuilder {
   /// @return vectors to the top and bottom end of the SDE
   std::pair<Vector3, Vector3> endsOfStrip(const GeometryContext& gctx,
                                           const cluster_t& cluster) const;
+
+  Vector2 globalCov(const GeometryContext& gctx,
+                    const GeometryIdentifier& geoId, const Vector2& localPos,
+                    const SymMatrix2& localCov) const;
+
+  size_t getMeasurementId(const cluster_t& cluster) const;
+
+  double getLocVar(const cluster_t& cluster) const;
+
+  Acts::Vector2 getGlobalVars(const GeometryContext& gctx,
+                              const cluster_t& cluster_front,
+                              const cluster_t& cluster_back,
+                              double theta) const;
 };
 }  // namespace Acts
 #include "Acts/SpacePointFormation/detail/DoubleHitSpacePointBuilder.ipp"

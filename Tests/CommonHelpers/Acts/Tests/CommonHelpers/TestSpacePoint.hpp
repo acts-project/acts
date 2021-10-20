@@ -28,14 +28,14 @@ class TestSpacePoint {
   /// @param measurementIndex Index of the underlying measurement
   template <typename position_t>
   TestSpacePoint(const Eigen::MatrixBase<position_t>& pos, float varRho,
-                 float varZ, size_t measurementIndex)
+                 float varZ, std::vector<size_t> measurementIndices)
       : m_x(pos[Acts::ePos0]),
         m_y(pos[Acts::ePos1]),
         m_z(pos[Acts::ePos2]),
         m_rho(std::hypot(m_x, m_y)),
         m_varianceRho(varRho),
         m_varianceZ(varZ),
-        m_measurementIndex(measurementIndex) {
+        m_measurementIndices(measurementIndices) {
     EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(position_t, 3);
   }
   TestSpacePoint() = default;
@@ -47,6 +47,9 @@ class TestSpacePoint {
   constexpr float varianceZ() const { return m_varianceZ; }
 
   constexpr size_t measurementIndex() const { return m_measurementIndex; }
+  const std::vector<size_t>& measurementIndices() const {
+    return m_measurementIndices;
+  }
 
  private:
   // Global position
@@ -59,14 +62,14 @@ class TestSpacePoint {
   float m_varianceZ;
   // Index of the corresponding measurement
   size_t m_measurementIndex;
+  std::vector<size_t> m_measurementIndices;
 };
 
-constexpr bool operator==(const TestSpacePoint& lhs,
-                          const TestSpacePoint& rhs) {
+inline bool operator==(const TestSpacePoint& lhs, const TestSpacePoint& rhs) {
   // TODO would it be sufficient to check just the index under the assumption
   //   that the same measurement index always produces the same space point?
   // no need to check r since it is fully defined by x/y
-  return (lhs.measurementIndex() == rhs.measurementIndex()) and
+  return (lhs.measurementIndices() == rhs.measurementIndices()) and
          (lhs.x() == rhs.x()) and (lhs.y() == rhs.y()) and
          (lhs.z() == rhs.z()) and (lhs.varianceR() == rhs.varianceR()) and
          (lhs.varianceZ() == rhs.varianceZ());
