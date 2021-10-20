@@ -22,7 +22,6 @@
 #include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/DigitizationOptions.hpp"
-#include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 
 #include <map>
 #include <memory>
