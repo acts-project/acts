@@ -25,7 +25,8 @@ template <typename external_spacepoint_t>
 class BinFinder {
  public:
   /// constructor
-  BinFinder(const std::vector<std::vector<size_t> >&& indicesVector);
+  BinFinder(const std::vector<std::vector<size_t> >&& indicesVector,
+            const size_t&& numPhiNeighbors);
 
   /// destructor
   ~BinFinder() = default;
@@ -41,6 +42,7 @@ class BinFinder {
 
  private:
   const std::vector<std::vector<size_t> > m_indicesVector;
+  const size_t m_numPhiNeighbors;
 };
 }  // namespace Acts
 #include "Acts/Seeding/BinFinder.ipp"

@@ -76,6 +76,10 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config bFieldInZ");
   }
 
+  if (m_cfg.gridConfig.numPhiNeighbors % 2 == 0) {
+    throw std::invalid_argument("numPhiNeighbors needs to be an odd number");
+  }
+
   m_cfg.seedFinderConfig.seedFilter =
       std::make_unique<Acts::SeedFilter<SimSpacePoint>>(m_cfg.seedFilterConfig);
 }
@@ -111,9 +115,13 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   };
 
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
-      Acts::BinFinder<SimSpacePoint>(std::move(m_cfg.binFinderConfigBottom)));
+      Acts::BinFinder<SimSpacePoint>(
+          std::move(m_cfg.binFinderConfigBottom),
+          std::move(m_cfg.gridConfig.numPhiNeighbors)));
   auto topBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
-      Acts::BinFinder<SimSpacePoint>(std::move(m_cfg.binFinderConfigTop)));
+      Acts::BinFinder<SimSpacePoint>(
+          std::move(m_cfg.binFinderConfigTop),
+          std::move(m_cfg.gridConfig.numPhiNeighbors)));
   auto grid =
       Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(m_cfg.gridConfig);
   auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
