@@ -236,7 +236,7 @@ class TrackingVolume : public Volume {
 
   /// @brief Visit all sensitive surfaces
   ///
-  /// @tparam visitor_t Type of callable visitor
+  /// @tparam visitor_t Type of the callable visitor
   ///
   /// @param visitor The callable. Will be called for each sensitive surface
   /// that is found
