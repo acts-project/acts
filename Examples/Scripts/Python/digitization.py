@@ -93,9 +93,7 @@ def configureDigitization(
     if outputRoot:
         rmwConfig = acts.examples.RootMeasurementWriter.Config(
             inputMeasurements=digiAlg.config.outputMeasurements,
-            inputClusters=""
-            if digiAlg.config.isSimpleSmearer
-            else digiAlg.config.outputClusters,
+            inputClusters=digiAlg.config.outputClusters,
             inputSimHits=simAlg.config.outputSimHits,
             inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
             filePath=str(outputDir / f"{digiAlg.config.outputMeasurements}.root"),
@@ -111,9 +109,7 @@ def configureDigitization(
             acts.examples.CsvMeasurementWriter(
                 level=acts.logging.VERBOSE,
                 inputMeasurements=digiAlg.config.outputMeasurements,
-                inputClusters=""
-                if digiAlg.config.isSimpleSmearer
-                else digiAlg.config.outputClusters,
+                inputClusters=digiAlg.config.outputClusters,
                 inputSimHits=simAlg.config.outputSimHits,
                 inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
                 outputDir=str(csv_dir),
