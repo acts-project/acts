@@ -1,6 +1,7 @@
 add_library(
   ActsExamplesDetectorTGeo SHARED
-  src/TGeoDetector.cpp)
+  src/TGeoDetector.cpp
+  src/TGeoITkModuleSplitter.cpp)
   
 target_include_directories(
   ActsExamplesDetectorTGeo
@@ -8,7 +9,7 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesDetectorTGeo
   PUBLIC
-    ActsCore ActsPluginIdentification ActsPluginDigitization ActsPluginTGeo
+    ActsCore ActsPluginIdentification ActsPluginDigitization ActsPluginTGeo ActsPluginJson
     ActsExamplesFramework ActsExamplesDetectorsCommon
     ActsExamplesDetectorGeneric)
 

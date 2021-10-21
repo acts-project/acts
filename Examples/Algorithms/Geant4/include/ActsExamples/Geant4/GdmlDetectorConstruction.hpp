@@ -8,10 +8,7 @@
 
 #pragma once
 
-#include "ActsExamples/Geant4/G4DetectorConstructionFactory.hpp"
-
 #include <G4VUserDetectorConstruction.hh>
-#include <globals.hh>
 
 namespace ActsExamples {
 
@@ -21,27 +18,17 @@ class GdmlDetectorConstruction final : public G4VUserDetectorConstruction {
   /// @param path is the path to the Gdml file
   GdmlDetectorConstruction(std::string path);
 
-  /// Read the file and parse it to construct the Geant4 description.
+  /// Read the file and parse it to construct the Geant4 description
+  ///
+  /// @note to simplify further setup withiin the ACTS framework
+  /// the world is cached when first constructed
   G4VPhysicalVolume* Construct() final override;
 
  private:
+  /// Path to the Gdml file
   std::string m_path;
-};
-
-class GdmlDetectorConstructionFactory : public G4DetectorConstructionFactory {
- public:
-  /// @brief Construct a new GDML Detector Factory
-  ///
-  /// @param path The input GDML file path
-  GdmlDetectorConstructionFactory(const std::string& path);
-
-  /// @brief Main factory method following the interface
-  ///
-  /// @return Detector construction based on GDML.
-  std::unique_ptr<G4VUserDetectorConstruction> operator()() const override;
-
- private:
-  std::string m_path;
+  /// Cached worled volume
+  G4VPhysicalVolume* m_world;
 };
 
 }  // namespace ActsExamples

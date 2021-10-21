@@ -56,11 +56,11 @@ run_geometry_example() {
                   --mat-output-allmaterial true \
                   --mat-output-sensitives false
 }
-run_geometry_example Aligned
+run_geometry_example Aligned --align-mode internal
+run_geometry_example Aligned --align-mode external
 run_geometry_example DD4hep ${DD4HEP_INPUT}
 run_geometry_example Empty
 run_geometry_example Generic
-run_geometry_example Payload
 run_geometry_example Telescope
 # TODO: Add TGeo geometry example (needs an input file + knowhow)
 
@@ -71,12 +71,12 @@ run_geometry_example Telescope
 # conditions have code paths that are only exercised when the
 # Sequencer actually runs.
 #
-run_example ActsExamplePropagationAligned
+run_example ActsExamplePropagationAligned --align-mode internal
 run_example ActsExamplePropagationDD4hep ${DD4HEP_INPUT}
 # FIXME: Disabled because of issue #710
 # run_example ActsExamplePropagationEmpty
 run_example ActsExamplePropagationGeneric
-run_example ActsExamplePropagationPayload
+run_example ActsExamplePropagationAligned --align-mode external
 # TODO: Add TGeo propagation example (needs an input file + knowhow)
 
 # Run event generation examples as suggested by the Fatras tutorial
@@ -97,7 +97,7 @@ run_example ActsExamplePythia8 \
                 --gen-hard-process=Top:qqbar2ttbar=on \
                 --gen-npileup=140
 
-# Run Geantino recording example, as in the material mapping tutorial (but with
+# Run Material recording example, as in the material mapping tutorial (but with
 # 10x less events to keep CI running times reasonable)
 #
 # FIXME: Currently only works in single-threaded mode, even though it
@@ -106,14 +106,13 @@ run_example ActsExamplePythia8 \
 #        thread-unsafe Geant4 code is accidentally run outside of the
 #        mutex-protected region of the code. See issue #207 .
 #
-run_geantino_example() {
-    timed_run ActsExampleGeantinoRecording$* \
+run_material_example() {
+    timed_run ActsExampleMaterialRecording$* \
                   -n1000 \
                   -j1 \
-                  --g4-material-tracks=geant4-material-tracks-$1 \
                   --output-root
 }
-run_geantino_example DD4hep ${DD4HEP_INPUT}
+run_material_example DD4hep ${DD4HEP_INPUT}
 # TODO: Add GDML version (needs an input file + knowhow)
 
 # Run material validation example (generic-only, see above)
