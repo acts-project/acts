@@ -487,7 +487,12 @@ def test_digitization_example(trk_geo, tmp_path):
     ):
         assert_entries(root_file, f"vol{tn}", nev)
 
+    assert_root_hash(
+        root_file, "97721f3c88dba8df387126adb37b3451ea701dc7aa36c91b673506012d886722"
+    )
 
+
+@pytest.mark.xfail(reason="RootMeasurementWriter truncates output")
 def test_digitization_example_input(trk_geo, tmp_path):
     from particle_gun import runParticleGun
     from digitization import configureDigitization
@@ -534,6 +539,9 @@ def test_digitization_example_input(trk_geo, tmp_path):
         (18, 10),
     ):
         assert_entries(root_file, f"vol{tn}", nev)
+    assert_root_hash(
+        root_file, "4cfbd839845a3a0b654ed148856ce849551de6c8ea5ffcef952480376ce443e3"
+    )
 
 
 def test_digitization_config_example(trk_geo, tmp_path):
