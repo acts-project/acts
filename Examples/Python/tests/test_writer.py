@@ -213,7 +213,9 @@ def test_root_simhits_writer(tmp_path, fatras, conf_const):
 
 
 @pytest.mark.root
-@pytest.mark.xfail(reason="ClusterWriter output currently not reproducible")
+@pytest.mark.xfail(
+    reason="ClusterWriter output currently not reproducible", strict=True
+)
 def test_root_clusters_writer(tmp_path, fatras, conf_const, trk_geo, rng):
     s = Sequencer(numThreads=1, events=10)  # we're not going to use this one
     evGen, simAlg, _ = fatras(s)

@@ -293,7 +293,7 @@ def test_event_recording(tmp_path):
 def test_particle_gun(tmp_path):
     from particle_gun import runParticleGun
 
-    s = Sequencer(events=20, numThreads=1)
+    s = Sequencer(events=20, numThreads=-1)
 
     csv_dir = tmp_path / "csv"
     root_file = tmp_path / "particles.root"
@@ -457,7 +457,7 @@ def test_geometry_example(geoFactory, nobj, tmp_path):
 def test_digitization_example(trk_geo, tmp_path):
     from digitization import configureDigitization
 
-    s = Sequencer(events=10, numThreads=1)
+    s = Sequencer(events=10, numThreads=-1)
 
     csv_dir = tmp_path / "csv"
     root_file = tmp_path / "measurements.root"
@@ -488,28 +488,35 @@ def test_digitization_example(trk_geo, tmp_path):
         assert_entries(root_file, f"vol{tn}", nev)
 
     assert_root_hash(
-        root_file, "97721f3c88dba8df387126adb37b3451ea701dc7aa36c91b673506012d886722"
+        root_file, "f2dd54cd8315e4656136571d4802a69293d7feb71f427706410b8f0d2ad76265"
     )
 
 
-@pytest.mark.xfail(reason="RootMeasurementWriter truncates output")
+@pytest.mark.xfail(
+    reason="Digitization from input currently not reproducible", strict=True
+)
 def test_digitization_example_input(trk_geo, tmp_path):
     from particle_gun import runParticleGun
     from digitization import configureDigitization
 
     ptcl_dir = tmp_path / "ptcl"
     ptcl_dir.mkdir()
-    pgs = Sequencer(events=20)
+    pgs = Sequencer(events=20, numThreads=-1)
     runParticleGun(str(ptcl_dir), s=pgs)
     pgs.run()
 
-    s = Sequencer(numThreads=1)
+    s = Sequencer(numThreads=-1)
 
     csv_dir = tmp_path / "csv"
     root_file = tmp_path / "measurements.root"
 
     assert not root_file.exists()
     assert not csv_dir.exists()
+
+    assert_root_hash(
+        ptcl_dir / "particles.root",
+        "78a89f365177423d0834ea6f1bd8afe1488e72b12a25066a20bd9050f5407860",
+    )
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
     configureDigitization(
@@ -540,7 +547,7 @@ def test_digitization_example_input(trk_geo, tmp_path):
     ):
         assert_entries(root_file, f"vol{tn}", nev)
     assert_root_hash(
-        root_file, "4cfbd839845a3a0b654ed148856ce849551de6c8ea5ffcef952480376ce443e3"
+        root_file, "ccc92f0ad538d1b62d98f19f947970bcc491843e54d8ffeed16ad2e226b8caee"
     )
 
 
