@@ -28,7 +28,7 @@ jobs:
       - name: Install black
         run: pip install black
       - name: Run black format check
-        run: black --check Examples
+        run: black --check . --extend-exclude ".*thirdparty.*"
 
   license:
     runs-on: ubuntu-latest
