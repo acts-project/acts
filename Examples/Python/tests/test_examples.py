@@ -14,6 +14,7 @@ from helpers import (
     AssertCollectionExistsAlg,
     isCI,
 )
+from helpers.hash_root import assert_root_hash
 
 pytestmark = pytest.mark.skipif(not rootEnabled, reason="ROOT not set up")
 
@@ -70,13 +71,28 @@ def test_fatras(trk_geo, tmp_path, field):
     nevents = 10
 
     root_files = [
-        ("fatras_particles_final.root", "particles", nevents),
-        ("fatras_particles_initial.root", "particles", nevents),
-        ("hits.root", "hits", 115),
+        (
+            "fatras_particles_final.root",
+            "particles",
+            nevents,
+            "09b0d46ad7641fc5af97650cdcbf0e6c85966933a2e1b2bfcf7fbb9c6d90b2e1",
+        ),
+        (
+            "fatras_particles_initial.root",
+            "particles",
+            nevents,
+            "712a41d95ed1fccafccf708afddcd2177793934bb80cd40b1d99b532c7a21031",
+        ),
+        (
+            "hits.root",
+            "hits",
+            115,
+            "f890599a8c94bc80270636c64039f8a0a7d8ddd716a15306d5ca61f15f8da5e8",
+        ),
     ]
 
     assert len(list(csv.iterdir())) == 0
-    for rf, _, _ in root_files:
+    for rf, _, _, _ in root_files:
         assert not (tmp_path / rf).exists()
 
     seq = Sequencer(events=nevents)
@@ -87,12 +103,13 @@ def test_fatras(trk_geo, tmp_path, field):
     assert_csv_output(csv, "particles_final")
     assert_csv_output(csv, "particles_initial")
     assert_csv_output(csv, "hits")
-    for f, tn, exp_entries in root_files:
+    for f, tn, exp_entries, file_hash in root_files:
         rfp = tmp_path / f
         assert rfp.exists()
         assert rfp.stat().st_size > 2 ** 10 * 10
 
         assert_entries(rfp, tn, exp_entries)
+        assert_root_hash(rfp, file_hash)
 
 
 def test_seeding(tmp_path, trk_geo, field):
@@ -106,15 +123,45 @@ def test_seeding(tmp_path, trk_geo, field):
     seq = Sequencer(events=10, numThreads=1)
 
     root_files = [
-        ("estimatedparams.root", "estimatedparams", 371),
-        ("performance_seeding_trees.root", "track_finder_tracks", 371),
-        ("performance_seeding_hists.root", None, 0),
-        ("evgen_particles.root", "particles", seq.config.events),
-        ("fatras_particles_final.root", "particles", seq.config.events),
-        ("fatras_particles_initial.root", "particles", seq.config.events),
+        (
+            "estimatedparams.root",
+            "estimatedparams",
+            371,
+            "8bbc97cb3d4777c61dd0b483a1c8268fc8411ad182c35bc731e5ed222450deca",
+        ),
+        (
+            "performance_seeding_trees.root",
+            "track_finder_tracks",
+            371,
+            "c900a70a9881ce637a73ff730de4b2f4b6c0446854d666f70c7fc9c44c893666",
+        ),
+        (
+            "performance_seeding_hists.root",
+            None,
+            0,
+            "4943f152bfad6ca6302563b57e495599fad4fea43b8e0b41abe5b8de31b391bc",
+        ),
+        (
+            "evgen_particles.root",
+            "particles",
+            seq.config.events,
+            "4943f152bfad6ca6302563b57e495599fad4fea43b8e0b41abe5b8de31b391bc",
+        ),
+        (
+            "fatras_particles_final.root",
+            "particles",
+            seq.config.events,
+            "934e290545090fe87d177bf40a78cf9375420e854433c2ef5a6d408fb3744d9d",
+        ),
+        (
+            "fatras_particles_initial.root",
+            "particles",
+            seq.config.events,
+            "4943f152bfad6ca6302563b57e495599fad4fea43b8e0b41abe5b8de31b391bc",
+        ),
     ]
 
-    for fn, _, _ in root_files:
+    for fn, _, _, _ in root_files:
         fp = tmp_path / fn
         assert not fp.exists()
 
@@ -124,13 +171,14 @@ def test_seeding(tmp_path, trk_geo, field):
 
     del seq
 
-    for fn, tn, exp_entries in root_files:
+    for fn, tn, exp_entries, file_hash in root_files:
         fp = tmp_path / fn
         assert fp.exists()
         assert fp.stat().st_size > 100
 
         if tn is not None:
             assert_entries(fp, tn, exp_entries)
+            assert_root_hash(fp, file_hash)
 
     assert_csv_output(csv, "evgen_particles")
     assert_csv_output(csv, "evgen_particles")
@@ -144,9 +192,16 @@ def test_propagation(tmp_path, trk_geo, field, seq):
     obj = tmp_path / "obj"
     obj.mkdir()
 
-    root_files = [("propagation_steps.root", "propagation_steps", 10000)]
+    root_files = [
+        (
+            "propagation_steps.root",
+            "propagation_steps",
+            10000,
+            "2d9a86e1097b8f0a845f33b05830f6b9c78cdeaeeb01685753e8dc9b434c7f9d",
+        )
+    ]
 
-    for fn, _, _ in root_files:
+    for fn, _, _, _ in root_files:
         fp = tmp_path / fn
         assert not fp.exists()
 
@@ -154,11 +209,12 @@ def test_propagation(tmp_path, trk_geo, field, seq):
 
     runPropagation(trk_geo, field, str(tmp_path), s=seq).run()
 
-    for fn, tn, ee in root_files:
+    for fn, tn, ee, file_hash in root_files:
         fp = tmp_path / fn
         assert fp.exists()
         assert fp.stat().st_size > 2 ** 10 * 50
         assert_entries(fp, tn, ee)
+        assert_root_hash(fp, file_hash)
 
     assert len(list(obj.iterdir())) > 0
 
@@ -169,13 +225,21 @@ def test_propagation(tmp_path, trk_geo, field, seq):
 def test_material_recording(tmp_path, material_recording):
 
     # Not quite sure why this isn't 200
-    root_files = [("geant4_material_tracks.root", "material-tracks", 198)]
+    root_files = [
+        (
+            "geant4_material_tracks.root",
+            "material-tracks",
+            198,
+            "aaf899f3584d6a96905dce0251d6cfe060b00008aeca43ea8162d65aa982000b",
+        )
+    ]
 
-    for fn, tn, ee in root_files:
+    for fn, tn, ee, file_hash in root_files:
         fp = material_recording / fn
         assert fp.exists()
         assert fp.stat().st_size > 2 ** 10 * 50
         assert_entries(fp, tn, ee)
+        assert_root_hash(fp, file_hash)
 
 
 @pytest.mark.slow
@@ -247,6 +311,9 @@ def test_particle_gun(tmp_path):
 
     assert root_file.stat().st_size > 200
     assert_entries(root_file, "particles", 20)
+    assert_root_hash(
+        root_file, "78a89f365177423d0834ea6f1bd8afe1488e72b12a25066a20bd9050f5407860"
+    )
 
 
 @pytest.mark.slow
@@ -285,6 +352,9 @@ def test_material_mapping(material_recording, tmp_path):
 
     assert map_file.exists()
     assert_entries(map_file, "material-tracks", 198)
+    assert_root_hash(
+        map_file, "7daa335505eb0b0143372fe00c75f62d03a69f94930be53c74a3b8b6e39e7822"
+    )
 
     val_file = tmp_path / "propagation-material.root"
     assert not val_file.exists()
@@ -313,6 +383,9 @@ def test_material_mapping(material_recording, tmp_path):
 
     assert val_file.exists()
     assert_entries(val_file, "material-tracks", 10000)
+    assert_root_hash(
+        val_file, "1fd042f01bc2ff60f740c3179cc7a68a641d7311f0eb65f8937f67cedd254634"
+    )
 
 
 @pytest.mark.parametrize(
@@ -381,115 +454,6 @@ def test_geometry_example(geoFactory, nobj, tmp_path):
         assert material_file.stat().st_size > 200
 
 
-def test_digitization_example(trk_geo, tmp_path):
-    from digitization import configureDigitization
-
-    s = Sequencer(events=10, numThreads=1)
-
-    csv_dir = tmp_path / "csv"
-    root_file = tmp_path / "measurements.root"
-
-    assert not root_file.exists()
-    assert not csv_dir.exists()
-
-    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-    configureDigitization(trk_geo, field, outputDir=tmp_path, s=s)
-
-    s.run()
-
-    assert root_file.exists()
-    assert csv_dir.exists()
-
-    assert len(list(csv_dir.iterdir())) == 3 * s.config.events
-    assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
-    for tn, nev in (
-        (8, 407),
-        (9, 0),
-        (12, 11),
-        (13, 375),
-        (14, 2),
-        (16, 25),
-        (17, 146),
-        (18, 9),
-    ):
-        assert_entries(root_file, f"vol{tn}", nev)
-
-
-def test_digitization_example_input(trk_geo, tmp_path):
-    from particle_gun import runParticleGun
-    from digitization import configureDigitization
-
-    ptcl_dir = tmp_path / "ptcl"
-    ptcl_dir.mkdir()
-    pgs = Sequencer(events=20)
-    runParticleGun(str(ptcl_dir), s=pgs)
-    pgs.run()
-
-    s = Sequencer(numThreads=1)
-
-    csv_dir = tmp_path / "csv"
-    root_file = tmp_path / "measurements.root"
-
-    assert not root_file.exists()
-    assert not csv_dir.exists()
-
-    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-    configureDigitization(
-        trk_geo,
-        field,
-        outputDir=tmp_path,
-        particlesInput=ptcl_dir / "particles.root",
-        s=s,
-    )
-
-    s.run()
-
-    assert root_file.exists()
-    assert csv_dir.exists()
-
-    assert len(list(csv_dir.iterdir())) == 3 * pgs.config.events
-    assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
-    for tn, nev in (
-        (7, 0),
-        (8, 193),
-        (9, 0),
-        (12, 1),
-        (13, 183),
-        (14, 6),
-        (16, 3),
-        (17, 76),
-        (18, 10),
-    ):
-        assert_entries(root_file, f"vol{tn}", nev)
-
-
-def test_digitization_config_example(trk_geo, tmp_path):
-    from digitization_config import runDigitizationConfig
-
-    out_file = tmp_path / "output.json"
-    assert not out_file.exists()
-
-    input = (
-        Path(__file__).parent
-        / "../../../Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-    )
-    assert input.exists(), input.resolve()
-
-    runDigitizationConfig(trk_geo, input=input, output=out_file)
-
-    assert out_file.exists()
-
-    with out_file.open() as fh:
-        data = json.load(fh)
-    assert len(data.keys()) == 2
-    assert data["acts-geometry-hierarchy-map"]["format-version"] == 0
-    assert (
-        data["acts-geometry-hierarchy-map"]["value-identifier"]
-        == "digitization-configuration"
-    )
-    assert len(data["entries"]) == 27
-
-
 def test_ckf_tracks_example_full_seeding(tmp_path):
     # the example as written is only compatible with the generic detector
     detector, trackingGeometry, decorators = GenericDetector.create()
@@ -499,17 +463,42 @@ def test_ckf_tracks_example_full_seeding(tmp_path):
     s = Sequencer(events=events, numThreads=1)  # Digitization is not thread-safe
 
     root_files = [
-        ("performance_ckf.root", None, None),
-        ("performance_seeding_trees.root", "track_finder_tracks", 368),
-        ("performance_seeding_trees.root", "track_finder_particles", 80),
-        ("trackstates_ckf.root", "trackstates", 368),
-        ("tracksummary_ckf.root", "tracksummary", 10),
+        (
+            "performance_ckf.root",
+            None,
+            None,
+            None,
+        ),
+        (
+            "performance_seeding_trees.root",
+            "track_finder_tracks",
+            368,
+            "938bcc9b9425b12c620f5d0efa2c592817dfe92a18c309e97aa9d87412918620",
+        ),
+        (
+            "performance_seeding_trees.root",
+            "track_finder_particles",
+            80,
+            "938bcc9b9425b12c620f5d0efa2c592817dfe92a18c309e97aa9d87412918620",
+        ),
+        (
+            "trackstates_ckf.root",
+            "trackstates",
+            368,
+            "2faceafd4a521ff4030557301723e29c3d870edad052965eb644b824b57e2146",
+        ),
+        (
+            "tracksummary_ckf.root",
+            "tracksummary",
+            10,
+            "530ba8801c465780c8c66a788ae15592bc8ce36f8cfd8126216ea445f73c7e0d",
+        ),
     ]
 
     csv = tmp_path / "csv"
 
     assert not csv.exists()
-    for rf, _, _ in root_files:
+    for rf, _, _, _ in root_files:
         assert not (tmp_path / rf).exists()
 
     from ckf_tracks import runCKFTracks
@@ -535,11 +524,12 @@ def test_ckf_tracks_example_full_seeding(tmp_path):
     del s  # files are closed in destructors, not great
 
     assert csv.exists()
-    for rf, tn, nume in root_files:
+    for rf, tn, nume, file_hash in root_files:
         rp = tmp_path / rf
         assert rp.exists()
         if tn is not None and nume is not None:
             assert_entries(rp, tn, nume)
+            assert_root_hash(rp, file_hash)
 
     assert len([f for f in csv.iterdir() if f.name.endswith("CKFtracks.csv")]) == events
     assert all([f.stat().st_size > 300 for f in csv.iterdir()])
@@ -554,17 +544,37 @@ def test_ckf_tracks_example_truth_estimate(tmp_path):
     s = Sequencer(events=events, numThreads=1)  # Digitization is not thread-safe
 
     root_files = [
-        ("performance_ckf.root", None, None),
-        ("performance_seeding_trees.root", "track_finder_tracks", 80),
-        ("performance_seeding_trees.root", "track_finder_particles", 80),
-        ("trackstates_ckf.root", "trackstates", 80),
-        ("tracksummary_ckf.root", "tracksummary", 10),
+        ("performance_ckf.root", None, None, None),
+        (
+            "performance_seeding_trees.root",
+            "track_finder_tracks",
+            80,
+            "5c0cf9e84af64e6814ab1ddf4cbaf4be6008ad8b2371b5b0241085b19d0fc52c",
+        ),
+        (
+            "performance_seeding_trees.root",
+            "track_finder_particles",
+            80,
+            "5c0cf9e84af64e6814ab1ddf4cbaf4be6008ad8b2371b5b0241085b19d0fc52c",
+        ),
+        (
+            "trackstates_ckf.root",
+            "trackstates",
+            80,
+            "f44a901621438c92c6f20f214f5b7528ce5f9e2e72a6ea86fff594afb827afbc",
+        ),
+        (
+            "tracksummary_ckf.root",
+            "tracksummary",
+            10,
+            "cfbb83740cb8abc5180e4304d1dd552c424babb5e7f0caab65c6caa45f2a4313",
+        ),
     ]
 
     csv = tmp_path / "csv"
 
     assert not csv.exists()
-    for rf, _, _ in root_files:
+    for rf, _, _, _ in root_files:
         assert not (tmp_path / rf).exists()
 
     from ckf_tracks import runCKFTracks
@@ -590,11 +600,12 @@ def test_ckf_tracks_example_truth_estimate(tmp_path):
     del s  # files are closed in destructors, not great
 
     assert csv.exists()
-    for rf, tn, nume in root_files:
+    for rf, tn, nume, file_hash in root_files:
         rp = tmp_path / rf
         assert rp.exists()
         if tn is not None and nume is not None:
             assert_entries(rp, tn, nume)
+            assert_root_hash(rp, file_hash)
 
     assert len([f for f in csv.iterdir() if f.name.endswith("CKFtracks.csv")]) == events
     assert all([f.stat().st_size > 100 for f in csv.iterdir()])
@@ -609,15 +620,25 @@ def test_ckf_tracks_example_truth_smeared(tmp_path):
     s = Sequencer(events=events, numThreads=1)  # Digitization is not thread-safe
 
     root_files = [
-        ("performance_ckf.root", None, None),
-        ("trackstates_ckf.root", "trackstates", 80),
-        ("tracksummary_ckf.root", "tracksummary", 10),
+        ("performance_ckf.root", None, None, None),
+        (
+            "trackstates_ckf.root",
+            "trackstates",
+            80,
+            "bfa96b735050dfe77bb93631ce5a4e06e82a3ad8d65c321950d6d549f20f1ffa",
+        ),
+        (
+            "tracksummary_ckf.root",
+            "tracksummary",
+            10,
+            "70568044605d373b49bf941064d5047b1fc74816a390cd76674d13d61c6cb7aa",
+        ),
     ]
 
     csv = tmp_path / "csv"
 
     assert not csv.exists()
-    for rf, _, _ in root_files:
+    for rf, _, _, _ in root_files:
         assert not (tmp_path / rf).exists()
 
     from ckf_tracks import runCKFTracks
@@ -643,11 +664,12 @@ def test_ckf_tracks_example_truth_smeared(tmp_path):
     del s  # files are closed in destructors, not great
 
     assert csv.exists()
-    for rf, tn, nume in root_files:
+    for rf, tn, nume, file_hash in root_files:
         rp = tmp_path / rf
         assert rp.exists()
         if tn is not None and nume is not None:
             assert_entries(rp, tn, nume)
+            assert_root_hash(rp, file_hash)
 
     assert len([f for f in csv.iterdir() if f.name.endswith("CKFtracks.csv")]) == events
     assert all([f.stat().st_size > 300 for f in csv.iterdir()])

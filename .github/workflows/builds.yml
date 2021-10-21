@@ -66,7 +66,7 @@ jobs:
           && /usr/local/bin/download_geant4_data.sh
           && source /usr/local/bin/geant4.sh
           && source build/python/setup.sh 
-          && pip3 install pytest
+          && pip3 install pytest uproot awkward
           && pytest -rFs
       - name: Install
         run: ${SETUP} && cmake --build build -- install
