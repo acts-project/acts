@@ -19,7 +19,7 @@
 #
 # which can be repeated as often as needed
 #
-#   --digi-smear-volume-id=11
+#   --digi-smear-volume=11
 #   --digi-smear-indices=1       # loc1
 #   --digi-smear-types=0         # loc1 uses gaussian
 #   --digi-smear-parameters=12.5 # loc1 gaussian width
@@ -59,7 +59,7 @@ def get_args_blocks():
 
     i = 0
     while i < len(argv):
-        if argv[i].startswith('--digi-smear-volume-id'):
+        if argv[i].startswith('--digi-smear-volume'):
             if current:
                 blocks.append(current)
                 current = []
@@ -80,7 +80,7 @@ def arg_parser():
         required=True
     )
     argp.add_argument(
-        '--digi-smear-type',
+        '--digi-smear-types',
         help='Smear function types as 0 (gauss), 1 (truncated gauss), 2 (clipped gauss), 3 (uniform), 4 (digital)',
         required=True
     )
@@ -119,23 +119,26 @@ def block_to_json(args):
     }
 
     indices = [int (x) for x in args.digi_smear_indices.split(':')]
-    types = [int(x) for x in args.digi_smear_type.split(':')]
+    types = [int(x) for x in args.digi_smear_types.split(':')]
     params = [float(x) for x in args.digi_smear_parameters.split(':')]
     param_blocks = get_param_blocks(types, params)
 
     for i, t, ps in zip(indices, types, param_blocks):
         data = {'index' : i }
         if t == 0:
+            data['mean'] = 0.0
+            data['stddev'] = ps[0]
             data['type'] = 'Gauss'
-            data['stddev'] = ps[0]
         elif t == 1:
+            data['mean'] = 0.0
+            data['stddev'] = ps[0]
+            data['range'] = ps[1:]
             data['type'] = 'GaussTrunc'
-            data['stddev'] = ps[0]
-            data['range'] = ps[1:]
         elif t == 2:
-            data['type'] = 'GaussClipped'
+            data['mean'] = 0.0
             data['stddev'] = ps[0]
             data['range'] = ps[1:]
+            data['type'] = 'GaussClipped'
         elif t in [3, 4]:
             data['type'] = 'Uniform' if t == 3 else 'Digitial'
 
