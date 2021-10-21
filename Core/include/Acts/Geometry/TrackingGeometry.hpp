@@ -13,7 +13,6 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 
-#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
