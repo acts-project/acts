@@ -68,7 +68,7 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
 
     TTree* tree = nullptr;
     // Identification parameters
-    size_t eventNr;
+    int eventNr;
     int volumeID;
     int layerID;
     int surfaceID;
@@ -172,7 +172,7 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
     ///
     /// @param eventNr The event number
     /// @param geoID The geometry identifier of the measurement
-    void fillIdentification(size_t evnt, Acts::GeometryIdentifier geoId) {
+    void fillIdentification(int evnt, Acts::GeometryIdentifier geoId) {
       eventNr = evnt;
       volumeID = geoId.volume();
       layerID = geoId.layer();
