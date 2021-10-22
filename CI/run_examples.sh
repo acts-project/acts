@@ -133,6 +133,3 @@ run_example ActsExampleMaterialValidationGeneric
 
 # Run vertex finder tutorial
 run_example ActsTutorialVertexFinder
-
-# Ensure we can generate smearing configurations
-python "${SRC_DIR}"/CI/check_smearing_config.py "${SRC_DIR}"
