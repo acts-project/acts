@@ -39,13 +39,17 @@ def hash_root_file(
         else:
             items = np.array([])
 
-            for entry in branches:
+            for row in zip(*[branches[b] for b in keys]):
                 h = hashlib.md5()
-                for col in keys:
-                    try:
-                        h.update(np.array(entry[col]).tobytes())
-                    except ValueError:
-                        h.update(("%s" % entry[col]).encode("utf8"))
+                for obj in row:
+                    if isinstance(obj, ak.highlevel.Array):
+                        if obj.ndim == 1:
+                            h.update(obj.to_numpy().tobytes())
+                        else:
+                            arr = ak.flatten(obj, axis=None).to_numpy()
+                            h.update(arr.tobytes())
+                    else:
+                        h.update(np.array([obj]).tobytes())
                 items = np.append(items, h.digest())
 
             items.sort()
