@@ -153,7 +153,7 @@ def test_root_material_track_reader(material_recording):
 
     s.run()
 
-    assert alg.events_seen == 198
+    assert alg.events_seen == 2
 
 
 @pytest.mark.csv
