@@ -8,9 +8,9 @@
 
 template <typename external_spacepoint_t>
 Acts::BinFinder<external_spacepoint_t>::BinFinder(
-    const std::vector<std::vector<size_t> >&& indicesVector,
+    const std::vector<std::vector<size_t> >&& neighborsVector,
     const size_t&& numPhiNeighbors)
-    : m_indicesVector(std::move(indicesVector)),
+    : m_neighborsVector(std::move(neighborsVector)),
       m_numPhiNeighbors(std::move(numPhiNeighbors)) {}
 
 template <typename external_spacepoint_t>
@@ -19,21 +19,22 @@ Acts::BinFinder<external_spacepoint_t>::findBins(
     size_t phiBin, size_t zBin,
     const Acts::SpacePointGrid<external_spacepoint_t>* binnedSP) {
   boost::container::small_vector<size_t, 9> indices;
-  // if indicesVector is not defined, get the indices using neighborHoodIndices
-  if (m_indicesVector.empty()) {
+  // if neighborsVector is not defined, get the indices using
+  // neighborHoodIndices
+  if (m_neighborsVector.empty()) {
     indices = binnedSP->neighborHoodIndices({phiBin, zBin}).collect();
   }
-  // if the indicesVector is defined, get the indices from there
+  // if the neighborsVector is defined, get the indices from there
   else {
     // loop over the phi range defined by m_numPhiNeighbors
     int phiNeighborRange = m_numPhiNeighbors;
     for (int phiBinIndex = -phiNeighborRange; phiBinIndex <= phiNeighborRange;
          phiBinIndex++) {
-      // loop over the z bins inside indicesVector
-      for (size_t zBinIndex = 0; zBinIndex < m_indicesVector[zBin - 1].size();
+      // loop over the z bins inside neighborsVector
+      for (size_t zBinIndex = 0; zBinIndex < m_neighborsVector[zBin - 1].size();
            zBinIndex++) {
-        // get z bin local index from indicesVector
-        auto zBinLocalIndex = m_indicesVector[zBin - 1][zBinIndex];
+        // get z bin local index from neighborsVector
+        auto zBinLocalIndex = m_neighborsVector[zBin - 1][zBinIndex];
         // get phi bin local index
         int maxPhiBin = (binnedSP->numLocalBins())[0];
         // wrap around phi

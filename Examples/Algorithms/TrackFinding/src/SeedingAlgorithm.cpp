@@ -112,11 +112,11 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
 
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
       Acts::BinFinder<SimSpacePoint>(
-          std::move(m_cfg.binFinderConfigBottom),
+          std::move(m_cfg.neighborsVectorBottom),
           std::move(m_cfg.gridConfig.numPhiNeighbors)));
   auto topBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
       Acts::BinFinder<SimSpacePoint>(
-          std::move(m_cfg.binFinderConfigTop),
+          std::move(m_cfg.neighborsVectorTop),
           std::move(m_cfg.gridConfig.numPhiNeighbors)));
   auto grid =
       Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(m_cfg.gridConfig);
