@@ -52,8 +52,7 @@ def _parse_hash_file(file: Path) -> Dict[str, str]:
 @pytest.fixture(scope="session")
 def root_file_exp_hashes():
     path = Path(
-        os.environ.get("PYTEST_ROOT_FILE_HASHES", Path(__file__).parent)
-        / "root_file_hashes.txt"
+        os.environ.get("ROOT_HASH_FILE", Path(__file__).parent / "root_file_hashes.txt")
     )
     return _parse_hash_file(path)
 
@@ -107,12 +106,19 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
             "RootHashAssertionErrors", sep="-", red=True, bold=True
         )
         terminalreporter.line(
-            "Failed hash assertions and obtained actual hashes folow."
+            "The ROOT files produced by tests have changed since the last recorded reference."
         )
         terminalreporter.line(
-            "You can put these in the file Examples/Python/tests/root_file_hashes.txt to make hash checks succeed"
+            "This can be be expected if e.g. the underlying algorithm changed, or it can be a test failure symptom."
         )
-        terminalreporter.line("MAKE SURE THE FILES GIVING THESE HASHES ARE KNOWN GOOD!")
+        terminalreporter.line(
+            "Please manually check the output files listed below and make sure that their content is correct."
+        )
+        terminalreporter.line(
+            "If it is, you can update the test reference file Examples/Python/tests/root_file_hashes.txt with the new hashes below."
+        )
+        terminalreporter.line("")
+
         for e in hash_assertion_failures:
             terminalreporter.line(f"{e.key}: {e.act_hash}")
 
