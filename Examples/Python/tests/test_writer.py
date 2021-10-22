@@ -13,7 +13,6 @@ from helpers import (
     geant4Enabled,
     AssertCollectionExistsAlg,
 )
-from helpers.hash_root import assert_root_hash
 
 
 import acts
@@ -105,7 +104,9 @@ def test_csv_particle_writer(tmp_path, conf_const, ptcl_gun):
 
 
 @pytest.mark.root
-def test_root_prop_step_writer(tmp_path, trk_geo, conf_const, basic_prop_seq):
+def test_root_prop_step_writer(
+    tmp_path, trk_geo, conf_const, basic_prop_seq, assert_root_hash
+):
     with pytest.raises(TypeError):
         RootPropagationStepsWriter()
 
@@ -126,13 +127,11 @@ def test_root_prop_step_writer(tmp_path, trk_geo, conf_const, basic_prop_seq):
 
     assert file.exists()
     assert file.stat().st_size > 2 ** 10 * 50
-    assert_root_hash(
-        file, "3bb94cb1100996445e5a91ab86221f1a56040ef800894bc0279462422c734e60"
-    )
+    assert_root_hash(file.name, file)
 
 
 @pytest.mark.root
-def test_root_particle_writer(tmp_path, conf_const, ptcl_gun):
+def test_root_particle_writer(tmp_path, conf_const, ptcl_gun, assert_root_hash):
     s = Sequencer(numThreads=1, events=10)
     evGen = ptcl_gun(s)
 
@@ -153,13 +152,11 @@ def test_root_particle_writer(tmp_path, conf_const, ptcl_gun):
 
     assert file.exists()
     assert file.stat().st_size > 1024 * 10
-    assert_root_hash(
-        file, "7d2c8cce6f491c22ce149b526866bdfa8795cfac20105a7c33fce096d52d47d8"
-    )
+    assert_root_hash(file.name, file)
 
 
 @pytest.mark.root
-def test_root_meas_writer(tmp_path, fatras, trk_geo):
+def test_root_meas_writer(tmp_path, fatras, trk_geo, assert_root_hash):
     s = Sequencer(numThreads=1, events=10)
     evGen, simAlg, digiAlg = fatras(s)
 
@@ -181,13 +178,11 @@ def test_root_meas_writer(tmp_path, fatras, trk_geo):
 
     assert out.exists()
     assert out.stat().st_size > 40000
-    assert_root_hash(
-        out, "5c7a9c196b92937ddaebf34646a5ffa12d32316883069053dc6fe1ae6de4d961"
-    )
+    assert_root_hash(out.name, out)
 
 
 @pytest.mark.root
-def test_root_simhits_writer(tmp_path, fatras, conf_const):
+def test_root_simhits_writer(tmp_path, fatras, conf_const, assert_root_hash):
     s = Sequencer(numThreads=1, events=10)
     evGen, simAlg, digiAlg = fatras(s)
 
@@ -207,16 +202,16 @@ def test_root_simhits_writer(tmp_path, fatras, conf_const):
     s.run()
     assert out.exists()
     assert out.stat().st_size > 2e4
-    assert_root_hash(
-        out, "a2af481d95c62a813f6f069cb5499c0421a6326291df830a60a4a91988cc5491"
-    )
+    assert_root_hash(out.name, out)
 
 
 @pytest.mark.root
 @pytest.mark.xfail(
     reason="ClusterWriter output currently not reproducible", strict=True
 )
-def test_root_clusters_writer(tmp_path, fatras, conf_const, trk_geo, rng):
+def test_root_clusters_writer(
+    tmp_path, fatras, conf_const, trk_geo, rng, assert_root_hash
+):
     s = Sequencer(numThreads=1, events=10)  # we're not going to use this one
     evGen, simAlg, _ = fatras(s)
     s = Sequencer(numThreads=1, events=10)
@@ -254,9 +249,7 @@ def test_root_clusters_writer(tmp_path, fatras, conf_const, trk_geo, rng):
     s.run()
     assert out.exists()
     assert out.stat().st_size > 2 ** 10 * 50
-    assert_root_hash(
-        out, "7e452af7243d282dd0a8f5aa2844e150ef44364980bf3641718899068a1a1ecb"
-    )
+    assert_root_hash(out.name, out)
 
 
 @pytest.mark.csv
@@ -425,7 +418,7 @@ def test_csv_writer_interface(writer, conf_const, tmp_path, trk_geo):
 
 @pytest.mark.root
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
-def test_root_material_writer(tmp_path):
+def test_root_material_writer(tmp_path, assert_root_hash):
     from acts.examples.dd4hep import DD4hepDetector
 
     detector, trackingGeometry, _ = DD4hepDetector.create(
@@ -442,9 +435,7 @@ def test_root_material_writer(tmp_path):
     rmw.write(trackingGeometry)
 
     assert out.stat().st_size > 1000
-    assert_root_hash(
-        out, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    )
+    assert_root_hash(out.name, out)
 
 
 @pytest.mark.json

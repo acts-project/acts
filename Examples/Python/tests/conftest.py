@@ -3,6 +3,9 @@ import sys
 import os
 import tempfile
 import shutil
+from typing import Dict
+import warnings
+import pytest_check as check
 
 
 sys.path += [
@@ -11,6 +14,7 @@ sys.path += [
 ]
 
 import helpers
+import helpers.hash_root
 from common import getOpenDataDetectorDirectory
 
 import pytest
@@ -19,6 +23,102 @@ import acts
 import acts.examples
 
 u = acts.UnitConstants
+
+
+class RootHashAssertionError(AssertionError):
+    def __init__(
+        self, file: Path, key: str, exp_hash: str, act_hash: str, *args, **kwargs
+    ):
+        super().__init__(f"{exp_hash} != {act_hash}", *args, **kwargs)
+        self.file = file
+        self.key = key
+        self.exp_hash = exp_hash
+        self.act_hash = act_hash
+
+
+hash_assertion_failures = []
+
+
+def _parse_hash_file(file: Path) -> Dict[str, str]:
+    res = {}
+    for line in file.open():
+        if line.strip() == "" or line.strip().startswith("#"):
+            continue
+        key, h = line.strip().split(":", 1)
+        res[key.strip()] = h.strip()
+    return res
+
+
+@pytest.fixture(scope="session")
+def root_file_exp_hashes():
+    path = Path(
+        os.environ.get("PYTEST_ROOT_FILE_HASHES", Path(__file__).parent)
+        / "root_file_hashes.txt"
+    )
+    return _parse_hash_file(path)
+
+
+do_hash_checks = os.environ.get("ROOT_HASH_CHECKS", "") != "" or "CI" in os.environ
+
+
+@pytest.fixture(name="assert_root_hash")
+def assert_root_hash(request, root_file_exp_hashes, record_property):
+    if not do_hash_checks:
+
+        def fn(*args, **kwargs):
+            pass
+
+        return fn
+
+    def fn(key: str, file: Path):
+        """
+        Assertion helper function to check the hashes of root files.
+        Do NOT use this function directly by importing, rather use it as a pytest fixture
+
+        Arguments you need to provide:
+        key: Explicit lookup key for the expected hash, should be unique per test function
+        file: Root file to check the expected hash against
+        """
+        __tracebackhide__ = True
+        gkey = f"{request.node.name}__{key}"
+        act_hash = helpers.hash_root.hash_root_file(file)
+        if not gkey in root_file_exp_hashes:
+            warnings.warn(
+                f'Hash lookup key "{key}" not found for test "{request.node.name}"'
+            )
+            check.equal(act_hash, "[MISSING]")
+            exc = RootHashAssertionError(file, gkey, "[MISSING]", act_hash)
+            hash_assertion_failures.append(exc)
+
+        else:
+            refhash = root_file_exp_hashes[gkey]
+            check.equal(act_hash, refhash)
+            if act_hash != refhash:
+                exc = RootHashAssertionError(file, gkey, refhash, act_hash)
+                hash_assertion_failures.append(exc)
+
+    return fn
+
+
+def pytest_terminal_summary(terminalreporter, exitstatus, config):
+    if len(hash_assertion_failures) > 0:
+        terminalreporter.ensure_newline()
+        terminalreporter.section(
+            "RootHashAssertionErrors", sep="-", red=True, bold=True
+        )
+        terminalreporter.line(
+            "Failed hash assertions and obtained actual hashes folow."
+        )
+        terminalreporter.line(
+            "You can put these in the file Examples/Python/tests/root_file_hashes.txt to make hash checks succeed"
+        )
+        terminalreporter.line("MAKE SURE THE FILES GIVING THESE HASHES ARE KNOWN GOOD!")
+        for e in hash_assertion_failures:
+            terminalreporter.line(f"{e.key}: {e.act_hash}")
+
+    if not do_hash_checks:
+        terminalreporter.section("Root file has checks", sep="-", blue=True, bold=True)
+        terminalreporter.line("NOTE: Root file hash checks were skipped")
 
 
 def kwargsConstructor(cls, *args, **kwargs):
