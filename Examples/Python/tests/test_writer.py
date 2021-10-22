@@ -206,9 +206,6 @@ def test_root_simhits_writer(tmp_path, fatras, conf_const, assert_root_hash):
 
 
 @pytest.mark.root
-@pytest.mark.xfail(
-    reason="ClusterWriter output currently not reproducible", strict=True
-)
 def test_root_clusters_writer(
     tmp_path, fatras, conf_const, trk_geo, rng, assert_root_hash
 ):
