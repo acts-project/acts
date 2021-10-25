@@ -21,8 +21,6 @@ def hash_root_file(path: Path, ordering_invariant: bool = True) -> str:
         tree = rf[tree_name]
         keys = list(sorted(tree.keys()))
 
-        #  print(path, tree_name)
-        #  tree.show()
         branches = tree.arrays(library="ak")
 
         if not ordering_invariant:
