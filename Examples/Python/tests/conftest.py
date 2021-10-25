@@ -57,12 +57,9 @@ def root_file_exp_hashes():
     return _parse_hash_file(path)
 
 
-do_hash_checks = os.environ.get("ROOT_HASH_CHECKS", "") != "" or "CI" in os.environ
-
-
 @pytest.fixture(name="assert_root_hash")
 def assert_root_hash(request, root_file_exp_hashes, record_property):
-    if not do_hash_checks:
+    if not helpers.doHashChecks:
 
         def fn(*args, **kwargs):
             pass
@@ -122,7 +119,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
         for e in hash_assertion_failures:
             terminalreporter.line(f"{e.key}: {e.act_hash}")
 
-    if not do_hash_checks:
+    if not helpers.doHashChecks:
         terminalreporter.section("Root file has checks", sep="-", blue=True, bold=True)
         terminalreporter.line(
             "NOTE: Root file hash checks were skipped, enable with ROOT_HASH_CHECKS=on"

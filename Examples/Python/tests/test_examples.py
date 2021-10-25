@@ -13,6 +13,7 @@ from helpers import (
     hepmc3Enabled,
     AssertCollectionExistsAlg,
     isCI,
+    doHashChecks,
 )
 
 pytestmark = pytest.mark.skipif(not rootEnabled, reason="ROOT not set up")
@@ -473,7 +474,9 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash):
 
 
 @pytest.mark.xfail(
-    reason="Digitization from input currently not reproducible", strict=True
+    reason="Digitization from input currently not reproducible",
+    condition=doHashChecks,
+    strict=True,
 )
 def test_digitization_example_input(trk_geo, tmp_path, assert_root_hash):
     from particle_gun import runParticleGun
