@@ -190,7 +190,6 @@ BOOST_DATA_TEST_CASE(DoubleHitSpacePointBuilder_basic, bdata::xrange(1),
     } else {
     }
   }
-  //  // BOOST_CHECK_NE(testMeasurements.size(), 0);
 
   auto spBuilderConfig = DoubleHitSpacePointBuilderConfig();
   spBuilderConfig.trackingGeometry = geometry;
@@ -206,17 +205,16 @@ BOOST_DATA_TEST_CASE(DoubleHitSpacePointBuilder_basic, bdata::xrange(1),
 
   doubleSPBuilder.makeClusterPairs(tgContext, clusters_front, clusters_back,
                                    clusterPairs);
-  // std::endl; BOOST_CHECK_NE(clusterPairs.size(), 0);
+  BOOST_CHECK_NE(clusterPairs.size(), 0);
   doubleSPBuilder.calculateSpacePoints(tgContext, clusterPairs, spacePoints);
 
-  // BOOST_REQUIRE_EQUAL(clusters.size(), spacePoints.size());
+  BOOST_REQUIRE_EQUAL(clusterPairs.size(), spacePoints.size());
   std::cout << "Number of space points " << spacePoints.size() << std::endl;
 
   for (auto& sp : spacePoints) {
     std::cout << "space point (" << sp.x() << " " << sp.y() << " " << sp.z()
               << ") var: " << sp.varianceR() << " " << sp.varianceZ()
               << std::endl;
-    //  //     BOOST_CHECK_NE(data[0].vector, Vector3::Zero());
   }
   std::cout << "Space point calculated" << std::endl;
 }

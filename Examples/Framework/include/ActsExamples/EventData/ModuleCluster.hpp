@@ -29,7 +29,8 @@ class ModuleCluster {
   const Acts::Segmentation& segmentation() const {
     return (*m_segmentation.get());
   }
-   private:
+
+ private:
   measurement_t m_measurement;
   std::shared_ptr<const Acts::Segmentation> m_segmentation;
 };

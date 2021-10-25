@@ -34,7 +34,7 @@ class TestCluster {
  private:
   measurement_t m_measurement;
   std::shared_ptr<const Acts::Segmentation> m_segmentation;
-  };
+};
 
 }  // namespace Test
 }  // namespace Acts

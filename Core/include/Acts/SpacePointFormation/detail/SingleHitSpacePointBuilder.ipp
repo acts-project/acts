@@ -30,11 +30,11 @@ Acts::SingleHitSpacePointBuilder<spacepoint_t, cluster_t>::globalCoords(
   auto slink = std::visit([](const auto& x) { return x.sourceLink(); }, meas);
   const auto geoId = slink.geometryId();
   const Acts::Surface* surface = m_config.trackingGeometry->findSurface(geoId);
-    auto [localPos, localCov] = std::visit(
+  auto [localPos, localCov] = std::visit(
       [](const auto& measurement) {
         auto expander = measurement.expander();
         Acts::BoundVector par = expander * measurement.parameters();
-                Acts::BoundSymMatrix cov =
+        Acts::BoundSymMatrix cov =
             expander * measurement.covariance() * expander.transpose();
         // extract local position
         Acts::Vector2 lpar(par[Acts::eBoundLoc0], par[Acts::eBoundLoc1]);

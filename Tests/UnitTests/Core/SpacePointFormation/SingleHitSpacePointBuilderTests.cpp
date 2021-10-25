@@ -134,33 +134,13 @@ BOOST_DATA_TEST_CASE(SingleHitSpacePointBuilder_basic, bdata::xrange(1),
 
   std::vector<Cluster> clusters;
   for (auto& sl : sourceLinks) {
-    //    TestMeasurement meas = makeMeasurement(sl, sl.parameters,
-    //    sl.covariance,
-    std::cout << "geo ID from source link " << sl.geoId << std::endl;
-    std::cout << "local measurement indices" << std::endl
-              << sl.indices[0] << " " << sl.indices[1] << std::endl;
-    std::cout << "local measurement" << std::endl << sl.parameters << std::endl;
-    // auto meas = makeMeasurement(sl, sl.parameters, sl.covariance, eBoundLoc0,
     auto meas = makeMeasurement(sl, sl.parameters, sl.covariance, sl.indices[0],
                                 sl.indices[1]);
-    // std::cout << "meas parameters " << std::endl << meas.parameters() <<
-    // std::endl;
 
-    auto index0 = sl.indices[0];
-    auto index1 = sl.indices[1];
-    std::cout << "indices:" << index0 << " " << index1 << std::endl;
-
-    // auto par = meas.expander() * meas.parameters();
-    // std::cout << "measurement parameters " << std::endl << par << std::endl;
-    // const auto param = sl.parameters;
-    // const auto gid = sl.geoId;
     auto clus = Cluster(meas, nullptr);  // No segment is needed for pixel SP
-    //  testMeasurements.emplace_back(meas);
+
     clusters.emplace_back(clus);
-    // std::cout << gid << std::endl;
-    // std::cout << param << std::endl;
   }
-  // BOOST_CHECK_NE(testMeasurements.size(), 0);
 
   auto spBuilderConfig = SingleHitSpacePointBuilderConfig();
   spBuilderConfig.trackingGeometry = geometry;
@@ -170,20 +150,10 @@ BOOST_DATA_TEST_CASE(SingleHitSpacePointBuilder_basic, bdata::xrange(1),
           spBuilderConfig);
   TestSpacePointContainer spacePoints;
 
-  //     singleSPBuilder.calculateSpacePoints(geoCtx, testMeasurements,
-  //     spacePoints);
   singleSPBuilder.calculateSpacePoints(geoCtx, clusters, spacePoints);
 
   BOOST_REQUIRE_EQUAL(clusters.size(), spacePoints.size());
   BOOST_CHECK_NE(spacePoints[0].x(), 0);
-
-  //     BOOST_CHECK_NE(data[0].vector, Vector3::Zero());
-  std::cout << "space points:" << std::endl;
-  for (auto sp : spacePoints) {
-    std::cout << sp.x() << " " << sp.y() << " " << sp.z() << std::endl;
-  }
-
-  std::cout << "Space point calculated" << std::endl;
 }
 
 }  // end of namespace Test
