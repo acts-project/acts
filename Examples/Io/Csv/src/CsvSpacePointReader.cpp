@@ -64,10 +64,14 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointReader::read(
     Acts::Vector3 globalPos(data.sp_x, data.sp_y, data.sp_z);
 
     if (m_cfg.inputCollection == "pixel" || m_cfg.inputCollection == "strip" ||
-        m_cfg.inputCollection == "overlap")
-      spacePoints.emplace_back(globalPos, data.sp_covr, data.sp_covz,
-                               data.measurement_id);
-    else {
+        m_cfg.inputCollection == "overlap") {
+      std::vector<Index> measIndices;
+      measIndices.emplace_back(data.measurement_id);
+      auto sp =
+          SimSpacePoint(globalPos, data.sp_covr, data.sp_covz, {measIndices});
+      spacePoints.emplace_back(sp);
+
+    } else {
       ACTS_ERROR("Invalid space point type " << m_cfg.inputStem);
       return ProcessCode::ABORT;
     }

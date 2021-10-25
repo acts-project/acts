@@ -80,7 +80,8 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
   std::unordered_map<Index, const SimSpacePoint*> spMap;
 
   for (const SimSpacePoint& i : spacePoints) {
-    spMap.emplace(i.measurementIndex(), &i);
+    spMap.emplace(i.measurementIndices()[0],
+                  &i);  // To do: add the second measurement for strips
   }
 
   for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
