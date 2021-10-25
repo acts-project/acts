@@ -116,7 +116,7 @@ def buildITkGeometry(geo_dir: Path):
                 zRange=LayerTriplet(
                     negative=(-3000 * u.mm, -377 * u.mm),
                     central=(-377 * u.mm, 377 * u.mm),
-                    positive=(3000 * u.mm, 377 * u.mm),
+                    positive=(377 * u.mm, 3000 * u.mm),
                 ),
                 splitTolR=LayerTriplet(
                     negative=15 * u.mm, central=5 * u.mm, positive=15 * u.mm
