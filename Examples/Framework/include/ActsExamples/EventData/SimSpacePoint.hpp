@@ -61,8 +61,7 @@ class SimSpacePoint {
   // Variance in rho/z of the global coordinates
   float m_varianceRho;
   float m_varianceZ;
-  // Index of the corresponding measurement
-  // Index m_measurementIndex;
+  // Indices of the corresponding measurements
   std::vector<Index> m_measurementIndices;
 };
 
@@ -70,8 +69,6 @@ inline bool operator==(const SimSpacePoint& lhs, const SimSpacePoint& rhs) {
   // TODO would it be sufficient to check just the index under the assumption
   //   that the same measurement index always produces the same space point?
   // no need to check r since it is fully defined by x/y
-  //  return (std::equal(lhs.measurementIndices().begin(),
-  // lhs.measurementIndices().end(),rhs.measurementIndices().begin())) and
   return (lhs.measurementIndices() == rhs.measurementIndices()) and
          (lhs.x() == rhs.x()) and (lhs.y() == rhs.y()) and
          (lhs.z() == rhs.z()) and (lhs.varianceR() == rhs.varianceR()) and

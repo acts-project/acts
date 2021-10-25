@@ -8,7 +8,6 @@
 
 #pragma once
 #include "Acts/Definitions/TrackParametrization.hpp"
-//#include "Acts/EventData/Measurement.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.h"
@@ -63,7 +62,7 @@ class SingleHitSpacePointBuilder {
   std::pair<Vector3, Vector2> globalCoords(const GeometryContext& gctx,
                                            const cluster_t& meas) const;
 
-  // configuration of the strip builder
+  // configuration of the single hit space point builder
   SingleHitSpacePointBuilderConfig m_config;
 };
 }  // namespace Acts
