@@ -285,7 +285,23 @@ struct grid_helper_impl {
     // ask n-th axis
     size_t locIdx = localIndices.at(N);
     NeighborHoodIndices locNeighbors =
-        std::get<N>(axes).neighborHoodIndices(locIdx, sizes);
+        std::get<N>(axes).neighborHoodIndices(locIdx, sizes.at(N));
+    neighborIndices.at(N) = locNeighbors;
+
+    grid_helper_impl<N - 1>::neighborHoodIndices(localIndices, sizes, axes,
+                                                 neighborIndices);
+  }
+
+  template <class... Axes>
+  static void neighborHoodIndices(
+      const std::array<size_t, sizeof...(Axes)>& localIndices,
+      std::array<std::pair<int, int>,sizeof...(Axes)> sizes,
+      const std::tuple<Axes...>& axes,
+      std::array<NeighborHoodIndices, sizeof...(Axes)>& neighborIndices) {
+    // ask n-th axis
+    size_t locIdx = localIndices.at(N);
+    NeighborHoodIndices locNeighbors =
+        std::get<N>(axes).neighborHoodIndices(locIdx, sizes.at(N));
     neighborIndices.at(N) = locNeighbors;
 
     grid_helper_impl<N - 1>::neighborHoodIndices(localIndices, sizes, axes,
@@ -770,6 +786,47 @@ struct grid_helper {
       const std::array<size_t, sizeof...(Axes)>& localIndices, size_t size,
       const std::tuple<Axes...>& axes) {
     return neighborHoodIndices(localIndices, std::make_pair(size, size), axes);
+  }
+
+  /// @brief get global bin indices for bins in specified neighborhood
+  ///        for each axis
+  ///
+  /// @tparam Axes parameter pack of axis types defining the grid
+  /// @param  [in] localIndices local bin indices along each axis
+  /// @param  [in] size         size of neighborhood for each axis, which
+  ///                           bins along each axis are considered
+  /// @param  [in] axes         actual axis objects spanning the grid
+  /// @return Sorted collection of global bin indices for all bins in
+  ///         the neighborhood
+  ///
+  /// @note Over-/underflow bins are included in the neighborhood.
+  /// @note The @c size parameter sets the range by how many units each local
+  ///       bin index is allowed to be varied. All local bin indices are
+  ///       varied independently, that is diagonal neighbors are included.
+  ///       Ignoring the truncation of the neighborhood size reaching beyond
+  ///       over-/underflow bins, the neighborhood is of size \f$2 \times
+  ///       \text{size}+1\f$ along each dimension.
+  /// @note The concrete bins which are returned depend on the WrappingTypes
+  ///       of the contained axes
+  ///
+  template <class... Axes>
+  static GlobalNeighborHoodIndices<sizeof...(Axes)> neighborHoodIndices(
+      const std::array<size_t, sizeof...(Axes)>& localIndices,
+      std::array<std::pair<int, int>, sizeof...(Axes)>& sizes,
+      const std::tuple<Axes...>& axes) {
+    constexpr size_t MAX = sizeof...(Axes) - 1;
+
+    // length N array which contains local neighbors based on size par
+    std::array<NeighborHoodIndices, sizeof...(Axes)> neighborIndices;
+    // get local bin indices for neighboring bins
+    grid_helper_impl<MAX>::neighborHoodIndices(localIndices, sizes, axes,
+                                               neighborIndices);
+
+    // Query the number of bins
+    std::array<size_t, sizeof...(Axes)> nBinsArray = getNBins(axes);
+
+    // Produce iterator of global indices
+    return GlobalNeighborHoodIndices(neighborIndices, nBinsArray);
   }
 
   /// @brief get bin indices of all overflow and underflow bins

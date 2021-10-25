@@ -1070,6 +1070,16 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
                 == bins_t({1556, 1557, 1558, 1568, 1569, 1570, 1580, 1581,
                            1582, 1700, 1701, 1702, 1712, 1713, 1714, 1724,
                            1725, 1726}));
+
+    // Neighbors array
+    BOOST_CHECK(g1.neighborHoodIndices({{0}},{{-1,1}}).collectVector()
+                == bins_t({0,1}));
+    BOOST_CHECK(g1.neighborHoodIndices({{2}},{{-1,1}}).collectVector()
+                == bins_t({1,2,3}));
+    BOOST_CHECK(g1.neighborHoodIndices({{2}},{{2,3}}).collectVector()
+                == bins_t({4,5}));
+    BOOST_CHECK(g1.neighborHoodIndices({{2}},{{-2,-1}}).collectVector()
+                == bins_t({0,1}));
   // clang-format on
 
   using EAxisClosed = Axis<AxisType::Equidistant, AxisBoundaryType::Closed>;
