@@ -88,8 +88,7 @@ class CartesianSegmentation : public Segmentation {
   /// correct for lorentz effect if needed
   ///
   /// @copydoc Segmentation::digitizationStep
-  DigitizationStep digitizationStep(const Vector3& startStep,
-                                    const Vector3& endStep,
+  DigitizationStep digitizationStep(const Vector3& start, const Vector3& end,
                                     double halfThickness,
                                     int readoutDirection = 1,
                                     double lorentzAngle = 0.) const final;

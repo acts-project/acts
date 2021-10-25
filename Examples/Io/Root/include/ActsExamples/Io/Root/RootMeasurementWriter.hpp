@@ -15,7 +15,6 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -244,13 +243,16 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
   /// Constructor with
   /// @param cfg configuration struct
   /// @param output logging level
-  RootMeasurementWriter(const Config& cfg, Acts::Logging::Level lvl);
+  RootMeasurementWriter(const Config& config, Acts::Logging::Level level);
 
   /// Virtual destructor
   ~RootMeasurementWriter() final override;
 
   /// End-of-run hook
   ProcessCode endRun() final override;
+
+  /// Get const access to the config
+  const Config& config() const { return m_cfg; }
 
  protected:
   /// This implementation holds the actual writing method

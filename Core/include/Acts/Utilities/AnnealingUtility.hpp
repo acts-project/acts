@@ -55,6 +55,7 @@ class AnnealingUtility {
 
   /// @brief Weight access
   ///
+  /// @param state The state object
   /// @param chi2 Chi^2 for e.g. current track, i.e. compatibility
   /// of track to current vertex candidate
   /// @param allChi2 Vector of all chi^2 values, i.e. e.g. compatibilities
@@ -66,6 +67,7 @@ class AnnealingUtility {
 
   /// @brief Weight access
   ///
+  /// @param state The state object
   /// @param chi2 Chi^2
   ///
   /// @return Calculated weight

@@ -74,7 +74,7 @@ class DiscLayer : virtual public DiscSurface, public Layer {
   /// @param dbounds are the disc bounds that describe the layer dimensions
   /// @param surfaceArray is the array of sensitive surfaces
   /// @param thickness is the layer thickness (along the normal vector)
-  /// @param ad is the approach descriptor that provides the approach surface
+  /// @param ades Are the approach descriptors that provides the approach surface
   /// @param laytyp is the layer taype
   DiscLayer(const Transform3& transform,
             const std::shared_ptr<const DiscBounds>& dbounds,

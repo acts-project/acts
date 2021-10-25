@@ -28,7 +28,8 @@ struct VoidBranchStopper {
   ///
   /// @return The resulting
   template <typename track_quality_t>
-  bool operator()(const track_quality_t& /*trackQuality*/) const {
+  bool operator()(const track_quality_t& trackQuality) const {
+    (void)trackQuality;
     return false;
   }
 };

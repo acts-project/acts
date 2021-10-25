@@ -165,7 +165,8 @@ BOOST_AUTO_TEST_CASE(UpdateFromBound) {
   //         the update method not do anything when it is set. Why?
   state.state_ready = false;
   BOOST_CHECK(params.covariance().has_value());
-  stepper.update(state, freeParams, *params.covariance());
+  stepper.update(state, freeParams, params.parameters(), *params.covariance(),
+                 *plane);
   CHECK_CLOSE_ABS(stepper.position(state), newPos, eps);
   CHECK_CLOSE_ABS(stepper.time(state), newTime, eps);
   CHECK_CLOSE_ABS(stepper.direction(state), newUnitDir, eps);

@@ -16,6 +16,8 @@
 #include <stdexcept>
 
 #include <FTFP_BERT.hh>
+#include <G4RunManager.hh>
+#include <G4VUserDetectorConstruction.hh>
 #include <HepMC3/GenParticle.h>
 
 #include "EventAction.hpp"
@@ -29,9 +31,10 @@ ActsExamples::EventRecording::~EventRecording() {
 }
 
 ActsExamples::EventRecording::EventRecording(
-    ActsExamples::EventRecording::Config&& cnf, Acts::Logging::Level level)
+    const ActsExamples::EventRecording::Config& config,
+    Acts::Logging::Level level)
     : ActsExamples::BareAlgorithm("EventRecording", level),
-      m_cfg(std::move(cnf)),
+      m_cfg(config),
       m_runManager(std::make_unique<G4RunManager>()) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input particle collection");
@@ -39,20 +42,21 @@ ActsExamples::EventRecording::EventRecording(
   if (m_cfg.outputHepMcTracks.empty()) {
     throw std::invalid_argument("Missing output event collection");
   }
-  if (!m_cfg.detectorConstruction) {
+  if (m_cfg.detectorConstruction == nullptr) {
     throw std::invalid_argument("Missing detector construction object");
   }
 
   /// Now set up the Geant4 simulation
-  m_runManager->SetUserInitialization(m_cfg.detectorConstruction.release());
+  m_runManager->SetUserInitialization(m_cfg.detectorConstruction);
   m_runManager->SetUserInitialization(new FTFP_BERT);
-  m_runManager->SetUserAction(new ActsExamples::RunAction());
+  m_runManager->SetUserAction(new ActsExamples::Geant4::HepMC3::RunAction());
   m_runManager->SetUserAction(
-      new ActsExamples::EventAction(m_cfg.processesCombine));
+      new ActsExamples::Geant4::HepMC3::EventAction(m_cfg.processesCombine));
   m_runManager->SetUserAction(
-      new ActsExamples::PrimaryGeneratorAction(m_cfg.seed1, m_cfg.seed2));
+      new ActsExamples::Geant4::HepMC3::PrimaryGeneratorAction(m_cfg.seed1,
+                                                               m_cfg.seed2));
   m_runManager->SetUserAction(
-      new ActsExamples::SteppingAction(m_cfg.processesReject));
+      new ActsExamples::Geant4::HepMC3::SteppingAction(m_cfg.processesReject));
   m_runManager->Initialize();
 }
 
@@ -72,18 +76,20 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
 
   for (const auto& part : initialParticles) {
     // Prepare the particle gun
-    ActsExamples::PrimaryGeneratorAction::instance()->prepareParticleGun(part);
+    ActsExamples::Geant4::HepMC3::PrimaryGeneratorAction::instance()
+        ->prepareParticleGun(part);
 
     // Begin with the simulation
     m_runManager->BeamOn(1);
 
     // Test if the event was aborted
-    if (SteppingAction::instance()->eventAborted()) {
+    if (Geant4::HepMC3::SteppingAction::instance()->eventAborted()) {
       continue;
     }
 
     // Set event start time
-    HepMC3::GenEvent event = ActsExamples::EventAction::instance()->event();
+    HepMC3::GenEvent event =
+        ActsExamples::Geant4::HepMC3::EventAction::instance()->event();
     HepMC3::FourVector shift(0., 0., 0., part.time() / Acts::UnitConstants::mm);
     event.shift_position_by(shift);
 
@@ -127,12 +133,28 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
       }
       // Store the result
       if (storeEvent) {
-        // Remove vertices without outgoing particles
-        for (auto it = event.vertices().crbegin();
-             it != event.vertices().crend(); it++) {
-          if ((*it)->particles_out().empty()) {
-            event.remove_vertex(*it);
+        // Remove vertices w/o outgoing particles and particles w/o production
+        // vertices
+        while (true) {
+          bool sane = true;
+          for (auto v : event.vertices()) {
+            if (!v)
+              continue;
+            if (v->particles_out().empty()) {
+              event.remove_vertex(v);
+              sane = false;
+            }
           }
+          for (auto p : event.particles()) {
+            if (!p)
+              continue;
+            if (!p->production_vertex()) {
+              event.remove_particle(p);
+              sane = false;
+            }
+          }
+          if (sane)
+            break;
         }
         events.push_back(std::move(event));
       }

@@ -30,7 +30,6 @@ class PlanarModuleStepper {
  public:
   /// Constructor
   ///
-  /// @param pmsConfig is the configuration
   /// @param mlogger is the logging istance
   PlanarModuleStepper(std::unique_ptr<const Logger> mlogger = getDefaultLogger(
                           "PlanarModuleStepper", Logging::INFO));

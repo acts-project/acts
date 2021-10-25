@@ -39,35 +39,45 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Missing seeds output collection");
   }
 
-  m_gridCfg.bFieldInZ = m_cfg.bFieldInZ;
-  m_gridCfg.minPt = m_cfg.minPt;
-  m_gridCfg.rMax = m_cfg.rMax;
-  m_gridCfg.zMax = m_cfg.zMax;
-  m_gridCfg.zMin = m_cfg.zMin;
-  m_gridCfg.deltaRMax = m_cfg.deltaRMax;
-  m_gridCfg.cotThetaMax = m_cfg.cotThetaMax;
+  if (m_cfg.gridConfig.rMax != m_cfg.seedFinderConfig.rMax) {
+    throw std::invalid_argument("Inconsistent config rMax");
+  }
 
-  // construct seed filter
-  Acts::SeedFilterConfig filterCfg;
-  filterCfg.maxSeedsPerSpM = m_cfg.maxSeedsPerSpM;
-  m_finderCfg.seedFilter = std::make_unique<Acts::SeedFilter<SimSpacePoint>>(
-      Acts::SeedFilter<SimSpacePoint>(filterCfg));
+  if (m_cfg.seedFilterConfig.deltaRMin != m_cfg.seedFinderConfig.deltaRMin) {
+    throw std::invalid_argument("Inconsistent config deltaRMin");
+  }
 
-  m_finderCfg.rMax = m_cfg.rMax;
-  m_finderCfg.deltaRMin = m_cfg.deltaRMin;
-  m_finderCfg.deltaRMax = m_cfg.deltaRMax;
-  m_finderCfg.collisionRegionMin = m_cfg.collisionRegionMin;
-  m_finderCfg.collisionRegionMax = m_cfg.collisionRegionMax;
-  m_finderCfg.zMin = m_cfg.zMin;
-  m_finderCfg.zMax = m_cfg.zMax;
-  m_finderCfg.maxSeedsPerSpM = m_cfg.maxSeedsPerSpM;
-  m_finderCfg.cotThetaMax = m_cfg.cotThetaMax;
-  m_finderCfg.sigmaScattering = m_cfg.sigmaScattering;
-  m_finderCfg.radLengthPerSeed = m_cfg.radLengthPerSeed;
-  m_finderCfg.minPt = m_cfg.minPt;
-  m_finderCfg.bFieldInZ = m_cfg.bFieldInZ;
-  m_finderCfg.beamPos = Acts::Vector2(m_cfg.beamPosX, m_cfg.beamPosY);
-  m_finderCfg.impactMax = m_cfg.impactMax;
+  if (m_cfg.gridConfig.deltaRMax != m_cfg.seedFinderConfig.deltaRMax) {
+    throw std::invalid_argument("Inconsistent config deltaRMax");
+  }
+
+  if (m_cfg.gridConfig.zMin != m_cfg.seedFinderConfig.zMin) {
+    throw std::invalid_argument("Inconsistent config zMin");
+  }
+
+  if (m_cfg.gridConfig.zMax != m_cfg.seedFinderConfig.zMax) {
+    throw std::invalid_argument("Inconsistent config zMax");
+  }
+
+  if (m_cfg.seedFilterConfig.maxSeedsPerSpM !=
+      m_cfg.seedFinderConfig.maxSeedsPerSpM) {
+    throw std::invalid_argument("Inconsistent config maxSeedsPerSpM");
+  }
+
+  if (m_cfg.gridConfig.cotThetaMax != m_cfg.seedFinderConfig.cotThetaMax) {
+    throw std::invalid_argument("Inconsistent config cotThetaMax");
+  }
+
+  if (m_cfg.gridConfig.minPt != m_cfg.seedFinderConfig.minPt) {
+    throw std::invalid_argument("Inconsistent config minPt");
+  }
+
+  if (m_cfg.gridConfig.bFieldInZ != m_cfg.seedFinderConfig.bFieldInZ) {
+    throw std::invalid_argument("Inconsistent config bFieldInZ");
+  }
+
+  m_cfg.seedFinderConfig.seedFilter =
+      std::make_unique<Acts::SeedFilter<SimSpacePoint>>(m_cfg.seedFilterConfig);
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
@@ -104,28 +114,33 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       Acts::BinFinder<SimSpacePoint>());
   auto topBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
       Acts::BinFinder<SimSpacePoint>());
-  auto grid = Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(m_gridCfg);
+  auto grid =
+      Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(m_cfg.gridConfig);
   auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
       spacePointPtrs.begin(), spacePointPtrs.end(), extractGlobalQuantities,
-      bottomBinFinder, topBinFinder, std::move(grid), m_finderCfg);
-  auto finder = Acts::Seedfinder<SimSpacePoint>(m_finderCfg);
+      bottomBinFinder, topBinFinder, std::move(grid), m_cfg.seedFinderConfig);
+  auto finder = Acts::Seedfinder<SimSpacePoint>(m_cfg.seedFinderConfig);
 
   // run the seeding
-  SimSeedContainer seeds;
+  static thread_local SimSeedContainer seeds;
+  seeds.clear();
+  static thread_local decltype(finder)::State state;
+
   auto group = spacePointsGrouping.begin();
   auto groupEnd = spacePointsGrouping.end();
   for (; !(group == groupEnd); ++group) {
-    const auto& groupSeeds =
-        finder.createSeedsForGroup(group.bottom(), group.middle(), group.top());
-    std::copy(groupSeeds.begin(), groupSeeds.end(), std::back_inserter(seeds));
+    finder.createSeedsForGroup(state, std::back_inserter(seeds), group.bottom(),
+                               group.middle(), group.top());
   }
 
   // extract proto tracks, i.e. groups of measurement indices, from tracks seeds
   size_t nSeeds = seeds.size();
-  ProtoTrackContainer protoTracks;
+  static thread_local ProtoTrackContainer protoTracks;
+  protoTracks.clear();
+
   protoTracks.reserve(nSeeds);
   for (const auto& seed : seeds) {
-    ProtoTrack protoTrack;
+    ProtoTrack& protoTrack = protoTracks.emplace_back();
     protoTrack.reserve(seed.sp().size());
     for (auto spacePointPtr : seed.sp()) {
       if (spacePointPtr->measurementIndices().size() > 0) {
@@ -134,13 +149,12 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       } else
         ACTS_WARNING("Missing measurement index");
     }
-    protoTracks.push_back(std::move(protoTrack));
   }
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePointPtrs.size() << " space points");
 
-  ctx.eventStore.add(m_cfg.outputSeeds, std::move(seeds));
-  ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(protoTracks));
+  ctx.eventStore.add(m_cfg.outputSeeds, SimSeedContainer{seeds});
+  ctx.eventStore.add(m_cfg.outputProtoTracks, ProtoTrackContainer{protoTracks});
   return ActsExamples::ProcessCode::SUCCESS;
 }

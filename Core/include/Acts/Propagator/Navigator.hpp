@@ -69,11 +69,13 @@ struct NavigationOptions {
 
   /// Constructor
   ///
-  /// @param nDir Navigation direction prescription
+  /// @param ndir Navigation direction prescription
   /// @param bcheck Boundary check for the navigation action
+  /// @param resolves Boolean whether to resolve sensitives
+  /// @param resolvem Boolean whether to resolve material
+  /// @param resolvep Boolean whether to resolve passives
   /// @param sobject Start object to check against
   /// @param eobject End object to check against
-  /// @param maxStepLength Maximal step length to check against
   NavigationOptions(NavigationDirection ndir, BoundaryCheck bcheck,
                     bool resolves = true, bool resolvem = true,
                     bool resolvep = false, const object_t* sobject = nullptr,
@@ -210,6 +212,42 @@ class Navigator {
     bool navigationBreak = false;
     // The navigation stage (@todo: integrate break, target)
     Stage navigationStage = Stage::undefined;
+
+    /// Reset state
+    ///
+    /// @param geoContext is the geometry context
+    /// @param pos is the global position
+    /// @param dir is the momentum direction
+    /// @param navDir is the navigation direction
+    /// @param ssurface is the new starting surface
+    /// @param tsurface is the target surface
+    void reset(const GeometryContext& geoContext, const Vector3& pos,
+               const Vector3& dir, NavigationDirection navDir,
+               const Surface* ssurface, const Surface* tsurface) {
+      // Reset everything first
+      *this = State();
+
+      // Set the start, current and target objects
+      startSurface = ssurface;
+      if (ssurface->associatedLayer() != nullptr) {
+        startLayer = ssurface->associatedLayer();
+      }
+      if (startLayer->trackingVolume() != nullptr) {
+        startVolume = startLayer->trackingVolume();
+      }
+      currentSurface = startSurface;
+      currentVolume = startVolume;
+      targetSurface = tsurface;
+
+      // Get the compatible layers (including the current layer)
+      NavigationOptions<Layer> navOpts(navDir, true, true, true, true, nullptr,
+                                       nullptr);
+      navLayers =
+          currentVolume->compatibleLayers(geoContext, pos, dir, navOpts);
+
+      // Set the iterator to the first
+      navLayerIter = navLayers.begin();
+    }
   };
 
   /// Constructor with configuration object
@@ -274,6 +312,12 @@ class Navigator {
           // this was the last surface, check if we have layers
           if (!state.navigation.navLayers.empty()) {
             ++state.navigation.navLayerIter;
+          } else if (state.navigation.startLayer != nullptr and
+                     state.navigation.currentSurface->associatedLayer() ==
+                         state.navigation.startLayer) {
+            // this was the start layer, switch to layer target next
+            state.navigation.navigationStage = Stage::layerTarget;
+            return;
           } else {
             // no layers, go to boundary
             state.navigation.navigationStage = Stage::boundaryTarget;
@@ -385,7 +429,6 @@ class Navigator {
       // Find out about the target as much as you can
       initializeTarget(state, stepper);
     }
-
     // Try targeting the surfaces - then layers - then boundaries
     if (state.navigation.navigationStage <= Stage::surfaceTarget and
         targetSurfaces(state, stepper)) {
@@ -565,7 +608,6 @@ class Navigator {
     if (state.navigation.navigationBreak) {
       return false;
     }
-
     // Make sure resolve Surfaces is called on the start layer
     if (state.navigation.startLayer and
         not state.navigation.startLayerResolved) {
@@ -678,6 +720,7 @@ class Navigator {
   template <typename propagator_state_t, typename stepper_t>
   bool targetLayers(propagator_state_t& state, const stepper_t& stepper) const {
     using namespace UnitLiterals;
+
     const auto& logger = state.options.logger;
 
     if (state.navigation.navigationBreak ||

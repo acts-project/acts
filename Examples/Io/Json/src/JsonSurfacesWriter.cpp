@@ -20,11 +20,11 @@
 
 using namespace ActsExamples;
 
-JsonSurfacesWriter::JsonSurfacesWriter(const JsonSurfacesWriter::Config& cfg,
-                                       Acts::Logging::Level lvl)
-    : m_cfg(cfg),
+JsonSurfacesWriter::JsonSurfacesWriter(const JsonSurfacesWriter::Config& config,
+                                       Acts::Logging::Level level)
+    : m_cfg(config),
       m_world(nullptr),
-      m_logger(Acts::getDefaultLogger("JsonSurfacesWriter", lvl)) {
+      m_logger(Acts::getDefaultLogger("JsonSurfacesWriter", level)) {
   if (not m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
@@ -74,8 +74,8 @@ void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,
       if (layer->surfaceArray() and writeSensitive) {
         for (auto surface : layer->surfaceArray()->surfaces()) {
           if (surface) {
-            cSurfaces.push_back(
-                SurfaceContainer::InputElement{surface->geometryId(), surface});
+            cSurfaces.push_back(SurfaceContainer::InputElement{
+                surface->geometryId(), surface->getSharedPtr()});
           }
         }
       }

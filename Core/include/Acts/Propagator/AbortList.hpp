@@ -72,13 +72,13 @@ struct AbortList : public detail::Extendable<aborters_t...> {
 
   /// Constructor from tuple
   ///
-  /// @param extensions Source extensions tuple
+  /// @param aborters Source extensions tuple
   AbortList(const std::tuple<aborters_t...>& aborters)
       : detail::Extendable<aborters_t...>(aborters) {}
 
   /// Constructor from tuple move
   ///
-  /// @param extensions Source extensions tuple
+  /// @param aborters Source extensions tuple
   AbortList(std::tuple<aborters_t...>&& aborters)
       : detail::Extendable<aborters_t...>(std::move(aborters)) {}
 

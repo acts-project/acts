@@ -179,7 +179,6 @@ class DiscSurface : public Surface {
   /// Special method for DiscSurface : local<->local transformations polar <->
   /// cartesian
   ///
-  /// @param gctx The current geometry context object, e.g. alignment
   /// @param locpol is a local position in polar coordinates
   ///
   /// @return values is local 2D position in cartesian coordinates

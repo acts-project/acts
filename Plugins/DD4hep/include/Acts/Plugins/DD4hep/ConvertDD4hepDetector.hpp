@@ -20,8 +20,8 @@
 namespace Acts {
 
 /// Sort function which sorts dd4hep::DetElement by their ID
-/// @param[in][out] det the dd4hep::DetElements to be sorted
-void sortDetElementsByID(std::vector<dd4hep::DetElement>& det) {
+/// @param [in,out] det the dd4hep::DetElements to be sorted
+inline void sortDetElementsByID(std::vector<dd4hep::DetElement>& det) {
   sort(det.begin(), det.end(),
        [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
          return (a.id() < b.id());
@@ -33,7 +33,7 @@ void sortDetElementsByID(std::vector<dd4hep::DetElement>& det) {
 /// This method returns a std::unique_ptr of the TrackingGeometry from the
 /// World DD4hep \a DetElement.
 /// @pre Before using this method make sure, that the preconditions described in
-/// @ref DD4hepPlugins are met.
+/// DD4hepPlugins are met.
 ///
 ///
 /// @param [in] worldDetElement the DD4hep DetElement of the world
@@ -66,12 +66,16 @@ void sortDetElementsByID(std::vector<dd4hep::DetElement>& det) {
 ///       the material will have the'real' thickness.
 /// @attention The default thickness should be set thin enough that no
 ///            touching or overlapping with the next layer can happen.
-/// @param [in] sortSubDetectors std::function which should be used in order to
-/// sort all sub detectors (=all Detelements collected by the method
-/// collectSubDetectors()) from bottom to top to ensure correct wrapping of the
-/// volumes, which is needed for navigation. Therefore the different hierachies
-/// need to be sorted ascending. The default is sorting by ID.
-/// @param matDetcroator is the material decorator that loads material maps
+/// @param [in] sortSubDetectors @c std::function which should be used in order to
+///                              sort all sub detectors (=all Detelements
+///                              collected by the method
+///                              @c collectSubDetectors() ) from bottom to top to
+///                              ensure correct wrapping of the volumes, which
+///                              is needed for navigation. Therefore the
+///                              different hierachies need to be sorted
+///                              ascending. The default is sorting by ID.
+/// @param gctx The geometry context to use
+/// @param matDecorator is the material decorator that loads material maps
 ///
 /// @exception std::logic_error if an error in the translation occurs
 /// @return std::unique_ptr to the full TrackingGeometry
@@ -101,7 +105,7 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
 /// 'isBeampipe' by their extension.
 ///
 ///
-/// @param [in] worldDetElement the DD4hep DetElement of the world
+/// @param [in] subDetector the DD4hep DetElement of the subdetector
 /// @param [in] loggingLevel is the debug logging level of the conversion and
 /// geometry building
 /// @param [in] bTypePhi is how the sensitive surfaces (modules) should be

@@ -25,10 +25,6 @@ namespace Acts {
 
 class MaterialSlab;
 
-/// list of point used in the mapping of a volume
-using RecordedMaterialVolumePoint =
-    std::vector<std::pair<Acts::MaterialSlab, std::vector<Acts::Vector3>>>;
-
 using EAxis = Acts::detail::EquidistantAxis;
 using Grid2D =
     Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
@@ -68,7 +64,7 @@ Grid3D createGrid(std::array<double, 3> gridAxis1,
 /// @brief return a function that return the coordinate corresponding to type of
 /// bin
 ///
-/// @param [in] Type of bin
+/// @param [in] type Type of bin
 ///
 /// @return a coordinate transform function
 std::function<double(Acts::Vector3)> globalToLocalFromBin(
@@ -78,8 +74,8 @@ std::function<double(Acts::Vector3)> globalToLocalFromBin(
 /// Also determine the coresponding global to local transform and grid mapping
 /// function
 ///
-/// @param [in] BinUtility of the volume to be mapped
-/// @param [in] Global to local transform to be updated.
+/// @param [in] bins BinUtility of the volume to be mapped
+/// @param [in] transfoGlobalToLocal Global to local transform to be updated.
 ///
 /// @return the 3D grid
 Grid2D createGrid2D(
@@ -90,8 +86,8 @@ Grid2D createGrid2D(
 /// Also determine the coresponding global to local transform and grid mapping
 /// function
 ///
-/// @param [in] BinUtility of the volume to be mapped
-/// @param [in] Global to local transform to be updated.
+/// @param [in] bins BinUtility of the volume to be mapped
+/// @param [in] transfoGlobalToLocal Global to local transform to be updated.
 ///
 /// @return the 3D grid
 Grid3D createGrid3D(

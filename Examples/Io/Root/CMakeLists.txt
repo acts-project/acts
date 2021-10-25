@@ -15,6 +15,7 @@ add_library(
   src/RootTrajectorySummaryReader.cpp
   src/RootTrajectorySummaryWriter.cpp
   src/RootVertexPerformanceWriter.cpp
+  src/RootBFieldWriter.cpp
 )
 target_include_directories(
   ActsExamplesIoRoot
@@ -23,7 +24,7 @@ target_link_libraries(
   ActsExamplesIoRoot
   PUBLIC
     ActsCore ActsPluginDigitization ActsPluginIdentification ActsExamplesDigitization
-    ActsExamplesFramework ActsExamplesPropagation ActsExamplesTruthTracking
+    ActsExamplesFramework ActsExamplesPropagation ActsExamplesTruthTracking ActsExamplesMaterialMapping
     Threads::Threads
   PRIVATE ROOT::Core ROOT::Hist ROOT::Tree)
 

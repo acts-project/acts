@@ -108,6 +108,9 @@ class DigitizationConfig {
       const Options::Variables &vars,
       Acts::GeometryHierarchyMap<DigiComponentsConfig> &&digiCfgs);
 
+  DigitizationConfig(
+      Acts::GeometryHierarchyMap<DigiComponentsConfig> &&digiCfgs);
+
   /// Input collection of simulated hits.
   std::string inputSimHits = "simhits";
   /// Output source links collection.
@@ -124,8 +127,6 @@ class DigitizationConfig {
   std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr;
   /// Random numbers tool.
   std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
-  /// Was the simple smearer requested
-  const bool isSimpleSmearer;
   /// Do we merge hits or not
   const bool doMerge;
   /// How close do parameters have to be to consider merged
@@ -137,14 +138,6 @@ class DigitizationConfig {
 
   std::vector<
       std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
-  getBoundIndices();
-
- private:
-  // Private initializer for SmearingAlgorithm
-  void smearingConfig(const Options::Variables &vars);
+  getBoundIndices() const;
 };
-
-std::shared_ptr<ActsExamples::IAlgorithm> createDigitizationAlgorithm(
-    DigitizationConfig &cfg, Acts::Logging::Level lvl);
-
 }  // namespace ActsExamples

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -35,6 +35,10 @@
 #include "ATLASCuts.hpp"
 #include "CommandLineArguments.h"
 #include "SpacePoint.hpp"
+#include "vecmem/memory/sycl/device_memory_resource.hpp"
+#include "vecmem/memory/sycl/host_memory_resource.hpp"
+
+using namespace Acts::UnitLiterals;
 
 auto readFile(const std::string& filename) -> std::vector<const SpacePoint*> {
   std::string line;
@@ -83,21 +87,21 @@ auto setupSeedfinderConfiguration()
     -> Acts::SeedfinderConfig<external_spacepoint_t> {
   Acts::SeedfinderConfig<SpacePoint> config;
   // silicon detector max
-  config.rMax = 160.;
-  config.deltaRMin = 5.;
-  config.deltaRMax = 160.;
-  config.collisionRegionMin = -250.;
-  config.collisionRegionMax = 250.;
-  config.zMin = -2800.;
-  config.zMax = 2800.;
+  config.rMax = 160._mm;
+  config.deltaRMin = 5._mm;
+  config.deltaRMax = 160._mm;
+  config.collisionRegionMin = -250._mm;
+  config.collisionRegionMax = 250._mm;
+  config.zMin = -2800._mm;
+  config.zMax = 2800._mm;
   config.maxSeedsPerSpM = 5;
   // 2.7 eta
   config.cotThetaMax = 7.40627;
   config.sigmaScattering = 1.00000;
-  config.minPt = 500.;
-  config.bFieldInZ = 0.00199724;
-  config.beamPos = {-.5, -.5};
-  config.impactMax = 10.;
+  config.minPt = 500._MeV;
+  config.bFieldInZ = 1.99724_T;
+  config.beamPos = {-.5_mm, -.5_mm};
+  config.impactMax = 10._mm;
 
   // for sycl
   config.nTrplPerSpBLimit = 100;
@@ -146,11 +150,13 @@ auto main(int argc, char** argv) -> int {
 
   const Acts::Logging::Level logLvl =
       cmdlTool.csvFormat ? Acts::Logging::WARNING : Acts::Logging::INFO;
+  Acts::Sycl::QueueWrapper queue(
+      cmdlTool.deviceName,
+      Acts::getDefaultLogger("Sycl::QueueWrapper", logLvl));
+  vecmem::sycl::host_memory_resource resource(queue.getQueue());
+  vecmem::sycl::device_memory_resource device_resource(queue.getQueue());
   Acts::Sycl::Seedfinder<SpacePoint> syclSeedfinder(
-      config, deviceAtlasCuts,
-      Acts::Sycl::QueueWrapper(
-          cmdlTool.deviceName,
-          Acts::getDefaultLogger("Sycl::QueueWrapper", logLvl)));
+      config, deviceAtlasCuts, queue, resource, &device_resource);
   Acts::Seedfinder<SpacePoint> normalSeedfinder(config);
   auto globalTool =
       [=](const SpacePoint& sp, float /*unused*/, float /*unused*/,
@@ -188,10 +194,12 @@ auto main(int argc, char** argv) -> int {
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
 
   if (!cmdlTool.onlyGpu) {
+    decltype(normalSeedfinder)::State state;
     for (auto groupIt = spGroup.begin(); !(groupIt == spGroup.end());
          ++groupIt) {
-      seedVector_cpu.push_back(normalSeedfinder.createSeedsForGroup(
-          groupIt.bottom(), groupIt.middle(), groupIt.top()));
+      normalSeedfinder.createSeedsForGroup(
+          state, std::back_inserter(seedVector_cpu.emplace_back()),
+          groupIt.bottom(), groupIt.middle(), groupIt.top());
       group_count++;
       if (!cmdlTool.allgroup && group_count >= cmdlTool.groups) {
         break;

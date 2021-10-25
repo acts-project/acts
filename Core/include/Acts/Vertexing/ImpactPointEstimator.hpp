@@ -39,11 +39,11 @@ template <typename input_track_t, typename propagator_t,
           typename propagator_options_t = PropagatorOptions<>>
 class ImpactPointEstimator {
  public:
-  /// @struct State struct
+  /// State struct
   struct State {
     /// @brief The state constructor
     ///
-    /// @param mctx The magnetic field context
+    /// @param fieldCacheIn The magnetic field cache
     State(MagneticFieldProvider::Cache fieldCacheIn)
         : fieldCache(std::move(fieldCacheIn)) {}
     /// Magnetic field cache
@@ -123,7 +123,7 @@ class ImpactPointEstimator {
   /// distance between the track and the vertex
   ///
   /// @param gctx The Geometry context
-  /// @param track Track parameters at point of closest
+  /// @param trkParams Track parameters at point of closest
   /// approach in 3d as retrieved by estimate3DImpactParameters
   /// @param vertexPos The vertex position
   ///

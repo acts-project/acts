@@ -74,12 +74,13 @@ class DoubleHitSpacePointBuilder {
 
   /// @brief Getter method for the local coordinates of a cluster
   /// on its corresponding surface
-  /// @param cluster object related to the cluster that holds the
-  /// necessary information
+  /// @param cluster object related to the cluster that holds the necessary
+  ///                information
   /// @return vector of the local coordinates of the cluster on the surface
   std::pair<Vector2, SymMatrix2> localCoords(const cluster_t& cluster) const;
 
   /// @brief Getter method for the global coordinates of a cluster
+
   /// @param cluster object related to the cluster that holds the
   /// necessary information
   /// @return vector of the global coordinates of the cluster
@@ -89,6 +90,7 @@ class DoubleHitSpacePointBuilder {
 
   /// @brief Calculates the top and bottom ends of a SDE
   /// that corresponds to a given hit
+  /// @param gctx The geometry context to use
   /// @param cluster object that stores the information about the hit
   /// @return vectors to the top and bottom end of the SDE
   std::pair<Vector3, Vector3> endsOfStrip(const GeometryContext& gctx,

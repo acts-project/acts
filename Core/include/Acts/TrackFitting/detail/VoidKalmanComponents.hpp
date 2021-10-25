@@ -21,13 +21,14 @@ struct VoidKalmanComponents {
   /// @tparam measurement_t Type of the measurement
   /// @tparam parameter_t Type of the parameters for calibration
   ///
-  /// @param m Measurement to be moved through
-  /// @param pars Parameters to be used for calibration
+  /// @param measurement Measurement to be moved through
+  /// @param parameters Parameters to be used for calibration
   ///
   /// @return void-calibrated measurement
   template <typename measurement_t, typename parameters_t>
   Result<measurement_t> operator()(measurement_t measurement,
-                                   const parameters_t& /* parameters */) const {
+                                   const parameters_t& parameters) const {
+    (void)parameters;
     return measurement;
   }
 };
@@ -36,16 +37,17 @@ struct VoidKalmanComponents {
 struct VoidKalmanUpdater {
   /// @brief Public call mimicking an updater
   ///
-  /// @tparam measurement_t Type of the measurement to be used
-  /// @tpredicted_state_t Type of the (bound) predicted state
+  /// @tparam track_state_t Type of the track state to be used
+  /// @tparam predicted_state_t Type of the (bound) predicted state
   ///
-  /// @param m The measurement
+  /// @param trackState The track state
   /// @param predicted The predicted parameters
   ///
   /// @return The copied predicted parameters
   template <typename track_state_t, typename predicted_state_t>
-  auto operator()(track_state_t& /* trackState */,
+  auto operator()(track_state_t& trackState,
                   const predicted_state_t& predicted) const {
+    (void)trackState;
     return &(predicted.parameters);
   }
 };
@@ -56,11 +58,12 @@ struct VoidKalmanSmoother {
   ///
   /// @tparam track_states_t Type of the track states
   ///
-  /// @param states The track states to be smoothed
+  /// @param trackStates The track states to be smoothed
   ///
   /// @return The resulting
   template <typename parameters_t, typename track_states_t>
-  const parameters_t* operator()(track_states_t& /* trackStates */) const {
+  const parameters_t* operator()(track_states_t& trackStates) const {
+    (void)trackStates;
     return nullptr;
   }
 };
@@ -75,7 +78,24 @@ struct VoidOutlierFinder {
   ///
   /// @return Whether it's outlier or not
   template <typename track_state_t>
-  constexpr bool operator()(const track_state_t& /* trackState */) const {
+  constexpr bool operator()(const track_state_t& trackState) const {
+    (void)trackState;
+    return false;
+  }
+};
+
+/// @brief void smoothing logic
+struct VoidReverseFilteringLogic {
+  /// @brief Public call mimicking an outlier finder
+  ///
+  /// @tparam track_state_t Type of the track state
+  ///
+  /// @param trackState The trackState of the last measurement
+  ///
+  /// @return Whether to run filtering in reversed direction as smoothing or not
+  template <typename track_state_t>
+  constexpr bool operator()(const track_state_t& trackState) const {
+    (void)trackState;
     return false;
   }
 };

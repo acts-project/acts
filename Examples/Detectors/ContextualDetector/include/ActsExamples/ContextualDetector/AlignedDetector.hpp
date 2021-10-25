@@ -8,20 +8,51 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
+#include "ActsExamples/GenericDetector/GenericDetector.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 #include <memory>
 #include <vector>
 
-struct AlignedDetector : public ActsExamples::IBaseDetector {
-  using DetectorElement = ActsExamples::Contextual::AlignedDetectorElement;
-  using DetectorElementPtr = std::shared_ptr<DetectorElement>;
-  using Decorator = ActsExamples::Contextual::AlignmentDecorator;
-  using DetectorStore = std::vector<std::vector<DetectorElementPtr>>;
+namespace ActsExamples::Contextual {
+class InternallyAlignedDetectorElement;
+class InternalAlignmentDecorator;
 
-  /// The Store of the detector elements (lifetime: job)
-  DetectorStore detectorStore;
+class AlignedDetector : public ActsExamples::IBaseDetector {
+ public:
+  //   using DetectorElement =
+  //       ActsExamples::Contextual::InternallyAlignedDetectorElement;
+  //   using DetectorElementPtr = std::shared_ptr<DetectorElement>;
+  //   using Decorator = ActsExamples::Contextual::InternalAlignmentDecorator;
+  //   using DetectorStore = std::vector<std::vector<DetectorElementPtr>>;
+
+  struct Config : public GenericDetector::Config {
+    /// Seed for the decorator random numbers.
+    double seed = 1324354657;
+    /// Size of a valid IOV.
+    size_t iovSize = 100;
+    /// Span until garbage collection is active.
+    size_t flushSize = 200;
+    /// Run the garbage collection?
+    bool doGarbageCollection = true;
+    /// Sigma of the in-plane misalignment
+    double sigmaInPlane = 100 * Acts::UnitConstants::um;
+    /// Sigma of the out-of-plane misalignment
+    double sigmaOutPlane = 50 * Acts::UnitConstants::um;
+    /// Sigma of the in-plane rotation misalignment
+    double sigmaInRot = 20 * 0.001;  // millirad
+    /// Sigma of the out-of-plane rotation misalignment
+    double sigmaOutRot = 0;
+    /// Keep the first iov batch nominal.
+    bool firstIovNominal = false;
+    /// Log level for the decorator
+    Acts::Logging::Level decoratorLogLevel = Acts::Logging::INFO;
+
+    enum class Mode { Internal, External };
+    Mode mode = Mode::Internal;
+  };
 
   void addOptions(
       boost::program_options::options_description& opt) const override;
@@ -29,4 +60,20 @@ struct AlignedDetector : public ActsExamples::IBaseDetector {
   std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
   finalize(const boost::program_options::variables_map& vm,
            std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) override;
+
+  std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
+  finalize(const Config& cfg,
+           std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
+
+  std::vector<std::vector<std::shared_ptr<Generic::GenericDetectorElement>>>&
+  detectorStore() {
+    return m_detectorStore;
+  }
+
+ private:
+  /// The Store of the detector elements (lifetime: job)
+  std::vector<std::vector<std::shared_ptr<Generic::GenericDetectorElement>>>
+      m_detectorStore;
 };
+
+}  // namespace ActsExamples::Contextual

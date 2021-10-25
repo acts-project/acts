@@ -46,23 +46,19 @@ class RootTrajectorySummaryWriter final
     std::string inputParticles;
     /// Input hit-particles map collection.
     std::string inputMeasurementParticlesMap;
-    /// Output directory.
-    std::string outputDir;
     /// Output filename.
-    std::string outputFilename = "tracksummary.root";
+    std::string filePath = "tracksummary.root";
     /// Name of the output tree.
-    std::string outputTreename = "tracksummary";
+    std::string treeName = "tracksummary";
     /// File access mode.
     std::string fileMode = "RECREATE";
-    /// Common root file.
-    TFile* rootFile = nullptr;
   };
 
   /// Constructor
   ///
-  /// @param cfg Configuration struct
+  /// @param config Configuration struct
   /// @param level Message level declaration
-  RootTrajectorySummaryWriter(const Config& cfg, Acts::Logging::Level lvl);
+  RootTrajectorySummaryWriter(const Config& config, Acts::Logging::Level level);
   ~RootTrajectorySummaryWriter() final override;
 
   /// End-of-run hook
@@ -90,6 +86,7 @@ class RootTrajectorySummaryWriter final
   std::vector<unsigned int> m_nMeasurements;  ///< The number of measurements
   std::vector<unsigned int> m_nOutliers;      ///< The number of outliers
   std::vector<unsigned int> m_nHoles;         ///< The number of holes
+  std::vector<unsigned int> m_nSharedHits;    ///< The number of shared hits
   std::vector<float> m_chi2Sum;               ///< The total chi2
   std::vector<unsigned int>
       m_NDF;  ///< The number of ndf of the measurements+outliers
@@ -121,16 +118,23 @@ class RootTrajectorySummaryWriter final
   std::vector<float> m_t_pz;     ///< Initial momenta pz of majority particle
   std::vector<float> m_t_theta;  ///< Initial momenta theta of majority particle
   std::vector<float> m_t_phi;    ///< Initial momenta phi of majority particle
+  std::vector<float> m_t_p;      ///< Initial abs momenta of majority particle
   std::vector<float> m_t_pT;     ///< Initial momenta pT of majority particle
   std::vector<float> m_t_eta;    ///< Initial momenta eta of majority particle
+  std::vector<float>
+      m_t_d0;  ///< The extrapolated truth transverse impact parameter
+  std::vector<float>
+      m_t_z0;  ///< The extrapolated truth longitudinal impact parameter
 
   std::vector<bool> m_hasFittedParams;  ///< If the track has fitted parameter
+  // The fitted parameters
   std::vector<float> m_eLOC0_fit;   ///< Fitted parameters eBoundLoc0 of track
   std::vector<float> m_eLOC1_fit;   ///< Fitted parameters eBoundLoc1 of track
   std::vector<float> m_ePHI_fit;    ///< Fitted parameters ePHI of track
   std::vector<float> m_eTHETA_fit;  ///< Fitted parameters eTHETA of track
   std::vector<float> m_eQOP_fit;    ///< Fitted parameters eQOP of track
   std::vector<float> m_eT_fit;      ///< Fitted parameters eT of track
+  // The error of fitted parameters
   std::vector<float> m_err_eLOC0_fit;  ///< Fitted parameters eLOC err of track
   std::vector<float>
       m_err_eLOC1_fit;  ///< Fitted parameters eBoundLoc1 err of track
@@ -139,6 +143,25 @@ class RootTrajectorySummaryWriter final
       m_err_eTHETA_fit;               ///< Fitted parameters eTHETA err of track
   std::vector<float> m_err_eQOP_fit;  ///< Fitted parameters eQOP err of track
   std::vector<float> m_err_eT_fit;    ///< Fitted parameters eT err of track
+  // The residual of fitted parameters
+  std::vector<float> m_res_eLOC0_fit;  ///< Fitted parameters eLOC res of track
+  std::vector<float>
+      m_res_eLOC1_fit;  ///< Fitted parameters eBoundLoc1 res of track
+  std::vector<float> m_res_ePHI_fit;  ///< Fitted parameters ePHI res of track
+  std::vector<float>
+      m_res_eTHETA_fit;               ///< Fitted parameters eTHETA res of track
+  std::vector<float> m_res_eQOP_fit;  ///< Fitted parameters eQOP res of track
+  std::vector<float> m_res_eT_fit;    ///< Fitted parameters eT res of track
+  // The pull of fitted parameters
+  std::vector<float>
+      m_pull_eLOC0_fit;  ///< Fitted parameters eLOC pull of track
+  std::vector<float>
+      m_pull_eLOC1_fit;  ///< Fitted parameters eBoundLoc1 pull of track
+  std::vector<float> m_pull_ePHI_fit;  ///< Fitted parameters ePHI pull of track
+  std::vector<float>
+      m_pull_eTHETA_fit;  ///< Fitted parameters eTHETA pull of track
+  std::vector<float> m_pull_eQOP_fit;  ///< Fitted parameters eQOP pull of track
+  std::vector<float> m_pull_eT_fit;    ///< Fitted parameters eT pull of track
 };
 
 }  // namespace ActsExamples

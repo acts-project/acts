@@ -83,6 +83,7 @@ class AccumulatedSurfaceMaterial {
   ///
   /// @param lp local position for the bin assignment
   /// @param mp material properties to be assigned
+  /// @param pathCorrection Correction factor for the effective path length
   ///
   /// @return the bin triple to which the material was assigned
   std::array<size_t, 3> accumulate(const Vector2& lp, const MaterialSlab& mp,
@@ -92,6 +93,7 @@ class AccumulatedSurfaceMaterial {
   ///
   /// @param gp global position for the bin assignment
   /// @param mp material properties to be assigned
+  /// @param pathCorrection Correction factor for the effective path length
   ///
   /// @return the bin triple to which the material was assigned
   std::array<size_t, 3> accumulate(const Vector3& gp, const MaterialSlab& mp,

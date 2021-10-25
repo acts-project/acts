@@ -25,6 +25,7 @@
 #include "ActsExamples/Io/Root/RootTrajectorySummaryWriter.hpp"
 #include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Reconstruction/ReconstructionBase.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMakerOptions.hpp"
@@ -41,8 +42,6 @@
 #include <memory>
 
 #include <boost/filesystem.hpp>
-
-#include "RecInput.hpp"
 
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
@@ -172,21 +171,46 @@ int runRecCKFTracks(int argc, char* argv[],
       };
       seedingCfg.outputSeeds = "seeds";
       seedingCfg.outputProtoTracks = "prototracks";
-      seedingCfg.rMax = 200.;
-      seedingCfg.deltaRMax = 60.;
-      seedingCfg.collisionRegionMin = -250;
-      seedingCfg.collisionRegionMax = 250.;
-      seedingCfg.zMin = -2000.;
-      seedingCfg.zMax = 2000.;
-      seedingCfg.maxSeedsPerSpM = 1;
-      seedingCfg.cotThetaMax = 7.40627;  // 2.7 eta
-      seedingCfg.sigmaScattering = 50;
-      seedingCfg.radLengthPerSeed = 0.1;
-      seedingCfg.minPt = 500.;
-      seedingCfg.bFieldInZ = 0.00199724;
-      seedingCfg.beamPosX = 0;
-      seedingCfg.beamPosY = 0;
-      seedingCfg.impactMax = 3.;
+
+      seedingCfg.gridConfig.rMax = 200._mm;
+      seedingCfg.seedFinderConfig.rMax = seedingCfg.gridConfig.rMax;
+
+      seedingCfg.seedFilterConfig.deltaRMin = 1_mm;
+      seedingCfg.seedFinderConfig.deltaRMin =
+          seedingCfg.seedFilterConfig.deltaRMin;
+
+      seedingCfg.gridConfig.deltaRMax = 60._mm;
+      seedingCfg.seedFinderConfig.deltaRMax = seedingCfg.gridConfig.deltaRMax;
+
+      seedingCfg.seedFinderConfig.collisionRegionMin = -250_mm;
+      seedingCfg.seedFinderConfig.collisionRegionMax = 250._mm;
+
+      seedingCfg.gridConfig.zMin = -2000._mm;
+      seedingCfg.gridConfig.zMax = 2000._mm;
+      seedingCfg.seedFinderConfig.zMin = seedingCfg.gridConfig.zMin;
+      seedingCfg.seedFinderConfig.zMax = seedingCfg.gridConfig.zMax;
+
+      seedingCfg.seedFilterConfig.maxSeedsPerSpM = 1;
+      seedingCfg.seedFinderConfig.maxSeedsPerSpM =
+          seedingCfg.seedFilterConfig.maxSeedsPerSpM;
+
+      seedingCfg.gridConfig.cotThetaMax = 7.40627;  // 2.7 eta
+      seedingCfg.seedFinderConfig.cotThetaMax =
+          seedingCfg.gridConfig.cotThetaMax;
+
+      seedingCfg.seedFinderConfig.sigmaScattering = 50;
+      seedingCfg.seedFinderConfig.radLengthPerSeed = 0.1;
+
+      seedingCfg.gridConfig.minPt = 500._MeV;
+      seedingCfg.seedFinderConfig.minPt = seedingCfg.gridConfig.minPt;
+
+      seedingCfg.gridConfig.bFieldInZ = 1.99724_T;
+      seedingCfg.seedFinderConfig.bFieldInZ = seedingCfg.gridConfig.bFieldInZ;
+
+      seedingCfg.seedFinderConfig.beamPos = {0_mm, 0_mm};
+
+      seedingCfg.seedFinderConfig.impactMax = 3._mm;
+
       sequencer.addAlgorithm(
           std::make_shared<SeedingAlgorithm>(seedingCfg, logLevel));
       inputProtoTracks = seedingCfg.outputProtoTracks;
@@ -200,8 +224,7 @@ int runRecCKFTracks(int argc, char* argv[],
     tfPerfCfg.inputParticles = inputParticles;
     tfPerfCfg.inputMeasurementParticlesMap =
         digiCfg.outputMeasurementParticlesMap;
-    tfPerfCfg.outputDir = outputDir;
-    tfPerfCfg.outputFilename = "performance_seeding_trees.root";
+    tfPerfCfg.filePath = outputDir + "/performance_seeding_trees.root";
     sequencer.addWriter(
         std::make_shared<TrackFinderPerformanceWriter>(tfPerfCfg, logLevel));
 
@@ -243,6 +266,7 @@ int runRecCKFTracks(int argc, char* argv[],
   trackFindingCfg.inputSourceLinks = digiCfg.outputSourceLinks;
   trackFindingCfg.inputInitialTrackParameters = outputTrackParameters;
   trackFindingCfg.outputTrajectories = "trajectories";
+  trackFindingCfg.computeSharedHits = true;
   trackFindingCfg.findTracks = TrackFindingAlgorithm::makeTrackFinderFunction(
       trackingGeometry, magneticField);
   sequencer.addAlgorithm(
@@ -261,9 +285,8 @@ int runRecCKFTracks(int argc, char* argv[],
       digiCfg.outputMeasurementParticlesMap;
   trackStatesWriter.inputMeasurementSimHitsMap =
       digiCfg.outputMeasurementSimHitsMap;
-  trackStatesWriter.outputDir = outputDir;
-  trackStatesWriter.outputFilename = "trackstates_ckf.root";
-  trackStatesWriter.outputTreename = "trackstates";
+  trackStatesWriter.filePath = outputDir + "/trackstates_ckf.root";
+  trackStatesWriter.treeName = "trackstates";
   sequencer.addWriter(std::make_shared<RootTrajectoryStatesWriter>(
       trackStatesWriter, logLevel));
 
@@ -277,9 +300,8 @@ int runRecCKFTracks(int argc, char* argv[],
   trackSummaryWriter.inputParticles = particleReader.outputParticles;
   trackSummaryWriter.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
-  trackSummaryWriter.outputDir = outputDir;
-  trackSummaryWriter.outputFilename = "tracksummary_ckf.root";
-  trackSummaryWriter.outputTreename = "tracksummary";
+  trackSummaryWriter.filePath = outputDir + "/tracksummary_ckf.root";
+  trackSummaryWriter.treeName = "tracksummary";
   sequencer.addWriter(std::make_shared<RootTrajectorySummaryWriter>(
       trackSummaryWriter, logLevel));
 
@@ -292,7 +314,7 @@ int runRecCKFTracks(int argc, char* argv[],
   // The bottom seed could be the first, second or third hits on the truth track
   perfWriterCfg.nMeasurementsMin = particleSelectorCfg.nHitsMin - 3;
   perfWriterCfg.ptMin = 0.4_GeV;
-  perfWriterCfg.outputDir = outputDir;
+  perfWriterCfg.filePath = outputDir + "/performance_ckf.root";
 #ifdef ACTS_PLUGIN_ONNX
   // Onnx plugin related options
   // Path to default demo ML model for track classification

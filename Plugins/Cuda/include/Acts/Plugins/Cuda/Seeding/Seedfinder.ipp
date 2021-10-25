@@ -16,7 +16,7 @@ namespace Acts {
 template <typename external_spacepoint_t>
 Seedfinder<external_spacepoint_t, Acts::Cuda>::Seedfinder(
     Acts::SeedfinderConfig<external_spacepoint_t> config)
-    : m_config(std::move(config)) {
+    : m_config(config.toInternalUnits()) {
   // calculation of scattering using the highland formula
   // convert pT to p once theta angle is known
   m_config.highland = 13.6 * std::sqrt(m_config.radLengthPerSeed) *
@@ -289,7 +289,8 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
                 bottomSP, middleSP, topSP, Zob)));
       }
 
-      m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, outputVec);
+      m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM,
+                                                std::back_inserter(outputVec));
     }
   }
   ACTS_CUDA_ERROR_CHECK(cudaStreamDestroy(cuStream));

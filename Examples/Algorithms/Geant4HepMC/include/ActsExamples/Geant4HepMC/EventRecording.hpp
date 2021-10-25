@@ -14,11 +14,13 @@
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <functional>
 #include <memory>
 #include <mutex>
 
-#include <G4VUserDetectorConstruction.hh>
 #include <HepMC3/GenEvent.h>
+
+#include "G4VUserDetectorConstruction.hh"
 
 class G4RunManager;
 
@@ -33,7 +35,7 @@ class EventRecording final : public ActsExamples::BareAlgorithm {
     /// The recorded events output
     std::string outputHepMcTracks = "geant-outcome-tracks";
 
-    std::unique_ptr<G4VUserDetectorConstruction> detectorConstruction = nullptr;
+    G4VUserDetectorConstruction* detectorConstruction{nullptr};
 
     /// random number seed 1
     int seed1 = 12345;
@@ -50,11 +52,17 @@ class EventRecording final : public ActsExamples::BareAlgorithm {
   };
 
   /// Constructor
-  EventRecording(Config&& cnf, Acts::Logging::Level level);
+  /// @param config the configuration
+  /// @param level the log level
+  EventRecording(const Config& config, Acts::Logging::Level level);
+
   ~EventRecording();
 
   ActsExamples::ProcessCode execute(
       const AlgorithmContext& context) const final override;
+
+  /// Readonly access to the config
+  const Config& config() const { return m_cfg; }
 
  private:
   /// The config object

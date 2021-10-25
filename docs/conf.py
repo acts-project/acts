@@ -1,6 +1,8 @@
 # Configuration file for the Sphinx documentation builder.
 
 import os
+import sys
+import subprocess
 
 from m2r import MdInclude
 from recommonmark.transform import AutoStructify
@@ -12,7 +14,7 @@ on_readthedocs = os.environ.get("READTHEDOCS", None) == "True"
 
 project = "Acts"
 author = "The Acts authors"
-copyright = "2014–2020 CERN for the benefit of the Acts project"
+copyright = "2014–2021 CERN for the benefit of the Acts project"
 # version = '@PROJECT_VERSION@'
 # release = '@PROJECT_VERSION@'
 
@@ -52,7 +54,7 @@ if not on_readthedocs:
 
 html_theme_options = {
     "collapse_navigation": False,
-    "navigation_depth": 2,
+    "navigation_depth": 3,
     "prev_next_buttons_location": None,  # no prev/next links
     "style_external_links": True,
 }
@@ -78,33 +80,37 @@ breathe_domain_by_extension = {
     "hpp": "cpp",
     "ipp": "cpp",
 }
-breathe_default_members = [
+breathe_default_members = (
     "members",
     "undoc-members",
-]
+)
 
-# -- Automatic API documentation generation with Exhale -----------------------
+# -- Automatic API documentation ---------------------------------------------
 
-exhale_args = {
-    "containmentFolder": "api",
-    "rootFileName": "api.rst",
-    "rootFileTitle": "API",
-    "createTreeView": True,
-    "exhaleUseDoxyfile": True,
-    # note: OUTPUT_DIRECTORY in Doxyfile must match breathe default project path
-    # note: this must match STRIP_FROM_PATH in Doxyfile
-    "doxygenStripFromPath": "..",
-}
+env = os.environ.copy()
+env["DOXYGEN_WARN_AS_ERROR"] = "NO"
+cwd = os.path.dirname(__file__)
 
-if on_readthedocs:
+if on_readthedocs or tags.has("run_doxygen"):
     # if we are running on RTD Doxygen must be run as part of the build
-    # let exhale handle the doxygen execution
-    extensions.append("exhale")
-    exhale_args["exhaleExecutesDoxygen"] = True
-elif tags.has("use_exhale"):
-    # if exhale is requested manually, we expect the Doxygen has been run for us
-    extensions.append("exhale")
-    exhale_args["exhaleExecutesDoxygen"] = False
+    print("Executing doxygen in", cwd)
+    print(
+        "Doxygen version:",
+        subprocess.check_output(["doxygen", "--version"], encoding="utf-8"),
+    )
+    sys.stdout.flush()
+    subprocess.check_call(
+        ["doxygen", "Doxyfile"], stdout=subprocess.PIPE, cwd=cwd, env=env
+    )
+
+if on_readthedocs or tags.has("run_apidoc"):
+    print("Executing breathe apidoc in", cwd)
+    subprocess.check_call(
+        [sys.executable, "-m", "breathe.apidoc", "_build/doxygen-xml", "-o", "api"],
+        stdout=subprocess.PIPE,
+        cwd=cwd,
+        env=env,
+    )
 
 # -- Markdown bridge setup hook (must come last, not sure why) ----------------
 

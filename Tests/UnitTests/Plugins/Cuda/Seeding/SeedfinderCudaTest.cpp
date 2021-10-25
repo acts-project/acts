@@ -29,6 +29,8 @@
 #include "ATLASCuts.hpp"
 #include "SpacePoint.hpp"
 
+using namespace Acts::UnitLiterals;
+
 std::vector<const SpacePoint*> readFile(std::string filename) {
   std::string line;
   int layer;
@@ -166,23 +168,23 @@ int main(int argc, char** argv) {
   // Set seed finder configuration
   Acts::SeedfinderConfig<SpacePoint> config;
   // silicon detector max
-  config.rMax = 160.;
-  config.deltaRMin = 5.;
-  config.deltaRMax = 160.;
-  config.collisionRegionMin = -250.;
-  config.collisionRegionMax = 250.;
-  config.zMin = -2800.;
-  config.zMax = 2800.;
+  config.rMax = 160._mm;
+  config.deltaRMin = 5._mm;
+  config.deltaRMax = 160._mm;
+  config.collisionRegionMin = -250._mm;
+  config.collisionRegionMax = 250._mm;
+  config.zMin = -2800._mm;
+  config.zMax = 2800._mm;
   config.maxSeedsPerSpM = 5;
   // 2.7 eta
   config.cotThetaMax = 7.40627;
   config.sigmaScattering = 1.00000;
 
-  config.minPt = 500.;
-  config.bFieldInZ = 0.00199724;
+  config.minPt = 500._MeV;
+  config.bFieldInZ = 1.99724_T;
 
-  config.beamPos = {-.5, -.5};
-  config.impactMax = 10.;
+  config.beamPos = {-.5_mm, -.5_mm};
+  config.impactMax = 10._mm;
 
   // cuda
   cudaDeviceProp prop;
@@ -249,11 +251,13 @@ int main(int argc, char** argv) {
   groupIt = spGroup.begin();
 
   if (do_cpu) {
+    decltype(seedfinder_cpu)::State state;
     for (int i_s = 0; i_s < skip; i_s++)
       ++groupIt;
     for (; !(groupIt == spGroup.end()); ++groupIt) {
-      seedVector_cpu.push_back(seedfinder_cpu.createSeedsForGroup(
-          groupIt.bottom(), groupIt.middle(), groupIt.top()));
+      seedfinder_cpu.createSeedsForGroup(
+          state, std::back_inserter(seedVector_cpu.emplace_back()),
+          groupIt.bottom(), groupIt.middle(), groupIt.top());
       group_count++;
       if (allgroup == false) {
         if (group_count >= nGroupToIterate)

@@ -10,7 +10,7 @@ on:
 jobs:
   format:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/format10:v11
+    container: ghcr.io/acts-project/format10:v13
     steps:
       - uses: actions/checkout@v2
       - name: Check
@@ -20,6 +20,16 @@ jobs:
         with:
           name: changed
           path: changed
+  format-py:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - name: Install black
+        run: pip install black
+      - name: Run black format check
+        run: black --check . --extend-exclude ".*thirdparty.*"
+
   license:
     runs-on: ubuntu-latest
     container: python:alpine3.6

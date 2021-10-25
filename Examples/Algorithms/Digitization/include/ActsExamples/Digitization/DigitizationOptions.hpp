@@ -9,7 +9,6 @@
 #pragma once
 
 #include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
-#include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 namespace ActsExamples {
@@ -19,11 +18,6 @@ namespace Options {
 ///
 /// @param desc The options description to add options to
 void addDigitizationOptions(Description &desc);
-
-/// Read SmearingAlgorithm Config from the options.
-///
-/// @param variables The variables to read from
-DigitizationConfig readSmearingConfig(const Variables &variables);
 
 }  // namespace Options
 }  // namespace ActsExamples

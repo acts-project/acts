@@ -12,6 +12,7 @@
 #include "Acts/Utilities/PdgParticle.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Generators/EventGenerator.hpp"
 
 #include <array>
 #include <cmath>
@@ -24,7 +25,7 @@ namespace ActsExamples {
 /// direction is drawn from a uniform distribution on the unit sphere (within
 /// the given limits). Its absolute momentum is drawn from a uniform
 /// distribution. Position and time are always set to zero.
-class ParametricParticleGenerator {
+class ParametricParticleGenerator : public EventGenerator::ParticlesGenerator {
  public:
   struct Config {
     /// Low, high (exclusive) for the transverse direction angle.
@@ -34,8 +35,14 @@ class ParametricParticleGenerator {
     ///
     /// This intentionally uses theta instead of eta so it can represent the
     /// full direction space with finite values.
+    ///
+    /// @note This is the standard generation, for detector performance
+    /// classification, where a flat distribution in eta can be useful,
+    /// this can be set by the etaUniform flag;
+    ///
     double thetaMin = 0.0;
     double thetaMax = M_PI;
+    bool etaUniform = false;
     /// Low, high (exclusive) for absolute/transverse momentum.
     double pMin = 1 * Acts::UnitConstants::GeV;
     double pMax = 10 * Acts::UnitConstants::GeV;
@@ -52,7 +59,7 @@ class ParametricParticleGenerator {
   ParametricParticleGenerator(const Config& cfg);
 
   /// Generate a single primary vertex with the given number of particles.
-  SimParticleContainer operator()(RandomEngine& rng) const;
+  SimParticleContainer operator()(RandomEngine& rng) override;
 
  private:
   Config m_cfg;
@@ -61,6 +68,8 @@ class ParametricParticleGenerator {
   double m_mass;
   double m_cosThetaMin;
   double m_cosThetaMax;
+  double m_etaMin;
+  double m_etaMax;
 };
 
 }  // namespace ActsExamples

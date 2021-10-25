@@ -88,8 +88,8 @@ struct NuclearInteraction {
   ///
   /// @tparam generator_t The random number generator type
   /// @param [in, out] generator The random number generator
-  /// @param [in] slab The material
   /// @param [in, out] particle The ingoing particle
+  /// @param [out] generated Additional generated particles
   ///
   /// @return True if the particle was killed, false otherwise
   template <typename generator_t>
@@ -219,7 +219,7 @@ struct NuclearInteraction {
   ///
   /// @tparam generator_t The random number generator type
   /// @param [in, out] generator The random number generator
-  /// @param [in] kinematicParameters Parametrisation of kinematic properties
+  /// @param [in] parametrisation Parametrisation of kinematic properties
   ///
   /// @return Vector containing the invariant masses
   template <typename generator_t>
@@ -231,8 +231,9 @@ struct NuclearInteraction {
   /// Evaluates the final state momenta
   ///
   /// @tparam generator_t The random number generator type
-  /// @param [in, out] The random number generator
-  /// @param [in] kinematicParameters Parametrisation of kinematic properties
+  /// @param [in, out] generator The random number generator
+  /// @param [in] parametrisation Parametrisation of kinematic properties
+  /// @param [in] initialMomentum The initial momentum
   ///
   /// @return Vector containing the momenta
   template <typename generator_t>
@@ -258,7 +259,7 @@ struct NuclearInteraction {
   /// This method samples the kinematics of the final state particles
   ///
   /// @tparam generator_t The random number generator type
-  /// @param [in, out] The random number generator
+  /// @param [in, out] generator The random number generator
   /// @param [in] parameters The parametrisation
   /// @param [in] momentum The momentum of the parametrisation
   ///
@@ -291,10 +292,10 @@ struct NuclearInteraction {
   /// Converter from sampled numbers to a vector of particles
   ///
   /// @tparam generator_t The random number generator type
-  /// @param [in, out] The random number generator
+  /// @param [in, out] generator The random number generator
   /// @param [in] pdgId The PDG IDs
-  /// @param [in] momentum The momenta
-  /// @param [in] invariantMass The invariant masses
+  /// @param [in] momenta The momenta
+  /// @param [in] invariantMasses The invariant masses
   /// @param [in] initialParticle The initial particle
   /// @param [in] parametrizedMomentum Momentum of the parametrisation
   /// @param [in] soft Treat it as soft or hard nuclear interaction

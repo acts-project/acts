@@ -40,7 +40,7 @@ class SingleHitSpacePointBuilder {
   /// and stores the results
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param measurements vector of measurements
+  /// @param clusters vector of clusters
   /// @param spacePointStorage storage of the results
   void calculateSpacePoints(const GeometryContext& gctx,
                             const std::vector<cluster_t>& measurements,
