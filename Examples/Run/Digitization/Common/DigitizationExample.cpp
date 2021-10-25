@@ -11,7 +11,6 @@
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
 #include "ActsExamples/Digitization/DigitizationOptions.hpp"
-#include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
@@ -111,22 +110,21 @@ int runDigitizationExample(
     measReaderCfg.inputDir = vm["input-dir"].as<std::string>();
     measReaderCfg.outputMeasurements = digiCfg.outputMeasurements;
     measReaderCfg.outputSourceLinks = digiCfg.outputSourceLinks;
-    if (not digiCfg.isSimpleSmearer)
-      measReaderCfg.outputClusters = digiCfg.outputClusters;
+    measReaderCfg.outputClusters = digiCfg.outputClusters;
     measReaderCfg.outputMeasurementSimHitsMap =
         digiCfg.outputMeasurementSimHitsMap;
     sequencer.addReader(
         std::make_shared<CsvMeasurementReader>(measReaderCfg, logLevel));
   } else {
-    sequencer.addAlgorithm(createDigitizationAlgorithm(digiCfg, logLevel));
+    sequencer.addAlgorithm(
+        std::make_shared<DigitizationAlgorithm>(digiCfg, logLevel));
   }
 
   // Write digitization output as ROOT files
   if (vm["output-root"].template as<bool>()) {
     RootMeasurementWriter::Config measWriterRoot;
     measWriterRoot.inputMeasurements = digiCfg.outputMeasurements;
-    measWriterRoot.inputClusters =
-        digiCfg.isSimpleSmearer ? std::string("") : digiCfg.outputClusters;
+    measWriterRoot.inputClusters = digiCfg.outputClusters;
     measWriterRoot.inputSimHits = simHitReaderCfg.outputSimHits;
     measWriterRoot.inputMeasurementSimHitsMap =
         digiCfg.outputMeasurementSimHitsMap;
@@ -145,8 +143,7 @@ int runDigitizationExample(
     CsvMeasurementWriter::Config measWriterCsv =
         Options::readCsvMeasurementWriterConfig(vm);
     measWriterCsv.inputMeasurements = digiCfg.outputMeasurements;
-    if (not digiCfg.isSimpleSmearer)
-      measWriterCsv.inputClusters = digiCfg.outputClusters;
+    measWriterCsv.inputClusters = digiCfg.outputClusters;
     measWriterCsv.inputSimHits = simHitReaderCfg.outputSimHits;
     measWriterCsv.inputMeasurementSimHitsMap =
         digiCfg.outputMeasurementSimHitsMap;

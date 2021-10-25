@@ -27,7 +27,6 @@ from acts.examples import (
     TrackParametersPrinter,
     PropagationAlgorithm,
     DigitizationAlgorithm,
-    SmearingAlgorithm,
     PlanarSteppingAlgorithm,
 )
 
@@ -90,4 +89,3 @@ def test_hepmc_algorithms():
 def test_special_algorithm_interfaces():
     # just assert they exists
     assert DigitizationAlgorithm
-    assert SmearingAlgorithm

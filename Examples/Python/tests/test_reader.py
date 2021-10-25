@@ -153,7 +153,7 @@ def test_root_material_track_reader(material_recording):
 
     s.run()
 
-    assert alg.events_seen == 198
+    assert alg.events_seen == 2
 
 
 @pytest.mark.csv
@@ -166,9 +166,7 @@ def test_csv_meas_reader(tmp_path, fatras, trk_geo, conf_const):
 
     config = CsvMeasurementWriter.Config(
         inputMeasurements=digiAlg.config.outputMeasurements,
-        inputClusters=""
-        if digiAlg.config.isSimpleSmearer
-        else digiAlg.config.outputClusters,
+        inputClusters=digiAlg.config.outputClusters,
         inputSimHits=simAlg.config.outputSimHits,
         inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
         outputDir=str(out),
