@@ -16,108 +16,115 @@ import sys
 # The config file can be used to define a binning for all the surfaces in a given volume
 # It can also be used to define the binning for volume mapping
 
+
 def getSurfaceMateral(mat):
     outputmat = {}
     value = {}
     material = {}
     bound = {}
-    outputmat['volume'] = mat['volume']
-    if 'boundary' in mat:
-        outputmat['boundary'] = mat['boundary']
-    if 'layer' in mat:
-        if 'approach' not in entry:
-            if 'sensitive' not in entry:        
-                outputmat['layer'] = 'X'
-    if 'approach' in mat:
-        outputmat['approach'] = mat['approach']
-    if 'sensitive' in mat:
-        outputmat['layer'] = mat['layer']
-        outputmat['sensitive'] = 'X'
-    material['binUtility'] = mat['value']['material']['binUtility']
-    material['mapMaterial'] = False
-    material['mappingType'] = mat['value']['material']['mappingType']
-    bound['type'] = mat['value']['bounds']['type']
-    value['material'] = material
-    value['bounds'] = bound
-    outputmat['value'] = value
+    outputmat["volume"] = mat["volume"]
+    if "boundary" in mat:
+        outputmat["boundary"] = mat["boundary"]
+    if "layer" in mat:
+        if "approach" not in entry:
+            if "sensitive" not in entry:
+                outputmat["layer"] = "X"
+    if "approach" in mat:
+        outputmat["approach"] = mat["approach"]
+    if "sensitive" in mat:
+        outputmat["layer"] = mat["layer"]
+        outputmat["sensitive"] = "X"
+    material["binUtility"] = mat["value"]["material"]["binUtility"]
+    material["mapMaterial"] = False
+    material["mappingType"] = mat["value"]["material"]["mappingType"]
+    bound["type"] = mat["value"]["bounds"]["type"]
+    value["material"] = material
+    value["bounds"] = bound
+    outputmat["value"] = value
     return outputmat
 
-if sys.version_info[0] < 3:
-    print('Using Python 2')
-    print('To obtain the proper ordering in the Json files Python 3 is recomanded')
 
-if len(sys.argv) < 2 :
-    inFileName = 'geometry-maps.json'
-else :
+if sys.version_info[0] < 3:
+    print("Using Python 2")
+    print("To obtain the proper ordering in the Json files Python 3 is recomanded")
+
+if len(sys.argv) < 2:
+    inFileName = "geometry-maps.json"
+else:
     inFileName = sys.argv[1]
 
-    
-with open(inFileName,'r') as json_file:
+
+with open(inFileName, "r") as json_file:
     config = {}
-    config['Surfaces'] = {}
+    config["Surfaces"] = {}
     data = json.load(json_file)
     lastVol = -1
-    for entry in data['Surfaces']['entries']:
-        if lastVol != entry['volume']:
+    for entry in data["Surfaces"]["entries"]:
+        if lastVol != entry["volume"]:
             if lastVol != -1:
-                config['Surfaces'][lastVol] = vconfig
+                config["Surfaces"][lastVol] = vconfig
             vconfig = []
-            lastVol = entry['volume']
+            lastVol = entry["volume"]
             typeLayer = []
             createdApproach1 = False
             createdApproach2 = False
             typeSensitive = {}
 
-        if 'type' not in entry['value']['bounds']:
-            entry['value']['bounds']['type'] = ''
+        if "type" not in entry["value"]["bounds"]:
+            entry["value"]["bounds"]["type"] = ""
 
-        if 'layer' in entry:  
-            if 'approach' not in entry:
-                if 'sensitive' not in entry:
-                    if entry['value']['bounds']['type'] not in typeLayer:
-                        typeLayer.append(entry['value']['bounds']['type'])
+        if "layer" in entry:
+            if "approach" not in entry:
+                if "sensitive" not in entry:
+                    if entry["value"]["bounds"]["type"] not in typeLayer:
+                        typeLayer.append(entry["value"]["bounds"]["type"])
                         surface = getSurfaceMateral(entry)
                         vconfig.append(surface)
                         continue
 
-        if 'boundary' in entry:    
-            if 'layer' not in entry:
+        if "boundary" in entry:
+            if "layer" not in entry:
                 surface = getSurfaceMateral(entry)
                 vconfig.append(surface)
-                continue         
+                continue
 
-        if 'approach' in entry:
-            if 'sensitive' not in entry:
-                if entry['approach'] == 1 and createdApproach1 == False:
+        if "approach" in entry:
+            if "sensitive" not in entry:
+                if entry["approach"] == 1 and createdApproach1 == False:
                     createdApproach1 = True
                     surface = getSurfaceMateral(entry)
                     vconfig.append(surface)
                     continue
-                if entry['approach'] == 2 and createdApproach2 == False:
+                if entry["approach"] == 2 and createdApproach2 == False:
                     createdApproach2 = True
                     surface = getSurfaceMateral(entry)
                     vconfig.append(surface)
                     continue
 
-        if 'sensitive' in entry:  
-            if 'approach' not in entry:
-                if entry['value']['material']['binUtility']['binningdata'] != None: 
-                    if not entry['layer'] in typeSensitive:
-                        typeSensitive[entry['layer']]=[]
-                    if entry['value']['bounds']['type'] not in typeSensitive[entry['layer']]:
-                        typeSensitive[entry['layer']].append(entry['value']['bounds']['type'])
+        if "sensitive" in entry:
+            if "approach" not in entry:
+                if entry["value"]["material"]["binUtility"]["binningdata"] != None:
+                    if not entry["layer"] in typeSensitive:
+                        typeSensitive[entry["layer"]] = []
+                    if (
+                        entry["value"]["bounds"]["type"]
+                        not in typeSensitive[entry["layer"]]
+                    ):
+                        typeSensitive[entry["layer"]].append(
+                            entry["value"]["bounds"]["type"]
+                        )
                         surface = getSurfaceMateral(entry)
                         vconfig.append(surface)
                         continue
 
     if lastVol != -1:
-        config['Surfaces'][lastVol] = vconfig
-    config['Volumes'] = data['Volumes']
+        config["Surfaces"][lastVol] = vconfig
+    config["Volumes"] = data["Volumes"]
 
-if len(sys.argv) < 3 :
-    outFileName = 'config-map.json'
-else :
+if len(sys.argv) < 3:
+    outFileName = "config-map.json"
+else:
     outFileName = sys.argv[2]
-    
-with open(outFileName, 'w') as outfile:
+
+with open(outFileName, "w") as outfile:
     json.dump(config, outfile, indent=4)
