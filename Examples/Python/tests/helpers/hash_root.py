@@ -8,11 +8,10 @@ import argparse
 import uproot
 import numpy as np
 import awkward as ak
+import numba
 
 
-def hash_root_file(
-    path: Path, tree_name: Optional[str] = None, ordering_invariant: bool = True
-) -> str:
+def hash_root_file(path: Path, ordering_invariant: bool = True) -> str:
     rf = uproot.open(path)
 
     gh = hashlib.sha256()
@@ -23,6 +22,8 @@ def hash_root_file(
         tree = rf[tree_name]
         keys = list(sorted(tree.keys()))
 
+        #  print(path, tree_name)
+        #  tree.show()
         branches = tree.arrays(library="ak")
 
         if not ordering_invariant:
@@ -71,10 +72,6 @@ if "__main__" == __name__:
         "input_file", type=Path, help="The input ROOT file to calculate a hash for"
     )
     p.add_argument(
-        "--tree-name",
-        help="Explicit tree name to use. This needs to be specified if the ROOT file contains more than one tree.",
-    )
-    p.add_argument(
         "--no-ordering-invariant",
         "-n",
         action="store_true",
@@ -86,7 +83,6 @@ if "__main__" == __name__:
     print(
         hash_root_file(
             path=args.input_file,
-            tree_name=args.tree_name,
             ordering_invariant=not args.no_ordering_invariant,
         )
     )
