@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -61,7 +61,6 @@ class DoubleHitSpacePointBuilder {
   /// @param clusterPairs pairs of clusters that are space point
   /// candidates
   /// @param spacePoints storage of the results
-  /// @note If no configuration is set, the default values will be used
   void calculateSpacePoints(
       const GeometryContext& gctx,
       const std::vector<std::pair<const cluster_t*, const cluster_t*>>&
@@ -76,15 +75,14 @@ class DoubleHitSpacePointBuilder {
   /// on its corresponding surface
   /// @param cluster object related to the cluster that holds the necessary
   ///                information
-  /// @return vector of the local coordinates of the cluster on the surface
+  /// @return vector of the local coordinates and covariance matrix of the cluster on the surface
   std::pair<Vector2, SymMatrix2> localCoords(const cluster_t& cluster) const;
 
   /// @brief Getter method for the global coordinates of a cluster
-
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param cluster object related to the cluster that holds the
   /// necessary information
   /// @return vector of the global coordinates of the cluster
-  // Vector3 globalCoords(const GeometryContext& gctx,
   Vector3 globalPos(const GeometryContext& gctx,
                     const cluster_t& cluster) const;
 
@@ -96,14 +94,31 @@ class DoubleHitSpacePointBuilder {
   std::pair<Vector3, Vector3> endsOfStrip(const GeometryContext& gctx,
                                           const cluster_t& cluster) const;
 
+  /// @brief Calculates the global covariance in R and Z directions
+  /// @param gctx The geometry context to use
+  /// @param geoId The geometry ID of the surface
+  /// @param localPos Local coordinates
+  /// @param localCov local covariant matrix that is calculated in this function
+  /// @return global variances in R and Z directions.
   Vector2 globalCov(const GeometryContext& gctx,
                     const GeometryIdentifier& geoId, const Vector2& localPos,
                     const SymMatrix2& localCov) const;
 
+  /// @brief Gets measurement ID of the cluster
+  /// @param cluster object that stores the information about the hit
+  /// @return measurement ID
   size_t getMeasurementId(const cluster_t& cluster) const;
 
+  /// @brief Gets local variance of the strip cluster
+  /// @param cluster object that sotres the information about the strip hit
+  /// @return lcoal variance of the strip
   double getLocVar(const cluster_t& cluster) const;
 
+  /// @brief gets global variations in R and Z directions from two strip clusters.
+  /// @param cluster_front strip cluster on the first surface
+  /// @param cluster_back strip cluster on the second surface
+  /// @param theta the angle between the two strips
+  /// @return global variances in R and Z directions.
   Acts::Vector2 getGlobalVars(const GeometryContext& gctx,
                               const cluster_t& cluster_front,
                               const cluster_t& cluster_back,

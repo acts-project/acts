@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -50,20 +50,20 @@ class SingleHitSpacePointBuilder {
   /// @brief Getter method for the local coordinates of a cluster
   /// on its corresponding surface
   ///
-  /// @param meas object related to the measurement that holds the necessary
-  /// information
+  /// @param clus cluster that holds the neccesary information of the 2D hit position.
   /// @return vector of the local coordinates of the cluster on the surface
-  Vector2 localCoords(const cluster_t& meas) const;
+  Vector2 localCoords(const cluster_t& clus) const;
 
   /// @brief Getter method for the global coordinates of a cluster
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param meas object related to the measurement that holds the necessary
+  /// @param clus cluster that holds the necessary
   /// information
-  /// @return vector of the global coordinates of the cluster
+  /// @return vector of the global coordinates and covariance of the cluster
   std::pair<Vector3, Vector2> globalCoords(const GeometryContext& gctx,
                                            const cluster_t& meas) const;
 
+  // configuration of the strip builder
   SingleHitSpacePointBuilderConfig m_config;
 };
 }  // namespace Acts
