@@ -28,6 +28,7 @@ def runITk(
     events=1,
     outputObj=True,
     outputCsv=False,
+    outputJson=False,
 ):
 
     for ievt in range(events):
@@ -60,6 +61,37 @@ def runITk(
                 outputDir=str(obj_dir),
             )
             writer.write(context, trackingGeometry)
+
+        if outputJson:
+            json_dir = outputDir / "json"
+            json_dir.mkdir(exist_ok=True)
+            writer = JsonSurfacesWriter(
+                level=acts.logging.INFO,
+                trackingGeometry=trackingGeometry,
+                outputDir=str(json_dir),
+                writePerEvent=True,
+                writeSensitive=True,
+            )
+            writer.write(context)
+
+            jmConverterCfg = MaterialMapJsonConverter.Config(
+                processSensitives=True,
+                processApproaches=True,
+                processRepresenting=True,
+                processBoundaries=True,
+                processVolumes=True,
+                processNonMaterial=True,
+                context=context.geoContext,
+            )
+
+            jmw = JsonMaterialWriter(
+                level=acts.logging.VERBOSE,
+                converterCfg=jmConverterCfg,
+                fileName=str(json_dir / "material-map"),
+                writeFormat=JsonFormat.Json,
+            )
+
+            jmw.write(trackingGeometry)
 
 
 def buildITkGeometry(geo_dir: Path):
@@ -201,6 +233,11 @@ if "__main__" == __name__:
     p.add_argument(
         "--output-obj", action="store_true", help="Write geometry in OBJ format."
     )
+    p.add_argument(
+        "--output-json",
+        action="store_true",
+        help="Write geometry and material in JSON format.",
+    )
 
     args = p.parse_args()
     args.output_dir.mkdir(exist_ok=True, parents=True)
@@ -216,4 +253,5 @@ if "__main__" == __name__:
         outputDir=args.output_dir,
         outputCsv=args.output_csv,
         outputObj=args.output_obj,
+        outputJson=args.output_json,
     )
