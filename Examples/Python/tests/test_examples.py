@@ -209,6 +209,49 @@ def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
     assert len(list(obj.iterdir())) > 0
 
 
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+def test_truth_tracking(tmp_path):
+    from truth_tracking import runTruthTracking
+
+    detector, trackingGeometry, _ = getOpenDataDetector()
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+    seq = Sequencer(events=10, numThreads=1)
+
+    root_files = [
+        ("trackstates_fitter.root", "trackstates", 19),
+        ("tracksummary_fitter.root", "tracksummary", 10),
+        ("performance_track_finder.root", "track_finder_tracks", 19),
+        ("performance_track_fitter.root", None, -1),
+    ]
+
+    for fn, _, _ in root_files:
+        fp = tmp_path / fn
+        assert not fp.exists()
+
+    runTruthTracking(
+        trackingGeometry,
+        field,
+        digiConfigFile=Path(
+            "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",
+        ),
+        outputDir=tmp_path,
+        s=seq,
+    )
+
+    seq.run()
+
+    del seq
+
+    for fn, tn, ee in root_files:
+        fp = tmp_path / fn
+        assert fp.exists()
+        assert fp.stat().st_size > 1024
+        if tn is not None:
+            assert_entries(fp, tn, ee)
+
+
 @pytest.mark.slow
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
