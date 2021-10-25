@@ -8,7 +8,6 @@ import argparse
 import uproot
 import numpy as np
 import awkward as ak
-import numba
 
 
 def hash_root_file(path: Path, ordering_invariant: bool = True) -> str:
