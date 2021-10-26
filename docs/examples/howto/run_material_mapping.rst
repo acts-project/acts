@@ -1,15 +1,15 @@
 ACTS Material Mapping Tutorial
 ==============================
-When performing track reconstruction, the proper amount of material crossed by the particle need to be accounted for. This material is originally available in the detector simulation with a lot of details, which would make it expensive to directly use. To circumvent this issue, the material is mapped onto different surfaces in the tracking geometry. This process will be performed in 3 steps : 
+When performing track reconstruction, the proper amount of material crossed by the particle needs to be accounted for. This material is originally available in the detector simulation with a lot of details, which would make it expensive to directly use. To circumvent this issue, the material is mapped onto different surfaces in the tracking geometry. This process will be performed in 3 steps: 
 
-- first, a json geometry file is created, it will be used to configure which surface the material is mapped onto and with wich binning.
-- second, a Geant4 simulation is used to collect the material inside the detector.
-- third, all the step are projected onto the closest surfaces (or volume in case of volume mapping) and averaged out over many events to create a map.
+- first, a JSON geometry file is created, it will be used to configure which surface the material is mapped onto and with which binning.
+- second, a Geant4 simulation is used to collect the material inside the detector from the detailed geometry.
+- third, all the steps are projected onto the closest surfaces (or volume in case of volume mapping) and averaged out over many events to create a map.
 This page will explain how to perform the material mapping with the ACTS Examples. For this example we will use the Open Data Detector (ODD) the last paragraph will explain what needs to be changed if you want to perform the material mapping with another detector.
 
 Prerequisites
 -------------
-As a prerequisite you will need to build the ACTS with the Examples, Geant4 and the JSON plugin (``ACTS_BUILD_EXAMPLES``, ``ACTS_BUILD_EXAMPLES_GEANT4`` and ``ACTS_BUILD_PLUGIN_JSON``), please refer to the general how-to ACTS guide. Depending on the type of detector you want to map you will need to use some additional packages, in our case ``ACTS_BUILD_EXAMPLES_DD4HEP`` and ``ACTS_BUILD_PLUGIN_TGEO`` are needed.
+As a prerequisite you will need to build ACTS with the Examples, Geant4 and the JSON plugin (``ACTS_BUILD_EXAMPLES``, ``ACTS_BUILD_EXAMPLES_GEANT4`` and ``ACTS_BUILD_PLUGIN_JSON``) enabled, please refer to the general how-to ACTS guide. Depending on the type of detector you want to map you will need to use some additional packages, in our case ``ACTS_BUILD_EXAMPLES_DD4HEP`` and ``ACTS_BUILD_PLUGIN_TGEO`` are needed.
 
 For this particular example the ODD will also be need. To use it, don't forget to get the corresponding submodule and the recompile the ACTS code if needed.
 
@@ -40,7 +40,7 @@ Four types of surfaces exist:
 By default, all the surfaces will be written but one can turn a specific type off (for example the sensitive) by using the appropriate option : ``mat-output-XXX false``
 
 The JSON file can now be edited to select which surfaces and volumes you want to have material mapped on. The JSON file is comprise of two parts, the first one contain a list of surfaces and the second a list of volumes. Information of the surface and volumes such as their type, range, id and position are available. To add one surface to the material mapping, one simply needs to switch the ``mapMaterial`` variable to ``true``. The binning can then be changed by changing the number associated to ``bins``, the type of bin can also be changed. For the volume, the same method can be applied, except that up to 3 bins can be associated.
-As a rule of thumb volume material should only be used for large homogeneous detector (like calorimeters and gaseous detectors), for the material mapping a good first try would be to use the representing surfaces of the layers with sensors the binning depend heavily on the geometry but could be of the order of 100 (the more bin are used the more vents should be simulated).
+As a rule of thumb volume material should only be used for large homogeneous detector (like calorimeters and gaseous detectors), for the material mapping a good first try would be to use the representing surfaces of the layers with sensors. The binning depends heavily on the geometry and could be of the order of 100 (the more bins are used the more events need to be simulated to populate the bins).
 
 .. warning::
   When mapping onto a surface, the material inside volumes with material (or ``ProtoMaterial``) will be ignored, you should thus avoid mapping material onto surfaces within material volumes. When mapping onto a volume, only the material within that volume will be used. If you have a large gap between the last material surface and the volume you might then want to also map material onto the boundary of the material volume.
