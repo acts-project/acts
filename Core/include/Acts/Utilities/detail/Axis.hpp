@@ -209,8 +209,8 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
 
     // Handle corner case where user requests more neighbours than the number
     // of bins on the axis. Returns all bins in this case.
-    sizes.first %= getNBins();
-    sizes.second %= getNBins();
+    sizes.first %= int(getNBins());
+    sizes.second %= int(getNBins());
     if (std::abs(sizes.first - sizes.second) >= getNBins()) {
       sizes.first = -idx+1;
       sizes.second = getNBins()-idx;

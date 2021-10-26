@@ -1072,13 +1072,23 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
                            1725, 1726}));
 
     // Neighbors array
-    BOOST_CHECK(g1.neighborHoodIndices({{0}},{{-1,1}}).collectVector()
+    std::array<std::pair<int,int>,1> a1;
+    a1.at(0) = std::make_pair<int,int>(-1,1);
+    BOOST_CHECK(g1.neighborHoodIndices({{0}}, a1).collectVector()
                 == bins_t({0,1}));
-    BOOST_CHECK(g1.neighborHoodIndices({{2}},{{-1,1}}).collectVector()
+    BOOST_CHECK(g1.neighborHoodIndices({{2}}, a1).collectVector()
                 == bins_t({1,2,3}));
-    BOOST_CHECK(g1.neighborHoodIndices({{2}},{{2,3}}).collectVector()
+
+    a1.at(0) = std::make_pair<int,int>(2,3);
+    BOOST_CHECK(g1.neighborHoodIndices({{2}}, a1).collectVector()
                 == bins_t({4,5}));
-    BOOST_CHECK(g1.neighborHoodIndices({{2}},{{-2,-1}}).collectVector()
+
+    a1.at(0) = std::make_pair<int,int>(-2,-1);
+    BOOST_CHECK(g1.neighborHoodIndices({{2}}, a1).collectVector()
+                == bins_t({0,1}));
+
+    a1.at(0) = std::make_pair<int,int>(-3,-1);
+    BOOST_CHECK(g1.neighborHoodIndices({{2}}, a1).collectVector()
                 == bins_t({0,1}));
   // clang-format on
 
