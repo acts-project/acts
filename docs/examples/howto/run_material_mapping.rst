@@ -1,10 +1,15 @@
 ACTS Material Mapping Tutorial
 ==============================
+When performing track reconstruction, the proper amount of material crossed by the particle needs to be accounted for. This material is originally available in the detector simulation with a lot of details, which would make it expensive to directly use. To circumvent this issue, the material is mapped onto different surfaces in the tracking geometry. This process will be performed in 3 steps: 
+
+- first, a JSON geometry file is created, it will be used to configure which surface the material is mapped onto and with which binning.
+- second, a Geant4 simulation is used to collect the material inside the detector from the detailed geometry.
+- third, all the steps are projected onto the closest surfaces (or volume in case of volume mapping) and averaged out over many events to create a map.
 This page will explain how to perform the material mapping with the ACTS Examples. For this example we will use the Open Data Detector (ODD) the last paragraph will explain what needs to be changed if you want to perform the material mapping with another detector.
 
 Prerequisites
 -------------
-First you will need to build the ACTS with the Examples, Geant4 and the JSON plugin (``ACTS_BUILD_EXAMPLES``, ``ACTS_BUILD_EXAMPLES_GEANT4`` and ``ACTS_BUILD_PLUGIN_JSON``), please refer to the general how-to ACTS guide. Depending on the type of detector you want to map you will need to use some additional packages, in our case ``ACTS_BUILD_EXAMPLES_DD4HEP`` and ``ACTS_BUILD_PLUGIN_TGEO`` are needed.
+As a prerequisite you will need to build ACTS with the Examples, Geant4 and the JSON plugin (``ACTS_BUILD_EXAMPLES``, ``ACTS_BUILD_EXAMPLES_GEANT4`` and ``ACTS_BUILD_PLUGIN_JSON``) enabled, please refer to the general how-to ACTS guide. Depending on the type of detector you want to map you will need to use some additional packages, in our case ``ACTS_BUILD_EXAMPLES_DD4HEP`` and ``ACTS_BUILD_PLUGIN_TGEO`` are needed.
 
 For this particular example the ODD will also be need. To use it, don't forget to get the corresponding submodule and the recompile the ACTS code if needed.
 
@@ -35,6 +40,7 @@ Four types of surfaces exist:
 By default, all the surfaces will be written but one can turn a specific type off (for example the sensitive) by using the appropriate option : ``mat-output-XXX false``
 
 The JSON file can now be edited to select which surfaces and volumes you want to have material mapped on. The JSON file is comprise of two parts, the first one contain a list of surfaces and the second a list of volumes. Information of the surface and volumes such as their type, range, id and position are available. To add one surface to the material mapping, one simply needs to switch the ``mapMaterial`` variable to ``true``. The binning can then be changed by changing the number associated to ``bins``, the type of bin can also be changed. For the volume, the same method can be applied, except that up to 3 bins can be associated.
+As a rule of thumb volume material should only be used for large homogeneous detector (like calorimeters and gaseous detectors), for the material mapping a good first try would be to use the representing surfaces of the layers with sensors. The binning depends heavily on the geometry and could be of the order of 100 (the more bins are used the more events need to be simulated to populate the bins).
 
 .. warning::
   When mapping onto a surface, the material inside volumes with material (or ``ProtoMaterial``) will be ignored, you should thus avoid mapping material onto surfaces within material volumes. When mapping onto a volume, only the material within that volume will be used. If you have a large gap between the last material surface and the volume you might then want to also map material onto the boundary of the material volume.
@@ -47,6 +53,7 @@ In addition to this, the mapping type can be changed for surface mapping by chan
 - ``Sensor`` : Only map the last material hits before the surface. Used to map only the sensor material onto the sensors.
 
 In case two different sufaces would receive a material hit (Default followed by Default or PreMapping for example), the material hit is associated with the closest surface.
+
 .. warning::
   Due to the implementation, all the material hits need to be associated with a surface. If a PostMapping surface follows a PreMapping or a Sensor surface, all the material between the two surface will be mapped onto the PostMapping surface and a warning will be issued. The same goes if the first surface encountered is a PostMapping surface.
 
@@ -89,6 +96,7 @@ With the surfaces map and the material track we can finally do the material mapp
 
   ./../build/bin/ActsExampleMaterialMappingDD4hep -j1 --input-root true --input-files geant4_material_tracks.root --mat-input-type file --mat-input-file geometry-map.json --output-root --output-json --output-cbor --mat-output-file material-maps --mat-mapping-surfaces true --mat-mapping-volumes true --mat-mapping-volume-stepsize 1 --dd4hep-input ../thirdparty/OpenDataDetector/xml/OpenDataDetector.xml
 
+Note that technically when using DD4Hep (in particular for the ODD) using the option ``--mat-input-type`` is not strictly necessary as the DD4Hep geometry can hold the information of which surface to map onto with which binning. The goal of this how-to being to explain how to make a material map regardless of the detector, we will ignore that option.
 
 As an output you will obtain the material map as a root and JSON file and a new material track collection in a root file. This new collection adds to each material interaction the associated surface during the mapping. This can be used for the control plots.
 Depending on what you want to do there are three option you can change :
