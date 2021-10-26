@@ -56,11 +56,11 @@ class SingleHitSpacePointBuilder {
   /// @brief Getter method for the global coordinates of a cluster
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param clus cluster that holds the necessary
+  /// @param cluster cluster that holds the necessary
   /// information
   /// @return vector of the global coordinates and covariance of the cluster
   std::pair<Vector3, Vector2> globalCoords(const GeometryContext& gctx,
-                                           const cluster_t& meas) const;
+                                           const cluster_t& cluster) const;
 
   // configuration of the single hit space point builder
   SingleHitSpacePointBuilderConfig m_config;

@@ -25,8 +25,8 @@ Acts::SingleHitSpacePointBuilder<spacepoint_t, cluster_t>::
 template <typename spacepoint_t, typename cluster_t>
 std::pair<Acts::Vector3, Acts::Vector2>
 Acts::SingleHitSpacePointBuilder<spacepoint_t, cluster_t>::globalCoords(
-    const GeometryContext& gctx, const cluster_t& clus) const {
-  auto meas = clus.measurement();
+    const GeometryContext& gctx, const cluster_t& cluster) const {
+  auto meas = cluster.measurement();
   auto slink = std::visit([](const auto& x) { return x.sourceLink(); }, meas);
   const auto geoId = slink.geometryId();
   const Acts::Surface* surface = m_config.trackingGeometry->findSurface(geoId);
@@ -89,7 +89,7 @@ void Acts::SingleHitSpacePointBuilder<spacepoint_t, cluster_t>::
   // Set the space point for all stored hits
   for (const auto& clus : clusters) {
     auto measurement = clus.measurement();
-    auto [gPos, gCov] = globalCoords(gctx, measurement);
+    auto [gPos, gCov] = globalCoords(gctx, clus);
     auto slink =
         std::visit([](const auto& x) { return x.sourceLink(); }, measurement);
 
