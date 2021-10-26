@@ -115,6 +115,7 @@ class DoubleHitSpacePointBuilder {
   double getLocVar(const cluster_t& cluster) const;
 
   /// @brief gets global variations in R and Z directions from two strip clusters.
+  /// @param gctx The geometry context to use
   /// @param cluster_front strip cluster on the first surface
   /// @param cluster_back strip cluster on the second surface
   /// @param theta the angle between the two strips
