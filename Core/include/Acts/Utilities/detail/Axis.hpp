@@ -419,7 +419,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   /// @param [in] idx requested bin index
   /// @param [in] size how many neighboring bins
   /// @return Set of neighboring bin indices (global)
-  NeighborHoodIndices neighborHoodIndices(size_t idx, int size = 1) const {
+  NeighborHoodIndices neighborHoodIndices(size_t idx, size_t size = 1) const {
     return neighborHoodIndices(idx, std::make_pair(-size, size));
   }
 
