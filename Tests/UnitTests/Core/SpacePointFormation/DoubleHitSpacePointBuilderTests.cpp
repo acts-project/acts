@@ -187,33 +187,33 @@ BOOST_DATA_TEST_CASE(DoubleHitSpacePointBuilder_basic, bdata::xrange(1),
       }
     }
   }
-    auto spBuilderConfig = DoubleHitSpacePointBuilderConfig();
-    spBuilderConfig.trackingGeometry = geometry;
+  auto spBuilderConfig = DoubleHitSpacePointBuilderConfig();
+  spBuilderConfig.trackingGeometry = geometry;
 
-    auto doubleSPBuilder =
-        Acts::DoubleHitSpacePointBuilder<TestSpacePoint, Cluster>(
-            spBuilderConfig);
+  auto doubleSPBuilder =
+      Acts::DoubleHitSpacePointBuilder<TestSpacePoint, Cluster>(
+          spBuilderConfig);
 
-    TestSpacePointContainer spacePoints;
-    std::cout << "number of front/back clusters " << clusters_front.size()
-              << " / " << clusters_back.size() << std::endl;
-    std::vector<std::pair<const Cluster*, const Cluster*>> clusterPairs;
+  TestSpacePointContainer spacePoints;
+  std::cout << "number of front/back clusters " << clusters_front.size()
+            << " / " << clusters_back.size() << std::endl;
+  std::vector<std::pair<const Cluster*, const Cluster*>> clusterPairs;
 
-    doubleSPBuilder.makeClusterPairs(tgContext, clusters_front, clusters_back,
-                                     clusterPairs);
-    BOOST_CHECK_NE(clusterPairs.size(), 0);
-    doubleSPBuilder.calculateSpacePoints(tgContext, clusterPairs, spacePoints);
+  doubleSPBuilder.makeClusterPairs(tgContext, clusters_front, clusters_back,
+                                   clusterPairs);
+  BOOST_CHECK_NE(clusterPairs.size(), 0);
+  doubleSPBuilder.calculateSpacePoints(tgContext, clusterPairs, spacePoints);
 
-    BOOST_REQUIRE_EQUAL(clusterPairs.size(), spacePoints.size());
-    std::cout << "Number of space points " << spacePoints.size() << std::endl;
+  BOOST_REQUIRE_EQUAL(clusterPairs.size(), spacePoints.size());
+  std::cout << "Number of space points " << spacePoints.size() << std::endl;
 
-    for (auto& sp : spacePoints) {
-      std::cout << "space point (" << sp.x() << " " << sp.y() << " " << sp.z()
-                << ") var: " << sp.varianceR() << " " << sp.varianceZ()
-                << std::endl;
-    }
-    std::cout << "Space point calculated" << std::endl;
+  for (auto& sp : spacePoints) {
+    std::cout << "space point (" << sp.x() << " " << sp.y() << " " << sp.z()
+              << ") var: " << sp.varianceR() << " " << sp.varianceZ()
+              << std::endl;
   }
+  std::cout << "Space point calculated" << std::endl;
+}
 
 }  // end of namespace Test
 }  // namespace Acts
