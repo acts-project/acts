@@ -257,7 +257,7 @@ def runCKFTracks(
     trackFinder = acts.examples.TrackFindingAlgorithm(
         level=acts.logging.INFO,
         measurementSelectorCfg=acts.MeasurementSelector.Config(
-            [(acts.GeometryIdentifier(), (15.0, 10))]
+            [(acts.GeometryIdentifier(), ([], [15.0], [10]))]
         ),
         inputMeasurements=digiAlg.config.outputMeasurements,
         inputSourceLinks=digiAlg.config.outputSourceLinks,

@@ -39,12 +39,8 @@ MeasurementSelector::select(
     return CombinatorialKalmanFilterError::MeasurementSelectionFailed;
   }
 
-  const double chi2CutOff = cuts->chi2CutOff;
-  const size_t numMeasurementsCutOff = cuts->numMeasurementsCutOff;
-  ACTS_VERBOSE("Allowed maximum chi2: " << chi2CutOff);
-  ACTS_VERBOSE(
-      "Allowed maximum number of measurements: " << numMeasurementsCutOff);
-  ACTS_VERBOSE("Number of measurement candidates: " << candidates.size());
+  const auto& chi2CutOff = cuts->chi2CutOff;
+  const auto& numMeasurementsCutOff = cuts->numMeasurementsCutOff;
 
   double minChi2 = std::numeric_limits<double>::max();
   size_t minIndex = 0;
@@ -82,10 +78,12 @@ MeasurementSelector::select(
                       .inverse() *
                   res)
                      .eval()(0, 0);
-          ACTS_VERBOSE("Chi2: " << chi2);
+          const auto chi2Cut =
+              VariableCut(predicted, cuts, chi2CutOff, logger);
+          ACTS_VERBOSE("Chi2: " << chi2 << ", max: " << chi2Cut);
 
           // use track state chi2 storage for this
-          if (chi2 < chi2CutOff) {
+          if (chi2 < chi2Cut) {
             // // // measChi2.at(nInitialCandidates) = {index, chi2};
             nInitialCandidates++;
           }
@@ -113,24 +111,54 @@ MeasurementSelector::select(
       candidates.begin(), candidates.end(),
       [](const auto& tsa, const auto& tsb) { return tsa.chi2() < tsb.chi2(); });
 
+  const size_t numMeasurementsCut =
+      VariableCut(candidates.begin()->predicted(), cuts, numMeasurementsCutOff, logger);
+
   auto endIterator = candidates.begin();
   auto maxIterator = candidates.end();
-  if (candidates.size() > numMeasurementsCutOff) {
-    maxIterator = std::next(candidates.begin(), numMeasurementsCutOff);
+  if (candidates.size() > numMeasurementsCut) {
+    maxIterator = std::next(candidates.begin(), numMeasurementsCut);
   }
 
   for (; endIterator != maxIterator; ++endIterator) {
-    if (endIterator->chi2() >= chi2CutOff) {
+    const auto chi2Cut = VariableCut(endIterator->predicted(), cuts, chi2CutOff, logger);
+    if (endIterator->chi2() >= chi2Cut) {
       break;  // endIterator now points at the first track state with chi2
               // larger than our cutoff => defines the end of our returned
               // range
     }
   }
-  ACTS_VERBOSE("Number of selected measurements: " << std::distance(
-                   candidates.begin(), endIterator));
+  ACTS_VERBOSE("Number of selected measurements: "
+               << std::distance(candidates.begin(), endIterator)
+               << ", max: " << numMeasurementsCut);
 
   isOutlier = false;
   return std::pair{candidates.begin(), endIterator};
+}
+
+template <typename cut_value_t>
+static cut_value_t VariableCut(
+    const Acts::MultiTrajectory::TrackStateProxy::Parameters& predictedParams,
+    const Acts::MeasurementSelector::Config::Iterator selector,
+    const std::vector<cut_value_t>& cuts, LoggerWrapper logger) {
+  const auto& etaBins = selector->etaBins;
+  if (etaBins.empty()) {
+    return cuts[0];  // shortcut if no etaBins
+  }
+  const auto eta = Acts::VectorHelpers::eta(predictedParams.unitDirection());
+  const auto abseta = std::abs(eta);
+  size_t bin = 0;
+  for (auto etaBin : etaBins) {
+    if (etaBin >= abseta) {
+      break;
+    }
+    bin++;
+  }
+  if (bin >= cuts.size()) {
+    bin = cuts.size() - 1;
+  }
+  ACTS_VERBOSE("Variable cut for eta=" << eta << ": " << cuts[bin]);
+  return cuts[bin];
 }
 
 }  // namespace Acts

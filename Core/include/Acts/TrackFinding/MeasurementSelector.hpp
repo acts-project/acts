@@ -28,10 +28,12 @@ namespace Acts {
 /// The default configuration only takes the best matching measurement without a
 /// cut on the local chi2.
 struct MeasurementSelectorCuts {
+  /// bins in |eta| to specify variable selections
+  std::vector<double> etaBins;
   /// Maximum local chi2 contribution.
-  double chi2CutOff = std::numeric_limits<double>::max();
+  std::vector<double> chi2CutOff{std::numeric_limits<double>::max()};
   /// Maximum number of associated measurements on a single surface.
-  size_t numMeasurementsCutOff = 1;
+  std::vector<int> numMeasurementsCutOff{1};
 };
 
 /// @brief Measurement selection struct selecting those measurements compatible
@@ -74,6 +76,12 @@ class MeasurementSelector {
          bool& isOutlier, LoggerWrapper logger) const;
 
  private:
+  template <typename cut_value_t>
+  static cut_value_t VariableCut(
+      const Acts::MultiTrajectory::TrackStateProxy::Parameters& predictedParams,
+      const Acts::MeasurementSelector::Config::Iterator selector,
+      const std::vector<cut_value_t>& cuts, LoggerWrapper logger);
+
   Config m_config;
 };
 
