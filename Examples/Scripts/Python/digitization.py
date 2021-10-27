@@ -51,11 +51,11 @@ def configureDigitization(
         )
     else:
         # Read input from input collection (e.g. Pythia8 output)
-
         evGen = acts.examples.RootParticleReader(
             level=acts.logging.INFO,
             particleCollection=particleCollection,
             filePath=str(particlesInput),
+            orderedEvents=False
         )
 
     # Simulation
