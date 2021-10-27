@@ -55,7 +55,7 @@ def configureDigitization(
             level=acts.logging.INFO,
             particleCollection=particleCollection,
             filePath=str(particlesInput),
-            orderedEvents=False
+            orderedEvents=False,
         )
 
     # Simulation
