@@ -186,6 +186,7 @@ BOOST_DATA_TEST_CASE(DoubleHitSpacePointBuilder_basic, bdata::xrange(1),
         }
       }
     }
+  }
     auto spBuilderConfig = DoubleHitSpacePointBuilderConfig();
     spBuilderConfig.trackingGeometry = geometry;
 
@@ -213,6 +214,6 @@ BOOST_DATA_TEST_CASE(DoubleHitSpacePointBuilder_basic, bdata::xrange(1),
     }
     std::cout << "Space point calculated" << std::endl;
   }
-}
+
 }  // end of namespace Test
 }  // namespace Acts
