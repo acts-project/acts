@@ -19,7 +19,7 @@ namespace Acts {
 
 /// @brief Configuration of the class to steer its behaviour
 
-/// @class TwoHitsSpacePointBuilder
+/// @class DoubleHitSpacePointBuilder
 ///
 /// After the particle interaction with surfaces are recorded and digitized
 /// the hits strip detectors need further treatment. This class takes
@@ -123,7 +123,7 @@ class DoubleHitSpacePointBuilder {
   Acts::Vector2 getGlobalVars(const GeometryContext& gctx,
                               const cluster_t& cluster_front,
                               const cluster_t& cluster_back,
-                              double theta) const;
+                              const double theta) const;
 };
 }  // namespace Acts
 #include "Acts/SpacePointFormation/detail/DoubleHitSpacePointBuilder.ipp"

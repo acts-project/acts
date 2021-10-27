@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -35,7 +35,6 @@
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <cmath>
-#include <iostream>  // just for tests
 #include <limits>
 #include <variant>
 namespace bdata = boost::unit_test::data;
@@ -178,7 +177,7 @@ BOOST_DATA_TEST_CASE(DoubleHitSpacePointBuilder_basic, bdata::xrange(1),
 
       const Cluster* clus = new Cluster(meas, segmentation);
 
-      if (geoId.volume() == 3) {
+      if (geoId.volume() == 3) {  // strip volume
         const auto layerId = geoId.layer();
         if (layerId == 2 || layerId == 6) {
           clusters_front.emplace_back(std::move(clus));
@@ -186,38 +185,35 @@ BOOST_DATA_TEST_CASE(DoubleHitSpacePointBuilder_basic, bdata::xrange(1),
           clusters_back.emplace_back(std::move(clus));
         }
       }
-
-    } else {
     }
+
+    auto spBuilderConfig = DoubleHitSpacePointBuilderConfig();
+    spBuilderConfig.trackingGeometry = geometry;
+
+    auto doubleSPBuilder =
+        Acts::DoubleHitSpacePointBuilder<TestSpacePoint, Cluster>(
+            spBuilderConfig);
+
+    TestSpacePointContainer spacePoints;
+    std::cout << "number of front/back clusters " << clusters_front.size()
+              << " / " << clusters_back.size() << std::endl;
+    std::vector<std::pair<const Cluster*, const Cluster*>> clusterPairs;
+
+    doubleSPBuilder.makeClusterPairs(tgContext, clusters_front, clusters_back,
+                                     clusterPairs);
+    BOOST_CHECK_NE(clusterPairs.size(), 0);
+    doubleSPBuilder.calculateSpacePoints(tgContext, clusterPairs, spacePoints);
+
+    BOOST_REQUIRE_EQUAL(clusterPairs.size(), spacePoints.size());
+    std::cout << "Number of space points " << spacePoints.size() << std::endl;
+
+    for (auto& sp : spacePoints) {
+      std::cout << "space point (" << sp.x() << " " << sp.y() << " " << sp.z()
+                << ") var: " << sp.varianceR() << " " << sp.varianceZ()
+                << std::endl;
+    }
+    std::cout << "Space point calculated" << std::endl;
   }
-
-  auto spBuilderConfig = DoubleHitSpacePointBuilderConfig();
-  spBuilderConfig.trackingGeometry = geometry;
-
-  auto doubleSPBuilder =
-      Acts::DoubleHitSpacePointBuilder<TestSpacePoint, Cluster>(
-          spBuilderConfig);
-
-  TestSpacePointContainer spacePoints;
-  std::cout << "number of front/back clusters " << clusters_front.size()
-            << " / " << clusters_back.size() << std::endl;
-  std::vector<std::pair<const Cluster*, const Cluster*>> clusterPairs;
-
-  doubleSPBuilder.makeClusterPairs(tgContext, clusters_front, clusters_back,
-                                   clusterPairs);
-  BOOST_CHECK_NE(clusterPairs.size(), 0);
-  doubleSPBuilder.calculateSpacePoints(tgContext, clusterPairs, spacePoints);
-
-  BOOST_REQUIRE_EQUAL(clusterPairs.size(), spacePoints.size());
-  std::cout << "Number of space points " << spacePoints.size() << std::endl;
-
-  for (auto& sp : spacePoints) {
-    std::cout << "space point (" << sp.x() << " " << sp.y() << " " << sp.z()
-              << ") var: " << sp.varianceR() << " " << sp.varianceZ()
-              << std::endl;
-  }
-  std::cout << "Space point calculated" << std::endl;
-}
 
 }  // end of namespace Test
-}  // end of namespace Acts
+}  // namespace Test

@@ -9,7 +9,8 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/SpacePointFormation/DoubleHitSpacePointBuilder.hpp"
+//#include "Acts/SpacePointFormation/DoubleHitSpacePointBuilder.hpp" TODO add
+// strips
 #include "Acts/SpacePointFormation/SingleHitSpacePointBuilder.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.h"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"

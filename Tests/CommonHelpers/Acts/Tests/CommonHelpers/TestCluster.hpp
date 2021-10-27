@@ -17,7 +17,6 @@
 namespace Acts {
 namespace Test {
 
-/// Space point representation of a measurement suitable for track seeding.
 template <typename measurement_t>
 class TestCluster {
  public:

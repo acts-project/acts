@@ -15,7 +15,7 @@
 
 namespace Acts {
 
-/// @class OneHitSpacePointBuilder
+/// @class SingleHitSpacePointBuilder
 ///
 /// After the particle interaction with surfaces are recorded and digitized
 /// the clusters pixel detectors need further treatment. This class takes

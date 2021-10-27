@@ -1,21 +1,13 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/ConeSurface.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-
 #include <cmath>
-#include <iostream>  // just for tests
 #include <limits>
-#include <variant>
 
 namespace Acts {
 namespace detail {
@@ -101,7 +93,6 @@ inline double differenceOfClustersChecked(const Vector3& pos1,
 /// @return Pair containing the top and bottom end
 inline std::pair<Vector2, Vector2> findLocalTopAndBottomEnd(
     const Vector2& local, const CartesianSegmentation* segment) {
-  // std::cout << "findLocalTopAndBottomEnd" << std::endl;
   auto& binData = segment->binUtility().binningData();
   auto& boundariesX = binData[0].boundaries();
   auto& boundariesY = binData[1].boundaries();
@@ -115,8 +106,8 @@ inline std::pair<Vector2, Vector2> findLocalTopAndBottomEnd(
 
   if (boundariesX[binX + 1] - boundariesX[binX] <
       boundariesY[binY + 1] - boundariesY[binY]) {
-    topBottomLocal.first = Vector2(
-        (boundariesX[binX] + boundariesX[binX + 1]) / 2, boundariesY[binY + 1]);
+    topBottomLocal.first = {(boundariesX[binX] + boundariesX[binX + 1]) / 2,
+                            boundariesY[binY + 1]};
     topBottomLocal.second = {(boundariesX[binX] + boundariesX[binX + 1]) / 2,
                              boundariesY[binY]};
   } else {
@@ -129,12 +120,6 @@ inline std::pair<Vector2, Vector2> findLocalTopAndBottomEnd(
 
   return topBottomLocal;
 }
-
-/// template <typename cluster_t>
-// inline double calcErrors(const cluster_t &clus_front, const cluster_t
-// &clusback){
-
-//}
 
 /// @brief Calculates a space point whithout using the vertex
 /// @note This is mostly to resolve space points from cosmic data
@@ -327,7 +312,6 @@ Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
     : m_cfg(std::move(cfg)) {}
 
 template <typename spacepoint_t, typename cluster_t>
-// Acts::Vector2//
 std::pair<Acts::Vector2, Acts::SymMatrix2>
 Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::localCoords(
     const cluster_t& cluster) const {
@@ -476,22 +460,19 @@ template <typename spacepoint_t, typename cluster_t>
 double Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::getLocVar(
     const cluster_t& clus) const {
   const auto meas = clus.measurement();
-
   auto cov = std::visit(
       [](const auto& x) {
         auto expander = x.expander();
         Acts::BoundSymMatrix bcov =
             expander * x.covariance() * expander.transpose();
-
         Acts::SymMatrix2 lcov =
             bcov.block<2, 2>(Acts::eBoundLoc0, Acts::eBoundLoc0);
-
         return lcov;
       },
       meas);
-
   return cov(0, 0);
 }
+
 template <typename spacepoint_t, typename cluster_t>
 Acts::Vector2
 Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::globalCov(
@@ -523,11 +504,12 @@ Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::globalCov(
 
   return gcov;
 }
+
 template <typename spacepoint_t, typename cluster_t>
 Acts::Vector2
 Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::getGlobalVars(
     const Acts::GeometryContext& gctx, const cluster_t& clus_front,
-    const cluster_t& clus_back, double theta) const {
+    const cluster_t& clus_back, const double theta) const {
   const auto var1 = getLocVar(clus_front);
   const auto var2 = getLocVar(clus_back);
   // strip1 and strip2 are tilted at +/- theta/2
@@ -540,7 +522,6 @@ Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::getGlobalVars(
   double sig_y1 = sigma_y * cos(0.5 * theta) + sigma_x * sin(0.5 * theta);
   Acts::SymMatrix2 lcov;
   lcov << sig_x1, 0, 0, sig_y1;
-  std::cout << lcov << std::endl;
 
   auto [localPos, localCov] = localCoords(clus_front);
   const auto meas = clus_front.measurement();
@@ -583,18 +564,16 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
     std::vector<size_t> measurementIndices = {id_front, id_back};
     double resultPerpProj;
 
-    if (m_cfg.usePerpProj) {
+    if (m_cfg.usePerpProj) {  // for cosmic without vertex constraint
       resultPerpProj = detail::calcPerpendicularProjection(
           ends1.first, ends2.first, spaPoPa.q, spaPoPa.r);
       if (resultPerpProj <= 0.) {
         Vector3 pos = ends1.first + resultPerpProj * spaPoPa.q;
         double theta = acos(spaPoPa.q.dot(spaPoPa.r) /
                             (spaPoPa.q.norm() * spaPoPa.r.norm()));
-
-        std::cout << "theta check " << theta << std::endl;
-        double varRho = 0.;  // TODO implement variance rho and z
-
-        double varZ = 0.;
+        const auto gcov = getGlobalVars(gctx, *(cp.first), *(cp.second), theta);
+        const double varRho = gcov[0];
+        const double varZ = gcov[1];
 
         auto sp =
             spacepoint_t(pos, varRho, varZ, std::move(measurementIndices));
@@ -617,8 +596,8 @@ void Acts::DoubleHitSpacePointBuilder<spacepoint_t, cluster_t>::
                           (spaPoPa.q.norm() * spaPoPa.r.norm()));
 
       const auto gcov = getGlobalVars(gctx, *(cp.first), *(cp.second), theta);
-      double varRho = gcov[0];
-      double varZ = gcov[1];
+      const double varRho = gcov[0];
+      const double varZ = gcov[1];
       auto sp = spacepoint_t(pos, varRho, varZ, std::move(measurementIndices));
       spacePoints.push_back(std::move(sp));
     }

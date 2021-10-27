@@ -95,7 +95,6 @@ struct CubicTrackingGeometry {
       rotation_strip.col(1) = yPos;
       rotation_strip.col(2) = zPos;
 
-      // Transform3 trafo(Transform3::Identity() * rotation_strip*rotation);
       Transform3 trafo(Transform3::Identity() * rotation * rotation_strip);
       trafo.translation() = translations[i];
 

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -154,6 +154,11 @@ BOOST_DATA_TEST_CASE(SingleHitSpacePointBuilder_basic, bdata::xrange(1),
 
   BOOST_REQUIRE_EQUAL(clusters.size(), spacePoints.size());
   BOOST_CHECK_NE(spacePoints[0].x(), 0);
+  for (auto& sp : spacePoints) {
+    std::cout << "space point (" << sp.x() << " " << sp.y() << " " << sp.z()
+              << ") var: " << sp.varianceR() << " " << sp.varianceZ()
+              << std::endl;
+  }
 }
 
 }  // end of namespace Test

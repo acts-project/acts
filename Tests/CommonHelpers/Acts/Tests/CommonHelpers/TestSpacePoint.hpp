@@ -25,7 +25,7 @@ class TestSpacePoint {
   /// @param pos Global position
   /// @param varRho Measurement variance of the global transverse distance
   /// @param varZ Measurement variance of the global longitudinal position
-  /// @param measurementIndex Index of the underlying measurement
+  /// @param measurementIndices Indices of the underlying measurement
   template <typename position_t>
   TestSpacePoint(const Eigen::MatrixBase<position_t>& pos, float varRho,
                  float varZ, std::vector<size_t> measurementIndices)
@@ -46,7 +46,6 @@ class TestSpacePoint {
   constexpr float varianceR() const { return m_varianceRho; }
   constexpr float varianceZ() const { return m_varianceZ; }
 
-  constexpr size_t measurementIndex() const { return m_measurementIndex; }
   const std::vector<size_t>& measurementIndices() const {
     return m_measurementIndices;
   }
@@ -60,8 +59,7 @@ class TestSpacePoint {
   // Variance in rho/z of the global coordinates
   float m_varianceRho;
   float m_varianceZ;
-  // Index of the corresponding measurement
-  size_t m_measurementIndex;
+  // Indices of the corresponding measurement
   std::vector<size_t> m_measurementIndices;
 };
 
