@@ -295,7 +295,7 @@ struct grid_helper_impl {
   template <class... Axes>
   static void neighborHoodIndices(
       const std::array<size_t, sizeof...(Axes)>& localIndices,
-      std::array<std::pair<int, int>,sizeof...(Axes)> sizes,
+      std::array<std::pair<int, int>, sizeof...(Axes)> sizes,
       const std::tuple<Axes...>& axes,
       std::array<NeighborHoodIndices, sizeof...(Axes)>& neighborIndices) {
     // ask n-th axis
@@ -440,7 +440,7 @@ struct grid_helper_impl<0u> {
   template <class... Axes>
   static void neighborHoodIndices(
       const std::array<size_t, sizeof...(Axes)>& localIndices,
-      std::array<std::pair<int, int>,1> sizes, const std::tuple<Axes...>& axes,
+      std::array<std::pair<int, int>, 1> sizes, const std::tuple<Axes...>& axes,
       std::array<NeighborHoodIndices, sizeof...(Axes)>& neighborIndices) {
     // ask 0-th axis
     size_t locIdx = localIndices.at(0u);
@@ -797,7 +797,8 @@ struct grid_helper {
   static GlobalNeighborHoodIndices<sizeof...(Axes)> neighborHoodIndices(
       const std::array<size_t, sizeof...(Axes)>& localIndices, size_t size,
       const std::tuple<Axes...>& axes) {
-    return neighborHoodIndices(localIndices, std::make_pair(int(-size), size), axes);
+    return neighborHoodIndices(localIndices, std::make_pair(int(-size), size),
+                               axes);
   }
 
   /// @brief get global bin indices for bins in specified neighborhood

@@ -159,8 +159,9 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
                                               -1, 1}) const {
     constexpr int min = 0;
     const int max = getNBins() + 1;
-    const int itmin = std::clamp(static_cast<int>(idx + sizes.first),min,max);
-    const int itmax = std::clamp(static_cast<int>(idx + sizes.second),min,max);
+    const int itmin = std::clamp(static_cast<int>(idx + sizes.first), min, max);
+    const int itmax =
+        std::clamp(static_cast<int>(idx + sizes.second), min, max);
     return NeighborHoodIndices(itmin, itmax + 1);
   }
 
@@ -184,7 +185,8 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
     constexpr int min = 1;
     const int max = getNBins();
     const int itmin = std::clamp(static_cast<int>(idx + sizes.first), min, max);
-    const int itmax = std::clamp(static_cast<int>(idx + sizes.second), min, max);
+    const int itmax =
+        std::clamp(static_cast<int>(idx + sizes.second), min, max);
     return NeighborHoodIndices(itmin, itmax + 1);
   }
 
@@ -492,7 +494,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
     sizes.first %= nbins;
     sizes.second %= nbins;
     if (std::abs(sizes.first - sizes.second) + 1 > nbins) {
-      sizes.first = 1-static_cast<int>(idx);
+      sizes.first = 1 - static_cast<int>(idx);
       sizes.second = nbins - static_cast<int>(idx);
     }
 
