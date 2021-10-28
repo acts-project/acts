@@ -1111,7 +1111,6 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
   // Grid3Closed_t;
   EAxisClosed e(0.0, 1.0, 5u);
   EAxisClosed f(0.0, 1.0, 5u);
-  EAxisClosed g(0.0, 1.0, 5u);
   Grid2Closed_t g2Cl(std::make_tuple(std::move(e), std::move(f)));
   BOOST_CHECK(g2Cl.neighborHoodIndices({{3, 3}}, 1).collectVector() ==
               bins_t({16, 17, 18, 23, 24, 25, 30, 31, 32}));
@@ -1139,6 +1138,34 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
   BOOST_CHECK(g2Cl.neighborHoodIndices({{5, 5}}, 2).collectVector() ==
               bins_t({24, 25, 26, 22, 23, 31, 32, 33, 29, 30, 38, 39, 40,
                       36, 37, 10, 11, 12, 8,  9,  17, 18, 19, 15, 16}));
+
+  std::array<std::pair<int, int>, 2> a2;
+  a2.at(0) =
+      std::make_pair<int, int>(-2, -1);  // only 2 bins left of requested bin
+                                         // (not including the requested bin)
+  a2.at(1) = std::make_pair<int, int>(
+      -1, 2);  // one bin left of requested bin, the requested bin itself and 2
+               // bins right of requested bin
+  std::set<size_t> returnedBins;
+
+  auto returnedBinsVec = g2Cl.neighborHoodIndices({{3, 2}}, a2).collectVector();
+  returnedBins.insert(returnedBinsVec.begin(), returnedBinsVec.end());
+  std::set<size_t> expectedBins{{8, 9, 10, 11, 15, 16, 17, 18}};
+  BOOST_CHECK(returnedBins == expectedBins);
+
+  returnedBinsVec = g2Cl.neighborHoodIndices({{1, 5}}, a2).collectVector();
+  returnedBins.clear();
+  returnedBins.insert(returnedBinsVec.begin(), returnedBinsVec.end());
+  expectedBins = {{29, 30, 32, 33, 36, 37, 39, 40}};
+  BOOST_CHECK(returnedBins == expectedBins);
+
+  a2.at(0) = {-6, 7};
+  a2.at(1) = {0, 0};
+  returnedBinsVec = g2Cl.neighborHoodIndices({{1, 5}}, a2).collectVector();
+  returnedBins.clear();
+  returnedBins.insert(returnedBinsVec.begin(), returnedBinsVec.end());
+  expectedBins = {{12, 19, 26, 33, 40}};
+  BOOST_CHECK(returnedBins == expectedBins);
 
   // @TODO 3D test would be nice, but should essentially not be a problem if
   // 2D works.

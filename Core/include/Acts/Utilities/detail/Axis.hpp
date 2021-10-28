@@ -184,9 +184,9 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
     }
     constexpr int min = 1;
     const int max = getNBins();
-    const int itmin = std::clamp(static_cast<int>(idx + sizes.first), min, max);
+    const int itmin = std::clamp(static_cast<int>(idx) + sizes.first, min, max);
     const int itmax =
-        std::clamp(static_cast<int>(idx + sizes.second), min, max);
+        std::clamp(static_cast<int>(idx) + sizes.second, min, max);
     return NeighborHoodIndices(itmin, itmax + 1);
   }
 
@@ -209,14 +209,15 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
       return NeighborHoodIndices();
     }
 
-    int nbins = getNBins();
     // Handle corner case where user requests more neighbours than the number
-    // of bins on the axis. Returns all bins in this case.
-    sizes.first %= nbins;
-    sizes.second %= nbins;
-    if (std::abs(sizes.first - sizes.second) >= nbins) {
+    // of bins on the axis. All bins are returned in this case.
+
+    const int max = getNBins();
+    sizes.first = std::clamp(sizes.first, -max, max);
+    sizes.second = std::clamp(sizes.second, -max, max);
+    if (std::abs(sizes.first - sizes.second) >= max) {
       sizes.first = 1 - idx;
-      sizes.second = nbins - idx;
+      sizes.second = max - idx;
     }
 
     // If the entire index range is not covered, we must wrap the range of
@@ -233,7 +234,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
     if (itfirst <= itlast) {
       return NeighborHoodIndices(itfirst, itlast + 1);
     } else {
-      return NeighborHoodIndices(itfirst, nbins + 1, 1, itlast + 1);
+      return NeighborHoodIndices(itfirst, max + 1, 1, itlast + 1);
     }
   }
 
@@ -488,14 +489,15 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
       return NeighborHoodIndices();
     }
 
-    int nbins = getNBins();
     // Handle corner case where user requests more neighbours than the number
     // of bins on the axis. All bins are returned in this case
-    sizes.first %= nbins;
-    sizes.second %= nbins;
-    if (std::abs(sizes.first - sizes.second) + 1 > nbins) {
-      sizes.first = 1 - static_cast<int>(idx);
-      sizes.second = nbins - static_cast<int>(idx);
+
+    const int max = getNBins();
+    sizes.first = std::clamp(sizes.first, -max, max);
+    sizes.second = std::clamp(sizes.second, -max, max);
+    if (std::abs(sizes.first - sizes.second) >= max) {
+      sizes.first = 1 - idx;
+      sizes.second = max - idx;
     }
 
     // If the entire index range is not covered, we must wrap the range of
@@ -512,7 +514,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
     if (itfirst <= itlast) {
       return NeighborHoodIndices(itfirst, itlast + 1);
     } else {
-      return NeighborHoodIndices(itfirst, nbins + 1, 1, itlast + 1);
+      return NeighborHoodIndices(itfirst, max + 1, 1, itlast + 1);
     }
   }
 
