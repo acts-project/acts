@@ -56,7 +56,7 @@ class ImpactPointEstimator {
     /// @param bIn The magnetic field
     /// @param prop The propagator
     Config(std::shared_ptr<const MagneticFieldProvider> bIn,
-           std::shared_ptr<propagator_t> prop)
+           std::shared_ptr<const propagator_t> prop)
         : bField(std::move(bIn)), propagator(std::move(prop)) {}
 
     /// @brief Config constructor without B field -> uses NullBField
@@ -69,7 +69,7 @@ class ImpactPointEstimator {
     /// Magnetic field
     std::shared_ptr<const MagneticFieldProvider> bField;
     /// Propagator
-    std::shared_ptr<propagator_t> propagator;
+    std::shared_ptr<const propagator_t> propagator;
     /// Max. number of iterations in Newton method
     int maxIterations = 20;
     /// Desired precision in deltaPhi in Newton method

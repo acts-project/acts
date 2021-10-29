@@ -64,19 +64,19 @@ class HelicalTrackLinearizer {
     /// @param bIn The magnetic field
     /// @param prop The propagator
     Config(std::shared_ptr<const MagneticFieldProvider> bIn,
-           std::shared_ptr<Propagator_t> prop)
+           std::shared_ptr<const Propagator_t> prop)
         : bField(std::move(bIn)), propagator(std::move(prop)) {}
 
     /// @brief Config constructor without B field -> uses NullBField
     ///
     /// @param prop The propagator
-    Config(std::shared_ptr<Propagator_t> prop)
+    Config(std::shared_ptr<const Propagator_t> prop)
         : bField{std::make_shared<NullBField>()}, propagator(std::move(prop)) {}
 
     // The magnetic field
     std::shared_ptr<const MagneticFieldProvider> bField;
     // The propagator
-    std::shared_ptr<Propagator_t> propagator;
+    std::shared_ptr<const Propagator_t> propagator;
 
     // Minimum q/p value
     double minQoP = 1e-15;
