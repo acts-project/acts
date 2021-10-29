@@ -915,9 +915,6 @@ class CombinatorialKalmanFilter {
 
       trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
 
-      // non source link contribution to chi2 sum should be 0
-      trackStateProxy.chi2() = 0;
-
       return currentTip;
     }
 
