@@ -246,19 +246,24 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
 
   const Surface* rSurface = &rStart.referenceSurface();
 
-  using Updater = GainMatrixUpdater;
-  using Smoother = GainMatrixSmoother;
-  using KalmanFitter = KalmanFitter<RecoPropagator, Updater, Smoother>;
+  using KalmanFitter = KalmanFitter<RecoPropagator>;
 
   KalmanFitter kFitter(rPropagator);
 
   auto logger = getDefaultLogger("KalmanFilter", Logging::WARNING);
-  KalmanFitterOptions<Test::TestSourceLinkCalibrator, VoidOutlierFinder,
-                      Acts::VoidReverseFilteringLogic>
-      kfOptions(tgContext, mfContext, calContext,
-                Test::TestSourceLinkCalibrator(), VoidOutlierFinder(),
-                VoidReverseFilteringLogic(), LoggerWrapper{*logger},
-                PropagatorPlainOptions(), rSurface);
+
+  Acts::GainMatrixUpdater kfUpdater;
+  Acts::GainMatrixSmoother kfSmoother;
+
+  KalmanFitterExtensions extensions;
+  extensions.calibrator.connect<&Test::testSourceLinkCalibrator>();
+  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(&kfUpdater);
+  extensions.smoother.connect<&Acts::GainMatrixSmoother::operator()>(
+      &kfSmoother);
+
+  KalmanFitterOptions kfOptions(tgContext, mfContext, calContext, extensions,
+                                LoggerWrapper{*logger},
+                                PropagatorPlainOptions(), rSurface);
 
   // Fit the track
   auto fitRes =

@@ -139,8 +139,7 @@ void fillTrackState(const TestTrackState& pc, TrackStatePropMask mask,
   }
   // create calibrated measurements from source link
   if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
-    auto meas = TestSourceLinkCalibrator()(pc.sourceLink, nullptr);
-    std::visit([&](const auto& m) { ts.setCalibrated(m); }, meas);
+    testSourceLinkCalibrator(Acts::GeometryContext{}, ts);
   }
 }
 
@@ -503,9 +502,9 @@ BOOST_AUTO_TEST_CASE(TrackStateReassignment) {
 
   // use temporary measurement to reset calibrated data
   TestTrackState ttsb(rng, 2u);
-  auto meas = TestSourceLinkCalibrator()(ttsb.sourceLink, nullptr);
+  ts.setUncalibrated(ttsb.sourceLink);
+  auto meas = testSourceLinkCalibratorReturn(gctx, ts);
   auto m2 = std::get<Measurement<BoundIndices, 2u>>(meas);
-  ts.setCalibrated(m2);
 
   BOOST_CHECK_EQUAL(ts.calibratedSize(), 2);
   BOOST_CHECK_EQUAL(ts.effectiveCalibrated(), m2.parameters());
@@ -588,7 +587,7 @@ BOOST_DATA_TEST_CASE(TrackStateProxyStorage, bd::make({1u, 2u}),
   fullProj.setZero();
   {
     // create a temporary measurement to extract the projector matrix
-    auto meas = TestSourceLinkCalibrator()(pc.sourceLink, nullptr);
+    auto meas = testSourceLinkCalibratorReturn(gctx, ts);
     std::visit(
         [&](const auto& m) {
           fullProj.topLeftCorner(nMeasurements, eBoundSize) = m.projector();
