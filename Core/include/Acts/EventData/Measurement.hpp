@@ -24,7 +24,6 @@ namespace Acts {
 
 /// A measurement of a fixed-size subspace of the full parameters.
 ///
-/// @tparam source_link_t Source link type to connect to the detector readout
 /// @tparam indices_t Parameter index type, determines the full parameter space
 /// @tparam kSize Size of the parameter subset.
 ///
@@ -212,7 +211,6 @@ struct VariantMeasurementGenerator<indices_t, 0u, kSizes...> {
 
 /// Variant that can contain all possible measurements in a parameter space.
 ///
-/// @tparam source_link_t Source link type to connect to the detector readout
 /// @tparam indices_t Parameter index type, determines the full parameter space
 template <typename indices_t>
 using VariantMeasurement = typename detail::VariantMeasurementGenerator<
@@ -220,12 +218,10 @@ using VariantMeasurement = typename detail::VariantMeasurementGenerator<
 
 /// Variant that can hold all possible bound measurements.
 ///
-/// @tparam source_link_t Source link type to connect to the detector readout
 using BoundVariantMeasurement = VariantMeasurement<BoundIndices>;
 
 /// Variant that can hold all possible free measurements.
 ///
-/// @tparam source_link_t Source link type to connect to the detector readout
 using FreeVariantMeasurement = VariantMeasurement<FreeIndices>;
 
 template <typename indices_t>

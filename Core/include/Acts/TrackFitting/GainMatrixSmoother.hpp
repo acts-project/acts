@@ -26,7 +26,6 @@ class GainMatrixSmoother {
  public:
   /// Run the Kalman smoothing for one trajectory.
   ///
-  /// @tparam source_link_t The type of source link
   /// @param[in] gctx The geometry context for the smoothing
   /// @param[in,out] trajectory The trajectory to be smoothed
   /// @param[in] entryIndex The index of state to start the smoothing

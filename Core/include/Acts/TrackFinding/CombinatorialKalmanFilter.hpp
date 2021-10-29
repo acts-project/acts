@@ -256,7 +256,6 @@ class CombinatorialKalmanFilter {
         std::tuple<CurvilinearTrackParameters, BoundMatrix, double>;
     // The source link container type
     using SourceLinkContainer = typename source_link_accessor_t::Container;
-    // The SourceLink type fulfilling the @c SourceLinkConcept
     /// Broadcast the result_type
     using result_type = CombinatorialKalmanFilterResult;
 

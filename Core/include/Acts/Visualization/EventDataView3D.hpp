@@ -174,7 +174,6 @@ struct EventDataView3D {
 
   /// Helper method to draw one trajectory stored in a MultiTrajectory object
   ///
-  /// @tparam source_link_t The source link type
   /// @param helper [in, out] The visualization helper
   /// @param multiTraj The MultiTrajectory storing the trajectory to be drawn
   /// @param entryIndex The trajectory entry index

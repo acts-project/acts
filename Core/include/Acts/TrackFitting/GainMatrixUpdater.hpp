@@ -23,7 +23,6 @@ class GainMatrixUpdater {
  public:
   /// Run the Kalman update step for a single trajectory state.
   ///
-  /// @tparam source_link_t The type of source link
   /// @tparam kMeasurementSizeMax
   /// @param[in] gctx The current geometry context object, e.g. alignment
   /// @param[in,out] trackState The track state

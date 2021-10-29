@@ -12,13 +12,20 @@
 
 namespace Acts {
 
+/// Base class for all SourceLink objects. Exposes a minimal nonvirtual
+/// interface
 class SourceLink {
  protected:
+  /// Constructor for @c SourceLink. Protected so it cannot be instantiated on it's own
+  /// @param id The geometry identifier this source link is associated with
   constexpr SourceLink(GeometryIdentifier id) : m_geometryId{id} {}
 
  public:
+  /// Getter for the geometry identifier
+  /// @return The GeometryIdentifier
   constexpr GeometryIdentifier geometryId() const { return m_geometryId; }
 
+  /// Virtual destructor, required for safely storing source links as their base
   virtual ~SourceLink() = 0;
 
  private:
