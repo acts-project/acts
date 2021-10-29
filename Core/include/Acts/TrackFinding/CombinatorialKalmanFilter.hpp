@@ -1187,8 +1187,6 @@ class CombinatorialKalmanFilter {
     using CombinatorialKalmanFilterActor =
         Actor<source_link_accessor_t, parameters_t, calibrator_t,
               measurement_selector_t>;
-    using CombinatorialKalmanFilterResult =
-        typename CombinatorialKalmanFilterActor::result_type;
     using Actors = ActionList<CombinatorialKalmanFilterActor>;
     using Aborters = AbortList<CombinatorialKalmanFilterAborter>;
 
