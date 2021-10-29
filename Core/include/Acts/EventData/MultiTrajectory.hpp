@@ -88,7 +88,13 @@ struct GrowableColumns {
   size_t size() const { return m_size; }
 
   /// Resize the storage column, without changing the allocated capacity
-  void resize(size_t size) { size = 0; }
+  void resize(size_t size) {
+    if (size > m_size) {
+      addCol(size - m_size);
+    } else {
+      m_size = size;
+    }
+  }
 
   /// Clear the storage of the storage column
   /// Equivalent to ``resize(0)``
