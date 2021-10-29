@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/SourceLinkConcept.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/detail/CalculateResiduals.hpp"
 #include "Acts/EventData/detail/ParameterTraits.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
@@ -44,11 +44,8 @@ namespace Acts {
 /// on). Both variants add additional complications. Since the geometry object
 /// is not required anyways (as discussed above), not storing it removes all
 /// these complications altogether.
-template <typename source_link_t, typename indices_t, size_t kSize>
+template <typename indices_t, size_t kSize>
 class Measurement {
-  static_assert(SourceLinkConcept<source_link_t>,
-                "Source link does not fulfill SourceLinkConcept");
-
   static constexpr size_t kFullSize = detail::kParametersSize<indices_t>;
 
   using Subspace = detail::FixedSizeSubspace<kFullSize, kSize>;
@@ -76,13 +73,11 @@ class Measurement {
   /// @note The indices must be ordered and must describe/match the content
   ///   of parameters and covariance.
   template <typename parameters_t, typename covariance_t>
-  Measurement(source_link_t source, const std::array<indices_t, kSize>& indices,
+  Measurement(const SourceLink& source,
+              const std::array<indices_t, kSize>& indices,
               const Eigen::MatrixBase<parameters_t>& params,
               const Eigen::MatrixBase<covariance_t>& cov)
-      : m_source(std::move(source)),
-        m_subspace(indices),
-        m_params(params),
-        m_cov(cov) {
+      : m_source(source), m_subspace(indices), m_params(params), m_cov(cov) {
     // TODO we should be able to support arbitrary ordering, by sorting the
     //   indices and reordering parameters/covariance. since the parameter order
     //   can be modified by the user, the user can not always know what the
@@ -99,7 +94,7 @@ class Measurement {
   Measurement& operator=(Measurement&&) = default;
 
   /// Source link that connects to the underlying detector readout.
-  const source_link_t& sourceLink() const { return m_source; }
+  const SourceLink& sourceLink() const { return m_source; }
 
   /// Number of measured parameters.
   static constexpr size_t size() { return kSize; }
@@ -150,7 +145,7 @@ class Measurement {
   }
 
  private:
-  source_link_t m_source;
+  std::reference_wrapper<const SourceLink> m_source;
   Subspace m_subspace;
   ParametersVector m_params;
   CovarianceMatrix m_cov;
@@ -158,7 +153,6 @@ class Measurement {
 
 /// Construct a fixed-size measurement for the given indices.
 ///
-/// @tparam source_link_t Source link type to connect to the detector readout
 /// @tparam parameters_t Input parameters vector type
 /// @tparam covariance_t Input covariance matrix type
 /// @tparam indices_t Parameter index type, determines the full parameter space
@@ -180,16 +174,15 @@ class Measurement {
 ///
 /// @note The indices must be ordered and must be consistent with the content of
 ///   parameters and covariance.
-template <typename source_link_t, typename parameters_t, typename covariance_t,
-          typename indices_t, typename... tail_indices_t>
-auto makeMeasurement(source_link_t source,
+template <typename parameters_t, typename covariance_t, typename indices_t,
+          typename... tail_indices_t>
+auto makeMeasurement(const SourceLink& source,
                      const Eigen::MatrixBase<parameters_t>& params,
                      const Eigen::MatrixBase<covariance_t>& cov,
                      indices_t index0, tail_indices_t... tailIndices)
-    -> Measurement<source_link_t, indices_t, 1u + sizeof...(tail_indices_t)> {
+    -> Measurement<indices_t, 1u + sizeof...(tail_indices_t)> {
   using IndexContainer = std::array<indices_t, 1u + sizeof...(tail_indices_t)>;
-  return {std::move(source), IndexContainer{index0, tailIndices...}, params,
-          cov};
+  return {source, IndexContainer{index0, tailIndices...}, params, cov};
 }
 
 namespace detail {
@@ -206,14 +199,12 @@ namespace detail {
 //     -> VariantMeasurementGenerator<..., 1, 2, 3, 4>
 //     -> VariantMeasurementGenerator<..., 0, 1, 2, 3, 4>
 //
-template <typename source_link_t, typename indices_t, size_t kN,
-          size_t... kSizes>
+template <typename indices_t, size_t kN, size_t... kSizes>
 struct VariantMeasurementGenerator
-    : VariantMeasurementGenerator<source_link_t, indices_t, kN - 1u, kN,
-                                  kSizes...> {};
-template <typename source_link_t, typename indices_t, size_t... kSizes>
-struct VariantMeasurementGenerator<source_link_t, indices_t, 0u, kSizes...> {
-  using Type = std::variant<Measurement<source_link_t, indices_t, kSizes>...>;
+    : VariantMeasurementGenerator<indices_t, kN - 1u, kN, kSizes...> {};
+template <typename indices_t, size_t... kSizes>
+struct VariantMeasurementGenerator<indices_t, 0u, kSizes...> {
+  using Type = std::variant<Measurement<indices_t, kSizes>...>;
 };
 
 /// @endcond
@@ -223,25 +214,23 @@ struct VariantMeasurementGenerator<source_link_t, indices_t, 0u, kSizes...> {
 ///
 /// @tparam source_link_t Source link type to connect to the detector readout
 /// @tparam indices_t Parameter index type, determines the full parameter space
-template <typename source_link_t, typename indices_t>
+template <typename indices_t>
 using VariantMeasurement = typename detail::VariantMeasurementGenerator<
-    source_link_t, indices_t, detail::kParametersSize<indices_t>>::Type;
+    indices_t, detail::kParametersSize<indices_t>>::Type;
 
 /// Variant that can hold all possible bound measurements.
 ///
 /// @tparam source_link_t Source link type to connect to the detector readout
-template <typename source_link_t>
-using BoundVariantMeasurement = VariantMeasurement<source_link_t, BoundIndices>;
+using BoundVariantMeasurement = VariantMeasurement<BoundIndices>;
 
 /// Variant that can hold all possible free measurements.
 ///
 /// @tparam source_link_t Source link type to connect to the detector readout
-template <typename source_link_t>
-using FreeVariantMeasurement = VariantMeasurement<source_link_t, FreeIndices>;
+using FreeVariantMeasurement = VariantMeasurement<FreeIndices>;
 
-template <typename source_link_t, typename indices_t>
-std::ostream& operator<<(
-    std::ostream& os, const VariantMeasurement<source_link_t, indices_t>& vm) {
+template <typename indices_t>
+std::ostream& operator<<(std::ostream& os,
+                         const VariantMeasurement<indices_t>& vm) {
   return std::visit([&](const auto& m) { return (os << m); }, vm);
 }
 

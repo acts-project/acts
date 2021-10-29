@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(Update) {
   trkCov.diagonal() << 0.08, 0.3, 1, 1, 1, 0;
 
   // Make trajectory w/ one state
-  MultiTrajectory<TestSourceLink> traj;
+  MultiTrajectory traj;
   auto idx = traj.addTrackState(TrackStatePropMask::All);
   auto ts = traj.getTrackState(idx);
 
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(Update) {
   ts.predicted() = trkPar;
   ts.predictedCovariance() = trkCov;
   ts.pathLength() = 0.;
-  ts.uncalibrated() = sourceLink;
+  ts.setUncalibrated(sourceLink);
   std::visit([&](const auto& m) { ts.setCalibrated(m); },
              calibrator(sourceLink, nullptr));
 
