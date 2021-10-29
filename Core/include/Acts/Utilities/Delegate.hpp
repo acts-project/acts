@@ -42,9 +42,20 @@ class Delegate<R(Args...)> {
   /// @tparam Callable The compile-time free function pointer
   template <auto Callable>
   void connect() {
+    m_payload = nullptr;
     m_function = [](const void* /*payload*/, Args... args) -> return_type {
       return std::invoke(Callable, std::forward<Args>(args)...);
     };
+  }
+
+  /// Connect anything that is assignable to the function pointer
+  /// @param callable The runtime value of the callable
+  /// @note The function signature requires the first argument of the callable is `const void*`.
+  ///       i.e. if the signature of the delegate is `void(int)`, the callable's
+  ///       signature has to be `void(const void*, int)`.
+  void connect(function_type callable) {
+    m_payload = nullptr;
+    m_function = callable;
   }
 
   /// Connect a member function to be called on an instance

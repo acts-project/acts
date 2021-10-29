@@ -23,12 +23,19 @@ namespace bd = boost::unit_test::data;
 
 BOOST_AUTO_TEST_SUITE(DelegateTests)
 
+int sumImpl(int a, int b) {
+  return a + b;
+}
+
 BOOST_AUTO_TEST_CASE(ConnectConstexprLambda) {
   Delegate<int(int, int)> sum;
 
-  constexpr int (*f)(int, int) = [](int a, int b) { return a + b; };
+  sum.connect<&sumImpl>();
 
-  sum.connect<f>();
+  BOOST_CHECK_EQUAL(sum(2, 5), 7);
+  BOOST_CHECK_NE(sum(2, 3), 7);
+
+  sum.connect([](const void*, int a, int b) -> int { return a + b; });
 
   BOOST_CHECK_EQUAL(sum(2, 5), 7);
   BOOST_CHECK_NE(sum(2, 3), 7);
