@@ -63,7 +63,7 @@ class HelicalTrackLinearizer {
     ///
     /// @param bIn The magnetic field
     /// @param prop The propagator
-    Config(std::shared_ptr<MagneticFieldProvider> bIn,
+    Config(std::shared_ptr<const MagneticFieldProvider> bIn,
            std::shared_ptr<Propagator_t> prop)
         : bField(std::move(bIn)), propagator(std::move(prop)) {}
 
@@ -74,7 +74,7 @@ class HelicalTrackLinearizer {
         : bField{std::make_shared<NullBField>()}, propagator(std::move(prop)) {}
 
     // The magnetic field
-    std::shared_ptr<MagneticFieldProvider> bField;
+    std::shared_ptr<const MagneticFieldProvider> bField;
     // The propagator
     std::shared_ptr<Propagator_t> propagator;
 
