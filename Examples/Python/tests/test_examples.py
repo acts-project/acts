@@ -214,12 +214,11 @@ def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_material_recording(tmp_path, material_recording, assert_root_hash):
 
-    # Not quite sure why this isn't 200
     root_files = [
         (
             "geant4_material_tracks.root",
             "material-tracks",
-            198,
+            200,
         )
     ]
 
@@ -382,7 +381,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
         assert json.load(fh)
 
     assert map_file.exists()
-    assert_entries(map_file, "material-tracks", 198)
+    assert_entries(map_file, "material-tracks", 200)
     assert_root_hash(map_file.name, map_file)
 
     val_file = tmp_path / "propagation-material.root"
