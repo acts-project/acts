@@ -108,13 +108,13 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::endRun() {
 
 ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
     const AlgorithmContext& ctx,
-    const std::vector<Acts::RecordedMaterialTrack>& materialTracks) {
+    const std::map<size_t, Acts::RecordedMaterialTrack>& materialTracks) {
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
   m_eventId = ctx.eventNumber;
   // Loop over the material tracks and write them out
-  for (auto& mtrack : materialTracks) {
+  for (auto& [idTrack, mtrack] : materialTracks) {
     // Clearing the vector first
     m_step_sx.clear();
     m_step_sy.clear();

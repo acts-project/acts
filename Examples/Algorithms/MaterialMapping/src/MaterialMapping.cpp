@@ -91,16 +91,15 @@ ActsExamples::MaterialMapping::~MaterialMapping() {
 ActsExamples::ProcessCode ActsExamples::MaterialMapping::execute(
     const ActsExamples::AlgorithmContext& context) const {
   // Take the collection from the EventStore
-  std::vector<Acts::RecordedMaterialTrack> mtrackCollection =
-      context.eventStore.get<std::vector<Acts::RecordedMaterialTrack>>(
+  std::map<size_t, Acts::RecordedMaterialTrack> mtrackCollection =
+      context.eventStore.get<std::map<size_t, Acts::RecordedMaterialTrack>>(
           m_cfg.collection);
 
   if (m_cfg.materialSurfaceMapper) {
     // To make it work with the framework needs a lock guard
     auto mappingState =
         const_cast<Acts::SurfaceMaterialMapper::State*>(&m_mappingState);
-
-    for (auto& mTrack : mtrackCollection) {
+    for (auto& [idTrack, mTrack] : mtrackCollection) {
       // Map this one onto the geometry
       m_cfg.materialSurfaceMapper->mapMaterialTrack(*mappingState, mTrack);
     }
@@ -110,7 +109,7 @@ ActsExamples::ProcessCode ActsExamples::MaterialMapping::execute(
     auto mappingState =
         const_cast<Acts::VolumeMaterialMapper::State*>(&m_mappingStateVol);
 
-    for (auto& mTrack : mtrackCollection) {
+    for (auto& [idTrack, mTrack] : mtrackCollection) {
       // Map this one onto the geometry
       m_cfg.materialVolumeMapper->mapMaterialTrack(*mappingState, mTrack);
     }

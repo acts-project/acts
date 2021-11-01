@@ -38,7 +38,7 @@ class EventStoreRegistry {
     /// The hits in sensitive detectors
     SimHitContainer::sequence_type hits;
     /// Tracks recorded in material mapping
-    std::vector<Acts::RecordedMaterialTrack> materialTracks;
+    std::map<size_t, Acts::RecordedMaterialTrack> materialTracks;
   };
 
   EventStoreRegistry() = delete;
