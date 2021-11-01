@@ -134,10 +134,12 @@ int main(int argc, char** argv) {
   config.beamPos = {-.5_mm, -.5_mm};
   config.impactMax = 10._mm;
 
-  auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-      Acts::BinFinder<SpacePoint>());
-  auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-      Acts::BinFinder<SpacePoint>());
+	config.numPhiNeighbors = 1;
+
+	auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
+			Acts::BinFinder<SpacePoint>(std::move(config.zBinNeighborsBottom), std::move(config.numPhiNeighbors))));
+	auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
+			Acts::BinFinder<SpacePoint>(std::move(config.zBinNeighborsTop), std::move(config.numPhiNeighbors))));
   Acts::SeedFilterConfig sfconf;
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
   config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(

@@ -8,8 +8,8 @@
 
 template <typename external_spacepoint_t>
 Acts::BinFinder<external_spacepoint_t>::BinFinder(
-    const std::vector<std::vector<size_t> >&& zBinNeighbors,
-    const size_t&& numPhiNeighbors)
+    const std::vector<std::pair<int, int> >&& zBinNeighbors,
+    const int&& numPhiNeighbors)
     : m_zBinNeighbors(std::move(zBinNeighbors)),
       m_numPhiNeighbors(std::move(numPhiNeighbors)) {}
 
@@ -26,27 +26,11 @@ Acts::BinFinder<external_spacepoint_t>::findBins(
   }
   // if the zBinNeighbors is defined, get the indices from there
   else {
-    // loop over the phi range defined by m_numPhiNeighbors
-    int phiNeighborRange = m_numPhiNeighbors;
-    for (int phiBinIndex = -phiNeighborRange; phiBinIndex <= phiNeighborRange;
-         phiBinIndex++) {
-      // loop over the z bins inside zBinNeighbors
-      for (size_t zBinIndex = 0; zBinIndex < m_zBinNeighbors[zBin - 1].size();
-           zBinIndex++) {
-        // get z bin local index from zBinNeighbors
-        auto zBinLocalIndex = m_zBinNeighbors[zBin - 1][zBinIndex];
-        // get phi bin local index
-        int maxPhiBin = (binnedSP->numLocalBins())[0];
-        // wrap around phi
-        size_t phiBinLocalIndex =
-            1 + (phiBin + phiBinIndex + (maxPhiBin - 1)) % (maxPhiBin);
-        const std::array<size_t, 2> localIndexArray = {phiBinLocalIndex,
-                                                       zBinLocalIndex};
-        // get the global bin index from local bin index
-        auto globalIndex = binnedSP->globalBinFromLocalBins(localIndexArray);
-        indices.push_back(globalIndex);
-      }
-    }
+    std::array<std::pair<int, int>, 2> sizePerAxis;
+    sizePerAxis.at(0) = std::make_pair(-m_numPhiNeighbors, m_numPhiNeighbors);
+    sizePerAxis.at(1) = m_zBinNeighbors[zBin - 1];
+    indices =
+        binnedSP->neighborHoodIndices({phiBin, zBin}, sizePerAxis).collect();
   }
 
   return {indices.begin(), indices.end()};

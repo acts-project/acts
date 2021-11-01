@@ -41,8 +41,8 @@ class SeedingAlgorithm final : public BareAlgorithm {
     Acts::SpacePointGridConfig gridConfig;
 
     // vector containing the map of z bins in the top and bottom layers
-    std::vector<std::vector<size_t> > zBinNeighborsTop;
-    std::vector<std::vector<size_t> > zBinNeighborsBottom;
+    std::vector<std::pair<int, int> > zBinNeighborsTop;
+    std::vector<std::pair<int, int> > zBinNeighborsBottom;
   };
 
   /// Construct the seeding algorithm.

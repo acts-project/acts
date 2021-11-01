@@ -76,6 +76,17 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config bFieldInZ");
   }
 
+  if (m_cfg.gridConfig.zBinEdges.size() - 1 != m_cfg.zBinNeighborsTop.size() &&
+      m_cfg.zBinNeighborsTop.empty() == false) {
+    throw std::invalid_argument("Inconsistent config zBinNeighborsTop");
+  }
+
+  if (m_cfg.gridConfig.zBinEdges.size() - 1 !=
+          m_cfg.zBinNeighborsBottom.size() &&
+      m_cfg.zBinNeighborsBottom.empty() == false) {
+    throw std::invalid_argument("Inconsistent config zBinNeighborsBottom");
+  }
+
   m_cfg.seedFinderConfig.seedFilter =
       std::make_unique<Acts::SeedFilter<SimSpacePoint>>(m_cfg.seedFilterConfig);
 }
