@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
   BOOST_CHECK(a1.neighborHoodIndices(11, 1).collect() == bins_t({10, 11}));
   BOOST_CHECK(a1.neighborHoodIndices(10, 1).collect() == bins_t({9, 10, 11}));
   BOOST_CHECK(a1.neighborHoodIndices(5, 1).collect() == bins_t({4, 5, 6}));
-  BOOST_CHECK(a1.neighborHoodIndices(5, {1, 0}).collect() == bins_t({4, 5}));
+  BOOST_CHECK(a1.neighborHoodIndices(5, {-1, 0}).collect() == bins_t({4, 5}));
   BOOST_CHECK(a1.neighborHoodIndices(5, {0, 1}).collect() == bins_t({5, 6}));
 
   BOOST_CHECK(a1.neighborHoodIndices(0, 2).collect() == bins_t({0, 1, 2}));
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
   BOOST_CHECK(a2.neighborHoodIndices(1, 1).collect() == bins_t({0, 1, 2}));
   BOOST_CHECK(a2.neighborHoodIndices(5, 1).collect() == bins_t({4, 5}));
   BOOST_CHECK(a2.neighborHoodIndices(4, 1).collect() == bins_t({3, 4, 5}));
-  BOOST_CHECK(a2.neighborHoodIndices(4, {1, 0}).collect() == bins_t({3, 4}));
+  BOOST_CHECK(a2.neighborHoodIndices(4, {-1, 0}).collect() == bins_t({3, 4}));
   BOOST_CHECK(a2.neighborHoodIndices(2, 1).collect() == bins_t({1, 2, 3}));
   BOOST_CHECK(a2.neighborHoodIndices(2, {0, 1}).collect() == bins_t({2, 3}));
 
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
   BOOST_CHECK(a3.neighborHoodIndices(10, 1).collect() == bins_t({9, 10}));
   BOOST_CHECK(a3.neighborHoodIndices(10, {0, 1}).collect() == bins_t({10}));
   BOOST_CHECK(a3.neighborHoodIndices(5, 1).collect() == bins_t({4, 5, 6}));
-  BOOST_CHECK(a3.neighborHoodIndices(5, {1, 0}).collect() == bins_t({4, 5}));
+  BOOST_CHECK(a3.neighborHoodIndices(5, {-1, 0}).collect() == bins_t({4, 5}));
   BOOST_CHECK(a3.neighborHoodIndices(5, {0, 1}).collect() == bins_t({5, 6}));
 
   BOOST_CHECK(a3.neighborHoodIndices(0, 2).collect() == bins_t({}));
@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
   BOOST_CHECK(a4.neighborHoodIndices(10, 1).collect() == bins_t({9, 10, 1}));
   BOOST_CHECK(a4.neighborHoodIndices(10, {0, 1}).collect() == bins_t({10, 1}));
   BOOST_CHECK(a4.neighborHoodIndices(5, 1).collect() == bins_t({4, 5, 6}));
-  BOOST_CHECK(a4.neighborHoodIndices(5, {1, 0}).collect() == bins_t({4, 5}));
+  BOOST_CHECK(a4.neighborHoodIndices(5, {-1, 0}).collect() == bins_t({4, 5}));
   BOOST_CHECK(a4.neighborHoodIndices(5, {0, 1}).collect() == bins_t({5, 6}));
 
   BOOST_CHECK(a4.neighborHoodIndices(0, 2).collect() == bins_t({}));
@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
   BOOST_CHECK(a5.neighborHoodIndices(5, 1).collect() == bins_t({4, 5}));
   BOOST_CHECK(a5.neighborHoodIndices(5, {0, 1}).collect() == bins_t({5}));
   BOOST_CHECK(a5.neighborHoodIndices(2, 1).collect() == bins_t({1, 2, 3}));
-  BOOST_CHECK(a5.neighborHoodIndices(2, {1, 0}).collect() == bins_t({1, 2}));
+  BOOST_CHECK(a5.neighborHoodIndices(2, {-1, 0}).collect() == bins_t({1, 2}));
   BOOST_CHECK(a5.neighborHoodIndices(2, {0, 1}).collect() == bins_t({2, 3}));
 
   BOOST_CHECK(a5.neighborHoodIndices(0, 2).collect() == bins_t({}));
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
   BOOST_CHECK(a6.neighborHoodIndices(5, 1).collect() == bins_t({4, 5, 1}));
   BOOST_CHECK(a6.neighborHoodIndices(5, {0, 1}).collect() == bins_t({5, 1}));
   BOOST_CHECK(a6.neighborHoodIndices(2, 1).collect() == bins_t({1, 2, 3}));
-  BOOST_CHECK(a6.neighborHoodIndices(2, {1, 0}).collect() == bins_t({1, 2}));
+  BOOST_CHECK(a6.neighborHoodIndices(2, {-1, 0}).collect() == bins_t({1, 2}));
   BOOST_CHECK(a6.neighborHoodIndices(2, {0, 1}).collect() == bins_t({2, 3}));
 
   BOOST_CHECK(a6.neighborHoodIndices(0, 2).collect() == bins_t({}));
@@ -310,9 +310,9 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
   BOOST_CHECK(a6.neighborHoodIndices(3, {0, 2}).collect() == bins_t({3, 4, 5}));
 
   BOOST_CHECK(a6.neighborHoodIndices(1, 3).collect() ==
-              bins_t({3, 4, 5, 1, 2}));
+              bins_t({1, 2, 3, 4, 5}));
   BOOST_CHECK(a6.neighborHoodIndices(5, 3).collect() ==
-              bins_t({2, 3, 4, 5, 1}));
+              bins_t({1, 2, 3, 4, 5}));
 }
 
 BOOST_AUTO_TEST_CASE(wrapBin) {
