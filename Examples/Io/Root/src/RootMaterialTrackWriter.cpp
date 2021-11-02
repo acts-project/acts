@@ -108,7 +108,8 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::endRun() {
 
 ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
     const AlgorithmContext& ctx,
-    const std::map<size_t, Acts::RecordedMaterialTrack>& materialTracks) {
+    const std::unordered_map<size_t, Acts::RecordedMaterialTrack>&
+        materialTracks) {
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 

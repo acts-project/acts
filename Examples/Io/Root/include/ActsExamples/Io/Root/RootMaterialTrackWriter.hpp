@@ -15,7 +15,7 @@
 #include <Acts/Utilities/Logger.hpp>
 
 #include <mutex>
-
+#include <unordered_map>
 class TFile;
 class TTree;
 
@@ -39,7 +39,7 @@ namespace ActsExamples {
 /// It writes out a MaterialTrack which is usually generated from
 /// Geant4 material mapping
 class RootMaterialTrackWriter
-    : public WriterT<std::map<size_t, Acts::RecordedMaterialTrack>> {
+    : public WriterT<std::unordered_map<size_t, Acts::RecordedMaterialTrack>> {
  public:
   struct Config {
     std::string collection =
@@ -79,9 +79,10 @@ class RootMaterialTrackWriter
   ///
   /// @param ctx The Algorithm context with per event information
   /// @param clusters is the data to be written out
-  ProcessCode writeT(const AlgorithmContext& ctx,
-                     const std::map<size_t, Acts::RecordedMaterialTrack>&
-                         materialtracks) final override;
+  ProcessCode writeT(
+      const AlgorithmContext& ctx,
+      const std::unordered_map<size_t, Acts::RecordedMaterialTrack>&
+          materialtracks) final override;
 
  private:
   /// The config class

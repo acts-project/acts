@@ -39,7 +39,7 @@ ProcessCode PropagationAlgorithm::execute(
   propagationSteps.reserve(m_cfg.ntests);
 
   // Output (optional): the recorded material
-  std::map<size_t, Acts::RecordedMaterialTrack> recordedMaterial;
+  std::unordered_map<size_t, Acts::RecordedMaterialTrack> recordedMaterial;
 
   // loop over number of particles
   for (size_t it = 0; it < m_cfg.ntests; ++it) {

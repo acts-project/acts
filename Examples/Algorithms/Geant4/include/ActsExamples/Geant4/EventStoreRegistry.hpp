@@ -12,7 +12,7 @@
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 namespace ActsExamples {
@@ -38,7 +38,7 @@ class EventStoreRegistry {
     /// The hits in sensitive detectors
     SimHitContainer::sequence_type hits;
     /// Tracks recorded in material mapping
-    std::map<size_t, Acts::RecordedMaterialTrack> materialTracks;
+    std::unordered_map<size_t, Acts::RecordedMaterialTrack> materialTracks;
   };
 
   EventStoreRegistry() = delete;
