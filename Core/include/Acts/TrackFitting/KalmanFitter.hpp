@@ -1028,7 +1028,8 @@ class KalmanFitter {
   /// @tparam reverse_filtering_logic_t Type of the smoothing logic
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
-  /// @param sourcelinks The fittable uncalibrated measurements
+  /// @param it Begin iterator for the fittable uncalibrated measurements
+  /// @param end End iterator for the fittable uncalibrated measurements
   /// @param sParameters The initial track parameters
   /// @param kfOptions KalmanOptions steering the fit
   /// @note The input measurements are given in the form of @c SourceLinks.
@@ -1127,7 +1128,8 @@ class KalmanFitter {
   /// @tparam reverse_filtering_logic_t Type of the smoothing logic
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
-  /// @param sourcelinks The fittable uncalibrated measurements
+  /// @param it Begin iterator for the fittable uncalibrated measurements
+  /// @param end End iterator for the fittable uncalibrated measurements
   /// @param sParameters The initial track parameters
   /// @param kfOptions KalmanOptions steering the fit
   /// @param sSequence surface sequence used to initialize a DirectNavigator
