@@ -60,3 +60,6 @@ class AssertCollectionExistsAlg(BareAlgorithm):
             assert ctx.eventStore.exists(collection), f"{collection} does not exist"
         self.events_seen += 1
         return acts.examples.ProcessCode.SUCCESS
+
+
+doHashChecks = os.environ.get("ROOT_HASH_CHECKS", "") != "" or "CI" in os.environ
