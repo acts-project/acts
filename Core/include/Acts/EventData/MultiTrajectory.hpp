@@ -219,7 +219,9 @@ class TrackStateProxy {
     }
 
     if (ACTS_CHECK_BIT(src, PM::Uncalibrated)) {
-      setUncalibrated(other.uncalibrated());
+      // need to do it this way since other might be nullptr
+      m_traj->m_sourceLinks[data().iuncalibrated] =
+          other.m_traj->m_sourceLinks[other.data().iuncalibrated];
     }
 
     if (ACTS_CHECK_BIT(src, PM::Jacobian)) {
@@ -227,7 +229,9 @@ class TrackStateProxy {
     }
 
     if (ACTS_CHECK_BIT(src, PM::Calibrated)) {
-      setCalibratedSourceLink(other.calibratedSourceLink());
+      // need to do it this way since other might be nullptr
+      m_traj->m_sourceLinks[data().icalibratedsourcelink] =
+          other.m_traj->m_sourceLinks[other.data().icalibratedsourcelink];
       calibrated() = other.calibrated();
       calibratedCovariance() = other.calibratedCovariance();
       data().measdim = other.data().measdim;
