@@ -136,80 +136,77 @@ int main(int argc, char** argv) {
 
   config.numPhiNeighbors = 1;
 
-        auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-			Acts::BinFinder<SpacePoint>(
-					std::move(config.zBinNeighborsBottom),
-					std::move(config.numPhiNeighbors)));
-        auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-			Acts::BinFinder<SpacePoint>(
-					std::move(config.zBinNeighborsTop),
-					std::move(config.numPhiNeighbors)));
-        Acts::SeedFilterConfig sfconf;
-        Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
-        config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
-            Acts::SeedFilter<SpacePoint>(sfconf, &atlasCuts));
-        Acts::Seedfinder<SpacePoint> a(config);
+  auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
+      Acts::BinFinder<SpacePoint>(std::move(config.zBinNeighborsBottom),
+                                  std::move(config.numPhiNeighbors)));
+  auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
+      Acts::BinFinder<SpacePoint>(std::move(config.zBinNeighborsTop),
+                                  std::move(config.numPhiNeighbors)));
+  Acts::SeedFilterConfig sfconf;
+  Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
+  config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
+      Acts::SeedFilter<SpacePoint>(sfconf, &atlasCuts));
+  Acts::Seedfinder<SpacePoint> a(config);
 
-        // covariance tool, sets covariances per spacepoint as required
-        auto ct = [=](const SpacePoint& sp, float, float,
-                      float) -> std::pair<Acts::Vector3, Acts::Vector2> {
-          Acts::Vector3 position(sp.x(), sp.y(), sp.z());
-          Acts::Vector2 covariance(sp.varianceR, sp.varianceZ);
-          return std::make_pair(position, covariance);
-        };
+  // covariance tool, sets covariances per spacepoint as required
+  auto ct = [=](const SpacePoint& sp, float, float,
+                float) -> std::pair<Acts::Vector3, Acts::Vector2> {
+    Acts::Vector3 position(sp.x(), sp.y(), sp.z());
+    Acts::Vector2 covariance(sp.varianceR, sp.varianceZ);
+    return std::make_pair(position, covariance);
+  };
 
-        // setup spacepoint grid config
-        Acts::SpacePointGridConfig gridConf;
-        gridConf.bFieldInZ = config.bFieldInZ;
-        gridConf.minPt = config.minPt;
-        gridConf.rMax = config.rMax;
-        gridConf.zMax = config.zMax;
-        gridConf.zMin = config.zMin;
-        gridConf.deltaRMax = config.deltaRMax;
-        gridConf.cotThetaMax = config.cotThetaMax;
-        // create grid with bin sizes according to the configured geometry
-        std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
-            Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConf);
-        auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
-            spVec.begin(), spVec.end(), ct, bottomBinFinder, topBinFinder,
-            std::move(grid), config);
+  // setup spacepoint grid config
+  Acts::SpacePointGridConfig gridConf;
+  gridConf.bFieldInZ = config.bFieldInZ;
+  gridConf.minPt = config.minPt;
+  gridConf.rMax = config.rMax;
+  gridConf.zMax = config.zMax;
+  gridConf.zMin = config.zMin;
+  gridConf.deltaRMax = config.deltaRMax;
+  gridConf.cotThetaMax = config.cotThetaMax;
+  // create grid with bin sizes according to the configured geometry
+  std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
+      Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConf);
+  auto spGroup = Acts::BinnedSPGroup<SpacePoint>(spVec.begin(), spVec.end(), ct,
+                                                 bottomBinFinder, topBinFinder,
+                                                 std::move(grid), config);
 
-        std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector;
-        decltype(a)::State state;
-        auto start = std::chrono::system_clock::now();
-        auto groupIt = spGroup.begin();
-        auto endOfGroups = spGroup.end();
-        for (; !(groupIt == endOfGroups); ++groupIt) {
-          auto& v = seedVector.emplace_back();
-          a.createSeedsForGroup(state, std::back_inserter(v), groupIt.bottom(),
-                                groupIt.middle(), groupIt.top());
-        }
-        auto end = std::chrono::system_clock::now();
-        std::chrono::duration<double> elapsed_seconds = end - start;
-        std::cout << "time to create seeds: " << elapsed_seconds.count()
-                  << std::endl;
-        std::cout << "Number of regions: " << seedVector.size() << std::endl;
-        int numSeeds = 0;
-        for (auto& outVec : seedVector) {
-          numSeeds += outVec.size();
-        }
-        std::cout << "Number of seeds generated: " << numSeeds << std::endl;
-        if (!quiet) {
-          for (auto& regionVec : seedVector) {
-            for (size_t i = 0; i < regionVec.size(); i++) {
-              const Acts::Seed<SpacePoint>* seed = &regionVec[i];
-              const SpacePoint* sp = seed->sp()[0];
-              std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z()
-                        << ") ";
-              sp = seed->sp()[1];
-              std::cout << sp->layer << " (" << sp->x() << ", " << sp->y()
-                        << ", " << sp->z() << ") ";
-              sp = seed->sp()[2];
-              std::cout << sp->layer << " (" << sp->x() << ", " << sp->y()
-                        << ", " << sp->z() << ") ";
-              std::cout << std::endl;
-            }
-          }
-        }
-        return 0;
+  std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector;
+  decltype(a)::State state;
+  auto start = std::chrono::system_clock::now();
+  auto groupIt = spGroup.begin();
+  auto endOfGroups = spGroup.end();
+  for (; !(groupIt == endOfGroups); ++groupIt) {
+    auto& v = seedVector.emplace_back();
+    a.createSeedsForGroup(state, std::back_inserter(v), groupIt.bottom(),
+                          groupIt.middle(), groupIt.top());
+  }
+  auto end = std::chrono::system_clock::now();
+  std::chrono::duration<double> elapsed_seconds = end - start;
+  std::cout << "time to create seeds: " << elapsed_seconds.count() << std::endl;
+  std::cout << "Number of regions: " << seedVector.size() << std::endl;
+  int numSeeds = 0;
+  for (auto& outVec : seedVector) {
+    numSeeds += outVec.size();
+  }
+  std::cout << "Number of seeds generated: " << numSeeds << std::endl;
+  if (!quiet) {
+    for (auto& regionVec : seedVector) {
+      for (size_t i = 0; i < regionVec.size(); i++) {
+        const Acts::Seed<SpacePoint>* seed = &regionVec[i];
+        const SpacePoint* sp = seed->sp()[0];
+        std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z()
+                  << ") ";
+        sp = seed->sp()[1];
+        std::cout << sp->layer << " (" << sp->x() << ", " << sp->y() << ", "
+                  << sp->z() << ") ";
+        sp = seed->sp()[2];
+        std::cout << sp->layer << " (" << sp->x() << ", " << sp->y() << ", "
+                  << sp->z() << ") ";
+        std::cout << std::endl;
+      }
+    }
+  }
+  return 0;
 }
