@@ -54,3 +54,11 @@ jobs:
       - name: Check
         run: >
           CI/check_boost_test_macro.sh
+  smearing_config:
+    runs-on: ubuntu-latest
+    container: python:alpine3.6
+    steps:
+      - uses: actions/checkout@v2
+      - name: Check
+        run: >
+          CI/check_smearing_config.py .
