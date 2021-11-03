@@ -74,7 +74,7 @@ ActsExamples::RootPlanarClusterWriter::RootPlanarClusterWriter(
   m_outputTree->Branch("truth_g_t", &m_t_gt);
   m_outputTree->Branch("truth_l_x", &m_t_lx);
   m_outputTree->Branch("truth_l_y", &m_t_ly);
-  m_outputTree->Branch("truth_barcode", &m_t_barcode, "truth_barcode/l");
+  m_outputTree->Branch("truth_barcode", &m_t_barcode);
 }
 
 ActsExamples::RootPlanarClusterWriter::~RootPlanarClusterWriter() {}
