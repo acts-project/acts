@@ -16,7 +16,7 @@ import math
 import subprocess
 
 args = argparse.ArgumentParser()
-args.add_argument('sourcedir')
+args.add_argument("sourcedir")
 args = args.parse_args()
 
 volumes = [7, 8, 9, 12, 13, 14, 16, 17, 18]
@@ -24,16 +24,16 @@ volumes = [7, 8, 9, 12, 13, 14, 16, 17, 18]
 
 base_cli = [
     "python",
-    args.sourcedir + "/Examples/Algorithms/Digitization/scripts/smearing-config.py"
+    args.sourcedir + "/Examples/Algorithms/Digitization/scripts/smearing-config.py",
 ]
 
 for vid in volumes:
     # 50μm×50μmand further out two different strip detectors withshort80μm×1200μmand long strips0.12 mm×10.8 mmare placed.
-    if vid in [7, 8, 9]: # Pixel
+    if vid in [7, 8, 9]:  # Pixel
         resx, resy = 0.05, 0.05
-    elif vid in [12, 13, 14]: # Short strip
+    elif vid in [12, 13, 14]:  # Short strip
         resx, resy = 0.08, 1.2
-    elif vid in [16, 17, 18]: # Long strip
+    elif vid in [16, 17, 18]:  # Long strip
         resx, resy = 0.12, 10.8
     else:
         raise RuntimeError("Invalid volume id")
@@ -48,15 +48,17 @@ for vid in volumes:
         "--digi-smear-parameters={}:{}".format(resx, resy),
     ]
 
-output = subprocess.check_output(base_cli).decode('utf-8')
+output = subprocess.check_output(base_cli).decode("utf-8")
 
-ref_path = args.sourcedir + "/Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+ref_path = (
+    args.sourcedir
+    + "/Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+)
 
-with open(ref_path, 'r') as ifile:
+with open(ref_path, "r") as ifile:
     ref = ifile.read()
 
-for i, (line_ref, line_gen) in \
-    enumerate(zip(ref.split('\n'), output.split('\n'))):
+for i, (line_ref, line_gen) in enumerate(zip(ref.split("\n"), output.split("\n"))):
 
     lhs = line_ref.strip()
     rhs = line_gen.strip()
