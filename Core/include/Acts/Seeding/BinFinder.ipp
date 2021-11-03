@@ -14,6 +14,12 @@ Acts::BinFinder<external_spacepoint_t>::BinFinder(
       m_numPhiNeighbors(std::move(numPhiNeighbors)) {}
 
 template <typename external_spacepoint_t>
+Acts::BinFinder<external_spacepoint_t>::BinFinder(
+    const std::vector<std::pair<int, int> >& zBinNeighbors,
+    const int& numPhiNeighbors)
+    : m_zBinNeighbors(zBinNeighbors), m_numPhiNeighbors(numPhiNeighbors) {}
+
+template <typename external_spacepoint_t>
 boost::container::small_vector<size_t, 10>
 Acts::BinFinder<external_spacepoint_t>::findBins(
     size_t phiBin, size_t zBin,
