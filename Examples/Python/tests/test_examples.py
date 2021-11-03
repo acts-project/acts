@@ -62,6 +62,30 @@ def assert_entries(root_file, tree_name, exp):
     assert rf.Get(tree_name).GetEntries() == exp, f"{root_file}:{tree_name}"
 
 
+@pytest.mark.slow
+def test_pythia8(tmp_path, seq):
+    from pythia8 import runPythia8
+
+    (tmp_path / "csv").mkdir()
+
+    assert not (tmp_path / "pythia8_particles.root").exists()
+    assert len(list((tmp_path / "csv").iterdir())) == 0
+
+    events = seq.config.events
+
+    runPythia8(str(tmp_path), s=seq).run()
+
+    del seq
+
+    fp = tmp_path / "pythia8_particles.root"
+    assert fp.exists()
+    assert fp.stat().st_size > 2 ** 10 * 50
+    assert_entries(fp, "particles", events)
+
+    assert len(list((tmp_path / "csv").iterdir())) > 0
+    assert_csv_output(tmp_path / "csv", "particles")
+
+
 def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
     from fatras import runFatras
 
