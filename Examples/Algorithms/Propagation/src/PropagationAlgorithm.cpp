@@ -39,10 +39,7 @@ ProcessCode PropagationAlgorithm::execute(
   propagationSteps.reserve(m_cfg.ntests);
 
   // Output (optional): the recorded material
-  std::vector<RecordedMaterialTrack> recordedMaterial;
-  if (m_cfg.recordMaterialInteractions) {
-    recordedMaterial.reserve(m_cfg.ntests);
-  }
+  std::unordered_map<size_t, Acts::RecordedMaterialTrack> recordedMaterial;
 
   // loop over number of particles
   for (size_t it = 0; it < m_cfg.ntests; ++it) {
@@ -100,7 +97,7 @@ ProcessCode PropagationAlgorithm::execute(
       // The material
       rmTrack.second = std::move(pOutput.second);
       // push it it
-      recordedMaterial.push_back(std::move(rmTrack));
+      recordedMaterial[it] = (std::move(rmTrack));
     }
   }
 
