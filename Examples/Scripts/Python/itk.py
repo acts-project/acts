@@ -94,14 +94,20 @@ def runITk(
             jmw.write(trackingGeometry)
 
 
-def buildITkGeometry(geo_dir: Path):
+def buildITkGeometry(geo_dir: Path, material: bool = True):
     Volume = TGeoDetector.Config.Volume
     LayerTriplet = TGeoDetector.Config.LayerTriplet
 
-    matDeco = acts.IMaterialDecorator.fromFile(
-        geo_dir / "atlas/itk-hgtd/material-maps-ITk-HGTD.json",
-        level=acts.logging.INFO,
-    )
+    logger = acts.logging.getLogger("buildITkGeometry")
+
+    matDeco = None
+    if material:
+        file = geo_dir / "atlas/itk-hgtd/material-maps-ITk-HGTD.json"
+        logger.info("Adding material from %s", file.absolute())
+        matDeco = acts.IMaterialDecorator.fromFile(
+            file,
+            level=acts.logging.INFO,
+        )
 
     return TGeoDetector.create(
         fileName=str(geo_dir / "atlas/itk-hgtd/ATLAS-ITk-HGTD.tgeo.root"),
@@ -238,6 +244,9 @@ if "__main__" == __name__:
         action="store_true",
         help="Write geometry and material in JSON format.",
     )
+    p.add_argument(
+        "--no-material", action="store_true", help="Decorate material to the geometry"
+    )
 
     args = p.parse_args()
     args.output_dir.mkdir(exist_ok=True, parents=True)
@@ -245,7 +254,10 @@ if "__main__" == __name__:
     geo_example_dir = Path(args.geo_dir)
     assert geo_example_dir.exists(), "Detector example input directory missing"
 
-    detector, trackingGeometry, decorators = buildITkGeometry(geo_example_dir)
+    detector, trackingGeometry, decorators = buildITkGeometry(
+        geo_example_dir,
+        material=not args.no_material,
+    )
 
     runITk(
         trackingGeometry=trackingGeometry,
