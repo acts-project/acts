@@ -74,12 +74,6 @@ struct SeedfinderConfig {
   Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
                         0 * Acts::UnitConstants::mm};
 
-  // sets of consecutive phi bins in the seed making step
-  int numPhiNeighbors;
-  // vector containing the map of z bins in the top and bottom layers
-  std::vector<std::pair<int, int>> zBinNeighborsTop;
-  std::vector<std::pair<int, int>> zBinNeighborsBottom;
-
   // average radiation lengths of material on the length of a seed. used for
   // scattering.
   // default is 5%
