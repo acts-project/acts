@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
@@ -38,6 +39,10 @@ class SeedingAlgorithm final : public BareAlgorithm {
     Acts::SeedFilterConfig seedFilterConfig;
     Acts::SeedfinderConfig<SimSpacePoint> seedFinderConfig;
     Acts::SpacePointGridConfig gridConfig;
+
+    // vector containing the map of z bins in the top and bottom layers
+    std::vector<std::pair<int, int> > zBinNeighborsTop;
+    std::vector<std::pair<int, int> > zBinNeighborsBottom;
   };
 
   /// Construct the seeding algorithm.

@@ -37,6 +37,8 @@ struct SpacePointGridConfig {
   float cotThetaMax;
   // maximum impact parameter in mm
   float impactMax;
+  // sets of consecutive phi bins in the seed making step
+  int numPhiNeighbors;
   // enable non equidistant binning in z
   std::vector<float> zBinEdges;
 
