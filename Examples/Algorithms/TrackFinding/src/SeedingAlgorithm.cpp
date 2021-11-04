@@ -59,11 +59,6 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config zMax");
   }
 
-  if (m_cfg.seedFilterConfig.maxSeedsPerSpM !=
-      m_cfg.seedFinderConfig.maxSeedsPerSpM) {
-    throw std::invalid_argument("Inconsistent config maxSeedsPerSpM");
-  }
-
   if (m_cfg.gridConfig.cotThetaMax != m_cfg.seedFinderConfig.cotThetaMax) {
     throw std::invalid_argument("Inconsistent config cotThetaMax");
   }

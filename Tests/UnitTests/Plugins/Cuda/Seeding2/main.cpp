@@ -68,7 +68,6 @@ int main(int argc, char* argv[]) {
   sfConfig.collisionRegionMax = 250._mm;
   sfConfig.zMin = -2800._mm;
   sfConfig.zMax = 2800._mm;
-  sfConfig.maxSeedsPerSpM = 5;
   // 2.7 eta
   sfConfig.cotThetaMax = 7.40627;
   sfConfig.sigmaScattering = 1.00000;

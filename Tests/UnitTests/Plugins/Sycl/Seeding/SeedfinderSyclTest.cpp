@@ -94,7 +94,6 @@ auto setupSeedfinderConfiguration()
   config.collisionRegionMax = 250._mm;
   config.zMin = -2800._mm;
   config.zMax = 2800._mm;
-  config.maxSeedsPerSpM = 5;
   // 2.7 eta
   config.cotThetaMax = 7.40627;
   config.sigmaScattering = 1.00000;
