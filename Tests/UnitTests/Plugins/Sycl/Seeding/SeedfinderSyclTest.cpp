@@ -103,11 +103,6 @@ auto setupSeedfinderConfiguration()
   config.beamPos = {-.5_mm, -.5_mm};
   config.impactMax = 10._mm;
 
-  int numPhiNeighbors = 1;
-
-  std::vector<std::pair<int, int>> zBinNeighborsTop;
-  std::vector<std::pair<int, int>> zBinNeighborsBottom;
-
   // for sycl
   config.nTrplPerSpBLimit = 100;
   config.nAvgTrplPerSpBLimit = 6;
@@ -141,6 +136,11 @@ auto main(int argc, char** argv) -> int {
   }
 
   auto spVec = readFile(cmdlTool.inpFileName);
+
+  int numPhiNeighbors = 1;
+
+  std::vector<std::pair<int, int>> zBinNeighborsTop;
+  std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
       Acts::BinFinder<SpacePoint>(zBinNeighborsBottom, numPhiNeighbors));
