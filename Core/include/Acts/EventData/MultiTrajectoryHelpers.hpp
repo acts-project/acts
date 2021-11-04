@@ -61,16 +61,17 @@ TrajectoryState trajectoryState(
     const auto& volume = geoID.volume();
     const auto& layer = geoID.layer();
     trajState.nStates++;
-    trajState.chi2Sum += state.chi2();
     trajState.NDF += state.calibratedSize();
     auto typeFlags = state.typeFlags();
     if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
-      if (typeFlags.test(Acts::TrackStateFlag::SharedHitFlag))
+      if (typeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) {
         trajState.nSharedHits++;
+      }
       trajState.nMeasurements++;
       trajState.measurementChi2.push_back(state.chi2());
       trajState.measurementVolume.push_back(volume);
       trajState.measurementLayer.push_back(layer);
+      trajState.chi2Sum += state.chi2();
     } else if (typeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
       trajState.nOutliers++;
       trajState.outlierChi2.push_back(state.chi2());
@@ -113,16 +114,17 @@ VolumeTrajectoryStateContainer trajectoryState(
     // The trajectory state for this volume
     auto& trajState = trajStateContainer[volume];
     trajState.nStates++;
-    trajState.chi2Sum += state.chi2();
     trajState.NDF += state.calibratedSize();
     auto typeFlags = state.typeFlags();
     if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
-      if (typeFlags.test(Acts::TrackStateFlag::SharedHitFlag))
+      if (typeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) {
         trajState.nSharedHits++;
+      }
       trajState.nMeasurements++;
       trajState.measurementChi2.push_back(state.chi2());
       trajState.measurementVolume.push_back(volume);
       trajState.measurementLayer.push_back(layer);
+      trajState.chi2Sum += state.chi2();
     } else if (typeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
       trajState.nOutliers++;
       trajState.outlierChi2.push_back(state.chi2());
