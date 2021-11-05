@@ -66,7 +66,10 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
     # Digitization
     digiCfg = acts.examples.DigitizationConfig(
         acts.examples.readDigiConfigFromJson(
-            str(srcdir / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json")
+            str(
+                srcdir
+                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            )
         ),
         trackingGeometry=trackingGeometry,
         randomNumbers=rnd,
@@ -93,7 +96,10 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
         outputSpacePoints="spacepoints",
         trackingGeometry=trackingGeometry,
         geometrySelection=acts.examples.readJsonGeometryList(
-            str(srcdir / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json")
+            str(
+                srcdir
+                / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+            )
         ),
     )
 

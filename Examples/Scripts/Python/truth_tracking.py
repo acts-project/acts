@@ -219,7 +219,8 @@ if "__main__" == __name__:
     runTruthTracking(
         trackingGeometry,
         field,
-        digiConfigFile=srcdir / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
-            # "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",
+        digiConfigFile=srcdir
+        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
+        # "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",
         outputDir=Path.cwd(),
     ).run()

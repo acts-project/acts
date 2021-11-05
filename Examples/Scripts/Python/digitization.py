@@ -76,7 +76,10 @@ def configureDigitization(
     # Digitization
     digiCfg = acts.examples.DigitizationConfig(
         acts.examples.readDigiConfigFromJson(
-            str(srcdir / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json")
+            str(
+                srcdir
+                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            )
         ),
         trackingGeometry=trackingGeometry,
         randomNumbers=rnd,

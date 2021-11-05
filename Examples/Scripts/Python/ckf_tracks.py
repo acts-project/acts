@@ -344,8 +344,10 @@ if "__main__" == __name__:
         trackingGeometry,
         decorators,
         field=field,
-        geometrySelection=srcdir / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
-        digiConfigFile=srcdir / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
+        geometrySelection=srcdir
+        / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
+        digiConfigFile=srcdir
+        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
         outputCsv=True,
         truthSmearedSeeded=False,
         truthEstimatedSeeded=False,
