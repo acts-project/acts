@@ -209,6 +209,8 @@ def runTruthTracking(
 
 if "__main__" == __name__:
 
+    srcdir = Path(__file__).resolve().parent.parent.parent.parent
+
     # detector, trackingGeometry, _ = getOpenDataDetector()
     detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
 
@@ -217,9 +219,7 @@ if "__main__" == __name__:
     runTruthTracking(
         trackingGeometry,
         field,
-        digiConfigFile=Path(
+        digiConfigFile=srcdir / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
             # "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",
-            "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-        ),
         outputDir=Path.cwd(),
     ).run()

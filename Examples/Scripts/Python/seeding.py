@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+from pathlib import Path
 
 import acts
 import acts.examples
@@ -9,6 +10,8 @@ u = acts.UnitConstants
 
 
 def runSeeding(trackingGeometry, field, outputDir, s=None):
+
+    srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
     csv_dir = os.path.join(outputDir, "csv")
     if not os.path.exists(csv_dir):
@@ -63,7 +66,7 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
     # Digitization
     digiCfg = acts.examples.DigitizationConfig(
         acts.examples.readDigiConfigFromJson(
-            "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            str(srcdir / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json")
         ),
         trackingGeometry=trackingGeometry,
         randomNumbers=rnd,
@@ -90,7 +93,7 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
         outputSpacePoints="spacepoints",
         trackingGeometry=trackingGeometry,
         geometrySelection=acts.examples.readJsonGeometryList(
-            "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+            str(srcdir / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json")
         ),
     )
 

@@ -330,6 +330,8 @@ def runCKFTracks(
 
 
 if "__main__" == __name__:
+    srcdir = Path(__file__).resolve().parent.parent.parent.parent
+
     detector, trackingGeometry, decorators = GenericDetector.create()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
@@ -342,12 +344,8 @@ if "__main__" == __name__:
         trackingGeometry,
         decorators,
         field=field,
-        geometrySelection=Path(
-            "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
-        ),
-        digiConfigFile=Path(
-            "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-        ),
+        geometrySelection=srcdir / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
+        digiConfigFile=srcdir / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
         outputCsv=True,
         truthSmearedSeeded=False,
         truthEstimatedSeeded=False,
