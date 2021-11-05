@@ -32,6 +32,9 @@ Seedfinder<external_spacepoint_t, platform_t>::Seedfinder(
       std::pow(m_config.minPt * 2 / m_config.pTPerHelixRadius, 2);
   m_config.pT2perRadius =
       std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);
+
+  m_config.binSizeZ = m_config.binsZ / (m_config.zMax - m_config.zMin);
+  m_config.binSizeR = m_config.binsR / (m_config.rMax - m_config.rMin);
 }
 
 template <typename external_spacepoint_t, typename platform_t>

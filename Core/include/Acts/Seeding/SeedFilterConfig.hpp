@@ -16,8 +16,10 @@
 namespace Acts {
 
 struct SeedFilterConfig {
-  // the allowed delta between two inverted seed radii for them to be considered
-  // compatible.
+  // the delta for inverse helix radius up to which compared seeds
+  // are considered to have a compatible radius. delta of inverse radius
+  // leads to this value being the cutoff. unit is 1/mm. default value
+  // of 0.00003 leads to all helices with radius>33m to be considered compatible
   float deltaInvHelixDiameter = 0.00003 * 1. / Acts::UnitConstants::mm;
   // the impact parameters (d0) is multiplied by this factor and subtracted from
   // weight
@@ -28,7 +30,7 @@ struct SeedFilterConfig {
   float deltaRMin = 5. * Acts::UnitConstants::mm;
   // in dense environments many seeds may be found per middle space point.
   // only seeds with the highest weight will be kept if this limit is reached.
-  unsigned int maxSeedsPerSpM = 10;
+  unsigned int maxSeedsPerSpM = 5;
   // how often do you want to increase the weight of a seed for finding a
   // compatible seed?
   size_t compatSeedLimit = 2;

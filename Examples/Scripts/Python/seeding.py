@@ -114,7 +114,6 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
         collisionRegionMax=250 * u.mm,
         zMin=gridConfig.zMin,
         zMax=gridConfig.zMax,
-        maxSeedsPerSpM=seedFilterConfig.maxSeedsPerSpM,
         cotThetaMax=gridConfig.cotThetaMax,
         sigmaScattering=50,
         radLengthPerSeed=0.1,
@@ -143,10 +142,6 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
         outputProtoTracks="prototracks_estimated",
         trackingGeometry=trackingGeometry,
         magneticField=field,
-    )
-
-    s = s or acts.examples.Sequencer(
-        events=100, numThreads=-1, logLevel=acts.logging.INFO
     )
 
     s.addReader(evGen)

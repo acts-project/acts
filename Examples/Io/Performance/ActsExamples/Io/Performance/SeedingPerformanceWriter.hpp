@@ -34,6 +34,8 @@ class SeedingPerformanceWriter final : public WriterT<ProtoTrackContainer> {
     std::string filePath = "performance_track_seeding.root";
     /// Output file mode
     std::string fileMode = "RECREATE";
+    /// Output file mode
+    bool write = true;
     /// Plot tool configurations.
     EffPlotTool::Config effPlotToolConfig;
     DuplicationPlotTool::Config duplicationPlotToolConfig;
@@ -48,6 +50,14 @@ class SeedingPerformanceWriter final : public WriterT<ProtoTrackContainer> {
 
   /// Finalize plots.
   ProcessCode endRun() final override;
+
+  size_t totalSeeds() const { return m_nTotalSeeds; };
+  size_t totalMatchedSeeds() const { return m_nTotalMatchedSeeds; };
+  size_t totalParticles() const { return m_nTotalParticles; };
+  size_t totalMatchedParticles() const { return m_nTotalMatchedParticles; };
+  size_t totalDuplicatedParticles() const {
+    return m_nTotalDuplicatedParticles;
+  };
 
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,

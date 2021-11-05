@@ -201,6 +201,13 @@ void addOutput(Context& ctx) {
     ACTS_PYTHON_MEMBER(effPlotToolConfig);
     ACTS_PYTHON_MEMBER(duplicationPlotToolConfig);
     ACTS_PYTHON_STRUCT_END();
+    w.def_property_readonly("totalSeeds", &Writer::totalSeeds);
+    w.def_property_readonly("totalMatchedSeeds", &Writer::totalMatchedSeeds);
+    w.def_property_readonly("totalParticles", &Writer::totalParticles);
+    w.def_property_readonly("totalMatchedParticles",
+                            &Writer::totalMatchedParticles);
+    w.def_property_readonly("totalDuplicatedParticles",
+                            &Writer::totalDuplicatedParticles);
   }
 
   {

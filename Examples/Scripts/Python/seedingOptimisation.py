@@ -6,6 +6,7 @@ import functools
 import acts
 import acts.examples
 
+from common import addPythia8
 
 u = acts.UnitConstants
 
@@ -15,27 +16,12 @@ def runSimulation(trackingGeometry, field, rnd, outputDir):
     if not os.path.exists(csv_dir):
         os.mkdir(csv_dir)
 
-    # Input
-    evGen = acts.examples.EventGenerator(
-        level=acts.logging.INFO,
-        generators=[
-            acts.examples.EventGenerator.Generator(
-                multiplicity=acts.examples.FixedMultiplicityGenerator(n=2),
-                vertex=acts.examples.GaussianVertexGenerator(
-                    stddev=acts.Vector4(0, 0, 0, 0), mean=acts.Vector4(0, 0, 0, 0)
-                ),
-                particles=acts.examples.ParametricParticleGenerator(
-                    p=(1 * u.GeV, 10 * u.GeV),
-                    eta=(-2, 2),
-                    phi=(0, 360 * u.degree),
-                    randomizeCharge=True,
-                    numParticles=4,
-                ),
-            )
-        ],
-        outputParticles="particles_input",
-        randomNumbers=rnd,
+# Sequencer
+    s = acts.examples.Sequencer(
+        events=1000, numThreads=-1, logLevel=acts.logging.INFO
     )
+
+    evGen = addPythia8(s, rnd, hardProcess = ["Top:qqbar2ttbar=on"])
 
     # Simulation
     simAlg = acts.examples.FatrasSimulation(
@@ -51,12 +37,6 @@ def runSimulation(trackingGeometry, field, rnd, outputDir):
         generateHitsOnSensitive=True,
     )
 
-# Sequencer
-    s = acts.examples.Sequencer(
-        events=1000, numThreads=-1, logLevel=acts.logging.INFO
-    )
-
-    s.addReader(evGen)
     s.addAlgorithm(simAlg)
 
     # Output
@@ -135,7 +115,7 @@ def runSeeding(trackingGeometry, field, rnd, outputDir,  gridConfig, seedFilterC
     )
 
     seedingAlg = acts.examples.SeedingAlgorithm(
-        level=acts.logging.VERBOSE,
+        level=acts.logging.INFO,
         inputSpacePoints=[spAlg.config.outputSpacePoints],
         outputSeeds="seeds",
         outputProtoTracks="prototracks",
@@ -145,7 +125,7 @@ def runSeeding(trackingGeometry, field, rnd, outputDir,  gridConfig, seedFilterC
     )
 
     parEstimateAlg = acts.examples.TrackParamsEstimationAlgorithm(
-        level=acts.logging.VERBOSE,
+        level=acts.logging.INFO,
         inputProtoTracks=seedingAlg.config.outputProtoTracks,
         inputSpacePoints=[spAlg.config.outputSpacePoints],
         inputSourceLinks=digiCfg.outputSourceLinks,
@@ -170,7 +150,7 @@ def runSeeding(trackingGeometry, field, rnd, outputDir,  gridConfig, seedFilterC
     s.addAlgorithm(parEstimateAlg)
 
     seedingPerformaces = acts.examples.SeedingPerformanceWriter(
-        level=acts.logging.DEBUG,
+        level=acts.logging.INFO,
         inputProtoTracks=seedingAlg.config.outputProtoTracks,
         inputParticles=inputParticles,
         inputMeasurementParticlesMap=digiCfg.outputMeasurementParticlesMap,
@@ -261,6 +241,9 @@ if "__main__" == __name__:
         "minPt": "uniform(100, 1000)",
         "deltaRMax": "uniform(10, 100)",
         "deltaRMin": "uniform(1, 10)",
+        "radLengthPerSeed": "uniform(0.01, 0.1)",
+        "compatSeedWeight": "uniform(100, 1000)",
+        "impactWeightFactor": "uniform(0.5, 5)",
     }
 
     experiment = build_experiment(
@@ -270,7 +253,7 @@ if "__main__" == __name__:
         # algorithms={"tpe": {"n_initial_points": 5}},
     )
 
-    def evaluate(maxSeedsPerSpM, minPt, deltaRMax, deltaRMin):
+    def evaluate(maxSeedsPerSpM, minPt, deltaRMax, deltaRMin, radLengthPerSeed, compatSeedWeight, impactWeightFactor):
         print("evaluate")
 
         if deltaRMax < deltaRMin:
@@ -283,11 +266,12 @@ if "__main__" == __name__:
             zMax=2000 * u.mm,
             zMin=-2000 * u.mm,
             deltaRMax=deltaRMax * u.mm,
-            cotThetaMax=7.40627,  # 2.7 eta
+            # cotThetaMax=7.40627,  # 2.7 eta
+            cotThetaMax=27.29,  # 4 eta
         )
 
         seedFilterConfig = acts.SeedFilterConfig(
-            maxSeedsPerSpM=round(maxSeedsPerSpM), deltaRMin=deltaRMin * u.mm
+            maxSeedsPerSpM=round(maxSeedsPerSpM), deltaRMin=deltaRMin * u.mm, compatSeedWeight=compatSeedWeight, impactWeightFactor=impactWeightFactor
         )
         seedFinderConfig = acts.SeedfinderConfig(
             rMax=gridConfig.rMax,
@@ -298,12 +282,12 @@ if "__main__" == __name__:
             zMin=gridConfig.zMin,
             zMax=gridConfig.zMax,
             cotThetaMax=gridConfig.cotThetaMax,
-            sigmaScattering=50,
-            radLengthPerSeed=0.1,
+            sigmaScattering=5,
+            radLengthPerSeed=radLengthPerSeed,
             minPt=gridConfig.minPt,
             bFieldInZ=gridConfig.bFieldInZ,
             beamPos=acts.Vector2(0 * u.mm, 0 * u.mm),
-            impactMax=3 * u.mm,
+            impactMax=3*u.mm,
         )
 
         (
@@ -319,7 +303,7 @@ if "__main__" == __name__:
         ) = runSeeding(trackingGeometry, field, rnd, outputDir,  gridConfig, seedFilterConfig, seedFinderConfig)
 
         K = 1000
-        effScore = efficiency - 10 * (fakeRate * duplicateRate) / K
+        effScore = efficiency - (100 * fakeRate + avgDuplicate) / K
         print("efficiency : ", efficiency, "fakeRate : ", fakeRate, "duplicateRate : ",duplicateRate, "effScore : ",effScore)
 
         objective = 1 - effScore
@@ -330,7 +314,7 @@ if "__main__" == __name__:
 
 
     print("begin workon")
-    experiment.workon(evaluate, max_trials=100)
+    experiment.workon(evaluate, max_trials=50)
     print("workon done")
 
     experiment.plot.regret().show()
