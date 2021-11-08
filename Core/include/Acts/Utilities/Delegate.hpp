@@ -37,6 +37,20 @@ class Delegate<R(Args...)> {
  public:
   Delegate() = default;
 
+  /// Constructor with an explicit runtime callable
+  /// @param callable The runtime value of the callable
+  /// @note The function signature requires the first argument of the callable is `const void*`.
+  ///       i.e. if the signature of the delegate is `void(int)`, the callable's
+  ///       signature has to be `void(const void*, int)`.
+  Delegate(function_type callable) { connect(callable); }
+
+  /// Assignment operator with an explicit runtime callable
+  /// @param callable The runtime value of the callable
+  /// @note The function signature requires the first argument of the callable is `const void*`.
+  ///       i.e. if the signature of the delegate is `void(int)`, the callable's
+  ///       signature has to be `void(const void*, int)`.
+  void operator=(function_type callable) { connect(callable); }
+
   /// Connect a free function pointer.
   /// @note The function pointer must be ``constexpr`` for @c Delegate to accept it
   /// @tparam Callable The compile-time free function pointer
@@ -78,8 +92,22 @@ class Delegate<R(Args...)> {
   /// @param args The arguments to call the contained function with
   /// @return Return value of the contained function
   return_type operator()(Args... args) const {
-    assert(m_function != nullptr && "Delegate is not connected");
+    assert(connected() && "Delegate is not connected");
     return std::invoke(m_function, m_payload, std::forward<Args>(args)...);
+  }
+
+  /// Return whether this delegate is currently connected
+  /// @return True if this delegate is connected
+  bool connected() const { return m_function != nullptr; }
+
+  /// Return whether this delegate is currently connected
+  /// @return True if this delegate is connected
+  operator bool() const { return connected(); }
+
+  /// Disconnect this delegate, meaning it cannot be called anymore
+  void disconnect() {
+    m_payload = nullptr;
+    m_function = nullptr;
   }
 
  private:
