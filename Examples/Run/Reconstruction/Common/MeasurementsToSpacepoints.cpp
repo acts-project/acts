@@ -39,9 +39,8 @@ using namespace ActsExamples;
 
 static std::unique_ptr<const Acts::Logger> m_logger;
 const Acts::Logger& logger() { return *m_logger; }
-int runMeasurements2SP(int argc, char* argv[],
-    std::shared_ptr<ActsExamples::IBaseDetector> detector) {
-  std::cout<<"Welcome to TrackFindingMLBased example." << std::endl;
+int runMeasurementsToSP(int argc, char* argv[],
+                        std::shared_ptr<ActsExamples::IBaseDetector> detector) {
 
   // Setup and parse options
   auto desc = Options::makeDefaultOptions();
