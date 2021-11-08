@@ -28,11 +28,13 @@ void ActsExamples::Options::addParticleGunOptions(Description& desc) {
   opt("gen-vertex-t-std-ns", value<double>()->default_value(0.0),
       "Temporal vertex standard deviation in ns");
   opt("gen-phi-degree",
-      value<Interval>()->value_name("MIN:MAX")->default_value({0.0, 360.0}),
+      value<Interval>()->value_name("MIN:MAX")->default_value({-180.0, 180.0}),
       "Transverse direction angle generation range in degree");
   opt("gen-eta",
       value<Interval>()->value_name("MIN:MAX")->default_value({-4.0, 4.0}),
       "Pseudo-rapidity generation range");
+  opt("gen-eta-uniform", bool_switch(),
+      "Sample eta directly and not cos(theta).");
   opt("gen-mom-gev",
       value<Interval>()->value_name("MIN:MAX")->default_value({1.0, 10.0}),
       "Absolute (or transverse) momentum generation range in GeV");
@@ -73,6 +75,8 @@ ActsExamples::Options::readParticleGunOptions(const Variables& vars) {
   // user config sets eta but the generator takes theta
   double etaMin, etaMax;
   getRange("gen-eta", 1.0, etaMin, etaMax);
+
+  pgCfg.etaUniform = vars["gen-eta-uniform"].template as<bool>();
   pgCfg.thetaMin = 2 * std::atan(std::exp(-etaMin));
   pgCfg.thetaMax = 2 * std::atan(std::exp(-etaMax));
   getRange("gen-mom-gev", 1_GeV, pgCfg.pMin, pgCfg.pMax);

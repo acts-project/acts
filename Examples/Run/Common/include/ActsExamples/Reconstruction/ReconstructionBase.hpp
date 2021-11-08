@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
+#include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"

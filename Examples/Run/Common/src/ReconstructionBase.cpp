@@ -10,7 +10,6 @@
 
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Digitization/DigitizationOptions.hpp"
-#include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
@@ -85,7 +84,7 @@ ActsExamples::DigitizationConfig setupDigitization(
   digiCfg.randomNumbers = rnd;
   digiCfg.trackingGeometry = trackingGeometry;
   sequencer.addAlgorithm(
-      ActsExamples::createDigitizationAlgorithm(digiCfg, logLevel));
+      std::make_shared<DigitizationAlgorithm>(digiCfg, logLevel));
 
   if (not vars["dump-digi-config"].as<std::string>().empty()) {
     writeDigiConfigToJson(digiCfg.digitizationConfigs,
