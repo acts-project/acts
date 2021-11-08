@@ -7,8 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
+
 #include "MeasurementsToSpacepoints.hpp"
 
 int main(int argc, char* argv[]) {
-    return runMeasurementsToSP(argc, argv, std::make_shared<ActsExamples::TGeoDetector>());
+  return runMeasurementsToSP(argc, argv,
+                             std::make_shared<ActsExamples::TGeoDetector>());
 }

@@ -7,9 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Csv/CsvSpacepointWriter.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
-#include "Acts/Definitions/Units.hpp"
 
+#include "Acts/Definitions/Units.hpp"
+#include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <ios>
@@ -23,9 +23,8 @@
 ActsExamples::CsvSpacepointWriter::CsvSpacepointWriter(
     const ActsExamples::CsvSpacepointWriter::Config& config,
     Acts::Logging::Level level)
-    : WriterT(config.inputSpacepoints, "CsvSpacepointWriter", level), m_cfg(config) {
-
-}
+    : WriterT(config.inputSpacepoints, "CsvSpacepointWriter", level),
+      m_cfg(config) {}
 
 ActsExamples::CsvSpacepointWriter::~CsvSpacepointWriter() {}
 
@@ -34,18 +33,17 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacepointWriter::endRun() {
   return ProcessCode::SUCCESS;
 }
 
-
 ActsExamples::ProcessCode ActsExamples::CsvSpacepointWriter::writeT(
     const AlgorithmContext& ctx, const SimSpacePointContainer& spacepoints) {
-
   // Open per-event file for all components
   std::string pathSP =
       perEventFilepath(m_cfg.outputDir, "spacepoint.csv", ctx.eventNumber);
 
-  dfe::NamedTupleCsvWriter<SpacepointData> writerSP(pathSP, m_cfg.outputPrecision);
+  dfe::NamedTupleCsvWriter<SpacepointData> writerSP(pathSP,
+                                                    m_cfg.outputPrecision);
 
   SpacepointData spData;
-  for(const auto& sp: spacepoints) {
+  for (const auto& sp : spacepoints) {
     spData.measurement_id = sp.measurementIndex();
     spData.x = sp.x();
     spData.y = sp.y();

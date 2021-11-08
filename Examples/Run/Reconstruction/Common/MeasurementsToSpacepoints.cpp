@@ -6,39 +6,36 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <Acts/Utilities/Logger.hpp>
 #include "Acts/Definitions/Units.hpp"
-#include "ActsExamples/Options/CommonOptions.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
-
-#include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
-#include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
-#include "ActsExamples/Io/Csv/CsvParticleReader.hpp" // for evaluating performance
-#include "ActsExamples/Io/Csv/CsvSpacepointWriter.hpp"
-
-#include "ActsExamples/TruthTracking/TruthSeedSelector.hpp" // for evaluating performance
-
+#include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
-
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
-#include "ActsExamples/Detector/IBaseDetector.hpp"
+#include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
+#include "ActsExamples/Io/Csv/CsvParticleReader.hpp"  // for evaluating performance
+#include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
+#include "ActsExamples/Io/Csv/CsvSpacepointWriter.hpp"
+#include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"  // to read digi config
 #include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
-#include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp" // to read digi config
-
-#include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
+#include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Reconstruction/ReconstructionBase.hpp"
+#include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
+#include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"  // for evaluating performance
+#include "ActsExamples/Utilities/Options.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
+#include <Acts/Utilities/Logger.hpp>
 
 #include <iostream>
+
 #include <boost/program_options.hpp>
 
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
 
-
 static std::unique_ptr<const Acts::Logger> m_logger;
-const Acts::Logger& logger() { return *m_logger; }
+const Acts::Logger& logger() {
+  return *m_logger;
+}
 int runMeasurementsToSP(int argc, char* argv[],
                         std::shared_ptr<ActsExamples::IBaseDetector> detector) {
 
@@ -57,12 +54,10 @@ int runMeasurementsToSP(int argc, char* argv[],
   // auto detector = std::make_shared<TGeoDetector>();
   detector->addOptions(desc);
 
-  std::cout<<"before parsing options" << std::endl;
   auto vm = Options::parse(desc, argc, argv);
   if (vm.empty()) {
     return EXIT_FAILURE;
   }
-  std::cout<<"after  parsing options" << std::endl;
 
   Sequencer sequencer(Options::readSequencerConfig(vm));
 
@@ -70,7 +65,7 @@ int runMeasurementsToSP(int argc, char* argv[],
   auto logLevel = Options::readLogLevel(vm);
   auto outputDir = ensureWritableDirectory(vm["output-dir"].as<std::string>());
 
-  m_logger = Acts::getDefaultLogger("MLBasedTrackFinding", logLevel);
+  m_logger = Acts::getDefaultLogger("MeasurementsToSP", logLevel);
   ACTS_INFO("after parsing input options");
 
   // The geometry, material and decoration
@@ -109,16 +104,15 @@ int runMeasurementsToSP(int argc, char* argv[],
   spCfg.inputMeasurements = measurementsReader.outputMeasurements;
   spCfg.outputSpacePoints = "spacepoints";
   spCfg.trackingGeometry = tGeometry;
-  spCfg.geometrySelection = {
-    Acts::GeometryIdentifier().setVolume(0)
-  };
+  spCfg.geometrySelection = {Acts::GeometryIdentifier().setVolume(0)};
   sequencer.addAlgorithm(std::make_shared<SpacePointMaker>(spCfg, logLevel));
 
   // // write out spacepoints...
   CsvSpacepointWriter::Config spWriterCfg;
   spWriterCfg.inputSpacepoints = spCfg.outputSpacePoints;
   spWriterCfg.outputDir = outputDir;
-  sequencer.addWriter(std::make_shared<CsvSpacepointWriter>(spWriterCfg, logLevel));
+  sequencer.addWriter(
+      std::make_shared<CsvSpacepointWriter>(spWriterCfg, logLevel));
 
   return sequencer.run();
 }

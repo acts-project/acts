@@ -14,4 +14,4 @@ class IBaseDetector;
 }
 
 int runMeasurementsToSP(int argc, char* argv[],
-    std::shared_ptr<ActsExamples::IBaseDetector> detector);
+                        std::shared_ptr<ActsExamples::IBaseDetector> detector);
