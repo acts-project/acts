@@ -137,10 +137,15 @@ auto main(int argc, char** argv) -> int {
 
   auto spVec = readFile(cmdlTool.inpFileName);
 
+  int numPhiNeighbors = 1;
+
+  std::vector<std::pair<int, int>> zBinNeighborsTop;
+  std::vector<std::pair<int, int>> zBinNeighborsBottom;
+
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-      Acts::BinFinder<SpacePoint>());
+      Acts::BinFinder<SpacePoint>(zBinNeighborsBottom, numPhiNeighbors));
   auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-      Acts::BinFinder<SpacePoint>());
+      Acts::BinFinder<SpacePoint>(zBinNeighborsTop, numPhiNeighbors));
   auto config = setupSeedfinderConfiguration<SpacePoint>();
 
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
