@@ -1,0 +1,127 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2021 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#include <boost/test/data/test_case.hpp>
+#include <boost/test/unit_test.hpp>
+
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Delegate.hpp"
+
+#include <numeric>
+#include <optional>
+#include <random>
+#include <tuple>
+
+using namespace Acts;
+
+namespace bd = boost::unit_test::data;
+
+BOOST_AUTO_TEST_SUITE(DelegateTests)
+
+int sumImpl(int a, int b) {
+  return a + b;
+}
+
+BOOST_AUTO_TEST_CASE(ConnectConstexprLambda) {
+  Delegate<int(int, int)> sum;
+  BOOST_CHECK(!sum);
+  BOOST_CHECK(!sum.connected());
+
+  sum.connect<&sumImpl>();
+
+  BOOST_CHECK_EQUAL(sum(2, 5), 7);
+  BOOST_CHECK_NE(sum(2, 3), 7);
+
+  sum.connect([](const void*, int a, int b) -> int { return a + b; });
+
+  BOOST_CHECK(sum);
+  BOOST_CHECK(sum.connected());
+
+  BOOST_CHECK_EQUAL(sum(2, 5), 7);
+  BOOST_CHECK_NE(sum(2, 3), 7);
+}
+
+float multiply(float a, float b) {
+  return a * b;
+}
+
+BOOST_AUTO_TEST_CASE(ConnectFunctionPointer) {
+  Delegate<float(float, float)> mult;
+
+  BOOST_CHECK(!mult);
+  BOOST_CHECK(!mult.connected());
+
+  mult.connect<multiply>();
+
+  BOOST_CHECK(mult);
+  BOOST_CHECK(mult.connected());
+
+  CHECK_CLOSE_REL(mult(2, 5.9), 2 * 5.9, 1e-6);
+  BOOST_CHECK_NE(mult(2, 3.2), 58.9);
+}
+
+struct Subtractor {
+  int v;
+  int execute(int a) const { return a - v; }
+};
+
+BOOST_AUTO_TEST_CASE(ConnectStruct) {
+  Delegate<int(int)> sub;
+
+  BOOST_CHECK(!sub);
+  BOOST_CHECK(!sub.connected());
+
+  Subtractor s{18};
+  sub.connect<&Subtractor::execute>(&s);
+
+  BOOST_CHECK(sub);
+  BOOST_CHECK(sub.connected());
+
+  BOOST_CHECK_EQUAL(sub(7), 7 - 18);
+}
+
+int addition(const void*, int a, int b) {
+  return a + b;
+}
+
+BOOST_AUTO_TEST_CASE(ConnectRuntime) {
+  {
+    Delegate<int(int, int)> add;
+    BOOST_CHECK(!add);
+    BOOST_CHECK(!add.connected());
+
+    add.connect(&addition);
+    BOOST_CHECK(add);
+    BOOST_CHECK(add.connected());
+
+    BOOST_CHECK_EQUAL(add(4, 4), 8);
+  }
+
+  {
+    Delegate<int(int, int)> add{&addition};
+
+    BOOST_CHECK(add);
+    BOOST_CHECK(add.connected());
+
+    BOOST_CHECK_EQUAL(add(4, 4), 8);
+  }
+
+  {
+    Delegate<int(int, int)> add;
+    BOOST_CHECK(!add);
+    BOOST_CHECK(!add.connected());
+
+    add = &addition;
+    BOOST_CHECK(add);
+    BOOST_CHECK(add.connected());
+
+    BOOST_CHECK_EQUAL(add(4, 4), 8);
+  }
+}
+
+BOOST_AUTO_TEST_SUITE_END()

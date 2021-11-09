@@ -10,6 +10,9 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 
 #include <array>
@@ -28,8 +31,7 @@ namespace Test {
 /// measurements are supported to limit the overhead. Additionaly, a source
 /// identifier is stored that can be used to store additional information. How
 /// this is interpreted depends on the specific tests.
-struct TestSourceLink {
-  GeometryIdentifier geoId;
+struct TestSourceLink final : public SourceLink {
   size_t sourceId = 0u;
   // use eBoundSize to indicate unused indices
   std::array<BoundIndices, 2> indices = {eBoundSize, eBoundSize};
@@ -39,7 +41,7 @@ struct TestSourceLink {
   /// Construct a source link for a 1d measurement.
   TestSourceLink(BoundIndices idx, ActsScalar val, ActsScalar var,
                  GeometryIdentifier gid = GeometryIdentifier(), size_t sid = 0u)
-      : geoId(gid),
+      : SourceLink(gid),
         sourceId(sid),
         indices{idx, eBoundSize},
         parameters(val, 0),
@@ -49,19 +51,18 @@ struct TestSourceLink {
                  const Acts::ActsVector<2>& params,
                  const Acts::ActsSymMatrix<2>& cov,
                  GeometryIdentifier gid = GeometryIdentifier(), size_t sid = 0u)
-      : geoId(gid),
+      : SourceLink(gid),
         sourceId(sid),
         indices{idx0, idx1},
         parameters(params),
         covariance(cov) {}
   /// Default-construct an invalid source link to satisfy SourceLinkConcept.
-  TestSourceLink() = default;
+  TestSourceLink() : SourceLink{GeometryIdentifier{}} {}
   TestSourceLink(const TestSourceLink&) = default;
   TestSourceLink(TestSourceLink&&) = default;
   TestSourceLink& operator=(const TestSourceLink&) = default;
   TestSourceLink& operator=(TestSourceLink&&) = default;
 
-  constexpr GeometryIdentifier geometryId() const { return geoId; }
   std::size_t index() const { return sourceId; }
 };
 
@@ -82,8 +83,10 @@ struct TestSourceLinkCalibrator {
   /// not depend on the track parameters, but they still must be part of the
   /// interface.
   template <typename parameters_t>
-  BoundVariantMeasurement<TestSourceLink> operator()(
-      const TestSourceLink& sl, const parameters_t& /* parameters */) const {
+  BoundVariantMeasurement operator()(
+      const Acts::SourceLink& sourceLink,
+      const parameters_t& /* parameters */) const {
+    const auto& sl = static_cast<const TestSourceLink&>(sourceLink);
     if ((sl.indices[0] != eBoundSize) and (sl.indices[1] != eBoundSize)) {
       return makeMeasurement(sl, sl.parameters, sl.covariance, sl.indices[0],
                              sl.indices[1]);

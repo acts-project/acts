@@ -33,8 +33,7 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
   using TrackFitterOptions =
       Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder,
                                 Acts::VoidReverseFilteringLogic>;
-  using TrackFitterResult =
-      Acts::Result<Acts::KalmanFitterResult<IndexSourceLink>>;
+  using TrackFitterResult = Acts::Result<Acts::KalmanFitterResult>;
 
   /// Fit function that takes the above parameters and runs a fit
   /// @note This is separated into a virtual interface to keep compilation units
@@ -42,9 +41,9 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
   class TrackFitterFunction {
    public:
     virtual ~TrackFitterFunction() = default;
-    virtual TrackFitterResult operator()(const std::vector<IndexSourceLink>&,
-                                         const TrackParameters&,
-                                         const TrackFitterOptions&) const = 0;
+    virtual TrackFitterResult operator()(
+        const std::vector<std::reference_wrapper<const IndexSourceLink>>&,
+        const TrackParameters&, const TrackFitterOptions&) const = 0;
   };
 
   /// Fit function that takes the above parameters plus a sorted surface
@@ -55,8 +54,8 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
    public:
     virtual ~DirectedTrackFitterFunction() = default;
     virtual TrackFitterResult operator()(
-        const std::vector<IndexSourceLink>&, const TrackParameters&,
-        const TrackFitterOptions&,
+        const std::vector<std::reference_wrapper<const IndexSourceLink>>&,
+        const TrackParameters&, const TrackFitterOptions&,
         const std::vector<const Acts::Surface*>&) const = 0;
   };
 
@@ -116,7 +115,8 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
  private:
   /// Helper function to call correct FitterFunction
   TrackFitterResult fitTrack(
-      const std::vector<ActsExamples::IndexSourceLink>& sourceLinks,
+      const std::vector<std::reference_wrapper<
+          const ActsExamples::IndexSourceLink>>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const TrackFitterOptions& options,
       const std::vector<const Acts::Surface*>& surfSequence) const;
@@ -126,7 +126,8 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
 
 inline ActsExamples::TrackFittingAlgorithm::TrackFitterResult
 ActsExamples::TrackFittingAlgorithm::fitTrack(
-    const std::vector<ActsExamples::IndexSourceLink>& sourceLinks,
+    const std::vector<std::reference_wrapper<
+        const ActsExamples::IndexSourceLink>>& sourceLinks,
     const ActsExamples::TrackParameters& initialParameters,
     const Acts::KalmanFitterOptions<MeasurementCalibrator,
                                     Acts::VoidOutlierFinder,
