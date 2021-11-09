@@ -126,7 +126,7 @@ struct IndexData {
   IndexType ijacobian = kInvalid;
   IndexType iprojector = kInvalid;
 
-  double chi2;
+  double chi2 = 0;
   double pathLength;
   TrackStateType typeFlags;
 

@@ -62,6 +62,30 @@ def assert_entries(root_file, tree_name, exp):
     assert rf.Get(tree_name).GetEntries() == exp, f"{root_file}:{tree_name}"
 
 
+@pytest.mark.slow
+def test_pythia8(tmp_path, seq):
+    from pythia8 import runPythia8
+
+    (tmp_path / "csv").mkdir()
+
+    assert not (tmp_path / "pythia8_particles.root").exists()
+    assert len(list((tmp_path / "csv").iterdir())) == 0
+
+    events = seq.config.events
+
+    runPythia8(str(tmp_path), s=seq).run()
+
+    del seq
+
+    fp = tmp_path / "pythia8_particles.root"
+    assert fp.exists()
+    assert fp.stat().st_size > 2 ** 10 * 50
+    assert_entries(fp, "particles", events)
+
+    assert len(list((tmp_path / "csv").iterdir())) > 0
+    assert_csv_output(tmp_path / "csv", "particles")
+
+
 def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
     from fatras import runFatras
 
@@ -214,12 +238,11 @@ def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_material_recording(tmp_path, material_recording, assert_root_hash):
 
-    # Not quite sure why this isn't 200
     root_files = [
         (
             "geant4_material_tracks.root",
             "material-tracks",
-            198,
+            200,
         )
     ]
 
@@ -382,7 +405,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
         assert json.load(fh)
 
     assert map_file.exists()
-    assert_entries(map_file, "material-tracks", 198)
+    assert_entries(map_file, "material-tracks", 200)
     assert_root_hash(map_file.name, map_file)
 
     val_file = tmp_path / "propagation-material.root"
