@@ -247,7 +247,10 @@ def fatras(ptcl_gun, trk_geo, rng):
         # Digitization
         digiCfg = acts.examples.DigitizationConfig(
             acts.examples.readDigiConfigFromJson(
-                "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+                str(
+                    Path(__file__).parent.parent.parent.parent
+                    / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+                )
             ),
             trackingGeometry=trk_geo,
             randomNumbers=rng,

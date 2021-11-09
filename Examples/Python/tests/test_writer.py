@@ -470,7 +470,10 @@ def test_csv_multitrajectory_writer(tmp_path):
         trackingGeometry,
         field,
         digiConfigFile=Path(
-            "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            str(
+                Path(__file__).parent.parent.parent.parent
+                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            )
         ),
         outputDir=tmp_path,
         s=s,
