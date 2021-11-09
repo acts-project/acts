@@ -50,8 +50,7 @@ namespace EventDataView3DTest {
 
 using Covariance = BoundSymMatrix;
 template <BoundIndices... params>
-using MeasurementType =
-    Measurement<Test::TestSourceLink, BoundIndices, params...>;
+using MeasurementType = Measurement<BoundIndices, params...>;
 
 std::normal_distribution<double> gauss(0., 1.);
 std::default_random_engine generator(42);
@@ -262,7 +261,8 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
                 PropagatorPlainOptions(), rSurface);
 
   // Fit the track
-  auto fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
+  auto fitRes =
+      kFitter.fit(sourcelinks.begin(), sourcelinks.end(), rStart, kfOptions);
   if (not fitRes.ok()) {
     std::cout << "Fit failed" << std::endl;
     return ss.str();
