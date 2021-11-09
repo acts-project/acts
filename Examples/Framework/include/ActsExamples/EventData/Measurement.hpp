@@ -9,6 +9,8 @@
 #pragma once
 
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 
 #include <cassert>
@@ -17,7 +19,7 @@
 namespace ActsExamples {
 
 /// Variable measurement type that can contain all possible combinations.
-using Measurement = ::Acts::BoundVariantMeasurement<IndexSourceLink>;
+using Measurement = ::Acts::BoundVariantMeasurement;
 /// Container of measurements.
 ///
 /// In contrast to the source links, the measurements themself must not be
@@ -40,13 +42,15 @@ class MeasurementCalibrator {
   /// @param sourceLink Input source link
   /// @param parameters Input track parameters (unused)
   template <typename parameters_t>
-  const Measurement& operator()(const IndexSourceLink& sourceLink,
+  const Measurement& operator()(const Acts::SourceLink& sourceLink,
                                 const parameters_t& /* parameters */) const {
+    const auto& sl = static_cast<const IndexSourceLink&>(sourceLink);
+
     assert(m_measurements and
            "Undefined measurement container in DigitizedCalibrator");
-    assert((sourceLink.index() < m_measurements->size()) and
+    assert((sl.index() < m_measurements->size()) and
            "Source link index is outside the container bounds");
-    return (*m_measurements)[sourceLink.index()];
+    return (*m_measurements)[sl.index()];
   }
 
  private:

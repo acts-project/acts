@@ -37,11 +37,13 @@ struct TrackFitterFunctionImpl
   TrackFitterFunctionImpl(Fitter&& f) : trackFitter(std::move(f)) {}
 
   ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
-      const std::vector<ActsExamples::IndexSourceLink>& sourceLinks,
+      const std::vector<std::reference_wrapper<
+          const ActsExamples::IndexSourceLink>>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingAlgorithm::TrackFitterOptions& options)
       const override {
-    return trackFitter.fit(sourceLinks, initialParameters, options);
+    return trackFitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                           initialParameters, options);
   };
 };
 
@@ -51,11 +53,13 @@ struct DirectedFitterFunctionImpl
   DirectedFitterFunctionImpl(DirectFitter&& f) : fitter(std::move(f)) {}
 
   ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
-      const std::vector<ActsExamples::IndexSourceLink>& sourceLinks,
+      const std::vector<std::reference_wrapper<
+          const ActsExamples::IndexSourceLink>>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingAlgorithm::TrackFitterOptions& options,
       const std::vector<const Acts::Surface*>& sSequence) const override {
-    return fitter.fit(sourceLinks, initialParameters, options, sSequence);
+    return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
+                      options, sSequence);
   };
 };
 
