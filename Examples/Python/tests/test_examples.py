@@ -676,10 +676,12 @@ def test_ckf_tracks_example_full_seeding(tmp_path, assert_root_hash):
         decorators,
         field=field,
         geometrySelection=Path(
-            "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+            Path(__file__).parent.parent.parent.parent
+            / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
         ),
         digiConfigFile=Path(
-            "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            Path(__file__).parent.parent.parent.parent
+            / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
         ),
         outputCsv=True,
         outputDir=tmp_path,
@@ -748,10 +750,12 @@ def test_ckf_tracks_example_truth_estimate(tmp_path, assert_root_hash):
         decorators,
         field=field,
         geometrySelection=Path(
-            "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+            Path(__file__).parent.parent.parent.parent
+            / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
         ),
         digiConfigFile=Path(
-            "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            Path(__file__).parent.parent.parent.parent
+            / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
         ),
         outputCsv=True,
         outputDir=tmp_path,
@@ -810,10 +814,12 @@ def test_ckf_tracks_example_truth_smeared(tmp_path, assert_root_hash):
         decorators,
         field=field,
         geometrySelection=Path(
-            "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+            Path(__file__).parent.parent.parent.parent
+            / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
         ),
         digiConfigFile=Path(
-            "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            Path(__file__).parent.parent.parent.parent
+            / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
         ),
         outputCsv=True,
         outputDir=tmp_path,
