@@ -105,7 +105,9 @@ struct CombinatorialKalmanFilterExtensions {
                 std::vector<MultiTrajectory::TrackStateProxy>::iterator>>
   voidMeasurementSelector(
       std::vector<MultiTrajectory::TrackStateProxy>& candidates,
-      bool& /*isOutlier*/, LoggerWrapper /*logger*/) {
+      bool& isOutlier, LoggerWrapper logger) {
+    (void)isOutlier;
+    (void)logger;
     return std::pair{candidates.begin(), candidates.end()};
   };
 
@@ -113,7 +115,8 @@ struct CombinatorialKalmanFilterExtensions {
   /// @param tipState The tip state to decide whether to stop (unused)
   /// @return false
   static bool voidBranchStopper(
-      const CombinatorialKalmanFilterTipState& /*tipState*/) {
+      const CombinatorialKalmanFilterTipState& tipState) {
+    (void)tipState;
     return false;
   }
 };

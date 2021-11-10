@@ -99,7 +99,7 @@ struct KalmanFitterOptions {
   /// @param gctx The goemetry context for this fit
   /// @param mctx The magnetic context for this fit
   /// @param cctx The calibration context for this fit
-  /// @param extentions_ The KF extensions
+  /// @param extensions_ The KF extensions
   /// @param logger_ The logger wrapper
   /// @param pOptions The plain propagator options
   /// @param rSurface The reference surface for the fit to be expressed at
@@ -107,16 +107,18 @@ struct KalmanFitterOptions {
   /// @param eLoss Whether to include energy loss
   /// @param rFiltering Whether to run filtering in reversed direction as
   /// smoothing
-  KalmanFitterOptions(
-      const GeometryContext& gctx, const MagneticFieldContext& mctx,
-      std::reference_wrapper<const CalibrationContext> cctx,
-      KalmanFitterExtensions extenstions_, LoggerWrapper logger_,
-      const PropagatorPlainOptions& pOptions, const Surface* rSurface = nullptr,
-      bool mScattering = true, bool eLoss = true, bool rFiltering = false)
+  KalmanFitterOptions(const GeometryContext& gctx,
+                      const MagneticFieldContext& mctx,
+                      std::reference_wrapper<const CalibrationContext> cctx,
+                      KalmanFitterExtensions extensions_, LoggerWrapper logger_,
+                      const PropagatorPlainOptions& pOptions,
+                      const Surface* rSurface = nullptr,
+                      bool mScattering = true, bool eLoss = true,
+                      bool rFiltering = false)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
-        extensions(std::move(extenstions_)),
+        extensions(std::move(extensions_)),
         propagatorPlainOptions(pOptions),
         referenceSurface(rSurface),
         multipleScattering(mScattering),
