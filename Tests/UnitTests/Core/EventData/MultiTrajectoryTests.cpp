@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(Build) {
 
 BOOST_AUTO_TEST_CASE(Clear) {
   constexpr TrackStatePropMask kMask = TrackStatePropMask::Predicted;
-  MultiTrajectory<TestSourceLink> t;
+  MultiTrajectory t;
   BOOST_CHECK_EQUAL(t.size(), 0);
 
   auto i0 = t.addTrackState(kMask);
@@ -804,8 +804,8 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopyDiffMTJ) {
   std::array<PM, 6> values{PM::Predicted, PM::Filtered,     PM::Smoothed,
                            PM::Jacobian,  PM::Uncalibrated, PM::Calibrated};
 
-  MultiTrajectory<TestSourceLink> mj;
-  MultiTrajectory<TestSourceLink> mj2;
+  MultiTrajectory mj;
+  MultiTrajectory mj2;
   auto mkts = [&](PM mask) { return mj.getTrackState(mj.addTrackState(mask)); };
   auto mkts2 = [&](PM mask) {
     return mj2.getTrackState(mj2.addTrackState(mask));
@@ -859,15 +859,12 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopyDiffMTJ) {
 
 BOOST_AUTO_TEST_CASE(ProxyAssignment) {
   constexpr TrackStatePropMask kMask = TrackStatePropMask::Predicted;
-  MultiTrajectory<TestSourceLink> t;
+  MultiTrajectory t;
   auto i0 = t.addTrackState(kMask);
 
-  MultiTrajectory<TestSourceLink>::TrackStateProxy tp =
-      t.getTrackState(i0);  // mutable
-  MultiTrajectory<TestSourceLink>::TrackStateProxy tp2{
-      tp};  // mutable to mutable
-  MultiTrajectory<TestSourceLink>::ConstTrackStateProxy tp3{
-      tp};  // mutable to const
+  MultiTrajectory::TrackStateProxy tp = t.getTrackState(i0);  // mutable
+  MultiTrajectory::TrackStateProxy tp2{tp};       // mutable to mutable
+  MultiTrajectory::ConstTrackStateProxy tp3{tp};  // mutable to const
   // const to mutable: this won't compile
   // MultiTrajectory::TrackStateProxy tp4{tp3};
 }

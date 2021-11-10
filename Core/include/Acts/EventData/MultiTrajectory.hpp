@@ -176,11 +176,10 @@ class TrackStateProxy {
 
   // Constructor and assignment operator to construct ReadOnly TrackStateProxy
   // from ReadWrite (mutable -> const)
-  TrackStateProxy(const TrackStateProxy<source_link_t, M, false>& other)
+  TrackStateProxy(const TrackStateProxy<M, false>& other)
       : m_traj{other.m_traj}, m_istate{other.m_istate} {}
 
-  TrackStateProxy& operator=(
-      const TrackStateProxy<source_link_t, M, false>& other) {
+  TrackStateProxy& operator=(const TrackStateProxy<M, false>& other) {
     m_traj = other.m_traj;
     m_istate = other.m_istate;
 
