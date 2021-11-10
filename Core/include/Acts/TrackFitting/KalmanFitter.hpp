@@ -245,7 +245,6 @@ class KalmanFitter {
 
   /// @brief Propagator Actor plugin for the KalmanFilter
   ///
-  /// @tparam SourceLink is an type fulfilling the @c SourceLinkConcept
   /// @tparam parameters_t The type of parameters used for "local" paremeters.
   /// @tparam calibrator_t The type of calibrator
   /// @tparam outlier_finder_t Type of the outlier finder class
@@ -1028,7 +1027,6 @@ class KalmanFitter {
   ///
   /// @tparam source_link_iterator_t Iterator type used to pass source links
   /// @tparam start_parameters_t Type of the initial parameters
-  /// @tparam SourceLink Type of the source link
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
   /// @param it Begin iterator for the fittable uncalibrated measurements
