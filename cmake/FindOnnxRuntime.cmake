@@ -6,6 +6,7 @@
 find_library(
   OnnxRuntime_LIBRARY
   NAMES onnxruntime
+  HINTS ${onnxruntime_DIR}
   PATH_SUFFIXES lib lib32 lib64
   DOC "The ONNXRuntime library")
   
@@ -15,8 +16,9 @@ endif()
 
 find_path(
   OnnxRuntime_INCLUDE_DIR
-  NAMES core/session/onnxruntime_cxx_api.h
+  NAMES core/session/onnxruntime_cxx_api.h core/session/providers/cuda_provider_factory.h
   PATH_SUFFIXES include include/onnxruntime
+  HITS ${onxxruntime_DIR}
   DOC "The ONNXRuntime include directory")
   
 if(NOT OnnxRuntime_INCLUDE_DIR)
