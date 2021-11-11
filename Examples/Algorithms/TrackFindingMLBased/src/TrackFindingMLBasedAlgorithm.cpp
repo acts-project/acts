@@ -42,7 +42,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingMLBasedAlgorithm::execute(
   size_t num_spacepoints = spacepoints.size();
   ACTS_INFO("Received " << num_spacepoints << " spacepoints");
 
-  std::vector<float> inputVales;
+  std::vector<float> inputValues;
   std::vector<ActsExamples::Index> spacepointIDs;
   for(const auto& sp: spacepoints) {
     float x = sp.x();
@@ -70,9 +70,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingMLBasedAlgorithm::execute(
 void ActsExamples::TrackFindingMLBasedAlgorithm::initTrainedModels() {
     // Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "ExaTrkX");
     m_env = new Ort::Env(ORT_LOGGING_LEVEL_WARNING, "ExaTrkX");
-    std::string embedModelPath(m_cfg.modelDir + "/embedding.onnx");
-    std::string filterModelPath(m_cfg.modelDir + "/filtering.onnx");
-    std::string gnnModelPath(m_cfg.modelDir + "/gnn.onnx");
+    std::string embedModelPath(m_cfg.inputMLModuleDir + "/embedding.onnx");
+    std::string filterModelPath(m_cfg.inputMLModuleDir + "/filtering.onnx");
+    std::string gnnModelPath(m_cfg.inputMLModuleDir + "/gnn.onnx");
     // <TODO: improve the call to avoid calling copying construtors >
 
     Ort::SessionOptions session_options;
@@ -91,7 +91,7 @@ void ActsExamples::TrackFindingMLBasedAlgorithm::runSessionWithIoBinding(
     std::vector<const char*>& inputNames,
     std::vector<Ort::Value> & inputData,
     std::vector<const char*>& outputNames,
-    std::vector<Ort::Value>&  outputData)
+    std::vector<Ort::Value>&  outputData) const
 {
     // std::cout <<"In the runSessionWithIoBinding" << std::endl;
     if (inputNames.size() < 1) {
@@ -119,7 +119,7 @@ void ActsExamples::TrackFindingMLBasedAlgorithm::runSessionWithIoBinding(
 
 
 void ActsExamples::TrackFindingMLBasedAlgorithm::buildEdges(
-  std::vector<float>& embedFeatures, std::vector<int64_t>& edgeList, int64_t numSpacepoints){
+  std::vector<float>& embedFeatures, std::vector<int64_t>& edgeList, int64_t numSpacepoints) const {
     torch::Device device(torch::kCUDA);
     auto options = torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA);
 
@@ -254,7 +254,7 @@ void ActsExamples::TrackFindingMLBasedAlgorithm::buildEdges(
 
 void ActsExamples::TrackFindingMLBasedAlgorithm::getTracks(
   std::vector<float>& inputValues, std::vector<ActsExamples::Index>& spacepointIDs,
-  ProtoTrackContainer& trackCandidates)
+  ProtoTrackContainer& trackCandidates) const
 {
     // hardcoded debugging information
     bool debug = true;
@@ -452,14 +452,13 @@ void ActsExamples::TrackFindingMLBasedAlgorithm::getTracks(
     weakly_connected_components<int32_t,int32_t,float>(
         rowIndices, colIndices, edgeWeights, trackLabels);
 
-    int idx = 0;
     std::cout << "size of components: " << trackLabels.size() << std::endl;
     if (trackLabels.size() == 0)  return;
 
 
     trackCandidates.clear();
 
-    int existTrkIdx = 0;
+    uint32_t existTrkIdx = 0;
     // map labeling from MCC to customized track id.
     std::map<uint32_t, uint32_t> trackLableToIds;
 
@@ -467,7 +466,7 @@ void ActsExamples::TrackFindingMLBasedAlgorithm::getTracks(
         uint32_t trackLabel = trackLabels[idx];
         int spacepointID = spacepointIDs[idx];
 
-        int trkId;
+        uint32_t trkId;
         if(trackLableToIds.find(trackLabel) != trackLableToIds.end()) {
             trkId = trackLableToIds[trackLabel];
             trackCandidates[trkId].push_back(spacepointID);

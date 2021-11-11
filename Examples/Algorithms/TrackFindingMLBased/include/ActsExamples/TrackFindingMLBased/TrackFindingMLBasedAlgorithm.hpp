@@ -2,6 +2,8 @@
 
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 
 #include <string>
 #include <vector>
@@ -59,15 +61,15 @@ class TrackFindingMLBasedAlgorithm final : public BareAlgorithm {
         std::vector<const char*>& inputNames,
         std::vector<Ort::Value> & inputData,
         std::vector<const char*>& outputNames,
-        std::vector<Ort::Value>&  outputData);
+        std::vector<Ort::Value>&  outputData) const;
 
       void buildEdges(std::vector<float>& embedFeatures,
-            std::vector<int64_t>& edgeList, int64_t numSpacepoints);
+            std::vector<int64_t>& edgeList, int64_t numSpacepoints) const;
 
       void getTracks(
         std::vector<float>& input_values,
-        std::vector<ActsExamples::Index>& spacepointIDs
-        ProtoTrackContainer& trackCandidates);
+        std::vector<ActsExamples::Index>& spacepointIDs,
+        ProtoTrackContainer& trackCandidates) const;
 
       // configuration
       Config m_cfg;

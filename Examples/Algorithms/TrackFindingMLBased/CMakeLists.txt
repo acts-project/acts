@@ -10,7 +10,8 @@ add_library(
 target_include_directories(
   ActsExamplesTrackFindingMLBased
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-         ${OnnxRuntime_INCLUDE_DIR})
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+        ${OnnxRuntime_INCLUDE_DIR})
 
 target_link_libraries(
   ActsExamplesTrackFindingMLBased
