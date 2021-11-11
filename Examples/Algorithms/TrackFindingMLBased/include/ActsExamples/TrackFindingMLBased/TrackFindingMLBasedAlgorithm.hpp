@@ -8,7 +8,6 @@
 
 #include <core/session/onnxruntime_cxx_api.h>
 
-
 namespace ActsExamples {
 
 class TrackFindingMLBasedAlgorithm final : public BareAlgorithm {
@@ -67,8 +66,8 @@ class TrackFindingMLBasedAlgorithm final : public BareAlgorithm {
 
       void getTracks(
         std::vector<float>& input_values,
-        std::vector<int>& spacepoint_ids,
-        std::vector<std::vector<int> >& track_candidates);
+        std::vector<ActsExamples::Index>& spacepointIDs
+        ProtoTrackContainer& trackCandidates);
 
       // configuration
       Config m_cfg;
