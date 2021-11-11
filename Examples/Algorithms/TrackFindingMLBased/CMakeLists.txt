@@ -5,7 +5,7 @@ add_library(
   ActsExamplesTrackFindingMLBased SHARED
   src/TrackFindingMLBasedAlgorithm.cpp)
 
-# set_target_properties(ActsExamplesTrackFindingMLBased PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+set_target_properties(ActsExamplesTrackFindingMLBased PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 target_include_directories(
   ActsExamplesTrackFindingMLBased
