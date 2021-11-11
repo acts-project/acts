@@ -84,7 +84,22 @@ struct GrowableColumns {
   /// Return the current allocated storage capacity
   size_t capacity() const { return static_cast<size_t>(data.cols()); }
 
+  /// Return the size of the storage column
   size_t size() const { return m_size; }
+
+  /// Resize the storage column, without changing the allocated capacity
+  /// @param size The new size of the storage
+  void resize(size_t size) {
+    if (size > m_size) {
+      addCol(size - m_size);
+    } else {
+      m_size = size;
+    }
+  }
+
+  /// Clear the storage of the storage column
+  /// Equivalent to ``resize(0)``
+  void clear() { resize(0); }
 
  private:
   Storage data;
@@ -160,6 +175,18 @@ class TrackStateProxy {
       Eigen::Matrix<typename Projector::Scalar, Eigen::Dynamic, Eigen::Dynamic,
                     ProjectorFlags, M, eBoundSize>;
 
+  // Constructor and assignment operator to construct ReadOnly TrackStateProxy
+  // from ReadWrite (mutable -> const)
+  TrackStateProxy(const TrackStateProxy<M, false>& other)
+      : m_traj{other.m_traj}, m_istate{other.m_istate} {}
+
+  TrackStateProxy& operator=(const TrackStateProxy<M, false>& other) {
+    m_traj = other.m_traj;
+    m_istate = other.m_istate;
+
+    return *this;
+  }
+
   /// Index within the trajectory.
   /// @return the index
   size_t index() const { return m_istate; }
@@ -184,58 +211,113 @@ class TrackStateProxy {
   /// Copy the contents of another track state proxy into this one
   /// @param other The other track state to copy from
   /// @param mask An optional mask to determine what to copy from
+  /// @param onlyAllocated Whether to only copy allocated components
   /// @note If the this track state proxy does not have compatible allocations
-  ///       with the source track state proxy, an exception is thrown.
+  ///       with the source track state proxy, and @p onlyAllocated is false,
+  ///       an exception is thrown.
   /// @note The mask parameter will not cause a copy of components that are
   ///       not allocated in the source track state proxy.
   template <bool RO = ReadOnly, bool ReadOnlyOther,
             typename = std::enable_if<!RO>>
   void copyFrom(const TrackStateProxy<M, ReadOnlyOther>& other,
-                TrackStatePropMask mask = TrackStatePropMask::All) {
+                TrackStatePropMask mask = TrackStatePropMask::All,
+                bool onlyAllocated = true) {
     using PM = TrackStatePropMask;
-    auto dest = getMask();
-    auto src = other.getMask() &
-               mask;  // combine what we have with what we want to copy
-    if (static_cast<std::underlying_type_t<TrackStatePropMask>>((src ^ dest) &
-                                                                src) != 0) {
-      throw std::runtime_error(
-          "Attempt track state copy with incompatible allocations");
-    }
 
-    // we're sure now this has correct allocations, so just copy
-    if (ACTS_CHECK_BIT(src, PM::Predicted)) {
-      predicted() = other.predicted();
-      predictedCovariance() = other.predictedCovariance();
-    }
+    if (onlyAllocated) {
+      auto dest = getMask();
+      auto src = other.getMask() &
+                 mask;  // combine what we have with what we want to copy
+      if (static_cast<std::underlying_type_t<TrackStatePropMask>>((src ^ dest) &
+                                                                  src) != 0) {
+        throw std::runtime_error(
+            "Attempt track state copy with incompatible allocations");
+      }
 
-    if (ACTS_CHECK_BIT(src, PM::Filtered)) {
-      filtered() = other.filtered();
-      filteredCovariance() = other.filteredCovariance();
-    }
+      // we're sure now this has correct allocations, so just copy
+      if (ACTS_CHECK_BIT(src, PM::Predicted)) {
+        predicted() = other.predicted();
+        predictedCovariance() = other.predictedCovariance();
+      }
 
-    if (ACTS_CHECK_BIT(src, PM::Smoothed)) {
-      smoothed() = other.smoothed();
-      smoothedCovariance() = other.smoothedCovariance();
-    }
+      if (ACTS_CHECK_BIT(src, PM::Filtered)) {
+        filtered() = other.filtered();
+        filteredCovariance() = other.filteredCovariance();
+      }
 
-    if (ACTS_CHECK_BIT(src, PM::Uncalibrated)) {
-      // need to do it this way since other might be nullptr
-      m_traj->m_sourceLinks[data().iuncalibrated] =
-          other.m_traj->m_sourceLinks[other.data().iuncalibrated];
-    }
+      if (ACTS_CHECK_BIT(src, PM::Smoothed)) {
+        smoothed() = other.smoothed();
+        smoothedCovariance() = other.smoothedCovariance();
+      }
 
-    if (ACTS_CHECK_BIT(src, PM::Jacobian)) {
-      jacobian() = other.jacobian();
-    }
+      if (ACTS_CHECK_BIT(src, PM::Uncalibrated)) {
+        // need to do it this way since other might be nullptr
+        m_traj->m_sourceLinks[data().iuncalibrated] =
+            other.m_traj->m_sourceLinks[other.data().iuncalibrated];
+      }
 
-    if (ACTS_CHECK_BIT(src, PM::Calibrated)) {
-      // need to do it this way since other might be nullptr
-      m_traj->m_sourceLinks[data().icalibratedsourcelink] =
-          other.m_traj->m_sourceLinks[other.data().icalibratedsourcelink];
-      calibrated() = other.calibrated();
-      calibratedCovariance() = other.calibratedCovariance();
-      data().measdim = other.data().measdim;
-      setProjectorBitset(other.projectorBitset());
+      if (ACTS_CHECK_BIT(src, PM::Jacobian)) {
+        jacobian() = other.jacobian();
+      }
+
+      if (ACTS_CHECK_BIT(src, PM::Calibrated)) {
+        // need to do it this way since other might be nullptr
+        m_traj->m_sourceLinks[data().icalibratedsourcelink] =
+            other.m_traj->m_sourceLinks[other.data().icalibratedsourcelink];
+        calibrated() = other.calibrated();
+        calibratedCovariance() = other.calibratedCovariance();
+        data().measdim = other.data().measdim;
+        setProjectorBitset(other.projectorBitset());
+      }
+    } else {
+      if (ACTS_CHECK_BIT(mask, PM::Predicted) &&
+          data().ipredicted != IndexData::kInvalid &&
+          other.data().ipredicted != IndexData::kInvalid) {
+        predicted() = other.predicted();
+        predictedCovariance() = other.predictedCovariance();
+      }
+
+      if (ACTS_CHECK_BIT(mask, PM::Filtered) &&
+          data().ifiltered != IndexData::kInvalid &&
+          other.data().ifiltered != IndexData::kInvalid) {
+        filtered() = other.filtered();
+        filteredCovariance() = other.filteredCovariance();
+      }
+
+      if (ACTS_CHECK_BIT(mask, PM::Smoothed) &&
+          data().ismoothed != IndexData::kInvalid &&
+          other.data().ismoothed != IndexData::kInvalid) {
+        smoothed() = other.smoothed();
+        smoothedCovariance() = other.smoothedCovariance();
+      }
+
+      if (ACTS_CHECK_BIT(mask, PM::Uncalibrated) &&
+          data().iuncalibrated != IndexData::kInvalid &&
+          other.data().iuncalibrated != IndexData::kInvalid) {
+        // need to do it this way since other might be nullptr
+        m_traj->m_sourceLinks[data().iuncalibrated] =
+            other.m_traj->m_sourceLinks[other.data().iuncalibrated];
+      }
+
+      if (ACTS_CHECK_BIT(mask, PM::Jacobian) &&
+          data().ijacobian != IndexData::kInvalid &&
+          other.data().ijacobian != IndexData::kInvalid) {
+        jacobian() = other.jacobian();
+      }
+
+      if (ACTS_CHECK_BIT(mask, PM::Calibrated) &&
+          data().icalibrated != IndexData::kInvalid &&
+          other.data().icalibrated != IndexData::kInvalid &&
+          data().icalibratedsourcelink != IndexData::kInvalid &&
+          other.data().icalibratedsourcelink != IndexData::kInvalid) {
+        // need to do it this way since other might be nullptr
+        m_traj->m_sourceLinks[data().icalibratedsourcelink] =
+            other.m_traj->m_sourceLinks[other.data().icalibratedsourcelink];
+        calibrated() = other.calibrated();
+        calibratedCovariance() = other.calibratedCovariance();
+        data().measdim = other.data().measdim;
+        setProjectorBitset(other.projectorBitset());
+      }
     }
 
     chi2() = other.chi2();
@@ -646,6 +728,22 @@ class MultiTrajectory {
   ///          points, this can have an impact on the other components.
   template <typename F>
   void applyBackwards(size_t iendpoint, F&& callable);
+
+  /// Clear the @c MultiTrajectory. Leaves the underlying storage untouched
+  void clear() {
+    m_index.clear();
+    m_params.clear();
+    m_cov.clear();
+    m_meas.clear();
+    m_measCov.clear();
+    m_jac.clear();
+    m_sourceLinks.clear();
+    m_projectors.clear();
+    m_referenceSurfaces.clear();
+  }
+
+  /// Returns the number of track states contained
+  size_t size() const { return m_index.size(); }
 
  private:
   /// index to map track states to the corresponding
