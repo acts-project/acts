@@ -70,6 +70,7 @@ ActsExamples::CsvParticleReader::Config setupParticleReading(
 
 static std::unique_ptr<const Acts::Logger> m_logger;
 const Acts::Logger& logger() { return *m_logger; }
+
 int main(int argc, char** argv) {
   std::cout<<"Welcome to TrackFindingMLBased example." << std::endl;
 
@@ -237,7 +238,6 @@ int main(int argc, char** argv) {
   paramsEstimationCfg.sigmaTheta = 0.001_degree;
   paramsEstimationCfg.sigmaQOverP = 0.1 / 1._GeV;
   paramsEstimationCfg.sigmaT0 = 1400._s;
-  paramsEstimationCfg.keepOneSeed = true;
   sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
       paramsEstimationCfg, logLevel));
 
@@ -268,8 +268,6 @@ int main(int argc, char** argv) {
   tfPerfCfg.inputParticles = inputParticles;
   tfPerfCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
-  tfPerfCfg.outputDir = outputDir;
-  tfPerfCfg.outputFilename = "performance_seeding_trees.root";
   sequencer.addWriter(
       std::make_shared<TrackFinderPerformanceWriter>(tfPerfCfg, logLevel));
 
@@ -282,7 +280,6 @@ int main(int argc, char** argv) {
       digiCfg.outputMeasurementParticlesMap;
   // The bottom seed on a pixel detector 'eats' one or two measurements?
   perfWriterCfg.nMeasurementsMin = particleSelectorCfg.nHitsMin;
-  perfWriterCfg.outputDir = outputDir;
   sequencer.addWriter(
     std::make_shared<CKFPerformanceWriter>(perfWriterCfg, logLevel));
 

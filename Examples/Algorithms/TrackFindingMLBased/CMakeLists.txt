@@ -9,14 +9,14 @@ add_library(
 
 target_include_directories(
   ActsExamplesTrackFindingMLBased
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  PUBLIC 
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-        ${OnnxRuntime_INCLUDE_DIR})
+    ${OnnxRuntime_INCLUDE_DIR})
 
 target_link_libraries(
   ActsExamplesTrackFindingMLBased
   PUBLIC
-    ActsCore
     ActsExamplesFramework
     frnn cugraphtestutil ${TORCH_LIBRARIES} ${OnnxRuntime_LIBRARY}
 )

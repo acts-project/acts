@@ -51,32 +51,34 @@ class TrackFindingMLBasedAlgorithm final : public BareAlgorithm {
     /// @return a process code to steer the algorithm flow
     ActsExamples::ProcessCode execute(
         const ActsExamples::AlgorithmContext& ctx) const final;
-    ActsExamples::ProcessCode execute() const;        
 
-    private:
-      void initTrainedModels();
-      
-      void runSessionWithIoBinding(
-        Ort::Session& sess,
-        std::vector<const char*>& inputNames,
-        std::vector<Ort::Value> & inputData,
-        std::vector<const char*>& outputNames,
-        std::vector<Ort::Value>&  outputData) const;
+    const Config& config() const { return m_cfg; }
 
-      void buildEdges(std::vector<float>& embedFeatures,
-            std::vector<int64_t>& edgeList, int64_t numSpacepoints) const;
+  private:
+    void initTrainedModels();
+    
+    void runSessionWithIoBinding(
+      Ort::Session& sess,
+      std::vector<const char*>& inputNames,
+      std::vector<Ort::Value> & inputData,
+      std::vector<const char*>& outputNames,
+      std::vector<Ort::Value>&  outputData) const;
 
-      void getTracks(
-        std::vector<float>& input_values,
-        std::vector<ActsExamples::Index>& spacepointIDs,
-        ProtoTrackContainer& trackCandidates) const;
+    void buildEdges(std::vector<float>& embedFeatures,
+          std::vector<int64_t>& edgeList, int64_t numSpacepoints) const;
 
-      // configuration
-      Config m_cfg;
-      Ort::Env* m_env;
-      Ort::Session* e_sess;
-      Ort::Session* f_sess;
-      Ort::Session* g_sess;
+    void getTracks(
+      std::vector<float>& input_values,
+      std::vector<ActsExamples::Index>& spacepointIDs,
+      ProtoTrackContainer& trackCandidates) const;
+
+  private:
+    // configuration
+    Config m_cfg;
+    Ort::Env* m_env;
+    Ort::Session* e_sess;
+    Ort::Session* f_sess;
+    Ort::Session* g_sess;
 
 };
 
