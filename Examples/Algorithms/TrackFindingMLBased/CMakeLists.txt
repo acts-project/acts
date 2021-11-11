@@ -1,7 +1,6 @@
 add_subdirectory(libFRNN)
 add_subdirectory(cuGraph)
 
-
 add_library(
   ActsExamplesTrackFindingMLBased SHARED
   src/TrackFindingMLBasedAlgorithm.cpp)

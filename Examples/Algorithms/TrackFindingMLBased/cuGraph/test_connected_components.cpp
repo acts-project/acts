@@ -1,6 +1,6 @@
 #include "mmio_read.h"
 
-int main(int argc, char** argv) {
+int main(int , char** ) {
     
     std::cout << "Begin to read" << std::endl;
     auto file_path = "../../datanmodels/CutEdge.csv";
