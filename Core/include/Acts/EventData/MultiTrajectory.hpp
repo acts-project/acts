@@ -213,7 +213,7 @@ class TrackStateProxy {
   /// @param mask An optional mask to determine what to copy from
   /// @param onlyAllocated Whether to only copy allocated components
   /// @note If the this track state proxy does not have compatible allocations
-  ///       with the source track state proxy, and @p onlyAllocated is false, 
+  ///       with the source track state proxy, and @p onlyAllocated is false,
   ///       an exception is thrown.
   /// @note The mask parameter will not cause a copy of components that are
   ///       not allocated in the source track state proxy.
