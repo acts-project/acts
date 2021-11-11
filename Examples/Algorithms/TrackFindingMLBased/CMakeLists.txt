@@ -1,5 +1,22 @@
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+include(FetchContent)
+FetchContent_Declare(
+  rapids-cmake
+  GIT_REPOSITORY https://github.com/rapidsai/rapids-cmake.git
+  GIT_TAG        origin/branch-21.10
+  )
+FetchContent_MakeAvailable(rapids-cmake)
+
+include(rapids-cpm)
+include(rapids-cmake)
+include(rapids-cuda)
+include(rapids-export)
+include(rapids-find)
+
+rapids_cuda_init_architectures(CUGRAPH_TESTS)
+
+
 if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA" AND
    CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 11.0)
     message(FATAL_ERROR "CUDA compiler version must be at least 11.0")
@@ -112,7 +129,7 @@ set(CMAKE_C_FLAGS "-Wno-error=format-truncation")
 
 add_subdirectory(libFRNN)
 add_subdirectory(cuGraph)
-find_package(onnxruntime)
+find_package(OnnxRuntime)
 
 add_library(
   ActsExamplesTrackFindingMLBased SHARED
@@ -123,14 +140,14 @@ set_target_properties(ActsExamplesTrackFindingMLBased PROPERTIES CUDA_SEPARABLE_
 target_include_directories(
   ActsExamplesTrackFindingMLBased
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-         ${onnxruntime_INCLUDE_DIRS})
+         ${OnnxRuntime_INCLUDE_DIR})
 
 target_link_libraries(
   ActsExamplesTrackFindingMLBased
   PUBLIC
     ActsCore
     ActsExamplesFramework
-    frnn cugraphtestutil ${TORCH_LIBRARIES} ${onnxruntime_LIBRARY}
+    frnn cugraphtestutil ${TORCH_LIBRARIES} ${OnnxRuntime_LIBRARY}
 )
 
 install(
