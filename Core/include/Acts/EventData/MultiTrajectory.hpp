@@ -88,6 +88,7 @@ struct GrowableColumns {
   size_t size() const { return m_size; }
 
   /// Resize the storage column, without changing the allocated capacity
+  /// @param size The new size of the storage
   void resize(size_t size) {
     if (size > m_size) {
       addCol(size - m_size);
@@ -210,8 +211,10 @@ class TrackStateProxy {
   /// Copy the contents of another track state proxy into this one
   /// @param other The other track state to copy from
   /// @param mask An optional mask to determine what to copy from
+  /// @param onlyAllocated Whether to only copy allocated components
   /// @note If the this track state proxy does not have compatible allocations
-  ///       with the source track state proxy, an exception is thrown.
+  ///       with the source track state proxy, and @p onlyAllocated is false,
+  ///       an exception is thrown.
   /// @note The mask parameter will not cause a copy of components that are
   ///       not allocated in the source track state proxy.
   template <bool RO = ReadOnly, bool ReadOnlyOther,
