@@ -21,15 +21,15 @@ class TrackFindingMLBasedAlgorithm final : public BareAlgorithm {
       /// input model directory
       std::string inputMLModuleDir;
 
+      /// Output protoTracks collection.
+      std::string outputProtoTracks;
+
       // hyperparameters in the pipeline.
       int64_t spacepointFeatures = 3;
       int embeddingDim = 8;
       float rVal = 1.6;
       int knnVal = 500;
       float filterCut = 0.21;
-
-      /// Output protoTracks collection.
-      std::string outputProtoTracks;
     };
 
     /// Constructor of the track finding algorithm
