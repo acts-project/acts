@@ -1,5 +1,5 @@
-# add_subdirectory(libFRNN)
-# add_subdirectory(cuGraph)
+add_subdirectory(libFRNN)
+add_subdirectory(cuGraph)
 
 add_library(
   ActsPluginExaTrkX SHARED
