@@ -11,15 +11,25 @@ target_include_directories(
   ActsPluginExaTrkX
   PUBLIC 
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     ${OnnxRuntime_INCLUDE_DIR}
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+
+target_include_directories(
+  ActsPluginExaTrkX
+  PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+
 )
 
 target_link_libraries(
   ActsPluginExaTrkX
+  PRIVATE
+    frnn cugraphtestutil ${TORCH_LIBRARIES}
+)
+target_link_libraries(
+  ActsPluginExaTrkX
   PUBLIC
-    frnn cugraphtestutil ${TORCH_LIBRARIES} ${OnnxRuntime_LIBRARY}
+  ${OnnxRuntime_LIBRARY}
 )
 
 install(

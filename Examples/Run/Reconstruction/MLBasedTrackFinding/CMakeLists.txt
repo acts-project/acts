@@ -4,14 +4,14 @@ add_executable(
 
 target_link_libraries(
   ActsExampleTrackFindingMLBased
-  PUBLIC
+  PRIVATE
     ActsExamplesCommon
     ActsExamplesFramework
     ActsExamplesDigitization
     ActsExamplesDetectorGeneric
+    ActsExamplesIoPerformance
     ActsExamplesTrackFindingMLBased
     ActsPluginExaTrkX
-    ActsExamplesIoPerformance
 )
 
 install(

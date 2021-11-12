@@ -75,7 +75,7 @@ const Acts::Logger& logger() { return *m_logger; }
 int main(int argc, char** argv) {
   std::cout<<"Welcome to TrackFindingMLBased example." << std::endl;
 
-  // Setup and parse options
+  // // Setup and parse options
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
   Options::addRandomNumbersOptions(desc);
