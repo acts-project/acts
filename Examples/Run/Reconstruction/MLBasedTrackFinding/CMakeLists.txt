@@ -4,14 +4,14 @@ add_executable(
 
 target_link_libraries(
   ActsExampleTrackFindingMLBased
-  PRIVATE
-    # ActsExamplesCommon
-    # ActsExamplesFramework
-    # ActsExamplesDigitization
-    # ActsExamplesDetectorGeneric
-    # ActsExamplesTrackFindingMLBased
-    ActsExamplesTrackFinding
-    # frnn cugraphtestutil ${TORCH_LIBRARIES} ${OnnxRuntime_LIBRARY}
+  PUBLIC
+    ActsExamplesCommon
+    ActsExamplesFramework
+    ActsExamplesDigitization
+    ActsExamplesDetectorGeneric
+    ActsExamplesTrackFindingMLBased
+    ActsPluginExaTrkX
+    ActsExamplesIoPerformance
 )
 
 install(
