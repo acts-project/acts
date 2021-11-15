@@ -1,6 +1,7 @@
 import os
 from typing import List, Union
 
+import acts
 from acts.examples import BareAlgorithm
 
 geant4Enabled = any(v.startswith("G4") for v in os.environ.keys())
