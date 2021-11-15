@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFinding.hpp"
 
+#include <core/session/onnxruntime_cxx_api.h>
 
 #include <torch/torch.h>
 #include <torch/script.h>
@@ -28,8 +29,17 @@ ExaTrkXTrackFinding::ExaTrkXTrackFinding(Config config) : m_cfg(std::move(config
   initTrainedModels();
 }
 
-void ExaTrkXTrackFinding::initTrainedModels() {
-    // Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "ExaTrkX");
+ExaTrkXTrackFinding::ExaTrkXTrackFinding(){
+  m_cfg = Config();
+  m_cfg.inputMLModuleDir = "/home/xju/ocean/code/Tracking-ML-Exa.TrkX/Pipelines/TrackML_Example/onnx_models";
+  
+  initTrainedModels();
+}
+
+void ExaTrkXTrackFinding::initTrainedModels()
+{
+
+    std::cout << "Initializing Trained ML Models" << std::endl;
     m_env = new Ort::Env(ORT_LOGGING_LEVEL_WARNING, "ExaTrkX");
     std::string embedModelPath(m_cfg.inputMLModuleDir + "/embedding.onnx");
     std::string filterModelPath(m_cfg.inputMLModuleDir + "/filtering.onnx");
