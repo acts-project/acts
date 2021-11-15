@@ -730,6 +730,12 @@ class CombinatorialKalmanFilter {
       return Result<void>::success();
     }
 
+    /// Create and fill track states for all source links
+    /// @param gctx The current geometry context
+    /// @param surface The surface currently being processed
+    /// @param result Reference to the result struct of the actor
+    /// @param boundState Bound state from the propagation on this surface
+    /// @param prevTip Index pointing at previous trajectory state (i.e. tip)
     void createSourceLinkTrackStates(const Acts::GeometryContext& gctx,
                                      const Surface* surface,
                                      result_type& result,
@@ -796,6 +802,15 @@ class CombinatorialKalmanFilter {
       }
     }
 
+    /// Handle the list of selected track states
+    /// @param gctx The current geometry context
+    /// @param begin The start iterator for selected track states
+    /// @param end The end iterator for selected track states
+    /// @param result Reference to the actor result struct
+    /// @param isOutlier If this track state is a single outlier one
+    /// @param prevTipState Tip state prior to this surface
+    /// @param [in,out] nBranchesOnSurface Number of branches on surface, will be updated
+    /// @param logger A logging instance
     Result<void> processSelectedTrackStates(
         const Acts::GeometryContext& gctx,
         std::vector<MultiTrajectory::TrackStateProxy>::const_iterator begin,
