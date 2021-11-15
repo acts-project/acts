@@ -200,7 +200,7 @@ struct CombinatorialKalmanFilterResult {
   // Fitted states that the actor has handled.
   MultiTrajectory fittedStates;
 
-  // This is used internally to store candidate trackstates
+  // These is used internally to store candidate trackstates
   MultiTrajectory stateBuffer;
   std::vector<MultiTrajectory::TrackStateProxy> trackStateCandidates;
 
@@ -234,13 +234,6 @@ struct CombinatorialKalmanFilterResult {
 
   // Indicator if track finding has been done
   bool finished = false;
-
-  // Temporary container for index and chi2 of intermediate measurement
-  // candidates
-  std::vector<std::pair<size_t, double>> measurementChi2;
-
-  // Temporary container for index of final measurement candidates
-  std::vector<size_t> measurementCandidateIndices;
 
   Result<void> result{Result<void>::success()};
 };
@@ -643,8 +636,10 @@ class CombinatorialKalmanFilter {
         }
 
         // Invoke the measurement selector to select compatible measurements
-        // with the predicted track parameter. It could return either the
-        // compatible measurement indices or an outlier index.
+        // with the predicted track parameter.
+        // It can modify the trackStateCandidates vector, and will return a pair
+        // of iterators marking the range of accepted measurements (track
+        // states)
         bool isOutlier = false;
         auto selectorResult = m_extensions.measurementSelector(
             result.trackStateCandidates, isOutlier, logger);
@@ -661,7 +656,6 @@ class CombinatorialKalmanFilter {
             std::nullopt};
         for (auto it = selected_ts_begin; it != selected_ts_end; ++it) {
           auto& candidateTrackState = *it;
-          // copy this trackstate into fitted states MultiTrajectory
 
           PM mask = PM::All;
 
@@ -675,6 +669,7 @@ class CombinatorialKalmanFilter {
                                     // parameters
           }
 
+          // copy this trackstate into fitted states MultiTrajectory
           MultiTrajectory::TrackStateProxy trackState =
               result.fittedStates.getTrackState(
                   result.fittedStates.addTrackState(
