@@ -20,6 +20,8 @@ def configureDigitization(
     s=None,
 ):
 
+    srcdir = Path(__file__).resolve().parent.parent.parent.parent
+
     csv_dir = os.path.join(outputDir, "csv")
     if not os.path.exists(csv_dir):
         os.mkdir(csv_dir)
@@ -74,7 +76,10 @@ def configureDigitization(
     # Digitization
     digiCfg = acts.examples.DigitizationConfig(
         acts.examples.readDigiConfigFromJson(
-            "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            str(
+                srcdir
+                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            )
         ),
         trackingGeometry=trackingGeometry,
         randomNumbers=rnd,

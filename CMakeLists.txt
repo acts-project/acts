@@ -36,6 +36,7 @@ option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
 option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" OFF)
 option(ACTS_BUILD_PLUGIN_LEGACY "Build legacy plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ONNX "Build ONNX plugin" OFF)
+option(ACTS_SETUP_VECMEM "Explicitly set up vecmem for the project" OFF)
 option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" OFF)
 option(ACTS_BUILD_PLUGIN_SYCL "Build SYCL plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TGEO "Build TGeo plugin" OFF)
@@ -58,7 +59,9 @@ option(ACTS_BUILD_INTEGRATIONTESTS "Build integration tests" OFF)
 option(ACTS_BUILD_UNITTESTS "Build unit tests" OFF)
 # other options
 option(ACTS_BUILD_DOCS "Build documentation" OFF)
+option(ACTS_SETUP_BOOST "Explicitly set up Boost for the project" ON)
 option(ACTS_USE_SYSTEM_BOOST "Use a system-provided boost" ON)
+option(ACTS_SETUP_EIGEN3 "Explicitly set up Eigen3 for the project" ON)
 option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" ON)
 
 # handle option inter-dependencies and the everything flag
@@ -142,19 +145,31 @@ set(_acts_tbb_version 2020.1)
 
 # required packages
 
-if (ACTS_USE_SYSTEM_BOOST)
-  # NOTE we use boost::filesystem instead of std::filesystem since the later
-  # is not uniformly supported even on compilers that nominally support C++17
-  # NOTE FindBoost.cmake looks for BoostConfig.cmake first, before running it's own logic.
-  find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS filesystem program_options unit_test_framework)
-else()
-  add_subdirectory(thirdparty/boost)
+if (ACTS_SETUP_BOOST)
+  if (ACTS_USE_SYSTEM_BOOST)
+    # NOTE we use boost::filesystem instead of std::filesystem since the later
+    # is not uniformly supported even on compilers that nominally support C++17
+    # NOTE FindBoost.cmake looks for BoostConfig.cmake first, before running it's own logic.
+    find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS filesystem program_options unit_test_framework)
+  else()
+    add_subdirectory(thirdparty/boost)
+  endif()
 endif()
 
-if (ACTS_USE_SYSTEM_EIGEN3)
-  find_package(Eigen3 ${_acts_eigen3_version} REQUIRED CONFIG)
-else()
-  add_subdirectory(thirdparty/eigen3)
+if (ACTS_SETUP_EIGEN3)
+  if (ACTS_USE_SYSTEM_EIGEN3)
+    find_package(Eigen3 ${_acts_eigen3_version} REQUIRED CONFIG)
+  else()
+    add_subdirectory(thirdparty/eigen3)
+  endif()
+endif()
+
+if (ACTS_SETUP_VECMEM)
+  if (ACTS_USE_SYSTEM_VECMEM)
+    find_package(vecmem REQUIRED)
+  else()
+    add_subdirectory(thirdparty/vecmem)
+  endif()
 endif()
 
 # the `<project_name>_VERSION` variables set by `setup(... VERSION ...)` have
@@ -214,11 +229,6 @@ if(ACTS_BUILD_PLUGIN_ONNX)
 endif()
 if(ACTS_BUILD_PLUGIN_SYCL)
   find_package(SYCL REQUIRED)
-  if (ACTS_USE_SYSTEM_VECMEM)
-    find_package(vecmem REQUIRED)
-  else()
-    add_subdirectory(thirdparty/vecmem)
-  endif()
 endif()
 if(ACTS_BUILD_PLUGIN_TGEO)
   find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Geom)

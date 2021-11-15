@@ -95,7 +95,7 @@ void ActsExamples::MaterialSteppingAction::UserSteppingAction(
   G4Track* g4Track = step->GetTrack();
   size_t trackID = g4Track->GetTrackID();
   auto& materialTracks = eventData.materialTracks;
-  if (materialTracks.size() < trackID) {
+  if (materialTracks.find(trackID - 1) == materialTracks.end()) {
     Acts::RecordedMaterialTrack rmTrack;
     const auto& g4Vertex = g4Track->GetVertexPosition();
     Acts::Vector3 vertex(g4Vertex[0], g4Vertex[1], g4Vertex[2]);
@@ -103,7 +103,7 @@ void ActsExamples::MaterialSteppingAction::UserSteppingAction(
     Acts::Vector3 direction(g4Direction[0], g4Direction[1], g4Direction[2]);
     rmTrack.first = {vertex, direction};
     rmTrack.second.materialInteractions.push_back(mInteraction);
-    materialTracks.push_back(rmTrack);
+    materialTracks[trackID - 1] = rmTrack;
   } else {
     materialTracks[trackID - 1].second.materialInteractions.push_back(
         mInteraction);
