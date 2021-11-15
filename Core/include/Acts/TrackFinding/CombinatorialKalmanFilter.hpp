@@ -286,7 +286,7 @@ class CombinatorialKalmanFilter {
   class Actor {
    public:
     using TipState = CombinatorialKalmanFilterTipState;
-    using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, double>;
+    using BoundState = std::tuple<parameters_t, BoundMatrix, double>;
     using CurvilinearState =
         std::tuple<CurvilinearTrackParameters, BoundMatrix, double>;
     // The source link container type
@@ -564,7 +564,6 @@ class CombinatorialKalmanFilter {
           return boundStateRes.error();
         }
         auto boundState = *boundStateRes;
-        const auto& [boundParams, jacobian, pathLength] = boundState;
 
         // Retrieve the previous tip and its state
         // The states created on this surface will have the common previous tip
@@ -577,63 +576,10 @@ class CombinatorialKalmanFilter {
           result.activeTips.erase(result.activeTips.end() - 1);
         }
 
-        // Get all source links on the surface
-        auto [lower_it, upper_it] =
-            m_sourcelinkAccessor.range(surface->geometryId());
-
-        result.trackStateCandidates.clear();
-        result.trackStateCandidates.reserve(std::distance(lower_it, upper_it));
-
-        result.stateBuffer.clear();
-
-        using PM = TrackStatePropMask;
-
-        // Calibrate all the source links on the surface since the selection has
-        // to be done based on calibrated measurement
-        for (auto it = lower_it; it != upper_it; ++it) {
-          // get the source link
-          const auto& sourceLink = m_sourcelinkAccessor.at(it);
-
-          // prepare the track state
-          PM mask =
-              PM::Predicted | PM::Jacobian | PM::Uncalibrated | PM::Calibrated;
-
-          if (it != lower_it) {
-            // not the first TrackState, only need uncalibrated and calibrated
-            mask = PM::Uncalibrated | PM::Calibrated;
-          }
-
-          size_t tsi = result.stateBuffer.addTrackState(mask, prevTip);
-          // CAREFUL! This trackstate has a previous index that is not in this
-          // MultiTrajectory Visiting brackwards from this track state will
-          // fail!
-          auto ts = result.stateBuffer.getTrackState(tsi);
-
-          if (it == lower_it) {
-            // only set these for first
-            ts.predicted() = boundParams.parameters();
-            if (boundParams.covariance()) {
-              ts.predictedCovariance() = *boundParams.covariance();
-            }
-            ts.jacobian() = jacobian;
-          } else {
-            // subsequent track states can reuse
-            auto& first = result.trackStateCandidates.front();
-            ts.data().ipredicted = first.data().ipredicted;
-            ts.data().ijacobian = first.data().ijacobian;
-          }
-
-          ts.pathLength() = pathLength;
-
-          ts.setReferenceSurface(boundParams.referenceSurface().getSharedPtr());
-
-          ts.setUncalibrated(sourceLink);
-
-          // now calibrate the track state
-          m_extensions.calibrator(state.geoContext, ts);
-
-          result.trackStateCandidates.push_back(ts);
-        }
+        // Create trackstates for all source links (will be filtered later)
+        // Results are stored in result => no return value
+        createSourceLinkTrackStates(state.geoContext, surface, result,
+                                    boundState, prevTip);
 
         // Invoke the measurement selector to select compatible measurements
         // with the predicted track parameter.
@@ -649,94 +595,17 @@ class CombinatorialKalmanFilter {
                      << selectorResult.error());
           return selectorResult.error();
         }
+        auto selectedTrackStateRange = *selectorResult;
 
-        auto [selected_ts_begin, selected_ts_end] = *selectorResult;
+        auto procRes = processSelectedTrackStates(
+            state.geoContext, selectedTrackStateRange.first,
+            selectedTrackStateRange.second, result, isOutlier, prevTipState,
+            nBranchesOnSurface, logger);
 
-        std::optional<MultiTrajectory::TrackStateProxy> firstTrackState{
-            std::nullopt};
-        for (auto it = selected_ts_begin; it != selected_ts_end; ++it) {
-          auto& candidateTrackState = *it;
-
-          PM mask = PM::All;
-
-          if (it != selected_ts_begin) {
-            // subsequent track states don't need storage for these
-            mask = ~PM::Predicted & ~PM::Jacobian;
-          }
-
-          if (isOutlier) {
-            mask &= ~PM::Filtered;  // outlier won't have separate filtered
-                                    // parameters
-          }
-
-          // copy this trackstate into fitted states MultiTrajectory
-          MultiTrajectory::TrackStateProxy trackState =
-              result.fittedStates.getTrackState(
-                  result.fittedStates.addTrackState(
-                      mask, candidateTrackState.previous()));
-
-          if (it != selected_ts_begin) {
-            // assign indices pointing to first track state
-            trackState.data().ipredicted = firstTrackState->data().ipredicted;
-            trackState.data().ijacobian = firstTrackState->data().ijacobian;
-          } else {
-            firstTrackState = trackState;
-          }
-
-          // either copy ALL or everything except for predicted and jacobian
-          trackState.copyFrom(candidateTrackState, mask, false);
-
-          auto& typeFlags = trackState.typeFlags();
-          if (trackState.referenceSurface().surfaceMaterial() != nullptr) {
-            typeFlags.set(TrackStateFlag::MaterialFlag);
-          }
-          typeFlags.set(TrackStateFlag::ParameterFlag);
-
-          // Inherit the tip state from the previous and will be updated
-          // later
-          TipState tipState = prevTipState;
-          size_t currentTip = trackState.index();
-
-          // Increment of number of processedState and passed sensitive surfaces
-          tipState.nSensitiveSurfaces++;
-          tipState.nStates++;
-
-          if (isOutlier) {
-            ACTS_VERBOSE(
-                "Creating outlier track state with tip = " << currentTip);
-            // Set the outlier flag
-            typeFlags.set(TrackStateFlag::OutlierFlag);
-            // Increment number of outliers
-            tipState.nOutliers++;
-            // No Kalman update for outlier
-            // Set the filtered parameter index to be the same with predicted
-            // parameter
-            trackState.data().ifiltered = trackState.data().ipredicted;
-
-          } else {
-            // Kalman update
-            auto updateRes = m_extensions.updater(state.geoContext, trackState,
-                                                  forward, getDummyLogger());
-            if (!updateRes.ok()) {
-              ACTS_ERROR("Update step failed: " << updateRes.error());
-              return updateRes.error();
-            }
-            ACTS_VERBOSE(
-                "Creating measurement track state with tip = " << currentTip);
-            // Set the measurement flag
-            typeFlags.set(TrackStateFlag::MeasurementFlag);
-            // Increment number of measurements
-            tipState.nMeasurements++;
-          }
-
-          // Check if need to stop this branch
-          if (not m_extensions.branchStopper(tipState)) {
-            // Put tipstate back into active tips to continue with it
-            result.activeTips.emplace_back(std::move(currentTip),
-                                           std::move(tipState));
-            // Record the number of branches on surface
-            nBranchesOnSurface++;
-          }
+        if (!procRes.ok()) {
+          ACTS_ERROR(
+              "Processing of selected track states failed: " << procRes.error())
+          return procRes.error();
         }
 
         if (nBranchesOnSurface > 0 and not isOutlier) {
@@ -858,6 +727,168 @@ class CombinatorialKalmanFilter {
         }
       }
 
+      return Result<void>::success();
+    }
+
+    void createSourceLinkTrackStates(const Acts::GeometryContext& gctx,
+                                     const Surface* surface,
+                                     result_type& result,
+                                     const BoundState& boundState,
+                                     size_t prevTip) const {
+      const auto& [boundParams, jacobian, pathLength] = boundState;
+
+      // Get all source links on the surface
+      auto [lower_it, upper_it] =
+          m_sourcelinkAccessor.range(surface->geometryId());
+
+      result.trackStateCandidates.clear();
+      result.trackStateCandidates.reserve(std::distance(lower_it, upper_it));
+
+      result.stateBuffer.clear();
+
+      using PM = TrackStatePropMask;
+
+      // Calibrate all the source links on the surface since the selection has
+      // to be done based on calibrated measurement
+      for (auto it = lower_it; it != upper_it; ++it) {
+        // get the source link
+        const auto& sourceLink = m_sourcelinkAccessor.at(it);
+
+        // prepare the track state
+        PM mask =
+            PM::Predicted | PM::Jacobian | PM::Uncalibrated | PM::Calibrated;
+
+        if (it != lower_it) {
+          // not the first TrackState, only need uncalibrated and calibrated
+          mask = PM::Uncalibrated | PM::Calibrated;
+        }
+
+        size_t tsi = result.stateBuffer.addTrackState(mask, prevTip);
+        // CAREFUL! This trackstate has a previous index that is not in this
+        // MultiTrajectory Visiting brackwards from this track state will
+        // fail!
+        auto ts = result.stateBuffer.getTrackState(tsi);
+
+        if (it == lower_it) {
+          // only set these for first
+          ts.predicted() = boundParams.parameters();
+          if (boundParams.covariance()) {
+            ts.predictedCovariance() = *boundParams.covariance();
+          }
+          ts.jacobian() = jacobian;
+        } else {
+          // subsequent track states can reuse
+          auto& first = result.trackStateCandidates.front();
+          ts.data().ipredicted = first.data().ipredicted;
+          ts.data().ijacobian = first.data().ijacobian;
+        }
+
+        ts.pathLength() = pathLength;
+
+        ts.setReferenceSurface(boundParams.referenceSurface().getSharedPtr());
+
+        ts.setUncalibrated(sourceLink);
+
+        // now calibrate the track state
+        m_extensions.calibrator(gctx, ts);
+
+        result.trackStateCandidates.push_back(ts);
+      }
+    }
+
+    Result<void> processSelectedTrackStates(
+        const Acts::GeometryContext& gctx,
+        std::vector<MultiTrajectory::TrackStateProxy>::const_iterator begin,
+        std::vector<MultiTrajectory::TrackStateProxy>::const_iterator end,
+        result_type& result, bool isOutlier, const TipState& prevTipState,
+        size_t& nBranchesOnSurface, LoggerWrapper logger) const {
+      using PM = TrackStatePropMask;
+
+      std::optional<MultiTrajectory::TrackStateProxy> firstTrackState{
+          std::nullopt};
+      for (auto it = begin; it != end; ++it) {
+        auto& candidateTrackState = *it;
+
+        PM mask = PM::All;
+
+        if (it != begin) {
+          // subsequent track states don't need storage for these
+          mask = ~PM::Predicted & ~PM::Jacobian;
+        }
+
+        if (isOutlier) {
+          mask &= ~PM::Filtered;  // outlier won't have separate filtered
+                                  // parameters
+        }
+
+        // copy this trackstate into fitted states MultiTrajectory
+        MultiTrajectory::TrackStateProxy trackState =
+            result.fittedStates.getTrackState(result.fittedStates.addTrackState(
+                mask, candidateTrackState.previous()));
+
+        if (it != begin) {
+          // assign indices pointing to first track state
+          trackState.data().ipredicted = firstTrackState->data().ipredicted;
+          trackState.data().ijacobian = firstTrackState->data().ijacobian;
+        } else {
+          firstTrackState = trackState;
+        }
+
+        // either copy ALL or everything except for predicted and jacobian
+        trackState.copyFrom(candidateTrackState, mask, false);
+
+        auto& typeFlags = trackState.typeFlags();
+        if (trackState.referenceSurface().surfaceMaterial() != nullptr) {
+          typeFlags.set(TrackStateFlag::MaterialFlag);
+        }
+        typeFlags.set(TrackStateFlag::ParameterFlag);
+
+        // Inherit the tip state from the previous and will be updated
+        // later
+        TipState tipState = prevTipState;
+        size_t currentTip = trackState.index();
+
+        // Increment of number of processedState and passed sensitive surfaces
+        tipState.nSensitiveSurfaces++;
+        tipState.nStates++;
+
+        if (isOutlier) {
+          ACTS_VERBOSE(
+              "Creating outlier track state with tip = " << currentTip);
+          // Set the outlier flag
+          typeFlags.set(TrackStateFlag::OutlierFlag);
+          // Increment number of outliers
+          tipState.nOutliers++;
+          // No Kalman update for outlier
+          // Set the filtered parameter index to be the same with predicted
+          // parameter
+          trackState.data().ifiltered = trackState.data().ipredicted;
+
+        } else {
+          // Kalman update
+          auto updateRes =
+              m_extensions.updater(gctx, trackState, forward, getDummyLogger());
+          if (!updateRes.ok()) {
+            ACTS_ERROR("Update step failed: " << updateRes.error());
+            return updateRes.error();
+          }
+          ACTS_VERBOSE(
+              "Creating measurement track state with tip = " << currentTip);
+          // Set the measurement flag
+          typeFlags.set(TrackStateFlag::MeasurementFlag);
+          // Increment number of measurements
+          tipState.nMeasurements++;
+        }
+
+        // Check if need to stop this branch
+        if (not m_extensions.branchStopper(tipState)) {
+          // Put tipstate back into active tips to continue with it
+          result.activeTips.emplace_back(std::move(currentTip),
+                                         std::move(tipState));
+          // Record the number of branches on surface
+          nBranchesOnSurface++;
+        }
+      }
       return Result<void>::success();
     }
 
