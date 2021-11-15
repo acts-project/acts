@@ -66,7 +66,7 @@ They can be found in ``$REPO_ROOT/Examples/Scripts/Python``. Make sure you have 
 
 .. code-block:: console
 
-   source $BUILD_DIR/python/source.sh
+   source $BUILD_DIR/python/setup.sh
 
 to make sure python can find the ``acts`` module.
 
