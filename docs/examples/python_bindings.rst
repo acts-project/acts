@@ -86,8 +86,8 @@ repository. They are located under ``$REPO_ROOT/Examples/Python/tests``, and
 intend to cover the public API of the python bindings. A set of tests also
 executed the standalone example scripts.
 
-To run these python based tests, ``pytest`` needs to be installed. It can be
-installed via ``pip install pytest``. It is recommended to install this package
+To run these python based tests, ``pytest`` and a few other dependencies need to be installed. They can be
+installed via ``pip install -r Examples/Python/tests/requirements.txt`` from the repository root. It is recommended to install these packages
 in `virtual environment`_. You can then simply run ``pytest`` from the
 repository root.
 
