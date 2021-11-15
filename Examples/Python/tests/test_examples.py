@@ -540,11 +540,6 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash):
     assert_root_hash(root_file.name, root_file)
 
 
-@pytest.mark.xfail(
-    reason="Digitization from input currently not reproducible",
-    condition=doHashChecks,
-    strict=True,
-)
 def test_digitization_example_input(trk_geo, tmp_path, assert_root_hash):
     from particle_gun import runParticleGun
     from digitization import configureDigitization
