@@ -15,6 +15,8 @@ sets up the particle propagation and runs a few events.
 
 .. code-block:: python
 
+   import os
+
    import acts
    import acts.examples
 
@@ -25,6 +27,7 @@ sets up the particle propagation and runs a few events.
 
    nav = acts.Navigator(trackingGeometry=trackingGeometry)
 
+   field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
    stepper = acts.EigenStepper(field)
 
    prop = acts.examples.ConcretePropagator(acts.Propagator(stepper, nav))
@@ -40,11 +43,16 @@ sets up the particle propagation and runs a few events.
 
    s.addAlgorithm(alg)
 
+   outputDir = "."
+   objDir = outputDir + "/obj"
+   if not os.path.exists(objDir):
+      os.mkdir(objDir)
+   
    s.addWriter(
        acts.examples.ObjPropagationStepsWriter(
            level=acts.logging.INFO,
            collection="propagation-steps",
-           outputDir=outputDir + "/obj",
+           outputDir=objDir,
        )
    )
 
