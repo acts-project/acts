@@ -29,6 +29,7 @@
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFinding.hpp"
 
 
+#include <functional>
 #include <iostream>
 #include <boost/program_options.hpp>
 
@@ -192,104 +193,109 @@ int main(int argc, char** argv) {
   ExaTrkXTrackFinding::Config exaTrkxConfig;
   exaTrkxConfig.inputMLModuleDir = "/home/xju/ocean/code/Tracking-ML-Exa.TrkX/Pipelines/TrackML_Example/onnx_models";
   ExaTrkXTrackFinding exaTrkx(exaTrkxConfig);
-  // // some hyperparamers
-  // trkFinderCfg.spacepointFeatures = 3;
-  // trkFinderCfg.embeddingDim = 8;
-  // trkFinderCfg.rVal = 1.6;
-  // trkFinderCfg.knnVal = 500;
-  // trkFinderCfg.filterCut = 0.21;
-
-  // ML-based Tracking alg.
-  // make module and function names as options..
-  TrackFindingMLBasedAlgorithm::Config trkFinderCfg;
-  trkFinderCfg.inputSpacePoints = spCfg.outputSpacePoints;
-  trkFinderCfg.outputProtoTracks = "protoTracks";
-  trkFinderCfg.trackFinder = std::bind(&ExaTrkXTrackFinding::getTracks,
-    &exaTrkx, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-
-  sequencer.addAlgorithm(std::make_shared<TrackFindingMLBasedAlgorithm>(trkFinderCfg, logLevel));
+  
+  // ExaTrkXTrackFinding exaTrkx();
 
 
-  SurfaceSortingAlgorithm::Config sorterCfg;
-  // Setup the surface sorter if running direct navigator
-  sorterCfg.inputProtoTracks = trkFinderCfg.outputProtoTracks;
-  sorterCfg.inputSimulatedHits = simHitReaderCfg.outputSimHits;
-  sorterCfg.inputMeasurementSimHitsMap = digiCfg.outputMeasurementSimHitsMap;
-  sorterCfg.outputProtoTracks = "sortedprototracks";
-  if (dirNav) {
-    sequencer.addAlgorithm(
-        std::make_shared<SurfaceSortingAlgorithm>(sorterCfg, logLevel));
-  }
+  // // // some hyperparamers
+  // // trkFinderCfg.spacepointFeatures = 3;
+  // // trkFinderCfg.embeddingDim = 8;
+  // // trkFinderCfg.rVal = 1.6;
+  // // trkFinderCfg.knnVal = 500;
+  // // trkFinderCfg.filterCut = 0.21;
 
-  auto inputProtoTracks = trkFinderCfg.outputProtoTracks;
-  if (dirNav) {
-    inputProtoTracks = sorterCfg.outputProtoTracks;
-  }
+  // // ML-based Tracking alg.
+  // // make module and function names as options..
+  // TrackFindingMLBasedAlgorithm::Config trkFinderCfg;
+  // trkFinderCfg.inputSpacePoints = spCfg.outputSpacePoints;
+  // trkFinderCfg.outputProtoTracks = "protoTracks";
+  // trkFinderCfg.trackFinder = std::bind(
+  //   &ExaTrkXTrackFinding::getTracks, &exaTrkx,
+  //   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
-  // Algorithm estimating track parameter from seed
-  TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
-  paramsEstimationCfg.inputSeeds = ""; // it will use spacepoints and input proto tracks as inputs.
-  paramsEstimationCfg.inputProtoTracks = inputProtoTracks;
-  paramsEstimationCfg.inputSpacePoints = {
-      spCfg.outputSpacePoints,
-  };
-  paramsEstimationCfg.inputSourceLinks = digiCfg.outputSourceLinks;
-  paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
-  paramsEstimationCfg.outputProtoTracks = "prototracks_estimated";
-  paramsEstimationCfg.trackingGeometry = tGeometry;
-  paramsEstimationCfg.magneticField = magneticField;
-  paramsEstimationCfg.bFieldMin = 0.1_T;
-  paramsEstimationCfg.deltaRMax = 100._mm;
-  paramsEstimationCfg.sigmaLoc0 = 25._um;
-  paramsEstimationCfg.sigmaLoc1 = 100._um;
-  paramsEstimationCfg.sigmaPhi = 0.005_degree;
-  paramsEstimationCfg.sigmaTheta = 0.001_degree;
-  paramsEstimationCfg.sigmaQOverP = 0.1 / 1._GeV;
-  paramsEstimationCfg.sigmaT0 = 1400._s;
-  sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
-      paramsEstimationCfg, logLevel));
-
-  // Track fitting
-  // setup the fitter
-  TrackFittingAlgorithm::Config fitter;
-  fitter.inputMeasurements = digiCfg.outputMeasurements;
-  fitter.inputSourceLinks = digiCfg.outputSourceLinks;
-  fitter.inputProtoTracks = trkFinderCfg.outputProtoTracks;
-  if (dirNav) {
-    fitter.inputProtoTracks = sorterCfg.outputProtoTracks;
-  }
-  fitter.inputInitialTrackParameters = paramsEstimationCfg.outputTrackParameters;
-  fitter.outputTrajectories = "trajectories";
-  fitter.directNavigation = dirNav;
-  fitter.trackingGeometry = tGeometry;
-  fitter.dFit = TrackFittingAlgorithm::makeTrackFitterFunction(magneticField);
-  fitter.fit = TrackFittingAlgorithm::makeTrackFitterFunction(tGeometry,
-                                                              magneticField);
-  sequencer.addAlgorithm(
-      std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
-
-  // write out performance
-  // write track finding/seeding performance
-  TrackFinderPerformanceWriter::Config tfPerfCfg;
-  tfPerfCfg.inputProtoTracks = trkFinderCfg.outputProtoTracks;
-  // using selected particles
-  tfPerfCfg.inputParticles = inputParticles;
-  tfPerfCfg.inputMeasurementParticlesMap =
-      digiCfg.outputMeasurementParticlesMap;
-  sequencer.addWriter(
-      std::make_shared<TrackFinderPerformanceWriter>(tfPerfCfg, logLevel));
+  // sequencer.addAlgorithm(std::make_shared<TrackFindingMLBasedAlgorithm>(trkFinderCfg, logLevel));
 
 
-  // Write track finding performance data
-  CKFPerformanceWriter::Config perfWriterCfg;
-  perfWriterCfg.inputParticles = inputParticles;
-  perfWriterCfg.inputTrajectories = fitter.outputTrajectories;
-  perfWriterCfg.inputMeasurementParticlesMap =
-      digiCfg.outputMeasurementParticlesMap;
-  // The bottom seed on a pixel detector 'eats' one or two measurements?
-  perfWriterCfg.nMeasurementsMin = particleSelectorCfg.nHitsMin;
-  sequencer.addWriter(
-    std::make_shared<CKFPerformanceWriter>(perfWriterCfg, logLevel));
+  // SurfaceSortingAlgorithm::Config sorterCfg;
+  // // Setup the surface sorter if running direct navigator
+  // sorterCfg.inputProtoTracks = trkFinderCfg.outputProtoTracks;
+  // sorterCfg.inputSimulatedHits = simHitReaderCfg.outputSimHits;
+  // sorterCfg.inputMeasurementSimHitsMap = digiCfg.outputMeasurementSimHitsMap;
+  // sorterCfg.outputProtoTracks = "sortedprototracks";
+  // if (dirNav) {
+  //   sequencer.addAlgorithm(
+  //       std::make_shared<SurfaceSortingAlgorithm>(sorterCfg, logLevel));
+  // }
+
+  // auto inputProtoTracks = trkFinderCfg.outputProtoTracks;
+  // if (dirNav) {
+  //   inputProtoTracks = sorterCfg.outputProtoTracks;
+  // }
+
+  // // Algorithm estimating track parameter from seed
+  // TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
+  // paramsEstimationCfg.inputSeeds = ""; // it will use spacepoints and input proto tracks as inputs.
+  // paramsEstimationCfg.inputProtoTracks = inputProtoTracks;
+  // paramsEstimationCfg.inputSpacePoints = {
+  //     spCfg.outputSpacePoints,
+  // };
+  // paramsEstimationCfg.inputSourceLinks = digiCfg.outputSourceLinks;
+  // paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
+  // paramsEstimationCfg.outputProtoTracks = "prototracks_estimated";
+  // paramsEstimationCfg.trackingGeometry = tGeometry;
+  // paramsEstimationCfg.magneticField = magneticField;
+  // paramsEstimationCfg.bFieldMin = 0.1_T;
+  // paramsEstimationCfg.deltaRMax = 100._mm;
+  // paramsEstimationCfg.sigmaLoc0 = 25._um;
+  // paramsEstimationCfg.sigmaLoc1 = 100._um;
+  // paramsEstimationCfg.sigmaPhi = 0.005_degree;
+  // paramsEstimationCfg.sigmaTheta = 0.001_degree;
+  // paramsEstimationCfg.sigmaQOverP = 0.1 / 1._GeV;
+  // paramsEstimationCfg.sigmaT0 = 1400._s;
+  // sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
+  //     paramsEstimationCfg, logLevel));
+
+  // // Track fitting
+  // // setup the fitter
+  // TrackFittingAlgorithm::Config fitter;
+  // fitter.inputMeasurements = digiCfg.outputMeasurements;
+  // fitter.inputSourceLinks = digiCfg.outputSourceLinks;
+  // fitter.inputProtoTracks = trkFinderCfg.outputProtoTracks;
+  // if (dirNav) {
+  //   fitter.inputProtoTracks = sorterCfg.outputProtoTracks;
+  // }
+  // fitter.inputInitialTrackParameters = paramsEstimationCfg.outputTrackParameters;
+  // fitter.outputTrajectories = "trajectories";
+  // fitter.directNavigation = dirNav;
+  // fitter.trackingGeometry = tGeometry;
+  // fitter.dFit = TrackFittingAlgorithm::makeTrackFitterFunction(magneticField);
+  // fitter.fit = TrackFittingAlgorithm::makeTrackFitterFunction(tGeometry,
+  //                                                             magneticField);
+  // sequencer.addAlgorithm(
+  //     std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
+
+  // // write out performance
+  // // write track finding/seeding performance
+  // TrackFinderPerformanceWriter::Config tfPerfCfg;
+  // tfPerfCfg.inputProtoTracks = trkFinderCfg.outputProtoTracks;
+  // // using selected particles
+  // tfPerfCfg.inputParticles = inputParticles;
+  // tfPerfCfg.inputMeasurementParticlesMap =
+  //     digiCfg.outputMeasurementParticlesMap;
+  // sequencer.addWriter(
+  //     std::make_shared<TrackFinderPerformanceWriter>(tfPerfCfg, logLevel));
+
+
+  // // Write track finding performance data
+  // CKFPerformanceWriter::Config perfWriterCfg;
+  // perfWriterCfg.inputParticles = inputParticles;
+  // perfWriterCfg.inputTrajectories = fitter.outputTrajectories;
+  // perfWriterCfg.inputMeasurementParticlesMap =
+  //     digiCfg.outputMeasurementParticlesMap;
+  // // The bottom seed on a pixel detector 'eats' one or two measurements?
+  // perfWriterCfg.nMeasurementsMin = particleSelectorCfg.nHitsMin;
+  // sequencer.addWriter(
+  //   std::make_shared<CKFPerformanceWriter>(perfWriterCfg, logLevel));
 
   return sequencer.run();
 }
