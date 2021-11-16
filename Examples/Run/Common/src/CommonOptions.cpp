@@ -160,15 +160,25 @@ boost::program_options::variables_map ActsExamples::Options::parse(
     ss << ifs.rdbuf();
     std::string rString = ss.str();
     std::vector<std::string> args;
-    const std::regex rgx("[ \t\r\n\f]");
-    std::sregex_token_iterator iter(rString.begin(), rString.end(), rgx, -1);
-    std::sregex_token_iterator end;
-    for (; iter != end; ++iter) {
-      if (std::string(*iter).empty()) {
-        continue;
-      }
-      args.push_back(*iter);
-    }
+    
+    const char* sep = " \t\r\n\f";
+    const char* pos;
+    int start = 0, length = 0;
+    const char* str = rString.c_str();
+    do {
+        pos = std::strpbrk(str, sep);
+        length = int(pos - str);
+        args.push_back(rString.substr(start, length));
+
+        str = pos;
+        start += length;
+        if(str) {
+            size_t skip = std::strspn(str, sep);
+            str += skip;
+            start += skip;
+        }
+    } while (str && *str);
+
     // Parse the file and store the options
     store(command_line_parser(args).options(opt).run(), vm);
   }
