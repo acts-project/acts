@@ -24,13 +24,15 @@ using namespace torch::indexing;
 #include "cuGraph/mmio_read.h"
 
 
-ExaTrkXTrackFinding::ExaTrkXTrackFinding(Config config) : m_cfg(std::move(config))
+ExaTrkXTrackFinding::ExaTrkXTrackFinding(ExaTrkXTrackFinding::Config config) : m_cfg(std::move(config))
 {
+    std::cout << "adding ExaTrkXTrackFinding algorithm" << std::endl;
+    std::cout << "Model directory: " << m_cfg.inputMLModuleDir << std::endl;
   initTrainedModels();
 }
 
 ExaTrkXTrackFinding::ExaTrkXTrackFinding(){
-  m_cfg = Config();
+  m_cfg = ExaTrkXTrackFinding::Config();
   m_cfg.inputMLModuleDir = "/home/xju/ocean/code/Tracking-ML-Exa.TrkX/Pipelines/TrackML_Example/onnx_models";
   
   initTrainedModels();
@@ -40,8 +42,11 @@ void ExaTrkXTrackFinding::initTrainedModels()
 {
 
     std::cout << "Initializing Trained ML Models" << std::endl;
+    m_cfg.inputMLModuleDir = "/home/xju/ocean/code/Tracking-ML-Exa.TrkX/Pipelines/TrackML_Example/onnx_models";
+    std::cout << "Model input directory: " << m_cfg.inputMLModuleDir << std::endl;
+
     m_env = new Ort::Env(ORT_LOGGING_LEVEL_WARNING, "ExaTrkX");
-    std::string embedModelPath(m_cfg.inputMLModuleDir + "/embedding.onnx");
+    std::string embedModelPath{m_cfg.inputMLModuleDir + "/embedding.onnx"};
     std::string filterModelPath(m_cfg.inputMLModuleDir + "/filtering.onnx");
     std::string gnnModelPath(m_cfg.inputMLModuleDir + "/gnn.onnx");
     // <TODO: improve the call to avoid calling copying construtors >

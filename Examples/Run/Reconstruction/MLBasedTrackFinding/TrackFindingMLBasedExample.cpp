@@ -192,6 +192,7 @@ int main(int argc, char** argv) {
   // The ML Algorithm
   ExaTrkXTrackFinding::Config exaTrkxConfig;
   exaTrkxConfig.inputMLModuleDir = "/home/xju/ocean/code/Tracking-ML-Exa.TrkX/Pipelines/TrackML_Example/onnx_models";
+  ACTS_INFO("ML model dir: " << exaTrkxConfig.inputMLModuleDir);
   ExaTrkXTrackFinding exaTrkx(exaTrkxConfig);
   
   // ExaTrkXTrackFinding exaTrkx();
