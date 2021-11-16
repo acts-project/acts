@@ -29,7 +29,6 @@ using Jacobian = Acts::BoundMatrix;
 
 constexpr double tol = 1e-6;
 const Acts::GeometryContext tgContext;
-const Acts::Test::TestSourceLinkCalibrator calibrator;
 
 }  // namespace
 
@@ -57,8 +56,7 @@ BOOST_AUTO_TEST_CASE(Update) {
   ts.predictedCovariance() = trkCov;
   ts.pathLength() = 0.;
   ts.setUncalibrated(sourceLink);
-  std::visit([&](const auto& m) { ts.setCalibrated(m); },
-             calibrator(sourceLink, nullptr));
+  testSourceLinkCalibrator(tgContext, ts);
 
   // Check that the state has storage available
   BOOST_CHECK(ts.hasPredicted());

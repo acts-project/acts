@@ -26,9 +26,9 @@ using Updater = Acts::GainMatrixUpdater;
 using Smoother = Acts::GainMatrixSmoother;
 using Stepper = Acts::EigenStepper<>;
 using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
-using Fitter = Acts::KalmanFitter<Propagator, Updater, Smoother>;
+using Fitter = Acts::KalmanFitter<Propagator>;
 using DirectPropagator = Acts::Propagator<Stepper, Acts::DirectNavigator>;
-using DirectFitter = Acts::KalmanFitter<DirectPropagator, Updater, Smoother>;
+using DirectFitter = Acts::KalmanFitter<DirectPropagator>;
 
 struct TrackFitterFunctionImpl
     : public ActsExamples::TrackFittingAlgorithm::TrackFitterFunction {
