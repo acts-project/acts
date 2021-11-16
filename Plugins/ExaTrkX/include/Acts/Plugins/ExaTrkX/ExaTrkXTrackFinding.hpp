@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -22,8 +23,7 @@ class ExaTrkXTrackFinding {
     /// Constructor of the track finding algorithm
     ///
     /// @param cfg is the config struct to configure the algorithm
-    ExaTrkXTrackFinding(Config config);
-    ExaTrkXTrackFinding();
+    ExaTrkXTrackFinding(const Config& config);
 
     virtual ~ExaTrkXTrackFinding() {
     }

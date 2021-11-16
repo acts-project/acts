@@ -24,18 +24,12 @@ using namespace torch::indexing;
 #include "cuGraph/mmio_read.h"
 
 
-ExaTrkXTrackFinding::ExaTrkXTrackFinding(ExaTrkXTrackFinding::Config config) : m_cfg(std::move(config))
+ExaTrkXTrackFinding::ExaTrkXTrackFinding(const Config& config) : m_cfg(config)
 {
     std::cout << "adding ExaTrkXTrackFinding algorithm" << std::endl;
-    std::cout << "Model directory: " << m_cfg.inputMLModuleDir << std::endl;
+    // std::cout << "Model directory: " << m_cfg.inputMLModuleDir << std::endl;
+    // std::cout << "Model directory: " << m_cfg.inputMLModuleDir << std::endl;
     initTrainedModels();
-}
-
-ExaTrkXTrackFinding::ExaTrkXTrackFinding(){
-  m_cfg = ExaTrkXTrackFinding::Config();
-  m_cfg.inputMLModuleDir = "/home/xju/ocean/code/Tracking-ML-Exa.TrkX/Pipelines/TrackML_Example/onnx_models";
-  
-  initTrainedModels();
 }
 
 void ExaTrkXTrackFinding::initTrainedModels()
@@ -43,7 +37,17 @@ void ExaTrkXTrackFinding::initTrainedModels()
 
     std::cout << "Initializing Trained ML Models" << std::endl;
     m_cfg.inputMLModuleDir = "/home/xju/ocean/code/Tracking-ML-Exa.TrkX/Pipelines/TrackML_Example/onnx_models";
+    m_cfg.spacepointFeatures = 3;
+    m_cfg.embeddingDim = 8;
+    m_cfg.rVal = 1.6;
+    m_cfg.knnVal = 500;
+    m_cfg.filterCut = 0.21;
     std::cout << "Model input directory: " << m_cfg.inputMLModuleDir << std::endl;
+    std::cout << "Spacepoint features: " << m_cfg.spacepointFeatures << std::endl;
+    std::cout << "Embedding Dimension: " << m_cfg.embeddingDim << std::endl;
+    std::cout << "radius value       : " << m_cfg.rVal << std::endl;
+    std::cout << "k-nearest neigbour : " << m_cfg.knnVal << std::endl;
+    std::cout << "filtering cut      : " << m_cfg.filterCut << std::endl;
 
     m_env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING, "ExaTrkX");
     std::string embedModelPath{m_cfg.inputMLModuleDir + "/embedding.onnx"};
@@ -239,7 +243,7 @@ void ExaTrkXTrackFinding::getTracks(
         OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);
 
     // printout the r,phi,z of the first spacepoint
-    std::cout <<"First spacepoint information: ";
+    std::cout <<"First spacepoint information: " << inputValues.size() << "\n\t";
     std::copy(inputValues.begin(), inputValues.begin() + 3,
               std::ostream_iterator<float>(std::cout, " "));
     std::cout << std::endl;
@@ -450,4 +454,6 @@ void ExaTrkXTrackFinding::getTracks(
             existTrkIdx++;
         }
     }
+
+    
 }
