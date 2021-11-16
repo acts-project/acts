@@ -22,7 +22,7 @@ class ExaTrkXTrackFinding {
     /// Constructor of the track finding algorithm
     ///
     /// @param cfg is the config struct to configure the algorithm
-    ExaTrkXTrackFinding(ExaTrkXTrackFinding::Config config);
+    ExaTrkXTrackFinding(Config config);
     ExaTrkXTrackFinding();
 
     virtual ~ExaTrkXTrackFinding() {
