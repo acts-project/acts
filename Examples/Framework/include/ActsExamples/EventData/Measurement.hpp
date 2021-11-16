@@ -39,18 +39,19 @@ class MeasurementCalibrator {
   /// Find the measurement corresponding to the source link.
   ///
   /// @tparam parameters_t Track parameters type
-  /// @param sourceLink Input source link
-  /// @param parameters Input track parameters (unused)
-  template <typename parameters_t>
-  const Measurement& operator()(const Acts::SourceLink& sourceLink,
-                                const parameters_t& /* parameters */) const {
-    const auto& sl = static_cast<const IndexSourceLink&>(sourceLink);
-
+  /// @param gctx The geometry context (unused)
+  /// @param trackState The track state to calibrate
+  void calibrate(const Acts::GeometryContext& /*gctx*/,
+                 Acts::MultiTrajectory::TrackStateProxy trackState) const {
+    const auto& sourceLink =
+        static_cast<const IndexSourceLink&>(trackState.uncalibrated());
     assert(m_measurements and
            "Undefined measurement container in DigitizedCalibrator");
-    assert((sl.index() < m_measurements->size()) and
+    assert((sourceLink.index() < m_measurements->size()) and
            "Source link index is outside the container bounds");
-    return (*m_measurements)[sl.index()];
+    std::visit(
+        [&trackState](const auto& meas) { trackState.setCalibrated(meas); },
+        (*m_measurements)[sourceLink.index()]);
   }
 
  private:
