@@ -54,8 +54,15 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingMLBasedAlgorithm::execute(
   }
 
   // ProtoTrackContainer protoTracks;
-  std::vector<std::vector<uint32_t> > protoTracks;
-  m_cfg.trackFinder(inputValues, spacepointIDs, protoTracks);
+  std::vector<std::vector<uint32_t> > trackCandidates;
+  m_cfg.trackFinder(inputValues, spacepointIDs, trackCandidates);
+
+  std::vector<ProtoTrack> protoTracks;
+  for(auto& x: trackCandidates){
+    ProtoTrack onetrack;
+    std::copy(x.begin(), x.end(), std::back_inserter(onetrack));
+    protoTracks.push_back(std::move(onetrack));
+  }
 
   ACTS_INFO("Created " << protoTracks.size() << " proto tracks");
   ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(protoTracks));
