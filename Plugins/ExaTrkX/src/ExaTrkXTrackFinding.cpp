@@ -28,7 +28,7 @@ ExaTrkXTrackFinding::ExaTrkXTrackFinding(ExaTrkXTrackFinding::Config config) : m
 {
     std::cout << "adding ExaTrkXTrackFinding algorithm" << std::endl;
     std::cout << "Model directory: " << m_cfg.inputMLModuleDir << std::endl;
-  initTrainedModels();
+    initTrainedModels();
 }
 
 ExaTrkXTrackFinding::ExaTrkXTrackFinding(){
@@ -45,7 +45,7 @@ void ExaTrkXTrackFinding::initTrainedModels()
     m_cfg.inputMLModuleDir = "/home/xju/ocean/code/Tracking-ML-Exa.TrkX/Pipelines/TrackML_Example/onnx_models";
     std::cout << "Model input directory: " << m_cfg.inputMLModuleDir << std::endl;
 
-    m_env = new Ort::Env(ORT_LOGGING_LEVEL_WARNING, "ExaTrkX");
+    m_env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING, "ExaTrkX");
     std::string embedModelPath{m_cfg.inputMLModuleDir + "/embedding.onnx"};
     std::string filterModelPath(m_cfg.inputMLModuleDir + "/filtering.onnx");
     std::string gnnModelPath(m_cfg.inputMLModuleDir + "/gnn.onnx");
@@ -56,9 +56,9 @@ void ExaTrkXTrackFinding::initTrainedModels()
     OrtStatus* status = OrtSessionOptionsAppendExecutionProvider_CUDA(session_options, 0);
     session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
 
-    e_sess = new Ort::Session(*m_env, embedModelPath.c_str(), session_options);
-    f_sess = new Ort::Session(*m_env, filterModelPath.c_str(), session_options);
-    g_sess = new Ort::Session(*m_env, gnnModelPath.c_str(), session_options);
+    e_sess = std::make_unique<Ort::Session>(*m_env, embedModelPath.c_str(), session_options);
+    f_sess = std::make_unique<Ort::Session>(*m_env, filterModelPath.c_str(), session_options);
+    g_sess = std::make_unique<Ort::Session>(*m_env, gnnModelPath.c_str(), session_options);
 }
 
 

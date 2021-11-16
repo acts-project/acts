@@ -26,10 +26,6 @@ class ExaTrkXTrackFinding {
     ExaTrkXTrackFinding();
 
     virtual ~ExaTrkXTrackFinding() {
-      delete e_sess;
-      delete f_sess;
-      delete g_sess;
-      delete m_env;
     }
 
     void getTracks(
@@ -56,9 +52,8 @@ class ExaTrkXTrackFinding {
   private:
     // configuration
     Config m_cfg;
-    Ort::Env* m_env;
-    Ort::Session* e_sess;
-    Ort::Session* f_sess;
-    Ort::Session* g_sess;
-
+    std::unique_ptr<Ort::Env> m_env;
+    std::unique_ptr<Ort::Session> e_sess;
+    std::unique_ptr<Ort::Session> f_sess;
+    std::unique_ptr<Ort::Session> g_sess;
 };
