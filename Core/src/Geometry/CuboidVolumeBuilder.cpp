@@ -35,8 +35,7 @@
 #include <limits>
 #include <optional>
 
-std::shared_ptr<const Acts::PlaneSurface>
-Acts::CuboidVolumeBuilder::buildSurface(
+std::shared_ptr<const Acts::Surface> Acts::CuboidVolumeBuilder::buildSurface(
     const GeometryContext& /*gctx*/,
     const CuboidVolumeBuilder::SurfaceConfig& cfg) const {
   std::shared_ptr<PlaneSurface> surface;
@@ -61,8 +60,8 @@ std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
     const GeometryContext& gctx,
     Acts::CuboidVolumeBuilder::LayerConfig& cfg) const {
   // Build the surface
-  if (cfg.surface == nullptr) {
-    cfg.surface = buildSurface(gctx, cfg.surfaceCfg);
+  if (cfg.surfaces.empty()) {
+    cfg.surfaces = {buildSurface(gctx, cfg.surfaceCfg)};
   }
   // Build transformation centered at the surface position
   Transform3 trafo(Transform3::Identity() * cfg.surfaceCfg.rotation);
@@ -71,22 +70,27 @@ std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
   LayerCreator::Config lCfg;
   lCfg.surfaceArrayCreator = std::make_shared<const SurfaceArrayCreator>();
   LayerCreator layerCreator(lCfg);
-  return layerCreator.planeLayer(gctx, {cfg.surface}, cfg.binsY, cfg.binsZ,
+  ProtoLayer pl{gctx, cfg.surfaces};
+  pl.envelope[binX] = cfg.envelopeX;
+  return layerCreator.planeLayer(gctx, cfg.surfaces, cfg.binsY, cfg.binsZ,
                                  BinningValue::binX, std::nullopt, trafo);
 }
 
 std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
-    const GeometryContext& /*gctx*/,
+    const GeometryContext& gctx,
     const Acts::CuboidVolumeBuilder::VolumeConfig& cfg) const {
   using namespace UnitLiterals;
   // Construct return value
   std::pair<double, double> minMax = std::make_pair(
       std::numeric_limits<double>::max(), -std::numeric_limits<double>::max());
   for (const auto& layercfg : cfg.layerCfg) {
-    auto surfacePosMin = layercfg.surfaceCfg.position.x() -
-                         layercfg.surfaceCfg.thickness / 2. - 1._um;
-    auto surfacePosMax = layercfg.surfaceCfg.position.x() +
-                         layercfg.surfaceCfg.thickness / 2. + 1._um;
+    // recreating the protolayer for each layer => slow, but only few sensors
+    ProtoLayer pl{gctx, layercfg.surfaces};
+    pl.envelope[binX] = layercfg.envelopeX;
+
+    double surfacePosMin = pl.min(binX);
+    double surfacePosMax = pl.max(binX);
+
     // Test if new extreme is found and set it
     if (surfacePosMin < minMax.first) {
       minMax.first = surfacePosMin;
