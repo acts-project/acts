@@ -73,7 +73,7 @@ std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
   ProtoLayer pl{gctx, cfg.surfaces};
   pl.envelope[binX] = cfg.envelopeX;
   return layerCreator.planeLayer(gctx, cfg.surfaces, cfg.binsY, cfg.binsZ,
-                                 BinningValue::binX, std::nullopt, trafo);
+				 BinningValue::binX, pl, trafo);
 }
 
 std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
