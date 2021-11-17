@@ -50,10 +50,8 @@ using VolumeTrajectoryStateContainer =
 /// @param entryIndex The entry index of trajectory to investigate
 ///
 /// @return The trajectory summary info
-template <typename source_link_t>
-TrajectoryState trajectoryState(
-    const Acts::MultiTrajectory<source_link_t>& multiTraj,
-    const size_t& entryIndex) {
+inline TrajectoryState trajectoryState(const Acts::MultiTrajectory& multiTraj,
+                                       const size_t& entryIndex) {
   TrajectoryState trajState;
   multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
     // Get the volume Id of this surface
@@ -61,16 +59,17 @@ TrajectoryState trajectoryState(
     const auto& volume = geoID.volume();
     const auto& layer = geoID.layer();
     trajState.nStates++;
-    trajState.chi2Sum += state.chi2();
     trajState.NDF += state.calibratedSize();
     auto typeFlags = state.typeFlags();
     if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
-      if (typeFlags.test(Acts::TrackStateFlag::SharedHitFlag))
+      if (typeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) {
         trajState.nSharedHits++;
+      }
       trajState.nMeasurements++;
       trajState.measurementChi2.push_back(state.chi2());
       trajState.measurementVolume.push_back(volume);
       trajState.measurementLayer.push_back(layer);
+      trajState.chi2Sum += state.chi2();
     } else if (typeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
       trajState.nOutliers++;
       trajState.outlierChi2.push_back(state.chi2());
@@ -94,10 +93,8 @@ TrajectoryState trajectoryState(
 ///
 /// @return The trajectory summary info at different sub-detectors (i.e.
 /// different volumes)
-template <typename source_link_t>
-VolumeTrajectoryStateContainer trajectoryState(
-    const Acts::MultiTrajectory<source_link_t>& multiTraj,
-    const size_t& entryIndex,
+inline VolumeTrajectoryStateContainer trajectoryState(
+    const Acts::MultiTrajectory& multiTraj, const size_t& entryIndex,
     const std::vector<GeometryIdentifier::Value>& volumeIds) {
   VolumeTrajectoryStateContainer trajStateContainer;
   multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
@@ -113,16 +110,17 @@ VolumeTrajectoryStateContainer trajectoryState(
     // The trajectory state for this volume
     auto& trajState = trajStateContainer[volume];
     trajState.nStates++;
-    trajState.chi2Sum += state.chi2();
     trajState.NDF += state.calibratedSize();
     auto typeFlags = state.typeFlags();
     if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
-      if (typeFlags.test(Acts::TrackStateFlag::SharedHitFlag))
+      if (typeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) {
         trajState.nSharedHits++;
+      }
       trajState.nMeasurements++;
       trajState.measurementChi2.push_back(state.chi2());
       trajState.measurementVolume.push_back(volume);
       trajState.measurementLayer.push_back(layer);
+      trajState.chi2Sum += state.chi2();
     } else if (typeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
       trajState.nOutliers++;
       trajState.outlierChi2.push_back(state.chi2());

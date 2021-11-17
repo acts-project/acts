@@ -60,8 +60,10 @@ using ConstantFieldPropagator =
 
 using KalmanUpdater = Acts::GainMatrixUpdater;
 using KalmanSmoother = Acts::GainMatrixSmoother;
-using KalmanFitterType =
-    Acts::KalmanFitter<ConstantFieldPropagator, KalmanUpdater, KalmanSmoother>;
+using KalmanFitterType = Acts::KalmanFitter<ConstantFieldPropagator>;
+
+KalmanUpdater kfUpdater;
+KalmanSmoother kfSmoother;
 
 // Create a test context
 const GeometryContext geoCtx;
@@ -70,6 +72,14 @@ const CalibrationContext calCtx;
 
 std::normal_distribution<double> normalDist(0., 1.);
 std::default_random_engine rng(42);
+
+KalmanFitterExtensions getExtensions() {
+  KalmanFitterExtensions extensions;
+  extensions.calibrator.connect<&testSourceLinkCalibrator>();
+  extensions.updater.connect<&KalmanUpdater::operator()>(&kfUpdater);
+  extensions.smoother.connect<&KalmanSmoother::operator()>(&kfSmoother);
+  return extensions;
+}
 
 ///
 /// @brief Contruct a telescope-like detector
@@ -276,11 +286,10 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
   const auto& trajectories = createTrajectories(geometry, 10);
 
   // Construct the KalmanFitter options
-  KalmanFitterOptions<TestSourceLinkCalibrator, VoidOutlierFinder,
-                      Acts::VoidReverseFilteringLogic>
-      kfOptions(geoCtx, magCtx, calCtx, TestSourceLinkCalibrator(),
-                VoidOutlierFinder(), Acts::VoidReverseFilteringLogic(),
-                LoggerWrapper{*kfLogger}, PropagatorPlainOptions());
+
+  KalmanFitterOptions kfOptions(geoCtx, magCtx, calCtx, getExtensions(),
+                                LoggerWrapper{*kfLogger},
+                                PropagatorPlainOptions());
 
   // Construct an non-updating alignment updater
   AlignedTransformUpdater voidAlignUpdater =
@@ -288,10 +297,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
          const Transform3& /*unused*/) { return true; };
 
   // Construct the alignment options
-  AlignmentOptions<
-      KalmanFitterOptions<TestSourceLinkCalibrator, VoidOutlierFinder,
-                          Acts::VoidReverseFilteringLogic>>
-      alignOptions(kfOptions, voidAlignUpdater, LoggerWrapper{*alignLogger});
+  AlignmentOptions<KalmanFitterOptions> alignOptions(
+      kfOptions, voidAlignUpdater, LoggerWrapper{*alignLogger});
   alignOptions.maxIterations = 1;
 
   // Set the surfaces to be aligned (fix the layer 8)
