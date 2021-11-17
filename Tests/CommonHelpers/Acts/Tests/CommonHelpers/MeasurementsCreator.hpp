@@ -172,7 +172,7 @@ Measurements createMeasurements(const propagator_t& propagator,
 
   // Launch and collect the measurements
   auto result = propagator.propagate(trackParameters, options).value();
-  return result.template get<Measurements>();
+  return std::move(result.template get<Measurements>());
 }
 
 }  // namespace Test

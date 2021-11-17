@@ -29,7 +29,6 @@ using Jacobian = Acts::BoundMatrix;
 
 constexpr double tol = 1e-6;
 const Acts::GeometryContext tgContext;
-const Acts::Test::TestSourceLinkCalibrator calibrator;
 
 }  // namespace
 
@@ -48,7 +47,7 @@ BOOST_AUTO_TEST_CASE(Update) {
   trkCov.diagonal() << 0.08, 0.3, 1, 1, 1, 0;
 
   // Make trajectory w/ one state
-  MultiTrajectory<TestSourceLink> traj;
+  MultiTrajectory traj;
   auto idx = traj.addTrackState(TrackStatePropMask::All);
   auto ts = traj.getTrackState(idx);
 
@@ -56,9 +55,8 @@ BOOST_AUTO_TEST_CASE(Update) {
   ts.predicted() = trkPar;
   ts.predictedCovariance() = trkCov;
   ts.pathLength() = 0.;
-  ts.uncalibrated() = sourceLink;
-  std::visit([&](const auto& m) { ts.setCalibrated(m); },
-             calibrator(sourceLink, nullptr));
+  ts.setUncalibrated(sourceLink);
+  testSourceLinkCalibrator(tgContext, ts);
 
   // Check that the state has storage available
   BOOST_CHECK(ts.hasPredicted());

@@ -106,7 +106,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
     // now read
 
     // The collection to be written
-    std::vector<Acts::RecordedMaterialTrack> mtrackCollection;
+    std::unordered_map<size_t, Acts::RecordedMaterialTrack> mtrackCollection;
 
     // Find the start entry and the batch size for this event
     std::string eventNumberStr = std::to_string(context.eventNumber);
@@ -161,7 +161,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
             s);
         rmTrack.second.materialInteractions.push_back(std::move(mInteraction));
       }
-      mtrackCollection.push_back(std::move(rmTrack));
+      mtrackCollection[ib] = (std::move(rmTrack));
     }
 
     // Write to the collection to the EventStore

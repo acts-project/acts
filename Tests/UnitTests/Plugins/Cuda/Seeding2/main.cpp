@@ -54,9 +54,16 @@ int main(int argc, char* argv[]) {
     spView.push_back(sp.get());
   }
 
+  int numPhiNeighbors = 1;
+
+  std::vector<std::pair<int, int>> zBinNeighborsTop;
+  std::vector<std::pair<int, int>> zBinNeighborsBottom;
+
   // Create binned groups of these spacepoints.
-  auto bottomBinFinder = std::make_shared<Acts::BinFinder<TestSpacePoint>>();
-  auto topBinFinder = std::make_shared<Acts::BinFinder<TestSpacePoint>>();
+  auto bottomBinFinder = std::make_shared<Acts::BinFinder<TestSpacePoint>>(
+      zBinNeighborsBottom, numPhiNeighbors);
+  auto topBinFinder = std::make_shared<Acts::BinFinder<TestSpacePoint>>(
+      zBinNeighborsTop, numPhiNeighbors);
 
   // Set up the seedfinder configuration.
   Acts::SeedfinderConfig<TestSpacePoint> sfConfig;
