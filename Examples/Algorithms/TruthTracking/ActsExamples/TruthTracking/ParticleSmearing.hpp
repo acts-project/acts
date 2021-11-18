@@ -12,14 +12,10 @@
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearingOptions.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
-#include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 #include <array>
 #include <limits>
 #include <string>
-
-#include <boost/program_options.hpp>
 
 namespace ActsExamples {
 

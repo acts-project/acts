@@ -14,12 +14,9 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
 
 #include <cmath>
 #include <vector>
-
-#include <boost/program_options.hpp>
 
 ActsExamples::ParticleSmearing::ParticleSmearing(const Config& config,
                                                  Acts::Logging::Level level)
