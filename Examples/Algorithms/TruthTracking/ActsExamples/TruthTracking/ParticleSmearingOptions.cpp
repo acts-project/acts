@@ -21,7 +21,7 @@ void ActsExamples::Options::addParticleSmearingOptions(Description& desc) {
       "a_1[um]*exp(-1.*abs(a_2[1/GeV])*pt)");
   opt("smear-sigma-T0", value<double>()->default_value(1),
       "Smear the initial time in ns");
-  opt("smear-sigma-momentum", value<Reals<3>>()->default_value({{1, 1, 0.1}}),
+  opt("smear-sigma-momentum", value<Reals<3>>()->default_value({{1, 1, 0.05}}),
       "Smear the initial phi (degree), theta (degree) and momentum (relative)");
   opt("fit-inflation-variance-inflation",
       value<Reals<6>>()->default_value({{1., 1., 1., 1., 1., 1.}}),
