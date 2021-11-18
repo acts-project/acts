@@ -106,7 +106,8 @@ ActsExamples::ParticleSmearing::Config setupParticleSmearing(
   auto logLevel = Options::readLogLevel(vars);
 
   // Create smeared particles states
-  ParticleSmearing::Config particleSmearingCfg(vars);
+  ParticleSmearing::Config particleSmearingCfg;
+  particleSmearingCfg.ReadOptions(vars);
   particleSmearingCfg.inputParticles = inputParticles;
   particleSmearingCfg.outputTrackParameters = "smearedparameters";
   particleSmearingCfg.randomNumbers = rnd;

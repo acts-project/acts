@@ -28,7 +28,7 @@ namespace ActsExamples {
 class ParticleSmearing final : public BareAlgorithm {
  public:
   struct Config {
-    Config(const Options::Variables& vars) {
+    void ReadOptions(const Options::Variables& vars) {
       using namespace Acts::UnitConstants;
       using Options::Reals;
 
