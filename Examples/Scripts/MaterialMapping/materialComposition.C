@@ -19,8 +19,12 @@
 #include <TTree.h>
 
 struct MaterialHistograms {
+
   TProfile* x0_vs_eta = nullptr;
   TProfile* l0_vs_eta = nullptr;
+
+  TProfile* x0_vs_phi= nullptr;
+  TProfile* l0_vs_phi = nullptr;
 
   float s_x0 = 0.;
   float s_l0 = 0.;
@@ -30,17 +34,30 @@ struct MaterialHistograms {
   /// @param iA the atomic number
   MaterialHistograms(const std::string& name, unsigned int iA,
                      unsigned int bins, float eta) {
-    std::string x0Name =
+    std::string x0NameEta =
         (iA == 0) ? name + std::string("_x0_vs_eta_all")
                   : name + std::string("_x0_vs_eta_A") + std::to_string(iA);
-    std::string l0Name =
+    std::string l0NameEta =
         (iA == 0) ? name + std::string("_l0_vs_eta_all")
                   : name + std::string("_l0_vs_eta_A") + std::to_string(iA);
 
     x0_vs_eta =
-        new TProfile(x0Name.c_str(), "X_{0} vs. #eta", bins, -eta, eta, 0., 5.);
+        new TProfile(x0NameEta.c_str(), "X_{0} vs. #eta", bins, -eta, eta, 0., 5.);
     l0_vs_eta =
-        new TProfile(l0Name.c_str(), "L_{0} vs. #eta", bins, -eta, eta, 0., 5.);
+        new TProfile(l0NameEta.c_str(), "L_{0} vs. #eta", bins, -eta, eta, 0., 5.);
+
+    std::string x0NamePhi =
+        (iA == 0) ? name + std::string("_x0_vs_phi_all")
+                  : name + std::string("_x0_vs_phi_A") + std::to_string(iA);
+    std::string l0NamePhi =
+        (iA == 0) ? name + std::string("_l0_vs_phi_all")
+                  : name + std::string("_l0_vs_phi_A") + std::to_string(iA);
+
+    x0_vs_phi =
+        new TProfile(x0NamePhi.c_str(), "X_{0} vs. #phi", bins, -M_PI, M_PI, 0., 5.);
+    l0_vs_phi =
+        new TProfile(l0NamePhi.c_str(), "L_{0} vs. #phi", bins, -M_PI, M_PI, 0., 5.);
+
   }
 
   MaterialHistograms() = default;
@@ -55,6 +72,9 @@ struct MaterialHistograms {
     x0_vs_eta->Fill(eta, s_x0);
     l0_vs_eta->Fill(eta, s_l0);
 
+    x0_vs_phi->Fill(phi, s_x0);
+    l0_vs_phi->Fill(phi, s_l0);
+
     s_x0 = 0.;
     s_l0 = 0.;
   }
@@ -64,6 +84,9 @@ struct MaterialHistograms {
   void write() {
     x0_vs_eta->Write();
     l0_vs_eta->Write();
+
+    x0_vs_phi->Write();
+    l0_vs_phi->Write();
   }
 };
 
