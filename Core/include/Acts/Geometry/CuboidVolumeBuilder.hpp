@@ -61,7 +61,7 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   /// @brief This struct stores the data for the construction of a PlaneLayer
   struct LayerConfig {
     // Configuration of the surface
-    SurfaceConfig surfaceCfg;
+    std::vector<SurfaceConfig> surfaceCfg;
     // Encapsulated surface
     std::vector<std::shared_ptr<const Surface>> surfaces;
     // Boolean flag if layer is active
@@ -72,6 +72,7 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     size_t binsZ = 1;
     // Envelope in X (along layer normal)
     std::pair<double, double> envelopeX{0, 0};
+    std::optional<RotationMatrix3> rotation{std::nullopt};
   };
 
   /// @brief This struct stores the data for the construction of a cuboid

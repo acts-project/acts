@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
   std::vector<CuboidVolumeBuilder::LayerConfig> layerConfig;
   for (auto& sCfg : surfaceConfig) {
     CuboidVolumeBuilder::LayerConfig cfg;
-    cfg.surfaceCfg = sCfg;
+    cfg.surfaceCfg = {sCfg};
     layerConfig.push_back(cfg);
   }
 
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
   std::vector<CuboidVolumeBuilder::LayerConfig> layerConfig2;
   for (auto& sCfg : surfaceConfig2) {
     CuboidVolumeBuilder::LayerConfig cfg;
-    cfg.surfaceCfg = sCfg;
+    cfg.surfaceCfg = {sCfg};
     layerConfig2.push_back(cfg);
   }
   CuboidVolumeBuilder::VolumeConfig volumeConfig2;

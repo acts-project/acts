@@ -61,11 +61,26 @@ std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
     Acts::CuboidVolumeBuilder::LayerConfig& cfg) const {
   // Build the surface
   if (cfg.surfaces.empty()) {
-    cfg.surfaces = {buildSurface(gctx, cfg.surfaceCfg)};
+    for (const auto& sCfg : cfg.surfaceCfg) {
+      cfg.surfaces.push_back(buildSurface(gctx, sCfg));
+    }
   }
   // Build transformation centered at the surface position
-  Transform3 trafo(Transform3::Identity() * cfg.surfaceCfg.rotation);
-  trafo.translation() = cfg.surfaceCfg.position;
+  Vector3 centroid;
+
+  for (const auto& surface : cfg.surfaces) {
+    centroid += surface->transform(gctx).translation();
+  }
+
+  centroid /= cfg.surfaces.size();
+
+  Transform3 trafo = Transform3::Identity();
+  trafo.translation() = centroid;
+  if (cfg.rotation) {
+    trafo.linear() = *cfg.rotation;
+  } else {
+    trafo.linear() = cfg.surfaces.front()->transform(gctx).rotation();
+  }
 
   LayerCreator::Config lCfg;
   lCfg.surfaceArrayCreator = std::make_shared<const SurfaceArrayCreator>();
@@ -73,7 +88,7 @@ std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
   ProtoLayer pl{gctx, cfg.surfaces};
   pl.envelope[binX] = cfg.envelopeX;
   return layerCreator.planeLayer(gctx, cfg.surfaces, cfg.binsY, cfg.binsZ,
-				 BinningValue::binX, pl, trafo);
+                                 BinningValue::binX, pl, trafo);
 }
 
 std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
@@ -128,7 +143,7 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
         RectangleBounds(cfg.length.y() * 0.5, cfg.length.z() * 0.5));
 
     LayerConfig lCfg;
-    lCfg.surfaceCfg = sCfg;
+    lCfg.surfaceCfg = {sCfg};
 
     cfg.layerCfg.push_back(lCfg);
   }
