@@ -23,4 +23,7 @@ void ActsExamples::Options::addParticleSmearingOptions(Description& desc) {
       "Smear the initial time in ns");
   opt("smear-sigma-momentum", value<Reals<3>>()->default_value({{1, 1, 0.1}}),
       "Smear the initial phi (degree), theta (degree) and momentum (relative)");
+  opt("fit-inflation-variance-inflation",
+      value<Reals<6>>()->default_value({{1., 1., 1., 1., 1., 1.}}),
+      "Inflate the initial covariance matrix");
 }

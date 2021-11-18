@@ -46,6 +46,8 @@ class ParticleSmearing final : public BareAlgorithm {
       sigmaPhi = sigmaMomOpts[0] * Acts::UnitConstants::degree;
       sigmaTheta = sigmaMomOpts[1] * Acts::UnitConstants::degree;
       sigmaPRel = sigmaMomOpts[2];
+      initialVarInflation =
+          vars["fit-initial-variance-inflation"].template as<Reals<6>>();
     }
 
     /// Input truth particles collection.
@@ -71,7 +73,7 @@ class ParticleSmearing final : public BareAlgorithm {
     /// Relative momentum resolution.
     double sigmaPRel;
     /// Inflate the initial covariance matrix
-    std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
+    std::array<double, 6> initialVarInflation;
     /// Random numbers service.
     std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
   };
