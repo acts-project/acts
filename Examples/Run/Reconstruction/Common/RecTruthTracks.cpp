@@ -52,6 +52,7 @@ int runRecTruthTracks(int argc, char* argv[],
   Options::addFittingOptions(desc);
   Options::addDigitizationOptions(desc);
   TruthSeedSelector::addOptions(desc);
+  ParticleSmearing::addOptions(desc);
 
   auto vm = Options::parse(desc, argc, argv);
   if (vm.empty()) {
@@ -104,8 +105,13 @@ int runRecTruthTracks(int argc, char* argv[],
   const auto& inputParticles = particleSelectorCfg.outputParticles;
 
   // Run the particle smearing
-  auto particleSmearingCfg =
-      setupParticleSmearing(vm, sequencer, rnd, inputParticles);
+  ParticleSmearing::Config particleSmearingCfg =
+      ParticleSmearing::readConfig(vm);
+  particleSmearingCfg.inputParticles = inputParticles;
+  particleSmearingCfg.outputTrackParameters = "smearedparameters";
+  particleSmearingCfg.randomNumbers = rnd;
+  sequencer.addAlgorithm(
+      std::make_shared<ParticleSmearing>(particleSmearingCfg, logLevel));
 
   // The fitter needs the measurements (proto tracks) and initial
   // track states (proto states). The elements in both collections

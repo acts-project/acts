@@ -14,9 +14,51 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 
 #include <cmath>
 #include <vector>
+
+#include <boost/program_options.hpp>
+
+void ActsExamples::ParticleSmearing::addOptions(Options::Description& desc) {
+  using boost::program_options::value;
+  using Options::Reals;
+
+  auto opt = desc.add_options();
+  opt("smear-sigma-D0", value<Reals<3>>()->default_value({20, 30, 0.3}),
+      "Smear the initial Pt-dependent d0 in perigee frame");
+  opt("smear-sigma-Z0", value<Reals<3>>()->default_value({20, 30, 0.3}),
+      "Smear the initial Pt-dependent z0 in perigee frame");
+  opt("smear-sigma-T0", value<double>()->default_value(1),
+      "Smear the initial time in ns");
+  opt("smear-sigma-momentum", value<Reals<3>>()->default_value({1, 1, 0.1}),
+      "Smear the initial phi (degree), theta (degree) and momentum (relative)");
+}
+
+ActsExamples::ParticleSmearing::Config
+ActsExamples::ParticleSmearing::readConfig(const Options::Variables& vars) {
+  using namespace Acts::UnitConstants;
+  using Options::Reals;
+
+  Config cfg;
+  auto sigmaD0 = vars["smear-sigma-D0"].template as<Reals<3>>();
+  auto sigmaZ0 = vars["smear-sigma-Z0"].template as<Reals<3>>();
+  auto sigmaMom = vars["smear-sigma-momentum"].template as<Reals<3>>();
+
+  cfg.sigmaD0 = sigmaD0[0] * Acts::UnitConstants::um;
+  cfg.sigmaD0PtA = sigmaD0[1] * Acts::UnitConstants::um;
+  cfg.sigmaD0PtB = sigmaD0[2] / Acts::UnitConstants::GeV;
+  cfg.sigmaZ0 = sigmaZ0[0] * Acts::UnitConstants::um;
+  cfg.sigmaZ0PtA = sigmaZ0[1] * Acts::UnitConstants::um;
+  cfg.sigmaZ0PtB = sigmaZ0[2] / Acts::UnitConstants::GeV;
+  cfg.sigmaT0 = vars["smear-sigma-T0"].as<double>() * Acts::UnitConstants::ns;
+  cfg.sigmaPhi = sigmaMom[0] * Acts::UnitConstants::degree;
+  cfg.sigmaTheta = sigmaMom[1] * Acts::UnitConstants::degree;
+  cfg.sigmaPRel = sigmaMom[2];
+
+  return cfg;
+}
 
 ActsExamples::ParticleSmearing::ParticleSmearing(const Config& config,
                                                  Acts::Logging::Level level)

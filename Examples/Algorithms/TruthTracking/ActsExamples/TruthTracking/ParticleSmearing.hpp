@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 #include <array>
 #include <limits>
@@ -54,6 +55,11 @@ class ParticleSmearing final : public BareAlgorithm {
     /// Random numbers service.
     std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
   };
+
+  /// Add options for the particle smearing.
+  static void addOptions(Options::Description& desc);
+  /// Construct particle smearing config from user variables.
+  static Config readConfig(const Options::Variables& vars);
 
   ParticleSmearing(const Config& config, Acts::Logging::Level level);
 
