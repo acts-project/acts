@@ -11,11 +11,15 @@
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/TruthTracking/ParticleSmearingOptions.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 #include <array>
 #include <limits>
 #include <string>
+
+#include <boost/program_options.hpp>
 
 namespace ActsExamples {
 
@@ -28,38 +32,53 @@ namespace ActsExamples {
 class ParticleSmearing final : public BareAlgorithm {
  public:
   struct Config {
+    Config(const Options::Variables& vars) {
+      using namespace Acts::UnitConstants;
+      using Options::Reals;
+
+      auto sigmaD0Opts = vars["smear-sigma-D0"].template as<Reals<3>>();
+      auto sigmaZ0Opts = vars["smear-sigma-Z0"].template as<Reals<3>>();
+      auto sigmaMomOpts = vars["smear-sigma-momentum"].template as<Reals<3>>();
+
+      sigmaD0 = sigmaD0Opts[0] * Acts::UnitConstants::um;
+      sigmaD0PtA = sigmaD0Opts[1] * Acts::UnitConstants::um;
+      sigmaD0PtB = sigmaD0Opts[2] / Acts::UnitConstants::GeV;
+      sigmaZ0 = sigmaZ0Opts[0] * Acts::UnitConstants::um;
+      sigmaZ0PtA = sigmaZ0Opts[1] * Acts::UnitConstants::um;
+      sigmaZ0PtB = sigmaZ0Opts[2] / Acts::UnitConstants::GeV;
+      sigmaT0 = vars["smear-sigma-T0"].as<double>() * Acts::UnitConstants::ns;
+      sigmaPhi = sigmaMomOpts[0] * Acts::UnitConstants::degree;
+      sigmaTheta = sigmaMomOpts[1] * Acts::UnitConstants::degree;
+      sigmaPRel = sigmaMomOpts[2];
+    }
+
     /// Input truth particles collection.
     std::string inputParticles;
     /// Output smeared tracks parameters collection.
     std::string outputTrackParameters;
     /// Constant term of the d0 resolution.
-    double sigmaD0 = 30 * Acts::UnitConstants::um;
+    double sigmaD0;
     /// Pt-dependent d0 resolution of the form sigma_d0 = A*exp(-1.*abs(B)*pt).
-    double sigmaD0PtA = 0 * Acts::UnitConstants::um;
-    double sigmaD0PtB = 1 / Acts::UnitConstants::GeV;
+    double sigmaD0PtA;
+    double sigmaD0PtB;
     /// Constant term of the z0 resolution.
-    double sigmaZ0 = 30 * Acts::UnitConstants::um;
+    double sigmaZ0;
     /// Pt-dependent z0 resolution of the form sigma_z0 = A*exp(-1.*abs(B)*pt).
-    double sigmaZ0PtA = 0 * Acts::UnitConstants::um;
-    double sigmaZ0PtB = 1 / Acts::UnitConstants::GeV;
+    double sigmaZ0PtA;
+    double sigmaZ0PtB;
     /// Time resolution.
-    double sigmaT0 = 5 * Acts::UnitConstants::ns;
+    double sigmaT0;
     /// Phi angular resolution.
-    double sigmaPhi = 1 * Acts::UnitConstants::degree;
+    double sigmaPhi;
     /// Theta angular resolution.
-    double sigmaTheta = 1 * Acts::UnitConstants::degree;
+    double sigmaTheta;
     /// Relative momentum resolution.
-    double sigmaPRel = 0.001;
+    double sigmaPRel;
     /// Inflate the initial covariance matrix
     std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
     /// Random numbers service.
     std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
   };
-
-  /// Add options for the particle smearing.
-  static void addOptions(Options::Description& desc);
-  /// Construct particle smearing config from user variables.
-  static Config readConfig(const Options::Variables& vars);
 
   ParticleSmearing(const Config& config, Acts::Logging::Level level);
 
