@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
 #include "ActsExamples/Utilities/Options.hpp"
 
 #include <exception>
@@ -53,14 +52,10 @@ int main(int argc, char** argv) {
     ao("eta,e", value<float>()->default_value(4.), "Eta range.");
     ao("sub-names", value<std::vector<std::string>>()->multitoken(),
        "Subdetector names.");
-    ao("sub-rmin", value<VariableReals>(),
-       "Minimal radial restrictions.");
-    ao("sub-rmax", value<VariableReals>(),
-       "Maximal radial restrictions.");
-    ao("sub-zmin", value<VariableReals>(),
-       "Minimal z radial restrictions");
-    ao("sub-zmax", value<VariableReals>(),
-       "Maximal z radial restrictions.");
+    ao("sub-rmin", value<VariableReals>(), "Minimal radial restrictions.");
+    ao("sub-rmax", value<VariableReals>(), "Maximal radial restrictions.");
+    ao("sub-zmin", value<VariableReals>(), "Minimal z radial restrictions");
+    ao("sub-zmax", value<VariableReals>(), "Maximal z radial restrictions.");
 
     // Set up the variables map
     variables_map vm;
