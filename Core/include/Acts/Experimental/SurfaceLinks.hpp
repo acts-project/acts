@@ -23,6 +23,49 @@
 
 namespace Acts {
 
+/// Helper function to get the surface candidates from a list, can and should
+/// be reuesed by all surface finders as it guaraqntees consistent path,
+/// overstep and alternative solutions handling
+///
+/// @param gctx is the current geometry conbtext
+/// @param surfaces is the pre-intersected surface candidates
+/// @param position is the position at the query
+/// @param direction is the direction at the query
+/// @param bCheck is the BoundaryCheck
+/// @param pathRange is the allowed path range for the intersection
+/// @param guessedNumber is the guessed number of intersections for
+/// reserving
+///
+/// @note onSurface solutions are ranked last
+inline std::vector<SurfaceIntersection> surfaceCandidates(
+    const GeometryContext& gctx, std::vector<const Surface*> surfaces,
+    const Vector3& position, const Vector3& direction,
+    const BoundaryCheck& bCheck, const std::array<ActsScalar, 2>& pathRange,
+    size_t guessedNumber) {
+  // Return object and reserving
+  std::vector<SurfaceIntersection> sIntersections;
+  sIntersections.reserve(guessedNumber);
+  for (const auto& s : surfaces) {
+    auto sIntersection = s->intersect(gctx, position, direction, bCheck);
+    // Swap in case of two solutions and conflict with overstep tolerance
+    if (sIntersection.intersection.pathLength + s_onSurfaceTolerance < pathRange[0] and
+        sIntersection.alternative.pathLength + s_onSurfaceTolerance > pathRange[0] and
+        sIntersection.alternative.status >= Intersection3D::Status::reachable) {
+      sIntersection.swapSolutions();
+    }
+    // The intersection needs to be valid and within range
+    if (sIntersection.intersection.status >=
+            Intersection3D::Status::reachable and
+        sIntersection.intersection.pathLength + s_onSurfaceTolerance >= pathRange[0] and
+        sIntersection.intersection.pathLength - s_onSurfaceTolerance < pathRange[1]) {
+      sIntersections.push_back(sIntersection);
+    }
+  }
+  // Sort and return
+  std::sort(sIntersections.begin(), sIntersections.end());
+  return sIntersections;
+}
+
 struct AllSurfaces {
   /// A guess for the number of candidates (for vector reserve)
   size_t guessedNumberOfCandidates = 25;
@@ -34,7 +77,7 @@ struct AllSurfaces {
   /// @param position the current position for intersection start
   /// @param direction the current momentum for intersecton start
   /// @param bCheck the boundary check
-  /// @param maxPathLength the maximal path length
+  /// @param pathRange the allowed path range
   /// @note provideAll is (obvisouly) ignored in this context
   ///
   /// @note the onSurface solution will be given first
@@ -43,24 +86,13 @@ struct AllSurfaces {
   std::vector<SurfaceIntersection> operator()(
       const GeometryContext& gctx, const DetectorVolume& volume,
       const Vector3& position, const Vector3& direction,
-      const BoundaryCheck& bCheck, const ActsScalar maxPathLength, bool) const {
+      const BoundaryCheck& bCheck, const std::array<ActsScalar, 2>& pathRange,
+      bool) const {
+
     // A volume needs to be present and so do surfaces
     if (not volume.surfaces().empty()) {
-      std::vector<SurfaceIntersection> sIntersections;
-      sIntersections.reserve(guessedNumberOfCandidates);
-      // Run over all surfaces and create the trial & error candidate lists in
-      for (const auto& s : volume.surfaces()) {
-        auto sIntersection = s->intersect(gctx, position, direction, bCheck);
-        // The intersection needs to be valid and within range
-        if (sIntersection.intersection.status >=
-                Intersection3D::Status::reachable and
-            sIntersection.intersection.pathLength < maxPathLength) {
-          sIntersections.push_back(sIntersection);
-        }
-      }
-      // Sort and return
-      std::sort(sIntersections.begin(), sIntersections.end());
-      return sIntersections;
+      return surfaceCandidates(gctx, volume.surfaces(), position, direction,
+                               bCheck, pathRange, guessedNumberOfCandidates);
     }
     return {};
   }

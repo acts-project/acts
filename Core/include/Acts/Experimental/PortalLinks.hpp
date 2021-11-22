@@ -16,6 +16,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 
+#include <array>
 #include <functional>
 #include <memory>
 #include <vector>
@@ -27,34 +28,47 @@ class DetectorVolume;
 /// Helper function to get the portal candidates from a volume
 ///
 /// @param gctx is the current geometry conbtext
-/// @param volume is the volume for which the portals are intersected
+/// @param portals is the volume for which the portals are intersected
 /// @param position is the position at the query
 /// @param direction is the direction at the query
+/// @param pathRange is the allowed path range for this search
 ///
 /// @note onSurface solutions are ranked last
 inline std::vector<PortalIntersection> portalCandidates(
-    const GeometryContext& gctx, const DetectorVolume& volume,
-    const Vector3& position, const Vector3& direction) {
+    const GeometryContext& gctx, const std::vector<const Portal*>& portals,
+    const Vector3& position, const Vector3& direction,
+    const std::array<ActsScalar, 2>& pathRange = {
+        0., std::numeric_limits<ActsScalar>::infinity()}) {
   // The portal intersections
   std::vector<PortalIntersection> pIntersections;
   // Get all the portals
-  const auto& portals = volume.portals();
   pIntersections.reserve(portals.size());
   // Loop over portals an intersect
   for (const auto& p : portals) {
-    pIntersections.push_back(p->intersect(gctx, position, direction));
+    // Get the intersection
+    auto pIntersection = p->intersect(gctx, position, direction);
+    if (pIntersection.intersection.pathLength + s_onSurfaceTolerance <
+            pathRange[0] and
+        pIntersection.alternative.pathLength + s_onSurfaceTolerance >
+            pathRange[0] and
+        pIntersection.alternative.status >= Intersection3D::Status::reachable) {
+      // Let's swap the solutions
+      pIntersection.swapSolutions();
+    }
+    pIntersections.push_back(pIntersection);
   }
-  // Sort and push negative and on surface solutions to the end
-  std::sort(pIntersections.begin(), pIntersections.end(),
-            [](const auto& a, const auto& b) {
-              if (a.intersection.pathLength < s_onSurfaceTolerance) {
-                return false;
-              }
-              if (b.intersection.pathLength < s_onSurfaceTolerance) {
-                return true;
-              }
-              return (a < b);
-            });
+  // Sort and non-allowed solutions to the end
+  std::sort(
+      pIntersections.begin(), pIntersections.end(),
+      [&](const auto& a, const auto& b) {
+        if (a.intersection.pathLength + s_onSurfaceTolerance < pathRange[0]) {
+          return false;
+        } else if (b.intersection.pathLength + s_onSurfaceTolerance <
+                   pathRange[0]) {
+          return true;
+        }
+        return a.intersection.pathLength < b.intersection.pathLength;
+      });
   // Return the sorted solutions
   return pIntersections;
 };
@@ -78,8 +92,7 @@ struct SinglePortalLink {
   ///
   /// @return a new environment for the navigation
   DetectorEnvironment operator()(const GeometryContext& gctx,
-                                 const Portal& /*portal*/,
-                                 const Vector3& position,
+                                 const Portal& portal, const Vector3& position,
                                  const Vector3& direction,
                                  const BoundaryCheck& bCheck,
                                  bool provideAll = false) const {
@@ -87,16 +100,26 @@ struct SinglePortalLink {
     std::vector<PortalIntersection> pCandidates = {};
     if (volume != nullptr) {
       // Get the portals coordinates (ordered)
-      pCandidates = portalCandidates(gctx, *volume, position, direction);
+      /// @todo: should run with a a tolerance that excludes the first portal
+      pCandidates =
+          portalCandidates(gctx, volume->portals(), position, direction);
 
-      // Maximum path length
-      ActsScalar maximumPath = pCandidates[0].intersection.pathLength;
+      // Maximum path length - if the intersection is on portal it needs to go
+      ActsScalar maximumPath =
+          std::abs(pCandidates[0].intersection.pathLength) >
+                  s_onSurfaceTolerance
+              ? pCandidates[0].intersection.pathLength
+              : pCandidates[1].intersection.pathLength;
 
       // The surface candidates one-time intersected & ordered
-      std::vector<SurfaceIntersection> sCandidates = surfaces(
-          gctx, *volume, position, direction, bCheck, maximumPath, provideAll);
+      std::vector<SurfaceIntersection> sCandidates =
+          surfaces(gctx, *volume, position, direction, bCheck,
+                   {0., maximumPath}, provideAll);
       // Return the new environment
-      return DetectorEnvironment{volume, sCandidates, pCandidates};
+      DetectorEnvironment environment{volume, sCandidates, pCandidates};
+      environment.currentSurface = &(portal.surfaceRepresentation());
+      environment.status = DetectorEnvironment::eOnPortal;
+      return environment;
     }
     return DetectorEnvironment{};
   }

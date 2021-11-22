@@ -18,6 +18,7 @@
 #include <functional>
 #include <memory>
 #include <vector>
+#include <array>
 
 namespace Acts {
 
@@ -30,7 +31,7 @@ class Surface;
 ///
 using SurfaceLinks = std::function<std::vector<SurfaceIntersection>(
     const GeometryContext&, const DetectorVolume&, const Vector3&,
-    const Vector3&, const BoundaryCheck&, ActsScalar, bool)>;
+    const Vector3&, const BoundaryCheck&, const std::array<ActsScalar,2>&, bool)>;
 
 /// Decleare a void surface link that
 struct VoidSurfaceLink {
@@ -40,7 +41,7 @@ struct VoidSurfaceLink {
   std::vector<SurfaceIntersection> operator()(
       const GeometryContext& /*gctx*/, const DetectorVolume& /*volume*/,
       const Vector3& /*position*/, const Vector3& /*direction*/,
-      const BoundaryCheck& /*bCheck*/, ActsScalar /*maxPath*/, bool) const {
+      const BoundaryCheck& /*bCheck*/, const std::array<ActsScalar,2>& /*pathRange*/, bool) const {
     return {};
   }
 };

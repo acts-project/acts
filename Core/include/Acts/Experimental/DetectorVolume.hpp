@@ -20,6 +20,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <array>
 
 /// @note This file is foreseen for the `Geometry` module
 
@@ -30,7 +31,7 @@ class DetectorVolume;
 
 using SurfaceLinks = std::function<std::vector<SurfaceIntersection>(
     const GeometryContext&, const DetectorVolume&, const Vector3&,
-    const Vector3&, const BoundaryCheck&, ActsScalar, bool)>;
+    const Vector3&, const BoundaryCheck&, const std::array<ActsScalar,2>&, bool)>;
 
 /// A detector volume description which can be:
 ///
@@ -121,6 +122,8 @@ class DetectorVolume {
   /// Factory for producing memory managed instances of Surface.
   /// Will forward all parameters and will attempt to find a suitable
   /// constructor.
+  ///
+  /// @tparam Args the arguments that will be forwarded
   template <typename... Args>
   static std::shared_ptr<DetectorVolume> makeShared(Args&&... args) {
     return std::shared_ptr<DetectorVolume>(
@@ -172,13 +175,15 @@ class DetectorVolume {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The global position on surface
   /// @param direction The direction on the surface
+  /// @param pathRange The possible path range
   /// @param bCheck is the boundary check for the surface search
-  /// @param proiveAll is the boolean switch for trial&error navigation
+  /// @param provideAll is the boolean switch for trial&error navigation
   ///
   /// @return a new detector environment with portals and surfaces
   DetectorEnvironment environment(const GeometryContext& gctx,
                                   const Vector3& position,
                                   const Vector3& direction,
+                                  const std::array<ActsScalar,2>& pathRange,
                                   const BoundaryCheck& bCheck,
                                   bool provideAll = false) const;
 
@@ -216,6 +221,9 @@ class DetectorVolume {
   ///
   /// @return a vector to const DetectorVolume raw pointers
   const std::vector<const DetectorVolume*>& volumes() const;
+
+  /// Set the name ov the volume
+  void setName(const std::string& name);
 
   /// @return the name of the volume
   const std::string& name() const;
@@ -281,6 +289,11 @@ inline const std::vector<const DetectorVolume*>& DetectorVolume::volumes()
     const {
   return m_volumes.external;
 }
+
+inline void DetectorVolume::setName(const std::string& name) {
+  m_name = name;
+}
+
 
 inline const std::string& DetectorVolume::name() const {
   return m_name;

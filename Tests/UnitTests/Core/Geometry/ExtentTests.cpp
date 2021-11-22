@@ -67,6 +67,12 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
   CHECK_CLOSE_ABS(otherExt.max(binR), 18_mm, 1e-6);
   CHECK_CLOSE_ABS(otherExt.min(binPhi), phiMin, 1e-6);
   CHECK_CLOSE_ABS(otherExt.max(binPhi), phiMax, 1e-6);
+
+  // Check containment 
+  Extent unbound(true);
+  BOOST_CHECK(unbound.contains(gExt));
+  BOOST_CHECK(unbound.contains(otherExt));
+
 }
 
 BOOST_AUTO_TEST_CASE(ExtentTestIntersects) {

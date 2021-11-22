@@ -143,6 +143,12 @@ class ObjectIntersection {
       const ObjectIntersection<object_t, representation_t>& oi) const {
     return (intersection > oi.intersection);
   }
+
+  /// Allow swapping the intersection and the alternative
+  void swapSolutions() {
+    std::swap(intersection, alternative);
+  }
+
 };
 
 struct SameSurfaceIntersection {

@@ -12,6 +12,7 @@
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <vector>
+#include <limits>
 
 namespace Acts {
 
@@ -26,11 +27,31 @@ using PortalIntersection = ObjectIntersection<Portal, Surface>;
 /// environment, it provided by the portal at entry into into
 /// detector volume.
 struct DetectorEnvironment {
+  
+  /// The status of the environment
+  enum Status : unsigned int {
+    eUninitialized = 0,
+    eTowardsSurface = 1,
+    eOnSurface = 2,
+    eTowardsPortal = 3,
+    eOnPortal = 4
+  };
+
   /// That is the volume you are processing
   const DetectorVolume* volume = nullptr;
+
   /// That are the candidate surfaces to process
   std::vector<SurfaceIntersection> surfaces = {};
+
   /// That are the portals for leaving that environment
   std::vector<PortalIntersection> portals = {};
+
+  /// Set the current surface
+  const Surface* currentSurface = nullptr;
+
+  /// Indicate the status of this environment
+  Status status = eUninitialized;
+
 };
+
 }  // namespace Acts

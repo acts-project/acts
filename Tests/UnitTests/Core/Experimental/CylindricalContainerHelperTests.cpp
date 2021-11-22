@@ -71,7 +71,6 @@ BOOST_AUTO_TEST_CASE(DetectorVolumesInR) {
   BOOST_CHECK(layer0->portals()[2] == gap->portals()[3]);
   BOOST_CHECK(gap->portals()[2] == layer1->portals()[3]);
 
-
   // -- the container outer portal should be the outer portal
   //    of volume 'layer1
   BOOST_CHECK(volumesInR->portals()[2] == layer1->portals()[2]);

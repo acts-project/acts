@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeAllSurfaces) {
   // Ask for the surfaces that can be intersected
   auto surfaceCandidatesFromBoundary =
       all(gctx, *singleVolume, atBoundary, direction, true,
-          std::numeric_limits<ActsScalar>::max(), false);
+          {0., std::numeric_limits<ActsScalar>::max()}, false);
 
   BOOST_TEST(surfaceCandidatesFromBoundary.size(), 4u);
 
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeAllSurfaces) {
   auto atFirst = surfaceCandidatesFromBoundary[0].intersection.position;
   auto surfaceCandidatesFromFirst =
       all(gctx, *singleVolume, atFirst, direction, true,
-          std::numeric_limits<ActsScalar>::max(), false);
+          {0., std::numeric_limits<ActsScalar>::max()}, false);
 
   BOOST_TEST(surfaceCandidatesFromFirst.size(), 4u);
 
@@ -61,13 +61,14 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeAllSurfaces) {
 
   auto surfaceCandidatesFromMiddle =
       all(gctx, *singleVolume, intermediate, -1 * direction, true,
-          std::numeric_limits<ActsScalar>::max(), false);
+          {0., std::numeric_limits<ActsScalar>::max()}, false);
 
   BOOST_TEST(surfaceCandidatesFromMiddle.size(), 4u);
 
   // Do the same, but avoid punch through
   auto surfaceCandidatesFromMiddleRestricted =
-      all(gctx, *singleVolume, intermediate, -1 * direction, true, 10., false);
+      all(gctx, *singleVolume, intermediate, -1 * direction, true, {0., 10.},
+          false);
 
   BOOST_TEST(surfaceCandidatesFromMiddleRestricted.size(), 0u);
 }

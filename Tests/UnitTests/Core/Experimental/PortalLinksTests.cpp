@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(DetectorVolumePortalCandidates) {
   Vector3 atInner(1., 0., 0.);
   Vector3 direction = Vector3(1., 1., 1.).normalized();
 
-  auto pCandidates = portalCandidates(gctx, *volume.get(), atInner, direction);
+  auto pCandidates = portalCandidates(gctx, volume->portals(), atInner, direction);
 
   BOOST_TEST(pCandidates.size(), 4u);
   // Exit should be through the outer tube
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(DetectorVolumePortalCandidates) {
   Vector3 atEpsilonFromInner(1.5, 0., 0.);
   // Result should be unchanged
   pCandidates =
-      portalCandidates(gctx, *volume.get(), atEpsilonFromInner, direction);
+      portalCandidates(gctx, volume->portals(), atEpsilonFromInner, direction);
 
   BOOST_TEST(pCandidates.size(), 4u);
   // Exit should be through the outer tube
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(DetectorVolumePortalCandidates) {
   BOOST_TEST(pCandidates[3].object, portals[3]);
 
   // Test from inner, but reverse
-  pCandidates = portalCandidates(gctx, *volume.get(), atEpsilonFromInner,
+  pCandidates = portalCandidates(gctx, volume->portals(), atEpsilonFromInner,
                                  -1. * direction);
 
   BOOST_TEST(pCandidates.size(), 4u);

@@ -69,7 +69,8 @@ void Acts::DetectorVolume::createPortals(
     if (not surfaceLinks.empty() and
         orientedSurfaces.size() != surfaceLinks.size()) {
       throw std::invalid_argument(
-          "DetectorVolume: not enough surface link objects provided");
+          "DetectorVolume: wrong number of portal surface link objects "
+          "provided");
     }
 
     // Loop over the oriented surfaces vector and
@@ -151,9 +152,9 @@ void Acts::DetectorVolume::updatePortalPtr(
   }
 
   // Check recursively if any of the containerd volumes needs updating
-  for (auto& rv : m_volumes.internal){
-    for (auto [i, rp] : enumerate(rv->m_portals.internal)){
-      if (rp == m_portals.internal[portal]){
+  for (auto& rv : m_volumes.internal) {
+    for (auto [i, rp] : enumerate(rv->m_portals.internal)) {
+      if (rp == m_portals.internal[portal]) {
         rv->updatePortalPtr(updatedPortal, portal, false);
       }
     }
@@ -168,22 +169,51 @@ void Acts::DetectorVolume::updatePortalPtr(
 
 Acts::DetectorEnvironment Acts::DetectorVolume::environment(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const BoundaryCheck& bCheck,
-    bool provideAll) const {
+    const Vector3& direction, const std::array<ActsScalar, 2>& pathRange,
+    const BoundaryCheck& bCheck, bool provideAll) const {
   DetectorEnvironment nEnvironment{};
-
   // The volume is obviously this
   nEnvironment.volume = this;
   // Evaluate the portals
-  nEnvironment.portals = portalCandidates(gctx, *this, position, direction);
+  nEnvironment.portals =
+      portalCandidates(gctx, portals(), position, direction, pathRange);
+  // Check if we are on a portal, if so let the portal do the job
+  auto portalCandidate = nEnvironment.portals.begin();
+  if (portalCandidate->intersection.status ==
+      Intersection3D::Status::onSurface) {
+    nEnvironment.status = DetectorEnvironment::eOnPortal;
+    nEnvironment.currentSurface = portalCandidate->representation;
+    // Let the portal do it's job
+    return portalCandidate->object->next(gctx, position, direction, bCheck,
+                                         provideAll);
+  } else {
+    // Not this can/will be overwritten by successful surface candidate search
+    nEnvironment.status = DetectorEnvironment::eTowardsPortal;
+  }
 
-  // Maximum path length, from closest portal intersection
+  // At first, the maximum path is the intersection to the next portal, and the
   ActsScalar maximumPath = nEnvironment.portals[0].intersection.pathLength;
 
   // The surface candidates one-time intersected & ordered
+  /// @todo check overstep possibility
   nEnvironment.surfaces = m_surfaceLinks(gctx, *this, position, direction,
-                                         bCheck, maximumPath, provideAll);
+                                         bCheck, {0., maximumPath}, provideAll);
 
+  // Set the environment status
+  if (not nEnvironment.surfaces.empty()) {
+    auto surfaceCandidate = nEnvironment.surfaces.begin();
+    if (surfaceCandidate->intersection.status ==
+        Intersection3D::Status::onSurface) {
+      nEnvironment.status = DetectorEnvironment::eOnSurface;
+      nEnvironment.currentSurface = surfaceCandidate->object;
+      // Delete the surface from the candidates
+      nEnvironment.surfaces.erase(nEnvironment.surfaces.begin(),
+                                  nEnvironment.surfaces.begin()+1);
+    } else {
+      nEnvironment.status = DetectorEnvironment::eTowardsSurface;
+    }
+  }
+  // Environment is set and flagged
   return nEnvironment;
 }
 

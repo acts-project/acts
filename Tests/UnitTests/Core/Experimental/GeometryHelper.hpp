@@ -231,17 +231,31 @@ std::shared_ptr<DetectorVolume> createCentralDetector(
     ActsScalar detectorHalfZ = 500.,
     const std::string& detectorName = "CentralBarrel") {
   // Create the volume bounds
-  ActsScalar beamPipeR = 27.;
+  auto beamPipeSurfaceBounds =
+      std::make_shared<CylinderBounds>(23., detectorHalfZ - 2.);
+
+  auto beamPipeSurface = Surface::makeShared<CylinderSurface>(
+      Transform3::Identity(), beamPipeSurfaceBounds);
+
+  std::vector<std::shared_ptr<Surface>> beamPipeSurfaces = {beamPipeSurface};
+
+  SurfaceLinks volumeSurfaceLinks = AllSurfaces{};
+
+  std::vector<SurfaceLinks> portalSurfaceLinks = { AllSurfaces{},
+                                                   AllSurfaces{}, AllSurfaces{}};
+
+  ActsScalar beamPipeVolumeR = 27.;
   // Beam pipe volume
   auto beamPipeBounds = std::make_unique<CylinderVolumeBounds>(
-      detectorRmin, beamPipeR, detectorHalfZ);
+      detectorRmin, beamPipeVolumeR, detectorHalfZ);
   auto beamPipe = DetectorVolume::makeShared(
-      Transform3::Identity(), std::move(beamPipeBounds),
+      Transform3::Identity(), std::move(beamPipeBounds), std::move(beamPipeSurfaces),
+      std::move(volumeSurfaceLinks), std::move(portalSurfaceLinks),
       detectorName + std::string("BeamPipe"));
   // First layer
   ActsScalar firstLayerOuterR = 38.;
   auto firstLayer =
-      createBarrelVolume(beamPipeR, firstLayerOuterR, detectorHalfZ,
+      createBarrelVolume(beamPipeVolumeR, firstLayerOuterR, detectorHalfZ,
                          detectorName + std::string("Layer0"));
   // First gap
   ActsScalar secondLayerInnerR = 64.;
@@ -254,8 +268,8 @@ std::shared_ptr<DetectorVolume> createCentralDetector(
   ActsScalar secondLayerOuterR = detectorRmax;
   auto secondLayer =
       createBarrelVolume(secondLayerInnerR, secondLayerOuterR, detectorHalfZ,
-                         detectorName + std::string("Layer1"), 8.4, 36.,
-                         0.145, 72., 2., 5., {32, 14});
+                         detectorName + std::string("Layer1"), 8.4, 36., 0.145,
+                         72., 2., 5., {32, 14});
 
   // The volumes in R
   std::vector<std::shared_ptr<DetectorVolume>> barrelVolumes = {
@@ -263,8 +277,7 @@ std::shared_ptr<DetectorVolume> createCentralDetector(
 
   // Return the container in R
   return CylindricalContainerHelper::containerInR(
-      std::move(barrelVolumes),
-      detectorName + std::string("TwoLayers"));
+      std::move(barrelVolumes), detectorName + std::string("TwoLayers"));
 }
 
 /// Helper method to create a central detector
@@ -327,7 +340,8 @@ std::shared_ptr<DetectorVolume> createEndcapDetector(
 
 // Create the detector
 std::shared_ptr<DetectorVolume> createDetector() {
-  auto negativeEndcap = createEndcapDetector(0., 80., 500., -1, "NegativeEndcap");
+  auto negativeEndcap =
+      createEndcapDetector(0., 80., 500., -1, "NegativeEndcap");
   auto centralBarrel = createCentralDetector(0., 80., 500., "Barrel");
   auto positiveEndcap =
       createEndcapDetector(0., 80., 500., 1, "PositiveEndcap");

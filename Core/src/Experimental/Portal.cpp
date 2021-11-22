@@ -26,7 +26,9 @@ Acts::PortalIntersection Acts::Portal::intersect(
   SurfaceIntersection sIntersection =
       m_surface->intersect(gctx, position, direction, false);
   // Return it as a portal intersection
-  return PortalIntersection{sIntersection.intersection, this, m_surface.get()};
+  PortalIntersection pIntersection{sIntersection.intersection, this, m_surface.get()};
+  pIntersection.alternative = sIntersection.alternative;
+  return pIntersection;
 }
 
 Acts::DetectorEnvironment Acts::Portal::next(const GeometryContext& gctx,
@@ -37,7 +39,7 @@ Acts::DetectorEnvironment Acts::Portal::next(const GeometryContext& gctx,
   // Chose which side w.r.t. to the normal the portal jump happens
   ActsScalar normalProjection =
       m_surface->normal(gctx, position).dot(direction);
-  // return along or opposite
+  // Return along or opposite
   return (normalProjection > 0.)
              ? m_alongNormal(gctx, *this, position, direction, bCheck,
                              provideAll)

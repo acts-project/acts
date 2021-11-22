@@ -27,26 +27,36 @@ using Range = std::pair<double, double>;
 ///
 /// This is a nested struct to the GeometryObject representation
 /// which can be retrieved and used for surface parsing and will
-/// give you the maximal extent in 3D space/
+/// give you the maximal extent in 3D space
+
 struct Extent {
   /// Possible maximal value
   static constexpr double maxval = std::numeric_limits<double>::max();
 
-  /// Start value
+  /// Start value, for an initial minimal extent
   static constexpr Range maxrange = {maxval, -maxval};
+  /// Start value, for an initial maximal extent
+  static constexpr Range minrange = {-maxval, maxval};
 
-  // The different ranges
-  std::vector<Range> ranges{(int)binValues, maxrange};
+  /// The different ranges
+  std::vector<Range> ranges{(size_t)binValues, maxrange};
 
-  // Constructor
-  Extent() = default;
+  /// Constructor
+  ///
+  /// @param unbound creates an ubound extend (i.e. infinite size)
+  Extent(bool unbound = false) {
+    if (unbound) {
+      ranges = std::vector<Range>{(size_t)binValues, minrange};
+    }
+  }
 
   /// Check if it intersects
+  ///
   /// @param other The source Extent
   /// @param bVal The binning value for the check (binValues for all)
   /// @param tolerance An additional tolerance for the intersection check
   bool intersects(const Extent& other, BinningValue bVal = binValues,
-                  double tolerance = s_epsilon) {
+                  double tolerance = s_epsilon) const {
     // Helper to check
     auto checkRange = [&](BinningValue bvc) -> bool {
       auto& a = ranges[bvc];
@@ -68,7 +78,33 @@ struct Extent {
     return checkRange(bVal);
   }
 
+  /// Check if another extend is contains
+  ///
+  /// @param other The source Extent
+  /// @param bVal The binning value for the check (binValues for all)
+  bool contains(const Extent& other, BinningValue bVal = binValues) const {
+    // Helper to check
+    auto checkContainment = [&](BinningValue bvc) -> bool {
+      auto& a = ranges[bvc];
+      auto& b = other.ranges[bvc];
+      return (b.first >= a.first and b.second <= a.second);
+    };
+
+    // Check all
+    if (bVal == binValues) {
+      for (int ibv = 0; ibv < (int)binValues; ++ibv) {
+        if (not checkContainment((BinningValue)ibv)) {
+          return false;
+        } 
+      }
+      return true;
+    }
+    // Check specific
+    return checkContainment(bVal);
+  }
+
   /// Extend with another extent
+  ///
   /// @param other is the source Extent
   void extend(const Extent& other) {
     for (std::size_t ir = 0; ir < other.ranges.size(); ++ir) {

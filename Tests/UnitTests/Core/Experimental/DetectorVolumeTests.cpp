@@ -153,8 +153,9 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeEnvironment) {
   Vector3 direction = Vector3(0.75, 0.75, 0.1).normalized();
   BoundaryCheck bCheck = true;
 
-  auto nEnvironment =
-      volumeWithSurfaces->environment(gctx, position, direction, bCheck);
+  auto nEnvironment = volumeWithSurfaces->environment(
+      gctx, position, direction,
+      {0., std::numeric_limits<ActsScalar>::infinity()}, bCheck);
   BOOST_CHECK(nEnvironment.volume == volumeWithSurfaces.get());
   // There should be 4 portals to try
   BOOST_CHECK(nEnvironment.portals.size() == 4u);

@@ -73,6 +73,9 @@ void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,
       // Check for sensitive surfaces
       if (layer->surfaceArray() and writeSensitive) {
         for (auto surface : layer->surfaceArray()->surfaces()) {
+
+          if ( Acts::VectorHelpers::perp(surface->center(Acts::GeometryContext())) > 200 ) continue;
+
           if (surface) {
             cSurfaces.push_back(SurfaceContainer::InputElement{
                 surface->geometryId(), surface->getSharedPtr()});
