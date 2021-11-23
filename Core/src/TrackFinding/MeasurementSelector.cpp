@@ -111,7 +111,7 @@ MeasurementSelector::select(
       candidates.begin(), candidates.end(),
       [](const auto& tsa, const auto& tsb) { return tsa.chi2() < tsb.chi2(); });
 
-  const size_t numMeasurementsCut =
+  const auto numMeasurementsCut =
       VariableCut(candidates.begin()->predicted(), cuts, numMeasurementsCutOff, logger);
 
   auto endIterator = candidates.begin();

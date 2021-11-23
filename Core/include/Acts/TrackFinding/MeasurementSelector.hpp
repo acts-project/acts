@@ -33,7 +33,7 @@ struct MeasurementSelectorCuts {
   /// Maximum local chi2 contribution.
   std::vector<double> chi2CutOff{std::numeric_limits<double>::max()};
   /// Maximum number of associated measurements on a single surface.
-  std::vector<int> numMeasurementsCutOff{1};
+  std::vector<size_t> numMeasurementsCutOff{1};
 };
 
 /// @brief Measurement selection struct selecting those measurements compatible

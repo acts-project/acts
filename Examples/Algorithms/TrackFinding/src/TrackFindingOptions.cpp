@@ -49,7 +49,8 @@ ActsExamples::Options::readTrackFindingConfig(
   // config is a GeometryHierarchyMap with just the global default
   TrackFindingAlgorithm::Config cfg;
   cfg.measurementSelectorCfg = {
-      {Acts::GeometryIdentifier(), {etaBins, chi2Max, nMax}},
+      {Acts::GeometryIdentifier(),
+       {etaBins, chi2Max, {nMax.begin(), nMax.end()}}},
   };
   return cfg;
 }

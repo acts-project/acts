@@ -204,10 +204,11 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
-    auto constructor = [](std::vector<std::pair<GeometryIdentifier,
-                                                std::tuple<std::vector<double>,
-                                                           std::vector<double>,
-                                                           std::vector<int>>>>
+    auto constructor = [](std::vector<
+                           std::pair<GeometryIdentifier,
+                                     std::tuple<std::vector<double>,
+                                                std::vector<double>,
+                                                std::vector<size_t>>>>
                               input) {
       std::vector<std::pair<GeometryIdentifier, MeasurementSelectorCuts>>
           converted;
@@ -222,7 +223,7 @@ void addTrackFinding(Context& ctx) {
     py::class_<MeasurementSelectorCuts>(m, "MeasurementSelectorCuts")
         .def(py::init<>())
         .def(py::init<std::vector<double>, std::vector<double>,
-                      std::vector<int>>())
+                      std::vector<size_t>>())
         .def_readwrite("etaBins", &MeasurementSelectorCuts::etaBins)
         .def_readwrite("chi2CutOff", &MeasurementSelectorCuts::chi2CutOff)
         .def_readwrite("numMeasurementsCutOff",
