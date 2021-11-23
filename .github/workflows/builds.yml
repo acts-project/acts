@@ -14,12 +14,14 @@ env:
 jobs:
   linux:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v13
+    container: ghcr.io/acts-project/${{ matrix.image }}:v14
     strategy:
       matrix:
         image:
-          - centos7-lcg97apython3-gcc9
-          - centos7-lcg98python3-gcc10
+          - centos7-lcg100-gcc10
+          - centos7-lcg101-gcc11
+          - centos8-lcg100-gcc10
+          - centos8-lcg101-gcc11
           - ubuntu2004
     env:
       SETUP: true
