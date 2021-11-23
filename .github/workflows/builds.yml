@@ -39,12 +39,16 @@ jobs:
         if: contains(matrix.image, 'lcg')
         run: echo "SETUP=${SETUP_LCG}" >> $GITHUB_ENV
       - name: Configure
+        # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
+        # dd4hep CMake configuration that gets triggered on recent CMake
+        # versions 
         run: >
           ${SETUP} &&
           cmake -B build -S .
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
+          -DCMAKE_CXX_STANDARD=17
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_BUILD_EVERYTHING=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
