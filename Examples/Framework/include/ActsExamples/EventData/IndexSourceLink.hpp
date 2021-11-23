@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/SourceLink.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 
@@ -24,32 +25,29 @@ namespace ActsExamples {
 /// Using an index instead of e.g. a pointer, means source link and
 /// measurement are decoupled and the measurement represenation can be
 /// easily changed without having to also change the source link.
-class IndexSourceLink final {
+class IndexSourceLink final : public Acts::SourceLink {
  public:
   /// Construct from geometry identifier and index.
   constexpr IndexSourceLink(Acts::GeometryIdentifier gid, Index idx)
-      : m_geometryId(gid), m_index(idx) {}
+      : SourceLink(gid), m_index(idx) {}
 
   // Construct an invalid source link. Must be default constructible to
   /// satisfy SourceLinkConcept.
-  IndexSourceLink() = default;
+  IndexSourceLink() : SourceLink{Acts::GeometryIdentifier{}} {}
   IndexSourceLink(const IndexSourceLink&) = default;
   IndexSourceLink(IndexSourceLink&&) = default;
   IndexSourceLink& operator=(const IndexSourceLink&) = default;
   IndexSourceLink& operator=(IndexSourceLink&&) = default;
 
-  /// Access the geometry identifier.
-  constexpr Acts::GeometryIdentifier geometryId() const { return m_geometryId; }
   /// Access the index.
   constexpr Index index() const { return m_index; }
 
  private:
-  Acts::GeometryIdentifier m_geometryId;
   Index m_index;
 
   friend constexpr bool operator==(const IndexSourceLink& lhs,
                                    const IndexSourceLink& rhs) {
-    return (lhs.m_geometryId == rhs.m_geometryId) and
+    return (lhs.geometryId() == rhs.geometryId()) and
            (lhs.m_index == rhs.m_index);
   }
   friend constexpr bool operator!=(const IndexSourceLink& lhs,
@@ -62,11 +60,13 @@ class IndexSourceLink final {
 ///
 /// Since the source links provide a `.geometryId()` accessor, they can be
 /// stored in an ordered geometry container.
-using IndexSourceLinkContainer = GeometryIdMultiset<IndexSourceLink>;
+using IndexSourceLinkContainer =
+    GeometryIdMultiset<std::reference_wrapper<const IndexSourceLink>>;
 /// Accessor for the above source link container
 ///
 /// It wraps up a few lookup methods to be used in the Combinatorial Kalman
 /// Filter
-using IndexSourceLinkAccessor = GeometryIdMultisetAccessor<IndexSourceLink>;
+using IndexSourceLinkAccessor =
+    GeometryIdMultisetAccessor<std::reference_wrapper<const IndexSourceLink>>;
 
 }  // namespace ActsExamples

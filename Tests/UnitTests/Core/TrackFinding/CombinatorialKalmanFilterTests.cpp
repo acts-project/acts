@@ -105,15 +105,15 @@ struct Fixture {
   using KalmanUpdater = Acts::GainMatrixUpdater;
   using KalmanSmoother = Acts::GainMatrixSmoother;
   using CombinatorialKalmanFilter =
-      Acts::CombinatorialKalmanFilter<ConstantFieldPropagator, KalmanUpdater,
-                                      KalmanSmoother>;
+      Acts::CombinatorialKalmanFilter<ConstantFieldPropagator>;
   using TestSourceLinkContainer =
       std::unordered_multimap<Acts::GeometryIdentifier, TestSourceLink>;
   using TestSourceLinkAccessor = TestContainerAccessor<TestSourceLinkContainer>;
   using CombinatorialKalmanFilterOptions =
-      Acts::CombinatorialKalmanFilterOptions<TestSourceLinkAccessor,
-                                             TestSourceLinkCalibrator,
-                                             Acts::MeasurementSelector>;
+      Acts::CombinatorialKalmanFilterOptions<TestSourceLinkAccessor>;
+
+  KalmanUpdater kfUpdater;
+  KalmanSmoother kfSmoother;
 
   Acts::GeometryContext geoCtx;
   Acts::MagneticFieldContext magCtx;
@@ -135,6 +135,18 @@ struct Fixture {
       // global default: no chi2 cut, only one measurement per surface
       {Acts::GeometryIdentifier(), {std::numeric_limits<double>::max(), 1u}},
   };
+
+  Acts::MeasurementSelector measSel{measurementSelectorCfg};
+
+  Acts::CombinatorialKalmanFilterExtensions getExtensions() const {
+    Acts::CombinatorialKalmanFilterExtensions extensions;
+    extensions.calibrator.connect<&testSourceLinkCalibrator>();
+    extensions.updater.connect<&KalmanUpdater::operator()>(&kfUpdater);
+    extensions.smoother.connect<&KalmanSmoother::operator()>(&kfSmoother);
+    extensions.measurementSelector.connect<&Acts::MeasurementSelector::select>(
+        &measSel);
+    return extensions;
+  }
 
   std::unique_ptr<const Acts::Logger> logger;
 
@@ -212,9 +224,7 @@ struct Fixture {
 
   CombinatorialKalmanFilterOptions makeCkfOptions() const {
     return CombinatorialKalmanFilterOptions(
-        geoCtx, magCtx, calCtx, TestSourceLinkAccessor(),
-        TestSourceLinkCalibrator(),
-        Acts::MeasurementSelector(measurementSelectorCfg),
+        geoCtx, magCtx, calCtx, TestSourceLinkAccessor(), getExtensions(),
         Acts::LoggerWrapper{*logger}, Acts::PropagatorPlainOptions());
   }
 };
@@ -252,6 +262,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
     BOOST_REQUIRE(res.ok());
 
     auto val = *res;
+    BOOST_CHECK_EQUAL(val.fittedStates.size(), f.detector.numMeasurements);
+
     // with the given measurement selection cuts, only one trajectory for the
     // given input parameters should be found.
     BOOST_CHECK_EQUAL(val.lastMeasurementIndices.size(), 1u);
@@ -262,8 +274,11 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
     val.fittedStates.visitBackwards(
         val.lastMeasurementIndices.front(), [&](const auto& trackState) {
           numHits += 1u;
-          nummismatchedHits += (trackId != trackState.uncalibrated().sourceId);
+          const auto& sl =
+              static_cast<const TestSourceLink&>(trackState.uncalibrated());
+          nummismatchedHits += (trackId != sl.sourceId);
         });
+
     BOOST_CHECK_EQUAL(numHits, f.detector.numMeasurements);
     BOOST_CHECK_EQUAL(nummismatchedHits, 0u);
   }
@@ -297,6 +312,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
     BOOST_REQUIRE(res.ok());
 
     auto val = *res;
+    BOOST_CHECK_EQUAL(val.fittedStates.size(), f.detector.numMeasurements);
     // with the given measurement selection cuts, only one trajectory for the
     // given input parameters should be found.
     BOOST_CHECK_EQUAL(val.lastMeasurementIndices.size(), 1u);
@@ -307,7 +323,9 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
     val.fittedStates.visitBackwards(
         val.lastMeasurementIndices.front(), [&](const auto& trackState) {
           numHits += 1u;
-          nummismatchedHits += (trackId != trackState.uncalibrated().sourceId);
+          nummismatchedHits += (trackId != static_cast<const TestSourceLink&>(
+                                               trackState.uncalibrated())
+                                               .sourceId);
         });
     BOOST_CHECK_EQUAL(numHits, f.detector.numMeasurements);
     BOOST_CHECK_EQUAL(nummismatchedHits, 0u);

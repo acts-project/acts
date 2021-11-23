@@ -18,9 +18,8 @@
 
 namespace Acts {
 
-class PlanarModuleCluster
-    : public Measurement<DigitizationSourceLink, BoundIndices, 3> {
-  using Base = Measurement<DigitizationSourceLink, BoundIndices, 3>;
+class PlanarModuleCluster : public Measurement<BoundIndices, 3> {
+  using Base = Measurement<BoundIndices, 3>;
 
   static constexpr std::array<BoundIndices, 3> kIndices = {
       eBoundLoc0, eBoundLoc1, eBoundTime};
@@ -37,12 +36,12 @@ class PlanarModuleCluster
   /// @param [in] dCells is the vector of digitization cells
   /// @param [in] dModule an optional pointer to a digitization configuration
   PlanarModuleCluster(std::shared_ptr<const Surface> surface,
-                      DigitizationSourceLink sourceLink,
+                      const DigitizationSourceLink& sourceLink,
                       Base::CovarianceMatrix cov, double loc0, double loc1,
                       double t, std::vector<DigitizationCell> dCells,
                       const DigitizationModule* dModule = nullptr)
-      : Base(std::move(sourceLink), kIndices,
-             Base::ParametersVector(loc0, loc1, t), std::move(cov)),
+      : Base(sourceLink, kIndices, Base::ParametersVector(loc0, loc1, t),
+             std::move(cov)),
         m_surface(std::move(surface)),
         m_digitizationCells(std::move(dCells)),
         m_digitizationModule(dModule) {

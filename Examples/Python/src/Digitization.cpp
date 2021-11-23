@@ -89,6 +89,7 @@ void addDigitization(Context& ctx) {
     ACTS_PYTHON_MEMBER(inputSimHits);
     ACTS_PYTHON_MEMBER(outputClusters);
     ACTS_PYTHON_MEMBER(outputSourceLinks);
+    ACTS_PYTHON_MEMBER(outputDigiSourceLinks);
     ACTS_PYTHON_MEMBER(outputMeasurements);
     ACTS_PYTHON_MEMBER(outputMeasurementParticlesMap);
     ACTS_PYTHON_MEMBER(outputMeasurementSimHitsMap);
