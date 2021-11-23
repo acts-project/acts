@@ -50,8 +50,7 @@ namespace EventDataView3DTest {
 
 using Covariance = BoundSymMatrix;
 template <BoundIndices... params>
-using MeasurementType =
-    Measurement<Test::TestSourceLink, BoundIndices, params...>;
+using MeasurementType = Measurement<BoundIndices, params...>;
 
 std::normal_distribution<double> gauss(0., 1.);
 std::default_random_engine generator(42);
@@ -247,22 +246,28 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
 
   const Surface* rSurface = &rStart.referenceSurface();
 
-  using Updater = GainMatrixUpdater;
-  using Smoother = GainMatrixSmoother;
-  using KalmanFitter = KalmanFitter<RecoPropagator, Updater, Smoother>;
+  using KalmanFitter = KalmanFitter<RecoPropagator>;
 
   KalmanFitter kFitter(rPropagator);
 
   auto logger = getDefaultLogger("KalmanFilter", Logging::WARNING);
-  KalmanFitterOptions<Test::TestSourceLinkCalibrator, VoidOutlierFinder,
-                      Acts::VoidReverseFilteringLogic>
-      kfOptions(tgContext, mfContext, calContext,
-                Test::TestSourceLinkCalibrator(), VoidOutlierFinder(),
-                VoidReverseFilteringLogic(), LoggerWrapper{*logger},
-                PropagatorPlainOptions(), rSurface);
+
+  Acts::GainMatrixUpdater kfUpdater;
+  Acts::GainMatrixSmoother kfSmoother;
+
+  KalmanFitterExtensions extensions;
+  extensions.calibrator.connect<&Test::testSourceLinkCalibrator>();
+  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(&kfUpdater);
+  extensions.smoother.connect<&Acts::GainMatrixSmoother::operator()>(
+      &kfSmoother);
+
+  KalmanFitterOptions kfOptions(tgContext, mfContext, calContext, extensions,
+                                LoggerWrapper{*logger},
+                                PropagatorPlainOptions(), rSurface);
 
   // Fit the track
-  auto fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
+  auto fitRes =
+      kFitter.fit(sourcelinks.begin(), sourcelinks.end(), rStart, kfOptions);
   if (not fitRes.ok()) {
     std::cout << "Fit failed" << std::endl;
     return ss.str();

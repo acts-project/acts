@@ -404,6 +404,28 @@ class Grid final {
     return grid_helper::neighborHoodIndices(localBins, size, m_axes);
   }
 
+  /// @brief get global bin   indices for neighborhood
+  ///
+  /// @param [in] localBins   center bin defined by local bin indices along
+  ///                         each axis. If size is negative, center bin
+  ///                         is not returned.
+  /// @param [in] sizePerAxis size of neighborhood for each axis, how many
+  ///                         adjacent bins along each axis are considered
+  /// @return set of global bin indices for all bins in neighborhood
+  ///
+  /// @note Over-/underflow bins are included in the neighborhood.
+  /// @note The @c size parameter sets the range by how many units each local
+  ///       bin index is allowed to be varied. All local bin indices are
+  ///       varied independently, that is diagonal neighbors are included.
+  ///       Ignoring the truncation of the neighborhood size reaching beyond
+  ///       over-/underflow bins, the neighborhood is of size \f$2 \times
+  ///       \text{size}+1\f$ along each dimension.
+  detail::GlobalNeighborHoodIndices<DIM> neighborHoodIndices(
+      const index_t& localBins,
+      std::array<std::pair<int, int>, DIM>& sizePerAxis) const {
+    return grid_helper::neighborHoodIndices(localBins, sizePerAxis, m_axes);
+  }
+
   /// @brief total number of bins
   ///
   /// @return total number of bins in the grid

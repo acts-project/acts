@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/Digitization/DigitizationModule.hpp"
+#include "Acts/Plugins/Digitization/DigitizationSourceLink.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Plugins/Digitization/Segmentation.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
@@ -74,7 +75,7 @@ ActsExamples::RootPlanarClusterWriter::RootPlanarClusterWriter(
   m_outputTree->Branch("truth_g_t", &m_t_gt);
   m_outputTree->Branch("truth_l_x", &m_t_lx);
   m_outputTree->Branch("truth_l_y", &m_t_ly);
-  m_outputTree->Branch("truth_barcode", &m_t_barcode, "truth_barcode/l");
+  m_outputTree->Branch("truth_barcode", &m_t_barcode);
 }
 
 ActsExamples::RootPlanarClusterWriter::~RootPlanarClusterWriter() {}
@@ -158,7 +159,9 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
       }
       // write hit-particle truth association
       // each hit can have multiple particles, e.g. in a dense environment
-      for (auto idx : cluster.sourceLink().indices()) {
+      const auto& sl = static_cast<const Acts::DigitizationSourceLink&>(
+          cluster.sourceLink());
+      for (auto idx : sl.indices()) {
         auto it = simHits.nth(idx);
         if (it == simHits.end()) {
           ACTS_FATAL("Simulation hit with index " << idx << " does not exist");
