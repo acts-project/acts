@@ -37,7 +37,7 @@ sets up the particle propagation and runs a few events.
        level=acts.logging.INFO,
        randomNumberSvc=rnd,
        ntests=1000,
-       sterileLogger=True,
+       sterileLogger=False,
        propagationStepCollection="propagation-steps",
    )
 
