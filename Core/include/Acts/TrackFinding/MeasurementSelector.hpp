@@ -78,7 +78,7 @@ class MeasurementSelector {
  private:
   template <typename cut_value_t>
   static cut_value_t VariableCut(
-      const Acts::MultiTrajectory::TrackStateProxy::Parameters& predictedParams,
+      const Acts::MultiTrajectory::TrackStateProxy& trackState,
       const Acts::MeasurementSelector::Config::Iterator selector,
       const std::vector<cut_value_t>& cuts, LoggerWrapper logger);
 

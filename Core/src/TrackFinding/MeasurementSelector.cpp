@@ -39,13 +39,9 @@ MeasurementSelector::select(
     return CombinatorialKalmanFilterError::MeasurementSelectionFailed;
   }
 
-  const auto& chi2CutOff = cuts->chi2CutOff;
-  const auto& numMeasurementsCutOff = cuts->numMeasurementsCutOff;
-
   double minChi2 = std::numeric_limits<double>::max();
   size_t minIndex = 0;
   size_t index = 0;
-  size_t nInitialCandidates = 0;
   // Loop over all measurements to select the compatible measurements
   for (auto& trackState : candidates) {
     // Take the parameter covariance
@@ -78,15 +74,7 @@ MeasurementSelector::select(
                       .inverse() *
                   res)
                      .eval()(0, 0);
-          const auto chi2Cut =
-              VariableCut(predicted, cuts, chi2CutOff, logger);
-          ACTS_VERBOSE("Chi2: " << chi2 << ", max: " << chi2Cut);
 
-          // use track state chi2 storage for this
-          if (chi2 < chi2Cut) {
-            // // // measChi2.at(nInitialCandidates) = {index, chi2};
-            nInitialCandidates++;
-          }
           // Search for the measurement with the min chi2
           if (chi2 < minChi2) {
             minChi2 = chi2;
@@ -97,32 +85,43 @@ MeasurementSelector::select(
     index++;
   }
 
-  // If there is no selected measurement, return the measurement with the best
-  // chi2 and tag it as an outlier
-  if (nInitialCandidates == 0) {
-    ACTS_VERBOSE("No measurement candidate. Return an outlier measurement.");
-    isOutlier = true;
-    auto outlierIt = std::next(candidates.begin(), minIndex);
-    // return single item range, no sorting necessary
-    return Result::success(std::pair{outlierIt, std::next(outlierIt, 1)});
+  const auto& chi2CutOff = cuts->chi2CutOff;
+
+  {
+    // If there is no selected measurement, return the measurement with the best
+    // chi2 and tag it as an outlier
+    const auto bestIt = std::next(candidates.begin(), minIndex);
+    const auto chi2 = bestIt->chi2();
+    const auto chi2Cut = VariableCut(*bestIt, cuts, chi2CutOff, logger);
+    ACTS_VERBOSE("Chi2: " << chi2 << ", max: " << chi2Cut);
+    if (chi2 >= chi2Cut) {
+      ACTS_VERBOSE("No measurement candidate. Return an outlier measurement.");
+      isOutlier = true;
+      // return single item range, no sorting necessary
+      return Result::success(std::pair{bestIt, std::next(bestIt, 1)});
+    }
   }
 
   std::sort(
       candidates.begin(), candidates.end(),
       [](const auto& tsa, const auto& tsb) { return tsa.chi2() < tsb.chi2(); });
 
-  const auto numMeasurementsCut =
-      VariableCut(candidates.begin()->predicted(), cuts, numMeasurementsCutOff, logger);
+  // use |eta| of best measurement to select numMeasurementsCut
+  const auto numMeasurementsCut = VariableCut(
+      *candidates.begin(), cuts, cuts->numMeasurementsCutOff, logger);
 
   auto endIterator = candidates.begin();
   auto maxIterator = candidates.end();
-  if (candidates.size() > numMeasurementsCut) {
+  if (candidates.size() > numMeasurementsCut && numMeasurementsCut > 0) {
     maxIterator = std::next(candidates.begin(), numMeasurementsCut);
   }
 
+  ++endIterator;  // best measurement already confirmed good
   for (; endIterator != maxIterator; ++endIterator) {
-    const auto chi2Cut = VariableCut(endIterator->predicted(), cuts, chi2CutOff, logger);
-    if (endIterator->chi2() >= chi2Cut) {
+    const auto chi2 = endIterator->chi2();
+    const auto chi2Cut = VariableCut(*endIterator, cuts, chi2CutOff, logger);
+    ACTS_VERBOSE("Chi2: " << chi2 << ", max: " << chi2Cut);
+    if (chi2 >= chi2Cut) {
       break;  // endIterator now points at the first track state with chi2
               // larger than our cutoff => defines the end of our returned
               // range
@@ -137,15 +136,15 @@ MeasurementSelector::select(
 }
 
 template <typename cut_value_t>
-static cut_value_t VariableCut(
-    const Acts::MultiTrajectory::TrackStateProxy::Parameters& predictedParams,
+cut_value_t MeasurementSelector::VariableCut(
+    const Acts::MultiTrajectory::TrackStateProxy& trackState,
     const Acts::MeasurementSelector::Config::Iterator selector,
     const std::vector<cut_value_t>& cuts, LoggerWrapper logger) {
   const auto& etaBins = selector->etaBins;
   if (etaBins.empty()) {
     return cuts[0];  // shortcut if no etaBins
   }
-  const auto eta = Acts::VectorHelpers::eta(predictedParams.unitDirection());
+  const auto eta = Acts::VectorHelpers::eta(trackState.predicted());
   const auto abseta = std::abs(eta);
   size_t bin = 0;
   for (auto etaBin : etaBins) {
