@@ -286,7 +286,6 @@ int main(int argc, char** argv) {
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cuda;
   groupIt = spGroup.begin();
-	Acts::Extent rRangeSPExtent;
 
   for (int i_s = 0; i_s < skip; i_s++)
     ++groupIt;

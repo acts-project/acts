@@ -227,7 +227,6 @@ auto main(int argc, char** argv) -> int {
 
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_sycl;
-	Acts::Extent rRangeSPExtent;
 
   for (auto groupIt = spGroup.begin(); !(groupIt == spGroup.end()); ++groupIt) {
     seedVector_sycl.push_back(syclSeedfinder.createSeedsForGroup(

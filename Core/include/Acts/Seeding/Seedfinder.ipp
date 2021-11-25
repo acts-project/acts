@@ -69,11 +69,6 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
     }
 
-    /// check if spM is on the first or last disk
-    if (zM > m_config.zMax || zM < m_config.zMin) {
-      continue;
-    }
-
     size_t nTopSeedConf = 0;
     if (m_config.seedConfirmation == true) {
       // check if middle SP is in the central or forward region
@@ -239,8 +234,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       /// this is an approximate worst case multiple scattering term assuming
       /// the lowest  pt we allow and the estimated theta angle
       float sigmaSquaredScatteringMinPt =
-          iSinTheta2 * m_config.kConstant /
-          (std::abs(m_config.minPt) * std::abs(m_config.minPt));
+          iSinTheta2 * m_config.kConstant / (std::pow(m_config.minPt, 2));
 
       // clear all vectors used in each inner for loop
       state.topSpVec.clear();
