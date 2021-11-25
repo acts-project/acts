@@ -33,7 +33,28 @@ struct SeedfinderConfig {
   float deltaRMin = 5 * Acts::UnitConstants::mm;
   // maximum distance in r between two measurements within one seed
   float deltaRMax = 270 * Acts::UnitConstants::mm;
+	// minimum distance in r between middle and top SP
+	float deltaRMinTopSP = 5 * Acts::UnitConstants::mm;
+	// maximum distance in r between middle and top SP
+	float deltaRMaxTopSP = 270 * Acts::UnitConstants::mm;
+	// minimum distance in r between middle and bottom SP
+	float deltaRMinBottomSP = 5 * Acts::UnitConstants::mm;
+	// maximum distance in r between middle and bottom SP
+	float deltaRMaxBottomSP = 270 * Acts::UnitConstants::mm;
+	
+	// radial range for middle SP
+	std::vector < std::vector<float> > rRangeMiddleSP;
+	bool useVariableMiddleSPRange = true;
+	float deltaRMiddleSPRange = 10.;
+	float rMinMiddleSP;
+	float rMaxMiddleSP;
+	
+	// seed confirmation
+	bool seedConfirmation = false;
 
+	// non equidistant binning in z
+	std::vector<float> zBinEdges;
+	
   // FIXME: this is not used yet
   //        float upperPtResolutionPerSeed = 20* Acts::GeV;
 
@@ -97,6 +118,9 @@ struct SeedfinderConfig {
   float pTPerHelixRadius = 0;
   float minHelixDiameter2 = 0;
   float pT2perRadius = 0;
+	
+	// constant factor used to evaluate multiple scattering contribution
+	float kConstant = 134.*0.05*9.;
 
   // only for Cuda plugin
   int maxBlockSize = 1024;

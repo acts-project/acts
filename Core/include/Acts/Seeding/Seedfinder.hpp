@@ -12,6 +12,7 @@
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Geometry/Extent.hpp"
 
 #include <array>
 #include <list>
@@ -23,6 +24,16 @@
 #include <vector>
 
 namespace Acts {
+
+struct SeedConfirmationRange {
+	float zMinSeedConf;
+	float zMaxSeedConf;
+	float rMaxSeedConf;
+	size_t nTopSeedConf;
+	size_t nTopForLargeR;
+	size_t nTopForSmallR;
+};
+
 template <typename external_spacepoint_t, typename platform_t = void*>
 class Seedfinder {
   ///////////////////////////////////////////////////////////////////
@@ -41,11 +52,18 @@ class Seedfinder {
     // ...for middle-top
     std::vector<LinCircle> linCircleTop;
 
+		// parameters for central seed confirmation
+		SeedConfirmationRange centralSeedConfirmationRange = {.zMaxSeedConf=250.,.zMinSeedConf=-250.,.rMaxSeedConf=140.,.nTopForLargeR=1,.nTopForSmallR=2};
+		// parameters for forward seed confirmation
+		SeedConfirmationRange forwardSeedConfirmationRange = {.zMaxSeedConf=3000.,.zMinSeedConf=-3000.,.rMaxSeedConf=140.,.nTopForLargeR=1,.nTopForSmallR=2};
+		
     // create vectors here to avoid reallocation in each loop
     std::vector<const InternalSpacePoint<external_spacepoint_t>*> topSpVec;
     std::vector<float> curvatures;
     std::vector<float> impactParameters;
-
+		std::vector<float> etaVec;
+		std::vector<float> ptVec;
+		
     std::vector<std::pair<
         float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
         seedsPerSpM;
@@ -76,7 +94,7 @@ class Seedfinder {
   void createSeedsForGroup(
       State& state,
       std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
-      sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
+      sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs, Extent rRangeSPExtent) const;
 
  private:
   Acts::SeedfinderConfig<external_spacepoint_t> m_config;
