@@ -14,7 +14,7 @@ env:
 jobs:
   linux:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v14
+    container: ghcr.io/acts-project/${{ matrix.image }}:v15
     strategy:
       matrix:
         image:
