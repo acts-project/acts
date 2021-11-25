@@ -95,6 +95,9 @@ void transformCoordinates(
     linCircleVec.push_back(l);
   }
   // sort the SP in order of cotTheta
-	std::sort(linCircleVec.begin(), linCircleVec.end(), [] (const LinCircle& a, const LinCircle& b) -> bool { return (a.cotTheta < b.cotTheta); } );
+  std::sort(linCircleVec.begin(), linCircleVec.end(),
+            [](const LinCircle& a, const LinCircle& b) -> bool {
+              return (a.cotTheta < b.cotTheta);
+            });
 }
 }  // namespace Acts
