@@ -74,18 +74,19 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       continue;
     }
 
-    SeedConfirmationRange seedConfRange;
+    size_t nTopSeedConf = 0;
     if (m_config.seedConfirmation == true) {
       // check if middle SP is in the central or forward region
-      seedConfRange = (zM > state.centralSeedConfirmationRange.zMaxSeedConf ||
-                       zM < state.centralSeedConfirmationRange.zMinSeedConf)
-                          ? state.forwardSeedConfirmationRange
-                          : state.centralSeedConfirmationRange;
+      SeedConfirmationRange seedConfRange =
+          (zM > state.centralSeedConfirmationRange.zMaxSeedConf ||
+           zM < state.centralSeedConfirmationRange.zMinSeedConf)
+              ? state.forwardSeedConfirmationRange
+              : state.centralSeedConfirmationRange;
       // set the minimum number of top SP depending on whether the middle SP is
       // in the central or forward region
-      seedConfRange.nTopSeedConf = rM > seedConfRange.rMaxSeedConf
-                                       ? seedConfRange.nTopForLargeR
-                                       : seedConfRange.nTopForSmallR;
+      nTopSeedConf = rM > seedConfRange.rMaxSeedConf
+                         ? seedConfRange.nTopForLargeR
+                         : seedConfRange.nTopForSmallR;
     }
 
     state.compatTopSP.clear();
@@ -139,7 +140,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     }
     // apply cut on the number of top SP if seedConfirmation is true
     if (m_config.seedConfirmation == true &&
-        state.compatTopSP.size() < seedConfRange.nTopSeedConf) {
+        state.compatTopSP.size() < nTopSeedConf) {
       continue;
     }
 
@@ -209,6 +210,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     size_t numTopSP = state.compatTopSP.size();
 
     size_t t0 = 0;
+
     for (size_t b = 0; b < numBotSP; b++) {
       auto lb = state.linCircleBottom[b];
       float Zob = lb.Zo;
@@ -244,7 +246,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       state.topSpVec.clear();
       state.curvatures.clear();
       state.impactParameters.clear();
-      for (size_t t = 0; t < numTopSP; t++) {
+      for (size_t t = t0; t < numTopSP; t++) {
         auto lt = state.linCircleTop[t];
 
         // add errors of spB-spM and spM-spT pairs and add the correlation term
