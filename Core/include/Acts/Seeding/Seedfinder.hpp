@@ -53,18 +53,23 @@ class Seedfinder {
     std::vector<LinCircle> linCircleTop;
 
     // parameters for central seed confirmation
-    SeedConfirmationRange centralSeedConfirmationRange = {.zMaxSeedConf = 250.,
-                                                          .zMinSeedConf = -250.,
-                                                          .rMaxSeedConf = 140.,
-                                                          .nTopForLargeR = 1,
-                                                          .nTopForSmallR = 2};
+    SeedConfirmationRange centralSeedConfirmationRange = {
+        250.,   // zMaxSeedConf
+        -250.,  // zMinSeedConf
+        140.,   // rMaxSeedConf
+        0,      // nTopSeedConf
+        1,      // nTopForLargeR
+        2,      // nTopForSmallR
+    };
     // parameters for forward seed confirmation
     SeedConfirmationRange forwardSeedConfirmationRange = {
-        .zMaxSeedConf = 3000.,
-        .zMinSeedConf = -3000.,
-        .rMaxSeedConf = 140.,
-        .nTopForLargeR = 1,
-        .nTopForSmallR = 2};
+        3000.,   // zMaxSeedConf
+        -3000.,  // zMinSeedConf
+        140.,    // rMaxSeedConf
+        0,       // nTopSeedConf
+        1,       // nTopForLargeR
+        2,       // nTopForSmallR
+    };
 
     // create vectors here to avoid reallocation in each loop
     std::vector<const InternalSpacePoint<external_spacepoint_t>*> topSpVec;
