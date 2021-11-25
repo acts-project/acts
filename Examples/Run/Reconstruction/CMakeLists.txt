@@ -82,17 +82,6 @@ target_link_libraries(
     ActsExamplesDetectorTGeo
 )
 
-# Seeding for ITk detector
-add_executable(
-  ActsExampleSeedingITk
-  ITkSeedingExample.cpp)
-target_link_libraries(
-  ActsExampleSeedingITk
-  PRIVATE
-    ActsExamplesRecTracksCommon
-    ActsExamplesDetectorGeneric
-)
-
 # =================================================
 # Convert measurements to spacepoints and write sp to csv
 add_executable(
@@ -140,7 +129,6 @@ install(
     ActsExampleCKFTracksTelescope
     ActsExampleSeedingGeneric
     ActsExampleSeedingTGeo
-    ActsExampleSeedingITk
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_subdirectory_if(DD4hep ACTS_BUILD_EXAMPLES_DD4HEP)

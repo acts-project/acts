@@ -100,10 +100,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   for (const auto& isp : m_cfg.inputSpacePoints) {
     nSpacePoints += ctx.eventStore.get<SimSpacePointContainer>(isp).size();
   }
-	
-	// extent used to store r range for middle spacepoint
-	Acts::Extent rRangeSPExtent;
-	
+
+  // extent used to store r range for middle spacepoint
+  Acts::Extent rRangeSPExtent;
+
   std::vector<const SimSpacePoint*> spacePointPtrs;
   spacePointPtrs.reserve(nSpacePoints);
   for (const auto& isp : m_cfg.inputSpacePoints) {
@@ -112,8 +112,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       // since the event store owns the space points, their pointers should be
       // stable and we do not need to create local copies.
       spacePointPtrs.push_back(&spacePoint);
-			// store x,y,z values in extent
-			rRangeSPExtent.check({spacePoint.x(), spacePoint.y(), spacePoint.z()});
+      // store x,y,z values in extent
+      rRangeSPExtent.check({spacePoint.x(), spacePoint.y(), spacePoint.z()});
     }
   }
 
