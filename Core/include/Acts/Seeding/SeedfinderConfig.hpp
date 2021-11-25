@@ -44,7 +44,7 @@ struct SeedfinderConfig {
 
   // radial range for middle SP
   std::vector<std::vector<float>> rRangeMiddleSP;
-  bool useVariableMiddleSPRange = true;
+  bool useVariableMiddleSPRange = false;
   float deltaRMiddleSPRange = 10.;
   float rMinMiddleSP;
   float rMaxMiddleSP;
