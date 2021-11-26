@@ -11,6 +11,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
 
 #include <algorithm>
 #include <limits>
@@ -154,15 +155,24 @@ predicate_result matrixCompare(const Eigen::DenseBase<Derived1>& val,
   return true;
 }
 
+template <typename T>
+using has_begin_t = decltype(std::declval<T>().cbegin());
+template <typename T>
+using has_end_t = decltype(std::declval<T>().cend());
+template <typename T>
+using has_eval_t = decltype(std::declval<T>().eval());
+
 // STL container frontend
 //
 // FIXME: The algorithm only supports ordered containers, so the API should
 //        only accept them. Does someone know a clean way to do that in C++?
 //
-template <
-    typename Container,
-    typename CbeginDefined = decltype(*std::cbegin(std::declval<Container>())),
-    typename CendDefined = decltype(*std::cend(std::declval<Container>()))>
+template <typename Container,
+          typename = std::enable_if_t<
+              !Acts::Concepts::exists<has_eval_t, Container> &&
+                  Acts::Concepts::exists<has_begin_t, Container> &&
+                  Acts::Concepts::exists<has_end_t, Container>,
+              int>>
 predicate_result compare(const Container& val, const Container& ref,
                          ScalarComparison&& compareImpl) {
   // Make sure that the two input containers have the same number of items
