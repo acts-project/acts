@@ -144,7 +144,7 @@ cut_value_t MeasurementSelector::VariableCut(
   if (etaBins.empty()) {
     return cuts[0];  // shortcut if no etaBins
   }
-  const auto eta = Acts::VectorHelpers::eta(trackState.predicted());
+  const auto eta = std::atanh(std::cos(trackState.predicted()[eBoundTheta]));
   const auto abseta = std::abs(eta);
   size_t bin = 0;
   for (auto etaBin : etaBins) {
