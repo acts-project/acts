@@ -5,7 +5,7 @@ The ACTS examples come with a certain variety of ROOT based validation and perfo
 whose output can be use to understand various aspects of the reconstruction in more detail.
 
 The building of these applications can be switched on by setting ``ACTS_BUILD_ANALYSIS_APPS=On``,
-which requires (on top of the Core dependencies, also ROOT for the analysis code).
+which requires (on top of the Core dependencies) ROOT for the analysis code.
 
 These analysis applications are steered via BOOST program options, hence a quick ``<APP> -h`` will 
 quickly show the relevant options, they can be executed in silent mode, i.e. without opening
