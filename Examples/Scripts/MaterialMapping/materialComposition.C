@@ -19,11 +19,10 @@
 #include <TTree.h>
 
 struct MaterialHistograms {
-
   TProfile* x0_vs_eta = nullptr;
   TProfile* l0_vs_eta = nullptr;
 
-  TProfile* x0_vs_phi= nullptr;
+  TProfile* x0_vs_phi = nullptr;
   TProfile* l0_vs_phi = nullptr;
 
   float s_x0 = 0.;
@@ -41,10 +40,10 @@ struct MaterialHistograms {
         (iA == 0) ? name + std::string("_l0_vs_eta_all")
                   : name + std::string("_l0_vs_eta_A") + std::to_string(iA);
 
-    x0_vs_eta =
-        new TProfile(x0NameEta.c_str(), "X_{0} vs. #eta", bins, -eta, eta, 0., 5.);
-    l0_vs_eta =
-        new TProfile(l0NameEta.c_str(), "L_{0} vs. #eta", bins, -eta, eta, 0., 5.);
+    x0_vs_eta = new TProfile(x0NameEta.c_str(), "X_{0} vs. #eta", bins, -eta,
+                             eta, 0., 5.);
+    l0_vs_eta = new TProfile(l0NameEta.c_str(), "L_{0} vs. #eta", bins, -eta,
+                             eta, 0., 5.);
 
     std::string x0NamePhi =
         (iA == 0) ? name + std::string("_x0_vs_phi_all")
@@ -53,11 +52,10 @@ struct MaterialHistograms {
         (iA == 0) ? name + std::string("_l0_vs_phi_all")
                   : name + std::string("_l0_vs_phi_A") + std::to_string(iA);
 
-    x0_vs_phi =
-        new TProfile(x0NamePhi.c_str(), "X_{0} vs. #phi", bins, -M_PI, M_PI, 0., 5.);
-    l0_vs_phi =
-        new TProfile(l0NamePhi.c_str(), "L_{0} vs. #phi", bins, -M_PI, M_PI, 0., 5.);
-
+    x0_vs_phi = new TProfile(x0NamePhi.c_str(), "X_{0} vs. #phi", bins, -M_PI,
+                             M_PI, 0., 5.);
+    l0_vs_phi = new TProfile(l0NamePhi.c_str(), "L_{0} vs. #phi", bins, -M_PI,
+                             M_PI, 0., 5.);
   }
 
   MaterialHistograms() = default;
@@ -69,6 +67,7 @@ struct MaterialHistograms {
   /// @param phi the phi value
   ///
   void fillAndClear(float eta, float phi) {
+    
     x0_vs_eta->Fill(eta, s_x0);
     l0_vs_eta->Fill(eta, s_l0);
 
@@ -80,13 +79,18 @@ struct MaterialHistograms {
   }
 
   /// Write out the histograms, the TDirectory needs
-  /// to be se before
+  /// to be set before
+  ///
+  /// Histrograms with no contribution will not be 
+  /// written to file.
   void write() {
-    x0_vs_eta->Write();
-    l0_vs_eta->Write();
+    if (x0_vs_eta->GetMaximum() > 0.) {
+      x0_vs_eta->Write();
+      l0_vs_eta->Write();
 
-    x0_vs_phi->Write();
-    l0_vs_phi->Write();
+      x0_vs_phi->Write();
+      l0_vs_phi->Write();
+    }
   }
 };
 
@@ -109,6 +113,7 @@ void materialComposition(const std::string& inFile, const std::string& treeName,
     // Get the different atomic numbers
     TCanvas* materialCanvas =
         new TCanvas("materialCanvas", "Materials", 100, 100, 620, 400);
+    materialCanvas->cd();
     // Draw all the atomic elements & get the histogram
     inputTree->Draw("mat_A>>hA(100,0.5,100.5)");
     TH1F* histA = dynamic_cast<TH1F*>(gDirectory->Get("hA"));
