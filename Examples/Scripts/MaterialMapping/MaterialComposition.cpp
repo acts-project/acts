@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
     ao("silent,s", bool_switch(), "Silent mode (without X-window/display).");
     ao("input,i", value<std::string>()->default_value(""),
        "Input ROOT file containing the input TTree.");
-    ao("tree,t", value<std::string>()->default_value("trackstates"),
+    ao("tree,t", value<std::string>()->default_value("material-tracks"),
        "Input TTree name.");
     ao("output,o", value<std::string>()->default_value(""),
        "Output ROOT file with histograms");
