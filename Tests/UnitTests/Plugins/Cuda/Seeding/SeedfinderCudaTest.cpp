@@ -254,7 +254,7 @@ int main(int argc, char** argv) {
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
   groupIt = spGroup.begin();
-	Acts::Extent rRangeSPExtent;
+  Acts::Extent rRangeSPExtent;
 
   if (do_cpu) {
     decltype(seedfinder_cpu)::State state;

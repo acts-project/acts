@@ -32,6 +32,8 @@ Seedfinder<external_spacepoint_t, platform_t>::Seedfinder(
       std::pow(m_config.minPt * 2 / m_config.pTPerHelixRadius, 2);
   m_config.pT2perRadius =
       std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);
+  m_config.sigmapT2perRadius =
+      m_config.pT2perRadius * std::pow(2 * m_config.sigmaScattering, 2);
 }
 
 template <typename external_spacepoint_t, typename platform_t>
@@ -231,11 +233,6 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       scatteringInRegion2 *=
           m_config.sigmaScattering * m_config.sigmaScattering;
 
-      /// this is an approximate worst case multiple scattering term assuming
-      /// the lowest  pt we allow and the estimated theta angle
-      float sigmaSquaredScatteringMinPt =
-          iSinTheta2 * m_config.kConstant / (std::pow(m_config.minPt, 2));
-
       // clear all vectors used in each inner for loop
       state.topSpVec.clear();
       state.curvatures.clear();
@@ -253,7 +250,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
         // if the error is larger than the difference in theta, no need to
         // compare with scattering
-        if (deltaCotTheta2 - error2 > sigmaSquaredScatteringMinPt) {
+        if (deltaCotTheta2 - error2 > scatteringInRegion2) {
           // break if cotThetaB < lt.cotTheta because the SP are sorted by
           // cotTheta
           if (cotThetaB - lt.cotTheta < 0) {
@@ -286,8 +283,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         // the two seed segments using a scattering term scaled by the actual
         // measured
         if ((deltaCotTheta2 - error2) * S2 >
-            B2 * iSinTheta2 * m_config.kConstant *
-                std::pow(2 / m_config.pTPerHelixRadius, 2)) {
+            B2 * iSinTheta2 * m_config.sigmapT2perRadius) {
           if (cotThetaB - lt.cotTheta < 0) {
             break;
           }

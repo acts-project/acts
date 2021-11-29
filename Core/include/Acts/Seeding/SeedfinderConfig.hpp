@@ -118,9 +118,7 @@ struct SeedfinderConfig {
   float pTPerHelixRadius = 0;
   float minHelixDiameter2 = 0;
   float pT2perRadius = 0;
-
-  // constant factor used to evaluate multiple scattering contribution
-  float kConstant = 134. * 0.05 * 9.;
+  float sigmapT2perRadius = 0;
 
   // only for Cuda plugin
   int maxBlockSize = 1024;
