@@ -144,9 +144,7 @@ set(_target ${_python_dir}/acts/${f})
 get_filename_component(_dir ${_target} DIRECTORY)
 file(MAKE_DIRECTORY ${_dir})
 
-file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/python/acts/${f} ${_target})
+file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/python/acts/${f} ${_target} SYMBOLIC)
 endforeach()
 
 add_dependencies(ActsPythonBindings ActsPythonGlueCode)
-
-  

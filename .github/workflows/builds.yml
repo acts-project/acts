@@ -14,12 +14,14 @@ env:
 jobs:
   linux:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v13
+    container: ghcr.io/acts-project/${{ matrix.image }}:v15
     strategy:
       matrix:
         image:
-          - centos7-lcg97apython3-gcc9
-          - centos7-lcg98python3-gcc10
+          - centos7-lcg100-gcc10
+          - centos7-lcg101-gcc11
+          - centos8-lcg100-gcc10
+          - centos8-lcg101-gcc11
           - ubuntu2004
     env:
       SETUP: true
@@ -37,18 +39,22 @@ jobs:
         if: contains(matrix.image, 'lcg')
         run: echo "SETUP=${SETUP_LCG}" >> $GITHUB_ENV
       - name: Configure
+        # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
+        # dd4hep CMake configuration that gets triggered on recent CMake
+        # versions 
         run: >
           ${SETUP} &&
           cmake -B build -S .
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
+          -DCMAKE_CXX_STANDARD=17
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DACTS_BUILD_EVERYTHING=on
+          -DACTS_BUILD_EVERYTHING=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
       - name: Build
-        run: ${SETUP} && cmake --build build -- 
+        run: ${SETUP} && cmake --build build --
       - name: Unit tests
         run: ${SETUP} && cmake --build build -- test
       - name: Integration tests
@@ -60,13 +66,13 @@ jobs:
         if: contains(matrix.image, 'ubuntu')
         shell: bash
         run: >
-          ${SETUP} 
+          ${SETUP}
           && source /usr/local/bin/thisroot.sh
           && source /usr/local/bin/thisdd4hep_only.sh
           && /usr/local/bin/download_geant4_data.sh
           && source /usr/local/bin/geant4.sh
-          && source build/python/setup.sh 
-          && pip3 install pytest
+          && source build/python/setup.sh
+          && pip3 install -r Examples/Python/tests/requirements.txt
           && pytest -rFs
       - name: Install
         run: ${SETUP} && cmake --build build -- install
@@ -81,6 +87,7 @@ jobs:
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
+          -DCMAKE_CXX_STANDARD=17
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
       - name: Downstream build
         run: ${SETUP} && cmake --build build-downstream --
@@ -122,9 +129,9 @@ jobs:
           -DACTS_BUILD_UNITTESTS=ON
           -DACTS_BUILD_INTEGRATIONTESTS=ON
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
-          -DACTS_USE_SYSTEM_BOOST=off
-          -DACTS_USE_SYSTEM_EIGEN3=off
-          -DACTS_BUILD_PLUGIN_JSON=on
+          -DACTS_USE_SYSTEM_BOOST=OFF
+          -DACTS_USE_SYSTEM_EIGEN3=OFF
+          -DACTS_BUILD_PLUGIN_JSON=ON
       - name: Build
         run: ${SETUP} && cmake --build build --
       - name: Unit tests
@@ -145,8 +152,8 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
-          -DACTS_USE_SYSTEM_BOOST=off
-          -DACTS_USE_SYSTEM_EIGEN3=off        
+          -DACTS_USE_SYSTEM_BOOST=OFF
+          -DACTS_USE_SYSTEM_EIGEN3=OFF
           -DACTS_BUILD_EXAMPLES=ON
       - name: Build Examples
         run: ${SETUP} && cmake --build build --
@@ -195,7 +202,7 @@ jobs:
           -DCMAKE_CXX_STANDARD=17
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DCMAKE_PREFIX_PATH=/usr/local/acts
-          -DACTS_BUILD_EVERYTHING=on
+          -DACTS_BUILD_EVERYTHING=ON
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
       - name: Build
         run: cmake --build build  --
@@ -253,6 +260,7 @@ jobs:
           -DCMAKE_CXX_COMPILER=clang++
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
+          -DACTS_SETUP_VECMEM=ON
           -DACTS_BUILD_PLUGIN_SYCL=ON
           -DACTS_BUILD_UNITTESTS=ON
       - name: Build
@@ -272,7 +280,7 @@ jobs:
           && pip3 install --upgrade pip
           && pip install -r docs/requirements.txt
       - name: Configure
-        run: cmake -B build -S . -GNinja -DACTS_BUILD_DOCS=on
+        run: cmake -B build -S . -GNinja -DACTS_BUILD_DOCS=ON
       - name: Build
         run: cmake --build build -- docs-with-api
       - uses: actions/upload-artifact@v2
