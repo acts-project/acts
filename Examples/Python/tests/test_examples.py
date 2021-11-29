@@ -848,7 +848,7 @@ def test_vertex_fitting(tmp_path):
 
     from vertex_fitting import runVertexFitting, VertexFinder
 
-    s = Sequencer(events=10)
+    s = Sequencer(events=100)
 
     runVertexFitting(
         field,
@@ -860,12 +860,8 @@ def test_vertex_fitting(tmp_path):
     alg = AssertCollectionExistsAlg(["fittedVertices"], name="check_alg")
     s.addAlgorithm(alg)
 
-    if isCI:
-        with pytest.raises(RuntimeError, match=".*ACTS_LOG_FAILURE_THRESHOLD.*"):
-            s.run()
-    else:
-        s.run()
-        assert alg.events_seen == s.config.events
+    s.run()
+    assert alg.events_seen == s.config.events
 
 
 import itertools
@@ -874,16 +870,18 @@ import itertools
 @pytest.mark.parametrize(
     "finder,inputTracks,entries",
     [
-        ("Truth", False, 1),
+        ("Truth", False, 100),
         # ("Truth", True, 0), # this combination seems to be not working
-        ("Iterative", False, 1),
-        ("Iterative", True, 10),
-        ("AMVF", False, 1),
-        ("AMVF", True, 10),
+        ("Iterative", False, 100),
+        ("Iterative", True, 100),
+        ("AMVF", False, 100),
+        ("AMVF", True, 100),
     ],
 )
 @pytest.mark.filterwarnings("ignore::UserWarning")
-def test_vertex_fitting_reading(tmp_path, ptcl_gun, rng, finder, inputTracks, entries):
+def test_vertex_fitting_reading(
+    tmp_path, ptcl_gun, rng, finder, inputTracks, entries, assert_root_hash
+):
 
     ptcl_file = tmp_path / "particles.root"
 
@@ -896,7 +894,7 @@ def test_vertex_fitting_reading(tmp_path, ptcl_gun, rng, finder, inputTracks, en
     if inputTracks:
         from truth_tracking import runTruthTracking
 
-        s2 = Sequencer(numThreads=1, events=10)
+        s2 = Sequencer(numThreads=1, events=100)
         runTruthTracking(
             trackingGeometry,
             field,
@@ -912,7 +910,7 @@ def test_vertex_fitting_reading(tmp_path, ptcl_gun, rng, finder, inputTracks, en
         assert inputTrackSummary.exists()
         assert ptcl_file.exists()
     else:
-        s0 = Sequencer(events=1)
+        s0 = Sequencer(events=100, numThreads=1)
         evGen = ptcl_gun(s0)
         s0.addWriter(
             RootParticleWriter(
@@ -942,17 +940,14 @@ def test_vertex_fitting_reading(tmp_path, ptcl_gun, rng, finder, inputTracks, en
     alg = AssertCollectionExistsAlg(["fittedVertices"], name="check_alg")
     s3.addAlgorithm(alg)
 
-    ## I think this is fixed, keep this commented for now
-    # if isCI and inputTracks:
-    #     # This is a workaround because in this configuration, the vertexing logs WARNING
-    #     # messages, which our CI is configured to fail on.
-    #     with pytest.raises(RuntimeError, match=".*ACTS_LOG_FAILURE_THRESHOLD.*"):
-    #         s3.run()
-    # else:
+    if finder == VertexFinder.AMVF and inputTracks:
+        with pytest.raises(RuntimeError, match="Failed to process event data"):
+            s3.run()
+    else:
+        s3.run()
 
-    s3.run()
+        vertexing_file = tmp_path / "performance_vertexing.root"
+        assert vertexing_file.exists()
 
-    vertexing_file = tmp_path / "performance_vertexing.root"
-    assert vertexing_file.exists()
-
-    assert_entries(vertexing_file, "vertexing", entries)
+        assert_entries(vertexing_file, "vertexing", entries)
+        assert_root_hash(vertexing_file.name, vertexing_file)

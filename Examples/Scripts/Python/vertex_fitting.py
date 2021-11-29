@@ -41,7 +41,7 @@ def runVertexFitting(
     vertexFinder: VertexFinder = VertexFinder.Truth,
     s=None,
 ):
-    s = s or Sequencer(events=100, numThreads=1)
+    s = s or Sequencer(events=100, numThreads=-1)
 
     logger = acts.logging.getLogger("VertexFittingExample")
 
@@ -60,7 +60,7 @@ def runVertexFitting(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
                 particleCollection=inputParticles,
-                orderedEvents=True,
+                orderedEvents=False,
             )
         )
 
@@ -77,7 +77,7 @@ def runVertexFitting(
     s.addAlgorithm(ptclSelector)
 
     trackParameters = "trackparameters"
-    if inputTrackSummary is None:
+    if inputTrackSummary is None or inputParticlePath is None:
         logger.info("Using smeared particles")
 
         ptclSmearing = ParticleSmearing(
@@ -97,7 +97,7 @@ def runVertexFitting(
             outputTracks="fittedTrackParameters",
             outputParticles=associatedParticles,
             filePath=str(inputTrackSummary.resolve()),
-            orderedEvents=True,
+            orderedEvents=False,
         )
         s.addReader(trackSummaryReader)
 
@@ -162,7 +162,9 @@ def runVertexFitting(
     if outputRoot:
         if inputTrackSummary is None:
             warnings.warn(
-                "Using inputTrackSummary == None with outputRoot: This combination is not necessarily supported. Please get in touch with us"
+                "Using inputTrackSummary == None with outputRoot: "
+                "This combination is not necessarily supported. "
+                "Please get in touch with us"
             )
         s.addWriter(
             RootVertexPerformanceWriter(
