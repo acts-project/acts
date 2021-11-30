@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Plugins/Cuda/Cuda.hpp"
 #include "Acts/Plugins/Cuda/Seeding/Kernels.cuh"
 #include "Acts/Seeding/InternalSeed.hpp"

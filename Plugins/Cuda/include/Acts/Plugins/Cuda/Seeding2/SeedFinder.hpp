@@ -12,6 +12,7 @@
 #include "Acts/Plugins/Cuda/Seeding2/TripletFilterConfig.hpp"
 
 // Acts include(s).
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
