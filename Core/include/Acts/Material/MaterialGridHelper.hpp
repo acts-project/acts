@@ -103,9 +103,7 @@ Grid3D createGrid3D(
 /// coordinate
 ///
 /// @return The average material grid decomposed into classification numbers
-MaterialGrid2D mapMaterialPoints(
-    Grid2D& grid, const Acts::RecordedMaterialVolumePoint& mPoints,
-    std::function<Acts::Vector2(Acts::Vector3)>& transfoGlobalToLocal);
+MaterialGrid2D mapMaterialPoints(Grid2D& grid);
 
 /// @brief Concatenate a set of material at arbitrary space points on a set of
 /// grid points and produces a grid containing the averaged material values.
@@ -116,8 +114,6 @@ MaterialGrid2D mapMaterialPoints(
 /// coordinate
 ///
 /// @return The average material grid decomposed into classification numbers
-MaterialGrid3D mapMaterialPoints(
-    Grid3D& grid, const Acts::RecordedMaterialVolumePoint& mPoints,
-    std::function<Acts::Vector3(Acts::Vector3)>& transfoGlobalToLocal);
+MaterialGrid3D mapMaterialPoints(Grid3D& grid);
 
 }  // namespace Acts

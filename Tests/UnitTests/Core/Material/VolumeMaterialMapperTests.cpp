@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   auto mState = vmMapper.createState(gCtx, mfCtx, *tGeometry);
 
   /// Test if this is not null
-  BOOST_CHECK_EQUAL(mState.recordedMaterial.size(), 3u);
+  BOOST_CHECK_EQUAL(mState.materialBin.size(), 3u);
 }
 
 /// @brief Test case for comparison between the mapped material and the

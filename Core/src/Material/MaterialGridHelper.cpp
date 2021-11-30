@@ -221,7 +221,6 @@ Acts::Grid3D Acts::createGrid3D(
 }
 
 Acts::MaterialGrid2D Acts::mapMaterialPoints(Acts::Grid2D& grid) {
-
   // Build material grid
   // Re-build the axes
   Acts::Grid2D::point_t min = grid.minPosition();
@@ -241,7 +240,6 @@ Acts::MaterialGrid2D Acts::mapMaterialPoints(Acts::Grid2D& grid) {
 }
 
 Acts::MaterialGrid3D Acts::mapMaterialPoints(Acts::Grid3D& grid) {
-
   // Build material grid
   // Re-build the axes
   Acts::Grid3D::point_t min = grid.minPosition();

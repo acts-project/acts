@@ -16,6 +16,8 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Material/AccumulatedVolumeMaterial.hpp"
+#include "Acts/Material/MaterialGridHelper.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -35,10 +37,6 @@ namespace Acts {
 class ISurfaceMaterial;
 class IVolumeMaterial;
 class TrackingGeometry;
-
-class AccumulatedVolumeMaterial;
-class Grid2D;
-class Grid3D;
 
 //
 /// @brief VolumeMaterialMapper
@@ -80,21 +78,31 @@ class VolumeMaterialMapper {
   ///
   /// Nested State struct which is used for the mapping prococess
   struct State {
+    typedef std::function<Acts::Vector2(Acts::Vector3)> transform2D;
+    typedef std::function<Acts::Vector3(Acts::Vector3)> transform3D;
+
     /// Constructor of the Sate with contexts
     State(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : geoContext(gctx), magFieldContext(mctx) {}
 
     /// The recorded material per geometry ID
-    std::map<GeometryIdentifier, Acts::AccumulatedVolumeMaterial> homogeneousGrid;
+    std::map<const GeometryIdentifier, Acts::AccumulatedVolumeMaterial>
+        homogeneousGrid;
 
     /// The recorded material per geometry ID
-    std::map<GeometryIdentifier, std::pair<std::function<Acts::Vector2(Acts::Vector3)>, Grid2D>> 2DGrid;
+    std::map<const GeometryIdentifier, transform2D> tsf2D;
 
     /// The recorded material per geometry ID
-    std::map<GeometryIdentifier, std::pair<std::function<Acts::Vector3(Acts::Vector3)>, Grid3D>> 3DGrid;
+    std::map<const GeometryIdentifier, Grid2D> grid2D;
+
+    /// The recorded material per geometry ID
+    std::map<const GeometryIdentifier, transform3D> tsf3D;
+
+    /// The recorded material per geometry ID
+    std::map<const GeometryIdentifier, Grid3D> grid3D;
 
     /// The binning per geometry ID
-    std::map<GeometryIdentifier, BinUtility> materialBin;
+    std::map<const GeometryIdentifier, BinUtility> materialBin;
 
     /// The surface material of the input tracking geometry
     std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
@@ -195,9 +203,10 @@ class VolumeMaterialMapper {
   /// @param properties material properties of the original hit
   /// @param position position of the original hit
   /// @param direction direction of the track
-  void createExtraHits(RecordedMaterialVolumePoint& matPoint,
-                       Acts::MaterialSlab properties, Vector3 position,
-                       Vector3 direction) const;
+  void createExtraHits(
+      State& mState,
+      std::pair<const GeometryIdentifier, BinUtility>& currentBinning,
+      Acts::MaterialSlab properties, Vector3 position, Vector3 direction) const;
 
   /// Standard logger method
   const Logger& logger() const { return *m_logger; }
