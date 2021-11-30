@@ -36,6 +36,10 @@ class ISurfaceMaterial;
 class IVolumeMaterial;
 class TrackingGeometry;
 
+class AccumulatedVolumeMaterial;
+class Grid2D;
+class Grid3D;
+
 //
 /// @brief VolumeMaterialMapper
 ///
@@ -81,7 +85,13 @@ class VolumeMaterialMapper {
         : geoContext(gctx), magFieldContext(mctx) {}
 
     /// The recorded material per geometry ID
-    std::map<GeometryIdentifier, RecordedMaterialVolumePoint> recordedMaterial;
+    std::map<GeometryIdentifier, Acts::AccumulatedVolumeMaterial> homogeneousGrid;
+
+    /// The recorded material per geometry ID
+    std::map<GeometryIdentifier, std::pair<std::function<Acts::Vector2(Acts::Vector3)>, Grid2D>> 2DGrid;
+
+    /// The recorded material per geometry ID
+    std::map<GeometryIdentifier, std::pair<std::function<Acts::Vector3(Acts::Vector3)>, Grid3D>> 3DGrid;
 
     /// The binning per geometry ID
     std::map<GeometryIdentifier, BinUtility> materialBin;
