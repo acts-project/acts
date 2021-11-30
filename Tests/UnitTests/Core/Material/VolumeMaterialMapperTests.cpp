@@ -226,8 +226,19 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
       [](Vector3 pos) -> Vector3 {
     return {pos.x(), pos.y(), pos.z()};
   };
-  MaterialGrid3D matGrid =
-      mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal);
+
+  // Walk over each properties
+  for (const auto& rm : matRecord) {
+    // Walk over each point associated with the properties
+    for (const auto& point : rm.second) {
+      // Search for fitting grid point and accumulate
+      Acts::Grid3D::index_t index =
+          Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(point));
+      Grid.atLocalBins(index).accumulate(rm.first);
+    }
+  }
+
+  MaterialGrid3D matGrid = mapMaterialPoints(Grid);
 
   // Construct a simple propagation through the detector
   StraightLineStepper sls;
