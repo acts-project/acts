@@ -9,7 +9,6 @@
 #pragma once
 
 // Acts include(s).
-#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
 
@@ -43,14 +42,12 @@ class Seedfinder {
   /// @param bottomSPs group of space points to be used as innermost SP in a seed.
   /// @param middleSPs group of space points to be used as middle SP in a seed.
   /// @param topSPs group of space points to be used as outermost SP in a seed.
-  /// @param rRangeSPExtent extent containing r values of all SP.
   /// Ranges must return pointers.
   /// Ranges must be separate objects for each parallel call.
   /// @return vector in which all found seeds for this group are stored.
   template <typename sp_range_t>
   std::vector<Seed<external_spacepoint_t>> createSeedsForGroup(
-      sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
-      Extent rRangeSPExtent) const;
+      sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
 
  private:
   Acts::SeedfinderConfig<external_spacepoint_t> m_config;
