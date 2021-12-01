@@ -27,9 +27,7 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   /// Track finder function that takes input measurements, initial trackstate
   /// and track finder options and returns some track-finder-specific result.
   using TrackFinderOptions =
-      Acts::CombinatorialKalmanFilterOptions<IndexSourceLinkAccessor,
-                                             MeasurementCalibrator,
-                                             Acts::MeasurementSelector>;
+      Acts::CombinatorialKalmanFilterOptions<IndexSourceLinkAccessor>;
   using TrackFinderResult =
       std::vector<Acts::Result<Acts::CombinatorialKalmanFilterResult>>;
 

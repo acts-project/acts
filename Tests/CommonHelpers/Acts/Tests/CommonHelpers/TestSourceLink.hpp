@@ -70,36 +70,41 @@ bool operator==(const TestSourceLink& lhs, const TestSourceLink& rhs);
 bool operator!=(const TestSourceLink& lhs, const TestSourceLink& rhs);
 std::ostream& operator<<(std::ostream& os, const TestSourceLink& sourceLink);
 
-/// Extract measurements from TestSourceLinks.
-struct TestSourceLinkCalibrator {
-  /// Extract the measurement from a TestSourceLink.
-  ///
-  /// @tparam parameters_t Track parameters type
-  /// @param sourceLink Input source link
-  /// @param parameters Input track parameters (unused)
-  ///
-  /// Since the TestSourceLink stores the necessary data inline, this just
-  /// constructs the correct type from the stored data. Consequently, it does
-  /// not depend on the track parameters, but they still must be part of the
-  /// interface.
-  template <typename parameters_t>
-  BoundVariantMeasurement operator()(
-      const Acts::SourceLink& sourceLink,
-      const parameters_t& /* parameters */) const {
-    const auto& sl = static_cast<const TestSourceLink&>(sourceLink);
-    if ((sl.indices[0] != eBoundSize) and (sl.indices[1] != eBoundSize)) {
-      return makeMeasurement(sl, sl.parameters, sl.covariance, sl.indices[0],
-                             sl.indices[1]);
-    } else if (sl.indices[0] != eBoundSize) {
-      return makeMeasurement(sl, sl.parameters.head<1>(),
-                             sl.covariance.topLeftCorner<1, 1>(),
-                             sl.indices[0]);
-    } else {
-      throw std::runtime_error(
-          "Tried to extract measurement from invalid TestSourceLink");
-    }
+/// Extract the measurement from a TestSourceLink.
+///
+/// @param gctx Unused
+/// @param trackState TrackState to calibrated
+/// @return The measurement used
+Acts::BoundVariantMeasurement testSourceLinkCalibratorReturn(
+    const GeometryContext& /*gctx*/,
+    MultiTrajectory::TrackStateProxy trackState) {
+  const auto& sl =
+      static_cast<const TestSourceLink&>(trackState.uncalibrated());
+  if ((sl.indices[0] != eBoundSize) and (sl.indices[1] != eBoundSize)) {
+    auto meas = makeMeasurement(sl, sl.parameters, sl.covariance, sl.indices[0],
+                                sl.indices[1]);
+    trackState.setCalibrated(meas);
+    return meas;
+  } else if (sl.indices[0] != eBoundSize) {
+    auto meas =
+        makeMeasurement(sl, sl.parameters.head<1>(),
+                        sl.covariance.topLeftCorner<1, 1>(), sl.indices[0]);
+    trackState.setCalibrated(meas);
+    return meas;
+  } else {
+    throw std::runtime_error(
+        "Tried to extract measurement from invalid TestSourceLink");
   }
-};
+}
+
+/// Extract the measurement from a TestSourceLink.
+///
+/// @param gctx Unused
+/// @param trackState TrackState to calibrated
+void testSourceLinkCalibrator(const GeometryContext& gctx,
+                              MultiTrajectory::TrackStateProxy trackState) {
+  testSourceLinkCalibratorReturn(gctx, trackState);
+}
 
 }  // namespace Test
 }  // namespace Acts

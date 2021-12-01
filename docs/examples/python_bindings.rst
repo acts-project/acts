@@ -15,6 +15,8 @@ sets up the particle propagation and runs a few events.
 
 .. code-block:: python
 
+   import os
+
    import acts
    import acts.examples
 
@@ -25,6 +27,7 @@ sets up the particle propagation and runs a few events.
 
    nav = acts.Navigator(trackingGeometry=trackingGeometry)
 
+   field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
    stepper = acts.EigenStepper(field)
 
    prop = acts.examples.ConcretePropagator(acts.Propagator(stepper, nav))
@@ -34,17 +37,22 @@ sets up the particle propagation and runs a few events.
        level=acts.logging.INFO,
        randomNumberSvc=rnd,
        ntests=1000,
-       sterileLogger=True,
+       sterileLogger=False,
        propagationStepCollection="propagation-steps",
    )
 
    s.addAlgorithm(alg)
 
+   outputDir = "."
+   objDir = outputDir + "/obj"
+   if not os.path.exists(objDir):
+      os.mkdir(objDir)
+   
    s.addWriter(
        acts.examples.ObjPropagationStepsWriter(
            level=acts.logging.INFO,
            collection="propagation-steps",
-           outputDir=outputDir + "/obj",
+           outputDir=objDir,
        )
    )
 
@@ -66,7 +74,7 @@ They can be found in ``$REPO_ROOT/Examples/Scripts/Python``. Make sure you have 
 
 .. code-block:: console
 
-   source $BUILD_DIR/python/source.sh
+   source $BUILD_DIR/python/setup.sh
 
 to make sure python can find the ``acts`` module.
 
@@ -78,8 +86,8 @@ repository. They are located under ``$REPO_ROOT/Examples/Python/tests``, and
 intend to cover the public API of the python bindings. A set of tests also
 executed the standalone example scripts.
 
-To run these python based tests, ``pytest`` needs to be installed. It can be
-installed via ``pip install pytest``. It is recommended to install this package
+To run these python based tests, ``pytest`` and a few other dependencies need to be installed. They can be
+installed via ``pip install -r Examples/Python/tests/requirements.txt`` from the repository root. It is recommended to install these packages
 in `virtual environment`_. You can then simply run ``pytest`` from the
 repository root.
 
