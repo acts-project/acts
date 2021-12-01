@@ -137,8 +137,9 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         // inserting aCoef into the linear equation
         float aCoef = (vT - vIP) / (uT - uIP);
         float bCoef = vIP - aCoef * uIP;
-        // the distance of the straight line from the origin is given by d^2 =
-        // bCoef^2 / (1 + aCoef^2) and we can apply the cut on the curvature
+        // the distance of the straight line from the origin (radius of the
+        // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
+        // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
         if ((bCoef * bCoef) >
             (1 + aCoef * aCoef) / m_config.minHelixDiameter2) {
           continue;
@@ -205,8 +206,9 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         // inserting aCoef into the linear equation
         float aCoef = (vB - vIP) / (uB - uIP);
         float bCoef = vIP - aCoef * uIP;
-        // the distance of the straight line from the origin is given by d^2 =
-        // bCoef^2 / (1 + aCoef^2) and we can apply the cut on the curvature
+        // the distance of the straight line from the origin (radius of the
+        // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
+        // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
         if ((bCoef * bCoef) >
             (1 + aCoef * aCoef) / m_config.minHelixDiameter2) {
           continue;
