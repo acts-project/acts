@@ -160,8 +160,8 @@ int main(int argc, char* argv[]) {
   auto start_host = std::chrono::system_clock::now();
   // Create the result object.
   std::vector<std::vector<Acts::Seed<TestSpacePoint>>> seeds_host;
-	
-	Acts::Extent rRangeSPExtent;
+
+  Acts::Extent rRangeSPExtent;
 
   // Perform the seed finding.
   if (!cmdl.onlyGPU) {
