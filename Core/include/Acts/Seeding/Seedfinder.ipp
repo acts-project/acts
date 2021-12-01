@@ -110,21 +110,35 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           zOrigin > m_config.collisionRegionMax) {
         continue;
       }
-      // cut on A and B impact parameter coefficients
+      // cut on the max curvature between top SP and interaction point
+      // first transform the space point coordinates into a frame such that the
+      // central space point SPm is in the origin of the frame and the x axis
+      // points away from the interaction point in addition to a translation
+      // transformation we also perform a rotation in order to keep the
+      // curvature of the circle tangent to the x axis
       float xVal = (topSP->x() - spM->x()) * (spM->x() / rM) +
                    (topSP->y() - spM->y()) * (spM->y() / rM);
       float yVal = (topSP->y() - spM->y()) * (spM->x() / rM) -
                    (topSP->x() - spM->x()) * (spM->y() / rM);
       if (std::abs(rM * yVal) > m_config.impactMax * xVal) {
-        // conformal transformation u:=x/(x²+y²); v:=y/(x²+y²);
+        // conformal transformation u=x/(x²+y²) v=y/(x²+y²) transform the circle
+        // into straight lines in the u/v plane the line equation can be
+        // described in terms of aCoef and bCoef, where v = aCoef * u + bCoef
         float uT = xVal / (xVal * xVal + yVal * yVal);
         float vT = yVal / (xVal * xVal + yVal * yVal);
-        float uM = -1. / rM;
-        float vM = m_config.impactMax / (rM * rM);
+        // in the rotated frame the interaction point is positioned at x = -rM
+        // and y ~= impactParam
+        float uIP = -1. / rM;
+        float vIP = m_config.impactMax / (rM * rM);
         if (yVal > 0.)
-          vM = -vM;
-        float aCoef = (vT - vM) / (uT - uM);
-        float bCoef = vM - aCoef * uM;
+          vIP = -vIP;
+        // we can obtain aCoef as the slope dv/du of the linear function,
+        // estimated using du and dv between the two SP bCoef is obtained by
+        // inserting aCoef into the linear equation
+        float aCoef = (vT - vIP) / (uT - uIP);
+        float bCoef = vIP - aCoef * uIP;
+        // the distance of the straight line from the origin is given by d^2 =
+        // bCoef^2 / (1 + aCoef^2) and we can apply the cut on the curvature
         if ((bCoef * bCoef) >
             (1 + aCoef * aCoef) / m_config.minHelixDiameter2) {
           continue;
@@ -164,21 +178,35 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           zOrigin > m_config.collisionRegionMax) {
         continue;
       }
-      // cut on A and B impact parameter coefficients
+      // cut on the max curvature between bottom SP and interaction point
+      // first transform the space point coordinates into a frame such that the
+      // central space point SPm is in the origin of the frame and the x axis
+      // points away from the interaction point in addition to a translation
+      // transformation we also perform a rotation in order to keep the
+      // curvature of the circle tangent to the x axis
       float xVal = (bottomSP->x() - spM->x()) * (spM->x() / rM) +
                    (bottomSP->y() - spM->y()) * (spM->y() / rM);
       float yVal = (bottomSP->y() - spM->y()) * (spM->x() / rM) -
                    (bottomSP->x() - spM->x()) * (spM->y() / rM);
       if (std::abs(rM * yVal) > -m_config.impactMax * xVal) {
-        // conformal transformation u:=x/(x²+y²); v:=y/(x²+y²);
+        // conformal transformation u=x/(x²+y²) v=y/(x²+y²) transform the circle
+        // into straight lines in the u/v plane the line equation can be
+        // described in terms of aCoef and bCoef, where v = aCoef * u + bCoef
         float uB = xVal / (xVal * xVal + yVal * yVal);
         float vB = yVal / (xVal * xVal + yVal * yVal);
-        float uM = -1. / rM;
-        float vM = m_config.impactMax / (rM * rM);
+        // in the rotated frame the interaction point is positioned at x = -rM
+        // and y ~= impactParam
+        float uIP = -1. / rM;
+        float vIP = m_config.impactMax / (rM * rM);
         if (yVal < 0.)
-          vM = -vM;
-        float aCoef = (vB - vM) / (uB - uM);
-        float bCoef = vM - aCoef * uM;
+          vIP = -vIP;
+        // we can obtain aCoef as the slope dv/du of the linear function,
+        // estimated using du and dv between the two SP bCoef is obtained by
+        // inserting aCoef into the linear equation
+        float aCoef = (vB - vIP) / (uB - uIP);
+        float bCoef = vIP - aCoef * uIP;
+        // the distance of the straight line from the origin is given by d^2 =
+        // bCoef^2 / (1 + aCoef^2) and we can apply the cut on the curvature
         if ((bCoef * bCoef) >
             (1 + aCoef * aCoef) / m_config.minHelixDiameter2) {
           continue;
