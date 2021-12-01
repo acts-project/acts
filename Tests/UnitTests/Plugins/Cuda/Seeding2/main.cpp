@@ -160,6 +160,8 @@ int main(int argc, char* argv[]) {
   auto start_host = std::chrono::system_clock::now();
   // Create the result object.
   std::vector<std::vector<Acts::Seed<TestSpacePoint>>> seeds_host;
+	
+	Acts::Extent rRangeSPExtent;
 
   // Perform the seed finding.
   if (!cmdl.onlyGPU) {
@@ -171,7 +173,7 @@ int main(int argc, char* argv[]) {
       auto& group = seeds_host.emplace_back();
       seedfinder_host.createSeedsForGroup(
           state, std::back_inserter(group), spGroup_itr.bottom(),
-          spGroup_itr.middle(), spGroup_itr.top());
+          spGroup_itr.middle(), spGroup_itr.top(), rRangeSPExtent);
     }
   }
 

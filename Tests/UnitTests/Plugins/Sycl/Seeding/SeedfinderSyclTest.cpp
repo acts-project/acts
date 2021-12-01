@@ -230,7 +230,7 @@ auto main(int argc, char** argv) -> int {
 
   for (auto groupIt = spGroup.begin(); !(groupIt == spGroup.end()); ++groupIt) {
     seedVector_sycl.push_back(syclSeedfinder.createSeedsForGroup(
-        groupIt.bottom(), groupIt.middle(), groupIt.top(), rRangeSPExtent));
+        groupIt.bottom(), groupIt.middle(), groupIt.top()));
     group_count++;
     if (!cmdlTool.allgroup && group_count >= cmdlTool.groups) {
       break;

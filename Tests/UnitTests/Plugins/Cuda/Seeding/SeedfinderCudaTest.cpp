@@ -291,7 +291,7 @@ int main(int argc, char** argv) {
     ++groupIt;
   for (; !(groupIt == spGroup.end()); ++groupIt) {
     seedVector_cuda.push_back(seedfinder_cuda.createSeedsForGroup(
-        groupIt.bottom(), groupIt.middle(), groupIt.top(), rRangeSPExtent));
+        groupIt.bottom(), groupIt.middle(), groupIt.top()));
     group_count++;
     if (allgroup == false) {
       if (group_count >= nGroupToIterate)
