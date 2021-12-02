@@ -34,7 +34,6 @@
 #include <sstream>
 #include <vector>
 
-#include "GsfUtils.hpp"
 #include "MultiStepperError.hpp"
 
 // #define PRINT_STEPSIZE_CHANGE
