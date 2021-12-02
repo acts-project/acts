@@ -192,7 +192,8 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
       .def_readwrite("events", &Config::events)
       .def_readwrite("logLevel", &Config::logLevel)
       .def_readwrite("numThreads", &Config::numThreads)
-      .def_readwrite("outputDir", &Config::outputDir);
+      .def_readwrite("outputDir", &Config::outputDir)
+      .def_readwrite("outputTimingFile", &Config::outputTimingFile);
 
   using ActsExamples::RandomNumbers;
   auto randomNumbers =
