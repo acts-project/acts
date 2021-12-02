@@ -11,15 +11,14 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 
-#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
 
 namespace Acts {
 
-class TrackingVolume;
 class Layer;
 class Surface;
 class PerigeeSurface;
@@ -89,10 +88,15 @@ class TrackingGeometry {
 
   /// @brief Visit all sensitive surfaces
   ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
   /// @param visitor The callable. Will be called for each sensitive surface
   /// that is found
-  void visitSurfaces(
-      const std::function<void(const Acts::Surface*)>& visitor) const;
+  template <typename visitor_t>
+  void visitSurfaces(visitor_t&& visitor) const {
+    highestTrackingVolume()->template visitSurfaces<visitor_t>(
+        std::forward<visitor_t>(visitor));
+  }
 
   /// Search for a volume with the given identifier.
   ///
