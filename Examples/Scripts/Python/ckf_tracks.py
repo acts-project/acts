@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 from pathlib import Path
 from typing import Optional
+import argparse
 
-from acts.examples import Sequencer, GenericDetector, RootParticleReader
+from acts.examples import Sequencer, GenericDetector, RootParticleReader, TGeoDetector
 
 import acts
 
@@ -12,7 +13,7 @@ from acts import UnitConstants as u
 def runCKFTracks(
     trackingGeometry,
     decorators,
-    geometrySelection: Path,
+    geometrySelection: Optional[Path],
     digiConfigFile: Path,
     field,
     outputDir: Path,
@@ -21,10 +22,20 @@ def runCKFTracks(
     outputCsv=True,
     inputParticlePath: Optional[Path] = None,
     s=None,
+    loglevel=acts.logging.INFO,
+    events=100,
+    numParticles=4,
+    numVertices=2,
+    atlasDetector=False,
 ):
-    s = s or Sequencer(events=100, numThreads=-1)
+    outputDir.mkdir(exist_ok=True)
+
+    s = s or Sequencer(
+        events=events, numThreads=-1, outputDir=str(outputDir), logLevel=loglevel
+    )
 
     logger = acts.logging.getLogger("CKFExample")
+    logger.setLevel(loglevel)
 
     for d in decorators:
         s.addContextDecorator(d)
@@ -33,22 +44,35 @@ def runCKFTracks(
 
     if inputParticlePath is None:
         logger.info("Generating particles using particle gun")
+        if atlasDetector:
+            particles = acts.examples.ParametricParticleGenerator(
+                p=(0.4 * u.GeV, 50 * u.GeV),
+                pTransverse=True,
+                eta=(-4, 4),
+                phi=(0, 360 * u.degree),
+                randomizeCharge=True,
+                numParticles=numParticles,
+            )
+        else:
+            particles = acts.examples.ParametricParticleGenerator(
+                p=(1 * u.GeV, 10 * u.GeV),
+                eta=(-2, 2),
+                phi=(0, 360 * u.degree),
+                randomizeCharge=True,
+                numParticles=numParticles,
+            )
 
         evGen = acts.examples.EventGenerator(
-            level=acts.logging.INFO,
+            level=loglevel,
             generators=[
                 acts.examples.EventGenerator.Generator(
-                    multiplicity=acts.examples.FixedMultiplicityGenerator(n=2),
+                    multiplicity=acts.examples.FixedMultiplicityGenerator(
+                        n=numVertices
+                    ),
                     vertex=acts.examples.GaussianVertexGenerator(
                         stddev=acts.Vector4(0, 0, 0, 0), mean=acts.Vector4(0, 0, 0, 0)
                     ),
-                    particles=acts.examples.ParametricParticleGenerator(
-                        p=(1 * u.GeV, 10 * u.GeV),
-                        eta=(-2, 2),
-                        phi=(0, 360 * u.degree),
-                        randomizeCharge=True,
-                        numParticles=4,
-                    ),
+                    particles=particles,
                 )
             ],
             outputParticles="particles_input",
@@ -62,7 +86,7 @@ def runCKFTracks(
         inputParticles = "particles_read"
         s.addReader(
             RootParticleReader(
-                level=acts.logging.INFO,
+                level=loglevel,
                 filePath=str(inputParticlePath.resolve()),
                 particleCollection=inputParticles,
                 orderedEvents=False,
@@ -71,7 +95,7 @@ def runCKFTracks(
 
     # Selector
     selector = acts.examples.ParticleSelector(
-        level=acts.logging.INFO,
+        level=loglevel,
         inputParticles=inputParticles,
         outputParticles="particles_selected",
     )
@@ -79,7 +103,7 @@ def runCKFTracks(
 
     # Simulation
     simAlg = acts.examples.FatrasSimulation(
-        level=acts.logging.INFO,
+        level=loglevel,
         inputParticles=selector.config.outputParticles,
         outputParticlesInitial="particles_initial",
         outputParticlesFinal="particles_final",
@@ -98,7 +122,7 @@ def runCKFTracks(
         randomNumbers=rnd,
         inputSimHits=simAlg.config.outputSimHits,
     )
-    digiAlg = acts.examples.DigitizationAlgorithm(digiCfg, acts.logging.INFO)
+    digiAlg = acts.examples.DigitizationAlgorithm(digiCfg, loglevel)
     s.addAlgorithm(digiAlg)
 
     # Run the particle selection
@@ -106,7 +130,7 @@ def runCKFTracks(
     # from all particles read in by particle reader for further processing. It
     # has no impact on the truth hits themselves
     selAlg = acts.examples.TruthSeedSelector(
-        level=acts.logging.INFO,
+        level=loglevel,
         ptMin=500 * u.MeV,
         nHitsMin=9,
         inputParticles=simAlg.config.outputParticlesInitial,
@@ -123,7 +147,7 @@ def runCKFTracks(
         logger.info("Using smeared truth particles for seeding")
         # Run particle smearing
         ptclSmear = acts.examples.ParticleSmearing(
-            level=acts.logging.INFO,
+            level=loglevel,
             inputParticles=inputParticles,
             outputTrackParameters="smearedparameters",
             randomNumbers=rnd,
@@ -145,7 +169,7 @@ def runCKFTracks(
     else:
         # Create space points
         spAlg = acts.examples.SpacePointMaker(
-            level=acts.logging.INFO,
+            level=loglevel,
             inputSourceLinks=digiAlg.config.outputSourceLinks,
             inputMeasurements=digiAlg.config.outputMeasurements,
             outputSpacePoints="spacepoints",
@@ -161,7 +185,7 @@ def runCKFTracks(
             logger.info("Using truth track finding from space points for seeding")
             # Use truth tracking
             truthTrackFinder = acts.examples.TruthTrackFinder(
-                level=acts.logging.INFO,
+                level=loglevel,
                 inputParticles=inputParticles,
                 inputMeasurementParticlesMap=digiAlg.config.outputMeasurementParticlesMap,
                 outputProtoTracks="prototracks",
@@ -172,15 +196,26 @@ def runCKFTracks(
         else:
             logger.info("Using seeding")
             # Use seeding
-            gridConfig = acts.SpacePointGridConfig(
-                bFieldInZ=1.99724 * u.T,
-                minPt=500 * u.MeV,
-                rMax=200 * u.mm,
-                zMax=2000 * u.mm,
-                zMin=-2000 * u.mm,
-                deltaRMax=60 * u.mm,
-                cotThetaMax=7.40627,  # 2.7 eta
-            )
+            if atlasDetector:
+                gridConfig = acts.SpacePointGridConfig(
+                    bFieldInZ=1.99724 * u.T,
+                    minPt=500 * u.MeV,
+                    rMax=300 * u.mm,
+                    zMax=3000 * u.mm,
+                    zMin=-3000 * u.mm,
+                    deltaRMax=100 * u.mm,
+                    cotThetaMax=27.3,  # 4.0 eta
+                )
+            else:
+                gridConfig = acts.SpacePointGridConfig(
+                    bFieldInZ=1.99724 * u.T,
+                    minPt=500 * u.MeV,
+                    rMax=200 * u.mm,
+                    zMax=2000 * u.mm,
+                    zMin=-2000 * u.mm,
+                    deltaRMax=60 * u.mm,
+                    cotThetaMax=7.40627,  # 2.7 eta
+                )
 
             seedFilterConfig = acts.SeedFilterConfig(
                 maxSeedsPerSpM=1, deltaRMin=1 * u.mm
@@ -196,15 +231,15 @@ def runCKFTracks(
                 zMax=gridConfig.zMax,
                 maxSeedsPerSpM=seedFilterConfig.maxSeedsPerSpM,
                 cotThetaMax=gridConfig.cotThetaMax,
-                sigmaScattering=50,
-                radLengthPerSeed=0.1,
+                sigmaScattering=(5 if atlasDetector else 50),
+                radLengthPerSeed=(0.5 if atlasDetector else 0.1),
                 minPt=gridConfig.minPt,
                 bFieldInZ=gridConfig.bFieldInZ,
                 beamPos=acts.Vector2(0 * u.mm, 0 * u.mm),
                 impactMax=3 * u.mm,
             )
             seeding = acts.examples.SeedingAlgorithm(
-                level=acts.logging.INFO,
+                level=loglevel,
                 inputSpacePoints=[spAlg.config.outputSpacePoints],
                 outputSeeds="seeds",
                 outputProtoTracks="prototracks",
@@ -218,7 +253,7 @@ def runCKFTracks(
 
         # Write truth track finding / seeding performance
         trackFinderPerformanceWriter = acts.examples.TrackFinderPerformanceWriter(
-            level=acts.logging.INFO,
+            level=loglevel,
             inputProtoTracks=inputProtoTracks,
             inputParticles=inputParticles,  # the original selected particles after digitization
             inputMeasurementParticlesMap=digiAlg.config.outputMeasurementParticlesMap,
@@ -228,7 +263,7 @@ def runCKFTracks(
 
         # Estimate track parameters from seeds
         paramEstimation = acts.examples.TrackParamsEstimationAlgorithm(
-            level=acts.logging.INFO,
+            level=loglevel,
             inputSeeds=inputSeeds,
             inputProtoTracks=inputProtoTracks,
             inputSpacePoints=[spAlg.config.outputSpacePoints],
@@ -255,7 +290,7 @@ def runCKFTracks(
     # It takes all the source links created from truth hit smearing, seeds from
     # truth particle smearing and source link selection config
     trackFinder = acts.examples.TrackFindingAlgorithm(
-        level=acts.logging.INFO,
+        level=loglevel,
         measurementSelectorCfg=acts.MeasurementSelector.Config(
             [(acts.GeometryIdentifier(), ([], [15.0], [10]))]
         ),
@@ -271,7 +306,7 @@ def runCKFTracks(
 
     # write track states from CKF
     trackStatesWriter = acts.examples.RootTrajectoryStatesWriter(
-        level=acts.logging.INFO,
+        level=loglevel,
         inputTrajectories=trackFinder.config.outputTrajectories,
         # @note The full particles collection is used here to avoid lots of warnings
         # since the unselected CKF track might have a majority particle not in the
@@ -288,7 +323,7 @@ def runCKFTracks(
 
     # write track summary from CKF
     trackSummaryWriter = acts.examples.RootTrajectorySummaryWriter(
-        level=acts.logging.INFO,
+        level=loglevel,
         inputTrajectories=trackFinder.config.outputTrajectories,
         # @note The full particles collection is used here to avoid lots of warnings
         # since the unselected CKF track might have a majority particle not in the
@@ -303,7 +338,7 @@ def runCKFTracks(
 
     # Write CKF performance data
     ckfPerfWriter = acts.examples.CKFPerformanceWriter(
-        level=acts.logging.INFO,
+        level=loglevel,
         inputParticles=inputParticles,
         inputTrajectories=trackFinder.config.outputTrajectories,
         inputMeasurementParticlesMap=digiAlg.config.outputMeasurementParticlesMap,
@@ -319,7 +354,7 @@ def runCKFTracks(
         csv_dir.mkdir(parents=True, exist_ok=True)
         logger.info("Writing CSV files")
         csvMTJWriter = acts.examples.CsvMultiTrajectoryWriter(
-            level=acts.logging.INFO,
+            level=loglevel,
             inputTrajectories=trackFinder.config.outputTrajectories,
             inputMeasurementParticlesMap=digiAlg.config.outputMeasurementParticlesMap,
             outputDir=str(csv_dir),
@@ -329,28 +364,224 @@ def runCKFTracks(
     return s
 
 
+def getITkGeometry(
+    geo_dir: Path,
+    mat_input_file: Optional[Path],
+    geo_tgeo_jsonconfig: Path,
+    geo_tgeo_filename: Path,
+    loglevel=acts.logging.INFO,
+):
+    Volume = TGeoDetector.Config.Volume
+    LayerTriplet = TGeoDetector.Config.LayerTriplet
+
+    logger = acts.logging.getLogger("getITkGeometry")
+    logger.setLevel(loglevel)
+
+    matDeco = None
+    if mat_input_file is not None:
+        logger.info("Adding material from %s", mat_input_file.absolute())
+        matDeco = acts.IMaterialDecorator.fromFile(
+            mat_input_file,
+            level=acts.logging.INFO,
+        )
+
+    return TGeoDetector.create(
+        jsonFile=str(geo_tgeo_jsonconfig),
+        fileName=str(geo_tgeo_filename),
+        surfaceLogLevel=loglevel,
+        layerLogLevel=loglevel,
+        volumeLogLevel=loglevel,
+        mdecorator=matDeco,
+    )
+
+
 if "__main__" == __name__:
-    srcdir = Path(__file__).resolve().parent.parent.parent.parent
+    p = argparse.ArgumentParser(
+        description="Example script to run CKF tracking",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    p.add_argument(
+        "-l",
+        "--loglevel",
+        type=int,
+        default=2,
+        help="The output log level. Please set the wished number (0 = VERBOSE, 1 = DEBUG, 2 = INFO, 3 = WARNING, 4 = ERROR, 5 = FATAL).",
+    )
+    p.add_argument(
+        "-n", "--events", type=int, default=100, help="The number of events to process."
+    )
+    p.add_argument(
+        "--gen-nparticles",
+        type=int,
+        default=4,
+        help="Number of generated particles per event.",
+    )
+    p.add_argument(
+        "--gen-nvertices",
+        type=int,
+        default=2,
+        help="Number of generated vertices.",
+    )
+    p.add_argument(
+        "--generic-detector",
+        action="store_true",
+        default=True,
+        help="Setup Generic Detector.",
+    )
+    p.add_argument(
+        "-a",
+        "--atlas",
+        action="store_true",
+        help="Setup ATLAS Detector using the ITk standalone geometry specified in --geo-dir. Get in touch if you don't have this.",
+    )
+    p.add_argument(
+        "-g",
+        "--geo-dir",
+        help="Input directory containing geometry.",
+    )
+    p.add_argument("-i", "--input-particles", type=Path, help="Input particles path.")
+    p.add_argument(
+        "-o",
+        "--output-dir",
+        default=Path.cwd(),
+        type=Path,
+        help="Directory to write outputs to.",
+    )
+    p.add_argument(
+        "--bf-constant-tesla",
+        type=float,
+        default=2,
+        help="Set a constant magnetic field vector in Tesla.",
+    )
+    p.add_argument(
+        "--output-trajectories-csv",
+        action="store_true",
+        help="output trajectories to CSV files",
+    )
+    p.add_argument(
+        "--no-material",
+        action="store_true",
+        help="Decorate material to the geometry (--atlas or --build-itk-geometry only)",
+    )
+    p.add_argument(
+        "--mat-input-file",
+        type=Path,
+        help="Name of the material map input file, supported: '.json', '.cbor' or '.root'.",
+    )
+    p.add_argument(
+        "--ckf-truth-smeared-seeds",
+        action="store_true",
+        help="Use track parameters smeared from truth particles for steering CKF",
+    )
+    p.add_argument(
+        "--ckf-truth-estimated-seeds",
+        action="store_true",
+        help="Use track parameters estimated from truth tracks for steering CKF",
+    )
+    p.add_argument(
+        "--geo-selection-config-file",
+        type=Path,
+        help="Json file for space point geometry selection",
+    )
+    p.add_argument(
+        "--build-itk-geometry",
+        action="store_true",
+        help="use itk.buildITkGeometry to create TGeo geometry (skips --geo-tgeo-*, defaults --mat-input-file)",
+    )
+    p.add_argument(
+        "--geo-tgeo-jsonconfig",
+        type=Path,
+        help="TGeo Json config file name (--atlas only).",
+    )
+    p.add_argument(
+        "--geo-tgeo-filename",
+        type=Path,
+        help="TGeo Root file name (--atlas only).",
+    )
+    p.add_argument(
+        "--digi-config-file",
+        type=Path,
+        help="Configuration (.json) file for digitization description",
+    )
 
-    detector, trackingGeometry, decorators = GenericDetector.create()
+    args = p.parse_args()
 
-    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+    if args.atlas:
+        args.generic_detector = False
 
-    inputParticlePath = Path("particles.root")
-    if not inputParticlePath.exists():
-        inputParticlePath = None
+    if args.generic_detector:
+        if args.geo_dir is None:
+            args.geo_dir = Path(__file__).resolve().parent.parent.parent.parent
+        if not args.ckf_truth_smeared_seeds and args.geo_selection_config_file is None:
+            args.geo_selection_config_file = (
+                args.geo_dir
+                / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+            )
+        if args.digi_config_file is None:
+            args.digi_config_file = (
+                args.geo_dir
+                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            )
+        if not args.build_itk_geometry:
+            detector, trackingGeometry, decorators = GenericDetector.create()
+
+    if args.atlas:
+        if args.geo_dir is None:
+            args.geo_dir = Path("acts-detector-examples")
+
+        if not args.ckf_truth_smeared_seeds and args.geo_selection_config_file is None:
+            args.geo_selection_config_file = (
+                args.geo_dir / "atlas/itk-hgtd/geoSelection-ITk.json"
+            )
+        if args.digi_config_file is None:
+            args.digi_config_file = (
+                args.geo_dir / "atlas/itk-hgtd/itk-smearing-config.json"
+            )
+
+        if not args.build_itk_geometry:
+            if not args.no_material and args.mat_input_file is None:
+                args.mat_input_file = (
+                    args.geo_dir / "atlas/itk-hgtd/material-maps-ITk-HGTD.json"
+                )
+            if args.geo_tgeo_jsonconfig is None:
+                args.geo_tgeo_jsonconfig = (
+                    args.geo_dir / "atlas/itk-hgtd/tgeo-atlas-itk-hgtd.json"
+                )
+            if args.geo_tgeo_filename is None:
+                args.geo_tgeo_filename = (
+                    args.geo_dir / "atlas/itk-hgtd/ATLAS-ITk-HGTD.tgeo.root"
+                )
+            detector, trackingGeometry, decorators = getITkGeometry(
+                args.geo_dir,
+                mat_input_file=args.mat_input_file,
+                geo_tgeo_jsonconfig=args.geo_tgeo_jsonconfig,
+                geo_tgeo_filename=args.geo_tgeo_filename,
+                loglevel=acts.logging.Level(args.loglevel),
+            )
+
+    if args.build_itk_geometry:
+        from itk import buildITkGeometry
+
+        detector, trackingGeometry, decorators = buildITkGeometry(
+            args.geo_dir, material=not args.no_material
+        )
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, args.bf_constant_tesla * u.T))
 
     runCKFTracks(
         trackingGeometry,
         decorators,
         field=field,
-        geometrySelection=srcdir
-        / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
-        digiConfigFile=srcdir
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
-        outputCsv=True,
-        truthSmearedSeeded=False,
-        truthEstimatedSeeded=False,
-        inputParticlePath=inputParticlePath,
-        outputDir=Path.cwd(),
+        geometrySelection=args.geo_selection_config_file,
+        digiConfigFile=args.digi_config_file,
+        outputCsv=args.output_trajectories_csv,
+        truthSmearedSeeded=args.ckf_truth_smeared_seeds,
+        truthEstimatedSeeded=args.ckf_truth_estimated_seeds,
+        inputParticlePath=args.input_particles,
+        outputDir=args.output_dir,
+        loglevel=acts.logging.Level(args.loglevel),
+        events=args.events,
+        numParticles=args.gen_nparticles,
+        numVertices=args.gen_nvertices,
+        atlasDetector=args.atlas,
     ).run()
