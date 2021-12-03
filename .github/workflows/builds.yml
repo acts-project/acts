@@ -14,12 +14,14 @@ env:
 jobs:
   linux:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v13
+    container: ghcr.io/acts-project/${{ matrix.image }}:v15
     strategy:
       matrix:
         image:
-          - centos7-lcg97apython3-gcc9
-          - centos7-lcg98python3-gcc10
+          - centos7-lcg100-gcc10
+          - centos7-lcg101-gcc11
+          - centos8-lcg100-gcc10
+          - centos8-lcg101-gcc11
           - ubuntu2004
     env:
       SETUP: true
@@ -37,12 +39,16 @@ jobs:
         if: contains(matrix.image, 'lcg')
         run: echo "SETUP=${SETUP_LCG}" >> $GITHUB_ENV
       - name: Configure
+        # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
+        # dd4hep CMake configuration that gets triggered on recent CMake
+        # versions 
         run: >
           ${SETUP} &&
           cmake -B build -S .
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
+          -DCMAKE_CXX_STANDARD=17
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_BUILD_EVERYTHING=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
@@ -81,6 +87,7 @@ jobs:
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
+          -DCMAKE_CXX_STANDARD=17
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
       - name: Downstream build
         run: ${SETUP} && cmake --build build-downstream --
