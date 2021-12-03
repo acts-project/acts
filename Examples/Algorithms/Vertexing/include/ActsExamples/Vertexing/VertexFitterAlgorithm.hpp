@@ -34,8 +34,10 @@ class VertexFitterAlgorithm final : public BareAlgorithm {
     Acts::Vector4 constraintPos = Acts::Vector4(0, 0, 0, 0);
     /// Vertex constraint covariance matrix
     Acts::SymMatrix4 constraintCov =
-        Acts::Vector4(3 * Acts::UnitConstants::mm*Acts::UnitConstants::mm, 3 * Acts::UnitConstants::mm*Acts::UnitConstants::mm,
-                      10 * Acts::UnitConstants::mm*Acts::UnitConstants::mm, 1 * Acts::UnitConstants::ns*Acts::UnitConstants::ns)
+        Acts::Vector4(3 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
+                      3 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
+                      10 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
+                      1 * Acts::UnitConstants::ns * Acts::UnitConstants::ns)
             .asDiagonal();
   };
 
