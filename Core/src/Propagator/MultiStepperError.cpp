@@ -26,6 +26,8 @@ class MultiStepperErrorCategory : public std::error_category {
         return "The global BoundState/CurvilinearState can only be computed if only one component exists";
       case MultiStepperError::AverageTrackLeftCurrentVolume:
         return "The average track has left the current volume";
+      case MultiStepperError::AllComponentsSteppingError:
+        return "Stepping error occured in all components";
       default:
         return "unknown";
     }

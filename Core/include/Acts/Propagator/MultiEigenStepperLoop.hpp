@@ -25,6 +25,7 @@
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/detail/gaussian_mixture_helpers.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -162,15 +163,25 @@ struct MaxMomentumReducerLoop {
 };
 
 /// @brief Stepper based on the EigenStepper, but handles Multi-Component Tracks
-/// (e.g., for the GSF)
+/// (e.g., for the GSF). Internally, this only manages a vector of
+/// EigenStepper::States. This simplifies implementation, but has several
+/// drawbacks:
+/// * There are certain redundancies between the global State and the component
+/// states
+/// * The components do not share a single magnetic-field-cache
+/// @tparam extensionlist_t See EigenStepper for details
+/// @tparam component_reducer_t How to map the multi-component state to a single component
+/// @tparam auctioneer_t See EigenStepper for details
 template <typename extensionlist_t,
           typename component_reducer_t = WeightedComponentReducerLoop,
           typename auctioneer_t = detail::VoidAuctioneer>
 class MultiEigenStepperLoop
     : public EigenStepper<extensionlist_t, auctioneer_t> {
+  /// Allows logging in the member functions
   const LoggerWrapper logger;
 
-  /// @brief Limits the number of steps after at least one component reached the surface
+  /// Limits the number of steps after at least one component reached the
+  /// surface
   std::size_t m_stepLimitAfterFirstComponentOnSurface = 50;
 
  public:
@@ -193,44 +204,6 @@ class MultiEigenStepperLoop
   static constexpr int maxComponents = std::numeric_limits<int>::max();
 
   struct State {
-    State() = delete;
-
-    /// Constructor from the initial bound track parameters
-    ///
-    /// @tparam charge_t Type of the bound parameter charge
-    ///
-    /// @param [in] gctx is the context object for the geometry
-    /// @param [in] mctx is the context object for the magnetic field
-    /// @param [in] par The track parameters at start
-    /// @param [in] ndir The navigation direciton w.r.t momentum
-    /// @param [in] ssize is the maximum step size
-    /// @param [in] stolerance is the stepping tolerance
-    ///
-    /// @note the covariance matrix is copied when needed
-    template <typename charge_t>
-    explicit State(
-        const GeometryContext& gctx, const MagneticFieldContext& mctx,
-        const std::shared_ptr<const MagneticFieldProvider>& bField,
-        const MultiComponentBoundTrackParameters<charge_t>& multipars,
-        NavigationDirection ndir = forward,
-        double ssize = std::numeric_limits<double>::max(),
-        double stolerance = s_onSurfaceTolerance)
-        : navDir(ndir), geoContext(gctx), magContext(mctx) {
-      throw_assert(!multipars.components().empty(),
-                   "Empty MultiComponent state");
-
-      for (const auto& [weight, single_component] : multipars.components()) {
-        components.push_back(
-            {SingleState(gctx, bField->makeCache(mctx), single_component, ndir,
-                         ssize, stolerance),
-             weight, Intersection3D::Status::reachable});
-      }
-
-      if (components.front().state.covTransport) {
-        covTransport = true;
-      }
-    }
-
     /// The struct that stores the individual components
     struct Component {
       SingleState state;
@@ -241,10 +214,7 @@ class MultiEigenStepperLoop
     /// The components of which the state consists
     std::vector<Component> components;
 
-    /// Required through stepper concept
-    /// TODO how can they be interpreted for a Multistepper
     bool covTransport = false;
-    Covariance cov = Covariance::Zero();
     NavigationDirection navDir;
     double pathAccumulated = 0.;
     int steps = 0;
@@ -258,6 +228,52 @@ class MultiEigenStepperLoop
     /// Step-limit counter which limits the number of steps when one component
     /// reached a surface
     std::optional<std::size_t> stepCounterAfterFirstComponentOnSurface;
+
+    /// No default constructor is provided
+    State() = delete;
+
+    /// Constructor from the initial bound track parameters
+    ///
+    /// @tparam charge_t Type of the bound parameter charge
+    ///
+    /// @param [in] gctx is the context object for the geometry
+    /// @param [in] mctx is the context object for the magnetic field
+    /// @param [in] bfield the shared magnetic filed provider
+    /// @param [in] multipars The track multi-component track-parameters at start
+    /// @param [in] ndir The navigation direciton w.r.t momentum
+    /// @param [in] ssize is the maximum step size
+    /// @param [in] stolerance is the stepping tolerance
+    ///
+    /// @note the covariance matrix is copied when needed
+    template <typename charge_t>
+    explicit State(
+        const GeometryContext& gctx, const MagneticFieldContext& mctx,
+        const std::shared_ptr<const MagneticFieldProvider>& bField,
+        const MultiComponentBoundTrackParameters<charge_t>& multiPars,
+        NavigationDirection ndir = forward,
+        double ssize = std::numeric_limits<double>::max(),
+        double stolerance = s_onSurfaceTolerance)
+        : navDir(ndir), geoContext(gctx), magContext(mctx) {
+      if (multiPars.components().empty()) {
+        throw std::invalid_argument(
+            "Cannot construct MultiEigenStepperLoop::State with empty "
+            "multi-component parameters");
+      }
+
+      const auto surface = multiPars.referenceSurface().getSharedPtr();
+
+      for (const auto& [weight, pars, cov] : multiPars.components()) {
+        components.push_back({SingleState(gctx, bField->makeCache(mctx),
+                                          SingleBoundTrackParameters<charge_t>(
+                                              surface, pars, cov),
+                                          ndir, ssize, stolerance),
+                              weight, Intersection3D::Status::reachable});
+      }
+
+      if (std::get<2>(multiPars.components().front())) {
+        covTransport = true;
+      }
+    }
   };
 
   /// A state type which can be used for a function which accepts only
@@ -278,7 +294,9 @@ class MultiEigenStepperLoop
       -> SinglePropState<navigation_t, options_t>;
 
   /// A proxy struct which allows access to a single component of the
-  /// multi-component state
+  /// multi-component state. It has the semantics of a mutable reference, i.e.
+  /// it requires a mutable reference of the single-component state it
+  /// represents
   struct ComponentProxy {
     const State& m_state;
     typename State::Component& m_cmp;
@@ -347,6 +365,10 @@ class MultiEigenStepperLoop
     }
   };
 
+  /// A proxy struct which allows access to a single component of the
+  /// multi-component state. It has the semantics of a const reference, i.e.
+  /// it requires a const reference of the single-component state it
+  /// represents
   struct ConstComponentProxy {
     const State& m_state;
     const typename State::Component& m_cmp;
@@ -506,10 +528,6 @@ class MultiEigenStepperLoop
     return Reducer::position(state);
   }
 
-  auto position(std::size_t i, const State& state) const {
-    return SingleStepper::position(state.components.at(i).state);
-  }
-
   /// Momentum direction accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
@@ -517,18 +535,10 @@ class MultiEigenStepperLoop
     return Reducer::direction(state);
   }
 
-  auto direction(std::size_t i, const State& state) const {
-    return SingleStepper::direction(state.components.at(i).state);
-  }
-
   /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double momentum(const State& state) const { return Reducer::momentum(state); }
-
-  auto momentum(std::size_t i, const State& state) const {
-    return SingleStepper::momentum(state.components.at(i).state);
-  }
 
   /// Charge access
   ///
@@ -539,10 +549,6 @@ class MultiEigenStepperLoop
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double time(const State& state) const { return Reducer::time(state); }
-
-  auto time(std::size_t i, const State& state) const {
-    return SingleStepper::time(state.components.at(i).state);
-  }
 
   /// Update surface status
   ///
@@ -763,45 +769,7 @@ class MultiEigenStepperLoop
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
   Result<BoundState> boundState(State& state, const Surface& surface,
-                                bool transportCov = true) const {
-    if (numberComponents(state) == 1) {
-      return SingleStepper::boundState(state.components.front().state, surface,
-                                       transportCov);
-    } else {
-      std::vector<std::pair<double, BoundState>> bs_vec;
-      double accumulatedPathLength = 0.0;
-      int failedBoundTransforms = 0;
-
-      for (auto i = 0ul; i < numberComponents(state); ++i) {
-        auto bs = SingleStepper::boundState(state.components[i].state, surface,
-                                            transportCov);
-
-        if (bs.ok()) {
-          bs_vec.push_back({state.components[i].weight, *bs});
-          accumulatedPathLength += std::get<double>(*bs);
-        } else {
-          failedBoundTransforms++;
-        }
-      }
-
-      const auto [params, cov] = detail::combineComponentRange(
-          bs_vec.begin(), bs_vec.end(), [&](const auto& wbs) {
-            const auto& bp = std::get<BoundTrackParameters>(wbs.second);
-            return std::tie(wbs.first, bp.parameters(), bp.covariance());
-          });
-
-      if (failedBoundTransforms > 0) {
-        ACTS_WARNING("Multi component bound state: "
-                     << failedBoundTransforms << " of "
-                     << numberComponents(state) << " transforms failed");
-      }
-
-      // TODO Jacobian for multi component state not defined really?
-      return BoundState{
-          BoundTrackParameters(surface.getSharedPtr(), params, cov),
-          Jacobian::Zero(), accumulatedPathLength / bs_vec.size()};
-    }
-  }
+                                bool transportCov = true) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -816,63 +784,7 @@ class MultiEigenStepperLoop
   ///   - the stepweise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
   CurvilinearState curvilinearState(State& state,
-                                    bool transportCov = true) const {
-    // TODO this is not correct, but not needed right now somewhere...
-    return SingleStepper::curvilinearState(state.components.front().state,
-                                           transportCov);
-  }
-
-  /// Method to update a stepper state to the some parameters
-  ///
-  /// @param [in,out] state State object that will be updated
-  /// @param [in] pars Parameters that will be written into @p state
-  /// TODO is this function useful for a MultiStepper?
-  void update(State& state, const FreeVector& parameters,
-              const Covariance& covariance) const {
-    for (auto& component : state.components) {
-      SingleStepper::update(component.state, parameters, covariance);
-    }
-  }
-
-  /// Method to update momentum, direction and p
-  ///
-  /// @param [in,out] state State object that will be updated
-  /// @param [in] uposition the updated position
-  /// @param [in] udirection the updated direction
-  /// @param [in] up the updated momentum value
-  /// TODO is this function useful for a MultiStepper?
-  void update(State& state, const Vector3& uposition, const Vector3& udirection,
-              double up, double time) const {
-    for (auto& component : state.components) {
-      SingleStepper::update(component.state, uposition, udirection, up, time);
-    }
-  }
-
-  /// Method to update the components individually
-  template <typename component_rep_t>
-  void updateComponents(State& state, const std::vector<component_rep_t>& cmps,
-                        const Surface& surface) const {
-    state.components.clear();
-
-    for (const auto& cmp : cmps) {
-      using Opt = std::optional<BoundSymMatrix>;
-      auto& tp = *cmp.trackStateProxy;
-      auto track_pars = BoundTrackParameters(
-          surface.getSharedPtr(), tp.filtered(),
-          (state.covTransport ? Opt{BoundSymMatrix{tp.filteredCovariance()}}
-                              : Opt{}));
-
-      state.components.push_back(
-          {SingleStepper::makeState(state.geoContext, state.magContext,
-                                    std::move(track_pars), state.navDir),
-           cmp.weight, Intersection3D::Status::onSurface});
-
-      state.components.back().state.jacobian = cmp.jacobian;
-      state.components.back().state.derivative = cmp.derivative;
-      state.components.back().state.jacToGlobal = cmp.jacToGlobal;
-      state.components.back().state.jacTransport = cmp.jacTransport;
-    }
-  }
+                                    bool transportCov = true) const;
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,
@@ -912,130 +824,17 @@ class MultiEigenStepperLoop
   /// backwards track propagation, and since we're using an adaptive
   /// algorithm, it can be modified by the stepper class during propagation.
   template <typename propagator_state_t>
-  Result<double> step(propagator_state_t& state) const {
-    State& stepping = state.stepping;
+  Result<double> step(propagator_state_t& state) const;
 
-    // Emit warning if charge is not the same for all componenents
-    {
-      std::stringstream ss;
-      bool charge_ambigous = false;
-      for (const auto& cmp : stepping.components) {
-        ss << cmp.state.q << " ";
-        if (cmp.state.q != stepping.components.front().state.q) {
-          charge_ambigous = true;
-        }
-      }
-
-      if (charge_ambigous) {
-        ACTS_VERBOSE(stepping.steps << "Charge of components is ambigous: "
-                                    << ss.str());
-      } else {
-        ACTS_VERBOSE(stepping.steps << "Charge of components: " << ss.str());
-      }
-    }
-
-    // Update step count
-    stepping.steps++;
-
-    // Check if we abort because of m_stepLimitAfterFirstComponentOnSurface
-    if (stepping.stepCounterAfterFirstComponentOnSurface) {
-      (*stepping.stepCounterAfterFirstComponentOnSurface)++;
-
-      // If the limit is reached, remove all components which are not on a
-      // surface, reweight the components, perform no step and return 0
-      if (*stepping.stepCounterAfterFirstComponentOnSurface >=
-          m_stepLimitAfterFirstComponentOnSurface) {
-        auto& cmps = stepping.components;
-
-        // It is not possible to remove components from the vector, since the
-        // GSF actor relies on the fact that the ordering and number of
-        // components does not change
-        for (auto& cmp : cmps) {
-          if (cmp.status != Intersection3D::Status::onSurface) {
-            cmp.status = Intersection3D::Status::missed;
-            cmp.weight = 0.0;
-            cmp.state.pars.template segment<3>(eFreeDir0) = Vector3::Zero();
-          }
-        }
-
-        // Reweight
-        const auto sum_of_weights = std::accumulate(
-            begin(cmps), end(cmps), ActsScalar{0},
-            [](auto sum, const auto& cmp) { return sum + cmp.weight; });
-        for (auto& cmp : cmps) {
-          cmp.weight /= sum_of_weights;
-        }
-
-        ACTS_VERBOSE(
-            "hit m_stepLimitAfterFirstComponentOnSurface, "
-            "perform no step");
-
-        stepping.stepCounterAfterFirstComponentOnSurface.reset();
-
-        return 0.0;
-      }
-    }
-
-
-    // Loop over all components and collect results in vector, write some
-    // summary information to a stringstream
-    std::vector<Result<double>> results;
-    std::stringstream ss;
-
-    for (auto& component : stepping.components) {
-      // We must also propagate missed components for the case that all
-      // components miss the target we need to retarget
-      if (component.status == Intersection3D::Status::onSurface) {
-        ss << "cmp skipped\t";
-        continue;
-      }
-
-      SinglePropState single_state{component.state, state.navigation,
-                                   state.options, state.geoContext};
-      results.push_back(SingleStepper::step(single_state));
-
-      if (results.back().ok()) {
-        ss << *results.back() << "\t";
-      } else {
-        ss << "step error: " << results.back().error() << "\t";
-      }
-    }
-
-    // Return no component was updated
-    if (results.empty()) {
-      return 0.0;
-    }
-
-    // Collect pointers to results which are ok, since Result is not copyable
-    std::vector<Result<double>*> ok_results;
-    for (auto& res : results) {
-      if (res.ok()) {
-        ok_results.push_back(&res);
-      }
-    }
-
-    // Return error if there is no ok result
-    if (ok_results.empty()) {
-      return GsfError::AllComponentsSteppingError;
-    }
-
-    // Print the summary
-    if (ok_results.size() == results.size()) {
-      ACTS_VERBOSE("Performed steps: " << ss.str());
-    } else {
-      ACTS_WARNING("Performed steps with errors: " << ss.str());
-    }
-
-    // Compute the average stepsize for the return value and the
-    // pathAccumulated
-    const auto avg_step =
-        std::accumulate(begin(ok_results), end(ok_results), 0.,
-                        [](auto sum, auto res) { return sum + res->value(); }) /
-        static_cast<double>(ok_results.size());
-    stepping.pathAccumulated += avg_step;
-
-    return avg_step;
-  }
+ private:
+  /// Helper method to unify combination to BoundState and CurvilinearState.
+  /// @tparam state_type_t Determines the behaviour of the function, must be 
+  /// BoundState or CurvilinearState (checked by static_assert inside)
+  template <typename state_type_t>
+  state_type_t combineComponents(State& state, const Surface *surface,
+                                 bool covTransport) const;
 };
 
 }  // namespace Acts
+
+#include "MultiEigenStepperLoop.ipp"
