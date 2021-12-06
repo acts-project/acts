@@ -10,7 +10,6 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Experimental/CylindricalContainerHelper.hpp"
 #include "Acts/Experimental/DetectorVolume.hpp"
 #include "Acts/Experimental/Enumerate.hpp"
 #include "Acts/Experimental/Portal.hpp"

@@ -1,4 +1,4 @@
-add_unittest(CylindricalContainerHelper CylindricalContainerHelperTests.cpp)
+add_unittest(CylindricalContainerBuilder CylindricalContainerBuilderTests.cpp)
 add_unittest(DetectorVolume DetectorVolumeTests.cpp)
 add_unittest(LayerBlueprint LayerBlueprintTests.cpp)
 add_unittest(SurfaceLinks SurfaceLinksTests.cpp)

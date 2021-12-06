@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Experimental/CylindricalContainerHelper.hpp"
+#include "Acts/Experimental/CylindricalContainerBuilders.hpp"
 #include "Acts/Experimental/DetectorVolume.hpp"
 #include "Acts/Experimental/SurfaceLinks.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
@@ -276,7 +276,7 @@ std::shared_ptr<DetectorVolume> createCentralDetector(
       beamPipe, firstLayer, firstGap, secondLayer};
 
   // Return the container in R
-  return CylindricalContainerHelper::containerInR(
+  return CylindricalContainerBuilderR::operator()(
       std::move(barrelVolumes), detectorName + std::string("TwoLayers"));
 }
 
@@ -333,7 +333,7 @@ std::shared_ptr<DetectorVolume> createEndcapDetector(
     endcapVolumes = {secondLayer, gap, firstLayer};
   }
   // Container in Z
-  return CylindricalContainerHelper::containerInZ(
+  return CylindricalContainerBuilderZ::operator()(
       std::move(endcapVolumes),
       detectorName + std::string("TwoLayers") + sideTag);
 }
@@ -346,7 +346,7 @@ std::shared_ptr<DetectorVolume> createDetector() {
   auto positiveEndcap =
       createEndcapDetector(0., 80., 500., 1, "PositiveEndcap");
 
-  return CylindricalContainerHelper::containerInZ(
+  return CylindricalContainerBuilderZ::operator()(
       {negativeEndcap, centralBarrel, positiveEndcap}, std::string("Detector"));
 }
 

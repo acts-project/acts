@@ -35,7 +35,7 @@ struct VoidContainerBuilder {
       throw std::invalid_argument(
           "VoidContainerBuilder: exacly one Volume has to be provided.");
     }
-
+    // The single volume is the new container 
     auto volume = containerVolumes[0];
     volume->setName(name);
     return volume;
@@ -64,11 +64,12 @@ class VolumeBlueprint {
   ///
   /// @param extent is the volume extent
   /// @param layerBlueprints is the list of layer blueprints
-  /// @param binningValue is the binning direction of the layer volumes
+  /// @param vBuilder is the function for layer volume building
+  /// @param cBuilder is the function for container volume building
   VolumeBlueprint(const Extent& extent,
                   const std::vector<LayerBlueprint>& layerBlueprints,
                   VolumeBuilder vBuilder,
-                  ContainerBuilder bBuilder = VoidContainerBuilder());
+                  ContainerBuilder cBuilder = VoidContainerBuilder());
 
   VolumeBlueprint() = delete;
 
@@ -81,11 +82,14 @@ class VolumeBlueprint {
   /// @return the layer blue prints
   const std::vector<LayerBlueprint>& layerBlueprints() const;
 
-
+  /// @return the volume builder function 
+  const VolumeBuilder& volumeBuilder() const;
   
+  /// @return the container builder function
+  const ContainerBuilder& containerBuilder const;
 
  private:
-  /// The actual extent (measured from surfaces)
+  /// The extent for this volume
   Extent m_extent;
 
   /// The contained layer blueprints
@@ -99,10 +103,6 @@ class VolumeBlueprint {
 
 };
 
-inline const std::vector<LayerBlueprint>& layerBlueprints() const {
-  return m_layerBlueprints;
-}
-
 inline const Extent& VolumeBlueprint::extent() const {
   return m_extent;
 }
@@ -111,8 +111,16 @@ inline Extent& VolumeBlueprint::extent() {
   return m_extent;
 }
 
-inline BinningValue VolumeBlueprint::binningValue() const {
-  return m_binningValue;
+inline const std::vector<LayerBlueprint>& VolumeBlueprint::layerBlueprints() const {
+  return m_layerBlueprints;
+}
+
+inline const VolumeBuilder& VolumeBlueprint::volumeBuilder() const {
+  return m_volumeBuilder;
+}
+  
+inline const ContainerBuilder& VolumeBlueprint::containerBuilder const {
+      return m_containerBuilder;
 }
 
 }  // namespace Acts

@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Experimental/CylindricalContainerHelper.hpp"
+#include "Acts/Experimental/CylindricalContainerBuilders.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Experimental/DetectorVolume.hpp"
@@ -26,7 +26,7 @@
 #include <stdexcept>
 
 std::shared_ptr<Acts::DetectorVolume>
-Acts::CylindricalContainerHelper::containerInZ(
+Acts::CylindricalContainerBuilderZ::operator()(
     std::vector<std::shared_ptr<DetectorVolume>>&& containerVolumes,
     const std::string& containerName) {
   // Consistency check: volumes exist
@@ -183,7 +183,7 @@ Acts::CylindricalContainerHelper::containerInZ(
 }
 
 std::shared_ptr<Acts::DetectorVolume>
-Acts::CylindricalContainerHelper::containerInR(
+Acts::CylindricalContainerBuilderR::operator()(
     std::vector<std::shared_ptr<DetectorVolume>>&& containerVolumes,
     const std::string& containerName) {
   // Consistency check: volumes exist

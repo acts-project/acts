@@ -4,5 +4,5 @@ target_sources(
   Portal.cpp
   DetectorVolume.cpp
   LayerBlueprint.cpp
-  CylindricalContainerHelper.cpp
+  CylindricalContainerBuilders.cpp
   CylindricalVolumeBuilder.cpp)
