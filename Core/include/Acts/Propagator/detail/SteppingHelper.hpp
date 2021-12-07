@@ -33,7 +33,8 @@ template <typename stepper_t>
 Acts::Intersection3D::Status updateSingleSurfaceStatus(
     const stepper_t& stepper, typename stepper_t::State& state,
     const Surface& surface, const BoundaryCheck& bcheck, LoggerWrapper logger) {
-  ACTS_VERBOSE("Update single surface status for surface: " << surface.geometryId());
+  ACTS_VERBOSE(
+      "Update single surface status for surface: " << surface.geometryId());
 
   auto sIntersection =
       surface.intersect(state.geoContext, stepper.position(state),
@@ -53,7 +54,8 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
       double cLimit = intersection.pathLength;
       ACTS_VERBOSE(" -> pLimit, oLimit, cLimit: " << pLimit << ", " << oLimit
                                                   << ", " << cLimit);
-      bool accept = (cLimit > oLimit and cLimit * cLimit < pLimit * pLimit + s_onSurfaceTolerance);
+      bool accept = (cLimit > oLimit and
+                     cLimit * cLimit < pLimit * pLimit + s_onSurfaceTolerance);
       if (accept) {
         ACTS_VERBOSE("Intersection is WITHIN limit");
         stepper.setStepSize(state, state.navDir * cLimit);
@@ -69,8 +71,8 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
           ACTS_VERBOSE("- intersection path length "
                        << std::abs(cLimit) << " is over the path limit "
                        << (std::abs(pLimit) + s_onSurfaceTolerance)
-                       << " (including tolerance of "
-                       << s_onSurfaceTolerance << ")");
+                       << " (including tolerance of " << s_onSurfaceTolerance
+                       << ")");
         }
       }
 
