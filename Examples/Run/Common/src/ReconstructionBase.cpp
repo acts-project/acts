@@ -25,7 +25,6 @@
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingOptions.hpp"
-#include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
@@ -106,8 +105,8 @@ ActsExamples::ParticleSmearing::Config setupParticleSmearing(
   auto logLevel = Options::readLogLevel(vars);
 
   // Create smeared particles states
-  ParticleSmearing::Config particleSmearingCfg;
-  particleSmearingCfg.ReadOptions(vars);
+  ParticleSmearing::Config particleSmearingCfg =
+      Options::readParticleSmearingOptions(vars);
   particleSmearingCfg.inputParticles = inputParticles;
   particleSmearingCfg.outputTrackParameters = "smearedparameters";
   particleSmearingCfg.randomNumbers = rnd;

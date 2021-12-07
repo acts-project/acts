@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "ActsExamples/TruthTracking/ParticleSmearingOptions.hpp"
 
 #include <array>
 #include <limits>
@@ -28,28 +27,6 @@ namespace ActsExamples {
 class ParticleSmearing final : public BareAlgorithm {
  public:
   struct Config {
-    void ReadOptions(const Options::Variables& vars) {
-      using namespace Acts::UnitConstants;
-      using Options::Reals;
-
-      auto sigmaD0Opts = vars["smear-sigma-D0"].template as<Reals<3>>();
-      auto sigmaZ0Opts = vars["smear-sigma-Z0"].template as<Reals<3>>();
-      auto sigmaMomOpts = vars["smear-sigma-momentum"].template as<Reals<3>>();
-
-      sigmaD0 = sigmaD0Opts[0] * Acts::UnitConstants::um;
-      sigmaD0PtA = sigmaD0Opts[1] * Acts::UnitConstants::um;
-      sigmaD0PtB = sigmaD0Opts[2] / Acts::UnitConstants::GeV;
-      sigmaZ0 = sigmaZ0Opts[0] * Acts::UnitConstants::um;
-      sigmaZ0PtA = sigmaZ0Opts[1] * Acts::UnitConstants::um;
-      sigmaZ0PtB = sigmaZ0Opts[2] / Acts::UnitConstants::GeV;
-      sigmaT0 = vars["smear-sigma-T0"].as<double>() * Acts::UnitConstants::ns;
-      sigmaPhi = sigmaMomOpts[0] * Acts::UnitConstants::degree;
-      sigmaTheta = sigmaMomOpts[1] * Acts::UnitConstants::degree;
-      sigmaPRel = sigmaMomOpts[2];
-      initialVarInflation =
-          vars["fit-initial-variance-inflation"].template as<Reals<6>>();
-    }
-
     /// Input truth particles collection.
     std::string inputParticles;
     /// Output smeared tracks parameters collection.

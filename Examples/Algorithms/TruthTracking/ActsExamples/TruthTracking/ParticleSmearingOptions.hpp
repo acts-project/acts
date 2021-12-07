@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
@@ -21,6 +22,10 @@ namespace Options {
 
 /// Add particle smearing options with a `smearing-` prefix.
 void addParticleSmearingOptions(Description& desc);
+
+/// Read options
+ParticleSmearing::Config readParticleSmearingOptions(
+    const Options::Variables& vars);
 
 }  // namespace Options
 }  // namespace ActsExamples

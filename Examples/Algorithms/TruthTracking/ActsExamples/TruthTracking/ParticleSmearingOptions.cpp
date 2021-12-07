@@ -27,3 +27,32 @@ void ActsExamples::Options::addParticleSmearingOptions(Description& desc) {
       value<Reals<6>>()->default_value({{1., 1., 1., 1., 1., 1.}}),
       "Inflate the initial covariance matrix");
 }
+
+ActsExamples::ParticleSmearing::Config
+ActsExamples::Options::readParticleSmearingOptions(
+    const ActsExamples::Options::Variables& vars) {
+  using namespace ActsExamples;
+  using namespace Acts::UnitConstants;
+  using Options::Reals;
+
+  ParticleSmearing::Config cfg;
+
+  auto sigmaD0Opts = vars["smear-sigma-D0"].template as<Reals<3>>();
+  auto sigmaZ0Opts = vars["smear-sigma-Z0"].template as<Reals<3>>();
+  auto sigmaMomOpts = vars["smear-sigma-momentum"].template as<Reals<3>>();
+
+  cfg.sigmaD0 = sigmaD0Opts[0] * Acts::UnitConstants::um;
+  cfg.sigmaD0PtA = sigmaD0Opts[1] * Acts::UnitConstants::um;
+  cfg.sigmaD0PtB = sigmaD0Opts[2] / Acts::UnitConstants::GeV;
+  cfg.sigmaZ0 = sigmaZ0Opts[0] * Acts::UnitConstants::um;
+  cfg.sigmaZ0PtA = sigmaZ0Opts[1] * Acts::UnitConstants::um;
+  cfg.sigmaZ0PtB = sigmaZ0Opts[2] / Acts::UnitConstants::GeV;
+  cfg.sigmaT0 = vars["smear-sigma-T0"].as<double>() * Acts::UnitConstants::ns;
+  cfg.sigmaPhi = sigmaMomOpts[0] * Acts::UnitConstants::degree;
+  cfg.sigmaTheta = sigmaMomOpts[1] * Acts::UnitConstants::degree;
+  cfg.sigmaPRel = sigmaMomOpts[2];
+  cfg.initialVarInflation =
+      vars["fit-initial-variance-inflation"].template as<Reals<6>>();
+
+  return cfg;
+}
