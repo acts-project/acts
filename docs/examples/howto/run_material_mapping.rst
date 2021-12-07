@@ -67,13 +67,13 @@ The first one take as an input the surfaces map previously generated and will re
 
 .. code-block:: console
 
-  python3 ../Examples/Scripts/MaterialMaping/writeMapConfig.py geometry-map.json config-map.json
+  python3 ../Examples/Scripts/MaterialMapping/writeMapConfig.py geometry-map.json config-map.json
 
 Then edit the config-map.json file
 
 .. code-block:: console
 
-  python3 ../Examples/Scripts/MaterialMaping/configureMap.py geometry-map.json config-map.json
+  python3 ../Examples/Scripts/MaterialMapping/configureMap.py geometry-map.json config-map.json
 
 Geantino scan
 -------------
@@ -122,7 +122,7 @@ By default, the Geantino scan is performed with no spread in :math:`z_0` and :ma
 
   ./../build/bin/ActsExampleMaterialValidationDD4hep -n 1000 --mat-input-type file --mat-input-file material-maps.json --output-root --mat-output-file val-mat-map --dd4hep-input ../thirdparty/OpenDataDetector/xml/OpenDataDetector.xml --prop-z0-sigma 0.0 --prop-d0-sigma 0.0
 
-To do the validation, five root macros are available in ``scripts/MaterialMaping``:
+To do the validation, five root macros are available in ``scripts/MaterialMapping``:
 
 - ``Mat_map.C``: general comparison at the track level and 2D map of the detector.
 - ``Mat_map_surface_plot.C``: for each mapped surface show the position of the material.
@@ -134,7 +134,7 @@ To do the validation, five root macros are available in ``scripts/MaterialMaping
 
   mkdir Validation
 
-  root -l -b ../Examples/Scripts/MaterialMaping/Mat_map.C'("propagation-material.root","material-maps_tracks.root","Validation")'
+  root -l -b ../Examples/Scripts/MaterialMapping/Mat_map.C'("propagation-material.root","material-maps_tracks.root","Validation")'
   .q
 
   mkdir Surfaces
@@ -146,11 +146,11 @@ To do the validation, five root macros are available in ``scripts/MaterialMaping
   mkdir 1D_plot
   cd ..
 
-  root -l -b ../Examples/Scripts/MaterialMaping/Mat_map_surface_plot_ratio.C'("propagation-material.root","material-maps_tracks.root","geometry-map.json",100000,"Surfaces/ratio_plot","Surfaces/prop_plot","Surfaces/map_plot")'
+  root -l -b ../Examples/Scripts/MaterialMapping/Mat_map_surface_plot_ratio.C'("propagation-material.root","material-maps_tracks.root","geometry-map.json",100000,"Surfaces/ratio_plot","Surfaces/prop_plot","Surfaces/map_plot")'
   .q
-  root -l -b ../Examples/Scripts/MaterialMaping/Mat_map_surface_plot_dist.C'("material-maps_tracks.root","geometry-map.json",-1,"Surfaces/dist_plot")'
+  root -l -b ../Examples/Scripts/MaterialMapping/Mat_map_surface_plot_dist.C'("material-maps_tracks.root","geometry-map.json",-1,"Surfaces/dist_plot")'
   .q
-  root -l -b ../Examples/Scripts/MaterialMaping/Mat_map_surface_plot_1D.C'("material-maps_tracks.root","geometry-map.json",100000,"Surfaces/1D_plot")'
+  root -l -b ../Examples/Scripts/MaterialMapping/Mat_map_surface_plot_1D.C'("material-maps_tracks.root","geometry-map.json",100000,"Surfaces/1D_plot")'
   .q
 
 Using the validation plots you can then adapt the binning and the mapped surface to improve the mapping.
@@ -158,7 +158,8 @@ Using the validation plots you can then adapt the binning and the mapped surface
 On top of those plots : 
 
 .. code-block:: console
-  root -l -b ../Examples/Scripts/MaterialMaping/Mat_map_detector_plot_ratio.C'("propagation-material.root","material-maps_tracks.root",{X,Y,Z},100000,"Det_ratio","Det_Acts","Det_G4")'
+
+  root -l -b ../Examples/Scripts/MaterialMapping/Mat_map_detector_plot_ratio.C'("propagation-material.root","material-maps_tracks.root",{X,Y,Z},100000,"Det_ratio","Det_Acts","Det_G4")'
   .q
 
 Can be use with X,Y,Z is a list of volumes, this will plot the material ratio between the map and the Geantino scan for the given volumes.
