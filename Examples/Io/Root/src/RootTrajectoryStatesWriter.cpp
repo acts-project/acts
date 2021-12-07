@@ -424,17 +424,26 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
                             H * covariance * H.transpose();
               auto res = state.effectiveCalibrated() - H * parameters;
               m_res_x_hit.push_back(res[Acts::eBoundLoc0]);
-              m_res_y_hit.push_back(res[Acts::eBoundLoc1]);
               m_err_x_hit.push_back(
                   sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
-              m_err_y_hit.push_back(
-                  sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
               m_pull_x_hit.push_back(
                   res[Acts::eBoundLoc0] /
                   sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
-              m_pull_y_hit.push_back(
-                  res[Acts::eBoundLoc1] /
-                  sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+
+              if (state.calibratedSize() >= 2) {
+                m_pull_y_hit.push_back(
+                    res[Acts::eBoundLoc1] /
+                    sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+                m_res_y_hit.push_back(res[Acts::eBoundLoc1]);
+                m_err_y_hit.push_back(
+                    sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+              } else {
+                float nan = std::numeric_limits<float>::quiet_NaN();
+                m_pull_y_hit.push_back(nan);
+                m_res_y_hit.push_back(nan);
+                m_err_y_hit.push_back(nan);
+              }
+
               m_dim_hit.push_back(state.calibratedSize());
             }
 
