@@ -110,8 +110,6 @@ ActsExamples::ParticleSmearing::Config setupParticleSmearing(
   particleSmearingCfg.inputParticles = inputParticles;
   particleSmearingCfg.outputTrackParameters = "smearedparameters";
   particleSmearingCfg.randomNumbers = rnd;
-  particleSmearingCfg.initialVarInflation =
-      vars["fit-initial-variance-inflation"].template as<Options::Reals<6>>();
   sequencer.addAlgorithm(
       std::make_shared<ParticleSmearing>(particleSmearingCfg, logLevel));
 
