@@ -16,13 +16,9 @@
 #include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "Acts/Propagator/DefaultExtension.hpp"
-#include "Acts/Propagator/DenseEnvironmentExtension.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
-#include "Acts/Propagator/StepperExtensionList.hpp"
-#include "Acts/Propagator/detail/Auctioneer.hpp"
-#include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/gaussian_mixture_helpers.hpp"
@@ -35,9 +31,9 @@
 #include <sstream>
 #include <vector>
 
-#include "MultiStepperError.hpp"
+#include <boost/container/small_vector.hpp>
 
-// #define PRINT_STEPSIZE_CHANGE
+#include "MultiStepperError.hpp"
 
 namespace Acts {
 
@@ -46,11 +42,11 @@ using namespace Acts::UnitLiterals;
 /// @brief Reducer struct for the Loop MultiEigenStepper which reduces the
 /// multicomponent state to simply by summing the weighted values
 struct WeightedComponentReducerLoop {
-  template <typename component_t>
-  static Vector3 toVector3(const std::vector<component_t>& comps,
+  template <typename component_range_t>
+  static Vector3 toVector3(const component_range_t& comps,
                            const FreeIndices i) {
     return std::accumulate(
-        begin(comps), end(comps), Vector3{Vector3::Zero()},
+        comps.begin(), comps.end(), Vector3{Vector3::Zero()},
         [i](const auto& sum, const auto& cmp) -> Vector3 {
           return sum + cmp.weight * cmp.state.pars.template segment<3>(i);
         });
@@ -69,7 +65,7 @@ struct WeightedComponentReducerLoop {
   template <typename stepper_state_t>
   static ActsScalar momentum(const stepper_state_t& s) {
     return std::accumulate(
-        begin(s.components), end(s.components), ActsScalar{0.},
+        s.components.begin(), s.components.end(), ActsScalar{0.},
         [](const auto& sum, const auto& cmp) -> ActsScalar {
           return sum +
                  cmp.weight * (1 / (cmp.state.pars[eFreeQOverP] / cmp.state.q));
@@ -78,7 +74,7 @@ struct WeightedComponentReducerLoop {
 
   template <typename stepper_state_t>
   static ActsScalar charge(const stepper_state_t& s) {
-    return std::accumulate(begin(s.components), end(s.components),
+    return std::accumulate(s.components.begin(), s.components.end(),
                            ActsScalar{0.},
                            [](const auto& sum, const auto& cmp) -> ActsScalar {
                              return sum + cmp.weight * cmp.state.q;
@@ -88,7 +84,7 @@ struct WeightedComponentReducerLoop {
   template <typename stepper_state_t>
   static ActsScalar time(const stepper_state_t& s) {
     return std::accumulate(
-        begin(s.components), end(s.components), ActsScalar{0.},
+        s.components.begin(), s.components.end(), ActsScalar{0.},
         [](const auto& sum, const auto& cmp) -> ActsScalar {
           return sum + cmp.weight * cmp.state.pars[eFreeTime];
         });
@@ -96,7 +92,7 @@ struct WeightedComponentReducerLoop {
 
   template <typename stepper_state_t>
   static FreeVector pars(const stepper_state_t& s) {
-    return std::accumulate(begin(s.components), end(s.components),
+    return std::accumulate(s.components.begin(), s.components.end(),
                            FreeVector{FreeVector::Zero()},
                            [](const auto& sum, const auto& cmp) -> FreeVector {
                              return sum + cmp.weight * cmp.state.pars;
@@ -105,7 +101,7 @@ struct WeightedComponentReducerLoop {
 
   template <typename stepper_state_t>
   static FreeVector cov(const stepper_state_t& s) {
-    return std::accumulate(begin(s.components), end(s.components),
+    return std::accumulate(s.components.begin(), s.components.end(),
                            FreeMatrix{FreeMatrix::Zero()},
                            [](const auto& sum, const auto& cmp) -> FreeMatrix {
                              return sum + cmp.weight * cmp.state.cov;
@@ -114,8 +110,8 @@ struct WeightedComponentReducerLoop {
 };
 
 struct MaxMomentumReducerLoop {
-  template <typename component_t>
-  static const auto& maxMomenutmIt(const std::vector<component_t>& cmps) {
+  template <typename component_range_t>
+  static const auto& maxMomenutmIt(const component_range_t& cmps) {
     return *std::max_element(cmps.begin(), cmps.end(),
                              [&](const auto& a, const auto& b) {
                                return std::abs(a.state.pars[eFreeQOverP]) >
@@ -170,9 +166,12 @@ struct MaxMomentumReducerLoop {
 /// states
 /// * The components do not share a single magnetic-field-cache
 /// @tparam extensionlist_t See EigenStepper for details
-/// @tparam component_reducer_t How to map the multi-component state to a single component
+/// @tparam component_reducer_t How to map the multi-component state to a single
+/// component
 /// @tparam auctioneer_t See EigenStepper for details
-template <typename extensionlist_t,
+/// @tparam small_vector_size A size-hint how much memory should be allocated
+/// by the small vector
+template <typename extensionlist_t = StepperExtensionList<DefaultExtension>,
           typename component_reducer_t = WeightedComponentReducerLoop,
           typename auctioneer_t = detail::VoidAuctioneer>
 class MultiEigenStepperLoop
@@ -183,6 +182,11 @@ class MultiEigenStepperLoop
   /// Limits the number of steps after at least one component reached the
   /// surface
   std::size_t m_stepLimitAfterFirstComponentOnSurface = 50;
+
+  /// Small vector type for speeding up some computations where we need to
+  /// accumulate stuff of components. We think 16 is a reasonable amount here.
+  template <typename T>
+  using SmallVector = boost::container::small_vector<T, 16>;
 
  public:
   /// @brief Typedef to the Single-Component Eigen Stepper
@@ -212,7 +216,7 @@ class MultiEigenStepperLoop
     };
 
     /// The components of which the state consists
-    std::vector<Component> components;
+    SmallVector<Component> components;
 
     bool covTransport = false;
     NavigationDirection navDir;
@@ -565,10 +569,6 @@ class MultiEigenStepperLoop
 
     std::array<int, 4> counts = {0, 0, 0, 0};
 
-#ifdef PRINT_STEPSIZE_CHANGE
-    const std::string before = outputStepSize(state);
-#endif
-
     for (auto& component : state.components) {
       component.status = detail::updateSingleSurfaceStatus<SingleStepper>(
           *this, component.state, surface, bcheck, logger);
@@ -585,12 +585,6 @@ class MultiEigenStepperLoop
                       }
                       return ss.str();
                     }());
-
-#ifdef PRINT_STEPSIZE_CHANGE
-    std::cout << "MultiStepperLoop::updateSurfaceStatus(...):\n"
-              << "\tBEFORE" << before << "\n"
-              << "\tAFTER" << outputStepSize(state) << std::endl;
-#endif
 
     // Switch on stepCounter if one or more components reached a surface, but
     // some are still in progress of reaching the surface
@@ -629,9 +623,6 @@ class MultiEigenStepperLoop
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
                       bool release = true) const {
-#ifdef PRINT_STEPSIZE_CHANGE
-    const std::string before = outputStepSize(state);
-#endif
     const Surface& surface = *oIntersection.representation;
 
     for (auto& component : state.components) {
@@ -653,12 +644,6 @@ class MultiEigenStepperLoop
 
       SingleStepper::updateStepSize(component.state, intersection, release);
     }
-
-#ifdef PRINT_STEPSIZE_CHANGE
-    std::cout << "MultiStepperLoop::updateStepSize(...):\n"
-              << "\tBEFORE" << before << "\n"
-              << "\tAFTER" << outputStepSize(state) << std::endl;
-#endif
   }
 
   /// Set Step size - explicitely with a double
@@ -667,21 +652,11 @@ class MultiEigenStepperLoop
   /// @param stepSize [in] The step size value
   /// @param stype [in] The step size type to be set
   void setStepSize(State& state, double stepSize,
-                   ConstrainedStep::Type stype = ConstrainedStep::actor,
-                   bool release = true) const {
-#ifdef PRINT_STEPSIZE_CHANGE
-    const std::string before = outputStepSize(state);
-#endif
+                   ConstrainedStep::Type stype = ConstrainedStep::actor) const {
 
     for (auto& component : state.components) {
-      SingleStepper::setStepSize(component.state, stepSize, stype, release);
+      SingleStepper::setStepSize(component.state, stepSize, stype);
     }
-
-#ifdef PRINT_STEPSIZE_CHANGE
-    std::cout << "MultiStepperLoop::setStepSize(...):\n"
-              << "\tBEFORE" << before << "\n"
-              << "\tAFTER" << outputStepSize(state) << std::endl;
-#endif
   }
 
   /// Get the step size
@@ -701,19 +676,9 @@ class MultiEigenStepperLoop
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   void releaseStepSize(State& state) const {
-#ifdef PRINT_STEPSIZE_CHANGE
-    const std::string before = outputStepSize(state);
-#endif
-
     for (auto& component : state.components) {
       SingleStepper::releaseStepSize(component.state);
     }
-
-#ifdef PRINT_STEPSIZE_CHANGE
-    std::cout << "MultiStepperLoop::releaseStepSize(...):\n"
-              << "\tBEFORE" << before << "\n"
-              << "\tAFTER" << outputStepSize(state) << std::endl;
-#endif
   }
 
   /// Output the Step Size - single component
@@ -758,7 +723,11 @@ class MultiEigenStepperLoop
   /// @brief This transports (if necessary) the covariance
   /// to the surface and creates a bound state. It does not check
   /// if the transported state is at the surface, this needs to
-  /// be guaranteed by the propagator
+  /// be guaranteed by the propagator.
+  /// @note This is done by combining the gaussian mixture on the specified
+  /// surface. If the conversion to bound states of some components
+  /// failes, these components are ignored unless all components fail. In this
+  /// case an error code is returned.
   ///
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
@@ -775,6 +744,8 @@ class MultiEigenStepperLoop
   ///
   /// @brief This transports (if necessary) the covariance
   /// to the current position and creates a curvilinear state.
+  /// @note This is done as a simple average over the free representation
+  /// and covariance of the components.
   ///
   /// @param [in] state State that will be presented as @c CurvilinearState
   /// @param [in] transportCov Flag steering covariance transport
@@ -823,16 +794,9 @@ class MultiEigenStepperLoop
   /// The state contains the desired step size. It can be negative during
   /// backwards track propagation, and since we're using an adaptive
   /// algorithm, it can be modified by the stepper class during propagation.
+  /// @note
   template <typename propagator_state_t>
   Result<double> step(propagator_state_t& state) const;
-
- private:
-  /// Helper method to unify combination to BoundState and CurvilinearState.
-  /// @tparam state_type_t Determines the behaviour of the function, must be 
-  /// BoundState or CurvilinearState (checked by static_assert inside)
-  template <typename state_type_t>
-  state_type_t combineComponents(State& state, const Surface *surface,
-                                 bool covTransport) const;
 };
 
 }  // namespace Acts

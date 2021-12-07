@@ -17,7 +17,8 @@ enum class MultiStepperError {
   ComponentNotOnSurface = 1,
   StateOfMultipleComponentsRequested = 2,
   AverageTrackLeftCurrentVolume = 3,
-  AllComponentsSteppingError = 4
+  AllComponentsSteppingError = 4,
+  AllComponentsConversionToBoundFailed = 5
 };
 
 std::error_code make_error_code(Acts::MultiStepperError e);

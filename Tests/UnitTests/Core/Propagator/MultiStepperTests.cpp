@@ -371,13 +371,14 @@ BOOST_AUTO_TEST_CASE(test_bound_state) {
       Vector3::Zero(), Vector3{1.0, 0.0, 0.0});
   auto bField = std::make_shared<NullBField>();
 
-  const auto pars = BoundVector::Random().eval();
+  // Use Ones() here, so that the angles are in correct range
+  const auto pars = BoundVector::Ones().eval();
   const auto cov = []() {
     auto c = BoundSymMatrix::Random().eval();
     c *= c.transpose();
     return c;
   }();
-
+  
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
       cmps(4, {0.25, pars, cov});
       
@@ -393,11 +394,50 @@ BOOST_AUTO_TEST_CASE(test_bound_state) {
   
   const auto [bound_pars, jacobian, pathLength] = *res;
   
-  std::cout << "start pars:       " << pars.transpose() << "\n";
-  std::cout << "bound state pars: " << bound_pars.parameters().transpose() << "\n";
-  
   BOOST_CHECK(jacobian == decltype(jacobian)::Zero());
   BOOST_CHECK(pathLength == 0.0);
   BOOST_CHECK(bound_pars.parameters().isApprox(pars, 1.e-8));
   BOOST_CHECK(bound_pars.covariance()->isApprox(cov, 1.e-8));
+}
+
+BOOST_AUTO_TEST_CASE(test_curvilinear_state) {
+  const NavigationDirection ndir = forward;
+  const double stepSize = 123.;
+  const double tolerance = 234.;
+
+  auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      Vector3::Zero(), Vector3{1.0, 0.0, 0.0});
+  auto bField = std::make_shared<NullBField>();
+
+  // Use Ones() here, so that the angles are in correct range
+  const auto pars = BoundVector::Ones().eval();
+  const auto cov = []() {
+    auto c = BoundSymMatrix::Random().eval();
+    c *= c.transpose();
+    return c;
+  }();
+  
+  std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
+      cmps(4, {0.25, pars, cov});
+  SingleBoundTrackParameters<SinglyCharged> check_pars(surface, pars, cov);
+      
+  MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface,
+                                                               cmps);
+  MultiStepper::State multi_state(geoCtx, magCtx, bField, multi_pars, ndir,
+                                  stepSize, tolerance);
+  MultiStepper multi_stepper(bField);
+  
+  const auto [curv_pars, jac, pathLength] = multi_stepper.curvilinearState(multi_state);
+  
+  BOOST_CHECK(curv_pars.fourPosition(multi_state.geoContext).isApprox(check_pars.fourPosition(multi_state.geoContext), 1.e-8));
+  BOOST_CHECK(curv_pars.unitDirection().isApprox(check_pars.unitDirection(), 1.e-8));
+  BOOST_CHECK_CLOSE(curv_pars.absoluteMomentum(), check_pars.absoluteMomentum(), 1.e-8);
+  BOOST_CHECK_CLOSE(curv_pars.charge(), check_pars.charge(), 1.e-8);
+}
+
+
+BOOST_AUTO_TEST_CASE(propagator_instatiation_test) {
+  auto bField = std::make_shared<NullBField>();
+  MultiEigenStepperLoop<> multi_stepper(bField);
+  [[maybe_unused]] Propagator<MultiEigenStepperLoop<>> propagator(multi_stepper);
 }

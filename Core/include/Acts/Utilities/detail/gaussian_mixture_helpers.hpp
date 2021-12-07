@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/Identity.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
 #include <tuple>
@@ -85,17 +84,16 @@ auto combineBoundGaussianMixture(
     // following lambda.
     auto handleCyclicCoor = [&ref = begin_pars, &pars = pars_l,
                              &weight = weight_l, &mean = mean](auto desc) {
-//       const auto delta = (ref[desc.idx] - pars[desc.idx]) / desc.constant;
+      const auto delta = (ref[desc.idx] - pars[desc.idx]) / desc.constant;
 
-//       if (delta > M_PI) {
-//         mean[desc.idx] += (2 * M_PI) * weight * desc.constant;
-//       } else if (delta < -M_PI) {
-//         mean[desc.idx] -= (2 * M_PI) * weight * desc.constant;
-//       }
-      mean[desc.idx] += wrap_periodic(pars[desc.idx] / desc.constant, 0.0, 2*M_PI) * weight * desc.constant;
+      if (delta > M_PI) {
+        mean[desc.idx] += (2 * M_PI) * weight * desc.constant;
+      } else if (delta < -M_PI) {
+        mean[desc.idx] -= (2 * M_PI) * weight * desc.constant;
+      }
     };
 
-    std::apply([&](auto... index) { (handleCyclicCoor(index), ...); },
+    std::apply([&](auto... idx_desc) { (handleCyclicCoor(idx_desc), ...); },
                angle_desc);
 
     // For covariance we must loop over all other following components

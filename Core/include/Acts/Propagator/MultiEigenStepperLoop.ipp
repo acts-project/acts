@@ -9,67 +9,6 @@
 namespace Acts {
 
 template <typename E, typename R, typename A>
-template <typename state_type_t>
-state_type_t MultiEigenStepperLoop<E, R, A>::combineComponents(
-    State& state, const Surface *surface, bool transportCov) const {
-  // Check if the state_type_t matches the requirements
-  static_assert(std::is_same_v<state_type_t, BoundState> ||
-                std::is_same_v<state_type_t, CurvilinearState>);
-  constexpr bool is_bound_state =
-      std::is_same_v<state_type_t, EigenStepper<>::BoundState>;
-
-  // Do the combination
-  std::vector<std::pair<double, state_type_t>> states;
-  double accumulatedPathLength = 0.0;
-  int failedBoundTransforms = 0;
-
-  for (auto i = 0ul; i < numberComponents(state); ++i) {
-    if constexpr (is_bound_state) {
-      auto bs = SingleStepper::boundState(state.components[i].state, *surface,
-                                          transportCov);
-
-      if (bs.ok()) {
-        states.push_back({state.components[i].weight, *bs});
-        accumulatedPathLength +=
-            std::get<double>(*bs) * state.components[i].weight;
-      } else {
-        failedBoundTransforms++;
-      }
-    } else {
-      auto cs = SingleStepper::curvilinearState(state.componenents[i].state,
-                                                transportCov);
-
-      states.push_back({state.components[i].weight, cs});
-      accumulatedPathLength +=
-          std::get<double>(cs) * state.components[i].weight;
-    }
-  }
-
-  if constexpr (is_bound_state) {
-    if (failedBoundTransforms > 0) {
-      ACTS_ERROR("Multi component bound state: "
-                 << failedBoundTransforms << " of " << numberComponents(state)
-                 << " transforms failed");
-    }
-  }
-
-  // TODO also implement a method of using the mode
-  const auto [params, cov] = detail::combineBoundGaussianMixture(
-      states.begin(), states.end(), [&](const auto& wbs) {
-        const auto& bp = std::get<BoundTrackParameters>(wbs.second);
-        return std::tie(wbs.first, bp.parameters(), bp.covariance());
-      });
-
-  if constexpr (is_bound_state) {
-    return BoundState{BoundTrackParameters(surface->getSharedPtr(), params, cov),
-                      Jacobian::Zero(), accumulatedPathLength};
-  } else {
-    return CurvilinearState{CurvilinearTrackParameters(params, cov),
-                            Jacobian::Zero(), accumulatedPathLength};
-  }
-}
-
-template <typename E, typename R, typename A>
 auto MultiEigenStepperLoop<E, R, A>::boundState(State& state,
                                                 const Surface& surface,
                                                 bool transportCov) const
@@ -77,8 +16,44 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(State& state,
   if (numberComponents(state) == 1) {
     return SingleStepper::boundState(state.components.front().state, surface,
                                      transportCov);
-  } else {
-    return combineComponents<BoundState>(state, &surface, transportCov);
+  } else {  // Do the combination
+    SmallVector<std::pair<double, BoundTrackParameters>> states;
+    double accumulatedPathLength = 0.0;
+    int failedBoundTransforms = 0;
+
+    for (auto i = 0ul; i < numberComponents(state); ++i) {
+      auto bs = SingleStepper::boundState(state.components[i].state, surface,
+                                          transportCov);
+
+      if (bs.ok()) {
+        states.push_back(
+            {state.components[i].weight, std::get<BoundTrackParameters>(*bs)});
+        accumulatedPathLength +=
+            std::get<double>(*bs) * state.components[i].weight;
+      } else {
+        failedBoundTransforms++;
+      }
+    }
+
+    if (failedBoundTransforms > 0) {
+      ACTS_ERROR("Multi component bound state: "
+                 << failedBoundTransforms << " of " << numberComponents(state)
+                 << " transforms failed");
+    }
+
+    if (states.size() == 0) {
+      return MultiStepperError::AllComponentsConversionToBoundFailed;
+    }
+
+    // TODO also implement a method of using the mode of the mixture
+    const auto [params, cov] = detail::combineBoundGaussianMixture(
+        states.begin(), states.end(), [&](const auto& wbs) {
+          return std::tie(wbs.first, wbs.second.parameters(),
+                          wbs.second.covariance());
+        });
+
+    return BoundState{BoundTrackParameters(surface.getSharedPtr(), params, cov),
+                      Jacobian::Zero(), accumulatedPathLength};
   }
 }
 
@@ -90,7 +65,27 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
     return SingleStepper::curvilinearState(state.components.front().state,
                                            transportCov);
   } else {
-    return combineComponents<CurvilinearState>(state, nullptr, transportCov);
+    Vector4 pos4 = Vector4::Zero();
+    Vector3 dir = Vector3::Zero();
+    ActsScalar qop = 0.0;
+    BoundSymMatrix cov = BoundSymMatrix::Zero();
+    ActsScalar pathLenth = 0.0;
+
+    for (auto i = 0ul; i < numberComponents(state); ++i) {
+      const auto [cp, jac, pl] = SingleStepper::curvilinearState(
+          state.components[i].state, transportCov);
+
+      pos4 += state.components[i].weight * cp.fourPosition(state.geoContext);
+      dir += state.components[i].weight * cp.unitDirection();
+      qop += state.components[i].weight * (cp.charge() / cp.absoluteMomentum());
+      if (cp.covariance()) {
+        cov += state.components[i].weight * *cp.covariance();
+      }
+      pathLenth += state.components[i].weight * pathLenth;
+    }
+
+    return CurvilinearState{CurvilinearTrackParameters(pos4, dir, qop, cov),
+                            Jacobian::Zero(), pathLenth};
   }
 }
 
@@ -145,7 +140,7 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
 
       // Reweight
       const auto sum_of_weights = std::accumulate(
-          begin(cmps), end(cmps), ActsScalar{0},
+          cmps.begin(), cmps.end(), ActsScalar{0},
           [](auto sum, const auto& cmp) { return sum + cmp.weight; });
       for (auto& cmp : cmps) {
         cmp.weight /= sum_of_weights;
@@ -163,12 +158,13 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
 
   // Loop over all components and collect results in vector, write some
   // summary information to a stringstream
-  std::vector<Result<double>> results;
+  SmallVector<Result<double>> results;
   std::stringstream ss;
+  double accumulatedPathLength = 0.0;
 
   for (auto& component : stepping.components) {
     // We must also propagate missed components for the case that all
-    // components miss the target we need to retarget
+    // components miss the target and we need to re-target
     if (component.status == Intersection3D::Status::onSurface) {
       ss << "cmp skipped\t";
       continue;
@@ -179,6 +175,7 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
     results.push_back(SingleStepper::step(single_state));
 
     if (results.back().ok()) {
+      accumulatedPathLength += component.weight * *results.back();
       ss << *results.back() << "\t";
     } else {
       ss << "step error: " << results.back().error() << "\t";
@@ -191,7 +188,7 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
   }
 
   // Collect pointers to results which are ok, since Result is not copyable
-  std::vector<Result<double>*> ok_results;
+  SmallVector<Result<double>*> ok_results;
   for (auto& res : results) {
     if (res.ok()) {
       ok_results.push_back(&res);
@@ -210,14 +207,8 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
     ACTS_WARNING("Performed steps with errors: " << ss.str());
   }
 
-  // Compute the average stepsize for the return value and the
-  // pathAccumulated
-  const auto avg_step =
-      std::accumulate(begin(ok_results), end(ok_results), 0.,
-                      [](auto sum, auto res) { return sum + res->value(); }) /
-      static_cast<double>(ok_results.size());
-  stepping.pathAccumulated += avg_step;
-
-  return avg_step;
+  // Return the weighted accumulated path length of all successful steps
+  stepping.pathAccumulated += accumulatedPathLength;
+  return accumulatedPathLength;
 }
 }  // namespace Acts

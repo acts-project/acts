@@ -28,6 +28,8 @@ class MultiStepperErrorCategory : public std::error_category {
         return "The average track has left the current volume";
       case MultiStepperError::AllComponentsSteppingError:
         return "Stepping error occured in all components";
+      case MultiStepperError::AllComponentsConversionToBoundFailed:
+        return "The conversion to the bound state failed for all components";
       default:
         return "unknown";
     }
