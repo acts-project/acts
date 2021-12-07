@@ -106,8 +106,8 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
       // Vertex constraint
       Acts::Vertex<Acts::BoundTrackParameters> theConstraint;
 
-      theConstraint.setCovariance(m_cfg.constraintCov);
-      theConstraint.setPosition(m_cfg.constraintPos);
+      theConstraint.setFullCovariance(m_cfg.constraintCov);
+      theConstraint.setFullPosition(m_cfg.constraintPos);
 
       // Vertex fitter options
       VertexFitterOptions vfOptionsConstr(ctx.geoContext, ctx.magFieldContext,
