@@ -197,6 +197,7 @@ BOOST_AUTO_TEST_CASE(multi_eigen_vs_single_eigen) {
     } single_prop_state{single_state, Options{}};
 
     auto single_result = single_stepper.step(single_prop_state);
+    single_stepper.transportCovarianceToCurvilinear(single_state);
 
     // Multi stepper;
     struct MultiPropState {
@@ -207,6 +208,7 @@ BOOST_AUTO_TEST_CASE(multi_eigen_vs_single_eigen) {
     } multi_prop_state{multi_state, Options{}, Navigation{}, geoCtx};
 
     auto multi_result = multi_stepper.step(multi_prop_state);
+    multi_stepper.transportCovarianceToCurvilinear(multi_state);
 
     // Check equality
     BOOST_REQUIRE(multi_result.ok() == true);
@@ -261,13 +263,24 @@ BOOST_AUTO_TEST_CASE(multi_eigen_component_iterable) {
 
   for (auto cmp : multi_stepper.componentIterable(multi_state)) {
     cmp.weight() *= 2.0;
+    cmp.pars() *= 2.0;
+    cmp.cov() *= 2.0;
   }
 
   {
     auto proxy_it = const_iterable.begin();
-    auto vec_it = cmps.begin();
-    for (; vec_it != cmps.end(); ++proxy_it, ++vec_it) {
-      BOOST_CHECK_EQUAL((*proxy_it).weight(), 2.0 * std::get<double>(*vec_it));
+    auto i = 0ul;
+    for (; proxy_it != const_iterable.end(); ++proxy_it, ++i) {
+      const auto [weight, single_pars_for_check] = multi_pars[i];
+      BOOST_CHECK_CLOSE((*proxy_it).weight(), 2.0 * weight, 1.e-10);
+      BOOST_CHECK((*proxy_it).pars().template segment<4>(eFreePos0).isApprox(
+          2.0 * single_pars_for_check.fourPosition(geoCtx), 1.e-10));
+      BOOST_CHECK((*proxy_it).pars().template segment<3>(eFreeDir0).isApprox(
+          2.0 * single_pars_for_check.unitDirection(), 1.e-10));
+      BOOST_CHECK_CLOSE((*proxy_it).pars()[eFreeQOverP],
+                        2.0 * single_pars_for_check.charge() /
+                            single_pars_for_check.absoluteMomentum(),
+                        1.e-10);
     }
   }
 }
