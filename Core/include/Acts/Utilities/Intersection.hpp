@@ -86,18 +86,6 @@ using Intersection2D = Intersection<2>;
 
 using Intersection3D = Intersection<3>;
 
-/// @brief Prints the status enum of a Intersection
-/// @note For some reason the compiler cannot infer the 
-/// integer-template-parameter when templating this on DIM
-inline std::ostream& operator<<(std::ostream& os,
-                                const Intersection3D::Status& status) {
-  constexpr static std::array s = {"missed/unreachable", "reachable",
-                                   "onSurface"};
-
-  os << s[static_cast<std::size_t>(status)];
-  return os;
-}
-
 /// @brief class extensions to return also the object and a representation
 template <typename object_t, typename representation_t = object_t>
 class ObjectIntersection {

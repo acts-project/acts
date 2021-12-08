@@ -32,7 +32,7 @@ class MultiComponentBoundTrackParameters {
   // TODO use [[no_unique_address]] once we switch to C++20
   charge_t m_chargeInterpreter;
 
-public:
+ public:
   /// Construct from multiple components with charge scalar q
   template <typename covariance_t>
   MultiComponentBoundTrackParameters(
@@ -117,17 +117,22 @@ public:
       const MultiComponentBoundTrackParameters&) = default;
   MultiComponentBoundTrackParameters& operator=(
       MultiComponentBoundTrackParameters&&) = default;
-      
+
   /// Access the parameters
-  const auto &components() const { return m_components; }
-  
+  const auto& components() const { return m_components; }
+
   /// Reference surface onto which the parameters are bound.
   const Surface& referenceSurface() const { return *m_surface; }
-  
+
   /// Get a SingleBoundTrackParameters object for one component
-  SingleBoundTrackParameters<charge_t> operator[](std::size_t i) const {
-    return SingleBoundTrackParameters<charge_t>(m_surface, std::get<BoundVector>(m_components[i]), std::get<std::optional<BoundSymMatrix>>(m_components[i]));
-  }  
+  std::pair<double, SingleBoundTrackParameters<charge_t>> operator[](
+      std::size_t i) const {
+    return std::make_pair(
+        std::get<double>(m_components[i]),
+        SingleBoundTrackParameters<charge_t>(
+            m_surface, std::get<BoundVector>(m_components[i]),
+            std::get<std::optional<BoundSymMatrix>>(m_components[i])));
+  }
 };
 
 }  // namespace Acts

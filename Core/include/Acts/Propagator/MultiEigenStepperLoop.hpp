@@ -16,9 +16,9 @@
 #include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/gaussian_mixture_helpers.hpp"
@@ -266,12 +266,12 @@ class MultiEigenStepperLoop
 
       const auto surface = multiPars.referenceSurface().getSharedPtr();
 
-      for (const auto& [weight, pars, cov] : multiPars.components()) {
-        components.push_back({SingleState(gctx, bField->makeCache(mctx),
-                                          SingleBoundTrackParameters<charge_t>(
-                                              surface, pars, cov),
-                                          ndir, ssize, stolerance),
-                              weight, Intersection3D::Status::reachable});
+      for (auto i = 0ul; i < multiPars.components().size(); ++i) {
+        const auto [weight, singlePars] = multiPars[i];
+        components.push_back(
+            {SingleState(gctx, bField->makeCache(mctx), std::move(singlePars),
+                         ndir, ssize, stolerance),
+             weight, Intersection3D::Status::reachable});
       }
 
       if (std::get<2>(multiPars.components().front())) {
@@ -653,7 +653,6 @@ class MultiEigenStepperLoop
   /// @param stype [in] The step size type to be set
   void setStepSize(State& state, double stepSize,
                    ConstrainedStep::Type stype = ConstrainedStep::actor) const {
-
     for (auto& component : state.components) {
       SingleStepper::setStepSize(component.state, stepSize, stype);
     }
