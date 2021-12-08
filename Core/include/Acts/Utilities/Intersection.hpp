@@ -25,13 +25,12 @@ enum class IntersectionStatus : int {
 };
 
 /// Ostream-operator for the IntersectionStatus enum
-inline std::ostream &operator<<(std::ostream &os, IntersectionStatus status) {
-    constexpr static std::array<const char *, 3> names = {{
-       "missed/unreachable", "reachable", "onSurface"
-    }};
+inline std::ostream& operator<<(std::ostream& os, IntersectionStatus status) {
+  constexpr static std::array<const char*, 3> names = {
+      {"missed/unreachable", "reachable", "onSurface"}};
 
-    os << names[static_cast<std::size_t>(status)];
-    return os;
+  os << names[static_cast<std::size_t>(status)];
+  return os;
 }
 
 ///  @struct Intersection
