@@ -108,6 +108,10 @@ void addDetector(Context& ctx) {
 
     auto c = py::class_<Config>(d, "Config").def(py::init<>());
 
+    c.def_property(
+        "jsonFile", nullptr,
+        [](Config& cfg, const std::string& file) { cfg.readJson(file); });
+
     py::enum_<Config::SubVolume>(c, "SubVolume")
         .value("Negative", Config::SubVolume::Negative)
         .value("Central", Config::SubVolume::Central)
