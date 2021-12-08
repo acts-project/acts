@@ -33,6 +33,7 @@ Acts::CylinderVolumeBounds::CylinderVolumeBounds(
   m_values[eHalfLengthZ] = cBounds.get(CylinderBounds::eHalfLengthZ);
   m_values[eHalfPhiSector] = cBounds.get(CylinderBounds::eHalfPhiSector);
   m_values[eAveragePhi] = cBounds.get(CylinderBounds::eAveragePhi);
+  m_values[eAngle] = cBounds.get(CylinderBounds::eAngle);
   buildSurfaceBounds();
 }
 
@@ -48,6 +49,7 @@ Acts::CylinderVolumeBounds::CylinderVolumeBounds(
   m_values[eHalfLengthZ] = 0.5 * thickness;
   m_values[eHalfPhiSector] = rBounds.get(RadialBounds::eHalfPhiSector);
   m_values[eAveragePhi] = rBounds.get(RadialBounds::eAveragePhi);
+  m_values[eAngle] = rBounds.get(RadialBounds::eAngle);
   buildSurfaceBounds();
 }
 
@@ -56,13 +58,30 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
   OrientedSurfaces oSurfaces;
   oSurfaces.reserve(6);
 
+  //Angle rotation of the sizes if the angle is defined
+  Translation3 vneg(0., 0., -get(eHalfLengthZ));
+  Translation3 vpos(0., 0., get(eHalfLengthZ));
+  //Transform3 vt = Eigen::AngleAxisf(0.785, w) * v1;
+  double angle = get(eAngle); 
+  Transform3 tneg, tpos;
+  if (angle != 0.) {  
+    double r = get(eMaxR);
+    Eigen::Vector3d w(1.0, 0.0, 0.0);
+    double sy = r * (1-std::cos(angle)) / std::cos(angle);
+    tneg = transform * vneg * Eigen::AngleAxisd(-angle, w) * Eigen::Scaling(1., 1. + sy, 1.);
+    tpos = transform * vpos * Eigen::AngleAxisd( angle, w) * Eigen::Scaling(1., 1. + sy, 1.);
+  } else {
+    tneg = transform * vneg;
+    tpos = transform * vpos;
+  }
+
   // [0] Bottom Disc (negative z)
   auto dSurface = Surface::makeShared<DiscSurface>(
-      transform * Translation3(0., 0., -get(eHalfLengthZ)), m_discBounds);
+      tneg, m_discBounds);
   oSurfaces.push_back(OrientedSurface(std::move(dSurface), forward));
   // [1] Top Disc (positive z)
   dSurface = Surface::makeShared<DiscSurface>(
-      transform * Translation3(0., 0., get(eHalfLengthZ)), m_discBounds);
+      tpos, m_discBounds);
   oSurfaces.push_back(OrientedSurface(std::move(dSurface), backward));
 
   // [2] Outer Cylinder
@@ -102,12 +121,12 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
 void Acts::CylinderVolumeBounds::buildSurfaceBounds() {
   if (get(eMinR) > s_epsilon) {
     m_innerCylinderBounds = std::make_shared<const CylinderBounds>(
-        get(eMinR), get(eHalfLengthZ), get(eHalfPhiSector), get(eAveragePhi));
+        get(eMinR), get(eHalfLengthZ), get(eHalfPhiSector), get(eAveragePhi), get(eAngle));
   }
   m_outerCylinderBounds = std::make_shared<const CylinderBounds>(
-      get(eMaxR), get(eHalfLengthZ), get(eHalfPhiSector), get(eAveragePhi));
+      get(eMaxR), get(eHalfLengthZ), get(eHalfPhiSector), get(eAveragePhi), get(eAngle));
   m_discBounds = std::make_shared<const RadialBounds>(
-      get(eMinR), get(eMaxR), get(eHalfPhiSector), get(eAveragePhi));
+      get(eMinR), get(eMaxR), get(eHalfPhiSector), get(eAveragePhi), get(eAngle));
 
   if (std::abs(get(eHalfPhiSector) - M_PI) > s_epsilon) {
     m_sectorPlaneBounds = std::make_shared<const RectangleBounds>(

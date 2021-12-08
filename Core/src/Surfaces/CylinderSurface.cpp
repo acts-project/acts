@@ -30,10 +30,11 @@ Acts::CylinderSurface::CylinderSurface(const GeometryContext& gctx,
 
 Acts::CylinderSurface::CylinderSurface(const Transform3& transform,
                                        double radius, double halfz,
-                                       double halfphi, double avphi)
+                                       double halfphi, double avphi,
+                                       double angle)
     : Surface(transform),
       m_bounds(std::make_shared<const CylinderBounds>(radius, halfz, halfphi,
-                                                      avphi)) {}
+                                                      avphi, angle)) {}
 
 Acts::CylinderSurface::CylinderSurface(
     std::shared_ptr<const CylinderBounds> cbounds,
@@ -193,7 +194,10 @@ Acts::Polyhedron Acts::CylinderSurface::polyhedronRepresentation(
           {bounds().get(CylinderBounds::eR), bounds().get(CylinderBounds::eR)},
           phiSegs[iseg], phiSegs[iseg + 1], lseg, addon,
           Vector3(0., 0., side * bounds().get(CylinderBounds::eHalfLengthZ)),
-          ctrans);
+          ctrans, bounds().get(CylinderBounds::eAngle));
+   //   std::cout << "segment added -----\n";
+   //   for(auto vtx : vertices) std::cout << "New vertex: " << vtx(0) << ", " << vtx(1) << ", " << vtx(2) << "\n";
+   //   std::cout << "---\n";      
     }
   }
   auto facesMesh =

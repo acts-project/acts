@@ -39,7 +39,8 @@ class CylinderBounds : public SurfaceBounds {
     eHalfLengthZ = 1,
     eHalfPhiSector = 2,
     eAveragePhi = 3,
-    eSize = 4
+    eAngle = 4,
+    eSize = 5
   };
 
   CylinderBounds() = delete;
@@ -51,8 +52,8 @@ class CylinderBounds : public SurfaceBounds {
   /// @param halfPhi The half opening angle
   /// @param avgPhi (optional) The phi value from which the opening angle spans
   CylinderBounds(double r, double halfZ, double halfPhi = M_PI,
-                 double avgPhi = 0.) noexcept(false)
-      : m_values({r, halfZ, halfPhi, avgPhi}),
+                 double avgPhi = 0., double angle = 0.) noexcept(false)
+      : m_values({r, halfZ, halfPhi, avgPhi, angle}),
         m_closed(std::abs(halfPhi - M_PI) < s_epsilon) {
     checkConsistency();
   }
