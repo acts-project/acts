@@ -295,10 +295,12 @@ BOOST_AUTO_TEST_CASE(test_surface_status) {
   MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(start_surface,
                                                                cmps);
 
-  BOOST_REQUIRE(
-      multi_pars[0].unitDirection().isApprox(Vector3{1.0, 0.0, 0.0}, 1.e-10));
-  BOOST_REQUIRE(
-      multi_pars[1].unitDirection().isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
+  BOOST_REQUIRE(std::get<1>(multi_pars[0])
+                    .unitDirection()
+                    .isApprox(Vector3{1.0, 0.0, 0.0}, 1.e-10));
+  BOOST_REQUIRE(std::get<1>(multi_pars[1])
+                    .unitDirection()
+                    .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
 
   MultiStepper::State multi_state(geoCtx, magCtx, bField, multi_pars, ndir,
                                   stepSize, tolerance);
@@ -378,22 +380,21 @@ BOOST_AUTO_TEST_CASE(test_bound_state) {
     c *= c.transpose();
     return c;
   }();
-  
+
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
       cmps(4, {0.25, pars, cov});
-      
-  MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface,
-                                                               cmps);
+
+  MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
   MultiStepper::State multi_state(geoCtx, magCtx, bField, multi_pars, ndir,
                                   stepSize, tolerance);
   MultiStepper multi_stepper(bField);
-  
+
   auto res = multi_stepper.boundState(multi_state, *surface, true);
-  
+
   BOOST_REQUIRE(res.ok());
-  
+
   const auto [bound_pars, jacobian, pathLength] = *res;
-  
+
   BOOST_CHECK(jacobian == decltype(jacobian)::Zero());
   BOOST_CHECK(pathLength == 0.0);
   BOOST_CHECK(bound_pars.parameters().isApprox(pars, 1.e-8));
@@ -416,28 +417,32 @@ BOOST_AUTO_TEST_CASE(test_curvilinear_state) {
     c *= c.transpose();
     return c;
   }();
-  
+
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
       cmps(4, {0.25, pars, cov});
   SingleBoundTrackParameters<SinglyCharged> check_pars(surface, pars, cov);
-      
-  MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface,
-                                                               cmps);
+
+  MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
   MultiStepper::State multi_state(geoCtx, magCtx, bField, multi_pars, ndir,
                                   stepSize, tolerance);
   MultiStepper multi_stepper(bField);
-  
-  const auto [curv_pars, jac, pathLength] = multi_stepper.curvilinearState(multi_state);
-  
-  BOOST_CHECK(curv_pars.fourPosition(multi_state.geoContext).isApprox(check_pars.fourPosition(multi_state.geoContext), 1.e-8));
-  BOOST_CHECK(curv_pars.unitDirection().isApprox(check_pars.unitDirection(), 1.e-8));
-  BOOST_CHECK_CLOSE(curv_pars.absoluteMomentum(), check_pars.absoluteMomentum(), 1.e-8);
+
+  const auto [curv_pars, jac, pathLength] =
+      multi_stepper.curvilinearState(multi_state);
+
+  BOOST_CHECK(
+      curv_pars.fourPosition(multi_state.geoContext)
+          .isApprox(check_pars.fourPosition(multi_state.geoContext), 1.e-8));
+  BOOST_CHECK(
+      curv_pars.unitDirection().isApprox(check_pars.unitDirection(), 1.e-8));
+  BOOST_CHECK_CLOSE(curv_pars.absoluteMomentum(), check_pars.absoluteMomentum(),
+                    1.e-8);
   BOOST_CHECK_CLOSE(curv_pars.charge(), check_pars.charge(), 1.e-8);
 }
-
 
 BOOST_AUTO_TEST_CASE(propagator_instatiation_test) {
   auto bField = std::make_shared<NullBField>();
   MultiEigenStepperLoop<> multi_stepper(bField);
-  [[maybe_unused]] Propagator<MultiEigenStepperLoop<>> propagator(multi_stepper);
+  [[maybe_unused]] Propagator<MultiEigenStepperLoop<>> propagator(
+      multi_stepper);
 }
