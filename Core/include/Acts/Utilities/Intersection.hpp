@@ -16,18 +16,31 @@
 #include <limits>
 namespace Acts {
 
+/// Status enum
+enum class IntersectionStatus : int {
+  missed = 0,
+  unreachable = 0,
+  reachable = 1,
+  onSurface = 2
+};
+
+/// Ostream-operator for the IntersectionStatus enum
+inline std::ostream &operator<<(std::ostream &os, IntersectionStatus status) {
+    constexpr static std::array<const char *, 3> names = {{
+       "missed/unreachable", "reachable", "onSurface"
+    }};
+
+    os << names[static_cast<std::size_t>(status)];
+    return os;
+}
+
 ///  @struct Intersection
 ///
 ///  Intersection struct used for position
 template <unsigned int DIM>
 struct Intersection {
-  /// Nested Status enum
-  enum class Status : int {
-    missed = 0,
-    unreachable = 0,
-    reachable = 1,
-    onSurface = 2
-  };
+  /// Status enum
+  using Status = IntersectionStatus;
 
   /// Position of the intersection
   ActsVector<DIM> position = ActsVector<DIM>::Zero();
