@@ -64,10 +64,10 @@ void createSegment(std::vector<vertex_t>& vertices,
     vertex(1) = rxy.second * std::sin(phi);
 
     if(angle != 0. && vertex.size() == 3) {
-      double sign = vertex(2) != 0 ? std::fabs(vertex(2))/vertex(2) : 1;
+      double sign = offset(2) != 0. ? std::fabs(offset(2))/offset(2) : 1.;
       vertex(2) = vertex(2) + sign * vertex(1) * std::tan(angle);
     }
-    
+
     vertex = vertex + offset;
     vertices.push_back(transform * vertex);
   }
