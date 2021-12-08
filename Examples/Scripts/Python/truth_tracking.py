@@ -14,6 +14,7 @@ def runTruthTracking(
     outputDir: Path,
     digiConfigFile: Path,
     directNavigation=False,
+    reverseFilteringMomThreshold=0*u.GeV,
     s: acts.examples.Sequencer = None,
 ):
 
@@ -152,6 +153,7 @@ def runTruthTracking(
         multipleScattering=True,
         energyLoss=True,
         pickTrack=-1,
+        reverseFilteringMomThreshold=reverseFilteringMomThreshold,
         trackingGeometry=trackingGeometry,
         dFit=acts.examples.TrackFittingAlgorithm.makeTrackFitterFunction(field),
         fit=acts.examples.TrackFittingAlgorithm.makeTrackFitterFunction(

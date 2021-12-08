@@ -303,7 +303,8 @@ def test_event_recording(tmp_path):
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
-def test_truth_tracking(tmp_path, assert_root_hash):
+@pytest.mark.parametrize("revFiltMomThresh", [0 * u.GeV, 1 * u.TeV])
+def test_truth_tracking(tmp_path, assert_root_hash, revFiltMomThresh):
     from truth_tracking import runTruthTracking
 
     detector, trackingGeometry, _ = getOpenDataDetector()
@@ -330,6 +331,7 @@ def test_truth_tracking(tmp_path, assert_root_hash):
             "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",
         ),
         outputDir=tmp_path,
+        reverseFilteringMomThreshold=revFiltMomThresh,
         s=seq,
     )
 
