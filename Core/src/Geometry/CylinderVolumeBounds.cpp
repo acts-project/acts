@@ -61,7 +61,6 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
   //Angle rotation of the sizes if the angle is defined
   Translation3 vneg(0., 0., -get(eHalfLengthZ));
   Translation3 vpos(0., 0., get(eHalfLengthZ));
-  //Transform3 vt = Eigen::AngleAxisf(0.785, w) * v1;
   double angle = get(eAngle); 
   Transform3 tneg, tpos;
   if (angle != 0.) {  
