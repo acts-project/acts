@@ -62,11 +62,12 @@ void createSegment(std::vector<vertex_t>& vertices,
     vertex_t vertex = vertex_t::Zero();
     vertex(0) = rxy.first * std::cos(phi);
     vertex(1) = rxy.second * std::sin(phi);
-    vertex = vertex + offset;
+    Vector3 angleOffset(0., 0., 0.);
     if(angle != 0.0){
-      double sign = vertex(2) != 0 ? std::fabs(vertex(2))/vertex(2) : 1;
-      vertex(2) = vertex(2) + sign * vertex(1) * std::tan(angle);
+      double sign = offset(2) != 0 ? std::fabs(offset(2))/offset(2) : 1;
+       angleOffset = sign * vertex(1) * std::tan(angle);
     } 
+    vertex = vertex + offset + angleOffset;
     vertices.push_back(transform * vertex);
   }
 }
