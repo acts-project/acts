@@ -25,15 +25,6 @@
 
 namespace Acts {
 
-struct SeedConfirmationRange {
-  float zMinSeedConf;
-  float zMaxSeedConf;
-  float rMaxSeedConf;
-  size_t nTopSeedConf;
-  size_t nTopForLargeR;
-  size_t nTopForSmallR;
-};
-
 template <typename external_spacepoint_t, typename platform_t = void*>
 class Seedfinder {
   ///////////////////////////////////////////////////////////////////
@@ -51,25 +42,6 @@ class Seedfinder {
     std::vector<LinCircle> linCircleBottom;
     // ...for middle-top
     std::vector<LinCircle> linCircleTop;
-
-    // parameters for central seed confirmation
-    SeedConfirmationRange centralSeedConfirmationRange = {
-        250.,   // zMaxSeedConf
-        -250.,  // zMinSeedConf
-        140.,   // rMaxSeedConf
-        0,      // nTopSeedConf
-        1,      // nTopForLargeR
-        2,      // nTopForSmallR
-    };
-    // parameters for forward seed confirmation
-    SeedConfirmationRange forwardSeedConfirmationRange = {
-        3000.,   // zMaxSeedConf
-        -3000.,  // zMinSeedConf
-        140.,    // rMaxSeedConf
-        0,       // nTopSeedConf
-        1,       // nTopForLargeR
-        2,       // nTopForSmallR
-    };
 
     // create vectors here to avoid reallocation in each loop
     std::vector<const InternalSpacePoint<external_spacepoint_t>*> topSpVec;

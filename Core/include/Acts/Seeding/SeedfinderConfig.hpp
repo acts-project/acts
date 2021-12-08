@@ -15,6 +15,15 @@
 
 namespace Acts {
 
+struct SeedConfirmationRange {
+	float zMinSeedConf;
+	float zMaxSeedConf;
+	float rMaxSeedConf;
+	size_t nTopSeedConf;
+	size_t nTopForLargeR;
+	size_t nTopForSmallR;
+};
+
 // forward declaration to avoid cyclic dependence
 template <typename T>
 class SeedFilter;
@@ -73,6 +82,10 @@ struct SeedfinderConfig {
 
   // for how many seeds can one SpacePoint be the middle SpacePoint?
   unsigned int maxSeedsPerSpM = 5;
+	// parameters for central seed confirmation
+	SeedConfirmationRange centralSeedConfirmationRange;
+	// parameters for forward seed confirmation
+	SeedConfirmationRange forwardSeedConfirmationRange;
 
   // Geometry Settings
   // Detector ROI
