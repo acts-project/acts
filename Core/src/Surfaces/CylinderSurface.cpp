@@ -195,9 +195,6 @@ Acts::Polyhedron Acts::CylinderSurface::polyhedronRepresentation(
           phiSegs[iseg], phiSegs[iseg + 1], lseg, addon,
           Vector3(0., 0., side * bounds().get(CylinderBounds::eHalfLengthZ)),
           ctrans, bounds().get(CylinderBounds::eAngle));
-   //   std::cout << "segment added -----\n";
-   //   for(auto vtx : vertices) std::cout << "New vertex: " << vtx(0) << ", " << vtx(1) << ", " << vtx(2) << "\n";
-   //   std::cout << "---\n";      
     }
   }
   auto facesMesh =
