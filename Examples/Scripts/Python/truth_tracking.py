@@ -14,7 +14,7 @@ def runTruthTracking(
     outputDir: Path,
     digiConfigFile: Path,
     directNavigation=False,
-    reverseFilteringMomThreshold=0*u.GeV,
+    reverseFilteringMomThreshold=0 * u.GeV,
     s: acts.examples.Sequencer = None,
 ):
 
