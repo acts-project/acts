@@ -78,9 +78,6 @@ class VolumeMaterialMapper {
   ///
   /// Nested State struct which is used for the mapping prococess
   struct State {
-    typedef std::function<Acts::Vector2(Acts::Vector3)> transform2D;
-    typedef std::function<Acts::Vector3(Acts::Vector3)> transform3D;
-
     /// Constructor of the Sate with contexts
     State(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : geoContext(gctx), magFieldContext(mctx) {}
@@ -89,19 +86,24 @@ class VolumeMaterialMapper {
     std::map<const GeometryIdentifier, Acts::AccumulatedVolumeMaterial>
         homogeneousGrid;
 
-    /// The recorded material per geometry ID
-    std::map<const GeometryIdentifier, transform2D> tsf2D;
+    /// The recorded 2D transform associated the grid for each geometry ID
+    std::map<const GeometryIdentifier,
+             std::function<Acts::Vector2(Acts::Vector3)>>
+        transform2D;
 
-    /// The recorded material per geometry ID
+    /// The 2D material grid for each geometry ID
     std::map<const GeometryIdentifier, Grid2D> grid2D;
 
-    /// The recorded material per geometry ID
-    std::map<const GeometryIdentifier, transform3D> tsf3D;
+    /// The recorded 3D transform associated the material grid for each geometry
+    /// ID
+    std::map<const GeometryIdentifier,
+             std::function<Acts::Vector3(Acts::Vector3)>>
+        transform3D;
 
-    /// The recorded material per geometry ID
+    /// The 3D material grid for each geometry ID
     std::map<const GeometryIdentifier, Grid3D> grid3D;
 
-    /// The binning per geometry ID
+    /// The binning for each geometry ID
     std::map<const GeometryIdentifier, BinUtility> materialBin;
 
     /// The surface material of the input tracking geometry
@@ -147,8 +149,8 @@ class VolumeMaterialMapper {
   /// @brief Method to finalize the maps
   ///
   /// It calls the final run averaging and then transforms
-  /// the AccumulatedVolume material class to a surface material
-  /// class type
+  /// the Homogeneous material into HomogeneousVolumeMaterial and
+  /// the 2D and 3D grid into a InterpolatedMaterialMap
   ///
   /// @param mState
   void finalizeMaps(State& mState) const;
@@ -197,9 +199,9 @@ class VolumeMaterialMapper {
   void collectMaterialSurfaces(State& mState,
                                const TrackingVolume& tVolume) const;
 
-  /// Create extra material point for the mapping
+  /// Create extra material point for the mapping and add them to the grid
   ///
-  /// @param matPoint RecordedMaterialVolumePoint where the extra hit are stored
+  /// @param currentBinning a pair containing the current geometry ID and the current binning
   /// @param properties material properties of the original hit
   /// @param position position of the original hit
   /// @param direction direction of the track

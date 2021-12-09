@@ -110,18 +110,21 @@ void Acts::VolumeMaterialMapper::checkAndInsert(
       ACTS_DEBUG("       - adjusted binning is " << buAdjusted);
       mState.materialBin[geoID] = buAdjusted;
       if (bu->dimensions() == 0) {
+        ACTS_DEBUG("Binning of dimension 0 create AccumulatedVolumeMaterial");
         Acts::AccumulatedVolumeMaterial homogeneousAccumulation;
         mState.homogeneousGrid[geoID] = homogeneousAccumulation;
       } else if (bu->dimensions() == 2) {
+        ACTS_DEBUG("Binning of dimension 2 create 2D Grid");
         std::function<Acts::Vector2(Acts::Vector3)> transfoGlobalToLocal;
-        Acts::Grid2D Grid = createGrid2D(*bu, transfoGlobalToLocal);
+        Acts::Grid2D Grid = createGrid2D(buAdjusted, transfoGlobalToLocal);
         mState.grid2D.insert(std::make_pair(geoID, Grid));
-        mState.tsf2D.insert(std::make_pair(geoID, transfoGlobalToLocal));
+        mState.transform2D.insert(std::make_pair(geoID, transfoGlobalToLocal));
       } else if (bu->dimensions() == 3) {
+        ACTS_DEBUG("Binning of dimension 3 create 3D Grid");
         std::function<Acts::Vector3(Acts::Vector3)> transfoGlobalToLocal;
-        Acts::Grid3D Grid = createGrid3D(*bu, transfoGlobalToLocal);
+        Acts::Grid3D Grid = createGrid3D(buAdjusted, transfoGlobalToLocal);
         mState.grid3D.insert(std::make_pair(geoID, Grid));
-        mState.tsf3D.insert(std::make_pair(geoID, transfoGlobalToLocal));
+        mState.transform3D.insert(std::make_pair(geoID, transfoGlobalToLocal));
       } else {
         throw std::invalid_argument(
             "Incorrect bin dimension, only 0, 2 and 3 are accepted");
@@ -135,12 +138,12 @@ void Acts::VolumeMaterialMapper::checkAndInsert(
     bu = (bmp2 != nullptr) ? (&bmp2->binUtility()) : nullptr;
     if (bu != nullptr) {
       // Screen output for Binned Surface material
-      ACTS_DEBUG("       - binning is " << *bu);
+      ACTS_DEBUG("       - (2D grid) binning is " << *bu);
       mState.materialBin[geoID] = *bu;
       std::function<Acts::Vector2(Acts::Vector3)> transfoGlobalToLocal;
       Acts::Grid2D Grid = createGrid2D(*bu, transfoGlobalToLocal);
       mState.grid2D.insert(std::make_pair(geoID, Grid));
-      mState.tsf2D.insert(std::make_pair(geoID, transfoGlobalToLocal));
+      mState.transform2D.insert(std::make_pair(geoID, transfoGlobalToLocal));
       return;
     }
     // Third attempt: 3D binned material
@@ -150,12 +153,12 @@ void Acts::VolumeMaterialMapper::checkAndInsert(
     bu = (bmp3 != nullptr) ? (&bmp3->binUtility()) : nullptr;
     if (bu != nullptr) {
       // Screen output for Binned Surface material
-      ACTS_DEBUG("       - binning is " << *bu);
+      ACTS_DEBUG("       - (3D grid) binning is " << *bu);
       mState.materialBin[geoID] = *bu;
       std::function<Acts::Vector3(Acts::Vector3)> transfoGlobalToLocal;
       Acts::Grid3D Grid = createGrid3D(*bu, transfoGlobalToLocal);
       mState.grid3D.insert(std::make_pair(geoID, Grid));
-      mState.tsf3D.insert(std::make_pair(geoID, transfoGlobalToLocal));
+      mState.transform3D.insert(std::make_pair(geoID, transfoGlobalToLocal));
       return;
     } else {
       // Create a homogeneous type of material
@@ -235,10 +238,13 @@ void Acts::VolumeMaterialMapper::createExtraHits(
     std::pair<const GeometryIdentifier, BinUtility>& currentBinning,
     Acts::MaterialSlab properties, Vector3 position, Vector3 direction) const {
   if (currentBinning.second.dimensions() == 0) {
+    // Writing homogeneous material for the current volumes no need to create
+    // extra hits. We directly accumulate the material
     mState.homogeneousGrid[currentBinning.first].accumulate(properties);
     return;
   }
 
+  // Computing the extra hits properties based on the mappingStep lenght
   int volumeStep = floor(properties.thickness() / m_cfg.mappingStep);
   float remainder = properties.thickness() - m_cfg.mappingStep * volumeStep;
   properties.scaleThickness(m_cfg.mappingStep / properties.thickness());
@@ -251,8 +257,9 @@ void Acts::VolumeMaterialMapper::createExtraHits(
     if (currentBinning.second.dimensions() == 2) {
       auto grid = mState.grid2D.find(currentBinning.first);
       if (grid != mState.grid2D.end()) {
+        // Find which grid bin the material fall into then accumulate
         Acts::Grid2D::index_t index = grid->second.localBinsFromLowerLeftEdge(
-            mState.tsf2D[currentBinning.first](extraPosition));
+            mState.transform2D[currentBinning.first](extraPosition));
         grid->second.atLocalBins(index).accumulate(properties);
       } else {
         throw std::domain_error("No grind 2D was found");
@@ -260,8 +267,9 @@ void Acts::VolumeMaterialMapper::createExtraHits(
     } else if (currentBinning.second.dimensions() == 3) {
       auto grid = mState.grid3D.find(currentBinning.first);
       if (grid != mState.grid3D.end()) {
+        // Find which grid bin the material fall into then accumulate
         Acts::Grid3D::index_t index = grid->second.localBinsFromLowerLeftEdge(
-            mState.tsf3D[currentBinning.first](extraPosition));
+            mState.transform3D[currentBinning.first](extraPosition));
         grid->second.atLocalBins(index).accumulate(properties);
       } else {
         throw std::domain_error("No grind 3D was found");
@@ -270,14 +278,16 @@ void Acts::VolumeMaterialMapper::createExtraHits(
   }
 
   if (remainder > 0) {
-    // adjust the thickness of the last extrapolated step
+    // We need to had an additional extra hit with the remainder lengh. Adjust
+    // the thickness of the last extrapolated step
     properties.scaleThickness(remainder / properties.thickness());
     Vector3 extraPosition = position + volumeStep * direction;
     if (currentBinning.second.dimensions() == 2) {
       auto grid = mState.grid2D.find(currentBinning.first);
       if (grid != mState.grid2D.end()) {
+        // Find which grid bin the material fall into then accumulate
         Acts::Grid2D::index_t index = grid->second.localBinsFromLowerLeftEdge(
-            mState.tsf2D[currentBinning.first](extraPosition));
+            mState.transform2D[currentBinning.first](extraPosition));
         grid->second.atLocalBins(index).accumulate(properties);
       } else {
         throw std::domain_error("No grind 2D was found");
@@ -285,8 +295,9 @@ void Acts::VolumeMaterialMapper::createExtraHits(
     } else if (currentBinning.second.dimensions() == 3) {
       auto grid = mState.grid3D.find(currentBinning.first);
       if (grid != mState.grid3D.end()) {
+        // Find which grid bin the material fall into then accumulate
         Acts::Grid3D::index_t index = grid->second.localBinsFromLowerLeftEdge(
-            mState.tsf3D[currentBinning.first](extraPosition));
+            mState.transform3D[currentBinning.first](extraPosition));
         grid->second.atLocalBins(index).accumulate(properties);
       } else {
         throw std::domain_error("No grind 3D was found");
@@ -300,20 +311,20 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
   for (auto& matBin : mState.materialBin) {
     ACTS_DEBUG("Create the material for volume  " << matBin.first);
     if (matBin.second.dimensions() == 0) {
-      // Accumulate all the recorded material onto a signle point
+      // Average the homogeneous volume material then store it
       ACTS_DEBUG("Homogeneous material volume");
-
       Acts::Material mat = mState.homogeneousGrid[matBin.first].average();
       mState.volumeMaterial[matBin.first] =
           std::make_unique<HomogeneousVolumeMaterial>(std::move(mat));
     } else if (matBin.second.dimensions() == 2) {
-      // Accumulate all the recorded material onto a grid
+      // Average the material in the 2D grid then create an
+      // InterpolatedMaterialMap
       ACTS_DEBUG("Grid material volume");
       auto grid = mState.grid2D.find(matBin.first);
       if (grid != mState.grid2D.end()) {
         Acts::MaterialGrid2D matGrid = mapMaterialPoints(grid->second);
-        MaterialMapper<Acts::MaterialGrid2D> matMap(mState.tsf2D[matBin.first],
-                                                    matGrid);
+        MaterialMapper<Acts::MaterialGrid2D> matMap(
+            mState.transform2D[matBin.first], matGrid);
         mState.volumeMaterial[matBin.first] = std::make_unique<
             InterpolatedMaterialMap<MaterialMapper<Acts::MaterialGrid2D>>>(
             std::move(matMap), matBin.second);
@@ -321,13 +332,14 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
         throw std::domain_error("No grind 2D was found");
       }
     } else if (matBin.second.dimensions() == 3) {
-      // Accumulate all the recorded material onto a grid
+      // Average the material in the 3D grid then create an
+      // InterpolatedMaterialMap
       ACTS_DEBUG("Grid material volume");
       auto grid = mState.grid3D.find(matBin.first);
       if (grid != mState.grid3D.end()) {
         Acts::MaterialGrid3D matGrid = mapMaterialPoints(grid->second);
-        MaterialMapper<Acts::MaterialGrid3D> matMap(mState.tsf3D[matBin.first],
-                                                    matGrid);
+        MaterialMapper<Acts::MaterialGrid3D> matMap(
+            mState.transform3D[matBin.first], matGrid);
         mState.volumeMaterial[matBin.first] = std::make_unique<
             InterpolatedMaterialMap<MaterialMapper<Acts::MaterialGrid3D>>>(
             std::move(matMap), matBin.second);
@@ -410,7 +422,8 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
     if (volIter != mappingVolumes.end() &&
         !volIter->volume->inside(rmIter->position)) {
       // Check if the material point is past the entry point to the current
-      // volume
+      // volume (this prevent switching volume before the first volume has been
+      // reached)
       double distVol = (volIter->position - mTrack.first.first).norm();
       double distMat = (rmIter->position - mTrack.first.first).norm();
       if (distMat - distVol > s_epsilon) {
@@ -420,8 +433,9 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
       }
     }
     if (volIter != mappingVolumes.end() &&
-        volIter->volume->inside(rmIter->position)) {
+        volIter->volume->inside(rmIter->position, s_epsilon)) {
       currentID = volIter->volume->geometryId();
+      direction = rmIter->direction;
       if (not(currentID == lastID)) {
         // Let's (re-)assess the information
         lastID = currentID;
@@ -442,7 +456,6 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
         }
         // determine the position of the last material slab using the track
         // direction
-        direction = rmIter->direction;
         direction =
             direction * (rmIter->materialSlab.thickness() / direction.norm());
         lastPositionEnd = rmIter->position + direction;
@@ -454,7 +467,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
       // check if we have reached the end of the volume or the last hit of the
       // track.
       if ((rmIter + 1) == rMaterial.end() ||
-          !volIter->volume->inside((rmIter + 1)->position)) {
+          !volIter->volume->inside((rmIter + 1)->position, s_epsilon)) {
         // find the boundary surface corresponding to the end of the volume
         while (sfIter != mappingSurfaces.end()) {
           if (sfIter->surface->geometryId().volume() == lastID.volume() ||
