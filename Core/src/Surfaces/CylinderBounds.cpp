@@ -80,3 +80,51 @@ std::ostream& Acts::CylinderBounds::toStream(std::ostream& sl) const {
   sl << std::setprecision(-1);
   return sl;
 }
+
+std::vector<Acts::Vector3> Acts::CylinderBounds::createCircles(
+    const Transform3 ctrans, size_t lseg) const {
+  std::vector<Vector3> vertices;
+
+  double avgPhi = get(eAveragePhi);
+  double halfPhi = get(eHalfPhiSector);
+
+  bool fullCylinder = coversFullAzimuth();
+
+  // Get the phi segments from the helper - ensures extra points
+  auto phiSegs = fullCylinder ? detail::VerticesHelper::phiSegments()
+                              : detail::VerticesHelper::phiSegments(
+                                    avgPhi - halfPhi, avgPhi + halfPhi,
+                                    {static_cast<ActsScalar>(avgPhi)});
+
+  // Write the two bows/circles on either side
+  std::vector<int> sides = {-1, 1};
+  for (auto& side : sides) {
+    for (size_t iseg = 0; iseg < phiSegs.size() - 1; ++iseg) {
+      int addon = (iseg == phiSegs.size() - 2 and not fullCylinder) ? 1 : 0;
+      /// Helper method to create the segment
+      detail::VerticesHelper::createSegment(
+          vertices, {get(eR), get(eR)}, phiSegs[iseg], phiSegs[iseg + 1], lseg,
+          addon, Vector3(0., 0., side * get(eHalfLengthZ)), ctrans);
+    }
+  }
+
+  double bevelMinZ = get(eBevelMinZ);
+  double bevelMaxZ = get(eBevelMaxZ);
+
+  // Modify the vertices position if bevel is defined
+  if (vertices.size() % 2 == 0) {
+    auto halfWay = vertices.end() - vertices.size() / 2;
+    float mult{1};
+    auto func = [&mult](Vector3& v) { v(2) += v(1) * mult; };
+    if (bevelMinZ != 0.) {
+      mult = std::tan(-bevelMinZ);
+      std::for_each(vertices.begin(), halfWay, func);
+    }
+    if (bevelMaxZ != 0.) {
+      mult = std::tan(bevelMaxZ);
+      std::for_each(halfWay, vertices.end(), func);
+    }
+  }
+
+  return vertices;
+}
