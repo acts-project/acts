@@ -460,7 +460,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     runMaterialMapping(
         trackingGeometry,
         decorators,
-        mapName="material-map-volume"
+        mapName="material-map-volume",
         outputDir=str(tmp_path),
         inputDir=material_recording,
         s=s,
