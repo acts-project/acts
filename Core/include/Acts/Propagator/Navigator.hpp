@@ -389,8 +389,14 @@ class Navigator {
       }
     } else if (state.navigation.currentVolume ==
                state.navigation.targetVolume) {
-      ACTS_WARNING(volInfo(state) << "No further navigation action, proceed to "
-                                     "target. This is very likely an error");
+      if (state.navigation.targetSurface == nullptr) {
+        ACTS_WARNING(volInfo(state)
+                     << "No further navigation action, proceed to "
+                        "target. This is very likely an error");
+      } else {
+        ACTS_VERBOSE(volInfo(state)
+                     << "No further navigation action, proceed to target.");
+      }
       // Set navigation break and release the navigation step size
       state.navigation.navigationBreak = true;
       stepper.releaseStepSize(state.stepping);
@@ -398,7 +404,6 @@ class Navigator {
       ACTS_VERBOSE(volInfo(state)
                    << "Status could not be determined - good luck.");
     }
-    return;
   }
 
   /// @brief Navigator target call
