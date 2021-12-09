@@ -8,12 +8,14 @@
 
 #pragma once
 
+#include "Acts/Experimental/SurfaceLinks.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 
 #include <memory>
 #include <ostream>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -21,23 +23,30 @@ namespace Acts {
 
 class Surface;
 
-/// The detector blueprint
-class LayerBlueprint {
+/// The blueprint for internal structure
+///
+/// This class is designed to describe how layers are built
+class InternalBlueprint {
  public:
   /// Constructor with all/part of the surfaces
   ///
   /// @param gctx The geometry context
+  /// @param surfaces The surfaces in to be contained by this layer volume
+  /// @param surfaceLinks The surface links abstraction
   /// @param restriction The extent restriction against which this is checked
   /// @param envelope The envelope in all bin directions
-  /// @param surfaces The surfaces in to be contained by this layer volume
-  LayerBlueprint(
-      const GeometryContext& gctx, const Extent& restriction = Extent(true),
+  /// @param name the name of the blueprint
+  InternalBlueprint(
+      const GeometryContext& gctx,
+      const std::vector<std::shared_ptr<Surface>>& surfaces = {},
+      const SurfaceLinks& surfaceLinks = AllSurfaces{},
+      const Extent& restriction = Extent(true),
       const std::vector<std::pair<ActsScalar, ActsScalar>>& envelope =
           std::vector<std::pair<ActsScalar, ActsScalar>>(size_t(binValues),
                                                          {0., 0.}),
-      const std::vector<std::shared_ptr<Surface>>& surfaces = {});
+      const std::string& name = "Unnamed");
 
-  LayerBlueprint() = default;
+  InternalBlueprint() = default;
 
   /// Add a surface, this will also check the restrictive and increase
   /// actual the extent
@@ -74,6 +83,12 @@ class LayerBlueprint {
   /// @return the vector of surfaces
   const std::vector<std::shared_ptr<Surface>>& surfaces() const;
 
+  /// @return the surface links object
+  const SurfaceLinks& surfaceLinks() const;
+
+  /// @return the name of the layer
+  const std::string& name() const;
+
   /// Output to ostream
   /// @param sl the input ostream
   std::ostream& toStream(std::ostream& sl) const;
@@ -97,18 +112,32 @@ class LayerBlueprint {
 
   /// Contained surfaces of this Layer
   std::vector<std::shared_ptr<Surface>> m_surfaces = {};
+
+  /// The surface links object
+  SurfaceLinks m_surfaceLinks = AllSurfaces{};
+
+  /// The name
+  std::string m_name;
 };
 
-inline const Extent& LayerBlueprint::extent() const {
+inline const Extent& InternalBlueprint::extent() const {
   return m_extent;
 }
 
-inline const std::vector<std::shared_ptr<Surface>>& LayerBlueprint::surfaces()
-    const {
+inline const std::vector<std::shared_ptr<Surface>>&
+InternalBlueprint::surfaces() const {
   return m_surfaces;
 }
 
+inline const SurfaceLinks& InternalBlueprint::surfaceLinks() const {
+  return m_surfaceLinks;
+}
+
+inline const std::string& InternalBlueprint::name() const {
+  return m_name;
+}
+
 /// Overload of << operator for std::ostream for debug output
-std::ostream& operator<<(std::ostream& sl, const LayerBlueprint& lbp);
+std::ostream& operator<<(std::ostream& sl, const InternalBlueprint& lbp);
 
 }  // namespace Acts

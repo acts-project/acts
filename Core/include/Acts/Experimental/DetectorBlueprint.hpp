@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Experimental/LayerBlueprint.hpp"
+#include "Acts/Experimental/InternalBlueprint.hpp"
 #include "Acts/Experimental/VolumeBlueprint.hpp"
 
 #include <vector>
@@ -18,10 +18,10 @@ namespace Acts {
 
     /// This is the detector blueprint class, it contains a 
     /// building plan for building a detector from scratch
-    /// using LayerBlueprint and VolumeBlueprint objects.
+    /// using InternalBlueprint and VolumeBlueprint objects.
     class DetectorBlueprint {
 
-        std::tuple<std::vector<VolumeBlueprint>, ContainerBuilder> manual;
+        std::tuple<std::vector<VolumeBlueprint>, VolumeBlueprint::ContainerBuilder> manual;
 
     };
 

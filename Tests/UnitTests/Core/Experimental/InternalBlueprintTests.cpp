@@ -10,7 +10,8 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Experimental/LayerBlueprint.hpp"
+#include "Acts/Experimental/InternalBlueprint.hpp"
+#include "Acts/Experimental/SurfaceLinks.hpp"
 #include "Acts/Geometry/Extent.hpp"
 
 #include "GeometryHelper.hpp"
@@ -22,7 +23,7 @@ namespace Test {
 BOOST_AUTO_TEST_SUITE(Experimental)
 
 // Single Link test
-BOOST_AUTO_TEST_CASE(LayerBlueprintConstruction) {
+BOOST_AUTO_TEST_CASE(InternalBlueprintConstruction) {
   auto layer0 = surfacesCylinder(8.4, 36., 0.145, 32., 2., 5., {16, 14});
   auto layer1 = surfacesCylinder(8.4, 36., 0.145, 72., 2., 5., {32, 14});
 
@@ -45,8 +46,8 @@ BOOST_AUTO_TEST_CASE(LayerBlueprintConstruction) {
   GeometryContext gctx;
 
   // Create the two Blue prints for the layers
-  LayerBlueprint layer0Bp(gctx, layer0Ext, zeroEnvelope, layer01);
-  LayerBlueprint layer1Bp(gctx, layer1Ext, zeroEnvelope, layer01);
+  InternalBlueprint layer0Bp(gctx, layer01, AllSurfaces{}, layer0Ext, zeroEnvelope);
+  InternalBlueprint layer1Bp(gctx, layer01, AllSurfaces{}, layer1Ext, zeroEnvelope);
 
   BOOST_CHECK(layer0Bp.surfaces().size() == layer0.size());
   BOOST_CHECK(layer1Bp.surfaces().size() == layer1.size());

@@ -85,6 +85,10 @@ struct Extent {
   bool contains(const Extent& other, BinningValue bVal = binValues) const {
     // Helper to check
     auto checkContainment = [&](BinningValue bvc) -> bool {
+      if (not restricts(bvc)) {
+        return true;
+      }
+
       auto& a = ranges[bvc];
       auto& b = other.ranges[bvc];
       return (b.first >= a.first and b.second <= a.second);
@@ -95,7 +99,7 @@ struct Extent {
       for (int ibv = 0; ibv < (int)binValues; ++ibv) {
         if (not checkContainment((BinningValue)ibv)) {
           return false;
-        } 
+        }
       }
       return true;
     }
@@ -108,8 +112,11 @@ struct Extent {
   /// @param other is the source Extent
   void extend(const Extent& other) {
     for (std::size_t ir = 0; ir < other.ranges.size(); ++ir) {
-      ranges[ir].first = std::min(ranges[ir].first, other.ranges[ir].first);
-      ranges[ir].second = std::max(ranges[ir].second, other.ranges[ir].second);
+      if (other.restricts((BinningValue)ir)) {
+        ranges[ir].first = std::min(ranges[ir].first, other.ranges[ir].first);
+        ranges[ir].second =
+            std::max(ranges[ir].second, other.ranges[ir].second);
+      }
     }
   }
 
@@ -143,6 +150,16 @@ struct Extent {
   /// @param bval the binning identification
   double range(BinningValue bval) const {
     return std::abs(ranges[bval].second - ranges[bval].first);
+  }
+
+  /// Check if this Extend does any restriction
+  /// @param bval the binning identification
+  bool restricts(BinningValue bval = binValues) const {
+    if (bval != binValues) {
+      return (ranges[bval] != minrange and ranges[bval] != maxrange);
+    }
+    return (ranges != std::vector<Range>{(size_t)binValues, minrange} and
+            ranges != std::vector<Range>{(size_t)binValues, maxrange});
   }
 
   /// Check the vertex

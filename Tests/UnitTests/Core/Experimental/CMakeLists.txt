@@ -1,6 +1,7 @@
 add_unittest(CylindricalContainerBuilder CylindricalContainerBuilderTests.cpp)
+add_unittest(CylindricalVolumeBuilder CylindricalVolumeBuilderTests.cpp)
 add_unittest(DetectorVolume DetectorVolumeTests.cpp)
-add_unittest(LayerBlueprint LayerBlueprintTests.cpp)
+add_unittest(InternalBlueprint InternalBlueprintTests.cpp)
 add_unittest(SurfaceLinks SurfaceLinksTests.cpp)
 add_unittest(PortalLinks PortalLinksTests.cpp)
 add_unittest(Tracer TracerTests.cpp)

@@ -66,9 +66,9 @@ class DetectorVolume {
 
     /// Store constructor
     ///
-    /// @param objects are the ones move'd into the internal store
-    ObjectStore(std::vector<Internal>&& objects)
-        : internal(std::move(objects)) {
+    /// @param objects are the ones copied into the internal store
+    ObjectStore(const std::vector<Internal>& objects)
+        : internal(objects) {
       external = unpack_ref_to_const_vector(internal);
     }
 
@@ -80,14 +80,14 @@ class DetectorVolume {
   ///
   /// @param transform the transform defining the volume position
   /// @param bounds the volume bounds
-  /// @param surfaces the contained surfaces, move semantics
+  /// @param surfaces the contained surfaces 
   /// @param volumeSurfaceLinks the atacched links to surface (from volume)
   /// @param portalSurfaceLinks the attached links to surfaces (from portal)
   /// @param name the volume name
   ///
   DetectorVolume(const Transform3& transform,
                  std::unique_ptr<VolumeBounds> bounds,
-                 std::vector<std::shared_ptr<Surface>>&& surfaces,
+                 const std::vector<std::shared_ptr<Surface>>& surfaces,
                  SurfaceLinks&& volumeSurfaceLinks = VoidSurfaceLink{},
                  std::vector<SurfaceLinks>&& portalSurfaceLinks = {},
                  const std::string& name = "Unnamed");
@@ -96,7 +96,7 @@ class DetectorVolume {
   ///
   /// @param transform the transform defining the volume position
   /// @param bounds the volume bounds
-  /// @param volumes the contained volumes, move semantics
+  /// @param volumes the contained volumes
   /// @param volumeLink the links for finding the volumes
   /// @param recastPortals boolean flag that indicates to recast portals
   /// @param recastValue the recast direction for portals
@@ -104,7 +104,7 @@ class DetectorVolume {
   ///
   DetectorVolume(const Transform3& transform,
                  std::unique_ptr<VolumeBounds> bounds,
-                 std::vector<std::shared_ptr<DetectorVolume>>&& volumes,
+                 const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
                  VolumeLink&& volumeLink, bool recastPortals,
                  BinningValue recastValue, const std::string& name = "Unnamed");
 

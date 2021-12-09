@@ -9,7 +9,7 @@
 #include "Acts/Experimental/BlueprintDetectorBuilder.hpp"
 #include "Acts/Experimental/DetectorVolume.hpp"
 #include "Acts/Experimental/VolumeBlueprint.hpp"
-#include "Acts/Experimental/LayerBlueprint.hpp"
+#include "Acts/Experimental/InternalBlueprint.hpp"
 
 std::vector<std::shared_ptr<Acts::DetectorVolume>> Acts::BlueprintDetectorBuilder::build(
       const GeometryContext& gctx, const VolumeBlueprint& vbp) {

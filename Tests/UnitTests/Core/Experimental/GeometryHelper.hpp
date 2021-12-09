@@ -144,7 +144,7 @@ std::shared_ptr<DetectorVolume> createBarrelVolume(
     const std::string& volumeName = "SingleLayerVolume",
     ActsScalar moduleHalfX = 8.4, ActsScalar moduleHalfY = 36.,
     ActsScalar moduleTiltPhi = 0.145, ActsScalar layerRadius = 32.,
-    ActsScalar radialStagger = 2., ActsScalar longitudinalOverlap = 5.,
+    ActsScalar radialStagger = 0.75, ActsScalar longitudinalOverlap = 5.,
     const std::pair<int, int>& binningSchema = {16, 14}) {
   // Generate the volume surfaces
   std::vector<std::shared_ptr<Surface>> volumeSurfaces =
@@ -276,8 +276,8 @@ std::shared_ptr<DetectorVolume> createCentralDetector(
       beamPipe, firstLayer, firstGap, secondLayer};
 
   // Return the container in R
-  return CylindricalContainerBuilderR::operator()(
-      std::move(barrelVolumes), detectorName + std::string("TwoLayers"));
+  CylindricalContainerBuilderR ccbr;
+  return ccbr(std::move(barrelVolumes), detectorName + std::string("TwoLayers"));
 }
 
 /// Helper method to create a central detector
@@ -333,7 +333,9 @@ std::shared_ptr<DetectorVolume> createEndcapDetector(
     endcapVolumes = {secondLayer, gap, firstLayer};
   }
   // Container in Z
-  return CylindricalContainerBuilderZ::operator()(
+  CylindricalContainerBuilderZ ccbz;
+
+  return ccbz(
       std::move(endcapVolumes),
       detectorName + std::string("TwoLayers") + sideTag);
 }
@@ -346,8 +348,8 @@ std::shared_ptr<DetectorVolume> createDetector() {
   auto positiveEndcap =
       createEndcapDetector(0., 80., 500., 1, "PositiveEndcap");
 
-  return CylindricalContainerBuilderZ::operator()(
-      {negativeEndcap, centralBarrel, positiveEndcap}, std::string("Detector"));
+  CylindricalContainerBuilderZ ccbz;
+  return ccbz({negativeEndcap, centralBarrel, positiveEndcap}, std::string("Detector"));
 }
 
 }  // namespace Test

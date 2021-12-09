@@ -13,7 +13,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Experimental/CylindricalContainerHelper.hpp"
+#include "Acts/Experimental/CylindricalContainerBuilders.hpp"
 #include "Acts/Experimental/DetectorVolume.hpp"
 #include "Acts/Experimental/Enumerate.hpp"
 #include "Acts/Experimental/Portal.hpp"

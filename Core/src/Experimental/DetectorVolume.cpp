@@ -24,13 +24,13 @@ Acts::DetectorVolume::DetectorVolume(const Transform3& transform,
 
 Acts::DetectorVolume::DetectorVolume(
     const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
-    std::vector<std::shared_ptr<Surface>>&& surfaces,
+    const std::vector<std::shared_ptr<Surface>>& surfaces,
     SurfaceLinks&& volumeSurfaceLinks,
     std::vector<SurfaceLinks>&& portalSurfaceLinks, const std::string& name)
     : m_transform(transform),
       m_bounds(std::move(bounds)),
-      m_surfaces(std::move(surfaces)),
-      m_surfaceLinks(volumeSurfaceLinks),
+      m_surfaces(surfaces),
+      m_surfaceLinks(std::move(volumeSurfaceLinks)),
       m_name(name) {
   // This will create the portal surfaces
   createPortals(std::move(portalSurfaceLinks));
@@ -38,12 +38,12 @@ Acts::DetectorVolume::DetectorVolume(
 
 Acts::DetectorVolume::DetectorVolume(
     const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
-    std::vector<std::shared_ptr<DetectorVolume>>&& volumes,
+    const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
     VolumeLink&& volumeLink, bool recastPortals, BinningValue recastValue,
     const std::string& name)
     : m_transform(transform),
       m_bounds(std::move(bounds)),
-      m_volumes(std::move(volumes)),
+      m_volumes(volumes),
       m_volumeLink(volumeLink),
       m_name(name) {
   // This will create the portal surfaces

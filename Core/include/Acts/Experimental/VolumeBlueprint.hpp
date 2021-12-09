@@ -8,13 +8,51 @@
 
 #pragma once
 
-#include "Acts/Experimental/LayerBlueprint.hpp"
+#include "Acts/Experimental/InternalBlueprint.hpp"
 #include "Acts/Geometry/Extent.hpp"
 
 #include <exception>
 #include <functional>
 #include <vector>
 
+namespace Acts {
+
+class DetectorVolume;
+
+using VolumeBuilder = std::function<
+
+/// The volume blueprint
+///
+/// This class is to be used how volumes are built, they
+/// can either be built from a layer structure or from other
+/// volumes as a container.
+class VolumeBlueprint {
+ public:
+
+  /// Constructor for a volume with one layer
+  ///
+  /// @param gctx The geometry context
+  /// @param restriction The extent restriction against which this is checked
+  VolumeBlueprint(
+    const GeometryContext& gctx,
+    const InternalBlueprint& lBlueprint,
+    const VolumeBuilder& vBuilder,
+    const std::string& name,
+    const Extent& restriction = Extent(true)
+  )
+
+  /// Constructor for an empty volume
+  ///
+  /// @param gctx The geometry context
+  /// @param restriction The extent restriction against which this is checked
+  VolumeBlueprint(
+      const GeometryContext& gctx, const Extent& restriction = Extent(true);
+
+};
+
+}  // namespace Acts
+
+/**
 namespace Acts {
 
 class DetectorVolume;
@@ -31,43 +69,48 @@ struct VoidContainerBuilder {
   std::shared_ptr<DetectorVolume> operator()(
       std::vector<std::shared_ptr<DetectorVolume>>&& containerVolumes,
       const std::string& name) const noexcept(false) {
-    if (containerVolumes.size() != 1 or containerVolume[0] == nullptr) {
+    if (containerVolumes.size() != 1 or containerVolumes[0] == nullptr) {
       throw std::invalid_argument(
           "VoidContainerBuilder: exacly one Volume has to be provided.");
     }
-    // The single volume is the new container 
+    // The single volume is the new container
     auto volume = containerVolumes[0];
     volume->setName(name);
     return volume;
-  };
-}
+  }
+};
+
+/// This defines how the sub volumes are build
+///
+///
+using VolumeBuilder =
+    std::function<std::vector<std::shared_ptr<DetectorVolume>>(
+        const GeometryContext&,
+        const Extent& extent,
+        const std::vector<InternalBlueprint>& InternalBlueprints,
+        std::string&)>;
+
+/// This defines how the container is build
+///
+/// In case the volume builder returns only one volume, this is the
+/// container volume already;
+using ContainerBuilder = std::function<std::shared_ptr<DetectorVolume>(
+    std::vector<std::shared_ptr<DetectorVolume>>&& containerVolumes,
+    const std::string&)>;
 
 /// The volume blue print that is used to describe the building
 /// instruction of a volume that contains layer volumes
 ///
 class VolumeBlueprint {
  public:
-  /// This defines how the sub volumes are build
-  using VolumeBuilder =
-      std::function<std::vector<std::shared_ptr<DetectorVolume>>(
-          const GeometryContext&, const VolumeBlueprint&)>;
-
-  /// This defines how the container is build
-  ///
-  /// In case the volume builder returns only one volume, this is the
-  /// container volume already;
-  using ContainerBuilder = std::function<std::shared_ptr<DetectorVolume>(
-      std::vector<std::shared_ptr<DetectorVolume>>&& containerVolumes,
-      const std::string&)>;
-
-  /// Constructor from arguments for a volume 
+  /// Constructor from arguments for a volume
   ///
   /// @param extent is the volume extent
-  /// @param layerBlueprints is the list of layer blueprints
+  /// @param InternalBlueprints is the list of layer blueprints
   /// @param vBuilder is the function for layer volume building
   /// @param cBuilder is the function for container volume building
   VolumeBlueprint(const Extent& extent,
-                  const std::vector<LayerBlueprint>& layerBlueprints,
+                  const std::vector<InternalBlueprint>& InternalBlueprints,
                   VolumeBuilder vBuilder,
                   ContainerBuilder cBuilder = VoidContainerBuilder());
 
@@ -80,27 +123,26 @@ class VolumeBlueprint {
   Extent& extent();
 
   /// @return the layer blue prints
-  const std::vector<LayerBlueprint>& layerBlueprints() const;
+  const std::vector<InternalBlueprint>& InternalBlueprints() const;
 
-  /// @return the volume builder function 
+  /// @return the volume builder function
   const VolumeBuilder& volumeBuilder() const;
-  
+
   /// @return the container builder function
-  const ContainerBuilder& containerBuilder const;
+  const ContainerBuilder& containerBuilder() const;
 
  private:
   /// The extent for this volume
   Extent m_extent;
 
   /// The contained layer blueprints
-  std::vector<LayerBlueprint> m_layerBlueprints;
+  std::vector<InternalBlueprint> m_InternalBlueprints;
 
   /// The volume builder to be used with this blue print
   VolumeBuilder m_volumeBuilder;
 
   /// Teh container builder used with the blue print
   ContainerBuilder m_containerBuilder;
-
 };
 
 inline const Extent& VolumeBlueprint::extent() const {
@@ -111,16 +153,20 @@ inline Extent& VolumeBlueprint::extent() {
   return m_extent;
 }
 
-inline const std::vector<LayerBlueprint>& VolumeBlueprint::layerBlueprints() const {
-  return m_layerBlueprints;
+inline const std::vector<InternalBlueprint>& VolumeBlueprint::InternalBlueprints()
+    const {
+  return m_InternalBlueprints;
 }
 
-inline const VolumeBuilder& VolumeBlueprint::volumeBuilder() const {
+inline const VolumeBuilder& VolumeBlueprint::volumeBuilder()
+    const {
   return m_volumeBuilder;
 }
-  
-inline const ContainerBuilder& VolumeBlueprint::containerBuilder const {
-      return m_containerBuilder;
+
+inline const ContainerBuilder&
+VolumeBlueprint::containerBuilder() const {
+  return m_containerBuilder;
 }
 
 }  // namespace Acts
+*/
