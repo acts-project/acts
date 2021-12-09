@@ -201,6 +201,7 @@ class VolumeMaterialMapper {
 
   /// Create extra material point for the mapping and add them to the grid
   ///
+  /// @param mState The state to be filled
   /// @param currentBinning a pair containing the current geometry ID and the current binning
   /// @param properties material properties of the original hit
   /// @param position position of the original hit
