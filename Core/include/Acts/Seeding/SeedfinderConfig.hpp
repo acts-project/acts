@@ -60,6 +60,10 @@ struct SeedfinderConfig {
 
   // seed confirmation
   bool seedConfirmation = false;
+  // parameters for central seed confirmation
+  SeedConfirmationRange centralSeedConfirmationRange;
+  // parameters for forward seed confirmation
+  SeedConfirmationRange forwardSeedConfirmationRange;
 
   // non equidistant binning in z
   std::vector<float> zBinEdges;
@@ -82,10 +86,6 @@ struct SeedfinderConfig {
 
   // for how many seeds can one SpacePoint be the middle SpacePoint?
   unsigned int maxSeedsPerSpM = 5;
-  // parameters for central seed confirmation
-  SeedConfirmationRange centralSeedConfirmationRange;
-  // parameters for forward seed confirmation
-  SeedConfirmationRange forwardSeedConfirmationRange;
 
   // Geometry Settings
   // Detector ROI
