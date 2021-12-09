@@ -365,7 +365,7 @@ int ActsExamples::Sequencer::run() {
                     << perEvent(clocksAlgorithms[i], numEvents));
   }
   storeTiming(names, clocksAlgorithms, numEvents,
-              joinPaths(m_cfg.outputDir, "timing.tsv"));
+              joinPaths(m_cfg.outputDir, m_cfg.outputTimingFile));
 
   return EXIT_SUCCESS;
 }

@@ -158,6 +158,7 @@ Using the validation plots you can then adapt the binning and the mapped surface
 On top of those plots : 
 
 .. code-block:: console
+
   root -l -b ../Examples/Scripts/MaterialMapping/Mat_map_detector_plot_ratio.C'("propagation-material.root","material-maps_tracks.root",{X,Y,Z},100000,"Det_ratio","Det_Acts","Det_G4")'
   .q
 
