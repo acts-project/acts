@@ -57,7 +57,7 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
       const bool coCriterion = cLimit > oLimit;
       const bool cpCriterion =
           std::abs(cLimit) < std::abs(pLimit) + s_onSurfaceTolerance;
-          
+
       const bool accept = coCriterion and cpCriterion;
       if (accept) {
         ACTS_VERBOSE("Intersection is WITHIN limit");
