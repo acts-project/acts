@@ -31,8 +31,7 @@ class RadialBounds : public DiscBounds {
     eMaxR = 1,
     eHalfPhiSector = 2,
     eAveragePhi = 3,
-    eAngle = 4,
-    eSize = 5
+    eSize = 4
   };
 
   RadialBounds() = delete;
@@ -44,8 +43,8 @@ class RadialBounds : public DiscBounds {
   /// @param halfPhi The half opening angle (Pi for full angular coverage)
   /// @param avgPhi The average phi for the disc/ring sector
   RadialBounds(double minR, double maxR, double halfPhi = M_PI,
-               double avgPhi = 0., double angle = 0.) noexcept(false)
-      : m_values({minR, maxR, halfPhi, avgPhi, angle}) {
+               double avgPhi = 0.) noexcept(false)
+      : m_values({minR, maxR, halfPhi, avgPhi}) {
     checkConsistency();
   }
 

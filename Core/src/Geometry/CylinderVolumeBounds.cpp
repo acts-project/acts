@@ -33,7 +33,8 @@ Acts::CylinderVolumeBounds::CylinderVolumeBounds(
   m_values[eHalfLengthZ] = cBounds.get(CylinderBounds::eHalfLengthZ);
   m_values[eHalfPhiSector] = cBounds.get(CylinderBounds::eHalfPhiSector);
   m_values[eAveragePhi] = cBounds.get(CylinderBounds::eAveragePhi);
-  m_values[eAngle] = cBounds.get(CylinderBounds::eAngle);
+  m_values[eBevelMinZ] = cBounds.get(CylinderBounds::eBevelMinZ);
+  m_values[eBevelMaxZ] = cBounds.get(CylinderBounds::eBevelMaxZ);
   buildSurfaceBounds();
 }
 
@@ -49,7 +50,6 @@ Acts::CylinderVolumeBounds::CylinderVolumeBounds(
   m_values[eHalfLengthZ] = 0.5 * thickness;
   m_values[eHalfPhiSector] = rBounds.get(RadialBounds::eHalfPhiSector);
   m_values[eAveragePhi] = rBounds.get(RadialBounds::eAveragePhi);
-  m_values[eAngle] = rBounds.get(RadialBounds::eAngle);
   buildSurfaceBounds();
 }
 
@@ -58,29 +58,35 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
   OrientedSurfaces oSurfaces;
   oSurfaces.reserve(6);
 
-  //Angle rotation of the sizes if the angle is defined
-  Translation3 vneg(0., 0., -get(eHalfLengthZ));
-  Translation3 vpos(0., 0., get(eHalfLengthZ));
-  double angle = get(eAngle); 
-  Transform3 tneg, tpos;
-  if (angle != 0.) {  
+  Translation3 vMinZ(0., 0., -get(eHalfLengthZ));
+  Translation3 vMaxZ(0., 0., get(eHalfLengthZ));
+  // Set up transform for beveled edges if they are defined
+  double bevelMinZ = get(eBevelMinZ);
+  double bevelMaxZ = get(eBevelMaxZ);
+  Transform3 transMinZ, transMaxZ;
+  if (bevelMinZ != 0.) {
     double r = get(eMaxR);
-    Eigen::Vector3d w(1.0, 0.0, 0.0);
-    double sy = r * (1-std::cos(angle)) / std::cos(angle);
-    tneg = transform * vneg * Eigen::AngleAxisd(-angle, w) * Eigen::Scaling(1., 1. + sy, 1.);
-    tpos = transform * vpos * Eigen::AngleAxisd( angle, w) * Eigen::Scaling(1., 1. + sy, 1.);
+    double sy = r * (1 - std::cos(bevelMinZ)) / std::cos(bevelMinZ);
+    transMinZ = transform * vMinZ *
+                Eigen::AngleAxisd(-bevelMinZ, Eigen::Vector3d(1., 0., 0.)) *
+                Eigen::Scaling(1., 1. + sy, 1.);
   } else {
-    tneg = transform * vneg;
-    tpos = transform * vpos;
+    transMinZ = transform * vMinZ;
   }
-
+  if (bevelMaxZ != 0.) {
+    double r = get(eMaxR);
+    double sy = r * (1 - std::cos(bevelMaxZ)) / std::cos(bevelMaxZ);
+    transMaxZ = transform * vMaxZ *
+                Eigen::AngleAxisd(bevelMaxZ, Eigen::Vector3d(1., 0., 0.)) *
+                Eigen::Scaling(1., 1. + sy, 1.);
+  } else {
+    transMaxZ = transform * vMaxZ;
+  }
   // [0] Bottom Disc (negative z)
-  auto dSurface = Surface::makeShared<DiscSurface>(
-      tneg, m_discBounds);
+  auto dSurface = Surface::makeShared<DiscSurface>(transMinZ, m_discBounds);
   oSurfaces.push_back(OrientedSurface(std::move(dSurface), forward));
   // [1] Top Disc (positive z)
-  dSurface = Surface::makeShared<DiscSurface>(
-      tpos, m_discBounds);
+  dSurface = Surface::makeShared<DiscSurface>(transMaxZ, m_discBounds);
   oSurfaces.push_back(OrientedSurface(std::move(dSurface), backward));
 
   // [2] Outer Cylinder
@@ -120,12 +126,14 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
 void Acts::CylinderVolumeBounds::buildSurfaceBounds() {
   if (get(eMinR) > s_epsilon) {
     m_innerCylinderBounds = std::make_shared<const CylinderBounds>(
-        get(eMinR), get(eHalfLengthZ), get(eHalfPhiSector), get(eAveragePhi), get(eAngle));
+        get(eMinR), get(eHalfLengthZ), get(eHalfPhiSector), get(eAveragePhi),
+        get(eBevelMinZ), get(eBevelMaxZ));
   }
   m_outerCylinderBounds = std::make_shared<const CylinderBounds>(
-      get(eMaxR), get(eHalfLengthZ), get(eHalfPhiSector), get(eAveragePhi), get(eAngle));
+      get(eMaxR), get(eHalfLengthZ), get(eHalfPhiSector), get(eAveragePhi),
+      get(eBevelMinZ), get(eBevelMaxZ));
   m_discBounds = std::make_shared<const RadialBounds>(
-      get(eMinR), get(eMaxR), get(eHalfPhiSector), get(eAveragePhi), get(eAngle));
+      get(eMinR), get(eMaxR), get(eHalfPhiSector), get(eAveragePhi));
 
   if (std::abs(get(eHalfPhiSector) - M_PI) > s_epsilon) {
     m_sectorPlaneBounds = std::make_shared<const RectangleBounds>(

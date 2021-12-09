@@ -51,7 +51,7 @@ void createSegment(std::vector<vertex_t>& vertices,
                    std::pair<ActsScalar, ActsScalar> rxy, ActsScalar phi1,
                    ActsScalar phi2, unsigned int lseg, int addon = 0,
                    const vertex_t& offset = vertex_t::Zero(),
-                   const transform_t& transform = transform_t::Identity(), const double angle = 0.) {
+                   const transform_t& transform = transform_t::Identity()) {
   // Calculate the number of segments - 1 is the minimum
   unsigned int segs = std::abs(phi2 - phi1) / (2 * M_PI) * lseg;
   segs = segs > 0 ? segs : 1;
@@ -62,11 +62,6 @@ void createSegment(std::vector<vertex_t>& vertices,
     vertex_t vertex = vertex_t::Zero();
     vertex(0) = rxy.first * std::cos(phi);
     vertex(1) = rxy.second * std::sin(phi);
-
-    if(angle != 0. && vertex.size() == 3) {
-      double sign = offset(2) != 0. ? std::fabs(offset(2))/offset(2) : 1.;
-      vertex(2) = vertex(2) + sign * vertex(1) * std::tan(angle);
-    }
 
     vertex = vertex + offset;
     vertices.push_back(transform * vertex);

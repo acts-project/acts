@@ -39,8 +39,9 @@ class CylinderBounds : public SurfaceBounds {
     eHalfLengthZ = 1,
     eHalfPhiSector = 2,
     eAveragePhi = 3,
-    eAngle = 4,
-    eSize = 5
+    eBevelMinZ = 4,
+    eBevelMaxZ = 5,
+    eSize = 6
   };
 
   CylinderBounds() = delete;
@@ -52,8 +53,9 @@ class CylinderBounds : public SurfaceBounds {
   /// @param halfPhi The half opening angle
   /// @param avgPhi (optional) The phi value from which the opening angle spans
   CylinderBounds(double r, double halfZ, double halfPhi = M_PI,
-                 double avgPhi = 0., double angle = 0.) noexcept(false)
-      : m_values({r, halfZ, halfPhi, avgPhi, angle}),
+                 double avgPhi = 0., double bevelMinZ = 0.,
+                 double bevelMaxZ = 0.) noexcept(false)
+      : m_values({r, halfZ, halfPhi, avgPhi, bevelMinZ, bevelMaxZ}),
         m_closed(std::abs(halfPhi - M_PI) < s_epsilon) {
     checkConsistency();
   }
@@ -101,6 +103,12 @@ class CylinderBounds : public SurfaceBounds {
 
   /// Returns true for full phi coverage
   bool coversFullAzimuth() const;
+
+  /// Create the bows/circles on either side of the cylinder
+  ///
+  /// @param trans is the global transform
+  /// @param lseg  are the numbero if phi segments
+  std::vector<Vector3> createCircles(const Transform3 trans, size_t lseg) const;
 
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;

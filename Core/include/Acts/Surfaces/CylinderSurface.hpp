@@ -49,7 +49,8 @@ class CylinderSurface : public Surface {
   /// @param halfphi The half opening angle
   /// @param avphi The phi value from which the opening angle spans (both sides)
   CylinderSurface(const Transform3& transform, double radius, double halfz,
-                  double halfphi = M_PI, double avphi = 0., double angle = 0.);
+                  double halfphi = M_PI, double avphi = 0.,
+                  double bevelMinZ = 0., double bevelMaxZ = 0.);
 
   /// Constructor from Transform3 and CylinderBounds arguments
   ///

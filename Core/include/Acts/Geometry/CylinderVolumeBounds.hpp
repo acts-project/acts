@@ -77,7 +77,8 @@ class CylinderVolumeBounds : public VolumeBounds {
     eHalfLengthZ = 2,
     eHalfPhiSector = 3,
     eAveragePhi = 4,
-    eAngle = 5,
+    eBevelMinZ = 5,
+    eBevelMaxZ = 6,
     eSize
   };
 
@@ -91,10 +92,10 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// @param halfphi The half lopening angle
   /// @param avgphi The average phi value
   CylinderVolumeBounds(double rmin, double rmax, double halfz,
-                       double halfphi = M_PI,
-                       double avgphi = 0.,
-                       double angle = 0.) noexcept(false)
-      : m_values({rmin, rmax, halfz, halfphi, avgphi, angle}) {
+                       double halfphi = M_PI, double avgphi = 0.,
+                       double bevelMinZ = 0.,
+                       double bevelMaxZ = 0.) noexcept(false)
+      : m_values({rmin, rmax, halfz, halfphi, avgphi, bevelMinZ, bevelMaxZ}) {
     checkConsistency();
     buildSurfaceBounds();
   }
