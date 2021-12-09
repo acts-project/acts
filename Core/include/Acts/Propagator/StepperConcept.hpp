@@ -101,8 +101,6 @@ constexpr bool MultiStepperStateConcept= require<
         static_assert(curvilinear_state_exists, "CurvilinearState type not found");
         constexpr static bool reset_state_exists = has_method<const S, void, reset_state_t, state&, const BoundVector&, const BoundSymMatrix&, const Surface&, const NavigationDirection, const double>;
         static_assert(reset_state_exists, "resetState method not found");
-        constexpr static bool get_field_exists = has_method<const S, Result<Vector3>, get_field_t, state&, const Vector3&>;
-        static_assert(get_field_exists, "getField method not found");
         constexpr static bool position_exists = has_method<const S, Vector3, position_t, const state&>;
         static_assert(position_exists, "position method not found");
         constexpr static bool direction_exists = has_method<const S, Vector3, direction_t, const state&>;
@@ -136,7 +134,6 @@ constexpr bool MultiStepperStateConcept= require<
                                               covariance_exists,
                                               bound_state_exists,
                                               curvilinear_state_exists,
-                                              get_field_exists,
                                               position_exists,
                                               direction_exists,
                                               momentum_exists,
@@ -154,16 +151,19 @@ constexpr bool MultiStepperStateConcept= require<
 // clang-format on
 
 // clang-format off
+    // NOTE This static_asserts in here must be commented out, since it would break the compilation for the MultiStepper
     template <typename S, typename state = typename S::State>
       struct SingleStepperConcept {
         constexpr static bool common_stepper_concept_fullfilled = CommonStepperConcept<S, state>::value;
         static_assert(common_stepper_concept_fullfilled, "Stepper does not fullfill common stepper concept");
         constexpr static bool update_method_exists = require<has_method<const S, void, update_t, state&, const FreeVector&, const BoundVector&, const BoundSymMatrix&, const Surface&>, has_method<const S, void, update_t, state&, const Vector3&, const Vector3&, double, double>>;
-        // NOTE This static_assert must be commented out, since it would break the compilation for the MultiStepper
         // static_assert(update_method_exists, "update method not found");
+        constexpr static bool get_field_exists = has_method<const S, Result<Vector3>, get_field_t, state&, const Vector3&>;
+        // static_assert(get_field_exists, "getField method not found");
 
         constexpr static bool value = require<common_stepper_concept_fullfilled,
-                                              update_method_exists>;
+                                              update_method_exists,
+                                              get_field_exists>;
       };
 // clang-format on
 

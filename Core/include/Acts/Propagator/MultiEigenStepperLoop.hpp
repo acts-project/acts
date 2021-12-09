@@ -505,25 +505,10 @@ class MultiEigenStepperLoop
                  stolerance);
   }
 
-  /// Constructor
+  /// Constructor from a magnetic field and a optionally provided Logger
   MultiEigenStepperLoop(std::shared_ptr<const MagneticFieldProvider> bField,
                         LoggerWrapper l = getDummyLogger())
       : EigenStepper<extensionlist_t, auctioneer_t>(bField), logger(l) {}
-
-  void setOverstepLimit(double oLimit) {
-    SingleStepper::m_overstepLimit = oLimit;
-  }
-
-  /// Get the field for the stepping, it checks first if the access is still
-  /// within the Cell, and updates the cell if necessary.
-  ///
-  /// @param [in,out] state is the propagation state associated with the track
-  ///                 the magnetic field cell is used (and potentially updated)
-  /// @param [in] pos is the field position
-  Result<Vector3> getField(State& state, const Vector3& pos) const {
-    // get the field from the cell
-    return SingleStepper::getField(state.components.front().state, pos);
-  }
 
   /// Global particle position accessor
   ///
