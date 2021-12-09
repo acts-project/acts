@@ -54,20 +54,21 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
       double cLimit = intersection.pathLength;
       ACTS_VERBOSE(" -> pLimit, oLimit, cLimit: " << pLimit << ", " << oLimit
                                                   << ", " << cLimit);
-      bool accept = (cLimit > oLimit and
-                     cLimit * cLimit < pLimit * pLimit + s_onSurfaceTolerance);
+      const bool coCriterion = cLimit > oLimit;
+      const bool cpCriterion =
+          std::abs(cLimit) < std::abs(pLimit) + s_onSurfaceTolerance;
+          
+      const bool accept = coCriterion and cpCriterion;
       if (accept) {
         ACTS_VERBOSE("Intersection is WITHIN limit");
         stepper.setStepSize(state, state.navDir * cLimit);
-      }
-
-      else {
+      } else {
         ACTS_VERBOSE("Intersection is OUTSIDE limit because: ");
-        if (cLimit <= oLimit) {
+        if (not coCriterion) {
           ACTS_VERBOSE("- intersection path length "
                        << cLimit << " <= overstep limit " << oLimit);
         }
-        if (cLimit * cLimit > pLimit * pLimit + s_onSurfaceTolerance) {
+        if (not cpCriterion) {
           ACTS_VERBOSE("- intersection path length "
                        << std::abs(cLimit) << " is over the path limit "
                        << (std::abs(pLimit) + s_onSurfaceTolerance)
