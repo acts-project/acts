@@ -204,7 +204,8 @@ class TripletSearch {
           const auto top = deviceIndTopDuplets[it];
           // this will be the t-th top space point for
           // fixed middle and bottom SP
-          vecmem::device_vector<uint32_t> deviceCountTriplets(m_countTripletsView);
+          vecmem::device_vector<uint32_t> deviceCountTriplets(
+              m_countTripletsView);
           vecmem::atomic obj(&deviceCountTriplets[ib]);
           auto t = obj.fetch_add(1);
           /*
