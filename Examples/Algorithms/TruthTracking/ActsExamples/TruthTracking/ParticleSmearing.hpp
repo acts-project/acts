@@ -32,23 +32,23 @@ class ParticleSmearing final : public BareAlgorithm {
     /// Output smeared tracks parameters collection.
     std::string outputTrackParameters;
     /// Constant term of the d0 resolution.
-    double sigmaD0 = 30 * Acts::UnitConstants::um;
+    double sigmaD0 = 20 * Acts::UnitConstants::um;
     /// Pt-dependent d0 resolution of the form sigma_d0 = A*exp(-1.*abs(B)*pt).
-    double sigmaD0PtA = 0 * Acts::UnitConstants::um;
-    double sigmaD0PtB = 1 / Acts::UnitConstants::GeV;
+    double sigmaD0PtA = 30 * Acts::UnitConstants::um;
+    double sigmaD0PtB = 0.3 / Acts::UnitConstants::GeV;
     /// Constant term of the z0 resolution.
-    double sigmaZ0 = 30 * Acts::UnitConstants::um;
+    double sigmaZ0 = 20 * Acts::UnitConstants::um;
     /// Pt-dependent z0 resolution of the form sigma_z0 = A*exp(-1.*abs(B)*pt).
-    double sigmaZ0PtA = 0 * Acts::UnitConstants::um;
-    double sigmaZ0PtB = 1 / Acts::UnitConstants::GeV;
+    double sigmaZ0PtA = 30 * Acts::UnitConstants::um;
+    double sigmaZ0PtB = 0.3 / Acts::UnitConstants::GeV;
     /// Time resolution.
-    double sigmaT0 = 5 * Acts::UnitConstants::ns;
+    double sigmaT0 = 1 * Acts::UnitConstants::ns;
     /// Phi angular resolution.
     double sigmaPhi = 1 * Acts::UnitConstants::degree;
     /// Theta angular resolution.
     double sigmaTheta = 1 * Acts::UnitConstants::degree;
     /// Relative momentum resolution.
-    double sigmaPRel = 0.001;
+    double sigmaPRel = 0.05;
     /// Inflate the initial covariance matrix
     std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
     /// Random numbers service.

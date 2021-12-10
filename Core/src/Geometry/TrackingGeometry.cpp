@@ -9,7 +9,6 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 
 #include "Acts/Geometry/Layer.hpp"
-#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -62,11 +61,6 @@ void Acts::TrackingGeometry::registerBeamTube(
 
 const Acts::Surface* Acts::TrackingGeometry::getBeamline() const {
   return m_beam.get();
-}
-
-void Acts::TrackingGeometry::visitSurfaces(
-    const std::function<void(const Acts::Surface*)>& visitor) const {
-  highestTrackingVolume()->visitSurfaces(visitor);
 }
 
 const Acts::TrackingVolume* Acts::TrackingGeometry::findVolume(
