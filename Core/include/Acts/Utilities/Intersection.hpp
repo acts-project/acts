@@ -218,7 +218,7 @@ bool checkIntersection(const intersection_t& intersection, double pLimit,
   }
 
   return accept;
-};
+}
 
 }  // namespace detail
 

@@ -478,16 +478,19 @@ Acts::TrackingVolume::compatibleBoundaries(
 
     ACTS_VERBOSE("Check intersection with surface "
                  << bSurface->surfaceRepresentation().geometryId());
-    if (detail::checkIntersection(sIntersection.intersection, pLimit, oLimit, logger)) {
+    if (detail::checkIntersection(sIntersection.intersection, pLimit, oLimit,
+                                  logger)) {
       return BoundaryIntersection(sIntersection.intersection, bSurface,
                                   sIntersection.object);
     }
 
     if (sIntersection.alternative) {
       ACTS_VERBOSE("Consider alternative");
-      if (detail::checkIntersection(sIntersection.alternative, pLimit, oLimit, logger)) {
+      if (detail::checkIntersection(sIntersection.alternative, pLimit, oLimit,
+                                    logger)) {
         return BoundaryIntersection(sIntersection.alternative, bSurface,
-                                  sIntersection.object);;
+                                    sIntersection.object);
+        ;
       }
     } else {
       ACTS_VERBOSE("No alternative for intersection");
