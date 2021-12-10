@@ -309,10 +309,10 @@ class MultiEigenStepperLoop
     auto status() const { return m_cmp.status; }
     auto& weight() { return m_cmp.weight; }
     auto weight() const { return m_cmp.weight; }
-    auto& charge() { return m_cmp.state.charge; }
-    auto charge() const { return m_cmp.state.charge; }
-    auto& pathLength() { return m_cmp.state.pathAccumulated; }
-    auto pathLength() const { return m_cmp.state.pathAccumulated; }
+    auto& charge() { return m_cmp.state.q; }
+    auto charge() const { return m_cmp.state.q; }
+    auto& pathAccumulated() { return m_cmp.state.pathAccumulated; }
+    auto pathAccumulated() const { return m_cmp.state.pathAccumulated; }
     auto& pars() { return m_cmp.state.pars; }
     const auto& pars() const { return m_cmp.state.pars; }
     auto& derivative() { return m_cmp.state.derivative; }
@@ -379,8 +379,8 @@ class MultiEigenStepperLoop
 
     auto status() const { return m_cmp.status; }
     auto weight() const { return m_cmp.weight; }
-    auto charge() const { return m_cmp.state.charge; }
-    auto pathLength() const { return m_cmp.state.pathAccumulated; }
+    auto charge() const { return m_cmp.state.q; }
+    auto pathAccumulated() const { return m_cmp.state.pathAccumulated; }
     const auto& pars() const { return m_cmp.state.pars; }
     const auto& derivative() const { return m_cmp.state.derivative; }
     const auto& jacTransport() const { return m_cmp.state.jacTransport; }

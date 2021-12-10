@@ -15,10 +15,10 @@
 using namespace Acts;
 using namespace Acts::VectorHelpers;
 
-MagneticFieldContext magCtx;
-GeometryContext geoCtx;
+const MagneticFieldContext magCtx;
+const GeometryContext geoCtx;
 
-using MultiStepper =
+using MultiStepperLoop =
     MultiEigenStepperLoop<StepperExtensionList<DefaultExtension>>;
 using SingleStepper = EigenStepper<StepperExtensionList<DefaultExtension>>;
 
@@ -31,118 +31,119 @@ struct Options {
 
 struct Navigation {};
 
-BOOST_AUTO_TEST_CASE(multi_eigen_stepper_state_charged_no_cov) {
+template <typename stepper_state_t>
+struct DummyPropState {
+  stepper_state_t &stepping;
+  Options options;
+  Navigation navigation;
+  GeometryContext geoContext;
+
+  DummyPropState(stepper_state_t &ss)
+      : stepping(ss),
+        options(Options{}),
+        navigation(Navigation{}),
+        geoContext(geoCtx) {}
+};
+
+template <typename T>
+using components_t = typename T::components;
+
+//////////////////////////////////////////////////////
+/// Test the construction of the MultiStepper::State
+//////////////////////////////////////////////////////
+template <typename multi_stepper_t, typename charge_t, bool Cov>
+void test_multi_stepper_state() {
+  static_assert(std::is_same_v<charge_t, SinglyCharged> ||
+                std::is_same_v<charge_t, Neutral>);
+
+  using MultiState = typename multi_stepper_t::State;
+  using MultiStepper = multi_stepper_t;
+
   const NavigationDirection ndir = backward;
   const double stepSize = 123.;
   const double tolerance = 234.;
 
   auto bField = std::make_shared<ConstantBField>(Vector3(1., 2.5, 33.33));
 
+  using cov_t = std::optional<BoundSymMatrix>;
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
-      cmps(4, {0.25, BoundVector::Ones(), std::nullopt});
+      cmps(4, {0.25, BoundVector::Ones(),
+               Cov ? cov_t{BoundSymMatrix::Identity()} : cov_t{std::nullopt}});
 
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Vector3::Zero(), Vector3::Ones().normalized());
 
   // Test charged parameters without covariance matrix
-  MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
+  MultiComponentBoundTrackParameters<charge_t> multi_pars(surface, cmps);
 
-  MultiStepper::State state(geoCtx, magCtx, bField, multi_pars, ndir, stepSize,
-                            tolerance);
+  MultiState state(geoCtx, magCtx, bField, multi_pars, ndir, stepSize,
+                   tolerance);
 
   MultiStepper ms((bField));
 
   BOOST_CHECK_EQUAL(cmps.size(), ms.numberComponents(state));
 
   // Test the result & compare with the input/test for reasonable members
-  for (const auto &cmp : state.components) {
-    BOOST_CHECK_EQUAL(cmp.state.jacToGlobal, BoundToFreeMatrix::Zero());
-    BOOST_CHECK_EQUAL(cmp.state.jacTransport, FreeMatrix::Identity());
-    BOOST_CHECK_EQUAL(cmp.state.derivative, FreeVector::Zero());
-    BOOST_CHECK_EQUAL(cmp.state.cov, BoundSymMatrix::Zero());
+  auto const_iterable = ms.constComponentIterable(state);
+  for (const auto &cmp : const_iterable) {
+    BOOST_CHECK_EQUAL(cmp.jacTransport(), FreeMatrix::Identity());
+    BOOST_CHECK_EQUAL(cmp.derivative(), FreeVector::Zero());
+    if constexpr (not Cov) {
+      BOOST_CHECK_EQUAL(cmp.jacToGlobal(), BoundToFreeMatrix::Zero());
+      BOOST_CHECK_EQUAL(cmp.cov(), BoundSymMatrix::Zero());
+    }
   }
 
-  BOOST_CHECK(not state.covTransport);
-  for (const auto &cmp : state.components) {
-    BOOST_CHECK(not cmp.state.covTransport);
-  }
+  const auto expected_charge = []() {
+    if constexpr (std::is_same_v<charge_t, Neutral>) {
+      return 0.0;
+    } else {
+      return 1.0;
+    }
+  }();
 
-  BOOST_CHECK_EQUAL(state.navDir, ndir);
-  for (const auto &cmp : state.components) {
-    BOOST_CHECK_EQUAL(cmp.state.navDir, ndir);
+  BOOST_CHECK_EQUAL(ms.charge(state), expected_charge);
+  for (const auto &cmp : const_iterable) {
+    BOOST_CHECK_EQUAL(cmp.charge(), expected_charge);
   }
 
   BOOST_CHECK_EQUAL(state.pathAccumulated, 0.);
-  for (const auto &cmp : state.components) {
-    BOOST_CHECK_EQUAL(cmp.state.pathAccumulated, 0.);
+  for (const auto &cmp : const_iterable) {
+    BOOST_CHECK_EQUAL(cmp.pathAccumulated(), 0.);
   }
 
-  BOOST_CHECK_EQUAL(ms.charge(state), 1.);
-  for (const auto &cmp : state.components) {
-    BOOST_CHECK_EQUAL(cmp.state.q, 1.);
-  }
-}
+  // navDir and the covTransport in the MultiEigenStepperLoop are redundant and
+  // thus not part of the interface. However, we want to check them for
+  // consistency.
+  if constexpr (Acts::Concepts::exists<components_t, MultiState>) {
+    BOOST_CHECK(not state.covTransport);
+    for (const auto &cmp : state.components) {
+      BOOST_CHECK(cmp.state.covTransport == Cov);
+    }
 
-BOOST_AUTO_TEST_CASE(multi_eigen_stepper_state_neutral_no_cov) {
-  const NavigationDirection ndir = backward;
-  const double stepSize = 123.;
-  const double tolerance = 234.;
-
-  auto bField = std::make_shared<ConstantBField>(Vector3(1., 2.5, 33.33));
-
-  std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
-      cmps(4, {0.25, BoundVector::Ones(), std::nullopt});
-
-  auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      Vector3::Zero(), Vector3::Ones().normalized());
-
-  // Test neutral parameters without covariance matrix
-  MultiComponentBoundTrackParameters<Neutral> multi_pars(surface, cmps);
-
-  MultiStepper::State state(geoCtx, magCtx, bField, multi_pars, ndir, stepSize,
-                            tolerance);
-
-  MultiStepper ms((bField));
-
-  BOOST_CHECK_EQUAL(ms.charge(state), 0.);
-  for (const auto &cmp : state.components) {
-    BOOST_CHECK_EQUAL(cmp.state.q, 0.);
+    BOOST_CHECK_EQUAL(state.navDir, ndir);
+    for (const auto &cmp : state.components) {
+      BOOST_CHECK_EQUAL(cmp.state.navDir, ndir);
+    }
   }
 }
 
-BOOST_AUTO_TEST_CASE(multi_eigen_stepper_state_charged_with_cov) {
-  const NavigationDirection ndir = backward;
-  const double stepSize = 123.;
-  const double tolerance = 234.;
-
-  auto bField = std::make_shared<ConstantBField>(Vector3(1., 2.5, 33.33));
-
-  std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
-      cmps(4, {0.25, BoundVector::Ones(), BoundSymMatrix::Identity()});
-
-  auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      Vector3::Zero(), Vector3::Ones().normalized());
-
-  // Test charged parameters without covariance matrix
-  MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
-
-  MultiStepper::State state(geoCtx, magCtx, bField, multi_pars, ndir, stepSize,
-                            tolerance);
-
-  MultiStepper ms((bField));
-
-  // Test the result & compare with the input/test for reasonable members
-  for (const auto &cmp : state.components) {
-    BOOST_CHECK_NE(cmp.state.cov, BoundSymMatrix::Zero());
-  }
-
-  BOOST_CHECK(state.covTransport);
-  for (const auto &cmp : state.components) {
-    BOOST_CHECK(cmp.state.covTransport);
-  }
+BOOST_AUTO_TEST_CASE(multi_stepper_state_charged_no_cov) {
+  test_multi_stepper_state<MultiStepperLoop, SinglyCharged, false>();
 }
 
-BOOST_AUTO_TEST_CASE(multi_eigen_stepper_state_invalid) {
+BOOST_AUTO_TEST_CASE(multi_stepper_state_neutral_no_cov) {
+  test_multi_stepper_state<MultiStepperLoop, Neutral, false>();
+}
+
+BOOST_AUTO_TEST_CASE(multi_stepper_state_charged_cov) {
+  test_multi_stepper_state<MultiStepperLoop, SinglyCharged, true>();
+}
+
+template <typename multi_stepper_t>
+void test_multi_stepper_state_invalid() {
+  using MultiState = typename multi_stepper_t::State;
+
   const NavigationDirection ndir = backward;
   const double stepSize = 123.;
   const double tolerance = 234.;
@@ -158,12 +159,24 @@ BOOST_AUTO_TEST_CASE(multi_eigen_stepper_state_invalid) {
 
   MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
 
-  BOOST_CHECK_THROW(MultiStepper::State(geoCtx, magCtx, bField, multi_pars,
-                                        ndir, stepSize, tolerance),
-                    std::invalid_argument);
+  BOOST_CHECK_THROW(
+      MultiState(geoCtx, magCtx, bField, multi_pars, ndir, stepSize, tolerance),
+      std::invalid_argument);
 }
 
-BOOST_AUTO_TEST_CASE(multi_eigen_vs_single_eigen) {
+BOOST_AUTO_TEST_CASE(multi_eigen_stepper_state_invalid) {
+  test_multi_stepper_state_invalid<MultiStepperLoop>();
+}
+
+////////////////////////////////////////////////////////////////////////
+// Compare the Multi-Stepper against the Eigen-Stepper for consistency
+////////////////////////////////////////////////////////////////////////
+
+template <typename multi_stepper_t>
+void test_multi_stepper_vs_eigen_stepper() {
+  using MultiState = typename multi_stepper_t::State;
+  using MultiStepper = multi_stepper_t;
+
   const NavigationDirection ndir = backward;
   const double stepSize = 123.;
   const double tolerance = 234.;
@@ -181,32 +194,23 @@ BOOST_AUTO_TEST_CASE(multi_eigen_vs_single_eigen) {
   MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
   SingleBoundTrackParameters<SinglyCharged> single_pars(surface, pars, cov);
 
-  MultiStepper::State multi_state(geoCtx, magCtx, bField, multi_pars, ndir,
-                                  stepSize, tolerance);
+  MultiState multi_state(geoCtx, magCtx, bField, multi_pars, ndir, stepSize,
+                         tolerance);
   SingleStepper::State single_state(geoCtx, bField->makeCache(magCtx),
                                     single_pars, ndir, stepSize, tolerance);
 
   MultiStepper multi_stepper(bField);
   SingleStepper single_stepper(bField);
 
+  // Do some steps and check that the results match
   for (int i = 0; i < 10; ++i) {
     // Single stepper
-    struct SinglePropState {
-      SingleStepper::State &stepping;
-      Options options;
-    } single_prop_state{single_state, Options{}};
-
+    auto single_prop_state = DummyPropState(single_state);
     auto single_result = single_stepper.step(single_prop_state);
     single_stepper.transportCovarianceToCurvilinear(single_state);
 
     // Multi stepper;
-    struct MultiPropState {
-      MultiStepper::State &stepping;
-      Options options;
-      Navigation navigation;
-      GeometryContext geoContext;
-    } multi_prop_state{multi_state, Options{}, Navigation{}, geoCtx};
-
+    auto multi_prop_state = DummyPropState(multi_state);
     auto multi_result = multi_stepper.step(multi_prop_state);
     multi_stepper.transportCovarianceToCurvilinear(multi_state);
 
@@ -216,18 +220,30 @@ BOOST_AUTO_TEST_CASE(multi_eigen_vs_single_eigen) {
 
     BOOST_CHECK_EQUAL(*single_result, *multi_result);
 
-    for (const auto &cmp : multi_state.components) {
-      BOOST_CHECK_EQUAL(cmp.state.pars, single_state.pars);
-      BOOST_CHECK_EQUAL(cmp.state.q, single_state.q);
-      BOOST_CHECK_EQUAL(cmp.state.cov, single_state.cov);
-      BOOST_CHECK_EQUAL(cmp.state.jacTransport, single_state.jacTransport);
-      BOOST_CHECK_EQUAL(cmp.state.jacToGlobal, single_state.jacToGlobal);
-      BOOST_CHECK_EQUAL(cmp.state.derivative, single_state.derivative);
+    for (const auto &cmp : multi_stepper.constComponentIterable(multi_state)) {
+      BOOST_CHECK_EQUAL(cmp.pars(), single_state.pars);
+      BOOST_CHECK_EQUAL(cmp.charge(), single_state.q);
+      BOOST_CHECK_EQUAL(cmp.cov(), single_state.cov);
+      BOOST_CHECK_EQUAL(cmp.jacTransport(), single_state.jacTransport);
+      BOOST_CHECK_EQUAL(cmp.jacToGlobal(), single_state.jacToGlobal);
+      BOOST_CHECK_EQUAL(cmp.derivative(), single_state.derivative);
+      BOOST_CHECK_EQUAL(cmp.pathAccumulated(), single_state.pathAccumulated);
     }
   }
 }
 
-BOOST_AUTO_TEST_CASE(multi_eigen_component_iterable) {
+BOOST_AUTO_TEST_CASE(multi_eigen_vs_single_eigen) {
+  test_multi_stepper_vs_eigen_stepper<MultiStepperLoop>();
+}
+
+////////////////////////////////////////////////////
+// Test the modifying accessors to the components
+////////////////////////////////////////////////////
+template <typename multi_stepper_t>
+void test_components_modifying_accessors() {
+  using MultiState = typename multi_stepper_t::State;
+  using MultiStepper = multi_stepper_t;
+
   const NavigationDirection ndir = backward;
   const double stepSize = 123.;
   const double tolerance = 234.;
@@ -245,47 +261,91 @@ BOOST_AUTO_TEST_CASE(multi_eigen_component_iterable) {
 
   MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
 
-  MultiStepper::State multi_state(geoCtx, magCtx, bField, multi_pars, ndir,
-                                  stepSize, tolerance);
+  MultiState mutable_multi_state(geoCtx, magCtx, bField, multi_pars, ndir,
+                                 stepSize, tolerance);
+  const MultiState const_multi_state(geoCtx, magCtx, bField, multi_pars, ndir,
+                                     stepSize, tolerance);
 
   MultiStepper multi_stepper(bField);
-  const auto const_iterable = multi_stepper.constComponentIterable(multi_state);
 
-  BOOST_CHECK_EQUAL(cmps.size(), multi_stepper.numberComponents(multi_state));
-
-  {
-    auto proxy_it = const_iterable.begin();
-    auto vec_it = cmps.begin();
-    for (; vec_it != cmps.end(); ++proxy_it, ++vec_it) {
-      BOOST_CHECK((*proxy_it).weight() == std::get<double>(*vec_it));
+  auto modify = [&](const auto &projector) {
+    // Here test the mutable overloads of the mutable iterable
+    for (auto cmp : multi_stepper.componentIterable(mutable_multi_state)) {
+      using type = std::decay_t<decltype(projector(cmp))>;
+      if constexpr (std::is_enum_v<type>) {
+        projector(cmp) =
+            static_cast<type>(static_cast<int>(projector(cmp)) + 1);
+      } else {
+        projector(cmp) *= 2.0;
+      }
     }
-  }
+  };
 
-  for (auto cmp : multi_stepper.componentIterable(multi_state)) {
-    cmp.weight() *= 2.0;
-    cmp.pars() *= 2.0;
-    cmp.cov() *= 2.0;
-  }
+  auto check = [&](const auto &projector) {
+    // Here test the const-member functions of the mutable iterable
+    auto mutable_state_iterable =
+        multi_stepper.componentIterable(mutable_multi_state);
+    // Here test the const iterable
+    auto const_state_iterable =
+        multi_stepper.constComponentIterable(const_multi_state);
 
-  {
-    auto proxy_it = const_iterable.begin();
-    auto i = 0ul;
-    for (; proxy_it != const_iterable.end(); ++proxy_it, ++i) {
-      const auto [weight, single_pars_for_check] = multi_pars[i];
-      BOOST_CHECK_CLOSE((*proxy_it).weight(), 2.0 * weight, 1.e-10);
-      BOOST_CHECK((*proxy_it).pars().template segment<4>(eFreePos0).isApprox(
-          2.0 * single_pars_for_check.fourPosition(geoCtx), 1.e-10));
-      BOOST_CHECK((*proxy_it).pars().template segment<3>(eFreeDir0).isApprox(
-          2.0 * single_pars_for_check.unitDirection(), 1.e-10));
-      BOOST_CHECK_CLOSE((*proxy_it).pars()[eFreeQOverP],
-                        2.0 * single_pars_for_check.charge() /
-                            single_pars_for_check.absoluteMomentum(),
-                        1.e-10);
+    auto mstate_it = mutable_state_iterable.begin();
+    auto cstate_it = const_state_iterable.begin();
+    for (; cstate_it != const_state_iterable.end(); ++mstate_it, ++cstate_it) {
+      const auto mstate_cmp = *mstate_it;
+      auto cstate_cmp = *cstate_it;
+
+      using type = std::decay_t<decltype(projector(mstate_cmp))>;
+
+      if constexpr (std::is_arithmetic_v<type>) {
+        BOOST_CHECK_CLOSE(projector(mstate_cmp), 2.0 * projector(cstate_cmp),
+                          1.e-8);
+      } else if constexpr (std::is_enum_v<type>) {
+        BOOST_CHECK_EQUAL(static_cast<int>(projector(mstate_cmp)),
+                          1 + static_cast<int>(projector(cstate_cmp)));
+      } else {
+        BOOST_CHECK(
+            projector(mstate_cmp).isApprox(2.0 * projector(cstate_cmp), 1.e-8));
+      }
     }
-  }
+  };
+
+  const auto projectors = std::make_tuple(
+      [](auto &cmp) -> decltype(auto) { return cmp.status(); },
+      [](auto &cmp) -> decltype(auto) { return cmp.pathAccumulated(); },
+      [](auto &cmp) -> decltype(auto) { return cmp.charge(); },
+      [](auto &cmp) -> decltype(auto) { return cmp.weight(); },
+      [](auto &cmp) -> decltype(auto) { return cmp.pars(); },
+      [](auto &cmp) -> decltype(auto) { return cmp.cov(); },
+      [](auto &cmp) -> decltype(auto) { return cmp.jacTransport(); },
+      [](auto &cmp) -> decltype(auto) { return cmp.derivative(); },
+      [](auto &cmp) -> decltype(auto) { return cmp.jacobian(); },
+      [](auto &cmp) -> decltype(auto) { return cmp.jacToGlobal(); });
+
+  std::apply(
+      [&](const auto &...projs) {
+        (
+            [&]() {
+              modify(projs);
+              check(projs);
+            }(),
+            ...);
+      },
+      projectors);
 }
 
-BOOST_AUTO_TEST_CASE(test_surface_status) {
+BOOST_AUTO_TEST_CASE(multi_eigen_component_iterable_with_modification) {
+  test_components_modifying_accessors<MultiStepperLoop>();
+}
+
+/////////////////////////////////////////////
+// Test if the surface status update works
+/////////////////////////////////////////////
+template <typename multi_stepper_t>
+void test_multi_stepper_surface_status_update() {
+  using MultiState = typename multi_stepper_t::State;
+  using MultiStepper = multi_stepper_t;
+
   const NavigationDirection ndir = forward;
   const double stepSize = 123.;
   const double tolerance = 234.;
@@ -315,9 +375,14 @@ BOOST_AUTO_TEST_CASE(test_surface_status) {
                     .unitDirection()
                     .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
 
-  MultiStepper::State multi_state(geoCtx, magCtx, bField, multi_pars, ndir,
-                                  stepSize, tolerance);
+  MultiState multi_state(geoCtx, magCtx, bField, multi_pars, ndir, stepSize,
+                         tolerance);
+  SingleStepper::State single_state(geoCtx, bField->makeCache(magCtx),
+                                    std::get<1>(multi_pars[0]), ndir, stepSize,
+                                    tolerance);
+
   MultiStepper multi_stepper(bField);
+  SingleStepper single_stepper(bField);
 
   // Update surface status and check
   {
@@ -336,14 +401,12 @@ BOOST_AUTO_TEST_CASE(test_surface_status) {
 
   // Step forward now
   {
-    struct MultiPropState {
-      MultiStepper::State &stepping;
-      Options options;
-      Navigation navigation;
-      GeometryContext geoContext;
-    } multi_prop_state{multi_state, Options{}, Navigation{}, geoCtx};
-
+    auto multi_prop_state = DummyPropState(multi_state);
     multi_stepper.step(multi_prop_state);
+
+    // Single stepper
+    auto single_prop_state = DummyPropState(single_state);
+    single_stepper.step(single_prop_state);
   }
 
   // Update surface status and check again
@@ -377,7 +440,94 @@ BOOST_AUTO_TEST_CASE(test_surface_status) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(test_bound_state) {
+BOOST_AUTO_TEST_CASE(test_surface_status_and_cmpwise_bound_state) {
+  test_multi_stepper_surface_status_update<MultiStepperLoop>();
+}
+
+//////////////////////////////////
+// Test Bound state computations
+//////////////////////////////////
+template <typename multi_stepper_t>
+void test_component_bound_state() {
+  using MultiState = typename multi_stepper_t::State;
+  using MultiStepper = multi_stepper_t;
+
+  const NavigationDirection ndir = forward;
+  const double stepSize = 123.;
+  const double tolerance = 234.;
+
+  auto start_surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      Vector3::Zero(), Vector3{1.0, 0.0, 0.0});
+
+  auto right_surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      Vector3{1.0, 0.0, 0.0}, Vector3{1.0, 0.0, 0.0});
+
+  auto bField = std::make_shared<NullBField>();
+
+  std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
+      cmps(2, {0.5, BoundVector::Zero(), std::nullopt});
+  std::get<BoundVector>(cmps[0])[eBoundTheta] = M_PI_2;
+  std::get<BoundVector>(cmps[1])[eBoundTheta] = -M_PI_2;
+  std::get<BoundVector>(cmps[0])[eBoundQOverP] = 1.0;
+  std::get<BoundVector>(cmps[1])[eBoundQOverP] = 1.0;
+
+  MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(start_surface,
+                                                               cmps);
+
+  BOOST_REQUIRE(std::get<1>(multi_pars[0])
+                    .unitDirection()
+                    .isApprox(Vector3{1.0, 0.0, 0.0}, 1.e-10));
+  BOOST_REQUIRE(std::get<1>(multi_pars[1])
+                    .unitDirection()
+                    .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
+
+  MultiState multi_state(geoCtx, magCtx, bField, multi_pars, ndir, stepSize,
+                         tolerance);
+  SingleStepper::State single_state(geoCtx, bField->makeCache(magCtx),
+                                    std::get<1>(multi_pars[0]), ndir, stepSize,
+                                    tolerance);
+
+  MultiStepper multi_stepper(bField);
+  SingleStepper single_stepper(bField);
+
+  // Step forward now
+  {
+    auto multi_prop_state = DummyPropState(multi_state);
+    multi_stepper.step(multi_prop_state);
+
+    // Single stepper
+    auto single_prop_state = DummyPropState(single_state);
+    single_stepper.step(single_prop_state);
+  }
+
+  // Check component-wise bound-state
+  {
+    auto single_bound_state =
+        single_stepper.boundState(single_state, *right_surface, true);
+    BOOST_CHECK(single_bound_state.ok());
+
+    auto cmp_iterable = multi_stepper.componentIterable(multi_state);
+
+    auto ok_bound_state =
+        (*cmp_iterable.begin()).boundState(*right_surface, true);
+    BOOST_CHECK(ok_bound_state.ok());
+    BOOST_CHECK(*single_bound_state == *ok_bound_state);
+
+    auto failed_bound_state =
+        (*(++cmp_iterable.begin())).boundState(*right_surface, true);
+    BOOST_CHECK(not failed_bound_state.ok());
+  }
+}
+
+BOOST_AUTO_TEST_CASE(test_component_wise_bound_state) {
+  test_component_bound_state<MultiStepperLoop>();
+}
+
+template <typename multi_stepper_t>
+void test_combined_bound_state_function() {
+  using MultiState = typename multi_stepper_t::State;
+  using MultiStepper = multi_stepper_t;
+
   const NavigationDirection ndir = forward;
   const double stepSize = 123.;
   const double tolerance = 234.;
@@ -398,8 +548,8 @@ BOOST_AUTO_TEST_CASE(test_bound_state) {
       cmps(4, {0.25, pars, cov});
 
   MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
-  MultiStepper::State multi_state(geoCtx, magCtx, bField, multi_pars, ndir,
-                                  stepSize, tolerance);
+  MultiState multi_state(geoCtx, magCtx, bField, multi_pars, ndir, stepSize,
+                         tolerance);
   MultiStepper multi_stepper(bField);
 
   auto res = multi_stepper.boundState(multi_state, *surface, true);
@@ -414,7 +564,18 @@ BOOST_AUTO_TEST_CASE(test_bound_state) {
   BOOST_CHECK(bound_pars.covariance()->isApprox(cov, 1.e-8));
 }
 
-BOOST_AUTO_TEST_CASE(test_curvilinear_state) {
+BOOST_AUTO_TEST_CASE(test_combined_bound_state) {
+  test_combined_bound_state_function<MultiStepperLoop>();
+}
+
+//////////////////////////////////////////////////
+// Test the combined curvilinear state function
+//////////////////////////////////////////////////
+template <typename multi_stepper_t>
+void test_combined_curvilinear_state_function() {
+  using MultiState = typename multi_stepper_t::State;
+  using MultiStepper = multi_stepper_t;
+
   const NavigationDirection ndir = forward;
   const double stepSize = 123.;
   const double tolerance = 234.;
@@ -436,8 +597,8 @@ BOOST_AUTO_TEST_CASE(test_curvilinear_state) {
   SingleBoundTrackParameters<SinglyCharged> check_pars(surface, pars, cov);
 
   MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
-  MultiStepper::State multi_state(geoCtx, magCtx, bField, multi_pars, ndir,
-                                  stepSize, tolerance);
+  MultiState multi_state(geoCtx, magCtx, bField, multi_pars, ndir, stepSize,
+                         tolerance);
   MultiStepper multi_stepper(bField);
 
   const auto [curv_pars, jac, pathLength] =
@@ -452,6 +613,14 @@ BOOST_AUTO_TEST_CASE(test_curvilinear_state) {
                     1.e-8);
   BOOST_CHECK_CLOSE(curv_pars.charge(), check_pars.charge(), 1.e-8);
 }
+
+BOOST_AUTO_TEST_CASE(test_curvilinear_state) {
+  test_combined_curvilinear_state_function<MultiStepperLoop>();
+}
+
+//////////////////////////////////////////////////
+// Instatiate a Propagator with the MultiStepper
+//////////////////////////////////////////////////
 
 BOOST_AUTO_TEST_CASE(propagator_instatiation_test) {
   auto bField = std::make_shared<NullBField>();
