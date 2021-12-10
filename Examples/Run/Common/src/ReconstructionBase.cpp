@@ -25,7 +25,6 @@
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingOptions.hpp"
-#include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
@@ -106,23 +105,11 @@ ActsExamples::ParticleSmearing::Config setupParticleSmearing(
   auto logLevel = Options::readLogLevel(vars);
 
   // Create smeared particles states
-  ParticleSmearing::Config particleSmearingCfg;
+  ParticleSmearing::Config particleSmearingCfg =
+      Options::readParticleSmearingOptions(vars);
   particleSmearingCfg.inputParticles = inputParticles;
   particleSmearingCfg.outputTrackParameters = "smearedparameters";
   particleSmearingCfg.randomNumbers = rnd;
-  // Gaussian sigmas to smear particle parameters
-  particleSmearingCfg.sigmaD0 = 20_um;
-  particleSmearingCfg.sigmaD0PtA = 30_um;
-  particleSmearingCfg.sigmaD0PtB = 0.3 / 1_GeV;
-  particleSmearingCfg.sigmaZ0 = 20_um;
-  particleSmearingCfg.sigmaZ0PtA = 30_um;
-  particleSmearingCfg.sigmaZ0PtB = 0.3 / 1_GeV;
-  particleSmearingCfg.sigmaPhi = 1_degree;
-  particleSmearingCfg.sigmaTheta = 1_degree;
-  particleSmearingCfg.sigmaPRel = 0.01;
-  particleSmearingCfg.sigmaT0 = 1_ns;
-  particleSmearingCfg.initialVarInflation =
-      vars["fit-initial-variance-inflation"].template as<Options::Reals<6>>();
   sequencer.addAlgorithm(
       std::make_shared<ParticleSmearing>(particleSmearingCfg, logLevel));
 
