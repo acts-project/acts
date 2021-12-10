@@ -12,6 +12,7 @@
 
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <limits>
 namespace Acts {
@@ -174,5 +175,50 @@ struct SameSurfaceIntersection {
     return (i1.object == i2.object);
   }
 };
+
+namespace detail {
+
+/// This function checks if an intersection is valid for the specified
+/// path-limit and overstep-limit
+///
+/// @tparam intersection_t Type of the intersection object
+/// @param intersection The intersection to check
+/// @param pLimit The path-limit
+/// @param oLimit The overstep-limit
+/// @param logger A optionally supplied logger which prints out a lot of infos at VERBOSE level
+template <typename intersection_t>
+bool checkIntersection(const intersection_t& intersection, double pLimit,
+                       double oLimit,
+                       Acts::LoggerWrapper logger = Acts::getDummyLogger()) {
+  double cLimit = intersection.pathLength;
+  ACTS_VERBOSE(" -> pLimit, oLimit, cLimit: " << pLimit << ", " << oLimit
+                                              << ", " << cLimit);
+  const bool coCriterion = cLimit > oLimit;
+  const bool cpCriterion =
+      std::abs(cLimit) < std::abs(pLimit) + s_onSurfaceTolerance;
+
+  const bool accept = coCriterion and cpCriterion;
+
+  if (accept) {
+    ACTS_VERBOSE("Intersection is WITHIN limit");
+  } else {
+    ACTS_VERBOSE("Intersection is OUTSIDE limit because: ");
+    if (not coCriterion) {
+      ACTS_VERBOSE("- intersection path length "
+                   << cLimit << " <= overstep limit " << oLimit);
+    }
+    if (not cpCriterion) {
+      ACTS_VERBOSE("- intersection path length "
+                   << std::abs(cLimit) << " is over the path limit "
+                   << (std::abs(pLimit) + s_onSurfaceTolerance)
+                   << " (including tolerance of " << s_onSurfaceTolerance
+                   << ")");
+    }
+  }
+
+  return accept;
+};
+
+}  // namespace detail
 
 }  // namespace Acts

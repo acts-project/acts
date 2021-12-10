@@ -156,7 +156,7 @@ std::vector<SurfaceIntersection> Layer::compatibleSurfaces(
     double sifPath = sfi.intersection.pathLength;
     // check the maximum path length
     if (sfi && sifPath > overstepLimit &&
-        sifPath * sifPath <= pathLimit * pathLimit) {
+        std::abs(sifPath) < std::abs(pathLimit) + s_onSurfaceTolerance) {
       // Now put the right sign on it
       sfi.intersection.pathLength *= std::copysign(1., options.navDir);
       sIntersections.push_back(sfi);
@@ -243,30 +243,23 @@ const SurfaceIntersection Layer::surfaceOnApproach(
     if (!sIntersection) {
       return sIntersection;
     }
-    double cLimit = sIntersection.intersection.pathLength;
-    // Check if you are within the limit
-    bool withinLimit =
-        (cLimit > oLimit and
-         cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
-    if (withinLimit) {
-      // Set the right sign to the path length
+
+    if (detail::checkIntersection(sIntersection.intersection, pLimit, oLimit)) {
       sIntersection.intersection.pathLength *=
           std::copysign(1., options.navDir);
       return sIntersection;
-    } else if (sIntersection.alternative.status >=
-               Intersection3D::Status::reachable) {
-      // Test the alternative
-      cLimit = sIntersection.alternative.pathLength;
-      withinLimit = (cLimit > oLimit and
-                     cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
-      if (sIntersection.alternative and withinLimit) {
-        // Set the right sign for the path length
-        sIntersection.alternative.pathLength *=
-            std::copysign(1., options.navDir);
-        return SurfaceIntersection(sIntersection.alternative,
-                                   sIntersection.object);
-      }
     }
+
+    if (sIntersection.alternative.status >=
+            Intersection3D::Status::reachable and
+        sIntersection.alternative and
+        detail::checkIntersection(sIntersection.alternative, pLimit, oLimit)) {
+      // Set the right sign for the path length
+      sIntersection.alternative.pathLength *= std::copysign(1., options.navDir);
+      return SurfaceIntersection(sIntersection.alternative,
+                                 sIntersection.object);
+    }
+
     // Return an invalid one
     return SurfaceIntersection();
   };
