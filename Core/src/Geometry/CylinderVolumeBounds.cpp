@@ -65,8 +65,9 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
   double bevelMaxZ = get(eBevelMaxZ);
   Transform3 transMinZ, transMaxZ;
   if (bevelMinZ != 0.) {
-    double r = get(eMaxR);
-    double sy = r * (1 - std::cos(bevelMinZ)) / std::cos(bevelMinZ);
+    double rmax = get(eMaxR);
+    double rmin = get(eMinR);
+    double sy = (rmax + rmin) * (1 - std::cos(bevelMinZ)) / std::cos(bevelMinZ);
     transMinZ = transform * vMinZ *
                 Eigen::AngleAxisd(-bevelMinZ, Eigen::Vector3d(1., 0., 0.)) *
                 Eigen::Scaling(1., 1. + sy, 1.);
@@ -74,8 +75,9 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
     transMinZ = transform * vMinZ;
   }
   if (bevelMaxZ != 0.) {
-    double r = get(eMaxR);
-    double sy = r * (1 - std::cos(bevelMaxZ)) / std::cos(bevelMaxZ);
+    double rmax = get(eMaxR);
+    double rmin = get(eMinR);
+    double sy = (rmax + rmin) * (1 - std::cos(bevelMaxZ)) / std::cos(bevelMaxZ);
     transMaxZ = transform * vMaxZ *
                 Eigen::AngleAxisd(bevelMaxZ, Eigen::Vector3d(1., 0., 0.)) *
                 Eigen::Scaling(1., 1. + sy, 1.);

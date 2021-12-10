@@ -112,9 +112,9 @@ std::vector<Acts::Vector3> Acts::CylinderBounds::createCircles(
   double bevelMaxZ = get(eBevelMaxZ);
 
   // Modify the vertices position if bevel is defined
-  if (vertices.size() % 2 == 0) {
+  if ((bevelMinZ != 0. || bevelMaxZ != 0.) && vertices.size() % 2 == 0) {
     auto halfWay = vertices.end() - vertices.size() / 2;
-    float mult{1};
+    double mult{1};
     auto func = [&mult](Vector3& v) { v(2) += v(1) * mult; };
     if (bevelMinZ != 0.) {
       mult = std::tan(-bevelMinZ);
@@ -125,6 +125,5 @@ std::vector<Acts::Vector3> Acts::CylinderBounds::createCircles(
       std::for_each(halfWay, vertices.end(), func);
     }
   }
-
   return vertices;
 }
