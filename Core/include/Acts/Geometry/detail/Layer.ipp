@@ -238,26 +238,22 @@ const SurfaceIntersection Layer::surfaceOnApproach(
 
   // Helper function to test intersection
   auto checkIntersection =
-      [&](SurfaceIntersection& sIntersection) -> SurfaceIntersection {
+      [&](SurfaceIntersection& isection) -> SurfaceIntersection {
     // Avoid doing anything if that's a rotten apple already
-    if (!sIntersection) {
-      return sIntersection;
+    if (!isection) {
+      return isection;
     }
 
-    if (detail::checkIntersection(sIntersection.intersection, pLimit, oLimit)) {
-      sIntersection.intersection.pathLength *=
-          std::copysign(1., options.navDir);
-      return sIntersection;
+    if (detail::checkIntersection(isection.intersection, pLimit, oLimit)) {
+      isection.intersection.pathLength *= std::copysign(1., options.navDir);
+      return isection;
     }
 
-    if (sIntersection.alternative.status >=
-            Intersection3D::Status::reachable and
-        sIntersection.alternative and
-        detail::checkIntersection(sIntersection.alternative, pLimit, oLimit)) {
+    if (isection.alternative and
+        detail::checkIntersection(isection.alternative, pLimit, oLimit)) {
       // Set the right sign for the path length
-      sIntersection.alternative.pathLength *= std::copysign(1., options.navDir);
-      return SurfaceIntersection(sIntersection.alternative,
-                                 sIntersection.object);
+      isection.alternative.pathLength *= std::copysign(1., options.navDir);
+      return SurfaceIntersection(isection.alternative, isection.object);
     }
 
     // Return an invalid one
