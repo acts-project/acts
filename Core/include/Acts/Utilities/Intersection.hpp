@@ -12,6 +12,7 @@
 
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <limits>
