@@ -437,6 +437,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     assert_entries(val_file, "material-tracks", 10000)
     assert_root_hash(val_file.name, val_file)
 
+
 @pytest.mark.slow
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash):
@@ -445,19 +446,15 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
 
     s = Sequencer(numThreads=1)
 
-    geo_map = (
-        Path(__file__).parent.parent.parent.parent
-        / "Tests"
-        / "Data"
-        / "geometry-volume-map.json"
-    )
+    geo_map = Path(__file__).parent / "geometry-volume-map.json"
     assert not geo_map.exists()
     assert geo_map.stat().st_size > 10
     with geo_map.open() as fh:
         assert json.load(fh)
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(geo_map))
+        mdecorator=acts.IMaterialDecorator.fromFile(geo_map)
+    )
 
     from material_mapping import runMaterialMapping
 
@@ -516,6 +513,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     assert val_file.exists()
     assert_entries(val_file, "material-tracks", 10000)
     assert_root_hash(val_file.name, val_file)
+
 
 @pytest.mark.parametrize(
     "geoFactory,nobj",
