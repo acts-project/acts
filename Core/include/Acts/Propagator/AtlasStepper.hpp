@@ -543,10 +543,20 @@ class AtlasStepper {
   /// @param [in,out] state The stepping state (thread-local cache)
   /// @param [in] stepSize The step size value
   /// @param [in] stype The step size type to be set
+  /// @param release [in] Do we release the step size?
   void setStepSize(State& state, double stepSize,
-                   ConstrainedStep::Type stype = ConstrainedStep::actor) const {
+                   ConstrainedStep::Type stype = ConstrainedStep::actor,
+                   bool release = true) const {
     state.previousStepSize = state.stepSize;
-    state.stepSize.update(stepSize, stype, true);
+    state.stepSize.update(stepSize, stype, release);
+  }
+
+  /// Get the step size
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @param stype [in] The step size type to be returned
+  double getStepSize(const State& state, ConstrainedStep::Type stype) const {
+    return state.stepSize.value(stype);
   }
 
   /// Release the Step size

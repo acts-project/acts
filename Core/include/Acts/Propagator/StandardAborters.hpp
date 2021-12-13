@@ -51,8 +51,7 @@ struct PathLimitReached {
   ///
   /// @param [in,out] state The propagation state object
   template <typename propagator_state_t, typename stepper_t>
-  bool operator()(propagator_state_t& state,
-                  const stepper_t& /*unused*/) const {
+  bool operator()(propagator_state_t& state, const stepper_t& stepper) const {
     const auto& logger = state.options.logger;
     if (state.navigation.targetReached) {
       return true;
@@ -61,7 +60,8 @@ struct PathLimitReached {
     double distance = state.stepping.navDir * std::abs(internalLimit) -
                       state.stepping.pathAccumulated;
     double tolerance = state.options.targetTolerance;
-    state.stepping.stepSize.update(distance, ConstrainedStep::aborter);
+    stepper.setStepSize(state.stepping, distance, ConstrainedStep::aborter,
+                        false);
     bool limitReached = (distance * distance < tolerance * tolerance);
     if (limitReached) {
       ACTS_VERBOSE("Target: x | "
@@ -71,7 +71,7 @@ struct PathLimitReached {
     } else {
       ACTS_VERBOSE("Target: 0 | "
                    << "Target stepSize (path limit) updated to "
-                   << state.stepping.stepSize.toString());
+                   << stepper.outputStepSize(state.stepping));
     }
     // path limit check
     return limitReached;
@@ -152,11 +152,12 @@ struct SurfaceReached {
         // Update the distance to the alternative solution
         distance = sIntersection.alternative.pathLength;
       }
-      state.stepping.stepSize.update(state.stepping.navDir * distance,
-                                     ConstrainedStep::aborter);
+      stepper.setStepSize(state.stepping, state.stepping.navDir * distance,
+                          ConstrainedStep::aborter, false);
+
       ACTS_VERBOSE("Target: 0 | "
                    << "Target stepSize (surface) updated to "
-                   << state.stepping.stepSize.toString());
+                   << stepper.outputStepSize(state.stepping));
     }
     // path limit check
     return targetReached;
