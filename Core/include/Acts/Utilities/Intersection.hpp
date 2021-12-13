@@ -194,7 +194,7 @@ namespace detail {
 template <typename intersection_t, typename logger_t = std::false_type>
 bool checkIntersection(const intersection_t& intersection, double pLimit,
                        double oLimit, double tolerance,
-                       logger_t logger = logger_t{}) {
+                       [[maybe_unused]] logger_t logger = logger_t{}) {
   constexpr bool doLogging = not std::is_same_v<logger_t, std::false_type>;
 
   const double cLimit = intersection.pathLength;
