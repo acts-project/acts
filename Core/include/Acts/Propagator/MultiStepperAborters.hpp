@@ -40,11 +40,10 @@ struct MultiStepperSurfaceReached {
   template <typename propagator_state_t, typename stepper_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const Surface& targetSurface) const {
-
     bool reached = true;
     for (auto cmp : stepper.componentIterable(state.stepping)) {
       auto singleState = cmp.singleState(state);
-      const auto &singleStepper = cmp.singleStepper(stepper);
+      const auto& singleStepper = cmp.singleStepper(stepper);
 
       if (!SurfaceReached{}(singleState, singleStepper, targetSurface)) {
         reached = false;
@@ -57,7 +56,7 @@ struct MultiStepperSurfaceReached {
       state.navigation.currentSurface = nullptr;
       state.navigation.targetReached = false;
     }
-    
+
     return reached;
   }
 };
