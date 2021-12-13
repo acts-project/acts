@@ -14,6 +14,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <array>
 #include <limits>
 namespace Acts {
 
