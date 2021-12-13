@@ -477,69 +477,25 @@ Acts::TrackingVolume::compatibleBoundaries(
     }
 
     ACTS_VERBOSE("Check intersection with surface "
-                 << &bSurface->surfaceRepresentation());
-    double cLimit = sIntersection.intersection.pathLength;
-    ACTS_VERBOSE(" -> pLimit, oLimit, cLimit: " << pLimit << ", " << oLimit
-                                                << ", " << cLimit);
-
-    // Check if the surface is within limit
-    bool withinLimit =
-        (cLimit > oLimit and
-         cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
-    if (withinLimit) {
-      ACTS_VERBOSE("Intersection is WITHIN limit");
-      sIntersection.intersection.pathLength *=
-          std::copysign(1., options.navDir);
+                 << bSurface->surfaceRepresentation().geometryId());
+    if (detail::checkIntersection(sIntersection.intersection, pLimit, oLimit,
+                                  s_onSurfaceTolerance, logger)) {
       return BoundaryIntersection(sIntersection.intersection, bSurface,
                                   sIntersection.object);
-    } else {
-      ACTS_VERBOSE("Intersection is OUTSIDE limit because: ");
-      if (cLimit <= oLimit) {
-        ACTS_VERBOSE("- intersection path length "
-                     << cLimit << " <= overstep limit " << oLimit);
-      }
-      if (cLimit * cLimit > pLimit * pLimit + s_onSurfaceTolerance) {
-        ACTS_VERBOSE("- intersection path length "
-                     << std::abs(cLimit) << " is over the path limit "
-                     << (std::abs(pLimit) + s_onSurfaceTolerance)
-                     << " (including tolerance of "
-                     << s_curvilinearProjTolerance << ")");
-      }
     }
 
-    // Check the alternative
     if (sIntersection.alternative) {
       ACTS_VERBOSE("Consider alternative");
-      // Test the alternative
-      cLimit = sIntersection.alternative.pathLength;
-      ACTS_VERBOSE(" -> pLimit, oLimit, cLimit: " << pLimit << ", " << oLimit
-                                                  << ", " << cLimit);
-      withinLimit = (cLimit > oLimit and
-                     cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
-      if (sIntersection.alternative and withinLimit) {
-        ACTS_VERBOSE("Intersection is WITHIN limit");
-        sIntersection.alternative.pathLength *=
-            std::copysign(1., options.navDir);
+      if (detail::checkIntersection(sIntersection.alternative, pLimit, oLimit,
+                                    s_onSurfaceTolerance, logger)) {
         return BoundaryIntersection(sIntersection.alternative, bSurface,
                                     sIntersection.object);
-      } else {
-        ACTS_VERBOSE("Intersection is OUTSIDE limit because: ");
-        if (cLimit <= oLimit) {
-          ACTS_VERBOSE("- intersection path length "
-                       << cLimit << " <= overstep limit " << oLimit);
-        }
-        if (cLimit * cLimit > pLimit * pLimit + s_onSurfaceTolerance) {
-          ACTS_VERBOSE("- intersection path length "
-                       << std::abs(cLimit) << " is over the path limit "
-                       << (std::abs(pLimit) + s_onSurfaceTolerance)
-                       << " (including tolerance of "
-                       << s_curvilinearProjTolerance << ")");
-        }
+        ;
       }
     } else {
       ACTS_VERBOSE("No alternative for intersection");
     }
-    // Return an invalid one
+
     ACTS_VERBOSE("No intersection accepted");
     return BoundaryIntersection();
   };
