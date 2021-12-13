@@ -14,17 +14,22 @@
 #include <cmath>
 #include <memory>
 #include <type_traits>
+#include <utility>
 
 namespace Acts {
 
 /// This class is only a light wrapper arround a surface and a vector of
 /// parameters. Its main purpose is to provide many constructors for the
-/// underlying vector
+/// underlying vector. Most accessors are generated from the
+/// SingleBoundTrackParameters equivalent and and thus may be expensive
 /// @tparam charge_t Helper type to interpret the particle charge/momentum
 /// @note This class holds shared ownership on its reference surface.
+/// @note The pos
 /// TODO Add constructor from range and projector maybe?
 template <typename charge_t>
 class MultiComponentBoundTrackParameters {
+  using SingleParameters = SingleBoundTrackParameters<charge_t>;
+
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
       m_components;
   std::shared_ptr<const Surface> m_surface;
@@ -32,7 +37,32 @@ class MultiComponentBoundTrackParameters {
   // TODO use [[no_unique_address]] once we switch to C++20
   charge_t m_chargeInterpreter;
 
+  /// Helper function to reduce the component vector to a single representation
+  template <typename projector_t>
+  auto reduce(projector_t&& proj) const {
+    using Ret = std::decay_t<decltype(proj(std::declval<SingleParameters>()))>;
+
+    Ret ret;
+
+    if constexpr (std::is_floating_point_v<Ret>) {
+      ret = 0.0;
+    } else {
+      ret = Ret::Zero();
+    }
+
+    for (auto i = 0ul; i < m_components.size(); ++i) {
+      const auto [weight, single_pars] = (*this)[i];
+      ret += weight * proj(single_pars);
+    }
+
+    return ret;
+  }
+
  public:
+  using Scalar = typename SingleParameters::Scalar;
+  using ParametersVector = typename SingleParameters::ParametersVector;
+  using CovarianceMatrix = typename SingleParameters::CovarianceMatrix;
+
   /// Construct from multiple components with charge scalar q
   template <typename covariance_t>
   MultiComponentBoundTrackParameters(
@@ -125,13 +155,82 @@ class MultiComponentBoundTrackParameters {
   const Surface& referenceSurface() const { return *m_surface; }
 
   /// Get a SingleBoundTrackParameters object for one component
-  std::pair<double, SingleBoundTrackParameters<charge_t>> operator[](
-      std::size_t i) const {
+  std::pair<double, SingleParameters> operator[](std::size_t i) const {
     return std::make_pair(
         std::get<double>(m_components[i]),
-        SingleBoundTrackParameters<charge_t>(
+        SingleParameters(
             m_surface, std::get<BoundVector>(m_components[i]),
             std::get<std::optional<BoundSymMatrix>>(m_components[i])));
+  }
+
+  /// Parameters vector.
+  const ParametersVector& parameters() const {
+    return reduce([](const SingleParameters& p) { return p.parameters(); });
+  }
+
+  /// Optional covariance matrix.
+  const std::optional<CovarianceMatrix>& covariance() const {
+    const auto ret = reduce([](const SingleParameters& p) {
+      return p.covariance ? *p.covariance() : CovarianceMatrix::Zero();
+    });
+
+    if (ret == CovarianceMatrix::Zero()) {
+      return std::nullopt;
+    } else {
+      return ret;
+    }
+  }
+
+  /// Space-time position four-vector.
+  ///
+  /// @param[in] geoCtx Geometry context for the local-to-global
+  /// transformation
+  Vector4 fourPosition(const GeometryContext& geoCtx) const {
+    return reduce(
+        [&](const SingleParameters& p) { return p.fourPosition(geoCtx); });
+  }
+
+  /// Spatial position three-vector.
+  ///
+  /// @param[in] geoCtx Geometry context for the local-to-global
+  /// transformation
+  Vector3 position(const GeometryContext& geoCtx) const {
+    return reduce(
+        [&](const SingleParameters& p) { return p.position(geoCtx); });
+  }
+
+  /// Time coordinate.
+  Scalar time() const {
+    return reduce([](const SingleParameters& p) { return p.time(); });
+  }
+
+  /// Unit direction three-vector, i.e. the normalized momentum
+  /// three-vector.
+  Vector3 unitDirection() const {
+    return reduce([](const SingleParameters& p) { return p.unitDirection(); })
+        .normalized();
+  }
+
+  /// Absolute momentum.
+  Scalar absoluteMomentum() const {
+    return reduce(
+        [](const SingleParameters& p) { return p.absoluteMomentum(); });
+  }
+
+  /// Transverse momentum.
+  Scalar transverseMomentum() const {
+    return reduce(
+        [](const SingleParameters& p) { return p.transverseMomentum(); });
+  }
+
+  /// Momentum three-vector.
+  Vector3 momentum() const {
+    return reduce([](const SingleParameters& p) { return p.momentum(); });
+  }
+
+  /// Particle electric charge.
+  Scalar charge() const {
+    return reduce([](const SingleParameters& p) { return p.charge(); });
   }
 };
 

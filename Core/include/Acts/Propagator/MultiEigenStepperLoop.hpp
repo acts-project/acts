@@ -207,6 +207,11 @@ class MultiEigenStepperLoop
   /// @brief How many components can this stepper manage?
   static constexpr int maxComponents = std::numeric_limits<int>::max();
 
+  /// Constructor from a magnetic field and a optionally provided Logger
+  MultiEigenStepperLoop(std::shared_ptr<const MagneticFieldProvider> bField,
+                        LoggerWrapper l = getDummyLogger())
+      : EigenStepper<extensionlist_t, auctioneer_t>(bField), logger(l) {}
+
   struct State {
     /// The struct that stores the individual components
     struct Component {
@@ -280,6 +285,37 @@ class MultiEigenStepperLoop
     }
   };
 
+
+  /// Construct and initialize a state
+  template <typename charge_t>
+  State makeState(std::reference_wrapper<const GeometryContext> gctx,
+                  std::reference_wrapper<const MagneticFieldContext> mctx,
+                  const MultiComponentBoundTrackParameters<charge_t>& par,
+                  NavigationDirection ndir = forward,
+                  double ssize = std::numeric_limits<double>::max(),
+                  double stolerance = s_onSurfaceTolerance) const {
+    return State(gctx, mctx, SingleStepper::m_bField, par, ndir, ssize,
+                 stolerance);
+  }
+
+  /// @brief Resets the state
+  ///
+  /// @param [in, out] state State of the stepper
+  /// @param [in] boundParams Parameters in bound parametrisation
+  /// @param [in] cov Covariance matrix
+  /// @param [in] surface The reference surface of the bound parameters
+  /// @param [in] navDir Navigation direction
+  /// @param [in] stepSize Step size
+  void resetState(
+      State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
+      const Surface& surface, const NavigationDirection navDir = forward,
+      const double stepSize = std::numeric_limits<double>::max()) const {
+    for (auto& component : state.components) {
+      SingleStepper::resetState(component.state, boundParams, cov, surface,
+                                navDir, stepSize);
+    }
+  }
+
   /// A state type which can be used for a function which accepts only
   /// single-component states and stepper
   template <typename navigation_t, typename options_t>
@@ -293,9 +329,11 @@ class MultiEigenStepperLoop
     GeometryContext geoContext;
   };
 
+#if __clang__
   template <typename navigation_t, typename options_t>
   SinglePropState(SingleState, navigation_t, options_t, GeometryContext)
       -> SinglePropState<navigation_t, options_t>;
+#endif
 
   /// A proxy struct which allows access to a single component of the
   /// multi-component state. It has the semantics of a mutable reference, i.e.
@@ -405,20 +443,22 @@ class MultiEigenStepperLoop
   auto componentIterable(State& state) const {
     struct Iterator {
       typename decltype(state.components)::iterator it;
-      const State& state;
+      const State& s;
 
       // clang-format off
       auto& operator++() { ++it; return *this; }
       auto operator!=(const Iterator& other) const { return it != other.it; }
-      auto operator*() const { return ComponentProxy{state, *it}; }
+      auto operator*() const { return ComponentProxy{s, *it}; }
       // clang-format on
     };
 
     struct Iterable {
-      State& state;
+      State& s;
 
-      auto begin() { return Iterator{state.components.begin(), state}; }
-      auto end() { return Iterator{state.components.end(), state}; }
+      // clang-format off
+      auto begin() { return Iterator{s.components.begin(), s}; }
+      auto end() { return Iterator{s.components.end(), s}; }
+      // clang-format on
     };
 
     return Iterable{state};
@@ -431,22 +471,22 @@ class MultiEigenStepperLoop
   auto constComponentIterable(const State& state) const {
     struct ConstIterator {
       typename decltype(state.components)::const_iterator it;
-      const State& state;
+      const State& s;
 
       // clang-format off
       auto& operator++() { ++it; return *this; }
       auto operator!=(const ConstIterator& other) const { return it != other.it; }
-      auto operator*() const { return ConstComponentProxy{state, *it}; }
+      auto operator*() const { return ConstComponentProxy{s, *it}; }
       // clang-format on
     };
 
     struct Iterable {
-      const State& state;
+      const State& s;
 
-      auto begin() const {
-        return ConstIterator{state.components.cbegin(), state};
-      }
-      auto end() const { return ConstIterator{state.components.cend(), state}; }
+      // clang-format off
+      auto begin() const { return ConstIterator{s.components.cbegin(), s}; }
+      auto end() const { return ConstIterator{s.components.cend(), s}; }
+      // clang-format on
     };
 
     return Iterable{state};
@@ -489,22 +529,17 @@ class MultiEigenStepperLoop
     return ComponentProxy{state, state.components.back()};
   }
 
-  /// Construct and initialize a state
-  template <typename charge_t>
-  State makeState(std::reference_wrapper<const GeometryContext> gctx,
-                  std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const MultiComponentBoundTrackParameters<charge_t>& par,
-                  NavigationDirection ndir = forward,
-                  double ssize = std::numeric_limits<double>::max(),
-                  double stolerance = s_onSurfaceTolerance) const {
-    return State(gctx, mctx, SingleStepper::m_bField, par, ndir, ssize,
-                 stolerance);
+  /// Get the field for the stepping, it checks first if the access is still
+  /// within the Cell, and updates the cell if necessary.
+  ///
+  /// @param [in,out] state is the propagation state associated with the track
+  ///                 the magnetic field cell is used (and potentially updated)
+  /// @param [in] pos is the field position
+  ///
+  /// @note This uses the cache of the first component stored in the state
+  Result<Vector3> getField(State& state, const Vector3& pos) const {
+    return SingleStepper::getField(state.components.front().state, pos);
   }
-
-  /// Constructor from a magnetic field and a optionally provided Logger
-  MultiEigenStepperLoop(std::shared_ptr<const MagneticFieldProvider> bField,
-                        LoggerWrapper l = getDummyLogger())
-      : EigenStepper<extensionlist_t, auctioneer_t>(bField), logger(l) {}
 
   /// Global particle position accessor
   ///
@@ -639,20 +674,7 @@ class MultiEigenStepperLoop
     }
   }
 
-  /// Get the step size
-  /// TODO add documentation
-  double getStepSize(const State& state, ConstrainedStep::Type stype) const {
-    return SingleStepper::getStepSize(
-        std::min_element(begin(state.components), end(state.components),
-                         [this, stype](const auto& a, const auto& b) {
-                           return SingleStepper::getStepSize(a.state, stype) <
-                                  SingleStepper::getStepSize(b.state, stype);
-                         })
-            ->state,
-        stype);
-  }
-
-  /// Release the Step size
+  /// Release the step-size for all components
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   void releaseStepSize(State& state) const {
@@ -661,7 +683,7 @@ class MultiEigenStepperLoop
     }
   }
 
-  /// Output the Step Size - single component
+  /// Output the Step Size of all components into one std::string
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   std::string outputStepSize(const State& state) const {
@@ -678,24 +700,6 @@ class MultiEigenStepperLoop
   double overstepLimit(const State& state) const {
     // A dynamic overstep limit could sit here
     return SingleStepper::overstepLimit(state.components.front().state);
-  }
-
-  /// @brief Resets the state
-  ///
-  /// @param [in, out] state State of the stepper
-  /// @param [in] boundParams Parameters in bound parametrisation
-  /// @param [in] cov Covariance matrix
-  /// @param [in] surface The reference surface of the bound parameters
-  /// @param [in] navDir Navigation direction
-  /// @param [in] stepSize Step size
-  void resetState(
-      State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
-      const Surface& surface, const NavigationDirection navDir = forward,
-      const double stepSize = std::numeric_limits<double>::max()) const {
-    for (auto& component : state.components) {
-      SingleStepper::resetState(component.state, boundParams, cov, surface,
-                                navDir, stepSize);
-    }
   }
 
   /// Create and return the bound state at the current position
