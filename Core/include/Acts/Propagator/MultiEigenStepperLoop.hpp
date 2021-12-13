@@ -350,14 +350,10 @@ class MultiEigenStepperLoop
     }
 
     Result<BoundState> boundState(const Surface& surface, bool transportCov) {
-      if (m_cmp.status == Intersection3D::Status::onSurface) {
-        return detail::boundState(m_state.geoContext, cov(), jacobian(),
-                                  jacTransport(), derivative(), jacToGlobal(),
-                                  pars(), m_state.covTransport && transportCov,
-                                  m_cmp.state.pathAccumulated, surface);
-      } else {
-        return MultiStepperError::ComponentNotOnSurface;
-      }
+      return detail::boundState(m_state.geoContext, cov(), jacobian(),
+                                jacTransport(), derivative(), jacToGlobal(),
+                                pars(), m_state.covTransport && transportCov,
+                                m_cmp.state.pathAccumulated, surface);
     }
 
     void update(const FreeVector& freeParams, const BoundVector& boundParams,

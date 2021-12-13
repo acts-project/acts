@@ -18,8 +18,8 @@
 namespace Acts {
 
 /// This class is only a light wrapper arround a surface and a vector of
-/// parameters. It does not provide any convenience accessors. Its many purpose
-/// is to provide many constructors for the underlying vector
+/// parameters. Its main purpose is to provide many constructors for the
+/// underlying vector
 /// @tparam charge_t Helper type to interpret the particle charge/momentum
 /// @note This class holds shared ownership on its reference surface.
 /// TODO Add constructor from range and projector maybe?

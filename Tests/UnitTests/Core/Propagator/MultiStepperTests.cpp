@@ -15,6 +15,9 @@
 using namespace Acts;
 using namespace Acts::VectorHelpers;
 
+/////////////////////////////////////////////////////
+// Some useful global objects, typedefs and structs
+/////////////////////////////////////////////////////
 const MagneticFieldContext magCtx;
 const GeometryContext geoCtx;
 
@@ -171,7 +174,6 @@ BOOST_AUTO_TEST_CASE(multi_eigen_stepper_state_invalid) {
 ////////////////////////////////////////////////////////////////////////
 // Compare the Multi-Stepper against the Eigen-Stepper for consistency
 ////////////////////////////////////////////////////////////////////////
-
 template <typename multi_stepper_t>
 void test_multi_stepper_vs_eigen_stepper() {
   using MultiState = typename multi_stepper_t::State;
@@ -492,10 +494,12 @@ void test_component_bound_state() {
 
   // Step forward now
   {
+    multi_stepper.updateSurfaceStatus(multi_state, *right_surface, false);
     auto multi_prop_state = DummyPropState(multi_state);
     multi_stepper.step(multi_prop_state);
 
     // Single stepper
+    single_stepper.updateSurfaceStatus(single_state, *right_surface, false);
     auto single_prop_state = DummyPropState(single_state);
     single_stepper.step(single_prop_state);
   }
@@ -504,13 +508,13 @@ void test_component_bound_state() {
   {
     auto single_bound_state =
         single_stepper.boundState(single_state, *right_surface, true);
-    BOOST_CHECK(single_bound_state.ok());
+    BOOST_REQUIRE(single_bound_state.ok());
 
     auto cmp_iterable = multi_stepper.componentIterable(multi_state);
 
     auto ok_bound_state =
         (*cmp_iterable.begin()).boundState(*right_surface, true);
-    BOOST_CHECK(ok_bound_state.ok());
+    BOOST_REQUIRE(ok_bound_state.ok());
     BOOST_CHECK(*single_bound_state == *ok_bound_state);
 
     auto failed_bound_state =
