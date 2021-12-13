@@ -108,7 +108,7 @@ def runMaterialMapping(
             collection=mmAlgCfg.mappingMaterialCollection,
             filePath=os.path.join(
                 outputDir,
-                mapName+"_tracks.root",
+                mapName + "_tracks.root",
             ),
             storeSurface=True,
             storeVolume=True,
