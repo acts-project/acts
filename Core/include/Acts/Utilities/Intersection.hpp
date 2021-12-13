@@ -12,7 +12,6 @@
 
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Common.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <limits>
@@ -193,10 +192,11 @@ namespace detail {
 /// at VERBOSE level
 template <typename intersection_t, typename logger_t = std::false_type>
 bool checkIntersection(const intersection_t& intersection, double pLimit,
-                       double oLimit, logger_t logger = logger_t{}) {
+                       double oLimit, double tolerance,
+                       logger_t logger = logger_t{}) {
   constexpr bool doLogging = not std::is_same_v<logger_t, std::false_type>;
 
-  double cLimit = intersection.pathLength;
+  const double cLimit = intersection.pathLength;
 
   if constexpr (doLogging) {
     ACTS_VERBOSE(" -> pLimit, oLimit, cLimit: " << pLimit << ", " << oLimit
@@ -204,8 +204,7 @@ bool checkIntersection(const intersection_t& intersection, double pLimit,
   }
 
   const bool coCriterion = cLimit > oLimit;
-  const bool cpCriterion =
-      std::abs(cLimit) < std::abs(pLimit) + s_onSurfaceTolerance;
+  const bool cpCriterion = std::abs(cLimit) < std::abs(pLimit) + tolerance;
 
   const bool accept = coCriterion and cpCriterion;
 
@@ -221,9 +220,8 @@ bool checkIntersection(const intersection_t& intersection, double pLimit,
       if (not cpCriterion) {
         ACTS_VERBOSE("- intersection path length "
                      << std::abs(cLimit) << " is over the path limit "
-                     << (std::abs(pLimit) + s_onSurfaceTolerance)
-                     << " (including tolerance of " << s_onSurfaceTolerance
-                     << ")");
+                     << (std::abs(pLimit) + tolerance)
+                     << " (including tolerance of " << tolerance << ")");
       }
     }
   }

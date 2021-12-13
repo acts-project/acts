@@ -153,8 +153,8 @@ std::vector<SurfaceIntersection> Layer::compatibleSurfaces(
     SurfaceIntersection sfi =
         sf.intersect(gctx, position, options.navDir * direction, boundaryCheck);
     // check if intersection is valid and pathLimit has not been exceeded
-    if (sfi &&
-        detail::checkIntersection(sfi.intersection, pathLimit, overstepLimit)) {
+    if (sfi && detail::checkIntersection(sfi.intersection, pathLimit,
+                                         overstepLimit, s_onSurfaceTolerance)) {
       // Now put the right sign on it
       sfi.intersection.pathLength *= std::copysign(1., options.navDir);
       sIntersections.push_back(sfi);
@@ -241,13 +241,15 @@ const SurfaceIntersection Layer::surfaceOnApproach(
       return isection;
     }
 
-    if (detail::checkIntersection(isection.intersection, pLimit, oLimit)) {
+    if (detail::checkIntersection(isection.intersection, pLimit, oLimit,
+                                  s_onSurfaceTolerance)) {
       isection.intersection.pathLength *= std::copysign(1., options.navDir);
       return isection;
     }
 
     if (isection.alternative and
-        detail::checkIntersection(isection.alternative, pLimit, oLimit)) {
+        detail::checkIntersection(isection.alternative, pLimit, oLimit,
+                                  s_onSurfaceTolerance)) {
       // Set the right sign for the path length
       isection.alternative.pathLength *= std::copysign(1., options.navDir);
       return SurfaceIntersection(isection.alternative, isection.object);
