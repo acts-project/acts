@@ -49,7 +49,7 @@ def runMaterialValidation(
         RootMaterialTrackWriter(
             level=acts.logging.INFO,
             collection=alg.config.propagationMaterialCollection,
-            filePath=os.path.join(outputDir, propagation - material + ".root"),
+            filePath=os.path.join(outputDir, (outputName + ".root")),
             storeSurface=True,
             storeVolume=True,
         )
