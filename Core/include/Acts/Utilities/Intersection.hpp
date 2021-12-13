@@ -188,6 +188,7 @@ namespace detail {
 /// @param intersection The intersection to check
 /// @param pLimit The path-limit
 /// @param oLimit The overstep-limit
+/// @param tolerance The tolerance that is applied to the path-limit criterion
 /// @param logger A optionally supplied logger which prints out a lot of infos
 /// at VERBOSE level
 template <typename intersection_t, typename logger_t = std::false_type>
