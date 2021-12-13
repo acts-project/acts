@@ -95,25 +95,6 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
     propagator_state_t& state) const {
   State& stepping = state.stepping;
 
-  // Emit warning if charge is not the same for all componenents
-  {
-    std::stringstream ss;
-    bool charge_ambigous = false;
-    for (const auto& cmp : stepping.components) {
-      ss << cmp.state.q << " ";
-      if (cmp.state.q != stepping.components.front().state.q) {
-        charge_ambigous = true;
-      }
-    }
-
-    if (charge_ambigous) {
-      ACTS_VERBOSE(stepping.steps << "Charge of components is ambigous: "
-                                  << ss.str());
-    } else {
-      ACTS_VERBOSE(stepping.steps << "Charge of components: " << ss.str());
-    }
-  }
-
   // Update step count
   stepping.steps++;
 
