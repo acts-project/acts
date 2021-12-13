@@ -505,7 +505,12 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     field = acts.NullBField()
 
     runMaterialValidation(
-        trackingGeometry, decorators, field, outputDir=str(tmp_path), s=s
+        trackingGeometry,
+        decorators,
+        field,
+        outputDir=str(tmp_path),
+        outputName="propagation-volume-material",
+        s=s,
     )
 
     s.run()
