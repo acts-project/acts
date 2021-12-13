@@ -50,6 +50,7 @@ struct PathLimitReached {
   /// @tparam stepper_t Type of the stepper
   ///
   /// @param [in,out] state The propagation state object
+  /// @param [in] stepper Stepper used for propagation
   template <typename propagator_state_t, typename stepper_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper) const {
     const auto& logger = state.options.logger;
