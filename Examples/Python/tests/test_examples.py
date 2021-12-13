@@ -454,7 +454,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     assert not geo_map.exists()
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(geo_map)
+        mdecorator=acts.IMaterialDecorator.fromFile(geo_map))
 
     from material_mapping import runMaterialMapping
 
