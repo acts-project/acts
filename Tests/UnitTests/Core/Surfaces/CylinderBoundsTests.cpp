@@ -77,7 +77,6 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsException) {
 }
 
 /// Unit tests for CylinderBounds properties
-BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(CylinderBoundsProperties, 4)
 BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
   // CylinderBounds object of radius 0.5 and halfz 20
   double nominalRadius{0.5};
@@ -116,8 +115,8 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
                   1e-6);
 
   /// test for averagePhi
-  CHECK_CLOSE_REL(cylinderBoundsObject.get(CylinderBounds::eAveragePhi),
-                  averagePhi, 1e-6);
+  CHECK_CLOSE_OR_SMALL(cylinderBoundsObject.get(CylinderBounds::eAveragePhi),
+                       averagePhi, 1e-6, 1e-6);
 
   /// test for halfPhiSector
   CHECK_CLOSE_REL(cylinderBoundsSegment.get(CylinderBounds::eHalfPhiSector),
