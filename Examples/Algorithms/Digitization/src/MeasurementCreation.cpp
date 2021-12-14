@@ -13,23 +13,19 @@ ActsExamples::Measurement ActsExamples::createMeasurement(
   switch (dParams.indices.size()) {
     case 1u: {
       auto [indices, par, cov] = measurementConstituents<1>(dParams);
-      return Acts::Measurement<IndexSourceLink, Acts::BoundIndices, 1>(
-          isl, indices, par, cov);
+      return Acts::Measurement<Acts::BoundIndices, 1>(isl, indices, par, cov);
     }
     case 2u: {
       auto [indices, par, cov] = measurementConstituents<2>(dParams);
-      return Acts::Measurement<IndexSourceLink, Acts::BoundIndices, 2>(
-          isl, indices, par, cov);
+      return Acts::Measurement<Acts::BoundIndices, 2>(isl, indices, par, cov);
     };
     case 3u: {
       auto [indices, par, cov] = measurementConstituents<3>(dParams);
-      return Acts::Measurement<IndexSourceLink, Acts::BoundIndices, 3>(
-          isl, indices, par, cov);
+      return Acts::Measurement<Acts::BoundIndices, 3>(isl, indices, par, cov);
     };
     case 4u: {
       auto [indices, par, cov] = measurementConstituents<4>(dParams);
-      return Acts::Measurement<IndexSourceLink, Acts::BoundIndices, 4>(
-          isl, indices, par, cov);
+      return Acts::Measurement<Acts::BoundIndices, 4>(isl, indices, par, cov);
     };
   }
   std::string errorMsg = "Invalid/mismatching measurement dimension: " +

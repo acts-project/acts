@@ -252,6 +252,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
     BOOST_REQUIRE(res.ok());
 
     auto val = *res;
+
     // with the given measurement selection cuts, only one trajectory for the
     // given input parameters should be found.
     BOOST_CHECK_EQUAL(val.lastMeasurementIndices.size(), 1u);
@@ -262,8 +263,11 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
     val.fittedStates.visitBackwards(
         val.lastMeasurementIndices.front(), [&](const auto& trackState) {
           numHits += 1u;
-          nummismatchedHits += (trackId != trackState.uncalibrated().sourceId);
+          const auto& sl =
+              static_cast<const TestSourceLink&>(trackState.uncalibrated());
+          nummismatchedHits += (trackId != sl.sourceId);
         });
+
     BOOST_CHECK_EQUAL(numHits, f.detector.numMeasurements);
     BOOST_CHECK_EQUAL(nummismatchedHits, 0u);
   }
@@ -307,7 +311,9 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
     val.fittedStates.visitBackwards(
         val.lastMeasurementIndices.front(), [&](const auto& trackState) {
           numHits += 1u;
-          nummismatchedHits += (trackId != trackState.uncalibrated().sourceId);
+          nummismatchedHits += (trackId != static_cast<const TestSourceLink&>(
+                                               trackState.uncalibrated())
+                                               .sourceId);
         });
     BOOST_CHECK_EQUAL(numHits, f.detector.numMeasurements);
     BOOST_CHECK_EQUAL(nummismatchedHits, 0u);

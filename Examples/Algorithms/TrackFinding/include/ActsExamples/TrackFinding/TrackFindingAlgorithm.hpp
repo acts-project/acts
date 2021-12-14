@@ -30,8 +30,8 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
       Acts::CombinatorialKalmanFilterOptions<IndexSourceLinkAccessor,
                                              MeasurementCalibrator,
                                              Acts::MeasurementSelector>;
-  using TrackFinderResult = std::vector<
-      Acts::Result<Acts::CombinatorialKalmanFilterResult<IndexSourceLink>>>;
+  using TrackFinderResult =
+      std::vector<Acts::Result<Acts::CombinatorialKalmanFilterResult>>;
 
   /// Find function that takes the above parameters
   /// @note This is separated into a virtual interface to keep compilation units
@@ -86,29 +86,23 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-  template <typename source_link_accessor_container_t,
-            typename source_link_accessor_value_t>
+  template <typename source_link_accessor_container_t>
   void computeSharedHits(
       const source_link_accessor_container_t& sourcelinks,
-      std::vector<Acts::Result<Acts::CombinatorialKalmanFilterResult<
-          source_link_accessor_value_t>>>&) const;
+      std::vector<Acts::Result<Acts::CombinatorialKalmanFilterResult>>&) const;
 
  private:
   Config m_cfg;
 };
 
-template <typename source_link_accessor_container_t,
-          typename source_link_accessor_value_t>
+template <typename source_link_accessor_container_t>
 void TrackFindingAlgorithm::computeSharedHits(
     const source_link_accessor_container_t& sourceLinks,
-    std::vector<Acts::Result<
-        Acts::CombinatorialKalmanFilterResult<source_link_accessor_value_t>>>&
-        results) const {
+    std::vector<Acts::Result<Acts::CombinatorialKalmanFilterResult>>& results)
+    const {
   // Compute shared hits from all the reconstructed tracks
   // Compute nSharedhits and Update ckf results
   // hit index -> list of multi traj indexes [traj, meas]
-  static_assert(Acts::SourceLinkConcept<source_link_accessor_value_t>,
-                "Source link does not fulfill SourceLinkConcept");
 
   std::vector<std::size_t> firstTrackOnTheHit(
       sourceLinks.size(), std::numeric_limits<std::size_t>::max());
@@ -128,7 +122,8 @@ void TrackFindingAlgorithm::computeSharedHits(
         if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag))
           return;
 
-        std::size_t hitIndex = state.uncalibrated().index();
+        std::size_t hitIndex =
+            static_cast<const IndexSourceLink&>(state.uncalibrated()).index();
 
         // Check if hit not already used
         if (firstTrackOnTheHit.at(hitIndex) ==

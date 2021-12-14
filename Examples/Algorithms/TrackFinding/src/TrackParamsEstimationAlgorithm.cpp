@@ -188,7 +188,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     }
     const auto hitIdx = bottomSP->measurementIndices()[0];
     const auto sourceLink = sourceLinks.nth(hitIdx);
-    auto geoId = sourceLink->geometryId();
+    auto geoId = sourceLink->get().geometryId();
     const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
     if (surface == nullptr) {
       ACTS_WARNING("surface with geoID "
