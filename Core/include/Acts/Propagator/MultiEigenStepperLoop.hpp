@@ -285,7 +285,6 @@ class MultiEigenStepperLoop
     }
   };
 
-
   /// Construct and initialize a state
   template <typename charge_t>
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
@@ -316,90 +315,50 @@ class MultiEigenStepperLoop
     }
   }
 
-  /// A state type which can be used for a function which accepts only
-  /// single-component states and stepper
-  template <typename navigation_t, typename options_t>
+  /// A helper type for providinig a propagation state which can be used with
+  /// functions expecting single-component steppers and states
+  template <typename stepping_t, typename navigation_t, typename options_t,
+            typename geoctx_t>
   struct SinglePropState {
-    SinglePropState(SingleState& s, navigation_t& n, options_t& o,
-                    GeometryContext g)
-        : stepping(s), navigation(n), options(o), geoContext(g) {}
-    SingleState& stepping;
+    stepping_t& stepping;
     navigation_t& navigation;
     options_t& options;
-    GeometryContext geoContext;
+    geoctx_t& geoContext;
+
+    SinglePropState(stepping_t& s, navigation_t& n, options_t& o, geoctx_t& g)
+        : stepping(s), navigation(n), options(o), geoContext(g) {}
   };
 
-#if __clang__
-  template <typename navigation_t, typename options_t>
-  SinglePropState(SingleState, navigation_t, options_t, GeometryContext)
-      -> SinglePropState<navigation_t, options_t>;
-#endif
+  template <typename component_t>
+  struct ComponentProxyBase {
+    component_t& cmp;
 
-  /// A proxy struct which allows access to a single component of the
-  /// multi-component state. It has the semantics of a mutable reference, i.e.
-  /// it requires a mutable reference of the single-component state it
-  /// represents
-  struct ComponentProxy {
-    const State& m_state;
-    typename State::Component& m_cmp;
+    ComponentProxyBase(component_t& c) : cmp(c) {}
 
-    auto& status() { return m_cmp.status; }
-    auto status() const { return m_cmp.status; }
-    auto& weight() { return m_cmp.weight; }
-    auto weight() const { return m_cmp.weight; }
-    auto& charge() { return m_cmp.state.q; }
-    auto charge() const { return m_cmp.state.q; }
-    auto& pathAccumulated() { return m_cmp.state.pathAccumulated; }
-    auto pathAccumulated() const { return m_cmp.state.pathAccumulated; }
-    auto& pars() { return m_cmp.state.pars; }
-    const auto& pars() const { return m_cmp.state.pars; }
-    auto& derivative() { return m_cmp.state.derivative; }
-    const auto& derivative() const { return m_cmp.state.derivative; }
-    auto& jacTransport() { return m_cmp.state.jacTransport; }
-    const auto& jacTransport() const { return m_cmp.state.jacTransport; }
-    auto& cov() { return m_cmp.state.cov; }
-    const auto& cov() const { return m_cmp.state.cov; }
-    auto& jacobian() { return m_cmp.state.jacobian; }
-    const auto& jacobian() const { return m_cmp.state.jacobian; }
-    auto& jacToGlobal() { return m_cmp.state.jacToGlobal; }
-    const auto& jacToGlobal() const { return m_cmp.state.jacToGlobal; }
+    auto status() const { return cmp.status; }
+    auto weight() const { return cmp.weight; }
+    auto charge() const { return cmp.state.q; }
+    auto pathAccumulated() const { return cmp.state.pathAccumulated; }
+    const auto& pars() const { return cmp.state.pars; }
+    const auto& derivative() const { return cmp.state.derivative; }
+    const auto& jacTransport() const { return cmp.state.jacTransport; }
+    const auto& cov() const { return cmp.state.cov; }
+    const auto& jacobian() const { return cmp.state.jacobian; }
+    const auto& jacToGlobal() const { return cmp.state.jacToGlobal; }
 
     template <typename propagator_state_t>
-    const auto& singleState(const propagator_state_t& state) const {
-      static_assert(
-          std::is_same_v<SingleState,
-                         decltype(state.stepping.components.front().state)>);
-      return SinglePropState{m_cmp.state, state.navigation, state.options,
-                             state.geoContext};
-    }
+    auto singleState(const propagator_state_t& state) const {
+      using DeducedStepping = decltype(state.stepping.components.front().state);
+      static_assert(std::is_same_v<SingleState, DeducedStepping>);
 
-    template <typename propagator_state_t>
-    auto singleState(propagator_state_t& state) {
-      static_assert(
-          std::is_same_v<SingleState,
-                         decltype(state.stepping.components.front().state)>);
-
-      return SinglePropState(m_cmp.state, state.navigation, state.options,
-                             state.geoContext);
+      return SinglePropState<
+          const SingleState, const decltype(state.navigation),
+          const decltype(state.options), const decltype(state.geoContext)>(
+          cmp.state, state.navigation, state.options, state.geoContext);
     }
 
     const auto& singleStepper(const MultiEigenStepperLoop& stepper) const {
       return static_cast<const SingleStepper&>(stepper);
-    }
-
-    Result<BoundState> boundState(const Surface& surface, bool transportCov) {
-      return detail::boundState(m_state.geoContext, cov(), jacobian(),
-                                jacTransport(), derivative(), jacToGlobal(),
-                                pars(), m_state.covTransport && transportCov,
-                                m_cmp.state.pathAccumulated, surface);
-    }
-
-    void update(const FreeVector& freeParams, const BoundVector& boundParams,
-                const Covariance& covariance, const Surface& surface) {
-      m_cmp.state.pars = freeParams;
-      m_cmp.state.cov = covariance;
-      m_cmp.state.jacToGlobal =
-          surface.boundToFreeJacobian(m_state.geoContext, boundParams);
     }
   };
 
@@ -407,32 +366,70 @@ class MultiEigenStepperLoop
   /// multi-component state. It has the semantics of a const reference, i.e.
   /// it requires a const reference of the single-component state it
   /// represents
-  struct ConstComponentProxy {
-    const State& m_state;
-    const typename State::Component& m_cmp;
+  using ConstComponentProxy =
+      ComponentProxyBase<const typename State::Component>;
 
-    auto status() const { return m_cmp.status; }
-    auto weight() const { return m_cmp.weight; }
-    auto charge() const { return m_cmp.state.q; }
-    auto pathAccumulated() const { return m_cmp.state.pathAccumulated; }
-    const auto& pars() const { return m_cmp.state.pars; }
-    const auto& derivative() const { return m_cmp.state.derivative; }
-    const auto& jacTransport() const { return m_cmp.state.jacTransport; }
-    const auto& cov() const { return m_cmp.state.cov; }
-    const auto& jacobian() const { return m_cmp.state.jacobian; }
-    const auto& jacToGlobal() const { return m_cmp.state.jacToGlobal; }
+  /// A proxy struct which allows access to a single component of the
+  /// multi-component state. It has the semantics of a mutable reference, i.e.
+  /// it requires a mutable reference of the single-component state it
+  /// represents
+  struct ComponentProxy : ComponentProxyBase<typename State::Component> {
+    using Base = ComponentProxyBase<typename State::Component>;
+    
+    using Base::cmp;
+    using Base::status;
+    using Base::weight;
+    using Base::charge;
+    using Base::pathAccumulated;
+    using Base::pars;
+    using Base::derivative;
+    using Base::jacTransport;
+    using Base::cov;
+    using Base::jacobian;
+    using Base::jacToGlobal;
+    using Base::singleState;
+    using Base::singleStepper;
+    
+    const State& all_state;
+
+    ComponentProxy(typename State::Component& cmp, const State& state)
+        : Base(cmp), all_state(state) {}
+
+    auto& status() { return cmp.status; }
+    auto& weight() { return cmp.weight; }
+    auto& charge() { return cmp.state.q; }
+    auto& pathAccumulated() { return cmp.state.pathAccumulated; }
+    auto& pars() { return cmp.state.pars; }
+    auto& derivative() { return cmp.state.derivative; }
+    auto& jacTransport() { return cmp.state.jacTransport; }
+    auto& cov() { return cmp.state.cov; }
+    auto& jacobian() { return cmp.state.jacobian; }
+    auto& jacToGlobal() { return cmp.state.jacToGlobal; }
 
     template <typename propagator_state_t>
-    const auto& singleState(const propagator_state_t& state) const {
-      static_assert(
-          std::is_same_v<SingleState,
-                         decltype(state.stepping.components.front().state)>);
-      return SinglePropState{m_cmp.state, state.navigation, state.options,
-                             state.geoContext};
+    auto singleState(propagator_state_t& state) {
+      using DeducedStepping = decltype(state.stepping.components.front().state);
+      static_assert(std::is_same_v<SingleState, DeducedStepping>);
+
+      return SinglePropState<SingleState, decltype(state.navigation),
+                             decltype(state.options),
+                             decltype(state.geoContext)>(
+          cmp.state, state.navigation, state.options, state.geoContext);
     }
 
-    const auto& singleStepper(const MultiEigenStepperLoop& stepper) const {
-      return static_cast<const SingleStepper&>(stepper);
+    Result<BoundState> boundState(const Surface& surface, bool transportCov) {
+      return detail::boundState(all_state.geoContext, cov(), jacobian(),
+                                jacTransport(), derivative(), jacToGlobal(),
+                                pars(), all_state.covTransport && transportCov,
+                                cmp.state.pathAccumulated, surface);
+    }
+
+    void update(const FreeVector& freeParams, const BoundVector& boundParams,
+                const Covariance& covariance, const Surface& surface) {
+      cmp.state.pars = freeParams;
+      cmp.state.cov = covariance;
+      cmp.state.jacToGlobal =
+          surface.boundToFreeJacobian(all_state.geoContext, boundParams);
     }
   };
 
@@ -448,7 +445,7 @@ class MultiEigenStepperLoop
       // clang-format off
       auto& operator++() { ++it; return *this; }
       auto operator!=(const Iterator& other) const { return it != other.it; }
-      auto operator*() const { return ComponentProxy{s, *it}; }
+      auto operator*() const { return ComponentProxy(*it, s); }
       // clang-format on
     };
 
@@ -476,7 +473,7 @@ class MultiEigenStepperLoop
       // clang-format off
       auto& operator++() { ++it; return *this; }
       auto operator!=(const ConstIterator& other) const { return it != other.it; }
-      auto operator*() const { return ConstComponentProxy{s, *it}; }
+      auto operator*() const { return ConstComponentProxy{*it}; }
       // clang-format on
     };
 
@@ -667,11 +664,29 @@ class MultiEigenStepperLoop
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value
   /// @param stype [in] The step size type to be set
+  /// @param release [in] Do we release the step size?
   void setStepSize(State& state, double stepSize,
-                   ConstrainedStep::Type stype = ConstrainedStep::actor) const {
+                   ConstrainedStep::Type stype = ConstrainedStep::actor,
+                   bool release = true) const {
     for (auto& component : state.components) {
-      SingleStepper::setStepSize(component.state, stepSize, stype);
+      SingleStepper::setStepSize(component.state, stepSize, stype, release);
     }
+  }
+
+  /// Get the step size
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @param stype [in] The step size type to be returned
+  /// @note This returns the smalles step size of all components. It uses
+  /// std::abs for comparison to handle backward propagation and negative
+  /// step sizes correctly.
+  double getStepSize(const State& state, ConstrainedStep::Type stype) const {
+    return std::min_element(state.components.begin(), state.components.end(),
+                            [=](const auto& a, const auto& b) {
+                              return std::abs(a.state.stepSize.value(stype)) <
+                                     std::abs(b.state.stepSize.value(stype));
+                            })
+        ->state.stepSize.value(stype);
   }
 
   /// Release the step-size for all components

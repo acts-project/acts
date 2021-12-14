@@ -151,8 +151,13 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
       continue;
     }
 
-    SinglePropState single_state{component.state, state.navigation,
-                                 state.options, state.geoContext};
+    using ThisSinglePropState =
+        SinglePropState<SingleState, decltype(state.navigation),
+                        decltype(state.options), decltype(state.geoContext)>;
+
+    ThisSinglePropState single_state(component.state, state.navigation,
+                                     state.options, state.geoContext);
+
     results.push_back(SingleStepper::step(single_state));
 
     if (results.back().ok()) {

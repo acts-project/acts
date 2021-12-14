@@ -12,6 +12,7 @@
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
 #include "Acts/Propagator/MultiStepperAborters.hpp"
+#include <Acts/Propagator/Navigator.hpp>
 
 using namespace Acts;
 using namespace Acts::VectorHelpers;
@@ -597,17 +598,66 @@ BOOST_AUTO_TEST_CASE(test_curvilinear_state) {
 // Test single component interface
 ////////////////////////////////////
 
-BOOST_AUTO_TEST_CASE(test_single_component_interface) {}
+template <typename multi_stepper_t>
+void test_single_component_interface_function() {
+  using MultiState = typename multi_stepper_t::State;
+  using MultiStepper = multi_stepper_t;
+
+  std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
+      cmps;
+  for (int i = 0; i < 4; ++i) {
+    cmps.push_back({0.25, BoundVector::Random(), BoundSymMatrix::Random()});
+  }
+
+  auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      Vector3::Zero(), Vector3::Ones().normalized());
+
+  MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
+
+  MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
+                         defaultStepSize, defaultTolerance);
+
+  MultiStepper multi_stepper(defaultBField);
+
+  DummyPropState multi_prop_state(multi_state);
+
+  // Check at least some properties at the moment
+  auto check = [&](auto cmp) {
+    auto sstepper = cmp.singleStepper(multi_stepper);
+    auto &sstepping = cmp.singleState(multi_prop_state).stepping;
+
+    BOOST_CHECK(sstepper.position(sstepping) ==
+                cmp.pars().template segment<3>(eFreePos0));
+    BOOST_CHECK(sstepper.direction(sstepping) ==
+                cmp.pars().template segment<3>(eFreeDir0));
+    BOOST_CHECK(sstepper.time(sstepping) == cmp.pars()[eFreeTime]);
+    BOOST_CHECK_CLOSE(sstepper.charge(sstepping) / sstepper.momentum(sstepping),
+                      cmp.pars()[eFreeQOverP], 1.e-8);
+  };
+
+  for (const auto &cmp : multi_stepper.constComponentIterable(multi_state)) {
+    check(cmp);
+  }
+
+  for (auto cmp : multi_stepper.componentIterable(multi_state)) {
+    check(cmp);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(test_single_component_interface) {
+  test_single_component_interface_function<MultiStepperLoop>();
+}
 
 //////////////////////////////////////////////////
 // Instatiate a Propagator with the MultiStepper
 //////////////////////////////////////////////////
 
-BOOST_AUTO_TEST_CASE(propagator_instatiation_test) {
+template <typename multi_stepper_t>
+void propagator_instatiation_test_function() {
   auto bField = std::make_shared<NullBField>();
-  MultiEigenStepperLoop<> multi_stepper(bField);
-  [[maybe_unused]] Propagator<MultiEigenStepperLoop<>> propagator(
-      multi_stepper);
+  multi_stepper_t multi_stepper(bField);
+  Propagator<multi_stepper_t, Navigator> propagator(
+      multi_stepper, Navigator{Navigator::Config{}});
 
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Vector3::Zero(), Vector3{1.0, 0.0, 0.0});
@@ -618,7 +668,15 @@ BOOST_AUTO_TEST_CASE(propagator_instatiation_test) {
                BoundSymMatrix::Identity().eval()});
   MultiComponentBoundTrackParameters<SinglyCharged> pars(surface, cmps);
 
-//   propagator
-//       .propagate<decltype(pars), decltype(options), MultiStepperSurfaceReached>(
-//           pars, *surface, options);
+  // Instantiate with target
+  propagator.template propagate<decltype(pars), decltype(options),
+                                MultiStepperSurfaceReached>(pars, *surface,
+                                                            options);
+
+  // Instantiate without target
+  propagator.propagate(pars, options);
+}
+
+BOOST_AUTO_TEST_CASE(propagator_instatiation_test) {
+  propagator_instatiation_test_function<MultiStepperLoop>();
 }
