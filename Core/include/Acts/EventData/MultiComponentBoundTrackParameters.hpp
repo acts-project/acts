@@ -24,7 +24,8 @@ namespace Acts {
 /// SingleBoundTrackParameters equivalent and and thus may be expensive
 /// @tparam charge_t Helper type to interpret the particle charge/momentum
 /// @note This class holds shared ownership on its reference surface.
-/// @note The pos
+/// @note The accessors for parameters, covariance, position, etc.
+/// are the weighted means of the components.
 /// TODO Add constructor from range and projector maybe?
 template <typename charge_t>
 class MultiComponentBoundTrackParameters {

@@ -19,4 +19,4 @@ struct Identity {
   }
 };
 
-}
+}  // namespace Acts

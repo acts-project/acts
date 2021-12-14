@@ -23,7 +23,8 @@ class MultiStepperErrorCategory : public std::error_category {
       case MultiStepperError::ComponentNotOnSurface:
         return "Component is not on a surface";
       case MultiStepperError::StateOfMultipleComponentsRequested:
-        return "The global BoundState/CurvilinearState can only be computed if only one component exists";
+        return "The global BoundState/CurvilinearState can only be computed if "
+               "only one component exists";
       case MultiStepperError::AverageTrackLeftCurrentVolume:
         return "The average track has left the current volume";
       case MultiStepperError::AllComponentsSteppingError:

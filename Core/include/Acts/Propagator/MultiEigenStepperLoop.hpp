@@ -375,21 +375,21 @@ class MultiEigenStepperLoop
   /// represents
   struct ComponentProxy : ComponentProxyBase<typename State::Component> {
     using Base = ComponentProxyBase<typename State::Component>;
-    
-    using Base::cmp;
-    using Base::status;
-    using Base::weight;
+
     using Base::charge;
-    using Base::pathAccumulated;
-    using Base::pars;
-    using Base::derivative;
-    using Base::jacTransport;
+    using Base::cmp;
     using Base::cov;
+    using Base::derivative;
     using Base::jacobian;
     using Base::jacToGlobal;
+    using Base::jacTransport;
+    using Base::pars;
+    using Base::pathAccumulated;
     using Base::singleState;
     using Base::singleStepper;
-    
+    using Base::status;
+    using Base::weight;
+
     const State& all_state;
 
     ComponentProxy(typename State::Component& cmp, const State& state)
