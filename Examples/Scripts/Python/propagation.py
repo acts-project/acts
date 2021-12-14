@@ -3,6 +3,7 @@ import os
 
 import acts
 import acts.examples
+import datetime
 
 from acts.examples import GenericDetector, AlignedDetector
 
@@ -11,7 +12,17 @@ from common import getOpenDataDetectorDirectory
 u = acts.UnitConstants
 
 
-def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
+def runPropagation(
+    trackingGeometry,
+    field,
+    outputDir,
+    outputObj=True,
+    outputRoot=True,
+    covTransport=False,
+    stepper=None,
+    s=None,
+    decorators=[],
+):
     s = s or acts.examples.Sequencer(events=100, numThreads=1)
 
     for d in decorators:
@@ -21,9 +32,7 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
 
     nav = acts.Navigator(trackingGeometry=trackingGeometry)
 
-    stepper = acts.EigenStepper(field)
-    # stepper = acts.AtlasStepper(field)
-    # stepper = acts.StraightLineStepper()
+    stepper = stepper or acts.EigenStepper(field)
 
     print("We're running with:", type(stepper).__name__)
     prop = acts.examples.ConcretePropagator(acts.Propagator(stepper, nav))
@@ -34,27 +43,30 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
         randomNumberSvc=rnd,
         ntests=1000,
         sterileLogger=True,
+        covarianceTransport=covTransport,
         propagationStepCollection="propagation-steps",
     )
 
     s.addAlgorithm(alg)
 
     # Output
-    s.addWriter(
-        acts.examples.ObjPropagationStepsWriter(
-            level=acts.logging.INFO,
-            collection="propagation-steps",
-            outputDir=outputDir + "/obj",
+    if outputObj:
+        s.addWriter(
+            acts.examples.ObjPropagationStepsWriter(
+                level=acts.logging.INFO,
+                collection="propagation-steps",
+                outputDir=outputDir + "/obj",
+            )
         )
-    )
 
-    s.addWriter(
-        acts.examples.RootPropagationStepsWriter(
-            level=acts.logging.INFO,
-            collection="propagation-steps",
-            filePath=outputDir + "/propagation_steps.root",
+    if outputRoot:
+        s.addWriter(
+            acts.examples.RootPropagationStepsWriter(
+                level=acts.logging.INFO,
+                collection="propagation-steps",
+                filePath=outputDir + "/propagation_steps.root",
+            )
         )
-    )
 
     return s
 
@@ -110,6 +122,30 @@ if "__main__" == __name__:
     #     field=solenoid
     # )
 
-    runPropagation(
-        trackingGeometry, field, os.getcwd(), decorators=contextDecorators
-    ).run()
+    for stepper in (acts.AtlasStepper(field), acts.EigenStepper(field)):
+        for cov in (True, False):
+            s = acts.examples.Sequencer(
+                events=10000, numThreads=-1, logLevel=acts.logging.WARNING
+            )
+
+            runPropagation(
+                trackingGeometry,
+                field,
+                os.getcwd(),
+                outputRoot=False,
+                outputObj=False,
+                covTransport=cov,
+                decorators=contextDecorators,
+                stepper=stepper,
+                s=s,
+            )
+
+            start = datetime.datetime.now()
+            s.run()
+            end = datetime.datetime.now()
+
+            duration = end - start
+
+            print(
+                f"{type(stepper).__name__} (cov={cov}):", f"{duration.total_seconds()}s"
+            )
