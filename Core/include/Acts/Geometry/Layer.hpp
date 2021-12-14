@@ -35,6 +35,9 @@ class TrackingVolume;
 class ApproachDescriptor;
 class IMaterialDecorator;
 
+template <typename T>
+struct NavigationOptions;
+
 // Simple surface intersection
 using SurfaceIntersection = ObjectIntersection<Surface>;
 
@@ -166,10 +169,10 @@ class Layer : public virtual GeometryObject {
   /// @param options The templated navigation options
   ///
   /// @return list of intersection of surfaces on the layer
-  template <typename options_t>
   std::vector<SurfaceIntersection> compatibleSurfaces(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const options_t& options) const;
+      const Vector3& direction,
+      const NavigationOptions<Surface>& options) const;
 
   /// Surface seen on approach
   ///
@@ -184,11 +187,9 @@ class Layer : public virtual GeometryObject {
   /// @param options The templated naivation options
   ///
   /// @return the Surface intersection of the approach surface
-  template <typename options_t>
-  const SurfaceIntersection surfaceOnApproach(const GeometryContext& gctx,
-                                              const Vector3& position,
-                                              const Vector3& direction,
-                                              const options_t& options) const;
+  SurfaceIntersection surfaceOnApproach(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const NavigationOptions<Layer>& options) const;
 
   /// Fast navigation to next layer
   ///
