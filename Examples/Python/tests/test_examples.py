@@ -516,9 +516,6 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     s.run()
 
     assert val_file.exists()
-    # assert_entries removed becaused of the navigation fails
-    # The navigation fails  are expected since volume material is not appropriate for the ODD geometry
-    # assert_entries(val_file, "material-tracks", 10000)
     assert_root_hash(val_file.name, val_file)
 
 
