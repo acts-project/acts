@@ -46,7 +46,8 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
     state.stepSize.release(ConstrainedStep::actor);
     ACTS_VERBOSE("Intersection: state is ON SURFACE");
     return Intersection3D::Status::onSurface;
-  } else if (sIntersection.intersection or sIntersection.alternative) {
+  }
+  if (sIntersection.intersection or sIntersection.alternative) {
     // Path and overstep limit checking
     double pLimit = state.stepSize.value(ConstrainedStep::aborter);
     double oLimit = stepper.overstepLimit(state);

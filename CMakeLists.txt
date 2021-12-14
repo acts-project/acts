@@ -301,3 +301,6 @@ add_subdirectory_if(docs ACTS_BUILD_DOCS)
 # create cmake configuration files and environment setup script
 include(ActsCreatePackageConfig)
 include(ActsCreateSetup)
+
+add_executable(propagation propagation.cpp)
+target_link_libraries(propagation PUBLIC ActsCore ActsExamplesFramework ActsExamplesPropagation ActsExamplesDetectorGeneric)

@@ -344,6 +344,9 @@ class KalmanFitter {
         if (result.measurementStates == inputMeasurements->size() or
             (result.measurementStates > 0 and
              state.navigation.navigationBreak)) {
+          ACTS_VERBOSE(
+              "Kalman filter has finished forward pass. Will now run "
+              "fast-smoothing or full backward propagation");
           // Remove the missing surfaces that occur after the last measurement
           result.missedActiveSurfaces.resize(result.measurementHoles);
           // now get track state proxy for the smoothing logic

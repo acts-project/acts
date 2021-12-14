@@ -201,8 +201,8 @@ bool checkIntersection(const intersection_t& intersection, double pLimit,
   const double cLimit = intersection.pathLength;
 
   if constexpr (doLogging) {
-    ACTS_VERBOSE(" -> pLimit, oLimit, cLimit: " << pLimit << ", " << oLimit
-                                                << ", " << cLimit);
+    ACTS_VERBOSE(" -> pathLimit, overstepLimit, ixLength: "
+                 << pLimit << ", " << oLimit << ", " << cLimit);
   }
 
   const bool coCriterion = cLimit > oLimit;
