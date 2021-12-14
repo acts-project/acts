@@ -480,6 +480,8 @@ Acts::TrackingVolume::compatibleBoundaries(
                  << bSurface->surfaceRepresentation().geometryId());
     if (detail::checkIntersection(sIntersection.intersection, pLimit, oLimit,
                                   s_onSurfaceTolerance, logger)) {
+      sIntersection.intersection.pathLength *=
+          std::copysign(1., options.navDir);
       return BoundaryIntersection(sIntersection.intersection, bSurface,
                                   sIntersection.object);
     }
@@ -488,6 +490,8 @@ Acts::TrackingVolume::compatibleBoundaries(
       ACTS_VERBOSE("Consider alternative");
       if (detail::checkIntersection(sIntersection.alternative, pLimit, oLimit,
                                     s_onSurfaceTolerance, logger)) {
+        sIntersection.alternative.pathLength *=
+            std::copysign(1., options.navDir);
         return BoundaryIntersection(sIntersection.alternative, bSurface,
                                     sIntersection.object);
         ;
