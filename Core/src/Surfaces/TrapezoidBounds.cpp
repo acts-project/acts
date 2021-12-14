@@ -20,7 +20,33 @@ Acts::SurfaceBounds::BoundsType Acts::TrapezoidBounds::type() const {
 
 bool Acts::TrapezoidBounds::inside(const Acts::Vector2& lposition,
                                    const Acts::BoundaryCheck& bcheck) const {
-  return bcheck.isInside(lposition, vertices());
+  const double x = lposition[0];
+  const double y = lposition[1];
+
+  const double hlY = get(TrapezoidBounds::eHalfLengthY);
+  const double hlXnY = get(TrapezoidBounds::eHalfLengthXnegY);
+  const double hlXpY = get(TrapezoidBounds::eHalfLengthXposY);
+
+  if (std::abs(y) > hlY) {
+    // outside y range
+    return false;
+  }
+
+  if (std::abs(x) > std::max(hlXnY, hlXpY)) {
+    // outside x range
+    return false;
+  }
+
+  if (std::abs(x) < std::min(hlXnY, hlXpY)) {
+    // inside x range
+    return true;
+  }
+
+  // at this stage, the point can only be in the triangles
+  // run slow-ish polygon check
+  std::array<Vector2, 4> v{
+      Vector2{-hlXnY, -hlY}, {hlXnY, -hlY}, {hlXpY, hlY}, {-hlXpY, hlY}};
+  return bcheck.isInside(lposition, v);
 }
 
 std::vector<Acts::Vector2> Acts::TrapezoidBounds::vertices(
