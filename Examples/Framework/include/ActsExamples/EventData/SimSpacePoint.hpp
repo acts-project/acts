@@ -10,7 +10,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 
 #include <cmath>
 #include <vector>
@@ -29,14 +31,14 @@ class SimSpacePoint {
   /// @param measurementIndex Index of the underlying measurement
   template <typename position_t>
   SimSpacePoint(const Eigen::MatrixBase<position_t>& pos, float varRho,
-                float varZ, std::vector<Index> measurementIndices)
+                float varZ, std::vector<const Acts::SourceLink*> sourceLinks)
       : m_x(pos[Acts::ePos0]),
         m_y(pos[Acts::ePos1]),
         m_z(pos[Acts::ePos2]),
         m_rho(std::hypot(m_x, m_y)),
         m_varianceRho(varRho),
         m_varianceZ(varZ),
-        m_measurementIndices(measurementIndices) {
+        m_sourceLinks(sourceLinks) {
     EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(position_t, 3);
   }
 
@@ -47,8 +49,11 @@ class SimSpacePoint {
   constexpr float varianceR() const { return m_varianceRho; }
   constexpr float varianceZ() const { return m_varianceZ; }
 
-  const std::vector<Index>& measurementIndices() const {
-    return m_measurementIndices;
+//  const std::vector<Index>& measurementIndices() const {
+//    return m_measurementIndices;
+//  }
+  const std::vector<const Acts::SourceLink*> sourceLinks() const{
+    return m_sourceLinks;
   }
 
  private:
@@ -61,15 +66,16 @@ class SimSpacePoint {
   float m_varianceRho;
   float m_varianceZ;
   // Indices of the corresponding measurements
-  std::vector<Index> m_measurementIndices;
+  //std::vector<Index> m_measurementIndices;
+  std::vector<const Acts::SourceLink*> m_sourceLinks;
 };
 
 inline bool operator==(const SimSpacePoint& lhs, const SimSpacePoint& rhs) {
   // TODO would it be sufficient to check just the index under the assumption
   //   that the same measurement index always produces the same space point?
   // no need to check r since it is fully defined by x/y
-  return (lhs.measurementIndices() == rhs.measurementIndices()) and
-         (lhs.x() == rhs.x()) and (lhs.y() == rhs.y()) and
+  //return (lhs.measurementIndices() == rhs.measurementIndices()) and
+  return (lhs.x() == rhs.x()) and (lhs.y() == rhs.y()) and
          (lhs.z() == rhs.z()) and (lhs.varianceR() == rhs.varianceR()) and
          (lhs.varianceZ() == rhs.varianceZ());
 }

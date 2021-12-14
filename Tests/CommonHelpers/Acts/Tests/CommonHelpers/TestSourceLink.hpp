@@ -66,7 +66,6 @@ struct TestSourceLink final : public SourceLink {
   constexpr size_t index() const { return sourceId; }
   constexpr GeometryIdentifier geometryId() const { return geoId; }
 
-
   // std::size_t index() const { return sourceId; }
 
 };

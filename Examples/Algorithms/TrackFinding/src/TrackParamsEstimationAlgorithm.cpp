@@ -79,9 +79,11 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
 
   std::unordered_map<Index, const SimSpacePoint*> spMap;
 
-  for (const SimSpacePoint& i : spacePoints) {
-    spMap.emplace(i.measurementIndices()[0],
-                  &i);  // TO DO: add the second measurement for strips
+  for (const SimSpacePoint& sp : spacePoints) {
+
+    const auto slink = static_cast<const IndexSourceLink&>(*(sp.sourceLinks()[0]));
+    spMap.emplace(slink.index(),
+                  &sp);  // TO DO: add the second measurement for strips
   }
 
   for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
@@ -182,13 +184,14 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     const auto& seed = seeds[iseed];
     // Get the bottom space point and its reference surface
     const auto bottomSP = seed.sp().front();
-    if (bottomSP->measurementIndices().size() == 0) {
-      ACTS_WARNING("Missing measurement index in the space point")
-      continue;
-    }
-    const auto hitIdx = bottomSP->measurementIndices()[0];
-    const auto sourceLink = sourceLinks.nth(hitIdx);
-    auto geoId = sourceLink->get().geometryId();
+    //if (bottomSP->measurementIndices().size() == 0) {
+    //  ACTS_WARNING("Missing measurement index in the space point")
+    //  continue;
+    //}
+    //const auto hitIdx = bottomSP->measurementIndices()[0];
+    //const auto sourceLink = sourceLinks.nth(hitIdx);
+    const auto sourceLink = bottomSP->sourceLinks()[0];
+    auto geoId = sourceLink->geometryId();
     const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
     if (surface == nullptr) {
       ACTS_WARNING("surface with geoID "
@@ -222,11 +225,19 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       ProtoTrack track;
       track.reserve(3);
       for (const auto& sp : seed.sp()) {
-        if (sp->measurementIndices().size() == 0) {
-          ACTS_WARNING("Missing measurement index in the space point")
+
+        if (sp->sourceLinks().size() == 0) {
+          ACTS_WARNING("Missing sourceLinks in the space point")
           continue;
         }
-        track.push_back(sp->measurementIndices()[0]);
+
+        //const auto slink0 = static_cast<const IndexSourceLink&>(*(spacePointPtr->sourceLinks()[0]));
+          //*slink0);
+        //std::cout << islink0.index() << std::endl;
+        //protoTrack.emplace_back(slink0.index() );
+        const auto slink = static_cast<const IndexSourceLink&>(*(sp->sourceLinks()[0]));
+        //protoTrack.emplace_back(slink.index());
+        track.push_back(slink.index());
       }
       tracks.emplace_back(track);
     }

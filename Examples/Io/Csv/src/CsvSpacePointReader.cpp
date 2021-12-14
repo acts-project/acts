@@ -67,9 +67,9 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointReader::read(
         m_cfg.inputCollection == "overlap") {
       std::vector<Index> measIndices;
       measIndices.emplace_back(data.measurement_id);
-      auto sp =
-          SimSpacePoint(globalPos, data.sp_covr, data.sp_covz, {measIndices});
-      spacePoints.emplace_back(sp);
+      //auto sp =
+      //    SimSpacePoint(globalPos, data.sp_covr, data.sp_covz, {measIndices});
+      //spacePoints.emplace_back(sp);
 
     } else {
       ACTS_ERROR("Invalid space point type " << m_cfg.inputStem);

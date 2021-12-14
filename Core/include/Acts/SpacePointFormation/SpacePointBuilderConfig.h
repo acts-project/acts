@@ -12,11 +12,11 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 
 namespace Acts {
-struct SingleHitSpacePointBuilderConfig{
+struct SpacePointBuilderConfig{
    // Tracking geometry
    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry; 
 
-   SingleHitSpacePointBuilderConfig()=default;
+   SpacePointBuilderConfig()=default;
 };
 
 

@@ -156,9 +156,17 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     ProtoTrack& protoTrack = protoTracks.emplace_back();
     protoTrack.reserve(seed.sp().size());
     for (auto spacePointPtr : seed.sp()) {
-      if (spacePointPtr->measurementIndices().size() > 0) {
+      if (spacePointPtr->sourceLinks().size() > 0) {
+        //const auto *slink = static_cast<IndexSourceLink*>(spacePointPtr->sourceLinks()[0]);
+        //const auto slink0 = 
+        const auto slink0 = static_cast<const IndexSourceLink&>(*(spacePointPtr->sourceLinks()[0]));
+          //*slink0);
+        //std::cout << islink0.index() << std::endl;
+        protoTrack.emplace_back(slink0.index() );
+//      }
+      //if (spacePointPtr->measurementIndices().size() > 0) {
         // Use the first measurement
-        protoTrack.push_back(spacePointPtr->measurementIndices()[0]);
+//        protoTrack.push_back(spacePointPtr->measurementIndices()[0]);
       } else
         ACTS_WARNING("Missing measurement index");
     }

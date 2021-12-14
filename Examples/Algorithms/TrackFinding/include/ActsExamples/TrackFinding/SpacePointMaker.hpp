@@ -11,7 +11,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 //#include "Acts/SpacePointFormation/DoubleHitSpacePointBuilder.hpp" TODO add
 // strips
-#include "Acts/SpacePointFormation/SingleHitSpacePointBuilder.hpp"
+#include "Acts/SpacePointFormation/SpacePointBuilder.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.h"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ModuleCluster.hpp"
@@ -81,9 +81,7 @@ class SpacePointMaker final : public BareAlgorithm {
  private:
   Config m_cfg;
 
-  Acts::SingleHitSpacePointBuilderConfig m_singleSPBuilderCfg;
-  Acts::SingleHitSpacePointBuilder<
-      SimSpacePoint, ActsExamples::ModuleCluster<ActsExamples::Measurement>>
-      m_singleSPBuilder;
+  Acts::SpacePointBuilderConfig m_singleSPBuilderCfg;
+  Acts::SpacePointBuilder<SimSpacePoint>   m_spacePointBuilder;
 };
 }  // namespace ActsExamples
