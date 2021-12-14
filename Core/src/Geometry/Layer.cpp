@@ -102,8 +102,6 @@ std::vector<Acts::SurfaceIntersection> Acts::Layer::compatibleSurfaces(
     const Vector3& direction, const NavigationOptions<Surface>& options) const {
   // the list of valid intersection
   std::vector<SurfaceIntersection> sIntersections;
-  // remember the surfaces for duplicate removal
-  std::unordered_map<const Surface*, bool> accepted;
 
   // fast exit - there is nothing to
   if (!m_surfaceArray || !m_approachDescriptor || !options.navDir) {
@@ -143,12 +141,8 @@ std::vector<Acts::SurfaceIntersection> Acts::Layer::compatibleSurfaces(
   }
 
   // lemma 0 : accept the surface
-  auto acceptSurface = [&options, &accepted](const Surface& sf,
-                                             bool sensitive = false) -> bool {
-    // check for duplicates
-    if (accepted.find(&sf) != accepted.end()) {
-      return false;
-    }
+  auto acceptSurface = [&options](const Surface& sf,
+                                  bool sensitive = false) -> bool {
     // surface is sensitive and you're asked to resolve
     if (sensitive && options.resolveSensitive) {
       return true;
@@ -187,7 +181,6 @@ std::vector<Acts::SurfaceIntersection> Acts::Layer::compatibleSurfaces(
       // Now put the right sign on it
       sfi.intersection.pathLength *= std::copysign(1., options.navDir);
       sIntersections.push_back(sfi);
-      accepted[&sf] = true;
     }
   };
 
@@ -230,6 +223,20 @@ std::vector<Acts::SurfaceIntersection> Acts::Layer::compatibleSurfaces(
   // the layer surface itself is a testSurface
   const Surface* layerSurface = &surfaceRepresentation();
   processSurface(*layerSurface);
+
+  // Sort by object address
+  std::sort(sIntersections.begin(), sIntersections.end(),
+            [](const auto& a, const auto& b) { return a.object < b.object; });
+  // Now look for duplicates. As we just sorted by path length, duplicates
+  // should be subsequent
+  auto it = std::unique(
+      sIntersections.begin(), sIntersections.end(),
+      [](const SurfaceIntersection& a, const SurfaceIntersection& b) -> bool {
+        return a.object == b.object;
+      });
+
+  // resize to remove all items that are past the unique range
+  sIntersections.resize(std::distance(sIntersections.begin(), it));
 
   // sort according to the path length
   if (options.navDir == forward) {
