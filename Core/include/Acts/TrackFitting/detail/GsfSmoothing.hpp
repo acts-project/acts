@@ -8,8 +8,9 @@
 
 #pragma once
 
-#include "GsfError.hpp"
-#include "GsfUtils.hpp"
+#include "Acts/TrackFitting/GsfError.hpp"
+#include "Acts/TrackFitting/detail/GsfUtils.hpp"
+#include "Acts/Utilities/detail/gaussian_mixture_helpers.hpp"
 
 namespace Acts {
 
@@ -171,20 +172,20 @@ auto smoothAndCombineTrajectories(
         proxy.copyFrom(firstBwdState);
 
         // The predicted state is the forward pass
-        const auto [fwdMeanPred, fwdCovPred] = combineComponentRange(
+        const auto [fwdMeanPred, fwdCovPred] = combineBoundGaussianMixture(
             fwdTips.begin(), fwdTips.end(), PredProjector{fwd, fwdWeights});
         proxy.predicted() = fwdMeanPred;
         proxy.predictedCovariance() = fwdCovPred.value();
 
         // The filtered state is the backward pass
-        const auto [bwdMeanFilt, bwdCovFilt] = combineComponentRange(
+        const auto [bwdMeanFilt, bwdCovFilt] = combineBoundGaussianMixture(
             bwdTips.begin(), bwdTips.end(), FiltProjector{bwd, bwdWeights});
         proxy.filtered() = bwdMeanFilt;
         proxy.filteredCovariance() = bwdCovFilt.value();
 
         // The smoothed state is a combination
         const auto [smoothedMean, smoothedCov] =
-            combineComponentRange(smoothedState.begin(), smoothedState.end());
+            combineBoundGaussianMixture(smoothedState.begin(), smoothedState.end());
         proxy.smoothed() = smoothedMean;
         proxy.smoothedCovariance() = smoothedCov.value();
       }

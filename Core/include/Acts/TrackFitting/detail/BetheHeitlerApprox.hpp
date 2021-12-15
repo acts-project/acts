@@ -74,15 +74,15 @@ class BetheHeitlerApprox {
     constexpr double maxX0 = 0.20;
 
     // Lambda which builds the components
-    auto make_mixture = [&](const Data &data, double x) {
+    auto make_mixture = [&](const Data &data, double xx) {
       std::array<GaussianMixture, NComponents> ret{};
       ActsScalar weight_sum = 0;
       for (int i = 0; i < NComponents; ++i) {
         // These transformations must be applied to the data according to ATHENA
         // (TrkGaussianSumFilter/src/GsfCombinedMaterialEffects.cxx:79)
-        ret[i].weight = logistic_sigmoid(poly(x, data[i].weightCoeffs));
-        ret[i].mean = logistic_sigmoid(poly(x, data[i].meanCoeffs));
-        ret[i].var = std::exp(poly(x, data[i].varCoeffs));
+        ret[i].weight = logistic_sigmoid(poly(xx, data[i].weightCoeffs));
+        ret[i].mean = logistic_sigmoid(poly(xx, data[i].meanCoeffs));
+        ret[i].var = std::exp(poly(xx, data[i].varCoeffs));
 
         weight_sum += ret[i].weight;
       }

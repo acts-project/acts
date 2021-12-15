@@ -15,20 +15,18 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
-#include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
+#include "Acts/TrackFitting/detail/BetheHeitlerApprox.hpp"
+#include "Acts/TrackFitting/GsfError.hpp"
+#include "Acts/TrackFitting/detail/GsfSmoothing.hpp"
+#include "Acts/TrackFitting/detail/GsfUtils.hpp"
+#include "Acts/TrackFitting/detail/KLMixtureReduction.hpp"
+#include "Acts/Utilities/Overload.hpp"
 
 #include <ios>
 #include <map>
 #include <numeric>
 
-#include "BetheHeitlerApprox.hpp"
-#include "GsfError.hpp"
-#include "GsfSmoothing.hpp"
-#include "GsfUtils.hpp"
-#include "KLMixtureReduction.hpp"
-#include "Overload.hpp"
 
 #define RETURN_ERROR_OR_ABORT_ACTOR(error) \
   if (m_cfg.abortOnError) {                \
@@ -73,8 +71,6 @@ struct GsfResult {
 };
 
 /// The actor carrying out the GSF algorithm
-template <typename updater_t, typename outlier_finder_t, typename calibrator_t,
-          typename smoother_t>
 struct GsfActor {
   /// Enforce default construction
   GsfActor() = default;
@@ -123,13 +119,10 @@ struct GsfActor {
 
     /// We can disable component splitting for debugging or so
     bool applyMaterialEffects = true;
+    
+    /// The extensions
+    KalmanFitterExtensions extensions;
   } m_cfg;
-
-  /// Configurable components:
-  updater_t m_updater;
-  outlier_finder_t m_outlierFinder;
-  calibrator_t m_calibrator;
-  smoother_t m_smoother;
 
   /// Broadcast Cache Type
   using TrackProxy = typename MultiTrajectory::TrackStateProxy;
@@ -225,20 +218,20 @@ struct GsfActor {
     // really all components are on a surface TODO Not sure why this is not
     // garantueed by having currentSurface pointer set
     const auto [missed_count, reachable_count] = [&]() {
-      std::size_t missed_count = 0;
-      std::size_t reachable_count = 0;
+      std::size_t missed = 0;
+      std::size_t reachable = 0;
       for (auto cmp : stepper.componentIterable(state.stepping)) {
         using Status = Acts::Intersection3D::Status;
 
         // clang-format off
           switch (cmp.status()) {
-            break; case Status::missed: ++missed_count;
-            break; case Status::reachable: ++reachable_count;
+            break; case Status::missed: ++missed;
+            break; case Status::reachable: ++reachable;
             break; default: {}
           }
         // clang-format on
       }
-      return std::make_tuple(missed_count, reachable_count);
+      return std::make_tuple(missed, reachable);
     }();
 
     // Workaround to initialize MT in backward mode
@@ -594,7 +587,7 @@ struct GsfActor {
       auto& cmp = *res;
       cmp.jacobian() = meta.jacobian;
       cmp.jacToGlobal() = meta.jacToGlobal;
-      cmp.pathLength() = meta.pathLength;
+      cmp.pathAccumulated() = meta.pathLength;
       cmp.derivative() = meta.derivative;
       cmp.jacTransport() = meta.jacTransport;
     }
@@ -643,9 +636,7 @@ struct GsfActor {
       trackProxy.pathLength() = std::move(meta.pathLength);
 
       // We have predicted parameters, so calibrate the uncalibrated
-      std::visit(
-          [&](const auto& calibrated) { trackProxy.setCalibrated(calibrated); },
-          m_calibrator(trackProxy.uncalibrated(), trackProxy.predicted()));
+      m_cfg.extensions.calibrator(state.geoContext, trackProxy);
 
       // Get and set the type flags
       trackProxy.typeFlags().set(TrackStateFlag::ParameterFlag);
@@ -654,9 +645,9 @@ struct GsfActor {
       }
 
       // Do Kalman update
-      if (not m_outlierFinder(trackProxy)) {
+      if (not m_cfg.extensions.outlierFinder(trackProxy)) {
         // Perform update
-        auto updateRes = m_updater(state.geoContext, trackProxy,
+        auto updateRes = m_cfg.extensions.updater(state.geoContext, trackProxy,
                                    state.stepping.navDir, logger);
 
         if (!updateRes.ok()) {

@@ -10,13 +10,13 @@
 
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/TrackFitting/detail/BetheHeitlerApprox.hpp"
+#include "Acts/TrackFitting/GsfActor.hpp"
+#include "Acts/Propagator/MultiStepperAborters.hpp"
+#include "Acts/TrackFitting/KalmanFitter.hpp"
 
 #include <fstream>
 
-#include "BetheHeitlerApprox.hpp"
-#include "GsfActor.hpp"
-#include "MultiStepperAborters.hpp"
-#include "MultiSteppingLogger.hpp"
 
 #define RETURN_ERROR_OR_ABORT_FIT(error) \
   if (options.abortOnError) {            \
@@ -27,27 +27,23 @@
 
 namespace Acts {
 
-template <typename calibrator_t, typename outlier_finder_t>
 struct GsfOptions {
-  using Calibrator = calibrator_t;
-  using OutlierFinder = outlier_finder_t;
-
-  Calibrator calibrator;
-  OutlierFinder outlierFinder;
-
   std::reference_wrapper<const GeometryContext> geoContext;
   std::reference_wrapper<const MagneticFieldContext> magFieldContext;
+  std::reference_wrapper<const CalibrationContext> calibrationContext;
+  
+  KalmanFitterExtensions extensions;
+  
+  LoggerWrapper logger;
+
+  PropagatorPlainOptions propagatorPlainOptions;
 
   const Surface* referenceSurface = nullptr;
-
-  LoggerWrapper logger;
 
   bool abortOnError = true;
 
   std::size_t maxComponents = 4;
-  std::size_t maxSteps = 1000;
-  bool loopProtection = true;
-
+  
   bool applyMaterialEffects = true;
 };
 
@@ -76,33 +72,30 @@ struct GaussianSumFitter {
   detail::BHApprox m_bethe_heitler_approx;
 
   /// @brief The fit function for the Direct navigator
-  template <typename source_link_it_t, typename start_parameters_t,
-            typename calibrator_t, typename outlier_finder_t>
+  template <typename source_link_it_t, typename start_parameters_t>
   Acts::Result<Acts::KalmanFitterResult> fit(
       source_link_it_t begin, source_link_it_t end,
       const start_parameters_t& sParameters,
-      const GsfOptions<calibrator_t, outlier_finder_t>& options,
+      const GsfOptions& options,
       const std::vector<const Surface*>& sSequence) const {
     // Check if we have the correct navigator
     static_assert(
         std::is_same_v<DirectNavigator, typename propagator_t::Navigator>);
 
-    using ThisGsfActor = GsfActor<GainMatrixUpdater, outlier_finder_t,
-                                  calibrator_t, GainMatrixSmoother>;
-
     // Initialize the forward propagation with the DirectNavigator
     auto fwdPropInitializer = [&sSequence, this](const auto& opts,
                                                  const auto& logger) {
-      using Actors = ActionList<ThisGsfActor, DirectNavigator::Initializer>;
+      using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
       using Aborters = AbortList<>;
 
       PropagatorOptions<Actors, Aborters> propOptions(
           opts.geoContext, opts.magFieldContext, logger);
+      
+      propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
-      propOptions.loopProtection = opts.loopProtection;
       propOptions.actionList.template get<DirectNavigator::Initializer>()
           .navSurfaces = sSequence;
-      propOptions.actionList.template get<ThisGsfActor>()
+      propOptions.actionList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_bethe_heitler_approx;
 
       return propOptions;
@@ -111,20 +104,21 @@ struct GaussianSumFitter {
     // Initialize the backward propagation with the DirectNavigator
     auto bwdPropInitializer = [&sSequence, this](const auto& opts,
                                                  const auto& logger) {
-      using Actors = ActionList<ThisGsfActor, DirectNavigator::Initializer>;
+      using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
       using Aborters = AbortList<>;
-
-      PropagatorOptions<Actors, Aborters> propOptions(
-          opts.geoContext, opts.magFieldContext, logger);
-
+      
       std::vector<const Surface*> backwardSequence(
           std::next(sSequence.rbegin()), sSequence.rend());
       backwardSequence.push_back(opts.referenceSurface);
 
-      propOptions.loopProtection = opts.loopProtection;
+      PropagatorOptions<Actors, Aborters> propOptions(
+          opts.geoContext, opts.magFieldContext, logger);
+
+      propOptions.setPlainOptions(opts.propagatorPlainOptions);
+
       propOptions.actionList.template get<DirectNavigator::Initializer>()
           .navSurfaces = std::move(backwardSequence);
-      propOptions.actionList.template get<ThisGsfActor>()
+      propOptions.actionList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_bethe_heitler_approx;
 
       return propOptions;
@@ -135,29 +129,23 @@ struct GaussianSumFitter {
   }
 
   /// @brief The fit function for the standard navigator
-  template <typename source_link_it_t, typename start_parameters_t,
-            typename calibrator_t, typename outlier_finder_t>
+  template <typename source_link_it_t, typename start_parameters_t>
   Acts::Result<Acts::KalmanFitterResult> fit(
       source_link_it_t begin, source_link_it_t end,
       const start_parameters_t& sParameters,
-      const GsfOptions<calibrator_t, outlier_finder_t>& options) const {
+      const GsfOptions& options) const {
     // Check if we have the correct navigator
     static_assert(std::is_same_v<Navigator, typename propagator_t::Navigator>);
 
-    // Create the ActionList and AbortList
-    using ThisGsfActor = GsfActor<GainMatrixUpdater, outlier_finder_t,
-                                  calibrator_t, GainMatrixSmoother>;
-
     // Initialize the forward propagation with the DirectNavigator
     auto fwdPropInitializer = [this](const auto& opts, const auto& logger) {
-      using Actors = ActionList<ThisGsfActor>;
+      using Actors = ActionList<GsfActor>;
       using Aborters = AbortList<EndOfWorldReached>;
 
       PropagatorOptions<Actors, Aborters> propOptions(
           opts.geoContext, opts.magFieldContext, logger);
-      propOptions.maxSteps = opts.maxSteps;
-      propOptions.loopProtection = opts.loopProtection;
-      propOptions.actionList.template get<ThisGsfActor>()
+      propOptions.setPlainOptions(opts.propagatorPlainOptions);
+      propOptions.actionList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_bethe_heitler_approx;
 
       return propOptions;
@@ -165,14 +153,15 @@ struct GaussianSumFitter {
 
     // Initialize the backward propagation with the DirectNavigator
     auto bwdPropInitializer = [this](const auto& opts, const auto& logger) {
-      using Actors = ActionList<ThisGsfActor>;
+      using Actors = ActionList<GsfActor>;
       using Aborters = AbortList<EndOfWorldReached>;
 
       PropagatorOptions<Actors, Aborters> propOptions(
           opts.geoContext, opts.magFieldContext, logger);
-      propOptions.maxSteps = opts.maxSteps;
-      propOptions.loopProtection = opts.loopProtection;
-      propOptions.actionList.template get<ThisGsfActor>()
+      
+      propOptions.setPlainOptions(opts.propagatorPlainOptions);
+      
+      propOptions.actionList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_bethe_heitler_approx;
 
       return propOptions;
@@ -183,12 +172,11 @@ struct GaussianSumFitter {
   }
 
   template <typename source_link_it_t, typename start_parameters_t,
-            typename calibrator_t, typename outlier_finder_t,
             typename fwd_prop_initializer_t, typename bwd_prop_initializer_t>
   Acts::Result<Acts::KalmanFitterResult> fit_impl(
       source_link_it_t begin, source_link_it_t end,
       const start_parameters_t& sParameters,
-      const GsfOptions<calibrator_t, outlier_finder_t>& options,
+      const GsfOptions& options,
       const fwd_prop_initializer_t& fwdPropInitializer,
       const bwd_prop_initializer_t& bwdPropInitializer) const {
     // The logger
@@ -217,16 +205,14 @@ struct GaussianSumFitter {
     std::map<GeometryIdentifier, std::reference_wrapper<const SourceLink>>
         inputMeasurements;
     for (auto it = begin; it != end; ++it) {
-      inputMeasurements.emplace(it->get().geometryId(), *it);
+      const SourceLink& sl = *it;
+      inputMeasurements.emplace(sl.geometryId(), *it);
     }
 
     ACTS_VERBOSE(
         "Gsf: Final measuerement map size: " << inputMeasurements.size());
     throw_assert(sParameters.covariance() != std::nullopt,
                  "we need a covariance here...");
-
-    using ThisGsfActor = GsfActor<GainMatrixUpdater, outlier_finder_t,
-                                  calibrator_t, GainMatrixSmoother>;
 
     /////////////////
     // Forward pass
@@ -243,11 +229,10 @@ struct GaussianSumFitter {
       auto fwdPropOptions = fwdPropInitializer(options, logger);
 
       // Catch the actor and set the measurements
-      auto& actor = fwdPropOptions.actionList.template get<ThisGsfActor>();
+      auto& actor = fwdPropOptions.actionList.template get<GsfActor>();
       actor.m_cfg.inputMeasurements = inputMeasurements;
       actor.m_cfg.maxComponents = options.maxComponents;
-      actor.m_calibrator = options.calibrator;
-      actor.m_outlierFinder = options.outlierFinder;
+      actor.m_cfg.extensions = options.extensions;
       actor.m_cfg.abortOnError = options.abortOnError;
       actor.m_cfg.applyMaterialEffects = options.applyMaterialEffects;
 
@@ -290,25 +275,26 @@ struct GaussianSumFitter {
 
       auto bwdPropOptions = bwdPropInitializer(options, logger);
 
-      auto& actor = bwdPropOptions.actionList.template get<ThisGsfActor>();
+      auto& actor = bwdPropOptions.actionList.template get<GsfActor>();
       actor.m_cfg.inputMeasurements = inputMeasurements;
       actor.m_cfg.maxComponents = options.maxComponents;
-      actor.m_calibrator = options.calibrator;
-      actor.m_outlierFinder = options.outlierFinder;
       actor.m_cfg.abortOnError = options.abortOnError;
       actor.m_cfg.applyMaterialEffects = options.applyMaterialEffects;
+      actor.m_cfg.extensions = options.extensions;
 
       // Workaround to get the first state into the MultiTrajectory seems also
       // to be necessary for standard navigator to prevent double kalman
       // update on the last surface
       actor.m_cfg.multiTrajectoryInitializer = [&fwdGsfResult](
                                                    auto& result,
-                                                   const auto& logger) {
+                                                   [[maybe_unused]] const auto& loggerr) {
         result.currentTips.clear();
+        
+        throw std::runtime_error("fix this -Wshadow with logger and gcc somehow");
 
-        ACTS_VERBOSE(
-            "Initialize the MultiTrajectory with information provided to the "
-            "Actor");
+        // ACTS_VERBOSE(
+        //     "Initialize the MultiTrajectory with information provided to the "
+        //     "Actor");
 
         for (const auto idx : fwdGsfResult.currentTips) {
           result.currentTips.push_back(
@@ -414,7 +400,7 @@ struct GaussianSumFitter {
 
       auto lastPropOptions = bwdPropInitializer(options, logger);
 
-      auto& actor = lastPropOptions.actionList.template get<ThisGsfActor>();
+      auto& actor = lastPropOptions.actionList.template get<GsfActor>();
       actor.m_cfg.maxComponents = options.maxComponents;
       actor.m_cfg.abortOnError = options.abortOnError;
       actor.m_cfg.applyMaterialEffects = options.applyMaterialEffects;
