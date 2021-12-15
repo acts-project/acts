@@ -161,12 +161,10 @@ class Layer : public virtual GeometryObject {
 
   /// @brief Decompose Layer into (compatible) surfaces
   ///
-  /// @tparam options_t The navigation options type
-  ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position Position parameter for searching
   /// @param direction Direction of the parameters for searching
-  /// @param options The templated navigation options
+  /// @param options The navigation options
   ///
   /// @return list of intersection of surfaces on the layer
   std::vector<SurfaceIntersection> compatibleSurfaces(
@@ -175,16 +173,13 @@ class Layer : public virtual GeometryObject {
       const NavigationOptions<Surface>& options) const;
 
   /// Surface seen on approach
-  ///
-  /// @tparam options_t The navigation options type
-  ///
   /// for layers without sub structure, this is the surfaceRepresentation
   /// for layers with sub structure, this is the approachSurface
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position Position for searching
   /// @param direction Direction for searching
-  /// @param options The templated naivation options
+  /// @param options The  navigation options
   ///
   /// @return the Surface intersection of the approach surface
   SurfaceIntersection surfaceOnApproach(
