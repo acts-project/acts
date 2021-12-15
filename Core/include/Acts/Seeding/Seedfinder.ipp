@@ -309,11 +309,27 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         if (S2 < B2 * m_config.minHelixDiameter2) {
           continue;
         }
+
         // refinement of the cut on the compatibility between the r-z slope of
         // the two seed segments using a scattering term scaled by the actual
-        // measured
-        if ((deltaCotTheta2 - error2) * S2 >
-            B2 * iSinTheta2 * m_config.sigmapT2perRadius) {
+        // measured pT
+        float iHelixDiameter2 = B2 / S2;
+        // calculate scattering for p(T) calculated from seed curvature
+        float pT2scatterSigma = iHelixDiameter2 * m_config.sigmapT2perRadius;
+        // if pT > maxPtScattering, calculate allowed scattering angle using
+        // maxPtScattering instead of pt.
+        float pT = m_config.pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
+        if (pT > m_config.maxPtScattering) {
+          float pTscatterSigma =
+              (m_config.highland / m_config.maxPtScattering) *
+              m_config.sigmaScattering;
+          pT2scatterSigma = pTscatterSigma * pTscatterSigma;
+        }
+        // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
+        // from rad to deltaCotTheta
+        float p2scatterSigma = pT2scatterSigma * iSinTheta2;
+        // if deltaTheta larger than allowed scattering for calculated pT, skip
+        if (deltaCotTheta2 - error2 > p2scatterSigma) {
           if (cotThetaB - lt.cotTheta < 0) {
             break;
           }
@@ -334,7 +350,6 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           state.impactParameters.push_back(Im);
 
           // evaluate eta and pT of the seed
-          float pT = m_config.pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
           float theta = std::atan(1. / std::sqrt(cotThetaB * lt.cotTheta));
           float eta = -std::log(std::tan(0.5 * theta));
           state.etaVec.push_back(eta);
