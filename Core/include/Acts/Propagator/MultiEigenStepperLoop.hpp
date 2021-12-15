@@ -392,8 +392,8 @@ class MultiEigenStepperLoop
 
     const State& all_state;
 
-    ComponentProxy(typename State::Component& cmp, const State& state)
-        : Base(cmp), all_state(state) {}
+    ComponentProxy(typename State::Component& c, const State& s)
+        : Base(c), all_state(s) {}
 
     auto& status() { return cmp.status; }
     auto& weight() { return cmp.weight; }
