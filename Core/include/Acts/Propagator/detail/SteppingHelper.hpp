@@ -33,7 +33,8 @@ template <typename stepper_t>
 Acts::Intersection3D::Status updateSingleSurfaceStatus(
     const stepper_t& stepper, typename stepper_t::State& state,
     const Surface& surface, const BoundaryCheck& bcheck, LoggerWrapper logger) {
-  ACTS_VERBOSE("Update single surface status for surface: " << &surface);
+  ACTS_VERBOSE(
+      "Update single surface status for surface: " << surface.geometryId());
 
   auto sIntersection =
       surface.intersect(state.geoContext, stepper.position(state),
@@ -49,38 +50,22 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
     // Path and overstep limit checking
     double pLimit = state.stepSize.value(ConstrainedStep::aborter);
     double oLimit = stepper.overstepLimit(state);
-    auto checkIntersection = [&](const Intersection3D& intersection) -> bool {
-      double cLimit = intersection.pathLength;
-      ACTS_VERBOSE(" -> pLimit, oLimit, cLimit: " << pLimit << ", " << oLimit
-                                                  << ", " << cLimit);
-      bool accept = (cLimit > oLimit and cLimit * cLimit < pLimit * pLimit);
-      if (accept) {
-        ACTS_VERBOSE("Intersection is WITHIN limit");
-        stepper.setStepSize(state, state.navDir * cLimit);
-      }
 
-      else {
-        ACTS_VERBOSE("Intersection is OUTSIDE limit because: ");
-        if (cLimit <= oLimit) {
-          ACTS_VERBOSE("- intersection path length "
-                       << cLimit << " <= overstep limit " << oLimit);
-        }
-        if (cLimit * cLimit > pLimit * pLimit + s_onSurfaceTolerance) {
-          ACTS_VERBOSE("- intersection path length "
-                       << std::abs(cLimit) << " is over the path limit "
-                       << (std::abs(pLimit) + s_onSurfaceTolerance)
-                       << " (including tolerance of "
-                       << s_curvilinearProjTolerance << ")");
-        }
-      }
-
-      return accept;
-    };
     // If either of the two intersections are viable return reachable
-    if (checkIntersection(sIntersection.intersection) or
-        (sIntersection.alternative and
-         checkIntersection(sIntersection.alternative))) {
+    if (detail::checkIntersection(sIntersection.intersection, pLimit, oLimit,
+                                  s_onSurfaceTolerance, logger)) {
       ACTS_VERBOSE("Surface is reachable");
+      stepper.setStepSize(state,
+                          state.navDir * sIntersection.intersection.pathLength);
+      return Intersection3D::Status::reachable;
+    }
+
+    if (sIntersection.alternative and
+        detail::checkIntersection(sIntersection.alternative, pLimit, oLimit,
+                                  s_onSurfaceTolerance, logger)) {
+      ACTS_VERBOSE("Surface is reachable");
+      stepper.setStepSize(state,
+                          state.navDir * sIntersection.alternative.pathLength);
       return Intersection3D::Status::reachable;
     }
   }
