@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsException) {
 }
 
 /// Unit tests for TrapezoidBounds properties
-BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties, *utf::expected_failures(3)) {
+BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties) {
   double minHalfX(1.), maxHalfX(6.), halfY(2.);
   //
   TrapezoidBounds trapezoidBoundsObject(minHalfX, maxHalfX, halfY);
