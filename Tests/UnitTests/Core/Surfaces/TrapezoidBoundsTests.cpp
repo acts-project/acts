@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties) {
 
   /// Test vertices
   std::vector<Vector2> expectedVertices{
-      {1., -2.}, {6., 2.}, {-6., 2.}, {-1., -2.}};
+      {-1., -2.}, {1., -2.}, {6., 2.}, {-6., 2.}};
   const auto& actualVertices = trapezoidBoundsObject.vertices();
   BOOST_CHECK_EQUAL_COLLECTIONS(actualVertices.cbegin(), actualVertices.cend(),
                                 expectedVertices.cbegin(),
@@ -120,8 +120,8 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties) {
   boost::test_tools::output_test_stream dumpOuput;
   trapezoidBoundsObject.toStream(dumpOuput);
   BOOST_CHECK(
-      dumpOuput.is_equal("Acts::TrapezoidBounds:  (minHlengthX, maxHlengthX, "
-                         "hlengthY) = (1.0000000, 6.0000000, 2.0000000)"));
+      dumpOuput.is_equal("Acts::TrapezoidBounds:  (halfXnegY, halfXposY, "
+                         "halfY) = (1.0000000, 6.0000000, 2.0000000)"));
   //
   /// Test inside
   BOOST_CHECK(trapezoidBoundsObject.inside(inRectangle, BoundaryCheck(true)));
