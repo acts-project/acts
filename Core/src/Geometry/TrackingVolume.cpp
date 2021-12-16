@@ -566,8 +566,6 @@ Acts::TrackingVolume::compatibleLayers(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const NavigationOptions<Layer>& options) const {
   // the layer intersections which are valid
-  // std::vector<LayerIntersection> lIntersections;
-  // lIntersections.reserve(5);
   boost::container::small_vector<Acts::LayerIntersection, 10> lIntersections;
 
   // the confinedLayers
