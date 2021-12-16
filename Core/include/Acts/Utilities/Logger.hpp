@@ -498,7 +498,10 @@ class LoggerWrapper {
   ///
   /// @param lvl The level to check
   /// @return Whether to print at this level or not.
-  bool doPrint(const Logging::Level& lvl) const;
+  bool doPrint(const Logging::Level& lvl) const {
+    assert(m_logger != nullptr);
+    return m_logger->doPrint(lvl);
+  }
 
   /// Add a logging message at a given level
   /// @param lvl The level to print at
@@ -509,7 +512,10 @@ class LoggerWrapper {
   /// Enables using the logging macros `ACTS_*` when an instance of this class
   /// is assigned to a local variable `logger`.
   /// @return Reference to the logger instance.
-  const Logger& operator()() const;
+  const Logger& operator()() const {
+    assert(m_logger != nullptr);
+    return *m_logger;
+  }
 
  private:
   const Logger* m_logger;
