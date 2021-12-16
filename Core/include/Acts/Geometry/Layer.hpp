@@ -169,7 +169,7 @@ class Layer : public virtual GeometryObject {
   /// @param options The templated navigation options
   ///
   /// @return list of intersection of surfaces on the layer
-  std::vector<SurfaceIntersection> compatibleSurfaces(
+  boost::container::small_vector<SurfaceIntersection, 10> compatibleSurfaces(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
       const NavigationOptions<Surface>& options) const;
