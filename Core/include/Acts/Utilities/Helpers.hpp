@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -237,6 +237,26 @@ inline auto makeVector4(const Eigen::MatrixBase<vector3_t>& vec3,
 
 }  // namespace VectorHelpers
 
+namespace MatrixHelpers {
+
+ActsMatrix<8, 8> multiply(const ActsMatrix<8, 1>& A, const ActsMatrix<1, 8>& B);
+
+ActsMatrix<6, 8> multiply(const ActsMatrix<6, 8>& A, const ActsMatrix<8, 8>& B);
+
+ActsMatrix<8, 8> multiply(const ActsMatrix<8, 8>& A, const ActsMatrix<8, 8>& B);
+
+ActsMatrix<8, 6> multiply(const ActsMatrix<8, 8>& A, const ActsMatrix<8, 6>& B);
+
+ActsMatrix<6, 6> multiply(const ActsMatrix<6, 8>& A, const ActsMatrix<8, 6>& B);
+
+ActsMatrix<6, 6> multiply(const ActsMatrix<6, 6>& A, const ActsMatrix<6, 6>& B);
+
+ActsMatrix<6, 6> transpose(const ActsMatrix<6, 6>& A);
+
+ActsMatrix<8, 8> plusIdentity(ActsMatrix<8, 8> A);
+
+}  // namespace MatrixHelpers
+
 namespace detail {
 
 inline double roundWithPrecision(double val, int precision) {
@@ -435,3 +455,5 @@ auto matrixToBitset(const Eigen::PlainObjectBase<Derived>& m) {
 }
 
 }  // namespace Acts
+
+#include "Acts/Utilities/Helpers.ipp"
