@@ -47,28 +47,45 @@ KalmanFitterExtensions getExtensions() {
   return extensions;
 }
 
+// Instatiate the tester
+FitterTester tester;
+
 // reconstruction propagator and fitter
 const auto logger = getDefaultLogger("GSF", Logging::INFO);
 const auto gsfZeroPropagator =
-    makeConstantFieldPropagator<Stepper>(geometry, 0_T);
+    makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T);
 const auto gsfZero = GaussianSumFitter(std::move(gsfZeroPropagator));
 
 std::default_random_engine rng(42);
 
 auto makeDefaultGsfOptions() {
-  return GsfOptions{geoCtx, magCtx, calCtx, getExtensions(),
+  return GsfOptions{tester.geoCtx, tester.magCtx, tester.calCtx, getExtensions(),
                              LoggerWrapper{*logger},
                              PropagatorPlainOptions()};
 }
+
+template<typename charge_t>
+struct MultiCmpsParsInterface : public SingleBoundTrackParameters<charge_t> {
+    using MultiPars = MultiComponentBoundTrackParameters<charge_t>;
+    
+    MultiCmpsParsInterface(const MultiPars &p) : SingleBoundTrackParameters<charge_t>(p.referenceSurface().getSharedPtr(), p.parameters(), p.covariance()), pars(p) {}
+    
+    MultiPars pars;
+    
+    operator MultiComponentBoundTrackParameters<charge_t>() {
+        return pars;
+    }
+};
 
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(TrackFittingKalmanFitter)
 
 BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
+  MultiCmpsParsInterface<SinglyCharged> multi_pars{MultiComponentBoundTrackParameters<SinglyCharged>(nullptr, BoundVector::Zero(), 1)};
   auto options = makeDefaultGsfOptions();
 
-  test_ZeroFieldNoSurfaceForward(gsfZero, options, rng);
+  tester.test_ZeroFieldNoSurfaceForward(gsfZero, options, multi_pars, rng);
 }
 
 /*
