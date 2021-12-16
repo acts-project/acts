@@ -601,6 +601,120 @@ void mult_6x8_8x6(double* D_result, const double* A, const double* B) {
                  A[44] * B[29] + A[45] * B[35] + A[46] * B[41] + A[47] * B[47];
 }
 
+void transpose_6x6(double* D_result, const double* A) {
+  D_result[0] = A[0];
+  D_result[1] = A[6];
+  D_result[2] = A[12];
+  D_result[3] = A[18];
+  D_result[4] = A[24];
+  D_result[5] = A[30];
+  D_result[6] = A[1];
+  D_result[7] = A[7];
+  D_result[8] = A[13];
+  D_result[9] = A[19];
+  D_result[10] = A[25];
+  D_result[11] = A[31];
+  D_result[12] = A[2];
+  D_result[13] = A[8];
+  D_result[14] = A[14];
+  D_result[15] = A[20];
+  D_result[16] = A[26];
+  D_result[17] = A[32];
+  D_result[18] = A[3];
+  D_result[19] = A[9];
+  D_result[20] = A[15];
+  D_result[21] = A[21];
+  D_result[22] = A[27];
+  D_result[23] = A[33];
+  D_result[24] = A[4];
+  D_result[25] = A[10];
+  D_result[26] = A[16];
+  D_result[27] = A[22];
+  D_result[28] = A[28];
+  D_result[29] = A[34];
+  D_result[30] = A[5];
+  D_result[31] = A[11];
+  D_result[32] = A[17];
+  D_result[33] = A[23];
+  D_result[34] = A[29];
+  D_result[35] = A[35];
+}
+
+void mult_6x6_6x6(double* D_result, const double* A, const double* B) {
+  D_result[0] = A[0] * B[0] + A[1] * B[6] + A[2] * B[12] + A[3] * B[18] +
+                A[4] * B[24] + A[5] * B[30];
+  D_result[1] = A[0] * B[1] + A[1] * B[7] + A[2] * B[13] + A[3] * B[19] +
+                A[4] * B[25] + A[5] * B[31];
+  D_result[2] = A[0] * B[2] + A[1] * B[8] + A[2] * B[14] + A[3] * B[20] +
+                A[4] * B[26] + A[5] * B[32];
+  D_result[3] = A[0] * B[3] + A[1] * B[9] + A[2] * B[15] + A[3] * B[21] +
+                A[4] * B[27] + A[5] * B[33];
+  D_result[4] = A[0] * B[4] + A[1] * B[10] + A[2] * B[16] + A[3] * B[22] +
+                A[4] * B[28] + A[5] * B[34];
+  D_result[5] = A[0] * B[5] + A[1] * B[11] + A[2] * B[17] + A[3] * B[23] +
+                A[4] * B[29] + A[5] * B[35];
+  D_result[6] = A[6] * B[0] + A[7] * B[6] + A[8] * B[12] + A[9] * B[18] +
+                A[10] * B[24] + A[11] * B[30];
+  D_result[7] = A[6] * B[1] + A[7] * B[7] + A[8] * B[13] + A[9] * B[19] +
+                A[10] * B[25] + A[11] * B[31];
+  D_result[8] = A[6] * B[2] + A[7] * B[8] + A[8] * B[14] + A[9] * B[20] +
+                A[10] * B[26] + A[11] * B[32];
+  D_result[9] = A[6] * B[3] + A[7] * B[9] + A[8] * B[15] + A[9] * B[21] +
+                A[10] * B[27] + A[11] * B[33];
+  D_result[10] = A[6] * B[4] + A[7] * B[10] + A[8] * B[16] + A[9] * B[22] +
+                 A[10] * B[28] + A[11] * B[34];
+  D_result[11] = A[6] * B[5] + A[7] * B[11] + A[8] * B[17] + A[9] * B[23] +
+                 A[10] * B[29] + A[11] * B[35];
+  D_result[12] = A[12] * B[0] + A[13] * B[6] + A[14] * B[12] + A[15] * B[18] +
+                 A[16] * B[24] + A[17] * B[30];
+  D_result[13] = A[12] * B[1] + A[13] * B[7] + A[14] * B[13] + A[15] * B[19] +
+                 A[16] * B[25] + A[17] * B[31];
+  D_result[14] = A[12] * B[2] + A[13] * B[8] + A[14] * B[14] + A[15] * B[20] +
+                 A[16] * B[26] + A[17] * B[32];
+  D_result[15] = A[12] * B[3] + A[13] * B[9] + A[14] * B[15] + A[15] * B[21] +
+                 A[16] * B[27] + A[17] * B[33];
+  D_result[16] = A[12] * B[4] + A[13] * B[10] + A[14] * B[16] + A[15] * B[22] +
+                 A[16] * B[28] + A[17] * B[34];
+  D_result[17] = A[12] * B[5] + A[13] * B[11] + A[14] * B[17] + A[15] * B[23] +
+                 A[16] * B[29] + A[17] * B[35];
+  D_result[18] = A[18] * B[0] + A[19] * B[6] + A[20] * B[12] + A[21] * B[18] +
+                 A[22] * B[24] + A[23] * B[30];
+  D_result[19] = A[18] * B[1] + A[19] * B[7] + A[20] * B[13] + A[21] * B[19] +
+                 A[22] * B[25] + A[23] * B[31];
+  D_result[20] = A[18] * B[2] + A[19] * B[8] + A[20] * B[14] + A[21] * B[20] +
+                 A[22] * B[26] + A[23] * B[32];
+  D_result[21] = A[18] * B[3] + A[19] * B[9] + A[20] * B[15] + A[21] * B[21] +
+                 A[22] * B[27] + A[23] * B[33];
+  D_result[22] = A[18] * B[4] + A[19] * B[10] + A[20] * B[16] + A[21] * B[22] +
+                 A[22] * B[28] + A[23] * B[34];
+  D_result[23] = A[18] * B[5] + A[19] * B[11] + A[20] * B[17] + A[21] * B[23] +
+                 A[22] * B[29] + A[23] * B[35];
+  D_result[24] = A[24] * B[0] + A[25] * B[6] + A[26] * B[12] + A[27] * B[18] +
+                 A[28] * B[24] + A[29] * B[30];
+  D_result[25] = A[24] * B[1] + A[25] * B[7] + A[26] * B[13] + A[27] * B[19] +
+                 A[28] * B[25] + A[29] * B[31];
+  D_result[26] = A[24] * B[2] + A[25] * B[8] + A[26] * B[14] + A[27] * B[20] +
+                 A[28] * B[26] + A[29] * B[32];
+  D_result[27] = A[24] * B[3] + A[25] * B[9] + A[26] * B[15] + A[27] * B[21] +
+                 A[28] * B[27] + A[29] * B[33];
+  D_result[28] = A[24] * B[4] + A[25] * B[10] + A[26] * B[16] + A[27] * B[22] +
+                 A[28] * B[28] + A[29] * B[34];
+  D_result[29] = A[24] * B[5] + A[25] * B[11] + A[26] * B[17] + A[27] * B[23] +
+                 A[28] * B[29] + A[29] * B[35];
+  D_result[30] = A[30] * B[0] + A[31] * B[6] + A[32] * B[12] + A[33] * B[18] +
+                 A[34] * B[24] + A[35] * B[30];
+  D_result[31] = A[30] * B[1] + A[31] * B[7] + A[32] * B[13] + A[33] * B[19] +
+                 A[34] * B[25] + A[35] * B[31];
+  D_result[32] = A[30] * B[2] + A[31] * B[8] + A[32] * B[14] + A[33] * B[20] +
+                 A[34] * B[26] + A[35] * B[32];
+  D_result[33] = A[30] * B[3] + A[31] * B[9] + A[32] * B[15] + A[33] * B[21] +
+                 A[34] * B[27] + A[35] * B[33];
+  D_result[34] = A[30] * B[4] + A[31] * B[10] + A[32] * B[16] + A[33] * B[22] +
+                 A[34] * B[28] + A[35] * B[34];
+  D_result[35] = A[30] * B[5] + A[31] * B[11] + A[32] * B[17] + A[33] * B[23] +
+                 A[34] * B[29] + A[35] * B[35];
+}
+
 /// @brief This function calculates the full jacobian from local parameters at
 /// the start surface to final curvilinear parameters
 ///
@@ -882,8 +996,16 @@ void transportCovarianceToCurvilinear(BoundSymMatrix& boundCovariance,
 
   // Apply the actual covariance transport to get covariance of the current
   // curvilinear parameters
-  boundCovariance = fullTransportJacobian * boundCovariance *
-                    fullTransportJacobian.transpose();
+  // boundCovariance = fullTransportJacobian * boundCovariance *
+  // fullTransportJacobian.transpose();
+
+  // std::cout << fullTransportJacobian.rows() << "x"
+  // << fullTransportJacobian.cols() << std::endl;
+  // std::terminate();
+  Acts::FreeMatrix jacT;
+  transpose_6x6(jacT.data(), fullTransportJacobian.data());
+  Acts::FreeMatrix A;
+  mult_6x6_6x6(A.data(), fullTransportJacobian.data(), boundCovariance.data());
 
   // Reinitialize jacobian components:
   // ->The free transportJacobian is reinitialized to Identity
