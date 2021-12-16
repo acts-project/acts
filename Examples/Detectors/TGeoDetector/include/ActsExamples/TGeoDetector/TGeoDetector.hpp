@@ -11,6 +11,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
 #include <map>
 #include <memory>
@@ -99,6 +100,8 @@ struct TGeoDetector : public ActsExamples::IBaseDetector {
       LayerTriplet<Options::Interval> zRange;
       LayerTriplet<double> splitTolR{0};
       LayerTriplet<double> splitTolZ{0};
+      LayerTriplet<std::vector<std::pair<int, Acts::BinningType>>> binning0;
+      LayerTriplet<std::vector<std::pair<int, Acts::BinningType>>> binning1;
 
       Options::Interval binToleranceR;
       Options::Interval binTolerancePhi;

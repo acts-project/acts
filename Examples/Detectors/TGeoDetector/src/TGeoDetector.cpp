@@ -102,6 +102,8 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
       if (0 < stz) {
         lConfig.splitConfigs.emplace_back(Acts::binZ, stz);
       }
+      lConfig.binning0 = volume.binning0.at(ncp);
+      lConfig.binning1 = volume.binning1.at(ncp);
 
       layerBuilderConfig.layerConfigurations[ncp].push_back(lConfig);
     }
