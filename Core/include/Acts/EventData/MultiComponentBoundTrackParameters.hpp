@@ -26,6 +26,8 @@ namespace Acts {
 /// @note This class holds shared ownership on its reference surface.
 /// @note The accessors for parameters, covariance, position, etc.
 /// are the weighted means of the components.
+/// @note If all covariances are zero, the accessor for the total 
+/// covariance does return std::nullopt;
 /// TODO Add constructor from range and projector maybe?
 template <typename charge_t>
 class MultiComponentBoundTrackParameters {
@@ -165,14 +167,14 @@ class MultiComponentBoundTrackParameters {
   }
 
   /// Parameters vector.
-  const ParametersVector& parameters() const {
+  ParametersVector parameters() const {
     return reduce([](const SingleParameters& p) { return p.parameters(); });
   }
 
   /// Optional covariance matrix.
-  const std::optional<CovarianceMatrix>& covariance() const {
+  std::optional<CovarianceMatrix> covariance() const {
     const auto ret = reduce([](const SingleParameters& p) {
-      return p.covariance ? *p.covariance() : CovarianceMatrix::Zero();
+      return p.covariance() ? *p.covariance() : CovarianceMatrix::Zero();
     });
 
     if (ret == CovarianceMatrix::Zero()) {
