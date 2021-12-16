@@ -44,6 +44,7 @@ def runPropagation(
         ntests=1000,
         sterileLogger=True,
         covarianceTransport=covTransport,
+        recordMaterialInteractions=False,
         propagationStepCollection="propagation-steps",
     )
 
