@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 
 #include <array>
+#include <fstream>
 
 namespace Acts {
 namespace detail {

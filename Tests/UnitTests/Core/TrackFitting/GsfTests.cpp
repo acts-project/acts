@@ -12,8 +12,8 @@
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
-#include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
+#include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/TrackFitting/detail/KalmanGlobalCovariance.hpp"
 
 #include <algorithm>
@@ -29,8 +29,7 @@ using namespace Acts::Test;
 using namespace Acts::UnitLiterals;
 
 using Stepper = Acts::MultiEigenStepperLoop<>;
-using Propagator =
-    Acts::Propagator<Stepper, Acts::Navigator>;
+using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
 
 using KalmanUpdater = Acts::GainMatrixUpdater;
 using KalmanSmoother = Acts::GainMatrixSmoother;
@@ -59,22 +58,27 @@ const auto gsfZero = GaussianSumFitter(std::move(gsfZeroPropagator));
 std::default_random_engine rng(42);
 
 auto makeDefaultGsfOptions() {
-  return GsfOptions{tester.geoCtx, tester.magCtx, tester.calCtx, getExtensions(),
-                             LoggerWrapper{*logger},
-                             PropagatorPlainOptions()};
+  return GsfOptions{tester.geoCtx,          tester.magCtx,
+                    tester.calCtx,          getExtensions(),
+                    LoggerWrapper{*logger}, PropagatorPlainOptions()};
 }
 
-template<typename charge_t>
+// A Helper type to allow us to put the MultiComponentBoundTrackParameters into
+// the function so that it can also be used as SingleBoundTrackParameters for
+// the MeasurementsCreator
+template <typename charge_t>
 struct MultiCmpsParsInterface : public SingleBoundTrackParameters<charge_t> {
-    using MultiPars = MultiComponentBoundTrackParameters<charge_t>;
-    
-    MultiCmpsParsInterface(const MultiPars &p) : SingleBoundTrackParameters<charge_t>(p.referenceSurface().getSharedPtr(), p.parameters(), p.covariance()), pars(p) {}
-    
-    MultiPars pars;
-    
-    operator MultiComponentBoundTrackParameters<charge_t>() {
-        return pars;
-    }
+  using MultiPars = MultiComponentBoundTrackParameters<charge_t>;
+
+  MultiCmpsParsInterface(const MultiPars &p)
+      : SingleBoundTrackParameters<charge_t>(
+            p.referenceSurface().getSharedPtr(), p.parameters(),
+            p.covariance()),
+        pars(p) {}
+
+  MultiPars pars;
+
+  operator MultiComponentBoundTrackParameters<charge_t>() { return pars; }
 };
 
 }  // namespace
@@ -82,7 +86,9 @@ struct MultiCmpsParsInterface : public SingleBoundTrackParameters<charge_t> {
 BOOST_AUTO_TEST_SUITE(TrackFittingKalmanFitter)
 
 BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
-  MultiCmpsParsInterface<SinglyCharged> multi_pars{MultiComponentBoundTrackParameters<SinglyCharged>(nullptr, BoundVector::Zero(), 1)};
+  MultiCmpsParsInterface<SinglyCharged> multi_pars{
+      MultiComponentBoundTrackParameters<SinglyCharged>(
+          nullptr, BoundVector::Zero(), 1)};
   auto options = makeDefaultGsfOptions();
 
   tester.test_ZeroFieldNoSurfaceForward(gsfZero, options, multi_pars, rng);
@@ -173,4 +179,3 @@ BOOST_AUTO_TEST_CASE(GlobalCovariance) {
 */
 
 BOOST_AUTO_TEST_SUITE_END()
-
