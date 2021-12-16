@@ -3,8 +3,6 @@
 import textwrap
 
 multiplications = [
-    ((2, 2), (2, 2)),
-    ((1, 2), (2, 1)),
     ((8, 1), (1, 8)),
     ((6, 8), (8, 8)),
     ((8, 8), (8, 8)),
@@ -57,17 +55,18 @@ for a, b in multiplications:
     body = multiply(a, b)
 
     body = (
-        render_assert("A")
-        + "\n"
-        + render_assert("B")
-        + "\n"
-        + f"{render_matrix((a[0], b[1]))} C;double* pC = C.data();\n"
+        f"{render_matrix((a[0], b[1]))} C;double* pC = C.data();\n"
         + "const double* pA = A.data();\n"
         + "const double* pB = B.data();"
         + "\n\n"
         + body
         + "\n\nreturn C;"
     )
+
+    if a[0] > 1 and a[1] > 1:
+        body = render_assert("A") + "\n" + body
+    if b[0] > 1 and b[1] > 1:
+        body = render_assert("B") + "\n" + body
 
     signature = f"inline {render_matrix((a[0], b[1]))} multiply(const {render_matrix(a)}& A, const {render_matrix(b)}& B)"
     body = "\n".join(

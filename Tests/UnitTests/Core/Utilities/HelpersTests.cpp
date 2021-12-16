@@ -173,13 +173,33 @@ BOOST_AUTO_TEST_CASE(HardCodedMatrixMultiplication) {
     }
   };
 
-  runTest(ActsMatrix<2, 2>{}, ActsMatrix<2, 2>{});
   runTest(ActsMatrix<8, 1>{}, ActsMatrix<1, 8>{});
   runTest(ActsMatrix<6, 8>{}, ActsMatrix<8, 8>{});
   runTest(ActsMatrix<8, 8>{}, ActsMatrix<8, 8>{});
   runTest(ActsMatrix<8, 8>{}, ActsMatrix<8, 6>{});
   runTest(ActsMatrix<6, 8>{}, ActsMatrix<8, 6>{});
   runTest(ActsMatrix<6, 6>{}, ActsMatrix<6, 6>{});
+}
+
+BOOST_AUTO_TEST_CASE(HardCodedMatrixTranspose) {
+  using MatrixHelpers::transpose;
+  for (size_t i = 0; i < 100; i++) {
+    ActsMatrix<6, 6> M;
+    M.setRandom();
+
+    CHECK_CLOSE_ABS(transpose(M), M.transpose(), 1e-9);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(HardCodedMatrixPlusIdentity) {
+  using MatrixHelpers::plusIdentity;
+  for (size_t i = 0; i < 100; i++) {
+    ActsMatrix<8, 8> M;
+    M.setRandom();
+
+    auto exp = (M + ActsMatrix<8, 8>::Identity()).eval();
+    CHECK_CLOSE_ABS(plusIdentity(M), exp, 1e-9);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

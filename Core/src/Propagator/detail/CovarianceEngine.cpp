@@ -154,13 +154,10 @@ void boundToCurvilinearJacobian(const Vector3& direction,
   // to curvilinear parameters
   // @note jac(locA->locB) = jac(gloB->locB)*(1+
   // pathCorrectionFactor(gloB))*jacTransport(gloA->gloB) *jac(locA->gloA)
-  // auto pdim = [](const auto& m) {
-  // std::cout << m.rows() << "x" << m.cols() << std::endl;
-  // };
+
   using MatrixHelpers::multiply;
   using MatrixHelpers::plusIdentity;
 
-  // fullTransportJacobian =
   fullTransportJacobian = multiply(
       multiply(freeToBoundJacobian,
                plusIdentity(multiply(freeToPathDerivatives, freeToPath))),
