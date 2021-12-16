@@ -155,6 +155,33 @@ BOOST_AUTO_TEST_CASE(test_matrix_dimension_switch) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(HardCodedMatrixMultiplication) {
+  using MatrixHelpers::multiply;
+  auto runTest = [](const auto A_, const auto B_) {
+    for (size_t i = 0; i < 100; i++) {
+      // copies
+      auto A = A_;
+      auto B = B_;
+
+      A.setRandom();
+      B.setRandom();
+
+      auto C_exp = (A * B).eval();
+      auto C_act = multiply(A, B);
+
+      CHECK_CLOSE_ABS(C_act, C_exp, 1e-9);
+    }
+  };
+
+  runTest(ActsMatrix<2, 2>{}, ActsMatrix<2, 2>{});
+  runTest(ActsMatrix<8, 1>{}, ActsMatrix<1, 8>{});
+  runTest(ActsMatrix<6, 8>{}, ActsMatrix<8, 8>{});
+  runTest(ActsMatrix<8, 8>{}, ActsMatrix<8, 8>{});
+  runTest(ActsMatrix<8, 8>{}, ActsMatrix<8, 6>{});
+  runTest(ActsMatrix<6, 8>{}, ActsMatrix<8, 6>{});
+  runTest(ActsMatrix<6, 6>{}, ActsMatrix<6, 6>{});
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Test
 }  // namespace Acts

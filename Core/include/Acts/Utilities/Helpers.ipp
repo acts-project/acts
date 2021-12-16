@@ -14,19 +14,22 @@ namespace MatrixHelpers {
 #include "Acts/Utilities/HelpersMatrixGenerated.ipp"
 
 inline ActsMatrix<8, 8> plusIdentity(ActsMatrix<8, 8> A) {
-  double* pA = A.data();
-
-  pA[0] += 1;
-  pA[9] += 1;
-  pA[18] += 1;
-  pA[27] += 1;
-  pA[36] += 1;
-  pA[45] += 1;
-  pA[54] += 1;
-  pA[63] += 1;
+  static_assert(!A.IsRowMajor, "not col major");
+  A(0, 0) += 1;
+  A(1, 1) += 1;
+  A(2, 2) += 1;
+  A(3, 3) += 1;
+  A(4, 4) += 1;
+  A(5, 5) += 1;
+  A(6, 6) += 1;
+  A(7, 7) += 1;
 
   return A;
 }
+
+// inline ActsMatrix<6, 6> transpose(ActsMatrix<6, 6>& A) {
+// return A.transpose();
+// }
 
 }  // namespace MatrixHelpers
 }  // namespace Acts
