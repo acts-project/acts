@@ -523,7 +523,7 @@ class MultiEigenStepperLoop
                      state.navDir),
          weight, Intersection3D::Status::onSurface});
 
-    return ComponentProxy{state, state.components.back()};
+    return ComponentProxy{state.components.back(), state};
   }
 
   /// Get the field for the stepping, it checks first if the access is still

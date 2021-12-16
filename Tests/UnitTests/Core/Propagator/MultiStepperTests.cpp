@@ -61,6 +61,33 @@ struct DummyPropState {
 template <typename T>
 using components_t = typename T::components;
 
+// Makes random bound parameters and covariance and a plane surface at {0,0,0}
+// with normal {1,0,0}. Optionally some external fixed bound parameters can be
+// supplied
+template<typename charge_t = SinglyCharged>
+auto makeDefaultBoundPars(bool cov = true, std::size_t n = 4,
+                          std::optional<BoundVector> ext_pars = std::nullopt) {
+  std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
+      cmps;
+  using Opt = std::optional<BoundSymMatrix>;
+
+  auto make_random_sym_matrix = []() {
+    auto c = BoundSymMatrix::Random().eval();
+    c *= c.transpose();
+    return c;
+  };
+
+  for (auto i = 0ul; i < n; ++i) {
+    cmps.push_back({1. / n, ext_pars ? *ext_pars : BoundVector::Random(),
+                    cov ? Opt{make_random_sym_matrix()} : Opt{}});
+  }
+
+  auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      Vector3::Zero(), Vector3{1.,0.,0.});
+
+  return MultiComponentBoundTrackParameters<charge_t>(surface, cmps);
+}
+
 //////////////////////////////////////////////////////
 /// Test the construction of the MultiStepper::State
 //////////////////////////////////////////////////////
@@ -72,23 +99,15 @@ void test_multi_stepper_state() {
   using MultiState = typename multi_stepper_t::State;
   using MultiStepper = multi_stepper_t;
 
-  using cov_t = std::optional<BoundSymMatrix>;
-  std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
-      cmps(4, {0.25, BoundVector::Ones(),
-               Cov ? cov_t{BoundSymMatrix::Identity()} : cov_t{std::nullopt}});
-
-  auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      Vector3::Zero(), Vector3::Ones().normalized());
-
-  // Test charged parameters without covariance matrix
-  MultiComponentBoundTrackParameters<charge_t> multi_pars(surface, cmps);
+  constexpr std::size_t N = 4;
+  const auto multi_pars = makeDefaultBoundPars<charge_t>(Cov, N, BoundVector::Ones());
 
   MultiState state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
                    defaultStepSize, defaultTolerance);
 
   MultiStepper ms(defaultBField);
 
-  BOOST_CHECK_EQUAL(cmps.size(), ms.numberComponents(state));
+  BOOST_CHECK_EQUAL(N, ms.numberComponents(state));
 
   // Test the result & compare with the input/test for reasonable members
   auto const_iterable = ms.constComponentIterable(state);
@@ -152,13 +171,7 @@ void test_multi_stepper_state_invalid() {
   using MultiState = typename multi_stepper_t::State;
 
   // Empty component vector
-  std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
-      cmps;
-
-  auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      Vector3::Zero(), Vector3::Ones().normalized());
-
-  MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
+  const auto multi_pars = makeDefaultBoundPars(false, 0);
 
   BOOST_CHECK_THROW(MultiState(geoCtx, magCtx, defaultBField, multi_pars,
                                defaultNDir, defaultStepSize, defaultTolerance),
@@ -247,16 +260,7 @@ void test_components_modifying_accessors() {
   using MultiState = typename multi_stepper_t::State;
   using MultiStepper = multi_stepper_t;
 
-  std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
-      cmps;
-  for (int i = 0; i < 4; ++i) {
-    cmps.push_back({0.25, BoundVector::Random(), BoundSymMatrix::Random()});
-  }
-
-  auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      Vector3::Zero(), Vector3::Ones().normalized());
-
-  MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
+  const auto multi_pars = makeDefaultBoundPars();
 
   MultiState mutable_multi_state(geoCtx, magCtx, defaultBField, multi_pars,
                                  defaultNDir, defaultStepSize,
@@ -322,7 +326,7 @@ void test_components_modifying_accessors() {
       [](auto &cmp) -> decltype(auto) { return cmp.jacToGlobal(); });
 
   std::apply(
-      [&](const auto &... projs) {
+      [&](const auto &...projs) {
         // clang-format off
         ( [&]() { modify(projs); check(projs); }(), ...);
         // clang-format on
@@ -646,6 +650,40 @@ void test_single_component_interface_function() {
 
 BOOST_AUTO_TEST_CASE(test_single_component_interface) {
   test_single_component_interface_function<MultiStepperLoop>();
+}
+
+//////////////////////////////
+// Remove and add components
+//////////////////////////////
+
+template <typename multi_stepper_t>
+void remove_add_components_function() {
+  using MultiState = typename multi_stepper_t::State;
+  using MultiStepper = multi_stepper_t;
+
+  const auto multi_pars = makeDefaultBoundPars(4);
+
+  MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
+                         defaultStepSize, defaultTolerance);
+
+  MultiStepper multi_stepper(defaultBField);
+
+  {
+    BoundTrackParameters pars(multi_pars.referenceSurface().getSharedPtr(),
+                              BoundVector::Ones());
+    multi_stepper.addComponent(multi_state, pars, 0.0);
+  }
+
+  BOOST_CHECK_EQUAL(multi_stepper.numberComponents(multi_state),
+                    multi_pars.components().size() + 1);
+
+  multi_stepper.clearComponents(multi_state);
+
+  BOOST_CHECK_EQUAL(multi_stepper.numberComponents(multi_state), 0);
+}
+
+BOOST_AUTO_TEST_CASE(remove_add_components_test) {
+  remove_add_components_function<MultiStepperLoop>();
 }
 
 //////////////////////////////////////////////////
