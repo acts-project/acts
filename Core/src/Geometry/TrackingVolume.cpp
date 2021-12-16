@@ -566,6 +566,7 @@ std::vector<Acts::LayerIntersection> Acts::TrackingVolume::compatibleLayers(
     const Vector3& direction, const NavigationOptions<Layer>& options) const {
   // the layer intersections which are valid
   std::vector<LayerIntersection> lIntersections;
+  lIntersections.reserve(5);
 
   // the confinedLayers
   if (m_confinedLayers != nullptr) {
