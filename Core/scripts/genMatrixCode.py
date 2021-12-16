@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import sympy as sp
-from sympy.utilities.codegen import codegen
 import textwrap
 
 multiplications = [
@@ -24,30 +22,6 @@ def render_assert(identifier):
     return f'static_assert(!{identifier}.IsRowMajor, "Matrix storage order must be ColumMajor");'
 
 
-def extract_body(expression):
-    raw = codegen(("D", expression), language="C")[0][1]
-    raw = raw.replace("D_result", "pOut")
-    raw = "\n".join(raw.split("\n")[13:-4])
-    body = textwrap.dedent(raw)
-    return body
-
-
-#  def multiply(dimA, dimB):
-#  assert dimA[1] == dimB[0]
-#  dimC = dimA[0], dimB[1]
-#  body = ""
-#  for i in range(dimC[0]):
-#  for j in range(dimC[1]):
-#  ex = f"C({i}, {j}) = "
-#  for k in range(dimA[1]):
-#  if k > 0:
-#  ex += " + "
-#  ex += f"A({i}, {k}) * B({k}, {j})"
-#  ex += ";"
-#  body += ex + "\n"
-#  return body.strip()
-
-
 def cnvIdx(i, j, dim):
     return j * dim[0] + i
 
@@ -58,12 +32,10 @@ def multiply(dimA, dimB):
     body = ""
     for i in range(dimC[0]):
         for j in range(dimC[1]):
-            #             ex = f"C({i}, {j}) = "
             ex = f"pC[{cnvIdx(i, j, dimC)}] = "
             for k in range(dimA[1]):
                 if k > 0:
                     ex += " + "
-                #                 ex += f"A({i}, {k}) * B({k}, {j})"
                 ex += f"pA[{cnvIdx(i, k, dimA)}] * pB[{cnvIdx(k, j, dimB)}]"
             body += ex + ";\n"
     return body.strip()
@@ -73,7 +45,6 @@ def transpose(dim):
     body = ""
     for i in range(dim[0]):
         for j in range(dim[1]):
-            #  body += f"B({i}, {j}) = A({j}, {i});\n"
             body += f"pB[{cnvIdx(i, j, dim)}] = pA[{cnvIdx(j, i, dim)}];\n"
     return body.strip()
 
@@ -83,15 +54,6 @@ line = "/" * len(header)
 header = line + "\n" + header + "\n" + line
 
 for a, b in multiplications:
-    #  A = sp.MatrixSymbol("pA", *a)
-    #  B = sp.MatrixSymbol("pB", *b)
-
-    #  if A.shape == (2, 2):
-    #  C = (A.T * B.T).T
-    #  else:
-    #  C = A * B
-
-    #  body = extract_body(C)
     body = multiply(a, b)
 
     body = (

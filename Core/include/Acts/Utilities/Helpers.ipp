@@ -27,9 +27,5 @@ inline ActsMatrix<8, 8> plusIdentity(ActsMatrix<8, 8> A) {
   return A;
 }
 
-// inline ActsMatrix<6, 6> transpose(ActsMatrix<6, 6>& A) {
-// return A.transpose();
-// }
-
 }  // namespace MatrixHelpers
 }  // namespace Acts
