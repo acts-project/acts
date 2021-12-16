@@ -8,6 +8,7 @@
 
 #pragma once
 // STL include(s)
+#include <cassert>
 #include <ctime>
 #include <exception>
 #include <functional>
