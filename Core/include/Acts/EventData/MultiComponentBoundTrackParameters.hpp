@@ -26,7 +26,7 @@ namespace Acts {
 /// @note This class holds shared ownership on its reference surface.
 /// @note The accessors for parameters, covariance, position, etc.
 /// are the weighted means of the components.
-/// @note If all covariances are zero, the accessor for the total 
+/// @note If all covariances are zero, the accessor for the total
 /// covariance does return std::nullopt;
 /// TODO Add constructor from range and projector maybe?
 template <typename charge_t>

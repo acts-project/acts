@@ -761,8 +761,6 @@ class MultiEigenStepperLoop
   /// or direction of the state
   ///
   /// @param [in,out] state State of the stepper
-  ///
-  /// @return the full transport jacobian
   void transportCovarianceToCurvilinear(State& state) const {
     for (auto& component : state.components) {
       SingleStepper::transportCovarianceToCurvilinear(component.state);
@@ -793,7 +791,6 @@ class MultiEigenStepperLoop
   /// The state contains the desired step size. It can be negative during
   /// backwards track propagation, and since we're using an adaptive
   /// algorithm, it can be modified by the stepper class during propagation.
-  /// @note
   template <typename propagator_state_t>
   Result<double> step(propagator_state_t& state) const;
 };

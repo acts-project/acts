@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
     BOOST_CHECK_EQUAL(multi_pars.unitDirection(), single_pars.unitDirection());
 
     // Check the behaviour for std::nullopt or zero covariance
-    if (cov && *cov != BoundSymMatrix::Zero() ) {
+    if (cov && *cov != BoundSymMatrix::Zero()) {
       BOOST_CHECK_EQUAL(*multi_pars.covariance(), *single_pars.covariance());
     } else {
       BOOST_CHECK(not multi_pars.covariance());

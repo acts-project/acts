@@ -64,7 +64,7 @@ using components_t = typename T::components;
 // Makes random bound parameters and covariance and a plane surface at {0,0,0}
 // with normal {1,0,0}. Optionally some external fixed bound parameters can be
 // supplied
-template<typename charge_t = SinglyCharged>
+template <typename charge_t = SinglyCharged>
 auto makeDefaultBoundPars(bool cov = true, std::size_t n = 4,
                           std::optional<BoundVector> ext_pars = std::nullopt) {
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
@@ -83,7 +83,7 @@ auto makeDefaultBoundPars(bool cov = true, std::size_t n = 4,
   }
 
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      Vector3::Zero(), Vector3{1.,0.,0.});
+      Vector3::Zero(), Vector3{1., 0., 0.});
 
   return MultiComponentBoundTrackParameters<charge_t>(surface, cmps);
 }
@@ -100,7 +100,8 @@ void test_multi_stepper_state() {
   using MultiStepper = multi_stepper_t;
 
   constexpr std::size_t N = 4;
-  const auto multi_pars = makeDefaultBoundPars<charge_t>(Cov, N, BoundVector::Ones());
+  const auto multi_pars =
+      makeDefaultBoundPars<charge_t>(Cov, N, BoundVector::Ones());
 
   MultiState state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
                    defaultStepSize, defaultTolerance);
@@ -111,7 +112,7 @@ void test_multi_stepper_state() {
 
   // Test the result & compare with the input/test for reasonable members
   auto const_iterable = ms.constComponentIterable(state);
-  for (const auto &cmp : const_iterable) {
+  for (const auto cmp : const_iterable) {
     BOOST_CHECK_EQUAL(cmp.jacTransport(), FreeMatrix::Identity());
     BOOST_CHECK_EQUAL(cmp.derivative(), FreeVector::Zero());
     if constexpr (not Cov) {
@@ -129,12 +130,12 @@ void test_multi_stepper_state() {
   }();
 
   BOOST_CHECK_EQUAL(ms.charge(state), expected_charge);
-  for (const auto &cmp : const_iterable) {
+  for (const auto cmp : const_iterable) {
     BOOST_CHECK_EQUAL(cmp.charge(), expected_charge);
   }
 
   BOOST_CHECK_EQUAL(state.pathAccumulated, 0.);
-  for (const auto &cmp : const_iterable) {
+  for (const auto cmp : const_iterable) {
     BOOST_CHECK_EQUAL(cmp.pathAccumulated(), 0.);
   }
 
@@ -229,7 +230,7 @@ void test_multi_stepper_vs_eigen_stepper() {
 
     BOOST_CHECK_EQUAL(*single_result, *multi_result);
 
-    for (const auto &cmp : multi_stepper.constComponentIterable(multi_state)) {
+    for (const auto cmp : multi_stepper.constComponentIterable(multi_state)) {
       BOOST_CHECK_EQUAL(cmp.pars(), single_state.pars);
       BOOST_CHECK_EQUAL(cmp.charge(), single_state.q);
       BOOST_CHECK_EQUAL(cmp.cov(), single_state.cov);
@@ -326,7 +327,7 @@ void test_components_modifying_accessors() {
       [](auto &cmp) -> decltype(auto) { return cmp.jacToGlobal(); });
 
   std::apply(
-      [&](const auto &...projs) {
+      [&](const auto &... projs) {
         // clang-format off
         ( [&]() { modify(projs); check(projs); }(), ...);
         // clang-format on
@@ -639,7 +640,7 @@ void test_single_component_interface_function() {
                       cmp.pars()[eFreeQOverP], 1.e-8);
   };
 
-  for (const auto &cmp : multi_stepper.constComponentIterable(multi_state)) {
+  for (const auto cmp : multi_stepper.constComponentIterable(multi_state)) {
     check(cmp);
   }
 
