@@ -59,8 +59,17 @@ bool Acts::CylinderBounds::inside3D(const Vector3& position,
       std::abs(perp(position) - get(eR))) {
     return false;
   } else if (checkAbsolute && m_closed) {
-    return ((s_onSurfaceTolerance + addToleranceZ + get(eHalfLengthZ)) >=
-            std::abs(position.z()));
+    double bevelMinZ = get(eBevelMinZ);
+    double bevelMaxZ = get(eBevelMaxZ);
+
+    double addedMinZ = bevelMinZ != 0. ? position.y() * std::sin(bevelMinZ) : 0.;
+    double addedMaxZ = bevelMinZ != 0. ? position.y() * std::sin(bevelMaxZ) : 0.;
+
+
+    return ((s_onSurfaceTolerance + addToleranceZ + get(eHalfLengthZ) + addedMinZ) >=
+              position.z()) && ((s_onSurfaceTolerance + addToleranceZ + get(eHalfLengthZ) + addedMaxZ) <=
+              position.z());
+
   }
   // detailed, but slower check
   Vector2 lpos(detail::radian_sym(phi(position) - get(eAveragePhi)),
@@ -76,7 +85,8 @@ std::ostream& Acts::CylinderBounds::toStream(std::ostream& sl) const {
   sl << "Acts::CylinderBounds: (radius, halfLengthZ, halfPhiSector, "
         "averagePhi) = ";
   sl << "(" << get(eR) << ", " << get(eHalfLengthZ) << ", ";
-  sl << get(eHalfPhiSector) << ", " << get(eAveragePhi) << ")";
+  sl << get(eHalfPhiSector) << ", " << get(eAveragePhi) << ", ";
+  sl << get(eBevelMinZ) << ", " << get(eBevelMaxZ) << ")";
   sl << std::setprecision(-1);
   return sl;
 }
