@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 
 #include <map>
 #include <memory>

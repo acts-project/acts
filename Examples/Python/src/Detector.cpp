@@ -137,6 +137,8 @@ void addDetector(Context& ctx) {
     ACTS_PYTHON_MEMBER(zRange);
     ACTS_PYTHON_MEMBER(splitTolR);
     ACTS_PYTHON_MEMBER(splitTolZ);
+    ACTS_PYTHON_MEMBER(binning0);
+    ACTS_PYTHON_MEMBER(binning1);
     ACTS_PYTHON_STRUCT_END();
 
     auto regTriplet = [&c](const std::string& name, auto v) {
@@ -157,6 +159,8 @@ void addDetector(Context& ctx) {
     regTriplet("LayerTripletVectorString", std::vector<std::string>{});
     regTriplet("LayerTripletInterval", Options::Interval{});
     regTriplet("LayerTripletDouble", double{5.5});
+    regTriplet("LayerTripletVectorBinning",
+               std::vector<std::pair<int, Acts::BinningType>>{});
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(surfaceLogLevel);

@@ -10,10 +10,10 @@
 
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoITkModuleSplitter.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 
 #include <map>
 #include <string>
@@ -44,10 +44,12 @@ void to_json(nlohmann::json& j,
 }
 
 // enum specilization by nlohman library
-NLOHMANN_JSON_SERIALIZE_ENUM(Acts::BinningType, {
-    {Acts::BinningType::equidistant, "equidistant"},
-    {Acts::BinningType::arbitrary, "arbitrary"},
-})
+NLOHMANN_JSON_SERIALIZE_ENUM(Acts::BinningType,
+                             {
+                                 {Acts::BinningType::equidistant,
+                                  "equidistant"},
+                                 {Acts::BinningType::arbitrary, "arbitrary"},
+                             })
 
 }  // namespace Acts
 
@@ -125,7 +127,7 @@ void from_json(const nlohmann::json& j,
   vol.zRange = j.at("geo-tgeo-layer-z-ranges");
   vol.splitTolR = j.at("geo-tgeo-layer-r-split");
   vol.splitTolZ = j.at("geo-tgeo-layer-z-split");
-  //Set binning manually
+  // Set binning manually
   vol.binning0 = j.at("geo-tgeo-binning0");
   vol.binning1 = j.at("geo-tgeo-binning1");
 
