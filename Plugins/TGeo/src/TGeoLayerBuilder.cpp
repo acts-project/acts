@@ -96,23 +96,37 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
   auto fillLayer = [&](const LayerSurfaceVector lSurfaces,
                        const LayerConfig& lCfg,
                        unsigned int pl_id = 0) -> void {
-    int nb0 = 0, nb1 = 0, nt0 = 0, nt1 = 0;
-    if (not(lCfg.binning0.size() > pl_id)) {
+    int nb0 = 0, nt0 = 0;
+    if (lCfg.binning0.size() <= pl_id) {
       // Has not been configured for auto-binning
-      if (lCfg.binning0.empty() or
-          (not(std::get<int>(lCfg.binning0.at(0)) <= 0) or
-           not(std::get<int>(lCfg.binning1.at(0)) <= 0))) {
-        ACTS_WARNING("No binning configuration found for protolayer #"
-                     << pl_id
-                     << ". Either no configuration or too few configurations "
-                        "were provided. Using auto-binning instead.");
+      if (lCfg.binning0.empty() or (std::get<int>(lCfg.binning0.at(0)) > 0)) {
+        ACTS_WARNING(
+            "Incorrect binning configuration found for loc1 protolayer #"
+            << pl_id
+            << ". Either no configuration or too few configurations were "
+               "provided. Using auto-binning instead.");
       }
     } else {
       // Set binning by hand if nb0 > 0 and nb1 > 0
       nb0 = std::get<int>(lCfg.binning0.at(pl_id));
-      nb1 = std::get<int>(lCfg.binning1.at(pl_id));
       // For a binning type
       nt0 = std::get<BinningType>(lCfg.binning0.at(pl_id));
+    }
+
+    int nb1 = 0, nt1 = 0;
+    if (lCfg.binning1.size() <= pl_id) {
+      // Has not been configured for auto-binning
+      if (lCfg.binning1.empty() or (std::get<int>(lCfg.binning1.at(0)) > 0)) {
+        ACTS_WARNING(
+            "Incorrect binning configuration found for loc1 protolayer #"
+            << pl_id
+            << ". Either no configuration or too few configurations were "
+               "provided. Using auto-binning instead.");
+      }
+    } else {
+      // Set binning by hand if nb0 > 0 and nb1 > 0
+      nb1 = std::get<int>(lCfg.binning1.at(pl_id));
+      // For a binning type
       nt1 = std::get<BinningType>(lCfg.binning1.at(pl_id));
     }
 
