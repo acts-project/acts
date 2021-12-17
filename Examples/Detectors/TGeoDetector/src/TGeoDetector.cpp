@@ -29,7 +29,6 @@
 
 #include <cstdlib>
 #include <fstream>
-#include <iostream>
 #include <list>
 
 #include <boost/program_options.hpp>
@@ -377,7 +376,7 @@ void writeTGeoDetectorConfig(const Variables& vm,
                             config.beamPipeLayerThickness};
 
   // Enable empty volume dump
-  if (config.volumes.size() == 0) {
+  if (config.volumes.empty()) {
     config.volumes.emplace_back();
   }
   djson["Volumes"] = config.volumes;

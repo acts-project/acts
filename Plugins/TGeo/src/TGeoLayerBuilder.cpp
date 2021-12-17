@@ -104,7 +104,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
             "Incorrect binning configuration found for loc1 protolayer #"
             << pl_id
             << ". Either no configuration or too few configurations were "
-               "provided. Using auto-binning instead.");
+               "provided. Using auto-binning for this layer instead.");
       }
     } else {
       // Set binning by hand if nb0 > 0 and nb1 > 0
@@ -121,7 +121,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
             "Incorrect binning configuration found for loc1 protolayer #"
             << pl_id
             << ". Either no configuration or too few configurations were "
-               "provided. Using auto-binning instead.");
+               "provided. Using auto-binning for this layer instead.");
       }
     } else {
       // Set binning by hand if nb0 > 0 and nb1 > 0
