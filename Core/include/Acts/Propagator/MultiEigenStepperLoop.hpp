@@ -257,29 +257,29 @@ class MultiEigenStepperLoop
     template <typename charge_t>
     explicit State(
         const GeometryContext& gctx, const MagneticFieldContext& mctx,
-        const std::shared_ptr<const MagneticFieldProvider>& bField,
-        const MultiComponentBoundTrackParameters<charge_t>& multiPars,
+        const std::shared_ptr<const MagneticFieldProvider>& bfield,
+        const MultiComponentBoundTrackParameters<charge_t>& multipars,
         NavigationDirection ndir = forward,
         double ssize = std::numeric_limits<double>::max(),
         double stolerance = s_onSurfaceTolerance)
         : navDir(ndir), geoContext(gctx), magContext(mctx) {
-      if (multiPars.components().empty()) {
+      if (multipars.components().empty()) {
         throw std::invalid_argument(
             "Cannot construct MultiEigenStepperLoop::State with empty "
             "multi-component parameters");
       }
 
-      const auto surface = multiPars.referenceSurface().getSharedPtr();
+      const auto surface = multipars.referenceSurface().getSharedPtr();
 
-      for (auto i = 0ul; i < multiPars.components().size(); ++i) {
-        const auto [weight, singlePars] = multiPars[i];
+      for (auto i = 0ul; i < multipars.components().size(); ++i) {
+        const auto [weight, singlePars] = multipars[i];
         components.push_back(
-            {SingleState(gctx, bField->makeCache(mctx), std::move(singlePars),
+            {SingleState(gctx, bfield->makeCache(mctx), std::move(singlePars),
                          ndir, ssize, stolerance),
              weight, Intersection3D::Status::reachable});
       }
 
-      if (std::get<2>(multiPars.components().front())) {
+      if (std::get<2>(multipars.components().front())) {
         covTransport = true;
       }
     }
