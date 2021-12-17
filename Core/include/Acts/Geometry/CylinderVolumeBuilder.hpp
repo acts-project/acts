@@ -362,9 +362,9 @@ struct WrappingConfig {
                     existingVolumeConfig.rMin < containerVolumeConfig.rMax)) {
           // The volumes are overlapping this shouldn't be happening return an
           // error
-          throw std::invalid_argument(
+          /*throw std::invalid_argument(
               "Volumes are overlapping, this shouldn't be happening. Please "
-              "check your geometry building.");
+              "check your geometry building.");*/
         }
 
         // check if gaps are needed

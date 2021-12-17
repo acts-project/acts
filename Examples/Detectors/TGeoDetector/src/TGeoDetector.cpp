@@ -29,6 +29,7 @@
 
 #include <cstdlib>
 #include <fstream>
+#include <iostream>
 #include <list>
 
 #include <boost/program_options.hpp>
@@ -376,8 +377,9 @@ void writeTGeoDetectorConfig(const Variables& vm,
                             config.beamPipeLayerThickness};
 
   // Enable empty volume dump
-  if (config.volumes.size() == 0)
+  if (config.volumes.size() == 0) {
     config.volumes.emplace_back();
+  }
   djson["Volumes"] = config.volumes;
 
   outfile << djson.dump(2) << std::endl;
@@ -456,7 +458,7 @@ void TGeoDetector::addOptions(
   opt("geo-tgeo-jsonconfig", value<std::string>()->default_value(""),
       "Json config file name.");
   opt("geo-tgeo-dump-jsonconfig",
-      value<std::string>()->default_value("empty_config.json"),
+      value<std::string>()->default_value("tgeo_empty_config.json"),
       "Json file to dump empty config into.");
 }
 
@@ -480,8 +482,14 @@ auto TGeoDetector::finalize(
     writeTGeoDetectorConfig(vm, config);
     std::exit(EXIT_SUCCESS);
   }
-
-  readTGeoLayerBuilderConfigs(vm, config);
+  // Enable dump from full config
+  else if (not(vm["geo-tgeo-dump-jsonconfig"].as<std::string>().compare(
+                   "tgeo_empty_cofig.json") == 0)) {
+    readTGeoLayerBuilderConfigs(vm, config);
+    writeTGeoDetectorConfig(vm, config);
+  } else {
+    readTGeoLayerBuilderConfigs(vm, config);
+  }
 
   return finalize(config, std::move(mdecorator));
 }

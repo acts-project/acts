@@ -128,6 +128,9 @@ void addDetector(Context& ctx) {
     ACTS_PYTHON_MEMBER(cylinderNPhiSegments);
     ACTS_PYTHON_MEMBER(discNRSegments);
     ACTS_PYTHON_MEMBER(discNPhiSegments);
+    ACTS_PYTHON_MEMBER(itkModuleSplit);
+    ACTS_PYTHON_MEMBER(barrelMap);
+    ACTS_PYTHON_MEMBER(discMap);
 
     ACTS_PYTHON_MEMBER(layers);
     ACTS_PYTHON_MEMBER(subVolumeName);
