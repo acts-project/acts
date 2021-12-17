@@ -876,11 +876,15 @@ BOOST_AUTO_TEST_CASE(CopyFromConst) {
   const auto idx_a = mj.addTrackState(PM::All);
   const auto idx_b = mj.addTrackState(PM::All);
 
-  auto mutableProxy = mj.getTrackState(idx_a);
-  auto constProxy =
-      static_cast<const MultiTrajectory&>(mj).getTrackState(idx_b);
+  MultiTrajectory::TrackStateProxy mutableProxy = mj.getTrackState(idx_a);
+
+  const MultiTrajectory& cmj = mj;
+  MultiTrajectory::ConstTrackStateProxy constProxy = cmj.getTrackState(idx_b);
 
   mutableProxy.copyFrom(constProxy);
+
+  // copy mutable to const: this won't compile
+  // constProxy.copyFrom(mutableProxy);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
