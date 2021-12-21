@@ -40,14 +40,6 @@ using KalmanFitter = Acts::KalmanFitter<ConstantFieldPropagator>;
 KalmanUpdater kfUpdater;
 KalmanSmoother kfSmoother;
 
-KalmanFitterExtensions getExtensions() {
-  KalmanFitterExtensions extensions;
-  extensions.calibrator.connect<&testSourceLinkCalibrator>();
-  extensions.updater.connect<&KalmanUpdater::operator()>(&kfUpdater);
-  extensions.smoother.connect<&KalmanSmoother::operator()>(&kfSmoother);
-  return extensions;
-}
-
 // Construct initial track parameters.
 Acts::CurvilinearTrackParameters makeParameters() {
   // create covariance matrix from reasonable standard deviations
@@ -77,8 +69,13 @@ const auto kfZero = KalmanFitter(kfZeroPropagator);
 std::default_random_engine rng(42);
 
 auto makeDefaultKalmanFitterOptions() {
+  KalmanFitterExtensions extensions;
+  extensions.calibrator.connect<&testSourceLinkCalibrator>();
+  extensions.updater.connect<&KalmanUpdater::operator()>(&kfUpdater);
+  extensions.smoother.connect<&KalmanSmoother::operator()>(&kfSmoother);
+    
   return KalmanFitterOptions(tester.geoCtx, tester.magCtx, tester.calCtx,
-                             getExtensions(), LoggerWrapper{*kfLogger},
+                             extensions, LoggerWrapper{*kfLogger},
                              PropagatorPlainOptions());
 }
 
@@ -169,13 +166,10 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
 
   // fitter options w/o target surface. outlier distance is set to be below the
   // default outlier distance in the `MeasurementsCreator`
-  auto extensions = getExtensions();
+  auto kfOptions = makeDefaultKalmanFitterOptions();
+  
   TestOutlierFinder tof{5_mm};
-  extensions.outlierFinder.connect<&TestOutlierFinder::operator()>(&tof);
-
-  KalmanFitterOptions kfOptions(tester.geoCtx, tester.magCtx, tester.calCtx,
-                                extensions, LoggerWrapper{*kfLogger},
-                                PropagatorPlainOptions());
+  kfOptions.extensions.outlierFinder.connect<&TestOutlierFinder::operator()>(&tof);
 
   bool expected_reversed = false;
   bool expected_smoothed = true;
@@ -188,16 +182,14 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithReverseFiltering) {
 
   auto test = [&](double threshold, bool reverse, bool expected_reversed,
                   bool expected_smoothed) {
-    // Reverse filtering threshold set at 0.5 GeV
-    auto extensions = getExtensions();
+    auto kfOptions = makeDefaultKalmanFitterOptions();
+    
     TestReverseFilteringLogic trfl{threshold};
-    extensions.reverseFilteringLogic
+    kfOptions.extensions.reverseFilteringLogic
         .connect<&TestReverseFilteringLogic::operator()>(&trfl);
 
-    KalmanFitterOptions kfOptions(tester.geoCtx, tester.magCtx, tester.calCtx,
-                                  extensions, LoggerWrapper{*kfLogger},
-                                  PropagatorPlainOptions());
     kfOptions.reversedFiltering = reverse;
+    
     tester.test_ZeroFieldWithReverseFiltering(
         kfZero, kfOptions, start, rng, expected_reversed, expected_smoothed);
   };
