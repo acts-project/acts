@@ -101,6 +101,8 @@ auto makeConstantFieldPropagator(
 // Put all this in a struct to avoid that all these objects are exposed as
 // global objects in the header
 struct FitterTester {
+  using Rng = std::default_random_engine;
+    
   // Context objects
   Acts::GeometryContext geoCtx;
   Acts::MagneticFieldContext magCtx;
@@ -133,12 +135,12 @@ struct FitterTester {
   // The testing functions
   //////////////////////////
 
-  template <typename fitter_t, typename fitter_options_t, typename parameters_t,
-            typename rng_t>
+  template <typename fitter_t, typename fitter_options_t, typename parameters_t>
   void test_ZeroFieldNoSurfaceForward(const fitter_t& fitter,
                                       fitter_options_t options,
-                                      const parameters_t& start,
-                                      rng_t& rng) const {
+                                      const parameters_t& start, Rng& rng,
+                                      const bool expected_reversed,
+                                      const bool expected_smoothed) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
     const auto& sourceLinks = measurements.sourceLinks;
@@ -156,18 +158,18 @@ struct FitterTester {
     BOOST_CHECK(not val.fittedParameters);
     BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
     // check the output status flags
-    BOOST_CHECK(val.smoothed);
-    BOOST_CHECK(not val.reversed);
+    BOOST_CHECK(val.smoothed == expected_smoothed);
+    BOOST_CHECK(val.reversed == expected_reversed);
     BOOST_CHECK(val.finished);
     BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
   }
 
-  template <typename fitter_t, typename fitter_options_t, typename parameters_t,
-            typename rng_t>
+  template <typename fitter_t, typename fitter_options_t, typename parameters_t>
   void test_ZeroFieldWithSurfaceForward(const fitter_t& fitter,
                                         fitter_options_t options,
-                                        const parameters_t& start,
-                                        rng_t& rng) const {
+                                        const parameters_t& start, Rng& rng,
+                                        const bool expected_reversed,
+                                        const bool expected_smoothed) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
     const auto& sourceLinks = measurements.sourceLinks;
@@ -179,40 +181,21 @@ struct FitterTester {
     // this is the default option. set anyways for consistency
     options.propagatorPlainOptions.direction = Acts::forward;
 
-    // regular smoothing
-    {
-      options.reversedFiltering = false;
-      auto res =
-          fitter.fit(sourceLinks.begin(), sourceLinks.end(), start, options);
-      BOOST_CHECK(res.ok());
+    auto res =
+        fitter.fit(sourceLinks.begin(), sourceLinks.end(), start, options);
+    BOOST_REQUIRE(res.ok());
 
-      const auto& val = res.value();
-      BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
-      BOOST_CHECK(val.fittedParameters);
-      BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
-      // check the output status flags
-      BOOST_CHECK(val.smoothed);
-      BOOST_CHECK(not val.reversed);
-      BOOST_CHECK(val.finished);
-      BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
-    }
-    // reverse filtering instead of smoothing
-    {
-      options.reversedFiltering = true;
-      auto res =
-          fitter.fit(sourceLinks.begin(), sourceLinks.end(), start, options);
-      BOOST_REQUIRE(res.ok());
-
-      const auto& val = res.value();
-      BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
-      BOOST_CHECK(val.fittedParameters);
-      // check the output status flags
-      BOOST_CHECK(not val.smoothed);
-      BOOST_CHECK(val.reversed);
-      BOOST_CHECK(val.finished);
-      BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
-      BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
-      // count the number of `smoothed` states
+    const auto& val = res.value();
+    BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
+    BOOST_CHECK(val.fittedParameters);
+    // check the output status flags
+    BOOST_CHECK(val.smoothed == expected_smoothed);
+    BOOST_CHECK(val.reversed == expected_reversed);
+    BOOST_CHECK(val.finished);
+    BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
+    BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
+    // count the number of `smoothed` states
+    if (expected_reversed) {
       size_t nSmoothed = 0;
       val.fittedStates.visitBackwards(val.lastMeasurementIndex,
                                       [&nSmoothed](const auto& state) {
@@ -222,12 +205,12 @@ struct FitterTester {
     }
   }
 
-  template <typename fitter_t, typename fitter_options_t, typename parameters_t,
-            typename rng_t>
+  template <typename fitter_t, typename fitter_options_t, typename parameters_t>
   void test_ZeroFieldWithSurfaceBackward(const fitter_t& fitter,
                                          fitter_options_t options,
-                                         const parameters_t& start,
-                                         rng_t& rng) const {
+                                         const parameters_t& start, Rng& rng,
+                                         const bool expected_reversed,
+                                         const bool expected_smoothed) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
     const auto& sourceLinks = measurements.sourceLinks;
@@ -243,40 +226,21 @@ struct FitterTester {
     options.referenceSurface = &startOuter.referenceSurface();
     options.propagatorPlainOptions.direction = Acts::backward;
 
-    // regular smoothing
-    {
-      options.reversedFiltering = false;
-      auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(), startOuter,
-                            options);
-      BOOST_CHECK(res.ok());
+    auto res =
+        fitter.fit(sourceLinks.begin(), sourceLinks.end(), startOuter, options);
+    BOOST_CHECK(res.ok());
 
-      const auto& val = res.value();
-      BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
-      BOOST_CHECK(val.fittedParameters);
-      BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
-      // check the output status flags
-      BOOST_CHECK(val.smoothed);
-      BOOST_CHECK(not val.reversed);
-      BOOST_CHECK(val.finished);
-      BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
-    }
-    // reverse filtering instead of smoothing
-    {
-      options.reversedFiltering = true;
-      auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(), startOuter,
-                            options);
-      BOOST_CHECK(res.ok());
-
-      const auto& val = res.value();
-      BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
-      BOOST_CHECK(val.fittedParameters);
-      BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
-      // check the output status flags
-      BOOST_CHECK(not val.smoothed);
-      BOOST_CHECK(val.reversed);
-      BOOST_CHECK(val.finished);
-      BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
-      // count the number of `smoothed` states
+    const auto& val = res.value();
+    BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
+    BOOST_CHECK(val.fittedParameters);
+    BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
+    // check the output status flags
+    BOOST_CHECK(val.smoothed == expected_smoothed);
+    BOOST_CHECK(val.reversed == expected_reversed);
+    BOOST_CHECK(val.finished);
+    BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
+    // count the number of `smoothed` states
+    if (expected_reversed) {
       size_t nSmoothed = 0;
       val.fittedStates.visitBackwards(val.lastMeasurementIndex,
                                       [&nSmoothed](const auto& state) {
@@ -286,12 +250,12 @@ struct FitterTester {
     }
   }
 
-  template <typename fitter_t, typename fitter_options_t, typename parameters_t,
-            typename rng_t>
+  template <typename fitter_t, typename fitter_options_t, typename parameters_t>
   void test_ZeroFieldWithSurfaceAtExit(const fitter_t& fitter,
                                        fitter_options_t options,
-                                       const parameters_t& start,
-                                       rng_t& rng) const {
+                                       const parameters_t& start, Rng& rng,
+                                       const bool expected_reversed,
+                                       const bool expected_smoothed) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
     const auto& sourceLinks = measurements.sourceLinks;
@@ -314,16 +278,17 @@ struct FitterTester {
     BOOST_CHECK(val.fittedParameters);
     BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
     // check the output status flags
-    BOOST_CHECK(val.smoothed);
-    BOOST_CHECK(not val.reversed);
+    BOOST_CHECK(val.smoothed == expected_smoothed);
+    BOOST_CHECK(val.reversed == expected_reversed);
     BOOST_CHECK(val.finished);
     BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
   }
 
-  template <typename fitter_t, typename fitter_options_t, typename parameters_t,
-            typename rng_t>
+  template <typename fitter_t, typename fitter_options_t, typename parameters_t>
   void test_ZeroFieldShuffled(const fitter_t& fitter, fitter_options_t options,
-                              const parameters_t& start, rng_t& rng) const {
+                              const parameters_t& start, Rng& rng,
+                              const bool expected_reversed,
+                              const bool expected_smoothed) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
     const auto& sourceLinks = measurements.sourceLinks;
@@ -345,8 +310,8 @@ struct FitterTester {
       parameters = val.fittedParameters->parameters();
       BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
       // check the output status flags
-      BOOST_CHECK(val.smoothed);
-      BOOST_CHECK(not val.reversed);
+      BOOST_CHECK(val.smoothed == expected_smoothed);
+      BOOST_CHECK(val.reversed == expected_reversed);
       BOOST_CHECK(val.finished);
       BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
     }
@@ -365,17 +330,18 @@ struct FitterTester {
       CHECK_CLOSE_ABS(val.fittedParameters->parameters(), parameters, 1e-5);
       BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
       // check the output status flags
-      BOOST_CHECK(val.smoothed);
-      BOOST_CHECK(not val.reversed);
+      BOOST_CHECK(val.smoothed == expected_smoothed);
+      BOOST_CHECK(val.reversed == expected_reversed);
       BOOST_CHECK(val.finished);
       BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
     }
   }
 
-  template <typename fitter_t, typename fitter_options_t, typename parameters_t,
-            typename rng_t>
+  template <typename fitter_t, typename fitter_options_t, typename parameters_t>
   void test_ZeroFieldWithHole(const fitter_t& fitter, fitter_options_t options,
-                              const parameters_t& start, rng_t& rng) const {
+                              const parameters_t& start, Rng& rng,
+                              const bool expected_reversed,
+                              const bool expected_smoothed) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
     const auto& sourceLinks = measurements.sourceLinks;
@@ -398,18 +364,19 @@ struct FitterTester {
       BOOST_CHECK(not val.fittedParameters);
       BOOST_CHECK_EQUAL(val.measurementStates, withHole.size());
       // check the output status flags
-      BOOST_CHECK(val.smoothed);
-      BOOST_CHECK(not val.reversed);
+      BOOST_CHECK(val.smoothed == expected_smoothed);
+      BOOST_CHECK(val.reversed == expected_reversed);
       BOOST_CHECK(val.finished);
       BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 1u);
     }
   }
 
-  template <typename fitter_t, typename fitter_options_t, typename parameters_t,
-            typename rng_t>
+  template <typename fitter_t, typename fitter_options_t, typename parameters_t>
   void test_ZeroFieldWithOutliers(const fitter_t& fitter,
                                   fitter_options_t options,
-                                  const parameters_t& start, rng_t& rng) const {
+                                  const parameters_t& start, Rng& rng,
+                                  const bool expected_reversed,
+                                  const bool expected_smoothed) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
     const auto& sourceLinks = measurements.sourceLinks;
@@ -441,18 +408,17 @@ struct FitterTester {
       BOOST_CHECK(not val.fittedParameters);
       BOOST_CHECK_EQUAL(val.measurementStates, withOutlier.size() - 1u);
       // check the output status flags
-      BOOST_CHECK(val.smoothed);
-      BOOST_CHECK(not val.reversed);
+      BOOST_CHECK(val.smoothed == expected_smoothed);
+      BOOST_CHECK(val.reversed == expected_reversed);
       BOOST_CHECK(val.finished);
       BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
     }
   }
 
-  template <typename fitter_t, typename fitter_options_t, typename parameters_t,
-            typename rng_t>
+  template <typename fitter_t, typename fitter_options_t, typename parameters_t>
   void test_ZeroFieldWithReverseFiltering(const fitter_t& fitter,
                                           fitter_options_t options,
-                                          const parameters_t& start, rng_t& rng,
+                                          const parameters_t& start, Rng& rng,
                                           const bool expected_reversed,
                                           const bool expected_smoothed) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
@@ -483,10 +449,9 @@ struct FitterTester {
 
   // TODO this is not really Kalman fitter specific. is probably better tested
   // with a synthetic trajectory.
-  template <typename fitter_t, typename fitter_options_t, typename parameters_t,
-            typename rng_t>
+  template <typename fitter_t, typename fitter_options_t, typename parameters_t>
   void test_GlobalCovariance(const fitter_t& fitter, fitter_options_t options,
-                             const parameters_t& start, rng_t& rng) const {
+                             const parameters_t& start, Rng& rng) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
     const auto& sourceLinks = measurements.sourceLinks;
