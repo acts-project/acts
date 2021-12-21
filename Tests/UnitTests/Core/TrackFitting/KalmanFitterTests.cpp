@@ -90,42 +90,78 @@ BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
   auto start = makeParameters();
   auto kfOptions = makeDefaultKalmanFitterOptions();
 
-  tester.test_ZeroFieldNoSurfaceForward(kfZero, kfOptions, start, rng);
+  bool expected_reversed = false;
+  bool expected_smoothed = true;
+  tester.test_ZeroFieldNoSurfaceForward(kfZero, kfOptions, start, rng,
+                                        expected_reversed, expected_smoothed);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
   auto start = makeParameters();
   auto kfOptions = makeDefaultKalmanFitterOptions();
 
-  tester.test_ZeroFieldWithSurfaceForward(kfZero, kfOptions, start, rng);
+  // regular smoothing
+  kfOptions.reversedFiltering = false;
+  bool expected_reversed = false;
+  bool expected_smoothed = true;
+  tester.test_ZeroFieldWithSurfaceForward(kfZero, kfOptions, start, rng,
+                                          expected_reversed, expected_smoothed);
+
+  // reverse filtering instead of smoothing
+  kfOptions.reversedFiltering = true;
+  expected_reversed = true;
+  expected_smoothed = false;
+  tester.test_ZeroFieldWithSurfaceForward(kfZero, kfOptions, start, rng,
+                                          expected_reversed, expected_smoothed);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
   auto start = makeParameters();
   auto kfOptions = makeDefaultKalmanFitterOptions();
 
-  tester.test_ZeroFieldWithSurfaceBackward(kfZero, kfOptions, start, rng);
+  // regular smoothing
+  kfOptions.reversedFiltering = false;
+  bool expected_reversed = false;
+  bool expected_smoothed = true;
+  tester.test_ZeroFieldWithSurfaceBackward(
+      kfZero, kfOptions, start, rng, expected_reversed, expected_smoothed);
+
+  // reverse filtering instead of smoothing
+  kfOptions.reversedFiltering = true;
+  expected_reversed = true;
+  expected_smoothed = false;
+  tester.test_ZeroFieldWithSurfaceBackward(
+      kfZero, kfOptions, start, rng, expected_reversed, expected_smoothed);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceAtExit) {
   auto start = makeParameters();
   auto kfOptions = makeDefaultKalmanFitterOptions();
 
-  tester.test_ZeroFieldWithSurfaceAtExit(kfZero, kfOptions, start, rng);
+  bool expected_reversed = false;
+  bool expected_smoothed = true;
+  tester.test_ZeroFieldWithSurfaceAtExit(kfZero, kfOptions, start, rng,
+                                         expected_reversed, expected_smoothed);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldShuffled) {
   auto start = makeParameters();
   auto kfOptions = makeDefaultKalmanFitterOptions();
 
-  tester.test_ZeroFieldShuffled(kfZero, kfOptions, start, rng);
+  bool expected_reversed = false;
+  bool expected_smoothed = true;
+  tester.test_ZeroFieldShuffled(kfZero, kfOptions, start, rng,
+                                expected_reversed, expected_smoothed);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithHole) {
   auto start = makeParameters();
   auto kfOptions = makeDefaultKalmanFitterOptions();
 
-  tester.test_ZeroFieldWithHole(kfZero, kfOptions, start, rng);
+  bool expected_reversed = false;
+  bool expected_smoothed = true;
+  tester.test_ZeroFieldWithHole(kfZero, kfOptions, start, rng,
+                                expected_reversed, expected_smoothed);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
@@ -141,7 +177,10 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
                                 extensions, LoggerWrapper{*kfLogger},
                                 PropagatorPlainOptions());
 
-  tester.test_ZeroFieldWithOutliers(kfZero, kfOptions, start, rng);
+  bool expected_reversed = false;
+  bool expected_smoothed = true;
+  tester.test_ZeroFieldWithOutliers(kfZero, kfOptions, start, rng,
+                                    expected_reversed, expected_smoothed);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithReverseFiltering) {
