@@ -73,7 +73,7 @@ auto makeDefaultKalmanFitterOptions() {
   extensions.calibrator.connect<&testSourceLinkCalibrator>();
   extensions.updater.connect<&KalmanUpdater::operator()>(&kfUpdater);
   extensions.smoother.connect<&KalmanSmoother::operator()>(&kfSmoother);
-    
+
   return KalmanFitterOptions(tester.geoCtx, tester.magCtx, tester.calCtx,
                              extensions, LoggerWrapper{*kfLogger},
                              PropagatorPlainOptions());
@@ -167,9 +167,10 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
   // fitter options w/o target surface. outlier distance is set to be below the
   // default outlier distance in the `MeasurementsCreator`
   auto kfOptions = makeDefaultKalmanFitterOptions();
-  
+
   TestOutlierFinder tof{5_mm};
-  kfOptions.extensions.outlierFinder.connect<&TestOutlierFinder::operator()>(&tof);
+  kfOptions.extensions.outlierFinder.connect<&TestOutlierFinder::operator()>(
+      &tof);
 
   bool expected_reversed = false;
   bool expected_smoothed = true;
@@ -183,13 +184,13 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithReverseFiltering) {
   auto test = [&](double threshold, bool reverse, bool expected_reversed,
                   bool expected_smoothed) {
     auto kfOptions = makeDefaultKalmanFitterOptions();
-    
+
     TestReverseFilteringLogic trfl{threshold};
     kfOptions.extensions.reverseFilteringLogic
         .connect<&TestReverseFilteringLogic::operator()>(&trfl);
 
     kfOptions.reversedFiltering = reverse;
-    
+
     tester.test_ZeroFieldWithReverseFiltering(
         kfZero, kfOptions, start, rng, expected_reversed, expected_smoothed);
   };

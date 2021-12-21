@@ -102,7 +102,7 @@ auto makeConstantFieldPropagator(
 // global objects in the header
 struct FitterTester {
   using Rng = std::default_random_engine;
-    
+
   // Context objects
   Acts::GeometryContext geoCtx;
   Acts::MagneticFieldContext magCtx;
