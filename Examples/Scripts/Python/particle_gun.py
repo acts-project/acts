@@ -23,7 +23,7 @@ def addParticleGun(
     s: Sequencer,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
-    pConfig: Tuple[float, float, bool] = (1 * u.GeV, 10 * u.GeV, True),
+    momentumConfig: Tuple[float, float, bool] = (1 * u.GeV, 10 * u.GeV, True),
     etaConfig: Tuple[float, float, bool] = (-4.0, 4.0, True),
     particleConfig: Tuple[int, PdgParticle, bool] = (10, PdgParticle.eMuon, True),
     vtxGen: Optional[EventGenerator.VertexGenerator] = None,
@@ -40,7 +40,7 @@ def addParticleGun(
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
-    pConfig : tuple|list
+    momentumConfig : tuple|list
         momentum configuration: minimum momentum, maximum momentum, transverse
     etaConfig : tuple|list
         pseudorapidity configuration: eta min, eta max, uniform
@@ -63,8 +63,8 @@ def addParticleGun(
         vtxGen.stddev = Vector4(0, 0, 0, 0)
 
     ptclGen = ParametricParticleGenerator(
-        p=(pConfig[0], pConfig[1]),
-        pTransverse=pConfig[2],
+        p=(momentumConfig[0], momentumConfig[1]),
+        pTransverse=momentumConfig[2],
         eta=(etaConfig[0], etaConfig[1]),
         etaUniform=etaConfig[2],
         numParticles=particleConfig[0],
@@ -131,7 +131,7 @@ def runParticleGun(outputDir, s=None):
         s,
         outputDirCsv=outputDir / "csv",
         outputDirRoot=outputDir,
-        pConfig=(1 * u.GeV, 10 * u.GeV, False),
+        momentumConfig=(1 * u.GeV, 10 * u.GeV, False),
         etaConfig=(-4.0, 4.0, False),
         particleConfig=(2, acts.PdgParticle.eMuon, False),
         printParticles=True,

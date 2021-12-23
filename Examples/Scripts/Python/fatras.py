@@ -135,7 +135,7 @@ def runFatras(trackingGeometry, field, outputDir, s: acts.examples.Sequencer = N
     rnd = acts.examples.RandomNumbers()
     s = addParticleGun(
         s,
-        pConfig=(1 * u.GeV, 10 * u.GeV, False),
+        momentumConfig=(1 * u.GeV, 10 * u.GeV, False),
         etaConfig=(-2.0, 2.0, False),
         particleConfig=(1, acts.PdgParticle.eMuon, False),
         rnd=rnd,
