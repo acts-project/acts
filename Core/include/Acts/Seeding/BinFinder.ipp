@@ -7,10 +7,37 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <typename external_spacepoint_t>
+Acts::BinFinder<external_spacepoint_t>::BinFinder(
+    const std::vector<std::pair<int, int> >&& zBinNeighbors,
+    const int&& numPhiNeighbors)
+    : m_zBinNeighbors(std::move(zBinNeighbors)),
+      m_numPhiNeighbors(std::move(numPhiNeighbors)) {}
+
+template <typename external_spacepoint_t>
+Acts::BinFinder<external_spacepoint_t>::BinFinder(
+    const std::vector<std::pair<int, int> >& zBinNeighbors,
+    const int& numPhiNeighbors)
+    : m_zBinNeighbors(zBinNeighbors), m_numPhiNeighbors(numPhiNeighbors) {}
+
+template <typename external_spacepoint_t>
 boost::container::small_vector<size_t, 10>
 Acts::BinFinder<external_spacepoint_t>::findBins(
     size_t phiBin, size_t zBin,
     const Acts::SpacePointGrid<external_spacepoint_t>* binnedSP) {
-  auto indices = binnedSP->neighborHoodIndices({phiBin, zBin}).collect();
+  boost::container::small_vector<size_t, 9> indices;
+  // if zBinNeighbors is not defined, get the indices using
+  // neighborHoodIndices
+  if (m_zBinNeighbors.empty()) {
+    indices = binnedSP->neighborHoodIndices({phiBin, zBin}).collect();
+  }
+  // if the zBinNeighbors is defined, get the indices from there
+  else {
+    std::array<std::pair<int, int>, 2> sizePerAxis;
+    sizePerAxis.at(0) = std::make_pair(-m_numPhiNeighbors, m_numPhiNeighbors);
+    sizePerAxis.at(1) = m_zBinNeighbors[zBin - 1];
+    indices =
+        binnedSP->neighborHoodIndices({phiBin, zBin}, sizePerAxis).collect();
+  }
+
   return {indices.begin(), indices.end()};
 }

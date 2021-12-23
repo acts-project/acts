@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -35,6 +35,8 @@
 #include "ATLASCuts.hpp"
 #include "CommandLineArguments.h"
 #include "SpacePoint.hpp"
+#include "vecmem/memory/sycl/device_memory_resource.hpp"
+#include "vecmem/memory/sycl/host_memory_resource.hpp"
 
 using namespace Acts::UnitLiterals;
 
@@ -135,10 +137,15 @@ auto main(int argc, char** argv) -> int {
 
   auto spVec = readFile(cmdlTool.inpFileName);
 
+  int numPhiNeighbors = 1;
+
+  std::vector<std::pair<int, int>> zBinNeighborsTop;
+  std::vector<std::pair<int, int>> zBinNeighborsBottom;
+
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-      Acts::BinFinder<SpacePoint>());
+      Acts::BinFinder<SpacePoint>(zBinNeighborsBottom, numPhiNeighbors));
   auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-      Acts::BinFinder<SpacePoint>());
+      Acts::BinFinder<SpacePoint>(zBinNeighborsTop, numPhiNeighbors));
   auto config = setupSeedfinderConfiguration<SpacePoint>();
 
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
@@ -148,11 +155,13 @@ auto main(int argc, char** argv) -> int {
 
   const Acts::Logging::Level logLvl =
       cmdlTool.csvFormat ? Acts::Logging::WARNING : Acts::Logging::INFO;
+  Acts::Sycl::QueueWrapper queue(
+      cmdlTool.deviceName,
+      Acts::getDefaultLogger("Sycl::QueueWrapper", logLvl));
+  vecmem::sycl::host_memory_resource resource(queue.getQueue());
+  vecmem::sycl::device_memory_resource device_resource(queue.getQueue());
   Acts::Sycl::Seedfinder<SpacePoint> syclSeedfinder(
-      config, deviceAtlasCuts,
-      Acts::Sycl::QueueWrapper(
-          cmdlTool.deviceName,
-          Acts::getDefaultLogger("Sycl::QueueWrapper", logLvl)));
+      config, deviceAtlasCuts, queue, resource, &device_resource);
   Acts::Seedfinder<SpacePoint> normalSeedfinder(config);
   auto globalTool =
       [=](const SpacePoint& sp, float /*unused*/, float /*unused*/,

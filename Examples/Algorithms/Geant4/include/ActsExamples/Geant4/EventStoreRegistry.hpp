@@ -12,7 +12,7 @@
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 namespace ActsExamples {
@@ -29,7 +29,7 @@ class EventStoreRegistry {
  public:
   /// Nested containers struct to give access to the
   /// shared event data.
-  struct Access {
+  struct State {
     /// The current event store
     WhiteBoard* store = nullptr;
     /// Initial and final particle collections
@@ -38,13 +38,12 @@ class EventStoreRegistry {
     /// The hits in sensitive detectors
     SimHitContainer::sequence_type hits;
     /// Tracks recorded in material mapping
-    std::vector<Acts::RecordedMaterialTrack> materialTracks;
+    std::unordered_map<size_t, Acts::RecordedMaterialTrack> materialTracks;
   };
 
-  EventStoreRegistry() = default;
-  virtual ~EventStoreRegistry() = default;
+  EventStoreRegistry() = delete;
 
-  static std::map<unsigned int, Access> eventData;
+  static State& eventData();
 };
 
 }  // namespace ActsExamples

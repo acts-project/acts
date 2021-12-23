@@ -25,16 +25,15 @@ class G4UserRunAction;
 class G4UserEventAction;
 class G4UserTrackingAction;
 class G4UserSteppingAction;
+class G4VUserPhysicsList;
 
 namespace ActsExamples {
-
-class G4DetectorConstructionFactory;
 
 /// Main function for running Geant4 with a specific detector.
 ///
 /// @param vars the parsed variables
 /// @param sequencer the event sequencer
-/// @param runManger the Geant4 run manager instance
+/// @param runManager the Geant4 runmanager to use
 /// @param detector the detector to be used
 /// @param runActions the list of Geant4 user run action
 /// @param eventActions the list of Geant4 user event action
@@ -46,8 +45,9 @@ class G4DetectorConstructionFactory;
 ///
 void setupGeant4Simulation(
     const ActsExamples::Options::Variables& vars,
-    ActsExamples::Sequencer& sequencer, G4RunManager* runManager,
-    G4VUserDetectorConstruction* detector,
+    ActsExamples::Sequencer& sequencer,
+    std::shared_ptr<G4RunManager> runManager,
+    std::unique_ptr<G4VUserDetectorConstruction> detector,
     std::vector<G4UserRunAction*> runActions = {},
     std::vector<G4UserEventAction*> eventActions = {},
     std::vector<G4UserTrackingAction*> trackingActions = {},
@@ -61,10 +61,8 @@ void setupGeant4Simulation(
 /// @param vars the parsed variables
 /// @param sequencer the event sequencer
 /// @param g4DetectorFactory is the detector to be used
-int runMaterialRecording(
-    const ActsExamples::Options::Variables& vars,
-    std::shared_ptr<ActsExamples::G4DetectorConstructionFactory>
-        g4DetectorFactory);
+int runMaterialRecording(const ActsExamples::Options::Variables& vars,
+                         std::unique_ptr<G4VUserDetectorConstruction> detector);
 
 /// Specific setup: Geant4 Simulation
 ///
@@ -74,8 +72,7 @@ int runMaterialRecording(
 /// @param trackingGeometry the tracking geometry for the sennsitive mapping
 int runGeant4Simulation(
     const ActsExamples::Options::Variables& vars,
-    std::shared_ptr<ActsExamples::G4DetectorConstructionFactory>
-        g4DetectorFactory,
+    std::unique_ptr<G4VUserDetectorConstruction> detector,
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry);
 
 }  // namespace ActsExamples

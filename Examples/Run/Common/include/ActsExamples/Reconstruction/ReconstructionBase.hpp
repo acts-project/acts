@@ -8,14 +8,16 @@
 
 #pragma once
 
-#include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
+#include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
+#include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
+#include "ActsExamples/TruthTracking/ParticleSmearingOptions.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 

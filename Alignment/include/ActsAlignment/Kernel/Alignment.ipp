@@ -18,7 +18,8 @@ ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
     const ActsAlignment::AlignmentMask& alignMask,
     Acts::LoggerWrapper logger) const {
   // Perform the fit
-  auto fitRes = m_fitter.fit(sourcelinks, sParameters, fitOptions);
+  auto fitRes = m_fitter.fit(sourcelinks.begin(), sourcelinks.end(),
+                             sParameters, fitOptions);
   if (not fitRes.ok()) {
     ACTS_WARNING("Fit failure");
     return fitRes.error();

@@ -3,7 +3,7 @@ add_library(
   RecTruthTracks.cpp
   RecCKFTracks.cpp
   SeedingExample.cpp
-  Measurements2Spacepoints.cpp
+  MeasurementsToSpacepoints.cpp
 )
 target_include_directories(
   ActsExamplesRecTracksCommon

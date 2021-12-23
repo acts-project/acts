@@ -85,11 +85,11 @@ target_link_libraries(
 # =================================================
 # Convert measurements to spacepoints and write sp to csv
 add_executable(
-  ActsExampleMeasurements2SPTGeo
-  Measurements2SPTGeo.cpp
+  ActsExampleMeasurementsToSPTGeo
+  MeasurementsToSPTGeo.cpp
 )
 target_link_libraries(
-  ActsExampleMeasurements2SPTGeo
+  ActsExampleMeasurementsToSPTGeo
   PRIVATE
     ActsExamplesFramework
     ActsExamplesCommon
@@ -103,10 +103,10 @@ target_link_libraries(
 )
 
 add_executable(
-  ActsExampleMeasurements2SPGeneric
-  Measurements2SPGeneric.cpp)
+  ActsExampleMeasurementsToSPGeneric
+  MeasurementsToSPGeneric.cpp)
 target_link_libraries(
-  ActsExampleMeasurements2SPGeneric
+  ActsExampleMeasurementsToSPGeneric
     PRIVATE
       ActsExamplesFramework
       ActsExamplesCommon

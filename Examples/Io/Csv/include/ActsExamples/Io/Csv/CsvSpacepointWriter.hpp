@@ -15,14 +15,12 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
-#include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/Framework/WriterT.hpp"
-
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/Framework/WriterT.hpp"
 
 #include <string>
 
@@ -33,8 +31,8 @@ namespace ActsExamples {
 /// This writes one file per event containing information about the
 /// spacepoints
 ///
-///     event000000001-spacepoints.csv
-///     event000000002-spacepoints.csv
+///     event000000001-spacepoint.csv
+///     event000000002-spacepoint.csv
 ///     ...
 ///
 /// Intrinsically thread-safe as one file per event.

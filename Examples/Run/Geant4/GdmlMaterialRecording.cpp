@@ -38,5 +38,5 @@ int main(int argc, char* argv[]) {
   auto gdmlFile = vm["gdml-file"].as<std::string>();
 
   return runMaterialRecording(
-      vm, std::make_unique<GdmlDetectorConstructionFactory>(gdmlFile));
+      vm, std::make_unique<GdmlDetectorConstruction>(gdmlFile));
 }

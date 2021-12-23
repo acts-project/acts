@@ -312,6 +312,12 @@ class Navigator {
           // this was the last surface, check if we have layers
           if (!state.navigation.navLayers.empty()) {
             ++state.navigation.navLayerIter;
+          } else if (state.navigation.startLayer != nullptr and
+                     state.navigation.currentSurface->associatedLayer() ==
+                         state.navigation.startLayer) {
+            // this was the start layer, switch to layer target next
+            state.navigation.navigationStage = Stage::layerTarget;
+            return;
           } else {
             // no layers, go to boundary
             state.navigation.navigationStage = Stage::boundaryTarget;
@@ -383,8 +389,14 @@ class Navigator {
       }
     } else if (state.navigation.currentVolume ==
                state.navigation.targetVolume) {
-      ACTS_WARNING(volInfo(state) << "No further navigation action, proceed to "
-                                     "target. This is very likely an error");
+      if (state.navigation.targetSurface == nullptr) {
+        ACTS_WARNING(volInfo(state)
+                     << "No further navigation action, proceed to "
+                        "target. This is very likely an error");
+      } else {
+        ACTS_VERBOSE(volInfo(state)
+                     << "No further navigation action, proceed to target.");
+      }
       // Set navigation break and release the navigation step size
       state.navigation.navigationBreak = true;
       stepper.releaseStepSize(state.stepping);
@@ -392,7 +404,6 @@ class Navigator {
       ACTS_VERBOSE(volInfo(state)
                    << "Status could not be determined - good luck.");
     }
-    return;
   }
 
   /// @brief Navigator target call
@@ -423,7 +434,6 @@ class Navigator {
       // Find out about the target as much as you can
       initializeTarget(state, stepper);
     }
-
     // Try targeting the surfaces - then layers - then boundaries
     if (state.navigation.navigationStage <= Stage::surfaceTarget and
         targetSurfaces(state, stepper)) {
@@ -603,7 +613,6 @@ class Navigator {
     if (state.navigation.navigationBreak) {
       return false;
     }
-
     // Make sure resolve Surfaces is called on the start layer
     if (state.navigation.startLayer and
         not state.navigation.startLayerResolved) {
@@ -716,6 +725,7 @@ class Navigator {
   template <typename propagator_state_t, typename stepper_t>
   bool targetLayers(propagator_state_t& state, const stepper_t& stepper) const {
     using namespace UnitLiterals;
+
     const auto& logger = state.options.logger;
 
     if (state.navigation.navigationBreak ||

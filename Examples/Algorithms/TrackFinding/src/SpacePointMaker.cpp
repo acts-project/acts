@@ -109,7 +109,7 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
         return ProcessCode::ABORT;
       }
 
-      for (auto sourceLink : moduleSourceLinks) {
+      for (auto& sourceLink : moduleSourceLinks) {
         // extract a local position/covariance independent from the concrecte
         // measurement content. since we do not know if and where the local
         // parameters are contained in the measurement parameters vector, they
@@ -129,7 +129,7 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
                   cov.block<2, 2>(Acts::eBoundLoc0, Acts::eBoundLoc0);
               return std::make_pair(lpar, lcov);
             },
-            measurements[sourceLink.index()]);
+            measurements[sourceLink.get().index()]);
 
         // transform local position to global coordinates
         Acts::Vector3 globalFakeMom(1, 1, 1);
@@ -164,7 +164,8 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
         Acts::ActsVector<2> var = (jac * localCov * jac.transpose()).diagonal();
 
         // construct space point in global coordinates
-        spacePoints.emplace_back(globalPos, var[0], var[1], sourceLink.index());
+        spacePoints.emplace_back(globalPos, var[0], var[1],
+                                 sourceLink.get().index());
       }
     }
   }
