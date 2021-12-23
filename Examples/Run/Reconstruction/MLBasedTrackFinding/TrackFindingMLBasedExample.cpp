@@ -147,7 +147,7 @@ int main(int argc, char** argv) {
   digiCfg.inputSimHits = simHitReaderCfg.outputSimHits;
   digiCfg.trackingGeometry = tGeometry;
   digiCfg.randomNumbers = randomNumbers;
-  sequencer.addAlgorithm(createDigitizationAlgorithm(digiCfg, logLevel));
+  sequencer.addAlgorithm(std::make_shared<DigitizationAlgorithm>(digiCfg, logLevel));
 
   ACTS_INFO("after digi");
 
