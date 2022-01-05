@@ -35,6 +35,9 @@ class TrackingVolume;
 class ApproachDescriptor;
 class IMaterialDecorator;
 
+template <typename T>
+struct NavigationOptions;
+
 // Simple surface intersection
 using SurfaceIntersection = ObjectIntersection<Surface>;
 
@@ -158,37 +161,30 @@ class Layer : public virtual GeometryObject {
 
   /// @brief Decompose Layer into (compatible) surfaces
   ///
-  /// @tparam options_t The navigation options type
-  ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position Position parameter for searching
   /// @param direction Direction of the parameters for searching
-  /// @param options The templated navigation options
+  /// @param options The navigation options
   ///
   /// @return list of intersection of surfaces on the layer
-  template <typename options_t>
   std::vector<SurfaceIntersection> compatibleSurfaces(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const options_t& options) const;
+      const Vector3& direction,
+      const NavigationOptions<Surface>& options) const;
 
   /// Surface seen on approach
-  ///
-  /// @tparam options_t The navigation options type
-  ///
   /// for layers without sub structure, this is the surfaceRepresentation
   /// for layers with sub structure, this is the approachSurface
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position Position for searching
   /// @param direction Direction for searching
-  /// @param options The templated naivation options
+  /// @param options The  navigation options
   ///
   /// @return the Surface intersection of the approach surface
-  template <typename options_t>
-  const SurfaceIntersection surfaceOnApproach(const GeometryContext& gctx,
-                                              const Vector3& position,
-                                              const Vector3& direction,
-                                              const options_t& options) const;
+  SurfaceIntersection surfaceOnApproach(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const NavigationOptions<Layer>& options) const;
 
   /// Fast navigation to next layer
   ///
