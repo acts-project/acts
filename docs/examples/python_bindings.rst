@@ -130,8 +130,8 @@ These checks have two purposes:
 2. Detect potential reproducibility issues. Tests that run with multiple threads should produce the same output every run,
    event ordering aside. If a test workload has a thread-reproducibility issue, the output hash should also change.
 
-Running the hash checks locally and how to update the reference hashes?
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+Running the hash checks locally and how to update the reference hashes
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 By default, the hash checks are not executed when the ``pytest`` command is run. To enable them, you need to set the environment
 variable ``ROOT_HASH_CHECKS`` needs to be set to ``ON``, for example like:
