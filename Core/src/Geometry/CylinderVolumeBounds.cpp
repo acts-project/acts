@@ -26,7 +26,7 @@ Acts::CylinderVolumeBounds::CylinderVolumeBounds(
   double cR = cBounds.get(CylinderBounds::eR);
   if (thickness <= 0. or (cR - 0.5 * thickness) < 0.) {
     throw(std::invalid_argument(
-        "CylinderVolumeBounds: invalid extrusion thickness."));
+        "\n *** CylinderVolumeBounds: invalid extrusion thickness."));
   }
   m_values[eMinR] = cR - 0.5 * thickness;
   m_values[eMaxR] = cR + 0.5 * thickness;
@@ -41,7 +41,7 @@ Acts::CylinderVolumeBounds::CylinderVolumeBounds(
     : VolumeBounds() {
   if (thickness <= 0.) {
     throw(std::invalid_argument(
-        "CylinderVolumeBounds: invalid extrusion thickness."));
+        "\n *** CylinderVolumeBounds: invalid extrusion thickness."));
   }
   m_values[eMinR] = rBounds.get(RadialBounds::eMinR);
   m_values[eMaxR] = rBounds.get(RadialBounds::eMaxR);
@@ -81,7 +81,7 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
   if (m_sectorPlaneBounds != nullptr) {
     // sectorPlane 1 (negative phi)
     const Transform3 sp1Transform = Transform3(
-        transform * AngleAxis3(-get(eHalfPhiSector), Vector3(0., 0., 1.)) *
+        transform * AngleAxis3(get(eAveragePhi)-get(eHalfPhiSector), Vector3(0., 0., 1.)) *
         Translation3(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.) *
         AngleAxis3(M_PI / 2, Vector3(1., 0., 0.)));
     auto pSurface =
@@ -89,7 +89,7 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
     oSurfaces.push_back(OrientedSurface(std::move(pSurface), forward));
     // sectorPlane 2 (positive phi)
     const Transform3 sp2Transform = Transform3(
-        transform * AngleAxis3(get(eHalfPhiSector), Vector3(0., 0., 1.)) *
+        transform * AngleAxis3(get(eAveragePhi)+get(eHalfPhiSector), Vector3(0., 0., 1.)) *
         Translation3(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.) *
         AngleAxis3(-M_PI / 2, Vector3(1., 0., 0.)));
     pSurface =

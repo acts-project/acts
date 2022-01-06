@@ -21,6 +21,7 @@
 #include <iosfwd>
 #include <memory>
 #include <stdexcept>
+#include <string>
 
 namespace Acts {
 
@@ -259,19 +260,34 @@ inline std::vector<double> CylinderVolumeBounds::values() const {
 
 inline void CylinderVolumeBounds::checkConsistency() noexcept(false) {
   if (get(eMinR) < 0. or get(eMaxR) <= 0. or get(eMinR) >= get(eMaxR)) {
-    throw std::invalid_argument("CylinderVolumeBounds: invalid radial input.");
+    std::string sException{
+        "\n *** CylinderVolumeBounds: invalid radial input. "};
+    sException += "\n *** r_min/r_max = ";
+    sException += std::to_string(get(eMinR));
+    sException += "/";
+    sException += std::to_string(get(eMaxR));
+    throw std::invalid_argument(sException);
   }
   if (get(eHalfLengthZ) <= 0) {
-    throw std::invalid_argument(
-        "CylinderVolumeBounds: invalid longitudinal input.");
+    std::string sException{
+        "\n *** CylinderVolumeBounds: invalid longitudinal input."};
+    sException += "\n *** half_z = ";
+    sException += std::to_string(get(eHalfLengthZ));
+    throw std::invalid_argument(sException);
   }
   if (get(eHalfPhiSector) < 0. or get(eHalfPhiSector) > M_PI) {
-    throw std::invalid_argument(
-        "CylinderVolumeBounds: invalid phi sector setup.");
+    std::string sException{
+        "\n *** CylinderVolumeBounds: invalid phi sector setup."};
+    sException += "\n *** half_phi = ";
+    sException += std::to_string(get(eHalfPhiSector));
+    throw std::invalid_argument(sException);
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
-    throw std::invalid_argument(
-        "CylinderVolumeBounds: invalid phi positioning.");
+    std::string sException{
+        "\n *** CylinderVolumeBounds: invalid phi sector positioning."};
+    sException += "\n *** avg_phi = ";
+    sException += std::to_string(get(eAveragePhi));
+    throw std::invalid_argument(sException);
   }
 }
 

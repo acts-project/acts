@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021CERN for the benefit of the Acts project
+// Copyright (C) 2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -28,7 +28,7 @@ class Tracer {
  public:
   struct Config {
     /// World volume of this Tracer
-    const DetectorVolume* world{nullptr};
+    std::shared_ptr<DetectorVolume> world{nullptr};
 
     // Trial & error navigation
     bool trialAndError = false;

@@ -12,7 +12,6 @@
 
 #include "Acts/Experimental/InternalBlueprint.hpp"
 #include "Acts/Experimental/SurfaceLinks.hpp"
-#include "Acts/Geometry/Extent.hpp"
 
 #include "GeometryHelper.hpp"
 
@@ -24,34 +23,22 @@ BOOST_AUTO_TEST_SUITE(Experimental)
 
 // Single Link test
 BOOST_AUTO_TEST_CASE(InternalBlueprintConstruction) {
+  // These are two cylinders
   auto layer0 = surfacesCylinder(8.4, 36., 0.145, 32., 2., 5., {16, 14});
   auto layer1 = surfacesCylinder(8.4, 36., 0.145, 72., 2., 5., {32, 14});
 
-  std::vector<std::shared_ptr<Acts::Surface>> layer01;
-  layer01.insert(layer01.begin(), layer0.begin(), layer0.end());
-  layer01.insert(layer01.begin(), layer1.begin(), layer1.end());
-
-  // Check that test environement is ok
-  BOOST_CHECK(layer01.size() == layer0.size() + layer1.size());
-
-  auto zeroEnvelope = std::vector<std::pair<ActsScalar, ActsScalar>>(
-      size_t(binValues), {0., 0.});
-
-  Extent layer0Ext(true);
-  layer0Ext.ranges[binR] = {0., 40.};
-
-  Extent layer1Ext(true);
-  layer1Ext.ranges[binR] = {40., 100.};
-
   GeometryContext gctx;
 
+  GeometricExtent layer0Extent;
+  GeometricExtent layer1Extent;
+
   // Create the two Blue prints for the layers
-  InternalBlueprint layer0Bp(gctx, layer01, AllSurfaces{}, layer0Ext, zeroEnvelope);
-  InternalBlueprint layer1Bp(gctx, layer01, AllSurfaces{}, layer1Ext, zeroEnvelope);
-
-  BOOST_CHECK(layer0Bp.surfaces().size() == layer0.size());
-  BOOST_CHECK(layer1Bp.surfaces().size() == layer1.size());
-
+  InternalBlueprint layer0Thight(gctx, layer0, AllInternalSurfaces{},
+                                 {{binZ, {0., 0.}}, {binR, {0., 0.}}},
+                                 "layer0");
+  InternalBlueprint layer1Thight(gctx, layer1, AllInternalSurfaces{},
+                                 {{binZ, {0., 0.}}, {binR, {0., 0.}}},
+                                 "layer1");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

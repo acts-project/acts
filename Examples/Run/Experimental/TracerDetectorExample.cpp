@@ -11,9 +11,9 @@
 
 int main(int argc, char* argv[]) {
 
-    const std::string jsonFile = "detector.json";
+    const std::string jsonFile = argv[1];
 
-    auto detector = detectorFromJson(jsonFile);
+    auto detector = Acts::detectorFromJson(jsonFile);
 
 
 

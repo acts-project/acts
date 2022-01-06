@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Experimental/InternalBlueprint.hpp"
+
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <iostream>
@@ -14,36 +15,41 @@
 Acts::InternalBlueprint::InternalBlueprint(
     const GeometryContext& gctx,
     const std::vector<std::shared_ptr<Surface>>& surfaces,
-    const SurfaceLinks& surfaceLinks,
-    const Extent& restriction,
-    const std::vector<std::pair<ActsScalar, ActsScalar>>& envelope,
+    const SurfaceLinksGenerator& surfaceLinksGenerator,
+    const std::vector<std::pair<BinningValue, Envelope>>& binValueEnvelopes,
     const std::string& name)
-    : m_restriction(restriction), m_envelope(envelope), m_surfaceLinks(surfaceLinks), m_name(name)
-{
+    : m_surfaces(surfaces),
+      m_surfaceLinksGenerator(surfaceLinksGenerator),
+      m_name(name) {
+  // Create the envelope & store the bin values
+  ExtentEnvelope eEnvelope = zeroEnvelopes;
+  std::vector<BinningValue> binValues;
+  for (const auto& bve : binValueEnvelopes) {
+    binValues.push_back(bve.first);
+    eEnvelope[bve.first] = bve.second;
+  }
+  m_extent = GeometricExtent(eEnvelope);
   m_surfaces.reserve(surfaces.size());
-  measure(gctx, surfaces);
-}
 
-Acts::ActsScalar Acts::InternalBlueprint::min(BinningValue bval, bool addenv) const {
-  if (addenv) {
-    return m_extent.min(bval) - m_envelope[bval].first;
+  for (auto& sf : m_surfaces) {
+    auto sfPolyhedron = sf->polyhedronRepresentation(gctx, 1);
+    for (const auto& v : sfPolyhedron.vertices) {
+      m_extent.extend(v, binValues);
+    }
   }
-  return m_extent.min(bval);
 }
 
-Acts::ActsScalar Acts::InternalBlueprint::max(BinningValue bval, bool addenv) const {
-  if (addenv) {
-    return m_extent.max(bval) + m_envelope[bval].second;
+Acts::InternalBlueprint::InternalBlueprint(
+    const std::vector<std::pair<std::shared_ptr<Surface>, GeometricExtent>>&
+        surfacesExtent,
+    const SurfaceLinksGenerator& surfaceLinksGenerator, const std::string& name)
+    : m_surfaceLinksGenerator(surfaceLinksGenerator), m_name(name) {
+  // Store surfaces and extent
+  m_surfaces.reserve(surfacesExtent.size());
+  for (auto& sfe : surfacesExtent) {
+    m_surfaces.push_back(sfe.first);
+    m_extent.extend(sfe.second, s_binningValues, false);
   }
-  return m_extent.max(bval);
-}
-
-Acts::ActsScalar Acts::InternalBlueprint::medium(BinningValue bval, bool addenv) const {
-  return 0.5 * (min(bval, addenv) + max(bval, addenv));
-}
-
-Acts::ActsScalar Acts::InternalBlueprint::range(BinningValue bval, bool addenv) const {
-  return std::abs(max(bval, addenv) - min(bval, addenv));
 }
 
 std::ostream& Acts::InternalBlueprint::toStream(std::ostream& sl) const {
@@ -52,27 +58,8 @@ std::ostream& Acts::InternalBlueprint::toStream(std::ostream& sl) const {
   return sl;
 }
 
-void Acts::InternalBlueprint::measure(
-    const GeometryContext& gctx,
-    const std::vector<std::shared_ptr<Surface>>& surfaces) {
-
-  for (auto& sf : surfaces) {
-    auto sfPolyhedron = sf->polyhedronRepresentation(gctx, 1);    
-    auto sfExtent= sfPolyhedron.extent();
-    // Check if the surface is contained within restriction
-    if (m_restriction.contains(sfExtent)){
-        m_extent.extend(sfExtent);
-        m_surfaces.push_back(sf);
-    }
-  }
-}
-
-void Acts::InternalBlueprint::add(const GeometryContext& gctx,
-                               std::shared_ptr<Surface> surface) {
-  measure(gctx, { surface });
-}
-
 // Overload of << operator for std::ostream for debug output
-std::ostream& Acts::operator<<(std::ostream& sl, const Acts::InternalBlueprint& lbp) {
+std::ostream& Acts::operator<<(std::ostream& sl,
+                               const Acts::InternalBlueprint& lbp) {
   return lbp.toStream(sl);
 }

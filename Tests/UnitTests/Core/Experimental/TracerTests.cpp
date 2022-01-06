@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(TracerStatusInitialize) {
   auto detector = createDetector();
 
   Tracer::Config tConfig{};
-  tConfig.world = detector.get();
+  tConfig.world = detector;
 
   GeometryContext gctx = GeometryContext();
 
@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE(TracerNavigationChainNoOverstepping) {
   auto detector = createDetector();
 
   Tracer::Config tConfig{};
-  tConfig.world = detector.get();
+  tConfig.world = detector;
 
   GeometryContext gctx = GeometryContext();
 

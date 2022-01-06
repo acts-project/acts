@@ -13,6 +13,8 @@
 #include "Acts/Experimental/DetectorVolume.hpp"
 #include "Acts/Experimental/Enumerate.hpp"
 #include "Acts/Experimental/Portal.hpp"
+#include "Acts/Experimental/CylindricalContainerBuilder.hpp"
+#include "Acts/Experimental/CylindricalVolumeBuilder.hpp"
 
 #include <memory>
 #include <vector>
@@ -113,7 +115,6 @@ BOOST_AUTO_TEST_CASE(DetectorVolumesInZ) {
 
 BOOST_AUTO_TEST_CASE(Detector) {
 
-
   auto detector = createDetector();
   BOOST_CHECK(detector != nullptr);
   BOOST_CHECK(detector->name() == "Detector");
@@ -191,6 +192,39 @@ BOOST_AUTO_TEST_CASE(Detector) {
     BOOST_CHECK(nv != nullptr);
   }
 }
+
+BOOST_AUTO_TEST_CASE(DetectorVolumesFromCylindricalBuilderInR) {
+
+  GeometryContext gctx;
+
+
+  auto layer0 = surfacesCylinder(8.4, 36., 0.145, 32., 0.5, 5., {16, 14});
+  auto layer1 = surfacesCylinder(8.4, 36., 0.145, 72., 2., 5., {32, 14});
+
+  InternalBlueprint ilb0(gctx, layer0, AllInternalSurfaces{4},
+                         {{binZ, {5., 5.}}, {binR, {2., 2.}}}, "barrel_layer0");
+
+  InternalBlueprint ilb1(gctx, layer1, AllInternalSurfaces{4},
+                         {{binZ, {10., 10.}}, {binR, {2., 2.}}},
+                         "barrel_layer1");
+
+  // This should constrain only in R, but leave Z
+  GeometricExtent extentInR;
+  extentInR.set(binR, 5., 100.);
+
+  CylindricalVolumeBuilder<binR> cvbr;
+  cvbr.volumeExtent = extentInR;
+  cvbr.internalBlueprints = {ilb0, ilb1};
+  cvbr.name = "barrel_r_extent";
+  
+  CylindricalContainerBuilder<binR> ccbr;
+  ccbr.volumeBuilder = cvbr;
+  ccbr.name = "barrel";
+
+  auto barrel = ccbr(GeometryContext{});
+
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

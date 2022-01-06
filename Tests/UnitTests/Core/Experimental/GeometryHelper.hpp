@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Experimental/CylindricalContainerBuilders.hpp"
+#include "Acts/Experimental/CylindricalContainerBuilder.hpp"
 #include "Acts/Experimental/DetectorVolume.hpp"
 #include "Acts/Experimental/SurfaceLinks.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
@@ -122,6 +122,59 @@ std::vector<std::shared_ptr<Surface>> surfacesRing(
 
   return layerSurfaces;
 }
+
+/// Generator of surfaces for a ring
+///
+/// @param moduleRadius radial position
+/// @param moduleZ modulePosition
+/// @param moduleHalfX The half lenght in X (at Y max) of the module
+/// @param moduleHalfY The half lenght in Y of the module
+/// @param moduleTiltPhi The tilt out of the plane for discs
+/// @param minPhi The central radius of the ring
+/// @param maxPhi The z position of the ring
+/// @param nPhi The number of phi modules
+///
+/// @return A vector of Surfaces
+std::vector<std::shared_ptr<Surface>> surfacesPhiSector(
+    ActsScalar moduleRadius, ActsScalar moduleZ, 
+    ActsScalar moduleHalfX, ActsScalar moduleHalfY, ActsScalar moduleTiltPhi,
+    ActsScalar minPhi, ActsScalar maxPhi, unsigned int nPhi) {
+ 
+  // Prepare the return vector
+  std::vector<std::shared_ptr<Surface>> layerSurfaces;
+  auto mBounds = std::make_shared<RectangleBounds>(moduleHalfX, moduleHalfY);
+
+  ActsScalar phiStep = (maxPhi-minPhi)/nPhi;  
+  
+  for (unsigned int iphi = 0; iphi < nPhi; ++iphi) {
+    // The association transform
+    ActsScalar modulePhi = minPhi + iphi * phiStep;
+
+    Vector3 mCenter(moduleRadius*std::cos(modulePhi), moduleRadius*std::sin(modulePhi), moduleZ);
+
+    // Local z axis is the normal vector
+    Vector3 moduleLocalZ(cos(modulePhi + moduleTiltPhi),
+                         sin(modulePhi + moduleTiltPhi), 0.);
+    // Local y axis is the global z axis
+    Vector3 moduleLocalY(0., 0., 1);
+    // Local x axis the normal to local y,z
+    Vector3 moduleLocalX(-sin(modulePhi + moduleTiltPhi),
+                         cos(modulePhi + moduleTiltPhi), 0.);
+    // Create the RotationMatrix
+    RotationMatrix3 moduleRotation;
+    moduleRotation.col(0) = moduleLocalX;
+    moduleRotation.col(1) = moduleLocalY;
+    moduleRotation.col(2) = moduleLocalZ;
+    // Get the moduleTransform
+    auto mModuleTransform = Transform3(Translation3(mCenter) * moduleRotation);
+
+    layerSurfaces.push_back(
+        Surface::makeShared<PlaneSurface>(mModuleTransform, mBounds));
+  }
+
+  return layerSurfaces;
+}
+
 
 /// Create a single layer Volume
 ///
@@ -276,8 +329,10 @@ std::shared_ptr<DetectorVolume> createCentralDetector(
       beamPipe, firstLayer, firstGap, secondLayer};
 
   // Return the container in R
-  CylindricalContainerBuilderR ccbr;
-  return ccbr(std::move(barrelVolumes), detectorName + std::string("TwoLayers"));
+  CylindricalContainerBuilder<binR> ccbr;
+  ccbr.volumeBuilder = CylindricalVolumeProvider{barrelVolumes};
+  ccbr.name = detectorName + std::string("TwoLayers");
+  return ccbr(GeometryContext{});
 }
 
 /// Helper method to create a central detector
@@ -333,11 +388,11 @@ std::shared_ptr<DetectorVolume> createEndcapDetector(
     endcapVolumes = {secondLayer, gap, firstLayer};
   }
   // Container in Z
-  CylindricalContainerBuilderZ ccbz;
+  CylindricalContainerBuilder<binZ> ccbz;
+  ccbz.volumeBuilder = CylindricalVolumeProvider{endcapVolumes};
+  ccbz.name = detectorName + std::string("TwoLayers") + sideTag;
 
-  return ccbz(
-      std::move(endcapVolumes),
-      detectorName + std::string("TwoLayers") + sideTag);
+  return ccbz(GeometryContext{});
 }
 
 // Create the detector
@@ -348,8 +403,10 @@ std::shared_ptr<DetectorVolume> createDetector() {
   auto positiveEndcap =
       createEndcapDetector(0., 80., 500., 1, "PositiveEndcap");
 
-  CylindricalContainerBuilderZ ccbz;
-  return ccbz({negativeEndcap, centralBarrel, positiveEndcap}, std::string("Detector"));
+  CylindricalContainerBuilder<binZ> ccbz;
+  ccbz.volumeBuilder = CylindricalVolumeProvider{{negativeEndcap, centralBarrel, positiveEndcap}};
+  ccbz.name = std::string("Detector");
+  return ccbz(GeometryContext{});
 }
 
 }  // namespace Test

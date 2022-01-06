@@ -3,6 +3,7 @@ target_sources(
   PRIVATE
   Portal.cpp
   DetectorVolume.cpp
+  GeometricExtent.cpp
   InternalBlueprint.cpp
-  CylindricalContainerBuilders.cpp
-  CylindricalVolumeBuilders.cpp)
+  CylindricalContainerBuilder.cpp
+  CylindricalVolumeHelper.cpp)
