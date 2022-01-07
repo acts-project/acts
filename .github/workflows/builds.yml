@@ -2,7 +2,11 @@ name: Builds
 
 on:
   push:
+    paths-ignore:
+      - "docs/**"
   pull_request:
+    paths-ignore:
+      - "docs/**"
     branches:
       - main
       - 'release/**'
@@ -267,23 +271,3 @@ jobs:
         run: >
           source /opt/intel/oneapi/setvars.sh
           && cmake --build build --
-  docs:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v9
-    env:
-        DOXYGEN_WARN_AS_ERROR: YES
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install dependencies
-        run: >
-          apt-get install -y doxygen
-          && pip3 install --upgrade pip
-          && pip install -r docs/requirements.txt
-      - name: Configure
-        run: cmake -B build -S . -GNinja -DACTS_BUILD_DOCS=ON
-      - name: Build
-        run: cmake --build build -- docs-with-api
-      - uses: actions/upload-artifact@v2
-        with:
-          name: acts-docs
-          path: docs/_build/html/
