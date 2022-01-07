@@ -81,7 +81,8 @@ Acts::SpacePointGridCreator::createGrid(
     // seeds
     // FIXME: zBinSize must include scattering
     float zBinSize = config.cotThetaMax * config.deltaRMax;
-    int zBins = std::floor((config.zMax - config.zMin) / zBinSize);
+    int zBins =
+        std::max(1, (int)std::floor((config.zMax - config.zMin) / zBinSize));
 
     for (int bin = 0; bin <= zBins; bin++) {
       AxisScalar edge = config.zMin + bin * zBinSize;
