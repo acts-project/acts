@@ -191,7 +191,6 @@ if "__main__" == __name__:
     inputParticlePath = Path("particles.root")
     if not inputParticlePath.exists():
         inputParticlePath = None
-    inputParticlePath = None
 
     inputTrackSummary = None
     for p in ("tracksummary_fitter.root", "tracksummary_ckf.root"):

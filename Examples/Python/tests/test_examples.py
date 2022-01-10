@@ -940,14 +940,10 @@ def test_vertex_fitting_reading(
     alg = AssertCollectionExistsAlg(["fittedVertices"], name="check_alg")
     s3.addAlgorithm(alg)
 
-    if finder == VertexFinder.AMVF and inputTracks:
-        with pytest.raises(RuntimeError, match="Failed to process event data"):
-            s3.run()
-    else:
-        s3.run()
+    s3.run()
 
-        vertexing_file = tmp_path / "performance_vertexing.root"
-        assert vertexing_file.exists()
+    vertexing_file = tmp_path / "performance_vertexing.root"
+    assert vertexing_file.exists()
 
-        assert_entries(vertexing_file, "vertexing", entries)
-        assert_root_hash(vertexing_file.name, vertexing_file)
+    assert_entries(vertexing_file, "vertexing", entries)
+    assert_root_hash(vertexing_file.name, vertexing_file)
