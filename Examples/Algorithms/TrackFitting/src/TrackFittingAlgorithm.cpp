@@ -17,6 +17,18 @@
 
 #include <stdexcept>
 
+namespace {
+struct SimpleReverseFilteringLogic {
+  double momentumThreshold;
+
+  bool doBackwardFiltering(
+      Acts::MultiTrajectory::ConstTrackStateProxy trackState) const {
+    auto momentum = fabs(1 / trackState.filtered()[Acts::eBoundQOverP]);
+    return (momentum <= momentumThreshold);
+  }
+};
+}  // namespace
+
 ActsExamples::TrackFittingAlgorithm::TrackFittingAlgorithm(
     Config config, Acts::Logging::Level level)
     : ActsExamples::BareAlgorithm("TrackFittingAlgorithm", level),
@@ -77,6 +89,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(&kfUpdater);
   extensions.smoother.connect<&Acts::GainMatrixSmoother::operator()>(
       &kfSmoother);
+
+  SimpleReverseFilteringLogic reverseFilteringLogic{
+      m_cfg.reverseFilteringMomThreshold};
+  extensions.reverseFilteringLogic
+      .connect<&SimpleReverseFilteringLogic::doBackwardFiltering>(
+          &reverseFilteringLogic);
 
   Acts::KalmanFitterOptions kfOptions(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, extensions,

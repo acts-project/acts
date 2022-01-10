@@ -389,8 +389,14 @@ class Navigator {
       }
     } else if (state.navigation.currentVolume ==
                state.navigation.targetVolume) {
-      ACTS_WARNING(volInfo(state) << "No further navigation action, proceed to "
-                                     "target. This is very likely an error");
+      if (state.navigation.targetSurface == nullptr) {
+        ACTS_WARNING(volInfo(state)
+                     << "No further navigation action, proceed to "
+                        "target. This is very likely an error");
+      } else {
+        ACTS_VERBOSE(volInfo(state)
+                     << "No further navigation action, proceed to target.");
+      }
       // Set navigation break and release the navigation step size
       state.navigation.navigationBreak = true;
       stepper.releaseStepSize(state.stepping);
@@ -398,7 +404,6 @@ class Navigator {
       ACTS_VERBOSE(volInfo(state)
                    << "Status could not be determined - good luck.");
     }
-    return;
   }
 
   /// @brief Navigator target call
@@ -917,7 +922,7 @@ class Navigator {
       // The navigation options
       NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
       navOpts.pathLimit =
-          state.stepping.stepSize.value(ConstrainedStep::aborter);
+          stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
       navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
 
       // Exclude the current surface in case it's a boundary
@@ -1123,7 +1128,8 @@ class Navigator {
       }
     }
     // Check the limit
-    navOpts.pathLimit = state.stepping.stepSize.value(ConstrainedStep::aborter);
+    navOpts.pathLimit =
+        stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
     // No overstepping on start layer, otherwise ask the stepper
     navOpts.overstepLimit = (cLayer != nullptr)
                                 ? s_onSurfaceTolerance
@@ -1192,7 +1198,8 @@ class Navigator {
         m_cfg.resolveMaterial, m_cfg.resolvePassive, startLayer, nullptr);
     // Set also the target surface
     navOpts.targetSurface = state.navigation.targetSurface;
-    navOpts.pathLimit = state.stepping.stepSize.value(ConstrainedStep::aborter);
+    navOpts.pathLimit =
+        stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
     navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
     // Request the compatible layers
     state.navigation.navLayers =
