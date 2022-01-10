@@ -21,6 +21,7 @@
 #include <random>
 
 #include "FitterTestsCommon.hpp"
+#include "PrecompiledGsf.hpp"
 
 namespace {
 
@@ -29,11 +30,11 @@ using namespace Acts::Test;
 using namespace Acts::UnitLiterals;
 
 using Stepper = Acts::MultiEigenStepperLoop<>;
-using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
+using Propagator =
+    PrecompiledGsfPropagator;  // Acts::Propagator<Stepper, Acts::Navigator>;
 
 using KalmanUpdater = Acts::GainMatrixUpdater;
 using KalmanSmoother = Acts::GainMatrixSmoother;
-using Gsf = Acts::KalmanFitter<Propagator>;
 
 KalmanUpdater kfUpdater;
 KalmanSmoother kfSmoother;
@@ -50,10 +51,10 @@ KalmanFitterExtensions getExtensions() {
 FitterTester tester;
 
 // reconstruction propagator and fitter
-const auto logger = getDefaultLogger("GSF", Logging::VERBOSE);
-const auto gsfZeroPropagator =
+const auto logger = getDefaultLogger("GSF", Logging::INFO);
+auto gsfZeroPropagator =
     makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T);
-const auto gsfZero = GaussianSumFitter(std::move(gsfZeroPropagator));
+const PrecompiledGsf gsfZero(std::move(gsfZeroPropagator));
 
 std::default_random_engine rng(42);
 
@@ -68,17 +69,17 @@ auto makeDefaultGsfOptions() {
 // the MeasurementsCreator
 template <typename charge_t>
 struct MultiCmpsParsInterface : public SingleBoundTrackParameters<charge_t> {
-  using MultiPars = MultiComponentBoundTrackParameters<charge_t>;
+  MultiComponentBoundTrackParameters<charge_t> multi_pars;
 
-  MultiCmpsParsInterface(const MultiPars &p)
+  MultiCmpsParsInterface(const MultiComponentBoundTrackParameters<charge_t> &p)
       : SingleBoundTrackParameters<charge_t>(
             p.referenceSurface().getSharedPtr(), p.parameters(),
             p.covariance()),
-        pars(p) {}
+        multi_pars(p) {}
 
-  MultiPars pars;
-
-  operator MultiComponentBoundTrackParameters<charge_t>() { return pars; }
+  operator MultiComponentBoundTrackParameters<charge_t>() const {
+    return multi_pars;
+  }
 };
 
 auto makeParameters() {
@@ -91,7 +92,7 @@ auto makeParameters() {
   stddev[Acts::eBoundTheta] = 2_degree;
   stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
   Acts::BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
-  
+
   // define a track in the transverse plane along x
   Acts::Vector4 mPos4(-3_m, 0., 0., 42_ns);
   Acts::CurvilinearTrackParameters cp(mPos4, 0_degree, 90_degree, 1_GeV, 1_e,
@@ -108,11 +109,11 @@ auto makeParameters() {
   deltaQOP[eBoundQOverP] = 0.01_GeV;
 
   std::vector<std::tuple<double, BoundVector, BoundSymMatrix>> cmps = {
-      {1.0, cp.parameters(), cov}/*,
+      {0.2, cp.parameters(), cov},
       {0.2, cp.parameters() + deltaLOC0 + deltaLOC1 + deltaQOP, cov},
       {0.2, cp.parameters() + deltaLOC0 - deltaLOC1 - deltaQOP, cov},
       {0.2, cp.parameters() - deltaLOC0 + deltaLOC1 + deltaQOP, cov},
-      {0.2, cp.parameters() - deltaLOC0 - deltaLOC1 - deltaQOP, cov}*/};
+      {0.2, cp.parameters() - deltaLOC0 - deltaLOC1 - deltaQOP, cov}};
 
   return MultiCmpsParsInterface<SinglyCharged>(
       Acts::MultiComponentBoundTrackParameters<SinglyCharged>(
@@ -121,51 +122,55 @@ auto makeParameters() {
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(TrackFittingKalmanFitter)
+BOOST_AUTO_TEST_SUITE(TrackFittingGsf)
 
-// BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
-//   auto multi_pars = makeParameters();
-//   auto options = makeDefaultGsfOptions();
-// 
-//   tester.test_ZeroFieldNoSurfaceForward(gsfZero, options, multi_pars, rng, true,
-//                                         true);
-// }
+BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
+  auto multi_pars = makeParameters();
+  auto options = makeDefaultGsfOptions();
 
+  tester.test_ZeroFieldNoSurfaceForward(gsfZero, options, multi_pars, rng, true,
+                                        true);
+}
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
   auto multi_pars = makeParameters();
   auto options = makeDefaultGsfOptions();
 
-  tester.test_ZeroFieldWithSurfaceForward(gsfZero, options, multi_pars, rng, true,
-                                        true);
+  tester.test_ZeroFieldWithSurfaceForward(gsfZero, options, multi_pars, rng,
+                                          true, true);
 }
 
-// BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
-//   auto multi_pars = makeParameters();
-//   auto options = makeDefaultGsfOptions();
-// 
-//   tester.test_ZeroFieldWithSurfaceBackward(gsfZero, options, multi_pars, rng, true,
-//                                         true);
-// }
-/*
-BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceAtExit) {
+BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
+  auto multi_pars = makeParameters();
   auto options = makeDefaultGsfOptions();
 
-  test_ZeroFieldWithSurfaceAtExit(kfZero, options, rng);
+  tester.test_ZeroFieldWithSurfaceBackward(gsfZero, options, multi_pars, rng,
+                                           true, true);
+}
+
+BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceAtExit) {
+  auto multi_pars = makeParameters();
+  auto options = makeDefaultGsfOptions();
+
+  tester.test_ZeroFieldWithSurfaceBackward(gsfZero, options, multi_pars, rng,
+                                           true, true);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldShuffled) {
+  auto multi_pars = makeParameters();
   auto options = makeDefaultGsfOptions();
 
-  test_ZeroFieldShuffled(kfZero, options, rng);
+  tester.test_ZeroFieldShuffled(gsfZero, options, multi_pars, rng, true, true);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithHole) {
   auto options = makeDefaultGsfOptions();
+  auto multi_pars = makeParameters();
 
-  test_ZeroFieldWithHole(kfZero, options, rng);
+  tester.test_ZeroFieldWithHole(gsfZero, options, multi_pars, rng, true, true);
 }
 
+/*
 BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
   // fitter options w/o target surface. outlier distance is set to be below the
   // default outlier distance in the `MeasurementsCreator`

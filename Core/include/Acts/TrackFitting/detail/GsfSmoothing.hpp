@@ -119,16 +119,10 @@ auto smoothAndCombineTrajectories(
   // Use backward trajectory as basic trajectory, so that final trajectory is
   // ordered correctly. We ensure also that they are unique.
   std::vector<std::size_t> bwdTips = bwdStartTips;
-  
-  bwd.visitBackwards(bwdSt
 
   // Ensures that the bwd tips are unique and do not contain MAX_SIZE which
   // represents an invalid trajectory state
   auto sort_unique_validate_bwd_tips = [&]() {
-    std::cout << "tips: ";
-    for(const auto &a : bwdTips) std::cout << a << " ";
-    std::cout << "\n";
-      
     std::sort(bwdTips.begin(), bwdTips.end());
     bwdTips.erase(std::unique(bwdTips.begin(), bwdTips.end()), bwdTips.end());
 
