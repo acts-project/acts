@@ -15,9 +15,9 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/TrackFitting/GsfError.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/TrackFitting/detail/BetheHeitlerApprox.hpp"
-#include "Acts/TrackFitting/GsfError.hpp"
 #include "Acts/TrackFitting/detail/GsfSmoothing.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
 #include "Acts/TrackFitting/detail/KLMixtureReduction.hpp"
@@ -26,7 +26,6 @@
 #include <ios>
 #include <map>
 #include <numeric>
-
 
 #define RETURN_ERROR_OR_ABORT_ACTOR(error) \
   if (m_cfg.abortOnError) {                \
@@ -58,8 +57,9 @@ struct GsfResult {
   /// to preserve this information
   std::vector<std::size_t> parentTips;
 
-  /// The number of measurement states created
+  /// Some counting
   std::size_t measurementStates = 0;
+  std::size_t measurementHoles = 0;
   std::size_t processedStates = 0;
   std::set<Acts::GeometryIdentifier> visitedSurfaces;
 
@@ -119,7 +119,7 @@ struct GsfActor {
 
     /// We can disable component splitting for debugging or so
     bool applyMaterialEffects = true;
-    
+
     /// The extensions
     KalmanFitterExtensions extensions;
   } m_cfg;
@@ -603,10 +603,13 @@ struct GsfActor {
     const auto& surface = *state.navigation.currentSurface;
     result.currentTips.clear();
 
-    // Boolean flag, so that not every component increases the
-    // result.measurementStates counter
-    bool counted_as_measurement_state = false;
+    // Boolean flag, to distinguish measurement and outlier states. This flag is
+    // only modified by the valid-measurement-branch, so only if there isn't any
+    // valid measuerement state, the flag stays false and the state is thus
+    // counted as an outlier
+    bool is_valid_measurement = false;
 
+    // Loop over all components
     for (auto& [variant, meta] : components) {
       // Create new track state
       result.currentTips.push_back(result.fittedStates.addTrackState(
@@ -647,22 +650,16 @@ struct GsfActor {
       // Do Kalman update
       if (not m_cfg.extensions.outlierFinder(trackProxy)) {
         // Perform update
-        auto updateRes = m_cfg.extensions.updater(state.geoContext, trackProxy,
-                                   state.stepping.navDir, logger);
+        auto updateRes = m_cfg.extensions.updater(
+            state.geoContext, trackProxy, state.stepping.navDir, logger);
 
         if (!updateRes.ok()) {
           ACTS_ERROR("Update step failed: " << updateRes.error());
           RETURN_ERROR_OR_ABORT_ACTOR(updateRes.error());
         }
 
+        is_valid_measurement = true;
         trackProxy.typeFlags().set(TrackStateFlag::MeasurementFlag);
-
-        // We count the state with measurement TODO does this metric make
-        // sense for a GSF?
-        if (!counted_as_measurement_state) {
-          ++result.measurementStates;
-          counted_as_measurement_state = true;
-        }
       } else {
         // TODO ACTS_VERBOSE message
         throw std::runtime_error("outlier handling not yet implemented fully");
@@ -672,9 +669,17 @@ struct GsfActor {
         trackProxy.data().ifiltered = trackProxy.data().ipredicted;
       }
     }
-
+    
+    // Do the statistics
     ++result.processedStates;
+    
+    if( is_valid_measurement ) {
+        ++result.measurementStates;
+    } else {
+        ++result.measurementHoles;
+    }
 
+    // Return sucess
     return Acts::Result<void>::success();
   }
 
@@ -688,7 +693,7 @@ struct GsfActor {
 
     for (auto cmp : stepper.componentIterable(state.stepping)) {
       auto singleState = cmp.singleState(state);
-      const auto &singleStepper = cmp.singleStepper(stepper);
+      const auto& singleStepper = cmp.singleStepper(stepper);
 
       detail::PointwiseMaterialInteraction interaction(&surface, singleState,
                                                        singleStepper);

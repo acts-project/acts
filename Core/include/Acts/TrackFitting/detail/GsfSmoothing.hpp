@@ -97,12 +97,16 @@ struct MultiTrajectoryProjector {
 /// @brief This function takes two MultiTrajectory objects and corresponding
 /// index lists (one of the backward pass, one of the forward pass), combines
 /// them, applies smoothing, and returns a new, single-component MultiTrajectory
+/// @tparam ReturnSmootedStates If set to true, the function returns not only
+/// combined MultiTrajectory, but also a std::vector contianing the
+/// component-wise smoothed states
+/// TODO this function does not handle outliers correctly at the moment I think
+/// TODO change std::vector< size_t > to boost::small_vector for better
+/// performance
 template <bool ReturnSmootedStates = false>
 auto smoothAndCombineTrajectories(
-    const MultiTrajectory &fwd,
-    const std::vector<std::size_t> &fwdStartTips,
-    const std::map<std::size_t, double> &fwdWeights,
-    const MultiTrajectory &bwd,
+    const MultiTrajectory &fwd, const std::vector<std::size_t> &fwdStartTips,
+    const std::map<std::size_t, double> &fwdWeights, const MultiTrajectory &bwd,
     const std::vector<std::size_t> &bwdStartTips,
     const std::map<std::size_t, double> &bwdWeights,
     LoggerWrapper logger = getDummyLogger()) {
@@ -115,17 +119,32 @@ auto smoothAndCombineTrajectories(
   // Use backward trajectory as basic trajectory, so that final trajectory is
   // ordered correctly. We ensure also that they are unique.
   std::vector<std::size_t> bwdTips = bwdStartTips;
-  std::sort(bwdTips.begin(), bwdTips.end());
-  bwdTips.erase(std::unique(bwdTips.begin(), bwdTips.end()), bwdTips.end());
+  
+  bwd.visitBackwards(bwdSt
+
+  // Ensures that the bwd tips are unique and do not contain MAX_SIZE which
+  // represents an invalid trajectory state
+  auto sort_unique_validate_bwd_tips = [&]() {
+    std::cout << "tips: ";
+    for(const auto &a : bwdTips) std::cout << a << " ";
+    std::cout << "\n";
+      
+    std::sort(bwdTips.begin(), bwdTips.end());
+    bwdTips.erase(std::unique(bwdTips.begin(), bwdTips.end()), bwdTips.end());
+
+    auto invalid_it = std::find(bwdTips.begin(), bwdTips.end(),
+                                std::numeric_limits<uint16_t>::max());
+    if (invalid_it != bwdTips.end()) {
+      bwdTips.erase(invalid_it);
+    }
+  };
+
+  sort_unique_validate_bwd_tips();
 
   MultiTrajectory finalTrajectory;
-
   std::size_t lastTip = SIZE_MAX;
 
-  // MultiTrajectory uses uint16_t internally TODO is none_of here correct?
-  while (std::none_of(bwdTips.begin(), bwdTips.end(), [](auto i) {
-    return i == std::numeric_limits<uint16_t>::max();
-  })) {
+  while (!bwdTips.empty()) {
     const auto firstBwdState = bwd.getTrackState(bwdTips.front());
     const auto &currentSurface = firstBwdState.referenceSurface();
 
@@ -168,7 +187,8 @@ auto smoothAndCombineTrajectories(
             finalTrajectory.addTrackState(TrackStatePropMask::All, lastTip);
         auto proxy = finalTrajectory.getTrackState(lastTip);
 
-        // This way I hope we copy all relevant flags and the calibrated field
+        // This way I hope we copy all relevant flags and the calibrated
+        // field
         proxy.copyFrom(firstBwdState);
 
         // The predicted state is the forward pass
@@ -184,10 +204,11 @@ auto smoothAndCombineTrajectories(
         proxy.filteredCovariance() = bwdCovFilt.value();
 
         // The smoothed state is a combination
-        const auto [smoothedMean, smoothedCov] =
-            combineBoundGaussianMixture(smoothedState.begin(), smoothedState.end());
+        const auto [smoothedMean, smoothedCov] = combineBoundGaussianMixture(
+            smoothedState.begin(), smoothedState.end());
         proxy.smoothed() = smoothedMean;
         proxy.smoothedCovariance() = smoothedCov.value();
+        ACTS_VERBOSE("Added smoothed state to MultiTrajectory");
       }
     } else {
       ACTS_WARNING("Did not find forward states on surface " << bwdGeoId);
@@ -199,8 +220,7 @@ auto smoothAndCombineTrajectories(
       tip = p.previous();
     }
 
-    std::sort(bwdTips.begin(), bwdTips.end());
-    bwdTips.erase(std::unique(bwdTips.begin(), bwdTips.end()), bwdTips.end());
+    sort_unique_validate_bwd_tips();
   }
 
   if constexpr (ReturnSmootedStates) {

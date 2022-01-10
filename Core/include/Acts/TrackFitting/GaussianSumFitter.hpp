@@ -9,14 +9,13 @@
 #pragma once
 
 #include "Acts/Propagator/EigenStepper.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
-#include "Acts/TrackFitting/detail/BetheHeitlerApprox.hpp"
-#include "Acts/TrackFitting/GsfActor.hpp"
 #include "Acts/Propagator/MultiStepperAborters.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/TrackFitting/GsfActor.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
+#include "Acts/TrackFitting/detail/BetheHeitlerApprox.hpp"
 
 #include <fstream>
-
 
 #define RETURN_ERROR_OR_ABORT_FIT(error) \
   if (options.abortOnError) {            \
@@ -31,9 +30,9 @@ struct GsfOptions {
   std::reference_wrapper<const GeometryContext> geoContext;
   std::reference_wrapper<const MagneticFieldContext> magFieldContext;
   std::reference_wrapper<const CalibrationContext> calibrationContext;
-  
+
   KalmanFitterExtensions extensions;
-  
+
   LoggerWrapper logger;
 
   PropagatorPlainOptions propagatorPlainOptions;
@@ -43,7 +42,7 @@ struct GsfOptions {
   bool abortOnError = true;
 
   std::size_t maxComponents = 4;
-  
+
   bool applyMaterialEffects = true;
 };
 
@@ -75,8 +74,7 @@ struct GaussianSumFitter {
   template <typename source_link_it_t, typename start_parameters_t>
   Acts::Result<Acts::KalmanFitterResult> fit(
       source_link_it_t begin, source_link_it_t end,
-      const start_parameters_t& sParameters,
-      const GsfOptions& options,
+      const start_parameters_t& sParameters, const GsfOptions& options,
       const std::vector<const Surface*>& sSequence) const {
     // Check if we have the correct navigator
     static_assert(
@@ -90,7 +88,7 @@ struct GaussianSumFitter {
 
       PropagatorOptions<Actors, Aborters> propOptions(
           opts.geoContext, opts.magFieldContext, logger);
-      
+
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
       propOptions.actionList.template get<DirectNavigator::Initializer>()
@@ -106,7 +104,7 @@ struct GaussianSumFitter {
                                                  const auto& logger) {
       using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
       using Aborters = AbortList<>;
-      
+
       std::vector<const Surface*> backwardSequence(
           std::next(sSequence.rbegin()), sSequence.rend());
       backwardSequence.push_back(opts.referenceSurface);
@@ -132,8 +130,7 @@ struct GaussianSumFitter {
   template <typename source_link_it_t, typename start_parameters_t>
   Acts::Result<Acts::KalmanFitterResult> fit(
       source_link_it_t begin, source_link_it_t end,
-      const start_parameters_t& sParameters,
-      const GsfOptions& options) const {
+      const start_parameters_t& sParameters, const GsfOptions& options) const {
     // Check if we have the correct navigator
     static_assert(std::is_same_v<Navigator, typename propagator_t::Navigator>);
 
@@ -158,9 +155,9 @@ struct GaussianSumFitter {
 
       PropagatorOptions<Actors, Aborters> propOptions(
           opts.geoContext, opts.magFieldContext, logger);
-      
+
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
-      
+
       propOptions.actionList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_bethe_heitler_approx;
 
@@ -175,8 +172,7 @@ struct GaussianSumFitter {
             typename fwd_prop_initializer_t, typename bwd_prop_initializer_t>
   Acts::Result<Acts::KalmanFitterResult> fit_impl(
       source_link_it_t begin, source_link_it_t end,
-      const start_parameters_t& sParameters,
-      const GsfOptions& options,
+      const start_parameters_t& sParameters, const GsfOptions& options,
       const fwd_prop_initializer_t& fwdPropInitializer,
       const bwd_prop_initializer_t& bwdPropInitializer) const {
     // The logger
@@ -285,47 +281,42 @@ struct GaussianSumFitter {
       // Workaround to get the first state into the MultiTrajectory seems also
       // to be necessary for standard navigator to prevent double kalman
       // update on the last surface
-      actor.m_cfg.multiTrajectoryInitializer = [&fwdGsfResult](
-                                                   auto& result,
-                                                   [[maybe_unused]] const auto& loggerr) {
-        result.currentTips.clear();
-        
-        throw std::runtime_error("fix this -Wshadow with logger and gcc somehow");
+      actor.m_cfg.multiTrajectoryInitializer =
+          [&fwdGsfResult](auto& result,
+                          [[maybe_unused]] const auto& gsf_logger) {
+            result.currentTips.clear();
 
-        // ACTS_VERBOSE(
-        //     "Initialize the MultiTrajectory with information provided to the "
-        //     "Actor");
+            // Manually expand the logging macro here since a function parameter
+            // named 'logger' seems to trigger a false-positive for gcc's
+            // -Wshadow warning
+            gsf_logger().log(Acts::Logging::VERBOSE,
+                             "Initialize the MultiTrajectory with information "
+                             "provided to the Actor");
 
-        for (const auto idx : fwdGsfResult.currentTips) {
-          result.currentTips.push_back(
-              result.fittedStates.addTrackState(TrackStatePropMask::All));
-          auto proxy =
-              result.fittedStates.getTrackState(result.currentTips.back());
-          proxy.copyFrom(fwdGsfResult.fittedStates.getTrackState(idx));
-          result.weightsOfStates[result.currentTips.back()] =
-              fwdGsfResult.weightsOfStates.at(idx);
+            for (const auto idx : fwdGsfResult.currentTips) {
+              result.currentTips.push_back(
+                  result.fittedStates.addTrackState(TrackStatePropMask::All));
+              auto proxy =
+                  result.fittedStates.getTrackState(result.currentTips.back());
+              proxy.copyFrom(fwdGsfResult.fittedStates.getTrackState(idx));
+              result.weightsOfStates[result.currentTips.back()] =
+                  fwdGsfResult.weightsOfStates.at(idx);
 
-          // Because we are backwards, we use forward filtered as predicted
-          proxy.predicted() = proxy.filtered();
-          proxy.predictedCovariance() = proxy.filteredCovariance();
+              // Because we are backwards, we use forward filtered as predicted
+              proxy.predicted() = proxy.filtered();
+              proxy.predictedCovariance() = proxy.filteredCovariance();
 
-          // Mark surface as visited
-          result.visitedSurfaces.insert(proxy.referenceSurface().geometryId());
-        }
-      };
+              // Mark surface as visited
+              result.visitedSurfaces.insert(
+                  proxy.referenceSurface().geometryId());
+            }
+            
+            result.measurementStates++;
+            result.processedStates++;
+          };
 
       bwdPropOptions.direction = Acts::backward;
-
-      // const auto targetSurface = [&]() {
-      //   const Surface* ts = nullptr;
-      //   fwdGsfResult.fittedStates.visitBackwards(
-      //       fwdGsfResult.currentTips.front(),
-      //       [&ts](const auto& state) { ts = &state.referenceSurface();
-      //       });
-      //   throw_assert(ts, "target surface must not be nullptr");
-      //   return ts;
-      // }();
-
+      
       // TODO somehow this proagation fails if we target the first
       // measuerement surface, go instead back to beamline for now
       return m_propagator
@@ -370,6 +361,7 @@ struct GaussianSumFitter {
     if (lastTip == SIZE_MAX) {
       RETURN_ERROR_OR_ABORT_FIT(GsfError::NoStatesCreated);
     }
+    
 
     Acts::KalmanFitterResult kalmanResult;
     kalmanResult.lastTrackIndex = lastTip;
@@ -378,6 +370,8 @@ struct GaussianSumFitter {
     kalmanResult.reversed = true;
     kalmanResult.finished = true;
     kalmanResult.lastMeasurementIndex = lastTip;
+    kalmanResult.measurementStates = std::min(fwdGsfResult.measurementStates, bwdGsfResult.measurementStates);
+    kalmanResult.measurementHoles = std::min(fwdGsfResult.measurementHoles, bwdGsfResult.measurementHoles);
 
     ///////////////////////////////////////////////////////
     // Propagate back to origin with smoothed parameters //
