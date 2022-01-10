@@ -62,6 +62,16 @@ struct GsfOptions {
   bool applyMaterialEffects = true;
 };
 
+/// Gaussian Sum Fitter implementation.
+/// @tparam propagator_t The propagator type on which the algorithm is built on
+///
+/// @note This GSF implementation tries to be as compatible to the KalmanFitter
+/// as possible. However, there are certain differences at the moment:
+/// * The MultiTrajectory contained in the KalmanFitterResult returned by the
+/// fit-functions does only contain states with measuerements but e.g., no
+/// holes.
+/// * There is always a reverse pass during fitting.
+/// * Probably some more differences which I don't think of at the moment.
 template <typename propagator_t>
 struct GaussianSumFitter {
   GaussianSumFitter(propagator_t&& propagator,
@@ -411,6 +421,24 @@ struct GaussianSumFitter {
                                               bwdGsfResult.measurementStates);
     kalmanResult.measurementHoles =
         std::min(fwdGsfResult.measurementHoles, bwdGsfResult.measurementHoles);
+
+    // Compute the missed active surfaces as the union of the forward and
+    // backward pass missed active surfaces
+    // TODO this is quite expencive computationally, maybe just use from fwd?
+    {
+      auto fwdActSurf = fwdGsfResult.missedActiveSurfaces;
+      std::sort(fwdActSurf.begin(), fwdActSurf.end());
+
+      auto bwdActSurf = bwdGsfResult.missedActiveSurfaces;
+      std::sort(bwdActSurf.begin(), bwdActSurf.end());
+
+      std::vector<const Surface*> missedActiveSurfaces;
+      std::set_union(fwdActSurf.begin(), fwdActSurf.end(), bwdActSurf.begin(),
+                     bwdActSurf.end(),
+                     std::back_inserter(missedActiveSurfaces));
+
+      kalmanResult.missedActiveSurfaces = missedActiveSurfaces;
+    }
 
     ///////////////////////////////////////////////////////
     // Propagate back to origin with smoothed parameters //

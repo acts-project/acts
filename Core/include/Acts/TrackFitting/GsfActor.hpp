@@ -62,6 +62,7 @@ struct GsfResult {
   std::size_t measurementHoles = 0;
   std::size_t processedStates = 0;
   std::set<Acts::GeometryIdentifier> visitedSurfaces;
+  std::vector<const Acts::Surface*> missedActiveSurfaces;
 
   // Propagate potential errors to the outside
   Result<void> result{Result<void>::success()};
@@ -302,6 +303,13 @@ struct GsfActor {
 
       ACTS_VERBOSE(std::boolalpha << "haveMaterial " << haveMaterial
                                   << ", haveMeasurement: " << haveMeasurement);
+
+      // Collect holes in result, but no holes before first measuerement
+      if (result.measurementStates > 0 && !haveMeasurement &&
+          surface.associatedDetectorElement()) {
+        ACTS_VERBOSE("Detected hole on " << surface.geometryId());
+        result.missedActiveSurfaces.push_back(&surface);
+      }
 
       // Early return if nothing happens
       if (not haveMaterial && not haveMeasurement) {
@@ -669,14 +677,14 @@ struct GsfActor {
         trackProxy.data().ifiltered = trackProxy.data().ipredicted;
       }
     }
-    
+
     // Do the statistics
     ++result.processedStates;
-    
-    if( is_valid_measurement ) {
-        ++result.measurementStates;
+
+    if (is_valid_measurement) {
+      ++result.measurementStates;
     } else {
-        ++result.measurementHoles;
+      ++result.measurementHoles;
     }
 
     // Return sucess
