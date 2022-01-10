@@ -199,7 +199,6 @@ struct FitterTester {
       size_t nSmoothed = 0;
       val.fittedStates.visitBackwards(val.lastMeasurementIndex,
                                       [&nSmoothed](const auto& state) {
-                                        std::cout << "smoothed? " << std::boolalpha << state.hasSmoothed() << "\n";
                                         nSmoothed += state.hasSmoothed();
                                       });
       BOOST_CHECK_EQUAL(nSmoothed, sourceLinks.size());
