@@ -303,7 +303,8 @@ def test_event_recording(tmp_path):
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
-def test_truth_tracking(tmp_path, assert_root_hash):
+@pytest.mark.parametrize("revFiltMomThresh", [0 * u.GeV, 1 * u.TeV])
+def test_truth_tracking(tmp_path, assert_root_hash, revFiltMomThresh):
     from truth_tracking import runTruthTracking
 
     detector, trackingGeometry, _ = getOpenDataDetector()
@@ -330,6 +331,7 @@ def test_truth_tracking(tmp_path, assert_root_hash):
             "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",
         ),
         outputDir=tmp_path,
+        reverseFilteringMomThreshold=revFiltMomThresh,
         s=seq,
     )
 
@@ -917,3 +919,114 @@ def test_ckf_tracks_example_truth_smeared(tmp_path, assert_root_hash):
 
     assert len([f for f in csv.iterdir() if f.name.endswith("CKFtracks.csv")]) == events
     assert all([f.stat().st_size > 300 for f in csv.iterdir()])
+
+
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+@pytest.mark.slow
+# @pytest.mark.filterwarnings("ignore::UserWarning")
+def test_vertex_fitting(tmp_path):
+    detector, trackingGeometry, decorators = getOpenDataDetector()
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+    from vertex_fitting import runVertexFitting, VertexFinder
+
+    s = Sequencer(events=100)
+
+    runVertexFitting(
+        field,
+        vertexFinder=VertexFinder.Truth,
+        outputDir=Path.cwd(),
+        s=s,
+    )
+
+    alg = AssertCollectionExistsAlg(["fittedVertices"], name="check_alg")
+    s.addAlgorithm(alg)
+
+    s.run()
+    assert alg.events_seen == s.config.events
+
+
+import itertools
+
+
+@pytest.mark.parametrize(
+    "finder,inputTracks,entries",
+    [
+        ("Truth", False, 100),
+        # ("Truth", True, 0), # this combination seems to be not working
+        ("Iterative", False, 100),
+        ("Iterative", True, 100),
+        ("AMVF", False, 100),
+        ("AMVF", True, 100),
+    ],
+)
+@pytest.mark.filterwarnings("ignore::UserWarning")
+def test_vertex_fitting_reading(
+    tmp_path, ptcl_gun, rng, finder, inputTracks, entries, assert_root_hash
+):
+
+    ptcl_file = tmp_path / "particles.root"
+
+    detector, trackingGeometry, decorators = GenericDetector.create()
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+    from vertex_fitting import runVertexFitting, VertexFinder
+
+    inputTrackSummary = None
+    if inputTracks:
+        from truth_tracking import runTruthTracking
+
+        s2 = Sequencer(numThreads=1, events=100)
+        runTruthTracking(
+            trackingGeometry,
+            field,
+            digiConfigFile=Path(
+                "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            ),
+            outputDir=tmp_path,
+            s=s2,
+        )
+        s2.run()
+        del s2
+        inputTrackSummary = tmp_path / "tracksummary_fitter.root"
+        assert inputTrackSummary.exists()
+        assert ptcl_file.exists()
+    else:
+        s0 = Sequencer(events=100, numThreads=1)
+        evGen = ptcl_gun(s0)
+        s0.addWriter(
+            RootParticleWriter(
+                level=acts.logging.INFO,
+                inputParticles=evGen.config.outputParticles,
+                filePath=str(ptcl_file),
+            )
+        )
+        s0.run()
+        del s0
+
+        assert ptcl_file.exists()
+
+    finder = VertexFinder[finder]
+
+    s3 = Sequencer(numThreads=1)
+
+    runVertexFitting(
+        field,
+        inputParticlePath=ptcl_file,
+        inputTrackSummary=inputTrackSummary,
+        outputDir=tmp_path,
+        vertexFinder=finder,
+        s=s3,
+    )
+
+    alg = AssertCollectionExistsAlg(["fittedVertices"], name="check_alg")
+    s3.addAlgorithm(alg)
+
+    s3.run()
+
+    vertexing_file = tmp_path / "performance_vertexing.root"
+    assert vertexing_file.exists()
+
+    assert_entries(vertexing_file, "vertexing", entries)
+    assert_root_hash(vertexing_file.name, vertexing_file)
