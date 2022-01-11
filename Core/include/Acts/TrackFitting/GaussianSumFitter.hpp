@@ -11,7 +11,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MultiStepperAborters.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
-#include "Acts/TrackFitting/GsfActor.hpp"
+#include "Acts/TrackFitting/detail/GsfActor.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/TrackFitting/detail/BetheHeitlerApprox.hpp"
 
@@ -109,7 +109,7 @@ struct GaussianSumFitter {
     // Initialize the forward propagation with the DirectNavigator
     auto fwdPropInitializer = [&sSequence, this](const auto& opts,
                                                  const auto& logger) {
-      using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
+      using Actors = ActionList<detail::GsfActor, DirectNavigator::Initializer>;
       using Aborters = AbortList<>;
 
       PropagatorOptions<Actors, Aborters> propOptions(
@@ -119,7 +119,7 @@ struct GaussianSumFitter {
 
       propOptions.actionList.template get<DirectNavigator::Initializer>()
           .navSurfaces = sSequence;
-      propOptions.actionList.template get<GsfActor>()
+      propOptions.actionList.template get<detail::GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_bethe_heitler_approx;
 
       return propOptions;
@@ -128,7 +128,7 @@ struct GaussianSumFitter {
     // Initialize the backward propagation with the DirectNavigator
     auto bwdPropInitializer = [&sSequence, this](const auto& opts,
                                                  const auto& logger) {
-      using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
+      using Actors = ActionList<detail::GsfActor, DirectNavigator::Initializer>;
       using Aborters = AbortList<>;
 
       std::vector<const Surface*> backwardSequence(
@@ -142,7 +142,7 @@ struct GaussianSumFitter {
 
       propOptions.actionList.template get<DirectNavigator::Initializer>()
           .navSurfaces = std::move(backwardSequence);
-      propOptions.actionList.template get<GsfActor>()
+      propOptions.actionList.template get<detail::GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_bethe_heitler_approx;
 
       return propOptions;
@@ -162,13 +162,13 @@ struct GaussianSumFitter {
 
     // Initialize the forward propagation with the DirectNavigator
     auto fwdPropInitializer = [this](const auto& opts, const auto& logger) {
-      using Actors = ActionList<GsfActor>;
+      using Actors = ActionList<detail::GsfActor>;
       using Aborters = AbortList<EndOfWorldReached>;
 
       PropagatorOptions<Actors, Aborters> propOptions(
           opts.geoContext, opts.magFieldContext, logger);
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
-      propOptions.actionList.template get<GsfActor>()
+      propOptions.actionList.template get<detail::GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_bethe_heitler_approx;
 
       return propOptions;
@@ -176,7 +176,7 @@ struct GaussianSumFitter {
 
     // Initialize the backward propagation with the DirectNavigator
     auto bwdPropInitializer = [this](const auto& opts, const auto& logger) {
-      using Actors = ActionList<GsfActor>;
+      using Actors = ActionList<detail::GsfActor>;
       using Aborters = AbortList<EndOfWorldReached>;
 
       PropagatorOptions<Actors, Aborters> propOptions(
@@ -184,7 +184,7 @@ struct GaussianSumFitter {
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
-      propOptions.actionList.template get<GsfActor>()
+      propOptions.actionList.template get<detail::GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_bethe_heitler_approx;
 
       return propOptions;
@@ -250,7 +250,7 @@ struct GaussianSumFitter {
       auto fwdPropOptions = fwdPropInitializer(options, logger);
 
       // Catch the actor and set the measurements
-      auto& actor = fwdPropOptions.actionList.template get<GsfActor>();
+      auto& actor = fwdPropOptions.actionList.template get<detail::GsfActor>();
       actor.m_cfg.inputMeasurements = inputMeasurements;
       actor.m_cfg.maxComponents = options.maxComponents;
       actor.m_cfg.extensions = options.extensions;
@@ -280,7 +280,7 @@ struct GaussianSumFitter {
       RETURN_ERROR_OR_ABORT_FIT(fwdResult.error());
     }
 
-    auto& fwdGsfResult = (*fwdResult).template get<GsfResult>();
+    auto& fwdGsfResult = (*fwdResult).template get<detail::GsfResult>();
 
     if (!fwdGsfResult.result.ok()) {
       RETURN_ERROR_OR_ABORT_FIT(fwdGsfResult.result.error());
@@ -310,7 +310,7 @@ struct GaussianSumFitter {
 
       auto bwdPropOptions = bwdPropInitializer(options, logger);
 
-      auto& actor = bwdPropOptions.actionList.template get<GsfActor>();
+      auto& actor = bwdPropOptions.actionList.template get<detail::GsfActor>();
       actor.m_cfg.inputMeasurements = inputMeasurements;
       actor.m_cfg.maxComponents = options.maxComponents;
       actor.m_cfg.abortOnError = options.abortOnError;
@@ -375,7 +375,7 @@ struct GaussianSumFitter {
       RETURN_ERROR_OR_ABORT_FIT(bwdResult.error());
     }
 
-    auto& bwdGsfResult = (*bwdResult).template get<GsfResult>();
+    auto& bwdGsfResult = (*bwdResult).template get<detail::GsfResult>();
 
     if (!bwdGsfResult.result.ok()) {
       RETURN_ERROR_OR_ABORT_FIT(bwdGsfResult.result.error());
@@ -462,7 +462,7 @@ struct GaussianSumFitter {
 
         auto lastPropOptions = bwdPropInitializer(options, logger);
 
-        auto& actor = lastPropOptions.actionList.template get<GsfActor>();
+        auto& actor = lastPropOptions.actionList.template get<detail::GsfActor>();
         actor.m_cfg.maxComponents = options.maxComponents;
         actor.m_cfg.abortOnError = options.abortOnError;
         actor.m_cfg.applyMaterialEffects = options.applyMaterialEffects;
