@@ -129,7 +129,8 @@ class SymmetricKLDistanceMatrix {
     // TODO Eigen minCoeff does not work for some reason??
     // return m_mapToPair.at(m_data.minCoeff());
     return m_mapToPair.at(std::distance(
-        &m_data[0], std::min_element(m_data.data(), m_data.data() + m_data.size())));
+        &m_data[0],
+        std::min_element(m_data.data(), m_data.data() + m_data.size())));
   }
 
   friend std::ostream &operator<<(std::ostream &os,

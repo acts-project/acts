@@ -60,7 +60,8 @@ Acts::BoundVariantMeasurement Acts::Test::testSourceLinkCalibratorReturn(
   }
 }
 
-void Acts::Test::testSourceLinkCalibrator(const Acts::GeometryContext& gctx,
-                              Acts::MultiTrajectory::TrackStateProxy trackState) {
+void Acts::Test::testSourceLinkCalibrator(
+    const Acts::GeometryContext& gctx,
+    Acts::MultiTrajectory::TrackStateProxy trackState) {
   testSourceLinkCalibratorReturn(gctx, trackState);
 }

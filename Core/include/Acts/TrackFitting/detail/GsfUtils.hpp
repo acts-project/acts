@@ -52,11 +52,11 @@ template <typename component_range_t, typename projector_t>
 void normalizeWeights(component_range_t &cmps, const projector_t &proj) {
   double sum_of_weights = 0.0;
 
-  for(auto it=cmps.begin(); it != cmps.end(); ++it) {
+  for (auto it = cmps.begin(); it != cmps.end(); ++it) {
     sum_of_weights += proj(*it);
   }
 
-  for(auto it=cmps.begin(); it != cmps.end(); ++it) {
+  for (auto it = cmps.begin(); it != cmps.end(); ++it) {
     proj(*it) /= sum_of_weights;
   }
 }
@@ -111,15 +111,15 @@ struct ComponentSplitter {
     const auto p_prev = old_bound.absoluteMomentum();
 
     // Evaluate material slab
-    auto slab =
-        surface.surfaceMaterial()->materialSlab(
-            old_bound.position(state.stepping.geoContext),
-            state.stepping.navDir, MaterialUpdateStage::fullUpdate);
+    auto slab = surface.surfaceMaterial()->materialSlab(
+        old_bound.position(state.stepping.geoContext), state.stepping.navDir,
+        MaterialUpdateStage::fullUpdate);
 
-//     auto pathCorrection = surface.pathCorrection(
-//         state.stepping.geoContext, old_bound.position(state.stepping.geoContext),
-//         old_bound.unitDirection());
-//     slab.scaleThickness(pathCorrection);
+    //     auto pathCorrection = surface.pathCorrection(
+    //         state.stepping.geoContext,
+    //         old_bound.position(state.stepping.geoContext),
+    //         old_bound.unitDirection());
+    //     slab.scaleThickness(pathCorrection);
 
     // Get the mixture
     const auto mixture = betheHeitler->mixture(slab.thicknessInX0());
@@ -171,7 +171,11 @@ struct ComponentSplitter {
         }();
 
         (*new_cov)(eBoundQOverP, eBoundQOverP) += varInvP;
-        throw_assert(std::isfinite((*new_cov)(eBoundQOverP, eBoundQOverP)), "cov not finite, varInvP=" << varInvP << ", p_prev=" << p_prev << ", gaussian.mean=" << gaussian.mean << ", gaussian.var=" << gaussian.var);
+        throw_assert(
+            std::isfinite((*new_cov)(eBoundQOverP, eBoundQOverP)),
+            "cov not finite, varInvP=" << varInvP << ", p_prev=" << p_prev
+                                       << ", gaussian.mean=" << gaussian.mean
+                                       << ", gaussian.var=" << gaussian.var);
       }
 
       // Set the remaining things and push to vector

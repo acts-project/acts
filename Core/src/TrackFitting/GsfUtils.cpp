@@ -11,11 +11,11 @@
 namespace Acts {
 namespace detail {
 
-
 auto extractMultiComponentState(const MultiTrajectory &traj,
                                 const std::vector<size_t> &tips,
                                 const std::map<size_t, ActsScalar> &weights,
-                                StatesType type) -> MultiComponentBoundTrackParameters<SinglyCharged> {
+                                StatesType type)
+    -> MultiComponentBoundTrackParameters<SinglyCharged> {
   throw_assert(
       !tips.empty(),
       "need at least one component to extract trajectory of type " << type);
@@ -55,6 +55,5 @@ auto extractMultiComponentState(const MultiTrajectory &traj,
   return MultiComponentBoundTrackParameters<SinglyCharged>(surface, cmps);
 }
 
-
-}
-}
+}  // namespace detail
+}  // namespace Acts

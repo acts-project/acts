@@ -37,7 +37,8 @@ class GsfErrorCategory : public std::error_category {
       case GsfError::LastStepParamsContainNan:
         return "The parameters to start the last step with contain NAN values";
       case GsfError::SmoothingFailed:
-        return "Smoothing failed because the difference between fwd and bwd was to big";
+        return "Smoothing failed because the difference between fwd and bwd "
+               "was to big";
       default:
         return "unknown";
     }

@@ -11,9 +11,9 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MultiStepperAborters.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
-#include "Acts/TrackFitting/detail/GsfActor.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/TrackFitting/detail/BetheHeitlerApprox.hpp"
+#include "Acts/TrackFitting/detail/GsfActor.hpp"
 
 #include <fstream>
 
@@ -462,7 +462,8 @@ struct GaussianSumFitter {
 
         auto lastPropOptions = bwdPropInitializer(options, logger);
 
-        auto& actor = lastPropOptions.actionList.template get<detail::GsfActor>();
+        auto& actor =
+            lastPropOptions.actionList.template get<detail::GsfActor>();
         actor.m_cfg.maxComponents = options.maxComponents;
         actor.m_cfg.abortOnError = options.abortOnError;
         actor.m_cfg.applyMaterialEffects = options.applyMaterialEffects;

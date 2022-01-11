@@ -130,49 +130,51 @@ class BetheHeitlerApprox {
 
 using BHApprox = BetheHeitlerApprox<6, 5>;
 
+template <std::size_t NCmps, std::size_t Order>
+auto load_bethe_heitler_data(const std::string &filepath) ->
+    typename BetheHeitlerApprox<NCmps, Order>::Data {
+  std::ifstream file(filepath);
 
-template<std::size_t NCmps, std::size_t Order>
-auto load_bethe_heitler_data(const std::string &filepath) -> typename BetheHeitlerApprox<NCmps, Order>::Data {
-    std::ifstream file(filepath);
+  if (!file) {
+    throw std::invalid_argument("Could not open '" + filepath + "'");
+  }
 
-    if( !file ) {
-        throw std::invalid_argument("Could not open '" + filepath + "'");
+  std::size_t n_cmps, order;
+  bool transform_code;
+
+  file >> n_cmps >> order >> transform_code;
+
+  if (NCmps != n_cmps) {
+    throw std::invalid_argument("Wrong number of components in '" + filepath +
+                                "'");
+  }
+
+  if (Order != order) {
+    throw std::invalid_argument("Wrong wrong polynom order in '" + filepath +
+                                "'");
+  }
+
+  if (!transform_code) {
+    throw std::invalid_argument("Transform-code is required in '" + filepath +
+                                "'");
+  }
+
+  typename BetheHeitlerApprox<NCmps, Order>::Data data;
+
+  for (auto &cmp : data) {
+    for (auto &coeff : cmp.weightCoeffs) {
+      file >> coeff;
     }
-
-    std::size_t n_cmps, order;
-    bool transform_code;
-
-    file >> n_cmps >> order >> transform_code;
-
-    if(NCmps != n_cmps) {
-        throw std::invalid_argument("Wrong number of components in '" + filepath + "'");
+    for (auto &coeff : cmp.meanCoeffs) {
+      file >> coeff;
     }
-
-    if(Order != order) {
-        throw std::invalid_argument("Wrong wrong polynom order in '" + filepath + "'");
+    for (auto &coeff : cmp.varCoeffs) {
+      file >> coeff;
     }
+  }
 
-    if(!transform_code) {
-        throw std::invalid_argument("Transform-code is required in '" + filepath + "'");
-    }
-
-    typename BetheHeitlerApprox<NCmps, Order>::Data data;
-
-    for(auto &cmp : data) {
-        for(auto &coeff : cmp.weightCoeffs){
-            file >> coeff;
-        }
-        for(auto &coeff : cmp.meanCoeffs){
-            file >> coeff;
-        }
-        for(auto &coeff : cmp.varCoeffs){
-            file >> coeff;
-        }
-    }
-
-    return data;
+  return data;
 }
-
 
 /// These data are from ATHENA
 /// (TrkGaussianSumFilter/Data/BetheHeitler_cdf_nC6_O5.par)
