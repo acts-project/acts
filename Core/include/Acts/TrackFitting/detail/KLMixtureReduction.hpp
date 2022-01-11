@@ -11,6 +11,7 @@
 #include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Utilities/detail/gaussian_mixture_helpers.hpp"
 
 #include "GsfUtils.hpp"
 

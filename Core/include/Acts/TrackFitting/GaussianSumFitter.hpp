@@ -28,17 +28,22 @@ namespace Acts {
 
 namespace detail {
 
-/// Type trait to identify if a type is a MultiComponentBoundTrackParameters
+/// Type trait to identify if a type is a MultiComponentBoundTrackParameters and
+/// to inspect its charge representation if not TODO this probably gives an ugly
+/// error message if detectCharge does not compile
 template <typename T>
 struct IsMultiComponentBoundParameters : public std::false_type {
-  using Charge = T;
+  template <template <class> class U, class V>
+  static auto detectCharge(const U<V>&) {
+    return V{};
+  }
+
+  using Charge = decltype(detectCharge(std::declval<T>()));
 };
 
 template <typename T>
 struct IsMultiComponentBoundParameters<MultiComponentBoundTrackParameters<T>>
-    : public std::true_type {
-  using Charge = T;
-};
+    : public std::true_type {};
 
 }  // namespace detail
 

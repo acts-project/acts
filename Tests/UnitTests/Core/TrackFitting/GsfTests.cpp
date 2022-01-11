@@ -21,17 +21,12 @@
 #include <random>
 
 #include "FitterTestsCommon.hpp"
-#include "PrecompiledGsf.hpp"
 
 namespace {
 
 using namespace Acts;
 using namespace Acts::Test;
 using namespace Acts::UnitLiterals;
-
-using Stepper = Acts::MultiEigenStepperLoop<>;
-using Propagator =
-    PrecompiledGsfPropagator;  // Acts::Propagator<Stepper, Acts::Navigator>;
 
 using KalmanUpdater = Acts::GainMatrixUpdater;
 using KalmanSmoother = Acts::GainMatrixSmoother;
@@ -47,14 +42,16 @@ KalmanFitterExtensions getExtensions() {
   return extensions;
 }
 
-// Instatiate the tester
 FitterTester tester;
 
-// reconstruction propagator and fitter
 const auto logger = getDefaultLogger("GSF", Logging::INFO);
+
+using Stepper = Acts::MultiEigenStepperLoop<>;
+using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
+
 auto gsfZeroPropagator =
     makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T);
-const PrecompiledGsf gsfZero(std::move(gsfZeroPropagator));
+const GaussianSumFitter<Propagator> gsfZero(std::move(gsfZeroPropagator));
 
 std::default_random_engine rng(42);
 
