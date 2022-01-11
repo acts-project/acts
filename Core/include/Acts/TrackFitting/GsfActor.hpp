@@ -666,11 +666,12 @@ struct GsfActor {
           RETURN_ERROR_OR_ABORT_ACTOR(updateRes.error());
         }
 
+        // If this is once true, it cannot become false anymore
         is_valid_measurement = true;
+
         trackProxy.typeFlags().set(TrackStateFlag::MeasurementFlag);
       } else {
-        // TODO ACTS_VERBOSE message
-        throw std::runtime_error("outlier handling not yet implemented fully");
+        ACTS_VERBOSE("Outlier detected");
 
         // Set the outlier type flag
         trackProxy.typeFlags().set(TrackStateFlag::OutlierFlag);
