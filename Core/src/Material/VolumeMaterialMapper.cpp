@@ -244,7 +244,7 @@ void Acts::VolumeMaterialMapper::createExtraHits(
     return;
   }
 
-  // Computing the extra hits properties based on the mappingStep lenght
+  // Computing the extra hits properties based on the mappingStep length
   int volumeStep = floor(properties.thickness() / m_cfg.mappingStep);
   float remainder = properties.thickness() - m_cfg.mappingStep * volumeStep;
   properties.scaleThickness(m_cfg.mappingStep / properties.thickness());
@@ -262,7 +262,7 @@ void Acts::VolumeMaterialMapper::createExtraHits(
             mState.transform2D[currentBinning.first](extraPosition));
         grid->second.atLocalBins(index).accumulate(properties);
       } else {
-        throw std::domain_error("No grind 2D was found");
+        throw std::domain_error("No grid 2D was found");
       }
     } else if (currentBinning.second.dimensions() == 3) {
       auto grid = mState.grid3D.find(currentBinning.first);
@@ -272,13 +272,13 @@ void Acts::VolumeMaterialMapper::createExtraHits(
             mState.transform3D[currentBinning.first](extraPosition));
         grid->second.atLocalBins(index).accumulate(properties);
       } else {
-        throw std::domain_error("No grind 3D was found");
+        throw std::domain_error("No grid 3D was found");
       }
     }
   }
 
   if (remainder > 0) {
-    // We need to had an additional extra hit with the remainder lengh. Adjust
+    // We need to had an additional extra hit with the remainder length. Adjust
     // the thickness of the last extrapolated step
     properties.scaleThickness(remainder / properties.thickness());
     Vector3 extraPosition = position + volumeStep * direction;
@@ -290,7 +290,7 @@ void Acts::VolumeMaterialMapper::createExtraHits(
             mState.transform2D[currentBinning.first](extraPosition));
         grid->second.atLocalBins(index).accumulate(properties);
       } else {
-        throw std::domain_error("No grind 2D was found");
+        throw std::domain_error("No grid 2D was found");
       }
     } else if (currentBinning.second.dimensions() == 3) {
       auto grid = mState.grid3D.find(currentBinning.first);
@@ -300,7 +300,7 @@ void Acts::VolumeMaterialMapper::createExtraHits(
             mState.transform3D[currentBinning.first](extraPosition));
         grid->second.atLocalBins(index).accumulate(properties);
       } else {
-        throw std::domain_error("No grind 3D was found");
+        throw std::domain_error("No grid 3D was found");
       }
     }
   }
@@ -329,7 +329,7 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
             InterpolatedMaterialMap<MaterialMapper<Acts::MaterialGrid2D>>>(
             std::move(matMap), matBin.second);
       } else {
-        throw std::domain_error("No grind 2D was found");
+        throw std::domain_error("No grid 2D was found");
       }
     } else if (matBin.second.dimensions() == 3) {
       // Average the material in the 3D grid then create an
@@ -344,7 +344,7 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
             InterpolatedMaterialMap<MaterialMapper<Acts::MaterialGrid3D>>>(
             std::move(matMap), matBin.second);
       } else {
-        throw std::domain_error("No grind 3D was found");
+        throw std::domain_error("No grid 3D was found");
       }
     } else {
       throw std::invalid_argument(
