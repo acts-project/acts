@@ -16,6 +16,7 @@ def runMaterialValidation(
     decorators,
     field,
     outputDir,
+    outputName="propagation-material",
     s=None,
 ):
     s = s or Sequencer(events=1000, numThreads=-1)
@@ -48,7 +49,7 @@ def runMaterialValidation(
         RootMaterialTrackWriter(
             level=acts.logging.INFO,
             collection=alg.config.propagationMaterialCollection,
-            filePath=os.path.join(outputDir, "propagation-material.root"),
+            filePath=os.path.join(outputDir, (outputName + ".root")),
             storeSurface=True,
             storeVolume=True,
         )
