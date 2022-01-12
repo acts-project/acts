@@ -97,16 +97,14 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
                        const LayerConfig& lCfg,
                        unsigned int pl_id = 0) -> void {
     int nb0 = 0, nt0 = 0;
-    if (lCfg.binning0.size() <= pl_id) {
-      // Has not been configured for auto-binning
-      if (lCfg.binning0.empty() or (std::get<int>(lCfg.binning0.at(0)) > 0)) {
-        ACTS_WARNING(
-            "Incorrect binning configuration found for loc1 protolayer #"
-            << pl_id
-            << ". Either no configuration or too few configurations were "
-               "provided. Using auto-binning for this layer instead.");
-      }
-    } else {
+    bool is_autobinning = ((lCfg.binning0.size() == 1) and
+                           (std::get<int>(lCfg.binning0.at(0)) <= 0));
+    if (!is_autobinning and std::get<int>(lCfg.binning0.at(pl_id)) <= 0) {
+      throw std::invalid_argument(
+          "Incorrect binning configuration found for loc0 protolayer #" +
+          std::to_string(pl_id) +
+          ". No autobinning for single protolayer possible. Quitting.");
+    } else if (!is_autobinning) {
       // Set binning by hand if nb0 > 0 and nb1 > 0
       nb0 = std::get<int>(lCfg.binning0.at(pl_id));
       // For a binning type
@@ -114,16 +112,14 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
     }
 
     int nb1 = 0, nt1 = 0;
-    if (lCfg.binning1.size() <= pl_id) {
-      // Has not been configured for auto-binning
-      if (lCfg.binning1.empty() or (std::get<int>(lCfg.binning1.at(0)) > 0)) {
-        ACTS_WARNING(
-            "Incorrect binning configuration found for loc1 protolayer #"
-            << pl_id
-            << ". Either no configuration or too few configurations were "
-               "provided. Using auto-binning for this layer instead.");
-      }
-    } else {
+    is_autobinning = (lCfg.binning1.size() == 1) and
+                     (std::get<int>(lCfg.binning1.at(0)) <= 0);
+    if (!is_autobinning and std::get<int>(lCfg.binning1.at(pl_id)) <= 0) {
+      throw std::invalid_argument(
+          "Incorrect binning configuration found for loc1 protolayer #" +
+          std::to_string(pl_id) +
+          ". No autobinning for single protolayer possible. Quitting.");
+    } else if (!is_autobinning) {
       // Set binning by hand if nb0 > 0 and nb1 > 0
       nb1 = std::get<int>(lCfg.binning1.at(pl_id));
       // For a binning type
@@ -246,6 +242,25 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
             gctx, unpack_shared_vector(layerSurfaces), layerCfg.splitConfigs);
         ACTS_DEBUG("- splitting into " << protoLayers.size() << " layers.");
 
+        // Number of options mismatch and has not been configured for
+        // auto-binning
+        const bool is_loc0_n_config =
+            layerCfg.binning0.size() == protoLayers.size();
+        const bool is_loc0_autobinning =
+            (layerCfg.binning0.size() == 1) and
+            (std::get<int>(layerCfg.binning0.at(0)) <= 0);
+        const bool is_loc1_n_config =
+            layerCfg.binning1.size() == protoLayers.size();
+        const bool is_loc1_autobinning =
+            (layerCfg.binning1.size() == 1) and
+            (std::get<int>(layerCfg.binning1.at(0)) <= 0);
+        if ((!is_loc0_n_config and !is_loc0_autobinning) or
+            (!is_loc1_n_config and !is_loc1_autobinning)) {
+          throw std::invalid_argument(
+              "Incorrect binning configuration found: Number of configurations "
+              "does not match number of protolayers in subvolume " +
+              layerCfg.volumeName + ". Quitting.");
+        }
         unsigned int layer_id = 0;
         for (auto& pLayer : protoLayers) {
           layerSurfaces.clear();
