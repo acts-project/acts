@@ -112,7 +112,7 @@ void test_multi_stepper_state() {
 
   // Test the result & compare with the input/test for reasonable members
   auto const_iterable = ms.constComponentIterable(state);
-  for (const auto &cmp : const_iterable) {
+  for (const auto cmp : const_iterable) {
     BOOST_CHECK_EQUAL(cmp.jacTransport(), FreeMatrix::Identity());
     BOOST_CHECK_EQUAL(cmp.derivative(), FreeVector::Zero());
     if constexpr (not Cov) {
@@ -130,12 +130,12 @@ void test_multi_stepper_state() {
   }();
 
   BOOST_CHECK_EQUAL(ms.charge(state), expected_charge);
-  for (const auto &cmp : const_iterable) {
+  for (const auto cmp : const_iterable) {
     BOOST_CHECK_EQUAL(cmp.charge(), expected_charge);
   }
 
   BOOST_CHECK_EQUAL(state.pathAccumulated, 0.);
-  for (const auto &cmp : const_iterable) {
+  for (const auto cmp : const_iterable) {
     BOOST_CHECK_EQUAL(cmp.pathAccumulated(), 0.);
   }
 
@@ -230,7 +230,7 @@ void test_multi_stepper_vs_eigen_stepper() {
 
     BOOST_CHECK_EQUAL(*single_result, *multi_result);
 
-    for (const auto &cmp : multi_stepper.constComponentIterable(multi_state)) {
+    for (const auto cmp : multi_stepper.constComponentIterable(multi_state)) {
       BOOST_CHECK_EQUAL(cmp.pars(), single_state.pars);
       BOOST_CHECK_EQUAL(cmp.charge(), single_state.q);
       BOOST_CHECK_EQUAL(cmp.cov(), single_state.cov);
@@ -640,7 +640,7 @@ void test_single_component_interface_function() {
                       cmp.pars()[eFreeQOverP], 1.e-8);
   };
 
-  for (const auto &cmp : multi_stepper.constComponentIterable(multi_state)) {
+  for (const auto cmp : multi_stepper.constComponentIterable(multi_state)) {
     check(cmp);
   }
 
