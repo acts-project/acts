@@ -103,7 +103,8 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
       throw std::invalid_argument(
           "Incorrect binning configuration found for loc0 protolayer #" +
           std::to_string(pl_id) +
-          ". No autobinning for single protolayer possible. Quitting.");
+          ". Layer is autobinned: No mixed binning (manual and auto) for loc0 "
+          "possible between layers in a single subvolume. Quitting");
     } else if (!is_autobinning) {
       // Set binning by hand if nb0 > 0 and nb1 > 0
       nb0 = std::get<int>(lCfg.binning0.at(pl_id));
@@ -118,7 +119,8 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
       throw std::invalid_argument(
           "Incorrect binning configuration found for loc1 protolayer #" +
           std::to_string(pl_id) +
-          ". No autobinning for single protolayer possible. Quitting.");
+          ". Layer is autobinned: No mixed binning (manual and auto) for loc1 "
+          "possible between layers in a single subvolume. Quitting");
     } else if (!is_autobinning) {
       // Set binning by hand if nb0 > 0 and nb1 > 0
       nb1 = std::get<int>(lCfg.binning1.at(pl_id));
