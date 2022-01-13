@@ -151,6 +151,12 @@ def buildITkGeometry(geo_dir: Path, material: bool = True):
                     central=[(12, equidistant), (6, equidistant)],
                     positive=[(0, equidistant)],
                 ),
+                cylinderDiscSplit=False,
+                cylinderNZSegments=0,
+                cylinderNPhiSegments=0,
+                discNRSegments=0,
+                discNPhiSegments=0,
+                itkModuleSplit=False,
             ),
             Volume(
                 name="OuterPixels",
@@ -183,6 +189,12 @@ def buildITkGeometry(geo_dir: Path, material: bool = True):
                     central=[(0, equidistant)],
                     positive=[(0, equidistant)],
                 ),
+                cylinderDiscSplit=False,
+                cylinderNZSegments=0,
+                cylinderNPhiSegments=0,
+                discNRSegments=0,
+                discNPhiSegments=0,
+                itkModuleSplit=False,
             ),
             Volume(
                 name="Strips",
@@ -225,6 +237,44 @@ def buildITkGeometry(geo_dir: Path, material: bool = True):
                     central=[(28, equidistant)] * 4,
                     positive=[(0, equidistant)],
                 ),
+                cylinderDiscSplit=False,
+                cylinderNZSegments=0,
+                cylinderNPhiSegments=0,
+                discNRSegments=0,
+                discNPhiSegments=0,
+                itkModuleSplit=True,
+                barrelMap={"MS": 2, "SS": 4},
+                discMap={"EC0": [
+                        [384.5, 403.481],
+                        [403.481, 427.462], 
+                        [427.462, 456.442], 
+                        [456.442, 488.423]
+                        ],
+                        "EC1": [
+                        [489.823, 507.916],
+                        [507.916, 535.009], 
+                        [535.009, 559.101], 
+                        [559.101, 574.194]
+                        ],
+                        "EC2": [
+                        [575.594, 606.402],
+                        [606.402, 637.209]
+                        ],
+                        "EC3": [
+                        [638.609, 670.832],
+                        [670.832, 697.055], 
+                        [697.055, 723.278], 
+                        [723.278, 755.501]
+                        ],
+                        "EC4": [
+                        [756.901, 811.482],
+                        [811.482, 866.062]
+                        ],
+                        "EC5": [
+                        [867.462, 907.623],
+                        [907.623, 967.785]
+                        ]
+                },
             ),
             Volume(
                 name="HGTD",
@@ -255,6 +305,12 @@ def buildITkGeometry(geo_dir: Path, material: bool = True):
                     central=[(0, equidistant)],
                     positive=[(0, equidistant)],
                 ),
+                cylinderDiscSplit=False,
+                cylinderNZSegments=0,
+                cylinderNPhiSegments=0,
+                discNRSegments=0,
+                discNPhiSegments=0,
+                itkModuleSplit=False,
             ),
         ],
     )
