@@ -49,7 +49,7 @@ template <typename external_spacepoint_t>
 void transformCoordinates(
     std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
-    std::vector<LinCircle>& linCircleVec);
+    std::vector<LinCircle>& linCircleVec, bool EnableCutsForSortedSP);
 }  // namespace Acts
 
 #include "Acts/Seeding/SeedFinderUtils.ipp"

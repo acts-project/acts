@@ -48,7 +48,7 @@ template <typename external_spacepoint_t>
 void transformCoordinates(
     std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
-    std::vector<LinCircle>& linCircleVec) {
+    std::vector<LinCircle>& linCircleVec, bool EnableCutsForSortedSP) {
   float xM = spM.x();
   float yM = spM.y();
   float zM = spM.z();
@@ -95,9 +95,11 @@ void transformCoordinates(
     linCircleVec.push_back(l);
   }
   // sort the SP in order of cotTheta
-  std::sort(linCircleVec.begin(), linCircleVec.end(),
-            [](const LinCircle& a, const LinCircle& b) -> bool {
-              return (a.cotTheta < b.cotTheta);
-            });
+	if (EnableCutsForSortedSP) {
+	  std::sort(linCircleVec.begin(), linCircleVec.end(),
+  	          [](const LinCircle& a, const LinCircle& b) -> bool {
+    	          return (a.cotTheta < b.cotTheta);
+      	      });
+	}
 }
 }  // namespace Acts

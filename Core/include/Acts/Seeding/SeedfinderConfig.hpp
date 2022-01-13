@@ -67,6 +67,9 @@ struct SeedfinderConfig {
 
   // non equidistant binning in z
   std::vector<float> zBinEdges;
+	
+  // sort the SP in transformCoordinates method and enables compatibility cuts based on the sorting of cotTheta
+	bool EnableCutsForSortedSP = false;
 
   // FIXME: this is not used yet
   //        float upperPtResolutionPerSeed = 20* Acts::GeV;
