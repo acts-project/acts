@@ -14,6 +14,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     const VertexingOptions<InputTrack_t>& vertexingOptions,
     State& /*state*/) const -> Result<std::vector<Vertex<InputTrack_t>>> {
   if (allTracks.empty()) {
+    ACTS_ERROR("Empty track collection handed to find method");
     return VertexingError::EmptyInput;
   }
   // Original tracks
