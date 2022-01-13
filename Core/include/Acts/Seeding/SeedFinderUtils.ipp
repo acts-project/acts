@@ -48,7 +48,7 @@ template <typename external_spacepoint_t>
 void transformCoordinates(
     std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
-    std::vector<LinCircle>& linCircleVec, bool EnableCutsForSortedSP) {
+    bool EnableCutsForSortedSP, std::vector<LinCircle>& linCircleVec) {
   float xM = spM.x();
   float yM = spM.y();
   float zM = spM.z();
