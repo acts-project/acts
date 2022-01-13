@@ -23,7 +23,7 @@ void ActsExamples::Options::addParticleSmearingOptions(Description& desc) {
       "Smear the initial time in ns");
   opt("smear-sigma-momentum", value<Reals<3>>()->default_value({{1, 1, 0.05}}),
       "Smear the initial phi (degree), theta (degree) and momentum (relative)");
-  opt("fit-initial-variance-inflation",
+  opt("smear-initial-variance-inflation",
       value<Reals<6>>()->default_value({{1., 1., 1., 1., 1., 1.}}),
       "Inflate the initial covariance matrix");
 }
@@ -51,7 +51,7 @@ ActsExamples::Options::readParticleSmearingOptions(
   cfg.sigmaTheta = sigmaMomOpts[1] * Acts::UnitConstants::degree;
   cfg.sigmaPRel = sigmaMomOpts[2];
   auto varInflation =
-      vars["fit-initial-variance-inflation"].template as<Reals<6>>();
+      vars["smear-initial-variance-inflation"].template as<Reals<6>>();
   cfg.initialVarInflation = {varInflation[0], varInflation[1], varInflation[2],
                              varInflation[3], varInflation[4], varInflation[5]};
   return cfg;

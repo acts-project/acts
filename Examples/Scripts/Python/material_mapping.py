@@ -33,6 +33,7 @@ def runMaterialMapping(
     decorators,
     outputDir,
     inputDir,
+    mapName="material-map",
     mapSurface=True,
     mapVolume=True,
     s=None,
@@ -97,7 +98,7 @@ def runMaterialMapping(
     jmw = JsonMaterialWriter(
         level=acts.logging.VERBOSE,
         converterCfg=jmConverterCfg,
-        fileName=os.path.join(outputDir, "material-map"),
+        fileName=os.path.join(outputDir, mapName),
         writeFormat=JsonFormat.Json,
     )
 
@@ -107,7 +108,7 @@ def runMaterialMapping(
             collection=mmAlgCfg.mappingMaterialCollection,
             filePath=os.path.join(
                 outputDir,
-                "material-maps_tracks.root",
+                mapName + "_tracks.root",
             ),
             storeSurface=True,
             storeVolume=True,
