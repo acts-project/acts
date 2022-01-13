@@ -20,7 +20,6 @@ import acts
 
 from acts import MaterialMapJsonConverter, UnitConstants as u
 
-
 def runITk(
     trackingGeometry,
     decorators,
@@ -97,6 +96,8 @@ def runITk(
 def buildITkGeometry(geo_dir: Path, material: bool = True):
     Volume = TGeoDetector.Config.Volume
     LayerTriplet = TGeoDetector.Config.LayerTriplet
+    equidistant = TGeoDetector.Config.BinningType(0)
+    arbritrary = TGeoDetector.Config.BinningType(1)
 
     logger = acts.logging.getLogger("buildITkGeometry")
 
@@ -140,6 +141,16 @@ def buildITkGeometry(geo_dir: Path, material: bool = True):
                 splitTolZ=LayerTriplet(
                     negative=10 * u.mm, central=-1.0, positive=10 * u.mm
                 ),
+                binning0=LayerTriplet(
+                    negative=[(0, equidistant)],
+                    central=[(6, equidistant), (10, equidistant)],
+                    positive=[(0, equidistant)],
+                ),
+                binning1=LayerTriplet(
+                    negative=[(0, equidistant)],
+                    central=[(12, equidistant), (6, equidistant)],
+                    positive=[(0, equidistant)],
+                ),
             ),
             Volume(
                 name="OuterPixels",
@@ -161,6 +172,16 @@ def buildITkGeometry(geo_dir: Path, material: bool = True):
                 ),
                 splitTolZ=LayerTriplet(
                     negative=20 * u.mm, central=-1.0, positive=20 * u.mm
+                ),
+                binning0=LayerTriplet(
+                    negative=[(0, equidistant)],
+                    central=[(0, equidistant)],
+                    positive=[(0, equidistant)],
+                ),
+                binning1=LayerTriplet(
+                    negative=[(0, equidistant)],
+                    central=[(0, equidistant)],
+                    positive=[(0, equidistant)],
                 ),
             ),
             Volume(
@@ -194,6 +215,16 @@ def buildITkGeometry(geo_dir: Path, material: bool = True):
                 splitTolZ=LayerTriplet(
                     negative=35 * u.mm, central=-1.0, positive=35 * u.mm
                 ),
+                binning0=LayerTriplet(
+                    negative=[(6, equidistant)] * 6,
+                    central=[(30, equidistant), (40, equidistant), (56, equidistant), (72, equidistant)],
+                    positive=[(6, equidistant)] * 6,
+                ),
+                binning1=LayerTriplet(
+                    negative=[(0, equidistant)],
+                    central=[(28, equidistant)] * 4,
+                    positive=[(0, equidistant)],
+                ),
             ),
             Volume(
                 name="HGTD",
@@ -214,6 +245,16 @@ def buildITkGeometry(geo_dir: Path, material: bool = True):
                 ),
                 splitTolR=LayerTriplet(-1.0),
                 splitTolZ=LayerTriplet(negative=10 * u.mm, positive=10 * u.mm),
+                binning0=LayerTriplet(
+                    negative=[(0, equidistant)],
+                    central=[(0, equidistant)],
+                    positive=[(0, equidistant)],
+                ),
+                binning1=LayerTriplet(
+                    negative=[(0, equidistant)],
+                    central=[(0, equidistant)],
+                    positive=[(0, equidistant)],
+                ),
             ),
         ],
     )
