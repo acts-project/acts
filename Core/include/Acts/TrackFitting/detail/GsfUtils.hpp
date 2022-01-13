@@ -31,9 +31,9 @@ bool weightsAreNormalized(const component_range_t &cmps,
                           double tol = s_normalizationTolerance,
                           print_flag_t print_flag = print_flag_t{}) {
   double sum_of_weights = 0.0;
-
-  for (const auto &cmp : cmps) {
-    sum_of_weights += proj(cmp);
+  
+  for (auto it = cmps.begin(); it != cmps.end(); ++it) {
+    sum_of_weights += proj(*it);
   }
 
   if (std::abs(sum_of_weights - 1.0) < tol) {
