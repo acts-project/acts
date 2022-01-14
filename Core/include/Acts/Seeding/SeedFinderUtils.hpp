@@ -44,12 +44,13 @@ LinCircle transformCoordinates(
 /// @param[in] vec The list of bottom or top spacepoints
 /// @param[in] spM The middle spacepoint.
 /// @param[in] bottom Should be true if vec are bottom spacepoints.
+/// @param[in] enableCutsForSortedSP enables sorting of cotTheta.
 /// @param[out] linCircleVec The output vector to write to.
 template <typename external_spacepoint_t>
 void transformCoordinates(
     std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
-    std::vector<LinCircle>& linCircleVec);
+    bool enableCutsForSortedSP, std::vector<LinCircle>& linCircleVec);
 }  // namespace Acts
 
 #include "Acts/Seeding/SeedFinderUtils.ipp"
