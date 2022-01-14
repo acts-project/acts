@@ -225,9 +225,9 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     state.linCircleTop.clear();
 
     transformCoordinates(state.compatBottomSP, *spM, true,
-                         m_config.EnableCutsForSortedSP, state.linCircleBottom);
+                         m_config.enableCutsForSortedSP, state.linCircleBottom);
     transformCoordinates(state.compatTopSP, *spM, false,
-                         m_config.EnableCutsForSortedSP, state.linCircleTop);
+                         m_config.enableCutsForSortedSP, state.linCircleTop);
 
     state.topSpVec.clear();
     state.curvatures.clear();
@@ -281,7 +281,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
         float error;
         float dCotThetaMinusError2;
-        if (m_config.EnableCutsForSortedSP) {
+        if (m_config.enableCutsForSortedSP) {
           // if the error is larger than the difference in theta, no need to
           // compare with scattering
           if (deltaCotTheta2 - error2 > scatteringInRegion2) {
@@ -350,7 +350,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         // from rad to deltaCotTheta
         float p2scatterSigma = pT2scatterSigma * iSinTheta2;
         // if deltaTheta larger than allowed scattering for calculated pT, skip
-        if (m_config.EnableCutsForSortedSP) {
+        if (m_config.enableCutsForSortedSP) {
           if (deltaCotTheta2 - error2 > p2scatterSigma) {
             if (cotThetaB - lt.cotTheta < 0) {
               break;
