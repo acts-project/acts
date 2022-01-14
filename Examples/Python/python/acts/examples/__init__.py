@@ -67,7 +67,12 @@ def _makeLayerTriplet(*args, **kwargs):
         ):
             return fill(TGeoDetector.Config.LayerTripletVectorString())
         elif all(
-            all((isinstance(v, tuple) or isinstance(v, list)) and isinstance(v[0], int) and isinstance(v[1], TGeoDetector.Config.BinningType) for v in vv)
+            all(
+                (isinstance(v, tuple) or isinstance(v, list))
+                and isinstance(v[0], int)
+                and isinstance(v[1], TGeoDetector.Config.BinningType)
+                for v in vv
+            )
             for vv in (negative, central, positive)
             if vv is not None
         ):

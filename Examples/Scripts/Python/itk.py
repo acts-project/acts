@@ -20,6 +20,7 @@ import acts
 
 from acts import MaterialMapJsonConverter, UnitConstants as u
 
+
 def runITk(
     trackingGeometry,
     decorators,
@@ -96,8 +97,8 @@ def runITk(
 def buildITkGeometry(geo_dir: Path, material: bool = True):
     Volume = TGeoDetector.Config.Volume
     LayerTriplet = TGeoDetector.Config.LayerTriplet
-    equidistant = TGeoDetector.Config.BinningType(0)
-    arbritrary = TGeoDetector.Config.BinningType(1)
+    equidistant = TGeoDetector.Config.BinningType.equidistant
+    arbitrary = TGeoDetector.Config.BinningType.arbitrary
 
     logger = acts.logging.getLogger("buildITkGeometry")
 
@@ -228,9 +229,14 @@ def buildITkGeometry(geo_dir: Path, material: bool = True):
                     negative=35 * u.mm, central=-1.0, positive=35 * u.mm
                 ),
                 binning0=LayerTriplet(
-                    negative=[(6, equidistant)] * 6,
-                    central=[(30, equidistant), (40, equidistant), (56, equidistant), (72, equidistant)],
-                    positive=[(6, equidistant)] * 6,
+                    negative=[(0, equidistant)],
+                    central=[
+                        (30, equidistant),
+                        (40, equidistant),
+                        (56, equidistant),
+                        (72, equidistant),
+                    ],
+                    positive=[(0, equidistant)],
                 ),
                 binning1=LayerTriplet(
                     negative=[(0, equidistant)],
@@ -244,36 +250,28 @@ def buildITkGeometry(geo_dir: Path, material: bool = True):
                 discNPhiSegments=0,
                 itkModuleSplit=True,
                 barrelMap={"MS": 2, "SS": 4},
-                discMap={"EC0": [
+                discMap={
+                    "EC0": [
                         [384.5, 403.481],
-                        [403.481, 427.462], 
-                        [427.462, 456.442], 
-                        [456.442, 488.423]
-                        ],
-                        "EC1": [
+                        [403.481, 427.462],
+                        [427.462, 456.442],
+                        [456.442, 488.423],
+                    ],
+                    "EC1": [
                         [489.823, 507.916],
-                        [507.916, 535.009], 
-                        [535.009, 559.101], 
-                        [559.101, 574.194]
-                        ],
-                        "EC2": [
-                        [575.594, 606.402],
-                        [606.402, 637.209]
-                        ],
-                        "EC3": [
+                        [507.916, 535.009],
+                        [535.009, 559.101],
+                        [559.101, 574.194],
+                    ],
+                    "EC2": [[575.594, 606.402], [606.402, 637.209]],
+                    "EC3": [
                         [638.609, 670.832],
-                        [670.832, 697.055], 
-                        [697.055, 723.278], 
-                        [723.278, 755.501]
-                        ],
-                        "EC4": [
-                        [756.901, 811.482],
-                        [811.482, 866.062]
-                        ],
-                        "EC5": [
-                        [867.462, 907.623],
-                        [907.623, 967.785]
-                        ]
+                        [670.832, 697.055],
+                        [697.055, 723.278],
+                        [723.278, 755.501],
+                    ],
+                    "EC4": [[756.901, 811.482], [811.482, 866.062]],
+                    "EC5": [[867.462, 907.623], [907.623, 967.785]],
                 },
             ),
             Volume(
