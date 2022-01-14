@@ -229,19 +229,14 @@ def buildITkGeometry(geo_dir: Path, material: bool = True):
                     negative=35 * u.mm, central=-1.0, positive=35 * u.mm
                 ),
                 binning0=LayerTriplet(
-                    negative=[(0, equidistant)],
-                    central=[
-                        (30, equidistant),
-                        (40, equidistant),
-                        (56, equidistant),
-                        (72, equidistant),
-                    ],
-                    positive=[(0, equidistant)],
+                    negative=[(-1, arbitrary)],
+                    central=[(0, equidistant)],
+                    positive=[(-1, arbitrary)],
                 ),
                 binning1=LayerTriplet(
-                    negative=[(0, equidistant)],
+                    negative=[(-1, arbitrary)],
                     central=[(28, equidistant)] * 4,
-                    positive=[(0, equidistant)],
+                    positive=[(-1, arbitrary)],
                 ),
                 cylinderDiscSplit=False,
                 cylinderNZSegments=0,

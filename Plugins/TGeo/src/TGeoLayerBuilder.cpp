@@ -105,11 +105,15 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
           std::to_string(pl_id) +
           ". Layer is autobinned: No mixed binning (manual and auto) for loc0 "
           "possible between layers in a single subvolume. Quitting");
-    } else if (!is_autobinning) {
+    }
+    if (is_autobinning) {
+      // Set binning by hand if nb0 > 0 and nb1 > 0
+      nb0 = std::get<int>(lCfg.binning0.at(0));
+      // Read the binning type
+      nt0 = std::get<BinningType>(lCfg.binning0.at(0));
+    } else if (pl_id < lCfg.binning0.size()) {
       // Set binning by hand if nb0 > 0 and nb1 > 0
       nb0 = std::get<int>(lCfg.binning0.at(pl_id));
-      // For a binning type
-      nt0 = std::get<BinningType>(lCfg.binning0.at(pl_id));
     }
 
     int nb1 = 0, nt1 = 0;
@@ -121,11 +125,15 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
           std::to_string(pl_id) +
           ". Layer is autobinned: No mixed binning (manual and auto) for loc1 "
           "possible between layers in a single subvolume. Quitting");
-    } else if (!is_autobinning) {
+    }
+    if (is_autobinning) {
+      // Set binning by hand if nb0 > 0 and nb1 > 0
+      nb1 = std::get<int>(lCfg.binning1.at(0));
+      // For a binning type
+      nt1 = std::get<BinningType>(lCfg.binning1.at(0));
+    } else if (pl_id < lCfg.binning1.size()) {
       // Set binning by hand if nb0 > 0 and nb1 > 0
       nb1 = std::get<int>(lCfg.binning1.at(pl_id));
-      // For a binning type
-      nt1 = std::get<BinningType>(lCfg.binning1.at(pl_id));
     }
 
     if (type == 0) {
@@ -135,7 +143,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
 
       pl.envelope[Acts::binR] = {lCfg.envelope.first, lCfg.envelope.second};
       pl.envelope[Acts::binZ] = {lCfg.envelope.second, lCfg.envelope.second};
-      if (nb0 > 0 and nb1 > 0) {
+      if (nb0 >= 0 and nb1 >= 0) {
         layers.push_back(
             m_cfg.layerCreator->cylinderLayer(gctx, lSurfaces, nb0, nb1, pl));
       } else {
@@ -149,7 +157,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
 
       pl.envelope[Acts::binR] = {lCfg.envelope.first, lCfg.envelope.second};
       pl.envelope[Acts::binZ] = {lCfg.envelope.second, lCfg.envelope.second};
-      if (nb0 > 0 and nb1 > 0) {
+      if (nb0 >= 0 and nb1 >= 0) {
         layers.push_back(
             m_cfg.layerCreator->discLayer(gctx, lSurfaces, nb0, nb1, pl));
       } else {
