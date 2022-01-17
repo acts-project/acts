@@ -197,6 +197,8 @@ if(ACTS_BUILD_PLUGIN_AUTODIFF)
     find_package(autodiff ${_acts_autodiff_version} CONFIG REQUIRED)
     message(STATUS "Using system installation of autodiff")
   else()
+    # This policy allows to set the options outside without changing autodiff's CMakeLists.txt
+    cmake_policy(SET CMP0077 NEW)
     set(AUTODIFF_BUILD_TESTS OFF)
     set(AUTODIFF_BUILD_PYTHON OFF)
     set(AUTODIFF_BUILD_EXAMPLES OFF)
