@@ -82,15 +82,19 @@ Acts::CylindricalVolumeHelper::buildVolume(const GeometryContext& gctx,
   }
   cExtent.extend(vExtent, s_binningValues, false);
 
+  // Build the bounds, as they might be needed by the surface links generation
+  auto volumeBounds = buildBounds(cExtent);
+
   // This gets the surface links generator, generates the links and
   // retrieves the surface links object for the volume and portal call
   const auto& surfaceLinksGenerator = iBlueprint.surfaceLinksGenerator();
-  auto surfaceLinks = surfaceLinksGenerator(gctx, iBlueprint.surfaces());
+  auto surfaceLinks =
+      surfaceLinksGenerator(gctx, iBlueprint.surfaces(), volumeBounds.get());
   auto volumeSurfaceLinks = std::get<0>(surfaceLinks);
   auto portalSurfaceLinks = std::get<1>(surfaceLinks);
 
   return DetectorVolume::makeShared(
-      buildTransform(cExtent), buildBounds(cExtent), iBlueprint.surfaces(),
+      buildTransform(cExtent), std::move(volumeBounds), iBlueprint.surfaces(),
       std::move(volumeSurfaceLinks), std::move(portalSurfaceLinks), name);
 }
 
@@ -175,7 +179,7 @@ void Acts::CylindricalVolumeHelper::checkExtents(
       std::stringstream sException;
       sException << "\n *** CylindricalVolumeHelper: internal structure does "
                     "not fit into "
-                    "externally providednvolume extent: \n";
+                    "externally provided volume extent: \n";
       sException << "   External: ";
       external.toStream(sException);
       sException << "\n   Internal: ";

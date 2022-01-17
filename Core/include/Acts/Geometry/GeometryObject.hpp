@@ -68,7 +68,7 @@ class GeometryObject {
   virtual double binningPositionValue(const GeometryContext& gctx,
                                       BinningValue bValue) const;
 
-  /// Set the value
+  /// Set the geometry identifier
   ///
   /// @param geometryId the geometry identifier to be assigned
   void assignGeometryId(const GeometryIdentifier& geometryId);

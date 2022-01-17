@@ -30,7 +30,7 @@ struct Step {
   Vector3 position = Vector3(0., 0., 0.);
   Vector3 momentum = Vector3(0., 0., 0.);
   std::shared_ptr<const Surface> surface = nullptr;
-  const TrackingVolume* volume = nullptr;
+  //const TrackingVolume* volume = nullptr;
 };
 
 /// @brief a step length logger for debugging the stepping
@@ -73,7 +73,7 @@ struct SteppingLogger {
       step.surface = state.navigation.currentSurface->getSharedPtr();
     }
 
-    step.volume = state.navigation.currentVolume;
+    //step.volume = state.navigation.currentVolume;
     result.steps.push_back(std::move(step));
   }
 

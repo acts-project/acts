@@ -47,6 +47,7 @@ inline std::vector<PortalIntersection> portalCandidates(
   for (const auto& p : portals) {
     // Get the intersection
     auto pIntersection = p->intersect(gctx, position, direction);
+    // Re-order if necessary
     if (pIntersection.intersection.pathLength + s_onSurfaceTolerance <
             pathRange[0] and
         pIntersection.alternative.pathLength + s_onSurfaceTolerance >
@@ -54,6 +55,10 @@ inline std::vector<PortalIntersection> portalCandidates(
         pIntersection.alternative.status >= Intersection3D::Status::reachable) {
       // Let's swap the solutions
       pIntersection.swapSolutions();
+    }
+    // Exclude on-portal solution
+    if (std::abs(pIntersection.intersection.pathLength) < s_onSurfaceTolerance){
+      continue;
     }
     pIntersections.push_back(pIntersection);
   }
@@ -100,7 +105,6 @@ struct SinglePortalLink {
     std::vector<PortalIntersection> pCandidates = {};
     if (volume != nullptr) {
       // Get the portals coordinates (ordered)
-      /// @todo: should run with a a tolerance that excludes the first portal
       pCandidates =
           portalCandidates(gctx, volume->portals(), position, direction);
 
@@ -148,8 +152,7 @@ struct MultiplePortalLink {
                                  const BoundaryCheck& bCheck,
                                  bool provideAll = false) const {
     // The portals one-time intersected
-    const Surface& surface = portal.surfaceRepresentation();
-    unsigned int vIndex = index(surface.transform(gctx), position);
+    unsigned int vIndex = index(position);
     if (vIndex < portalLinks.size()) {
       return portalLinks[vIndex](gctx, portal, position, direction, bCheck,
                                  provideAll);

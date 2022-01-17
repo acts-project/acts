@@ -222,8 +222,18 @@ class DetectorVolume {
   /// @return a vector to const DetectorVolume raw pointers
   const std::vector<const DetectorVolume*>& volumes() const;
 
-  /// Set the name ov the volume
+  /// Lock the geometry, this sets the GeometryIdentifier
+  /// of the sub surfaces
+  ///
+  /// @param geometryId is the geometry base identifier of
+  /// this detector volume
+  void lock(const GeometryIdentifier& geometryId = GeometryIdentifier().setVolume(1));
+
+  /// Set the name of the volume
   void setName(const std::string& name);
+
+  /// @return the geometry identifier
+  const GeometryIdentifier& geometryId() const;
 
   /// @return the name of the volume
   const std::string& name() const;
@@ -260,6 +270,9 @@ class DetectorVolume {
   /// Volume internal access to the volumes
   VolumeLink m_volumeLink = VoidVolumeLink{};
 
+  /// GeometryIdentifier of this volume
+  GeometryIdentifier m_geometryId;
+
   /// Name of the volume
   std::string m_name = "Unnamed";
 };
@@ -290,10 +303,13 @@ inline const std::vector<const DetectorVolume*>& DetectorVolume::volumes()
   return m_volumes.external;
 }
 
+inline const GeometryIdentifier& DetectorVolume::geometryId() const {
+  return m_geometryId;
+}
+
 inline void DetectorVolume::setName(const std::string& name) {
   m_name = name;
 }
-
 
 inline const std::string& DetectorVolume::name() const {
   return m_name;

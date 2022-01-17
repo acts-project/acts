@@ -12,13 +12,14 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Experimental/DetectorEnvironment.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
+#include <array>
 #include <functional>
 #include <memory>
 #include <vector>
-#include <array>
 
 namespace Acts {
 
@@ -31,7 +32,8 @@ class Surface;
 ///
 using SurfaceLinks = std::function<std::vector<SurfaceIntersection>(
     const GeometryContext&, const DetectorVolume&, const Vector3&,
-    const Vector3&, const BoundaryCheck&, const std::array<ActsScalar,2>&, bool)>;
+    const Vector3&, const BoundaryCheck&, const std::array<ActsScalar, 2>&,
+    bool)>;
 
 /// Decleare a void surface link that
 struct VoidSurfaceLink {
@@ -41,7 +43,8 @@ struct VoidSurfaceLink {
   std::vector<SurfaceIntersection> operator()(
       const GeometryContext& /*gctx*/, const DetectorVolume& /*volume*/,
       const Vector3& /*position*/, const Vector3& /*direction*/,
-      const BoundaryCheck& /*bCheck*/, const std::array<ActsScalar,2>& /*pathRange*/, bool) const {
+      const BoundaryCheck& /*bCheck*/,
+      const std::array<ActsScalar, 2>& /*pathRange*/, bool) const {
     return {};
   }
 };
@@ -49,12 +52,12 @@ struct VoidSurfaceLink {
 /// Definition of a VolumeLink function
 ///
 using VolumeLink =
-    std::function<unsigned int(const Transform3&, const Vector3&)>;
+    std::function<unsigned int(const Vector3&)>;
 
 /// Declare a void volume index
 struct VoidVolumeLink {
   /// @note the parameters are ignored in this context
-  unsigned int operator()(const Transform3&, const Vector3&) const {
+  unsigned int operator()(const Vector3&) const {
     return 0u;
   }
 };
@@ -81,7 +84,7 @@ struct VoidPortalLink {
                                  const Vector3& /*position*/,
                                  const Vector3& /*direction*/,
                                  const BoundaryCheck& /*bCheck*/,
-                                 bool /*provideAll = false*/) const {
+                                 bool /*provideAll = false*/) const { 
     return DetectorEnvironment{};
   }
 };
@@ -156,6 +159,11 @@ class Portal {
                            const Vector3& direction,
                            const BoundaryCheck& bCheck,
                            bool provideAll = false) const;
+
+  /// Set the geometry identifier (to the underlying surface)
+  ///
+  /// @param geometryId the geometry identifier to be assigned
+  void assignGeometryId(const GeometryIdentifier& geometryId);
 
  private:
   /// The surface representation of this portal

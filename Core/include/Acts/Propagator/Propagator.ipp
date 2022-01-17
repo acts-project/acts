@@ -55,13 +55,19 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
       }
       // Post-stepping:
       // navigator status call - action list - aborter list - target call
-      m_navigator.status(state, m_stepper);
+      if (not m_navigator.status(state, m_stepper)){
+        terminatedNormally = false;
+        break;
+      }
       state.options.actionList(state, m_stepper, result);
       if (state.options.abortList(result, state, m_stepper)) {
         terminatedNormally = true;
         break;
       }
-      m_navigator.target(state, m_stepper);
+      if (not m_navigator.target(state, m_stepper)){
+        terminatedNormally = false;
+        break;
+      }
     }
   } else {
     ACTS_VERBOSE("Propagation terminated without going into stepping loop.");
@@ -69,7 +75,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
 
   // if we didn't terminate normally (via aborters) set navigation break.
   // this will trigger error output in the lines below
-  if (!terminatedNormally) {
+  if (!terminatedNormally and not state.navigation.targetReached) {
     state.navigation.navigationBreak = true;
     ACTS_ERROR("Propagation reached the step count limit of "
                << state.options.maxSteps << " (did " << result.steps

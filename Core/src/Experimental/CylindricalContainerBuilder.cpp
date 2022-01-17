@@ -85,7 +85,9 @@ std::shared_ptr<Acts::DetectorVolume> Acts::CylindricalContainerBuilderR::build(
     for (auto cv : checkValues) {
       if (std::abs(fValues[cv] - cValues[cv]) >
           std::numeric_limits<ActsScalar>::epsilon()) {
-        std::string sException("\n *** Cylindrical container (in R): bounds are not consistent.\n");
+        std::string sException(
+            "\n *** Cylindrical container (in R): bounds are not "
+            "consistent.\n");
         sException += std::string(" *** Failed on comparing ");
         sException += std::to_string(fValues[cv]);
         sException += " with ";
@@ -98,7 +100,6 @@ std::shared_ptr<Acts::DetectorVolume> Acts::CylindricalContainerBuilderR::build(
 
     // Update the portal
     auto cPortalPtrs = cVolume->portalPtrs();
-
     lVolume->updatePortalPtr(cPortalPtrs[3u], 2u, true, backward);
   }
 
@@ -185,8 +186,6 @@ std::shared_ptr<Acts::DetectorVolume> Acts::CylindricalContainerBuilderZ::build(
   Vector3 fAxisZ = fTransform.rotation().col(2);
   std::vector<ActsScalar> fValues = fVolume->volumeBounds().values();
 
-  DetectorVolume* lVolume = fVolume;
-
   // The values that need to correspond
   std::vector<CylinderVolumeBounds::BoundValues> checkValues = {
       CylinderVolumeBounds::eMinR, CylinderVolumeBounds::eMaxR,
@@ -203,7 +202,6 @@ std::shared_ptr<Acts::DetectorVolume> Acts::CylindricalContainerBuilderZ::build(
     // The current volume
     DetectorVolume* cVolume = v.get();
     const Transform3& cTransform = cVolume->transform();
-
     auto cPortals = cVolume->portals();
     // Outer cover always exists
     oPortalLinks.push_back(cPortals[2]->portalLink(backward));
@@ -233,7 +231,9 @@ std::shared_ptr<Acts::DetectorVolume> Acts::CylindricalContainerBuilderZ::build(
     for (auto cv : checkValues) {
       if (std::abs(fValues[cv] - cValues[cv]) >
           std::numeric_limits<ActsScalar>::epsilon()) {
-        std::string sException("\n *** Cylindrical container (in Z): bounds are not consistent.\n");
+        std::string sException(
+            "\n *** Cylindrical container (in Z): bounds are not "
+            "consistent.\n");
         sException += std::string(" *** Failed on comparing ");
         sException += std::to_string(fValues[cv]);
         sException += " with ";
@@ -243,12 +243,6 @@ std::shared_ptr<Acts::DetectorVolume> Acts::CylindricalContainerBuilderZ::build(
         throw std::invalid_argument(sException.c_str());
       }
     }
-    // Update the portal
-    auto cPortalPtrs = cVolume->portalPtrs();
-    lVolume->updatePortalPtr(cPortalPtrs[1u], 1u);
-    // Remember the last volume
-    lVolume = cVolume;
-
   }  // end of loop
 
   // Create the z boundaries
@@ -309,15 +303,20 @@ std::shared_ptr<Acts::DetectorVolume> Acts::CylindricalContainerBuilderZ::build(
       std::make_unique<CylinderVolumeBounds>(containerValues);
 
   // A z-binned volume link
-  VariableVolumeLink vzLink(detail::VariableAxis(zBoundaries), binZ);
-  VariableVolumeLink ozLink(detail::VariableAxis(zBoundaries), binZ);
+  VariableVolumeLink vzLink(detail::VariableAxis(zBoundaries), binZ,
+                            containerTransform.inverse());
+  VariableVolumeLink ozLink(
+      detail::VariableAxis(zBoundaries), binZ,
+      outerPortal->surfaceRepresentation().transform(gctx).inverse());
   MultiplePortalLink oPortalMultiLink{oPortalLinks, std::move(ozLink)};
 
   // Update the outer portal (always exists)
   outerPortal->updatePortalLink(oPortalMultiLink, backward);
   // Update the inner portal (optional)
   if (innerPortal != nullptr) {
-    VariableVolumeLink izLink(detail::VariableAxis(zBoundaries), binZ);
+    VariableVolumeLink izLink(
+        detail::VariableAxis(zBoundaries), binZ,
+        innerPortal->surfaceRepresentation().transform(gctx).inverse());
     MultiplePortalLink iPortalMultiLink{iPortalLinks, std::move(izLink)};
     innerPortal->updatePortalLink(iPortalMultiLink, forward);
   }
@@ -332,5 +331,3 @@ Acts::CylindricalContainerBuilderPhi::build(const GeometryContext& gctx,
                                             const std::string& name) {
   return {};
 }
-
-

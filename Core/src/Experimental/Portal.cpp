@@ -46,3 +46,7 @@ Acts::DetectorEnvironment Acts::Portal::next(const GeometryContext& gctx,
              : m_oppositeNormal(gctx, *this, position, direction, bCheck,
                                 provideAll);
 }
+
+void Acts::Portal::assignGeometryId(const GeometryIdentifier& geometryId) {
+  m_surface->assignGeometryId(geometryId);
+}

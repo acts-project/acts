@@ -22,21 +22,30 @@
 namespace Acts {
 
 class Surface;
+class VolumeBounds;
 
 using InternalSurfaceLinks =
     std::tuple<SurfaceLinks, std::vector<SurfaceLinks>>;
 
-using SurfaceLinksGenerator = std::function<InternalSurfaceLinks(
-    const GeometryContext&, const std::vector<std::shared_ptr<Surface>>&)>;
+using SurfaceLinksGenerator =
+    std::function <
+    InternalSurfaceLinks(const GeometryContext&,
+                         const std::vector<std::shared_ptr<Surface>>&,
+                         const VolumeBounds*)>;
 
+/// A non-specified surface link generator that creates all dummy surface links
+/// to all internal surfaces
 struct AllInternalSurfaces {
+  /// The number of boundaries to be filled
   size_t boundaries;
 
   /// This is a standard surface link creator that provides all surfaces
   /// without local search
   ///
-  InternalSurfaceLinks operator()(const GeometryContext& /*ignored*/,
-                                  const std::vector<std::shared_ptr<Surface>>& /*ignored*/) const {
+  InternalSurfaceLinks operator()(
+      const GeometryContext& /*ignored*/,
+      const std::vector<std::shared_ptr<Surface>>& /*ignored*/,
+      const VolumeBounds* /*ignored*/) const {
     return {AllSurfaces{},
             std::vector<SurfaceLinks>(boundaries, AllSurfaces{})};
   }
@@ -47,7 +56,6 @@ struct AllInternalSurfaces {
 /// This class is designed to describe how layers are built
 class InternalBlueprint {
  public:
-
   /// (Slow) Constructor with all/part of the surfaces
   ///
   /// @param gctx The geometry context
@@ -55,12 +63,13 @@ class InternalBlueprint {
   /// @param surfaceLinksGenerator The surface links gnerator
   /// @param binValueEnvelopes The list of extent binning values, empty means all
   /// @param name The name of the blueprint
-  InternalBlueprint(
-      const GeometryContext& gctx,
-      const std::vector<std::shared_ptr<Surface>>& surfaces = {},
-      const SurfaceLinksGenerator& surfaceLinksGenerator = AllInternalSurfaces{},
-      const std::vector< std::pair<BinningValue, Envelope> >& binValueEnvelopes = {},
-      const std::string& name = "Unnamed");
+  InternalBlueprint(const GeometryContext& gctx,
+                    const std::vector<std::shared_ptr<Surface>>& surfaces = {},
+                    const SurfaceLinksGenerator& surfaceLinksGenerator =
+                        AllInternalSurfaces{},
+                    const std::vector<std::pair<BinningValue, Envelope>>&
+                        binValueEnvelopes = {},
+                    const std::string& name = "Unnamed");
 
   /// (Fast) Constructor with all/part of the surfaces
   ///
@@ -70,15 +79,17 @@ class InternalBlueprint {
   /// @param surfaceLinksGenerator The surface links gnerator
   /// @param name The name of the blueprint
   InternalBlueprint(
-      const std::vector< std::pair<std::shared_ptr<Surface>, GeometricExtent> >& surfacesExtent = {},
-      const SurfaceLinksGenerator& surfaceLinksGenerator = AllInternalSurfaces{},
-      const std::string& name = "Unnamed");    
+      const std::vector<std::pair<std::shared_ptr<Surface>, GeometricExtent>>&
+          surfacesExtent = {},
+      const SurfaceLinksGenerator& surfaceLinksGenerator =
+          AllInternalSurfaces{},
+      const std::string& name = "Unnamed");
 
   InternalBlueprint() = default;
 
   /// @return the current extent
   GeometricExtent& extent();
-  
+
   /// @return the current extent - non-const access
   const GeometricExtent& extent() const;
 

@@ -13,4 +13,4 @@ add_executable(
   TracerPropagationExample.cpp)
 target_link_libraries(
   ActsExampleTracerPropagation
-  PRIVATE ActsExamplesFramework ActsExamplesPropagation)
+  PRIVATE ActsPluginJson ActsExamplesFramework ActsExamplesPropagation)

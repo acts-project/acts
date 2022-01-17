@@ -6,4 +6,5 @@ target_sources(
   GeometricExtent.cpp
   InternalBlueprint.cpp
   CylindricalContainerBuilder.cpp
-  CylindricalVolumeHelper.cpp)
+  CylindricalVolumeHelper.cpp
+  CylindricalSurfaceLinksGenerator.cpp)

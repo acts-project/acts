@@ -275,12 +275,12 @@ class Navigator {
   /// @param [in,out] state is the mutable propagator state object
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
-  void status(propagator_state_t& state, const stepper_t& stepper) const {
+  bool status(propagator_state_t& state, const stepper_t& stepper) const {
     const auto& logger = state.options.logger;
 
     // Check if the navigator is inactive
     if (inactive(state, stepper)) {
-      return;
+      return false;
     }
 
     // Set the navigation stage
@@ -293,7 +293,7 @@ class Navigator {
     if (not state.navigation.startVolume or not state.navigation.startSurface) {
       // Initialize and return
       initialize(state, stepper);
-      return;
+      return true;
     }
 
     // Navigator status always starts without current surface
@@ -317,11 +317,11 @@ class Navigator {
                          state.navigation.startLayer) {
             // this was the start layer, switch to layer target next
             state.navigation.navigationStage = Stage::layerTarget;
-            return;
+            return true;
           } else {
             // no layers, go to boundary
             state.navigation.navigationStage = Stage::boundaryTarget;
-            return;
+            return true;
           }
         }
       }
@@ -337,7 +337,7 @@ class Navigator {
         if (resolveSurfaces(state, stepper)) {
           // Set the navigation stage back to surface handling
           state.navigation.navigationStage = Stage::surfaceTarget;
-          return;
+          return true;
         }
       } else {
         // Set the navigation stage to layer target
@@ -374,7 +374,7 @@ class Navigator {
           // Navigation break & release navigation stepping
           state.navigation.navigationBreak = true;
           stepper.releaseStepSize(state.stepping);
-          return;
+          return false;
         } else {
           ACTS_VERBOSE(volInfo(state) << "Volume updated.");
           // Forget the bounday information
@@ -398,7 +398,7 @@ class Navigator {
       ACTS_VERBOSE(volInfo(state)
                    << "Status could not be determined - good luck.");
     }
-    return;
+    return false;
   }
 
   /// @brief Navigator target call
@@ -414,11 +414,11 @@ class Navigator {
   /// @param [in,out] state is the mutable propagator state object
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
-  void target(propagator_state_t& state, const stepper_t& stepper) const {
+  bool target(propagator_state_t& state, const stepper_t& stepper) const {
     const auto& logger = state.options.logger;
     // Check if the navigator is inactive
     if (inactive(state, stepper)) {
-      return;
+      return false;
     }
 
     // Call the navigation helper prior to actual navigation
@@ -450,7 +450,7 @@ class Navigator {
     state.navigation.currentSurface = nullptr;
 
     // Return to the propagator
-    return;
+    return true;
   }
 
  private:
@@ -1283,7 +1283,6 @@ class Navigator {
         // set the target surface
         state.navigation.currentSurface = state.navigation.targetSurface;
         ACTS_VERBOSE(volInfo(state)
-                     << volInfo(state)
                      << "Current surface set to target surface "
                      << state.navigation.currentSurface->geometryId());
         return true;

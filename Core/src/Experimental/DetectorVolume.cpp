@@ -69,10 +69,9 @@ void Acts::DetectorVolume::createPortals(
     if (not surfaceLinks.empty() and
         orientedSurfaces.size() != surfaceLinks.size()) {
       throw std::invalid_argument(
-          "DetectorVolume: wrong number of portal surface link objects "
+          "\n *** DetectorVolume: wrong number of portal surface link objects "
           "provided");
     }
-
     // Loop over the oriented surfaces vector and
     for (auto [i, osf] : enumerate(orientedSurfaces)) {
       // Set the volume to the surface link
@@ -107,7 +106,7 @@ void Acts::DetectorVolume::createPortals(
         if (nsf > 3u) {
           portalSurfaces.push_back(volume0->m_portals.internal[3]);
         }
-        // @TODO include phi sectors
+        /// @todo include phi sectors
       } else if (recastValue == binZ) {
         // Attach the negative/positive discs
         for (auto [i, v] : enumerate(ivolumes)) {
@@ -123,10 +122,10 @@ void Acts::DetectorVolume::createPortals(
         if (nsf > 3u) {
           portalSurfaces.push_back(volume0->m_portals.internal[3]);
         }
-        // @TODO include phi sectors
+        /// @todo include phi sectors
       }
     } else {
-      throw std::invalid_argument("DetectorVolume: not yet implemented.");
+      throw std::invalid_argument("\n *** DetectorVolume: not yet implemented.");
     }
   }
   m_portals = ObjectStore<std::shared_ptr<Portal>>(std::move(portalSurfaces));
@@ -138,7 +137,7 @@ void Acts::DetectorVolume::updatePortalPtr(
   // Throw an exception if no portals are present
   if (portal >= m_portals.internal.size()) {
     throw std::invalid_argument(
-        "DetectorVolume: trying to update non-existing portal.");
+        "\n *** DetectorVolume: trying to update non-existing portal.");
   }
 
   // If configured, keep the portal link, DetectorVolume is
@@ -159,8 +158,7 @@ void Acts::DetectorVolume::updatePortalPtr(
       }
     }
   }
-
-  // Now overwrite the the portal
+  // Now overwrite the portal
   m_portals.internal[portal] = updatedPortal;
   // Reninitalize the portal store
   m_portals =
@@ -198,7 +196,6 @@ Acts::DetectorEnvironment Acts::DetectorVolume::environment(
   /// @todo check overstep possibility
   nEnvironment.surfaces = m_surfaceLinks(gctx, *this, position, direction,
                                          bCheck, {0., maximumPath}, provideAll);
-
   // Set the environment status
   if (not nEnvironment.surfaces.empty()) {
     auto surfaceCandidate = nEnvironment.surfaces.begin();
@@ -221,8 +218,60 @@ const Acts::DetectorVolume* Acts::DetectorVolume::lowest(
     const GeometryContext& gctx, const Vector3& position) const {
   const auto& vs = volumes();
   if (not vs.empty()) {
-    unsigned int v = m_volumeLink(transform(gctx), position);
+    unsigned int v = m_volumeLink(position);
     return vs[v]->lowest(gctx, position);
   }
   return this;
+}
+
+void Acts::DetectorVolume::lock(const GeometryIdentifier& geometryId) {    
+    
+    m_geometryId = geometryId;
+
+    // Assign the boundary Identifier
+    GeometryIdentifier portalId = geometryId;
+    for (auto [i, p] : enumerate(m_portals.internal)){
+      portalId.setBoundary(i+1);
+      p->assignGeometryId(portalId);
+    }
+
+    // Assign the sensitive/surface Identifier 
+    GeometryIdentifier sensitiveId = geometryId;
+    /// @todo add passive count
+    for (auto [i, s] : enumerate(m_surfaces.internal)){
+      sensitiveId.setSensitive(i+1);
+      s->assignGeometryId(sensitiveId);
+    }
+
+    // Check if it is a container or detector volume
+    if (not m_volumes.internal.empty()){
+        // Detection if any of the volume has sub surfaces 
+        bool detectorVolume = false;
+        for (auto v : volumes()){
+          // Would in principle qualify 
+          if (not v->surfaces().empty()){
+            detectorVolume = true;
+            break;
+          }
+        }
+        // Cross-check if no container is present
+        for (auto v : volumes()){
+          // Pure detector volume is vetoed
+          if (not v->volumes().empty()){
+            detectorVolume = false;
+            break;
+          }
+        }
+
+        // Assign the volume Identifier (recursive step down)
+        for (auto [i, v] : enumerate(m_volumes.internal)){
+        GeometryIdentifier volumeId = geometryId;
+          if (detectorVolume) {
+            volumeId.setLayer(i+1);
+          } else {
+            volumeId.setVolume(volumeId.volume()+i+1);
+          }
+          v->lock(volumeId);
+        }
+    }
 }

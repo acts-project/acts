@@ -23,21 +23,30 @@ template <typename axis_t>
 struct BinnedLinkT {
   /// The equidistant axis
   axis_t axis;
+
   /// The binning value for the cast
   BinningValue bvalue = BinningValue::binX;
 
-  BinnedLinkT(axis_t&& axis_, BinningValue bvalue_ = binX)
-      : axis(std::move(axis_)), bvalue(bvalue_) {}
+  /// The offset transform into local
+  Transform3 toLocal = Transform3::Identity();
+
+  /// Constructor without offset transforms
+  ///
+  /// @param axis_ is the axis
+  /// @param bvalue_ is the binning value
+  /// @param toLocal_ is the transform into local binning frame
+  BinnedLinkT(axis_t&& axis_, BinningValue bvalue_ = binX,
+              const Transform3& toLocal_ = Transform3::Identity())
+      : axis(std::move(axis_)), bvalue(bvalue_), toLocal(toLocal_) {}
 
   /// Call operator
   ///
   /// @param transform into the binning frame
   /// @param position the position for the request
-  unsigned int operator()(const Transform3& transform,
-                          const Vector3& position) const {
-
+  unsigned int operator()(const Vector3& position) const {
     // The position in the local frame
-    Vector3 posInFrame = transform.inverse() * position;
+    Vector3 posInFrame = toLocal * position;
+
     ActsScalar castedScalar = VectorHelpers::cast(posInFrame, bvalue);
     int bin = axis.getBin(castedScalar) - 1;
     return bin < 0 ? 0u
