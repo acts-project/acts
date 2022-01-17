@@ -40,6 +40,8 @@ removed except the following ones:
 -   autodiff (contains the header files)
 -   cmake
 -   CMakeLists.txt
+-   LICENSE
+-   README.md
 
 ## boost 
 
