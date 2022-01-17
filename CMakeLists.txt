@@ -198,7 +198,7 @@ if(ACTS_BUILD_PLUGIN_AUTODIFF)
     message(STATUS "Using system installation of autodiff")
   else()
     # This policy allows to set the options outside without changing autodiff's CMakeLists.txt
-    cmake_policy(SET CMP0077 NEW)
+    set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
     set(AUTODIFF_BUILD_TESTS OFF)
     set(AUTODIFF_BUILD_PYTHON OFF)
     set(AUTODIFF_BUILD_EXAMPLES OFF)
