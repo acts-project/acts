@@ -220,20 +220,7 @@ Acts::Grid3D Acts::createGrid3D(
                            std::move(gridAxis3)));
 }
 
-Acts::MaterialGrid2D Acts::mapMaterialPoints(
-    Acts::Grid2D& grid, const Acts::RecordedMaterialVolumePoint& mPoints,
-    std::function<Acts::Vector2(Acts::Vector3)>& transfoGlobalToLocal) {
-  // Walk over each properties
-  for (const auto& rm : mPoints) {
-    // Walk over each point associated with the properties
-    for (const auto& point : rm.second) {
-      // Search for fitting grid point and accumulate
-      Acts::Grid2D::index_t index =
-          grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(point));
-      grid.atLocalBins(index).accumulate(rm.first);
-    }
-  }
-
+Acts::MaterialGrid2D Acts::mapMaterialPoints(Acts::Grid2D& grid) {
   // Build material grid
   // Re-build the axes
   Acts::Grid2D::point_t min = grid.minPosition();
@@ -243,7 +230,7 @@ Acts::MaterialGrid2D Acts::mapMaterialPoints(
   Acts::EAxis axis1(min[0], max[0], nBins[0]);
   Acts::EAxis axis2(min[1], max[1], nBins[1]);
 
-  // Build the grid and fill it with data
+  // Fill the material Grid by averaging the material in the 2D grid
   Acts::MaterialGrid2D mGrid(std::make_tuple(axis1, axis2));
   for (size_t index = 0; index < grid.size(); index++) {
     mGrid.at(index) = grid.at(index).average().parameters();
@@ -252,20 +239,7 @@ Acts::MaterialGrid2D Acts::mapMaterialPoints(
   return mGrid;
 }
 
-Acts::MaterialGrid3D Acts::mapMaterialPoints(
-    Acts::Grid3D& grid, const Acts::RecordedMaterialVolumePoint& mPoints,
-    std::function<Acts::Vector3(Acts::Vector3)>& transfoGlobalToLocal) {
-  // Walk over each properties
-  for (const auto& rm : mPoints) {
-    // Walk over each point associated with the properties
-    for (const auto& point : rm.second) {
-      // Search for fitting grid point and accumulate
-      Acts::Grid3D::index_t index =
-          grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(point));
-      grid.atLocalBins(index).accumulate(rm.first);
-    }
-  }
-
+Acts::MaterialGrid3D Acts::mapMaterialPoints(Acts::Grid3D& grid) {
   // Build material grid
   // Re-build the axes
   Acts::Grid3D::point_t min = grid.minPosition();
@@ -276,7 +250,7 @@ Acts::MaterialGrid3D Acts::mapMaterialPoints(
   Acts::EAxis axis2(min[1], max[1], nBins[1]);
   Acts::EAxis axis3(min[2], max[2], nBins[2]);
 
-  // Build the grid and fill it with data
+  // Fill the material Grid by averaging the material in the 3D grid
   Acts::MaterialGrid3D mGrid(std::make_tuple(axis1, axis2, axis3));
   for (size_t index = 0; index < grid.size(); index++) {
     mGrid.at(index) = grid.at(index).average().parameters();

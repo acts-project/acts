@@ -90,6 +90,7 @@ void addTrackFitting(Context& ctx) {
     ACTS_PYTHON_MEMBER(multipleScattering);
     ACTS_PYTHON_MEMBER(energyLoss);
     ACTS_PYTHON_MEMBER(pickTrack);
+    ACTS_PYTHON_MEMBER(reverseFilteringMomThreshold);
     ACTS_PYTHON_STRUCT_END();
   }
 }

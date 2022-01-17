@@ -100,6 +100,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   for (const auto& isp : m_cfg.inputSpacePoints) {
     nSpacePoints += ctx.eventStore.get<SimSpacePointContainer>(isp).size();
   }
+
+  // extent used to store r range for middle spacepoint
+  Acts::Extent rRangeSPExtent;
+
   std::vector<const SimSpacePoint*> spacePointPtrs;
   spacePointPtrs.reserve(nSpacePoints);
   for (const auto& isp : m_cfg.inputSpacePoints) {
@@ -108,6 +112,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       // since the event store owns the space points, their pointers should be
       // stable and we do not need to create local copies.
       spacePointPtrs.push_back(&spacePoint);
+      // store x,y,z values in extent
+      rRangeSPExtent.check({spacePoint.x(), spacePoint.y(), spacePoint.z()});
     }
   }
 
@@ -143,7 +149,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   auto groupEnd = spacePointsGrouping.end();
   for (; !(group == groupEnd); ++group) {
     finder.createSeedsForGroup(state, std::back_inserter(seeds), group.bottom(),
-                               group.middle(), group.top());
+                               group.middle(), group.top(), rRangeSPExtent);
   }
 
   // extract proto tracks, i.e. groups of measurement indices, from tracks seeds

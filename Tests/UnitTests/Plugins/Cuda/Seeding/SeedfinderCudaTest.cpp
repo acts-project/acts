@@ -171,6 +171,10 @@ int main(int argc, char** argv) {
   config.rMax = 160._mm;
   config.deltaRMin = 5._mm;
   config.deltaRMax = 160._mm;
+  config.deltaRMinTopSP = config.deltaRMin;
+  config.deltaRMinBottomSP = config.deltaRMin;
+  config.deltaRMaxTopSP = config.deltaRMax;
+  config.deltaRMaxBottomSP = config.deltaRMax;
   config.collisionRegionMin = -250._mm;
   config.collisionRegionMax = 250._mm;
   config.zMin = -2800._mm;
@@ -254,6 +258,7 @@ int main(int argc, char** argv) {
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
   groupIt = spGroup.begin();
+  Acts::Extent rRangeSPExtent;
 
   if (do_cpu) {
     decltype(seedfinder_cpu)::State state;
@@ -262,7 +267,7 @@ int main(int argc, char** argv) {
     for (; !(groupIt == spGroup.end()); ++groupIt) {
       seedfinder_cpu.createSeedsForGroup(
           state, std::back_inserter(seedVector_cpu.emplace_back()),
-          groupIt.bottom(), groupIt.middle(), groupIt.top());
+          groupIt.bottom(), groupIt.middle(), groupIt.top(), rRangeSPExtent);
       group_count++;
       if (allgroup == false) {
         if (group_count >= nGroupToIterate)
