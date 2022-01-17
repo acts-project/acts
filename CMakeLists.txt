@@ -133,7 +133,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR
 # minimal dependency versions. they are defined here in a single place so
 # they can be easily upgraded, although they might not be used if the
 # dependency is included via `add_subdirectory(...)`.
-set(_acts_autodiff_version 0.6.4)
+set(_acts_autodiff_version 0.6)
 set(_acts_boost_version 1.71.0)
 set(_acts_dd4hep_version 1.11)
 set(_acts_doxygen_version 1.8.15)
@@ -201,21 +201,10 @@ if(ACTS_BUILD_PLUGIN_AUTODIFF)
     set(AUTODIFF_BUILD_PYTHON OFF)
     set(AUTODIFF_BUILD_EXAMPLES OFF)
     set(AUTODIFF_BUILD_DOCS OFF)
-    
     add_subdirectory(thirdparty/autodiff)
-    
     # Mark autodiff as system include directories so that no warnings trigger
     get_target_property(_autodiff_includes autodiff INTERFACE_INCLUDE_DIRECTORIES)
     set_target_properties(autodiff PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_autodiff_includes}")
-    
-    foreach(_dir ${INTERFACE_SYSTEM_INCLUDE_DIRECTORIES})
-        message(STATUS "-isystem ${_dir} ")
-    endforeach()
-    
-    foreach(_dir ${INTERFACE_INCLUDE_DIRECTORIES})
-        message(STATUS "interface: ${_dir} ")
-    endforeach()
-    
     message(STATUS "Using bundled autodiff")
   endif()
 endif()
