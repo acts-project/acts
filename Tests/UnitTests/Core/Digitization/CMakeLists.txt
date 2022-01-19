@@ -1,0 +1,2 @@
+add_unittest(CartesianSegmentation CartesianSegmentationTests.cpp)
+

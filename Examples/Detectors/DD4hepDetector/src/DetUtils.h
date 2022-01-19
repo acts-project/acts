@@ -1,7 +1,7 @@
 #pragma once
 
 // DD4hep
-#include "Acts/Plugins/Digitization/CartesianSegmentation.hpp"
+#include "Acts/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Plugins/Digitization/DigitizationModule.hpp"
 #include "DD4hep/DetFactoryHelper.h"
 #include "DD4hep/Detector.h"

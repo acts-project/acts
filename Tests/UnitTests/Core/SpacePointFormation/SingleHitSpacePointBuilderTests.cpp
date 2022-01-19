@@ -10,8 +10,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Digitization/SingleHitSpacePointBuilder.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
-#include "Acts/Plugins/Digitization/SingleHitSpacePointBuilder.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"

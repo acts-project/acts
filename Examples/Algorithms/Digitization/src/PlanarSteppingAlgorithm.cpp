@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Digitization/Segmentation.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/DetectorElementBase.hpp"
@@ -18,7 +19,6 @@
 #include "Acts/Plugins/Digitization/DigitizationModule.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleStepper.hpp"
-#include "Acts/Plugins/Digitization/Segmentation.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
