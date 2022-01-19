@@ -94,21 +94,56 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
 
   // Helper function to fill the layer
   auto fillLayer = [&](const LayerSurfaceVector lSurfaces,
-                       const LayerConfig& lCfg) -> void {
-    // Set binning by hand if nb0 > 0 and nb1 > 0
-    auto nb0 = std::get<int>(lCfg.binning0);
-    auto nb1 = std::get<int>(lCfg.binning1);
-    // Or use the binning type
-    auto nt0 = std::get<BinningType>(lCfg.binning0);
-    auto nt1 = std::get<BinningType>(lCfg.binning1);
+                       const LayerConfig& lCfg,
+                       unsigned int pl_id = 0) -> void {
+    int nb0 = 0, nt0 = 0;
+    bool is_autobinning = ((lCfg.binning0.size() == 1) and
+                           (std::get<int>(lCfg.binning0.at(0)) <= 0));
+    if (!is_autobinning and std::get<int>(lCfg.binning0.at(pl_id)) <= 0) {
+      throw std::invalid_argument(
+          "Incorrect binning configuration found for loc0 protolayer #" +
+          std::to_string(pl_id) +
+          ". Layer is autobinned: No mixed binning (manual and auto) for loc0 "
+          "possible between layers in a single subvolume. Quitting");
+    }
+    if (is_autobinning) {
+      // Set binning by hand if nb0 > 0 and nb1 > 0
+      nb0 = std::get<int>(lCfg.binning0.at(0));
+      // Read the binning type
+      nt0 = std::get<BinningType>(lCfg.binning0.at(0));
+    } else if (pl_id < lCfg.binning0.size()) {
+      // Set binning by hand if nb0 > 0 and nb1 > 0
+      nb0 = std::get<int>(lCfg.binning0.at(pl_id));
+    }
+
+    int nb1 = 0, nt1 = 0;
+    is_autobinning = (lCfg.binning1.size() == 1) and
+                     (std::get<int>(lCfg.binning1.at(0)) <= 0);
+    if (!is_autobinning and std::get<int>(lCfg.binning1.at(pl_id)) <= 0) {
+      throw std::invalid_argument(
+          "Incorrect binning configuration found for loc1 protolayer #" +
+          std::to_string(pl_id) +
+          ". Layer is autobinned: No mixed binning (manual and auto) for loc1 "
+          "possible between layers in a single subvolume. Quitting");
+    }
+    if (is_autobinning) {
+      // Set binning by hand if nb0 > 0 and nb1 > 0
+      nb1 = std::get<int>(lCfg.binning1.at(0));
+      // For a binning type
+      nt1 = std::get<BinningType>(lCfg.binning1.at(0));
+    } else if (pl_id < lCfg.binning1.size()) {
+      // Set binning by hand if nb0 > 0 and nb1 > 0
+      nb1 = std::get<int>(lCfg.binning1.at(pl_id));
+    }
 
     if (type == 0) {
       ProtoLayer pl(gctx, lSurfaces);
       ACTS_DEBUG("- creating CylinderLayer with "
                  << lSurfaces.size() << " surfaces at r = " << pl.medium(binR));
+
       pl.envelope[Acts::binR] = {lCfg.envelope.first, lCfg.envelope.second};
       pl.envelope[Acts::binZ] = {lCfg.envelope.second, lCfg.envelope.second};
-      if (nb0 > 0 and nb1 > 0) {
+      if (nb0 >= 0 and nb1 >= 0) {
         layers.push_back(
             m_cfg.layerCreator->cylinderLayer(gctx, lSurfaces, nb0, nb1, pl));
       } else {
@@ -119,9 +154,10 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
       ProtoLayer pl(gctx, lSurfaces);
       ACTS_DEBUG("- creating DiscLayer with "
                  << lSurfaces.size() << " surfaces at z = " << pl.medium(binZ));
+
       pl.envelope[Acts::binR] = {lCfg.envelope.first, lCfg.envelope.second};
       pl.envelope[Acts::binZ] = {lCfg.envelope.second, lCfg.envelope.second};
-      if (nb0 > 0 and nb1 > 0) {
+      if (nb0 >= 0 and nb1 >= 0) {
         layers.push_back(
             m_cfg.layerCreator->discLayer(gctx, lSurfaces, nb0, nb1, pl));
       } else {
@@ -215,14 +251,35 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
         auto protoLayers = m_cfg.protoLayerHelper->protoLayers(
             gctx, unpack_shared_vector(layerSurfaces), layerCfg.splitConfigs);
         ACTS_DEBUG("- splitting into " << protoLayers.size() << " layers.");
+
+        // Number of options mismatch and has not been configured for
+        // auto-binning
+        const bool is_loc0_n_config =
+            layerCfg.binning0.size() == protoLayers.size();
+        const bool is_loc0_autobinning =
+            (layerCfg.binning0.size() == 1) and
+            (std::get<int>(layerCfg.binning0.at(0)) <= 0);
+        const bool is_loc1_n_config =
+            layerCfg.binning1.size() == protoLayers.size();
+        const bool is_loc1_autobinning =
+            (layerCfg.binning1.size() == 1) and
+            (std::get<int>(layerCfg.binning1.at(0)) <= 0);
+        if ((!is_loc0_n_config and !is_loc0_autobinning) or
+            (!is_loc1_n_config and !is_loc1_autobinning)) {
+          throw std::invalid_argument(
+              "Incorrect binning configuration found: Number of configurations "
+              "does not match number of protolayers in subvolume " +
+              layerCfg.volumeName + ". Quitting.");
+        }
+        unsigned int layer_id = 0;
         for (auto& pLayer : protoLayers) {
           layerSurfaces.clear();
 
           for (const auto& lsurface : pLayer.surfaces()) {
             layerSurfaces.push_back(lsurface->getSharedPtr());
           }
-
-          fillLayer(layerSurfaces, layerCfg);
+          fillLayer(layerSurfaces, layerCfg, layer_id);
+          layer_id++;
         }
       } else {
         fillLayer(layerSurfaces, layerCfg);

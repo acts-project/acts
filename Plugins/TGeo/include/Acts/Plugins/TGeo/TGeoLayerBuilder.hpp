@@ -44,7 +44,7 @@ class Surface;
 /// split into layers.
 class TGeoLayerBuilder : public ILayerBuilder {
  public:
-  ///  Helper config structs for volume parsin
+  ///  Helper config structs for volume parsing
   struct LayerConfig {
    public:
     using RangeConfig = std::pair<BinningValue, std::pair<double, double>>;
@@ -65,9 +65,9 @@ class TGeoLayerBuilder : public ILayerBuilder {
     std::pair<double, double> envelope = {1 * UnitConstants::mm,
                                           1 * UnitConstants::mm};
     /// Binning setup in l0: nbins (-1 -> automated), axis binning type
-    std::tuple<int, BinningType> binning0 = {-1, equidistant};
+    std::vector<std::pair<int, BinningType>> binning0 = {{-1, equidistant}};
     /// Binning setup in l1: nbins (-1 -> automated), axis binning type
-    std::tuple<int, BinningType> binning1 = {-1, equidistant};
+    std::vector<std::pair<int, BinningType>> binning1 = {{-1, equidistant}};
 
     // Default constructor
     LayerConfig()
