@@ -2,7 +2,7 @@
 
 // DD4hep
 #include "Acts/Digitization/CartesianSegmentation.hpp"
-#include "Acts/Plugins/Digitization/DigitizationModule.hpp"
+#include "Acts/Digitization/DigitizationModule.hpp"
 #include "DD4hep/DetFactoryHelper.h"
 #include "DD4hep/Detector.h"
 #include "DD4hep/Objects.h"

@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/Digitization/DigitizationCell.hpp"
+#include "Acts/Digitization/DigitizationModule.hpp"
+#include "Acts/Digitization/DigitizationSourceLink.hpp"
 #include "Acts/EventData/Measurement.hpp"
-#include "Acts/Plugins/Digitization/DigitizationModule.hpp"
-#include "Acts/Plugins/Digitization/DigitizationSourceLink.hpp"
 
 #include <array>
 #include <cassert>

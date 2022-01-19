@@ -9,10 +9,10 @@
 #include "ActsExamples/Io/Root/RootPlanarClusterWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Digitization/DigitizationModule.hpp"
+#include "Acts/Digitization/DigitizationSourceLink.hpp"
+#include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Digitization/Segmentation.hpp"
-#include "Acts/Plugins/Digitization/DigitizationModule.hpp"
-#include "Acts/Plugins/Digitization/DigitizationSourceLink.hpp"
-#include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
