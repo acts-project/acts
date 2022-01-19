@@ -6,12 +6,24 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#pragma once
+
+#if __cplusplus >= 202002L
+
+#include <functional>
+
+namespace Acts {
+using Identity = std::identity;
+}
+
+#else
+
 #include <utility>
 
 namespace Acts {
 
 /// @brief Function object which maps a value to itself by perfect forwarding
-/// TODO Replace Identity with std::identity on C++20
+/// This is a backport of C++20's std::identity
 struct Identity {
   template <typename T>
   auto operator()(T &&v) const {
@@ -20,3 +32,5 @@ struct Identity {
 };
 
 }  // namespace Acts
+
+#endif

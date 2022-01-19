@@ -45,7 +45,10 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(State& state,
       return MultiStepperError::AllComponentsConversionToBoundFailed;
     }
 
-    // TODO also implement a method of using the mode of the mixture
+    // TODO At ATLAS, the final parameters seem to be computed with the mode of
+    // the mixture. At the moment, we use the mean of the mixture here, but
+    // there should be done a comparison sometimes in the future. This could
+    // also be configurable maybe...
     const auto [params, cov] = detail::combineBoundGaussianMixture(
         states.begin(), states.end(), [&](const auto& wbs) {
           return std::tie(wbs.first, wbs.second.parameters(),
@@ -71,6 +74,10 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
     BoundSymMatrix cov = BoundSymMatrix::Zero();
     ActsScalar pathLenth = 0.0;
 
+    // TODO At ATLAS, the final parameters seem to be computed with the mode of
+    // the mixture. At the moment, we use the mean of the mixture here, but
+    // there should be done a comparison sometimes in the future. This could
+    // also be configurable maybe...
     for (auto i = 0ul; i < numberComponents(state); ++i) {
       const auto [cp, jac, pl] = SingleStepper::curvilinearState(
           state.components[i].state, transportCov);

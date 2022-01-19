@@ -329,12 +329,20 @@ class MultiEigenStepperLoop
         : stepping(s), navigation(n), options(o), geoContext(g) {}
   };
 
+  /// A template class which contains all const member functions, that should be
+  /// available both in the mutable ComponentProxy and the ConstComponentProxy.
+  /// @tparam component_t Must be a const or mutable State::Component.
   template <typename component_t>
   struct ComponentProxyBase {
+    static_assert(std::is_same_v<std::remove_const_t<component_t>,
+                                 typename State::Component>);
+
     component_t& cmp;
 
     ComponentProxyBase(component_t& c) : cmp(c) {}
 
+    // These are the const accessors, which are shared between the mutable
+    // ComponentProxy and the ConstComponentProxy
     auto status() const { return cmp.status; }
     auto weight() const { return cmp.weight; }
     auto charge() const { return cmp.state.q; }
@@ -376,6 +384,7 @@ class MultiEigenStepperLoop
   struct ComponentProxy : ComponentProxyBase<typename State::Component> {
     using Base = ComponentProxyBase<typename State::Component>;
 
+    // Import the const accessors from ComponentProxyBase
     using Base::charge;
     using Base::cmp;
     using Base::cov;
@@ -390,11 +399,14 @@ class MultiEigenStepperLoop
     using Base::status;
     using Base::weight;
 
+    // The multi-component state of the stepper
     const State& all_state;
 
     ComponentProxy(typename State::Component& c, const State& s)
         : Base(c), all_state(s) {}
 
+    // These are the mutable accessors, the const ones are inherited from the
+    // ComponentProxyBase
     auto& status() { return cmp.status; }
     auto& weight() { return cmp.weight; }
     auto& charge() { return cmp.state.q; }
