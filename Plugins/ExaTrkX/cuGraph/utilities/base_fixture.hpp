@@ -28,7 +28,7 @@
 #include <rmm/mr/device/per_device_resource.hpp>
 #include <rmm/mr/device/pool_memory_resource.hpp>
 
-#include <gtest/gtest.h>
+// #include <gtest/gtest.h>
 
 #include <limits>
 #include <optional>
@@ -49,6 +49,7 @@ namespace test {
  * class MyTestFixture : public cugraph::test::BaseFixture {};
  * ```
  **/
+#if 0
 class BaseFixture : public ::testing::Test {
   rmm::mr::device_memory_resource* _mr{rmm::mr::get_current_device_resource()};
 
@@ -59,6 +60,7 @@ class BaseFixture : public ::testing::Test {
    **/
   rmm::mr::device_memory_resource* mr() { return _mr; }
 };
+#endif
 
 /// MR factory functions
 inline auto make_cuda() { return std::make_shared<rmm::mr::cuda_memory_resource>(); }

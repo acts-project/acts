@@ -16,7 +16,7 @@
 #include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp" // to read digi config
 #include "ActsExamples/Digitization/DigitizationOptions.hpp"
-z
+
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
