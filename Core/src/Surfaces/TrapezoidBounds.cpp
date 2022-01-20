@@ -27,19 +27,24 @@ bool Acts::TrapezoidBounds::inside(const Acts::Vector2& lposition,
   const double hlXnY = get(TrapezoidBounds::eHalfLengthXnegY);
   const double hlXpY = get(TrapezoidBounds::eHalfLengthXposY);
 
-  if (std::abs(y) > hlY) {
-    // outside y range
-    return false;
-  }
+  if (bcheck.type() == BoundaryCheck::Type::eAbsolute) {
+    double tolX = bcheck.tolerance()[eBoundLoc0];
+    double tolY = bcheck.tolerance()[eBoundLoc1];
 
-  if (std::abs(x) > std::max(hlXnY, hlXpY)) {
-    // outside x range
-    return false;
-  }
+    if (std::abs(y) - hlY > tolY) {
+      // outside y range
+      return false;
+    }
 
-  if (std::abs(x) < std::min(hlXnY, hlXpY)) {
-    // inside x range
-    return true;
+    if (std::abs(x) - std::max(hlXnY, hlXpY) > tolX) {
+      // outside x range
+      return false;
+    }
+
+    if (std::abs(x) - std::min(hlXnY, hlXpY) <= tolX) {
+      // inside x range
+      return true;
+    }
   }
 
   // at this stage, the point can only be in the triangles
