@@ -179,14 +179,18 @@ BOOST_DATA_TEST_CASE(
         bdata::random(
             (bdata::seed = 2,
              bdata::distribution = std::uniform_real_distribution<>(-3, 3))) ^
-        bdata::xrange(1000),
-    x, y, index) {
+        bdata::xrange(1000) * bdata::make({0.0, 0.1, 0.2, 0.3}),
+    x, y, index, tol) {
   (void)index;
   double minHalfX(1.), maxHalfX(6.), halfY(2.);
   static const TrapezoidBounds trapezoidBoundsObject(minHalfX, maxHalfX, halfY);
   static const auto vertices = trapezoidBoundsObject.vertices();
 
   BoundaryCheck bc{true};
+
+  if (tol != 0.0) {
+    bc = BoundaryCheck{true, true, tol, tol};
+  }
 
   BOOST_CHECK_EQUAL(bc.isInside({x, y}, vertices),
                     trapezoidBoundsObject.inside({x, y}, bc));
