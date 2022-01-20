@@ -64,10 +64,10 @@ authors:
   given-names: Rocky
   name-particle: Bala
 cff-version: 1.1.0
-date-released: '2021-11-17'
+date-released: '2022-01-20'
 doi: 10.5281/zenodo.5141419
 license: MPL-2.0
 message: If you use this software, please cite it using these metadata.
 repository-code: https://github.com/acts-project/acts
 title: A Common Tracking Software Project
-version: v15.0.0
+version: v15.0.1
