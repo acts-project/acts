@@ -96,6 +96,11 @@ void transformCoordinates(
   }
   // sort the SP in order of cotTheta
   if (enableCutsForSortedSP) {
+    std::sort(vec.begin(), vec.end(),
+              [](const InternalSpacePoint<external_spacepoint_t>* a,
+                 const InternalSpacePoint<external_spacepoint_t>* b) -> bool {
+                return (a->cotTheta() < b->cotTheta());
+              });
     std::sort(linCircleVec.begin(), linCircleVec.end(),
               [](const LinCircle& a, const LinCircle& b) -> bool {
                 return (a.cotTheta < b.cotTheta);
