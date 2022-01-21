@@ -39,10 +39,51 @@ Acts::ActsMatrix<2, 2> Acts::CylinderBounds::jacobian() const {
 
 bool Acts::CylinderBounds::inside(const Vector2& lposition,
                                   const BoundaryCheck& bcheck) const {
-  return bcheck.transformed(jacobian())
-      .isInside(shifted(lposition),
-                Vector2(-get(eHalfPhiSector), -get(eHalfLengthZ)),
-                Vector2(get(eHalfPhiSector), get(eHalfLengthZ)));
+  double bevelMinZ = get(eBevelMinZ);
+  double bevelMaxZ = get(eBevelMaxZ);
+
+  double halfLengthZ = get(eHalfLengthZ);
+  double halfPhi = get(eHalfPhiSector);
+  if (bevelMinZ != 0. && bevelMaxZ != 0.) {
+    double radius = get(eR);
+    // Beleved sides will unwrap to a trapezoid
+    ///////////////////////////////////
+    //  ________
+    // /| .  . |\ r/phi
+    // \|______|/ r/phi
+    // -Z   0  Z
+    ///////////////////////////////////
+    float localx =
+        lposition[0] > radius ? 2 * radius - lposition[0] : lposition[0];
+    Vector2 shiftedlposition = shifted(lposition);
+    if ((std::fabs(shiftedlposition[0]) <= halfPhi &&
+         std::fabs(shiftedlposition[1]) <= halfLengthZ))
+      return true;
+    else if ((lposition[1] >= -(localx * std::tan(bevelMinZ) + halfLengthZ)) &&
+             (lposition[1] <= (localx * std::tan(bevelMaxZ) + halfLengthZ)))
+      return true;
+    else {
+      // check within tolerance
+      auto boundaryCheck = bcheck.transformed(jacobian());
+
+      Vector2 lowerLeft = {-radius, -halfLengthZ};
+      Vector2 middleLeft = {0., -(halfLengthZ + radius * std::tan(bevelMinZ))};
+      Vector2 upperLeft = {radius, -halfLengthZ};
+      Vector2 upperRight = {radius, halfLengthZ};
+      Vector2 middleRight = {0., (halfLengthZ + radius * std::tan(bevelMaxZ))};
+      Vector2 lowerRight = {-radius, halfLengthZ};
+      Vector2 vertices[] = {lowerLeft,  middleLeft,  upperLeft,
+                            upperRight, middleRight, lowerRight};
+      Vector2 closestPoint =
+          boundaryCheck.computeClosestPointOnPolygon(lposition, vertices);
+
+      return boundaryCheck.isTolerated(closestPoint - lposition);
+    }
+  } else {
+    return bcheck.transformed(jacobian())
+        .isInside(shifted(lposition), Vector2(-halfPhi, -halfLengthZ),
+                  Vector2(halfPhi, halfLengthZ));
+  }
 }
 
 bool Acts::CylinderBounds::inside3D(const Vector3& position,
@@ -62,14 +103,15 @@ bool Acts::CylinderBounds::inside3D(const Vector3& position,
     double bevelMinZ = get(eBevelMinZ);
     double bevelMaxZ = get(eBevelMaxZ);
 
-    double addedMinZ = bevelMinZ != 0. ? position.y() * std::sin(bevelMinZ) : 0.;
-    double addedMaxZ = bevelMinZ != 0. ? position.y() * std::sin(bevelMaxZ) : 0.;
+    double addedMinZ =
+        bevelMinZ != 0. ? position.y() * std::sin(bevelMinZ) : 0.;
+    double addedMaxZ =
+        bevelMinZ != 0. ? position.y() * std::sin(bevelMaxZ) : 0.;
 
-
-    return ((s_onSurfaceTolerance + addToleranceZ + get(eHalfLengthZ) + addedMinZ) >=
-              position.z()) && ((s_onSurfaceTolerance + addToleranceZ + get(eHalfLengthZ) + addedMaxZ) <=
-              position.z());
-
+    return ((s_onSurfaceTolerance + addToleranceZ + get(eHalfLengthZ) +
+             addedMinZ) >= position.z()) &&
+           ((s_onSurfaceTolerance + addToleranceZ + get(eHalfLengthZ) +
+             addedMaxZ) <= position.z());
   }
   // detailed, but slower check
   Vector2 lpos(detail::radian_sym(phi(position) - get(eAveragePhi)),
