@@ -154,6 +154,12 @@ inline void CylinderBounds::checkConsistency() noexcept(false) {
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
     throw std::invalid_argument("CylinderBounds: invalid phi positioning.");
   }
+  if (get(eBevelMinZ) != detail::radian_sym(get(eBevelMinZ))) {
+    throw std::invalid_argument("CylinderBounds: invalid bevel at min Z.");
+  }
+  if (get(eBevelMaxZ) != detail::radian_sym(get(eBevelMaxZ))) {
+    throw std::invalid_argument("CylinderBounds: invalid bevel at max Z.");
+  }
 }
 
 }  // namespace Acts

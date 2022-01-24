@@ -50,6 +50,8 @@ Acts::CylinderVolumeBounds::CylinderVolumeBounds(
   m_values[eHalfLengthZ] = 0.5 * thickness;
   m_values[eHalfPhiSector] = rBounds.get(RadialBounds::eHalfPhiSector);
   m_values[eAveragePhi] = rBounds.get(RadialBounds::eAveragePhi);
+  m_values[eBevelMinZ] = (double)0.;
+  m_values[eBevelMaxZ] = (double)0.;
   buildSurfaceBounds();
 }
 
