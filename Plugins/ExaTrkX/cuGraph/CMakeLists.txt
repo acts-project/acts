@@ -34,7 +34,7 @@ target_compile_options(cugraphtestutil
 set_property(TARGET cugraphtestutil PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 target_include_directories(cugraphtestutil
-    PUBLIC
+    SYSTEM PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}/mmio"
         "${CMAKE_CURRENT_SOURCE_DIR}"
 )

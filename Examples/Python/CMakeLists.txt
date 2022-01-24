@@ -20,7 +20,6 @@ pybind11_add_module(ActsPythonBindings
   src/TruthTracking.cpp
   src/TrackFitting.cpp
   src/TrackFinding.cpp
-  src/ExaTrkXTrackFinding.cpp # to be moved once we have proper flags
   src/Vertexing.cpp
 )
 install(TARGETS ActsPythonBindings DESTINATION .)
@@ -135,6 +134,12 @@ else()
   target_sources(ActsPythonBindings PRIVATE src/HepMC3Stub.cpp)
 endif()
 
+if(ACTS_BUILD_PLUGIN_EXATRKX)
+  target_link_libraries(ActsPythonBindings PUBLIC ActsPluginExaTrkX)
+  target_sources(ActsPythonBindings PRIVATE src/ExaTrkXTrackFinding.cpp)
+else()
+
+endif()
 
 add_custom_target(ActsPythonGlueCode)
 configure_file(setup.sh.in ${_python_dir}/setup.sh)

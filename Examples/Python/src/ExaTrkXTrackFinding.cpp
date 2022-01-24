@@ -37,7 +37,7 @@ void addExaTrkXTrackFinding(Context& ctx) {
             mex, "TrackFindingMLBasedAlgorithm")
             .def(py::init<const Config&, Acts::Logging::Level>(),
                  py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config)
+            .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);

@@ -32,7 +32,7 @@ file(GLOB SrcFiles *.cu)
 add_library(frnn SHARED ${SrcFiles})
 
 target_include_directories(frnn 
-PUBLIC ${Python3_INCLUDE_DIRS} ${TORCH_INCLUDE_DIRS}
+  SYSTEM PUBLIC ${Python3_INCLUDE_DIRS} ${TORCH_INCLUDE_DIRS}
     INTERFACE 
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>

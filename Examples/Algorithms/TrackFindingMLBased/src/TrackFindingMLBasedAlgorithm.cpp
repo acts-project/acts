@@ -54,7 +54,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingMLBasedAlgorithm::execute(
 
   // ProtoTrackContainer protoTracks;
   std::vector<std::vector<uint32_t> > trackCandidates;
-  m_exaTrkx(inputValues, spacepointIDs, trackCandidates);
+  m_exaTrkx.getTracks(inputValues, spacepointIDs, trackCandidates);
 
   std::vector<ProtoTrack> protoTracks;
   for(auto& x: trackCandidates){

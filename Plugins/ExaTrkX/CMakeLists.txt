@@ -21,7 +21,6 @@ target_include_directories(
   ActsPluginExaTrkX
   PUBLIC 
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    ${OnnxRuntime_INCLUDE_DIR}
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
@@ -44,8 +43,7 @@ target_link_libraries(
 target_link_libraries(
   ActsPluginExaTrkX
   PUBLIC
-  ${OnnxRuntime_LIBRARY}
-  
+    OnnxRuntime  
 )
 
 install(
