@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, NVIDIA CORPORATION.
+ * Copyright (c) 2021-2022, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include <utilities/high_res_clock.h>
 #include <utilities/base_fixture.hpp>
 #include <utilities/device_comm_wrapper.hpp>
+#include <utilities/high_res_clock.h>
 #include <utilities/test_graphs.hpp>
 #include <utilities/thrust_wrapper.hpp>
 
@@ -79,7 +79,7 @@ class Tests_MGWeaklyConnectedComponents
     // 2. create MG graph
 
     if (cugraph::test::g_perf) {
-      CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
       handle.get_comms().barrier();
       hr_clock.start();
     }
@@ -89,7 +89,7 @@ class Tests_MGWeaklyConnectedComponents
         handle, input_usecase, false, true);
 
     if (cugraph::test::g_perf) {
-      CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
       handle.get_comms().barrier();
       double elapsed_time{0.0};
       hr_clock.stop(&elapsed_time);
@@ -104,7 +104,7 @@ class Tests_MGWeaklyConnectedComponents
                                                   handle.get_stream());
 
     if (cugraph::test::g_perf) {
-      CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
       handle.get_comms().barrier();
       hr_clock.start();
     }
@@ -112,7 +112,7 @@ class Tests_MGWeaklyConnectedComponents
     cugraph::weakly_connected_components(handle, mg_graph_view, d_mg_components.data());
 
     if (cugraph::test::g_perf) {
-      CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
       handle.get_comms().barrier();
       double elapsed_time{0.0};
       hr_clock.stop(&elapsed_time);
@@ -132,11 +132,8 @@ class Tests_MGWeaklyConnectedComponents
       if (handle.get_comms().get_rank() == int{0}) {
         // 4-2. unrenumbr MG results
 
-        std::tie(std::ignore, d_mg_aggregate_components) =
-          cugraph::test::sort_by_key(handle,
-                                     d_mg_aggregate_renumber_map_labels.data(),
-                                     d_mg_aggregate_components.data(),
-                                     d_mg_aggregate_renumber_map_labels.size());
+        std::tie(std::ignore, d_mg_aggregate_components) = cugraph::test::sort_by_key(
+          handle, d_mg_aggregate_renumber_map_labels, d_mg_aggregate_components);
 
         // 4-3. create SG graph
 
@@ -171,7 +168,7 @@ class Tests_MGWeaklyConnectedComponents
                           d_sg_components.size(),
                           handle.get_stream());
 
-        handle.get_stream_view().synchronize();
+        handle.sync_stream();
 
         std::unordered_map<vertex_t, vertex_t> mg_to_sg_map{};
         for (size_t i = 0; i < h_sg_components.size(); ++i) {
