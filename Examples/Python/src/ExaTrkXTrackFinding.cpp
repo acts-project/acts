@@ -12,6 +12,7 @@
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFinding.hpp"
+#include "ActsExamples/TrackFindingMLBased/TrackFindingMLBasedAlgorithm.hpp"
 
 #include <memory>
 
@@ -29,7 +30,7 @@ void addExaTrkXTrackFinding(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   {
-    using Alg = ActsExamples::TrackFindingAlgorithm;
+    using Alg = ActsExamples::TrackFindingMLBasedAlgorithm;
     using Config = Alg::Config;
 
     auto alg =

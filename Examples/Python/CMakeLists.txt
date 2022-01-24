@@ -135,7 +135,7 @@ else()
 endif()
 
 if(ACTS_BUILD_PLUGIN_EXATRKX)
-  target_link_libraries(ActsPythonBindings PUBLIC ActsPluginExaTrkX)
+  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesTrackFindingMLBased)
   target_sources(ActsPythonBindings PRIVATE src/ExaTrkXTrackFinding.cpp)
 else()
 
