@@ -129,16 +129,6 @@ def runExaTrkX(
     )
     s.addAlgorithm(spAlg)
 
-    # Write truth track finding / seeding performance
-    trackFinderPerformanceWriter = acts.examples.TrackFinderPerformanceWriter(
-        level=acts.logging.INFO,
-        inputProtoTracks=inputProtoTracks,
-        inputParticles=inputParticles,  # the original selected particles after digitization
-        inputMeasurementParticlesMap=digiAlg.config.outputMeasurementParticlesMap,
-        filePath=str(outputDir / "performance_seeding_trees.root"),
-    )
-    s.addWriter(trackFinderPerformanceWriter)
-
     # Setup the track finding algorithm with ExaTrkX
     # It takes all the source links created from truth hit smearing, seeds from
     # truth particle smearing and source link selection config
@@ -160,6 +150,17 @@ def runExaTrkX(
         exaTrkxConfig=exaTrkXCfg
     )
     s.addAlgorithm(trackFinder)
+    
+    
+    # Write truth track finding / seeding performance
+    trackFinderPerformanceWriter = acts.examples.TrackFinderPerformanceWriter(
+        level=acts.logging.INFO,
+        inputProtoTracks="protoTracks",
+        inputParticles=inputParticles,  # the original selected particles after digitization
+        inputMeasurementParticlesMap=digiAlg.config.outputMeasurementParticlesMap,
+        filePath=str(outputDir / "performance_seeding_trees.root"),
+    )
+    s.addWriter(trackFinderPerformanceWriter)
 
     return s
 
@@ -175,7 +176,7 @@ if "__main__" == __name__:
     if not inputParticlePath.exists():
         inputParticlePath = None
 
-    runCKFTracks(
+    runExaTrkX(
         trackingGeometry,
         decorators,
         field=field,
@@ -183,9 +184,5 @@ if "__main__" == __name__:
         / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
         digiConfigFile=srcdir
         / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
-        outputCsv=True,
-        truthSmearedSeeded=False,
-        truthEstimatedSeeded=False,
-        inputParticlePath=inputParticlePath,
         outputDir=Path.cwd(),
     ).run()
