@@ -124,4 +124,47 @@ BOOST_AUTO_TEST_CASE(ConnectRuntime) {
   }
 }
 
+void modify(int& v, int a) {
+  v = a;
+}
+
+void noModify(int v, int a) {
+  (void)v;
+  v = a;
+}
+
+BOOST_AUTO_TEST_CASE(DelegateReference) {
+  Delegate<void(int&, int)> d;
+  d.connect<&modify>();
+
+  int v = 0;
+  d(v, 42);
+  BOOST_CHECK_EQUAL(v, 42);
+
+  // This should not compile since the signature is not exactly matched
+  // d.connect<&noModify>();
+}
+
+struct SignatureTest {
+  void modify(int& v, int a) const { v = a; }
+
+  void noModify(int v, int a) const {
+    (void)v;
+    v = a;
+  }
+};
+
+BOOST_AUTO_TEST_CASE(DelegateReferenceMember) {
+  SignatureTest s;
+  Delegate<void(int&, int)> d;
+  d.connect<&SignatureTest::modify>(&s);
+
+  int v = 0;
+  d(v, 42);
+  BOOST_CHECK_EQUAL(v, 42);
+
+  // This should not compile since the signature is not exactly matched
+  // d.connect<&SignatureTest::noModify>(&s);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -530,8 +530,14 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
     } else {
       // Use full 3d information for significance
       SymMatrix4 sumCov = candidateCov + otherCov;
-      significance =
-          std::sqrt(deltaPos.dot((sumCov.inverse().eval()) * deltaPos));
+      SymMatrix4 sumCovInverse;
+      bool invertible;
+      sumCov.computeInverseWithCheck(sumCovInverse, invertible);
+      if (invertible) {
+        significance = std::sqrt(deltaPos.dot(sumCovInverse * deltaPos));
+      } else {
+        return true;
+      }
     }
     if (significance < m_cfg.maxMergeVertexSignificance) {
       return true;
