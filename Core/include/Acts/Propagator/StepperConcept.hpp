@@ -52,6 +52,7 @@ METHOD_TRAIT(covariance_transport_curvilinear_t,
 METHOD_TRAIT(step_t, step);
 METHOD_TRAIT(update_surface_status_t, updateSurfaceStatus);
 METHOD_TRAIT(set_step_size_t, setStepSize);
+METHOD_TRAIT(get_step_size_t, getStepSize);
 METHOD_TRAIT(release_step_size_t, releaseStepSize);
 METHOD_TRAIT(output_step_size_t, outputStepSize);
 
@@ -72,8 +73,8 @@ using step_size_t = decltype(std::declval<T>().stepSize);
       = require<has_member<S, cov_transport_t, bool>,
                 has_member<S, cov_t, BoundSymMatrix>,
                 has_member<S, nav_dir_t, NavigationDirection>,
-                has_member<S, path_accumulated_t, double>,
-                has_member<S, step_size_t, ConstrainedStep>
+                has_member<S, path_accumulated_t, double>//,
+//                 has_member<S, step_size_t, ConstrainedStep>
                >;
 // clang-format on
 
@@ -118,8 +119,10 @@ using step_size_t = decltype(std::declval<T>().stepSize);
         static_assert(covariance_transport_exists, "covarianceTransport method not found");
         constexpr static bool update_surface_exists = has_method<const S, Intersection3D::Status, update_surface_status_t, state&, const Surface&, const BoundaryCheck&, LoggerWrapper>;
         static_assert(update_surface_exists, "updateSurfaceStatus method not found");
-        constexpr static bool set_step_size_exists = has_method<const S, void, set_step_size_t, state&, double, ConstrainedStep::Type>;
+        constexpr static bool set_step_size_exists = has_method<const S, void, set_step_size_t, state&, double, ConstrainedStep::Type, bool>;
         static_assert(set_step_size_exists, "setStepSize method not found");
+        constexpr static bool get_step_size_exists = has_method<const S, double, get_step_size_t, const state &, ConstrainedStep::Type>;
+        static_assert(get_step_size_exists, "getStepSize method not found");
         constexpr static bool release_step_size_exists = has_method<const S, void, release_step_size_t, state&>;
         static_assert(release_step_size_exists, "releaseStepSize method not found");
         constexpr static bool output_step_size_exists = has_method<const S, std::string, output_step_size_t, const state&>;

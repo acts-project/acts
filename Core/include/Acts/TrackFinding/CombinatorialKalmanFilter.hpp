@@ -952,7 +952,9 @@ class CombinatorialKalmanFilter {
         typeFlags.set(TrackStateFlag::MaterialFlag);
       }
       typeFlags.set(TrackStateFlag::ParameterFlag);
-      typeFlags.set(TrackStateFlag::HoleFlag);
+      if (isSensitive) {
+        typeFlags.set(TrackStateFlag::HoleFlag);
+      }
 
       trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
 

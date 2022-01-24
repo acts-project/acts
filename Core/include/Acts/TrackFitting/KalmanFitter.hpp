@@ -53,9 +53,8 @@ struct KalmanFitterExtensions {
   using Smoother = Delegate<Result<void>(
       const GeometryContext&, MultiTrajectory&, size_t, LoggerWrapper)>;
 
-  using Updater =
-      Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
-                            const NavigationDirection&, LoggerWrapper)>;
+  using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
+                                        NavigationDirection, LoggerWrapper)>;
 
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
 
