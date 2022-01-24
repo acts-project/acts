@@ -16,7 +16,8 @@
 ActsExamples::TrackFindingMLBasedAlgorithm::TrackFindingMLBasedAlgorithm(
     Config config, Acts::Logging::Level level)
     : ActsExamples::BareAlgorithm("TrackFindingMLBasedAlgorithm", level),
-      m_cfg(std::move(config)) {
+      m_cfg(std::move(config)),
+      m_exaTrkx(m_cfg.exaTrkxConfig) {
   if (m_cfg.inputSpacePoints.empty()) {
     throw std::invalid_argument("Missing spacepoint input collection");
   }
@@ -28,8 +29,6 @@ ActsExamples::TrackFindingMLBasedAlgorithm::TrackFindingMLBasedAlgorithm(
 ActsExamples::ProcessCode ActsExamples::TrackFindingMLBasedAlgorithm::execute(
   const ActsExamples::AlgorithmContext& ctx) const 
 {
-  if (m_cfg.trackFinder == nullptr) return ActsExamples::ProcessCode::SUCCESS;
-
   // Read input data
   const auto& spacepoints =
     ctx.eventStore.get<SimSpacePointContainer>(m_cfg.inputSpacePoints);
@@ -55,7 +54,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingMLBasedAlgorithm::execute(
 
   // ProtoTrackContainer protoTracks;
   std::vector<std::vector<uint32_t> > trackCandidates;
-  m_cfg.trackFinder(inputValues, spacepointIDs, trackCandidates);
+  m_exaTrkx(inputValues, spacepointIDs, trackCandidates);
 
   std::vector<ProtoTrack> protoTracks;
   for(auto& x: trackCandidates){
