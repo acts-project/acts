@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
-
+#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFinding.hpp"
 
 #include <string>
 #include <vector>
@@ -17,9 +17,8 @@ class TrackFindingMLBasedAlgorithm final : public BareAlgorithm {
       /// Output protoTracks collection.
       std::string outputProtoTracks;
 
-      std::function< void(
-        std::vector<float>& inputValues, std::vector<uint32_t>& spacepointIDs,
-        std::vector<std::vector<uint32_t> >& trackCandidates) > trackFinder = nullptr;
+      ExaTrkXTrackFinding::Config exaTrkxConfig;
+
     };
 
     /// Constructor of the track finding algorithm
@@ -39,7 +38,9 @@ class TrackFindingMLBasedAlgorithm final : public BareAlgorithm {
 
     const Config& config() const { return m_cfg; }
 
-  private:
+    ExaTrkXTrackFinding m_exaTrkx;
+
+   private:
     // configuration
     Config m_cfg;
 };

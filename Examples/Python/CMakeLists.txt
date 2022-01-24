@@ -20,6 +20,7 @@ pybind11_add_module(ActsPythonBindings
   src/TruthTracking.cpp
   src/TrackFitting.cpp
   src/TrackFinding.cpp
+  src/ExaTrkXTrackFinding.cpp # to be moved once we have proper flags
   src/Vertexing.cpp
 )
 install(TARGETS ActsPythonBindings DESTINATION .)
