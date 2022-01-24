@@ -4,6 +4,8 @@ from typing import Optional
 
 from acts.examples import Sequencer, GenericDetector, RootParticleReader
 
+import acts.examples
+
 import acts
 
 from acts import UnitConstants as u
@@ -133,21 +135,15 @@ def runExaTrkX(
     # It takes all the source links created from truth hit smearing, seeds from
     # truth particle smearing and source link selection config
 
-    exaTrkXCfg = acts.Plugin.ExaTrkXTrackFinding.Config()
-    exaTrkXCfg.inputMLModuleDir = "/home/xju/ocean/code/Tracking-ML-Exa.TrkX/Pipelines/TrackML_Example/onnx_models";
-    ACTS_INFO("ML model dir: " << exaTrkXCfg.inputMLModuleDir)
-    exaTrkXCfg.spacepointFeatures = 3
-    exaTrkXCfg.embeddingDim = 8
-    exaTrkXCfg.rVal = 1.6
-    exaTrkXCfg.knnVal = 500
-    exaTrkXCfg.filterCut = 0.21
+    onnx_model_dir="/home/xju/ocean/code/Tracking-ML-Exa.TrkX/Pipelines/TrackML_Example/onnx_models"
+    #ACTS_INFO("ML model dir: " << onnx_model_dir)
 
 
-    ExaTrkXTrackFinding = acts.examples.TrackFindingMLBasedAlgorithm(
+    trackFinder = acts.examples.TrackFindingMLBasedAlgorithm(
         level=acts.logging.INFO,
         inputSpacePoints="spacepoints",
         outputProtoTracks="protoTracks",
-        exaTrkxConfig=exaTrkXCfg
+        onnxModelDir=onnx_model_dir
     )
     s.addAlgorithm(trackFinder)
     

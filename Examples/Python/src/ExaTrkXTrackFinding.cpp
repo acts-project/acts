@@ -44,7 +44,7 @@ void addExaTrkXTrackFinding(Context& ctx) {
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputSpacePoints);
     ACTS_PYTHON_MEMBER(outputProtoTracks);
-    ACTS_PYTHON_MEMBER(exaTrkxConfig);
+    ACTS_PYTHON_MEMBER(onnxModelDir);
     ACTS_PYTHON_STRUCT_END();
   }
 
