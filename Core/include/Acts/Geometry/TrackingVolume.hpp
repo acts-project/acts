@@ -27,6 +27,8 @@
 #include <string>
 #include <unordered_map>
 
+#include <boost/container/small_vector.hpp>
+
 namespace Acts {
 
 class GlueVolumesDescriptor;
@@ -177,7 +179,7 @@ class TrackingVolume : public Volume {
   /// @param options The templated navigation options
   ///
   /// @return vector of compatible intersections with layers
-  std::vector<LayerIntersection> compatibleLayers(
+  boost::container::small_vector<LayerIntersection, 10> compatibleLayers(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const NavigationOptions<Layer>& options) const;
 
@@ -193,7 +195,7 @@ class TrackingVolume : public Volume {
   /// @param logger A @c LoggerWrapper instance
   ///
   /// @return is the templated boundary intersection
-  std::vector<BoundaryIntersection> compatibleBoundaries(
+  boost::container::small_vector<BoundaryIntersection, 4> compatibleBoundaries(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const NavigationOptions<Surface>& options,
       LoggerWrapper logger = getDummyLogger()) const;
