@@ -17,8 +17,8 @@ class TrackFindingMLBasedAlgorithm final : public BareAlgorithm {
       /// Output protoTracks collection.
       std::string outputProtoTracks;
 
-      /// Path to the onnx model
-      std::string onnxModelDir;
+      /// ML based track finder
+      std::shared_ptr<ExaTrkXTrackFinding> trackFinderML;
 
       // NOTE the other config parameters for the Exa.TrkX class for now are just initialized as the defaults
     };
@@ -41,8 +41,6 @@ class TrackFindingMLBasedAlgorithm final : public BareAlgorithm {
     const Config& config() const { return m_cfg; }
 
    private:
-    ExaTrkXTrackFinding m_exaTrkx;
-    
     // configuration
     Config m_cfg;
 };

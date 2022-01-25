@@ -32,6 +32,9 @@ ActsExamples::TrackFindingMLBasedAlgorithm::TrackFindingMLBasedAlgorithm(
   if (m_cfg.outputProtoTracks.empty()) {
     throw std::invalid_argument("Missing protoTrack output collection");
   }
+  if (m_cfg.trackFinderML.empty()) {
+    throw std::invalid_argument("Missing track finder");
+  }
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackFindingMLBasedAlgorithm::execute(
@@ -62,7 +65,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingMLBasedAlgorithm::execute(
 
   // ProtoTrackContainer protoTracks;
   std::vector<std::vector<uint32_t> > trackCandidates;
-  m_exaTrkx.getTracks(inputValues, spacepointIDs, trackCandidates);
+  m_cfg.trackFinderML->getTracks(inputValues, spacepointIDs, trackCandidates);
 
   std::vector<ProtoTrack> protoTracks;
   for(auto& x: trackCandidates){

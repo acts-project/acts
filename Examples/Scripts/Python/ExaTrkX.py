@@ -135,17 +135,22 @@ def runExaTrkX(
     # It takes all the source links created from truth hit smearing, seeds from
     # truth particle smearing and source link selection config
 
-    onnx_model_dir="/home/xju/ocean/code/Tracking-ML-Exa.TrkX/Pipelines/TrackML_Example/onnx_models"
-    #ACTS_INFO("ML model dir: " << onnx_model_dir)
+    exaTrkxFinding = acts.examples.ExaTrkXTrackFinding(
+        inputMLModuleDir="/home/xju/ocean/code/Tracking-ML-Exa.TrkX/Pipelines/TrackML_Example/onnx_models",
+        spacepointFeatures=3,
+        embeddingDim=8,
+        rVal=1.6,
+        knnVal=500,
+        filterCut=0.21
+    )
 
-
-    trackFinder = acts.examples.TrackFindingMLBasedAlgorithm(
+    trackFinderAlg = acts.examples.TrackFindingMLBasedAlgorithm(
         level=acts.logging.INFO,
         inputSpacePoints="spacepoints",
         outputProtoTracks="protoTracks",
-        onnxModelDir=onnx_model_dir
+        trackFinderML=exaTrkxFinding
     )
-    s.addAlgorithm(trackFinder)
+    s.addAlgorithm(trackFinderAlg)
     
     
     # Write truth track finding / seeding performance
