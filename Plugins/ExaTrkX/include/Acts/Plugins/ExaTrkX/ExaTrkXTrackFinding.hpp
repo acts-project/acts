@@ -36,9 +36,7 @@ class ExaTrkXTrackFinding {
 
     const Config& config() const { return m_cfg; }
 
-  private:
-    void initTrainedModels();
-    
+  private:    
     void runSessionWithIoBinding(
       Ort::Session& sess,
       std::vector<const char*>& inputNames,

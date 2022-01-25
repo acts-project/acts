@@ -32,6 +32,7 @@
 #include <functional>
 #include <iostream>
 #include <boost/program_options.hpp>
+#include <filesystem>
 
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
@@ -86,6 +87,10 @@ int main(int argc, char** argv) {
   Options::addInputOptions(desc);
   Options::addMagneticFieldOptions(desc);
   Options::addDigitizationOptions(desc);
+  
+  // Add an option for the onnx models
+  desc.add_options()("onnx-dir", boost::program_options::value<std::string>(),
+                    "The directory where the ONNX models are");
 
   // Add specific options for this geometry
   // <TODO> make it as an argument.
@@ -190,22 +195,17 @@ int main(int argc, char** argv) {
   sequencer.addAlgorithm(std::make_shared<SpacePointMaker>(spCfg, logLevel));
 
   // The ML Algorithm
-  ExaTrkXTrackFinding::Config exaTrkxConfig;
-  exaTrkxConfig.inputMLModuleDir = "/home/xju/ocean/code/Tracking-ML-Exa.TrkX/Pipelines/TrackML_Example/onnx_models";
-  ACTS_INFO("ML model dir: " << exaTrkxConfig.inputMLModuleDir);
-  exaTrkxConfig.spacepointFeatures = 3;
-  exaTrkxConfig.embeddingDim = 8;
-  exaTrkxConfig.rVal = 1.6;
-  exaTrkxConfig.knnVal = 500;
-  exaTrkxConfig.filterCut = 0.21;
-
-  ExaTrkXTrackFinding exaTrkx(exaTrkxConfig);
 
   // ML-based Tracking alg.
   // make module and function names as options..
   TrackFindingMLBasedAlgorithm::Config trkFinderCfg;
   trkFinderCfg.inputSpacePoints = spCfg.outputSpacePoints;
   trkFinderCfg.outputProtoTracks = "protoTracks";
+  
+  if( vm["onnx-dir"].empty() or not std::filesystem::exists(vm["onnx-dir"].as<std::string>()) ) {
+      throw std::runtime_error("need to have a valid onnx-dir");
+  }
+  trkFinderCfg.onnxModelDir = vm["onnx-dir"].as<std::string>();
   // Is now directely compiled into the Algorithm
 //   trkFinderCfg.trackFinder = std::bind(
 //     &ExaTrkXTrackFinding::getTracks, &exaTrkx,

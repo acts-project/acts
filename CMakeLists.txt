@@ -214,8 +214,10 @@ if(ACTS_BUILD_PLUGIN_CUDA)
   set(CMAKE_CUDA_STANDARD 14 CACHE STRING "CUDA C++ standard to use")
   set(CMAKE_CUDA_STANDARD_REQUIRED ON CACHE BOOL
     "Force the C++ standard requirement")
-  set(CMAKE_CUDA_ARCHITECTURES "35;52;75" CACHE STRING
-    "CUDA architectures to generate code for")
+  if(NOT CMAKE_CUDA_ARCHITECTURES)
+    set(CMAKE_CUDA_ARCHITECTURES "35;52;75" CACHE STRING
+        "CUDA architectures to generate code for")
+  endif()
   set(CMAKE_CUDA_FLAGS_DEBUG "-g -G")
 endif()
 if(ACTS_BUILD_PLUGIN_DD4HEP)

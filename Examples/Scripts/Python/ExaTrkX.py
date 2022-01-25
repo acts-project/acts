@@ -22,7 +22,7 @@ def runExaTrkX(
     inputParticlePath: Optional[Path] = None,
     s=None,
 ):
-    s = s or Sequencer(events=100, numThreads=-1)
+    s = s or Sequencer(events=1, numThreads=1)
 
     logger = acts.logging.getLogger("ExaTrkXExample")
 
@@ -135,7 +135,7 @@ def runExaTrkX(
     # It takes all the source links created from truth hit smearing, seeds from
     # truth particle smearing and source link selection config
 
-    onnx_model_dir="/home/xju/ocean/code/Tracking-ML-Exa.TrkX/Pipelines/TrackML_Example/onnx_models"
+    onnx_model_dir="/home/benjamin/Documents/acts_project/gnn_integration/run/onnx_models"
     #ACTS_INFO("ML model dir: " << onnx_model_dir)
 
 

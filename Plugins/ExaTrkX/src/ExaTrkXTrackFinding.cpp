@@ -26,28 +26,12 @@ using namespace torch::indexing;
 
 ExaTrkXTrackFinding::ExaTrkXTrackFinding(const Config& config) : m_cfg(config)
 {
-    std::cout << "adding ExaTrkXTrackFinding algorithm" << std::endl;
-    // std::cout << "Model directory: " << m_cfg.inputMLModuleDir << std::endl;
-    // std::cout << "Model directory: " << m_cfg.inputMLModuleDir << std::endl;
-    initTrainedModels();
-}
-
-void ExaTrkXTrackFinding::initTrainedModels()
-{
-
-    std::cout << "Initializing Trained ML Models" << std::endl;
-    m_cfg.inputMLModuleDir = "/home/xju/ocean/code/Tracking-ML-Exa.TrkX/Pipelines/TrackML_Example/onnx_models";
-    m_cfg.spacepointFeatures = 3;
-    m_cfg.embeddingDim = 8;
-    m_cfg.rVal = 1.6;
-    m_cfg.knnVal = 500;
-    m_cfg.filterCut = 0.21;
-    std::cout << "Model input directory: " << m_cfg.inputMLModuleDir << std::endl;
-    std::cout << "Spacepoint features: " << m_cfg.spacepointFeatures << std::endl;
-    std::cout << "Embedding Dimension: " << m_cfg.embeddingDim << std::endl;
-    std::cout << "radius value       : " << m_cfg.rVal << std::endl;
-    std::cout << "k-nearest neigbour : " << m_cfg.knnVal << std::endl;
-    std::cout << "filtering cut      : " << m_cfg.filterCut << std::endl;
+    std::cout << "Model input directory: " << m_cfg.inputMLModuleDir << "\n";
+    std::cout << "Spacepoint features: " << m_cfg.spacepointFeatures << "\n";
+    std::cout << "Embedding Dimension: " << m_cfg.embeddingDim << "\n";
+    std::cout << "radius value       : " << m_cfg.rVal << "\n";
+    std::cout << "k-nearest neigbour : " << m_cfg.knnVal << "\n";
+    std::cout << "filtering cut      : " << m_cfg.filterCut << "\n";
 
     m_env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING, "ExaTrkX");
     std::string embedModelPath{m_cfg.inputMLModuleDir + "/embedding.onnx"};
@@ -57,7 +41,7 @@ void ExaTrkXTrackFinding::initTrainedModels()
 
     Ort::SessionOptions session_options;
     session_options.SetIntraOpNumThreads(1);
-    OrtStatus* status = OrtSessionOptionsAppendExecutionProvider_CUDA(session_options, 0);
+    // OrtStatus* status = OrtSessionOptionsAppendExecutionProvider_CUDA(session_options, 0);
     session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
 
     e_sess = std::make_unique<Ort::Session>(*m_env, embedModelPath.c_str(), session_options);
@@ -398,11 +382,14 @@ void ExaTrkXTrackFinding::getTracks(
             memoryInfo, gOutputData.data(), gOutputData.size(), 
             gOutputShape.data(), gOutputShape.size())
     );
+    
+    std::cout << "run ONNX session\n";
     runSessionWithIoBinding(*g_sess, gInputNames, gInputTensor, gOutputNames, gOutputTensor);
+    std::cout << "done with ONNX session\n";
 
     torch::Tensor gOutputCTen = torch::tensor(gOutputData, {torch::kFloat32});
     gOutputCTen = gOutputCTen.sigmoid();
-    // std::cout << gOutputCTen.slice(0, 0, 3) << std::endl;
+    std::cout << gOutputCTen.slice(0, 0, 3) << std::endl;
 
     // ************
     // Track Labeling with cugraph::connected_components
@@ -424,6 +411,7 @@ void ExaTrkXTrackFinding::getTracks(
         gOutputCTen.data_ptr<float>() + numEdgesAfterF,
         std::back_insert_iterator(edgeWeights));
 
+    std::cout << "run weakly_connected_components" << std::endl;
     weakly_connected_components<int32_t,int32_t,float>(
         rowIndices, colIndices, edgeWeights, trackLabels);
 
