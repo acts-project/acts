@@ -29,7 +29,7 @@ void addExaTrkXTrackFinding(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   {
-    using Alg = ActsExamples::TrackFindingAlgorithm;
+    using Alg = ActsExamples::TrackFindingMLBasedAlgorithm;
     using Config = Alg::Config;
 
     auto alg =
