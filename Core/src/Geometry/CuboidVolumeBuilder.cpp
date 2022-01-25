@@ -66,7 +66,7 @@ std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
     }
   }
   // Build transformation centered at the surface position
-  Vector3 centroid;
+  Vector3 centroid{0.,0.,0.};
 
   for (const auto& surface : cfg.surfaces) {
     centroid += surface->transform(gctx).translation();
