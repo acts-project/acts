@@ -13,11 +13,19 @@
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+namespace {
+    auto makeExaTrkxConfig(const std::string &onnxPath) {        
+        ExaTrkXTrackFinding::Config cfg;
+        cfg.inputMLModuleDir = onnxPath;
+        return cfg;
+    }
+}
+
 ActsExamples::TrackFindingMLBasedAlgorithm::TrackFindingMLBasedAlgorithm(
     Config config, Acts::Logging::Level level)
     : ActsExamples::BareAlgorithm("TrackFindingMLBasedAlgorithm", level),
       m_cfg(std::move(config)),
-      m_exaTrkx(m_cfg.exaTrkxConfig) {
+      m_exaTrkx(makeExaTrkxConfig(m_cfg.onnxModelDir)) {
   if (m_cfg.inputSpacePoints.empty()) {
     throw std::invalid_argument("Missing spacepoint input collection");
   }
@@ -54,7 +62,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingMLBasedAlgorithm::execute(
 
   // ProtoTrackContainer protoTracks;
   std::vector<std::vector<uint32_t> > trackCandidates;
-  m_exaTrkx(inputValues, spacepointIDs, trackCandidates);
+  m_exaTrkx.getTracks(inputValues, spacepointIDs, trackCandidates);
 
   std::vector<ProtoTrack> protoTracks;
   for(auto& x: trackCandidates){

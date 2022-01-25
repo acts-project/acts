@@ -1,4 +1,4 @@
-find_package (Python3 COMPONENTS Interpreter Development)
+find_package(Python3 COMPONENTS Interpreter Development)
 find_package(Torch REQUIRED)
 
 set(FRNN_CXX_FLAGS "${TORCH_CXX_FLAGS}")
@@ -32,7 +32,7 @@ file(GLOB SrcFiles *.cu)
 add_library(frnn SHARED ${SrcFiles})
 
 target_include_directories(frnn 
-PUBLIC ${Python3_INCLUDE_DIRS} ${TORCH_INCLUDE_DIRS}
+  SYSTEM PUBLIC ${Python3_INCLUDE_DIRS} ${TORCH_INCLUDE_DIRS}
     INTERFACE 
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
@@ -58,8 +58,15 @@ set_property(TARGET frnn PROPERTY CXX_STANDARD 14)
 set_property(TARGET frnn PROPERTY POSITION_INDEPENDENT_CODE ON)
 set_property(TARGET frnn PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 set_property(TARGET frnn PROPERTY CUDA_STANDARD 14)
+#set_property(TARGET frnn PROPERTY LINKER_LANGUAGE CXX CUDA)
 
 target_compile_options(frnn
     PUBLIC  "$<$<COMPILE_LANGUAGE:CXX>:${FRNN_CXX_FLAGS}>"
             "$<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CUDA>:${FRNN_CUDA_FLAGS}>>"
 )
+
+
+install(
+  TARGETS frnn
+  EXPORT ActsPluginExaTrkXTargets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

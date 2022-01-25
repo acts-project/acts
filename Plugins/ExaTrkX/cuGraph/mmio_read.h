@@ -50,16 +50,14 @@ __global__ void weakly_connected_components(
   std::vector<vertex_t>& trackLabels
   )
 {
-    // std::cout << "Weakly components Start" << std::endl;
-    // std::cout << "edge size: " << rowIndices.size() << " " << colIndices.size() << std::endl;
-    raft::handle_t handle{};
-
-    cugraph::graph_t<vertex_t, edge_t, weight_t, false, false> graph(handle);
-
-    
     cudaStream_t stream;
     CUDA_RT_CALL(cudaStreamCreate(&stream));
-    handle.set_stream(stream);
+    
+    // std::cout << "Weakly components Start" << std::endl;
+    // std::cout << "edge size: " << rowIndices.size() << " " << colIndices.size() << std::endl;
+    raft::handle_t handle{stream};
+
+    cugraph::graph_t<vertex_t, edge_t, weight_t, false, false> graph(handle);
 
     // constexpr bool renumber = true;
     // using store_transposed = bool;

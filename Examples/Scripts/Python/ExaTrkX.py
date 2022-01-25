@@ -4,6 +4,8 @@ from typing import Optional
 
 from acts.examples import Sequencer, GenericDetector, RootParticleReader
 
+import acts.examples
+
 import acts
 
 from acts import UnitConstants as u
@@ -129,37 +131,32 @@ def runExaTrkX(
     )
     s.addAlgorithm(spAlg)
 
+    # Setup the track finding algorithm with ExaTrkX
+    # It takes all the source links created from truth hit smearing, seeds from
+    # truth particle smearing and source link selection config
+
+    onnx_model_dir="/home/xju/ocean/code/Tracking-ML-Exa.TrkX/Pipelines/TrackML_Example/onnx_models"
+    #ACTS_INFO("ML model dir: " << onnx_model_dir)
+
+
+    trackFinder = acts.examples.TrackFindingMLBasedAlgorithm(
+        level=acts.logging.INFO,
+        inputSpacePoints="spacepoints",
+        outputProtoTracks="protoTracks",
+        onnxModelDir=onnx_model_dir
+    )
+    s.addAlgorithm(trackFinder)
+    
+    
     # Write truth track finding / seeding performance
     trackFinderPerformanceWriter = acts.examples.TrackFinderPerformanceWriter(
         level=acts.logging.INFO,
-        inputProtoTracks=inputProtoTracks,
+        inputProtoTracks="protoTracks",
         inputParticles=inputParticles,  # the original selected particles after digitization
         inputMeasurementParticlesMap=digiAlg.config.outputMeasurementParticlesMap,
         filePath=str(outputDir / "performance_seeding_trees.root"),
     )
     s.addWriter(trackFinderPerformanceWriter)
-
-    # Setup the track finding algorithm with ExaTrkX
-    # It takes all the source links created from truth hit smearing, seeds from
-    # truth particle smearing and source link selection config
-
-    exaTrkXCfg = acts.Plugin.ExaTrkXTrackFinding.Config()
-    exaTrkXCfg.inputMLModuleDir = "/home/xju/ocean/code/Tracking-ML-Exa.TrkX/Pipelines/TrackML_Example/onnx_models";
-    ACTS_INFO("ML model dir: " << exaTrkXCfg.inputMLModuleDir)
-    exaTrkXCfg.spacepointFeatures = 3
-    exaTrkXCfg.embeddingDim = 8
-    exaTrkXCfg.rVal = 1.6
-    exaTrkXCfg.knnVal = 500
-    exaTrkXCfg.filterCut = 0.21
-
-
-    ExaTrkXTrackFinding = acts.examples.TrackFindingMLBasedAlgorithm(
-        level=acts.logging.INFO,
-        inputSpacePoints="spacepoints",
-        outputProtoTracks="protoTracks",
-        exaTrkxConfig=exaTrkXCfg
-    )
-    s.addAlgorithm(trackFinder)
 
     return s
 
@@ -175,7 +172,7 @@ if "__main__" == __name__:
     if not inputParticlePath.exists():
         inputParticlePath = None
 
-    runCKFTracks(
+    runExaTrkX(
         trackingGeometry,
         decorators,
         field=field,
@@ -183,9 +180,5 @@ if "__main__" == __name__:
         / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
         digiConfigFile=srcdir
         / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
-        outputCsv=True,
-        truthSmearedSeeded=False,
-        truthEstimatedSeeded=False,
-        inputParticlePath=inputParticlePath,
         outputDir=Path.cwd(),
     ).run()

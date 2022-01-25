@@ -24,8 +24,7 @@ add_library(cugraphtestutil STATIC
             # utilities/rmat_utilities.cu
             utilities/thrust_wrapper.cu
             utilities/misc_utilities.cpp
-            components/wcc_graphs.cu
-            mmio/mmio.c)
+            components/wcc_graphs.cu)
 
 target_compile_options(cugraphtestutil
             PUBLIC "$<$<COMPILE_LANGUAGE:CXX>:${CUGRAPH_CXX_FLAGS}>"
@@ -35,19 +34,29 @@ target_compile_options(cugraphtestutil
 set_property(TARGET cugraphtestutil PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 target_include_directories(cugraphtestutil
-    PUBLIC
+    SYSTEM PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}/mmio"
         "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
 target_link_libraries(cugraphtestutil
     PUBLIC
-        $<BUILD_INTERFACE:conda_env>
-        cugraph
+        #$<BUILD_INTERFACE:conda_env>
+        cugraph::cugraph
         cuco::cuco
         NCCL::NCCL
 )
 
+####################
+
+enable_language(C)
+add_library(mmio STATIC mmio/mmio.c)
+set_property(TARGET mmio PROPERTY LINKER_LANGUAGE C)
+
+target_include_directories(mmio 
+    PUBLIC 
+        "${CMAKE_CURRENT_SOURCE_DIR}/mmio"
+)
 
 # Testing the weakly connected components
 add_executable(test_connected_components test_connected_components.cpp)
@@ -74,8 +83,9 @@ target_compile_definitions(test_connected_components PUBLIC CUDA_API_PER_THREAD_
 target_link_libraries(test_connected_components
 PUBLIC
     cugraphtestutil
-    $<BUILD_INTERFACE:conda_env>
-    cugraph
+    mmio
+    #$<BUILD_INTERFACE:conda_env>
+    cugraph::cugraph
     CUDA::cublas
     CUDA::cusparse
     CUDA::cusolver
@@ -109,8 +119,9 @@ target_compile_definitions(test_mmio_read PUBLIC CUDA_API_PER_THREAD_DEFAULT_STR
 target_link_libraries(test_mmio_read
 PUBLIC
     cugraphtestutil
-    $<BUILD_INTERFACE:conda_env>
-    cugraph
+    mmio
+    #$<BUILD_INTERFACE:conda_env>
+    cugraph::cugraph
     CUDA::cublas
     CUDA::cusparse
     CUDA::cusolver

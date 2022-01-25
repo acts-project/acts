@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, NVIDIA CORPORATION.
+ * Copyright (c) 2021-2022, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 
 #include <cugraph/detail/shuffle_wrappers.hpp>
 #include <cugraph/detail/utility_wrappers.hpp>
+#include <cugraph/functions.hpp>  // legacy coo_to_csr
 #include <cugraph/graph_functions.hpp>
 #include <cugraph/graph_generators.hpp>
 
@@ -54,6 +55,11 @@ class File_Usecase : public detail::TranslateGraph_Usecase {
 
   File_Usecase(std::string const& graph_file_path, size_t base_vertex_id = 0)
     : detail::TranslateGraph_Usecase(base_vertex_id)
+  {
+    set_filename(graph_file_path);
+  }
+
+  void set_filename(std::string const& graph_file_path)
   {
     if ((graph_file_path.length() > 0) && (graph_file_path[0] != '/')) {
       graph_file_full_path_ = cugraph::test::get_rapids_dataset_root_dir() + "/" + graph_file_path;
@@ -134,6 +140,13 @@ class Rmat_Usecase : public detail::TranslateGraph_Usecase {
              bool>
   construct_edgelist(raft::handle_t const& handle, bool test_weighted) const
   {
+    CUGRAPH_EXPECTS(
+      (size_t{1} << scale_) <= static_cast<size_t>(std::numeric_limits<vertex_t>::max()),
+      "Invalid template parameter: scale_ too large for vertex_t.");
+    CUGRAPH_EXPECTS(((size_t{1} << scale_) * edge_factor_) <=
+                      static_cast<size_t>(std::numeric_limits<edge_t>::max()),
+                    "Invalid template parameter: (scale_, edge_factor_) too large for edge_t");
+
     std::vector<size_t> partition_ids(1);
     size_t num_partitions;
 
@@ -168,6 +181,7 @@ class Rmat_Usecase : public detail::TranslateGraph_Usecase {
 
       partition_vertex_firsts[i] = (number_of_vertices / num_partitions) * id;
       partition_vertex_lasts[i]  = (number_of_vertices / num_partitions) * (id + 1);
+
       if (id < number_of_vertices % num_partitions) {
         partition_vertex_firsts[i] += id;
         partition_vertex_lasts[i] += id + 1;
@@ -206,7 +220,7 @@ class Rmat_Usecase : public detail::TranslateGraph_Usecase {
                                                                             handle.get_stream());
         }
 
-        cugraph::detail::uniform_random_fill(handle.get_stream_view(),
+        cugraph::detail::uniform_random_fill(handle.get_stream(),
                                              i == 0 ? weights_v->data() : tmp_weights_v->data(),
                                              i == 0 ? weights_v->size() : tmp_weights_v->size(),
                                              weight_t{0.0},
@@ -236,8 +250,9 @@ class Rmat_Usecase : public detail::TranslateGraph_Usecase {
     translate(handle, src_v, dst_v);
 
     if (undirected_)
-      std::tie(src_v, dst_v, std::ignore) = cugraph::symmetrize_edgelist<vertex_t, weight_t>(
-        handle, std::move(src_v), std::move(dst_v), std::nullopt);
+      std::tie(src_v, dst_v, weights_v) =
+        cugraph::symmetrize_edgelist_from_triangular<vertex_t, weight_t>(
+          handle, std::move(src_v), std::move(dst_v), std::move(weights_v));
 
     if (multi_gpu) {
       std::tie(store_transposed ? dst_v : src_v, store_transposed ? src_v : dst_v, weights_v) =
@@ -255,13 +270,13 @@ class Rmat_Usecase : public detail::TranslateGraph_Usecase {
       auto start_offset = vertices_v.size();
       vertices_v.resize(start_offset + (partition_vertex_lasts[i] - partition_vertex_firsts[i]),
                         handle.get_stream());
-      cugraph::detail::sequence_fill(handle.get_stream_view(),
+      cugraph::detail::sequence_fill(handle.get_stream(),
                                      vertices_v.begin() + start_offset,
                                      vertices_v.size() - start_offset,
                                      partition_vertex_firsts[i]);
     }
 
-    if (multi_gpu) {
+    if constexpr (multi_gpu) {
       vertices_v = cugraph::detail::shuffle_vertices_by_gpu_id(handle, std::move(vertices_v));
     }
 
@@ -324,13 +339,14 @@ class PathGraph_Usecase {
     });
 
     auto [src_v, dst_v] = cugraph::generate_path_graph_edgelist<vertex_t>(handle, converted_parms);
-    std::tie(src_v, dst_v, std::ignore) = cugraph::symmetrize_edgelist<vertex_t, weight_t>(
-      handle, std::move(src_v), std::move(dst_v), std::nullopt);
+    std::tie(src_v, dst_v, std::ignore) =
+      cugraph::symmetrize_edgelist_from_triangular<vertex_t, weight_t>(
+        handle, std::move(src_v), std::move(dst_v), std::nullopt);
 
     rmm::device_uvector<vertex_t> d_vertices(num_vertices_, handle.get_stream());
     cugraph::detail::sequence_fill(
       handle.get_stream(), d_vertices.data(), num_vertices_, vertex_t{0});
-    handle.get_stream_view().synchronize();
+    handle.sync_stream();
 
     return std::make_tuple(std::move(src_v),
                            std::move(dst_v),
@@ -527,12 +543,18 @@ std::tuple<cugraph::graph_t<vertex_t, edge_t, weight_t, store_transposed, multi_
 construct_graph(raft::handle_t const& handle,
                 input_usecase_t const& input_usecase,
                 bool test_weighted,
-                bool renumber = true)
+                bool renumber         = true,
+                bool drop_self_loops  = false,
+                bool drop_multi_edges = false)
 {
   auto [d_src_v, d_dst_v, d_weights_v, d_vertices_v, num_vertices, is_symmetric] =
     input_usecase
       .template construct_edgelist<vertex_t, edge_t, weight_t, store_transposed, multi_gpu>(
         handle, test_weighted);
+
+  if (drop_self_loops) { remove_self_loops(handle, d_src_v, d_dst_v, d_weights_v); }
+
+  if (drop_multi_edges) { sort_and_remove_multi_edges(handle, d_src_v, d_dst_v, d_weights_v); }
 
   return cugraph::
     create_graph_from_edgelist<vertex_t, edge_t, weight_t, store_transposed, multi_gpu>(
@@ -541,9 +563,30 @@ construct_graph(raft::handle_t const& handle,
       std::move(d_src_v),
       std::move(d_dst_v),
       std::move(d_weights_v),
-      cugraph::graph_properties_t{is_symmetric, false},
+      cugraph::graph_properties_t{is_symmetric, true},
       renumber);
 }
 
+namespace legacy {
+
+template <typename vertex_t, typename edge_t, typename weight_t, typename input_usecase_t>
+std::unique_ptr<cugraph::legacy::GraphCSR<vertex_t, edge_t, weight_t>> construct_graph_csr(
+  raft::handle_t const& handle, input_usecase_t const& input_usecase, bool test_weighted)
+{
+  auto [d_src_v, d_dst_v, d_weight_v, d_vertices_v, num_vertices, is_symmetric] =
+    input_usecase.template construct_edgelist<vertex_t, edge_t, weight_t, false, false>(
+      handle, test_weighted);
+
+  cugraph::legacy::GraphCOOView<vertex_t, edge_t, weight_t> cooview(
+    d_src_v.data(),
+    d_dst_v.data(),
+    d_weight_v ? d_weight_v->data() : nullptr,
+    num_vertices,
+    static_cast<edge_t>(d_src_v.size()));
+
+  return cugraph::coo_to_csr(cooview);
+}
+
+}  // namespace legacy
 }  // namespace test
 }  // namespace cugraph

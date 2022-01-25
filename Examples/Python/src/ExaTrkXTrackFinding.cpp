@@ -12,6 +12,7 @@
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFinding.hpp"
+#include "ActsExamples/TrackFindingMLBased/TrackFindingMLBasedAlgorithm.hpp"
 
 #include <memory>
 
@@ -37,13 +38,13 @@ void addExaTrkXTrackFinding(Context& ctx) {
             mex, "TrackFindingMLBasedAlgorithm")
             .def(py::init<const Config&, Acts::Logging::Level>(),
                  py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config)
+            .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputSpacePoints);
     ACTS_PYTHON_MEMBER(outputProtoTracks);
-    ACTS_PYTHON_MEMBER(exaTrkxConfig);
+    ACTS_PYTHON_MEMBER(onnxModelDir);
     ACTS_PYTHON_STRUCT_END();
   }
 

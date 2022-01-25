@@ -16,7 +16,7 @@
 #include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp" // to read digi config
 #include "ActsExamples/Digitization/DigitizationOptions.hpp"
-z
+
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
@@ -206,9 +206,10 @@ int main(int argc, char** argv) {
   TrackFindingMLBasedAlgorithm::Config trkFinderCfg;
   trkFinderCfg.inputSpacePoints = spCfg.outputSpacePoints;
   trkFinderCfg.outputProtoTracks = "protoTracks";
-  trkFinderCfg.trackFinder = std::bind(
-    &ExaTrkXTrackFinding::getTracks, &exaTrkx,
-    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+  // Is now directely compiled into the Algorithm
+//   trkFinderCfg.trackFinder = std::bind(
+//     &ExaTrkXTrackFinding::getTracks, &exaTrkx,
+//     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
   sequencer.addAlgorithm(std::make_shared<TrackFindingMLBasedAlgorithm>(trkFinderCfg, logLevel));
 
