@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/TypeTraits.hpp"
+
 #include <cassert>
 #include <functional>
 
@@ -35,6 +37,12 @@ class Delegate<R(Args...)> {
   /// Alias to the function pointer type this class will store
   using function_type = return_type (*)(const void*, Args...);
 
+  using function_ptr_type = return_type (*)(Args...);
+
+  template <typename T, typename C>
+  using isSignatureCompatible =
+      decltype(std::declval<T&>() = std::declval<C>());
+
  public:
   Delegate() = default;
 
@@ -58,6 +66,13 @@ class Delegate<R(Args...)> {
   template <auto Callable>
   void connect() {
     m_payload = nullptr;
+
+    static_assert(
+        Concepts::is_detected<isSignatureCompatible, function_ptr_type,
+                              decltype(Callable)>::value,
+        "Callable given does not correspond exactly to required call "
+        "signature");
+
     m_function = [](const void* /*payload*/, Args... args) -> return_type {
       return std::invoke(Callable, std::forward<Args>(args)...);
     };
@@ -81,6 +96,13 @@ class Delegate<R(Args...)> {
   ///       it's lifetime is longer than that of @c Delegate.
   template <auto Callable, typename Type>
   void connect(const Type* instance) {
+    using member_ptr_type = return_type (Type::*)(Args...) const;
+
+    static_assert(Concepts::is_detected<isSignatureCompatible, member_ptr_type,
+                                        decltype(Callable)>::value,
+                  "Callable given does not correspond exactly to required call "
+                  "signature");
+
     m_payload = instance;
     m_function = [](const void* payload, Args... args) -> return_type {
       const auto* concretePayload = static_cast<const Type*>(payload);

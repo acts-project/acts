@@ -16,7 +16,7 @@
 
 #include <limits>
 
-namespace utf = boost::unit_test;
+namespace bdata = boost::unit_test::data;
 
 namespace Acts {
 
@@ -126,7 +126,76 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties) {
   /// Test inside
   BOOST_CHECK(trapezoidBoundsObject.inside(inRectangle, BoundaryCheck(true)));
   BOOST_CHECK(!trapezoidBoundsObject.inside(outside, BoundaryCheck(true)));
+
+  const auto vertices = trapezoidBoundsObject.vertices();
+  BoundaryCheck bc{true};
+
+  std::vector<Vector2> testPoints = {
+      // inside
+      {0, 1},
+      {0, -1},
+      {2, 0.5},
+      {2, 0},
+      {-2, 0},
+      {-2, 0.5},
+      {3, 1},
+      {-3, 1},
+      {4, 1},
+      {-4, 1},
+      {-6, 2},
+
+      // outside
+      {0, 2.5},
+      {0, -2.5},
+      {2, 2.5},
+      {-2, 2.5},
+      {2, -2.5},
+      {2, -2.5},
+      {4, -1},
+      {-4, -1},
+      {-7, 0},
+      {7, 0},
+      {5, -3},
+      {5, 3},
+      {-5, -3},
+      {-5, 3},
+      {6, 2},
+
+  };
+
+  for (const auto& p : testPoints) {
+    BOOST_TEST_CONTEXT("p=" << p.transpose()) {
+      BOOST_CHECK_EQUAL(bc.isInside(p, vertices),
+                        trapezoidBoundsObject.inside(p, bc));
+    }
+  }
 }
+
+BOOST_DATA_TEST_CASE(
+    TrapezoidInsideCheck,
+    bdata::random((bdata::seed = 1,
+                   bdata::distribution = std::uniform_real_distribution<>(-7,
+                                                                          7))) ^
+        bdata::random(
+            (bdata::seed = 2,
+             bdata::distribution = std::uniform_real_distribution<>(-3, 3))) ^
+        bdata::xrange(1000) * bdata::make({0.0, 0.1, 0.2, 0.3}),
+    x, y, index, tol) {
+  (void)index;
+  double minHalfX(1.), maxHalfX(6.), halfY(2.);
+  static const TrapezoidBounds trapezoidBoundsObject(minHalfX, maxHalfX, halfY);
+  static const auto vertices = trapezoidBoundsObject.vertices();
+
+  BoundaryCheck bc{true};
+
+  if (tol != 0.0) {
+    bc = BoundaryCheck{true, true, tol, tol};
+  }
+
+  BOOST_CHECK_EQUAL(bc.isInside({x, y}, vertices),
+                    trapezoidBoundsObject.inside({x, y}, bc));
+}
+
 /// Unit test for testing TrapezoidBounds assignment
 BOOST_AUTO_TEST_CASE(TrapezoidBoundsAssignment) {
   double minHalfX(1.), maxHalfX(6.), halfY(2.);
