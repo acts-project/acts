@@ -32,6 +32,16 @@ namespace Acts {
 /// opening angle @f$ 2\cdot\phi_{half}@f$
 /// around an average @f$ \phi @f$ angle @f$ \phi_{ave} @f$.
 ///
+/// CylinderBounds also supports beveled sizes defined by an angle \phi.
+/// Different angles can be defined on both sides of the cylinder.
+/// A postive angle is defined as an "extruding" from the defined Zlength,
+/// while a negative angle is "intruding" on the Zlength.
+/// +pi -pi          -pi +pi
+/// ________________________
+/// \  |  /          \  |  /
+///  \ | /            \ | /   
+///   \|/______________\|/
+///     2 * ZhalfLength
 class CylinderBounds : public SurfaceBounds {
  public:
   enum BoundValues : int {
@@ -52,6 +62,8 @@ class CylinderBounds : public SurfaceBounds {
   /// @param halfZ The half length in z
   /// @param halfPhi The half opening angle
   /// @param avgPhi (optional) The phi value from which the opening angle spans
+  /// @param bevelMinZ (optional) The bevel on the negative z side
+  /// @param bevelMaxZ (optional) The bevel on the positive z sid The bevel on the positive z sidee
   CylinderBounds(double r, double halfZ, double halfPhi = M_PI,
                  double avgPhi = 0., double bevelMinZ = 0.,
                  double bevelMaxZ = 0.) noexcept(false)
