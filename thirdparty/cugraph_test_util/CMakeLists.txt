@@ -21,7 +21,6 @@
 
 add_library(cugraphtestutil STATIC
             utilities/matrix_market_file_utilities.cu
-            # utilities/rmat_utilities.cu
             utilities/thrust_wrapper.cu
             utilities/misc_utilities.cpp
             components/wcc_graphs.cu)
@@ -35,16 +34,17 @@ set_property(TARGET cugraphtestutil PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 target_include_directories(cugraphtestutil
     SYSTEM PUBLIC
-        "${CMAKE_CURRENT_SOURCE_DIR}/mmio"
         "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
+target_include_directories(cugraphtestutil
+    SYSTEM PUBLIC
+        "${CMAKE_CURRENT_SOURCE_DIR}/"
+        "${CMAKE_CURRENT_SOURCE_DIR}/mmio"
+)
+
 target_link_libraries(cugraphtestutil
-    PUBLIC
-        #$<BUILD_INTERFACE:conda_env>
-        cugraph::cugraph
-        cuco::cuco
-        NCCL::NCCL
+    cugraph::cugraph
 )
 
 ####################
@@ -54,7 +54,7 @@ add_library(mmio STATIC mmio/mmio.c)
 set_property(TARGET mmio PROPERTY LINKER_LANGUAGE C)
 
 target_include_directories(mmio 
-    PUBLIC 
+    SYSTEM PUBLIC 
         "${CMAKE_CURRENT_SOURCE_DIR}/mmio"
 )
 
@@ -76,6 +76,13 @@ target_compile_options(test_connected_components
             "$<$<COMPILE_LANGUAGE:CUDA>:${CUGRAPH_CUDA_FLAGS}>"
 )
 
+# To not expose the headers to all targets linking to cugraphtestutil
+target_include_directories(test_connected_components SYSTEM PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/cugraph_test_util"
+    "${CMAKE_CURRENT_SOURCE_DIR}/cugraph_test_util/mmio"
+)
+
+
 # Per-thread default stream option see https://docs.nvidia.com/cuda/cuda-runtime-api/stream-sync-behavior.html
 # The per-thread default stream does not synchronize with other streams
 target_compile_definitions(test_connected_components PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM)
@@ -84,13 +91,11 @@ target_link_libraries(test_connected_components
 PUBLIC
     cugraphtestutil
     mmio
-    #$<BUILD_INTERFACE:conda_env>
-    cugraph::cugraph
     CUDA::cublas
     CUDA::cusparse
     CUDA::cusolver
     CUDA::curand
-    NCCL::NCCL
+    cugraph::cugraph
 )
 
 
@@ -111,6 +116,12 @@ target_compile_options(test_mmio_read
             "$<$<COMPILE_LANGUAGE:CUDA>:${CUGRAPH_CUDA_FLAGS}>"
 )
 
+# To not expose the headers to all targets linking to cugraphtestutil
+target_include_directories(test_mmio_read SYSTEM PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/cugraph_test_util"
+    "${CMAKE_CURRENT_SOURCE_DIR}/cugraph_test_util/mmio"
+)
+
 # Per-thread default stream option see https://docs.nvidia.com/cuda/cuda-runtime-api/stream-sync-behavior.html
 # The per-thread default stream does not synchronize with other streams
 target_compile_definitions(test_mmio_read PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM)
@@ -120,11 +131,9 @@ target_link_libraries(test_mmio_read
 PUBLIC
     cugraphtestutil
     mmio
-    #$<BUILD_INTERFACE:conda_env>
-    cugraph::cugraph
     CUDA::cublas
     CUDA::cusparse
     CUDA::cusolver
     CUDA::curand
-    NCCL::NCCL
+    cugraph::cugraph
 )

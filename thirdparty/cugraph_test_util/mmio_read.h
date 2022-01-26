@@ -1,7 +1,7 @@
-#include <utilities/test_graphs.hpp>
-#include <utilities/high_res_clock.h>
-#include <utilities/base_fixture.hpp>
-#include <utilities/test_utilities.hpp>
+#include "utilities/test_graphs.hpp"
+#include "utilities/high_res_clock.h"
+#include "utilities/base_fixture.hpp"
+#include "utilities/test_utilities.hpp"
 
 #include <cugraph/partition_manager.hpp>
 #include <cugraph/utilities/error.hpp>

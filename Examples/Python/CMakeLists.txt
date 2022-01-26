@@ -134,7 +134,7 @@ else()
   target_sources(ActsPythonBindings PRIVATE src/HepMC3Stub.cpp)
 endif()
 
-if(ACTS_BUILD_PLUGIN_EXATRKX)
+if(ACTS_BUILD_EXAMPLES_EXATRKX)
   target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesTrackFindingMLBased)
   target_sources(ActsPythonBindings PRIVATE src/ExaTrkXTrackFinding.cpp)
 else()

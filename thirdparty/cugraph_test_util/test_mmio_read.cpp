@@ -1,10 +1,10 @@
-#include <utilities/test_graphs.hpp>
-#include <utilities/high_res_clock.h>
-
 #include <cugraph/algorithms.hpp>
 #include <cugraph/graph.hpp>
 #include <cugraph/graph_functions.hpp>
 #include <cugraph/graph_view.hpp>
+
+#include "utilities/test_graphs.hpp"
+#include "utilities/high_res_clock.h"
 
 #include <iostream>
 #include <string>

@@ -49,6 +49,7 @@ option(ACTS_BUILD_ALIGNMENT "Build Alignment package" OFF)
 # examples related options
 option(ACTS_BUILD_EXAMPLES "Build standalone examples" OFF)
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
+option(ACTS_BUILD_EXAMPLES_EXATRKX "Build the Exa.TrkX example code" OFF)
 option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HEPMC3 "Build HepMC3-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
@@ -80,10 +81,7 @@ set_option_if(ACTS_BUILD_FATRAS_GEANT4 ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_FATRAS_GEANT4)
 set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_PLUGIN_EXATRKX ACTS_BUILD_EVERYTHING)
-
-# Enable plugin ONNX and CUDA automatically if we enable Exa.TrkX
-set_option_if(ACTS_BUILD_PLUGIN_CUDA ACTS_BUILD_PLUGIN_EXATRKX)
-set_option_if(ACTS_BUILD_PLUGIN_ONNX ACTS_BUILD_PLUGIN_EXATRKX)
+set_option_if(ACTS_BUILD_EXAMPLES_EXATRKX ACTS_BUILD_EVERYTHING)
 
 # any examples component activates the general examples option
 set_option_if(
@@ -214,10 +212,8 @@ if(ACTS_BUILD_PLUGIN_CUDA)
   set(CMAKE_CUDA_STANDARD 14 CACHE STRING "CUDA C++ standard to use")
   set(CMAKE_CUDA_STANDARD_REQUIRED ON CACHE BOOL
     "Force the C++ standard requirement")
-  if(NOT CMAKE_CUDA_ARCHITECTURES)
-    set(CMAKE_CUDA_ARCHITECTURES "35;52;75" CACHE STRING
-        "CUDA architectures to generate code for")
-  endif()
+  set(CMAKE_CUDA_ARCHITECTURES "35;52;75" CACHE STRING
+    "CUDA architectures to generate code for")
   set(CMAKE_CUDA_FLAGS_DEBUG "-g -G")
 endif()
 if(ACTS_BUILD_PLUGIN_DD4HEP)
@@ -243,6 +239,17 @@ if(ACTS_BUILD_PLUGIN_TGEO)
   find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Geom)
   check_root_compatibility()
 endif()
+if(ACTS_BUILD_PLUGIN_EXATRKX)
+  enable_language(CUDA)
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --extended-lambda")
+  find_package(CUDAToolkit REQUIRED)
+  find_package(Torch REQUIRED)
+  find_package(OnnxRuntime REQUIRED)
+  find_package(cugraph REQUIRED)
+  add_subdirectory(thirdparty/libFRNN)
+  add_subdirectory(thirdparty/cugraph_test_util)
+endif()
+
 # examples dependencies
 if(ACTS_BUILD_EXAMPLES)
   set(THREADS_PREFER_PTHREAD_FLAG ON)
