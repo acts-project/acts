@@ -387,7 +387,7 @@ class EigenStepper {
   template <typename propagator_state_t>
   Result<double> step(propagator_state_t& state) const;
 
- private:
+ protected:
   /// Magnetic field inside of the detector
   std::shared_ptr<const MagneticFieldProvider> m_bField;
 
