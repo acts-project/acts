@@ -30,6 +30,28 @@ void addExaTrkXTrackFinding(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   {
+    using Alg = Acts::Plugin::ExaTrkXTrackFinding;
+    using Config = Acts::Plugin::ExaTrkXTrackFinding::Config;
+
+    auto alg =
+        py::class_<Alg, std::shared_ptr<Alg>>(
+            mex, "ExaTrkXTrackFinding")
+            .def(py::init<const Config&>(),
+                 py::arg("config"))
+            .def_property_readonly("config", &Alg::config);
+
+    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(inputMLModuleDir);
+    ACTS_PYTHON_MEMBER(spacepointFeatures);
+    ACTS_PYTHON_MEMBER(embeddingDim);
+    ACTS_PYTHON_MEMBER(rVal);
+    ACTS_PYTHON_MEMBER(knnVal);
+    ACTS_PYTHON_MEMBER(filterCut);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
     using Alg = ActsExamples::TrackFindingMLBasedAlgorithm;
     using Config = Alg::Config;
 
@@ -44,7 +66,7 @@ void addExaTrkXTrackFinding(Context& ctx) {
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputSpacePoints);
     ACTS_PYTHON_MEMBER(outputProtoTracks);
-    ACTS_PYTHON_MEMBER(onnxModelDir);
+    ACTS_PYTHON_MEMBER(trackFinderML);
     ACTS_PYTHON_STRUCT_END();
   }
 

@@ -84,7 +84,6 @@ void addGenerators(Context& ctx);
 void addTruthTracking(Context& ctx);
 void addTrackFitting(Context& ctx);
 void addTrackFinding(Context& ctx);
-void addExaTrkXTrackFinding(Context& ctx);
 void addVertexing(Context& ctx);
 
 // Plugins
