@@ -39,7 +39,7 @@ namespace Acts {
 /// +pi -pi          -pi +pi
 /// ________________________
 /// \  |  /          \  |  /
-///  \ | /            \ | /   
+///  \ | /            \ | /
 ///   \|/______________\|/
 ///     2 * ZhalfLength
 class CylinderBounds : public SurfaceBounds {
