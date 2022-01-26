@@ -12,7 +12,6 @@
 
 #include <torch/torch.h>
 #include <torch/script.h>
-using namespace torch::indexing;
 
 #include <grid.h>
 #include <insert_points.h>
@@ -23,8 +22,9 @@ using namespace torch::indexing;
 #include "cuda_runtime_api.h"
 #include "cuGraph/mmio_read.h"
 
+using namespace torch::indexing;
 
-ExaTrkXTrackFinding::ExaTrkXTrackFinding(const Config& config) : m_cfg(config)
+Acts::ExaTrkXTrackFinding::ExaTrkXTrackFinding(const Config& config) : m_cfg(config)
 {
     std::cout << "Model input directory: " << m_cfg.inputMLModuleDir << "\n";
     std::cout << "Spacepoint features: " << m_cfg.spacepointFeatures << "\n";
@@ -50,7 +50,7 @@ ExaTrkXTrackFinding::ExaTrkXTrackFinding(const Config& config) : m_cfg(config)
 }
 
 
-void ExaTrkXTrackFinding::runSessionWithIoBinding(
+void Acts::ExaTrkXTrackFinding::runSessionWithIoBinding(
     Ort::Session& sess,
     std::vector<const char*>& inputNames,
     std::vector<Ort::Value> & inputData,
@@ -77,7 +77,7 @@ void ExaTrkXTrackFinding::runSessionWithIoBinding(
 }
 
 
-void ExaTrkXTrackFinding::buildEdges(
+void Acts::ExaTrkXTrackFinding::buildEdges(
   std::vector<float>& embedFeatures, std::vector<int64_t>& edgeList, int64_t numSpacepoints) const {
     torch::Device device(torch::kCUDA);
     auto options = torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA);
@@ -211,7 +211,7 @@ void ExaTrkXTrackFinding::buildEdges(
 }
 
 
-void ExaTrkXTrackFinding::getTracks(
+void Acts::ExaTrkXTrackFinding::getTracks(
   std::vector<float>& inputValues, std::vector<uint32_t>& spacepointIDs,
   std::vector<std::vector<uint32_t> >& trackCandidates) const
 {
@@ -442,6 +442,4 @@ void ExaTrkXTrackFinding::getTracks(
             existTrkIdx++;
         }
     }
-
-    
 }

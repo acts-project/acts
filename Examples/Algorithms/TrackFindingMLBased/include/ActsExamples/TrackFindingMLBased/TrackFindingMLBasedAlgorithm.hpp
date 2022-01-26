@@ -18,7 +18,7 @@ class TrackFindingMLBasedAlgorithm final : public BareAlgorithm {
       std::string outputProtoTracks;
 
       /// ML based track finder
-      std::shared_ptr<ExaTrkXTrackFinding> trackFinderML;
+      std::shared_ptr<Acts::ExaTrkXTrackFinding> trackFinderML;
 
       // NOTE the other config parameters for the Exa.TrkX class for now are just initialized as the defaults
     };

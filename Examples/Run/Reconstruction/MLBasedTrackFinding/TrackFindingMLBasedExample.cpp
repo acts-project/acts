@@ -203,13 +203,13 @@ int main(int argc, char** argv) {
   trkFinderCfg.outputProtoTracks = "protoTracks";
   
   if( vm["onnx-dir"].empty() or not std::filesystem::exists(vm["onnx-dir"].as<std::string>()) ) {
-      throw std::runtime_error("need to have a valid onnx-dir");
+      throw std::invalid_argument("The directory to the Onnx models must be passed to the directory");
   }
-  trkFinderCfg.onnxModelDir = vm["onnx-dir"].as<std::string>();
-  // Is now directely compiled into the Algorithm
-//   trkFinderCfg.trackFinder = std::bind(
-//     &ExaTrkXTrackFinding::getTracks, &exaTrkx,
-//     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+  
+  Acts::ExaTrkXTrackFinding::Config cfg;
+  cfg.inputMLModuleDir = vm["onnx-dir"].as<std::string>();
+  
+  trkFinderCfg.trackFinderML = std::make_shared<Acts::ExaTrkXTrackFinding>(cfg);
 
   sequencer.addAlgorithm(std::make_shared<TrackFindingMLBasedAlgorithm>(trkFinderCfg, logLevel));
 

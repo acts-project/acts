@@ -30,8 +30,8 @@ void addExaTrkXTrackFinding(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   {
-    using Alg = Acts::Plugin::ExaTrkXTrackFinding;
-    using Config = Acts::Plugin::ExaTrkXTrackFinding::Config;
+    using Alg = Acts::ExaTrkXTrackFinding;
+    using Config = Acts::ExaTrkXTrackFinding::Config;
 
     auto alg =
         py::class_<Alg, std::shared_ptr<Alg>>(

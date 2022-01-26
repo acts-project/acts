@@ -6,6 +6,8 @@
 
 #include <core/session/onnxruntime_cxx_api.h>
 
+namespace Acts {
+
 class ExaTrkXTrackFinding {
   public:
     struct Config {
@@ -55,3 +57,5 @@ class ExaTrkXTrackFinding {
     std::unique_ptr<Ort::Session> f_sess;
     std::unique_ptr<Ort::Session> g_sess;
 };
+
+}
