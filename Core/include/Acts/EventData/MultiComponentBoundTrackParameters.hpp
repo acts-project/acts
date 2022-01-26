@@ -157,7 +157,7 @@ class MultiComponentBoundTrackParameters {
   /// Reference surface onto which the parameters are bound.
   const Surface& referenceSurface() const { return *m_surface; }
 
-  /// Get a SingleBoundTrackParameters object for one component
+  /// Get the weight and a SingleBoundTrackParameters object for one component
   std::pair<double, SingleParameters> operator[](std::size_t i) const {
     return std::make_pair(
         std::get<double>(m_components[i]),

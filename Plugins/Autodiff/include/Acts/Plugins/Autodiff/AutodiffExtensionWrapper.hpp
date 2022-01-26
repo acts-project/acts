@@ -12,8 +12,8 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
-#include <autodiff/forward.hpp>
-#include <autodiff/forward/eigen.hpp>
+#include <autodiff/forward/dual.hpp>
+#include <autodiff/forward/dual/eigen.hpp>
 
 namespace Acts {
 
@@ -124,8 +124,6 @@ struct AutodiffExtensionWrapper {
     const auto& sd = state.stepping.stepData;
 
     // Compute jacobian
-    using namespace autodiff::forward;
-
     D = jacobian([&](const auto& in) { return RKN4step(in, sd, fstate, h); },
                  wrt(initial_params), at(initial_params))
             .template cast<double>();
