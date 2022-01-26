@@ -32,11 +32,11 @@ namespace Acts {
 /// opening angle @f$ 2\cdot\phi_{half}@f$
 /// around an average @f$ \phi @f$ angle @f$ \phi_{ave} @f$.
 ///
-/// CylinderBounds also supports beveled sizes defined by an angle \phi.
+/// CylinderBounds also supports beveled sizes defined by an angle.
 /// Different angles can be defined on both sides of the cylinder.
 /// A postive angle is defined as an "extruding" from the defined Zlength,
 /// while a negative angle is "intruding" on the Zlength.
-/// +pi -pi          -pi +pi
+/// +    -            -   +
 /// ________________________
 /// \  |  /          \  |  /
 ///  \ | /            \ | /
