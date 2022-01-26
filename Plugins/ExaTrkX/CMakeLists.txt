@@ -21,14 +21,14 @@ target_link_libraries(
   ActsPluginExaTrkX
   PRIVATE
     frnn
-    cugraphtestutil
     ${TORCH_LIBRARIES}
 )
 
 target_link_libraries(
   ActsPluginExaTrkX
   PUBLIC
-    OnnxRuntime  
+    OnnxRuntime
+    cugraph::cugraph
 )
 
 install(

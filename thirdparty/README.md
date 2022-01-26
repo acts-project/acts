@@ -69,8 +69,3 @@ the examples. The following files/directories are removed:
 
 These source files are copied from https://github.com/murnanedaniel/FRNN
 and https://github.com/lxxue/prefix_sum and used for the Exa.Trkx Plugin
-
-## cugraph_test_util
-
-These source files are copied from the test directory of https://github.com/rapidsai/cugraph and 
-used for the Exa.TrkX Plugin.

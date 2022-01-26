@@ -22,7 +22,7 @@
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 
-#include <mmio_read.h>
+#include "weakly_connected_components.hpp"
 
 using namespace torch::indexing;
 

@@ -1,7 +1,7 @@
-#include "utilities/test_graphs.hpp"
-#include "utilities/high_res_clock.h"
-#include "utilities/base_fixture.hpp"
-#include "utilities/test_utilities.hpp"
+// #include "utilities/test_graphs.hpp"
+// #include "utilities/high_res_clock.h"
+// #include "utilities/base_fixture.hpp"
+// #include "utilities/test_utilities.hpp"
 
 #include <cugraph/partition_manager.hpp>
 #include <cugraph/utilities/error.hpp>
@@ -62,6 +62,7 @@ __global__ void weakly_connected_components(
     // constexpr bool renumber = true;
     // using store_transposed = bool;
 
+#if 0
     static int PERF = 0;
     HighResClock hr_clock{};
 
@@ -69,6 +70,7 @@ __global__ void weakly_connected_components(
       CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
       hr_clock.start();
     }
+#endif
 
     // learn from matrix_market_file_utilities.cu
     vertex_t maxVertexID_row = *std::max_element(rowIndices.begin(), rowIndices.end());

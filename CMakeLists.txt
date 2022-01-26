@@ -247,7 +247,7 @@ if(ACTS_BUILD_PLUGIN_EXATRKX)
   find_package(OnnxRuntime REQUIRED)
   find_package(cugraph REQUIRED)
   add_subdirectory(thirdparty/libFRNN)
-  add_subdirectory(thirdparty/cugraph_test_util)
+  #add_subdirectory(thirdparty/cugraph_test_util)
 endif()
 
 # examples dependencies
