@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceConstruction) {
 }
 
 /// Unit tests of all named methods
-BOOST_AUTO_TEST_CASE(DiscSurfaceProperties, *utf::expected_failures(2)) {
+BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
   Vector3 origin3D{0, 0, 0};
   double rMin(1.0), rMax(5.0), halfPhiSector(M_PI / 8.);
   auto discSurfaceObject = Surface::makeShared<DiscSurface>(
