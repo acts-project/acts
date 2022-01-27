@@ -92,12 +92,12 @@ void transformCoordinates(
     l.Er = ((varianceZM + sp->varianceZ()) +
             (cot_theta * cot_theta) * (varianceRM + sp->varianceR())) *
            iDeltaR2;
-		
-		l.x = sp->x();
-		l.y = sp->y();
-		l.z = sp->z();
-		l.r = sp->radius();
-		
+
+    l.x = sp->x();
+    l.y = sp->y();
+    l.z = sp->z();
+    l.r = sp->radius();
+
     linCircleVec.push_back(l);
   }
   // sort the SP in order of cotTheta
