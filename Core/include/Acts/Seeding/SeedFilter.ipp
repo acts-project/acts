@@ -7,6 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <utility>
+#include <numeric>
+#include <algorithm>
 
 namespace Acts {
 // constructor
@@ -25,11 +27,26 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     const InternalSpacePoint<external_spacepoint_t>& middleSP,
     std::vector<const InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
     std::vector<float>& invHelixDiameterVec,
-    std::vector<float>& impactParametersVec, float zOrigin,
+    std::vector<float>& impactParametersVec,
+    std::vector<float>& cotThetaVec, float zOrigin,
     std::back_insert_iterator<std::vector<std::pair<
         float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>>
         outIt) const {
-  for (size_t i = 0; i < topSpVec.size(); i++) {
+
+  // TODO: pass this from the Seedfinder, adding a new config called enableSortingInFilter
+  bool enableSorting = false;
+
+  // initialize original index locations
+  std::vector<size_t> idx(topSpVec.size());
+  std::iota(idx.begin(), idx.end(), 0);
+
+  if (enableSorting) {
+      // sort indexes based on comparing values in cotThetaVec
+      std::sort(idx.begin(), idx.end(),
+                [&cotThetaVec](size_t i1, size_t i2) {return cotThetaVec[i1] < cotThetaVec[i2];});
+  }
+
+  for (auto& i : idx) {
     // if two compatible seeds with high distance in r are found, compatible
     // seeds span 5 layers
     // -> very good seed
@@ -42,7 +59,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     float impact = impactParametersVec[i];
 
     float weight = -(impact * m_cfg.impactWeightFactor);
-    for (size_t j = 0; j < topSpVec.size(); j++) {
+    for (auto& j : idx) {
       if (i == j) {
         continue;
       }
