@@ -42,7 +42,7 @@ class InternalSpacePoint {
   const float& varianceZ() const { return m_varianceZ; }
   const SpacePoint& sp() const { return m_sp; }
   const float& cotTheta() const { return m_cotTheta; }
-  void setCotTheta(float& cotTheta) const { m_cotTheta = cotTheta; }
+  void setCotTheta(float cotTheta) const { m_cotTheta = cotTheta; }
 
  protected:
   float m_x;                 // x-coordinate in beam system coordinates
