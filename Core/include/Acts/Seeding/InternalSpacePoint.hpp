@@ -51,7 +51,7 @@ class InternalSpacePoint {
   float m_r;                 // radius       in beam system coordinates
   float m_varianceR;         //
   float m_varianceZ;         //
-  mutable float m_cotTheta;  //
+  float m_cotTheta;  //
   const SpacePoint& m_sp;    // external space point
 };
 
