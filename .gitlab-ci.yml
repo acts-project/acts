@@ -1,0 +1,6 @@
+sample:
+  image: debian:latest
+  tags:
+    - cvmfs
+  script:
+    - echo "HALLO $HOSTNAME"
