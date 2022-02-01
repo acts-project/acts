@@ -79,7 +79,7 @@ def test_pythia8(tmp_path, seq):
 
     fp = tmp_path / "pythia8_particles.root"
     assert fp.exists()
-    assert fp.stat().st_size > 2 ** 10 * 50
+    assert fp.stat().st_size > 2**10 * 50
     assert_entries(fp, "particles", events)
 
     assert len(list((tmp_path / "csv").iterdir())) > 0
@@ -127,7 +127,7 @@ def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
     for f, tn, exp_entries in root_files:
         rfp = tmp_path / f
         assert rfp.exists()
-        assert rfp.stat().st_size > 2 ** 10 * 10
+        assert rfp.stat().st_size > 2**10 * 10
 
         assert_entries(rfp, tn, exp_entries)
         assert_root_hash(f, rfp)
@@ -226,7 +226,7 @@ def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
     for fn, tn, ee in root_files:
         fp = tmp_path / fn
         assert fp.exists()
-        assert fp.stat().st_size > 2 ** 10 * 50
+        assert fp.stat().st_size > 2**10 * 50
         assert_entries(fp, tn, ee)
         assert_root_hash(fn, fp)
 
@@ -249,7 +249,7 @@ def test_material_recording(tmp_path, material_recording, assert_root_hash):
     for fn, tn, ee in root_files:
         fp = material_recording / fn
         assert fp.exists()
-        assert fp.stat().st_size > 2 ** 10 * 50
+        assert fp.stat().st_size > 2**10 * 50
         assert_entries(fp, tn, ee)
         assert_root_hash(fn, fp)
 
