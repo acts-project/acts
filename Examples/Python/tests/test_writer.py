@@ -126,7 +126,7 @@ def test_root_prop_step_writer(
     s.run()
 
     assert file.exists()
-    assert file.stat().st_size > 2 ** 10 * 50
+    assert file.stat().st_size > 2**10 * 50
     assert_root_hash(file.name, file)
 
 
@@ -246,7 +246,7 @@ def test_root_clusters_writer(
 
     s.run()
     assert out.exists()
-    assert out.stat().st_size > 2 ** 10 * 50
+    assert out.stat().st_size > 2**10 * 50
     assert_root_hash(out.name, out)
 
 
