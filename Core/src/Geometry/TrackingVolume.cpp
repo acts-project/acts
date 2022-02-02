@@ -450,7 +450,7 @@ void Acts::TrackingVolume::closeGeometry(
 }
 
 // Returns the boundary surfaces ordered in probability to hit them based on
-std::vector<Acts::BoundaryIntersection>
+boost::container::small_vector<Acts::BoundaryIntersection, 4>
 Acts::TrackingVolume::compatibleBoundaries(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const NavigationOptions<Surface>& options,
@@ -458,7 +458,7 @@ Acts::TrackingVolume::compatibleBoundaries(
   ACTS_VERBOSE("Finding compatibleBoundaries");
   // Loop over boundarySurfaces and calculate the intersection
   auto excludeObject = options.startObject;
-  std::vector<BoundaryIntersection> bIntersections;
+  boost::container::small_vector<Acts::BoundaryIntersection, 4> bIntersections;
 
   // The signed direction: solution (except overstepping) is positive
   auto sDirection = options.navDir * direction;
@@ -561,11 +561,12 @@ Acts::TrackingVolume::compatibleBoundaries(
   return bIntersections;
 }
 
-std::vector<Acts::LayerIntersection> Acts::TrackingVolume::compatibleLayers(
+boost::container::small_vector<Acts::LayerIntersection, 10>
+Acts::TrackingVolume::compatibleLayers(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const NavigationOptions<Layer>& options) const {
   // the layer intersections which are valid
-  std::vector<LayerIntersection> lIntersections;
+  boost::container::small_vector<Acts::LayerIntersection, 10> lIntersections;
 
   // the confinedLayers
   if (m_confinedLayers != nullptr) {

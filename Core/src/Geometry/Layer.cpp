@@ -97,11 +97,12 @@ void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
   }
 }
 
-std::vector<Acts::SurfaceIntersection> Acts::Layer::compatibleSurfaces(
+boost::container::small_vector<Acts::SurfaceIntersection, 10>
+Acts::Layer::compatibleSurfaces(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const NavigationOptions<Surface>& options) const {
   // the list of valid intersection
-  std::vector<SurfaceIntersection> sIntersections;
+  boost::container::small_vector<SurfaceIntersection, 10> sIntersections;
 
   // fast exit - there is nothing to
   if (!m_surfaceArray || !m_approachDescriptor || !options.navDir) {

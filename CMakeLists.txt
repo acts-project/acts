@@ -30,7 +30,6 @@ option(ACTS_BUILD_PLUGIN_AUTODIFF "Build the autodiff plugin" OFF)
 option(ACTS_USE_SYSTEM_AUTODIFF "Use autodiff provided by the system instead of the bundled version" OFF)
 option(ACTS_BUILD_PLUGIN_CUDA "Build CUDA plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
-option(ACTS_BUILD_PLUGIN_DIGITIZATION "Build Digitization plugin" OFF)
 option(ACTS_BUILD_PLUGIN_IDENTIFICATION "Build Identification plugin" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
 option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" OFF)
@@ -97,9 +96,6 @@ set_option_if(
   ACTS_BUILD_PLUGIN_IDENTIFICATION
   ACTS_BUILD_PLUGIN_TGEO OR ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
 set_option_if(
-  ACTS_BUILD_PLUGIN_DIGITIZATION
-  ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
-set_option_if(
   ACTS_BUILD_PLUGIN_JSON
   ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
 set_option_if(
@@ -133,7 +129,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR
 # minimal dependency versions. they are defined here in a single place so
 # they can be easily upgraded, although they might not be used if the
 # dependency is included via `add_subdirectory(...)`.
-set(_acts_autodiff_version 0.5.11)
+set(_acts_autodiff_version 0.6)
 set(_acts_boost_version 1.71.0)
 set(_acts_dd4hep_version 1.11)
 set(_acts_doxygen_version 1.8.15)
@@ -197,8 +193,16 @@ if(ACTS_BUILD_PLUGIN_AUTODIFF)
     find_package(autodiff ${_acts_autodiff_version} CONFIG REQUIRED)
     message(STATUS "Using system installation of autodiff")
   else()
+    # This policy allows to set the options outside without changing autodiff's CMakeLists.txt
+    set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+    set(AUTODIFF_BUILD_TESTS OFF)
+    set(AUTODIFF_BUILD_PYTHON OFF)
+    set(AUTODIFF_BUILD_EXAMPLES OFF)
+    set(AUTODIFF_BUILD_DOCS OFF)
     add_subdirectory(thirdparty/autodiff)
-    add_library(autodiff::autodiff ALIAS autodiff)
+    # Mark autodiff as system include directories so that no warnings trigger
+    get_target_property(_autodiff_includes autodiff INTERFACE_INCLUDE_DIRECTORIES)
+    set_target_properties(autodiff PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_autodiff_includes}")
     message(STATUS "Using bundled autodiff")
   endif()
 endif()

@@ -3,7 +3,6 @@
 # independent plugins
 add_component_if(Autodiff PluginAutodiff ACTS_BUILD_PLUGIN_AUTODIFF)
 add_component_if(Cuda PluginCuda ACTS_BUILD_PLUGIN_CUDA)
-add_component_if(Digitization PluginDigitization ACTS_BUILD_PLUGIN_DIGITIZATION)
 add_component_if(Identification PluginIdentification ACTS_BUILD_PLUGIN_IDENTIFICATION)
 add_component_if(Json PluginJson ACTS_BUILD_PLUGIN_JSON)
 add_component_if(Legacy PluginLegacy ACTS_BUILD_PLUGIN_LEGACY)
