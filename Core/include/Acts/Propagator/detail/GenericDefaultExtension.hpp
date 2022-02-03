@@ -162,26 +162,32 @@ struct GenericDefaultExtension {
     auto qop =
         stepper.charge(state.stepping) / stepper.momentum(state.stepping);
 
-    D = FreeMatrix::Identity();
+    // D = FreeMatrix::Identity();
+    std::memset(D.data(), 0, 8 * 8);
+    for (size_t i = 0; i < 8; i++) {
+      D(i, i) = 1;
+    }
+    // D(0,0) = 1;
+    // D(1) = 1;
 
     double half_h = h * 0.5;
     // This sets the reference to the sub matrices
-    // dFdx is already initialised as (3x3) idendity
+    // dFdx is already initialised as (3x3) identity
     auto dFdT = D.block<3, 3>(0, 4);
     auto dFdL = D.block<3, 1>(0, 7);
     // dGdx is already initialised as (3x3) zero
     auto dGdT = D.block<3, 3>(4, 4);
     auto dGdL = D.block<3, 1>(4, 7);
 
-    ActsMatrix<3, 3> dk1dT = ActsMatrix<3, 3>::Zero();
+    ActsMatrix<3, 3> dk1dT;  // = ActsMatrix<3, 3>::Zero();
     ActsMatrix<3, 3> dk2dT = ActsMatrix<3, 3>::Identity();
     ActsMatrix<3, 3> dk3dT = ActsMatrix<3, 3>::Identity();
     ActsMatrix<3, 3> dk4dT = ActsMatrix<3, 3>::Identity();
 
-    Vector3 dk1dL = Vector3::Zero();
-    Vector3 dk2dL = Vector3::Zero();
-    Vector3 dk3dL = Vector3::Zero();
-    Vector3 dk4dL = Vector3::Zero();
+    Vector3 dk1dL;
+    Vector3 dk2dL;
+    Vector3 dk3dL;
+    Vector3 dk4dL;
 
     // For the case without energy loss
     dk1dL = dir.cross(sd.B_first);
@@ -192,12 +198,15 @@ struct GenericDefaultExtension {
     dk4dL =
         (dir + h * sd.k3).cross(sd.B_last) + qop * h * dk3dL.cross(sd.B_last);
 
+    dk1dT(0, 0) = 0;
     dk1dT(0, 1) = sd.B_first.z();
     dk1dT(0, 2) = -sd.B_first.y();
     dk1dT(1, 0) = -sd.B_first.z();
+    dk1dT(1, 1) = 0;
     dk1dT(1, 2) = sd.B_first.x();
     dk1dT(2, 0) = sd.B_first.y();
     dk1dT(2, 1) = -sd.B_first.x();
+    dk1dT(2, 2) = 0;
     dk1dT *= qop;
 
     dk2dT += half_h * dk1dT;

@@ -364,9 +364,9 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
       return EigenStepperError::StepInvalid;
     }
 
-    // for moment, only update the transport part
-    // state.stepping.jacTransport = D * state.stepping.jacTransport;
-    //
+    // // for moment, only update the transport part
+    // // state.stepping.jacTransport = D * state.stepping.jacTransport;
+    // //
     Acts::FreeMatrix jac = state.stepping.jacTransport;
     mult_8x8_8x8(state.stepping.jacTransport.data(), D.data(), jac.data());
   } else {

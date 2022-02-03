@@ -1,5 +1,6 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -26,7 +27,8 @@ int main() {
   Sequencer s{cfg};
 
   Acts::Navigator nav{{trkGeo}};
-  Acts::EigenStepper<> stepper{field};
+  // Acts::EigenStepper<> stepper{field};
+  Acts::AtlasStepper stepper{field};
 
   Acts::Propagator prop{std::move(stepper), std::move(nav)};
 

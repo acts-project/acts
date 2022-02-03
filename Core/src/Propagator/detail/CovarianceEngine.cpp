@@ -119,7 +119,7 @@ void boundToBoundJacobian(const GeometryContext& geoContext,
       freeTransportJacobian * boundToFreeJacobian;
 }
 
-void mult_8x1_1x8(double* D_result, const double* A, const double* B) {
+inline void mult_8x1_1x8(double* D_result, const double* A, const double* B) {
   D_result[0] = B[0] * A[0];
   D_result[1] = B[1] * A[0];
   D_result[2] = B[2] * A[0];
@@ -186,7 +186,7 @@ void mult_8x1_1x8(double* D_result, const double* A, const double* B) {
   D_result[63] = B[7] * A[7];
 }
 
-void plus_identity(double* A) {
+inline void plus_identity(double* A) {
   A[0] += 1;
   A[9] += 1;
   A[18] += 1;
@@ -197,7 +197,7 @@ void plus_identity(double* A) {
   A[63] += 1;
 }
 
-void mult_6x8_8x8(double* D_result, const double* A, const double* B) {
+inline void mult_6x8_8x8(double* D_result, const double* A, const double* B) {
   D_result[0] = A[0] * B[0] + A[1] * B[8] + A[2] * B[16] + A[3] * B[24] +
                 A[4] * B[32] + A[5] * B[40] + A[6] * B[48] + A[7] * B[56];
   D_result[1] = A[0] * B[1] + A[1] * B[9] + A[2] * B[17] + A[3] * B[25] +
@@ -296,7 +296,7 @@ void mult_6x8_8x8(double* D_result, const double* A, const double* B) {
                  A[44] * B[39] + A[45] * B[47] + A[46] * B[55] + A[47] * B[63];
 }
 
-void mult_8x8_8x8(double* D_result, const double* A, const double* B) {
+inline void mult_8x8_8x8(double* D_result, const double* A, const double* B) {
   D_result[0] = A[0] * B[0] + A[1] * B[8] + A[2] * B[16] + A[3] * B[24] +
                 A[4] * B[32] + A[5] * B[40] + A[6] * B[48] + A[7] * B[56];
   D_result[1] = A[0] * B[1] + A[1] * B[9] + A[2] * B[17] + A[3] * B[25] +
@@ -427,7 +427,7 @@ void mult_8x8_8x8(double* D_result, const double* A, const double* B) {
                  A[60] * B[39] + A[61] * B[47] + A[62] * B[55] + A[63] * B[63];
 }
 
-void mult_8x8_8x6(double* D_result, const double* A, const double* B) {
+inline void mult_8x8_8x6(double* D_result, const double* A, const double* B) {
   D_result[0] = A[0] * B[0] + A[1] * B[6] + A[2] * B[12] + A[3] * B[18] +
                 A[4] * B[24] + A[5] * B[30] + A[6] * B[36] + A[7] * B[42];
   D_result[1] = A[0] * B[1] + A[1] * B[7] + A[2] * B[13] + A[3] * B[19] +
@@ -526,7 +526,7 @@ void mult_8x8_8x6(double* D_result, const double* A, const double* B) {
                  A[60] * B[29] + A[61] * B[35] + A[62] * B[41] + A[63] * B[47];
 }
 
-void mult_6x8_8x6(double* D_result, const double* A, const double* B) {
+inline void mult_6x8_8x6(double* D_result, const double* A, const double* B) {
   D_result[0] = A[0] * B[0] + A[1] * B[6] + A[2] * B[12] + A[3] * B[18] +
                 A[4] * B[24] + A[5] * B[30] + A[6] * B[36] + A[7] * B[42];
   D_result[1] = A[0] * B[1] + A[1] * B[7] + A[2] * B[13] + A[3] * B[19] +
@@ -601,7 +601,7 @@ void mult_6x8_8x6(double* D_result, const double* A, const double* B) {
                  A[44] * B[29] + A[45] * B[35] + A[46] * B[41] + A[47] * B[47];
 }
 
-void transpose_6x6(double* D_result, const double* A) {
+inline void transpose_6x6(double* D_result, const double* A) {
   D_result[0] = A[0];
   D_result[1] = A[6];
   D_result[2] = A[12];
@@ -640,7 +640,7 @@ void transpose_6x6(double* D_result, const double* A) {
   D_result[35] = A[35];
 }
 
-void mult_6x6_6x6(double* D_result, const double* A, const double* B) {
+inline void mult_6x6_6x6(double* D_result, const double* A, const double* B) {
   D_result[0] = A[0] * B[0] + A[1] * B[6] + A[2] * B[12] + A[3] * B[18] +
                 A[4] * B[24] + A[5] * B[30];
   D_result[1] = A[0] * B[1] + A[1] * B[7] + A[2] * B[13] + A[3] * B[19] +
