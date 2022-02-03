@@ -21,16 +21,30 @@ from acts import Vector4, UnitConstants as u, PdgParticle
 MomentumConfig = namedtuple(
     "MomentumConfig",
     ["min", "max", "transverse"],
-    defaults=[1 * u.GeV, 10 * u.GeV, True],
+    defaults=[None, None, None],
 )
 EtaConfig = namedtuple(
-    "EtaConfig", ["min", "max", "uniform"], defaults=[-4.0, 4.0, True]
+    "EtaConfig", ["min", "max", "uniform"], defaults=[None, None, None]
 )
 ParticleConfig = namedtuple(
     "ParticleConfig",
     ["num", "pdg", "randomizeCharge"],
-    defaults=[10, PdgParticle.eMuon, True],
+    defaults=[None, None, None],
 )
+
+
+def DefaultKWArgs(**kwargs) -> dict:
+    """Removes keyword arguments that are None or a list of all None (eg. [None,None]).
+    This keeps the called function's defaults."""
+    from collections.abc import Iterable
+
+    return {
+        k: v
+        for k, v in kwargs.items()
+        if not (
+            v is None or (isinstance(v, Iterable) and all([vv is None for vv in v]))
+        )
+    }
 
 
 def addParticleGun(
@@ -68,9 +82,6 @@ def addParticleGun(
         random number generator
     """
 
-    print("momentumConfig=", momentumConfig)
-    print("etaConfig=", etaConfig)
-    print("particleConfig=", particleConfig)
     # Preliminaries
     rnd = rnd or RandomNumbers(seed=228)
 
@@ -80,13 +91,15 @@ def addParticleGun(
         vtxGen.stddev = Vector4(0, 0, 0, 0)
 
     ptclGen = ParametricParticleGenerator(
-        p=(momentumConfig.min, momentumConfig.max),
-        pTransverse=momentumConfig.transverse,
-        eta=(etaConfig.min, etaConfig.max),
-        etaUniform=etaConfig.uniform,
-        numParticles=particleConfig.num,
-        pdg=particleConfig.pdg,
-        randomizeCharge=particleConfig.randomizeCharge,
+        **DefaultKWArgs(
+            p=(momentumConfig.min, momentumConfig.max),
+            pTransverse=momentumConfig.transverse,
+            eta=(etaConfig.min, etaConfig.max),
+            etaUniform=etaConfig.uniform,
+            numParticles=particleConfig.num,
+            pdg=particleConfig.pdg,
+            randomizeCharge=particleConfig.randomizeCharge,
+        )
     )
 
     g = EventGenerator.Generator()
@@ -148,11 +161,8 @@ def runParticleGun(outputDir, s=None):
         s,
         outputDirCsv=outputDir / "csv",
         outputDirRoot=outputDir,
-        momentumConfig=MomentumConfig(1 * u.GeV, 10 * u.GeV, transverse=False),
-        etaConfig=EtaConfig(-4.0, 4.0, uniform=False),
-        particleConfig=ParticleConfig(
-            2, pdg=acts.PdgParticle.eMuon, randomizeCharge=False
-        ),
+        etaConfig=EtaConfig(-4.0, 4.0),
+        particleConfig=ParticleConfig(2),
         printParticles=True,
     )
 
