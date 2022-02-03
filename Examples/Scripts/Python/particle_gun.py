@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from typing import Optional, Union, Tuple
 from pathlib import Path
+from collections import namedtuple
 
 from acts.examples import (
     Sequencer,
@@ -17,14 +18,28 @@ from acts.examples import (
 import acts
 from acts import Vector4, UnitConstants as u, PdgParticle
 
+MomentumConfig = namedtuple(
+    "MomentumConfig",
+    ["min", "max", "transverse"],
+    defaults=[1 * u.GeV, 10 * u.GeV, True],
+)
+EtaConfig = namedtuple(
+    "EtaConfig", ["min", "max", "uniform"], defaults=[-4.0, 4.0, True]
+)
+ParticleConfig = namedtuple(
+    "ParticleConfig",
+    ["num", "pdg", "randomizeCharge"],
+    defaults=[10, PdgParticle.eMuon, True],
+)
+
 
 def addParticleGun(
     s: Sequencer,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
-    momentumConfig: Tuple[float, float, bool] = (1 * u.GeV, 10 * u.GeV, True),
-    etaConfig: Tuple[float, float, bool] = (-4.0, 4.0, True),
-    particleConfig: Tuple[int, PdgParticle, bool] = (10, PdgParticle.eMuon, True),
+    momentumConfig: MomentumConfig = MomentumConfig(),
+    etaConfig: EtaConfig = EtaConfig(),
+    particleConfig: ParticleConfig = ParticleConfig(),
     vtxGen: Optional[EventGenerator.VertexGenerator] = None,
     printParticles: bool = False,
     rnd: Optional[RandomNumbers] = None,
@@ -39,11 +54,11 @@ def addParticleGun(
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
-    momentumConfig : tuple|list
+    momentumConfig : MomentumConfig(min, max, transverse)
         momentum configuration: minimum momentum, maximum momentum, transverse
-    etaConfig : tuple|list
+    etaConfig : EtaConfig(min, max, uniform)
         pseudorapidity configuration: eta min, eta max, uniform
-    particleConfig: tuple|list
+    particleConfig: ParticleConfig(num, pdg, randomizeCharge)
         partilce configuration: number of particles, particle type, charge flip
     vtxGen : VertexGenerator, None
         vertex generator module
@@ -53,6 +68,9 @@ def addParticleGun(
         random number generator
     """
 
+    print("momentumConfig=", momentumConfig)
+    print("etaConfig=", etaConfig)
+    print("particleConfig=", particleConfig)
     # Preliminaries
     rnd = rnd or RandomNumbers(seed=228)
 
@@ -62,13 +80,13 @@ def addParticleGun(
         vtxGen.stddev = Vector4(0, 0, 0, 0)
 
     ptclGen = ParametricParticleGenerator(
-        p=(momentumConfig[0], momentumConfig[1]),
-        pTransverse=momentumConfig[2],
-        eta=(etaConfig[0], etaConfig[1]),
-        etaUniform=etaConfig[2],
-        numParticles=particleConfig[0],
-        pdg=particleConfig[1],
-        randomizeCharge=particleConfig[2],
+        p=(momentumConfig.min, momentumConfig.max),
+        pTransverse=momentumConfig.transverse,
+        eta=(etaConfig.min, etaConfig.max),
+        etaUniform=etaConfig.uniform,
+        numParticles=particleConfig.num,
+        pdg=particleConfig.pdg,
+        randomizeCharge=particleConfig.randomizeCharge,
     )
 
     g = EventGenerator.Generator()
@@ -130,9 +148,11 @@ def runParticleGun(outputDir, s=None):
         s,
         outputDirCsv=outputDir / "csv",
         outputDirRoot=outputDir,
-        momentumConfig=(1 * u.GeV, 10 * u.GeV, False),
-        etaConfig=(-4.0, 4.0, False),
-        particleConfig=(2, acts.PdgParticle.eMuon, False),
+        momentumConfig=MomentumConfig(1 * u.GeV, 10 * u.GeV, transverse=False),
+        etaConfig=EtaConfig(-4.0, 4.0, uniform=False),
+        particleConfig=ParticleConfig(
+            2, pdg=acts.PdgParticle.eMuon, randomizeCharge=False
+        ),
         printParticles=True,
     )
 
