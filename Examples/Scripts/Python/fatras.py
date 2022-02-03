@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import os
 from typing import Optional, Union
 from pathlib import Path
 
@@ -63,8 +62,8 @@ def addFatras(
     # Output
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)
-        if not os.path.exists(outputDirCsv):
-            os.mkdir(outputDirCsv)
+        if not outputDirCsv.exists():
+            outputDirCsv.mkdir()
         s.addWriter(
             acts.examples.CsvParticleWriter(
                 level=s.config.logLevel,
@@ -76,8 +75,8 @@ def addFatras(
 
     if outputDirRoot is not None:
         outputDirRoot = Path(outputDirRoot)
-        if not os.path.exists(outputDirRoot):
-            os.mkdir(outputDirRoot)
+        if not outputDirRoot.exists():
+            outputDirRoot.mkdir()
         s.addWriter(
             acts.examples.RootParticleWriter(
                 level=s.config.logLevel,
@@ -152,7 +151,7 @@ def runFatras(trackingGeometry, field, outputDir, s: acts.examples.Sequencer = N
 
 
 if "__main__" == __name__:
-
+    import os
     gdc = acts.examples.GenericDetector.Config()
     detector = acts.examples.GenericDetector()
     trackingGeometry, contextDecorators = detector.finalize(gdc, None)

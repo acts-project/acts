@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import os
 from typing import Optional, Union, Tuple
 from pathlib import Path
 
@@ -95,8 +94,8 @@ def addParticleGun(
 
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)
-        if not os.path.exists(outputDirCsv):
-            os.mkdir(outputDirCsv)
+        if not outputDirCsv.exists():
+            outputDirCsv.mkdir()
 
         s.addWriter(
             CsvParticleWriter(
@@ -109,8 +108,8 @@ def addParticleGun(
 
     if outputDirRoot is not None:
         outputDirRoot = Path(outputDirRoot)
-        if not os.path.exists(outputDirRoot):
-            os.mkdir(outputDirRoot)
+        if not outputDirRoot.exists():
+            outputDirRoot.mkdir()
 
         s.addWriter(
             RootParticleWriter(
@@ -139,4 +138,6 @@ def runParticleGun(outputDir, s=None):
 
 
 if "__main__" == __name__:
+    import os
+
     runParticleGun(os.getcwd()).run()
