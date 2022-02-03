@@ -16,6 +16,7 @@ def runPropagation(
     trackingGeometry,
     field,
     outputDir,
+    ntracks,
     outputObj=True,
     outputRoot=True,
     covTransport=False,
@@ -41,7 +42,7 @@ def runPropagation(
         propagatorImpl=prop,
         level=acts.logging.INFO,
         randomNumberSvc=rnd,
-        ntests=1000,
+        ntests=ntracks,
         sterileLogger=True,
         covarianceTransport=covTransport,
         recordMaterialInteractions=False,
@@ -69,7 +70,7 @@ def runPropagation(
             )
         )
 
-    return s
+    return s, alg
 
 
 if "__main__" == __name__:
@@ -142,16 +143,19 @@ if "__main__" == __name__:
     if args.cov is not None:
         covs = [args.cov == "yes"]
 
+    ntracks = 1000
+
     for stepper in steppers:
         for cov in covs:
             s = acts.examples.Sequencer(
-                events=args.events, numThreads=-1, logLevel=acts.logging.WARNING
+                events=args.events, numThreads=1, logLevel=acts.logging.WARNING
             )
 
-            runPropagation(
+            _, alg = runPropagation(
                 trackingGeometry,
                 field,
                 os.getcwd(),
+                ntracks=ntracks,
                 outputRoot=False,
                 outputObj=False,
                 covTransport=cov,
@@ -166,8 +170,9 @@ if "__main__" == __name__:
 
             duration = end - start
 
-            tps = args.events * 1000 / duration.total_seconds()
+            tps = args.events * ntracks / duration.total_seconds()
 
+            print("total steps:", alg.nSteps)
             print(
                 f"{type(stepper).__name__} (cov={cov}):",
                 f"{duration.total_seconds()}s",

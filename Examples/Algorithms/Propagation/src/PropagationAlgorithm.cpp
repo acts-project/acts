@@ -85,9 +85,9 @@ ProcessCode PropagationAlgorithm::execute(
           context, m_cfg, Acts::LoggerWrapper{logger()}, neutralParameters);
     }
     // Record the propagator steps
-    propagationSteps.push_back(std::move(pOutput.first));
+    propagationSteps.push_back(std::move(pOutput.steps));
     if (m_cfg.recordMaterialInteractions &&
-        pOutput.second.materialInteractions.size()) {
+        pOutput.recordedMaterial.materialInteractions.size()) {
       // Create a recorded material track
       RecordedMaterialTrack rmTrack;
       // Start position
@@ -95,10 +95,13 @@ ProcessCode PropagationAlgorithm::execute(
       // Start momentum
       rmTrack.first.second = std::move(sMomentum);
       // The material
-      rmTrack.second = std::move(pOutput.second);
+      rmTrack.second = std::move(pOutput.recordedMaterial);
       // push it it
       recordedMaterial[it] = (std::move(rmTrack));
     }
+
+    // ACTS_INFO("Executed " << pOutput.nSteps << " steps");
+    nSteps += pOutput.nSteps;
   }
 
   // Write the propagation step data to the event store

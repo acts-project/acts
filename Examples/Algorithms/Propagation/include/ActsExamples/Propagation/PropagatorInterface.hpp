@@ -135,12 +135,13 @@ class ConcretePropagator : public PropagatorInterface {
             resultValue.template get<SteppingLogger::result_type>();
 
         // Set the stepping result
-        pOutput.first = std::move(steppingResults.steps);
+        pOutput.steps = std::move(steppingResults.steps);
+        pOutput.nSteps = steppingResults.nSteps;
         // Also set the material recording result - if configured
         if (cfg.recordMaterialInteractions) {
           auto materialResult =
               resultValue.template get<MaterialInteractor::result_type>();
-          pOutput.second = std::move(materialResult);
+          pOutput.recordedMaterial = std::move(materialResult);
         }
       }
     }

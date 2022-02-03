@@ -46,8 +46,13 @@ using RecordedMaterialTrack =
     std::pair<std::pair<Acts::Vector3, Acts::Vector3>, RecordedMaterial>;
 
 /// Finally the output of the propagation test
-using PropagationOutput =
-    std::pair<std::vector<Acts::detail::Step>, RecordedMaterial>;
+struct PropagationOutput {
+  std::vector<Acts::detail::Step> steps;
+  size_t nSteps;
+  RecordedMaterial recordedMaterial;
+};
+// using PropagationOutput =
+// std::pair<std::vector<Acts::detail::Step>, RecordedMaterial>;
 
 /// @brief this test algorithm performs test propagation
 /// within the Acts::Propagator
@@ -131,6 +136,8 @@ class PropagationAlgorithm : public BareAlgorithm {
 
   /// Get const access to the config
   const Config& config() const { return m_cfg; }
+
+  mutable size_t nSteps{0};
 
  private:
   Config m_cfg;  ///< the config class

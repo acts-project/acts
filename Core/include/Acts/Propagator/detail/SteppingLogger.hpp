@@ -40,6 +40,7 @@ struct SteppingLogger {
   /// Simple result struct to be returned
   struct this_result {
     std::vector<Step> steps;
+    size_t nSteps = 0;
   };
 
   using result_type = this_result;
@@ -58,9 +59,14 @@ struct SteppingLogger {
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   result_type& result) const {
     // don't log if you have reached the target
-    if (sterile or state.navigation.targetReached) {
+    if (sterile) {
+      result.nSteps++;
       return;
     }
+    if (state.navigation.targetReached) {
+      return;
+    }
+
     // record the propagation state
     Step step;
     step.stepSize = state.stepping.stepSize;

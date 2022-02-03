@@ -76,6 +76,8 @@ void addPropagation(Context& ctx) {
                  py::arg("config"), py::arg("level"))
             .def_property_readonly("config", &Algorithm::config);
 
+    alg.def_readonly("nSteps", &Algorithm::nSteps);
+
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(propagatorImpl);
