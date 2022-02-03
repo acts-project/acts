@@ -186,6 +186,7 @@ endmacro()
 # when a particular package is actually needed.
 # plugin dependencies
 if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
+    find_package(Python REQUIRED COMPONENTS Development Interpreter)
     add_subdirectory(thirdparty/pybind11)
 endif()
 if(ACTS_BUILD_PLUGIN_AUTODIFF)

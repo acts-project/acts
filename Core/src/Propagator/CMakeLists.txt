@@ -9,4 +9,5 @@ target_sources(
     detail/PointwiseMaterialInteraction.cpp
     detail/CovarianceEngine.cpp
     detail/JacobianEngine.cpp
+    detail/transport.cpp
 )
