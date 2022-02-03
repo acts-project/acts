@@ -15,7 +15,8 @@ using namespace Acts::UnitLiterals;
 
 int main() {
   Sequencer::Config cfg;
-  cfg.events = 1000;
+  cfg.events = 500;
+  cfg.numThreads = 1;
 
   auto field = std::make_shared<Acts::ConstantBField>(Acts::Vector3{0, 0, 2_T});
 
@@ -37,7 +38,7 @@ int main() {
 
   PropagationAlgorithm::Config pCfg;
   pCfg.propagatorImpl = cProp;
-  pCfg.ntests = 10;
+  pCfg.ntests = 1000;
   pCfg.sterileLogger = true;
   pCfg.covarianceTransport = true;
   pCfg.propagationStepCollection = "propagation-steps";
