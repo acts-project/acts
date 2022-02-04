@@ -18,6 +18,8 @@ from acts.examples import (
 import acts
 from acts import Vector4, UnitConstants as u, PdgParticle
 
+# Defaults (given as `None` here) use class defaults defined in
+# Examples/Algorithms/Generators/ActsExamples/Generators/ParametricParticleGenerator.hpp
 MomentumConfig = namedtuple(
     "MomentumConfig",
     ["min", "max", "transverse"],
@@ -33,20 +35,33 @@ ParticleConfig = namedtuple(
 )
 
 
-def DefaultKWArgs(**kwargs) -> dict:
-    """Removes keyword arguments that are None or a list of all None (eg. [None,None]).
-    This keeps the called function's defaults."""
-    from collections.abc import Iterable
+def ConfigArgs(func):
+    """Decorator to move `namedtuple` args to kwargs based on type, so user doesn't need to specify key name."""
+    from functools import wraps
 
-    return {
-        k: v
-        for k, v in kwargs.items()
-        if not (
-            v is None or (isinstance(v, Iterable) and all([vv is None for vv in v]))
-        )
-    }
+    @wraps(func)
+    def ConfigArgsWrapper(*args, **kwargs):
+        def isNormalArg(arg, key, cls):
+            if not isinstance(arg, cls):
+                return True
+            if key in kwargs:
+                raise KeyError(key)
+            kwargs[key] = arg
+            return False
+
+        newargs = [
+            a
+            for a in args
+            if isNormalArg(a, "momentumConfig", MomentumConfig)
+            and isNormalArg(a, "etaConfig", EtaConfig)
+            and isNormalArg(a, "particleConfig", ParticleConfig)
+        ]
+        return func(*newargs, **kwargs)
+
+    return ConfigArgsWrapper
 
 
+@ConfigArgs
 def addParticleGun(
     s: Sequencer,
     outputDirCsv: Optional[Union[Path, str]] = None,
@@ -81,6 +96,19 @@ def addParticleGun(
     rnd : RandomNumbers, None
         random number generator
     """
+
+    def DefaultKWArgs(**kwargs) -> dict:
+        """Removes keyword arguments that are None or a list of all None (eg. [None,None]).
+        This keeps the called function's defaults."""
+        from collections.abc import Iterable
+
+        return {
+            k: v
+            for k, v in kwargs.items()
+            if not (
+                v is None or (isinstance(v, Iterable) and all([vv is None for vv in v]))
+            )
+        }
 
     # Preliminaries
     rnd = rnd or RandomNumbers(seed=228)
@@ -159,10 +187,10 @@ def runParticleGun(outputDir, s=None):
     outputDir = Path(outputDir)
     return addParticleGun(
         s,
+        EtaConfig(-4.0, 4.0),
+        ParticleConfig(2),
         outputDirCsv=outputDir / "csv",
         outputDirRoot=outputDir,
-        etaConfig=EtaConfig(-4.0, 4.0),
-        particleConfig=ParticleConfig(2),
         printParticles=True,
     )
 
