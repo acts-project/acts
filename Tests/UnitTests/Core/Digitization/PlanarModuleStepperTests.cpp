@@ -10,10 +10,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Digitization/CartesianSegmentation.hpp"
+#include "Acts/Digitization/DigitizationModule.hpp"
+#include "Acts/Digitization/PlanarModuleStepper.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/Digitization/CartesianSegmentation.hpp"
-#include "Acts/Plugins/Digitization/DigitizationModule.hpp"
-#include "Acts/Plugins/Digitization/PlanarModuleStepper.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"

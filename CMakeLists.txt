@@ -30,7 +30,6 @@ option(ACTS_BUILD_PLUGIN_AUTODIFF "Build the autodiff plugin" OFF)
 option(ACTS_USE_SYSTEM_AUTODIFF "Use autodiff provided by the system instead of the bundled version" OFF)
 option(ACTS_BUILD_PLUGIN_CUDA "Build CUDA plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
-option(ACTS_BUILD_PLUGIN_DIGITIZATION "Build Digitization plugin" OFF)
 option(ACTS_BUILD_PLUGIN_IDENTIFICATION "Build Identification plugin" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
 option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" OFF)
@@ -96,9 +95,6 @@ set_option_if(
 set_option_if(
   ACTS_BUILD_PLUGIN_IDENTIFICATION
   ACTS_BUILD_PLUGIN_TGEO OR ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
-set_option_if(
-  ACTS_BUILD_PLUGIN_DIGITIZATION
-  ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
 set_option_if(
   ACTS_BUILD_PLUGIN_JSON
   ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
