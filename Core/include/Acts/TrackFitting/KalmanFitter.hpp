@@ -104,8 +104,8 @@ struct KalmanFitterOptions {
   /// @param rSurface The reference surface for the fit to be expressed at
   /// @param mScattering Whether to include multiple scattering
   /// @param eLoss Whether to include energy loss
-  /// @param rFiltering Whether to run filtering in reversed direction as
-  /// smoothing
+  /// @param rFiltering Whether to run filtering in reversed direction as smoothing
+  /// @param rfScaling Scale factor for the covariance matrix before the backward filtering
   KalmanFitterOptions(const GeometryContext& gctx,
                       const MagneticFieldContext& mctx,
                       std::reference_wrapper<const CalibrationContext> cctx,
@@ -153,8 +153,8 @@ struct KalmanFitterOptions {
   /// ReverseFilteringLogic
   bool reversedFiltering = false;
 
-  // Factor by which the covariance of the input of the reversed filtering is
-  // scaled
+  /// Factor by which the covariance of the input of the reversed filtering is
+  /// scaled
   double reversedFilteringCovarianceScaling = 1.0;
 
   /// Logger
