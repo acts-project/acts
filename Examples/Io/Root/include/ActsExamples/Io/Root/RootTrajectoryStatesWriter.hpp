@@ -44,6 +44,8 @@ class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
     std::string inputParticles;
     /// Input collection of simulated hits.
     std::string inputSimHits;
+    /// Input collection of measurements.
+    std::string inputClusters;
     /// Input hit-particles map collection.
     std::string inputMeasurementParticlesMap;
     /// Input collection to map measured hits to simulated hits.
@@ -119,6 +121,9 @@ class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
   std::vector<float> m_pull_x_hit;  ///< hit pull x
   std::vector<float> m_pull_y_hit;  ///< hit pull y
   std::vector<int> m_dim_hit;       ///< dimension of measurement
+  std::vector<int> m_cltr_size;     ///< cluster size
+  std::vector<int> m_cltr_size_loc0;///< cluster size in local x
+  std::vector<int> m_cltr_size_loc1;///< cluster size in local y
 
   std::array<int, 3> m_nParams;  ///< number of states which have
                                  ///< filtered/predicted/smoothed parameters

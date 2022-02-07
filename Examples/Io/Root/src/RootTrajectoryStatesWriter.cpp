@@ -15,6 +15,7 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
@@ -108,6 +109,9 @@ ActsExamples::RootTrajectoryStatesWriter::RootTrajectoryStatesWriter(
     m_outputTree->Branch("pull_x_hit", &m_pull_x_hit);
     m_outputTree->Branch("pull_y_hit", &m_pull_y_hit);
     m_outputTree->Branch("dim_hit", &m_dim_hit);
+    m_outputTree->Branch("cltr_size", &m_cltr_size);
+    m_outputTree->Branch("cltr_size_loc0", &m_cltr_size_loc0);
+    m_outputTree->Branch("cltr_size_loc1", &m_cltr_size_loc1);
 
     m_outputTree->Branch("nPredicted", &m_nParams[0]);
     m_outputTree->Branch("predicted", &m_hasParams[0]);
@@ -244,6 +248,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
   const auto& particles =
       ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
   const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
+  const auto& clusters = ctx.eventStore.get<ClusterContainer>(m_cfg.inputClusters);
   const auto& hitParticlesMap =
       ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
   const auto& hitSimHitsMap =
@@ -325,6 +330,18 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
         auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
         auto [truthLocal, truthPos4, truthUnitDir] =
             averageSimHits(ctx.geoContext, surface, simHits, indices);
+
+        if (not clusters.empty()) {
+          const auto& c = clusters[hitIdx];
+          m_cltr_size.push_back(c.sizeLoc0);
+          m_cltr_size_loc0.push_back(c.sizeLoc1);
+          m_cltr_size_loc1.push_back(c.channels.size());
+        }
+        else {
+          m_cltr_size.push_back(99);
+          m_cltr_size_loc0.push_back(99);
+          m_cltr_size_loc1.push_back(99);
+        }
         // momemtum averaging makes even less sense than averaging position and
         // direction. use the first momentum or set q/p to zero
         float truthQOP = 0.0f;
@@ -609,6 +626,9 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
       m_pull_x_hit.clear();
       m_pull_y_hit.clear();
       m_dim_hit.clear();
+      m_cltr_size.clear();
+      m_cltr_size_loc0.clear();
+      m_cltr_size_loc1.clear();
 
       for (unsigned int ipar = 0; ipar < 3; ++ipar) {
         m_hasParams[ipar].clear();
