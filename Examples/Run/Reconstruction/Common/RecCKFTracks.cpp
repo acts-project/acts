@@ -21,6 +21,7 @@
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectorySummaryWriter.hpp"
 #include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
@@ -115,6 +116,21 @@ int runRecCKFTracks(int argc, char* argv[],
   // Run the sim hits smearing
   auto digiCfg = setupDigitization(vm, sequencer, rnd, trackingGeometry,
                                    simHitReaderCfg.outputSimHits);
+
+  /*RootMeasurementWriter::Config measWriterRoot;
+  measWriterRoot.inputMeasurements = digiCfg.outputMeasurements;
+  measWriterRoot.inputClusters = digiCfg.outputClusters;
+  measWriterRoot.inputSimHits = simHitReaderCfg.outputSimHits;
+  measWriterRoot.inputMeasurementSimHitsMap =
+    digiCfg.outputMeasurementSimHitsMap;
+  measWriterRoot.filePath =
+    joinPaths(outputDir, std::string(digiCfg.outputMeasurements) + ".root");
+  measWriterRoot.boundIndices =
+    Acts::GeometryHierarchyMap<std::vector<Acts::BoundIndices>>(
+        digiCfg.getBoundIndices());
+  measWriterRoot.trackingGeometry = trackingGeometry;
+  sequencer.addWriter(
+    std::make_shared<RootMeasurementWriter>(measWriterRoot, logLevel));*/
 
   // Run the particle selection
   // The pre-selection will select truth particles satisfying provided criteria
@@ -282,6 +298,7 @@ int runRecCKFTracks(int argc, char* argv[],
   // selection algorithm is used.
   trackStatesWriter.inputParticles = particleReader.outputParticles;
   trackStatesWriter.inputSimHits = simHitReaderCfg.outputSimHits;
+  trackStatesWriter.inputClusters = digiCfg.outputClusters;
   trackStatesWriter.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
   trackStatesWriter.inputMeasurementSimHitsMap =
