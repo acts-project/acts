@@ -94,11 +94,7 @@ def runITk(
             jmw.write(trackingGeometry)
 
 
-def buildITkGeometry(geo_dir: Path, material: bool = True):
-    Volume = TGeoDetector.Config.Volume
-    LayerTriplet = TGeoDetector.Config.LayerTriplet
-    equidistant = TGeoDetector.Config.BinningType.equidistant
-    arbitrary = TGeoDetector.Config.BinningType.arbitrary
+def buildITkGeometry(geo_dir: Path, material: bool = True, jsonconfig: bool = False):
 
     logger = acts.logging.getLogger("buildITkGeometry")
 
@@ -111,8 +107,25 @@ def buildITkGeometry(geo_dir: Path, material: bool = True):
             level=acts.logging.INFO,
         )
 
+    tgeo_fileName = geo_dir / "atlas/itk-hgtd/ATLAS-ITk-HGTD.tgeo.root"
+
+    if jsonconfig:
+        return TGeoDetector.create(
+            jsonFile=str(geo_dir / "atlas/itk-hgtd/tgeo-atlas-itk-hgtd.json"),
+            fileName=str(tgeo_fileName),
+            surfaceLogLevel=acts.logging.WARNING,
+            layerLogLevel=acts.logging.WARNING,
+            volumeLogLevel=acts.logging.WARNING,
+            mdecorator=matDeco,
+        )
+
+    Volume = TGeoDetector.Config.Volume
+    LayerTriplet = TGeoDetector.Config.LayerTriplet
+    equidistant = TGeoDetector.Config.BinningType.equidistant
+    arbitrary = TGeoDetector.Config.BinningType.arbitrary
+
     return TGeoDetector.create(
-        fileName=str(geo_dir / "atlas/itk-hgtd/ATLAS-ITk-HGTD.tgeo.root"),
+        fileName=str(tgeo_fileName),
         mdecorator=matDeco,
         buildBeamPipe=True,
         unitScalor=1.0,  # explicit units
