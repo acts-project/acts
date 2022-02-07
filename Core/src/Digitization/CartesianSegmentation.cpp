@@ -10,7 +10,7 @@
 // CartesianSegmentation.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "Acts/Plugins/Digitization/CartesianSegmentation.hpp"
+#include "Acts/Digitization/CartesianSegmentation.hpp"
 
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"

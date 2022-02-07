@@ -10,7 +10,7 @@
 // DigitizationModule.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "Acts/Plugins/Digitization/DigitizationModule.hpp"
+#include "Acts/Digitization/DigitizationModule.hpp"
 
 #include <utility>
 
