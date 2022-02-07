@@ -37,27 +37,35 @@ ParticleConfig = namedtuple(
 
 
 def ConfigArgs(func):
-    """Decorator to move `namedtuple` args to kwargs based on type, so user doesn't need to specify key name."""
+    """Decorator to move `namedtuple` args to kwargs based on type, so user doesn't need to specify key name.
+    Also allows the keyword argument to be specified as a tuple."""
     from functools import wraps
 
     @wraps(func)
     def ConfigArgsWrapper(*args, **kwargs):
-        def isNormalArg(arg, key, cls):
-            if not isinstance(arg, cls):
-                return True
-            if key in kwargs:
-                raise KeyError(key)
-            kwargs[key] = arg
-            return False
+        namedtupleArgs = {
+            "momentumConfig": MomentumConfig,
+            "etaConfig": EtaConfig,
+            "phiConfig": PhiConfig,
+            "particleConfig": ParticleConfig,
+        }
+        namedtupleClasses = {c: a for a, c in namedtupleArgs.items()}
 
-        newargs = [
-            a
-            for a in args
-            if isNormalArg(a, "momentumConfig", MomentumConfig)
-            and isNormalArg(a, "etaConfig", EtaConfig)
-            and isNormalArg(a, "phiConfig", PhiConfig)
-            and isNormalArg(a, "particleConfig", ParticleConfig)
-        ]
+        for k, v in kwargs.items():
+            if isinstance(v, tuple):
+                cls = namedtupleArgs.get(k)
+                if cls is not None:
+                    kwargs[k] = cls(*v)
+
+        newargs = []
+        for a in args:
+            k = namedtupleClasses.get(type(a))
+            if k is None:
+                newargs.append(a)
+            elif k in kwargs:
+                raise KeyError(k)
+            else:
+                kwargs[k] = a
         return func(*newargs, **kwargs)
 
     return ConfigArgsWrapper
