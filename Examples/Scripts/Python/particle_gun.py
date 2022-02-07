@@ -28,6 +28,7 @@ MomentumConfig = namedtuple(
 EtaConfig = namedtuple(
     "EtaConfig", ["min", "max", "uniform"], defaults=[None, None, None]
 )
+PhiConfig = namedtuple("PhiConfig", ["min", "max"], defaults=[None, None])
 ParticleConfig = namedtuple(
     "ParticleConfig",
     ["num", "pdg", "randomizeCharge"],
@@ -54,6 +55,7 @@ def ConfigArgs(func):
             for a in args
             if isNormalArg(a, "momentumConfig", MomentumConfig)
             and isNormalArg(a, "etaConfig", EtaConfig)
+            and isNormalArg(a, "phiConfig", PhiConfig)
             and isNormalArg(a, "particleConfig", ParticleConfig)
         ]
         return func(*newargs, **kwargs)
@@ -68,7 +70,9 @@ def addParticleGun(
     outputDirRoot: Optional[Union[Path, str]] = None,
     momentumConfig: MomentumConfig = MomentumConfig(),
     etaConfig: EtaConfig = EtaConfig(),
+    phiConfig: PhiConfig = PhiConfig(),
     particleConfig: ParticleConfig = ParticleConfig(),
+    multiplicity: int = 1,
     vtxGen: Optional[EventGenerator.VertexGenerator] = None,
     printParticles: bool = False,
     rnd: Optional[RandomNumbers] = None,
@@ -123,6 +127,7 @@ def addParticleGun(
             p=(momentumConfig.min, momentumConfig.max),
             pTransverse=momentumConfig.transverse,
             eta=(etaConfig.min, etaConfig.max),
+            phi=(phiConfig.min, phiConfig.max),
             etaUniform=etaConfig.uniform,
             numParticles=particleConfig.num,
             pdg=particleConfig.pdg,
@@ -131,7 +136,7 @@ def addParticleGun(
     )
 
     g = EventGenerator.Generator()
-    g.multiplicity = FixedMultiplicityGenerator(n=1)
+    g.multiplicity = FixedMultiplicityGenerator(n=multiplicity)
     g.vertex = vtxGen
     g.particles = ptclGen
 
@@ -196,6 +201,4 @@ def runParticleGun(outputDir, s=None):
 
 
 if "__main__" == __name__:
-    import os
-
-    runParticleGun(os.getcwd()).run()
+    runParticleGun(Path.cwd()).run()
