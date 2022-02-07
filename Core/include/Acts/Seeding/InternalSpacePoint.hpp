@@ -45,14 +45,14 @@ class InternalSpacePoint {
   void setCotTheta(float cotTheta) const { m_cotTheta = cotTheta; }
 
  protected:
-  float m_x;                 // x-coordinate in beam system coordinates
-  float m_y;                 // y-coordinate in beam system coordinates
-  float m_z;                 // z-coordinate in beam system coordinetes
-  float m_r;                 // radius       in beam system coordinates
-  float m_varianceR;         //
-  float m_varianceZ;         //
-  float m_cotTheta;  //
-  const SpacePoint& m_sp;    // external space point
+  float m_x;               // x-coordinate in beam system coordinates
+  float m_y;               // y-coordinate in beam system coordinates
+  float m_z;               // z-coordinate in beam system coordinetes
+  float m_r;               // radius       in beam system coordinates
+  float m_varianceR;       //
+  float m_varianceZ;       //
+  float m_cotTheta;        //
+  const SpacePoint& m_sp;  // external space point
 };
 
 /////////////////////////////////////////////////////////////////////////////////
