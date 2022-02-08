@@ -13,7 +13,6 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -42,7 +41,7 @@ int main(int argc, char* argv[]) {
     // clang-format off
   desc.add_options()
       ("help", "produce help message")
-      ("toys",po::value<unsigned int>(&toys)->default_value(200000),"number of tracks to propagate")
+      ("toys",po::value<unsigned int>(&toys)->default_value(20000),"number of tracks to propagate")
       ("pT",po::value<double>(&ptInGeV)->default_value(1),"transverse momentum in GeV")
       ("B",po::value<double>(&BzInT)->default_value(2),"z-component of B-field in T")
       ("path",po::value<double>(&maxPathInM)->default_value(5),"maximum path length in m")
@@ -76,9 +75,8 @@ int main(int argc, char* argv[]) {
 
   auto bField =
       std::make_shared<BField_type>(Vector3{0, 0, BzInT * UnitConstants::T});
-  Stepper_type stepper(std::move(bField));
-  // Propagator_type propagator(std::move(atlas_stepper));
-  detail::VoidNavigator navigator;
+  Stepper_type atlas_stepper(std::move(bField));
+  Propagator_type propagator(std::move(atlas_stepper));
 
   PropagatorOptions<> options(tgContext, mfContext, getDummyLogger());
   options.pathLimit = maxPathInM * UnitConstants::m;
@@ -100,40 +98,24 @@ int main(int argc, char* argv[]) {
   CurvilinearTrackParameters pars(Vector4::Zero(), 0_degree, 90_degree,
                                   ptInGeV * UnitConstants::GeV, 1_e, optCov);
 
-  PathLimitReached pathAborter;
-  pathAborter.internalLimit = options.pathLimit;
-
-  auto abortList = options.abortList.append(pathAborter);
-
-  // The expanded options (including path limit)
-  auto eOptions = options.extend(abortList);
-  using OptionsType = decltype(eOptions);
-  // Initialize the internal propagator state
-  using StateType = Propagator_type::State<OptionsType>;
-  StateType state{
-      pars, eOptions,
-      stepper.makeState(eOptions.geoContext, eOptions.magFieldContext, pars,
-                        eOptions.direction, eOptions.maxStepSize,
-                        eOptions.tolerance)};
-
-  navigator.status(state, stepper);
-  navigator.target(state, stepper);
-
-  stepper.step(state);
-
-  const auto step_bench_result = Acts::Test::microBenchmark(
+  double totalPathLength = 0;
+  size_t num_iters = 0;
+  const auto propagation_bench_result = Acts::Test::microBenchmark(
       [&] {
-        auto r = stepper.step(state);
-        navigator.status(state, stepper);
-        navigator.target(state, stepper);
+        auto r = propagator.propagate(pars, options).value();
+        if (totalPathLength == 0.) {
+          ACTS_DEBUG("reached position "
+                     << r.endParameters->position(tgContext).transpose()
+                     << " in " << r.steps << " steps");
+        }
+        totalPathLength += r.pathLength;
+        ++num_iters;
         return r;
       },
-      10, toys);
-  ACTS_INFO("step stats: " << step_bench_result);
+      1, toys);
 
-  const auto transport_bench_results = Acts::Test::microBenchmark(
-      [&] { stepper.transportCovarianceToCurvilinear(state.stepping); }, 10,
-      toys);
-  ACTS_INFO("transport stats: " << transport_bench_results);
+  ACTS_INFO("Execution stats: " << propagation_bench_result);
+  ACTS_INFO("average path length = " << totalPathLength / num_iters / 1_mm
+                                     << "mm");
   return 0;
 }
