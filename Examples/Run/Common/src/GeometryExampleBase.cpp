@@ -14,7 +14,7 @@
 #include "ActsExamples/Io/Csv/CsvOptionsWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
 #include "ActsExamples/Io/Json/JsonMaterialWriter.hpp"
-#include "ActsExamples/Io/Json/JsonOptionsWriter.hpp"
+#include "ActsExamples/Io/Json/JsonWriterOptions.hpp"
 #include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"

@@ -13,6 +13,7 @@
 #include <Acts/Utilities/Logger.hpp>
 
 #include <limits>
+#include <map>
 
 namespace Acts {
 class TrackingVolume;
@@ -52,6 +53,8 @@ class JsonSurfacesWriter : public IWriter {
     bool writePerEvent = false;
     /// Write a string object, containing the type name.
     bool writeOnlyNames = false;
+    /// Restrict to volume, layer pairs, accept all if empty
+    std::multimap<unsigned int, unsigned int> volumeLayer;
   };
 
   /// Construct the geometry writer.

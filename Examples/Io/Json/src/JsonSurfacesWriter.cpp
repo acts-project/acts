@@ -46,36 +46,61 @@ using SurfaceConverter = Acts::GeometryHierarchyMapJsonConverter<
     std::shared_ptr<const Acts::Surface>>;
 
 /// Write all child surfaces and descend into confined volumes.
-void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,
-                     const Acts::TrackingVolume& volume, bool writeLayer,
-                     bool writeApproach, bool writeSensitive,
-                     bool writeBoundary) {
-  // Process all layers that are directly stored within this volume
-  if (volume.confinedLayers()) {
-    for (auto layer : volume.confinedLayers()->arrayObjects()) {
-      // We jump navigation layers
-      if (layer->layerType() == Acts::navigation) {
-        continue;
-      }
-      // Layer surface
-      if (writeLayer) {
-        auto layerSurfacePtr = layer->surfaceRepresentation().getSharedPtr();
-        cSurfaces.push_back(SurfaceContainer::InputElement{
-            layer->surfaceRepresentation().geometryId(), layerSurfacePtr});
-      }
-      // Approach surfaces
-      if (writeApproach and layer->approachDescriptor()) {
-        for (auto sf : layer->approachDescriptor()->containedSurfaces()) {
-          cSurfaces.push_back(SurfaceContainer::InputElement{
-              sf->geometryId(), sf->getSharedPtr()});
+void collectSurfaces(
+    std::vector<SurfaceContainer::InputElement>& cSurfaces,
+    const Acts::TrackingVolume& volume, bool writeLayer, bool writeApproach,
+    bool writeSensitive, bool writeBoundary,
+    const std::multimap<unsigned int, unsigned int>& volumeLayer) {
+  // Retrieve the volume Id for potential veto
+  unsigned int volumeID = volume.geometryId().volume();
+  if (volumeLayer.empty() or volumeLayer.find(volumeID) != volumeLayer.end()) {
+    // Process all layers that are directly stored within this volume
+    if (volume.confinedLayers()) {
+      for (auto layer : volume.confinedLayers()->arrayObjects()) {
+        // We jump navigation layers
+        if (layer->layerType() == Acts::navigation) {
+          continue;
         }
-      }
-      // Check for sensitive surfaces
-      if (layer->surfaceArray() and writeSensitive) {
-        for (auto surface : layer->surfaceArray()->surfaces()) {
-          if (surface) {
+
+        // Veto/accept layer if necessary
+        bool accept = true;
+        if (not volumeLayer.empty()) {
+          accept = false;
+          unsigned int layerID = layer->geometryId().layer();
+          auto acceptedLayers = volumeLayer.equal_range(volumeID);
+          auto lIter = acceptedLayers.first;
+          for (; lIter != acceptedLayers.second; ++lIter) {
+            if (layerID == lIter->second) {
+              accept = true;
+              break;
+            }
+          }
+        }
+
+        if (not accept) {
+          continue;
+        }
+
+        // Layer surface
+        if (writeLayer) {
+          auto layerSurfacePtr = layer->surfaceRepresentation().getSharedPtr();
+          cSurfaces.push_back(SurfaceContainer::InputElement{
+              layer->surfaceRepresentation().geometryId(), layerSurfacePtr});
+        }
+        // Approach surfaces
+        if (writeApproach and layer->approachDescriptor()) {
+          for (auto sf : layer->approachDescriptor()->containedSurfaces()) {
             cSurfaces.push_back(SurfaceContainer::InputElement{
-                surface->geometryId(), surface->getSharedPtr()});
+                sf->geometryId(), sf->getSharedPtr()});
+          }
+        }
+        // Check for sensitive surfaces
+        if (layer->surfaceArray() and writeSensitive) {
+          for (auto surface : layer->surfaceArray()->surfaces()) {
+            if (surface) {
+              cSurfaces.push_back(SurfaceContainer::InputElement{
+                  surface->geometryId(), surface->getSharedPtr()});
+            }
           }
         }
       }
@@ -93,7 +118,7 @@ void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,
   if (volume.confinedVolumes()) {
     for (auto confined : volume.confinedVolumes()->arrayObjects()) {
       collectSurfaces(cSurfaces, *confined.get(), writeLayer, writeApproach,
-                      writeSensitive, writeBoundary);
+                      writeSensitive, writeBoundary, volumeLayer);
     }
   }
 }
@@ -109,7 +134,7 @@ ProcessCode JsonSurfacesWriter::write(const AlgorithmContext& ctx) {
 
   std::vector<SurfaceContainer::InputElement> cSurfaces;
   collectSurfaces(cSurfaces, *m_world, m_cfg.writeLayer, m_cfg.writeApproach,
-                  m_cfg.writeSensitive, m_cfg.writeBoundary);
+                  m_cfg.writeSensitive, m_cfg.writeBoundary, m_cfg.volumeLayer);
   SurfaceContainer sContainer(cSurfaces);
 
   if (not m_cfg.writeOnlyNames) {
@@ -142,7 +167,7 @@ ProcessCode JsonSurfacesWriter::endRun() {
 
   std::vector<SurfaceContainer::InputElement> cSurfaces;
   collectSurfaces(cSurfaces, *m_world, m_cfg.writeLayer, m_cfg.writeApproach,
-                  m_cfg.writeSensitive, m_cfg.writeBoundary);
+                  m_cfg.writeSensitive, m_cfg.writeBoundary, m_cfg.volumeLayer);
   SurfaceContainer sContainer(cSurfaces);
 
   auto j = SurfaceConverter("surfaces").toJson(sContainer);

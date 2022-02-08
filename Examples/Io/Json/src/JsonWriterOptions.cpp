@@ -6,7 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Json/JsonOptionsWriter.hpp"
+#include "ActsExamples/Io/Json/JsonWriterOptions.hpp"
+
+#include "ActsExamples/Utilities/Options.hpp"
 
 #include <boost/program_options.hpp>
 
@@ -27,7 +29,9 @@ void ActsExamples::Options::addJsonWriterOptions(
       "json-write-sf-sensitive", bool_switch(),
       "Write tracking geometry sensitive surfaces.")(
       "json-write-sf-names-only", bool_switch(),
-      "Write only names of tracking geometry surfaces.");
+      "Write only names of tracking geometry surfaces.")(
+      "json-restrict-volume-layer", value<std::vector<Integers<2>>>(),
+      "Restriction to volume layer pairs.");
 }
 
 ActsExamples::JsonSurfacesWriter::Config
@@ -43,6 +47,12 @@ ActsExamples::Options::readJsonSurfacesWriterConfig(
   cfg.writeSensitive = vm["json-write-sf-sensitive"].as<bool>();
   cfg.writeBoundary = vm["json-write-sf-boundaries"].as<bool>();
   cfg.writeOnlyNames = vm["json-write-sf-names-only"].as<bool>();
+
+  auto vlPairs =
+      vm["json-restrict-volume-layer"].as<std::vector<Integers<2>>>();
+  for (auto vl : vlPairs) {
+    cfg.volumeLayer.insert({vl[0], vl[1]});
+  }
 
   return cfg;
 }

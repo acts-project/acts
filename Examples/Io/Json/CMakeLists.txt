@@ -3,7 +3,7 @@ add_library(
   src/JsonGeometryList.cpp
   src/JsonMaterialWriter.cpp
   src/JsonSurfacesWriter.cpp
-  src/JsonOptionsWriter.cpp
+  src/JsonWriterOptions.cpp
   src/JsonDigitizationConfig.cpp)
 target_include_directories(
   ActsExamplesIoJson
