@@ -331,17 +331,6 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
         auto [truthLocal, truthPos4, truthUnitDir] =
             averageSimHits(ctx.geoContext, surface, simHits, indices);
 
-        if (not clusters.empty()) {
-          const auto& c = clusters[hitIdx];
-          m_cltr_size.push_back(c.sizeLoc0);
-          m_cltr_size_loc0.push_back(c.sizeLoc1);
-          m_cltr_size_loc1.push_back(c.channels.size());
-        }
-        else {
-          m_cltr_size.push_back(99);
-          m_cltr_size_loc0.push_back(99);
-          m_cltr_size_loc1.push_back(99);
-        }
         // momemtum averaging makes even less sense than averaging position and
         // direction. use the first momentum or set q/p to zero
         float truthQOP = 0.0f;
@@ -349,6 +338,18 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
           // we assume that the indices are within valid ranges so we do not
           // need to check their validity again.
           const auto simHitIdx0 = indices.begin()->second;
+          // Save cluster information for this simHit
+          int sizeLoc0 = -1, sizeLoc1 = -1, size = -1;
+          if (not clusters.empty()) {
+            const auto& c = clusters[simHitIdx0];
+            sizeLoc0 = c.sizeLoc0 < 100 && c.sizeLoc0 > 0 ? c.sizeLoc0 : -1;
+            sizeLoc1 = c.sizeLoc1 < 100 && c.sizeLoc1 > 0 ? c.sizeLoc1 : -1;
+            size = c.channels.size() < 1000 && c.channels.size() > 0 ? c.channels.size() : -1;
+          }
+          m_cltr_size_loc0.push_back(sizeLoc0);
+          m_cltr_size_loc1.push_back(sizeLoc1);
+          m_cltr_size.push_back(size);
+          
           const auto& simHit0 = *simHits.nth(simHitIdx0);
           const auto p =
               simHit0.momentum4Before().template segment<3>(Acts::eMom0).norm();
