@@ -328,11 +328,10 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
       break;
     }
 
-    stepSizeScaling =
-        std::min(std::max(0.25, std::pow((state.options.tolerance /
-                                          std::abs(2. * error_estimate)),
-                                         0.25)),
-                 4.);
+    stepSizeScaling = std::min(
+        std::max(0.25, std::sqrt(std::sqrt((state.options.tolerance /
+                                            std::abs(2. * error_estimate))))),
+        4.);
 
     state.stepping.stepSize = state.stepping.stepSize * stepSizeScaling;
 
@@ -392,10 +391,10 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
       ConstrainedStep::Type::accuracy) {
     state.stepping.stepSize =
         state.stepping.stepSize *
-        std::min(std::max(0.25, std::pow((state.options.tolerance /
-                                          std::abs(error_estimate)),
-                                         0.25)),
-                 4.);
+        std::min(
+            std::max(0.25, std::sqrt(std::sqrt((state.options.tolerance /
+                                                std::abs(error_estimate))))),
+            4.);
   }
   return h;
 }
