@@ -3,6 +3,7 @@ target_sources(
   PRIVATE
     CovarianceTransport.cpp
     EigenStepperError.cpp
+    MultiStepperError.cpp
     PropagatorError.cpp
     StraightLineStepper.cpp
     detail/PointwiseMaterialInteraction.cpp
