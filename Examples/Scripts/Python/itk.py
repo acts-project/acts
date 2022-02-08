@@ -94,7 +94,12 @@ def runITk(
             jmw.write(trackingGeometry)
 
 
-def buildITkGeometry(geo_dir: Path, material: bool = True, jsonconfig: bool = False):
+def buildITkGeometry(
+    geo_dir: Path,
+    material: bool = True,
+    jsonconfig: bool = False,
+    logLevel=acts.logging.WARNING,
+):
 
     logger = acts.logging.getLogger("buildITkGeometry")
 
@@ -104,18 +109,20 @@ def buildITkGeometry(geo_dir: Path, material: bool = True, jsonconfig: bool = Fa
         logger.info("Adding material from %s", file.absolute())
         matDeco = acts.IMaterialDecorator.fromFile(
             file,
-            level=acts.logging.INFO,
+            level=acts.logging.Level(min(acts.logging.INFO.value, logLevel.value)),
         )
 
     tgeo_fileName = geo_dir / "atlas/itk-hgtd/ATLAS-ITk-HGTD.tgeo.root"
 
     if jsonconfig:
+        jsonFile = geo_dir / "atlas/itk-hgtd/tgeo-atlas-itk-hgtd.json"
+        logger.info("Create geometry from %s", jsonFile.absolute())
         return TGeoDetector.create(
-            jsonFile=str(geo_dir / "atlas/itk-hgtd/tgeo-atlas-itk-hgtd.json"),
+            jsonFile=str(jsonFile),
             fileName=str(tgeo_fileName),
-            surfaceLogLevel=acts.logging.WARNING,
-            layerLogLevel=acts.logging.WARNING,
-            volumeLogLevel=acts.logging.WARNING,
+            surfaceLogLevel=logLevel,
+            layerLogLevel=logLevel,
+            volumeLogLevel=logLevel,
             mdecorator=matDeco,
         )
 
@@ -132,9 +139,9 @@ def buildITkGeometry(geo_dir: Path, material: bool = True, jsonconfig: bool = Fa
         beamPipeRadius=23.934 * u.mm,
         beamPipeHalflengthZ=3000.0 * u.mm,
         beamPipeLayerThickness=0.8 * u.mm,
-        surfaceLogLevel=acts.logging.WARNING,
-        layerLogLevel=acts.logging.WARNING,
-        volumeLogLevel=acts.logging.WARNING,
+        surfaceLogLevel=logLevel,
+        layerLogLevel=logLevel,
+        volumeLogLevel=logLevel,
         volumes=[
             Volume(
                 name="InnerPixels",
