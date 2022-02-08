@@ -239,21 +239,27 @@ inline auto makeVector4(const Eigen::MatrixBase<vector3_t>& vec3,
 
 namespace MatrixHelpers {
 
-ActsMatrix<8, 8> multiply(const ActsMatrix<8, 1>& A, const ActsMatrix<1, 8>& B);
+inline ActsMatrix<8, 8> multiply(const ActsMatrix<8, 1>& A,
+                                 const ActsMatrix<1, 8>& B);
 
-ActsMatrix<6, 8> multiply(const ActsMatrix<6, 8>& A, const ActsMatrix<8, 8>& B);
+inline ActsMatrix<6, 8> multiply(const ActsMatrix<6, 8>& A,
+                                 const ActsMatrix<8, 8>& B);
 
-ActsMatrix<8, 8> multiply(const ActsMatrix<8, 8>& A, const ActsMatrix<8, 8>& B);
+inline ActsMatrix<8, 8> multiply(const ActsMatrix<8, 8>& A,
+                                 const ActsMatrix<8, 8>& B);
 
-ActsMatrix<8, 6> multiply(const ActsMatrix<8, 8>& A, const ActsMatrix<8, 6>& B);
+inline ActsMatrix<8, 6> multiply(const ActsMatrix<8, 8>& A,
+                                 const ActsMatrix<8, 6>& B);
 
-ActsMatrix<6, 6> multiply(const ActsMatrix<6, 8>& A, const ActsMatrix<8, 6>& B);
+inline ActsMatrix<6, 6> multiply(const ActsMatrix<6, 8>& A,
+                                 const ActsMatrix<8, 6>& B);
 
-ActsMatrix<6, 6> multiply(const ActsMatrix<6, 6>& A, const ActsMatrix<6, 6>& B);
+inline ActsMatrix<6, 6> multiply(const ActsMatrix<6, 6>& A,
+                                 const ActsMatrix<6, 6>& B);
 
-ActsMatrix<6, 6> transpose(const ActsMatrix<6, 6>& A);
+inline ActsMatrix<6, 6> transpose(const ActsMatrix<6, 6>& A);
 
-ActsMatrix<8, 8> plusIdentity(ActsMatrix<8, 8> A);
+inline ActsMatrix<8, 8> plusIdentity(ActsMatrix<8, 8> A);
 
 }  // namespace MatrixHelpers
 
