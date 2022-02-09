@@ -70,7 +70,6 @@ ActsExamples::ProcessCode ActsExamples::CsvParticleReader::read(
     particle.setDirection(data.px, data.py, data.pz);
     particle.setAbsoluteMomentum(std::hypot(data.px, data.py, data.pz) *
                                  Acts::UnitConstants::GeV);
-    particle.setParentPDG(data.parent_pid);
     unordered.push_back(std::move(particle));
   }
 
