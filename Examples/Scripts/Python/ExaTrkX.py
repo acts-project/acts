@@ -117,7 +117,6 @@ def runExaTrkX(
 
     inputParticles = selAlg.config.outputParticles
 
-
     # Create space points
     spAlg = acts.examples.SpacePointMaker(
         level=acts.logging.INFO,
@@ -125,9 +124,7 @@ def runExaTrkX(
         inputMeasurements=digiAlg.config.outputMeasurements,
         outputSpacePoints="spacepoints",
         trackingGeometry=trackingGeometry,
-        geometrySelection=acts.examples.readJsonGeometryList(
-            str(geometrySelection)
-        ),
+        geometrySelection=acts.examples.readJsonGeometryList(str(geometrySelection)),
     )
     s.addAlgorithm(spAlg)
 
@@ -140,18 +137,17 @@ def runExaTrkX(
         embeddingDim=8,
         rVal=1.6,
         knnVal=500,
-        filterCut=0.21
+        filterCut=0.21,
     )
 
     trackFinderAlg = acts.examples.TrackFindingMLBasedAlgorithm(
         level=acts.logging.INFO,
         inputSpacePoints="spacepoints",
         outputProtoTracks="protoTracks",
-        trackFinderML=exaTrkxFinding
+        trackFinderML=exaTrkxFinding,
     )
     s.addAlgorithm(trackFinderAlg)
-    
-    
+
     # Write truth track finding / seeding performance
     trackFinderPerformanceWriter = acts.examples.TrackFinderPerformanceWriter(
         level=acts.logging.INFO,
