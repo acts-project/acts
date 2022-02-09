@@ -244,6 +244,23 @@ jobs:
           -DACTS_BUILD_UNITTESTS=ON
       - name: Build
         run: cmake --build build --
+  exatrkx:
+    runs-on: ubuntu-latest
+    container: ghcr.io/acts-project/ubuntu2004_exatrkx:master
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configure
+        run: >
+          cmake -B build -S .
+          -GNinja
+          -DCMAKE_CXX_COMPILER=/usr/bin/g++-8
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
+          -DACTS_BUILD_PLUGIN_EXATRKX=ON
+          -DACTS_BUILD_EXAMPLES_EXATRKX=ON
+          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+      - name: Build
+        run: cmake --build build --
   sycl:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004_oneapi:v9
