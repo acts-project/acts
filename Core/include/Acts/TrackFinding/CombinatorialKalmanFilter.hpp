@@ -1105,17 +1105,17 @@ class CombinatorialKalmanFilter {
       bool closerToFirstCreatedState =
           (std::abs(firstIntersection.intersection.pathLength) <=
            std::abs(lastIntersection.intersection.pathLength));
-      if (closerTofirstCreatedState) {
-        stepper.resetState(state.stepping, firstCreatedState.smoothed(),
-                           firstCreatedState.smoothedCovariance(),
-                           firstCreatedState.referenceSurface(),
-                           state.stepping.navDir, state.options.maxStepSize);
+      if (closerToFirstCreatedState) {
+        stepper.update(state.stepping, firstParams,
+                       firstCreatedState.smoothed(),
+                       firstCreatedState.smoothedCovariance(),
+                       firstCreatedState.referenceSurface());
         reverseDirection = (firstIntersection.intersection.pathLength < 0);
       } else {
-        stepper.resetState(state.stepping, lastCreatedMeasurement.smoothed(),
-                           lastCreatedMeasurement.smoothedCovariance(),
-                           lastCreatedMeasurement.referenceSurface(),
-                           state.stepping.navDir, state.options.maxStepSize););
+        stepper.update(state.stepping, lastParams,
+                       lastCreatedMeasurement.smoothed(),
+                       lastCreatedMeasurement.smoothedCovariance(),
+                       lastCreatedMeasurement.referenceSurface());
         reverseDirection = (lastIntersection.intersection.pathLength < 0);
       }
       const auto& surface = closerToFirstCreatedState
@@ -1134,9 +1134,17 @@ class CombinatorialKalmanFilter {
         state.stepping.navDir =
             (state.stepping.navDir == forward) ? backward : forward;
       }
+      // Reinitialize the stepping jacobian
+      state.stepping.jacToGlobal =
+          surface.boundToFreeJacobian(state.stepping.geoContext, boundParams);
+      state.stepping.jacobian = BoundMatrix::Identity();
+      state.stepping.jacTransport = FreeMatrix::Identity();
+      state.stepping.derivative = FreeVector::Zero();
       // Reset the step size
       state.stepping.stepSize = ConstrainedStep(
           state.stepping.navDir * std::abs(state.options.maxStepSize));
+      // Set accumulatd path to zero before targeting surface
+      state.stepping.pathAccumulated = 0.;
 
       return Result<void>::success();
     }
