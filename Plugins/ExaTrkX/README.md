@@ -7,7 +7,7 @@ This plugin contains a seed finding module based on Graph Neural Networks (GNNs)
 To build the plugin, enable the appropriate CMake options:
 
 ```cmake
-cmake -b <builddir> \
+cmake -B <builddir> -S <srcdir> \
   -D ACTS_BUILD_EXATRKX_PLUGIN=ON \
   -D ACTS_BUILD_EXAMPLES_EXATRKX=ON \
   -D ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON \
