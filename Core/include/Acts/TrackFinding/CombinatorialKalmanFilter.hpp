@@ -1105,7 +1105,7 @@ class CombinatorialKalmanFilter {
       bool closerToFirstCreatedState =
           (std::abs(firstIntersection.intersection.pathLength) <=
            std::abs(lastIntersection.intersection.pathLength));
-      if (closerTofirstCreatedState) {
+      if (closerToFirstCreatedState) {
         stepper.update(state.stepping, firstParams,
                        firstCreatedState.smoothed(),
                        firstCreatedState.smoothedCovariance(),
