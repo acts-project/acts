@@ -188,6 +188,20 @@ macro(project)
   set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION}" CACHE INTERNAL "")
 endmacro()
 
+# CUDA settings are collected here in a macro, so that they can be reused by different plugins
+macro(enable_cuda)
+  enable_language(CUDA)
+  set(CMAKE_CUDA_STANDARD 14 CACHE STRING "CUDA C++ standard to use")
+  set(CMAKE_CUDA_STANDARD_REQUIRED ON CACHE BOOL
+    "Force the C++ standard requirement")
+  if(NOT CMAKE_CUDA_ARCHITECTURES)
+    set(CMAKE_CUDA_ARCHITECTURES "35;52;75" CACHE STRING
+        "CUDA architectures to generate code for")
+  endif()
+  set(CMAKE_CUDA_FLAGS_DEBUG "${CMAKE_CUDA_FLAGS_DEBUG} -g -G")
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --extended-lambda")
+endmacro()
+
 # optional packages
 #
 # find packages explicitly for each component even if this means searching for
@@ -208,13 +222,7 @@ if(ACTS_BUILD_PLUGIN_AUTODIFF)
   endif()
 endif()
 if(ACTS_BUILD_PLUGIN_CUDA)
-  enable_language(CUDA)
-  set(CMAKE_CUDA_STANDARD 14 CACHE STRING "CUDA C++ standard to use")
-  set(CMAKE_CUDA_STANDARD_REQUIRED ON CACHE BOOL
-    "Force the C++ standard requirement")
-  set(CMAKE_CUDA_ARCHITECTURES "35;52;75" CACHE STRING
-    "CUDA architectures to generate code for")
-  set(CMAKE_CUDA_FLAGS_DEBUG "-g -G")
+  enable_cuda()
 endif()
 if(ACTS_BUILD_PLUGIN_DD4HEP)
   find_package(DD4hep ${_acts_dd4hep_version} REQUIRED CONFIG COMPONENTS DDCore DDDetectors)
@@ -240,14 +248,12 @@ if(ACTS_BUILD_PLUGIN_TGEO)
   check_root_compatibility()
 endif()
 if(ACTS_BUILD_PLUGIN_EXATRKX)
-  enable_language(CUDA)
-  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --extended-lambda")
+  enable_cuda()
   find_package(CUDAToolkit REQUIRED)
   find_package(Torch REQUIRED)
   find_package(OnnxRuntime REQUIRED)
   find_package(cugraph REQUIRED)
   add_subdirectory(thirdparty/libFRNN)
-  #add_subdirectory(thirdparty/cugraph_test_util)
 endif()
 
 # examples dependencies

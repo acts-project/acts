@@ -32,7 +32,7 @@
 #include <functional>
 #include <iostream>
 #include <boost/program_options.hpp>
-#include <filesystem>
+#include <boost/filesystem.hpp>
 
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
@@ -71,11 +71,10 @@ ActsExamples::CsvParticleReader::Config setupParticleReading(
   return particleReader;
 }
 
-static std::unique_ptr<const Acts::Logger> m_logger;
 const Acts::Logger& logger() { return *m_logger; }
 
 int main(int argc, char** argv) {
-  std::cout<<"Welcome to TrackFindingMLBased example." << std::endl;
+  std::unique_ptr<const Acts::Logger> local_logger;
 
   // // Setup and parse options
   auto desc = Options::makeDefaultOptions();
@@ -97,15 +96,13 @@ int main(int argc, char** argv) {
   auto detector = std::make_shared<GenericDetector>();
   detector->addOptions(desc);
 
-  std::cout<<"before parsing options" << std::endl;
   auto vm = Options::parse(desc, argc, argv);
   if (vm.empty()) {
     return EXIT_FAILURE;
   }
-  std::cout<<"after  parsing options" << std::endl;
+
   bool dirNav = false;
   // auto dirNav = vm["directed-navigation"].as<bool>(); // should be false.
-
 
   Sequencer sequencer(Options::readSequencerConfig(vm));
 
@@ -114,7 +111,6 @@ int main(int argc, char** argv) {
   auto outputDir = ensureWritableDirectory(vm["output-dir"].as<std::string>());
 
   m_logger = Acts::getDefaultLogger("MLBasedTrackFinding", logLevel);
-  ACTS_INFO("after parsing input options");
 
   // The geometry, material and decoration
   // build the detector
@@ -124,27 +120,20 @@ int main(int argc, char** argv) {
   auto randomNumbers =
       std::make_shared<RandomNumbers>(Options::readRandomNumbersConfig(vm));
 
-  ACTS_INFO("after building geometry");
-
   // Add the decorator to the sequencer
   for (auto cdr : contextDecorators) {
     sequencer.addContextDecorator(cdr);
   }
 
-  ACTS_INFO("after adding context decorator");
-
   // Setup the magnetic field
   Options::setupMagneticFieldServices(vm, sequencer);
   auto magneticField = Options::readMagneticField(vm);
-
-  ACTS_INFO("after setting magnetic field");
 
   // Read the sim hits
   auto simHitReaderCfg = setupSimHitReading(vm, sequencer);
   // Read the particles
   auto particleReader = setupParticleReading(vm, sequencer);
 
-  ACTS_INFO("after reading SimHits and particles");
 
   // Digitization: SimHits -> Clusters / Measurements
   auto digiCfg = DigitizationConfig(
@@ -153,9 +142,6 @@ int main(int argc, char** argv) {
   digiCfg.trackingGeometry = tGeometry;
   digiCfg.randomNumbers = randomNumbers;
   sequencer.addAlgorithm(std::make_shared<DigitizationAlgorithm>(digiCfg, logLevel));
-
-  ACTS_INFO("after digi");
-
 
   // Select particles in a pre-defined fiducial region for performance study
   TruthSeedSelector::Config particleSelectorCfg;
@@ -202,8 +188,8 @@ int main(int argc, char** argv) {
   trkFinderCfg.inputSpacePoints = spCfg.outputSpacePoints;
   trkFinderCfg.outputProtoTracks = "protoTracks";
   
-  if( vm["onnx-dir"].empty() or not std::filesystem::exists(vm["onnx-dir"].as<std::string>()) ) {
-      throw std::invalid_argument("The directory to the Onnx models must be passed to the directory");
+  if( vm["onnx-dir"].empty() or not boost::filesystem::exists(vm["onnx-dir"].as<std::string>()) ) {
+      throw std::invalid_argument("The directory to the ONNX models is empty or invalid");
   }
   
   Acts::ExaTrkXTrackFinding::Config cfg;
