@@ -1105,17 +1105,17 @@ class CombinatorialKalmanFilter {
       bool closerToFirstCreatedState =
           (std::abs(firstIntersection.intersection.pathLength) <=
            std::abs(lastIntersection.intersection.pathLength));
-      if (closerToFirstCreatedState) {
-        stepper.update(state.stepping, firstParams,
-                       firstCreatedState.smoothed(),
-                       firstCreatedState.smoothedCovariance(),
-                       firstCreatedState.referenceSurface());
+      if (closerTofirstCreatedState) {
+        stepper.resetState(state.stepping, firstCreatedState.smoothed(),
+                           firstCreatedState.smoothedCovariance(),
+                           firstCreatedState.referenceSurface(),
+                           state.stepping.navDir, state.options.maxStepSize);
         reverseDirection = (firstIntersection.intersection.pathLength < 0);
       } else {
-        stepper.update(state.stepping, lastParams,
-                       lastCreatedMeasurement.smoothed(),
-                       lastCreatedMeasurement.smoothedCovariance(),
-                       lastCreatedMeasurement.referenceSurface());
+        stepper.resetState(state.stepping, lastCreatedMeasurement.smoothed(),
+                           lastCreatedMeasurement.smoothedCovariance(),
+                           lastCreatedMeasurement.referenceSurface(),
+                           state.stepping.navDir, state.options.maxStepSize););
         reverseDirection = (lastIntersection.intersection.pathLength < 0);
       }
       const auto& surface = closerToFirstCreatedState
