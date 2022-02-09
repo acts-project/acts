@@ -6,15 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <cugraph/algorithms.hpp>
-#include <cugraph/graph.hpp>
-#include <cugraph/graph_functions.hpp>
-#include <cugraph/graph_view.hpp>
-#include <cugraph/partition_manager.hpp>
-#include <cugraph/utilities/error.hpp>
-#include <raft/cudart_utils.h>
-#include <raft/handle.hpp>
-
 #include <cerrno>
 #include <cstring>
 #include <fstream>
@@ -24,6 +15,14 @@
 #include <vector>
 
 #include <boost/range/combine.hpp>
+#include <cugraph/algorithms.hpp>
+#include <cugraph/graph.hpp>
+#include <cugraph/graph_functions.hpp>
+#include <cugraph/graph_view.hpp>
+#include <cugraph/partition_manager.hpp>
+#include <cugraph/utilities/error.hpp>
+#include <raft/cudart_utils.h>
+#include <raft/handle.hpp>
 
 #ifndef CUDA_RT_CALL
 #define CUDA_RT_CALL(call)                                                    \
