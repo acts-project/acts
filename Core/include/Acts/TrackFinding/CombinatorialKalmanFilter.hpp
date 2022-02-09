@@ -1105,18 +1105,26 @@ class CombinatorialKalmanFilter {
       bool closerToFirstCreatedState =
           (std::abs(firstIntersection.intersection.pathLength) <=
            std::abs(lastIntersection.intersection.pathLength));
-      if (closerToFirstCreatedState) {
+      if (closerTofirstCreatedState) {
         stepper.update(state.stepping, firstParams,
                        firstCreatedState.smoothed(),
                        firstCreatedState.smoothedCovariance(),
                        firstCreatedState.referenceSurface());
         reverseDirection = (firstIntersection.intersection.pathLength < 0);
+        // Reinitialize the stepping jacobian
+        state.stepping.jacToGlobal =
+            firstCreatedState.referenceSurface().boundToFreeJacobian(
+                state.stepping.geoContext, firstCreatedState.smoothed());
       } else {
         stepper.update(state.stepping, lastParams,
                        lastCreatedMeasurement.smoothed(),
                        lastCreatedMeasurement.smoothedCovariance(),
                        lastCreatedMeasurement.referenceSurface());
         reverseDirection = (lastIntersection.intersection.pathLength < 0);
+        // Reinitialize the stepping jacobian
+        state.stepping.jacToGlobal =
+            lastCreatedMeasurement.referenceSurface().boundToFreeJacobian(
+                state.stepping.geoContext, lastCreatedMeasurement.smoothed());
       }
       const auto& surface = closerToFirstCreatedState
                                 ? firstCreatedState.referenceSurface()
@@ -1135,8 +1143,6 @@ class CombinatorialKalmanFilter {
             (state.stepping.navDir == forward) ? backward : forward;
       }
       // Reinitialize the stepping jacobian
-      state.stepping.jacToGlobal =
-          surface.boundToFreeJacobian(state.stepping.geoContext, boundParams);
       state.stepping.jacobian = BoundMatrix::Identity();
       state.stepping.jacTransport = FreeMatrix::Identity();
       state.stepping.derivative = FreeVector::Zero();
