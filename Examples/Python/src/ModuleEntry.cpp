@@ -91,7 +91,7 @@ void addDigitization(Context& ctx);
 void addPythia8(Context& ctx);
 void addJson(Context& ctx);
 void addHepMC3(Context& ctx);
-void addExaTrkXTrackFinding(Context &ctx);
+void addExaTrkXTrackFinding(Context& ctx);
 
 }  // namespace Acts::Python
 

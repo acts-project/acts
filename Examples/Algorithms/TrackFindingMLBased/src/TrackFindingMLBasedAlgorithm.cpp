@@ -8,12 +8,10 @@
 
 #include "ActsExamples/TrackFindingMLBased/TrackFindingMLBasedAlgorithm.hpp"
 
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-
-
 
 ActsExamples::TrackFindingMLBasedAlgorithm::TrackFindingMLBasedAlgorithm(
     Config config, Acts::Logging::Level level)
@@ -31,19 +29,19 @@ ActsExamples::TrackFindingMLBasedAlgorithm::TrackFindingMLBasedAlgorithm(
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackFindingMLBasedAlgorithm::execute(
-  const ActsExamples::AlgorithmContext& ctx) const 
-{
+    const ActsExamples::AlgorithmContext& ctx) const {
   // Read input data
   const auto& spacepoints =
-    ctx.eventStore.get<SimSpacePointContainer>(m_cfg.inputSpacePoints);
+      ctx.eventStore.get<SimSpacePointContainer>(m_cfg.inputSpacePoints);
 
-  // Convert Input data to a list of size [num_measurements x measurement_features]
+  // Convert Input data to a list of size [num_measurements x
+  // measurement_features]
   size_t num_spacepoints = spacepoints.size();
   ACTS_INFO("Received " << num_spacepoints << " spacepoints");
 
   std::vector<float> inputValues;
   std::vector<uint32_t> spacepointIDs;
-  for(const auto& sp: spacepoints) {
+  for (const auto& sp : spacepoints) {
     float x = sp.x();
     float y = sp.y();
     float z = sp.z();
@@ -61,7 +59,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingMLBasedAlgorithm::execute(
   m_cfg.trackFinderML->getTracks(inputValues, spacepointIDs, trackCandidates);
 
   std::vector<ProtoTrack> protoTracks;
-  for(auto& x: trackCandidates){
+  for (auto& x : trackCandidates) {
     ProtoTrack onetrack;
     std::copy(x.begin(), x.end(), std::back_inserter(onetrack));
     protoTracks.push_back(std::move(onetrack));

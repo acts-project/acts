@@ -1,38 +1,33 @@
-#include <Acts/Utilities/Logger.hpp>
-#include "ActsExamples/Options/CommonOptions.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
-#include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
-#include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
-
-#include "ActsExamples/Io/Csv/CsvParticleReader.hpp" // for evaluating performance
-#include "ActsExamples/TruthTracking/TruthSeedSelector.hpp" // for evaluating performance
-
+#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFinding.hpp"
+#include "ActsExamples/Digitization/DigitizationOptions.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
-
-#include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
+#include "ActsExamples/Geometry/CommonGeometry.hpp"
+#include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
+#include "ActsExamples/Io/Csv/CsvParticleReader.hpp"  // for evaluating performance
+#include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
+#include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"  // to read digi config
+#include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
+#include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
-#include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp" // to read digi config
-#include "ActsExamples/Digitization/DigitizationOptions.hpp"
-
+#include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
+#include "ActsExamples/TrackFindingMLBased/TrackFindingMLBasedAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingOptions.hpp"
-#include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
-#include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
-
-#include "ActsExamples/TrackFindingMLBased/TrackFindingMLBasedAlgorithm.hpp"
-#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFinding.hpp"
-
+#include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"  // for evaluating performance
+#include "ActsExamples/Utilities/Options.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
+#include <Acts/Utilities/Logger.hpp>
 
 #include <functional>
 #include <iostream>
-#include <boost/program_options.hpp>
+
 #include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
 
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
@@ -40,7 +35,6 @@ using namespace ActsExamples;
 ActsExamples::CsvSimHitReader::Config setupSimHitReading(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer) {
-
   // Read some standard options
   auto logLevel = Options::readLogLevel(vars);
 
@@ -57,7 +51,6 @@ ActsExamples::CsvSimHitReader::Config setupSimHitReading(
 ActsExamples::CsvParticleReader::Config setupParticleReading(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer) {
-
   // Read some standard options
   auto logLevel = Options::readLogLevel(vars);
 
@@ -84,10 +77,10 @@ int main(int argc, char** argv) {
   Options::addInputOptions(desc);
   Options::addMagneticFieldOptions(desc);
   Options::addDigitizationOptions(desc);
-  
+
   // Add an option for the onnx models
   desc.add_options()("onnx-dir", boost::program_options::value<std::string>(),
-                    "The directory where the ONNX models are");
+                     "The directory where the ONNX models are");
 
   // Add specific options for this geometry
   // <TODO> make it as an argument.
@@ -130,14 +123,14 @@ int main(int argc, char** argv) {
   // Read the particles
   auto particleReader = setupParticleReading(vm, sequencer);
 
-
   // Digitization: SimHits -> Clusters / Measurements
   auto digiCfg = DigitizationConfig(
       vm, readDigiConfigFromJson(vm["digi-config-file"].as<std::string>()));
   digiCfg.inputSimHits = simHitReaderCfg.outputSimHits;
   digiCfg.trackingGeometry = tGeometry;
   digiCfg.randomNumbers = randomNumbers;
-  sequencer.addAlgorithm(std::make_shared<DigitizationAlgorithm>(digiCfg, logLevel));
+  sequencer.addAlgorithm(
+      std::make_shared<DigitizationAlgorithm>(digiCfg, logLevel));
 
   // Select particles in a pre-defined fiducial region for performance study
   TruthSeedSelector::Config particleSelectorCfg;
@@ -153,7 +146,6 @@ int main(int argc, char** argv) {
   // The selected particles
   const auto& inputParticles = particleSelectorCfg.outputParticles;
 
-
   // measurements:  digiCfg.outputMeasurements
   // clusters: digiCfg.outputClusters
   // Now measurements --> SpacePoints
@@ -162,17 +154,15 @@ int main(int argc, char** argv) {
   spCfg.inputMeasurements = digiCfg.outputMeasurements;
   spCfg.outputSpacePoints = "spacepoints";
   spCfg.trackingGeometry = tGeometry;
-  spCfg.geometrySelection = {
-    Acts::GeometryIdentifier().setVolume(7),
-    Acts::GeometryIdentifier().setVolume(8),
-    Acts::GeometryIdentifier().setVolume(9),
-    Acts::GeometryIdentifier().setVolume(12),
-    Acts::GeometryIdentifier().setVolume(13),
-    Acts::GeometryIdentifier().setVolume(14),
-    Acts::GeometryIdentifier().setVolume(16),
-    Acts::GeometryIdentifier().setVolume(17),
-    Acts::GeometryIdentifier().setVolume(18)
-  };
+  spCfg.geometrySelection = {Acts::GeometryIdentifier().setVolume(7),
+                             Acts::GeometryIdentifier().setVolume(8),
+                             Acts::GeometryIdentifier().setVolume(9),
+                             Acts::GeometryIdentifier().setVolume(12),
+                             Acts::GeometryIdentifier().setVolume(13),
+                             Acts::GeometryIdentifier().setVolume(14),
+                             Acts::GeometryIdentifier().setVolume(16),
+                             Acts::GeometryIdentifier().setVolume(17),
+                             Acts::GeometryIdentifier().setVolume(18)};
 
   sequencer.addAlgorithm(std::make_shared<SpacePointMaker>(spCfg, logLevel));
 
@@ -183,18 +173,20 @@ int main(int argc, char** argv) {
   TrackFindingMLBasedAlgorithm::Config trkFinderCfg;
   trkFinderCfg.inputSpacePoints = spCfg.outputSpacePoints;
   trkFinderCfg.outputProtoTracks = "protoTracks";
-  
-  if( vm["onnx-dir"].empty() or not boost::filesystem::exists(vm["onnx-dir"].as<std::string>()) ) {
-      throw std::invalid_argument("The directory to the ONNX models is empty or invalid");
+
+  if (vm["onnx-dir"].empty() or
+      not boost::filesystem::exists(vm["onnx-dir"].as<std::string>())) {
+    throw std::invalid_argument(
+        "The directory to the ONNX models is empty or invalid");
   }
-  
+
   Acts::ExaTrkXTrackFinding::Config cfg;
   cfg.inputMLModuleDir = vm["onnx-dir"].as<std::string>();
-  
+
   trkFinderCfg.trackFinderML = std::make_shared<Acts::ExaTrkXTrackFinding>(cfg);
 
-  sequencer.addAlgorithm(std::make_shared<TrackFindingMLBasedAlgorithm>(trkFinderCfg, logLevel));
-
+  sequencer.addAlgorithm(
+      std::make_shared<TrackFindingMLBasedAlgorithm>(trkFinderCfg, logLevel));
 
   SurfaceSortingAlgorithm::Config sorterCfg;
   // Setup the surface sorter if running direct navigator
@@ -214,7 +206,8 @@ int main(int argc, char** argv) {
 
   // Algorithm estimating track parameter from seed
   TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
-  paramsEstimationCfg.inputSeeds = ""; // it will use spacepoints and input proto tracks as inputs.
+  paramsEstimationCfg.inputSeeds =
+      "";  // it will use spacepoints and input proto tracks as inputs.
   paramsEstimationCfg.inputProtoTracks = inputProtoTracks;
   paramsEstimationCfg.inputSpacePoints = {
       spCfg.outputSpacePoints,
@@ -244,13 +237,14 @@ int main(int argc, char** argv) {
   if (dirNav) {
     fitter.inputProtoTracks = sorterCfg.outputProtoTracks;
   }
-  fitter.inputInitialTrackParameters = paramsEstimationCfg.outputTrackParameters;
+  fitter.inputInitialTrackParameters =
+      paramsEstimationCfg.outputTrackParameters;
   fitter.outputTrajectories = "trajectories";
   fitter.directNavigation = dirNav;
   fitter.trackingGeometry = tGeometry;
   fitter.dFit = TrackFittingAlgorithm::makeTrackFitterFunction(magneticField);
-  fitter.fit = TrackFittingAlgorithm::makeTrackFitterFunction(tGeometry,
-                                                              magneticField);
+  fitter.fit =
+      TrackFittingAlgorithm::makeTrackFitterFunction(tGeometry, magneticField);
   sequencer.addAlgorithm(
       std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
 
@@ -265,7 +259,6 @@ int main(int argc, char** argv) {
   sequencer.addWriter(
       std::make_shared<TrackFinderPerformanceWriter>(tfPerfCfg, logLevel));
 
-
   // Write track finding performance data
   CKFPerformanceWriter::Config perfWriterCfg;
   perfWriterCfg.inputParticles = inputParticles;
@@ -275,7 +268,7 @@ int main(int argc, char** argv) {
   // The bottom seed on a pixel detector 'eats' one or two measurements?
   perfWriterCfg.nMeasurementsMin = particleSelectorCfg.nHitsMin;
   sequencer.addWriter(
-    std::make_shared<CKFPerformanceWriter>(perfWriterCfg, logLevel));
+      std::make_shared<CKFPerformanceWriter>(perfWriterCfg, logLevel));
 
   return sequencer.run();
 }
