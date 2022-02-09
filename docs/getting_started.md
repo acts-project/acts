@@ -31,17 +31,19 @@ The following dependencies are required to build the Acts core library:
 The following dependencies are optional and are needed to build additional
 components:
 
--   [CUDA](https://developer.nvidia.com/cuda-zone) for the CUDA plugin
+-   [CUDA](https://developer.nvidia.com/cuda-zone) for the CUDA plugin and the Exa.TrkX plugin and its examples
 -   [DD4Hep](http://dd4hep.cern.ch) >= 1.11 for the DD4Hep plugin and some examples
 -   [Doxygen](http://doxygen.org) >= 1.8.15 for the documentation
 -   [Geant4](http://geant4.org/) for some examples
 -   [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) >= 3.2.1 for some examples
 -   [Intel Threading Building Blocks](https://01.org/tbb) >= 2020.1 for the examples
--   [ONNX Runtime](https://onnxruntime.ai/) for the ONNX plugin and some examples
+-   [ONNX Runtime](https://onnxruntime.ai/) for the ONNX plugin, the Exa.TrkX plugin and some examples
 -   [Pythia8](http://home.thep.lu.se/~torbjorn/Pythia.html) for some examples
 -   [ROOT](https://root.cern.ch) >= 6.20 for the TGeo plugin and the examples
 -   [Sphinx](https://www.sphinx-doc.org) >= 2.0 with [Breathe](https://breathe.readthedocs.io/en/latest/), [Exhale](https://exhale.readthedocs.io/en/latest/), and [recommonmark](https://recommonmark.readthedocs.io/en/latest/index.html) extensions for the documentation
 -   [SYCL](https://www.khronos.org/sycl/) for the SYCL plugin
+-   [cugraph](https://github.com/rapidsai/cugraph) for the Exa.TrkX plugin
+-   [libtorch](https://pytorch.org/cppdocs/installing.html) for the Exa.TrkX plugin
 
 There are some additional dependencies that are automatically provided as part of
 the build system.
@@ -240,6 +242,7 @@ components.
 | ACTS_BUILD_EVERYTHING               | Build with most options enabled (except HepMC3 and documentation)                                     |
 | ACTS_BUILD_PLUGIN_CUDA              | Build CUDA plugin                                                                                     |
 | ACTS_BUILD_PLUGIN_DD4HEP            | Build DD4hep geometry plugin                                                                          |
+| ACTS_BUILD_PLUGIN_EXATRKX           | Build Exa.TrkX plugin                                                                             |
 | ACTS_BUILD_PLUGIN_IDENTIFICATION    | Build Identification plugin                                                                           |
 | ACTS_BUILD_PLUGIN_JSON              | Build Json plugin                                                                                     |
 | ACTS_BUILD_PLUGIN_LEGACY            | Build legacy plugin                                                                                   |
@@ -249,6 +252,7 @@ components.
 | ACTS_BUILD_FATRAS                   | Build FAst TRAcking Simulation package                                                                |
 | ACTS_BUILD_EXAMPLES                 | Build standalone examples                                                                             |
 | ACTS_BUILD_EXAMPLES_DD4HEP          | Build DD4hep-based code in the examples                                                               |
+| ACTS_BUILD_EXAMPLES_EXATRKX         | Build some examples based on the Exa.TrkX track finding module                                        |
 | ACTS_BUILD_EXAMPLES_GEANT4          | Build Geant4-based code in the examples                                                               |
 | ACTS_BUILD_EXAMPLES_HEPMC3          | Build HepMC3-based code in the examples                                                               |
 | ACTS_BUILD_EXAMPLES_PYTHIA8         | Build Pythia8-based code in the examples                                                              |
