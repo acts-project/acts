@@ -99,6 +99,7 @@ void transformCoordinates(
     l.r = sp->radius();
 
     linCircleVec.push_back(l);
+    sp->setCotTheta(cot_theta);
   }
   // sort the SP in order of cotTheta
   if (enableCutsForSortedSP) {
