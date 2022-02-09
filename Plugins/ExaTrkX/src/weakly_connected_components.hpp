@@ -1,7 +1,10 @@
-// #include "utilities/test_graphs.hpp"
-// #include "utilities/high_res_clock.h"
-// #include "utilities/base_fixture.hpp"
-// #include "utilities/test_utilities.hpp"
+// This file is part of the Acts project.
+//
+// Copyright (C) 2022 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <cugraph/algorithms.hpp>
 #include <cugraph/graph.hpp>
@@ -11,8 +14,6 @@
 #include <cugraph/utilities/error.hpp>
 #include <raft/cudart_utils.h>
 #include <raft/handle.hpp>
-
-// #include <thrust/sequence.h>
 
 #include <cerrno>
 #include <cstring>
