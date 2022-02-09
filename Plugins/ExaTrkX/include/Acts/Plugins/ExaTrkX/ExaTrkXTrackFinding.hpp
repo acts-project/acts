@@ -8,10 +8,13 @@
 
 namespace Acts {
 
+/// Class implementing the Exa.TrkX track finding algorithm.
+/// It holds the required ONNX objects.
 class ExaTrkXTrackFinding {
  public:
+  /// Configuration struct for the track finding.
   struct Config {
-    /// input model directory
+    // input model directory
     std::string inputMLModuleDir;
 
     // hyperparameters in the pipeline.
@@ -22,17 +25,27 @@ class ExaTrkXTrackFinding {
     float filterCut = 0.21;
   };
 
-  /// Constructor of the track finding algorithm
+  /// Constructor of the track finding module
   ///
-  /// @param cfg is the config struct to configure the algorithm
+  /// @param cfg is the config struct to configure the module
   ExaTrkXTrackFinding(const Config& config);
 
   virtual ~ExaTrkXTrackFinding() {}
 
+  /// Do the track finding
+  ///
+  /// @param [in] input_values Packed spacepoints in the form
+  /// [ r1, phi1, z1, r2, phi2, z2, ... ]
+  /// @param [in] spacepointIDs corresponding spacepoint IDs to the input_values.
+  /// @param [out] trackCandidates nested vector containing the spacepoint ids
+  /// of the found tracks
+  /// @note The input values are not const, because the underlying ONNX API
+  /// takes only non-const pointers.
   void getTracks(std::vector<float>& input_values,
                  std::vector<uint32_t>& spacepointIDs,
                  std::vector<std::vector<uint32_t> >& trackCandidates) const;
 
+  /// Return the configuration object of the track finding module
   const Config& config() const { return m_cfg; }
 
  private:
@@ -46,7 +59,6 @@ class ExaTrkXTrackFinding {
                   std::vector<int64_t>& edgeList, int64_t numSpacepoints) const;
 
  private:
-  // configuration
   Config m_cfg;
   std::unique_ptr<Ort::Env> m_env;
   std::unique_ptr<Ort::Session> e_sess;
