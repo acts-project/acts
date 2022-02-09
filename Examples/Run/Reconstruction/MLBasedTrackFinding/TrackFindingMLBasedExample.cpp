@@ -71,8 +71,6 @@ ActsExamples::CsvParticleReader::Config setupParticleReading(
   return particleReader;
 }
 
-const Acts::Logger& logger() { return *m_logger; }
-
 int main(int argc, char** argv) {
   std::unique_ptr<const Acts::Logger> local_logger;
 
@@ -109,8 +107,6 @@ int main(int argc, char** argv) {
   // Now read the standard options
   auto logLevel = Options::readLogLevel(vm);
   auto outputDir = ensureWritableDirectory(vm["output-dir"].as<std::string>());
-
-  m_logger = Acts::getDefaultLogger("MLBasedTrackFinding", logLevel);
 
   // The geometry, material and decoration
   // build the detector
