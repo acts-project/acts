@@ -83,7 +83,7 @@ else()
   target_sources(ActsPythonBindings PRIVATE src/Pythia8Stub.cpp)
 endif()
 
-if(ACTS_BUILD_PLUGIN_DIGITIZATION AND ACTS_BUILD_PLUGIN_IDENTIFICATION)
+if(ACTS_BUILD_PLUGIN_IDENTIFICATION)
   target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesDigitization)
   target_sources(ActsPythonBindings PRIVATE src/Digitization.cpp)
 else()

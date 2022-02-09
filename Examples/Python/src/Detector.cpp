@@ -117,6 +117,10 @@ void addDetector(Context& ctx) {
         .value("Central", Config::SubVolume::Central)
         .value("Positive", Config::SubVolume::Positive);
 
+    py::enum_<Acts::BinningType>(c, "BinningType")
+        .value("equidistant", Acts::BinningType::equidistant)
+        .value("arbitrary", Acts::BinningType::arbitrary);
+
     auto volume = py::class_<Config::Volume>(c, "Volume").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(volume, Config::Volume);
     ACTS_PYTHON_MEMBER(name);
@@ -128,6 +132,9 @@ void addDetector(Context& ctx) {
     ACTS_PYTHON_MEMBER(cylinderNPhiSegments);
     ACTS_PYTHON_MEMBER(discNRSegments);
     ACTS_PYTHON_MEMBER(discNPhiSegments);
+    ACTS_PYTHON_MEMBER(itkModuleSplit);
+    ACTS_PYTHON_MEMBER(barrelMap);
+    ACTS_PYTHON_MEMBER(discMap);
 
     ACTS_PYTHON_MEMBER(layers);
     ACTS_PYTHON_MEMBER(subVolumeName);
@@ -137,6 +144,8 @@ void addDetector(Context& ctx) {
     ACTS_PYTHON_MEMBER(zRange);
     ACTS_PYTHON_MEMBER(splitTolR);
     ACTS_PYTHON_MEMBER(splitTolZ);
+    ACTS_PYTHON_MEMBER(binning0);
+    ACTS_PYTHON_MEMBER(binning1);
     ACTS_PYTHON_STRUCT_END();
 
     auto regTriplet = [&c](const std::string& name, auto v) {
@@ -157,6 +166,8 @@ void addDetector(Context& ctx) {
     regTriplet("LayerTripletVectorString", std::vector<std::string>{});
     regTriplet("LayerTripletInterval", Options::Interval{});
     regTriplet("LayerTripletDouble", double{5.5});
+    regTriplet("LayerTripletVectorBinning",
+               std::vector<std::pair<int, Acts::BinningType>>{});
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(surfaceLogLevel);
