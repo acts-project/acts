@@ -290,7 +290,7 @@ def buildITkGeometry(geo_dir: Path, material: bool = True):
                 name="HGTD",
                 binToleranceR=(15 * u.mm, 15 * u.mm),
                 binToleranceZ=(5 * u.mm, 5 * u.mm),
-                binTolerancePhi=(0.025 * u.mm, 0.025 * u.mm),
+                binTolerancePhi=(0.25 * u.mm, 0.25 * u.mm),
                 layers=LayerTriplet(positive=True, central=False, negative=True),
                 subVolumeName=LayerTriplet("HGTD::HGTD"),
                 sensitiveNames=LayerTriplet(["HGTD::HGTDSiSensor*"]),
