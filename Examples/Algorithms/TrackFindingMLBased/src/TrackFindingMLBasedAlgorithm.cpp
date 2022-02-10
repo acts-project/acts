@@ -61,6 +61,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingMLBasedAlgorithm::execute(
   m_cfg.trackFinderML->getTracks(inputValues, spacepointIDs, trackCandidates);
 
   std::vector<ProtoTrack> protoTracks;
+  protoTracks.reserve(trackCandidates.size());
   for (auto& x : trackCandidates) {
     ProtoTrack onetrack;
     std::copy(x.begin(), x.end(), std::back_inserter(onetrack));
