@@ -7,7 +7,7 @@ outputDir = pathlib.Path.cwd()
 
 detector, trackingGeometry, decorators = itk.buildITkGeometry(geo_dir)
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
-rnd = acts.examples.RandomNumbers()
+rnd = acts.examples.RandomNumbers(seed=42)
 
 from particle_gun import addParticleGun, MomentumConfig, EtaConfig, ParticleConfig
 from fatras import addFatras
