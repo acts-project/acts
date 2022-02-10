@@ -41,7 +41,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingMLBasedAlgorithm::execute(
 
   std::vector<float> inputValues;
   std::vector<uint32_t> spacepointIDs;
-  inputValues.reserve(spacepoints.size()*3);
+  inputValues.reserve(spacepoints.size() * 3);
   spacepointIDs.reserve(spacepoints.size());
   for (const auto& sp : spacepoints) {
     float x = sp.x();
