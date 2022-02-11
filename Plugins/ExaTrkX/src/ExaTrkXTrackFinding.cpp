@@ -19,7 +19,7 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 
-#include "weakly_connected_components.hpp"
+#include "weaklyConnectedComponents.hpp"
 
 using namespace torch::indexing;
 
@@ -411,8 +411,8 @@ void Acts::ExaTrkXTrackFinding::getTracks(
             gOutputCTen.data_ptr<float>() + numEdgesAfterF,
             std::back_insert_iterator(edgeWeights));
 
-  std::cout << "run weakly_connected_components" << std::endl;
-  weakly_connected_components<int32_t, int32_t, float>(
+  std::cout << "run weaklyConnectedComponents" << std::endl;
+  weaklyConnectedComponents<int32_t, int32_t, float>(
       rowIndices, colIndices, edgeWeights, trackLabels);
 
   std::cout << "size of components: " << trackLabels.size() << std::endl;

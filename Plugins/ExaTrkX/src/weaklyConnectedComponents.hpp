@@ -38,7 +38,7 @@
 #endif  // CUDA_RT_CALL
 
 template <typename vertex_t, typename edge_t, typename weight_t>
-__global__ void weakly_connected_components(
+__global__ void weaklyConnectedComponents(
     std::vector<vertex_t>& rowIndices, std::vector<vertex_t>& colIndices,
     std::vector<weight_t>& edgeWeights, std::vector<vertex_t>& trackLabels) {
   cudaStream_t stream;
