@@ -1,6 +1,6 @@
 # Exa.TrkX Plugin
 
-This plugin contains a seed finding module based on Graph Neural Networks (GNNs) which is developed by the [Exa.TrkX](https://exatrkx.github.io/) team.
+This plugin contains a track finding module based on Graph Neural Networks (GNNs) which is developed by the [Exa.TrkX](https://exatrkx.github.io/) team.
 
 ## Building
 
