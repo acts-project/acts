@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFinding.hpp"
 #include "ActsExamples/Digitization/DigitizationOptions.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
@@ -22,14 +21,14 @@
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
-#include "ActsExamples/TrackFindingMLBased/TrackFindingMLBasedAlgorithm.hpp"
+#include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingOptions.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"  // for evaluating performance
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include <Acts/Utilities/Logger.hpp>
+#include "Acts/Utilities/Logger.hpp"
 
 #include <functional>
 #include <iostream>
@@ -178,7 +177,7 @@ int main(int argc, char** argv) {
 
   // ML-based Tracking alg.
   // make module and function names as options..
-  TrackFindingMLBasedAlgorithm::Config trkFinderCfg;
+  TrackFindingAlgorithmExaTrkX::Config trkFinderCfg;
   trkFinderCfg.inputSpacePoints = spCfg.outputSpacePoints;
   trkFinderCfg.outputProtoTracks = "protoTracks";
 
@@ -194,7 +193,7 @@ int main(int argc, char** argv) {
   trkFinderCfg.trackFinderML = std::make_shared<Acts::ExaTrkXTrackFinding>(cfg);
 
   sequencer.addAlgorithm(
-      std::make_shared<TrackFindingMLBasedAlgorithm>(trkFinderCfg, logLevel));
+      std::make_shared<TrackFindingAlgorithmExaTrkX>(trkFinderCfg, logLevel));
 
   SurfaceSortingAlgorithm::Config sorterCfg;
   // Setup the surface sorter if running direct navigator

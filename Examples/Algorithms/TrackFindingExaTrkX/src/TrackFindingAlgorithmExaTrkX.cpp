@@ -6,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TrackFindingMLBased/TrackFindingMLBasedAlgorithm.hpp"
+#include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
 
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
-ActsExamples::TrackFindingMLBasedAlgorithm::TrackFindingMLBasedAlgorithm(
+ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
     Config config, Acts::Logging::Level level)
     : ActsExamples::BareAlgorithm("TrackFindingMLBasedAlgorithm", level),
       m_cfg(std::move(config)) {
@@ -28,7 +28,7 @@ ActsExamples::TrackFindingMLBasedAlgorithm::TrackFindingMLBasedAlgorithm(
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackFindingMLBasedAlgorithm::execute(
+ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Read input data
   const auto& spacepoints =

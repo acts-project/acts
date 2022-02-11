@@ -1,21 +1,21 @@
 add_executable(
-  ActsExampleTrackFindingMLBased
-  TrackFindingMLBasedExample.cpp)
+  ActsExampleExaTrkXGeneric
+  TrackFindingExaTrkXGeneric.cpp)
 
 target_link_libraries(
-  ActsExampleTrackFindingMLBased
+  ActsExampleExaTrkXGeneric
   PRIVATE
     ActsExamplesCommon
     ActsExamplesFramework
     ActsExamplesDigitization
     ActsExamplesDetectorGeneric
     ActsExamplesIoPerformance
-    ActsExamplesTrackFindingMLBased
+    ActsExamplesTrackFindingExaTrkX
     ActsPluginExaTrkX
     Boost::filesystem
 )
 
 install(
   TARGETS
-  ActsExampleTrackFindingMLBased
+  ActsExampleExaTrkXGeneric
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

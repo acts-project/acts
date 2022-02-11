@@ -1,23 +1,23 @@
 add_library(
-  ActsExamplesTrackFindingMLBased SHARED
-  src/TrackFindingMLBasedAlgorithm.cpp
+  ActsExamplesTrackFindingExaTrkX SHARED
+  src/TrackFindingAlgorithmExaTrkX.cpp
 )
 
 
 target_include_directories(
-  ActsExamplesTrackFindingMLBased
+  ActsExamplesTrackFindingExaTrkX
   PUBLIC 
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
     
 
 target_link_libraries(
-  ActsExamplesTrackFindingMLBased
+  ActsExamplesTrackFindingExaTrkX
   PUBLIC
     ActsPluginExaTrkX
     ActsExamplesFramework
 )
 
 install(
-  TARGETS ActsExamplesTrackFindingMLBased
+  TARGETS ActsExamplesTrackFindingExaTrkX
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

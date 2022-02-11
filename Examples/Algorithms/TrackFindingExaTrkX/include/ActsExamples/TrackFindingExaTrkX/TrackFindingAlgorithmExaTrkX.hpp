@@ -16,7 +16,7 @@
 
 namespace ActsExamples {
 
-class TrackFindingMLBasedAlgorithm final : public BareAlgorithm {
+class TrackFindingAlgorithmExaTrkX final : public BareAlgorithm {
  public:
   struct Config {
     /// Input spacepoints collection.
@@ -36,9 +36,9 @@ class TrackFindingMLBasedAlgorithm final : public BareAlgorithm {
   ///
   /// @param cfg is the config struct to configure the algorithm
   /// @param level is the logging level
-  TrackFindingMLBasedAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  TrackFindingAlgorithmExaTrkX(Config cfg, Acts::Logging::Level lvl);
 
-  virtual ~TrackFindingMLBasedAlgorithm() {}
+  virtual ~TrackFindingAlgorithmExaTrkX() {}
 
   /// Framework execute method of the track finding algorithm
   ///

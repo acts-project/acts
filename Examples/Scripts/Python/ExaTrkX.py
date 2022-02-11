@@ -140,7 +140,7 @@ def runExaTrkX(
         filterCut=0.21,
     )
 
-    trackFinderAlg = acts.examples.TrackFindingMLBasedAlgorithm(
+    trackFinderAlg = acts.examples.TrackFindingAlgorithmExaTrkX(
         level=acts.logging.INFO,
         inputSpacePoints="spacepoints",
         outputProtoTracks="protoTracks",

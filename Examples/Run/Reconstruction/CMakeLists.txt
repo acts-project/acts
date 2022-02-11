@@ -132,4 +132,4 @@ install(
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_subdirectory_if(DD4hep ACTS_BUILD_EXAMPLES_DD4HEP)
-add_subdirectory_if(MLBasedTrackFinding ACTS_BUILD_EXAMPLES_EXATRKX)
+add_subdirectory_if(ExaTrkX ACTS_BUILD_EXAMPLES_EXATRKX)

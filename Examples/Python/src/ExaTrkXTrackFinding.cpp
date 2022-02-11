@@ -13,7 +13,7 @@
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
-#include "ActsExamples/TrackFindingMLBased/TrackFindingMLBasedAlgorithm.hpp"
+#include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
 
 #include <memory>
 
@@ -50,12 +50,12 @@ void addExaTrkXTrackFinding(Context& ctx) {
   }
 
   {
-    using Alg = ActsExamples::TrackFindingMLBasedAlgorithm;
+    using Alg = ActsExamples::TrackFindingAlgorithmExaTrkX;
     using Config = Alg::Config;
 
     auto alg =
         py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>(
-            mex, "TrackFindingMLBasedAlgorithm")
+            mex, "TrackFindingAlgorithmExaTrkX")
             .def(py::init<const Config&, Acts::Logging::Level>(),
                  py::arg("config"), py::arg("level"))
             .def_property_readonly("config", &Alg::config);
