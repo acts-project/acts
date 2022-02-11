@@ -246,7 +246,7 @@ jobs:
         run: cmake --build build --
   exatrkx:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_exatrkx:master
+    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v17
     steps:
       - uses: actions/checkout@v2
       - name: Configure
