@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Digitization/DigitizationOptions.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
@@ -28,7 +29,6 @@
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"  // for evaluating performance
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include "Acts/Utilities/Logger.hpp"
 
 #include <functional>
 #include <iostream>

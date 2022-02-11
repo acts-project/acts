@@ -412,8 +412,8 @@ void Acts::ExaTrkXTrackFinding::getTracks(
             std::back_insert_iterator(edgeWeights));
 
   std::cout << "run weaklyConnectedComponents" << std::endl;
-  weaklyConnectedComponents<int32_t, int32_t, float>(
-      rowIndices, colIndices, edgeWeights, trackLabels);
+  weaklyConnectedComponents<int32_t, int32_t, float>(rowIndices, colIndices,
+                                                     edgeWeights, trackLabels);
 
   std::cout << "size of components: " << trackLabels.size() << std::endl;
   if (trackLabels.size() == 0)
