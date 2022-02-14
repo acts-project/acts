@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-import os
+from typing import Optional, Union
+from pathlib import Path
 
 import acts
 import acts.examples
@@ -7,41 +8,43 @@ import acts.examples
 u = acts.UnitConstants
 
 
-def runFatras(trackingGeometry, field, outputDir, s: acts.examples.Sequencer = None):
+def addFatras(
+    s: acts.examples.Sequencer,
+    trackingGeometry: acts.TrackingGeometry,
+    field: acts.MagneticFieldProvider,
+    outputDirCsv: Optional[Union[Path, str]] = None,
+    outputDirRoot: Optional[Union[Path, str]] = None,
+    rnd: Optional[acts.examples.RandomNumbers] = None,
+) -> acts.examples.Sequencer:
+    """This function steers the detector simulation using Fatras
+
+    Parameters
+    ----------
+    s: Sequencer
+        the sequencer module to which we add the Fatras steps (returned from addFatras)
+    trackingGeometry : tracking geometry
+    field : magnetic field
+    outputDirCsv : Path|str, path, None
+        the output folder for the Csv output, None triggers no output
+    outputDirRoot : Path|str, path, None
+        the output folder for the Root output, None triggers no output
+    rnd : RandomNumbers, None
+        random number generator
+    """
 
     # Preliminaries
-    rnd = acts.examples.RandomNumbers()
-
-    # Input
-    vtxGen = acts.examples.GaussianVertexGenerator()
-    vtxGen.stddev = acts.Vector4(0, 0, 0, 0)
-
-    ptclGen = acts.examples.ParametricParticleGenerator(
-        p=(1 * u.GeV, 10 * u.GeV), eta=(-2, 2)
-    )
-
-    g = acts.examples.EventGenerator.Generator()
-    g.multiplicity = acts.examples.FixedMultiplicityGenerator()
-    g.vertex = vtxGen
-    g.particles = ptclGen
-
-    evGen = acts.examples.EventGenerator(
-        level=acts.logging.INFO,
-        generators=[g],
-        outputParticles="particles_input",
-        randomNumbers=rnd,
-    )
+    rnd = rnd or acts.examples.RandomNumbers()
 
     # Selector
     selector = acts.examples.ParticleSelector(
-        level=acts.logging.INFO,
-        inputParticles=evGen.config.outputParticles,
+        level=s.config.logLevel,
+        inputParticles="particles_input",
         outputParticles="particles_selected",
     )
 
     # Simulation
     alg = acts.examples.FatrasSimulation(
-        level=acts.logging.INFO,
+        level=s.config.logLevel,
         inputParticles=selector.config.outputParticles,
         outputParticlesInitial="particles_initial",
         outputParticlesFinal="particles_final",
@@ -53,70 +56,100 @@ def runFatras(trackingGeometry, field, outputDir, s: acts.examples.Sequencer = N
     )
 
     # Sequencer
-    s = s or acts.examples.Sequencer(
-        events=100, numThreads=-1, logLevel=acts.logging.INFO
-    )
-
-    s.addReader(evGen)
     s.addAlgorithm(selector)
     s.addAlgorithm(alg)
 
     # Output
-    s.addWriter(
-        acts.examples.CsvParticleWriter(
-            level=acts.logging.INFO,
-            outputDir=outputDir + "/csv",
-            inputParticles="particles_final",
-            outputStem="particles_final",
+    if outputDirCsv is not None:
+        outputDirCsv = Path(outputDirCsv)
+        if not outputDirCsv.exists():
+            outputDirCsv.mkdir()
+        s.addWriter(
+            acts.examples.CsvParticleWriter(
+                level=s.config.logLevel,
+                outputDir=str(outputDirCsv),
+                inputParticles="particles_final",
+                outputStem="particles_final",
+            )
         )
-    )
 
-    s.addWriter(
-        acts.examples.RootParticleWriter(
-            level=acts.logging.INFO,
-            inputParticles="particles_final",
-            filePath=outputDir + "/fatras_particles_final.root",
+    if outputDirRoot is not None:
+        outputDirRoot = Path(outputDirRoot)
+        if not outputDirRoot.exists():
+            outputDirRoot.mkdir()
+        s.addWriter(
+            acts.examples.RootParticleWriter(
+                level=s.config.logLevel,
+                inputParticles="particles_final",
+                filePath=str(outputDirRoot / "fatras_particles_final.root"),
+            )
         )
-    )
 
-    s.addWriter(
-        acts.examples.CsvParticleWriter(
-            level=acts.logging.INFO,
-            outputDir=outputDir + "/csv",
-            inputParticles="particles_initial",
-            outputStem="particles_initial",
+    if outputDirCsv is not None:
+        s.addWriter(
+            acts.examples.CsvParticleWriter(
+                level=s.config.logLevel,
+                outputDir=str(outputDirCsv),
+                inputParticles="particles_initial",
+                outputStem="particles_initial",
+            )
         )
-    )
 
-    s.addWriter(
-        acts.examples.RootParticleWriter(
-            level=acts.logging.INFO,
-            inputParticles="particles_initial",
-            filePath=outputDir + "/fatras_particles_initial.root",
+    if outputDirRoot is not None:
+        s.addWriter(
+            acts.examples.RootParticleWriter(
+                level=s.config.logLevel,
+                inputParticles="particles_initial",
+                filePath=str(outputDirRoot / "fatras_particles_initial.root"),
+            )
         )
-    )
 
-    s.addWriter(
-        acts.examples.CsvSimHitWriter(
-            level=acts.logging.INFO,
-            inputSimHits=alg.config.outputSimHits,
-            outputDir=outputDir + "/csv",
-            outputStem="hits",
+    if outputDirCsv is not None:
+        s.addWriter(
+            acts.examples.CsvSimHitWriter(
+                level=s.config.logLevel,
+                inputSimHits=alg.config.outputSimHits,
+                outputDir=str(outputDirCsv),
+                outputStem="hits",
+            )
         )
-    )
 
-    s.addWriter(
-        acts.examples.RootSimHitWriter(
-            level=acts.logging.INFO,
-            inputSimHits=alg.config.outputSimHits,
-            filePath=outputDir + "/hits.root",
+    if outputDirRoot is not None:
+        s.addWriter(
+            acts.examples.RootSimHitWriter(
+                level=s.config.logLevel,
+                inputSimHits=alg.config.outputSimHits,
+                filePath=str(outputDirRoot / "hits.root"),
+            )
         )
-    )
 
     return s
 
 
+def runFatras(trackingGeometry, field, outputDir, s: acts.examples.Sequencer = None):
+    from particle_gun import addParticleGun, EtaConfig
+
+    s = s or acts.examples.Sequencer(events=100, numThreads=-1)
+    s.config.logLevel = acts.logging.INFO
+    rnd = acts.examples.RandomNumbers()
+    s = addParticleGun(
+        s,
+        EtaConfig(-2.0, 2.0),
+        rnd=rnd,
+    )
+    outputDir = Path(outputDir)
+    return addFatras(
+        s,
+        trackingGeometry,
+        field,
+        outputDirCsv=outputDir / "csv",
+        outputDirRoot=outputDir,
+        rnd=rnd,
+    )
+
+
 if "__main__" == __name__:
+    import os
 
     gdc = acts.examples.GenericDetector.Config()
     detector = acts.examples.GenericDetector()
