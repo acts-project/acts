@@ -102,8 +102,8 @@ std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
   //Compute the min volume boundaries for computing the binning start
   //See https://acts.readthedocs.io/en/latest/core/geometry.html#geometry-building
   // !! IMPORTANT !! The volume is assumed to be already rotated into the telescope geometry 
-  Vector3 min_volume_boundaries = cfg.position - 0.5*cfg.length;
-  Vector3 max_volume_boundaries = cfg.position + 0.5*cfg.length;
+  Vector3 minVolumeBoundaries = cfg.position - 0.5*cfg.length;
+  Vector3 maxVolumeBoundaries = cfg.position + 0.5*cfg.length;
 
   //Compute first the min-max from the layers
   
@@ -125,19 +125,8 @@ std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
   }
 
   //Use the volume boundaries as limits for the binning
-  //and check that the layers are inside the defined tracking volume
-    
-  if (minMax.first >= min_volume_boundaries(binX))
-    minMax.first = min_volume_boundaries(binX);
-  //else
-  //  ACTS_ERROR("CuboidVolumeBuilder::binningRange::The min binning range value " << minMax.first
-  //            << "is lower than the volume boundary " << min_volume_boundaries(binX));
-  
-  if (minMax.second <= max_volume_boundaries(binX))
-    minMax.second = max_volume_boundaries(binX);
-  //else
-  //  ACTS_ERROR("CuboidVolumeBuilder::binningRange::The max binning range value " << minMax.second
-  //              << "is greater than the volume boundary " << max_volume_boundaries(binX));
+  minMax.first  = std::min(minMax.first, minVolumeBoundaries(binX));
+  minMax.second = std::max(minMax.second,maxVolumeBoundaries(binX));
   
   return minMax;
 }
