@@ -59,6 +59,8 @@ class KDTree {
   /// @brief The type of iterators in our vectors.
   using iterator_t = typename vector_t::iterator;
 
+  using const_iterator_t = typename vector_t::const_iterator;
+
   // We do not need an empty constructor - this is never useful.
   KDTree() = delete;
 
@@ -262,6 +264,10 @@ class KDTree {
   /// Used mostly for debugging purposes. You probably do not want to call this
   /// in actual code.
   std::string toString(void) const { return m_root->toString(0); }
+
+  const_iterator_t begin(void) const { return m_elems.begin(); }
+
+  const_iterator_t end(void) const { return m_elems.end(); }
 
  private:
   static Scalar nextRepresentable(Scalar v) {
