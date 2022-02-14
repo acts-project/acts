@@ -965,20 +965,12 @@ class KalmanFitter {
                        firstCreatedState.smoothedCovariance(),
                        firstCreatedState.referenceSurface());
         reverseDirection = (firstIntersection.intersection.pathLength < 0);
-        // Reinitialize the stepping jacobian
-        state.stepping.jacToGlobal =
-            firstCreatedState.referenceSurface().boundToFreeJacobian(
-                state.stepping.geoContext, firstCreatedState.smoothed());
       } else {
         stepper.update(state.stepping, lastParams,
                        lastCreatedMeasurement.smoothed(),
                        lastCreatedMeasurement.smoothedCovariance(),
                        lastCreatedMeasurement.referenceSurface());
         reverseDirection = (lastIntersection.intersection.pathLength < 0);
-        // Reinitialize the stepping jacobian
-        state.stepping.jacToGlobal =
-            lastCreatedMeasurement.referenceSurface().boundToFreeJacobian(
-                state.stepping.geoContext, lastCreatedMeasurement.smoothed());
       }
       const auto& surface = closerTofirstCreatedState
                                 ? firstCreatedState.referenceSurface()
