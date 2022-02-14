@@ -141,12 +141,17 @@ void from_json(const nlohmann::json& j,
     vol.discNPhiSegments = cdConfig.discPhiSegments;
   }
 
-  vol.itkModuleSplit = j.at("geo-tgeo-itk-module-split");
-  if (vol.itkModuleSplit) {
-    ActsExamples::TGeoITkModuleSplitter::Config itkConfig =
-        j.at("Splitters").at("ITk");
-    vol.barrelMap = itkConfig.barrelMap;
-    vol.discMap = itkConfig.discMap;
+  // Don't require ITk module splitting to be present
+  if (j.count("geo-tgeo-itk-module-split") != 0) {
+    vol.itkModuleSplit = j.at("geo-tgeo-itk-module-split");
+    if (vol.itkModuleSplit) {
+      ActsExamples::TGeoITkModuleSplitter::Config itkConfig =
+          j.at("Splitters").at("ITk");
+      vol.barrelMap = itkConfig.barrelMap;
+      vol.discMap = itkConfig.discMap;
+    }
+  } else {
+    vol.itkModuleSplit = false;
   }
 }
 
@@ -179,10 +184,12 @@ void to_json(nlohmann::json& j, const TGeoDetector::Config::Volume& vol) {
   cdConfig.discPhiSegments = vol.discNPhiSegments;
   j["Splitters"]["CylinderDisk"] = cdConfig;
 
-  ActsExamples::TGeoITkModuleSplitter::Config itkConfig;
-  itkConfig.barrelMap = vol.barrelMap;
-  itkConfig.discMap = vol.discMap;
-  j["Splitters"]["ITk"] = itkConfig;
+  if (vol.itkModuleSplit) {
+    ActsExamples::TGeoITkModuleSplitter::Config itkConfig;
+    itkConfig.barrelMap = vol.barrelMap;
+    itkConfig.discMap = vol.discMap;
+    j["Splitters"]["ITk"] = itkConfig;
+  }
 }
 
 }  // namespace ActsExamples
