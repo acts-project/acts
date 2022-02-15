@@ -10,11 +10,14 @@ import pytest
 from helpers import (
     dd4hepEnabled,
     hepmc3Enabled,
+    geant4Enabled,
     AssertCollectionExistsAlg,
 )
 
 
 import acts
+
+from common import getOpenDataDetectorDirectory
 
 from acts import PlanarModuleStepper, UnitConstants as u
 
@@ -101,7 +104,9 @@ def test_csv_particle_writer(tmp_path, conf_const, ptcl_gun):
 
 
 @pytest.mark.root
-def test_root_prop_step_writer(tmp_path, trk_geo, conf_const, basic_prop_seq):
+def test_root_prop_step_writer(
+    tmp_path, trk_geo, conf_const, basic_prop_seq, assert_root_hash
+):
     with pytest.raises(TypeError):
         RootPropagationStepsWriter()
 
@@ -121,11 +126,12 @@ def test_root_prop_step_writer(tmp_path, trk_geo, conf_const, basic_prop_seq):
     s.run()
 
     assert file.exists()
-    assert file.stat().st_size > 2 ** 10 * 50
+    assert file.stat().st_size > 2**10 * 50
+    assert_root_hash(file.name, file)
 
 
 @pytest.mark.root
-def test_root_particle_writer(tmp_path, conf_const, ptcl_gun):
+def test_root_particle_writer(tmp_path, conf_const, ptcl_gun, assert_root_hash):
     s = Sequencer(numThreads=1, events=10)
     evGen = ptcl_gun(s)
 
@@ -146,10 +152,11 @@ def test_root_particle_writer(tmp_path, conf_const, ptcl_gun):
 
     assert file.exists()
     assert file.stat().st_size > 1024 * 10
+    assert_root_hash(file.name, file)
 
 
 @pytest.mark.root
-def test_root_meas_writer(tmp_path, fatras, trk_geo):
+def test_root_meas_writer(tmp_path, fatras, trk_geo, assert_root_hash):
     s = Sequencer(numThreads=1, events=10)
     evGen, simAlg, digiAlg = fatras(s)
 
@@ -159,9 +166,7 @@ def test_root_meas_writer(tmp_path, fatras, trk_geo):
 
     config = RootMeasurementWriter.Config(
         inputMeasurements=digiAlg.config.outputMeasurements,
-        inputClusters=""
-        if digiAlg.config.isSimpleSmearer
-        else digiAlg.config.outputClusters,
+        inputClusters=digiAlg.config.outputClusters,
         inputSimHits=simAlg.config.outputSimHits,
         inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
         filePath=str(out),
@@ -173,10 +178,11 @@ def test_root_meas_writer(tmp_path, fatras, trk_geo):
 
     assert out.exists()
     assert out.stat().st_size > 40000
+    assert_root_hash(out.name, out)
 
 
 @pytest.mark.root
-def test_root_simhits_writer(tmp_path, fatras, conf_const):
+def test_root_simhits_writer(tmp_path, fatras, conf_const, assert_root_hash):
     s = Sequencer(numThreads=1, events=10)
     evGen, simAlg, digiAlg = fatras(s)
 
@@ -196,20 +202,24 @@ def test_root_simhits_writer(tmp_path, fatras, conf_const):
     s.run()
     assert out.exists()
     assert out.stat().st_size > 2e4
+    assert_root_hash(out.name, out)
 
 
 @pytest.mark.root
-def test_root_clusters_writer(tmp_path, fatras, conf_const, trk_geo, rng):
+def test_root_clusters_writer(
+    tmp_path, fatras, conf_const, trk_geo, rng, assert_root_hash
+):
     s = Sequencer(numThreads=1, events=10)  # we're not going to use this one
     evGen, simAlg, _ = fatras(s)
     s = Sequencer(numThreads=1, events=10)
     s.addReader(evGen)
     s.addAlgorithm(simAlg)
     digiAlg = PlanarSteppingAlgorithm(
-        level=acts.logging.WARNING,
+        level=acts.logging.INFO,
         inputSimHits=simAlg.config.outputSimHits,
         outputClusters="clusters",
         outputSourceLinks="sourcelinks",
+        outputDigiSourceLinks="digi_sourcelinks",
         outputMeasurements="measurements",
         outputMeasurementParticlesMap="meas_ptcl_map",
         outputMeasurementSimHitsMap="meas_sh_map",
@@ -226,7 +236,7 @@ def test_root_clusters_writer(tmp_path, fatras, conf_const, trk_geo, rng):
     s.addWriter(
         conf_const(
             RootPlanarClusterWriter,
-            level=acts.logging.WARNING,
+            level=acts.logging.INFO,
             filePath=str(out),
             inputSimHits=simAlg.config.outputSimHits,
             inputClusters=digiAlg.config.outputClusters,
@@ -236,7 +246,8 @@ def test_root_clusters_writer(tmp_path, fatras, conf_const, trk_geo, rng):
 
     s.run()
     assert out.exists()
-    assert out.stat().st_size > 2 ** 10 * 50
+    assert out.stat().st_size > 2**10 * 50
+    assert_root_hash(out.name, out)
 
 
 @pytest.mark.csv
@@ -252,9 +263,7 @@ def test_csv_meas_writer(tmp_path, fatras, trk_geo, conf_const):
             CsvMeasurementWriter,
             level=acts.logging.INFO,
             inputMeasurements=digiAlg.config.outputMeasurements,
-            inputClusters=""
-            if digiAlg.config.isSimpleSmearer
-            else digiAlg.config.outputClusters,
+            inputClusters=digiAlg.config.outputClusters,
             inputSimHits=simAlg.config.outputSimHits,
             inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
             outputDir=str(out),
@@ -301,6 +310,7 @@ def test_csv_clusters_writer(tmp_path, fatras, conf_const, trk_geo, rng):
         inputSimHits=simAlg.config.outputSimHits,
         outputClusters="clusters",
         outputSourceLinks="sourcelinks",
+        outputDigiSourceLinks="digi_sourcelinks",
         outputMeasurements="measurements",
         outputMeasurementParticlesMap="meas_ptcl_map",
         outputMeasurementSimHitsMap="meas_sh_map",
@@ -407,11 +417,11 @@ def test_csv_writer_interface(writer, conf_const, tmp_path, trk_geo):
 
 @pytest.mark.root
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
-def test_root_material_writer(tmp_path):
+def test_root_material_writer(tmp_path, assert_root_hash):
     from acts.examples.dd4hep import DD4hepDetector
 
     detector, trackingGeometry, _ = DD4hepDetector.create(
-        xmlFileNames=["thirdparty/OpenDataDetector/xml/OpenDataDetector.xml"]
+        xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
     )
 
     out = tmp_path / "material.root"
@@ -424,6 +434,7 @@ def test_root_material_writer(tmp_path):
     rmw.write(trackingGeometry)
 
     assert out.stat().st_size > 1000
+    assert_root_hash(out.name, out)
 
 
 @pytest.mark.json
@@ -433,7 +444,7 @@ def test_json_material_writer(tmp_path, fmt):
     from acts.examples.dd4hep import DD4hepDetector
 
     detector, trackingGeometry, _ = DD4hepDetector.create(
-        xmlFileNames=["thirdparty/OpenDataDetector/xml/OpenDataDetector.xml"]
+        xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
     )
 
     out = (tmp_path / "material").with_suffix("." + fmt.name.lower())
@@ -447,6 +458,43 @@ def test_json_material_writer(tmp_path, fmt):
     jmw.write(trackingGeometry)
 
     assert out.stat().st_size > 1000
+
+
+@pytest.mark.csv
+def test_csv_multitrajectory_writer(tmp_path):
+    detector, trackingGeometry, decorators = GenericDetector.create()
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+    from truth_tracking import runTruthTracking
+
+    s = Sequencer(numThreads=1, events=10)
+    runTruthTracking(
+        trackingGeometry,
+        field,
+        digiConfigFile=Path(
+            str(
+                Path(__file__).parent.parent.parent.parent
+                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            )
+        ),
+        outputDir=tmp_path,
+        s=s,
+    )
+
+    csv_dir = tmp_path / "csv"
+    csv_dir.mkdir()
+    s.addWriter(
+        CsvMultiTrajectoryWriter(
+            level=acts.logging.INFO,
+            inputTrajectories="trajectories",
+            inputMeasurementParticlesMap="measurement_particles_map",
+            outputDir=str(csv_dir),
+        )
+    )
+    s.run()
+    del s
+    assert len([f for f in csv_dir.iterdir() if f.is_file()]) == 10
+    assert all(f.stat().st_size > 20 for f in csv_dir.iterdir())
 
 
 @pytest.fixture(scope="session")
@@ -485,3 +533,48 @@ def hepmc_data(hepmc_data_impl: Path, tmp_path):
     shutil.copy(hepmc_data_impl, dest)
 
     return dest
+
+
+@pytest.mark.skipif(not hepmc3Enabled, reason="HepMC3 plugin not available")
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+@pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
+@pytest.mark.slow
+def test_hepmc3_histogram(hepmc_data, tmp_path):
+
+    from acts.examples.hepmc3 import (
+        HepMC3AsciiReader,
+        HepMCProcessExtractor,
+    )
+
+    s = Sequencer(numThreads=1)
+
+    s.addReader(
+        HepMC3AsciiReader(
+            level=acts.logging.INFO,
+            inputDir=str(hepmc_data.parent),
+            inputStem="events",
+            outputEvents="hepmc-events",
+        )
+    )
+
+    s.addAlgorithm(
+        HepMCProcessExtractor(
+            level=acts.logging.INFO,
+            inputEvents="hepmc-events",
+            extractionProcess="Inelastic",
+        )
+    )
+
+    # This segfaults, see https://github.com/acts-project/acts/issues/914
+    # s.addWriter(
+    #     RootNuclearInteractionParametersWriter(
+    #         level=acts.logging.INFO, inputSimulationProcesses="event-fraction"
+    #     )
+    # )
+
+    alg = AssertCollectionExistsAlg(
+        "hepmc-events", name="check_alg", level=acts.logging.INFO
+    )
+    s.addAlgorithm(alg)
+
+    s.run()

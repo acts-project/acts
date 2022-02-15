@@ -72,6 +72,10 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(cotThetaMax);
     ACTS_PYTHON_MEMBER(deltaRMin);
     ACTS_PYTHON_MEMBER(deltaRMax);
+    ACTS_PYTHON_MEMBER(deltaRMinBottomSP);
+    ACTS_PYTHON_MEMBER(deltaRMaxBottomSP);
+    ACTS_PYTHON_MEMBER(deltaRMinTopSP);
+    ACTS_PYTHON_MEMBER(deltaRMaxTopSP);
     ACTS_PYTHON_MEMBER(impactMax);
     ACTS_PYTHON_MEMBER(sigmaScattering);
     ACTS_PYTHON_MEMBER(maxPtScattering);
@@ -204,22 +208,27 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
-    auto constructor =
-        [](std::vector<std::pair<GeometryIdentifier, std::pair<double, size_t>>>
-               input) {
-          std::vector<std::pair<GeometryIdentifier, MeasurementSelectorCuts>>
-              converted;
-          converted.reserve(input.size());
-          for (const auto& [id, cuts] : input) {
-            const auto [chi2, num] = cuts;
-            converted.emplace_back(id, MeasurementSelectorCuts{chi2, num});
-          }
-          return std::make_unique<MeasurementSelector::Config>(converted);
-        };
+    auto constructor = [](std::vector<
+                           std::pair<GeometryIdentifier,
+                                     std::tuple<std::vector<double>,
+                                                std::vector<double>,
+                                                std::vector<size_t>>>>
+                              input) {
+      std::vector<std::pair<GeometryIdentifier, MeasurementSelectorCuts>>
+          converted;
+      converted.reserve(input.size());
+      for (const auto& [id, cuts] : input) {
+        const auto& [bins, chi2, num] = cuts;
+        converted.emplace_back(id, MeasurementSelectorCuts{bins, chi2, num});
+      }
+      return std::make_unique<MeasurementSelector::Config>(converted);
+    };
 
     py::class_<MeasurementSelectorCuts>(m, "MeasurementSelectorCuts")
         .def(py::init<>())
-        .def(py::init<double, size_t>())
+        .def(py::init<std::vector<double>, std::vector<double>,
+                      std::vector<size_t>>())
+        .def_readwrite("etaBins", &MeasurementSelectorCuts::etaBins)
         .def_readwrite("chi2CutOff", &MeasurementSelectorCuts::chi2CutOff)
         .def_readwrite("numMeasurementsCutOff",
                        &MeasurementSelectorCuts::numMeasurementsCutOff);

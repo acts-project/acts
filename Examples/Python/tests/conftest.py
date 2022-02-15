@@ -2,6 +2,10 @@ from pathlib import Path
 import sys
 import os
 import tempfile
+import shutil
+from typing import Dict
+import warnings
+import pytest_check as check
 
 
 sys.path += [
@@ -10,6 +14,8 @@ sys.path += [
 ]
 
 import helpers
+import helpers.hash_root
+from common import getOpenDataDetectorDirectory
 
 import pytest
 
@@ -17,6 +23,110 @@ import acts
 import acts.examples
 
 u = acts.UnitConstants
+
+
+class RootHashAssertionError(AssertionError):
+    def __init__(
+        self, file: Path, key: str, exp_hash: str, act_hash: str, *args, **kwargs
+    ):
+        super().__init__(f"{exp_hash} != {act_hash}", *args, **kwargs)
+        self.file = file
+        self.key = key
+        self.exp_hash = exp_hash
+        self.act_hash = act_hash
+
+
+hash_assertion_failures = []
+
+
+def _parse_hash_file(file: Path) -> Dict[str, str]:
+    res = {}
+    for line in file.open():
+        if line.strip() == "" or line.strip().startswith("#"):
+            continue
+        key, h = line.strip().split(":", 1)
+        res[key.strip()] = h.strip()
+    return res
+
+
+@pytest.fixture(scope="session")
+def root_file_exp_hashes():
+    path = Path(
+        os.environ.get("ROOT_HASH_FILE", Path(__file__).parent / "root_file_hashes.txt")
+    )
+    return _parse_hash_file(path)
+
+
+@pytest.fixture(name="assert_root_hash")
+def assert_root_hash(request, root_file_exp_hashes, record_property):
+    if not helpers.doHashChecks:
+
+        def fn(*args, **kwargs):
+            pass
+
+        return fn
+
+    def fn(key: str, file: Path):
+        """
+        Assertion helper function to check the hashes of root files.
+        Do NOT use this function directly by importing, rather use it as a pytest fixture
+
+        Arguments you need to provide:
+        key: Explicit lookup key for the expected hash, should be unique per test function
+        file: Root file to check the expected hash against
+        """
+        __tracebackhide__ = True
+        gkey = f"{request.node.name}__{key}"
+        act_hash = helpers.hash_root.hash_root_file(file)
+        if not gkey in root_file_exp_hashes:
+            warnings.warn(
+                f'Hash lookup key "{key}" not found for test "{request.node.name}"'
+            )
+            check.equal(act_hash, "[MISSING]")
+            exc = RootHashAssertionError(file, gkey, "[MISSING]", act_hash)
+            hash_assertion_failures.append(exc)
+
+        else:
+            refhash = root_file_exp_hashes[gkey]
+            check.equal(act_hash, refhash)
+            if act_hash != refhash:
+                exc = RootHashAssertionError(file, gkey, refhash, act_hash)
+                hash_assertion_failures.append(exc)
+
+    return fn
+
+
+def pytest_terminal_summary(terminalreporter, exitstatus, config):
+    docs_url = "https://acts.readthedocs.io/en/latest/examples/python_bindings.html#root-file-hash-regression-checks"
+    if len(hash_assertion_failures) > 0:
+        terminalreporter.ensure_newline()
+        terminalreporter.section(
+            "RootHashAssertionErrors", sep="-", red=True, bold=True
+        )
+        terminalreporter.line(
+            "The ROOT files produced by tests have changed since the last recorded reference."
+        )
+        terminalreporter.line(
+            "This can be be expected if e.g. the underlying algorithm changed, or it can be a test failure symptom."
+        )
+        terminalreporter.line(
+            "Please manually check the output files listed below and make sure that their content is correct."
+        )
+        terminalreporter.line(
+            "If it is, you can update the test reference file Examples/Python/tests/root_file_hashes.txt with the new hashes below."
+        )
+        terminalreporter.line(f"See {docs_url} for more details")
+        terminalreporter.line("")
+
+        for e in hash_assertion_failures:
+            terminalreporter.line(f"{e.key}: {e.act_hash}")
+
+    if not helpers.doHashChecks:
+        terminalreporter.section("Root file has checks", sep="-", blue=True, bold=True)
+        terminalreporter.line(
+            "NOTE: Root file hash checks were skipped, enable with ROOT_HASH_CHECKS=on"
+        )
+        terminalreporter.line(f"See {docs_url} for more details")
 
 
 def kwargsConstructor(cls, *args, **kwargs):
@@ -140,7 +250,10 @@ def fatras(ptcl_gun, trk_geo, rng):
         # Digitization
         digiCfg = acts.examples.DigitizationConfig(
             acts.examples.readDigiConfigFromJson(
-                "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+                str(
+                    Path(__file__).parent.parent.parent.parent
+                    / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+                )
             ),
             trackingGeometry=trk_geo,
             randomNumbers=rng,
@@ -153,3 +266,41 @@ def fatras(ptcl_gun, trk_geo, rng):
         return evGen, simAlg, digiAlg
 
     return _factory
+
+
+@pytest.fixture(scope="session")
+def material_recording_session():
+    if not helpers.geant4Enabled:
+        pytest.skip("Geantino recording requested, but Geant4 is not set up")
+
+    if not helpers.dd4hepEnabled:
+        pytest.skip("DD4hep recording requested, but Geant4 is not set up")
+
+    from material_recording import runMaterialRecording
+
+    dd4hepSvc = acts.examples.dd4hep.DD4hepGeometryService(
+        xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
+    )
+    dd4hepG4Construction = acts.examples.geant4.dd4hep.DDG4DetectorConstruction(
+        dd4hepSvc
+    )
+
+    with tempfile.TemporaryDirectory() as d:
+
+        s = acts.examples.Sequencer(events=2, numThreads=1)
+
+        runMaterialRecording(dd4hepG4Construction, str(d), tracksPerEvent=100, s=s)
+        s.run()
+
+        del s
+        del dd4hepSvc
+        del dd4hepG4Construction
+
+        yield Path(d)
+
+
+@pytest.fixture
+def material_recording(material_recording_session: Path, tmp_path: Path):
+    target = tmp_path / material_recording_session.name
+    shutil.copytree(material_recording_session, target)
+    yield target

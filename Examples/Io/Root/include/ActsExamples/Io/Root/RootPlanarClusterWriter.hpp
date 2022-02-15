@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
@@ -92,14 +92,13 @@ class RootPlanarClusterWriter
   std::vector<float> m_cell_data;  ///< local cell position y
 
   // (optional) the truth position
-  std::vector<float> m_t_gx;  ///< truth position global x
-  std::vector<float> m_t_gy;  ///< truth position global y
-  std::vector<float> m_t_gz;  ///< truth position global z
-  std::vector<float> m_t_gt;  ///< truth time t
-  std::vector<float> m_t_lx;  ///< truth position local x
-  std::vector<float> m_t_ly;  ///< truth position local y
-  std::vector<unsigned long>
-      m_t_barcode;  ///< associated truth particle barcode
+  std::vector<float> m_t_gx;          ///< truth position global x
+  std::vector<float> m_t_gy;          ///< truth position global y
+  std::vector<float> m_t_gz;          ///< truth position global z
+  std::vector<float> m_t_gt;          ///< truth time t
+  std::vector<float> m_t_lx;          ///< truth position local x
+  std::vector<float> m_t_ly;          ///< truth position local y
+  std::vector<uint64_t> m_t_barcode;  ///< associated truth particle barcode
 };
 
 }  // namespace ActsExamples

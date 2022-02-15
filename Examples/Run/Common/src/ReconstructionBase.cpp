@@ -10,7 +10,6 @@
 
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Digitization/DigitizationOptions.hpp"
-#include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
@@ -26,7 +25,6 @@
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingOptions.hpp"
-#include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
@@ -85,7 +83,7 @@ ActsExamples::DigitizationConfig setupDigitization(
   digiCfg.randomNumbers = rnd;
   digiCfg.trackingGeometry = trackingGeometry;
   sequencer.addAlgorithm(
-      ActsExamples::createDigitizationAlgorithm(digiCfg, logLevel));
+      std::make_shared<DigitizationAlgorithm>(digiCfg, logLevel));
 
   if (not vars["dump-digi-config"].as<std::string>().empty()) {
     writeDigiConfigToJson(digiCfg.digitizationConfigs,
@@ -107,25 +105,32 @@ ActsExamples::ParticleSmearing::Config setupParticleSmearing(
   auto logLevel = Options::readLogLevel(vars);
 
   // Create smeared particles states
-  ParticleSmearing::Config particleSmearingCfg;
+  ParticleSmearing::Config particleSmearingCfg =
+      Options::readParticleSmearingOptions(vars);
   particleSmearingCfg.inputParticles = inputParticles;
   particleSmearingCfg.outputTrackParameters = "smearedparameters";
   particleSmearingCfg.randomNumbers = rnd;
-  // Gaussian sigmas to smear particle parameters
-  particleSmearingCfg.sigmaD0 = 20_um;
-  particleSmearingCfg.sigmaD0PtA = 30_um;
-  particleSmearingCfg.sigmaD0PtB = 0.3 / 1_GeV;
-  particleSmearingCfg.sigmaZ0 = 20_um;
-  particleSmearingCfg.sigmaZ0PtA = 30_um;
-  particleSmearingCfg.sigmaZ0PtB = 0.3 / 1_GeV;
-  particleSmearingCfg.sigmaPhi = 1_degree;
-  particleSmearingCfg.sigmaTheta = 1_degree;
-  particleSmearingCfg.sigmaPRel = 0.01;
-  particleSmearingCfg.sigmaT0 = 1_ns;
-  particleSmearingCfg.initialVarInflation =
-      vars["fit-initial-variance-inflation"].template as<Options::Reals<6>>();
   sequencer.addAlgorithm(
       std::make_shared<ParticleSmearing>(particleSmearingCfg, logLevel));
 
   return particleSmearingCfg;
+}
+
+ActsExamples::CsvMeasurementReader::Config setupMeasurementReading(
+    const ActsExamples::Options::Variables& vars,
+    ActsExamples::Sequencer& sequencer) {
+  using namespace ActsExamples;
+  // Read some standard options
+  auto logLevel = Options::readLogLevel(vars);
+
+  // Read particles (initial states) from CSV files
+  auto measurementsReader = Options::readCsvMeasurementReaderConfig(vars);
+  measurementsReader.outputMeasurements = "measurements";
+  measurementsReader.outputMeasurementSimHitsMap = "measurements2hits";
+  measurementsReader.outputSourceLinks = "source_links";
+  measurementsReader.outputClusters = "clusters";
+  sequencer.addReader(
+      std::make_shared<CsvMeasurementReader>(measurementsReader, logLevel));
+
+  return measurementsReader;
 }

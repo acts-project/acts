@@ -33,6 +33,8 @@ Acts::CylinderVolumeBounds::CylinderVolumeBounds(
   m_values[eHalfLengthZ] = cBounds.get(CylinderBounds::eHalfLengthZ);
   m_values[eHalfPhiSector] = cBounds.get(CylinderBounds::eHalfPhiSector);
   m_values[eAveragePhi] = cBounds.get(CylinderBounds::eAveragePhi);
+  m_values[eBevelMinZ] = cBounds.get(CylinderBounds::eBevelMinZ);
+  m_values[eBevelMaxZ] = cBounds.get(CylinderBounds::eBevelMaxZ);
   buildSurfaceBounds();
 }
 
@@ -48,6 +50,8 @@ Acts::CylinderVolumeBounds::CylinderVolumeBounds(
   m_values[eHalfLengthZ] = 0.5 * thickness;
   m_values[eHalfPhiSector] = rBounds.get(RadialBounds::eHalfPhiSector);
   m_values[eAveragePhi] = rBounds.get(RadialBounds::eAveragePhi);
+  m_values[eBevelMinZ] = (double)0.;
+  m_values[eBevelMaxZ] = (double)0.;
   buildSurfaceBounds();
 }
 
@@ -56,13 +60,37 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
   OrientedSurfaces oSurfaces;
   oSurfaces.reserve(6);
 
+  Translation3 vMinZ(0., 0., -get(eHalfLengthZ));
+  Translation3 vMaxZ(0., 0., get(eHalfLengthZ));
+  // Set up transform for beveled edges if they are defined
+  double bevelMinZ = get(eBevelMinZ);
+  double bevelMaxZ = get(eBevelMaxZ);
+  Transform3 transMinZ, transMaxZ;
+  if (bevelMinZ != 0.) {
+    double rmax = get(eMaxR);
+    double rmin = get(eMinR);
+    double sy = (rmax + rmin) * (1 - std::cos(bevelMinZ)) / std::cos(bevelMinZ);
+    transMinZ = transform * vMinZ *
+                Eigen::AngleAxisd(-bevelMinZ, Eigen::Vector3d(1., 0., 0.)) *
+                Eigen::Scaling(1., 1. + sy, 1.);
+  } else {
+    transMinZ = transform * vMinZ;
+  }
+  if (bevelMaxZ != 0.) {
+    double rmax = get(eMaxR);
+    double rmin = get(eMinR);
+    double sy = (rmax + rmin) * (1 - std::cos(bevelMaxZ)) / std::cos(bevelMaxZ);
+    transMaxZ = transform * vMaxZ *
+                Eigen::AngleAxisd(bevelMaxZ, Eigen::Vector3d(1., 0., 0.)) *
+                Eigen::Scaling(1., 1. + sy, 1.);
+  } else {
+    transMaxZ = transform * vMaxZ;
+  }
   // [0] Bottom Disc (negative z)
-  auto dSurface = Surface::makeShared<DiscSurface>(
-      transform * Translation3(0., 0., -get(eHalfLengthZ)), m_discBounds);
+  auto dSurface = Surface::makeShared<DiscSurface>(transMinZ, m_discBounds);
   oSurfaces.push_back(OrientedSurface(std::move(dSurface), forward));
   // [1] Top Disc (positive z)
-  dSurface = Surface::makeShared<DiscSurface>(
-      transform * Translation3(0., 0., get(eHalfLengthZ)), m_discBounds);
+  dSurface = Surface::makeShared<DiscSurface>(transMaxZ, m_discBounds);
   oSurfaces.push_back(OrientedSurface(std::move(dSurface), backward));
 
   // [2] Outer Cylinder
@@ -80,18 +108,22 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
   // [4] & [5] - Sectoral planes (optional)
   if (m_sectorPlaneBounds != nullptr) {
     // sectorPlane 1 (negative phi)
-    const Transform3 sp1Transform = Transform3(
-        transform * AngleAxis3(-get(eHalfPhiSector), Vector3(0., 0., 1.)) *
-        Translation3(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.) *
-        AngleAxis3(M_PI / 2, Vector3(1., 0., 0.)));
+    const Transform3 sp1Transform =
+        Transform3(transform *
+                   AngleAxis3(get(eAveragePhi) - get(eHalfPhiSector),
+                              Vector3(0., 0., 1.)) *
+                   Translation3(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.) *
+                   AngleAxis3(M_PI / 2, Vector3(1., 0., 0.)));
     auto pSurface =
         Surface::makeShared<PlaneSurface>(sp1Transform, m_sectorPlaneBounds);
     oSurfaces.push_back(OrientedSurface(std::move(pSurface), forward));
     // sectorPlane 2 (positive phi)
-    const Transform3 sp2Transform = Transform3(
-        transform * AngleAxis3(get(eHalfPhiSector), Vector3(0., 0., 1.)) *
-        Translation3(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.) *
-        AngleAxis3(-M_PI / 2, Vector3(1., 0., 0.)));
+    const Transform3 sp2Transform =
+        Transform3(transform *
+                   AngleAxis3(get(eAveragePhi) + get(eHalfPhiSector),
+                              Vector3(0., 0., 1.)) *
+                   Translation3(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.) *
+                   AngleAxis3(-M_PI / 2, Vector3(1., 0., 0.)));
     pSurface =
         Surface::makeShared<PlaneSurface>(sp2Transform, m_sectorPlaneBounds);
     oSurfaces.push_back(OrientedSurface(std::move(pSurface), backward));
@@ -102,10 +134,12 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
 void Acts::CylinderVolumeBounds::buildSurfaceBounds() {
   if (get(eMinR) > s_epsilon) {
     m_innerCylinderBounds = std::make_shared<const CylinderBounds>(
-        get(eMinR), get(eHalfLengthZ), get(eHalfPhiSector), get(eAveragePhi));
+        get(eMinR), get(eHalfLengthZ), get(eHalfPhiSector), get(eAveragePhi),
+        get(eBevelMinZ), get(eBevelMaxZ));
   }
   m_outerCylinderBounds = std::make_shared<const CylinderBounds>(
-      get(eMaxR), get(eHalfLengthZ), get(eHalfPhiSector), get(eAveragePhi));
+      get(eMaxR), get(eHalfLengthZ), get(eHalfPhiSector), get(eAveragePhi),
+      get(eBevelMinZ), get(eBevelMaxZ));
   m_discBounds = std::make_shared<const RadialBounds>(
       get(eMinR), get(eMaxR), get(eHalfPhiSector), get(eAveragePhi));
 

@@ -49,8 +49,7 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorConstruction) {
 }
 
 /// Unit test for testing GenericApproachDescriptor properties
-BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties,
-                     *utf::expected_failures(1)) {
+BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties) {
   Vector3 origin{
       0.,
       0.,

@@ -199,6 +199,17 @@ struct LayerVolumeData {
                  max_v0, min_v1, max_v1, min_v2, max_v2);
 };
 
+struct SpacePointData {
+  /// Event-unique measurement identifier. Each value can appear at most once.
+  uint64_t measurement_id;
+  /// Space point information
+  float sp_x, sp_y, sp_z, sp_radius;
+  float sp_covr, sp_covz;
+
+  DFE_NAMEDTUPLE(SpacePointData, measurement_id, sp_x, sp_y, sp_z, sp_radius,
+                 sp_covr, sp_covz);
+};
+
 struct SurfaceGridData {
   /// Surface identifier. Not available in the TrackML datasets.
   uint64_t geometry_id;
@@ -215,6 +226,13 @@ struct SurfaceGridData {
   DFE_NAMEDTUPLE(SurfaceGridData, geometry_id, volume_id, layer_id, surface_id,
                  type_loc0, nbins_loc0, min_loc0, max_loc0, type_loc1,
                  nbins_loc1, min_loc1, max_loc1);
+};
+
+struct SpacepointData {
+  uint64_t measurement_id;
+  float x, y, z;
+  float var_r, var_z;
+  DFE_NAMEDTUPLE(SpacepointData, measurement_id, x, y, z, var_r, var_z);
 };
 
 }  // namespace ActsExamples

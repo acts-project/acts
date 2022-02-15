@@ -6,13 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Digitization/PlanarModuleStepper.hpp"
+#include "Acts/Digitization/PlanarModuleStepper.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/DigitizationConfigurator.hpp"
 #include "ActsExamples/Digitization/PlanarSteppingAlgorithm.hpp"
-#include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 
 #include <memory>
@@ -60,7 +59,6 @@ void addDigitization(Context& ctx) {
     ACTS_PYTHON_MEMBER(digitizationConfigs);
     ACTS_PYTHON_STRUCT_END();
 
-    c.def_readonly("isSimpleSmearer", &Config::isSimpleSmearer);
     c.def_readonly("doMerge", &Config::doMerge);
     c.def_readonly("mergeNsigma", &Config::mergeNsigma);
     c.def_readonly("mergeCommonCorner", &Config::mergeCommonCorner);
@@ -91,6 +89,7 @@ void addDigitization(Context& ctx) {
     ACTS_PYTHON_MEMBER(inputSimHits);
     ACTS_PYTHON_MEMBER(outputClusters);
     ACTS_PYTHON_MEMBER(outputSourceLinks);
+    ACTS_PYTHON_MEMBER(outputDigiSourceLinks);
     ACTS_PYTHON_MEMBER(outputMeasurements);
     ACTS_PYTHON_MEMBER(outputMeasurementParticlesMap);
     ACTS_PYTHON_MEMBER(outputMeasurementSimHitsMap);
@@ -108,16 +107,6 @@ void addDigitization(Context& ctx) {
           return std::make_shared<PlanarModuleStepper>(
               getDefaultLogger("PlanarModuleStepper", level));
         }));
-  }
-
-  {
-    using Alg = ActsExamples::SmearingAlgorithm;
-
-    py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>(
-        mex, "SmearingAlgorithm")
-        .def(py::init<const ActsExamples::DigitizationConfig&,
-                      Acts::Logging::Level>(),
-             py::arg("config"), py::arg("level"));
   }
 
   {

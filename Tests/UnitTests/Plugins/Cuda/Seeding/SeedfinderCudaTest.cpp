@@ -171,6 +171,10 @@ int main(int argc, char** argv) {
   config.rMax = 160._mm;
   config.deltaRMin = 5._mm;
   config.deltaRMax = 160._mm;
+  config.deltaRMinTopSP = config.deltaRMin;
+  config.deltaRMinBottomSP = config.deltaRMin;
+  config.deltaRMaxTopSP = config.deltaRMax;
+  config.deltaRMaxBottomSP = config.deltaRMax;
   config.collisionRegionMin = -250._mm;
   config.collisionRegionMax = 250._mm;
   config.zMin = -2800._mm;
@@ -186,6 +190,11 @@ int main(int argc, char** argv) {
   config.beamPos = {-.5_mm, -.5_mm};
   config.impactMax = 10._mm;
 
+  int numPhiNeighbors = 1;
+
+  std::vector<std::pair<int, int>> zBinNeighborsTop;
+  std::vector<std::pair<int, int>> zBinNeighborsBottom;
+
   // cuda
   cudaDeviceProp prop;
   ACTS_CUDA_ERROR_CHECK(cudaGetDeviceProperties(&prop, deviceID));
@@ -197,9 +206,9 @@ int main(int argc, char** argv) {
 
   // binfinder
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-      Acts::BinFinder<SpacePoint>());
+      Acts::BinFinder<SpacePoint>(zBinNeighborsBottom, numPhiNeighbors));
   auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-      Acts::BinFinder<SpacePoint>());
+      Acts::BinFinder<SpacePoint>(zBinNeighborsTop, numPhiNeighbors));
   Acts::SeedFilterConfig sfconf;
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
   config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
@@ -249,6 +258,7 @@ int main(int argc, char** argv) {
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
   groupIt = spGroup.begin();
+  Acts::Extent rRangeSPExtent;
 
   if (do_cpu) {
     decltype(seedfinder_cpu)::State state;
@@ -257,7 +267,7 @@ int main(int argc, char** argv) {
     for (; !(groupIt == spGroup.end()); ++groupIt) {
       seedfinder_cpu.createSeedsForGroup(
           state, std::back_inserter(seedVector_cpu.emplace_back()),
-          groupIt.bottom(), groupIt.middle(), groupIt.top());
+          groupIt.bottom(), groupIt.middle(), groupIt.top(), rRangeSPExtent);
       group_count++;
       if (allgroup == false) {
         if (group_count >= nGroupToIterate)

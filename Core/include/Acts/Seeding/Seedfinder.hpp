@@ -8,8 +8,10 @@
 
 #pragma once
 
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
+#include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
 
 #include <array>
@@ -22,14 +24,7 @@
 #include <vector>
 
 namespace Acts {
-struct LinCircle {
-  float Zo;
-  float cotTheta;
-  float iDeltaR;
-  float Er;
-  float U;
-  float V;
-};
+
 template <typename external_spacepoint_t, typename platform_t = void*>
 class Seedfinder {
   ///////////////////////////////////////////////////////////////////
@@ -52,6 +47,8 @@ class Seedfinder {
     std::vector<const InternalSpacePoint<external_spacepoint_t>*> topSpVec;
     std::vector<float> curvatures;
     std::vector<float> impactParameters;
+    std::vector<float> etaVec;
+    std::vector<float> ptVec;
 
     std::vector<std::pair<
         float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
@@ -77,20 +74,17 @@ class Seedfinder {
   /// @param bottomSPs group of space points to be used as innermost SP in a seed.
   /// @param middleSPs group of space points to be used as middle SP in a seed.
   /// @param topSPs group of space points to be used as outermost SP in a seed.
+  /// @param rRangeSPExtent extent containing r values of all SP.
   /// @note Ranges must return pointers.
   /// @note Ranges must be separate objects for each parallel call.
   template <template <typename...> typename container_t, typename sp_range_t>
   void createSeedsForGroup(
       State& state,
       std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
-      sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
+      sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
+      Extent rRangeSPExtent) const;
 
  private:
-  void transformCoordinates(
-      std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
-      const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
-      std::vector<LinCircle>& linCircleVec) const;
-
   Acts::SeedfinderConfig<external_spacepoint_t> m_config;
 };
 

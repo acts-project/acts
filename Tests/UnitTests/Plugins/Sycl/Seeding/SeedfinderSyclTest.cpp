@@ -90,6 +90,10 @@ auto setupSeedfinderConfiguration()
   config.rMax = 160._mm;
   config.deltaRMin = 5._mm;
   config.deltaRMax = 160._mm;
+  config.deltaRMinTopSP = config.deltaRMin;
+  config.deltaRMinBottomSP = config.deltaRMin;
+  config.deltaRMaxTopSP = config.deltaRMax;
+  config.deltaRMaxBottomSP = config.deltaRMax;
   config.collisionRegionMin = -250._mm;
   config.collisionRegionMax = 250._mm;
   config.zMin = -2800._mm;
@@ -137,10 +141,15 @@ auto main(int argc, char** argv) -> int {
 
   auto spVec = readFile(cmdlTool.inpFileName);
 
+  int numPhiNeighbors = 1;
+
+  std::vector<std::pair<int, int>> zBinNeighborsTop;
+  std::vector<std::pair<int, int>> zBinNeighborsBottom;
+
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-      Acts::BinFinder<SpacePoint>());
+      Acts::BinFinder<SpacePoint>(zBinNeighborsBottom, numPhiNeighbors));
   auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-      Acts::BinFinder<SpacePoint>());
+      Acts::BinFinder<SpacePoint>(zBinNeighborsTop, numPhiNeighbors));
   auto config = setupSeedfinderConfiguration<SpacePoint>();
 
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
@@ -192,6 +201,7 @@ auto main(int argc, char** argv) -> int {
   auto start_cpu = std::chrono::system_clock::now();
   uint group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
+  Acts::Extent rRangeSPExtent;
 
   if (!cmdlTool.onlyGpu) {
     decltype(normalSeedfinder)::State state;
@@ -199,7 +209,7 @@ auto main(int argc, char** argv) -> int {
          ++groupIt) {
       normalSeedfinder.createSeedsForGroup(
           state, std::back_inserter(seedVector_cpu.emplace_back()),
-          groupIt.bottom(), groupIt.middle(), groupIt.top());
+          groupIt.bottom(), groupIt.middle(), groupIt.top(), rRangeSPExtent);
       group_count++;
       if (!cmdlTool.allgroup && group_count >= cmdlTool.groups) {
         break;

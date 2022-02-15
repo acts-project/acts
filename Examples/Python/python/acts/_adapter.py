@@ -84,9 +84,9 @@ def _detector_create(cls, config_class=None):
             cfg = config_class()
         _kwargs = {}
         for k, v in kwargs.items():
-            if hasattr(cfg, k):
+            try:
                 setattr(cfg, k, v)
-            else:
+            except AttributeError:
                 _kwargs[k] = v
         det = cls()
         tg, deco = det.finalize(cfg, mdecorator, *args, **_kwargs)

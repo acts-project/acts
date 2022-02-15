@@ -76,6 +76,17 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config bFieldInZ");
   }
 
+  if (m_cfg.gridConfig.zBinEdges.size() - 1 != m_cfg.zBinNeighborsTop.size() &&
+      m_cfg.zBinNeighborsTop.empty() == false) {
+    throw std::invalid_argument("Inconsistent config zBinNeighborsTop");
+  }
+
+  if (m_cfg.gridConfig.zBinEdges.size() - 1 !=
+          m_cfg.zBinNeighborsBottom.size() &&
+      m_cfg.zBinNeighborsBottom.empty() == false) {
+    throw std::invalid_argument("Inconsistent config zBinNeighborsBottom");
+  }
+
   m_cfg.seedFinderConfig.seedFilter =
       std::make_unique<Acts::SeedFilter<SimSpacePoint>>(m_cfg.seedFilterConfig);
 }
@@ -89,6 +100,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   for (const auto& isp : m_cfg.inputSpacePoints) {
     nSpacePoints += ctx.eventStore.get<SimSpacePointContainer>(isp).size();
   }
+
+  // extent used to store r range for middle spacepoint
+  Acts::Extent rRangeSPExtent;
+
   std::vector<const SimSpacePoint*> spacePointPtrs;
   spacePointPtrs.reserve(nSpacePoints);
   for (const auto& isp : m_cfg.inputSpacePoints) {
@@ -97,6 +112,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       // since the event store owns the space points, their pointers should be
       // stable and we do not need to create local copies.
       spacePointPtrs.push_back(&spacePoint);
+      // store x,y,z values in extent
+      rRangeSPExtent.check({spacePoint.x(), spacePoint.y(), spacePoint.z()});
     }
   }
 
@@ -111,9 +128,11 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   };
 
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
-      Acts::BinFinder<SimSpacePoint>());
+      Acts::BinFinder<SimSpacePoint>(m_cfg.zBinNeighborsBottom,
+                                     m_cfg.gridConfig.numPhiNeighbors));
   auto topBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
-      Acts::BinFinder<SimSpacePoint>());
+      Acts::BinFinder<SimSpacePoint>(m_cfg.zBinNeighborsTop,
+                                     m_cfg.gridConfig.numPhiNeighbors));
   auto grid =
       Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(m_cfg.gridConfig);
   auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
@@ -130,7 +149,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   auto groupEnd = spacePointsGrouping.end();
   for (; !(group == groupEnd); ++group) {
     finder.createSeedsForGroup(state, std::back_inserter(seeds), group.bottom(),
-                               group.middle(), group.top());
+                               group.middle(), group.top(), rRangeSPExtent);
   }
 
   // extract proto tracks, i.e. groups of measurement indices, from tracks seeds

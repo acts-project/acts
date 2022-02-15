@@ -259,13 +259,39 @@ Acts::CylinderVolumeBuilder::trackingVolume(
           }
         }
       }
+
+      // we check radii for consistency from the inside outwards, so need to
+      // sort
+      std::sort(innerRadii.begin(), innerRadii.end());
+      std::sort(outerRadii.begin(), outerRadii.end());
+
+      ACTS_DEBUG("Inner radii:" << [&]() {
+        std::stringstream ss;
+        for (double f : innerRadii) {
+          ss << " " << f;
+        }
+        return ss.str();
+      }());
+
+      ACTS_DEBUG("Outer radii:" << [&]() {
+        std::stringstream ss;
+        for (double f : outerRadii) {
+          ss << " " << f;
+        }
+        return ss.str();
+      }());
       // Result of the parsing loop
       if (innerRadii.size() == outerRadii.size() and not innerRadii.empty()) {
         bool consistent = true;
         // The inter volume radii
+        ACTS_VERBOSE("Checking ring radius consistency");
         std::vector<double> interRadii = {};
         for (int ir = 1; ir < int(innerRadii.size()); ++ir) {
           // Check whether inner/outer radii are consistent
+          ACTS_VERBOSE(
+              "or #" << ir - 1 << " < ir #" << ir << ": " << outerRadii[ir - 1]
+                     << " < " << innerRadii[ir] << ", ok: "
+                     << (outerRadii[ir - 1] < innerRadii[ir] ? "yes" : "no"));
           if (outerRadii[ir - 1] < innerRadii[ir]) {
             interRadii.push_back(0.5 * (outerRadii[ir - 1] + innerRadii[ir]));
           } else {
@@ -328,7 +354,12 @@ Acts::CylinderVolumeBuilder::trackingVolume(
           }
           // Return a container of ring volumes
           return tvHelper->createContainerTrackingVolume(gctx, endcapContainer);
+        } else {
+          ACTS_DEBUG("Ring radii found to be inconsistent");
         }
+      } else {
+        ACTS_DEBUG("Have " << innerRadii.size() << " inner radii and "
+                           << outerRadii.size() << " outer radii");
       }
     }
 

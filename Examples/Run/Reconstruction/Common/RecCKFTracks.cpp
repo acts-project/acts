@@ -77,6 +77,7 @@ int runRecCKFTracks(int argc, char* argv[],
   Options::addTrackFindingOptions(desc);
   addRecCKFOptions(desc);
   Options::addDigitizationOptions(desc);
+  Options::addParticleSmearingOptions(desc);
   Options::addSpacePointMakerOptions(desc);
   Options::addSeedingAlgorithmOptions(desc);
   Options::addMLOutputOptions(desc);

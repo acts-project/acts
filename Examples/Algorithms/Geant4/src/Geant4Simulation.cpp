@@ -28,6 +28,7 @@
 #include <G4UserSteppingAction.hh>
 #include <G4UserTrackingAction.hh>
 #include <G4VUserDetectorConstruction.hh>
+#include <G4VUserPhysicsList.hh>
 
 namespace {
 /// Helper method to add the user actions
@@ -47,15 +48,29 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
     const ActsExamples::Geant4Simulation::Config& config,
     Acts::Logging::Level level)
     : BareAlgorithm("Geant4Simulation", level), m_cfg(config) {
-  if (m_cfg.runManager == nullptr) {
-    throw std::invalid_argument("Missing G4 RunManager object");
-  }
   if (m_cfg.detectorConstruction == nullptr) {
     throw std::invalid_argument("Missing G4 DetectorConstruction object");
   }
   if (m_cfg.primaryGeneratorAction == nullptr) {
     throw std::invalid_argument("Missing G4 PrimaryGeneratorAction object");
   }
+  if (!m_cfg.runManager) {
+    throw std::invalid_argument("Missing G4 RunManager object");
+  }
+
+  if (m_cfg.sensitiveSurfaceMapper) {
+    if (m_cfg.outputSimHits.empty()) {
+      ACTS_WARNING("No output sim hits collection configured");
+    }
+    if (m_cfg.outputParticlesInitial.empty()) {
+      ACTS_WARNING("No output initial particles collection configured");
+    }
+    if (m_cfg.outputParticlesFinal.empty()) {
+      ACTS_WARNING("No output final particles collection configured");
+    }
+  }
+
+  G4Random::setTheSeed(m_cfg.seed);
 
   // Set the detector construction
   m_cfg.runManager->SetUserInitialization(m_cfg.detectorConstruction);
