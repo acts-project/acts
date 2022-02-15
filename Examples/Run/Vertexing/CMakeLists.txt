@@ -20,6 +20,13 @@ target_link_libraries(
   ActsExampleVertexFinderTrackReaderPerformanceWriter
   PRIVATE ${_common_libraries} ActsExamplesIoRoot ActsExamplesPrinters)
 
+  add_executable(
+  ActsExampleVertexFinderAMVF
+  RunAMVF.cpp)
+target_link_libraries(
+  ActsExampleVertexFinderAMVF
+  PRIVATE ${_common_libraries} ActsExamplesIoRoot ActsExamplesPrinters)
+
 install(
   TARGETS
     ActsExampleVertexFinderParticleReader

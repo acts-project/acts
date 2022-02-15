@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// To Do: add formatted output if outputIsML is true or not
+
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
 
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
@@ -42,10 +44,21 @@ ActsExamples::CKFPerformanceWriter::CKFPerformanceWriter(
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
   // must always be opened internally
+  if (!m_cfg.outputIsML) {
+    m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
+    if (not m_outputFile) {
+      throw std::invalid_argument("Could not open '" + m_cfg.filePath + "'");
+    }
+  }
+  /*
   m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
   if (not m_outputFile) {
     throw std::invalid_argument("Could not open '" + m_cfg.filePath + "'");
   }
+  if (m_cfg.outputIsML) {
+    return;
+  }
+  */
 
   // initialize the plot tools
   m_effPlotTool.book(m_effPlotCache);
@@ -55,6 +68,9 @@ ActsExamples::CKFPerformanceWriter::CKFPerformanceWriter(
 }
 
 ActsExamples::CKFPerformanceWriter::~CKFPerformanceWriter() {
+  if (m_cfg.outputIsML) {
+    return;
+  }
   m_effPlotTool.clear(m_effPlotCache);
   m_fakeRatePlotTool.clear(m_fakeRatePlotCache);
   m_duplicationPlotTool.clear(m_duplicationPlotCache);
@@ -65,6 +81,34 @@ ActsExamples::CKFPerformanceWriter::~CKFPerformanceWriter() {
 }
 
 ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::endRun() {
+  float eff = float(m_nTotalMatchedTracks)/m_nTotalTracks;
+  float fakeRate = float(m_nTotalFakeTracks)/m_nTotalTracks;
+  float duplicationRate = float(m_nTotalDuplicateTracks)/m_nTotalTracks;
+
+  float eff_particle = float(m_nTotalMatchedParticles)/m_nTotalParticles;
+  float fakeRate_particle = float(m_nTotalFakeParticles)/m_nTotalParticles;
+  float duplicationRate_particle = float(m_nTotalDuplicateParticles)/m_nTotalParticles;
+
+  ACTS_DEBUG("nTotalTracks                = " << m_nTotalTracks);
+  ACTS_DEBUG("nTotalMatchedTracks         = " << m_nTotalMatchedTracks);
+  ACTS_DEBUG("nTotalDuplicateTracks       = " << m_nTotalDuplicateTracks);
+  ACTS_DEBUG("nTotalFakeTracks            = " << m_nTotalFakeTracks);
+  // Need to find some way to get this into ML input
+  ACTS_INFO("Efficiency with tracks (nMatchedTracks/ nAllTracks) = " << eff);
+  ACTS_INFO("Fake rate with tracks (nFakeTracks/nAllTracks) = " << fakeRate);
+  ACTS_INFO("Duplicate rate with tracks (nDuplicateTracks/nAllTracks) = " << duplicationRate);
+  ACTS_INFO("Efficiency with particles (nMatchedParticles/nTrueParticles) = " << eff_particle);
+  ACTS_INFO("Fake rate with particles (nFakeParticles/nTrueParticles) = " << fakeRate_particle);
+  ACTS_INFO("Duplicate rate with particles (nDuplicateParticles/nTrueParticles) = " << duplicationRate_particle);
+  if (m_cfg.outputIsML) {
+    std::cout << m_cfg.mlTag << ","
+    << "eff" << "," << eff_particle << ","
+    << "fake" << "," << fakeRate << ","
+    << "dup" << "," << duplicationRate << std::endl;
+    // don't need to write to file
+    return ProcessCode::SUCCESS;;
+  }
+  
   if (m_outputFile) {
     m_outputFile->cd();
     m_effPlotTool.write(m_effPlotCache);
@@ -135,15 +179,24 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
       const auto& fittedParameters = traj.trackParameters(trackTip);
       // Requirement on the pT of the track
       const auto& momentum = fittedParameters.momentum();
+      const auto eta = Acts::VectorHelpers::eta(fittedParameters.unitDirection());
       const auto pT = perp(momentum);
       if (pT < m_cfg.ptMin) {
         continue;
       }
+      //const auto eta = 
+      // Add minPt and minEta here for efficiency calculations
+      //if (pT < m_cfg.ptMin || pT > m_cfg.ptMax || eta > m_cfg.etaMax || eta < m_cfg.etaMin) {
+      //  continue;
+      //}
       // Fill the trajectory summary info
-      m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
-                                  trajState.nStates, trajState.nMeasurements,
-                                  trajState.nOutliers, trajState.nHoles,
-                                  trajState.nSharedHits);
+      // Only need to do this if not ML output
+      if (!m_cfg.outputIsML) {
+        m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
+                                    trajState.nStates, trajState.nMeasurements,
+                                    trajState.nOutliers, trajState.nHoles,
+                                    trajState.nSharedHits);
+      }
 
       // Get the majority truth particle to this track
       identifyContributingParticles(hitParticlesMap, traj, trackTip,
@@ -174,7 +227,9 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
         unmatched[majorityParticleId]++;
       }
       // Fill fake rate plots
-      m_fakeRatePlotTool.fill(m_fakeRatePlotCache, fittedParameters, isFake);
+      if (!m_cfg.outputIsML) {
+        m_fakeRatePlotTool.fill(m_fakeRatePlotCache, fittedParameters, isFake);
+      }
 
       // Use neural network classification for duplication rate plots
       // Currently, the network used for this example can only handle
@@ -185,10 +240,18 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
         inputFeatures[2] = trajState.chi2Sum * 1.0 / trajState.NDF;
         // predict if current trajectory is 'duplicate'
         bool isDuplicated = m_cfg.duplicatedPredictor(inputFeatures);
+        // Add to number of duplicated particles 
+        if (isDuplicated) {
+          m_nTotalDuplicateTracks ++; 
+        }
         // Fill the duplication rate
-        m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
+        if (!m_cfg.outputIsML) { 
+          m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
                                    isDuplicated);
+        }
       }
+      // Counting number of total trajectories
+      m_nTotalTracks ++;
     }  // end all trajectories in a multiTrajectory
   }    // end all multiTrajectories
 
@@ -208,19 +271,36 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
         // The tracks with maximum number of majority hits is taken as the
         // 'real' track; others are as 'duplicated'
         bool isDuplicated = (itrack != 0);
+        // the track is associated to the same particle
+        if (isDuplicated) {
+          m_nTotalDuplicateTracks ++; 
+        }
         // Fill the duplication rate
-        m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
+        if (!m_cfg.outputIsML) {
+          m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
                                    isDuplicated);
+        }
       }
     }
   }
 
   // Loop over all truth particle seeds for efficiency plots and reco details.
   // These are filled w.r.t. truth particle seed info
+
+  // Count the number of particles
+  
   for (const auto& particle : particles) {
-    if (particle.transverseMomentum() < m_cfg.ptMin) {
+    const auto eta = Acts::VectorHelpers::eta(particle.unitDirection());
+    /*
+    if (particle.transverseMomentum() < m_cfg.ptMin || 
+        particle.transverseMomentum() > m_cfg.ptMax || eta < m_cfg.etaMin
+        || eta > m_cfg.etaMax) {
       continue;
     }
+    */
+   if (particle.transverseMomentum() < m_cfg.ptMin) {
+     continue;
+   }
     auto particleId = particle.particleId();
     // Investigate the truth-matched tracks
     size_t nMatchedTracks = 0;
@@ -228,23 +308,39 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
     auto imatched = matched.find(particleId);
     if (imatched != matched.end()) {
       nMatchedTracks = imatched->second.size();
+      // Add number for total matched tracks here
+      m_nTotalMatchedTracks += nMatchedTracks;
+      m_nTotalMatchedParticles += 1;
+      // Check if the particle has more than one matched track for the duplicate rate
+      if (nMatchedTracks > 1) {
+        m_nTotalDuplicateParticles += 1;
+      }
       isReconstructed = true;
     }
     // Fill efficiency plots
-    m_effPlotTool.fill(m_effPlotCache, particle, isReconstructed);
-    // Fill number of duplicated tracks for this particle
-    m_duplicationPlotTool.fill(m_duplicationPlotCache, particle,
-                               nMatchedTracks - 1);
+    if (!m_cfg.outputIsML) {
+      m_effPlotTool.fill(m_effPlotCache, particle, isReconstructed);
+      // Fill number of duplicated tracks for this particle
+      m_duplicationPlotTool.fill(m_duplicationPlotCache, particle,
+                                nMatchedTracks - 1);
+    }
 
     // Investigate the fake (i.e. truth-unmatched) tracks
     size_t nFakeTracks = 0;
+    // Using unmatched count that is already computed above, pretty sure this is right
     auto ifake = unmatched.find(particleId);
     if (ifake != unmatched.end()) {
       nFakeTracks = ifake->second;
+      m_nTotalFakeTracks += nFakeTracks; 
+      // unmatched is a map of majority particle id to # of tracks associated with that particle
+      m_nTotalFakeParticles += 1;
     }
     // Fill number of reconstructed/truth-matched/fake tracks for this particle
-    m_fakeRatePlotTool.fill(m_fakeRatePlotCache, particle, nMatchedTracks,
-                            nFakeTracks);
+    if (!m_cfg.outputIsML) {
+      m_fakeRatePlotTool.fill(m_fakeRatePlotCache, particle, nMatchedTracks,
+                              nFakeTracks);
+    }
+    m_nTotalParticles += 1;
   }  // end all truth particles
 
   return ProcessCode::SUCCESS;

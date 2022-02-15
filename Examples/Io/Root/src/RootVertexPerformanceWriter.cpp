@@ -99,7 +99,7 @@ int ActsExamples::RootVertexPerformanceWriter::
         const SimParticleContainer& collection) const {
   // map for finding frequency
   std::map<int, int> fmap;
-
+  
   std::vector<int> reconstructableTruthVertices;
 
   // traverse the array for frequency
@@ -131,6 +131,8 @@ int ActsExamples::RootVertexPerformanceWriter::getNumberOfTruePriVertices(
   for (const auto& p : collection) {
     int priVtxId = p.particleId().vertexPrimary();
     int secVtxId = p.particleId().vertexSecondary();
+    std::cout << "primary vertex id: " << priVtxId << std::endl;
+    std::cout << "Secondary vertex id: " << secVtxId << std::endl;
     if (secVtxId != 0) {
       // truthparticle from secondary vtx
       continue;
