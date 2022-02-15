@@ -154,7 +154,9 @@ struct KalmanFitterOptions {
   bool reversedFiltering = false;
 
   /// Factor by which the covariance of the input of the reversed filtering is
-  /// scaled
+  /// scaled. This is only used in the backwardfiltering (if reversedFiltering
+  /// is true or if the ReverseFilteringLogic return true for the track of
+  /// interest)
   double reversedFilteringCovarianceScaling = 1.0;
 
   /// Logger
