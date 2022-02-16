@@ -41,8 +41,6 @@ class InternalSpacePoint {
   const float& varianceR() const { return m_varianceR; }
   const float& varianceZ() const { return m_varianceZ; }
   const SpacePoint& sp() const { return m_sp; }
-  float cotTheta() const { return m_cotTheta; }
-  void setCotTheta(float cotTheta) const { m_cotTheta = cotTheta; }
 
  protected:
   float m_x;               // x-coordinate in beam system coordinates
@@ -51,7 +49,6 @@ class InternalSpacePoint {
   float m_r;               // radius       in beam system coordinates
   float m_varianceR;       //
   float m_varianceZ;       //
-  float m_cotTheta;        //
   const SpacePoint& m_sp;  // external space point
 };
 
@@ -86,7 +83,6 @@ inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
   m_r = sp.m_r;
   m_varianceR = sp.m_varianceR;
   m_varianceZ = sp.m_varianceZ;
-  m_cotTheta = sp.m_cotTheta;
 }
 
 }  // end of namespace Acts
