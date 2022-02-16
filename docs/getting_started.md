@@ -240,7 +240,6 @@ components.
 | ACTS_BUILD_EVERYTHING               | Build with most options enabled (except HepMC3 and documentation)                                     |
 | ACTS_BUILD_PLUGIN_CUDA              | Build CUDA plugin                                                                                     |
 | ACTS_BUILD_PLUGIN_DD4HEP            | Build DD4hep geometry plugin                                                                          |
-| ACTS_BUILD_PLUGIN_DIGITIZATION      | Build Digitization plugin                                                                             |
 | ACTS_BUILD_PLUGIN_IDENTIFICATION    | Build Identification plugin                                                                           |
 | ACTS_BUILD_PLUGIN_JSON              | Build Json plugin                                                                                     |
 | ACTS_BUILD_PLUGIN_LEGACY            | Build legacy plugin                                                                                   |
@@ -258,6 +257,7 @@ components.
 | ACTS_BUILD_INTEGRATIONTESTS         | Build integration tests                                                                               |
 | ACTS_BUILD_UNITTESTS                | Build unit tests                                                                                      |
 | ACTS_BUILD_DOCS                     | Build documentation                                                                                   |
+| ACTS_BUILD_ANALYSIS_APPS            | Build root based stand-alone analysis applications (defaults is OFF)                                  |
 | ACTS_LOG_FAILURE_THRESHOLD          | Automatically fail when a log above the specified debug level is emitted (useful for automated tests) |
 | ACTS_PARAMETER_DEFINITIONS_HEADER   | Use a different (track) parameter definitions header                                                  |
 | ACTS_USE_SYSTEM_AUTODIFF            | Use autodiff provided by the system instead of the bundled version                                    |

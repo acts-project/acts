@@ -190,6 +190,10 @@ def runCKFTracks(
                 rMax=gridConfig.rMax,
                 deltaRMin=seedFilterConfig.deltaRMin,
                 deltaRMax=gridConfig.deltaRMax,
+                deltaRMinTopSP=seedFilterConfig.deltaRMin,
+                deltaRMinBottomSP=seedFilterConfig.deltaRMin,
+                deltaRMaxTopSP=gridConfig.deltaRMax,
+                deltaRMaxBottomSP=gridConfig.deltaRMax,
                 collisionRegionMin=-250 * u.mm,
                 collisionRegionMax=250 * u.mm,
                 zMin=gridConfig.zMin,
@@ -257,7 +261,7 @@ def runCKFTracks(
     trackFinder = acts.examples.TrackFindingAlgorithm(
         level=acts.logging.INFO,
         measurementSelectorCfg=acts.MeasurementSelector.Config(
-            [(acts.GeometryIdentifier(), (15.0, 10))]
+            [(acts.GeometryIdentifier(), ([], [15.0], [10]))]
         ),
         inputMeasurements=digiAlg.config.outputMeasurements,
         inputSourceLinks=digiAlg.config.outputSourceLinks,

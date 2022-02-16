@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
@@ -35,6 +36,8 @@ struct TGeoDetector : public ActsExamples::IBaseDetector {
     Acts::Logging::Level surfaceLogLevel = Acts::Logging::WARNING;
     Acts::Logging::Level layerLogLevel = Acts::Logging::WARNING;
     Acts::Logging::Level volumeLogLevel = Acts::Logging::WARNING;
+
+    void readJson(const std::string& fileName);
 
     std::string fileName;
     bool buildBeamPipe = false;
@@ -97,6 +100,8 @@ struct TGeoDetector : public ActsExamples::IBaseDetector {
       LayerTriplet<Options::Interval> zRange;
       LayerTriplet<double> splitTolR{0};
       LayerTriplet<double> splitTolZ{0};
+      LayerTriplet<std::vector<std::pair<int, Acts::BinningType>>> binning0;
+      LayerTriplet<std::vector<std::pair<int, Acts::BinningType>>> binning1;
 
       Options::Interval binToleranceR;
       Options::Interval binTolerancePhi;

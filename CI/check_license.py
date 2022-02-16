@@ -22,7 +22,7 @@ class bcolors:
     UNDERLINE = "\033[4m"
 
 
-CROSS_SYMBOL = u"\u2717"
+CROSS_SYMBOL = "\u2717"
 
 
 def err(string):
