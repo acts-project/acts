@@ -90,7 +90,10 @@ if "__main__" == __name__:
         inputParticlePath = None
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
-    geometrySelection = srcdir / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+    geometrySelection = (
+        srcdir
+        / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+    )
     assert geometrySelection.exists()
 
     onnxdir = Path(os.getcwd()) / "onnx_models"
@@ -109,15 +112,9 @@ if "__main__" == __name__:
         inputParticlePath,
         outputRoot=True,
         outputCsv=True,
-        s=s
+        s=s,
     )
 
-    s = addExaTrkx(
-        s,
-        trackingGeometry,
-        geometrySelection,
-        onnxdir,
-        outputDir
-    )
+    s = addExaTrkx(s, trackingGeometry, geometrySelection, onnxdir, outputDir)
 
     s.run()
