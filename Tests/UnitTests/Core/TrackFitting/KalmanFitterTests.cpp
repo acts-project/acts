@@ -106,6 +106,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
 
   // reverse filtering instead of smoothing
   kfOptions.reversedFiltering = true;
+  kfOptions.reversedFilteringCovarianceScaling = 100.0;
   expected_reversed = true;
   expected_smoothed = false;
   tester.test_ZeroFieldWithSurfaceForward(kfZero, kfOptions, start, rng,
@@ -125,6 +126,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
 
   // reverse filtering instead of smoothing
   kfOptions.reversedFiltering = true;
+  kfOptions.reversedFilteringCovarianceScaling = 100.0;
   expected_reversed = true;
   expected_smoothed = false;
   tester.test_ZeroFieldWithSurfaceBackward(
@@ -190,6 +192,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithReverseFiltering) {
         .connect<&TestReverseFilteringLogic::operator()>(&trfl);
 
     kfOptions.reversedFiltering = reverse;
+    kfOptions.reversedFilteringCovarianceScaling = 100.0;
 
     tester.test_ZeroFieldWithReverseFiltering(
         kfZero, kfOptions, start, rng, expected_reversed, expected_smoothed);
