@@ -66,7 +66,7 @@ std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
     }
   }
   // Build transformation centered at the surface position
-  Vector3 centroid{0.,0.,0.};
+  Vector3 centroid{0., 0., 0.};
 
   for (const auto& surface : cfg.surfaces) {
     centroid += surface->transform(gctx).translation();
@@ -99,14 +99,16 @@ std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
   std::pair<double, double> minMax = std::make_pair(
       std::numeric_limits<double>::max(), -std::numeric_limits<double>::max());
 
-  //Compute the min volume boundaries for computing the binning start
-  //See https://acts.readthedocs.io/en/latest/core/geometry.html#geometry-building
-  // !! IMPORTANT !! The volume is assumed to be already rotated into the telescope geometry 
-  Vector3 minVolumeBoundaries = cfg.position - 0.5*cfg.length;
-  Vector3 maxVolumeBoundaries = cfg.position + 0.5*cfg.length;
+  // Compute the min volume boundaries for computing the binning start
+  // See
+  // https://acts.readthedocs.io/en/latest/core/geometry.html#geometry-building
+  // !! IMPORTANT !! The volume is assumed to be already rotated into the
+  // telescope geometry
+  Vector3 minVolumeBoundaries = cfg.position - 0.5 * cfg.length;
+  Vector3 maxVolumeBoundaries = cfg.position + 0.5 * cfg.length;
 
-  //Compute first the min-max from the layers
-  
+  // Compute first the min-max from the layers
+
   for (const auto& layercfg : cfg.layerCfg) {
     // recreating the protolayer for each layer => slow, but only few sensors
     ProtoLayer pl{gctx, layercfg.surfaces};
@@ -124,10 +126,10 @@ std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
     }
   }
 
-  //Use the volume boundaries as limits for the binning
-  minMax.first  = std::min(minMax.first, minVolumeBoundaries(binX));
-  minMax.second = std::max(minMax.second,maxVolumeBoundaries(binX));
-  
+  // Use the volume boundaries as limits for the binning
+  minMax.first = std::min(minMax.first, minVolumeBoundaries(binX));
+  minMax.second = std::max(minMax.second, maxVolumeBoundaries(binX));
+
   return minMax;
 }
 
@@ -216,12 +218,14 @@ Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
     volumes.push_back(buildVolume(gctx, volCfg));
   }
 
-  //Sort the volumes vectors according to the center location, otherwise the binning boundaries will fail
-  
-  std::sort(volumes.begin(), volumes.end(), [](const TrackingVolumePtr& lhs, const TrackingVolumePtr& rhs) {
-    return lhs->center().x() < rhs->center().x();
-  });
-  
+  // Sort the volumes vectors according to the center location, otherwise the
+  // binning boundaries will fail
+
+  std::sort(volumes.begin(), volumes.end(),
+            [](const TrackingVolumePtr& lhs, const TrackingVolumePtr& rhs) {
+              return lhs->center().x() < rhs->center().x();
+            });
+
   // Glue volumes
   for (unsigned int i = 0; i < volumes.size() - 1; i++) {
     volumes[i + 1]->glueTrackingVolume(
@@ -235,11 +239,11 @@ Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
   // Translation
   Transform3 trafo(Transform3::Identity());
   trafo.translation() = m_cfg.position;
-  
+
   // Size of the volume
   auto volume = std::make_shared<const CuboidVolumeBounds>(
       m_cfg.length.x() * 0.5, m_cfg.length.y() * 0.5, m_cfg.length.z() * 0.5);
-  
+
   // Build vector of confined volumes
   std::vector<std::pair<TrackingVolumePtr, Vector3>> tapVec;
   tapVec.reserve(m_cfg.volumeCfg.size());
