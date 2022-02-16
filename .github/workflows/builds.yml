@@ -253,7 +253,6 @@ jobs:
         run: >
           cmake -B build -S .
           -GNinja
-          -DCMAKE_CXX_COMPILER=/usr/bin/g++-8
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
           -DACTS_BUILD_PLUGIN_EXATRKX=ON
