@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <utility>
-#include <numeric>
 #include <algorithm>
+#include <numeric>
+#include <utility>
 
 namespace Acts {
 // constructor
@@ -31,17 +31,16 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     std::back_insert_iterator<std::vector<std::pair<
         float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>>
         outIt) const {
-
   // initialize original index locations
   std::vector<size_t> idx(topSpVec.size());
   std::iota(idx.begin(), idx.end(), 0);
 
   if (m_cfg.curvatureSortingInFilter) {
-		// sort indexes based on comparing values in invHelixDiameterVec
-		std::sort(idx.begin(), idx.end(),
-							[&invHelixDiameterVec](size_t i1, size_t i2) {
-			return invHelixDiameterVec[i1] < invHelixDiameterVec[i2];
-		});
+    // sort indexes based on comparing values in invHelixDiameterVec
+    std::sort(idx.begin(), idx.end(),
+              [&invHelixDiameterVec](size_t i1, size_t i2) {
+                return invHelixDiameterVec[i1] < invHelixDiameterVec[i2];
+              });
   }
 
   for (auto& i : idx) {
@@ -74,9 +73,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         continue;
       }
       if (invHelixDiameterVec[j] > upperLimitCurv) {
-				if (m_cfg.curvatureSortingInFilter) {
-					break;
-				}
+        if (m_cfg.curvatureSortingInFilter) {
+          break;
+        }
         continue;
       }
       bool newCompSeed = true;
