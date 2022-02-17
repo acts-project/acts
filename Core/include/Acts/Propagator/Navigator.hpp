@@ -25,6 +25,7 @@
 #include <string>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/container/small_vector.hpp>
 
 namespace Acts {
 
@@ -119,13 +120,16 @@ class Navigator {
   using Surfaces = std::vector<const Surface*>;
   using SurfaceIter = std::vector<const Surface*>::iterator;
 
-  using NavigationSurfaces = std::vector<SurfaceIntersection>;
+  using NavigationSurfaces =
+      boost::container::small_vector<SurfaceIntersection, 10>;
   using NavigationSurfaceIter = NavigationSurfaces::iterator;
 
-  using NavigationLayers = std::vector<LayerIntersection>;
+  using NavigationLayers =
+      boost::container::small_vector<LayerIntersection, 10>;
   using NavigationLayerIter = NavigationLayers::iterator;
 
-  using NavigationBoundaries = std::vector<BoundaryIntersection>;
+  using NavigationBoundaries =
+      boost::container::small_vector<BoundaryIntersection, 4>;
   using NavigationBoundaryIter = NavigationBoundaries::iterator;
 
   using ExternalSurfaces = std::multimap<uint64_t, GeometryIdentifier>;
@@ -790,7 +794,11 @@ class Navigator {
                state.navigation.navSurfaces.empty()) ||
               protoNavSurfaces.front().intersection.pathLength > 1_um) {
             // we are not, go on
-            state.navigation.navSurfaces = std::move(protoNavSurfaces);
+            // state.navigation.navSurfaces = std::move(protoNavSurfaces);
+            state.navigation.navSurfaces.clear();
+            state.navigation.navSurfaces.insert(
+                state.navigation.navSurfaces.begin(), protoNavSurfaces.begin(),
+                protoNavSurfaces.end());
 
             state.navigation.navSurfaceIter =
                 state.navigation.navSurfaces.begin();
@@ -922,7 +930,7 @@ class Navigator {
       // The navigation options
       NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
       navOpts.pathLimit =
-          state.stepping.stepSize.value(ConstrainedStep::aborter);
+          stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
       navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
 
       // Exclude the current surface in case it's a boundary
@@ -1128,7 +1136,8 @@ class Navigator {
       }
     }
     // Check the limit
-    navOpts.pathLimit = state.stepping.stepSize.value(ConstrainedStep::aborter);
+    navOpts.pathLimit =
+        stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
     // No overstepping on start layer, otherwise ask the stepper
     navOpts.overstepLimit = (cLayer != nullptr)
                                 ? s_onSurfaceTolerance
@@ -1197,7 +1206,8 @@ class Navigator {
         m_cfg.resolveMaterial, m_cfg.resolvePassive, startLayer, nullptr);
     // Set also the target surface
     navOpts.targetSurface = state.navigation.targetSurface;
-    navOpts.pathLimit = state.stepping.stepSize.value(ConstrainedStep::aborter);
+    navOpts.pathLimit =
+        stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
     navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
     // Request the compatible layers
     state.navigation.navLayers =

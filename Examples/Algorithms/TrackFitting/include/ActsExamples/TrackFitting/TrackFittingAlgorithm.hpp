@@ -94,6 +94,9 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
     bool energyLoss = true;
     /// Pick a single track for debugging (-1 process all tracks)
     int pickTrack = -1;
+    /// Switch to fully-fledged backwards filtering below this pt value
+    /// (default: never)
+    double reverseFilteringMomThreshold = 0;
   };
 
   /// Constructor of the fitting algorithm

@@ -31,7 +31,7 @@ class InternalSpacePoint {
   ~InternalSpacePoint() = default;
 
   InternalSpacePoint<SpacePoint>& operator=(
-      const InternalSpacePoint<SpacePoint>&);
+      const InternalSpacePoint<SpacePoint>&) = delete;
 
   const float& x() const { return m_x; }
   const float& y() const { return m_y; }

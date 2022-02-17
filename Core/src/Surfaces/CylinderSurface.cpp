@@ -30,10 +30,11 @@ Acts::CylinderSurface::CylinderSurface(const GeometryContext& gctx,
 
 Acts::CylinderSurface::CylinderSurface(const Transform3& transform,
                                        double radius, double halfz,
-                                       double halfphi, double avphi)
+                                       double halfphi, double avphi,
+                                       double bevelMinZ, double bevelMaxZ)
     : Surface(transform),
-      m_bounds(std::make_shared<const CylinderBounds>(radius, halfz, halfphi,
-                                                      avphi)) {}
+      m_bounds(std::make_shared<const CylinderBounds>(
+          radius, halfz, halfphi, avphi, bevelMinZ, bevelMaxZ)) {}
 
 Acts::CylinderSurface::CylinderSurface(
     std::shared_ptr<const CylinderBounds> cbounds,
@@ -165,41 +166,20 @@ const Acts::CylinderBounds& Acts::CylinderSurface::bounds() const {
 
 Acts::Polyhedron Acts::CylinderSurface::polyhedronRepresentation(
     const GeometryContext& gctx, size_t lseg) const {
+  auto ctrans = transform(gctx);
+
   // Prepare vertices and faces
-  std::vector<Vector3> vertices;
+  std::vector<Vector3> vertices = bounds().createCircles(ctrans, lseg);
   std::vector<Polyhedron::FaceType> faces;
   std::vector<Polyhedron::FaceType> triangularMesh;
 
-  auto ctrans = transform(gctx);
   bool fullCylinder = bounds().coversFullAzimuth();
 
-  double avgPhi = bounds().get(CylinderBounds::eAveragePhi);
-  double halfPhi = bounds().get(CylinderBounds::eHalfPhiSector);
-
-  // Get the phi segments from the helper - ensures extra points
-  auto phiSegs = fullCylinder ? detail::VerticesHelper::phiSegments()
-                              : detail::VerticesHelper::phiSegments(
-                                    avgPhi - halfPhi, avgPhi + halfPhi,
-                                    {static_cast<ActsScalar>(avgPhi)});
-
-  // Write the two bows/circles on either side
-  std::vector<int> sides = {-1, 1};
-  for (auto& side : sides) {
-    for (size_t iseg = 0; iseg < phiSegs.size() - 1; ++iseg) {
-      int addon = (iseg == phiSegs.size() - 2 and not fullCylinder) ? 1 : 0;
-      /// Helper method to create the segment
-      detail::VerticesHelper::createSegment(
-          vertices,
-          {bounds().get(CylinderBounds::eR), bounds().get(CylinderBounds::eR)},
-          phiSegs[iseg], phiSegs[iseg + 1], lseg, addon,
-          Vector3(0., 0., side * bounds().get(CylinderBounds::eHalfLengthZ)),
-          ctrans);
-    }
-  }
   auto facesMesh =
       detail::FacesHelper::cylindricalFaceMesh(vertices, fullCylinder);
   return Polyhedron(vertices, facesMesh.first, facesMesh.second, false);
 }
+
 Acts::Vector3 Acts::CylinderSurface::rotSymmetryAxis(
     const GeometryContext& gctx) const {
   // fast access via tranform matrix (and not rotation())

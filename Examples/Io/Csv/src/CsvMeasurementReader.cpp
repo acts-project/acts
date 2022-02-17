@@ -9,7 +9,7 @@
 #include "ActsExamples/Io/Csv/CsvMeasurementReader.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
+#include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"

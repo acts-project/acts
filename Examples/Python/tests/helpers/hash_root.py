@@ -42,9 +42,9 @@ def hash_root_file(path: Path, ordering_invariant: bool = True) -> str:
                 for obj in row:
                     if isinstance(obj, ak.highlevel.Array):
                         if obj.ndim == 1:
-                            h.update(obj.to_numpy().tobytes())
+                            h.update(ak.to_numpy(obj).tobytes())
                         else:
-                            arr = ak.flatten(obj, axis=None).to_numpy()
+                            arr = ak.to_numpy(ak.flatten(obj, axis=None))
                             h.update(arr.tobytes())
                     else:
                         h.update(np.array([obj]).tobytes())
