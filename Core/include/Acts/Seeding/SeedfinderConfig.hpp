@@ -15,6 +15,15 @@
 
 namespace Acts {
 
+struct SeedConfirmationRange {
+  float zMinSeedConf;
+  float zMaxSeedConf;
+  float rMaxSeedConf;
+  size_t nTopSeedConf;
+  size_t nTopForLargeR;
+  size_t nTopForSmallR;
+};
+
 // forward declaration to avoid cyclic dependence
 template <typename T>
 class SeedFilter;
@@ -33,6 +42,35 @@ struct SeedfinderConfig {
   float deltaRMin = 5 * Acts::UnitConstants::mm;
   // maximum distance in r between two measurements within one seed
   float deltaRMax = 270 * Acts::UnitConstants::mm;
+  // minimum distance in r between middle and top SP
+  float deltaRMinTopSP = 5 * Acts::UnitConstants::mm;
+  // maximum distance in r between middle and top SP
+  float deltaRMaxTopSP = 270 * Acts::UnitConstants::mm;
+  // minimum distance in r between middle and bottom SP
+  float deltaRMinBottomSP = 5 * Acts::UnitConstants::mm;
+  // maximum distance in r between middle and bottom SP
+  float deltaRMaxBottomSP = 270 * Acts::UnitConstants::mm;
+
+  // radial range for middle SP
+  std::vector<std::vector<float>> rRangeMiddleSP;
+  bool useVariableMiddleSPRange = false;
+  float deltaRMiddleSPRange = 10.;
+  float rMinMiddleSP;
+  float rMaxMiddleSP;
+
+  // seed confirmation
+  bool seedConfirmation = false;
+  // parameters for central seed confirmation
+  SeedConfirmationRange centralSeedConfirmationRange;
+  // parameters for forward seed confirmation
+  SeedConfirmationRange forwardSeedConfirmationRange;
+
+  // non equidistant binning in z
+  std::vector<float> zBinEdges;
+
+  // sort the SP in transformCoordinates method and enables compatibility cuts
+  // based on the sorting of cotTheta
+  bool enableCutsForSortedSP = false;
 
   // FIXME: this is not used yet
   //        float upperPtResolutionPerSeed = 20* Acts::GeV;
@@ -97,6 +135,7 @@ struct SeedfinderConfig {
   float pTPerHelixRadius = 0;
   float minHelixDiameter2 = 0;
   float pT2perRadius = 0;
+  float sigmapT2perRadius = 0;
 
   // only for Cuda plugin
   int maxBlockSize = 1024;
