@@ -10,8 +10,8 @@ from acts import UnitConstants as u
 def addExaTrkx(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
-    geometrySelection: Optional[Union[Path, str]],
-    onnxModelDir: Optional[Union[Path, str]],
+    geometrySelection: Union[Path, str],
+    onnxModelDir: Union[Path, str],
     outputDirRoot: Optional[Union[Path, str]] = None,
 ) -> acts.examples.Sequencer:
 
@@ -19,32 +19,32 @@ def addExaTrkx(
     # The pre-selection will select truth particles satisfying provided criteria
     # from all particles read in by particle reader for further processing. It
     # has no impact on the truth hits themselves
-    selAlg = acts.examples.TruthSeedSelector(
-        level=acts.logging.INFO,
-        ptMin=500 * u.MeV,
-        nHitsMin=9,
-        inputParticles="particles_initial",
-        inputMeasurementParticlesMap="measurement_particle_map",
-        outputParticles="particles_seed_selected",
+    s.addAlgorithm(
+        acts.examples.TruthSeedSelector(
+            level=acts.logging.INFO,
+            ptMin=500 * u.MeV,
+            nHitsMin=9,
+            inputParticles="particles_initial",
+            inputMeasurementParticlesMap="measurement_particle_map",
+            outputParticles="particles_seed_selected",
+        )
     )
-    s.addAlgorithm(selAlg)
-
-    inputParticles = selAlg.config.outputParticles
 
     # Create space points
-    spAlg = acts.examples.SpacePointMaker(
-        level=acts.logging.INFO,
-        inputSourceLinks="source_links",
-        inputMeasurements="measurements",
-        outputSpacePoints="spacepoints",
-        trackingGeometry=trackingGeometry,
-        geometrySelection=acts.examples.readJsonGeometryList(str(geometrySelection)),
+    s.addAlgorithm(
+        acts.examples.SpacePointMaker(
+            level=acts.logging.INFO,
+            inputSourceLinks="source_links",
+            inputMeasurements="measurements",
+            outputSpacePoints="spacepoints",
+            trackingGeometry=trackingGeometry,
+            geometrySelection=acts.examples.readJsonGeometryList(str(geometrySelection)),
+        )
     )
-    s.addAlgorithm(spAlg)
 
-    # Setup the track finding algorithm with ExaTrkX
-    # It takes all the source links created from truth hit smearing, seeds from
-    # truth particle smearing and source link selection config
+    #Setup the track finding algorithm with ExaTrkX
+    #It takes all the source links created from truth hit smearing, seeds from
+    #truth particle smearing and source link selection config
     exaTrkxFinding = acts.examples.ExaTrkXTrackFinding(
         inputMLModuleDir=str(onnxModelDir),
         spacepointFeatures=3,
@@ -54,23 +54,26 @@ def addExaTrkx(
         filterCut=0.21,
     )
 
-    trackFinderAlg = acts.examples.TrackFindingMLBasedAlgorithm(
-        level=acts.logging.INFO,
-        inputSpacePoints="spacepoints",
-        outputProtoTracks="protoTracks",
-        trackFinderML=exaTrkxFinding,
+    s.addAlgorithm(
+        acts.examples.TrackFindingMLBasedAlgorithm(
+            level=acts.logging.INFO,
+            inputSpacePoints="spacepoints",
+            outputProtoTracks="protoTracks",
+            trackFinderML=exaTrkxFinding,
+        )
     )
-    s.addAlgorithm(trackFinderAlg)
 
     # Write truth track finding / seeding performance
-    trackFinderPerformanceWriter = acts.examples.TrackFinderPerformanceWriter(
-        level=acts.logging.INFO,
-        inputProtoTracks="protoTracks",
-        inputParticles=inputParticles,  # the original selected particles after digitization
-        inputMeasurementParticlesMap=digiAlg.config.outputMeasurementParticlesMap,
-        filePath=str(outputDirRoot / "performance_seeding_trees.root"),
-    )
-    s.addWriter(trackFinderPerformanceWriter)
+    if outputDirRoot is not None:
+        s.addWriter(
+            acts.examples.TrackFinderPerformanceWriter(
+                level=acts.logging.INFO,
+                inputProtoTracks="protoTracks",
+                inputParticles="particles_initial",  # the original selected particles after digitization
+                inputMeasurementParticlesMap="measurement_particle_map",
+                filePath=str(outputDirRoot / "performance_seeding_trees.root"),
+            )
+        )
 
     return s
 
@@ -117,4 +120,4 @@ if "__main__" == __name__:
 
     s = addExaTrkx(s, trackingGeometry, geometrySelection, onnxdir, outputDir)
 
-    s.run()
+    #s.run()
