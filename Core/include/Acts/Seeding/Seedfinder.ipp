@@ -382,13 +382,12 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           float eta = -std::log(std::tan(0.5 * theta));
           state.etaVec.push_back(eta);
           state.ptVec.push_back(pT);
-          state.cotThetaVec.push_back(lt.cotTheta);
         }
       }
       if (!state.topSpVec.empty()) {
         m_config.seedFilter->filterSeeds_2SpFixed(
             *state.compatBottomSP[b], *spM, state.topSpVec, state.curvatures,
-            state.impactParameters, state.cotThetaVec, Zob, std::back_inserter(state.seedsPerSpM));
+            state.impactParameters, Zob, std::back_inserter(state.seedsPerSpM));
 
       }
     }

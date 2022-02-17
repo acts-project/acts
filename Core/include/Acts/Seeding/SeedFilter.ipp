@@ -27,23 +27,21 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     const InternalSpacePoint<external_spacepoint_t>& middleSP,
     std::vector<const InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
     std::vector<float>& invHelixDiameterVec,
-    std::vector<float>& impactParametersVec,
-    std::vector<float>& cotThetaVec, float zOrigin,
+    std::vector<float>& impactParametersVec, float zOrigin,
     std::back_insert_iterator<std::vector<std::pair<
         float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>>
         outIt) const {
-
-  // TODO: pass this from the Seedfinder, adding a new config called enableSortingInFilter
-  bool enableSorting = false;
 
   // initialize original index locations
   std::vector<size_t> idx(topSpVec.size());
   std::iota(idx.begin(), idx.end(), 0);
 
-  if (enableSorting) {
-      // sort indexes based on comparing values in cotThetaVec
-      std::sort(idx.begin(), idx.end(),
-                [&cotThetaVec](size_t i1, size_t i2) {return cotThetaVec[i1] < cotThetaVec[i2];});
+  if (m_cfg.curvatureSortingInFilter) {
+		// sort indexes based on comparing values in invHelixDiameterVec
+		std::sort(idx.begin(), idx.end(),
+							[&invHelixDiameterVec](size_t i1, size_t i2) {
+			return invHelixDiameterVec[i1] < invHelixDiameterVec[i2];
+		});
   }
 
   for (auto& i : idx) {
@@ -76,6 +74,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         continue;
       }
       if (invHelixDiameterVec[j] > upperLimitCurv) {
+				if (m_cfg.curvatureSortingInFilter) {
+					break;
+				}
         continue;
       }
       bool newCompSeed = true;
