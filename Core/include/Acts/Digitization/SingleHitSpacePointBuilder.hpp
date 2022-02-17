@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "Acts/Digitization/CartesianSegmentation.hpp"
+#include "Acts/Digitization/SpacePointBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/Digitization/CartesianSegmentation.hpp"
-#include "Acts/Plugins/Digitization/SpacePointBuilder.hpp"
 
 namespace Acts {
 
@@ -56,4 +56,4 @@ class SpacePointBuilder<SpacePoint<Cluster>> {
                        const Cluster& cluster) const;
 };
 }  // namespace Acts
-#include "Acts/Plugins/Digitization/detail/SingleHitSpacePointBuilder.ipp"
+#include "Acts/Digitization/detail/SingleHitSpacePointBuilder.ipp"

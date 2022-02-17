@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(NavigationLayerConstruction) {
 }
 
 /// Unit test for testing NavigationLayer properties
-BOOST_AUTO_TEST_CASE(NavigationLayerProperties, *utf::expected_failures(1)) {
+BOOST_AUTO_TEST_CASE(NavigationLayerProperties) {
   const double thickness = 0.1;
   std::shared_ptr<const Surface> pSurface = Surface::makeShared<SurfaceStub>();
   auto rawSurfacePtr = pSurface.get();
@@ -64,7 +64,8 @@ BOOST_AUTO_TEST_CASE(NavigationLayerProperties, *utf::expected_failures(1)) {
   BOOST_CHECK(pNavigationLayer->isOnLayer(tgContext, origin, true));
   // isOnLayer()
   Vector3 crazyPosition{1000., 10000., std::nan("")};
-  BOOST_CHECK(!pNavigationLayer->isOnLayer(tgContext, crazyPosition, true));
+  // layer stub has hard-coded globalToLocal return value
+  BOOST_CHECK(pNavigationLayer->isOnLayer(tgContext, crazyPosition, true));
   // resolve()
   BOOST_CHECK(!pNavigationLayer->resolve(true, true, true));
 }

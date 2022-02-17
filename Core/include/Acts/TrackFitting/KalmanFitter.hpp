@@ -104,8 +104,8 @@ struct KalmanFitterOptions {
   /// @param rSurface The reference surface for the fit to be expressed at
   /// @param mScattering Whether to include multiple scattering
   /// @param eLoss Whether to include energy loss
-  /// @param rFiltering Whether to run filtering in reversed direction as
-  /// smoothing
+  /// @param rFiltering Whether to run filtering in reversed direction as smoothing
+  /// @param rfScaling Scale factor for the covariance matrix before the backward filtering
   KalmanFitterOptions(const GeometryContext& gctx,
                       const MagneticFieldContext& mctx,
                       std::reference_wrapper<const CalibrationContext> cctx,
@@ -113,7 +113,7 @@ struct KalmanFitterOptions {
                       const PropagatorPlainOptions& pOptions,
                       const Surface* rSurface = nullptr,
                       bool mScattering = true, bool eLoss = true,
-                      bool rFiltering = false)
+                      bool rFiltering = false, double rfScaling = 1.0)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
@@ -123,6 +123,7 @@ struct KalmanFitterOptions {
         multipleScattering(mScattering),
         energyLoss(eLoss),
         reversedFiltering(rFiltering),
+        reversedFilteringCovarianceScaling(rfScaling),
         logger(logger_) {}
   /// Contexts are required and the options must not be default-constructible.
   KalmanFitterOptions() = delete;
@@ -151,6 +152,12 @@ struct KalmanFitterOptions {
   /// Whether to run filtering in reversed direction overwrite the
   /// ReverseFilteringLogic
   bool reversedFiltering = false;
+
+  /// Factor by which the covariance of the input of the reversed filtering is
+  /// scaled. This is only used in the backwardfiltering (if reversedFiltering
+  /// is true or if the ReverseFilteringLogic return true for the track of
+  /// interest)
+  double reversedFilteringCovarianceScaling = 1.0;
 
   /// Logger
   LoggerWrapper logger;
@@ -272,6 +279,9 @@ class KalmanFitter {
 
     /// Whether run reversed filtering
     bool reversedFiltering = false;
+
+    // Scale the covariance before the reversed filtering
+    double reversedFilteringCovarianceScaling = 1.0;
 
     /// @brief Kalman actor operation
     ///
@@ -470,9 +480,11 @@ class KalmanFitter {
       auto st = result.fittedStates.getTrackState(result.lastMeasurementIndex);
 
       // Update the stepping state
-      stepper.resetState(state.stepping, st.filtered(), st.filteredCovariance(),
-                         st.referenceSurface(), state.stepping.navDir,
-                         state.options.maxStepSize);
+      stepper.resetState(
+          state.stepping, st.filtered(),
+          reversedFilteringCovarianceScaling * st.filteredCovariance(),
+          st.referenceSurface(), state.stepping.navDir,
+          state.options.maxStepSize);
 
       // For the last measurement state, smoothed is filtered
       st.smoothed() = st.filtered();
@@ -1080,6 +1092,8 @@ class KalmanFitter {
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
     kalmanActor.reversedFiltering = kfOptions.reversedFiltering;
+    kalmanActor.reversedFilteringCovarianceScaling =
+        kfOptions.reversedFilteringCovarianceScaling;
     kalmanActor.extensions = std::move(kfOptions.extensions);
 
     // Run the fitter
@@ -1173,6 +1187,8 @@ class KalmanFitter {
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
     kalmanActor.reversedFiltering = kfOptions.reversedFiltering;
+    kalmanActor.reversedFilteringCovarianceScaling =
+        kfOptions.reversedFilteringCovarianceScaling;
     kalmanActor.extensions = std::move(kfOptions.extensions);
 
     // Set the surface sequence
