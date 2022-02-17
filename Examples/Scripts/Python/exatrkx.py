@@ -71,7 +71,7 @@ def addExaTrkx(
                 inputProtoTracks="protoTracks",
                 inputParticles="particles_initial",  # the original selected particles after digitization
                 inputMeasurementParticlesMap="measurement_particle_map",
-                filePath=str(outputDirRoot / "performance_seeding_trees.root"),
+                filePath=str(Path(outputDirRoot) / "performance_seeding_trees.root"),
             )
         )
 
