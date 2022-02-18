@@ -113,6 +113,7 @@ void addJson(Context& ctx) {
     ACTS_PYTHON_MEMBER(writeBoundary);
     ACTS_PYTHON_MEMBER(writePerEvent);
     ACTS_PYTHON_MEMBER(writeOnlyNames);
+    ACTS_PYTHON_MEMBER(volumeLayer);
     ACTS_PYTHON_STRUCT_END();
   }
 }
