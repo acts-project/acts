@@ -1134,9 +1134,15 @@ class CombinatorialKalmanFilter {
         state.stepping.navDir =
             (state.stepping.navDir == forward) ? backward : forward;
       }
+      // Reinitialize the stepping jacobian
+      state.stepping.jacobian = BoundMatrix::Identity();
+      state.stepping.jacTransport = FreeMatrix::Identity();
+      state.stepping.derivative = FreeVector::Zero();
       // Reset the step size
       state.stepping.stepSize = ConstrainedStep(
           state.stepping.navDir * std::abs(state.options.maxStepSize));
+      // Set accumulatd path to zero before targeting surface
+      state.stepping.pathAccumulated = 0.;
 
       return Result<void>::success();
     }
