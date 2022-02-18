@@ -87,11 +87,12 @@ full_chain_algorithm::full_chain_algorithm(
     const spacepoint_grid_config& grid_config,
     const seedfilter_config& filter_config,
     const gbts_seedfinder_config& gbts_config,
+    const hough_seeding_config& /*hough_config*/,
     const track_params_estimation_config& track_params_estimation_config,
     const finding_algorithm::config_type& finding_config,
     const fitting_algorithm::config_type& fitting_config,
     const shared_data& data, std::unique_ptr<const traccc::Logger> logger,
-    bool useGBTS, await_strategy await_mode)
+    bool useGBTS, bool useHough, await_strategy await_mode)
     : messaging(logger->clone()),
       m_host_mr(host_mr),
       m_pinned_host_mr(),
@@ -134,7 +135,8 @@ full_chain_algorithm::full_chain_algorithm(
       m_fitting(fitting_config, {m_cached_device_mr, &m_cached_pinned_host_mr},
                 m_copy, m_stream, logger->cloneWithSuffix("TrackFittingAlg"),
                 m_await_function),
-      usingGBTS(useGBTS) {
+      usingGBTS(useGBTS),
+      usingHough(useHough) {
   // Tell the user what device is being used.
   int device = 0;
   HIP_ERROR_CHECK(hipGetDevice(&device));
@@ -149,6 +151,10 @@ full_chain_algorithm::~full_chain_algorithm() = default;
 
 full_chain_algorithm::output_type full_chain_algorithm::operator()(
     const edm::silicon_cell_collection::host& cells) const {
+  if (usingHough) {
+    std::cout << "Hough not implemented for hip" << std::endl;
+  }
+
   // Create device copy of input collections
   edm::silicon_cell_collection::buffer cells_buffer(
       static_cast<unsigned int>(cells.size()), m_cached_device_mr);
@@ -207,6 +213,9 @@ bound_track_parameters_collection_types::host full_chain_algorithm::seeding(
   edm::silicon_cell_collection::buffer cells_buffer(
       static_cast<unsigned int>(cells.size()), m_cached_device_mr);
   m_copy(vecmem::ignore_event, vecmem::get_data(cells), cells_buffer);
+  if (usingHough) {
+    std::cout << "Hough not implemented for hip" << std::endl;
+  }
 
   // Run the clusterization (asynchronously).
   const auto unsorted_measurements =
