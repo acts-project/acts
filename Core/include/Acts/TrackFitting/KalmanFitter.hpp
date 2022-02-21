@@ -1000,6 +1000,10 @@ class KalmanFitter {
         state.stepping.navDir =
             (state.stepping.navDir == forward) ? backward : forward;
       }
+      // Reinitialize the stepping jacobian
+      state.stepping.jacobian = BoundMatrix::Identity();
+      state.stepping.jacTransport = FreeMatrix::Identity();
+      state.stepping.derivative = FreeVector::Zero();
       // Reset the step size
       state.stepping.stepSize = ConstrainedStep(
           state.stepping.navDir * std::abs(state.options.maxStepSize));
