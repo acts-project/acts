@@ -440,6 +440,7 @@ class KDTree {
       // Next, we calculate the summed squared error from the mean in each
       // dimension, again with the normalized values.
       std::array<Scalar, Dims> sqe_v;
+      sqe_v.fill(0);
 
       for (iterator_t i = this->m_begin_it; i != this->m_end_it; ++i) {
         for (std::size_t j = 0; j < Dims; ++j) {
