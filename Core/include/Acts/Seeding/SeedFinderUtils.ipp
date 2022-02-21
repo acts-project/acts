@@ -20,7 +20,7 @@ LinCircle transformCoordinates(
 	return output;
        };
     
-    return transformCoordinates(sp, spM, bottom, extractFunction);
+    return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(sp, spM, bottom, extractFunction);
 }
 
 template <typename external_spacepoint_t>
@@ -73,7 +73,7 @@ void transformCoordinates(
         return output;
        };
 
-    return transformCoordinates(vec, spM, bottom, enableCutsForSortedSP, linCircleVec, extractFunction);
+    return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(vec, spM, bottom, enableCutsForSortedSP, linCircleVec, extractFunction);
 }
 
 template <typename external_spacepoint_t>
