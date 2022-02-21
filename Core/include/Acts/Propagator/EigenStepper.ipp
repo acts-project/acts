@@ -266,3 +266,8 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   }
   return h;
 }
+
+template <typename E, typename A>
+void Acts::EigenStepper<E, A>::setIdentityJacobian(State& state) const {
+  state.jacobian = BoundMatrix::Identity();
+}

@@ -814,7 +814,7 @@ class KalmanFitter {
         }
         // Not creating bound state here, so need manually reinitialize
         // jacobian
-        state.stepping.jacobian = BoundMatrix::Identity();
+        stepper.setIdentityJacobian(state.stepping);
         if (surface->surfaceMaterial() != nullptr) {
           // Update state and stepper with material effects
           materialInteractor(surface, state, stepper);
@@ -972,16 +972,14 @@ class KalmanFitter {
           (std::abs(firstIntersection.intersection.pathLength) <=
            std::abs(lastIntersection.intersection.pathLength));
       if (closerTofirstCreatedState) {
-        stepper.update(state.stepping, firstParams,
-                       firstCreatedState.smoothed(),
-                       firstCreatedState.smoothedCovariance(),
-                       firstCreatedState.referenceSurface());
+        stepper.resetState(state.stepping, firstCreatedState.smoothed(),
+                           firstCreatedState.smoothedCovariance(),
+                           firstCreatedState.referenceSurface());
         reverseDirection = (firstIntersection.intersection.pathLength < 0);
       } else {
-        stepper.update(state.stepping, lastParams,
-                       lastCreatedMeasurement.smoothed(),
-                       lastCreatedMeasurement.smoothedCovariance(),
-                       lastCreatedMeasurement.referenceSurface());
+        stepper.resetState(state.stepping, lastCreatedMeasurement.smoothed(),
+                           lastCreatedMeasurement.smoothedCovariance(),
+                           lastCreatedMeasurement.referenceSurface());
         reverseDirection = (lastIntersection.intersection.pathLength < 0);
       }
       const auto& surface = closerTofirstCreatedState
@@ -1000,10 +998,6 @@ class KalmanFitter {
         state.stepping.navDir =
             (state.stepping.navDir == forward) ? backward : forward;
       }
-      // Reinitialize the stepping jacobian
-      state.stepping.jacobian = BoundMatrix::Identity();
-      state.stepping.jacTransport = FreeMatrix::Identity();
-      state.stepping.derivative = FreeVector::Zero();
       // Reset the step size
       state.stepping.stepSize = ConstrainedStep(
           state.stepping.navDir * std::abs(state.options.maxStepSize));
