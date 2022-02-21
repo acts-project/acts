@@ -11,23 +11,24 @@ template <typename external_spacepoint_t>
 LinCircle transformCoordinates(
     const InternalSpacePoint<external_spacepoint_t>& sp,
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom) {
+  auto extractFunction =
+      [](const InternalSpacePoint<external_spacepoint_t>& obj)
+      -> std::array<float, 6> {
+    std::array<float, 6> output{obj.x(),      obj.y(),         obj.z(),
+                                obj.radius(), obj.varianceR(), obj.varianceZ()};
+    return output;
+  };
 
-    auto extractFunction = 
-    [] (const InternalSpacePoint<external_spacepoint_t>& obj) 
-       -> std::array<float, 6>
-       {
-	std::array<float, 6> output {obj.x(), obj.y(), obj.z(), obj.radius(), obj.varianceR(), obj.varianceZ()};
-	return output;
-       };
-    
-    return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(sp, spM, bottom, extractFunction);
+  return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(
+      sp, spM, bottom, extractFunction);
 }
 
 template <typename external_spacepoint_t>
 LinCircle transformCoordinates(
-    const external_spacepoint_t& sp,
-    const external_spacepoint_t& spM, bool bottom,
-    std::function<std::array<float, 6>(const external_spacepoint_t&)> extractFunction) {
+    const external_spacepoint_t& sp, const external_spacepoint_t& spM,
+    bool bottom,
+    std::function<std::array<float, 6>(const external_spacepoint_t&)>
+        extractFunction) {
   // The computation inside this function is exactly identical to that in the
   // vectorized version of this function, except that it operates on a single
   // spacepoint. Please see the other version of this function for more
@@ -64,25 +65,25 @@ void transformCoordinates(
     const std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     bool enableCutsForSortedSP, std::vector<LinCircle>& linCircleVec) {
+  auto extractFunction =
+      [](const InternalSpacePoint<external_spacepoint_t>& obj)
+      -> std::array<float, 6> {
+    std::array<float, 6> output{obj.x(),      obj.y(),         obj.z(),
+                                obj.radius(), obj.varianceR(), obj.varianceZ()};
+    return output;
+  };
 
-    auto extractFunction =
-    	 [] (const InternalSpacePoint<external_spacepoint_t>& obj)
-       ->std::array<float, 6>
-       {     
-        std::array<float, 6> output {obj.x(), obj.y(), obj.z(), obj.radius(), obj.varianceR(), obj.varianceZ()};
-        return output;
-       };
-
-    return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(vec, spM, bottom, enableCutsForSortedSP, linCircleVec, extractFunction);
+  return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(
+      vec, spM, bottom, enableCutsForSortedSP, linCircleVec, extractFunction);
 }
 
 template <typename external_spacepoint_t>
 void transformCoordinates(
     const std::vector<const external_spacepoint_t*>& vec,
-    const external_spacepoint_t& spM, bool bottom,
-    bool enableCutsForSortedSP, std::vector<LinCircle>& linCircleVec,
-    std::function<std::array<float, 6>(const external_spacepoint_t&)> extractFunction) {
-
+    const external_spacepoint_t& spM, bool bottom, bool enableCutsForSortedSP,
+    std::vector<LinCircle>& linCircleVec,
+    std::function<std::array<float, 6>(const external_spacepoint_t&)>
+        extractFunction) {
   auto [xM, yM, zM, rM, varianceRM, varianceZM] = extractFunction(spM);
 
   float cosPhiM = xM / rM;

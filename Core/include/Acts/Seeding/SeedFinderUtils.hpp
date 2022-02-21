@@ -38,9 +38,10 @@ LinCircle transformCoordinates(
 
 template <typename external_spacepoint_t>
 LinCircle transformCoordinates(
-    const external_spacepoint_t& sp,
-    const external_spacepoint_t& spM, bool bottom,
-    std::function<std::array<float, 6>(const external_spacepoint_t&)> extractFunction);
+    const external_spacepoint_t& sp, const external_spacepoint_t& spM,
+    bool bottom,
+    std::function<std::array<float, 6>(const external_spacepoint_t&)>
+        extractFunction);
 
 /// @brief Transform a vector of spacepoints to u-v space circles with respect
 /// to a given middle spacepoint.
@@ -61,8 +62,8 @@ void transformCoordinates(
 template <typename external_spacepoint_t>
 void transformCoordinates(
     const std::vector<const external_spacepoint_t*>& vec,
-    const external_spacepoint_t& spM, bool bottom,
-    bool enableCutsForSortedSP, std::vector<LinCircle>& linCircleVec,
+    const external_spacepoint_t& spM, bool bottom, bool enableCutsForSortedSP,
+    std::vector<LinCircle>& linCircleVec,
     std::function<std::array<float, 6>(const external_spacepoint_t&)>);
 }  // namespace Acts
 
