@@ -88,7 +88,7 @@ void transformCoordinates(
   float cosPhiM = xM / rM;
   float sinPhiM = yM / rM;
   for (auto sp : vec) {
-    auto [xSP, ySP, zSP, rSP, varianceRSP, varianceZSP] = extractFunction(sp);
+    auto [xSP, ySP, zSP, rSP, varianceRSP, varianceZSP] = extractFunction(*sp);
 
     float deltaX = xSP - xM;
     float deltaY = ySP - yM;
