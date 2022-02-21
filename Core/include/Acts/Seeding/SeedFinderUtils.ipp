@@ -13,7 +13,7 @@ LinCircle transformCoordinates(
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom) {
 
     auto extractFunction = 
-    [] (const external_spacepoint_t& obj) 
+    [] (const InternalSpacePoint<external_spacepoint_t>& obj) 
        -> std::array<float, 6>
        {
 	std::array<float, 6> output {obj.x(), obj.y(), obj.z(), obj.radius(), obj.varianceR(), obj.varianceZ()};
@@ -66,7 +66,7 @@ void transformCoordinates(
     bool enableCutsForSortedSP, std::vector<LinCircle>& linCircleVec) {
 
     auto extractFunction =
-    	 [] (const external_spacepoint_t& obj)
+    	 [] (const InternalSpacePoint<external_spacepoint_t>& obj)
        ->std::array<float, 6>
        {     
         std::array<float, 6> output {obj.x(), obj.y(), obj.z(), obj.radius(), obj.varianceR(), obj.varianceZ()};
