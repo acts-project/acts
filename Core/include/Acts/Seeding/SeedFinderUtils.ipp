@@ -16,7 +16,7 @@ LinCircle transformCoordinates(
     [] (const external_spacepoint_t& obj) 
        -> std::array<float, 6>
        {
-	std::array<float, 6> output {sp.x(), sp.y(), sp.z(), sp.radius(), sp.varianceR(), sp.varianceZ()};
+	std::array<float, 6> output {obj.x(), obj.y(), obj.z(), obj.radius(), obj.varianceR(), obj.varianceZ()};
 	return output;
        };
     
@@ -69,7 +69,7 @@ void transformCoordinates(
     	 [] (const external_spacepoint_t& obj)
        ->std::array<float, 6>
        {     
-        std::array<float, 6> output {sp.x(), sp.y(), sp.z(), sp.radius(), sp.varianceR(), sp.varianceZ()};
+        std::array<float, 6> output {obj.x(), obj.y(), obj.z(), obj.radius(), obj.varianceR(), obj.varianceZ()};
         return output;
        };
 

@@ -57,6 +57,13 @@ void transformCoordinates(
     const std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     bool enableCutsForSortedSP, std::vector<LinCircle>& linCircleVec);
+
+template <typename external_spacepoint_t>
+void transformCoordinates(
+    const std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
+    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
+    bool enableCutsForSortedSP, std::vector<LinCircle>& linCircleVec,
+    std::function<std::array<float, 6>(const external_spacepoint_t&)>);
 }  // namespace Acts
 
 #include "Acts/Seeding/SeedFinderUtils.ipp"
