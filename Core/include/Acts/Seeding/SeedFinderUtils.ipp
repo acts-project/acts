@@ -78,8 +78,8 @@ void transformCoordinates(
 
 template <typename external_spacepoint_t>
 void transformCoordinates(
-    const std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
-    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
+    const std::vector<const external_spacepoint_t*>& vec,
+    const external_spacepoint_t& spM, bool bottom,
     bool enableCutsForSortedSP, std::vector<LinCircle>& linCircleVec,
     std::function<std::array<float, 6>(const external_spacepoint_t&)> extractFunction) {
 
