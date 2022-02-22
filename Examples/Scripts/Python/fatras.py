@@ -15,6 +15,7 @@ def addFatras(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
+    preselectParticles: bool = True,
 ) -> acts.examples.Sequencer:
     """This function steers the detector simulation using Fatras
 
@@ -36,16 +37,22 @@ def addFatras(
     rnd = rnd or acts.examples.RandomNumbers()
 
     # Selector
-    selector = acts.examples.ParticleSelector(
-        level=s.config.logLevel,
-        inputParticles="particles_input",
-        outputParticles="particles_selected",
-    )
+    if preselectParticles:
+        particles_selected = "particles_selected"
+        s.addAlgorithm(
+            acts.examples.ParticleSelector(
+                level=s.config.logLevel,
+                inputParticles="particles_input",
+                outputParticles=particles_selected,
+            )
+        )
+    else:
+        particles_selected = "particles_input"
 
     # Simulation
     alg = acts.examples.FatrasSimulation(
         level=s.config.logLevel,
-        inputParticles=selector.config.outputParticles,
+        inputParticles=particles_selected,
         outputParticlesInitial="particles_initial",
         outputParticlesFinal="particles_final",
         outputSimHits="simhits",
@@ -56,7 +63,6 @@ def addFatras(
     )
 
     # Sequencer
-    s.addAlgorithm(selector)
     s.addAlgorithm(alg)
 
     # Output

@@ -188,6 +188,7 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
         outputDirCsv=outputDir / "csv",
         outputDirRoot=outputDir,
         rnd=rnd,
+        preselectParticles=False,
     )
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
