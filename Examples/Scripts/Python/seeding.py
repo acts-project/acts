@@ -15,10 +15,32 @@ def addSeeding(
     field: acts.MagneticFieldProvider,
     geoSelectionConfigFile: Union[Path, str],
     outputDir: Optional[Union[Path, str]] = None,
+    logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.Sequencer:
+    """This function steers the seeding
+
+    Parameters
+    ----------
+    s: Sequencer
+        the sequencer module to which we add the Seeding steps (returned from addSeeding)
+    trackingGeometry : tracking geometry
+    field : magnetic field
+    geoSelectionConfigFile : Path|str, path, None
+        Json file for space point geometry selection
+    outputDir : Path|str, path, None
+        the output folder for the Root output, None triggers no output
+    logLevel : acts.logging.Level, None
+        logging level to override setting given in `s`
+    """
+
+    def customLogLevel(custom: acts.logging.Level = acts.logging.INFO):
+        """override logging level"""
+        if logLevel is None:
+            return s.config.logLevel
+        return acts.logging.Level(max(custom.value, logLevel.value))
 
     selAlg = acts.examples.TruthSeedSelector(
-        level=s.config.logLevel,
+        level=customLogLevel(),
         ptMin=1 * u.GeV,
         eta=(-2.5, 2.5),
         nHitsMin=9,
@@ -28,7 +50,7 @@ def addSeeding(
     )
 
     spAlg = acts.examples.SpacePointMaker(
-        level=s.config.logLevel,
+        level=customLogLevel(),
         inputSourceLinks="sourcelinks",
         inputMeasurements="measurements",
         outputSpacePoints="spacepoints",
@@ -73,7 +95,7 @@ def addSeeding(
     )
 
     seedingAlg = acts.examples.SeedingAlgorithm(
-        level=s.config.logLevel,
+        level=customLogLevel(acts.logging.VERBOSE),
         inputSpacePoints=[spAlg.config.outputSpacePoints],
         outputSeeds="seeds",
         outputProtoTracks="prototracks",
@@ -83,7 +105,7 @@ def addSeeding(
     )
 
     parEstimateAlg = acts.examples.TrackParamsEstimationAlgorithm(
-        level=s.config.logLevel,
+        level=customLogLevel(acts.logging.VERBOSE),
         inputProtoTracks=seedingAlg.config.outputProtoTracks,
         inputSpacePoints=[spAlg.config.outputSpacePoints],
         inputSourceLinks=spAlg.config.inputSourceLinks,
@@ -101,7 +123,7 @@ def addSeeding(
     if outputDir is not None:
         s.addWriter(
             acts.examples.TrackFinderPerformanceWriter(
-                level=s.config.logLevel,
+                level=customLogLevel(),
                 inputProtoTracks=seedingAlg.config.outputProtoTracks,
                 inputParticles=selAlg.config.outputParticles,
                 inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
@@ -111,7 +133,7 @@ def addSeeding(
 
         s.addWriter(
             acts.examples.SeedingPerformanceWriter(
-                level=s.config.logLevel,
+                level=customLogLevel(acts.logging.DEBUG),
                 inputProtoTracks=seedingAlg.config.outputProtoTracks,
                 inputParticles=selAlg.config.outputParticles,
                 inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
@@ -121,7 +143,7 @@ def addSeeding(
 
         s.addWriter(
             acts.examples.RootTrackParameterWriter(
-                level=s.config.logLevel,
+                level=customLogLevel(acts.logging.VERBOSE),
                 inputTrackParameters=parEstimateAlg.config.outputTrackParameters,
                 inputProtoTracks=parEstimateAlg.config.outputProtoTracks,
                 inputParticles=selAlg.config.inputParticles,
@@ -185,6 +207,7 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
         geoSelectionConfigFile=srcdir
         / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
         outputDir=outputDir,
+        logLevel=acts.logging.VERBOSE,
     )
     return s
 

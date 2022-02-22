@@ -18,6 +18,23 @@ def addDigitization(
     outputDirRoot: Optional[Union[Path, str]] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
 ) -> acts.examples.Sequencer:
+    """This function steers the digitization step
+
+    Parameters
+    ----------
+    s: Sequencer
+        the sequencer module to which we add the Digitization steps (returned from addDigitization)
+    trackingGeometry : tracking geometry
+    field : magnetic field
+    digiConfigFile : Path|str, path
+        Configuration (.json) file for digitization or smearing description
+    outputDirCsv : Path|str, path, None
+        the output folder for the Csv output, None triggers no output
+    outputDirRoot : Path|str, path, None
+        the output folder for the Root output, None triggers no output
+    rnd : RandomNumbers, None
+        random number generator
+    """
 
     # Preliminaries
     rnd = rnd or acts.examples.RandomNumbers()
