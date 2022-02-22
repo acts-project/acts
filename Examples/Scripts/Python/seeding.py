@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import os
 from pathlib import Path
+from typing import Optional, Union
 
 import acts
 import acts.examples
@@ -9,97 +9,32 @@ import acts.examples
 u = acts.UnitConstants
 
 
-def runSeeding(trackingGeometry, field, outputDir, s=None):
-
-    srcdir = Path(__file__).resolve().parent.parent.parent.parent
-
-    csv_dir = os.path.join(outputDir, "csv")
-    if not os.path.exists(csv_dir):
-        os.mkdir(csv_dir)
-
-    # Input
-    rnd = acts.examples.RandomNumbers(seed=42)
-    evGen = acts.examples.EventGenerator(
-        level=acts.logging.INFO,
-        generators=[
-            acts.examples.EventGenerator.Generator(
-                multiplicity=acts.examples.FixedMultiplicityGenerator(n=2),
-                vertex=acts.examples.GaussianVertexGenerator(
-                    stddev=acts.Vector4(0, 0, 0, 0), mean=acts.Vector4(0, 0, 0, 0)
-                ),
-                particles=acts.examples.ParametricParticleGenerator(
-                    p=(1 * u.GeV, 10 * u.GeV),
-                    eta=(-2, 2),
-                    phi=(0, 360 * u.degree),
-                    randomizeCharge=True,
-                    numParticles=4,
-                ),
-            )
-        ],
-        outputParticles="particles_input",
-        randomNumbers=rnd,
-    )
-
-    # Read input from input collection (e.g. Pythia8 output)
-
-    # evGen = acts.examples.RootParticleReader(
-    #     level=acts.logging.INFO,
-    #     particleCollection="particles_input",
-    #     inputDir="output",
-    #     inputFile="pythia8_particles.root",
-    # )
-
-    # Simulation
-    simAlg = acts.examples.FatrasSimulation(
-        level=acts.logging.INFO,
-        inputParticles=evGen.config.outputParticles,
-        # inputParticles=evGen.config.particleCollection,
-        outputParticlesInitial="particles_initial",
-        outputParticlesFinal="particles_final",
-        outputSimHits="simhits",
-        randomNumbers=rnd,
-        trackingGeometry=trackingGeometry,
-        magneticField=field,
-        generateHitsOnSensitive=True,
-    )
-
-    # Digitization
-    digiCfg = acts.examples.DigitizationConfig(
-        acts.examples.readDigiConfigFromJson(
-            str(
-                srcdir
-                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-            )
-        ),
-        trackingGeometry=trackingGeometry,
-        randomNumbers=rnd,
-        inputSimHits=simAlg.config.outputSimHits,
-    )
-    digiAlg = acts.examples.DigitizationAlgorithm(digiCfg, acts.logging.INFO)
+def addSeeding(
+    s: acts.examples.Sequencer,
+    trackingGeometry: acts.TrackingGeometry,
+    field: acts.MagneticFieldProvider,
+    geoSelectionConfigFile: Union[Path, str],
+    outputDir: Optional[Union[Path, str]] = None,
+) -> acts.examples.Sequencer:
 
     selAlg = acts.examples.TruthSeedSelector(
-        level=acts.logging.INFO,
+        level=s.config.logLevel,
         ptMin=1 * u.GeV,
         eta=(-2.5, 2.5),
         nHitsMin=9,
-        inputParticles=simAlg.config.outputParticlesFinal,
-        inputMeasurementParticlesMap=digiCfg.outputMeasurementParticlesMap,
-        outputParticles="particles_selected",
+        inputParticles="particles_final",
+        inputMeasurementParticlesMap="measurement_particles_map",
+        outputParticles="truth_seeds_selected",
     )
 
-    inputParticles = selAlg.config.outputParticles
-
     spAlg = acts.examples.SpacePointMaker(
-        level=acts.logging.INFO,
-        inputSourceLinks=digiCfg.outputSourceLinks,
-        inputMeasurements=digiCfg.outputMeasurements,
+        level=s.config.logLevel,
+        inputSourceLinks="sourcelinks",
+        inputMeasurements="measurements",
         outputSpacePoints="spacepoints",
         trackingGeometry=trackingGeometry,
         geometrySelection=acts.examples.readJsonGeometryList(
-            str(
-                srcdir
-                / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
-            )
+            str(geoSelectionConfigFile)
         ),
     )
 
@@ -138,7 +73,7 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
     )
 
     seedingAlg = acts.examples.SeedingAlgorithm(
-        level=acts.logging.VERBOSE,
+        level=s.config.logLevel,
         inputSpacePoints=[spAlg.config.outputSpacePoints],
         outputSeeds="seeds",
         outputProtoTracks="prototracks",
@@ -148,110 +83,109 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
     )
 
     parEstimateAlg = acts.examples.TrackParamsEstimationAlgorithm(
-        level=acts.logging.VERBOSE,
+        level=s.config.logLevel,
         inputProtoTracks=seedingAlg.config.outputProtoTracks,
         inputSpacePoints=[spAlg.config.outputSpacePoints],
-        inputSourceLinks=digiCfg.outputSourceLinks,
+        inputSourceLinks=spAlg.config.inputSourceLinks,
         outputTrackParameters="estimatedparameters",
         outputProtoTracks="prototracks_estimated",
         trackingGeometry=trackingGeometry,
         magneticField=field,
     )
 
-    s = s or acts.examples.Sequencer(
-        events=100, numThreads=-1, logLevel=acts.logging.INFO
-    )
-
-    s.addReader(evGen)
-    s.addAlgorithm(simAlg)
-    s.addAlgorithm(digiAlg)
     s.addAlgorithm(selAlg)
     s.addAlgorithm(spAlg)
     s.addAlgorithm(seedingAlg)
     s.addAlgorithm(parEstimateAlg)
 
-    s.addWriter(
-        acts.examples.RootParticleWriter(
-            level=acts.logging.INFO,
-            inputParticles=evGen.config.outputParticles,
-            filePath=outputDir + "/evgen_particles.root",
+    if outputDir is not None:
+        s.addWriter(
+            acts.examples.TrackFinderPerformanceWriter(
+                level=s.config.logLevel,
+                inputProtoTracks=seedingAlg.config.outputProtoTracks,
+                inputParticles=selAlg.config.outputParticles,
+                inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
+                filePath=str(outputDir / "performance_seeding_trees.root"),
+            )
         )
+
+        s.addWriter(
+            acts.examples.SeedingPerformanceWriter(
+                level=s.config.logLevel,
+                inputProtoTracks=seedingAlg.config.outputProtoTracks,
+                inputParticles=selAlg.config.outputParticles,
+                inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
+                filePath=str(outputDir / "performance_seeding_hists.root"),
+            )
+        )
+
+        s.addWriter(
+            acts.examples.RootTrackParameterWriter(
+                level=s.config.logLevel,
+                inputTrackParameters=parEstimateAlg.config.outputTrackParameters,
+                inputProtoTracks=parEstimateAlg.config.outputProtoTracks,
+                inputParticles=selAlg.config.inputParticles,
+                inputSimHits="simhits",
+                inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
+                inputMeasurementSimHitsMap="measurement_simhits_map",
+                filePath=str(outputDir / "estimatedparams.root"),
+                treeName="estimatedparams",
+            )
+        )
+
+    return s
+
+
+def runSeeding(trackingGeometry, field, outputDir, s=None):
+
+    from particle_gun import addParticleGun, EtaConfig, PhiConfig, ParticleConfig
+    from fatras import addFatras
+    from digitization import addDigitization
+
+    s = s or acts.examples.Sequencer(
+        events=100, numThreads=-1, logLevel=acts.logging.INFO
     )
-    s.addWriter(
-        acts.examples.CsvParticleWriter(
-            level=acts.logging.INFO,
-            inputParticles=evGen.config.outputParticles,
-            outputStem="evgen_particles",
-            outputDir=outputDir + "/csv",
-        )
+    rnd = acts.examples.RandomNumbers(seed=42)
+    outputDir = Path(outputDir)
+
+    s = addParticleGun(
+        s,
+        EtaConfig(-2.0, 2.0),
+        ParticleConfig(4, acts.PdgParticle.eMuon, True),
+        PhiConfig(0.0, 360.0 * u.degree),
+        multiplicity=2,
+        outputDirCsv=outputDir / "csv",
+        outputDirRoot=outputDir,
+        rnd=rnd,
     )
 
-    s.addWriter(
-        acts.examples.RootParticleWriter(
-            level=acts.logging.INFO,
-            inputParticles=simAlg.config.outputParticlesFinal,
-            filePath=outputDir + "/fatras_particles_final.root",
-        )
-    )
-    s.addWriter(
-        acts.examples.CsvParticleWriter(
-            level=acts.logging.INFO,
-            inputParticles=simAlg.config.outputParticlesFinal,
-            outputStem="fatras_particles_final",
-            outputDir=outputDir + "/csv",
-        )
+    s = addFatras(
+        s,
+        trackingGeometry,
+        field,
+        outputDirCsv=outputDir / "csv",
+        outputDirRoot=outputDir,
+        rnd=rnd,
     )
 
-    s.addWriter(
-        acts.examples.RootParticleWriter(
-            level=acts.logging.INFO,
-            inputParticles=simAlg.config.outputParticlesInitial,
-            filePath=outputDir + "/fatras_particles_initial.root",
-        )
-    )
-    s.addWriter(
-        acts.examples.CsvParticleWriter(
-            level=acts.logging.INFO,
-            inputParticles=simAlg.config.outputParticlesInitial,
-            outputStem="fatras_particles_initial",
-            outputDir=outputDir + "/csv",
-        )
+    srcdir = Path(__file__).resolve().parent.parent.parent.parent
+    s = addDigitization(
+        s,
+        trackingGeometry,
+        field,
+        digiConfigFile=srcdir
+        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
+        rnd=rnd,
     )
 
-    s.addWriter(
-        acts.examples.TrackFinderPerformanceWriter(
-            level=acts.logging.INFO,
-            inputProtoTracks=seedingAlg.config.outputProtoTracks,
-            inputParticles=inputParticles,
-            inputMeasurementParticlesMap=digiCfg.outputMeasurementParticlesMap,
-            filePath=outputDir + "/performance_seeding_trees.root",
-        )
+    s = addSeeding(
+        s,
+        trackingGeometry,
+        field,
+        geoSelectionConfigFile=srcdir
+        / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
+        outputDir=outputDir,
     )
-
-    s.addWriter(
-        acts.examples.SeedingPerformanceWriter(
-            level=acts.logging.DEBUG,
-            inputProtoTracks=seedingAlg.config.outputProtoTracks,
-            inputParticles=inputParticles,
-            inputMeasurementParticlesMap=digiCfg.outputMeasurementParticlesMap,
-            filePath=outputDir + "/performance_seeding_hists.root",
-        )
-    )
-
-    s.addWriter(
-        acts.examples.RootTrackParameterWriter(
-            level=acts.logging.VERBOSE,
-            inputTrackParameters=parEstimateAlg.config.outputTrackParameters,
-            inputProtoTracks=parEstimateAlg.config.outputProtoTracks,
-            inputParticles=simAlg.config.outputParticlesFinal,
-            inputSimHits=simAlg.config.outputSimHits,
-            inputMeasurementParticlesMap=digiCfg.outputMeasurementParticlesMap,
-            inputMeasurementSimHitsMap=digiCfg.outputMeasurementSimHitsMap,
-            filePath=outputDir + "/estimatedparams.root",
-            treeName="estimatedparams",
-        )
-    )
-
     return s
 
 
@@ -263,4 +197,4 @@ if "__main__" == __name__:
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    runSeeding(trackingGeometry, field, outputDir=os.getcwd()).run()
+    runSeeding(trackingGeometry, field, outputDir=Path.cwd()).run()

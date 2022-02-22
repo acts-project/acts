@@ -160,7 +160,7 @@ def test_seeding(tmp_path, trk_geo, field, assert_root_hash):
             0,
         ),
         (
-            "evgen_particles.root",
+            "particles.root",
             "particles",
             seq.config.events,
         ),
@@ -195,10 +195,9 @@ def test_seeding(tmp_path, trk_geo, field, assert_root_hash):
             assert_entries(fp, tn, exp_entries)
             assert_root_hash(fn, fp)
 
-    assert_csv_output(csv, "evgen_particles")
-    assert_csv_output(csv, "evgen_particles")
-    assert_csv_output(csv, "fatras_particles_final")
-    assert_csv_output(csv, "fatras_particles_initial")
+    assert_csv_output(csv, "particles")
+    assert_csv_output(csv, "particles_final")
+    assert_csv_output(csv, "particles_initial")
 
 
 def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):

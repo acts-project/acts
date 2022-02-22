@@ -30,6 +30,10 @@ def addDigitization(
         trackingGeometry=trackingGeometry,
         randomNumbers=rnd,
         inputSimHits="simhits",
+        outputSourceLinks="sourcelinks",
+        outputMeasurements="measurements",
+        outputMeasurementParticlesMap="measurement_particles_map",
+        outputMeasurementSimHitsMap="measurement_simhits_map",
     )
     digiAlg = acts.examples.DigitizationAlgorithm(digiCfg, s.config.logLevel)
 
