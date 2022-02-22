@@ -982,7 +982,8 @@ def test_vertex_fitting_reading(
             trackingGeometry,
             field,
             digiConfigFile=Path(
-                "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+                Path(__file__).parent.parent.parent.parent
+                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
             ),
             outputDir=tmp_path,
             s=s2,
