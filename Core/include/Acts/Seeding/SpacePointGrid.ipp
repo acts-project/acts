@@ -58,6 +58,14 @@ Acts::SpacePointGridCreator::createGrid(
     float deltaPhi = (outerAngle - innerAngle + deltaAngleWithMaxD0) /
                      (2 * config.numPhiNeighbors + 1);
 
+    // sanity check: if the delta phi is equal to or less than zero, we'll be
+    // creating an infinite or a negative number of bins, which would be bad!
+    if (deltaPhi <= 0.f) {
+      throw std::domain_error(
+          "Delta phi value is equal to or less than zero, leading to an "
+          "impossible number of bins (negative or infinite)");
+    }
+
     // divide 2pi by angle delta to get number of phi-bins
     // size is always 2pi even for regions of interest
     phiBins = std::ceil(2 * M_PI / deltaPhi);
