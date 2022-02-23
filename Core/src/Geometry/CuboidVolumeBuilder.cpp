@@ -33,7 +33,6 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <limits>
-#include <optional>
 
 std::shared_ptr<const Acts::Surface> Acts::CuboidVolumeBuilder::buildSurface(
     const GeometryContext& /*gctx*/,
@@ -74,6 +73,8 @@ std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
 
   centroid /= cfg.surfaces.size();
 
+  // In the case the layer configuration doesn't define the rotation of the layer
+  // use the orientation of the first surface to define the layer rotation in space.
   Transform3 trafo = Transform3::Identity();
   trafo.translation() = centroid;
   if (cfg.rotation) {
@@ -220,7 +221,6 @@ Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
 
   // Sort the volumes vectors according to the center location, otherwise the
   // binning boundaries will fail
-
   std::sort(volumes.begin(), volumes.end(),
             [](const TrackingVolumePtr& lhs, const TrackingVolumePtr& rhs) {
               return lhs->center().x() < rhs->center().x();
