@@ -351,6 +351,8 @@ struct GaussianSumFitter {
           // Because we are backwards, we use forward filtered as predicted
           // @FIXME: MTJ direct index access
           // proxy.data().ipredicted = proxy.data().ifiltered;
+          using PM = TrackStatePropMask;
+          proxy.shareFrom(proxy, PM::Filtered, PM::Predicted);
 
           // Mark surface as visited
           result.visitedSurfaces.insert(proxy.referenceSurface().geometryId());

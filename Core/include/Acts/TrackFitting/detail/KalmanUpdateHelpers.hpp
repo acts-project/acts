@@ -104,10 +104,11 @@ auto kalmanHandleMeasurement(
         "be an outlier. Stepping state is not updated.")
     // Set the outlier type flag
     typeFlags.set(TrackStateFlag::OutlierFlag);
-    typeFlags.set(TrackStateFlag::OutlierFlag);
     // @FIXME: MTJ direct index access
     // trackStateProxy.data().ifiltered =
     // trackStateProxy.data().ipredicted;
+    using PM = TrackStatePropMask;
+    trackStateProxy.shareFrom(trackStateProxy, PM::Predicted, PM::Filtered);
   }
 
   return trackStateProxy;
@@ -185,7 +186,9 @@ auto kalmanHandleNoMeasurement(
   // parameter
   // @FIXME: MTJ direct index access
   // trackStateProxy.data().ifiltered =
-  // trackStateProxy.data().ipredicted; We count the processed state
+  // trackStateProxy.data().ipredicted;
+  using PM = TrackStatePropMask;
+  trackStateProxy.shareFrom(trackStateProxy, PM::Predicted, PM::Filtered);
 
   return trackStateProxy;
 }

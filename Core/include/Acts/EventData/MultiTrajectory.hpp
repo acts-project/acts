@@ -195,11 +195,53 @@ class TrackStateProxy {
   /// @return The index of the previous track state.
   size_t previous() const { return data().iprevious; }
 
-
   /// Build a mask that represents all the allocated components of this track
   /// state proxy
   /// @return The generated mask
   TrackStatePropMask getMask() const;
+
+  template <bool RO = ReadOnly, bool ReadOnlyOther,
+            typename = std::enable_if<!RO>>
+  void shareFrom(const TrackStateProxy<M, ReadOnlyOther>& other,
+                 TrackStatePropMask shareSource,
+                 TrackStatePropMask shareTarget) {
+    using PM = TrackStatePropMask;
+
+    IndexData::IndexType sourceIndex{IndexData::kInvalid};
+    switch (shareSource) {
+      case PM::Predicted:
+        sourceIndex = other.data().ipredicted;
+        break;
+      case PM::Filtered:
+        sourceIndex = other.data().ifiltered;
+        break;
+      case PM::Smoothed:
+        sourceIndex = other.data().ismoothed;
+        break;
+      case PM::Jacobian:
+        sourceIndex = other.data().ijacobian;
+        break;
+      default:
+        throw std::domain_error{"Unable to share this component"};
+    }
+
+    switch (shareTarget) {
+      case PM::Predicted:
+        data().ipredicted = sourceIndex;
+        break;
+      case PM::Filtered:
+        data().ifiltered = sourceIndex;
+        break;
+      case PM::Smoothed:
+        data().ismoothed = sourceIndex;
+        break;
+      case PM::Jacobian:
+        data().ijacobian = sourceIndex;
+        break;
+      default:
+        throw std::domain_error{"Unable to share this component"};
+    }
+  }
 
   /// Copy the contents of another track state proxy into this one
   /// @param other The other track state to copy from

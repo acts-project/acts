@@ -801,9 +801,11 @@ class CombinatorialKalmanFilter {
         } else {
           // subsequent track states can reuse
           // @FIXME: MTJ direct index access
-          // auto& first = result.trackStateCandidates.front();
+          auto& first = result.trackStateCandidates.front();
           // ts.data().ipredicted = first.data().ipredicted;
           // ts.data().ijacobian = first.data().ijacobian;
+          ts.shareFrom(first, PM::Predicted, PM::Predicted);
+          ts.shareFrom(first, PM::Jacobian, PM::Jacobian);
         }
 
         ts.pathLength() = pathLength;
@@ -863,6 +865,8 @@ class CombinatorialKalmanFilter {
           // @FIXME: MTJ direct index access
           // trackState.data().ipredicted = firstTrackState->data().ipredicted;
           // trackState.data().ijacobian = firstTrackState->data().ijacobian;
+          trackState.shareFrom(*firstTrackState, PM::Predicted, PM::Predicted);
+          trackState.shareFrom(*firstTrackState, PM::Jacobian, PM::Jacobian);
         } else {
           firstTrackState = trackState;
         }
@@ -897,6 +901,7 @@ class CombinatorialKalmanFilter {
           // parameter
           // @FIXME: MTJ direct index access
           // trackState.data().ifiltered = trackState.data().ipredicted;
+          trackState.shareFrom(trackState, PM::Predicted, PM::Filtered);
 
         } else {
           // Kalman update
@@ -977,6 +982,8 @@ class CombinatorialKalmanFilter {
 
       // @FIXME: MTJ direct index access
       // trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
+      using PM = TrackStatePropMask;
+      trackStateProxy.shareFrom(trackStateProxy, PM::Predicted, PM::Filtered);
 
       return currentTip;
     }
