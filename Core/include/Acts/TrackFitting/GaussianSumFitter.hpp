@@ -349,7 +349,8 @@ struct GaussianSumFitter {
               fwdGsfResult.weightsOfStates.at(idx);
 
           // Because we are backwards, we use forward filtered as predicted
-          proxy.data().ipredicted = proxy.data().ifiltered;
+          // @FIXME: MTJ direct index access
+          // proxy.data().ipredicted = proxy.data().ifiltered;
 
           // Mark surface as visited
           result.visitedSurfaces.insert(proxy.referenceSurface().geometryId());

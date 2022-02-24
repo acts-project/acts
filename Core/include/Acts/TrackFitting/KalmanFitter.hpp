@@ -447,8 +447,9 @@ class KalmanFitter {
                   if (surface_it == result.passedAgainSurfaces.end()) {
                     // If reversed filtering missed this surface, then there is
                     // no smoothed parameter
-                    trackState.data().ismoothed =
-                        detail_lt::IndexData::kInvalid;
+                    // @FIXME: MTJ direct index access
+                    // trackState.data().ismoothed =
+                    // detail_lt::IndexData::kInvalid;
                   }
                 });
           }

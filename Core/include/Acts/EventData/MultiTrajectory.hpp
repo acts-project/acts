@@ -195,13 +195,6 @@ class TrackStateProxy {
   /// @return The index of the previous track state.
   size_t previous() const { return data().iprevious; }
 
-  /// Return the index tuple that makes up this track state
-  /// @return Mutable ref to index tuple from the parent @c MultiTrajectory
-  /// @note This overload is only present in case @c ReadOnly is false.
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  IndexData& data() {
-    return m_traj->m_index[m_istate];
-  }
 
   /// Build a mask that represents all the allocated components of this track
   /// state proxy
@@ -327,10 +320,6 @@ class TrackStateProxy {
     // can be nullptr, but we just take that
     setReferenceSurface(other.referenceSurfacePointer());
   }
-
-  /// Return the index tuple that makes up this track state
-  /// @return Immutable ref to index tuple from the parent @c MultiTrajectory
-  const IndexData& data() const { return m_traj->m_index[m_istate]; }
 
   /// Reference surface.
   /// @return the reference surface
@@ -633,6 +622,18 @@ class TrackStateProxy {
   TrackStateType typeFlags() const { return data().typeFlags; }
 
  private:
+  /// Return the index tuple that makes up this track state
+  /// @return Immutable ref to index tuple from the parent @c MultiTrajectory
+  const IndexData& data() const { return m_traj->m_index[m_istate]; }
+
+  /// Return the index tuple that makes up this track state
+  /// @return Mutable ref to index tuple from the parent @c MultiTrajectory
+  /// @note This overload is only present in case @c ReadOnly is false.
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  IndexData& data() {
+    return m_traj->m_index[m_istate];
+  }
+
   // Private since it can only be created by the trajectory.
   TrackStateProxy(ConstIf<MultiTrajectory, ReadOnly>& trajectory,
                   size_t istate);

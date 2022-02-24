@@ -215,7 +215,8 @@ auto smoothAndCombineTrajectories(
 
       proxy.predicted() = mean;
       proxy.predictedCovariance() = cov.value();
-      proxy.data().ifiltered = proxy.data().ipredicted;
+      // @FIXME: MTJ direct index access
+      // proxy.data().ifiltered = proxy.data().ipredicted;
 
     }
     // If we have a measurement, do the smoothing

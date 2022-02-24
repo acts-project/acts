@@ -99,12 +99,15 @@ auto kalmanHandleMeasurement(
     typeFlags.set(TrackStateFlag::MeasurementFlag);
   } else {
     ACTS_VERBOSE(
-        "Filtering step successful. But measurement is deterimined "
+        "Filtering step successful. But measurement is determined "
         "to "
         "be an outlier. Stepping state is not updated.")
     // Set the outlier type flag
     typeFlags.set(TrackStateFlag::OutlierFlag);
-    trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
+    typeFlags.set(TrackStateFlag::OutlierFlag);
+    // @FIXME: MTJ direct index access
+    // trackStateProxy.data().ifiltered =
+    // trackStateProxy.data().ipredicted;
   }
 
   return trackStateProxy;
@@ -180,7 +183,9 @@ auto kalmanHandleNoMeasurement(
 
   // Set the filtered parameter index to be the same with predicted
   // parameter
-  trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
+  // @FIXME: MTJ direct index access
+  // trackStateProxy.data().ifiltered =
+  // trackStateProxy.data().ipredicted; We count the processed state
 
   return trackStateProxy;
 }
