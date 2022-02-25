@@ -123,3 +123,40 @@ def _process_volume_intervals(kwargs):
 
 
 _patchKwargsConstructor(TGeoDetector.Config.Volume, proc=_process_volume_intervals)
+
+
+def NamedTypeArgs(**namedTypeArgs):
+    """Decorator to move args of a named type (eg. `namedtuple` or `Enum`) to kwargs based on type, so user doesn't need to specify the key name.
+    Also allows the keyword argument to be converted from a built-in type (eg. `tuple` or `int`)."""
+
+    namedTypeClasses = {c: a for a, c in namedTypeArgs.items()}
+
+    def NamedTypeArgsDecorator(func):
+        from functools import wraps
+
+        @wraps(func)
+        def NamedTypeArgsWrapper(*args, **kwargs):
+            from collections.abc import Iterable
+
+            for k, v in kwargs.items():
+                cls = namedTypeArgs.get(k)
+                if cls is not None and v.__class__.__module__ == int.__module__:
+                    if issubclass(cls, Iterable):
+                        kwargs[k] = cls(*v)
+                    else:
+                        kwargs[k] = cls(v)
+
+            newargs = []
+            for a in args:
+                k = namedTypeClasses.get(type(a))
+                if k is None:
+                    newargs.append(a)
+                elif k in kwargs:
+                    raise KeyError(k)
+                else:
+                    kwargs[k] = a
+            return func(*newargs, **kwargs)
+
+        return NamedTypeArgsWrapper
+
+    return NamedTypeArgsDecorator

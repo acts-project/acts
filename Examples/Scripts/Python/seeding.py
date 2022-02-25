@@ -11,6 +11,9 @@ u = acts.UnitConstants
 SeedingAlgorithm = Enum("SeedingAlgorithm", "Default TruthSmeared TruthEstimated")
 
 
+@acts.examples.NamedTypeArgs(
+    seedingAlgorithm=SeedingAlgorithm, logLevel=acts.logging.Level
+)
 def addSeeding(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
@@ -263,11 +266,11 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
         s,
         trackingGeometry,
         field,
+        # SeedingAlgorithm.TruthEstimated,
+        acts.logging.VERBOSE,
         geoSelectionConfigFile=srcdir
         / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
         outputDir=outputDir,
-        logLevel=acts.logging.VERBOSE,
-        # seedingAlgorithm=SeedingAlgorithm.TruthEstimated,
     )
     return s
 

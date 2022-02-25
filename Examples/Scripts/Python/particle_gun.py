@@ -36,42 +36,12 @@ ParticleConfig = namedtuple(
 )
 
 
-def ConfigArgs(func):
-    """Decorator to move `namedtuple` args to kwargs based on type, so user doesn't need to specify key name.
-    Also allows the keyword argument to be specified as a tuple."""
-    from functools import wraps
-
-    @wraps(func)
-    def ConfigArgsWrapper(*args, **kwargs):
-        namedtupleArgs = {
-            "momentumConfig": MomentumConfig,
-            "etaConfig": EtaConfig,
-            "phiConfig": PhiConfig,
-            "particleConfig": ParticleConfig,
-        }
-        namedtupleClasses = {c: a for a, c in namedtupleArgs.items()}
-
-        for k, v in kwargs.items():
-            if isinstance(v, tuple):
-                cls = namedtupleArgs.get(k)
-                if cls is not None:
-                    kwargs[k] = cls(*v)
-
-        newargs = []
-        for a in args:
-            k = namedtupleClasses.get(type(a))
-            if k is None:
-                newargs.append(a)
-            elif k in kwargs:
-                raise KeyError(k)
-            else:
-                kwargs[k] = a
-        return func(*newargs, **kwargs)
-
-    return ConfigArgsWrapper
-
-
-@ConfigArgs
+@acts.examples.NamedTypeArgs(
+    momentumConfig=MomentumConfig,
+    etaConfig=EtaConfig,
+    phiConfig=PhiConfig,
+    particleConfig=ParticleConfig,
+)
 def addParticleGun(
     s: Sequencer,
     outputDirCsv: Optional[Union[Path, str]] = None,
