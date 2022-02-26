@@ -2,6 +2,7 @@
 from pathlib import Path
 from typing import Optional, Union
 from enum import Enum
+from collections import namedtuple
 
 import acts
 import acts.examples
@@ -10,9 +11,24 @@ import acts.examples
 u = acts.UnitConstants
 SeedingAlgorithm = Enum("SeedingAlgorithm", "Default TruthSmeared TruthEstimated")
 
+TruthSeedRanges = namedtuple(
+    "TruthSeedRanges",
+    ["rho", "z", "phi", "eta", "absEta", "pt", "nHits"],
+    defaults=[(None, None)] * 7,
+)
+
+ParticleSmearingSigmas = namedtuple(
+    "ParticleSmearingSigmas",
+    ["d0", "d0PtA", "d0PtB", "z0", "z0PtA", "z0PtB", "t0", "phi", "theta", "pRel"],
+    defaults=[None] * 10,
+)
+
 
 @acts.examples.NamedTypeArgs(
-    seedingAlgorithm=SeedingAlgorithm, logLevel=acts.logging.Level
+    seedingAlgorithm=SeedingAlgorithm,
+    truthSeedRanges=TruthSeedRanges,
+    particleSmearingSigmas=ParticleSmearingSigmas,
+    logLevel=acts.logging.Level,
 )
 def addSeeding(
     s: acts.examples.Sequencer,
@@ -20,6 +36,9 @@ def addSeeding(
     field: acts.MagneticFieldProvider,
     geoSelectionConfigFile: Optional[Union[Path, str]] = None,
     seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Default,
+    truthSeedRanges: Optional[TruthSeedRanges] = None,
+    particleSmearingSigmas: Optional[ParticleSmearingSigmas] = None,
+    initialVarInflation: Optional[list] = None,
     outputDir: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
@@ -51,10 +70,15 @@ def addSeeding(
     logger = acts.logging.getLogger("addSeeding")
 
     selAlg = acts.examples.TruthSeedSelector(
+        **acts.examples.defaultKWArgs(
+            ptMin=truthSeedRanges.pt[0],
+            ptMax=truthSeedRanges.pt[1],
+            etaMin=truthSeedRanges.eta[0],
+            etaMax=truthSeedRanges.eta[1],
+            nHitsMin=truthSeedRanges.nHits[0],
+            nHitsMax=truthSeedRanges.nHits[1],
+        ),
         level=customLogLevel(),
-        ptMin=1 * u.GeV,
-        eta=(-2.5, 2.5),
-        nHitsMin=9,
         inputParticles="particles_final",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputParticles="truth_seeds_selected",
@@ -74,17 +98,19 @@ def addSeeding(
             outputTrackParameters="smearedparameters",
             randomNumbers=rnd,
             # gaussian sigmas to smear particle parameters
-            sigmaD0=20 * u.um,
-            sigmaD0PtA=30 * u.um,
-            sigmaD0PtB=0.3 / 1 * u.GeV,
-            sigmaZ0=20 * u.um,
-            sigmaZ0PtA=30 * u.um,
-            sigmaZ0PtB=0.3 / 1 * u.GeV,
-            sigmaPhi=1 * u.degree,
-            sigmaTheta=1 * u.degree,
-            sigmaPRel=0.01,
-            sigmaT0=1 * u.ns,
-            initialVarInflation=[1, 1, 1, 1, 1, 1],
+            **acts.examples.defaultKWArgs(
+                sigmaD0=particleSmearingSigmas.d0,
+                sigmaD0PtA=particleSmearingSigmas.d0PtA,
+                sigmaD0PtB=particleSmearingSigmas.d0PtB,
+                sigmaZ0=particleSmearingSigmas.z0,
+                sigmaZ0PtA=particleSmearingSigmas.z0PtA,
+                sigmaZ0PtB=particleSmearingSigmas.z0PtB,
+                sigmaT0=particleSmearingSigmas.t0,
+                sigmaPhi=particleSmearingSigmas.phi,
+                sigmaTheta=particleSmearingSigmas.theta,
+                sigmaPRel=particleSmearingSigmas.pRel,
+                initialVarInflation=initialVarInflation,
+            ),
         )
         s.addAlgorithm(ptclSmear)
     else:
@@ -266,7 +292,10 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
         s,
         trackingGeometry,
         field,
+        # SeedingAlgorithm.TruthSmeared,
         # SeedingAlgorithm.TruthEstimated,
+        TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-2.5, 2.5), nHits=(9, None)),
+        ParticleSmearingSigmas(pRel=0.01),  # only used by SeedingAlgorithm.TruthSmeared
         acts.logging.VERBOSE,
         geoSelectionConfigFile=srcdir
         / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",

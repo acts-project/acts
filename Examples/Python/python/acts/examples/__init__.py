@@ -160,3 +160,18 @@ def NamedTypeArgs(**namedTypeArgs):
         return NamedTypeArgsWrapper
 
     return NamedTypeArgsDecorator
+
+
+def defaultKWArgs(**kwargs) -> dict:
+    """Removes keyword arguments that are None or a list of all None (eg. [None,None]).
+    This keeps the called function's defaults."""
+    from collections.abc import Iterable
+
+    a = {
+        k: v
+        for k, v in kwargs.items()
+        if not (
+            v is None or (isinstance(v, Iterable) and all([vv is None for vv in v]))
+        )
+    }
+    return a

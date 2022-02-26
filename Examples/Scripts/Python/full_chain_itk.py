@@ -12,6 +12,7 @@ rnd = acts.examples.RandomNumbers(seed=42)
 from particle_gun import addParticleGun, MomentumConfig, EtaConfig, ParticleConfig
 from fatras import addFatras
 from digitization import addDigitization
+from seeding import addSeeding, SeedingAlgorithm, TruthSeedRanges
 
 s = acts.examples.Sequencer(events=100, numThreads=-1)
 s = addParticleGun(
@@ -36,4 +37,14 @@ s = addDigitization(
     outputDirRoot=outputDir,
     rnd=rnd,
 )
+s = addSeeding(
+    s,
+    trackingGeometry,
+    field,
+    # SeedingAlgorithm.TruthEstimated,
+    TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None)),
+    geoSelectionConfigFile=geo_dir / "atlas/itk-hgtd/geoSelection-ITk.json",
+    outputDir=outputDir,
+)
+
 s.run()

@@ -79,19 +79,6 @@ def addParticleGun(
         random number generator
     """
 
-    def DefaultKWArgs(**kwargs) -> dict:
-        """Removes keyword arguments that are None or a list of all None (eg. [None,None]).
-        This keeps the called function's defaults."""
-        from collections.abc import Iterable
-
-        return {
-            k: v
-            for k, v in kwargs.items()
-            if not (
-                v is None or (isinstance(v, Iterable) and all([vv is None for vv in v]))
-            )
-        }
-
     # Preliminaries
     rnd = rnd or RandomNumbers(seed=228)
 
@@ -101,7 +88,7 @@ def addParticleGun(
         vtxGen.stddev = Vector4(0, 0, 0, 0)
 
     ptclGen = ParametricParticleGenerator(
-        **DefaultKWArgs(
+        **acts.examples.defaultKWArgs(
             p=(momentumConfig.min, momentumConfig.max),
             pTransverse=momentumConfig.transverse,
             eta=(etaConfig.min, etaConfig.max),
