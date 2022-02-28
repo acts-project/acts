@@ -23,11 +23,31 @@ ParticleSmearingSigmas = namedtuple(
     defaults=[None] * 10,
 )
 
+SeedfinderConfigArg = namedtuple(
+    "SeedfinderConfig",
+    [
+        "maxSeedsPerSpM",
+        "cotThetaMax",
+        "sigmaScattering",
+        "radLengthPerSeed",
+        "minPt",
+        "bFieldInZ",
+        "impactMax",
+        "deltaR",  # (min,max)
+        "collisionRegion",  # (min,max)
+        "r",  # (min,max)
+        "z",  # (min,max)
+        "beamPos",  # (x,y)
+    ],
+    defaults=[None] * 7 + [(None, None)] * 5,
+)
+
 
 @acts.examples.NamedTypeArgs(
     seedingAlgorithm=SeedingAlgorithm,
     truthSeedRanges=TruthSeedRanges,
     particleSmearingSigmas=ParticleSmearingSigmas,
+    seedfinderConfigArg=SeedfinderConfigArg,
     logLevel=acts.logging.Level,
 )
 def addSeeding(
@@ -39,6 +59,7 @@ def addSeeding(
     truthSeedRanges: Optional[TruthSeedRanges] = None,
     particleSmearingSigmas: Optional[ParticleSmearingSigmas] = None,
     initialVarInflation: Optional[list] = None,
+    seedfinderConfigArg: Optional[SeedfinderConfigArg] = None,
     outputDir: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
@@ -143,40 +164,52 @@ def addSeeding(
         elif seedingAlgorithm == SeedingAlgorithm.Default:
             logger.info("Using default seeding")
             # Use seeding
-            gridConfig = acts.SpacePointGridConfig(
-                bFieldInZ=1.99724 * u.T,
-                minPt=500 * u.MeV,
-                rMax=200 * u.mm,
-                zMax=2000 * u.mm,
-                zMin=-2000 * u.mm,
-                deltaRMax=60 * u.mm,
-                cotThetaMax=7.40627,  # 2.7 eta
+            seedFinderConfig = acts.SeedfinderConfig(
+                **acts.examples.defaultKWArgs(
+                    rMin=seedfinderConfigArg.r[0],
+                    rMax=seedfinderConfigArg.r[1],
+                    deltaRMin=seedfinderConfigArg.deltaR[0],
+                    deltaRMax=seedfinderConfigArg.deltaR[1],
+                    deltaRMinTopSP=seedfinderConfigArg.deltaR[0],
+                    deltaRMinBottomSP=seedfinderConfigArg.deltaR[0],
+                    deltaRMaxTopSP=seedfinderConfigArg.deltaR[1],
+                    deltaRMaxBottomSP=seedfinderConfigArg.deltaR[1],
+                    collisionRegionMin=seedfinderConfigArg.collisionRegion[0],
+                    collisionRegionMax=seedfinderConfigArg.collisionRegion[1],
+                    zMin=seedfinderConfigArg.z[0],
+                    zMax=seedfinderConfigArg.z[1],
+                    maxSeedsPerSpM=seedfinderConfigArg.maxSeedsPerSpM,
+                    cotThetaMax=seedfinderConfigArg.cotThetaMax,
+                    sigmaScattering=seedfinderConfigArg.sigmaScattering,
+                    radLengthPerSeed=seedfinderConfigArg.radLengthPerSeed,
+                    minPt=seedfinderConfigArg.minPt,
+                    bFieldInZ=seedfinderConfigArg.bFieldInZ,
+                    impactMax=seedfinderConfigArg.impactMax,
+                    beamPos=(
+                        None
+                        if seedfinderConfigArg.beamPos is None
+                        or all([x is None for x in seedfinderConfigArg.beamPos])
+                        else acts.Vector2(
+                            seedfinderConfigArg.beamPos[0] or 0.0,
+                            seedfinderConfigArg.beamPos[1] or 0.0,
+                        )
+                    ),
+                ),
             )
 
             seedFilterConfig = acts.SeedFilterConfig(
-                maxSeedsPerSpM=1, deltaRMin=1 * u.mm
+                maxSeedsPerSpM=seedFinderConfig.maxSeedsPerSpM,
+                deltaRMin=seedFinderConfig.deltaRMin,
             )
 
-            seedFinderConfig = acts.SeedfinderConfig(
-                rMax=gridConfig.rMax,
-                deltaRMin=seedFilterConfig.deltaRMin,
-                deltaRMax=gridConfig.deltaRMax,
-                deltaRMinTopSP=seedFilterConfig.deltaRMin,
-                deltaRMinBottomSP=seedFilterConfig.deltaRMin,
-                deltaRMaxTopSP=gridConfig.deltaRMax,
-                deltaRMaxBottomSP=gridConfig.deltaRMax,
-                collisionRegionMin=-250 * u.mm,
-                collisionRegionMax=250 * u.mm,
-                zMin=gridConfig.zMin,
-                zMax=gridConfig.zMax,
-                maxSeedsPerSpM=seedFilterConfig.maxSeedsPerSpM,
-                cotThetaMax=gridConfig.cotThetaMax,
-                sigmaScattering=50,
-                radLengthPerSeed=0.1,
-                minPt=gridConfig.minPt,
-                bFieldInZ=gridConfig.bFieldInZ,
-                beamPos=acts.Vector2(0 * u.mm, 0 * u.mm),
-                impactMax=3 * u.mm,
+            gridConfig = acts.SpacePointGridConfig(
+                bFieldInZ=seedFinderConfig.bFieldInZ,
+                minPt=seedFinderConfig.minPt,
+                rMax=seedFinderConfig.rMax,
+                zMax=seedFinderConfig.zMax,
+                zMin=seedFinderConfig.zMin,
+                deltaRMax=seedFinderConfig.deltaRMax,
+                cotThetaMax=seedFinderConfig.cotThetaMax,
             )
 
             seedingAlg = acts.examples.SeedingAlgorithm(
@@ -296,6 +329,18 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
         # SeedingAlgorithm.TruthEstimated,
         TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-2.5, 2.5), nHits=(9, None)),
         ParticleSmearingSigmas(pRel=0.01),  # only used by SeedingAlgorithm.TruthSmeared
+        SeedfinderConfigArg(
+            r=(None, 200 * u.mm),  # rMin=default, 33mm
+            deltaR=(1 * u.mm, 60 * u.mm),
+            collisionRegion=(-250 * u.mm, 250 * u.mm),
+            z=(-2000 * u.mm, 2000 * u.mm),
+            maxSeedsPerSpM=1,
+            sigmaScattering=50,
+            radLengthPerSeed=0.1,
+            minPt=500 * u.MeV,
+            bFieldInZ=1.99724 * u.T,
+            impactMax=3 * u.mm,
+        ),
         acts.logging.VERBOSE,
         geoSelectionConfigFile=srcdir
         / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
