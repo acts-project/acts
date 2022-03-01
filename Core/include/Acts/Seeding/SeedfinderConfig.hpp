@@ -55,8 +55,6 @@ struct SeedfinderConfig {
   std::vector<std::vector<float>> rRangeMiddleSP;
   bool useVariableMiddleSPRange = false;
   float deltaRMiddleSPRange = 10.;
-  float rMinMiddleSP;
-  float rMaxMiddleSP;
 
   // seed confirmation
   bool seedConfirmation = false;
