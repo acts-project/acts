@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(DecayWidthTime) {
 }
 
 BOOST_AUTO_TEST_CASE(Charge) {
-  CHECK_CLOSE_REL(1_C, 1.602176634e19_e, eps);
+  CHECK_CLOSE_REL(1_C, 6.2415091e18_e, eps);
 }
 
 BOOST_AUTO_TEST_CASE(MagneticField) {
