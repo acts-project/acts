@@ -51,7 +51,11 @@ option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HEPMC3 "Build HepMC3-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "Build python bindings for the examples" OFF)
+option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" OFF )
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
+
+# dependency related options
+
 # test related options
 option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
 option(ACTS_BUILD_INTEGRATIONTESTS "Build integration tests" OFF)
@@ -186,7 +190,11 @@ endmacro()
 # when a particular package is actually needed.
 # plugin dependencies
 if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
+  if(ACTS_USE_SYSTEM_PYBIND11) 
+    find_package(pybind11 CONFIG REQUIRED)
+  else()
     add_subdirectory(thirdparty/pybind11)
+  endif()
 endif()
 if(ACTS_BUILD_PLUGIN_AUTODIFF)
   if(ACTS_USE_SYSTEM_AUTODIFF)
