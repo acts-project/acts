@@ -53,9 +53,6 @@ option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OF
 option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "Build python bindings for the examples" OFF)
 option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" OFF )
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
-
-# dependency related options
-
 # test related options
 option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
 option(ACTS_BUILD_INTEGRATIONTESTS "Build integration tests" OFF)
