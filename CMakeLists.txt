@@ -187,6 +187,7 @@ endmacro()
 # when a particular package is actually needed.
 # plugin dependencies
 if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
+  find_package(Python COMPONENTS Interpreter Development)
   if(ACTS_USE_SYSTEM_PYBIND11) 
     find_package(pybind11 CONFIG REQUIRED)
   else()
