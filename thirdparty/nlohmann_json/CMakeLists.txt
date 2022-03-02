@@ -16,4 +16,5 @@ FetchContent_Declare( nlohmann_json
 
 # Now set up its build.
 set(JSON_BuildTests OFF CACHE INTERNAL "")
+set(JSON_Install ON CACHE INTERNAL "")
 FetchContent_MakeAvailable( nlohmann_json )
