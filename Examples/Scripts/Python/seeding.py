@@ -42,12 +42,21 @@ SeedfinderConfigArg = namedtuple(
     defaults=[None] * 7 + [(None, None)] * 5,
 )
 
+TrackParamsEstimationConfig = namedtuple(
+    "TrackParamsEstimationConfig",
+    [
+        "deltaR",  # (min,max)
+    ],
+    defaults=[(None, None)],
+)
+
 
 @acts.examples.NamedTypeArgs(
     seedingAlgorithm=SeedingAlgorithm,
     truthSeedRanges=TruthSeedRanges,
     particleSmearingSigmas=ParticleSmearingSigmas,
     seedfinderConfigArg=SeedfinderConfigArg,
+    trackParamsEstimationConfig=TrackParamsEstimationConfig,
     logLevel=acts.logging.Level,
 )
 def addSeeding(
@@ -56,10 +65,13 @@ def addSeeding(
     field: acts.MagneticFieldProvider,
     geoSelectionConfigFile: Optional[Union[Path, str]] = None,
     seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Default,
-    truthSeedRanges: Optional[TruthSeedRanges] = None,
-    particleSmearingSigmas: Optional[ParticleSmearingSigmas] = None,
+    truthSeedRanges: Optional[TruthSeedRanges] = TruthSeedRanges(),
+    particleSmearingSigmas: Optional[ParticleSmearingSigmas] = ParticleSmearingSigmas(),
     initialVarInflation: Optional[list] = None,
-    seedfinderConfigArg: Optional[SeedfinderConfigArg] = None,
+    seedfinderConfigArg: Optional[SeedfinderConfigArg] = SeedfinderConfigArg(),
+    trackParamsEstimationConfig: Optional[
+        TrackParamsEstimationConfig
+    ] = TrackParamsEstimationConfig(),
     outputDir: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
@@ -90,22 +102,25 @@ def addSeeding(
 
     logger = acts.logging.getLogger("addSeeding")
 
-    selAlg = acts.examples.TruthSeedSelector(
-        **acts.examples.defaultKWArgs(
-            ptMin=truthSeedRanges.pt[0],
-            ptMax=truthSeedRanges.pt[1],
-            etaMin=truthSeedRanges.eta[0],
-            etaMax=truthSeedRanges.eta[1],
-            nHitsMin=truthSeedRanges.nHits[0],
-            nHitsMax=truthSeedRanges.nHits[1],
-        ),
-        level=customLogLevel(),
-        inputParticles="particles_final",
-        inputMeasurementParticlesMap="measurement_particles_map",
-        outputParticles="truth_seeds_selected",
-    )
-    s.addAlgorithm(selAlg)
-    inputParticles = selAlg.config.outputParticles
+    if truthSeedRanges is not None:
+        selAlg = acts.examples.TruthSeedSelector(
+            **acts.examples.defaultKWArgs(
+                ptMin=truthSeedRanges.pt[0],
+                ptMax=truthSeedRanges.pt[1],
+                etaMin=truthSeedRanges.eta[0],
+                etaMax=truthSeedRanges.eta[1],
+                nHitsMin=truthSeedRanges.nHits[0],
+                nHitsMax=truthSeedRanges.nHits[1],
+            ),
+            level=customLogLevel(),
+            inputParticles="particles_final",
+            inputMeasurementParticlesMap="measurement_particles_map",
+            outputParticles="truth_seeds_selected",
+        )
+        s.addAlgorithm(selAlg)
+        inputParticles = selAlg.config.outputParticles
+    else:
+        inputParticles = "particles_final"
 
     # Create starting parameters from either particle smearing or combined seed
     # finding and track parameters estimation
@@ -116,7 +131,7 @@ def addSeeding(
         ptclSmear = acts.examples.ParticleSmearing(
             level=customLogLevel(),
             inputParticles=inputParticles,
-            outputTrackParameters="smearedparameters",
+            outputTrackParameters="estimatedparameters",
             randomNumbers=rnd,
             # gaussian sigmas to smear particle parameters
             **acts.examples.defaultKWArgs(
@@ -237,6 +252,10 @@ def addSeeding(
             outputProtoTracks="prototracks_estimated",
             trackingGeometry=trackingGeometry,
             magneticField=field,
+            **acts.examples.defaultKWArgs(
+                deltaRMin=trackParamsEstimationConfig.deltaR[0],
+                deltaRMax=trackParamsEstimationConfig.deltaR[1],
+            ),
         )
         s.addAlgorithm(parEstimateAlg)
 
@@ -255,7 +274,7 @@ def addSeeding(
                 acts.examples.SeedingPerformanceWriter(
                     level=customLogLevel(acts.logging.DEBUG),
                     inputProtoTracks=inputProtoTracks,
-                    inputParticles=selAlg.config.outputParticles,
+                    inputParticles=inputParticles,
                     inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
                     filePath=str(outputDir / "performance_seeding_hists.root"),
                 )
@@ -266,7 +285,7 @@ def addSeeding(
                     level=customLogLevel(acts.logging.VERBOSE),
                     inputTrackParameters=parEstimateAlg.config.outputTrackParameters,
                     inputProtoTracks=parEstimateAlg.config.outputProtoTracks,
-                    inputParticles=selAlg.config.inputParticles,
+                    inputParticles=inputParticles,
                     inputSimHits="simhits",
                     inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
                     inputMeasurementSimHitsMap="measurement_simhits_map",
@@ -350,7 +369,7 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
 
 
 if "__main__" == __name__:
-    from common import getOpenDataDetector
+    # from common import getOpenDataDetector
 
     # detector, trackingGeometry, _ = getOpenDataDetector()
     detector, trackingGeometry, _ = acts.examples.GenericDetector.create()
