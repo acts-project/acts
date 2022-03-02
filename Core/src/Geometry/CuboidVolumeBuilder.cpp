@@ -58,6 +58,12 @@ std::shared_ptr<const Acts::Surface> Acts::CuboidVolumeBuilder::buildSurface(
 std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
     const GeometryContext& gctx,
     Acts::CuboidVolumeBuilder::LayerConfig& cfg) const {
+  if (cfg.surfaces.empty() && cfg.surfaceCfg.empty()) {
+    throw std::runtime_error{
+        "Neither surfaces nor config to build surfaces was provided. Cannot "
+        "proceed"};
+  }
+
   // Build the surface
   if (cfg.surfaces.empty()) {
     for (const auto& sCfg : cfg.surfaceCfg) {
@@ -73,8 +79,9 @@ std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
 
   centroid /= cfg.surfaces.size();
 
-  // In the case the layer configuration doesn't define the rotation of the layer
-  // use the orientation of the first surface to define the layer rotation in space.
+  // In the case the layer configuration doesn't define the rotation of the
+  // layer use the orientation of the first surface to define the layer rotation
+  // in space.
   Transform3 trafo = Transform3::Identity();
   trafo.translation() = centroid;
   if (cfg.rotation) {
