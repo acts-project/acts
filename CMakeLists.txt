@@ -25,7 +25,7 @@ option(ACTS_BUILD_EVERYTHING "Build with most options enabled (except HepMC3 and
 # core related options
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
 set(ACTS_LOG_FAILURE_THRESHOLD "" CACHE STRING "Log level above which an exception should be automatically thrown")
-option(ACTS_FORCE_ASSERTIONS "Modify compiler flags to keep assertions" OFF)
+option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
 # plugins related options
 option(ACTS_BUILD_PLUGIN_AUTODIFF "Build the autodiff plugin" OFF)
 option(ACTS_USE_SYSTEM_AUTODIFF "Use autodiff provided by the system instead of the bundled version" OFF)
