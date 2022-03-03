@@ -37,6 +37,5 @@ set(CMAKE_INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
 
 if(ACTS_FORCE_ASSERTIONS)
   message(STATUS "Stripping -DNDEBUG from compile flags to enable assertions. This can have side-effects, USE WITH CAUTION!")
-string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
-string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO ${CMAKE_CXX_FLAGS_RELWITHDEBINFO})
+include_directories(SYSTEM BEFORE ${CMAKE_CURRENT_LIST_DIR}/assert_include)
 endif()
