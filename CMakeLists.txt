@@ -127,6 +127,12 @@ include(ActsComponentsHelpers) # handle components via add_..._if commands
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
 
+# This needs to happen before we set up any targets
+if(ACTS_FORCE_ASSERTIONS)
+  message(STATUS "Injecting headers to force assertions. This can have side-effects, USE WITH CAUTION!")
+  include_directories(BEFORE SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/cmake/assert_include)
+endif()
+
 # minimal dependency versions. they are defined here in a single place so
 # they can be easily upgraded, although they might not be used if the
 # dependency is included via `add_subdirectory(...)`.
