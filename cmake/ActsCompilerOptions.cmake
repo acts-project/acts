@@ -33,9 +33,7 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 # set relative library path for ACTS libraries
 set(CMAKE_INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
 
-# message(STATUS ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE})
-
 if(ACTS_FORCE_ASSERTIONS)
   message(STATUS "Stripping -DNDEBUG from compile flags to enable assertions. This can have side-effects, USE WITH CAUTION!")
-include_directories(SYSTEM BEFORE ${CMAKE_CURRENT_LIST_DIR}/assert_include)
+  include_directories(SYSTEM BEFORE ${CMAKE_CURRENT_LIST_DIR}/assert_include)
 endif()
