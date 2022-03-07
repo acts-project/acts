@@ -99,6 +99,9 @@ void Mat_map(std::string Val = "", std::string geantino = "", std::string name =
   gStyle->SetOptStat(0);
   gStyle->SetOptTitle(0);
 
+  TH2F * Val_Map = new TH2F("Val_Map","Val_Map",4000,0,4000,1200,0,1200);
+  TH2F * geantino_Map = new TH2F("geantino_Map","geantino_Map",4000,0,4000,1200,0,1200);
+
   TProfile * Val_X0_Eta = new TProfile("Val_X0_Eta","Val_X0_Eta",160,-4,4);
   TProfile * Val_X0_Phi = new TProfile("Val_X0_Phi","Val_X0_Phi",160,-4,4);
   TH2F * Val_X0_Eta_spread = new TH2F("Val_X0_Eta_spread","Val_X0_Eta_spread",160,-4,4,160,0,4);
@@ -119,43 +122,34 @@ void Mat_map(std::string Val = "", std::string geantino = "", std::string name =
   TChain *geantino_file = new TChain("material-tracks");
 
   // Define line corresponding to the different eta value
-  TLine *eta_0 = new TLine(0,-1200,0,1200);
-  eta_0->SetLineColor(kRed);
+  TLine *eta_0 = new TLine(0,0,0,1200);
+  eta_0->SetLineColor(kBlue);
 
-  TLine *eta_1p = new TLine(-1250,-1064,1250,1064);
-  eta_1p->SetLineColor(kRed);
-  TLine *eta_2p = new TLine(-3000,-827,3000,827);
-  eta_2p->SetLineColor(kRed);
-  TLine *eta_3p = new TLine(-3000,-300,3000,300);
-  eta_3p->SetLineColor(kRed);
-  TLine *eta_4p = new TLine(-3000,-110,3000,110);
-  eta_4p->SetLineColor(kRed);
-
-  TLine *eta_1n = new TLine(-1250,1064,1250,-1064);
-  eta_1n->SetLineColor(kRed);
-  TLine *eta_2n = new TLine(-3000,827,3000,-827);
-  eta_2n->SetLineColor(kRed);
-  TLine *eta_3n = new TLine(-3000,300,3000,-300);
-  eta_3n->SetLineColor(kRed);
-  TLine *eta_4n = new TLine(-3000,110,3000,-110);
-  eta_4n->SetLineColor(kRed);
+  TLine *eta_1p = new TLine(0,0,1250,1064);
+  eta_1p->SetLineColor(kBlue);
+  TLine *eta_2p = new TLine(0,0,3000,827);
+  eta_2p->SetLineColor(kBlue);
+  TLine *eta_3p = new TLine(0,0,3000,300);
+  eta_3p->SetLineColor(kBlue);
+  TLine *eta_4p = new TLine(0,0,3000,110);
+  eta_4p->SetLineColor(kBlue);
 
   if(Val != ""){
     Val_file->Add(Val.c_str());
 
     // 2D map for Validation input
     TCanvas *VM = new TCanvas("VM","Validation Map") ;
-    Val_file->Draw("mat_y:mat_z","fabs(mat_x)<1");
+    Val_file->Draw("sqrt(mat_y*mat_y+mat_x*mat_x):mat_z >> Val_Map");
+
+    Val_Map->GetXaxis()->SetTitle("Z[mm]");
+    Val_Map->GetYaxis()->SetTitle("R[mm]");
 
     eta_0->Draw("Same");
     eta_1p->Draw("Same");
-    eta_1n->Draw("Same");
     eta_2p->Draw("Same");
-    eta_2n->Draw("Same");
     eta_3p->Draw("Same");
-    eta_3n->Draw("Same");
     eta_4p->Draw("Same");
-    eta_4n->Draw("Same");
+
 
     VM->Print( (name+"/Val_mat_map.png").c_str());
     //VM->Print( (name+"/Val_mat_map.pdf").c_str());
@@ -206,17 +200,16 @@ void Mat_map(std::string Val = "", std::string geantino = "", std::string name =
 
     // 2D map for Geantino input
     TCanvas *GM = new TCanvas("GM","Geantino Map") ;
-    geantino_file->Draw("mat_y:mat_z","fabs(mat_x)<1");
+    geantino_file->Draw("sqrt(mat_y*mat_y+mat_x*mat_x):mat_z>>geantino_Map","");
+
+    geantino_Map->GetXaxis()->SetTitle("Z[mm]");
+    geantino_Map->GetYaxis()->SetTitle("R[mm]");
 
     eta_0->Draw("Same");
     eta_1p->Draw("Same");
-    eta_1n->Draw("Same");
     eta_2p->Draw("Same");
-    eta_2n->Draw("Same");
     eta_3p->Draw("Same");
-    eta_3n->Draw("Same");
     eta_4p->Draw("Same");
-    eta_4n->Draw("Same");
 
     GM->Print( (name+"/geant_mat_map.png").c_str());
     //GM->Print( (name+"/geant_mat_map.pdf").c_str());
@@ -263,6 +256,22 @@ void Mat_map(std::string Val = "", std::string geantino = "", std::string name =
   }
 
   if(Val != "" && geantino != ""){
+
+    // 2D map for Geantino input
+    TCanvas *GM = new TCanvas("M","Map") ;
+    geantino_Map->Draw();
+    geantino_Map->SetMarkerColor(kRed);
+    geantino_Map->SetLineColor(kRed);
+    Val_Map->Draw("SAME");
+
+    eta_0->Draw("Same");
+    eta_1p->Draw("Same");
+    eta_2p->Draw("Same");
+    eta_3p->Draw("Same");
+    eta_4p->Draw("Same");
+
+    GM->Print( (name+"/mat_map.png").c_str());
+    //GM->Print( (name+"/mat_map.pdf").c_str());
 
     Val_X0_Eta->SetMarkerColor(kBlack);
     Val_X0_Eta->SetLineColor(kBlack);
