@@ -167,7 +167,12 @@ std::vector<Acts::Vector3> Acts::CylinderBounds::createCircles(
   if ((bevelMinZ != 0. || bevelMaxZ != 0.) && vertices.size() % 2 == 0) {
     auto halfWay = vertices.end() - vertices.size() / 2;
     double mult{1};
-    auto func = [&mult](Vector3& v) { v(2) += v(1) * mult; };
+    auto func = [&mult, &ctrans](Vector3& v) 
+	{ 
+	  v = ctrans.inverse() * v;
+          v(2) += v(1) * mult; 
+	  v = ctrans * v;
+	};
     if (bevelMinZ != 0.) {
       mult = std::tan(-bevelMinZ);
       std::for_each(vertices.begin(), halfWay, func);
