@@ -289,14 +289,14 @@ boost::test_tools::predicate_result checkCloseCovariance(
       // difference means little if the overall correlation has a tiny weight
       // with respect to the diagonal variance elements anyway.
       //
-      auto orderOfMagnitude = std::sqrt(ref(row, row) * ref(col, col));
+      auto orderOfMagnitude = std::sqrt( std::min(ref(row, row),val(row, row)) * std::min(ref(col, col),val(col, col)));
       if (std::abs(val(row, col) - ref(row, col)) >= tol * orderOfMagnitude) {
         boost::test_tools::predicate_result res(false);
         res.message() << "The difference between the covariance matrix term "
                       << val(row, col) << " and its reference " << ref(row, col)
                       << ","
                       << " at index (" << row << ", " << col << "),"
-                      << " is not within tolerance " << tol << '.'
+                      << " is not within tolerance " << tol * orderOfMagnitude << '.'
                       << " The covariance matrix being tested was\n"
                       << val << '\n'
                       << "and the reference covariance matrix was\n"
