@@ -38,7 +38,7 @@ constexpr auto epsPos = 1_um;
 constexpr auto epsDir = 0.125_mrad;
 constexpr auto epsMom = 1_eV;
 // relative covariance tolerance
-constexpr auto epsCov = 0.0125;
+constexpr auto epsCov = 0.1;
 
 const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
@@ -54,12 +54,12 @@ inline std::pair<AtlasPropagator, EigenPropagator> makePropagators(double bz) {
 BOOST_AUTO_TEST_SUITE(PropagationCompareAtlasEigenConstant)
 
 BOOST_DATA_TEST_CASE(Forward,
-                     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
+                     ds::phi* (ds::thetaWithoutBeam)* ds::absMomentum* ds::chargeNonZero*
                          ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, bz) {
   auto [atlasPropagator, eigenPropagator] = makePropagators(bz);
   runForwardComparisonTest(atlasPropagator, eigenPropagator, geoCtx, magCtx,
-                           makeParametersCurvilinear(phi, theta, p, q), s,
+                           makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
                            epsPos, epsDir, epsMom, epsCov);
 }
 
@@ -69,29 +69,29 @@ BOOST_DATA_TEST_CASE(ToCylinderAlongZ,
                      phi, theta, p, q, s, bz) {
   auto [atlasPropagator, eigenPropagator] = makePropagators(bz);
   runToSurfaceComparisonTest(atlasPropagator, eigenPropagator, geoCtx, magCtx,
-                             makeParametersCurvilinear(phi, theta, p, q), s,
+                             makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
                              ZCylinderSurfaceBuilder(), epsPos, epsDir, epsMom,
                              epsCov);
 }
 
 BOOST_DATA_TEST_CASE(ToDisc,
-                     ds::phiWithoutAmbiguity* ds::theta* ds::absMomentum*
+                     ds::phiWithoutAmbiguity* ds::thetaWithoutBeam* ds::absMomentum*
                          ds::chargeNonZero* ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, bz) {
   auto [atlasPropagator, eigenPropagator] = makePropagators(bz);
   runToSurfaceComparisonTest(atlasPropagator, eigenPropagator, geoCtx, magCtx,
-                             makeParametersCurvilinear(phi, theta, p, q), s,
+                             makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
                              DiscSurfaceBuilder(), epsPos, epsDir, epsMom,
                              epsCov);
 }
 
 BOOST_DATA_TEST_CASE(ToPlane,
-                     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum* ds::chargeNonZero*
                          ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, bz) {
   auto [atlasPropagator, eigenPropagator] = makePropagators(bz);
   runToSurfaceComparisonTest(atlasPropagator, eigenPropagator, geoCtx, magCtx,
-                             makeParametersCurvilinear(phi, theta, p, q), s,
+                             makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
                              PlaneSurfaceBuilder(), epsPos, epsDir, epsMom,
                              epsCov);
 }
@@ -102,7 +102,7 @@ BOOST_DATA_TEST_CASE(ToStrawAlongZ,
                      phi, theta, p, q, s, bz) {
   auto [atlasPropagator, eigenPropagator] = makePropagators(bz);
   runToSurfaceComparisonTest(atlasPropagator, eigenPropagator, geoCtx, magCtx,
-                             makeParametersCurvilinear(phi, theta, p, q), s,
+                             makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
                              ZStrawSurfaceBuilder(), epsPos, epsDir, epsMom,
                              epsCov);
 }
