@@ -100,6 +100,8 @@ def addSeeding(
             return s.config.logLevel
         return acts.logging.Level(max(custom.value, logLevel.value))
 
+    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
+        acts.examples.dump_args_calls(locals())
     logger = acts.logging.getLogger("addSeeding")
 
     allInputParticles = "particles_final"

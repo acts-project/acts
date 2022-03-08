@@ -42,7 +42,7 @@ def addDigitization(
     # Digitization
     digiCfg = acts.examples.DigitizationConfig(
         acts.examples.readDigiConfigFromJson(
-            str(Path(digiConfigFile)),
+            str(digiConfigFile),
         ),
         trackingGeometry=trackingGeometry,
         randomNumbers=rnd,

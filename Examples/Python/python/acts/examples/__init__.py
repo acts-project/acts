@@ -1,4 +1,4 @@
-import inspect
+import sys, inspect
 
 from acts.ActsPythonBindings._examples import *
 from acts import ActsPythonBindings
@@ -175,3 +175,58 @@ def defaultKWArgs(**kwargs) -> dict:
         )
     }
     return a
+
+
+def dump_args(func):
+    """
+    Decorator to print function call details.
+    This includes parameters names and effective values.
+    https://stackoverflow.com/questions/6200270/decorator-that-prints-function-call-details-parameters-names-and-effective-valu
+    """
+    from functools import wraps
+
+    @wraps(func)
+    def dump_args_wrapper(*args, **kwargs):
+        import inspect
+
+        try:
+            func_args = inspect.signature(func).bind(*args, **kwargs).arguments
+            func_args_str = ", ".join(
+                map("{0[0]} = {0[1]!r}".format, func_args.items())
+            )
+        except ValueError:
+            func_args_str = ", ".join(
+                list(map("{0!r}".format, args))
+                + list(map("{0[0]} = {0[1]!r}".format, kwargs.items()))
+            )
+        print(f"{func.__module__}.{func.__qualname__} ( {func_args_str} )")
+        return func(*args, **kwargs)
+
+    return dump_args_wrapper
+
+
+def dump_args_calls(
+    myLocal=None,
+    mod=sys.modules[__name__],
+):
+    """
+    Wrap all calls to acts.examples Python bindings in dump_args.
+    Specify myLocal=locals() to include imported symbols too.
+    """
+    import collections
+
+    for n in dir(mod):
+        if n.startswith("_"):
+            continue
+        f = getattr(mod, n)
+        if not (
+            isinstance(f, collections.abc.Callable)
+            and f.__module__.startswith("acts.ActsPythonBindings")
+            and not hasattr(f, "__wrapped__")
+        ):
+            continue
+        dump_args_calls(myLocal, f)  # wrap class's contained methods
+        w = dump_args(f)
+        setattr(mod, n, w)
+        if myLocal and hasattr(myLocal, n):
+            setattr(myLocal, n, w)

@@ -35,6 +35,9 @@ def addCKFTracks(
         the output folder for the Root output, None triggers no output
     """
 
+    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
+        acts.examples.dump_args_calls(locals())
+
     # Setup the track finding algorithm with CKF
     # It takes all the source links created from truth hit smearing, seeds from
     # truth particle smearing and source link selection config
