@@ -82,6 +82,7 @@ jobs:
         run: >
           ${SETUP}
           && pip3 install git+https://github.com/paulgessinger/histcmp.git@d9fba59
+          && source /usr/local/bin/thisroot.sh
           && CI/phys_perf_mon.sh physmon
       - uses: actions/upload-artifact@v2
         with:
