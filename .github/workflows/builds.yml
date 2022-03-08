@@ -38,256 +38,269 @@ jobs:
       - name: Define setup script
         if: contains(matrix.image, 'lcg')
         run: echo "SETUP=${SETUP_LCG}" >> $GITHUB_ENV
-      - name: Configure
-        # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
-        # dd4hep CMake configuration that gets triggered on recent CMake
-        # versions 
-        run: >
-          ${SETUP} &&
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_CXX_STANDARD=17
-          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DACTS_BUILD_EVERYTHING=ON
-          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
-          -DACTS_LOG_FAILURE_THRESHOLD=WARNING
-          -DACTS_BUILD_ASSERTIONS=ON
-      - name: Build
-        run: ${SETUP} && cmake --build build --
-      - name: Unit tests
-        run: ${SETUP} && cmake --build build -- test
-      - name: Integration tests
-        run: ${SETUP} && cmake --build build -- integrationtests
-      - name: Examples
-        if: contains(matrix.image, 'ubuntu')
-        run: ${SETUP} && ./CI/run_examples.sh
+
+      # - name: Configure
+        # # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
+        # # dd4hep CMake configuration that gets triggered on recent CMake
+        # # versions 
+        # run: >
+          # ${SETUP} &&
+          # cmake -B build -S .
+          # -GNinja
+          # -DCMAKE_BUILD_TYPE=Release
+          # -DCMAKE_CXX_FLAGS=-Werror
+          # -DCMAKE_CXX_STANDARD=17
+          # -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+          # -DACTS_BUILD_EVERYTHING=ON
+          # -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+          # -DACTS_LOG_FAILURE_THRESHOLD=WARNING
+          # -DACTS_BUILD_ASSERTIONS=ON
+      # - name: Build
+        # run: ${SETUP} && cmake --build build --
+      # - name: Unit tests
+        # run: ${SETUP} && cmake --build build -- test
+      # - name: Integration tests
+        # run: ${SETUP} && cmake --build build -- integrationtests
+      # - name: Examples
+        # if: contains(matrix.image, 'ubuntu')
+        # run: ${SETUP} && ./CI/run_examples.sh
+      # - name: Python level tests
+        # if: contains(matrix.image, 'ubuntu')
+        # shell: bash
+        # run: >
+            # ${SETUP}
+          # && source /usr/local/bin/thisroot.sh
+          # && source /usr/local/bin/thisdd4hep_only.sh
+          # && /usr/local/bin/download_geant4_data.sh
+          # && source /usr/local/bin/geant4.sh
+          # && source build/python/setup.sh
+          # && pip3 install -r Examples/Python/tests/requirements.txt
+          # && pytest -rFs
       - name: Python level tests
         if: contains(matrix.image, 'ubuntu')
         shell: bash
         run: >
-          ${SETUP}
-          && source /usr/local/bin/thisroot.sh
-          && source /usr/local/bin/thisdd4hep_only.sh
-          && /usr/local/bin/download_geant4_data.sh
-          && source /usr/local/bin/geant4.sh
-          && source build/python/setup.sh
-          && pip3 install -r Examples/Python/tests/requirements.txt
-          && pytest -rFs
-      - name: Install
-        run: ${SETUP} && cmake --build build -- install
+            ${SETUP}
+          && pip install histcmp==0.1.0
+          && source CI/python_setup.sh
+          && CI/phys_perf_mon.sh physmon
       - uses: actions/upload-artifact@v2
         with:
-          name: acts-${{ matrix.image }}
-          path: ${{ env.INSTALL_DIR }}
-      - name: Downstream configure
-        run: >
-          ${SETUP} &&
-          cmake -B build-downstream -S Tests/DownstreamProject
-          -GNinja
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_CXX_STANDARD=17
-          -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
-      - name: Downstream build
-        run: ${SETUP} && cmake --build build-downstream --
-      - name: Downstream run
-        run: ${SETUP} && ./build-downstream/bin/ShowActsVersion
+          name: physmon
+          path: physmon
+      # - name: Install
+        # run: ${SETUP} && cmake --build build -- install
+      # - uses: actions/upload-artifact@v2
+        # with:
+          # name: acts-${{ matrix.image }}
+          # path: ${{ env.INSTALL_DIR }}
+      # - name: Downstream configure
+        # run: >
+          # ${SETUP} &&
+          # cmake -B build-downstream -S Tests/DownstreamProject
+          # -GNinja
+          # -DCMAKE_BUILD_TYPE=Release
+          # -DCMAKE_CXX_FLAGS=-Werror
+          # -DCMAKE_CXX_STANDARD=17
+          # -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+      # - name: Downstream build
+        # run: ${SETUP} && cmake --build build-downstream --
+      # - name: Downstream run
+        # run: ${SETUP} && ./build-downstream/bin/ShowActsVersion
 
-  linux-nodeps:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:latest
-    strategy:
-      matrix:
-        image:
-          # Note: We only want the centos8 base here, and so we do not
-          # setup the lcg environment below
-          - centos8-lcg100-gcc10
-    env:
-      # NOTE: we setup the ROOT from LCG even though this is a
-      # "nodeps" build. This is because we want to test that the boost
-      # dependency is handled correctly when building the examples
-      # (same for tbb below). ROOT is available from the "epel"
-      # official centos8 repo, but to save hundreds of MB's of package
-      # download we simply use lcg for this one package.
-      SETUP: source /opt/lcg/ROOT/v6.24.00-e7098/x86_64-centos8-gcc10-opt/bin/thisroot.sh
-      PRELOAD: export LD_PRELOAD=/opt/lcg/gcc/10/x86_64-centos8/lib64/libstdc++.so.6
-      INSTALL_DIR: ${{ github.workspace }}/install
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install dependencies
-          # Install tbb-devel also to build the examples
-        run: >
-          dnf -y install ninja-build tbb-devel
-      - name: Configure
-        run: >
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DACTS_BUILD_UNITTESTS=ON
-          -DACTS_BUILD_INTEGRATIONTESTS=ON
-          -DACTS_LOG_FAILURE_THRESHOLD=WARNING
-          -DACTS_BUILD_ASSERTIONS=ON
-          -DACTS_USE_SYSTEM_BOOST=OFF
-          -DACTS_USE_SYSTEM_EIGEN3=OFF
-          -DACTS_BUILD_PLUGIN_JSON=ON
-      - name: Build
-        run: ${SETUP} && cmake --build build --
-      - name: Unit tests
-        run: ${SETUP} && ${PRELOAD} && cmake --build build -- test
-      - name: Integration tests
-        run: ${SETUP} && cmake --build build -- integrationtests
-      - name: Install
-        run: ${SETUP} && cmake --build build -- install
-      # For some reasons, this version of ROOT complains that it
-      # cannot find the nlohmann::json config before we even installed
-      # it. So we have to do the examples in separate step.
-      - name: Configure Examples
-        run: >
-          ${SETUP} &&
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DACTS_LOG_FAILURE_THRESHOLD=WARNING
-          -DACTS_BUILD_ASSERTIONS=ON
-          -DACTS_USE_SYSTEM_BOOST=OFF
-          -DACTS_USE_SYSTEM_EIGEN3=OFF
-          -DACTS_BUILD_EXAMPLES=ON
-      - name: Build Examples
-        run: ${SETUP} && cmake --build build --
-      - name: Install Examples
-        run: ${SETUP} && cmake --build build -- install
-      - name: Run Examples
-        # Run a single example to be sure that the boost dependencies
-        # got linked correctly
-        run: ${SETUP} && ${PRELOAD} && "${INSTALL_DIR}/bin/ActsExampleHelloWorld" -n 1
-      - name: Downstream configure
-        run: >
-          ${SETUP} &&
-          cmake -B build-downstream-nodeps -S Tests/DownstreamProjectNodeps
-          -GNinja
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
-      - name: Downstream build
-        run: cmake --build build-downstream-nodeps --
-      - name: Downstream run
-        run: ./build-downstream-nodeps/bin/ShowActsVersion
-             && CI/check_boost_eigen_versions.sh ./build-downstream-nodeps/bin/ShowActsVersion
+  # linux-nodeps:
+    # runs-on: ubuntu-latest
+    # container: ghcr.io/acts-project/${{ matrix.image }}:latest
+    # strategy:
+      # matrix:
+        # image:
+          # # Note: We only want the centos8 base here, and so we do not
+          # # setup the lcg environment below
+          # - centos8-lcg100-gcc10
+    # env:
+      # # NOTE: we setup the ROOT from LCG even though this is a
+      # # "nodeps" build. This is because we want to test that the boost
+      # # dependency is handled correctly when building the examples
+      # # (same for tbb below). ROOT is available from the "epel"
+      # # official centos8 repo, but to save hundreds of MB's of package
+      # # download we simply use lcg for this one package.
+      # SETUP: source /opt/lcg/ROOT/v6.24.00-e7098/x86_64-centos8-gcc10-opt/bin/thisroot.sh
+      # PRELOAD: export LD_PRELOAD=/opt/lcg/gcc/10/x86_64-centos8/lib64/libstdc++.so.6
+      # INSTALL_DIR: ${{ github.workspace }}/install
+    # steps:
+      # - uses: actions/checkout@v2
+      # - name: Install dependencies
+          # # Install tbb-devel also to build the examples
+        # run: >
+          # dnf -y install ninja-build tbb-devel
+      # - name: Configure
+        # run: >
+          # cmake -B build -S .
+          # -GNinja
+          # -DCMAKE_BUILD_TYPE=Release
+          # -DCMAKE_CXX_FLAGS=-Werror
+          # -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+          # -DACTS_BUILD_UNITTESTS=ON
+          # -DACTS_BUILD_INTEGRATIONTESTS=ON
+          # -DACTS_LOG_FAILURE_THRESHOLD=WARNING
+          # -DACTS_BUILD_ASSERTIONS=ON
+          # -DACTS_USE_SYSTEM_BOOST=OFF
+          # -DACTS_USE_SYSTEM_EIGEN3=OFF
+          # -DACTS_BUILD_PLUGIN_JSON=ON
+      # - name: Build
+        # run: ${SETUP} && cmake --build build --
+      # - name: Unit tests
+        # run: ${SETUP} && ${PRELOAD} && cmake --build build -- test
+      # - name: Integration tests
+        # run: ${SETUP} && cmake --build build -- integrationtests
+      # - name: Install
+        # run: ${SETUP} && cmake --build build -- install
+      # # For some reasons, this version of ROOT complains that it
+      # # cannot find the nlohmann::json config before we even installed
+      # # it. So we have to do the examples in separate step.
+      # - name: Configure Examples
+        # run: >
+          # ${SETUP} &&
+          # cmake -B build -S .
+          # -GNinja
+          # -DCMAKE_BUILD_TYPE=Release
+          # -DCMAKE_CXX_FLAGS=-Werror
+          # -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+          # -DACTS_LOG_FAILURE_THRESHOLD=WARNING
+          # -DACTS_BUILD_ASSERTIONS=ON
+          # -DACTS_USE_SYSTEM_BOOST=OFF
+          # -DACTS_USE_SYSTEM_EIGEN3=OFF
+          # -DACTS_BUILD_EXAMPLES=ON
+      # - name: Build Examples
+        # run: ${SETUP} && cmake --build build --
+      # - name: Install Examples
+        # run: ${SETUP} && cmake --build build -- install
+      # - name: Run Examples
+        # # Run a single example to be sure that the boost dependencies
+        # # got linked correctly
+        # run: ${SETUP} && ${PRELOAD} && "${INSTALL_DIR}/bin/ActsExampleHelloWorld" -n 1
+      # - name: Downstream configure
+        # run: >
+          # ${SETUP} &&
+          # cmake -B build-downstream-nodeps -S Tests/DownstreamProjectNodeps
+          # -GNinja
+          # -DCMAKE_BUILD_TYPE=Release
+          # -DCMAKE_CXX_FLAGS=-Werror
+          # -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+      # - name: Downstream build
+        # run: cmake --build build-downstream-nodeps --
+      # - name: Downstream run
+        # run: ./build-downstream-nodeps/bin/ShowActsVersion
+             # && CI/check_boost_eigen_versions.sh ./build-downstream-nodeps/bin/ShowActsVersion
 
-  macos:
-    runs-on: macos-10.15
-    env:
-      INSTALL_DIR: ${{ github.workspace }}/install
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install dependencies
-        run: >
-          brew install cmake eigen ninja
-          && sudo mkdir /usr/local/acts
-          && sudo chown $USER /usr/local/acts
-          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ci/macOS/deps.43e0201.tar.gz
-          && tar -xf deps.tar.gz -C /usr/local/acts
-      - name: Configure
-        # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
-        # dd4hep CMake configuration that gets triggered on recent CMake
-        # versions such as the one installed via homebrew
-        run: >
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_CXX_STANDARD=17
-          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DCMAKE_PREFIX_PATH=/usr/local/acts
-          -DACTS_BUILD_EVERYTHING=ON
-          -DACTS_LOG_FAILURE_THRESHOLD=WARNING
-          -DACTS_BUILD_ASSERTIONS=ON
-      - name: Build
-        run: cmake --build build  --
-      - name: Unit tests
-        run: cmake --build build -- test
-      - name: Integration tests
-        run: cmake --build build -- integrationtests
-      - name: Install
-        run: cmake --build build -- install
-      - uses: actions/upload-artifact@v2
-        with:
-          name: acts-macos
-          path: ${{ env.INSTALL_DIR }}
-      - name: Downstream configure
-        run: >
-          cmake -B build-downstream -S Tests/DownstreamProject
-          -GNinja
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_CXX_STANDARD=17
-          -DCMAKE_PREFIX_PATH="${INSTALL_DIR};/usr/local/acts"
-      - name: Downstream build
-        run: cmake --build build-downstream --
-      - name: Downstream run
-        run: ./build-downstream/bin/ShowActsVersion
-  cuda:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu1804_cuda:v9
-    steps:
-      - uses: actions/checkout@v2
-      - name: Configure
-        run: >
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER=/usr/bin/g++-8
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DACTS_BUILD_PLUGIN_CUDA=ON
-          -DACTS_BUILD_UNITTESTS=ON
-      - name: Build
-        run: cmake --build build --
-  sycl:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_oneapi:v9
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@v2
-      - name: Configure
-        run: >
-          source /opt/intel/oneapi/setvars.sh
-          && cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER=clang++
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DACTS_SETUP_VECMEM=ON
-          -DACTS_BUILD_PLUGIN_SYCL=ON
-          -DACTS_BUILD_UNITTESTS=ON
-      - name: Build
-        run: >
-          source /opt/intel/oneapi/setvars.sh
-          && cmake --build build --
-  docs:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v9
-    env:
-        DOXYGEN_WARN_AS_ERROR: YES
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install dependencies
-        run: >
-          apt-get install -y doxygen
-          && pip3 install --upgrade pip
-          && pip install -r docs/requirements.txt
-      - name: Configure
-        run: cmake -B build -S . -GNinja -DACTS_BUILD_DOCS=ON
-      - name: Build
-        run: cmake --build build -- docs-with-api
-      - uses: actions/upload-artifact@v2
-        with:
-          name: acts-docs
-          path: docs/_build/html/
+  # macos:
+    # runs-on: macos-10.15
+    # env:
+      # INSTALL_DIR: ${{ github.workspace }}/install
+    # steps:
+      # - uses: actions/checkout@v2
+      # - name: Install dependencies
+        # run: >
+          # brew install cmake eigen ninja
+          # && sudo mkdir /usr/local/acts
+          # && sudo chown $USER /usr/local/acts
+          # && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ci/macOS/deps.43e0201.tar.gz
+          # && tar -xf deps.tar.gz -C /usr/local/acts
+      # - name: Configure
+        # # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
+        # # dd4hep CMake configuration that gets triggered on recent CMake
+        # # versions such as the one installed via homebrew
+        # run: >
+          # cmake -B build -S .
+          # -GNinja
+          # -DCMAKE_BUILD_TYPE=Release
+          # -DCMAKE_CXX_FLAGS=-Werror
+          # -DCMAKE_CXX_STANDARD=17
+          # -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+          # -DCMAKE_PREFIX_PATH=/usr/local/acts
+          # -DACTS_BUILD_EVERYTHING=ON
+          # -DACTS_LOG_FAILURE_THRESHOLD=WARNING
+          # -DACTS_BUILD_ASSERTIONS=ON
+      # - name: Build
+        # run: cmake --build build  --
+      # - name: Unit tests
+        # run: cmake --build build -- test
+      # - name: Integration tests
+        # run: cmake --build build -- integrationtests
+      # - name: Install
+        # run: cmake --build build -- install
+      # - uses: actions/upload-artifact@v2
+        # with:
+          # name: acts-macos
+          # path: ${{ env.INSTALL_DIR }}
+      # - name: Downstream configure
+        # run: >
+          # cmake -B build-downstream -S Tests/DownstreamProject
+          # -GNinja
+          # -DCMAKE_BUILD_TYPE=Release
+          # -DCMAKE_CXX_FLAGS=-Werror
+          # -DCMAKE_CXX_STANDARD=17
+          # -DCMAKE_PREFIX_PATH="${INSTALL_DIR};/usr/local/acts"
+      # - name: Downstream build
+        # run: cmake --build build-downstream --
+      # - name: Downstream run
+        # run: ./build-downstream/bin/ShowActsVersion
+  # cuda:
+    # runs-on: ubuntu-latest
+    # container: ghcr.io/acts-project/ubuntu1804_cuda:v9
+    # steps:
+      # - uses: actions/checkout@v2
+      # - name: Configure
+        # run: >
+          # cmake -B build -S .
+          # -GNinja
+          # -DCMAKE_CXX_COMPILER=/usr/bin/g++-8
+          # -DCMAKE_BUILD_TYPE=Release
+          # -DCMAKE_CXX_FLAGS=-Werror
+          # -DACTS_BUILD_PLUGIN_CUDA=ON
+          # -DACTS_BUILD_UNITTESTS=ON
+      # - name: Build
+        # run: cmake --build build --
+  # sycl:
+    # runs-on: ubuntu-latest
+    # container: ghcr.io/acts-project/ubuntu2004_oneapi:v9
+    # defaults:
+      # run:
+        # shell: bash
+    # steps:
+      # - uses: actions/checkout@v2
+      # - name: Configure
+        # run: >
+          # source /opt/intel/oneapi/setvars.sh
+          # && cmake -B build -S .
+          # -GNinja
+          # -DCMAKE_CXX_COMPILER=clang++
+          # -DCMAKE_BUILD_TYPE=Release
+          # -DCMAKE_CXX_FLAGS=-Werror
+          # -DACTS_SETUP_VECMEM=ON
+          # -DACTS_BUILD_PLUGIN_SYCL=ON
+          # -DACTS_BUILD_UNITTESTS=ON
+      # - name: Build
+        # run: >
+          # source /opt/intel/oneapi/setvars.sh
+          # && cmake --build build --
+  # docs:
+    # runs-on: ubuntu-latest
+    # container: ghcr.io/acts-project/ubuntu2004:v9
+    # env:
+        # DOXYGEN_WARN_AS_ERROR: YES
+    # steps:
+      # - uses: actions/checkout@v2
+      # - name: Install dependencies
+        # run: >
+          # apt-get install -y doxygen
+          # && pip3 install --upgrade pip
+          # && pip install -r docs/requirements.txt
+      # - name: Configure
+        # run: cmake -B build -S . -GNinja -DACTS_BUILD_DOCS=ON
+      # - name: Build
+        # run: cmake --build build -- docs-with-api
+      # - uses: actions/upload-artifact@v2
+        # with:
+          # name: acts-docs
+          # path: docs/_build/html/
