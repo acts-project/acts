@@ -76,7 +76,7 @@ jobs:
           # && source build/python/setup.sh
           # && pip3 install -r Examples/Python/tests/requirements.txt
           # && pytest -rFs
-      - name: Python level tests
+      - name: Physics performance checks
         if: contains(matrix.image, 'ubuntu')
         shell: bash
         run: >
@@ -84,7 +84,8 @@ jobs:
           && pip3 install git+https://github.com/paulgessinger/histcmp.git@c7bc199
           && source /usr/local/bin/thisroot.sh
           && CI/phys_perf_mon.sh physmon
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
+        if: always()
         with:
           name: physmon
           path: physmon
