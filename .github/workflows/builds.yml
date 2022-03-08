@@ -81,7 +81,9 @@ jobs:
         shell: bash
         run: >
           ${SETUP}
+          && echo "::group::Dependencies"
           && pip3 install git+https://github.com/paulgessinger/histcmp.git@c7bc199
+          && echo "::endgroup::"
           && source /usr/local/bin/thisroot.sh
           && CI/phys_perf_mon.sh physmon
       - uses: actions/upload-artifact@v3
