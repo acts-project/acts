@@ -102,6 +102,7 @@ def addSeeding(
 
     logger = acts.logging.getLogger("addSeeding")
 
+    allInputParticles = "particles_final"
     if truthSeedRanges is not None:
         selAlg = acts.examples.TruthSeedSelector(
             **acts.examples.defaultKWArgs(
@@ -113,14 +114,14 @@ def addSeeding(
                 nHitsMax=truthSeedRanges.nHits[1],
             ),
             level=customLogLevel(),
-            inputParticles="particles_final",
+            inputParticles=allInputParticles,
             inputMeasurementParticlesMap="measurement_particles_map",
             outputParticles="truth_seeds_selected",
         )
         s.addAlgorithm(selAlg)
         inputParticles = selAlg.config.outputParticles
     else:
-        inputParticles = "particles_final"
+        inputParticles = allInputParticles
 
     # Create starting parameters from either particle smearing or combined seed
     # finding and track parameters estimation
@@ -285,7 +286,7 @@ def addSeeding(
                     level=customLogLevel(acts.logging.VERBOSE),
                     inputTrackParameters=parEstimateAlg.config.outputTrackParameters,
                     inputProtoTracks=parEstimateAlg.config.outputProtoTracks,
-                    inputParticles=inputParticles,
+                    inputParticles=allInputParticles,
                     inputSimHits="simhits",
                     inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
                     inputMeasurementSimHitsMap="measurement_simhits_map",
