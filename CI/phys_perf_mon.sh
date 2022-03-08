@@ -10,7 +10,7 @@ mkdir -p $outdir
 histcmp \
     histcmp_demo/performance_track_fitter_a.root \
     histcmp_demo/performance_track_fitter_b.root \
-    - c track_fitter.yml \
+    -c track_fitter.yml \
     -o $outdir/track_fitter.html \
 
 histcmp \
