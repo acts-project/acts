@@ -82,7 +82,7 @@ jobs:
         run: >
           ${SETUP}
           && echo "::group::Dependencies"
-          && pip3 install git+https://github.com/paulgessinger/histcmp.git@1744e5d
+          && pip3 install git+https://github.com/paulgessinger/histcmp.git@2c56058
           && echo "::endgroup::"
           && source /usr/local/bin/thisroot.sh
           && CI/phys_perf_mon.sh physmon
