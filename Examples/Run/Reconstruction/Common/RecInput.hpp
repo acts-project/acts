@@ -29,8 +29,8 @@
 ///
 /// @return config for sim hits csv reader
 ActsExamples::CsvSimHitReader::Config setupSimHitReading(
-																												 const ActsExamples::Options::Variables& vars,
-																												 ActsExamples::Sequencer& sequencer);
+    const ActsExamples::Options::Variables& vars,
+    ActsExamples::Sequencer& sequencer);
 
 /// Setup sim particle csv reader
 ///
@@ -39,8 +39,8 @@ ActsExamples::CsvSimHitReader::Config setupSimHitReading(
 ///
 /// @return config for sim particles csv reader
 ActsExamples::CsvParticleReader::Config setupParticleReading(
-																														 const ActsExamples::Options::Variables& vars,
-																														 ActsExamples::Sequencer& sequencer);
+    const ActsExamples::Options::Variables& vars,
+    ActsExamples::Sequencer& sequencer);
 
 /// Setup space point csv reader
 ///
@@ -49,6 +49,6 @@ ActsExamples::CsvParticleReader::Config setupParticleReading(
 ///
 /// @return config for space points csv reader
 ActsExamples::CsvSpacePointReader::Config setupSpacePointReading(
-																																 const ActsExamples::Options::Variables& vars,
-																																 ActsExamples::Sequencer& sequencer,
-																																 const std::string& inputCollectionName = "");
+    const ActsExamples::Options::Variables& vars,
+    ActsExamples::Sequencer& sequencer,
+    const std::string& inputCollectionName = "");
