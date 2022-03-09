@@ -41,12 +41,20 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
     // Propagation loop : stepping
     for (; result.steps < state.options.maxSteps; ++result.steps) {
       // Perform a propagation step - it takes the propagation state
-      Result<double> res = m_stepper.step(state);
+      Result<double> res = m_stepper.step(state, logger);
       if (res.ok()) {
         // Accumulate the path length
         double s = *res;
         result.pathLength += s;
         ACTS_VERBOSE("Step with size = " << s << " performed");
+        auto xyzr = [](const Vector3& v) -> std::string {
+          std::stringstream ss;
+          ss << v.transpose() << " r=" << Acts::VectorHelpers::perp(v) << "";
+          return ss.str();
+        };
+        ACTS_VERBOSE("=> now at " << xyzr(m_stepper.position(state.stepping))
+                                  << " -> dir "
+                                  << xyzr(m_stepper.direction(state.stepping)));
       } else {
         ACTS_ERROR("Step failed with " << res.error() << ": "
                                        << res.error().message());
@@ -126,7 +134,7 @@ auto Acts::Propagator<S, N>::propagate(
 
   static_assert(
       Concepts ::has_method<const S, Result<double>, Concepts ::Stepper::step_t,
-                            StateType&>,
+                            StateType&, LoggerWrapper>,
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 
@@ -198,7 +206,7 @@ auto Acts::Propagator<S, N>::propagate(
 
   static_assert(
       Concepts ::has_method<const S, Result<double>, Concepts ::Stepper::step_t,
-                            StateType&>,
+                            StateType&, LoggerWrapper>,
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 

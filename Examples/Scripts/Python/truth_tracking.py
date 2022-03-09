@@ -19,11 +19,11 @@ def runTruthTracking(
 ):
 
     # Preliminaries
-    rnd = acts.examples.RandomNumbers()
+    rnd = acts.examples.RandomNumbers(seed=84747)
 
     # Sequencer
     s = s or acts.examples.Sequencer(
-        events=10, numThreads=-1, logLevel=acts.logging.INFO
+        events=100000, numThreads=-1, logLevel=acts.logging.INFO, skip=0
     )
 
     # Input
@@ -213,7 +213,9 @@ if "__main__" == __name__:
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
-    # detector, trackingGeometry, _ = getOpenDataDetector()
+    from common import getOpenDataDetector
+
+    #  detector, trackingGeometry, _ = getOpenDataDetector()
     detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
@@ -222,7 +224,6 @@ if "__main__" == __name__:
         trackingGeometry,
         field,
         digiConfigFile=srcdir
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
-        # "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",
+        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",  # "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",
         outputDir=Path.cwd(),
     ).run()

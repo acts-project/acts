@@ -348,6 +348,7 @@ class StraightLineStepper {
   /// Perform a straight line propagation step
   ///
   /// @param [in,out] state is the propagation state associated with the track
+  /// @param logger A logger wrapper instance
   /// parameters that are being propagated.
   ///                The state contains the desired step size,
   ///                it can be negative during backwards track propagation,
@@ -356,7 +357,8 @@ class StraightLineStepper {
   ///
   /// @return the step size taken
   template <typename propagator_state_t>
-  Result<double> step(propagator_state_t& state) const {
+  Result<double> step(propagator_state_t& state,
+                      LoggerWrapper /*logger*/) const {
     // use the adjusted step size
     const auto h = state.stepping.stepSize;
     const double p = momentum(state.stepping);

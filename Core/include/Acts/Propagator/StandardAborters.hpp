@@ -61,6 +61,10 @@ struct PathLimitReached {
     double distance = state.stepping.navDir * std::abs(internalLimit) -
                       state.stepping.pathAccumulated;
     double tolerance = state.options.targetTolerance;
+    ACTS_VERBOSE("PathLimit: navDir ("
+                 << state.stepping.navDir << ") * |internalLimit| ("
+                 << std::abs(internalLimit) << ") - pathAcc ("
+                 << state.stepping.pathAccumulated << ") = " << distance);
     stepper.setStepSize(state.stepping, distance, ConstrainedStep::aborter,
                         false);
     bool limitReached = (distance * distance < tolerance * tolerance);
@@ -131,6 +135,8 @@ struct SurfaceReached {
     bool targetReached = (sIntersection.intersection.status ==
                           Intersection3D::Status::onSurface);
     double distance = sIntersection.intersection.pathLength;
+    ACTS_VERBOSE("Target: 0 | distance to surface "
+                 << targetSurface.geometryId() << ": " << distance);
 
     // Return true if you fall below tolerance
     if (targetReached) {
