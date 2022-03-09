@@ -176,7 +176,7 @@ auto load_bethe_heitler_data(const std::string &filepath) ->
   return data;
 }
 
-/// These data are from ATHENA
+/// These data are from ATLAS
 /// (TrkGaussianSumFilter/Data/BetheHeitler_cdf_nC6_O5.par)
 // clang-format off
 constexpr static BHApprox::Data bh_cdf_cmps6_order5_data = {{

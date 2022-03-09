@@ -68,7 +68,7 @@ struct GsfOptions {
 /// * The MultiTrajectory contained in the KalmanFitterResult returned by the
 /// fit-functions does only contain states with measuerements but e.g., no
 /// holes.
-/// * There is always a reverse pass during fitting.
+/// * There is always a backward pass during fitting.
 /// * Probably some more differences which I don't think of at the moment.
 template <typename propagator_t>
 struct GaussianSumFitter {
