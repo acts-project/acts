@@ -216,7 +216,7 @@ def dump_args_calls(
     import collections
 
     for n in dir(mod):
-        if n.startswith("_"):
+        if n.startswith("_") or n == "Config":
             continue
         f = getattr(mod, n)
         if not (

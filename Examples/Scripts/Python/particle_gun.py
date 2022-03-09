@@ -79,35 +79,36 @@ def addParticleGun(
         random number generator
     """
 
+    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
+        acts.examples.dump_args_calls(locals())
+
     # Preliminaries
     rnd = rnd or RandomNumbers(seed=228)
 
     # Input
-    if vtxGen is None:
-        vtxGen = GaussianVertexGenerator()
-        vtxGen.stddev = Vector4(0, 0, 0, 0)
-
-    ptclGen = ParametricParticleGenerator(
-        **acts.examples.defaultKWArgs(
-            p=(momentumConfig.min, momentumConfig.max),
-            pTransverse=momentumConfig.transverse,
-            eta=(etaConfig.min, etaConfig.max),
-            phi=(phiConfig.min, phiConfig.max),
-            etaUniform=etaConfig.uniform,
-            numParticles=particleConfig.num,
-            pdg=particleConfig.pdg,
-            randomizeCharge=particleConfig.randomizeCharge,
-        )
-    )
-
-    g = EventGenerator.Generator()
-    g.multiplicity = FixedMultiplicityGenerator(n=multiplicity)
-    g.vertex = vtxGen
-    g.particles = ptclGen
-
     evGen = EventGenerator(
         level=s.config.logLevel,
-        generators=[g],
+        generators=[
+            EventGenerator.Generator(
+                multiplicity=FixedMultiplicityGenerator(n=multiplicity),
+                vertex=vtxGen
+                or acts.examples.GaussianVertexGenerator(
+                    stddev=Vector4(0, 0, 0, 0), mean=acts.Vector4(0, 0, 0, 0)
+                ),
+                particles=acts.examples.ParametricParticleGenerator(
+                    **acts.examples.defaultKWArgs(
+                        p=(momentumConfig.min, momentumConfig.max),
+                        pTransverse=momentumConfig.transverse,
+                        eta=(etaConfig.min, etaConfig.max),
+                        phi=(phiConfig.min, phiConfig.max),
+                        etaUniform=etaConfig.uniform,
+                        numParticles=particleConfig.num,
+                        pdg=particleConfig.pdg,
+                        randomizeCharge=particleConfig.randomizeCharge,
+                    )
+                ),
+            )
+        ],
         outputParticles="particles_input",
         randomNumbers=rnd,
     )

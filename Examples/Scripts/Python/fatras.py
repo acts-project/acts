@@ -33,6 +33,9 @@ def addFatras(
         random number generator
     """
 
+    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
+        acts.examples.dump_args_calls(locals())
+
     # Preliminaries
     rnd = rnd or acts.examples.RandomNumbers()
 

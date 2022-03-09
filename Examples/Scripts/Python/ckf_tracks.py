@@ -225,6 +225,7 @@ def runCKFTracks(
         else SeedingAlgorithm.Default,
         geoSelectionConfigFile=geometrySelection,
         outputDir=outputDir,
+        rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
     )
 
     s = addCKFTracks(
