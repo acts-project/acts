@@ -29,7 +29,7 @@ Seedfinder<external_spacepoint_t, platform_t>::Seedfinder(
           Acts::RegionalParameters<external_spacepoint_t>());
     }
   }
-  // Compute derived values
+  // Compute derived values for the regional parameters
   for (auto rparams : config.regionalParameters) {
     // calculation of scattering using the highland formula
     // convert pT to p once theta angle is known
@@ -61,6 +61,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
   for (auto spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
+    // get the regional parameters for the current middle space point
     Acts::RegionalParameters regionConfig =
         m_config.regionalParameters[m_config.regionalBin(rM, zM)];
     float varianceRM = spM->varianceR();

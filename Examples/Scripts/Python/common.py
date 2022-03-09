@@ -43,8 +43,6 @@ def addPythia8(
     cmsEnergy=14 * acts.UnitConstants.TeV,
     vertexStddev: acts.Vector4 = acts.Vector4(0, 0, 0, 0),
     vertexMean: acts.Vector4=acts.Vector4(0, 0, 0, 0),
-    hardProcess = ["HardQCD:all = on"],
-    softProcess = ["SoftQCD:all = on"],
 ):
     vertexGenerator = acts.examples.GaussianVertexGenerator(
         stddev=vertexStddev, mean=vertexMean
@@ -61,7 +59,7 @@ def addPythia8(
                     pdgBeam0=beam0,
                     pdgBeam1=beam1,
                     cmsEnergy=cmsEnergy,
-                    settings=hardProcess,
+                    settings=["HardQCD:all = on"],
                 ),
             )
         )
@@ -75,7 +73,7 @@ def addPythia8(
                     pdgBeam0=beam0,
                     pdgBeam1=beam1,
                     cmsEnergy=cmsEnergy,
-                    settings=softProcess,
+                    settings=["SoftQCD:all = on"],
                 ),
             )
         )

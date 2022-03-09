@@ -38,20 +38,14 @@ ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input particles collection");
   }
-  if (m_cfg.filePath.empty() && m_cfg.write) {
+  if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
 
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
   // must always be opened internally
-  if (m_cfg.write) {
-    auto path = m_cfg.filePath;
-    m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
-    if (not m_outputFile) {
-      throw std::invalid_argument("Could not open '" + path + "'");
-    }
-  }
+  throw std::invalid_argument("Could not open '" + path + "'");
   // initialize the plot tools
   m_effPlotTool.book(m_effPlotCache);
   m_duplicationPlotTool.book(m_duplicationPlotCache);

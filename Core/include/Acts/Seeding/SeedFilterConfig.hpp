@@ -30,7 +30,7 @@ struct SeedFilterConfig {
   float deltaRMin = 5. * Acts::UnitConstants::mm;
   // in dense environments many seeds may be found per middle space point.
   // only seeds with the highest weight will be kept if this limit is reached.
-  unsigned int maxSeedsPerSpM = 5;
+  unsigned int maxSeedsPerSpM = 10;
   // how often do you want to increase the weight of a seed for finding a
   // compatible seed?
   size_t compatSeedLimit = 2;
