@@ -21,6 +21,7 @@
 #include "Acts/TrackFitting/detail/GsfSmoothing.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
 #include "Acts/TrackFitting/detail/KLMixtureReduction.hpp"
+#include "Acts/TrackFitting/detail/kalman_update_helpers.hpp"
 #include "Acts/Utilities/Overload.hpp"
 
 #include <ios>
@@ -105,9 +106,8 @@ struct GsfActor {
 
   /// Broadcast Cache Type
   using TrackProxy = typename MultiTrajectory::TrackStateProxy;
-  using ComponentCache =
-      std::tuple<std::variant<detail::GsfComponentParameterCache, TrackProxy>,
-                 detail::GsfComponentMetaCache>;
+  using ComponentCache = std::tuple<detail::GsfComponentParameterCache,
+                                    detail::GsfComponentMetaCache>;
 
   struct ParametersCacheProjector {
     auto& operator()(ComponentCache& cache) const {
@@ -289,6 +289,7 @@ struct GsfActor {
           surface.associatedDetectorElement()) {
         ACTS_VERBOSE("Detected hole on " << surface.geometryId());
         result.missedActiveSurfaces.push_back(&surface);
+        ++result.measurementHoles;
       }
 
       // Early return if nothing happens
@@ -296,43 +297,46 @@ struct GsfActor {
         return;
       }
 
-      // Create Cache
-      std::vector<ComponentCache> componentCache;
-
       // Projectors
-      auto mapToProxyAndWeight = [&](auto& cmp) {
-        auto& proxy = std::get<TrackProxy>(std::get<0>(cmp));
-        return std::tie(proxy, result.weightsOfStates.at(proxy.index()));
-      };
-
-      auto mapParsCacheToWeightParsCov = [&](auto& variant) -> decltype(auto) {
-        return std::get<detail::GsfComponentParameterCache>(variant);
-      };
-
-      auto mapProxyToWeightParsCov = [&](auto& variant) {
-        auto& proxy = std::get<TrackProxy>(variant);
-        return std::make_tuple(result.weightsOfStates.at(proxy.index()),
-                               proxy.filtered(), proxy.filteredCovariance());
-      };
-
-      auto mapToWeight = [&](auto& cmp) -> decltype(auto) {
-        constexpr bool C =
-            std::is_const_v<std::remove_reference_t<decltype(cmp)>>;
-
-        using T1 = detail::GsfComponentParameterCache;
-        using T2 = MultiTrajectory::TrackStateProxy;
-        using R = std::conditional_t<C, double, double&>;
-
-        return std::visit(
-            Overload{
-                [](std::conditional_t<C, std::add_const_t<T1>, T1>& p) -> R {
-                  return p.weight;
-                },
-                [&](std::conditional_t<C, std::add_const_t<T2>, T2>& p) -> R {
-                  return result.weightsOfStates.at(p.index());
-                }},
-            std::get<0>(cmp));
-      };
+      //       auto mapToProxyAndWeight = [&](auto& cmp) {
+      //         auto& proxy = std::get<TrackProxy>(std::get<0>(cmp));
+      //         return std::tie(proxy,
+      //         result.weightsOfStates.at(proxy.index()));
+      //       };
+      //
+      //       auto mapParsCacheToWeightParsCov = [&](auto& variant) ->
+      //       decltype(auto) {
+      //         return std::get<detail::GsfComponentParameterCache>(variant);
+      //       };
+      //
+      //       auto mapProxyToWeightParsCov = [&](auto& variant) {
+      //         auto& proxy = std::get<TrackProxy>(variant);
+      //         return
+      //         std::make_tuple(result.weightsOfStates.at(proxy.index()),
+      //                                proxy.filtered(),
+      //                                proxy.filteredCovariance());
+      //       };
+      //
+      //       auto mapToWeight = [&](auto& cmp) -> decltype(auto) {
+      //         constexpr bool C =
+      //             std::is_const_v<std::remove_reference_t<decltype(cmp)>>;
+      //
+      //         using T1 = detail::GsfComponentParameterCache;
+      //         using T2 = MultiTrajectory::TrackStateProxy;
+      //         using R = std::conditional_t<C, double, double&>;
+      //
+      //         return std::visit(
+      //             Overload{
+      //                 [](std::conditional_t<C, std::add_const_t<T1>, T1>& p)
+      //                 -> R {
+      //                   return p.weight;
+      //                 },
+      //                 [&](std::conditional_t<C, std::add_const_t<T2>, T2>& p)
+      //                 -> R {
+      //                   return result.weightsOfStates.at(p.index());
+      //                 }},
+      //             std::get<0>(cmp));
+      //       };
 
       ////////////////////////
       // The Core Algorithm
@@ -346,6 +350,86 @@ struct GsfActor {
         }
       }
 
+      // We do not need the component cache here, we can just update our stepper
+      // state with the filtered components.
+      // NOTE because of early return before we know that we have a measurement
+      if (not haveMaterial) {
+        auto update_stepper = [&](auto cmp, const auto& proxy, double) {
+          cmp.pars() = MultiTrajectoryHelpers::freeFiltered(
+              state.options.geoContext, proxy);
+          cmp.cov() = proxy.filteredCovariance();
+        };
+
+        kalmanUpdate(state, stepper, result, found_source_link->second,
+                     update_stepper);
+      }
+
+      if (haveMaterial) {
+        // Create Cache
+        std::vector<ComponentCache> componentCache;
+
+        // Here we create the new with the filtered kalman result
+        if (haveMeasurement) {
+          auto update_cache = [&](auto cmp, const auto& proxy, double weight) {
+            detail::GsfComponentMetaCache mcache;
+            mcache.parentIndex = proxy.index();
+            mcache.jacobian = cmp.jacobian();
+            mcache.jacToGlobal = cmp.jacToGlobal();
+            mcache.jacTransport = cmp.jacTransport();
+            mcache.derivative = cmp.derivative();
+            mcache.pathLength = cmp.pathAccumulated();
+
+            BoundTrackParameters bound(surface.getSharedPtr(), proxy.filtered(),
+                                       proxy.filteredCovariance());
+            detail::create_new_components(state, bound, weight, mcache,
+                                          m_cfg.bethe_heitler_approx,
+                                          componentCache, m_cfg.weightCutoff);
+          };
+
+          kalmanUpdate(state, stepper, result, found_source_link->second,
+                       update_cache);
+        } 
+        // Here we simply compute the bound state and then create the new components
+        else {
+          auto cmp_iterable = stepper.componentIterable(state.stepping);
+          auto cmp_it = cmp_iterable.begin();
+          auto idx_it = result.parentTips.begin();
+
+          for (; idx_it != result.parentTips.end(); ++cmp_it, ++idx_it) {
+            auto cmp = *cmp_it;
+
+            detail::GsfComponentMetaCache mcache;
+            mcache.parentIndex = *idx_it;
+            mcache.jacobian = cmp.jacobian();
+            mcache.jacToGlobal = cmp.jacToGlobal();
+            mcache.jacTransport = cmp.jacTransport();
+            mcache.derivative = cmp.derivative();
+            mcache.pathLength = cmp.pathAccumulated();
+
+            if (cmp.status() != Intersection3D::Status::onSurface) {
+              ACTS_VERBOSE("Skip component which is not on surface");
+              continue;
+            }
+
+            auto boundState = cmp.boundState(surface, m_cfg.doCovTransport);
+
+            if (!boundState.ok()) {
+              ACTS_ERROR(
+                  "Failed to compute boundState: " << boundState.error());
+              continue;
+            }
+
+            const auto& [bound, jac, pathLength] = boundState.value();
+
+            detail::create_new_components(state, bound, cmp.weight(), mcache,
+                                          m_cfg.bethe_heitler_approx,
+                                          componentCache, m_cfg.weightCutoff);
+          }
+        }
+        
+        reduceComponents(stepper, surface, componentCache);
+      }
+
       // If we have material, compute the bound state, split components
       // and reduce them to the desired size
       if (haveMaterial) {
@@ -355,7 +439,6 @@ struct GsfActor {
                                       m_cfg.weightCutoff},
             m_cfg.doCovTransport, componentCache);
 
-        reduceComponents(stepper, surface, componentCache);
       }
       // If we have no material, just compute the bound state
       else {
@@ -582,83 +665,60 @@ struct GsfActor {
     return new_parent_tips;
   }
 
-  template <typename propagator_state_t>
-  Result<void> kalmanUpdate(const propagator_state_t& state,
-                            const SourceLink& source_link, result_type& result,
-                            std::vector<ComponentCache>& components) const {
+  template <typename propagator_state_t, typename stepper_t,
+            typename component_handler_t>
+  Result<void> kalmanUpdate(propagator_state_t& state, const stepper_t& stepper,
+                            result_type& result, const SourceLink& source_link,
+                            component_handler_t& handle_component) const {
     const auto& logger = state.options.logger;
     const auto& surface = *state.navigation.currentSurface;
+
+    // Clear things that are overwritten soon
     result.currentTips.clear();
 
-    // Boolean flag, to distinguish measurement and outlier states. This flag is
-    // only modified by the valid-measurement-branch, so only if there isn't any
-    // valid measuerement state, the flag stays false and the state is thus
-    // counted as an outlier
+    // Boolean flag, to distinguish measurement and outlier states. This flag
+    // is only modified by the valid-measurement-branch, so only if there
+    // isn't any valid measuerement state, the flag stays false and the state
+    // is thus counted as an outlier
     bool is_valid_measurement = false;
 
-    // Loop over all components
-    for (auto& [variant, meta] : components) {
-      // Create new track state
-      result.currentTips.push_back(result.fittedStates.addTrackState(
-          TrackStatePropMask::All, meta.parentIndex));
+    // Do a for loop over the components and the parent indices
+    auto cmp_iterable = stepper.componentIterable(state.stepping);
+    auto cmp_it = cmp_iterable.begin();
+    auto idx_it = result.parentTips.begin();
 
-      const auto [weight, pars, cov] =
-          std::get<detail::GsfComponentParameterCache>(variant);
+    for (; idx_it != result.parentTips.end(); ++cmp_it, ++idx_it) {
+      auto cmp = *cmp_it;
 
-      variant = result.fittedStates.getTrackState(result.currentTips.back());
-      auto& trackProxy = std::get<TrackProxy>(variant);
-
-      // Set track parameters
-      trackProxy.predicted() = std::move(pars);
-
-      if (cov) {
-        trackProxy.predictedCovariance() = std::move(*cov);
-      }
-      result.weightsOfStates[result.currentTips.back()] = weight;
-
-      // Set surface
-      trackProxy.setReferenceSurface(surface.getSharedPtr());
-
-      // assign the source link to the track state
-      trackProxy.setUncalibrated(source_link);
-
-      trackProxy.jacobian() = std::move(meta.jacobian);
-      trackProxy.pathLength() = std::move(meta.pathLength);
-
-      // We have predicted parameters, so calibrate the uncalibrated
-      m_cfg.extensions.calibrator(state.geoContext, trackProxy);
-
-      // Get and set the type flags
-      trackProxy.typeFlags().set(TrackStateFlag::ParameterFlag);
-      if (surface.surfaceMaterial() != nullptr) {
-        trackProxy.typeFlags().set(TrackStateFlag::MaterialFlag);
+      if (cmp.status() != Intersection3D::Status::onSurface) {
+        ACTS_VERBOSE("Skip component which is not on surface");
+        continue;
       }
 
-      // Do Kalman update
-      if (not m_cfg.extensions.outlierFinder(trackProxy)) {
-        // Perform update
-        auto updateRes = m_cfg.extensions.updater(
-            state.geoContext, trackProxy, state.stepping.navDir, logger);
+      auto singleState = cmp.singleState(state);
+      const auto& singleStepper = cmp.singleStepper(stepper);
 
-        if (!updateRes.ok()) {
-          ACTS_ERROR("Update step failed: " << updateRes.error());
-          if (m_cfg.abortOnError) {
-            std::abort();
-          }
-          return updateRes.error();
-        }
+      auto trackStateProxyRes = detail::handleMeasurement(
+          singleState, singleStepper, m_cfg.extensions, surface, source_link,
+          result.fittedStates, *idx_it);
 
-        // If this is once true, it cannot become false anymore
+      if (!trackStateProxyRes.ok()) {
+        return trackStateProxyRes.error();
+      }
+
+      const auto& trackStateProxy = *trackStateProxyRes;
+      result.currentTips.push_back(trackStateProxy.index());
+
+      // If at least one component is no outlier, we consider the whole thing
+      // as a measuerementState
+      if (trackStateProxy.typeFlags().test(
+              Acts::TrackStateFlag::MeasurementFlag)) {
         is_valid_measurement = true;
-
-        trackProxy.typeFlags().set(TrackStateFlag::MeasurementFlag);
-      } else {
-        ACTS_VERBOSE("Outlier detected");
-
-        // Set the outlier type flag
-        trackProxy.typeFlags().set(TrackStateFlag::OutlierFlag);
-        trackProxy.data().ifiltered = trackProxy.data().ipredicted;
       }
+
+      // Do whatever needs to be done next
+      handle_component(cmp, trackStateProxy,
+                       result.weightsOfStates.at(*idx_it));
     }
 
     // Do the statistics
@@ -666,8 +726,6 @@ struct GsfActor {
 
     if (is_valid_measurement) {
       ++result.measurementStates;
-    } else {
-      ++result.measurementHoles;
     }
 
     // Return sucess

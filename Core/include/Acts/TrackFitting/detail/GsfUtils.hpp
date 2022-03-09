@@ -90,6 +90,91 @@ using MultiComponentState =
               std::vector<std::tuple<ActsScalar, BoundVector,
                                      std::optional<BoundSymMatrix>>>>;
 
+template <typename propagator_state_t, typename component_cache_t,
+          typename bethe_heitler_approx_t>
+void create_new_components(const propagator_state_t &state,
+                           const BoundTrackParameters &old_bound,
+                           const double old_weight,
+                           const GsfComponentMetaCache &metaCache,
+                           const bethe_heitler_approx_t &betheHeitler,
+                           std::vector<component_cache_t> &componentCaches,
+                           const double weightCutoff) {
+  const auto &logger = state.options.logger;
+  const auto &surface = *state.navigation.currentSurface;
+  const auto p_prev = old_bound.absoluteMomentum();
+
+  // Evaluate material slab
+  auto slab = surface.surfaceMaterial()->materialSlab(
+      old_bound.position(state.stepping.geoContext), state.stepping.navDir,
+      MaterialUpdateStage::fullUpdate);
+
+  auto pathCorrection = surface.pathCorrection(
+      state.stepping.geoContext, old_bound.position(state.stepping.geoContext),
+      old_bound.unitDirection());
+  slab.scaleThickness(pathCorrection);
+
+  // Get the mixture
+  const auto mixture = betheHeitler->mixture(slab.thicknessInX0());
+
+  // Create all possible new components
+  for (const auto &gaussian : mixture) {
+    // Here we combine the new child weight with the parent weight.
+    // However, this must be later re-adjusted
+    const auto new_weight = gaussian.weight * old_weight;
+
+    if (new_weight < weightCutoff) {
+      ACTS_VERBOSE("Skip component with weight " << new_weight);
+      continue;
+    }
+
+    if (gaussian.mean < 1.e-8) {
+      ACTS_WARNING("Skip component with gaussian " << gaussian.mean << " +- "
+                                                   << gaussian.var);
+      continue;
+    }
+
+    // compute delta p from mixture and update parameters
+    auto new_pars = old_bound.parameters();
+
+    const auto delta_p = [&]() {
+      if (state.stepping.navDir == NavigationDirection::forward)
+        return p_prev * (gaussian.mean - 1.);
+      else
+        return p_prev * (1. / gaussian.mean - 1.);
+    }();
+
+    throw_assert(p_prev + delta_p > 0.,
+                 "new momentum after bethe-heitler must be > 0, p_prev= "
+                     << p_prev << ", delta_p=" << delta_p
+                     << ", gaussian mean: " << gaussian.mean);
+    new_pars[eBoundQOverP] = old_bound.charge() / (p_prev + delta_p);
+
+    // compute inverse variance of p from mixture and update covariance
+    auto new_cov = std::move(old_bound.covariance());
+
+    if (new_cov.has_value()) {
+      const auto varInvP = [&]() {
+        if (state.stepping.navDir == NavigationDirection::forward) {
+          const auto f = 1. / (p_prev * gaussian.mean);
+          return f * f * gaussian.var;
+        } else {
+          return gaussian.var / (p_prev * p_prev);
+        }
+      }();
+
+      (*new_cov)(eBoundQOverP, eBoundQOverP) += varInvP;
+      throw_assert(std::isfinite((*new_cov)(eBoundQOverP, eBoundQOverP)),
+                   "cov not finite, varInvP="
+                       << varInvP << ", p_prev=" << p_prev << ", gaussian.mean="
+                       << gaussian.mean << ", gaussian.var=" << gaussian.var);
+    }
+
+    // Set the remaining things and push to vector
+    componentCaches.push_back(
+        {GsfComponentParameterCache{new_weight, new_pars, new_cov}, metaCache});
+  }
+}
+
 /// Functor which splits a component into multiple new components by creating a
 /// gaussian mixture, and adds them to a cache with a customizable cache_maker
 template <typename bethe_heitler_t>
@@ -115,11 +200,11 @@ struct ComponentSplitter {
         old_bound.position(state.stepping.geoContext), state.stepping.navDir,
         MaterialUpdateStage::fullUpdate);
 
-    //     auto pathCorrection = surface.pathCorrection(
-    //         state.stepping.geoContext,
-    //         old_bound.position(state.stepping.geoContext),
-    //         old_bound.unitDirection());
-    //     slab.scaleThickness(pathCorrection);
+    auto pathCorrection =
+        surface.pathCorrection(state.stepping.geoContext,
+                               old_bound.position(state.stepping.geoContext),
+                               old_bound.unitDirection());
+    slab.scaleThickness(pathCorrection);
 
     // Get the mixture
     const auto mixture = betheHeitler->mixture(slab.thicknessInX0());
