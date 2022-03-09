@@ -65,32 +65,32 @@ int main(int argc, char* argv[]) {
   auto topBinFinder = std::make_shared<Acts::BinFinder<TestSpacePoint>>(
       zBinNeighborsTop, numPhiNeighbors);
 
-  Acts::SeedfinderConfig<TestSpacePoint> config;
+  Acts::SeedfinderConfig<TestSpacePoint> sfConfig;
   Acts::RegionalParameters<TestSpacePoint> regionalParameters;
   // silicon detector max
-  config.rMax = 160._mm;
+  sfConfig.rMax = 160._mm;
   float deltaRMin = 5._mm;
   float deltaRMax = 160._mm;
   regionalParameters.deltaRMinTopSP = deltaRMin;
   regionalParameters.deltaRMinBottomSP = deltaRMin;
   regionalParameters.deltaRMaxTopSP = deltaRMax;
   regionalParameters.deltaRMaxBottomSP = deltaRMax;
-  config.collisionRegionMin = -250._mm;
-  config.collisionRegionMax = 250._mm;
-  config.zMin = -2800._mm;
-  config.zMax = 2800._mm;
+  sfConfig.collisionRegionMin = -250._mm;
+  sfConfig.collisionRegionMax = 250._mm;
+  sfConfig.zMin = -2800._mm;
+  sfConfig.zMax = 2800._mm;
   // 2.7 eta
-  config.cotThetaMax = 7.40627;
+  sfConfig.cotThetaMax = 7.40627;
   regionalParameters.sigmaScattering = 1.00000;
 
   regionalParameters.minPt = 500._MeV;
   regionalParameters.bFieldInZ = 1.99724_T;
 
-  config.beamPos = {-.5_mm, -.5_mm};
-  config.impactMax = 10._mm;
+  sfConfig.beamPos = {-.5_mm, -.5_mm};
+  sfConfig.impactMax = 10._mm;
 
-  config.useVariableMiddleSPRange = false;
-  config.regionalParameters.push_back(regionalParameters);
+  sfConfig.useVariableMiddleSPRange = false;
+  sfConfig.regionalParameters.push_back(regionalParameters);
 
   // Use a size slightly smaller than what modern GPUs are capable of. This is
   // because for debugging we can't use all available threads in a block, and
@@ -101,12 +101,12 @@ int main(int argc, char* argv[]) {
 
   // Set up the spacepoint grid configuration.
   Acts::SpacePointGridConfig gridConfig;
-  gridConfig.bFieldInZ = sfConfig.bFieldInZ;
-  gridConfig.minPt = sfConfig.minPt;
+  gridConfig.bFieldInZ = regionalParameters.bFieldInZ;
+  gridConfig.minPt = regionalParameters.minPt;
   gridConfig.rMax = sfConfig.rMax;
   gridConfig.zMax = sfConfig.zMax;
   gridConfig.zMin = sfConfig.zMin;
-  gridConfig.deltaRMax = sfConfig.deltaRMax;
+  gridConfig.deltaRMax = regionalParameters.deltaRMaxTopSP;
   gridConfig.cotThetaMax = sfConfig.cotThetaMax;
 
   // Covariance tool, sets covariances per spacepoint as required.
