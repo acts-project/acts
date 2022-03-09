@@ -43,14 +43,6 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config rMax");
   }
 
-  if (m_cfg.seedFilterConfig.deltaRMin != m_cfg.seedFinderConfig.deltaRMin) {
-    throw std::invalid_argument("Inconsistent config deltaRMin");
-  }
-
-  if (m_cfg.gridConfig.deltaRMax != m_cfg.seedFinderConfig.deltaRMax) {
-    throw std::invalid_argument("Inconsistent config deltaRMax");
-  }
-
   if (m_cfg.gridConfig.zMin != m_cfg.seedFinderConfig.zMin) {
     throw std::invalid_argument("Inconsistent config zMin");
   }
@@ -63,11 +55,23 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config cotThetaMax");
   }
 
-  if (m_cfg.gridConfig.minPt != m_cfg.seedFinderConfig.minPt) {
+  float minRegionalminPt = std::numeric_limits<float>::max();
+  float maxRegionalbFieldInZ = 0;
+
+  for (auto rparams : m_cfg.seedFinderConfig.regionalParameters) {
+    if (rparams.minPt < minRegionalminPt) {
+      minRegionalminPt = rparams.minPt;
+    }
+    if (rparams.bFieldInZ > maxRegionalbFieldInZ) {
+      maxRegionalbFieldInZ = rparams.bFieldInZ;
+    }
+  }
+
+  if (m_cfg.gridConfig.minPt != minRegionalminPt) {
     throw std::invalid_argument("Inconsistent config minPt");
   }
 
-  if (m_cfg.gridConfig.bFieldInZ != m_cfg.seedFinderConfig.bFieldInZ) {
+  if (m_cfg.gridConfig.bFieldInZ != maxRegionalbFieldInZ) {
     throw std::invalid_argument("Inconsistent config bFieldInZ");
   }
 
@@ -82,8 +86,16 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config zBinNeighborsBottom");
   }
 
-  m_cfg.seedFinderConfig.seedFilter =
-      std::make_unique<Acts::SeedFilter<SimSpacePoint>>(m_cfg.seedFilterConfig);
+  if (m_cfg.seedFilterConfig.size() !=
+      m_cfg.seedFinderConfig.regionalParameters.size()) {
+    throw std::invalid_argument("Inconsistent number of filter config");
+  }
+
+  for (size_t region = 0; region < m_cfg.seedFilterConfig.size(); region++) {
+    m_cfg.seedFinderConfig.regionalParameters[region].seedFilter =
+        std::make_unique<Acts::SeedFilter<SimSpacePoint>>(
+            m_cfg.seedFilterConfig[region]);
+  }
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
