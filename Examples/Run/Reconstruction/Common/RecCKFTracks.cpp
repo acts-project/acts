@@ -214,7 +214,6 @@ int runRecCKFTracks(int argc, char* argv[],
       seedingCfg.seedFinderConfig.regionalParameters.push_back(
           regionalParameters);
 
-      (regionalParameters);
       sequencer.addAlgorithm(
           std::make_shared<SeedingAlgorithm>(seedingCfg, logLevel));
       inputProtoTracks = seedingCfg.outputProtoTracks;

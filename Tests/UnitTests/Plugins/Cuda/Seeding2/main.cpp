@@ -65,8 +65,8 @@ int main(int argc, char* argv[]) {
   auto topBinFinder = std::make_shared<Acts::BinFinder<TestSpacePoint>>(
       zBinNeighborsTop, numPhiNeighbors);
 
-  Acts::SeedfinderConfig<SpacePoint> config;
-  Acts::RegionalParameters<SpacePoint> regionalParameters;
+  Acts::SeedfinderConfig<TestSpacePoint> config;
+  Acts::RegionalParameters<TestSpacePoint> regionalParameters;
   // silicon detector max
   config.rMax = 160._mm;
   float deltaRMin = 5._mm;

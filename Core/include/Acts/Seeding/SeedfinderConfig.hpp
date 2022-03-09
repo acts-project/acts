@@ -28,6 +28,7 @@ struct SeedConfirmationRange {
 template <typename T>
 class SeedFilter;
 
+/// Seeding arameters we want to optimise for different regions of the detector
 template <typename SpacePoint>
 struct RegionalParameters {
   std::shared_ptr<Acts::SeedFilter<SpacePoint>> seedFilter;
@@ -69,6 +70,13 @@ struct SeedfinderConfig {
   std::vector<float> rboundaries;
 
   /// Return for a given middle space point the associated parameters region
+  /// The bin are define from negative Z to positive, then for increasing R
+  /// value as followed :
+  ///
+  ///        3   |    4    |   5
+  ///    ---------------------------
+  ///        0   |    1    |   2
+  ///    ---------------------------
   ///
   /// @param rM R position of the middle space point
   /// @param zM Z position of the middle space point

@@ -85,8 +85,8 @@ auto readFile(const std::string& filename) -> std::vector<const SpacePoint*> {
 template <typename external_spacepoint_t>
 auto setupSeedfinderConfiguration()
     -> Acts::SeedfinderConfig<external_spacepoint_t> {
-  Acts::SeedfinderConfig<SpacePoint> config;
-  Acts::RegionalParameters<SpacePoint> regionalParameters;
+  Acts::SeedfinderConfig<external_spacepoint_t> config;
+  Acts::RegionalParameters<external_spacepoint_t> regionalParameters;
   // silicon detector max
   config.rMax = 160._mm;
   float deltaRMin = 5._mm;

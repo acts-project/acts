@@ -35,29 +35,33 @@ Seedfinder<external_spacepoint_t>::Seedfinder(
       m_resource(&resource),
       m_device_resource(device_resource) {
   // init m_config
-  m_config.highland = 13.6f * std::sqrt(m_config.radLengthPerSeed) *
-                      (1 + 0.038f * std::log(m_config.radLengthPerSeed));
-  float maxScatteringAngle = m_config.highland / m_config.minPt;
-  m_config.maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;
-  m_config.pTPerHelixRadius = 300.f * m_config.bFieldInZ;
-  m_config.minHelixDiameter2 =
-      std::pow(m_config.minPt * 2 / m_config.pTPerHelixRadius, 2);
-  m_config.pT2perRadius =
-      std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);
+  Acts::RegionalParameters regionalParameters = m_config.regionalParameters[0];
+  regionalParameters.highland =
+      13.6f * std::sqrt(regionalParameters.radLengthPerSeed) *
+      (1 + 0.038f * std::log(regionalParameters.radLengthPerSeed));
+  float maxScatteringAngle =
+      regionalParameters.highland / regionalParameters.minPt;
+  regionalParameters.maxScatteringAngle2 =
+      maxScatteringAngle * maxScatteringAngle;
+  regionalParameters.pTPerHelixRadius = 300.f * regionalParameters.bFieldInZ;
+  regionalParameters.minHelixDiameter2 = std::pow(
+      regionalParameters.minPt * 2 / regionalParameters.pTPerHelixRadius, 2);
+  regionalParameters.pT2perRadius = std::pow(
+      regionalParameters.highland / regionalParameters.pTPerHelixRadius, 2);
 
-  auto seedFilterConfig = m_config.seedFilter->getSeedFilterConfig();
+  auto seedFilterConfig = regionalParameters.seedFilter->getSeedFilterConfig();
 
   // init m_deviceConfig
   m_deviceConfig = Acts::Sycl::detail::DeviceSeedfinderConfig{
-      m_config.deltaRMin,
-      m_config.deltaRMax,
+      regionalParameters.deltaRMinTopSP,
+      regionalParameters.deltaRMaxTopSP,
       m_config.cotThetaMax,
       m_config.collisionRegionMin,
       m_config.collisionRegionMax,
-      m_config.maxScatteringAngle2,
-      m_config.sigmaScattering,
-      m_config.minHelixDiameter2,
-      m_config.pT2perRadius,
+      regionalParameters.maxScatteringAngle2,
+      regionalParameters.sigmaScattering,
+      regionalParameters.minHelixDiameter2,
+      regionalParameters.pT2perRadius,
       seedFilterConfig.deltaInvHelixDiameter,
       seedFilterConfig.impactWeightFactor,
       seedFilterConfig.deltaRMin,
