@@ -54,7 +54,7 @@ struct GsfResult {
   Result<void> result{Result<void>::success()};
 
   // Used for workaround to initialize MT correctly
-  bool haveInitializedMT = false;
+  bool haveInitializedResult = false;
 };
 
 /// The actor carrying out the GSF algorithm
@@ -81,9 +81,6 @@ struct GsfActor {
     /// Number of processed states
     std::size_t processedStates = 0;
 
-    /// Allow to configure surfaces to skip
-    std::set<GeometryIdentifier> surfacesToSkip;
-
     /// Wether to transport covariance
     bool doCovTransport = true;
 
@@ -102,7 +99,7 @@ struct GsfActor {
     /// A not so nice workaround to get the first backward state in the
     /// MultiTrajectory for the DirectNavigator
     std::function<void(result_type&, const LoggerWrapper&)>
-        multiTrajectoryInitializer;
+        resultInitializer;
 
     /// We can disable component splitting for debugging or so
     bool applyMaterialEffects = true;
@@ -230,10 +227,10 @@ struct GsfActor {
       return std::make_tuple(missed, reachable);
     }();
 
-    // Workaround to initialize MT in backward mode
-    if (!result.haveInitializedMT && m_cfg.multiTrajectoryInitializer) {
-      m_cfg.multiTrajectoryInitializer(result, logger);
-      result.haveInitializedMT = true;
+    // Workaround to initialize e.g. MultiTrajectory in backward mode
+    if (!result.haveInitializedResult && m_cfg.resultInitializer) {
+      m_cfg.resultInitializer(result, logger);
+      result.haveInitializedResult = true;
     }
 
     // Initialize current tips on first pass
@@ -269,13 +266,6 @@ struct GsfActor {
 
       if (!success) {
         ACTS_VERBOSE("Already visited surface, return");
-        return;
-      }
-
-      // Early return if the surfaces should be skipped
-      if (m_cfg.surfacesToSkip.find(surface.geometryId()) !=
-          m_cfg.surfacesToSkip.end()) {
-        ACTS_VERBOSE("Surface is configured to be skipped");
         return;
       }
 

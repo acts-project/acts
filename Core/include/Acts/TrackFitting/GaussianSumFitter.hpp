@@ -329,41 +329,39 @@ struct GaussianSumFitter {
       // Workaround to get the first state into the MultiTrajectory seems also
       // to be necessary for standard navigator to prevent double kalman
       // update on the last surface
-      actor.m_cfg.multiTrajectoryInitializer =
-          [&fwdGsfResult](auto& result,
-                          [[maybe_unused]] const auto& gsf_logger) {
-            result.currentTips.clear();
+      actor.m_cfg.resultInitializer = [&fwdGsfResult](auto& result,
+                                                      const auto& gsf_logger) {
+        result.currentTips.clear();
 
-            // Manually expand the logging macro here since a function parameter
-            // named 'logger' seems to trigger a false-positive for gcc's
-            // -Wshadow warning
-            gsf_logger().log(Acts::Logging::VERBOSE,
-                             "Initialize the MultiTrajectory with information "
-                             "provided to the Actor");
+        // Manually expand the logging macro here since a function parameter
+        // named 'logger' seems to trigger a false-positive for gcc's
+        // -Wshadow warning
+        gsf_logger().log(Acts::Logging::VERBOSE,
+                         "Initialize the MultiTrajectory with information "
+                         "provided to the Actor");
 
-            for (const auto idx : fwdGsfResult.currentTips) {
-              result.currentTips.push_back(
-                  result.fittedStates.addTrackState(TrackStatePropMask::All));
-              result.parentTips = result.currentTips;
+        for (const auto idx : fwdGsfResult.currentTips) {
+          result.currentTips.push_back(
+              result.fittedStates.addTrackState(TrackStatePropMask::All));
+          result.parentTips = result.currentTips;
 
-              auto proxy =
-                  result.fittedStates.getTrackState(result.currentTips.back());
-              proxy.copyFrom(fwdGsfResult.fittedStates.getTrackState(idx));
-              result.weightsOfStates[result.currentTips.back()] =
-                  fwdGsfResult.weightsOfStates.at(idx);
+          auto proxy =
+              result.fittedStates.getTrackState(result.currentTips.back());
+          proxy.copyFrom(fwdGsfResult.fittedStates.getTrackState(idx));
+          result.weightsOfStates[result.currentTips.back()] =
+              fwdGsfResult.weightsOfStates.at(idx);
 
-              // Because we are backwards, we use forward filtered as predicted
-              proxy.predicted() = proxy.filtered();
-              proxy.predictedCovariance() = proxy.filteredCovariance();
+          // Because we are backwards, we use forward filtered as predicted
+          proxy.predicted() = proxy.filtered();
+          proxy.predictedCovariance() = proxy.filteredCovariance();
 
-              // Mark surface as visited
-              result.visitedSurfaces.insert(
-                  proxy.referenceSurface().geometryId());
-            }
+          // Mark surface as visited
+          result.visitedSurfaces.insert(proxy.referenceSurface().geometryId());
+        }
 
-            result.measurementStates++;
-            result.processedStates++;
-          };
+        result.measurementStates++;
+        result.processedStates++;
+      };
 
       bwdPropOptions.direction = gsfBackward;
 
@@ -476,7 +474,13 @@ struct GaussianSumFitter {
         actor.m_cfg.maxComponents = options.maxComponents;
         actor.m_cfg.abortOnError = options.abortOnError;
         actor.m_cfg.applyMaterialEffects = options.applyMaterialEffects;
-        actor.m_cfg.surfacesToSkip.insert(surface->geometryId());
+
+        // Add the initial surface to the list of already visited surfaces, so
+        // that the material effects are not applied twice
+        actor.m_cfg.resultInitializer =
+            [id = surface->geometryId()](auto& result, const auto&) {
+              result.visitedSurfaces.insert(id);
+            };
 
         lastPropOptions.direction = gsfBackward;
 
