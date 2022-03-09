@@ -17,11 +17,6 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
     if not os.path.exists(csv_dir):
         os.mkdir(csv_dir)
 
-    # Sequencer
-    s = s or acts.examples.Sequencer(
-        events=10, numThreads=-1, logLevel=acts.logging.INFO
-    )
-
     # Input
     rnd = acts.examples.RandomNumbers(seed=42)
     evGen = acts.examples.EventGenerator(
@@ -162,6 +157,10 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
         outputProtoTracks="prototracks_estimated",
         trackingGeometry=trackingGeometry,
         magneticField=field,
+    )
+
+    s = s or acts.examples.Sequencer(
+        events=100, numThreads=-1, logLevel=acts.logging.INFO
     )
 
     s.addReader(evGen)
