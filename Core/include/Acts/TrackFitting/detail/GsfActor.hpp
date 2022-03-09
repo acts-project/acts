@@ -78,9 +78,6 @@ struct GsfActor {
     /// instance TODO if we somehow could initialize a reference here...
     const detail::BHApprox* bethe_heitler_approx = nullptr;
 
-    /// Number of processed states
-    std::size_t processedStates = 0;
-
     /// Wether to transport covariance
     bool doCovTransport = true;
 
@@ -302,8 +299,7 @@ struct GsfActor {
       }
 
       // Create Cache
-      thread_local std::vector<ComponentCache> componentCache;
-      componentCache.clear();
+      std::vector<ComponentCache> componentCache;
 
       // Projectors
       auto mapToProxyAndWeight = [&](auto& cmp) {
