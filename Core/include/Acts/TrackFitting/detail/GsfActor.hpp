@@ -27,21 +27,6 @@
 #include <map>
 #include <numeric>
 
-#define RETURN_ERROR_OR_ABORT_ACTOR(error) \
-  if (m_cfg.abortOnError) {                \
-    std::abort();                          \
-  } else {                                 \
-    return error;                          \
-  }
-
-#define SET_ERROR_AND_RETURN_OR_ABORT_ACTOR(error) \
-  if (m_cfg.abortOnError) {                        \
-    std::abort();                                  \
-  } else {                                         \
-    result.result = error;                         \
-    return;                                        \
-  }
-
 namespace Acts {
 namespace detail {
 
@@ -152,6 +137,15 @@ struct GsfActor {
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   result_type& result) const {
+    // Set error or abort utility
+    auto set_error_or_abort = [&](auto error) {
+      if (m_cfg.abortOnError) {
+        std::abort();
+      } else {
+        result.result = error;
+      }
+    };
+
     const auto& logger = state.options.logger;
 
     throw_assert(detail::weightsAreNormalized(
@@ -254,7 +248,7 @@ struct GsfActor {
                  << result.parentTips.size() << " vs "
                  << stepper.numberComponents(state.stepping));
 
-      SET_ERROR_AND_RETURN_OR_ABORT_ACTOR(GsfError::ComponentNumberMismatch);
+      return set_error_or_abort(GsfError::ComponentNumberMismatch);
     }
 
     // There seem to be cases where this is not always after initializing the
@@ -405,7 +399,7 @@ struct GsfActor {
                                            mapParsCacheToWeightParsCov);
 
       if (!updateRes.ok()) {
-        SET_ERROR_AND_RETURN_OR_ABORT_ACTOR(updateRes.error());
+        return set_error_or_abort(updateRes.error());
       }
       result.parentTips = *updateRes;
 
@@ -664,7 +658,10 @@ struct GsfActor {
 
         if (!updateRes.ok()) {
           ACTS_ERROR("Update step failed: " << updateRes.error());
-          RETURN_ERROR_OR_ABORT_ACTOR(updateRes.error());
+          if (m_cfg.abortOnError) {
+            std::abort();
+          }
+          return updateRes.error();
         }
 
         // If this is once true, it cannot become false anymore

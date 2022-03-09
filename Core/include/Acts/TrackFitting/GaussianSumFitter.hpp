@@ -17,13 +17,6 @@
 
 #include <fstream>
 
-#define RETURN_ERROR_OR_ABORT_FIT(error) \
-  if (options.abortOnError) {            \
-    std::abort();                        \
-  } else {                               \
-    return error;                        \
-  }
-
 namespace Acts {
 
 namespace detail {
@@ -199,6 +192,9 @@ struct GaussianSumFitter {
                     bwdPropInitializer);
   }
 
+  /// The generic implementation of the fit function.
+  /// TODO check what this function does with the referenceSurface is e.g. the
+  /// first measuerementSurface
   template <typename source_link_it_t, typename start_parameters_t,
             typename fwd_prop_initializer_t, typename bwd_prop_initializer_t>
   Acts::Result<Acts::KalmanFitterResult> fit_impl(
@@ -206,6 +202,14 @@ struct GaussianSumFitter {
       const start_parameters_t& sParameters, const GsfOptions& options,
       const fwd_prop_initializer_t& fwdPropInitializer,
       const bwd_prop_initializer_t& bwdPropInitializer) const {
+    // return or abort utility
+    auto return_error_or_abort = [&](auto error) {
+      if (options.abortOnError) {
+        std::abort();
+      }
+      return error;
+    };
+
     // The logger
     const auto& logger = options.logger;
 
@@ -282,17 +286,17 @@ struct GaussianSumFitter {
     }();
 
     if (!fwdResult.ok()) {
-      RETURN_ERROR_OR_ABORT_FIT(fwdResult.error());
+      return return_error_or_abort(fwdResult.error());
     }
 
     auto& fwdGsfResult = (*fwdResult).template get<detail::GsfResult>();
 
     if (!fwdGsfResult.result.ok()) {
-      RETURN_ERROR_OR_ABORT_FIT(fwdGsfResult.result.error());
+      return return_error_or_abort(fwdGsfResult.result.error());
     }
 
     if (fwdGsfResult.processedStates == 0) {
-      RETURN_ERROR_OR_ABORT_FIT(GsfError::NoStatesCreated);
+      return return_error_or_abort(GsfError::NoStatesCreated);
     }
 
     ACTS_VERBOSE("Finished forward propagation");
@@ -377,17 +381,17 @@ struct GaussianSumFitter {
     }();
 
     if (!bwdResult.ok()) {
-      RETURN_ERROR_OR_ABORT_FIT(bwdResult.error());
+      return return_error_or_abort(bwdResult.error());
     }
 
     auto& bwdGsfResult = (*bwdResult).template get<detail::GsfResult>();
 
     if (!bwdGsfResult.result.ok()) {
-      RETURN_ERROR_OR_ABORT_FIT(bwdGsfResult.result.error());
+      return return_error_or_abort(bwdGsfResult.result.error());
     }
 
     if (bwdGsfResult.processedStates == 0) {
-      RETURN_ERROR_OR_ABORT_FIT(GsfError::NoStatesCreated);
+      return return_error_or_abort(GsfError::NoStatesCreated);
     }
 
     ////////////////////////////////////
@@ -412,7 +416,7 @@ struct GaussianSumFitter {
 
     // Some test
     if (lastTip == SIZE_MAX) {
-      RETURN_ERROR_OR_ABORT_FIT(GsfError::NoStatesCreated);
+      return return_error_or_abort(GsfError::NoStatesCreated);
     }
 
     Acts::KalmanFitterResult kalmanResult;
@@ -449,9 +453,9 @@ struct GaussianSumFitter {
     // Propagate back to origin with smoothed parameters //
     ///////////////////////////////////////////////////////
     if (options.referenceSurface) {
-      ACTS_VERBOSE("+--------------------------------------+");
-      ACTS_VERBOSE("| Gsf: Do propagation back to beamline |");
-      ACTS_VERBOSE("+--------------------------------------+");
+      ACTS_VERBOSE("+-----------------------------------------------+");
+      ACTS_VERBOSE("| Gsf: Do propagation back to reference surface |");
+      ACTS_VERBOSE("+-----------------------------------------------+");
       auto lastResult = [&]() -> Result<std::unique_ptr<BoundTrackParameters>> {
         const auto& [surface, lastSmoothedState] =
             std::get<2>(smoothResult).front();
@@ -490,7 +494,7 @@ struct GaussianSumFitter {
       }();
 
       if (!lastResult.ok()) {
-        RETURN_ERROR_OR_ABORT_FIT(lastResult.error());
+        return return_error_or_abort(lastResult.error());
       }
 
       kalmanResult.fittedParameters = **lastResult;
