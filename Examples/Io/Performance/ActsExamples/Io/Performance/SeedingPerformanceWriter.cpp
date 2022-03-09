@@ -45,7 +45,11 @@ ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
   // must always be opened internally
-  throw std::invalid_argument("Could not open '" + path + "'");
+  auto path = m_cfg.filePath;
+  m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
+  if (not m_outputFile) {
+    throw std::invalid_argument("Could not open '" + path + "'");
+  }
   // initialize the plot tools
   m_effPlotTool.book(m_effPlotCache);
   m_duplicationPlotTool.book(m_duplicationPlotCache);
