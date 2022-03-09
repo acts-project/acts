@@ -151,6 +151,8 @@ int main(int argc, char* argv[]) {
 
   // enable non equidistant binning in z, in case the binning is not defined the
   // edges are evaluated automatically using equidistant binning
+  // ITk binning:
+  // [-3000,-2500.,-1400.,-925.,-450.,-250.,250.,450.,925.,1400.,2500.,3000]
   seedingCfg.gridConfig.zBinEdges = {-3000., -2500., -1400., -925.,
                                      -450.,  -250.,  250.,   450.,
                                      925.,   1400.,  2500.,  3000.};
@@ -158,15 +160,7 @@ int main(int argc, char* argv[]) {
   // enable cotTheta sorting in SeedFinder
   seedingCfg.seedFinderConfig.enableCutsForSortedSP = true;  // pixel: true
 
-  // Guide for building neighbors:
-  // z == 6: central z region, |z|<250mm
-  // [-3000, -2500., -1400., -925., -450., -250.,  250.,  450.,  925.,  1400.,
-  // 2500.,  3000]
-  //       1       2       3      4      5      6      7      8      9       10
-  //       11        z bin index
-  // -------------------------------------------------------------------------------------------->
-  // Z[mm] Z=-3000                                  IP,Z=0 Z=+3000
-  //
+  // Guide for building ITk neighbors:
   // allows to specify the number of neighbors desired for each bin
   // {-1,1} means one neighbor on the left and one on the right
   // vector containing the map of z bins for the top SP, if the vector is empty
