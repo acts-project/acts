@@ -57,7 +57,7 @@ struct GsfOptions {
 
   std::size_t maxComponents = 4;
 
-  bool applyMaterialEffects = true;
+  bool disableAllMaterialHandling = false;
 };
 
 /// Gaussian Sum Fitter implementation.
@@ -264,7 +264,8 @@ struct GaussianSumFitter {
       actor.m_cfg.maxComponents = options.maxComponents;
       actor.m_cfg.extensions = options.extensions;
       actor.m_cfg.abortOnError = options.abortOnError;
-      actor.m_cfg.applyMaterialEffects = options.applyMaterialEffects;
+      actor.m_cfg.disableAllMaterialHandling =
+          options.disableAllMaterialHandling;
 
       fwdPropOptions.direction = gsfForward;
 
@@ -323,7 +324,8 @@ struct GaussianSumFitter {
       actor.m_cfg.inputMeasurements = inputMeasurements;
       actor.m_cfg.maxComponents = options.maxComponents;
       actor.m_cfg.abortOnError = options.abortOnError;
-      actor.m_cfg.applyMaterialEffects = options.applyMaterialEffects;
+      actor.m_cfg.disableAllMaterialHandling =
+          options.disableAllMaterialHandling;
       actor.m_cfg.extensions = options.extensions;
 
       // Workaround to get the first state into the MultiTrajectory seems also
@@ -473,14 +475,15 @@ struct GaussianSumFitter {
             lastPropOptions.actionList.template get<detail::GsfActor>();
         actor.m_cfg.maxComponents = options.maxComponents;
         actor.m_cfg.abortOnError = options.abortOnError;
-        actor.m_cfg.applyMaterialEffects = options.applyMaterialEffects;
+        actor.m_cfg.disableAllMaterialHandling =
+            options.disableAllMaterialHandling;
 
         // Add the initial surface to the list of already visited surfaces, so
         // that the material effects are not applied twice
-        actor.m_cfg.resultInitializer =
-            [id = surface->geometryId()](auto& result, const auto&) {
-              result.visitedSurfaces.insert(id);
-            };
+        actor.m_cfg.resultInitializer = [id = surface->geometryId()](
+                                            auto& result, const auto&) {
+          result.visitedSurfaces.insert(id);
+        };
 
         lastPropOptions.direction = gsfBackward;
 

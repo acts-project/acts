@@ -84,22 +84,20 @@ struct GsfActor {
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
 
-    /// Whether to consider energy loss.
-    bool energyLoss = true;
-
-    /// Whether to abort immediately when an error occurs
-    bool abortOnError = false;
-
     /// When to discard components
     double weightCutoff = 1.0e-4;
 
     /// A not so nice workaround to get the first backward state in the
     /// MultiTrajectory for the DirectNavigator
-    std::function<void(result_type&, const LoggerWrapper&)>
-        resultInitializer;
+    std::function<void(result_type&, const LoggerWrapper&)> resultInitializer;
 
-    /// We can disable component splitting for debugging or so
-    bool applyMaterialEffects = true;
+    /// When this option is enabled, material information on all surfaces is
+    /// ignored. This disables the component convolution as well as the handling
+    /// of energy. This may be useful for debugging.
+    bool disableAllMaterialHandling = false;
+
+    /// Whether to abort immediately when an error occurs
+    bool abortOnError = false;
 
     /// The extensions
     KalmanFitterExtensions extensions;
@@ -279,7 +277,7 @@ struct GsfActor {
           m_cfg.inputMeasurements.find(surface.geometryId());
       const bool haveMaterial =
           state.navigation.currentSurface->surfaceMaterial() &&
-          m_cfg.applyMaterialEffects;
+          !m_cfg.disableAllMaterialHandling;
       const bool haveMeasurement =
           found_source_link != m_cfg.inputMeasurements.end();
 
@@ -690,12 +688,10 @@ struct GsfActor {
 
       detail::PointwiseMaterialInteraction interaction(&surface, singleState,
                                                        singleStepper);
-
       if (interaction.evaluateMaterialSlab(singleState, updateStage)) {
-        constexpr bool doMultipleScattering = true;
-        constexpr bool doEnergyLoss = false;
-        interaction.evaluatePointwiseMaterialInteraction(doMultipleScattering,
-                                                         doEnergyLoss);
+        // In the Gsf we only need to handle the multiple scattering
+        interaction.evaluatePointwiseMaterialInteraction(
+            m_cfg.multipleScattering, false);
 
         // Screen out material effects info
         ACTS_VERBOSE("Material effects on surface: "
