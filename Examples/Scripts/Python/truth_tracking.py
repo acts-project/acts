@@ -14,6 +14,7 @@ def runTruthTracking(
     outputDir: Path,
     digiConfigFile: Path,
     directNavigation=False,
+    reverseFilteringMomThreshold=0 * u.GeV,
     s: acts.examples.Sequencer = None,
 ):
 
@@ -152,6 +153,7 @@ def runTruthTracking(
         multipleScattering=True,
         energyLoss=True,
         pickTrack=-1,
+        reverseFilteringMomThreshold=reverseFilteringMomThreshold,
         trackingGeometry=trackingGeometry,
         dFit=acts.examples.TrackFittingAlgorithm.makeTrackFitterFunction(field),
         fit=acts.examples.TrackFittingAlgorithm.makeTrackFitterFunction(
@@ -209,6 +211,8 @@ def runTruthTracking(
 
 if "__main__" == __name__:
 
+    srcdir = Path(__file__).resolve().parent.parent.parent.parent
+
     # detector, trackingGeometry, _ = getOpenDataDetector()
     detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
 
@@ -217,9 +221,8 @@ if "__main__" == __name__:
     runTruthTracking(
         trackingGeometry,
         field,
-        digiConfigFile=Path(
-            # "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",
-            "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-        ),
+        digiConfigFile=srcdir
+        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
+        # "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",
         outputDir=Path.cwd(),
     ).run()

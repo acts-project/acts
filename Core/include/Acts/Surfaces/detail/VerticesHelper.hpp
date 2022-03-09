@@ -62,6 +62,7 @@ void createSegment(std::vector<vertex_t>& vertices,
     vertex_t vertex = vertex_t::Zero();
     vertex(0) = rxy.first * std::cos(phi);
     vertex(1) = rxy.second * std::sin(phi);
+
     vertex = vertex + offset;
     vertices.push_back(transform * vertex);
   }

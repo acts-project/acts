@@ -165,25 +165,31 @@ int main(int argc, char** argv) {
 
   std::cout << "read " << spVec.size() << " SP from file " << file << std::endl;
 
-  // Set seed finder configuration
   Acts::SeedfinderConfig<SpacePoint> config;
+  Acts::RegionalParameters<SpacePoint> regionalParameters;
   // silicon detector max
   config.rMax = 160._mm;
-  config.deltaRMin = 5._mm;
-  config.deltaRMax = 160._mm;
+  float deltaRMin = 5._mm;
+  float deltaRMax = 160._mm;
+  regionalParameters.deltaRMinTopSP = deltaRMin;
+  regionalParameters.deltaRMinBottomSP = deltaRMin;
+  regionalParameters.deltaRMaxTopSP = deltaRMax;
+  regionalParameters.deltaRMaxBottomSP = deltaRMax;
   config.collisionRegionMin = -250._mm;
   config.collisionRegionMax = 250._mm;
   config.zMin = -2800._mm;
   config.zMax = 2800._mm;
   // 2.7 eta
   config.cotThetaMax = 7.40627;
-  config.sigmaScattering = 1.00000;
+  regionalParameters.sigmaScattering = 1.00000;
 
-  config.minPt = 500._MeV;
-  config.bFieldInZ = 1.99724_T;
+  regionalParameters.minPt = 500._MeV;
+  regionalParameters.bFieldInZ = 1.99724_T;
 
   config.beamPos = {-.5_mm, -.5_mm};
   config.impactMax = 10._mm;
+
+  config.useVariableMiddleSPRange = false;
 
   int numPhiNeighbors = 1;
 
@@ -206,10 +212,13 @@ int main(int argc, char** argv) {
       Acts::BinFinder<SpacePoint>(zBinNeighborsTop, numPhiNeighbors));
   Acts::SeedFilterConfig sfconf;
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
-  config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
-      Acts::SeedFilter<SpacePoint>(sfconf, &atlasCuts));
+  regionalParameters.seedFilter =
+      std::make_unique<Acts::SeedFilter<SpacePoint>>(
+          Acts::SeedFilter<SpacePoint>(sfconf, &atlasCuts));
   Acts::Seedfinder<SpacePoint> seedfinder_cpu(config);
   Acts::Seedfinder<SpacePoint, Acts::Cuda> seedfinder_cuda(config);
+
+  config.regionalParameters.push_back(regionalParameters);
 
   // covariance tool, sets covariances per spacepoint as required
   auto ct = [=](const SpacePoint& sp, float, float,
@@ -221,12 +230,12 @@ int main(int argc, char** argv) {
 
   // setup spacepoint grid config
   Acts::SpacePointGridConfig gridConf;
-  gridConf.bFieldInZ = config.bFieldInZ;
-  gridConf.minPt = config.minPt;
+  gridConf.bFieldInZ = regionalParameters.bFieldInZ;
+  gridConf.minPt = regionalParameters.minPt;
   gridConf.rMax = config.rMax;
   gridConf.zMax = config.zMax;
   gridConf.zMin = config.zMin;
-  gridConf.deltaRMax = config.deltaRMax;
+  gridConf.deltaRMax = deltaRMax;
   gridConf.cotThetaMax = config.cotThetaMax;
   // create grid with bin sizes according to the configured geometry
   std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
@@ -253,6 +262,7 @@ int main(int argc, char** argv) {
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
   groupIt = spGroup.begin();
+  Acts::Extent rRangeSPExtent;
 
   if (do_cpu) {
     decltype(seedfinder_cpu)::State state;
@@ -261,7 +271,7 @@ int main(int argc, char** argv) {
     for (; !(groupIt == spGroup.end()); ++groupIt) {
       seedfinder_cpu.createSeedsForGroup(
           state, std::back_inserter(seedVector_cpu.emplace_back()),
-          groupIt.bottom(), groupIt.middle(), groupIt.top());
+          groupIt.bottom(), groupIt.middle(), groupIt.top(), rRangeSPExtent);
       group_count++;
       if (allgroup == false) {
         if (group_count >= nGroupToIterate)

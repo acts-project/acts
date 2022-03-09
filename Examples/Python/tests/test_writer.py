@@ -126,7 +126,7 @@ def test_root_prop_step_writer(
     s.run()
 
     assert file.exists()
-    assert file.stat().st_size > 2 ** 10 * 50
+    assert file.stat().st_size > 2**10 * 50
     assert_root_hash(file.name, file)
 
 
@@ -215,10 +215,11 @@ def test_root_clusters_writer(
     s.addReader(evGen)
     s.addAlgorithm(simAlg)
     digiAlg = PlanarSteppingAlgorithm(
-        level=acts.logging.WARNING,
+        level=acts.logging.INFO,
         inputSimHits=simAlg.config.outputSimHits,
         outputClusters="clusters",
         outputSourceLinks="sourcelinks",
+        outputDigiSourceLinks="digi_sourcelinks",
         outputMeasurements="measurements",
         outputMeasurementParticlesMap="meas_ptcl_map",
         outputMeasurementSimHitsMap="meas_sh_map",
@@ -235,7 +236,7 @@ def test_root_clusters_writer(
     s.addWriter(
         conf_const(
             RootPlanarClusterWriter,
-            level=acts.logging.WARNING,
+            level=acts.logging.INFO,
             filePath=str(out),
             inputSimHits=simAlg.config.outputSimHits,
             inputClusters=digiAlg.config.outputClusters,
@@ -245,7 +246,7 @@ def test_root_clusters_writer(
 
     s.run()
     assert out.exists()
-    assert out.stat().st_size > 2 ** 10 * 50
+    assert out.stat().st_size > 2**10 * 50
     assert_root_hash(out.name, out)
 
 
@@ -309,6 +310,7 @@ def test_csv_clusters_writer(tmp_path, fatras, conf_const, trk_geo, rng):
         inputSimHits=simAlg.config.outputSimHits,
         outputClusters="clusters",
         outputSourceLinks="sourcelinks",
+        outputDigiSourceLinks="digi_sourcelinks",
         outputMeasurements="measurements",
         outputMeasurementParticlesMap="meas_ptcl_map",
         outputMeasurementSimHitsMap="meas_sh_map",
@@ -470,7 +472,10 @@ def test_csv_multitrajectory_writer(tmp_path):
         trackingGeometry,
         field,
         digiConfigFile=Path(
-            "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            str(
+                Path(__file__).parent.parent.parent.parent
+                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            )
         ),
         outputDir=tmp_path,
         s=s,

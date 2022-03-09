@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(SurfaceConstruction) {
 }
 
 /// Unit test for testing Surface properties
-BOOST_AUTO_TEST_CASE(SurfaceProperties, *utf::expected_failures(1)) {
+BOOST_AUTO_TEST_CASE(SurfaceProperties) {
   // build a test object , 'surface'
   std::shared_ptr<const Acts::PlanarBounds> pPlanarBound =
       std::make_shared<const RectangleBounds>(5., 10.);
@@ -98,8 +98,9 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties, *utf::expected_failures(1)) {
   Vector2 localPosition{0.1, 3.0};
   BOOST_CHECK(surface.insideBounds(localPosition));
   Vector2 outside{20., 20.};
-  BOOST_CHECK(!surface.insideBounds(
-      outside));  // fails: m_bounds only in derived classes
+  BOOST_CHECK(surface.insideBounds(
+      outside));  // should return false, but doesn't because SurfaceStub has
+                  // "no bounds" hard-coded
   Vector3 mom{100., 200., 300.};
   // isOnSurface
   BOOST_CHECK(surface.isOnSurface(tgContext, reference, mom, false));

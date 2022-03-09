@@ -65,23 +65,32 @@ int main(int argc, char* argv[]) {
   auto topBinFinder = std::make_shared<Acts::BinFinder<TestSpacePoint>>(
       zBinNeighborsTop, numPhiNeighbors);
 
-  // Set up the seedfinder configuration.
-  Acts::SeedfinderConfig<TestSpacePoint> sfConfig;
+  Acts::SeedfinderConfig<SpacePoint> config;
+  Acts::RegionalParameters<SpacePoint> regionalParameters;
   // silicon detector max
-  sfConfig.rMax = 160._mm;
-  sfConfig.deltaRMin = 5._mm;
-  sfConfig.deltaRMax = 160._mm;
-  sfConfig.collisionRegionMin = -250._mm;
-  sfConfig.collisionRegionMax = 250._mm;
-  sfConfig.zMin = -2800._mm;
-  sfConfig.zMax = 2800._mm;
+  config.rMax = 160._mm;
+  float deltaRMin = 5._mm;
+  float deltaRMax = 160._mm;
+  regionalParameters.deltaRMinTopSP = deltaRMin;
+  regionalParameters.deltaRMinBottomSP = deltaRMin;
+  regionalParameters.deltaRMaxTopSP = deltaRMax;
+  regionalParameters.deltaRMaxBottomSP = deltaRMax;
+  config.collisionRegionMin = -250._mm;
+  config.collisionRegionMax = 250._mm;
+  config.zMin = -2800._mm;
+  config.zMax = 2800._mm;
   // 2.7 eta
-  sfConfig.cotThetaMax = 7.40627;
-  sfConfig.sigmaScattering = 1.00000;
-  sfConfig.minPt = 500._MeV;
-  sfConfig.bFieldInZ = 1.99724_T;
-  sfConfig.beamPos = {-.5_mm, -.5_mm};
-  sfConfig.impactMax = 10._mm;
+  config.cotThetaMax = 7.40627;
+  regionalParameters.sigmaScattering = 1.00000;
+
+  regionalParameters.minPt = 500._MeV;
+  regionalParameters.bFieldInZ = 1.99724_T;
+
+  config.beamPos = {-.5_mm, -.5_mm};
+  config.impactMax = 10._mm;
+
+  config.useVariableMiddleSPRange = false;
+  config.regionalParameters.push_back(regionalParameters);
 
   // Use a size slightly smaller than what modern GPUs are capable of. This is
   // because for debugging we can't use all available threads in a block, and
@@ -160,6 +169,8 @@ int main(int argc, char* argv[]) {
   // Create the result object.
   std::vector<std::vector<Acts::Seed<TestSpacePoint>>> seeds_host;
 
+  Acts::Extent rRangeSPExtent;
+
   // Perform the seed finding.
   if (!cmdl.onlyGPU) {
     auto spGroup_itr = spGroup.begin();
@@ -170,7 +181,7 @@ int main(int argc, char* argv[]) {
       auto& group = seeds_host.emplace_back();
       seedfinder_host.createSeedsForGroup(
           state, std::back_inserter(group), spGroup_itr.bottom(),
-          spGroup_itr.middle(), spGroup_itr.top());
+          spGroup_itr.middle(), spGroup_itr.top(), rRangeSPExtent);
     }
   }
 

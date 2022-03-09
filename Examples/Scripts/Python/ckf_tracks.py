@@ -190,6 +190,10 @@ def runCKFTracks(
                 rMax=gridConfig.rMax,
                 deltaRMin=seedFilterConfig.deltaRMin,
                 deltaRMax=gridConfig.deltaRMax,
+                deltaRMinTopSP=seedFilterConfig.deltaRMin,
+                deltaRMinBottomSP=seedFilterConfig.deltaRMin,
+                deltaRMaxTopSP=gridConfig.deltaRMax,
+                deltaRMaxBottomSP=gridConfig.deltaRMax,
                 collisionRegionMin=-250 * u.mm,
                 collisionRegionMax=250 * u.mm,
                 zMin=gridConfig.zMin,
@@ -257,7 +261,7 @@ def runCKFTracks(
     trackFinder = acts.examples.TrackFindingAlgorithm(
         level=acts.logging.INFO,
         measurementSelectorCfg=acts.MeasurementSelector.Config(
-            [(acts.GeometryIdentifier(), (15.0, 10))]
+            [(acts.GeometryIdentifier(), ([], [15.0], [10]))]
         ),
         inputMeasurements=digiAlg.config.outputMeasurements,
         inputSourceLinks=digiAlg.config.outputSourceLinks,
@@ -330,6 +334,8 @@ def runCKFTracks(
 
 
 if "__main__" == __name__:
+    srcdir = Path(__file__).resolve().parent.parent.parent.parent
+
     detector, trackingGeometry, decorators = GenericDetector.create()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
@@ -342,12 +348,10 @@ if "__main__" == __name__:
         trackingGeometry,
         decorators,
         field=field,
-        geometrySelection=Path(
-            "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
-        ),
-        digiConfigFile=Path(
-            "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-        ),
+        geometrySelection=srcdir
+        / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
+        digiConfigFile=srcdir
+        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
         outputCsv=True,
         truthSmearedSeeded=False,
         truthEstimatedSeeded=False,

@@ -9,11 +9,25 @@
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
+#include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <stdexcept>
+
+namespace {
+struct SimpleReverseFilteringLogic {
+  double momentumThreshold;
+
+  bool doBackwardFiltering(
+      Acts::MultiTrajectory::ConstTrackStateProxy trackState) const {
+    auto momentum = fabs(1 / trackState.filtered()[Acts::eBoundQOverP]);
+    return (momentum <= momentumThreshold);
+  }
+};
+}  // namespace
 
 ActsExamples::TrackFittingAlgorithm::TrackFittingAlgorithm(
     Config config, Acts::Logging::Level level)
@@ -67,19 +81,31 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
       Acts::Vector3{0., 0., 0.});
 
   // Set the KalmanFitter options
-  Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder,
-                            Acts::VoidReverseFilteringLogic>
-      kfOptions(ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
-                MeasurementCalibrator(measurements), Acts::VoidOutlierFinder(),
-                Acts::VoidReverseFilteringLogic(),
-                Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(),
-                &(*pSurface));
+  Acts::KalmanFitterExtensions extensions;
+  MeasurementCalibrator calibrator{measurements};
+  extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
+  Acts::GainMatrixUpdater kfUpdater;
+  Acts::GainMatrixSmoother kfSmoother;
+  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(&kfUpdater);
+  extensions.smoother.connect<&Acts::GainMatrixSmoother::operator()>(
+      &kfSmoother);
+
+  SimpleReverseFilteringLogic reverseFilteringLogic{
+      m_cfg.reverseFilteringMomThreshold};
+  extensions.reverseFilteringLogic
+      .connect<&SimpleReverseFilteringLogic::doBackwardFiltering>(
+          &reverseFilteringLogic);
+
+  Acts::KalmanFitterOptions kfOptions(
+      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, extensions,
+      Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(),
+      &(*pSurface));
 
   kfOptions.multipleScattering = m_cfg.multipleScattering;
   kfOptions.energyLoss = m_cfg.energyLoss;
 
   // Perform the fit for each input track
-  std::vector<IndexSourceLink> trackSourceLinks;
+  std::vector<std::reference_wrapper<const IndexSourceLink>> trackSourceLinks;
   std::vector<const Acts::Surface*> surfSequence;
   for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
     // Check if you are not in picking mode
@@ -109,15 +135,16 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
     // Fill the source links via their indices from the container
     for (auto hitIndex : protoTrack) {
-      auto sourceLink = sourceLinks.nth(hitIndex);
-      auto geoId = sourceLink->geometryId();
-      if (sourceLink == sourceLinks.end()) {
+      if (auto it = sourceLinks.nth(hitIndex); it != sourceLinks.end()) {
+        const IndexSourceLink& sourceLink = *it;
+        auto geoId = sourceLink.geometryId();
+        trackSourceLinks.push_back(std::cref(sourceLink));
+        surfSequence.push_back(m_cfg.trackingGeometry->findSurface(geoId));
+      } else {
         ACTS_FATAL("Proto track " << itrack << " contains invalid hit index"
                                   << hitIndex);
         return ProcessCode::ABORT;
       }
-      trackSourceLinks.push_back(*sourceLink);
-      surfSequence.push_back(m_cfg.trackingGeometry->findSurface(geoId));
     }
 
     ACTS_DEBUG("Invoke fitter");

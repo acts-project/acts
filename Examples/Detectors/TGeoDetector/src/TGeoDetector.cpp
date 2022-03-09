@@ -102,6 +102,8 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
       if (0 < stz) {
         lConfig.splitConfigs.emplace_back(Acts::binZ, stz);
       }
+      lConfig.binning0 = volume.binning0.at(ncp);
+      lConfig.binning1 = volume.binning1.at(ncp);
 
       layerBuilderConfig.layerConfigurations[ncp].push_back(lConfig);
     }
@@ -322,13 +324,12 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
 }
 
 /// Read the TGeo layer builder configurations from the user configuration.
-void readTGeoLayerBuilderConfigs(const Variables& vm,
-                                 TGeoDetector::Config& config) {
-  const auto path = vm["geo-tgeo-jsonconfig"].template as<std::string>();
-  nlohmann::json djson;
+void readTGeoLayerBuilderConfigsFile(const std::string& path,
+                                     TGeoDetector::Config& config) {
   if (path.empty()) {
     return;
   }
+  nlohmann::json djson;
   std::ifstream infile(path, std::ifstream::in | std::ifstream::binary);
   infile >> djson;
 
@@ -350,6 +351,14 @@ void readTGeoLayerBuilderConfigs(const Variables& vm,
   }
 }
 
+/// Read the TGeo layer builder configurations from the user configuration
+/// specified with --geo-tgeo-jsonconfig.
+void readTGeoLayerBuilderConfigs(const Variables& vm,
+                                 TGeoDetector::Config& config) {
+  const auto path = vm["geo-tgeo-jsonconfig"].template as<std::string>();
+  readTGeoLayerBuilderConfigsFile(path, config);
+}
+
 /// Dump TGeo Detector config to file.
 void writeTGeoDetectorConfig(const Variables& vm,
                              TGeoDetector::Config& config) {
@@ -367,8 +376,9 @@ void writeTGeoDetectorConfig(const Variables& vm,
                             config.beamPipeLayerThickness};
 
   // Enable empty volume dump
-  if (config.volumes.size() == 0)
+  if (config.volumes.empty()) {
     config.volumes.emplace_back();
+  }
   djson["Volumes"] = config.volumes;
 
   outfile << djson.dump(2) << std::endl;
@@ -447,7 +457,7 @@ void TGeoDetector::addOptions(
   opt("geo-tgeo-jsonconfig", value<std::string>()->default_value(""),
       "Json config file name.");
   opt("geo-tgeo-dump-jsonconfig",
-      value<std::string>()->default_value("empty_config.json"),
+      value<std::string>()->default_value("tgeo_empty_config.json"),
       "Json file to dump empty config into.");
 }
 
@@ -471,8 +481,14 @@ auto TGeoDetector::finalize(
     writeTGeoDetectorConfig(vm, config);
     std::exit(EXIT_SUCCESS);
   }
-
-  readTGeoLayerBuilderConfigs(vm, config);
+  // Enable dump from full config
+  else if (not(vm["geo-tgeo-dump-jsonconfig"].as<std::string>().compare(
+                   "tgeo_empty_cofig.json") == 0)) {
+    readTGeoLayerBuilderConfigs(vm, config);
+    writeTGeoDetectorConfig(vm, config);
+  } else {
+    readTGeoLayerBuilderConfigs(vm, config);
+  }
 
   return finalize(config, std::move(mdecorator));
 }
@@ -489,6 +505,10 @@ auto TGeoDetector::finalize(
   // Return the pair of geometry and empty decorators
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
       std::move(tgeoTrackingGeometry), std::move(tgeoContextDeocrators));
+}
+
+void TGeoDetector::Config::readJson(const std::string& jsonFile) {
+  readTGeoLayerBuilderConfigsFile(jsonFile, *this);
 }
 
 }  // namespace ActsExamples

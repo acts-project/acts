@@ -97,6 +97,7 @@ def assert_root_hash(request, root_file_exp_hashes, record_property):
 
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
+    docs_url = "https://acts.readthedocs.io/en/latest/examples/python_bindings.html#root-file-hash-regression-checks"
     if len(hash_assertion_failures) > 0:
         terminalreporter.ensure_newline()
         terminalreporter.section(
@@ -114,6 +115,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
         terminalreporter.line(
             "If it is, you can update the test reference file Examples/Python/tests/root_file_hashes.txt with the new hashes below."
         )
+        terminalreporter.line(f"See {docs_url} for more details")
         terminalreporter.line("")
 
         for e in hash_assertion_failures:
@@ -124,6 +126,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
         terminalreporter.line(
             "NOTE: Root file hash checks were skipped, enable with ROOT_HASH_CHECKS=on"
         )
+        terminalreporter.line(f"See {docs_url} for more details")
 
 
 def kwargsConstructor(cls, *args, **kwargs):
@@ -247,7 +250,10 @@ def fatras(ptcl_gun, trk_geo, rng):
         # Digitization
         digiCfg = acts.examples.DigitizationConfig(
             acts.examples.readDigiConfigFromJson(
-                "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+                str(
+                    Path(__file__).parent.parent.parent.parent
+                    / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+                )
             ),
             trackingGeometry=trk_geo,
             randomNumbers=rng,

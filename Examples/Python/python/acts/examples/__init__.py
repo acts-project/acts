@@ -66,6 +66,17 @@ def _makeLayerTriplet(*args, **kwargs):
             if vv is not None
         ):
             return fill(TGeoDetector.Config.LayerTripletVectorString())
+        elif all(
+            all(
+                (isinstance(v, tuple) or isinstance(v, list))
+                and isinstance(v[0], int)
+                and isinstance(v[1], TGeoDetector.Config.BinningType)
+                for v in vv
+            )
+            for vv in (negative, central, positive)
+            if vv is not None
+        ):
+            return fill(TGeoDetector.Config.LayerTripletVectorBinning())
         else:
             raise TypeError("Invalid types for list input")
     elif _type == tuple:

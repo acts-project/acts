@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+from pathlib import Path
 
 import acts
 import acts.examples
@@ -10,9 +11,16 @@ u = acts.UnitConstants
 
 def runSeeding(trackingGeometry, field, outputDir, s=None):
 
+    srcdir = Path(__file__).resolve().parent.parent.parent.parent
+
     csv_dir = os.path.join(outputDir, "csv")
     if not os.path.exists(csv_dir):
         os.mkdir(csv_dir)
+
+    # Sequencer
+    s = s or acts.examples.Sequencer(
+        events=10, numThreads=-1, logLevel=acts.logging.INFO
+    )
 
     # Input
     rnd = acts.examples.RandomNumbers(seed=42)
@@ -63,7 +71,10 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
     # Digitization
     digiCfg = acts.examples.DigitizationConfig(
         acts.examples.readDigiConfigFromJson(
-            "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            str(
+                srcdir
+                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            )
         ),
         trackingGeometry=trackingGeometry,
         randomNumbers=rnd,
@@ -90,7 +101,10 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
         outputSpacePoints="spacepoints",
         trackingGeometry=trackingGeometry,
         geometrySelection=acts.examples.readJsonGeometryList(
-            "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+            str(
+                srcdir
+                / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+            )
         ),
     )
 
@@ -106,19 +120,25 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
 
     seedFilterConfig = acts.SeedFilterConfig(maxSeedsPerSpM=1, deltaRMin=1 * u.mm)
 
+    seedRegionalParameters = acts.RegionalParameters(
+        deltaRMinTopSP=seedFilterConfig.deltaRMin,
+        deltaRMinBottomSP=seedFilterConfig.deltaRMin,
+        deltaRMaxTopSP=gridConfig.deltaRMax,
+        deltaRMaxBottomSP=gridConfig.deltaRMax,
+        sigmaScattering=50,
+        radLengthPerSeed=0.1,
+        minPt=gridConfig.minPt,
+        bFieldInZ=gridConfig.bFieldInZ,
+    )
+
     seedFinderConfig = acts.SeedfinderConfig(
         rMax=gridConfig.rMax,
-        deltaRMin=seedFilterConfig.deltaRMin,
-        deltaRMax=gridConfig.deltaRMax,
+        regionalParameters=[seedRegionalParameters],
         collisionRegionMin=-250 * u.mm,
         collisionRegionMax=250 * u.mm,
         zMin=gridConfig.zMin,
         zMax=gridConfig.zMax,
         cotThetaMax=gridConfig.cotThetaMax,
-        sigmaScattering=50,
-        radLengthPerSeed=0.1,
-        minPt=gridConfig.minPt,
-        bFieldInZ=gridConfig.bFieldInZ,
         beamPos=acts.Vector2(0 * u.mm, 0 * u.mm),
         impactMax=3 * u.mm,
     )
@@ -129,7 +149,7 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
         outputSeeds="seeds",
         outputProtoTracks="prototracks",
         gridConfig=gridConfig,
-        seedFilterConfig=seedFilterConfig,
+        seedFilterConfig=[seedFilterConfig],
         seedFinderConfig=seedFinderConfig,
     )
 

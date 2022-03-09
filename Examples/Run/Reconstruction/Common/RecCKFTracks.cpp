@@ -76,6 +76,7 @@ int runRecCKFTracks(int argc, char* argv[],
   Options::addTrackFindingOptions(desc);
   addRecCKFOptions(desc);
   Options::addDigitizationOptions(desc);
+  Options::addParticleSmearingOptions(desc);
   Options::addSpacePointMakerOptions(desc);
   Options::addCsvWriterOptions(desc);
 
@@ -169,18 +170,18 @@ int runRecCKFTracks(int argc, char* argv[],
       seedingCfg.inputSpacePoints = {
           spCfg.outputSpacePoints,
       };
+
+      Acts::RegionalParameters<SimSpacePoint> regionalParameters;
+      Acts::SeedFilterConfig filterConfig;
+
       seedingCfg.outputSeeds = "seeds";
       seedingCfg.outputProtoTracks = "prototracks";
 
       seedingCfg.gridConfig.rMax = 200._mm;
       seedingCfg.seedFinderConfig.rMax = seedingCfg.gridConfig.rMax;
-
-      seedingCfg.seedFilterConfig.deltaRMin = 1_mm;
-      seedingCfg.seedFinderConfig.deltaRMin =
-          seedingCfg.seedFilterConfig.deltaRMin;
+      filterConfig.deltaRMin = 1_mm;
 
       seedingCfg.gridConfig.deltaRMax = 60._mm;
-      seedingCfg.seedFinderConfig.deltaRMax = seedingCfg.gridConfig.deltaRMax;
 
       seedingCfg.seedFinderConfig.collisionRegionMin = -250_mm;
       seedingCfg.seedFinderConfig.collisionRegionMax = 250._mm;
@@ -190,27 +191,30 @@ int runRecCKFTracks(int argc, char* argv[],
       seedingCfg.seedFinderConfig.zMin = seedingCfg.gridConfig.zMin;
       seedingCfg.seedFinderConfig.zMax = seedingCfg.gridConfig.zMax;
 
-      seedingCfg.seedFilterConfig.maxSeedsPerSpM = 1;
-      seedingCfg.seedFinderConfig.maxSeedsPerSpM =
-          seedingCfg.seedFilterConfig.maxSeedsPerSpM;
+      filterConfig.maxSeedsPerSpM = 1;
 
       seedingCfg.gridConfig.cotThetaMax = 7.40627;  // 2.7 eta
       seedingCfg.seedFinderConfig.cotThetaMax =
           seedingCfg.gridConfig.cotThetaMax;
 
-      seedingCfg.seedFinderConfig.sigmaScattering = 50;
-      seedingCfg.seedFinderConfig.radLengthPerSeed = 0.1;
+      regionalParameters.sigmaScattering = 50;
+      regionalParameters.radLengthPerSeed = 0.1;
 
       seedingCfg.gridConfig.minPt = 500._MeV;
-      seedingCfg.seedFinderConfig.minPt = seedingCfg.gridConfig.minPt;
+      regionalParameters.minPt = seedingCfg.gridConfig.minPt;
 
       seedingCfg.gridConfig.bFieldInZ = 1.99724_T;
-      seedingCfg.seedFinderConfig.bFieldInZ = seedingCfg.gridConfig.bFieldInZ;
+      regionalParameters.bFieldInZ = seedingCfg.gridConfig.bFieldInZ;
 
       seedingCfg.seedFinderConfig.beamPos = {0_mm, 0_mm};
 
       seedingCfg.seedFinderConfig.impactMax = 3._mm;
 
+      seedingCfg.seedFilterConfig.push_back(filterConfig);
+      seedingCfg.seedFinderConfig.regionalParameters.push_back(
+          regionalParameters);
+
+      (regionalParameters);
       sequencer.addAlgorithm(
           std::make_shared<SeedingAlgorithm>(seedingCfg, logLevel));
       inputProtoTracks = seedingCfg.outputProtoTracks;

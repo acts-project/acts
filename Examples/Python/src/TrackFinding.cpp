@@ -65,17 +65,34 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
+    using Config = Acts::RegionalParameters<SimSpacePoint>;
+    auto c = py::class_<Config>(m, "RegionalParameters").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(minPt);
+    ACTS_PYTHON_MEMBER(deltaRMinBottomSP);
+    ACTS_PYTHON_MEMBER(deltaRMaxBottomSP);
+    ACTS_PYTHON_MEMBER(deltaRMinTopSP);
+    ACTS_PYTHON_MEMBER(deltaRMaxTopSP);
+    ACTS_PYTHON_MEMBER(sigmaScattering);
+    ACTS_PYTHON_MEMBER(maxPtScattering);
+    ACTS_PYTHON_MEMBER(bFieldInZ);
+    ACTS_PYTHON_MEMBER(radLengthPerSeed);
+    ACTS_PYTHON_MEMBER(highland);
+    ACTS_PYTHON_MEMBER(maxScatteringAngle2);
+    ACTS_PYTHON_MEMBER(pTPerHelixRadius);
+    ACTS_PYTHON_MEMBER(minHelixDiameter2);
+    ACTS_PYTHON_MEMBER(pT2perRadius);
+    ACTS_PYTHON_STRUCT_END();
+    patchKwargsConstructor(c);
+  }
+
+  {
     using Config = Acts::SeedfinderConfig<SimSpacePoint>;
     auto c = py::class_<Config>(m, "SeedfinderConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(minPt);
+    ACTS_PYTHON_MEMBER(regionalParameters);
     ACTS_PYTHON_MEMBER(cotThetaMax);
-    ACTS_PYTHON_MEMBER(deltaRMin);
-    ACTS_PYTHON_MEMBER(deltaRMax);
     ACTS_PYTHON_MEMBER(impactMax);
-    ACTS_PYTHON_MEMBER(sigmaScattering);
-    ACTS_PYTHON_MEMBER(maxPtScattering);
-    ACTS_PYTHON_MEMBER(maxSeedsPerSpM);
     ACTS_PYTHON_MEMBER(collisionRegionMin);
     ACTS_PYTHON_MEMBER(collisionRegionMax);
     ACTS_PYTHON_MEMBER(phiMin);
@@ -84,17 +101,10 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(zMax);
     ACTS_PYTHON_MEMBER(rMax);
     ACTS_PYTHON_MEMBER(rMin);
-    ACTS_PYTHON_MEMBER(bFieldInZ);
     ACTS_PYTHON_MEMBER(beamPos);
-    ACTS_PYTHON_MEMBER(radLengthPerSeed);
     ACTS_PYTHON_MEMBER(zAlign);
     ACTS_PYTHON_MEMBER(rAlign);
     ACTS_PYTHON_MEMBER(sigmaError);
-    ACTS_PYTHON_MEMBER(highland);
-    ACTS_PYTHON_MEMBER(maxScatteringAngle2);
-    ACTS_PYTHON_MEMBER(pTPerHelixRadius);
-    ACTS_PYTHON_MEMBER(minHelixDiameter2);
-    ACTS_PYTHON_MEMBER(pT2perRadius);
     ACTS_PYTHON_MEMBER(maxBlockSize);
     ACTS_PYTHON_MEMBER(nTrplPerSpBLimit);
     ACTS_PYTHON_MEMBER(nAvgTrplPerSpBLimit);
@@ -204,22 +214,27 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
-    auto constructor =
-        [](std::vector<std::pair<GeometryIdentifier, std::pair<double, size_t>>>
-               input) {
-          std::vector<std::pair<GeometryIdentifier, MeasurementSelectorCuts>>
-              converted;
-          converted.reserve(input.size());
-          for (const auto& [id, cuts] : input) {
-            const auto [chi2, num] = cuts;
-            converted.emplace_back(id, MeasurementSelectorCuts{chi2, num});
-          }
-          return std::make_unique<MeasurementSelector::Config>(converted);
-        };
+    auto constructor = [](std::vector<
+                           std::pair<GeometryIdentifier,
+                                     std::tuple<std::vector<double>,
+                                                std::vector<double>,
+                                                std::vector<size_t>>>>
+                              input) {
+      std::vector<std::pair<GeometryIdentifier, MeasurementSelectorCuts>>
+          converted;
+      converted.reserve(input.size());
+      for (const auto& [id, cuts] : input) {
+        const auto& [bins, chi2, num] = cuts;
+        converted.emplace_back(id, MeasurementSelectorCuts{bins, chi2, num});
+      }
+      return std::make_unique<MeasurementSelector::Config>(converted);
+    };
 
     py::class_<MeasurementSelectorCuts>(m, "MeasurementSelectorCuts")
         .def(py::init<>())
-        .def(py::init<double, size_t>())
+        .def(py::init<std::vector<double>, std::vector<double>,
+                      std::vector<size_t>>())
+        .def_readwrite("etaBins", &MeasurementSelectorCuts::etaBins)
         .def_readwrite("chi2CutOff", &MeasurementSelectorCuts::chi2CutOff)
         .def_readwrite("numMeasurementsCutOff",
                        &MeasurementSelectorCuts::numMeasurementsCutOff);

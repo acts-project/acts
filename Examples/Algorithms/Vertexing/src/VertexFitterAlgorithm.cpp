@@ -78,7 +78,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
   for (const auto& protoVertex : protoVertices) {
     // un-constrained fit requires at least two tracks
     if ((not m_cfg.doConstrainedFit) and (protoVertex.size() < 2)) {
-      ACTS_WARNING(
+      ACTS_INFO(
           "Skip un-constrained vertex fit on proto-vertex with less than two "
           "tracks");
       continue;
@@ -106,8 +106,8 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
       // Vertex constraint
       Acts::Vertex<Acts::BoundTrackParameters> theConstraint;
 
-      theConstraint.setCovariance(m_cfg.constraintCov);
-      theConstraint.setPosition(m_cfg.constraintPos);
+      theConstraint.setFullCovariance(m_cfg.constraintCov);
+      theConstraint.setFullPosition(m_cfg.constraintPos);
 
       // Vertex fitter options
       VertexFitterOptions vfOptionsConstr(ctx.geoContext, ctx.magFieldContext,

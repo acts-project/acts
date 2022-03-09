@@ -20,11 +20,15 @@ void ActsExamples::Options::addTrackFindingOptions(
   using boost::program_options::value;
 
   auto opt = desc.add_options();
-  opt("ckf-selection-chi2max", value<double>()->default_value(15),
-      "Global criteria of maximum chi2 for CKF measurement selection");
-  opt("ckf-selection-nmax", value<size_t>()->default_value(10),
-      "Global criteria of maximum number of measurement candidates on a "
-      "surface for CKF measurement selection");
+  opt("ckf-selection-abseta-bins", value<VariableReals>()->default_value({{}}),
+      "bins in |eta| to specify variable selections");
+  opt("ckf-selection-chi2max", value<VariableReals>()->default_value({{15}}),
+      "Maximum chi2 for CKF measurement selection "
+      "(specify multiple values with --ckf-selection-abseta-bins)");
+  opt("ckf-selection-nmax", value<VariableIntegers>()->default_value({{10}}),
+      "Maximum number of measurement candidates on a "
+      "surface for CKF measurement selection "
+      "(specify multiple values with --ckf-selection-abseta-bins)");
   opt("ckf-initial-variance-inflation",
       value<Reals<6>>()->default_value({{1., 1., 1., 1., 1., 1.}}),
       "Inflation factor for the initial variances in the CKF search, must be "
@@ -34,13 +38,19 @@ void ActsExamples::Options::addTrackFindingOptions(
 ActsExamples::TrackFindingAlgorithm::Config
 ActsExamples::Options::readTrackFindingConfig(
     const ActsExamples::Options::Variables& variables) {
-  auto chi2Max = variables["ckf-selection-chi2max"].template as<double>();
-  auto nMax = variables["ckf-selection-nmax"].template as<size_t>();
+  auto etaBins = variables["ckf-selection-abseta-bins"]
+                     .template as<VariableReals>()
+                     .values;
+  auto chi2Max =
+      variables["ckf-selection-chi2max"].template as<VariableReals>().values;
+  auto nMax =
+      variables["ckf-selection-nmax"].template as<VariableIntegers>().values;
 
   // config is a GeometryHierarchyMap with just the global default
   TrackFindingAlgorithm::Config cfg;
   cfg.measurementSelectorCfg = {
-      {Acts::GeometryIdentifier(), {chi2Max, nMax}},
+      {Acts::GeometryIdentifier(),
+       {etaBins, chi2Max, {nMax.begin(), nMax.end()}}},
   };
   return cfg;
 }

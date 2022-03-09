@@ -86,21 +86,31 @@ template <typename external_spacepoint_t>
 auto setupSeedfinderConfiguration()
     -> Acts::SeedfinderConfig<external_spacepoint_t> {
   Acts::SeedfinderConfig<SpacePoint> config;
+  Acts::RegionalParameters<SpacePoint> regionalParameters;
   // silicon detector max
   config.rMax = 160._mm;
-  config.deltaRMin = 5._mm;
-  config.deltaRMax = 160._mm;
+  float deltaRMin = 5._mm;
+  float deltaRMax = 160._mm;
+  regionalParameters.deltaRMinTopSP = deltaRMin;
+  regionalParameters.deltaRMinBottomSP = deltaRMin;
+  regionalParameters.deltaRMaxTopSP = deltaRMax;
+  regionalParameters.deltaRMaxBottomSP = deltaRMax;
   config.collisionRegionMin = -250._mm;
   config.collisionRegionMax = 250._mm;
   config.zMin = -2800._mm;
   config.zMax = 2800._mm;
   // 2.7 eta
   config.cotThetaMax = 7.40627;
-  config.sigmaScattering = 1.00000;
-  config.minPt = 500._MeV;
-  config.bFieldInZ = 1.99724_T;
+  regionalParameters.sigmaScattering = 1.00000;
+
+  regionalParameters.minPt = 500._MeV;
+  regionalParameters.bFieldInZ = 1.99724_T;
+
   config.beamPos = {-.5_mm, -.5_mm};
   config.impactMax = 10._mm;
+
+  config.useVariableMiddleSPRange = false;
+  config.regionalParameters.push_back(regionalParameters);
 
   // for sycl
   config.nTrplPerSpBLimit = 100;
@@ -149,8 +159,9 @@ auto main(int argc, char** argv) -> int {
 
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
   Acts::Sycl::DeviceExperimentCuts deviceAtlasCuts;
-  config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
-      Acts::SeedFilter<SpacePoint>(Acts::SeedFilterConfig(), &atlasCuts));
+  config.regionalParameters[0].seedFilter =
+      std::make_unique<Acts::SeedFilter<SpacePoint>>(
+          Acts::SeedFilter<SpacePoint>(Acts::SeedFilterConfig(), &atlasCuts));
 
   const Acts::Logging::Level logLvl =
       cmdlTool.csvFormat ? Acts::Logging::WARNING : Acts::Logging::INFO;
@@ -196,6 +207,7 @@ auto main(int argc, char** argv) -> int {
   auto start_cpu = std::chrono::system_clock::now();
   uint group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
+  Acts::Extent rRangeSPExtent;
 
   if (!cmdlTool.onlyGpu) {
     decltype(normalSeedfinder)::State state;
@@ -203,7 +215,7 @@ auto main(int argc, char** argv) -> int {
          ++groupIt) {
       normalSeedfinder.createSeedsForGroup(
           state, std::back_inserter(seedVector_cpu.emplace_back()),
-          groupIt.bottom(), groupIt.middle(), groupIt.top());
+          groupIt.bottom(), groupIt.middle(), groupIt.top(), rRangeSPExtent);
       group_count++;
       if (!cmdlTool.allgroup && group_count >= cmdlTool.groups) {
         break;

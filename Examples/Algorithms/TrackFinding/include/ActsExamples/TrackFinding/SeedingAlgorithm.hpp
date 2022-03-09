@@ -36,7 +36,7 @@ class SeedingAlgorithm final : public BareAlgorithm {
     /// Output proto track collection.
     std::string outputProtoTracks;
 
-    Acts::SeedFilterConfig seedFilterConfig;
+    std::vector<Acts::SeedFilterConfig> seedFilterConfig;
     Acts::SeedfinderConfig<SimSpacePoint> seedFinderConfig;
     Acts::SpacePointGridConfig gridConfig;
 
