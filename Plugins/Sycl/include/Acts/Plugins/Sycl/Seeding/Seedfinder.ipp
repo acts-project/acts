@@ -29,11 +29,24 @@ Seedfinder<external_spacepoint_t>::Seedfinder(
     const Acts::Sycl::DeviceExperimentCuts& cuts,
     Acts::Sycl::QueueWrapper wrappedQueue, vecmem::memory_resource& resource,
     vecmem::memory_resource* device_resource)
-    : m_config(config.toInternalUnits()),
+    : m_config(config),
       m_deviceCuts(cuts),
       m_wrappedQueue(std::move(wrappedQueue)),
       m_resource(&resource),
       m_device_resource(device_resource) {
+  // If the size of the regionalParameters doesn't match the number of boundary
+  // fill the remaning region with the default RegionalParameters
+  if (m_config.regionalParameters.size() <
+      (m_config.zboundaries.size() + 1) * (m_config.zboundaries.size() + 1)) {
+    while (m_config.regionalParameters.size() <
+           (m_config.zboundaries.size() + 1) *
+               (m_config.zboundaries.size() + 1)) {
+      m_config.regionalParameters.push_back(
+          Acts::RegionalParameters<external_spacepoint_t>());
+    }
+  }
+  m_config.toInternalUnits();
+
   // init m_config
   Acts::RegionalParameters regionalParameters = m_config.regionalParameters[0];
   regionalParameters.highland =

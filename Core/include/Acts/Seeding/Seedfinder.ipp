@@ -17,7 +17,7 @@ namespace Acts {
 template <typename external_spacepoint_t, typename platform_t>
 Seedfinder<external_spacepoint_t, platform_t>::Seedfinder(
     Acts::SeedfinderConfig<external_spacepoint_t> config)
-    : m_config(config.toInternalUnits()) {
+    : m_config(config) {
   // If the size of the regionalParameters doesn't match the number of boundary
   // fill the remaning region with the default RegionalParameters
   if (m_config.regionalParameters.size() <
@@ -29,6 +29,7 @@ Seedfinder<external_spacepoint_t, platform_t>::Seedfinder(
           Acts::RegionalParameters<external_spacepoint_t>());
     }
   }
+  m_config.toInternalUnits();
   // Compute derived values for the regional parameters
   for (auto rparams : config.regionalParameters) {
     // calculation of scattering using the highland formula

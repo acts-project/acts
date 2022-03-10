@@ -16,7 +16,20 @@ namespace Acts {
 template <typename external_spacepoint_t>
 Seedfinder<external_spacepoint_t, Acts::Cuda>::Seedfinder(
     Acts::SeedfinderConfig<external_spacepoint_t> config)
-    : m_config(config.toInternalUnits()) {
+    : m_config(config) {
+  // If the size of the regionalParameters doesn't match the number of boundary
+  // fill the remaning region with the default RegionalParameters
+  if (m_config.regionalParameters.size() <
+      (m_config.zboundaries.size() + 1) * (m_config.zboundaries.size() + 1)) {
+    while (m_config.regionalParameters.size() <
+           (m_config.zboundaries.size() + 1) *
+               (m_config.zboundaries.size() + 1)) {
+      m_config.regionalParameters.push_back(
+          Acts::RegionalParameters<external_spacepoint_t>());
+    }
+  }
+  m_config.toInternalUnits();
+
   // calculation of scattering using the highland formula
   // convert pT to p once theta angle is known
   m_config.regionalParameters[0].highland =

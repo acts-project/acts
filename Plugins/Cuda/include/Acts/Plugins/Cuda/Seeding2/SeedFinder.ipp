@@ -34,11 +34,25 @@ SeedFinder<external_spacepoint_t>::SeedFinder(
     const SeedFilterConfig& seedFilterConfig,
     const TripletFilterConfig& tripletFilterConfig, int device,
     std::unique_ptr<const Logger> incomingLogger)
-    : m_commonConfig(commonConfig.toInternalUnits()),
+    : m_commonConfig(commonConfig),
       m_seedFilterConfig(seedFilterConfig.toInternalUnits()),
       m_tripletFilterConfig(tripletFilterConfig),
       m_device(device),
       m_logger(std::move(incomingLogger)) {
+  // If the size of the regionalParameters doesn't match the number of boundary
+  // fill the remaning region with the default RegionalParameters
+  if (m_commonConfig.regionalParameters.size() <
+      (m_commonConfig.zboundaries.size() + 1) *
+          (m_commonConfig.zboundaries.size() + 1)) {
+    while (m_commonConfig.regionalParameters.size() <
+           (m_commonConfig.zboundaries.size() + 1) *
+               (m_commonConfig.zboundaries.size() + 1)) {
+      m_commonConfig.regionalParameters.push_back(
+          Acts::RegionalParameters<external_spacepoint_t>());
+    }
+  }
+  m_commonConfig.toInternalUnits();
+
   // calculation of scattering using the highland formula
   // convert pT to p once theta angle is known
   m_commonConfig.regionalParameters[0].highland =
