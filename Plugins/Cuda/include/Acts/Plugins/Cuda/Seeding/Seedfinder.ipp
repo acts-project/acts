@@ -63,7 +63,7 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   CudaScalar<float> sigmaScattering_cuda(
       &m_config.regionalParameters[0].sigmaScattering);
   CudaScalar<float> minHelixDiameter2_cuda(
-      &m_config.regionalParameters[0] minHelixDiameter2);
+      &m_config.regionalParameters[0].minHelixDiameter2);
   CudaScalar<float> pT2perRadius_cuda(
       &m_config.regionalParameters[0].pT2perRadius);
   CudaScalar<float> impactMax_cuda(&m_config.impactMax);
