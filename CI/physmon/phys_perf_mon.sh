@@ -5,7 +5,11 @@ set -e
 outdir=$1
 mkdir -p $outdir
 
-# GENERATE THE OUTPUTS!
+refdir=CI/physmon/reference
+
+echo "::group::Generate validation dataset"
+CI/physmon/physmon.py $outdir
+echo "::endgroup::"
 
 set +e
 
@@ -25,18 +29,17 @@ function run() {
 }
 
 
-
 run \
-    histcmp_demo/performance_ckf.root \
-    histcmp_demo/performance_ckf_main.root \
+    physmon/performance_ckf_tracks.root \
+    $refdir/performance_ckf_tracks.root \
     -o $outdir/ckf.html \
 
 
 run \
-    histcmp_demo/performance_track_fitter_a.root \
-    histcmp_demo/performance_track_fitter_b.root \
-    -c track_fitter.yml \
-    -o $outdir/track_fitter.html \
+    physmon/performance_truth_tracking.root \
+    $refdir/performance_truth_tracking.root \
+    -c CI/physmon/truth_tracking.yml \
+    -o $outdir/truth_tracking.html \
 
 
 exit $ec

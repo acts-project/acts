@@ -18,10 +18,10 @@ jobs:
     strategy:
       matrix:
         image:
-          - centos7-lcg100-gcc10
-          - centos7-lcg101-gcc11
-          - centos8-lcg100-gcc10
-          - centos8-lcg101-gcc11
+          # - centos7-lcg100-gcc10
+          # - centos7-lcg101-gcc11
+          # - centos8-lcg100-gcc10
+          # - centos8-lcg101-gcc11
           - ubuntu2004
     env:
       SETUP: true
@@ -39,77 +39,80 @@ jobs:
         if: contains(matrix.image, 'lcg')
         run: echo "SETUP=${SETUP_LCG}" >> $GITHUB_ENV
 
-      # - name: Configure
-        # # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
-        # # dd4hep CMake configuration that gets triggered on recent CMake
-        # # versions 
-        # run: >
-          # ${SETUP} &&
-          # cmake -B build -S .
-          # -GNinja
-          # -DCMAKE_BUILD_TYPE=Release
-          # -DCMAKE_CXX_FLAGS=-Werror
-          # -DCMAKE_CXX_STANDARD=17
-          # -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          # -DACTS_BUILD_EVERYTHING=ON
-          # -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
-          # -DACTS_LOG_FAILURE_THRESHOLD=WARNING
-          # -DACTS_BUILD_ASSERTIONS=ON
-      # - name: Build
-        # run: ${SETUP} && cmake --build build --
-      # - name: Unit tests
-        # run: ${SETUP} && cmake --build build -- test
-      # - name: Integration tests
-        # run: ${SETUP} && cmake --build build -- integrationtests
-      # - name: Examples
-        # if: contains(matrix.image, 'ubuntu')
-        # run: ${SETUP} && ./CI/run_examples.sh
-      # - name: Python level tests
-        # if: contains(matrix.image, 'ubuntu')
-        # shell: bash
-        # run: >
-            # ${SETUP}
-          # && source /usr/local/bin/thisroot.sh
-          # && source /usr/local/bin/thisdd4hep_only.sh
-          # && /usr/local/bin/download_geant4_data.sh
-          # && source /usr/local/bin/geant4.sh
-          # && source build/python/setup.sh
-          # && pip3 install -r Examples/Python/tests/requirements.txt
-          # && pytest -rFs
+      - name: Configure
+        # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
+        # dd4hep CMake configuration that gets triggered on recent CMake
+        # versions 
+        run: >
+          ${SETUP} &&
+          cmake -B build -S .
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
+          -DCMAKE_CXX_STANDARD=17
+          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+          -DACTS_BUILD_EVERYTHING=ON
+          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+          -DACTS_LOG_FAILURE_THRESHOLD=WARNING
+          -DACTS_BUILD_ASSERTIONS=ON
+      - name: Build
+        run: ${SETUP} && cmake --build build --
+      - name: Unit tests
+        run: ${SETUP} && cmake --build build -- test
+      - name: Integration tests
+        run: ${SETUP} && cmake --build build -- integrationtests
+      - name: Examples
+        if: contains(matrix.image, 'ubuntu')
+        run: ${SETUP} && ./CI/run_examples.sh
+      - name: Python level tests
+        if: contains(matrix.image, 'ubuntu')
+        shell: bash
+        run: >
+            ${SETUP}
+          && /usr/local/bin/download_geant4_data.sh
+          && source /usr/local/bin/thisroot.sh
+          && source /usr/local/bin/thisdd4hep_only.sh
+          && source /usr/local/bin/geant4.sh
+          && source build/python/setup.sh
+          && pip3 install -r Examples/Python/tests/requirements.txt
+          && pytest -rFs
       - name: Physics performance checks
         if: contains(matrix.image, 'ubuntu')
         shell: bash
         run: >
           ${SETUP}
           && echo "::group::Dependencies"
-          && pip3 install git+https://github.com/paulgessinger/histcmp.git@2c56058
-          && echo "::endgroup::"
+          && pip3 install histcmp==0.2.0
           && source /usr/local/bin/thisroot.sh
+          && source /usr/local/bin/thisdd4hep_only.sh
+          && source /usr/local/bin/geant4.sh
+          && source build/python/setup.sh
+          && echo "::endgroup::"
           && CI/phys_perf_mon.sh physmon
       - uses: actions/upload-artifact@v3
         if: always()
         with:
           name: physmon
           path: physmon
-      # - name: Install
-        # run: ${SETUP} && cmake --build build -- install
-      # - uses: actions/upload-artifact@v2
-        # with:
-          # name: acts-${{ matrix.image }}
-          # path: ${{ env.INSTALL_DIR }}
-      # - name: Downstream configure
-        # run: >
-          # ${SETUP} &&
-          # cmake -B build-downstream -S Tests/DownstreamProject
-          # -GNinja
-          # -DCMAKE_BUILD_TYPE=Release
-          # -DCMAKE_CXX_FLAGS=-Werror
-          # -DCMAKE_CXX_STANDARD=17
-          # -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
-      # - name: Downstream build
-        # run: ${SETUP} && cmake --build build-downstream --
-      # - name: Downstream run
-        # run: ${SETUP} && ./build-downstream/bin/ShowActsVersion
+      - name: Install
+        run: ${SETUP} && cmake --build build -- install
+      - uses: actions/upload-artifact@v2
+        with:
+          name: acts-${{ matrix.image }}
+          path: ${{ env.INSTALL_DIR }}
+      - name: Downstream configure
+        run: >
+          ${SETUP} &&
+          cmake -B build-downstream -S Tests/DownstreamProject
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
+          -DCMAKE_CXX_STANDARD=17
+          -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+      - name: Downstream build
+        run: ${SETUP} && cmake --build build-downstream --
+      - name: Downstream run
+        run: ${SETUP} && ./build-downstream/bin/ShowActsVersion
 
   # linux-nodeps:
     # runs-on: ubuntu-latest
