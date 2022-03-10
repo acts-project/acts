@@ -102,8 +102,26 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(maxBlockSize);
     ACTS_PYTHON_MEMBER(nTrplPerSpBLimit);
     ACTS_PYTHON_MEMBER(nAvgTrplPerSpBLimit);
+    ACTS_PYTHON_MEMBER(impactMax);
+    ACTS_PYTHON_MEMBER(zBinEdges);
+    ACTS_PYTHON_MEMBER(enableCutsForSortedSP);
+    ACTS_PYTHON_MEMBER(zBinEdges);
+    ACTS_PYTHON_MEMBER(rRangeMiddleSP);
+    ACTS_PYTHON_MEMBER(useVariableMiddleSPRange);
+    ACTS_PYTHON_MEMBER(deltaRMiddleSPRange);
+    ACTS_PYTHON_MEMBER(seedConfirmation);
+    ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
+    ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
+
+    py::class_<SeedConfirmationRange>(m, "SeedConfirmationRange")
+        .def(py::init<float, float, float, size_t, size_t>())
+        .def_readwrite("zMinSeedConf", &SeedConfirmationRange::zMinSeedConf)
+        .def_readwrite("zMaxSeedConf", &SeedConfirmationRange::zMaxSeedConf)
+        .def_readwrite("rMaxSeedConf", &SeedConfirmationRange::rMaxSeedConf)
+        .def_readwrite("nTopForLargeR", &SeedConfirmationRange::nTopForLargeR)
+        .def_readwrite("nTopForSmallR", &SeedConfirmationRange::nTopForSmallR);
   }
 
   {
@@ -118,6 +136,9 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(zMin);
     ACTS_PYTHON_MEMBER(deltaRMax);
     ACTS_PYTHON_MEMBER(cotThetaMax);
+    ACTS_PYTHON_MEMBER(numPhiNeighbors);
+    ACTS_PYTHON_MEMBER(impactMax);
+    ACTS_PYTHON_MEMBER(zBinEdges);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }
@@ -142,6 +163,8 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(seedFilterConfig);
     ACTS_PYTHON_MEMBER(seedFinderConfig);
     ACTS_PYTHON_MEMBER(gridConfig);
+    ACTS_PYTHON_MEMBER(zBinNeighborsTop);
+    ACTS_PYTHON_MEMBER(zBinNeighborsBottom);
     ACTS_PYTHON_STRUCT_END();
   }
 
