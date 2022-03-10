@@ -19,19 +19,27 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::Seedfinder(
     : m_config(config.toInternalUnits()) {
   // calculation of scattering using the highland formula
   // convert pT to p once theta angle is known
-  m_config.highland = 13.6 * std::sqrt(m_config.radLengthPerSeed) *
-                      (1 + 0.038 * std::log(m_config.radLengthPerSeed));
-  float maxScatteringAngle = m_config.highland / m_config.minPt;
-  m_config.maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;
+  m_config.regionalParameters[0].highland =
+      13.6 * std::sqrt(m_config.regionalParameters[0].radLengthPerSeed) *
+      (1 + 0.038 * std::log(m_config.regionalParameters[0].radLengthPerSeed));
+  float maxScatteringAngle = m_config.regionalParameters[0].highland /
+                             m_config.regionalParameters[0].minPt;
+  m_config.regionalParameters[0].maxScatteringAngle2 =
+      maxScatteringAngle * maxScatteringAngle;
 
   // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and
   // millimeter
   // TODO: change using ACTS units
-  m_config.pTPerHelixRadius = 300. * m_config.bFieldInZ;
-  m_config.minHelixDiameter2 =
-      std::pow(m_config.minPt * 2 / m_config.pTPerHelixRadius, 2);
+  m_config.regionalParameters[0].pTPerHelixRadius =
+      300. * m_config.regionalParameters[0].bFieldInZ;
+  m_config.regionalParameters[0].minHelixDiameter2 =
+      std::pow(m_config.regionalParameters[0].minPt * 2 /
+                   m_config.regionalParameters[0].pTPerHelixRadius,
+               2);
   m_config.pT2perRadius =
-      std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);
+      std::pow(m_config.regionalParameters[0].highland /
+                   m_config.regionalParameters[0].pTPerHelixRadius,
+               2);
 }
 
 // CUDA seed finding
@@ -43,17 +51,24 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   std::vector<Seed<external_spacepoint_t>> outputVec;
 
   // Get SeedfinderConfig values
-  CudaScalar<float> deltaRMin_cuda(&m_config.deltaRMin);
-  CudaScalar<float> deltaRMax_cuda(&m_config.deltaRMax);
+  CudaScalar<float> deltaRMin_cuda(
+      &m_config.regionalParameters[0].deltaRMinTopSP);
+  CudaScalar<float> deltaRMax_cuda(
+      &m_config.regionalParameters[0].deltaRMaxTopSP);
   CudaScalar<float> cotThetaMax_cuda(&m_config.cotThetaMax);
   CudaScalar<float> collisionRegionMin_cuda(&m_config.collisionRegionMin);
   CudaScalar<float> collisionRegionMax_cuda(&m_config.collisionRegionMax);
-  CudaScalar<float> maxScatteringAngle2_cuda(&m_config.maxScatteringAngle2);
-  CudaScalar<float> sigmaScattering_cuda(&m_config.sigmaScattering);
-  CudaScalar<float> minHelixDiameter2_cuda(&m_config.minHelixDiameter2);
-  CudaScalar<float> pT2perRadius_cuda(&m_config.pT2perRadius);
+  CudaScalar<float> maxScatteringAngle2_cuda(
+      &m_config.regionalParameters[0].maxScatteringAngle2);
+  CudaScalar<float> sigmaScattering_cuda(
+      &m_config.regionalParameters[0].sigmaScattering);
+  CudaScalar<float> minHelixDiameter2_cuda(
+      &m_config..regionalParameters[0] minHelixDiameter2);
+  CudaScalar<float> pT2perRadius_cuda(
+      &m_config.regionalParameters[0].pT2perRadius);
   CudaScalar<float> impactMax_cuda(&m_config.impactMax);
-  const auto seedFilterConfig = m_config.seedFilter->getSeedFilterConfig();
+  const auto seedFilterConfig =
+      m_config.regionalParameters[0].seedFilter->getSeedFilterConfig();
   CudaScalar<float> deltaInvHelixDiameter_cuda(
       &seedFilterConfig.deltaInvHelixDiameter);
   CudaScalar<float> impactWeightFactor_cuda(
@@ -255,7 +270,8 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
     }
 
     if (i_m > 0) {
-      const auto m_experimentCuts = m_config.seedFilter->getExperimentCuts();
+      const auto m_experimentCuts =
+          m_config.regionalParameters[0].seedFilter->getExperimentCuts();
       std::vector<std::pair<
           float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
           seedsPerSpM;
@@ -289,8 +305,8 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
                 bottomSP, middleSP, topSP, Zob)));
       }
 
-      m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM,
-                                                std::back_inserter(outputVec));
+      m_config.regionalParameters[0].seedFilter->filterSeeds_1SpFixed(
+          seedsPerSpM, std::back_inserter(outputVec));
     }
   }
   ACTS_CUDA_ERROR_CHECK(cudaStreamDestroy(cuStream));
