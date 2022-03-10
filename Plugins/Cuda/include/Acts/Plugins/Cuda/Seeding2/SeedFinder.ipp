@@ -41,26 +41,27 @@ SeedFinder<external_spacepoint_t>::SeedFinder(
       m_logger(std::move(incomingLogger)) {
   // calculation of scattering using the highland formula
   // convert pT to p once theta angle is known
-  m_config.regionalParameters[0].highland =
-      13.6 * std::sqrt(m_config.regionalParameters[0].radLengthPerSeed) *
-      (1 + 0.038 * std::log(m_config.regionalParameters[0].radLengthPerSeed));
-  float maxScatteringAngle = m_config.regionalParameters[0].highland /
-                             m_config.regionalParameters[0].minPt;
-  m_config.regionalParameters[0].maxScatteringAngle2 =
+  m_commonConfig.regionalParameters[0].highland =
+      13.6 * std::sqrt(m_commonConfig.regionalParameters[0].radLengthPerSeed) *
+      (1 +
+       0.038 * std::log(m_commonConfig.regionalParameters[0].radLengthPerSeed));
+  float maxScatteringAngle = m_commonConfig.regionalParameters[0].highland /
+                             m_commonConfig.regionalParameters[0].minPt;
+  m_commonConfig.regionalParameters[0].maxScatteringAngle2 =
       maxScatteringAngle * maxScatteringAngle;
 
   // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and
   // millimeter
   // TODO: change using ACTS units
-  m_config.regionalParameters[0].pTPerHelixRadius =
-      300. * m_config.regionalParameters[0].bFieldInZ;
-  m_config.regionalParameters[0].minHelixDiameter2 =
-      std::pow(m_config.regionalParameters[0].minPt * 2 /
-                   m_config.regionalParameters[0].pTPerHelixRadius,
+  m_commonConfig.regionalParameters[0].pTPerHelixRadius =
+      300. * m_commonConfig.regionalParameters[0].bFieldInZ;
+  m_commonConfig.regionalParameters[0].minHelixDiameter2 =
+      std::pow(m_commonConfig.regionalParameters[0].minPt * 2 /
+                   m_commonConfig.regionalParameters[0].pTPerHelixRadius,
                2);
-  m_config.regionalParameters[0].pT2perRadius =
-      std::pow(m_config.regionalParameters[0].highland /
-                   m_config.regionalParameters[0].pTPerHelixRadius,
+  m_commonConfig.regionalParameters[0].pT2perRadius =
+      std::pow(m_commonConfig.regionalParameters[0].highland /
+                   m_commonConfig.regionalParameters[0].pTPerHelixRadius,
                2);
 
   // Tell the user what CUDA device will be used by the object.
@@ -164,11 +165,11 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
   Details::findDublets(
       m_commonConfig.maxBlockSize, bottomSPVec.size(), bottomSPDeviceArray,
       middleSPVec.size(), middleSPDeviceArray, topSPVec.size(),
-      topSPDeviceArray, m_config.regionalParameters[0].deltaRMinTopSP,
-      m_config.regionalParameters[0].deltaRMaxTopSP, m_commonConfig.cotThetaMax,
-      m_commonConfig.collisionRegionMin, m_commonConfig.collisionRegionMax,
-      middleBottomCounts, middleBottomDublets, middleTopCounts,
-      middleTopDublets);
+      topSPDeviceArray, m_commonConfig.regionalParameters[0].deltaRMinTopSP,
+      m_commonConfig.regionalParameters[0].deltaRMaxTopSP,
+      m_commonConfig.cotThetaMax, m_commonConfig.collisionRegionMin,
+      m_commonConfig.collisionRegionMax, middleBottomCounts,
+      middleBottomDublets, middleTopCounts, middleTopDublets);
 
   // Count the number of dublets that we have to launch the subsequent steps
   // for.
@@ -188,10 +189,12 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
       bottomSPVec.size(), bottomSPDeviceArray, middleSPVec.size(),
       middleSPDeviceArray, topSPVec.size(), topSPDeviceArray,
       middleBottomCounts, middleBottomDublets, middleTopCounts,
-      middleTopDublets, m_config.regionalParameters[0].maxScatteringAngle2,
-      m_config.regionalParameters[0].sigmaScattering,
-      m_config.regionalParameters[0].minHelixDiameter2,
-      m_config.regionalParameters[0].pT2perRadius, m_commonConfig.impactMax);
+      middleTopDublets,
+      m_commonConfig.regionalParameters[0].maxScatteringAngle2,
+      m_commonConfig.regionalParameters[0].sigmaScattering,
+      m_commonConfig.regionalParameters[0].minHelixDiameter2,
+      m_commonConfig.regionalParameters[0].pT2perRadius,
+      m_commonConfig.impactMax);
   assert(tripletCandidates.size() == middleSPVec.size());
 
   // Perform the final step of the filtering.
@@ -213,7 +216,7 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
           std::make_unique<const InternalSeed<external_spacepoint_t>>(
               bottomSP, middleSP, topSP, 0)));
     }
-    m_config.regionalParameters[0].seedFilter->filterSeeds_1SpFixed(
+    m_commonConfig.regionalParameters[0].seedFilter->filterSeeds_1SpFixed(
         seedsPerSPM, std::back_inserter(outputVec));
   }
 
