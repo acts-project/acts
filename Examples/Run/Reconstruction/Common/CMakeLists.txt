@@ -1,7 +1,6 @@
 add_library(
   ActsExamplesRecTracksCommon SHARED
   RecTruthTracks.cpp
-  RecInput.cpp
   RecCKFTracks.cpp
   SeedingExample.cpp
   MeasurementsToSpacepoints.cpp
