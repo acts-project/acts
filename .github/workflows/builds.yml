@@ -27,6 +27,7 @@ jobs:
       SETUP: true
       SETUP_LCG: source /opt/lcg_view/setup.sh
       INSTALL_DIR: ${{ github.workspace }}/install
+      ACTS_LOG_FAILURE_THRESHOLD: WARNING
     steps:
       - uses: actions/checkout@v2
         with:
@@ -53,7 +54,6 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_BUILD_EVERYTHING=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
-          -DACTS_LOG_FAILURE_THRESHOLD=WARNING
           -DACTS_BUILD_ASSERTIONS=ON
       - name: Build
         run: ${SETUP} && cmake --build build --
