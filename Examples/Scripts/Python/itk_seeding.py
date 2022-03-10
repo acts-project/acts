@@ -19,7 +19,7 @@ def runITkSeeding(field, outputDir, s=None):
         level=acts.logging.INFO,
         inputStem="spacepoints",
         inputCollection="pixel",
-        inputDir="/acts/Examples/Scripts/Python/CsvSpacePointsOutput_singleMu_100GeV_300evnts/",
+        inputDir="acts/Examples/Scripts/Python/data_itk_seeding/CsvSpacePointsOutput_singleMu_100GeV_300evnts/",
         outputSpacePoints="PixelSpacePoints",
     )
 
