@@ -88,7 +88,7 @@ jobs:
           && source /usr/local/bin/geant4.sh
           && source build/python/setup.sh
           && echo "::endgroup::"
-          && CI/phys_perf_mon.sh physmon
+          && CI/physmon/phys_perf_mon.sh physmon
       - uses: actions/upload-artifact@v3
         if: always()
         with:
