@@ -68,7 +68,7 @@ jobs:
         if: contains(matrix.image, 'ubuntu')
         shell: bash
         run: >
-            ${SETUP}
+          ${SETUP}
           && /usr/local/bin/download_geant4_data.sh
           && source /usr/local/bin/thisroot.sh
           && source /usr/local/bin/thisdd4hep_only.sh
