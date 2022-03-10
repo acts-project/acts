@@ -186,24 +186,25 @@ def runCKFTracks(
                 maxSeedsPerSpM=1, deltaRMin=1 * u.mm
             )
 
-            seedFinderConfig = acts.SeedfinderConfig(
-                rMax=gridConfig.rMax,
-                deltaRMin=seedFilterConfig.deltaRMin,
-                deltaRMax=gridConfig.deltaRMax,
+            seedRegionalParameters = acts.RegionalParameters(
                 deltaRMinTopSP=seedFilterConfig.deltaRMin,
                 deltaRMinBottomSP=seedFilterConfig.deltaRMin,
                 deltaRMaxTopSP=gridConfig.deltaRMax,
                 deltaRMaxBottomSP=gridConfig.deltaRMax,
-                collisionRegionMin=-250 * u.mm,
-                collisionRegionMax=250 * u.mm,
-                zMin=gridConfig.zMin,
-                zMax=gridConfig.zMax,
-                maxSeedsPerSpM=seedFilterConfig.maxSeedsPerSpM,
-                cotThetaMax=gridConfig.cotThetaMax,
                 sigmaScattering=50,
                 radLengthPerSeed=0.1,
                 minPt=gridConfig.minPt,
                 bFieldInZ=gridConfig.bFieldInZ,
+            )
+
+            seedFinderConfig = acts.SeedfinderConfig(
+                regionalParameters=[seedRegionalParameters],
+                rMax=gridConfig.rMax,
+                collisionRegionMin=-250 * u.mm,
+                collisionRegionMax=250 * u.mm,
+                zMin=gridConfig.zMin,
+                zMax=gridConfig.zMax,
+                cotThetaMax=gridConfig.cotThetaMax,
                 beamPos=acts.Vector2(0 * u.mm, 0 * u.mm),
                 impactMax=3 * u.mm,
             )
@@ -213,7 +214,7 @@ def runCKFTracks(
                 outputSeeds="seeds",
                 outputProtoTracks="prototracks",
                 gridConfig=gridConfig,
-                seedFilterConfig=seedFilterConfig,
+                seedFilterConfig=[seedFilterConfig],
                 seedFinderConfig=seedFinderConfig,
             )
             s.addAlgorithm(seeding)

@@ -41,20 +41,27 @@ SeedFinder<external_spacepoint_t>::SeedFinder(
       m_logger(std::move(incomingLogger)) {
   // calculation of scattering using the highland formula
   // convert pT to p once theta angle is known
-  m_commonConfig.highland =
-      13.6 * std::sqrt(m_commonConfig.radLengthPerSeed) *
-      (1 + 0.038 * std::log(m_commonConfig.radLengthPerSeed));
-  float maxScatteringAngle = m_commonConfig.highland / m_commonConfig.minPt;
-  m_commonConfig.maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;
+  m_config.regionalParameters[0].highland =
+      13.6 * std::sqrt(m_config.regionalParameters[0].radLengthPerSeed) *
+      (1 + 0.038 * std::log(m_config.regionalParameters[0].radLengthPerSeed));
+  float maxScatteringAngle = m_config.regionalParameters[0].highland /
+                             m_config.regionalParameters[0].minPt;
+  m_config.regionalParameters[0].maxScatteringAngle2 =
+      maxScatteringAngle * maxScatteringAngle;
 
   // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and
   // millimeter
   // TODO: change using ACTS units
-  m_commonConfig.pTPerHelixRadius = 300. * m_commonConfig.bFieldInZ;
-  m_commonConfig.minHelixDiameter2 =
-      std::pow(m_commonConfig.minPt * 2 / m_commonConfig.pTPerHelixRadius, 2);
-  m_commonConfig.pT2perRadius =
-      std::pow(m_commonConfig.highland / m_commonConfig.pTPerHelixRadius, 2);
+  m_config.regionalParameters[0].pTPerHelixRadius =
+      300. * m_config.regionalParameters[0].bFieldInZ;
+  m_config.regionalParameters[0].minHelixDiameter2 =
+      std::pow(m_config.regionalParameters[0].minPt * 2 /
+                   m_config.regionalParameters[0].pTPerHelixRadius,
+               2);
+  m_config.regionalParameters[0].pT2perRadius =
+      std::pow(m_config.regionalParameters[0].highland /
+                   m_config.regionalParameters[0].pTPerHelixRadius,
+               2);
 
   // Tell the user what CUDA device will be used by the object.
   if (static_cast<std::size_t>(m_device) < Info::instance().devices().size()) {
@@ -157,10 +164,11 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
   Details::findDublets(
       m_commonConfig.maxBlockSize, bottomSPVec.size(), bottomSPDeviceArray,
       middleSPVec.size(), middleSPDeviceArray, topSPVec.size(),
-      topSPDeviceArray, m_commonConfig.deltaRMin, m_commonConfig.deltaRMax,
-      m_commonConfig.cotThetaMax, m_commonConfig.collisionRegionMin,
-      m_commonConfig.collisionRegionMax, middleBottomCounts,
-      middleBottomDublets, middleTopCounts, middleTopDublets);
+      topSPDeviceArray, m_config.regionalParameters[0].deltaRMinTopSP,
+      m_config.regionalParameters[0].deltaRMaxTopSP, m_commonConfig.cotThetaMax,
+      m_commonConfig.collisionRegionMin, m_commonConfig.collisionRegionMax,
+      middleBottomCounts, middleBottomDublets, middleTopCounts,
+      middleTopDublets);
 
   // Count the number of dublets that we have to launch the subsequent steps
   // for.
@@ -180,9 +188,10 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
       bottomSPVec.size(), bottomSPDeviceArray, middleSPVec.size(),
       middleSPDeviceArray, topSPVec.size(), topSPDeviceArray,
       middleBottomCounts, middleBottomDublets, middleTopCounts,
-      middleTopDublets, m_commonConfig.maxScatteringAngle2,
-      m_commonConfig.sigmaScattering, m_commonConfig.minHelixDiameter2,
-      m_commonConfig.pT2perRadius, m_commonConfig.impactMax);
+      middleTopDublets, m_config.regionalParameters[0].maxScatteringAngle2,
+      m_config.regionalParameters[0].sigmaScattering,
+      m_config.regionalParameters[0].minHelixDiameter2,
+      m_config.regionalParameters[0].pT2perRadius, m_commonConfig.impactMax);
   assert(tripletCandidates.size() == middleSPVec.size());
 
   // Perform the final step of the filtering.
@@ -204,7 +213,7 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
           std::make_unique<const InternalSeed<external_spacepoint_t>>(
               bottomSP, middleSP, topSP, 0)));
     }
-    m_commonConfig.seedFilter->filterSeeds_1SpFixed(
+    m_config.regionalParameters[0].seedFilter->filterSeeds_1SpFixed(
         seedsPerSPM, std::back_inserter(outputVec));
   }
 

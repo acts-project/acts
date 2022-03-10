@@ -151,8 +151,9 @@ int main(int argc, char* argv[]) {
   // Set up the seedfinder configuration objects.
   TestHostCuts hostCuts;
   Acts::SeedFilterConfig filterConfig;
-  sfConfig.seedFilter = std::make_unique<Acts::SeedFilter<TestSpacePoint>>(
-      filterConfig, &hostCuts);
+  sfConfig.regionalParameters[0].seedFilter =
+      std::make_unique<Acts::SeedFilter<TestSpacePoint>>(filterConfig,
+                                                         &hostCuts);
   auto deviceCuts = testDeviceCuts();
 
   // Set up the seedfinder objects.

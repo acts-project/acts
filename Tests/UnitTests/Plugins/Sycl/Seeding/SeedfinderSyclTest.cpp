@@ -123,12 +123,12 @@ auto setupSpacePointGridConfig(
     const Acts::SeedfinderConfig<external_spacepoint_t>& config)
     -> Acts::SpacePointGridConfig {
   Acts::SpacePointGridConfig gridConf{};
-  gridConf.bFieldInZ = config.bFieldInZ;
-  gridConf.minPt = config.minPt;
+  gridConf.bFieldInZ = config.regionalParameters[0].bFieldInZ;
+  gridConf.minPt = config.regionalParameters[0].minPt;
   gridConf.rMax = config.rMax;
   gridConf.zMax = config.zMax;
   gridConf.zMin = config.zMin;
-  gridConf.deltaRMax = config.deltaRMax;
+  gridConf.deltaRMax = config.regionalParameters[0].deltaRMaxTopSP;
   gridConf.cotThetaMax = config.cotThetaMax;
   return gridConf;
 }
