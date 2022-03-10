@@ -143,7 +143,7 @@ int runSeedingExample(int argc, char* argv[],
   seedingCfg.seedFinderConfig.zMin = seedingCfg.gridConfig.zMin;
   seedingCfg.seedFinderConfig.zMax = seedingCfg.gridConfig.zMax;
 
-  filterConfig.maxSeedsPerSpM = 5;
+  filterConfig.maxSeedsPerSpM = 1;
 
   seedingCfg.gridConfig.cotThetaMax = 7.40627;  // 2.7 eta
   seedingCfg.seedFinderConfig.cotThetaMax = seedingCfg.gridConfig.cotThetaMax;
