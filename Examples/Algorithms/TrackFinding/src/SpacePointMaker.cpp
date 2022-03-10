@@ -93,8 +93,6 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
   SimSpacePointContainer spacePoints;
   spacePoints.reserve(sourceLinks.size());
 
-  size_t nSourceLinks = 0;
-
   for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) {
     // select volume/layer depending on what is set in the geometry id
     auto range = selectLowestNonZeroGeometryObject(sourceLinks, geoId);
@@ -132,8 +130,6 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
               return std::make_pair(lpar, lcov);
             },
             measurements[sourceLink.get().index()]);
-
-        nSourceLinks++;
 
         // transform local position to global coordinates
         Acts::Vector3 globalFakeMom(1, 1, 1);
@@ -175,8 +171,7 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
   }
   spacePoints.shrink_to_fit();
 
-  ACTS_DEBUG("Created " << spacePoints.size() << " space points from "
-                        << nSourceLinks << " source links");
+  ACTS_DEBUG("Created " << spacePoints.size() << " space points");
   ctx.eventStore.add(m_cfg.outputSpacePoints, std::move(spacePoints));
 
   return ActsExamples::ProcessCode::SUCCESS;

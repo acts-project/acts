@@ -377,7 +377,6 @@ class EigenStepper {
   /// Perform a Runge-Kutta track parameter propagation step
   ///
   /// @param [in,out] state is the propagation state associated with the track
-  /// @param logger A logger wrapper instance
   /// parameters that are being propagated.
   ///
   ///                      the state contains the desired step size.
@@ -386,7 +385,7 @@ class EigenStepper {
   ///                      and since we're using an adaptive algorithm, it can
   ///                      be modified by the stepper class during propagation.
   template <typename propagator_state_t>
-  Result<double> step(propagator_state_t& state, LoggerWrapper logger) const;
+  Result<double> step(propagator_state_t& state) const;
 
   /// Method that reset the Jacobian to the Identity for when no bound state are
   /// available

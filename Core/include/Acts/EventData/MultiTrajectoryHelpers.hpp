@@ -134,13 +134,6 @@ inline VolumeTrajectoryStateContainer trajectoryState(
   return trajStateContainer;
 }
 
-template <typename track_state_proxy_t>
-FreeVector freePredicted(const GeometryContext& gctx,
-                         const track_state_proxy_t& trackStateProxy) {
-  return detail::transformBoundToFreeParameters(
-      trackStateProxy.referenceSurface(), gctx, trackStateProxy.predicted());
-}
-
 /// @brief Transforms the filtered parameters from a @c TrackStateProxy to free
 /// parameters
 ///

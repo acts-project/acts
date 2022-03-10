@@ -144,13 +144,13 @@ inline std::string ConstrainedStep::toString() const {
     }
   };
 
-  dstream << "( acr=";
+  dstream << "(";
   streamValue(accuracy);
-  dstream << ", act=";
+  dstream << ", ";
   streamValue(actor);
-  dstream << ", abr=";
+  dstream << ", ";
   streamValue(aborter);
-  dstream << ", usr=";
+  dstream << ", ";
   streamValue(user);
   dstream << " )";
   return dstream.str();

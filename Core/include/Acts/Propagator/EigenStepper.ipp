@@ -109,7 +109,7 @@ void Acts::EigenStepper<E, A>::transportCovarianceToBound(
 template <typename E, typename A>
 template <typename propagator_state_t>
 Acts::Result<double> Acts::EigenStepper<E, A>::step(
-    propagator_state_t& state, LoggerWrapper logger) const {
+    propagator_state_t& state) const {
   using namespace UnitLiterals;
 
   // Runge-Kutta integrator state
@@ -184,7 +184,8 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     return success(error_estimate <= state.options.tolerance);
   };
 
-  size_t nStepTrials = 1;
+  double stepSizeScaling = 1.;
+  size_t nStepTrials = 0;
   // Select and adjust the appropriate Runge-Kutta step size as given
   // ATL-SOFT-PUB-2009-001
   while (true) {
@@ -196,19 +197,12 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
       break;
     }
 
-    double stepSizeScaling = std::min(
-        std::max(0.25, std::sqrt(std::sqrt(state.options.tolerance /
-                                           std::abs(2. * error_estimate)))),
-        4.0);
-    // double stepSizeScaling = std::min(
-    // std::max(
-    // 0.25,
-    // std::pow(state.options.tolerance / std::abs(error_estimate), 0.25)),
-    // 4.0);
+    stepSizeScaling =
+        std::min(std::max(0.25f, std::sqrt(std::sqrt(static_cast<float>(
+                                     state.options.tolerance /
+                                     std::abs(2. * error_estimate))))),
+                 4.0f);
 
-    ACTS_VERBOSE("Scaling step size: "
-                 << state.stepping.stepSize << " * " << stepSizeScaling
-                 << " => " << state.stepping.stepSize * stepSizeScaling);
     state.stepping.stepSize = state.stepping.stepSize * stepSizeScaling;
 
     // If step size becomes too small the particle remains at the initial
@@ -227,8 +221,6 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     }
     nStepTrials++;
   }
-
-  ACTS_VERBOSE("Step with " << nStepTrials << " step trials");
 
   // use the adjusted step size
   const double h = state.stepping.stepSize;
@@ -264,20 +256,13 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   state.stepping.pathAccumulated += h;
   if (state.stepping.stepSize.currentType() ==
       ConstrainedStep::Type::accuracy) {
-    // double stepSizeScaling =
-    // std::min(std::max(0.25, std::sqrt(std::sqrt(state.options.tolerance /
-    // std::abs(error_estimate)))),
-    // 4.0);
-    double stepSizeScaling = std::min(
-        std::max(
-            0.25,
-            std::pow(state.options.tolerance / std::abs(error_estimate), 0.25)),
-        4.0);
-    ACTS_VERBOSE("Scaling step size: "
-                 << state.stepping.stepSize << " * " << stepSizeScaling
-                 << " => " << state.stepping.stepSize * stepSizeScaling);
-    state.stepping.stepSize = state.stepping.stepSize * stepSizeScaling;
-    ;
+    state.stepping.stepSize =
+        state.stepping.stepSize *
+        std::min(
+            std::max(0.25f,
+                     std::sqrt(std::sqrt(static_cast<float>(
+                         state.options.tolerance / std::abs(error_estimate))))),
+            4.0f);
   }
   return h;
 }

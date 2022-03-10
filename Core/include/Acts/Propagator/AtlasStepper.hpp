@@ -1124,10 +1124,8 @@ class AtlasStepper {
   /// Perform the actual step on the state
   ///
   /// @param state is the provided stepper state (caller keeps thread locality)
-  /// @param logger A logger wrapper instance
   template <typename propagator_state_t>
-  Result<double> step(propagator_state_t& state,
-                      LoggerWrapper /*logger*/) const {
+  Result<double> step(propagator_state_t& state) const {
     // we use h for keeping the nominclature with the original atlas code
     auto& h = state.stepping.stepSize;
     bool Jac = state.stepping.useJacobian;

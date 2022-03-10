@@ -65,15 +65,6 @@ Result<void> GainMatrixSmoother::operator()(const GeometryContext& gctx,
       return false;                             // abort execution
     }
 
-    ACTS_VERBOSE("Is measurement state: "
-                 << (ts.typeFlags().test(TrackStateFlag::MeasurementFlag)
-                         ? "yes"
-                         : "no"));
-    ACTS_VERBOSE("Is previous measurement state: "
-                 << (ts.typeFlags().test(TrackStateFlag::MeasurementFlag)
-                         ? "yes"
-                         : "no"));
-
     ACTS_VERBOSE("Gain smoothing matrix G:\n" << G);
 
     ACTS_VERBOSE("Calculate smoothed parameters:");

@@ -668,10 +668,9 @@ class CombinatorialKalmanFilter {
           // No source links on surface, add either hole or passive material
           // TrackState. No storage allocation for uncalibrated/calibrated
           // measurement and filtered parameter
-          auto stateMask = ~(
-              TrackStatePropMask::Uncalibrated | TrackStatePropMask::Calibrated
-              // | TrackStatePropMask::Filtered
-          );
+          auto stateMask =
+              ~(TrackStatePropMask::Uncalibrated |
+                TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered);
 
           // Increment of number of processed states
           tipState.nStates++;
@@ -833,8 +832,8 @@ class CombinatorialKalmanFilter {
         }
 
         if (isOutlier) {
-          // mask &= ~PM::Filtered;  // outlier won't have separate filtered
-          // parameters
+          mask &= ~PM::Filtered;  // outlier won't have separate filtered
+                                  // parameters
         }
 
         // copy this trackstate into fitted states MultiTrajectory
@@ -871,8 +870,6 @@ class CombinatorialKalmanFilter {
         if (isOutlier) {
           ACTS_VERBOSE(
               "Creating outlier track state with tip = " << currentTip);
-          ACTS_VERBOSE(
-              "Outlier predicted (=filtered): " << trackState.predicted());
           // Set the outlier flag
           typeFlags.set(TrackStateFlag::OutlierFlag);
           // Increment number of outliers
@@ -880,9 +877,7 @@ class CombinatorialKalmanFilter {
           // No Kalman update for outlier
           // Set the filtered parameter index to be the same with predicted
           // parameter
-          // trackState.data().ifiltered = trackState.data().ipredicted;
-          trackState.filtered() = trackState.predicted();
-          trackState.filteredCovariance() = trackState.predictedCovariance();
+          trackState.data().ifiltered = trackState.data().ipredicted;
 
         } else {
           // Kalman update
@@ -943,11 +938,6 @@ class CombinatorialKalmanFilter {
       if (boundParams.covariance().has_value()) {
         trackStateProxy.predictedCovariance() = *boundParams.covariance();
       }
-      trackStateProxy.filtered() = boundParams.parameters();
-      if (boundParams.covariance().has_value()) {
-        trackStateProxy.filteredCovariance() = *boundParams.covariance();
-      }
-
       trackStateProxy.jacobian() = jacobian;
       trackStateProxy.pathLength() = pathLength;
       // Set the surface
@@ -966,7 +956,7 @@ class CombinatorialKalmanFilter {
         typeFlags.set(TrackStateFlag::HoleFlag);
       }
 
-      // trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
+      trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
 
       return currentTip;
     }
@@ -1045,16 +1035,12 @@ class CombinatorialKalmanFilter {
       // Get the indices of the first states (can be either a measurement or
       // material);
       size_t firstStateIndex = lastMeasurementIndex;
-      size_t firstMeasurementIndex = lastMeasurementIndex;
       // Count track states to be smoothed
       size_t nStates = 0;
       result.fittedStates.applyBackwards(lastMeasurementIndex, [&](auto st) {
         bool isMeasurement =
             st.typeFlags().test(TrackStateFlag::MeasurementFlag);
         bool isMaterial = st.typeFlags().test(TrackStateFlag::MaterialFlag);
-        if (isMeasurement) {
-          firstMeasurementIndex = st.index();
-        }
         if (isMeasurement || isMaterial) {
           firstStateIndex = st.index();
         }
@@ -1070,35 +1056,13 @@ class CombinatorialKalmanFilter {
       ACTS_VERBOSE("Apply smoothing on " << nStates
                                          << " filtered track states.");
       // Smooth the track states
-      auto smoothRes = m_extensions.smoother(
-          state.geoContext, result.fittedStates, lastMeasurementIndex, logger);
+      auto smoothRes =
+          m_extensions.smoother(state.geoContext, result.fittedStates,
+                                lastMeasurementIndex, getDummyLogger());
       if (!smoothRes.ok()) {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
         return smoothRes.error();
       }
-
-      result.fittedStates.applyBackwards(lastMeasurementIndex, [&](auto st) {
-        bool isMeasurement =
-            st.typeFlags().test(TrackStateFlag::MeasurementFlag);
-        bool isMaterial = st.typeFlags().test(TrackStateFlag::MaterialFlag);
-        bool isOutlier = st.typeFlags().test(TrackStateFlag::OutlierFlag);
-        ACTS_VERBOSE("Measurement State: "
-                     << (isMeasurement ? "measurement" : "")
-                     << (isMaterial ? "material" : "")
-                     << (isOutlier ? "outlier" : ""));
-        ACTS_VERBOSE("-> Pred: " << st.predicted().transpose());
-        ACTS_VERBOSE("->       " << MultiTrajectoryHelpers::freePredicted(
-                                        state.geoContext, st)
-                                        .transpose());
-        ACTS_VERBOSE("-> Filt: " << st.filtered().transpose());
-        ACTS_VERBOSE("->       " << MultiTrajectoryHelpers::freeFiltered(
-                                        state.geoContext, st)
-                                        .transpose());
-        ACTS_VERBOSE("-> Smth: " << st.smoothed().transpose());
-        ACTS_VERBOSE("->       " << MultiTrajectoryHelpers::freeSmoothed(
-                                        state.geoContext, st)
-                                        .transpose());
-      });
 
       // Return in case no target surface
       if (targetSurface == nullptr) {
@@ -1109,19 +1073,8 @@ class CombinatorialKalmanFilter {
       // The first state can also be a material state
       auto firstCreatedState =
           result.fittedStates.getTrackState(firstStateIndex);
-      auto firstCreatedMeasurement =
-          result.fittedStates.getTrackState(firstMeasurementIndex);
       auto lastCreatedMeasurement =
           result.fittedStates.getTrackState(lastMeasurementIndex);
-
-      ACTS_VERBOSE("First meas:")
-      ACTS_VERBOSE("Pred: " << firstCreatedMeasurement.predicted().transpose())
-      ACTS_VERBOSE("Filt: " << firstCreatedMeasurement.filtered().transpose())
-      ACTS_VERBOSE("Smth: " << firstCreatedMeasurement.smoothed().transpose())
-      ACTS_VERBOSE("Last meas:")
-      ACTS_VERBOSE("Pred: " << lastCreatedMeasurement.predicted().transpose())
-      ACTS_VERBOSE("Filt: " << lastCreatedMeasurement.filtered().transpose())
-      ACTS_VERBOSE("Smth: " << lastCreatedMeasurement.smoothed().transpose())
 
       // Lambda to get the intersection of the free params on the target surface
       auto target = [&](const FreeVector& freeVector) -> SurfaceIntersection {
@@ -1132,17 +1085,13 @@ class CombinatorialKalmanFilter {
 
       // The smoothed free params at the first/last measurement state
       auto firstParams = MultiTrajectoryHelpers::freeSmoothed(
-          state.options.geoContext, firstCreatedMeasurement);
+          state.options.geoContext, firstCreatedState);
       auto lastParams = MultiTrajectoryHelpers::freeSmoothed(
           state.options.geoContext, lastCreatedMeasurement);
       // Get the intersections of the smoothed free parameters with the target
       // surface
       const auto firstIntersection = target(firstParams);
       const auto lastIntersection = target(lastParams);
-
-      ACTS_VERBOSE("Current pos: "
-                   << stepper.position(state.stepping).transpose() << " dir: "
-                   << stepper.direction(state.stepping).transpose());
 
       // Update the stepping parameters - in order to progress to destination.
       // At the same time, reverse navigation direction for further
@@ -1157,51 +1106,31 @@ class CombinatorialKalmanFilter {
           (std::abs(firstIntersection.intersection.pathLength) <=
            std::abs(lastIntersection.intersection.pathLength));
       if (closerToFirstCreatedState) {
-        // stepper.update(state.stepping, firstParams,
-        // firstCreatedMeasurement.smoothed(),
-        // firstCreatedMeasurement.smoothedCovariance(),
-        // firstCreatedMeasurement.referenceSurface());
-        stepper.resetState(state.stepping, firstCreatedMeasurement.smoothed(),
-                           firstCreatedMeasurement.smoothedCovariance(),
-                           firstCreatedMeasurement.referenceSurface());
+        stepper.update(state.stepping, firstParams,
+                       firstCreatedState.smoothed(),
+                       firstCreatedState.smoothedCovariance(),
+                       firstCreatedState.referenceSurface());
         reverseDirection = (firstIntersection.intersection.pathLength < 0);
       } else {
-        // stepper.update(state.stepping, lastParams,
-        // lastCreatedMeasurement.smoothed(),
-        // lastCreatedMeasurement.smoothedCovariance(),
-        // lastCreatedMeasurement.referenceSurface());
-        stepper.resetState(state.stepping, lastCreatedMeasurement.smoothed(),
-                           lastCreatedMeasurement.smoothedCovariance(),
-                           lastCreatedMeasurement.referenceSurface());
+        stepper.update(state.stepping, lastParams,
+                       lastCreatedMeasurement.smoothed(),
+                       lastCreatedMeasurement.smoothedCovariance(),
+                       lastCreatedMeasurement.referenceSurface());
         reverseDirection = (lastIntersection.intersection.pathLength < 0);
       }
       const auto& surface = closerToFirstCreatedState
-                                ? firstCreatedMeasurement.referenceSurface()
+                                ? firstCreatedState.referenceSurface()
                                 : lastCreatedMeasurement.referenceSurface();
       ACTS_VERBOSE(
           "Smoothing successful, updating stepping state to smoothed "
           "parameters at surface "
-          << surface.geometryId() << " ("
-          << (closerToFirstCreatedState ? "first created state"
-                                        : "last meas. state")
-          << ")");
-
-      ACTS_VERBOSE("Current pos: "
-                   << stepper.position(state.stepping).transpose() << " dir: "
-                   << stepper.direction(state.stepping).transpose());
-
-      ACTS_VERBOSE("Prepared to reach target surface: " << ([&state, this]() {
-                     std::stringstream ss;
-                     targetSurface->toStream(state.geoContext, ss);
-                     return ss.str();
-                   }()));
+          << surface.geometryId() << ". Prepared to reach the target surface.");
 
       // Reverse the navigation direction if necessary
       if (reverseDirection) {
         ACTS_VERBOSE(
             "Reverse navigation direction after smoothing for reaching the "
             "target surface");
-
         state.stepping.navDir =
             (state.stepping.navDir == forward) ? backward : forward;
       }

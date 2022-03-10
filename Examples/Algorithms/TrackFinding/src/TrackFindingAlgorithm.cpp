@@ -92,7 +92,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
     // The result for this seed
     auto& result = results[iseed];
     if (result.ok()) {
-      ACTS_DEBUG("Track finding succeeded for seed " << iseed);
       // Get the track finding output object
       const auto& trackFindingOutput = result.value();
       // Create a Trajectories result struct
@@ -101,9 +100,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
           std::move(trackFindingOutput.lastMeasurementIndices),
           std::move(trackFindingOutput.fittedParameters));
     } else {
-      ACTS_WARNING("Track finding failed for seed "
-                   << iseed << " with error " << result.error() << " "
-                   << result.error().message());
+      ACTS_WARNING("Track finding failed for seed " << iseed << " with error"
+                                                    << result.error());
       // Track finding failed. Add an empty result so the output container has
       // the same number of entries as the input.
       trajectories.push_back(Trajectories());
