@@ -5,9 +5,7 @@ import argparse
 import acts
 import acts.examples
 
-from acts.examples import (
-     CsvSpacePointReader
-)
+from acts.examples import CsvSpacePointReader
 
 u = acts.UnitConstants
 
@@ -26,24 +24,37 @@ def runITkSeeding(field, outputDir, s=None):
     gridConfig = acts.SpacePointGridConfig(
         bFieldInZ=1.997244311 * u.T,
         minPt=900 * u.MeV,
-        rMax=320 * u.mm, # pixel: 320 mm, strip: 1000 mm
+        rMax=320 * u.mm,  # pixel: 320 mm, strip: 1000 mm
         zMax=3000 * u.mm,
         zMin=-3000 * u.mm,
-        deltaRMax=280 * u.mm, # pixel: 280 mm, strip: 600 mm
+        deltaRMax=280 * u.mm,  # pixel: 280 mm, strip: 600 mm
         cotThetaMax=27.2899,  # pixel: 27.2899 (4 eta), strip: 900
-        impactMax=2 * u.mm, # pixel: 2 mm, strip: 20 mm
-        zBinEdges=[-3000., -2500., -1400., -925., -450., -250., 250., 450., 925., 1400., 2500., 3000.], # zBinEdges enables non-equidistant binning in z, in case the binning is not defined the edges are evaluated automatically using equidistant binning
-        numPhiNeighbors=1, # number of phiBin neighbors (plus the current bin) that covers the full deflection of a minimum pT particle
+        impactMax=2 * u.mm,  # pixel: 2 mm, strip: 20 mm
+        zBinEdges=[
+            -3000.0,
+            -2500.0,
+            -1400.0,
+            -925.0,
+            -450.0,
+            -250.0,
+            250.0,
+            450.0,
+            925.0,
+            1400.0,
+            2500.0,
+            3000.0,
+        ],  # zBinEdges enables non-equidistant binning in z, in case the binning is not defined the edges are evaluated automatically using equidistant binning
+        numPhiNeighbors=1,  # number of phiBin neighbors (plus the current bin) that covers the full deflection of a minimum pT particle
     )
-    
+
     seedFinderConfig = acts.SeedfinderConfig(
         rMax=gridConfig.rMax,
         deltaRMin=20 * u.mm,
         deltaRMax=gridConfig.deltaRMax,
-        deltaRMinTopSP=6 * u.mm, # pixel: 6 mm, strip: 20 mm
-        deltaRMinBottomSP=6 * u.mm, # pixel: 6 mm, strip: 20 mm
-        deltaRMaxTopSP=280 * u.mm, # pixel: 280 mm, strip: 3000 mm
-        deltaRMaxBottomSP=120 * u.mm, # pixel: 120 mm, strip: 3000 mm
+        deltaRMinTopSP=6 * u.mm,  # pixel: 6 mm, strip: 20 mm
+        deltaRMinBottomSP=6 * u.mm,  # pixel: 6 mm, strip: 20 mm
+        deltaRMaxTopSP=280 * u.mm,  # pixel: 280 mm, strip: 3000 mm
+        deltaRMaxBottomSP=120 * u.mm,  # pixel: 120 mm, strip: 3000 mm
         collisionRegionMin=-200 * u.mm,
         collisionRegionMax=200 * u.mm,
         zMin=gridConfig.zMin,
@@ -58,23 +69,39 @@ def runITkSeeding(field, outputDir, s=None):
         impactMax=gridConfig.impactMax,
         maxPtScattering=1000000 * u.GeV,
         zBinEdges=gridConfig.zBinEdges,
-        enableCutsForSortedSP=True, # enable cotTheta sorting in SeedFinder
-        rRangeMiddleSP=[[40., 90.],[40., 200.],[46., 200.],[46., 200.],[46., 250.], [46., 250.], [46., 250.], [46., 200.],[46., 200.], [40., 200.], [40., 90.]], # if useVariableMiddleSPRange is set to false, the vector rRangeMiddleSP can be used to define a fixed r range for each z bin: {{rMin, rMax}, ...}. If useVariableMiddleSPRange is set to false and the vector is empty, the cuts won't be applied
-        useVariableMiddleSPRange=True, # if useVariableMiddleSPRange is true, the values in rRangeMiddleSP will be calculated based on r values of the SPs and deltaRMiddleSPRange
+        enableCutsForSortedSP=True,  # enable cotTheta sorting in SeedFinder
+        rRangeMiddleSP=[
+            [40.0, 90.0],
+            [40.0, 200.0],
+            [46.0, 200.0],
+            [46.0, 200.0],
+            [46.0, 250.0],
+            [46.0, 250.0],
+            [46.0, 250.0],
+            [46.0, 200.0],
+            [46.0, 200.0],
+            [40.0, 200.0],
+            [40.0, 90.0],
+        ],  # if useVariableMiddleSPRange is set to false, the vector rRangeMiddleSP can be used to define a fixed r range for each z bin: {{rMin, rMax}, ...}. If useVariableMiddleSPRange is set to false and the vector is empty, the cuts won't be applied
+        useVariableMiddleSPRange=True,  # if useVariableMiddleSPRange is true, the values in rRangeMiddleSP will be calculated based on r values of the SPs and deltaRMiddleSPRange
         deltaRMiddleSPRange=10,
         seedConfirmation=True,
-        centralSeedConfirmationRange=acts.SeedConfirmationRange(250., -250., 140., 1, 2), # contains parameters for seed confirmation (zMinSeedConf, zMaxSeedConf, rMaxSeedConf, nTopForLargeR, nTopForSmallR)
-        forwardSeedConfirmationRange=acts.SeedConfirmationRange(3000., -3000., 140., 1, 2),
+        centralSeedConfirmationRange=acts.SeedConfirmationRange(
+            250.0, -250.0, 140.0, 1, 2
+        ),  # contains parameters for seed confirmation (zMinSeedConf, zMaxSeedConf, rMaxSeedConf, nTopForLargeR, nTopForSmallR)
+        forwardSeedConfirmationRange=acts.SeedConfirmationRange(
+            3000.0, -3000.0, 140.0, 1, 2
+        ),
     )
-    
+
     seedFilterConfig = acts.SeedFilterConfig(
         maxSeedsPerSpM=seedFinderConfig.maxSeedsPerSpM,
         deltaRMin=seedFinderConfig.deltaRMin,
-        impactWeightFactor = 100,
-        compatSeedWeight = 100,
-        compatSeedLimit = 3,
+        impactWeightFactor=100,
+        compatSeedWeight=100,
+        compatSeedLimit=3,
     )
-    
+
     seedingAlg = acts.examples.SeedingAlgorithm(
         level=acts.logging.VERBOSE,
         inputSpacePoints=[evReader.config.outputSpacePoints],
@@ -83,8 +110,32 @@ def runITkSeeding(field, outputDir, s=None):
         gridConfig=gridConfig,
         seedFinderConfig=seedFinderConfig,
         seedFilterConfig=seedFilterConfig,
-        zBinNeighborsTop=[[0, 0],[-1, 0],[-1, 0],[-1, 0],[-1, 0],[-1, 1],[0, 1],[0, 1],[0, 1],[0, 1],[0, 0]], # allows to specify the number of neighbors desired for each bin, [-1,1] means one neighbor on the left and one on the right, if the vector is empty the algorithm returns the 8 surrounding bins
-        zBinNeighborsBottom=[[0, 1],[0, 1],[0, 1],[0, 1],[0, 1],[0, 0],[-1, 0],[-1, 0],[-1, 0],[-1, 0],[-1, 0]],
+        zBinNeighborsTop=[
+            [0, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 0],
+        ],  # allows to specify the number of neighbors desired for each bin, [-1,1] means one neighbor on the left and one on the right, if the vector is empty the algorithm returns the 8 surrounding bins
+        zBinNeighborsBottom=[
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 0],
+        ],
     )
 
     s = s or acts.examples.Sequencer(
