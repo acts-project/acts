@@ -1,9 +1,14 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from pathlib import Path
 import argparse
 import tempfile
 import shutil
 import os
+import sys
+
+sys.path += [
+    str(Path(__file__).parent.parent.parent / "Examples/Scripts/Python/"),
+]
 
 # this has to happen before we import the ACTS module
 os.environ["ACTS_LOG_FAILURE_THRESHOLD"] = "FATAL"
