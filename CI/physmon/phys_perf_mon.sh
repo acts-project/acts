@@ -8,7 +8,7 @@ mkdir -p $outdir
 refdir=CI/physmon/reference
 
 echo "::group::Generate validation dataset"
-CI/physmon/physmon.py $outdir
+CI/physmon/physmon.py $outdir 2>&1 > $outdir/run.log
 echo "::endgroup::"
 
 set +e
