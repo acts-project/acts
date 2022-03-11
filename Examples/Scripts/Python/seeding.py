@@ -72,6 +72,7 @@ def addSeeding(
     trackParamsEstimationConfig: Optional[
         TrackParamsEstimationConfig
     ] = TrackParamsEstimationConfig(),
+    inputParticles = "particles_final",
     outputDir: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
@@ -104,7 +105,6 @@ def addSeeding(
         acts.examples.dump_args_calls(locals())
     logger = acts.logging.getLogger("addSeeding")
 
-    allInputParticles = "particles_final"
     if truthSeedRanges is not None:
         selAlg = acts.examples.TruthSeedSelector(
             **acts.examples.defaultKWArgs(
@@ -116,14 +116,14 @@ def addSeeding(
                 nHitsMax=truthSeedRanges.nHits[1],
             ),
             level=customLogLevel(),
-            inputParticles=allInputParticles,
+            inputParticles=inputParticles,
             inputMeasurementParticlesMap="measurement_particles_map",
             outputParticles="truth_seeds_selected",
         )
         s.addAlgorithm(selAlg)
-        inputParticles = selAlg.config.outputParticles
+        selectedParticles = selAlg.config.outputParticles
     else:
-        inputParticles = allInputParticles
+        selectedParticles = inputParticles
 
     # Create starting parameters from either particle smearing or combined seed
     # finding and track parameters estimation
@@ -133,7 +133,7 @@ def addSeeding(
         # Run particle smearing
         ptclSmear = acts.examples.ParticleSmearing(
             level=customLogLevel(),
-            inputParticles=inputParticles,
+            inputParticles=selectedParticles,
             outputTrackParameters="estimatedparameters",
             randomNumbers=rnd,
             # gaussian sigmas to smear particle parameters
@@ -172,7 +172,7 @@ def addSeeding(
             # Use truth tracking
             truthTrackFinder = acts.examples.TruthTrackFinder(
                 level=customLogLevel(),
-                inputParticles=inputParticles,
+                inputParticles=selectedParticles,
                 inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
                 outputProtoTracks="prototracks",
             )
@@ -267,7 +267,7 @@ def addSeeding(
                 acts.examples.TrackFinderPerformanceWriter(
                     level=customLogLevel(),
                     inputProtoTracks=inputProtoTracks,
-                    inputParticles=inputParticles,  # the original selected particles after digitization
+                    inputParticles=selectedParticles,  # the original selected particles after digitization
                     inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
                     filePath=str(outputDir / "performance_seeding_trees.root"),
                 )
@@ -277,7 +277,7 @@ def addSeeding(
                 acts.examples.SeedingPerformanceWriter(
                     level=customLogLevel(acts.logging.DEBUG),
                     inputProtoTracks=inputProtoTracks,
-                    inputParticles=inputParticles,
+                    inputParticles=selectedParticles,
                     inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
                     filePath=str(outputDir / "performance_seeding_hists.root"),
                 )
@@ -288,7 +288,7 @@ def addSeeding(
                     level=customLogLevel(acts.logging.VERBOSE),
                     inputTrackParameters=parEstimateAlg.config.outputTrackParameters,
                     inputProtoTracks=parEstimateAlg.config.outputProtoTracks,
-                    inputParticles=allInputParticles,
+                    inputParticles=inputParticles,
                     inputSimHits="simhits",
                     inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
                     inputMeasurementSimHitsMap="measurement_simhits_map",
