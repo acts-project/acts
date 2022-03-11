@@ -167,14 +167,13 @@ def defaultKWArgs(**kwargs) -> dict:
     This keeps the called function's defaults."""
     from collections.abc import Iterable
 
-    a = {
+    return {
         k: v
         for k, v in kwargs.items()
         if not (
             v is None or (isinstance(v, Iterable) and all([vv is None for vv in v]))
         )
     }
-    return a
 
 
 def dump_args(func):
