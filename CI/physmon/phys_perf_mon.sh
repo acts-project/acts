@@ -30,16 +30,26 @@ function run() {
 
 
 run \
-    physmon/performance_ckf_tracks.root \
-    $refdir/performance_ckf_tracks.root \
+    physmon/performance_ckf_tracks_True_False.root \
+    $refdir/performance_ckf_tracks_True_False.root \
     -o $outdir/ckf.html \
 
+run \
+    physmon/performance_ckf_tracks_False_True.root \
+    $refdir/performance_ckf_tracks_False_True.root \
+    -o $outdir/ckf.html \
+
+run \
+    physmon/performance_ckf_tracks_False_False.root \
+    $refdir/performance_ckf_tracks_False_False.root \
+    -o $outdir/ckf.html \
 
 run \
     physmon/performance_truth_tracking.root \
     $refdir/performance_truth_tracking.root \
     -c CI/physmon/truth_tracking.yml \
     -o $outdir/truth_tracking.html \
+
 
 
 exit $ec

@@ -82,7 +82,7 @@ jobs:
         run: >
           ${SETUP}
           && echo "::group::Dependencies"
-          && pip3 install histcmp==0.2.0
+          && pip3 install histcmp==0.3.0
           && source /usr/local/bin/thisroot.sh
           && source /usr/local/bin/thisdd4hep_only.sh
           && source /usr/local/bin/geant4.sh

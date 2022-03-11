@@ -67,26 +67,34 @@ with tempfile.TemporaryDirectory() as temp:
     shutil.copy(perf_file, outdir / "performance_truth_tracking.root")
 
 
-s = acts.examples.Sequencer(
-    events=args.events, numThreads=1, logLevel=acts.logging.INFO, skip=args.skip
-)
-
-with tempfile.TemporaryDirectory() as temp:
-    tp = Path(temp)
-    runCKFTracks(
-        trackingGeometry,
-        decorators=decorators,
-        field=field,
-        digiConfigFile=digiConfig,
-        geometrySelection=geoSel,
-        outputDir=tp,
-        outputCsv=False,
-        s=s,
+for truthSmeared, truthEstimated in [
+    (True, False),  # if first is true, second is ignored
+    (False, True),
+    (False, False),
+]:
+    s = acts.examples.Sequencer(
+        events=args.events, numThreads=1, logLevel=acts.logging.INFO, skip=args.skip
     )
 
-    s.run()
-    del s
+    key = f"{truthSmeared}_{truthEstimated}"
+    with tempfile.TemporaryDirectory() as temp:
+        tp = Path(temp)
+        runCKFTracks(
+            trackingGeometry,
+            decorators=decorators,
+            field=field,
+            digiConfigFile=digiConfig,
+            geometrySelection=geoSel,
+            outputDir=tp,
+            outputCsv=False,
+            truthSmearedSeeded=truthSmeared,
+            truthEstimatedSeeded=truthEstimated,
+            s=s,
+        )
 
-    perf_file = tp / "performance_ckf.root"
-    assert perf_file.exists(), "Performance file not found"
-    shutil.copy(perf_file, outdir / "performance_ckf_tracks.root")
+        s.run()
+        del s
+
+        perf_file = tp / "performance_ckf.root"
+        assert perf_file.exists(), "Performance file not found"
+        shutil.copy(perf_file, outdir / f"performance_ckf_tracks_{key}.root")
