@@ -29,12 +29,10 @@ jobs:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: true
-        if: "!contains(matrix.image, 'lcg')"
-      - uses: actions/checkout@v2
-        if: contains(matrix.image, 'lcg')
+          lfs: true
 
       - name: Define setup script
         if: contains(matrix.image, 'lcg')
