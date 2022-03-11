@@ -72,7 +72,7 @@ def addSeeding(
     trackParamsEstimationConfig: Optional[
         TrackParamsEstimationConfig
     ] = TrackParamsEstimationConfig(),
-    inputParticles = "particles_final",
+    inputParticles="particles_final",
     outputDir: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
