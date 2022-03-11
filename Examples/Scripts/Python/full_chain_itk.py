@@ -13,6 +13,7 @@ from particle_gun import addParticleGun, MomentumConfig, EtaConfig, ParticleConf
 from fatras import addFatras
 from digitization import addDigitization
 from seeding import addSeeding, SeedingAlgorithm, TruthSeedRanges
+from ckf_tracks import addCKFTracks
 
 s = acts.examples.Sequencer(events=100, numThreads=-1)
 s = addParticleGun(
@@ -41,10 +42,16 @@ s = addSeeding(
     s,
     trackingGeometry,
     field,
-    # SeedingAlgorithm.TruthEstimated,
     TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None)),
     geoSelectionConfigFile=geo_dir / "atlas/itk-hgtd/geoSelection-ITk.json",
     outputDir=outputDir,
+)
+s = addCKFTracks(
+    s,
+    trackingGeometry,
+    field,
+    TruthSeedRanges(pt=(400.0 * u.MeV, None), nHits=(6, None)),
+    outputDirRoot=outputDir,
 )
 
 s.run()
