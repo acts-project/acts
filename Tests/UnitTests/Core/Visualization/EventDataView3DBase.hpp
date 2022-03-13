@@ -160,7 +160,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
           return new Test::DetectorElementStub(trans, bounds, thickness);
         };
     CuboidVolumeBuilder::LayerConfig lConf;
-    lConf.surfaceCfg = sConf;
+    lConf.surfaceCfg = {sConf};
     lConfs.push_back(lConf);
   }
 
