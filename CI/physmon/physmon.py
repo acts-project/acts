@@ -67,16 +67,15 @@ with tempfile.TemporaryDirectory() as temp:
     shutil.copy(perf_file, outdir / "performance_truth_tracking.root")
 
 
-for truthSmeared, truthEstimated in [
-    (True, False),  # if first is true, second is ignored
-    (False, True),
-    (False, False),
+for truthSmeared, truthEstimated, label in [
+    (True, False, "truth_smeared"),  # if first is true, second is ignored
+    (False, True, "truth_estimated"),
+    (False, False, "seeded"),
 ]:
     s = acts.examples.Sequencer(
         events=args.events, numThreads=1, logLevel=acts.logging.INFO, skip=args.skip
     )
 
-    key = f"{truthSmeared}_{truthEstimated}"
     with tempfile.TemporaryDirectory() as temp:
         tp = Path(temp)
         runCKFTracks(
@@ -97,4 +96,4 @@ for truthSmeared, truthEstimated in [
 
         perf_file = tp / "performance_ckf.root"
         assert perf_file.exists(), "Performance file not found"
-        shutil.copy(perf_file, outdir / f"performance_ckf_tracks_{key}.root")
+        shutil.copy(perf_file, outdir / f"performance_ckf_tracks_{label}.root")
