@@ -1,0 +1,9 @@
+#if defined(NDEBUG)
+#define _HAD_NDEBUG
+#undef NDEBUG
+#endif
+#include_next <cassert>
+#if defined(_HAD_NDEBUG)
+#undef _HAD_NDEBUG
+#define NDEBUG
+#endif
