@@ -38,6 +38,7 @@ run \
     physmon/performance_ckf_tracks_truth_smeared.root \
     $refdir/performance_ckf_tracks_truth_smeared.root \
     --title "CKF truth smeared" \
+    -c CI/physmon/ckf_truth_smeared.yml \
     -o $outdir/ckf_truth_smeared.html \
 
 run \

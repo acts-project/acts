@@ -1,0 +1,26 @@
+checks:
+  "*":
+    Chi2Test:
+      threshold: 0.01
+    KolmogorovTest:
+      threshold: 0.68
+    RatioCheck:
+      threshold: 3
+    ResidualCheck:
+      threshold: 3
+    IntegralCheck:
+      threshold: 3
+
+
+
+
+  nHoles_vs_eta:
+    KolmogorovTest:
+      threshold: 0.25
+  nOutliers_vs_pT:
+    KolmogorovTest:
+      threshold: 0.59
+
+  nStates_vs_eta:
+    KolmogorovTest: null
+    IntegralCheck: null
