@@ -564,7 +564,9 @@ class KalmanFitter {
         // measurement)
         if (result.measurementStates > 0 ||
             surface->surfaceMaterial() != nullptr) {
-          auto trackStateProxyRes = detail::handleNoMeasurement(state, stepper, *surface, result.fittedStates, result.lastTrackIndex);
+          auto trackStateProxyRes = detail::handleNoMeasurement(
+              state, stepper, *surface, result.fittedStates,
+              result.lastTrackIndex);
 
           if (!trackStateProxyRes.ok()) {
             return trackStateProxyRes.error();
