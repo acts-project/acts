@@ -31,10 +31,14 @@ jobs:
     steps:
       - name: Install git lfs
         run: apt install -y git-lfs
+        if: contains(matrix.image, 'ubuntu')
       - uses: actions/checkout@v3
+        if: contains(matrix.image, 'ubuntu')
         with:
           submodules: true
           lfs: true
+      - uses: actions/checkout@v3
+        if: !contains(matrix.image, 'ubuntu')
 
       - name: Define setup script
         if: contains(matrix.image, 'lcg')
