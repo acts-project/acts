@@ -315,6 +315,10 @@ struct GsfActor {
           cmp.cov() = proxy.filteredCovariance();
           cmp.weight() = result.weightsOfStates.at(idx);
         }
+
+        detail::normalizeWeights(
+            stepper.componentIterable(state.stepping),
+            [](const auto& cmp) -> double& { return cmp.weight(); });
       }
       // We have material, we thus need a component cache since we will
       // convolute the components and later reduce them again before updating
@@ -653,7 +657,10 @@ struct GsfActor {
 
     return new_parent_tips;
   }
-
+  
+  /// This function performs the kalman update, computes the new posterior
+  /// weights and does some statistics.
+  /// @note The weights are not re-normalized inside this function.
   template <typename propagator_state_t, typename stepper_t>
   Result<void> kalmanUpdate(propagator_state_t& state, const stepper_t& stepper,
                             result_type& result,
@@ -700,7 +707,7 @@ struct GsfActor {
               Acts::TrackStateFlag::MeasurementFlag)) {
         is_valid_measurement = true;
       }
-      
+
       // Add the weight of the component to the map
       result.weightsOfStates[trackStateProxy.index()] = cmp.weight();
     }
