@@ -40,7 +40,7 @@ jobs:
           lfs: true
 
       - uses: actions/checkout@v3
-        if: !contains(matrix.image, 'ubuntu')
+        if: "!contains(matrix.image, 'ubuntu')"
 
       - name: Define setup script
         if: contains(matrix.image, 'lcg')
