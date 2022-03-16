@@ -317,8 +317,7 @@ struct GsfActor {
         }
 
         detail::normalizeWeights(
-            stepper.componentIterable(state.stepping),
-            [](const auto& cmp) -> double& { return cmp.weight(); });
+            cmps, [](const auto& cmp) -> double& { return cmp.weight(); });
       }
       // We have material, we thus need a component cache since we will
       // convolute the components and later reduce them again before updating
@@ -657,7 +656,7 @@ struct GsfActor {
 
     return new_parent_tips;
   }
-  
+
   /// This function performs the kalman update, computes the new posterior
   /// weights and does some statistics.
   /// @note The weights are not re-normalized inside this function.
