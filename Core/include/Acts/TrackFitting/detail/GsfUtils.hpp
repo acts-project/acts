@@ -52,12 +52,16 @@ template <typename component_range_t, typename projector_t>
 void normalizeWeights(component_range_t &cmps, const projector_t &proj) {
   double sum_of_weights = 0.0;
 
+  // we need decltype(auto) here to support proxy-types with reference
+  // semantics, otherwise there is a `cannot bind ... to ...` error
   for (auto it = cmps.begin(); it != cmps.end(); ++it) {
-    sum_of_weights += proj(*it);
+    decltype(auto) cmp = *it;
+    sum_of_weights += proj(cmp);
   }
 
   for (auto it = cmps.begin(); it != cmps.end(); ++it) {
-    proj(*it) /= sum_of_weights;
+    decltype(auto) cmp = *it;
+    proj(cmp) /= sum_of_weights;
   }
 }
 

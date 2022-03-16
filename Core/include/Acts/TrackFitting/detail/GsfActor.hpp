@@ -317,7 +317,7 @@ struct GsfActor {
         }
 
         detail::normalizeWeights(
-            cmps, [](const auto& cmp) -> double& { return cmp.weight(); });
+            cmps, [](auto& cmp) -> double& { return cmp.weight(); });
       }
       // We have material, we thus need a component cache since we will
       // convolute the components and later reduce them again before updating
