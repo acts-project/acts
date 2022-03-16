@@ -700,6 +700,9 @@ struct GsfActor {
               Acts::TrackStateFlag::MeasurementFlag)) {
         is_valid_measurement = true;
       }
+      
+      // Add the weight of the component to the map
+      result.weightsOfStates[trackStateProxy.index()] = cmp.weight();
     }
 
     // Compute posterior weights
