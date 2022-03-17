@@ -40,6 +40,12 @@ class InternalSpacePoint {
   float phi() const { return atan2f(m_y, m_x); }
   const float& varianceR() const { return m_varianceR; }
   const float& varianceZ() const { return m_varianceZ; }
+  const float& quality() const { return m_quality; }
+  const float& cotTheta() const {return m_cotTheta; }
+  void setCotTheta(float cotTheta) { m_cotTheta = cotTheta; }
+  void setQuality(float quality) {
+    if (quality >= m_quality) m_quality = quality;
+  }
   const SpacePoint& sp() const { return m_sp; }
 
  protected:
@@ -49,6 +55,8 @@ class InternalSpacePoint {
   float m_r;               // radius       in beam system coordinates
   float m_varianceR;       //
   float m_varianceZ;       //
+  float m_cotTheta;        //
+  float m_quality;         //
   const SpacePoint& m_sp;  // external space point
 };
 
@@ -67,6 +75,10 @@ inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
   m_r = std::sqrt(m_x * m_x + m_y * m_y);
   m_varianceR = variance.x();
   m_varianceZ = variance.y();
+  // initialised to invalid values, will be changed
+  // during seed finding and filtering if needed
+  m_quality = -std::numeric_limits<double>::infinity();
+  m_cotTheta = std::numeric_limits<double>::quiet_NaN();
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -83,6 +95,8 @@ inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
   m_r = sp.m_r;
   m_varianceR = sp.m_varianceR;
   m_varianceZ = sp.m_varianceZ;
+  m_quality = sp.m_quality;
+  m_cotTheta = sp.m_cotTheta;
 }
 
 }  // end of namespace Acts

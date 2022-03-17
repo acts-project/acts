@@ -9,8 +9,8 @@
 namespace Acts {
 template <typename external_spacepoint_t>
 LinCircle transformCoordinates(
-    const InternalSpacePoint<external_spacepoint_t>& sp,
-    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom) {
+    InternalSpacePoint<external_spacepoint_t>& sp,
+    InternalSpacePoint<external_spacepoint_t>& spM, bool bottom) {
   // The computation inside this function is exactly identical to that in the
   // vectorized version of this function, except that it operates on a single
   // spacepoint. Please see the other version of this function for more
@@ -46,8 +46,8 @@ LinCircle transformCoordinates(
 
 template <typename external_spacepoint_t>
 void transformCoordinates(
-    const std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
-    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
+    const std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
+    InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     bool enableCutsForSortedSP, std::vector<LinCircle>& linCircleVec) {
   float xM = spM.x();
   float yM = spM.y();
@@ -93,6 +93,7 @@ void transformCoordinates(
             (cot_theta * cot_theta) * (varianceRM + sp->varianceR())) *
            iDeltaR2;
     linCircleVec.push_back(l);
+    sp->setCotTheta(cot_theta);
   }
   // sort the SP in order of cotTheta
   if (enableCutsForSortedSP) {
