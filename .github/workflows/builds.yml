@@ -181,7 +181,7 @@ jobs:
              && CI/check_boost_eigen_versions.sh ./build-downstream-nodeps/bin/ShowActsVersion
 
   macos:
-    runs-on: macos-10.15
+    runs-on: macos-11
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
     steps:
