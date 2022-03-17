@@ -23,7 +23,7 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
     )
 
     gridConfig = acts.SpacePointGridConfig(
-        bFieldInZ=1.997244311 * u.T,
+        bFieldInZ=2 * u.T,
         minPt=900 * u.MeV,
         rMax=320 * u.mm,  # pixel: 320 mm, strip: 1000 mm
         zMax=3000 * u.mm,
