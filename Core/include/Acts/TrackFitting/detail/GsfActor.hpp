@@ -80,9 +80,6 @@ struct GsfActor {
     /// instance TODO if we somehow could initialize a reference here...
     const detail::BHApprox* bethe_heitler_approx = nullptr;
 
-    /// Wether to transport covariance
-    bool doCovTransport = true;
-
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
 
@@ -199,7 +196,7 @@ struct GsfActor {
     const auto [missed_count, reachable_count] = [&]() {
       std::size_t missed = 0;
       std::size_t reachable = 0;
-      for (auto cmp : stepper.componentIterable(state.stepping)) {
+      for (auto cmp : stepper.constComponentIterable(state.stepping)) {
         using Status = Acts::Intersection3D::Status;
 
         // clang-format off
@@ -292,6 +289,12 @@ struct GsfActor {
       // The Core Algorithm
       ////////////////////////
 
+      for (auto cmp : stepper.componentIterable(state.stepping)) {
+        auto singleState = cmp.singleState(state);
+        cmp.singleStepper(stepper).transportCovarianceToBound(
+            singleState.stepping, surface);
+      }
+
       if (haveMaterial) {
         if (haveMeasurement) {
           applyMultipleScattering(state, stepper, preUpdate);
@@ -306,15 +309,33 @@ struct GsfActor {
       if (not haveMaterial) {
         kalmanUpdate(state, stepper, result, found_source_link->second);
 
+        result.parentTips.clear();
+
         auto cmps = stepper.componentIterable(state.stepping);
         for (auto [idx, cmp] : boost::combine(result.currentTips, cmps)) {
+          // we set ignored components to missed, so we can remove them after
+          // the loop
+          if (result.weightsOfStates.at(idx) < m_cfg.weightCutoff) {
+            cmp.status() = Intersection3D::Status::missed;
+            continue;
+          }
+
           auto proxy = result.fittedStates.getTrackState(idx);
 
           cmp.pars() = MultiTrajectoryHelpers::freeFiltered(
               state.options.geoContext, proxy);
           cmp.cov() = proxy.filteredCovariance();
           cmp.weight() = result.weightsOfStates.at(idx);
+
+          result.parentTips.push_back(idx);
         }
+
+        stepper.removeMissedComponents(state.stepping);
+
+        // TODO we have two normalization passes here now, this can probably be
+        // optimized
+        detail::normalizeWeights(
+            cmps, [&](auto cmp) -> double& { return cmp.weight(); });
       }
       // We have material, we thus need a component cache since we will
       // convolute the components and later reduce them again before updating
@@ -349,7 +370,7 @@ struct GsfActor {
         // components
         else {
           auto cmps = stepper.componentIterable(state.stepping);
-          for (auto [idx, cmp] : boost::combine(result.currentTips, cmps)) {
+          for (auto [idx, cmp] : boost::combine(result.parentTips, cmps)) {
             detail::GsfComponentMetaCache mcache;
             mcache.parentIndex = idx;
             mcache.jacobian = cmp.jacobian();
@@ -363,7 +384,7 @@ struct GsfActor {
               continue;
             }
 
-            auto boundState = cmp.boundState(surface, m_cfg.doCovTransport);
+            auto boundState = cmp.boundState(surface, false);
 
             if (!boundState.ok()) {
               ACTS_ERROR(
@@ -398,10 +419,15 @@ struct GsfActor {
       }
     }
 
+    const auto cmps = stepper.constComponentIterable(state.stepping);
     throw_assert(detail::weightsAreNormalized(
-                     stepper.constComponentIterable(state.stepping),
-                     [](const auto& cmp) { return cmp.weight(); }),
+                     cmps, [](const auto& cmp) { return cmp.weight(); }),
                  "at the end not normalized");
+
+    throw_assert(
+        std::all_of(cmps.begin(), cmps.end(),
+                    [](auto cmp) { return std::isfinite(cmp.weight()); }),
+        "some weights are not finite");
   }
 
   template <typename propagator_state_t>
@@ -518,87 +544,45 @@ struct GsfActor {
     }
   }
 
+  /// Removes the components which are missed and update the list of parent tips
+  /// for the MultiTrajectory
   template <typename propagator_state_t, typename stepper_t>
   void removeMissedComponents(propagator_state_t& state,
                               const stepper_t& stepper,
-                              std::vector<std::size_t>& current_tips) const {
-    throw_assert(
-        stepper.numberComponents(state.stepping) == current_tips.size(),
-        "size mismatch");
-    auto components = stepper.componentIterable(state.stepping);
+                              std::vector<std::size_t>& parentTips) const {
+    throw_assert(stepper.numberComponents(state.stepping) == parentTips.size(),
+                 "size mismatch");
 
-    // 1) Compute the summed momentum and weight of the lost components
-    double sumW_loss = 0.0;
-    double sumWeightedQOverP_loss = 0.0;
-    double initialQOverP = 0.0;
-
-    for (const auto cmp : components) {
-      if (cmp.status() != Intersection3D::Status::onSurface) {
-        sumW_loss += cmp.weight();
-        sumWeightedQOverP_loss += cmp.weight() * cmp.pars()[eFreeQOverP];
-      }
-
-      initialQOverP += cmp.weight() * cmp.pars()[eFreeQOverP];
-    }
-
-    throw_assert(
-        sumW_loss < 1.0, "sumW_loss is 1, components:\n"
-                             << [&]() {
-                                  std::stringstream ss;
-                                  for (const auto cmp : components) {
-                                    ss << "cmp: w=" << cmp.weight()
-                                       << ", s=" << cmp.status() << "\n";
-                                  }
-                                  return ss.str();
-                                }());
-
-    // 2) Adjust the momentum of the remaining components AND update the
-    // current_tips vector
-    double checkWeightSum = 0.0;
-    double checkQOverPSum = 0.0;
     std::vector<std::size_t> new_tips;
+    auto components = stepper.componentIterable(state.stepping);
+    double sum_w = 0.0;
 
-    for (auto [tip, cmp] : boost::combine(current_tips, components)) {
+    for (const auto [tip, cmp] : boost::combine(parentTips, components)) {
       if (cmp.status() == Intersection3D::Status::onSurface) {
-        auto& weight = cmp.weight();
-        auto& qop = cmp.pars()[eFreeQOverP];
-
-        weight /= (1.0 - sumW_loss);
-        qop = qop * (1.0 - sumW_loss) + sumWeightedQOverP_loss;
-
-        checkWeightSum += weight;
-        checkQOverPSum += weight * qop;
-
+        sum_w += cmp.weight();
         new_tips.push_back(tip);
       }
     }
 
-    current_tips = new_tips;
+    // If the remaining weights are close to zero, re-sanitize all weights
+    if (sum_w < m_cfg.weightCutoff) {
+      for (auto cmp : components) {
+        cmp.weight() = 1.0;
+      }
+    }
 
-    // 3) Remove components
+    parentTips = new_tips;
     stepper.removeMissedComponents(state.stepping);
 
-    // 4) Some checks
-    throw_assert(
-        std::abs(checkQOverPSum - initialQOverP) < 1.e-4,
-        "momentum mismatch, initial: " << std::setprecision(8) << initialQOverP
-                                       << ", final: " << checkQOverPSum);
+    detail::normalizeWeights(components,
+                             [](auto& cmp) -> double& { return cmp.weight(); });
 
-    throw_assert(
-        std::abs(checkWeightSum - 1.0) < s_normalizationTolerance,
-        "must sum up to 1 but is " << std::setprecision(8) << checkWeightSum);
-
-    throw_assert(detail::weightsAreNormalized(
-                     stepper.constComponentIterable(state.stepping),
-                     [](const auto& cmp) { return cmp.weight(); }),
-                 "not normalized");
-
-    throw_assert(
-        stepper.numberComponents(state.stepping) == current_tips.size(),
-        "size mismatch");
+    throw_assert(stepper.numberComponents(state.stepping) == parentTips.size(),
+                 "size mismatch");
   }
 
-  /// Remove components with low weights and renormalize.
+  /// Remove components with low weights and renormalize from the component
+  /// cache
   /// TODO This function does not expect normalized components, but this
   /// could be redundant work...
   void removeLowWeightComponents(std::vector<ComponentCache>& cmps) const {
@@ -684,7 +668,6 @@ struct GsfActor {
 
       auto singleState = cmp.singleState(state);
       const auto& singleStepper = cmp.singleStepper(stepper);
-
       auto trackStateProxyRes = detail::handleMeasurement(
           singleState, singleStepper, m_cfg.extensions, surface, source_link,
           result.fittedStates, idx);
