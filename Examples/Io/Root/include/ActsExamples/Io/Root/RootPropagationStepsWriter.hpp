@@ -23,7 +23,7 @@ using PropagationSteps = std::vector<Acts::detail::Step>;
 /// @class RootPropagationStepsWriter
 ///
 /// Write out the steps of test propgations for stepping validation,
-/// each step sequence is one entry in the  in the root file for optimised
+/// each step sequence is one entry in the root file for optimised
 /// data writing speed.
 /// The event number is part of the written data.
 ///
