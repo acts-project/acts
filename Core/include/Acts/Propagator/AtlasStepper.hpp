@@ -1376,6 +1376,54 @@ class AtlasStepper {
     return h;
   }
 
+  /// Method that reset the Jacobian to the Identity for when no bound state are
+  /// available
+  ///
+  /// @param [in,out] state State of the stepper
+  void setIdentityJacobian(State& state) const {
+    state.jacobian[0] = 1.;  // dL0/dL0
+    state.jacobian[1] = 0.;  // dL0/dL1
+    state.jacobian[2] = 0.;  // dL0/dPhi
+    state.jacobian[3] = 0.;  // dL0/dThe
+    state.jacobian[4] = 0.;  // dL0/dCM
+    state.jacobian[5] = 0.;  // dL0/dT
+
+    state.jacobian[6] = 0.;   // dL1/dL0
+    state.jacobian[7] = 1.;   // dL1/dL1
+    state.jacobian[8] = 0.;   // dL1/dPhi
+    state.jacobian[9] = 0.;   // dL1/dThe
+    state.jacobian[10] = 0.;  // dL1/dCM
+    state.jacobian[11] = 0.;  // dL1/dT
+
+    state.jacobian[12] = 0.;  // dPhi/dL0
+    state.jacobian[13] = 0.;  // dPhi/dL1
+    state.jacobian[14] = 1.;  // dPhi/dPhi
+    state.jacobian[15] = 0.;  // dPhi/dThe
+    state.jacobian[16] = 0.;  // dPhi/dCM
+    state.jacobian[17] = 0.;  // dPhi/dT
+
+    state.jacobian[18] = 0.;  // dThe/dL0
+    state.jacobian[19] = 0.;  // dThe/dL1
+    state.jacobian[20] = 0.;  // dThe/dPhi
+    state.jacobian[21] = 1.;  // dThe/dThe
+    state.jacobian[22] = 0.;  // dThe/dCM
+    state.jacobian[23] = 0.;  // dThe/dT
+
+    state.jacobian[24] = 0.;  // dCM /dL0
+    state.jacobian[25] = 0.;  // dCM /dL1
+    state.jacobian[26] = 0.;  // dCM /dPhi
+    state.jacobian[27] = 0.;  // dCM /dTheta
+    state.jacobian[28] = 1.;  // dCM /dCM
+    state.jacobian[29] = 0.;  // dCM/dT
+
+    state.jacobian[30] = 0.;  // dT/dL0
+    state.jacobian[31] = 0.;  // dT/dL1
+    state.jacobian[32] = 0.;  // dT/dPhi
+    state.jacobian[33] = 0.;  // dT/dThe
+    state.jacobian[34] = 0.;  // dT/dCM
+    state.jacobian[35] = 1.;  // dT/dT
+  }
+
  private:
   std::shared_ptr<const MagneticFieldProvider> m_bField;
 
