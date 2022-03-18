@@ -34,9 +34,8 @@ class Seedfinder {
  public:
   struct State {
     // bottom space point
-    std::vector<const InternalSpacePoint<external_spacepoint_t>*>
-        compatBottomSP;
-    std::vector<const InternalSpacePoint<external_spacepoint_t>*> compatTopSP;
+    std::vector<InternalSpacePoint<external_spacepoint_t>*> compatBottomSP;
+    std::vector<InternalSpacePoint<external_spacepoint_t>*> compatTopSP;
     // contains parameters required to calculate circle with linear equation
     // ...for bottom-middle
     std::vector<LinCircle> linCircleBottom;
@@ -44,7 +43,7 @@ class Seedfinder {
     std::vector<LinCircle> linCircleTop;
 
     // create vectors here to avoid reallocation in each loop
-    std::vector<const InternalSpacePoint<external_spacepoint_t>*> topSpVec;
+    std::vector<InternalSpacePoint<external_spacepoint_t>*> topSpVec;
     std::vector<float> curvatures;
     std::vector<float> impactParameters;
     std::vector<float> etaVec;
