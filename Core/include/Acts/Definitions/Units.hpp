@@ -140,7 +140,7 @@ constexpr double g = 1.0 / 1.782662e-24;
 constexpr double kg = 1.0 / 1.782662e-27;
 // Charge, native unit e (elementary charge)
 constexpr double e = 1.0;
-constexpr double C = 1.602176634e19;
+constexpr double C = 6.2415091e18;
 // Magnetic field, native unit GeV/(e*mm)
 constexpr double T = 0.000299792458;  // equivalent to c in appropriate SI units
 constexpr double Gauss = 1e-4 * T;
