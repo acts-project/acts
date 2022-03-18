@@ -11,6 +11,7 @@
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
+#include "ActsExamples/Io/Csv/CsvSpacePointReader.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
 #include "ActsExamples/Io/Root/RootTrajectorySummaryReader.hpp"
@@ -167,6 +168,25 @@ void addInput(Context& ctx) {
     ACTS_PYTHON_MEMBER(inputDir);
     ACTS_PYTHON_MEMBER(inputStem);
     ACTS_PYTHON_MEMBER(outputSimHits);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    using Reader = ActsExamples::CsvSpacePointReader;
+    using Config = Reader::Config;
+    auto reader =
+        py::class_<Reader, ActsExamples::IReader, std::shared_ptr<Reader>>(
+            mex, "CsvSpacePointReader")
+            .def(py::init<const Config&, Acts::Logging::Level>(),
+                 py::arg("config"), py::arg("level"))
+            .def_property_readonly("config", &Reader::config);
+
+    auto c = py::class_<Config>(reader, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(inputDir);
+    ACTS_PYTHON_MEMBER(inputStem);
+    ACTS_PYTHON_MEMBER(inputCollection);
+    ACTS_PYTHON_MEMBER(outputSpacePoints);
     ACTS_PYTHON_STRUCT_END();
   }
 }

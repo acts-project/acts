@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -143,20 +144,22 @@ void boundToCurvilinearJacobian(const Vector3& direction,
                                 const FreeMatrix& freeTransportJacobian,
                                 const FreeVector& freeToPathDerivatives,
                                 BoundMatrix& fullTransportJacobian) {
-  // Calculate the derivative of path length at the the curvilinear surface
-  // w.r.t. free parameters
-  FreeToPathMatrix freeToPath = FreeToPathMatrix::Zero();
-  freeToPath.segment<3>(eFreePos0) = -1.0 * direction;
   // Calculate the jacobian from global to local at the curvilinear surface
   FreeToBoundMatrix freeToBoundJacobian = freeToCurvilinearJacobian(direction);
+
+  // Update the jacobian to include the derivative of the path length at the
+  // curvilinear surface w.r.t. the free parameters
+  freeToBoundJacobian.topLeftCorner<6, 3>() +=
+      (freeToBoundJacobian * freeToPathDerivatives) *
+      (-1.0 * direction).transpose();
+
   // Calculate the full jocobian from the local parameters at the start surface
   // to curvilinear parameters
   // @note jac(locA->locB) = jac(gloB->locB)*(1+
   // pathCorrectionFactor(gloB))*jacTransport(gloA->gloB) *jac(locA->gloA)
   fullTransportJacobian =
-      freeToBoundJacobian *
-      (FreeMatrix::Identity() + freeToPathDerivatives * freeToPath) *
-      freeTransportJacobian * boundToFreeJacobian;
+      blockedMult(freeToBoundJacobian,
+                  blockedMult(freeTransportJacobian, boundToFreeJacobian));
 }
 
 /// @brief This function reinitialises the state members required for the
