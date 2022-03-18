@@ -171,6 +171,10 @@ constexpr Level FAILURE_THRESHOLD =
     Level::MAX;
 #endif
 
+/// Function which returns the failure threshold for log messages.
+/// This can either be from a compilation option or from an environment
+/// variable.
+/// @return The log level failure threshold
 inline Level getFailureThreshold() {
   static const Level threshold{[]() -> Level {
     Level level = FAILURE_THRESHOLD;
