@@ -114,14 +114,19 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
+  }
 
-    py::class_<SeedConfirmationRange>(m, "SeedConfirmationRange")
-        .def(py::init<float, float, float, size_t, size_t>())
-        .def_readwrite("zMinSeedConf", &SeedConfirmationRange::zMinSeedConf)
-        .def_readwrite("zMaxSeedConf", &SeedConfirmationRange::zMaxSeedConf)
-        .def_readwrite("rMaxSeedConf", &SeedConfirmationRange::rMaxSeedConf)
-        .def_readwrite("nTopForLargeR", &SeedConfirmationRange::nTopForLargeR)
-        .def_readwrite("nTopForSmallR", &SeedConfirmationRange::nTopForSmallR);
+  {
+    using seedConf = Acts::SeedConfirmationRange;
+    auto c = py::class_<seedConf>(m, "SeedConfirmationRange").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, seedConf);
+    ACTS_PYTHON_MEMBER(zMinSeedConf);
+    ACTS_PYTHON_MEMBER(zMaxSeedConf);
+    ACTS_PYTHON_MEMBER(rMaxSeedConf);
+    ACTS_PYTHON_MEMBER(nTopForLargeR);
+    ACTS_PYTHON_MEMBER(nTopForSmallR);
+    ACTS_PYTHON_STRUCT_END();
+    patchKwargsConstructor(c);
   }
 
   {

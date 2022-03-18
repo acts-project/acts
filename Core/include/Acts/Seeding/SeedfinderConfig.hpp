@@ -16,21 +16,24 @@
 namespace Acts {
 
 struct SeedConfirmationRange {
-  float zMinSeedConf;
-  float zMaxSeedConf;
-  float rMaxSeedConf;
-  size_t nTopForLargeR;
-  size_t nTopForSmallR;
+  float zMinSeedConf =
+      std::numeric_limits<float>::min() * Acts::UnitConstants::mm;
+  float zMaxSeedConf =
+      std::numeric_limits<float>::max() * Acts::UnitConstants::mm;
+  float rMaxSeedConf =
+      std::numeric_limits<float>::max() * Acts::UnitConstants::mm;
+  size_t nTopForLargeR = 0;
+  size_t nTopForSmallR = 0;
 
-  SeedConfirmationRange(float zMinSC = std::numeric_limits<float>::min(),
-                        float zMaxSC = std::numeric_limits<float>::max(),
-                        float rMaxSC = std::numeric_limits<float>::max(),
-                        size_t nTopLargeR = 0, size_t nTopSmallR = 0)
-      : zMinSeedConf(zMinSC),
-        zMaxSeedConf(zMaxSC),
-        rMaxSeedConf(rMaxSC),
-        nTopForLargeR(nTopLargeR),
-        nTopForSmallR(nTopSmallR) {}
+  //  SeedConfirmationRange(float zMinSC = std::numeric_limits<float>::min(),
+  //                        float zMaxSC = std::numeric_limits<float>::max(),
+  //                        float rMaxSC = std::numeric_limits<float>::max(),
+  //                        size_t nTopLargeR = 0, size_t nTopSmallR = 0)
+  //      : zMinSeedConf(zMinSC),
+  //        zMaxSeedConf(zMaxSC),
+  //        rMaxSeedConf(rMaxSC),
+  //        nTopForLargeR(nTopLargeR),
+  //        nTopForSmallR(nTopSmallR) {}
 };
 
 // forward declaration to avoid cyclic dependence
