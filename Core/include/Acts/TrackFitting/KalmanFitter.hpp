@@ -31,7 +31,7 @@
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/TrackFitting/detail/VoidKalmanComponents.hpp"
-#include "Acts/TrackFitting/detail/kalman_update_helpers.hpp"
+#include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -519,9 +519,9 @@ class KalmanFitter {
         materialInteractor(surface, state, stepper, preUpdate);
 
         // do the kalman update
-        auto trackStateProxyRes = detail::handleMeasurement(
+        auto trackStateProxyRes = detail::kalmanHandleMeasurement(
             state, stepper, extensions, *surface, sourcelink_it->second,
-            result.fittedStates, result.lastTrackIndex);
+            result.fittedStates, result.lastTrackIndex, false);
 
         if (!trackStateProxyRes.ok()) {
           return trackStateProxyRes.error();
@@ -564,9 +564,9 @@ class KalmanFitter {
         // measurement)
         if (result.measurementStates > 0 ||
             surface->surfaceMaterial() != nullptr) {
-          auto trackStateProxyRes = detail::handleNoMeasurement(
+          auto trackStateProxyRes = detail::kalmanHandleNoMeasurement(
               state, stepper, *surface, result.fittedStates,
-              result.lastTrackIndex);
+              result.lastTrackIndex, true);
 
           if (!trackStateProxyRes.ok()) {
             return trackStateProxyRes.error();

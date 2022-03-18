@@ -345,7 +345,6 @@ struct GaussianSumFitter {
         for (const auto idx : fwdGsfResult.currentTips) {
           result.currentTips.push_back(
               result.fittedStates.addTrackState(TrackStatePropMask::All));
-          result.parentTips = result.currentTips;
 
           auto proxy =
               result.fittedStates.getTrackState(result.currentTips.back());
@@ -354,13 +353,13 @@ struct GaussianSumFitter {
               fwdGsfResult.weightsOfStates.at(idx);
 
           // Because we are backwards, we use forward filtered as predicted
-          proxy.predicted() = proxy.filtered();
-          proxy.predictedCovariance() = proxy.filteredCovariance();
+          proxy.data().ipredicted = proxy.data().ifiltered;
 
           // Mark surface as visited
           result.visitedSurfaces.insert(proxy.referenceSurface().geometryId());
         }
 
+        result.parentTips = result.currentTips;
         result.measurementStates++;
         result.processedStates++;
       };
@@ -417,7 +416,7 @@ struct GaussianSumFitter {
     // Some test
     if (lastTip == SIZE_MAX) {
       return return_error_or_abort(GsfError::NoStatesCreated);
-    }
+    }    
 
     Acts::KalmanFitterResult kalmanResult;
     kalmanResult.lastTrackIndex = lastTip;
@@ -449,9 +448,9 @@ struct GaussianSumFitter {
       kalmanResult.missedActiveSurfaces = missedActiveSurfaces;
     }
 
-    ///////////////////////////////////////////////////////
-    // Propagate back to origin with smoothed parameters //
-    ///////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////
+    // Propagate back to reference surface with smoothed parameters //
+    //////////////////////////////////////////////////////////////////
     if (options.referenceSurface) {
       ACTS_VERBOSE("+-----------------------------------------------+");
       ACTS_VERBOSE("| Gsf: Do propagation back to reference surface |");

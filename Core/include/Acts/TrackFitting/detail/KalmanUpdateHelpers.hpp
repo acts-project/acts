@@ -16,21 +16,34 @@
 namespace Acts {
 namespace detail {
 
-/// This function encapsulates the Kalman update with a single source link. It
-/// is intended to be shared between the KalmanFilter and the GSF. All
-/// bookkeeping and other statistics is left to the caller.
+/// This function encapsulates the Kalman update performed on a MultiTrajectory
+/// for a single source link.
+/// @tparam propagator_state_t The propagator state type
+/// @tparam stepper_t The stepper type
+/// @tparam extensions_t The type of the extensions used for the update
+/// @param state The propagator state
+/// @param stepper The stepper
+/// @param extensions The extension used for the update
+/// @param surface The current surface
+/// @param source_link The source-link used for the update
+/// @param fittedStates The Multitrajectory to that we add the state
+/// @param lastTrackIndex The parent index for the new state in the MT
+/// @param doCovTransport Wether to perform a covariance transport when
+/// computing the bound state or not
 template <typename propagator_state_t, typename stepper_t,
           typename extensions_t>
-auto handleMeasurement(propagator_state_t &state, const stepper_t &stepper,
-                       const extensions_t &extensions, const Surface &surface,
-                       const SourceLink &source_link,
-                       MultiTrajectory &fittedStates,
-                       const size_t lastTrackIndex)
+auto kalmanHandleMeasurement(propagator_state_t &state,
+                             const stepper_t &stepper,
+                             const extensions_t &extensions,
+                             const Surface &surface,
+                             const SourceLink &source_link,
+                             MultiTrajectory &fittedStates,
+                             const size_t lastTrackIndex, bool doCovTransport)
     -> Result<MultiTrajectory::TrackStateProxy> {
   const auto &logger = state.options.logger;
 
   // Bind the transported state to the current surface
-  auto res = stepper.boundState(state.stepping, surface, false);
+  auto res = stepper.boundState(state.stepping, surface, doCovTransport);
   if (!res.ok()) {
     return res.error();
   }
@@ -96,12 +109,22 @@ auto handleMeasurement(propagator_state_t &state, const stepper_t &stepper,
   return trackStateProxy;
 }
 
-// This function handles the update of the MultiTrajectory when we encounter a
-// hole or a inactive Surface
+/// This function encapsulates what actions should be performed on a
+/// MultiTrajectory when we have no measuerement
+/// @tparam propagator_state_t The propagator state type
+/// @tparam stepper_t The stepper type
+/// @param state The propagator state
+/// @param stepper The stepper
+/// @param surface The current surface
+/// @param fittedStates The Multitrajectory to that we add the state
+/// @param lastTrackIndex The parent index for the new state in the MT
+/// @param doCovTransport Wether to perform a covariance transport when
+/// computing the bound state or not
 template <typename propagator_state_t, typename stepper_t>
-auto handleNoMeasurement(propagator_state_t &state, const stepper_t &stepper,
-                         const Surface &surface, MultiTrajectory &fittedStates,
-                         const size_t lastTrackIndex)
+auto kalmanHandleNoMeasurement(propagator_state_t &state,
+                               const stepper_t &stepper, const Surface &surface,
+                               MultiTrajectory &fittedStates,
+                               const size_t lastTrackIndex, bool doCovTransport)
     -> Result<MultiTrajectory::TrackStateProxy> {
   const auto &logger = state.options.logger;
 
@@ -134,7 +157,7 @@ auto handleNoMeasurement(propagator_state_t &state, const stepper_t &stepper,
   }
 
   // Transport & bind the state to the current surface
-  auto res = stepper.boundState(state.stepping, surface);
+  auto res = stepper.boundState(state.stepping, surface, doCovTransport);
   if (!res.ok()) {
     ACTS_ERROR("Propagate to surface " << surface.geometryId()
                                        << " failed: " << res.error());

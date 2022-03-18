@@ -65,6 +65,76 @@ void normalizeWeights(component_range_t &cmps, const projector_t &proj) {
   }
 }
 
+// A class that prints information about the state on construction and
+// destruction, it also contains some assertions in the constructor and
+// destructor. It can be removed without change of behaviour, since it only
+// holds const references
+template <typename propagator_state_t, typename stepper_t>
+class ScopedGsfInfoPrinterAndChecker {
+  const propagator_state_t &m_state;
+  const stepper_t &m_stepper;
+  double m_p_initial;
+
+  const auto &logger() const { return m_state.options.logger(); }
+
+  void print_component_stats() const {
+    std::size_t i = 0;
+    for (auto cmp : m_stepper.constComponentIterable(m_state.stepping)) {
+      auto getVector = [&](auto idx) {
+        return cmp.pars().template segment<3>(idx).transpose();
+      };
+      ACTS_VERBOSE("  #" << i++ << " pos: " << getVector(eFreePos0) << ", dir: "
+                         << getVector(eFreeDir0) << ", weight: " << cmp.weight()
+                         << ", status: " << cmp.status()
+                         << ", qop: " << cmp.pars()[eFreeQOverP]);
+    }
+  }
+
+  void checks(const std::string_view &where) const {
+    const auto cmps = m_stepper.constComponentIterable(m_state.stepping);
+    throw_assert(detail::weightsAreNormalized(
+                     cmps, [](const auto &cmp) { return cmp.weight(); }),
+                 "not normalized at " << where);
+
+    throw_assert(
+        std::all_of(cmps.begin(), cmps.end(),
+                    [](auto cmp) { return std::isfinite(cmp.weight()); }),
+        "some weights are not finite at " << where);
+  }
+
+ public:
+  ScopedGsfInfoPrinterAndChecker(const propagator_state_t &state,
+                                const stepper_t &stepper)
+      : m_state(state),
+        m_stepper(stepper),
+        m_p_initial(stepper.momentum(state.stepping)) {
+    // Some initial printing
+    checks("start");
+    ACTS_VERBOSE("Gsf step "
+                 << state.stepping.steps << " at mean position "
+                 << stepper.position(state.stepping).transpose()
+                 << " with direction "
+                 << stepper.direction(state.stepping).transpose()
+                 << " and momentum " << stepper.momentum(state.stepping)
+                 << " and charge " << stepper.charge(state.stepping));
+    ACTS_VERBOSE("Propagation is in "
+                 << (state.stepping.navDir == forward ? "forward" : "backward")
+                 << " mode");
+    print_component_stats();
+  }
+
+  ~ScopedGsfInfoPrinterAndChecker() {
+    if (m_state.navigation.currentSurface) {
+      const auto p_final = m_stepper.momentum(m_state.stepping);
+      ACTS_VERBOSE("Component status at end of step:");
+      print_component_stats();
+      ACTS_VERBOSE("Delta Momentum = " << std::setprecision(5)
+                                       << p_final - m_p_initial);
+    }
+    checks("end");
+  }
+};
+
 /// Stores meta information about the components
 struct GsfComponentMetaCache {
   /// Where to find the parent component in the MultiTrajectory

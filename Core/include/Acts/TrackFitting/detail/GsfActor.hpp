@@ -21,7 +21,7 @@
 #include "Acts/TrackFitting/detail/GsfSmoothing.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
 #include "Acts/TrackFitting/detail/KLMixtureReduction.hpp"
-#include "Acts/TrackFitting/detail/kalman_update_helpers.hpp"
+#include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
 
 #include <ios>
 #include <map>
@@ -40,9 +40,9 @@ struct GsfResult {
   /// The current indexes for the newest components in the multi trajectory
   std::vector<std::size_t> currentTips;
 
-  /// The indices of the parent states in the multi trajectory. This is needed
-  /// since there can be cases with splitting but no Kalman-Update, so we need
-  /// to preserve this information
+  /// We must capture the parent tips to ensure that we can keep track of the
+  /// last states in the multitrajectory after the component convolution and
+  /// reduction
   std::vector<std::size_t> parentTips;
 
   /// Some counting
@@ -117,6 +117,12 @@ struct GsfActor {
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   result_type& result) const {
+    const auto& logger = state.options.logger;
+
+    // Prints some VERBOSE things and performs some asserts. Can be removed
+    // without change of behaviour
+    const detail::ScopedGsfInfoPrinterAndChecker printer(state, stepper);
+
     // Set error or abort utility
     auto set_error_or_abort = [&](auto error) {
       if (m_cfg.abortOnError) {
@@ -125,70 +131,6 @@ struct GsfActor {
         result.result = error;
       }
     };
-
-    const auto& logger = state.options.logger;
-
-    throw_assert(detail::weightsAreNormalized(
-                     stepper.constComponentIterable(state.stepping),
-                     [](const auto& cmp) { return cmp.weight(); }),
-                 "not normalized at start of operator()");
-
-    // A class that prints information about the state on construction and
-    // destruction
-    class ScopedInfoPrinter {
-      const propagator_state_t& m_state;
-      const stepper_t& m_stepper;
-      double m_p_initial;
-
-      const auto& logger() const { return m_state.options.logger(); }
-
-      void print_component_stats() const {
-        std::size_t i = 0;
-        for (auto cmp : m_stepper.constComponentIterable(m_state.stepping)) {
-          auto getVector = [&](auto idx) {
-            return cmp.pars().template segment<3>(idx).transpose();
-          };
-          ACTS_VERBOSE("  #" << i++ << " pos: " << getVector(eFreePos0)
-                             << ", dir: " << getVector(eFreeDir0)
-                             << ", weight: " << cmp.weight()
-                             << ", status: " << cmp.status()
-                             << ", qop: " << cmp.pars()[eFreeQOverP]);
-        }
-      }
-
-     public:
-      ScopedInfoPrinter(const propagator_state_t& state,
-                        const stepper_t& stepper)
-          : m_state(state),
-            m_stepper(stepper),
-            m_p_initial(stepper.momentum(state.stepping)) {
-        // Some initial printing
-        ACTS_VERBOSE("Gsf step "
-                     << state.stepping.steps << " at mean position "
-                     << stepper.position(state.stepping).transpose()
-                     << " with direction "
-                     << stepper.direction(state.stepping).transpose()
-                     << " and momentum " << stepper.momentum(state.stepping)
-                     << " and charge " << stepper.charge(state.stepping));
-        ACTS_VERBOSE(
-            "Propagation is in "
-            << (state.stepping.navDir == forward ? "forward" : "backward")
-            << " mode");
-        print_component_stats();
-      }
-
-      ~ScopedInfoPrinter() {
-        if (m_state.navigation.currentSurface) {
-          const auto p_final = m_stepper.momentum(m_state.stepping);
-          ACTS_VERBOSE("Component status at end of step:");
-          print_component_stats();
-          ACTS_VERBOSE("Delta Momentum = " << std::setprecision(5)
-                                           << p_final - m_p_initial);
-        }
-      }
-    };
-
-    const ScopedInfoPrinter printer(state, stepper);
 
     // Count the states of the components, this is necessary to evaluate if
     // really all components are on a surface TODO Not sure why this is not
@@ -216,13 +158,12 @@ struct GsfActor {
       result.haveInitializedResult = true;
     }
 
-    // Initialize current tips on first pass
+    // Initialize the tips if they are empty (should only happen at first pass)
     if (result.parentTips.empty()) {
       result.parentTips.resize(stepper.numberComponents(state.stepping),
                                SIZE_MAX);
     }
 
-    // Check if we have the right number of components
     if (result.parentTips.size() != stepper.numberComponents(state.stepping)) {
       ACTS_ERROR("component number mismatch:"
                  << result.parentTips.size() << " vs "
@@ -252,13 +193,7 @@ struct GsfActor {
         return;
       }
 
-      // Remove missed surfaces and adjust momenta
       removeMissedComponents(state, stepper, result.parentTips);
-      throw_assert(
-          result.parentTips.size() == stepper.numberComponents(state.stepping),
-          "size mismatch (parentTips="
-              << result.parentTips.size()
-              << ", nCmps=" << stepper.numberComponents(state.stepping));
 
       // Check what we have on this surface
       const auto found_source_link =
@@ -272,22 +207,19 @@ struct GsfActor {
       ACTS_VERBOSE(std::boolalpha << "haveMaterial " << haveMaterial
                                   << ", haveMeasurement: " << haveMeasurement);
 
-      // Collect holes in result, but no holes before first measuerement
-      if (result.measurementStates > 0 && !haveMeasurement &&
-          surface.associatedDetectorElement()) {
-        ACTS_VERBOSE("Detected hole on " << surface.geometryId());
-        result.missedActiveSurfaces.push_back(&surface);
-        ++result.measurementHoles;
-      }
-
-      // Early return if nothing happens
-      if (not haveMaterial && not haveMeasurement) {
-        return;
-      }
-
       ////////////////////////
       // The Core Algorithm
       ////////////////////////
+
+      // Early return if nothing happens
+      if (not haveMaterial && not haveMeasurement) {
+        // No hole before first measurement
+        if (result.processedStates > 0 && surface.associatedDetectorElement()) {
+          noMeasurementUpdate(state, stepper, result, true);
+          result.parentTips = result.currentTips;
+        }
+        return;
+      }
 
       for (auto cmp : stepper.componentIterable(state.stepping)) {
         auto singleState = cmp.singleState(state);
@@ -309,33 +241,8 @@ struct GsfActor {
       if (not haveMaterial) {
         kalmanUpdate(state, stepper, result, found_source_link->second);
 
-        result.parentTips.clear();
+        result.parentTips = updateStepper(state, stepper, result);
 
-        auto cmps = stepper.componentIterable(state.stepping);
-        for (auto [idx, cmp] : boost::combine(result.currentTips, cmps)) {
-          // we set ignored components to missed, so we can remove them after
-          // the loop
-          if (result.weightsOfStates.at(idx) < m_cfg.weightCutoff) {
-            cmp.status() = Intersection3D::Status::missed;
-            continue;
-          }
-
-          auto proxy = result.fittedStates.getTrackState(idx);
-
-          cmp.pars() = MultiTrajectoryHelpers::freeFiltered(
-              state.options.geoContext, proxy);
-          cmp.cov() = proxy.filteredCovariance();
-          cmp.weight() = result.weightsOfStates.at(idx);
-
-          result.parentTips.push_back(idx);
-        }
-
-        stepper.removeMissedComponents(state.stepping);
-
-        // TODO we have two normalization passes here now, this can probably be
-        // optimized
-        detail::normalizeWeights(
-            cmps, [&](auto cmp) -> double& { return cmp.weight(); });
       }
       // We have material, we thus need a component cache since we will
       // convolute the components and later reduce them again before updating
@@ -343,74 +250,21 @@ struct GsfActor {
       else {
         std::vector<ComponentCache> componentCache;
 
-        // Here we create the new components with the filtered kalman result
         if (haveMeasurement) {
           kalmanUpdate(state, stepper, result, found_source_link->second);
 
-          auto cmp_iterable = stepper.constComponentIterable(state.stepping);
-          for (auto [idx, cmp] :
-               boost::combine(result.currentTips, cmp_iterable)) {
-            auto proxy = result.fittedStates.getTrackState(idx);
+          convoluteComponents(state, stepper, result, componentCache);
+        } else {
+          noMeasurementUpdate(state, stepper, result, false);
 
-            detail::GsfComponentMetaCache mcache;
-            mcache.parentIndex = proxy.index();
-            mcache.jacobian = cmp.jacobian();
-            mcache.jacToGlobal = cmp.jacToGlobal();
-            mcache.jacTransport = cmp.jacTransport();
-            mcache.derivative = cmp.derivative();
-            mcache.pathLength = cmp.pathAccumulated();
-
-            BoundTrackParameters bound(surface.getSharedPtr(), proxy.filtered(),
-                                       proxy.filteredCovariance());
-            convoluteComponents(state, bound, result.weightsOfStates.at(idx),
-                                mcache, componentCache);
-          }
-        }
-        // Here we simply compute the bound state and then create the new
-        // components
-        else {
-          auto cmps = stepper.componentIterable(state.stepping);
-          for (auto [idx, cmp] : boost::combine(result.parentTips, cmps)) {
-            detail::GsfComponentMetaCache mcache;
-            mcache.parentIndex = idx;
-            mcache.jacobian = cmp.jacobian();
-            mcache.jacToGlobal = cmp.jacToGlobal();
-            mcache.jacTransport = cmp.jacTransport();
-            mcache.derivative = cmp.derivative();
-            mcache.pathLength = cmp.pathAccumulated();
-
-            if (cmp.status() != Intersection3D::Status::onSurface) {
-              ACTS_VERBOSE("Skip component which is not on surface");
-              continue;
-            }
-
-            auto boundState = cmp.boundState(surface, false);
-
-            if (!boundState.ok()) {
-              ACTS_ERROR(
-                  "Failed to compute boundState: " << boundState.error());
-              continue;
-            }
-
-            const auto& [bound, jac, pathLength] = boundState.value();
-
-            convoluteComponents(state, bound, cmp.weight(), mcache,
-                                componentCache);
-          }
+          convoluteComponents(state, stepper, result, componentCache);
         }
 
         reduceComponents(stepper, surface, componentCache);
 
         removeLowWeightComponents(componentCache);
 
-        auto res = updateStepper(state, stepper, componentCache);
-
-        if (!res.ok()) {
-          result.result = res.error();
-          return;
-        }
-
-        result.parentTips = *res;
+        result.parentTips = updateStepper(state, stepper, componentCache);
       }
 
       // If we only done preUpdate before, now do postUpdate
@@ -418,24 +272,38 @@ struct GsfActor {
         applyMultipleScattering(state, stepper, postUpdate);
       }
     }
+  }
 
-    const auto cmps = stepper.constComponentIterable(state.stepping);
-    throw_assert(detail::weightsAreNormalized(
-                     cmps, [](const auto& cmp) { return cmp.weight(); }),
-                 "at the end not normalized");
+  template <typename propagator_state_t, typename stepper_t>
+  void convoluteComponents(propagator_state_t& state, const stepper_t& stepper,
+                           const result_type& result,
+                           std::vector<ComponentCache>& componentCache) const {
+    auto cmps = stepper.componentIterable(state.stepping);
+    for (auto [idx, cmp] : boost::combine(result.currentTips, cmps)) {
+      auto proxy = result.fittedStates.getTrackState(idx);
 
-    throw_assert(
-        std::all_of(cmps.begin(), cmps.end(),
-                    [](auto cmp) { return std::isfinite(cmp.weight()); }),
-        "some weights are not finite");
+      detail::GsfComponentMetaCache mcache;
+      mcache.parentIndex = idx;
+      mcache.jacobian = cmp.jacobian();
+      mcache.jacToGlobal = cmp.jacToGlobal();
+      mcache.jacTransport = cmp.jacTransport();
+      mcache.derivative = cmp.derivative();
+      mcache.pathLength = cmp.pathAccumulated();
+
+      BoundTrackParameters bound(proxy.referenceSurface().getSharedPtr(),
+                                 proxy.filtered(), proxy.filteredCovariance());
+
+      applyBetheHeitler(state, bound, result.weightsOfStates.at(idx), mcache,
+                        componentCache);
+    }
   }
 
   template <typename propagator_state_t>
-  void convoluteComponents(const propagator_state_t& state,
-                           const BoundTrackParameters& old_bound,
-                           const double old_weight,
-                           const GsfComponentMetaCache& metaCache,
-                           std::vector<ComponentCache>& componentCaches) const {
+  void applyBetheHeitler(const propagator_state_t& state,
+                         const BoundTrackParameters& old_bound,
+                         const double old_weight,
+                         const GsfComponentMetaCache& metaCache,
+                         std::vector<ComponentCache>& componentCaches) const {
     const auto& logger = state.options.logger;
     const auto& surface = *state.navigation.currentSurface;
     const auto p_prev = old_bound.absoluteMomentum();
@@ -549,15 +417,12 @@ struct GsfActor {
   template <typename propagator_state_t, typename stepper_t>
   void removeMissedComponents(propagator_state_t& state,
                               const stepper_t& stepper,
-                              std::vector<std::size_t>& parentTips) const {
-    throw_assert(stepper.numberComponents(state.stepping) == parentTips.size(),
-                 "size mismatch");
-
+                              std::vector<std::size_t>& tips) const {
     std::vector<std::size_t> new_tips;
     auto components = stepper.componentIterable(state.stepping);
     double sum_w = 0.0;
 
-    for (const auto [tip, cmp] : boost::combine(parentTips, components)) {
+    for (const auto [tip, cmp] : boost::combine(tips, components)) {
       if (cmp.status() == Intersection3D::Status::onSurface) {
         sum_w += cmp.weight();
         new_tips.push_back(tip);
@@ -571,13 +436,13 @@ struct GsfActor {
       }
     }
 
-    parentTips = new_tips;
+    tips = new_tips;
     stepper.removeMissedComponents(state.stepping);
 
     detail::normalizeWeights(components,
                              [](auto& cmp) -> double& { return cmp.weight(); });
 
-    throw_assert(stepper.numberComponents(state.stepping) == parentTips.size(),
+    throw_assert(stepper.numberComponents(state.stepping) == tips.size(),
                  "size mismatch");
   }
 
@@ -598,12 +463,49 @@ struct GsfActor {
     detail::normalizeWeights(cmps, proj);
   }
 
-  /// Function that updates the stepper with the component Cache
+  /// Function that updates the stepper from the MultiTrajectory
   template <typename propagator_state_t, typename stepper_t>
-  Result<std::vector<size_t>> updateStepper(
+  std::vector<size_t> updateStepper(propagator_state_t& state,
+                                    const stepper_t& stepper,
+                                    const result_type& result) const {
+    std::vector<std::size_t> newTips;
+
+    auto cmps = stepper.componentIterable(state.stepping);
+    for (auto [idx, cmp] : boost::combine(result.currentTips, cmps)) {
+      // we set ignored components to missed, so we can remove them after
+      // the loop
+      if (result.weightsOfStates.at(idx) < m_cfg.weightCutoff) {
+        cmp.status() = Intersection3D::Status::missed;
+        continue;
+      }
+
+      auto proxy = result.fittedStates.getTrackState(idx);
+
+      cmp.pars() =
+          MultiTrajectoryHelpers::freeFiltered(state.options.geoContext, proxy);
+      cmp.cov() = proxy.filteredCovariance();
+      cmp.weight() = result.weightsOfStates.at(idx);
+
+      newTips.push_back(idx);
+    }
+
+    stepper.removeMissedComponents(state.stepping);
+
+    // TODO we have two normalization passes here now, this can probably be
+    // optimized
+    detail::normalizeWeights(cmps,
+                             [&](auto cmp) -> double& { return cmp.weight(); });
+
+    return newTips;
+  }
+
+  /// Function that updates the stepper from the ComponentCache
+  template <typename propagator_state_t, typename stepper_t>
+  std::vector<size_t> updateStepper(
       propagator_state_t& state, const stepper_t& stepper,
       const std::vector<ComponentCache>& componentCache) const {
     const auto& surface = *state.navigation.currentSurface;
+    const auto& logger = state.options.logger;
 
     // We collect new tips in the loop
     std::vector<size_t> new_parent_tips;
@@ -615,17 +517,18 @@ struct GsfActor {
     for (const auto& [pcache, meta] : componentCache) {
       const auto& [weight, pars, cov] = pcache;
 
-      // Keep track of the indices
-      new_parent_tips.push_back(meta.parentIndex);
-
       // Add the component to the stepper
       const BoundTrackParameters bound(surface.getSharedPtr(), pars, cov);
 
       auto res = stepper.addComponent(state.stepping, std::move(bound), weight);
 
       if (!res.ok()) {
-        return res.error();
+        ACTS_ERROR("Error adding component to MultiStepper");
+        continue;
       }
+
+      // Only add index after we are sure the component was successful added
+      new_parent_tips.push_back(meta.parentIndex);
 
       auto& cmp = *res;
       cmp.jacobian() = meta.jacobian;
@@ -644,10 +547,9 @@ struct GsfActor {
   Result<void> kalmanUpdate(propagator_state_t& state, const stepper_t& stepper,
                             result_type& result,
                             const SourceLink& source_link) const {
-    const auto& logger = state.options.logger;
     const auto& surface = *state.navigation.currentSurface;
 
-    // Clear things that are overwritten soon
+    // We will overwrite this soon with new components
     result.currentTips.clear();
 
     // Boolean flag, to distinguish measurement and outlier states. This flag
@@ -656,28 +558,20 @@ struct GsfActor {
     // is thus counted as an outlier
     bool is_valid_measurement = false;
 
-    // Do a for loop over the components and the parent indices
-    // NOTE non-const, since we bound state computation changes the data
-    auto cmp_iterable = stepper.componentIterable(state.stepping);
-
-    for (auto [idx, cmp] : boost::combine(result.parentTips, cmp_iterable)) {
-      if (cmp.status() != Intersection3D::Status::onSurface) {
-        ACTS_VERBOSE("Skip component which is not on surface");
-        continue;
-      }
-
+    auto cmps = stepper.componentIterable(state.stepping);
+    for (auto [idx, cmp] : boost::combine(result.parentTips, cmps)) {
       auto singleState = cmp.singleState(state);
       const auto& singleStepper = cmp.singleStepper(stepper);
-      auto trackStateProxyRes = detail::handleMeasurement(
+
+      auto trackStateProxyRes = detail::kalmanHandleMeasurement(
           singleState, singleStepper, m_cfg.extensions, surface, source_link,
-          result.fittedStates, idx);
+          result.fittedStates, idx, false);
 
       if (!trackStateProxyRes.ok()) {
         return trackStateProxyRes.error();
       }
 
       const auto& trackStateProxy = *trackStateProxyRes;
-      result.currentTips.push_back(trackStateProxy.index());
 
       // If at least one component is no outlier, we consider the whole thing
       // as a measuerementState
@@ -686,7 +580,8 @@ struct GsfActor {
         is_valid_measurement = true;
       }
 
-      result.weightsOfStates[trackStateProxy.index()] = cmp.weight();
+      result.currentTips.push_back(trackStateProxy.index());
+      result.weightsOfStates[result.currentTips.back()] = cmp.weight();
     }
 
     computePosteriorWeights(result.fittedStates, result.currentTips,
@@ -705,6 +600,56 @@ struct GsfActor {
 
     // Return sucess
     return Acts::Result<void>::success();
+  }
+
+  template <typename propagator_state_t, typename stepper_t>
+  Result<void> noMeasurementUpdate(propagator_state_t& state,
+                                   const stepper_t& stepper,
+                                   result_type& result,
+                                   bool doCovTransport) const {
+    const auto& surface = *state.navigation.currentSurface;
+
+    // We will overwrite this soon with new components
+    result.currentTips.clear();
+
+    // Initialize as true, so that any component can flip it. However, all
+    // components should behave the same
+    bool is_hole = true;
+
+    auto cmps = stepper.componentIterable(state.stepping);
+    for (auto [idx, cmp] : boost::combine(result.parentTips, cmps)) {
+      auto singleState = cmp.singleState(state);
+      const auto& singleStepper = cmp.singleStepper(stepper);
+
+      // There is some redundant checking inside this function, but do this for
+      // now until we measure this is significant
+      auto trackStateProxyRes = detail::kalmanHandleNoMeasurement(
+          singleState, singleStepper, surface, result.fittedStates, idx,
+          doCovTransport);
+
+      if (!trackStateProxyRes.ok()) {
+        return trackStateProxyRes.error();
+      }
+
+      const auto& trackStateProxy = *trackStateProxyRes;
+
+      if (not trackStateProxy.typeFlags().test(TrackStateFlag::HoleFlag)) {
+        is_hole = false;
+      }
+
+      result.currentTips.push_back(trackStateProxy.index());
+      result.weightsOfStates[result.currentTips.back()] = cmp.weight();
+    }
+
+    // These things should only be done once for all components
+    if (is_hole) {
+      result.missedActiveSurfaces.push_back(&surface);
+      ++result.measurementHoles;
+    }
+
+    ++result.processedStates;
+
+    return Result<void>::success();
   }
 
   /// Apply the multipe scattering to the state
