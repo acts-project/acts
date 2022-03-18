@@ -65,7 +65,7 @@ class InternalSpacePoint {
       double>::infinity();  // Quality score of the seed the space point is used
                             // for. Quality can be changed if the space point is
                             // used for a better quality seed.
-  const SpacePoint& m_sp;  // external space point
+  const SpacePoint& m_sp;   // external space point
 };
 
 /////////////////////////////////////////////////////////////////////////////////
