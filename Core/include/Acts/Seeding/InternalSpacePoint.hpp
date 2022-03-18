@@ -44,20 +44,27 @@ class InternalSpacePoint {
   const float& cotTheta() const { return m_cotTheta; }
   void setCotTheta(float cotTheta) { m_cotTheta = cotTheta; }
   void setQuality(float quality) {
-    if (quality >= m_quality)
+    if (quality >= m_quality) {
       m_quality = quality;
+    }
   }
   const SpacePoint& sp() const { return m_sp; }
 
  protected:
-  float m_x;               // x-coordinate in beam system coordinates
-  float m_y;               // y-coordinate in beam system coordinates
-  float m_z;               // z-coordinate in beam system coordinetes
-  float m_r;               // radius       in beam system coordinates
-  float m_varianceR;       //
-  float m_varianceZ;       //
-  float m_cotTheta;        //
-  float m_quality;         //
+  float m_x;          // x-coordinate in beam system coordinates
+  float m_y;          // y-coordinate in beam system coordinates
+  float m_z;          // z-coordinate in beam system coordinetes
+  float m_r;          // radius       in beam system coordinates
+  float m_varianceR;  //
+  float m_varianceZ;  //
+  float m_cotTheta = std::numeric_limits<
+      double>::quiet_NaN();  // 1/tanTheta estimated from central+this space
+                             // point. Its evaluation requires that the space
+                             // point is a candidate for triplet search.
+  float m_quality = -std::numeric_limits<
+      double>::infinity();  // Quality score of the seed the space point is used
+                            // for. Quality can be changed if the space point is
+                            // used for a better quality seed.
   const SpacePoint& m_sp;  // external space point
 };
 
@@ -76,10 +83,6 @@ inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
   m_r = std::sqrt(m_x * m_x + m_y * m_y);
   m_varianceR = variance.x();
   m_varianceZ = variance.y();
-  // initialised to invalid values, will be changed
-  // during seed finding and filtering if needed
-  m_quality = -std::numeric_limits<double>::infinity();
-  m_cotTheta = std::numeric_limits<double>::quiet_NaN();
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -88,16 +91,6 @@ inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
 
 template <typename SpacePoint>
 inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
-    const InternalSpacePoint<SpacePoint>& sp)
-    : m_sp(sp.sp()) {
-  m_x = sp.m_x;
-  m_y = sp.m_y;
-  m_z = sp.m_z;
-  m_r = sp.m_r;
-  m_varianceR = sp.m_varianceR;
-  m_varianceZ = sp.m_varianceZ;
-  m_quality = sp.m_quality;
-  m_cotTheta = sp.m_cotTheta;
-}
+    const InternalSpacePoint<SpacePoint>& sp) = default;
 
 }  // end of namespace Acts
