@@ -34,8 +34,7 @@ class Seedfinder {
  public:
   struct State {
     // bottom space point
-    std::vector<InternalSpacePoint<external_spacepoint_t>*>
-        compatBottomSP;
+    std::vector<InternalSpacePoint<external_spacepoint_t>*> compatBottomSP;
     std::vector<InternalSpacePoint<external_spacepoint_t>*> compatTopSP;
     // contains parameters required to calculate circle with linear equation
     // ...for bottom-middle

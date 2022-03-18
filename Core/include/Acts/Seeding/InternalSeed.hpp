@@ -49,8 +49,7 @@ inline InternalSeed<SpacePoint>& InternalSeed<SpacePoint>::operator=(
 
 template <typename SpacePoint>
 inline InternalSeed<SpacePoint>::InternalSeed(
-    InternalSpacePoint<SpacePoint>& s0,
-    InternalSpacePoint<SpacePoint>& s1,
+    InternalSpacePoint<SpacePoint>& s0, InternalSpacePoint<SpacePoint>& s1,
     InternalSpacePoint<SpacePoint>& s2, float z)
     : sp({&s0, &s1, &s2}) {
   m_z = z;

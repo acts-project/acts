@@ -41,10 +41,11 @@ class InternalSpacePoint {
   const float& varianceR() const { return m_varianceR; }
   const float& varianceZ() const { return m_varianceZ; }
   const float& quality() const { return m_quality; }
-  const float& cotTheta() const {return m_cotTheta; }
+  const float& cotTheta() const { return m_cotTheta; }
   void setCotTheta(float cotTheta) { m_cotTheta = cotTheta; }
   void setQuality(float quality) {
-    if (quality >= m_quality) m_quality = quality;
+    if (quality >= m_quality)
+      m_quality = quality;
   }
   const SpacePoint& sp() const { return m_sp; }
 
