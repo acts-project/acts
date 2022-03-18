@@ -545,7 +545,7 @@ class CombinatorialKalmanFilter {
       size_t nBranchesOnSurface = 0;
 
       // Count the number of source links on the surface
-      size_t nSourcelinks = m_sourcelinkAccessor.count(surface->geometryId());
+      size_t nSourcelinks = m_sourcelinkAccessor.count(*surface);
       if (nSourcelinks > 0) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
@@ -744,8 +744,7 @@ class CombinatorialKalmanFilter {
       const auto& [boundParams, jacobian, pathLength] = boundState;
 
       // Get all source links on the surface
-      auto [lower_it, upper_it] =
-          m_sourcelinkAccessor.range(surface->geometryId());
+      auto [lower_it, upper_it] = m_sourcelinkAccessor.range(*surface);
 
       result.trackStateCandidates.clear();
       result.trackStateCandidates.reserve(std::distance(lower_it, upper_it));

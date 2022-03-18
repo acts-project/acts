@@ -14,6 +14,8 @@
 
 namespace Acts {
 
+class Surface;
+
 namespace Concepts {
 namespace SourceLinkAccessor {
 
@@ -41,17 +43,17 @@ METHOD_TRAIT(at_t, at);
         static_assert(value_exists, "Value type not found");
         constexpr static bool iterator_exists = exists<iterator_t, S>;
         static_assert(iterator_exists, "Iterator type not found");
-        
+
         constexpr static bool container_pointer_exists =
           std::is_same_v<std::decay_t<decltype(*(std::declval<S>().container))>, container_t<S>>;
         static_assert(container_pointer_exists, "Pointer to container not found");
 
         constexpr static bool count_exists = has_method<const S,
-          size_t, count_t, const typename S::Key&>;
+          size_t, count_t, const Surface&>;
         static_assert(count_exists, "count method not found");
         constexpr static bool range_exists = has_method<const S,
           std::pair<typename S::Iterator, typename S::Iterator>,
-          range_t, const typename S::Key&>;
+          range_t, const Surface&>;
         static_assert(range_exists, "range method not found");
         constexpr static bool at_exists = has_method<const S,
           const typename S::Value&, at_t, const typename S::Iterator&>;
