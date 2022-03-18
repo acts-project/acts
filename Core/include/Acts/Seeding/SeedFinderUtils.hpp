@@ -36,9 +36,9 @@ struct LinCircle {
 /// @param[in] spM The middle spacepoint to use.
 /// @param[in] bottom Should be true if sp is a bottom SP.
 template <typename external_spacepoint_t>
-LinCircle transformCoordinates(
-    const InternalSpacePoint<external_spacepoint_t>& sp,
-    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom);
+LinCircle transformCoordinates(InternalSpacePoint<external_spacepoint_t>& sp,
+                               InternalSpacePoint<external_spacepoint_t>& spM,
+                               bool bottom);
 
 /// @brief Transform a vector of spacepoints to u-v space circles with respect
 /// to a given middle spacepoint.
@@ -52,8 +52,8 @@ LinCircle transformCoordinates(
 /// @param[out] linCircleVec The output vector to write to.
 template <typename external_spacepoint_t>
 void transformCoordinates(
-    const std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
-    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
+    const std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
+    InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     bool enableCutsForSortedSP, std::vector<LinCircle>& linCircleVec);
 }  // namespace Acts
 
