@@ -11,6 +11,7 @@
 #include "Acts/Utilities/EnumBitwiseOperators.hpp"
 
 #include <limits>
+#include <ostream>
 #include <type_traits>
 
 namespace Acts {
@@ -37,5 +38,7 @@ enum struct TrackStatePropMask : uint8_t {
 };
 
 ACTS_DEFINE_ENUM_BITWISE_OPERATORS(TrackStatePropMask)
+
+std::ostream& operator<<(std::ostream& os, TrackStatePropMask mask);
 
 }  // namespace Acts
