@@ -23,9 +23,9 @@ SeedFilter<external_spacepoint_t>::SeedFilter(
 // return vector must contain weight of each seed
 template <typename external_spacepoint_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
-    const InternalSpacePoint<external_spacepoint_t>& bottomSP,
-    const InternalSpacePoint<external_spacepoint_t>& middleSP,
-    std::vector<const InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
+    InternalSpacePoint<external_spacepoint_t>& bottomSP,
+    InternalSpacePoint<external_spacepoint_t>& middleSP,
+    std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
     std::vector<float>& invHelixDiameterVec,
     std::vector<float>& impactParametersVec, float zOrigin,
     std::back_insert_iterator<std::vector<std::pair<
@@ -158,6 +158,12 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
   // ordering by weight by filterSeeds_2SpFixed means these are the lowest
   // weight seeds
   for (; it < itBegin + maxSeeds; ++it) {
+    float bestSeedQuality = (*it).first;
+
+    (*it).second->sp[0]->setQuality(bestSeedQuality);
+    (*it).second->sp[1]->setQuality(bestSeedQuality);
+    (*it).second->sp[2]->setQuality(bestSeedQuality);
+
     outIt = Seed<external_spacepoint_t>{
         (*it).second->sp[0]->sp(), (*it).second->sp[1]->sp(),
         (*it).second->sp[2]->sp(), (*it).second->z()};
