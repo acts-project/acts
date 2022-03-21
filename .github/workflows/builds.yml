@@ -53,6 +53,7 @@ jobs:
           -DACTS_BUILD_EVERYTHING=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
+          -DACTS_FORCE_ASSERTIONS=ON
       - name: Build
         run: ${SETUP} && cmake --build build --
       - name: Unit tests
@@ -129,6 +130,7 @@ jobs:
           -DACTS_BUILD_UNITTESTS=ON
           -DACTS_BUILD_INTEGRATIONTESTS=ON
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
+          -DACTS_FORCE_ASSERTIONS=ON
           -DACTS_USE_SYSTEM_BOOST=OFF
           -DACTS_USE_SYSTEM_EIGEN3=OFF
           -DACTS_BUILD_PLUGIN_JSON=ON
@@ -152,6 +154,7 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
+          -DACTS_FORCE_ASSERTIONS=ON
           -DACTS_USE_SYSTEM_BOOST=OFF
           -DACTS_USE_SYSTEM_EIGEN3=OFF
           -DACTS_BUILD_EXAMPLES=ON
@@ -178,7 +181,7 @@ jobs:
              && CI/check_boost_eigen_versions.sh ./build-downstream-nodeps/bin/ShowActsVersion
 
   macos:
-    runs-on: macos-10.15
+    runs-on: macos-11
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
     steps:
@@ -188,7 +191,7 @@ jobs:
           brew install cmake eigen ninja
           && sudo mkdir /usr/local/acts
           && sudo chown $USER /usr/local/acts
-          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ci/macOS/deps.43e0201.tar.gz
+          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ci/macOS/deps.494c52d.tar.gz
           && tar -xf deps.tar.gz -C /usr/local/acts
       - name: Configure
         # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
@@ -204,6 +207,7 @@ jobs:
           -DCMAKE_PREFIX_PATH=/usr/local/acts
           -DACTS_BUILD_EVERYTHING=ON
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
+          -DACTS_FORCE_ASSERTIONS=ON
       - name: Build
         run: cmake --build build  --
       - name: Unit tests
