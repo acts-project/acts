@@ -23,7 +23,7 @@ import acts
 
 from acts import UnitConstants as u
 
-from common import addPythia8
+import pythia8
 
 
 class VertexFinder(enum.Enum):
@@ -49,8 +49,8 @@ def runVertexFitting(
 
     if inputParticlePath is None:
         logger.info("Generating particles using Pythia8")
-        evGen = addPythia8(s, rnd)
-        inputParticles = evGen.config.outputParticles
+        pythia8.addPythia8(s, rnd)
+        inputParticles = "particles_input"
     else:
         logger.info("Reading particles from %s", inputParticlePath.resolve())
         assert inputParticlePath.exists()

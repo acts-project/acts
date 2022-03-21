@@ -16,7 +16,7 @@ from acts.examples import (
 )
 
 import acts
-from acts import Vector4, UnitConstants as u, PdgParticle
+from acts import UnitConstants as u, PdgParticle
 
 # Defaults (given as `None` here) use class defaults defined in
 # Examples/Algorithms/Generators/ActsExamples/Generators/ParametricParticleGenerator.hpp
@@ -93,7 +93,7 @@ def addParticleGun(
                 multiplicity=FixedMultiplicityGenerator(n=multiplicity),
                 vertex=vtxGen
                 or acts.examples.GaussianVertexGenerator(
-                    stddev=Vector4(0, 0, 0, 0), mean=acts.Vector4(0, 0, 0, 0)
+                    stddev=acts.Vector4(0, 0, 0, 0), mean=acts.Vector4(0, 0, 0, 0)
                 ),
                 particles=acts.examples.ParametricParticleGenerator(
                     **acts.examples.defaultKWArgs(
