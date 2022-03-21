@@ -11,6 +11,7 @@
 #include "Acts/TrackFitting/GsfError.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
 #include "Acts/Utilities/detail/gaussian_mixture_helpers.hpp"
+#include "Acts/TrackFitting/KalmanFitter.hpp"
 
 namespace Acts {
 
@@ -144,8 +145,7 @@ auto smoothAndCombineTrajectories(
 
   sort_unique_validate_bwd_tips();
 
-  MultiTrajectory finalTrajectory;
-  std::size_t lastTip = SIZE_MAX;
+  KalmanFitterResult result;
 
   while (!bwdTips.empty()) {
     // Ensure that we update the bwd tips whenever we go to the next iteration
@@ -159,7 +159,7 @@ auto smoothAndCombineTrajectories(
       sort_unique_validate_bwd_tips();
     });
 
-    const auto firstBwdState = bwd.getTrackState(bwdTips.front());
+    const auto firstBwdState = bwd.getTrackState(bwdTips.front());    
     const auto &currentSurface = firstBwdState.referenceSurface();
 
     // Search corresponding forward tips
@@ -185,8 +185,10 @@ auto smoothAndCombineTrajectories(
     fwdTips.erase(std::unique(fwdTips.begin(), fwdTips.end()), fwdTips.end());
 
     // Add state to MultiTrajectory
-    lastTip = finalTrajectory.addTrackState(TrackStatePropMask::All, lastTip);
-    auto proxy = finalTrajectory.getTrackState(lastTip);
+    result.lastTrackIndex = result.fittedStates.addTrackState(TrackStatePropMask::All, result.lastTrackIndex);
+    result.processedStates++;
+    
+    auto proxy = result.fittedStates.getTrackState(result.lastTrackIndex);
 
     // This way we copy all relevant flags and the calibrated field. However
     // this assumes that the relevant flags do not differ between components
@@ -205,10 +207,17 @@ auto smoothAndCombineTrajectories(
       proxy.predicted() = mean;
       proxy.predictedCovariance() = cov.value();
       proxy.data().ifiltered = proxy.data().ipredicted;
+      
+      if( not proxy.typeFlags().test(Acts::TrackStateFlag::HoleFlag) ) {
+        result.measurementHoles++;
+      }
 
     }
     // If we have a measurement, do the smoothing
     else {
+      result.measurementStates++;
+      result.lastMeasurementIndex = result.lastTrackIndex;
+      
       // The predicted state is the forward pass
       const auto [fwdMeanPred, fwdCovPred] = combineBoundGaussianMixture(
           fwdTips.begin(), fwdTips.end(), PredProjector{fwd, fwdWeights});
@@ -245,11 +254,15 @@ auto smoothAndCombineTrajectories(
       ACTS_VERBOSE("Added smoothed state to MultiTrajectory");
     }
   }
+  
+  result.smoothed = true;
+  result.reversed = true;
+  result.finished = true;
 
   if constexpr (ReturnSmootedStates) {
-    return std::make_tuple(finalTrajectory, lastTip, smoothedStates);
+    return std::make_tuple(result, smoothedStates);
   } else {
-    return std::make_tuple(finalTrajectory, lastTip);
+    return std::make_tuple(result);
   }
 }
 

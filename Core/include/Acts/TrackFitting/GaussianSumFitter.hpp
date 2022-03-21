@@ -65,10 +65,9 @@ struct GsfOptions {
 ///
 /// @note This GSF implementation tries to be as compatible to the KalmanFitter
 /// as possible. However, there are certain differences at the moment:
-/// * The MultiTrajectory contained in the KalmanFitterResult returned by the
-/// fit-functions does only contain states with measuerements but e.g., no
-/// holes.
 /// * There is always a backward pass during fitting.
+/// * There are only measurement states in the result
+/// * Passed-again-surfaces is always empty at the moment
 /// * Probably some more differences which I don't think of at the moment.
 template <typename propagator_t>
 struct GaussianSumFitter {
@@ -404,31 +403,18 @@ struct GaussianSumFitter {
                                               << ", holes: "
                                               << bwdGsfResult.measurementHoles);
 
-    const auto smoothResult = detail::smoothAndCombineTrajectories<true>(
+    auto smoothResult = detail::smoothAndCombineTrajectories<true>(
         fwdGsfResult.fittedStates, fwdGsfResult.currentTips,
         fwdGsfResult.weightsOfStates, bwdGsfResult.fittedStates,
         bwdGsfResult.currentTips, bwdGsfResult.weightsOfStates, logger);
 
     // Cannot use structured binding since they cannot be captured in lambda
-    const auto& combinedTraj = std::get<0>(smoothResult);
-    const auto lastTip = std::get<1>(smoothResult);
-
+    auto &kalmanResult = std::get<0>(smoothResult);
+    
     // Some test
-    if (lastTip == SIZE_MAX) {
+    if (std::get<1>(smoothResult).empty()) {
       return return_error_or_abort(GsfError::NoStatesCreated);
-    }    
-
-    Acts::KalmanFitterResult kalmanResult;
-    kalmanResult.lastTrackIndex = lastTip;
-    kalmanResult.fittedStates = std::move(combinedTraj);
-    kalmanResult.smoothed = true;
-    kalmanResult.reversed = true;
-    kalmanResult.finished = true;
-    kalmanResult.lastMeasurementIndex = lastTip;
-    kalmanResult.measurementStates = std::min(fwdGsfResult.measurementStates,
-                                              bwdGsfResult.measurementStates);
-    kalmanResult.measurementHoles =
-        std::min(fwdGsfResult.measurementHoles, bwdGsfResult.measurementHoles);
+    }
 
     // Compute the missed active surfaces as the union of the forward and
     // backward pass missed active surfaces
@@ -457,7 +443,7 @@ struct GaussianSumFitter {
       ACTS_VERBOSE("+-----------------------------------------------+");
       auto lastResult = [&]() -> Result<std::unique_ptr<BoundTrackParameters>> {
         const auto& [surface, lastSmoothedState] =
-            std::get<2>(smoothResult).front();
+            std::get<1>(smoothResult).front();
 
         throw_assert(
             detail::weightsAreNormalized(
