@@ -315,7 +315,7 @@ struct GaussianSumFitter {
     auto bwdResult = [&]() {
       // Use last forward state as start parameters for backward propagation
       const auto params = detail::extractMultiComponentState(
-          fwdGsfResult.fittedStates, fwdGsfResult.currentTips,
+          fwdGsfResult.fittedStates, fwdGsfResult.lastMeasurementTips,
           fwdGsfResult.weightsOfStates, detail::StatesType::eFiltered);
 
       auto bwdPropOptions = bwdPropInitializer(options, logger);
@@ -342,7 +342,7 @@ struct GaussianSumFitter {
                          "Initialize the MultiTrajectory with information "
                          "provided to the Actor");
 
-        for (const auto idx : fwdGsfResult.currentTips) {
+        for (const auto idx : fwdGsfResult.lastMeasurementTips) {
           result.currentTips.push_back(
               result.fittedStates.addTrackState(TrackStatePropMask::All));
 

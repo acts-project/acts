@@ -38,7 +38,12 @@ struct GsfResult {
   std::map<size_t, ActsScalar> weightsOfStates;
 
   /// The current indexes for the newest components in the multi trajectory
+  /// (this includes material, hole and outlier states)
   std::vector<std::size_t> currentTips;
+
+  /// The last tips referring to a measuerement state so we do not need so
+  /// search them recursively later
+  std::vector<std::size_t> lastMeasurementTips;
 
   /// We must capture the parent tips to ensure that we can keep track of the
   /// last states in the multitrajectory after the component convolution and
@@ -596,6 +601,7 @@ struct GsfActor {
 
     if (is_valid_measurement) {
       ++result.measurementStates;
+      result.lastMeasurementTips = result.currentTips;
     }
 
     // Return sucess
