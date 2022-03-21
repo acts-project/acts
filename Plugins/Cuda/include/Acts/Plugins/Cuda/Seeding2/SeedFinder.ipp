@@ -42,11 +42,11 @@ SeedFinder<external_spacepoint_t>::SeedFinder(
   // If the size of the regionalParameters doesn't match the number of boundary
   // fill the remaning region with the default RegionalParameters
   if (m_commonConfig.regionalParameters.size() <
-      (m_commonConfig.zboundaries.size() + 1) *
-          (m_commonConfig.zboundaries.size() + 1)) {
+      ((m_commonConfig.zboundaries.size() + 1) *
+       (m_commonConfig.rboundaries.size() + 1))) {
     while (m_commonConfig.regionalParameters.size() <
-           (m_commonConfig.zboundaries.size() + 1) *
-               (m_commonConfig.zboundaries.size() + 1)) {
+           ((m_commonConfig.zboundaries.size() + 1) *
+            (m_commonConfig.rboundaries.size() + 1))) {
       m_commonConfig.regionalParameters.push_back(
           Acts::RegionalParameters<external_spacepoint_t>());
     }

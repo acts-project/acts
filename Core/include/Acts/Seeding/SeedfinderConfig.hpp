@@ -84,7 +84,7 @@ struct SeedfinderConfig {
   /// @return the output as an output track
   size_t regionalBin(float rM, float zM) const {
     size_t bin = 0;
-    size_t binZ = zboundaries.size() + 1;
+    size_t binZ = zboundaries.size();
     for (auto rboundary : rboundaries) {
       if (rM > rboundary) {
         bin = bin + binZ;
