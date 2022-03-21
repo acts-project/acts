@@ -24,6 +24,7 @@ def addPythia8(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     printParticles: bool = False,
+    returnEvGen: bool = False,
 ) -> acts.examples.Sequencer:
     """This function steers the particle generation using Pythia8
 
@@ -33,6 +34,8 @@ def addPythia8(
     ----------
     s: Sequencer
         the sequencer module to which we add the particle gun steps (returned from addParticleGun)
+    rnd : RandomNumbers, None
+        random number generator
     nhard, npileup : int, 1, 200
         Number of hard-scatter and pileup vertices
     beam : PdgParticle|[PdgParticle,PdgParticle], eProton
@@ -49,8 +52,6 @@ def addPythia8(
         the output folder for the Root output, None triggers no output
     printParticles : bool, False
         print generated particles
-    rnd : RandomNumbers, None
-        random number generator
     """
 
     if int(s.config.logLevel) <= int(acts.logging.DEBUG):
@@ -142,7 +143,7 @@ def addPythia8(
             )
         )
 
-    return s
+    return evGen if returnEvGen else s
 
 
 def runPythia8(

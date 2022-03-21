@@ -46,7 +46,7 @@ def addPythia8(
 ):
     import pythia8
 
-    pythia8.addPythia8(
+    evGen = pythia8.addPythia8(
         sequencer,
         rnd=rnd,
         nhard=nhard,
@@ -56,6 +56,7 @@ def addPythia8(
         vtxGen=acts.examples.GaussianVertexGenerator(
             stddev=vertexStddev, mean=vertexMean
         ),
+        returnEvGen=True,
     )
 
     return evGen
