@@ -24,8 +24,9 @@ LinCircle transformCoordinates(
 }
 
 template <typename external_spacepoint_t, typename callable_t>
-LinCircle transformCoordinates(const external_spacepoint_t& sp,
-                               const external_spacepoint_t& spM, bool bottom,
+LinCircle transformCoordinates(external_spacepoint_t& sp,
+                               external_spacepoint_t& spM,
+			       bool bottom,
                                callable_t&& extractFunction) {
   // The computation inside this function is exactly identical to that in the
   // vectorized version of this function, except that it operates on a single
@@ -76,8 +77,8 @@ void transformCoordinates(
 }
 
 template <typename external_spacepoint_t, typename callable_t>
-void transformCoordinates(const std::vector<const external_spacepoint_t*>& vec,
-                          const external_spacepoint_t& spM, bool bottom,
+void transformCoordinates(const std::vector<external_spacepoint_t*>& vec,
+                          external_spacepoint_t& spM, bool bottom,
                           bool enableCutsForSortedSP,
                           std::vector<LinCircle>& linCircleVec,
                           callable_t&& extractFunction) {
