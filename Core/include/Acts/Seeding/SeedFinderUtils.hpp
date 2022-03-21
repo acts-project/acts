@@ -37,8 +37,8 @@ LinCircle transformCoordinates(InternalSpacePoint<external_spacepoint_t>& sp,
                                bool bottom);
 
 template <typename external_spacepoint_t, typename callable_t>
-LinCircle transformCoordinates(const external_spacepoint_t& sp,
-                               const external_spacepoint_t& spM, bool bottom,
+LinCircle transformCoordinates(external_spacepoint_t& sp,
+                               external_spacepoint_t& spM, bool bottom,
                                callable_t&& extractFunction);
 
 /// @brief Transform a vector of spacepoints to u-v space circles with respect
@@ -58,8 +58,8 @@ void transformCoordinates(
     bool enableCutsForSortedSP, std::vector<LinCircle>& linCircleVec);
 
 template <typename external_spacepoint_t, typename callable_t>
-void transformCoordinates(const std::vector<const external_spacepoint_t*>& vec,
-                          const external_spacepoint_t& spM, bool bottom,
+void transformCoordinates(const std::vector<external_spacepoint_t*>& vec,
+                          external_spacepoint_t& spM, bool bottom,
                           bool enableCutsForSortedSP,
                           std::vector<LinCircle>& linCircleVec,
                           callable_t&& extractFunction);
