@@ -60,8 +60,8 @@ LinCircle transformCoordinates(const external_spacepoint_t& sp,
 
 template <typename external_spacepoint_t>
 void transformCoordinates(
-    const std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
-    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
+    const std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
+    InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     bool enableCutsForSortedSP, std::vector<LinCircle>& linCircleVec) {
   auto extractFunction =
       [](const InternalSpacePoint<external_spacepoint_t>& obj)
@@ -123,6 +123,7 @@ void transformCoordinates(const std::vector<const external_spacepoint_t*>& vec,
             (cot_theta * cot_theta) * (varianceRM + sp->varianceR())) *
            iDeltaR2;
     linCircleVec.push_back(l);
+    sp->setCotTheta(cot_theta);
   }
   // sort the SP in order of cotTheta
   if (enableCutsForSortedSP) {

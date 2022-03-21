@@ -16,12 +16,14 @@
 namespace Acts {
 
 struct SeedConfirmationRange {
-  float zMinSeedConf;
-  float zMaxSeedConf;
-  float rMaxSeedConf;
-  size_t nTopSeedConf;
-  size_t nTopForLargeR;
-  size_t nTopForSmallR;
+  float zMinSeedConf =
+      std::numeric_limits<float>::min() * Acts::UnitConstants::mm;
+  float zMaxSeedConf =
+      std::numeric_limits<float>::max() * Acts::UnitConstants::mm;
+  float rMaxSeedConf =
+      std::numeric_limits<float>::max() * Acts::UnitConstants::mm;
+  size_t nTopForLargeR = 0;
+  size_t nTopForSmallR = 0;
 };
 
 // forward declaration to avoid cyclic dependence
@@ -54,9 +56,7 @@ struct SeedfinderConfig {
   // radial range for middle SP
   std::vector<std::vector<float>> rRangeMiddleSP;
   bool useVariableMiddleSPRange = false;
-  float deltaRMiddleSPRange = 10.;
-  float rMinMiddleSP;
-  float rMaxMiddleSP;
+  float deltaRMiddleSPRange = 10. * Acts::UnitConstants::mm;
 
   // seed confirmation
   bool seedConfirmation = false;
@@ -148,6 +148,11 @@ struct SeedfinderConfig {
     config.minPt /= 1_MeV;
     config.deltaRMin /= 1_mm;
     config.deltaRMax /= 1_mm;
+    config.deltaRMinTopSP /= 1_mm;
+    config.deltaRMaxTopSP /= 1_mm;
+    config.deltaRMinBottomSP /= 1_mm;
+    config.deltaRMaxBottomSP /= 1_mm;
+    config.deltaRMiddleSPRange /= 1_mm;
     config.impactMax /= 1_mm;
     config.maxPtScattering /= 1_MeV;  // correct?
     config.collisionRegionMin /= 1_mm;

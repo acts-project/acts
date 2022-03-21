@@ -84,37 +84,33 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
   vecmem::vector<detail::DeviceSpacePoint> deviceMiddleSPs(m_resource);
   vecmem::vector<detail::DeviceSpacePoint> deviceTopSPs(m_resource);
 
-  std::vector<const Acts::InternalSpacePoint<external_spacepoint_t>*>
-      bottomSPvec;
-  std::vector<const Acts::InternalSpacePoint<external_spacepoint_t>*>
-      middleSPvec;
-  std::vector<const Acts::InternalSpacePoint<external_spacepoint_t>*> topSPvec;
+  std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> bottomSPvec;
+  std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> middleSPvec;
+  std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> topSPvec;
 
-  for (const Acts::InternalSpacePoint<external_spacepoint_t>* SP : bottomSPs) {
+  for (auto SP : bottomSPs) {
     bottomSPvec.push_back(SP);
   }
   deviceBottomSPs.reserve(bottomSPvec.size());
-  for (const Acts::InternalSpacePoint<external_spacepoint_t>* SP :
-       bottomSPvec) {
+  for (auto SP : bottomSPvec) {
     deviceBottomSPs.push_back({SP->x(), SP->y(), SP->z(), SP->radius(),
                                SP->varianceR(), SP->varianceZ()});
   }
 
-  for (const Acts::InternalSpacePoint<external_spacepoint_t>* SP : middleSPs) {
+  for (auto SP : middleSPs) {
     middleSPvec.push_back(SP);
   }
   deviceMiddleSPs.reserve(middleSPvec.size());
-  for (const Acts::InternalSpacePoint<external_spacepoint_t>* SP :
-       middleSPvec) {
+  for (auto SP : middleSPvec) {
     deviceMiddleSPs.push_back({SP->x(), SP->y(), SP->z(), SP->radius(),
                                SP->varianceR(), SP->varianceZ()});
   }
 
-  for (const Acts::InternalSpacePoint<external_spacepoint_t>* SP : topSPs) {
+  for (auto SP : topSPs) {
     topSPvec.push_back(SP);
   }
   deviceTopSPs.reserve(topSPvec.size());
-  for (const Acts::InternalSpacePoint<external_spacepoint_t>* SP : topSPvec) {
+  for (auto SP : topSPvec) {
     deviceTopSPs.push_back({SP->x(), SP->y(), SP->z(), SP->radius(),
                             SP->varianceR(), SP->varianceZ()});
   }
