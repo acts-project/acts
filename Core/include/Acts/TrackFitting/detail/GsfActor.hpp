@@ -599,9 +599,13 @@ struct GsfActor {
     // Do the statistics
     ++result.processedStates;
 
+    // We also need to save outlier states here, otherwise they would not be
+    // included in the MT if they are at the end of the track
+    result.lastMeasurementTips = result.currentTips;
+
+    // TODO should outlier states also be counted here?
     if (is_valid_measurement) {
       ++result.measurementStates;
-      result.lastMeasurementTips = result.currentTips;
     }
 
     // Return sucess

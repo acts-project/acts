@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/TrackFitting/GsfError.hpp"
+#include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
 #include "Acts/Utilities/detail/gaussian_mixture_helpers.hpp"
-#include "Acts/TrackFitting/KalmanFitter.hpp"
 
 namespace Acts {
 
@@ -159,7 +159,7 @@ auto smoothAndCombineTrajectories(
       sort_unique_validate_bwd_tips();
     });
 
-    const auto firstBwdState = bwd.getTrackState(bwdTips.front());    
+    const auto firstBwdState = bwd.getTrackState(bwdTips.front());
     const auto &currentSurface = firstBwdState.referenceSurface();
 
     // Search corresponding forward tips
@@ -179,15 +179,16 @@ auto smoothAndCombineTrajectories(
       ACTS_WARNING("Did not find forward states on surface " << bwdGeoId);
       continue;
     }
-    
+
     // Ensure we have no duplicates
     std::sort(fwdTips.begin(), fwdTips.end());
     fwdTips.erase(std::unique(fwdTips.begin(), fwdTips.end()), fwdTips.end());
 
     // Add state to MultiTrajectory
-    result.lastTrackIndex = result.fittedStates.addTrackState(TrackStatePropMask::All, result.lastTrackIndex);
+    result.lastTrackIndex = result.fittedStates.addTrackState(
+        TrackStatePropMask::All, result.lastTrackIndex);
     result.processedStates++;
-    
+
     auto proxy = result.fittedStates.getTrackState(result.lastTrackIndex);
 
     // This way we copy all relevant flags and the calibrated field. However
@@ -198,6 +199,14 @@ auto smoothAndCombineTrajectories(
     using PredProjector = MultiTrajectoryProjector<StatesType::ePredicted>;
     using FiltProjector = MultiTrajectoryProjector<StatesType::eFiltered>;
 
+    
+    if (proxy.typeFlags().test(Acts::TrackStateFlag::HoleFlag)) {
+      result.measurementHoles++;
+    } else {
+      // We also need to save outlier states here, otherwise they would not be included in the MT if they are at the end of the track
+      result.lastMeasurementIndex = result.lastTrackIndex;
+    }
+
     // If we have a hole or an outlier, just take the combination of filtered
     // and predicted and no smoothed state
     if (not proxy.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
@@ -207,17 +216,12 @@ auto smoothAndCombineTrajectories(
       proxy.predicted() = mean;
       proxy.predictedCovariance() = cov.value();
       proxy.data().ifiltered = proxy.data().ipredicted;
-      
-      if( not proxy.typeFlags().test(Acts::TrackStateFlag::HoleFlag) ) {
-        result.measurementHoles++;
-      }
 
     }
     // If we have a measurement, do the smoothing
     else {
       result.measurementStates++;
-      result.lastMeasurementIndex = result.lastTrackIndex;
-      
+
       // The predicted state is the forward pass
       const auto [fwdMeanPred, fwdCovPred] = combineBoundGaussianMixture(
           fwdTips.begin(), fwdTips.end(), PredProjector{fwd, fwdWeights});
@@ -239,7 +243,7 @@ auto smoothAndCombineTrajectories(
         ACTS_WARNING("Smoothing failed on " << bwdGeoId);
         continue;
       }
-      
+
       const auto &smoothedState = *smoothedStateResult;
 
       if constexpr (ReturnSmootedStates) {
@@ -254,7 +258,7 @@ auto smoothAndCombineTrajectories(
       ACTS_VERBOSE("Added smoothed state to MultiTrajectory");
     }
   }
-  
+
   result.smoothed = true;
   result.reversed = true;
   result.finished = true;
