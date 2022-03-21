@@ -108,9 +108,31 @@ struct GsfActor {
     KalmanFitterExtensions extensions;
   } m_cfg;
 
+  /// Stores meta information about the components
+  struct MetaCache {
+    /// Where to find the parent component in the MultiTrajectory
+    std::size_t parentIndex;
+
+    /// Other quantities TODO are they really needed here? seems they are
+    /// reinitialized to Identity etc.
+    BoundMatrix jacobian;
+    BoundToFreeMatrix jacToGlobal;
+    FreeMatrix jacTransport;
+    FreeVector derivative;
+
+    /// We need to preserve the path length
+    ActsScalar pathLength;
+  };
+
+  /// Stores parameters of a gaussian component
+  struct ParameterCache {
+    ActsScalar weight;
+    BoundVector boundPars;
+    std::optional<BoundSymMatrix> boundCov;
+  };
+
   /// Broadcast Cache Type
-  using ComponentCache = std::tuple<detail::GsfComponentParameterCache,
-                                    detail::GsfComponentMetaCache>;
+  using ComponentCache = std::tuple<ParameterCache, MetaCache>;
 
   /// @brief GSF actor operation
   ///
@@ -288,7 +310,7 @@ struct GsfActor {
     for (auto [idx, cmp] : boost::combine(result.currentTips, cmps)) {
       auto proxy = result.fittedStates.getTrackState(idx);
 
-      detail::GsfComponentMetaCache mcache;
+      MetaCache mcache;
       mcache.parentIndex = idx;
       mcache.jacobian = cmp.jacobian();
       mcache.jacToGlobal = cmp.jacToGlobal();
@@ -307,8 +329,7 @@ struct GsfActor {
   template <typename propagator_state_t>
   void applyBetheHeitler(const propagator_state_t& state,
                          const BoundTrackParameters& old_bound,
-                         const double old_weight,
-                         const GsfComponentMetaCache& metaCache,
+                         const double old_weight, const MetaCache& metaCache,
                          std::vector<ComponentCache>& componentCaches) const {
     const auto& logger = state.options.logger;
     const auto& surface = *state.navigation.currentSurface;
@@ -385,8 +406,7 @@ struct GsfActor {
 
       // Set the remaining things and push to vector
       componentCaches.push_back(
-          {GsfComponentParameterCache{new_weight, new_pars, new_cov},
-           metaCache});
+          {ParameterCache{new_weight, new_pars, new_cov}, metaCache});
     }
   }
 
