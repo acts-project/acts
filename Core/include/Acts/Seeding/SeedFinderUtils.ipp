@@ -9,8 +9,8 @@
 namespace Acts {
 template <typename external_spacepoint_t>
 LinCircle transformCoordinates(
-    const InternalSpacePoint<external_spacepoint_t>& sp,
-    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom) {
+    InternalSpacePoint<external_spacepoint_t>& sp,
+    InternalSpacePoint<external_spacepoint_t>& spM, bool bottom) {
   auto extractFunction =
       [](const InternalSpacePoint<external_spacepoint_t>& obj)
       -> std::array<float, 6> {
