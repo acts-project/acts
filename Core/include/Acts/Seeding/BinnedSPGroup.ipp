@@ -35,8 +35,8 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   // create number of bins equal to number of millimeters rMax
   // (worst case minR: configured minR + 1mm)
   size_t numRBins = (config.rMax + config.beamPos.norm());
-  std::vector<std::vector<
-      std::unique_ptr<const InternalSpacePoint<external_spacepoint_t>>>>
+  std::vector<
+      std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>>
       rBins(numRBins);
   for (spacepoint_iterator_t it = spBegin; it != spEnd; it++) {
     if (*it == nullptr) {
@@ -58,9 +58,8 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
       continue;
     }
 
-    auto isp =
-        std::make_unique<const InternalSpacePoint<external_spacepoint_t>>(
-            sp, spPosition, config.beamPos, variance);
+    auto isp = std::make_unique<InternalSpacePoint<external_spacepoint_t>>(
+        sp, spPosition, config.beamPos, variance);
     // calculate r-Bin index and protect against overflow (underflow not
     // possible)
     size_t rIndex = isp->radius();
@@ -75,8 +74,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   for (auto& rbin : rBins) {
     for (auto& isp : rbin) {
       Acts::Vector2 spLocation(isp->phi(), isp->z());
-      std::vector<
-          std::unique_ptr<const InternalSpacePoint<external_spacepoint_t>>>&
+      std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
           bin = grid->atPosition(spLocation);
       bin.push_back(std::move(isp));
     }
