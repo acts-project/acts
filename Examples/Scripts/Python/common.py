@@ -45,8 +45,17 @@ def addPythia8(
     vertexMean: acts.Vector4 = acts.Vector4(0, 0, 0, 0),
 ):
     import pythia8
-    pythia8.addPythia8 (sequencer, rnd=rnd, nhard=nhard, npileup=npileup, beam=(beam0,beam1), cmsEnergy=cmsEnergy, vtxGen=acts.examples.GaussianVertexGenerator(
-        stddev=vertexStddev, mean=vertexMean
-    ))
+
+    pythia8.addPythia8(
+        sequencer,
+        rnd=rnd,
+        nhard=nhard,
+        npileup=npileup,
+        beam=(beam0, beam1),
+        cmsEnergy=cmsEnergy,
+        vtxGen=acts.examples.GaussianVertexGenerator(
+            stddev=vertexStddev, mean=vertexMean
+        ),
+    )
 
     return evGen
