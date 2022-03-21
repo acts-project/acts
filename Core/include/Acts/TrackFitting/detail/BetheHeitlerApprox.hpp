@@ -128,8 +128,6 @@ class BetheHeitlerApprox {
   }
 };
 
-using BHApprox = BetheHeitlerApprox<6, 5>;
-
 template <std::size_t NCmps, std::size_t Order>
 auto load_bethe_heitler_data(const std::string &filepath) ->
     typename BetheHeitlerApprox<NCmps, Order>::Data {
@@ -179,7 +177,7 @@ auto load_bethe_heitler_data(const std::string &filepath) ->
 /// These data are from ATLAS
 /// (TrkGaussianSumFilter/Data/BetheHeitler_cdf_nC6_O5.par)
 // clang-format off
-constexpr static BHApprox::Data bh_cdf_cmps6_order5_data = {{
+constexpr static BetheHeitlerApprox<6, 5>::Data bh_cdf_cmps6_order5_data = {{
     // Component #1
     {
         {{3.74397e+004,-1.95241e+004, 3.51047e+003,-2.54377e+002, 1.81080e+001,-3.57643e+000}},

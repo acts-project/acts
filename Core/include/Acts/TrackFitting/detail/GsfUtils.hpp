@@ -104,7 +104,7 @@ class ScopedGsfInfoPrinterAndChecker {
 
  public:
   ScopedGsfInfoPrinterAndChecker(const propagator_state_t &state,
-                                const stepper_t &stepper)
+                                 const stepper_t &stepper)
       : m_state(state),
         m_stepper(stepper),
         m_p_initial(stepper.momentum(state.stepping)) {

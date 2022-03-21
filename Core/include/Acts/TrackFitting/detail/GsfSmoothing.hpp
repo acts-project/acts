@@ -199,11 +199,11 @@ auto smoothAndCombineTrajectories(
     using PredProjector = MultiTrajectoryProjector<StatesType::ePredicted>;
     using FiltProjector = MultiTrajectoryProjector<StatesType::eFiltered>;
 
-    
     if (proxy.typeFlags().test(Acts::TrackStateFlag::HoleFlag)) {
       result.measurementHoles++;
     } else {
-      // We also need to save outlier states here, otherwise they would not be included in the MT if they are at the end of the track
+      // We also need to save outlier states here, otherwise they would not be
+      // included in the MT if they are at the end of the track
       result.lastMeasurementIndex = result.lastTrackIndex;
     }
 

@@ -62,6 +62,7 @@ struct GsfOptions {
 
 /// Gaussian Sum Fitter implementation.
 /// @tparam propagator_t The propagator type on which the algorithm is built on
+/// @tparam bethe_heitler_approx_t The type of the Bethe-Heitler-Approximation
 ///
 /// @note This GSF implementation tries to be as compatible to the KalmanFitter
 /// as possible. However, there are certain differences at the moment:
@@ -69,29 +70,25 @@ struct GsfOptions {
 /// * There are only measurement states in the result
 /// * Passed-again-surfaces is always empty at the moment
 /// * Probably some more differences which I don't think of at the moment.
-template <typename propagator_t>
+template <typename propagator_t,
+          typename bethe_heitler_approx_t = detail::BetheHeitlerApprox<6, 5>>
 struct GaussianSumFitter {
   GaussianSumFitter(propagator_t&& propagator,
-                    const std::string& high_x0_bethe_heitler_path,
-                    const std::string& low_x0_bethe_heitler_path)
-      : m_propagator(std::move(propagator)),
-        m_bethe_heitler_approx(
-            detail::load_bethe_heitler_data<6, 5>(low_x0_bethe_heitler_path),
-            detail::load_bethe_heitler_data<6, 5>(high_x0_bethe_heitler_path)) {
-  }
-
-  GaussianSumFitter(propagator_t&& propagator)
-      : m_propagator(std::move(propagator)),
-        m_bethe_heitler_approx(detail::bh_cdf_cmps6_order5_data) {}
-
-  /// The navigator type
-  using GsfNavigator = typename propagator_t::Navigator;
+                    bethe_heitler_approx_t&& bha = bethe_heitler_approx_t(
+                        detail::bh_cdf_cmps6_order5_data))
+      : m_propagator(std::move(propagator)), m_bethe_heitler_approx(bha) {}
 
   /// The propagator instance used by the fit function
   propagator_t m_propagator;
 
   /// The fitter holds the instance of the bethe heitler approx
-  detail::BHApprox m_bethe_heitler_approx;
+  bethe_heitler_approx_t m_bethe_heitler_approx;
+
+  /// The navigator type
+  using GsfNavigator = typename propagator_t::Navigator;
+
+  /// The actor type
+  using GsfActor = detail::GsfActor<bethe_heitler_approx_t>;
 
   /// @brief The fit function for the Direct navigator
   template <typename source_link_it_t, typename start_parameters_t>
@@ -106,7 +103,7 @@ struct GaussianSumFitter {
     // Initialize the forward propagation with the DirectNavigator
     auto fwdPropInitializer = [&sSequence, this](const auto& opts,
                                                  const auto& logger) {
-      using Actors = ActionList<detail::GsfActor, DirectNavigator::Initializer>;
+      using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
       using Aborters = AbortList<>;
 
       PropagatorOptions<Actors, Aborters> propOptions(
@@ -116,7 +113,7 @@ struct GaussianSumFitter {
 
       propOptions.actionList.template get<DirectNavigator::Initializer>()
           .navSurfaces = sSequence;
-      propOptions.actionList.template get<detail::GsfActor>()
+      propOptions.actionList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_bethe_heitler_approx;
 
       return propOptions;
@@ -125,7 +122,7 @@ struct GaussianSumFitter {
     // Initialize the backward propagation with the DirectNavigator
     auto bwdPropInitializer = [&sSequence, this](const auto& opts,
                                                  const auto& logger) {
-      using Actors = ActionList<detail::GsfActor, DirectNavigator::Initializer>;
+      using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
       using Aborters = AbortList<>;
 
       std::vector<const Surface*> backwardSequence(
@@ -139,7 +136,7 @@ struct GaussianSumFitter {
 
       propOptions.actionList.template get<DirectNavigator::Initializer>()
           .navSurfaces = std::move(backwardSequence);
-      propOptions.actionList.template get<detail::GsfActor>()
+      propOptions.actionList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_bethe_heitler_approx;
 
       return propOptions;
@@ -159,13 +156,13 @@ struct GaussianSumFitter {
 
     // Initialize the forward propagation with the DirectNavigator
     auto fwdPropInitializer = [this](const auto& opts, const auto& logger) {
-      using Actors = ActionList<detail::GsfActor>;
+      using Actors = ActionList<GsfActor>;
       using Aborters = AbortList<EndOfWorldReached>;
 
       PropagatorOptions<Actors, Aborters> propOptions(
           opts.geoContext, opts.magFieldContext, logger);
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
-      propOptions.actionList.template get<detail::GsfActor>()
+      propOptions.actionList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_bethe_heitler_approx;
 
       return propOptions;
@@ -173,7 +170,7 @@ struct GaussianSumFitter {
 
     // Initialize the backward propagation with the DirectNavigator
     auto bwdPropInitializer = [this](const auto& opts, const auto& logger) {
-      using Actors = ActionList<detail::GsfActor>;
+      using Actors = ActionList<GsfActor>;
       using Aborters = AbortList<EndOfWorldReached>;
 
       PropagatorOptions<Actors, Aborters> propOptions(
@@ -181,7 +178,7 @@ struct GaussianSumFitter {
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
-      propOptions.actionList.template get<detail::GsfActor>()
+      propOptions.actionList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_bethe_heitler_approx;
 
       return propOptions;
@@ -258,7 +255,7 @@ struct GaussianSumFitter {
       auto fwdPropOptions = fwdPropInitializer(options, logger);
 
       // Catch the actor and set the measurements
-      auto& actor = fwdPropOptions.actionList.template get<detail::GsfActor>();
+      auto& actor = fwdPropOptions.actionList.template get<GsfActor>();
       actor.m_cfg.inputMeasurements = inputMeasurements;
       actor.m_cfg.maxComponents = options.maxComponents;
       actor.m_cfg.extensions = options.extensions;
@@ -319,7 +316,7 @@ struct GaussianSumFitter {
 
       auto bwdPropOptions = bwdPropInitializer(options, logger);
 
-      auto& actor = bwdPropOptions.actionList.template get<detail::GsfActor>();
+      auto& actor = bwdPropOptions.actionList.template get<GsfActor>();
       actor.m_cfg.inputMeasurements = inputMeasurements;
       actor.m_cfg.maxComponents = options.maxComponents;
       actor.m_cfg.abortOnError = options.abortOnError;
@@ -409,8 +406,8 @@ struct GaussianSumFitter {
         bwdGsfResult.currentTips, bwdGsfResult.weightsOfStates, logger);
 
     // Cannot use structured binding since they cannot be captured in lambda
-    auto &kalmanResult = std::get<0>(smoothResult);
-    
+    auto& kalmanResult = std::get<0>(smoothResult);
+
     // Some test
     if (std::get<1>(smoothResult).empty()) {
       return return_error_or_abort(GsfError::NoStatesCreated);
@@ -456,8 +453,7 @@ struct GaussianSumFitter {
 
         auto lastPropOptions = bwdPropInitializer(options, logger);
 
-        auto& actor =
-            lastPropOptions.actionList.template get<detail::GsfActor>();
+        auto& actor = lastPropOptions.actionList.template get<GsfActor>();
         actor.m_cfg.maxComponents = options.maxComponents;
         actor.m_cfg.abortOnError = options.abortOnError;
         actor.m_cfg.disableAllMaterialHandling =

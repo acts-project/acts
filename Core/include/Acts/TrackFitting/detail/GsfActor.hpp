@@ -65,6 +65,7 @@ struct GsfResult {
 };
 
 /// The actor carrying out the GSF algorithm
+template <typename bethe_heitler_approx_t>
 struct GsfActor {
   /// Enforce default construction
   GsfActor() = default;
@@ -83,7 +84,7 @@ struct GsfActor {
 
     /// Bethe Heitler Approximator pointer. The fitter holds the approximator
     /// instance TODO if we somehow could initialize a reference here...
-    const detail::BHApprox* bethe_heitler_approx = nullptr;
+    const bethe_heitler_approx_t* bethe_heitler_approx = nullptr;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
