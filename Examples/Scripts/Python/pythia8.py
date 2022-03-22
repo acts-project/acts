@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from typing import Optional, Union
 from pathlib import Path
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable
 
 import acts
 import acts.examples
@@ -15,11 +15,11 @@ def addPythia8(
     nhard: int = 1,
     npileup: int = 200,
     beam: Optional[
-        Union[acts.PdgParticle, Sequence[acts.PdgParticle]]
+        Union[acts.PdgParticle, Iterable]
     ] = None,  # default: acts.PdgParticle.eProton
     cmsEnergy: Optional[float] = None,  # default: 14 * acts.UnitConstants.TeV
-    hardProcess: Optional[Sequence[str]] = None,  # default: ["HardQCD:all = on"]
-    pileupProcess: Sequence[str] = ["SoftQCD:all = on"],
+    hardProcess: Optional[Iterable] = None,  # default: ["HardQCD:all = on"]
+    pileupProcess: Iterable = ["SoftQCD:all = on"],
     vtxGen: Optional[acts.examples.EventGenerator.VertexGenerator] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
