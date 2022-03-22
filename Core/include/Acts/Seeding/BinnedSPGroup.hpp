@@ -30,7 +30,7 @@ template <typename external_spacepoint_t>
 class NeighborhoodIterator {
  public:
   using sp_it_t = typename std::vector<std::unique_ptr<
-      const InternalSpacePoint<external_spacepoint_t>>>::const_iterator;
+      InternalSpacePoint<external_spacepoint_t>>>::const_iterator;
 
   NeighborhoodIterator() = delete;
 
@@ -94,7 +94,7 @@ class NeighborhoodIterator {
     }
   }
 
-  const InternalSpacePoint<external_spacepoint_t>* operator*() {
+  InternalSpacePoint<external_spacepoint_t>* operator*() {
     return (*m_curIt).get();
   }
 
