@@ -7,6 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <typename external_spacepoint_t>
+Acts::BinFinder<external_spacepoint_t>::BinFinder()
+    : Acts::BinFinder<external_spacepoint_t>::BinFinder(
+          std::vector<std::pair<int, int>>(), 1) {}
+
+template <typename external_spacepoint_t>
 Acts::BinFinder<external_spacepoint_t>::BinFinder(
     const std::vector<std::pair<int, int> >&& zBinNeighbors,
     const int&& numPhiNeighbors)
