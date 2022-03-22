@@ -60,7 +60,6 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_BUILD_EVERYTHING=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
-          -DACTS_LOG_FAILURE_THRESHOLD=WARNING
           -DACTS_FORCE_ASSERTIONS=ON
       - name: Build
         run: ${SETUP} && cmake --build build --
