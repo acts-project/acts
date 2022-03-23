@@ -38,13 +38,15 @@ def addExaTrkx(
             inputMeasurements="measurements",
             outputSpacePoints="spacepoints",
             trackingGeometry=trackingGeometry,
-            geometrySelection=acts.examples.readJsonGeometryList(str(geometrySelection)),
+            geometrySelection=acts.examples.readJsonGeometryList(
+                str(geometrySelection)
+            ),
         )
     )
 
-    #Setup the track finding algorithm with ExaTrkX
-    #It takes all the source links created from truth hit smearing, seeds from
-    #truth particle smearing and source link selection config
+    # Setup the track finding algorithm with ExaTrkX
+    # It takes all the source links created from truth hit smearing, seeds from
+    # truth particle smearing and source link selection config
     exaTrkxFinding = acts.examples.ExaTrkXTrackFinding(
         inputMLModuleDir=str(onnxModelDir),
         spacepointFeatures=3,
@@ -120,4 +122,4 @@ if "__main__" == __name__:
 
     s = addExaTrkx(s, trackingGeometry, geometrySelection, onnxdir, outputDir)
 
-    #s.run()
+    s.run()
