@@ -13,14 +13,14 @@ Acts::BinFinder<external_spacepoint_t>::BinFinder()
 
 template <typename external_spacepoint_t>
 Acts::BinFinder<external_spacepoint_t>::BinFinder(
-    const std::vector<std::pair<int, int> >&& zBinNeighbors,
+    const std::vector<std::pair<int, int>>&& zBinNeighbors,
     const int&& numPhiNeighbors)
     : m_zBinNeighbors(std::move(zBinNeighbors)),
       m_numPhiNeighbors(std::move(numPhiNeighbors)) {}
 
 template <typename external_spacepoint_t>
 Acts::BinFinder<external_spacepoint_t>::BinFinder(
-    const std::vector<std::pair<int, int> >& zBinNeighbors,
+    const std::vector<std::pair<int, int>>& zBinNeighbors,
     const int& numPhiNeighbors)
     : m_zBinNeighbors(zBinNeighbors), m_numPhiNeighbors(numPhiNeighbors) {}
 
