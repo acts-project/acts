@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <memory>
 #include <vector>
 
 // TODO top-level description
@@ -28,7 +29,8 @@ template <typename Cell>
 struct LabeledCell {
     Cell const * ptr;
     mutable Label lbl;
-    explicit LabeledCell(const Cell& cell); : ptr{&cell}, lbl{Label::None} {}
+    explicit LabeledCell(const Cell& cell) :
+	ptr{std::addressof(cell)}, lbl{Label::None} {}
 };
 
 template <typename Cell>
