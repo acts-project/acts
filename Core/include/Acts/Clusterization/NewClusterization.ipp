@@ -11,19 +11,40 @@
 
 #include <boost/pending/disjoint_sets.hpp>
 
+
+namespace Concepts {
+template <typename...> using void_t = void;
+
+template <typename, typename T = void>
+struct cell_type_has_required_functions : std::false_type {};
+
+template <typename T>
+struct cell_type_has_required_functions<T, void_t<
+    decltype(get_cell_row(std::declval<T>())),
+    decltype(get_cell_column(std::declval<T>())),
+    decltype(get_cell_activation(std::declval<T>()))>>
+    : std::true_type {};
+} // namespace Concepts
+
+template <typename T>
+constexpr bool CellConcept =
+    Concepts::cell_type_has_required_functions<T>();
+
+#define CHECK_CELL_TYPE(T) static_assert(CellConcept<T>, "Cell type should have the following functions:'int get_cell_row(const Cell&)', 'int get_cell_column(const Cell&)', 'float get_cell_activation(const Cell&)'")
+
 // TODO namespace
 // TODO internal namespace
 
 // TODO descr
 template <typename Cell>
 struct Compare {
-	bool operator()(const Cell &c0, const Cell &c1) const {
-	    int row0 = get_cell_row(c0);
-	    int row1 = get_cell_row(c1);
-	    int col0 = get_cell_column(c0);
-	    int col1 = get_cell_column(c1);
-	    return (col0 == col1)? row0 < row1 : col0 < col1;
-	}
+    bool operator()(const Cell &c0, const Cell &c1) const {
+	int row0 = get_cell_row(c0);
+	int row1 = get_cell_row(c1);
+	int col0 = get_cell_column(c0);
+	int col1 = get_cell_column(c1);
+	return (col0 == col1)? row0 < row1 : col0 < col1;
+    }
 };
 
 // Definition of the Cell api for the LabeledCell<Cell> wrapper
@@ -167,6 +188,7 @@ void label_clusters_inplace(CellCollection& lcells, bool commonCorner)
 template <typename Cell, typename InputIt>
 LabeledCellCollection<Cell> labelClusters(InputIt begin, InputIt end, bool commonCorner, float threshold)
 {
+    CHECK_CELL_TYPE(Cell);
     LabeledCellCollection<Cell> lcells;
     for (InputIt it = begin; it != end; ++it) {
 	if (get_cell_activation(*it) >= threshold)
@@ -180,6 +202,7 @@ LabeledCellCollection<Cell> labelClusters(InputIt begin, InputIt end, bool commo
 template <typename Cell, typename ClusterT, typename InputIt, typename OutputIt>
 void createClusters(InputIt begin, InputIt end, OutputIt out, bool commonCorner, float threshold)
 {
+    CHECK_CELL_TYPE(Cell);
     LabeledCellCollection<Cell> lcells {
 	labelClusters<Cell>(begin, end, commonCorner, threshold)
     };
