@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <algorithm>
+#include <numeric>
 #include <utility>
 
 namespace Acts {
@@ -29,7 +31,19 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     std::back_insert_iterator<std::vector<std::pair<
         float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>>
         outIt) const {
-  for (size_t i = 0; i < topSpVec.size(); i++) {
+  // initialize original index locations
+  std::vector<size_t> idx(topSpVec.size());
+  std::iota(idx.begin(), idx.end(), 0);
+
+  if (m_cfg.curvatureSortingInFilter) {
+    // sort indexes based on comparing values in invHelixDiameterVec
+    std::sort(idx.begin(), idx.end(),
+              [&invHelixDiameterVec](size_t i1, size_t i2) {
+                return invHelixDiameterVec[i1] < invHelixDiameterVec[i2];
+              });
+  }
+
+  for (auto& i : idx) {
     // if two compatible seeds with high distance in r are found, compatible
     // seeds span 5 layers
     // -> very good seed
@@ -42,7 +56,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     float impact = impactParametersVec[i];
 
     float weight = -(impact * m_cfg.impactWeightFactor);
-    for (size_t j = 0; j < topSpVec.size(); j++) {
+    for (auto& j : idx) {
       if (i == j) {
         continue;
       }
@@ -53,12 +67,13 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         continue;
       }
       // curvature difference within limits?
-      // TODO: how much slower than sorting all vectors by curvature
-      // and breaking out of loop? i.e. is vector size large (e.g. in jets?)
       if (invHelixDiameterVec[j] < lowerLimitCurv) {
         continue;
       }
       if (invHelixDiameterVec[j] > upperLimitCurv) {
+        if (m_cfg.curvatureSortingInFilter) {
+          break;
+        }
         continue;
       }
       bool newCompSeed = true;
