@@ -71,16 +71,21 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   extensions.measurementSelector.connect<&Acts::MeasurementSelector::select>(
       &measSel);
 
+  IndexSourceLinkAccessor slAccessor;
+  slAccessor.container = &sourceLinks;
+  Acts::SourceLinkAccessor<IndexSourceLinkAccessor::Iterator>
+      slAccessorDelegate;
+  slAccessorDelegate.connect<&IndexSourceLinkAccessor::range>(&slAccessor);
+
   // Set the CombinatorialKalmanFilter options
   ActsExamples::TrackFindingAlgorithm::TrackFinderOptions options(
-      ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
-      IndexSourceLinkAccessor(), extensions, Acts::LoggerWrapper{logger()},
-      pOptions, &(*pSurface));
+      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
+      extensions, Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
                                           << " seeds.");
-  auto results = (*m_cfg.findTracks)(sourceLinks, initialParameters, options);
+  auto results = (*m_cfg.findTracks)(initialParameters, options);
 
   // Compute shared hits from all the reconstructed tracks
   if (m_cfg.computeSharedHits) {

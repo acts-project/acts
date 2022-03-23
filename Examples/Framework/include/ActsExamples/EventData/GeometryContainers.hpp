@@ -9,12 +9,14 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/Utilities/GroupBy.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <iostream>
 #include <utility>
 
 #include <boost/container/flat_map.hpp>
@@ -226,20 +228,22 @@ struct GeometryIdMultisetAccessor {
   const Container* container = nullptr;
 
   // count the number of elements with requested geoId
-  size_t count(const Acts::GeometryIdentifier& geoId) const {
+  size_t count(const Acts::Surface& surface) const {
     assert(container != nullptr);
-    return container->count(geoId);
+    return container->count(surface.geometryId());
   }
 
   // get the range of elements with requested geoId
-  std::pair<Iterator, Iterator> range(
-      const Acts::GeometryIdentifier& geoId) const {
+  std::pair<Iterator, Iterator> range(const Acts::Surface& surface) const {
     assert(container != nullptr);
-    return container->equal_range(geoId);
+    return container->equal_range(surface.geometryId());
   }
 
   // get the element using the iterator
-  const Value& at(const Iterator& it) const { return *it; }
+  const Value& at(const Iterator& it) const {
+    assert(container != nullptr);
+    return *it;
+  }
 };
 
 }  // namespace ActsExamples

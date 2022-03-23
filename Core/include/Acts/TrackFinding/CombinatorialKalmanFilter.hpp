@@ -121,13 +121,21 @@ struct CombinatorialKalmanFilterExtensions {
   }
 };
 
+/// Delegate type that retrieves a range of source links to for a given surface
+/// to be processed by the CKF
+template <typename source_link_iterator_t>
+using SourceLinkAccessor =
+    Delegate<std::pair<source_link_iterator_t, source_link_iterator_t>(
+        const Surface&)>;
+
 /// Combined options for the combinatorial Kalman filter.
 ///
 /// @tparam source_link_accessor_t Source link accessor type, should be
 /// semiregular.
-template <typename source_link_accessor_t>
+template <typename source_link_iterator_t>
 struct CombinatorialKalmanFilterOptions {
-  using SourceLinkAccessor = source_link_accessor_t;
+  using SourceLinkIterator = source_link_iterator_t;
+  using SourceLinkAccessor = SourceLinkAccessor<source_link_iterator_t>;
 
   /// PropagatorOptions with context
   ///
@@ -290,7 +298,6 @@ class CombinatorialKalmanFilter {
     using CurvilinearState =
         std::tuple<CurvilinearTrackParameters, BoundMatrix, double>;
     // The source link container type
-    using SourceLinkContainer = typename source_link_accessor_t::Container;
     /// Broadcast the result_type
     using result_type = CombinatorialKalmanFilterResult;
 
@@ -545,8 +552,8 @@ class CombinatorialKalmanFilter {
       size_t nBranchesOnSurface = 0;
 
       // Count the number of source links on the surface
-      size_t nSourcelinks = m_sourcelinkAccessor.count(*surface);
-      if (nSourcelinks > 0) {
+      auto [slBegin, slEnd] = m_sourcelinkAccessor(*surface);
+      if (slBegin != slEnd) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
@@ -744,7 +751,7 @@ class CombinatorialKalmanFilter {
       const auto& [boundParams, jacobian, pathLength] = boundState;
 
       // Get all source links on the surface
-      auto [lower_it, upper_it] = m_sourcelinkAccessor.range(*surface);
+      auto [lower_it, upper_it] = m_sourcelinkAccessor(*surface);
 
       result.trackStateCandidates.clear();
       result.trackStateCandidates.reserve(std::distance(lower_it, upper_it));
@@ -757,7 +764,7 @@ class CombinatorialKalmanFilter {
       // to be done based on calibrated measurement
       for (auto it = lower_it; it != upper_it; ++it) {
         // get the source link
-        const auto& sourceLink = m_sourcelinkAccessor.at(it);
+        const auto& sourceLink = *it;
 
         // prepare the track state
         PM mask =
@@ -1176,7 +1183,7 @@ class CombinatorialKalmanFilter {
   /// Combinatorial Kalman Filter implementation, calls the the Kalman filter
   /// and smoother
   ///
-  /// @tparam source_link_accessor_t Type of the source link accessor
+  /// @tparam source_link_iterator_t Type of the source link iterator
   /// @tparam start_parameters_container_t Type of the initial parameters
   /// container
   /// @tparam calibrator_t Type of the source link calibrator
@@ -1194,32 +1201,22 @@ class CombinatorialKalmanFilter {
   ///
   /// @return a container of track finding result for all the initial track
   /// parameters
-  template <typename source_link_accessor_t,
+  template <typename source_link_iterator_t,
             typename start_parameters_container_t,
             typename parameters_t = BoundTrackParameters>
   std::vector<Result<CombinatorialKalmanFilterResult>> findTracks(
-      const typename source_link_accessor_t::Container& sourcelinks,
       const start_parameters_container_t& initialParameters,
-      const CombinatorialKalmanFilterOptions<source_link_accessor_t>& tfOptions)
+      const CombinatorialKalmanFilterOptions<source_link_iterator_t>& tfOptions)
       const {
-    static_assert(
-        SourceLinkAccessorConcept<source_link_accessor_t>,
-        "The source link accessor does not fullfill SourceLinkAccessorConcept");
-    static_assert(
-        std::is_same_v<GeometryIdentifier,
-                       typename source_link_accessor_t::Key>,
-        "The source link container does not have GeometryIdentifier as the key "
-        "type");
-
     const auto& logger = tfOptions.logger;
 
-    ACTS_VERBOSE("Preparing " << sourcelinks.size() << " input measurements");
+    using SourceLinkAccessor = SourceLinkAccessor<source_link_iterator_t>;
 
     // Create the ActionList and AbortList
     using CombinatorialKalmanFilterAborter =
-        Aborter<source_link_accessor_t, parameters_t>;
+        Aborter<SourceLinkAccessor, parameters_t>;
     using CombinatorialKalmanFilterActor =
-        Actor<source_link_accessor_t, parameters_t>;
+        Actor<SourceLinkAccessor, parameters_t>;
     using Actors = ActionList<CombinatorialKalmanFilterActor>;
     using Aborters = AbortList<CombinatorialKalmanFilterAborter>;
 
@@ -1240,8 +1237,6 @@ class CombinatorialKalmanFilter {
 
     // copy source link accessor, calibrator and measurement selector
     combKalmanActor.m_sourcelinkAccessor = tfOptions.sourcelinkAccessor;
-    // set the pointer to the source links
-    combKalmanActor.m_sourcelinkAccessor.container = &sourcelinks;
     combKalmanActor.m_extensions = tfOptions.extensions;
 
     // Run the CombinatorialKalmanFilter.

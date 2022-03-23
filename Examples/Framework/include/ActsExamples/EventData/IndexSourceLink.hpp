@@ -67,22 +67,7 @@ using IndexSourceLinkContainer =
 ///
 /// It wraps up a few lookup methods to be used in the Combinatorial Kalman
 /// Filter
-class IndexSourceLinkAccessor
-    : public GeometryIdMultisetAccessor<
-          std::reference_wrapper<const IndexSourceLink>> {
-  using Base =
-      GeometryIdMultisetAccessor<std::reference_wrapper<const IndexSourceLink>>;
-
- public:
-  std::pair<Iterator, Iterator> range(const Acts::Surface& surface) const {
-    return Base::range(surface.geometryId());
-  }
-
-  size_t count(const Acts::Surface& surface) const {
-    return Base::count(surface.geometryId());
-  }
-
-  const Value& at(const Iterator& it) const { return Base::at(it); }
-};
+using IndexSourceLinkAccessor =
+    GeometryIdMultisetAccessor<std::reference_wrapper<const IndexSourceLink>>;
 
 }  // namespace ActsExamples

@@ -34,11 +34,10 @@ struct TrackFinderFunctionImpl
   TrackFinderFunctionImpl(CKF&& f) : trackFinder(std::move(f)) {}
 
   ActsExamples::TrackFindingAlgorithm::TrackFinderResult operator()(
-      const ActsExamples::IndexSourceLinkContainer& sourcelinks,
       const ActsExamples::TrackParametersContainer& initialParameters,
       const ActsExamples::TrackFindingAlgorithm::TrackFinderOptions& options)
       const override {
-    return trackFinder.findTracks(sourcelinks, initialParameters, options);
+    return trackFinder.findTracks(initialParameters, options);
   };
 };
 
