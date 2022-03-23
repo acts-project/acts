@@ -102,21 +102,12 @@ struct TestContainerAccessor {
   // pointer to the container
   const Container* container = nullptr;
 
-  // count the number of elements with requested key
-  size_t count(const Acts::Surface& surface) const {
-    assert(container != nullptr);
-    return container->count(surface.geometryId());
-  }
-
   // get the range of elements with requested key
   std::pair<Iterator, Iterator> range(const Acts::Surface& surface) const {
     assert(container != nullptr);
     auto [begin, end] = container->equal_range(surface.geometryId());
     return {Iterator{begin}, Iterator{end}};
   }
-
-  // get the element using the iterator
-  const Value& at(const Iterator& it) const { return *it; }
 };
 
 struct Fixture {
