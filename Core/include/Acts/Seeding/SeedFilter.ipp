@@ -73,6 +73,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     float impact = impactParametersVec[i];
 
     if (m_cfg.useDeltaRTopRadius) {
+			// use deltaR instead of top radius
       currentTop_r = topSpVec[i]->deltaR();
     } else {
       currentTop_r = topSpVec[i]->radius();
