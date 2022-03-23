@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Seeding/SeedfinderConfig.hpp"
 
 // System include(s).
 #include <cstddef>
@@ -33,6 +34,22 @@ struct SeedFilterConfig {
   // compatible seed?
   size_t compatSeedLimit = 2;
   // Tool to apply experiment specific cuts on collected middle space points
+	
+	// seed confirmation
+	bool seedConfirmation = false;
+	// contains parameters for central seed confirmation
+	SeedConfirmationRange centralSeedConfirmationRange;
+	// contains parameters for forward seed confirmation
+	SeedConfirmationRange forwardSeedConfirmationRange;
+	// minimum radius for bottom SP in seed confirmation
+	float seedConfMinBottomRadius = 60. * Acts::UnitConstants::mm;
+	// maximum zOrigin in seed confirmation
+	float seedConfMaxZOrigin = 150. * Acts::UnitConstants::mm;
+	// minimum impact parameter for seed confirmation
+	float minImpactSeedConf = 1. * Acts::UnitConstants::mm;
+	
+	// use deltaR instead of top radius
+	bool useDeltaRTopRadius = false;
 
   SeedFilterConfig toInternalUnits() const {
     using namespace Acts::UnitLiterals;

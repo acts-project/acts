@@ -236,6 +236,8 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     size_t numBotSP = state.compatBottomSP.size();
     size_t numTopSP = state.compatTopSP.size();
+		
+		int numQualitySeeds = 0;
 
     size_t t0 = 0;
 
@@ -387,7 +389,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       if (!state.topSpVec.empty()) {
         m_config.seedFilter->filterSeeds_2SpFixed(
             *state.compatBottomSP[b], *spM, state.topSpVec, state.curvatures,
-            state.impactParameters, Zob, std::back_inserter(state.seedsPerSpM));
+            state.impactParameters, Zob, numQualitySeeds, std::back_inserter(state.seedsPerSpM));
       }
     }
     m_config.seedFilter->filterSeeds_1SpFixed(state.seedsPerSpM, outIt);

@@ -100,6 +100,8 @@ void transformCoordinates(
 
     linCircleVec.push_back(l);
     sp->setCotTheta(cot_theta);
+		
+		sp->setDeltaR(std::sqrt((x * x) + (y * y) + (deltaZ * deltaZ)));
   }
   // sort the SP in order of cotTheta
   if (enableCutsForSortedSP) {
