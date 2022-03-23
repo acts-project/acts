@@ -754,7 +754,11 @@ class CombinatorialKalmanFilter {
       auto [lower_it, upper_it] = m_sourcelinkAccessor(*surface);
 
       result.trackStateCandidates.clear();
-      result.trackStateCandidates.reserve(std::distance(lower_it, upper_it));
+      if constexpr (std::is_same_v<typename std::iterator_traits<decltype(
+                                       lower_it)>::iterator_category,
+                                   std::random_access_iterator_tag>) {
+        result.trackStateCandidates.reserve(std::distance(lower_it, upper_it));
+      }
 
       result.stateBuffer.clear();
 
