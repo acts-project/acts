@@ -96,8 +96,6 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         continue;
       }
       // curvature difference within limits?
-      // TODO: how much slower than sorting all vectors by curvature
-      // and breaking out of loop? i.e. is vector size large (e.g. in jets?)
       if (invHelixDiameterVec[j] < lowerLimitCurv) {
         continue;
       }
