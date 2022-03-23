@@ -56,6 +56,9 @@ struct SeedFilterConfig {
     SeedFilterConfig config = *this;
     config.deltaRMin /= 1_mm;
     config.deltaInvHelixDiameter /= 1. / 1_mm;
+		config.seedConfMinBottomRadius /= 1_mm;
+		config.seedConfMaxZOrigin /= 1_mm;
+		config.minImpactSeedConf /= 1_mm;
 
     return config;
   }
