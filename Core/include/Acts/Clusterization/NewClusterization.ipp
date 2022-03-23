@@ -24,13 +24,27 @@ struct cell_type_has_required_functions<T, void_t<
     decltype(get_cell_column(std::declval<T>())),
     decltype(get_cell_activation(std::declval<T>()))>>
     : std::true_type {};
+
+template <typename, typename, typename T = void>
+struct cluster_type_has_required_functions : std::false_type {};
+
+template <typename T, typename U>
+struct cluster_type_has_required_functions<T, U, void_t<
+    decltype(cluster_add_cell(std::declval<T>(), std::declval<U>()))>>
+    : std::true_type {};
 } // namespace Concepts
 
 template <typename T>
 constexpr bool CellConcept =
     Concepts::cell_type_has_required_functions<T>();
 
+template <typename T, typename U>
+constexpr bool ClusterConcept =
+    Concepts::cluster_type_has_required_functions<T, U>();
+
 #define CHECK_CELL_TYPE(T) static_assert(CellConcept<T>, "Cell type should have the following functions:'int get_cell_row(const Cell&)', 'int get_cell_column(const Cell&)', 'float get_cell_activation(const Cell&)'")
+
+#define CHECK_CLUSTER_TYPE(T, U) static_assert(ClusterConcept<T, U>, "Cluster type should have the following function:'void cluster_add_cell(Cluster&, const Cell&)'")
 
 // TODO namespace
 // TODO internal namespace
@@ -189,6 +203,7 @@ template <typename Cell, typename InputIt>
 LabeledCellCollection<Cell> labelClusters(InputIt begin, InputIt end, bool commonCorner, float threshold)
 {
     CHECK_CELL_TYPE(Cell);
+
     LabeledCellCollection<Cell> lcells;
     for (InputIt it = begin; it != end; ++it) {
 	if (get_cell_activation(*it) >= threshold)
@@ -203,6 +218,8 @@ template <typename Cell, typename ClusterT, typename InputIt, typename OutputIt>
 void createClusters(InputIt begin, InputIt end, OutputIt out, bool commonCorner, float threshold)
 {
     CHECK_CELL_TYPE(Cell);
+    CHECK_CLUSTER_TYPE(ClusterT&, const Cell&);
+
     LabeledCellCollection<Cell> lcells {
 	labelClusters<Cell>(begin, end, commonCorner, threshold)
     };
