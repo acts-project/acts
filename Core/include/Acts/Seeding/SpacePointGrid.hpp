@@ -38,7 +38,7 @@ struct SpacePointGridConfig {
   // maximum impact parameter in mm
   float impactMax;
   // sets of consecutive phi bins in the seed making step
-  int numPhiNeighbors;
+  int numPhiNeighbors = 0;
   // enable non equidistant binning in z
   std::vector<float> zBinEdges;
 
@@ -59,8 +59,7 @@ struct SpacePointGridConfig {
 
 template <typename external_spacepoint_t>
 using SpacePointGrid = detail::Grid<
-    std::vector<
-        std::unique_ptr<const InternalSpacePoint<external_spacepoint_t>>>,
+    std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>,
     detail::Axis<detail::AxisType::Equidistant,
                  detail::AxisBoundaryType::Closed>,
     detail::Axis<detail::AxisType::Variable, detail::AxisBoundaryType::Bound>>;

@@ -44,6 +44,7 @@ components:
 -   [SYCL](https://www.khronos.org/sycl/) for the SYCL plugin
 -   [cugraph](https://github.com/rapidsai/cugraph) for the Exa.TrkX plugin
 -   [libtorch](https://pytorch.org/cppdocs/installing.html) for the Exa.TrkX plugin
+-   [Pybind11](https://github.com/pybind/pybind11) for the Python bindings of the examples
 
 There are some additional dependencies that are automatically provided as part of
 the build system.
@@ -247,6 +248,7 @@ components.
 | ACTS_BUILD_PLUGIN_JSON              | Build Json plugin                                                                                     |
 | ACTS_BUILD_PLUGIN_LEGACY            | Build legacy plugin                                                                                   |
 | ACTS_BUILD_PLUGIN_ONNX              | Build ONNX plugin                                                                                     |
+| ACTS_SETUP_VECMEM                   | Setup the vecmem library targets as part of this build                                                |
 | ACTS_BUILD_PLUGIN_SYCL              | Build SYCL plugin                                                                                     |
 | ACTS_BUILD_PLUGIN_TGEO              | Build TGeo plugin                                                                                     |
 | ACTS_BUILD_FATRAS                   | Build FAst TRAcking Simulation package                                                                |
@@ -263,11 +265,14 @@ components.
 | ACTS_BUILD_DOCS                     | Build documentation                                                                                   |
 | ACTS_BUILD_ANALYSIS_APPS            | Build root based stand-alone analysis applications (defaults is OFF)                                  |
 | ACTS_LOG_FAILURE_THRESHOLD          | Automatically fail when a log above the specified debug level is emitted (useful for automated tests) |
+| ACTS_FORCE_ASSERTIONS               | Try to force keeping `assert` even in Release builds. (useful for automated tests)                    |
 | ACTS_PARAMETER_DEFINITIONS_HEADER   | Use a different (track) parameter definitions header                                                  |
-| ACTS_USE_SYSTEM_AUTODIFF            | Use autodiff provided by the system instead of the bundled version                                    |
-| ACTS_USE_SYSTEM_NLOHMANN_JSON       | Use nlohmann::json provided by the system instead of the bundled version                              |
+| ACTS_USE_SYSTEM_AUTODIFF            | Use autodiff provided by the system instead of building it                                            |
+| ACTS_USE_SYSTEM_NLOHMANN_JSON       | Use nlohmann::json provided by the system instead of building it                                      |
 | ACTS_USE_SYSTEM_BOOST               | Use the system boost libraries (defaults to ON)                                                       |
 | ACTS_USE_SYSTEM_EIGEN3              | Use the system eigen3 libraries (defaults to ON)                                                      |
+| ACTS_USE_SYSTEM_VECMEM              | Use system provided vecmem installation                                                               |
+| ACTS_USE_SYSTEM_PYBIND11            | Use pybind11 installed in the system                                                                  |
 
 All Acts-specific options are disabled or empty by default and must be
 specifically requested. Some of the options have interdependencies that are

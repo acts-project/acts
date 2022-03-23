@@ -25,6 +25,7 @@ option(ACTS_BUILD_EVERYTHING "Build with most options enabled (except HepMC3 and
 # core related options
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
 set(ACTS_LOG_FAILURE_THRESHOLD "" CACHE STRING "Log level above which an exception should be automatically thrown")
+option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
 # plugins related options
 option(ACTS_BUILD_PLUGIN_AUTODIFF "Build the autodiff plugin" OFF)
 option(ACTS_USE_SYSTEM_AUTODIFF "Use autodiff provided by the system instead of the bundled version" OFF)
@@ -53,6 +54,7 @@ option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HEPMC3 "Build HepMC3-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "Build python bindings for the examples" OFF)
+option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" OFF )
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
 # test related options
 option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
@@ -131,6 +133,12 @@ include(ActsComponentsHelpers) # handle components via add_..._if commands
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
 
+# This needs to happen before we set up any targets
+if(ACTS_FORCE_ASSERTIONS)
+  message(STATUS "Injecting headers to force assertions. This can have side-effects, USE WITH CAUTION!")
+  include_directories(BEFORE SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/cmake/assert_include)
+endif()
+
 # minimal dependency versions. they are defined here in a single place so
 # they can be easily upgraded, although they might not be used if the
 # dependency is included via `add_subdirectory(...)`.
@@ -205,24 +213,19 @@ endmacro()
 # when a particular package is actually needed.
 # plugin dependencies
 if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
+  find_package(Python COMPONENTS Interpreter Development)
+  if(ACTS_USE_SYSTEM_PYBIND11) 
+    find_package(pybind11 CONFIG REQUIRED)
+  else()
     add_subdirectory(thirdparty/pybind11)
+  endif()
 endif()
 if(ACTS_BUILD_PLUGIN_AUTODIFF)
   if(ACTS_USE_SYSTEM_AUTODIFF)
     find_package(autodiff ${_acts_autodiff_version} CONFIG REQUIRED)
     message(STATUS "Using system installation of autodiff")
   else()
-    # This policy allows to set the options outside without changing autodiff's CMakeLists.txt
-    set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-    set(AUTODIFF_BUILD_TESTS OFF)
-    set(AUTODIFF_BUILD_PYTHON OFF)
-    set(AUTODIFF_BUILD_EXAMPLES OFF)
-    set(AUTODIFF_BUILD_DOCS OFF)
     add_subdirectory(thirdparty/autodiff)
-    # Mark autodiff as system include directories so that no warnings trigger
-    get_target_property(_autodiff_includes autodiff INTERFACE_INCLUDE_DIRECTORIES)
-    set_target_properties(autodiff PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_autodiff_includes}")
-    message(STATUS "Using bundled autodiff")
   endif()
 endif()
 if(ACTS_BUILD_PLUGIN_CUDA)
@@ -236,8 +239,6 @@ if(ACTS_BUILD_PLUGIN_JSON)
     message(STATUS "Using system installation of nlohmann::json")
     find_package(nlohmann_json ${_acts_nlohmanjson_version} REQUIRED CONFIG)
   else()
-    message(STATUS "Using bundled nlohmann::json")
-    set(JSON_BuildTests OFF CACHE INTERNAL "")
     add_subdirectory(thirdparty/nlohmann_json)
   endif()
 endif()
