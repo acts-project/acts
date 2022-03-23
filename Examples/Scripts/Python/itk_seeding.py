@@ -109,6 +109,11 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
         impactWeightFactor=100,
         compatSeedWeight=100,
         compatSeedLimit=3,
+        curvatureSortingInFilter=True,
+        seedConfirmation=True,
+        centralSeedConfirmationRange=seedFinderConfig.centralSeedConfirmationRange,
+				forwardSeedConfirmationRange=seedFinderConfig.forwardSeedConfirmationRange,
+        useDeltaRTopRadius=True,
     )
 
     seedingAlg = acts.examples.SeedingAlgorithm(

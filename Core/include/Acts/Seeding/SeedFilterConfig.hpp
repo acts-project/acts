@@ -35,6 +35,9 @@ struct SeedFilterConfig {
   size_t compatSeedLimit = 2;
   // Tool to apply experiment specific cuts on collected middle space points
 	
+	// sort vectors vectors by curvature
+	bool curvatureSortingInFilter = false;
+	
 	// seed confirmation
 	bool seedConfirmation = false;
 	// contains parameters for central seed confirmation

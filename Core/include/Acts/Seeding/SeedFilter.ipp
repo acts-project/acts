@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <algorithm>
+#include <numeric>
 #include <utility>
 
 namespace Acts {
@@ -46,7 +48,19 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 	bool minWeightSeed = false;
 	float weightMin = std::numeric_limits<float>::min();
 	
-  for (size_t i = 0; i < topSpVec.size(); i++) {
+	// initialize original index locations
+	std::vector<size_t> idx(topSpVec.size());
+	std::iota(idx.begin(), idx.end(), 0);
+	
+	if (m_cfg.curvatureSortingInFilter) {
+		// sort indexes based on comparing values in invHelixDiameterVec
+		std::sort(idx.begin(), idx.end(),
+							[&invHelixDiameterVec](size_t i1, size_t i2) {
+			return invHelixDiameterVec[i1] < invHelixDiameterVec[i2];
+		});
+	}
+	
+	for (auto& i : idx) {
     // if two compatible seeds with high distance in r are found, compatible
     // seeds span 5 layers
     // -> very good seed
@@ -65,7 +79,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 		}
     
     float weight = -(impact * m_cfg.impactWeightFactor);
-    for (size_t j = 0; j < topSpVec.size(); j++) {
+		for (auto& j : idx) {
       if (i == j) {
         continue;
       }
@@ -87,6 +101,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         continue;
       }
       if (invHelixDiameterVec[j] > upperLimitCurv) {
+				if (m_cfg.curvatureSortingInFilter) {
+					break;
+				}
         continue;
       }
       bool newCompSeed = true;

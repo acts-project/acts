@@ -60,6 +60,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(deltaRMin);
     ACTS_PYTHON_MEMBER(maxSeedsPerSpM);
     ACTS_PYTHON_MEMBER(compatSeedLimit);
+		ACTS_PYTHON_MEMBER(curvatureSortingInFilter);
 		ACTS_PYTHON_MEMBER(seedConfirmation);
 		ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
 		ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
