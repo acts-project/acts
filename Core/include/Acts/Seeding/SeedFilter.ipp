@@ -33,15 +33,15 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>>
         outIt) const {
   // seed confirmation
-  int nTopSeedConf;
+  int nTopSeedConf = 0;
   if (m_cfg.seedConfirmation) {
     float rMaxSeedConfirmation =
         std::abs(bottomSP.z()) < m_cfg.centralSeedConfirmationRange.zMaxSeedConf
             ? m_cfg.centralSeedConfirmationRange.rMaxSeedConf
             : m_cfg.forwardSeedConfirmationRange.rMaxSeedConf;
-    nTopSeedConf = 1;
+    nTopSeedConf = rMaxSeedConfirmation.nTopForSmallR;
     if (bottomSP.radius() > rMaxSeedConfirmation)
-      nTopSeedConf = 0;
+      nTopSeedConf = rMaxSeedConfirmation.nTopForLargeR;
   }
 
   size_t minWeightSeedIndex = 0;
@@ -138,7 +138,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     int deltaSeedConf;
     if (m_cfg.seedConfirmation) {
       // seed confirmation cuts
-      deltaSeedConf = compatibleSeedR.size() - nTopSeedConf;
+      deltaSeedConf = compatibleSeedR.size() + 1 - nTopSeedConf;
       if (deltaSeedConf < 0 || (numQualitySeeds and !deltaSeedConf)) {
         continue;
       }
