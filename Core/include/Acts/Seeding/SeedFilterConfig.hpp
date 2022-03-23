@@ -34,34 +34,34 @@ struct SeedFilterConfig {
   // compatible seed?
   size_t compatSeedLimit = 2;
   // Tool to apply experiment specific cuts on collected middle space points
-	
-	// sort vectors vectors by curvature
-	bool curvatureSortingInFilter = false;
-	
-	// seed confirmation
-	bool seedConfirmation = false;
-	// contains parameters for central seed confirmation
-	SeedConfirmationRange centralSeedConfirmationRange;
-	// contains parameters for forward seed confirmation
-	SeedConfirmationRange forwardSeedConfirmationRange;
-	// minimum radius for bottom SP in seed confirmation
-	float seedConfMinBottomRadius = 60. * Acts::UnitConstants::mm;
-	// maximum zOrigin in seed confirmation
-	float seedConfMaxZOrigin = 150. * Acts::UnitConstants::mm;
-	// minimum impact parameter for seed confirmation
-	float minImpactSeedConf = 1. * Acts::UnitConstants::mm;
-	
-	// use deltaR instead of top radius
-	bool useDeltaRTopRadius = false;
+
+  // sort vectors vectors by curvature
+  bool curvatureSortingInFilter = false;
+
+  // seed confirmation
+  bool seedConfirmation = false;
+  // contains parameters for central seed confirmation
+  SeedConfirmationRange centralSeedConfirmationRange;
+  // contains parameters for forward seed confirmation
+  SeedConfirmationRange forwardSeedConfirmationRange;
+  // minimum radius for bottom SP in seed confirmation
+  float seedConfMinBottomRadius = 60. * Acts::UnitConstants::mm;
+  // maximum zOrigin in seed confirmation
+  float seedConfMaxZOrigin = 150. * Acts::UnitConstants::mm;
+  // minimum impact parameter for seed confirmation
+  float minImpactSeedConf = 1. * Acts::UnitConstants::mm;
+
+  // use deltaR instead of top radius
+  bool useDeltaRTopRadius = false;
 
   SeedFilterConfig toInternalUnits() const {
     using namespace Acts::UnitLiterals;
     SeedFilterConfig config = *this;
     config.deltaRMin /= 1_mm;
     config.deltaInvHelixDiameter /= 1. / 1_mm;
-		config.seedConfMinBottomRadius /= 1_mm;
-		config.seedConfMaxZOrigin /= 1_mm;
-		config.minImpactSeedConf /= 1_mm;
+    config.seedConfMinBottomRadius /= 1_mm;
+    config.seedConfMaxZOrigin /= 1_mm;
+    config.minImpactSeedConf /= 1_mm;
 
     return config;
   }

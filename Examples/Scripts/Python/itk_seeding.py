@@ -112,7 +112,7 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
         curvatureSortingInFilter=True,
         seedConfirmation=True,
         centralSeedConfirmationRange=seedFinderConfig.centralSeedConfirmationRange,
-				forwardSeedConfirmationRange=seedFinderConfig.forwardSeedConfirmationRange,
+        forwardSeedConfirmationRange=seedFinderConfig.forwardSeedConfirmationRange,
         useDeltaRTopRadius=True,
     )
 
