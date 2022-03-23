@@ -127,8 +127,8 @@ template <typename Cell, typename CellCollection>
 void label_clusters_inplace(CellCollection& lcells, bool commonCorner)
 {
     DisjointSets ds{};
-    std::array<LabelType, 4> seen = {
-	LabelType::None, LabelType::None, LabelType::None, LabelType::None
+    std::array<Label, 4> seen = {
+	Label::None, Label::None, Label::None, Label::None
     };
 
     // Sort cells by position to enable in-order scan
@@ -165,7 +165,7 @@ void label_clusters_inplace(CellCollection& lcells, bool commonCorner)
 
 // TODO descr
 template <typename Cell, typename InputIt>
-LabeledCellCollection<Cell> labelClusters(InputIt begin, InputIt end, bool commonCorner = true, float threshold = 0)
+LabeledCellCollection<Cell> labelClusters(InputIt begin, InputIt end, bool commonCorner, float threshold)
 {
     LabeledCellCollection<Cell> lcells;
     for (InputIt it = begin; it != end; ++it) {
@@ -183,6 +183,8 @@ void createClusters(InputIt begin, InputIt end, OutputIt out, bool commonCorner,
     LabeledCellCollection<Cell> lcells {
 	labelClusters<Cell>(begin, end, commonCorner, threshold)
     };
+    if (lcells.empty())
+	return;
 
     // Sort the cells by their cluster label
     std::sort(lcells.begin(), lcells.end(),
@@ -191,7 +193,7 @@ void createClusters(InputIt begin, InputIt end, OutputIt out, bool commonCorner,
 
     // Accumulate clusters into the output collections
     ClusterT cl;
-    size_t lbl = lcells[0].lbl;
+    size_t lbl = lcells.front().lbl;
     for (auto& cell : lcells) {
 	if (cell.lbl != lbl) {
 	    // New cluster, save previous one
