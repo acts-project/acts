@@ -42,9 +42,9 @@ template <typename T, typename U>
 constexpr bool ClusterConcept =
     Concepts::cluster_type_has_required_functions<T, U>();
 
-#define CHECK_CELL_TYPE(T) static_assert(CellConcept<T>, "Cell type should have the following functions:'int get_cell_row(const Cell&)', 'int get_cell_column(const Cell&)', 'float get_cell_activation(const Cell&)'")
+#define CHECK_CELL_TYPE(T) do { static_assert(CellConcept<T>, "Cell type should have the following functions:'int get_cell_row(const Cell&)', 'int get_cell_column(const Cell&)', 'float get_cell_activation(const Cell&)'") } while (0)
 
-#define CHECK_CLUSTER_TYPE(T, U) static_assert(ClusterConcept<T, U>, "Cluster type should have the following function:'void cluster_add_cell(Cluster&, const Cell&)'")
+#define CHECK_CLUSTER_TYPE(T, U) do { static_assert(ClusterConcept<T, U>, "Cluster type should have the following function:'void cluster_add_cell(Cluster&, const Cell&)'") } while (0)
 
 // TODO namespace
 // TODO internal namespace
@@ -246,3 +246,6 @@ void createClusters(InputIt begin, InputIt end, OutputIt out, bool commonCorner,
     // Get the last cluster as well
     *out++ = std::move(cl);
 }
+
+#undef CHECK_CELL_TYPE
+#undef CHECK_CLUSTER_TYPE
