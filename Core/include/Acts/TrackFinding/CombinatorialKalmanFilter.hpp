@@ -585,8 +585,8 @@ class CombinatorialKalmanFilter {
 
         // Create trackstates for all source links (will be filtered later)
         // Results are stored in result => no return value
-        createSourceLinkTrackStates(state.geoContext, surface, result,
-                                    boundState, prevTip);
+        createSourceLinkTrackStates(state.geoContext, result, boundState,
+                                    prevTip, slBegin, slEnd);
 
         // Invoke the measurement selector to select compatible measurements
         // with the predicted track parameter.
@@ -743,20 +743,20 @@ class CombinatorialKalmanFilter {
     /// @param result Reference to the result struct of the actor
     /// @param boundState Bound state from the propagation on this surface
     /// @param prevTip Index pointing at previous trajectory state (i.e. tip)
+    template <typename source_link_iterator_t>
     void createSourceLinkTrackStates(const Acts::GeometryContext& gctx,
-                                     const Surface* surface,
                                      result_type& result,
                                      const BoundState& boundState,
-                                     size_t prevTip) const {
+                                     size_t prevTip,
+                                     source_link_iterator_t slBegin,
+                                     source_link_iterator_t slEnd) const {
       const auto& [boundParams, jacobian, pathLength] = boundState;
 
-      // Get all source links on the surface
-      auto [slBegin, slEnd] = m_sourcelinkAccessor(*surface);
-
       result.trackStateCandidates.clear();
-      if constexpr (std::is_same_v<typename std::iterator_traits<decltype(
-                                       slBegin)>::iterator_category,
-                                   std::random_access_iterator_tag>) {
+      if constexpr (std::is_same_v<
+                        typename std::iterator_traits<
+                            source_link_iterator_t>::iterator_category,
+                        std::random_access_iterator_tag>) {
         result.trackStateCandidates.reserve(std::distance(slBegin, slEnd));
       }
 
