@@ -130,7 +130,7 @@ class ISurfaceMaterial {
 
 inline double ISurfaceMaterial::factor(NavigationDirection pDir,
                                        MaterialUpdateStage mStage) const {
-  if (mStage == Acts::MaterialUpdateStage::fullUpdate) {
+  if (mStage == Acts::MaterialUpdateStage::FullUpdate) {
     return 1.;
   }
   return (pDir * mStage > 0 ? m_splitFactor : 1. - m_splitFactor);
