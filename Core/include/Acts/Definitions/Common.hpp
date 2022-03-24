@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 
+#include <iosfwd>
 #include <limits>
 
 namespace Acts {
@@ -39,11 +40,21 @@ enum NavigationDirection : int { backward = -1, forward = 1 };
 /// - PreUpdate  : update on approach of a surface
 /// - FullUpdate : update when passing a surface
 /// - PostUpdate : update when leaving a surface
-enum MaterialUpdateStage : int {
+enum class MaterialUpdateStage : int {
   PreUpdate = -1,
   FullUpdate = 0,
   PostUpdate = 1
 };
+
+std::ostream& operator<<(std::ostream& os, MaterialUpdateStage matUpdate);
+
+inline constexpr auto operator*(MaterialUpdateStage dir, double value) {
+  return static_cast<std::underlying_type_t<NavigationDirection>>(dir) * value;
+}
+
+inline constexpr auto operator*(double value, MaterialUpdateStage dir) {
+  return value * static_cast<std::underlying_type_t<NavigationDirection>>(dir);
+}
 
 /// @enum NoiseUpdateMode to tell how to deal with noise term in covariance
 /// transport
