@@ -555,7 +555,8 @@ class CombinatorialKalmanFilter {
         stepper.transportCovarianceToBound(state.stepping, *surface);
 
         // Update state and stepper with pre material effects
-        materialInteractor(surface, state, stepper, MaterialUpdateStage::PreUpdate);
+        materialInteractor(surface, state, stepper,
+                           MaterialUpdateStage::PreUpdate);
 
         // Bind the transported state to the current surface
         auto boundStateRes =
@@ -626,7 +627,8 @@ class CombinatorialKalmanFilter {
                              << result.activeTips.back().first);
         }
         // Update state and stepper with post material effects
-        materialInteractor(surface, state, stepper, MaterialUpdateStage::PostUpdate);
+        materialInteractor(surface, state, stepper,
+                           MaterialUpdateStage::PostUpdate);
       } else if (surface->associatedDetectorElement() != nullptr ||
                  surface->surfaceMaterial() != nullptr) {
         // No splitting on the surface without source links. Set it to one
@@ -703,7 +705,8 @@ class CombinatorialKalmanFilter {
         }
         if (surface->surfaceMaterial() != nullptr) {
           // Update state and stepper with material effects
-          materialInteractor(surface, state, stepper, MaterialUpdateStage::FullUpdate);
+          materialInteractor(surface, state, stepper,
+                             MaterialUpdateStage::FullUpdate);
         }
       } else {
         // Neither measurement nor material on surface, this branch is still
@@ -972,9 +975,10 @@ class CombinatorialKalmanFilter {
     /// @param updateStage The materal update stage
     ///
     template <typename propagator_state_t, typename stepper_t>
-    void materialInteractor(
-        const Surface* surface, propagator_state_t& state, stepper_t& stepper,
-        const MaterialUpdateStage& updateStage = MaterialUpdateStage::FullUpdate) const {
+    void materialInteractor(const Surface* surface, propagator_state_t& state,
+                            stepper_t& stepper,
+                            const MaterialUpdateStage& updateStage =
+                                MaterialUpdateStage::FullUpdate) const {
       const auto& logger = state.options.logger;
       // Indicator if having material
       bool hasMaterial = false;

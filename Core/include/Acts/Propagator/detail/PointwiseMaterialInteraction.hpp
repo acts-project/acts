@@ -88,8 +88,9 @@ struct PointwiseMaterialInteraction {
   ///
   /// @return Boolean statement whether the material is valid
   template <typename propagator_state_t>
-  bool evaluateMaterialSlab(const propagator_state_t& state,
-                            MaterialUpdateStage updateStage = MaterialUpdateStage::FullUpdate) {
+  bool evaluateMaterialSlab(
+      const propagator_state_t& state,
+      MaterialUpdateStage updateStage = MaterialUpdateStage::FullUpdate) {
     // We are at the start surface
     if (surface == state.navigation.startSurface) {
       updateStage = MaterialUpdateStage::PostUpdate;
