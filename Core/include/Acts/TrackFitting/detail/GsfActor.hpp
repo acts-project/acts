@@ -22,12 +22,11 @@
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
 #include "Acts/TrackFitting/detail/KLMixtureReduction.hpp"
 #include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
+#include "Acts/Utilities/Zip.hpp"
 
 #include <ios>
 #include <map>
 #include <numeric>
-
-#include <boost/range/combine.hpp>
 
 namespace Acts {
 namespace detail {
@@ -307,7 +306,7 @@ struct GsfActor {
                            const result_type& result,
                            std::vector<ComponentCache>& componentCache) const {
     auto cmps = stepper.componentIterable(state.stepping);
-    for (auto [idx, cmp] : boost::combine(result.currentTips, cmps)) {
+    for (auto [idx, cmp] : zip(result.currentTips, cmps)) {
       auto proxy = result.fittedStates.getTrackState(idx);
 
       MetaCache mcache;
@@ -448,7 +447,7 @@ struct GsfActor {
     auto components = stepper.componentIterable(state.stepping);
     double sum_w = 0.0;
 
-    for (const auto [tip, cmp] : boost::combine(tips, components)) {
+    for (auto [tip, cmp] : zip(tips, components)) {
       if (cmp.status() == Intersection3D::Status::onSurface) {
         sum_w += cmp.weight();
         new_tips.push_back(tip);
@@ -497,7 +496,8 @@ struct GsfActor {
     std::vector<std::size_t> newTips;
 
     auto cmps = stepper.componentIterable(state.stepping);
-    for (auto [idx, cmp] : boost::combine(result.currentTips, cmps)) {
+
+    for (auto [idx, cmp] : zip(result.currentTips, cmps)) {
       // we set ignored components to missed, so we can remove them after
       // the loop
       if (result.weightsOfStates.at(idx) < m_cfg.weightCutoff) {
@@ -585,7 +585,7 @@ struct GsfActor {
     bool is_valid_measurement = false;
 
     auto cmps = stepper.componentIterable(state.stepping);
-    for (auto [idx, cmp] : boost::combine(result.parentTips, cmps)) {
+    for (auto [idx, cmp] : zip(result.parentTips, cmps)) {
       auto singleState = cmp.singleState(state);
       const auto& singleStepper = cmp.singleStepper(stepper);
 
@@ -648,7 +648,7 @@ struct GsfActor {
     bool is_hole = true;
 
     auto cmps = stepper.componentIterable(state.stepping);
-    for (auto [idx, cmp] : boost::combine(result.parentTips, cmps)) {
+    for (auto [idx, cmp] : zip(result.parentTips, cmps)) {
       auto singleState = cmp.singleState(state);
       const auto& singleStepper = cmp.singleStepper(stepper);
 
