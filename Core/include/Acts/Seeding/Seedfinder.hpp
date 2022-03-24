@@ -83,6 +83,27 @@ class Seedfinder {
       sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
       Extent rRangeSPExtent) const;
 
+  /// @brief Compatibility method for the new-style seed finding API.
+  ///
+  /// This method models the old-style seeding API where we only need a
+  /// container for the bottom, middle, and top space points. Also, the results
+  /// are returned by value instead of inserted into an inserter.
+  ///
+  /// @note This method is a very simply wrapper around the more modern API.
+  /// @warning The performance of the seeding code is far greater if the new
+  /// API is used, and this is recommended for all new uses which do not
+  /// require backwards-compatibility.
+  ///
+  /// @tparam sp_range_t container type for the seed point collections.
+  /// @param bottomSPs group of space points to be used as innermost SP in a
+  /// seed.
+  /// @param middleSPs group of space points to be used as middle SP in a seed.
+  /// @param topSPs group of space points to be used as outermost SP in a seed.
+  /// @returns a vector of seeds.
+  template <typename sp_range_t>
+  std::vector<Seed<external_spacepoint_t>> createSeedsForGroup(
+      sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
+
  private:
   Acts::SeedfinderConfig<external_spacepoint_t> m_config;
 };
