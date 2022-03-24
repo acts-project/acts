@@ -179,7 +179,8 @@ struct FitterTester {
     // backward filtering requires a reference surface
     options.referenceSurface = &start.referenceSurface();
     // this is the default option. set anyways for consistency
-    options.propagatorPlainOptions.direction = Acts::forward;
+    options.propagatorPlainOptions.direction =
+        Acts::NavigationDirection::forward;
 
     auto res =
         fitter.fit(sourceLinks.begin(), sourceLinks.end(), start, options);
@@ -224,7 +225,8 @@ struct FitterTester {
         start.charge(), start.covariance());
 
     options.referenceSurface = &startOuter.referenceSurface();
-    options.propagatorPlainOptions.direction = Acts::backward;
+    options.propagatorPlainOptions.direction =
+        Acts::NavigationDirection::backward;
 
     auto res =
         fitter.fit(sourceLinks.begin(), sourceLinks.end(), startOuter, options);

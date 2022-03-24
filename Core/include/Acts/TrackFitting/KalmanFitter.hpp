@@ -105,7 +105,7 @@ struct KalmanFitterOptions {
   /// @param mScattering Whether to include multiple scattering
   /// @param eLoss Whether to include energy loss
   /// @param rFiltering Whether to run filtering in reversed direction as smoothing
-  /// @param rfScaling Scale factor for the covariance matrix before the backward filtering
+  /// @param rfScaling Scale factor for the covariance matrix before the NavigationDirection::backward filtering
   KalmanFitterOptions(const GeometryContext& gctx,
                       const MagneticFieldContext& mctx,
                       std::reference_wrapper<const CalibrationContext> cctx,
@@ -206,7 +206,8 @@ struct KalmanFitterResult {
   // Measurement surfaces without hits
   std::vector<const Surface*> missedActiveSurfaces;
 
-  // Measurement surfaces handled in both forward and backward filtering
+  // Measurement surfaces handled in both NavigationDirection::forward and
+  // NavigationDirection::backward filtering
   std::vector<const Surface*> passedAgainSurfaces;
 
   Result<void> result{Result<void>::success()};
@@ -319,7 +320,9 @@ class KalmanFitter {
       // - Waiting for a current surface
       auto surface = state.navigation.currentSurface;
       std::string direction =
-          (state.stepping.navDir == forward) ? "forward" : "backward";
+          (state.stepping.navDir == NavigationDirection::forward)
+              ? "NavigationDirection::forward"
+              : "NavigationDirection::backward";
       if (surface != nullptr) {
         // Check if the surface is in the measurement map
         // -> Get the measurement / calibrate
@@ -466,7 +469,9 @@ class KalmanFitter {
 
       // Reverse navigation direction
       state.stepping.navDir =
-          (state.stepping.navDir == forward) ? backward : forward;
+          (state.stepping.navDir == NavigationDirection::forward)
+              ? NavigationDirection::backward
+              : NavigationDirection::forward;
 
       // Reset propagator options
       state.options.maxStepSize =
@@ -996,7 +1001,9 @@ class KalmanFitter {
             "Reverse navigation direction after smoothing for reaching the "
             "target surface");
         state.stepping.navDir =
-            (state.stepping.navDir == forward) ? backward : forward;
+            (state.stepping.navDir == NavigationDirection::forward)
+                ? NavigationDirection::backward
+                : NavigationDirection::forward;
       }
       // Reset the step size
       state.stepping.stepSize = ConstrainedStep(

@@ -50,7 +50,7 @@ static constexpr auto eps = 1024 * std::numeric_limits<double>::epsilon();
 // propagation settings
 static constexpr auto stepSize = 10_mm;
 static constexpr auto tolerance = 10_um;
-static constexpr NavigationDirection navDir = backward;
+static constexpr NavigationDirection navDir = NavigationDirection::backward;
 static auto magneticField =
     std::make_shared<ConstantBField>(Vector3(0.1_T, -0.2_T, 2_T));
 
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
                                 newAbsMom, newCharge, newCov);
   FreeVector freeParams = detail::transformBoundToFreeParameters(
       cp.referenceSurface(), geoCtx, cp.parameters());
-  NavigationDirection ndir = forward;
+  NavigationDirection ndir = NavigationDirection::forward;
   double stepSize = -256.;
 
   auto copyState = [&](auto& field, const auto& other) {
@@ -435,7 +435,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
                     std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_CHECK_EQUAL(stepper.charge(stateCopy), stepper.charge(state.stepping));
   BOOST_CHECK_EQUAL(stepper.time(stateCopy), freeParams[eFreeTime]);
-  BOOST_CHECK_EQUAL(stateCopy.navDir, forward);
+  BOOST_CHECK_EQUAL(stateCopy.navDir, NavigationDirection::forward);
   BOOST_CHECK_EQUAL(stateCopy.pathAccumulated, 0.);
   BOOST_CHECK_EQUAL(stateCopy.stepSize, std::numeric_limits<double>::max());
   BOOST_CHECK_EQUAL(stateCopy.previousStepSize,

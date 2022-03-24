@@ -70,7 +70,7 @@ struct PropagatorState {
       double q;
 
       /// the navigation direction
-      NavigationDirection navDir = forward;
+      NavigationDirection navDir = NavigationDirection::forward;
 
       // accummulated path length cache
       double pathAccumulated = 0.;

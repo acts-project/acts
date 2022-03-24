@@ -63,7 +63,7 @@ struct PropagatorResult : private detail::Extendable<result_list...> {
 ///
 struct PropagatorPlainOptions {
   /// Propagation direction
-  NavigationDirection direction = forward;
+  NavigationDirection direction = NavigationDirection::forward;
 
   /// The |pdg| code for (eventual) material integration - pion default
   int absPdgCode = 211;

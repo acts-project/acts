@@ -159,7 +159,7 @@ inline const Surface& BoundarySurfaceT<volume_t>::surfaceRepresentation()
 template <class volume_t>
 void BoundarySurfaceT<volume_t>::attachVolume(const volume_t* volume,
                                               NavigationDirection navDir) {
-  if (navDir == backward) {
+  if (navDir == NavigationDirection::backward) {
     m_oppositeVolume = volume;
   } else {
     m_alongVolume = volume;
@@ -170,7 +170,7 @@ template <class volume_t>
 void BoundarySurfaceT<volume_t>::attachVolumeArray(
     const std::shared_ptr<const VolumeArray> volumes,
     NavigationDirection navDir) {
-  if (navDir == backward) {
+  if (navDir == NavigationDirection::backward) {
     m_oppositeVolumeArray = volumes;
   } else {
     m_alongVolumeArray = volumes;

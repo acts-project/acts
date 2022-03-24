@@ -84,21 +84,25 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
   }
   // [0] Bottom Disc (negative z)
   auto dSurface = Surface::makeShared<DiscSurface>(transMinZ, m_discBounds);
-  oSurfaces.push_back(OrientedSurface(std::move(dSurface), forward));
+  oSurfaces.push_back(
+      OrientedSurface(std::move(dSurface), NavigationDirection::forward));
   // [1] Top Disc (positive z)
   dSurface = Surface::makeShared<DiscSurface>(transMaxZ, m_discBounds);
-  oSurfaces.push_back(OrientedSurface(std::move(dSurface), backward));
+  oSurfaces.push_back(
+      OrientedSurface(std::move(dSurface), NavigationDirection::backward));
 
   // [2] Outer Cylinder
   auto cSurface =
       Surface::makeShared<CylinderSurface>(transform, m_outerCylinderBounds);
-  oSurfaces.push_back(OrientedSurface(std::move(cSurface), backward));
+  oSurfaces.push_back(
+      OrientedSurface(std::move(cSurface), NavigationDirection::backward));
 
   // [3] Inner Cylinder (optional)
   if (m_innerCylinderBounds != nullptr) {
     cSurface =
         Surface::makeShared<CylinderSurface>(transform, m_innerCylinderBounds);
-    oSurfaces.push_back(OrientedSurface(std::move(cSurface), forward));
+    oSurfaces.push_back(
+        OrientedSurface(std::move(cSurface), NavigationDirection::forward));
   }
 
   // [4] & [5] - Sectoral planes (optional)
@@ -112,7 +116,8 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
                    AngleAxis3(M_PI / 2, Vector3(1., 0., 0.)));
     auto pSurface =
         Surface::makeShared<PlaneSurface>(sp1Transform, m_sectorPlaneBounds);
-    oSurfaces.push_back(OrientedSurface(std::move(pSurface), forward));
+    oSurfaces.push_back(
+        OrientedSurface(std::move(pSurface), NavigationDirection::forward));
     // sectorPlane 2 (positive phi)
     const Transform3 sp2Transform =
         Transform3(transform *
@@ -122,7 +127,8 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
                    AngleAxis3(-M_PI / 2, Vector3(1., 0., 0.)));
     pSurface =
         Surface::makeShared<PlaneSurface>(sp2Transform, m_sectorPlaneBounds);
-    oSurfaces.push_back(OrientedSurface(std::move(pSurface), backward));
+    oSurfaces.push_back(
+        OrientedSurface(std::move(pSurface), NavigationDirection::backward));
   }
   return oSurfaces;
 }

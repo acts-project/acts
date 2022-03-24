@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   state.stepping.p = 8.;
   state.stepping.q = 9.;
   state.stepping.covTransport = true;
-  state.stepping.navDir = backward;
+  state.stepping.navDir = NavigationDirection::backward;
   state.options.mass = 10.;
   state.options.absPdgCode = 11;
   state.navigation.currentVolume = volume;

@@ -29,7 +29,7 @@ using SingleStepper = EigenStepper<StepperExtensionList<DefaultExtension>>;
 
 const double defaultStepSize = 123.;
 const double defaultTolerance = 234.;
-const auto defaultNDir = backward;
+const auto defaultNDir = NavigationDirection::backward;
 
 const auto defaultBField =
     std::make_shared<ConstantBField>(Vector3(1., 2.5, 33.33));
@@ -370,11 +370,12 @@ void test_multi_stepper_surface_status_update() {
                     .unitDirection()
                     .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
 
-  MultiState multi_state(geoCtx, magCtx, defaultNullBField, multi_pars, forward,
-                         defaultStepSize, defaultTolerance);
+  MultiState multi_state(geoCtx, magCtx, defaultNullBField, multi_pars,
+                         NavigationDirection::forward, defaultStepSize,
+                         defaultTolerance);
   SingleStepper::State single_state(
       geoCtx, defaultNullBField->makeCache(magCtx), std::get<1>(multi_pars[0]),
-      forward, defaultStepSize, defaultTolerance);
+      NavigationDirection::forward, defaultStepSize, defaultTolerance);
 
   MultiStepper multi_stepper(defaultNullBField);
   SingleStepper single_stepper(defaultNullBField);
@@ -470,11 +471,12 @@ void test_component_bound_state() {
                     .unitDirection()
                     .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
 
-  MultiState multi_state(geoCtx, magCtx, defaultNullBField, multi_pars, forward,
-                         defaultStepSize, defaultTolerance);
+  MultiState multi_state(geoCtx, magCtx, defaultNullBField, multi_pars,
+                         NavigationDirection::forward, defaultStepSize,
+                         defaultTolerance);
   SingleStepper::State single_state(
       geoCtx, defaultNullBField->makeCache(magCtx), std::get<1>(multi_pars[0]),
-      forward, defaultStepSize, defaultTolerance);
+      NavigationDirection::forward, defaultStepSize, defaultTolerance);
 
   MultiStepper multi_stepper(defaultNullBField);
   SingleStepper single_stepper(defaultNullBField);

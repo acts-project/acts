@@ -131,8 +131,11 @@ struct PointwiseMaterialInteraction {
                    NoiseUpdateMode updateMode = addNoise) {
     // in forward(backward) propagation, energy decreases(increases) and
     // variances increase(decrease)
-    const auto nextE = std::sqrt(mass * mass + momentum * momentum) -
-                       std::copysign(Eloss, nav);
+    const auto nextE =
+        std::sqrt(mass * mass + momentum * momentum) -
+        std::copysign(
+            Eloss,
+            static_cast<std::underlying_type_t<NavigationDirection>>(nav));
     // put particle at rest if energy loss is too large
     nextP = (mass < nextE) ? std::sqrt(nextE * nextE - mass * mass) : 0;
     // update track parameters and covariance

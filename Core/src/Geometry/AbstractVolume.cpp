@@ -35,7 +35,7 @@ void Acts::AbstractVolume::createBoundarySurfaces() {
   for (auto& osf : orientedSurfaces) {
     AbstractVolume* opposite = nullptr;
     AbstractVolume* along = nullptr;
-    if (osf.second == backward) {
+    if (osf.second == NavigationDirection::backward) {
       opposite = this;
     } else {
       along = this;

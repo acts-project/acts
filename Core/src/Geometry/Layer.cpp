@@ -105,7 +105,7 @@ Acts::Layer::compatibleSurfaces(
   boost::container::small_vector<SurfaceIntersection, 10> sIntersections;
 
   // fast exit - there is nothing to
-  if (!m_surfaceArray || !m_approachDescriptor || !options.navDir) {
+  if (!m_surfaceArray || !m_approachDescriptor) {
     return sIntersections;
   }
 
@@ -180,7 +180,7 @@ Acts::Layer::compatibleSurfaces(
     if (sfi && detail::checkIntersection(sfi.intersection, pathLimit,
                                          overstepLimit, s_onSurfaceTolerance)) {
       // Now put the right sign on it
-      sfi.intersection.pathLength *= std::copysign(1., options.navDir);
+      sfi.intersection.pathLength *= options.navDir;
       sIntersections.push_back(sfi);
     }
   };
@@ -240,7 +240,7 @@ Acts::Layer::compatibleSurfaces(
   sIntersections.resize(std::distance(sIntersections.begin(), it));
 
   // sort according to the path length
-  if (options.navDir == forward) {
+  if (options.navDir == NavigationDirection::forward) {
     std::sort(sIntersections.begin(), sIntersections.end());
   } else {
     std::sort(sIntersections.begin(), sIntersections.end(), std::greater<>());
@@ -279,7 +279,7 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
 
     if (detail::checkIntersection(isection.intersection, pLimit, oLimit,
                                   s_onSurfaceTolerance)) {
-      isection.intersection.pathLength *= std::copysign(1., options.navDir);
+      isection.intersection.pathLength *= options.navDir;
       return isection;
     }
 
@@ -287,7 +287,7 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
         detail::checkIntersection(isection.alternative, pLimit, oLimit,
                                   s_onSurfaceTolerance)) {
       // Set the right sign for the path length
-      isection.alternative.pathLength *= std::copysign(1., options.navDir);
+      isection.alternative.pathLength *= options.navDir;
       return SurfaceIntersection(isection.alternative, isection.object);
     }
 
