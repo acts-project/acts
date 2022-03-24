@@ -40,6 +40,7 @@ class SeedFilter {
   /// @param invHelixDiameterVec vector containing 1/(2*r) values where r is the helix radius
   /// @param impactParametersVec vector containing the impact parameters
   /// @param zOrigin on the z axis as defined by bottom and middle space point
+  /// @param numQualitySeeds number of high quality seeds
   /// @param outIt Output iterator for the seeds
   virtual void filterSeeds_2SpFixed(
       InternalSpacePoint<external_spacepoint_t>& bottomSP,
