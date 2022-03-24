@@ -12,8 +12,6 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
-#include <concepts>
-
 namespace Acts {
 
 class Surface;

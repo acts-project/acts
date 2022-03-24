@@ -43,10 +43,10 @@ SteppingAction::~SteppingAction() {
 
 void SteppingAction::UserSteppingAction(const G4Step* step) {
   // Test if the event should be aborted
+  std::string processName =
+      step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
   if (std::find(m_eventRejectionProcess.begin(), m_eventRejectionProcess.end(),
-                step->GetPostStepPoint()
-                    ->GetProcessDefinedStep()
-                    ->GetProcessName()) != m_eventRejectionProcess.end()) {
+                processName) != m_eventRejectionProcess.end()) {
     m_eventAborted = true;
     G4RunManager::GetRunManager()->AbortEvent();
     return;
