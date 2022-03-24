@@ -15,7 +15,6 @@
 #include <cstddef>
 
 namespace Acts {
-
 struct SeedFilterConfig {
   // the allowed delta between two inverted seed radii for them to be considered
   // compatible.

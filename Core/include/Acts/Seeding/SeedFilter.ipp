@@ -39,9 +39,14 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         std::abs(bottomSP.z()) < m_cfg.centralSeedConfirmationRange.zMaxSeedConf
             ? m_cfg.centralSeedConfirmationRange.rMaxSeedConf
             : m_cfg.forwardSeedConfirmationRange.rMaxSeedConf;
-    nTopSeedConf = rMaxSeedConfirmation.nTopForSmallR;
+    SeedConfirmationRange seedConfRange =
+        (middleSP->z() > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
+         middleSP->z() < m_config.centralSeedConfirmationRange.zMinSeedConf)
+            ? m_config.forwardSeedConfirmationRange
+            : m_config.centralSeedConfirmationRange;
+    nTopSeedConf = seedConfRange.nTopForSmallR;
     if (bottomSP.radius() > rMaxSeedConfirmation)
-      nTopSeedConf = rMaxSeedConfirmation.nTopForLargeR;
+      nTopSeedConf = seedConfRange.nTopForLargeR;
   }
 
   size_t minWeightSeedIndex = 0;
