@@ -8,10 +8,9 @@
 
 namespace Acts {
 template <typename external_spacepoint_t>
-LinCircle transformCoordinates(
-    InternalSpacePoint<external_spacepoint_t>& sp,
-    InternalSpacePoint<external_spacepoint_t>& spM, 
-    bool bottom) {
+LinCircle transformCoordinates(InternalSpacePoint<external_spacepoint_t>& sp,
+                               InternalSpacePoint<external_spacepoint_t>& spM,
+                               bool bottom) {
   auto extractFunction =
       [](const InternalSpacePoint<external_spacepoint_t>& obj)
       -> std::array<float, 6> {
@@ -26,8 +25,7 @@ LinCircle transformCoordinates(
 
 template <typename external_spacepoint_t, typename callable_t>
 LinCircle transformCoordinates(external_spacepoint_t& sp,
-                               external_spacepoint_t& spM,
-			       bool bottom,
+                               external_spacepoint_t& spM, bool bottom,
                                callable_t&& extractFunction) {
   // The computation inside this function is exactly identical to that in the
   // vectorized version of this function, except that it operates on a single
@@ -63,11 +61,8 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
 template <typename external_spacepoint_t>
 void transformCoordinates(
     std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
-    InternalSpacePoint<external_spacepoint_t>& spM, 
-    bool bottom,
-    bool enableCutsForSortedSP, 
-    std::vector<LinCircle>& linCircleVec) {
-
+    InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
+    bool enableCutsForSortedSP, std::vector<LinCircle>& linCircleVec) {
   auto extractFunction =
       [](const InternalSpacePoint<external_spacepoint_t>& obj)
       -> std::array<float, 6> {
@@ -82,8 +77,7 @@ void transformCoordinates(
 
 template <typename external_spacepoint_t, typename callable_t>
 void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
-                          external_spacepoint_t& spM, 
-			  bool bottom,
+                          external_spacepoint_t& spM, bool bottom,
                           bool enableCutsForSortedSP,
                           std::vector<LinCircle>& linCircleVec,
                           callable_t&& extractFunction) {
@@ -140,8 +134,7 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
   // sort the SP in order of cotTheta
   if (enableCutsForSortedSP) {
     std::sort(vec.begin(), vec.end(),
-              [](external_spacepoint_t* a,
-                 external_spacepoint_t* b) -> bool {
+              [](external_spacepoint_t* a, external_spacepoint_t* b) -> bool {
                 return (a->cotTheta() < b->cotTheta());
               });
     std::sort(linCircleVec.begin(), linCircleVec.end(),
