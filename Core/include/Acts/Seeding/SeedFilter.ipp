@@ -40,10 +40,10 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
             ? m_cfg.centralSeedConfirmationRange.rMaxSeedConf
             : m_cfg.forwardSeedConfirmationRange.rMaxSeedConf;
     SeedConfirmationRange seedConfRange =
-        (middleSP->z() > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
-         middleSP->z() < m_config.centralSeedConfirmationRange.zMinSeedConf)
-            ? m_config.forwardSeedConfirmationRange
-            : m_config.centralSeedConfirmationRange;
+        (middleSP.z() > m_cfg.centralSeedConfirmationRange.zMaxSeedConf ||
+         middleSP.z() < m_cfg.centralSeedConfirmationRange.zMinSeedConf)
+            ? m_cfg.forwardSeedConfirmationRange
+            : m_cfg.centralSeedConfirmationRange;
     nTopSeedConf = seedConfRange.nTopForSmallR;
     if (bottomSP.radius() > rMaxSeedConfirmation)
       nTopSeedConf = seedConfRange.nTopForLargeR;
