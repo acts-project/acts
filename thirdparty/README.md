@@ -12,36 +12,15 @@ issues with missing files after installation.
 
 ## dfelibs
 
-A copy of [dfelibs](https://github.com/msmk0/dfelibs) v20200416, with the
-following folders removed:
-
--   examples
--   unittests
+CMake instructions to build [dfelibs](https://github.com/msmk0/dfelibs).
 
 ## nlohmann_json
 
-A copy of [nlohmann::json](https://github.com/nlohmann/json) revision 84f19d6, with the
-following folders removed:
-
--   benchmarks
--   doc
--   test
--   include
--   third_party
+CMake instructions to build [nlohmann::json](https://github.com/nlohmann/json).
 
 ## autodiff
 
-A copy of [autodiff](https://github.com/autodiff/autodiff), v0.6.4 (however, the 
-version given in the `CMakeLists.txt` of autodiff has not been changed by the maintainers
-and is still v0.6.3). In the `CMakeLists.txt` the commands `add_subdirectory(tests)` and 
-`add_subdirectory(examples)` have been commented out. All folders/files have been 
-removed except the following ones:
-
--   autodiff (contains the header files)
--   cmake
--   CMakeLists.txt
--   LICENSE
--   README.md
+CMake instructions to build  [autodiff](https://github.com/autodiff/autodiff).
 
 ## boost 
 
@@ -61,8 +40,4 @@ the minimum required version of [Eigen](https://eigen.tuxfamily.org)
 
 ## pybind11
 
-[Pybind11](https://github.com/pybind/pybind11) is used to create python bindings for 
-the examples. The following files/directories are removed:
--   docs
--   tests
--   .github
+CMake instructions to build [Pybind11](https://github.com/pybind/pybind11), which is used to create python bindings for the examples.
