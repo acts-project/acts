@@ -73,7 +73,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
   IndexSourceLinkAccessor slAccessor;
   slAccessor.container = &sourceLinks;
-  Acts::SourceLinkAccessor<IndexSourceLinkAccessor::Iterator>
+  Acts::SourceLinkAccessorDelegate<IndexSourceLinkAccessor::Iterator>
       slAccessorDelegate;
   slAccessorDelegate.connect<&IndexSourceLinkAccessor::range>(&slAccessor);
 

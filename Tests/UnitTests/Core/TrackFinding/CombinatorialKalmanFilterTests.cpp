@@ -250,7 +250,7 @@ struct Fixture {
   CombinatorialKalmanFilterOptions makeCkfOptions() const {
     return CombinatorialKalmanFilterOptions(
         geoCtx, magCtx, calCtx,
-        Acts::SourceLinkAccessor<
+        Acts::SourceLinkAccessorDelegate<
             TestSourceLinkAccessor::Iterator>{},  // leave the accessor empty,
                                                   // this will have to be set
                                                   // before running the CKF

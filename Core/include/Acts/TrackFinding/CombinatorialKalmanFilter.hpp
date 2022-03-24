@@ -124,7 +124,7 @@ struct CombinatorialKalmanFilterExtensions {
 /// Delegate type that retrieves a range of source links to for a given surface
 /// to be processed by the CKF
 template <typename source_link_iterator_t>
-using SourceLinkAccessor =
+using SourceLinkAccessorDelegate =
     Delegate<std::pair<source_link_iterator_t, source_link_iterator_t>(
         const Surface&)>;
 
@@ -135,7 +135,7 @@ using SourceLinkAccessor =
 template <typename source_link_iterator_t>
 struct CombinatorialKalmanFilterOptions {
   using SourceLinkIterator = source_link_iterator_t;
-  using SourceLinkAccessor = SourceLinkAccessor<source_link_iterator_t>;
+  using SourceLinkAccessor = SourceLinkAccessorDelegate<source_link_iterator_t>;
 
   /// PropagatorOptions with context
   ///
@@ -1210,7 +1210,8 @@ class CombinatorialKalmanFilter {
       const {
     const auto& logger = tfOptions.logger;
 
-    using SourceLinkAccessor = SourceLinkAccessor<source_link_iterator_t>;
+    using SourceLinkAccessor =
+        SourceLinkAccessorDelegate<source_link_iterator_t>;
 
     // Create the ActionList and AbortList
     using CombinatorialKalmanFilterAborter =
