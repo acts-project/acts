@@ -86,9 +86,9 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_access_test) {
   NavigationDirection fDir = forward;
   NavigationDirection bDir = backward;
 
-  MaterialUpdateStage pre = preUpdate;
-  MaterialUpdateStage full = fullUpdate;
-  MaterialUpdateStage post = postUpdate;
+  MaterialUpdateStage pre = MaterialUpdateStage::preUpdate;
+  MaterialUpdateStage full = MaterialUpdateStage::fullUpdate;
+  MaterialUpdateStage post = MaterialUpdateStage::postUpdate;
 
   // (a) Forward factor material test
   BOOST_CHECK_EQUAL(hsmfwd.factor(fDir, full), 1.);
