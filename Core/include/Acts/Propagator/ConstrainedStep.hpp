@@ -36,7 +36,7 @@ struct ConstrainedStep {
        std::numeric_limits<Scalar>::max(), std::numeric_limits<Scalar>::max()}};
 
   /// The Navigation direction
-  NavigationDirection direction = NavigationDirection::forward;
+  NavigationDirection direction = NavigationDirection::Forward;
 
   /// Update the step size of a certain type
   ///
@@ -61,7 +61,7 @@ struct ConstrainedStep {
   ///
   /// @param type is the constraint type to be released
   void release(Type type) {
-    Scalar mvalue = (direction == NavigationDirection::forward)
+    Scalar mvalue = (direction == NavigationDirection::Forward)
                         ? (*std::max_element(values.begin(), values.end()))
                         : (*std::min_element(values.begin(), values.end()));
     values[type] = mvalue;
@@ -70,8 +70,8 @@ struct ConstrainedStep {
   /// constructor from double
   /// @param value is the user given initial value
   ConstrainedStep(Scalar value)
-      : direction(value > 0. ? NavigationDirection::forward
-                             : NavigationDirection::backward) {
+      : direction(value > 0. ? NavigationDirection::Forward
+                             : NavigationDirection::Backward) {
     values[accuracy] *= direction;
     values[actor] *= direction;
     values[aborter] *= direction;
@@ -87,15 +87,15 @@ struct ConstrainedStep {
     /// set the accuracy value
     values[accuracy] = value;
     // set/update the direction
-    direction = value > 0. ? NavigationDirection::forward
-                           : NavigationDirection::backward;
+    direction = value > 0. ? NavigationDirection::Forward
+                           : NavigationDirection::Backward;
     return (*this);
   }
 
   /// Cast operator to double, returning the min/max value
   /// depending on the direction
   operator Scalar() const {
-    if (direction == NavigationDirection::forward) {
+    if (direction == NavigationDirection::Forward) {
       return (*std::min_element(values.begin(), values.end()));
     }
     return (*std::max_element(values.begin(), values.end()));
@@ -121,7 +121,7 @@ struct ConstrainedStep {
   /// Access to currently leading min type
   ///
   Type currentType() const {
-    if (direction == NavigationDirection::forward) {
+    if (direction == NavigationDirection::Forward) {
       return Type(std::min_element(values.begin(), values.end()) -
                   values.begin());
     }

@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   // Set up some variables
   GeometryContext tgContext = GeometryContext();
   MagneticFieldContext mfContext = MagneticFieldContext();
-  NavigationDirection ndir = NavigationDirection::backward;
+  NavigationDirection ndir = NavigationDirection::Backward;
   double stepSize = 123.;
   double tolerance = 234.;
 
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   // Set up some variables for the state
   GeometryContext tgContext = GeometryContext();
   MagneticFieldContext mfContext = MagneticFieldContext();
-  NavigationDirection ndir = NavigationDirection::backward;
+  NavigationDirection ndir = NavigationDirection::Backward;
   double stepSize = 123.;
   double tolerance = 234.;
 
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_CHECK(cp2.covariance().has_value());
   FreeVector freeParams = detail::transformBoundToFreeParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
-  ndir = NavigationDirection::forward;
+  ndir = NavigationDirection::Forward;
   double stepSize2 = -2. * stepSize;
 
   // Reset all possible parameters
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
                   std::abs(1. / freeParams[eFreeQOverP]), 1e-6);
   CHECK_CLOSE_ABS(sls.charge(slsStateCopy), sls.charge(ps.stepping), 1e-6);
   CHECK_CLOSE_ABS(sls.time(slsStateCopy), freeParams[eFreeTime], 1e-6);
-  BOOST_CHECK_EQUAL(slsStateCopy.navDir, NavigationDirection::forward);
+  BOOST_CHECK_EQUAL(slsStateCopy.navDir, NavigationDirection::Forward);
   BOOST_CHECK_EQUAL(slsStateCopy.pathAccumulated, 0.);
   BOOST_CHECK_EQUAL(slsStateCopy.stepSize, std::numeric_limits<double>::max());
   BOOST_CHECK_EQUAL(slsStateCopy.previousStepSize,

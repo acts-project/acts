@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
 
   auto options = f.makeCkfOptions();
   // this is the default option. set anyways for consistency
-  options.propagatorPlainOptions.direction = Acts::NavigationDirection::forward;
+  options.propagatorPlainOptions.direction = Acts::NavigationDirection::Forward;
   // Construct a plane surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3{-3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
 
   auto options = f.makeCkfOptions();
   options.propagatorPlainOptions.direction =
-      Acts::NavigationDirection::backward;
+      Acts::NavigationDirection::Backward;
   // Construct a plane surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3{3_m, 0., 0.}, Acts::Vector3{1., 0., 0});

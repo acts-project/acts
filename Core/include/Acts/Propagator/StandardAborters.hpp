@@ -24,7 +24,7 @@ namespace Acts {
 /// @brief TargetOptions struct for geometry interface
 struct TargetOptions {
   /// Navigation direction
-  NavigationDirection navDir = NavigationDirection::forward;
+  NavigationDirection navDir = NavigationDirection::Forward;
 
   /// Target Boundary check directive - always false here
   BoundaryCheck boundaryCheck = false;

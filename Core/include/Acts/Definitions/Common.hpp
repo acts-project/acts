@@ -34,7 +34,7 @@ static constexpr ActsScalar s_curvilinearProjTolerance = 0.999995;
 /// @enum NavigationDirection
 /// The navigation direciton is always with
 /// respect to a given momentum or direction
-enum class NavigationDirection : int { backward = -1, forward = 1 };
+enum class NavigationDirection : int { Backward = -1, Forward = 1 };
 
 std::ostream& operator<<(std::ostream& os, NavigationDirection navDir);
 

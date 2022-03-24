@@ -74,7 +74,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   // Create propagator options
   auto logger = getDefaultLogger("IPEstProp", Logging::INFO);
   propagator_options_t pOptions(gctx, mctx, LoggerWrapper{*logger});
-  pOptions.direction = NavigationDirection::backward;
+  pOptions.direction = NavigationDirection::Backward;
 
   // Do the propagation to linPointPos
   auto result = m_cfg.propagator->propagate(trkParams, *planeSurface, pOptions);
@@ -269,7 +269,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   // Create propagator options
   auto logger = getDefaultLogger("IPEstProp", Logging::INFO);
   propagator_options_t pOptions(gctx, mctx, LoggerWrapper{*logger});
-  pOptions.direction = NavigationDirection::backward;
+  pOptions.direction = NavigationDirection::Backward;
 
   // Do the propagation to linPoint
   auto result = m_cfg.propagator->propagate(track, *perigeeSurface, pOptions);

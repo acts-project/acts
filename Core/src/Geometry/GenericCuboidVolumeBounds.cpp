@@ -82,8 +82,8 @@ Acts::OrientedSurfaces Acts::GenericCuboidVolumeBounds::orientedSurfaces(
     Vector3 normal = ab.cross(ac).normalized();
 
     NavigationDirection nDir = ((cog - d).dot(normal) < 0)
-                                   ? NavigationDirection::backward
-                                   : NavigationDirection::forward;
+                                   ? NavigationDirection::Backward
+                                   : NavigationDirection::Forward;
 
     // build transform from z unit to normal
     // z is normal in local coordinates

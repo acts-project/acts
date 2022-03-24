@@ -131,7 +131,7 @@ struct StepCollector {
 /// These tests are aiming to test whether the state setup is working properly
 BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   // Set up some variables
-  NavigationDirection ndir = NavigationDirection::backward;
+  NavigationDirection ndir = NavigationDirection::Backward;
   double stepSize = 123.;
   double tolerance = 234.;
   auto bField = std::make_shared<ConstantBField>(Vector3(1., 2.5, 33.33));
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
 /// The numerical correctness of the stepper is tested in the integration tests
 BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Set up some variables for the state
-  NavigationDirection ndir = NavigationDirection::backward;
+  NavigationDirection ndir = NavigationDirection::Backward;
   double stepSize = 123.;
   double tolerance = 234.;
   auto bField = std::make_shared<ConstantBField>(Vector3(1., 2.5, 33.33));
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                                  charge2, cov2);
   FreeVector freeParams = detail::transformBoundToFreeParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
-  ndir = NavigationDirection::forward;
+  ndir = NavigationDirection::Forward;
   double stepSize2 = -2. * stepSize;
 
   auto copyState = [&](auto& field, const auto& state) {
@@ -397,7 +397,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_CHECK_EQUAL(es.charge(esStateCopy), es.charge(ps.stepping));
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
-  BOOST_CHECK_EQUAL(esStateCopy.navDir, NavigationDirection::forward);
+  BOOST_CHECK_EQUAL(esStateCopy.navDir, NavigationDirection::Forward);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
   BOOST_CHECK_EQUAL(esStateCopy.stepSize, std::numeric_limits<double>::max());
   BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, ps.stepping.previousStepSize);

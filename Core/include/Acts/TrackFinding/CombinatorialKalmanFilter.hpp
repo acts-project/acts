@@ -476,9 +476,9 @@ class CombinatorialKalmanFilter {
                 // Reverse navigation direction to start targeting for the rest
                 // tracks
                 state.stepping.navDir =
-                    (state.stepping.navDir == NavigationDirection::backward)
-                        ? NavigationDirection::forward
-                        : NavigationDirection::backward;
+                    (state.stepping.navDir == NavigationDirection::Backward)
+                        ? NavigationDirection::Forward
+                        : NavigationDirection::Backward;
                 // To avoid meaningless navigation target call
                 state.stepping.stepSize =
                     ConstrainedStep(state.stepping.navDir *
@@ -884,7 +884,7 @@ class CombinatorialKalmanFilter {
         } else {
           // Kalman update
           auto updateRes = m_extensions.updater(
-              gctx, trackState, NavigationDirection::forward, getDummyLogger());
+              gctx, trackState, NavigationDirection::Forward, getDummyLogger());
           if (!updateRes.ok()) {
             ACTS_ERROR("Update step failed: " << updateRes.error());
             return updateRes.error();
@@ -1134,9 +1134,9 @@ class CombinatorialKalmanFilter {
             "Reverse navigation direction after smoothing for reaching the "
             "target surface");
         state.stepping.navDir =
-            (state.stepping.navDir == NavigationDirection::forward)
-                ? NavigationDirection::backward
-                : NavigationDirection::forward;
+            (state.stepping.navDir == NavigationDirection::Forward)
+                ? NavigationDirection::Backward
+                : NavigationDirection::Forward;
       }
       // Reinitialize the stepping jacobian
       state.stepping.jacobian = BoundMatrix::Identity();

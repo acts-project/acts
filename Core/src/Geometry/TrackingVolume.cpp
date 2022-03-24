@@ -132,12 +132,12 @@ void Acts::TrackingVolume::connectDenseBoundarySurfaces(
                 boundSur.at(i));
         if (mutableBs->m_oppositeVolume != nullptr &&
             mutableBs->m_alongVolume == nullptr) {
-          navDir = NavigationDirection::forward;
+          navDir = NavigationDirection::Forward;
           mutableBs->attachVolume(this, navDir);
         } else {
           if (mutableBs->m_oppositeVolume == nullptr &&
               mutableBs->m_alongVolume != nullptr) {
-            navDir = NavigationDirection::backward;
+            navDir = NavigationDirection::Backward;
             mutableBs->attachVolume(this, navDir);
           }
         }
@@ -161,7 +161,7 @@ void Acts::TrackingVolume::createBoundarySurfaces() {
   for (auto& osf : orientedSurfaces) {
     TrackingVolume* opposite = nullptr;
     TrackingVolume* along = nullptr;
-    if (osf.second == NavigationDirection::backward) {
+    if (osf.second == NavigationDirection::Backward) {
       opposite = this;
     } else {
       along = this;
@@ -188,8 +188,8 @@ void Acts::TrackingVolume::glueTrackingVolume(const GeometryContext& gctx,
       bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
   // estimate the orientation
   NavigationDirection navDir = (nvector.dot(distance) > 0.)
-                                   ? NavigationDirection::forward
-                                   : NavigationDirection::backward;
+                                   ? NavigationDirection::Forward
+                                   : NavigationDirection::Backward;
   // The easy case :
   // - no glue volume descriptors on either side
   if ((m_glueVolumeDescriptor == nullptr) ||
@@ -235,8 +235,8 @@ void Acts::TrackingVolume::glueTrackingVolumes(
       bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
   // estimate the orientation
   NavigationDirection navDir = (nvector.dot(distance) > 0.)
-                                   ? NavigationDirection::forward
-                                   : NavigationDirection::backward;
+                                   ? NavigationDirection::Forward
+                                   : NavigationDirection::Backward;
   // the easy case :
   // - no glue volume descriptors on either side
   if ((m_glueVolumeDescriptor == nullptr) ||
@@ -553,7 +553,7 @@ Acts::TrackingVolume::compatibleBoundaries(
   }
 
   // Sort them accordingly to the navigation direction
-  if (options.navDir == NavigationDirection::forward) {
+  if (options.navDir == NavigationDirection::Forward) {
     std::sort(bIntersections.begin(), bIntersections.end());
   } else {
     std::sort(bIntersections.begin(), bIntersections.end(), std::greater<>());
@@ -603,7 +603,7 @@ Acts::TrackingVolume::compatibleLayers(
               : tLayer->nextLayer(gctx, position, options.navDir * direction);
     }
     // sort them accordingly to the navigation direction
-    if (options.navDir == NavigationDirection::forward) {
+    if (options.navDir == NavigationDirection::Forward) {
       std::sort(lIntersections.begin(), lIntersections.end());
     } else {
       std::sort(lIntersections.begin(), lIntersections.end(), std::greater<>());
@@ -689,7 +689,7 @@ Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
   }
 
   // Sort according to the path length
-  if (options.navDir == NavigationDirection::forward) {
+  if (options.navDir == NavigationDirection::Forward) {
     std::sort(sIntersections.begin(), sIntersections.end());
   } else {
     std::sort(sIntersections.begin(), sIntersections.end(), std::greater<>());

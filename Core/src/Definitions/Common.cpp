@@ -14,10 +14,10 @@ namespace Acts {
 
 std::ostream& operator<<(std::ostream& os, NavigationDirection navDir) {
   switch (navDir) {
-    case NavigationDirection::forward:
+    case NavigationDirection::Forward:
       os << "forward";
       break;
-    case NavigationDirection::backward:
+    case NavigationDirection::Backward:
       os << "backward";
       break;
     default:

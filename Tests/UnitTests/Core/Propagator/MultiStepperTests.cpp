@@ -29,7 +29,7 @@ using SingleStepper = EigenStepper<StepperExtensionList<DefaultExtension>>;
 
 const double defaultStepSize = 123.;
 const double defaultTolerance = 234.;
-const auto defaultNDir = NavigationDirection::backward;
+const auto defaultNDir = NavigationDirection::Backward;
 
 const auto defaultBField =
     std::make_shared<ConstantBField>(Vector3(1., 2.5, 33.33));
@@ -371,11 +371,11 @@ void test_multi_stepper_surface_status_update() {
                     .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
 
   MultiState multi_state(geoCtx, magCtx, defaultNullBField, multi_pars,
-                         NavigationDirection::forward, defaultStepSize,
+                         NavigationDirection::Forward, defaultStepSize,
                          defaultTolerance);
   SingleStepper::State single_state(
       geoCtx, defaultNullBField->makeCache(magCtx), std::get<1>(multi_pars[0]),
-      NavigationDirection::forward, defaultStepSize, defaultTolerance);
+      NavigationDirection::Forward, defaultStepSize, defaultTolerance);
 
   MultiStepper multi_stepper(defaultNullBField);
   SingleStepper single_stepper(defaultNullBField);
@@ -472,11 +472,11 @@ void test_component_bound_state() {
                     .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
 
   MultiState multi_state(geoCtx, magCtx, defaultNullBField, multi_pars,
-                         NavigationDirection::forward, defaultStepSize,
+                         NavigationDirection::Forward, defaultStepSize,
                          defaultTolerance);
   SingleStepper::State single_state(
       geoCtx, defaultNullBField->makeCache(magCtx), std::get<1>(multi_pars[0]),
-      NavigationDirection::forward, defaultStepSize, defaultTolerance);
+      NavigationDirection::Forward, defaultStepSize, defaultTolerance);
 
   MultiStepper multi_stepper(defaultNullBField);
   SingleStepper single_stepper(defaultNullBField);

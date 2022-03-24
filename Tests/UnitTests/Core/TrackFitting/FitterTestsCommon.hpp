@@ -180,7 +180,7 @@ struct FitterTester {
     options.referenceSurface = &start.referenceSurface();
     // this is the default option. set anyways for consistency
     options.propagatorPlainOptions.direction =
-        Acts::NavigationDirection::forward;
+        Acts::NavigationDirection::Forward;
 
     auto res =
         fitter.fit(sourceLinks.begin(), sourceLinks.end(), start, options);
@@ -226,7 +226,7 @@ struct FitterTester {
 
     options.referenceSurface = &startOuter.referenceSurface();
     options.propagatorPlainOptions.direction =
-        Acts::NavigationDirection::backward;
+        Acts::NavigationDirection::Backward;
 
     auto res =
         fitter.fit(sourceLinks.begin(), sourceLinks.end(), startOuter, options);

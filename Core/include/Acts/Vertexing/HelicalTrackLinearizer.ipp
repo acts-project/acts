@@ -22,7 +22,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   // Create propagator options
   auto logger = getDefaultLogger("HelTrkLinProp", Logging::INFO);
   propagator_options_t pOptions(gctx, mctx, LoggerWrapper{*logger});
-  pOptions.direction = NavigationDirection::backward;
+  pOptions.direction = NavigationDirection::Backward;
 
   const BoundTrackParameters* endParams = nullptr;
   // Do the propagation to linPointPos
