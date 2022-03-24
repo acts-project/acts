@@ -133,7 +133,11 @@ inline double ISurfaceMaterial::factor(NavigationDirection pDir,
   if (mStage == Acts::MaterialUpdateStage::FullUpdate) {
     return 1.;
   }
-  return (pDir * mStage > 0 ? m_splitFactor : 1. - m_splitFactor);
+  return (
+      pDir * static_cast<std::underlying_type_t<MaterialUpdateStage>>(mStage) >
+              0
+          ? m_splitFactor
+          : 1. - m_splitFactor);
 }
 
 inline MaterialSlab ISurfaceMaterial::materialSlab(
