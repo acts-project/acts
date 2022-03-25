@@ -751,13 +751,13 @@ class CombinatorialKalmanFilter {
       const auto& [boundParams, jacobian, pathLength] = boundState;
 
       // Get all source links on the surface
-      auto [lower_it, upper_it] = m_sourcelinkAccessor(*surface);
+      auto [slBegin, slEnd] = m_sourcelinkAccessor(*surface);
 
       result.trackStateCandidates.clear();
       if constexpr (std::is_same_v<typename std::iterator_traits<decltype(
-                                       lower_it)>::iterator_category,
+                                       slBegin)>::iterator_category,
                                    std::random_access_iterator_tag>) {
-        result.trackStateCandidates.reserve(std::distance(lower_it, upper_it));
+        result.trackStateCandidates.reserve(std::distance(slBegin, slEnd));
       }
 
       result.stateBuffer.clear();
@@ -766,7 +766,7 @@ class CombinatorialKalmanFilter {
 
       // Calibrate all the source links on the surface since the selection has
       // to be done based on calibrated measurement
-      for (auto it = lower_it; it != upper_it; ++it) {
+      for (auto it = slBegin; it != slEnd; ++it) {
         // get the source link
         const auto& sourceLink = *it;
 
@@ -774,7 +774,7 @@ class CombinatorialKalmanFilter {
         PM mask =
             PM::Predicted | PM::Jacobian | PM::Uncalibrated | PM::Calibrated;
 
-        if (it != lower_it) {
+        if (it != slBegin) {
           // not the first TrackState, only need uncalibrated and calibrated
           mask = PM::Uncalibrated | PM::Calibrated;
         }
@@ -785,7 +785,7 @@ class CombinatorialKalmanFilter {
         // fail!
         auto ts = result.stateBuffer.getTrackState(tsi);
 
-        if (it == lower_it) {
+        if (it == slBegin) {
           // only set these for first
           ts.predicted() = boundParams.parameters();
           if (boundParams.covariance()) {
