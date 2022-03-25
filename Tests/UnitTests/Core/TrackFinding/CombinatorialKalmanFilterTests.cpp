@@ -86,7 +86,10 @@ struct TestContainerAccessor {
     using pointer = typename BaseIterator::pointer;
     using reference = typename BaseIterator::reference;
 
-    void operator++() { ++m_iterator; }
+    Iterator& operator++() {
+      ++m_iterator;
+      return *this;
+    }
 
     bool operator==(const Iterator& other) const {
       return m_iterator == other.m_iterator;
