@@ -73,7 +73,7 @@ def addSeeding(
         TrackParamsEstimationConfig
     ] = TrackParamsEstimationConfig(),
     inputParticles="particles_final",
-    outputDir: Optional[Union[Path, str]] = None,
+    outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
 ) -> acts.examples.Sequencer:
@@ -87,7 +87,7 @@ def addSeeding(
     field : magnetic field
     geoSelectionConfigFile : Path|str, path, None
         Json file for space point geometry selection. Not required for SeedingAlgorithm.TruthSmeared.
-    outputDir : Path|str, path, None
+    outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
     logLevel : acts.logging.Level, None
         logging level to override setting given in `s`
@@ -101,7 +101,7 @@ def addSeeding(
             return s.config.logLevel
         return acts.logging.Level(max(custom.value, logLevel.value))
 
-    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
+    if int(customLogLevel()) <= int(acts.logging.DEBUG):
         acts.examples.dump_args_calls(locals())
     logger = acts.logging.getLogger("addSeeding")
 
@@ -262,14 +262,17 @@ def addSeeding(
         )
         s.addAlgorithm(parEstimateAlg)
 
-        if outputDir is not None:
+        if outputDirRoot is not None:
+            outputDirRoot = Path(outputDirRoot)
+            if not outputDirRoot.exists():
+                outputDirRoot.mkdir()
             s.addWriter(
                 acts.examples.TrackFinderPerformanceWriter(
                     level=customLogLevel(),
                     inputProtoTracks=inputProtoTracks,
                     inputParticles=selectedParticles,  # the original selected particles after digitization
                     inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
-                    filePath=str(outputDir / "performance_seeding_trees.root"),
+                    filePath=str(outputDirRoot / "performance_seeding_trees.root"),
                 )
             )
 
@@ -279,7 +282,7 @@ def addSeeding(
                     inputProtoTracks=inputProtoTracks,
                     inputParticles=selectedParticles,
                     inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
-                    filePath=str(outputDir / "performance_seeding_hists.root"),
+                    filePath=str(outputDirRoot / "performance_seeding_hists.root"),
                 )
             )
 
@@ -292,7 +295,7 @@ def addSeeding(
                     inputSimHits="simhits",
                     inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
                     inputMeasurementSimHitsMap="measurement_simhits_map",
-                    filePath=str(outputDir / "estimatedparams.root"),
+                    filePath=str(outputDirRoot / "estimatedparams.root"),
                     treeName="estimatedparams",
                 )
             )
@@ -366,7 +369,7 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
         acts.logging.VERBOSE,
         geoSelectionConfigFile=srcdir
         / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
-        outputDir=outputDir,
+        outputDirRoot=outputDir,
     )
     return s
 

@@ -44,7 +44,7 @@ s = addSeeding(
     field,
     TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None)),
     geoSelectionConfigFile=geo_dir / "atlas/itk-hgtd/geoSelection-ITk.json",
-    outputDir=outputDir,
+    outputDirRoot=outputDir,
 )
 s = addCKFTracks(
     s,
