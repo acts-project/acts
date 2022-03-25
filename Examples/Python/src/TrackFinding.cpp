@@ -60,6 +60,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(deltaRMin);
     ACTS_PYTHON_MEMBER(maxSeedsPerSpM);
     ACTS_PYTHON_MEMBER(compatSeedLimit);
+    ACTS_PYTHON_MEMBER(curvatureSortingInFilter);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }
@@ -102,6 +103,29 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(maxBlockSize);
     ACTS_PYTHON_MEMBER(nTrplPerSpBLimit);
     ACTS_PYTHON_MEMBER(nAvgTrplPerSpBLimit);
+    ACTS_PYTHON_MEMBER(impactMax);
+    ACTS_PYTHON_MEMBER(zBinEdges);
+    ACTS_PYTHON_MEMBER(enableCutsForSortedSP);
+    ACTS_PYTHON_MEMBER(zBinEdges);
+    ACTS_PYTHON_MEMBER(rRangeMiddleSP);
+    ACTS_PYTHON_MEMBER(useVariableMiddleSPRange);
+    ACTS_PYTHON_MEMBER(deltaRMiddleSPRange);
+    ACTS_PYTHON_MEMBER(seedConfirmation);
+    ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
+    ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
+    ACTS_PYTHON_STRUCT_END();
+    patchKwargsConstructor(c);
+  }
+
+  {
+    using seedConf = Acts::SeedConfirmationRange;
+    auto c = py::class_<seedConf>(m, "SeedConfirmationRange").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, seedConf);
+    ACTS_PYTHON_MEMBER(zMinSeedConf);
+    ACTS_PYTHON_MEMBER(zMaxSeedConf);
+    ACTS_PYTHON_MEMBER(rMaxSeedConf);
+    ACTS_PYTHON_MEMBER(nTopForLargeR);
+    ACTS_PYTHON_MEMBER(nTopForSmallR);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }
@@ -118,6 +142,9 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(zMin);
     ACTS_PYTHON_MEMBER(deltaRMax);
     ACTS_PYTHON_MEMBER(cotThetaMax);
+    ACTS_PYTHON_MEMBER(numPhiNeighbors);
+    ACTS_PYTHON_MEMBER(impactMax);
+    ACTS_PYTHON_MEMBER(zBinEdges);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }
@@ -142,6 +169,8 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(seedFilterConfig);
     ACTS_PYTHON_MEMBER(seedFinderConfig);
     ACTS_PYTHON_MEMBER(gridConfig);
+    ACTS_PYTHON_MEMBER(zBinNeighborsTop);
+    ACTS_PYTHON_MEMBER(zBinNeighborsBottom);
     ACTS_PYTHON_STRUCT_END();
   }
 

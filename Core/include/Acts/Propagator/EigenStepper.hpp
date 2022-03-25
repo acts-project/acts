@@ -387,6 +387,12 @@ class EigenStepper {
   template <typename propagator_state_t>
   Result<double> step(propagator_state_t& state) const;
 
+  /// Method that reset the Jacobian to the Identity for when no bound state are
+  /// available
+  ///
+  /// @param [in,out] state State of the stepper
+  void setIdentityJacobian(State& state) const;
+
  protected:
   /// Magnetic field inside of the detector
   std::shared_ptr<const MagneticFieldProvider> m_bField;

@@ -31,7 +31,7 @@ class InternalSpacePoint {
   ~InternalSpacePoint() = default;
 
   InternalSpacePoint<SpacePoint>& operator=(
-      const InternalSpacePoint<SpacePoint>&);
+      const InternalSpacePoint<SpacePoint>&) = delete;
 
   const float& x() const { return m_x; }
   const float& y() const { return m_y; }
@@ -40,16 +40,32 @@ class InternalSpacePoint {
   float phi() const { return atan2f(m_y, m_x); }
   const float& varianceR() const { return m_varianceR; }
   const float& varianceZ() const { return m_varianceZ; }
+  const float& quality() const { return m_quality; }
+  const float& cotTheta() const { return m_cotTheta; }
+  void setCotTheta(float cotTheta) { m_cotTheta = cotTheta; }
+  void setQuality(float quality) {
+    if (quality >= m_quality) {
+      m_quality = quality;
+    }
+  }
   const SpacePoint& sp() const { return m_sp; }
 
  protected:
-  float m_x;               // x-coordinate in beam system coordinates
-  float m_y;               // y-coordinate in beam system coordinates
-  float m_z;               // z-coordinate in beam system coordinetes
-  float m_r;               // radius       in beam system coordinates
-  float m_varianceR;       //
-  float m_varianceZ;       //
-  const SpacePoint& m_sp;  // external space point
+  float m_x;          // x-coordinate in beam system coordinates
+  float m_y;          // y-coordinate in beam system coordinates
+  float m_z;          // z-coordinate in beam system coordinetes
+  float m_r;          // radius       in beam system coordinates
+  float m_varianceR;  //
+  float m_varianceZ;  //
+  float m_cotTheta = std::numeric_limits<
+      double>::quiet_NaN();  // 1/tanTheta estimated from central+this space
+                             // point. Its evaluation requires that the space
+                             // point is a candidate for triplet search.
+  float m_quality = -std::numeric_limits<
+      double>::infinity();  // Quality score of the seed the space point is used
+                            // for. Quality can be changed if the space point is
+                            // used for a better quality seed.
+  const SpacePoint& m_sp;   // external space point
 };
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -75,14 +91,6 @@ inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
 
 template <typename SpacePoint>
 inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
-    const InternalSpacePoint<SpacePoint>& sp)
-    : m_sp(sp.sp()) {
-  m_x = sp.m_x;
-  m_y = sp.m_y;
-  m_z = sp.m_z;
-  m_r = sp.m_r;
-  m_varianceR = sp.m_varianceR;
-  m_varianceZ = sp.m_varianceZ;
-}
+    const InternalSpacePoint<SpacePoint>& sp) = default;
 
 }  // end of namespace Acts

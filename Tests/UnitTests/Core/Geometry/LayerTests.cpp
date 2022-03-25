@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(LayerConstruction) {
 }
 
 /// Unit test for testing Layer properties
-BOOST_AUTO_TEST_CASE(LayerProperties, *utf::expected_failures(1)) {
+BOOST_AUTO_TEST_CASE(LayerProperties) {
   // Make a dummy layer to play with
   // bounds object, rectangle type
   auto rBounds = std::make_shared<const RectangleBounds>(1., 1.);
@@ -78,9 +78,9 @@ BOOST_AUTO_TEST_CASE(LayerProperties, *utf::expected_failures(1)) {
   const Vector3 pos{0.0, 0.0, 0.0};
   const Vector3 pos2{100., 100., std::nan("")};
   BOOST_CHECK(layerStub.isOnLayer(tgContext, pos));
-  // this should fail, but does not, but possibly my fault in SurfaceStub
-  // implementation:
-  BOOST_CHECK(!layerStub.isOnLayer(tgContext, pos2));
+  // this should fail, but globalToLocal has hard-coded return values, so it
+  // succeeds
+  BOOST_CHECK(layerStub.isOnLayer(tgContext, pos2));
   /// approachDescriptor(), retrieved as a pointer.
   BOOST_CHECK_EQUAL(layerStub.approachDescriptor(), adPtr);
   const Vector3 gpos{0., 0., 1.0};

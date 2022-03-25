@@ -155,6 +155,30 @@ BOOST_AUTO_TEST_CASE(test_matrix_dimension_switch) {
   }
 }
 
+typedef std::tuple<std::pair<ActsMatrix<3, 3>, ActsMatrix<3, 3>>,
+                   std::pair<ActsMatrix<4, 4>, ActsMatrix<4, 4>>,
+                   std::pair<ActsMatrix<8, 8>, ActsMatrix<8, 8>>,
+                   std::pair<ActsMatrix<8, 7>, ActsMatrix<7, 4>>>
+    MatrixProductTypes;
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(BlockedMatrixMultiplication, Matrices,
+                              MatrixProductTypes) {
+  using A = typename Matrices::first_type;
+  using B = typename Matrices::second_type;
+  using C = ActsMatrix<A::RowsAtCompileTime, B::ColsAtCompileTime>;
+
+  for (std::size_t i = 0; i < 100; ++i) {
+    A a = A::Random();
+    B b = B::Random();
+
+    C ref = a * b;
+    C res = blockedMult(a, b);
+
+    BOOST_CHECK(ref.isApprox(res));
+    BOOST_CHECK(res.isApprox(ref));
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Test
 }  // namespace Acts

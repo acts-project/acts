@@ -8,9 +8,9 @@
 
 namespace Acts {
 template <typename external_spacepoint_t>
-LinCircle transformCoordinates(
-    const InternalSpacePoint<external_spacepoint_t>& sp,
-    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom) {
+LinCircle transformCoordinates(InternalSpacePoint<external_spacepoint_t>& sp,
+                               InternalSpacePoint<external_spacepoint_t>& spM,
+                               bool bottom) {
   // The computation inside this function is exactly identical to that in the
   // vectorized version of this function, except that it operates on a single
   // spacepoint. Please see the other version of this function for more
@@ -46,8 +46,8 @@ LinCircle transformCoordinates(
 
 template <typename external_spacepoint_t>
 void transformCoordinates(
-    std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
-    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
+    std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
+    InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     bool enableCutsForSortedSP, std::vector<LinCircle>& linCircleVec) {
   float xM = spM.x();
   float yM = spM.y();
@@ -92,10 +92,22 @@ void transformCoordinates(
     l.Er = ((varianceZM + sp->varianceZ()) +
             (cot_theta * cot_theta) * (varianceRM + sp->varianceR())) *
            iDeltaR2;
+
+    l.x = sp->x();
+    l.y = sp->y();
+    l.z = sp->z();
+    l.r = sp->radius();
+
     linCircleVec.push_back(l);
+    sp->setCotTheta(cot_theta);
   }
   // sort the SP in order of cotTheta
   if (enableCutsForSortedSP) {
+    std::sort(vec.begin(), vec.end(),
+              [](InternalSpacePoint<external_spacepoint_t>* a,
+                 InternalSpacePoint<external_spacepoint_t>* b) -> bool {
+                return (a->cotTheta() < b->cotTheta());
+              });
     std::sort(linCircleVec.begin(), linCircleVec.end(),
               [](const LinCircle& a, const LinCircle& b) -> bool {
                 return (a.cotTheta < b.cotTheta);

@@ -8,7 +8,7 @@
 
 #include "HitsPrinter.hpp"
 
-#include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
+#include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
