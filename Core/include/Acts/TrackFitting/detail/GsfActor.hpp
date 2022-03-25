@@ -34,6 +34,8 @@ namespace detail {
 struct GsfResult {
   /// The multi-trajectory which stores the graph of components
   MultiTrajectory fittedStates;
+  
+  /// This provides the weights for the states in the MultiTrajectory. Each entry maps to one track state. TODO This is a workaround until the MultiTrajectory can handle weights
   std::map<size_t, ActsScalar> weightsOfStates;
 
   /// The current indexes for the newest components in the multi trajectory
