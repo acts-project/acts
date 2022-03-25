@@ -132,7 +132,7 @@ auto smoothAndCombineTrajectories(
 
   // Ensures that the bwd tips are unique and do not contain MAX_SIZE which
   // represents an invalid trajectory state
-  auto sort_unique_validate_bwd_tips = [&]() {
+  auto sortUniqueValidateBwdTips = [&]() {
     std::sort(bwdTips.begin(), bwdTips.end());
     bwdTips.erase(std::unique(bwdTips.begin(), bwdTips.end()), bwdTips.end());
 
@@ -143,7 +143,7 @@ auto smoothAndCombineTrajectories(
     }
   };
 
-  sort_unique_validate_bwd_tips();
+  sortUniqueValidateBwdTips();
 
   KalmanFitterResult result;
 
@@ -156,7 +156,7 @@ auto smoothAndCombineTrajectories(
         tip = p.previous();
       }
 
-      sort_unique_validate_bwd_tips();
+      sortUniqueValidateBwdTips();
     });
 
     const auto firstBwdState = bwd.getTrackState(bwdTips.front());

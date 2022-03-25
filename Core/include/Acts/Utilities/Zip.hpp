@@ -30,11 +30,15 @@ auto zip(RA &ra, RB &rb) {
     using reference =
         std::tuple<typename ItA::reference, typename ItB::reference>;
 
-    // clang-format off
-    auto operator++() { ++a; ++b; return *this; }
+    auto operator++() {
+      ++a;
+      ++b;
+      return *this;
+    }
+    
     auto operator!=(const It &other) const { return a != other.a; }
+    
     reference operator*() { return {*a, *b}; }
-    // clang-format on
   };
 
   struct Zip {
