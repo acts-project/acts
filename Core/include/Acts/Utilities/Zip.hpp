@@ -35,9 +35,9 @@ auto zip(RA &ra, RB &rb) {
       ++b;
       return *this;
     }
-    
+
     auto operator!=(const It &other) const { return a != other.a; }
-    
+
     reference operator*() { return {*a, *b}; }
   };
 
