@@ -393,4 +393,17 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     m_config.seedFilter->filterSeeds_1SpFixed(state.seedsPerSpM, outIt);
   }
 }
+
+template <typename external_spacepoint_t, typename platform_t>
+template <typename sp_range_t>
+std::vector<Seed<external_spacepoint_t>>
+Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
+    sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
+  State state;
+  Extent extent;
+  std::vector<Seed<external_spacepoint_t>> ret;
+
+  createSeedsForGroup(state, std::back_inserter(ret), bottomSPs, middleSPs,
+                      topSPs, extent);
+}
 }  // namespace Acts
