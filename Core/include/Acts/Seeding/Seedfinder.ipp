@@ -99,8 +99,9 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       if (deltaR > m_config.deltaRMaxTopSP) {
         continue;
       }
+      float deltaZ = topSP->z() - zM;
       // ratio Z/R (forward angle) of space point duplet
-      float cotTheta = (topSP->z() - zM) / deltaR;
+      float cotTheta = deltaZ / deltaR;
       if (std::fabs(cotTheta) > m_config.cotThetaMax) {
         continue;
       }
@@ -171,8 +172,9 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       if (deltaR < m_config.deltaRMinBottomSP) {
         continue;
       }
+      float deltaZ = zM - bottomSP->z();
       // ratio Z/R (forward angle) of space point duplet
-      float cotTheta = (zM - bottomSP->z()) / deltaR;
+      float cotTheta = deltaZ / deltaR;
       if (std::fabs(cotTheta) > m_config.cotThetaMax) {
         continue;
       }
