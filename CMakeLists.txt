@@ -31,6 +31,7 @@ option(ACTS_BUILD_PLUGIN_AUTODIFF "Build the autodiff plugin" OFF)
 option(ACTS_USE_SYSTEM_AUTODIFF "Use autodiff provided by the system instead of the bundled version" OFF)
 option(ACTS_BUILD_PLUGIN_CUDA "Build CUDA plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
+option(ACTS_BUILD_PLUGIN_EXATRKX "Build the Exa.TrkX plugin" OFF)
 option(ACTS_BUILD_PLUGIN_IDENTIFICATION "Build Identification plugin" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
 option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" OFF)
@@ -48,10 +49,12 @@ option(ACTS_BUILD_ALIGNMENT "Build Alignment package" OFF)
 # examples related options
 option(ACTS_BUILD_EXAMPLES "Build standalone examples" OFF)
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
+option(ACTS_BUILD_EXAMPLES_EXATRKX "Build the Exa.TrkX example code" OFF)
 option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HEPMC3 "Build HepMC3-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "Build python bindings for the examples" OFF)
+option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" OFF )
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
 # test related options
 option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
@@ -78,6 +81,7 @@ set_option_if(ACTS_BUILD_EXAMPLES_PYTHIA8 ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_FATRAS_GEANT4 ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_FATRAS_GEANT4)
 set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_EVERYTHING)
+
 # any examples component activates the general examples option
 set_option_if(
   ACTS_BUILD_EXAMPLES
@@ -85,6 +89,7 @@ set_option_if(
   OR ACTS_BUILD_EXAMPLES_GEANT4
   OR ACTS_BUILD_EXAMPLES_HEPMC3
   OR ACTS_BUILD_EXAMPLES_PYTHIA8
+  OR ACTS_BUILD_EXAMPLES_EXATRKX
   OR ACTS_BUILD_EVERYTHING)
 # core plugins might be required by examples or depend on each other
 set_option_if(
@@ -104,6 +109,7 @@ set_option_if(
   ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_PLUGIN_LEGACY ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_PLUGIN_AUTODIFF ACTS_BUILD_EVERYTHING)
+set_option_if(ACTS_BUILD_EXAMPLES_EXATRKX ACTS_BUILD_PLUGIN_EXATRKX)
 
 # feature tests
 include(CheckCXXSourceCompiles)
@@ -186,6 +192,20 @@ macro(project)
   set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION}" CACHE INTERNAL "")
 endmacro()
 
+# CUDA settings are collected here in a macro, so that they can be reused by different plugins
+macro(enable_cuda)
+  enable_language(CUDA)
+  set(CMAKE_CUDA_STANDARD 14 CACHE STRING "CUDA C++ standard to use")
+  set(CMAKE_CUDA_STANDARD_REQUIRED ON CACHE BOOL
+    "Force the C++ standard requirement")
+  if(NOT CMAKE_CUDA_ARCHITECTURES)
+    set(CMAKE_CUDA_ARCHITECTURES "35;52;75" CACHE STRING
+        "CUDA architectures to generate code for")
+  endif()
+  set(CMAKE_CUDA_FLAGS_DEBUG "${CMAKE_CUDA_FLAGS_DEBUG} -g -G")
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --extended-lambda")
+endmacro()
+
 # optional packages
 #
 # find packages explicitly for each component even if this means searching for
@@ -193,34 +213,23 @@ endmacro()
 # when a particular package is actually needed.
 # plugin dependencies
 if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
+  find_package(Python COMPONENTS Interpreter Development)
+  if(ACTS_USE_SYSTEM_PYBIND11) 
+    find_package(pybind11 CONFIG REQUIRED)
+  else()
     add_subdirectory(thirdparty/pybind11)
+  endif()
 endif()
 if(ACTS_BUILD_PLUGIN_AUTODIFF)
   if(ACTS_USE_SYSTEM_AUTODIFF)
     find_package(autodiff ${_acts_autodiff_version} CONFIG REQUIRED)
     message(STATUS "Using system installation of autodiff")
   else()
-    # This policy allows to set the options outside without changing autodiff's CMakeLists.txt
-    set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-    set(AUTODIFF_BUILD_TESTS OFF)
-    set(AUTODIFF_BUILD_PYTHON OFF)
-    set(AUTODIFF_BUILD_EXAMPLES OFF)
-    set(AUTODIFF_BUILD_DOCS OFF)
     add_subdirectory(thirdparty/autodiff)
-    # Mark autodiff as system include directories so that no warnings trigger
-    get_target_property(_autodiff_includes autodiff INTERFACE_INCLUDE_DIRECTORIES)
-    set_target_properties(autodiff PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_autodiff_includes}")
-    message(STATUS "Using bundled autodiff")
   endif()
 endif()
 if(ACTS_BUILD_PLUGIN_CUDA)
-  enable_language(CUDA)
-  set(CMAKE_CUDA_STANDARD 14 CACHE STRING "CUDA C++ standard to use")
-  set(CMAKE_CUDA_STANDARD_REQUIRED ON CACHE BOOL
-    "Force the C++ standard requirement")
-  set(CMAKE_CUDA_ARCHITECTURES "35;52;75" CACHE STRING
-    "CUDA architectures to generate code for")
-  set(CMAKE_CUDA_FLAGS_DEBUG "-g -G")
+  enable_cuda()
 endif()
 if(ACTS_BUILD_PLUGIN_DD4HEP)
   find_package(DD4hep ${_acts_dd4hep_version} REQUIRED CONFIG COMPONENTS DDCore DDDetectors)
@@ -230,8 +239,6 @@ if(ACTS_BUILD_PLUGIN_JSON)
     message(STATUS "Using system installation of nlohmann::json")
     find_package(nlohmann_json ${_acts_nlohmanjson_version} REQUIRED CONFIG)
   else()
-    message(STATUS "Using bundled nlohmann::json")
-    set(JSON_BuildTests OFF CACHE INTERNAL "")
     add_subdirectory(thirdparty/nlohmann_json)
   endif()
 endif()
@@ -245,6 +252,15 @@ if(ACTS_BUILD_PLUGIN_TGEO)
   find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Geom)
   check_root_compatibility()
 endif()
+if(ACTS_BUILD_PLUGIN_EXATRKX)
+  enable_cuda()
+  find_package(CUDAToolkit REQUIRED)
+  find_package(Torch REQUIRED)
+  find_package(OnnxRuntime REQUIRED)
+  find_package(cugraph REQUIRED)
+  add_subdirectory(thirdparty/libFRNN)
+endif()
+
 # examples dependencies
 if(ACTS_BUILD_EXAMPLES)
   set(THREADS_PREFER_PTHREAD_FLAG ON)

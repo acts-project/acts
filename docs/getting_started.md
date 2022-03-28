@@ -31,17 +31,20 @@ The following dependencies are required to build the Acts core library:
 The following dependencies are optional and are needed to build additional
 components:
 
--   [CUDA](https://developer.nvidia.com/cuda-zone) for the CUDA plugin
+-   [CUDA](https://developer.nvidia.com/cuda-zone) for the CUDA plugin and the Exa.TrkX plugin and its examples
 -   [DD4Hep](http://dd4hep.cern.ch) >= 1.11 for the DD4Hep plugin and some examples
 -   [Doxygen](http://doxygen.org) >= 1.8.15 for the documentation
 -   [Geant4](http://geant4.org/) for some examples
 -   [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) >= 3.2.1 for some examples
 -   [Intel Threading Building Blocks](https://01.org/tbb) >= 2020.1 for the examples
--   [ONNX Runtime](https://onnxruntime.ai/) for the ONNX plugin and some examples
+-   [ONNX Runtime](https://onnxruntime.ai/) for the ONNX plugin, the Exa.TrkX plugin and some examples
 -   [Pythia8](http://home.thep.lu.se/~torbjorn/Pythia.html) for some examples
 -   [ROOT](https://root.cern.ch) >= 6.20 for the TGeo plugin and the examples
 -   [Sphinx](https://www.sphinx-doc.org) >= 2.0 with [Breathe](https://breathe.readthedocs.io/en/latest/), [Exhale](https://exhale.readthedocs.io/en/latest/), and [recommonmark](https://recommonmark.readthedocs.io/en/latest/index.html) extensions for the documentation
 -   [SYCL](https://www.khronos.org/sycl/) for the SYCL plugin
+-   [cugraph](https://github.com/rapidsai/cugraph) for the Exa.TrkX plugin
+-   [libtorch](https://pytorch.org/cppdocs/installing.html) for the Exa.TrkX plugin
+-   [Pybind11](https://github.com/pybind/pybind11) for the Python bindings of the examples
 
 There are some additional dependencies that are automatically provided as part of
 the build system.
@@ -240,15 +243,18 @@ components.
 | ACTS_BUILD_EVERYTHING               | Build with most options enabled (except HepMC3 and documentation)                                     |
 | ACTS_BUILD_PLUGIN_CUDA              | Build CUDA plugin                                                                                     |
 | ACTS_BUILD_PLUGIN_DD4HEP            | Build DD4hep geometry plugin                                                                          |
+| ACTS_BUILD_PLUGIN_EXATRKX           | Build Exa.TrkX plugin                                                                             |
 | ACTS_BUILD_PLUGIN_IDENTIFICATION    | Build Identification plugin                                                                           |
 | ACTS_BUILD_PLUGIN_JSON              | Build Json plugin                                                                                     |
 | ACTS_BUILD_PLUGIN_LEGACY            | Build legacy plugin                                                                                   |
 | ACTS_BUILD_PLUGIN_ONNX              | Build ONNX plugin                                                                                     |
+| ACTS_SETUP_VECMEM                   | Setup the vecmem library targets as part of this build                                                |
 | ACTS_BUILD_PLUGIN_SYCL              | Build SYCL plugin                                                                                     |
 | ACTS_BUILD_PLUGIN_TGEO              | Build TGeo plugin                                                                                     |
 | ACTS_BUILD_FATRAS                   | Build FAst TRAcking Simulation package                                                                |
 | ACTS_BUILD_EXAMPLES                 | Build standalone examples                                                                             |
 | ACTS_BUILD_EXAMPLES_DD4HEP          | Build DD4hep-based code in the examples                                                               |
+| ACTS_BUILD_EXAMPLES_EXATRKX         | Build some examples based on the Exa.TrkX track finding module                                        |
 | ACTS_BUILD_EXAMPLES_GEANT4          | Build Geant4-based code in the examples                                                               |
 | ACTS_BUILD_EXAMPLES_HEPMC3          | Build HepMC3-based code in the examples                                                               |
 | ACTS_BUILD_EXAMPLES_PYTHIA8         | Build Pythia8-based code in the examples                                                              |
@@ -261,10 +267,12 @@ components.
 | ACTS_LOG_FAILURE_THRESHOLD          | Automatically fail when a log above the specified debug level is emitted (useful for automated tests) |
 | ACTS_FORCE_ASSERTIONS               | Try to force keeping `assert` even in Release builds. (useful for automated tests)                    |
 | ACTS_PARAMETER_DEFINITIONS_HEADER   | Use a different (track) parameter definitions header                                                  |
-| ACTS_USE_SYSTEM_AUTODIFF            | Use autodiff provided by the system instead of the bundled version                                    |
-| ACTS_USE_SYSTEM_NLOHMANN_JSON       | Use nlohmann::json provided by the system instead of the bundled version                              |
+| ACTS_USE_SYSTEM_AUTODIFF            | Use autodiff provided by the system instead of building it                                            |
+| ACTS_USE_SYSTEM_NLOHMANN_JSON       | Use nlohmann::json provided by the system instead of building it                                      |
 | ACTS_USE_SYSTEM_BOOST               | Use the system boost libraries (defaults to ON)                                                       |
 | ACTS_USE_SYSTEM_EIGEN3              | Use the system eigen3 libraries (defaults to ON)                                                      |
+| ACTS_USE_SYSTEM_VECMEM              | Use system provided vecmem installation                                                               |
+| ACTS_USE_SYSTEM_PYBIND11            | Use pybind11 installed in the system                                                                  |
 
 All Acts-specific options are disabled or empty by default and must be
 specifically requested. Some of the options have interdependencies that are
