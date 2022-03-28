@@ -202,6 +202,8 @@ class BinnedSPGroupIterator {
     phiIndex = 1;
     zIndex = 1;
     customZorder = bins;
+    // if m_bins vector was not defined, use z bin 1 (zIndex) to start the
+    // iterator, otherwise use the first value in m_bins vector
     size_t this_zIndex = bins.empty() ? zIndex : bins.front();
     outputIndex = grid->globalBinFromLocalBins({phiIndex, this_zIndex});
     currentBin = NeighborhoodVector{
@@ -222,6 +224,8 @@ class BinnedSPGroupIterator {
     zIndex = zInd;
     phiZbins = grid->numLocalBins();
     customZorder = bins;
+    // if m_bins vector was not defined, use the next z bin (zInd), otherwise
+    // use the z bin value stored in m_bins vector for a custom order
     size_t this_zIndex =
         bins.empty()
             ? zIndex
