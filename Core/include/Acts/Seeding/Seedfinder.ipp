@@ -110,6 +110,9 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           zOrigin > m_config.collisionRegionMax) {
         continue;
       }
+      if (std::abs(deltaZ) > m_config.deltaZMax) {
+        continue;
+      }
       // cut on the max curvature between top SP and interaction point
       // first transform the space point coordinates into a frame such that the
       // central space point SPm is in the origin of the frame and the x axis
@@ -177,6 +180,9 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       float zOrigin = zM - rM * cotTheta;
       if (zOrigin < m_config.collisionRegionMin ||
           zOrigin > m_config.collisionRegionMax) {
+        continue;
+      }
+      if (std::abs(deltaZ) > m_config.deltaZMax) {
         continue;
       }
       // cut on the max curvature between bottom SP and interaction point

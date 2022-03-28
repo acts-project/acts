@@ -65,6 +65,9 @@ struct SeedfinderConfig {
   // parameters for forward seed confirmation
   SeedConfirmationRange forwardSeedConfirmationRange;
 
+  // cut to the maximum value of delta z between SPs
+  float deltaZMax = std::numeric_limits<float>::max() * Acts::UnitConstants::mm;
+
   // non equidistant binning in z
   std::vector<float> zBinEdges;
 
@@ -162,6 +165,7 @@ struct SeedfinderConfig {
     config.rMax /= 1_mm;
     config.rMin /= 1_mm;
     config.bFieldInZ /= 1000. * 1_T;
+    config.deltaZMax /= 1_mm;
 
     config.beamPos[0] /= 1_mm;
     config.beamPos[1] /= 1_mm;
