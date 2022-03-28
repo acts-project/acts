@@ -70,6 +70,7 @@ struct SeedfinderConfig {
 
   // sort the SP in transformCoordinates method and enables compatibility cuts
   // based on the sorting of cotTheta
+  bool cotThetaSorting = false;
   bool enableCutsForSortedSP = false;
 
   // FIXME: this is not used yet

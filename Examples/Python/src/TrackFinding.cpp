@@ -105,6 +105,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(nAvgTrplPerSpBLimit);
     ACTS_PYTHON_MEMBER(impactMax);
     ACTS_PYTHON_MEMBER(zBinEdges);
+    ACTS_PYTHON_MEMBER(cotThetaSorting);
     ACTS_PYTHON_MEMBER(enableCutsForSortedSP);
     ACTS_PYTHON_MEMBER(zBinEdges);
     ACTS_PYTHON_MEMBER(rRangeMiddleSP);

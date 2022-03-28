@@ -76,6 +76,13 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config bFieldInZ");
   }
 
+  if (m_cfg.seedFinderConfig.cotThetaSorting == false and
+      m_cfg.seedFinderConfig.enableCutsForSortedSP == true) {
+    throw std::invalid_argument(
+        "enableCutsForSortedSP cannot be true if cotThetaSorting is set to "
+        "false");
+  }
+
   if (m_cfg.gridConfig.zBinEdges.size() - 1 != m_cfg.zBinNeighborsTop.size() &&
       m_cfg.zBinNeighborsTop.empty() == false) {
     throw std::invalid_argument("Inconsistent config zBinNeighborsTop");
