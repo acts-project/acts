@@ -11,8 +11,11 @@
 
 #include <boost/pending/disjoint_sets.hpp>
 
+namespace Acts {
+namespace internal {
 
-namespace Concepts {
+// Machinery for validating generic Cell/Cluster types at compile-time
+
 template <typename...> using void_t = void;
 
 template <typename, typename T = void>
@@ -32,24 +35,18 @@ template <typename T, typename U>
 struct cluster_type_has_required_functions<T, U, void_t<
     decltype(cluster_add_cell(std::declval<T>(), std::declval<U>()))>>
     : std::true_type {};
-} // namespace Concepts
 
 template <typename T>
-constexpr bool CellConcept =
-    Concepts::cell_type_has_required_functions<T>();
+constexpr bool CellConcept = cell_type_has_required_functions<T>();
 
 template <typename T, typename U>
-constexpr bool ClusterConcept =
-    Concepts::cluster_type_has_required_functions<T, U>();
+constexpr bool ClusterConcept = cluster_type_has_required_functions<T, U>();
 
-#define CHECK_CELL_TYPE(T) do { static_assert(CellConcept<T>, "Cell type should have the following functions:'int get_cell_row(const Cell&)', 'int get_cell_column(const Cell&)', 'float get_cell_activation(const Cell&)'") } while (0)
+#define CHECK_CELL_TYPE(T) do { static_assert(Acts::internal::CellConcept<T>, "Cell type should have the following functions:'int get_cell_row(const Cell&)', 'int get_cell_column(const Cell&)', 'Label& get_cell_label(const Cell&)'"); } while (0)
 
-#define CHECK_CLUSTER_TYPE(T, U) do { static_assert(ClusterConcept<T, U>, "Cluster type should have the following function:'void cluster_add_cell(Cluster&, const Cell&)'") } while (0)
+#define CHECK_CLUSTER_TYPE(T, U) do { static_assert(Acts::internal::ClusterConcept<T, U>, "Cluster type should have the following function:'void cluster_add_cell(Cluster&, const Cell&)'"); } while (0)
 
-// TODO namespace
-// TODO internal namespace
-
-// TODO descr
+// Comparator function object for cells, column-wise ordering
 template <typename Cell>
 struct Compare {
     bool operator()(const Cell &c0, const Cell &c1) const {
@@ -60,26 +57,6 @@ struct Compare {
 	return (col0 == col1)? row0 < row1 : col0 < col1;
     }
 };
-
-// Definition of the Cell api for the LabeledCell<Cell> wrapper
-
-template <typename Cell>
-int get_cell_row(const LabeledCell<Cell>& cell)
-{
-    return get_cell_row(*cell.ptr);
-}
-
-template <typename Cell>
-int get_cell_column(const LabeledCell<Cell>& cell)
-{
-    return get_cell_column(*cell.ptr);
-}
-
-template <typename Cell>
-Label& get_cell_label(LabeledCell<Cell>& lcell)
-{
-    return lcell.lbl;
-}
 
 // Simple wrapper around boost::disjoint_sets. In theory, could use
 // boost::vector_property_map and use boost::disjoint_sets without
@@ -119,14 +96,15 @@ private:
 };
 
 
-// TODO descr
+// Cell collection logic
+// TODO: add template parameter to extend matching logic?
 template <typename Cell>
 int get_connexions(typename std::vector<Cell>::iterator it, std::vector<Cell>& set, bool commonCorner, std::array<Label, 4>& seen)
 {
     int curr_row = get_cell_row(*it);
     int curr_col = get_cell_column(*it);
     int nconn = 0;
-    seen[0] = seen[1] = seen[2] = seen[3] = Label::None;
+    seen[0] = seen[1] = seen[2] = seen[3] = NO_LABEL;
     typename std::vector<Cell>::iterator it_2 {it};
 
     while (it_2 != set.begin()) {
@@ -156,96 +134,82 @@ int get_connexions(typename std::vector<Cell>::iterator it, std::vector<Cell>& s
     return nconn;
 }
 
-// TODO descr
-// TODO should be exposed at top-level? i.e. in header
+} // internal namespace
+
 template <typename Cell, typename CellCollection>
-void label_clusters_inplace(CellCollection& lcells, bool commonCorner)
+void labelClusters(CellCollection& cells, bool commonCorner)
 {
-    DisjointSets ds{};
+    CHECK_CELL_TYPE(Cell);
+
+    internal::DisjointSets ds{};
     std::array<Label, 4> seen = {
-	Label::None, Label::None, Label::None, Label::None
+	NO_LABEL, NO_LABEL, NO_LABEL, NO_LABEL
     };
-
+    
     // Sort cells by position to enable in-order scan
-    std::sort(lcells.begin(), lcells.end(), Compare<Cell>());
+    std::sort(cells.begin(), cells.end(), internal::Compare<Cell>());
 
-    for (auto it = lcells.begin(); it != lcells.end(); ++it) {
-	    int nconn = get_connexions<Cell>(it, lcells, commonCorner, seen);
-	    if (nconn == 0) {
-		// Allocate new label
-		get_cell_label(*it) = ds.make_set();
-	    } else {
-		// Sanity check: first element should always have
-		// label if nconn > 0
-		if (seen[0] == Label::None)
-		    throw std::logic_error("nconn > 0 but seen[0] == Label::None");
+    // First pass: Allocate labels and record equivalences
+    for (auto it = cells.begin(); it != cells.end(); ++it) {
+	int nconn = internal::get_connexions<Cell>(it, cells, commonCorner, seen);
+	if (nconn == 0) {
+	    // Allocate new label
+	    get_cell_label(*it) = ds.make_set();
+	} else {
+	    // Sanity check: first element should always have
+	    // label if nconn > 0
+	    if (seen[0] == NO_LABEL)
+		throw std::logic_error("nconn > 0 but seen[0] == NO_LABEL");
 
-		// Record equivalences
-		for (size_t i = 1; i < (commonCorner? 4 : 2); i++) {
-		    if (seen[i] != Label::None and seen[0] != seen[i]) {
-			ds.union_set(seen[0], seen[i]);
-		    }
+	    // Record equivalences
+	    for (size_t i = 1; i < (commonCorner? 4 : 2); i++) {
+		if (seen[i] != NO_LABEL and seen[0] != seen[i]) {
+		    ds.union_set(seen[0], seen[i]);
 		}
-		// Set label for current cell
-		get_cell_label(*it) = seen[0];
 	    }
+	    // Set label for current cell
+	    get_cell_label(*it) = seen[0];
+	}
     }
 
-    // Second pass: Merge labels
-    for (auto& cell : lcells) {
+    // Second pass: Merge labels based on recorded equivalences
+    for (auto& cell : cells) {
 	Label& lbl = get_cell_label(cell);
 	lbl = ds.find_set(lbl);
     }
 }
 
-// TODO descr
-template <typename Cell, typename InputIt>
-LabeledCellCollection<Cell> labelClusters(InputIt begin, InputIt end, bool commonCorner, float threshold)
+template <typename Cell, typename Cluster, typename CellCollection, typename ClusterCollection>
+ClusterCollection mergeClusters(CellCollection& cells)
 {
     CHECK_CELL_TYPE(Cell);
+    CHECK_CLUSTER_TYPE(Cluster&, const Cell&);
 
-    LabeledCellCollection<Cell> lcells;
-    for (InputIt it = begin; it != end; ++it) {
-	if (get_cell_activation(*it) >= threshold)
-	    lcells.push_back(LabeledCell<Cell>(*it));
-    }
-    label_clusters_inplace<LabeledCell<Cell>>(lcells, commonCorner);
-    return lcells;
-}
-
-// TODO descr
-template <typename Cell, typename ClusterT, typename InputIt, typename OutputIt>
-void createClusters(InputIt begin, InputIt end, OutputIt out, bool commonCorner, float threshold)
-{
-    CHECK_CELL_TYPE(Cell);
-    CHECK_CLUSTER_TYPE(ClusterT&, const Cell&);
-
-    LabeledCellCollection<Cell> lcells {
-	labelClusters<Cell>(begin, end, commonCorner, threshold)
-    };
-    if (lcells.empty())
-	return;
-
+    if (cells.empty())
+	return {};
+    
     // Sort the cells by their cluster label
-    std::sort(lcells.begin(), lcells.end(),
-	      [](const LabeledCell<Cell>& lhs, const LabeledCell<Cell>& rhs)
-		  {return lhs.lbl < rhs.lbl;});
+    std::sort(cells.begin(), cells.end(),
+	    [](Cell& lhs, Cell& rhs)
+		{return get_cell_label(lhs) < get_cell_label(rhs);});
 
-    // Accumulate clusters into the output collections
-    ClusterT cl;
-    size_t lbl = lcells.front().lbl;
-    for (auto& cell : lcells) {
-	if (cell.lbl != lbl) {
+    // Accumulate clusters into the output collection
+    ClusterCollection outv;
+    Cluster cl;
+    int lbl = get_cell_label(cells.front());
+    for (auto& cell : cells) {
+	if (get_cell_label(cell) != lbl) {
 	    // New cluster, save previous one
-	    *out++ = std::move(cl);
-	    cl = ClusterT();
-	    lbl = cell.lbl;
+	    outv.push_back(std::move(cl));
+	    cl = Cluster();
+	    lbl = get_cell_label(cell);
 	}
-	cluster_add_cell(cl, *cell.ptr);
+	cluster_add_cell(cl, cell);
     }
     // Get the last cluster as well
-    *out++ = std::move(cl);
+    outv.push_back(std::move(cl));
+
+    return outv;
 }
 
-#undef CHECK_CELL_TYPE
-#undef CHECK_CLUSTER_TYPE
+} // Acts namespace
