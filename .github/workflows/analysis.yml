@@ -40,7 +40,7 @@ jobs:
           && du -sh build
       - name: Coverage
         run: >
-          pip3 install gcovr
+          pip3 install gcovr==5.0
           && cd build
           && /usr/bin/python3 ../CI/test_coverage
       - name: Upload coverage
