@@ -14,31 +14,26 @@ typedef int Label;
 //   int get_cell_column(const Cell&)
 template <typename Cell>
 struct LabeledCell {
-    Cell const * ptr;
-    mutable Label lbl;
-    explicit LabeledCell(const Cell& cell) :
-	ptr{std::addressof(cell)}, lbl{0} {}
+  Cell const* ptr;
+  mutable Label lbl;
+  explicit LabeledCell(const Cell& cell) : ptr{std::addressof(cell)}, lbl{0} {}
 };
 
 // Definition of the Cell api for the LabeledCell<Cell> wrapper
 template <typename Cell>
-int get_cell_row(const LabeledCell<Cell>& cell)
-{
-    return get_cell_row(*cell.ptr);
+int get_cell_row(const LabeledCell<Cell>& cell) {
+  return get_cell_row(*cell.ptr);
 }
 
 template <typename Cell>
-int get_cell_column(const LabeledCell<Cell>& cell)
-{
-    return get_cell_column(*cell.ptr);
+int get_cell_column(const LabeledCell<Cell>& cell) {
+  return get_cell_column(*cell.ptr);
 }
 
 template <typename Cell>
-Label& get_cell_label(LabeledCell<Cell>& lcell)
-{
-    return lcell.lbl;
+Label& get_cell_label(LabeledCell<Cell>& lcell) {
+  return lcell.lbl;
 }
-
 
 /// @brief labelClusters
 ///
@@ -58,26 +53,27 @@ void labelClusters(CellCollection& cells, bool commonCorner);
 
 /// @brief mergeClusters
 ///
-/// Merge a set of cells previously labeled (for instance with `labelClusters`) into actual clusters.
-/// The Cluster type must have the following function defined:
+/// Merge a set of cells previously labeled (for instance with `labelClusters`)
+/// into actual clusters. The Cluster type must have the following function
+/// defined:
 ///   void cluster_add_cell(Cluster&, const Cell&)
 ///
 /// @param [in] cells the labeled cell collection
 /// @return nothing
-template <typename Cell, typename Cluster, typename CellCollection, typename ClusterCollection = std::vector<Cluster>>
+template <typename Cell, typename Cluster, typename CellCollection,
+          typename ClusterCollection = std::vector<Cluster>>
 ClusterCollection mergeClusters(CellCollection& cells);
 
 /// @brief createClusters
 /// Conveniance function which runs both labelClusters and createClusters.
-template <typename Cell, typename Cluster, typename CellCollection, typename ClusterCollection = std::vector<Cluster>>
-ClusterCollection createClusters(CellCollection& cells, bool commonCorner)
-{
-    labelClusters<Cell>(cells, commonCorner);
-    return mergeClusters<Cell,Cluster>(cells);
+template <typename Cell, typename Cluster, typename CellCollection,
+          typename ClusterCollection = std::vector<Cluster>>
+ClusterCollection createClusters(CellCollection& cells, bool commonCorner) {
+  labelClusters<Cell>(cells, commonCorner);
+  return mergeClusters<Cell, Cluster>(cells);
 }
 
-
-} // Acts namespace
+}  // namespace Acts
 
 // #include "Acts/Clusterization/NewClusterization.ipp"
 #include "NewNewClusterization.ipp"
