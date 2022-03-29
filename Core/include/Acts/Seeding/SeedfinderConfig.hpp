@@ -66,7 +66,8 @@ struct SeedfinderConfig {
   SeedConfirmationRange forwardSeedConfirmationRange;
 
   // cut to the maximum value of delta z between SPs
-  float deltaZMax = std::numeric_limits<float>::max() * Acts::UnitConstants::mm;
+  float deltaZMax =
+      std::numeric_limits<float>::infinity() * Acts::UnitConstants::mm;
 
   // non equidistant binning in z
   std::vector<float> zBinEdges;
