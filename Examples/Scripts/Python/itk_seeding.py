@@ -70,6 +70,7 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
         impactMax=gridConfig.impactMax,
         maxPtScattering=float("inf") * u.GeV,
         deltaZMax=900 * u.mm,
+        interactionPointCut=True,
         zBinEdges=gridConfig.zBinEdges,
         enableCutsForSortedSP=True,  # enable cotTheta sorting in SeedFinder
         rRangeMiddleSP=[

@@ -69,6 +69,9 @@ struct SeedfinderConfig {
   float deltaZMax =
       std::numeric_limits<float>::infinity() * Acts::UnitConstants::mm;
 
+  // enable cut on the compatibility between interaction point and SPs
+  bool interactionPointCut = false;
+
   // non equidistant binning in z
   std::vector<float> zBinEdges;
 
