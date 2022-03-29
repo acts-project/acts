@@ -44,6 +44,10 @@ def addPythia8(
     vertexStddev: acts.Vector4 = acts.Vector4(0, 0, 0, 0),
     vertexMean: acts.Vector4 = acts.Vector4(0, 0, 0, 0),
 ):
+    """This function steers the particle generation using Pythia8
+
+    NB. this version is included here only for compatibility. Please use pythia8.addPythia8 instead.
+    """
     import pythia8
 
     evGen = pythia8.addPythia8(
