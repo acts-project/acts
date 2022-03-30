@@ -166,7 +166,6 @@ STRIP_FROM_INC_PATH    = ../Core/include \
                          ../Plugins/DD4hep/include \
                          ../Plugins/Digitization/include \
                          ../Plugins/Geant4/include \
-                         ../Identification/include \
                          ../Plugins/Json/include \
                          ../Plugins/Legacy/include \
                          ../Plugins/TGeo/include
