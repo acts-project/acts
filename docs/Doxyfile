@@ -776,11 +776,8 @@ INPUT                  = ../Core/include \
                          ../Plugins/Autodiff/include \
                          ../Plugins/Cuda/include \
                          ../Plugins/DD4hep/include \
-<<<<<<< HEAD
-=======
                          ../Plugins/Digitization/include \
                          ../Identification/include \
->>>>>>> identificationInCore
                          ../Plugins/Json/include \
                          ../Plugins/Legacy/include \
                          ../Plugins/Onnx/include \
