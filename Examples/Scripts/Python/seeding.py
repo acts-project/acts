@@ -3,13 +3,46 @@ from pathlib import Path
 from typing import Optional, Union
 from enum import Enum
 from collections import namedtuple
+import argparse
 
 import acts
 import acts.examples
 
 
+# Graciously taken from https://stackoverflow.com/a/60750535/4280680
+class EnumAction(argparse.Action):
+    """
+    Argparse action for handling Enums
+    """
+    def __init__(self, **kwargs):
+        # Pop off the type value
+        enum_type = kwargs.pop("enum", None)
+
+        # Ensure an Enum subclass is provided
+        if enum_type is None:
+            raise ValueError("type must be assigned an Enum when using EnumAction")
+        if not issubclass(enum_type, Enum):
+            raise TypeError("type must be an Enum when using EnumAction")
+
+        # Generate choices from the Enum
+        kwargs.setdefault("choices", tuple(e.name for e in enum_type))
+        kwargs.setdefault("default", "Default")
+
+        super(EnumAction, self).__init__(**kwargs)
+
+        self._enum = enum_type
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        for e in self._enum:
+            if e.name == values:
+                setattr(namespace, self.dest, e)
+                break
+        else:
+            raise ValueError("%s is not a validly enumerated algorithm." % values)
+
+
 u = acts.UnitConstants
-SeedingAlgorithm = Enum("SeedingAlgorithm", "Default TruthSmeared TruthEstimated")
+SeedingAlgorithm = Enum("SeedingAlgorithm", "Default TruthSmeared TruthEstimated Orthogonal")
 
 TruthSeedRanges = namedtuple(
     "TruthSeedRanges",
@@ -75,6 +108,7 @@ def addSeeding(
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
 ) -> acts.examples.Sequencer:
+    print(seedingAlgorithm)
     """This function steers the seeding
 
     Parameters
@@ -267,8 +301,56 @@ def addSeeding(
             s.addAlgorithm(seedingAlg)
             inputProtoTracks = seedingAlg.config.outputProtoTracks
             inputSeeds = seedingAlg.config.outputSeeds
+        elif seedingAlgorithm == SeedingAlgorithm.Orthogonal:
+            logger.info("Using orthogonal seeding")
+            # Use seeding
+            seedFinderConfig = acts.SeedFinderOrthogonalConfig(
+                **acts.examples.defaultKWArgs(
+                    rMin=seedfinderConfigArg.r[0],
+                    rMax=seedfinderConfigArg.r[1],
+                    deltaRMin=seedfinderConfigArg.deltaR[0],
+                    deltaRMax=seedfinderConfigArg.deltaR[1],
+                    collisionRegionMin=seedfinderConfigArg.collisionRegion[0],
+                    collisionRegionMax=seedfinderConfigArg.collisionRegion[1],
+                    zMin=seedfinderConfigArg.z[0],
+                    zMax=seedfinderConfigArg.z[1],
+                    maxSeedsPerSpM=seedfinderConfigArg.maxSeedsPerSpM,
+                    cotThetaMax=seedfinderConfigArg.cotThetaMax,
+                    sigmaScattering=seedfinderConfigArg.sigmaScattering,
+                    radLengthPerSeed=seedfinderConfigArg.radLengthPerSeed,
+                    minPt=seedfinderConfigArg.minPt,
+                    bFieldInZ=seedfinderConfigArg.bFieldInZ,
+                    impactMax=seedfinderConfigArg.impactMax,
+                    beamPos=(
+                        None
+                        if seedfinderConfigArg.beamPos is None
+                        or all([x is None for x in seedfinderConfigArg.beamPos])
+                        else acts.Vector2(
+                            seedfinderConfigArg.beamPos[0] or 0.0,
+                            seedfinderConfigArg.beamPos[1] or 0.0,
+                        )
+                    ),
+                ),
+            )
+
+            seedFilterConfig = acts.SeedFilterConfig(
+                maxSeedsPerSpM=seedFinderConfig.maxSeedsPerSpM,
+                deltaRMin=seedFinderConfig.deltaRMin,
+            )
+
+            seedingAlg = acts.examples.SeedingOrthogonalAlgorithm(
+                level=customLogLevel(acts.logging.VERBOSE),
+                inputSpacePoints=[spAlg.config.outputSpacePoints],
+                outputSeeds="seeds",
+                outputProtoTracks="prototracks",
+                seedFilterConfig=seedFilterConfig,
+                seedFinderConfig=seedFinderConfig,
+            )
+            s.addAlgorithm(seedingAlg)
+            inputProtoTracks = seedingAlg.config.outputProtoTracks
+            inputSeeds = seedingAlg.config.outputSeeds
         else:
-            logger.fatal("unknown seedingAlgorithm", seedingAlgorithm)
+            logger.fatal("unknown seedingAlgorithm %s", seedingAlgorithm)
 
         parEstimateAlg = acts.examples.TrackParamsEstimationAlgorithm(
             level=customLogLevel(acts.logging.VERBOSE),
@@ -328,7 +410,7 @@ def addSeeding(
     return s
 
 
-def runSeeding(trackingGeometry, field, outputDir, s=None):
+def runSeeding(trackingGeometry, field, outputDir, s=None, seedingAlgorithm=SeedingAlgorithm.Default):
 
     from particle_gun import addParticleGun, EtaConfig, PhiConfig, ParticleConfig
     from fatras import addFatras
@@ -375,8 +457,6 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
         s,
         trackingGeometry,
         field,
-        # SeedingAlgorithm.TruthSmeared,
-        # SeedingAlgorithm.TruthEstimated,
         TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-2.5, 2.5), nHits=(9, None)),
         ParticleSmearingSigmas(pRel=0.01),  # only used by SeedingAlgorithm.TruthSmeared
         SeedfinderConfigArg(
@@ -392,6 +472,7 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
             impactMax=3 * u.mm,
         ),
         acts.logging.VERBOSE,
+        seedingAlgorithm=seedingAlgorithm,
         geoSelectionConfigFile=srcdir
         / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
         inputParticles="particles_final",  # use this to reproduce the original root_file_hashes.txt - remove to fix
@@ -401,11 +482,22 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
 
 
 if "__main__" == __name__:
-    # from common import getOpenDataDetector
+    p = argparse.ArgumentParser(
+        description="Example script to run seed finding",
+    )
+
+    p.add_argument(
+        "--algorithm",
+        action=EnumAction,
+        enum=SeedingAlgorithm,
+        help="Select the seeding algorithm to use",
+    )
+
+    args = p.parse_args()
 
     # detector, trackingGeometry, _ = getOpenDataDetector()
     detector, trackingGeometry, _ = acts.examples.GenericDetector.create()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    runSeeding(trackingGeometry, field, outputDir=Path.cwd()).run()
+    runSeeding(trackingGeometry, field, outputDir=Path.cwd(), seedingAlgorithm=args.algorithm).run()
