@@ -32,7 +32,6 @@ option(ACTS_USE_SYSTEM_AUTODIFF "Use autodiff provided by the system instead of 
 option(ACTS_BUILD_PLUGIN_CUDA "Build CUDA plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EXATRKX "Build the Exa.TrkX plugin" OFF)
-option(ACTS_BUILD_PLUGIN_IDENTIFICATION "Build Identification plugin" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
 option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" OFF)
 option(ACTS_BUILD_PLUGIN_LEGACY "Build legacy plugin" OFF)
@@ -98,9 +97,6 @@ set_option_if(
 set_option_if(
   ACTS_BUILD_PLUGIN_TGEO
   ACTS_BUILD_PLUGIN_DD4HEP OR ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
-set_option_if(
-  ACTS_BUILD_PLUGIN_IDENTIFICATION
-  ACTS_BUILD_PLUGIN_TGEO OR ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
 set_option_if(
   ACTS_BUILD_PLUGIN_JSON
   ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)

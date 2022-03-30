@@ -20,7 +20,7 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesIoCsv
   PRIVATE
-    ActsCore ActsPluginIdentification
+    ActsCore
     ActsExamplesFramework ActsExamplesDigitization
     Threads::Threads Boost::program_options dfelibs)
 

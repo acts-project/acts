@@ -63,7 +63,7 @@ struct TestSourceLink final : public SourceLink {
   TestSourceLink& operator=(const TestSourceLink&) = default;
   TestSourceLink& operator=(TestSourceLink&&) = default;
 
-  std::size_t index() const { return sourceId; }
+  constexpr size_t index() const { return sourceId; }
 };
 
 bool operator==(const TestSourceLink& lhs, const TestSourceLink& rhs);

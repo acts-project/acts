@@ -79,8 +79,15 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
 
   std::unordered_map<Index, const SimSpacePoint*> spMap;
 
-  for (const SimSpacePoint& i : spacePoints) {
-    spMap.emplace(i.measurementIndex(), &i);
+  for (const SimSpacePoint& sp : spacePoints) {
+    if (sp.sourceLinks().size() == 0) {
+      ACTS_WARNING("Missing soucelink in space point");
+      continue;
+    }
+    const auto slink =
+        static_cast<const IndexSourceLink&>(*(sp.sourceLinks()[0]));
+    spMap.emplace(slink.index(),
+                  &sp);  // The second measurement is ignored for strips
   }
 
   for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
@@ -148,9 +155,6 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
 
 ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  // Read source links (necesary for retrieving the geometry identifer)
-  const auto& sourceLinks =
-      ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
   // Read seeds or create them from proto tracks and space points
   SimSeedContainer seeds;
   SimSpacePointContainer spacePoints;
@@ -181,9 +185,12 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     const auto& seed = seeds[iseed];
     // Get the bottom space point and its reference surface
     const auto bottomSP = seed.sp().front();
-    const auto hitIdx = bottomSP->measurementIndex();
-    const auto sourceLink = sourceLinks.nth(hitIdx);
-    auto geoId = sourceLink->get().geometryId();
+    if (bottomSP->sourceLinks().size() == 0) {
+      ACTS_WARNING("Missing sourcelink in the space point")
+      continue;
+    }
+    const auto sourceLink = bottomSP->sourceLinks()[0];
+    auto geoId = sourceLink->geometryId();
     const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
     if (surface == nullptr) {
       ACTS_WARNING("surface with geoID "
@@ -217,7 +224,13 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       ProtoTrack track;
       track.reserve(3);
       for (const auto& sp : seed.sp()) {
-        track.push_back(sp->measurementIndex());
+        if (sp->sourceLinks().size() == 0) {
+          ACTS_WARNING("Missing sourceLinks in the space point")
+          continue;
+        }
+        const auto slink =
+            static_cast<const IndexSourceLink&>(*(sp->sourceLinks()[0]));
+        track.push_back(slink.index());
       }
       tracks.emplace_back(track);
     }

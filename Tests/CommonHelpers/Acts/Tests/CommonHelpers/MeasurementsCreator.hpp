@@ -101,7 +101,6 @@ struct MeasurementsCreator {
             .globalToLocal(state.geoContext, stepper.position(state.stepping),
                            stepper.direction(state.stepping))
             .value();
-
     // The truth info
     BoundVector parameters = BoundVector::Zero();
     parameters[eBoundLoc0] = loc[eBoundLoc0];

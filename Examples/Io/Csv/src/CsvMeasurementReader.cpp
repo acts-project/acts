@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Digitization/PlanarModuleCluster.hpp"
-#include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
+#include "Acts/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"

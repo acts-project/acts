@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include <boost/container/static_vector.hpp>
 #include <dfe/dfe_io_dsv.hpp>
 
 #include "CsvOutputData.hpp"
@@ -64,10 +65,12 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointReader::read(
     Acts::Vector3 globalPos(data.sp_x, data.sp_y, data.sp_z);
 
     if (m_cfg.inputCollection == "pixel" || m_cfg.inputCollection == "strip" ||
-        m_cfg.inputCollection == "overlap")
-      spacePoints.emplace_back(globalPos, data.sp_covr, data.sp_covz,
-                               data.measurement_id);
-    else {
+        m_cfg.inputCollection == "overlap") {
+      boost::container::static_vector<const Acts::SourceLink*, 2> sLinks;
+      auto sp = SimSpacePoint(globalPos, data.sp_covr, data.sp_covz, sLinks);
+      spacePoints.emplace_back(sp);
+
+    } else {
       ACTS_ERROR("Invalid space point type " << m_cfg.inputStem);
       return ProcessCode::ABORT;
     }

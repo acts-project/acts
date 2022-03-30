@@ -162,7 +162,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     ProtoTrack& protoTrack = protoTracks.emplace_back();
     protoTrack.reserve(seed.sp().size());
     for (auto spacePointPtr : seed.sp()) {
-      protoTrack.push_back(spacePointPtr->measurementIndex());
+      for (const auto slink : spacePointPtr->sourceLinks()) {
+        const auto islink = static_cast<const IndexSourceLink&>(*slink);
+        protoTrack.emplace_back(islink.index());
+      }
     }
   }
 
