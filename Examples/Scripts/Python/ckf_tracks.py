@@ -20,6 +20,7 @@ def addCKFTracks(
     truthSeedRanges: Optional[TruthSeedRanges] = TruthSeedRanges(),
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
+    selectedParticles: str = "truth_seeds_selected",
 ) -> acts.examples.Sequencer:
     """This function steers the seeding
 
@@ -96,7 +97,7 @@ def addCKFTracks(
         # Write CKF performance data
         ckfPerfWriter = acts.examples.CKFPerformanceWriter(
             level=s.config.logLevel,
-            inputParticles="particles_input",
+            inputParticles=selectedParticles,
             inputTrajectories=trackFinder.config.outputTrajectories,
             inputMeasurementParticlesMap="measurement_particles_map",
             # The bottom seed could be the first, second or third hits on the truth track
