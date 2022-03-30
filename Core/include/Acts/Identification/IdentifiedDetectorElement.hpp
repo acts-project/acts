@@ -25,8 +25,6 @@ class DigitizationModule;
 /// declaration of the DigitizationModule to the detector
 /// elements
 ///
-/// The identifier can be overwritten with by the use of
-/// the ACTS_CORE_IDENTIFIER_PLUGIN
 class IdentifiedDetectorElement : public DetectorElementBase {
  public:
   /// Retrieve the Identifier
