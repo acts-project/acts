@@ -155,28 +155,10 @@ BOOST_AUTO_TEST_CASE(test_matrix_dimension_switch) {
   }
 }
 
-typedef std::tuple<
-    // Square matrix tests
-    std::pair<ActsMatrix<4, 4>, ActsMatrix<4, 4>>,
-    std::pair<ActsMatrix<8, 8>, ActsMatrix<8, 8>>,
-
-    // Square odd matrix tests
-    std::pair<ActsMatrix<3, 3>, ActsMatrix<3, 3>>,
-    std::pair<ActsMatrix<7, 7>, ActsMatrix<7, 7>>,
-
-    // Non-square matrix tests
-    std::pair<ActsMatrix<3, 4>, ActsMatrix<4, 3>>,
-    std::pair<ActsMatrix<3, 8>, ActsMatrix<8, 4>>,
-    std::pair<ActsMatrix<4, 3>, ActsMatrix<3, 8>>,
-    std::pair<ActsMatrix<7, 3>, ActsMatrix<3, 7>>,
-    std::pair<ActsMatrix<8, 3>, ActsMatrix<3, 7>>,
-    std::pair<ActsMatrix<8, 7>, ActsMatrix<7, 4>>,
-
-    // Very large matrix tests for sanity
-    std::pair<ActsMatrix<37, 81>, ActsMatrix<81, 59>>,
-    std::pair<ActsMatrix<38, 82>, ActsMatrix<82, 60>>,
-    std::pair<ActsMatrix<37, 82>, ActsMatrix<82, 59>>,
-    std::pair<ActsMatrix<38, 81>, ActsMatrix<81, 60>>>
+typedef std::tuple<std::pair<ActsMatrix<3, 3>, ActsMatrix<3, 3>>,
+                   std::pair<ActsMatrix<4, 4>, ActsMatrix<4, 4>>,
+                   std::pair<ActsMatrix<8, 8>, ActsMatrix<8, 8>>,
+                   std::pair<ActsMatrix<8, 7>, ActsMatrix<7, 4>>>
     MatrixProductTypes;
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(BlockedMatrixMultiplication, Matrices,

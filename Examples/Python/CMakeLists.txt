@@ -136,6 +136,12 @@ else()
   target_sources(ActsPythonBindings PRIVATE src/HepMC3Stub.cpp)
 endif()
 
+if(ACTS_BUILD_EXAMPLES_EXATRKX)
+  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesTrackFindingExaTrkX)
+  target_sources(ActsPythonBindings PRIVATE src/ExaTrkXTrackFinding.cpp)
+else()
+  target_sources(ActsPythonBindings PRIVATE src/ExaTrkXTrackFindingStub.cpp)
+endif()
 
 add_custom_target(ActsPythonGlueCode)
 configure_file(setup.sh.in ${_python_dir}/setup.sh COPYONLY)

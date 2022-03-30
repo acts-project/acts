@@ -70,6 +70,8 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
         beamPos=acts.Vector2(0 * u.mm, 0 * u.mm),
         impactMax=gridConfig.impactMax,
         maxPtScattering=float("inf") * u.GeV,
+        deltaZMax=900 * u.mm,
+        interactionPointCut=True,
         zBinEdges=gridConfig.zBinEdges,
         enableCutsForSortedSP=True,  # enable cotTheta sorting in SeedFinder
         rRangeMiddleSP=[
@@ -110,6 +112,7 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
         impactWeightFactor=100,
         compatSeedWeight=100,
         compatSeedLimit=3,
+        curvatureSortingInFilter=True,
     )
 
     seedingAlg = acts.examples.SeedingAlgorithm(
