@@ -75,5 +75,4 @@ ClusterCollection createClusters(CellCollection& cells, bool commonCorner) {
 
 }  // namespace Acts
 
-// #include "Acts/Clusterization/NewClusterization.ipp"
-#include "NewNewClusterization.ipp"
+#include "Acts/Clusterization/HkClusterization.ipp"
