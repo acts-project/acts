@@ -8,8 +8,8 @@
 
 #pragma once
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
-#include "Acts/Plugins/Identification/Identifier.hpp"
+#include "Acts/Identification/IdentifiedDetectorElement.hpp"
+#include "Acts/Identification/Identifier.hpp"
 
 #include <iostream>
 

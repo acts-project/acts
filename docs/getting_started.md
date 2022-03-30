@@ -244,7 +244,6 @@ components.
 | ACTS_BUILD_PLUGIN_CUDA              | Build CUDA plugin                                                                                     |
 | ACTS_BUILD_PLUGIN_DD4HEP            | Build DD4hep geometry plugin                                                                          |
 | ACTS_BUILD_PLUGIN_EXATRKX           | Build Exa.TrkX plugin                                                                             |
-| ACTS_BUILD_PLUGIN_IDENTIFICATION    | Build Identification plugin                                                                           |
 | ACTS_BUILD_PLUGIN_JSON              | Build Json plugin                                                                                     |
 | ACTS_BUILD_PLUGIN_LEGACY            | Build legacy plugin                                                                                   |
 | ACTS_BUILD_PLUGIN_ONNX              | Build ONNX plugin                                                                                     |

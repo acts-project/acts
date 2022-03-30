@@ -23,6 +23,7 @@ pybind11_add_module(ActsPythonBindings
   src/TrackFitting.cpp
   src/TrackFinding.cpp
   src/Vertexing.cpp
+  src/Digitization.cpp
 )
 install(TARGETS ActsPythonBindings DESTINATION ${_python_install_dir})
 
@@ -50,6 +51,7 @@ target_link_libraries(ActsPythonBindings PUBLIC
   ActsExamplesVertexing
   ActsExamplesFatras
   ActsExamplesPrinters
+  ActsExamplesDigitization
 )
 
 set(py_files 
@@ -83,13 +85,6 @@ if(ACTS_BUILD_EXAMPLES_PYTHIA8)
   target_sources(ActsPythonBindings PRIVATE src/Pythia8.cpp)
 else()
   target_sources(ActsPythonBindings PRIVATE src/Pythia8Stub.cpp)
-endif()
-
-if(ACTS_BUILD_PLUGIN_IDENTIFICATION)
-  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesDigitization)
-  target_sources(ActsPythonBindings PRIVATE src/Digitization.cpp)
-else()
-  target_sources(ActsPythonBindings PRIVATE src/DigitizationStub.cpp)
 endif()
 
 if(ACTS_BUILD_EXAMPLES_GEANT4)

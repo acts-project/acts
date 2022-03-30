@@ -11,8 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
-#include "Acts/Plugins/Identification/Identifier.hpp"
+#include "Acts/Identification/IdentifiedDetectorElement.hpp"
+#include "Acts/Identification/Identifier.hpp"
 
 namespace Acts {
 class Surface;

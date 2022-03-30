@@ -23,7 +23,7 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesIoRoot
   PUBLIC
-    ActsCore ActsPluginIdentification ActsExamplesDigitization
+    ActsCore ActsExamplesDigitization
     ActsExamplesFramework ActsExamplesPropagation ActsExamplesTruthTracking ActsExamplesMaterialMapping
     Threads::Threads
   PRIVATE ROOT::Core ROOT::Hist ROOT::Tree)

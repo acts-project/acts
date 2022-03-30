@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/Identification/Identifier.hpp"
+#include "Acts/Identification/Identifier.hpp"
 
 #include <memory>
 #include <vector>
