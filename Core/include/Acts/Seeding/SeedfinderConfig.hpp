@@ -74,7 +74,7 @@ struct SeedfinderConfig {
   // sort the SP in transformCoordinates method based on cotTheta
   bool cotThetaSorting = false;
   // enables compatibility cuts based on the sorting of cotTheta
-  bool enableCutsForSortedSP = true;
+  bool enableCutsForSortedSP = false;
 
   // FIXME: this is not used yet
   //        float upperPtResolutionPerSeed = 20* Acts::GeV;
