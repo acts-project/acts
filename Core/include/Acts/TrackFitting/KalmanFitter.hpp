@@ -30,6 +30,7 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
+#include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
 #include "Acts/TrackFitting/detail/VoidKalmanComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -529,61 +530,21 @@ class KalmanFitter {
         // Update state and stepper with pre material effects
         materialInteractor(surface, state, stepper, preUpdate);
 
-        // Bind the transported state to the current surface
-        auto res = stepper.boundState(state.stepping, *surface, false);
-        if (!res.ok()) {
-          return res.error();
-        }
-        auto& [boundParams, jacobian, pathLength] = *res;
+        // do the kalman update
+        auto trackStateProxyRes = detail::kalmanHandleMeasurement(
+            state, stepper, extensions, *surface, sourcelink_it->second,
+            result.fittedStates, result.lastTrackIndex, false);
 
-        // add a full TrackState entry multi trajectory
-        // (this allocates storage for all components, we will set them later)
-        result.lastTrackIndex = result.fittedStates.addTrackState(
-            TrackStatePropMask::All, result.lastTrackIndex);
-
-        // now get track state proxy back
-        auto trackStateProxy =
-            result.fittedStates.getTrackState(result.lastTrackIndex);
-
-        trackStateProxy.setReferenceSurface(surface->getSharedPtr());
-
-        // assign the source link to the track state
-        trackStateProxy.setUncalibrated(sourcelink_it->second);
-
-        // Fill the track state
-        trackStateProxy.predicted() = std::move(boundParams.parameters());
-        if (boundParams.covariance().has_value()) {
-          trackStateProxy.predictedCovariance() =
-              std::move(*boundParams.covariance());
-        }
-        trackStateProxy.jacobian() = std::move(jacobian);
-        trackStateProxy.pathLength() = std::move(pathLength);
-
-        // We have predicted parameters, so calibrate the uncalibrated input
-        // measuerement
-        extensions.calibrator(state.geoContext, trackStateProxy);
-
-        // Get and set the type flags
-        auto& typeFlags = trackStateProxy.typeFlags();
-        typeFlags.set(TrackStateFlag::ParameterFlag);
-        if (surface->surfaceMaterial() != nullptr) {
-          typeFlags.set(TrackStateFlag::MaterialFlag);
+        if (!trackStateProxyRes.ok()) {
+          return trackStateProxyRes.error();
         }
 
-        // Check if the state is an outlier.
-        // If not, run Kalman update, tag it as a
-        // measurement and update the stepping state. Otherwise, just tag it as
-        // an outlier
-        if (not extensions.outlierFinder(trackStateProxy)) {
-          // Run Kalman update
-          auto updateRes = extensions.updater(state.geoContext, trackStateProxy,
-                                              state.stepping.navDir, logger);
-          if (!updateRes.ok()) {
-            ACTS_ERROR("Update step failed: " << updateRes.error());
-            return updateRes.error();
-          }
-          // Set the measurement type flag
-          typeFlags.set(TrackStateFlag::MeasurementFlag);
+        const auto& trackStateProxy = *trackStateProxyRes;
+        result.lastTrackIndex = trackStateProxy.index();
+
+        // Update the stepper if it is not an outlier
+        if (trackStateProxy.typeFlags().test(
+                Acts::TrackStateFlag::MeasurementFlag)) {
           // Update the stepping state with filtered parameters
           ACTS_VERBOSE("Filtering step successful, updated parameters are : \n"
                        << trackStateProxy.filtered().transpose());
@@ -595,14 +556,6 @@ class KalmanFitter {
                          trackStateProxy.filteredCovariance(), *surface);
           // We count the state with measurement
           ++result.measurementStates;
-        } else {
-          ACTS_VERBOSE(
-              "Filtering step successful. But measurement is deterimined "
-              "to "
-              "be an outlier. Stepping state is not updated.")
-          // Set the outlier type flag
-          typeFlags.set(TrackStateFlag::OutlierFlag);
-          trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
         }
 
         // Update state and stepper with post material effects
@@ -623,61 +576,22 @@ class KalmanFitter {
         // measurement)
         if (result.measurementStates > 0 ||
             surface->surfaceMaterial() != nullptr) {
-          // No source links on surface, add either hole or passive material
-          // TrackState entry multi trajectory. No storage allocation for
-          // uncalibrated/calibrated measurement and filtered parameter
-          result.lastTrackIndex = result.fittedStates.addTrackState(
-              ~(TrackStatePropMask::Uncalibrated |
-                TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered),
-              result.lastTrackIndex);
+          auto trackStateProxyRes = detail::kalmanHandleNoMeasurement(
+              state, stepper, *surface, result.fittedStates,
+              result.lastTrackIndex, true);
 
-          // now get track state proxy back
-          auto trackStateProxy =
-              result.fittedStates.getTrackState(result.lastTrackIndex);
-
-          // Set the surface
-          trackStateProxy.setReferenceSurface(surface->getSharedPtr());
-
-          // Set the track state flags
-          auto& typeFlags = trackStateProxy.typeFlags();
-          typeFlags.set(TrackStateFlag::ParameterFlag);
-          if (surface->surfaceMaterial() != nullptr) {
-            typeFlags.set(TrackStateFlag::MaterialFlag);
+          if (!trackStateProxyRes.ok()) {
+            return trackStateProxyRes.error();
           }
-          if (surface->associatedDetectorElement() != nullptr) {
-            ACTS_VERBOSE("Detected hole on " << surface->geometryId());
-            // If the surface is sensitive, set the hole type flag
-            typeFlags.set(TrackStateFlag::HoleFlag);
 
+          const auto& trackStateProxy = *trackStateProxyRes;
+          result.lastTrackIndex = trackStateProxy.index();
+
+          if (trackStateProxy.typeFlags().test(TrackStateFlag::HoleFlag)) {
             // Count the missed surface
             result.missedActiveSurfaces.push_back(surface);
-          } else if (surface->surfaceMaterial() != nullptr) {
-            ACTS_VERBOSE("Detected in-sensitive surface "
-                         << surface->geometryId());
           }
 
-          // Transport & bind the state to the current surface
-          auto res = stepper.boundState(state.stepping, *surface);
-          if (!res.ok()) {
-            ACTS_ERROR("Propagate to surface " << surface->geometryId()
-                                               << " failed: " << res.error());
-            return res.error();
-          }
-          auto& [boundParams, jacobian, pathLength] = *res;
-
-          // Fill the track state
-          trackStateProxy.predicted() = std::move(boundParams.parameters());
-          if (boundParams.covariance().has_value()) {
-            trackStateProxy.predictedCovariance() =
-                std::move(*boundParams.covariance());
-          }
-          trackStateProxy.jacobian() = std::move(jacobian);
-          trackStateProxy.pathLength() = std::move(pathLength);
-
-          // Set the filtered parameter index to be the same with predicted
-          // parameter
-          trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
-          // We count the processed state
           ++result.processedStates;
         }
         if (surface->surfaceMaterial() != nullptr) {
@@ -814,7 +728,7 @@ class KalmanFitter {
         }
         // Not creating bound state here, so need manually reinitialize
         // jacobian
-        state.stepping.jacobian = BoundMatrix::Identity();
+        stepper.setIdentityJacobian(state.stepping);
         if (surface->surfaceMaterial() != nullptr) {
           // Update state and stepper with material effects
           materialInteractor(surface, state, stepper);
@@ -972,16 +886,14 @@ class KalmanFitter {
           (std::abs(firstIntersection.intersection.pathLength) <=
            std::abs(lastIntersection.intersection.pathLength));
       if (closerTofirstCreatedState) {
-        stepper.update(state.stepping, firstParams,
-                       firstCreatedState.smoothed(),
-                       firstCreatedState.smoothedCovariance(),
-                       firstCreatedState.referenceSurface());
+        stepper.resetState(state.stepping, firstCreatedState.smoothed(),
+                           firstCreatedState.smoothedCovariance(),
+                           firstCreatedState.referenceSurface());
         reverseDirection = (firstIntersection.intersection.pathLength < 0);
       } else {
-        stepper.update(state.stepping, lastParams,
-                       lastCreatedMeasurement.smoothed(),
-                       lastCreatedMeasurement.smoothedCovariance(),
-                       lastCreatedMeasurement.referenceSurface());
+        stepper.resetState(state.stepping, lastCreatedMeasurement.smoothed(),
+                           lastCreatedMeasurement.smoothedCovariance(),
+                           lastCreatedMeasurement.referenceSurface());
         reverseDirection = (lastIntersection.intersection.pathLength < 0);
       }
       const auto& surface = closerTofirstCreatedState

@@ -101,6 +101,12 @@ class AxisAlignedBoundingBox {
   AxisAlignedBoundingBox(const self_t& other) = default;
 
   /**
+   * Copy assignment operator from other bounding box.
+   * @param other The other AABB
+   */
+  AxisAlignedBoundingBox& operator=(const self_t& other) = default;
+
+  /**
    * Constructor from an entity pointer, and the min and max vertices.
    * @param entity The entity to store
    * @param vmin The minimum vertex.
