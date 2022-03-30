@@ -935,7 +935,7 @@ def test_vertex_fitting(tmp_path):
     runVertexFitting(
         field,
         vertexFinder=VertexFinder.Truth,
-        outputDir=Path.cwd(),
+        outputDir=tmp_path,
         s=s,
     )
 
