@@ -705,6 +705,13 @@ def test_digitization_config_example(trk_geo, tmp_path):
 
 
 @pytest.mark.parametrize(
+    "detector",
+    [
+        "generic",
+        "odd",
+    ],
+)
+@pytest.mark.parametrize(
     "truthSmeared,truthEstimated",
     [
         [False, False],
@@ -713,16 +720,43 @@ def test_digitization_config_example(trk_geo, tmp_path):
     ],
     ids=["full_seeding", "truth_estimated", "truth_smeared"],
 )
-def test_ckf_tracks_example(tmp_path, assert_root_hash, truthSmeared, truthEstimated):
+def test_ckf_tracks_example(
+    tmp_path, assert_root_hash, truthSmeared, truthEstimated, detector
+):
     csv = tmp_path / "csv"
 
     assert not csv.exists()
 
-    # the example as written is only compatible with the generic detector
-    detector, trackingGeometry, decorators = GenericDetector.create()
+    srcdir = Path(__file__).resolve().parent.parent.parent.parent
+    if detector == "generic":
+        detector, trackingGeometry, decorators = GenericDetector.create()
+        geometrySelection = (
+            srcdir
+            / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+        )
+        digiConfigFile = (
+            srcdir
+            / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+        )
+    elif detector == "odd":
+
+        matDeco = acts.IMaterialDecorator.fromFile(
+            srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
+            level=acts.logging.INFO,
+        )
+        detector, trackingGeometry, decorators = getOpenDataDetector(matDeco)
+        digiConfigFile = (
+            srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
+        )
+        geometrySelection = (
+            srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json"
+        )
+
+    else:
+        raise ValueError(f"Invalid detector {detector}")
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-    events = 10
+    events = 100
     s = Sequencer(events=events, numThreads=1)  # Digitization is not thread-safe
 
     root_files = [
@@ -757,16 +791,10 @@ def test_ckf_tracks_example(tmp_path, assert_root_hash, truthSmeared, truthEstim
         trackingGeometry,
         decorators,
         field=field,
-        geometrySelection=Path(
-            Path(__file__).parent.parent.parent.parent
-            / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
-        ),
-        digiConfigFile=Path(
-            Path(__file__).parent.parent.parent.parent
-            / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-        ),
         outputCsv=True,
         outputDir=tmp_path,
+        geometrySelection=geometrySelection,
+        digiConfigFile=digiConfigFile,
         truthSmearedSeeded=truthSmeared,
         truthEstimatedSeeded=truthEstimated,
         s=s,

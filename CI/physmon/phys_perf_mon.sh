@@ -26,7 +26,7 @@ function run() {
     histcmp \
         --label-reference=$refcommit \
         --label-monitored=$commit \
-        "$@"
+        "$@" || true
 
     ec=$(($ec | $?))
 
