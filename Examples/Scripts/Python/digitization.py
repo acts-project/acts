@@ -18,6 +18,7 @@ def configureDigitization(
     outputRoot=True,
     outputCsv=True,
     s=None,
+    doMerge=False,
 ):
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
@@ -84,6 +85,7 @@ def configureDigitization(
         trackingGeometry=trackingGeometry,
         randomNumbers=rnd,
         inputSimHits=simAlg.config.outputSimHits,
+        doMerge=doMerge
     )
     digiAlg = acts.examples.DigitizationAlgorithm(digiCfg, acts.logging.INFO)
 

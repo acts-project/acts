@@ -135,8 +135,7 @@ int get_connexions(typename std::vector<Cell>::iterator it,
 
     // Decide whether or not cluster is connected based on 4- or
     // 8-connectivity
-    if ((delta_row + delta_col) == 1 ||
-        (commonCorner and delta_row == 1 and delta_col == 1)) {
+    if ((delta_row + delta_col) <= (commonCorner? 2 : 1)) {
       seen[nconn++] = get_cell_label(*it_2);
       if (nconn == (commonCorner ? 4 : 2))
         break;
@@ -147,6 +146,7 @@ int get_connexions(typename std::vector<Cell>::iterator it,
 }
 
 }  // namespace internal
+
 
 template <typename Cell, typename CellCollection>
 void labelClusters(CellCollection& cells, bool commonCorner) {
