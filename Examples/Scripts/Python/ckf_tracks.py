@@ -155,7 +155,6 @@ def runCKFTracks(
         s.addContextDecorator(d)
     rnd = acts.examples.RandomNumbers(seed=42)
     outputDir = Path(outputDir)
-    outputDirCsv = outputDir / "csv" if outputCsv else None
 
     if inputParticlePath is None:
         s = addParticleGun(
@@ -164,7 +163,6 @@ def runCKFTracks(
             ParticleConfig(4, acts.PdgParticle.eMuon, True),
             PhiConfig(0.0, 360.0 * u.degree),
             multiplicity=2,
-            outputDirRoot=outputDir,
             rnd=rnd,
         )
     else:
@@ -185,8 +183,6 @@ def runCKFTracks(
         s,
         trackingGeometry,
         field,
-        outputDirCsv=outputDirCsv,
-        outputDirRoot=outputDir,
         rnd=rnd,
     )
 
@@ -234,7 +230,7 @@ def runCKFTracks(
         field,
         TruthSeedRanges(pt=(400.0 * u.MeV, None), nHits=(6, None)),
         outputDirRoot=outputDir,
-        outputDirCsv=outputDirCsv,
+        outputDirCsv=outputDir / "csv" if outputCsv else None,
     )
 
     return s
