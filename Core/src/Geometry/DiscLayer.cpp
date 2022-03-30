@@ -77,6 +77,10 @@ void Acts::DiscLayer::buildApproachDescriptor() {
         bSurfaces.at(negativeFaceXY)->surfaceRepresentation().getSharedPtr());
     aSurfaces.push_back(
         bSurfaces.at(positiveFaceXY)->surfaceRepresentation().getSharedPtr());
+    aSurfaces.push_back(
+        bSurfaces.at(tubeInnerCover)->surfaceRepresentation().getSharedPtr());
+    aSurfaces.push_back(
+        bSurfaces.at(tubeOuterCover)->surfaceRepresentation().getSharedPtr());
     // create an ApproachDescriptor with Boundary surfaces
     m_approachDescriptor =
         std::make_unique<const GenericApproachDescriptor>(std::move(aSurfaces));
