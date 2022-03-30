@@ -119,6 +119,8 @@ struct SeedfinderConfig {
   Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
                         0 * Acts::UnitConstants::mm};
 
+  boost::container::small_vector<size_t, 20> zBinsCustomLooping = {};
+
   // average radiation lengths of material on the length of a seed. used for
   // scattering.
   // default is 5%
