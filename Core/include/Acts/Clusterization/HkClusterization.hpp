@@ -68,10 +68,7 @@ ClusterCollection mergeClusters(CellCollection& cells);
 /// Conveniance function which runs both labelClusters and createClusters.
 template <typename Cell, typename Cluster, typename CellCollection,
           typename ClusterCollection = std::vector<Cluster>>
-ClusterCollection createClusters(CellCollection& cells, bool commonCorner) {
-  labelClusters<Cell>(cells, commonCorner);
-  return mergeClusters<Cell, Cluster>(cells);
-}
+ClusterCollection createClusters(CellCollection& cells, bool commonCorner);
 
 }  // namespace Acts
 

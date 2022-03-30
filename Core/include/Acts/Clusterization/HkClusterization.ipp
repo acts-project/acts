@@ -26,7 +26,7 @@ template <typename T>
 struct cell_type_has_required_functions<
     T, void_t<decltype(get_cell_row(std::declval<T>())),
               decltype(get_cell_column(std::declval<T>())),
-              decltype(get_cell_activation(std::declval<T>()))>>
+              decltype(get_cell_label(std::declval<T&>()))>>
     : std::true_type {};
 
 template <typename, typename, typename T = void>
@@ -49,7 +49,7 @@ constexpr bool ClusterConcept = cluster_type_has_required_functions<T, U>();
     static_assert(Acts::internal::CellConcept<T>,                           \
                   "Cell type should have the following functions:'int "     \
                   "get_cell_row(const Cell&)', 'int get_cell_column(const " \
-                  "Cell&)', 'Label& get_cell_label(const Cell&)'");         \
+                  "Cell&)', 'Label& get_cell_label(Cell&)'");         \
   } while (0)
 
 #define CHECK_CLUSTER_TYPE(T, U)                                           \
@@ -219,6 +219,15 @@ ClusterCollection mergeClusters(CellCollection& cells) {
   outv.push_back(std::move(cl));
 
   return outv;
+}
+
+template <typename Cell, typename Cluster, typename CellCollection,
+          typename ClusterCollection = std::vector<Cluster>>
+ClusterCollection createClusters(CellCollection& cells, bool commonCorner) {
+  CHECK_CELL_TYPE(Cell);
+  CHECK_CLUSTER_TYPE(Cluster&, const Cell&);
+  labelClusters<Cell>(cells, commonCorner);
+  return mergeClusters<Cell, Cluster>(cells);
 }
 
 }  // namespace Acts
