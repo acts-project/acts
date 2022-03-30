@@ -52,7 +52,7 @@ LinCircle transformCoordinates(InternalSpacePoint<external_spacepoint_t>& sp,
 /// @param[out] linCircleVec The output vector to write to.
 template <typename external_spacepoint_t>
 void transformCoordinates(
-    const std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
+    std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
     InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     bool enableCutsForSortedSP, std::vector<LinCircle>& linCircleVec);
 }  // namespace Acts
