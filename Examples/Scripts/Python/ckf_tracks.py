@@ -217,7 +217,6 @@ def runCKFTracks(
             impactMax=3 * u.mm,
         ),
         TrackParamsEstimationConfig(deltaR=(10.0 * u.mm, None)),
-        acts.logging.VERBOSE,
         inputParticles="particles_initial",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared
         if truthSmearedSeeded
