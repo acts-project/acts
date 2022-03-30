@@ -107,6 +107,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(zBinEdges);
     ACTS_PYTHON_MEMBER(cotThetaSorting);
     ACTS_PYTHON_MEMBER(enableCutsForSortedSP);
+    ACTS_PYTHON_MEMBER(interactionPointCut);
     ACTS_PYTHON_MEMBER(zBinEdges);
     ACTS_PYTHON_MEMBER(rRangeMiddleSP);
     ACTS_PYTHON_MEMBER(useVariableMiddleSPRange);

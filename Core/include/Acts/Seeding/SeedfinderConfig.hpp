@@ -65,6 +65,9 @@ struct SeedfinderConfig {
   // parameters for forward seed confirmation
   SeedConfirmationRange forwardSeedConfirmationRange;
 
+  // enable cut on the compatibility between interaction point and SPs
+  bool interactionPointCut = false;
+
   // non equidistant binning in z
   std::vector<float> zBinEdges;
 
