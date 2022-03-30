@@ -39,7 +39,7 @@ struct SpacePointGridConfig {
   float impactMax;
   // number of phiBin neighbors (plus the current bin) that covers the full
   // deflection of a minimum pT particle
-  int phiBinDeflectionCoverage;
+  int phiBinDeflectionCoverage = 1;
   // number of phiBin neighbors at each side of the current bin that will be
   // used to search for SPs
   int numPhiNeighbors;
