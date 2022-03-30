@@ -48,14 +48,6 @@ enum class MaterialUpdateStage : int {
 
 std::ostream& operator<<(std::ostream& os, MaterialUpdateStage matUpdate);
 
-inline constexpr auto operator*(MaterialUpdateStage dir, double value) {
-  return static_cast<std::underlying_type_t<NavigationDirection>>(dir) * value;
-}
-
-inline constexpr auto operator*(double value, MaterialUpdateStage dir) {
-  return value * static_cast<std::underlying_type_t<NavigationDirection>>(dir);
-}
-
 /// @enum NoiseUpdateMode to tell how to deal with noise term in covariance
 /// transport
 /// - removeNoise: subtract noise term
