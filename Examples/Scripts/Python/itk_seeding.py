@@ -45,7 +45,8 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
             2500.0,
             3000.0,
         ],  # zBinEdges enables non-equidistant binning in z, in case the binning is not defined the edges are evaluated automatically using equidistant binning
-        numPhiNeighbors=1,  # number of phiBin neighbors (plus the current bin) that covers the full deflection of a minimum pT particle
+        numPhiNeighbors=1,
+        phiBinDeflectionCoverage=3,
     )
 
     seedFinderConfig = acts.SeedfinderConfig(

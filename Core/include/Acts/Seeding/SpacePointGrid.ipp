@@ -56,7 +56,7 @@ Acts::SpacePointGridCreator::createGrid(
     // individual bin should cover 1/config.numPhiNeighbors of the maximum
     // expected azimutal deflection
     float deltaPhi = (outerAngle - innerAngle + deltaAngleWithMaxD0) /
-                     (2 * config.numPhiNeighbors + 1);
+                     config.phiBinDeflectionCoverage;
 
     // sanity check: if the delta phi is equal to or less than zero, we'll be
     // creating an infinite or a negative number of bins, which would be bad!
