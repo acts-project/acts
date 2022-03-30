@@ -922,7 +922,7 @@ def test_ckf_tracks_example_truth_smeared(tmp_path, assert_root_hash):
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.slow
-# @pytest.mark.filterwarnings("ignore::UserWarning")
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_vertex_fitting(tmp_path):
     detector, trackingGeometry, decorators = getOpenDataDetector()
 
