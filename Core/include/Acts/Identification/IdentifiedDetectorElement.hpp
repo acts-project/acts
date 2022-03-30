@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 - 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -25,8 +25,6 @@ class DigitizationModule;
 /// declaration of the DigitizationModule to the detector
 /// elements
 ///
-/// The identifier can be overwritten with by the use of
-/// the ACTS_CORE_IDENTIFIER_PLUGIN
 class IdentifiedDetectorElement : public DetectorElementBase {
  public:
   /// Retrieve the Identifier
