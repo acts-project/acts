@@ -157,7 +157,7 @@ class SeedFinderOrthogonal {
    * @return An N-dimensional axis-aligned search range.
    */
   typename tree_t::range_t validTupleOrthoRangeHL(
-      const internal_sp_t &mid) const;
+      const internal_sp_t &high) const;
 
   /**
    * @brief Check whether two spacepoints form a valid tuple.

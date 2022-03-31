@@ -87,9 +87,9 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeLH(
 
 template <typename external_spacepoint_t>
 auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeHL(
-    const internal_sp_t &mid) const -> typename tree_t::range_t {
-  float pM = mid.phi();
-  float rM = mid.radius();
+    const internal_sp_t &high) const -> typename tree_t::range_t {
+  float pM = high.phi();
+  float rM = high.radius();
 
   typename tree_t::range_t res;
 
@@ -126,13 +126,13 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeHL(
    */
   float fracR = res[DimR].min() / rM;
 
-  float zMin = (mid.z() - m_config.collisionRegionMin) * fracR +
+  float zMin = (high.z() - m_config.collisionRegionMin) * fracR +
                m_config.collisionRegionMin;
-  float zMax = (mid.z() - m_config.collisionRegionMax) * fracR +
+  float zMax = (high.z() - m_config.collisionRegionMax) * fracR +
                m_config.collisionRegionMax;
 
-  res[DimZ].shrinkMin(std::min(zMin, mid.z()));
-  res[DimZ].shrinkMax(std::max(zMax, mid.z()));
+  res[DimZ].shrinkMin(std::min(zMin, high.z()));
+  res[DimZ].shrinkMax(std::max(zMax, high.z()));
 
   /*
    * Cut: Shrink the φ range, such that Δφ_min ≤ φ - φ_H ≤ Δφ_max
