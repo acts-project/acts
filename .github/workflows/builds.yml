@@ -88,7 +88,7 @@ jobs:
         run: >
           ${SETUP}
           && echo "::group::Dependencies"
-          && pip3 install histcmp==0.3.0
+          && pip3 install histcmp==0.3.1
           && source /usr/local/bin/thisroot.sh
           && source /usr/local/bin/thisdd4hep_only.sh
           && source /usr/local/bin/geant4.sh
@@ -271,6 +271,22 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DACTS_BUILD_PLUGIN_CUDA=ON
           -DACTS_BUILD_UNITTESTS=ON
+      - name: Build
+        run: cmake --build build --
+  exatrkx:
+    runs-on: ubuntu-latest
+    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v17
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configure
+        run: >
+          cmake -B build -S .
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
+          -DACTS_BUILD_PLUGIN_EXATRKX=ON
+          -DACTS_BUILD_EXAMPLES_EXATRKX=ON
+          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
       - name: Build
         run: cmake --build build --
   sycl:
