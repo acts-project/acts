@@ -110,7 +110,7 @@ class DisjointSets {
 // Cell collection logic
 // TODO: add template parameter to extend matching logic?
 template <typename Cell>
-int get_connexions(typename std::vector<Cell>::iterator it,
+int get_connections(typename std::vector<Cell>::iterator it,
                    std::vector<Cell>& set, bool commonCorner,
                    std::array<Label, 4>& seen) {
   int curr_row = get_cell_row(*it);
@@ -160,7 +160,7 @@ void labelClusters(CellCollection& cells, bool commonCorner) {
 
   // First pass: Allocate labels and record equivalences
   for (auto it = cells.begin(); it != cells.end(); ++it) {
-    int nconn = internal::get_connexions<Cell>(it, cells, commonCorner, seen);
+    int nconn = internal::get_connections<Cell>(it, cells, commonCorner, seen);
     if (nconn == 0) {
       // Allocate new label
       get_cell_label(*it) = ds.make_set();
@@ -229,5 +229,8 @@ ClusterCollection createClusters(CellCollection& cells, bool commonCorner) {
   labelClusters<Cell>(cells, commonCorner);
   return mergeClusters<Cell, Cluster>(cells);
 }
+
+#undef CHECK_CELL_TYPE
+#undef CHECK_CLUSTER_TYPE
 
 }  // namespace Acts

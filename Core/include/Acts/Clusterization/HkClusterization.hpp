@@ -5,8 +5,8 @@
 
 namespace Acts {
 
-typedef int Label;
-#define NO_LABEL 0
+using Label = int;
+constexpr Label NO_LABEL = 0;
 
 // Simple wrapper around a generic cell type
 // The Cell type should have the following accessor functions defined:
