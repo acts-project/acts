@@ -1198,7 +1198,6 @@ class CombinatorialKalmanFilter {
   /// @tparam measurement_selector_t Type of the measurement selector
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
-  /// @param sourcelinks The fittable uncalibrated measurements
   /// @param initialParameters The initial track parameters
   /// @param tfOptions CombinatorialKalmanFilterOptions steering the track
   /// finding
