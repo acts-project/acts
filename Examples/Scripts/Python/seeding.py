@@ -70,7 +70,7 @@ def addSeeding(
     initialVarInflation: Optional[list] = None,
     seedfinderConfigArg: SeedfinderConfigArg = SeedfinderConfigArg(),
     trackParamsEstimationConfig: TrackParamsEstimationConfig = TrackParamsEstimationConfig(),
-    inputParticles="particles_final",
+    inputParticles="particles_initial",
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
@@ -367,6 +367,7 @@ def runSeeding(trackingGeometry, field, outputDir, s=None):
         acts.logging.VERBOSE,
         geoSelectionConfigFile=srcdir
         / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
+        inputParticles="particles_final",
         outputDirRoot=outputDir,
     )
     return s
