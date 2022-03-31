@@ -17,7 +17,7 @@ def addCKFTracks(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
-    truthSeedRanges: Optional[TruthSeedRanges] = TruthSeedRanges(),
+    truthSeedRanges: TruthSeedRanges = TruthSeedRanges(),
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     selectedParticles: str = "truth_seeds_selected",

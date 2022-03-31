@@ -65,13 +65,11 @@ def addSeeding(
     field: acts.MagneticFieldProvider,
     geoSelectionConfigFile: Optional[Union[Path, str]] = None,
     seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Default,
-    truthSeedRanges: Optional[TruthSeedRanges] = TruthSeedRanges(),
-    particleSmearingSigmas: Optional[ParticleSmearingSigmas] = ParticleSmearingSigmas(),
+    truthSeedRanges: TruthSeedRanges = TruthSeedRanges(),
+    particleSmearingSigmas: ParticleSmearingSigmas = ParticleSmearingSigmas(),
     initialVarInflation: Optional[list] = None,
-    seedfinderConfigArg: Optional[SeedfinderConfigArg] = SeedfinderConfigArg(),
-    trackParamsEstimationConfig: Optional[
-        TrackParamsEstimationConfig
-    ] = TrackParamsEstimationConfig(),
+    seedfinderConfigArg: SeedfinderConfigArg = SeedfinderConfigArg(),
+    trackParamsEstimationConfig: TrackParamsEstimationConfig = TrackParamsEstimationConfig(),
     inputParticles="particles_final",
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
