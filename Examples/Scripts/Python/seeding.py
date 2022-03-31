@@ -108,7 +108,6 @@ def addSeeding(
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
 ) -> acts.examples.Sequencer:
-    print(seedingAlgorithm)
     """This function steers the seeding
 
     Parameters
