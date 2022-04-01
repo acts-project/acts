@@ -38,26 +38,25 @@ struct cluster_type_has_required_functions<
     void_t<decltype(cluster_add_cell(std::declval<T>(), std::declval<U>()))>>
     : std::true_type {};
 
-template <typename T>
-constexpr bool CellConcept = cell_type_has_required_functions<T>();
+template <typename T> constexpr void
+static_check_cell_type()
+{
+    constexpr bool has_fns = cell_type_has_required_functions<T>();
+    static_assert(has_fns,
+	"Cell type should have the following functions: "
+        "'int get_cell_row(const Cell&)', "
+	"'int get_cell_column(const Cell&)', "
+	"'Label& get_cell_label(Cell&)'");
+}
 
-template <typename T, typename U>
-constexpr bool ClusterConcept = cluster_type_has_required_functions<T, U>();
-
-#define CHECK_CELL_TYPE(T)                                                  \
-  do {                                                                      \
-    static_assert(Acts::internal::CellConcept<T>,                           \
-                  "Cell type should have the following functions:'int "     \
-                  "get_cell_row(const Cell&)', 'int get_cell_column(const " \
-                  "Cell&)', 'Label& get_cell_label(Cell&)'");         \
-  } while (0)
-
-#define CHECK_CLUSTER_TYPE(T, U)                                           \
-  do {                                                                     \
-    static_assert(Acts::internal::ClusterConcept<T, U>,                    \
-                  "Cluster type should have the following function:'void " \
-                  "cluster_add_cell(Cluster&, const Cell&)'");             \
-  } while (0)
+template <typename T, typename U> constexpr void
+static_check_cluster_type()
+{
+    constexpr bool has_fns = cluster_type_has_required_functions<T, U>();
+    static_assert(has_fns,
+	"Cluster type should have the following function: "
+        "'void cluster_add_cell(Cluster&, const Cell&)'");
+}
 
 // Comparator function object for cells, column-wise ordering
 template <typename Cell>
@@ -150,7 +149,7 @@ int get_connections(typename std::vector<Cell>::iterator it,
 
 template <typename Cell, typename CellCollection>
 void labelClusters(CellCollection& cells, bool commonCorner) {
-  CHECK_CELL_TYPE(Cell);
+  internal::static_check_cell_type<Cell>();
 
   internal::DisjointSets ds{};
   std::array<Label, 4> seen = {NO_LABEL, NO_LABEL, NO_LABEL, NO_LABEL};
@@ -191,8 +190,8 @@ void labelClusters(CellCollection& cells, bool commonCorner) {
 template <typename Cell, typename Cluster, typename CellCollection,
           typename ClusterCollection>
 ClusterCollection mergeClusters(CellCollection& cells) {
-  CHECK_CELL_TYPE(Cell);
-  CHECK_CLUSTER_TYPE(Cluster&, const Cell&);
+  internal::static_check_cell_type<Cell>();
+  internal::static_check_cluster_type<Cluster&, const Cell&>();
 
   if (cells.empty())
     return {};
@@ -224,13 +223,10 @@ ClusterCollection mergeClusters(CellCollection& cells) {
 template <typename Cell, typename Cluster, typename CellCollection,
           typename ClusterCollection = std::vector<Cluster>>
 ClusterCollection createClusters(CellCollection& cells, bool commonCorner) {
-  CHECK_CELL_TYPE(Cell);
-  CHECK_CLUSTER_TYPE(Cluster&, const Cell&);
+  internal::static_check_cell_type<Cell>();
+  internal::static_check_cluster_type<Cluster&, const Cell&>();
   labelClusters<Cell>(cells, commonCorner);
   return mergeClusters<Cell, Cluster>(cells);
 }
-
-#undef CHECK_CELL_TYPE
-#undef CHECK_CLUSTER_TYPE
 
 }  // namespace Acts
