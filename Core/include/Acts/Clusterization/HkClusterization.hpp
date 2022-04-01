@@ -16,33 +16,6 @@ namespace Acts {
 using Label = int;
 constexpr Label NO_LABEL = 0;
 
-// Simple wrapper around a generic cell type
-// The Cell type should have the following accessor functions defined:
-//   int get_cell_row(const Cell&)
-//   int get_cell_column(const Cell&)
-template <typename Cell>
-struct LabeledCell {
-  Cell const* ptr;
-  mutable Label lbl;
-  explicit LabeledCell(const Cell& cell) : ptr{std::addressof(cell)}, lbl{0} {}
-};
-
-// Definition of the Cell api for the LabeledCell<Cell> wrapper
-template <typename Cell>
-int get_cell_row(const LabeledCell<Cell>& cell) {
-  return get_cell_row(*cell.ptr);
-}
-
-template <typename Cell>
-int get_cell_column(const LabeledCell<Cell>& cell) {
-  return get_cell_column(*cell.ptr);
-}
-
-template <typename Cell>
-Label& get_cell_label(LabeledCell<Cell>& lcell) {
-  return lcell.lbl;
-}
-
 /// @brief labelClusters
 ///
 /// In-place connected component labelling using the Hoshen-Kopelman algorithm.

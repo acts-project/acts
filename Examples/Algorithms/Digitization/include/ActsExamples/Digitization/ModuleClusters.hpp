@@ -25,6 +25,7 @@ struct ModuleValue {
   std::vector<Acts::ActsScalar> paramVariances = {};
   std::variant<Cluster, Cluster::Cell> value;
   std::set<SimHitContainer::size_type> sources = {};
+  Acts::Label label = {Acts::NO_LABEL};
 };
 
 class ModuleClusters {
@@ -54,7 +55,7 @@ class ModuleClusters {
   double m_nsigma;
   bool m_commonCorner;
 
-  std::vector<Acts::LabeledCell<ModuleValue>> createCellCollection();
+  std::vector<ModuleValue> createCellCollection();
   void merge();
   ModuleValue squash(std::vector<ModuleValue>& values);
   std::vector<size_t> nonGeoEntries(std::vector<Acts::BoundIndices>& indices);
