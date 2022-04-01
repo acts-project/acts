@@ -70,7 +70,7 @@ def addSeeding(
     initialVarInflation: Optional[list] = None,
     seedfinderConfigArg: SeedfinderConfigArg = SeedfinderConfigArg(),
     trackParamsEstimationConfig: TrackParamsEstimationConfig = TrackParamsEstimationConfig(),
-    inputParticles="particles_initial",
+    inputParticles: str = "particles_initial",
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
@@ -85,6 +85,25 @@ def addSeeding(
     field : magnetic field
     geoSelectionConfigFile : Path|str, path, None
         Json file for space point geometry selection. Not required for SeedingAlgorithm.TruthSmeared.
+    seedingAlgorithm : SeedingAlgorithm, Default
+        seeding algorithm to use: one of Default (no truth information used), TruthSmeared, TruthEstimated
+    truthSeedRanges : TruthSeedRanges(rho, z, phi, eta, absEta, pt, nHits)
+        TruthSeedSelector configuration. Each range is specified as a tuple of (min,max).
+        Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TruthSeedSelector.hpp
+    particleSmearingSigmas : ParticleSmearingSigmas(d0, d0PtA, d0PtB, z0, z0PtA, z0PtB, t0, phi, theta, pRel)
+        ParticleSmearing configuration.
+        Defaults specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
+    initialVarInflation : list
+        List of 6 scale factors to inflate the initial covariance matrix
+        Defaults (all 1) specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
+    seedfinderConfigArg : SeedfinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, bFieldInZ, impactMax, deltaR, collisionRegion, r, z, beamPos)
+        SeedfinderConfig settings. deltaR, collisionRegion, r, z are ranges specified as a tuple of (min,max). beamPos is specified as (x,y).
+        Defaults specified in Core/include/Acts/Seeding/SeedfinderConfig.hpp
+    trackParamsEstimationConfig : TrackParamsEstimationConfig(deltaR)
+        TrackParamsEstimationAlgorithm configuration. Currently only deltaR=(min,max) range specified here.
+        Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp
+    inputParticles : str, "particles_initial"
+        input particles name in the WhiteBoard
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
     logLevel : acts.logging.Level, None
@@ -112,6 +131,14 @@ def addSeeding(
                 etaMax=truthSeedRanges.eta[1],
                 nHitsMin=truthSeedRanges.nHits[0],
                 nHitsMax=truthSeedRanges.nHits[1],
+                rhoMin=truthSeedRanges.rho[0],
+                rhoMax=truthSeedRanges.rho[1],
+                zMin=truthSeedRanges.z[0],
+                zMax=truthSeedRanges.z[1],
+                phiMin=truthSeedRanges.phi[0],
+                phiMax=truthSeedRanges.phi[1],
+                absEtaMin=truthSeedRanges.absEta[0],
+                absEtaMax=truthSeedRanges.absEta[1],
             ),
             level=customLogLevel(),
             inputParticles=inputParticles,

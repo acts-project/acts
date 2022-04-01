@@ -49,6 +49,10 @@ def addVertexFitting(
     field : magnetic field
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
+    associatedParticles : str, "associatedTruthParticles"
+        RootVertexPerformanceWriter.inputAssociatedTruthParticles
+    vertexFinder : VertexFinder, Truth
+        vertexFinder algorithm: one of Truth, AMVF, Iterative
     logLevel : acts.logging.Level, None
         logging level to override setting given in `s`
     """

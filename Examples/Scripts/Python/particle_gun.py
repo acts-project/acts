@@ -69,8 +69,12 @@ def addParticleGun(
         momentum configuration: minimum momentum, maximum momentum, transverse
     etaConfig : EtaConfig(min, max, uniform)
         pseudorapidity configuration: eta min, eta max, uniform
-    particleConfig: ParticleConfig(num, pdg, randomizeCharge)
+    phiConfig : PhiConfig(min, max)
+        azimuthal angle configuration: phi min, phi max
+    particleConfig : ParticleConfig(num, pdg, randomizeCharge)
         partilce configuration: number of particles, particle type, charge flip
+    multiplicity : int, 1
+        number of generated vertices
     vtxGen : VertexGenerator, None
         vertex generator module
     printParticles : bool, False

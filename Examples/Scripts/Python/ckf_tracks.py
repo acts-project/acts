@@ -30,10 +30,15 @@ def addCKFTracks(
         the sequencer module to which we add the Seeding steps (returned from addSeeding)
     trackingGeometry : tracking geometry
     field : magnetic field
+    truthSeedRanges : TruthSeedRanges(nHits, pt)
+        CKFPerformanceWriter configuration. Each range is specified as a tuple of (min,max), though currently only the min is used.
+        Defaults specified in Examples/Io/Performance/ActsExamples/Io/Performance/CKFPerformanceWriter.hpp
     outputDirCsv : Path|str, path, None
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
+    selectedParticles : str, "truth_seeds_selected"
+        CKFPerformanceWriter truth input
     """
 
     if int(s.config.logLevel) <= int(acts.logging.DEBUG):

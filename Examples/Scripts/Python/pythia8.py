@@ -25,7 +25,7 @@ def addPythia8(
     outputDirRoot: Optional[Union[Path, str]] = None,
     printParticles: bool = False,
     returnEvGen: bool = False,
-) -> acts.examples.Sequencer:
+) -> Union[acts.examples.Sequencer, acts.examples.EventGenerator]:
     """This function steers the particle generation using Pythia8
 
     NB. this is a reimplementation of common.addPythia8, which is maintained for now for compatibility.
@@ -52,6 +52,9 @@ def addPythia8(
         the output folder for the Root output, None triggers no output
     printParticles : bool, False
         print generated particles
+    returnEvGen: bool, False
+        returns EventGenerator instead of Sequencer.
+        This option  is included for compatibility and will be removed when common.addPythia8 is removed.
     """
 
     if int(s.config.logLevel) <= int(acts.logging.DEBUG):
