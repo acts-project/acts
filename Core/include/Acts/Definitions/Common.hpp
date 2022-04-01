@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 
+#include <iosfwd>
 #include <limits>
 
 namespace Acts {
@@ -36,14 +37,16 @@ static constexpr ActsScalar s_curvilinearProjTolerance = 0.999995;
 enum NavigationDirection : int { backward = -1, forward = 1 };
 
 ///  This is a steering enum to tell which material update stage:
-/// - preUpdate  : update on approach of a surface
-/// - fullUpdate : update when passing a surface
-/// - postUpdate : update when leaving a surface
-enum MaterialUpdateStage : int {
-  preUpdate = -1,
-  fullUpdate = 0,
-  postUpdate = 1
+/// - PreUpdate  : update on approach of a surface
+/// - FullUpdate : update when passing a surface
+/// - PostUpdate : update when leaving a surface
+enum class MaterialUpdateStage : int {
+  PreUpdate = -1,
+  FullUpdate = 0,
+  PostUpdate = 1
 };
+
+std::ostream& operator<<(std::ostream& os, MaterialUpdateStage matUpdate);
 
 /// @enum NoiseUpdateMode to tell how to deal with noise term in covariance
 /// transport
