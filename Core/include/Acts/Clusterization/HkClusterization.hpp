@@ -16,6 +16,25 @@ namespace Acts {
 using Label = int;
 constexpr Label NO_LABEL = 0;
 
+// When looking for a cell connected to a reference cluster, the the
+// code always loops backward, starting from the reference cell. Since
+// the cells are globally sorted column-wise, the connection function
+// can therefore tell when the search should be stopped.
+enum ConnectResult {
+  NO_CONN,       // No connections, keep looking
+  NO_CONN_STOP,  // No connections, stop looking
+  CONN           // Found connection
+};
+
+// Default connection type: 4- or 8-cell connectivity
+template <typename Cell>
+struct DefaultConnect {
+  bool conn8;
+  DefaultConnect() : conn8{true} {}
+  DefaultConnect(bool commonCorner) : conn8{commonCorner} {}
+  ConnectResult operator()(const Cell& ref, const Cell& iter);
+};
+
 /// @brief labelClusters
 ///
 /// In-place connected component labelling using the Hoshen-Kopelman algorithm.
@@ -27,10 +46,11 @@ constexpr Label NO_LABEL = 0;
 /// provided LabeledCell<Cell> wrapper type.
 ///
 /// @param [in] cells the cell collection to be labeled
-/// @param [in] commonCorner flag indicating if cells sharing a common corner should be merged into one cluster
+/// @param [in] connect the connection type (see DefaultConnect)
 /// @return nothing
-template <typename Cell, typename CellCollection>
-void labelClusters(CellCollection& cells, bool commonCorner);
+template <typename Cell, typename CellCollection,
+          typename Connect = DefaultConnect<Cell>>
+void labelClusters(CellCollection& cells, Connect connect = Connect());
 
 /// @brief mergeClusters
 ///
@@ -47,9 +67,12 @@ ClusterCollection mergeClusters(CellCollection& cells);
 
 /// @brief createClusters
 /// Conveniance function which runs both labelClusters and createClusters.
-template <typename Cell, typename Cluster, typename CellCollection,
+template <typename Cell, typename Cluster,
+          typename Connect = DefaultConnect<Cell>,
+          typename CellCollection = std::vector<Cell>,
           typename ClusterCollection = std::vector<Cluster>>
-ClusterCollection createClusters(CellCollection& cells, bool commonCorner);
+ClusterCollection createClusters(CellCollection& cells,
+                                 Connect connect = Connect());
 
 }  // namespace Acts
 

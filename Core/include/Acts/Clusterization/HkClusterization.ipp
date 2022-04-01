@@ -108,47 +108,54 @@ class DisjointSets {
 
 // Cell collection logic
 // TODO: add template parameter to extend matching logic?
-template <typename Cell>
+template <typename Cell, typename Connect>
 int get_connections(typename std::vector<Cell>::iterator it,
-                   std::vector<Cell>& set, bool commonCorner,
-                   std::array<Label, 4>& seen) {
-  int curr_row = get_cell_row(*it);
-  int curr_col = get_cell_column(*it);
+                    std::vector<Cell>& set, Connect connect,
+                    std::array<Label, 4>& seen) {
   int nconn = 0;
   seen[0] = seen[1] = seen[2] = seen[3] = NO_LABEL;
   typename std::vector<Cell>::iterator it_2{it};
 
   while (it_2 != set.begin()) {
     it_2 = std::prev(it_2);
-    int delta_row = std::abs(curr_row - get_cell_row(*it_2));
-    int delta_col = std::abs(curr_col - get_cell_column(*it_2));
 
-    // Iteration is column-wise, so if too far in column, can
-    // safely stop
-    if (delta_col > 1)
+    ConnectResult cr = connect(*it, *it_2);
+    if (cr == NO_CONN_STOP)
       break;
-    // For same reason, if too far in row we know the pixel is not
-    // connected, but need to keep iterating
-    if (delta_row > 1)
+    if (cr == NO_CONN)
       continue;
-
-    // Decide whether or not cluster is connected based on 4- or
-    // 8-connectivity
-    if ((delta_row + delta_col) <= (commonCorner? 2 : 1)) {
+    if (cr == CONN) {
       seen[nconn++] = get_cell_label(*it_2);
-      if (nconn == (commonCorner ? 4 : 2))
+      if (nconn == 4)
         break;
     }
   }
-
   return nconn;
 }
 
 }  // namespace internal
 
+template <typename Cell>
+ConnectResult DefaultConnect<Cell>::operator()(const Cell& a, const Cell& b) {
+  int delta_row = std::abs(get_cell_row(a) - get_cell_row(b));
+  int delta_col = std::abs(get_cell_column(a) - get_cell_column(b));
+  // Iteration is column-wise, so if too far in column, can
+  // safely stop
+  if (delta_col > 1)
+    return ConnectResult::NO_CONN_STOP;
+  // For same reason, if too far in row we know the pixel is not
+  // connected, but need to keep iterating
+  if (delta_row > 1)
+    return ConnectResult::NO_CONN;
+  // Decide whether or not cluster is connected based on 4- or
+  // 8-connectivity
+  if ((delta_row + delta_col) <= (conn8 ? 2 : 1))
+    return ConnectResult::CONN;
+  return ConnectResult::NO_CONN;
+}
 
-template <typename Cell, typename CellCollection>
-void labelClusters(CellCollection& cells, bool commonCorner) {
+template <typename Cell, typename CellCollection, typename Connect>
+void labelClusters(CellCollection& cells, Connect connect) {
   internal::static_check_cell_type<Cell>();
 
   internal::DisjointSets ds{};
@@ -159,7 +166,8 @@ void labelClusters(CellCollection& cells, bool commonCorner) {
 
   // First pass: Allocate labels and record equivalences
   for (auto it = cells.begin(); it != cells.end(); ++it) {
-    int nconn = internal::get_connections<Cell>(it, cells, commonCorner, seen);
+    int nconn =
+        internal::get_connections<Cell, Connect>(it, cells, connect, seen);
     if (nconn == 0) {
       // Allocate new label
       get_cell_label(*it) = ds.make_set();
@@ -170,7 +178,7 @@ void labelClusters(CellCollection& cells, bool commonCorner) {
         throw std::logic_error("nconn > 0 but seen[0] == NO_LABEL");
 
       // Record equivalences
-      for (size_t i = 1; i < (commonCorner ? 4 : 2); i++) {
+      for (size_t i = 1; i < 4; i++) {
         if (seen[i] != NO_LABEL and seen[0] != seen[i]) {
           ds.union_set(seen[0], seen[i]);
         }
@@ -220,12 +228,12 @@ ClusterCollection mergeClusters(CellCollection& cells) {
   return outv;
 }
 
-template <typename Cell, typename Cluster, typename CellCollection,
-          typename ClusterCollection = std::vector<Cluster>>
-ClusterCollection createClusters(CellCollection& cells, bool commonCorner) {
+template <typename Cell, typename Cluster, typename Connect,
+          typename CellCollection, typename ClusterCollection>
+ClusterCollection createClusters(CellCollection& cells, Connect connect) {
   internal::static_check_cell_type<Cell>();
   internal::static_check_cluster_type<Cluster&, const Cell&>();
-  labelClusters<Cell>(cells, commonCorner);
+  labelClusters<Cell, CellCollection, Connect>(cells, connect);
   return mergeClusters<Cell, Cluster>(cells);
 }
 

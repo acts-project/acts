@@ -104,7 +104,7 @@ void ModuleClusters::merge() {
       std::vector<std::vector<ModuleValue>> merged =
 	  Acts::createClusters<ModuleValue,
 			       std::vector<ModuleValue>>
-	  (cells, m_commonCorner);
+	(cells, Acts::DefaultConnect<ModuleValue>(m_commonCorner));
 
     for (std::vector<ModuleValue>& cellv : merged) {
       // At this stage, the cellv vector contains cells that form a
