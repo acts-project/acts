@@ -102,9 +102,9 @@ void ModuleClusters::merge() {
   if (not cells.empty()) {
     // Case where we actually have geometric clusters
       std::vector<std::vector<ModuleValue>> merged =
-	  Acts::createClusters<ModuleValue,
+	Acts::Ccl::createClusters<ModuleValue,
 			       std::vector<ModuleValue>>
-	(cells, Acts::DefaultConnect<ModuleValue>(m_commonCorner));
+	(cells, Acts::Ccl::DefaultConnect<ModuleValue>(m_commonCorner));
 
     for (std::vector<ModuleValue>& cellv : merged) {
       // At this stage, the cellv vector contains cells that form a

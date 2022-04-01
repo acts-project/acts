@@ -12,6 +12,7 @@
 #include <vector>
 
 namespace Acts {
+namespace Ccl {
 
 using Label = int;
 constexpr Label NO_LABEL = 0;
@@ -74,6 +75,7 @@ template <typename Cell, typename Cluster,
 ClusterCollection createClusters(CellCollection& cells,
                                  Connect connect = Connect());
 
+}  // namespace Ccl
 }  // namespace Acts
 
 #include "Acts/Clusterization/HkClusterization.ipp"

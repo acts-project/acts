@@ -12,6 +12,7 @@
 #include <boost/pending/disjoint_sets.hpp>
 
 namespace Acts {
+namespace Ccl {
 namespace internal {
 
 // Machinery for validating generic Cell/Cluster types at compile-time
@@ -237,4 +238,5 @@ ClusterCollection createClusters(CellCollection& cells, Connect connect) {
   return mergeClusters<Cell, Cluster>(cells);
 }
 
+}  // namespace Ccl;
 }  // namespace Acts

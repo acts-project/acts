@@ -25,7 +25,7 @@ struct ModuleValue {
   std::vector<Acts::ActsScalar> paramVariances = {};
   std::variant<Cluster, Cluster::Cell> value;
   std::set<SimHitContainer::size_type> sources = {};
-  Acts::Label label = {Acts::NO_LABEL};
+  Acts::Ccl::Label label = {Acts::Ccl::NO_LABEL};
 };
 
 class ModuleClusters {
