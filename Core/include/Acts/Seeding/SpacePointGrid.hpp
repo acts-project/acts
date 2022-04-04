@@ -37,12 +37,13 @@ struct SpacePointGridConfig {
   float cotThetaMax;
   // maximum impact parameter in mm
   float impactMax;
-  // number of phiBin neighbors (plus the current bin) that covers the full
-  // deflection of a minimum pT particle
+  // Multiplicator for the number of phi-bins. The minimum number of phi-bins
+  // depends on min_pt, magnetic field: 2*M_PI/(minPT particle phi-deflection).
+  // phiBinDeflectionCoverage is a multiplier for this number. If
+  // numPhiNeighbors (in the configuration of the BinFinders) is configured to
+  // return 1 neighbor on either side of the current phi-bin (and you want to
+  // cover the full phi-range of minPT), leave this at 1.
   int phiBinDeflectionCoverage = 1;
-  // number of phiBin neighbors at each side of the current bin that will be
-  // used to search for SPs
-  int numPhiNeighbors;
   // enable non equidistant binning in z
   std::vector<float> zBinEdges;
 

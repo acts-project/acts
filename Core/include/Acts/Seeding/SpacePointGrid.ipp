@@ -51,10 +51,11 @@ Acts::SpacePointGridCreator::createGrid(
 
     // evaluating delta Phi based on the inner and outer angle, and the azimutal
     // deflection including the maximum impact parameter
-    // Divide by config.numPhiNeighbors since we combine config.numPhiNeighbors
-    // number of consecutive phi bins in the seed making step. So each
-    // individual bin should cover 1/config.numPhiNeighbors of the maximum
-    // expected azimutal deflection
+    // Divide by config.phiBinDeflectionCoverage since we combine
+    // config.phiBinDeflectionCoverage number of consecutive phi bins in the
+    // seed making step. So each individual bin should cover
+    // 1/config.phiBinDeflectionCoverage of the maximum expected azimutal
+    // deflection
     float deltaPhi = (outerAngle - innerAngle + deltaAngleWithMaxD0) /
                      config.phiBinDeflectionCoverage;
 

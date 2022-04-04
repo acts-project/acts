@@ -45,7 +45,6 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
             2500.0,
             3000.0,
         ],  # zBinEdges enables non-equidistant binning in z, in case the binning is not defined the edges are evaluated automatically using equidistant binning
-        numPhiNeighbors=1,
         phiBinDeflectionCoverage=3,
     )
 
@@ -149,6 +148,7 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
             [-1, 0],
             [-1, 0],
         ],
+        numPhiNeighbors=1,
     )
 
     s = s or acts.examples.Sequencer(

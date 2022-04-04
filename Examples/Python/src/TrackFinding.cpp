@@ -145,7 +145,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(zMin);
     ACTS_PYTHON_MEMBER(deltaRMax);
     ACTS_PYTHON_MEMBER(cotThetaMax);
-    ACTS_PYTHON_MEMBER(numPhiNeighbors);
     ACTS_PYTHON_MEMBER(phiBinDeflectionCoverage);
     ACTS_PYTHON_MEMBER(impactMax);
     ACTS_PYTHON_MEMBER(zBinEdges);
@@ -175,6 +174,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(gridConfig);
     ACTS_PYTHON_MEMBER(zBinNeighborsTop);
     ACTS_PYTHON_MEMBER(zBinNeighborsBottom);
+    ACTS_PYTHON_MEMBER(numPhiNeighbors);
     ACTS_PYTHON_STRUCT_END();
   }
 
