@@ -98,7 +98,7 @@ void Mat_map(std::string Val = "", std::string geantino = "", std::string name =
 
   gStyle->SetOptStat(0);
   gStyle->SetOptTitle(0);
-  
+
   TProfile * Val_X0_Eta = new TProfile("Val_X0_Eta","Val_X0_Eta",160,-4,4);
   TProfile * Val_X0_Phi = new TProfile("Val_X0_Phi","Val_X0_Phi",160,-4,4);
   TH2F * Val_X0_Eta_spread = new TH2F("Val_X0_Eta_spread","Val_X0_Eta_spread",160,-4,4,160,0,4);
