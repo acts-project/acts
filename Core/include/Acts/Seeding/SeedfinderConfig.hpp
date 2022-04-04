@@ -16,12 +16,14 @@
 namespace Acts {
 
 struct SeedConfirmationRange {
-  float zMinSeedConf;
-  float zMaxSeedConf;
-  float rMaxSeedConf;
-  size_t nTopSeedConf;
-  size_t nTopForLargeR;
-  size_t nTopForSmallR;
+  float zMinSeedConf =
+      std::numeric_limits<float>::min() * Acts::UnitConstants::mm;
+  float zMaxSeedConf =
+      std::numeric_limits<float>::max() * Acts::UnitConstants::mm;
+  float rMaxSeedConf =
+      std::numeric_limits<float>::max() * Acts::UnitConstants::mm;
+  size_t nTopForLargeR = 0;
+  size_t nTopForSmallR = 0;
 };
 
 // forward declaration to avoid cyclic dependence
@@ -54,9 +56,7 @@ struct SeedfinderConfig {
   // radial range for middle SP
   std::vector<std::vector<float>> rRangeMiddleSP;
   bool useVariableMiddleSPRange = false;
-  float deltaRMiddleSPRange = 10.;
-  float rMinMiddleSP;
-  float rMaxMiddleSP;
+  float deltaRMiddleSPRange = 10. * Acts::UnitConstants::mm;
 
   // seed confirmation
   bool seedConfirmation = false;
@@ -64,6 +64,13 @@ struct SeedfinderConfig {
   SeedConfirmationRange centralSeedConfirmationRange;
   // parameters for forward seed confirmation
   SeedConfirmationRange forwardSeedConfirmationRange;
+
+  // cut to the maximum value of delta z between SPs
+  float deltaZMax =
+      std::numeric_limits<float>::infinity() * Acts::UnitConstants::mm;
+
+  // enable cut on the compatibility between interaction point and SPs
+  bool interactionPointCut = false;
 
   // non equidistant binning in z
   std::vector<float> zBinEdges;
@@ -112,6 +119,8 @@ struct SeedfinderConfig {
   Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
                         0 * Acts::UnitConstants::mm};
 
+  boost::container::small_vector<size_t, 20> zBinsCustomLooping = {};
+
   // average radiation lengths of material on the length of a seed. used for
   // scattering.
   // default is 5%
@@ -148,6 +157,11 @@ struct SeedfinderConfig {
     config.minPt /= 1_MeV;
     config.deltaRMin /= 1_mm;
     config.deltaRMax /= 1_mm;
+    config.deltaRMinTopSP /= 1_mm;
+    config.deltaRMaxTopSP /= 1_mm;
+    config.deltaRMinBottomSP /= 1_mm;
+    config.deltaRMaxBottomSP /= 1_mm;
+    config.deltaRMiddleSPRange /= 1_mm;
     config.impactMax /= 1_mm;
     config.maxPtScattering /= 1_MeV;  // correct?
     config.collisionRegionMin /= 1_mm;
@@ -157,6 +171,7 @@ struct SeedfinderConfig {
     config.rMax /= 1_mm;
     config.rMin /= 1_mm;
     config.bFieldInZ /= 1000. * 1_T;
+    config.deltaZMax /= 1_mm;
 
     config.beamPos[0] /= 1_mm;
     config.beamPos[1] /= 1_mm;

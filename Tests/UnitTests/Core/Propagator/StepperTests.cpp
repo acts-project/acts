@@ -983,7 +983,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
       new HomogeneousSurfaceMaterial(matProp));
   sConf1.thickness = 1._mm;
   CuboidVolumeBuilder::LayerConfig lConf1;
-  lConf1.surfaceCfg = sConf1;
+  lConf1.surfaceCfg = {sConf1};
 
   CuboidVolumeBuilder::SurfaceConfig sConf2;
   sConf2.position = Vector3(0.6_m, 0., 0.);
@@ -996,7 +996,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
       new HomogeneousSurfaceMaterial(matProp));
   sConf2.thickness = 1._mm;
   CuboidVolumeBuilder::LayerConfig lConf2;
-  lConf2.surfaceCfg = sConf2;
+  lConf2.surfaceCfg = {sConf2};
 
   CuboidVolumeBuilder::VolumeConfig muConf1;
   muConf1.position = {2.3_m, 0., 0.};

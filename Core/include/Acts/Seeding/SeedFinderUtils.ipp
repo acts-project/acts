@@ -8,24 +8,38 @@
 
 namespace Acts {
 template <typename external_spacepoint_t>
-LinCircle transformCoordinates(
-    const InternalSpacePoint<external_spacepoint_t>& sp,
-    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom) {
+LinCircle transformCoordinates(InternalSpacePoint<external_spacepoint_t>& sp,
+                               InternalSpacePoint<external_spacepoint_t>& spM,
+                               bool bottom) {
+  auto extractFunction =
+      [](const InternalSpacePoint<external_spacepoint_t>& obj)
+      -> std::array<float, 6> {
+    std::array<float, 6> output{obj.x(),      obj.y(),         obj.z(),
+                                obj.radius(), obj.varianceR(), obj.varianceZ()};
+    return output;
+  };
+
+  return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(
+      sp, spM, bottom, extractFunction);
+}
+
+template <typename external_spacepoint_t, typename callable_t>
+LinCircle transformCoordinates(external_spacepoint_t& sp,
+                               external_spacepoint_t& spM, bool bottom,
+                               callable_t&& extractFunction) {
   // The computation inside this function is exactly identical to that in the
   // vectorized version of this function, except that it operates on a single
   // spacepoint. Please see the other version of this function for more
   // detailed comments.
-  float xM = spM.x();
-  float yM = spM.y();
-  float zM = spM.z();
-  float rM = spM.radius();
-  float varianceZM = spM.varianceZ();
-  float varianceRM = spM.varianceR();
+
+  auto [xM, yM, zM, rM, varianceRM, varianceZM] = extractFunction(spM);
+  auto [xSP, ySP, zSP, rSP, varianceRSP, varianceZSP] = extractFunction(sp);
+
   float cosPhiM = xM / rM;
   float sinPhiM = yM / rM;
-  float deltaX = sp.x() - xM;
-  float deltaY = sp.y() - yM;
-  float deltaZ = sp.z() - zM;
+  float deltaX = xSP - xM;
+  float deltaY = ySP - yM;
+  float deltaZ = zSP - zM;
   float x = deltaX * cosPhiM + deltaY * sinPhiM;
   float y = deltaY * cosPhiM - deltaX * sinPhiM;
   float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
@@ -38,29 +52,45 @@ LinCircle transformCoordinates(
   l.iDeltaR = iDeltaR;
   l.U = x * iDeltaR2;
   l.V = y * iDeltaR2;
-  l.Er = ((varianceZM + sp.varianceZ()) +
-          (cot_theta * cot_theta) * (varianceRM + sp.varianceR())) *
+  l.Er = ((varianceZM + varianceZSP) +
+          (cot_theta * cot_theta) * (varianceRM + varianceRSP)) *
          iDeltaR2;
   return l;
 }
 
 template <typename external_spacepoint_t>
 void transformCoordinates(
-    const std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
-    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
+    std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
+    InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     bool enableCutsForSortedSP, std::vector<LinCircle>& linCircleVec) {
-  float xM = spM.x();
-  float yM = spM.y();
-  float zM = spM.z();
-  float rM = spM.radius();
-  float varianceZM = spM.varianceZ();
-  float varianceRM = spM.varianceR();
+  auto extractFunction =
+      [](const InternalSpacePoint<external_spacepoint_t>& obj)
+      -> std::array<float, 6> {
+    std::array<float, 6> output{obj.x(),      obj.y(),         obj.z(),
+                                obj.radius(), obj.varianceR(), obj.varianceZ()};
+    return output;
+  };
+
+  return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(
+      vec, spM, bottom, enableCutsForSortedSP, linCircleVec, extractFunction);
+}
+
+template <typename external_spacepoint_t, typename callable_t>
+void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
+                          external_spacepoint_t& spM, bool bottom,
+                          bool enableCutsForSortedSP,
+                          std::vector<LinCircle>& linCircleVec,
+                          callable_t&& extractFunction) {
+  auto [xM, yM, zM, rM, varianceRM, varianceZM] = extractFunction(spM);
+
   float cosPhiM = xM / rM;
   float sinPhiM = yM / rM;
   for (auto sp : vec) {
-    float deltaX = sp->x() - xM;
-    float deltaY = sp->y() - yM;
-    float deltaZ = sp->z() - zM;
+    auto [xSP, ySP, zSP, rSP, varianceRSP, varianceZSP] = extractFunction(*sp);
+
+    float deltaX = xSP - xM;
+    float deltaY = ySP - yM;
+    float deltaZ = zSP - zM;
     // calculate projection fraction of spM->sp vector pointing in same
     // direction as
     // vector origin->spM (x) and projection fraction of spM->sp vector pointing
@@ -92,10 +122,21 @@ void transformCoordinates(
     l.Er = ((varianceZM + sp->varianceZ()) +
             (cot_theta * cot_theta) * (varianceRM + sp->varianceR())) *
            iDeltaR2;
+
+    l.x = sp->x();
+    l.y = sp->y();
+    l.z = sp->z();
+    l.r = sp->radius();
+
     linCircleVec.push_back(l);
+    sp->setCotTheta(cot_theta);
   }
   // sort the SP in order of cotTheta
   if (enableCutsForSortedSP) {
+    std::sort(vec.begin(), vec.end(),
+              [](external_spacepoint_t* a, external_spacepoint_t* b) -> bool {
+                return (a->cotTheta() < b->cotTheta());
+              });
     std::sort(linCircleVec.begin(), linCircleVec.end(),
               [](const LinCircle& a, const LinCircle& b) -> bool {
                 return (a.cotTheta < b.cotTheta);

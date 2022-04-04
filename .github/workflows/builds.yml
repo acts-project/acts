@@ -27,17 +27,25 @@ jobs:
       SETUP: true
       SETUP_LCG: source /opt/lcg_view/setup.sh
       INSTALL_DIR: ${{ github.workspace }}/install
+      ACTS_LOG_FAILURE_THRESHOLD: WARNING
     steps:
-      - uses: actions/checkout@v2
+      - name: Install git lfs
+        if: contains(matrix.image, 'ubuntu')
+        run: apt install -y git-lfs
+
+      - uses: actions/checkout@v3
+        if: contains(matrix.image, 'ubuntu')
         with:
           submodules: true
-        if: "!contains(matrix.image, 'lcg')"
-      - uses: actions/checkout@v2
-        if: contains(matrix.image, 'lcg')
+          lfs: true
+
+      - uses: actions/checkout@v3
+        if: "!contains(matrix.image, 'ubuntu')"
 
       - name: Define setup script
         if: contains(matrix.image, 'lcg')
         run: echo "SETUP=${SETUP_LCG}" >> $GITHUB_ENV
+
       - name: Configure
         # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
         # dd4hep CMake configuration that gets triggered on recent CMake
@@ -52,7 +60,7 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_BUILD_EVERYTHING=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
-          -DACTS_LOG_FAILURE_THRESHOLD=WARNING
+          -DACTS_FORCE_ASSERTIONS=ON
       - name: Build
         run: ${SETUP} && cmake --build build --
       - name: Unit tests
@@ -67,13 +75,31 @@ jobs:
         shell: bash
         run: >
           ${SETUP}
+          && /usr/local/bin/download_geant4_data.sh
           && source /usr/local/bin/thisroot.sh
           && source /usr/local/bin/thisdd4hep_only.sh
-          && /usr/local/bin/download_geant4_data.sh
           && source /usr/local/bin/geant4.sh
           && source build/python/setup.sh
           && pip3 install -r Examples/Python/tests/requirements.txt
           && pytest -rFs
+      - name: Physics performance checks
+        if: contains(matrix.image, 'ubuntu')
+        shell: bash
+        run: >
+          ${SETUP}
+          && echo "::group::Dependencies"
+          && pip3 install histcmp==0.3.1
+          && source /usr/local/bin/thisroot.sh
+          && source /usr/local/bin/thisdd4hep_only.sh
+          && source /usr/local/bin/geant4.sh
+          && source build/python/setup.sh
+          && echo "::endgroup::"
+          && CI/physmon/phys_perf_mon.sh physmon
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: physmon
+          path: physmon
       - name: Install
         run: ${SETUP} && cmake --build build -- install
       - uses: actions/upload-artifact@v2
@@ -129,6 +155,7 @@ jobs:
           -DACTS_BUILD_UNITTESTS=ON
           -DACTS_BUILD_INTEGRATIONTESTS=ON
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
+          -DACTS_FORCE_ASSERTIONS=ON
           -DACTS_USE_SYSTEM_BOOST=OFF
           -DACTS_USE_SYSTEM_EIGEN3=OFF
           -DACTS_BUILD_PLUGIN_JSON=ON
@@ -152,6 +179,7 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
+          -DACTS_FORCE_ASSERTIONS=ON
           -DACTS_USE_SYSTEM_BOOST=OFF
           -DACTS_USE_SYSTEM_EIGEN3=OFF
           -DACTS_BUILD_EXAMPLES=ON
@@ -178,7 +206,7 @@ jobs:
              && CI/check_boost_eigen_versions.sh ./build-downstream-nodeps/bin/ShowActsVersion
 
   macos:
-    runs-on: macos-10.15
+    runs-on: macos-11
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
     steps:
@@ -188,7 +216,7 @@ jobs:
           brew install cmake eigen ninja
           && sudo mkdir /usr/local/acts
           && sudo chown $USER /usr/local/acts
-          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ci/macOS/deps.43e0201.tar.gz
+          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ci/macOS/deps.494c52d.tar.gz
           && tar -xf deps.tar.gz -C /usr/local/acts
       - name: Configure
         # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
@@ -204,6 +232,7 @@ jobs:
           -DCMAKE_PREFIX_PATH=/usr/local/acts
           -DACTS_BUILD_EVERYTHING=ON
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
+          -DACTS_FORCE_ASSERTIONS=ON
       - name: Build
         run: cmake --build build  --
       - name: Unit tests
@@ -242,6 +271,22 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DACTS_BUILD_PLUGIN_CUDA=ON
           -DACTS_BUILD_UNITTESTS=ON
+      - name: Build
+        run: cmake --build build --
+  exatrkx:
+    runs-on: ubuntu-latest
+    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v17
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configure
+        run: >
+          cmake -B build -S .
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
+          -DACTS_BUILD_PLUGIN_EXATRKX=ON
+          -DACTS_BUILD_EXAMPLES_EXATRKX=ON
+          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
       - name: Build
         run: cmake --build build --
   sycl:

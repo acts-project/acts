@@ -20,6 +20,10 @@ struct LinCircle {
   float Er;
   float U;
   float V;
+  float x;
+  float y;
+  float z;
+  float r;
 };
 
 /// @brief Transform two spacepoints to a u-v space circle.
@@ -32,9 +36,14 @@ struct LinCircle {
 /// @param[in] spM The middle spacepoint to use.
 /// @param[in] bottom Should be true if sp is a bottom SP.
 template <typename external_spacepoint_t>
-LinCircle transformCoordinates(
-    const InternalSpacePoint<external_spacepoint_t>& sp,
-    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom);
+LinCircle transformCoordinates(InternalSpacePoint<external_spacepoint_t>& sp,
+                               InternalSpacePoint<external_spacepoint_t>& spM,
+                               bool bottom);
+
+template <typename external_spacepoint_t, typename callable_t>
+LinCircle transformCoordinates(external_spacepoint_t& sp,
+                               external_spacepoint_t& spM, bool bottom,
+                               callable_t&& extractFunction);
 
 /// @brief Transform a vector of spacepoints to u-v space circles with respect
 /// to a given middle spacepoint.
@@ -48,9 +57,16 @@ LinCircle transformCoordinates(
 /// @param[out] linCircleVec The output vector to write to.
 template <typename external_spacepoint_t>
 void transformCoordinates(
-    const std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
-    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
+    std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
+    InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     bool enableCutsForSortedSP, std::vector<LinCircle>& linCircleVec);
+
+template <typename external_spacepoint_t, typename callable_t>
+void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
+                          external_spacepoint_t& spM, bool bottom,
+                          bool enableCutsForSortedSP,
+                          std::vector<LinCircle>& linCircleVec,
+                          callable_t&& extractFunction);
 }  // namespace Acts
 
 #include "Acts/Seeding/SeedFinderUtils.ipp"

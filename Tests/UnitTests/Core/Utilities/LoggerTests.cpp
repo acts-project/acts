@@ -50,7 +50,7 @@ void debug_level_test(const char* output_file, Logging::Level lvl) {
 
   // If fail-on-error is enabled, then the logger will not, and should not,
   // tolerate being set up with a coarser debug level.
-  if (lvl > Logging::FAILURE_THRESHOLD) {
+  if (lvl > Logging::getFailureThreshold()) {
     BOOST_CHECK_THROW(detail::create_logger("TestLogger", &logfile, lvl),
                       std::runtime_error);
     return;
@@ -62,7 +62,7 @@ void debug_level_test(const char* output_file, Logging::Level lvl) {
 
   // Test logging at a certain debug level
   auto test_logging = [](auto&& test_operation, Logging::Level test_lvl) {
-    if (test_lvl >= Logging::FAILURE_THRESHOLD) {
+    if (test_lvl >= Logging::getFailureThreshold()) {
       BOOST_CHECK_THROW(test_operation(), std::runtime_error);
     } else {
       test_operation();
