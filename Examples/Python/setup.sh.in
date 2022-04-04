@@ -1,1 +1,3 @@
-export PYTHONPATH=@_python_dir@:$PYTHONPATH
+python_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  )
+
+export PYTHONPATH=$python_dir:$PYTHONPATH
