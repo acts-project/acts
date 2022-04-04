@@ -98,10 +98,7 @@ void Mat_map(std::string Val = "", std::string geantino = "", std::string name =
 
   gStyle->SetOptStat(0);
   gStyle->SetOptTitle(0);
-
-  TH2F * Val_Map = new TH2F("Val_Map","Val_Map",4000,0,4000,1200,0,1200);
-  TH2F * geantino_Map = new TH2F("geantino_Map","geantino_Map",4000,0,4000,1200,0,1200);
-
+  
   TProfile * Val_X0_Eta = new TProfile("Val_X0_Eta","Val_X0_Eta",160,-4,4);
   TProfile * Val_X0_Phi = new TProfile("Val_X0_Phi","Val_X0_Phi",160,-4,4);
   TH2F * Val_X0_Eta_spread = new TH2F("Val_X0_Eta_spread","Val_X0_Eta_spread",160,-4,4,160,0,4);
@@ -121,7 +118,7 @@ void Mat_map(std::string Val = "", std::string geantino = "", std::string name =
   TChain *Val_file = new TChain("material-tracks");
   TChain *geantino_file = new TChain("material-tracks");
 
-// Define line corresponding to the different eta value
+  // Define line corresponding to the different eta value
   TLine *eta_0 = new TLine(0,-1200,0,1200);
   eta_0->SetLineColor(kRed);
 
@@ -150,9 +147,6 @@ void Mat_map(std::string Val = "", std::string geantino = "", std::string name =
     TCanvas *VM = new TCanvas("VM","Validation Map") ;
     Val_file->Draw("mat_y:mat_z","fabs(mat_x)<1");
 
-    Val_Map->GetXaxis()->SetTitle("Z[mm]");
-    Val_Map->GetYaxis()->SetTitle("R[mm]");
-
     eta_0->Draw("Same");
     eta_1p->Draw("Same");
     eta_1n->Draw("Same");
@@ -162,7 +156,6 @@ void Mat_map(std::string Val = "", std::string geantino = "", std::string name =
     eta_3n->Draw("Same");
     eta_4p->Draw("Same");
     eta_4n->Draw("Same");
-
 
     VM->Print( (name+"/Val_mat_map.png").c_str());
     //VM->Print( (name+"/Val_mat_map.pdf").c_str());
