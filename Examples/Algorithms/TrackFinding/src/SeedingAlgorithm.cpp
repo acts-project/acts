@@ -76,10 +76,10 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config bFieldInZ");
   }
 
-  if (m_cfg.seedFinderConfig.cotThetaSorting == false and
-      m_cfg.seedFinderConfig.enableCutsForSortedSP == true) {
+  if (m_cfg.seedFinderConfig.enableCutsForSortedSP == false and
+      m_cfg.seedFinderConfig.skipPreviousTopSP == true) {
     throw std::invalid_argument(
-        "enableCutsForSortedSP cannot be true if cotThetaSorting is set to "
+        "skipPreviousTopSP cannot be true if cotThetaSorting is set to "
         "false");
   }
 

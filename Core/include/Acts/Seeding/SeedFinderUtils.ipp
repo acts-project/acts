@@ -48,7 +48,7 @@ template <typename external_spacepoint_t>
 void transformCoordinates(
     std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
     InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
-    bool cotThetaSorting, std::vector<LinCircle>& linCircleVec) {
+    bool enableCutsForSortedSP, std::vector<LinCircle>& linCircleVec) {
   float xM = spM.x();
   float yM = spM.y();
   float zM = spM.z();
@@ -102,7 +102,7 @@ void transformCoordinates(
     sp->setCotTheta(cot_theta);
   }
   // sort the SP in order of cotTheta
-  if (cotThetaSorting) {
+  if (enableCutsForSortedSP) {
     std::sort(vec.begin(), vec.end(),
               [](InternalSpacePoint<external_spacepoint_t>* a,
                  InternalSpacePoint<external_spacepoint_t>* b) -> bool {

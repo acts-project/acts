@@ -72,8 +72,8 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
         deltaZMax=900 * u.mm,
         interactionPointCut=True,
         zBinEdges=gridConfig.zBinEdges,
-        cotThetaSorting=True,  # enable cotTheta sorting in SeedFinder
-        enableCutsForSortedSP=True,
+        enableCutsForSortedSP=True,  # enable cotTheta sorting in SeedFinder
+        skipPreviousTopSP=True,
         rRangeMiddleSP=[
             [40.0, 90.0],
             [40.0, 200.0],
