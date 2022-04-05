@@ -40,7 +40,9 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   }
 
   if (m_cfg.gridConfig.rMax != m_cfg.seedFinderConfig.rMax) {
-    throw std::invalid_argument("Inconsistent config rMax");
+    ACTS_WARNING(
+        "Inconsistent config rMax: using different values in gridConfig and "
+        "seedFinderConfig. Ignore this warning if values are intentional")
   }
 
   if (m_cfg.seedFilterConfig.deltaRMin != m_cfg.seedFinderConfig.deltaRMin) {
