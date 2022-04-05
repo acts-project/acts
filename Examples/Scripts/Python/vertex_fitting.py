@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 import enum
 import warnings
 
@@ -23,13 +23,120 @@ import acts
 
 from acts import UnitConstants as u
 
-from common import addPythia8
+import pythia8
 
 
 class VertexFinder(enum.Enum):
     Truth = (1,)
     AMVF = (2,)
     Iterative = (3,)
+
+
+def addVertexFitting(
+    s,
+    field,
+    outputDirRoot: Optional[Union[Path, str]] = None,
+    associatedParticles: str = "associatedTruthParticles",
+    vertexFinder: VertexFinder = VertexFinder.Truth,
+    logLevel: Optional[acts.logging.Level] = None,
+):
+    """This function steers the vertex fitting
+
+    Parameters
+    ----------
+    s: Sequencer
+        the sequencer module to which we add the Seeding steps (returned from addVertexFitting)
+    field : magnetic field
+    outputDirRoot : Path|str, path, None
+        the output folder for the Root output, None triggers no output
+    associatedParticles : str, "associatedTruthParticles"
+        RootVertexPerformanceWriter.inputAssociatedTruthParticles
+    vertexFinder : VertexFinder, Truth
+        vertexFinder algorithm: one of Truth, AMVF, Iterative
+    logLevel : acts.logging.Level, None
+        logging level to override setting given in `s`
+    """
+
+    def customLogLevel(custom: acts.logging.Level = acts.logging.INFO):
+        """override logging level"""
+        if logLevel is None:
+            return s.config.logLevel
+        return acts.logging.Level(max(custom.value, logLevel.value))
+
+    if int(customLogLevel()) <= int(acts.logging.DEBUG):
+        acts.examples.dump_args_calls(locals())
+
+    inputParticles = "particles_input"
+    outputVertices = "fittedVertices"
+    selectedParticles = "particles_selected"
+    trackParameters = "trackparameters"
+
+    outputTime = ""
+    if vertexFinder == VertexFinder.Truth:
+        findVertices = TruthVertexFinder(
+            level=customLogLevel(acts.logging.VERBOSE),
+            inputParticles=selectedParticles,
+            outputProtoVertices="protovertices",
+            excludeSecondaries=True,
+        )
+        s.addAlgorithm(findVertices)
+        fitVertices = VertexFitterAlgorithm(
+            level=customLogLevel(acts.logging.VERBOSE),
+            bField=field,
+            inputTrackParameters=trackParameters,
+            inputProtoVertices=findVertices.config.outputProtoVertices,
+            outputVertices=outputVertices,
+        )
+        s.addAlgorithm(fitVertices)
+
+    elif vertexFinder == VertexFinder.Iterative:
+        findVertices = IterativeVertexFinderAlgorithm(
+            level=customLogLevel(),
+            bField=field,
+            inputTrackParameters=trackParameters,
+            outputProtoVertices="protovertices",
+            outputVertices=outputVertices,
+        )
+        s.addAlgorithm(findVertices)
+    elif vertexFinder == VertexFinder.AMVF:
+        outputTime = "outputTime"
+        findVertices = AdaptiveMultiVertexFinderAlgorithm(
+            level=customLogLevel(),
+            bField=field,
+            inputTrackParameters=trackParameters,
+            outputProtoVertices="protovertices",
+            outputVertices=outputVertices,
+            outputTime=outputTime,
+        )
+
+        s.addAlgorithm(findVertices)
+    else:
+        raise RuntimeError("Invalid finder argument")
+
+    if outputDirRoot is not None:
+        outputDirRoot = Path(outputDirRoot)
+        if not outputDirRoot.exists():
+            outputDirRoot.mkdir()
+        if associatedParticles == selectedParticles:
+            warnings.warn(
+                "Using RootVertexPerformanceWriter with smeared particles is not necessarily supported. "
+                "Please get in touch with us"
+            )
+        s.addWriter(
+            RootVertexPerformanceWriter(
+                level=customLogLevel(),
+                inputAllTruthParticles=inputParticles,
+                inputSelectedTruthParticles=selectedParticles,
+                inputAssociatedTruthParticles=associatedParticles,
+                inputFittedTracks=trackParameters,
+                inputVertices=outputVertices,
+                inputTime=outputTime,
+                treeName="vertexing",
+                filePath=str(outputDirRoot / "performance_vertexing.root"),
+            )
+        )
+
+    return s
 
 
 def runVertexFitting(
@@ -47,14 +154,13 @@ def runVertexFitting(
 
     rnd = acts.examples.RandomNumbers(seed=42)
 
+    inputParticles = "particles_input"
     if inputParticlePath is None:
         logger.info("Generating particles using Pythia8")
-        evGen = addPythia8(s, rnd)
-        inputParticles = evGen.config.outputParticles
+        pythia8.addPythia8(s, rnd)
     else:
         logger.info("Reading particles from %s", inputParticlePath.resolve())
         assert inputParticlePath.exists()
-        inputParticles = "particles_read"
         s.addReader(
             RootParticleReader(
                 level=acts.logging.INFO,
@@ -116,71 +222,13 @@ def runVertexFitting(
 
     logger.info("Using vertex finder: %s", vertexFinder.name)
 
-    outputVertices = "fittedVertices"
-    outputTime = ""
-    if vertexFinder == VertexFinder.Truth:
-        findVertices = TruthVertexFinder(
-            level=acts.logging.VERBOSE,
-            inputParticles=selectedParticles,
-            outputProtoVertices="protovertices",
-            excludeSecondaries=True,
-        )
-        s.addAlgorithm(findVertices)
-        fitVertices = VertexFitterAlgorithm(
-            level=acts.logging.VERBOSE,
-            bField=field,
-            inputTrackParameters=trackParameters,
-            inputProtoVertices=findVertices.config.outputProtoVertices,
-            outputVertices=outputVertices,
-        )
-        s.addAlgorithm(fitVertices)
-
-    elif vertexFinder == VertexFinder.Iterative:
-        findVertices = IterativeVertexFinderAlgorithm(
-            level=acts.logging.INFO,
-            bField=field,
-            inputTrackParameters=trackParameters,
-            outputProtoVertices="protovertices",
-            outputVertices=outputVertices,
-        )
-        s.addAlgorithm(findVertices)
-    elif vertexFinder == VertexFinder.AMVF:
-        outputTime = "outputTime"
-        findVertices = AdaptiveMultiVertexFinderAlgorithm(
-            level=acts.logging.INFO,
-            bField=field,
-            inputTrackParameters=trackParameters,
-            outputProtoVertices="protovertices",
-            outputVertices=outputVertices,
-            outputTime=outputTime,
-        )
-
-        s.addAlgorithm(findVertices)
-    else:
-        raise RuntimeError("Invalid finder argument")
-
-    if outputRoot:
-        if inputTrackSummary is None:
-            warnings.warn(
-                "Using inputTrackSummary == None with outputRoot: "
-                "This combination is not necessarily supported. "
-                "Please get in touch with us"
-            )
-        s.addWriter(
-            RootVertexPerformanceWriter(
-                level=acts.logging.INFO,
-                inputAllTruthParticles=inputParticles,
-                inputSelectedTruthParticles=selectedParticles,
-                inputAssociatedTruthParticles=associatedParticles,
-                inputFittedTracks=trackParameters,
-                inputVertices=outputVertices,
-                inputTime=outputTime,
-                treeName="vertexing",
-                filePath=str(outputDir / "performance_vertexing.root"),
-            )
-        )
-
-    return s
+    return addVertexFitting(
+        s,
+        field,
+        outputDirRoot=outputDir if outputRoot else None,
+        associatedParticles=associatedParticles,
+        vertexFinder=vertexFinder,
+    )
 
 
 if "__main__" == __name__:

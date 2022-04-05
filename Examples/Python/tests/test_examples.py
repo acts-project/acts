@@ -160,7 +160,7 @@ def test_seeding(tmp_path, trk_geo, field, assert_root_hash):
             0,
         ),
         (
-            "evgen_particles.root",
+            "particles.root",
             "particles",
             seq.config.events,
         ),
@@ -195,10 +195,9 @@ def test_seeding(tmp_path, trk_geo, field, assert_root_hash):
             assert_entries(fp, tn, exp_entries)
             assert_root_hash(fn, fp)
 
-    assert_csv_output(csv, "evgen_particles")
-    assert_csv_output(csv, "evgen_particles")
-    assert_csv_output(csv, "fatras_particles_final")
-    assert_csv_output(csv, "fatras_particles_initial")
+    assert_csv_output(csv, "particles")
+    assert_csv_output(csv, "particles_final")
+    assert_csv_output(csv, "particles_initial")
 
 
 def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
@@ -923,7 +922,7 @@ def test_ckf_tracks_example_truth_smeared(tmp_path, assert_root_hash):
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.slow
-# @pytest.mark.filterwarnings("ignore::UserWarning")
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_vertex_fitting(tmp_path):
     detector, trackingGeometry, decorators = getOpenDataDetector()
 
@@ -936,7 +935,7 @@ def test_vertex_fitting(tmp_path):
     runVertexFitting(
         field,
         vertexFinder=VertexFinder.Truth,
-        outputDir=Path.cwd(),
+        outputDir=tmp_path,
         s=s,
     )
 
@@ -982,7 +981,8 @@ def test_vertex_fitting_reading(
             trackingGeometry,
             field,
             digiConfigFile=Path(
-                "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+                Path(__file__).parent.parent.parent.parent
+                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
             ),
             outputDir=tmp_path,
             s=s2,
