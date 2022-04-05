@@ -37,8 +37,13 @@ struct SpacePointGridConfig {
   float cotThetaMax;
   // maximum impact parameter in mm
   float impactMax;
-  // sets of consecutive phi bins in the seed making step
-  int numPhiNeighbors = 0;
+  // Multiplicator for the number of phi-bins. The minimum number of phi-bins
+  // depends on min_pt, magnetic field: 2*M_PI/(minPT particle phi-deflection).
+  // phiBinDeflectionCoverage is a multiplier for this number. If
+  // numPhiNeighbors (in the configuration of the BinFinders) is configured to
+  // return 1 neighbor on either side of the current phi-bin (and you want to
+  // cover the full phi-range of minPT), leave this at 1.
+  int phiBinDeflectionCoverage = 1;
   // enable non equidistant binning in z
   std::vector<float> zBinEdges;
 
