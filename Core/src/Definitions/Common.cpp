@@ -27,4 +27,22 @@ std::ostream& operator<<(std::ostream& os, NavigationDirection navDir) {
   return os;
 }
 
+std::ostream& operator<<(std::ostream& os, MaterialUpdateStage matUpdate) {
+  switch (matUpdate) {
+    case MaterialUpdateStage::PreUpdate:
+      os << "PreUpdate (-1)";
+      break;
+    case MaterialUpdateStage::PostUpdate:
+      os << "PostUpdate (1)";
+      break;
+    case MaterialUpdateStage::FullUpdate:
+      os << "FullUpdate (0)";
+      break;
+    default:
+      assert(false && "Invalid material update stage (shouldn't happen)");
+      std::abort();
+  }
+  return os;
+}
+
 }  // namespace Acts

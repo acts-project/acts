@@ -4,7 +4,7 @@ if (NOT CMAKE_BUILD_TYPE)
   message(STATUS "Setting default build type: ${CMAKE_BUILD_TYPE}")
 endif() 
 
-set(ACTS_CXX_FLAGS "-Wall -Wextra -Wpedantic -Wshadow -Wunused-local-typedefs")
+set(ACTS_CXX_FLAGS "-Wall -Wextra -Wpedantic -Wshadow -Wno-unused-local-typedefs")
 set(ACTS_CXX_FLAGS_DEBUG "--coverage")
 set(ACTS_CXX_FLAGS_MINSIZEREL "")
 set(ACTS_CXX_FLAGS_RELEASE "")
