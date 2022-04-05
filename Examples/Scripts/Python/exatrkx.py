@@ -57,7 +57,7 @@ def addExaTrkx(
     )
 
     s.addAlgorithm(
-        acts.examples.TrackFindingMLBasedAlgorithm(
+        acts.examples.TrackFindingAlgorithmExaTrkX(
             level=acts.logging.INFO,
             inputSpacePoints="spacepoints",
             outputProtoTracks="protoTracks",
