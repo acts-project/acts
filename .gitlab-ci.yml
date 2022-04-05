@@ -1,0 +1,20 @@
+exatrkx:
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v17
+  tags:
+  - docker-gpu-nvidia
+  script:
+    - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
+    - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
+    - echo $PATH
+    - nvcc --version
+    - apt update
+    - apt-get -y install git
+    - git clone $CLONE_URL src
+    - cd src
+    - git checkout $HEAD_SHA
+    - cd ..
+    - mkdir build
+    - cmake -B build -S src -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-Werror -DACTS_BUILD_PLUGIN_EXATRKX=ON -DACTS_BUILD_EXAMPLES_EXATRKX=ON -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+    - cmake --build build --
+    - source build/python/setup.sh
+    - python src/Examples/Scripts/Python/exatrkx.py
