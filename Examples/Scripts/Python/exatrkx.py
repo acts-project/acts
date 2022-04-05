@@ -34,7 +34,7 @@ def addExaTrkx(
     s.addAlgorithm(
         acts.examples.SpacePointMaker(
             level=acts.logging.INFO,
-            inputSourceLinks="source_links",
+            inputSourceLinks="sourcelinks",
             inputMeasurements="measurements",
             outputSpacePoints="spacepoints",
             trackingGeometry=trackingGeometry,
