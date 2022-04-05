@@ -104,7 +104,7 @@ if "__main__" == __name__:
     onnxdir = srcdir / "Examples/Algorithms/TrackFindingExaTrkX/share/onnx_models"
     assert onnxdir.exists()
 
-    s = acts.examples.Sequencer(events=100, numThreads=-1)
+    s = acts.examples.Sequencer(events=2, numThreads=-1)
     s.config.logLevel = acts.logging.INFO
 
     rnd = acts.examples.RandomNumbers()
