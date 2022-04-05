@@ -110,6 +110,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(skipPreviousTopSP);
     ACTS_PYTHON_MEMBER(interactionPointCut);
     ACTS_PYTHON_MEMBER(zBinEdges);
+    ACTS_PYTHON_MEMBER(zBinsCustomLooping);
     ACTS_PYTHON_MEMBER(rRangeMiddleSP);
     ACTS_PYTHON_MEMBER(useVariableMiddleSPRange);
     ACTS_PYTHON_MEMBER(deltaRMiddleSPRange);
