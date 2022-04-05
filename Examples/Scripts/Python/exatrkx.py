@@ -25,7 +25,7 @@ def addExaTrkx(
             ptMin=500 * u.MeV,
             nHitsMin=9,
             inputParticles="particles_initial",
-            inputMeasurementParticlesMap="measurement_particle_map",
+            inputMeasurementParticlesMap="measurement_particles_map",
             outputParticles="particles_seed_selected",
         )
     )
@@ -72,7 +72,7 @@ def addExaTrkx(
                 level=acts.logging.INFO,
                 inputProtoTracks="protoTracks",
                 inputParticles="particles_initial",  # the original selected particles after digitization
-                inputMeasurementParticlesMap="measurement_particle_map",
+                inputMeasurementParticlesMap="measurement_particles_map",
                 filePath=str(Path(outputDirRoot) / "performance_seeding_trees.root"),
             )
         )
