@@ -16,4 +16,5 @@ exatrkx:
     - cmake -B build -S src -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-w -DCMAKE_CUDA_FLAGS=-w -DACTS_BUILD_PLUGIN_EXATRKX=ON -DACTS_BUILD_EXAMPLES_EXATRKX=ON -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
     - cmake --build build --
     - source build/python/setup.sh
+    - nvidia-smi
     - python3 src/Examples/Scripts/Python/exatrkx.py
