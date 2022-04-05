@@ -106,7 +106,7 @@ struct KalmanFitterOptions {
   /// @param mScattering Whether to include multiple scattering
   /// @param eLoss Whether to include energy loss
   /// @param rFiltering Whether to run filtering in reversed direction as smoothing
-  /// @param rfScaling Scale factor for the covariance matrix before the NavigationDirection::Backward filtering
+  /// @param rfScaling Scale factor for the covariance matrix before the backward filtering
   KalmanFitterOptions(const GeometryContext& gctx,
                       const MagneticFieldContext& mctx,
                       std::reference_wrapper<const CalibrationContext> cctx,
@@ -207,8 +207,8 @@ struct KalmanFitterResult {
   // Measurement surfaces without hits
   std::vector<const Surface*> missedActiveSurfaces;
 
-  // Measurement surfaces handled in both NavigationDirection::Forward and
-  // NavigationDirection::Backward filtering
+  // Measurement surfaces handled in both forward and
+  // backward filtering
   std::vector<const Surface*> passedAgainSurfaces;
 
   Result<void> result{Result<void>::success()};
@@ -321,9 +321,8 @@ class KalmanFitter {
       // - Waiting for a current surface
       auto surface = state.navigation.currentSurface;
       std::string direction =
-          (state.stepping.navDir == NavigationDirection::Forward)
-              ? "NavigationDirection::Forward"
-              : "NavigationDirection::Backward";
+          (state.stepping.navDir == NavigationDirection::Forward) ? "forward"
+                                                                  : "backward";
       if (surface != nullptr) {
         // Check if the surface is in the measurement map
         // -> Get the measurement / calibrate
