@@ -101,7 +101,7 @@ if "__main__" == __name__:
     )
     assert geometrySelection.exists()
 
-    onnxdir = ( srcdir / "Examples/Algorithms/TrackFindingExaTrkX/share/onnx_models" )
+    onnxdir = srcdir / "Examples/Algorithms/TrackFindingExaTrkX/share/onnx_models"
     assert onnxdir.exists()
 
     s = acts.examples.Sequencer(events=100, numThreads=-1)
