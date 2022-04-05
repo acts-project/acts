@@ -7,7 +7,7 @@ exatrkx:
     - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
     - echo $PATH
     - apt-get update -y
-    - apt-get install -y python3
+    - apt-get install -y python3 libxxhash0
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
