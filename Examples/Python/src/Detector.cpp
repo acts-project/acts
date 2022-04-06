@@ -14,6 +14,7 @@
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
+#include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 
 #include <memory>
 
@@ -52,6 +53,28 @@ void addDetector(Context& ctx) {
         .def_readwrite("layerLogLevel", &Config::layerLogLevel)
         .def_readwrite("volumeLogLevel", &Config::volumeLogLevel)
         .def_readwrite("buildProto", &Config::buildProto);
+  }
+  
+  {
+    using Config = TelescopeDetector::Config;
+
+    auto td = py::class_<TelescopeDetector, std::shared_ptr<TelescopeDetector>>(
+                  mex, "TelescopeDetector")
+                  .def(py::init<>())
+                  .def("finalize",
+                       py::overload_cast<
+                           const Config&,
+                           std::shared_ptr<const Acts::IMaterialDecorator>>(
+                           &TelescopeDetector::finalize));
+
+    py::class_<Config>(td, "Config")
+        .def(py::init<>())
+        .def_readwrite("positions", &Config::positions)
+        .def_readwrite("offsets", &Config::offsets)
+        .def_readwrite("bounds", &Config::bounds)
+        .def_readwrite("thickness", &Config::thickness)
+        .def_readwrite("surfaceType", &Config::surfaceType)
+        .def_readwrite("binValue", &Config::binValue);
   }
 
   {
