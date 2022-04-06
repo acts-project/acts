@@ -54,7 +54,7 @@ void addDetector(Context& ctx) {
         .def_readwrite("volumeLogLevel", &Config::volumeLogLevel)
         .def_readwrite("buildProto", &Config::buildProto);
   }
-  
+
   {
     using Config = TelescopeDetector::Config;
 
