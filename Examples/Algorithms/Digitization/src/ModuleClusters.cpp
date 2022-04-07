@@ -57,54 +57,48 @@ ModuleClusters::digitizedParameters() {
 }
 
 // Needed for clusterization
-int get_cell_row(const ModuleValue& mval)
-{
+int get_cell_row(const ModuleValue& mval) {
   if (std::holds_alternative<ActsExamples::Cluster::Cell>(mval.value)) {
     return std::get<ActsExamples::Cluster::Cell>(mval.value).bin[0];
   }
   throw std::domain_error("ModuleValue does not contain cell!");
 }
 
-int get_cell_column(const ActsExamples::ModuleValue& mval)
-{
+int get_cell_column(const ActsExamples::ModuleValue& mval) {
   if (std::holds_alternative<ActsExamples::Cluster::Cell>(mval.value)) {
     return std::get<ActsExamples::Cluster::Cell>(mval.value).bin[1];
   }
   throw std::domain_error("ModuleValue does not contain cell!");
 }
 
-int& get_cell_label(ActsExamples::ModuleValue& mval)
-{
+int& get_cell_label(ActsExamples::ModuleValue& mval) {
   return mval.label;
 }
 
 void cluster_add_cell(std::vector<ModuleValue>& cl, const ModuleValue& ce) {
-    cl.push_back(ce);
+  cl.push_back(ce);
 }
 
-std::vector<ModuleValue>
-ModuleClusters::createCellCollection() {
-    std::vector<ModuleValue> cells;
-    for (ModuleValue& mval : m_moduleValues) {
-	if (std::holds_alternative<Cluster::Cell>(mval.value)) {
-	    cells.push_back(mval);
-	}
+std::vector<ModuleValue> ModuleClusters::createCellCollection() {
+  std::vector<ModuleValue> cells;
+  for (ModuleValue& mval : m_moduleValues) {
+    if (std::holds_alternative<Cluster::Cell>(mval.value)) {
+      cells.push_back(mval);
     }
-    return cells;
+  }
+  return cells;
 }
 
 void ModuleClusters::merge() {
-
   std::vector<ModuleValue> cells = createCellCollection();
 
   std::vector<ModuleValue> newVals;
 
   if (not cells.empty()) {
     // Case where we actually have geometric clusters
-      std::vector<std::vector<ModuleValue>> merged =
-	Acts::Ccl::createClusters<ModuleValue,
-			       std::vector<ModuleValue>>
-	(cells, Acts::Ccl::DefaultConnect<ModuleValue>(m_commonCorner));
+    std::vector<std::vector<ModuleValue>> merged =
+        Acts::Ccl::createClusters<ModuleValue, std::vector<ModuleValue>>(
+            cells, Acts::Ccl::DefaultConnect<ModuleValue>(m_commonCorner));
 
     for (std::vector<ModuleValue>& cellv : merged) {
       // At this stage, the cellv vector contains cells that form a
@@ -141,8 +135,8 @@ std::vector<size_t> ModuleClusters::nonGeoEntries(
 }
 
 // Merging based on parameters
-std::vector<std::vector<ModuleValue>>
-ModuleClusters::mergeParameters(std::vector<ModuleValue> values) {
+std::vector<std::vector<ModuleValue>> ModuleClusters::mergeParameters(
+    std::vector<ModuleValue> values) {
   std::vector<std::vector<ModuleValue>> retv;
 
   std::vector<bool> used(values.size(), false);
@@ -214,8 +208,7 @@ ModuleClusters::mergeParameters(std::vector<ModuleValue> values) {
   return retv;
 }
 
-ModuleValue ModuleClusters::squash(
-    std::vector<ModuleValue>& values) {
+ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
   ModuleValue mval;
   Acts::ActsScalar tot = 0;
   Acts::ActsScalar tot2 = 0;
@@ -324,6 +317,5 @@ ModuleValue ModuleClusters::squash(
 
   return mval;
 }
-
 
 }  // namespace ActsExamples

@@ -46,8 +46,6 @@ class ModuleClusters {
   digitizedParameters();
 
  private:
-
-
   Acts::BinUtility m_segmentation;
   std::vector<Acts::BoundIndices> m_geoIndices;
   std::vector<ModuleValue> m_moduleValues;

@@ -8,8 +8,9 @@
 
 #pragma once
 
-#pragma message("Clusterization.hpp is deprecated; " \
-                "Use HkClusterization.hpp instead")
+#pragma message(                         \
+    "Clusterization.hpp is deprecated; " \
+    "Use HkClusterization.hpp instead")
 
 #include <type_traits>
 #include <unordered_map>

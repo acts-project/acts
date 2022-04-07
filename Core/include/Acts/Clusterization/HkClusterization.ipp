@@ -27,8 +27,8 @@ template <typename T>
 struct cell_type_has_required_functions<
     T, void_t<decltype(get_cell_row(std::declval<T>())),
               decltype(get_cell_column(std::declval<T>())),
-              decltype(get_cell_label(std::declval<T&>()))>>
-    : std::true_type {};
+              decltype(get_cell_label(std::declval<T&>()))>> : std::true_type {
+};
 
 template <typename, typename, typename T = void>
 struct cluster_type_has_required_functions : std::false_type {};
@@ -39,24 +39,22 @@ struct cluster_type_has_required_functions<
     void_t<decltype(cluster_add_cell(std::declval<T>(), std::declval<U>()))>>
     : std::true_type {};
 
-template <typename T> constexpr void
-static_check_cell_type()
-{
-    constexpr bool has_fns = cell_type_has_required_functions<T>();
-    static_assert(has_fns,
-	"Cell type should have the following functions: "
-        "'int get_cell_row(const Cell&)', "
-	"'int get_cell_column(const Cell&)', "
-	"'Label& get_cell_label(Cell&)'");
+template <typename T>
+constexpr void static_check_cell_type() {
+  constexpr bool has_fns = cell_type_has_required_functions<T>();
+  static_assert(has_fns,
+                "Cell type should have the following functions: "
+                "'int get_cell_row(const Cell&)', "
+                "'int get_cell_column(const Cell&)', "
+                "'Label& get_cell_label(Cell&)'");
 }
 
-template <typename T, typename U> constexpr void
-static_check_cluster_type()
-{
-    constexpr bool has_fns = cluster_type_has_required_functions<T, U>();
-    static_assert(has_fns,
-	"Cluster type should have the following function: "
-        "'void cluster_add_cell(Cluster&, const Cell&)'");
+template <typename T, typename U>
+constexpr void static_check_cluster_type() {
+  constexpr bool has_fns = cluster_type_has_required_functions<T, U>();
+  static_assert(has_fns,
+                "Cluster type should have the following function: "
+                "'void cluster_add_cell(Cluster&, const Cell&)'");
 }
 
 // Comparator function object for cells, column-wise ordering
@@ -238,5 +236,5 @@ ClusterCollection createClusters(CellCollection& cells, Connect connect) {
   return mergeClusters<Cell, Cluster>(cells);
 }
 
-}  // namespace Ccl;
+}  // namespace Ccl
 }  // namespace Acts
