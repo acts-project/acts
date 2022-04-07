@@ -742,10 +742,11 @@ class CombinatorialKalmanFilter {
 
     /// Create and fill track states for all source links
     /// @param gctx The current geometry context
-    /// @param surface The surface currently being processed
     /// @param result Reference to the result struct of the actor
     /// @param boundState Bound state from the propagation on this surface
     /// @param prevTip Index pointing at previous trajectory state (i.e. tip)
+    /// @param slBegin Begin iterator for sourcelinks
+    /// @param slEnd End iterator for sourcelinks
     template <typename source_link_iterator_t>
     void createSourceLinkTrackStates(const Acts::GeometryContext& gctx,
                                      result_type& result,
