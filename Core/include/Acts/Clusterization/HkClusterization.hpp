@@ -48,7 +48,6 @@ struct DefaultConnect {
 ///
 /// @param [in] cells the cell collection to be labeled
 /// @param [in] connect the connection type (see DefaultConnect)
-/// @return nothing
 template <typename Cell, typename CellCollection,
           typename Connect = DefaultConnect<Cell>>
 void labelClusters(CellCollection& cells, Connect connect = Connect());
