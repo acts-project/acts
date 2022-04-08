@@ -70,13 +70,6 @@ class SimSpacePoint {
         m_varianceRho(varRho),
         m_varianceZ(varZ),
         m_measurementIndex(measurementIndex) {
-    m_topHalfStripLength = 0;
-    m_bottomHalfStripLength = 0;
-    m_topStripDirection = {0, 0, 0};
-    m_bottomStripDirection = {0, 0, 0};
-    m_stripCenterDistance = {0, 0, 0};
-    m_bottomStripCenterPosition = {0, 0, 0};
-    m_validDoubleMeasurementDetails = false;
     EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(position_t, 3);
   }
 
@@ -116,18 +109,18 @@ class SimSpacePoint {
   Index m_measurementIndex;
 
   // half of the length of the top strip
-  float m_topHalfStripLength;
+  float m_topHalfStripLength = 0;
   // half of the length of the bottom strip
-  float m_bottomHalfStripLength;
+  float m_bottomHalfStripLength = 0;
   // direction of the top strip
-  Acts::Vector3 m_topStripDirection;
+  Acts::Vector3 m_topStripDirection = {0, 0, 0};
   // direction of the bottom strip
-  Acts::Vector3 m_bottomStripDirection;
+  Acts::Vector3 m_bottomStripDirection = {0, 0, 0};
   // distance between the center of the two strips
-  Acts::Vector3 m_stripCenterDistance;
+  Acts::Vector3 m_stripCenterDistance = {0, 0, 0};
   // position of the center of the bottom strip
-  Acts::Vector3 m_bottomStripCenterPosition;
-  bool m_validDoubleMeasurementDetails;
+  Acts::Vector3 m_bottomStripCenterPosition = {0, 0, 0};
+  bool m_validDoubleMeasurementDetails = false;
 };
 
 constexpr bool operator==(const SimSpacePoint& lhs, const SimSpacePoint& rhs) {
