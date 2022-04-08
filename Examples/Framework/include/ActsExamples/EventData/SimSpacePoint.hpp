@@ -56,8 +56,7 @@ class SimSpacePoint {
         m_bottomStripDirection(bottomStripDirection),
         m_stripCenterDistance(stripCenterDistance),
         m_bottomStripCenterPosition(bottomStripCenterPosition),
-        m_validDoubleMeasurementDetails(true),
-  {
+        m_validDoubleMeasurementDetails(true) {
     EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(position_t, 3);
   }
   template <typename position_t>

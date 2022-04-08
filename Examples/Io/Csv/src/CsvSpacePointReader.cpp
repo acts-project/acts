@@ -85,6 +85,9 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointReader::read(
             data.sp_topHalfStripLength, data.sp_bottomHalfStripLength,
             topStripDirection, bottomStripDirection, stripCenterDistance,
             bottomStripCenterPosition);
+      } else {
+        spacePoints.emplace_back(globalPos, data.sp_covr, data.sp_covz,
+                                 data.measurement_id);
       }
     } else {
       ACTS_ERROR("Invalid space point type " << m_cfg.inputStem);
