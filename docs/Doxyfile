@@ -164,7 +164,6 @@ STRIP_FROM_PATH        = ..
 STRIP_FROM_INC_PATH    = ../Core/include \
                          ../Fatras/include \
                          ../Plugins/DD4hep/include \
-                         ../Plugins/Digitization/include \
                          ../Plugins/Geant4/include \
                          ../Plugins/Identification/include \
                          ../Plugins/Json/include \
