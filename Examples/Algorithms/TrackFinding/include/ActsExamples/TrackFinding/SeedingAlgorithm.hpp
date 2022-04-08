@@ -43,6 +43,9 @@ class SeedingAlgorithm final : public BareAlgorithm {
     // vector containing the map of z bins in the top and bottom layers
     std::vector<std::pair<int, int> > zBinNeighborsTop;
     std::vector<std::pair<int, int> > zBinNeighborsBottom;
+    // number of phiBin neighbors at each side of the current bin that will be
+    // used to search for SPs
+    int numPhiNeighbors;
   };
 
   /// Construct the seeding algorithm.
