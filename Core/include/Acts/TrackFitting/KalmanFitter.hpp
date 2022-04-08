@@ -207,7 +207,8 @@ struct KalmanFitterResult {
   // Measurement surfaces without hits
   std::vector<const Surface*> missedActiveSurfaces;
 
-  // Measurement surfaces handled in both forward and backward filtering
+  // Measurement surfaces handled in both forward and
+  // backward filtering
   std::vector<const Surface*> passedAgainSurfaces;
 
   Result<void> result{Result<void>::success()};
@@ -320,7 +321,8 @@ class KalmanFitter {
       // - Waiting for a current surface
       auto surface = state.navigation.currentSurface;
       std::string direction =
-          (state.stepping.navDir == forward) ? "forward" : "backward";
+          (state.stepping.navDir == NavigationDirection::Forward) ? "forward"
+                                                                  : "backward";
       if (surface != nullptr) {
         // Check if the surface is in the measurement map
         // -> Get the measurement / calibrate
@@ -467,7 +469,9 @@ class KalmanFitter {
 
       // Reverse navigation direction
       state.stepping.navDir =
-          (state.stepping.navDir == forward) ? backward : forward;
+          (state.stepping.navDir == NavigationDirection::Forward)
+              ? NavigationDirection::Backward
+              : NavigationDirection::Forward;
 
       // Reset propagator options
       state.options.maxStepSize =
@@ -916,7 +920,9 @@ class KalmanFitter {
             "Reverse navigation direction after smoothing for reaching the "
             "target surface");
         state.stepping.navDir =
-            (state.stepping.navDir == forward) ? backward : forward;
+            (state.stepping.navDir == NavigationDirection::Forward)
+                ? NavigationDirection::Backward
+                : NavigationDirection::Forward;
       }
       // Reset the step size
       state.stepping.stepSize = ConstrainedStep(
