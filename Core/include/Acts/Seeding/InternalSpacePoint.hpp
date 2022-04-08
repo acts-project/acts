@@ -15,6 +15,17 @@
 #include <limits>
 
 namespace Acts {
+
+struct DoubleMeasurementDetails {
+  float topHalfStripLength;
+  float bottomHalfStripLength;
+  Acts::Vector3 topStripDirection;
+  Acts::Vector3 bottomStripDirection;
+  Acts::Vector3 stripCenterDistance;
+  Acts::Vector3 bottomStripCenterPosition;
+  bool validDoubleMeasurementDetails = false;
+};
+
 template <typename SpacePoint>
 class InternalSpacePoint {
   /////////////////////////////////////////////////////////////////////////////////
@@ -42,6 +53,27 @@ class InternalSpacePoint {
   const float& varianceZ() const { return m_varianceZ; }
   const float& quality() const { return m_quality; }
   const float& cotTheta() const { return m_cotTheta; }
+  float topHalfStripLength() const {
+    return m_doubleMeasurement.topHalfStripLength;
+  };
+  float bottomHalfStripLength() const {
+    return m_doubleMeasurement.bottomHalfStripLength;
+  };
+  const Acts::Vector3& topStripDirection() const {
+    return m_doubleMeasurement.topStripDirection;
+  }
+  const Acts::Vector3& bottomStripDirection() const {
+    return m_doubleMeasurement.bottomStripDirection;
+  }
+  const Acts::Vector3& stripCenterDistance() const {
+    return m_doubleMeasurement.stripCenterDistance;
+  }
+  const Acts::Vector3& bottomStripCenterPosition() const {
+    return m_doubleMeasurement.bottomStripCenterPosition;
+  }
+  bool validDoubleMeasurementDetails() const {
+    return m_doubleMeasurement.validDoubleMeasurementDetails;
+  }
   void setCotTheta(float cotTheta) { m_cotTheta = cotTheta; }
   void setQuality(float quality) {
     if (quality >= m_quality) {
@@ -66,6 +98,9 @@ class InternalSpacePoint {
                             // for. Quality can be changed if the space point is
                             // used for a better quality seed.
   const SpacePoint& m_sp;   // external space point
+
+  DoubleMeasurementDetails
+      m_doubleMeasurement;  // double measurement details for strip coordinates
 };
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -83,6 +118,16 @@ inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
   m_r = std::sqrt(m_x * m_x + m_y * m_y);
   m_varianceR = variance.x();
   m_varianceZ = variance.y();
+
+  m_doubleMeasurement.topHalfStripLength = sp.topHalfStripLength();
+  m_doubleMeasurement.bottomHalfStripLength = sp.bottomHalfStripLength();
+  m_doubleMeasurement.topStripDirection = sp.topStripDirection();
+  m_doubleMeasurement.bottomStripDirection = sp.bottomStripDirection();
+  m_doubleMeasurement.stripCenterDistance = sp.stripCenterDistance();
+  m_doubleMeasurement.bottomStripCenterPosition =
+      sp.bottomStripCenterPosition();
+  m_doubleMeasurement.validDoubleMeasurementDetails =
+      sp.validDoubleMeasurementDetails();
 }
 
 /////////////////////////////////////////////////////////////////////////////////
