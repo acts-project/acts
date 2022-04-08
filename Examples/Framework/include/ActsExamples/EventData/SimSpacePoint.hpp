@@ -59,14 +59,14 @@ class SimSpacePoint {
         m_validDoubleMeasurementDetails(true) {
     EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(position_t, 3);
   }
-	
-	/// Construct the space point from global position and selected variances.
-	///
-	/// @tparam position_t Input position type
-	/// @param pos Global position
-	/// @param varRho Measurement variance of the global transverse distance
-	/// @param varZ Measurement variance of the global longitudinal position
-	/// @param measurementIndex Index of the underlying measurement
+
+  /// Construct the space point from global position and selected variances.
+  ///
+  /// @tparam position_t Input position type
+  /// @param pos Global position
+  /// @param varRho Measurement variance of the global transverse distance
+  /// @param varZ Measurement variance of the global longitudinal position
+  /// @param measurementIndex Index of the underlying measurement
   template <typename position_t>
   SimSpacePoint(const Eigen::MatrixBase<position_t>& pos, float varRho,
                 float varZ, Index measurementIndex)
