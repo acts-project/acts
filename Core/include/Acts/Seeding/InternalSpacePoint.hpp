@@ -59,16 +59,16 @@ class InternalSpacePoint {
   float bottomHalfStripLength() const {
     return m_doubleMeasurement.bottomHalfStripLength;
   };
-  const Acts::Vector3 topStripDirection() const {
+	Acts::Vector3 topStripDirection() const {
     return m_doubleMeasurement.topStripDirection;
   }
-  const Acts::Vector3 bottomStripDirection() const {
+	Acts::Vector3 bottomStripDirection() const {
     return m_doubleMeasurement.bottomStripDirection;
   }
-  const Acts::Vector3 stripCenterDistance() const {
+	Acts::Vector3 stripCenterDistance() const {
     return m_doubleMeasurement.stripCenterDistance;
   }
-  const Acts::Vector3 bottomStripCenterPosition() const {
+  Acts::Vector3 bottomStripCenterPosition() const {
     return m_doubleMeasurement.bottomStripCenterPosition;
   }
   bool validDoubleMeasurementDetails() const {
