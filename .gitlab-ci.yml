@@ -6,8 +6,6 @@ build:
     paths:
       - build/
       - src/Examples/Scripts/Python
-    exclude:
-      - build/**/*.o
   script:
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
     - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
