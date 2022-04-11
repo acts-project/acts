@@ -37,12 +37,12 @@ class SimSpacePoint {
   template <typename position_t>
   SimSpacePoint(const Eigen::MatrixBase<position_t>& pos, float varRho,
                 float varZ, Index measurementIndex,
-                const float& topHalfStripLength,
-                const float& bottomHalfStripLength,
-                const Acts::Vector3& topStripDirection,
-                const Acts::Vector3& bottomStripDirection,
-                const Acts::Vector3& stripCenterDistance,
-                const Acts::Vector3& bottomStripCenterPosition)
+                const float topHalfStripLength,
+                const float bottomHalfStripLength,
+                const Acts::Vector3 topStripDirection,
+                const Acts::Vector3 bottomStripDirection,
+                const Acts::Vector3 stripCenterDistance,
+                const Acts::Vector3 bottomStripCenterPosition)
       : m_x(pos[Acts::ePos0]),
         m_y(pos[Acts::ePos1]),
         m_z(pos[Acts::ePos2]),
