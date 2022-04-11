@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+
 struct SpacePoint {
   float m_x;
   float m_y;

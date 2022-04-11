@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+
 struct SpacePoint {
   SpacePoint() = default;
   ;
@@ -28,6 +30,19 @@ struct SpacePoint {
   float r() const { return m_r; }
   int id() const { return m_id; }
   int surface() const { return m_surface; }
+  constexpr float topHalfStripLength() const { return m_topHalfStripLength; }
+  constexpr float bottomHalfStripLength() const {
+    return m_bottomHalfStripLength;
+  }
+  Acts::Vector3 topStripDirection() const { return m_topStripDirection; }
+  Acts::Vector3 bottomStripDirection() const { return m_bottomStripDirection; }
+  Acts::Vector3 stripCenterDistance() const { return m_stripCenterDistance; }
+  Acts::Vector3 bottomStripCenterPosition() const {
+    return m_bottomStripCenterPosition;
+  }
+  constexpr bool validDoubleMeasurementDetails() const {
+    return m_validDoubleMeasurementDetails;
+  }
   friend bool operator==(const SpacePoint &a, const SpacePoint &b);
   float varianceR;
   float varianceZ;
@@ -39,6 +54,13 @@ struct SpacePoint {
   float m_y;
   float m_z;
   float m_r;
+  float m_topHalfStripLength = 0;
+  float m_bottomHalfStripLength = 0;
+  Acts::Vector3 m_topStripDirection = {0, 0, 0};
+  Acts::Vector3 m_bottomStripDirection = {0, 0, 0};
+  Acts::Vector3 m_stripCenterDistance = {0, 0, 0};
+  Acts::Vector3 m_bottomStripCenterPosition = {0, 0, 0};
+  bool m_validDoubleMeasurementDetails = false;
 };
 
 bool operator==(const SpacePoint &a, const SpacePoint &b) {
