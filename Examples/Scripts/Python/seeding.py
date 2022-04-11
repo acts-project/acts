@@ -14,6 +14,7 @@ class EnumAction(argparse.Action):
     """
     Argparse action for handling Enums
     """
+
     def __init__(self, **kwargs):
         # Pop off the type value
         enum_type = kwargs.pop("enum", None)
@@ -42,7 +43,9 @@ class EnumAction(argparse.Action):
 
 
 u = acts.UnitConstants
-SeedingAlgorithm = Enum("SeedingAlgorithm", "Default TruthSmeared TruthEstimated Orthogonal")
+SeedingAlgorithm = Enum(
+    "SeedingAlgorithm", "Default TruthSmeared TruthEstimated Orthogonal"
+)
 
 TruthSeedRanges = namedtuple(
     "TruthSeedRanges",
@@ -409,7 +412,13 @@ def addSeeding(
     return s
 
 
-def runSeeding(trackingGeometry, field, outputDir, s=None, seedingAlgorithm=SeedingAlgorithm.Default):
+def runSeeding(
+    trackingGeometry,
+    field,
+    outputDir,
+    s=None,
+    seedingAlgorithm=SeedingAlgorithm.Default,
+):
 
     from particle_gun import addParticleGun, EtaConfig, PhiConfig, ParticleConfig
     from fatras import addFatras
@@ -499,4 +508,6 @@ if "__main__" == __name__:
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    runSeeding(trackingGeometry, field, outputDir=Path.cwd(), seedingAlgorithm=args.algorithm).run()
+    runSeeding(
+        trackingGeometry, field, outputDir=Path.cwd(), seedingAlgorithm=args.algorithm
+    ).run()
