@@ -172,6 +172,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(seedFilterConfig);
     ACTS_PYTHON_MEMBER(seedFinderConfig);
     ACTS_PYTHON_MEMBER(gridConfig);
+    ACTS_PYTHON_MEMBER(allowSeparateRMax);
     ACTS_PYTHON_MEMBER(zBinNeighborsTop);
     ACTS_PYTHON_MEMBER(zBinNeighborsBottom);
     ACTS_PYTHON_MEMBER(numPhiNeighbors);
