@@ -5,6 +5,7 @@ build:
     untracked: true
     paths:
       - build/
+      - src/Examples/Scripts/Python
     exclude:
       - build/**/*.o
   script:
