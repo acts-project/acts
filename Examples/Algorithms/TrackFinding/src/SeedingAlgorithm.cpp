@@ -87,6 +87,20 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config zBinNeighborsBottom");
   }
 
+  if (m_cfg.seedFinderConfig.zBinsCustomLooping.size() != 0) {
+    // check if zBinsCustomLooping contains numbers from 1 to the total number
+    // of bin in zBinEdges
+    for (size_t i = 1; i != m_cfg.gridConfig.zBinEdges.size(); i++) {
+      if (std::find(m_cfg.seedFinderConfig.zBinsCustomLooping.begin(),
+                    m_cfg.seedFinderConfig.zBinsCustomLooping.end(),
+                    i) == m_cfg.seedFinderConfig.zBinsCustomLooping.end()) {
+        throw std::invalid_argument(
+            "Inconsistent config zBinsCustomLooping does not contain the same "
+            "bins as zBinEdges");
+      }
+    }
+  }
+
   m_cfg.seedFinderConfig.seedFilter =
       std::make_unique<Acts::SeedFilter<SimSpacePoint>>(m_cfg.seedFilterConfig);
 }
@@ -129,10 +143,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
 
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
       Acts::BinFinder<SimSpacePoint>(m_cfg.zBinNeighborsBottom,
-                                     m_cfg.gridConfig.numPhiNeighbors));
+                                     m_cfg.numPhiNeighbors));
   auto topBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
       Acts::BinFinder<SimSpacePoint>(m_cfg.zBinNeighborsTop,
-                                     m_cfg.gridConfig.numPhiNeighbors));
+                                     m_cfg.numPhiNeighbors));
   auto grid =
       Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(m_cfg.gridConfig);
   auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(

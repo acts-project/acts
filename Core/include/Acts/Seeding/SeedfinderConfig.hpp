@@ -65,6 +65,10 @@ struct SeedfinderConfig {
   // parameters for forward seed confirmation
   SeedConfirmationRange forwardSeedConfirmationRange;
 
+  // cut to the maximum value of delta z between SPs
+  float deltaZMax =
+      std::numeric_limits<float>::infinity() * Acts::UnitConstants::mm;
+
   // enable cut on the compatibility between interaction point and SPs
   bool interactionPointCut = false;
 
@@ -114,6 +118,8 @@ struct SeedfinderConfig {
   // used as offset for Space Points
   Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
                         0 * Acts::UnitConstants::mm};
+
+  boost::container::small_vector<size_t, 20> zBinsCustomLooping = {};
 
   // average radiation lengths of material on the length of a seed. used for
   // scattering.
@@ -165,6 +171,7 @@ struct SeedfinderConfig {
     config.rMax /= 1_mm;
     config.rMin /= 1_mm;
     config.bFieldInZ /= 1000. * 1_T;
+    config.deltaZMax /= 1_mm;
 
     config.beamPos[0] /= 1_mm;
     config.beamPos[1] /= 1_mm;

@@ -104,10 +104,12 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(nTrplPerSpBLimit);
     ACTS_PYTHON_MEMBER(nAvgTrplPerSpBLimit);
     ACTS_PYTHON_MEMBER(impactMax);
+    ACTS_PYTHON_MEMBER(deltaZMax);
     ACTS_PYTHON_MEMBER(zBinEdges);
     ACTS_PYTHON_MEMBER(enableCutsForSortedSP);
     ACTS_PYTHON_MEMBER(interactionPointCut);
     ACTS_PYTHON_MEMBER(zBinEdges);
+    ACTS_PYTHON_MEMBER(zBinsCustomLooping);
     ACTS_PYTHON_MEMBER(rRangeMiddleSP);
     ACTS_PYTHON_MEMBER(useVariableMiddleSPRange);
     ACTS_PYTHON_MEMBER(deltaRMiddleSPRange);
@@ -143,7 +145,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(zMin);
     ACTS_PYTHON_MEMBER(deltaRMax);
     ACTS_PYTHON_MEMBER(cotThetaMax);
-    ACTS_PYTHON_MEMBER(numPhiNeighbors);
+    ACTS_PYTHON_MEMBER(phiBinDeflectionCoverage);
     ACTS_PYTHON_MEMBER(impactMax);
     ACTS_PYTHON_MEMBER(zBinEdges);
     ACTS_PYTHON_STRUCT_END();
@@ -172,6 +174,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(gridConfig);
     ACTS_PYTHON_MEMBER(zBinNeighborsTop);
     ACTS_PYTHON_MEMBER(zBinNeighborsBottom);
+    ACTS_PYTHON_MEMBER(numPhiNeighbors);
     ACTS_PYTHON_STRUCT_END();
   }
 

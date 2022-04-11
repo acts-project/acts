@@ -207,7 +207,8 @@ struct KalmanFitterResult {
   // Measurement surfaces without hits
   std::vector<const Surface*> missedActiveSurfaces;
 
-  // Measurement surfaces handled in both forward and backward filtering
+  // Measurement surfaces handled in both forward and
+  // backward filtering
   std::vector<const Surface*> passedAgainSurfaces;
 
   Result<void> result{Result<void>::success()};
@@ -320,7 +321,8 @@ class KalmanFitter {
       // - Waiting for a current surface
       auto surface = state.navigation.currentSurface;
       std::string direction =
-          (state.stepping.navDir == forward) ? "forward" : "backward";
+          (state.stepping.navDir == NavigationDirection::Forward) ? "forward"
+                                                                  : "backward";
       if (surface != nullptr) {
         // Check if the surface is in the measurement map
         // -> Get the measurement / calibrate
@@ -467,7 +469,9 @@ class KalmanFitter {
 
       // Reverse navigation direction
       state.stepping.navDir =
-          (state.stepping.navDir == forward) ? backward : forward;
+          (state.stepping.navDir == NavigationDirection::Forward)
+              ? NavigationDirection::Backward
+              : NavigationDirection::Forward;
 
       // Reset propagator options
       state.options.maxStepSize =
@@ -528,7 +532,8 @@ class KalmanFitter {
         stepper.transportCovarianceToBound(state.stepping, *surface);
 
         // Update state and stepper with pre material effects
-        materialInteractor(surface, state, stepper, preUpdate);
+        materialInteractor(surface, state, stepper,
+                           MaterialUpdateStage::PreUpdate);
 
         // do the kalman update
         auto trackStateProxyRes = detail::kalmanHandleMeasurement(
@@ -559,7 +564,8 @@ class KalmanFitter {
         }
 
         // Update state and stepper with post material effects
-        materialInteractor(surface, state, stepper, postUpdate);
+        materialInteractor(surface, state, stepper,
+                           MaterialUpdateStage::PostUpdate);
         // We count the processed state
         ++result.processedStates;
         // Update the number of holes count only when encoutering a
@@ -596,7 +602,8 @@ class KalmanFitter {
         }
         if (surface->surfaceMaterial() != nullptr) {
           // Update state and stepper with material effects
-          materialInteractor(surface, state, stepper, fullUpdate);
+          materialInteractor(surface, state, stepper,
+                             MaterialUpdateStage::FullUpdate);
         }
       }
       return Result<void>::success();
@@ -636,7 +643,8 @@ class KalmanFitter {
         stepper.transportCovarianceToBound(state.stepping, *surface);
 
         // Update state and stepper with pre material effects
-        materialInteractor(surface, state, stepper, preUpdate);
+        materialInteractor(surface, state, stepper,
+                           MaterialUpdateStage::PreUpdate);
 
         // Bind the transported state to the current surface
         auto res = stepper.boundState(state.stepping, *surface, false);
@@ -708,7 +716,8 @@ class KalmanFitter {
                          trackStateProxy.filteredCovariance(), *surface);
 
           // Update state and stepper with post material effects
-          materialInteractor(surface, state, stepper, postUpdate);
+          materialInteractor(surface, state, stepper,
+                             MaterialUpdateStage::PostUpdate);
         }
       } else if (surface->associatedDetectorElement() != nullptr ||
                  surface->surfaceMaterial() != nullptr) {
@@ -749,9 +758,10 @@ class KalmanFitter {
     /// @param updateStage The materal update stage
     ///
     template <typename propagator_state_t, typename stepper_t>
-    void materialInteractor(
-        const Surface* surface, propagator_state_t& state, stepper_t& stepper,
-        const MaterialUpdateStage& updateStage = fullUpdate) const {
+    void materialInteractor(const Surface* surface, propagator_state_t& state,
+                            stepper_t& stepper,
+                            const MaterialUpdateStage& updateStage =
+                                MaterialUpdateStage::FullUpdate) const {
       const auto& logger = state.options.logger;
       // Indicator if having material
       bool hasMaterial = false;
@@ -910,7 +920,9 @@ class KalmanFitter {
             "Reverse navigation direction after smoothing for reaching the "
             "target surface");
         state.stepping.navDir =
-            (state.stepping.navDir == forward) ? backward : forward;
+            (state.stepping.navDir == NavigationDirection::Forward)
+                ? NavigationDirection::Backward
+                : NavigationDirection::Forward;
       }
       // Reset the step size
       state.stepping.stepSize = ConstrainedStep(
