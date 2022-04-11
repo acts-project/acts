@@ -6,6 +6,7 @@ build:
       - build/
       - src/Examples/Python
       - src/Examples/Scripts/Python
+      - src/Examples/Algorithms/TrackFinding/share
     exclude:
       - build/**/*.o
 
