@@ -101,8 +101,12 @@ if "__main__" == __name__:
     )
     assert geometrySelection.exists()
 
-    onnxdir = srcdir / "Examples/Algorithms/TrackFindingExaTrkX/share/onnx_models"
-    assert onnxdir.exists()
+    onnxdir = Path(cwd=os.getcwd()) / "onnx_models"
+    assert (
+        (onnxdir / "embedding.onnx").exists()
+        and (onnxdir / "filtering.onnx").exists()
+        and (onnxdir / "gnn.onnx").exists()
+    )
 
     s = acts.examples.Sequencer(events=2, numThreads=-1)
     s.config.logLevel = acts.logging.INFO
