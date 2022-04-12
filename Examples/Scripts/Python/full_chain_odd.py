@@ -78,7 +78,7 @@ s = addSeeding(
     TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-2.7, 2.7), nHits=(9, None)),
     geoSelectionConfigFile=oddSeedingSel,
     outputDirRoot=outputDir,
-    initialVarInflation = [100,100,100,100,100,100]
+    initialVarInflation=[100, 100, 100, 100, 100, 100],
 )
 s = addCKFTracks(
     s,
