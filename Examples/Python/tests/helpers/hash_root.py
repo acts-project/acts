@@ -18,7 +18,12 @@ def hash_root_file(path: Path, ordering_invariant: bool = True) -> str:
     for tree_name in sorted(rf.keys()):
         gh.update(tree_name.encode("utf8"))
 
-        tree = rf[tree_name]
+        try:
+            tree = rf[tree_name]
+            if not isinstance(tree, uproot.TTree):
+                continue
+        except NotImplementedError:
+            continue
         keys = list(sorted(tree.keys()))
 
         branches = tree.arrays(library="ak")
