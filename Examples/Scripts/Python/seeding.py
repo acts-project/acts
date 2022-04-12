@@ -27,7 +27,6 @@ class EnumAction(argparse.Action):
 
         # Generate choices from the Enum
         kwargs.setdefault("choices", tuple(e.name for e in enum_type))
-        kwargs.setdefault("default", "Default")
 
         super(EnumAction, self).__init__(**kwargs)
 
@@ -498,6 +497,7 @@ if "__main__" == __name__:
         "--algorithm",
         action=EnumAction,
         enum=SeedingAlgorithm,
+        default=SeedingAlgorithm.Default,
         help="Select the seeding algorithm to use",
     )
 

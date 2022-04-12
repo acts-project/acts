@@ -201,7 +201,7 @@ def test_seeding(tmp_path, trk_geo, field, assert_root_hash):
 
 
 def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
-    from seeding import runSeeding
+    from seeding import runSeeding, SeedingAlgorithm
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
 
@@ -227,7 +227,7 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
             0,
         ),
         (
-            "evgen_particles.root",
+            "particles.root",
             "particles",
             seq.config.events,
         ),
@@ -249,7 +249,7 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
 
     assert len(list(csv.iterdir())) == 0
 
-    runSeeding(trk_geo, field, outputDir=str(tmp_path), s=seq, useOrthogonal=True).run()
+    runSeeding(trk_geo, field, outputDir=str(tmp_path), s=seq, seedingAlgorithm=SeedingAlgorithm.Orthogonal).run()
 
     del seq
 
@@ -262,10 +262,9 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
             assert_entries(fp, tn, exp_entries)
             assert_root_hash(fn, fp)
 
-    assert_csv_output(csv, "evgen_particles")
-    assert_csv_output(csv, "evgen_particles")
-    assert_csv_output(csv, "fatras_particles_final")
-    assert_csv_output(csv, "fatras_particles_initial")
+    assert_csv_output(csv, "particles")
+    assert_csv_output(csv, "particles_final")
+    assert_csv_output(csv, "particles_initial")
 
 
 def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
