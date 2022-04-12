@@ -25,8 +25,14 @@ parser.add_argument(
     default=pathlib.Path.cwd(),
     help="Output directories. Default: $PWD",
 )
+parser.add_argument(
+    "-m",
+    "--multiplicity",
+    type=int,
+    default=1,
+    help="Particle multiplicity, Default: 1",
+)
 args = parser.parse_args()
-
 
 u = acts.UnitConstants
 outputDir = args.output
@@ -48,12 +54,17 @@ from digitization import addDigitization
 from seeding import addSeeding, SeedingAlgorithm, TruthSeedRanges
 from ckf_tracks import addCKFTracks
 
-s = acts.examples.Sequencer(events=args.events, numThreads=args.jobs, skip=args.skip)
+s = acts.examples.Sequencer(
+    events=args.events,
+    numThreads=args.jobs,
+    skip=args.skip,
+    logLevel=acts.logging.INFO)
+
 s = addParticleGun(
     s,
     MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
     EtaConfig(-3.0, 3.0, True),
-    ParticleConfig(1, acts.PdgParticle.eMuon, True),
+    ParticleConfig(args.multiplicity, acts.PdgParticle.eMuon, True),
     rnd=rnd,
 )
 s = addFatras(
@@ -85,7 +96,6 @@ s = addCKFTracks(
     trackingGeometry,
     field,
     TruthSeedRanges(pt=(400.0 * u.MeV, None), nHits=(6, None)),
-    outputDirRoot=outputDir,
-)
+    outputDirRoot=outputDir)
 
 s.run()
