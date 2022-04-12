@@ -1,10 +1,35 @@
 #!/usr/bin/env python3
+import argparse
 import pathlib, acts, acts.examples
 import acts.examples.dd4hep
 from common import getOpenDataDetector, getOpenDataDetectorDirectory
 
+parser = argparse.ArgumentParser(description="OpenDataDetector full chain example")
+parser.add_argument(
+    "-n", "--events", type=int, default=100, help="Number of events to run"
+)
+parser.add_argument(
+    "-s", "--skip", type=int, default=0, help="Number of events to skip"
+)
+parser.add_argument(
+    "-j",
+    "--jobs",
+    type=int,
+    default=-1,
+    help="Number of threads to use. Default: -1 i.e. number of cores",
+)
+parser.add_argument(
+    "-o",
+    "--output",
+    type=pathlib.Path,
+    default=pathlib.Path.cwd(),
+    help="Output directories. Default: $PWD",
+)
+args = parser.parse_args()
+
+
 u = acts.UnitConstants
-outputDir = pathlib.Path.cwd()
+outputDir = args.output
 
 oddDir = getOpenDataDetectorDirectory()
 
@@ -23,7 +48,7 @@ from digitization import addDigitization
 from seeding import addSeeding, SeedingAlgorithm, TruthSeedRanges
 from ckf_tracks import addCKFTracks
 
-s = acts.examples.Sequencer(events=100, numThreads=-1)
+s = acts.examples.Sequencer(events=args.events, numThreads=args.jobs, skip=args.skip)
 s = addParticleGun(
     s,
     MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
