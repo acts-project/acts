@@ -27,7 +27,7 @@ s = acts.examples.Sequencer(events=100, numThreads=-1)
 s = addParticleGun(
     s,
     MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
-    EtaConfig(-4.0, 4.0, True),
+    EtaConfig(-3.0, 3.0, True),
     ParticleConfig(1, acts.PdgParticle.eMuon, True),
     rnd=rnd,
 )
@@ -50,9 +50,10 @@ s = addSeeding(
     s,
     trackingGeometry,
     field,
-    TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None)),
+    TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-2.7, 2.7), nHits=(9, None)),
     geoSelectionConfigFile=oddSeedingSel,
     outputDirRoot=outputDir,
+    initialVarInflation = [100,100,100,100,100,100]
 )
 s = addCKFTracks(
     s,
