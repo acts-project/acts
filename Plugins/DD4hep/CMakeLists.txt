@@ -1,6 +1,13 @@
+include(FetchContent)
+
+FetchContent_Declare(actsdd4hep
+	GIT_REPOSITORY https://github.com/acts-project/acts-dd4hep.git
+	GIT_TAG mvp)
+FetchContent_MakeAvailable(actsdd4hep)
+
+
 add_library(
   ActsPluginDD4hep SHARED
-  src/ActsExtension.cpp
   src/ConvertDD4hepDetector.cpp
   src/ConvertDD4hepMaterial.cpp
   src/DD4hepDetectorElement.cpp
@@ -13,7 +20,7 @@ target_include_directories(
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(
   ActsPluginDD4hep
-  PUBLIC ActsCore ActsPluginTGeo)
+  PUBLIC ActsCore ActsPluginTGeo ActsDD4hep)
 
 if(${DD4hep_VERSION} VERSION_LESS 1.11)
   target_include_directories(ActsPluginDD4hep PUBLIC ${DD4hep_INCLUDE_DIRS})

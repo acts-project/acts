@@ -8,9 +8,10 @@
 
 #pragma once
 
-#include "Acts/Plugins/DD4hep/ActsExtension.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include "ActsDD4hep/ActsExtension.hpp"
 
 #include <DD4hep/DetElement.h>
 #include <DD4hep/DetFactoryHelper.h>
@@ -67,19 +68,5 @@ std::shared_ptr<Acts::ProtoSurfaceMaterial> createProtoMaterial(
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&
         binning);
 
-/// Helper method that decorates an ActsExtension with proto material
-/// description for boundaries
-/// - it assigns bins for inner / representing / outer
-
-/// Helper method that decorates an ActsExtension with proto material
-/// description,
-/// - it assigns bins for inner / representing / outer
-///
-/// @param x_material the material tag to be inspected
-/// @param actsExtension the extension that is augmented
-/// @param baseTag the xml tag to be checked
-void xmlToProtoSurfaceMaterial(const xml_comp_t& x_material,
-                               ActsExtension& actsExtension,
-                               const std::string& baseTag);
 
 }  // namespace Acts
