@@ -6,11 +6,11 @@ from common import getOpenDataDetector, getOpenDataDetectorDirectory
 u = acts.UnitConstants
 outputDir = pathlib.Path.cwd()
 
-oddDir = str(getOpenDataDetectorDirectory())
+oddDir = getOpenDataDetectorDirectory()
 
-oddMaterialMap = oddDir + '/data/odd-material-maps.root'
-oddDigiConfig = oddDir + '/config/odd-digi-smearing-config.json'
-oddSeedingSel = oddDir + '/config/odd-seeding-config.json'
+oddMaterialMap = oddDir / "data/odd-material-maps.root"
+oddDigiConfig = oddDir / "config/odd-digi-smearing-config.json"
+oddSeedingSel = oddDir / "config/odd-seeding-config.json"
 oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
 detector, trackingGeometry, decorators = getOpenDataDetector(mdecorator=oddMaterialDeco)
