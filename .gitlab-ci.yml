@@ -1,6 +1,8 @@
 build:
   stage: build
   image: ghcr.io/acts-project/ubuntu2004_exatrkx:v17
+  tags:
+    - docker
   artifacts:
     paths:
       - build/
