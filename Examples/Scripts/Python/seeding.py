@@ -363,6 +363,7 @@ def addSeeding(
             outputProtoTracks="prototracks_estimated",
             trackingGeometry=trackingGeometry,
             magneticField=field,
+            initialVarInflation=initialVarInflation,            
             **acts.examples.defaultKWArgs(
                 initialVarInflation=initialVarInflation,
                 deltaRMin=trackParamsEstimationConfig.deltaR[0],
