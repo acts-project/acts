@@ -60,7 +60,7 @@ struct PropagatorState {
     // Accummulated path length cache
     double pathAccumulated = 0.;
     // Navigation direction
-    NavigationDirection navDir = forward;
+    NavigationDirection navDir = NavigationDirection::Forward;
     // adaptive sep size of the runge-kutta integration
     ConstrainedStep stepSize = std::numeric_limits<double>::max();
   };

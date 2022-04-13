@@ -70,7 +70,7 @@ Result<void> GainMatrixUpdater::operator()(
 
         if (K.hasNaN()) {
           error =
-              (direction == forward)
+              (direction == NavigationDirection::Forward)
                   ? KalmanFitterError::ForwardUpdateFailed
                   : KalmanFitterError::BackwardUpdateFailed;  // set to error
           return false;                                       // abort execution
