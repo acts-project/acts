@@ -34,6 +34,17 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
 
   using TrackFitterResult = Acts::Result<Acts::KalmanFitterResult>;
 
+  /// General options that do not depend on the fitter type, but need to be
+  /// handed over by the algorithm
+  struct GeneralFitterOptions {
+    std::reference_wrapper<const Acts::GeometryContext> geoContext;
+    std::reference_wrapper<const Acts::MagneticFieldContext> magFieldContext;
+    std::reference_wrapper<const Acts::CalibrationContext> calibrationContext;
+    std::reference_wrapper<const MeasurementContainer> measurements;
+    const Acts::Surface* referenceSurface = nullptr;
+    Acts::LoggerWrapper logger;
+  };
+
   /// Fit function that takes the above parameters and runs a fit
   /// @note This is separated into a virtual interface to keep compilation units
   /// small
@@ -42,7 +53,7 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
     virtual ~TrackFitterFunction() = default;
     virtual TrackFitterResult operator()(
         const std::vector<std::reference_wrapper<const IndexSourceLink>>&,
-        const TrackParameters&, const TrackFitterOptions&) const = 0;
+        const TrackParameters&, const GeneralFitterOptions&) const = 0;
   };
 
   /// Fit function that takes the above parameters plus a sorted surface
@@ -54,20 +65,9 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
     virtual ~DirectedTrackFitterFunction() = default;
     virtual TrackFitterResult operator()(
         const std::vector<std::reference_wrapper<const IndexSourceLink>>&,
-        const TrackParameters&, const TrackFitterOptions&,
+        const TrackParameters&, const GeneralFitterOptions&,
         const std::vector<const Acts::Surface*>&) const = 0;
   };
-
-  /// Create the track fitter function implementation.
-  ///
-  /// The magnetic field is intentionally given by-value since the variant
-  /// contains shared_ptr anyways.
-  static std::shared_ptr<TrackFitterFunction> makeTrackFitterFunction(
-      std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
-
-  static std::shared_ptr<DirectedTrackFitterFunction> makeTrackFitterFunction(
-      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
 
   struct Config {
     /// Input measurements collection.
@@ -88,15 +88,8 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
     std::shared_ptr<DirectedTrackFitterFunction> dFit;
     /// Tracking geometry for surface lookup
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
-    /// Some more detailed steering - mainly for debugging, correct for MCS
-    bool multipleScattering = true;
-    /// Some more detailed steering - correct for e-loss
-    bool energyLoss = true;
     /// Pick a single track for debugging (-1 process all tracks)
     int pickTrack = -1;
-    /// Switch to fully-fledged backwards filtering below this pt value
-    /// (default: never)
-    double reverseFilteringMomThreshold = 0;
   };
 
   /// Constructor of the fitting algorithm
@@ -120,7 +113,7 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
       const std::vector<std::reference_wrapper<
           const ActsExamples::IndexSourceLink>>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
-      const TrackFitterOptions& options,
+      const GeneralFitterOptions& options,
       const std::vector<const Acts::Surface*>& surfSequence) const;
 
   Config m_cfg;
@@ -131,7 +124,7 @@ ActsExamples::TrackFittingAlgorithm::fitTrack(
     const std::vector<std::reference_wrapper<
         const ActsExamples::IndexSourceLink>>& sourceLinks,
     const ActsExamples::TrackParameters& initialParameters,
-    const Acts::KalmanFitterOptions& options,
+    const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
     const std::vector<const Acts::Surface*>& surfSequence) const {
   if (m_cfg.directNavigation) {
     return (*m_cfg.dFit)(sourceLinks, initialParameters, options, surfSequence);

@@ -24,6 +24,7 @@
 #include "ActsExamples/Reconstruction/ReconstructionBase.hpp"
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
+#include "ActsExamples/TrackFitting/TrackFittingFunctions.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingOptions.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
@@ -143,14 +144,15 @@ int runRecTruthTracks(int argc, char* argv[],
       particleSmearingCfg.outputTrackParameters;
   fitter.outputTrajectories = "trajectories";
   fitter.directNavigation = dirNav;
-  fitter.multipleScattering =
-      vm["fit-multiple-scattering-correction"].as<bool>();
-  fitter.energyLoss = vm["fit-energy-loss-correction"].as<bool>();
   fitter.pickTrack = vm["fit-pick-track"].as<int>();
   fitter.trackingGeometry = trackingGeometry;
-  fitter.dFit = TrackFittingAlgorithm::makeTrackFitterFunction(magneticField);
-  fitter.fit = TrackFittingAlgorithm::makeTrackFitterFunction(trackingGeometry,
-                                                              magneticField);
+  fitter.dFit = makeKalmanFitterFunction(
+      magneticField, vm["fit-multiple-scattering-correction"].as<bool>(),
+      vm["fit-energy-loss-correction"].as<bool>());
+  fitter.fit = makeKalmanFitterFunction(
+      trackingGeometry, magneticField,
+      vm["fit-multiple-scattering-correction"].as<bool>(),
+      vm["fit-energy-loss-correction"].as<bool>());
   sequencer.addAlgorithm(
       std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
 

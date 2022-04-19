@@ -19,6 +19,7 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
+#include "ActsExamples/TrackFitting/TrackFittingFunctions.hpp"
 
 namespace {
 
@@ -30,9 +31,52 @@ using Fitter = Acts::KalmanFitter<Propagator>;
 using DirectPropagator = Acts::Propagator<Stepper, Acts::DirectNavigator>;
 using DirectFitter = Acts::KalmanFitter<DirectPropagator>;
 
+struct SimpleReverseFilteringLogic {
+  double momentumThreshold;
+
+  bool doBackwardFiltering(
+      Acts::MultiTrajectory::ConstTrackStateProxy trackState) const {
+    auto momentum = fabs(1 / trackState.filtered()[Acts::eBoundQOverP]);
+    return (momentum <= momentumThreshold);
+  }
+};
+
+template <typename TrackFitterFunktion>
+auto makeKfOptions(
+    const TrackFitterFunktion& f,
+    ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions options) {
+  // Set the KalmanFitter options
+  Acts::KalmanFitterExtensions extensions;
+  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(
+      &f.kfUpdater);
+  extensions.smoother.connect<&Acts::GainMatrixSmoother::operator()>(
+      &f.kfSmoother);
+  extensions.reverseFilteringLogic
+      .connect<&SimpleReverseFilteringLogic::doBackwardFiltering>(
+          &f.reverseFilteringLogic);
+
+  Acts::KalmanFitterOptions kfOptions(
+      options.geoContext, options.magFieldContext, options.calibrationContext,
+      extensions, options.logger, Acts::PropagatorPlainOptions(),
+      &(*options.referenceSurface));
+
+  kfOptions.multipleScattering = f.multipleScattering;
+  kfOptions.energyLoss = f.energyLoss;
+
+  return kfOptions;
+}
+
 struct TrackFitterFunctionImpl
     : public ActsExamples::TrackFittingAlgorithm::TrackFitterFunction {
   Fitter trackFitter;
+
+  Acts::GainMatrixUpdater kfUpdater;
+  Acts::GainMatrixSmoother kfSmoother;
+  SimpleReverseFilteringLogic reverseFilteringLogic;
+
+  bool multipleScattering;
+  bool energyLoss;
+  double reverseFilteringMomThreshold;
 
   TrackFitterFunctionImpl(Fitter&& f) : trackFitter(std::move(f)) {}
 
@@ -40,35 +84,54 @@ struct TrackFitterFunctionImpl
       const std::vector<std::reference_wrapper<
           const ActsExamples::IndexSourceLink>>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
-      const ActsExamples::TrackFittingAlgorithm::TrackFitterOptions& options)
+      const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options)
       const override {
+    ActsExamples::MeasurementCalibrator calibrator(options.measurements);
+    auto kfOptions = makeKfOptions(*this, options);
+    kfOptions.extensions.calibrator
+        .connect<&ActsExamples::MeasurementCalibrator::calibrate>(&calibrator);
     return trackFitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                           initialParameters, options);
+                           initialParameters, kfOptions);
   };
 };
 
 struct DirectedFitterFunctionImpl
     : public ActsExamples::TrackFittingAlgorithm::DirectedTrackFitterFunction {
   DirectFitter fitter;
+
+  Acts::GainMatrixUpdater kfUpdater;
+  Acts::GainMatrixSmoother kfSmoother;
+  SimpleReverseFilteringLogic reverseFilteringLogic;
+
+  bool multipleScattering;
+  bool energyLoss;
+  double reverseFilteringMomThreshold;
+
   DirectedFitterFunctionImpl(DirectFitter&& f) : fitter(std::move(f)) {}
 
   ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
       const std::vector<std::reference_wrapper<
           const ActsExamples::IndexSourceLink>>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
-      const ActsExamples::TrackFittingAlgorithm::TrackFitterOptions& options,
+      const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
       const std::vector<const Acts::Surface*>& sSequence) const override {
+    ActsExamples::MeasurementCalibrator calibrator(options.measurements);
+    auto kfOptions = makeKfOptions(*this, options);
+    kfOptions.extensions.calibrator
+        .connect<&ActsExamples::MeasurementCalibrator::calibrate>(&calibrator);
     return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
-                      options, sSequence);
+                      kfOptions, sSequence);
   };
 };
 
 }  // namespace
 
 std::shared_ptr<ActsExamples::TrackFittingAlgorithm::TrackFitterFunction>
-ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
+ActsExamples::makeKalmanFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField) {
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+    bool multipleScattering, bool energyLoss,
+    double reverseFilteringMomThreshold) {
   Stepper stepper(std::move(magneticField));
   Acts::Navigator::Config cfg{trackingGeometry};
   cfg.resolvePassive = false;
@@ -79,13 +142,20 @@ ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
   Fitter trackFitter(std::move(propagator));
 
   // build the fitter functions. owns the fitter object.
-  return std::make_shared<TrackFitterFunctionImpl>(std::move(trackFitter));
+  auto fitterFunction = std::make_shared<TrackFitterFunctionImpl>(std::move(trackFitter));
+  fitterFunction->multipleScattering = multipleScattering;
+  fitterFunction->energyLoss = energyLoss;
+  fitterFunction->reverseFilteringMomThreshold = reverseFilteringMomThreshold;
+  
+  return fitterFunction;
 }
 
 std::shared_ptr<
     ActsExamples::TrackFittingAlgorithm::DirectedTrackFitterFunction>
-ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
-    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField) {
+ActsExamples::makeKalmanFitterFunction(
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+    bool multipleScattering, bool energyLoss,
+    double reverseFilteringMomThreshold) {
   // construct all components for the fitter
   Stepper stepper(std::move(magneticField));
   Acts::DirectNavigator navigator;
@@ -93,5 +163,11 @@ ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
   DirectFitter fitter(std::move(propagator));
 
   // build the fitter functions. owns the fitter object.
-  return std::make_shared<DirectedFitterFunctionImpl>(std::move(fitter));
+  auto fitterFunction =
+      std::make_shared<DirectedFitterFunctionImpl>(std::move(fitter));
+  fitterFunction->multipleScattering = multipleScattering;
+  fitterFunction->energyLoss = energyLoss;
+  fitterFunction->reverseFilteringMomThreshold = reverseFilteringMomThreshold;
+
+  return fitterFunction;
 }
