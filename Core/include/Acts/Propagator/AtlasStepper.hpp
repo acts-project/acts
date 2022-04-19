@@ -57,7 +57,7 @@ class AtlasStepper {
     template <typename Parameters>
     State(const GeometryContext& gctx,
           MagneticFieldProvider::Cache fieldCacheIn, const Parameters& pars,
-          NavigationDirection ndir = forward,
+          NavigationDirection ndir = NavigationDirection::Forward,
           double ssize = std::numeric_limits<double>::max(),
           double stolerance = s_onSurfaceTolerance)
         : navDir(ndir),
@@ -305,7 +305,7 @@ class AtlasStepper {
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
                   const SingleBoundTrackParameters<charge_t>& par,
-                  NavigationDirection ndir = forward,
+                  NavigationDirection ndir = NavigationDirection::Forward,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const {
     return State{gctx, m_bField->makeCache(mctx), par, ndir, ssize, stolerance};
@@ -321,7 +321,8 @@ class AtlasStepper {
   /// @param [in] stepSize Step size
   void resetState(
       State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
-      const Surface& surface, const NavigationDirection navDir = forward,
+      const Surface& surface,
+      const NavigationDirection navDir = NavigationDirection::Forward,
       const double stepSize = std::numeric_limits<double>::max()) const {
     // Update the stepping state
     update(state,

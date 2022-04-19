@@ -105,6 +105,7 @@ class Delegate<R(Args...)> {
 
     m_payload = instance;
     m_function = [](const void* payload, Args... args) -> return_type {
+      assert(payload != nullptr && "Payload is required, but not set");
       const auto* concretePayload = static_cast<const Type*>(payload);
       return std::invoke(Callable, concretePayload,
                          std::forward<Args>(args)...);
