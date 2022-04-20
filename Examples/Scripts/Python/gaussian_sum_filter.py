@@ -79,8 +79,8 @@ def runCKFTracks(
         level=acts.logging.INFO,
         ptMin=500 * u.MeV,
         nHitsMin=9,
-        inputParticles="particles_initial", #fatrasCfg.outputParticlesInitial,
-        inputMeasurementParticlesMap="measurement_particles_map", #digiCfg.outputMeasurementParticlesMap,
+        inputParticles="particles_initial",  # fatrasCfg.outputParticlesInitial,
+        inputMeasurementParticlesMap="measurement_particles_map",  # digiCfg.outputMeasurementParticlesMap,
         outputParticles="particles_seed_selected",
     )
     s.addAlgorithm(selAlg)
@@ -110,7 +110,7 @@ def runCKFTracks(
     truthTrkFndAlg = acts.examples.TruthTrackFinder(
         level=acts.logging.INFO,
         inputParticles=inputParticles,
-        inputMeasurementParticlesMap="measurement_particles_map", #digiCfg.outputMeasurementParticlesMap,
+        inputMeasurementParticlesMap="measurement_particles_map",  # digiCfg.outputMeasurementParticlesMap,
         outputProtoTracks="prototracks",
     )
     s.addAlgorithm(truthTrkFndAlg)
@@ -123,8 +123,8 @@ def runCKFTracks(
 
     gsfAlg = acts.examples.TrackFittingAlgorithm(
         level=acts.logging.INFO,
-        inputMeasurements="measurements", #digiCfg.outputMeasurements,
-        inputSourceLinks="sourcelinks", #digiCfg.outputSourceLinks,
+        inputMeasurements="measurements",  # digiCfg.outputMeasurements,
+        inputSourceLinks="sourcelinks",  # digiCfg.outputSourceLinks,
         inputProtoTracks=truthTrkFndAlg.config.outputProtoTracks,
         inputInitialTrackParameters=smearAlg.config.outputTrackParameters,
         outputTrajectories="gsf-trajectories",
