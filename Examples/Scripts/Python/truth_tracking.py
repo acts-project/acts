@@ -9,8 +9,8 @@ u = acts.UnitConstants
 
 
 def runTruthTracking(
-    trackingGeometry,
-    field,
+    trackingGeometry: acts.TrackingGeometry,
+    field: acts.MagneticFieldProvider,
     outputDir: Path,
     digiConfigFile: Path,
     directNavigation=False,
@@ -142,6 +142,12 @@ def runTruthTracking(
     else:
         inputProtoTracks = truthTrkFndAlg.config.outputProtoTracks
 
+    kalmanOptions = {
+        "multipleScattering": True,
+        "energyLoss": True,
+        "reverseFilteringMomThreshold": reverseFilteringMomThreshold,
+    }
+
     fitAlg = acts.examples.TrackFittingAlgorithm(
         level=acts.logging.INFO,
         inputMeasurements=digiAlg.config.outputMeasurements,
@@ -150,14 +156,13 @@ def runTruthTracking(
         inputInitialTrackParameters=smearAlg.config.outputTrackParameters,
         outputTrajectories="trajectories",
         directNavigation=directNavigation,
-        multipleScattering=True,
-        energyLoss=True,
         pickTrack=-1,
-        reverseFilteringMomThreshold=reverseFilteringMomThreshold,
         trackingGeometry=trackingGeometry,
-        dFit=acts.examples.TrackFittingAlgorithm.makeTrackFitterFunction(field),
-        fit=acts.examples.TrackFittingAlgorithm.makeTrackFitterFunction(
-            trackingGeometry, field
+        dFit=acts.examples.TrackFittingAlgorithm.makeKalmanFitterFunction(
+            field, **kalmanOptions
+        ),
+        fit=acts.examples.TrackFittingAlgorithm.makeKalmanFitterFunction(
+            trackingGeometry, field, **kalmanOptions
         ),
     )
     s.addAlgorithm(fitAlg)

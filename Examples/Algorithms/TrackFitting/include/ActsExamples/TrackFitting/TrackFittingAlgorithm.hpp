@@ -40,7 +40,7 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
     std::reference_wrapper<const Acts::GeometryContext> geoContext;
     std::reference_wrapper<const Acts::MagneticFieldContext> magFieldContext;
     std::reference_wrapper<const Acts::CalibrationContext> calibrationContext;
-    std::reference_wrapper<const MeasurementContainer> measurements;
+    std::reference_wrapper<const MeasurementCalibrator> calibrator;
     const Acts::Surface* referenceSurface = nullptr;
     Acts::LoggerWrapper logger;
   };
@@ -106,6 +106,32 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
+
+  /// Create the track fitter function implementation.
+  ///
+  /// The magnetic field is intentionally given by-value since the variant
+  /// contains shared_ptr anyways.
+  static std::shared_ptr<TrackFitterFunction> makeKalmanFitterFunction(
+      std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+      bool multipleScattering = true, bool energyLoss = true,
+      double reverseFilteringMomThreshold = 0.0);
+
+  static std::shared_ptr<DirectedTrackFitterFunction> makeKalmanFitterFunction(
+      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+      bool multipleScattering = true, bool energyLoss = true,
+      double reverseFilteringMomThreshold = 0.0);
+
+  static std::shared_ptr<TrackFitterFunction> makeGsfFitterFunction(
+      std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+      std::size_t maxComponents = 4, bool abortOnError = true,
+      bool disableAllMaterialHandling = false);
+
+  static std::shared_ptr<DirectedTrackFitterFunction> makeGsfFitterFunction(
+      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+      std::size_t maxComponents = 4, bool abortOnError = true,
+      bool disableAllMaterialHandling = false);
 
  private:
   /// Helper function to call correct FitterFunction

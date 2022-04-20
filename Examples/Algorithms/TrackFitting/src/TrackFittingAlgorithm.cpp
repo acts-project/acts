@@ -67,14 +67,15 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   // Construct a perigee surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
-  
+
+  // Measurement calibrator must be instantiated here, because we need the
+  // measurements to construct it. The other extensions are hold by the
+  // fit-function-object
+  ActsExamples::MeasurementCalibrator calibrator(measurements);
+
   GeneralFitterOptions options{
-    ctx.geoContext,
-    ctx.magFieldContext,
-    ctx.calibContext,
-    measurements,
-    &(*pSurface),
-    Acts::LoggerWrapper{logger()},
+      ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
+      calibrator,     &(*pSurface),        Acts::LoggerWrapper{logger()},
   };
 
   // Perform the fit for each input track

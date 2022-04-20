@@ -19,7 +19,6 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
-#include "ActsExamples/TrackFitting/TrackFittingFunctions.hpp"
 
 namespace {
 
@@ -45,7 +44,6 @@ template <typename TrackFitterFunktion>
 auto makeKfOptions(
     const TrackFitterFunktion& f,
     ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions options) {
-  // Set the KalmanFitter options
   Acts::KalmanFitterExtensions extensions;
   extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(
       &f.kfUpdater);
@@ -86,10 +84,10 @@ struct TrackFitterFunctionImpl
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options)
       const override {
-    ActsExamples::MeasurementCalibrator calibrator(options.measurements);
     auto kfOptions = makeKfOptions(*this, options);
     kfOptions.extensions.calibrator
-        .connect<&ActsExamples::MeasurementCalibrator::calibrate>(&calibrator);
+        .connect<&ActsExamples::MeasurementCalibrator::calibrate>(
+            &options.calibrator.get());
     return trackFitter.fit(sourceLinks.begin(), sourceLinks.end(),
                            initialParameters, kfOptions);
   };
@@ -115,10 +113,10 @@ struct DirectedFitterFunctionImpl
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
       const std::vector<const Acts::Surface*>& sSequence) const override {
-    ActsExamples::MeasurementCalibrator calibrator(options.measurements);
     auto kfOptions = makeKfOptions(*this, options);
     kfOptions.extensions.calibrator
-        .connect<&ActsExamples::MeasurementCalibrator::calibrate>(&calibrator);
+        .connect<&ActsExamples::MeasurementCalibrator::calibrate>(
+            &options.calibrator.get());
     return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
                       kfOptions, sSequence);
   };
@@ -127,7 +125,7 @@ struct DirectedFitterFunctionImpl
 }  // namespace
 
 std::shared_ptr<ActsExamples::TrackFittingAlgorithm::TrackFitterFunction>
-ActsExamples::makeKalmanFitterFunction(
+ActsExamples::TrackFittingAlgorithm::makeKalmanFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering, bool energyLoss,
@@ -142,17 +140,18 @@ ActsExamples::makeKalmanFitterFunction(
   Fitter trackFitter(std::move(propagator));
 
   // build the fitter functions. owns the fitter object.
-  auto fitterFunction = std::make_shared<TrackFitterFunctionImpl>(std::move(trackFitter));
+  auto fitterFunction =
+      std::make_shared<TrackFitterFunctionImpl>(std::move(trackFitter));
   fitterFunction->multipleScattering = multipleScattering;
   fitterFunction->energyLoss = energyLoss;
   fitterFunction->reverseFilteringMomThreshold = reverseFilteringMomThreshold;
-  
+
   return fitterFunction;
 }
 
 std::shared_ptr<
     ActsExamples::TrackFittingAlgorithm::DirectedTrackFitterFunction>
-ActsExamples::makeKalmanFitterFunction(
+ActsExamples::TrackFittingAlgorithm::makeKalmanFitterFunction(
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering, bool energyLoss,
     double reverseFilteringMomThreshold) {
