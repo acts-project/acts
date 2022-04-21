@@ -283,13 +283,15 @@ class StraightLineStepper {
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
   /// @param [in] transportCov Flag steering covariance transport
+  /// @param [in] globalToLocalCorrection Flag steering non-linearity correction during global to local transform
   ///
   /// @return A bound state:
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
   Result<BoundState> boundState(State& state, const Surface& surface,
-                                bool transportCov = true) const;
+                                bool transportCov = true,
+                                bool globalToLocalCorrection = false) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -342,9 +344,11 @@ class StraightLineStepper {
   /// @param [in,out] state The stepper state
   /// @param [in] surface is the surface to which the covariance is
   ///        forwarded to
+  /// @param [in] globalToLocalCorrection Flag steering non-linearity correction during global to local transform
   /// @note no check is done if the position is actually on the surface
   ///
-  void transportCovarianceToBound(State& state, const Surface& surface) const;
+  void transportCovarianceToBound(State& state, const Surface& surface,
+                                  bool globalToLocalCorrection = false) const;
 
   /// Perform a straight line propagation step
   ///

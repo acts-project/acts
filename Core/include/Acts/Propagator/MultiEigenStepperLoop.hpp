@@ -430,11 +430,12 @@ class MultiEigenStepperLoop
           cmp.state, state.navigation, state.options, state.geoContext);
     }
 
-    Result<BoundState> boundState(const Surface& surface, bool transportCov) {
-      return detail::boundState(all_state.geoContext, cov(), jacobian(),
-                                jacTransport(), derivative(), jacToGlobal(),
-                                pars(), all_state.covTransport && transportCov,
-                                cmp.state.pathAccumulated, surface);
+    Result<BoundState> boundState(const Surface& surface, bool transportCov,
+                                  bool globalToLocalCorrection) {
+      return detail::boundState(
+          all_state.geoContext, cov(), jacobian(), jacTransport(), derivative(),
+          jacToGlobal(), pars(), all_state.covTransport && transportCov,
+          cmp.state.pathAccumulated, surface, globalToLocalCorrection);
     }
 
     void update(const FreeVector& freeParams, const BoundVector& boundParams,
@@ -761,13 +762,15 @@ class MultiEigenStepperLoop
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
   /// @param [in] transportCov Flag steering covariance transport
+  /// @param [in] globalToLocalCorrection Flag steering non-linear correction during global to local correction
   ///
   /// @return A bound state:
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
   Result<BoundState> boundState(State& state, const Surface& surface,
-                                bool transportCov = true) const;
+                                bool transportCov = true,
+                                bool globalToLocalCorrection = false) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -805,11 +808,14 @@ class MultiEigenStepperLoop
   ///
   /// @param [in,out] state State of the stepper
   /// @param [in] surface is the surface to which the covariance is forwarded
+  /// @param [in] globalToLocalCorrection Flag steering non-linear correction during global to local correction
   /// to
   /// @note no check is done if the position is actually on the surface
-  void transportCovarianceToBound(State& state, const Surface& surface) const {
+  void transportCovarianceToBound(State& state, const Surface& surface,
+                                  bool globalToLocalCorrection = false) const {
     for (auto& component : state.components) {
-      SingleStepper::transportCovarianceToBound(component.state, surface);
+      SingleStepper::transportCovarianceToBound(component.state, surface,
+                                                globalToLocalCorrection);
     }
   }
 

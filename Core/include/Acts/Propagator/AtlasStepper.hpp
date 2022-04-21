@@ -580,13 +580,15 @@ class AtlasStepper {
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
   /// @param [in] transportCov Flag steering covariance transport
+  /// @param [in] globalToLocalCorrection Flag steering non-linearity correction during global to local transform
   ///
   /// @return A bound state:
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it
   ///   - and the path length (from start - for ordering)
   Result<BoundState> boundState(State& state, const Surface& surface,
-                                bool transportCov = true) const {
+                                bool transportCov = true,
+                                bool globalToLocalCorrection = false) const {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
     // extract state information
@@ -604,7 +606,7 @@ class AtlasStepper {
     // The transport of the covariance
     std::optional<Covariance> covOpt = std::nullopt;
     if (state.covTransport && transportCov) {
-      transportCovarianceToBound(state, surface);
+      transportCovarianceToBound(state, surface, globalToLocalCorrection);
     }
     if (state.cov != Covariance::Zero()) {
       covOpt = state.cov;
@@ -871,7 +873,10 @@ class AtlasStepper {
   ///
   /// @param [in,out] state State of the stepper
   /// @param [in] surface is the surface to which the covariance is forwarded to
-  void transportCovarianceToBound(State& state, const Surface& surface) const {
+  /// @param [in] globalToLocalCorrection Flag steering non-linearity correction during global to local transform (@todo to make it work)
+  void transportCovarianceToBound(
+      State& state, const Surface& surface,
+      bool /*globalToLocalCorrection*/ = false) const {
     Acts::Vector3 gp(state.pVector[0], state.pVector[1], state.pVector[2]);
     Acts::Vector3 mom(state.pVector[4], state.pVector[5], state.pVector[6]);
     mom /= std::abs(state.pVector[7]);
