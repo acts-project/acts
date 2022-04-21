@@ -92,6 +92,8 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
     bool multipleScattering = true;
     /// Some more detailed steering - correct for e-loss
     bool energyLoss = true;
+    /// Whether to correct for non-linear effects during global to local transformation
+    bool globalToLocalCorrection = false; 
     /// Pick a single track for debugging (-1 process all tracks)
     int pickTrack = -1;
     /// Switch to fully-fledged backwards filtering below this pt value
