@@ -165,6 +165,7 @@ STRIP_FROM_INC_PATH    = ../Core/include \
                          ../Fatras/include \
                          ../Plugins/DD4hep/include \
                          ../Plugins/Geant4/include \
+                         ../Plugins/Identification/include \
                          ../Plugins/Json/include \
                          ../Plugins/Legacy/include \
                          ../Plugins/TGeo/include
@@ -777,7 +778,7 @@ INPUT                  = ../Core/include \
                          ../Plugins/Cuda/include \
                          ../Plugins/DD4hep/include \
                          ../Plugins/Digitization/include \
-                         ../Identification/include \
+                         ../Plugins/Identification/include \
                          ../Plugins/Json/include \
                          ../Plugins/Legacy/include \
                          ../Plugins/Onnx/include \

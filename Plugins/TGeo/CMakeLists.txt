@@ -13,7 +13,7 @@ target_include_directories(
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(
   ActsPluginTGeo
-  PUBLIC ActsCore ROOT::Geom)
+  PUBLIC ActsCore ActsPluginIdentification ROOT::Geom)
 
 install(
   TARGETS ActsPluginTGeo

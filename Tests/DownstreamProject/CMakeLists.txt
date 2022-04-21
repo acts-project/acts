@@ -10,6 +10,7 @@ find_package(
     Fatras
     PluginAutodiff
     PluginDD4hep
+    PluginIdentification
     PluginJson
     PluginLegacy
     PluginTGeo)
@@ -28,6 +29,7 @@ target_link_libraries(
     ActsCore
     ActsFatras
     ActsPluginDD4hep
+    ActsPluginIdentification
     ActsPluginJson
     ActsPluginLegacy
     ActsPluginTGeo)

@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Identification/Identifier.hpp"
+#include "Acts/Plugins/Identification/Identifier.hpp"
 
 class TGeoNode;
 

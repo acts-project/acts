@@ -9,7 +9,7 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesDetectorTGeo
   PUBLIC
-    ActsCore ActsPluginTGeo ActsPluginJson
+    ActsCore ActsPluginIdentification ActsPluginTGeo ActsPluginJson
     ActsExamplesFramework ActsExamplesDetectorsCommon
     ActsExamplesDetectorGeneric)
 
