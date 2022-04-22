@@ -30,7 +30,7 @@ namespace detail {
 /// @param lastTrackIndex The parent index for the new state in the MT
 /// @param doCovTransport Wether to perform a covariance transport when
 /// computing the bound state or not
-/// @param globalToLocalCorrection Wether to perform non-linear correction when
+/// @param doFreeToBoundCorrection Wether to perform non-linear correction when
 /// transforming from global to local track parameters (correction is performed
 /// only when performing CovTransport)
 template <typename propagator_state_t, typename stepper_t,
@@ -42,13 +42,13 @@ auto kalmanHandleMeasurement(propagator_state_t &state,
                              const SourceLink &source_link,
                              MultiTrajectory &fittedStates,
                              const size_t lastTrackIndex, bool doCovTransport,
-                             bool globalToLocalCorrection = false)
+                             bool doFreeToBoundCorrection = false)
     -> Result<MultiTrajectory::TrackStateProxy> {
   const auto &logger = state.options.logger;
 
   // Bind the transported state to the current surface
   auto res = stepper.boundState(state.stepping, surface, doCovTransport,
-                                globalToLocalCorrection);
+                                doFreeToBoundCorrection);
   if (!res.ok()) {
     return res.error();
   }
@@ -125,7 +125,7 @@ auto kalmanHandleMeasurement(propagator_state_t &state,
 /// @param lastTrackIndex The parent index for the new state in the MT
 /// @param doCovTransport Wether to perform a covariance transport when
 /// computing the bound state or not
-/// @param globalToLocalCorrection Wether to perform non-linear correction when
+/// @param doFreeToBoundCorrection Wether to perform non-linear correction when
 /// transforming from global to local track parameters (correction is performed
 /// only when performing CovTransport)
 template <typename propagator_state_t, typename stepper_t>
@@ -133,7 +133,7 @@ auto kalmanHandleNoMeasurement(propagator_state_t &state,
                                const stepper_t &stepper, const Surface &surface,
                                MultiTrajectory &fittedStates,
                                const size_t lastTrackIndex, bool doCovTransport,
-                               bool globalToLocalCorrection = false)
+                               bool doFreeToBoundCorrection = false)
     -> Result<MultiTrajectory::TrackStateProxy> {
   const auto &logger = state.options.logger;
 
@@ -167,7 +167,7 @@ auto kalmanHandleNoMeasurement(propagator_state_t &state,
 
   // Transport & bind the state to the current surface
   auto res = stepper.boundState(state.stepping, surface, doCovTransport,
-                                globalToLocalCorrection);
+                                doFreeToBoundCorrection);
   if (!res.ok()) {
     ACTS_ERROR("Propagate to surface " << surface.geometryId()
                                        << " failed: " << res.error());

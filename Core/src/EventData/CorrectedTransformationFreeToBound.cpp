@@ -11,8 +11,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 /// Get the non-linearity corrected bound parameters and its covariance
-std::optional<std::tuple<Acts::BoundVector, Acts::BoundSymMatrix,
-                         Acts::BoundToFreeMatrix>>
+std::optional<std::tuple<Acts::BoundVector, Acts::BoundSymMatrix>>
 Acts::detail::CorrectedFreeToBoundTransformer::operator()(
     const Acts::FreeVector& freeParams,
     const Acts::FreeSymMatrix& freeCovariance, const Acts::Surface& surface,
@@ -20,9 +19,11 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   // Get the incidence angle
   Vector3 dir = freeParams.segment<3>(eFreeDir0);
   Vector3 normal = surface.normal(geoContext);
-  ActsScalar incidenceAng = dir.dot(normal);
-  // No correction if the incidentAngle is small enough
-  if (abs(incidenceAng) > std::cos(incidentAngleCutoff)) {
+  ActsScalar absCosIncidenceAng = std::abs(dir.dot(normal));
+  // No correction if the incidentAngle is small enough (not necessary ) or too
+  // large (correction could be invalid).
+  if (absCosIncidenceAng < cosIncidentAngleMinCutoff or
+      absCosIncidenceAng > cosIncidentAngleMaxCutoff) {
     return std::nullopt;
   }
 
@@ -74,8 +75,6 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   BoundVector bpMean = BoundVector::Zero();
   // Initialize the bound covariance
   BoundSymMatrix bv = BoundSymMatrix::Zero();
-  // Initialize the correlation matrix
-  BoundToFreeMatrix cross = BoundToFreeMatrix::Zero();
 
   // The transformed bound parameters
   std::vector<std::pair<BoundVector, ActsScalar>> transformedBoundParams;
@@ -122,15 +121,12 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   }
 
   // Get the weighted bound covariance
-  for (unsigned int isample = 0; isample < sampleSize; ++isample) {
-    FreeVector fSigma = std::get<0>(sampledFreeParams[isample]) - freeParams;
+  for (unsigned isample = 0; isample < sampleSize; ++isample) {
     BoundVector bSigma = transformedBoundParams[isample].first - bpMean;
 
     bv = bv +
          transformedBoundParams[isample].second * bSigma * bSigma.transpose();
-    cross = cross + transformedBoundParams[isample].second * fSigma *
-                        bSigma.transpose();
   }
 
-  return std::make_tuple(bpMean, bv, cross);
+  return std::make_tuple(bpMean, bv);
 }

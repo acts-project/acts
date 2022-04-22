@@ -127,7 +127,7 @@ struct KalmanFitterOptions {
         energyLoss(eLoss),
         reversedFiltering(rFiltering),
         reversedFilteringCovarianceScaling(rfScaling),
-        globalToLocalCorrection(gToLCorrection),
+        freeToBoundCorrection(gToLCorrection),
 
         logger(logger_) {}
   /// Contexts are required and the options must not be default-constructible.
@@ -166,7 +166,7 @@ struct KalmanFitterOptions {
 
   /// Whether to include non-linear correction during global to local
   /// transformation
-  bool globalToLocalCorrection = false;
+  bool freeToBoundCorrection = false;
 
   /// Logger
   LoggerWrapper logger;
@@ -295,7 +295,7 @@ class KalmanFitter {
 
     /// Whether to include non-linear correction during global to local
     /// transformation
-    bool globalToLocalCorrection = false;
+    bool freeToBoundCorrection = false;
 
     /// @brief Kalman actor operation
     ///
@@ -425,7 +425,7 @@ class KalmanFitter {
           ACTS_VERBOSE("Completing with fitted track parameter");
           // Transport & bind the parameter to the final surface
           auto res = stepper.boundState(state.stepping, *targetSurface, true,
-                                        globalToLocalCorrection);
+                                        freeToBoundCorrection);
           if (!res.ok()) {
             ACTS_ERROR("Error in " << direction << " filter: " << res.error());
             result.result = res.error();
@@ -543,7 +543,7 @@ class KalmanFitter {
                                             << " detected.");
         // Transport the covariance to the surface
         stepper.transportCovarianceToBound(state.stepping, *surface,
-                                           globalToLocalCorrection);
+                                           freeToBoundCorrection);
 
         // Update state and stepper with pre material effects
         materialInteractor(surface, state, stepper,
@@ -599,7 +599,7 @@ class KalmanFitter {
             surface->surfaceMaterial() != nullptr) {
           auto trackStateProxyRes = detail::kalmanHandleNoMeasurement(
               state, stepper, *surface, result.fittedStates,
-              result.lastTrackIndex, true, globalToLocalCorrection);
+              result.lastTrackIndex, true, freeToBoundCorrection);
 
           if (!trackStateProxyRes.ok()) {
             return trackStateProxyRes.error();
@@ -656,7 +656,7 @@ class KalmanFitter {
 
         // Transport the covariance to the surface
         stepper.transportCovarianceToBound(state.stepping, *surface,
-                                           globalToLocalCorrection);
+                                           freeToBoundCorrection);
 
         // Update state and stepper with pre material effects
         materialInteractor(surface, state, stepper,
@@ -1034,8 +1034,8 @@ class KalmanFitter {
     kalmanActor.reversedFiltering = kfOptions.reversedFiltering;
     kalmanActor.reversedFilteringCovarianceScaling =
         kfOptions.reversedFilteringCovarianceScaling;
-    kalmanActor.globalToLocalCorrection =
-        std::move(kfOptions.globalToLocalCorrection);
+    kalmanActor.freeToBoundCorrection =
+        std::move(kfOptions.freeToBoundCorrection);
     kalmanActor.extensions = std::move(kfOptions.extensions);
 
     // Run the fitter

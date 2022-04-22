@@ -262,7 +262,7 @@ Result<BoundState> boundState(
     BoundMatrix& jacobian, FreeMatrix& transportJacobian,
     FreeVector& derivatives, BoundToFreeMatrix& boundToFreeJacobian,
     FreeVector& parameters, bool covTransport, double accumulatedPath,
-    const Surface& surface, bool globalToLocalCorrection) {
+    const Surface& surface, bool doFreeToBoundCorrection) {
   // Covariance transport
   std::optional<BoundSymMatrix> cov = std::nullopt;
   if (covTransport) {
@@ -273,7 +273,7 @@ Result<BoundState> boundState(
     // boundToFreeJacobian
     transportCovarianceToBound(
         geoContext, covarianceMatrix, jacobian, transportJacobian, derivatives,
-        boundToFreeJacobian, parameters, surface, globalToLocalCorrection);
+        boundToFreeJacobian, parameters, surface, doFreeToBoundCorrection);
   }
   if (covarianceMatrix != BoundSymMatrix::Zero()) {
     cov = covarianceMatrix;
@@ -334,7 +334,7 @@ void transportCovarianceToBound(
     BoundMatrix& fullTransportJacobian, FreeMatrix& freeTransportJacobian,
     FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
     FreeVector& freeParameters, const Surface& surface,
-    bool globalToLocalCorrection) {
+    bool doFreeToBoundCorrection) {
   // Calculate the full jacobian from local parameters at the start surface to
   // current bound parameters
   boundToBoundJacobian(geoContext, freeParameters, boundToFreeJacobian,
@@ -342,7 +342,7 @@ void transportCovarianceToBound(
                        fullTransportJacobian, surface);
 
   bool correction = false;
-  if (globalToLocalCorrection) {
+  if (doFreeToBoundCorrection) {
     BoundToFreeMatrix startBoundToFinalFreeJacobian =
         freeTransportJacobian * boundToFreeJacobian;
     FreeSymMatrix freeCovariance = startBoundToFinalFreeJacobian *
@@ -355,13 +355,13 @@ void transportCovarianceToBound(
 
     if (correctedRes.has_value()) {
       auto correctedValue = correctedRes.value();
-      BoundVector boundParams = std::get<0>(correctedValue);
+      BoundVector boundParams = std::get<BoundVector>(correctedValue);
       // 1. Update the free parameters with the corrected bound parameters
       freeParameters = detail::transformBoundToFreeParameters(
           surface, geoContext, boundParams);
 
       // 2. Update the bound covariance
-      boundCovariance = std::get<1>(correctedValue);
+      boundCovariance = std::get<BoundSymMatrix>(correctedValue);
 
       correction = true;
     }

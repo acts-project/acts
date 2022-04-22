@@ -22,14 +22,19 @@ struct CorrectedFreeToBoundTransformer {
   ActsScalar alpha = 0.1;
   ActsScalar beta = 2;
 
-  // The incident angle cutoff for correction
-  ActsScalar incidentAngleCutoff = 0.1;
+  // The maximum incident angle (i.e. mininum cos incident angle) cutoff for
+  // correction
+  ActsScalar cosIncidentAngleMinCutoff = 1e-5;
+
+  // The minimum incident angle (i.e. mininum cos incident angle) cutoff for
+  // correction cos(0.1) = 0.99500417
+  ActsScalar cosIncidentAngleMaxCutoff = 0.99500417;
 
   /// Get the non-linearity corrected bound parameters and its covariance
-  std::optional<std::tuple<BoundVector, BoundSymMatrix, BoundToFreeMatrix>>
-  operator()(const FreeVector& freeParams, const FreeSymMatrix& freeCovariance,
-             const Surface& surface, const GeometryContext& geoContext,
-             NavigationDirection navDir = NavigationDirection::Forward);
+  std::optional<std::tuple<BoundVector, BoundSymMatrix>> operator()(
+      const FreeVector& freeParams, const FreeSymMatrix& freeCovariance,
+      const Surface& surface, const GeometryContext& geoContext,
+      NavigationDirection navDir = NavigationDirection::Forward);
 };
 
 }  // namespace detail

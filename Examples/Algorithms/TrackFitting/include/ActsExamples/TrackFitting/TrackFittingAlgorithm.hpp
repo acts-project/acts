@@ -94,7 +94,7 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
     bool energyLoss = true;
     /// Whether to correct for non-linear effects during global to local
     /// transformation
-    bool globalToLocalCorrection = false;
+    bool freeToBoundCorrection = false;
     /// Pick a single track for debugging (-1 process all tracks)
     int pickTrack = -1;
     /// Switch to fully-fledged backwards filtering below this pt value

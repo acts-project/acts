@@ -103,6 +103,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
   kfOptions.multipleScattering = m_cfg.multipleScattering;
   kfOptions.energyLoss = m_cfg.energyLoss;
+  kfOptions.freeToBoundCorrection = m_cfg.freeToBoundCorrection;
 
   // Perform the fit for each input track
   std::vector<std::reference_wrapper<const IndexSourceLink>> trackSourceLinks;
