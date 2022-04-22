@@ -259,7 +259,7 @@ class MultiEigenStepperLoop
         const GeometryContext& gctx, const MagneticFieldContext& mctx,
         const std::shared_ptr<const MagneticFieldProvider>& bfield,
         const MultiComponentBoundTrackParameters<charge_t>& multipars,
-        NavigationDirection ndir = forward,
+        NavigationDirection ndir = NavigationDirection::Forward,
         double ssize = std::numeric_limits<double>::max(),
         double stolerance = s_onSurfaceTolerance)
         : navDir(ndir), geoContext(gctx), magContext(mctx) {
@@ -290,7 +290,7 @@ class MultiEigenStepperLoop
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
                   const MultiComponentBoundTrackParameters<charge_t>& par,
-                  NavigationDirection ndir = forward,
+                  NavigationDirection ndir = NavigationDirection::Forward,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const {
     return State(gctx, mctx, SingleStepper::m_bField, par, ndir, ssize,
@@ -307,7 +307,8 @@ class MultiEigenStepperLoop
   /// @param [in] stepSize Step size
   void resetState(
       State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
-      const Surface& surface, const NavigationDirection navDir = forward,
+      const Surface& surface,
+      const NavigationDirection navDir = NavigationDirection::Forward,
       const double stepSize = std::numeric_limits<double>::max()) const {
     for (auto& component : state.components) {
       SingleStepper::resetState(component.state, boundParams, cov, surface,
@@ -451,17 +452,26 @@ class MultiEigenStepperLoop
   /// proxy internally holding a reference
   auto componentIterable(State& state) const {
     struct Iterator {
+      using difference_type = std::ptrdiff_t;
+      using value_type = ComponentProxy;
+      using reference = ComponentProxy;
+      using pointer = void;
+      using iterator_category = std::forward_iterator_tag;
+
       typename decltype(state.components)::iterator it;
       const State& s;
 
       // clang-format off
       auto& operator++() { ++it; return *this; }
       auto operator!=(const Iterator& other) const { return it != other.it; }
+      auto operator==(const Iterator& other) const { return it == other.it; }
       auto operator*() const { return ComponentProxy(*it, s); }
       // clang-format on
     };
 
     struct Iterable {
+      using iterator = Iterator;
+
       State& s;
 
       // clang-format off
@@ -479,17 +489,25 @@ class MultiEigenStepperLoop
   /// proxy internally holding a reference
   auto constComponentIterable(const State& state) const {
     struct ConstIterator {
+      using difference_type = std::ptrdiff_t;
+      using value_type = ConstComponentProxy;
+      using reference = ConstComponentProxy;
+      using pointer = void;
+      using iterator_category = std::forward_iterator_tag;
+
       typename decltype(state.components)::const_iterator it;
       const State& s;
 
       // clang-format off
       auto& operator++() { ++it; return *this; }
       auto operator!=(const ConstIterator& other) const { return it != other.it; }
+      auto operator==(const ConstIterator& other) const { return it == other.it; }
       auto operator*() const { return ConstComponentProxy{*it}; }
       // clang-format on
     };
 
     struct Iterable {
+      using iterator = ConstIterator;
       const State& s;
 
       // clang-format off

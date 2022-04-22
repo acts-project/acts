@@ -160,7 +160,7 @@ def test_seeding(tmp_path, trk_geo, field, assert_root_hash):
             0,
         ),
         (
-            "evgen_particles.root",
+            "particles.root",
             "particles",
             seq.config.events,
         ),
@@ -195,10 +195,82 @@ def test_seeding(tmp_path, trk_geo, field, assert_root_hash):
             assert_entries(fp, tn, exp_entries)
             assert_root_hash(fn, fp)
 
-    assert_csv_output(csv, "evgen_particles")
-    assert_csv_output(csv, "evgen_particles")
-    assert_csv_output(csv, "fatras_particles_final")
-    assert_csv_output(csv, "fatras_particles_initial")
+    assert_csv_output(csv, "particles")
+    assert_csv_output(csv, "particles_final")
+    assert_csv_output(csv, "particles_initial")
+
+
+def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
+    from seeding import runSeeding, SeedingAlgorithm
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
+
+    csv = tmp_path / "csv"
+    csv.mkdir()
+
+    seq = Sequencer(events=10, numThreads=1)
+
+    root_files = [
+        (
+            "estimatedparams.root",
+            "estimatedparams",
+            309,
+        ),
+        (
+            "performance_seeding_trees.root",
+            "track_finder_tracks",
+            309,
+        ),
+        (
+            "performance_seeding_hists.root",
+            None,
+            0,
+        ),
+        (
+            "particles.root",
+            "particles",
+            seq.config.events,
+        ),
+        (
+            "fatras_particles_final.root",
+            "particles",
+            seq.config.events,
+        ),
+        (
+            "fatras_particles_initial.root",
+            "particles",
+            seq.config.events,
+        ),
+    ]
+
+    for fn, _, _ in root_files:
+        fp = tmp_path / fn
+        assert not fp.exists()
+
+    assert len(list(csv.iterdir())) == 0
+
+    runSeeding(
+        trk_geo,
+        field,
+        outputDir=str(tmp_path),
+        s=seq,
+        seedingAlgorithm=SeedingAlgorithm.Orthogonal,
+    ).run()
+
+    del seq
+
+    for fn, tn, exp_entries in root_files:
+        fp = tmp_path / fn
+        assert fp.exists()
+        assert fp.stat().st_size > 100
+
+        if tn is not None:
+            assert_entries(fp, tn, exp_entries)
+            assert_root_hash(fn, fp)
+
+    assert_csv_output(csv, "particles")
+    assert_csv_output(csv, "particles_final")
+    assert_csv_output(csv, "particles_initial")
 
 
 def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
@@ -704,47 +776,85 @@ def test_digitization_config_example(trk_geo, tmp_path):
     assert len(data["entries"]) == 27
 
 
-def test_ckf_tracks_example_full_seeding(tmp_path, assert_root_hash):
+@pytest.mark.parametrize(
+    "detector",
+    [
+        "generic",
+        "odd",
+    ],
+)
+@pytest.mark.parametrize(
+    "truthSmeared,truthEstimated",
+    [
+        [False, False],
+        [False, True],
+        [True, False],
+    ],
+    ids=["full_seeding", "truth_estimated", "truth_smeared"],
+)
+def test_ckf_tracks_example(
+    tmp_path, assert_root_hash, truthSmeared, truthEstimated, detector
+):
     csv = tmp_path / "csv"
 
     assert not csv.exists()
 
-    # the example as written is only compatible with the generic detector
-    detector, trackingGeometry, decorators = GenericDetector.create()
+    srcdir = Path(__file__).resolve().parent.parent.parent.parent
+    if detector == "generic":
+        detector, trackingGeometry, decorators = GenericDetector.create()
+        geometrySelection = (
+            srcdir
+            / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+        )
+        digiConfigFile = (
+            srcdir
+            / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+        )
+    elif detector == "odd":
+
+        matDeco = acts.IMaterialDecorator.fromFile(
+            srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
+            level=acts.logging.INFO,
+        )
+        detector, trackingGeometry, decorators = getOpenDataDetector(matDeco)
+        digiConfigFile = (
+            srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
+        )
+        geometrySelection = (
+            srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json"
+        )
+
+    else:
+        raise ValueError(f"Invalid detector {detector}")
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-    events = 10
+    events = 100
     s = Sequencer(events=events, numThreads=1)  # Digitization is not thread-safe
 
     root_files = [
         (
             "performance_ckf.root",
             None,
-            None,
-        ),
-        (
-            "performance_seeding_trees.root",
-            "track_finder_tracks",
-            368,
-        ),
-        (
-            "performance_seeding_trees.root",
-            "track_finder_particles",
-            80,
         ),
         (
             "trackstates_ckf.root",
             "trackstates",
-            368,
         ),
         (
             "tracksummary_ckf.root",
             "tracksummary",
-            10,
         ),
     ]
 
-    for rf, _, _ in root_files:
+    if not truthSmeared:
+        root_files += [
+            (
+                "performance_seeding_trees.root",
+                "track_finder_tracks",
+            ),
+        ]
+
+    for rf, _ in root_files:
         assert not (tmp_path / rf).exists()
 
     from ckf_tracks import runCKFTracks
@@ -753,18 +863,12 @@ def test_ckf_tracks_example_full_seeding(tmp_path, assert_root_hash):
         trackingGeometry,
         decorators,
         field=field,
-        geometrySelection=Path(
-            Path(__file__).parent.parent.parent.parent
-            / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
-        ),
-        digiConfigFile=Path(
-            Path(__file__).parent.parent.parent.parent
-            / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-        ),
         outputCsv=True,
         outputDir=tmp_path,
-        truthSmearedSeeded=False,
-        truthEstimatedSeeded=False,
+        geometrySelection=geometrySelection,
+        digiConfigFile=digiConfigFile,
+        truthSmearedSeeded=truthSmeared,
+        truthEstimatedSeeded=truthEstimated,
         s=s,
     )
     s.run()
@@ -772,149 +876,10 @@ def test_ckf_tracks_example_full_seeding(tmp_path, assert_root_hash):
     del s  # files are closed in destructors, not great
 
     assert csv.exists()
-    for rf, tn, nume in root_files:
+    for rf, tn in root_files:
         rp = tmp_path / rf
         assert rp.exists()
-        if tn is not None and nume is not None:
-            assert_entries(rp, tn, nume)
-            assert_root_hash(rf, rp)
-
-    assert len([f for f in csv.iterdir() if f.name.endswith("CKFtracks.csv")]) == events
-    assert all([f.stat().st_size > 300 for f in csv.iterdir()])
-
-
-def test_ckf_tracks_example_truth_estimate(tmp_path, assert_root_hash):
-    # the example as written is only compatible with the generic detector
-    detector, trackingGeometry, decorators = GenericDetector.create()
-
-    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-    events = 10
-    s = Sequencer(events=events, numThreads=1)  # Digitization is not thread-safe
-
-    root_files = [
-        ("performance_ckf.root", None, None),
-        (
-            "performance_seeding_trees.root",
-            "track_finder_tracks",
-            80,
-        ),
-        (
-            "performance_seeding_trees.root",
-            "track_finder_particles",
-            80,
-        ),
-        (
-            "trackstates_ckf.root",
-            "trackstates",
-            80,
-        ),
-        (
-            "tracksummary_ckf.root",
-            "tracksummary",
-            10,
-        ),
-    ]
-
-    csv = tmp_path / "csv"
-
-    assert not csv.exists()
-    for rf, _, _ in root_files:
-        assert not (tmp_path / rf).exists()
-
-    from ckf_tracks import runCKFTracks
-
-    runCKFTracks(
-        trackingGeometry,
-        decorators,
-        field=field,
-        geometrySelection=Path(
-            Path(__file__).parent.parent.parent.parent
-            / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
-        ),
-        digiConfigFile=Path(
-            Path(__file__).parent.parent.parent.parent
-            / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-        ),
-        outputCsv=True,
-        outputDir=tmp_path,
-        truthSmearedSeeded=False,
-        truthEstimatedSeeded=True,
-        s=s,
-    )
-    s.run()
-
-    del s  # files are closed in destructors, not great
-
-    assert csv.exists()
-    for rf, tn, nume in root_files:
-        rp = tmp_path / rf
-        assert rp.exists()
-        if tn is not None and nume is not None:
-            assert_entries(rp, tn, nume)
-            assert_root_hash(rf, rp)
-
-    assert len([f for f in csv.iterdir() if f.name.endswith("CKFtracks.csv")]) == events
-    assert all([f.stat().st_size > 100 for f in csv.iterdir()])
-
-
-def test_ckf_tracks_example_truth_smeared(tmp_path, assert_root_hash):
-    # the example as written is only compatible with the generic detector
-    detector, trackingGeometry, decorators = GenericDetector.create()
-
-    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-    events = 10
-    s = Sequencer(events=events, numThreads=1)  # Digitization is not thread-safe
-
-    root_files = [
-        ("performance_ckf.root", None, None),
-        (
-            "trackstates_ckf.root",
-            "trackstates",
-            80,
-        ),
-        (
-            "tracksummary_ckf.root",
-            "tracksummary",
-            10,
-        ),
-    ]
-
-    csv = tmp_path / "csv"
-
-    assert not csv.exists()
-    for rf, _, _ in root_files:
-        assert not (tmp_path / rf).exists()
-
-    from ckf_tracks import runCKFTracks
-
-    runCKFTracks(
-        trackingGeometry,
-        decorators,
-        field=field,
-        geometrySelection=Path(
-            Path(__file__).parent.parent.parent.parent
-            / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
-        ),
-        digiConfigFile=Path(
-            Path(__file__).parent.parent.parent.parent
-            / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-        ),
-        outputCsv=True,
-        outputDir=tmp_path,
-        truthSmearedSeeded=True,
-        truthEstimatedSeeded=False,
-        s=s,
-    )
-    s.run()
-
-    del s  # files are closed in destructors, not great
-
-    assert csv.exists()
-    for rf, tn, nume in root_files:
-        rp = tmp_path / rf
-        assert rp.exists()
-        if tn is not None and nume is not None:
-            assert_entries(rp, tn, nume)
+        if tn is not None:
             assert_root_hash(rf, rp)
 
     assert len([f for f in csv.iterdir() if f.name.endswith("CKFtracks.csv")]) == events
@@ -923,7 +888,7 @@ def test_ckf_tracks_example_truth_smeared(tmp_path, assert_root_hash):
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.slow
-# @pytest.mark.filterwarnings("ignore::UserWarning")
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_vertex_fitting(tmp_path):
     detector, trackingGeometry, decorators = getOpenDataDetector()
 
@@ -936,7 +901,7 @@ def test_vertex_fitting(tmp_path):
     runVertexFitting(
         field,
         vertexFinder=VertexFinder.Truth,
-        outputDir=Path.cwd(),
+        outputDir=tmp_path,
         s=s,
     )
 
@@ -982,7 +947,8 @@ def test_vertex_fitting_reading(
             trackingGeometry,
             field,
             digiConfigFile=Path(
-                "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+                Path(__file__).parent.parent.parent.parent
+                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
             ),
             outputDir=tmp_path,
             s=s2,

@@ -1,4 +1,4 @@
-import inspect
+import sys, inspect
 
 from acts.ActsPythonBindings._examples import *
 from acts import ActsPythonBindings
@@ -123,3 +123,109 @@ def _process_volume_intervals(kwargs):
 
 
 _patchKwargsConstructor(TGeoDetector.Config.Volume, proc=_process_volume_intervals)
+
+
+def NamedTypeArgs(**namedTypeArgs):
+    """Decorator to move args of a named type (eg. `namedtuple` or `Enum`) to kwargs based on type, so user doesn't need to specify the key name.
+    Also allows the keyword argument to be converted from a built-in type (eg. `tuple` or `int`)."""
+
+    namedTypeClasses = {c: a for a, c in namedTypeArgs.items()}
+
+    def NamedTypeArgsDecorator(func):
+        from functools import wraps
+
+        @wraps(func)
+        def NamedTypeArgsWrapper(*args, **kwargs):
+            from collections.abc import Iterable
+
+            for k, v in kwargs.items():
+                cls = namedTypeArgs.get(k)
+                if cls is not None and v.__class__.__module__ == int.__module__:
+                    if issubclass(cls, Iterable):
+                        kwargs[k] = cls(*v)
+                    else:
+                        kwargs[k] = cls(v)
+
+            newargs = []
+            for a in args:
+                k = namedTypeClasses.get(type(a))
+                if k is None:
+                    newargs.append(a)
+                elif k in kwargs:
+                    raise KeyError(k)
+                else:
+                    kwargs[k] = a
+            return func(*newargs, **kwargs)
+
+        return NamedTypeArgsWrapper
+
+    return NamedTypeArgsDecorator
+
+
+def defaultKWArgs(**kwargs) -> dict:
+    """Removes keyword arguments that are None or a list of all None (eg. [None,None]).
+    This keeps the called function's defaults."""
+    from collections.abc import Iterable
+
+    return {
+        k: v
+        for k, v in kwargs.items()
+        if not (
+            v is None or (isinstance(v, Iterable) and all([vv is None for vv in v]))
+        )
+    }
+
+
+def dump_args(func):
+    """
+    Decorator to print function call details.
+    This includes parameters names and effective values.
+    https://stackoverflow.com/questions/6200270/decorator-that-prints-function-call-details-parameters-names-and-effective-valu
+    """
+    from functools import wraps
+
+    @wraps(func)
+    def dump_args_wrapper(*args, **kwargs):
+        import inspect
+
+        try:
+            func_args = inspect.signature(func).bind(*args, **kwargs).arguments
+            func_args_str = ", ".join(
+                map("{0[0]} = {0[1]!r}".format, func_args.items())
+            )
+        except ValueError:
+            func_args_str = ", ".join(
+                list(map("{0!r}".format, args))
+                + list(map("{0[0]} = {0[1]!r}".format, kwargs.items()))
+            )
+        print(f"{func.__module__}.{func.__qualname__} ( {func_args_str} )")
+        return func(*args, **kwargs)
+
+    return dump_args_wrapper
+
+
+def dump_args_calls(
+    myLocal=None,
+    mod=sys.modules[__name__],
+):
+    """
+    Wrap all calls to acts.examples Python bindings in dump_args.
+    Specify myLocal=locals() to include imported symbols too.
+    """
+    import collections
+
+    for n in dir(mod):
+        if n.startswith("_") or n == "Config":
+            continue
+        f = getattr(mod, n)
+        if not (
+            isinstance(f, collections.abc.Callable)
+            and f.__module__.startswith("acts.ActsPythonBindings")
+            and not hasattr(f, "__wrapped__")
+        ):
+            continue
+        dump_args_calls(myLocal, f)  # wrap class's contained methods
+        w = dump_args(f)
+        setattr(mod, n, w)
+        if myLocal and hasattr(myLocal, n):
+            setattr(myLocal, n, w)
