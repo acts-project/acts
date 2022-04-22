@@ -22,11 +22,11 @@ struct CorrectedFreeToBoundTransformer {
   ActsScalar alpha = 0.1;
   ActsScalar beta = 2;
 
-  // The maximum incident angle (i.e. mininum cos incident angle) cutoff for
+  // The maximum incident angle (i.e. minimum cos incident angle) cutoff for
   // correction
   ActsScalar cosIncidentAngleMinCutoff = 1e-5;
 
-  // The minimum incident angle (i.e. mininum cos incident angle) cutoff for
+  // The minimum incident angle (i.e. maximum cos incident angle) cutoff for
   // correction cos(0.1) = 0.99500417
   ActsScalar cosIncidentAngleMaxCutoff = 0.99500417;
 

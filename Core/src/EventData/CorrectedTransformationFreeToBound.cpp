@@ -80,16 +80,16 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   std::vector<std::pair<BoundVector, ActsScalar>> transformedBoundParams;
 
   // 1. The nominal one
-  const auto& [params_, mweight_, cweight_] = sampledFreeParams[0];
+  const auto& [paramsNom, mweightNom, cweightNom] = sampledFreeParams[0];
   // Transform the free to bound
   auto nominalRes =
-      detail::transformFreeToBoundParameters(params_, surface, geoContext);
+      detail::transformFreeToBoundParameters(paramsNom, surface, geoContext);
   if (not nominalRes.ok()) {
     return std::nullopt;
   }
   auto nominalBound = nominalRes.value();
-  transformedBoundParams.push_back({nominalBound, cweight_});
-  bpMean = bpMean + mweight_ * nominalBound;
+  transformedBoundParams.push_back({nominalBound, cweightNom});
+  bpMean = bpMean + mweightNom * nominalBound;
 
   // 2. Loop over the rest sample points of the free parameters to get the
   // weighted bound parameters

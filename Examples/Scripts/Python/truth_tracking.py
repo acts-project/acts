@@ -152,7 +152,7 @@ def runTruthTracking(
         directNavigation=directNavigation,
         multipleScattering=True,
         energyLoss=True,
-        globalToLocalCorrection=False,
+        freeToBoundCorrection=False,
         pickTrack=-1,
         reverseFilteringMomThreshold=reverseFilteringMomThreshold,
         trackingGeometry=trackingGeometry,
