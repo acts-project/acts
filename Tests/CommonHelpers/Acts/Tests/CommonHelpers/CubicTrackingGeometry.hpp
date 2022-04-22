@@ -100,23 +100,9 @@ struct CubicTrackingGeometry {
       Transform3 trafo(Transform3::Identity() * rotation * rotation_strip);
       trafo.translation() = translations[i];
 
-      double halfX = 0.5_m;
-      double halfY = 0.5_m;
-      size_t nbinsx = 200;
-      size_t nbinsy = 1;
-      double hThickness = 75_um;
-      int readDirection = 1;
-      double lAngle = 0.;
-      auto moduleBounds = std::make_shared<const RectangleBounds>(halfX, halfY);
-      auto cSegmentation = std::make_shared<const CartesianSegmentation>(
-          moduleBounds, nbinsx, nbinsy);
-
-      const auto digiModulePtr =
-          std::make_shared<const Acts::DigitizationModule>(
-              cSegmentation, hThickness, readDirection, lAngle);
       // Create the detector element
       auto detElement = std::make_unique<const DetectorElementStub>(
-          trafo, rBounds, 1._um, surfaceMaterial, digiModulePtr);
+          trafo, rBounds, 1._um, surfaceMaterial);
       // And remember the surface
       surfaces[i] = detElement->surface().getSharedPtr();
       // Add it to the event store
