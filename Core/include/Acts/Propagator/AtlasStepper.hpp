@@ -873,7 +873,6 @@ class AtlasStepper {
   ///
   /// @param [in,out] state State of the stepper
   /// @param [in] surface is the surface to which the covariance is forwarded to
-  /// @param [in] globalToLocalCorrection Flag steering non-linearity correction during global to local transform (@todo to make it work)
   void transportCovarianceToBound(
       State& state, const Surface& surface,
       bool /*globalToLocalCorrection*/ = false) const {

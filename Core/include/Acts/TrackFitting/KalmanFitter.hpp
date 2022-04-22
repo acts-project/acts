@@ -549,7 +549,8 @@ class KalmanFitter {
         materialInteractor(surface, state, stepper,
                            MaterialUpdateStage::PreUpdate);
 
-        // do the kalman update
+        // do the kalman update (no need to perform covTransport here, hence no
+        // point in performing globalToLocal correction)
         auto trackStateProxyRes = detail::kalmanHandleMeasurement(
             state, stepper, extensions, *surface, sourcelink_it->second,
             result.fittedStates, result.lastTrackIndex, false);
@@ -598,7 +599,7 @@ class KalmanFitter {
             surface->surfaceMaterial() != nullptr) {
           auto trackStateProxyRes = detail::kalmanHandleNoMeasurement(
               state, stepper, *surface, result.fittedStates,
-              result.lastTrackIndex, true);
+              result.lastTrackIndex, true, globalToLocalCorrection);
 
           if (!trackStateProxyRes.ok()) {
             return trackStateProxyRes.error();
