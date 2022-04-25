@@ -1,2 +1,3 @@
-add_subdirectory(MaterialMapping)
-add_subdirectory(TrackingPerformance)
+add_subdirectory_if(MaterialMapping ACTS_BUILD_ANALYSIS_APPS)
+add_subdirectory_if(TrackingPerformance ACTS_BUILD_ANALYSIS_APPS)
+add_subdirectory_if(Python ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
