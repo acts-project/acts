@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,20 +8,23 @@
 
 #pragma once
 
-#include "Acts/Seeding/BinFinder.hpp"
+#include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
-#include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/KDTree.hpp"
+#include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 
+#include <optional>
 #include <string>
 #include <vector>
 
 namespace ActsExamples {
 
 /// Construct track seeds from space points.
-class SeedingAlgorithm final : public BareAlgorithm {
+class SeedingOrthogonalAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
     /// Input space point collections.
@@ -37,34 +40,40 @@ class SeedingAlgorithm final : public BareAlgorithm {
     std::string outputProtoTracks;
 
     Acts::SeedFilterConfig seedFilterConfig;
-    Acts::SeedfinderConfig<SimSpacePoint> seedFinderConfig;
-    Acts::SpacePointGridConfig gridConfig;
+    Acts::SeedFinderOrthogonalConfig<SimSpacePoint> seedFinderConfig;
 
-    // allow for different values of rMax in gridConfig and seedFinderConfig
-    bool allowSeparateRMax = false;
-
-    // vector containing the map of z bins in the top and bottom layers
-    std::vector<std::pair<int, int> > zBinNeighborsTop;
-    std::vector<std::pair<int, int> > zBinNeighborsBottom;
-    // number of phiBin neighbors at each side of the current bin that will be
-    // used to search for SPs
-    int numPhiNeighbors;
+    float rMax = 200.;
+    float deltaRMin = 1.;
+    float deltaRMax = 60.;
+    float collisionRegionMin = -250;
+    float collisionRegionMax = 250.;
+    float zMin = -2000.;
+    float zMax = 2000.;
+    float maxSeedsPerSpM = 1;
+    float cotThetaMax = 7.40627;  // 2.7 eta
+    float sigmaScattering = 5;
+    float radLengthPerSeed = 0.1;
+    float minPt = 500.;
+    float bFieldInZ = 0.00199724;
+    float beamPosX = 0;
+    float beamPosY = 0;
+    float impactMax = 3.;
   };
 
   /// Construct the seeding algorithm.
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  SeedingAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  SeedingOrthogonalAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
   /// Run the seeding algorithm.
   ///
   /// @param txt is the algorithm context with event information
   /// @return a process code indication success or failure
-  ProcessCode execute(const AlgorithmContext& ctx) const final override;
+  ProcessCode execute(const AlgorithmContext &ctx) const final override;
 
   /// Const access to the config
-  const Config& config() const { return m_cfg; }
+  const Config &config() const { return m_cfg; }
 
  private:
   Config m_cfg;
