@@ -292,9 +292,17 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
         float deltaCotTheta = cotThetaB - lt.cotTheta;
         float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
-        // check if the difference in theta and error are compatible with the
-        // limit of minimum pT scattering
-        if (deltaCotTheta2 - error2 > scatteringInRegion2) {
+        // Apply a cut on the compatibility between the r-z slope of the two
+        // seed segments. This is done by comparing the squared difference
+        // between slopes, and comparing to the squared uncertainty in this
+        // difference - we keep a seed if the difference is compatible within
+        // the assumed uncertainties. The uncertainties get contribution from
+        // the  space-point-related squared error (error2) and a scattering term
+        // calculated assuming the minimum pt we expect to reconstruct
+        // (scatteringInRegion2). This assumes gaussian error propagation which
+        // allows just adding the two errors if they are uncorrelated (which is
+        // fair for scattering and measurement uncertainties)
+        if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
           // additional cut to skip top SPs when producing triplets
           if (m_config.skipPreviousTopSP) {
             // break if cotThetaB < lt.cotTheta because the SP are sorted by
@@ -326,7 +334,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
         // refinement of the cut on the compatibility between the r-z slope of
         // the two seed segments using a scattering term scaled by the actual
-        // measured pT
+        // measured pT (p2scatterSigma)
         float iHelixDiameter2 = B2 / S2;
         // calculate scattering for p(T) calculated from seed curvature
         float pT2scatterSigma = iHelixDiameter2 * m_config.sigmapT2perRadius;
@@ -343,7 +351,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         // from rad to deltaCotTheta
         float p2scatterSigma = pT2scatterSigma * iSinTheta2;
         // if deltaTheta larger than allowed scattering for calculated pT, skip
-        if (deltaCotTheta2 - error2 > p2scatterSigma) {
+        if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
           if (m_config.skipPreviousTopSP) {
             if (cotThetaB - lt.cotTheta < 0) {
               break;
