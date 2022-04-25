@@ -239,9 +239,8 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     state.linCircleTop.clear();
 
     transformCoordinates(state.compatBottomSP, *spM, true,
-                         m_config.enableCutsForSortedSP, state.linCircleBottom);
-    transformCoordinates(state.compatTopSP, *spM, false,
-                         m_config.enableCutsForSortedSP, state.linCircleTop);
+                         state.linCircleBottom);
+    transformCoordinates(state.compatTopSP, *spM, false, state.linCircleTop);
 
     state.topSpVec.clear();
     state.curvatures.clear();
@@ -293,39 +292,19 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
         float deltaCotTheta = cotThetaB - lt.cotTheta;
         float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
-        float error;
-        float dCotThetaMinusError2;
-        if (m_config.enableCutsForSortedSP) {
-          // if the error is larger than the difference in theta, no need to
-          // compare with scattering
-          if (deltaCotTheta2 - error2 > scatteringInRegion2) {
-            // additional cut to skip top SPs when producing triplets
-            if (m_config.skipPreviousTopSP) {
-              // break if cotThetaB < lt.cotTheta because the SP are sorted by
-              // cotTheta
-              if (cotThetaB - lt.cotTheta < 0) {
-                break;
-              }
-              t0 = t + 1;
+        // check if the difference in theta and error are compatible with the
+        // limit of minimum pT scattering
+        if (deltaCotTheta2 - error2 > scatteringInRegion2) {
+          // additional cut to skip top SPs when producing triplets
+          if (m_config.skipPreviousTopSP) {
+            // break if cotThetaB < lt.cotTheta because the SP are sorted by
+            // cotTheta
+            if (cotThetaB - lt.cotTheta < 0) {
+              break;
             }
-            continue;
+            t0 = t + 1;
           }
-        } else {
-          if (deltaCotTheta2 - error2 > 0) {
-            deltaCotTheta = std::abs(deltaCotTheta);
-            // if deltaTheta larger than the scattering for the lower pT cut,
-            // skip
-            error = std::sqrt(error2);
-            dCotThetaMinusError2 =
-                deltaCotTheta2 + error2 - 2 * deltaCotTheta * error;
-            // avoid taking root of scatteringInRegion
-            // if left side of ">" is positive, both sides of unequality can be
-            // squared
-            // (scattering is always positive)
-            if (dCotThetaMinusError2 > scatteringInRegion2) {
-              continue;
-            }
-          }
+          continue;
         }
 
         // protects against division by 0
@@ -364,23 +343,15 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         // from rad to deltaCotTheta
         float p2scatterSigma = pT2scatterSigma * iSinTheta2;
         // if deltaTheta larger than allowed scattering for calculated pT, skip
-        if (m_config.enableCutsForSortedSP) {
-          if (deltaCotTheta2 - error2 > p2scatterSigma) {
-            if (m_config.skipPreviousTopSP) {
-              if (cotThetaB - lt.cotTheta < 0) {
-                break;
-              }
-              t0 = t;
+        if (deltaCotTheta2 - error2 > p2scatterSigma) {
+          if (m_config.skipPreviousTopSP) {
+            if (cotThetaB - lt.cotTheta < 0) {
+              break;
             }
-            continue;
+            t0 = t;
           }
-        } else {
-          if ((deltaCotTheta2 - error2 > 0) &&
-              (dCotThetaMinusError2 > p2scatterSigma)) {
-            continue;
-          }
+          continue;
         }
-
         // A and B allow calculation of impact params in U/V plane with linear
         // function
         // (in contrast to having to solve a quadratic function in x/y plane)

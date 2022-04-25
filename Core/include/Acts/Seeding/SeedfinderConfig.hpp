@@ -75,8 +75,6 @@ struct SeedfinderConfig {
   // non equidistant binning in z
   std::vector<float> zBinEdges;
 
-  // sort the SP in transformCoordinates method based on cotTheta
-  bool enableCutsForSortedSP = false;
   // additional cut to skip top SPs when producing triplets
   bool skipPreviousTopSP = false;
 
