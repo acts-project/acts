@@ -15,7 +15,6 @@
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.h"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -43,39 +42,6 @@ class SpacePointBuilder {
 
   // Default constructor
   SpacePointBuilder() = default;
-
-  /// @brief Calculates the space points out of a given collection of measurements
-  /// and stores the results
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param spacePointIt Output iterator for the space points
-  /// @param frontMeasurements measurements on the front surfaces for the strip SP formation, or all measurements for the pixel SP.
-  /// @param backMeasurements measurements on the back surfaces for the strip SP. nullptr for pixel SP formation
-  template <template <typename...> typename container_t>
-  void calculateSpacePoints(
-      const GeometryContext& gctx,
-      std::back_insert_iterator<container_t<spacepoint_t>> spacePointIt,
-      const std::vector<const Measurement*>* frontMeasurements,
-      const std::vector<const Measurement*>* backMeasurements = nullptr) const;
-
- protected:
-  /// @brief Getter method for the local coordinates of a measurement
-  /// on its corresponding surface
-  ///
-  /// @param meas measurement that holds the neccesary information of the hit position.
-  /// @return vector of the local coordinates of the measurement on the surface
-  Vector2 getLocalPos(const Measurement& meas) const;
-  std::pair<Acts::Vector2, Acts::SymMatrix2> getLocalPosCov(
-      const Measurement& meas) const;
-
-  /// @brief Getter method for the global coordinates of a measurement
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param meas measurement that holds the necessary
-  /// information
-  /// @return vectors of the global coordinates and covariance of the measurement
-  std::pair<Vector3, Vector2> globalCoords(const GeometryContext& gctx,
-                                           const Measurement& meas) const;
 
   /// @brief Calculates the space points out of a given collection of measurements
   /// and stores the results
@@ -112,9 +78,30 @@ class SpacePointBuilder {
   template <template <typename...> typename container_t>
   void calculateDoubleHitSpacePoints(
       const Acts::GeometryContext& gctx,
-      const std::vector<std::pair<const Measurement*, const Measurement*>>&
-          measurementPairs,
+      const std::pair<const Measurement*, const Measurement*>&
+          measurementPair,
+      const std::pair<const std::pair<Vector3, Vector3>, const std::pair<Vector3, Vector3>>& stripEndsPair,
       std::back_insert_iterator<container_t<spacepoint_t>> spacePointIt) const;
+
+
+protected:
+  /// @brief Getter method for the local coordinates of a measurement
+  /// on its corresponding surface
+  ///
+  /// @param meas measurement that holds the neccesary information of the hit position.
+  /// @return vector of the local coordinates of the measurement on the surface
+  Vector2 getLocalPos(const Measurement& meas) const;
+  std::pair<Acts::Vector2, Acts::SymMatrix2> getLocalPosCov(
+      const Measurement& meas) const;
+
+  /// @brief Getter method for the global coordinates of a measurement
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param meas measurement that holds the necessary
+  /// information
+  /// @return vectors of the global coordinates and covariance of the measurement
+  std::pair<Vector3, Vector2> globalCoords(const GeometryContext& gctx,
+                                           const Measurement& meas) const;
 
   /// @brief Calculates the top and bottom ends of a strip detector element
   /// that corresponds to a given hit

@@ -62,11 +62,10 @@ inline double differenceOfMeasurementsChecked(const Vector3& pos1,
   }
 
   // Calculate the angles of the vectors
-  double phi1, theta1, phi2, theta2;
-  phi1 = VectorHelpers::phi(pos1 - posVertex);
-  theta1 = VectorHelpers::theta(pos1 - posVertex);
-  phi2 = VectorHelpers::phi(pos2 - posVertex);
-  theta2 = VectorHelpers::theta(pos2 - posVertex);
+  double phi1 = VectorHelpers::phi(pos1 - posVertex);
+  double theta1 = VectorHelpers::theta(pos1 - posVertex);
+  double phi2 = VectorHelpers::phi(pos2 - posVertex);
+  double theta2 = VectorHelpers::theta(pos2 - posVertex);
 
   // Calculate the squared difference between the theta angles
   double diffTheta2 = (theta1 - theta2) * (theta1 - theta2);
@@ -255,7 +254,7 @@ inline bool recoverSpacePoint(SpacePointParameters& spaPoPa,
 /// detector element length
 ///
 /// @return Boolean statement whether the space point calculation was succesful
-inline bool calculateDoubleHitSpacePoint(
+inline bool calculateSpacePointPosition(
     const std::pair<Vector3, Vector3>& stripEnds1,
     const std::pair<Vector3, Vector3>& stripEnds2, const Vector3& posVertex,
     SpacePointParameters& spaPoPa, const double stripLengthTolerance) {
@@ -375,31 +374,6 @@ void SpacePointBuilder<spacepoint_t>::calculateSingleHitSpacePoints(
     spacePointIt = sp;
   }
 }
-template <typename spacepoint_t>
-template <template <typename...> typename container_t>
-void SpacePointBuilder<spacepoint_t>::calculateSpacePoints(
-    const GeometryContext& gctx,
-    std::back_insert_iterator<container_t<spacepoint_t>> spacePointIt,
-    const std::vector<const Measurement*>* FrontMeasurements,
-    const std::vector<const Measurement*>* BackMeasurements) const {
-  if (FrontMeasurements == nullptr) {
-    ACTS_WARNING(" No measurements found in the SP formation");
-    return;
-  }
-
-  if (BackMeasurements == nullptr) {  // pixel SP building
-    calculateSingleHitSpacePoints(gctx, *FrontMeasurements, spacePointIt);
-
-  } else {  // strip SP building
-
-    std::vector<std::pair<const Measurement*, const Measurement*>>
-        measurementPairs;
-    makeMeasurementPairs(gctx, *FrontMeasurements, *BackMeasurements,
-                         measurementPairs);
-
-    calculateDoubleHitSpacePoints(gctx, measurementPairs, spacePointIt);
-  }
-}
 
 template <typename spacepoint_t>
 void SpacePointBuilder<spacepoint_t>::makeMeasurementPairs(
@@ -456,50 +430,45 @@ template <typename spacepoint_t>
 template <template <typename...> typename container_t>
 void SpacePointBuilder<spacepoint_t>::calculateDoubleHitSpacePoints(
     const GeometryContext& gctx,
-    const std::vector<std::pair<const Measurement*, const Measurement*>>&
-        measurementPairs,
+    const std::pair<const Measurement*, const Measurement*>& // 
+        measurementPair,
+    const std::pair<const std::pair<Vector3, Vector3>, const std::pair<Vector3, Vector3>>& stripEndsPair,
     std::back_insert_iterator<container_t<spacepoint_t>> spacePointIt) const {
   // Source of algorithm: Athena, SiSpacePointMakerTool::makeSCT_SpacePoint()
 
   detail::SpacePointParameters spaPoPa;
 
-  // Walk over every found candidate pair
-  for (const auto& mp : measurementPairs) {
-    // Calculate the ends of the SDEs
-    const auto& ends1 = endsOfStrip(gctx, *(mp.first));
-    const auto& ends2 = endsOfStrip(gctx, *(mp.second));
+    const auto& ends1 = stripEndsPair.first;
+    const auto& ends2 = stripEndsPair.second;    
 
     spaPoPa.q = ends1.first - ends1.second;
     spaPoPa.r = ends2.first - ends2.second;
 
-    const auto& slink_front = getSourceLink(*(mp.first));
-    const auto& slink_back = getSourceLink(*(mp.second));
+    const auto& slink_front = getSourceLink(*(measurementPair.first));
+    const auto& slink_back = getSourceLink(*(measurementPair.second));
 
     boost::container::static_vector<const SourceLink*, 2> slinks;
     slinks.emplace_back(slink_front);
     slinks.emplace_back(slink_back);
 
-    double resultPerpProj;
-
     if (m_config.usePerpProj) {  // for cosmic without vertex constraint
-      resultPerpProj = detail::calcPerpendicularProjection(
+      double resultPerpProj = detail::calcPerpendicularProjection(
           ends1.first, ends2.first, spaPoPa.q, spaPoPa.r);
       if (resultPerpProj <= 0.) {
         Vector3 pos = ends1.first + resultPerpProj * spaPoPa.q;
         double theta = acos(spaPoPa.q.dot(spaPoPa.r) /
                             (spaPoPa.q.norm() * spaPoPa.r.norm()));
         const auto gcov =
-            calcGlobalVars(gctx, *(mp.first), *(mp.second), theta);
+            calcGlobalVars(gctx, *(measurementPair.first), *(measurementPair.second), theta);
         const double varRho = gcov[0];
         const double varZ = gcov[1];
 
         auto sp = spacepoint_t(pos, varRho, varZ, std::move(slinks));
         spacePointIt = std::move(sp);
-        continue;
       }
     }
 
-    bool spFound = calculateDoubleHitSpacePoint(
+    bool spFound = calculateSpacePointPosition(
         ends1, ends2, m_config.vertex, spaPoPa, m_config.stripLengthTolerance);
     if (!spFound)
       spFound =
@@ -511,53 +480,15 @@ void SpacePointBuilder<spacepoint_t>::calculateDoubleHitSpacePoints(
       double theta = acos(spaPoPa.q.dot(spaPoPa.r) /
                           (spaPoPa.q.norm() * spaPoPa.r.norm()));
 
-      const auto gcov = calcGlobalVars(gctx, *(mp.first), *(mp.second), theta);
+      const auto gcov = calcGlobalVars(gctx, *(measurementPair.first), *(measurementPair.second), theta);
       const double varRho = gcov[0];
       const double varZ = gcov[1];
       auto sp = spacepoint_t(pos, varRho, varZ, std::move(slinks));
       spacePointIt = std::move(sp);
     }
-  }
+  // }
 }
 
-template <typename spacepoint_t>
-std::pair<Vector3, Vector3> SpacePointBuilder<spacepoint_t>::endsOfStrip(
-    const GeometryContext& gctx, const Measurement& measurement) const {
-  Vector3 topGlobal(0, 0, 0);
-  Vector3 bottomGlobal(0, 0, 0);
-
-  auto localPos = getLocalPos(measurement);
-
-  const auto& slink = getSourceLink(measurement);
-  const auto geoId = slink->geometryId();
-  const Surface* surface = m_config.trackingGeometry->findSurface(geoId);
-
-  auto detectorElement = dynamic_cast<const IdentifiedDetectorElement*>(
-      surface->associatedDetectorElement());
-
-  if (!detectorElement) {
-    ACTS_ERROR(" No detector element found in the strip SP formation");
-    return std::make_pair(topGlobal, bottomGlobal);
-  }
-
-  auto digitizationModule = detectorElement->digitizationModule();
-  if (!digitizationModule) {
-    ACTS_ERROR(" No digitizationModule found in the strip SP formation");
-    return std::make_pair(topGlobal, bottomGlobal);
-  }
-  const Segmentation& segment = digitizationModule->segmentation();
-
-  std::pair<Vector2, Vector2> topBottomLocal =
-      detail::findLocalTopAndBottomEnd(localPos, &segment);
-
-  // Calculate the global coordinates of the top and bottom end of the strip
-  Vector3 globalFakeMom(1, 1, 1);
-  topGlobal = surface->localToGlobal(gctx, topBottomLocal.first, globalFakeMom);
-  bottomGlobal =
-      surface->localToGlobal(gctx, topBottomLocal.second, globalFakeMom);
-  // Return the top and bottom end of the strip in global coordinates
-  return std::make_pair(topGlobal, bottomGlobal);
-}
 
 template <typename spacepoint_t>
 Vector2 SpacePointBuilder<spacepoint_t>::calcGlobalVars(
