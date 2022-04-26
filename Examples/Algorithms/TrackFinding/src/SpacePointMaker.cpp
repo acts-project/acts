@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -113,8 +113,8 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
     }
   }
   SimSpacePointContainer spacePoints;
-  m_spacePointBuilder.calculateSpacePoints(
-      ctx.geoContext, std::back_inserter(spacePoints), &selectedMeasurements);
+  m_spacePointBuilder.calculateSingleHitSpacePoints(
+						    ctx.geoContext,  selectedMeasurements,std::back_inserter(spacePoints));
   spacePoints.shrink_to_fit();
 
   ACTS_DEBUG("Created " << spacePoints.size() << " space points");
