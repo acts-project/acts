@@ -1,8 +1,7 @@
 name: "Lint PR"
 
 on:
-  # pull_request_target:
-  pull_request:
+  pull_request_target:
     types:
       - opened
       - edited
