@@ -75,16 +75,15 @@ class SpacePointBuilder {
   /// @param measurementPairs pairs of measurements that are space point candidates
   /// @param spacePointIt storage of the results
   /// @note If no configuration is set, the default values will be used
-  template <template <typename...> typename container_t>
-  void calculateDoubleHitSpacePoints(
+  // template <template <typename...> typename container_t>
+  void calculateDoubleHitSpacePoint(
       const Acts::GeometryContext& gctx,
-      const std::pair<const Measurement*, const Measurement*>&
-          measurementPair,
-      const std::pair<const std::pair<Vector3, Vector3>, const std::pair<Vector3, Vector3>>& stripEndsPair,
-      std::back_insert_iterator<container_t<spacepoint_t>> spacePointIt) const;
+      const std::pair<const Measurement*, const Measurement*>& measurementPair,
+      const std::pair<const std::pair<Vector3, Vector3>,
+                      const std::pair<Vector3, Vector3>>& stripEndsPair,
+      spacepoint_t* spacePoint) const;
 
-
-protected:
+ protected:
   /// @brief Getter method for the local coordinates of a measurement
   /// on its corresponding surface
   ///

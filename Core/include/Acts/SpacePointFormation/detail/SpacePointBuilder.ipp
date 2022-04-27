@@ -427,68 +427,67 @@ void SpacePointBuilder<spacepoint_t>::makeMeasurementPairs(
 }
 
 template <typename spacepoint_t>
-template <template <typename...> typename container_t>
-void SpacePointBuilder<spacepoint_t>::calculateDoubleHitSpacePoints(
+// template <template <typename...> typename container_t>
+void SpacePointBuilder<spacepoint_t>::calculateDoubleHitSpacePoint(
     const GeometryContext& gctx,
-    const std::pair<const Measurement*, const Measurement*>& // 
-        measurementPair,
-    const std::pair<const std::pair<Vector3, Vector3>, const std::pair<Vector3, Vector3>>& stripEndsPair,
-    std::back_insert_iterator<container_t<spacepoint_t>> spacePointIt) const {
+    const std::pair<const Measurement*, const Measurement*>& measurementPair,
+    const std::pair<const std::pair<Vector3, Vector3>,
+                    const std::pair<Vector3, Vector3>>& stripEndsPair,
+    spacepoint_t* spacePoint) const {
   // Source of algorithm: Athena, SiSpacePointMakerTool::makeSCT_SpacePoint()
 
   detail::SpacePointParameters spaPoPa;
 
-    const auto& ends1 = stripEndsPair.first;
-    const auto& ends2 = stripEndsPair.second;    
+  const auto& ends1 = stripEndsPair.first;
+  const auto& ends2 = stripEndsPair.second;
 
-    spaPoPa.q = ends1.first - ends1.second;
-    spaPoPa.r = ends2.first - ends2.second;
+  spaPoPa.q = ends1.first - ends1.second;
+  spaPoPa.r = ends2.first - ends2.second;
 
-    const auto& slink_front = getSourceLink(*(measurementPair.first));
-    const auto& slink_back = getSourceLink(*(measurementPair.second));
+  const auto& slink_front = getSourceLink(*(measurementPair.first));
+  const auto& slink_back = getSourceLink(*(measurementPair.second));
 
-    boost::container::static_vector<const SourceLink*, 2> slinks;
-    slinks.emplace_back(slink_front);
-    slinks.emplace_back(slink_back);
+  boost::container::static_vector<const SourceLink*, 2> slinks;
+  slinks.emplace_back(slink_front);
+  slinks.emplace_back(slink_back);
 
-    if (m_config.usePerpProj) {  // for cosmic without vertex constraint
-      double resultPerpProj = detail::calcPerpendicularProjection(
-          ends1.first, ends2.first, spaPoPa.q, spaPoPa.r);
-      if (resultPerpProj <= 0.) {
-        Vector3 pos = ends1.first + resultPerpProj * spaPoPa.q;
-        double theta = acos(spaPoPa.q.dot(spaPoPa.r) /
-                            (spaPoPa.q.norm() * spaPoPa.r.norm()));
-        const auto gcov =
-            calcGlobalVars(gctx, *(measurementPair.first), *(measurementPair.second), theta);
-        const double varRho = gcov[0];
-        const double varZ = gcov[1];
-
-        auto sp = spacepoint_t(pos, varRho, varZ, std::move(slinks));
-        spacePointIt = std::move(sp);
-      }
-    }
-
-    bool spFound = calculateSpacePointPosition(
-        ends1, ends2, m_config.vertex, spaPoPa, m_config.stripLengthTolerance);
-    if (!spFound)
-      spFound =
-          detail::recoverSpacePoint(spaPoPa, m_config.stripLengthGapTolerance);
-
-    if (spFound) {
-      Vector3 pos = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
-
+  if (m_config.usePerpProj) {  // for cosmic without vertex constraint
+    double resultPerpProj = detail::calcPerpendicularProjection(
+        ends1.first, ends2.first, spaPoPa.q, spaPoPa.r);
+    if (resultPerpProj <= 0.) {
+      Vector3 pos = ends1.first + resultPerpProj * spaPoPa.q;
       double theta = acos(spaPoPa.q.dot(spaPoPa.r) /
                           (spaPoPa.q.norm() * spaPoPa.r.norm()));
-
-      const auto gcov = calcGlobalVars(gctx, *(measurementPair.first), *(measurementPair.second), theta);
+      const auto gcov = calcGlobalVars(gctx, *(measurementPair.first),
+                                       *(measurementPair.second), theta);
       const double varRho = gcov[0];
       const double varZ = gcov[1];
-      auto sp = spacepoint_t(pos, varRho, varZ, std::move(slinks));
-      spacePointIt = std::move(sp);
-    }
-  // }
-}
 
+      auto sp = spacepoint_t(pos, varRho, varZ, std::move(slinks));
+      spacePoint = &sp;
+    }
+  }
+
+  bool spFound = calculateSpacePointPosition(
+      ends1, ends2, m_config.vertex, spaPoPa, m_config.stripLengthTolerance);
+  if (!spFound)
+    spFound =
+        detail::recoverSpacePoint(spaPoPa, m_config.stripLengthGapTolerance);
+
+  if (spFound) {
+    Vector3 pos = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
+
+    double theta =
+        acos(spaPoPa.q.dot(spaPoPa.r) / (spaPoPa.q.norm() * spaPoPa.r.norm()));
+
+    const auto gcov = calcGlobalVars(gctx, *(measurementPair.first),
+                                     *(measurementPair.second), theta);
+    const double varRho = gcov[0];
+    const double varZ = gcov[1];
+    auto sp = spacepoint_t(pos, varRho, varZ, std::move(slinks));
+    spacePoint = &sp;
+  }
+}
 
 template <typename spacepoint_t>
 Vector2 SpacePointBuilder<spacepoint_t>::calcGlobalVars(
