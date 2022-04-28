@@ -119,6 +119,7 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
         inputSpacePoints=[evReader.config.outputSpacePoints],
         outputSeeds="PixelSeeds",
         outputProtoTracks="prototracks",
+        allowSeparateRMax=False,
         gridConfig=gridConfig,
         seedFinderConfig=seedFinderConfig,
         seedFilterConfig=seedFilterConfig,

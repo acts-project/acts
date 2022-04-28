@@ -28,10 +28,10 @@ class GainMatrixUpdater {
   /// @param[in,out] trackState The track state
   /// @param[in] direction The navigation direction
   /// @param[in] logger Where to write logging information to
-  Result<void> operator()(const GeometryContext& gctx,
-                          MultiTrajectory::TrackStateProxy trackState,
-                          NavigationDirection direction = forward,
-                          LoggerWrapper logger = getDummyLogger()) const;
+  Result<void> operator()(
+      const GeometryContext& gctx, MultiTrajectory::TrackStateProxy trackState,
+      NavigationDirection direction = NavigationDirection::Forward,
+      LoggerWrapper logger = getDummyLogger()) const;
 };
 
 }  // namespace Acts
