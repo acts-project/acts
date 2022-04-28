@@ -12,7 +12,7 @@ env:
   HOMEBREW_NO_INSTALL_CLEANUP: 1
 
 jobs:
-  linux:
+  lcg:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/${{ matrix.image }}:v15
     strategy:
@@ -22,29 +22,12 @@ jobs:
           - centos7-lcg101-gcc11
           - centos8-lcg100-gcc10
           - centos8-lcg101-gcc11
-          - ubuntu2004
     env:
-      SETUP: true
-      SETUP_LCG: source /opt/lcg_view/setup.sh
+      SETUP: source /opt/lcg_view/setup.sh
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
     steps:
-      - name: Install git lfs
-        if: contains(matrix.image, 'ubuntu')
-        run: apt install -y git-lfs
-
       - uses: actions/checkout@v3
-        if: contains(matrix.image, 'ubuntu')
-        with:
-          submodules: true
-          lfs: true
-
-      - uses: actions/checkout@v3
-        if: "!contains(matrix.image, 'ubuntu')"
-
-      - name: Define setup script
-        if: contains(matrix.image, 'lcg')
-        run: echo "SETUP=${SETUP_LCG}" >> $GITHUB_ENV
 
       - name: Configure
         # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
@@ -61,57 +44,24 @@ jobs:
           -DACTS_BUILD_EVERYTHING=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
           -DACTS_FORCE_ASSERTIONS=ON
+
       - name: Build
         run: ${SETUP} && cmake --build build --
+
       - name: Unit tests
         run: ${SETUP} && cmake --build build -- test
+
       - name: Integration tests
         run: ${SETUP} && cmake --build build -- integrationtests
-      - name: Examples
-        if: contains(matrix.image, 'ubuntu')
-        run: ${SETUP} && ./CI/run_examples.sh
-      - name: Physics performance checks
-        if: contains(matrix.image, 'ubuntu')
-        env:
-          # ODD currently throws ERRORs (https://github.com/acts-project/acts/issues/1215)
-          ACTS_LOG_FAILURE_THRESHOLD: FATAL 
-        shell: bash
-        run: >
-          ${SETUP}
-          && echo "::group::Dependencies"
-          && pip3 install histcmp==0.3.2
-          && source /usr/local/bin/thisroot.sh
-          && source /usr/local/bin/thisdd4hep_only.sh
-          && source /usr/local/bin/geant4.sh
-          && source build/python/setup.sh
-          && echo "::endgroup::"
-          && CI/physmon/phys_perf_mon.sh physmon
-      - name: Python level tests
-        if: contains(matrix.image, 'ubuntu')
-        env:
-          # ODD currently throws ERRORs (https://github.com/acts-project/acts/issues/1215)
-          ACTS_LOG_FAILURE_THRESHOLD: FATAL
-        shell: bash
-        run: >
-          ${SETUP}
-          && /usr/local/bin/download_geant4_data.sh
-          && source /usr/local/bin/thisroot.sh
-          && source /usr/local/bin/thisdd4hep_only.sh
-          && source /usr/local/bin/geant4.sh
-          && source build/python/setup.sh
-          && pip3 install -r Examples/Python/tests/requirements.txt
-          && pytest -rFs
-      - uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: physmon
-          path: physmon
+
       - name: Install
         run: ${SETUP} && cmake --build build -- install
-      - uses: actions/upload-artifact@v2
+
+      - uses: actions/upload-artifact@v3
         with:
           name: acts-${{ matrix.image }}
           path: ${{ env.INSTALL_DIR }}
+
       - name: Downstream configure
         run: >
           ${SETUP} &&
@@ -121,10 +71,157 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=17
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+
       - name: Downstream build
         run: ${SETUP} && cmake --build build-downstream --
+
       - name: Downstream run
         run: ${SETUP} && ./build-downstream/bin/ShowActsVersion
+
+
+  linux_ubuntu:
+    runs-on: ubuntu-latest
+    container: ghcr.io/acts-project/ubuntu2004:v15
+    env:
+      INSTALL_DIR: ${{ github.workspace }}/install
+      ACTS_LOG_FAILURE_THRESHOLD: WARNING
+    steps:
+      - name: Install git lfs
+        run: apt install -y git-lfs
+
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+          lfs: true
+
+      - name: Configure
+        # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
+        # dd4hep CMake configuration that gets triggered on recent CMake
+        # versions 
+        run: >
+          cmake -B build -S .
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
+          -DCMAKE_CXX_STANDARD=17
+          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+          -DACTS_BUILD_EVERYTHING=ON
+          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+          -DACTS_FORCE_ASSERTIONS=ON
+
+      - name: Build
+        run: cmake --build build --
+
+      - name: Unit tests
+        run: cmake --build build -- test
+
+      - name: Integration tests
+        run: cmake --build build -- integrationtests
+
+      - name: Install
+        run: cmake --build build -- install
+
+      - name: Package build
+        run: tar czf build.tar.gz -C build . 
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: acts-linux-ubuntu
+          path: build.tar.gz
+
+      - name: Downstream configure
+        run: >
+          cmake -B build-downstream -S Tests/DownstreamProject
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
+          -DCMAKE_CXX_STANDARD=17
+          -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+
+      - name: Downstream build
+        run: cmake --build build-downstream --
+
+      - name: Downstream run
+        run: ./build-downstream/bin/ShowActsVersion
+
+  linux_examples_test:
+    runs-on: ubuntu-latest
+    container: ghcr.io/acts-project/ubuntu2004:v15
+    needs: [linux_ubuntu]
+    env:
+      ACTS_LOG_FAILURE_THRESHOLD: FATAL
+
+    steps:
+      - name: Install git lfs
+        run: apt install -y git-lfs
+
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+          lfs: true
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: acts-linux-ubuntu
+
+      - name: Unpack build
+        run: mkdir build && tar xf build.tar.gz -C build
+
+      - name: Examples
+        run: ./CI/run_examples.sh
+
+      - name: Python level tests
+        shell: bash
+        run: >
+          /usr/local/bin/download_geant4_data.sh
+          && source /usr/local/bin/thisroot.sh
+          && source /usr/local/bin/thisdd4hep_only.sh
+          && source /usr/local/bin/geant4.sh
+          && source build/python/setup.sh
+          && pip3 install -r Examples/Python/tests/requirements.txt
+          && pytest -rFs
+
+  linux_physmon:
+    runs-on: ubuntu-latest
+    container: ghcr.io/acts-project/ubuntu2004:v15
+    needs: [linux_ubuntu]
+    env:
+      ACTS_LOG_FAILURE_THRESHOLD: FATAL
+
+    steps:
+      - name: Install git lfs
+        run: apt install -y git-lfs
+
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+          lfs: true
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: acts-linux-ubuntu
+
+      - name: Unpack build
+        run: mkdir build && tar xf build.tar.gz -C build
+
+      - name: Physics performance checks
+        shell: bash
+        run: >
+          echo "::group::Dependencies"
+          && pip3 install histcmp==0.3.1
+          && /usr/local/bin/download_geant4_data.sh
+          && source /usr/local/bin/thisroot.sh
+          && source /usr/local/bin/thisdd4hep_only.sh
+          && source /usr/local/bin/geant4.sh
+          && source build/python/setup.sh
+          && echo "::endgroup::"
+          && CI/physmon/phys_perf_mon.sh physmon
+
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: physmon
+          path: physmon
 
   linux-nodeps:
     runs-on: ubuntu-latest
