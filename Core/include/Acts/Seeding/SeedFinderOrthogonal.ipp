@@ -219,8 +219,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
   std::vector<LinCircle> linCircleTop;
   linCircleTop.reserve(top.size());
 
-  transformCoordinates(bottom, middle, true, false, linCircleBottom);
-  transformCoordinates(top, middle, false, false, linCircleTop);
+  transformCoordinates(bottom, middle, true, linCircleBottom);
+  transformCoordinates(top, middle, false, linCircleTop);
 
   std::vector<float> tanLM;
   std::vector<float> tanMT;

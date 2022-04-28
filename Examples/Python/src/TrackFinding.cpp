@@ -108,7 +108,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(impactMax);
     ACTS_PYTHON_MEMBER(deltaZMax);
     ACTS_PYTHON_MEMBER(zBinEdges);
-    ACTS_PYTHON_MEMBER(enableCutsForSortedSP);
+    ACTS_PYTHON_MEMBER(skipPreviousTopSP);
     ACTS_PYTHON_MEMBER(interactionPointCut);
     ACTS_PYTHON_MEMBER(zBinEdges);
     ACTS_PYTHON_MEMBER(zBinsCustomLooping);
