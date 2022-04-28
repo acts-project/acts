@@ -14,9 +14,9 @@
 namespace Acts {
 
 Result<std::tuple<BoundTrackParameters, BoundMatrix, double>>
-StraightLineStepper::boundState(State& state, const Surface& surface,
-                                bool transportCov,
-                                bool freeToBoundCorrection) const {
+StraightLineStepper::boundState(
+    State& state, const Surface& surface, bool transportCov,
+    const detail::FreeToBoundCorrection& freeToBoundCorrection) const {
   return detail::boundState(
       state.geoContext, state.cov, state.jacobian, state.jacTransport,
       state.derivative, state.jacToGlobal, state.pars,
@@ -58,7 +58,8 @@ void StraightLineStepper::transportCovarianceToCurvilinear(State& state) const {
 }
 
 void StraightLineStepper::transportCovarianceToBound(
-    State& state, const Surface& surface, bool freeToBoundCorrection) const {
+    State& state, const Surface& surface,
+    const detail::FreeToBoundCorrection& freeToBoundCorrection) const {
   detail::transportCovarianceToBound(
       state.geoContext, state.cov, state.jacobian, state.jacTransport,
       state.derivative, state.jacToGlobal, state.pars, surface,

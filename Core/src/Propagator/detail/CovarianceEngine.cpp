@@ -262,7 +262,8 @@ Result<BoundState> boundState(
     BoundMatrix& jacobian, FreeMatrix& transportJacobian,
     FreeVector& derivatives, BoundToFreeMatrix& boundToFreeJacobian,
     FreeVector& parameters, bool covTransport, double accumulatedPath,
-    const Surface& surface, bool freeToBoundCorrection) {
+    const Surface& surface,
+    const detail::FreeToBoundCorrection& freeToBoundCorrection) {
   // Covariance transport
   std::optional<BoundSymMatrix> cov = std::nullopt;
   if (covTransport) {
@@ -334,7 +335,7 @@ void transportCovarianceToBound(
     BoundMatrix& fullTransportJacobian, FreeMatrix& freeTransportJacobian,
     FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
     FreeVector& freeParameters, const Surface& surface,
-    bool freeToBoundCorrection) {
+    const detail::FreeToBoundCorrection& freeToBoundCorrection) {
   // Calculate the full jacobian from local parameters at the start surface to
   // current bound parameters
   boundToBoundJacobian(geoContext, freeParameters, boundToFreeJacobian,
@@ -349,7 +350,8 @@ void transportCovarianceToBound(
                                    boundCovariance *
                                    startBoundToFinalFreeJacobian.transpose();
 
-    auto transformer = detail::CorrectedFreeToBoundTransformer();
+    auto transformer =
+        detail::CorrectedFreeToBoundTransformer(freeToBoundCorrection);
     auto correctedRes =
         transformer(freeParameters, freeCovariance, surface, geoContext);
 

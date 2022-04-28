@@ -15,6 +15,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
@@ -430,8 +431,9 @@ class MultiEigenStepperLoop
           cmp.state, state.navigation, state.options, state.geoContext);
     }
 
-    Result<BoundState> boundState(const Surface& surface, bool transportCov,
-                                  bool freeToBoundCorrection) {
+    Result<BoundState> boundState(
+        const Surface& surface, bool transportCov,
+        const detail::FreeToBoundCorrection& freeToBoundCorrection) {
       return detail::boundState(
           all_state.geoContext, cov(), jacobian(), jacTransport(), derivative(),
           jacToGlobal(), pars(), all_state.covTransport && transportCov,
@@ -768,9 +770,9 @@ class MultiEigenStepperLoop
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  Result<BoundState> boundState(State& state, const Surface& surface,
-                                bool transportCov = true,
-                                bool freeToBoundCorrection = false) const;
+  Result<BoundState> boundState(
+      State& state, const Surface& surface, bool transportCov = true,
+      const detail::FreeToBoundCorrection& freeToBoundCorrection = false) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -812,7 +814,8 @@ class MultiEigenStepperLoop
   /// to
   /// @note no check is done if the position is actually on the surface
   void transportCovarianceToBound(State& state, const Surface& surface,
-                                  bool freeToBoundCorrection = false) const {
+                                  const detail::FreeToBoundCorrection&
+                                      freeToBoundCorrection = false) const {
     for (auto& component : state.components) {
       SingleStepper::transportCovarianceToBound(component.state, surface,
                                                 freeToBoundCorrection);

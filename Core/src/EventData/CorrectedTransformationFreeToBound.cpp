@@ -15,14 +15,10 @@ Acts::detail::FreeToBoundCorrection::FreeToBoundCorrection(bool apply_,
                                                            ActsScalar beta_)
     : apply(apply_), alpha(alpha_), beta(beta_) {}
 
-Acts::detail::FreeToBoundCorrection&
-Acts::detail::FreeToBoundCorrection::operator=(bool apply_) {
-  apply = apply_;
-  return (*this);
-}
+Acts::detail::FreeToBoundCorrection::FreeToBoundCorrection(bool apply_)
+    : apply(apply_) {}
 
-// Return boolean for applying correction or not
-bool Acts::detail::FreeToBoundCorrection::operator()() const {
+Acts::detail::FreeToBoundCorrection::operator bool() const {
   return apply;
 }
 
@@ -34,11 +30,20 @@ Acts::detail::CorrectedFreeToBoundTransformer::CorrectedFreeToBoundTransformer(
       m_cosIncidentAngleMinCutoff(cosIncidentAngleMinCutoff),
       m_cosIncidentAngleMaxCutoff(cosIncidentAngleMaxCutoff) {}
 
+Acts::detail::CorrectedFreeToBoundTransformer::CorrectedFreeToBoundTransformer(
+    const FreeToBoundCorrection& freeToBoundCorrection) {
+  m_alpha = freeToBoundCorrection.alpha;
+  m_beta = freeToBoundCorrection.beta;
+  m_cosIncidentAngleMinCutoff = freeToBoundCorrection.cosIncidentAngleMinCutoff;
+  m_cosIncidentAngleMaxCutoff = freeToBoundCorrection.cosIncidentAngleMaxCutoff;
+}
+
 std::optional<std::tuple<Acts::BoundVector, Acts::BoundSymMatrix>>
 Acts::detail::CorrectedFreeToBoundTransformer::operator()(
     const Acts::FreeVector& freeParams,
     const Acts::FreeSymMatrix& freeCovariance, const Acts::Surface& surface,
-    const Acts::GeometryContext& geoContext, NavigationDirection navDir) const {
+    const Acts::GeometryContext& geoContext, NavigationDirection navDir,
+    LoggerWrapper logger) const {
   // Get the incidence angle
   Vector3 dir = freeParams.segment<3>(eFreeDir0);
   Vector3 normal = surface.normal(geoContext);
@@ -47,6 +52,8 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   // large (correction could be invalid).
   if (absCosIncidenceAng < m_cosIncidentAngleMinCutoff or
       absCosIncidenceAng > m_cosIncidentAngleMaxCutoff) {
+    ACTS_VERBOSE("Incident angle: " << std::acos(absCosIncidenceAng)
+                                    << " is out of range for correction");
     return std::nullopt;
   }
 
@@ -112,6 +119,8 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
       detail::transformFreeToBoundParameters(paramsNom, surface, geoContext);
   // Not successful, the transformation without correction will be invoked
   if (not nominalRes.ok()) {
+    ACTS_WARNING(
+        "Free to bound transformation for nominal free parameters failed.");
     return std::nullopt;
   }
   auto nominalBound = nominalRes.value();
@@ -136,6 +145,9 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
                                                          surface, geoContext);
     // Not successful, the transformation without correction will be invoked
     if (not result.ok()) {
+      ACTS_WARNING(
+          "Free to bound transformation for sampled free parameters: \n"
+          << correctedFreeParams << " failed.");
       return std::nullopt;
     }
 

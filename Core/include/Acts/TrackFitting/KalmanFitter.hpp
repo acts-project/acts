@@ -107,16 +107,15 @@ struct KalmanFitterOptions {
   /// @param eLoss Whether to include energy loss
   /// @param rFiltering Whether to run filtering in reversed direction as smoothing
   /// @param rfScaling Scale factor for the covariance matrix before the backward filtering
-  /// @param gToLCorrection Whether to include non-linear correction during global to local transformation
-  KalmanFitterOptions(const GeometryContext& gctx,
-                      const MagneticFieldContext& mctx,
-                      std::reference_wrapper<const CalibrationContext> cctx,
-                      KalmanFitterExtensions extensions_, LoggerWrapper logger_,
-                      const PropagatorPlainOptions& pOptions,
-                      const Surface* rSurface = nullptr,
-                      bool mScattering = true, bool eLoss = true,
-                      bool rFiltering = false, double rfScaling = 1.0,
-                      bool gToLCorrection = false)
+  /// @param freeToBoundCorrection_ Correction for non-linearity effect during transform from free to bound
+  KalmanFitterOptions(
+      const GeometryContext& gctx, const MagneticFieldContext& mctx,
+      std::reference_wrapper<const CalibrationContext> cctx,
+      KalmanFitterExtensions extensions_, LoggerWrapper logger_,
+      const PropagatorPlainOptions& pOptions, const Surface* rSurface = nullptr,
+      bool mScattering = true, bool eLoss = true, bool rFiltering = false,
+      double rfScaling = 1.0,
+      const detail::FreeToBoundCorrection& freeToBoundCorrection_ = false)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
@@ -127,8 +126,7 @@ struct KalmanFitterOptions {
         energyLoss(eLoss),
         reversedFiltering(rFiltering),
         reversedFilteringCovarianceScaling(rfScaling),
-        freeToBoundCorrection(gToLCorrection),
-
+        freeToBoundCorrection(freeToBoundCorrection_),
         logger(logger_) {}
   /// Contexts are required and the options must not be default-constructible.
   KalmanFitterOptions() = delete;
@@ -166,7 +164,7 @@ struct KalmanFitterOptions {
 
   /// Whether to include non-linear correction during global to local
   /// transformation
-  bool freeToBoundCorrection = false;
+  detail::FreeToBoundCorrection freeToBoundCorrection = false;
 
   /// Logger
   LoggerWrapper logger;
@@ -295,7 +293,7 @@ class KalmanFitter {
 
     /// Whether to include non-linear correction during global to local
     /// transformation
-    bool freeToBoundCorrection = false;
+    detail::FreeToBoundCorrection freeToBoundCorrection = false;
 
     /// @brief Kalman actor operation
     ///

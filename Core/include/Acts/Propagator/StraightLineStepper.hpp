@@ -1,4 +1,4 @@
-ll// This file is part of the Acts project.
+// This file is part of the Acts project.
 //
 // Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
@@ -13,6 +13,7 @@ ll// This file is part of the Acts project.
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
@@ -283,15 +284,15 @@ class StraightLineStepper {
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
   /// @param [in] transportCov Flag steering covariance transport
-  /// @param [in] freeToBoundCorrection Flag steering non-linearity correction during global to local transform
+  /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
   ///
   /// @return A bound state:
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  Result<BoundState> boundState(State& state, const Surface& surface,
-                                bool transportCov = true,
-                                bool freeToBoundCorrection = false) const;
+  Result<BoundState> boundState(
+      State& state, const Surface& surface, bool transportCov = true,
+      const detail::FreeToBoundCorrection& freeToBoundCorrection = false) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -344,11 +345,12 @@ class StraightLineStepper {
   /// @param [in,out] state The stepper state
   /// @param [in] surface is the surface to which the covariance is
   ///        forwarded to
-  /// @param [in] freeToBoundCorrection Flag steering non-linearity correction during global to local transform
   /// @note no check is done if the position is actually on the surface
+  /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
   ///
-  void transportCovarianceToBound(State& state, const Surface& surface,
-                                  bool freeToBoundCorrection = false) const;
+  void transportCovarianceToBound(
+      State& state, const Surface& surface,
+      const detail::FreeToBoundCorrection& freeToBoundCorrection = false) const;
 
   /// Perform a straight line propagation step
   ///

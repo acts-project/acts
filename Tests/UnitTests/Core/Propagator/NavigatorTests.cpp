@@ -149,8 +149,9 @@ struct PropagatorState {
       return state.stepSize.toString();
     }
 
-    Result<BoundState> boundState(State& state, const Surface& surface,
-                                  bool /*unused*/, bool /*unused*/
+    Result<BoundState> boundState(
+        State& state, const Surface& surface, bool /*unused*/,
+        const detail::FreeToBoundCorrection& /*unused*/
     ) const {
       auto bound =
           BoundTrackParameters::create(surface.getSharedPtr(), tgContext,
@@ -183,9 +184,9 @@ struct PropagatorState {
 
     void transportCovarianceToCurvilinear(State& /*state*/) const {}
 
-    void transportCovarianceToBound(State& /*unused*/,
-                                    const Surface& /*surface*/,
-                                    bool /*unused*/) const {}
+    void transportCovarianceToBound(
+        State& /*unused*/, const Surface& /*surface*/,
+        const detail::FreeToBoundCorrection& /*unused*/) const {}
 
     Result<Vector3> getField(State& /*state*/, const Vector3& /*pos*/) const {
       // get the field from the cell
