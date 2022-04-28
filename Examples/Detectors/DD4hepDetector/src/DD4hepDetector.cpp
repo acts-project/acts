@@ -41,6 +41,10 @@ auto DD4hepDetector::finalize(
       std::make_shared<ActsExamples::DD4hep::DD4hepGeometryService>(config);
   TrackingGeometryPtr dd4tGeometry =
       geometrySvc->trackingGeometry(dd4HepContext);
+  if (!dd4tGeometry) {
+    throw std::runtime_error{
+        "Did not receive tracking geometry from DD4hep geometry service"};
+  }
   ContextDecorators dd4ContextDeocrators = {};
   // return the pair of geometry and empty decorators
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(

@@ -66,6 +66,7 @@ option(ACTS_SETUP_BOOST "Explicitly set up Boost for the project" ON)
 option(ACTS_USE_SYSTEM_BOOST "Use a system-provided boost" ON)
 option(ACTS_SETUP_EIGEN3 "Explicitly set up Eigen3 for the project" ON)
 option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" ON)
+option(ACTS_BUILD_ODD "Build the OpenDataDetector" OFF)
 
 # handle option inter-dependencies and the everything flag
 # NOTE: ordering is important here. dependencies must come before dependees
@@ -81,6 +82,7 @@ set_option_if(ACTS_BUILD_EXAMPLES_PYTHIA8 ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_FATRAS_GEANT4 ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_FATRAS_GEANT4)
 set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_EVERYTHING)
+set_option_if(ACTS_BUILD_ODD ACTS_BUILD_EVERYTHING)
 
 # any examples component activates the general examples option
 set_option_if(
@@ -92,6 +94,7 @@ set_option_if(
   OR ACTS_BUILD_EXAMPLES_EXATRKX
   OR ACTS_BUILD_EVERYTHING)
 # core plugins might be required by examples or depend on each other
+set_option_if(ACTS_BUILD_ODD ACTS_BUILD_PLUGIN_DD4HEP)
 set_option_if(
   ACTS_BUILD_PLUGIN_DD4HEP
   ACTS_BUILD_EXAMPLES_DD4HEP OR ACTS_BUILD_EVERYTHING)
@@ -110,6 +113,7 @@ set_option_if(
 set_option_if(ACTS_BUILD_PLUGIN_LEGACY ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_PLUGIN_AUTODIFF ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_EXAMPLES_EXATRKX ACTS_BUILD_PLUGIN_EXATRKX)
+
 
 # feature tests
 include(CheckCXXSourceCompiles)
@@ -307,6 +311,8 @@ add_component(Core Core)
 add_subdirectory(Plugins)
 add_component_if(Fatras Fatras ACTS_BUILD_FATRAS)
 add_component_if(Alignment Alignment ACTS_BUILD_ALIGNMENT)
+
+add_subdirectory_if(thirdparty/OpenDataDetector ACTS_BUILD_ODD)
 
 # examples
 add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
