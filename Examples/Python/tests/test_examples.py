@@ -1030,3 +1030,17 @@ def test_vertex_fitting_reading(
 
     assert_entries(vertexing_file, "vertexing", entries)
     assert_root_hash(vertexing_file.name, vertexing_file)
+
+
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+def test_full_chain_odd_example(tmp_path):
+    # This test literally only ensures that the full chain example can run without erroring out
+    script = (
+        Path(__file__).parent.parent.parent.parent
+        / "Examples"
+        / "Scripts"
+        / "Python"
+        / "full_chain_odd.py"
+    )
+    assert script.exists()
+    subprocess.check_call([str(script)], cwd=tmp_path)
