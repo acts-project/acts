@@ -10,59 +10,82 @@
 
 #include "Acts/Surfaces/Surface.hpp"
 
-/// Get the non-linearity corrected bound parameters and its covariance
+Acts::detail::FreeToBoundCorrection::FreeToBoundCorrection(bool apply_,
+                                                           ActsScalar alpha_,
+                                                           ActsScalar beta_)
+    : apply(apply_), alpha(alpha_), beta(beta_) {}
+
+Acts::detail::FreeToBoundCorrection&
+Acts::detail::FreeToBoundCorrection::operator=(bool apply_) {
+  apply = apply_;
+  return (*this);
+}
+
+// Return boolean for applying correction or not
+bool Acts::detail::FreeToBoundCorrection::operator()() const {
+  return apply;
+}
+
+Acts::detail::CorrectedFreeToBoundTransformer::CorrectedFreeToBoundTransformer(
+    ActsScalar alpha, ActsScalar beta, ActsScalar cosIncidentAngleMinCutoff,
+    ActsScalar cosIncidentAngleMaxCutoff)
+    : m_alpha(alpha),
+      m_beta(beta),
+      m_cosIncidentAngleMinCutoff(cosIncidentAngleMinCutoff),
+      m_cosIncidentAngleMaxCutoff(cosIncidentAngleMaxCutoff) {}
+
 std::optional<std::tuple<Acts::BoundVector, Acts::BoundSymMatrix>>
 Acts::detail::CorrectedFreeToBoundTransformer::operator()(
     const Acts::FreeVector& freeParams,
     const Acts::FreeSymMatrix& freeCovariance, const Acts::Surface& surface,
-    const Acts::GeometryContext& geoContext, NavigationDirection navDir) {
+    const Acts::GeometryContext& geoContext, NavigationDirection navDir) const {
   // Get the incidence angle
   Vector3 dir = freeParams.segment<3>(eFreeDir0);
   Vector3 normal = surface.normal(geoContext);
   ActsScalar absCosIncidenceAng = std::abs(dir.dot(normal));
   // No correction if the incidentAngle is small enough (not necessary ) or too
   // large (correction could be invalid).
-  if (absCosIncidenceAng < cosIncidentAngleMinCutoff or
-      absCosIncidenceAng > cosIncidentAngleMaxCutoff) {
+  if (absCosIncidenceAng < m_cosIncidentAngleMinCutoff or
+      absCosIncidenceAng > m_cosIncidentAngleMaxCutoff) {
     return std::nullopt;
   }
 
+  // The number of sigma points
   size_t sampleSize = 2 * eFreeSize + 1;
+  // The sampled free parameters, the weight for measurement W_m and weight for
+  // covariance, W_c
   std::vector<std::tuple<FreeVector, ActsScalar, ActsScalar>> sampledFreeParams;
   sampledFreeParams.reserve(sampleSize);
 
   // Initialize the covariance sqrt root matrix
   FreeSymMatrix covSqrt = FreeSymMatrix::Zero();
-  // Get the covariance sqrt root matrix
+  // SVD decomposition: freeCovariance = U*S*U^T here
   Eigen::JacobiSVD<FreeSymMatrix> svd(
       freeCovariance, Eigen::ComputeThinU | Eigen::ComputeThinV);
-  // U*S*V^-1
   auto S = svd.singularValues();
-  auto U = svd.matrixU();
+  FreeMatrix U = svd.matrixU();
+  // Get the sqrt root matrix of S
   FreeMatrix D = FreeMatrix::Zero();
   for (unsigned i = 0; i < eFreeSize; ++i) {
-    if (S(i) == 0) {
-      continue;
-    }
-    D(i, i) = std::sqrt(S(i));
-  }
-
-  FreeMatrix UP = FreeMatrix::Zero();
-  for (unsigned i = 0; i < eFreeSize; ++i) {
-    for (unsigned j = 0; j < eFreeSize; ++j) {
-      UP(i, j) = U(i, j);
+    if (S(i) > 0) {
+      D(i, i) = std::sqrt(S(i));
     }
   }
-  covSqrt = UP * D;
+  // Get the covariance sqrt root matrix
+  covSqrt = U * D;
 
-  double kappa = alpha * alpha * eFreeSize;
-  double gamma = std::sqrt(kappa);
-  double lambda = kappa - eFreeSize;
+  // Define kappa = alpha*alpha*N
+  ActsScalar kappa = m_alpha * m_alpha * eFreeSize;
+  // lambda = alpha*alpha*N - N
+  ActsScalar lambda = kappa - eFreeSize;
+  // gamma = sqrt(labmda + N)
+  ActsScalar gamma = std::sqrt(kappa);
 
   // Sample the free parameters
-  // 1. the baseline parameter
-  sampledFreeParams.push_back({freeParams, lambda / kappa,
-                               lambda / kappa + (1.0 - alpha * alpha + beta)});
+  // 1. the nominal parameter
+  sampledFreeParams.push_back(
+      {freeParams, lambda / kappa,
+       lambda / kappa + (1.0 - m_alpha * m_alpha + m_beta)});
   // 2. the shifted parameters
   for (unsigned i = 0; i < eFreeSize; ++i) {
     sampledFreeParams.push_back(
@@ -76,14 +99,18 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   // Initialize the bound covariance
   BoundSymMatrix bv = BoundSymMatrix::Zero();
 
-  // The transformed bound parameters
+  // The transformed bound parameters and weight for each sampled free
+  // parameters
   std::vector<std::pair<BoundVector, ActsScalar>> transformedBoundParams;
 
   // 1. The nominal one
+  // The sampled free parameters, the weight for measurement W_m and weight for
+  // covariance, W_c
   const auto& [paramsNom, mweightNom, cweightNom] = sampledFreeParams[0];
   // Transform the free to bound
   auto nominalRes =
       detail::transformFreeToBoundParameters(paramsNom, surface, geoContext);
+  // Not successful, the transformation without correction will be invoked
   if (not nominalRes.ok()) {
     return std::nullopt;
   }
@@ -92,7 +119,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   bpMean = bpMean + mweightNom * nominalBound;
 
   // 2. Loop over the rest sample points of the free parameters to get the
-  // weighted bound parameters
+  // corrected bound parameters
   for (unsigned i = 1; i < sampledFreeParams.size(); ++i) {
     const auto& [params, mweight, cweight] = sampledFreeParams[i];
     FreeVector correctedFreeParams = params;
@@ -107,6 +134,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
     // Transform the free to bound
     auto result = detail::transformFreeToBoundParameters(correctedFreeParams,
                                                          surface, geoContext);
+    // Not successful, the transformation without correction will be invoked
     if (not result.ok()) {
       return std::nullopt;
     }
@@ -116,11 +144,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
     bpMean = bpMean + mweight * bp;
   }
 
-  if (transformedBoundParams.empty()) {
-    return std::nullopt;
-  }
-
-  // Get the weighted bound covariance
+  // Get the corrected bound covariance
   for (unsigned isample = 0; isample < sampleSize; ++isample) {
     BoundVector bSigma = transformedBoundParams[isample].first - bpMean;
 

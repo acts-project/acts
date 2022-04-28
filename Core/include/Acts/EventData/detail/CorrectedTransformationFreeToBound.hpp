@@ -14,27 +14,67 @@
 namespace Acts {
 namespace detail {
 
-/// @brief Parameters sampling based on covariance matrix sqrt root in UKF: https://doi.org/10.1117/12.280797
-///
-///@todo make the parameters configurable
-struct CorrectedFreeToBoundTransformer {
-  /// The parameter to tune the weight (0 < alpha <=1)
+/// @brief Free to bound transformation Correction configuration class
+//
+struct FreeToBoundCorrection {
+  // Apply correction or not
+  bool apply = false;
+
+  // UKF tuning parameters
   ActsScalar alpha = 0.1;
   ActsScalar beta = 2;
 
-  // The maximum incident angle (i.e. minimum cos incident angle) cutoff for
-  // correction
+  // The cutoff of incident angles cosine for correction
   ActsScalar cosIncidentAngleMinCutoff = 1e-5;
-
-  // The minimum incident angle (i.e. maximum cos incident angle) cutoff for
-  // correction cos(0.1) = 0.99500417
   ActsScalar cosIncidentAngleMaxCutoff = 0.99500417;
+
+  // Construct from boolean and UKF parameters (alpha, beta)
+  FreeToBoundCorrection(bool apply_, ActsScalar alpha_, ActsScalar beta_);
+
+  // Construct from boolean, default UKF tuning parameters
+  FreeToBoundCorrection& operator=(bool apply_);
+
+  // Return boolean for applying correction or not
+  bool operator()() const;
+};
+
+/// @brief Corrected free to bound transform class based on covariance matrix sqrt root in UKF: https://doi.org/10.1117/12.280797
+///
+struct CorrectedFreeToBoundTransformer {
+  // Construct from boolean, UKF parameters (alpha, beta) and incident angle
+  // cutoff for correction
+  CorrectedFreeToBoundTransformer(ActsScalar alpha, ActsScalar beta,
+                                  ActsScalar cosIncidentAngleMinCutoff,
+                                  ActsScalar cosIncidentAngleMaxCutoff);
+
+  // Default constructors
+  CorrectedFreeToBoundTransformer() = default;
+  CorrectedFreeToBoundTransformer(const CorrectedFreeToBoundTransformer&) =
+      default;
+  CorrectedFreeToBoundTransformer(CorrectedFreeToBoundTransformer&&) = default;
+  CorrectedFreeToBoundTransformer& operator=(
+      const CorrectedFreeToBoundTransformer&) = default;
+  CorrectedFreeToBoundTransformer& operator=(
+      CorrectedFreeToBoundTransformer&&) = default;
 
   /// Get the non-linearity corrected bound parameters and its covariance
   std::optional<std::tuple<BoundVector, BoundSymMatrix>> operator()(
       const FreeVector& freeParams, const FreeSymMatrix& freeCovariance,
       const Surface& surface, const GeometryContext& geoContext,
-      NavigationDirection navDir = NavigationDirection::Forward);
+      NavigationDirection navDir = NavigationDirection::Forward) const;
+
+ private:
+  /// The parameters to tune the weight in UKF (0 < alpha <=1)
+  ActsScalar m_alpha = 0.1;
+  ActsScalar m_beta = 2;
+
+  // The maximum incident angle (i.e. minimum cos incident angle) cutoff for
+  // correction
+  ActsScalar m_cosIncidentAngleMinCutoff = 1e-5;
+
+  // The minimum incident angle (i.e. maximum cos incident angle) cutoff for
+  // correction, note cos(0.1) = 0.99500417
+  ActsScalar m_cosIncidentAngleMaxCutoff = 0.99500417;
 };
 
 }  // namespace detail
