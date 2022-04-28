@@ -431,11 +431,11 @@ class MultiEigenStepperLoop
     }
 
     Result<BoundState> boundState(const Surface& surface, bool transportCov,
-                                  bool doFreeToBoundCorrection) {
+                                  bool freeToBoundCorrection) {
       return detail::boundState(
           all_state.geoContext, cov(), jacobian(), jacTransport(), derivative(),
           jacToGlobal(), pars(), all_state.covTransport && transportCov,
-          cmp.state.pathAccumulated, surface, doFreeToBoundCorrection);
+          cmp.state.pathAccumulated, surface, freeToBoundCorrection);
     }
 
     void update(const FreeVector& freeParams, const BoundVector& boundParams,
@@ -762,7 +762,7 @@ class MultiEigenStepperLoop
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
   /// @param [in] transportCov Flag steering covariance transport
-  /// @param [in] doFreeToBoundCorrection Flag steering non-linear correction during global to local correction
+  /// @param [in] freeToBoundCorrection Flag steering non-linear correction during global to local correction
   ///
   /// @return A bound state:
   ///   - the parameters at the surface
@@ -770,7 +770,7 @@ class MultiEigenStepperLoop
   ///   - and the path length (from start - for ordering)
   Result<BoundState> boundState(State& state, const Surface& surface,
                                 bool transportCov = true,
-                                bool doFreeToBoundCorrection = false) const;
+                                bool freeToBoundCorrection = false) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -808,14 +808,14 @@ class MultiEigenStepperLoop
   ///
   /// @param [in,out] state State of the stepper
   /// @param [in] surface is the surface to which the covariance is forwarded
-  /// @param [in] doFreeToBoundCorrection Flag steering non-linear correction during global to local correction
+  /// @param [in] freeToBoundCorrection Flag steering non-linear correction during global to local correction
   /// to
   /// @note no check is done if the position is actually on the surface
   void transportCovarianceToBound(State& state, const Surface& surface,
-                                  bool doFreeToBoundCorrection = false) const {
+                                  bool freeToBoundCorrection = false) const {
     for (auto& component : state.components) {
       SingleStepper::transportCovarianceToBound(component.state, surface,
-                                                doFreeToBoundCorrection);
+                                                freeToBoundCorrection);
     }
   }
 

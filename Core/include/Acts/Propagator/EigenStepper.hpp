@@ -313,7 +313,7 @@ class EigenStepper {
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
   /// @param [in] transportCov Flag steering covariance transport
-  /// @param [in] doFreeToBoundCorrection Whether correct for non-linearity effect during transform from free to bound
+  /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
   ///
   /// @return A bound state:
   ///   - the parameters at the surface
@@ -321,7 +321,7 @@ class EigenStepper {
   ///   - and the path length (from start - for ordering)
   Result<BoundState> boundState(State& state, const Surface& surface,
                                 bool transportCov = true,
-                                bool doFreeToBoundCorrection = false) const;
+                                detail::FreeToBoundCorrection freeToBoundCorrection = false) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -374,10 +374,10 @@ class EigenStepper {
   ///
   /// @param [in,out] state State of the stepper
   /// @param [in] surface is the surface to which the covariance is forwarded to
-  /// @param [in] doFreeToBoundCorrection Whether correct for non-linearity effect during transform from free to bound
+  /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
   /// @note no check is done if the position is actually on the surface
   void transportCovarianceToBound(State& state, const Surface& surface,
-                                  bool doFreeToBoundCorrection = false) const;
+                                  detail::FreeToBoundCorrection freeToBoundCorrection = false) const;
 
   /// Perform a Runge-Kutta track parameter propagation step
   ///

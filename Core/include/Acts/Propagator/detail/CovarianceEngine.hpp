@@ -48,7 +48,7 @@ namespace detail {
 /// performed
 /// @param [in] accumulatedPath Propagated distance
 /// @param [in] surface Target surface on which the state is represented
-/// @param [in] doFreeToBoundCorrection Whether correct for non-linearity effect during transform from free to bound
+/// @param [in] freeToBoundCorrection Whether correct for non-linearity effect during transform from free to bound
 ///
 /// @return A bound state:
 ///   - the parameters at the surface
@@ -59,7 +59,7 @@ Result<std::tuple<BoundTrackParameters, BoundMatrix, double>> boundState(
     BoundMatrix& jacobian, FreeMatrix& transportJacobian,
     FreeVector& derivatives, BoundToFreeMatrix& jacToGlobal,
     FreeVector& parameters, bool covTransport, double accumulatedPath,
-    const Surface& surface, bool doFreeToBoundCorrection = false);
+    const Surface& surface, bool freeToBoundCorrection = false);
 
 /// Create and return a curvilinear state at the current position
 ///
@@ -100,7 +100,7 @@ std::tuple<CurvilinearTrackParameters, BoundMatrix, double> curvilinearState(
 /// @param [in, out] freeParameters Free, nominal parametrisation
 /// @param [in] surface is the surface to which the covariance is
 ///        forwarded to
-/// @param [in] doFreeToBoundCorrection Whether correct for non-linearity effect during transform from free to bound
+/// @param [in] freeToBoundCorrection Whether correct for non-linearity effect during transform from free to bound
 ///
 /// @note No check is done if the position is actually on the surface
 ///
@@ -109,7 +109,7 @@ void transportCovarianceToBound(
     BoundMatrix& fullTransportJacobian, FreeMatrix& freeTransportJacobian,
     FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
     FreeVector& freeParameters, const Surface& surface,
-    bool doFreeToBoundCorrection = false);
+    bool freeToBoundCorrection = false);
 
 /// @brief Method for on-demand covariance transport of a bound/curvilinear
 /// to a new curvilinear representation.

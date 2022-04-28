@@ -262,7 +262,7 @@ Result<BoundState> boundState(
     BoundMatrix& jacobian, FreeMatrix& transportJacobian,
     FreeVector& derivatives, BoundToFreeMatrix& boundToFreeJacobian,
     FreeVector& parameters, bool covTransport, double accumulatedPath,
-    const Surface& surface, bool doFreeToBoundCorrection) {
+    const Surface& surface, bool freeToBoundCorrection) {
   // Covariance transport
   std::optional<BoundSymMatrix> cov = std::nullopt;
   if (covTransport) {
@@ -273,7 +273,7 @@ Result<BoundState> boundState(
     // boundToFreeJacobian
     transportCovarianceToBound(
         geoContext, covarianceMatrix, jacobian, transportJacobian, derivatives,
-        boundToFreeJacobian, parameters, surface, doFreeToBoundCorrection);
+        boundToFreeJacobian, parameters, surface, freeToBoundCorrection);
   }
   if (covarianceMatrix != BoundSymMatrix::Zero()) {
     cov = covarianceMatrix;
@@ -334,7 +334,7 @@ void transportCovarianceToBound(
     BoundMatrix& fullTransportJacobian, FreeMatrix& freeTransportJacobian,
     FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
     FreeVector& freeParameters, const Surface& surface,
-    bool doFreeToBoundCorrection) {
+    bool freeToBoundCorrection) {
   // Calculate the full jacobian from local parameters at the start surface to
   // current bound parameters
   boundToBoundJacobian(geoContext, freeParameters, boundToFreeJacobian,
@@ -342,7 +342,7 @@ void transportCovarianceToBound(
                        fullTransportJacobian, surface);
 
   bool correction = false;
-  if (doFreeToBoundCorrection) {
+  if (freeToBoundCorrection) {
     BoundToFreeMatrix startBoundToFinalFreeJacobian =
         freeTransportJacobian * boundToFreeJacobian;
     FreeSymMatrix freeCovariance = startBoundToFinalFreeJacobian *

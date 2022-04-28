@@ -1,4 +1,4 @@
-// This file is part of the Acts project.
+ll// This file is part of the Acts project.
 //
 // Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
@@ -283,7 +283,7 @@ class StraightLineStepper {
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
   /// @param [in] transportCov Flag steering covariance transport
-  /// @param [in] doFreeToBoundCorrection Flag steering non-linearity correction during global to local transform
+  /// @param [in] freeToBoundCorrection Flag steering non-linearity correction during global to local transform
   ///
   /// @return A bound state:
   ///   - the parameters at the surface
@@ -291,7 +291,7 @@ class StraightLineStepper {
   ///   - and the path length (from start - for ordering)
   Result<BoundState> boundState(State& state, const Surface& surface,
                                 bool transportCov = true,
-                                bool doFreeToBoundCorrection = false) const;
+                                bool freeToBoundCorrection = false) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -344,11 +344,11 @@ class StraightLineStepper {
   /// @param [in,out] state The stepper state
   /// @param [in] surface is the surface to which the covariance is
   ///        forwarded to
-  /// @param [in] doFreeToBoundCorrection Flag steering non-linearity correction during global to local transform
+  /// @param [in] freeToBoundCorrection Flag steering non-linearity correction during global to local transform
   /// @note no check is done if the position is actually on the surface
   ///
   void transportCovarianceToBound(State& state, const Surface& surface,
-                                  bool doFreeToBoundCorrection = false) const;
+                                  bool freeToBoundCorrection = false) const;
 
   /// Perform a straight line propagation step
   ///
