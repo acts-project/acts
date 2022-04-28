@@ -49,7 +49,8 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   Vector3 normal = surface.normal(geoContext);
   ActsScalar absCosIncidenceAng = std::abs(dir.dot(normal));
   // No correction if the incidentAngle is small enough (not necessary ) or too
-  // large (correction could be invalid).
+  // large (correction could be invalid). Fall back to nominal free to bound
+  // transformation
   if (absCosIncidenceAng < m_cosIncidentAngleMinCutoff or
       absCosIncidenceAng > m_cosIncidentAngleMaxCutoff) {
     ACTS_VERBOSE("Incident angle: " << std::acos(absCosIncidenceAng)
@@ -117,7 +118,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   // Transform the free to bound
   auto nominalRes =
       detail::transformFreeToBoundParameters(paramsNom, surface, geoContext);
-  // Not successful, the transformation without correction will be invoked
+  // Not successful, fall back to nominal free to bound transformation
   if (not nominalRes.ok()) {
     ACTS_WARNING(
         "Free to bound transformation for nominal free parameters failed.");
@@ -143,7 +144,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
     // Transform the free to bound
     auto result = detail::transformFreeToBoundParameters(correctedFreeParams,
                                                          surface, geoContext);
-    // Not successful, the transformation without correction will be invoked
+    // Not successful, fall back to nominal free to bound transformation
     if (not result.ok()) {
       ACTS_WARNING(
           "Free to bound transformation for sampled free parameters: \n"

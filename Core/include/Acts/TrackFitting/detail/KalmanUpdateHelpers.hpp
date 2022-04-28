@@ -30,19 +30,15 @@ namespace detail {
 /// @param lastTrackIndex The parent index for the new state in the MT
 /// @param doCovTransport Wether to perform a covariance transport when
 /// computing the bound state or not
-/// @param freeToBoundCorrection Wether to perform non-linear correction when
-/// transforming from global to local track parameters (correction is performed
-/// only when performing CovTransport)
+/// @param freeToBoundCorrection Correction for non-linearity effect during transform from free to bound (only corrected when performing CovTransport)
 template <typename propagator_state_t, typename stepper_t,
           typename extensions_t>
-auto kalmanHandleMeasurement(propagator_state_t &state,
-                             const stepper_t &stepper,
-                             const extensions_t &extensions,
-                             const Surface &surface,
-                             const SourceLink &source_link,
-                             MultiTrajectory &fittedStates,
-                             const size_t lastTrackIndex, bool doCovTransport,
-                             bool freeToBoundCorrection = false)
+auto kalmanHandleMeasurement(
+    propagator_state_t &state, const stepper_t &stepper,
+    const extensions_t &extensions, const Surface &surface,
+    const SourceLink &source_link, MultiTrajectory &fittedStates,
+    const size_t lastTrackIndex, bool doCovTransport,
+    const FreeToBoundCorrection &freeToBoundCorrection = false)
     -> Result<MultiTrajectory::TrackStateProxy> {
   const auto &logger = state.options.logger;
 
@@ -125,15 +121,13 @@ auto kalmanHandleMeasurement(propagator_state_t &state,
 /// @param lastTrackIndex The parent index for the new state in the MT
 /// @param doCovTransport Wether to perform a covariance transport when
 /// computing the bound state or not
-/// @param freeToBoundCorrection Wether to perform non-linear correction when
-/// transforming from global to local track parameters (correction is performed
-/// only when performing CovTransport)
+/// @param freeToBoundCorrection Correction for non-linearity effect during transform from free to bound (only corrected when performing CovTransport)
 template <typename propagator_state_t, typename stepper_t>
-auto kalmanHandleNoMeasurement(propagator_state_t &state,
-                               const stepper_t &stepper, const Surface &surface,
-                               MultiTrajectory &fittedStates,
-                               const size_t lastTrackIndex, bool doCovTransport,
-                               bool freeToBoundCorrection = false)
+auto kalmanHandleNoMeasurement(
+    propagator_state_t &state, const stepper_t &stepper, const Surface &surface,
+    MultiTrajectory &fittedStates, const size_t lastTrackIndex,
+    bool doCovTransport,
+    const FreeToBoundCorrection &freeToBoundCorrection = false)
     -> Result<MultiTrajectory::TrackStateProxy> {
   const auto &logger = state.options.logger;
 
