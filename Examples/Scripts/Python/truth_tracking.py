@@ -152,7 +152,7 @@ def runTruthTracking(
         directNavigation=directNavigation,
         multipleScattering=True,
         energyLoss=True,
-        freeToBoundCorrection=False,
+        freeToBoundCorrection=acts.examples.FreeToBoundCorrection(False),
         pickTrack=-1,
         reverseFilteringMomThreshold=reverseFilteringMomThreshold,
         trackingGeometry=trackingGeometry,

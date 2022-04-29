@@ -94,6 +94,14 @@ void addTrackFitting(Context& ctx) {
     ACTS_PYTHON_MEMBER(reverseFilteringMomThreshold);
     ACTS_PYTHON_STRUCT_END();
   }
+
+  {
+    py::class_<detail::FreeToBoundCorrection>(mex, "FreeToBoundCorrection")
+        .def(py::init<>())
+        .def(py::init<bool>(), py::arg("apply") = false)
+        .def(py::init<bool, double, double>(), py::arg("apply") = false,
+             py::arg("alpha") = 0.1, py::arg("beta") = 2);
+  }
 }
 
 }  // namespace Acts::Python
