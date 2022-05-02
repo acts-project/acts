@@ -9,49 +9,61 @@ import acts.examples
 u = acts.UnitConstants
 
 
-def addTruthTrackFinding(
+def addKalmanTracks(
     s: acts.examples.Sequencer,
-    rnd: Optional[acts.examples.RandomNumbers] = None,
+    trackingGeometry: acts.TrackingGeometry,
+    field: acts.MagneticFieldProvider,
+    directNavigation=False,
+    reverseFilteringMomThreshold=0*u.GeV,
 ):
-    selAlg = acts.examples.TruthSeedSelector(
-        level=acts.logging.INFO,
-        ptMin=500 * u.MeV,
-        nHitsMin=9,
-        inputParticles="particles_initial",
-        inputMeasurementParticlesMap="measurement_particles_map",
-        outputParticles="particles_seed_selected",
-    )
-    s.addAlgorithm(selAlg)
-
-    smearAlg = acts.examples.ParticleSmearing(
-        level=acts.logging.INFO,
-        inputParticles=selAlg.config.outputParticles,
-        outputTrackParameters="smearedparameters",
-        randomNumbers=rnd,
-        # Gaussian sigmas to smear particle parameters
-        # sigmaD0=20 * u.um,
-        # sigmaD0PtA=30 * u.um,
-        # sigmaD0PtB=0.3 / u.GeV,
-        # sigmaZ0=20 * u.um,
-        # sigmaZ0PtA=30 * u.um,
-        # sigmaZ0PtB=0.3 / u.GeV,
-        # sigmaPhi=1 * u.degree,
-        # sigmaTheta=1 * u.degree,
-        # sigmaPRel=0.01,
-        # sigmaT0=1 * u.ns,
-        # initialVarInflation=[1, 1, 1, 1, 1, 1],
-    )
-    s.addAlgorithm(smearAlg)
-
     truthTrkFndAlg = acts.examples.TruthTrackFinder(
         level=acts.logging.INFO,
-        inputParticles=selAlg.config.outputParticles,
+        inputParticles="truth_seeds_selected",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputProtoTracks="prototracks",
     )
     s.addAlgorithm(truthTrkFndAlg)
 
+    if directNavigation:
+        srfSortAlg = acts.examples.SurfaceSortingAlgorithm(
+            level=acts.logging.INFO,
+            inputProtoTracks="prototracks",
+            inputSimulatedHits=outputSimHits,
+            inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
+            outputProtoTracks="sortedprototracks",
+        )
+        s.addAlgorithm(srfSortAlg)
+        inputProtoTracks = srfSortAlg.config.outputProtoTracks
+    else:
+        inputProtoTracks = "prototracks"
+
+    kalmanOptions = {
+        "multipleScattering": True,
+        "energyLoss": True,
+        "reverseFilteringMomThreshold": reverseFilteringMomThreshold,
+    }
+
+    fitAlg = acts.examples.TrackFittingAlgorithm(
+        level=acts.logging.INFO,
+        inputMeasurements="measurements",
+        inputSourceLinks="sourcelinks",
+        inputProtoTracks=inputProtoTracks,
+        inputInitialTrackParameters="estimatedparameters",
+        outputTrajectories="trajectories",
+        directNavigation=directNavigation,
+        pickTrack=-1,
+        trackingGeometry=trackingGeometry,
+        dFit=acts.examples.TrackFittingAlgorithm.makeKalmanFitterFunction(
+            field, **kalmanOptions
+        ),
+        fit=acts.examples.TrackFittingAlgorithm.makeKalmanFitterFunction(
+            trackingGeometry, field, **kalmanOptions
+        ),
+    )
+    s.addAlgorithm(fitAlg)
+
     return s
+
 
 
 def runTruthTrackingKalman(
@@ -67,6 +79,7 @@ def runTruthTrackingKalman(
     from particle_gun import addParticleGun, EtaConfig, PhiConfig, ParticleConfig
     from fatras import addFatras
     from digitization import addDigitization
+    from seeding import addSeeding, SeedingAlgorithm
 
     s = s or acts.examples.Sequencer(
         events=100, numThreads=-1, logLevel=acts.logging.INFO
@@ -116,55 +129,22 @@ def runTruthTrackingKalman(
         rnd=rnd,
     )
 
-    s = addTruthTrackFinding(
+    s = addSeeding(
         s,
-        rnd=rnd,
+        trackingGeometry,
+        field,
+        seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
     )
 
-    if directNavigation:
-        srfSortAlg = acts.examples.SurfaceSortingAlgorithm(
-            level=acts.logging.INFO,
-            inputProtoTracks="prototracks",
-            inputSimulatedHits=outputSimHits,
-            inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
-            outputProtoTracks="sortedprototracks",
-        )
-        s.addAlgorithm(srfSortAlg)
-        inputProtoTracks = srfSortAlg.config.outputProtoTracks
-    else:
-        inputProtoTracks = "prototracks"
-
-    kalmanOptions = {
-        "multipleScattering": True,
-        "energyLoss": True,
-        "reverseFilteringMomThreshold": reverseFilteringMomThreshold,
-    }
-
-    fitAlg = acts.examples.TrackFittingAlgorithm(
-        level=acts.logging.INFO,
-        inputMeasurements="measurements",
-        inputSourceLinks="sourcelinks",
-        inputProtoTracks=inputProtoTracks,
-        inputInitialTrackParameters="smearedparameters",
-        outputTrajectories="trajectories",
-        directNavigation=directNavigation,
-        pickTrack=-1,
-        trackingGeometry=trackingGeometry,
-        dFit=acts.examples.TrackFittingAlgorithm.makeKalmanFitterFunction(
-            field, **kalmanOptions
-        ),
-        fit=acts.examples.TrackFittingAlgorithm.makeKalmanFitterFunction(
-            trackingGeometry, field, **kalmanOptions
-        ),
-    )
-    s.addAlgorithm(fitAlg)
+    s = addKalmanTracks(
+        s, trackingGeometry, field, directNavigation, reverseFilteringMomThreshold)
 
     # Output
     s.addWriter(
         acts.examples.RootTrajectoryStatesWriter(
             level=acts.logging.INFO,
-            inputTrajectories=fitAlg.config.outputTrajectories,
-            inputParticles="particles_seed_selected",
+            inputTrajectories="trajectories",
+            inputParticles="truth_seeds_selected",
             inputSimHits="simhits",
             inputMeasurementParticlesMap="measurement_particles_map",
             inputMeasurementSimHitsMap="measurement_simhits_map",
@@ -175,8 +155,8 @@ def runTruthTrackingKalman(
     s.addWriter(
         acts.examples.RootTrajectorySummaryWriter(
             level=acts.logging.INFO,
-            inputTrajectories=fitAlg.config.outputTrajectories,
-            inputParticles="particles_seed_selected",
+            inputTrajectories="trajectories",
+            inputParticles="truth_seeds_selected",
             inputMeasurementParticlesMap="measurement_particles_map",
             filePath=str(outputDir / "tracksummary_fitter.root"),
         )
@@ -185,8 +165,8 @@ def runTruthTrackingKalman(
     s.addWriter(
         acts.examples.TrackFinderPerformanceWriter(
             level=acts.logging.INFO,
-            inputProtoTracks=fitAlg.config.inputProtoTracks,
-            inputParticles="particles_seed_selected",
+            inputProtoTracks="sortedprototracks" if directNavigation else "prototracks",
+            inputParticles="truth_seeds_selected",
             inputMeasurementParticlesMap="measurement_particles_map",
             filePath=str(outputDir / "performance_track_finder.root"),
         )
@@ -195,8 +175,8 @@ def runTruthTrackingKalman(
     s.addWriter(
         acts.examples.TrackFitterPerformanceWriter(
             level=acts.logging.INFO,
-            inputTrajectories=fitAlg.config.outputTrajectories,
-            inputParticles="particles_seed_selected",
+            inputTrajectories="trajectories",
+            inputParticles="truth_seeds_selected",
             inputMeasurementParticlesMap="measurement_particles_map",
             filePath=str(outputDir / "performance_track_fitter.root"),
         )

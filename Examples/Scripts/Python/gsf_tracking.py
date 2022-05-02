@@ -11,6 +11,8 @@ from acts import UnitConstants as u
 
 def addGsfTracks(
     s: acts.examples.Sequencer,
+    trackingGeometry: acts.TrackingGeometry,
+    field: acts.MagneticFieldProvider,
 ):
     gsfOptions = {
         "maxComponents": 12,
@@ -23,8 +25,8 @@ def addGsfTracks(
         inputMeasurements="measurements",
         inputSourceLinks="sourcelinks",
         inputProtoTracks="prototracks",
-        inputInitialTrackParameters="smearedparameters",
-        outputTrajectories="gsf-trajectories",
+        inputInitialTrackParameters="estimatedparameters",
+        outputTrajectories="gsf_trajectories",
         directNavigation=False,
         pickTrack=-1,
         trackingGeometry=trackingGeometry,
@@ -55,7 +57,7 @@ def runGsfTracks(
     from particle_gun import addParticleGun, EtaConfig, PhiConfig, ParticleConfig
     from fatras import addFatras
     from digitization import addDigitization
-    from truth_tracking import addTruthTrackFinding
+    from seeding import addSeeding, SeedingAlgorithm
 
     s = s or acts.examples.Sequencer(
         events=100, numThreads=-1, logLevel=acts.logging.INFO
@@ -105,9 +107,46 @@ def runGsfTracks(
         rnd=rnd,
     )
 
-    s = addTruthTrackFinding(s, rnd=rnd)
+    s = addSeeding(
+        s,
+        trackingGeometry,
+        field,
+        seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
+    )
 
-    s = addGsfTracks(s)
+    truthTrkFndAlg = acts.examples.TruthTrackFinder(
+        level=acts.logging.INFO,
+        inputParticles="truth_seeds_selected",
+        inputMeasurementParticlesMap="measurement_particles_map",
+        outputProtoTracks="prototracks",
+    )
+
+    s.addAlgorithm(truthTrkFndAlg)
+
+    s = addGsfTracks(s, trackingGeometry, field)
+
+    # Output
+    s.addWriter(
+        acts.examples.RootTrajectoryStatesWriter(
+            level=acts.logging.INFO,
+            inputTrajectories="gsf_trajectories",
+            inputParticles="truth_seeds_selected",
+            inputSimHits="simhits",
+            inputMeasurementParticlesMap="measurement_particles_map",
+            inputMeasurementSimHitsMap="measurement_simhits_map",
+            filePath=str(outputDir / "trackstates_gsf.root"),
+        )
+    )
+
+    s.addWriter(
+        acts.examples.RootTrajectorySummaryWriter(
+            level=acts.logging.INFO,
+            inputTrajectories="gsf_trajectories",
+            inputParticles="truth_seeds_selected",
+            inputMeasurementParticlesMap="measurement_particles_map",
+            filePath=str(outputDir / "tracksummary_gsf.root"),
+        )
+    )
 
     return s
 
