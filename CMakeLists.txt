@@ -82,7 +82,6 @@ set_option_if(ACTS_BUILD_EXAMPLES_PYTHIA8 ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_FATRAS_GEANT4 ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_FATRAS_GEANT4)
 set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_ODD ACTS_BUILD_EVERYTHING)
 
 # any examples component activates the general examples option
 set_option_if(

@@ -28,9 +28,6 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: true
-          lfs: true
 
       - name: Configure
         # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
@@ -109,6 +106,7 @@ jobs:
           -DCMAKE_CXX_STANDARD=17
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_BUILD_EVERYTHING=ON
+          -DACTS_BUILD_ODD=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
           -DACTS_FORCE_ASSERTIONS=ON
 
@@ -319,10 +317,6 @@ jobs:
       INSTALL_DIR: ${{ github.workspace }}/install
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: true
-          lfs: true
-
       - name: Install dependencies
         run: >
           brew install cmake eigen ninja
@@ -343,6 +337,7 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DCMAKE_PREFIX_PATH=/usr/local/acts
           -DACTS_BUILD_EVERYTHING=ON
+          -DACTS_BUILD_ODD=ON
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
           -DACTS_FORCE_ASSERTIONS=ON
       - name: Build
