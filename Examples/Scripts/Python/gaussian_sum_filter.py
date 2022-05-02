@@ -9,7 +9,36 @@ import acts
 from acts import UnitConstants as u
 
 
-def runCKFTracks(
+def addGSF(
+    s: acts.examples.Sequencer,
+):
+    gsfOptions = {
+        "maxComponents": 12,
+        "abortOnError": False,
+        "disableAllMaterialHandling": False,
+    }
+
+    gsfAlg = acts.examples.TrackFittingAlgorithm(
+        level=acts.logging.INFO,
+        inputMeasurements="measurements",
+        inputSourceLinks="sourcelinks",
+        inputProtoTracks="prototracks",
+        inputInitialTrackParameters="smearedparameters",
+        outputTrajectories="gsf-trajectories",
+        directNavigation=False,
+        pickTrack=-1,
+        trackingGeometry=trackingGeometry,
+        fit=acts.examples.TrackFittingAlgorithm.makeGsfFitterFunction(
+            trackingGeometry, field, **gsfOptions
+        ),
+    )
+
+    s.addAlgorithm(gsfAlg)
+
+    return s
+
+
+def runGSF(
     trackingGeometry,
     decorators,
     geometrySelection: Path,
@@ -26,6 +55,7 @@ def runCKFTracks(
     from particle_gun import addParticleGun, EtaConfig, PhiConfig, ParticleConfig
     from fatras import addFatras
     from digitization import addDigitization
+    from truth_tracking import addTruthTrackFinding
 
     s = s or acts.examples.Sequencer(
         events=100, numThreads=-1, logLevel=acts.logging.INFO
@@ -75,68 +105,9 @@ def runCKFTracks(
         rnd=rnd,
     )
 
-    selAlg = acts.examples.TruthSeedSelector(
-        level=acts.logging.INFO,
-        ptMin=500 * u.MeV,
-        nHitsMin=9,
-        inputParticles="particles_initial",  # fatrasCfg.outputParticlesInitial,
-        inputMeasurementParticlesMap="measurement_particles_map",  # digiCfg.outputMeasurementParticlesMap,
-        outputParticles="particles_seed_selected",
-    )
-    s.addAlgorithm(selAlg)
+    s = addTruthTrackFinding(s, rnd=rnd)
 
-    inputParticles = selAlg.config.outputParticles
-
-    smearAlg = acts.examples.ParticleSmearing(
-        level=acts.logging.INFO,
-        inputParticles=inputParticles,
-        outputTrackParameters="smearedparameters",
-        randomNumbers=rnd,
-        # Gaussian sigmas to smear particle parameters
-        # sigmaD0=20 * u.um,
-        # sigmaD0PtA=30 * u.um,
-        # sigmaD0PtB=0.3 / u.GeV,
-        # sigmaZ0=20 * u.um,
-        # sigmaZ0PtA=30 * u.um,
-        # sigmaZ0PtB=0.3 / u.GeV,
-        # sigmaPhi=1 * u.degree,
-        # sigmaTheta=1 * u.degree,
-        # sigmaPRel=0.01,
-        # sigmaT0=1 * u.ns,
-        # initialVarInflation=[1, 1, 1, 1, 1, 1],
-    )
-    s.addAlgorithm(smearAlg)
-
-    truthTrkFndAlg = acts.examples.TruthTrackFinder(
-        level=acts.logging.INFO,
-        inputParticles=inputParticles,
-        inputMeasurementParticlesMap="measurement_particles_map",  # digiCfg.outputMeasurementParticlesMap,
-        outputProtoTracks="prototracks",
-    )
-    s.addAlgorithm(truthTrkFndAlg)
-
-    gsfOptions = {
-        "maxComponents": 12,
-        "abortOnError": False,
-        "disableAllMaterialHandling": False,
-    }
-
-    gsfAlg = acts.examples.TrackFittingAlgorithm(
-        level=acts.logging.INFO,
-        inputMeasurements="measurements",  # digiCfg.outputMeasurements,
-        inputSourceLinks="sourcelinks",  # digiCfg.outputSourceLinks,
-        inputProtoTracks=truthTrkFndAlg.config.outputProtoTracks,
-        inputInitialTrackParameters=smearAlg.config.outputTrackParameters,
-        outputTrajectories="gsf-trajectories",
-        directNavigation=False,
-        pickTrack=-1,
-        trackingGeometry=trackingGeometry,
-        fit=acts.examples.TrackFittingAlgorithm.makeGsfFitterFunction(
-            trackingGeometry, field, **gsfOptions
-        ),
-    )
-
-    s.addAlgorithm(gsfAlg)
+    s = addGSF(s)
 
     return s
 
@@ -152,7 +123,7 @@ if "__main__" == __name__:
     if not inputParticlePath.exists():
         inputParticlePath = None
 
-    runCKFTracks(
+    runGSF(
         trackingGeometry,
         decorators,
         field=field,

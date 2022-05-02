@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 from pathlib import Path
+from typing import Optional, Union
 
 import acts
 import acts.examples
@@ -8,102 +9,23 @@ import acts.examples
 u = acts.UnitConstants
 
 
-def runTruthTracking(
-    trackingGeometry: acts.TrackingGeometry,
-    field: acts.MagneticFieldProvider,
-    outputDir: Path,
-    digiConfigFile: Path,
-    directNavigation=False,
-    reverseFilteringMomThreshold=0 * u.GeV,
-    s: acts.examples.Sequencer = None,
+def addTruthTrackFinding(
+    s: acts.examples.Sequencer,
+    rnd: Optional[acts.examples.RandomNumbers] = None,
 ):
-
-    # Preliminaries
-    rnd = acts.examples.RandomNumbers()
-
-    # Sequencer
-    s = s or acts.examples.Sequencer(
-        events=10, numThreads=-1, logLevel=acts.logging.INFO
-    )
-
-    # Input
-    vtxGen = acts.examples.GaussianVertexGenerator()
-    vtxGen.stddev = acts.Vector4(0, 0, 0, 0)
-
-    ptclGen = acts.examples.ParametricParticleGenerator(
-        p=(1 * u.GeV, 10 * u.GeV), eta=(-2, 2), numParticles=2
-    )
-
-    g = acts.examples.EventGenerator.Generator()
-    g.multiplicity = acts.examples.FixedMultiplicityGenerator()
-    g.vertex = vtxGen
-    g.particles = ptclGen
-
-    evGen = acts.examples.EventGenerator(
-        level=acts.logging.INFO,
-        generators=[g],
-        outputParticles="particles_input",
-        randomNumbers=rnd,
-    )
-    s.addReader(evGen)
-
-    s.addWriter(
-        acts.examples.RootParticleWriter(
-            level=acts.logging.INFO,
-            inputParticles=evGen.config.outputParticles,
-            filePath=str(outputDir / "particles.root"),
-        )
-    )
-
-    # Selector
-    selector = acts.examples.ParticleSelector(
-        level=acts.logging.INFO,
-        inputParticles=evGen.config.outputParticles,
-        outputParticles="particles_selected",
-    )
-    s.addAlgorithm(selector)
-
-    # Simulation
-    simAlg = acts.examples.FatrasSimulation(
-        level=acts.logging.INFO,
-        inputParticles=selector.config.outputParticles,
-        outputParticlesInitial="particles_initial",
-        outputParticlesFinal="particles_final",
-        outputSimHits="simhits",
-        randomNumbers=rnd,
-        trackingGeometry=trackingGeometry,
-        magneticField=field,
-        generateHitsOnSensitive=True,
-    )
-    s.addAlgorithm(simAlg)
-
-    # Digitization
-    digiCfg = acts.examples.DigitizationConfig(
-        acts.examples.readDigiConfigFromJson(
-            str(digiConfigFile),
-        ),
-        trackingGeometry=trackingGeometry,
-        randomNumbers=rnd,
-        inputSimHits=simAlg.config.outputSimHits,
-    )
-    digiAlg = acts.examples.DigitizationAlgorithm(digiCfg, acts.logging.INFO)
-    s.addAlgorithm(digiAlg)
-
     selAlg = acts.examples.TruthSeedSelector(
         level=acts.logging.INFO,
         ptMin=500 * u.MeV,
         nHitsMin=9,
-        inputParticles=simAlg.config.outputParticlesInitial,
-        inputMeasurementParticlesMap=digiCfg.outputMeasurementParticlesMap,
+        inputParticles="particles_initial",
+        inputMeasurementParticlesMap="measurement_particles_map",
         outputParticles="particles_seed_selected",
     )
     s.addAlgorithm(selAlg)
 
-    inputParticles = selAlg.config.outputParticles
-
     smearAlg = acts.examples.ParticleSmearing(
         level=acts.logging.INFO,
-        inputParticles=inputParticles,
+        inputParticles=selAlg.config.outputParticles,
         outputTrackParameters="smearedparameters",
         randomNumbers=rnd,
         # Gaussian sigmas to smear particle parameters
@@ -123,24 +45,94 @@ def runTruthTracking(
 
     truthTrkFndAlg = acts.examples.TruthTrackFinder(
         level=acts.logging.INFO,
-        inputParticles=inputParticles,
-        inputMeasurementParticlesMap=digiAlg.config.outputMeasurementParticlesMap,
+        inputParticles=selAlg.config.outputParticles,
+        inputMeasurementParticlesMap="measurement_particles_map",
         outputProtoTracks="prototracks",
     )
     s.addAlgorithm(truthTrkFndAlg)
 
+    return s
+
+
+def runTruthTrackingKalman(
+    trackingGeometry: acts.TrackingGeometry,
+    field: acts.MagneticFieldProvider,
+    outputDir: Path,
+    digiConfigFile: Path,
+    directNavigation=False,
+    reverseFilteringMomThreshold=0 * u.GeV,
+    s: acts.examples.Sequencer = None,
+    inputParticlePath: Optional[Path] = None,
+):
+    from particle_gun import addParticleGun, EtaConfig, PhiConfig, ParticleConfig
+    from fatras import addFatras
+    from digitization import addDigitization
+
+    s = s or acts.examples.Sequencer(
+        events=100, numThreads=-1, logLevel=acts.logging.INFO
+    )
+
+    for d in decorators:
+        s.addContextDecorator(d)
+
+    rnd = acts.examples.RandomNumbers(seed=42)
+    outputDir = Path(outputDir)
+
+    if inputParticlePath is None:
+        s = addParticleGun(
+            s,
+            EtaConfig(-2.0, 2.0),
+            ParticleConfig(4, acts.PdgParticle.eMuon, True),
+            PhiConfig(0.0, 360.0 * u.degree),
+            multiplicity=2,
+            rnd=rnd,
+        )
+    else:
+        acts.logging.getLogger("Truth tracking example").info(
+            "Reading particles from %s", inputParticlePath.resolve()
+        )
+        assert inputParticlePath.exists()
+        s.addReader(
+            RootParticleReader(
+                level=acts.logging.INFO,
+                filePath=str(inputParticlePath.resolve()),
+                particleCollection="particles_input",
+                orderedEvents=False,
+            )
+        )
+
+    s = addFatras(
+        s,
+        trackingGeometry,
+        field,
+        rnd=rnd,
+    )
+
+    s = addDigitization(
+        s,
+        trackingGeometry,
+        field,
+        digiConfigFile=digiConfigFile,
+        rnd=rnd,
+    )
+
+    s = addTruthTrackFinding(
+        s,
+        rnd=rnd,
+    )
+
     if directNavigation:
         srfSortAlg = acts.examples.SurfaceSortingAlgorithm(
             level=acts.logging.INFO,
-            inputProtoTracks=truthTrkFndAlg.config.outputProtoTracks,
-            inputSimulatedHits=simAlg.config.outputSimHits,
+            inputProtoTracks="prototracks",
+            inputSimulatedHits=outputSimHits,
             inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
             outputProtoTracks="sortedprototracks",
         )
         s.addAlgorithm(srfSortAlg)
         inputProtoTracks = srfSortAlg.config.outputProtoTracks
     else:
-        inputProtoTracks = truthTrkFndAlg.config.outputProtoTracks
+        inputProtoTracks = "prototracks"
 
     kalmanOptions = {
         "multipleScattering": True,
@@ -150,10 +142,10 @@ def runTruthTracking(
 
     fitAlg = acts.examples.TrackFittingAlgorithm(
         level=acts.logging.INFO,
-        inputMeasurements=digiAlg.config.outputMeasurements,
-        inputSourceLinks=digiAlg.config.outputSourceLinks,
+        inputMeasurements="measurements",
+        inputSourceLinks="sourcelinks",
         inputProtoTracks=inputProtoTracks,
-        inputInitialTrackParameters=smearAlg.config.outputTrackParameters,
+        inputInitialTrackParameters="smearedparameters",
         outputTrajectories="trajectories",
         directNavigation=directNavigation,
         pickTrack=-1,
@@ -168,15 +160,14 @@ def runTruthTracking(
     s.addAlgorithm(fitAlg)
 
     # Output
-
     s.addWriter(
         acts.examples.RootTrajectoryStatesWriter(
             level=acts.logging.INFO,
             inputTrajectories=fitAlg.config.outputTrajectories,
-            inputParticles=inputParticles,
-            inputSimHits=simAlg.config.outputSimHits,
-            inputMeasurementParticlesMap=digiAlg.config.outputMeasurementParticlesMap,
-            inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
+            inputParticles="particles_seed_selected",
+            inputSimHits="simhits",
+            inputMeasurementParticlesMap="measurement_particles_map",
+            inputMeasurementSimHitsMap="measurement_simhits_map",
             filePath=str(outputDir / "trackstates_fitter.root"),
         )
     )
@@ -185,8 +176,8 @@ def runTruthTracking(
         acts.examples.RootTrajectorySummaryWriter(
             level=acts.logging.INFO,
             inputTrajectories=fitAlg.config.outputTrajectories,
-            inputParticles=inputParticles,
-            inputMeasurementParticlesMap=digiAlg.config.outputMeasurementParticlesMap,
+            inputParticles="particles_seed_selected",
+            inputMeasurementParticlesMap="measurement_particles_map",
             filePath=str(outputDir / "tracksummary_fitter.root"),
         )
     )
@@ -194,9 +185,9 @@ def runTruthTracking(
     s.addWriter(
         acts.examples.TrackFinderPerformanceWriter(
             level=acts.logging.INFO,
-            inputProtoTracks=truthTrkFndAlg.config.outputProtoTracks,
-            inputParticles=inputParticles,
-            inputMeasurementParticlesMap=digiAlg.config.outputMeasurementParticlesMap,
+            inputProtoTracks=fitAlg.config.inputProtoTracks,
+            inputParticles="particles_seed_selected",
+            inputMeasurementParticlesMap="measurement_particles_map",
             filePath=str(outputDir / "performance_track_finder.root"),
         )
     )
@@ -205,8 +196,8 @@ def runTruthTracking(
         acts.examples.TrackFitterPerformanceWriter(
             level=acts.logging.INFO,
             inputTrajectories=fitAlg.config.outputTrajectories,
-            inputParticles=inputParticles,
-            inputMeasurementParticlesMap=digiAlg.config.outputMeasurementParticlesMap,
+            inputParticles="particles_seed_selected",
+            inputMeasurementParticlesMap="measurement_particles_map",
             filePath=str(outputDir / "performance_track_fitter.root"),
         )
     )
@@ -223,7 +214,7 @@ if "__main__" == __name__:
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    runTruthTracking(
+    runTruthTrackingKalman(
         trackingGeometry,
         field,
         digiConfigFile=srcdir

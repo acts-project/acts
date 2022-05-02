@@ -14,6 +14,8 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Delegate.hpp"
+#include "Acts/TrackFitting/detail/VoidKalmanComponents.hpp"
 
 namespace Acts {
 
