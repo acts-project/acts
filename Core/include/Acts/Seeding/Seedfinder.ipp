@@ -284,11 +284,21 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       for (size_t t = t0; t < numTopSP; t++) {
         auto lt = state.linCircleTop[t];
 
+        // cotThetaAvg2 is an approximation of the slope at the position of SPm
+        float cotThetaAvg2;
+        if (m_config.arithmeticAverageCotTheta) {
+          // use arithmetic average
+          cotThetaAvg2 = std::pow((cotThetaB + lt.cotTheta) / 2, 2);
+        } else {
+          // use geometric average
+          cotThetaAvg2 = cotThetaB * lt.cotTheta;
+        }
+
         // add errors of spB-spM and spM-spT pairs and add the correlation term
         // for errors on spM
         float error2 = lt.Er + ErB +
-                       2 * (cotThetaB * lt.cotTheta * varianceRM + varianceZM) *
-                           iDeltaRB * lt.iDeltaR;
+                       2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB *
+                           lt.iDeltaR;
 
         float deltaCotTheta = cotThetaB - lt.cotTheta;
         float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
@@ -372,8 +382,13 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           state.curvatures.push_back(B / std::sqrt(S2));
           state.impactParameters.push_back(Im);
 
+          float cotThetaAvg = std::sqrt(cotThetaAvg2);
+          if (state.compatTopSP[t]->z() < 0) {
+            cotThetaAvg = -cotThetaAvg;
+          }
+
           // evaluate eta and pT of the seed
-          float theta = std::atan(1. / std::sqrt(cotThetaB * lt.cotTheta));
+          float theta = std::atan(1. / cotThetaAvg);
           float eta = -std::log(std::tan(0.5 * theta));
           state.etaVec.push_back(eta);
           state.ptVec.push_back(pT);
