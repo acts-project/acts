@@ -72,6 +72,10 @@ struct SeedfinderConfig {
   // enable cut on the compatibility between interaction point and SPs
   bool interactionPointCut = false;
 
+  // use arithmetic average in the calculation of the squared error on the
+  // difference in tan(theta)
+  bool arithmeticAverageCotTheta = false;
+
   // non equidistant binning in z
   std::vector<float> zBinEdges;
 
