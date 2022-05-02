@@ -28,6 +28,9 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: true
+          lfs: true
 
       - name: Configure
         # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
@@ -315,7 +318,11 @@ jobs:
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+          lfs: true
+
       - name: Install dependencies
         run: >
           brew install cmake eigen ninja
