@@ -1,0 +1,9 @@
+identifier	time_total_s	time_perevent_s
+Reader:EventGenerator	0.00133	1.33e-05
+Algorithm:ParticleSelector	0.0004088	4.088e-06
+Algorithm:FatrasSimulation	0.04809	0.0004809
+Algorithm:DigitizationAlgorithm	0.0143	0.000143
+Algorithm:TruthSeedSelector	0.001828	1.828e-05
+Algorithm:ParticleSmearing	0.001151	1.151e-05
+Algorithm:TruthTrackFinder	0.001246	1.246e-05
+Algorithm:TrackFittingAlgorithm	18.21	0.1821

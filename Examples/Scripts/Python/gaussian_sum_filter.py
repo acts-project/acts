@@ -9,7 +9,7 @@ import acts
 from acts import UnitConstants as u
 
 
-def addGSF(
+def addGsfTracks(
     s: acts.examples.Sequencer,
 ):
     gsfOptions = {
@@ -38,7 +38,7 @@ def addGSF(
     return s
 
 
-def runGSF(
+def runGsfTracks(
     trackingGeometry,
     decorators,
     geometrySelection: Path,
@@ -107,7 +107,7 @@ def runGSF(
 
     s = addTruthTrackFinding(s, rnd=rnd)
 
-    s = addGSF(s)
+    s = addGsfTracks(s)
 
     return s
 
@@ -123,7 +123,7 @@ if "__main__" == __name__:
     if not inputParticlePath.exists():
         inputParticlePath = None
 
-    runGSF(
+    runGsfTracks(
         trackingGeometry,
         decorators,
         field=field,
