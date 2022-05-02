@@ -14,7 +14,7 @@ def addKalmanTracks(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     directNavigation=False,
-    reverseFilteringMomThreshold=0*u.GeV,
+    reverseFilteringMomThreshold=0 * u.GeV,
 ):
     truthTrkFndAlg = acts.examples.TruthTrackFinder(
         level=acts.logging.INFO,
@@ -63,7 +63,6 @@ def addKalmanTracks(
     s.addAlgorithm(fitAlg)
 
     return s
-
 
 
 def runTruthTrackingKalman(
@@ -137,7 +136,8 @@ def runTruthTrackingKalman(
     )
 
     s = addKalmanTracks(
-        s, trackingGeometry, field, directNavigation, reverseFilteringMomThreshold)
+        s, trackingGeometry, field, directNavigation, reverseFilteringMomThreshold
+    )
 
     # Output
     s.addWriter(
