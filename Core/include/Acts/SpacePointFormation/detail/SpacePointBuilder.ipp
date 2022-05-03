@@ -421,9 +421,9 @@ void SpacePointBuilder<spacepoint_t>::makeMeasurementPairs(
 
     // Store the best (=closest) result
     if (measurementMinDist < measurementsBack.size()) {
-      std::pair<const Measurement*, const Measurement*> measurementPair;
-      measurementPair = std::make_pair(measurementsFront[iMeasurementsFront],
-                                       measurementsBack[measurementMinDist]);
+      std::pair<const Measurement*, const Measurement*> measurementPair =
+          std::make_pair(measurementsFront[iMeasurementsFront],
+                         measurementsBack[measurementMinDist]);
       measurementPairs.push_back(measurementPair);
     }
   }
