@@ -108,14 +108,6 @@ class SpacePointBuilder {
   std::pair<Vector3, Vector2> globalCoords(const GeometryContext& gctx,
                                            const Measurement& meas) const;
 
-  /// @brief Calculates the top and bottom ends of a strip detector element
-  /// that corresponds to a given hit
-  /// @param gctx The geometry context to use
-  /// @param measurement object that stores the information about the hit
-  /// @return vectors to the top and bottom end of the SDE
-  std::pair<Acts::Vector3, Acts::Vector3> endsOfStrip(
-      const Acts::GeometryContext& gctx, const Measurement& measurement) const;
-
   /// @brief Get global covariance from the local position and covariance
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param geoId The geometry ID
