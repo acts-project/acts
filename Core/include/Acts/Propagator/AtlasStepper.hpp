@@ -485,7 +485,9 @@ class AtlasStepper {
       return parameters.error();
     }
 
-    return BoundState(std::move(*parameters), state.jacobian,
+    Jacobian jacobian(state.jacobian);
+
+    return BoundState(std::move(*parameters), jacobian.transpose(),
                       state.pathAccumulated);
   }
 
@@ -525,7 +527,9 @@ class AtlasStepper {
 
     CurvilinearTrackParameters parameters(pos4, dir, qOverP, std::move(covOpt));
 
-    return CurvilinearState(std::move(parameters), state.jacobian,
+    Jacobian jacobian(state.jacobian);
+
+    return CurvilinearState(std::move(parameters), jacobian.transpose(),
                             state.pathAccumulated);
   }
 
@@ -534,6 +538,7 @@ class AtlasStepper {
   /// @param [in,out] state The stepper state for
   /// @param [in] parameters The new free track parameters at start
   /// @param [in] covariance The updated covariance matrix
+  /// @param [in] surface The surface used to update the pVector
   void update(State& state, const FreeVector& parameters,
               const BoundVector& boundParams, const Covariance& covariance,
               const Surface& surface) const {

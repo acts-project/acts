@@ -46,10 +46,11 @@ Result<void> GainMatrixSmoother::operator()(const GeometryContext& gctx,
     // previous trackstate should have smoothed and predicted
     assert(prev_ts.hasSmoothed());
     assert(prev_ts.hasPredicted());
+    assert(prev_ts.hasJacobian());
 
     ACTS_VERBOSE("Calculate smoothing matrix:");
     ACTS_VERBOSE("Filtered covariance:\n" << ts.filteredCovariance());
-    ACTS_VERBOSE("Jacobian:\n" << ts.jacobian());
+    ACTS_VERBOSE("Jacobian:\n" << prev_ts.jacobian());
     ACTS_VERBOSE("Prev. predicted covariance\n"
                  << prev_ts.predictedCovariance() << "\n, inverse: \n"
                  << prev_ts.predictedCovariance().inverse());
