@@ -77,8 +77,9 @@ class SpacePointBuilder {
   /// @brief Searches possible combinations of two measurements on different
   /// surfaces that may come from the same particles
   /// @param gctx The geometry context to use
-  /// @param measurementPairs pairs of measurements that are space point candidates
-  /// @param spacePointIt storage of the results
+  /// @param measurementPair pair of measurements that are space point candidates
+  /// @param stripEndsPair The global positions of the ends of the strip pair
+  /// @param spacePoint The space point to be created.
   /// @note If no configuration is set, the default values will be used
   // template <template <typename...> typename container_t>
   void calculateDoubleHitSpacePoint(
