@@ -10,7 +10,6 @@
 
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Logger.hpp"
-
 #include "ActsDD4hep/ActsExtension.hpp"
 
 #include <DD4hep/DetElement.h>
@@ -67,6 +66,5 @@ std::shared_ptr<Acts::ProtoSurfaceMaterial> createProtoMaterial(
     const ActsExtension& actsExtension, const std::string& valueTag,
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&
         binning);
-
 
 }  // namespace Acts

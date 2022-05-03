@@ -25,7 +25,6 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArrayXD.hpp"
-
 #include "ActsDD4hep/ActsExtension.hpp"
 
 #include <boost/algorithm/string.hpp>
