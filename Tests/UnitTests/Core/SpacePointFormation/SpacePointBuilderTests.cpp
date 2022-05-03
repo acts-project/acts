@@ -163,7 +163,16 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   spBuilderConfig.trackingGeometry = geometry;
   spBuilderConfig.vertex = vertex;
 
-  auto spBuilder = Acts::SpacePointBuilder<TestSpacePoint>(spBuilderConfig);
+  std::function<TestSpacePoint(
+      Acts::Vector3, Acts::Vector2,
+      boost::container::static_vector<const Acts::SourceLink*, 2>)>
+      spConstructor =
+          [](Acts::Vector3 pos, Acts::Vector2 cov,
+             boost::container::static_vector<const Acts::SourceLink*, 2> slinks)
+      -> TestSpacePoint { return TestSpacePoint(pos, cov[0], cov[1], slinks); };
+
+  auto spBuilder =
+      Acts::SpacePointBuilder<TestSpacePoint>(spBuilderConfig, spConstructor);
 
   TestSpacePointContainer spacePoints;
 
@@ -196,15 +205,15 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   }
   // BOOST_CHECK_EQUAL(spacePoints.size(), 4);
 
-  // usePerpProj = true for cosmic  without vertex constraint
+  // for cosmic  without vertex constraint, usePerpProj = true
 
   auto spBuilderConfig_perp = SpacePointBuilderConfig();
   spBuilderConfig_perp.trackingGeometry = geometry;
   spBuilderConfig_perp.usePerpProj = true;
 
   TestSpacePointContainer spacePoints_perp;
-  auto spBuilder_perp =
-      Acts::SpacePointBuilder<TestSpacePoint>(spBuilderConfig_perp);
+  auto spBuilder_perp = Acts::SpacePointBuilder<TestSpacePoint>(
+      spBuilderConfig_perp, spConstructor);
   // strip SP building
   spBuilder.makeMeasurementPairs(tgContext, frontMeasurements, backMeasurements,
                                  measPairs);
@@ -215,7 +224,7 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
               << sp.varianceZ() << std::endl;
   }
 
-  // BOOST_CHECK_EQUAL(spacePoints_perp.size(), 2);
+  BOOST_CHECK_EQUAL(spacePoints_perp.size(), 2);
 }
 
 }  // end of namespace Test
