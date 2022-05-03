@@ -278,12 +278,12 @@ def addSeeding(
             )
 
             seedFilterConfig = acts.SeedFilterConfig(
-                maxSeedsPerSpM=seedFinderConfig.maxSeedsPerSpM,
-                deltaRMin=seedFinderConfig.deltaRMin,
+                maxSeedsPerSpM=seedfinderConfigArg.maxSeedsPerSpM,
+                deltaRMin=seedfinderConfigArg.deltaR[1],
             )
 
             gridConfig = acts.SpacePointGridConfig(
-                bFieldInZ=seedFinderConfig.bFieldInZ,
+                bFieldInZ=seedfinderConfigArg.bFieldInZ,
                 minPt=seedfinderConfigArg.minPt,
                 rMax=seedFinderConfig.rMax,
                 zMax=seedFinderConfig.zMax,
@@ -298,7 +298,7 @@ def addSeeding(
                 outputSeeds="seeds",
                 outputProtoTracks="prototracks",
                 gridConfig=gridConfig,
-                seedFilterConfig=seedFilterConfig,
+                seedFilterConfig=[seedFilterConfig],
                 seedFinderConfig=seedFinderConfig,
             )
             s.addAlgorithm(seedingAlg)
@@ -337,7 +337,7 @@ def addSeeding(
             )
 
             seedFilterConfig = acts.SeedFilterConfig(
-                maxSeedsPerSpM=seedFinderConfig.maxSeedsPerSpM,
+                maxSeedsPerSpM=seedfinderConfigArg.maxSeedsPerSpM,
                 deltaRMin=seedFinderConfig.deltaRMin,
             )
 

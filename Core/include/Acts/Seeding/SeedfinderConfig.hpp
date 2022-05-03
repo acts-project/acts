@@ -36,7 +36,7 @@ struct RegionalParameters {
   std::shared_ptr<Acts::SeedFilter<SpacePoint>> seedFilter;
   // Seed Cuts
   // lower cutoff for seeds
-  float minPt = 400. * Acts::UnitConstants::MeV;  
+  float minPt = 400. * Acts::UnitConstants::MeV;
   // minimum distance in r between middle and top SP
   float deltaRMinTopSP = 5 * Acts::UnitConstants::mm;
   // maximum distance in r between middle and top SP
