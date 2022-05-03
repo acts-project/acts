@@ -374,9 +374,7 @@ void SpacePointBuilder<spacepoint_t>::calculateSingleHitSpacePoints(
 
     boost::container::static_vector<const SourceLink*, 2> slinks;
     slinks.emplace_back(slink);
-    auto sp = m_spConstructor(gPos, gCov, std::move(slinks));
-
-    spacePointIt = sp;
+    spacePointIt = m_spConstructor(gPos, gCov, std::move(slinks));
   }
 }
 
@@ -466,8 +464,7 @@ void SpacePointBuilder<spacepoint_t>::calculateDoubleHitSpacePoint(
       const auto gCov = calcGlobalVars(gctx, *(measurementPair.first),
                                        *(measurementPair.second), theta);
 
-      auto sp = m_spConstructor(gPos, gCov, std::move(slinks));
-      spacePoint = &sp;
+      *spacePoint = m_spConstructor(gPos, gCov, std::move(slinks));
     }
   }
 
@@ -485,8 +482,8 @@ void SpacePointBuilder<spacepoint_t>::calculateDoubleHitSpacePoint(
 
     const auto gCov = calcGlobalVars(gctx, *(measurementPair.first),
                                      *(measurementPair.second), theta);
-    auto sp = m_spConstructor(gPos, gCov, std::move(slinks));
-    spacePoint = &sp;
+
+    *spacePoint = m_spConstructor(gPos, gCov, std::move(slinks));
   }
 }
 

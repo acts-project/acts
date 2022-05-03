@@ -34,7 +34,8 @@ class SpacePointBuilder {
  public:
   using Measurement = Acts::BoundVariantMeasurement;
   // Constructor
-  /// @param cfg the configuration for the space point builder
+  /// @param cfg The configuration for the space point builder
+  /// @param func The function that provides user's SP constructor with global pos, global cov, and sourceLinks.
   /// @param logger The logging instance
   SpacePointBuilder(SpacePointBuilderConfig cfg,
                     std::function<spacepoint_t(
