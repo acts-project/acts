@@ -16,7 +16,7 @@ from acts.examples import (
 )
 
 import acts
-from acts import Vector4, UnitConstants as u, PdgParticle
+from acts import UnitConstants as u, PdgParticle
 
 # Defaults (given as `None` here) use class defaults defined in
 # Examples/Algorithms/Generators/ActsExamples/Generators/ParametricParticleGenerator.hpp
@@ -28,6 +28,7 @@ MomentumConfig = namedtuple(
 EtaConfig = namedtuple(
     "EtaConfig", ["min", "max", "uniform"], defaults=[None, None, None]
 )
+PhiConfig = namedtuple("PhiConfig", ["min", "max"], defaults=[None, None])
 ParticleConfig = namedtuple(
     "ParticleConfig",
     ["num", "pdg", "randomizeCharge"],
@@ -35,40 +36,21 @@ ParticleConfig = namedtuple(
 )
 
 
-def ConfigArgs(func):
-    """Decorator to move `namedtuple` args to kwargs based on type, so user doesn't need to specify key name."""
-    from functools import wraps
-
-    @wraps(func)
-    def ConfigArgsWrapper(*args, **kwargs):
-        def isNormalArg(arg, key, cls):
-            if not isinstance(arg, cls):
-                return True
-            if key in kwargs:
-                raise KeyError(key)
-            kwargs[key] = arg
-            return False
-
-        newargs = [
-            a
-            for a in args
-            if isNormalArg(a, "momentumConfig", MomentumConfig)
-            and isNormalArg(a, "etaConfig", EtaConfig)
-            and isNormalArg(a, "particleConfig", ParticleConfig)
-        ]
-        return func(*newargs, **kwargs)
-
-    return ConfigArgsWrapper
-
-
-@ConfigArgs
+@acts.examples.NamedTypeArgs(
+    momentumConfig=MomentumConfig,
+    etaConfig=EtaConfig,
+    phiConfig=PhiConfig,
+    particleConfig=ParticleConfig,
+)
 def addParticleGun(
     s: Sequencer,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     momentumConfig: MomentumConfig = MomentumConfig(),
     etaConfig: EtaConfig = EtaConfig(),
+    phiConfig: PhiConfig = PhiConfig(),
     particleConfig: ParticleConfig = ParticleConfig(),
+    multiplicity: int = 1,
     vtxGen: Optional[EventGenerator.VertexGenerator] = None,
     printParticles: bool = False,
     rnd: Optional[RandomNumbers] = None,
@@ -87,8 +69,12 @@ def addParticleGun(
         momentum configuration: minimum momentum, maximum momentum, transverse
     etaConfig : EtaConfig(min, max, uniform)
         pseudorapidity configuration: eta min, eta max, uniform
-    particleConfig: ParticleConfig(num, pdg, randomizeCharge)
+    phiConfig : PhiConfig(min, max)
+        azimuthal angle configuration: phi min, phi max
+    particleConfig : ParticleConfig(num, pdg, randomizeCharge)
         partilce configuration: number of particles, particle type, charge flip
+    multiplicity : int, 1
+        number of generated vertices
     vtxGen : VertexGenerator, None
         vertex generator module
     printParticles : bool, False
@@ -97,47 +83,36 @@ def addParticleGun(
         random number generator
     """
 
-    def DefaultKWArgs(**kwargs) -> dict:
-        """Removes keyword arguments that are None or a list of all None (eg. [None,None]).
-        This keeps the called function's defaults."""
-        from collections.abc import Iterable
-
-        return {
-            k: v
-            for k, v in kwargs.items()
-            if not (
-                v is None or (isinstance(v, Iterable) and all([vv is None for vv in v]))
-            )
-        }
+    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
+        acts.examples.dump_args_calls(locals())
 
     # Preliminaries
     rnd = rnd or RandomNumbers(seed=228)
 
     # Input
-    if vtxGen is None:
-        vtxGen = GaussianVertexGenerator()
-        vtxGen.stddev = Vector4(0, 0, 0, 0)
-
-    ptclGen = ParametricParticleGenerator(
-        **DefaultKWArgs(
-            p=(momentumConfig.min, momentumConfig.max),
-            pTransverse=momentumConfig.transverse,
-            eta=(etaConfig.min, etaConfig.max),
-            etaUniform=etaConfig.uniform,
-            numParticles=particleConfig.num,
-            pdg=particleConfig.pdg,
-            randomizeCharge=particleConfig.randomizeCharge,
-        )
-    )
-
-    g = EventGenerator.Generator()
-    g.multiplicity = FixedMultiplicityGenerator(n=1)
-    g.vertex = vtxGen
-    g.particles = ptclGen
-
     evGen = EventGenerator(
         level=s.config.logLevel,
-        generators=[g],
+        generators=[
+            EventGenerator.Generator(
+                multiplicity=FixedMultiplicityGenerator(n=multiplicity),
+                vertex=vtxGen
+                or acts.examples.GaussianVertexGenerator(
+                    stddev=acts.Vector4(0, 0, 0, 0), mean=acts.Vector4(0, 0, 0, 0)
+                ),
+                particles=acts.examples.ParametricParticleGenerator(
+                    **acts.examples.defaultKWArgs(
+                        p=(momentumConfig.min, momentumConfig.max),
+                        pTransverse=momentumConfig.transverse,
+                        eta=(etaConfig.min, etaConfig.max),
+                        phi=(phiConfig.min, phiConfig.max),
+                        etaUniform=etaConfig.uniform,
+                        numParticles=particleConfig.num,
+                        pdg=particleConfig.pdg,
+                        randomizeCharge=particleConfig.randomizeCharge,
+                    )
+                ),
+            )
+        ],
         outputParticles="particles_input",
         randomNumbers=rnd,
     )
@@ -196,6 +171,4 @@ def runParticleGun(outputDir, s=None):
 
 
 if "__main__" == __name__:
-    import os
-
-    runParticleGun(os.getcwd()).run()
+    runParticleGun(Path.cwd()).run()

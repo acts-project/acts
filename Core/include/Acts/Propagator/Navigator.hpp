@@ -37,7 +37,7 @@ namespace Acts {
 template <typename object_t>
 struct NavigationOptions {
   /// The navigation direction
-  NavigationDirection navDir = forward;
+  NavigationDirection navDir = NavigationDirection::Forward;
 
   /// The boundary check directive
   BoundaryCheck boundaryCheck = true;
@@ -765,7 +765,7 @@ class Navigator {
           // ~ non-zero field
           double ir = (dir.cross(B).norm()) * q / mom;
           double s;
-          if (state.stepping.navDir == forward) {
+          if (state.stepping.navDir == NavigationDirection::Forward) {
             s = state.stepping.stepSize.max();
           } else {
             s = state.stepping.stepSize.min();

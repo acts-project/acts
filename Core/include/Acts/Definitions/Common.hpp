@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 
+#include <iosfwd>
 #include <limits>
 
 namespace Acts {
@@ -33,17 +34,80 @@ static constexpr ActsScalar s_curvilinearProjTolerance = 0.999995;
 /// @enum NavigationDirection
 /// The navigation direciton is always with
 /// respect to a given momentum or direction
-enum NavigationDirection : int { backward = -1, forward = 1 };
+enum class NavigationDirection : int { Backward = -1, Forward = 1 };
+
+std::ostream& operator<<(std::ostream& os, NavigationDirection navDir);
+
+// NavigationDirection * T
+
+inline constexpr auto operator*(NavigationDirection dir, int value) {
+  return static_cast<std::underlying_type_t<NavigationDirection>>(dir) * value;
+}
+
+inline constexpr auto operator*(NavigationDirection dir, float value) {
+  return static_cast<std::underlying_type_t<NavigationDirection>>(dir) * value;
+}
+
+inline constexpr auto operator*(NavigationDirection dir, double value) {
+  return static_cast<std::underlying_type_t<NavigationDirection>>(dir) * value;
+}
+
+inline Acts::Vector3 operator*(NavigationDirection dir, Acts::Vector3 value) {
+  return static_cast<std::underlying_type_t<NavigationDirection>>(dir) * value;
+}
+
+// T * NavigationDirection
+
+inline constexpr auto operator*(int value, NavigationDirection dir) {
+  return value * static_cast<std::underlying_type_t<NavigationDirection>>(dir);
+}
+
+inline constexpr auto operator*(float value, NavigationDirection dir) {
+  return value * static_cast<std::underlying_type_t<NavigationDirection>>(dir);
+}
+
+inline constexpr auto operator*(double value, NavigationDirection dir) {
+  return value * static_cast<std::underlying_type_t<NavigationDirection>>(dir);
+}
+
+inline Acts::Vector3 operator*(Acts::Vector3 value, NavigationDirection dir) {
+  return value * static_cast<std::underlying_type_t<NavigationDirection>>(dir);
+}
+
+// T *= NavigationDirection
+
+inline constexpr auto operator*=(int& value, NavigationDirection dir) {
+  value *= static_cast<std::underlying_type_t<NavigationDirection>>(dir);
+  return value;
+}
+
+inline constexpr auto operator*=(float& value, NavigationDirection dir) {
+  value *= static_cast<std::underlying_type_t<NavigationDirection>>(dir);
+  return value;
+}
+
+inline constexpr auto operator*=(double& value, NavigationDirection dir) {
+  value *= static_cast<std::underlying_type_t<NavigationDirection>>(dir);
+  return value;
+}
+
+inline Acts::Vector3& operator*=(Acts::Vector3& value,
+                                 NavigationDirection dir) {
+  value *= static_cast<std::underlying_type_t<NavigationDirection>>(dir);
+  return value;
+}
 
 ///  This is a steering enum to tell which material update stage:
-/// - preUpdate  : update on approach of a surface
-/// - fullUpdate : update when passing a surface
-/// - postUpdate : update when leaving a surface
-enum MaterialUpdateStage : int {
-  preUpdate = -1,
-  fullUpdate = 0,
-  postUpdate = 1
+/// - PreUpdate  : update on approach of a surface
+/// - FullUpdate : update when passing a surface
+/// - PostUpdate : update when leaving a surface
+enum class MaterialUpdateStage : int {
+  PreUpdate = -1,
+  FullUpdate = 0,
+  PostUpdate = 1
 };
+
+std::ostream& operator<<(std::ostream& os, MaterialUpdateStage matUpdate);
 
 /// @enum NoiseUpdateMode to tell how to deal with noise term in covariance
 /// transport

@@ -103,7 +103,8 @@ struct MaterialInteractor {
       }
       // Change the noise updater depending on the navigation direction
       NoiseUpdateMode mode =
-          (state.stepping.navDir == forward) ? addNoise : removeNoise;
+          (state.stepping.navDir == NavigationDirection::Forward) ? addNoise
+                                                                  : removeNoise;
       // Apply the material interactions
       d.updateState(state, stepper, mode);
       // Record the result

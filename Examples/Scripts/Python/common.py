@@ -44,48 +44,23 @@ def addPythia8(
     vertexStddev: acts.Vector4 = acts.Vector4(0, 0, 0, 0),
     vertexMean: acts.Vector4 = acts.Vector4(0, 0, 0, 0),
 ):
-    vertexGenerator = acts.examples.GaussianVertexGenerator(
-        stddev=vertexStddev, mean=vertexMean
+    """This function steers the particle generation using Pythia8
+
+    NB. this version is included here only for compatibility. Please use pythia8.addPythia8 instead.
+    """
+    import pythia8
+
+    evGen = pythia8.addPythia8(
+        sequencer,
+        rnd=rnd,
+        nhard=nhard,
+        npileup=npileup,
+        beam=(beam0, beam1),
+        cmsEnergy=cmsEnergy,
+        vtxGen=acts.examples.GaussianVertexGenerator(
+            stddev=vertexStddev, mean=vertexMean
+        ),
+        returnEvGen=True,
     )
-
-    generators = []
-    if nhard > 0:
-        generators.append(
-            acts.examples.EventGenerator.Generator(
-                multiplicity=acts.examples.FixedMultiplicityGenerator(n=nhard),
-                vertex=vertexGenerator,
-                particles=acts.examples.pythia8.Pythia8Generator(
-                    level=acts.logging.INFO,
-                    pdgBeam0=beam0,
-                    pdgBeam1=beam1,
-                    cmsEnergy=cmsEnergy,
-                    settings=["HardQCD:all = on"],
-                ),
-            )
-        )
-    if npileup > 0:
-        generators.append(
-            acts.examples.EventGenerator.Generator(
-                multiplicity=acts.examples.FixedMultiplicityGenerator(n=npileup),
-                vertex=vertexGenerator,
-                particles=acts.examples.pythia8.Pythia8Generator(
-                    level=acts.logging.INFO,
-                    pdgBeam0=beam0,
-                    pdgBeam1=beam1,
-                    cmsEnergy=cmsEnergy,
-                    settings=["SoftQCD:all = on"],
-                ),
-            )
-        )
-
-    # Input
-    evGen = acts.examples.EventGenerator(
-        level=acts.logging.INFO,
-        generators=generators,
-        outputParticles="particles_input",
-        randomNumbers=rnd,
-    )
-
-    sequencer.addReader(evGen)
 
     return evGen
