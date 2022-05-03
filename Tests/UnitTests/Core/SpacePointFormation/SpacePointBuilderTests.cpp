@@ -180,6 +180,8 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   spBuilder.calculateSingleHitSpacePoints(tgContext, singleHitMeasurements,
                                           std::back_inserter(spacePoints));
 
+  BOOST_CHECK_EQUAL(spacePoints.size(), 2);
+
   std::vector<std::pair<const TestMeasurement*, const TestMeasurement*>>
       measPairs;
 
@@ -203,7 +205,7 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
               << ") var (r,z): " << sp.varianceR() << " " << sp.varianceZ()
               << std::endl;
   }
-  // BOOST_CHECK_EQUAL(spacePoints.size(), 4);
+  BOOST_CHECK_EQUAL(spacePoints.size(), 4);
 
   // for cosmic  without vertex constraint, usePerpProj = true
 
