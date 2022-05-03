@@ -374,7 +374,7 @@ void SpacePointBuilder<spacepoint_t>::calculateSingleHitSpacePoints(
 
     boost::container::static_vector<const SourceLink*, 2> slinks;
     slinks.emplace_back(slink);
-    auto sp = m_spConstructor(gPos, gCov[0], gCov[1], std::move(slinks));
+    auto sp = m_spConstructor(gPos, gCov, std::move(slinks));
 
     spacePointIt = sp;
   }
@@ -460,15 +460,13 @@ void SpacePointBuilder<spacepoint_t>::calculateDoubleHitSpacePoint(
     double resultPerpProj = detail::calcPerpendicularProjection(
         ends1.first, ends2.first, spaPoPa.q, spaPoPa.r);
     if (resultPerpProj <= 0.) {
-      Vector3 pos = ends1.first + resultPerpProj * spaPoPa.q;
+      Vector3 gPos = ends1.first + resultPerpProj * spaPoPa.q;
       double theta = acos(spaPoPa.q.dot(spaPoPa.r) /
                           (spaPoPa.q.norm() * spaPoPa.r.norm()));
-      const auto gcov = calcGlobalVars(gctx, *(measurementPair.first),
+      const auto gCov = calcGlobalVars(gctx, *(measurementPair.first),
                                        *(measurementPair.second), theta);
-      const double varRho = gcov[0];
-      const double varZ = gcov[1];
 
-      auto sp = m_spConstructor(gPos, gCov[0], gCov[1], std::move(slinks));
+      auto sp = m_spConstructor(gPos, gCov, std::move(slinks));
       spacePoint = &sp;
     }
   }
@@ -480,16 +478,14 @@ void SpacePointBuilder<spacepoint_t>::calculateDoubleHitSpacePoint(
         detail::recoverSpacePoint(spaPoPa, m_config.stripLengthGapTolerance);
 
   if (spFound) {
-    Vector3 pos = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
+    Vector3 gPos = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
 
     double theta =
         acos(spaPoPa.q.dot(spaPoPa.r) / (spaPoPa.q.norm() * spaPoPa.r.norm()));
 
-    const auto gcov = calcGlobalVars(gctx, *(measurementPair.first),
+    const auto gCov = calcGlobalVars(gctx, *(measurementPair.first),
                                      *(measurementPair.second), theta);
-    const double varRho = gcov[0];
-    const double varZ = gcov[1];
-    auto sp = m_spConstructor(pos, varRho, varZ, std::move(slinks));
+    auto sp = m_spConstructor(gPos, gCov, std::move(slinks));
     spacePoint = &sp;
   }
 }

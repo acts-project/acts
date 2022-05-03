@@ -87,10 +87,13 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
   std::function<SimSpacePoint(
       Acts::Vector3, Acts::Vector2,
       boost::container::static_vector<const Acts::SourceLink*, 2>)>
-      spCreater =
+      spConstructor =
           [](Acts::Vector3 pos, Acts::Vector2 cov,
              boost::container::static_vector<const Acts::SourceLink*, 2> slinks)
       -> SimSpacePoint { return SimSpacePoint(pos, cov[0], cov[1], slinks); };
+  m_spacePointBuilder = Acts::SpacePointBuilder<SimSpacePoint>(
+      spBuilderConfig, spConstructor,
+      Acts::getDefaultLogger("SpacePointBuilder", lvl));
 }
 
 ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
@@ -118,9 +121,8 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
     }
   }
   SimSpacePointContainer spacePoints;
-  //  m_spacePointBuilder.calculateSingleHitSpacePoints(
-  //      ctx.geoContext, selectedMeasurements,
-  //      std::back_inserter(spacePoints));
+  m_spacePointBuilder.calculateSingleHitSpacePoints(
+      ctx.geoContext, selectedMeasurements, std::back_inserter(spacePoints));
   spacePoints.shrink_to_fit();
 
   ACTS_DEBUG("Created " << spacePoints.size() << " space points");

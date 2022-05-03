@@ -88,15 +88,6 @@ class SpacePointBuilder {
       spacepoint_t* spacePoint) const;
 
  protected:
-  /// @brief Function to create external space point
-  /// InputTrack_t objects are BoundTrackParameters by default, function to be
-  /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  ///
-  std::function<spacepoint_t(
-      Acts::Vector3, Acts::Vector2,
-      boost::container::static_vector<const SourceLink*, 2>)>
-      m_spConstructor;
-
   /// @brief Getter method for the local coordinates of a measurement
   /// on its corresponding surface
   ///
@@ -156,6 +147,14 @@ class SpacePointBuilder {
 
   // configuration of the single hit space point builder
   SpacePointBuilderConfig m_config;
+
+  /// @brief Function to create external space point
+  /// The constructor of spacepoint_t with Vector3 global pos, Vector2 global
+  /// cov, and vector of source link pointers.
+  std::function<spacepoint_t(
+      Acts::Vector3, Acts::Vector2,
+      boost::container::static_vector<const SourceLink*, 2>)>
+      m_spConstructor;
 
   /// the logging instance
   std::unique_ptr<const Acts::Logger> m_logger;
