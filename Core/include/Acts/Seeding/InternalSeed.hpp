@@ -24,7 +24,7 @@ class InternalSeed {
   InternalSeed(InternalSpacePoint<SpacePoint>& s0,
                InternalSpacePoint<SpacePoint>& s1,
                InternalSpacePoint<SpacePoint>& s2, float z,
-               bool qualitySeed = true);
+               bool qualitySeed = false);
   InternalSeed& operator=(const InternalSeed& seed);
 
   const std::array<InternalSpacePoint<SpacePoint>*, 3> sp;
