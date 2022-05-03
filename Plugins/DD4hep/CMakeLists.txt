@@ -2,7 +2,7 @@ include(FetchContent)
 
 FetchContent_Declare(actsdd4hep
 	GIT_REPOSITORY https://github.com/acts-project/acts-dd4hep.git
-	GIT_TAG mvp)
+	GIT_TAG v1)
 FetchContent_MakeAvailable(actsdd4hep)
 
 
