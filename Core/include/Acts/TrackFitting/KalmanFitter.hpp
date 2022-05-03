@@ -115,7 +115,7 @@ struct KalmanFitterOptions {
       const PropagatorPlainOptions& pOptions, const Surface* rSurface = nullptr,
       bool mScattering = true, bool eLoss = true, bool rFiltering = false,
       double rfScaling = 1.0,
-      const detail::FreeToBoundCorrection& freeToBoundCorrection_ = false)
+      const FreeToBoundCorrection& freeToBoundCorrection_ = false)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
@@ -164,7 +164,7 @@ struct KalmanFitterOptions {
 
   /// Whether to include non-linear correction during global to local
   /// transformation
-  detail::FreeToBoundCorrection freeToBoundCorrection = false;
+  FreeToBoundCorrection freeToBoundCorrection;
 
   /// Logger
   LoggerWrapper logger;
@@ -293,7 +293,7 @@ class KalmanFitter {
 
     /// Whether to include non-linear correction during global to local
     /// transformation
-    detail::FreeToBoundCorrection freeToBoundCorrection = false;
+    FreeToBoundCorrection freeToBoundCorrection;
 
     /// @brief Kalman actor operation
     ///

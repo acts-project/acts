@@ -13,7 +13,6 @@
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
-namespace detail {
 
 /// @brief Free to bound transformation Correction configuration class
 ///
@@ -47,6 +46,8 @@ struct FreeToBoundCorrection {
   /// Return boolean for applying correction or not
   operator bool() const;
 };
+
+namespace detail {
 
 /// @brief Corrected free to bound transform class based on covariance matrix sqrt root in UKF: https://doi.org/10.1117/12.280797
 ///

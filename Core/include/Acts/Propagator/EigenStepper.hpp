@@ -321,7 +321,8 @@ class EigenStepper {
   ///   - and the path length (from start - for ordering)
   Result<BoundState> boundState(
       State& state, const Surface& surface, bool transportCov = true,
-      const detail::FreeToBoundCorrection& freeToBoundCorrection = false) const;
+      const FreeToBoundCorrection& freeToBoundCorrection =
+          FreeToBoundCorrection(false)) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -378,7 +379,8 @@ class EigenStepper {
   /// @note no check is done if the position is actually on the surface
   void transportCovarianceToBound(
       State& state, const Surface& surface,
-      const detail::FreeToBoundCorrection& freeToBoundCorrection = false) const;
+      const FreeToBoundCorrection& freeToBoundCorrection =
+          FreeToBoundCorrection(false)) const;
 
   /// Perform a Runge-Kutta track parameter propagation step
   ///

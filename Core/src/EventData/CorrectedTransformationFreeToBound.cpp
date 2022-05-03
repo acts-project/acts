@@ -10,15 +10,15 @@
 
 #include "Acts/Surfaces/Surface.hpp"
 
-Acts::detail::FreeToBoundCorrection::FreeToBoundCorrection(bool apply_,
-                                                           ActsScalar alpha_,
-                                                           ActsScalar beta_)
+Acts::FreeToBoundCorrection::FreeToBoundCorrection(bool apply_,
+                                                   ActsScalar alpha_,
+                                                   ActsScalar beta_)
     : apply(apply_), alpha(alpha_), beta(beta_) {}
 
-Acts::detail::FreeToBoundCorrection::FreeToBoundCorrection(bool apply_)
+Acts::FreeToBoundCorrection::FreeToBoundCorrection(bool apply_)
     : apply(apply_) {}
 
-Acts::detail::FreeToBoundCorrection::operator bool() const {
+Acts::FreeToBoundCorrection::operator bool() const {
   return apply;
 }
 

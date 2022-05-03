@@ -61,7 +61,8 @@ Result<std::tuple<BoundTrackParameters, BoundMatrix, double>> boundState(
     FreeVector& derivatives, BoundToFreeMatrix& jacToGlobal,
     FreeVector& parameters, bool covTransport, double accumulatedPath,
     const Surface& surface,
-    const detail::FreeToBoundCorrection& freeToBoundCorrection = false);
+    const FreeToBoundCorrection& freeToBoundCorrection =
+        FreeToBoundCorrection(false));
 
 /// Create and return a curvilinear state at the current position
 ///
@@ -111,7 +112,8 @@ void transportCovarianceToBound(
     BoundMatrix& fullTransportJacobian, FreeMatrix& freeTransportJacobian,
     FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
     FreeVector& freeParameters, const Surface& surface,
-    const detail::FreeToBoundCorrection& freeToBoundCorrection = false);
+    const FreeToBoundCorrection& freeToBoundCorrection =
+        FreeToBoundCorrection(false));
 
 /// @brief Method for on-demand covariance transport of a bound/curvilinear
 /// to a new curvilinear representation.

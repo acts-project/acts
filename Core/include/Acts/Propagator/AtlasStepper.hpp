@@ -587,10 +587,10 @@ class AtlasStepper {
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it
   ///   - and the path length (from start - for ordering)
-  Result<BoundState> boundState(State& state, const Surface& surface,
-                                bool transportCov = true,
-                                const detail::FreeToBoundCorrection&
-                                    freeToBoundCorrection = false) const {
+  Result<BoundState> boundState(
+      State& state, const Surface& surface, bool transportCov = true,
+      const FreeToBoundCorrection& freeToBoundCorrection =
+          FreeToBoundCorrection(false)) const {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
     // extract state information
@@ -877,8 +877,7 @@ class AtlasStepper {
   /// @param [in] surface is the surface to which the covariance is forwarded to
   void transportCovarianceToBound(
       State& state, const Surface& surface,
-      const detail::FreeToBoundCorrection& /*freeToBoundCorrection*/ =
-          false) const {
+      const FreeToBoundCorrection& /*freeToBoundCorrection*/ = false) const {
     Acts::Vector3 gp(state.pVector[0], state.pVector[1], state.pVector[2]);
     Acts::Vector3 mom(state.pVector[4], state.pVector[5], state.pVector[6]);
     mom /= std::abs(state.pVector[7]);

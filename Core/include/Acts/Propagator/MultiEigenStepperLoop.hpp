@@ -433,7 +433,7 @@ class MultiEigenStepperLoop
 
     Result<BoundState> boundState(
         const Surface& surface, bool transportCov,
-        const detail::FreeToBoundCorrection& freeToBoundCorrection) {
+        const FreeToBoundCorrection& freeToBoundCorrection) {
       return detail::boundState(
           all_state.geoContext, cov(), jacobian(), jacTransport(), derivative(),
           jacToGlobal(), pars(), all_state.covTransport && transportCov,
@@ -772,7 +772,8 @@ class MultiEigenStepperLoop
   ///   - and the path length (from start - for ordering)
   Result<BoundState> boundState(
       State& state, const Surface& surface, bool transportCov = true,
-      const detail::FreeToBoundCorrection& freeToBoundCorrection = false) const;
+      const FreeToBoundCorrection& freeToBoundCorrection =
+          FreeToBoundCorrection(false)) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -813,9 +814,10 @@ class MultiEigenStepperLoop
   /// @param [in] freeToBoundCorrection Flag steering non-linear correction during global to local correction
   /// to
   /// @note no check is done if the position is actually on the surface
-  void transportCovarianceToBound(State& state, const Surface& surface,
-                                  const detail::FreeToBoundCorrection&
-                                      freeToBoundCorrection = false) const {
+  void transportCovarianceToBound(
+      State& state, const Surface& surface,
+      const FreeToBoundCorrection& freeToBoundCorrection =
+          FreeToBoundCorrection(false)) const {
     for (auto& component : state.components) {
       SingleStepper::transportCovarianceToBound(component.state, surface,
                                                 freeToBoundCorrection);

@@ -38,8 +38,8 @@ auto kalmanHandleMeasurement(
     const extensions_t &extensions, const Surface &surface,
     const SourceLink &source_link, MultiTrajectory &fittedStates,
     const size_t lastTrackIndex, bool doCovTransport,
-    const FreeToBoundCorrection &freeToBoundCorrection = false)
-    -> Result<MultiTrajectory::TrackStateProxy> {
+    const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
+        false)) -> Result<MultiTrajectory::TrackStateProxy> {
   const auto &logger = state.options.logger;
 
   // Bind the transported state to the current surface
@@ -127,8 +127,8 @@ auto kalmanHandleNoMeasurement(
     propagator_state_t &state, const stepper_t &stepper, const Surface &surface,
     MultiTrajectory &fittedStates, const size_t lastTrackIndex,
     bool doCovTransport,
-    const FreeToBoundCorrection &freeToBoundCorrection = false)
-    -> Result<MultiTrajectory::TrackStateProxy> {
+    const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
+        false)) -> Result<MultiTrajectory::TrackStateProxy> {
   const auto &logger = state.options.logger;
 
   // No source links on surface, add either hole or passive material

@@ -96,7 +96,7 @@ void addTrackFitting(Context& ctx) {
   }
 
   {
-    py::class_<detail::FreeToBoundCorrection>(mex, "FreeToBoundCorrection")
+    py::class_<FreeToBoundCorrection>(mex, "FreeToBoundCorrection")
         .def(py::init<>())
         .def(py::init<bool>(), py::arg("apply") = false)
         .def(py::init<bool, double, double>(), py::arg("apply") = false,
