@@ -40,6 +40,11 @@ LinCircle transformCoordinates(InternalSpacePoint<external_spacepoint_t>& sp,
                                InternalSpacePoint<external_spacepoint_t>& spM,
                                bool bottom);
 
+template <typename external_spacepoint_t, typename callable_t>
+LinCircle transformCoordinates(external_spacepoint_t& sp,
+                               external_spacepoint_t& spM, bool bottom,
+                               callable_t&& extractFunction);
+
 /// @brief Transform a vector of spacepoints to u-v space circles with respect
 /// to a given middle spacepoint.
 ///
@@ -48,13 +53,18 @@ LinCircle transformCoordinates(InternalSpacePoint<external_spacepoint_t>& sp,
 /// @param[in] vec The list of bottom or top spacepoints
 /// @param[in] spM The middle spacepoint.
 /// @param[in] bottom Should be true if vec are bottom spacepoints.
-/// @param[in] enableCutsForSortedSP enables sorting of cotTheta.
 /// @param[out] linCircleVec The output vector to write to.
 template <typename external_spacepoint_t>
 void transformCoordinates(
-    const std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
+    std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
     InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
-    bool enableCutsForSortedSP, std::vector<LinCircle>& linCircleVec);
+    std::vector<LinCircle>& linCircleVec);
+
+template <typename external_spacepoint_t, typename callable_t>
+void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
+                          external_spacepoint_t& spM, bool bottom,
+                          std::vector<LinCircle>& linCircleVec,
+                          callable_t&& extractFunction);
 }  // namespace Acts
 
 #include "Acts/Seeding/SeedFinderUtils.ipp"

@@ -260,9 +260,11 @@ struct GsfActor {
 
       if (haveMaterial) {
         if (haveMeasurement) {
-          applyMultipleScattering(state, stepper, preUpdate);
+          applyMultipleScattering(state, stepper,
+                                  MaterialUpdateStage::PreUpdate);
         } else {
-          applyMultipleScattering(state, stepper, fullUpdate);
+          applyMultipleScattering(state, stepper,
+                                  MaterialUpdateStage::FullUpdate);
         }
       }
 
@@ -300,7 +302,8 @@ struct GsfActor {
 
       // If we only done preUpdate before, now do postUpdate
       if (haveMaterial && haveMeasurement) {
-        applyMultipleScattering(state, stepper, postUpdate);
+        applyMultipleScattering(state, stepper,
+                                MaterialUpdateStage::PostUpdate);
       }
     }
   }
@@ -341,7 +344,7 @@ struct GsfActor {
     // Evaluate material slab
     auto slab = surface.surfaceMaterial()->materialSlab(
         old_bound.position(state.stepping.geoContext), state.stepping.navDir,
-        MaterialUpdateStage::fullUpdate);
+        MaterialUpdateStage::FullUpdate);
 
     auto pathCorrection =
         surface.pathCorrection(state.stepping.geoContext,
@@ -374,7 +377,7 @@ struct GsfActor {
       auto new_pars = old_bound.parameters();
 
       const auto delta_p = [&]() {
-        if (state.stepping.navDir == NavigationDirection::forward)
+        if (state.stepping.navDir == NavigationDirection::Forward)
           return p_prev * (gaussian.mean - 1.);
         else
           return p_prev * (1. / gaussian.mean - 1.);
@@ -391,7 +394,7 @@ struct GsfActor {
 
       if (new_cov.has_value()) {
         const auto varInvP = [&]() {
-          if (state.stepping.navDir == NavigationDirection::forward) {
+          if (state.stepping.navDir == NavigationDirection::Forward) {
             const auto f = 1. / (p_prev * gaussian.mean);
             return f * f * gaussian.var;
           } else {
@@ -689,9 +692,10 @@ struct GsfActor {
 
   /// Apply the multipe scattering to the state
   template <typename propagator_state_t, typename stepper_t>
-  void applyMultipleScattering(
-      propagator_state_t& state, const stepper_t& stepper,
-      const MaterialUpdateStage& updateStage = fullUpdate) const {
+  void applyMultipleScattering(propagator_state_t& state,
+                               const stepper_t& stepper,
+                               const MaterialUpdateStage& updateStage =
+                                   MaterialUpdateStage::FullUpdate) const {
     const auto& logger = state.options.logger;
     const auto& surface = *state.navigation.currentSurface;
 

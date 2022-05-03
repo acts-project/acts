@@ -45,7 +45,7 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
             2500.0,
             3000.0,
         ],  # zBinEdges enables non-equidistant binning in z, in case the binning is not defined the edges are evaluated automatically using equidistant binning
-        numPhiNeighbors=1,  # number of phiBin neighbors (plus the current bin) that covers the full deflection of a minimum pT particle
+        phiBinDeflectionCoverage=3,
     )
 
     seedFinderConfig = acts.SeedfinderConfig(
@@ -69,9 +69,10 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
         beamPos=acts.Vector2(0 * u.mm, 0 * u.mm),
         impactMax=gridConfig.impactMax,
         maxPtScattering=float("inf") * u.GeV,
+        deltaZMax=900 * u.mm,
         interactionPointCut=True,
         zBinEdges=gridConfig.zBinEdges,
-        enableCutsForSortedSP=True,  # enable cotTheta sorting in SeedFinder
+        skipPreviousTopSP=True,
         rRangeMiddleSP=[
             [40.0, 90.0],
             [40.0, 200.0],
@@ -118,6 +119,7 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
         inputSpacePoints=[evReader.config.outputSpacePoints],
         outputSeeds="PixelSeeds",
         outputProtoTracks="prototracks",
+        allowSeparateRMax=False,
         gridConfig=gridConfig,
         seedFinderConfig=seedFinderConfig,
         seedFilterConfig=seedFilterConfig,
@@ -147,6 +149,7 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
             [-1, 0],
             [-1, 0],
         ],
+        numPhiNeighbors=1,
     )
 
     s = s or acts.examples.Sequencer(
