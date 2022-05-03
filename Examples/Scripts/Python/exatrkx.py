@@ -25,7 +25,7 @@ def addExaTrkx(
             ptMin=500 * u.MeV,
             nHitsMin=9,
             inputParticles="particles_initial",
-            inputMeasurementParticlesMap="measurement_particle_map",
+            inputMeasurementParticlesMap="measurement_particles_map",
             outputParticles="particles_seed_selected",
         )
     )
@@ -34,7 +34,7 @@ def addExaTrkx(
     s.addAlgorithm(
         acts.examples.SpacePointMaker(
             level=acts.logging.INFO,
-            inputSourceLinks="source_links",
+            inputSourceLinks="sourcelinks",
             inputMeasurements="measurements",
             outputSpacePoints="spacepoints",
             trackingGeometry=trackingGeometry,
@@ -57,7 +57,7 @@ def addExaTrkx(
     )
 
     s.addAlgorithm(
-        acts.examples.TrackFindingMLBasedAlgorithm(
+        acts.examples.TrackFindingAlgorithmExaTrkX(
             level=acts.logging.INFO,
             inputSpacePoints="spacepoints",
             outputProtoTracks="protoTracks",
@@ -72,7 +72,7 @@ def addExaTrkx(
                 level=acts.logging.INFO,
                 inputProtoTracks="protoTracks",
                 inputParticles="particles_initial",  # the original selected particles after digitization
-                inputMeasurementParticlesMap="measurement_particle_map",
+                inputMeasurementParticlesMap="measurement_particles_map",
                 filePath=str(Path(outputDirRoot) / "performance_seeding_trees.root"),
             )
         )
@@ -101,10 +101,14 @@ if "__main__" == __name__:
     )
     assert geometrySelection.exists()
 
-    onnxdir = Path(os.getcwd()) / "onnx_models"
-    assert onnxdir.exists()
+    onnxdir = Path(cwd=os.getcwd()) / "onnx_models"
+    assert (
+        (onnxdir / "embedding.onnx").exists()
+        and (onnxdir / "filtering.onnx").exists()
+        and (onnxdir / "gnn.onnx").exists()
+    )
 
-    s = acts.examples.Sequencer(events=100, numThreads=-1)
+    s = acts.examples.Sequencer(events=2, numThreads=-1)
     s.config.logLevel = acts.logging.INFO
 
     rnd = acts.examples.RandomNumbers()

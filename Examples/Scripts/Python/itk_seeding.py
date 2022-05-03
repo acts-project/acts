@@ -72,7 +72,7 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
         deltaZMax=900 * u.mm,
         interactionPointCut=True,
         zBinEdges=gridConfig.zBinEdges,
-        enableCutsForSortedSP=True,  # enable cotTheta sorting in SeedFinder
+        skipPreviousTopSP=True,
         rRangeMiddleSP=[
             [40.0, 90.0],
             [40.0, 200.0],
@@ -119,6 +119,7 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
         inputSpacePoints=[evReader.config.outputSpacePoints],
         outputSeeds="PixelSeeds",
         outputProtoTracks="prototracks",
+        allowSeparateRMax=False,
         gridConfig=gridConfig,
         seedFinderConfig=seedFinderConfig,
         seedFilterConfig=seedFilterConfig,

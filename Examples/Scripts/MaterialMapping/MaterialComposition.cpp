@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
     if (subs != rmins.size() or subs != rmaxs.size() or subs != zmins.size() or
         subs != zmaxs.size()) {
       std::cerr << "Configuration problem." << std::endl;
-      return -1;
+      return 1;
     }
 
     // Create the regions
@@ -112,5 +112,5 @@ int main(int argc, char** argv) {
   }
 
   std::cout << "*** Done." << std::endl;
-  return 1;
+  return 0;
 }

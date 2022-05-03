@@ -39,8 +39,12 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Missing seeds output collection");
   }
 
-  if (m_cfg.gridConfig.rMax != m_cfg.seedFinderConfig.rMax) {
-    throw std::invalid_argument("Inconsistent config rMax");
+  if (m_cfg.gridConfig.rMax != m_cfg.seedFinderConfig.rMax and
+      m_cfg.allowSeparateRMax == false) {
+    throw std::invalid_argument(
+        "Inconsistent config rMax: using different values in gridConfig and "
+        "seedFinderConfig. If values are intentional set allowSeparateRMax to "
+        "true");
   }
 
   if (m_cfg.seedFilterConfig.deltaRMin != m_cfg.seedFinderConfig.deltaRMin) {
