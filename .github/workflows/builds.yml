@@ -14,7 +14,7 @@ env:
 jobs:
   lcg:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v15
+    container: ghcr.io/acts-project/${{ matrix.image }}:v21
     strategy:
       matrix:
         image:
@@ -81,7 +81,7 @@ jobs:
 
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v15
+    container: ghcr.io/acts-project/ubuntu2004:v21
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -146,7 +146,7 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v15
+    container: ghcr.io/acts-project/ubuntu2004:v21
     needs: [linux_ubuntu]
     env:
       ACTS_LOG_FAILURE_THRESHOLD: FATAL
@@ -183,7 +183,7 @@ jobs:
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v15
+    container: ghcr.io/acts-project/ubuntu2004:v21
     needs: [linux_ubuntu]
     env:
       ACTS_LOG_FAILURE_THRESHOLD: FATAL
@@ -362,7 +362,7 @@ jobs:
         run: ./build-downstream/bin/ShowActsVersion
   cuda:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu1804_cuda:v9
+    container: ghcr.io/acts-project/ubuntu1804_cuda:v21
     steps:
       - uses: actions/checkout@v2
       - name: Configure
@@ -378,7 +378,7 @@ jobs:
         run: cmake --build build --
   exatrkx:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v17
+    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v21
     steps:
       - uses: actions/checkout@v2
       - name: Configure
@@ -394,7 +394,7 @@ jobs:
         run: cmake --build build --
   sycl:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_oneapi:v9
+    container: ghcr.io/acts-project/ubuntu2004_oneapi:v21
     defaults:
       run:
         shell: bash
@@ -417,7 +417,7 @@ jobs:
           && cmake --build build --
   docs:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v9
+    container: ghcr.io/acts-project/ubuntu2004:v21
     env:
         DOXYGEN_WARN_AS_ERROR: YES
     steps:
