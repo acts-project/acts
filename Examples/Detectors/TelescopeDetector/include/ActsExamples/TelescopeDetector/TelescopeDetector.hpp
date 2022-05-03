@@ -8,11 +8,16 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 #include <memory>
 #include <vector>
+
+using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 namespace Telescope {
@@ -25,6 +30,15 @@ struct TelescopeDetector : public ActsExamples::IBaseDetector {
   using DetectorElementPtr = std::shared_ptr<DetectorElement>;
   using DetectorStore = std::vector<DetectorElementPtr>;
 
+  struct Config {
+    std::vector<double> positions{{0, 30, 60, 120, 150, 180}};
+    std::array<double, 2> offsets{{0, 0}};
+    std::array<double, 2> bounds{{25, 100}};
+    double thickness{80_um};
+    int surfaceType{0};
+    int binValue{2};
+  };
+
   /// The store of the detector elements (lifetime: job)
   DetectorStore detectorStore;
 
@@ -33,4 +47,8 @@ struct TelescopeDetector : public ActsExamples::IBaseDetector {
   std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
   finalize(const boost::program_options::variables_map& vm,
            std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) override;
+
+  std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
+  finalize(const Config& cfg,
+           std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
 };

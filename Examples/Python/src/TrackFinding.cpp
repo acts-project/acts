@@ -1,14 +1,16 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
@@ -106,7 +108,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(impactMax);
     ACTS_PYTHON_MEMBER(deltaZMax);
     ACTS_PYTHON_MEMBER(zBinEdges);
-    ACTS_PYTHON_MEMBER(enableCutsForSortedSP);
+    ACTS_PYTHON_MEMBER(skipPreviousTopSP);
     ACTS_PYTHON_MEMBER(interactionPointCut);
     ACTS_PYTHON_MEMBER(zBinEdges);
     ACTS_PYTHON_MEMBER(zBinsCustomLooping);
@@ -134,6 +136,44 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
+    using Config = Acts::SeedFinderOrthogonalConfig<SimSpacePoint>;
+    auto c =
+        py::class_<Config>(m, "SeedFinderOrthogonalConfig").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(minPt);
+    ACTS_PYTHON_MEMBER(cotThetaMax);
+    ACTS_PYTHON_MEMBER(deltaRMin);
+    ACTS_PYTHON_MEMBER(deltaRMax);
+
+    ACTS_PYTHON_MEMBER(impactMax);
+    ACTS_PYTHON_MEMBER(sigmaScattering);
+    ACTS_PYTHON_MEMBER(maxPtScattering);
+    ACTS_PYTHON_MEMBER(maxSeedsPerSpM);
+    ACTS_PYTHON_MEMBER(collisionRegionMin);
+    ACTS_PYTHON_MEMBER(collisionRegionMax);
+    ACTS_PYTHON_MEMBER(phiMin);
+    ACTS_PYTHON_MEMBER(phiMax);
+    ACTS_PYTHON_MEMBER(zMin);
+    ACTS_PYTHON_MEMBER(zMax);
+    ACTS_PYTHON_MEMBER(rMax);
+    ACTS_PYTHON_MEMBER(rMin);
+    ACTS_PYTHON_MEMBER(bFieldInZ);
+    ACTS_PYTHON_MEMBER(beamPos);
+    ACTS_PYTHON_MEMBER(radLengthPerSeed);
+    ACTS_PYTHON_MEMBER(rMinMiddle);
+    ACTS_PYTHON_MEMBER(rMaxMiddle);
+    ACTS_PYTHON_MEMBER(deltaPhiMax);
+
+    ACTS_PYTHON_MEMBER(highland);
+    ACTS_PYTHON_MEMBER(maxScatteringAngle2);
+    ACTS_PYTHON_MEMBER(pTPerHelixRadius);
+    ACTS_PYTHON_MEMBER(minHelixDiameter2);
+    ACTS_PYTHON_MEMBER(pT2perRadius);
+    ACTS_PYTHON_STRUCT_END();
+    patchKwargsConstructor(c);
+  }
+
+  {
     using Config = Acts::SpacePointGridConfig;
     auto c = py::class_<Config>(m, "SpacePointGridConfig").def(py::init<>());
 
@@ -145,7 +185,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(zMin);
     ACTS_PYTHON_MEMBER(deltaRMax);
     ACTS_PYTHON_MEMBER(cotThetaMax);
-    ACTS_PYTHON_MEMBER(numPhiNeighbors);
+    ACTS_PYTHON_MEMBER(phiBinDeflectionCoverage);
     ACTS_PYTHON_MEMBER(impactMax);
     ACTS_PYTHON_MEMBER(zBinEdges);
     ACTS_PYTHON_STRUCT_END();
@@ -172,8 +212,33 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(seedFilterConfig);
     ACTS_PYTHON_MEMBER(seedFinderConfig);
     ACTS_PYTHON_MEMBER(gridConfig);
+    ACTS_PYTHON_MEMBER(allowSeparateRMax);
     ACTS_PYTHON_MEMBER(zBinNeighborsTop);
     ACTS_PYTHON_MEMBER(zBinNeighborsBottom);
+    ACTS_PYTHON_MEMBER(numPhiNeighbors);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    using Config = ActsExamples::SeedingOrthogonalAlgorithm::Config;
+
+    auto alg =
+        py::class_<ActsExamples::SeedingOrthogonalAlgorithm,
+                   ActsExamples::BareAlgorithm,
+                   std::shared_ptr<ActsExamples::SeedingOrthogonalAlgorithm>>(
+            mex, "SeedingOrthogonalAlgorithm")
+            .def(py::init<const Config&, Acts::Logging::Level>(),
+                 py::arg("config"), py::arg("level"))
+            .def_property_readonly(
+                "config", &ActsExamples::SeedingOrthogonalAlgorithm::config);
+
+    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(inputSpacePoints);
+    ACTS_PYTHON_MEMBER(outputSeeds);
+    ACTS_PYTHON_MEMBER(outputProtoTracks);
+    ACTS_PYTHON_MEMBER(seedFilterConfig);
+    ACTS_PYTHON_MEMBER(seedFinderConfig);
     ACTS_PYTHON_STRUCT_END();
   }
 

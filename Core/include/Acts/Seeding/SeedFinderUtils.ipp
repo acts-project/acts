@@ -62,7 +62,7 @@ template <typename external_spacepoint_t>
 void transformCoordinates(
     std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
     InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
-    bool enableCutsForSortedSP, std::vector<LinCircle>& linCircleVec) {
+    std::vector<LinCircle>& linCircleVec) {
   auto extractFunction =
       [](const InternalSpacePoint<external_spacepoint_t>& obj)
       -> std::array<float, 6> {
@@ -72,13 +72,12 @@ void transformCoordinates(
   };
 
   return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(
-      vec, spM, bottom, enableCutsForSortedSP, linCircleVec, extractFunction);
+      vec, spM, bottom, linCircleVec, extractFunction);
 }
 
 template <typename external_spacepoint_t, typename callable_t>
 void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
                           external_spacepoint_t& spM, bool bottom,
-                          bool enableCutsForSortedSP,
                           std::vector<LinCircle>& linCircleVec,
                           callable_t&& extractFunction) {
   auto [xM, yM, zM, rM, varianceRM, varianceZM] = extractFunction(spM);
@@ -132,15 +131,13 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
     sp->setCotTheta(cot_theta);
   }
   // sort the SP in order of cotTheta
-  if (enableCutsForSortedSP) {
-    std::sort(vec.begin(), vec.end(),
-              [](external_spacepoint_t* a, external_spacepoint_t* b) -> bool {
-                return (a->cotTheta() < b->cotTheta());
-              });
-    std::sort(linCircleVec.begin(), linCircleVec.end(),
-              [](const LinCircle& a, const LinCircle& b) -> bool {
-                return (a.cotTheta < b.cotTheta);
-              });
-  }
+  std::sort(vec.begin(), vec.end(),
+            [](external_spacepoint_t* a, external_spacepoint_t* b) -> bool {
+              return (a->cotTheta() < b->cotTheta());
+            });
+  std::sort(linCircleVec.begin(), linCircleVec.end(),
+            [](const LinCircle& a, const LinCircle& b) -> bool {
+              return (a.cotTheta < b.cotTheta);
+            });
 }
 }  // namespace Acts
