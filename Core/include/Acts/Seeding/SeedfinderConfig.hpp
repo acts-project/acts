@@ -16,12 +16,14 @@
 namespace Acts {
 
 struct SeedConfirmationRange {
-  float zMinSeedConf;
-  float zMaxSeedConf;
-  float rMaxSeedConf;
-  size_t nTopSeedConf;
-  size_t nTopForLargeR;
-  size_t nTopForSmallR;
+  float zMinSeedConf =
+      std::numeric_limits<float>::min() * Acts::UnitConstants::mm;
+  float zMaxSeedConf =
+      std::numeric_limits<float>::max() * Acts::UnitConstants::mm;
+  float rMaxSeedConf =
+      std::numeric_limits<float>::max() * Acts::UnitConstants::mm;
+  size_t nTopForLargeR = 0;
+  size_t nTopForSmallR = 0;
 };
 
 // forward declaration to avoid cyclic dependence
@@ -34,7 +36,7 @@ struct RegionalParameters {
   std::shared_ptr<Acts::SeedFilter<SpacePoint>> seedFilter;
   // Seed Cuts
   // lower cutoff for seeds
-  float minPt = 400. * Acts::UnitConstants::MeV;
+  float minPt = 400. * Acts::UnitConstants::MeV;  
   // minimum distance in r between middle and top SP
   float deltaRMinTopSP = 5 * Acts::UnitConstants::mm;
   // maximum distance in r between middle and top SP
@@ -118,12 +120,18 @@ struct SeedfinderConfig {
   // parameters for forward seed confirmation
   SeedConfirmationRange forwardSeedConfirmationRange;
 
+  // cut to the maximum value of delta z between SPs
+  float deltaZMax =
+      std::numeric_limits<float>::infinity() * Acts::UnitConstants::mm;
+
+  // enable cut on the compatibility between interaction point and SPs
+  bool interactionPointCut = false;
+
   // non equidistant binning in z
   std::vector<float> zBinEdges;
 
-  // sort the SP in transformCoordinates method and enables compatibility cuts
-  // based on the sorting of cotTheta
-  bool enableCutsForSortedSP = false;
+  // additional cut to skip top SPs when producing triplets
+  bool skipPreviousTopSP = false;
 
   // impact parameter
   float impactMax = 20. * Acts::UnitConstants::mm;
@@ -148,6 +156,7 @@ struct SeedfinderConfig {
   Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
                         0 * Acts::UnitConstants::mm};
 
+  boost::container::small_vector<size_t, 20> zBinsCustomLooping = {};
   // alignment uncertainties, used for uncertainties in the
   // non-measurement-plane of the modules
   // which otherwise would be 0
