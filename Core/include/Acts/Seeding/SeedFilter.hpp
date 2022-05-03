@@ -40,7 +40,8 @@ class SeedFilter {
   /// @param invHelixDiameterVec vector containing 1/(2*r) values where r is the helix radius
   /// @param impactParametersVec vector containing the impact parameters
   /// @param zOrigin on the z axis as defined by bottom and middle space point
-  /// @param numQualitySeeds number of high quality seeds
+  /// @param numQualitySeeds number of high quality seeds in seed confirmation
+  /// @param numSeeds number of low quality seeds in seed confirmation
   /// @param outIt Output iterator for the seeds
   virtual void filterSeeds_2SpFixed(
       InternalSpacePoint<external_spacepoint_t>& bottomSP,
@@ -48,19 +49,21 @@ class SeedFilter {
       std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
       std::vector<float>& invHelixDiameterVec,
       std::vector<float>& impactParametersVec, float zOrigin,
-      int& numQualitySeeds,
-      std::back_insert_iterator<std::vector<std::pair<
-          float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>>
+      int& numQualitySeeds, int& numSeeds,
+      std::vector<std::pair<
+          float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
           outIt) const;
 
   /// Filter seeds once all seeds for one middle space point have been created
   /// @param seedsPerSpM vector of pairs containing weight and seed for all
+  /// @param numQualitySeeds number of high quality seeds in seed confirmation
   /// @param outIt Output iterator for the seeds
   /// for all seeds with the same middle space point
   virtual void filterSeeds_1SpFixed(
       std::vector<std::pair<
           float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
           seedsPerSpM,
+      int& numQualitySeeds,
       std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
       const;
   const SeedFilterConfig getSeedFilterConfig() const { return m_cfg; }

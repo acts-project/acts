@@ -50,6 +50,11 @@ struct SeedFilterConfig {
   // minimum impact parameter for seed confirmation
   float minImpactSeedConf = 1. * Acts::UnitConstants::mm;
 
+  // maximum number of lower quality seeds in seed confirmation
+  float maxSeedsPerSpMConf = 5;
+  // maximum number of quality seeds in seed confirmation
+  float maxQualitySeedsPerSpMConf = 5;
+
   // use deltaR instead of top radius
   bool useDeltaRTopRadius = false;
 
