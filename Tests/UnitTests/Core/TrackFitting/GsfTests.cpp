@@ -28,17 +28,12 @@ using namespace Acts;
 using namespace Acts::Test;
 using namespace Acts::UnitLiterals;
 
-using KalmanUpdater = Acts::GainMatrixUpdater;
-using KalmanSmoother = Acts::GainMatrixSmoother;
+Acts::GainMatrixUpdater kfUpdater;
 
-KalmanUpdater kfUpdater;
-KalmanSmoother kfSmoother;
-
-KalmanFitterExtensions getExtensions() {
-  KalmanFitterExtensions extensions;
+GsfExtensions getExtensions() {
+  GsfExtensions extensions;
   extensions.calibrator.connect<&testSourceLinkCalibrator>();
-  extensions.updater.connect<&KalmanUpdater::operator()>(&kfUpdater);
-  extensions.smoother.connect<&KalmanSmoother::operator()>(&kfSmoother);
+  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(&kfUpdater);
   return extensions;
 }
 
