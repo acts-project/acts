@@ -132,12 +132,12 @@ void Acts::TrackingVolume::connectDenseBoundarySurfaces(
                 boundSur.at(i));
         if (mutableBs->m_oppositeVolume != nullptr &&
             mutableBs->m_alongVolume == nullptr) {
-          navDir = forward;
+          navDir = NavigationDirection::Forward;
           mutableBs->attachVolume(this, navDir);
         } else {
           if (mutableBs->m_oppositeVolume == nullptr &&
               mutableBs->m_alongVolume != nullptr) {
-            navDir = backward;
+            navDir = NavigationDirection::Backward;
             mutableBs->attachVolume(this, navDir);
           }
         }
@@ -161,7 +161,7 @@ void Acts::TrackingVolume::createBoundarySurfaces() {
   for (auto& osf : orientedSurfaces) {
     TrackingVolume* opposite = nullptr;
     TrackingVolume* along = nullptr;
-    if (osf.second == backward) {
+    if (osf.second == NavigationDirection::Backward) {
       opposite = this;
     } else {
       along = this;
@@ -187,8 +187,9 @@ void Acts::TrackingVolume::glueTrackingVolume(const GeometryContext& gctx,
   Vector3 nvector =
       bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
   // estimate the orientation
-  NavigationDirection navDir =
-      (nvector.dot(distance) > 0.) ? forward : backward;
+  NavigationDirection navDir = (nvector.dot(distance) > 0.)
+                                   ? NavigationDirection::Forward
+                                   : NavigationDirection::Backward;
   // The easy case :
   // - no glue volume descriptors on either side
   if ((m_glueVolumeDescriptor == nullptr) ||
@@ -233,8 +234,9 @@ void Acts::TrackingVolume::glueTrackingVolumes(
   Vector3 nvector =
       bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
   // estimate the orientation
-  NavigationDirection navDir =
-      (nvector.dot(distance) > 0.) ? forward : backward;
+  NavigationDirection navDir = (nvector.dot(distance) > 0.)
+                                   ? NavigationDirection::Forward
+                                   : NavigationDirection::Backward;
   // the easy case :
   // - no glue volume descriptors on either side
   if ((m_glueVolumeDescriptor == nullptr) ||
@@ -480,8 +482,7 @@ Acts::TrackingVolume::compatibleBoundaries(
                  << bSurface->surfaceRepresentation().geometryId());
     if (detail::checkIntersection(sIntersection.intersection, pLimit, oLimit,
                                   s_onSurfaceTolerance, logger)) {
-      sIntersection.intersection.pathLength *=
-          std::copysign(1., options.navDir);
+      sIntersection.intersection.pathLength *= options.navDir;
       return BoundaryIntersection(sIntersection.intersection, bSurface,
                                   sIntersection.object);
     }
@@ -490,8 +491,7 @@ Acts::TrackingVolume::compatibleBoundaries(
       ACTS_VERBOSE("Consider alternative");
       if (detail::checkIntersection(sIntersection.alternative, pLimit, oLimit,
                                     s_onSurfaceTolerance, logger)) {
-        sIntersection.alternative.pathLength *=
-            std::copysign(1., options.navDir);
+        sIntersection.alternative.pathLength *= options.navDir;
         return BoundaryIntersection(sIntersection.alternative, bSurface,
                                     sIntersection.object);
         ;
@@ -553,7 +553,7 @@ Acts::TrackingVolume::compatibleBoundaries(
   }
 
   // Sort them accordingly to the navigation direction
-  if (options.navDir == forward) {
+  if (options.navDir == NavigationDirection::Forward) {
     std::sort(bIntersections.begin(), bIntersections.end());
   } else {
     std::sort(bIntersections.begin(), bIntersections.end(), std::greater<>());
@@ -603,7 +603,7 @@ Acts::TrackingVolume::compatibleLayers(
               : tLayer->nextLayer(gctx, position, options.navDir * direction);
     }
     // sort them accordingly to the navigation direction
-    if (options.navDir == forward) {
+    if (options.navDir == NavigationDirection::Forward) {
       std::sort(lIntersections.begin(), lIntersections.end());
     } else {
       std::sort(lIntersections.begin(), lIntersections.end(), std::greater<>());
@@ -656,7 +656,7 @@ Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
   double pLimit = options.pathLimit;
   double oLimit = options.overstepLimit;
 
-  if (m_bvhTop == nullptr || !options.navDir) {
+  if (m_bvhTop == nullptr) {
     return sIntersections;
   }
 
@@ -689,7 +689,7 @@ Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
   }
 
   // Sort according to the path length
-  if (options.navDir == forward) {
+  if (options.navDir == NavigationDirection::Forward) {
     std::sort(sIntersections.begin(), sIntersections.end());
   } else {
     std::sort(sIntersections.begin(), sIntersections.end(), std::greater<>());

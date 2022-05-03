@@ -82,4 +82,6 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   m_binnedSP = std::move(grid);
   m_bottomBinFinder = botBinFinder;
   m_topBinFinder = tBinFinder;
+
+  m_bins = _config.zBinsCustomLooping;
 }

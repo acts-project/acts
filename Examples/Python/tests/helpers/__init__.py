@@ -5,6 +5,11 @@ import acts
 from acts.examples import BareAlgorithm
 
 geant4Enabled = any(v.startswith("G4") for v in os.environ.keys())
+if geant4Enabled:
+    try:
+        import acts.examples.geant4
+    except ImportError:
+        geant4Enabled = False
 
 try:
     import ROOT

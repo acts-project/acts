@@ -15,6 +15,7 @@ def addFatras(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
+    preselectParticles: bool = True,
 ) -> acts.examples.Sequencer:
     """This function steers the detector simulation using Fatras
 
@@ -32,20 +33,29 @@ def addFatras(
         random number generator
     """
 
+    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
+        acts.examples.dump_args_calls(locals())
+
     # Preliminaries
     rnd = rnd or acts.examples.RandomNumbers()
 
     # Selector
-    selector = acts.examples.ParticleSelector(
-        level=s.config.logLevel,
-        inputParticles="particles_input",
-        outputParticles="particles_selected",
-    )
+    if preselectParticles:
+        particles_selected = "particles_selected"
+        s.addAlgorithm(
+            acts.examples.ParticleSelector(
+                level=s.config.logLevel,
+                inputParticles="particles_input",
+                outputParticles=particles_selected,
+            )
+        )
+    else:
+        particles_selected = "particles_input"
 
     # Simulation
     alg = acts.examples.FatrasSimulation(
         level=s.config.logLevel,
-        inputParticles=selector.config.outputParticles,
+        inputParticles=particles_selected,
         outputParticlesInitial="particles_initial",
         outputParticlesFinal="particles_final",
         outputSimHits="simhits",
@@ -56,7 +66,6 @@ def addFatras(
     )
 
     # Sequencer
-    s.addAlgorithm(selector)
     s.addAlgorithm(alg)
 
     # Output
@@ -149,12 +158,10 @@ def runFatras(trackingGeometry, field, outputDir, s: acts.examples.Sequencer = N
 
 
 if "__main__" == __name__:
-    import os
-
     gdc = acts.examples.GenericDetector.Config()
     detector = acts.examples.GenericDetector()
     trackingGeometry, contextDecorators = detector.finalize(gdc, None)
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    runFatras(trackingGeometry, field, os.getcwd()).run()
+    runFatras(trackingGeometry, field, Path.cwd()).run()

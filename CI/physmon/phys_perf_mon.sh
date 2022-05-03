@@ -3,6 +3,7 @@
 set -e
 
 outdir=$1
+[ -z "$outdir" ] && outdir=physmon
 mkdir -p $outdir
 
 refdir=CI/physmon/reference
@@ -26,7 +27,7 @@ function run() {
     histcmp \
         --label-reference=$refcommit \
         --label-monitored=$commit \
-        "$@"
+        "$@" || true
 
     ec=$(($ec | $?))
 
@@ -35,26 +36,26 @@ function run() {
 
 
 run \
-    physmon/performance_ckf_tracks_truth_smeared.root \
+    $outdir/performance_ckf_tracks_truth_smeared.root \
     $refdir/performance_ckf_tracks_truth_smeared.root \
     --title "CKF truth smeared" \
     -c CI/physmon/ckf_truth_smeared.yml \
     -o $outdir/ckf_truth_smeared.html \
 
 run \
-    physmon/performance_ckf_tracks_truth_estimated.root \
+    $outdir/performance_ckf_tracks_truth_estimated.root \
     $refdir/performance_ckf_tracks_truth_estimated.root \
     --title "CKF truth estimated" \
     -o $outdir/ckf_truth_estimated.html \
 
 run \
-    physmon/performance_ckf_tracks_seeded.root \
+    $outdir/performance_ckf_tracks_seeded.root \
     $refdir/performance_ckf_tracks_seeded.root \
     --title "CKF seeded" \
     -o $outdir/ckf_seeded.html \
 
 run \
-    physmon/performance_truth_tracking.root \
+    $outdir/performance_truth_tracking.root \
     $refdir/performance_truth_tracking.root \
     --title "Truth tracking" \
     -c CI/physmon/truth_tracking.yml \
