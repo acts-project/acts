@@ -299,8 +299,13 @@ inline bool calculateSpacePointPosition(
 
 template <typename spacepoint_t>
 SpacePointBuilder<spacepoint_t>::SpacePointBuilder(
-    SpacePointBuilderConfig cfg, std::unique_ptr<const Logger> logger)
-    : m_config(cfg), m_logger(std::move(logger)) {}
+    SpacePointBuilderConfig cfg,
+    std::function<
+        spacepoint_t(Acts::Vector3, Acts::Vector2,
+                     boost::container::static_vector<const SourceLink*, 2>)>
+        func,
+    std::unique_ptr<const Logger> logger)
+    : m_config(cfg), m_spConstructor(func), m_logger(std::move(logger)) {}
 
 template <typename spacepoint_t>
 std::pair<Vector3, Vector2> SpacePointBuilder<spacepoint_t>::globalCoords(
@@ -369,7 +374,7 @@ void SpacePointBuilder<spacepoint_t>::calculateSingleHitSpacePoints(
 
     boost::container::static_vector<const SourceLink*, 2> slinks;
     slinks.emplace_back(slink);
-    auto sp = spacepoint_t(gPos, gCov[0], gCov[1], slinks);
+    auto sp = m_spConstructor(gPos, gCov[0], gCov[1], std::move(slinks));
 
     spacePointIt = sp;
   }
@@ -463,7 +468,7 @@ void SpacePointBuilder<spacepoint_t>::calculateDoubleHitSpacePoint(
       const double varRho = gcov[0];
       const double varZ = gcov[1];
 
-      auto sp = spacepoint_t(pos, varRho, varZ, std::move(slinks));
+      auto sp = m_spConstructor(gPos, gCov[0], gCov[1], std::move(slinks));
       spacePoint = &sp;
     }
   }
@@ -484,7 +489,7 @@ void SpacePointBuilder<spacepoint_t>::calculateDoubleHitSpacePoint(
                                      *(measurementPair.second), theta);
     const double varRho = gcov[0];
     const double varZ = gcov[1];
-    auto sp = spacepoint_t(pos, varRho, varZ, std::move(slinks));
+    auto sp = m_spConstructor(pos, varRho, varZ, std::move(slinks));
     spacePoint = &sp;
   }
 }
