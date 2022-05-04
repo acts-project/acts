@@ -5,7 +5,7 @@ from pathlib import Path
 import acts
 import acts.examples
 
-from truth_tracking import runTruthTracking
+from truth_tracking_kalman import runTruthTrackingKalman
 
 u = acts.UnitConstants
 
@@ -21,7 +21,7 @@ if "__main__" == __name__:
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    runTruthTracking(
+    runTruthTrackingKalman(
         trackingGeometry,
         field,
         digiConfigFile=srcdir
