@@ -405,7 +405,7 @@ jobs:
           source /opt/intel/oneapi/setvars.sh
           && cmake -B build -S .
           -GNinja
-          -DCMAKE_CXX_COMPILER=clang++
+          -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2022.0.2/linux/bin-llvm/clang++
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
           -DACTS_SETUP_VECMEM=ON
