@@ -538,6 +538,7 @@ class AtlasStepper {
   ///
   /// @param [in,out] state The stepper state for
   /// @param [in] parameters The new free track parameters at start
+  /// @param [in] boundParams Corresponding bound parameters
   /// @param [in] covariance The updated covariance matrix
   /// @param [in] surface The surface used to update the pVector
   void update(State& state, const FreeVector& parameters,
