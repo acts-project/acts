@@ -84,9 +84,6 @@ def runTruthTrackingKalman(
         events=100, numThreads=-1, logLevel=acts.logging.INFO
     )
 
-    for d in decorators:
-        s.addContextDecorator(d)
-
     rnd = acts.examples.RandomNumbers(seed=42)
     outputDir = Path(outputDir)
 
