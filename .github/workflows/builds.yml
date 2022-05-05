@@ -14,7 +14,7 @@ env:
 jobs:
   lcg:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v15
+    container: ghcr.io/acts-project/${{ matrix.image }}:v21
     strategy:
       matrix:
         image:
@@ -81,7 +81,7 @@ jobs:
 
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v15
+    container: ghcr.io/acts-project/ubuntu2004:v21
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -147,7 +147,7 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v15
+    container: ghcr.io/acts-project/ubuntu2004:v21
     needs: [linux_ubuntu]
     env:
       ACTS_LOG_FAILURE_THRESHOLD: FATAL
@@ -185,7 +185,7 @@ jobs:
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v15
+    container: ghcr.io/acts-project/ubuntu2004:v21
     needs: [linux_ubuntu]
     env:
       ACTS_LOG_FAILURE_THRESHOLD: FATAL
@@ -210,6 +210,7 @@ jobs:
         shell: bash
         run: >
           echo "::group::Dependencies"
+          && git config --global safe.directory "$GITHUB_WORKSPACE"
           && pip3 install histcmp==0.3.1
           && /usr/local/bin/download_geant4_data.sh
           && source /usr/local/bin/thisroot.sh
@@ -370,7 +371,7 @@ jobs:
         run: ./build-downstream/bin/ShowActsVersion
   cuda:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu1804_cuda:v9
+    container: ghcr.io/acts-project/ubuntu1804_cuda:v21
     steps:
       - uses: actions/checkout@v2
       - name: Configure
@@ -386,7 +387,7 @@ jobs:
         run: cmake --build build --
   exatrkx:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v17
+    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v21
     steps:
       - uses: actions/checkout@v2
       - name: Configure
@@ -402,7 +403,7 @@ jobs:
         run: cmake --build build --
   sycl:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_oneapi:v9
+    container: ghcr.io/acts-project/ubuntu2004_oneapi:v21
     defaults:
       run:
         shell: bash
@@ -413,7 +414,7 @@ jobs:
           source /opt/intel/oneapi/setvars.sh
           && cmake -B build -S .
           -GNinja
-          -DCMAKE_CXX_COMPILER=clang++
+          -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2022.0.2/linux/bin-llvm/clang++
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
           -DACTS_SETUP_VECMEM=ON
@@ -425,7 +426,7 @@ jobs:
           && cmake --build build --
   docs:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v9
+    container: ghcr.io/acts-project/ubuntu2004:v21
     env:
         DOXYGEN_WARN_AS_ERROR: YES
     steps:
