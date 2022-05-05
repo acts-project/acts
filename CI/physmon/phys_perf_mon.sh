@@ -27,7 +27,7 @@ function run() {
     histcmp \
         --label-reference=$refcommit \
         --label-monitored=$commit \
-        "$@" || true
+        "$@"
 
     ec=$(($ec | $?))
 
@@ -41,18 +41,21 @@ run \
     --title "CKF truth smeared" \
     -c CI/physmon/ckf_truth_smeared.yml \
     -o $outdir/ckf_truth_smeared.html \
+    -p $outdir/ckf_truth_smeared_plots \
 
 run \
     $outdir/performance_ckf_tracks_truth_estimated.root \
     $refdir/performance_ckf_tracks_truth_estimated.root \
     --title "CKF truth estimated" \
     -o $outdir/ckf_truth_estimated.html \
+    -p $outdir/ckf_truth_estimated_plots \
 
 run \
     $outdir/performance_ckf_tracks_seeded.root \
     $refdir/performance_ckf_tracks_seeded.root \
     --title "CKF seeded" \
     -o $outdir/ckf_seeded.html \
+    -p $outdir/ckf_seeded_plots \
 
 run \
     $outdir/performance_truth_tracking.root \
@@ -60,6 +63,7 @@ run \
     --title "Truth tracking" \
     -c CI/physmon/truth_tracking.yml \
     -o $outdir/truth_tracking.html \
+    -p $outdir/truth_tracking_plots \
 
 
 
