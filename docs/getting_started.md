@@ -259,6 +259,7 @@ components.
 | ACTS_BUILD_EXAMPLES_HEPMC3          | Build HepMC3-based code in the examples                                                               |
 | ACTS_BUILD_EXAMPLES_PYTHIA8         | Build Pythia8-based code in the examples                                                              |
 | ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS | Build python bindings for the examples                                                                |
+| ACTS_BUILD_ODD                      | Build the OpenDataDetector. Requires the submodule in thirdparty/OpenDataDetector to be initialized   |
 | ACTS_BUILD_BENCHMARKS               | Build benchmarks                                                                                      |
 | ACTS_BUILD_INTEGRATIONTESTS         | Build integration tests                                                                               |
 | ACTS_BUILD_UNITTESTS                | Build unit tests                                                                                      |
@@ -273,6 +274,7 @@ components.
 | ACTS_USE_SYSTEM_EIGEN3              | Use the system eigen3 libraries (defaults to ON)                                                      |
 | ACTS_USE_SYSTEM_VECMEM              | Use system provided vecmem installation                                                               |
 | ACTS_USE_SYSTEM_PYBIND11            | Use pybind11 installed in the system                                                                  |
+| ACTS_USE_SYSTEM_ACTSDD4HEP          | Use ActsDD4hep glue library externally (and don't include it in the build)                            |
 
 All Acts-specific options are disabled or empty by default and must be
 specifically requested. Some of the options have interdependencies that are
