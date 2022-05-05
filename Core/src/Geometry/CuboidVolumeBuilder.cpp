@@ -33,10 +33,8 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <limits>
-#include <optional>
 
-std::shared_ptr<const Acts::PlaneSurface>
-Acts::CuboidVolumeBuilder::buildSurface(
+std::shared_ptr<const Acts::Surface> Acts::CuboidVolumeBuilder::buildSurface(
     const GeometryContext& /*gctx*/,
     const CuboidVolumeBuilder::SurfaceConfig& cfg) const {
   std::shared_ptr<PlaneSurface> surface;
@@ -60,33 +58,73 @@ Acts::CuboidVolumeBuilder::buildSurface(
 std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
     const GeometryContext& gctx,
     Acts::CuboidVolumeBuilder::LayerConfig& cfg) const {
+  if (cfg.surfaces.empty() && cfg.surfaceCfg.empty()) {
+    throw std::runtime_error{
+        "Neither surfaces nor config to build surfaces was provided. Cannot "
+        "proceed"};
+  }
+
   // Build the surface
-  if (cfg.surface == nullptr) {
-    cfg.surface = buildSurface(gctx, cfg.surfaceCfg);
+  if (cfg.surfaces.empty()) {
+    for (const auto& sCfg : cfg.surfaceCfg) {
+      cfg.surfaces.push_back(buildSurface(gctx, sCfg));
+    }
   }
   // Build transformation centered at the surface position
-  Transform3 trafo(Transform3::Identity() * cfg.surfaceCfg.rotation);
-  trafo.translation() = cfg.surfaceCfg.position;
+  Vector3 centroid{0., 0., 0.};
+
+  for (const auto& surface : cfg.surfaces) {
+    centroid += surface->transform(gctx).translation();
+  }
+
+  centroid /= cfg.surfaces.size();
+
+  // In the case the layer configuration doesn't define the rotation of the
+  // layer use the orientation of the first surface to define the layer rotation
+  // in space.
+  Transform3 trafo = Transform3::Identity();
+  trafo.translation() = centroid;
+  if (cfg.rotation) {
+    trafo.linear() = *cfg.rotation;
+  } else {
+    trafo.linear() = cfg.surfaces.front()->transform(gctx).rotation();
+  }
 
   LayerCreator::Config lCfg;
   lCfg.surfaceArrayCreator = std::make_shared<const SurfaceArrayCreator>();
   LayerCreator layerCreator(lCfg);
-  return layerCreator.planeLayer(gctx, {cfg.surface}, cfg.binsY, cfg.binsZ,
-                                 BinningValue::binX, std::nullopt, trafo);
+  ProtoLayer pl{gctx, cfg.surfaces};
+  pl.envelope[binX] = cfg.envelopeX;
+  return layerCreator.planeLayer(gctx, cfg.surfaces, cfg.binsY, cfg.binsZ,
+                                 BinningValue::binX, pl, trafo);
 }
 
 std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
-    const GeometryContext& /*gctx*/,
+    const GeometryContext& gctx,
     const Acts::CuboidVolumeBuilder::VolumeConfig& cfg) const {
   using namespace UnitLiterals;
   // Construct return value
   std::pair<double, double> minMax = std::make_pair(
       std::numeric_limits<double>::max(), -std::numeric_limits<double>::max());
+
+  // Compute the min volume boundaries for computing the binning start
+  // See
+  // https://acts.readthedocs.io/en/latest/core/geometry.html#geometry-building
+  // !! IMPORTANT !! The volume is assumed to be already rotated into the
+  // telescope geometry
+  Vector3 minVolumeBoundaries = cfg.position - 0.5 * cfg.length;
+  Vector3 maxVolumeBoundaries = cfg.position + 0.5 * cfg.length;
+
+  // Compute first the min-max from the layers
+
   for (const auto& layercfg : cfg.layerCfg) {
-    auto surfacePosMin = layercfg.surfaceCfg.position.x() -
-                         layercfg.surfaceCfg.thickness / 2. - 1._um;
-    auto surfacePosMax = layercfg.surfaceCfg.position.x() +
-                         layercfg.surfaceCfg.thickness / 2. + 1._um;
+    // recreating the protolayer for each layer => slow, but only few sensors
+    ProtoLayer pl{gctx, layercfg.surfaces};
+    pl.envelope[binX] = layercfg.envelopeX;
+
+    double surfacePosMin = pl.min(binX);
+    double surfacePosMax = pl.max(binX);
+
     // Test if new extreme is found and set it
     if (surfacePosMin < minMax.first) {
       minMax.first = surfacePosMin;
@@ -95,6 +133,11 @@ std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
       minMax.second = surfacePosMax;
     }
   }
+
+  // Use the volume boundaries as limits for the binning
+  minMax.first = std::min(minMax.first, minVolumeBoundaries(binX));
+  minMax.second = std::max(minMax.second, maxVolumeBoundaries(binX));
+
   return minMax;
 }
 
@@ -124,7 +167,7 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
         RectangleBounds(cfg.length.y() * 0.5, cfg.length.z() * 0.5));
 
     LayerConfig lCfg;
-    lCfg.surfaceCfg = sCfg;
+    lCfg.surfaceCfg = {sCfg};
 
     cfg.layerCfg.push_back(lCfg);
   }
@@ -182,6 +225,13 @@ Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
   for (VolumeConfig volCfg : m_cfg.volumeCfg) {
     volumes.push_back(buildVolume(gctx, volCfg));
   }
+
+  // Sort the volumes vectors according to the center location, otherwise the
+  // binning boundaries will fail
+  std::sort(volumes.begin(), volumes.end(),
+            [](const TrackingVolumePtr& lhs, const TrackingVolumePtr& rhs) {
+              return lhs->center().x() < rhs->center().x();
+            });
 
   // Glue volumes
   for (unsigned int i = 0; i < volumes.size() - 1; i++) {

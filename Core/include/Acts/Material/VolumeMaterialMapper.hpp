@@ -16,6 +16,8 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Material/AccumulatedVolumeMaterial.hpp"
+#include "Acts/Material/MaterialGridHelper.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -81,10 +83,28 @@ class VolumeMaterialMapper {
         : geoContext(gctx), magFieldContext(mctx) {}
 
     /// The recorded material per geometry ID
-    std::map<GeometryIdentifier, RecordedMaterialVolumePoint> recordedMaterial;
+    std::map<const GeometryIdentifier, Acts::AccumulatedVolumeMaterial>
+        homogeneousGrid;
 
-    /// The binning per geometry ID
-    std::map<GeometryIdentifier, BinUtility> materialBin;
+    /// The recorded 2D transform associated the grid for each geometry ID
+    std::map<const GeometryIdentifier,
+             std::function<Acts::Vector2(Acts::Vector3)>>
+        transform2D;
+
+    /// The 2D material grid for each geometry ID
+    std::map<const GeometryIdentifier, Grid2D> grid2D;
+
+    /// The recorded 3D transform associated the material grid for each geometry
+    /// ID
+    std::map<const GeometryIdentifier,
+             std::function<Acts::Vector3(Acts::Vector3)>>
+        transform3D;
+
+    /// The 3D material grid for each geometry ID
+    std::map<const GeometryIdentifier, Grid3D> grid3D;
+
+    /// The binning for each geometry ID
+    std::map<const GeometryIdentifier, BinUtility> materialBin;
 
     /// The surface material of the input tracking geometry
     std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
@@ -129,8 +149,8 @@ class VolumeMaterialMapper {
   /// @brief Method to finalize the maps
   ///
   /// It calls the final run averaging and then transforms
-  /// the AccumulatedVolume material class to a surface material
-  /// class type
+  /// the Homogeneous material into HomogeneousVolumeMaterial and
+  /// the 2D and 3D grid into a InterpolatedMaterialMap
   ///
   /// @param mState
   void finalizeMaps(State& mState) const;
@@ -179,15 +199,17 @@ class VolumeMaterialMapper {
   void collectMaterialSurfaces(State& mState,
                                const TrackingVolume& tVolume) const;
 
-  /// Create extra material point for the mapping
+  /// Create extra material point for the mapping and add them to the grid
   ///
-  /// @param matPoint RecordedMaterialVolumePoint where the extra hit are stored
+  /// @param mState The state to be filled
+  /// @param currentBinning a pair containing the current geometry ID and the current binning
   /// @param properties material properties of the original hit
   /// @param position position of the original hit
   /// @param direction direction of the track
-  void createExtraHits(RecordedMaterialVolumePoint& matPoint,
-                       Acts::MaterialSlab properties, Vector3 position,
-                       Vector3 direction) const;
+  void createExtraHits(
+      State& mState,
+      std::pair<const GeometryIdentifier, BinUtility>& currentBinning,
+      Acts::MaterialSlab properties, Vector3 position, Vector3 direction) const;
 
   /// Standard logger method
   const Logger& logger() const { return *m_logger; }

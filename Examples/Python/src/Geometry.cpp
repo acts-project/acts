@@ -28,7 +28,10 @@ void addGeometry(Context& ctx) {
   {
     py::class_<Acts::TrackingGeometry, std::shared_ptr<Acts::TrackingGeometry>>(
         m, "TrackingGeometry")
-        .def("visitSurfaces", &Acts::TrackingGeometry::visitSurfaces);
+        .def("visitSurfaces",
+             [](Acts::TrackingGeometry& self, py::function& func) {
+               self.visitSurfaces(func);
+             });
   }
 }
 

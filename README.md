@@ -74,11 +74,5 @@ http://mozilla.org/MPL/2.0/ .
 
 The Acts project contains copies of the following external packages:
 
--   [dfelibs](https://gitlab.cern.ch/msmk/dfelibs) by Moritz Kiehn
-    licensed under the MIT license.
--   [JSON for Modern C++](https://github.com/nlohmann/json) by Niels Lohmann
-    licensed under the MIT License.
--   [autodiff](https://github.com/autodiff/autodiff/) by Allan Leal licensed
-    under the MIT license.
 -   [OpenDataDetector](https://github.com/acts-project/OpenDataDetector)
     licensed under the MPLv2 license.

@@ -82,6 +82,43 @@ target_link_libraries(
     ActsExamplesDetectorTGeo
 )
 
+# =================================================
+# Convert measurements to spacepoints and write sp to csv
+add_executable(
+  ActsExampleMeasurementsToSPTGeo
+  MeasurementsToSPTGeo.cpp
+)
+target_link_libraries(
+  ActsExampleMeasurementsToSPTGeo
+  PRIVATE
+    ActsExamplesFramework
+    ActsExamplesCommon
+    ActsExamplesIoCsv
+    ActsExamplesIoJson
+    ActsExamplesIoRoot
+    ActsExamplesDetectorTGeo
+    ActsExamplesMagneticField
+    ActsExamplesTrackFinding
+    ActsExamplesRecTracksCommon
+)
+
+add_executable(
+  ActsExampleMeasurementsToSPGeneric
+  MeasurementsToSPGeneric.cpp)
+target_link_libraries(
+  ActsExampleMeasurementsToSPGeneric
+    PRIVATE
+      ActsExamplesFramework
+      ActsExamplesCommon
+      ActsExamplesIoCsv
+      ActsExamplesIoJson
+      ActsExamplesIoRoot
+      ActsExamplesDetectorGeneric
+      ActsExamplesMagneticField
+      ActsExamplesTrackFinding
+      ActsExamplesRecTracksCommon)
+# =================================================
+
 install(
   TARGETS
     ActsExampleTruthTracksGeneric
@@ -95,3 +132,4 @@ install(
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_subdirectory_if(DD4hep ACTS_BUILD_EXAMPLES_DD4HEP)
+add_subdirectory_if(ExaTrkX ACTS_BUILD_EXAMPLES_EXATRKX)

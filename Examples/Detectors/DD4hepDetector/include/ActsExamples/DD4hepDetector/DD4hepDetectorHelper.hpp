@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Plugins/Digitization/DigitizationModule.hpp"
+#include "Acts/Digitization/DigitizationModule.hpp"
 
 #include "DD4hep/Segmentations.h"
 

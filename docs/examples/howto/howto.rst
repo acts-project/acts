@@ -12,3 +12,4 @@ How-to guides
    run_ckf_tracking
    setup_and_run_vertexing
    run_alignment
+   smearing_digitization_config.md

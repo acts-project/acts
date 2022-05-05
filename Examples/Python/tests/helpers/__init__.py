@@ -1,9 +1,15 @@
 import os
 from typing import List, Union
 
+import acts
 from acts.examples import BareAlgorithm
 
 geant4Enabled = any(v.startswith("G4") for v in os.environ.keys())
+if geant4Enabled:
+    try:
+        import acts.examples.geant4
+    except ImportError:
+        geant4Enabled = False
 
 try:
     import ROOT
@@ -60,3 +66,6 @@ class AssertCollectionExistsAlg(BareAlgorithm):
             assert ctx.eventStore.exists(collection), f"{collection} does not exist"
         self.events_seen += 1
         return acts.examples.ProcessCode.SUCCESS
+
+
+doHashChecks = os.environ.get("ROOT_HASH_CHECKS", "") != "" or "CI" in os.environ

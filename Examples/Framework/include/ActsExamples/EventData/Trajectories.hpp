@@ -28,7 +28,7 @@ namespace ActsExamples {
 struct Trajectories final {
  public:
   /// (Reconstructed) trajectory with multiple states.
-  using MultiTrajectory = ::Acts::MultiTrajectory<IndexSourceLink>;
+  using MultiTrajectory = ::Acts::MultiTrajectory;
   /// Fitted parameters identified by indices in the multi trajectory.
   using IndexedParameters = std::unordered_map<size_t, TrackParameters>;
 

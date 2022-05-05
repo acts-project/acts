@@ -91,6 +91,7 @@ void addDigitization(Context& ctx);
 void addPythia8(Context& ctx);
 void addJson(Context& ctx);
 void addHepMC3(Context& ctx);
+void addExaTrkXTrackFinding(Context& ctx);
 
 }  // namespace Acts::Python
 
@@ -192,7 +193,8 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
       .def_readwrite("events", &Config::events)
       .def_readwrite("logLevel", &Config::logLevel)
       .def_readwrite("numThreads", &Config::numThreads)
-      .def_readwrite("outputDir", &Config::outputDir);
+      .def_readwrite("outputDir", &Config::outputDir)
+      .def_readwrite("outputTimingFile", &Config::outputTimingFile);
 
   using ActsExamples::RandomNumbers;
   auto randomNumbers =
@@ -229,4 +231,5 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addPythia8(ctx);
   addJson(ctx);
   addHepMC3(ctx);
+  addExaTrkXTrackFinding(ctx);
 }

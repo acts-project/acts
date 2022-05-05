@@ -55,6 +55,9 @@ class CsvSpacePointReader final : public IReader {
   /// Read out data from the input stream.
   ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final override;
 
+  /// Readonly access to the config
+  const Config& config() const { return m_cfg; }
+
  private:
   Config m_cfg;
   std::pair<size_t, size_t> m_eventsRange;

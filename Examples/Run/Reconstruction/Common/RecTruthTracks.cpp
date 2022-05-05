@@ -51,6 +51,7 @@ int runRecTruthTracks(int argc, char* argv[],
   Options::addMagneticFieldOptions(desc);
   Options::addFittingOptions(desc);
   Options::addDigitizationOptions(desc);
+  Options::addParticleSmearingOptions(desc);
   TruthSeedSelector::addOptions(desc);
 
   auto vm = Options::parse(desc, argc, argv);

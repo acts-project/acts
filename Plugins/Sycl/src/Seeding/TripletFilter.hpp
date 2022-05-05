@@ -27,10 +27,8 @@
 #include <cstdint>
 
 namespace Acts::Sycl::detail {
-using AtomicAccessorFilter =
-    sycl::accessor<uint32_t, 1, sycl::access::mode::read>;
+
 /// Functor performing Triplet Filter
-template <class AtomicAccessorType>
 class TripletFilter {
  public:
   /// Constructor
@@ -46,7 +44,7 @@ class TripletFilter {
       vecmem::data::vector_view<const detail::DeviceSpacePoint> topSPsView,
       vecmem::data::vector_view<const detail::DeviceSpacePoint> middleSPsView,
       vecmem::data::vector_view<const detail::DeviceSpacePoint> bottomSPsView,
-      const AtomicAccessorFilter& countTripletsAcc,
+      vecmem::data::vector_view<uint32_t> countTripletsView,
       vecmem::data::vector_view<detail::SeedData> seedArrayView,
       const DeviceSeedfinderConfig& config, const DeviceExperimentCuts& cuts)
       : m_numTripletFilterThreads(numTripletFilterThreads),
@@ -60,7 +58,7 @@ class TripletFilter {
         m_topSPsView(topSPsView),
         m_middleSPsView(middleSPsView),
         m_bottomSPsView(bottomSPsView),
-        m_countTripletsAcc(countTripletsAcc),
+        m_countTripletsView(countTripletsView),
         m_seedArrayView(seedArrayView),
         m_config(config),
         m_cuts(cuts) {}
@@ -71,7 +69,8 @@ class TripletFilter {
       vecmem::device_vector<uint32_t> sumBotMidPrefix(m_sumBotMidView),
           deviceIndMidBot(m_indMidBotCompView),
           deviceIndBotDuplets(m_indBotDupletView),
-          sumBotTopCombPrefix(m_sumBotTopCombView);
+          sumBotTopCombPrefix(m_sumBotTopCombView),
+          deviceCountTriplets(m_countTripletsView);
       vecmem::jagged_device_vector<uint32_t> midTopDuplets(m_midTopDupletView);
       const auto idx =
           sumBotMidPrefix[m_firstMiddle] + item.get_global_linear_id();
@@ -81,7 +80,7 @@ class TripletFilter {
       const auto tripletBegin =
           sumBotTopCombPrefix[mid] - sumCombUptoFirstMiddle +
           (idx - sumBotMidPrefix[mid]) * midTopDuplets.at(mid).size();
-      const auto tripletEnd = tripletBegin + m_countTripletsAcc[idx];
+      const auto tripletEnd = tripletBegin + deviceCountTriplets[idx];
       const vecmem::device_vector<detail::DeviceTriplet> deviceCurvImpactConst(
           m_curvImpactView);
       for (auto i1 = tripletBegin; i1 < tripletEnd; ++i1) {
@@ -160,7 +159,7 @@ class TripletFilter {
   vecmem::data::vector_view<const detail::DeviceSpacePoint> m_topSPsView;
   vecmem::data::vector_view<const detail::DeviceSpacePoint> m_middleSPsView;
   vecmem::data::vector_view<const detail::DeviceSpacePoint> m_bottomSPsView;
-  AtomicAccessorFilter m_countTripletsAcc;
+  vecmem::data::vector_view<uint32_t> m_countTripletsView;
   vecmem::data::vector_view<detail::SeedData> m_seedArrayView;
   DeviceSeedfinderConfig m_config;
   DeviceExperimentCuts m_cuts;

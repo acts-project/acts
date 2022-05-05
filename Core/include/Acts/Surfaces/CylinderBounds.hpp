@@ -32,6 +32,16 @@ namespace Acts {
 /// opening angle @f$ 2\cdot\phi_{half}@f$
 /// around an average @f$ \phi @f$ angle @f$ \phi_{ave} @f$.
 ///
+/// CylinderBounds also supports beveled sides defined by an angle.
+/// Different angles can be defined on both sides of the cylinder.
+/// A postive angle is defined as "extruding" from the defined Zlength,
+/// while a negative angle is "intruding" on the Zlength.
+/// +    -            -   +
+/// ________________________
+/// \  |  /          \  |  /
+///  \ | /            \ | /
+///   \|/______________\|/
+///     2 * ZhalfLength
 class CylinderBounds : public SurfaceBounds {
  public:
   enum BoundValues : int {
@@ -39,7 +49,9 @@ class CylinderBounds : public SurfaceBounds {
     eHalfLengthZ = 1,
     eHalfPhiSector = 2,
     eAveragePhi = 3,
-    eSize = 4
+    eBevelMinZ = 4,
+    eBevelMaxZ = 5,
+    eSize = 6
   };
 
   CylinderBounds() = delete;
@@ -50,9 +62,12 @@ class CylinderBounds : public SurfaceBounds {
   /// @param halfZ The half length in z
   /// @param halfPhi The half opening angle
   /// @param avgPhi (optional) The phi value from which the opening angle spans
+  /// @param bevelMinZ (optional) The bevel on the negative z side
+  /// @param bevelMaxZ (optional) The bevel on the positive z sid The bevel on the positive z side
   CylinderBounds(double r, double halfZ, double halfPhi = M_PI,
-                 double avgPhi = 0.) noexcept(false)
-      : m_values({r, halfZ, halfPhi, avgPhi}),
+                 double avgPhi = 0., double bevelMinZ = 0.,
+                 double bevelMaxZ = 0.) noexcept(false)
+      : m_values({r, halfZ, halfPhi, avgPhi, bevelMinZ, bevelMaxZ}),
         m_closed(std::abs(halfPhi - M_PI) < s_epsilon) {
     checkConsistency();
   }
@@ -101,6 +116,12 @@ class CylinderBounds : public SurfaceBounds {
   /// Returns true for full phi coverage
   bool coversFullAzimuth() const;
 
+  /// Create the bows/circles on either side of the cylinder
+  ///
+  /// @param trans is the global transform
+  /// @param lseg  are the numbero if phi segments
+  std::vector<Vector3> createCircles(const Transform3 trans, size_t lseg) const;
+
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;
 
@@ -144,6 +165,12 @@ inline void CylinderBounds::checkConsistency() noexcept(false) {
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
     throw std::invalid_argument("CylinderBounds: invalid phi positioning.");
+  }
+  if (get(eBevelMinZ) != detail::radian_sym(get(eBevelMinZ))) {
+    throw std::invalid_argument("CylinderBounds: invalid bevel at min Z.");
+  }
+  if (get(eBevelMaxZ) != detail::radian_sym(get(eBevelMaxZ))) {
+    throw std::invalid_argument("CylinderBounds: invalid bevel at max Z.");
   }
 }
 

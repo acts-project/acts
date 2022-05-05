@@ -31,11 +31,13 @@ class VertexFitterAlgorithm final : public BareAlgorithm {
     /// Constraint vertex fit bool
     bool doConstrainedFit = false;
     /// Vertex constraint position
-    Acts::Vector3 constraintPos = Acts::Vector3(0, 0, 0);
+    Acts::Vector4 constraintPos = Acts::Vector4(0, 0, 0, 0);
     /// Vertex constraint covariance matrix
-    Acts::SymMatrix3 constraintCov =
-        Acts::Vector3(3 * Acts::UnitConstants::mm, 3 * Acts::UnitConstants::mm,
-                      10 * Acts::UnitConstants::mm)
+    Acts::SymMatrix4 constraintCov =
+        Acts::Vector4(3 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
+                      3 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
+                      10 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
+                      1 * Acts::UnitConstants::ns * Acts::UnitConstants::ns)
             .asDiagonal();
   };
 

@@ -20,6 +20,7 @@
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
 #include <algorithm>
+#include <list>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -115,6 +116,8 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
   ACTS_DEBUG("Loaded " << simHits.size() << " sim hits");
 
   // Prepare output containers
+  // need list here for stable addresses
+  std::list<IndexSourceLink> sourceLinkStorage;
   IndexSourceLinkContainer sourceLinks;
   MeasurementContainer measurements;
   ClusterContainer clusters;
@@ -221,13 +224,15 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
             // The measurement container is unordered and the index under which
             // the measurement will be stored is known before adding it.
             Index measurementIdx = measurements.size();
-            IndexSourceLink sourceLink(moduleGeoId, measurementIdx);
+            sourceLinkStorage.emplace_back(moduleGeoId, measurementIdx);
+            IndexSourceLink& sourceLink = sourceLinkStorage.back();
 
             // Add to output containers:
             // index map and source link container are geometry-ordered.
             // since the input is also geometry-ordered, new items can
             // be added at the end.
-            sourceLinks.emplace_hint(sourceLinks.end(), std::move(sourceLink));
+            sourceLinks.insert(sourceLinks.end(), sourceLink);
+
             measurements.emplace_back(
                 createMeasurement(dParameters, sourceLink));
             clusters.emplace_back(std::move(dParameters.cluster));
@@ -246,6 +251,8 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
   }
 
   ctx.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));
+  ctx.eventStore.add(m_cfg.outputSourceLinks + "__storage",
+                     std::move(sourceLinkStorage));
   ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
   ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
   ctx.eventStore.add(m_cfg.outputMeasurementParticlesMap,

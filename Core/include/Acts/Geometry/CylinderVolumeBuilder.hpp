@@ -356,6 +356,15 @@ struct WrappingConfig {
           // set the Central Wrapping
           wCondition = CentralWrapping;
           wConditionScreen = "[centrally inserted]";
+        } else if ((existingVolumeConfig.rMax > containerVolumeConfig.rMin &&
+                    existingVolumeConfig.rMin < containerVolumeConfig.rMin) ||
+                   (existingVolumeConfig.rMax > containerVolumeConfig.rMax &&
+                    existingVolumeConfig.rMin < containerVolumeConfig.rMax)) {
+          // The volumes are overlapping this shouldn't be happening return an
+          // error
+          throw std::invalid_argument(
+              "Volumes are overlapping, this shouldn't be happening. Please "
+              "check your geometry building.");
         }
 
         // check if gaps are needed

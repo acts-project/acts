@@ -130,10 +130,15 @@ class ISurfaceMaterial {
 
 inline double ISurfaceMaterial::factor(NavigationDirection pDir,
                                        MaterialUpdateStage mStage) const {
-  if (mStage == Acts::fullUpdate) {
+  if (mStage == Acts::MaterialUpdateStage::FullUpdate) {
     return 1.;
+  } else if (mStage == Acts::MaterialUpdateStage::PreUpdate) {
+    return pDir == NavigationDirection::Backward ? m_splitFactor
+                                                 : 1 - m_splitFactor;
+  } else /*if (mStage == Acts::MaterialUpdateStage::PostUpdate)*/ {
+    return pDir == NavigationDirection::Forward ? m_splitFactor
+                                                : 1 - m_splitFactor;
   }
-  return (pDir * mStage > 0 ? m_splitFactor : 1. - m_splitFactor);
 }
 
 inline MaterialSlab ISurfaceMaterial::materialSlab(

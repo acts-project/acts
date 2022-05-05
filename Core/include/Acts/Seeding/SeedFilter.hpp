@@ -42,9 +42,9 @@ class SeedFilter {
   /// @param zOrigin on the z axis as defined by bottom and middle space point
   /// @param outIt Output iterator for the seeds
   virtual void filterSeeds_2SpFixed(
-      const InternalSpacePoint<external_spacepoint_t>& bottomSP,
-      const InternalSpacePoint<external_spacepoint_t>& middleSP,
-      std::vector<const InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
+      InternalSpacePoint<external_spacepoint_t>& bottomSP,
+      InternalSpacePoint<external_spacepoint_t>& middleSP,
+      std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
       std::vector<float>& invHelixDiameterVec,
       std::vector<float>& impactParametersVec, float zOrigin,
       std::back_insert_iterator<std::vector<std::pair<

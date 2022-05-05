@@ -20,6 +20,17 @@ using namespace boost::program_options;
 
 boost::program_options::options_description
 ActsExamples::Options::makeDefaultOptions(std::string caption) {
+  std::cout
+      << "\n\n======================= DEPRECATION NOTICE "
+         "========================\n"
+         "The examples executables is deprecated. They will be removed in a\n"
+         "future version.\n"
+         "Consider using the python bindings for the example algorithms: \n"
+         "https://acts.readthedocs.io/en/latest/examples/python_bindings.html\n"
+         "==================================================================="
+         "\n\n"
+      << std::endl;
+
   options_description opt(caption);
 
   opt.add_options()("help,h", "Produce help message");

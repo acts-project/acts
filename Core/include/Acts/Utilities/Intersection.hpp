@@ -12,22 +12,36 @@
 
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
+#include <array>
 #include <limits>
 namespace Acts {
+
+/// Status enum
+enum class IntersectionStatus : int {
+  missed = 0,
+  unreachable = 0,
+  reachable = 1,
+  onSurface = 2
+};
+
+/// Ostream-operator for the IntersectionStatus enum
+inline std::ostream& operator<<(std::ostream& os, IntersectionStatus status) {
+  constexpr static std::array<const char*, 3> names = {
+      {"missed/unreachable", "reachable", "onSurface"}};
+
+  os << names[static_cast<std::size_t>(status)];
+  return os;
+}
 
 ///  @struct Intersection
 ///
 ///  Intersection struct used for position
 template <unsigned int DIM>
 struct Intersection {
-  /// Nested Status enum
-  enum class Status : int {
-    missed = 0,
-    unreachable = 0,
-    reachable = 1,
-    onSurface = 2
-  };
+  /// Status enum
+  using Status = IntersectionStatus;
 
   /// Position of the intersection
   ActsVector<DIM> position = ActsVector<DIM>::Zero();
@@ -162,5 +176,61 @@ struct SameSurfaceIntersection {
     return (i1.object == i2.object);
   }
 };
+
+namespace detail {
+
+/// This function checks if an intersection is valid for the specified
+/// path-limit and overstep-limit
+///
+/// @tparam intersection_t Type of the intersection object
+/// @tparam logger_t The logger type, which defaults to std::false_type to
+/// prevent the generation of logging code
+///
+/// @param intersection The intersection to check
+/// @param pLimit The path-limit
+/// @param oLimit The overstep-limit
+/// @param tolerance The tolerance that is applied to the path-limit criterion
+/// @param logger A optionally supplied logger which prints out a lot of infos
+/// at VERBOSE level
+template <typename intersection_t, typename logger_t = std::false_type>
+bool checkIntersection(const intersection_t& intersection, double pLimit,
+                       double oLimit, double tolerance,
+                       [[maybe_unused]] logger_t logger = logger_t{}) {
+  constexpr bool doLogging = not std::is_same_v<logger_t, std::false_type>;
+
+  const double cLimit = intersection.pathLength;
+
+  if constexpr (doLogging) {
+    ACTS_VERBOSE(" -> pLimit, oLimit, cLimit: " << pLimit << ", " << oLimit
+                                                << ", " << cLimit);
+  }
+
+  const bool coCriterion = cLimit > oLimit;
+  const bool cpCriterion = std::abs(cLimit) < std::abs(pLimit) + tolerance;
+
+  const bool accept = coCriterion and cpCriterion;
+
+  if constexpr (doLogging) {
+    if (accept) {
+      ACTS_VERBOSE("Intersection is WITHIN limit");
+    } else {
+      ACTS_VERBOSE("Intersection is OUTSIDE limit because: ");
+      if (not coCriterion) {
+        ACTS_VERBOSE("- intersection path length "
+                     << cLimit << " <= overstep limit " << oLimit);
+      }
+      if (not cpCriterion) {
+        ACTS_VERBOSE("- intersection path length "
+                     << std::abs(cLimit) << " is over the path limit "
+                     << (std::abs(pLimit) + tolerance)
+                     << " (including tolerance of " << tolerance << ")");
+      }
+    }
+  }
+
+  return accept;
+}
+
+}  // namespace detail
 
 }  // namespace Acts

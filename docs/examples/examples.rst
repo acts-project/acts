@@ -16,6 +16,12 @@ At the time of writing, there are two aspects to the ACTS examples:
    plugins are enabled in the build. These executables are configured by a number of 
    command line options, for example to set the number of events to be processed, 
    or which output formats to read from / write to.
+
+#. Standalone Performance and Analysis applications based on ROOT. These applications
+   are built on top of the ROOT based output writers of the ``Examples`` folder, they
+   comprise of track reconstruction performance validation and material validation
+   code.
+
 #. Python bindings for the various components of the examples. These bindings
    allow more flexible combination of the example components into scripts, and can
    overcome the complexity of the large number of executables and command line
@@ -35,4 +41,5 @@ At the time of writing, there are two aspects to the ACTS examples:
    :maxdepth: 2
 
    howto/howto
+   Analysis Apps <analysis_apps>
    Python bindings <python_bindings>

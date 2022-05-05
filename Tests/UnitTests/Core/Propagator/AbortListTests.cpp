@@ -60,7 +60,7 @@ struct PropagatorState {
     // Accummulated path length cache
     double pathAccumulated = 0.;
     // Navigation direction
-    NavigationDirection navDir = forward;
+    NavigationDirection navDir = NavigationDirection::Forward;
     // adaptive sep size of the runge-kutta integration
     ConstrainedStep stepSize = std::numeric_limits<double>::max();
   };
@@ -95,7 +95,22 @@ struct PropagatorState {
 };
 
 /// This is a struct to mimic the stepper
-struct Stepper {};
+struct Stepper {
+  auto outputStepSize(const PropagatorState::StepperState&) const {
+    return std::string{};
+  }
+
+  double getStepSize(const PropagatorState::StepperState& state,
+                     ConstrainedStep::Type stype) const {
+    return state.stepSize.value(stype);
+  }
+
+  void setStepSize(PropagatorState::StepperState& state, double stepSize,
+                   ConstrainedStep::Type stype = ConstrainedStep::actor,
+                   bool release = true) const {
+    state.stepSize.update(stepSize, stype, release);
+  }
+};
 
 /// This is a simple result struct to mimic the
 /// propagator result

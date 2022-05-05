@@ -77,6 +77,8 @@ class CylinderVolumeBounds : public VolumeBounds {
     eHalfLengthZ = 2,
     eHalfPhiSector = 3,
     eAveragePhi = 4,
+    eBevelMinZ = 5,
+    eBevelMaxZ = 6,
     eSize
   };
 
@@ -89,10 +91,13 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// @param halfz The half length in z
   /// @param halfphi The half lopening angle
   /// @param avgphi The average phi value
+  /// @param bevelMinZ The bevel angle, in radians, for the negative side
+  /// @param bevelMaxZ The bevel angle, in radians, for the positive side
   CylinderVolumeBounds(double rmin, double rmax, double halfz,
-                       double halfphi = M_PI,
-                       double avgphi = 0.) noexcept(false)
-      : m_values({rmin, rmax, halfz, halfphi, avgphi}) {
+                       double halfphi = M_PI, double avgphi = 0.,
+                       double bevelMinZ = 0.,
+                       double bevelMaxZ = 0.) noexcept(false)
+      : m_values({rmin, rmax, halfz, halfphi, avgphi, bevelMinZ, bevelMaxZ}) {
     checkConsistency();
     buildSurfaceBounds();
   }
@@ -245,9 +250,10 @@ stream_t& CylinderVolumeBounds::dumpT(stream_t& dt) const {
   dt << std::setiosflags(std::ios::fixed);
   dt << std::setprecision(5);
   dt << "Acts::CylinderVolumeBounds: (rMin, rMax, halfZ, halfPhi, "
-        "averagePhi) = ";
+        "averagePhi, minBevelZ, maxBevelZ) = ";
   dt << get(eMinR) << ", " << get(eMaxR) << ", " << get(eHalfLengthZ) << ", "
-     << get(eHalfPhiSector) << get(eAveragePhi);
+     << get(eHalfPhiSector) << ", " << get(eAveragePhi) << ", "
+     << get(eBevelMinZ) << ", " << get(eBevelMaxZ);
   return dt;
 }
 
@@ -272,6 +278,12 @@ inline void CylinderVolumeBounds::checkConsistency() noexcept(false) {
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
     throw std::invalid_argument(
         "CylinderVolumeBounds: invalid phi positioning.");
+  }
+  if (get(eBevelMinZ) != detail::radian_sym(get(eBevelMinZ))) {
+    throw std::invalid_argument("CylinderBounds: invalid bevel at min Z.");
+  }
+  if (get(eBevelMaxZ) != detail::radian_sym(get(eBevelMaxZ))) {
+    throw std::invalid_argument("CylinderBounds: invalid bevel at max Z.");
   }
 }
 

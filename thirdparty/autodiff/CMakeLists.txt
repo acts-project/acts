@@ -1,35 +1,29 @@
-# The minimum required cmake version
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required( VERSION 3.11 )
+include( FetchContent )
 
-# Set the cmake module path of the project
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+# Tell the user what's happening.
+message( STATUS "Building autodiff as part of the ACTS project" )
 
-# Use ccache to speed up repeated compilations
-include(CCache)
 
-# Name and details of the project
-project(autodiff VERSION 0.5.11 LANGUAGES CXX)
+# Declare where to get VecMem from.
+set( ACTS_AUTODIFF_GIT_REPOSITORY "https://github.com/autodiff/autodiff.git"
+   CACHE STRING "Git repository to take autodiff from" )
+set( ACTS_AUTODIFF_GIT_TAG "v0.6.4" CACHE STRING "Version of autodiff to build" )
+mark_as_advanced( ACTS_AUTODIFF_GIT_REPOSITORY ACTS_AUTODIFF_GIT_TAG )
+FetchContent_Declare( autodiff
+   GIT_REPOSITORY "${ACTS_AUTODIFF_GIT_REPOSITORY}"
+   GIT_TAG "${ACTS_AUTODIFF_GIT_TAG}" )
 
-# Include the cmake variables with values for installation directories
-include(GNUInstallDirs)
+# Now set up its build.
+# This policy allows to set the options outside without changing autodiff's CMakeLists.txt
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+set(AUTODIFF_BUILD_TESTS OFF CACHE INTERNAL "")
+set(AUTODIFF_BUILD_PYTHON OFF CACHE INTERNAL "")
+set(AUTODIFF_BUILD_EXAMPLES OFF CACHE INTERNAL "")
+set(AUTODIFF_BUILD_DOCS OFF CACHE INTERNAL "")
 
-# Ensure proper configuration if in a conda environment
-include(CondaAware)
+FetchContent_MakeAvailable( autodiff )
 
-# Find Eigen3 if its include path is not given
-if(NOT DEFINED EIGEN3_INCLUDE_DIR)
-    find_package(Eigen3 3.3 REQUIRED NO_MODULE)
-endif()
-
-# Show message stating path to Eigen3
-message(STATUS "Using Eigen3 library found at ${EIGEN3_INCLUDE_DIR}")
-
-# autodiff requires a c++17 enabled compiler
-set(CMAKE_CXX_STANDARD 17)
-
-add_subdirectory(autodiff)
-# add_subdirectory(examples)
-# add_subdirectory(test)
-
-# Install the cmake config files that permit users to use find_package(Reaktoro)
-include(autodiffInstallCMakeConfigFiles)
+# Mark autodiff as system include directories so that no warnings trigger
+get_target_property(_autodiff_includes autodiff INTERFACE_INCLUDE_DIRECTORIES)
+set_target_properties(autodiff PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_autodiff_includes}")

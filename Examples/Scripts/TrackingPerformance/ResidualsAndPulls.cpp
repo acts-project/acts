@@ -47,6 +47,7 @@ int main(int argc, char** argv) {
 
     if (vm.count("help")) {
       std::cout << description;
+      return 1;
     }
 
     // Parse the parameters

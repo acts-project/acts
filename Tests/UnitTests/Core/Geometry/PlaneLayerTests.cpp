@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(PlaneLayerConstruction) {
 }
 
 /// Unit test for testing Layer properties
-BOOST_AUTO_TEST_CASE(PlaneLayerProperties /*, *utf::expected_failures(1)*/) {
+BOOST_AUTO_TEST_CASE(PlaneLayerProperties) {
   Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3(translation);
   const double halfX(10.), halfY(5.);  // 20 x 10 rectangle

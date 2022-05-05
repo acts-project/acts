@@ -81,18 +81,18 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
 
   // Create more convenient vectors out of the space point containers.
   auto spVecMaker = [](sp_range_t spRange) {
-    std::vector<const Acts::InternalSpacePoint<external_spacepoint_t>*> result;
+    std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> result;
     for (auto* sp : spRange) {
       result.push_back(sp);
     }
     return result;
   };
 
-  std::vector<const Acts::InternalSpacePoint<external_spacepoint_t>*>
-      bottomSPVec(spVecMaker(bottomSPs));
-  std::vector<const Acts::InternalSpacePoint<external_spacepoint_t>*>
-      middleSPVec(spVecMaker(middleSPs));
-  std::vector<const Acts::InternalSpacePoint<external_spacepoint_t>*> topSPVec(
+  std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> bottomSPVec(
+      spVecMaker(bottomSPs));
+  std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> middleSPVec(
+      spVecMaker(middleSPs));
+  std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> topSPVec(
       spVecMaker(topSPs));
 
   // If either one of them is empty, we have nothing to find.
@@ -193,12 +193,12 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
     std::vector<std::pair<
         float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
         seedsPerSPM;
-    const auto& middleSP = *(middleSPVec[middleIndex]);
+    auto& middleSP = *(middleSPVec[middleIndex]);
     for (const Details::Triplet& triplet : *triplet_itr) {
       assert(triplet.bottomIndex < bottomSPVec.size());
-      const auto& bottomSP = *(bottomSPVec[triplet.bottomIndex]);
+      auto& bottomSP = *(bottomSPVec[triplet.bottomIndex]);
       assert(triplet.topIndex < topSPVec.size());
-      const auto& topSP = *(topSPVec[triplet.topIndex]);
+      auto& topSP = *(topSPVec[triplet.topIndex]);
       seedsPerSPM.emplace_back(std::make_pair(
           triplet.weight,
           std::make_unique<const InternalSeed<external_spacepoint_t>>(

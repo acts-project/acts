@@ -117,16 +117,26 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   using VertexingOptions = Acts::VertexingOptions<Acts::BoundTrackParameters>;
   VertexingOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
 
-  // find vertices and measure elapsed time
-  auto t1 = std::chrono::high_resolution_clock::now();
-  auto result = finder.find(inputTrackPointers, finderOpts, state);
-  auto t2 = std::chrono::high_resolution_clock::now();
+  std::vector<Acts::Vertex<Fitter::InputTrack_t>> vertices;
 
-  if (not result.ok()) {
-    ACTS_ERROR("Error in vertex finder: " << result.error().message());
-    return ProcessCode::ABORT;
+  auto t1 = std::chrono::high_resolution_clock::now();
+
+  if (inputTrackParameters.empty()) {
+    ACTS_DEBUG("Empty track parameter collection found, skipping vertexing");
+  } else {
+    ACTS_DEBUG("Have " << inputTrackParameters.size()
+                       << " input track parameters, running vertexing");
+    // find vertices and measure elapsed time
+    auto result = finder.find(inputTrackPointers, finderOpts, state);
+
+    if (not result.ok()) {
+      ACTS_ERROR("Error in vertex finder: " << result.error().message());
+      return ProcessCode::ABORT;
+    }
+    vertices = *result;
   }
-  auto vertices = *result;
+
+  auto t2 = std::chrono::high_resolution_clock::now();
 
   // show some debug output
   ACTS_INFO("Found " << vertices.size() << " vertices in event");

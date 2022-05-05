@@ -252,6 +252,7 @@ def test_csv_clusters_reader(tmp_path, fatras, conf_const, trk_geo, rng):
         inputSimHits=simAlg.config.outputSimHits,
         outputClusters="clusters",
         outputSourceLinks="sourcelinks",
+        outputDigiSourceLinks="digiSourceLink",
         outputMeasurements="measurements",
         outputMeasurementParticlesMap="meas_ptcl_map",
         outputMeasurementSimHitsMap="meas_sh_map",

@@ -487,7 +487,7 @@ class SurfaceArray {
   /// @note The @c SurfaceVector will be combined. For technical reasons, the
   ///       different bin content vectors have to be copied, so the resulting
   ///       vector contains copies.
-  SurfaceVector neighbors(const Vector3& position) const {
+  const SurfaceVector& neighbors(const Vector3& position) const {
     return p_gridLookup->neighbors(position);
   }
 

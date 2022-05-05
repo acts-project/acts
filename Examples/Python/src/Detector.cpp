@@ -14,6 +14,7 @@
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
+#include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 
 #include <memory>
 
@@ -52,6 +53,28 @@ void addDetector(Context& ctx) {
         .def_readwrite("layerLogLevel", &Config::layerLogLevel)
         .def_readwrite("volumeLogLevel", &Config::volumeLogLevel)
         .def_readwrite("buildProto", &Config::buildProto);
+  }
+
+  {
+    using Config = TelescopeDetector::Config;
+
+    auto td = py::class_<TelescopeDetector, std::shared_ptr<TelescopeDetector>>(
+                  mex, "TelescopeDetector")
+                  .def(py::init<>())
+                  .def("finalize",
+                       py::overload_cast<
+                           const Config&,
+                           std::shared_ptr<const Acts::IMaterialDecorator>>(
+                           &TelescopeDetector::finalize));
+
+    py::class_<Config>(td, "Config")
+        .def(py::init<>())
+        .def_readwrite("positions", &Config::positions)
+        .def_readwrite("offsets", &Config::offsets)
+        .def_readwrite("bounds", &Config::bounds)
+        .def_readwrite("thickness", &Config::thickness)
+        .def_readwrite("surfaceType", &Config::surfaceType)
+        .def_readwrite("binValue", &Config::binValue);
   }
 
   {
@@ -108,10 +131,18 @@ void addDetector(Context& ctx) {
 
     auto c = py::class_<Config>(d, "Config").def(py::init<>());
 
+    c.def_property(
+        "jsonFile", nullptr,
+        [](Config& cfg, const std::string& file) { cfg.readJson(file); });
+
     py::enum_<Config::SubVolume>(c, "SubVolume")
         .value("Negative", Config::SubVolume::Negative)
         .value("Central", Config::SubVolume::Central)
         .value("Positive", Config::SubVolume::Positive);
+
+    py::enum_<Acts::BinningType>(c, "BinningType")
+        .value("equidistant", Acts::BinningType::equidistant)
+        .value("arbitrary", Acts::BinningType::arbitrary);
 
     auto volume = py::class_<Config::Volume>(c, "Volume").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(volume, Config::Volume);
@@ -124,6 +155,9 @@ void addDetector(Context& ctx) {
     ACTS_PYTHON_MEMBER(cylinderNPhiSegments);
     ACTS_PYTHON_MEMBER(discNRSegments);
     ACTS_PYTHON_MEMBER(discNPhiSegments);
+    ACTS_PYTHON_MEMBER(itkModuleSplit);
+    ACTS_PYTHON_MEMBER(barrelMap);
+    ACTS_PYTHON_MEMBER(discMap);
 
     ACTS_PYTHON_MEMBER(layers);
     ACTS_PYTHON_MEMBER(subVolumeName);
@@ -133,6 +167,8 @@ void addDetector(Context& ctx) {
     ACTS_PYTHON_MEMBER(zRange);
     ACTS_PYTHON_MEMBER(splitTolR);
     ACTS_PYTHON_MEMBER(splitTolZ);
+    ACTS_PYTHON_MEMBER(binning0);
+    ACTS_PYTHON_MEMBER(binning1);
     ACTS_PYTHON_STRUCT_END();
 
     auto regTriplet = [&c](const std::string& name, auto v) {
@@ -153,6 +189,8 @@ void addDetector(Context& ctx) {
     regTriplet("LayerTripletVectorString", std::vector<std::string>{});
     regTriplet("LayerTripletInterval", Options::Interval{});
     regTriplet("LayerTripletDouble", double{5.5});
+    regTriplet("LayerTripletVectorBinning",
+               std::vector<std::pair<int, Acts::BinningType>>{});
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(surfaceLogLevel);

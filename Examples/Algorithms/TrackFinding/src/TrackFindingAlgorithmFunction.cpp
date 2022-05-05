@@ -25,7 +25,7 @@ using Smoother = Acts::GainMatrixSmoother;
 using Stepper = Acts::EigenStepper<>;
 using Navigator = Acts::Navigator;
 using Propagator = Acts::Propagator<Stepper, Navigator>;
-using CKF = Acts::CombinatorialKalmanFilter<Propagator, Updater, Smoother>;
+using CKF = Acts::CombinatorialKalmanFilter<Propagator>;
 
 struct TrackFinderFunctionImpl
     : public ActsExamples::TrackFindingAlgorithm::TrackFinderFunction {
@@ -34,11 +34,10 @@ struct TrackFinderFunctionImpl
   TrackFinderFunctionImpl(CKF&& f) : trackFinder(std::move(f)) {}
 
   ActsExamples::TrackFindingAlgorithm::TrackFinderResult operator()(
-      const ActsExamples::IndexSourceLinkContainer& sourcelinks,
       const ActsExamples::TrackParametersContainer& initialParameters,
       const ActsExamples::TrackFindingAlgorithm::TrackFinderOptions& options)
       const override {
-    return trackFinder.findTracks(sourcelinks, initialParameters, options);
+    return trackFinder.findTracks(initialParameters, options);
   };
 };
 

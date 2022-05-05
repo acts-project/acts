@@ -9,7 +9,7 @@
 #include "ActsExamples/Io/Csv/CsvMeasurementReader.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
+#include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
@@ -21,6 +21,8 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
+
+#include <list>
 
 #include <dfe/dfe_io_dsv.hpp>
 
@@ -134,6 +136,8 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   ClusterContainer clusters;
   IndexMultimap<Index> measurementSimHitsMap;
   IndexSourceLinkContainer sourceLinks;
+  // need list here for stable addresses
+  std::list<IndexSourceLink> sourceLinkStorage;
   orderedMeasurements.reserve(measurementData.size());
   // Safe long as we have single particle to sim hit association
   measurementSimHitsMap.reserve(measurementData.size());
@@ -186,7 +190,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
     // The measurement container is unordered and the index under which
     // the measurement will be stored is known before adding it.
     Index hitIdx = orderedMeasurements.size();
-    IndexSourceLink sourceLink(geoId, hitIdx);
+    IndexSourceLink& sourceLink = sourceLinkStorage.emplace_back(geoId, hitIdx);
     auto measurement = createMeasurement(dParameters, sourceLink);
 
     // Due to the previous sorting of the raw hit data by geometry id, new
@@ -200,7 +204,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
       return ProcessCode::ABORT;
     }
 
-    sourceLinks.emplace_hint(sourceLinks.end(), std::move(sourceLink));
+    sourceLinks.insert(sourceLinks.end(), std::cref(sourceLink));
   }
 
   MeasurementContainer measurements;
@@ -213,6 +217,8 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   ctx.eventStore.add(m_cfg.outputMeasurementSimHitsMap,
                      std::move(measurementSimHitsMap));
   ctx.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));
+  ctx.eventStore.add(m_cfg.outputSourceLinks + "__storage",
+                     std::move(sourceLinkStorage));
   if (not clusters.empty()) {
     ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
   }

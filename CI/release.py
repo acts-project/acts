@@ -52,10 +52,12 @@ def get_current_version():
 class Commit:
     sha: str
     message: str
+    author: str
 
-    def __init__(self, sha: str, message: str):
+    def __init__(self, sha: str, message: str, author: str):
         self.sha = sha
         self.message = self._normalize(message)
+        self.author = author
 
     @staticmethod
     def _normalize(message):
@@ -114,13 +116,15 @@ def generate_changelog(commits, commit_parser=_default_parser) -> dict:
             capital_message = (
                 message.descriptions[0][0].upper() + message.descriptions[0][1:]
             )
-            changes[message.type].append((commit.sha, capital_message))
+            changes[message.type].append((commit.sha, capital_message, commit.author))
 
             if message.breaking_descriptions:
                 for paragraph in message.breaking_descriptions:
-                    changes["breaking"].append((commit.sha, paragraph))
+                    changes["breaking"].append((commit.sha, paragraph, commit.author))
             elif message.bump == 3:
-                changes["breaking"].append((commit.sha, message.descriptions[0]))
+                changes["breaking"].append(
+                    (commit.sha, message.descriptions[0], commit.author)
+                )
 
         except UnknownCommitMessageStyleError as err:
             pass
@@ -136,8 +140,8 @@ def markdown_changelog(version: str, changelog: dict, header: bool = False) -> s
             continue
         output += "\n### {0}\n".format(section.capitalize())
 
-        for item in items:
-            output += "* {0} ({1})\n".format(item[1], item[0])
+        for sha, msg, author in items:
+            output += "* {} ({}) (@{})\n".format(msg, sha, author)
 
     return output
 
@@ -209,7 +213,7 @@ async def get_parsed_commit_range(
                 commit_message = typer.edit(commit_message)
                 _default_parser(commit_message)
 
-            commit = Commit(commit_hash, commit_message)
+            commit = Commit(commit_hash, commit_message, item["author"]["login"])
             commits.append(commit)
 
             if invalid_message:

@@ -104,8 +104,18 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
   matRecord.push_back(std::make_pair(matprop1, vectPos1));
   matRecord.push_back(std::make_pair(matprop2, vectPos2));
 
-  MaterialGrid2D matMap =
-      mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal);
+  // Walk over each properties
+  for (const auto& rm : matRecord) {
+    // Walk over each point associated with the properties
+    for (const auto& point : rm.second) {
+      // Search for fitting grid point and accumulate
+      Acts::Grid2D::index_t index =
+          Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(point));
+      Grid.atLocalBins(index).accumulate(rm.first);
+    }
+  }
+
+  MaterialGrid2D matMap = mapMaterialPoints(Grid);
 
   CHECK_CLOSE_REL(matMap.atLocalBins(index1), mat1.parameters(), 1e-4);
   CHECK_CLOSE_REL(matMap.atLocalBins(index2), mat2.parameters(), 1e-4);
@@ -186,8 +196,18 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
   matRecord.push_back(std::make_pair(matprop1, vectPos1));
   matRecord.push_back(std::make_pair(matprop2, vectPos2));
 
-  MaterialGrid2D matMap =
-      mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal);
+  // Walk over each properties
+  for (const auto& rm : matRecord) {
+    // Walk over each point associated with the properties
+    for (const auto& point : rm.second) {
+      // Search for fitting grid point and accumulate
+      Acts::Grid2D::index_t index =
+          Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(point));
+      Grid.atLocalBins(index).accumulate(rm.first);
+    }
+  }
+
+  MaterialGrid2D matMap = mapMaterialPoints(Grid);
 
   CHECK_CLOSE_REL(matMap.atLocalBins(index1), mat1.parameters(), 1e-4);
   CHECK_CLOSE_REL(matMap.atLocalBins(index2), mat2.parameters(), 1e-4);
@@ -270,8 +290,18 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
   matRecord.push_back(std::make_pair(matprop1, vectPos1));
   matRecord.push_back(std::make_pair(matprop2, vectPos2));
 
-  MaterialGrid3D matMap =
-      mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal);
+  // Walk over each properties
+  for (const auto& rm : matRecord) {
+    // Walk over each point associated with the properties
+    for (const auto& point : rm.second) {
+      // Search for fitting grid point and accumulate
+      Acts::Grid3D::index_t index =
+          Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(point));
+      Grid.atLocalBins(index).accumulate(rm.first);
+    }
+  }
+
+  MaterialGrid3D matMap = mapMaterialPoints(Grid);
 
   CHECK_CLOSE_REL(matMap.atLocalBins(index1), mat1.parameters(), 1e-4);
   CHECK_CLOSE_REL(matMap.atLocalBins(index2), mat2.parameters(), 1e-4);
@@ -358,8 +388,18 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   matRecord.push_back(std::make_pair(matprop1, vectPos1));
   matRecord.push_back(std::make_pair(matprop2, vectPos2));
 
-  MaterialGrid3D matMap =
-      mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal);
+  // Walk over each properties
+  for (const auto& rm : matRecord) {
+    // Walk over each point associated with the properties
+    for (const auto& point : rm.second) {
+      // Search for fitting grid point and accumulate
+      Acts::Grid3D::index_t index =
+          Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(point));
+      Grid.atLocalBins(index).accumulate(rm.first);
+    }
+  }
+
+  MaterialGrid3D matMap = mapMaterialPoints(Grid);
 
   CHECK_CLOSE_REL(matMap.atLocalBins(index1), mat1.parameters(), 1e-4);
   CHECK_CLOSE_REL(matMap.atLocalBins(index2), mat2.parameters(), 1e-4);

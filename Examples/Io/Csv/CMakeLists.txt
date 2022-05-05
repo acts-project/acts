@@ -12,14 +12,15 @@ add_library(
   src/CsvSimHitWriter.cpp
   src/CsvSpacePointReader.cpp
   src/CsvTrackingGeometryWriter.cpp
-  src/CsvMultiTrajectoryWriter.cpp )
+  src/CsvMultiTrajectoryWriter.cpp 
+  src/CsvSpacepointWriter.cpp)
 target_include_directories(
   ActsExamplesIoCsv
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesIoCsv
   PRIVATE
-    ActsCore ActsPluginDigitization ActsPluginIdentification
+    ActsCore ActsPluginIdentification
     ActsExamplesFramework ActsExamplesDigitization
     Threads::Threads Boost::program_options dfelibs)
 

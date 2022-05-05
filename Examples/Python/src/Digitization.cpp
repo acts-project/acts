@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Digitization/PlanarModuleStepper.hpp"
+#include "Acts/Digitization/PlanarModuleStepper.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
@@ -89,6 +89,7 @@ void addDigitization(Context& ctx) {
     ACTS_PYTHON_MEMBER(inputSimHits);
     ACTS_PYTHON_MEMBER(outputClusters);
     ACTS_PYTHON_MEMBER(outputSourceLinks);
+    ACTS_PYTHON_MEMBER(outputDigiSourceLinks);
     ACTS_PYTHON_MEMBER(outputMeasurements);
     ACTS_PYTHON_MEMBER(outputMeasurementParticlesMap);
     ACTS_PYTHON_MEMBER(outputMeasurementSimHitsMap);

@@ -59,6 +59,8 @@ class KDTree {
   /// @brief The type of iterators in our vectors.
   using iterator_t = typename vector_t::iterator;
 
+  using const_iterator_t = typename vector_t::const_iterator;
+
   // We do not need an empty constructor - this is never useful.
   KDTree() = delete;
 
@@ -263,6 +265,10 @@ class KDTree {
   /// in actual code.
   std::string toString(void) const { return m_root->toString(0); }
 
+  const_iterator_t begin(void) const { return m_elems.begin(); }
+
+  const_iterator_t end(void) const { return m_elems.end(); }
+
  private:
   static Scalar nextRepresentable(Scalar v) {
     // I'm not super happy with this bit of code, but since 1D ranges are
@@ -434,6 +440,7 @@ class KDTree {
       // Next, we calculate the summed squared error from the mean in each
       // dimension, again with the normalized values.
       std::array<Scalar, Dims> sqe_v;
+      sqe_v.fill(0);
 
       for (iterator_t i = this->m_begin_it; i != this->m_end_it; ++i) {
         for (std::size_t j = 0; j < Dims; ++j) {

@@ -201,7 +201,7 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
       "Total number of reconstructed tracks : " << inputFittedTracks.size());
 
   if (associatedTruthParticles.size() != inputFittedTracks.size()) {
-    ACTS_WARNING(
+    ACTS_INFO(
         "Number of fitted tracks and associated truth particles do not match. "
         "Not able to match fitted tracks at reconstructed vertex to truth "
         "vertex.");

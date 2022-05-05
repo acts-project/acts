@@ -103,7 +103,6 @@ BOOST_AUTO_TEST_CASE(ConeBoundsExceptions) {
 }
 
 /// Unit tests for EllipseBounds properties
-BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(CylinderBoundsProperties, 1)
 BOOST_AUTO_TEST_CASE(EllipseBoundsProperties) {
   double innerRx(10.), outerRx(15.), innerRy(15.), outerRy(20.), averagePhi(0.),
       phiSector(M_PI / 2.);

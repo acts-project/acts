@@ -11,6 +11,7 @@
 #include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Options/Pythia8Options.hpp"
+#include "ActsExamples/Reconstruction/ReconstructionBase.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
@@ -31,6 +32,7 @@ int main(int argc, char* argv[]) {
   Options::addVertexingOptions(desc);
   Options::addMagneticFieldOptions(desc);
   Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
+  Options::addParticleSmearingOptions(desc);
   auto vars = Options::parse(desc, argc, argv);
   if (vars.empty()) {
     return EXIT_FAILURE;
@@ -63,18 +65,14 @@ int main(int argc, char* argv[]) {
   sequencer.addAlgorithm(
       std::make_shared<ParticleSelector>(selectParticles, logLevel));
 
-  // simulate track reconstruction by smearing truth track parameters
-  ParticleSmearing::Config smearParticles;
-  smearParticles.inputParticles = selectParticles.outputParticles;
-  smearParticles.outputTrackParameters = "trackparameters";
-  smearParticles.randomNumbers = rnd;
-  sequencer.addAlgorithm(
-      std::make_shared<ParticleSmearing>(smearParticles, logLevel));
+  // Run the particle smearing
+  auto particleSmearingCfg = setupParticleSmearing(
+      vars, sequencer, rnd, selectParticles.outputParticles);
 
   // find vertices
   IterativeVertexFinderAlgorithm::Config findVertices;
   findVertices.bField = magneticField;
-  findVertices.inputTrackParameters = smearParticles.outputTrackParameters;
+  findVertices.inputTrackParameters = particleSmearingCfg.outputTrackParameters;
   findVertices.outputProtoVertices = "protovertices";
   sequencer.addAlgorithm(
       std::make_shared<IterativeVertexFinderAlgorithm>(findVertices, logLevel));

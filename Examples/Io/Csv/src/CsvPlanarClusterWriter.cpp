@@ -9,7 +9,7 @@
 #include "ActsExamples/Io/Csv/CsvPlanarClusterWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
+#include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -105,7 +105,9 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
       // each hit can have multiple particles, e.g. in a dense environment
       truth.hit_id = hit.hit_id;
       truth.geometry_id = hit.geometry_id;
-      for (auto idx : cluster.sourceLink().indices()) {
+      const auto& sl = static_cast<const Acts::DigitizationSourceLink&>(
+          cluster.sourceLink());
+      for (auto idx : sl.indices()) {
         auto it = simHits.nth(idx);
         if (it == simHits.end()) {
           ACTS_FATAL("Simulation hit with index " << idx << " does not exist");

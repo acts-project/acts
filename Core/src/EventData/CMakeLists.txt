@@ -6,4 +6,5 @@ target_sources(
     TrackParameters.cpp
     TransformationBoundToFree.cpp
     TransformationFreeToBound.cpp
+    TrackStatePropMask.cpp
 )

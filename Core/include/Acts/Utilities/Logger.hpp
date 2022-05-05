@@ -8,6 +8,7 @@
 
 #pragma once
 // STL include(s)
+#include <cassert>
 #include <ctime>
 #include <exception>
 #include <functional>
@@ -170,6 +171,41 @@ constexpr Level FAILURE_THRESHOLD =
     Level::MAX;
 #endif
 
+/// Function which returns the failure threshold for log messages.
+/// This can either be from a compilation option or from an environment
+/// variable.
+/// @return The log level failure threshold
+inline Level getFailureThreshold() {
+  static const Level threshold{[]() -> Level {
+    Level level = FAILURE_THRESHOLD;
+    const char* envvar = std::getenv("ACTS_LOG_FAILURE_THRESHOLD");
+    if (envvar == nullptr) {
+      return level;
+    }
+    std::string slevel = envvar;
+    if (slevel == "VERBOSE") {
+      level = std::min(level, Level::VERBOSE);
+    } else if (slevel == "DEBUG") {
+      level = std::min(level, Level::DEBUG);
+    } else if (slevel == "INFO") {
+      level = std::min(level, Level::INFO);
+    } else if (slevel == "WARNING") {
+      level = std::min(level, Level::WARNING);
+    } else if (slevel == "ERROR") {
+      level = std::min(level, Level::ERROR);
+    } else if (slevel == "FATAL") {
+      level = std::min(level, Level::FATAL);
+    } else {
+      std::cerr << "ACTS_LOG_FAILURE_THRESHOLD environment variable is set to "
+                   "unknown value: "
+                << slevel << std::endl;
+    }
+    return level;
+  }()};
+
+  return threshold;
+}
+
 /// @brief abstract base class for printing debug output
 ///
 /// Implementations of this interface need to define how and where to @a print
@@ -214,7 +250,7 @@ class DefaultFilterPolicy final : public OutputFilterPolicy {
   ///
   /// @param [in] lvl threshold debug level
   explicit DefaultFilterPolicy(const Level& lvl) : m_level(lvl) {
-    if (lvl > FAILURE_THRESHOLD) {
+    if (lvl > getFailureThreshold()) {
       throw std::runtime_error(
           "Requested debug level is incompatible with "
           "the ACTS_LOG_FAILURE_THRESHOLD configuration");
@@ -427,7 +463,7 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
   /// @param [in] input text of debug message
   void flush(const Level& lvl, const std::string& input) final {
     (*m_out) << input << std::endl;
-    if (lvl >= FAILURE_THRESHOLD) {
+    if (lvl >= getFailureThreshold()) {
       throw std::runtime_error(
           "Previous debug message exceeds the "
           "ACTS_LOG_FAILURE_THRESHOLD configuration, bailing out");
@@ -498,7 +534,10 @@ class LoggerWrapper {
   ///
   /// @param lvl The level to check
   /// @return Whether to print at this level or not.
-  bool doPrint(const Logging::Level& lvl) const;
+  bool doPrint(const Logging::Level& lvl) const {
+    assert(m_logger != nullptr);
+    return m_logger->doPrint(lvl);
+  }
 
   /// Add a logging message at a given level
   /// @param lvl The level to print at
@@ -509,7 +548,10 @@ class LoggerWrapper {
   /// Enables using the logging macros `ACTS_*` when an instance of this class
   /// is assigned to a local variable `logger`.
   /// @return Reference to the logger instance.
-  const Logger& operator()() const;
+  const Logger& operator()() const {
+    assert(m_logger != nullptr);
+    return *m_logger;
+  }
 
  private:
   const Logger* m_logger;

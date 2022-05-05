@@ -31,7 +31,7 @@ const Acts::GeometryContext tgContext;
 BOOST_AUTO_TEST_SUITE(TrackFittingGainMatrixSmoother)
 
 BOOST_AUTO_TEST_CASE(Smooth) {
-  MultiTrajectory<TestSourceLink> traj;
+  MultiTrajectory traj;
   size_t ts_idx = traj.addTrackState(TrackStatePropMask::All);
   auto ts = traj.getTrackState(ts_idx);
 

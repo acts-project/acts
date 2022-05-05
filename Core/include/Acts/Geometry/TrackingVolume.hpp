@@ -27,6 +27,8 @@
 #include <string>
 #include <unordered_map>
 
+#include <boost/container/small_vector.hpp>
+
 namespace Acts {
 
 class GlueVolumesDescriptor;
@@ -177,7 +179,7 @@ class TrackingVolume : public Volume {
   /// @param options The templated navigation options
   ///
   /// @return vector of compatible intersections with layers
-  std::vector<LayerIntersection> compatibleLayers(
+  boost::container::small_vector<LayerIntersection, 10> compatibleLayers(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const NavigationOptions<Layer>& options) const;
 
@@ -193,7 +195,7 @@ class TrackingVolume : public Volume {
   /// @param logger A @c LoggerWrapper instance
   ///
   /// @return is the templated boundary intersection
-  std::vector<BoundaryIntersection> compatibleBoundaries(
+  boost::container::small_vector<BoundaryIntersection, 4> compatibleBoundaries(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const NavigationOptions<Surface>& options,
       LoggerWrapper logger = getDummyLogger()) const;
@@ -236,13 +238,35 @@ class TrackingVolume : public Volume {
 
   /// @brief Visit all sensitive surfaces
   ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
   /// @param visitor The callable. Will be called for each sensitive surface
   /// that is found
   ///
   /// If a context is needed for the vist, the vistitor has to provide this
   /// e.g. as a private member
-  void visitSurfaces(
-      const std::function<void(const Acts::Surface*)>& visitor) const;
+  template <typename visitor_t>
+  void visitSurfaces(visitor_t&& visitor) const {
+    if (!m_confinedVolumes) {
+      // no sub volumes => loop over the confined layers
+      if (m_confinedLayers) {
+        for (const auto& layer : m_confinedLayers->arrayObjects()) {
+          if (layer->surfaceArray() == nullptr) {
+            // no surface array (?)
+            continue;
+          }
+          for (const auto& srf : layer->surfaceArray()->surfaces()) {
+            visitor(srf);
+          }
+        }
+      }
+    } else {
+      // contains sub volumes
+      for (const auto& volume : m_confinedVolumes->arrayObjects()) {
+        volume->visitSurfaces(visitor);
+      }
+    }
+  }
 
   /// Returns the VolumeName - for debug reason, might be depreciated later
   const std::string& volumeName() const;

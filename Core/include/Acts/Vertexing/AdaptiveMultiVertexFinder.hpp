@@ -58,7 +58,8 @@ class AdaptiveMultiVertexFinder {
     /// @param bIn Input magnetic field
     Config(vfitter_t fitter, const sfinder_t& sfinder,
            const ImpactPointEstimator<InputTrack_t, Propagator_t>& ipEst,
-           const Linearizer_t& lin, std::shared_ptr<MagneticFieldProvider> bIn)
+           const Linearizer_t& lin,
+           std::shared_ptr<const MagneticFieldProvider> bIn)
         : vertexFitter(std::move(fitter)),
           seedFinder(sfinder),
           ipEstimator(ipEst),
@@ -77,7 +78,7 @@ class AdaptiveMultiVertexFinder {
     // Track linearizer
     Linearizer_t linearizer;
 
-    std::shared_ptr<MagneticFieldProvider> bField;
+    std::shared_ptr<const MagneticFieldProvider> bField;
 
     // Use a beam spot constraint, vertexConstraint in VertexingOptions
     // has to be set in this case

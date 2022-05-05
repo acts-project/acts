@@ -134,23 +134,17 @@ inline ActsExamples::PropagationAlgorithm::Config readPropagationConfig(
     /// Set the covariance transport to true
     pAlgConfig.covarianceTransport = true;
     /// Set the covariance matrix
-    pAlgConfig.covariances(Acts::BoundIndices::eBoundLoc0,
-                           Acts::BoundIndices::eBoundLoc0) =
+    pAlgConfig.covariances(Acts::BoundIndices::eBoundLoc0) =
         pAlgConfig.d0Sigma * pAlgConfig.d0Sigma;
-    pAlgConfig.covariances(Acts::BoundIndices::eBoundLoc1,
-                           Acts::BoundIndices::eBoundLoc1) =
+    pAlgConfig.covariances(Acts::BoundIndices::eBoundLoc1) =
         pAlgConfig.z0Sigma * pAlgConfig.z0Sigma;
-    pAlgConfig.covariances(Acts::BoundIndices::eBoundPhi,
-                           Acts::BoundIndices::eBoundPhi) =
+    pAlgConfig.covariances(Acts::BoundIndices::eBoundPhi) =
         pAlgConfig.phiSigma * pAlgConfig.phiSigma;
-    pAlgConfig.covariances(Acts::BoundIndices::eBoundTheta,
-                           Acts::BoundIndices::eBoundTheta) =
+    pAlgConfig.covariances(Acts::BoundIndices::eBoundTheta) =
         pAlgConfig.thetaSigma * pAlgConfig.thetaSigma;
-    pAlgConfig.covariances(Acts::BoundIndices::eBoundQOverP,
-                           Acts::BoundIndices::eBoundQOverP) =
+    pAlgConfig.covariances(Acts::BoundIndices::eBoundQOverP) =
         pAlgConfig.qpSigma * pAlgConfig.qpSigma;
-    pAlgConfig.covariances(Acts::BoundIndices::eBoundTime,
-                           Acts::BoundIndices::eBoundTime) =
+    pAlgConfig.covariances(Acts::BoundIndices::eBoundTime) =
         pAlgConfig.tSigma * pAlgConfig.tSigma;
 
     // Only if they are properly defined, assign off-diagonals

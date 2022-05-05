@@ -70,7 +70,7 @@ struct PropagatorState {
       double q;
 
       /// the navigation direction
-      NavigationDirection navDir = forward;
+      NavigationDirection navDir = NavigationDirection::Forward;
 
       // accummulated path length cache
       double pathAccumulated = 0.;
@@ -130,11 +130,15 @@ struct PropagatorState {
       detail::updateSingleStepSize<Stepper>(state, oIntersection, release);
     }
 
-    void setStepSize(
-        State& state, double stepSize,
-        ConstrainedStep::Type stype = ConstrainedStep::actor) const {
+    void setStepSize(State& state, double stepSize,
+                     ConstrainedStep::Type stype = ConstrainedStep::actor,
+                     bool release = true) const {
       state.previousStepSize = state.stepSize;
-      state.stepSize.update(stepSize, stype, true);
+      state.stepSize.update(stepSize, stype, release);
+    }
+
+    double getStepSize(const State& state, ConstrainedStep::Type stype) const {
+      return state.stepSize.value(stype);
     }
 
     void releaseStepSize(State& state) const {

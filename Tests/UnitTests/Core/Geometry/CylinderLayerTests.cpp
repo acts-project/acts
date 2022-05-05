@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(CylinderLayerConstruction) {
 }
 
 /// Unit test for testing Layer properties
-BOOST_AUTO_TEST_CASE(CylinderLayerProperties /*, *utf::expected_failures(1)*/) {
+BOOST_AUTO_TEST_CASE(CylinderLayerProperties) {
   Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3(translation);
   double radius(0.5), halfz(10.);

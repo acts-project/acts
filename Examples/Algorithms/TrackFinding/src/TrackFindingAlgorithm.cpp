@@ -9,6 +9,9 @@
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
+#include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -55,17 +58,34 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   Acts::PropagatorPlainOptions pOptions;
   pOptions.maxSteps = 10000;
 
+  MeasurementCalibrator calibrator{measurements};
+  Acts::GainMatrixUpdater kfUpdater;
+  Acts::GainMatrixSmoother kfSmoother;
+  Acts::MeasurementSelector measSel{m_cfg.measurementSelectorCfg};
+
+  Acts::CombinatorialKalmanFilterExtensions extensions;
+  extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
+  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(&kfUpdater);
+  extensions.smoother.connect<&Acts::GainMatrixSmoother::operator()>(
+      &kfSmoother);
+  extensions.measurementSelector.connect<&Acts::MeasurementSelector::select>(
+      &measSel);
+
+  IndexSourceLinkAccessor slAccessor;
+  slAccessor.container = &sourceLinks;
+  Acts::SourceLinkAccessorDelegate<IndexSourceLinkAccessor::Iterator>
+      slAccessorDelegate;
+  slAccessorDelegate.connect<&IndexSourceLinkAccessor::range>(&slAccessor);
+
   // Set the CombinatorialKalmanFilter options
   ActsExamples::TrackFindingAlgorithm::TrackFinderOptions options(
-      ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
-      IndexSourceLinkAccessor(), MeasurementCalibrator(measurements),
-      Acts::MeasurementSelector(m_cfg.measurementSelectorCfg),
-      Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
+      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
+      extensions, Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
                                           << " seeds.");
-  auto results = (*m_cfg.findTracks)(sourceLinks, initialParameters, options);
+  auto results = (*m_cfg.findTracks)(initialParameters, options);
 
   // Compute shared hits from all the reconstructed tracks
   if (m_cfg.computeSharedHits) {

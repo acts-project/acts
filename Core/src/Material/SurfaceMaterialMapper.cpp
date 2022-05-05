@@ -279,6 +279,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
       if (distMat - distVol > s_epsilon) {
         // Switch to next material volume
         ++volIter;
+        continue;
       }
     }
     /// check if we are inside a material volume
@@ -305,6 +306,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
                 "from before the PostMapping surface will be mapped onto it");
           }
           ++sfIter;
+          continue;
         }
       } else if (mappingType == Acts::MappingType::Default ||
                  mappingType == Acts::MappingType::PostMapping) {
@@ -315,6 +317,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
             if ((rmIter->position - sfIter->position).norm() >
                 (rmIter->position - (sfIter + 1)->position).norm()) {
               ++sfIter;
+              continue;
             }
             break;
           }
@@ -323,6 +326,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
             if ((rmIter->position - sfIter->position).norm() >
                 ((sfIter + 1)->position - sfIter->position).norm()) {
               ++sfIter;
+              continue;
             }
             break;
           }
@@ -332,6 +336,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
                 ((rmIter + 1)->position - sfIter->position).norm() >
                     ((sfIter + 1)->position - sfIter->position).norm()) {
               ++sfIter;
+              continue;
             }
             break;
           }

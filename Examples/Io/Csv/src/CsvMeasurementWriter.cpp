@@ -107,14 +107,15 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
           meas.geometry_id = geoId.value();
           meas.local_key = 0;
           // Create a full set of parameters
-          auto parameters = m.expander() * m.parameters();
+          auto parameters = (m.expander() * m.parameters()).eval();
           meas.local0 = parameters[Acts::eBoundLoc0];
           meas.local1 = parameters[Acts::eBoundLoc1];
           meas.phi = parameters[Acts::eBoundPhi];
           meas.theta = parameters[Acts::eBoundTheta];
           meas.time = parameters[Acts::eBoundTime] / Acts::UnitConstants::ns;
 
-          auto covariance = m.expander() * m.covariance();
+          auto covariance =
+              (m.expander() * m.covariance() * m.expander().transpose()).eval();
           meas.var_local0 = covariance(Acts::eBoundLoc0, Acts::eBoundLoc0);
           meas.var_local1 = covariance(Acts::eBoundLoc1, Acts::eBoundLoc1);
           meas.var_phi = covariance(Acts::eBoundPhi, Acts::eBoundPhi);

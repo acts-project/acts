@@ -12,7 +12,7 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesDigitization
   PUBLIC
-    ActsCore ActsPluginDigitization ActsPluginIdentification ActsExamplesFramework)
+    ActsCore ActsPluginIdentification ActsExamplesFramework)
 target_link_libraries(ActsExamplesDigitization PRIVATE Boost::program_options)
 
 install(

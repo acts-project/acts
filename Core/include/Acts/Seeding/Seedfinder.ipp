@@ -32,6 +32,8 @@ Seedfinder<external_spacepoint_t, platform_t>::Seedfinder(
       std::pow(m_config.minPt * 2 / m_config.pTPerHelixRadius, 2);
   m_config.pT2perRadius =
       std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);
+  m_config.sigmapT2perRadius =
+      m_config.pT2perRadius * std::pow(2 * m_config.sigmaScattering, 2);
 }
 
 template <typename external_spacepoint_t, typename platform_t>
@@ -39,28 +41,67 @@ template <template <typename...> typename container_t, typename sp_range_t>
 void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     State& state,
     std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
-    sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
+    sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
+    Extent rRangeSPExtent) const {
   for (auto spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
     float varianceRM = spM->varianceR();
     float varianceZM = spM->varianceZ();
 
-    state.compatBottomSP.clear();
+    /// check if spM is outside our radial region of interest
+    if (m_config.useVariableMiddleSPRange) {
+      float rMinMiddleSP = std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
+                           m_config.deltaRMiddleSPRange;
+      float rMaxMiddleSP = std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2 -
+                           m_config.deltaRMiddleSPRange;
+      if (rM < rMinMiddleSP || rM > rMaxMiddleSP) {
+        continue;
+      }
+    } else if (not m_config.rRangeMiddleSP.empty()) {
+      /// get zBin position of the middle SP
+      auto pVal = std::lower_bound(m_config.zBinEdges.begin(),
+                                   m_config.zBinEdges.end(), zM);
+      int zBin = std::distance(m_config.zBinEdges.begin(), pVal);
+      /// protects against zM at the limit of zBinEdges
+      zBin == 0 ? zBin : --zBin;
+      if (rM < m_config.rRangeMiddleSP[zBin][0] ||
+          rM > m_config.rRangeMiddleSP[zBin][1]) {
+        continue;
+      }
+    }
 
-    for (auto bottomSP : bottomSPs) {
-      float rB = bottomSP->radius();
-      float deltaR = rM - rB;
+    size_t nTopSeedConf = 0;
+    if (m_config.seedConfirmation == true) {
+      // check if middle SP is in the central or forward region
+      SeedConfirmationRange seedConfRange =
+          (zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
+           zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
+              ? m_config.forwardSeedConfirmationRange
+              : m_config.centralSeedConfirmationRange;
+      // set the minimum number of top SP depending on whether the middle SP is
+      // in the central or forward region
+      nTopSeedConf = rM > seedConfRange.rMaxSeedConf
+                         ? seedConfRange.nTopForLargeR
+                         : seedConfRange.nTopForSmallR;
+    }
+
+    state.compatTopSP.clear();
+
+    for (auto topSP : topSPs) {
+      float rT = topSP->radius();
+      float deltaR = rT - rM;
+      // if r-distance is too small, try next SP in bin
+      if (deltaR < m_config.deltaRMinTopSP) {
+        continue;
+      }
       // if r-distance is too big, try next SP in bin
-      if (deltaR > m_config.deltaRMax) {
+      if (deltaR > m_config.deltaRMaxTopSP) {
         continue;
       }
-      // if r-distance is too small, continue because bins are NOT r-sorted
-      if (deltaR < m_config.deltaRMin) {
-        continue;
-      }
+      float deltaZ = topSP->z() - zM;
       // ratio Z/R (forward angle) of space point duplet
-      float cotTheta = (zM - bottomSP->z()) / deltaR;
+      float cotTheta = deltaZ / deltaR;
       if (std::fabs(cotTheta) > m_config.cotThetaMax) {
         continue;
       }
@@ -70,38 +111,127 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           zOrigin > m_config.collisionRegionMax) {
         continue;
       }
-      state.compatBottomSP.push_back(bottomSP);
+      if (std::abs(deltaZ) > m_config.deltaZMax) {
+        continue;
+      }
+      // cut on the max curvature between top SP and interaction point
+      // first transform the space point coordinates into a frame such that the
+      // central space point SPm is in the origin of the frame and the x axis
+      // points away from the interaction point in addition to a translation
+      // transformation we also perform a rotation in order to keep the
+      // curvature of the circle tangent to the x axis
+      if (m_config.interactionPointCut) {
+        float xVal = (topSP->x() - spM->x()) * (spM->x() / rM) +
+                     (topSP->y() - spM->y()) * (spM->y() / rM);
+        float yVal = (topSP->y() - spM->y()) * (spM->x() / rM) -
+                     (topSP->x() - spM->x()) * (spM->y() / rM);
+        if (std::abs(rM * yVal) > m_config.impactMax * xVal) {
+          // conformal transformation u=x/(x²+y²) v=y/(x²+y²) transform the
+          // circle into straight lines in the u/v plane the line equation can
+          // be described in terms of aCoef and bCoef, where v = aCoef * u +
+          // bCoef
+          float uT = xVal / (xVal * xVal + yVal * yVal);
+          float vT = yVal / (xVal * xVal + yVal * yVal);
+          // in the rotated frame the interaction point is positioned at x = -rM
+          // and y ~= impactParam
+          float uIP = -1. / rM;
+          float vIP = m_config.impactMax / (rM * rM);
+          if (yVal > 0.)
+            vIP = -vIP;
+          // we can obtain aCoef as the slope dv/du of the linear function,
+          // estimated using du and dv between the two SP bCoef is obtained by
+          // inserting aCoef into the linear equation
+          float aCoef = (vT - vIP) / (uT - uIP);
+          float bCoef = vIP - aCoef * uIP;
+          // the distance of the straight line from the origin (radius of the
+          // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
+          // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
+          if ((bCoef * bCoef) >
+              (1 + aCoef * aCoef) / m_config.minHelixDiameter2) {
+            continue;
+          }
+        }
+      }
+      state.compatTopSP.push_back(topSP);
     }
-    // no bottom SP found -> try next spM
-    if (state.compatBottomSP.empty()) {
+    if (state.compatTopSP.empty()) {
+      continue;
+    }
+    // apply cut on the number of top SP if seedConfirmation is true
+    if (m_config.seedConfirmation == true &&
+        state.compatTopSP.size() < nTopSeedConf) {
       continue;
     }
 
-    state.compatTopSP.clear();
+    state.compatBottomSP.clear();
 
-    for (auto topSP : topSPs) {
-      float rT = topSP->radius();
-      float deltaR = rT - rM;
-      // this condition is the opposite of the condition for bottom SP
-      if (deltaR < m_config.deltaRMin) {
+    for (auto bottomSP : bottomSPs) {
+      float rB = bottomSP->radius();
+      float deltaR = rM - rB;
+      // this condition is the opposite of the condition for top SP
+      if (deltaR > m_config.deltaRMaxBottomSP) {
         continue;
       }
-      if (deltaR > m_config.deltaRMax) {
+      if (deltaR < m_config.deltaRMinBottomSP) {
         continue;
       }
-
-      float cotTheta = (topSP->z() - zM) / deltaR;
+      float deltaZ = zM - bottomSP->z();
+      // ratio Z/R (forward angle) of space point duplet
+      float cotTheta = deltaZ / deltaR;
       if (std::fabs(cotTheta) > m_config.cotThetaMax) {
         continue;
       }
+      // check if duplet origin on z axis within collision region
       float zOrigin = zM - rM * cotTheta;
       if (zOrigin < m_config.collisionRegionMin ||
           zOrigin > m_config.collisionRegionMax) {
         continue;
       }
-      state.compatTopSP.push_back(topSP);
+      if (std::abs(deltaZ) > m_config.deltaZMax) {
+        continue;
+      }
+      // cut on the max curvature between bottom SP and interaction point
+      // first transform the space point coordinates into a frame such that the
+      // central space point SPm is in the origin of the frame and the x axis
+      // points away from the interaction point in addition to a translation
+      // transformation we also perform a rotation in order to keep the
+      // curvature of the circle tangent to the x axis
+      if (m_config.interactionPointCut) {
+        float xVal = (bottomSP->x() - spM->x()) * (spM->x() / rM) +
+                     (bottomSP->y() - spM->y()) * (spM->y() / rM);
+        float yVal = (bottomSP->y() - spM->y()) * (spM->x() / rM) -
+                     (bottomSP->x() - spM->x()) * (spM->y() / rM);
+        if (std::abs(rM * yVal) > -m_config.impactMax * xVal) {
+          // conformal transformation u=x/(x²+y²) v=y/(x²+y²) transform the
+          // circle into straight lines in the u/v plane the line equation can
+          // be
+          // described in terms of aCoef and bCoef, where v = aCoef * u + bCoef
+          float uB = xVal / (xVal * xVal + yVal * yVal);
+          float vB = yVal / (xVal * xVal + yVal * yVal);
+          // in the rotated frame the interaction point is positioned at x = -rM
+          // and y ~= impactParam
+          float uIP = -1. / rM;
+          float vIP = m_config.impactMax / (rM * rM);
+          if (yVal < 0.)
+            vIP = -vIP;
+          // we can obtain aCoef as the slope dv/du of the linear function,
+          // estimated using du and dv between the two SP bCoef is obtained by
+          // inserting aCoef into the linear equation
+          float aCoef = (vB - vIP) / (uB - uIP);
+          float bCoef = vIP - aCoef * uIP;
+          // the distance of the straight line from the origin (radius of the
+          // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
+          // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
+          if ((bCoef * bCoef) >
+              (1 + aCoef * aCoef) / m_config.minHelixDiameter2) {
+            continue;
+          }
+        }
+      }
+      state.compatBottomSP.push_back(bottomSP);
     }
-    if (state.compatTopSP.empty()) {
+    // no bottom SP found -> try next spM
+    if (state.compatBottomSP.empty()) {
       continue;
     }
 
@@ -119,6 +249,8 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     size_t numBotSP = state.compatBottomSP.size();
     size_t numTopSP = state.compatTopSP.size();
+
+    size_t t0 = 0;
 
     for (size_t b = 0; b < numBotSP; b++) {
       auto lb = state.linCircleBottom[b];
@@ -149,7 +281,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       state.topSpVec.clear();
       state.curvatures.clear();
       state.impactParameters.clear();
-      for (size_t t = 0; t < numTopSP; t++) {
+      for (size_t t = t0; t < numTopSP; t++) {
         auto lt = state.linCircleTop[t];
 
         // add errors of spB-spM and spM-spT pairs and add the correlation term
@@ -160,24 +292,27 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
         float deltaCotTheta = cotThetaB - lt.cotTheta;
         float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
-        float error;
-        float dCotThetaMinusError2;
-        // if the error is larger than the difference in theta, no need to
-        // compare with scattering
-        if (deltaCotTheta2 - error2 > 0) {
-          deltaCotTheta = std::abs(deltaCotTheta);
-          // if deltaTheta larger than the scattering for the lower pT cut, skip
-          error = std::sqrt(error2);
-          dCotThetaMinusError2 =
-              deltaCotTheta2 + error2 - 2 * deltaCotTheta * error;
-          // avoid taking root of scatteringInRegion
-          // if left side of ">" is positive, both sides of unequality can be
-          // squared
-          // (scattering is always positive)
-
-          if (dCotThetaMinusError2 > scatteringInRegion2) {
-            continue;
+        // Apply a cut on the compatibility between the r-z slope of the two
+        // seed segments. This is done by comparing the squared difference
+        // between slopes, and comparing to the squared uncertainty in this
+        // difference - we keep a seed if the difference is compatible within
+        // the assumed uncertainties. The uncertainties get contribution from
+        // the  space-point-related squared error (error2) and a scattering term
+        // calculated assuming the minimum pt we expect to reconstruct
+        // (scatteringInRegion2). This assumes gaussian error propagation which
+        // allows just adding the two errors if they are uncorrelated (which is
+        // fair for scattering and measurement uncertainties)
+        if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
+          // additional cut to skip top SPs when producing triplets
+          if (m_config.skipPreviousTopSP) {
+            // break if cotThetaB < lt.cotTheta because the SP are sorted by
+            // cotTheta
+            if (cotThetaB - lt.cotTheta < 0) {
+              break;
+            }
+            t0 = t + 1;
           }
+          continue;
         }
 
         // protects against division by 0
@@ -196,24 +331,33 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         if (S2 < B2 * m_config.minHelixDiameter2) {
           continue;
         }
-        // 1/helixradius: (B/sqrt(S2))*2 (we leave everything squared)
+
+        // refinement of the cut on the compatibility between the r-z slope of
+        // the two seed segments using a scattering term scaled by the actual
+        // measured pT (p2scatterSigma)
         float iHelixDiameter2 = B2 / S2;
         // calculate scattering for p(T) calculated from seed curvature
-        float pT2scatter = 4 * iHelixDiameter2 * m_config.pT2perRadius;
+        float pT2scatterSigma = iHelixDiameter2 * m_config.sigmapT2perRadius;
         // if pT > maxPtScattering, calculate allowed scattering angle using
         // maxPtScattering instead of pt.
         float pT = m_config.pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
         if (pT > m_config.maxPtScattering) {
-          float pTscatter = m_config.highland / m_config.maxPtScattering;
-          pT2scatter = pTscatter * pTscatter;
+          float pTscatterSigma =
+              (m_config.highland / m_config.maxPtScattering) *
+              m_config.sigmaScattering;
+          pT2scatterSigma = pTscatterSigma * pTscatterSigma;
         }
         // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
         // from rad to deltaCotTheta
-        float p2scatter = pT2scatter * iSinTheta2;
+        float p2scatterSigma = pT2scatterSigma * iSinTheta2;
         // if deltaTheta larger than allowed scattering for calculated pT, skip
-        if ((deltaCotTheta2 - error2 > 0) &&
-            (dCotThetaMinusError2 >
-             p2scatter * m_config.sigmaScattering * m_config.sigmaScattering)) {
+        if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
+          if (m_config.skipPreviousTopSP) {
+            if (cotThetaB - lt.cotTheta < 0) {
+              break;
+            }
+            t0 = t;
+          }
           continue;
         }
         // A and B allow calculation of impact params in U/V plane with linear
@@ -227,6 +371,12 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           // positive/negative in phi
           state.curvatures.push_back(B / std::sqrt(S2));
           state.impactParameters.push_back(Im);
+
+          // evaluate eta and pT of the seed
+          float theta = std::atan(1. / std::sqrt(cotThetaB * lt.cotTheta));
+          float eta = -std::log(std::tan(0.5 * theta));
+          state.etaVec.push_back(eta);
+          state.ptVec.push_back(pT);
         }
       }
       if (!state.topSpVec.empty()) {
@@ -237,5 +387,18 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     }
     m_config.seedFilter->filterSeeds_1SpFixed(state.seedsPerSpM, outIt);
   }
+}
+
+template <typename external_spacepoint_t, typename platform_t>
+template <typename sp_range_t>
+std::vector<Seed<external_spacepoint_t>>
+Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
+    sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
+  State state;
+  Extent extent;
+  std::vector<Seed<external_spacepoint_t>> ret;
+
+  createSeedsForGroup(state, std::back_inserter(ret), bottomSPs, middleSPs,
+                      topSPs, extent);
 }
 }  // namespace Acts

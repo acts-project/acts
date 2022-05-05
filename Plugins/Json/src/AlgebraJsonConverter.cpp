@@ -32,15 +32,15 @@ void Acts::to_json(nlohmann::json& j, const Acts::Transform3& r) {
 
 void Acts::from_json(const nlohmann::json& j, Acts::Transform3& t) {
   t = Acts::Transform3::Identity();
-  if (j.find("translation") != j.end() and not j["translation"].empty()) {
-    std::array<Acts::ActsScalar, 3> tdata = j["translation"];
-    t.pretranslate(Acts::Vector3(tdata[0], tdata[1], tdata[2]));
-  }
   if (j.find("rotation") != j.end() and not j["rotation"].empty()) {
     std::array<Acts::ActsScalar, 9> rdata = j["rotation"];
     Acts::RotationMatrix3 rot;
     rot << rdata[0], rdata[1], rdata[2], rdata[3], rdata[4], rdata[5], rdata[6],
         rdata[7], rdata[8];
     t.prerotate(rot);
+  }
+  if (j.find("translation") != j.end() and not j["translation"].empty()) {
+    std::array<Acts::ActsScalar, 3> tdata = j["translation"];
+    t.pretranslate(Acts::Vector3(tdata[0], tdata[1], tdata[2]));
   }
 }
