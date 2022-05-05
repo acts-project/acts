@@ -241,6 +241,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
                                top[t]->z() - middle.z()));
   }
 
+  int numQualitySeeds = 0;
+  int numSeeds = 0;
+
   for (size_t b = 0; b < numBotSP; b++) {
     auto lb = linCircleBottom[b];
     float Zob = lb.Zo;
@@ -353,7 +356,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     }
     if (!top_valid.empty()) {
       m_config.seedFilter->filterSeeds_2SpFixed(
-          *bottom[b], middle, top_valid, curvatures, impactParameters, Zob, it);
+          *bottom[b], middle, top_valid, curvatures, impactParameters, Zob,
+          numQualitySeeds, numSeeds it);
     }
   }
 }
@@ -530,7 +534,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
   /*
    * Run a seed filter, just like in other seeding algorithms.
    */
-  m_config.seedFilter->filterSeeds_1SpFixed(protoseeds, out_it);
+  m_config.seedFilter->filterSeeds_1SpFixed(protoseeds, 0, out_it);
 }
 
 template <typename external_spacepoint_t>

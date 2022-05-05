@@ -287,7 +287,9 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
                 bottomSP, middleSP, topSP, Zob)));
       }
 
-      m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM,
+      int numQualitySeeds =
+          0;  // It is not used in the filter but needs to be fixed anyway...
+      m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, numQualitySeeds,
                                                 std::back_inserter(outputVec));
     }
   }

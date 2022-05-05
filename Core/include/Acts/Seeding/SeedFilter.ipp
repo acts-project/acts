@@ -327,14 +327,17 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
   for (; it < itBegin + maxSeeds; ++it) {
     float bestSeedQuality = (*it).first;
 
-    // continue if higher-quality seeds were found
-    if (numQualitySeeds > 0 and (*it).second->qualitySeed() == false) {
-      continue;
-    }
+    if (m_cfg.seedConfirmation) {
+      // continue if higher-quality seeds were found
+      if (numQualitySeeds > 0 and (*it).second->qualitySeed() == false) {
+        continue;
+      }
 
-    (*it).second->sp[0]->setQuality(bestSeedQuality);
-    (*it).second->sp[1]->setQuality(bestSeedQuality);
-    (*it).second->sp[2]->setQuality(bestSeedQuality);
+      // set quality of seed components
+      (*it).second->sp[0]->setQuality(bestSeedQuality);
+      (*it).second->sp[1]->setQuality(bestSeedQuality);
+      (*it).second->sp[2]->setQuality(bestSeedQuality);
+    }
 
     outIt = Seed<external_spacepoint_t>{
         (*it).second->sp[0]->sp(), (*it).second->sp[1]->sp(),
