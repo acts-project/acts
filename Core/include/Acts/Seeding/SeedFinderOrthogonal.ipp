@@ -357,7 +357,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     if (!top_valid.empty()) {
       m_config.seedFilter->filterSeeds_2SpFixed(
           *bottom[b], middle, top_valid, curvatures, impactParameters, Zob,
-          numQualitySeeds, numSeeds it);
+          numQualitySeeds, numSeeds, it);
     }
   }
 }
