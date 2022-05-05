@@ -1,11 +1,5 @@
 include(FetchContent)
 
-FetchContent_Declare(actsdd4hep
-	GIT_REPOSITORY https://github.com/acts-project/acts-dd4hep.git
-	GIT_TAG v1)
-FetchContent_MakeAvailable(actsdd4hep)
-
-
 add_library(
   ActsPluginDD4hep SHARED
   src/ConvertDD4hepDetector.cpp
