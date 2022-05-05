@@ -77,7 +77,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     float currentTop_r;
     float impact = impactParametersVec[i];
 
-    if (m_cfg.useDeltaRTopRadius) {
+    if (m_cfg.useDeltaRorTopRadius) {
       // use deltaR instead of top radius
       currentTop_r = topSpVec[i]->deltaR();
     } else {
@@ -90,7 +90,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         continue;
       }
       float otherTop_r;
-      if (m_cfg.useDeltaRTopRadius) {
+      if (m_cfg.useDeltaRorTopRadius) {
         otherTop_r = topSpVec[i]->deltaR();
       } else {
         otherTop_r = topSpVec[i]->radius();
@@ -206,11 +206,13 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
                 return outIt.at(a).first < outIt.at(b).first;
               });
 
-          // replace that seed with the new one
-          outIt.at(index) = std::make_pair(
-              weight,
-              std::make_unique<const InternalSeed<external_spacepoint_t>>(
-                  bottomSP, middleSP, *topSpVec[i], zOrigin, true));
+          // replace that seed with the new one if new one is better
+          if (outIt.at(index).first < weight) {
+            outIt.at(index) = std::make_pair(
+                weight,
+                std::make_unique<const InternalSeed<external_spacepoint_t>>(
+                    bottomSP, middleSP, *topSpVec[i], zOrigin, true));
+          }
         }
 
       } else if (weight > weightMin) {
@@ -269,12 +271,14 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
                               return outIt.at(a).first < outIt.at(b).first;
                             });
 
-      // replace that seed with the new one
-      outIt.at(index) = std::make_pair(
-          weightMin,
-          std::make_unique<const InternalSeed<external_spacepoint_t>>(
-              bottomSP, middleSP, *topSpVec[minWeightSeedIndex], zOrigin,
-              false));
+      // replace that seed with the new one if new one is better
+      if (outIt.at(index).first < weightMin) {
+        outIt.at(index) = std::make_pair(
+            weightMin,
+            std::make_unique<const InternalSeed<external_spacepoint_t>>(
+                bottomSP, middleSP, *topSpVec[minWeightSeedIndex], zOrigin,
+                false));
+      }
     }
   }
 }

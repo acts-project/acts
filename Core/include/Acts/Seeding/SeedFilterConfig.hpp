@@ -56,7 +56,7 @@ struct SeedFilterConfig {
   float maxQualitySeedsPerSpMConf = 5;
 
   // use deltaR instead of top radius
-  bool useDeltaRTopRadius = false;
+  bool useDeltaRorTopRadius = false;
 
   SeedFilterConfig toInternalUnits() const {
     using namespace Acts::UnitLiterals;
