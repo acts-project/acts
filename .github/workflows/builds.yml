@@ -258,7 +258,7 @@ jobs:
           && build/bin/ActsAnalysisResidualsAndPulls -i trackstates_ckf.root -o acts_analysis_residuals_and_pulls.root --predicted --filtered --smoothed --silent
           && histcmp acts_analysis_residuals_and_pulls.root CI/physmon/reference/acts_analysis_residuals_and_pulls.root
 
-      # TODO upload
+      # TODO upload diagrams
 
   linux-nodeps:
     runs-on: ubuntu-latest
