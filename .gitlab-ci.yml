@@ -3,7 +3,7 @@ clang_tidy:
   image: ghcr.io/acts-project/ubuntu2004:v21
   artifacts:
     paths:
-      - clang-tidy/
+      - src/clang-tidy/
     when: always
     expire_in: 2 weeks
   script:
