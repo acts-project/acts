@@ -194,8 +194,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
             it = std::find_if(
                 std::next(it), outIt.end(),
                 [&](std::pair<float, std::unique_ptr<const InternalSeed<
-                                         external_spacepoint_t>>>& outIt) {
-                  return outIt.second->qualitySeed() == true;
+                                         external_spacepoint_t>>>& outItCheck) {
+                  return outItCheck.second->qualitySeed() == true;
                 });
           }
 
@@ -259,8 +259,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         it = std::find_if(
             std::next(it), outIt.end(),
             [&](std::pair<float, std::unique_ptr<const InternalSeed<
-                                     external_spacepoint_t>>>& outIt) {
-              return outIt.second->qualitySeed() == false;
+                                     external_spacepoint_t>>>& outItCheck) {
+              return outItCheck.second->qualitySeed() == false;
             });
       }
 
