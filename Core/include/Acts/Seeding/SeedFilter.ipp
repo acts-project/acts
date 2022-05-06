@@ -328,12 +328,23 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
   // default filter removes the last seeds if maximum amount exceeded
   // ordering by weight by filterSeeds_2SpFixed means these are the lowest
   // weight seeds
-  for (; it < itBegin + maxSeeds; ++it) {
+  unsigned int nSeeds = 0;
+  for (; it < itBegin + seedsPerSpM.size(); ++it) {
     float bestSeedQuality = (*it).first;
+
+    // stop if we reach the maximum number of seeds
+    if (nSeeds >= maxSeeds) {
+      continue;
+    }
 
     if (m_cfg.seedConfirmation) {
       // continue if higher-quality seeds were found
       if (numQualitySeeds > 0 and (*it).second->qualitySeed() == false) {
+        continue;
+      }
+      if (bestSeedQuality < (*it).second->sp[0]->quality() and
+          bestSeedQuality < (*it).second->sp[1]->quality() and
+          bestSeedQuality < (*it).second->sp[2]->quality()) {
         continue;
       }
 
@@ -346,6 +357,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     outIt = Seed<external_spacepoint_t>{
         (*it).second->sp[0]->sp(), (*it).second->sp[1]->sp(),
         (*it).second->sp[2]->sp(), (*it).second->z()};
+    nSeeds += 1;
   }
 }
 
