@@ -29,6 +29,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Install git lfs
+        run: yum install -y ccache
+
+      - name: Cache multiple paths
+        uses: actions/cache@v3
+          with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ runner.os  }}-ccache
+
       - name: Configure
         # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
         # dd4hep CMake configuration that gets triggered on recent CMake
@@ -37,6 +46,7 @@ jobs:
           ${SETUP} &&
           cmake -B build -S .
           -GNinja
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=17
@@ -85,14 +95,21 @@ jobs:
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
+      CCACHE_DIR: ${{ github.workspace }}/ccache
     steps:
       - name: Install git lfs
-        run: apt install -y git-lfs
+        run: apt install -y git-lfs ccache
 
       - uses: actions/checkout@v3
         with:
           submodules: true
           lfs: true
+
+      - name: Cache multiple paths
+        uses: actions/cache@v3
+          with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ runner.os  }}-ccache
 
       - name: Configure
         # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
@@ -101,6 +118,7 @@ jobs:
         run: >
           cmake -B build -S .
           -GNinja
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=17
