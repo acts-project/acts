@@ -100,7 +100,7 @@ class SeedFinderOrthogonal {
    */
   template <typename input_container_t, typename output_container_t>
   void createSeeds(const input_container_t &spacePoints,
-                   std::back_insert_iterator<output_container_t> out_it) const;
+                   output_container_t out_it) const;
 
   /**
    * @brief Perform seed finding, returning a new container of seeds.
@@ -200,8 +200,8 @@ class SeedFinderOrthogonal {
   template <typename output_it_t>
   void filterCandidates(internal_sp_t &middle,
                         std::vector<internal_sp_t *> &bottom,
-                        std::vector<internal_sp_t *> &top,
-                        output_it_t it) const;
+                        std::vector<internal_sp_t *> &top, int numQualitySeeds,
+                        output_it_t &it) const;
 
   /**
    * @brief Search for seeds starting from a given middle space point.

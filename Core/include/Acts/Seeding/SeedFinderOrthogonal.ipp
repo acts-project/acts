@@ -202,7 +202,8 @@ template <typename external_spacepoint_t>
 template <typename output_it_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     internal_sp_t &middle, std::vector<internal_sp_t *> &bottom,
-    std::vector<internal_sp_t *> &top, output_it_t it) const {
+    std::vector<internal_sp_t *> &top, int numQualitySeeds,
+    output_it_t &it) const {
   float rM = middle.radius();
   float varianceRM = middle.varianceR();
   float varianceZM = middle.varianceZ();
@@ -241,7 +242,6 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
                                top[t]->z() - middle.z()));
   }
 
-  int numQualitySeeds = 0;
   int numSeeds = 0;
 
   for (size_t b = 0; b < numBotSP; b++) {
@@ -515,26 +515,29 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
       float, std::unique_ptr<const InternalSeed<ActsExamples::SimSpacePoint>>>>
       protoseeds;
 
+  int numQualitySeeds = 0;
+
   /*
    * If we have candidates for increasing z tracks, we try to combine them.
    */
   if (!bottom_lh_v.empty() && !top_lh_v.empty()) {
-    filterCandidates(middle, bottom_lh_v, top_lh_v,
-                     std::back_inserter(protoseeds));
+    filterCandidates(middle, bottom_lh_v, top_lh_v, numQualitySeeds,
+                     protoseeds);
   }
 
   /*
    * Try to combine candidates for decreasing z tracks.
    */
   if (!bottom_hl_v.empty() && !top_hl_v.empty()) {
-    filterCandidates(middle, bottom_hl_v, top_hl_v,
-                     std::back_inserter(protoseeds));
+    filterCandidates(middle, bottom_hl_v, top_hl_v, numQualitySeeds,
+                     protoseeds);
   }
 
   /*
    * Run a seed filter, just like in other seeding algorithms.
    */
-  m_config.seedFilter->filterSeeds_1SpFixed(protoseeds, 0, out_it);
+  m_config.seedFilter->filterSeeds_1SpFixed(protoseeds, numQualitySeeds,
+                                            std::back_inserter(out_it));
 }
 
 template <typename external_spacepoint_t>
@@ -563,8 +566,7 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::createTree(
 template <typename external_spacepoint_t>
 template <typename input_container_t, typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
-    const input_container_t &spacePoints,
-    std::back_insert_iterator<output_container_t> out_it) const {
+    const input_container_t &spacePoints, output_container_t out_it) const {
   /*
    * The template parameters we accept are a little too generic, so we want to
    * run some basic checks to make sure the containers have the correct value
@@ -619,7 +621,7 @@ SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
     const input_container_t &spacePoints) const {
   std::vector<seed_t> r;
 
-  createSeeds(spacePoints, std::back_inserter(r));
+  createSeeds(spacePoints, r);
 
   return r;
 }
