@@ -404,6 +404,8 @@ jobs:
     env:
       CCACHE_DIR: ${{ github.workspace }}/ccache
     steps:
+      - uses: actions/checkout@v2
+
       - name: Install ccache
         run: apt install -y ccache
 
