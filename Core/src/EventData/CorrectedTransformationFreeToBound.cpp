@@ -69,7 +69,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   FreeSymMatrix covSqrt = FreeSymMatrix::Zero();
   // SVD decomposition: freeCovariance = U*S*U^T here
   Eigen::JacobiSVD<FreeSymMatrix> svd(
-      freeCovariance, Eigen::ComputeThinU | Eigen::ComputeThinV);
+      freeCovariance, Eigen::ComputeFullU | Eigen::ComputeFullV);
   auto S = svd.singularValues();
   FreeMatrix U = svd.matrixU();
   // Get the sqrt root matrix of S
