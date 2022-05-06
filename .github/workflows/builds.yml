@@ -32,9 +32,9 @@ jobs:
       - name: Install git lfs
         run: yum install -y ccache
 
-      - name: Cache multiple paths
+      - name: Cache build
         uses: actions/cache@v3
-          with:
+        with:
           path: ${{ github.workspace }}/ccache
           key: ${{ runner.os  }}-ccache
 
@@ -105,9 +105,9 @@ jobs:
           submodules: true
           lfs: true
 
-      - name: Cache multiple paths
+      - name: Cache build
         uses: actions/cache@v3
-          with:
+        with:
           path: ${{ github.workspace }}/ccache
           key: ${{ runner.os  }}-ccache
 
