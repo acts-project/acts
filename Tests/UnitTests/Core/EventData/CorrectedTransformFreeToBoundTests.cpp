@@ -89,10 +89,11 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   transportJac(eFreePos1, eFreeDir1) = s;
   transportJac(eFreePos2, eFreeDir2) = s;
 
+  // the free covariance at the start position
+  FreeSymMatrix sFreeCov =
+      boundToFreeJac * sBoundCov * boundToFreeJac.transpose();
   // the free covariance at the end position
-  FreeSymMatrix eFreeCov = transportJac * boundToFreeJac * sBoundCov *
-                           boundToFreeJac.transpose() *
-                           transportJac.transpose();
+  FreeSymMatrix eFreeCov = transportJac * sFreeCov * transportJac.transpose();
 
   // convert free parameters to bound parameters with non-linear correction
 
@@ -101,6 +102,7 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
 
   // the corrected transformation
   auto freeToBoundCorrection = FreeToBoundCorrection(true);
+  BOOST_CHECK(freeToBoundCorrection);
 
   auto transformer =
       detail::CorrectedFreeToBoundTransformer(freeToBoundCorrection);

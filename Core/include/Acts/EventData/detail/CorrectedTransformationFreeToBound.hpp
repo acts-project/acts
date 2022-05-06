@@ -41,7 +41,7 @@ struct FreeToBoundCorrection {
   /// Construct from boolean only
   ///
   /// @param apply_ Wheter to apply correction
-  FreeToBoundCorrection(bool apply_);
+  explicit FreeToBoundCorrection(bool apply_);
 
   /// Return boolean for applying correction or not
   operator bool() const;

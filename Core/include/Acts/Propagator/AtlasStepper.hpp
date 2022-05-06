@@ -877,7 +877,8 @@ class AtlasStepper {
   /// @param [in] surface is the surface to which the covariance is forwarded to
   void transportCovarianceToBound(
       State& state, const Surface& surface,
-      const FreeToBoundCorrection& /*freeToBoundCorrection*/ = false) const {
+      const FreeToBoundCorrection& /*freeToBoundCorrection*/ =
+          FreeToBoundCorrection(false)) const {
     Acts::Vector3 gp(state.pVector[0], state.pVector[1], state.pVector[2]);
     Acts::Vector3 mom(state.pVector[4], state.pVector[5], state.pVector[6]);
     mom /= std::abs(state.pVector[7]);

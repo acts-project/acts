@@ -108,14 +108,16 @@ struct KalmanFitterOptions {
   /// @param rFiltering Whether to run filtering in reversed direction as smoothing
   /// @param rfScaling Scale factor for the covariance matrix before the backward filtering
   /// @param freeToBoundCorrection_ Correction for non-linearity effect during transform from free to bound
-  KalmanFitterOptions(
-      const GeometryContext& gctx, const MagneticFieldContext& mctx,
-      std::reference_wrapper<const CalibrationContext> cctx,
-      KalmanFitterExtensions extensions_, LoggerWrapper logger_,
-      const PropagatorPlainOptions& pOptions, const Surface* rSurface = nullptr,
-      bool mScattering = true, bool eLoss = true, bool rFiltering = false,
-      double rfScaling = 1.0,
-      const FreeToBoundCorrection& freeToBoundCorrection_ = false)
+  KalmanFitterOptions(const GeometryContext& gctx,
+                      const MagneticFieldContext& mctx,
+                      std::reference_wrapper<const CalibrationContext> cctx,
+                      KalmanFitterExtensions extensions_, LoggerWrapper logger_,
+                      const PropagatorPlainOptions& pOptions,
+                      const Surface* rSurface = nullptr,
+                      bool mScattering = true, bool eLoss = true,
+                      bool rFiltering = false, double rfScaling = 1.0,
+                      const FreeToBoundCorrection& freeToBoundCorrection_ =
+                          FreeToBoundCorrection(false))
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
