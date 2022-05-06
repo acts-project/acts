@@ -37,7 +37,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache
+          key: ${{ runner.os  }}-ccache-${{ matrix.image }}
 
       - name: Configure
         # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
@@ -110,7 +110,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache
+          key: ${{ runner.os  }}-ccache-linux_ubuntu
 
       - name: Configure
         # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
@@ -274,7 +274,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache
+          key: ${{ runner.os  }}-ccache-linux-nodeps
 
       - name: Configure
         run: >
@@ -411,7 +411,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache
+          key: ${{ runner.os  }}-ccache-cuda
 
       - name: Configure
         run: >
@@ -439,7 +439,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache
+          key: ${{ runner.os  }}-ccache-exatrkx
 
       - name: Configure
         run: >
@@ -470,7 +470,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache
+          key: ${{ runner.os  }}-ccache-sycl
 
       - name: Configure
         run: >
