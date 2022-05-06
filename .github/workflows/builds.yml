@@ -10,6 +10,7 @@ on:
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
   HOMEBREW_NO_INSTALL_CLEANUP: 1
+  CCACHE_DIR: ${{ github.workspace }}/ccache
 
 jobs:
   lcg:
@@ -26,7 +27,6 @@ jobs:
       SETUP: source /opt/lcg_view/setup.sh
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
-      CCACHE_DIR: ${{ github.workspace }}/ccache
     steps:
       - uses: actions/checkout@v3
 
@@ -96,7 +96,6 @@ jobs:
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
-      CCACHE_DIR: ${{ github.workspace }}/ccache
     steps:
       - name: Install git lfs and ccache
         run: apt-get install -y git-lfs ccache
@@ -262,7 +261,6 @@ jobs:
       SETUP: source /opt/lcg/ROOT/v6.24.00-e7098/x86_64-centos8-gcc10-opt/bin/thisroot.sh
       PRELOAD: export LD_PRELOAD=/opt/lcg/gcc/10/x86_64-centos8/lib64/libstdc++.so.6
       INSTALL_DIR: ${{ github.workspace }}/install
-      CCACHE_DIR: ${{ github.workspace }}/ccache
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
@@ -341,7 +339,6 @@ jobs:
     runs-on: macos-11
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
-      CCACHE_DIR: ${{ github.workspace }}/ccache
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
@@ -401,8 +398,6 @@ jobs:
   cuda:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu1804_cuda:v21
-    env:
-      CCACHE_DIR: ${{ github.workspace }}/ccache
     steps:
       - uses: actions/checkout@v2
 
@@ -430,8 +425,6 @@ jobs:
   exatrkx:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004_exatrkx:v21
-    env:
-      CCACHE_DIR: ${{ github.workspace }}/ccache
     steps:
       - uses: actions/checkout@v2
       - name: Install ccache
@@ -458,8 +451,6 @@ jobs:
   sycl:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004_oneapi:v21
-    env:
-      CCACHE_DIR: ${{ github.workspace }}/ccache
     defaults:
       run:
         shell: bash

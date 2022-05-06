@@ -11,6 +11,7 @@ on:
 
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
+  CCACHE_DIR: ${{ github.workspace }}/ccache
 
 # NOTE this only builds core unittests to reduce the output size. if we
 #      found a way to have Github actions not fail regularly with this job
@@ -19,8 +20,6 @@ jobs:
   build_debug:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004:v21
-    env:
-      CCACHE_DIR: ${{ github.workspace }}/ccache
     steps:
       - uses: actions/checkout@v3
 
