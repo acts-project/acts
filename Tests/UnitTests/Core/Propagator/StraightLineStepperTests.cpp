@@ -333,7 +333,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   // Test the bound state construction
   FreeToBoundCorrection freeToBoundCorrection(false);
   auto boundState =
-      sls.boundState(slsState, *plane, freeToBoundCorrection).value();
+      sls.boundState(slsState, *plane, true, freeToBoundCorrection).value();
   auto boundPars = std::get<0>(boundState);
   CHECK_CLOSE_ABS(boundPars.position(tgContext), bp.position(tgContext), 1e-6);
   CHECK_CLOSE_ABS(boundPars.momentum(), bp.momentum(), 1e-6);
