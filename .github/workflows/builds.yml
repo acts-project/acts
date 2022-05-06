@@ -99,7 +99,7 @@ jobs:
       CCACHE_DIR: ${{ github.workspace }}/ccache
     steps:
       - name: Install git lfs and ccache
-        run: apt install -y git-lfs ccache
+        run: apt-get install -y git-lfs ccache
 
       - uses: actions/checkout@v3
         with:
@@ -172,7 +172,7 @@ jobs:
 
     steps:
       - name: Install git lfs
-        run: apt install -y git-lfs
+        run: apt-get install -y git-lfs
 
       - uses: actions/checkout@v3
         with:
@@ -209,7 +209,7 @@ jobs:
 
     steps:
       - name: Install git lfs
-        run: apt install -y git-lfs
+        run: apt-get install -y git-lfs
 
       - uses: actions/checkout@v3
         with:
@@ -407,7 +407,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install ccache
-        run: apt install -y ccache
+        run: apt-get install -y ccache
 
       - name: Cache build
         uses: actions/cache@v3
@@ -435,7 +435,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install ccache
-        run: apt install -y ccache
+        run: apt-get install -y ccache
 
       - name: Cache build
         uses: actions/cache@v3
@@ -466,7 +466,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install ccache
-        run: apt install -y ccache
+        run: apt-get install -y ccache
 
       - name: Cache build
         uses: actions/cache@v3
