@@ -19,12 +19,25 @@ jobs:
   build_debug:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004:v21
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/ccache
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+
+      - name: Install ccache
+        run: apt-get install -y ccache
+
+      - name: Cache build
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ runner.os  }}-ccache-linux_ubuntu_debug
+
       - name: Configure
         run: >
           cmake -B build -S .
           -GNinja
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           -DCMAKE_BUILD_TYPE=Debug
           -DCMAKE_CXX_FLAGS="-Werror -gz -g1"
           -DACTS_BUILD_UNITTESTS=on
@@ -51,7 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004:v21
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install dependencies
         run: pip3 install git+https://github.com/paulgessinger/cmakeperf.git@ece8fc8
       - name: Configure
@@ -76,7 +89,7 @@ jobs:
     needs: build_performance
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install dependencies
         run: pip3 install git+https://github.com/paulgessinger/headwind.git@eeeaa80
       - uses: actions/download-artifact@v2
