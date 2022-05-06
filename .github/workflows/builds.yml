@@ -253,8 +253,8 @@ jobs:
           && source /usr/local/bin/geant4.sh
           && source build/python/setup.sh
           && echo "::endgroup::"
-          && thirdparty/OpenDataDetector/ci/full_chain_odd.py
-          && ActsAnalysisResidualsAndPulls -i trackstates_ckf.root -o acts_analysis_residuals_and_pulls.root --predicted --filtered --smoothed --silent
+          && PYTHONPATH="${PYTHONPATH}":"`pdw`/Examples/Scripts/Python" thirdparty/OpenDataDetector/ci/full_chain_odd.py
+          && build/bin/ActsAnalysisResidualsAndPulls -i trackstates_ckf.root -o acts_analysis_residuals_and_pulls.root --predicted --filtered --smoothed --silent
           && histcmp acts_analysis_residuals_and_pulls.root CI/physmon/reference/acts_analysis_residuals_and_pulls.root
 
       # TODO upload
