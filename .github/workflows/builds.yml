@@ -26,6 +26,7 @@ jobs:
       SETUP: source /opt/lcg_view/setup.sh
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
+      CCACHE_DIR: ${{ github.workspace }}/ccache
     steps:
       - uses: actions/checkout@v3
 
@@ -46,7 +47,7 @@ jobs:
           ${SETUP} &&
           cmake -B build -S .
           -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=/usr/bin/ccache
+          -DCMAKE_CXX_COMPILER_LAUNCHER=$(find / -type f -name "ccache")
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=17
@@ -97,7 +98,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
       CCACHE_DIR: ${{ github.workspace }}/ccache
     steps:
-      - name: Install git lfs
+      - name: Install git lfs and ccache
         run: apt install -y git-lfs ccache
 
       - uses: actions/checkout@v3
@@ -261,16 +262,25 @@ jobs:
       SETUP: source /opt/lcg/ROOT/v6.24.00-e7098/x86_64-centos8-gcc10-opt/bin/thisroot.sh
       PRELOAD: export LD_PRELOAD=/opt/lcg/gcc/10/x86_64-centos8/lib64/libstdc++.so.6
       INSTALL_DIR: ${{ github.workspace }}/install
+      CCACHE_DIR: ${{ github.workspace }}/ccache
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
           # Install tbb-devel also to build the examples
         run: >
-          dnf -y install ninja-build tbb-devel
+          dnf -y install ninja-build tbb-devel ccache
+
+      - name: Cache build
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ runner.os  }}-ccache
+
       - name: Configure
         run: >
           cmake -B build -S .
           -GNinja
+          -DCMAKE_CXX_COMPILER_LAUNCHER=$(find / -type f -name "ccache")
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
@@ -331,15 +341,23 @@ jobs:
     runs-on: macos-11
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
+      CCACHE_DIR: ${{ github.workspace }}/ccache
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
         run: >
-          brew install cmake eigen ninja
+          brew install cmake eigen ninja ccache
           && sudo mkdir /usr/local/acts
           && sudo chown $USER /usr/local/acts
           && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ci/macOS/deps.5e0adfa.tar.gz
           && tar -xf deps.tar.gz -C /usr/local/acts
+
+      - name: Cache build
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ runner.os  }}-ccache
+
       - name: Configure
         # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
         # dd4hep CMake configuration that gets triggered on recent CMake
@@ -347,6 +365,7 @@ jobs:
         run: >
           cmake -B build -S .
           -GNinja
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=17
@@ -382,12 +401,23 @@ jobs:
   cuda:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu1804_cuda:v21
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/ccache
     steps:
-      - uses: actions/checkout@v2
+      - name: Install ccache
+        run: apt install -y ccache
+
+      - name: Cache build
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ runner.os  }}-ccache
+
       - name: Configure
         run: >
           cmake -B build -S .
           -GNinja
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           -DCMAKE_CXX_COMPILER=/usr/bin/g++-8
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
@@ -398,12 +428,24 @@ jobs:
   exatrkx:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004_exatrkx:v21
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/ccache
     steps:
       - uses: actions/checkout@v2
+      - name: Install ccache
+        run: apt install -y ccache
+
+      - name: Cache build
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ runner.os  }}-ccache
+
       - name: Configure
         run: >
           cmake -B build -S .
           -GNinja
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
           -DACTS_BUILD_PLUGIN_EXATRKX=ON
@@ -414,16 +456,28 @@ jobs:
   sycl:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004_oneapi:v21
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/ccache
     defaults:
       run:
         shell: bash
     steps:
       - uses: actions/checkout@v2
+      - name: Install ccache
+        run: apt install -y ccache
+
+      - name: Cache build
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ runner.os  }}-ccache
+
       - name: Configure
         run: >
           source /opt/intel/oneapi/setvars.sh
           && cmake -B build -S .
           -GNinja
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2022.0.2/linux/bin-llvm/clang++
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
