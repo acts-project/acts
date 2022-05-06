@@ -11,6 +11,7 @@ env:
   CTEST_OUTPUT_ON_FAILURE: 1
   HOMEBREW_NO_INSTALL_CLEANUP: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
+  CCACHE_MAXSIZE: 250M
 
 jobs:
   lcg:
