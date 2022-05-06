@@ -1,6 +1,6 @@
 build:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v17
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v21
   tags:
     - docker
   artifacts:
@@ -30,7 +30,7 @@ test:
   stage: test
   dependencies:
     - build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v17
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v21
   tags:
     - docker-gpu-nvidia
   script:
