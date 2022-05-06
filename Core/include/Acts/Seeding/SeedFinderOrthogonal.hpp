@@ -195,6 +195,7 @@ class SeedFinderOrthogonal {
    * @param middle The (singular) middle spacepoint.
    * @param bottom The (vector of) candidate bottom spacepoints.
    * @param top The (vector of) candidate top spacepoints.
+   * @param numQualitySeeds number of high quality seeds in seed confirmation.
    * @param it The iterator to write the resulting seeds to.
    */
   template <typename output_it_t>
