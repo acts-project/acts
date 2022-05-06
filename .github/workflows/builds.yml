@@ -169,7 +169,9 @@ jobs:
         run: mkdir build && tar xf build.tar.gz -C build
 
       - name: Examples
-        run: ./CI/run_examples.sh
+        run: >
+          export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
+          && ./CI/run_examples.sh
 
       - name: Python level tests
         shell: bash
