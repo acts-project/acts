@@ -334,7 +334,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
 
     // stop if we reach the maximum number of seeds
     if (nSeeds >= maxSeeds) {
-      continue;
+      break;
     }
 
     if (m_cfg.seedConfirmation) {
