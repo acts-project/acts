@@ -344,6 +344,7 @@ void transportCovarianceToBound(
 
   bool correction = false;
   if (freeToBoundCorrection) {
+    std::cout << "start freeToBoundCorrection " << std::endl;
     BoundToFreeMatrix startBoundToFinalFreeJacobian =
         freeTransportJacobian * boundToFreeJacobian;
     FreeSymMatrix freeCovariance = startBoundToFinalFreeJacobian *

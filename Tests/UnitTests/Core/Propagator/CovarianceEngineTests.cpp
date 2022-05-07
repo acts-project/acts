@@ -134,6 +134,19 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
                  Covariance::Identity());
   BOOST_CHECK_NE(std::get<1>(boundResult), 2. * Jacobian::Identity());
   BOOST_CHECK_EQUAL(std::get<2>(boundResult), 1337.);
+
+  // Reset
+  freeToBoundCorrection.apply = true;
+
+  // Produce a bound state with free to bound correction
+  boundResult =
+      detail::boundState(tgContext, covariance, jacobian, transportJacobian,
+                         derivatives, boundToFreeJacobian, parameters, true,
+                         1337., *surface, freeToBoundCorrection)
+          .value();
+  BOOST_CHECK(std::get<0>(boundResult).covariance().has_value());
+  BOOST_CHECK_NE(*(std::get<0>(boundResult).covariance()),
+                 Covariance::Identity());
 }
 }  // namespace Test
 }  // namespace Acts
