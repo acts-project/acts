@@ -11,7 +11,7 @@ env:
   CTEST_OUTPUT_ON_FAILURE: 1
   HOMEBREW_NO_INSTALL_CLEANUP: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
-  CCACHE_MAXSIZE: 5G
+  CCACHE_MAXSIZE: 10G
 
 jobs:
   lcg:
@@ -35,7 +35,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache-${{ matrix.image }}
+          key: ${{ runner.os  }}-ccache-${{ matrix.image }}_r1
 
       - name: Configure
         # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
@@ -107,7 +107,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache-linux_ubuntu
+          key: ${{ runner.os  }}-ccache-linux_ubuntu_r1
 
       - name: Configure
         # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
@@ -270,7 +270,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache-linux-nodeps
+          key: ${{ runner.os  }}-ccache-linux-nodeps_r1
 
       - name: Configure
         run: >
@@ -351,7 +351,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache
+          key: ${{ runner.os  }}-ccache_r1
 
       - name: Configure
         # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
@@ -403,7 +403,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache-cuda
+          key: ${{ runner.os  }}-ccache-cuda_r1
 
       - name: Configure
         run: >
@@ -427,7 +427,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache-exatrkx
+          key: ${{ runner.os  }}-ccache-exatrkx_r1
 
       - name: Configure
         run: >
@@ -454,7 +454,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache-sycl
+          key: ${{ runner.os  }}-ccache-sycl_r1
 
       - name: Configure
         run: >
