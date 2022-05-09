@@ -262,8 +262,8 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: acts_analysis_residuals_and_pulls.root
-          path: acts_analysis_residuals_and_pulls.root
+          name: analysis_root_files
+          path: "*.root"
 
   linux-nodeps:
     runs-on: ubuntu-latest
