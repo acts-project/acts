@@ -16,7 +16,7 @@ env:
 jobs:
   lcg:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v21
+    container: ghcr.io/acts-project/${{ matrix.image }}:v22
     strategy:
       matrix:
         image:
@@ -30,9 +30,6 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
     steps:
       - uses: actions/checkout@v3
-
-      - name: Install ccache
-        run: yum install -y ccache
 
       - name: Cache build
         uses: actions/cache@v3
@@ -93,13 +90,13 @@ jobs:
 
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v21
+    container: ghcr.io/acts-project/ubuntu2004:v22
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
     steps:
-      - name: Install git lfs and ccache
-        run: apt-get install -y git-lfs ccache
+      - name: Install git lfs
+        run: apt-get install -y git-lfs
 
       - uses: actions/checkout@v3
         with:
@@ -165,7 +162,7 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v21
+    container: ghcr.io/acts-project/ubuntu2004:v22
     needs: [linux_ubuntu]
     env:
       ACTS_LOG_FAILURE_THRESHOLD: FATAL
@@ -202,7 +199,7 @@ jobs:
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v21
+    container: ghcr.io/acts-project/ubuntu2004:v22
     needs: [linux_ubuntu]
     env:
       ACTS_LOG_FAILURE_THRESHOLD: FATAL
@@ -398,12 +395,9 @@ jobs:
         run: ./build-downstream/bin/ShowActsVersion
   cuda:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu1804_cuda:v21
+    container: ghcr.io/acts-project/ubuntu1804_cuda:v22
     steps:
       - uses: actions/checkout@v2
-
-      - name: Install ccache
-        run: apt-get install -y ccache
 
       - name: Cache build
         uses: actions/cache@v3
@@ -425,11 +419,9 @@ jobs:
         run: cmake --build build --
   exatrkx:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v21
+    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v22
     steps:
       - uses: actions/checkout@v2
-      - name: Install ccache
-        run: apt-get install -y ccache
 
       - name: Cache build
         uses: actions/cache@v3
@@ -451,14 +443,12 @@ jobs:
         run: cmake --build build --
   sycl:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_oneapi:v21
+    container: ghcr.io/acts-project/ubuntu2004_oneapi:v22
     defaults:
       run:
         shell: bash
     steps:
       - uses: actions/checkout@v2
-      - name: Install ccache
-        run: apt-get install -y ccache
 
       - name: Cache build
         uses: actions/cache@v3
@@ -484,7 +474,7 @@ jobs:
           && cmake --build build --
   docs:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v21
+    container: ghcr.io/acts-project/ubuntu2004:v22
     env:
         DOXYGEN_WARN_AS_ERROR: YES
     steps:
