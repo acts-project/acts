@@ -66,10 +66,11 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   boundToFreeJacobian = 4. * BoundToFreeMatrix::Identity();
 
   // Repeat transport to surface
+  FreeToBoundCorrection freeToBoundCorrection(false);
   auto surface = Surface::makeShared<PlaneSurface>(position, direction);
-  detail::transportCovarianceToBound(tgContext, covariance, jacobian,
-                                     transportJacobian, derivatives,
-                                     boundToFreeJacobian, parameters, *surface);
+  detail::transportCovarianceToBound(
+      tgContext, covariance, jacobian, transportJacobian, derivatives,
+      boundToFreeJacobian, parameters, *surface, freeToBoundCorrection);
 
   BOOST_CHECK_NE(covariance, Covariance::Identity());
   BOOST_CHECK_NE(jacobian, 2. * Jacobian::Identity());
@@ -109,7 +110,7 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   auto boundResult =
       detail::boundState(tgContext, covariance, jacobian, transportJacobian,
                          derivatives, boundToFreeJacobian, parameters, false,
-                         1337., *surface)
+                         1337., *surface, freeToBoundCorrection)
           .value();
   BOOST_CHECK(std::get<0>(curvResult).covariance().has_value());
   BOOST_CHECK_EQUAL(*(std::get<0>(curvResult).covariance()), covarianceBefore);
@@ -126,13 +127,26 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   boundResult =
       detail::boundState(tgContext, covariance, jacobian, transportJacobian,
                          derivatives, boundToFreeJacobian, parameters, true,
-                         1337., *surface)
+                         1337., *surface, freeToBoundCorrection)
           .value();
   BOOST_CHECK(std::get<0>(boundResult).covariance().has_value());
   BOOST_CHECK_NE(*(std::get<0>(boundResult).covariance()),
                  Covariance::Identity());
   BOOST_CHECK_NE(std::get<1>(boundResult), 2. * Jacobian::Identity());
   BOOST_CHECK_EQUAL(std::get<2>(boundResult), 1337.);
+
+  // Reset
+  freeToBoundCorrection.apply = true;
+
+  // Produce a bound state with free to bound correction
+  boundResult =
+      detail::boundState(tgContext, covariance, jacobian, transportJacobian,
+                         derivatives, boundToFreeJacobian, parameters, true,
+                         1337., *surface, freeToBoundCorrection)
+          .value();
+  BOOST_CHECK(std::get<0>(boundResult).covariance().has_value());
+  BOOST_CHECK_NE(*(std::get<0>(boundResult).covariance()),
+                 Covariance::Identity());
 }
 }  // namespace Test
 }  // namespace Acts

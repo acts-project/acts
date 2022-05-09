@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -92,6 +93,8 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
     bool multipleScattering = true;
     /// Some more detailed steering - correct for e-loss
     bool energyLoss = true;
+    // Correction for non-linearity effect during transform from free to bound
+    Acts::FreeToBoundCorrection freeToBoundCorrection;
     /// Pick a single track for debugging (-1 process all tracks)
     int pickTrack = -1;
     /// Switch to fully-fledged backwards filtering below this pt value
