@@ -13,6 +13,7 @@ env:
   CTEST_OUTPUT_ON_FAILURE: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 10G
+  CCACHE_KEY_SUFFIX: r1
 
 # NOTE this only builds core unittests to reduce the output size. if we
 #      found a way to have Github actions not fail regularly with this job
@@ -28,7 +29,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache-linux_ubuntu_debug_r1
+          key: ${{ runner.os  }}-ccache-linux_ubuntu_debug_${{ env.CCACHE_KEY_SUFFIX }}
 
       - name: Configure
         run: >
