@@ -31,7 +31,16 @@ build:
     - git checkout $HEAD_SHA
     - cd ..
     - mkdir build
-    - cmake -B build -S src -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-w -DCMAKE_CUDA_FLAGS=-w -DACTS_BUILD_PLUGIN_EXATRKX=ON -DACTS_BUILD_EXAMPLES_EXATRKX=ON -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+    - >
+      cmake -B build -S src 
+      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      -GNinja 
+      -DCMAKE_BUILD_TYPE=Release 
+      -DCMAKE_CXX_FLAGS=-w 
+      -DCMAKE_CUDA_FLAGS=-w 
+      -DACTS_BUILD_PLUGIN_EXATRKX=ON 
+      -DACTS_BUILD_EXAMPLES_EXATRKX=ON 
+      -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
     - cmake --build build --
 
 
