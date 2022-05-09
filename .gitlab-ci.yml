@@ -1,8 +1,17 @@
 build:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v21
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v22
   tags:
     - docker
+  variables:
+    CCACHE_DIR: ${CI_PROJECT_DIR}/ccache
+    CCACHE_MAXSIZE: 1G
+
+  cache:
+    key: ccache-exatrkx-$CI_COMMIT_REF_SLUG
+    paths:
+      - ${CI_PROJECT_DIR}/ccache
+
   artifacts:
     paths:
       - build/
@@ -30,7 +39,7 @@ test:
   stage: test
   dependencies:
     - build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v21
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v22
   tags:
     - docker-gpu-nvidia
   script:
