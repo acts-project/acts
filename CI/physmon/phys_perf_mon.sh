@@ -66,5 +66,26 @@ run \
     -p $outdir/truth_tracking_plots \
 
 
+echo "::group::full_chain_odd"
+
+thirdparty/OpenDataDetector/ci/full_chain_odd.py -o $outdir
+
+build/bin/ActsAnalysisResidualsAndPulls \
+    --predicted --filtered --smoothed --silent \
+    -i $outdir/trackstates_ckf.root \
+    -o $outdir/acts_analysis_residuals_and_pulls.root
+
+histcmp \
+    --title "full_chain_odd" \
+    --label-reference=$refcommit \
+    --label-monitored=$commit \
+    -o $outdir/full_chain_odd.html \
+    $outdir/acts_analysis_residuals_and_pulls.root \
+    CI/physmon/reference/acts_analysis_residuals_and_pulls.root
+
+ec=$(($ec | $?))
+
+echo "::endgroup::"
+
 
 exit $ec
