@@ -13,6 +13,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -43,11 +44,12 @@ namespace detail {
 /// parameters
 /// @param [in, out] jacToGlobal Projection jacobian of the last bound
 /// parametrisation to free parameters
-/// @param [in] parameters Free, nominal parametrisation
+/// @param [in, out] parameters Free, nominal parametrisation
 /// @param [in] covTransport Decision whether the covariance transport should be
 /// performed
 /// @param [in] accumulatedPath Propagated distance
 /// @param [in] surface Target surface on which the state is represented
+/// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
 ///
 /// @return A bound state:
 ///   - the parameters at the surface
@@ -57,8 +59,10 @@ Result<std::tuple<BoundTrackParameters, BoundMatrix, double>> boundState(
     const GeometryContext& geoContext, BoundSymMatrix& covarianceMatrix,
     BoundMatrix& jacobian, FreeMatrix& transportJacobian,
     FreeVector& derivatives, BoundToFreeMatrix& jacToGlobal,
-    const FreeVector& parameters, bool covTransport, double accumulatedPath,
-    const Surface& surface);
+    FreeVector& parameters, bool covTransport, double accumulatedPath,
+    const Surface& surface,
+    const FreeToBoundCorrection& freeToBoundCorrection =
+        FreeToBoundCorrection(false));
 
 /// Create and return a curvilinear state at the current position
 ///
@@ -96,9 +100,10 @@ std::tuple<CurvilinearTrackParameters, BoundMatrix, double> curvilinearState(
 /// @param [in, out] freeToPathDerivatives Path length derivatives
 /// @param [in, out] boundToFreeJacobian Projection jacobian of the last bound
 /// parametrisation to free parameters
-/// @param [in] freeParameters Free, nominal parametrisation
+/// @param [in, out] freeParameters Free, nominal parametrisation
 /// @param [in] surface is the surface to which the covariance is
 ///        forwarded to
+/// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
 ///
 /// @note No check is done if the position is actually on the surface
 ///
@@ -106,7 +111,9 @@ void transportCovarianceToBound(
     const GeometryContext& geoContext, BoundSymMatrix& boundCovariance,
     BoundMatrix& fullTransportJacobian, FreeMatrix& freeTransportJacobian,
     FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
-    const FreeVector& freeParameters, const Surface& surface);
+    FreeVector& freeParameters, const Surface& surface,
+    const FreeToBoundCorrection& freeToBoundCorrection =
+        FreeToBoundCorrection(false));
 
 /// @brief Method for on-demand covariance transport of a bound/curvilinear
 /// to a new curvilinear representation.
