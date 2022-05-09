@@ -89,9 +89,18 @@ void addTrackFitting(Context& ctx) {
     ACTS_PYTHON_MEMBER(trackingGeometry);
     ACTS_PYTHON_MEMBER(multipleScattering);
     ACTS_PYTHON_MEMBER(energyLoss);
+    ACTS_PYTHON_MEMBER(freeToBoundCorrection);
     ACTS_PYTHON_MEMBER(pickTrack);
     ACTS_PYTHON_MEMBER(reverseFilteringMomThreshold);
     ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    py::class_<FreeToBoundCorrection>(mex, "FreeToBoundCorrection")
+        .def(py::init<>())
+        .def(py::init<bool>(), py::arg("apply") = false)
+        .def(py::init<bool, double, double>(), py::arg("apply") = false,
+             py::arg("alpha") = 0.1, py::arg("beta") = 2);
   }
 }
 

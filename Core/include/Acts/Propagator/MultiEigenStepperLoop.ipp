@@ -9,21 +9,21 @@
 namespace Acts {
 
 template <typename E, typename R, typename A>
-auto MultiEigenStepperLoop<E, R, A>::boundState(State& state,
-                                                const Surface& surface,
-                                                bool transportCov) const
+auto MultiEigenStepperLoop<E, R, A>::boundState(
+    State& state, const Surface& surface, bool transportCov,
+    const FreeToBoundCorrection& freeToBoundCorrection) const
     -> Result<BoundState> {
   if (numberComponents(state) == 1) {
     return SingleStepper::boundState(state.components.front().state, surface,
-                                     transportCov);
-  } else {  // Do the combination
+                                     transportCov, freeToBoundCorrection);
+  } else {  // Do the combinatio
     SmallVector<std::pair<double, BoundTrackParameters>> states;
     double accumulatedPathLength = 0.0;
     int failedBoundTransforms = 0;
 
     for (auto i = 0ul; i < numberComponents(state); ++i) {
       auto bs = SingleStepper::boundState(state.components[i].state, surface,
-                                          transportCov);
+                                          transportCov, freeToBoundCorrection);
 
       if (bs.ok()) {
         states.push_back(

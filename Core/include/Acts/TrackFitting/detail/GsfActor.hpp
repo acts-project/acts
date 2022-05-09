@@ -377,7 +377,7 @@ struct GsfActor {
       auto new_pars = old_bound.parameters();
 
       const auto delta_p = [&]() {
-        if (state.stepping.navDir == NavigationDirection::forward)
+        if (state.stepping.navDir == NavigationDirection::Forward)
           return p_prev * (gaussian.mean - 1.);
         else
           return p_prev * (1. / gaussian.mean - 1.);
@@ -394,7 +394,7 @@ struct GsfActor {
 
       if (new_cov.has_value()) {
         const auto varInvP = [&]() {
-          if (state.stepping.navDir == NavigationDirection::forward) {
+          if (state.stepping.navDir == NavigationDirection::Forward) {
             const auto f = 1. / (p_prev * gaussian.mean);
             return f * f * gaussian.var;
           } else {

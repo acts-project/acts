@@ -12,6 +12,21 @@
 
 namespace Acts {
 
+std::ostream& operator<<(std::ostream& os, NavigationDirection navDir) {
+  switch (navDir) {
+    case NavigationDirection::Forward:
+      os << "forward";
+      break;
+    case NavigationDirection::Backward:
+      os << "backward";
+      break;
+    default:
+      assert(false && "Invalid direction (shouldn't happen)");
+      std::abort();
+  }
+  return os;
+}
+
 std::ostream& operator<<(std::ostream& os, MaterialUpdateStage matUpdate) {
   switch (matUpdate) {
     case MaterialUpdateStage::PreUpdate:

@@ -14,6 +14,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -57,7 +58,7 @@ class AtlasStepper {
     template <typename Parameters>
     State(const GeometryContext& gctx,
           MagneticFieldProvider::Cache fieldCacheIn, const Parameters& pars,
-          NavigationDirection ndir = forward,
+          NavigationDirection ndir = NavigationDirection::Forward,
           double ssize = std::numeric_limits<double>::max(),
           double stolerance = s_onSurfaceTolerance)
         : navDir(ndir),
@@ -305,7 +306,7 @@ class AtlasStepper {
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
                   const SingleBoundTrackParameters<charge_t>& par,
-                  NavigationDirection ndir = forward,
+                  NavigationDirection ndir = NavigationDirection::Forward,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const {
     return State{gctx, m_bField->makeCache(mctx), par, ndir, ssize, stolerance};
@@ -321,7 +322,8 @@ class AtlasStepper {
   /// @param [in] stepSize Step size
   void resetState(
       State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
-      const Surface& surface, const NavigationDirection navDir = forward,
+      const Surface& surface,
+      const NavigationDirection navDir = NavigationDirection::Forward,
       const double stepSize = std::numeric_limits<double>::max()) const {
     // Update the stepping state
     update(state,
@@ -579,13 +581,16 @@ class AtlasStepper {
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
   /// @param [in] transportCov Flag steering covariance transport
+  /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
   ///
   /// @return A bound state:
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it
   ///   - and the path length (from start - for ordering)
-  Result<BoundState> boundState(State& state, const Surface& surface,
-                                bool transportCov = true) const {
+  Result<BoundState> boundState(
+      State& state, const Surface& surface, bool transportCov = true,
+      const FreeToBoundCorrection& freeToBoundCorrection =
+          FreeToBoundCorrection(false)) const {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
     // extract state information
@@ -603,7 +608,7 @@ class AtlasStepper {
     // The transport of the covariance
     std::optional<Covariance> covOpt = std::nullopt;
     if (state.covTransport && transportCov) {
-      transportCovarianceToBound(state, surface);
+      transportCovarianceToBound(state, surface, freeToBoundCorrection);
     }
     if (state.cov != Covariance::Zero()) {
       covOpt = state.cov;
@@ -870,7 +875,10 @@ class AtlasStepper {
   ///
   /// @param [in,out] state State of the stepper
   /// @param [in] surface is the surface to which the covariance is forwarded to
-  void transportCovarianceToBound(State& state, const Surface& surface) const {
+  void transportCovarianceToBound(
+      State& state, const Surface& surface,
+      const FreeToBoundCorrection& /*freeToBoundCorrection*/ =
+          FreeToBoundCorrection(false)) const {
     Acts::Vector3 gp(state.pVector[0], state.pVector[1], state.pVector[2]);
     Acts::Vector3 mom(state.pVector[4], state.pVector[5], state.pVector[6]);
     mom /= std::abs(state.pVector[7]);

@@ -39,8 +39,12 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Missing seeds output collection");
   }
 
-  if (m_cfg.gridConfig.rMax != m_cfg.seedFinderConfig.rMax) {
-    throw std::invalid_argument("Inconsistent config rMax");
+  if (m_cfg.gridConfig.rMax != m_cfg.seedFinderConfig.rMax and
+      m_cfg.allowSeparateRMax == false) {
+    throw std::invalid_argument(
+        "Inconsistent config rMax: using different values in gridConfig and "
+        "seedFinderConfig. If values are intentional set allowSeparateRMax to "
+        "true");
   }
 
   if (m_cfg.seedFilterConfig.deltaRMin != m_cfg.seedFinderConfig.deltaRMin) {
@@ -143,10 +147,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
 
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
       Acts::BinFinder<SimSpacePoint>(m_cfg.zBinNeighborsBottom,
-                                     m_cfg.gridConfig.numPhiNeighbors));
+                                     m_cfg.numPhiNeighbors));
   auto topBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
       Acts::BinFinder<SimSpacePoint>(m_cfg.zBinNeighborsTop,
-                                     m_cfg.gridConfig.numPhiNeighbors));
+                                     m_cfg.numPhiNeighbors));
   auto grid =
       Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(m_cfg.gridConfig);
   auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
