@@ -73,7 +73,8 @@ thirdparty/OpenDataDetector/ci/full_chain_odd.py -o $outdir
 build/bin/ActsAnalysisResidualsAndPulls \
     --predicted --filtered --smoothed --silent \
     -i $outdir/trackstates_ckf.root \
-    -o $outdir/acts_analysis_residuals_and_pulls.root
+    -o $outdir/acts_analysis_residuals_and_pulls.root \
+    && true
 
 histcmp \
     --title "full_chain_odd" \

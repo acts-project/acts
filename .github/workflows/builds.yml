@@ -235,6 +235,7 @@ jobs:
           && source /usr/local/bin/geant4.sh
           && source build/python/setup.sh
           && echo "::endgroup::"
+          && export PYTHONPATH="${PYTHONPATH}":"${GITHUB_WORKSPACE}/Examples/Scripts/Python"
           && CI/physmon/phys_perf_mon.sh physmon
 
       - uses: actions/upload-artifact@v3
