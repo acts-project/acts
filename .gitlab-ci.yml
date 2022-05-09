@@ -1,8 +1,18 @@
 build:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v21
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v22
   tags:
     - docker
+  variables:
+    CCACHE_DIR: ${CI_PROJECT_DIR}/ccache
+    CCACHE_MAXSIZE: 10G
+    CCACHE_KEY_SUFFIX: r1
+
+  cache:
+    key: ccache-exatrkx-$CI_COMMIT_REF_SLUG
+    paths:
+      - ${CI_PROJECT_DIR}/ccache_${CCACHE_KEY_SUFFIX}
+
   artifacts:
     paths:
       - build/
@@ -22,7 +32,16 @@ build:
     - git checkout $HEAD_SHA
     - cd ..
     - mkdir build
-    - cmake -B build -S src -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-w -DCMAKE_CUDA_FLAGS=-w -DACTS_BUILD_PLUGIN_EXATRKX=ON -DACTS_BUILD_EXAMPLES_EXATRKX=ON -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+    - >
+      cmake -B build -S src 
+      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      -GNinja 
+      -DCMAKE_BUILD_TYPE=Release 
+      -DCMAKE_CXX_FLAGS=-w 
+      -DCMAKE_CUDA_FLAGS=-w 
+      -DACTS_BUILD_PLUGIN_EXATRKX=ON 
+      -DACTS_BUILD_EXAMPLES_EXATRKX=ON 
+      -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
     - cmake --build build --
 
 
@@ -30,7 +49,7 @@ test:
   stage: test
   dependencies:
     - build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v21
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v22
   tags:
     - docker-gpu-nvidia
   script:
