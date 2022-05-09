@@ -22,6 +22,9 @@ void ActsExamples::Options::addFittingOptions(
   opt.add_options()("fit-energy-loss-correction",
                     value<bool>()->default_value(true),
                     "Correct for energyloss effects.");
+  opt.add_options()(
+      "fit-ftob-nonlinear-correction", value<bool>()->default_value(false),
+      "Correct for non-linear effects during free to bound transformation.");
   opt.add_options()("fit-pick-track", value<int>()->default_value(-1),
                     "Pick a single track by track number (-1 for all tracks)");
   opt.add_options()(

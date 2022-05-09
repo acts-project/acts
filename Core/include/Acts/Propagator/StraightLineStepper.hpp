@@ -13,6 +13,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
@@ -283,13 +284,16 @@ class StraightLineStepper {
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
   /// @param [in] transportCov Flag steering covariance transport
+  /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
   ///
   /// @return A bound state:
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  Result<BoundState> boundState(State& state, const Surface& surface,
-                                bool transportCov = true) const;
+  Result<BoundState> boundState(
+      State& state, const Surface& surface, bool transportCov = true,
+      const FreeToBoundCorrection& freeToBoundCorrection =
+          FreeToBoundCorrection(false)) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -343,8 +347,12 @@ class StraightLineStepper {
   /// @param [in] surface is the surface to which the covariance is
   ///        forwarded to
   /// @note no check is done if the position is actually on the surface
+  /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
   ///
-  void transportCovarianceToBound(State& state, const Surface& surface) const;
+  void transportCovarianceToBound(
+      State& state, const Surface& surface,
+      const FreeToBoundCorrection& freeToBoundCorrection =
+          FreeToBoundCorrection(false)) const;
 
   /// Perform a straight line propagation step
   ///

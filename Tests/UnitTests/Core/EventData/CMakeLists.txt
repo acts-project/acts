@@ -8,3 +8,4 @@ add_unittest(MultiComponentBoundTrackParameters MultiComponentBoundTrackParamete
 add_unittest(MultiTrajectory MultiTrajectoryTests.cpp)
 add_unittest(TransformBoundToFree TransformBoundToFreeTests.cpp)
 add_unittest(TransformFreeToBound TransformFreeToBoundTests.cpp)
+add_unittest(CorrectedTransformFreeToBound CorrectedTransformFreeToBoundTests.cpp)
