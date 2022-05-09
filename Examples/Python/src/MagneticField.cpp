@@ -14,9 +14,12 @@
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsExamples/MagneticField/FieldMapRootIo.hpp"
+#include "ActsExamples/MagneticField/FieldMapTextIo.hpp"
 
 #include <memory>
 
+#include <boost/filesystem.hpp>
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
@@ -43,14 +46,79 @@ void addMagneticField(Context& ctx) {
       .def(py::init<Acts::Vector3>());
 
   py::class_<ActsExamples::detail::InterpolatedMagneticField2,
-             Acts::InterpolatedMagneticField,
+             Acts::MagneticFieldProvider,
              std::shared_ptr<ActsExamples::detail::InterpolatedMagneticField2>>(
-      mex, "InterpolatedMagneticField2");
+      mex, "MagneticFieldMapRz")
+      .def(
+          py::init([](std::string filename, std::string tree,
+                      bool useOctantOnly, double lengthUnit, double fieldUnit) {
+            const boost::filesystem::path file = filename;
+
+            auto mapBins = [](std::array<size_t, 2> bins,
+                              std::array<size_t, 2> sizes) {
+              return (bins[1] * sizes[0] + bins[0]);
+            };
+
+            if (file.extension() == ".root") {
+              auto map = ActsExamples::makeMagneticFieldMapRzFromRoot(
+                  std::move(mapBins), file.native(), tree, lengthUnit,
+                  fieldUnit, useOctantOnly);
+              return std::make_shared<
+                  ActsExamples::detail::InterpolatedMagneticField2>(
+                  std::move(map));
+            } else if (file.extension() == ".txt") {
+              auto map = ActsExamples::makeMagneticFieldMapRzFromText(
+                  std::move(mapBins), file.native(), lengthUnit, fieldUnit,
+                  useOctantOnly);
+              return std::make_shared<
+                  ActsExamples::detail::InterpolatedMagneticField2>(
+                  std::move(map));
+            } else {
+              throw std::runtime_error(
+                  "Unsupported magnetic field map file type");
+            }
+          }),
+          py::arg("file"), py::arg("tree") = "bField",
+          py::arg("useOctantOnly") = false, py::arg("lengthUnit") = 1.0,
+          py::arg("fieldUnit") = 1.0);
 
   py::class_<ActsExamples::detail::InterpolatedMagneticField3,
-             Acts::InterpolatedMagneticField,
+             Acts::MagneticFieldProvider,
              std::shared_ptr<ActsExamples::detail::InterpolatedMagneticField3>>(
-      mex, "InterpolatedMagneticField3");
+      mex, "MagneticFieldMapXyz")
+      .def(
+          py::init([](std::string filename, std::string tree,
+                      bool useOctantOnly, double lengthUnit, double fieldUnit) {
+            const boost::filesystem::path file = filename;
+
+            auto mapBins = [](std::array<size_t, 3> bins,
+                              std::array<size_t, 3> sizes) {
+              return (bins[0] * (sizes[1] * sizes[2]) + bins[1] * sizes[2] +
+                      bins[2]);
+            };
+
+            if (file.extension() == ".root") {
+              auto map = ActsExamples::makeMagneticFieldMapXyzFromRoot(
+                  std::move(mapBins), file.native(), tree, lengthUnit,
+                  fieldUnit, useOctantOnly);
+              return std::make_shared<
+                  ActsExamples::detail::InterpolatedMagneticField3>(
+                  std::move(map));
+            } else if (file.extension() == ".txt") {
+              auto map = ActsExamples::makeMagneticFieldMapXyzFromText(
+                  std::move(mapBins), file.native(), lengthUnit, fieldUnit,
+                  useOctantOnly);
+              return std::make_shared<
+                  ActsExamples::detail::InterpolatedMagneticField3>(
+                  std::move(map));
+            } else {
+              throw std::runtime_error(
+                  "Unsupported magnetic field map file type");
+            }
+          }),
+          py::arg("file"), py::arg("tree") = "bField",
+          py::arg("useOctantOnly") = false, py::arg("lengthUnit") = 1.0,
+          py::arg("fieldUnit") = 1.0);
 
   py::class_<Acts::NullBField, Acts::MagneticFieldProvider,
              std::shared_ptr<Acts::NullBField>>(m, "NullBField")
