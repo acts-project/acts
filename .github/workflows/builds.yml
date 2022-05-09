@@ -55,7 +55,7 @@ jobs:
           -DACTS_FORCE_ASSERTIONS=ON
 
       - name: Build
-        run: ${SETUP} && cmake --build build --
+        run: ${SETUP} && cmake --build build -- -v
 
       - name: Unit tests
         run: ${SETUP} && cmake --build build -- test
