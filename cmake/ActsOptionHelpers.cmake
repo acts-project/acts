@@ -16,7 +16,6 @@ macro(set_option_if option)
     # create a regular (directory-scope) variable that should take precedence
     # over a cache entry of the same name. that means that automatically
     # activated options are not stored in the cache.
-    message(STATUS "Setting ${option} to ON")
-    set(${option} ON CACHE BOOL "" FORCE)
+    set(${option} ON)
   endif()
 endmacro()
