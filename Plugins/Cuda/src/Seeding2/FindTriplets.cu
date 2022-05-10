@@ -17,6 +17,7 @@
 
 // Acts include(s).
 #include "Acts/Seeding/SeedFilterConfig.hpp"
+#include "Acts/Seeding/SeedfinderConfig.hpp"
 
 // CUDA include(s).
 #include <cuda_runtime.h>
