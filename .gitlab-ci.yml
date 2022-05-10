@@ -1,8 +1,55 @@
+clang_tidy:
+  stage: build
+  image: ghcr.io/acts-project/ubuntu2004:v21
+  artifacts:
+    paths:
+      - src/clang-tidy/
+    when: always
+    expire_in: 2 weeks
+  script:
+    - git clone $CLONE_URL src 
+    - cd src
+    - git checkout $HEAD_SHA
+    - >
+        apt-get update
+        && apt-get install -y clang-10 clang-tidy-10 g++-8 libstdc++-8-dev
+        && ln -s /usr/bin/clang++-10 /usr/bin/clang++
+        && ln -s /usr/bin/clang-10 /usr/bin/clang
+        && ln -s /usr/bin/clang-tidy-10 /usr/bin/clang-tidy
+        && mkdir -p /opt/lib/gcc/x86_64-linux-gnu
+        && ln -s /usr/lib/gcc/x86_64-linux-gnu/8/ /opt/lib/gcc/x86_64-linux-gnu/ 
+        && clang++ --gcc-toolchain=/opt -v
+    - >
+        cmake -B build -S .
+        -GNinja
+        -DCMAKE_CXX_COMPILER=clang++
+        -DCMAKE_C_COMPILER=clang
+        -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_CXX_FLAGS="-Werror --gcc-toolchain=/opt"
+        -DACTS_BUILD_EVERYTHING=on
+        -DACTS_RUN_CLANG_TIDY=on
+
+    - mkdir clang-tidy
+    - CI/clang_tidy/run_clang_tidy.sh build > clang-tidy/clang-tidy.log
+    - pip install -r CI/clang_tidy/requirements.txt
+    - CI/clang_tidy/parse_clang_tidy.py clang-tidy/clang-tidy.log clang-tidy/clang-tidy.json
+    - CI/clang_tidy/check_clang_tidy.py --report clang-tidy/clang-tidy.json --config CI/clang_tidy/limits.yml
+
 build:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v17
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v22
   tags:
     - docker
+  variables:
+    CCACHE_DIR: ${CI_PROJECT_DIR}/ccache
+    CCACHE_MAXSIZE: 10G
+    CCACHE_KEY_SUFFIX: r1
+
+  cache:
+    key: ccache-exatrkx-$CI_COMMIT_REF_SLUG
+    paths:
+      - ${CI_PROJECT_DIR}/ccache_${CCACHE_KEY_SUFFIX}
+
   artifacts:
     paths:
       - build/
@@ -22,7 +69,16 @@ build:
     - git checkout $HEAD_SHA
     - cd ..
     - mkdir build
-    - cmake -B build -S src -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-w -DCMAKE_CUDA_FLAGS=-w -DACTS_BUILD_PLUGIN_EXATRKX=ON -DACTS_BUILD_EXAMPLES_EXATRKX=ON -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+    - >
+      cmake -B build -S src 
+      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      -GNinja 
+      -DCMAKE_BUILD_TYPE=Release 
+      -DCMAKE_CXX_FLAGS=-w 
+      -DCMAKE_CUDA_FLAGS=-w 
+      -DACTS_BUILD_PLUGIN_EXATRKX=ON 
+      -DACTS_BUILD_EXAMPLES_EXATRKX=ON 
+      -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
     - cmake --build build --
 
 
@@ -30,7 +86,7 @@ test:
   stage: test
   dependencies:
     - build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v17
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v22
   tags:
     - docker-gpu-nvidia
   script:
@@ -41,3 +97,4 @@ test:
     - source build/python/setup.sh
     - nvidia-smi
     - python3 src/Examples/Scripts/Python/exatrkx.py
+

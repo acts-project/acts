@@ -284,24 +284,19 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 
       float deltaCotTheta = cotThetaB - lt.cotTheta;
       float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
-      float error;
-      float dCotThetaMinusError2 = 0;
-      // if the error is larger than the difference in theta, no need to
-      // compare with scattering
-      if (deltaCotTheta2 - error2 > 0) {
-        deltaCotTheta = std::abs(deltaCotTheta);
-        // if deltaTheta larger than the scattering for the lower pT cut, skip
-        error = std::sqrt(error2);
-        dCotThetaMinusError2 =
-            deltaCotTheta2 + error2 - 2 * deltaCotTheta * error;
-        // avoid taking root of scatteringInRegion
-        // if left side of ">" is positive, both sides of unequality can be
-        // squared
-        // (scattering is always positive)
 
-        if (dCotThetaMinusError2 > scatteringInRegion2) {
-          continue;
-        }
+      // Apply a cut on the compatibility between the r-z slope of the two
+      // seed segments. This is done by comparing the squared difference
+      // between slopes, and comparing to the squared uncertainty in this
+      // difference - we keep a seed if the difference is compatible within
+      // the assumed uncertainties. The uncertainties get contribution from
+      // the  space-point-related squared error (error2) and a scattering term
+      // calculated assuming the minimum pt we expect to reconstruct
+      // (scatteringInRegion2). This assumes gaussian error propagation which
+      // allows just adding the two errors if they are uncorrelated (which is
+      // fair for scattering and measurement uncertainties)
+      if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
+        continue;
       }
 
       float dU = lt.U - Ub;
@@ -331,13 +326,12 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
       // from rad to deltaCotTheta
       // if deltaTheta larger than allowed scattering for calculated pT, skip
-      if (deltaCotTheta2 - error2 > 0) {
-        if (dCotThetaMinusError2 > pT2scatter * iSinTheta2 *
-                                       m_config.sigmaScattering *
-                                       m_config.sigmaScattering) {
-          continue;
-        }
+      if (deltaCotTheta2 >
+          (error2 + (pT2scatter * iSinTheta2 * m_config.sigmaScattering *
+                     m_config.sigmaScattering))) {
+        continue;
       }
+
       // A and B allow calculation of impact params in U/V plane with linear
       // function
       // (in contrast to having to solve a quadratic function in x/y plane)

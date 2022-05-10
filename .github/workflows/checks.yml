@@ -10,12 +10,14 @@ on:
 jobs:
   format:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/format10:v15
+    container: ghcr.io/acts-project/format10:v22
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Check
-        run: CI/check_format .
-      - uses: actions/upload-artifact@v1
+        run: >
+          git config --global safe.directory "$GITHUB_WORKSPACE"
+          && CI/check_format .
+      - uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: changed
@@ -23,7 +25,7 @@ jobs:
   format-py:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-python@v2
       - name: Install black
         run: pip install black==22.3.0
@@ -34,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     container: python:alpine3.6
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Check
         run: >
           apk add --no-cache git
@@ -43,14 +45,14 @@ jobs:
     runs-on: ubuntu-latest
     container: python:alpine3.6
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Check
         run: >
           CI/check_include_guards.py . --fail-global --exclude "*thirdparty/*"
   boost_test_macro:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Check
         run: >
           CI/check_boost_test_macro.sh
@@ -58,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     container: python:alpine3.6
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Check
         run: >
           CI/check_smearing_config.py .
