@@ -19,7 +19,7 @@
 //  Author     : F.Gaede
 //
 //====================================================================
-#include "Acts/Plugins/DD4hep/ActsExtension.hpp"
+#include "ActsDD4hep/ActsExtension.hpp"
 
 #include "DD4hep/DetFactoryHelper.h"
 
