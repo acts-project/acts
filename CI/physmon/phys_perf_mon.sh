@@ -14,6 +14,15 @@ echo "::group::Generate validation dataset"
 CI/physmon/physmon.py $outdir 2>&1 > $outdir/run.log
 echo "::endgroup::"
 
+echo "::group::full_chain_odd"
+thirdparty/OpenDataDetector/ci/full_chain_odd.py -o $outdir
+
+build/bin/ActsAnalysisResidualsAndPulls \
+    --predicted --filtered --smoothed --silent \
+    -i $outdir/trackstates_ckf.root \
+    -o $outdir/acts_analysis_residuals_and_pulls.root \
+echo "::endgroup::"
+
 set +e
 
 ec=0
@@ -66,25 +75,10 @@ run \
     -p $outdir/truth_tracking_plots \
 
 
-echo "::group::full_chain_odd"
-
-thirdparty/OpenDataDetector/ci/full_chain_odd.py -o $outdir
-
-build/bin/ActsAnalysisResidualsAndPulls \
-    --predicted --filtered --smoothed --silent \
-    -i $outdir/trackstates_ckf.root \
-    -o $outdir/acts_analysis_residuals_and_pulls.root \
-
-histcmp \
-    --title "full_chain_odd" \
-    --label-reference=$refcommit \
-    --label-monitored=$commit \
+run \
     $outdir/acts_analysis_residuals_and_pulls.root \
-    CI/physmon/reference/acts_analysis_residuals_and_pulls.root \
-
-ec=$(($ec | $?))
-
-echo "::endgroup::"
+    $refdir/acts_analysis_residuals_and_pulls.root \
+    --title "full_chain_odd" \
 
 
 exit $ec
