@@ -59,39 +59,6 @@ jobs:
         with:
           file: ./build/coverage/cov.xml
 
-  clang-tidy:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v15
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install clang-tidy
-        run: >
-          apt-get update
-          && apt-get install -y clang-10 clang-tidy-10 g++-8 libstdc++-8-dev
-          && ln -s /usr/bin/clang++-10 /usr/bin/clang++
-          && ln -s /usr/bin/clang-10 /usr/bin/clang
-          && ln -s /usr/bin/clang-tidy-10 /usr/bin/clang-tidy
-          && mkdir -p /opt/lib/gcc/x86_64-linux-gnu
-          && ln -s /usr/lib/gcc/x86_64-linux-gnu/8/ /opt/lib/gcc/x86_64-linux-gnu/ 
-          && clang++ --gcc-toolchain=/opt -v
-      - name: Configure
-        run: >
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER=clang++
-          -DCMAKE_C_COMPILER=clang
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS="-Werror --gcc-toolchain=/opt"
-          -DACTS_BUILD_EVERYTHING=on
-          -DACTS_RUN_CLANG_TIDY=on
-          && cmake -B build -S .
-          -DACTS_BUILD_UNITTESTS=OFF
-          -DACTS_BUILD_INTEGRATIONTESTS=OFF
-          -DACTS_BUILD_BENCHMARKS=OFF
-      - name: Build
-        run: cmake --build build --
-
-
   build_performance:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004:v22
