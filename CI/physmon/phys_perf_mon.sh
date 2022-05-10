@@ -73,14 +73,14 @@ thirdparty/OpenDataDetector/ci/full_chain_odd.py -o $outdir
 build/bin/ActsAnalysisResidualsAndPulls \
     --predicted --filtered --smoothed --silent \
     -i $outdir/trackstates_ckf.root \
-    -o $outdir/acts_analysis_residuals_and_pulls.root
+    -o $outdir/acts_analysis_residuals_and_pulls.root \
 
 histcmp \
     --title "full_chain_odd" \
     --label-reference=$refcommit \
     --label-monitored=$commit \
     $outdir/acts_analysis_residuals_and_pulls.root \
-    CI/physmon/reference/acts_analysis_residuals_and_pulls.root
+    CI/physmon/reference/acts_analysis_residuals_and_pulls.root \
 
 ec=$(($ec | $?))
 
