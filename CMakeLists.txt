@@ -32,6 +32,7 @@ option(ACTS_USE_SYSTEM_AUTODIFF "Use autodiff provided by the system instead of 
 option(ACTS_BUILD_PLUGIN_CUDA "Build CUDA plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EXATRKX "Build the Exa.TrkX plugin" OFF)
+option(ACTS_USE_SYSTEM_ACTSDD4HEP "Use the ActsDD4hep glue library provided by the system instead of building it" OFF)
 option(ACTS_BUILD_PLUGIN_IDENTIFICATION "Build Identification plugin" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
 option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" OFF)
@@ -67,6 +68,7 @@ option(ACTS_SETUP_BOOST "Explicitly set up Boost for the project" ON)
 option(ACTS_USE_SYSTEM_BOOST "Use a system-provided boost" ON)
 option(ACTS_SETUP_EIGEN3 "Explicitly set up Eigen3 for the project" ON)
 option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" ON)
+option(ACTS_BUILD_ODD "Build the OpenDataDetector" OFF)
 
 # handle option inter-dependencies and the everything flag
 # NOTE: ordering is important here. dependencies must come before dependees
@@ -151,6 +153,7 @@ endif()
 set(_acts_autodiff_version 0.6)
 set(_acts_boost_version 1.71.0)
 set(_acts_dd4hep_version 1.11)
+set(_acts_actsdd4hep_version 1.0.0)
 set(_acts_doxygen_version 1.8.15)
 set(_acts_eigen3_version 3.3.7)
 set(_acts_hepmc3_version 3.2.1)
@@ -239,6 +242,12 @@ if(ACTS_BUILD_PLUGIN_CUDA)
 endif()
 if(ACTS_BUILD_PLUGIN_DD4HEP)
   find_package(DD4hep ${_acts_dd4hep_version} REQUIRED CONFIG COMPONENTS DDCore DDDetectors)
+  if(ACTS_USE_SYSTEM_ACTSDD4HEP)
+    find_package(ActsDD4hep ${_acts_actsdd4hep_version} CONFIG REQUIRED)
+  else()
+    add_subdirectory(thirdparty/actsdd4hep)
+  endif()
+
 endif()
 if(ACTS_BUILD_PLUGIN_JSON)
   if(ACTS_USE_SYSTEM_NLOHMANN_JSON)
@@ -313,6 +322,16 @@ add_component(Core Core)
 add_subdirectory(Plugins)
 add_component_if(Fatras Fatras ACTS_BUILD_FATRAS)
 add_component_if(Alignment Alignment ACTS_BUILD_ALIGNMENT)
+
+if(ACTS_BUILD_ODD)
+  if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/thirdparty/OpenDataDetector/CMakeLists.txt")
+    add_subdirectory_if(thirdparty/OpenDataDetector ACTS_BUILD_ODD)
+  else()
+    message(FATAL_ERROR "ODD build was requested, but the ODD directory seems not to be present. "
+                        "Did you init and update the submodule?")
+  endif()
+endif()
+
 
 # examples
 add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)

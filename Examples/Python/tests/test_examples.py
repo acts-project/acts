@@ -1001,6 +1001,8 @@ def test_vertex_fitting_reading(
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_full_chain_odd_example(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
+    getOpenDataDetector()  # just to make sure it can build
+
     script = (
         Path(__file__).parent.parent.parent.parent
         / "Examples"

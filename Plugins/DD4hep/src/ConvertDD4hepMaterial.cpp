@@ -99,31 +99,6 @@ void Acts::addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
   }
 }
 
-void Acts::xmlToProtoSurfaceMaterial(const xml_comp_t& x_material,
-                                     ActsExtension& actsExtension,
-                                     const std::string& baseTag) {
-  // Add the layer material flag
-  actsExtension.addType(baseTag);
-  // prepare everything here
-  std::string mSurface = x_material.attr<std::string>("surface");
-  std::string mBinning = x_material.attr<std::string>("binning");
-  boost::char_separator<char> sep(",");
-  boost::tokenizer binTokens(mBinning, sep);
-  const auto n = std::distance(binTokens.begin(), binTokens.end());
-  if (n == 2) {
-    // Fill the bins
-    auto bin = binTokens.begin();
-    std::string bin0 = *(bin);
-    std::string bin1 = *(++bin);
-    size_t nBins0 = x_material.attr<int>("bins0");
-    size_t nBins1 = x_material.attr<int>("bins1");
-    // Add the material tags
-    std::string btmSurface = baseTag + std::string("_") + mSurface;
-    actsExtension.addValue(nBins0, bin0, btmSurface);
-    actsExtension.addValue(nBins1, bin1, btmSurface);
-  }
-}
-
 void Acts::addDiscLayerProtoMaterial(dd4hep::DetElement detElement,
                                      Layer& discLayer,
                                      Logging::Level loggingLevel) {
