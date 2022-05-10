@@ -365,7 +365,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 template <typename external_spacepoint_t>
 template <typename output_it_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
-    const tree_t &tree, output_it_t out_it,
+    const tree_t &tree, output_it_t &out_it,
     const typename tree_t::pair_t &middle_p) const {
   using range_t = typename tree_t::range_t;
   internal_sp_t &middle = *middle_p.second;
@@ -566,7 +566,7 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::createTree(
 template <typename external_spacepoint_t>
 template <typename input_container_t, typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
-    const input_container_t &spacePoints, output_container_t out_it) const {
+    const input_container_t &spacePoints, output_container_t &out_it) const {
   /*
    * The template parameters we accept are a little too generic, so we want to
    * run some basic checks to make sure the containers have the correct value

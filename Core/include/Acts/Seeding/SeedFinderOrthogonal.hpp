@@ -100,7 +100,7 @@ class SeedFinderOrthogonal {
    */
   template <typename input_container_t, typename output_container_t>
   void createSeeds(const input_container_t &spacePoints,
-                   output_container_t out_it) const;
+                   output_container_t &out_it) const;
 
   /**
    * @brief Perform seed finding, returning a new container of seeds.
@@ -215,7 +215,7 @@ class SeedFinderOrthogonal {
    * @param middle_p The middle spacepoint to find seeds for.
    */
   template <typename output_it_t>
-  void processFromMiddleSP(const tree_t &tree, output_it_t out_it,
+  void processFromMiddleSP(const tree_t &tree, output_it_t &out_it,
                            const typename tree_t::pair_t &middle_p) const;
 
   /**
