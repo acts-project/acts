@@ -19,7 +19,6 @@
 #include <vector>
 
 namespace Acts {
-
 /// Filter seeds at various stages with the currently
 /// available information.
 template <typename external_spacepoint_t>

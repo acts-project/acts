@@ -25,18 +25,18 @@ struct LinCircle {
   float z;
   float r;
 };
-
-/// @brief contains parameters for  seed confirmation
-struct SeedConfirmationRange {
-	float zMinSeedConf =
-	std::numeric_limits<float>::min() * Acts::UnitConstants::mm;
-	float zMaxSeedConf =
-	std::numeric_limits<float>::max() * Acts::UnitConstants::mm;
-	float rMaxSeedConf =
-	std::numeric_limits<float>::max() * Acts::UnitConstants::mm;
-	size_t nTopForLargeR = 0;
-	size_t nTopForSmallR = 0;
-};
+//
+///// @brief contains parameters for  seed confirmation
+//struct SeedConfirmationRange {
+//	float zMinSeedConf =
+//	std::numeric_limits<float>::min() * Acts::UnitConstants::mm;
+//	float zMaxSeedConf =
+//	std::numeric_limits<float>::max() * Acts::UnitConstants::mm;
+//	float rMaxSeedConf =
+//	std::numeric_limits<float>::max() * Acts::UnitConstants::mm;
+//	size_t nTopForLargeR = 0;
+//	size_t nTopForSmallR = 0;
+//};
 
 /// @brief Transform two spacepoints to a u-v space circle.
 ///

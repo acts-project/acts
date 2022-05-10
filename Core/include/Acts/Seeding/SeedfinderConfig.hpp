@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Seeding/SeedFinderUtils.hpp"
+#include "Acts/Seeding/SeedConfirmationRange.hpp"
 
 #include <memory>
 
