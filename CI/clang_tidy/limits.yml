@@ -1,5 +1,5 @@
-limits:
-  "readability-inconsistent-declaration-parameter-name": 0
+limits: {}
+  # "readability-inconsistent-declaration-parameter-name": 0
   # "readability-named-parameter": 0
   # "readability-container-size-empty": 0
   # "modernize-use-using": 0
