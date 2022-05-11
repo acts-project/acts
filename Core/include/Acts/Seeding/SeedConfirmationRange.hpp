@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <limits>
+
 namespace Acts {
 /// @brief contains parameters for  seed confirmation
 struct SeedConfirmationRange {
