@@ -58,9 +58,11 @@ jobs:
         uses: codecov/codecov-action@v1
         with:
           file: ./build/coverage/cov.xml
+
   build_performance:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004:v22
+    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
