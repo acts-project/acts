@@ -27,7 +27,7 @@ struct LinCircle {
 };
 //
 ///// @brief contains parameters for  seed confirmation
-//struct SeedConfirmationRange {
+// struct SeedConfirmationRange {
 //	float zMinSeedConf =
 //	std::numeric_limits<float>::min() * Acts::UnitConstants::mm;
 //	float zMaxSeedConf =

@@ -13,13 +13,13 @@
 namespace Acts {
 /// @brief contains parameters for  seed confirmation
 struct SeedConfirmationRange {
-	float zMinSeedConf =
-	std::numeric_limits<float>::min() * Acts::UnitConstants::mm;
-	float zMaxSeedConf =
-	std::numeric_limits<float>::max() * Acts::UnitConstants::mm;
-	float rMaxSeedConf =
-	std::numeric_limits<float>::max() * Acts::UnitConstants::mm;
-	size_t nTopForLargeR = 0;
-	size_t nTopForSmallR = 0;
+  float zMinSeedConf =
+      std::numeric_limits<float>::min() * Acts::UnitConstants::mm;
+  float zMaxSeedConf =
+      std::numeric_limits<float>::max() * Acts::UnitConstants::mm;
+  float rMaxSeedConf =
+      std::numeric_limits<float>::max() * Acts::UnitConstants::mm;
+  size_t nTopForLargeR = 0;
+  size_t nTopForSmallR = 0;
 };
 }  // namespace Acts
