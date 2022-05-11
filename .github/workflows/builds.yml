@@ -124,6 +124,7 @@ jobs:
           -DCMAKE_CXX_STANDARD=17
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_BUILD_EVERYTHING=ON
+          -DACTS_BUILD_ODD=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
           -DACTS_FORCE_ASSERTIONS=ON
 
@@ -186,7 +187,9 @@ jobs:
         run: mkdir build && tar xf build.tar.gz -C build
 
       - name: Examples
-        run: ./CI/run_examples.sh
+        run: >
+          export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
+          && ./CI/run_examples.sh
 
       - name: Python level tests
         shell: bash
@@ -196,6 +199,7 @@ jobs:
           && source /usr/local/bin/thisdd4hep_only.sh
           && source /usr/local/bin/geant4.sh
           && source build/python/setup.sh
+          && export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
           && pip3 install -r Examples/Python/tests/requirements.txt
           && pytest -rFs
 
@@ -233,6 +237,7 @@ jobs:
           && source /usr/local/bin/thisdd4hep_only.sh
           && source /usr/local/bin/geant4.sh
           && source build/python/setup.sh
+          && export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
           && echo "::endgroup::"
           && CI/physmon/phys_perf_mon.sh physmon
 
@@ -341,7 +346,11 @@ jobs:
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+          lfs: true
+
       - name: Install dependencies
         run: >
           brew install cmake eigen ninja ccache
@@ -371,6 +380,7 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DCMAKE_PREFIX_PATH=/usr/local/acts
           -DACTS_BUILD_EVERYTHING=ON
+          -DACTS_BUILD_ODD=ON
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
           -DACTS_FORCE_ASSERTIONS=ON
       - name: Build
