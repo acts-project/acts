@@ -117,5 +117,7 @@ for truthSmeared, truthEstimated, label in [
                     str(tp / "trackstates_ckf.root"),
                     "-o",
                     str(outdir / "acts_analysis_residuals_and_pulls.root"),
+                    "--save",
+                    "",
                 ]
             )

@@ -114,9 +114,6 @@ set_option_if(ACTS_BUILD_PLUGIN_LEGACY ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_PLUGIN_AUTODIFF ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_EXAMPLES_EXATRKX ACTS_BUILD_PLUGIN_EXATRKX)
 
-# Done with conditional option setting, unset it now
-unset(ACTS_BUILD_EVERYTHING CACHE)
-
 # feature tests
 include(CheckCXXSourceCompiles)
 
