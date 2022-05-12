@@ -120,7 +120,8 @@ void addMagneticField(Context& ctx) {
              std::shared_ptr<ActsExamples::detail::InterpolatedMagneticField3>>(
       mex, "InterpolatedMagneticField3");
 
-  py::class_<ActsExamples::MagneticFieldMapRz, Acts::MagneticFieldProvider,
+  py::class_<ActsExamples::MagneticFieldMapRz, Acts::InterpolatedMagneticField,
+             Acts::MagneticFieldProvider,
              std::shared_ptr<ActsExamples::MagneticFieldMapRz>>(
       mex, "MagneticFieldMapRz")
       .def(
@@ -133,7 +134,8 @@ void addMagneticField(Context& ctx) {
           py::arg("useOctantOnly") = false, py::arg("lengthUnit") = 1.0,
           py::arg("fieldUnit") = 1.0);
 
-  py::class_<ActsExamples::MagneticFieldMapXyz, Acts::MagneticFieldProvider,
+  py::class_<ActsExamples::MagneticFieldMapXyz, Acts::InterpolatedMagneticField,
+             Acts::MagneticFieldProvider,
              std::shared_ptr<ActsExamples::MagneticFieldMapXyz>>(
       mex, "MagneticFieldMapXyz")
       .def(
