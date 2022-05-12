@@ -382,12 +382,8 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           state.curvatures.push_back(B / std::sqrt(S2));
           state.impactParameters.push_back(Im);
 
-          float cotThetaAvg = std::sqrt(cotThetaAvg2);
-          if (state.compatTopSP[t]->z() < 0) {
-            cotThetaAvg = -cotThetaAvg;
-          }
-
           // evaluate eta and pT of the seed
+          float cotThetaAvg = std::sqrt(cotThetaAvg2);
           float theta = std::atan(1. / cotThetaAvg);
           float eta = -std::log(std::tan(0.5 * theta));
           state.etaVec.push_back(eta);
