@@ -74,27 +74,18 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     float invHelixDiameter = invHelixDiameterVec[i];
     float lowerLimitCurv = invHelixDiameter - m_cfg.deltaInvHelixDiameter;
     float upperLimitCurv = invHelixDiameter + m_cfg.deltaInvHelixDiameter;
-    float currentTop_r;
+    // use deltaR instead of top radius
+    float currentTop_r = m_cfg.useDeltaRorTopRadius ? topSpVec[i]->deltaR() : topSpVec[i]->radius();
     float impact = impactParametersVec[i];
-
-    if (m_cfg.useDeltaRorTopRadius) {
-      // use deltaR instead of top radius
-      currentTop_r = topSpVec[i]->deltaR();
-    } else {
-      currentTop_r = topSpVec[i]->radius();
-    }
 
     float weight = -(impact * m_cfg.impactWeightFactor);
     for (auto& j : idx) {
       if (i == j) {
         continue;
       }
-      float otherTop_r;
-      if (m_cfg.useDeltaRorTopRadius) {
-        otherTop_r = topSpVec[i]->deltaR();
-      } else {
-        otherTop_r = topSpVec[i]->radius();
-      }
+
+      float otherTop_r = m_cfg.useDeltaRorTopRadius ? topSpVec[j]->deltaR() : topSpVec[j]->radius();
+
       // compared top SP should have at least deltaRMin distance
       float deltaR = currentTop_r - otherTop_r;
       if (std::abs(deltaR) < m_cfg.deltaRMin) {
@@ -330,12 +321,12 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
   // weight seeds
   unsigned int nSeeds = 0;
   for (; it < itBegin + seedsPerSpM.size(); ++it) {
-    float bestSeedQuality = (*it).first;
-
     // stop if we reach the maximum number of seeds
     if (nSeeds >= maxSeeds) {
       break;
     }
+
+    float bestSeedQuality = (*it).first;
 
     if (m_cfg.seedConfirmation) {
       // continue if higher-quality seeds were found
@@ -347,12 +338,12 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
           bestSeedQuality < (*it).second->sp[2]->quality()) {
         continue;
       }
-
-      // set quality of seed components
-      (*it).second->sp[0]->setQuality(bestSeedQuality);
-      (*it).second->sp[1]->setQuality(bestSeedQuality);
-      (*it).second->sp[2]->setQuality(bestSeedQuality);
     }
+
+    // set quality of seed components
+    (*it).second->sp[0]->setQuality(bestSeedQuality);
+    (*it).second->sp[1]->setQuality(bestSeedQuality);
+    (*it).second->sp[2]->setQuality(bestSeedQuality);
 
     outIt = Seed<external_spacepoint_t>{
         (*it).second->sp[0]->sp(), (*it).second->sp[1]->sp(),
