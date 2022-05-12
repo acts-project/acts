@@ -76,6 +76,7 @@ build:
       -DCMAKE_BUILD_TYPE=Release 
       -DCMAKE_CXX_FLAGS=-w 
       -DCMAKE_CUDA_FLAGS=-w 
+      -DCMAKE_CUDA_ARCHITECTURES=86
       -DACTS_BUILD_PLUGIN_EXATRKX=ON 
       -DACTS_BUILD_EXAMPLES_EXATRKX=ON 
       -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
@@ -88,7 +89,7 @@ test:
     - build
   image: ghcr.io/acts-project/ubuntu2004_exatrkx:v22
   tags:
-    - docker-gpu-nvidia
+    - docker-gpu-a4000
   script:
     - apt-get update -y
     - apt-get install -y python3 libxxhash0
