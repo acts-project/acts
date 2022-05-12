@@ -75,7 +75,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     float lowerLimitCurv = invHelixDiameter - m_cfg.deltaInvHelixDiameter;
     float upperLimitCurv = invHelixDiameter + m_cfg.deltaInvHelixDiameter;
     // use deltaR instead of top radius
-    float currentTop_r = m_cfg.useDeltaRorTopRadius ? topSpVec[i]->deltaR() : topSpVec[i]->radius();
+    float currentTop_r = m_cfg.useDeltaRorTopRadius ? topSpVec[i]->deltaR()
+                                                    : topSpVec[i]->radius();
     float impact = impactParametersVec[i];
 
     float weight = -(impact * m_cfg.impactWeightFactor);
@@ -84,7 +85,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         continue;
       }
 
-      float otherTop_r = m_cfg.useDeltaRorTopRadius ? topSpVec[j]->deltaR() : topSpVec[j]->radius();
+      float otherTop_r = m_cfg.useDeltaRorTopRadius ? topSpVec[j]->deltaR()
+                                                    : topSpVec[j]->radius();
 
       // compared top SP should have at least deltaRMin distance
       float deltaR = currentTop_r - otherTop_r;

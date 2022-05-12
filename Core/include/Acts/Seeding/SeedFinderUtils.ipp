@@ -124,8 +124,6 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
 
     l.x = sp->x();
     l.y = sp->y();
-    l.z = sp->z();
-    l.r = sp->radius();
 
     linCircleVec.push_back(l);
     sp->setCotTheta(cot_theta);

@@ -22,8 +22,6 @@ struct LinCircle {
   float V;
   float x;
   float y;
-  float z;
-  float r;
 };
 //
 ///// @brief contains parameters for  seed confirmation
