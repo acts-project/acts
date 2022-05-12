@@ -217,7 +217,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       // keep the normal behavior without seed quality confirmation
       outIt.push_back(std::make_pair(
           weight, std::make_unique<const InternalSeed<external_spacepoint_t>>(
-                      bottomSP, middleSP, *topSpVec[i], zOrigin, true)));
+                      bottomSP, middleSP, *topSpVec[i], zOrigin, false)));
     }
   }
   // if no high quality seed was found for a certain middle+bottom SP pair,
