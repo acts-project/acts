@@ -25,8 +25,73 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-namespace Acts::Python {
+namespace ActsExamples {
+// MagneticFieldMapRz/Xyz are subclasses of InterpolatedMagneticField2/3 used
+// here simply to keep them separate for the Python bindings
+class MagneticFieldMapRz final
+    : public ActsExamples::detail::InterpolatedMagneticField2 {
+  static ActsExamples::detail::InterpolatedMagneticField2 readFile(
+      std::string filename, std::string tree, bool useOctantOnly,
+      double lengthUnit, double fieldUnit) {
+    const boost::filesystem::path file = filename;
 
+    auto mapBins = [](std::array<size_t, 2> bins, std::array<size_t, 2> sizes) {
+      return (bins[1] * sizes[0] + bins[0]);
+    };
+
+    if (file.extension() == ".root") {
+      return ActsExamples::makeMagneticFieldMapRzFromRoot(
+          std::move(mapBins), file.native(), tree, lengthUnit, fieldUnit,
+          useOctantOnly);
+    } else if (file.extension() == ".txt") {
+      return ActsExamples::makeMagneticFieldMapRzFromText(
+          std::move(mapBins), file.native(), lengthUnit, fieldUnit,
+          useOctantOnly);
+    } else {
+      throw std::runtime_error("Unsupported magnetic field map file type");
+    }
+  }
+
+ public:
+  MagneticFieldMapRz(std::string filename, std::string tree, bool useOctantOnly,
+                     double lengthUnit, double fieldUnit)
+      : ActsExamples::detail::InterpolatedMagneticField2(std::move(
+            readFile(filename, tree, useOctantOnly, lengthUnit, fieldUnit))) {}
+};
+
+class MagneticFieldMapXyz final
+    : public ActsExamples::detail::InterpolatedMagneticField3 {
+  static ActsExamples::detail::InterpolatedMagneticField3 readFile(
+      std::string filename, std::string tree, bool useOctantOnly,
+      double lengthUnit, double fieldUnit) {
+    const boost::filesystem::path file = filename;
+
+    auto mapBins = [](std::array<size_t, 3> bins, std::array<size_t, 3> sizes) {
+      return (bins[0] * (sizes[1] * sizes[2]) + bins[1] * sizes[2] + bins[2]);
+    };
+
+    if (file.extension() == ".root") {
+      return ActsExamples::makeMagneticFieldMapXyzFromRoot(
+          std::move(mapBins), file.native(), tree, lengthUnit, fieldUnit,
+          useOctantOnly);
+    } else if (file.extension() == ".txt") {
+      return ActsExamples::makeMagneticFieldMapXyzFromText(
+          std::move(mapBins), file.native(), lengthUnit, fieldUnit,
+          useOctantOnly);
+    } else {
+      throw std::runtime_error("Unsupported magnetic field map file type");
+    }
+  }
+
+ public:
+  MagneticFieldMapXyz(std::string filename, std::string tree,
+                      bool useOctantOnly, double lengthUnit, double fieldUnit)
+      : ActsExamples::detail::InterpolatedMagneticField3(std::move(
+            readFile(filename, tree, useOctantOnly, lengthUnit, fieldUnit))) {}
+};
+}  // namespace ActsExamples
+
+namespace Acts::Python {
 void addMagneticField(Context& ctx) {
   auto [m, mex, prop] = ctx.get("main", "examples", "propagation");
 
@@ -46,75 +111,36 @@ void addMagneticField(Context& ctx) {
       .def(py::init<Acts::Vector3>());
 
   py::class_<ActsExamples::detail::InterpolatedMagneticField2,
-             Acts::MagneticFieldProvider,
+             Acts::InterpolatedMagneticField,
              std::shared_ptr<ActsExamples::detail::InterpolatedMagneticField2>>(
+      mex, "InterpolatedMagneticField2");
+
+  py::class_<ActsExamples::detail::InterpolatedMagneticField3,
+             Acts::InterpolatedMagneticField,
+             std::shared_ptr<ActsExamples::detail::InterpolatedMagneticField3>>(
+      mex, "InterpolatedMagneticField3");
+
+  py::class_<ActsExamples::MagneticFieldMapRz, Acts::MagneticFieldProvider,
+             std::shared_ptr<ActsExamples::MagneticFieldMapRz>>(
       mex, "MagneticFieldMapRz")
       .def(
           py::init([](std::string filename, std::string tree,
                       bool useOctantOnly, double lengthUnit, double fieldUnit) {
-            const boost::filesystem::path file = filename;
-
-            auto mapBins = [](std::array<size_t, 2> bins,
-                              std::array<size_t, 2> sizes) {
-              return (bins[1] * sizes[0] + bins[0]);
-            };
-
-            if (file.extension() == ".root") {
-              auto map = ActsExamples::makeMagneticFieldMapRzFromRoot(
-                  std::move(mapBins), file.native(), tree, lengthUnit,
-                  fieldUnit, useOctantOnly);
-              return std::make_shared<
-                  ActsExamples::detail::InterpolatedMagneticField2>(
-                  std::move(map));
-            } else if (file.extension() == ".txt") {
-              auto map = ActsExamples::makeMagneticFieldMapRzFromText(
-                  std::move(mapBins), file.native(), lengthUnit, fieldUnit,
-                  useOctantOnly);
-              return std::make_shared<
-                  ActsExamples::detail::InterpolatedMagneticField2>(
-                  std::move(map));
-            } else {
-              throw std::runtime_error(
-                  "Unsupported magnetic field map file type");
-            }
+            return ActsExamples::MagneticFieldMapRz(
+                filename, tree, useOctantOnly, lengthUnit, fieldUnit);
           }),
           py::arg("file"), py::arg("tree") = "bField",
           py::arg("useOctantOnly") = false, py::arg("lengthUnit") = 1.0,
           py::arg("fieldUnit") = 1.0);
 
-  py::class_<ActsExamples::detail::InterpolatedMagneticField3,
-             Acts::MagneticFieldProvider,
-             std::shared_ptr<ActsExamples::detail::InterpolatedMagneticField3>>(
+  py::class_<ActsExamples::MagneticFieldMapXyz, Acts::MagneticFieldProvider,
+             std::shared_ptr<ActsExamples::MagneticFieldMapXyz>>(
       mex, "MagneticFieldMapXyz")
       .def(
           py::init([](std::string filename, std::string tree,
                       bool useOctantOnly, double lengthUnit, double fieldUnit) {
-            const boost::filesystem::path file = filename;
-
-            auto mapBins = [](std::array<size_t, 3> bins,
-                              std::array<size_t, 3> sizes) {
-              return (bins[0] * (sizes[1] * sizes[2]) + bins[1] * sizes[2] +
-                      bins[2]);
-            };
-
-            if (file.extension() == ".root") {
-              auto map = ActsExamples::makeMagneticFieldMapXyzFromRoot(
-                  std::move(mapBins), file.native(), tree, lengthUnit,
-                  fieldUnit, useOctantOnly);
-              return std::make_shared<
-                  ActsExamples::detail::InterpolatedMagneticField3>(
-                  std::move(map));
-            } else if (file.extension() == ".txt") {
-              auto map = ActsExamples::makeMagneticFieldMapXyzFromText(
-                  std::move(mapBins), file.native(), lengthUnit, fieldUnit,
-                  useOctantOnly);
-              return std::make_shared<
-                  ActsExamples::detail::InterpolatedMagneticField3>(
-                  std::move(map));
-            } else {
-              throw std::runtime_error(
-                  "Unsupported magnetic field map file type");
-            }
+            return ActsExamples::MagneticFieldMapXyz(
+                filename, tree, useOctantOnly, lengthUnit, fieldUnit);
           }),
           py::arg("file"), py::arg("tree") = "bField",
           py::arg("useOctantOnly") = false, py::arg("lengthUnit") = 1.0,

@@ -35,4 +35,4 @@ def test_solenoid(conf_const):
         field=solenoid,
     )
 
-    assert isinstance(field, acts.examples.MagneticFieldMapRz)
+    assert isinstance(field, acts.examples.InterpolatedMagneticField2)
