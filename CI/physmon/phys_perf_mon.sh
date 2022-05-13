@@ -14,6 +14,17 @@ echo "::group::Generate validation dataset"
 CI/physmon/physmon.py $outdir 2>&1 > $outdir/run.log
 echo "::endgroup::"
 
+echo "::group::full_chain_odd"
+thirdparty/OpenDataDetector/ci/full_chain_odd.py -o $outdir
+
+# this will currently produce an error code because of the small amount of particles
+build/bin/ActsAnalysisResidualsAndPulls \
+    --predicted --filtered --smoothed --silent \
+    -i $outdir/trackstates_ckf.root \
+    -o $outdir/acts_analysis_residuals_and_pulls.root \
+    || true
+echo "::endgroup::"
+
 set +e
 
 ec=0
@@ -65,6 +76,11 @@ run \
     -o $outdir/truth_tracking.html \
     -p $outdir/truth_tracking_plots \
 
+
+run \
+    $outdir/acts_analysis_residuals_and_pulls.root \
+    $refdir/acts_analysis_residuals_and_pulls.root \
+    --title "full_chain_odd" \
 
 
 exit $ec
