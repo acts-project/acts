@@ -24,7 +24,7 @@ from particle_gun import addParticleGun, MomentumConfig, EtaConfig, ParticleConf
 from fatras import addFatras
 from digitization import addDigitization
 from seeding import addSeeding, SeedingAlgorithm, TruthSeedRanges
-from ckf_tracks import addCKFTracks
+from ckf_tracks import addCKFTracks, CKFPerformanceConfig
 
 s = acts.examples.Sequencer(events=100, numThreads=-1, logLevel=acts.logging.INFO)
 
@@ -63,7 +63,7 @@ s = addCKFTracks(
     s,
     trackingGeometry,
     field,
-    TruthSeedRanges(pt=(400.0 * u.MeV, None), nHits=(6, None)),
+    CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
     outputDirRoot=outputDir,
 )
 
