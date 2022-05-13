@@ -12,6 +12,14 @@ ActsFatras::Hit convertEDM4hepSimHit(const edm4hep::SimTrackerHit& sth) {
   const auto particleId =
       0;  // ActsFatras::Barcode(sth.getMCParticle().getPDG());  // TODO
 
+  const auto mass = sth.getMCParticle().getMass();
+  const ActsVector<3> momentum{
+      sth.getMomentum().x * Acts::UnitConstants::GeV,
+      sth.getMomentum().y * Acts::UnitConstants::GeV,
+      sth.getMomentum().z * Acts::UnitConstants::GeV,
+  };
+  const auto energy = std::sqrt(momentum.squaredNorm() + mass * mass);
+
   ActsFatras::Hit::Vector4 pos4{
       sth.getPosition().x * Acts::UnitConstants::mm,
       sth.getPosition().y * Acts::UnitConstants::mm,
@@ -19,20 +27,21 @@ ActsFatras::Hit convertEDM4hepSimHit(const edm4hep::SimTrackerHit& sth) {
       sth.getTime() * Acts::UnitConstants::ns,
   };
   ActsFatras::Hit::Vector4 mom4{
-      sth.getMomentum().x * Acts::UnitConstants::GeV,
-      sth.getMomentum().y * Acts::UnitConstants::GeV,
-      sth.getMomentum().z * Acts::UnitConstants::GeV,
-      100 * Acts::UnitConstants::GeV,  // TODO
+      momentum.x(),
+      momentum.y(),
+      momentum.z(),
+      energy,
   };
   ActsFatras::Hit::Vector4 delta4{
       0 * Acts::UnitConstants::GeV,  // TODO
       0 * Acts::UnitConstants::GeV,  // TODO
       0 * Acts::UnitConstants::GeV,  // TODO
-      sth.getEDep() * Acts::UnitConstants::GeV,
+      0 * Acts::UnitConstants::GeV,  // TODO sth.getEDep()
   };
-  int32_t index = -1;
+  int32_t index = -1;  // TODO
 
-  return ActsFatras::Hit(geometryId, particleId, pos4, mom4, mom4 + delta4, index);
+  return ActsFatras::Hit(geometryId, particleId, pos4, mom4, mom4 + delta4,
+                         index);
 }
 
 }  // namespace Acts
