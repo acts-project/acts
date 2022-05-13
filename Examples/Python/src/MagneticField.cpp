@@ -84,8 +84,8 @@ void addMagneticField(Context& ctx) {
 
   mex.def(
       "MagneticFieldMapXyz",
-      [](std::string filename, std::string tree, bool useOctantOnly,
-         double lengthUnit, double fieldUnit) {
+      [](std::string filename, std::string tree, double lengthUnit,
+         double BFieldUnit, bool firstOctant) {
         const boost::filesystem::path file = filename;
 
         auto mapBins = [](std::array<size_t, 3> bins,
@@ -96,14 +96,14 @@ void addMagneticField(Context& ctx) {
 
         if (file.extension() == ".root") {
           auto map = ActsExamples::makeMagneticFieldMapXyzFromRoot(
-              std::move(mapBins), file.native(), tree, lengthUnit, fieldUnit,
-              useOctantOnly);
+              std::move(mapBins), file.native(), tree, lengthUnit, BFieldUnit,
+              firstOctant);
           return std::make_shared<
               ActsExamples::detail::InterpolatedMagneticField3>(std::move(map));
         } else if (file.extension() == ".txt") {
           auto map = ActsExamples::makeMagneticFieldMapXyzFromText(
-              std::move(mapBins), file.native(), lengthUnit, fieldUnit,
-              useOctantOnly);
+              std::move(mapBins), file.native(), lengthUnit, BFieldUnit,
+              firstOctant);
           return std::make_shared<
               ActsExamples::detail::InterpolatedMagneticField3>(std::move(map));
         } else {
@@ -111,13 +111,14 @@ void addMagneticField(Context& ctx) {
         }
       },
       py::arg("file"), py::arg("tree") = "bField",
-      py::arg("useOctantOnly") = false, py::arg("lengthUnit") = 1.0,
-      py::arg("fieldUnit") = 1.0);
+      py::arg("lengthUnit") = Acts::UnitConstants::mm,
+      py::arg("BFieldUnit") = Acts::UnitConstants::T,
+      py::arg("firstOctant") = false);
 
   mex.def(
       "MagneticFieldMapRz",
-      [](std::string filename, std::string tree, bool useOctantOnly,
-         double lengthUnit, double fieldUnit) {
+      [](std::string filename, std::string tree, double lengthUnit,
+         double BFieldUnit, bool firstQuadrant) {
         const boost::filesystem::path file = filename;
 
         auto mapBins = [](std::array<size_t, 2> bins,
@@ -127,14 +128,14 @@ void addMagneticField(Context& ctx) {
 
         if (file.extension() == ".root") {
           auto map = ActsExamples::makeMagneticFieldMapRzFromRoot(
-              std::move(mapBins), file.native(), tree, lengthUnit, fieldUnit,
-              useOctantOnly);
+              std::move(mapBins), file.native(), tree, lengthUnit, BFieldUnit,
+              firstQuadrant);
           return std::make_shared<
               ActsExamples::detail::InterpolatedMagneticField2>(std::move(map));
         } else if (file.extension() == ".txt") {
           auto map = ActsExamples::makeMagneticFieldMapRzFromText(
-              std::move(mapBins), file.native(), lengthUnit, fieldUnit,
-              useOctantOnly);
+              std::move(mapBins), file.native(), lengthUnit, BFieldUnit,
+              firstQuadrant);
           return std::make_shared<
               ActsExamples::detail::InterpolatedMagneticField2>(std::move(map));
         } else {
@@ -142,8 +143,9 @@ void addMagneticField(Context& ctx) {
         }
       },
       py::arg("file"), py::arg("tree") = "bField",
-      py::arg("useOctantOnly") = false, py::arg("lengthUnit") = 1.0,
-      py::arg("fieldUnit") = 1.0);
+      py::arg("lengthUnit") = Acts::UnitConstants::mm,
+      py::arg("BFieldUnit") = Acts::UnitConstants::T,
+      py::arg("firstQuadrant") = false);
 }
 
 }  // namespace Acts::Python
