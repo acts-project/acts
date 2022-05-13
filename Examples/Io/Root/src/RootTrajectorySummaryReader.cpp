@@ -166,7 +166,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryReader::read(
 
     // The collection to be written
     std::vector<Acts::BoundTrackParameters> trackParameterCollection;
-    SimParticleContainer truthParticleCollection;
+    //SimParticleContainer truthParticleCollection;
+    std::vector<ActsFatras::Particle> truthParticleCollection;
 
     // Read the correct entry
     auto entry = context.eventNumber;
@@ -178,6 +179,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryReader::read(
                                 << " stored as entry: " << entry);
 
     unsigned int nTracks = m_eLOC0_fit->size();
+    std::cout << "Number of tracks = " << nTracks << std::endl;
     for (unsigned int i = 0; i < nTracks; i++) {
       Acts::BoundVector paramVec;
       paramVec << (*m_eLOC0_fit)[i], (*m_eLOC1_fit)[i], (*m_ePHI_fit)[i],
@@ -204,6 +206,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryReader::read(
     }
 
     unsigned int nTruthParticles = m_t_vx->size();
+    std::cout << "Number of truth particles = " << nTruthParticles << std::endl;
     for (unsigned int i = 0; i < nTruthParticles; i++) {
       ActsFatras::Particle truthParticle;
 
@@ -212,9 +215,16 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryReader::read(
       truthParticle.setDirection((*m_t_px)[i], (*m_t_py)[i], (*m_t_pz)[i]);
       truthParticle.setParticleId((*m_majorityParticleId)[i]);
 
-      truthParticleCollection.insert(truthParticleCollection.end(),
-                                     truthParticle);
+      //truthParticleCollection.insert(truthParticleCollection.end(),
+      //truthParticle);
+      truthParticleCollection.push_back(truthParticle);
+
     }
+
+
+    std::cout << "trackParameterCollection size = " << trackParameterCollection.size() << std::endl;
+    std::cout << "truthParticleCollection size = " << truthParticleCollection.size() << std::endl;
+
     // Write the collections to the EventStore
     context.eventStore.add(m_cfg.outputTracks,
                            std::move(trackParameterCollection));

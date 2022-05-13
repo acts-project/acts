@@ -96,7 +96,9 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::endRun() {
 
 int ActsExamples::RootVertexPerformanceWriter::
     getNumberOfReconstructableVertices(
-        const SimParticleContainer& collection) const {
+    //const SimParticleContainer& collection) const {
+       const std::vector<ActsFatras::Particle>& collection) const {
+
   // map for finding frequency
   std::map<int, int> fmap;
   
@@ -131,8 +133,6 @@ int ActsExamples::RootVertexPerformanceWriter::getNumberOfTruePriVertices(
   for (const auto& p : collection) {
     int priVtxId = p.particleId().vertexPrimary();
     int secVtxId = p.particleId().vertexSecondary();
-    std::cout << "primary vertex id: " << priVtxId << std::endl;
-    std::cout << "Secondary vertex id: " << secVtxId << std::endl;
     if (secVtxId != 0) {
       // truthparticle from secondary vtx
       continue;
@@ -152,7 +152,7 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
 
   m_nrecoVtx = vertices.size();
 
-  ACTS_DEBUG("Number of reco vertices in event: " << m_nrecoVtx);
+  ACTS_INFO("Number of reco vertices in event: " << m_nrecoVtx);
   if (m_outputFile == nullptr)
     return ProcessCode::SUCCESS;
 
@@ -180,8 +180,10 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
 
   // Read track-associated truth particle input collection
   const auto& associatedTruthParticles =
-      ctx.eventStore.get<SimParticleContainer>(
+    //ctx.eventStore.get<SimParticleContainer>(
+    ctx.eventStore.get<std::vector<ActsFatras::Particle>>(
           m_cfg.inputAssociatedTruthParticles);
+
   // Get number of track-associated true primary vertices
   m_nVtxReconstructable =
       getNumberOfReconstructableVertices(associatedTruthParticles);
@@ -210,8 +212,20 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
   } else {
     // Loop over all reco vertices and find associated truth particles
     std::vector<SimParticleContainer> truthParticlesAtVtxContainer;
+
+    float relativeDiff = 0;
+
+    int cleanCounter = 0;
+    int mergeCounter = 0;
+    int fakeCounter = 0;
+
+    std::map<int, int> cleanIdMap;
+    std::map<int, int> mergeIdMap;
+    std::map<int, int> matchedIdMap;
+
     for (const auto& vtx : vertices) {
       const auto tracks = vtx.tracks();
+
       // Store all associated truth particles to current vtx
       SimParticleContainer particleAtVtx;
 
@@ -239,8 +253,12 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
       for (int priVtxId : contributingTruthVertices) {
         fmap[priVtxId]++;
       }
+
       int maxOccurrenceId = -1;
       int maxOccurence = -1;
+      int secondmaxOccurrenceId = -1;
+      int secondmaxOccurence = -1;
+
       for (auto it : fmap) {
         if (it.second > maxOccurence) {
           maxOccurence = it.second;
@@ -248,31 +266,148 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
         }
       }
 
-      // Match reco to truth vertex if at least 50% of tracks match
-      if ((double)fmap[maxOccurrenceId] / tracks.size() >
-          m_cfg.minTrackVtxMatchFraction) {
-        for (const auto& particle : associatedTruthParticles) {
-          int priVtxId = particle.particleId().vertexPrimary();
-          int secVtxId = particle.particleId().vertexSecondary();
+      fmap.erase(maxOccurrenceId);
 
-          if (secVtxId != 0) {
-            // truthparticle from secondary vtx
-            continue;
-          }
-
-          if (priVtxId == maxOccurrenceId) {
-            // Vertex found, fill varibles
-            const auto& truePos = particle.position();
-
-            m_diffx.push_back(vtx.position()[0] - truePos[0]);
-            m_diffy.push_back(vtx.position()[1] - truePos[1]);
-            m_diffz.push_back(vtx.position()[2] - truePos[2]);
-            // Next vertex now
-            break;
-          }
-        }
+      if(fmap.size() > 0){
+	for (auto it : fmap) {
+	  if (it.second > secondmaxOccurence) {
+	    secondmaxOccurence = it.second;
+	    secondmaxOccurrenceId = it.first;
+	  }
+	}
       }
+
+      //checking if a vertex is clean/merged/fake
+      if((double)maxOccurence / tracks.size() > 0.7){
+      
+	bool found = false;
+	for (const auto& particle : associatedTruthParticles) {
+	  int priVtxId = particle.particleId().vertexPrimary();
+	  int secVtxId = particle.particleId().vertexSecondary();
+
+	  if (secVtxId != 0) {
+	    // truthparticle from secondary vtx
+	    continue;
+	  }
+	  
+	  if (priVtxId == maxOccurrenceId) {
+	    found = true;
+	    cleanCounter++;
+	    cleanIdMap[maxOccurrenceId]++;
+	    matchedIdMap[maxOccurrenceId]++;
+	    
+	    // Vertex found, fill varibles
+	    const auto& truePos = particle.position();
+	    
+	    float diffx = vtx.position()[0] - truePos[0];
+	    float diffy = vtx.position()[1] - truePos[1];
+	    float diffz = vtx.position()[2] - truePos[2];
+	    
+	    m_diffx.push_back(diffx);
+	    m_diffy.push_back(diffy);
+	    m_diffz.push_back(diffz);
+
+	    float diff = ( (diffx*diffx + diffy*diffy + diffz*diffz) / (truePos[0]*truePos[0] + truePos[1]*truePos[1] + truePos[2]*truePos[2])  );
+
+	    relativeDiff = relativeDiff + diff;
+
+	    // Next vertex now
+	    break;
+	  }
+	}
+	if(!found) fakeCounter++;
+      }
+      else if(((double)maxOccurence / tracks.size() <= 0.7 && (double)maxOccurence / tracks.size() > 0.4) && ((double)secondmaxOccurence / tracks.size() <= 0.7 && (double)secondmaxOccurence / tracks.size() > 0.3)){
+	  
+	bool found = false;
+	for (const auto& particle : associatedTruthParticles) {
+	  int priVtxId = particle.particleId().vertexPrimary();
+	  int secVtxId = particle.particleId().vertexSecondary();
+
+	  if (secVtxId != 0) {
+	    // truthparticle from secondary vtx
+	    continue;
+	  }
+	  
+	  if (priVtxId == maxOccurrenceId) {
+	    found = true;
+	    mergeCounter++;
+	    mergeIdMap[maxOccurrenceId]++;
+	    //mergeIdMap[secondmaxOccurrenceId]++;
+	    matchedIdMap[maxOccurrenceId]++;
+	    
+	    // Vertex found, fill varibles
+	    const auto& truePos = particle.position();
+	    
+	    float diffx = vtx.position()[0] - truePos[0];
+	    float diffy = vtx.position()[1] - truePos[1];
+	    float diffz = vtx.position()[2] - truePos[2];
+	    
+	    m_diffx.push_back(diffx);
+	    m_diffy.push_back(diffy);
+	    m_diffz.push_back(diffz);
+
+	    float diff = ( (diffx*diffx + diffy*diffy + diffz*diffz) / (truePos[0]*truePos[0] + truePos[1]*truePos[1] + truePos[2]*truePos[2])  );
+
+	    relativeDiff = relativeDiff + diff;
+
+	    // Next vertex now
+	    break;
+	  }
+	}
+	if(!found) fakeCounter++;
+      }
+      else{
+	fakeCounter++;
+      }
+
     }  // end loop vertices
+
+    //getting the split vertices (reco vertices matched to same truth vertex)
+    //from the matchedId map which contains both clean and merge
+    int splitCounter = 0;
+    for (auto itv : matchedIdMap) {
+      if(itv.second > 1){
+	splitCounter = splitCounter + (itv.second - 1);
+      }
+    }
+
+    //from the clean id map (splits among clean)
+    int splitCleanCounter = 0;
+    for (auto itv : cleanIdMap) {
+      if(itv.second > 1){
+	splitCleanCounter = splitCleanCounter + (itv.second - 1);
+      }
+    }
+
+    //from the merge id map (splits among merge)
+    int splitMergeCounter = 0;
+    for (auto itv : mergeIdMap) {
+      if(itv.second > 1){
+	splitMergeCounter = splitMergeCounter + (itv.second - 1);
+      }
+    }
+
+    int mergeCleanCounter = 0;
+    for(auto itc: cleanIdMap){
+      for(auto itm: mergeIdMap){
+	if(itm.first == itc.first) mergeCleanCounter++;
+      }
+    }
+
+    // number of splits in matchIdmap should be equal to splitCleanCounter + splitMergeCounter + mergeCleanCounter 
+
+    ACTS_INFO("Number of clean reco vertices in event: " << (cleanCounter - splitCleanCounter));
+    ACTS_INFO("Number of merge reco vertices in event: " << (mergeCounter - splitMergeCounter - mergeCleanCounter));
+    ACTS_INFO("Number of split reco vertices in event: " << (splitCleanCounter + splitMergeCounter + mergeCleanCounter));
+    ACTS_INFO("Number of fake reco vertices in event: " << fakeCounter);
+    ACTS_INFO("Efficiency of total reco vertices in event:" << float(vertices.size())/float(m_nVtxDetAcceptance));
+    ACTS_INFO("Efficiency of clean reco vertices in event:" << float(cleanCounter - splitCleanCounter)/float(m_nVtxDetAcceptance));
+    ACTS_INFO("Fraction of merge reco vertices in event:" << float(mergeCounter - splitMergeCounter - mergeCleanCounter)/float(m_nVtxDetAcceptance));
+    ACTS_INFO("Fraction of split reco vertices in event:" << float(splitCleanCounter + splitMergeCounter + mergeCleanCounter)/float(m_nVtxDetAcceptance));
+    ACTS_INFO("Fraction of fake reco vertices in event:" << float(fakeCounter)/float(m_nVtxDetAcceptance));
+    ACTS_INFO("Relative difference between true and reco vertex position:" << std::sqrt(relativeDiff));
+
   }
 
   // Retrieve and set reconstruction time

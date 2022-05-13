@@ -84,7 +84,9 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   Linearizer linearizer(ltConfig);
 
   // Set up deterministic annealing with user-defined temperatures
-  std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
+  //std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
+  //Set of temperatures used in 21.9 InDetAdaptiveMultiFinderTool (https://gitlab.cern.ch/atlas/athena/-/blob/21.9/InnerDetector/InDetExample/InDetRecExample/share/InDetRecLoadTools.py#L1521)
+  std::vector<double> temperatures{64.0, 16.0, 4.0, 2.0, 1.5, 1.0};
   Acts::AnnealingUtility::Config annealingConfig(temperatures);
   Acts::AnnealingUtility annealingUtility(annealingConfig);
 
@@ -93,6 +95,8 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
       Acts::AdaptiveMultiVertexFitter<Acts::BoundTrackParameters, Linearizer>;
   Fitter::Config fitterCfg(ipEstimator);
   fitterCfg.annealingTool = annealingUtility;
+  fitterCfg.minWeight = m_cfg.amvf_minWeight;
+  fitterCfg.doSmoothing = true;
   Fitter fitter(fitterCfg);
 
   // Set up the vertex seed finder
@@ -106,7 +110,15 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
                               linearizer, m_cfg.bField);
   // We do not want to use a beamspot constraint here
-  finderConfig.useBeamSpotConstraint = false;
+  finderConfig.useBeamSpotConstraint = m_cfg.amvf_useBeamSpotConstraint;
+  finderConfig.tracksMaxZinterval = m_cfg.amvf_tracksMaxZinterval;
+  finderConfig.tracksMaxSignificance = m_cfg.amvf_tracksMaxSignificance;
+  finderConfig.maxVertexChi2 = m_cfg.amvf_maxVertexChi2;
+  finderConfig.maxMergeVertexSignificance = m_cfg.amvf_maxMergeVertexSignificance;
+  finderConfig.minWeight = m_cfg.amvf_minWeight;
+  finderConfig.maxIterations = m_cfg.amvf_maxIterations;
+  finderConfig.maximumVertexContamination = m_cfg.amvf_maximumVertexContamination;
+  finderConfig.useVertexCovForIPEstimation = m_cfg.amvf_useVertexCovForIPEstimation;
 
   // Instantiate the finder
   Finder finder(finderConfig);

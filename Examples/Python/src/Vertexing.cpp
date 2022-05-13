@@ -45,6 +45,15 @@ void addVertexing(Context& ctx) {
     ACTS_PYTHON_MEMBER(outputVertices);
     ACTS_PYTHON_MEMBER(outputTime);
     ACTS_PYTHON_MEMBER(bField);
+    ACTS_PYTHON_MEMBER(amvf_useBeamSpotConstraint);
+    ACTS_PYTHON_MEMBER(amvf_tracksMaxZinterval);
+    ACTS_PYTHON_MEMBER(amvf_tracksMaxSignificance);
+    ACTS_PYTHON_MEMBER(amvf_maxVertexChi2);
+    ACTS_PYTHON_MEMBER(amvf_maxMergeVertexSignificance);
+    ACTS_PYTHON_MEMBER(amvf_minWeight);
+    ACTS_PYTHON_MEMBER(amvf_maxIterations);
+    ACTS_PYTHON_MEMBER(amvf_maximumVertexContamination);
+    ACTS_PYTHON_MEMBER(amvf_useVertexCovForIPEstimation);
     ACTS_PYTHON_STRUCT_END();
   }
 

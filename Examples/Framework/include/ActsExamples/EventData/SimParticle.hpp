@@ -20,14 +20,17 @@ struct CompareParticleId {
   constexpr bool operator()(const ActsFatras::Particle& lhs,
                             const ActsFatras::Particle& rhs) const {
     return lhs.particleId() < rhs.particleId();
+    //return ((lhs.particleId() < rhs.particleId()) || (lhs.particleId() == rhs.particleId()));
   }
   constexpr bool operator()(ActsFatras::Barcode lhs,
                             const ActsFatras::Particle& rhs) const {
     return lhs < rhs.particleId();
+    //return ((lhs < rhs.particleId()) || (lhs == rhs.particleId()));
   }
   constexpr bool operator()(const ActsFatras::Particle& lhs,
                             ActsFatras::Barcode rhs) const {
     return lhs.particleId() < rhs;
+    //return ((lhs.particleId() < rhs) || (lhs.particleId() == rhs));
   }
 };
 struct PrimaryVertexIdGetter {

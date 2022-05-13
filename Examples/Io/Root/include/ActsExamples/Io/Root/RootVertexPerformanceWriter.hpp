@@ -97,7 +97,8 @@ class RootVertexPerformanceWriter final
   int m_timeMS = -1;  ///< Reconstruction time in ms
 
   int getNumberOfReconstructableVertices(
-      const SimParticleContainer& collection) const;
+  //const SimParticleContainer& collection) const;
+      const std::vector<ActsFatras::Particle>& collection) const;
 
   int getNumberOfTruePriVertices(const SimParticleContainer& collection) const;
 };
