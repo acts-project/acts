@@ -15,12 +15,8 @@ sys.path += [
 os.environ["ACTS_LOG_FAILURE_THRESHOLD"] = "FATAL"
 import acts.examples
 
-from particle_gun import addParticleGun, MomentumConfig, EtaConfig, ParticleConfig
-from fatras import addFatras
 from truth_tracking import runTruthTracking
-from digitization import addDigitization
 from ckf_tracks import runCKFTracks
-from seeding import addSeeding, SeedingAlgorithm, TruthSeedRanges
 from common import getOpenDataDetector
 
 parser = argparse.ArgumentParser()
