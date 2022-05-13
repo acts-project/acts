@@ -15,6 +15,7 @@
 #include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
 #include "ActsExamples/Io/Root/RootTrajectorySummaryReader.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepSimHitReader.hpp"
 
 #include <memory>
 
@@ -170,6 +171,25 @@ void addInput(Context& ctx) {
     ACTS_PYTHON_MEMBER(outputSimHits);
     ACTS_PYTHON_STRUCT_END();
   }
+
+  {
+    using Reader = ActsExamples::EDM4hepSimHitReader;
+    using Config = Reader::Config;
+    auto reader =
+        py::class_<Reader, ActsExamples::IReader, std::shared_ptr<Reader>>(
+            mex, "EDM4hepSimHitReader")
+            .def(py::init<const Config&, Acts::Logging::Level>(),
+                 py::arg("config"), py::arg("level"))
+            .def_property_readonly("config", &Reader::config);
+
+    auto c = py::class_<Config>(reader, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(inputPath);
+    ACTS_PYTHON_MEMBER(outputSimHits);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  // EDM4HEP READERS
 
   {
     using Reader = ActsExamples::CsvSpacePointReader;

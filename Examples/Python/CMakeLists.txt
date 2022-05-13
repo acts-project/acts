@@ -44,6 +44,7 @@ target_link_libraries(ActsPythonBindings PUBLIC
   ActsExamplesIoObj
   ActsExamplesIoJson
   ActsExamplesIoPerformance
+  ActsExamplesIoEDM4hep
   ActsExamplesGenerators
   ActsExamplesTrackFinding
   ActsExamplesTrackFitting

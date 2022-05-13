@@ -21,6 +21,7 @@ from acts.examples import (
     CsvSimHitReader,
     CsvPlanarClusterWriter,
     CsvPlanarClusterReader,
+    EDM4hepSimHitReader,
     PlanarSteppingAlgorithm,
     BareAlgorithm,
     Sequencer,
@@ -303,3 +304,23 @@ def test_csv_clusters_reader(tmp_path, fatras, conf_const, trk_geo, rng):
 
     for alg in algs:
         assert alg.events_seen == 10
+
+
+def test_edm4hep_simhits_reader(conf_const):
+    s = Sequencer(numThreads=1)
+
+    s.addReader(
+        conf_const(
+            EDM4hepSimHitReader,
+            level=acts.logging.INFO,
+            inputPath=str("/home/andreas/cern/source/OpenDataDetector/output_edm4hep.root"), # TODO
+            outputSimHits="simhits",
+        )
+    )
+
+    alg = AssertCollectionExistsAlg("simhits", "check_alg", acts.logging.WARNING)
+    s.addAlgorithm(alg)
+
+    s.run()
+
+    assert alg.events_seen == 100
