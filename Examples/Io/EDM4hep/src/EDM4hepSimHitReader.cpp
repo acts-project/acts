@@ -6,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Plugins/EDM4hep/EDM4hepConverter.hpp"
+
+#include "ActsFatras/EventData/Hit.hpp"
+
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitReader.hpp"
-
-#include "Acts/Definitions/Units.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 
-#include "edm4hep/SimCalorimeterHitCollection.h"
 #include "edm4hep/SimTrackerHitCollection.h"
 
 ActsExamples::EDM4hepSimHitReader::EDM4hepSimHitReader(
@@ -28,6 +28,8 @@ ActsExamples::EDM4hepSimHitReader::EDM4hepSimHitReader(
   m_store.setReader(&m_reader);
 
   m_eventsRange = std::make_pair(0, m_reader.getEntries());
+
+  m_simHitCollections = m_reader.getCollectionIDTable()->names();
 }
 
 std::string ActsExamples::EDM4hepSimHitReader::EDM4hepSimHitReader::name()
@@ -47,7 +49,7 @@ ActsExamples::ProcessCode ActsExamples::EDM4hepSimHitReader::read(
   m_store.clear();
   m_reader.goToEvent(ctx.eventNumber);
 
-  for (const auto& name : m_reader.getCollectionIDTable()->names()) {
+  for (const auto& name : m_simHitCollections) {
     auto& sths = m_store.get<edm4hep::SimTrackerHitCollection>(name);
 
     if (!sths.isValid()) {
@@ -55,31 +57,7 @@ ActsExamples::ProcessCode ActsExamples::EDM4hepSimHitReader::read(
     }
 
     for (const auto& sth : sths) {
-      const auto geometryId = 0; // Acts::GeometryIdentifier(sth.getCellID());  // TODO
-      const auto particleId = 0; // ActsFatras::Barcode(sth.getMCParticle().getPDG());  // TODO
-
-      ActsFatras::Hit::Vector4 pos4{
-          sth.getPosition().x * Acts::UnitConstants::mm,
-          sth.getPosition().y * Acts::UnitConstants::mm,
-          sth.getPosition().z * Acts::UnitConstants::mm,
-          sth.getTime() * Acts::UnitConstants::ns,
-      };
-      ActsFatras::Hit::Vector4 mom4{
-          sth.getMomentum().x * Acts::UnitConstants::GeV,
-          sth.getMomentum().y * Acts::UnitConstants::GeV,
-          sth.getMomentum().z * Acts::UnitConstants::GeV,
-          100 * Acts::UnitConstants::GeV,  // TODO
-      };
-      ActsFatras::Hit::Vector4 delta4{
-          0 * Acts::UnitConstants::GeV,  // TODO
-          0 * Acts::UnitConstants::GeV,  // TODO
-          0 * Acts::UnitConstants::GeV,  // TODO
-          sth.getEDep() * Acts::UnitConstants::GeV,
-      };
-      int32_t index = -1;
-
-      ActsFatras::Hit hit(geometryId, particleId, pos4, mom4, mom4 + delta4,
-                          index);
+      auto hit = Acts::convertEDM4hepSimHit(sth);
       unordered.push_back(std::move(hit));
     }
   }

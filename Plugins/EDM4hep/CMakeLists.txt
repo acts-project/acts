@@ -1,6 +1,6 @@
 add_library(
   ActsPluginEDM4hep SHARED
-  src/test.cpp)
+  src/EDM4hepConverter.cpp)
 target_include_directories(
   ActsPluginEDM4hep
   PUBLIC
@@ -10,7 +10,7 @@ target_link_libraries(
   ActsPluginEDM4hep
   PUBLIC ActsCore)
 
-target_link_libraries(ActsPluginEDM4hep PUBLIC EDM4HEP::edm4hep podio::podioRootIO)
+target_link_libraries(ActsPluginEDM4hep PUBLIC EDM4HEP::edm4hep podio::podioRootIO ActsFatras)
 
 install(
   TARGETS ActsPluginEDM4hep
