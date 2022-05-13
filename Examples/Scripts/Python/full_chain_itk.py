@@ -5,6 +5,7 @@ u = acts.UnitConstants
 geo_dir = pathlib.Path("acts-itk")
 outputDir = pathlib.Path.cwd()
 
+# acts.examples.dump_args_calls(locals())
 detector, trackingGeometry, decorators = itk.buildITkGeometry(geo_dir)
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
 rnd = acts.examples.RandomNumbers(seed=42)
@@ -14,10 +15,6 @@ from fatras import addFatras
 from digitization import addDigitization
 from seeding import addSeeding, TruthSeedRanges
 from ckf_tracks import addCKFTracks, CKFPerformanceConfig
-
-# from seeding import SeedingAlgorithm, ParticleSmearingSigmas
-
-# acts.examples.dump_args_calls(locals())
 
 s = acts.examples.Sequencer(events=100, numThreads=-1)
 s = addParticleGun(
@@ -42,6 +39,7 @@ s = addDigitization(
     outputDirRoot=outputDir,
     rnd=rnd,
 )
+# from seeding import SeedingAlgorithm, ParticleSmearingSigmas
 s = addSeeding(
     s,
     trackingGeometry,
