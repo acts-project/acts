@@ -87,7 +87,7 @@ test:
   stage: test
   dependencies:
     - build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v22
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:sha-dbae1f13
   tags:
     - docker-gpu-a4000
   script:
