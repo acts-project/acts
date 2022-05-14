@@ -67,6 +67,7 @@ ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
   m_outputTree->Branch("step_act", &m_step_act);
   m_outputTree->Branch("step_abt", &m_step_abt);
   m_outputTree->Branch("step_usr", &m_step_usr);
+  m_outputTree->Branch("nStepTrials", &m_nStepTrials);
 }
 
 ActsExamples::RootPropagationStepsWriter::~RootPropagationStepsWriter() {}
@@ -113,6 +114,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
     m_step_act.clear();
     m_step_abt.clear();
     m_step_usr.clear();
+    m_nStepTrials.clear();
 
     // loop over single steps
     for (auto& step : steps) {
@@ -181,6 +183,9 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       m_step_act.push_back(actor);
       m_step_abt.push_back(aborter);
       m_step_usr.push_back(user);
+      
+      // stepper efficiency
+      m_nStepTrials.push_back(step.stepSize.nStepTrials);
     }
     m_outputTree->Fill();
   }
