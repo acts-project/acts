@@ -83,7 +83,7 @@ class EigenStepper {
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
           fieldCache(std::move(fieldCacheIn)),
-          geoContext(gctx){
+          geoContext(gctx) {
       pars.template segment<3>(eFreePos0) = par.position(gctx);
       pars.template segment<3>(eFreeDir0) = par.unitDirection();
       pars[eFreeTime] = par.time();
