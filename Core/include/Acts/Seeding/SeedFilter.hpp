@@ -75,9 +75,9 @@ class SeedFilter {
   /// @param weight weight of the seed
   /// @param outIt iterator for the seeds
   virtual void checkReplaceSeeds(
-      const InternalSpacePoint<external_spacepoint_t>& bottomSP,
-      const InternalSpacePoint<external_spacepoint_t>& middleSP,
-      const InternalSpacePoint<external_spacepoint_t>& topSp, float zOrigin,
+      InternalSpacePoint<external_spacepoint_t>& bottomSP,
+      InternalSpacePoint<external_spacepoint_t>& middleSP,
+      InternalSpacePoint<external_spacepoint_t>& topSp, float zOrigin,
       bool isQualitySeed, float weight,
       std::vector<std::pair<
           float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
