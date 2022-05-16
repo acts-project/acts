@@ -65,6 +65,28 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
                           external_spacepoint_t& spM, bool bottom,
                           std::vector<LinCircle>& linCircleVec,
                           callable_t&& extractFunction);
+
+/// @brief Check the compatibility of spacepoint coordinates in xyz assuming the Bottom-Middle direction with the strip meassument details
+///
+/// @param[in] spacepointPosition Spacepoint coordinates in xyz plane.
+/// @param topHalfStripLength half of the length of the top strip.
+/// @param bottomHalfStripLength half of the length of the bottom strip.
+/// @param topStripDirection direction of the top strip.
+/// @param bottomStripDirection direction of the bottom strip.
+/// @param stripCenterDistance distance between the center of the two strips.
+/// @param bottomStripCenterPosition position of the center of the bottom strip.
+/// @param[in] toleranceParam Parameter used to evaluate if spacepointPosition is inside the detector elements.
+/// @param[out] outputCoordinates The output vector to write to.
+/// @returns bool that says if spacepoint is conpatible with being inside the detector element.
+static bool xyzCoordinateCheck(const double* spacepointPosition,
+                        const float topHalfStripLength,
+                        const float bottomHalfStripLength,
+                        const Acts::Vector3 topStripDirection,
+                        const Acts::Vector3 bottomStripDirection,
+                        const Acts::Vector3 stripCenterDistance,
+                        const Acts::Vector3 bottomStripCenterPosition,
+                        const float toleranceParam, double* outputCoordinates);
+
 }  // namespace Acts
 
 #include "Acts/Seeding/SeedFinderUtils.ipp"

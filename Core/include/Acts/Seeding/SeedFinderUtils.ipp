@@ -140,4 +140,73 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
               return (a.cotTheta < b.cotTheta);
             });
 }
+
+static bool xyzCoordinateCheck(const double* spacepointPosition,
+                        const float topHalfStripLength,
+                        const float bottomHalfStripLength,
+                        const Acts::Vector3 topStripDirection,
+                        const Acts::Vector3 bottomStripDirection,
+                        const Acts::Vector3 stripCenterDistance,
+                        const Acts::Vector3 bottomStripCenterPosition,
+                        const float toleranceParam, double* outputCoordinates) {
+  // check the compatibility of SPs coordinates in xyz assuming the
+  // Bottom-Middle direction with the strip meassument details
+
+  // cross product between top strip vector and spacepointPosition
+  double d1[3] = {
+      (topHalfStripLength * topStripDirection[1]) * spacepointPosition[2] -
+          (topHalfStripLength * topStripDirection[2]) * spacepointPosition[1],
+      (topHalfStripLength * topStripDirection[2]) * spacepointPosition[0] -
+          (topHalfStripLength * topStripDirection[0]) * spacepointPosition[2],
+      (topHalfStripLength * topStripDirection[0]) * spacepointPosition[1] -
+          (topHalfStripLength * topStripDirection[1]) * spacepointPosition[0]};
+
+  // scalar product between bottom strip vector and d1
+  double bd1 = (bottomHalfStripLength * bottomStripDirection[0]) * d1[0] +
+               (bottomHalfStripLength * bottomStripDirection[1]) * d1[1] +
+               (bottomHalfStripLength * bottomStripDirection[2]) * d1[2];
+
+  // compatibility check using distance between strips to evaluate if
+  // spacepointPosition is inside the bottom detector element
+  double s1 = (stripCenterDistance[0] * d1[0] + stripCenterDistance[1] * d1[1] +
+               stripCenterDistance[2] * d1[2]);
+  if (std::abs(s1) > std::abs(bd1) * toleranceParam)
+    return false;
+
+  // cross product between bottom strip vector and spacepointPosition
+  double d0[3] = {(bottomHalfStripLength * bottomStripDirection[1]) *
+                          spacepointPosition[2] -
+                      (bottomHalfStripLength * bottomStripDirection[2]) *
+                          spacepointPosition[1],
+                  (bottomHalfStripLength * bottomStripDirection[2]) *
+                          spacepointPosition[0] -
+                      (bottomHalfStripLength * bottomStripDirection[0]) *
+                          spacepointPosition[2],
+                  (bottomHalfStripLength * bottomStripDirection[0]) *
+                          spacepointPosition[1] -
+                      (bottomHalfStripLength * bottomStripDirection[1]) *
+                          spacepointPosition[0]};
+
+  // compatibility check using distance between strips to evaluate if
+  // spacepointPosition is inside the top detector element
+  double s0 =
+      -(stripCenterDistance[0] * d0[0] + stripCenterDistance[1] * d0[1] +
+        stripCenterDistance[2] * d0[2]);
+  if (std::abs(s0) > std::abs(bd1) * toleranceParam)
+    return false;
+
+  // if arive here spacepointPosition is compatible with strip directions and
+  // detector elements
+
+  // spacepointPosition corected with respect to the bottom strip direction and
+  // the distance between the strips
+  s0 = s0 / bd1;
+  outputCoordinates[0] = bottomStripCenterPosition[0] +
+                         (topHalfStripLength * topStripDirection[0]) * s0;
+  outputCoordinates[1] = bottomStripCenterPosition[1] +
+                         (topHalfStripLength * topStripDirection[1]) * s0;
+  outputCoordinates[2] = bottomStripCenterPosition[2] +
+                         (topHalfStripLength * topStripDirection[2]) * s0;
+  return true;
+}
 }  // namespace Acts

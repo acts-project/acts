@@ -277,6 +277,9 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       scatteringInRegion2 *=
           m_config.sigmaScattering * m_config.sigmaScattering;
 
+      float sinTheta = 1 / std::sqrt(iSinTheta2);
+      float cosTheta = cotThetaB * sinTheta;
+
       // clear all vectors used in each inner for loop
       state.topSpVec.clear();
       state.curvatures.clear();
@@ -284,13 +287,135 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       for (size_t t = t0; t < numTopSP; t++) {
         auto lt = state.linCircleTop[t];
 
+        float cotThetaT = lt.cotTheta;
+        float cotThetaBNew;
+        float rMxy;
+        float ub;
+        float vb;
+        float ut;
+        float vt;
+
+        if (m_config.useDetailedDoubleMeasurementInfo) {
+          // protects against division by 0
+          float dU = lt.U - Ub;
+          if (dU == 0.) {
+            continue;
+          }
+          // A and B are evaluated as a function of the circumference parameters
+          // x_0 and y_0
+          float A0 = (lt.V - Vb) / dU;
+
+          // coordinate transformation and checks for middle spacepoint
+          // x and y terms for the rotation from UV to XY plane
+          float rotationTermsUVtoXY[2] = {spM->x() * sinTheta / spM->radius(),
+                                          spM->y() * sinTheta / spM->radius()};
+          // position of Middle SP converted from UV to XY assuming cotTheta
+          // evaluated from the Bottom and Middle SPs double
+          double positionMiddle[3] = {
+              rotationTermsUVtoXY[0] - rotationTermsUVtoXY[1] * A0,
+              rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1],
+              cosTheta * std::sqrt(1 + A0 * A0)};
+
+          double rMTransf[3];
+          if (!xyzCoordinateCheck(
+                  positionMiddle, m_config.getTopHalfStripLength(&(spM->sp())),
+                  m_config.getBottomHalfStripLength(&(spM->sp())),
+                  m_config.getTopStripDirection(&(spM->sp())),
+                  m_config.getBottomStripDirection(&(spM->sp())),
+                  m_config.getStripCenterDistance(&(spM->sp())),
+                  m_config.getBottomStripCenterPosition(&(spM->sp())),
+                  m_config.toleranceParam, rMTransf)) {
+            continue;
+          }
+
+          // coordinate transformation and checks for bottom spacepoint
+          float B0 = 2. * (Vb - A0 * Ub);
+          float Cb = 1. - B0 * lb.y;
+          float Sb = A0 + B0 * lb.x;
+          double positionBottom[3] = {
+              rotationTermsUVtoXY[0] * Cb - rotationTermsUVtoXY[1] * Sb,
+              rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb,
+              cosTheta * std::sqrt(1 + A0 * A0)};
+
+          auto spB = state.compatBottomSP[b];
+          double rBTransf[3];
+          if (!xyzCoordinateCheck(
+                  positionBottom, m_config.getTopHalfStripLength(&(spB->sp())),
+                  m_config.getBottomHalfStripLength(&(spB->sp())),
+                  m_config.getTopStripDirection(&(spB->sp())),
+                  m_config.getBottomStripDirection(&(spB->sp())),
+                  m_config.getStripCenterDistance(&(spB->sp())),
+                  m_config.getBottomStripCenterPosition(&(spB->sp())),
+                  m_config.toleranceParam, rBTransf)) {
+            continue;
+          }
+
+          // coordinate transformation and checks for top spacepoint
+          float Ct = 1. - B0 * lt.y;
+          float St = A0 + B0 * lt.x;
+          double positionTop[3] = {
+              rotationTermsUVtoXY[0] * Ct - rotationTermsUVtoXY[1] * St,
+              rotationTermsUVtoXY[0] * St + rotationTermsUVtoXY[1] * Ct,
+              cosTheta * std::sqrt(1 + A0 * A0)};
+
+          auto spT = state.compatTopSP[t];
+          double rTTransf[3];
+          if (!xyzCoordinateCheck(
+                  positionTop, m_config.getTopHalfStripLength(&(spT->sp())),
+                  m_config.getBottomHalfStripLength(&(spT->sp())),
+                  m_config.getTopStripDirection(&(spT->sp())),
+                  m_config.getBottomStripDirection(&(spT->sp())),
+                  m_config.getStripCenterDistance(&(spT->sp())),
+                  m_config.getBottomStripCenterPosition(&(spT->sp())),
+                  m_config.toleranceParam, rTTransf)) {
+            continue;
+          }
+
+          // correcting other variables
+          float xB = rBTransf[0] - rTTransf[0];
+          float yB = rBTransf[1] - rTTransf[1];
+          float zB = rBTransf[2] - rTTransf[2];
+          float xT = rBTransf[0] - rTTransf[0];
+          float yT = rBTransf[1] - rTTransf[1];
+          float zT = rBTransf[2] - rTTransf[2];
+
+          float iDeltaRB2 = 1. / (xB * xB + yB * yB);
+          float iDeltaRT2 = 1. / (xT * xT + yT * yT);
+
+          cotThetaBNew = -zB * std::sqrt(iDeltaRB2);
+          cotThetaT = zT * std::sqrt(iDeltaRT2);
+
+          rMxy =
+              std::sqrt(rMTransf[0] * rMTransf[0] + rMTransf[1] * rMTransf[1]);
+          float Ax = rMTransf[0] / rMxy;
+          float Ay = rMTransf[1] / rMxy;
+
+          ub = (xB * Ax + yB * Ay) * iDeltaRB2;
+          vb = (yB * Ax - xB * Ay) * iDeltaRB2;
+          ut = (xT * Ax + yT * Ay) * iDeltaRT2;
+          vt = (yT * Ax - xT * Ay) * iDeltaRT2;
+
+        } else {
+          // don't use the xyz coordinate check
+          cotThetaBNew = cotThetaB;
+        }
+
+        float cotThetaAvg2;
+        if (m_config.arithmeticAverageCotTheta) {
+          // use arithmetic average
+          cotThetaAvg2 = std::pow((cotThetaBNew + lt.cotTheta) / 2, 2);
+        } else {
+          // use geometric average
+          cotThetaAvg2 = cotThetaBNew * lt.cotTheta;
+        }
+
         // add errors of spB-spM and spM-spT pairs and add the correlation term
         // for errors on spM
         float error2 = lt.Er + ErB +
-                       2 * (cotThetaB * lt.cotTheta * varianceRM + varianceZM) *
-                           iDeltaRB * lt.iDeltaR;
+                       2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB *
+                           lt.iDeltaR;
 
-        float deltaCotTheta = cotThetaB - lt.cotTheta;
+        float deltaCotTheta = cotThetaBNew - cotThetaT;
         float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
         // Apply a cut on the compatibility between the r-z slope of the two
         // seed segments. This is done by comparing the squared difference
@@ -305,9 +430,9 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
           // additional cut to skip top SPs when producing triplets
           if (m_config.skipPreviousTopSP) {
-            // break if cotThetaB < lt.cotTheta because the SP are sorted by
-            // cotTheta
-            if (cotThetaB - lt.cotTheta < 0) {
+            // break if cotTheta from bottom SP < cotTheta from top SP because
+            // the SP are sorted by cotTheta
+            if (cotThetaBNew - lt.cotTheta < 0) {
               break;
             }
             t0 = t + 1;
@@ -315,17 +440,37 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           continue;
         }
 
-        // protects against division by 0
-        float dU = lt.U - Ub;
-        if (dU == 0.) {
-          continue;
+        float dU;
+        float A;
+        float S2;
+        float B;
+        float B2;
+
+        if (m_config.useDetailedDoubleMeasurementInfo) {
+          // protects against division by 0
+          dU = lt.U - Ub;
+          if (dU == 0.) {
+            continue;
+          }
+          // A and B are evaluated as a function of the circumference parameters
+          // x_0 and y_0
+          A = (lt.V - Vb) / dU;
+          S2 = 1. + A * A;
+          B = Vb - A * Ub;
+          B2 = B * B;
+
+        } else {
+          // protects against division by 0
+          dU = ut - ub;
+          if (dU == 0.) {
+            continue;
+          }
+          A = (vt - vb) / dU;
+          S2 = 1. + A * A;
+          B = vb - A * ub;
+          B2 = B * B;
         }
-        // A and B are evaluated as a function of the circumference parameters
-        // x_0 and y_0
-        float A = (lt.V - Vb) / dU;
-        float S2 = 1. + A * A;
-        float B = Vb - A * Ub;
-        float B2 = B * B;
+
         // sqrt(S2)/B = 2 * helixradius
         // calculated radius must not be smaller than minimum radius
         if (S2 < B2 * m_config.minHelixDiameter2) {
@@ -353,7 +498,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         // if deltaTheta larger than allowed scattering for calculated pT, skip
         if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
           if (m_config.skipPreviousTopSP) {
-            if (cotThetaB - lt.cotTheta < 0) {
+            if (cotThetaBNew - cotThetaT < 0) {
               break;
             }
             t0 = t;
@@ -363,7 +508,12 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         // A and B allow calculation of impact params in U/V plane with linear
         // function
         // (in contrast to having to solve a quadratic function in x/y plane)
-        float Im = std::abs((A - B * rM) * rM);
+        float Im;
+        if (m_config.useDetailedDoubleMeasurementInfo) {
+          Im = std::abs((A - B * rM) * rM);
+        } else {
+          Im = std::abs((A - B * rMxy) * rMxy);
+        }
 
         if (Im <= m_config.impactMax) {
           state.topSpVec.push_back(state.compatTopSP[t]);
@@ -373,7 +523,8 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           state.impactParameters.push_back(Im);
 
           // evaluate eta and pT of the seed
-          float theta = std::atan(1. / std::sqrt(cotThetaB * lt.cotTheta));
+          float cotThetaAvg = std::sqrt(cotThetaAvg2);
+          float theta = std::atan(1. / cotThetaAvg);
           float eta = -std::log(std::tan(0.5 * theta));
           state.etaVec.push_back(eta);
           state.ptVec.push_back(pT);

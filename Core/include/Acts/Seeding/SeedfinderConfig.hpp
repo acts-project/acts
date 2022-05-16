@@ -73,6 +73,10 @@ struct SeedfinderConfig {
   // enable cut on the compatibility between interaction point and SPs
   bool interactionPointCut = false;
 
+  // use arithmetic average in the calculation of the squared error on the
+  // difference in tan(theta)
+  bool arithmeticAverageCotTheta = false;
+
   // non equidistant binning in z
   std::vector<float> zBinEdges;
 
@@ -97,6 +101,10 @@ struct SeedfinderConfig {
 
   // for how many seeds can one SpacePoint be the middle SpacePoint?
   unsigned int maxSeedsPerSpM = 5;
+
+  // tolerance parameter used to check the compatibility of SPs coordinates in
+  // xyz
+  float toleranceParam = 1.1;
 
   // Geometry Settings
   // Detector ROI
