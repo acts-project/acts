@@ -32,13 +32,13 @@ The following dependencies are optional and are needed to build additional
 components:
 
 -   [CUDA](https://developer.nvidia.com/cuda-zone) for the CUDA plugin and the Exa.TrkX plugin and its examples
--   [DD4Hep](http://dd4hep.cern.ch) >= 1.11 for the DD4Hep plugin and some examples
+-   [DD4hep](http://dd4hep.cern.ch) >= 1.11 for the DD4hep plugin and some examples
 -   [Doxygen](http://doxygen.org) >= 1.8.15 for the documentation
 -   [Geant4](http://geant4.org/) for some examples
 -   [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) >= 3.2.1 for some examples
 -   [Intel Threading Building Blocks](https://01.org/tbb) >= 2020.1 for the examples
 -   [ONNX Runtime](https://onnxruntime.ai/) for the ONNX plugin, the Exa.TrkX plugin and some examples
--   [Pythia8](http://home.thep.lu.se/~torbjorn/Pythia.html) for some examples
+-   [Pythia8](https://pythia.org) for some examples
 -   [ROOT](https://root.cern.ch) >= 6.20 for the TGeo plugin and the examples
 -   [Sphinx](https://www.sphinx-doc.org) >= 2.0 with [Breathe](https://breathe.readthedocs.io/en/latest/), [Exhale](https://exhale.readthedocs.io/en/latest/), and [recommonmark](https://recommonmark.readthedocs.io/en/latest/index.html) extensions for the documentation
 -   [SYCL](https://www.khronos.org/sycl/) for the SYCL plugin

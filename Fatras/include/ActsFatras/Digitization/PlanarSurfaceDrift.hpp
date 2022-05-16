@@ -33,7 +33,7 @@ struct PlanarSurfaceDrift {
   /// @param surface The nominal intersection surface
   /// @param thickness The emulated module/depletion thickness
   /// @param pos The position in global coordinates
-  /// @param dir The direciton in global coordinates
+  /// @param dir The direction in global coordinates
   /// @param driftdir The drift direction in local (surface) coordinates
   /// @note a drift direction of (0,0,0) is drift to central plane
   ///       any other a drift direction with driftDir.z() != 0.

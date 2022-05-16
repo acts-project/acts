@@ -58,7 +58,7 @@ To draw the resolution (residual and pull) of fitted perigee track parameters fo
 
 .. code-block:: console
 
- $ root <source>/Examples/Scripts/perigeeParamResolution.C("rec_ttbar_pu200/performance_track_fitter.root")'
+ $ root <source>/Examples/Scripts/perigeeParamResolution.C'("rec_ttbar_pu200/performance_track_fitter.root")'
 
 ``<source>`` here is used to identify the path of the source directory. 
 

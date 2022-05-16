@@ -24,8 +24,8 @@ Currently, there are two configurable criteria to select compatible source links
 * Global maximum number of measurements on a surface. This could be set up via ``--ckf-selection-nmax`` 
 
 The digitization of the truth hits must also be configured. Since the command-line configuration of this step can get unwieldy,
-an example json configuration file for the smearing digitizer is provided with the source code.
-The detector volumes and layers used in the space point maker are also configured using another example json file in the source code.
+an example JSON configuration file for the smearing digitizer is provided with the source code.
+The detector volumes and layers used in the space point maker are also configured using another example JSON file in the source code.
 
 .. code-block:: console
 
