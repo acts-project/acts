@@ -151,7 +151,8 @@ struct SeedfinderConfig {
   int nTrplPerSpBLimit = 100;
   int nAvgTrplPerSpBLimit = 2;
 
-  // Delegates for accessors to detailed information on double measurement that produced the space point
+  // Delegates for accessors to detailed information on double measurement that
+  // produced the space point
   bool useDetailedDoubleMeasurementInfo = false;
   Delegate<float(const void*)> getTopHalfStripLength;
   Delegate<float(const void*)> getBottomHalfStripLength;
