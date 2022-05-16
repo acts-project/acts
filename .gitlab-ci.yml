@@ -89,7 +89,7 @@ test:
     - build
   image: ghcr.io/acts-project/ubuntu2004_exatrkx:v23
   tags:
-    - docker-gpu-a4000
+    - docker-gpu-nvidia
   script:
     - apt-get update -y
     - apt-get install -y python3 libxxhash0
