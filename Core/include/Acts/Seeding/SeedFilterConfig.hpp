@@ -37,6 +37,11 @@ struct SeedFilterConfig {
   // sort vectors vectors by curvature
   bool curvatureSortingInFilter = false;
 
+  // increment in seed weight if number of compatible seeds is larger than
+  // numSeedIncrement
+  float seedWeightIncrement = 0;
+  float numSeedIncrement = std::numeric_limits<float>::infinity();
+
   // seed confirmation
   bool seedConfirmation = false;
   // contains parameters for central seed confirmation
@@ -51,9 +56,9 @@ struct SeedFilterConfig {
   float minImpactSeedConf = 1. * Acts::UnitConstants::mm;
 
   // maximum number of lower quality seeds in seed confirmation
-  float maxSeedsPerSpMConf = 5;
+  float maxSeedsPerSpMConf = std::numeric_limits<float>::infinity();
   // maximum number of quality seeds in seed confirmation
-  float maxQualitySeedsPerSpMConf = 5;
+  float maxQualitySeedsPerSpMConf = std::numeric_limits<float>::infinity();
 
   // use deltaR instead of top radius
   bool useDeltaRorTopRadius = false;
