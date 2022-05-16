@@ -12,13 +12,17 @@
 
 #include "edm4hep/SimTrackerHitCollection.h"
 
+#include <fstream> // TODO remove
+
 namespace Acts {
 
 ActsFatras::Hit convertEDM4hepSimHit(const edm4hep::SimTrackerHit& sth) {
-  const auto geometryId =
-      0;  // Acts::GeometryIdentifier(sth.getCellID());  // TODO
-  const auto particleId =
-      0;  // ActsFatras::Barcode(sth.getMCParticle().getPDG());  // TODO
+  std::ofstream debug("/home/andreas/debug.txt", std::ios::app);
+  debug << "EDM4hep convert cell id " << sth.getCellID() << std::endl;
+
+  const auto geometryId = sth.getCellID();
+  ActsFatras::Barcode particleId;
+  particleId.setParticle(sth.getMCParticle().getPDG()); // TODO or id()?
 
   const auto mass = sth.getMCParticle().getMass();
   const ActsVector<3> momentum{
@@ -41,12 +45,11 @@ ActsFatras::Hit convertEDM4hepSimHit(const edm4hep::SimTrackerHit& sth) {
       energy,
   };
   ActsFatras::Hit::Vector4 delta4{
-      0 * Acts::UnitConstants::GeV,  // TODO
-      0 * Acts::UnitConstants::GeV,  // TODO
-      0 * Acts::UnitConstants::GeV,  // TODO
-      0 * Acts::UnitConstants::GeV,  // TODO sth.getEDep()
+      0 * Acts::UnitConstants::GeV, 0 * Acts::UnitConstants::GeV,
+      0 * Acts::UnitConstants::GeV,
+      0 * Acts::UnitConstants::GeV,  // sth.getEDep()
   };
-  int32_t index = -1;  // TODO
+  int32_t index = -1;
 
   return ActsFatras::Hit(geometryId, particleId, pos4, mom4, mom4 + delta4,
                          index);

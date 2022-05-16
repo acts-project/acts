@@ -36,7 +36,7 @@ def test_odd():
     config = acts.MaterialMapJsonConverter.Config()
     matDeco = acts.JsonMaterialDecorator(
         rConfig=config,
-        jFileName="thirdparty/OpenDataDetector/config/odd-material-mapping-config.json",
+        jFileName=str(getOpenDataDetectorDirectory() / "config/odd-material-mapping-config.json"),
         level=acts.logging.WARNING,
     )
 

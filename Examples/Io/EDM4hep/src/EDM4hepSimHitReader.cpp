@@ -49,15 +49,18 @@ ActsExamples::ProcessCode ActsExamples::EDM4hepSimHitReader::read(
   m_reader.goToEvent(ctx.eventNumber);
 
   for (const auto& name : m_simHitCollections) {
-    auto& sths = m_store.get<edm4hep::SimTrackerHitCollection>(name);
+    auto& collection = m_store.get<podio::CollectionBase>(name);
 
-    if (!sths.isValid()) {
+    if (!collection.isValid()) {
       continue;
     }
 
-    for (const auto& sth : sths) {
-      auto hit = Acts::convertEDM4hepSimHit(sth);
-      unordered.push_back(std::move(hit));
+    if (collection.getTypeName() == "edm4hep::SimTrackerHitCollection") {
+      for (const auto& sth :
+           (const edm4hep::SimTrackerHitCollection&)collection) {
+        auto hit = Acts::convertEDM4hepSimHit(sth);
+        unordered.push_back(std::move(hit));
+      }
     }
   }
 
