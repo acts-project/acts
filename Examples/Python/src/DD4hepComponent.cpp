@@ -32,6 +32,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
     auto c = py::class_<Config>(s, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(logLevel);
+    ACTS_PYTHON_MEMBER(dd4hepLogLevel);
     ACTS_PYTHON_MEMBER(xmlFileNames);
     ACTS_PYTHON_MEMBER(name);
     ACTS_PYTHON_MEMBER(bTypePhi);

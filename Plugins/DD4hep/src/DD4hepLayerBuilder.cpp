@@ -107,7 +107,7 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
         }
         // check if layer has surfaces
         if (layerSurfaces.empty()) {
-          ACTS_VERBOSE(" Disc layer has no senstive surfaces.");
+          ACTS_VERBOSE(" Disc layer has no sensitive surfaces.");
           // in case no surfaces are handed over the layer thickness will be set
           // to a default value to allow attaching material layers
           double z = (zMin + zMax) * 0.5;

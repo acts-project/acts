@@ -158,7 +158,8 @@ std::shared_ptr<const CylinderVolumeHelper> cylinderVolumeHelper_dd4hep(
 /// @param [out] subdetectors the DD4hep::DetElements of the sub detectors
 /// contained by detElement
 void collectSubDetectors_dd4hep(dd4hep::DetElement& detElement,
-                                std::vector<dd4hep::DetElement>& subdetectors);
+                                std::vector<dd4hep::DetElement>& subdetectors,
+                                LoggerWrapper logger);
 
 /// Method internally used by convertDD4hepDetector to collect all volumes of a
 /// compound detector
@@ -175,7 +176,8 @@ void collectCompounds_dd4hep(dd4hep::DetElement& detElement,
 /// @param [out] layers the DD4hep::DetElements of the layers contained by
 /// detElement
 void collectLayers_dd4hep(dd4hep::DetElement& detElement,
-                          std::vector<dd4hep::DetElement>& layers);
+                          std::vector<dd4hep::DetElement>& layers,
+                          LoggerWrapper logger);
 
 /// Method internally used by convertDD4hepDetector
 /// @param [in] detElement the dd4hep::DetElement of the volume of which the
