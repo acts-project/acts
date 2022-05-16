@@ -176,9 +176,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
                   bottomSP, middleSP, *topSpVec[i], zOrigin, true)));
         } else {
           // otherwise we check if there is a lower quality seed to remove
-          //          checkReplaceSeeds(bottomSP, middleSP, *topSpVec[i],
-          //          zOrigin, true,
-          //                            weight, outIt);
+          checkReplaceSeeds(bottomSP, middleSP, *topSpVec[i], zOrigin, true,
+                            weight, outIt);
         }
 
       } else if (weight > weightMin) {
@@ -200,9 +199,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
                         bottomSP, middleSP, *topSpVec[i], zOrigin, false)));
       } else {
         // otherwise we check if there is a lower quality seed to remove
-        //        checkReplaceSeeds(bottomSP, middleSP, *topSpVec[i], zOrigin,
-        //        false,
-        //                          weight, outIt);
+        checkReplaceSeeds(bottomSP, middleSP, *topSpVec[i], zOrigin, false,
+                          weight, outIt);
       }
     }
   }
