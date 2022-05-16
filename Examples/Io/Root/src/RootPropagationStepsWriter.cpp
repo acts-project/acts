@@ -183,7 +183,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       m_step_act.push_back(actor);
       m_step_abt.push_back(aborter);
       m_step_usr.push_back(user);
-      
+
       // stepper efficiency
       m_nStepTrials.push_back(step.stepSize.nStepTrials);
     }
