@@ -12,10 +12,10 @@
 #include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSpacePointReader.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepSimHitReader.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
 #include "ActsExamples/Io/Root/RootTrajectorySummaryReader.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepSimHitReader.hpp"
 
 #include <memory>
 

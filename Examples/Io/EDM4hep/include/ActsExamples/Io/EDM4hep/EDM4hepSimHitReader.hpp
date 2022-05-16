@@ -12,11 +12,11 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 
-#include "podio/EventStore.h"
-#include "podio/ROOTReader.h"
-
 #include <memory>
 #include <string>
+
+#include "podio/EventStore.h"
+#include "podio/ROOTReader.h"
 
 namespace ActsExamples {
 

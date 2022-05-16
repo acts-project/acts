@@ -6,13 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/EDM4hep/EDM4hepConverter.hpp"
-
-#include "ActsFatras/EventData/Hit.hpp"
-
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitReader.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+
+#include "Acts/Plugins/EDM4hep/EDM4hepConverter.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
 
 #include "edm4hep/SimTrackerHitCollection.h"
 

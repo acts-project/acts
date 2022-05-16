@@ -313,7 +313,9 @@ def test_edm4hep_simhits_reader(conf_const):
         conf_const(
             EDM4hepSimHitReader,
             level=acts.logging.INFO,
-            inputPath=str("/home/andreas/cern/source/OpenDataDetector/output_edm4hep.root"), # TODO
+            inputPath=str(  # TODO
+                "/home/andreas/cern/source/OpenDataDetector/output_edm4hep.root"
+            ),
             outputSimHits="simhits",
         )
     )
