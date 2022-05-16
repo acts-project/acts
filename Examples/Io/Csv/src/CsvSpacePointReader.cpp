@@ -64,10 +64,32 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointReader::read(
     Acts::Vector3 globalPos(data.sp_x, data.sp_y, data.sp_z);
 
     if (m_cfg.inputCollection == "pixel" || m_cfg.inputCollection == "strip" ||
-        m_cfg.inputCollection == "overlap")
-      spacePoints.emplace_back(globalPos, data.sp_covr, data.sp_covz,
-                               data.measurement_id);
-    else {
+        m_cfg.inputCollection == "overlap") {
+      if (m_cfg.extendCollection) {
+        Acts::Vector3 topStripDirection(data.sp_topStripDirection[0],
+                                        data.sp_topStripDirection[1],
+                                        data.sp_topStripDirection[2]);
+        Acts::Vector3 bottomStripDirection(data.sp_bottomStripDirection[0],
+                                           data.sp_bottomStripDirection[1],
+                                           data.sp_bottomStripDirection[2]);
+        Acts::Vector3 stripCenterDistance(data.sp_stripCenterDistance[0],
+                                          data.sp_stripCenterDistance[1],
+                                          data.sp_stripCenterDistance[2]);
+        Acts::Vector3 bottomStripCenterPosition(
+          data.sp_bottomStripCenterPosition[0],
+          data.sp_bottomStripCenterPosition[1],
+          data.sp_bottomStripCenterPosition[2]);
+
+        spacePoints.emplace_back(
+          globalPos, data.sp_covr, data.sp_covz, data.measurement_id,
+          data.sp_topHalfStripLength, data.sp_bottomHalfStripLength,
+          topStripDirection, bottomStripDirection, stripCenterDistance,
+          bottomStripCenterPosition);
+      } else {
+        spacePoints.emplace_back(globalPos, data.sp_covr, data.sp_covz,
+                                 data.measurement_id);
+      }
+    } else {
       ACTS_ERROR("Invalid space point type " << m_cfg.inputStem);
       return ProcessCode::ABORT;
     }

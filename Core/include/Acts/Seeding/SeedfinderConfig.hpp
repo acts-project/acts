@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 
 #include <memory>
 
@@ -149,6 +150,15 @@ struct SeedfinderConfig {
   int maxBlockSize = 1024;
   int nTrplPerSpBLimit = 100;
   int nAvgTrplPerSpBLimit = 2;
+
+  // Delegates for accessors to detailed information on double measurement that produced the space point
+  bool useDetailedDoubleMeasurementInfo = false;
+  Delegate<float(const void*)> getTopHalfStripLength;
+  Delegate<float(const void*)> getBottomHalfStripLength;
+  Delegate<Acts::Vector3(const void*)> getTopStripDirection;
+  Delegate<Acts::Vector3(const void*)> getBottomStripDirection;
+  Delegate<Acts::Vector3(const void*)> getStripCenterDistance;
+  Delegate<Acts::Vector3(const void*)> getBottomStripCenterPosition;
 
   SeedfinderConfig toInternalUnits() const {
     using namespace Acts::UnitLiterals;

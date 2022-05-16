@@ -252,6 +252,10 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     size_t t0 = 0;
 
+    // just to show how to use it
+    if (m_config.useDetailedDoubleMeasurementInfo)
+          std::cout << "CHECK MIDDLE --> " << m_config.getTopHalfStripLength(&(spM->sp())) << std::endl;
+
     for (size_t b = 0; b < numBotSP; b++) {
       auto lb = state.linCircleBottom[b];
       float Zob = lb.Zo;
@@ -260,6 +264,10 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       float Ub = lb.U;
       float ErB = lb.Er;
       float iDeltaRB = lb.iDeltaR;
+
+      // just to show how to use it
+      if (m_config.useDetailedDoubleMeasurementInfo)
+        std::cout << "CHECK BOTTOM --> " << m_config.getTopHalfStripLength(&(state.compatBottomSP.at(b)->sp())) << std::endl;
 
       // 1+(cot^2(theta)) = 1/sin^2(theta)
       float iSinTheta2 = (1. + cotThetaB * cotThetaB);
@@ -282,6 +290,11 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       state.curvatures.clear();
       state.impactParameters.clear();
       for (size_t t = t0; t < numTopSP; t++) {
+
+        // just to show how to use it
+        if (m_config.useDetailedDoubleMeasurementInfo)
+          std::cout << "CHECK TOP --> " << m_config.getTopHalfStripLength(&(state.compatTopSP.at(t)->sp())) << std::endl;
+
         auto lt = state.linCircleTop[t];
 
         // add errors of spB-spM and spM-spT pairs and add the correlation term

@@ -105,6 +105,44 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     }
   }
 
+  if (m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo) {
+    m_cfg.seedFinderConfig.getTopHalfStripLength.connect([](const void*, const void* ptr) -> float {
+      auto* concretePtr = static_cast<const SimSpacePoint*>(ptr);
+      throw_assert (concretePtr->validDoubleMeasurementDetails() == true, "Not valid measurement details");
+      return concretePtr->topHalfStripLength();}
+    );
+
+    m_cfg.seedFinderConfig.getBottomHalfStripLength.connect([](const void*, const void* ptr) -> float {
+      auto* concretePtr = static_cast<const SimSpacePoint*>(ptr);
+      throw_assert (concretePtr->validDoubleMeasurementDetails() == true, "Not valid measurement details");
+      return concretePtr->bottomHalfStripLength();}
+    );
+
+    m_cfg.seedFinderConfig.getTopStripDirection.connect([](const void*, const void* ptr) -> Acts::Vector3 {
+      auto* concretePtr = static_cast<const SimSpacePoint*>(ptr);
+      throw_assert (concretePtr->validDoubleMeasurementDetails() == true, "Not valid measurement details");
+      return concretePtr->topStripDirection();}
+    );
+
+    m_cfg.seedFinderConfig.getBottomStripDirection.connect([](const void*, const void* ptr) -> Acts::Vector3 {
+      auto* concretePtr = static_cast<const SimSpacePoint*>(ptr);
+      throw_assert (concretePtr->validDoubleMeasurementDetails() == true, "Not valid measurement details");
+      return concretePtr->bottomStripDirection();}
+    );
+
+    m_cfg.seedFinderConfig.getStripCenterDistance.connect([](const void*, const void* ptr) -> Acts::Vector3 {
+      auto* concretePtr = static_cast<const SimSpacePoint*>(ptr);
+      throw_assert (concretePtr->validDoubleMeasurementDetails() == true, "Not valid measurement details");
+      return concretePtr->stripCenterDistance();}
+    );
+
+    m_cfg.seedFinderConfig.getBottomStripCenterPosition.connect([](const void*, const void* ptr) -> Acts::Vector3 {
+      auto* concretePtr = static_cast<const SimSpacePoint*>(ptr);
+      throw_assert (concretePtr->validDoubleMeasurementDetails() == true, "Not valid measurement details");
+      return concretePtr->bottomStripCenterPosition();}
+    );
+  }
+
   m_cfg.seedFinderConfig.seedFilter =
       std::make_unique<Acts::SeedFilter<SimSpacePoint>>(m_cfg.seedFilterConfig);
 }
