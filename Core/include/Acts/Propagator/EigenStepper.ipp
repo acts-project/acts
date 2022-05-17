@@ -269,7 +269,6 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
             4.0f);
   }
 
-  // TODO: enable only if needed
   state.stepping.stepSize.nStepTrials = nStepTrials;
 
   return h;
