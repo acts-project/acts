@@ -146,7 +146,7 @@ bool xyzCoordinateCheck(Acts::SeedfinderConfig<external_spacepoint_t> m_config,
                         sp_range_t sp, const double* spacepointPosition,
                         const float toleranceParam, double* outputCoordinates) {
   // check the compatibility of SPs coordinates in xyz assuming the
-  // Bottom-Middle direction with the strip meassument details
+  // Bottom-Middle direction with the strip measurement details
 
   const float topHalfStripLength = m_config.getTopHalfStripLength(&(sp->sp()));
   const float bottomHalfStripLength =
