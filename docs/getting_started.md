@@ -310,6 +310,26 @@ The following environment variables might be useful.
 | HepMC3_DIR           | Search path for the HepMC3 installation  |
 | Pythia8_DIR          | Search path for the Pythia8 installation |
 
+## The OpenDataDetector
+
+Acts comes packaged with a detector modeled using DD4Hep that can be used to test your algorithms. It comes equipped with a magnetic field file as well as an already built material map. 
+It is available via the git submodule feature by performing the following steps (git lfs need to be installed on your machine) :
+
+.. code-block:: console
+  
+  git submodule init
+  git submodule update
+
+To use it, you will then need to build acts with the ACTS_BUILD_ODD option and then point either LD_LIBRARY_PATH on Linux or  
+DYLD_LIBRARY_PATH and DD4HEP_LIBRARY_PATH on MacOs to the install path of the ODD factory (for example : build/thirdparty/OpenDataDetector/factory).
+
+You can now use the ODD in the python binding by using : 
+
+```oddMaterialDeco = acts.IMaterialDecorator.fromFile("PATH_TO_Acts/thirdparty/OpenDataDetector/data/odd-material-maps.root")
+detector, trackingGeometry, decorators = getOpenDataDetector(oddMaterialDeco)
+```
+
+
 ## Using Acts
 
 When using Acts in your own CMake-based project, you need to include the

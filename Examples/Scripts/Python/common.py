@@ -42,7 +42,7 @@ def getOpenDataDetector(mdecorator=None):
         if not found:
             msg = (
                 "Unable to find OpenDataDetector factory library. "
-                f"You might need to point {'/'.join(env_vars)} to build/thirdparty/OpenDataDetector/factory"
+                f"You might need to point {'/'.join(env_vars)} to build/thirdparty/OpenDataDetector/factory or other ODD install location"
             )
             raise RuntimeError(msg)
 
