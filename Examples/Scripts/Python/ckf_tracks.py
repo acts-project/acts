@@ -1,23 +1,29 @@
 #!/usr/bin/env python3
 from pathlib import Path
 from typing import Optional, Union
+from collections import namedtuple
 
 from acts.examples import Sequencer, GenericDetector, RootParticleReader
 
 import acts
 
 from acts import UnitConstants as u
-from seeding import TruthSeedRanges
+
+CKFPerformanceConfig = namedtuple(
+    "CKFPerformanceConfig",
+    ["truthMatchProbMin", "nMeasurementsMin", "ptMin"],
+    defaults=[None] * 3,
+)
 
 
 @acts.examples.NamedTypeArgs(
-    truthSeedRanges=TruthSeedRanges,
+    CKFPerformanceConfigArg=CKFPerformanceConfig,
 )
 def addCKFTracks(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
-    truthSeedRanges: TruthSeedRanges = TruthSeedRanges(),
+    CKFPerformanceConfigArg: CKFPerformanceConfig = CKFPerformanceConfig(),
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     selectedParticles: str = "truth_seeds_selected",
@@ -30,8 +36,8 @@ def addCKFTracks(
         the sequencer module to which we add the Seeding steps (returned from addSeeding)
     trackingGeometry : tracking geometry
     field : magnetic field
-    truthSeedRanges : TruthSeedRanges(nHits, pt)
-        CKFPerformanceWriter configuration. Each range is specified as a tuple of (min,max), though currently only the min is used.
+    CKFPerformanceConfigArg : CKFPerformanceConfig(truthMatchProbMin, nMeasurementsMin, ptMin)
+        CKFPerformanceWriter configuration.
         Defaults specified in Examples/Io/Performance/ActsExamples/Io/Performance/CKFPerformanceWriter.hpp
     outputDirCsv : Path|str, path, None
         the output folder for the Csv output, None triggers no output
@@ -105,9 +111,12 @@ def addCKFTracks(
             inputParticles=selectedParticles,
             inputTrajectories=trackFinder.config.outputTrajectories,
             inputMeasurementParticlesMap="measurement_particles_map",
-            # The bottom seed could be the first, second or third hits on the truth track
-            nMeasurementsMin=truthSeedRanges.nHits[0],
-            ptMin=truthSeedRanges.pt[0],
+            **acts.examples.defaultKWArgs(
+                # The bottom seed could be the first, second or third hits on the truth track
+                nMeasurementsMin=CKFPerformanceConfigArg.nMeasurementsMin,
+                ptMin=CKFPerformanceConfigArg.ptMin,
+                truthMatchProbMin=CKFPerformanceConfigArg.truthMatchProbMin,
+            ),
             filePath=str(outputDirRoot / "performance_ckf.root"),
         )
         s.addWriter(ckfPerfWriter)
@@ -233,7 +242,7 @@ def runCKFTracks(
         s,
         trackingGeometry,
         field,
-        TruthSeedRanges(pt=(400.0 * u.MeV, None), nHits=(6, None)),
+        CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
         outputDirRoot=outputDir,
         outputDirCsv=outputDir / "csv" if outputCsv else None,
     )

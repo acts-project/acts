@@ -66,5 +66,10 @@ run \
     -p $outdir/truth_tracking_plots \
 
 
+run \
+    $outdir/acts_analysis_residuals_and_pulls.root \
+    $refdir/acts_analysis_residuals_and_pulls.root \
+    --title "full_chain_odd" \
+
 
 exit $ec
