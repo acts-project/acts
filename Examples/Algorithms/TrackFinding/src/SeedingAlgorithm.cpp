@@ -107,33 +107,33 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
 
   if (m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo) {
     m_cfg.seedFinderConfig.getTopHalfStripLength.connect(
-        [](const void*, const SimSpacePoint* ptr) -> float {
-          return ptr->topHalfStripLength();
+        [](const void*, const SimSpacePoint sp) -> float {
+          return sp.topHalfStripLength();
         });
 
     m_cfg.seedFinderConfig.getBottomHalfStripLength.connect(
-        [](const void*, const SimSpacePoint* ptr) -> float {
-          return ptr->bottomHalfStripLength();
+        [](const void*, const SimSpacePoint sp) -> float {
+          return sp.bottomHalfStripLength();
         });
 
     m_cfg.seedFinderConfig.getTopStripDirection.connect(
-        [](const void*, const SimSpacePoint* ptr) -> Acts::Vector3 {
-          return ptr->topStripDirection();
+        [](const void*, const SimSpacePoint sp) -> Acts::Vector3 {
+          return sp.topStripDirection();
         });
 
     m_cfg.seedFinderConfig.getBottomStripDirection.connect(
-        [](const void*, const SimSpacePoint* ptr) -> Acts::Vector3 {
-          return ptr->bottomStripDirection();
+        [](const void*, const SimSpacePoint sp) -> Acts::Vector3 {
+          return sp.bottomStripDirection();
         });
 
     m_cfg.seedFinderConfig.getStripCenterDistance.connect(
-        [](const void*, const SimSpacePoint* ptr) -> Acts::Vector3 {
-          return ptr->stripCenterDistance();
+        [](const void*, const SimSpacePoint sp) -> Acts::Vector3 {
+          return sp.stripCenterDistance();
         });
 
     m_cfg.seedFinderConfig.getBottomStripCenterPosition.connect(
-        [](const void*, const SimSpacePoint* ptr) -> Acts::Vector3 {
-          return ptr->bottomStripCenterPosition();
+        [](const void*, const SimSpacePoint sp) -> Acts::Vector3 {
+          return sp.bottomStripCenterPosition();
         });
   }
 

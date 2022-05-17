@@ -166,17 +166,17 @@ struct SeedfinderConfig {
   // Enables setting of the following delegates.
   bool useDetailedDoubleMeasurementInfo = false;
   // Returns half of the length of the top strip.
-  Delegate<float(const SpacePoint*)> getTopHalfStripLength;
+  Delegate<float(const SpacePoint)> getTopHalfStripLength;
   // Returns half of the length of the bottom strip.
-  Delegate<float(const SpacePoint*)> getBottomHalfStripLength;
+  Delegate<float(const SpacePoint)> getBottomHalfStripLength;
   // Returns direction of the top strip.
-  Delegate<Acts::Vector3(const SpacePoint*)> getTopStripDirection;
+  Delegate<Acts::Vector3(const SpacePoint)> getTopStripDirection;
   // Returns direction of the bottom strip.
-  Delegate<Acts::Vector3(const SpacePoint*)> getBottomStripDirection;
+  Delegate<Acts::Vector3(const SpacePoint)> getBottomStripDirection;
   // Returns distance between the centers of the two strips.
-  Delegate<Acts::Vector3(const SpacePoint*)> getStripCenterDistance;
+  Delegate<Acts::Vector3(const SpacePoint)> getStripCenterDistance;
   // Returns position of the center of the bottom strip.
-  Delegate<Acts::Vector3(const SpacePoint*)> getBottomStripCenterPosition;
+  Delegate<Acts::Vector3(const SpacePoint)> getBottomStripCenterPosition;
 
   SeedfinderConfig toInternalUnits() const {
     using namespace Acts::UnitLiterals;

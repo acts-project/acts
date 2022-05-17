@@ -148,15 +148,15 @@ bool xyzCoordinateCheck(Acts::SeedfinderConfig<external_spacepoint_t> m_config,
   // check the compatibility of SPs coordinates in xyz assuming the
   // Bottom-Middle direction with the strip measurement details
 
-  const float topHalfStripLength = m_config.getTopHalfStripLength(&(sp->sp()));
+  const float topHalfStripLength = m_config.getTopHalfStripLength(sp->sp());
   const float bottomHalfStripLength =
-      m_config.getBottomHalfStripLength(&(sp->sp()));
+      m_config.getBottomHalfStripLength(sp->sp());
   const Acts::Vector3 topStripDirection =
-      m_config.getTopStripDirection(&(sp->sp()));
+      m_config.getTopStripDirection(sp->sp());
   const Acts::Vector3 bottomStripDirection =
-      m_config.getBottomStripDirection(&(sp->sp()));
+      m_config.getBottomStripDirection(sp->sp());
   const Acts::Vector3 stripCenterDistance =
-      m_config.getStripCenterDistance(&(sp->sp()));
+      m_config.getStripCenterDistance(sp->sp());
 
   // cross product between top strip vector and spacepointPosition
   double d1[3] = {
@@ -205,7 +205,7 @@ bool xyzCoordinateCheck(Acts::SeedfinderConfig<external_spacepoint_t> m_config,
   // detector elements
 
   const Acts::Vector3 bottomStripCenterPosition =
-      m_config.getBottomStripCenterPosition(&(sp->sp()));
+      m_config.getBottomStripCenterPosition(sp->sp());
 
   // spacepointPosition corected with respect to the bottom strip direction and
   // the distance between the strips
