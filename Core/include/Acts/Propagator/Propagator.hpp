@@ -311,6 +311,7 @@ class Propagator final {
     using type = typename action_list_t::template result_type<this_result_type>;
   };
 
+ public:
   /// @brief Short-hand type definition for propagation result derived from
   ///        an action list
   ///
@@ -321,6 +322,7 @@ class Propagator final {
   using action_list_t_result_t =
       typename result_type_helper<parameters_t, action_list_t>::type;
 
+ private:
   /// @brief Propagate track parameters
   /// Private method with propagator and stepper state
   ///
@@ -338,7 +340,8 @@ class Propagator final {
   ///
   /// @return Propagation result
   template <typename result_t, typename propagator_state_t>
-  Result<result_t> propagate_impl(propagator_state_t& state) const;
+  Result<result_t> propagate_impl(propagator_state_t& state,
+                                  result_t result) const;
 
  public:
   /// @brief Propagate track parameters
@@ -367,6 +370,17 @@ class Propagator final {
   propagate(const parameters_t& start,
             const propagator_options_t& options) const;
 
+  template <typename parameters_t, typename propagator_options_t,
+            typename path_aborter_t = PathLimitReached>
+  Result<
+      action_list_t_result_t<CurvilinearTrackParameters,
+                             typename propagator_options_t::action_list_type>>
+  propagate(
+      const parameters_t& start, const propagator_options_t& options,
+      action_list_t_result_t<CurvilinearTrackParameters,
+                             typename propagator_options_t::action_list_type>
+          inputResult) const;
+
   /// @brief Propagate track parameters - User method
   ///
   /// This function performs the propagation of the track parameters according
@@ -393,6 +407,18 @@ class Propagator final {
       BoundTrackParameters, typename propagator_options_t::action_list_type>>
   propagate(const parameters_t& start, const Surface& target,
             const propagator_options_t& options) const;
+
+  template <typename parameters_t, typename propagator_options_t,
+            typename target_aborter_t = SurfaceReached,
+            typename path_aborter_t = PathLimitReached>
+  Result<action_list_t_result_t<
+      BoundTrackParameters, typename propagator_options_t::action_list_type>>
+  propagate(
+      const parameters_t& start, const Surface& target,
+      const propagator_options_t& options,
+      action_list_t_result_t<BoundTrackParameters,
+                             typename propagator_options_t::action_list_type>
+          inputResult) const;
 
  private:
   /// Implementation of propagation algorithm
