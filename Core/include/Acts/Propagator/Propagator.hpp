@@ -337,6 +337,7 @@ class Propagator final {
   /// @tparam propagator_state_t Type of of propagator state with options
   ///
   /// @param [in,out] state the propagator state object
+  /// @param [in] result an existing result object to start from
   ///
   /// @return Propagation result
   template <typename result_t, typename propagator_state_t>
@@ -370,6 +371,25 @@ class Propagator final {
   propagate(const parameters_t& start,
             const propagator_options_t& options) const;
 
+  /// @brief Propagate track parameters
+  ///
+  /// This function performs the propagation of the track parameters using the
+  /// internal stepper implementation, until at least one abort condition is
+  /// fulfilled or the maximum number of steps/path length provided in the
+  /// propagation options is reached.
+  ///
+  /// @tparam parameters_t Type of initial track parameters to propagate
+  /// @tparam action_list_t Type list of actions, type ActionList<>
+  /// @tparam aborter_list_t Type list of abort conditions, type AbortList<>
+  /// @tparam propagator_options_t Type of the propagator options
+  ///
+  /// @param [in] start initial track parameters to propagate
+  /// @param [in] options Propagation options, type Options<,>
+  /// @param [in] result an existing result object to start from
+  ///
+  /// @return Propagation result containing the propagation status, final
+  ///         track parameters, and output of actions (if they produce any)
+  ///
   template <typename parameters_t, typename propagator_options_t,
             typename path_aborter_t = PathLimitReached>
   Result<
@@ -408,6 +428,26 @@ class Propagator final {
   propagate(const parameters_t& start, const Surface& target,
             const propagator_options_t& options) const;
 
+  /// @brief Propagate track parameters - User method
+  ///
+  /// This function performs the propagation of the track parameters according
+  /// to the internal implementation object until at least one abort condition
+  /// is fulfilled, the destination surface is hit or the maximum number of
+  /// steps/path length as given in the propagation options is reached.
+  ///
+  /// @tparam parameters_t Type of initial track parameters to propagate
+  /// @tparam surface_t Type of target surface
+  /// @tparam action_list_t Type list of actions
+  /// @tparam aborter_list_t Type list of abort conditions
+  /// @tparam propagator_options_t Type of the propagator options
+  ///
+  /// @param [in] start Initial track parameters to propagate
+  /// @param [in] target Target surface of to propagate to
+  /// @param [in] options Propagation options
+  /// @param [in] result an existing result object to start from
+  ///
+  /// @return Propagation result containing the propagation status, final
+  ///         track parameters, and output of actions (if they produce any)
   template <typename parameters_t, typename propagator_options_t,
             typename target_aborter_t = SurfaceReached,
             typename path_aborter_t = PathLimitReached>
