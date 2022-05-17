@@ -60,7 +60,7 @@ inline auto TrackStateProxy<M, ReadOnly>::parameters() const -> Parameters {
     idx = data().ipredicted;
   }
 
-  return Parameters(m_traj->m_params.data.col(idx).data());
+  return Parameters(m_traj->m_params[idx].data());
 }
 
 template <size_t M, bool ReadOnly>
@@ -73,52 +73,52 @@ inline auto TrackStateProxy<M, ReadOnly>::covariance() const -> Covariance {
   } else {
     idx = data().ipredicted;
   }
-  return Covariance(m_traj->m_cov.data.col(idx).data());
+  return Covariance(m_traj->m_cov[idx].data());
 }
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::predicted() const -> Parameters {
   assert(data().ipredicted != IndexData::kInvalid);
-  return Parameters(m_traj->m_params.col(data().ipredicted).data());
+  return Parameters(m_traj->m_params[data().ipredicted].data());
 }
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::predictedCovariance() const
     -> Covariance {
   assert(data().ipredicted != IndexData::kInvalid);
-  return Covariance(m_traj->m_cov.col(data().ipredicted).data());
+  return Covariance(m_traj->m_cov[data().ipredicted].data());
 }
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::filtered() const -> Parameters {
   assert(data().ifiltered != IndexData::kInvalid);
-  return Parameters(m_traj->m_params.col(data().ifiltered).data());
+  return Parameters(m_traj->m_params[data().ifiltered].data());
 }
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::filteredCovariance() const
     -> Covariance {
   assert(data().ifiltered != IndexData::kInvalid);
-  return Covariance(m_traj->m_cov.col(data().ifiltered).data());
+  return Covariance(m_traj->m_cov[data().ifiltered].data());
 }
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::smoothed() const -> Parameters {
   assert(data().ismoothed != IndexData::kInvalid);
-  return Parameters(m_traj->m_params.col(data().ismoothed).data());
+  return Parameters(m_traj->m_params[data().ismoothed].data());
 }
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::smoothedCovariance() const
     -> Covariance {
   assert(data().ismoothed != IndexData::kInvalid);
-  return Covariance(m_traj->m_cov.col(data().ismoothed).data());
+  return Covariance(m_traj->m_cov[data().ismoothed].data());
 }
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::jacobian() const -> Covariance {
   assert(data().ijacobian != IndexData::kInvalid);
-  return Covariance(m_traj->m_jac.col(data().ijacobian).data());
+  return Covariance(m_traj->m_jac[data().ijacobian].data());
 }
 
 template <size_t M, bool ReadOnly>
@@ -138,7 +138,7 @@ inline auto TrackStateProxy<M, ReadOnly>::uncalibrated() const
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::calibrated() const -> Measurement {
   assert(data().icalibrated != IndexData::kInvalid);
-  return Measurement(m_traj->m_meas.col(data().icalibrated).data());
+  return Measurement(m_traj->m_meas[data().icalibrated].data());
 }
 
 template <size_t M, bool ReadOnly>
@@ -153,8 +153,7 @@ template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::calibratedCovariance() const
     -> MeasurementCovariance {
   assert(data().icalibrated != IndexData::kInvalid);
-  return MeasurementCovariance(
-      m_traj->m_measCov.col(data().icalibrated).data());
+  return MeasurementCovariance(m_traj->m_measCov[data().icalibrated].data());
 }
 
 }  // namespace detail_lt
@@ -176,25 +175,25 @@ inline size_t MultiTrajectory::addTrackState(TrackStatePropMask mask,
   p.irefsurface = m_referenceSurfaces.size() - 1;
 
   if (ACTS_CHECK_BIT(mask, PropMask::Predicted)) {
-    m_params.addCol();
-    m_cov.addCol();
+    m_params.emplace_back();
+    m_cov.emplace_back();
     p.ipredicted = m_params.size() - 1;
   }
 
   if (ACTS_CHECK_BIT(mask, PropMask::Filtered)) {
-    m_params.addCol();
-    m_cov.addCol();
+    m_params.emplace_back();
+    m_cov.emplace_back();
     p.ifiltered = m_params.size() - 1;
   }
 
   if (ACTS_CHECK_BIT(mask, PropMask::Smoothed)) {
-    m_params.addCol();
-    m_cov.addCol();
+    m_params.emplace_back();
+    m_cov.emplace_back();
     p.ismoothed = m_params.size() - 1;
   }
 
   if (ACTS_CHECK_BIT(mask, PropMask::Jacobian)) {
-    m_jac.addCol();
+    m_jac.emplace_back();
     p.ijacobian = m_jac.size() - 1;
   }
 
@@ -204,8 +203,8 @@ inline size_t MultiTrajectory::addTrackState(TrackStatePropMask mask,
   }
 
   if (ACTS_CHECK_BIT(mask, PropMask::Calibrated)) {
-    m_meas.addCol();
-    m_measCov.addCol();
+    m_meas.emplace_back();
+    m_measCov.emplace_back();
     p.icalibrated = m_meas.size() - 1;
 
     m_sourceLinks.emplace_back();

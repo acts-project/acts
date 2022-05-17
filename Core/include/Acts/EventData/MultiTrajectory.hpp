@@ -51,60 +51,6 @@ namespace detail_lt {
 /// Either type T or const T depending on the boolean.
 template <typename T, bool select>
 using ConstIf = std::conditional_t<select, const T, T>;
-/// wrapper for a dynamic Eigen type that adds support for automatic growth
-///
-/// \warning Assumes the underlying storage has a fixed number of rows
-template <typename Storage, size_t kSizeIncrement>
-struct GrowableColumns {
-  /// Make sure storage for @p n additional columns is allocated. Will update
-  /// the size of the container accordingly. The indices added by this call
-  /// can safely be written to.
-  /// @param n Number of columns to add, defaults to 1.
-  /// @return View into the last allocated column
-  auto addCol(size_t n = 1) {
-    size_t index = m_size + (n - 1);
-    while (capacity() <= index) {
-      data.conservativeResize(Eigen::NoChange, data.cols() + kSizeIncrement);
-    }
-    m_size = index + 1;
-
-    // @TODO: do this or not? If we assume this happens only when something is
-    // written, the expectation is that everything is zero
-    data.col(index).setZero();
-
-    return data.col(index);
-  }
-
-  /// Writable access to a column w/o checking its existence first.
-  auto col(size_t index) { return data.col(index); }
-
-  /// Read-only access to a column w/o checking its existence first.
-  auto col(size_t index) const { return data.col(index); }
-
-  /// Return the current allocated storage capacity
-  size_t capacity() const { return static_cast<size_t>(data.cols()); }
-
-  /// Return the size of the storage column
-  size_t size() const { return m_size; }
-
-  /// Resize the storage column, without changing the allocated capacity
-  /// @param size The new size of the storage
-  void resize(size_t size) {
-    if (size > m_size) {
-      addCol(size - m_size);
-    } else {
-      m_size = size;
-    }
-  }
-
-  /// Clear the storage of the storage column
-  /// Equivalent to ``resize(0)``
-  void clear() { resize(0); }
-
- private:
-  Storage data;
-  size_t m_size{0};
-};
 
 /// Type construction helper for coefficients and associated covariances.
 template <size_t Size, bool ReadOnlyMaps = true>
@@ -119,13 +65,6 @@ struct Types {
   using Covariance = Eigen::Matrix<Scalar, Size, Size, Flags>;
   using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
   using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
-  // storage of multiple items in flat arrays
-  using StorageCoefficients =
-      GrowableColumns<Eigen::Array<Scalar, Size, Eigen::Dynamic, Flags>,
-                      SizeIncrement>;
-  using StorageCovariance =
-      GrowableColumns<Eigen::Array<Scalar, Size * Size, Eigen::Dynamic, Flags>,
-                      SizeIncrement>;
 };
 
 struct IndexData {
@@ -816,11 +755,18 @@ class MultiTrajectory {
  private:
   /// index to map track states to the corresponding
   std::vector<detail_lt::IndexData> m_index;
-  typename detail_lt::Types<eBoundSize>::StorageCoefficients m_params;
-  typename detail_lt::Types<eBoundSize>::StorageCovariance m_cov;
-  typename detail_lt::Types<MeasurementSizeMax>::StorageCoefficients m_meas;
-  typename detail_lt::Types<MeasurementSizeMax>::StorageCovariance m_measCov;
-  typename detail_lt::Types<eBoundSize>::StorageCovariance m_jac;
+  std::vector<typename detail_lt::Types<eBoundSize>::Coefficients> m_params;
+  std::vector<typename detail_lt::Types<eBoundSize>::Covariance> m_cov;
+  std::vector<typename detail_lt::Types<MeasurementSizeMax>::Coefficients>
+      m_meas;
+  std::vector<typename detail_lt::Types<MeasurementSizeMax>::Covariance>
+      m_measCov;
+  std::vector<typename detail_lt::Types<eBoundSize>::Covariance> m_jac;
+  // typename detail_lt::Types<eBoundSize>::StorageCoefficients m_params;
+  // typename detail_lt::Types<eBoundSize>::StorageCovariance m_cov;
+  // typename detail_lt::Types<MeasurementSizeMax>::StorageCoefficients m_meas;
+  // typename detail_lt::Types<MeasurementSizeMax>::StorageCovariance m_measCov;
+  // typename detail_lt::Types<eBoundSize>::StorageCovariance m_jac;
   std::vector<const SourceLink*> m_sourceLinks;
   std::vector<ProjectorBitset> m_projectors;
 
