@@ -50,11 +50,11 @@ This file includes a few efficiency plots showing the CKF efficiency, fake rate,
 
 Example plots to show the CKF efficiency, fake rate and duplication rate for the ttbar sample generated above:
 
-.. image:: ../figures/performance/CKF/trackeff_vs_eta_ttbar_pu200.png
+.. image:: ../../figures/performance/CKF/trackeff_vs_eta_ttbar_pu200.png
    :width: 300
 
-.. image:: ../figures/performance/CKF/fakerate_vs_eta_ttbar_pu200.png
+.. image:: ../../figures/performance/CKF/fakerate_vs_eta_ttbar_pu200.png
    :width: 300
 
-.. image:: ../figures/performance/CKF/duplicationrate_vs_eta_ttbar_pu200.png
+.. image:: ../../figures/performance/CKF/duplicationrate_vs_eta_ttbar_pu200.png
    :width: 300

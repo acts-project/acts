@@ -40,18 +40,18 @@ The truth tracking will generate three root files (the name of those root files 
 
 Example plots to show the fitting efficiency versus eta and pT for ttbar sample generated above:
 
-.. image:: ../figures/performance/fitter/trackeff_vs_eta_ttbar_pu200.png
+.. image:: ../../figures/performance/fitter/trackeff_vs_eta_ttbar_pu200.png
    :width: 300
 
-.. image:: ../figures/performance/fitter/trackeff_vs_pT_ttbar_pu200.png
+.. image:: ../../figures/performance/fitter/trackeff_vs_pT_ttbar_pu200.png
    :width: 300
 
 Example plots to show the average number of measurments and holes versus eta for ttbar sample generated above:
 
-.. image:: ../figures/performance/fitter/nMeasurements_vs_eta_ttbar_pu200.png
+.. image:: ../../figures/performance/fitter/nMeasurements_vs_eta_ttbar_pu200.png
    :width: 300
 
-.. image:: ../figures/performance/fitter/nHoles_vs_eta_ttbar_pu200.png
+.. image:: ../../figures/performance/fitter/nHoles_vs_eta_ttbar_pu200.png
    :width: 300
 
 To draw the resolution (residual and pull) of fitted perigee track parameters for e.g. ttbar sample, one could use:
@@ -64,5 +64,5 @@ To draw the resolution (residual and pull) of fitted perigee track parameters fo
 
 An example plot of the pull distribution of fitted perigee track parameters for the ttbar sample generated above:
 
-.. image:: ../figures/performance/fitter/pull_perigee_parameters_ttbar_pu200.png
+.. image:: ../../figures/performance/fitter/pull_perigee_parameters_ttbar_pu200.png
    :width: 600

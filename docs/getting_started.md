@@ -191,7 +191,7 @@ package manager. [Sphinx][sphinx] and its extensions can be installed using the
 Python package manager via
 
 ```console
-$ cd <path/to/repository>
+$ cd <source>
 # --user installs to a user-specific directory instead of the system
 $ pip install --user -r docs/requirements.txt
 ```
@@ -199,7 +199,7 @@ $ pip install --user -r docs/requirements.txt
 To activate the documentation build targets, the `ACTS_BUILD_DOCS` option has to be set
 
 ```console
-$ cmake -B <build> -S <path/to/repository> -DACTS_BUILD_DOCS=on
+$ cmake -B <build> -S <source> -DACTS_BUILD_DOCS=on
 ```
 
 Then the documentation can be build with either of the following two build
