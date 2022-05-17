@@ -161,8 +161,9 @@ struct SeedfinderConfig {
 
   // Delegates for accessors to detailed information on double measurement that
   // produced the space point.
-  // This is mainly referring to space points produced when combining measurement from strips on back-to-back modules.
-  // Defines if the following delegates are set or not.
+  // This is mainly referring to space points produced when combining
+  // measurement from strips on back-to-back modules.
+  // Enables setting of the following delegates.
   bool useDetailedDoubleMeasurementInfo = false;
   // Returns half of the length of the top strip.
   Delegate<float(const SpacePoint*)> getTopHalfStripLength;
