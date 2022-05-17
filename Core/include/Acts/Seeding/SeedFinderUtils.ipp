@@ -141,16 +141,22 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
             });
 }
 
-static bool xyzCoordinateCheck(const double* spacepointPosition,
-                        const float topHalfStripLength,
-                        const float bottomHalfStripLength,
-                        const Acts::Vector3 topStripDirection,
-                        const Acts::Vector3 bottomStripDirection,
-                        const Acts::Vector3 stripCenterDistance,
-                        const Acts::Vector3 bottomStripCenterPosition,
+template <typename external_spacepoint_t, typename sp_range_t>
+bool xyzCoordinateCheck(Acts::SeedfinderConfig<external_spacepoint_t> m_config,
+                        sp_range_t sp, const double* spacepointPosition,
                         const float toleranceParam, double* outputCoordinates) {
   // check the compatibility of SPs coordinates in xyz assuming the
   // Bottom-Middle direction with the strip meassument details
+
+  const float topHalfStripLength = m_config.getTopHalfStripLength(&(sp->sp()));
+  const float bottomHalfStripLength =
+      m_config.getBottomHalfStripLength(&(sp->sp()));
+  const Acts::Vector3 topStripDirection =
+      m_config.getTopStripDirection(&(sp->sp()));
+  const Acts::Vector3 bottomStripDirection =
+      m_config.getBottomStripDirection(&(sp->sp()));
+  const Acts::Vector3 stripCenterDistance =
+      m_config.getStripCenterDistance(&(sp->sp()));
 
   // cross product between top strip vector and spacepointPosition
   double d1[3] = {
@@ -197,6 +203,9 @@ static bool xyzCoordinateCheck(const double* spacepointPosition,
 
   // if arive here spacepointPosition is compatible with strip directions and
   // detector elements
+
+  const Acts::Vector3 bottomStripCenterPosition =
+      m_config.getBottomStripCenterPosition(&(sp->sp()));
 
   // spacepointPosition corected with respect to the bottom strip direction and
   // the distance between the strips

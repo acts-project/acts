@@ -295,7 +295,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         float ut;
         float vt;
 
-        if (m_config.useDetailedDoubleMeasurementInfo) {
+        if (m_config.useDetailedDoubleMeasurementInfo == true) {
           // protects against division by 0
           float dU = lt.U - Ub;
           if (dU == 0.) {
@@ -317,14 +317,8 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
               cosTheta * std::sqrt(1 + A0 * A0)};
 
           double rMTransf[3];
-          if (!xyzCoordinateCheck(
-                  positionMiddle, m_config.getTopHalfStripLength(&(spM->sp())),
-                  m_config.getBottomHalfStripLength(&(spM->sp())),
-                  m_config.getTopStripDirection(&(spM->sp())),
-                  m_config.getBottomStripDirection(&(spM->sp())),
-                  m_config.getStripCenterDistance(&(spM->sp())),
-                  m_config.getBottomStripCenterPosition(&(spM->sp())),
-                  m_config.toleranceParam, rMTransf)) {
+          if (!xyzCoordinateCheck(m_config, spM, positionMiddle,
+                                  m_config.toleranceParam, rMTransf)) {
             continue;
           }
 
@@ -339,14 +333,8 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
           auto spB = state.compatBottomSP[b];
           double rBTransf[3];
-          if (!xyzCoordinateCheck(
-                  positionBottom, m_config.getTopHalfStripLength(&(spB->sp())),
-                  m_config.getBottomHalfStripLength(&(spB->sp())),
-                  m_config.getTopStripDirection(&(spB->sp())),
-                  m_config.getBottomStripDirection(&(spB->sp())),
-                  m_config.getStripCenterDistance(&(spB->sp())),
-                  m_config.getBottomStripCenterPosition(&(spB->sp())),
-                  m_config.toleranceParam, rBTransf)) {
+          if (!xyzCoordinateCheck(m_config, spB, positionBottom,
+                                  m_config.toleranceParam, rBTransf)) {
             continue;
           }
 
@@ -360,14 +348,8 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
           auto spT = state.compatTopSP[t];
           double rTTransf[3];
-          if (!xyzCoordinateCheck(
-                  positionTop, m_config.getTopHalfStripLength(&(spT->sp())),
-                  m_config.getBottomHalfStripLength(&(spT->sp())),
-                  m_config.getTopStripDirection(&(spT->sp())),
-                  m_config.getBottomStripDirection(&(spT->sp())),
-                  m_config.getStripCenterDistance(&(spT->sp())),
-                  m_config.getBottomStripCenterPosition(&(spT->sp())),
-                  m_config.toleranceParam, rTTransf)) {
+          if (!xyzCoordinateCheck(m_config, spT, positionTop,
+                                  m_config.toleranceParam, rTTransf)) {
             continue;
           }
 
@@ -446,7 +428,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         float B;
         float B2;
 
-        if (m_config.useDetailedDoubleMeasurementInfo) {
+        if (m_config.useDetailedDoubleMeasurementInfo == false) {
           // protects against division by 0
           dU = lt.U - Ub;
           if (dU == 0.) {
@@ -509,7 +491,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         // function
         // (in contrast to having to solve a quadratic function in x/y plane)
         float Im;
-        if (m_config.useDetailedDoubleMeasurementInfo) {
+        if (m_config.useDetailedDoubleMeasurementInfo == false) {
           Im = std::abs((A - B * rM) * rM);
         } else {
           Im = std::abs((A - B * rMxy) * rMxy);
