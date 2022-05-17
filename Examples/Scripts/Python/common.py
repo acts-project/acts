@@ -30,7 +30,6 @@ def getOpenDataDetector(mdecorator=None):
         env_vars = ["DYLD_LIBRARY_PATH", "DD4HEP_LIBRARY_PATH"]
         lib_name = "libOpenDataDetector.dylib"
 
-
     if lib_name is not None and len(env_vars) > 0:
         found = False
         for env_var in env_vars:
