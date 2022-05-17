@@ -1,6 +1,9 @@
 from typing import Type
 import inspect
 
+from helpers import dd4hepEnabled
+from common import getOpenDataDetectorDirectory
+
 import pytest
 
 from helpers import geant4Enabled, AssertCollectionExistsAlg
@@ -306,7 +309,17 @@ def test_csv_clusters_reader(tmp_path, fatras, conf_const, trk_geo, rng):
         assert alg.events_seen == 10
 
 
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")
 def test_edm4hep_simhits_reader(conf_const):
+    import acts.examples.dd4hep
+
+    odd_dir = getOpenDataDetectorDirectory()
+
+    dd4hepConfig = acts.examples.dd4hep.DD4hepGeometryService.Config(
+        xmlFileNames=[str(odd_dir / "xml/OpenDataDetector.xml")]
+    )
+    geometryService = acts.examples.dd4hep.DD4hepGeometryService(dd4hepConfig)
+
     s = Sequencer(numThreads=1)
 
     s.addReader(
@@ -317,6 +330,7 @@ def test_edm4hep_simhits_reader(conf_const):
                 "/home/andreas/cern/source/OpenDataDetector/output_edm4hep.root"
             ),
             outputSimHits="simhits",
+            dd4hepGeometryService=geometryService,
         )
     )
 

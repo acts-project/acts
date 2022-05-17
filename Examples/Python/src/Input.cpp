@@ -186,6 +186,7 @@ void addInput(Context& ctx) {
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputPath);
     ACTS_PYTHON_MEMBER(outputSimHits);
+    ACTS_PYTHON_MEMBER(dd4hepGeometryService);
     ACTS_PYTHON_STRUCT_END();
   }
 

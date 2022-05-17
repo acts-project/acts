@@ -22,7 +22,7 @@ ActsFatras::Hit convertEDM4hepSimHit(const edm4hep::SimTrackerHit& sth) {
 
   const auto geometryId = sth.getCellID();
   ActsFatras::Barcode particleId;
-  particleId.setParticle(sth.getMCParticle().getPDG()); // TODO or id()?
+  particleId.setParticle(sth.getMCParticle().id());
 
   const auto mass = sth.getMCParticle().getMass();
   const ActsVector<3> momentum{

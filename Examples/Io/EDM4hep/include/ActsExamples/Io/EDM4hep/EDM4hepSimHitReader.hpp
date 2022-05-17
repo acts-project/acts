@@ -10,7 +10,9 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
 #include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 
 #include <memory>
 #include <string>
@@ -27,6 +29,8 @@ class EDM4hepSimHitReader final : public IReader {
     std::string inputPath;
     /// Output simulated (truth) hits collection.
     std::string outputSimHits;
+
+    std::shared_ptr<DD4hep::DD4hepGeometryService> dd4hepGeometryService;
   };
 
   /// Construct the simhit reader.

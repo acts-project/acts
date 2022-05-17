@@ -8,11 +8,14 @@
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitReader.hpp"
 
-#include "Acts/Plugins/EDM4hep/EDM4hepConverter.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+
 #include "ActsFatras/EventData/Hit.hpp"
 
+#include "Acts/Definitions/Units.hpp"
+
+#include "edm4hep/SimTrackerHit.h"
 #include "edm4hep/SimTrackerHitCollection.h"
 
 ActsExamples::EDM4hepSimHitReader::EDM4hepSimHitReader(
@@ -41,6 +44,62 @@ std::pair<size_t, size_t> ActsExamples::EDM4hepSimHitReader::availableEvents()
   return m_eventsRange;
 }
 
+ActsFatras::Hit convertEDM4hepSimHit(
+    const edm4hep::SimTrackerHit& sth,
+    ActsExamples::DD4hep::DD4hepGeometryService &geometryService) {
+  std::ofstream debug("/home/andreas/debug.txt", std::ios::app);
+
+  try {
+    auto test = geometryService.lcdd()->volumeManager().lookupDetElement(1250572);
+    debug << "EDM4hep found test " << test.volumeID() << std::endl;
+  } catch (...) {
+    debug << "EDM4hep test failed" << std::endl;
+  }
+
+  debug << "EDM4hep convert cell id " << sth.getCellID() << std::endl;
+
+  try {
+    auto detElement = geometryService.lcdd()->volumeManager().lookupDetElement(sth.getCellID());
+    debug << "EDM4hep found detElement " << detElement.volumeID() << std::endl;
+  } catch (...) {
+    debug << "EDM4hep detElement not found" << std::endl;
+  }
+
+  const auto geometryId = sth.getCellID(); // TODO
+  ActsFatras::Barcode particleId;
+  particleId.setParticle(sth.getMCParticle().id()); // TODO
+
+  const auto mass = sth.getMCParticle().getMass();
+  const Acts::ActsVector<3> momentum{
+      sth.getMomentum().x * Acts::UnitConstants::GeV,
+      sth.getMomentum().y * Acts::UnitConstants::GeV,
+      sth.getMomentum().z * Acts::UnitConstants::GeV,
+  };
+  const auto energy = std::sqrt(momentum.squaredNorm() + mass * mass);
+
+  ActsFatras::Hit::Vector4 pos4{
+      sth.getPosition().x * Acts::UnitConstants::mm,
+      sth.getPosition().y * Acts::UnitConstants::mm,
+      sth.getPosition().z * Acts::UnitConstants::mm,
+      sth.getTime() * Acts::UnitConstants::ns,
+  };
+  ActsFatras::Hit::Vector4 mom4{
+      momentum.x(),
+      momentum.y(),
+      momentum.z(),
+      energy,
+  };
+  ActsFatras::Hit::Vector4 delta4{
+      0 * Acts::UnitConstants::GeV, 0 * Acts::UnitConstants::GeV,
+      0 * Acts::UnitConstants::GeV,
+      0 * Acts::UnitConstants::GeV,  // sth.getEDep()
+  };
+  int32_t index = -1;
+
+  return ActsFatras::Hit(geometryId, particleId, pos4, mom4, mom4 + delta4,
+                         index);
+}
+
 ActsExamples::ProcessCode ActsExamples::EDM4hepSimHitReader::read(
     const ActsExamples::AlgorithmContext& ctx) {
   SimHitContainer::sequence_type unordered;
@@ -58,7 +117,7 @@ ActsExamples::ProcessCode ActsExamples::EDM4hepSimHitReader::read(
     if (collection.getTypeName() == "edm4hep::SimTrackerHitCollection") {
       for (const auto& sth :
            (const edm4hep::SimTrackerHitCollection&)collection) {
-        auto hit = Acts::convertEDM4hepSimHit(sth);
+        auto hit = convertEDM4hepSimHit(sth, *m_cfg.dd4hepGeometryService);
         unordered.push_back(std::move(hit));
       }
     }

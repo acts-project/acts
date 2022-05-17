@@ -6,7 +6,7 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesIoEDM4hep
-  PUBLIC ActsCore ActsExamplesFramework ActsPluginEDM4hep)
+  PUBLIC ActsCore ActsExamplesFramework ActsExamplesDetectorDD4hep ActsPluginEDM4hep)
 
 install(
   TARGETS ActsExamplesIoEDM4hep
