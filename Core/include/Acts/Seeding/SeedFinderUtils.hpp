@@ -70,7 +70,7 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
 /// @brief Check the compatibility of spacepoint coordinates in xyz assuming the Bottom-Middle direction with the strip meassument details
 ///
 /// @tparam external_spacepoint_t The external spacepoint type.
-/// @tparam sp_range_t container type for the seed point collections.
+/// @tparam sp_range_t container type for the space point collections.
 ///
 /// @param[in] m_config seedfinder config containing the delegate to the strip meassument details
 /// @param[in] spacepointPosition Spacepoint coordinates in xyz plane.
