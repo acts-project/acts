@@ -222,16 +222,16 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
       }
       // check if it has a volume extension telling if it is a barrel or an
       // endcap
-      ActsExtension* volumeExtension = nullptr;
-      try {
-        volumeExtension = volumeDetElement.extension<ActsExtension>();
-      } catch (std::runtime_error& e) {
-        throw std::logic_error(
-            std::string("Current DetElement: ") + volumeDetElement.name() +
-            std::string(" has no ActsExtension! At this stage it should be a "
-                        "detector volume declared as Barrel or Endcap. Please"
-                        "check your detector construction."));
-      }
+      // ActsExtension* volumeExtension = nullptr;
+      // try {
+      // volumeExtension = volumeDetElement.extension<ActsExtension>();
+      // } catch (std::runtime_error& e) {
+      // throw std::logic_error(
+      // std::string("Current DetElement: ") + volumeDetElement.name() +
+      // std::string(" has no ActsExtension! At this stage it should be a "
+      // "detector volume declared as Barrel or Endcap. Please"
+      // "check your detector construction."));
+      // }
 
       dd4hep::DetType type{volumeDetElement.typeFlag()};
 
@@ -250,18 +250,22 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
           ACTS_VERBOSE("      -> is negative endcap");
           collectLayers_dd4hep(volumeDetElement, negativeLayers, loggerWrapper);
           // Fill the volume material for barrel case
-          if (volumeExtension->hasType("boundary_material")) {
+          // if (volumeExtension->hasType("boundary_material")) {
+          if (getParamOr<bool>("boundary_material", volumeDetElement, false)) {
             ACTS_VERBOSE(
                 "      -> boundary_material flag detected, creating proto "
                 "material.");
-            if (volumeExtension->hasValue("boundary_material_negative")) {
+            auto& params = getParams(volumeDetElement);
+            // if (volumeExtension->hasValue("boundary_material_negative")) {
+            if (hasParam("boundary_material_negative", volumeDetElement)) {
               cvbConfig.boundaryMaterial[2] = Acts::createProtoMaterial(
-                  *volumeExtension, "boundary_material_negative",
+                  params, "boundary_material_negative",
                   {{"binPhi", Acts::closed}, {"binR", Acts::open}});
             }
-            if (volumeExtension->hasValue("boundary_material_positive")) {
+            // if (volumeExtension->hasValue("boundary_material_positive")) {
+            if (hasParam("boundary_material_positive", volumeDetElement)) {
               cvbConfig.boundaryMaterial[3] = Acts::createProtoMaterial(
-                  *volumeExtension, "boundary_material_positive",
+                  params, "boundary_material_positive",
                   {{"binPhi", Acts::closed}, {"binR", Acts::open}});
             }
           }
@@ -277,18 +281,22 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
           ACTS_VERBOSE("      -> is positive endcap");
           collectLayers_dd4hep(volumeDetElement, positiveLayers, loggerWrapper);
           // Fill the volume material for barrel case
-          if (volumeExtension->hasType("boundary_material")) {
+          // if (volumeExtension->hasType("boundary_material")) {
+          if (getParamOr<bool>("boundary_material", volumeDetElement, false)) {
             ACTS_VERBOSE(
                 "      -> boundary_material flag detected, creating proto "
                 "material.");
-            if (volumeExtension->hasValue("boundary_material_negative")) {
+            auto& params = getParams(volumeDetElement);
+            // if (volumeExtension->hasValue("boundary_material_negative")) {
+            if (params.contains("boundary_material_negative")) {
               cvbConfig.boundaryMaterial[4] = Acts::createProtoMaterial(
-                  *volumeExtension, "boundary_material_negative",
+                  params, "boundary_material_negative",
                   {{"binPhi", Acts::closed}, {"binR", Acts::open}});
             }
-            if (volumeExtension->hasValue("boundary_material_positive")) {
+            // if (volumeExtension->hasValue("boundary_material_positive")) {
+            if (params.contains("boundary_material_positive")) {
               cvbConfig.boundaryMaterial[5] = Acts::createProtoMaterial(
-                  *volumeExtension, "boundary_material_positive",
+                  params, "boundary_material_positive",
                   {{"binPhi", Acts::closed}, {"binR", Acts::open}});
             }
           }
@@ -306,18 +314,22 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
                                     << " is marked as BARREL");
         collectLayers_dd4hep(volumeDetElement, centralLayers, loggerWrapper);
         // Fill the volume material for barrel case
-        if (volumeExtension->hasType("boundary_material")) {
+        // if (volumeExtension->hasType("boundary_material")) {
+        if (getParamOr<bool>("boundary_material", volumeDetElement, false)) {
           ACTS_VERBOSE(
               "      -> boundary_material flag detected, creating proto "
               "material.");
-          if (volumeExtension->hasValue("boundary_material_negative")) {
+          auto& params = getParams(volumeDetElement);
+          // if (volumeExtension->hasValue("boundary_material_negative")) {
+          if (params.contains("boundary_material_negative")) {
             cvbConfig.boundaryMaterial[3] = Acts::createProtoMaterial(
-                *volumeExtension, "boundary_material_negative",
+                params, "boundary_material_negative",
                 {{"binPhi", Acts::closed}, {"binR", Acts::open}});
           }
-          if (volumeExtension->hasValue("boundary_material_positive")) {
+          // if (volumeExtension->hasValue("boundary_material_positive")) {
+          if (params.contains("boundary_material_positive")) {
             cvbConfig.boundaryMaterial[4] = Acts::createProtoMaterial(
-                *volumeExtension, "boundary_material_positive",
+                params, "boundary_material_positive",
                 {{"binPhi", Acts::closed}, {"binR", Acts::open}});
           }
         }
@@ -331,18 +343,22 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
       }
 
       // Fill the volume material for the inner / outer cover
-      if (volumeExtension->hasType("boundary_material")) {
+      // if (volumeExtension->hasType("boundary_material")) {
+      if (getParamOr<bool>("boundary_material", volumeDetElement, false)) {
         ACTS_VERBOSE(
             "      -> boundary_material flag detected, creating proto "
             "material.");
-        if (volumeExtension->hasValue("boundary_material_inner")) {
+        auto& params = getParams(volumeDetElement);
+        // if (volumeExtension->hasValue("boundary_material_inner")) {
+        if (params.contains("boundary_material_inner")) {
           cvbConfig.boundaryMaterial[0] = Acts::createProtoMaterial(
-              *volumeExtension, "boundary_material_inner",
+              params, "boundary_material_inner",
               {{"binPhi", Acts::closed}, {"binZ", Acts::open}});
         }
-        if (volumeExtension->hasValue("boundary_material_outer")) {
+        // if (volumeExtension->hasValue("boundary_material_outer")) {
+        if (params.contains("boundary_material_outer")) {
           cvbConfig.boundaryMaterial[1] = Acts::createProtoMaterial(
-              *volumeExtension, "boundary_material_outer",
+              params, "boundary_material_outer",
               {{"binPhi", Acts::closed}, {"binZ", Acts::open}});
         }
       }
@@ -396,7 +412,6 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
             Acts::getDefaultLogger(std::string("D2A_V:") + subDetector.name(),
                                    loggingLevel));
     return cylinderVolumeBuilder;
-
   } else if (subDetType.is(dd4hep::DetType::BEAMPIPE)) {
     ACTS_VERBOSE("Subdetector : " << subDetector.name()
                                   << " - building a passive cylinder.");
@@ -422,10 +437,11 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
         << rMin << " / " << rMax << " / " << halfZ << " )");
 
     std::shared_ptr<Acts::ISurfaceMaterial> plMaterial = nullptr;
-    if (subDetExtension->hasType("layer_material")) {
+    // if (subDetExtension->hasType("layer_material")) {
+    if (getParamOr<bool>("layer_material", subDetector, false)) {
       // get the possible material of the surounding volume
       plMaterial = Acts::createProtoMaterial(
-          *subDetExtension, "layer_material_representing",
+          getParams(subDetector), "layer_material_representing",
           {{"binPhi", Acts::closed}, {"binZ", Acts::open}});
     }
 
@@ -452,17 +468,20 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     cvbConfig.buildToRadiusZero = subDetExtension->hasType("beampipe", "layer");
 
     // Fill the volume material for the inner / outer cover
-    if (subDetExtension->hasType("boundary_material")) {
+    // if (subDetExtension->hasType("boundary_material")) {
+    if (getParamOr<bool>("boundary_material", subDetector, false)) {
       ACTS_VERBOSE(
-          "      -> boundary_material flag detected, creating proto material.");
+          "      -> boundary_material flag detected, creating proto "
+          "material.");
+      auto& params = getParams(subDetector);
       if (subDetExtension->hasValue("boundary_material_inner")) {
         cvbConfig.boundaryMaterial[0] = Acts::createProtoMaterial(
-            *subDetExtension, "boundary_material_inner",
+            params, "boundary_material_inner",
             {{"binPhi", Acts::closed}, {"binZ", Acts::open}});
       }
       if (subDetExtension->hasValue("boundary_material_outer")) {
         cvbConfig.boundaryMaterial[1] = Acts::createProtoMaterial(
-            *subDetExtension, "boundary_material_outer",
+            params, "boundary_material_outer",
             {{"binPhi", Acts::closed}, {"binZ", Acts::open}});
       }
     }
@@ -473,7 +492,6 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
         Acts::getDefaultLogger(std::string("D2A_V:") + subDetector.name(),
                                loggingLevel));
     return pcVolumeBuilder;
-
   } else if (subDetType.is(dd4hep::DetType::BARREL)) {
     ACTS_VERBOSE("Subdetector: "
                  << subDetector.name()
@@ -540,7 +558,6 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
             Acts::getDefaultLogger(std::string("D2A_V:") + subDetector.name(),
                                    loggingLevel));
     return cylinderVolumeBuilder;
-
   } else {
     ACTS_INFO(
         "Subdetector with name : '"

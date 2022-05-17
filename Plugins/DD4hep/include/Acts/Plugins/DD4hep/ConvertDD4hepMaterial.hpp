@@ -14,6 +14,7 @@
 
 #include <DD4hep/DetElement.h>
 #include <DD4hep/DetFactoryHelper.h>
+#include <DDRec/DetectorData.h>
 
 namespace Acts {
 
@@ -28,9 +29,9 @@ class Layer;
 ///                   assigned
 /// @param cylinderLayer is the target layer
 /// @param loggingLevel is the output level for the conversion
-void addCylinderLayerProtoMaterial(
-    dd4hep::DetElement detElement, Layer& cylinderLayer,
-    Logging::Level loggingLevel = Logging::Level::INFO);
+void addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
+                                   Layer& cylinderLayer,
+                                   LoggerWrapper logger = getDummyLogger());
 
 /// Helper method to translate DD4hep material to Acts::ISurfaceMaterial
 ///
@@ -40,9 +41,8 @@ void addCylinderLayerProtoMaterial(
 /// assigned
 /// @param discLayer is the target layer
 /// @param loggingLevel is the output level for the conversion
-void addDiscLayerProtoMaterial(
-    dd4hep::DetElement detElement, Layer& discLayer,
-    Logging::Level loggingLevel = Logging::Level::INFO);
+void addDiscLayerProtoMaterial(dd4hep::DetElement detElement, Layer& discLayer,
+                               LoggerWrapper logger = getDummyLogger());
 
 /// Helper method to be called for Cylinder and Disc Proto material
 ///
@@ -56,6 +56,12 @@ void addLayerProtoMaterial(
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&
         binning);
 
+void addLayerProtoMaterial(
+    const dd4hep::rec::VariantParameters& params, Layer& layer,
+    const std::vector<std::pair<const std::string, Acts::BinningOption> >&
+        binning,
+    LoggerWrapper logger = getDummyLogger());
+
 /// Helper method to create proto material - to be called from the
 /// addProto(...) methods
 ///
@@ -66,5 +72,11 @@ std::shared_ptr<Acts::ProtoSurfaceMaterial> createProtoMaterial(
     const ActsExtension& actsExtension, const std::string& valueTag,
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&
         binning);
+
+std::shared_ptr<Acts::ProtoSurfaceMaterial> createProtoMaterial(
+    const dd4hep::rec::VariantParameters& params, const std::string& valueTag,
+    const std::vector<std::pair<const std::string, Acts::BinningOption> >&
+        binning,
+    LoggerWrapper logger = getDummyLogger());
 
 }  // namespace Acts
