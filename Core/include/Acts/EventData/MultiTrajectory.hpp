@@ -762,11 +762,6 @@ class MultiTrajectory {
   std::vector<typename detail_lt::Types<MeasurementSizeMax>::Covariance>
       m_measCov;
   std::vector<typename detail_lt::Types<eBoundSize>::Covariance> m_jac;
-  // typename detail_lt::Types<eBoundSize>::StorageCoefficients m_params;
-  // typename detail_lt::Types<eBoundSize>::StorageCovariance m_cov;
-  // typename detail_lt::Types<MeasurementSizeMax>::StorageCoefficients m_meas;
-  // typename detail_lt::Types<MeasurementSizeMax>::StorageCovariance m_measCov;
-  // typename detail_lt::Types<eBoundSize>::StorageCovariance m_jac;
   std::vector<const SourceLink*> m_sourceLinks;
   std::vector<ProjectorBitset> m_projectors;
 
