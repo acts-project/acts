@@ -11,7 +11,7 @@ Fatras simulation executables. With this option alone, Fatras can be run for
 the generic detector using a particle gun or externally generated particle
 input data.
 
-Additional options might be need enable different generators or detectors.
+Additional options might be needed to enable different generators or detectors.
 The ``ACTS_BUILD_EXAMPLES_PYTHIA8=on`` option enables Pythia8-based event
 generator excutables. To be able to run e.g. DD4hep-base detectors, the
 ``ACTS_BUILD_EXAMPLES_DD4hep=on`` option must be set. The full list of
