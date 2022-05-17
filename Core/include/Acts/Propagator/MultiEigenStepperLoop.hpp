@@ -250,7 +250,7 @@ class MultiEigenStepperLoop
     /// @param [in] mctx is the context object for the magnetic field
     /// @param [in] bfield the shared magnetic filed provider
     /// @param [in] multipars The track multi-component track-parameters at start
-    /// @param [in] ndir The navigation direciton w.r.t momentum
+    /// @param [in] ndir The navigation direction w.r.t momentum
     /// @param [in] ssize is the maximum step size
     /// @param [in] stolerance is the stepping tolerance
     ///

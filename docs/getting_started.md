@@ -9,9 +9,9 @@ following commands will clone the repository, configure, and build the core
 library:
 
 ```console
-$ git clone --recursive https://github.com/acts-project/acts <source-dir>
-$ cmake -B <build-dir> -S <source-dir>
-$ cmake --build <build-dir>
+$ git clone --recursive https://github.com/acts-project/acts <source>
+$ cmake -B <build> -S <source>
+$ cmake --build <build>
 ```
 
 For a full list of dependencies, including specific versions, see the
@@ -32,13 +32,13 @@ The following dependencies are optional and are needed to build additional
 components:
 
 -   [CUDA](https://developer.nvidia.com/cuda-zone) for the CUDA plugin and the Exa.TrkX plugin and its examples
--   [DD4Hep](http://dd4hep.cern.ch) >= 1.11 for the DD4Hep plugin and some examples
+-   [DD4hep](http://dd4hep.cern.ch) >= 1.11 for the DD4hep plugin and some examples
 -   [Doxygen](http://doxygen.org) >= 1.8.15 for the documentation
 -   [Geant4](http://geant4.org/) for some examples
 -   [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) >= 3.2.1 for some examples
 -   [Intel Threading Building Blocks](https://01.org/tbb) >= 2020.1 for the examples
 -   [ONNX Runtime](https://onnxruntime.ai/) for the ONNX plugin, the Exa.TrkX plugin and some examples
--   [Pythia8](http://home.thep.lu.se/~torbjorn/Pythia.html) for some examples
+-   [Pythia8](https://pythia.org) for some examples
 -   [ROOT](https://root.cern.ch) >= 6.20 for the TGeo plugin and the examples
 -   [Sphinx](https://www.sphinx-doc.org) >= 2.0 with [Breathe](https://breathe.readthedocs.io/en/latest/), [Exhale](https://exhale.readthedocs.io/en/latest/), and [recommonmark](https://recommonmark.readthedocs.io/en/latest/index.html) extensions for the documentation
 -   [SYCL](https://www.khronos.org/sycl/) for the SYCL plugin
@@ -191,7 +191,7 @@ package manager. [Sphinx][sphinx] and its extensions can be installed using the
 Python package manager via
 
 ```console
-$ cd <path/to/repository>
+$ cd <source>
 # --user installs to a user-specific directory instead of the system
 $ pip install --user -r docs/requirements.txt
 ```
@@ -199,16 +199,16 @@ $ pip install --user -r docs/requirements.txt
 To activate the documentation build targets, the `ACTS_BUILD_DOCS` option has to be set
 
 ```console
-$ cmake -B <build-dir> -S <path/to/repository> -DACTS_BUILD_DOCS=on
+$ cmake -B <build> -S <source> -DACTS_BUILD_DOCS=on
 ```
 
 Then the documentation can be build with either of the following two build
 targets
 
 ```console
-$ cmake --build <build-dir> docs # default fast option
+$ cmake --build <build> --target docs # default fast option
 # or
-$ cmake --build <build-dir> docs-with-api # full documentation
+$ cmake --build <build> --target docs-with-api # full documentation
 ```
 
 The default option includes the Doxygen, Sphinx, and the Breathe extension, i.e.
@@ -230,7 +230,7 @@ CMake options can be set by adding `-D<OPTION>=<VALUE>` to the configuration
 command. The following command would e.g. enable the unit tests
 
 ```console
-$ cmake -B <build-dir> -S <source-dir> -DACTS_BUILD_UNITTESTS=ON
+$ cmake -B <build> -S <source> -DACTS_BUILD_UNITTESTS=ON
 ```
 
 Multiple options can be given. `cmake` caches the options so that only changed
@@ -299,7 +299,7 @@ documentation](https://cmake.org/documentation/).
 The build is also affected by some environment variables. They can be set by prepending them to the configuration call:
 
 ```console
-$ DD4hep_DIR=<path/to/dd4hep> cmake -B <build-dir> -S <source-dir>
+$ DD4hep_DIR=<path/to/dd4hep> cmake -B <build> -S <source>
 ```
 
 The following environment variables might be useful.
