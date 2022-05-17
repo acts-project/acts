@@ -76,7 +76,7 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
 /// @param[in] spacepointPosition Spacepoint coordinates in xyz plane.
 /// @param[in] toleranceParam Parameter used to evaluate if spacepointPosition is inside the detector elements.
 /// @param[out] outputCoordinates The output vector to write to.
-/// @returns bool that says if spacepoint is conpatible with being inside the detector element.
+/// @returns bool that says if spacepoint is compatible with being inside the detector element.
 template <typename external_spacepoint_t, typename sp_range_t>
 bool xyzCoordinateCheck(Acts::SeedfinderConfig<external_spacepoint_t> m_config,
                         sp_range_t sp, const double* spacepointPosition,
