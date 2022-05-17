@@ -289,11 +289,11 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
         float cotThetaT = lt.cotTheta;
         float cotThetaBNew;
-        float rMxy;
-        float ub;
-        float vb;
-        float ut;
-        float vt;
+        float rMxy = 0.;
+        float ub = 0.;
+        float vb = 0.;
+        float ut = 0.;
+        float vt = 0.;
 
         if (m_config.useDetailedDoubleMeasurementInfo == true) {
           // protects against division by 0
@@ -429,8 +429,8 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         float B2;
 
         if (m_config.useDetailedDoubleMeasurementInfo == false) {
-          // protects against division by 0
           dU = lt.U - Ub;
+          // protects against division by 0
           if (dU == 0.) {
             continue;
           }
@@ -442,8 +442,8 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           B2 = B * B;
 
         } else {
-          // protects against division by 0
           dU = ut - ub;
+          // protects against division by 0
           if (dU == 0.) {
             continue;
           }
