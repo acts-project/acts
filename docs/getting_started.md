@@ -9,9 +9,9 @@ following commands will clone the repository, configure, and build the core
 library:
 
 ```console
-$ git clone --recursive https://github.com/acts-project/acts <source-dir>
-$ cmake -B <build-dir> -S <source-dir>
-$ cmake --build <build-dir>
+$ git clone --recursive https://github.com/acts-project/acts <source>
+$ cmake -B <build> -S <source>
+$ cmake --build <build>
 ```
 
 For a full list of dependencies, including specific versions, see the
@@ -199,16 +199,16 @@ $ pip install --user -r docs/requirements.txt
 To activate the documentation build targets, the `ACTS_BUILD_DOCS` option has to be set
 
 ```console
-$ cmake -B <build-dir> -S <path/to/repository> -DACTS_BUILD_DOCS=on
+$ cmake -B <build> -S <path/to/repository> -DACTS_BUILD_DOCS=on
 ```
 
 Then the documentation can be build with either of the following two build
 targets
 
 ```console
-$ cmake --build <build-dir> docs # default fast option
+$ cmake --build <build> --target docs # default fast option
 # or
-$ cmake --build <build-dir> docs-with-api # full documentation
+$ cmake --build <build> --target docs-with-api # full documentation
 ```
 
 The default option includes the Doxygen, Sphinx, and the Breathe extension, i.e.
@@ -230,7 +230,7 @@ CMake options can be set by adding `-D<OPTION>=<VALUE>` to the configuration
 command. The following command would e.g. enable the unit tests
 
 ```console
-$ cmake -B <build-dir> -S <source-dir> -DACTS_BUILD_UNITTESTS=ON
+$ cmake -B <build> -S <source> -DACTS_BUILD_UNITTESTS=ON
 ```
 
 Multiple options can be given. `cmake` caches the options so that only changed
@@ -299,7 +299,7 @@ documentation](https://cmake.org/documentation/).
 The build is also affected by some environment variables. They can be set by prepending them to the configuration call:
 
 ```console
-$ DD4hep_DIR=<path/to/dd4hep> cmake -B <build-dir> -S <source-dir>
+$ DD4hep_DIR=<path/to/dd4hep> cmake -B <build> -S <source>
 ```
 
 The following environment variables might be useful.
