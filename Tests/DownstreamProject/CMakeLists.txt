@@ -15,7 +15,7 @@ find_package(
     PluginLegacy
     PluginTGeo)
 
-# place artifacts in GNU-like paths, e.g. binaries in `<build_dir>/bin`
+# place artifacts in GNU-like paths, e.g. binaries in `<build>/bin`
 include(GNUInstallDirs)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
