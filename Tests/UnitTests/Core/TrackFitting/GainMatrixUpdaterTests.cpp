@@ -13,6 +13,7 @@
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
@@ -47,7 +48,7 @@ BOOST_AUTO_TEST_CASE(Update) {
   trkCov.diagonal() << 0.08, 0.3, 1, 1, 1, 0;
 
   // Make trajectory w/ one state
-  MultiTrajectory traj;
+  VectorMultiTrajectory traj;
   auto idx = traj.addTrackState(TrackStatePropMask::All);
   auto ts = traj.getTrackState(idx);
 

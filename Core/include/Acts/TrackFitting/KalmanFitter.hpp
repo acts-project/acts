@@ -18,6 +18,7 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
@@ -174,7 +175,7 @@ struct KalmanFitterOptions {
 
 struct KalmanFitterResult {
   // Fitted states that the actor has handled.
-  MultiTrajectory fittedStates;
+  std::shared_ptr<MultiTrajectory> fittedStates;
 
   // This is the index of the 'tip' of the track stored in multitrajectory.
   // This correspond to the last measurment state in the multitrajectory.
@@ -297,6 +298,9 @@ class KalmanFitter {
     /// transformation
     FreeToBoundCorrection freeToBoundCorrection;
 
+    /// Input MultiTrajectory
+    std::shared_ptr<MultiTrajectory> outputStates;
+
     /// @brief Kalman actor operation
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
@@ -309,6 +313,8 @@ class KalmanFitter {
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     result_type& result) const {
       const auto& logger = state.options.logger;
+
+      assert(result.fittedStates && "Output MultiTrajectory not set");
 
       if (result.finished) {
         return;
@@ -373,7 +379,7 @@ class KalmanFitter {
           result.missedActiveSurfaces.resize(result.measurementHoles);
           // now get track state proxy for the smoothing logic
           auto trackStateProxy =
-              result.fittedStates.getTrackState(result.lastMeasurementIndex);
+              result.fittedStates->getTrackState(result.lastMeasurementIndex);
           if (reversedFiltering ||
               extensions.reverseFilteringLogic(trackStateProxy)) {
             // Start to run reversed filtering:
@@ -437,7 +443,7 @@ class KalmanFitter {
 
           // Reset smoothed status of states missed in reversed filtering
           if (result.reversed) {
-            result.fittedStates.applyBackwards(
+            result.fittedStates->applyBackwards(
                 result.lastMeasurementIndex, [&](auto trackState) {
                   auto fSurface = &trackState.referenceSurface();
                   auto surface_it = std::find_if(
@@ -497,7 +503,7 @@ class KalmanFitter {
 
       // Get the last measurement state and reset navigation&stepping state
       // based on information on this state
-      auto st = result.fittedStates.getTrackState(result.lastMeasurementIndex);
+      auto st = result.fittedStates->getTrackState(result.lastMeasurementIndex);
 
       // Update the stepping state
       stepper.resetState(
@@ -555,7 +561,7 @@ class KalmanFitter {
         // point in performing globalToLocal correction)
         auto trackStateProxyRes = detail::kalmanHandleMeasurement(
             state, stepper, extensions, *surface, sourcelink_it->second,
-            result.fittedStates, result.lastTrackIndex, false);
+            *result.fittedStates, result.lastTrackIndex, false);
 
         if (!trackStateProxyRes.ok()) {
           return trackStateProxyRes.error();
@@ -600,7 +606,7 @@ class KalmanFitter {
         if (result.measurementStates > 0 ||
             surface->surfaceMaterial() != nullptr) {
           auto trackStateProxyRes = detail::kalmanHandleNoMeasurement(
-              state, stepper, *surface, result.fittedStates,
+              state, stepper, *surface, *result.fittedStates,
               result.lastTrackIndex, true, freeToBoundCorrection);
 
           if (!trackStateProxyRes.ok()) {
@@ -674,10 +680,10 @@ class KalmanFitter {
 
         // Create a detached track state proxy
         auto tempTrackTip =
-            result.fittedStates.addTrackState(TrackStatePropMask::All);
+            result.fittedStates->addTrackState(TrackStatePropMask::All);
 
         // Get the detached track state proxy back
-        auto trackStateProxy = result.fittedStates.getTrackState(tempTrackTip);
+        auto trackStateProxy = result.fittedStates->getTrackState(tempTrackTip);
 
         trackStateProxy.setReferenceSurface(surface->getSharedPtr());
 
@@ -711,7 +717,7 @@ class KalmanFitter {
               << trackStateProxy.filtered().transpose());
 
           // Fill the smoothed parameter for the existing track state
-          result.fittedStates.applyBackwards(
+          result.fittedStates->applyBackwards(
               result.lastMeasurementIndex, [&](auto trackState) {
                 auto fSurface = &trackState.referenceSurface();
                 if (fSurface == surface) {
@@ -841,7 +847,7 @@ class KalmanFitter {
       size_t firstStateIndex = result.lastMeasurementIndex;
       // Count track states to be smoothed
       size_t nStates = 0;
-      result.fittedStates.applyBackwards(
+      result.fittedStates->applyBackwards(
           result.lastMeasurementIndex, [&](auto st) {
             bool isMeasurement =
                 st.typeFlags().test(TrackStateFlag::MeasurementFlag);
@@ -865,7 +871,7 @@ class KalmanFitter {
 
       // Smooth the track states
       auto smoothRes =
-          extensions.smoother(state.geoContext, result.fittedStates,
+          extensions.smoother(state.geoContext, *result.fittedStates,
                               result.lastMeasurementIndex, logger);
       if (!smoothRes.ok()) {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
@@ -879,9 +885,9 @@ class KalmanFitter {
 
       // Obtain the smoothed parameters at first/last measurement state
       auto firstCreatedState =
-          result.fittedStates.getTrackState(firstStateIndex);
+          result.fittedStates->getTrackState(firstStateIndex);
       auto lastCreatedMeasurement =
-          result.fittedStates.getTrackState(result.lastMeasurementIndex);
+          result.fittedStates->getTrackState(result.lastMeasurementIndex);
 
       // Lambda to get the intersection of the free params on the target surface
       auto target = [&](const FreeVector& freeVector) -> SurfaceIntersection {
@@ -1040,8 +1046,17 @@ class KalmanFitter {
         std::move(kfOptions.freeToBoundCorrection);
     kalmanActor.extensions = std::move(kfOptions.extensions);
 
+    using FullResultType =
+        typename propagator_t::template action_list_t_result_t<
+            CurvilinearTrackParameters, Actors>;
+
+    FullResultType inputResult;
+    inputResult.template get<KalmanResult>().fittedStates =
+        std::make_shared<VectorMultiTrajectory>();
+
     // Run the fitter
-    auto result = m_propagator.template propagate(sParameters, kalmanOptions);
+    auto result = m_propagator.template propagate(sParameters, kalmanOptions,
+                                                  std::move(inputResult));
 
     if (!result.ok()) {
       ACTS_ERROR("Propapation failed: " << result.error());

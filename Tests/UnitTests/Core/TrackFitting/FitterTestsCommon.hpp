@@ -198,10 +198,10 @@ struct FitterTester {
     // count the number of `smoothed` states
     if (expected_reversed) {
       size_t nSmoothed = 0;
-      val.fittedStates.visitBackwards(val.lastMeasurementIndex,
-                                      [&nSmoothed](const auto& state) {
-                                        nSmoothed += state.hasSmoothed();
-                                      });
+      val.fittedStates->visitBackwards(val.lastMeasurementIndex,
+                                       [&nSmoothed](const auto& state) {
+                                         nSmoothed += state.hasSmoothed();
+                                       });
       BOOST_CHECK_EQUAL(nSmoothed, sourceLinks.size());
     }
   }
@@ -244,10 +244,10 @@ struct FitterTester {
     // count the number of `smoothed` states
     if (expected_reversed) {
       size_t nSmoothed = 0;
-      val.fittedStates.visitBackwards(val.lastMeasurementIndex,
-                                      [&nSmoothed](const auto& state) {
-                                        nSmoothed += state.hasSmoothed();
-                                      });
+      val.fittedStates->visitBackwards(val.lastMeasurementIndex,
+                                       [&nSmoothed](const auto& state) {
+                                         nSmoothed += state.hasSmoothed();
+                                       });
       BOOST_CHECK_EQUAL(nSmoothed, sourceLinks.size());
     }
   }
@@ -401,7 +401,7 @@ struct FitterTester {
       BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
       // count the number of outliers
       size_t nOutliers = 0;
-      val.fittedStates.visitBackwards(
+      val.fittedStates->visitBackwards(
           val.lastMeasurementIndex, [&nOutliers](const auto& state) {
             nOutliers +=
                 state.typeFlags().test(Acts::TrackStateFlag::OutlierFlag);
@@ -466,7 +466,7 @@ struct FitterTester {
     // Calculate global track parameters covariance matrix
     const auto& val = res.value();
     auto [trackParamsCov, stateRowIndices] =
-        Acts::detail::globalTrackParametersCovariance(val.fittedStates,
+        Acts::detail::globalTrackParametersCovariance(*val.fittedStates,
                                                       val.lastMeasurementIndex);
     BOOST_CHECK_EQUAL(trackParamsCov.rows(),
                       sourceLinks.size() * Acts::eBoundSize);

@@ -698,6 +698,8 @@ class MultiTrajectory {
   /// Create an empty trajectory.
   MultiTrajectory() = default;
 
+  virtual ~MultiTrajectory() = 0;
+
   /// Add a track state without providing explicit information. Which components
   /// of the track state are initialized/allocated can be controlled via @p mask
   /// @param mask The bitmask that instructs which components to allocate and
@@ -774,6 +776,8 @@ class MultiTrajectory {
   friend class detail_lt::TrackStateProxy<MeasurementSizeMax, true>;
   friend class detail_lt::TrackStateProxy<MeasurementSizeMax, false>;
 };
+
+inline MultiTrajectory::~MultiTrajectory() = default;
 
 }  // namespace Acts
 

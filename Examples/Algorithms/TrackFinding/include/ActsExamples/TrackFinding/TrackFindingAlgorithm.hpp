@@ -115,7 +115,7 @@ void TrackFindingAlgorithm::computeSharedHits(
     auto& measIndexes = ckfResult.lastMeasurementIndices;
 
     for (auto measIndex : measIndexes) {
-      ckfResult.fittedStates.visitBackwards(measIndex, [&](const auto& state) {
+      ckfResult.fittedStates->visitBackwards(measIndex, [&](const auto& state) {
         if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag))
           return;
 
@@ -136,19 +136,19 @@ void TrackFindingAlgorithm::computeSharedHits(
         int indexFirstState = firstStateOnTheHit.at(hitIndex);
         if (not results.at(indexFirstTrack)
                     .value()
-                    .fittedStates.getTrackState(indexFirstState)
+                    .fittedStates->getTrackState(indexFirstState)
                     .typeFlags()
                     .test(Acts::TrackStateFlag::SharedHitFlag))
           results.at(indexFirstTrack)
               .value()
-              .fittedStates.getTrackState(indexFirstState)
+              .fittedStates->getTrackState(indexFirstState)
               .typeFlags()
               .set(Acts::TrackStateFlag::SharedHitFlag);
 
         // Decorate this track
         results.at(iresult)
             .value()
-            .fittedStates.getTrackState(state.index())
+            .fittedStates->getTrackState(state.index())
             .typeFlags()
             .set(Acts::TrackStateFlag::SharedHitFlag);
       });

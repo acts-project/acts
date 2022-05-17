@@ -12,6 +12,7 @@
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
@@ -155,7 +156,7 @@ BOOST_AUTO_TEST_CASE(Build) {
   constexpr TrackStatePropMask kMask = TrackStatePropMask::Predicted;
 
   // construct trajectory w/ multiple components
-  MultiTrajectory t;
+  VectorMultiTrajectory t;
   auto i0 = t.addTrackState(kMask);
   // trajectory bifurcates here into multiple hypotheses
   auto i1a = t.addTrackState(kMask, i0);
@@ -191,7 +192,7 @@ BOOST_AUTO_TEST_CASE(Build) {
 
 BOOST_AUTO_TEST_CASE(Clear) {
   constexpr TrackStatePropMask kMask = TrackStatePropMask::Predicted;
-  MultiTrajectory t;
+  VectorMultiTrajectory t;
   BOOST_CHECK_EQUAL(t.size(), 0);
 
   auto i0 = t.addTrackState(kMask);
@@ -210,7 +211,7 @@ BOOST_AUTO_TEST_CASE(ApplyWithAbort) {
   constexpr TrackStatePropMask kMask = TrackStatePropMask::Predicted;
 
   // construct trajectory with three components
-  MultiTrajectory t;
+  VectorMultiTrajectory t;
   auto i0 = t.addTrackState(kMask);
   auto i1 = t.addTrackState(kMask, i0);
   auto i2 = t.addTrackState(kMask, i1);
@@ -316,7 +317,7 @@ BOOST_AUTO_TEST_CASE(BitmaskOperators) {
 BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   using PM = TrackStatePropMask;
 
-  MultiTrajectory t;
+  VectorMultiTrajectory t;
 
   auto ts = t.getTrackState(t.addTrackState(PM::All));
   BOOST_CHECK(ts.hasPredicted());
@@ -396,7 +397,7 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCrossTalk) {
   TestTrackState pc(rng, 2u);
 
   // multi trajectory w/ a single, fully set, track state
-  MultiTrajectory traj;
+  VectorMultiTrajectory traj;
   size_t index = traj.addTrackState();
   {
     auto ts = traj.getTrackState(index);
@@ -488,7 +489,7 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCrossTalk) {
 BOOST_AUTO_TEST_CASE(TrackStateReassignment) {
   TestTrackState pc(rng, 1u);
 
-  MultiTrajectory t;
+  VectorMultiTrajectory t;
   size_t index = t.addTrackState();
   auto ts = t.getTrackState(index);
   fillTrackState(pc, TrackStatePropMask::All, ts);
@@ -529,7 +530,7 @@ BOOST_DATA_TEST_CASE(TrackStateProxyStorage, bd::make({1u, 2u}),
   TestTrackState pc(rng, nMeasurements);
 
   // create trajectory with a single fully-filled random track state
-  MultiTrajectory t;
+  VectorMultiTrajectory t;
   size_t index = t.addTrackState();
   auto ts = t.getTrackState(index);
   fillTrackState(pc, TrackStatePropMask::All, ts);
@@ -603,7 +604,7 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyAllocations) {
   TestTrackState pc(rng, 2u);
 
   // this should allocate for all components in the trackstate, plus filtered
-  MultiTrajectory t;
+  VectorMultiTrajectory t;
   size_t i = t.addTrackState(
       TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
       TrackStatePropMask::Uncalibrated | TrackStatePropMask::Jacobian);
@@ -629,7 +630,7 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyGetMask) {
   PM all = std::accumulate(values.begin(), values.end(), PM::None,
                            [](auto a, auto b) { return a | b; });
 
-  MultiTrajectory mj;
+  VectorMultiTrajectory mj;
   {
     auto ts = mj.getTrackState(mj.addTrackState(PM::All));
     BOOST_CHECK(ts.getMask() == all);
@@ -657,7 +658,7 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   std::array<PM, 6> values{PM::Predicted, PM::Filtered,     PM::Smoothed,
                            PM::Jacobian,  PM::Uncalibrated, PM::Calibrated};
 
-  MultiTrajectory mj;
+  VectorMultiTrajectory mj;
   auto mkts = [&](PM mask) { return mj.getTrackState(mj.addTrackState(mask)); };
 
   // orthogonal ones
@@ -803,8 +804,8 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopyDiffMTJ) {
   std::array<PM, 6> values{PM::Predicted, PM::Filtered,     PM::Smoothed,
                            PM::Jacobian,  PM::Uncalibrated, PM::Calibrated};
 
-  MultiTrajectory mj;
-  MultiTrajectory mj2;
+  VectorMultiTrajectory mj;
+  VectorMultiTrajectory mj2;
   auto mkts = [&](PM mask) { return mj.getTrackState(mj.addTrackState(mask)); };
   auto mkts2 = [&](PM mask) {
     return mj2.getTrackState(mj2.addTrackState(mask));
@@ -858,7 +859,7 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopyDiffMTJ) {
 
 BOOST_AUTO_TEST_CASE(ProxyAssignment) {
   constexpr TrackStatePropMask kMask = TrackStatePropMask::Predicted;
-  MultiTrajectory t;
+  VectorMultiTrajectory t;
   auto i0 = t.addTrackState(kMask);
 
   MultiTrajectory::TrackStateProxy tp = t.getTrackState(i0);  // mutable
@@ -871,7 +872,7 @@ BOOST_AUTO_TEST_CASE(ProxyAssignment) {
 // Check if the copy from const does compile, assume the copy is done correctly
 BOOST_AUTO_TEST_CASE(CopyFromConst) {
   using PM = TrackStatePropMask;
-  MultiTrajectory mj;
+  VectorMultiTrajectory mj;
 
   const auto idx_a = mj.addTrackState(PM::All);
   const auto idx_b = mj.addTrackState(PM::All);

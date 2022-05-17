@@ -146,6 +146,7 @@ auto smoothAndCombineTrajectories(
   sortUniqueValidateBwdTips();
 
   KalmanFitterResult result;
+  result.fittedStates = std::make_shared<VectorMultiTrajectory>();
 
   while (!bwdTips.empty()) {
     // Ensure that we update the bwd tips whenever we go to the next iteration
@@ -185,11 +186,11 @@ auto smoothAndCombineTrajectories(
     fwdTips.erase(std::unique(fwdTips.begin(), fwdTips.end()), fwdTips.end());
 
     // Add state to MultiTrajectory
-    result.lastTrackIndex = result.fittedStates.addTrackState(
+    result.lastTrackIndex = result.fittedStates->addTrackState(
         TrackStatePropMask::All, result.lastTrackIndex);
     result.processedStates++;
 
-    auto proxy = result.fittedStates.getTrackState(result.lastTrackIndex);
+    auto proxy = result.fittedStates->getTrackState(result.lastTrackIndex);
 
     // This way we copy all relevant flags and the calibrated field. However
     // this assumes that the relevant flags do not differ between components

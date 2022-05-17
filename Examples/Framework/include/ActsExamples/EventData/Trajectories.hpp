@@ -40,10 +40,10 @@ struct Trajectories final {
   /// @param multiTraj The multi trajectory
   /// @param tTips Tip indices that identify valid trajectories
   /// @param parameters Fitted track parameters indexed by trajectory index
-  Trajectories(const MultiTrajectory& multiTraj,
+  Trajectories(std::shared_ptr<MultiTrajectory> multiTraj,
                const std::vector<size_t>& tTips,
                const IndexedParameters& parameters)
-      : m_multiTrajectory(multiTraj),
+      : m_multiTrajectory(std::move(multiTraj)),
         m_trackTips(tTips),
         m_trackParameters(parameters) {}
 
@@ -51,7 +51,7 @@ struct Trajectories final {
   bool empty() const { return m_trackTips.empty(); }
 
   /// Access the underlying multi trajectory.
-  const MultiTrajectory& multiTrajectory() const { return m_multiTrajectory; }
+  const MultiTrajectory& multiTrajectory() const { return *m_multiTrajectory; }
 
   /// Access the tip indices that identify valid trajectories.
   const std::vector<size_t>& tips() const { return m_trackTips; }
@@ -88,7 +88,7 @@ struct Trajectories final {
 
  private:
   // The multiTrajectory
-  MultiTrajectory m_multiTrajectory;
+  std::shared_ptr<MultiTrajectory> m_multiTrajectory;
   // The entry indices of trajectories stored in multiTrajectory
   std::vector<size_t> m_trackTips = {};
   // The fitted parameters at the provided surface for individual trajectories
