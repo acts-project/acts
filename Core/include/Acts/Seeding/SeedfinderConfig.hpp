@@ -104,7 +104,7 @@ struct SeedfinderConfig {
 
   // tolerance parameter used to check the compatibility of SPs coordinates in
   // xyz
-  float toleranceParam = 1.1;
+  float toleranceParam = 1.1 * Acts::UnitConstants::mm;
 
   // Geometry Settings
   // Detector ROI
@@ -205,6 +205,8 @@ struct SeedfinderConfig {
 
     config.zAlign /= 1_mm;
     config.rAlign /= 1_mm;
+
+    config.toleranceParam /= 1_mm;
 
     return config;
   }
