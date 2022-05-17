@@ -450,6 +450,7 @@ class KalmanFitter {
                     // @FIXME: MTJ direct index access
                     // trackState.data().ismoothed =
                     // detail_lt::IndexData::kInvalid;
+                    trackState.unset(TrackStatePropMask::Smoothed);
                   }
                 });
           }

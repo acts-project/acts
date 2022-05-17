@@ -363,6 +363,30 @@ class TrackStateProxy {
     setReferenceSurface(other.referenceSurfacePointer());
   }
 
+  /// Unset an optional track state component
+  /// @param target The component to unset
+  template <bool RO = ReadOnly, typename = std::enable_if<!RO>>
+  void unset(TrackStatePropMask target) {
+    using PM = TrackStatePropMask;
+
+    switch (target) {
+      case PM::Predicted:
+        data().ipredicted = IndexData::kInvalid;
+        break;
+      case PM::Filtered:
+        data().ifiltered = IndexData::kInvalid;
+        break;
+      case PM::Smoothed:
+        data().ismoothed = IndexData::kInvalid;
+        break;
+      case PM::Jacobian:
+        data().ijacobian = IndexData::kInvalid;
+        break;
+      default:
+        throw std::domain_error{"Unable to unset this component"};
+    }
+  }
+
   /// Reference surface.
   /// @return the reference surface
   const Surface& referenceSurface() const {
