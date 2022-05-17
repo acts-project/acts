@@ -288,14 +288,13 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         auto lt = state.linCircleTop[t];
 
         float cotThetaT = lt.cotTheta;
-        float cotThetaBNew;
         float rMxy = 0.;
         float ub = 0.;
         float vb = 0.;
         float ut = 0.;
         float vt = 0.;
 
-        if (m_config.useDetailedDoubleMeasurementInfo == true) {
+        if (m_config.useDetailedDoubleMeasurementInfo) {
           // protects against division by 0
           float dU = lt.U - Ub;
           if (dU == 0.) {
@@ -364,7 +363,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           float iDeltaRB2 = 1. / (xB * xB + yB * yB);
           float iDeltaRT2 = 1. / (xT * xT + yT * yT);
 
-          cotThetaBNew = -zB * std::sqrt(iDeltaRB2);
+          cotThetaB = -zB * std::sqrt(iDeltaRB2);
           cotThetaT = zT * std::sqrt(iDeltaRT2);
 
           rMxy =
@@ -376,19 +375,13 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           vb = (yB * Ax - xB * Ay) * iDeltaRB2;
           ut = (xT * Ax + yT * Ay) * iDeltaRT2;
           vt = (yT * Ax - xT * Ay) * iDeltaRT2;
-
-        } else {
-          // don't use the xyz coordinate check
-          cotThetaBNew = cotThetaB;
         }
 
-        float cotThetaAvg2;
+        // use geometric average
+        float cotThetaAvg2 = cotThetaB * cotThetaT;
         if (m_config.arithmeticAverageCotTheta) {
           // use arithmetic average
-          cotThetaAvg2 = std::pow((cotThetaBNew + lt.cotTheta) / 2, 2);
-        } else {
-          // use geometric average
-          cotThetaAvg2 = cotThetaBNew * lt.cotTheta;
+          cotThetaAvg2 = std::pow((cotThetaB + cotThetaT) / 2, 2);
         }
 
         // add errors of spB-spM and spM-spT pairs and add the correlation term
@@ -397,7 +390,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
                        2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB *
                            lt.iDeltaR;
 
-        float deltaCotTheta = cotThetaBNew - cotThetaT;
+        float deltaCotTheta = cotThetaB - cotThetaT;
         float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
         // Apply a cut on the compatibility between the r-z slope of the two
         // seed segments. This is done by comparing the squared difference
@@ -414,7 +407,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           if (m_config.skipPreviousTopSP) {
             // break if cotTheta from bottom SP < cotTheta from top SP because
             // the SP are sorted by cotTheta
-            if (cotThetaBNew - lt.cotTheta < 0) {
+            if (cotThetaB - lt.cotTheta < 0) {
               break;
             }
             t0 = t + 1;
@@ -428,7 +421,17 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         float B;
         float B2;
 
-        if (m_config.useDetailedDoubleMeasurementInfo == false) {
+        if (m_config.useDetailedDoubleMeasurementInfo) {
+          dU = ut - ub;
+          // protects against division by 0
+          if (dU == 0.) {
+            continue;
+          }
+          A = (vt - vb) / dU;
+          S2 = 1. + A * A;
+          B = vb - A * ub;
+          B2 = B * B;
+        } else {
           dU = lt.U - Ub;
           // protects against division by 0
           if (dU == 0.) {
@@ -439,17 +442,6 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           A = (lt.V - Vb) / dU;
           S2 = 1. + A * A;
           B = Vb - A * Ub;
-          B2 = B * B;
-
-        } else {
-          dU = ut - ub;
-          // protects against division by 0
-          if (dU == 0.) {
-            continue;
-          }
-          A = (vt - vb) / dU;
-          S2 = 1. + A * A;
-          B = vb - A * ub;
           B2 = B * B;
         }
 
@@ -480,7 +472,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         // if deltaTheta larger than allowed scattering for calculated pT, skip
         if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
           if (m_config.skipPreviousTopSP) {
-            if (cotThetaBNew - cotThetaT < 0) {
+            if (cotThetaB - cotThetaT < 0) {
               break;
             }
             t0 = t;
