@@ -134,7 +134,7 @@ struct ConstrainedStep {
 
   /// Number of iterations needed by the stepsize finder
   /// (e.g. Runge-Kutta) of the stepper.
-  int nStepTrials = -1;
+  int nStepTrials = std::numeric_limits<int>::max();
 };
 
 inline std::string ConstrainedStep::toString() const {
