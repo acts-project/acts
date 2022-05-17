@@ -160,14 +160,22 @@ struct SeedfinderConfig {
   int nAvgTrplPerSpBLimit = 2;
 
   // Delegates for accessors to detailed information on double measurement that
-  // produced the space point
+  // produced the space point.
+  // This is mainly referring to space points produced when combining measurement from strips on back-to-back modules.
+  // Defines if the following delegates are set or not.
   bool useDetailedDoubleMeasurementInfo = false;
-  Delegate<float(const void*)> getTopHalfStripLength;
-  Delegate<float(const void*)> getBottomHalfStripLength;
-  Delegate<Acts::Vector3(const void*)> getTopStripDirection;
-  Delegate<Acts::Vector3(const void*)> getBottomStripDirection;
-  Delegate<Acts::Vector3(const void*)> getStripCenterDistance;
-  Delegate<Acts::Vector3(const void*)> getBottomStripCenterPosition;
+  // Returns half of the length of the top strip.
+  Delegate<float(const SpacePoint*)> getTopHalfStripLength;
+  // Returns half of the length of the bottom strip.
+  Delegate<float(const SpacePoint*)> getBottomHalfStripLength;
+  // Returns direction of the top strip.
+  Delegate<Acts::Vector3(const SpacePoint*)> getTopStripDirection;
+  // Returns direction of the bottom strip.
+  Delegate<Acts::Vector3(const SpacePoint*)> getBottomStripDirection;
+  // Returns distance between the centers of the two strips.
+  Delegate<Acts::Vector3(const SpacePoint*)> getStripCenterDistance;
+  // Returns position of the center of the bottom strip.
+  Delegate<Acts::Vector3(const SpacePoint*)> getBottomStripCenterPosition;
 
   SeedfinderConfig toInternalUnits() const {
     using namespace Acts::UnitLiterals;
