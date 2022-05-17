@@ -407,7 +407,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           if (m_config.skipPreviousTopSP) {
             // break if cotTheta from bottom SP < cotTheta from top SP because
             // the SP are sorted by cotTheta
-            if (cotThetaB - lt.cotTheta < 0) {
+            if (cotThetaB - cotThetaT < 0) {
               break;
             }
             t0 = t + 1;
