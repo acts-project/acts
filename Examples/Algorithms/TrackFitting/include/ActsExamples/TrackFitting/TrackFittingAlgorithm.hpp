@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -111,16 +112,25 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
   ///
   /// The magnetic field is intentionally given by-value since the variant
   /// contains shared_ptr anyways.
+  /// @param trackingGeometry
+  /// @param multipleScattering correct for MCS (mainly for debugging)
+  /// @param energyLoss correct for e-loss
+  /// @param reverseFilteringMomThreshold at which threshold
+  /// @param freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
   static std::shared_ptr<TrackFitterFunction> makeKalmanFitterFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
       bool multipleScattering = true, bool energyLoss = true,
-      double reverseFilteringMomThreshold = 0.0);
+      double reverseFilteringMomThreshold = 0.0,
+      Acts::FreeToBoundCorrection freeToBoundCorrection =
+          Acts::FreeToBoundCorrection());
 
   static std::shared_ptr<DirectedTrackFitterFunction> makeKalmanFitterFunction(
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
       bool multipleScattering = true, bool energyLoss = true,
-      double reverseFilteringMomThreshold = 0.0);
+      double reverseFilteringMomThreshold = 0.0,
+      Acts::FreeToBoundCorrection freeToBoundCorrection =
+          Acts::FreeToBoundCorrection());
 
   static std::shared_ptr<TrackFitterFunction> makeGsfFitterFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,

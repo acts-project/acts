@@ -60,17 +60,21 @@ void addTrackFitting(Context& ctx) {
                         py::overload_cast<
                             std::shared_ptr<const Acts::TrackingGeometry>,
                             std::shared_ptr<const Acts::MagneticFieldProvider>,
-                            bool, bool, double>(&Alg::makeKalmanFitterFunction),
+                            bool, bool, double, Acts::FreeToBoundCorrection>(
+                            &Alg::makeKalmanFitterFunction),
                         py::arg("trackingGeometry"), py::arg("magneticField"),
                         py::arg("multipleScattering"), py::arg("energyLoss"),
-                        py::arg("reverseFilteringMomThreshold"))
+                        py::arg("reverseFilteringMomThreshold"),
+                        py::arg("freeToBoundCorrection"))
             .def_static("makeKalmanFitterFunction",
                         py::overload_cast<
                             std::shared_ptr<const Acts::MagneticFieldProvider>,
-                            bool, bool, double>(&Alg::makeKalmanFitterFunction),
+                            bool, bool, double, Acts::FreeToBoundCorrection>(
+                            &Alg::makeKalmanFitterFunction),
                         py::arg("magneticField"), py::arg("multipleScattering"),
                         py::arg("energyLoss"),
-                        py::arg("reverseFilteringMomThreshold"))
+                        py::arg("reverseFilteringMomThreshold"),
+                        py::arg("freeToBoundCorrection"))
             .def_static(
                 "makeGsfFitterFunction",
                 py::overload_cast<
@@ -111,6 +115,14 @@ void addTrackFitting(Context& ctx) {
     ACTS_PYTHON_MEMBER(trackingGeometry);
     ACTS_PYTHON_MEMBER(pickTrack);
     ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    py::class_<FreeToBoundCorrection>(mex, "FreeToBoundCorrection")
+        .def(py::init<>())
+        .def(py::init<bool>(), py::arg("apply") = false)
+        .def(py::init<bool, double, double>(), py::arg("apply") = false,
+             py::arg("alpha") = 0.1, py::arg("beta") = 2);
   }
 }
 

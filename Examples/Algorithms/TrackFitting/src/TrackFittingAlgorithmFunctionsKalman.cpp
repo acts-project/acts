@@ -60,6 +60,7 @@ auto makeKfOptions(
 
   kfOptions.multipleScattering = f.multipleScattering;
   kfOptions.energyLoss = f.energyLoss;
+  kfOptions.freeToBoundCorrection = f.freeToBoundCorrection;
 
   return kfOptions;
 }
@@ -74,6 +75,7 @@ struct TrackFitterFunctionImpl
 
   bool multipleScattering;
   bool energyLoss;
+  Acts::FreeToBoundCorrection freeToBoundCorrection;
 
   TrackFitterFunctionImpl(Fitter&& f) : trackFitter(std::move(f)) {}
 
@@ -102,7 +104,7 @@ struct DirectedFitterFunctionImpl
 
   bool multipleScattering;
   bool energyLoss;
-  double reverseFilteringMomThreshold;
+  Acts::FreeToBoundCorrection freeToBoundCorrection;
 
   DirectedFitterFunctionImpl(DirectFitter&& f) : fitter(std::move(f)) {}
 
@@ -128,7 +130,7 @@ ActsExamples::TrackFittingAlgorithm::makeKalmanFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering, bool energyLoss,
-    double reverseFilteringMomThreshold) {
+    double reverseFilteringMomThreshold, Acts::FreeToBoundCorrection freeToBoundCorrection) {
   Stepper stepper(std::move(magneticField));
   Acts::Navigator::Config cfg{trackingGeometry};
   cfg.resolvePassive = false;
@@ -145,6 +147,7 @@ ActsExamples::TrackFittingAlgorithm::makeKalmanFitterFunction(
   fitterFunction->energyLoss = energyLoss;
   fitterFunction->reverseFilteringLogic.momentumThreshold =
       reverseFilteringMomThreshold;
+  fitterFunction->freeToBoundCorrection = freeToBoundCorrection;
 
   return fitterFunction;
 }
@@ -154,7 +157,7 @@ std::shared_ptr<
 ActsExamples::TrackFittingAlgorithm::makeKalmanFitterFunction(
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering, bool energyLoss,
-    double reverseFilteringMomThreshold) {
+    double reverseFilteringMomThreshold, Acts::FreeToBoundCorrection freeToBoundCorrection) {
   // construct all components for the fitter
   Stepper stepper(std::move(magneticField));
   Acts::DirectNavigator navigator;
@@ -168,6 +171,7 @@ ActsExamples::TrackFittingAlgorithm::makeKalmanFitterFunction(
   fitterFunction->energyLoss = energyLoss;
   fitterFunction->reverseFilteringLogic.momentumThreshold =
       reverseFilteringMomThreshold;
+  fitterFunction->freeToBoundCorrection = freeToBoundCorrection;
 
   return fitterFunction;
 }

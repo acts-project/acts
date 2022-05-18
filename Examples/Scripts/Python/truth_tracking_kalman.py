@@ -41,6 +41,7 @@ def addKalmanTracks(
         "multipleScattering": True,
         "energyLoss": True,
         "reverseFilteringMomThreshold": reverseFilteringMomThreshold,
+        "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False)
     }
 
     fitAlg = acts.examples.TrackFittingAlgorithm(
