@@ -74,7 +74,6 @@ struct TrackFitterFunctionImpl
 
   bool multipleScattering;
   bool energyLoss;
-  double reverseFilteringMomThreshold;
 
   TrackFitterFunctionImpl(Fitter&& f) : trackFitter(std::move(f)) {}
 
@@ -144,7 +143,8 @@ ActsExamples::TrackFittingAlgorithm::makeKalmanFitterFunction(
       std::make_shared<TrackFitterFunctionImpl>(std::move(trackFitter));
   fitterFunction->multipleScattering = multipleScattering;
   fitterFunction->energyLoss = energyLoss;
-  fitterFunction->reverseFilteringMomThreshold = reverseFilteringMomThreshold;
+  fitterFunction->reverseFilteringLogic.momentumThreshold =
+      reverseFilteringMomThreshold;
 
   return fitterFunction;
 }
@@ -166,7 +166,8 @@ ActsExamples::TrackFittingAlgorithm::makeKalmanFitterFunction(
       std::make_shared<DirectedFitterFunctionImpl>(std::move(fitter));
   fitterFunction->multipleScattering = multipleScattering;
   fitterFunction->energyLoss = energyLoss;
-  fitterFunction->reverseFilteringMomThreshold = reverseFilteringMomThreshold;
+  fitterFunction->reverseFilteringLogic.momentumThreshold =
+      reverseFilteringMomThreshold;
 
   return fitterFunction;
 }
