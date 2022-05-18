@@ -47,7 +47,7 @@ ActsFatras::Hit convertEDM4hepSimHit(
 
   const auto geometryId = detElement.volumeID();
   ActsFatras::Barcode particleId;
-  particleId.setParticle(sth.getMCParticle().id());  // TODO
+  particleId.setParticle(sth.getMCParticle().id());
 
   const auto mass = sth.getMCParticle().getMass();
   const Acts::ActsVector<3> momentum{
