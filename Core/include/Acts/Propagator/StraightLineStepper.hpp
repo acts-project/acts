@@ -54,7 +54,7 @@ class StraightLineStepper {
     /// @param [in] gctx is the context object for the geometry
     /// @param [in] mctx is the context object for the magnetic field
     /// @param [in] par The track parameters at start
-    /// @param [in] ndir The navigation direciton w.r.t momentum
+    /// @param [in] ndir The navigation direction w.r.t momentum
     /// @param [in] ssize is the maximum step size
     /// @param [in] stolerance is the stepping tolerance
     ///
