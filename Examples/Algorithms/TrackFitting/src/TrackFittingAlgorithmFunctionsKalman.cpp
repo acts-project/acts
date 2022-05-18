@@ -130,7 +130,8 @@ ActsExamples::TrackFittingAlgorithm::makeKalmanFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering, bool energyLoss,
-    double reverseFilteringMomThreshold, Acts::FreeToBoundCorrection freeToBoundCorrection) {
+    double reverseFilteringMomThreshold,
+    Acts::FreeToBoundCorrection freeToBoundCorrection) {
   Stepper stepper(std::move(magneticField));
   Acts::Navigator::Config cfg{trackingGeometry};
   cfg.resolvePassive = false;
@@ -157,7 +158,8 @@ std::shared_ptr<
 ActsExamples::TrackFittingAlgorithm::makeKalmanFitterFunction(
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering, bool energyLoss,
-    double reverseFilteringMomThreshold, Acts::FreeToBoundCorrection freeToBoundCorrection) {
+    double reverseFilteringMomThreshold,
+    Acts::FreeToBoundCorrection freeToBoundCorrection) {
   // construct all components for the fitter
   Stepper stepper(std::move(magneticField));
   Acts::DirectNavigator navigator;
