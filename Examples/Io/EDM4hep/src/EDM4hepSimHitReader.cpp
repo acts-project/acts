@@ -9,7 +9,6 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitReader.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "ActsDD4hep/ActsExtension.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
@@ -46,11 +45,7 @@ ActsFatras::Hit convertEDM4hepSimHit(
   auto detElement =
       geometryService.lcdd()->volumeManager().lookupDetElement(sth.getCellID());
 
-  // auto detExtension = detElement.extension<Acts::ActsExtension>();
-  // std::cerr << "EDM4hep converter axes definitions " <<
-  // detExtension->getType("axes", "definitions") << std::endl;
-
-  const auto geometryId = detElement.volumeID();  // TODO
+  const auto geometryId = detElement.volumeID();
   ActsFatras::Barcode particleId;
   particleId.setParticle(sth.getMCParticle().id());  // TODO
 
