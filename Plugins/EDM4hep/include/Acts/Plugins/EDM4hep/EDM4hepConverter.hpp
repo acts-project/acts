@@ -11,6 +11,4 @@
 #include "ActsFatras/EventData/Hit.hpp"
 
 #include "edm4hep/SimTrackerHit.h"
-namespace Acts {
-
-}  // namespace Acts
+namespace Acts {}  // namespace Acts

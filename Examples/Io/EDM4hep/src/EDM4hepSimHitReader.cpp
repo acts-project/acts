@@ -8,14 +8,11 @@
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitReader.hpp"
 
+#include "Acts/Definitions/Units.hpp"
+#include "ActsDD4hep/ActsExtension.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-
 #include "ActsFatras/EventData/Hit.hpp"
-
-#include "ActsDD4hep/ActsExtension.hpp"
-
-#include "Acts/Definitions/Units.hpp"
 
 #include "edm4hep/SimTrackerHit.h"
 #include "edm4hep/SimTrackerHitCollection.h"
@@ -45,15 +42,17 @@ std::pair<size_t, size_t> ActsExamples::EDM4hepSimHitReader::availableEvents()
 
 ActsFatras::Hit convertEDM4hepSimHit(
     const edm4hep::SimTrackerHit& sth,
-    ActsExamples::DD4hep::DD4hepGeometryService &geometryService) {
-  auto detElement = geometryService.lcdd()->volumeManager().lookupDetElement(sth.getCellID());
+    ActsExamples::DD4hep::DD4hepGeometryService& geometryService) {
+  auto detElement =
+      geometryService.lcdd()->volumeManager().lookupDetElement(sth.getCellID());
 
-  //auto detExtension = detElement.extension<Acts::ActsExtension>();
-  //std::cerr << "EDM4hep converter axes definitions " << detExtension->getType("axes", "definitions") << std::endl;
+  // auto detExtension = detElement.extension<Acts::ActsExtension>();
+  // std::cerr << "EDM4hep converter axes definitions " <<
+  // detExtension->getType("axes", "definitions") << std::endl;
 
-  const auto geometryId = detElement.volumeID(); // TODO
+  const auto geometryId = detElement.volumeID();  // TODO
   ActsFatras::Barcode particleId;
-  particleId.setParticle(sth.getMCParticle().id()); // TODO
+  particleId.setParticle(sth.getMCParticle().id());  // TODO
 
   const auto mass = sth.getMCParticle().getMass();
   const Acts::ActsVector<3> momentum{
@@ -107,7 +106,8 @@ ActsExamples::ProcessCode ActsExamples::EDM4hepSimHitReader::read(
           auto hit = convertEDM4hepSimHit(sth, *m_cfg.dd4hepGeometryService);
           unordered.push_back(std::move(hit));
         } catch (...) {
-          m_logger->log(Acts::Logging::Level::ERROR, "EDM4hepSimHitReader: failed to convert SimTrackerHit");
+          m_logger->log(Acts::Logging::Level::ERROR,
+                        "EDM4hepSimHitReader: failed to convert SimTrackerHit");
           continue;
         }
       }

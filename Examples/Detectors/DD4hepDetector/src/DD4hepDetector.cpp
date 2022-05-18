@@ -54,5 +54,5 @@ auto DD4hepDetector::finalize(
       std::move(dd4tGeometry), std::move(dd4ContextDeocrators));
 }
 
-}
-}
+}  // namespace DD4hep
+}  // namespace ActsExamples

@@ -10,9 +10,8 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
-
-#include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
+#include "ActsExamples/Framework/IReader.hpp"
 
 #include <memory>
 #include <string>

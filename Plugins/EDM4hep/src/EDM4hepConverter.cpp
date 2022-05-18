@@ -12,6 +12,4 @@
 
 #include "edm4hep/SimTrackerHitCollection.h"
 
-namespace Acts {
-
-}  // namespace Acts
+namespace Acts {}  // namespace Acts
