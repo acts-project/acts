@@ -477,7 +477,7 @@ class KalmanFitter {
         return KalmanFitterError::ReverseNavigationFailed;
       }
 
-      // Remember the navigation direciton has been reversed
+      // Remember the navigation direction has been reversed
       result.reversed = true;
 
       // Reverse navigation direction

@@ -246,7 +246,7 @@ Very simple helper methods for 3D libraries exist, they are certainly not
 optimised, but used for templating:
 
 * `TGeoDetectorElement` connects a TGeo volume to a `Surface`
-* `DD4HepDetectorElement` connects a DD4Hep volume (based on TGeo) to a `Surface`
+* `DD4HepDetectorElement` connects a DD4hep volume (based on TGeo) to a `Surface`
 
 ## Layer building
 
