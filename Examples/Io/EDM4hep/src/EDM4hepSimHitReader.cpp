@@ -49,13 +49,6 @@ ActsFatras::Hit convertEDM4hepSimHit(
     ActsExamples::DD4hep::DD4hepGeometryService &geometryService) {
   std::ofstream debug("/home/andreas/debug.txt", std::ios::app);
 
-  try {
-    auto test = geometryService.lcdd()->volumeManager().lookupDetElement(1250572);
-    debug << "EDM4hep found test " << test.volumeID() << std::endl;
-  } catch (...) {
-    debug << "EDM4hep test failed" << std::endl;
-  }
-
   debug << "EDM4hep convert cell id " << sth.getCellID() << std::endl;
 
   try {

@@ -12,5 +12,5 @@
 
 int main(int argc, char* argv[]) {
   return runDigitizationConfigExample(argc, argv,
-                                      std::make_shared<DD4hepDetector>());
+                                      std::make_shared<ActsExamples::DD4hep::DD4hepDetector>());
 }

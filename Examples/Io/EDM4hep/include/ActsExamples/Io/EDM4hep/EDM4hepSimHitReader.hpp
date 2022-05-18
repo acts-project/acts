@@ -29,7 +29,7 @@ class EDM4hepSimHitReader final : public IReader {
     std::string inputPath;
     /// Output simulated (truth) hits collection.
     std::string outputSimHits;
-
+    /// DD4hep geometry service for cellID resolution.
     std::shared_ptr<DD4hep::DD4hepGeometryService> dd4hepGeometryService;
   };
 
