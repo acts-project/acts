@@ -13,6 +13,8 @@
 
 #include "ActsFatras/EventData/Hit.hpp"
 
+#include "ActsDD4hep/ActsExtension.hpp"
+
 #include "Acts/Definitions/Units.hpp"
 
 #include "edm4hep/SimTrackerHit.h"
@@ -23,9 +25,6 @@ ActsExamples::EDM4hepSimHitReader::EDM4hepSimHitReader(
     Acts::Logging::Level level)
     : m_cfg(config),
       m_logger(Acts::getDefaultLogger("EDM4hepSimHitReader", level)) {
-  std::cerr << "EDM4hepSimHitReader: input path " << m_cfg.inputPath
-            << std::endl;
-
   m_reader.openFile(m_cfg.inputPath);
   m_store.setReader(&m_reader);
 
@@ -47,18 +46,12 @@ std::pair<size_t, size_t> ActsExamples::EDM4hepSimHitReader::availableEvents()
 ActsFatras::Hit convertEDM4hepSimHit(
     const edm4hep::SimTrackerHit& sth,
     ActsExamples::DD4hep::DD4hepGeometryService &geometryService) {
-  std::ofstream debug("/home/andreas/debug.txt", std::ios::app);
+  auto detElement = geometryService.lcdd()->volumeManager().lookupDetElement(sth.getCellID());
 
-  debug << "EDM4hep convert cell id " << sth.getCellID() << std::endl;
+  //auto detExtension = detElement.extension<Acts::ActsExtension>();
+  //std::cerr << "EDM4hep converter axes definitions " << detExtension->getType("axes", "definitions") << std::endl;
 
-  try {
-    auto detElement = geometryService.lcdd()->volumeManager().lookupDetElement(sth.getCellID());
-    debug << "EDM4hep found detElement " << detElement.volumeID() << std::endl;
-  } catch (...) {
-    debug << "EDM4hep detElement not found" << std::endl;
-  }
-
-  const auto geometryId = sth.getCellID(); // TODO
+  const auto geometryId = detElement.volumeID(); // TODO
   ActsFatras::Barcode particleId;
   particleId.setParticle(sth.getMCParticle().id()); // TODO
 
@@ -110,8 +103,13 @@ ActsExamples::ProcessCode ActsExamples::EDM4hepSimHitReader::read(
     if (collection.getTypeName() == "edm4hep::SimTrackerHitCollection") {
       for (const auto& sth :
            (const edm4hep::SimTrackerHitCollection&)collection) {
-        auto hit = convertEDM4hepSimHit(sth, *m_cfg.dd4hepGeometryService);
-        unordered.push_back(std::move(hit));
+        try {
+          auto hit = convertEDM4hepSimHit(sth, *m_cfg.dd4hepGeometryService);
+          unordered.push_back(std::move(hit));
+        } catch (...) {
+          m_logger->log(Acts::Logging::Level::ERROR, "EDM4hepSimHitReader: failed to convert SimTrackerHit");
+          continue;
+        }
       }
     }
   }

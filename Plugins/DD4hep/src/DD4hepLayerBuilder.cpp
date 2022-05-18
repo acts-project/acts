@@ -341,9 +341,6 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
     return nullptr;
   }
 
-  std::ofstream debug("/home/andreas/debug.txt", std::ios::app);
-  debug << "DD4hep createSensitiveSurface detElement.volumeId() " << detElement.volumeID() << std::endl;
-
   auto detAxis = detExtension->getType("axes", "definitions");
   // Create the corresponding detector element !- memory leak --!
   Acts::DD4hepDetectorElement* dd4hepDetElement =

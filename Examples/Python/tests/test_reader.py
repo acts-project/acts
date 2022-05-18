@@ -313,7 +313,7 @@ def test_csv_clusters_reader(tmp_path, fatras, conf_const, trk_geo, rng):
 def test_edm4hep_simhits_reader(conf_const):
     import acts.examples.dd4hep
 
-    odd = getOpenDataDetector()
+    detector, _, _ = getOpenDataDetector()
 
     s = Sequencer(numThreads=1)
 
@@ -325,7 +325,7 @@ def test_edm4hep_simhits_reader(conf_const):
                 "/home/andreas/cern/output_edm4hep.root"
             ),
             outputSimHits="simhits",
-            dd4hepGeometryService=odd.geometryService,
+            dd4hepGeometryService=detector.geometryService,
         )
     )
 
