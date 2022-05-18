@@ -78,23 +78,23 @@ def runTruthTrackingKalman(
     from particle_gun import addParticleGun, EtaConfig, PhiConfig, ParticleConfig
     from fatras import addFatras
     from digitization import addDigitization
-    from seeding import addSeeding, SeedingAlgorithm
+    from seeding import addSeeding, SeedingAlgorithm, TruthSeedRanges
 
     s = s or acts.examples.Sequencer(
         events=100, numThreads=-1, logLevel=acts.logging.INFO
     )
 
-    rnd = acts.examples.RandomNumbers(seed=42)
+    rnd = acts.examples.RandomNumbers()
     outputDir = Path(outputDir)
 
     if inputParticlePath is None:
         s = addParticleGun(
             s,
             EtaConfig(-2.0, 2.0),
-            ParticleConfig(4, acts.PdgParticle.eMuon, True),
-            PhiConfig(0.0, 360.0 * u.degree),
-            multiplicity=2,
+            ParticleConfig(2, acts.PdgParticle.eMuon, False),
+            multiplicity=1,
             rnd=rnd,
+            outputDirRoot=outputDir,
         )
     else:
         acts.logging.getLogger("Truth tracking example").info(
@@ -130,6 +130,11 @@ def runTruthTrackingKalman(
         trackingGeometry,
         field,
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
+        rnd=rnd,
+        truthSeedRanges=TruthSeedRanges(
+            pt = (500*u.MeV, None),
+            nHits=(9, None),
+        ),
     )
 
     s = addKalmanTracks(
