@@ -1302,7 +1302,7 @@ class CombinatorialKalmanFilter {
 
       /// Get the result of the CombinatorialKalmanFilter
       auto combKalmanResult =
-          propRes.template get<CombinatorialKalmanFilterResult>();
+          std::move(propRes.template get<CombinatorialKalmanFilterResult>());
 
       /// The propagation could already reach max step size
       /// before the track finding is finished during two phases:
@@ -1328,7 +1328,7 @@ class CombinatorialKalmanFilter {
       }
 
       // Emplace back the successful result
-      ckfResults.emplace_back(combKalmanResult);
+      ckfResults.emplace_back(std::move(combKalmanResult));
     }
 
     return ckfResults;

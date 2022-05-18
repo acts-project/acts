@@ -12,17 +12,28 @@
 #include <cstdint>
 
 namespace Acts {
+using HashedString = std::uint32_t;
+
 // Adapted from https://gist.github.com/Lee-R/3839813
 namespace detail {
 // FNV-1a 32bit hashing algorithm.
-constexpr std::uint32_t fnv1a_32(char const* s, std::size_t count) {
+constexpr HashedString fnv1a_32(char const* s, std::size_t count) {
   return ((count ? fnv1a_32(s, count - 1) : 2166136261u) ^ s[count]) *
          16777619u;
 }
+constexpr int length(const char* str) {
+  return *str ? 1 + length(str + 1) : 0;
+}
 }  // namespace detail
 
-constexpr std::uint32_t operator"" _hash(char const* s, std::size_t count) {
+constexpr HashedString hashString(const char* s) {
+  return detail::fnv1a_32(s, detail::length(s));
+}
+
+namespace HashedStringLiteral {
+constexpr HashedString operator"" _hash(char const* s, std::size_t count) {
   return detail::fnv1a_32(s, count);
 }
 
+}  // namespace HashedStringLiteral
 }  // namespace Acts
