@@ -32,7 +32,6 @@ def test_generic_geometry():
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")
 def test_odd():
-
     config = acts.MaterialMapJsonConverter.Config()
     matDeco = acts.JsonMaterialDecorator(
         rConfig=config,
@@ -40,7 +39,7 @@ def test_odd():
         level=acts.logging.WARNING,
     )
 
-    detector, geo, _ = getOpenDataDetector(matDeco)
+    _, geo, _ = getOpenDataDetector(matDeco)
 
     assert count_surfaces(geo) == 18824
 

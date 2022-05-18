@@ -2,7 +2,7 @@ from typing import Type
 import inspect
 
 from helpers import dd4hepEnabled
-from common import getOpenDataDetectorDirectory
+from common import getOpenDataDetector
 
 import pytest
 
@@ -313,12 +313,7 @@ def test_csv_clusters_reader(tmp_path, fatras, conf_const, trk_geo, rng):
 def test_edm4hep_simhits_reader(conf_const):
     import acts.examples.dd4hep
 
-    odd_dir = getOpenDataDetectorDirectory()
-
-    dd4hepConfig = acts.examples.dd4hep.DD4hepGeometryService.Config(
-        xmlFileNames=[str(odd_dir / "xml/OpenDataDetector.xml")]
-    )
-    geometryService = acts.examples.dd4hep.DD4hepGeometryService(dd4hepConfig)
+    odd = getOpenDataDetector()
 
     s = Sequencer(numThreads=1)
 
@@ -330,7 +325,7 @@ def test_edm4hep_simhits_reader(conf_const):
                 "/home/andreas/cern/output_edm4hep.root"
             ),
             outputSimHits="simhits",
-            dd4hepGeometryService=geometryService,
+            dd4hepGeometryService=odd.geometryService,
         )
     )
 
