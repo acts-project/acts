@@ -27,6 +27,46 @@ class SimSpacePoint {
   /// @param varRho Measurement variance of the global transverse distance
   /// @param varZ Measurement variance of the global longitudinal position
   /// @param measurementIndex Index of the underlying measurement
+  /// @param topHalfStripLength half of the length of the top strip
+  /// @param bottomHalfStripLength half of the length of the bottom strip
+  /// @param topStripDirection direction of the top strip
+  /// @param bottomStripDirection direction of the bottom strip
+  /// @param stripCenterDistance distance between the center of the two strips
+  /// @param bottomStripCenterPosition position of the center of the bottom strip
+  /// @param validDoubleMeasurementDetails boolean to check if double measurements are valid
+  template <typename position_t>
+  SimSpacePoint(const Eigen::MatrixBase<position_t>& pos, float varRho,
+                float varZ, Index measurementIndex,
+                const float topHalfStripLength,
+                const float bottomHalfStripLength,
+                const Acts::Vector3 topStripDirection,
+                const Acts::Vector3 bottomStripDirection,
+                const Acts::Vector3 stripCenterDistance,
+                const Acts::Vector3 bottomStripCenterPosition)
+      : m_x(pos[Acts::ePos0]),
+        m_y(pos[Acts::ePos1]),
+        m_z(pos[Acts::ePos2]),
+        m_rho(std::hypot(m_x, m_y)),
+        m_varianceRho(varRho),
+        m_varianceZ(varZ),
+        m_measurementIndex(measurementIndex),
+        m_topHalfStripLength(topHalfStripLength),
+        m_bottomHalfStripLength(bottomHalfStripLength),
+        m_topStripDirection(topStripDirection),
+        m_bottomStripDirection(bottomStripDirection),
+        m_stripCenterDistance(stripCenterDistance),
+        m_bottomStripCenterPosition(bottomStripCenterPosition),
+        m_validDoubleMeasurementDetails(true) {
+    EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(position_t, 3);
+  }
+
+  /// Construct the space point from global position and selected variances.
+  ///
+  /// @tparam position_t Input position type
+  /// @param pos Global position
+  /// @param varRho Measurement variance of the global transverse distance
+  /// @param varZ Measurement variance of the global longitudinal position
+  /// @param measurementIndex Index of the underlying measurement
   template <typename position_t>
   SimSpacePoint(const Eigen::MatrixBase<position_t>& pos, float varRho,
                 float varZ, Index measurementIndex)
@@ -49,6 +89,20 @@ class SimSpacePoint {
 
   constexpr Index measurementIndex() const { return m_measurementIndex; }
 
+  constexpr float topHalfStripLength() const { return m_topHalfStripLength; }
+  constexpr float bottomHalfStripLength() const {
+    return m_bottomHalfStripLength;
+  }
+  Acts::Vector3 topStripDirection() const { return m_topStripDirection; }
+  Acts::Vector3 bottomStripDirection() const { return m_bottomStripDirection; }
+  Acts::Vector3 stripCenterDistance() const { return m_stripCenterDistance; }
+  Acts::Vector3 bottomStripCenterPosition() const {
+    return m_bottomStripCenterPosition;
+  }
+  constexpr bool validDoubleMeasurementDetails() const {
+    return m_validDoubleMeasurementDetails;
+  }
+
  private:
   // Global position
   float m_x;
@@ -60,6 +114,20 @@ class SimSpacePoint {
   float m_varianceZ;
   // Index of the corresponding measurement
   Index m_measurementIndex;
+
+  // half of the length of the top strip
+  float m_topHalfStripLength = 0;
+  // half of the length of the bottom strip
+  float m_bottomHalfStripLength = 0;
+  // direction of the top strip
+  Acts::Vector3 m_topStripDirection = {0, 0, 0};
+  // direction of the bottom strip
+  Acts::Vector3 m_bottomStripDirection = {0, 0, 0};
+  // distance between the center of the two strips
+  Acts::Vector3 m_stripCenterDistance = {0, 0, 0};
+  // position of the center of the bottom strip
+  Acts::Vector3 m_bottomStripCenterPosition = {0, 0, 0};
+  bool m_validDoubleMeasurementDetails = false;
 };
 
 constexpr bool operator==(const SimSpacePoint& lhs, const SimSpacePoint& rhs) {
