@@ -41,7 +41,7 @@ def addKalmanTracks(
         "multipleScattering": True,
         "energyLoss": True,
         "reverseFilteringMomThreshold": reverseFilteringMomThreshold,
-        "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False)
+        "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
     }
 
     fitAlg = acts.examples.TrackFittingAlgorithm(
@@ -133,7 +133,7 @@ def runTruthTrackingKalman(
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         rnd=rnd,
         truthSeedRanges=TruthSeedRanges(
-            pt = (500*u.MeV, None),
+            pt=(500 * u.MeV, None),
             nHits=(9, None),
         ),
     )
