@@ -140,12 +140,31 @@ class TrackStateProxy {
   /// @return The generated mask
   TrackStatePropMask getMask() const;
 
+  template <bool RO = ReadOnly, typename = std::enable_if<!RO>>
+  void shareFrom(TrackStatePropMask shareSource,
+                 TrackStatePropMask shareTarget) {
+    shareFrom(*this, shareSource, shareTarget);
+  }
+
+  template <bool RO = ReadOnly, bool ReadOnlyOther,
+            typename = std::enable_if<!RO>>
+  void shareFrom(const TrackStateProxy<M, ReadOnlyOther>& other,
+                 TrackStatePropMask component) {
+    shareFrom(other, component, component);
+  }
+
   template <bool RO = ReadOnly, bool ReadOnlyOther,
             typename = std::enable_if<!RO>>
   void shareFrom(const TrackStateProxy<M, ReadOnlyOther>& other,
                  TrackStatePropMask shareSource,
                  TrackStatePropMask shareTarget) {
     using PM = TrackStatePropMask;
+
+    assert(m_traj == other.m_traj &&
+           "Cannot share components across MultiTrajectories");
+
+    assert(ACTS_CHECK_BIT(other.getMask(), shareSource) &&
+           "Source has incompatible allocation");
 
     // @TODO: Push behind interface somehow
 
@@ -169,15 +188,19 @@ class TrackStateProxy {
 
     switch (shareTarget) {
       case PM::Predicted:
+        assert(shareSource != PM::Jacobian);
         data().ipredicted = sourceIndex;
         break;
       case PM::Filtered:
+        assert(shareSource != PM::Jacobian);
         data().ifiltered = sourceIndex;
         break;
       case PM::Smoothed:
+        assert(shareSource != PM::Jacobian);
         data().ismoothed = sourceIndex;
         break;
       case PM::Jacobian:
+        assert(shareSource == PM::Jacobian);
         data().ijacobian = sourceIndex;
         break;
       default:

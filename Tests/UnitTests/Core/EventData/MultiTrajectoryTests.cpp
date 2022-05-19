@@ -865,4 +865,81 @@ BOOST_AUTO_TEST_CASE(CopyFromConst) {
   // constProxy.copyFrom(mutableProxy);
 }
 
+BOOST_AUTO_TEST_CASE(TrackStateProxyShare) {
+  TestTrackState pc(rng, 2u);
+
+  {
+    VectorMultiTrajectory traj;
+    size_t ia = traj.addTrackState(TrackStatePropMask::All);
+    size_t ib = traj.addTrackState(TrackStatePropMask::None);
+
+    auto tsa = traj.getTrackState(ia);
+    auto tsb = traj.getTrackState(ib);
+
+    fillTrackState(pc, TrackStatePropMask::All, tsa);
+
+    BOOST_CHECK(tsa.hasPredicted());
+    BOOST_CHECK(!tsb.hasPredicted());
+    tsb.shareFrom(tsa, TrackStatePropMask::Predicted);
+    BOOST_CHECK(tsa.hasPredicted());
+    BOOST_CHECK(tsb.hasPredicted());
+    BOOST_CHECK_EQUAL(tsa.predicted(), tsb.predicted());
+    BOOST_CHECK_EQUAL(tsa.predictedCovariance(), tsb.predictedCovariance());
+
+    BOOST_CHECK(tsa.hasFiltered());
+    BOOST_CHECK(!tsb.hasFiltered());
+    tsb.shareFrom(tsa, TrackStatePropMask::Filtered);
+    BOOST_CHECK(tsa.hasFiltered());
+    BOOST_CHECK(tsb.hasFiltered());
+    BOOST_CHECK_EQUAL(tsa.filtered(), tsb.filtered());
+    BOOST_CHECK_EQUAL(tsa.filteredCovariance(), tsb.filteredCovariance());
+
+    BOOST_CHECK(tsa.hasSmoothed());
+    BOOST_CHECK(!tsb.hasSmoothed());
+    tsb.shareFrom(tsa, TrackStatePropMask::Smoothed);
+    BOOST_CHECK(tsa.hasSmoothed());
+    BOOST_CHECK(tsb.hasSmoothed());
+    BOOST_CHECK_EQUAL(tsa.smoothed(), tsb.smoothed());
+    BOOST_CHECK_EQUAL(tsa.smoothedCovariance(), tsb.smoothedCovariance());
+
+    BOOST_CHECK(tsa.hasJacobian());
+    BOOST_CHECK(!tsb.hasJacobian());
+    tsb.shareFrom(tsa, TrackStatePropMask::Jacobian);
+    BOOST_CHECK(tsa.hasJacobian());
+    BOOST_CHECK(tsb.hasJacobian());
+    BOOST_CHECK_EQUAL(tsa.jacobian(), tsb.jacobian());
+  }
+
+  {
+    VectorMultiTrajectory traj;
+    size_t i = traj.addTrackState(TrackStatePropMask::All &
+                                  ~TrackStatePropMask::Filtered &
+                                  ~TrackStatePropMask::Smoothed);
+
+    auto ts = traj.getTrackState(i);
+
+    BOOST_CHECK(ts.hasPredicted());
+    BOOST_CHECK(!ts.hasFiltered());
+    BOOST_CHECK(!ts.hasSmoothed());
+    ts.predicted().setRandom();
+    ts.predictedCovariance().setRandom();
+
+    ts.shareFrom(TrackStatePropMask::Predicted, TrackStatePropMask::Filtered);
+    BOOST_CHECK(ts.hasPredicted());
+    BOOST_CHECK(ts.hasFiltered());
+    BOOST_CHECK(!ts.hasSmoothed());
+    BOOST_CHECK_EQUAL(ts.predicted(), ts.filtered());
+    BOOST_CHECK_EQUAL(ts.predictedCovariance(), ts.filteredCovariance());
+
+    ts.shareFrom(TrackStatePropMask::Predicted, TrackStatePropMask::Smoothed);
+    BOOST_CHECK(ts.hasPredicted());
+    BOOST_CHECK(ts.hasFiltered());
+    BOOST_CHECK(ts.hasSmoothed());
+    BOOST_CHECK_EQUAL(ts.predicted(), ts.filtered());
+    BOOST_CHECK_EQUAL(ts.predicted(), ts.smoothed());
+    BOOST_CHECK_EQUAL(ts.predictedCovariance(), ts.filteredCovariance());
+    BOOST_CHECK_EQUAL(ts.predictedCovariance(), ts.smoothedCovariance());
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
