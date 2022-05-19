@@ -11,27 +11,117 @@ from acts.examples import CsvSpacePointReader
 u = acts.UnitConstants
 
 
-def runITkSeeding(field, csvInputDir, outputDir, s=None):
+def runITkSeeding(field, csvInputDir, outputDir, inputSpacePointsType, s=None):
+
+    # variables that change for pixel and strip SP
+    if inputSpacePointsType=="PixelSpacePoints":
+        inputCollection="pixel"
+        rMaxGridConfig=320 * u.mm
+        rMaxSeedFinderConfig=rMaxGridConfig
+        allowSeparateRMax=False
+        deltaRMinSP=6 * u.mm
+        deltaRMax=280 * u.mm
+        deltaRMaxTopSP=280 * u.mm
+        deltaRMaxTopSP=120 * u.mm
+        interactionPointCut=True
+        arithmeticAverageCotTheta=False
+        deltaZMax=600 * u.mm
+        impactMax=2 * u.mm
+        zBinsCustomLooping=[1, 2, 3, 4, 11, 10, 9, 8, 6, 5, 7] # enable custom z looping when searching for SPs, must contain numbers from 1 to the total number of bin in zBinEdges
+        skipPreviousTopSP=True
+        zBinNeighborsTop=[
+            [0, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 0],
+        ]  # allows to specify the number of neighbors desired for each bin, [-1,1] means one neighbor on the left and one on the right, if the vector is empty the algorithm returns the 8 surrounding bins
+        zBinNeighborsBottom=[
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 0],
+        ]
+#        deltaRMiddleMinSPRange=10 * u.mm;
+#        deltaRMiddleMaxSPRange=10 * u.mm;
+    else:
+        inputCollection="strip"
+        rMaxGridConfig=1000. * u.mm
+        rMaxSeedFinderConfig=1200. * u.mm
+        allowSeparateRMax=True
+        deltaRMinSP=20 * u.mm
+        deltaRMax=600 * u.mm
+        deltaRMaxTopSP=300 * u.mm
+        deltaRMaxBottomSP=deltaRMaxTopSP
+        interactionPointCut=False
+        arithmeticAverageCotTheta=True
+        deltaZMax=900 * u.mm
+        impactMax=20 * u.mm
+        zBinsCustomLooping=[6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1]
+        skipPreviousTopSP=False
+        zBinNeighborsTop=[
+            [0, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 0],
+        ]
+        zBinNeighborsBottom=[
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 2],
+            [0, 1],
+            [0, 0],
+            [-1, 0],
+            [-2, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 0],
+        ]
+#        deltaRMiddleMinSPRange=30 * u.mm;
+#        deltaRMiddleMaxSPRange=150 * u.mm;
+
+
 
     # Read input space points from input csv files
     evReader = CsvSpacePointReader(
         level=acts.logging.INFO,
         inputStem="spacepoints",
-        inputCollection="pixel",
+        inputCollection=inputCollection,
         inputDir=csvInputDir,
-        outputSpacePoints="PixelSpacePoints",
+        outputSpacePoints=inputSpacePointsType,
         extendCollection=False,
     )
 
     gridConfig = acts.SpacePointGridConfig(
         bFieldInZ=2 * u.T,
         minPt=900 * u.MeV,
-        rMax=320 * u.mm,  # pixel: 320 mm, strip: 1000 mm
+        rMax=rMaxGridConfig,
         zMax=3000 * u.mm,
         zMin=-3000 * u.mm,
-        deltaRMax=280 * u.mm,  # pixel: 280 mm, strip: 600 mm
-        cotThetaMax=27.2899,  # pixel: 27.2899 (4 eta)
-        impactMax=2 * u.mm,  # pixel: 2 mm, strip: 20 mm
+        deltaRMax=deltaRMax,
+        cotThetaMax=27.2899,
+        impactMax=2 * u.mm,
         zBinEdges=[
             -3000.0,
             -2500.0,
@@ -50,30 +140,32 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
     )
 
     seedFinderConfig = acts.SeedfinderConfig(
-        rMax=gridConfig.rMax,
+        rMax=rMaxSeedFinderConfig,
         deltaRMin=20 * u.mm,
         deltaRMax=gridConfig.deltaRMax,
-        deltaRMinTopSP=6 * u.mm,  # pixel: 6 mm, strip: 20 mm
-        deltaRMinBottomSP=6 * u.mm,  # pixel: 6 mm, strip: 20 mm
-        deltaRMaxTopSP=280 * u.mm,  # pixel: 280 mm, strip: 3000 mm
-        deltaRMaxBottomSP=120 * u.mm,  # pixel: 120 mm, strip: 3000 mm
+        deltaRMinTopSP=deltaRMinSP,
+        deltaRMinBottomSP=deltaRMinSP,
+        deltaRMaxTopSP=280 * u.mm,
+        deltaRMaxBottomSP=120 * u.mm,
         collisionRegionMin=-200 * u.mm,
         collisionRegionMax=200 * u.mm,
         zMin=gridConfig.zMin,
         zMax=gridConfig.zMax,
         maxSeedsPerSpM=4,
+        interactionPointCut=True,
         cotThetaMax=gridConfig.cotThetaMax,
         sigmaScattering=2,
         radLengthPerSeed=0.1,
+        arithmeticAverageCotTheta=False,
+        deltaZMax=600 * u.mm,
         minPt=gridConfig.minPt,
         bFieldInZ=gridConfig.bFieldInZ,
         beamPos=acts.Vector2(0 * u.mm, 0 * u.mm),
         impactMax=gridConfig.impactMax,
         maxPtScattering=float("inf") * u.GeV,
-        deltaZMax=900 * u.mm,
-        interactionPointCut=True,
         zBinEdges=gridConfig.zBinEdges,
         skipPreviousTopSP=True,
+        zBinsCustomLooping=[1, 2, 3, 4, 11, 10, 9, 8, 6, 5, 7],
         rRangeMiddleSP=[
             [40.0, 90.0],
             [40.0, 200.0],
@@ -92,7 +184,7 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
         seedConfirmation=True,
         centralSeedConfirmationRange=acts.SeedConfirmationRange(
             zMinSeedConf=250 * u.mm,
-            zMaxSeedConf=250 * u.mm,
+            zMaxSeedConf=-250 * u.mm,
             rMaxSeedConf=140 * u.mm,
             nTopForLargeR=1,
             nTopForSmallR=2,
@@ -113,15 +205,18 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
         impactWeightFactor=100,
         compatSeedWeight=100,
         compatSeedLimit=3,
+#        seedConfirmation=seedFinderConfig.seedConfirmation,
+#        centralSeedConfirmationRange=seedFinderConfig.centralSeedConfirmationRange,
+#        forwardSeedConfirmationRange=seedFinderConfig.forwardSeedConfirmationRange,
         curvatureSortingInFilter=True,
     )
 
     seedingAlg = acts.examples.SeedingAlgorithm(
         level=acts.logging.VERBOSE,
         inputSpacePoints=[evReader.config.outputSpacePoints],
-        outputSeeds="PixelSeeds",
+        outputSeeds="PixelSeeds" if inputSpacePointsType=="PixelSpacePoints" else "StripSeeds",
         outputProtoTracks="prototracks",
-        allowSeparateRMax=False,
+        allowSeparateRMax=allowSeparateRMax,
         gridConfig=gridConfig,
         seedFinderConfig=seedFinderConfig,
         seedFilterConfig=seedFilterConfig,
@@ -166,7 +261,7 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
 
 if "__main__" == __name__:
 
-    # create temporary file
+    # create temporary file with pixel SPs and run the seeding
     with tempfile.TemporaryDirectory() as tmpdirname:
         temp = open(tmpdirname + "/event000000000-spacepoints_pixel.csv", "w+t")
         print(
@@ -183,4 +278,23 @@ if "__main__" == __name__:
         field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
         # run seeding
-        runITkSeeding(field, os.path.dirname(temp.name), outputDir=os.getcwd()).run()
+        runITkSeeding(field, os.path.dirname(temp.name), outputDir=os.getcwd(), inputSpacePointsType="PixelSpacePoints").run()
+		
+		# create temporary file with strips SPs and run the seeding
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        temp = open(tmpdirname + "/event000000000-spacepoints_strip.csv", "w+t")
+        print(
+            "created temporary file: "
+            + tmpdirname
+            + "/event000000000-spacepoints_strip.csv"
+        )
+        temp.write(
+            "measurement_id,sp_type,module_idhash,sp_x,sp_y,sp_z,sp_radius,sp_covr,sp_covz,sp_topHalfStripLength,sp_bottomHalfStripLength,sp_topStripDirection[0],sp_topStripDirection[1],sp_topStripDirection[2],sp_bottomStripDirection[0],sp_bottomStripDirection[1],sp_bottomStripDirection[2],sp_stripCenterDistance[0],sp_stripCenterDistance[1],sp_stripCenterDistance[2],sp_bottomStripCenterPosition[0],sp_bottomStripCenterPosition[1],sp_bottomStripCenterPosition[2]\n 0,1,0,386.77178955078125,-62.579288482666015625,-72.66841888427734375,391.801727294921875,0.100000001490116119384765625,5.11999988555908203125,12.08999919891357421875,12.08999919891357421875,-0.00864744372665882110595703125,-0.02451671846210956573486328125,0.999662101268768310546875,0.00864744372665882110595703125,0.02451671846210956573486328125,0.999662101268768310546875,-6.43960094451904296875,1.04346692562103271484375,23.157070159912109375,386.6771240234375,-62.847682952880859375,-61.724697113037109375\n 1,1,0,543.9947509765625,-87.7279205322265625,-82.09113311767578125,551.02313232421875,0.100000001490116119384765625,5.11999988555908203125,12.08999919891357421875,12.08999919891357421875,-0.0073835677467286586761474609375,-0.024926505982875823974609375,0.999662101268768310546875,0.0073835677467286586761474609375,0.024926505982875823974609375,0.999662101268768310546875,-6.34883975982666015625,1.17108881473541259765625,-2.3926274776458740234375,544.0279541015625,-87.6157989501953125,-86.58742523193359375\n 2,1,0,544.00189208984375,-87.70365142822265625,-83.064239501953125,551.02630615234375,0.100000001490116119384765625,5.11999988555908203125,12.08999919891357421875,12.08999919891357421875,-0.0073835677467286586761474609375,-0.024926505982875823974609375,0.999662101268768310546875,0.011192028410732746124267578125,0.02346457540988922119140625,0.999662101268768310546875,-24.83704376220703125,4.08867168426513671875,-0.0274789035320281982421875,544.0279541015625,-87.6157989501953125,-86.58742523193359375\n 3,1,0,562.2547607421875,-90.650543212890625,-83.99970245361328125,569.5155029296875,0.100000001490116119384765625,5.11999988555908203125,12.08999919891357421875,12.08999919891357421875,-0.011192028410732746124267578125,-0.02346457540988922119140625,0.999662101268768310546875,0.0073835677467286586761474609375,0.024926505982875823974609375,0.999662101268768310546875,11.8808460235595703125,-1.85768926143646240234375,-0.0588833652436733245849609375,562.25762939453125,-90.6445770263671875,-84.2536773681640625\n 4,1,0,562.26605224609375,-90.62686920166015625,-85.00818634033203125,569.52288818359375,0.100000001490116119384765625,5.11999988555908203125,12.08999919891357421875,12.08999919891357421875,-0.011192028410732746124267578125,-0.02346457540988922119140625,0.999662101268768310546875,0.011192028410732746124267578125,0.02346457540988922119140625,0.999662101268768310546875,-6.60735797882080078125,1.05989348888397216796875,2.3062651157379150390625,562.25762939453125,-90.6445770263671875,-84.2536773681640625\n 5,1,0,750.5875244140625,-120.5648040771484375,-98.9385986328125,760.2088623046875,0.100000001490116119384765625,5.11999988555908203125,24.1799983978271484375,24.1799983978271484375,-0.009588238783180713653564453125,-0.02416430227458477020263671875,0.999662101268768310546875,0.009588238783180713653564453125,0.02416430227458477020263671875,0.999662101268768310546875,-6.041371822357177734375,2.1813886165618896484375,0.3670396506786346435546875,750.81573486328125,-119.98968505859375,-122.7309112548828125\n 6,1,0,979.34979248046875,-156.5580291748046875,-114.63397979736328125,991.78448486328125,0.100000001490116119384765625,5.11999988555908203125,24.1799983978271484375,24.1799983978271484375,-0.00824898667633533477783203125,-0.02465364150702953338623046875,0.999662101268768310546875,0.00824898667633533477783203125,0.02465364150702953338623046875,0.999662101268768310546875,-6.2955722808837890625,1.417438507080078125,-1.45441913604736328125,979.4241943359375,-156.335723876953125,-123.64752960205078125"
+        )
+        temp.read()
+
+        # set magnetic field
+        field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+        # run seeding
+        runITkSeeding(field, os.path.dirname(temp.name), outputDir=os.getcwd(), inputSpacePointsType="StripSpacePoints").run()
