@@ -44,7 +44,6 @@ target_link_libraries(ActsPythonBindings PUBLIC
   ActsExamplesIoObj
   ActsExamplesIoJson
   ActsExamplesIoPerformance
-  ActsExamplesIoEDM4hep
   ActsExamplesGenerators
   ActsExamplesTrackFinding
   ActsExamplesTrackFitting
@@ -143,6 +142,13 @@ if(ACTS_BUILD_EXAMPLES_EXATRKX)
   target_sources(ActsPythonBindings PRIVATE src/ExaTrkXTrackFinding.cpp)
 else()
   target_sources(ActsPythonBindings PRIVATE src/ExaTrkXTrackFindingStub.cpp)
+endif()
+
+if(ACTS_BUILD_EXAMPLES_EDM4HEP)
+  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesIoEDM4hep)
+  target_sources(ActsPythonBindings PRIVATE src/EDM4hep.cpp)
+else()
+  target_sources(ActsPythonBindings PRIVATE src/EDM4hepStub.cpp)
 endif()
 
 add_custom_target(ActsPythonGlueCode)
