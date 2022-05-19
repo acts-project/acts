@@ -147,6 +147,8 @@ class TrackStateProxy {
                  TrackStatePropMask shareTarget) {
     using PM = TrackStatePropMask;
 
+    // @TODO: Push behind interface somehow
+
     IndexData::IndexType sourceIndex{IndexData::kInvalid};
     switch (shareSource) {
       case PM::Predicted:
@@ -198,6 +200,8 @@ class TrackStateProxy {
                 TrackStatePropMask mask = TrackStatePropMask::All,
                 bool onlyAllocated = true) {
     using PM = TrackStatePropMask;
+
+    // @TODO: How to support arbitrary columns here?
 
     if (onlyAllocated) {
       auto dest = getMask();

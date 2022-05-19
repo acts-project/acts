@@ -128,7 +128,6 @@ class VectorMultiTrajectory final : public MultiTrajectory {
   std::size_t size() const override { return m_index.size(); }
 
   void clear() override {
-    std::cout << "traj: " << this << " clear" << std::endl;
     m_index.clear();
     m_params.clear();
     m_cov.clear();
@@ -152,8 +151,6 @@ class VectorMultiTrajectory final : public MultiTrajectory {
         return &m_index[istate].ismoothed;
       case "measurement"_hash:
         return &m_index[istate].icalibrated;
-      // case "measurementCovariance"_hash:
-      // return &m_index[istate].icalibrated;
       case "projector"_hash:
         return &m_projectors[m_index[istate].iprojector];
       case "jacobian"_hash:
@@ -164,6 +161,8 @@ class VectorMultiTrajectory final : public MultiTrajectory {
         return &m_sourceLinks[m_index[istate].icalibratedsourcelink];
       case "referenceSurface"_hash:
         return &m_referenceSurfaces[m_index[istate].irefsurface];
+      case "measdim"_hash:
+        return &m_index[istate].measdim;
       default:
         assert(false);
     }
@@ -180,8 +179,6 @@ class VectorMultiTrajectory final : public MultiTrajectory {
         return &m_index[istate].ismoothed;
       case "measurement"_hash:
         return &m_index[istate].icalibrated;
-      // case "measurementCovariance"_hash:
-      // return &m_measCov[m_index[istate].icalibrated];
       case "projector"_hash:
         return &m_projectors[m_index[istate].iprojector];
       case "jacobian"_hash:
@@ -192,6 +189,8 @@ class VectorMultiTrajectory final : public MultiTrajectory {
         return &m_sourceLinks[m_index[istate].icalibratedsourcelink];
       case "referenceSurface"_hash:
         return &m_referenceSurfaces[m_index[istate].irefsurface];
+      case "measdim"_hash:
+        return &m_index[istate].measdim;
       default:
         assert(false);
     }

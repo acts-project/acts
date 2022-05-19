@@ -10,6 +10,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <utility>
 
 namespace Acts {
 using HashedString = std::uint32_t;
@@ -18,9 +19,10 @@ using HashedString = std::uint32_t;
 namespace detail {
 // FNV-1a 32bit hashing algorithm.
 constexpr HashedString fnv1a_32(char const* s, std::size_t count) {
-  return ((count ? fnv1a_32(s, count - 1) : 2166136261u) ^ s[count]) *
-         16777619u;
+  return count ? (fnv1a_32(s, count - 1) ^ s[count - 1]) * 16777619u
+               : 2166136261u;
 }
+
 constexpr int length(const char* str) {
   return *str ? 1 + length(str + 1) : 0;
 }
