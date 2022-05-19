@@ -114,12 +114,12 @@ class TrackStateProxy {
 
   /// Return the index of the track state 'previous' in the track sequence
   /// @return The index of the previous track state.
-  IndexType previous() const {
-    return component<IndexType, hashString("previous")>();
+  size_t previous() const {
+    return component<size_t, hashString("previous")>();
   }
 
   bool hasPrevious() const {
-    return component<IndexType, hashString("previous")>() < kNoPrevious;
+    return component<size_t, hashString("previous")>() < kNoPrevious;
   }
 
   /// Build a mask that represents all the allocated components of this track
@@ -737,7 +737,7 @@ class MultiTrajectory {
   /// @return Index of the newly added track state
   virtual size_t addTrackState(
       TrackStatePropMask mask = TrackStatePropMask::All,
-      IndexType iprevious = kNoPrevious) = 0;
+      size_t iprevious = kNoPrevious) = 0;
 
   /// Access a read-only point on the trajectory by index.
   /// @param istate The index to access

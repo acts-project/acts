@@ -15,7 +15,7 @@ namespace Acts {
 class VectorMultiTrajectory final : public MultiTrajectory {
   struct IndexData {
     IndexType irefsurface = kInvalid;
-    IndexType iprevious = kInvalid;
+    size_t iprevious = kInvalid;
     IndexType ipredicted = kInvalid;
     IndexType ifiltered = kInvalid;
     IndexType ismoothed = kInvalid;
@@ -78,7 +78,7 @@ class VectorMultiTrajectory final : public MultiTrajectory {
   }
 
   std::size_t addTrackState(TrackStatePropMask mask = TrackStatePropMask::All,
-                            IndexType iprevious = kNoPrevious) override {
+                            size_t iprevious = kNoPrevious) override {
     using PropMask = TrackStatePropMask;
 
     m_index.emplace_back();
