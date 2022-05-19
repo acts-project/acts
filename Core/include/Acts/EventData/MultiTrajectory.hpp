@@ -83,6 +83,7 @@ class TrackStateProxy {
 
   using IndexType = std::uint16_t;
   static constexpr IndexType kInvalid = std::numeric_limits<IndexType>::max();
+  static constexpr IndexType kNoPrevious = kInvalid - 1;
 
   // as opposed to the types above, this is an actual Matrix (rather than a
   // map)
@@ -113,9 +114,13 @@ class TrackStateProxy {
 
   /// Return the index of the track state 'previous' in the track sequence
   /// @return The index of the previous track state.
-  size_t previous() const { return m_traj->previous(m_istate); }
+  IndexType previous() const {
+    return component<IndexType, hashString("previous")>();
+  }
 
-  bool hasPrevious() const { return has<hashString("previous")>(); }
+  bool hasPrevious() const {
+    return component<IndexType, hashString("previous")>() < kNoPrevious;
+  }
 
   /// Build a mask that represents all the allocated components of this track
   /// state proxy
@@ -717,6 +722,7 @@ class MultiTrajectory {
 
   using IndexType = TrackStateProxy::IndexType;
   static constexpr IndexType kInvalid = TrackStateProxy::kInvalid;
+  static constexpr IndexType kNoPrevious = kInvalid - 1;
 
   /// Create an empty trajectory.
   MultiTrajectory() = default;
@@ -727,11 +733,11 @@ class MultiTrajectory {
   /// of the track state are initialized/allocated can be controlled via @p mask
   /// @param mask The bitmask that instructs which components to allocate and
   /// which to leave invalid
-  /// @param iprevious index of the previous state, SIZE_MAX if first
+  /// @param iprevious index of the previous state, kInvalid if first
   /// @return Index of the newly added track state
   virtual size_t addTrackState(
       TrackStatePropMask mask = TrackStatePropMask::All,
-      size_t iprevious = SIZE_MAX) = 0;
+      IndexType iprevious = kNoPrevious) = 0;
 
   /// Access a read-only point on the trajectory by index.
   /// @param istate The index to access
@@ -768,7 +774,6 @@ class MultiTrajectory {
   /// Returns the number of track states contained
   virtual size_t size() const = 0;
 
-  virtual std::size_t previous(IndexType istate) const = 0;
   // virtual const detail_lt::IndexData& data(IndexType istate) const = 0;
   // virtual detail_lt::IndexData& data(IndexType istate) = 0;
 

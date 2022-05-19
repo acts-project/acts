@@ -13,10 +13,6 @@
 namespace Acts {
 
 class VectorMultiTrajectory final : public MultiTrajectory {
- public:
-  std::size_t previous(IndexType istate) const override {
-    return m_index[istate].iprevious;
-  }
   struct IndexData {
     IndexType irefsurface = kInvalid;
     IndexType iprevious = kInvalid;
@@ -35,6 +31,8 @@ class VectorMultiTrajectory final : public MultiTrajectory {
     IndexType icalibratedsourcelink = kInvalid;
     IndexType measdim = 0;
   };
+
+ public:
   TrackStateProxy::Parameters parameters(IndexType parIdx) override {
     return TrackStateProxy::Parameters{m_params[parIdx].data()};
   }
@@ -80,15 +78,15 @@ class VectorMultiTrajectory final : public MultiTrajectory {
   }
 
   std::size_t addTrackState(TrackStatePropMask mask = TrackStatePropMask::All,
-                            size_t iprevious = SIZE_MAX) override {
+                            IndexType iprevious = kNoPrevious) override {
     using PropMask = TrackStatePropMask;
 
     m_index.emplace_back();
     IndexData& p = m_index.back();
     size_t index = m_index.size() - 1;
 
-    if (iprevious != SIZE_MAX) {
-      p.iprevious = static_cast<uint16_t>(iprevious);
+    if (iprevious != kNoPrevious) {
+      p.iprevious = iprevious;
     }
 
     // always set, but can be null
@@ -234,6 +232,7 @@ class VectorMultiTrajectory final : public MultiTrajectory {
         return m_index[istate].ijacobian != kInvalid;
       case "projector"_hash:
         return m_index[istate].iprojector != kInvalid;
+      case "previous"_hash:
       case "sourceLink"_hash:
       case "calibratedSourceLink"_hash:
       case "referenceSurface"_hash:
@@ -265,6 +264,8 @@ class VectorMultiTrajectory final : public MultiTrajectory {
   void* componentImpl(HashedString key, IndexType istate) override {
     using namespace Acts::HashedStringLiteral;
     switch (key) {
+      case "previous"_hash:
+        return &m_index[istate].iprevious;
       case "predicted"_hash:
         return &m_index[istate].ipredicted;
       case "filtered"_hash:
@@ -299,6 +300,8 @@ class VectorMultiTrajectory final : public MultiTrajectory {
   const void* componentImpl(HashedString key, IndexType istate) const override {
     using namespace Acts::HashedStringLiteral;
     switch (key) {
+      case "previous"_hash:
+        return &m_index[istate].iprevious;
       case "predicted"_hash:
         return &m_index[istate].ipredicted;
       case "filtered"_hash:
@@ -329,8 +332,6 @@ class VectorMultiTrajectory final : public MultiTrajectory {
         assert(false);
     }
   }
-
-
 
  private:
   /// index to map track states to the corresponding

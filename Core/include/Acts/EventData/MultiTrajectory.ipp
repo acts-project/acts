@@ -181,22 +181,23 @@ void MultiTrajectory::visitBackwards(size_t iendpoint, F&& callable) const {
                 "Callable needs to satisfy VisitorConcept");
 
   while (true) {
+    auto ts = getTrackState(iendpoint);
     if constexpr (std::is_same_v<std::invoke_result_t<F, ConstTrackStateProxy>,
                                  bool>) {
-      bool proceed = callable(getTrackState(iendpoint));
+      bool proceed = callable(ts);
       // this point has no parent and ends the trajectory, or a break was
       // requested
-      if (previous(iendpoint) == kInvalid || !proceed) {
+      if (!ts.hasPrevious() || !proceed) {
         break;
       }
     } else {
-      callable(getTrackState(iendpoint));
+      callable(ts);
       // this point has no parent and ends the trajectory
-      if (previous(iendpoint) == kInvalid) {
+      if (!ts.hasPrevious()) {
         break;
       }
     }
-    iendpoint = previous(iendpoint);
+    iendpoint = ts.previous();
   }
 }
 
@@ -206,22 +207,23 @@ void MultiTrajectory::applyBackwards(size_t iendpoint, F&& callable) {
                 "Callable needs to satisfy VisitorConcept");
 
   while (true) {
+    auto ts = getTrackState(iendpoint);
     if constexpr (std::is_same_v<std::invoke_result_t<F, TrackStateProxy>,
                                  bool>) {
-      bool proceed = callable(getTrackState(iendpoint));
+      bool proceed = callable(ts);
       // this point has no parent and ends the trajectory, or a break was
       // requested
-      if (previous(iendpoint) == kInvalid || !proceed) {
+      if (!ts.hasPrevious() || !proceed) {
         break;
       }
     } else {
-      callable(getTrackState(iendpoint));
+      callable(ts);
       // this point has no parent and ends the trajectory
-      if (previous(iendpoint) == kInvalid) {
+      if (!ts.hasPrevious()) {
         break;
       }
     }
-    iendpoint = previous(iendpoint);
+    iendpoint = ts.previous();
   }
 }
 }  // namespace Acts

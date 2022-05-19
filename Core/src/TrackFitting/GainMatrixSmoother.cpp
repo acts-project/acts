@@ -25,7 +25,7 @@ Result<void> GainMatrixSmoother::operator()(const GeometryContext& gctx,
   prev_ts.smoothedCovariance() = prev_ts.filteredCovariance();
 
   // make sure there is more than one track state
-  if (prev_ts.previous() == Acts::MultiTrajectory::kInvalid) {
+  if (!prev_ts.hasPrevious()) {
     ACTS_VERBOSE("Only one track state given, smoothing terminates early");
     return Result<void>::success();
   }
