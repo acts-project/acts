@@ -15,6 +15,7 @@
 
 #include "edm4hep/SimTrackerHit.h"
 #include "edm4hep/SimTrackerHitCollection.h"
+#include "edm4hep/MCParticle.h"
 
 ActsExamples::EDM4hepSimHitReader::EDM4hepSimHitReader(
     const ActsExamples::EDM4hepSimHitReader::Config& config,

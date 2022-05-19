@@ -51,7 +51,7 @@ option(ACTS_BUILD_ALIGNMENT "Build Alignment package" OFF)
 # examples related options
 option(ACTS_BUILD_EXAMPLES "Build standalone examples" OFF)
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
-option(ACTS_BUILD_EXAMPLES_EDM4HEP "Build EDM4hep-based code in the examples" ON)
+option(ACTS_BUILD_EXAMPLES_EDM4HEP "Build EDM4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EXATRKX "Build the Exa.TrkX example code" OFF)
 option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HEPMC3 "Build HepMC3-based code in the examples" OFF)
@@ -101,7 +101,8 @@ set_option_if(
 # core plugins might be required by examples or depend on each other
 set_option_if(
   ACTS_BUILD_PLUGIN_DD4HEP
-  ACTS_BUILD_EXAMPLES_DD4HEP OR ACTS_BUILD_EVERYTHING)
+  ACTS_BUILD_EXAMPLES_DD4HEP OR ACTS_BUILD_EVERYTHING OR
+  ACTS_BUILD_PLUGIN_EDM4HEP OR ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(
   ACTS_BUILD_PLUGIN_EDM4HEP
   ACTS_BUILD_EXAMPLES_EDM4HEP OR ACTS_BUILD_EVERYTHING)
@@ -252,7 +253,6 @@ if(ACTS_BUILD_PLUGIN_DD4HEP)
   else()
     add_subdirectory(thirdparty/actsdd4hep)
   endif()
-
 endif()
 if(ACTS_BUILD_PLUGIN_EDM4HEP)
   find_package(EDM4HEP REQUIRED)
