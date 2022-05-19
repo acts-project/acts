@@ -682,8 +682,7 @@ class CombinatorialKalmanFilter {
           // TrackState. No storage allocation for uncalibrated/calibrated
           // measurement and filtered parameter
           auto stateMask =
-              ~(TrackStatePropMask::Uncalibrated |
-                TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered);
+              ~(TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered);
 
           // Increment of number of processed states
           tipState.nStates++;
@@ -779,12 +778,11 @@ class CombinatorialKalmanFilter {
         const auto& sourceLink = *it;
 
         // prepare the track state
-        PM mask =
-            PM::Predicted | PM::Jacobian | PM::Uncalibrated | PM::Calibrated;
+        PM mask = PM::Predicted | PM::Jacobian | PM::Calibrated;
 
         if (it != slBegin) {
           // not the first TrackState, only need uncalibrated and calibrated
-          mask = PM::Uncalibrated | PM::Calibrated;
+          mask = PM::Calibrated;
         }
 
         size_t tsi = result.stateBuffer->addTrackState(mask, prevTip);

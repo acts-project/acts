@@ -139,8 +139,7 @@ auto kalmanHandleNoMeasurement(
   // TrackState entry multi trajectory. No storage allocation for
   // uncalibrated/calibrated measurement and filtered parameter
   const auto newTrackIndex = fittedStates.addTrackState(
-      ~(TrackStatePropMask::Uncalibrated | TrackStatePropMask::Calibrated |
-        TrackStatePropMask::Filtered),
+      ~(TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered),
       lastTrackIndex);
 
   // now get track state proxy back

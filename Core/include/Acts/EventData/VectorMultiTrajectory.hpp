@@ -105,10 +105,8 @@ class VectorMultiTrajectory final : public MultiTrajectory {
       p.ijacobian = m_jac.size() - 1;
     }
 
-    if (ACTS_CHECK_BIT(mask, PropMask::Uncalibrated)) {
-      m_sourceLinks.emplace_back();
-      p.iuncalibrated = m_sourceLinks.size() - 1;
-    }
+    m_sourceLinks.emplace_back();
+    p.iuncalibrated = m_sourceLinks.size() - 1;
 
     if (ACTS_CHECK_BIT(mask, PropMask::Calibrated)) {
       m_meas.emplace_back();

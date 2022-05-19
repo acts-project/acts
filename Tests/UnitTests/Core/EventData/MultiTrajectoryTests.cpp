@@ -135,9 +135,7 @@ void fillTrackState(const TestTrackState& pc, TrackStatePropMask mask,
   ts.chi2() = pc.chi2;
   ts.pathLength() = pc.pathLength;
   // source link defines the uncalibrated measurement
-  if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Uncalibrated)) {
-    ts.setUncalibrated(pc.sourceLink);
-  }
+  ts.setUncalibrated(pc.sourceLink);
   // create calibrated measurements from source link
   if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
     testSourceLinkCalibrator(Acts::GeometryContext{}, ts);
@@ -168,7 +166,6 @@ BOOST_AUTO_TEST_CASE(Build) {
   std::vector<size_t> act;
   auto collect = [&](auto p) {
     act.push_back(p.index());
-    BOOST_CHECK(!p.hasUncalibrated());
     BOOST_CHECK(!p.hasCalibrated());
     BOOST_CHECK(!p.hasFiltered());
     BOOST_CHECK(!p.hasSmoothed());
@@ -244,31 +241,30 @@ BOOST_AUTO_TEST_CASE(ApplyWithAbort) {
 BOOST_AUTO_TEST_CASE(BitmaskOperators) {
   using PM = TrackStatePropMask;
 
-  auto bs1 = PM::Uncalibrated;
+  auto bs1 = PM::Predicted;
 
-  BOOST_CHECK(ACTS_CHECK_BIT(bs1, PM::Uncalibrated));
+  BOOST_CHECK(ACTS_CHECK_BIT(bs1, PM::Predicted));
   BOOST_CHECK(!ACTS_CHECK_BIT(bs1, PM::Calibrated));
 
   auto bs2 = PM::Calibrated;
 
-  BOOST_CHECK(!ACTS_CHECK_BIT(bs2, PM::Uncalibrated));
+  BOOST_CHECK(!ACTS_CHECK_BIT(bs2, PM::Predicted));
   BOOST_CHECK(ACTS_CHECK_BIT(bs2, PM::Calibrated));
 
-  auto bs3 = PM::Calibrated | PM::Uncalibrated;
+  auto bs3 = PM::Calibrated | PM::Predicted;
 
-  BOOST_CHECK(ACTS_CHECK_BIT(bs3, PM::Uncalibrated));
+  BOOST_CHECK(ACTS_CHECK_BIT(bs3, PM::Predicted));
   BOOST_CHECK(ACTS_CHECK_BIT(bs3, PM::Calibrated));
 
-  BOOST_CHECK(ACTS_CHECK_BIT(PM::All, PM::Uncalibrated));
+  BOOST_CHECK(ACTS_CHECK_BIT(PM::All, PM::Predicted));
   BOOST_CHECK(ACTS_CHECK_BIT(PM::All, PM::Calibrated));
 
-  auto bs4 = PM::Predicted | PM::Jacobian | PM::Uncalibrated;
+  auto bs4 = PM::Predicted | PM::Jacobian | PM::Smoothed;
   BOOST_CHECK(ACTS_CHECK_BIT(bs4, PM::Predicted));
-  BOOST_CHECK(ACTS_CHECK_BIT(bs4, PM::Uncalibrated));
   BOOST_CHECK(ACTS_CHECK_BIT(bs4, PM::Jacobian));
+  BOOST_CHECK(ACTS_CHECK_BIT(bs4, PM::Smoothed));
   BOOST_CHECK(!ACTS_CHECK_BIT(bs4, PM::Calibrated));
   BOOST_CHECK(!ACTS_CHECK_BIT(bs4, PM::Filtered));
-  BOOST_CHECK(!ACTS_CHECK_BIT(bs4, PM::Smoothed));
 
   auto cnv = [](auto a) -> std::bitset<8> {
     return static_cast<std::underlying_type<PM>::type>(a);
@@ -278,8 +274,8 @@ BOOST_AUTO_TEST_CASE(BitmaskOperators) {
   BOOST_CHECK(cnv(PM::None).none());  // all zeros
 
   // test orthogonality
-  std::array<PM, 6> values{PM::Predicted, PM::Filtered,     PM::Smoothed,
-                           PM::Jacobian,  PM::Uncalibrated, PM::Calibrated};
+  std::array<PM, 5> values{PM::Predicted, PM::Filtered, PM::Smoothed,
+                           PM::Jacobian, PM::Calibrated};
   for (size_t i = 0; i < values.size(); i++) {
     for (size_t j = 0; j < values.size(); j++) {
       PM a = values[i];
@@ -323,7 +319,6 @@ BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   BOOST_CHECK(ts.hasPredicted());
   BOOST_CHECK(ts.hasFiltered());
   BOOST_CHECK(ts.hasSmoothed());
-  BOOST_CHECK(ts.hasUncalibrated());
   BOOST_CHECK(ts.hasCalibrated());
   BOOST_CHECK(ts.hasProjector());
   BOOST_CHECK(ts.hasJacobian());
@@ -332,7 +327,6 @@ BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   BOOST_CHECK(!ts.hasPredicted());
   BOOST_CHECK(!ts.hasFiltered());
   BOOST_CHECK(!ts.hasSmoothed());
-  BOOST_CHECK(!ts.hasUncalibrated());
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
   BOOST_CHECK(!ts.hasJacobian());
@@ -341,7 +335,6 @@ BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   BOOST_CHECK(ts.hasPredicted());
   BOOST_CHECK(!ts.hasFiltered());
   BOOST_CHECK(!ts.hasSmoothed());
-  BOOST_CHECK(!ts.hasUncalibrated());
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
   BOOST_CHECK(!ts.hasJacobian());
@@ -350,7 +343,6 @@ BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   BOOST_CHECK(!ts.hasPredicted());
   BOOST_CHECK(ts.hasFiltered());
   BOOST_CHECK(!ts.hasSmoothed());
-  BOOST_CHECK(!ts.hasUncalibrated());
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
   BOOST_CHECK(!ts.hasJacobian());
@@ -359,16 +351,6 @@ BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   BOOST_CHECK(!ts.hasPredicted());
   BOOST_CHECK(!ts.hasFiltered());
   BOOST_CHECK(ts.hasSmoothed());
-  BOOST_CHECK(!ts.hasUncalibrated());
-  BOOST_CHECK(!ts.hasCalibrated());
-  BOOST_CHECK(!ts.hasProjector());
-  BOOST_CHECK(!ts.hasJacobian());
-
-  ts = t.getTrackState(t.addTrackState(PM::Uncalibrated));
-  BOOST_CHECK(!ts.hasPredicted());
-  BOOST_CHECK(!ts.hasFiltered());
-  BOOST_CHECK(!ts.hasSmoothed());
-  BOOST_CHECK(ts.hasUncalibrated());
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
   BOOST_CHECK(!ts.hasJacobian());
@@ -377,7 +359,6 @@ BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   BOOST_CHECK(!ts.hasPredicted());
   BOOST_CHECK(!ts.hasFiltered());
   BOOST_CHECK(!ts.hasSmoothed());
-  BOOST_CHECK(!ts.hasUncalibrated());
   BOOST_CHECK(ts.hasCalibrated());
   BOOST_CHECK(ts.hasProjector());
   BOOST_CHECK(!ts.hasJacobian());
@@ -386,7 +367,6 @@ BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   BOOST_CHECK(!ts.hasPredicted());
   BOOST_CHECK(!ts.hasFiltered());
   BOOST_CHECK(!ts.hasSmoothed());
-  BOOST_CHECK(!ts.hasUncalibrated());
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
   BOOST_CHECK(ts.hasJacobian());
@@ -562,7 +542,6 @@ BOOST_DATA_TEST_CASE(TrackStateProxyStorage, bd::make({1u, 2u}),
   BOOST_CHECK_EQUAL(ts.chi2(), pc.chi2);
 
   // check that the uncalibrated source link is set
-  BOOST_CHECK(ts.hasUncalibrated());
   BOOST_CHECK_EQUAL(&ts.uncalibrated(), &pc.sourceLink);
 
   // check that the calibrated measurement is set
@@ -605,19 +584,17 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyAllocations) {
 
   // this should allocate for all components in the trackstate, plus filtered
   VectorMultiTrajectory t;
-  size_t i = t.addTrackState(
-      TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
-      TrackStatePropMask::Uncalibrated | TrackStatePropMask::Jacobian);
+  size_t i = t.addTrackState(TrackStatePropMask::Predicted |
+                             TrackStatePropMask::Filtered |
+                             TrackStatePropMask::Jacobian);
   auto tso = t.getTrackState(i);
   fillTrackState(pc, TrackStatePropMask::Predicted, tso);
   fillTrackState(pc, TrackStatePropMask::Filtered, tso);
-  fillTrackState(pc, TrackStatePropMask::Uncalibrated, tso);
   fillTrackState(pc, TrackStatePropMask::Jacobian, tso);
 
   BOOST_CHECK(tso.hasPredicted());
   BOOST_CHECK(tso.hasFiltered());
   BOOST_CHECK(!tso.hasSmoothed());
-  BOOST_CHECK(tso.hasUncalibrated());
   BOOST_CHECK(!tso.hasCalibrated());
   BOOST_CHECK(tso.hasJacobian());
 }
@@ -625,8 +602,8 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyAllocations) {
 BOOST_AUTO_TEST_CASE(TrackStateProxyGetMask) {
   using PM = TrackStatePropMask;
 
-  std::array<PM, 6> values{PM::Predicted, PM::Filtered,     PM::Smoothed,
-                           PM::Jacobian,  PM::Uncalibrated, PM::Calibrated};
+  std::array<PM, 5> values{PM::Predicted, PM::Filtered, PM::Smoothed,
+                           PM::Jacobian, PM::Calibrated};
   PM all = std::accumulate(values.begin(), values.end(), PM::None,
                            [](auto a, auto b) { return a | b; });
 
@@ -655,8 +632,8 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyGetMask) {
 BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   using PM = TrackStatePropMask;
 
-  std::array<PM, 6> values{PM::Predicted, PM::Filtered,     PM::Smoothed,
-                           PM::Jacobian,  PM::Uncalibrated, PM::Calibrated};
+  std::array<PM, 5> values{PM::Predicted, PM::Filtered, PM::Smoothed,
+                           PM::Jacobian, PM::Calibrated};
 
   VectorMultiTrajectory mj;
   auto mkts = [&](PM mask) { return mj.getTrackState(mj.addTrackState(mask)); };
@@ -801,8 +778,8 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
 BOOST_AUTO_TEST_CASE(TrackStateProxyCopyDiffMTJ) {
   using PM = TrackStatePropMask;
 
-  std::array<PM, 6> values{PM::Predicted, PM::Filtered,     PM::Smoothed,
-                           PM::Jacobian,  PM::Uncalibrated, PM::Calibrated};
+  std::array<PM, 5> values{PM::Predicted, PM::Filtered, PM::Smoothed,
+                           PM::Jacobian, PM::Calibrated};
 
   VectorMultiTrajectory mj;
   VectorMultiTrajectory mj2;
@@ -828,8 +805,8 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopyDiffMTJ) {
   }
 
   // make sure they are actually on different MultiTrajectories
-  BOOST_CHECK_EQUAL(mj.size(), 36);
-  BOOST_CHECK_EQUAL(mj2.size(), 36);
+  BOOST_CHECK_EQUAL(mj.size(), values.size() * values.size());
+  BOOST_CHECK_EQUAL(mj2.size(), values.size() * values.size());
 
   auto ts1 = mkts(PM::Filtered | PM::Predicted);  // this has both
   ts1.filtered().setRandom();

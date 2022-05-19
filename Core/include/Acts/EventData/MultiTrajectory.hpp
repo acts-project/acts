@@ -229,14 +229,12 @@ class TrackStateProxy {
         smoothedCovariance() = other.smoothedCovariance();
       }
 
-      if (ACTS_CHECK_BIT(src, PM::Uncalibrated)) {
-        // need to do it this way since other might be nullptr
-        m_traj->template component<const SourceLink*>("sourceLink", m_istate) =
-            other.m_traj->template component<const SourceLink*>("sourceLink",
-                                                                other.m_istate);
-        // m_traj->m_sourceLinks[data().iuncalibrated] =
-        // other.m_traj->m_sourceLinks[other.data().iuncalibrated];
-      }
+      // need to do it this way since other might be nullptr
+      m_traj->template component<const SourceLink*>("sourceLink", m_istate) =
+          other.m_traj->template component<const SourceLink*>("sourceLink",
+                                                              other.m_istate);
+      // m_traj->m_sourceLinks[data().iuncalibrated] =
+      // other.m_traj->m_sourceLinks[other.data().iuncalibrated];
 
       if (ACTS_CHECK_BIT(src, PM::Jacobian)) {
         jacobian() = other.jacobian();
@@ -277,16 +275,12 @@ class TrackStateProxy {
         smoothedCovariance() = other.smoothedCovariance();
       }
 
-      if (ACTS_CHECK_BIT(mask, PM::Uncalibrated) &&
-          data().iuncalibrated != IndexData::kInvalid &&
-          other.data().iuncalibrated != IndexData::kInvalid) {
-        // need to do it this way since other might be nullptr
-        m_traj->template component<const SourceLink*>("sourceLink", m_istate) =
-            other.m_traj->template component<const SourceLink*>("sourceLink",
-                                                                other.m_istate);
-        // m_traj->m_sourceLinks[data().iuncalibrated] =
-        // other.m_traj->m_sourceLinks[other.data().iuncalibrated];
-      }
+      // need to do it this way since other might be nullptr
+      m_traj->template component<const SourceLink*>("sourceLink", m_istate) =
+          other.m_traj->template component<const SourceLink*>("sourceLink",
+                                                              other.m_istate);
+      // m_traj->m_sourceLinks[data().iuncalibrated] =
+      // other.m_traj->m_sourceLinks[other.data().iuncalibrated];
 
       if (ACTS_CHECK_BIT(mask, PM::Jacobian) &&
           data().ijacobian != IndexData::kInvalid &&
@@ -478,11 +472,6 @@ class TrackStateProxy {
         matrixToBitset(fullProjector);
   }
 
-  /// Return whether an uncalibrated measurement (source link) is set
-  /// @return Whether it is set
-  bool hasUncalibrated() const {
-    return data().iuncalibrated != IndexData::kInvalid;
-  }
 
   /// Uncalibrated measurement in the form of a source link. Const version
   /// @return The uncalibrated measurement source link

@@ -40,9 +40,6 @@ TrackStatePropMask TrackStateProxy<M, ReadOnly>::getMask() const {
   if (hasJacobian()) {
     mask |= PM::Jacobian;
   }
-  if (hasUncalibrated()) {
-    mask |= PM::Uncalibrated;
-  }
   if (hasCalibrated()) {
     mask |= PM::Calibrated;
   }

@@ -16,8 +16,6 @@ Result<void> GainMatrixUpdater::operator()(
   (void)gctx;
   ACTS_VERBOSE("Invoked GainMatrixUpdater");
 
-  // we should definitely have an uncalibrated measurement here
-  assert(trackState.hasUncalibrated());
   // there should be a calibrated measurement
   assert(trackState.hasCalibrated());
   // we should have predicted state set
