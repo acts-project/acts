@@ -95,7 +95,7 @@ ActsExamples::ProcessCode ActsExamples::EDM4hepSimHitReader::read(
       continue;
     }
 
-    if (collection.getTypeName() == "edm4hep::SimTrackerHitCollection") {
+    if (collection.getValueTypeName() == "edm4hep::SimTrackerHit") {
       for (const auto& sth :
            (const edm4hep::SimTrackerHitCollection&)collection) {
         try {
