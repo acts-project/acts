@@ -50,11 +50,11 @@ template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::parameters() const -> Parameters {
   IndexData::IndexType idx;
   if (hasSmoothed()) {
-    idx = data().ismoothed;
+    return smoothed();
   } else if (hasFiltered()) {
-    idx = data().ifiltered;
+    return filtered();
   } else {
-    idx = data().ipredicted;
+    return predicted();
   }
 
   return m_traj->parameters(idx);
@@ -64,108 +64,108 @@ template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::covariance() const -> Covariance {
   IndexData::IndexType idx;
   if (hasSmoothed()) {
-    idx = data().ismoothed;
+    return smoothed();
   } else if (hasFiltered()) {
-    idx = data().ifiltered;
+    return filtered();
   } else {
-    idx = data().ipredicted;
+    return predicted();
   }
   return m_traj->covariance(idx);
 }
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::predicted() const -> Parameters {
-  assert(data().ipredicted != IndexData::kInvalid);
-  return m_traj->parameters(m_traj->template component<IndexData::IndexType>(
-      hashString("predicted"), m_istate));
+  assert(has<hashString("predicted")>());
+  return m_traj->parameters(
+      component<IndexData::IndexType, hashString("predicted")>());
 }
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::predictedCovariance() const
     -> Covariance {
-  assert(data().ipredicted != IndexData::kInvalid);
+  assert(has<hashString("predicted")>());
   // return Covariance(m_traj->m_cov[data().ipredicted].data());
-  return m_traj->covariance(m_traj->template component<IndexData::IndexType>(
-      hashString("predicted"), m_istate));
+  return m_traj->covariance(
+      component<IndexData::IndexType, hashString("predicted")>());
 }
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::filtered() const -> Parameters {
-  assert(data().ifiltered != IndexData::kInvalid);
-  return m_traj->parameters(m_traj->template component<IndexData::IndexType>(
-      hashString("filtered"), m_istate));
+  assert(has<hashString("filtered")>());
+  return m_traj->parameters(
+      component<IndexData::IndexType, hashString("filtered")>());
 }
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::filteredCovariance() const
     -> Covariance {
-  assert(data().ifiltered != IndexData::kInvalid);
-  return m_traj->covariance(m_traj->template component<IndexData::IndexType>(
-      hashString("filtered"), m_istate));
+  assert(has<hashString("filtered")>());
+  return m_traj->covariance(
+      component<IndexData::IndexType, hashString("filtered")>());
 }
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::smoothed() const -> Parameters {
-  assert(data().ismoothed != IndexData::kInvalid);
+  assert(has<hashString("smoothed")>());
   return m_traj->parameters(
-      m_traj->template component<IndexData::IndexType>("smoothed", m_istate));
+      component<IndexData::IndexType, hashString("smoothed")>());
 }
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::smoothedCovariance() const
     -> Covariance {
-  assert(data().ismoothed != IndexData::kInvalid);
+  assert(has<hashString("smoothed")>());
   return m_traj->covariance(
-      m_traj->template component<IndexData::IndexType>("smoothed", m_istate));
+      component<IndexData::IndexType, hashString("smoothed")>());
 }
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::jacobian() const -> Covariance {
-  assert(data().ijacobian != IndexData::kInvalid);
+  assert(has<hashString("jacobian")>());
   // return Covariance(m_traj->m_jac[data().ijacobian].data());
   return m_traj->jacobian(
-      m_traj->template component<IndexData::IndexType>("jacobian", m_istate));
+      component<IndexData::IndexType, hashString("jacobian")>());
 }
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::projector() const -> Projector {
-  assert(data().iprojector != IndexData::kInvalid);
+  assert(has<hashString("projector")>());
   // return bitsetToMatrix<Projector>(m_traj->m_projectors[data().iprojector]);
   return bitsetToMatrix<Projector>(
-      m_traj->template component<ProjectorBitset>("projector", m_istate));
+      component<ProjectorBitset, hashString("projector")>());
 }
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::uncalibrated() const
     -> const SourceLink& {
-  assert(data().iuncalibrated != IndexData::kInvalid);
+  assert(has<hashString("sourceLink")>());
   // assert(m_traj->m_sourceLinks[data().iuncalibrated] != nullptr);
   // return *m_traj->m_sourceLinks[data().iuncalibrated];
   using T = const SourceLink*;
-  const T& sl =
-      m_traj->template component<const SourceLink*>("sourceLink", m_istate);
+  const T& sl = component<const SourceLink*, hashString("sourceLink")>();
   assert(sl != nullptr);
   return *sl;
 }
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::calibrated() const -> Measurement {
-  assert(data().icalibrated != IndexData::kInvalid);
+  assert(has<hashString("calibrated")>());
   // return Measurement(m_traj->m_meas[data().icalibrated].data());
   // return m_traj->template component<Measurement>(hashString("measurement"),
   // m_istate);
-  return m_traj->measurement(m_traj->template component<IndexData::IndexType>(
-      "measurement", m_istate));
+  return m_traj->measurement(
+      component<IndexData::IndexType, hashString("calibrated")>());
 }
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::calibratedSourceLink() const
     -> const SourceLink& {
-  assert(data().icalibratedsourcelink != IndexData::kInvalid);
+  assert(has<hashString("calibratedSourceLink")>());
   // assert(m_traj->m_sourceLinks[data().icalibratedsourcelink] != nullptr);
   // return *m_traj->m_sourceLinks[data().icalibratedsourcelink];
-  const SourceLink*& sl = m_traj->template component<const SourceLink*>(
-      "calibratedSourceLink", m_istate);
+  using T = const SourceLink*;
+  const T& sl =
+      component<const SourceLink*, hashString("calibratedSourceLink")>();
   assert(sl != nullptr);
   return *sl;
 }
@@ -173,13 +173,12 @@ inline auto TrackStateProxy<M, ReadOnly>::calibratedSourceLink() const
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::calibratedCovariance() const
     -> MeasurementCovariance {
-  assert(data().icalibrated != IndexData::kInvalid);
+  assert(has<hashString("calibrated")>());
   // return MeasurementCovariance(m_traj->m_measCov[data().icalibrated].data());
   // return m_traj->template component<MeasurementCovariance>(
   // hashString("measurementCovariance"), m_istate);
   return m_traj->measurementCovariance(
-      m_traj->template component<IndexData::IndexType>("measurement",
-                                                       m_istate));
+      component<IndexData::IndexType, hashString("calibrated")>());
 }
 
 }  // namespace detail_lt

@@ -178,6 +178,58 @@ class VectorMultiTrajectory final : public MultiTrajectory {
     }
   }
 
+  void unset(TrackStatePropMask target, IndexType istate) override {
+    using PM = TrackStatePropMask;
+
+    switch (target) {
+      case PM::Predicted:
+        m_index[istate].ipredicted = kInvalid;
+        break;
+      case PM::Filtered:
+        m_index[istate].ifiltered = kInvalid;
+        break;
+      case PM::Smoothed:
+        m_index[istate].ismoothed = kInvalid;
+        break;
+      case PM::Jacobian:
+        m_index[istate].ijacobian = kInvalid;
+        break;
+      case PM::Calibrated:
+        m_index[istate].icalibrated = kInvalid;
+        break;
+      default:
+        throw std::domain_error{"Unable to unset this component"};
+    }
+  }
+
+  bool has(HashedString key, IndexType istate) const override {
+    using namespace Acts::HashedStringLiteral;
+    switch (key) {
+      case "predicted"_hash:
+        return m_index[istate].ipredicted != kInvalid;
+      case "filtered"_hash:
+        return m_index[istate].ifiltered != kInvalid;
+      case "smoothed"_hash:
+        return m_index[istate].ismoothed != kInvalid;
+      case "calibrated"_hash:
+        return m_index[istate].icalibrated != kInvalid;
+      case "jacobian"_hash:
+        return m_index[istate].ijacobian != kInvalid;
+      case "projector"_hash:
+        return m_index[istate].iprojector != kInvalid;
+      case "sourceLink"_hash:
+      case "calibratedSourceLink"_hash:
+      case "referenceSurface"_hash:
+      case "measdim"_hash:
+      case "chi2"_hash:
+      case "pathLength"_hash:
+      case "typeFlags"_hash:
+        return true;
+      default:
+        assert(false && "Unable to handle this component");
+    }
+  }
+
   std::size_t size() const override { return m_index.size(); }
 
   void clear() override {
@@ -202,12 +254,12 @@ class VectorMultiTrajectory final : public MultiTrajectory {
         return &m_index[istate].ifiltered;
       case "smoothed"_hash:
         return &m_index[istate].ismoothed;
-      case "measurement"_hash:
+      case "calibrated"_hash:
         return &m_index[istate].icalibrated;
-      case "projector"_hash:
-        return &m_projectors[m_index[istate].iprojector];
       case "jacobian"_hash:
         return &m_index[istate].ijacobian;
+      case "projector"_hash:
+        return &m_projectors[m_index[istate].iprojector];
       case "sourceLink"_hash:
         return &m_sourceLinks[m_index[istate].iuncalibrated];
       case "calibratedSourceLink"_hash:
@@ -216,8 +268,14 @@ class VectorMultiTrajectory final : public MultiTrajectory {
         return &m_referenceSurfaces[m_index[istate].irefsurface];
       case "measdim"_hash:
         return &m_index[istate].measdim;
+      case "chi2"_hash:
+        return &m_index[istate].chi2;
+      case "pathLength"_hash:
+        return &m_index[istate].pathLength;
+      case "typeFlags"_hash:
+        return &m_index[istate].typeFlags;
       default:
-        assert(false);
+        assert(false && "Unable to handle this component");
     }
   }
 
@@ -230,12 +288,12 @@ class VectorMultiTrajectory final : public MultiTrajectory {
         return &m_index[istate].ifiltered;
       case "smoothed"_hash:
         return &m_index[istate].ismoothed;
-      case "measurement"_hash:
+      case "calibrated"_hash:
         return &m_index[istate].icalibrated;
-      case "projector"_hash:
-        return &m_projectors[m_index[istate].iprojector];
       case "jacobian"_hash:
         return &m_index[istate].ijacobian;
+      case "projector"_hash:
+        return &m_projectors[m_index[istate].iprojector];
       case "sourceLink"_hash:
         return &m_sourceLinks[m_index[istate].iuncalibrated];
       case "calibratedSourceLink"_hash:
@@ -244,6 +302,12 @@ class VectorMultiTrajectory final : public MultiTrajectory {
         return &m_referenceSurfaces[m_index[istate].irefsurface];
       case "measdim"_hash:
         return &m_index[istate].measdim;
+      case "chi2"_hash:
+        return &m_index[istate].chi2;
+      case "pathLength"_hash:
+        return &m_index[istate].pathLength;
+      case "typeFlags"_hash:
+        return &m_index[istate].typeFlags;
       default:
         assert(false);
     }

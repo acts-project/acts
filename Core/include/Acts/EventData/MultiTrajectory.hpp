@@ -212,9 +212,10 @@ class TrackStateProxy {
       }
 
       // need to do it this way since other might be nullptr
-      m_traj->template component<const SourceLink*>("sourceLink", m_istate) =
-          other.m_traj->template component<const SourceLink*>("sourceLink",
-                                                              other.m_istate);
+      component<const SourceLink*, hashString("sourceLink")>() =
+          other.template component<const SourceLink*,
+                                   hashString("sourceLink")>();
+
       // m_traj->m_sourceLinks[data().iuncalibrated] =
       // other.m_traj->m_sourceLinks[other.data().iuncalibrated];
 
@@ -224,67 +225,62 @@ class TrackStateProxy {
 
       if (ACTS_CHECK_BIT(src, PM::Calibrated)) {
         // need to do it this way since other might be nullptr
-        m_traj->template component<const SourceLink*>("calibratedSourceLink",
-                                                      m_istate) =
-            other.m_traj->template component<const SourceLink*>(
-                "calibratedSourceLink", other.m_istate);
+        component<const SourceLink*, hashString("calibratedSourceLink")>() =
+            other.template component<const SourceLink*,
+                                     hashString("calibratedSourceLink")>();
         // m_traj->m_sourceLinks[data().icalibratedsourcelink] =
         // other.m_traj->m_sourceLinks[other.data().icalibratedsourcelink];
         calibrated() = other.calibrated();
         calibratedCovariance() = other.calibratedCovariance();
-        data().measdim = other.data().measdim;
+        calibratedSize() = other.calibratedSize();
         setProjectorBitset(other.projectorBitset());
       }
     } else {
       if (ACTS_CHECK_BIT(mask, PM::Predicted) &&
-          data().ipredicted != IndexData::kInvalid &&
-          other.data().ipredicted != IndexData::kInvalid) {
+          has<hashString("predicted")>() &&
+          other.template has<hashString("predicted")>()) {
         predicted() = other.predicted();
         predictedCovariance() = other.predictedCovariance();
       }
 
-      if (ACTS_CHECK_BIT(mask, PM::Filtered) &&
-          data().ifiltered != IndexData::kInvalid &&
-          other.data().ifiltered != IndexData::kInvalid) {
+      if (ACTS_CHECK_BIT(mask, PM::Filtered) && has<hashString("filtered")>() &&
+          other.template has<hashString("filtered")>()) {
         filtered() = other.filtered();
         filteredCovariance() = other.filteredCovariance();
       }
 
-      if (ACTS_CHECK_BIT(mask, PM::Smoothed) &&
-          data().ismoothed != IndexData::kInvalid &&
-          other.data().ismoothed != IndexData::kInvalid) {
+      if (ACTS_CHECK_BIT(mask, PM::Smoothed) && has<hashString("smoothed")>() &&
+          other.template has<hashString("smoothed")>()) {
         smoothed() = other.smoothed();
         smoothedCovariance() = other.smoothedCovariance();
       }
 
       // need to do it this way since other might be nullptr
-      m_traj->template component<const SourceLink*>("sourceLink", m_istate) =
-          other.m_traj->template component<const SourceLink*>("sourceLink",
-                                                              other.m_istate);
+      component<const SourceLink*, hashString("sourceLink")>() =
+          other.template component<const SourceLink*,
+                                   hashString("sourceLink")>();
       // m_traj->m_sourceLinks[data().iuncalibrated] =
       // other.m_traj->m_sourceLinks[other.data().iuncalibrated];
 
-      if (ACTS_CHECK_BIT(mask, PM::Jacobian) &&
-          data().ijacobian != IndexData::kInvalid &&
-          other.data().ijacobian != IndexData::kInvalid) {
+      if (ACTS_CHECK_BIT(mask, PM::Jacobian) && has<hashString("jacobian")>() &&
+          other.template has<hashString("jacobian")>()) {
         jacobian() = other.jacobian();
       }
 
       if (ACTS_CHECK_BIT(mask, PM::Calibrated) &&
-          data().icalibrated != IndexData::kInvalid &&
-          other.data().icalibrated != IndexData::kInvalid &&
-          data().icalibratedsourcelink != IndexData::kInvalid &&
-          other.data().icalibratedsourcelink != IndexData::kInvalid) {
+          has<hashString("calibrated")>() &&
+          other.template has<hashString("calibrated")>() &&
+          has<hashString("calibratedSourceLink")>() &&
+          other.template has<hashString("calibratedSourceLink")>()) {
         // need to do it this way since other might be nullptr
-        m_traj->template component<const SourceLink*>("calibratedSourceLink",
-                                                      m_istate) =
-            other.m_traj->template component<const SourceLink*>(
-                "calibratedSourceLink", other.m_istate);
+        component<const SourceLink*, hashString("calibratedSourceLink")>() =
+            other.template component<const SourceLink*,
+                                     hashString("calibratedSourceLink")>();
         // m_traj->m_sourceLinks[data().icalibratedsourcelink] =
         // other.m_traj->m_sourceLinks[other.data().icalibratedsourcelink];
         calibrated() = other.calibrated();
         calibratedCovariance() = other.calibratedCovariance();
-        data().measdim = other.data().measdim;
+        calibratedSize() = other.calibratedSize();
         setProjectorBitset(other.projectorBitset());
       }
     }
@@ -301,33 +297,16 @@ class TrackStateProxy {
   /// @param target The component to unset
   template <bool RO = ReadOnly, typename = std::enable_if<!RO>>
   void unset(TrackStatePropMask target) {
-    using PM = TrackStatePropMask;
-
-    switch (target) {
-      case PM::Predicted:
-        data().ipredicted = IndexData::kInvalid;
-        break;
-      case PM::Filtered:
-        data().ifiltered = IndexData::kInvalid;
-        break;
-      case PM::Smoothed:
-        data().ismoothed = IndexData::kInvalid;
-        break;
-      case PM::Jacobian:
-        data().ijacobian = IndexData::kInvalid;
-        break;
-      default:
-        throw std::domain_error{"Unable to unset this component"};
-    }
+    m_traj->unset(target, m_istate);
   }
 
   /// Reference surface.
   /// @return the reference surface
   const Surface& referenceSurface() const {
-    assert(data().irefsurface != IndexData::kInvalid);
+    assert(has<hashString("referenceSurface")>());
     // return *m_traj->m_referenceSurfaces[data().irefsurface];
-    return *m_traj->template component<std::shared_ptr<const Surface>>(
-        "referenceSurface", m_istate);
+    return *component<std::shared_ptr<const Surface>,
+                      hashString("referenceSurface")>();
   }
 
   /// Set the reference surface to a given value
@@ -336,8 +315,26 @@ class TrackStateProxy {
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void setReferenceSurface(std::shared_ptr<const Surface> srf) {
     // m_traj->m_referenceSurfaces[data().irefsurface] = std::move(srf);
-    m_traj->template component<std::shared_ptr<const Surface>>(
-        "referenceSurface", m_istate) = std::move(srf);
+    assert(has<hashString("referenceSurface")>());
+    component<std::shared_ptr<const Surface>,
+              hashString("referenceSurface")>() = std::move(srf);
+  }
+
+  // bool has(HashedString key) const { return m_traj->has(key, m_istate); }
+  // bool has(const char* key) const { return has(hashString(key)); }
+  template <HashedString key>
+  constexpr bool has() const {
+    return m_traj->has(key, m_istate);
+  }
+
+  template <typename T, HashedString key>
+  constexpr T& component() {
+    return m_traj->template component<T, key>(m_istate);
+  }
+
+  template <typename T, HashedString key>
+  constexpr const T& component() const {
+    return m_traj->template component<T, key>(m_istate);
   }
 
   /// Track parameters vector. This tries to be somewhat smart and return the
@@ -363,7 +360,7 @@ class TrackStateProxy {
 
   /// Check whether the predicted parameters+covariance is set
   /// @return Whether it is set or not
-  bool hasPredicted() const { return data().ipredicted != IndexData::kInvalid; }
+  bool hasPredicted() const { return has<hashString("predicted")>(); }
 
   /// Filtered track parameters vector
   /// @return The filtered parameters
@@ -375,7 +372,7 @@ class TrackStateProxy {
 
   /// Return whether filtered parameters+covariance is set
   /// @return Whether it is set
-  bool hasFiltered() const { return data().ifiltered != IndexData::kInvalid; }
+  bool hasFiltered() const { return has<hashString("filtered")>(); }
 
   /// Smoothed track parameters vector
   /// @return The smoothed parameters
@@ -387,7 +384,7 @@ class TrackStateProxy {
 
   /// Return whether smoothed parameters+covariance is set
   /// @return Whether it is set
-  bool hasSmoothed() const { return data().ismoothed != IndexData::kInvalid; }
+  bool hasSmoothed() const { return has<hashString("smoothed")>(); }
 
   /// Returns the jacobian from the previous trackstate to this one
   /// @return The jacobian matrix
@@ -395,7 +392,7 @@ class TrackStateProxy {
 
   /// Returns whether a jacobian is set for this trackstate
   /// @return Whether it is set
-  bool hasJacobian() const { return data().ijacobian != IndexData::kInvalid; }
+  bool hasJacobian() const { return has<hashString("jacobian")>(); }
 
   /// Returns the projector (measurement mapping function) for this track
   /// state. It is derived from the uncalibrated measurement
@@ -408,7 +405,7 @@ class TrackStateProxy {
 
   /// Returns whether a projector is set
   /// @return Whether it is set
-  bool hasProjector() const { return data().iprojector != IndexData::kInvalid; }
+  bool hasProjector() const { return has<hashString("projector")>(); }
 
   /// Returns the projector (measurement mapping function) for this track
   /// state. It is derived from the uncalibrated measurement
@@ -417,7 +414,7 @@ class TrackStateProxy {
   /// measurement.
   /// @return The effective projector
   EffectiveProjector effectiveProjector() const {
-    return projector().topLeftCorner(data().measdim, M);
+    return projector().topLeftCorner(calibratedSize(), M);
   }
 
   /// Set the projector on this track state
@@ -434,8 +431,9 @@ class TrackStateProxy {
     static_assert(rows != -1 && cols != -1,
                   "Assignment of dynamic matrices is currently not supported.");
 
-    IndexData& dataref = data();
-    assert(dataref.iprojector != IndexData::kInvalid);
+    assert(has<hashString("projector")>());
+    // IndexData& dataref = data();
+    // assert(dataref.iprojector != IndexData::kInvalid);
 
     static_assert(rows <= M, "Given projector has too many rows");
     static_assert(cols <= eBoundSize, "Given projector has too many columns");
@@ -450,10 +448,15 @@ class TrackStateProxy {
 
     // convert to bitset before storing
     // m_traj->m_projectors[dataref.iprojector] = matrixToBitset(fullProjector);
-    m_traj->template component<ProjectorBitset>("projector", m_istate) =
+    component<ProjectorBitset, hashString("projector")>() =
         matrixToBitset(fullProjector);
   }
 
+  // /// Return whether an uncalibrated measurement (source link) is set
+  // /// @return Whether it is set
+  // bool hasUncalibrated() const {
+  // return data().iuncalibrated != IndexData::kInvalid;
+  // }
 
   /// Uncalibrated measurement in the form of a source link. Const version
   /// @return The uncalibrated measurement source link
@@ -463,22 +466,19 @@ class TrackStateProxy {
   /// @param sourceLink The uncalibrated source link to set
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void setUncalibrated(const SourceLink& sourceLink) {
-    assert(data().iuncalibrated != IndexData::kInvalid);
+    assert(has<hashString("sourceLink")>());
     // m_traj->m_sourceLinks[data().iuncalibrated] = &sourceLink;
     using T = const SourceLink*;
-    T& sl =
-        m_traj->template component<const SourceLink*>("sourceLink", m_istate);
+    T& sl = component<const SourceLink*, hashString("sourceLink")>();
     sl = &sourceLink;
 
-    assert(m_traj->template component<const SourceLink*>("sourceLink",
-                                                         m_istate) != nullptr);
+    assert(
+        (component<const SourceLink*, hashString("sourceLink")>() != nullptr));
   }
 
   /// Check if the point has an associated calibrated measurement.
   /// @return Whether it is set
-  bool hasCalibrated() const {
-    return data().icalibrated != IndexData::kInvalid;
-  }
+  bool hasCalibrated() const { return has<hashString("calibrated")>(); }
 
   /// The source link of the calibrated measurement. Const version
   /// @note This does not necessarily have to be the uncalibrated source link.
@@ -489,7 +489,7 @@ class TrackStateProxy {
   /// @param sourceLink The source link to set
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void setCalibratedSourceLink(const SourceLink& sourceLink) {
-    assert(data().icalibratedsourcelink != IndexData::kInvalid);
+    assert(has<hashString("sourceLink")>());
     // m_traj->m_sourceLinks[data().icalibratedsourcelink] = &sourceLink;
     m_traj->template component<const SourceLink*>("calibratedSourceLink",
                                                   m_istate) = &sourceLink;
@@ -510,19 +510,34 @@ class TrackStateProxy {
 
   /// Dynamic measurement vector with only the valid dimensions.
   /// @return The effective calibrated measurement vector
-  auto effectiveCalibrated() const { return calibrated().head(data().measdim); }
+  auto effectiveCalibrated() const {
+    return calibrated().head(calibratedSize());
+  }
 
   /// Dynamic measurement covariance matrix with only the valid dimensions.
   /// @return The effective calibrated covariance matrix
   auto effectiveCalibratedCovariance() const {
-    return calibratedCovariance().topLeftCorner(data().measdim, data().measdim);
+    const size_t measdim = calibratedSize();
+    return calibratedCovariance().topLeftCorner(measdim, measdim);
   }
 
   /// Return the (dynamic) number of dimensions stored for this measurement.
   /// @note The underlying storage is overallocated to MeasurementSizeMax
   /// regardless of this value
   /// @return The number of dimensions
-  size_t calibratedSize() const { return data().measdim; }
+  IndexData::IndexType calibratedSize() const {
+    return component<IndexData::IndexType, hashString("measdim")>();
+  }
+
+  /// Return reference to the (dynamic) number of dimensions stored for this
+  /// measurement.
+  /// @note The underlying storage is overallocated to MeasurementSizeMax
+  /// regardless of this value
+  /// @return The number of dimensions
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  IndexData::IndexType& calibratedSize() {
+    return component<IndexData::IndexType, hashString("measdim")>();
+  }
 
   /// Overwrite existing measurement data.
   ///
@@ -541,16 +556,17 @@ class TrackStateProxy {
     static_assert(kMeasurementSize <= M,
                   "Input measurement must be within the allowed size");
 
-    IndexData& dataref = data();
-    dataref.measdim = kMeasurementSize;
+    // IndexData& dataref = data();
+    calibratedSize() = kMeasurementSize;
 
-    assert(dataref.icalibratedsourcelink != IndexData::kInvalid);
-    m_traj->template component<const SourceLink*>(
-        "calibratedSourceLink", m_istate) = &meas.sourceLink();
+    assert(has<hashString("calibratedSourceLink")>());
+    component<const SourceLink*, hashString("calibratedSourceLink")>() =
+        &meas.sourceLink();
     // m_traj->m_sourceLinks[dataref.icalibratedsourcelink] =
     // &meas.sourceLink();
-    assert(m_traj->template component<const SourceLink*>("calibratedSourceLink",
-                                                         m_istate) != nullptr);
+    assert(
+        (component<const SourceLink*, hashString("calibratedSourceLink")>() !=
+         nullptr));
 
     assert(hasCalibrated());
     calibrated().setZero();
@@ -605,14 +621,14 @@ class TrackStateProxy {
   /// @return Mutable reference to the chi2 value
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   double& chi2() {
-    return data().chi2;
+    return component<double, hashString("chi2")>();
   }
 
   /// Getter for the chi2 value associated with the track state.
   /// This overload returns a copy of the chi2 value, and thus does not allow
   /// modification of the value in the backing storage.
   /// @return the chi2 value of the track state
-  double chi2() const { return data().chi2; }
+  double chi2() const { return component<double, hashString("chi2")>(); }
 
   /// Getter for the path length associated with the track state.
   /// This overloaded is only enabled if not read-only, and returns a mutable
@@ -620,12 +636,14 @@ class TrackStateProxy {
   /// @return Mutable reference to the pathlength.
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   double& pathLength() {
-    return data().pathLength;
+    return component<double, hashString("pathLength")>();
   }
 
   /// Getter for the path length. Returns a copy of the path length value.
   /// @return The path length of this track state
-  double pathLength() const { return data().pathLength; }
+  double pathLength() const {
+    return component<double, hashString("pathLength")>();
+  }
 
   /// Getter for the type flags associated with the track state.
   /// This overloaded is only enabled if not read-only, and returns a mutable
@@ -633,48 +651,50 @@ class TrackStateProxy {
   /// @return reference to the type flags.
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   TrackStateType& typeFlags() {
-    return data().typeFlags;
+    return component<TrackStateType, hashString("typeFlags")>();
   }
 
   /// Getter for the type flags. Returns a copy of the type flags value.
   /// @return The type flags of this track state
-  TrackStateType typeFlags() const { return data().typeFlags; }
+  TrackStateType typeFlags() const {
+    return component<TrackStateType, hashString("typeFlags")>();
+  }
 
  private:
-  /// Return the index tuple that makes up this track state
-  /// @return Immutable ref to index tuple from the parent @c MultiTrajectory
-  const IndexData& data() const { return m_traj->data(m_istate); }
+  // /// Return the index tuple that makes up this track state
+  // /// @return Immutable ref to index tuple from the parent @c MultiTrajectory
+  // const IndexData& data() const { return m_traj->data(m_istate); }
 
-  /// Return the index tuple that makes up this track state
-  /// @return Mutable ref to index tuple from the parent @c MultiTrajectory
-  /// @note This overload is only present in case @c ReadOnly is false.
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  IndexData& data() {
-    return m_traj->data(m_istate);
-  }
+  // /// Return the index tuple that makes up this track state
+  // /// @return Mutable ref to index tuple from the parent @c MultiTrajectory
+  // /// @note This overload is only present in case @c ReadOnly is false.
+  // template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  // IndexData& data() {
+  // return m_traj->data(m_istate);
+  // }
 
   // Private since it can only be created by the trajectory.
   TrackStateProxy(ConstIf<MultiTrajectory, ReadOnly>& trajectory,
                   size_t istate);
 
   const std::shared_ptr<const Surface>& referenceSurfacePointer() const {
-    assert(data().irefsurface != IndexData::kInvalid);
+    assert(has<hashString("referenceSurface")>());
     // return m_traj->m_referenceSurfaces[data().irefsurface];
-    return m_traj->template component<std::shared_ptr<const Surface>>(
-        "referenceSurface", m_istate);
+    return component<std::shared_ptr<const Surface>,
+                     hashString("referenceSurface")>();
   }
 
   ProjectorBitset projectorBitset() const {
-    assert(data().iprojector != IndexData::kInvalid);
+    assert(has<hashString("projector")>());
     // return m_traj->m_projectors[data().iprojector];
-    return m_traj->template component<ProjectorBitset>("projector", m_istate);
+    return component<ProjectorBitset, hashString("projector")>();
   }
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void setProjectorBitset(ProjectorBitset proj) {
-    assert(data().iprojector != IndexData::kInvalid);
+    assert(has<hashString("projector")>());
     // m_traj->m_projectors[data().iprojector] = proj;
-    m_traj->template component<ProjectorBitset>("projector", m_istate) = proj;
+    component<ProjectorBitset, hashString("projector")>() = proj;
   }
 
   ConstIf<MultiTrajectory, ReadOnly>* m_traj;
@@ -770,23 +790,21 @@ class MultiTrajectory {
   virtual const detail_lt::IndexData& data(IndexType istate) const = 0;
   virtual detail_lt::IndexData& data(IndexType istate) = 0;
 
-  template <typename T>
-  constexpr T& component(const char* key, IndexType istate) {
-    return *static_cast<T*>(componentImpl(hashString(key), istate));
-  }
+  // constexpr bool has(const char* key, IndexType istate) const {
+  // return has(hashString(key), istate);
+  // }
 
-  template <typename T>
-  constexpr const T& component(const char* key, IndexType istate) const {
-    return *static_cast<const T*>(componentImpl(hashString(key), istate));
-  }
+  virtual bool has(HashedString key, IndexType istate) const = 0;
 
-  template <typename T>
-  constexpr T& component(HashedString key, IndexType istate) {
+  template <typename T, HashedString key>
+  constexpr T& component(IndexType istate) {
+    assert(has(key, istate));
     return *static_cast<T*>(componentImpl(key, istate));
   }
 
-  template <typename T>
-  constexpr const T& component(HashedString key, IndexType istate) const {
+  template <typename T, HashedString key>
+  constexpr const T& component(IndexType istate) const {
+    assert(has(key, istate));
     return *static_cast<const T*>(componentImpl(key, istate));
   }
 
@@ -813,6 +831,8 @@ class MultiTrajectory {
   virtual void shareFrom(IndexType iself, IndexType iother,
                          TrackStatePropMask shareSource,
                          TrackStatePropMask shareTarget) = 0;
+
+  virtual void unset(TrackStatePropMask target, IndexType istate) = 0;
 
  protected:
   virtual const void* componentImpl(HashedString key,

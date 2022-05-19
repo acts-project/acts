@@ -312,8 +312,19 @@ BOOST_AUTO_TEST_CASE(BitmaskOperators) {
 
 BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   using PM = TrackStatePropMask;
+  using namespace Acts::HashedStringLiteral;
 
   VectorMultiTrajectory t;
+
+  auto alwaysPresent = [](auto& ts) {
+    BOOST_CHECK(ts.template has<"sourceLink"_hash>());
+    BOOST_CHECK(ts.template has<"calibratedSourceLink"_hash>());
+    BOOST_CHECK(ts.template has<"referenceSurface"_hash>());
+    BOOST_CHECK(ts.template has<"measdim"_hash>());
+    BOOST_CHECK(ts.template has<"chi2"_hash>());
+    BOOST_CHECK(ts.template has<"pathLength"_hash>());
+    BOOST_CHECK(ts.template has<"typeFlags"_hash>());
+  };
 
   auto ts = t.getTrackState(t.addTrackState(PM::All));
   BOOST_CHECK(ts.hasPredicted());
@@ -322,6 +333,7 @@ BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   BOOST_CHECK(ts.hasCalibrated());
   BOOST_CHECK(ts.hasProjector());
   BOOST_CHECK(ts.hasJacobian());
+  alwaysPresent(ts);
 
   ts = t.getTrackState(t.addTrackState(PM::None));
   BOOST_CHECK(!ts.hasPredicted());
@@ -330,6 +342,7 @@ BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
   BOOST_CHECK(!ts.hasJacobian());
+  alwaysPresent(ts);
 
   ts = t.getTrackState(t.addTrackState(PM::Predicted));
   BOOST_CHECK(ts.hasPredicted());
@@ -338,6 +351,7 @@ BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
   BOOST_CHECK(!ts.hasJacobian());
+  alwaysPresent(ts);
 
   ts = t.getTrackState(t.addTrackState(PM::Filtered));
   BOOST_CHECK(!ts.hasPredicted());
@@ -346,6 +360,7 @@ BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
   BOOST_CHECK(!ts.hasJacobian());
+  alwaysPresent(ts);
 
   ts = t.getTrackState(t.addTrackState(PM::Smoothed));
   BOOST_CHECK(!ts.hasPredicted());
@@ -354,6 +369,7 @@ BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
   BOOST_CHECK(!ts.hasJacobian());
+  alwaysPresent(ts);
 
   ts = t.getTrackState(t.addTrackState(PM::Calibrated));
   BOOST_CHECK(!ts.hasPredicted());
@@ -370,6 +386,7 @@ BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
   BOOST_CHECK(ts.hasJacobian());
+  alwaysPresent(ts);
 }
 
 // assert expected "cross-talk" between trackstate proxies
@@ -580,6 +597,8 @@ BOOST_DATA_TEST_CASE(TrackStateProxyStorage, bd::make({1u, 2u}),
 }
 
 BOOST_AUTO_TEST_CASE(TrackStateProxyAllocations) {
+  using namespace Acts::HashedStringLiteral;
+
   TestTrackState pc(rng, 2u);
 
   // this should allocate for all components in the trackstate, plus filtered
@@ -597,6 +616,47 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyAllocations) {
   BOOST_CHECK(!tso.hasSmoothed());
   BOOST_CHECK(!tso.hasCalibrated());
   BOOST_CHECK(tso.hasJacobian());
+
+  auto tsnone = t.getTrackState(t.addTrackState(TrackStatePropMask::None));
+  BOOST_CHECK(!tsnone.has<"predicted"_hash>());
+  BOOST_CHECK(!tsnone.has<"filtered"_hash>());
+  BOOST_CHECK(!tsnone.has<"smoothed"_hash>());
+  BOOST_CHECK(!tsnone.has<"jacobian"_hash>());
+  BOOST_CHECK(!tsnone.has<"calibrated"_hash>());
+  BOOST_CHECK(!tsnone.has<"projector"_hash>());
+  BOOST_CHECK(tsnone.has<"sourceLink"_hash>());
+  BOOST_CHECK(tsnone.has<"calibratedSourceLink"_hash>());
+  BOOST_CHECK(tsnone.has<"referenceSurface"_hash>());
+  BOOST_CHECK(tsnone.has<"measdim"_hash>());
+  BOOST_CHECK(tsnone.has<"chi2"_hash>());
+  BOOST_CHECK(tsnone.has<"pathLength"_hash>());
+  BOOST_CHECK(tsnone.has<"typeFlags"_hash>());
+
+  auto tsall = t.getTrackState(t.addTrackState(TrackStatePropMask::All));
+  BOOST_CHECK(tsall.has<"predicted"_hash>());
+  BOOST_CHECK(tsall.has<"filtered"_hash>());
+  BOOST_CHECK(tsall.has<"smoothed"_hash>());
+  BOOST_CHECK(tsall.has<"jacobian"_hash>());
+  BOOST_CHECK(tsall.has<"calibrated"_hash>());
+  BOOST_CHECK(tsall.has<"projector"_hash>());
+  BOOST_CHECK(tsall.has<"sourceLink"_hash>());
+  BOOST_CHECK(tsall.has<"calibratedSourceLink"_hash>());
+  BOOST_CHECK(tsall.has<"referenceSurface"_hash>());
+  BOOST_CHECK(tsall.has<"measdim"_hash>());
+  BOOST_CHECK(tsall.has<"chi2"_hash>());
+  BOOST_CHECK(tsall.has<"pathLength"_hash>());
+  BOOST_CHECK(tsall.has<"typeFlags"_hash>());
+
+  tsall.unset(TrackStatePropMask::Predicted);
+  BOOST_CHECK(!tsall.has<"predicted"_hash>());
+  tsall.unset(TrackStatePropMask::Filtered);
+  BOOST_CHECK(!tsall.has<"filtered"_hash>());
+  tsall.unset(TrackStatePropMask::Smoothed);
+  BOOST_CHECK(!tsall.has<"smoothed"_hash>());
+  tsall.unset(TrackStatePropMask::Jacobian);
+  BOOST_CHECK(!tsall.has<"jacobian"_hash>());
+  tsall.unset(TrackStatePropMask::Calibrated);
+  BOOST_CHECK(!tsall.has<"calibrated"_hash>());
 }
 
 BOOST_AUTO_TEST_CASE(TrackStateProxyGetMask) {
