@@ -157,7 +157,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       // term on the weight that depends on the value of zOrigin
       weight += -std::abs(zOrigin) + m_cfg.compatSeedWeight;
 
-      // skip a bad quality if any of the components has a weight smaller than
+      // skip a bad quality seed if any of its constituents has a weight larger than
       // the seed weight
       if (weight < bottomSP.quality() and weight < middleSP.quality() and
           weight < topSpVec[i]->quality()) {
