@@ -76,7 +76,8 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config minPt");
   }
 
-  if (m_cfg.gridConfig.bFieldInZ != m_cfg.seedFinderConfig.bFieldInZ) {
+  if (m_cfg.gridConfig.bFieldInZ != m_cfg.seedFinderConfig.bFieldInZ and
+      m_cfg.allowSeparateBField == false) {
     throw std::invalid_argument("Inconsistent config bFieldInZ");
   }
 

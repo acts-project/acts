@@ -122,6 +122,7 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
         outputSeeds="PixelSeeds",
         outputProtoTracks="prototracks",
         allowSeparateRMax=False,
+        allowSeparateBField=True,
         gridConfig=gridConfig,
         seedFinderConfig=seedFinderConfig,
         seedFilterConfig=seedFilterConfig,
