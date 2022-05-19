@@ -123,6 +123,61 @@ class VectorMultiTrajectory final : public MultiTrajectory {
     return index;
   }
 
+  void shareFrom(IndexType iself, IndexType iother,
+                 TrackStatePropMask shareSource,
+                 TrackStatePropMask shareTarget) override {
+    // auto other = getTrackState(iother);
+    detail_lt::IndexData& self = m_index[iself];
+    detail_lt::IndexData& other = m_index[iother];
+
+    assert(ACTS_CHECK_BIT(getTrackState(iother).getMask(), shareSource) &&
+           "Source has incompatible allocation");
+
+    // @TODO: Push behind interface somehow
+    using PM = TrackStatePropMask;
+
+    IndexType sourceIndex{kInvalid};
+    switch (shareSource) {
+      case PM::Predicted:
+        sourceIndex = other.ipredicted;
+        break;
+      case PM::Filtered:
+        sourceIndex = other.ifiltered;
+        break;
+      case PM::Smoothed:
+        sourceIndex = other.ismoothed;
+        break;
+      case PM::Jacobian:
+        sourceIndex = other.ijacobian;
+        break;
+      default:
+        throw std::domain_error{"Unable to share this component"};
+    }
+
+    assert(sourceIndex != kInvalid);
+
+    switch (shareTarget) {
+      case PM::Predicted:
+        assert(shareSource != PM::Jacobian);
+        self.ipredicted = sourceIndex;
+        break;
+      case PM::Filtered:
+        assert(shareSource != PM::Jacobian);
+        self.ifiltered = sourceIndex;
+        break;
+      case PM::Smoothed:
+        assert(shareSource != PM::Jacobian);
+        self.ismoothed = sourceIndex;
+        break;
+      case PM::Jacobian:
+        assert(shareSource == PM::Jacobian);
+        self.ijacobian = sourceIndex;
+        break;
+      default:
+        throw std::domain_error{"Unable to share this component"};
+    }
+  }
+
   std::size_t size() const override { return m_index.size(); }
 
   void clear() override {

@@ -158,54 +158,13 @@ class TrackStateProxy {
   void shareFrom(const TrackStateProxy<M, ReadOnlyOther>& other,
                  TrackStatePropMask shareSource,
                  TrackStatePropMask shareTarget) {
-    using PM = TrackStatePropMask;
-
     assert(m_traj == other.m_traj &&
            "Cannot share components across MultiTrajectories");
 
     assert(ACTS_CHECK_BIT(other.getMask(), shareSource) &&
            "Source has incompatible allocation");
 
-    // @TODO: Push behind interface somehow
-
-    IndexData::IndexType sourceIndex{IndexData::kInvalid};
-    switch (shareSource) {
-      case PM::Predicted:
-        sourceIndex = other.data().ipredicted;
-        break;
-      case PM::Filtered:
-        sourceIndex = other.data().ifiltered;
-        break;
-      case PM::Smoothed:
-        sourceIndex = other.data().ismoothed;
-        break;
-      case PM::Jacobian:
-        sourceIndex = other.data().ijacobian;
-        break;
-      default:
-        throw std::domain_error{"Unable to share this component"};
-    }
-
-    switch (shareTarget) {
-      case PM::Predicted:
-        assert(shareSource != PM::Jacobian);
-        data().ipredicted = sourceIndex;
-        break;
-      case PM::Filtered:
-        assert(shareSource != PM::Jacobian);
-        data().ifiltered = sourceIndex;
-        break;
-      case PM::Smoothed:
-        assert(shareSource != PM::Jacobian);
-        data().ismoothed = sourceIndex;
-        break;
-      case PM::Jacobian:
-        assert(shareSource == PM::Jacobian);
-        data().ijacobian = sourceIndex;
-        break;
-      default:
-        throw std::domain_error{"Unable to share this component"};
-    }
+    m_traj->shareFrom(m_istate, other.m_istate, shareSource, shareTarget);
   }
 
   /// Copy the contents of another track state proxy into this one
@@ -755,6 +714,7 @@ class MultiTrajectory {
   using TrackStateProxy = detail_lt::TrackStateProxy<MeasurementSizeMax, false>;
 
   using IndexType = uint16_t;
+  static constexpr IndexType kInvalid = UINT16_MAX;
 
   /// Create an empty trajectory.
   MultiTrajectory() = default;
@@ -849,6 +809,10 @@ class MultiTrajectory {
       IndexType covIdx) = 0;
   virtual ConstTrackStateProxy::MeasurementCovariance measurementCovariance(
       IndexType covIdx) const = 0;
+
+  virtual void shareFrom(IndexType iself, IndexType iother,
+                         TrackStatePropMask shareSource,
+                         TrackStatePropMask shareTarget) = 0;
 
  protected:
   virtual const void* componentImpl(HashedString key,
