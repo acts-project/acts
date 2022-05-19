@@ -83,7 +83,6 @@ template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::predictedCovariance() const
     -> Covariance {
   assert(has<hashString("predicted")>());
-  // return Covariance(m_traj->m_cov[data().ipredicted].data());
   return m_traj->covariance(component<IndexType, hashString("predicted")>());
 }
 
@@ -116,14 +115,12 @@ inline auto TrackStateProxy<M, ReadOnly>::smoothedCovariance() const
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::jacobian() const -> Covariance {
   assert(has<hashString("jacobian")>());
-  // return Covariance(m_traj->m_jac[data().ijacobian].data());
   return m_traj->jacobian(component<IndexType, hashString("jacobian")>());
 }
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::projector() const -> Projector {
   assert(has<hashString("projector")>());
-  // return bitsetToMatrix<Projector>(m_traj->m_projectors[data().iprojector]);
   return bitsetToMatrix<Projector>(
       component<ProjectorBitset, hashString("projector")>());
 }
@@ -132,8 +129,6 @@ template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::uncalibrated() const
     -> const SourceLink& {
   assert(has<hashString("sourceLink")>());
-  // assert(m_traj->m_sourceLinks[data().iuncalibrated] != nullptr);
-  // return *m_traj->m_sourceLinks[data().iuncalibrated];
   using T = const SourceLink*;
   const T& sl = component<const SourceLink*, hashString("sourceLink")>();
   assert(sl != nullptr);
@@ -143,9 +138,6 @@ inline auto TrackStateProxy<M, ReadOnly>::uncalibrated() const
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::calibrated() const -> Measurement {
   assert(has<hashString("calibrated")>());
-  // return Measurement(m_traj->m_meas[data().icalibrated].data());
-  // return m_traj->template component<Measurement>(hashString("measurement"),
-  // m_istate);
   return m_traj->measurement(component<IndexType, hashString("calibrated")>());
 }
 
@@ -153,8 +145,6 @@ template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::calibratedSourceLink() const
     -> const SourceLink& {
   assert(has<hashString("calibratedSourceLink")>());
-  // assert(m_traj->m_sourceLinks[data().icalibratedsourcelink] != nullptr);
-  // return *m_traj->m_sourceLinks[data().icalibratedsourcelink];
   using T = const SourceLink*;
   const T& sl =
       component<const SourceLink*, hashString("calibratedSourceLink")>();
@@ -166,9 +156,6 @@ template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::calibratedCovariance() const
     -> MeasurementCovariance {
   assert(has<hashString("calibrated")>());
-  // return MeasurementCovariance(m_traj->m_measCov[data().icalibrated].data());
-  // return m_traj->template component<MeasurementCovariance>(
-  // hashString("measurementCovariance"), m_istate);
   return m_traj->measurementCovariance(
       component<IndexType, hashString("calibrated")>());
 }

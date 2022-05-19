@@ -148,7 +148,6 @@ class VectorMultiTrajectory final : public MultiTrajectory {
     assert(ACTS_CHECK_BIT(getTrackState(iother).getMask(), shareSource) &&
            "Source has incompatible allocation");
 
-    // @TODO: Push behind interface somehow
     using PM = TrackStatePropMask;
 
     IndexType sourceIndex{kInvalid};
