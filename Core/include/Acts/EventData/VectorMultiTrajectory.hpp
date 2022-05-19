@@ -17,7 +17,24 @@ class VectorMultiTrajectory final : public MultiTrajectory {
   std::size_t previous(IndexType istate) const override {
     return m_index[istate].iprevious;
   }
+  struct IndexData {
+    IndexType irefsurface = kInvalid;
+    IndexType iprevious = kInvalid;
+    IndexType ipredicted = kInvalid;
+    IndexType ifiltered = kInvalid;
+    IndexType ismoothed = kInvalid;
+    IndexType ijacobian = kInvalid;
+    IndexType iprojector = kInvalid;
 
+    double chi2 = 0;
+    double pathLength;
+    TrackStateType typeFlags;
+
+    IndexType iuncalibrated = kInvalid;
+    IndexType icalibrated = kInvalid;
+    IndexType icalibratedsourcelink = kInvalid;
+    IndexType measdim = 0;
+  };
   TrackStateProxy::Parameters parameters(IndexType parIdx) override {
     return TrackStateProxy::Parameters{m_params[parIdx].data()};
   }
@@ -67,7 +84,7 @@ class VectorMultiTrajectory final : public MultiTrajectory {
     using PropMask = TrackStatePropMask;
 
     m_index.emplace_back();
-    detail_lt::IndexData& p = m_index.back();
+    IndexData& p = m_index.back();
     size_t index = m_index.size() - 1;
 
     if (iprevious != SIZE_MAX) {
@@ -127,8 +144,8 @@ class VectorMultiTrajectory final : public MultiTrajectory {
                  TrackStatePropMask shareSource,
                  TrackStatePropMask shareTarget) override {
     // auto other = getTrackState(iother);
-    detail_lt::IndexData& self = m_index[iself];
-    detail_lt::IndexData& other = m_index[iother];
+    IndexData& self = m_index[iself];
+    IndexData& other = m_index[iother];
 
     assert(ACTS_CHECK_BIT(getTrackState(iother).getMask(), shareSource) &&
            "Source has incompatible allocation");
@@ -313,17 +330,11 @@ class VectorMultiTrajectory final : public MultiTrajectory {
     }
   }
 
-  const detail_lt::IndexData& data(IndexType istate) const override {
-    return m_index[istate];
-  }
 
-  detail_lt::IndexData& data(IndexType istate) override {
-    return m_index[istate];
-  }
 
  private:
   /// index to map track states to the corresponding
-  std::vector<detail_lt::IndexData> m_index;
+  std::vector<IndexData> m_index;
   std::vector<typename detail_lt::Types<eBoundSize>::Coefficients> m_params;
   std::vector<typename detail_lt::Types<eBoundSize>::Covariance> m_cov;
   std::vector<typename detail_lt::Types<MeasurementSizeMax>::Coefficients>

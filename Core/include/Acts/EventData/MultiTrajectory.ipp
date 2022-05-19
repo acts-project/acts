@@ -48,7 +48,7 @@ TrackStatePropMask TrackStateProxy<M, ReadOnly>::getMask() const {
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::parameters() const -> Parameters {
-  IndexData::IndexType idx;
+  IndexType idx;
   if (hasSmoothed()) {
     return smoothed();
   } else if (hasFiltered()) {
@@ -62,7 +62,7 @@ inline auto TrackStateProxy<M, ReadOnly>::parameters() const -> Parameters {
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::covariance() const -> Covariance {
-  IndexData::IndexType idx;
+  IndexType idx;
   if (hasSmoothed()) {
     return smoothed();
   } else if (hasFiltered()) {
@@ -76,8 +76,7 @@ inline auto TrackStateProxy<M, ReadOnly>::covariance() const -> Covariance {
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::predicted() const -> Parameters {
   assert(has<hashString("predicted")>());
-  return m_traj->parameters(
-      component<IndexData::IndexType, hashString("predicted")>());
+  return m_traj->parameters(component<IndexType, hashString("predicted")>());
 }
 
 template <size_t M, bool ReadOnly>
@@ -85,46 +84,40 @@ inline auto TrackStateProxy<M, ReadOnly>::predictedCovariance() const
     -> Covariance {
   assert(has<hashString("predicted")>());
   // return Covariance(m_traj->m_cov[data().ipredicted].data());
-  return m_traj->covariance(
-      component<IndexData::IndexType, hashString("predicted")>());
+  return m_traj->covariance(component<IndexType, hashString("predicted")>());
 }
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::filtered() const -> Parameters {
   assert(has<hashString("filtered")>());
-  return m_traj->parameters(
-      component<IndexData::IndexType, hashString("filtered")>());
+  return m_traj->parameters(component<IndexType, hashString("filtered")>());
 }
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::filteredCovariance() const
     -> Covariance {
   assert(has<hashString("filtered")>());
-  return m_traj->covariance(
-      component<IndexData::IndexType, hashString("filtered")>());
+  return m_traj->covariance(component<IndexType, hashString("filtered")>());
 }
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::smoothed() const -> Parameters {
   assert(has<hashString("smoothed")>());
-  return m_traj->parameters(
-      component<IndexData::IndexType, hashString("smoothed")>());
+  return m_traj->parameters(component<IndexType, hashString("smoothed")>());
 }
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::smoothedCovariance() const
     -> Covariance {
   assert(has<hashString("smoothed")>());
-  return m_traj->covariance(
-      component<IndexData::IndexType, hashString("smoothed")>());
+  return m_traj->covariance(component<IndexType, hashString("smoothed")>());
 }
 
 template <size_t M, bool ReadOnly>
 inline auto TrackStateProxy<M, ReadOnly>::jacobian() const -> Covariance {
   assert(has<hashString("jacobian")>());
   // return Covariance(m_traj->m_jac[data().ijacobian].data());
-  return m_traj->jacobian(
-      component<IndexData::IndexType, hashString("jacobian")>());
+  return m_traj->jacobian(component<IndexType, hashString("jacobian")>());
 }
 
 template <size_t M, bool ReadOnly>
@@ -153,8 +146,7 @@ inline auto TrackStateProxy<M, ReadOnly>::calibrated() const -> Measurement {
   // return Measurement(m_traj->m_meas[data().icalibrated].data());
   // return m_traj->template component<Measurement>(hashString("measurement"),
   // m_istate);
-  return m_traj->measurement(
-      component<IndexData::IndexType, hashString("calibrated")>());
+  return m_traj->measurement(component<IndexType, hashString("calibrated")>());
 }
 
 template <size_t M, bool ReadOnly>
@@ -178,7 +170,7 @@ inline auto TrackStateProxy<M, ReadOnly>::calibratedCovariance() const
   // return m_traj->template component<MeasurementCovariance>(
   // hashString("measurementCovariance"), m_istate);
   return m_traj->measurementCovariance(
-      component<IndexData::IndexType, hashString("calibrated")>());
+      component<IndexType, hashString("calibrated")>());
 }
 
 }  // namespace detail_lt
@@ -194,13 +186,13 @@ void MultiTrajectory::visitBackwards(size_t iendpoint, F&& callable) const {
       bool proceed = callable(getTrackState(iendpoint));
       // this point has no parent and ends the trajectory, or a break was
       // requested
-      if (previous(iendpoint) == detail_lt::IndexData::kInvalid || !proceed) {
+      if (previous(iendpoint) == kInvalid || !proceed) {
         break;
       }
     } else {
       callable(getTrackState(iendpoint));
       // this point has no parent and ends the trajectory
-      if (previous(iendpoint) == detail_lt::IndexData::kInvalid) {
+      if (previous(iendpoint) == kInvalid) {
         break;
       }
     }
@@ -219,13 +211,13 @@ void MultiTrajectory::applyBackwards(size_t iendpoint, F&& callable) {
       bool proceed = callable(getTrackState(iendpoint));
       // this point has no parent and ends the trajectory, or a break was
       // requested
-      if (previous(iendpoint) == detail_lt::IndexData::kInvalid || !proceed) {
+      if (previous(iendpoint) == kInvalid || !proceed) {
         break;
       }
     } else {
       callable(getTrackState(iendpoint));
       // this point has no parent and ends the trajectory
-      if (previous(iendpoint) == detail_lt::IndexData::kInvalid) {
+      if (previous(iendpoint) == kInvalid) {
         break;
       }
     }

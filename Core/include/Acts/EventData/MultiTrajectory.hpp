@@ -68,29 +68,6 @@ struct Types {
   using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
 };
 
-struct IndexData {
-  using IndexType = uint16_t;
-
-  static constexpr IndexType kInvalid = UINT16_MAX;
-
-  IndexType irefsurface = kInvalid;
-  IndexType iprevious = kInvalid;
-  IndexType ipredicted = kInvalid;
-  IndexType ifiltered = kInvalid;
-  IndexType ismoothed = kInvalid;
-  IndexType ijacobian = kInvalid;
-  IndexType iprojector = kInvalid;
-
-  double chi2 = 0;
-  double pathLength;
-  TrackStateType typeFlags;
-
-  IndexType iuncalibrated = kInvalid;
-  IndexType icalibrated = kInvalid;
-  IndexType icalibratedsourcelink = kInvalid;
-  IndexType measdim = 0;
-};
-
 /// Proxy object to access a single point on the trajectory.
 ///
 /// @tparam SourceLink Type to link back to an original measurement
@@ -103,6 +80,9 @@ class TrackStateProxy {
   using Covariance = typename Types<eBoundSize, ReadOnly>::CovarianceMap;
   using Measurement = typename Types<M, ReadOnly>::CoefficientsMap;
   using MeasurementCovariance = typename Types<M, ReadOnly>::CovarianceMap;
+
+  using IndexType = std::uint16_t;
+  static constexpr IndexType kInvalid = std::numeric_limits<IndexType>::max();
 
   // as opposed to the types above, this is an actual Matrix (rather than a
   // map)
@@ -134,6 +114,8 @@ class TrackStateProxy {
   /// Return the index of the track state 'previous' in the track sequence
   /// @return The index of the previous track state.
   size_t previous() const { return m_traj->previous(m_istate); }
+
+  bool hasPrevious() const { return has<hashString("previous")>(); }
 
   /// Build a mask that represents all the allocated components of this track
   /// state proxy
@@ -525,8 +507,8 @@ class TrackStateProxy {
   /// @note The underlying storage is overallocated to MeasurementSizeMax
   /// regardless of this value
   /// @return The number of dimensions
-  IndexData::IndexType calibratedSize() const {
-    return component<IndexData::IndexType, hashString("measdim")>();
+  IndexType calibratedSize() const {
+    return component<IndexType, hashString("measdim")>();
   }
 
   /// Return reference to the (dynamic) number of dimensions stored for this
@@ -535,8 +517,8 @@ class TrackStateProxy {
   /// regardless of this value
   /// @return The number of dimensions
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  IndexData::IndexType& calibratedSize() {
-    return component<IndexData::IndexType, hashString("measdim")>();
+  IndexType& calibratedSize() {
+    return component<IndexType, hashString("measdim")>();
   }
 
   /// Overwrite existing measurement data.
@@ -733,8 +715,8 @@ class MultiTrajectory {
       detail_lt::TrackStateProxy<MeasurementSizeMax, true>;
   using TrackStateProxy = detail_lt::TrackStateProxy<MeasurementSizeMax, false>;
 
-  using IndexType = uint16_t;
-  static constexpr IndexType kInvalid = UINT16_MAX;
+  using IndexType = TrackStateProxy::IndexType;
+  static constexpr IndexType kInvalid = TrackStateProxy::kInvalid;
 
   /// Create an empty trajectory.
   MultiTrajectory() = default;
@@ -787,8 +769,8 @@ class MultiTrajectory {
   virtual size_t size() const = 0;
 
   virtual std::size_t previous(IndexType istate) const = 0;
-  virtual const detail_lt::IndexData& data(IndexType istate) const = 0;
-  virtual detail_lt::IndexData& data(IndexType istate) = 0;
+  // virtual const detail_lt::IndexData& data(IndexType istate) const = 0;
+  // virtual detail_lt::IndexData& data(IndexType istate) = 0;
 
   // constexpr bool has(const char* key, IndexType istate) const {
   // return has(hashString(key), istate);
