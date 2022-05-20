@@ -154,7 +154,10 @@ BOOST_AUTO_TEST_CASE(Build) {
   constexpr TrackStatePropMask kMask = TrackStatePropMask::Predicted;
 
   // construct trajectory w/ multiple components
-  VectorMultiTrajectory t;
+  std::unique_ptr<MultiTrajectory> tptr =
+      std::make_unique<VectorMultiTrajectory>();
+  MultiTrajectory& t = *tptr;
+
   auto i0 = t.addTrackState(kMask);
   // trajectory bifurcates here into multiple hypotheses
   auto i1a = t.addTrackState(kMask, i0);
@@ -189,7 +192,9 @@ BOOST_AUTO_TEST_CASE(Build) {
 
 BOOST_AUTO_TEST_CASE(Clear) {
   constexpr TrackStatePropMask kMask = TrackStatePropMask::Predicted;
-  VectorMultiTrajectory t;
+  std::unique_ptr<MultiTrajectory> tptr =
+      std::make_unique<VectorMultiTrajectory>();
+  MultiTrajectory& t = *tptr;
   BOOST_CHECK_EQUAL(t.size(), 0);
 
   auto i0 = t.addTrackState(kMask);
@@ -208,7 +213,9 @@ BOOST_AUTO_TEST_CASE(ApplyWithAbort) {
   constexpr TrackStatePropMask kMask = TrackStatePropMask::Predicted;
 
   // construct trajectory with three components
-  VectorMultiTrajectory t;
+  std::unique_ptr<MultiTrajectory> tptr =
+      std::make_unique<VectorMultiTrajectory>();
+  MultiTrajectory& t = *tptr;
   auto i0 = t.addTrackState(kMask);
   auto i1 = t.addTrackState(kMask, i0);
   auto i2 = t.addTrackState(kMask, i1);
@@ -314,7 +321,9 @@ BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   using PM = TrackStatePropMask;
   using namespace Acts::HashedStringLiteral;
 
-  VectorMultiTrajectory t;
+  std::unique_ptr<MultiTrajectory> tptr =
+      std::make_unique<VectorMultiTrajectory>();
+  MultiTrajectory& t = *tptr;
 
   auto alwaysPresent = [](auto& ts) {
     BOOST_CHECK(ts.template has<"sourceLink"_hash>());
@@ -394,7 +403,9 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCrossTalk) {
   TestTrackState pc(rng, 2u);
 
   // multi trajectory w/ a single, fully set, track state
-  VectorMultiTrajectory traj;
+  std::unique_ptr<MultiTrajectory> tptr =
+      std::make_unique<VectorMultiTrajectory>();
+  MultiTrajectory& traj = *tptr;
   size_t index = traj.addTrackState();
   {
     auto ts = traj.getTrackState(index);
@@ -486,7 +497,9 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCrossTalk) {
 BOOST_AUTO_TEST_CASE(TrackStateReassignment) {
   TestTrackState pc(rng, 1u);
 
-  VectorMultiTrajectory t;
+  std::unique_ptr<MultiTrajectory> tptr =
+      std::make_unique<VectorMultiTrajectory>();
+  MultiTrajectory& t = *tptr;
   size_t index = t.addTrackState();
   auto ts = t.getTrackState(index);
   fillTrackState(pc, TrackStatePropMask::All, ts);
@@ -527,7 +540,9 @@ BOOST_DATA_TEST_CASE(TrackStateProxyStorage, bd::make({1u, 2u}),
   TestTrackState pc(rng, nMeasurements);
 
   // create trajectory with a single fully-filled random track state
-  VectorMultiTrajectory t;
+  std::unique_ptr<MultiTrajectory> tptr =
+      std::make_unique<VectorMultiTrajectory>();
+  MultiTrajectory& t = *tptr;
   size_t index = t.addTrackState();
   auto ts = t.getTrackState(index);
   fillTrackState(pc, TrackStatePropMask::All, ts);
@@ -602,7 +617,9 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyAllocations) {
   TestTrackState pc(rng, 2u);
 
   // this should allocate for all components in the trackstate, plus filtered
-  VectorMultiTrajectory t;
+  std::unique_ptr<MultiTrajectory> tptr =
+      std::make_unique<VectorMultiTrajectory>();
+  MultiTrajectory& t = *tptr;
   size_t i = t.addTrackState(TrackStatePropMask::Predicted |
                              TrackStatePropMask::Filtered |
                              TrackStatePropMask::Jacobian);
@@ -667,7 +684,9 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyGetMask) {
   PM all = std::accumulate(values.begin(), values.end(), PM::None,
                            [](auto a, auto b) { return a | b; });
 
-  VectorMultiTrajectory mj;
+  std::unique_ptr<MultiTrajectory> tptr =
+      std::make_unique<VectorMultiTrajectory>();
+  MultiTrajectory& mj = *tptr;
   {
     auto ts = mj.getTrackState(mj.addTrackState(PM::All));
     BOOST_CHECK(ts.getMask() == all);
@@ -695,7 +714,9 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   std::array<PM, 5> values{PM::Predicted, PM::Filtered, PM::Smoothed,
                            PM::Jacobian, PM::Calibrated};
 
-  VectorMultiTrajectory mj;
+  std::unique_ptr<MultiTrajectory> tptr =
+      std::make_unique<VectorMultiTrajectory>();
+  MultiTrajectory& mj = *tptr;
   auto mkts = [&](PM mask) { return mj.getTrackState(mj.addTrackState(mask)); };
 
   // orthogonal ones
@@ -841,8 +862,12 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopyDiffMTJ) {
   std::array<PM, 5> values{PM::Predicted, PM::Filtered, PM::Smoothed,
                            PM::Jacobian, PM::Calibrated};
 
-  VectorMultiTrajectory mj;
-  VectorMultiTrajectory mj2;
+  std::unique_ptr<MultiTrajectory> tptr =
+      std::make_unique<VectorMultiTrajectory>();
+  MultiTrajectory& mj = *tptr;
+  std::unique_ptr<MultiTrajectory> tptr2 =
+      std::make_unique<VectorMultiTrajectory>();
+  MultiTrajectory& mj2 = *tptr2;
   auto mkts = [&](PM mask) { return mj.getTrackState(mj.addTrackState(mask)); };
   auto mkts2 = [&](PM mask) {
     return mj2.getTrackState(mj2.addTrackState(mask));
@@ -896,7 +921,9 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopyDiffMTJ) {
 
 BOOST_AUTO_TEST_CASE(ProxyAssignment) {
   constexpr TrackStatePropMask kMask = TrackStatePropMask::Predicted;
-  VectorMultiTrajectory t;
+  std::unique_ptr<MultiTrajectory> tptr =
+      std::make_unique<VectorMultiTrajectory>();
+  MultiTrajectory& t = *tptr;
   auto i0 = t.addTrackState(kMask);
 
   MultiTrajectory::TrackStateProxy tp = t.getTrackState(i0);  // mutable
@@ -909,7 +936,9 @@ BOOST_AUTO_TEST_CASE(ProxyAssignment) {
 // Check if the copy from const does compile, assume the copy is done correctly
 BOOST_AUTO_TEST_CASE(CopyFromConst) {
   using PM = TrackStatePropMask;
-  VectorMultiTrajectory mj;
+  std::unique_ptr<MultiTrajectory> tptr =
+      std::make_unique<VectorMultiTrajectory>();
+  MultiTrajectory& mj = *tptr;
 
   const auto idx_a = mj.addTrackState(PM::All);
   const auto idx_b = mj.addTrackState(PM::All);
@@ -929,7 +958,9 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyShare) {
   TestTrackState pc(rng, 2u);
 
   {
-    VectorMultiTrajectory traj;
+    std::unique_ptr<MultiTrajectory> tptr =
+        std::make_unique<VectorMultiTrajectory>();
+    MultiTrajectory& traj = *tptr;
     size_t ia = traj.addTrackState(TrackStatePropMask::All);
     size_t ib = traj.addTrackState(TrackStatePropMask::None);
 
@@ -971,7 +1002,9 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyShare) {
   }
 
   {
-    VectorMultiTrajectory traj;
+    std::unique_ptr<MultiTrajectory> tptr =
+        std::make_unique<VectorMultiTrajectory>();
+    MultiTrajectory& traj = *tptr;
     size_t i = traj.addTrackState(TrackStatePropMask::All &
                                   ~TrackStatePropMask::Filtered &
                                   ~TrackStatePropMask::Smoothed);
@@ -1000,6 +1033,70 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyShare) {
     BOOST_CHECK_EQUAL(ts.predictedCovariance(), ts.filteredCovariance());
     BOOST_CHECK_EQUAL(ts.predictedCovariance(), ts.smoothedCovariance());
   }
+}
+
+BOOST_AUTO_TEST_CASE(MultiTrajectoryExtraColumns) {
+  using namespace HashedStringLiteral;
+  using MTJ = MultiTrajectory;
+
+  struct TestColumn {
+    double value;
+  };
+
+  std::unique_ptr<MultiTrajectory> tptr = MultiTrajectory::createWithBackend(
+      std::make_unique<VectorMultiTrajectory>(),
+      MTJ::C<"extra_column"_hash, int>{},
+      MTJ::C<"another_column"_hash, TestColumn>{});
+
+  MultiTrajectory& traj = *tptr;
+  auto ts1 = traj.getTrackState(traj.addTrackState());
+  auto ts2 = traj.getTrackState(
+      traj.addTrackState(TrackStatePropMask::All, ts1.index()));
+  auto ts3 = traj.getTrackState(
+      traj.addTrackState(TrackStatePropMask::All, ts2.index()));
+
+  BOOST_CHECK(ts1.has<"extra_column"_hash>());
+  BOOST_CHECK(ts2.has<"extra_column"_hash>());
+  BOOST_CHECK(ts3.has<"extra_column"_hash>());
+
+  BOOST_CHECK(ts1.has<"another_column"_hash>());
+  BOOST_CHECK(ts2.has<"another_column"_hash>());
+  BOOST_CHECK(ts3.has<"another_column"_hash>());
+
+  ts2.component<int, "extra_column"_hash>() = 6;
+
+  BOOST_CHECK_EQUAL((ts2.component<int, "extra_column"_hash>()), 6);
+
+  ts3.component<TestColumn, "another_column"_hash>().value = 7;
+  BOOST_CHECK_EQUAL((ts3.component<TestColumn, "another_column"_hash>().value),
+                    7);
+}
+
+BOOST_AUTO_TEST_CASE(MultiTrajectoryExtraColumnsRuntime) {
+  auto runTest = [](auto&& fn) {
+    VectorMultiTrajectory mt;
+    std::vector<std::string> columns = {"one", "two", "three", "four"};
+    for (const auto& c : columns) {
+      BOOST_CHECK(!mt.hasColumn(fn(c)));
+      mt.addColumn<int>(fn(c));
+      BOOST_CHECK(mt.hasColumn(fn(c)));
+    }
+    for (const auto& c : columns) {
+      auto ts1 = mt.getTrackState(mt.addTrackState());
+      auto ts2 = mt.getTrackState(mt.addTrackState());
+      BOOST_CHECK(ts1.has(fn(c)));
+      BOOST_CHECK(ts2.has(fn(c)));
+      ts1.component<int>(fn(c)) = 674;
+      ts2.component<int>(fn(c)) = 421;
+      BOOST_CHECK_EQUAL(ts1.component<int>(fn(c)), 674);
+      BOOST_CHECK_EQUAL(ts2.component<int>(fn(c)), 421);
+    }
+  };
+
+  runTest([](const std::string& c) { return hashString(c.c_str()); });
+  runTest([](const std::string& c) { return c.c_str(); });
+  runTest([](const std::string& c) { return c; });
+  runTest([](std::string_view c) { return c; });
 }
 
 BOOST_AUTO_TEST_SUITE_END()

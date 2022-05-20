@@ -10,6 +10,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <string_view>
 #include <utility>
 
 namespace Acts {
@@ -23,6 +24,12 @@ constexpr HashedString fnv1a_32(char const* s, std::size_t count) {
                : 2166136261u;
 }
 
+constexpr HashedString fnv1a_32(std::string_view s) {
+  return s.size() ? (fnv1a_32(s.substr(0, s.size() - 1)) ^ s[s.size() - 1]) *
+                        16777619u
+                  : 2166136261u;
+}
+
 constexpr int length(const char* str) {
   return *str ? 1 + length(str + 1) : 0;
 }
@@ -30,6 +37,10 @@ constexpr int length(const char* str) {
 
 constexpr HashedString hashString(const char* s) {
   return detail::fnv1a_32(s, detail::length(s));
+}
+
+constexpr HashedString hashString(std::string_view s) {
+  return detail::fnv1a_32(s);
 }
 
 namespace HashedStringLiteral {

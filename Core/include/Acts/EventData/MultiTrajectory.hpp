@@ -298,7 +298,20 @@ class TrackStateProxy {
 
   template <HashedString key>
   constexpr bool has() const {
+    return has(key);
+  }
+
+  constexpr bool has(HashedString key) const {
     return m_traj->has(key, m_istate);
+  }
+
+  constexpr bool has(std::string_view key) const {
+    return has(hashString(key));
+  }
+
+  template <typename T>
+  constexpr bool has(T key) const {
+    return has(hashString(key));
   }
 
   template <typename T, HashedString key>
@@ -306,9 +319,39 @@ class TrackStateProxy {
     return m_traj->template component<T, key>(m_istate);
   }
 
+  template <typename T>
+  constexpr T& component(HashedString key) {
+    return m_traj->template component<T>(key, m_istate);
+  }
+
+  template <typename T>
+  constexpr T& component(std::string_view key) {
+    return m_traj->template component<T>(hashString(key), m_istate);
+  }
+
+  template <typename T, typename K>
+  constexpr T& component(K key) {
+    return m_traj->template component<T>(hashString(key), m_istate);
+  }
+
   template <typename T, HashedString key>
   constexpr const T& component() const {
     return m_traj->template component<T, key>(m_istate);
+  }
+
+  template <typename T>
+  constexpr const T& component(HashedString key) const {
+    return m_traj->template component<T>(key, m_istate);
+  }
+
+  template <typename T, typename K>
+  constexpr const T& component(K key) const {
+    return m_traj->template component<T>(hashString(key), m_istate);
+  }
+
+  template <typename T>
+  constexpr const T& component(std::string_view key) const {
+    return m_traj->template component<T>(hashString(key), m_istate);
   }
 
   /// Track parameters vector. This tries to be somewhat smart and return the
@@ -625,6 +668,56 @@ constexpr bool VisitorConcept = Concepts ::require<
 
 }  // namespace detail_lt
 
+template <typename derived_t>
+class MultiTrajectoryBackend {
+ public:
+  using Derived = derived_t;
+
+  template <typename T>
+  constexpr void addColumn(HashedString key) {
+    Derived& self = static_cast<Derived&>(*this);
+    assert(self.size() == 0 &&
+           "Adding columns not supported after track states have been added");
+    self.template addColumnImpl<T>(key);
+  }
+
+  template <HashedString key, typename T>
+  constexpr void addColumn() {
+    return addColumn<T>(key);
+  }
+
+  template <typename T>
+  constexpr void addColumn(std::string_view key) {
+    return addColumn<T>(hashString(key));
+  }
+
+  template <typename T, typename K>
+  constexpr void addColumn(K key) {
+    return addColumn<T>(hashString(key));
+  }
+
+  template <HashedString key>
+  constexpr bool hasColumn() {
+    return hasColumn(key);
+  }
+
+  constexpr bool hasColumn(HashedString key) {
+    Derived& self = static_cast<Derived&>(*this);
+    return self.hasColumnImpl(key);
+  }
+
+  constexpr bool hasColumn(std::string_view key) {
+    Derived& self = static_cast<Derived&>(*this);
+    return self.hasColumnImpl(hashString(key));
+  }
+
+  template <typename K>
+  constexpr bool hasColumn(K key) {
+    Derived& self = static_cast<Derived&>(*this);
+    return self.hasColumnImpl(hashString(key));
+  }
+};
+
 /// Store a trajectory of track states with multiple components.
 ///
 /// This container supports both simple, sequential trajectories as well
@@ -646,8 +739,27 @@ class MultiTrajectory {
   static constexpr IndexType kInvalid = TrackStateProxy::kInvalid;
   static constexpr IndexType kNoPrevious = kInvalid - 1;
 
-  /// Create an empty trajectory.
-  MultiTrajectory() = default;
+  template <HashedString K, typename T>
+  struct Column {
+    constexpr static HashedString key = K;
+    using type = T;
+  };
+
+  // This is just for convenience, maybe remove
+  template <HashedString K, typename T>
+  using C = MultiTrajectory::Column<K, T>;
+
+  template <typename T, typename... Args>
+  std::unique_ptr<MultiTrajectory> static createWithBackend(
+      std::unique_ptr<T> backend, Args&&... args) {
+    MultiTrajectoryBackend<typename T::Derived>& impl = *backend;
+    auto addColumns = [&impl](auto&& column) {
+      using column_t = std::decay_t<decltype(column)>;
+      impl.template addColumn<column_t::key, typename column_t::type>();
+    };
+    (addColumns(std::forward<Args>(args)), ...);
+    return backend;
+  }
 
   virtual ~MultiTrajectory() = 0;
 
@@ -696,19 +808,8 @@ class MultiTrajectory {
   /// Returns the number of track states contained
   virtual size_t size() const = 0;
 
+ protected:
   virtual bool has(HashedString key, IndexType istate) const = 0;
-
-  template <typename T, HashedString key>
-  constexpr T& component(IndexType istate) {
-    assert(has(key, istate));
-    return *static_cast<T*>(componentImpl(key, istate));
-  }
-
-  template <typename T, HashedString key>
-  constexpr const T& component(IndexType istate) const {
-    assert(has(key, istate));
-    return *static_cast<const T*>(componentImpl(key, istate));
-  }
 
   virtual TrackStateProxy::Parameters parameters(IndexType parIdx) = 0;
   virtual ConstTrackStateProxy::Parameters parameters(
@@ -736,10 +837,33 @@ class MultiTrajectory {
 
   virtual void unset(TrackStatePropMask target, IndexType istate) = 0;
 
- protected:
   virtual const void* componentImpl(HashedString key,
                                     IndexType istate) const = 0;
   virtual void* componentImpl(HashedString key, IndexType istate) = 0;
+
+  template <typename T, HashedString key>
+  constexpr T& component(IndexType istate) {
+    assert(has(key, istate));
+    return *static_cast<T*>(componentImpl(key, istate));
+  }
+
+  template <typename T>
+  constexpr T& component(HashedString key, IndexType istate) {
+    assert(has(key, istate));
+    return *static_cast<T*>(componentImpl(key, istate));
+  }
+
+  template <typename T, HashedString key>
+  constexpr const T& component(IndexType istate) const {
+    assert(has(key, istate));
+    return *static_cast<const T*>(componentImpl(key, istate));
+  }
+
+  template <typename T>
+  constexpr const T& component(HashedString key, IndexType istate) const {
+    assert(has(key, istate));
+    return *static_cast<const T*>(componentImpl(key, istate));
+  }
 
  private:
   friend class detail_lt::TrackStateProxy<MeasurementSizeMax, true>;
