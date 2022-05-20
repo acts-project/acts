@@ -10,6 +10,8 @@
 
 #include "Acts/EventData/MultiTrajectory.hpp"
 
+#include <unordered_map>
+
 namespace Acts {
 
 class VectorMultiTrajectory final
