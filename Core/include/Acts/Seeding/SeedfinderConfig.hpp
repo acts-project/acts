@@ -52,9 +52,9 @@ struct SeedfinderConfig {
   // seed confirmation
   bool seedConfirmation = false;
   // parameters for central seed confirmation
-	SeedConfirmationRangeConfig centralSeedConfirmationRange;
+  SeedConfirmationRangeConfig centralSeedConfirmationRange;
   // parameters for forward seed confirmation
-	SeedConfirmationRangeConfig forwardSeedConfirmationRange;
+  SeedConfirmationRangeConfig forwardSeedConfirmationRange;
 
   // cut to the maximum value of delta z between SPs
   float deltaZMax =

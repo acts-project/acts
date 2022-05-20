@@ -37,17 +37,19 @@ struct SeedFilterConfig {
   // sort vectors vectors by curvature
   bool curvatureSortingInFilter = false;
 
-  // increment in seed weight if number of compatible seeds is larger than
-  // numSeedIncrement
+  // increment in seed weight if the number of compatible seeds is larger than
+  // numSeedIncrement, this is used in case of high occupancy scenarios if we
+  // want to increase the weight of the seed by seedWeightIncrement when the
+  // number of compatible seeds is higher than a certain value
   float seedWeightIncrement = 0;
   float numSeedIncrement = std::numeric_limits<float>::infinity();
 
   // seed confirmation
   bool seedConfirmation = false;
   // contains parameters for central seed confirmation
-	SeedConfirmationRangeConfig centralSeedConfirmationRange;
+  SeedConfirmationRangeConfig centralSeedConfirmationRange;
   // contains parameters for forward seed confirmation
-	SeedConfirmationRangeConfig forwardSeedConfirmationRange;
+  SeedConfirmationRangeConfig forwardSeedConfirmationRange;
   // minimum radius for bottom SP in seed confirmation
   float seedConfMinBottomRadius = 60. * Acts::UnitConstants::mm;
   // maximum zOrigin in seed confirmation
@@ -57,11 +59,13 @@ struct SeedFilterConfig {
 
   // maximum number of lower quality seeds in seed confirmation
   float maxSeedsPerSpMConf = std::numeric_limits<float>::infinity();
-  // maximum number of quality seeds for each middle-bottom SP-duplet in seed confirmation
-	// if the limit is reached we check if there is a lower quality seed to be replaced
+  // maximum number of quality seeds for each middle-bottom SP-duplet in seed
+  // confirmation if the limit is reached we check if there is a lower quality
+  // seed to be replaced
   float maxQualitySeedsPerSpMConf = std::numeric_limits<float>::infinity();
 
-  // use deltaR between top and middle SP instead of top radius to search for compatible SPs
+  // use deltaR between top and middle SP instead of top radius to search for
+  // compatible SPs
   bool useDeltaRorTopRadius = false;
 
   SeedFilterConfig toInternalUnits() const {

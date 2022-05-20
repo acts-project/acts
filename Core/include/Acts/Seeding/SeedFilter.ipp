@@ -141,7 +141,10 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
     int deltaSeedConf;
     if (m_cfg.seedConfirmation) {
-      // seed confirmation cuts - keep seeds if they have specific values of impact parameter, z-origin and number of compatible seeds inside a pre-defined range that also depends on the region of the detector (i.e. forward or central region) defined by SeedConfirmationRange
+      // seed confirmation cuts - keep seeds if they have specific values of
+      // impact parameter, z-origin and number of compatible seeds inside a
+      // pre-defined range that also depends on the region of the detector (i.e.
+      // forward or central region) defined by SeedConfirmationRange
       deltaSeedConf = compatibleSeedR.size() + 1 - nTopSeedConf;
       if (deltaSeedConf < 0 || (numQualitySeeds and !deltaSeedConf)) {
         continue;
@@ -157,8 +160,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       // term on the weight that depends on the value of zOrigin
       weight += -std::abs(zOrigin) + m_cfg.compatSeedWeight;
 
-      // skip a bad quality seed if any of its constituents has a weight larger than
-      // the seed weight
+      // skip a bad quality seed if any of its constituents has a weight larger
+      // than the seed weight
       if (weight < bottomSP.quality() and weight < middleSP.quality() and
           weight < topSpVec[i]->quality()) {
         continue;

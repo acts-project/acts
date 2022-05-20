@@ -132,7 +132,8 @@ void addTrackFinding(Context& ctx) {
 
   {
     using seedConf = Acts::SeedConfirmationRangeConfig;
-    auto c = py::class_<seedConf>(m, "SeedConfirmationRangeConfig").def(py::init<>());
+    auto c = py::class_<seedConf>(m, "SeedConfirmationRangeConfig")
+                 .def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, seedConf);
     ACTS_PYTHON_MEMBER(zMinSeedConf);
     ACTS_PYTHON_MEMBER(zMaxSeedConf);
