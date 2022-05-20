@@ -16,13 +16,14 @@ def runITkSeeding(field, csvInputDir, outputDir, inputSpacePointsType, s=None):
     # variables that change for pixel and strip SP
     if inputSpacePointsType=="PixelSpacePoints":
         inputCollection="pixel"
+        outputSeeds="PixelSeeds"
         rMaxGridConfig=320 * u.mm
         rMaxSeedFinderConfig=rMaxGridConfig
         allowSeparateRMax=False
         deltaRMinSP=6 * u.mm
         deltaRMax=280 * u.mm
         deltaRMaxTopSP=280 * u.mm
-        deltaRMaxTopSP=120 * u.mm
+        deltaRMaxBottomSP=120 * u.mm
         interactionPointCut=True
         arithmeticAverageCotTheta=False
         deltaZMax=600 * u.mm
@@ -55,10 +56,15 @@ def runITkSeeding(field, csvInputDir, outputDir, inputSpacePointsType, s=None):
             [-1, 0],
             [-1, 0],
         ]
-#        deltaRMiddleMinSPRange=10 * u.mm;
-#        deltaRMiddleMaxSPRange=10 * u.mm;
+        deltaRMiddleMinSPRange=10 * u.mm;
+        deltaRMiddleMaxSPRange=10 * u.mm;
+        impactWeightFactor = 100
+        compatSeedLimit = 3
+        numSeedIncrement = float("inf")
+        seedWeightIncrement = 0
     else:
         inputCollection="strip"
+        outputSeeds="StripSeeds"
         rMaxGridConfig=1000. * u.mm
         rMaxSeedFinderConfig=1200. * u.mm
         allowSeparateRMax=True
@@ -98,9 +104,12 @@ def runITkSeeding(field, csvInputDir, outputDir, inputSpacePointsType, s=None):
             [-1, 0],
             [-1, 0],
         ]
-#        deltaRMiddleMinSPRange=30 * u.mm;
-#        deltaRMiddleMaxSPRange=150 * u.mm;
-
+        deltaRMiddleMinSPRange=30 * u.mm;
+        deltaRMiddleMaxSPRange=150 * u.mm;
+        impactWeightFactor = 1
+        compatSeedLimit = 4
+        numSeedIncrement = 1
+        seedWeightIncrement = 10100
 
 
     # Read input space points from input csv files
@@ -121,7 +130,7 @@ def runITkSeeding(field, csvInputDir, outputDir, inputSpacePointsType, s=None):
         zMin=-3000 * u.mm,
         deltaRMax=deltaRMax,
         cotThetaMax=27.2899,
-        impactMax=2 * u.mm,
+        impactMax=impactMax,
         zBinEdges=[
             -3000.0,
             -2500.0,
@@ -145,27 +154,27 @@ def runITkSeeding(field, csvInputDir, outputDir, inputSpacePointsType, s=None):
         deltaRMax=gridConfig.deltaRMax,
         deltaRMinTopSP=deltaRMinSP,
         deltaRMinBottomSP=deltaRMinSP,
-        deltaRMaxTopSP=280 * u.mm,
-        deltaRMaxBottomSP=120 * u.mm,
+        deltaRMaxTopSP=deltaRMaxTopSP,
+        deltaRMaxBottomSP=deltaRMaxBottomSP,
         collisionRegionMin=-200 * u.mm,
         collisionRegionMax=200 * u.mm,
         zMin=gridConfig.zMin,
         zMax=gridConfig.zMax,
         maxSeedsPerSpM=4,
-        interactionPointCut=True,
+        interactionPointCut=interactionPointCut,
         cotThetaMax=gridConfig.cotThetaMax,
         sigmaScattering=2,
         radLengthPerSeed=0.1,
-        arithmeticAverageCotTheta=False,
-        deltaZMax=600 * u.mm,
+        arithmeticAverageCotTheta=arithmeticAverageCotTheta,
+        deltaZMax=deltaZMax,
         minPt=gridConfig.minPt,
         bFieldInZ=gridConfig.bFieldInZ,
         beamPos=acts.Vector2(0 * u.mm, 0 * u.mm),
         impactMax=gridConfig.impactMax,
         maxPtScattering=float("inf") * u.GeV,
         zBinEdges=gridConfig.zBinEdges,
-        skipPreviousTopSP=True,
-        zBinsCustomLooping=[1, 2, 3, 4, 11, 10, 9, 8, 6, 5, 7],
+        skipPreviousTopSP=skipPreviousTopSP,
+        zBinsCustomLooping=zBinsCustomLooping,
         rRangeMiddleSP=[
             [40.0, 90.0],
             [40.0, 200.0],
@@ -180,7 +189,8 @@ def runITkSeeding(field, csvInputDir, outputDir, inputSpacePointsType, s=None):
             [40.0, 90.0],
         ],  # if useVariableMiddleSPRange is set to false, the vector rRangeMiddleSP can be used to define a fixed r range for each z bin: {{rMin, rMax}, ...}. If useVariableMiddleSPRange is set to false and the vector is empty, the cuts won't be applied
         useVariableMiddleSPRange=True,  # if useVariableMiddleSPRange is true, the values in rRangeMiddleSP will be calculated based on r values of the SPs and deltaRMiddleSPRange
-        deltaRMiddleSPRange=10,
+#        deltaRMiddleMinSPRange=deltaRMiddleMinSPRange,
+#        deltaRMiddleMaxSPRange=deltaRMiddleMaxSPRange,
         seedConfirmation=True,
         centralSeedConfirmationRange=acts.SeedConfirmationRange(
             zMinSeedConf=250 * u.mm,
@@ -202,9 +212,11 @@ def runITkSeeding(field, csvInputDir, outputDir, inputSpacePointsType, s=None):
     seedFilterConfig = acts.SeedFilterConfig(
         maxSeedsPerSpM=seedFinderConfig.maxSeedsPerSpM,
         deltaRMin=seedFinderConfig.deltaRMin,
-        impactWeightFactor=100,
+        impactWeightFactor=impactWeightFactor,
         compatSeedWeight=100,
-        compatSeedLimit=3,
+        compatSeedLimit=compatSeedLimit,
+#        numSeedIncrement=numSeedIncrement,
+#        seedWeightIncrement=seedWeightIncrement,
 #        seedConfirmation=seedFinderConfig.seedConfirmation,
 #        centralSeedConfirmationRange=seedFinderConfig.centralSeedConfirmationRange,
 #        forwardSeedConfirmationRange=seedFinderConfig.forwardSeedConfirmationRange,
@@ -214,38 +226,14 @@ def runITkSeeding(field, csvInputDir, outputDir, inputSpacePointsType, s=None):
     seedingAlg = acts.examples.SeedingAlgorithm(
         level=acts.logging.VERBOSE,
         inputSpacePoints=[evReader.config.outputSpacePoints],
-        outputSeeds="PixelSeeds" if inputSpacePointsType=="PixelSpacePoints" else "StripSeeds",
+        outputSeeds=outputSeeds,
         outputProtoTracks="prototracks",
         allowSeparateRMax=allowSeparateRMax,
         gridConfig=gridConfig,
         seedFinderConfig=seedFinderConfig,
         seedFilterConfig=seedFilterConfig,
-        zBinNeighborsTop=[
-            [0, 0],
-            [-1, 0],
-            [-1, 0],
-            [-1, 0],
-            [-1, 0],
-            [-1, 1],
-            [0, 1],
-            [0, 1],
-            [0, 1],
-            [0, 1],
-            [0, 0],
-        ],  # allows to specify the number of neighbors desired for each bin, [-1,1] means one neighbor on the left and one on the right, if the vector is empty the algorithm returns the 8 surrounding bins
-        zBinNeighborsBottom=[
-            [0, 1],
-            [0, 1],
-            [0, 1],
-            [0, 1],
-            [0, 1],
-            [0, 0],
-            [-1, 0],
-            [-1, 0],
-            [-1, 0],
-            [-1, 0],
-            [-1, 0],
-        ],
+        zBinNeighborsTop=zBinNeighborsTop,
+        zBinNeighborsBottom=zBinNeighborsBottom,
         numPhiNeighbors=1,
     )
 
@@ -279,8 +267,8 @@ if "__main__" == __name__:
 
         # run seeding
         runITkSeeding(field, os.path.dirname(temp.name), outputDir=os.getcwd(), inputSpacePointsType="PixelSpacePoints").run()
-		
-		# create temporary file with strips SPs and run the seeding
+    
+    # create temporary file with strips SPs and run the seeding
     with tempfile.TemporaryDirectory() as tmpdirname:
         temp = open(tmpdirname + "/event000000000-spacepoints_strip.csv", "w+t")
         print(
