@@ -3,6 +3,7 @@ add_library(
   RecTruthTracks.cpp
   RecCKFTracks.cpp
   SeedingExample.cpp
+  HoughExample.cpp
   MeasurementsToSpacepoints.cpp
 )
 target_include_directories(

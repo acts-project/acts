@@ -68,15 +68,20 @@
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
-
+#include "ActsExamples/TrackFinding/HoughVectors.hpp"
 #include <string>
 #include <vector>
 #include <utility>
 #include <unordered_set>
 
-
+// An image is a 2d array of points, where each point has a value.
+// The value starts as the number of hit layers, but can change with effects
+// like a convolution. Also stored are all hits that contributed to each bin.
+// Size m_imageSize_y * m_imageSize_x. (NOTE y is row coordinate)
+    
 
 namespace ActsExamples {
+typedef vector2D<std::pair<int, std::unordered_set<const ActsExamples::SimSpacePoint*>>> Image;
 
 /// Construct track seeds from space points.
 class HoughTransformSeeder final : public BareAlgorithm {
@@ -91,8 +96,8 @@ class HoughTransformSeeder final : public BareAlgorithm {
     std::vector<std::string> inputSpacePoints;
     /// Output track seed collection.
     std::string outputSeeds;
-    /// Output proto track collection.
-    std::string outputProtoTracks;
+    /// Output hough track collection.
+    std::string outputHoughTracks;
 
     Acts::SeedFilterConfig seedFilterConfig;
     Acts::SeedfinderConfig<SimSpacePoint> seedFinderConfig;
@@ -114,10 +119,10 @@ class HoughTransformSeeder final : public BareAlgorithm {
   /// Const access to the config
   const Config& config() const { return m_cfg; }
 
-  double getMinX() const { return m_parMin[m_par_x]; }
-  double getMaxX() const { return m_parMax[m_par_x]; }
-  double getMinY() const { return m_parMin[m_par_y]; }
-  double getMaxY() const { return m_parMax[m_par_y]; }
+  double getMinX() const { return m_xMin; }
+  double getMaxX() const { return m_xMax; }
+  double getMinY() const { return m_yMin; }
+  double getMaxY() const { return m_yMax; }
   unsigned getThreshold() const { return m_threshold[m_threshold.size() / 2]; }
   int getSubRegion() const { return m_subRegion; }
 
@@ -128,15 +133,6 @@ class HoughTransformSeeder final : public BareAlgorithm {
   static double fieldCorrection(unsigned region, double y, double r); 
   
   double yToX(double y, double r, double phi) const;
-
-  typedef Vector2D<std::pair<int, std::unordered_set<const SimSpacePoint*>>> Image;
-  // An image is a 2d array of points, where each point has a value.
-  // The value starts as the number of hit layers, but can change with effects
-  // like a convolution. Also stored are all hits that contributed to each bin.
-  // Size m_imageSize_y * m_imageSize_x. (NOTE y is row coordinate)
-  Image const & getImage() const { return m_image; } // Returns the image generated from the last call of getSeeds()
-  
-  
 
  private:
   Config m_cfg;
@@ -150,24 +146,24 @@ class HoughTransformSeeder final : public BareAlgorithm {
   bool m_fieldCorrection = true;
 
   // === Image ===
-  float m_xMin = 0.3; // minphi
-  float m_xMax = 0.5; // maxphi
-  float m_yMin = -1.0; // min q/pt, -1/1 GeV
-  float m_yMax = 1.0; // max q/pt, +1/1 GeV
+  float m_xMin = 0; // minphi
+  float m_xMax = 2*3.14159; // maxphi
+  float m_yMin = -0.5; // min q/pt, -1/1 GeV JAAAAA check units
+  float m_yMax = 0.5; // max q/pt, +1/1 GeV JAAAAA check units
 
-  unsigned m_imageSize_x = 0; // i.e. number of bins in phi_track
-  unsigned m_imageSize_y = 0; // i.e. number of bins in q/pT
+  unsigned m_imageSize_x = 216; // i.e. number of bins in phi_track
+  unsigned m_imageSize_y = 216; // i.e. number of bins in q/pT
   
-  std::vector<unsigned> m_hitExtend_x; // Hit lines will fill extra bins in x by this amount on each side, size == nLayers
+  std::vector<unsigned> m_hitExtend_x = {2,1,0,0,0,0,0,0}; // Hit lines will fill extra bins in x by this amount on each side, size == nLayers
 
-  // === Seeds ===
-  int m_threshold; // Minimum point value post-convolution to accept as a seed (inclusive)
+  // === Seeds ==
+  std::vector<int> m_threshold = {1}; // Minimum point value post-convolution to accept as a road (inclusive)
   int m_localMaxWindowSize = 0; // Only create roads from a local maximum, requires traceHits
   
   ///////////////////////////////////////////////////////////////////////
   // Convenience
   
-  unsigned m_nLayers; 
+  unsigned m_nLayers=20; 
 
   double m_step_x = 0; // step size of the bin boundaries in x
   double m_step_y = 0; // step size of the bin boundaries in y
@@ -177,16 +173,11 @@ class HoughTransformSeeder final : public BareAlgorithm {
   // These are calculated from m_xMin/m_xMax
   
   ///////////////////////////////////////////////////////////////////////
-  // Event Storage
-  
-  Image m_image;
-  
-  ///////////////////////////////////////////////////////////////////////
   // Core
 
   
-  Image createLayerImage(unsigned layer, std::vector<const SimSpacePoint*> const & spacepoints) const;
-  Image createImage(std::vector<const SimSpacePoint*> const & spacepoints) const;
+  Image createLayerImage(unsigned layer, std::vector<const SimSpacePoint*> & spacepoints) const;
+  Image createImage(std::vector<const SimSpacePoint*> & spacepoints) const;
 
   ///////////////////////////////////////////////////////////////////////
   // Helpers
@@ -202,8 +193,4 @@ class HoughTransformSeeder final : public BareAlgorithm {
 
 
 
-};
 
-
-
-#endif // HTTHOUGHTRANSFORMTOOL_H

@@ -14,11 +14,16 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/Seedfinder.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/HoughTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <stdexcept>
+
+static inline int quant(double min, double max, unsigned nSteps, double val);
+static inline double unquant(double min, double max, unsigned nSteps, int step);
+template <typename T> static inline std::string to_string(std::vector<T> v);
+
 
 ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
     ActsExamples::HoughTransformSeeder::Config cfg, Acts::Logging::Level lvl)
@@ -32,11 +37,8 @@ ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
       throw std::invalid_argument("Invalid space point input collection");
     }
   }
-  if (m_cfg.outputProtoTracks.empty()) {
-    throw std::invalid_argument("Missing proto tracks output collection");
-  }
-  if (m_cfg.outputSeeds.empty()) {
-    throw std::invalid_argument("Missing seeds output collection");
+  if (m_cfg.outputHoughTracks.empty()) {
+    throw std::invalid_argument("Missing hough tracks output collection");
   }
 
   if (m_cfg.gridConfig.rMax != m_cfg.seedFinderConfig.rMax) {
@@ -45,16 +47,15 @@ ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
 
   if (m_cfg.gridConfig.deltaRMax != m_cfg.seedFinderConfig.deltaRMax) {
     throw std::invalid_argument("Inconsistent config deltaRMax");
-  }
+  } 
 
   // Fill convenience variables
-  m_step_x = (m_parMax[m_par_x] - m_parMin[m_par_x]) / m_imageSize_x;
-  m_step_y = (m_parMax[m_par_y] - m_parMin[m_par_y]) / m_imageSize_y;
+  m_step_x = (m_xMax - m_xMin) / m_imageSize_x;
+  m_step_y = (m_yMax - m_yMin) / m_imageSize_y;
   for (unsigned i = 0; i <= m_imageSize_x; i++)
-     m_bins_x.push_back(unquant(m_parMin[m_par_x], m_parMax[m_par_x], m_imageSize_x, i));
+     m_bins_x.push_back(unquant(m_xMin, m_xMax, m_imageSize_x, i));
   for (unsigned i = 0; i <= m_imageSize_y; i++)
-     m_bins_y.push_back(unquant(m_parMin[m_par_y], m_parMax[m_par_y], m_imageSize_y, i));
-  
+     m_bins_y.push_back(unquant(m_yMin, m_yMax, m_imageSize_y, i));
 }
 
 ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
@@ -66,83 +67,75 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
    for (const auto& isp : m_cfg.inputSpacePoints) {
       nSpacePoints += ctx.eventStore.get<SimSpacePointContainer>(isp).size();
    }
-   
+
    std::vector<const SimSpacePoint*> spacePointPtrs;
    spacePointPtrs.reserve(nSpacePoints);
    for (const auto& isp : m_cfg.inputSpacePoints) {
-      for (const auto& spacePoint :
+      for (auto& spacePoint :
               ctx.eventStore.get<SimSpacePointContainer>(isp)) {
          // since the event store owns the space points, their pointers should be
-         // stable and we do not need to create local copies.
-         spacePointPtrs.push_back(&spacePoint);
+         // stable and we do noet need to create local copies.
+         spacePointPtrs.push_back(&spacePoint); 
       }
    }
+   // JAA need to use this later?
+   auto finder = Acts::Seedfinder<SimSpacePoint>(m_cfg.seedFinderConfig);
 
-  // run the seeding
-  static thread_local SimSeedContainer seeds;
-  seeds.clear();
-  static thread_local decltype(finder)::State state;
+   ActsExamples::Image m_image = createImage(spacePointPtrs);
 
-  m_image = createImage(spacePointPtrs);
-  
-  for (unsigned y = 0; y < m_imageSize_y; y++)
-     for (unsigned x = 0; x < m_imageSize_x; x++)
-        if (passThreshold(m_image, x, y))
-        {
-           // Now find the set of hits for each such road JAAA TO DO need to know the layer!
-           seeds.insert(a.end(), m_image(y, x).second); // JAA TO DO this is a collection of            
-        }
-
-  // extract proto tracks, i.e. groups of measurement indices, from tracks seeds
-  size_t nSeeds = seeds.size();
-  static thread_local ProtoTrackContainer protoTracks;
-  protoTracks.clear();
-
-  protoTracks.reserve(nSeeds);
-  for (const auto& seed : seeds) {
-    ProtoTrack& protoTrack = protoTracks.emplace_back();
-    protoTrack.reserve(seed.sp().size());
-    for (auto spacePointPtr : seed.sp()) {
-      protoTrack.push_back(spacePointPtr->measurementIndex());
-    }
-  }
-
-  ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
+   static thread_local HoughTrackContainer houghTracks;
+   houghTracks.clear();
+   
+   for (unsigned y = 0; y < m_imageSize_y; y++)
+      for (unsigned x = 0; x < m_imageSize_x; x++)
+         if (passThreshold(m_image, x, y))
+         {
+            
+            HoughTrack houghTrack;
+            houghTrack.reserve(m_image(y,x).second.size());
+            for (auto sp : m_image(y, x).second) houghTrack.push_back(sp->measurementIndex());
+         }
+   
+   ACTS_DEBUG("Created " << houghTracks.size() << " track seeds from "
                         << spacePointPtrs.size() << " space points");
-
-  ctx.eventStore.add(m_cfg.outputSeeds, SimSeedContainer{seeds});
-  ctx.eventStore.add(m_cfg.outputProtoTracks, ProtoTrackContainer{protoTracks});
-  return ActsExamples::ProcessCode::SUCCESS;
+   
+   std::cerr << "JAAAAAAAA hough 6 and size = " <<  houghTracks.size() << "and sp size = " << spacePointPtrs.size() << std::endl;
+   ctx.eventStore.add(m_cfg.outputHoughTracks, HoughTrackContainer{houghTracks});
+   std::cerr << "JAAAAAAAA hough 7 " << std::endl;
+   return ActsExamples::ProcessCode::SUCCESS;
 }
 
 
 
-Image createLayerImage(unsigned layer, std::vector<const SimSpacePoint*> const & spacepoints) const {
+ActsExamples::Image ActsExamples::HoughTransformSeeder::createLayerImage(unsigned layer, std::vector<const SimSpacePoint*> & spacepoints) const
 {
-    Image image(m_imageSize_y, m_imageSize_x);
+   ActsExamples::Image image(m_imageSize_y, m_imageSize_x);
 
     for (auto sp : spacepoints) 
     {
-       if (sp->layer() != layer) continue; // JAAA
+       
+//////       if (sp->layer() != layer) continue; // JAAA
+       ACTS_WARNING("JAAAA r = " << sp->r());
 
        // This scans over y (pT) because that is more efficient in memory, in C.
        // Unknown if firmware will want to scan over x instead.
        for (unsigned y_ = 0; y_ < m_imageSize_y; y_++)
        {
-          unsigned y_bin_min = scale * y_;
-          unsigned y_bin_max = scale * (y_ + 1);
+          unsigned y_bin_min = y_;
+          unsigned y_bin_max = (y_ + 1);
           
           // Find the min/max x bins
-          float r = TMath::Sqrt(sp.x()*sp.x()+sp.y()*sp.y());
-          float phi = TMath::Atan2(sp.y()/sp.x());
-          auto xBins = yToXBins(y_bin_min, y_bin_max, r, phi, sp.layer()); // JAAA
+          float r = sqrt(sp->x()*sp->x()+sp->y()*sp->y());
+          float phi = atan2(sp->y(),sp->x());
+          auto xBins = yToXBins(y_bin_min, y_bin_max, r, phi, 0); // JAAA TO FIX
+/////          auto xBins = yToXBins(y_bin_min, y_bin_max, r, phi, sp.layer()); // JAAA
           
           // Update the image
           for (unsigned y = y_bin_min; y < y_bin_max; y++)
              for (unsigned x = xBins.first; x < xBins.second; x++)
              {
                 image(y, x).first++;
-                image(y, x).second.insert(hit);
+                image(y, x).second.insert(sp);
              }
        }
     }
@@ -150,9 +143,9 @@ Image createLayerImage(unsigned layer, std::vector<const SimSpacePoint*> const &
     return image;
 }
 
-HoughTransformSeeder::Image HoughTransformSeeder::createImage(std::vector<const SimSpacePoint*> const & spacepoints) const
+ActsExamples::Image ActsExamples::HoughTransformSeeder::createImage(std::vector<const SimSpacePoint*> & spacepoints)  const
 {
-    Image image(m_imageSize_y, m_imageSize_x);
+   ActsExamples::Image image(m_imageSize_y, m_imageSize_x);
 
     for (unsigned i = 0; i < m_nLayers; i++)
     {
@@ -169,12 +162,16 @@ HoughTransformSeeder::Image HoughTransformSeeder::createImage(std::vector<const 
     return image;
 }
 
-bool HoughTransformSeeder::passThreshold(Image const & image, unsigned x, unsigned y) const
-{
-    // Pass window threshold
-    if (x < 0 || image.size(1) < 0) return false;
-    if (image(y, x.first < m_threshold) return false;
+bool ActsExamples::HoughTransformSeeder::passThreshold(Image const & image, unsigned x, unsigned y) const
+{   
 
+    // Pass window threshold
+   unsigned width = m_threshold.size() / 2;
+   if (x < width || (image.size(1) - x) < width) return false;
+ 
+   for (unsigned i = 0; i < m_threshold.size(); i++)
+      if (image(y, x - width + i).first < m_threshold[i]) return false;
+   
     // Pass local-maximum check
     if (m_localMaxWindowSize)
         for (int j = -m_localMaxWindowSize; j <= m_localMaxWindowSize; j++)
@@ -227,16 +224,16 @@ static inline std::string to_string(std::vector<T> v)
 }
 
 
-double HoughTransformSeeder::fieldCorrection(unsigned region, double qpt, double r)
+double ActsExamples::HoughTransformSeeder::fieldCorrection(unsigned region, double qpt, double r)
 {
    // can ultimately derive field corrections here!
    return 0;
 }
 
-double HoughTransformSeeder::yToX(double y, double r, double phi) const
+double ActsExamples::HoughTransformSeeder::yToX(double y, double r, double phi) const
 {
    double d0 = 0; // d0 correction TO DO allow for this
-   double x = asin(r * A * y - d0 / r) + phi;
+   double x = asin(r * ActsExamples::HoughTransformSeeder::kA * y - d0 / r) + phi;
     
    if (m_fieldCorrection) x += fieldCorrection(0, y, r);
 
@@ -245,18 +242,18 @@ double HoughTransformSeeder::yToX(double y, double r, double phi) const
 
 // Find the min/max x bins of the hit's line, in each y bin. Max is exclusive.
 // Note this assumes yToX is monotonic. Returns {0, 0} if hit lies out of bounds.
-std::pair<unsigned, unsigned> HoughTransformSeeder::yToXBins(size_t yBin_min, size_t yBin_max, double r, double phi, unsigned layer) const
+std::pair<unsigned, unsigned> ActsExamples::HoughTransformSeeder::yToXBins(size_t yBin_min, size_t yBin_max, double r, double phi, unsigned layer) const
 {
     // Get float values
    double x_min = yToX(m_bins_y[yBin_min], r, phi);
    double x_max = yToX(m_bins_y[yBin_max], r, phi);
    if (x_min > x_max) std::swap(x_min, x_max);
-   if (x_max < m_parMin[m_par_x] || x_min > m_parMax[m_par_x])
+   if (x_max < m_xMin || x_min > m_xMax)
       return { 0, 0 }; // out of bounds
    
    // Get bins
-   int x_bin_min = quant(m_parMin[m_par_x], m_parMax[m_par_x], m_imageSize_x, x_min);
-   int x_bin_max = quant(m_parMin[m_par_x], m_parMax[m_par_x], m_imageSize_x, x_max) + 1; // exclusive
+   int x_bin_min = quant(m_xMin, m_xMax, m_imageSize_x, x_min);
+   int x_bin_max = quant(m_xMin, m_xMax, m_imageSize_x, x_max) + 1; // exclusive
 
    // Extend bins
    unsigned extend = getExtension(yBin_min, layer);  // JAAAAAAAAAAAAAA TO DO LAYER
@@ -271,7 +268,7 @@ std::pair<unsigned, unsigned> HoughTransformSeeder::yToXBins(size_t yBin_min, si
 }
 
 // We allow variable extension based on the size of m_hitExtend_x. See comments below.
-unsigned HoughTransformSeeder::getExtension(unsigned y, unsigned layer) const
+unsigned ActsExamples::HoughTransformSeeder::getExtension(unsigned y, unsigned layer) const
 {
    if (m_hitExtend_x.size() == m_nLayers) return m_hitExtend_x[layer];
    if (m_hitExtend_x.size() == m_nLayers * 2)
