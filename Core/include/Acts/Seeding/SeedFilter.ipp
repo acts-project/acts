@@ -68,7 +68,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
   for (auto& i : idx) {
     // if two compatible seeds with high distance in r are found, compatible
     // seeds span 5 layers
-    // -> very good seed
+    // -> weaker requirement for a good seed
     std::vector<float> compatibleSeedR;
 
     float invHelixDiameter = invHelixDiameterVec[i];
@@ -141,7 +141,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
     int deltaSeedConf;
     if (m_cfg.seedConfirmation) {
-      // seed confirmation cuts
+      // seed confirmation cuts - keep seeds if they have specific values of impact parameter, z-origin and number of compatible seeds inside a pre-defined range that also depends on the region of the detector (i.e. forward or central region) defined by SeedConfirmationRange
       deltaSeedConf = compatibleSeedR.size() + 1 - nTopSeedConf;
       if (deltaSeedConf < 0 || (numQualitySeeds and !deltaSeedConf)) {
         continue;
