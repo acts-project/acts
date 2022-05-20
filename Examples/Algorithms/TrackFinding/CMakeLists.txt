@@ -7,6 +7,7 @@ add_library(
   src/TrackFindingAlgorithm.cpp
   src/TrackFindingAlgorithmFunction.cpp
   src/TrackFindingOptions.cpp
+  src/HoughTransformSeeder.cpp
   src/TrackParamsEstimationAlgorithm.cpp)
 target_include_directories(
   ActsExamplesTrackFinding
