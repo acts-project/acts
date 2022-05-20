@@ -52,9 +52,9 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     /// check if spM is outside our radial region of interest
     if (m_config.useVariableMiddleSPRange) {
       float rMinMiddleSP = std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
-                           m_config.deltaRMiddleSPRange;
+                           m_config.deltaRMiddleMinSPRange;
       float rMaxMiddleSP = std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2 -
-                           m_config.deltaRMiddleSPRange;
+                           m_config.deltaRMiddleMaxSPRange;
       if (rM < rMinMiddleSP || rM > rMaxMiddleSP) {
         continue;
       }
