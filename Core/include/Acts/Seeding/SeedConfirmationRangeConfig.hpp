@@ -12,7 +12,7 @@
 
 namespace Acts {
 /// @brief contains parameters for  seed confirmation
-struct SeedConfirmationRange {
+struct SeedConfirmationRangeConfig {
 	// z minimum and maximum of middle component of the seed used to define the region of the detector for seed confirmation
   float zMinSeedConf =
 	std::numeric_limits<float>::min(); // Acts::UnitConstants::mm

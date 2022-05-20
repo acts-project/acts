@@ -74,7 +74,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     size_t nTopSeedConf = 0;
     if (m_config.seedConfirmation == true) {
       // check if middle SP is in the central or forward region
-      SeedConfirmationRange seedConfRange =
+      SeedConfirmationRangeConfig seedConfRange =
           (zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
            zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
               ? m_config.forwardSeedConfirmationRange

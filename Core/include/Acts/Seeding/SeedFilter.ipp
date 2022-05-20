@@ -39,7 +39,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         std::abs(bottomSP.z()) < m_cfg.centralSeedConfirmationRange.zMaxSeedConf
             ? m_cfg.centralSeedConfirmationRange.rMaxSeedConf
             : m_cfg.forwardSeedConfirmationRange.rMaxSeedConf;
-    SeedConfirmationRange seedConfRange =
+    SeedConfirmationRangeConfig seedConfRange =
         (middleSP.z() > m_cfg.centralSeedConfirmationRange.zMaxSeedConf ||
          middleSP.z() < m_cfg.centralSeedConfirmationRange.zMinSeedConf)
             ? m_cfg.forwardSeedConfirmationRange

@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Seeding/SeedConfirmationRange.hpp"
+#include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
 #include <memory>
@@ -52,9 +52,9 @@ struct SeedfinderConfig {
   // seed confirmation
   bool seedConfirmation = false;
   // parameters for central seed confirmation
-  SeedConfirmationRange centralSeedConfirmationRange;
+	SeedConfirmationRangeConfig centralSeedConfirmationRange;
   // parameters for forward seed confirmation
-  SeedConfirmationRange forwardSeedConfirmationRange;
+	SeedConfirmationRangeConfig forwardSeedConfirmationRange;
 
   // cut to the maximum value of delta z between SPs
   float deltaZMax =

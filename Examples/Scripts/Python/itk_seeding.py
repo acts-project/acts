@@ -90,14 +90,14 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
         useVariableMiddleSPRange=True,  # if useVariableMiddleSPRange is true, the values in rRangeMiddleSP will be calculated based on r values of the SPs and deltaRMiddleSPRange
         deltaRMiddleSPRange=10,
         seedConfirmation=True,
-        centralSeedConfirmationRange=acts.SeedConfirmationRange(
+        centralSeedConfirmationRange=acts.SeedConfirmationRangeConfig(
             zMinSeedConf=250 * u.mm,
             zMaxSeedConf=250 * u.mm,
             rMaxSeedConf=140 * u.mm,
             nTopForLargeR=1,
             nTopForSmallR=2,
         ),  # contains parameters for seed confirmation
-        forwardSeedConfirmationRange=acts.SeedConfirmationRange(
+        forwardSeedConfirmationRange=acts.SeedConfirmationRangeConfig(
             zMinSeedConf=3000 * u.mm,
             zMaxSeedConf=-3000 * u.mm,
             rMaxSeedConf=140 * u.mm,

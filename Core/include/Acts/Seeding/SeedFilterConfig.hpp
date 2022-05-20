@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Seeding/SeedConfirmationRange.hpp"
+#include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 
 // System include(s).
 #include <cstddef>
@@ -45,9 +45,9 @@ struct SeedFilterConfig {
   // seed confirmation
   bool seedConfirmation = false;
   // contains parameters for central seed confirmation
-  SeedConfirmationRange centralSeedConfirmationRange;
+	SeedConfirmationRangeConfig centralSeedConfirmationRange;
   // contains parameters for forward seed confirmation
-  SeedConfirmationRange forwardSeedConfirmationRange;
+	SeedConfirmationRangeConfig forwardSeedConfirmationRange;
   // minimum radius for bottom SP in seed confirmation
   float seedConfMinBottomRadius = 60. * Acts::UnitConstants::mm;
   // maximum zOrigin in seed confirmation
@@ -57,10 +57,11 @@ struct SeedFilterConfig {
 
   // maximum number of lower quality seeds in seed confirmation
   float maxSeedsPerSpMConf = std::numeric_limits<float>::infinity();
-  // maximum number of quality seeds in seed confirmation
+  // maximum number of quality seeds for each middle-bottom SP-duplet in seed confirmation
+	// if the limit is reached we check if there is a lower quality seed to be replaced
   float maxQualitySeedsPerSpMConf = std::numeric_limits<float>::infinity();
 
-  // use deltaR instead of top radius
+  // use deltaR between top and middle SP instead of top radius to search for compatible SPs
   bool useDeltaRorTopRadius = false;
 
   SeedFilterConfig toInternalUnits() const {
