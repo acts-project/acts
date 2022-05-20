@@ -90,12 +90,10 @@ class SpacePointBuilder {
       spacepoint_t* spacePoint) const;
 
  protected:
-  /// @brief Getter method for the local coordinates of a measurement
-  /// on its corresponding surface
+  /// @brief Getter method for the local coordinates of a measurement and its covariance
   ///
   /// @param meas measurement that holds the neccesary information of the hit position.
-  /// @return vector of the local coordinates of the measurement on the surface
-  Vector2 getLocalPos(const Measurement& meas) const;
+  /// @return vector of the local coordinates and covariance of the measurement on the surface
   std::pair<Acts::Vector2, Acts::SymMatrix2> getLocalPosCov(
       const Measurement& meas) const;
 

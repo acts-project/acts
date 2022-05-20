@@ -23,7 +23,8 @@ namespace ActsExamples {
 
 /// Space point representation of a measurement suitable for track seeding.
 class SimSpacePoint {
- using Scalar = Acts::ActsScalar;
+  using Scalar = Acts::ActsScalar;
+
  public:
   /// Construct the space point from global position and selected variances.
   ///

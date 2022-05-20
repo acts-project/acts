@@ -531,21 +531,6 @@ double SpacePointBuilder<spacepoint_t>::getLoc0Var(
 }
 
 template <typename spacepoint_t>
-Vector2 SpacePointBuilder<spacepoint_t>::getLocalPos(
-    const Measurement& meas) const {
-  Vector2 localPos = std::visit(
-      [](const auto& x) {
-        auto expander = x.expander();
-        BoundVector par = expander * x.parameters();
-        Vector2 local(par[BoundIndices::eBoundLoc0],
-                      par[BoundIndices::eBoundLoc1]);
-        return local;
-      },
-      meas);
-  return localPos;
-}
-
-template <typename spacepoint_t>
 std::pair<Vector2, SymMatrix2> SpacePointBuilder<spacepoint_t>::getLocalPosCov(
     const Measurement& meas) const {
   return std::visit(
