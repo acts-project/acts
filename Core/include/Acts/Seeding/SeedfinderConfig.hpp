@@ -47,7 +47,8 @@ struct SeedfinderConfig {
   // radial range for middle SP
   std::vector<std::vector<float>> rRangeMiddleSP;
   bool useVariableMiddleSPRange = false;
-  float deltaRMiddleSPRange = 10. * Acts::UnitConstants::mm;
+  float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
+  float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
 
   // seed confirmation
   bool seedConfirmation = false;
@@ -178,7 +179,8 @@ struct SeedfinderConfig {
     config.deltaRMaxTopSP /= 1_mm;
     config.deltaRMinBottomSP /= 1_mm;
     config.deltaRMaxBottomSP /= 1_mm;
-    config.deltaRMiddleSPRange /= 1_mm;
+    config.deltaRMiddleMinSPRange /= 1_mm;
+    config.deltaRMiddleMaxSPRange /= 1_mm;
     config.impactMax /= 1_mm;
     config.maxPtScattering /= 1_MeV;  // correct?
     config.collisionRegionMin /= 1_mm;
