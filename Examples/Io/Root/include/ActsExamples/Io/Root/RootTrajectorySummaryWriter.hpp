@@ -31,7 +31,7 @@ namespace ActsExamples {
 /// Each entry in the TTree corresponds to all reconstructed trajectories in one
 /// single event. The event number is part of the written data.
 ///
-/// A common file can be provided for to the writer to attach his TTree,
+/// A common file can be provided for the writer to attach his TTree,
 /// this is done by setting the Config::rootFile pointer to an existing
 /// file
 ///

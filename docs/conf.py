@@ -14,7 +14,7 @@ on_readthedocs = os.environ.get("READTHEDOCS", None) == "True"
 
 project = "Acts"
 author = "The Acts authors"
-copyright = "2014–2021 CERN for the benefit of the Acts project"
+copyright = "2014–2022 CERN for the benefit of the Acts project"
 # version = '@PROJECT_VERSION@'
 # release = '@PROJECT_VERSION@'
 

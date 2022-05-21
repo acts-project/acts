@@ -76,6 +76,7 @@ build:
       -DCMAKE_BUILD_TYPE=Release 
       -DCMAKE_CXX_FLAGS=-w 
       -DCMAKE_CUDA_FLAGS=-w 
+      -DCMAKE_CUDA_ARCHITECTURES="75;86"
       -DACTS_BUILD_PLUGIN_EXATRKX=ON 
       -DACTS_BUILD_EXAMPLES_EXATRKX=ON 
       -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
@@ -86,7 +87,7 @@ test:
   stage: test
   dependencies:
     - build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v22
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v23
   tags:
     - docker-gpu-nvidia
   script:
