@@ -87,6 +87,9 @@ class RootPropagationStepsWriter
   std::vector<float> m_step_act;   ///< actor check
   std::vector<float> m_step_abt;   ///< aborter
   std::vector<float> m_step_usr;   ///< user
+  std::vector<int>
+      m_nStepTrials;  ///< Number of iterations needed by the stepsize
+                      ///  finder (e.g. Runge-Kutta) of the stepper.
 };
 
 }  // namespace ActsExamples
