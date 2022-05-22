@@ -15,8 +15,7 @@
 namespace Acts {
 
 class VectorMultiTrajectory final
-    : public MultiTrajectory,
-      public MultiTrajectoryBackend<VectorMultiTrajectory> {
+    : public MultiTrajectory<VectorMultiTrajectory> {
   struct IndexData {
     size_t iprevious = kInvalid;
     IndexType ipredicted = kInvalid;
@@ -157,8 +156,6 @@ class VectorMultiTrajectory final
         return m_dynamic.find(key) != m_dynamic.end();
     }
   }
-
-  friend class MultiTrajectoryBackend<VectorMultiTrajectory>;
 
  private:
   /// index to map track states to the corresponding

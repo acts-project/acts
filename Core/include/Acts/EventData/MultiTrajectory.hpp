@@ -43,6 +43,7 @@ enum TrackStateFlag {
 using TrackStateType = std::bitset<TrackStateFlag::NumTrackStateFlags>;
 
 // forward declarations
+template <typename derived_t>
 class MultiTrajectory;
 class Surface;
 
@@ -58,8 +59,8 @@ template <size_t Size, bool ReadOnlyMaps = true>
 struct Types {
   enum {
     Flags = Eigen::ColMajor | Eigen::AutoAlign,
-    SizeIncrement = 8,
   };
+
   using Scalar = ActsScalar;
   // single items
   using Coefficients = Eigen::Matrix<Scalar, Size, 1, Flags>;
@@ -67,41 +68,66 @@ struct Types {
   using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
   using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
 };
+}  // namespace detail_lt
+
+// This is public
+template <size_t M, bool ReadOnly = true>
+struct TrackStateTraits {
+  using Parameters =
+      typename detail_lt::Types<eBoundSize, ReadOnly>::CoefficientsMap;
+  using Covariance =
+      typename detail_lt::Types<eBoundSize, ReadOnly>::CovarianceMap;
+  using Measurement = typename detail_lt::Types<M, ReadOnly>::CoefficientsMap;
+  using MeasurementCovariance =
+      typename detail_lt::Types<M, ReadOnly>::CovarianceMap;
+
+  using IndexType = std::uint16_t;
+  static constexpr IndexType kInvalid = std::numeric_limits<IndexType>::max();
+  static constexpr IndexType kNoPrevious = kInvalid - 1;
+
+  constexpr static auto ProjectorFlags = Eigen::RowMajor | Eigen::AutoAlign;
+  using Projector =
+      Eigen::Matrix<typename Covariance::Scalar, M, eBoundSize, ProjectorFlags>;
+};
+
+namespace detail_lt {
 
 /// Proxy object to access a single point on the trajectory.
 ///
 /// @tparam SourceLink Type to link back to an original measurement
 /// @tparam M         Maximum number of measurement dimensions
 /// @tparam ReadOnly  true for read-only access to underlying storage
-template <size_t M, bool ReadOnly = true>
+template <typename trajectory_t, size_t M, bool ReadOnly = true>
 class TrackStateProxy {
  public:
-  using Parameters = typename Types<eBoundSize, ReadOnly>::CoefficientsMap;
-  using Covariance = typename Types<eBoundSize, ReadOnly>::CovarianceMap;
-  using Measurement = typename Types<M, ReadOnly>::CoefficientsMap;
-  using MeasurementCovariance = typename Types<M, ReadOnly>::CovarianceMap;
+  using Parameters = typename TrackStateTraits<M, ReadOnly>::Parameters;
+  using Covariance = typename TrackStateTraits<M, ReadOnly>::Covariance;
+  using Measurement = typename TrackStateTraits<M, ReadOnly>::Parameters;
+  using MeasurementCovariance =
+      typename TrackStateTraits<M, ReadOnly>::Covariance;
 
-  using IndexType = std::uint16_t;
-  static constexpr IndexType kInvalid = std::numeric_limits<IndexType>::max();
-  static constexpr IndexType kNoPrevious = kInvalid - 1;
+  using IndexType = typename TrackStateTraits<M, ReadOnly>::IndexType;
+  static constexpr IndexType kInvalid = TrackStateTraits<M, ReadOnly>::kInvalid;
+  static constexpr IndexType kNoPrevious =
+      TrackStateTraits<M, ReadOnly>::kInvalid;
 
   // as opposed to the types above, this is an actual Matrix (rather than a
   // map)
   // @TODO: Does not copy flags, because this fails: can't have col major row
   // vector, but that's required for 1xN projection matrices below.
-  constexpr static auto ProjectorFlags = Eigen::RowMajor | Eigen::AutoAlign;
-  using Projector =
-      Eigen::Matrix<typename Covariance::Scalar, M, eBoundSize, ProjectorFlags>;
+  using Projector = typename TrackStateTraits<M, ReadOnly>::Projector;
   using EffectiveProjector =
       Eigen::Matrix<typename Projector::Scalar, Eigen::Dynamic, Eigen::Dynamic,
-                    ProjectorFlags, M, eBoundSize>;
+                    TrackStateTraits<M, ReadOnly>::ProjectorFlags, M,
+                    eBoundSize>;
 
   // Constructor and assignment operator to construct ReadOnly TrackStateProxy
   // from ReadWrite (mutable -> const)
-  TrackStateProxy(const TrackStateProxy<M, false>& other)
+  TrackStateProxy(const TrackStateProxy<trajectory_t, M, false>& other)
       : m_traj{other.m_traj}, m_istate{other.m_istate} {}
 
-  TrackStateProxy& operator=(const TrackStateProxy<M, false>& other) {
+  TrackStateProxy& operator=(
+      const TrackStateProxy<trajectory_t, M, false>& other) {
     m_traj = other.m_traj;
     m_istate = other.m_istate;
 
@@ -135,14 +161,14 @@ class TrackStateProxy {
 
   template <bool RO = ReadOnly, bool ReadOnlyOther,
             typename = std::enable_if<!RO>>
-  void shareFrom(const TrackStateProxy<M, ReadOnlyOther>& other,
+  void shareFrom(const TrackStateProxy<trajectory_t, M, ReadOnlyOther>& other,
                  TrackStatePropMask component) {
     shareFrom(other, component, component);
   }
 
   template <bool RO = ReadOnly, bool ReadOnlyOther,
             typename = std::enable_if<!RO>>
-  void shareFrom(const TrackStateProxy<M, ReadOnlyOther>& other,
+  void shareFrom(const TrackStateProxy<trajectory_t, M, ReadOnlyOther>& other,
                  TrackStatePropMask shareSource,
                  TrackStatePropMask shareTarget) {
     assert(m_traj == other.m_traj &&
@@ -165,7 +191,7 @@ class TrackStateProxy {
   ///       not allocated in the source track state proxy.
   template <bool RO = ReadOnly, bool ReadOnlyOther,
             typename = std::enable_if<!RO>>
-  void copyFrom(const TrackStateProxy<M, ReadOnlyOther>& other,
+  void copyFrom(const TrackStateProxy<trajectory_t, M, ReadOnlyOther>& other,
                 TrackStatePropMask mask = TrackStatePropMask::All,
                 bool onlyAllocated = true) {
     using PM = TrackStatePropMask;
@@ -629,7 +655,7 @@ class TrackStateProxy {
 
  private:
   // Private since it can only be created by the trajectory.
-  TrackStateProxy(ConstIf<MultiTrajectory, ReadOnly>& trajectory,
+  TrackStateProxy(ConstIf<MultiTrajectory<trajectory_t>, ReadOnly>& trajectory,
                   size_t istate);
 
   const std::shared_ptr<const Surface>& referenceSurfacePointer() const {
@@ -649,12 +675,12 @@ class TrackStateProxy {
     component<ProjectorBitset, hashString("projector")>() = proj;
   }
 
-  ConstIf<MultiTrajectory, ReadOnly>* m_traj;
+  ConstIf<MultiTrajectory<trajectory_t>, ReadOnly>* m_traj;
   size_t m_istate;
 
-  friend class Acts::MultiTrajectory;
-  friend class TrackStateProxy<M, true>;
-  friend class TrackStateProxy<M, false>;
+  friend class Acts::MultiTrajectory<trajectory_t>;
+  friend class TrackStateProxy<trajectory_t, M, true>;
+  friend class TrackStateProxy<trajectory_t, M, false>;
 };
 
 // implement track state visitor concept
@@ -668,55 +694,59 @@ constexpr bool VisitorConcept = Concepts ::require<
 
 }  // namespace detail_lt
 
-template <typename derived_t>
-class MultiTrajectoryBackend {
- public:
-  using Derived = derived_t;
+// template <typename derived_t>
+// class MultiTrajectoryBackend {
+// public:
+// using Derived = derived_t;
 
-  template <typename T>
-  constexpr void addColumn(HashedString key) {
-    Derived& self = static_cast<Derived&>(*this);
-    assert(self.size() == 0 &&
-           "Adding columns not supported after track states have been added");
-    self.template addColumnImpl<T>(key);
-  }
+// template <typename T>
+// constexpr void addColumn(HashedString key) {
+// Derived& self = static_cast<Derived&>(*this);
+// assert(self.size() == 0 &&
+// "Adding columns not supported after track states have been added");
+// self.template addColumnImpl<T>(key);
+// }
 
-  template <HashedString key, typename T>
-  constexpr void addColumn() {
-    return addColumn<T>(key);
-  }
+// template <HashedString key, typename T>
+// constexpr void addColumn() {
+// return addColumn<T>(key);
+// }
 
-  template <typename T>
-  constexpr void addColumn(std::string_view key) {
-    return addColumn<T>(hashString(key));
-  }
+// template <typename T>
+// constexpr void addColumn(std::string_view key) {
+// return addColumn<T>(hashString(key));
+// }
 
-  template <typename T, typename K>
-  constexpr void addColumn(K key) {
-    return addColumn<T>(hashString(key));
-  }
+// template <typename T, typename K>
+// constexpr void addColumn(K key) {
+// return addColumn<T>(hashString(key));
+// }
 
-  template <HashedString key>
-  constexpr bool hasColumn() {
-    return hasColumn(key);
-  }
+// template <HashedString key>
+// constexpr bool hasColumn() {
+// return hasColumn(key);
+// }
 
-  constexpr bool hasColumn(HashedString key) {
-    Derived& self = static_cast<Derived&>(*this);
-    return self.hasColumnImpl(key);
-  }
+// constexpr bool hasColumn(HashedString key) {
+// Derived& self = static_cast<Derived&>(*this);
+// return self.hasColumnImpl(key);
+// }
 
-  constexpr bool hasColumn(std::string_view key) {
-    Derived& self = static_cast<Derived&>(*this);
-    return self.hasColumnImpl(hashString(key));
-  }
+// constexpr bool hasColumn(std::string_view key) {
+// Derived& self = static_cast<Derived&>(*this);
+// return self.hasColumnImpl(hashString(key));
+// }
 
-  template <typename K>
-  constexpr bool hasColumn(K key) {
-    Derived& self = static_cast<Derived&>(*this);
-    return self.hasColumnImpl(hashString(key));
-  }
-};
+// template <typename K>
+// constexpr bool hasColumn(K key) {
+// Derived& self = static_cast<Derived&>(*this);
+// return self.hasColumnImpl(hashString(key));
+// }
+// };
+
+namespace MultiTrajectoryTraits {
+constexpr unsigned int MeasurementSizeMax = eBoundSize;
+}
 
 /// Store a trajectory of track states with multiple components.
 ///
@@ -726,16 +756,20 @@ class MultiTrajectoryBackend {
 /// of sub-trajectories. From a set of endpoints, all possible sub-components
 /// can be easily identified. Some functionality is provided to simplify
 /// iterating over specific sub-components.
+template <typename derived_t>
 class MultiTrajectory {
  public:
-  enum {
-    MeasurementSizeMax = eBoundSize,
-  };
-  using ConstTrackStateProxy =
-      detail_lt::TrackStateProxy<MeasurementSizeMax, true>;
-  using TrackStateProxy = detail_lt::TrackStateProxy<MeasurementSizeMax, false>;
+  using Derived = derived_t;
 
-  using IndexType = TrackStateProxy::IndexType;
+  static constexpr unsigned int MeasurementSizeMax =
+      MultiTrajectoryTraits::MeasurementSizeMax;
+
+  using ConstTrackStateProxy =
+      detail_lt::TrackStateProxy<Derived, MeasurementSizeMax, true>;
+  using TrackStateProxy =
+      detail_lt::TrackStateProxy<Derived, MeasurementSizeMax, false>;
+
+  using IndexType = typename TrackStateProxy::IndexType;
   static constexpr IndexType kInvalid = TrackStateProxy::kInvalid;
   static constexpr IndexType kNoPrevious = kInvalid - 1;
 
@@ -749,17 +783,17 @@ class MultiTrajectory {
   template <HashedString K, typename T>
   using C = MultiTrajectory::Column<K, T>;
 
-  template <typename T, typename... Args>
-  std::unique_ptr<MultiTrajectory> static createWithBackend(
-      std::unique_ptr<T> backend, Args&&... args) {
-    MultiTrajectoryBackend<typename T::Derived>& impl = *backend;
-    auto addColumns = [&impl](auto&& column) {
-      using column_t = std::decay_t<decltype(column)>;
-      impl.template addColumn<column_t::key, typename column_t::type>();
-    };
-    (addColumns(std::forward<Args>(args)), ...);
-    return backend;
-  }
+  // template <typename T, typename... Args>
+  // std::unique_ptr<MultiTrajectory> static createWithBackend(
+  // std::unique_ptr<T> backend, Args&&... args) {
+  // MultiTrajectoryBackend<typename T::Derived>& impl = *backend;
+  // auto addColumns = [&impl](auto&& column) {
+  // using column_t = std::decay_t<decltype(column)>;
+  // impl.template addColumn<column_t::key, typename column_t::type>();
+  // };
+  // (addColumns(std::forward<Args>(args)), ...);
+  // return backend;
+  // }
 
   virtual ~MultiTrajectory() = 0;
 
@@ -811,25 +845,27 @@ class MultiTrajectory {
  protected:
   virtual bool has(HashedString key, IndexType istate) const = 0;
 
-  virtual TrackStateProxy::Parameters parameters(IndexType parIdx) = 0;
-  virtual ConstTrackStateProxy::Parameters parameters(
+  virtual typename TrackStateProxy::Parameters parameters(IndexType parIdx) = 0;
+  virtual typename ConstTrackStateProxy::Parameters parameters(
       IndexType parIdx) const = 0;
 
-  virtual TrackStateProxy::Covariance covariance(IndexType covIdx) = 0;
-  virtual ConstTrackStateProxy::Covariance covariance(
+  virtual typename TrackStateProxy::Covariance covariance(IndexType covIdx) = 0;
+  virtual typename ConstTrackStateProxy::Covariance covariance(
       IndexType covIdx) const = 0;
 
-  virtual TrackStateProxy::Covariance jacobian(IndexType covIdx) = 0;
-  virtual ConstTrackStateProxy::Covariance jacobian(IndexType covIdx) const = 0;
+  virtual typename TrackStateProxy::Covariance jacobian(IndexType covIdx) = 0;
+  virtual typename ConstTrackStateProxy::Covariance jacobian(
+      IndexType covIdx) const = 0;
 
-  virtual TrackStateProxy::Measurement measurement(IndexType parIdx) = 0;
-  virtual ConstTrackStateProxy::Measurement measurement(
+  virtual typename TrackStateProxy::Measurement measurement(
+      IndexType parIdx) = 0;
+  virtual typename ConstTrackStateProxy::Measurement measurement(
       IndexType parIdx) const = 0;
 
-  virtual TrackStateProxy::MeasurementCovariance measurementCovariance(
+  virtual typename TrackStateProxy::MeasurementCovariance measurementCovariance(
       IndexType covIdx) = 0;
-  virtual ConstTrackStateProxy::MeasurementCovariance measurementCovariance(
-      IndexType covIdx) const = 0;
+  virtual typename ConstTrackStateProxy::MeasurementCovariance
+  measurementCovariance(IndexType covIdx) const = 0;
 
   virtual void shareFrom(IndexType iself, IndexType iother,
                          TrackStatePropMask shareSource,
@@ -866,11 +902,12 @@ class MultiTrajectory {
   }
 
  private:
-  friend class detail_lt::TrackStateProxy<MeasurementSizeMax, true>;
-  friend class detail_lt::TrackStateProxy<MeasurementSizeMax, false>;
+  friend class detail_lt::TrackStateProxy<Derived, MeasurementSizeMax, true>;
+  friend class detail_lt::TrackStateProxy<Derived, MeasurementSizeMax, false>;
 };
 
-inline MultiTrajectory::~MultiTrajectory() = default;
+template <typename D>
+inline MultiTrajectory<D>::~MultiTrajectory() = default;
 
 }  // namespace Acts
 
