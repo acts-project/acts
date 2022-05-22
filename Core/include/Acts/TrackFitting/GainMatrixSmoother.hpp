@@ -24,9 +24,6 @@ namespace Acts {
 /// smoothing procedure for a filtered, forward trajectory using the stored
 /// linearization.
 class GainMatrixSmoother {
-  using TrackStateTraits =
-      TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax, false>;
-
   // struct InternalTrackState {
   // TrackStateTraits::Parameters filtered;
   // TrackStateTraits::Covariance filteredCovariance;
@@ -157,8 +154,12 @@ class GainMatrixSmoother {
     return error ? Result<void>::failure(error) : Result<void>::success();
   }
 
-  using GetParameters = Acts::Delegate<TrackStateTraits::Parameters(void*)>;
-  using GetCovariance = Acts::Delegate<TrackStateTraits::Covariance(void*)>;
+  using GetParameters =
+      Acts::Delegate<TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                                      false>::Parameters(void*)>;
+  using GetCovariance =
+      Acts::Delegate<TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                                      false>::Covariance(void*)>;
 
   Result<void> calculate(void* ts, void* prev_ts, const GetParameters& filtered,
                          const GetCovariance& filteredCovariance,

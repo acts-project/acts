@@ -11,11 +11,17 @@
 namespace Acts {
 
 double MeasurementSelector::calculateChi2(
-    TrackStateTraits::Measurement fullCalibrated,
-    TrackStateTraits::MeasurementCovariance fullCalibratedCovariance,
-    TrackStateTraits::Parameters predicted,
-    TrackStateTraits::Covariance predictedCovariance,
-    TrackStateTraits::Projector projector, unsigned int calibratedSize) const {
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     false>::Measurement fullCalibrated,
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     false>::MeasurementCovariance fullCalibratedCovariance,
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     false>::Parameters predicted,
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     false>::Covariance predictedCovariance,
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     false>::Projector projector,
+    unsigned int calibratedSize) const {
   return visit_measurement(
       fullCalibrated, fullCalibratedCovariance, calibratedSize,
       [&](const auto calibrated, const auto calibratedCovariance) -> double {

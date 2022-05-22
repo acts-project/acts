@@ -20,16 +20,21 @@ namespace Acts {
 
 /// Kalman update step using the gain matrix formalism.
 class GainMatrixUpdater {
-  using TrackStateTraits =
-      TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax, false>;
   struct InternalTrackState {
-    TrackStateTraits::Parameters predicted;
-    TrackStateTraits::Covariance predictedCovariance;
-    TrackStateTraits::Parameters filtered;
-    TrackStateTraits::Covariance filteredCovariance;
-    TrackStateTraits::Measurement calibrated;
-    TrackStateTraits::MeasurementCovariance calibratedCovariance;
-    TrackStateTraits::Projector projector;
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     false>::Parameters predicted;
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     false>::Covariance predictedCovariance;
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     false>::Parameters filtered;
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     false>::Covariance filteredCovariance;
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     false>::Measurement calibrated;
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     false>::MeasurementCovariance calibratedCovariance;
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     false>::Projector projector;
     unsigned int calibratedSize;
   };
 
