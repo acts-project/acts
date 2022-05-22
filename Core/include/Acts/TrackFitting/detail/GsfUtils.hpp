@@ -136,6 +136,17 @@ class ScopedGsfInfoPrinterAndChecker {
   }
 };
 
+ActsScalar calculateDeterminant(
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     true>::Measurement fullCalibrated,
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     true>::MeasurementCovariance fullCalibratedCovariance,
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     true>::Covariance predictedCovariance,
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax, true>::Projector
+        projector,
+    unsigned int calibratedSize);
+
 /// Reweight the components according to `R. Frühwirth, "Track fitting
 /// with non-Gaussian noise"`. See also the implementation in Athena at
 /// PosteriorWeightsCalculator.cxx
@@ -146,25 +157,6 @@ void computePosteriorWeights(const MultiTrajectory<D> &mt,
                              std::map<std::size_t, double> &weights) {
   // @TODO: Put back into compilation unit
   // Helper Function to compute detR
-  auto computeDetR = [](const auto &trackState) -> ActsScalar {
-    const auto predictedCovariance = trackState.predictedCovariance();
-
-    return visit_measurement(
-        trackState.calibrated(), trackState.calibratedCovariance(),
-        trackState.calibratedSize(),
-        [&](const auto calibrated, const auto calibratedCovariance) {
-          constexpr size_t kMeasurementSize =
-              decltype(calibrated)::RowsAtCompileTime;
-          const auto H =
-              trackState.projector()
-                  .template topLeftCorner<kMeasurementSize, eBoundSize>()
-                  .eval();
-
-          return (H * predictedCovariance * H.transpose() +
-                  calibratedCovariance)
-              .determinant();
-        });
-  };
 
   // Find minChi2, this can be used to factor some things later in the
   // exponentiation
@@ -180,7 +172,9 @@ void computePosteriorWeights(const MultiTrajectory<D> &mt,
   for (auto tip : tips) {
     const auto state = mt.getTrackState(tip);
     const double chi2 = state.chi2() - minChi2;
-    const double detR = computeDetR(state);
+    const double detR = calculateDeterminant(
+        state.calibrated(), state.calibratedCovariance(),
+        state.predictedCovariance(), state.projector(), state.calibratedSize());
 
     // If something is not finite here, just leave the weight as it is
     if (std::isfinite(chi2) && std::isfinite(detR)) {

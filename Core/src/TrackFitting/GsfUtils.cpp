@@ -11,5 +11,28 @@
 #include "Acts/EventData/MeasurementHelpers.hpp"
 
 namespace Acts {
-namespace detail {}  // namespace detail
+namespace detail {
+
+using TrackStateTraits =
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax, true>;
+
+ActsScalar calculateDeterminant(
+    TrackStateTraits::Measurement fullCalibrated,
+    TrackStateTraits::MeasurementCovariance fullCalibratedCovariance,
+    TrackStateTraits::Covariance predictedCovariance,
+    TrackStateTraits::Projector projector, unsigned int calibratedSize) {
+  return visit_measurement(
+      fullCalibrated, fullCalibratedCovariance, calibratedSize,
+      [&](const auto calibrated, const auto calibratedCovariance) {
+        constexpr size_t kMeasurementSize =
+            decltype(calibrated)::RowsAtCompileTime;
+        const auto H =
+            projector.template topLeftCorner<kMeasurementSize, eBoundSize>()
+                .eval();
+
+        return (H * predictedCovariance * H.transpose() + calibratedCovariance)
+            .determinant();
+      });
+}
+}  // namespace detail
 }  // namespace Acts
