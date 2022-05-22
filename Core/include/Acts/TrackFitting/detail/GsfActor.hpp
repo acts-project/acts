@@ -31,9 +31,10 @@
 namespace Acts {
 namespace detail {
 
+template <typename traj_t>
 struct GsfResult {
   /// The multi-trajectory which stores the graph of components
-  std::shared_ptr<MultiTrajectory> fittedStates;
+  std::shared_ptr<MultiTrajectory<traj_t>> fittedStates;
 
   /// This provides the weights for the states in the MultiTrajectory. Each
   /// entry maps to one track state. TODO This is a workaround until the
@@ -68,13 +69,13 @@ struct GsfResult {
 };
 
 /// The actor carrying out the GSF algorithm
-template <typename bethe_heitler_approx_t>
+template <typename bethe_heitler_approx_t, typename traj_t>
 struct GsfActor {
   /// Enforce default construction
   GsfActor() = default;
 
   /// Broadcast the result_type
-  using result_type = GsfResult;
+  using result_type = GsfResult<traj_t>;
 
   // Actor configuration
   struct Config {
@@ -108,7 +109,7 @@ struct GsfActor {
     bool abortOnError = false;
 
     /// The extensions
-    KalmanFitterExtensions extensions;
+    KalmanFitterExtensions<traj_t> extensions;
   } m_cfg;
 
   /// Stores meta information about the components

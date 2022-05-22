@@ -41,12 +41,13 @@ struct IsMultiComponentBoundParameters<MultiComponentBoundTrackParameters<T>>
 
 }  // namespace detail
 
+template <typename traj_t>
 struct GsfOptions {
   std::reference_wrapper<const GeometryContext> geoContext;
   std::reference_wrapper<const MagneticFieldContext> magFieldContext;
   std::reference_wrapper<const CalibrationContext> calibrationContext;
 
-  KalmanFitterExtensions extensions;
+  KalmanFitterExtensions<traj_t> extensions;
 
   LoggerWrapper logger;
 
@@ -71,7 +72,7 @@ struct GsfOptions {
 /// * There are only measurement states in the result
 /// * Passed-again-surfaces is always empty at the moment
 /// * Probably some more differences which I don't think of at the moment.
-template <typename propagator_t,
+template <typename propagator_t, typename traj_t,
           typename bethe_heitler_approx_t = detail::BetheHeitlerApprox<6, 5>>
 struct GaussianSumFitter {
   GaussianSumFitter(propagator_t&& propagator,
@@ -89,13 +90,13 @@ struct GaussianSumFitter {
   using GsfNavigator = typename propagator_t::Navigator;
 
   /// The actor type
-  using GsfActor = detail::GsfActor<bethe_heitler_approx_t>;
+  using GsfActor = detail::GsfActor<bethe_heitler_approx_t, traj_t>;
 
   /// @brief The fit function for the Direct navigator
   template <typename source_link_it_t, typename start_parameters_t>
-  Acts::Result<Acts::KalmanFitterResult> fit(
+  Acts::Result<Acts::KalmanFitterResult<traj_t>> fit(
       source_link_it_t begin, source_link_it_t end,
-      const start_parameters_t& sParameters, const GsfOptions& options,
+      const start_parameters_t& sParameters, const GsfOptions<traj_t>& options,
       const std::vector<const Surface*>& sSequence) const {
     // Check if we have the correct navigator
     static_assert(
@@ -149,9 +150,10 @@ struct GaussianSumFitter {
 
   /// @brief The fit function for the standard navigator
   template <typename source_link_it_t, typename start_parameters_t>
-  Acts::Result<Acts::KalmanFitterResult> fit(
+  Acts::Result<Acts::KalmanFitterResult<traj_t>> fit(
       source_link_it_t begin, source_link_it_t end,
-      const start_parameters_t& sParameters, const GsfOptions& options) const {
+      const start_parameters_t& sParameters,
+      const GsfOptions<traj_t>& options) const {
     // Check if we have the correct navigator
     static_assert(std::is_same_v<Navigator, typename propagator_t::Navigator>);
 
@@ -194,9 +196,9 @@ struct GaussianSumFitter {
   /// first measuerementSurface
   template <typename source_link_it_t, typename start_parameters_t,
             typename fwd_prop_initializer_t, typename bwd_prop_initializer_t>
-  Acts::Result<Acts::KalmanFitterResult> fit_impl(
+  Acts::Result<Acts::KalmanFitterResult<traj_t>> fit_impl(
       source_link_it_t begin, source_link_it_t end,
-      const start_parameters_t& sParameters, const GsfOptions& options,
+      const start_parameters_t& sParameters, const GsfOptions<traj_t>& options,
       const fwd_prop_initializer_t& fwdPropInitializer,
       const bwd_prop_initializer_t& bwdPropInitializer) const {
     // return or abort utility
@@ -290,7 +292,7 @@ struct GaussianSumFitter {
       return return_error_or_abort(fwdResult.error());
     }
 
-    auto& fwdGsfResult = (*fwdResult).template get<detail::GsfResult>();
+    auto& fwdGsfResult = (*fwdResult).template get<detail::GsfResult<traj_t>>();
 
     if (!fwdGsfResult.result.ok()) {
       return return_error_or_abort(fwdGsfResult.result.error());
@@ -387,7 +389,7 @@ struct GaussianSumFitter {
       return return_error_or_abort(bwdResult.error());
     }
 
-    auto& bwdGsfResult = (*bwdResult).template get<detail::GsfResult>();
+    auto& bwdGsfResult = (*bwdResult).template get<detail::GsfResult<traj_t>>();
 
     if (!bwdGsfResult.result.ok()) {
       return return_error_or_abort(bwdGsfResult.result.error());
@@ -408,7 +410,7 @@ struct GaussianSumFitter {
                                               << ", holes: "
                                               << bwdGsfResult.measurementHoles);
 
-    auto smoothResult = detail::smoothAndCombineTrajectories<true>(
+    auto smoothResult = detail::smoothAndCombineTrajectories<traj_t, true>(
         *fwdGsfResult.fittedStates, fwdGsfResult.currentTips,
         fwdGsfResult.weightsOfStates, *bwdGsfResult.fittedStates,
         bwdGsfResult.currentTips, bwdGsfResult.weightsOfStates, logger);

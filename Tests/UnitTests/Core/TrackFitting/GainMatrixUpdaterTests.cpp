@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(Update) {
   ts.predictedCovariance() = trkCov;
   ts.pathLength() = 0.;
   ts.setUncalibrated(sourceLink);
-  testSourceLinkCalibrator(tgContext, ts);
+  testSourceLinkCalibrator<VectorMultiTrajectory>(tgContext, ts);
 
   // Check that the state has storage available
   BOOST_CHECK(ts.hasPredicted());
@@ -65,7 +65,10 @@ BOOST_AUTO_TEST_CASE(Update) {
   BOOST_CHECK(ts.hasCalibrated());
 
   // Gain matrix update and filtered state
-  BOOST_CHECK(GainMatrixUpdater()(tgContext, ts).ok());
+  BOOST_CHECK(GainMatrixUpdater()
+                  .
+                  operator()<VectorMultiTrajectory>(tgContext, ts)
+                  .ok());
 
   // Check for regression. This does NOT test if the math is correct, just that
   // the result is the same as when the test was written.

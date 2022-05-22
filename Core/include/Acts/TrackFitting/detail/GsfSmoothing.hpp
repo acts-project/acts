@@ -83,9 +83,9 @@ auto bayesianSmoothing(component_iterator_t fwdBegin,
 /// @brief Projector type which maps a MultiTrajectory-Index to a tuple of
 /// [weight, parameters, covariance]. Therefore, it contains a MultiTrajectory
 /// and for now a std::map for the weights
-template <StatesType type>
+template <StatesType type, typename traj_t>
 struct MultiTrajectoryProjector {
-  const MultiTrajectory &mt;
+  const MultiTrajectory<traj_t> &mt;
   const std::map<std::size_t, double> &weights;
 
   auto operator()(std::size_t idx) const {
@@ -113,10 +113,12 @@ struct MultiTrajectoryProjector {
 /// TODO this function does not handle outliers correctly at the moment I think
 /// TODO change std::vector< size_t > to boost::small_vector for better
 /// performance
-template <bool ReturnSmootedStates = false>
+template <typename traj_t, bool ReturnSmootedStates = false>
 auto smoothAndCombineTrajectories(
-    const MultiTrajectory &fwd, const std::vector<std::size_t> &fwdStartTips,
-    const std::map<std::size_t, double> &fwdWeights, const MultiTrajectory &bwd,
+    const MultiTrajectory<traj_t> &fwd,
+    const std::vector<std::size_t> &fwdStartTips,
+    const std::map<std::size_t, double> &fwdWeights,
+    const MultiTrajectory<traj_t> &bwd,
     const std::vector<std::size_t> &bwdStartTips,
     const std::map<std::size_t, double> &bwdWeights,
     LoggerWrapper logger = getDummyLogger()) {
@@ -145,8 +147,8 @@ auto smoothAndCombineTrajectories(
 
   sortUniqueValidateBwdTips();
 
-  KalmanFitterResult result;
-  result.fittedStates = std::make_shared<VectorMultiTrajectory>();
+  KalmanFitterResult<traj_t> result;
+  result.fittedStates = std::make_shared<traj_t>();
 
   while (!bwdTips.empty()) {
     // Ensure that we update the bwd tips whenever we go to the next iteration
@@ -197,8 +199,10 @@ auto smoothAndCombineTrajectories(
     proxy.copyFrom(firstBwdState);
 
     // Define some Projector types we need in the following
-    using PredProjector = MultiTrajectoryProjector<StatesType::ePredicted>;
-    using FiltProjector = MultiTrajectoryProjector<StatesType::eFiltered>;
+    using PredProjector =
+        MultiTrajectoryProjector<StatesType::ePredicted, traj_t>;
+    using FiltProjector =
+        MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
 
     if (proxy.typeFlags().test(Acts::TrackStateFlag::HoleFlag)) {
       result.measurementHoles++;
