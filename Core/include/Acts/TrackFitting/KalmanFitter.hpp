@@ -85,11 +85,12 @@ struct KalmanFitterExtensions {
 
   /// Default constructor which connects the default void components
   KalmanFitterExtensions() {
-    calibrator.template connect<&voidKalmanCalibrator>();
-    updater.template connect<&voidKalmanUpdater>();
-    smoother.template connect<&voidKalmanSmoother>();
-    outlierFinder.template connect<&voidOutlierFinder>();
-    reverseFilteringLogic.template connect<&voidReverseFilteringLogic>();
+    calibrator.template connect<&voidKalmanCalibrator<traj_t>>();
+    updater.template connect<&voidKalmanUpdater<traj_t>>();
+    smoother.template connect<&voidKalmanSmoother<traj_t>>();
+    outlierFinder.template connect<&voidOutlierFinder<traj_t>>();
+    reverseFilteringLogic
+        .template connect<&voidReverseFilteringLogic<traj_t>>();
   }
 };
 

@@ -22,7 +22,8 @@ struct SimpleReverseFilteringLogic {
   double momentumThreshold;
 
   bool doBackwardFiltering(
-      Acts::MultiTrajectory::ConstTrackStateProxy trackState) const {
+      Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::ConstTrackStateProxy
+          trackState) const {
     auto momentum = fabs(1 / trackState.filtered()[Acts::eBoundQOverP]);
     return (momentum <= momentumThreshold);
   }
@@ -81,13 +82,16 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
       Acts::Vector3{0., 0., 0.});
 
   // Set the KalmanFitter options
-  Acts::KalmanFitterExtensions extensions;
+  Acts::KalmanFitterExtensions<Acts::VectorMultiTrajectory> extensions;
   MeasurementCalibrator calibrator{measurements};
   extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
   Acts::GainMatrixUpdater kfUpdater;
   Acts::GainMatrixSmoother kfSmoother;
-  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(&kfUpdater);
-  extensions.smoother.connect<&Acts::GainMatrixSmoother::operator()>(
+  extensions.updater.connect<
+      &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
+      &kfUpdater);
+  extensions.smoother.connect<
+      &Acts::GainMatrixSmoother::operator()<Acts::VectorMultiTrajectory>>(
       &kfSmoother);
 
   SimpleReverseFilteringLogic reverseFilteringLogic{

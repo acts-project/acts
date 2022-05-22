@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 
@@ -28,7 +29,7 @@ namespace ActsExamples {
 struct Trajectories final {
  public:
   /// (Reconstructed) trajectory with multiple states.
-  using MultiTrajectory = ::Acts::MultiTrajectory;
+  using MultiTrajectory = ::Acts::MultiTrajectory<Acts::VectorMultiTrajectory>;
   /// Fitted parameters identified by indices in the multi trajectory.
   using IndexedParameters = std::unordered_map<size_t, TrackParameters>;
 
