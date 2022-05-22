@@ -35,64 +35,70 @@ class VectorMultiTrajectory final
   };
 
  public:
-  TrackStateProxy::Parameters parameters(IndexType parIdx) override {
+  // BEGIN INTERFACE
+  TrackStateProxy::Parameters parameters(IndexType parIdx) {
     return TrackStateProxy::Parameters{m_params[parIdx].data()};
   }
 
-  ConstTrackStateProxy::Parameters parameters(IndexType parIdx) const override {
+  ConstTrackStateProxy::Parameters parameters(IndexType parIdx) const {
     return ConstTrackStateProxy::Parameters{m_params[parIdx].data()};
   }
 
-  TrackStateProxy::Covariance covariance(IndexType parIdx) override {
+  TrackStateProxy::Covariance covariance(IndexType parIdx) {
     return TrackStateProxy::Covariance{m_cov[parIdx].data()};
   }
 
-  ConstTrackStateProxy::Covariance covariance(IndexType parIdx) const override {
+  ConstTrackStateProxy::Covariance covariance(IndexType parIdx) const {
     return ConstTrackStateProxy::Covariance{m_cov[parIdx].data()};
   }
 
-  TrackStateProxy::Covariance jacobian(IndexType parIdx) override {
+  TrackStateProxy::Covariance jacobian(IndexType parIdx) {
     return TrackStateProxy::Covariance{m_jac[parIdx].data()};
   }
 
-  ConstTrackStateProxy::Covariance jacobian(IndexType parIdx) const override {
+  ConstTrackStateProxy::Covariance jacobian(IndexType parIdx) const {
     return ConstTrackStateProxy::Covariance{m_jac[parIdx].data()};
   }
 
-  TrackStateProxy::Measurement measurement(IndexType parIdx) override {
+  TrackStateProxy::Measurement measurement(IndexType parIdx) {
     return TrackStateProxy::Measurement{m_meas[parIdx].data()};
   }
 
-  ConstTrackStateProxy::Measurement measurement(
-      IndexType parIdx) const override {
+  ConstTrackStateProxy::Measurement measurement(IndexType parIdx) const {
     return ConstTrackStateProxy::Measurement{m_meas[parIdx].data()};
   }
 
   TrackStateProxy::MeasurementCovariance measurementCovariance(
-      IndexType parIdx) override {
+      IndexType parIdx) {
     return TrackStateProxy::MeasurementCovariance{m_measCov[parIdx].data()};
   }
 
   ConstTrackStateProxy::MeasurementCovariance measurementCovariance(
-      IndexType parIdx) const override {
+      IndexType parIdx) const {
     return ConstTrackStateProxy::MeasurementCovariance{
         m_measCov[parIdx].data()};
   }
 
   std::size_t addTrackState(TrackStatePropMask mask = TrackStatePropMask::All,
-                            size_t iprevious = kNoPrevious) override;
+                            size_t iprevious = kNoPrevious);
 
   void shareFrom(IndexType iself, IndexType iother,
                  TrackStatePropMask shareSource,
-                 TrackStatePropMask shareTarget) override;
+                 TrackStatePropMask shareTarget);
 
-  void unset(TrackStatePropMask target, IndexType istate) override;
+  void unset(TrackStatePropMask target, IndexType istate);
 
-  bool has(HashedString key, IndexType istate) const override;
+  bool has(HashedString key, IndexType istate) const;
 
-  std::size_t size() const override { return m_index.size(); }
+  std::size_t size() const { return m_index.size(); }
 
-  void clear() override;
+  void clear();
+
+  void* componentImpl(HashedString key, IndexType istate);
+
+  const void* componentImpl(HashedString key, IndexType istate) const;
+
+  // END INTERFACE
 
   struct DynamicColumnBase {
     virtual ~DynamicColumnBase() = 0;
@@ -125,10 +131,6 @@ class VectorMultiTrajectory final
   };
 
  protected:
-  void* componentImpl(HashedString key, IndexType istate) override;
-
-  const void* componentImpl(HashedString key, IndexType istate) const override;
-
   template <typename T>
   constexpr void addColumnImpl(HashedString key) {
     m_dynamic.insert({key, std::make_unique<DynamicColumn<T>>()});

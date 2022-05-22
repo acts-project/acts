@@ -121,13 +121,15 @@ class TrackStateProxy {
                     TrackStateTraits<M, ReadOnly>::ProjectorFlags, M,
                     eBoundSize>;
 
+  using Trajectory = trajectory_t;
+
   // Constructor and assignment operator to construct ReadOnly TrackStateProxy
   // from ReadWrite (mutable -> const)
-  TrackStateProxy(const TrackStateProxy<trajectory_t, M, false>& other)
+  TrackStateProxy(const TrackStateProxy<Trajectory, M, false>& other)
       : m_traj{other.m_traj}, m_istate{other.m_istate} {}
 
   TrackStateProxy& operator=(
-      const TrackStateProxy<trajectory_t, M, false>& other) {
+      const TrackStateProxy<Trajectory, M, false>& other) {
     m_traj = other.m_traj;
     m_istate = other.m_istate;
 
@@ -161,14 +163,14 @@ class TrackStateProxy {
 
   template <bool RO = ReadOnly, bool ReadOnlyOther,
             typename = std::enable_if<!RO>>
-  void shareFrom(const TrackStateProxy<trajectory_t, M, ReadOnlyOther>& other,
+  void shareFrom(const TrackStateProxy<Trajectory, M, ReadOnlyOther>& other,
                  TrackStatePropMask component) {
     shareFrom(other, component, component);
   }
 
   template <bool RO = ReadOnly, bool ReadOnlyOther,
             typename = std::enable_if<!RO>>
-  void shareFrom(const TrackStateProxy<trajectory_t, M, ReadOnlyOther>& other,
+  void shareFrom(const TrackStateProxy<Trajectory, M, ReadOnlyOther>& other,
                  TrackStatePropMask shareSource,
                  TrackStatePropMask shareTarget) {
     assert(m_traj == other.m_traj &&
@@ -177,7 +179,8 @@ class TrackStateProxy {
     assert(ACTS_CHECK_BIT(other.getMask(), shareSource) &&
            "Source has incompatible allocation");
 
-    m_traj->shareFrom(m_istate, other.m_istate, shareSource, shareTarget);
+    m_traj->self().shareFrom(m_istate, other.m_istate, shareSource,
+                             shareTarget);
   }
 
   /// Copy the contents of another track state proxy into this one
@@ -191,7 +194,7 @@ class TrackStateProxy {
   ///       not allocated in the source track state proxy.
   template <bool RO = ReadOnly, bool ReadOnlyOther,
             typename = std::enable_if<!RO>>
-  void copyFrom(const TrackStateProxy<trajectory_t, M, ReadOnlyOther>& other,
+  void copyFrom(const TrackStateProxy<Trajectory, M, ReadOnlyOther>& other,
                 TrackStatePropMask mask = TrackStatePropMask::All,
                 bool onlyAllocated = true) {
     using PM = TrackStatePropMask;
@@ -301,7 +304,7 @@ class TrackStateProxy {
   /// @param target The component to unset
   template <bool RO = ReadOnly, typename = std::enable_if<!RO>>
   void unset(TrackStatePropMask target) {
-    m_traj->unset(target, m_istate);
+    m_traj->self().unset(target, m_istate);
   }
 
   /// Reference surface.
@@ -328,7 +331,7 @@ class TrackStateProxy {
   }
 
   constexpr bool has(HashedString key) const {
-    return m_traj->has(key, m_istate);
+    return m_traj->self().has(key, m_istate);
   }
 
   constexpr bool has(std::string_view key) const {
@@ -342,42 +345,42 @@ class TrackStateProxy {
 
   template <typename T, HashedString key>
   constexpr T& component() {
-    return m_traj->template component<T, key>(m_istate);
+    return m_traj->self().template component<T, key>(m_istate);
   }
 
   template <typename T>
   constexpr T& component(HashedString key) {
-    return m_traj->template component<T>(key, m_istate);
+    return m_traj->self().template component<T>(key, m_istate);
   }
 
   template <typename T>
   constexpr T& component(std::string_view key) {
-    return m_traj->template component<T>(hashString(key), m_istate);
+    return m_traj->self().template component<T>(hashString(key), m_istate);
   }
 
   template <typename T, typename K>
   constexpr T& component(K key) {
-    return m_traj->template component<T>(hashString(key), m_istate);
+    return m_traj->self().template component<T>(hashString(key), m_istate);
   }
 
   template <typename T, HashedString key>
   constexpr const T& component() const {
-    return m_traj->template component<T, key>(m_istate);
+    return m_traj->self().template component<T, key>(m_istate);
   }
 
   template <typename T>
   constexpr const T& component(HashedString key) const {
-    return m_traj->template component<T>(key, m_istate);
+    return m_traj->self().template component<T>(key, m_istate);
   }
 
   template <typename T, typename K>
   constexpr const T& component(K key) const {
-    return m_traj->template component<T>(hashString(key), m_istate);
+    return m_traj->self().template component<T>(hashString(key), m_istate);
   }
 
   template <typename T>
   constexpr const T& component(std::string_view key) const {
-    return m_traj->template component<T>(hashString(key), m_istate);
+    return m_traj->self().template component<T>(hashString(key), m_istate);
   }
 
   /// Track parameters vector. This tries to be somewhat smart and return the
@@ -523,11 +526,11 @@ class TrackStateProxy {
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void setCalibratedSourceLink(const SourceLink& sourceLink) {
     assert(has<hashString("sourceLink")>());
-    m_traj->template component<const SourceLink*>("calibratedSourceLink",
-                                                  m_istate) = &sourceLink;
+    m_traj->self().template component<const SourceLink*>(
+        "calibratedSourceLink", m_istate) = &sourceLink;
 
-    assert(m_traj->template component<const SourceLink*>("calibratedSourceLink",
-                                                         m_istate) != nullptr);
+    assert(m_traj->self().template component<const SourceLink*>(
+               "calibratedSourceLink", m_istate) != nullptr);
   }
 
   /// Full calibrated measurement vector. Might contain additional zeroed
@@ -655,7 +658,7 @@ class TrackStateProxy {
 
  private:
   // Private since it can only be created by the trajectory.
-  TrackStateProxy(ConstIf<MultiTrajectory<trajectory_t>, ReadOnly>& trajectory,
+  TrackStateProxy(ConstIf<MultiTrajectory<Trajectory>, ReadOnly>& trajectory,
                   size_t istate);
 
   const std::shared_ptr<const Surface>& referenceSurfacePointer() const {
@@ -675,12 +678,12 @@ class TrackStateProxy {
     component<ProjectorBitset, hashString("projector")>() = proj;
   }
 
-  ConstIf<MultiTrajectory<trajectory_t>, ReadOnly>* m_traj;
+  ConstIf<MultiTrajectory<Trajectory>, ReadOnly>* m_traj;
   size_t m_istate;
 
-  friend class Acts::MultiTrajectory<trajectory_t>;
-  friend class TrackStateProxy<trajectory_t, M, true>;
-  friend class TrackStateProxy<trajectory_t, M, false>;
+  friend class Acts::MultiTrajectory<Trajectory>;
+  friend class TrackStateProxy<Trajectory, M, true>;
+  friend class TrackStateProxy<Trajectory, M, false>;
 };
 
 // implement track state visitor concept
@@ -842,63 +845,67 @@ class MultiTrajectory {
   /// Returns the number of track states contained
   virtual size_t size() const = 0;
 
+ private:
+  Derived& self() { return static_cast<Derived&>(*this); }
+  const Derived& self() const { return static_cast<const Derived&>(*this); }
+
  protected:
-  virtual bool has(HashedString key, IndexType istate) const = 0;
+  // virtual bool has(HashedString key, IndexType istate) const = 0;
 
-  virtual typename TrackStateProxy::Parameters parameters(IndexType parIdx) = 0;
-  virtual typename ConstTrackStateProxy::Parameters parameters(
-      IndexType parIdx) const = 0;
+  // virtual typename TrackStateProxy::Parameters parameters(IndexType parIdx) =
+  // 0; virtual typename ConstTrackStateProxy::Parameters parameters( IndexType
+  // parIdx) const = 0;
 
-  virtual typename TrackStateProxy::Covariance covariance(IndexType covIdx) = 0;
-  virtual typename ConstTrackStateProxy::Covariance covariance(
-      IndexType covIdx) const = 0;
+  // virtual typename TrackStateProxy::Covariance covariance(IndexType covIdx) =
+  // 0; virtual typename ConstTrackStateProxy::Covariance covariance( IndexType
+  // covIdx) const = 0;
 
-  virtual typename TrackStateProxy::Covariance jacobian(IndexType covIdx) = 0;
-  virtual typename ConstTrackStateProxy::Covariance jacobian(
-      IndexType covIdx) const = 0;
+  // virtual typename TrackStateProxy::Covariance jacobian(IndexType covIdx) =
+  // 0; virtual typename ConstTrackStateProxy::Covariance jacobian( IndexType
+  // covIdx) const = 0;
 
-  virtual typename TrackStateProxy::Measurement measurement(
-      IndexType parIdx) = 0;
-  virtual typename ConstTrackStateProxy::Measurement measurement(
-      IndexType parIdx) const = 0;
+  // virtual typename TrackStateProxy::Measurement measurement(
+  // IndexType parIdx) = 0;
+  // virtual typename ConstTrackStateProxy::Measurement measurement(
+  // IndexType parIdx) const = 0;
 
-  virtual typename TrackStateProxy::MeasurementCovariance measurementCovariance(
-      IndexType covIdx) = 0;
-  virtual typename ConstTrackStateProxy::MeasurementCovariance
-  measurementCovariance(IndexType covIdx) const = 0;
+  // virtual typename TrackStateProxy::MeasurementCovariance
+  // measurementCovariance( IndexType covIdx) = 0;
+  // virtual typename ConstTrackStateProxy::MeasurementCovariance
+  // measurementCovariance(IndexType covIdx) const = 0;
 
-  virtual void shareFrom(IndexType iself, IndexType iother,
-                         TrackStatePropMask shareSource,
-                         TrackStatePropMask shareTarget) = 0;
+  // virtual void shareFrom(IndexType iself, IndexType iother,
+  // TrackStatePropMask shareSource,
+  // TrackStatePropMask shareTarget) = 0;
 
-  virtual void unset(TrackStatePropMask target, IndexType istate) = 0;
+  // virtual void unset(TrackStatePropMask target, IndexType istate) = 0;
 
-  virtual const void* componentImpl(HashedString key,
-                                    IndexType istate) const = 0;
-  virtual void* componentImpl(HashedString key, IndexType istate) = 0;
+  // virtual const void* componentImpl(HashedString key,
+  // IndexType istate) const = 0;
+  // virtual void* componentImpl(HashedString key, IndexType istate) = 0;
 
   template <typename T, HashedString key>
   constexpr T& component(IndexType istate) {
-    assert(has(key, istate));
-    return *static_cast<T*>(componentImpl(key, istate));
+    assert(self().has(key, istate));
+    return *static_cast<T*>(self().componentImpl(key, istate));
   }
 
   template <typename T>
   constexpr T& component(HashedString key, IndexType istate) {
-    assert(has(key, istate));
-    return *static_cast<T*>(componentImpl(key, istate));
+    assert(self().has(key, istate));
+    return *static_cast<T*>(self().componentImpl(key, istate));
   }
 
   template <typename T, HashedString key>
   constexpr const T& component(IndexType istate) const {
-    assert(has(key, istate));
-    return *static_cast<const T*>(componentImpl(key, istate));
+    assert(self().has(key, istate));
+    return *static_cast<const T*>(self().componentImpl(key, istate));
   }
 
   template <typename T>
   constexpr const T& component(HashedString key, IndexType istate) const {
-    assert(has(key, istate));
-    return *static_cast<const T*>(componentImpl(key, istate));
+    assert(self().has(key, istate));
+    return *static_cast<const T*>(self().componentImpl(key, istate));
   }
 
  private:

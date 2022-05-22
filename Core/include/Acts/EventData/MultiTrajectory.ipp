@@ -57,7 +57,7 @@ inline auto TrackStateProxy<D, M, ReadOnly>::parameters() const -> Parameters {
     return predicted();
   }
 
-  return m_traj->parameters(idx);
+  return m_traj->self().parameters(idx);
 }
 
 template <typename D, size_t M, bool ReadOnly>
@@ -70,52 +70,59 @@ inline auto TrackStateProxy<D, M, ReadOnly>::covariance() const -> Covariance {
   } else {
     return predicted();
   }
-  return m_traj->covariance(idx);
+  return m_traj->self().covariance(idx);
 }
 
 template <typename D, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::predicted() const -> Parameters {
   assert(has<hashString("predicted")>());
-  return m_traj->parameters(component<IndexType, hashString("predicted")>());
+  return m_traj->self().parameters(
+      component<IndexType, hashString("predicted")>());
 }
 
 template <typename D, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::predictedCovariance() const
     -> Covariance {
   assert(has<hashString("predicted")>());
-  return m_traj->covariance(component<IndexType, hashString("predicted")>());
+  return m_traj->self().covariance(
+      component<IndexType, hashString("predicted")>());
 }
 
 template <typename D, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::filtered() const -> Parameters {
   assert(has<hashString("filtered")>());
-  return m_traj->parameters(component<IndexType, hashString("filtered")>());
+  return m_traj->self().parameters(
+      component<IndexType, hashString("filtered")>());
 }
 
 template <typename D, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::filteredCovariance() const
     -> Covariance {
   assert(has<hashString("filtered")>());
-  return m_traj->covariance(component<IndexType, hashString("filtered")>());
+  return m_traj->self().covariance(
+      component<IndexType, hashString("filtered")>());
 }
 
 template <typename D, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::smoothed() const -> Parameters {
   assert(has<hashString("smoothed")>());
-  return m_traj->parameters(component<IndexType, hashString("smoothed")>());
+  return m_traj->self().parameters(
+      component<IndexType, hashString("smoothed")>());
 }
 
 template <typename D, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::smoothedCovariance() const
     -> Covariance {
   assert(has<hashString("smoothed")>());
-  return m_traj->covariance(component<IndexType, hashString("smoothed")>());
+  return m_traj->self().covariance(
+      component<IndexType, hashString("smoothed")>());
 }
 
 template <typename D, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::jacobian() const -> Covariance {
   assert(has<hashString("jacobian")>());
-  return m_traj->jacobian(component<IndexType, hashString("jacobian")>());
+  return m_traj->self().jacobian(
+      component<IndexType, hashString("jacobian")>());
 }
 
 template <typename D, size_t M, bool ReadOnly>
@@ -138,7 +145,8 @@ inline auto TrackStateProxy<D, M, ReadOnly>::uncalibrated() const
 template <typename D, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::calibrated() const -> Measurement {
   assert(has<hashString("calibrated")>());
-  return m_traj->measurement(component<IndexType, hashString("calibrated")>());
+  return m_traj->self().measurement(
+      component<IndexType, hashString("calibrated")>());
 }
 
 template <typename D, size_t M, bool ReadOnly>
@@ -156,7 +164,7 @@ template <typename D, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::calibratedCovariance() const
     -> MeasurementCovariance {
   assert(has<hashString("calibrated")>());
-  return m_traj->measurementCovariance(
+  return m_traj->self().measurementCovariance(
       component<IndexType, hashString("calibrated")>());
 }
 
