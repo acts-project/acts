@@ -870,7 +870,7 @@ class MultiTrajectory {
 
   template <HashedString key>
   constexpr bool has(IndexType istate) const {
-    return self().template has_impl<key>(istate);
+    return self().has_impl(key, istate);
   }
 
   constexpr typename TrackStateProxy::Parameters parameters(IndexType parIdx) {
@@ -927,7 +927,7 @@ class MultiTrajectory {
 
   template <typename T, HashedString key>
   constexpr T& component(IndexType istate) {
-    assert(has<key>(istate));
+    assert(has(key, istate));
     return *static_cast<T*>(self().template component_impl<key>(istate));
   }
 
@@ -939,7 +939,7 @@ class MultiTrajectory {
 
   template <typename T, HashedString key>
   constexpr const T& component(IndexType istate) const {
-    assert(has<key>(istate));
+    assert(has(key, istate));
     return *static_cast<const T*>(self().template component_impl<key>(istate));
   }
 

@@ -89,36 +89,6 @@ class VectorMultiTrajectory final
 
   void unset_impl(TrackStatePropMask target, IndexType istate);
 
-  template <HashedString key>
-  constexpr bool has_impl(IndexType istate) const {
-    using namespace Acts::HashedStringLiteral;
-    switch (key) {
-      case "predicted"_hash:
-        return m_index[istate].ipredicted != kInvalid;
-      case "filtered"_hash:
-        return m_index[istate].ifiltered != kInvalid;
-      case "smoothed"_hash:
-        return m_index[istate].ismoothed != kInvalid;
-      case "calibrated"_hash:
-        return m_index[istate].icalibrated != kInvalid;
-      case "jacobian"_hash:
-        return m_index[istate].ijacobian != kInvalid;
-      case "projector"_hash:
-        return m_index[istate].iprojector != kInvalid;
-      case "previous"_hash:
-      case "sourceLink"_hash:
-      case "calibratedSourceLink"_hash:
-      case "referenceSurface"_hash:
-      case "measdim"_hash:
-      case "chi2"_hash:
-      case "pathLength"_hash:
-      case "typeFlags"_hash:
-        return true;
-      default:
-        // return false;
-        return m_dynamic.find(key) != m_dynamic.end();
-    }
-  }
 
   constexpr bool has_impl(HashedString key, IndexType istate) const {
     using namespace Acts::HashedStringLiteral;
