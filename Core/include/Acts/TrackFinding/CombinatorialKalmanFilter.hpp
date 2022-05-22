@@ -61,11 +61,13 @@ struct CombinatorialKalmanFilterTipState {
 };
 
 /// Extension struct which holds the delegates to customize the CKF behavior
+template <typename traj_t>
 struct CombinatorialKalmanFilterExtensions {
-  using candidate_container_t = std::vector<MultiTrajectory::TrackStateProxy>;
+  using candidate_container_t =
+      typename std::vector<typename MultiTrajectory<traj_t>::TrackStateProxy>;
   using MeasurementSelector =
-      Delegate<Result<std::pair<candidate_container_t::iterator,
-                                candidate_container_t::iterator>>(
+      Delegate<Result<std::pair<typename candidate_container_t::iterator,
+                                typename candidate_container_t::iterator>>(
           candidate_container_t& trackStates, bool&, LoggerWrapper)>;
   using BranchStopper =
       Delegate<bool(const CombinatorialKalmanFilterTipState&)>;
@@ -73,13 +75,13 @@ struct CombinatorialKalmanFilterExtensions {
   /// The Calibrator is a dedicated calibration algorithm that allows
   /// to calibrate measurements using track information, this could be
   /// e.g. sagging for wires, module deformations, etc.
-  KalmanFitterExtensions::Calibrator calibrator;
+  typename KalmanFitterExtensions<traj_t>::Calibrator calibrator;
 
   /// The updater incorporates measurement information into the track parameters
-  KalmanFitterExtensions::Updater updater;
+  typename KalmanFitterExtensions<traj_t>::Updater updater;
 
   /// The smoother back-propagates measurement information along the track
-  KalmanFitterExtensions::Smoother smoother;
+  typename KalmanFitterExtensions<traj_t>::Smoother smoother;
 
   /// The measurement selector is called during the filtering by the Actor.
   MeasurementSelector measurementSelector;
@@ -88,11 +90,11 @@ struct CombinatorialKalmanFilterExtensions {
 
   /// Default constructor which connects the default void components
   CombinatorialKalmanFilterExtensions() {
-    calibrator.connect<&voidKalmanCalibrator>();
-    updater.connect<&voidKalmanUpdater>();
-    smoother.connect<&voidKalmanSmoother>();
+    calibrator.template connect<&voidKalmanCalibrator<traj_t>>();
+    updater.template connect<&voidKalmanUpdater<traj_t>>();
+    smoother.template connect<&voidKalmanSmoother<traj_t>>();
     branchStopper.connect<voidBranchStopper>();
-    measurementSelector.connect<voidMeasurementSelector>();
+    measurementSelector.template connect<voidMeasurementSelector>();
   }
 
  private:
@@ -100,11 +102,13 @@ struct CombinatorialKalmanFilterExtensions {
   /// @param candidates Measurement track state candidates
   /// @param isOutlier Output variable indicating whether the returned state is an outlier (unused)
   /// @param logger A logger instance
-  static Result<
-      std::pair<std::vector<MultiTrajectory::TrackStateProxy>::iterator,
-                std::vector<MultiTrajectory::TrackStateProxy>::iterator>>
+  static Result<std::pair<typename std::vector<typename MultiTrajectory<
+                              traj_t>::TrackStateProxy>::iterator,
+                          typename std::vector<typename MultiTrajectory<
+                              traj_t>::TrackStateProxy>::iterator>>
   voidMeasurementSelector(
-      std::vector<MultiTrajectory::TrackStateProxy>& candidates,
+      typename std::vector<typename MultiTrajectory<traj_t>::TrackStateProxy>&
+          candidates,
       bool& isOutlier, LoggerWrapper logger) {
     (void)isOutlier;
     (void)logger;
@@ -132,7 +136,7 @@ using SourceLinkAccessorDelegate =
 ///
 /// @tparam source_link_accessor_t Source link accessor type, should be
 /// semiregular.
-template <typename source_link_iterator_t>
+template <typename source_link_iterator_t, typename traj_t>
 struct CombinatorialKalmanFilterOptions {
   using SourceLinkIterator = source_link_iterator_t;
   using SourceLinkAccessor = SourceLinkAccessorDelegate<source_link_iterator_t>;
@@ -155,9 +159,10 @@ struct CombinatorialKalmanFilterOptions {
       const GeometryContext& gctx, const MagneticFieldContext& mctx,
       std::reference_wrapper<const CalibrationContext> cctx,
       SourceLinkAccessor accessor_,
-      CombinatorialKalmanFilterExtensions extensions_, LoggerWrapper logger_,
-      const PropagatorPlainOptions& pOptions, const Surface* rSurface = nullptr,
-      bool mScattering = true, bool eLoss = true, bool rSmoothing = true)
+      CombinatorialKalmanFilterExtensions<traj_t> extensions_,
+      LoggerWrapper logger_, const PropagatorPlainOptions& pOptions,
+      const Surface* rSurface = nullptr, bool mScattering = true,
+      bool eLoss = true, bool rSmoothing = true)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
@@ -183,7 +188,7 @@ struct CombinatorialKalmanFilterOptions {
   SourceLinkAccessor sourcelinkAccessor;
 
   /// The filter extensions
-  CombinatorialKalmanFilterExtensions extensions;
+  CombinatorialKalmanFilterExtensions<traj_t> extensions;
 
   /// The trivial propagator options
   PropagatorPlainOptions propagatorPlainOptions;
@@ -204,13 +209,15 @@ struct CombinatorialKalmanFilterOptions {
   LoggerWrapper logger;
 };
 
+template <typename traj_t>
 struct CombinatorialKalmanFilterResult {
   // Fitted states that the actor has handled.
-  std::shared_ptr<MultiTrajectory> fittedStates;
+  std::shared_ptr<MultiTrajectory<traj_t>> fittedStates;
 
   // These is used internally to store candidate trackstates
-  std::shared_ptr<MultiTrajectory> stateBuffer;
-  std::vector<MultiTrajectory::TrackStateProxy> trackStateCandidates;
+  std::shared_ptr<MultiTrajectory<traj_t>> stateBuffer;
+  std::vector<typename MultiTrajectory<traj_t>::TrackStateProxy>
+      trackStateCandidates;
 
   // This is the indices of the 'tip' of the tracks stored in multitrajectory.
   // This correspond to the last measurment state in the multitrajectory.
@@ -268,7 +275,7 @@ struct CombinatorialKalmanFilterResult {
 /// the navigation of the propagator.
 ///
 /// The void components are provided mainly for unit testing.
-template <typename propagator_t>
+template <typename propagator_t, typename traj_t>
 class CombinatorialKalmanFilter {
  public:
   /// Default constructor is deleted
@@ -299,7 +306,7 @@ class CombinatorialKalmanFilter {
         std::tuple<CurvilinearTrackParameters, BoundMatrix, double>;
     // The source link container type
     /// Broadcast the result_type
-    using result_type = CombinatorialKalmanFilterResult;
+    using result_type = CombinatorialKalmanFilterResult<traj_t>;
 
     /// The target surface
     const Surface* targetSurface = nullptr;
@@ -832,14 +839,18 @@ class CombinatorialKalmanFilter {
     /// @param logger A logging instance
     Result<void> processSelectedTrackStates(
         const Acts::GeometryContext& gctx,
-        std::vector<MultiTrajectory::TrackStateProxy>::const_iterator begin,
-        std::vector<MultiTrajectory::TrackStateProxy>::const_iterator end,
+        typename std::vector<
+            typename MultiTrajectory<traj_t>::TrackStateProxy>::const_iterator
+            begin,
+        typename std::vector<
+            typename MultiTrajectory<traj_t>::TrackStateProxy>::const_iterator
+            end,
         result_type& result, bool isOutlier, const TipState& prevTipState,
         size_t& nBranchesOnSurface, LoggerWrapper logger) const {
       using PM = TrackStatePropMask;
 
-      std::optional<MultiTrajectory::TrackStateProxy> firstTrackState{
-          std::nullopt};
+      std::optional<typename MultiTrajectory<traj_t>::TrackStateProxy>
+          firstTrackState{std::nullopt};
       for (auto it = begin; it != end; ++it) {
         auto& candidateTrackState = *it;
 
@@ -856,7 +867,7 @@ class CombinatorialKalmanFilter {
         }
 
         // copy this trackstate into fitted states MultiTrajectory
-        MultiTrajectory::TrackStateProxy trackState =
+        typename MultiTrajectory<traj_t>::TrackStateProxy trackState =
             result.fittedStates->getTrackState(
                 result.fittedStates->addTrackState(
                     mask, candidateTrackState.previous()));
@@ -1178,7 +1189,7 @@ class CombinatorialKalmanFilter {
       return Result<void>::success();
     }
 
-    CombinatorialKalmanFilterExtensions m_extensions;
+    CombinatorialKalmanFilterExtensions<traj_t> m_extensions;
 
     /// The source link accesor
     source_link_accessor_t m_sourcelinkAccessor;
@@ -1228,10 +1239,10 @@ class CombinatorialKalmanFilter {
   template <typename source_link_iterator_t,
             typename start_parameters_container_t,
             typename parameters_t = BoundTrackParameters>
-  std::vector<Result<CombinatorialKalmanFilterResult>> findTracks(
+  std::vector<Result<CombinatorialKalmanFilterResult<traj_t>>> findTracks(
       const start_parameters_container_t& initialParameters,
-      const CombinatorialKalmanFilterOptions<source_link_iterator_t>& tfOptions)
-      const {
+      const CombinatorialKalmanFilterOptions<source_link_iterator_t, traj_t>&
+          tfOptions) const {
     const auto& logger = tfOptions.logger;
 
     using SourceLinkAccessor =
@@ -1271,16 +1282,17 @@ class CombinatorialKalmanFilter {
     // Run the CombinatorialKalmanFilter.
     // @todo The same target surface is used for all the initial track
     // parameters, which is not necessarily the case.
-    std::vector<Result<CombinatorialKalmanFilterResult>> ckfResults;
+    std::vector<Result<CombinatorialKalmanFilterResult<traj_t>>> ckfResults;
     ckfResults.reserve(initialParameters.size());
     // Loop over all initial track parameters. Return the results for all
     // initial track parameters including those failed ones.
     for (size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
       FullResultType inputResult;
-      inputResult.template get<CombinatorialKalmanFilterResult>().fittedStates =
-          std::make_shared<VectorMultiTrajectory>();
-      inputResult.template get<CombinatorialKalmanFilterResult>().stateBuffer =
-          std::make_shared<VectorMultiTrajectory>();
+      // @TODO: Add these to the arguments
+      inputResult.template get<CombinatorialKalmanFilterResult<traj_t>>()
+          .fittedStates = std::make_shared<VectorMultiTrajectory>();
+      inputResult.template get<CombinatorialKalmanFilterResult<traj_t>>()
+          .stateBuffer = std::make_shared<VectorMultiTrajectory>();
 
       const auto& sParameters = initialParameters[iseed];
       auto result = m_propagator.template propagate(sParameters, propOptions,
@@ -1299,8 +1311,8 @@ class CombinatorialKalmanFilter {
       const auto& propRes = *result;
 
       /// Get the result of the CombinatorialKalmanFilter
-      auto combKalmanResult =
-          std::move(propRes.template get<CombinatorialKalmanFilterResult>());
+      auto combKalmanResult = std::move(
+          propRes.template get<CombinatorialKalmanFilterResult<traj_t>>());
 
       /// The propagation could already reach max step size
       /// before the track finding is finished during two phases:

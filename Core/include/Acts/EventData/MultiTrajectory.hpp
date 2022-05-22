@@ -798,18 +798,15 @@ class MultiTrajectory {
   // return backend;
   // }
 
-  virtual ~MultiTrajectory() = 0;
+  // virtual ~MultiTrajectory() = 0;
+ protected:
+  MultiTrajectory() = default;  // pseudo abstract base class
 
-  /// Add a track state without providing explicit information. Which components
-  /// of the track state are initialized/allocated can be controlled via @p mask
-  /// @param mask The bitmask that instructs which components to allocate and
-  /// which to leave invalid
-  /// @param iprevious index of the previous state, kInvalid if first
-  /// @return Index of the newly added track state
-  virtual size_t addTrackState(
-      TrackStatePropMask mask = TrackStatePropMask::All,
-      size_t iprevious = kNoPrevious) = 0;
+ private:
+  Derived& self() { return static_cast<Derived&>(*this); }
+  const Derived& self() const { return static_cast<const Derived&>(*this); }
 
+ public:
   /// Access a read-only point on the trajectory by index.
   /// @param istate The index to access
   /// @return Read only proxy to the stored track state
@@ -840,81 +837,108 @@ class MultiTrajectory {
   void applyBackwards(size_t iendpoint, F&& callable);
 
   /// Clear the @c MultiTrajectory. Leaves the underlying storage untouched
-  virtual void clear() = 0;
+  constexpr void clear() { self().clear_impl(); }
 
   /// Returns the number of track states contained
-  virtual size_t size() const = 0;
+  constexpr size_t size() const { return self().size_impl(); }
 
- private:
-  Derived& self() { return static_cast<Derived&>(*this); }
-  const Derived& self() const { return static_cast<const Derived&>(*this); }
+  /// Add a track state without providing explicit information. Which components
+  /// of the track state are initialized/allocated can be controlled via @p mask
+  /// @param mask The bitmask that instructs which components to allocate and
+  /// which to leave invalid
+  /// @param iprevious index of the previous state, kInvalid if first
+  /// @return Index of the newly added track state
+  constexpr size_t addTrackState(
+      TrackStatePropMask mask = TrackStatePropMask::All,
+      size_t iprevious = kNoPrevious) {
+    return self().addTrackState_impl(mask, iprevious);
+  }
 
  protected:
-  // virtual bool has(HashedString key, IndexType istate) const = 0;
+  constexpr bool has(HashedString key, IndexType istate) const {
+    return self().has_impl(key, istate);
+  }
 
-  // virtual typename TrackStateProxy::Parameters parameters(IndexType parIdx) =
-  // 0; virtual typename ConstTrackStateProxy::Parameters parameters( IndexType
-  // parIdx) const = 0;
+  constexpr typename TrackStateProxy::Parameters parameters(IndexType parIdx) {
+    return self().parameters_impl(parIdx);
+  };
+  constexpr typename ConstTrackStateProxy::Parameters parameters(
+      IndexType parIdx) const {
+    return self().parameters_impl(parIdx);
+  }
 
-  // virtual typename TrackStateProxy::Covariance covariance(IndexType covIdx) =
-  // 0; virtual typename ConstTrackStateProxy::Covariance covariance( IndexType
-  // covIdx) const = 0;
+  constexpr typename TrackStateProxy::Covariance covariance(IndexType covIdx) {
+    return self().covariance_impl(covIdx);
+  }
+  constexpr typename ConstTrackStateProxy::Covariance covariance(
+      IndexType covIdx) const {
+    return self().covariance_impl(covIdx);
+  }
 
-  // virtual typename TrackStateProxy::Covariance jacobian(IndexType covIdx) =
-  // 0; virtual typename ConstTrackStateProxy::Covariance jacobian( IndexType
-  // covIdx) const = 0;
+  constexpr typename TrackStateProxy::Covariance jacobian(IndexType covIdx) {
+    return self().jacobian_impl(covIdx);
+  }
+  constexpr typename ConstTrackStateProxy::Covariance jacobian(
+      IndexType covIdx) const {
+    return self().jacobian_impl(covIdx);
+  }
 
-  // virtual typename TrackStateProxy::Measurement measurement(
-  // IndexType parIdx) = 0;
-  // virtual typename ConstTrackStateProxy::Measurement measurement(
-  // IndexType parIdx) const = 0;
+  constexpr typename TrackStateProxy::Measurement measurement(
+      IndexType measIdx) {
+    return self().measurement_impl(measIdx);
+  }
+  constexpr typename ConstTrackStateProxy::Measurement measurement(
+      IndexType measIdx) const {
+    return self().measurement_impl(measIdx);
+  }
 
-  // virtual typename TrackStateProxy::MeasurementCovariance
-  // measurementCovariance( IndexType covIdx) = 0;
-  // virtual typename ConstTrackStateProxy::MeasurementCovariance
-  // measurementCovariance(IndexType covIdx) const = 0;
+  constexpr typename TrackStateProxy::MeasurementCovariance
+  measurementCovariance(IndexType covIdx) {
+    return self().measurementCovariance_impl(covIdx);
+  }
+  constexpr typename ConstTrackStateProxy::MeasurementCovariance
+  measurementCovariance(IndexType covIdx) const {
+    return self().measurementCovariance_impl(covIdx);
+  }
 
-  // virtual void shareFrom(IndexType iself, IndexType iother,
-  // TrackStatePropMask shareSource,
-  // TrackStatePropMask shareTarget) = 0;
+  constexpr void shareFrom(IndexType iself, IndexType iother,
+                           TrackStatePropMask shareSource,
+                           TrackStatePropMask shareTarget) {
+    self().shareFrom_impl(iself, iother, shareSource, shareTarget);
+  }
 
-  // virtual void unset(TrackStatePropMask target, IndexType istate) = 0;
-
-  // virtual const void* componentImpl(HashedString key,
-  // IndexType istate) const = 0;
-  // virtual void* componentImpl(HashedString key, IndexType istate) = 0;
+  constexpr void unset(TrackStatePropMask target, IndexType istate) {
+    self().unset_impl(target, istate);
+  }
 
   template <typename T, HashedString key>
   constexpr T& component(IndexType istate) {
     assert(self().has(key, istate));
-    return *static_cast<T*>(self().componentImpl(key, istate));
+    return *static_cast<T*>(self().component_impl(key, istate));
   }
 
   template <typename T>
   constexpr T& component(HashedString key, IndexType istate) {
     assert(self().has(key, istate));
-    return *static_cast<T*>(self().componentImpl(key, istate));
+    return *static_cast<T*>(self().component_impl(key, istate));
   }
 
   template <typename T, HashedString key>
   constexpr const T& component(IndexType istate) const {
     assert(self().has(key, istate));
-    return *static_cast<const T*>(self().componentImpl(key, istate));
+    return *static_cast<const T*>(self().component_impl(key, istate));
   }
 
   template <typename T>
   constexpr const T& component(HashedString key, IndexType istate) const {
     assert(self().has(key, istate));
-    return *static_cast<const T*>(self().componentImpl(key, istate));
+    return *static_cast<const T*>(self().component_impl(key, istate));
   }
 
  private:
   friend class detail_lt::TrackStateProxy<Derived, MeasurementSizeMax, true>;
   friend class detail_lt::TrackStateProxy<Derived, MeasurementSizeMax, false>;
-};
-
-template <typename D>
-inline MultiTrajectory<D>::~MultiTrajectory() = default;
+};  // namespace Acts
 
 }  // namespace Acts
 

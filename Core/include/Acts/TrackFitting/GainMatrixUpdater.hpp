@@ -29,7 +29,7 @@ class GainMatrixUpdater {
     TrackStateTraits::Covariance filteredCovariance;
     TrackStateTraits::Measurement calibrated;
     TrackStateTraits::MeasurementCovariance calibratedCovariance;
-    TrackStateTraits::Projector& projector;
+    TrackStateTraits::Projector projector;
     unsigned int calibratedSize;
   };
 
@@ -41,10 +41,10 @@ class GainMatrixUpdater {
   /// @param[in,out] trackState The track state
   /// @param[in] direction The navigation direction
   /// @param[in] logger Where to write logging information to
-  template <typename D>
+  template <typename traj_t>
   Result<void> operator()(
       const GeometryContext& gctx,
-      typename MultiTrajectory<D>::TrackStateProxy trackState,
+      typename MultiTrajectory<traj_t>::TrackStateProxy trackState,
       NavigationDirection direction = NavigationDirection::Forward,
       LoggerWrapper logger = getDummyLogger()) const {
     (void)gctx;
@@ -58,8 +58,8 @@ class GainMatrixUpdater {
     assert(trackState.hasFiltered());
 
     // read-only handles. Types are eigen maps to backing storage
-    const auto predicted = trackState.predicted();
-    const auto predictedCovariance = trackState.predictedCovariance();
+    // const auto predicted = trackState.predicted();
+    // const auto predictedCovariance = trackState.predictedCovariance();
 
     ACTS_VERBOSE(
         "Predicted parameters: " << trackState.predicted().transpose());

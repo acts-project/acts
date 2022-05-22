@@ -32,14 +32,14 @@ namespace detail {
 /// computing the bound state or not
 /// @param freeToBoundCorrection Correction for non-linearity effect during transform from free to bound (only corrected when performing CovTransport)
 template <typename propagator_state_t, typename stepper_t,
-          typename extensions_t>
+          typename extensions_t, typename traj_t>
 auto kalmanHandleMeasurement(
     propagator_state_t &state, const stepper_t &stepper,
     const extensions_t &extensions, const Surface &surface,
-    const SourceLink &source_link, MultiTrajectory &fittedStates,
+    const SourceLink &source_link, MultiTrajectory<traj_t> &fittedStates,
     const size_t lastTrackIndex, bool doCovTransport,
     const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
-        false)) -> Result<MultiTrajectory::TrackStateProxy> {
+        false)) -> Result<typename MultiTrajectory<traj_t>::TrackStateProxy> {
   const auto &logger = state.options.logger;
 
   // Bind the transported state to the current surface
@@ -126,13 +126,13 @@ auto kalmanHandleMeasurement(
 /// @param doCovTransport Wether to perform a covariance transport when
 /// computing the bound state or not
 /// @param freeToBoundCorrection Correction for non-linearity effect during transform from free to bound (only corrected when performing CovTransport)
-template <typename propagator_state_t, typename stepper_t>
+template <typename propagator_state_t, typename stepper_t, typename traj_t>
 auto kalmanHandleNoMeasurement(
     propagator_state_t &state, const stepper_t &stepper, const Surface &surface,
-    MultiTrajectory &fittedStates, const size_t lastTrackIndex,
+    MultiTrajectory<traj_t> &fittedStates, const size_t lastTrackIndex,
     bool doCovTransport,
     const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
-        false)) -> Result<MultiTrajectory::TrackStateProxy> {
+        false)) -> Result<typename MultiTrajectory<traj_t>::TrackStateProxy> {
   const auto &logger = state.options.logger;
 
   // No source links on surface, add either hole or passive material

@@ -36,67 +36,68 @@ class VectorMultiTrajectory final
 
  public:
   // BEGIN INTERFACE
-  TrackStateProxy::Parameters parameters(IndexType parIdx) {
+  TrackStateProxy::Parameters parameters_impl(IndexType parIdx) {
     return TrackStateProxy::Parameters{m_params[parIdx].data()};
   }
 
-  ConstTrackStateProxy::Parameters parameters(IndexType parIdx) const {
+  ConstTrackStateProxy::Parameters parameters_impl(IndexType parIdx) const {
     return ConstTrackStateProxy::Parameters{m_params[parIdx].data()};
   }
 
-  TrackStateProxy::Covariance covariance(IndexType parIdx) {
+  TrackStateProxy::Covariance covariance_impl(IndexType parIdx) {
     return TrackStateProxy::Covariance{m_cov[parIdx].data()};
   }
 
-  ConstTrackStateProxy::Covariance covariance(IndexType parIdx) const {
+  ConstTrackStateProxy::Covariance covariance_impl(IndexType parIdx) const {
     return ConstTrackStateProxy::Covariance{m_cov[parIdx].data()};
   }
 
-  TrackStateProxy::Covariance jacobian(IndexType parIdx) {
+  TrackStateProxy::Covariance jacobian_impl(IndexType parIdx) {
     return TrackStateProxy::Covariance{m_jac[parIdx].data()};
   }
 
-  ConstTrackStateProxy::Covariance jacobian(IndexType parIdx) const {
+  ConstTrackStateProxy::Covariance jacobian_impl(IndexType parIdx) const {
     return ConstTrackStateProxy::Covariance{m_jac[parIdx].data()};
   }
 
-  TrackStateProxy::Measurement measurement(IndexType parIdx) {
+  TrackStateProxy::Measurement measurement_impl(IndexType parIdx) {
     return TrackStateProxy::Measurement{m_meas[parIdx].data()};
   }
 
-  ConstTrackStateProxy::Measurement measurement(IndexType parIdx) const {
+  ConstTrackStateProxy::Measurement measurement_impl(IndexType parIdx) const {
     return ConstTrackStateProxy::Measurement{m_meas[parIdx].data()};
   }
 
-  TrackStateProxy::MeasurementCovariance measurementCovariance(
+  TrackStateProxy::MeasurementCovariance measurementCovariance_impl(
       IndexType parIdx) {
     return TrackStateProxy::MeasurementCovariance{m_measCov[parIdx].data()};
   }
 
-  ConstTrackStateProxy::MeasurementCovariance measurementCovariance(
+  ConstTrackStateProxy::MeasurementCovariance measurementCovariance_impl(
       IndexType parIdx) const {
     return ConstTrackStateProxy::MeasurementCovariance{
         m_measCov[parIdx].data()};
   }
 
-  std::size_t addTrackState(TrackStatePropMask mask = TrackStatePropMask::All,
-                            size_t iprevious = kNoPrevious);
+  std::size_t addTrackState_impl(
+      TrackStatePropMask mask = TrackStatePropMask::All,
+      size_t iprevious = kNoPrevious);
 
-  void shareFrom(IndexType iself, IndexType iother,
-                 TrackStatePropMask shareSource,
-                 TrackStatePropMask shareTarget);
+  void shareFrom_impl(IndexType iself, IndexType iother,
+                      TrackStatePropMask shareSource,
+                      TrackStatePropMask shareTarget);
 
-  void unset(TrackStatePropMask target, IndexType istate);
+  void unset_impl(TrackStatePropMask target, IndexType istate);
 
-  bool has(HashedString key, IndexType istate) const;
+  bool has_impl(HashedString key, IndexType istate) const;
 
-  std::size_t size() const { return m_index.size(); }
+  std::size_t size_impl() const { return m_index.size(); }
 
-  void clear();
+  void clear_impl();
 
-  void* componentImpl(HashedString key, IndexType istate);
+  void* component_impl(HashedString key, IndexType istate);
 
-  const void* componentImpl(HashedString key, IndexType istate) const;
+  const void* component_impl(HashedString key, IndexType istate) const;
 
   // END INTERFACE
 

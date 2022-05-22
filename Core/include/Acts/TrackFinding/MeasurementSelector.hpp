@@ -71,18 +71,19 @@ class MeasurementSelector {
   /// @return Pair of iterators into @a candidates marking the range of selected candidates
   ///
 
-  template <typename D>
-  Result<std::pair<typename std::vector<
-                       typename MultiTrajectory<D>::TrackStateProxy>::iterator,
-                   typename std::vector<
-                       typename MultiTrajectory<D>::TrackStateProxy>::iterator>>
-  select(std::vector<typename MultiTrajectory<D>::TrackStateProxy>& candidates,
+  template <typename traj_t>
+  Result<std::pair<typename std::vector<typename MultiTrajectory<
+                       traj_t>::TrackStateProxy>::iterator,
+                   typename std::vector<typename MultiTrajectory<
+                       traj_t>::TrackStateProxy>::iterator>>
+  select(std::vector<typename MultiTrajectory<traj_t>::TrackStateProxy>&
+             candidates,
          bool& isOutlier, LoggerWrapper logger) const {
-    using Result = Result<
-        std::pair<typename std::vector<
-                      typename MultiTrajectory<D>::TrackStateProxy>::iterator,
-                  typename std::vector<
-                      typename MultiTrajectory<D>::TrackStateProxy>::iterator>>;
+    using Result =
+        Result<std::pair<typename std::vector<typename MultiTrajectory<
+                             traj_t>::TrackStateProxy>::iterator,
+                         typename std::vector<typename MultiTrajectory<
+                             traj_t>::TrackStateProxy>::iterator>>;
 
     ACTS_VERBOSE("Invoked MeasurementSelector");
 
@@ -157,7 +158,8 @@ class MeasurementSelector {
       // best chi2 and tag it as an outlier
       const auto bestIt = std::next(candidates.begin(), minIndex);
       const auto chi2 = bestIt->chi2();
-      const auto chi2Cut = VariableCut(*bestIt, cuts, chi2CutOff, logger);
+      const auto chi2Cut =
+          VariableCut<traj_t>(*bestIt, cuts, chi2CutOff, logger);
       ACTS_VERBOSE("Chi2: " << chi2 << ", max: " << chi2Cut);
       if (chi2 >= chi2Cut) {
         ACTS_VERBOSE(
@@ -174,7 +176,7 @@ class MeasurementSelector {
               });
 
     // use |eta| of best measurement to select numMeasurementsCut
-    const auto numMeasurementsCut = VariableCut(
+    const auto numMeasurementsCut = VariableCut<traj_t>(
         *candidates.begin(), cuts, cuts->numMeasurementsCutOff, logger);
 
     auto endIterator = candidates.begin();
@@ -186,7 +188,8 @@ class MeasurementSelector {
     ++endIterator;  // best measurement already confirmed good
     for (; endIterator != maxIterator; ++endIterator) {
       const auto chi2 = endIterator->chi2();
-      const auto chi2Cut = VariableCut(*endIterator, cuts, chi2CutOff, logger);
+      const auto chi2Cut =
+          VariableCut<traj_t>(*endIterator, cuts, chi2CutOff, logger);
       ACTS_VERBOSE("Chi2: " << chi2 << ", max: " << chi2Cut);
       if (chi2 >= chi2Cut) {
         break;  // endIterator now points at the first track state with chi2
@@ -203,9 +206,9 @@ class MeasurementSelector {
   }
 
  private:
-  template <typename D, typename cut_value_t>
+  template <typename traj_t, typename cut_value_t>
   static cut_value_t VariableCut(
-      const typename Acts::MultiTrajectory<D>::TrackStateProxy& trackState,
+      const typename Acts::MultiTrajectory<traj_t>::TrackStateProxy& trackState,
       const Acts::MeasurementSelector::Config::Iterator selector,
       const std::vector<cut_value_t>& cuts, LoggerWrapper logger) {
     const auto& etaBins = selector->etaBins;

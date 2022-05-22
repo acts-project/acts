@@ -45,15 +45,17 @@
 namespace Acts {
 
 /// Extension struct which holeds delegates to customize the KF behavior
+template <typename traj_t>
 struct KalmanFitterExtensions {
-  using TrackStateProxy = MultiTrajectory::TrackStateProxy;
-  using ConstTrackStateProxy = MultiTrajectory::ConstTrackStateProxy;
-  using Parameters = TrackStateProxy::Parameters;
+  using TrackStateProxy = typename MultiTrajectory<traj_t>::TrackStateProxy;
+  using ConstTrackStateProxy =
+      typename MultiTrajectory<traj_t>::ConstTrackStateProxy;
+  using Parameters = typename TrackStateProxy::Parameters;
 
   using Calibrator = Delegate<void(const GeometryContext&, TrackStateProxy)>;
 
   using Smoother = Delegate<Result<void>(
-      const GeometryContext&, MultiTrajectory&, size_t, LoggerWrapper)>;
+      const GeometryContext&, MultiTrajectory<traj_t>&, size_t, LoggerWrapper)>;
 
   using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
                                         NavigationDirection, LoggerWrapper)>;
@@ -83,17 +85,18 @@ struct KalmanFitterExtensions {
 
   /// Default constructor which connects the default void components
   KalmanFitterExtensions() {
-    calibrator.connect<&voidKalmanCalibrator>();
-    updater.connect<&voidKalmanUpdater>();
-    smoother.connect<&voidKalmanSmoother>();
-    outlierFinder.connect<&voidOutlierFinder>();
-    reverseFilteringLogic.connect<&voidReverseFilteringLogic>();
+    calibrator.template connect<&voidKalmanCalibrator>();
+    updater.template connect<&voidKalmanUpdater>();
+    smoother.template connect<&voidKalmanSmoother>();
+    outlierFinder.template connect<&voidOutlierFinder>();
+    reverseFilteringLogic.template connect<&voidReverseFilteringLogic>();
   }
 };
 
 /// Combined options for the Kalman fitter.
 ///
-/// @tparam SourceLink Source link type
+/// @tparam traj_t The trajectory type
+template <typename traj_t>
 struct KalmanFitterOptions {
   /// PropagatorOptions with context.
   ///
@@ -112,7 +115,8 @@ struct KalmanFitterOptions {
   KalmanFitterOptions(const GeometryContext& gctx,
                       const MagneticFieldContext& mctx,
                       std::reference_wrapper<const CalibrationContext> cctx,
-                      KalmanFitterExtensions extensions_, LoggerWrapper logger_,
+                      KalmanFitterExtensions<traj_t> extensions_,
+                      LoggerWrapper logger_,
                       const PropagatorPlainOptions& pOptions,
                       const Surface* rSurface = nullptr,
                       bool mScattering = true, bool eLoss = true,
@@ -141,7 +145,7 @@ struct KalmanFitterOptions {
   /// context object for the calibration
   std::reference_wrapper<const CalibrationContext> calibrationContext;
 
-  KalmanFitterExtensions extensions;
+  KalmanFitterExtensions<traj_t> extensions;
 
   /// The trivial propagator options
   PropagatorPlainOptions propagatorPlainOptions;
@@ -173,9 +177,10 @@ struct KalmanFitterOptions {
   LoggerWrapper logger;
 };
 
+template <typename traj_t>
 struct KalmanFitterResult {
   // Fitted states that the actor has handled.
-  std::shared_ptr<MultiTrajectory> fittedStates;
+  std::shared_ptr<MultiTrajectory<traj_t>> fittedStates;
 
   // This is the index of the 'tip' of the track stored in multitrajectory.
   // This correspond to the last measurment state in the multitrajectory.
@@ -243,7 +248,7 @@ struct KalmanFitterResult {
 /// the propagator.
 ///
 /// The void components are provided mainly for unit testing.
-template <typename propagator_t>
+template <typename propagator_t, typename traj_t>
 class KalmanFitter {
   /// The navigator type
   using KalmanNavigator = typename propagator_t::Navigator;
@@ -272,7 +277,7 @@ class KalmanFitter {
   class Actor {
    public:
     /// Broadcast the result_type
-    using result_type = KalmanFitterResult;
+    using result_type = KalmanFitterResult<traj_t>;
 
     /// The target surface
     const Surface* targetSurface = nullptr;
@@ -299,7 +304,7 @@ class KalmanFitter {
     FreeToBoundCorrection freeToBoundCorrection;
 
     /// Input MultiTrajectory
-    std::shared_ptr<MultiTrajectory> outputStates;
+    std::shared_ptr<MultiTrajectory<traj_t>> outputStates;
 
     /// @brief Kalman actor operation
     ///
@@ -957,7 +962,7 @@ class KalmanFitter {
       return Result<void>::success();
     }
 
-    KalmanFitterExtensions extensions;
+    KalmanFitterExtensions<traj_t> extensions;
 
     /// The Surface beeing
     SurfaceReached targetReached;
@@ -1002,8 +1007,8 @@ class KalmanFitter {
             bool _isdn = isDirectNavigator>
   auto fit(source_link_iterator_t it, source_link_iterator_t end,
            const start_parameters_t& sParameters,
-           const KalmanFitterOptions& kfOptions) const
-      -> std::enable_if_t<!_isdn, Result<KalmanFitterResult>> {
+           const KalmanFitterOptions<traj_t>& kfOptions) const
+      -> std::enable_if_t<!_isdn, Result<KalmanFitterResult<traj_t>>> {
     const auto& logger = kfOptions.logger;
 
     // To be able to find measurements later, we put them into a map
@@ -1108,9 +1113,9 @@ class KalmanFitter {
             bool _isdn = isDirectNavigator>
   auto fit(source_link_iterator_t it, source_link_iterator_t end,
            const start_parameters_t& sParameters,
-           const KalmanFitterOptions& kfOptions,
+           const KalmanFitterOptions<traj_t>& kfOptions,
            const std::vector<const Surface*>& sSequence) const
-      -> std::enable_if_t<_isdn, Result<KalmanFitterResult>> {
+      -> std::enable_if_t<_isdn, Result<KalmanFitterResult<traj_t>>> {
     const auto& logger = kfOptions.logger;
 
     // To be able to find measurements later, we put them into a map

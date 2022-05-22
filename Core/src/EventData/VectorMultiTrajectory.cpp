@@ -12,8 +12,8 @@ namespace Acts {
 
 VectorMultiTrajectory::DynamicColumnBase::~DynamicColumnBase() = default;
 
-std::size_t VectorMultiTrajectory::addTrackState(TrackStatePropMask mask,
-                                                 size_t iprevious) {
+std::size_t VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
+                                                      size_t iprevious) {
   using PropMask = TrackStatePropMask;
 
   m_index.emplace_back();
@@ -77,9 +77,9 @@ std::size_t VectorMultiTrajectory::addTrackState(TrackStatePropMask mask,
   return index;
 }
 
-void VectorMultiTrajectory::shareFrom(IndexType iself, IndexType iother,
-                                      TrackStatePropMask shareSource,
-                                      TrackStatePropMask shareTarget) {
+void VectorMultiTrajectory::shareFrom_impl(IndexType iself, IndexType iother,
+                                           TrackStatePropMask shareSource,
+                                           TrackStatePropMask shareTarget) {
   // auto other = getTrackState(iother);
   IndexData& self = m_index[iself];
   IndexData& other = m_index[iother];
@@ -131,7 +131,8 @@ void VectorMultiTrajectory::shareFrom(IndexType iself, IndexType iother,
   }
 }
 
-void VectorMultiTrajectory::unset(TrackStatePropMask target, IndexType istate) {
+void VectorMultiTrajectory::unset_impl(TrackStatePropMask target,
+                                       IndexType istate) {
   using PM = TrackStatePropMask;
 
   switch (target) {
@@ -155,7 +156,7 @@ void VectorMultiTrajectory::unset(TrackStatePropMask target, IndexType istate) {
   }
 }
 
-bool VectorMultiTrajectory::has(HashedString key, IndexType istate) const {
+bool VectorMultiTrajectory::has_impl(HashedString key, IndexType istate) const {
   using namespace Acts::HashedStringLiteral;
   switch (key) {
     case "predicted"_hash:
@@ -184,7 +185,7 @@ bool VectorMultiTrajectory::has(HashedString key, IndexType istate) const {
   }
 }
 
-void VectorMultiTrajectory::clear() {
+void VectorMultiTrajectory::clear_impl() {
   m_index.clear();
   m_params.clear();
   m_cov.clear();
@@ -199,7 +200,8 @@ void VectorMultiTrajectory::clear() {
   }
 }
 
-void* VectorMultiTrajectory::componentImpl(HashedString key, IndexType istate) {
+void* VectorMultiTrajectory::component_impl(HashedString key,
+                                            IndexType istate) {
   using namespace Acts::HashedStringLiteral;
   switch (key) {
     case "previous"_hash:
@@ -241,8 +243,8 @@ void* VectorMultiTrajectory::componentImpl(HashedString key, IndexType istate) {
   }
 }
 
-const void* VectorMultiTrajectory::componentImpl(HashedString key,
-                                                 IndexType istate) const {
+const void* VectorMultiTrajectory::component_impl(HashedString key,
+                                                  IndexType istate) const {
   using namespace Acts::HashedStringLiteral;
   switch (key) {
     case "previous"_hash:
