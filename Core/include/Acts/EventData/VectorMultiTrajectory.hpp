@@ -89,15 +89,261 @@ class VectorMultiTrajectory final
 
   void unset_impl(TrackStatePropMask target, IndexType istate);
 
-  bool has_impl(HashedString key, IndexType istate) const;
+  template <HashedString key>
+  constexpr bool has_impl(IndexType istate) const {
+    using namespace Acts::HashedStringLiteral;
+    switch (key) {
+      case "predicted"_hash:
+        return m_index[istate].ipredicted != kInvalid;
+      case "filtered"_hash:
+        return m_index[istate].ifiltered != kInvalid;
+      case "smoothed"_hash:
+        return m_index[istate].ismoothed != kInvalid;
+      case "calibrated"_hash:
+        return m_index[istate].icalibrated != kInvalid;
+      case "jacobian"_hash:
+        return m_index[istate].ijacobian != kInvalid;
+      case "projector"_hash:
+        return m_index[istate].iprojector != kInvalid;
+      case "previous"_hash:
+      case "sourceLink"_hash:
+      case "calibratedSourceLink"_hash:
+      case "referenceSurface"_hash:
+      case "measdim"_hash:
+      case "chi2"_hash:
+      case "pathLength"_hash:
+      case "typeFlags"_hash:
+        return true;
+      default:
+        // return false;
+        return m_dynamic.find(key) != m_dynamic.end();
+    }
+  }
+
+  constexpr bool has_impl(HashedString key, IndexType istate) const {
+    using namespace Acts::HashedStringLiteral;
+    switch (key) {
+      case "predicted"_hash:
+        return m_index[istate].ipredicted != kInvalid;
+      case "filtered"_hash:
+        return m_index[istate].ifiltered != kInvalid;
+      case "smoothed"_hash:
+        return m_index[istate].ismoothed != kInvalid;
+      case "calibrated"_hash:
+        return m_index[istate].icalibrated != kInvalid;
+      case "jacobian"_hash:
+        return m_index[istate].ijacobian != kInvalid;
+      case "projector"_hash:
+        return m_index[istate].iprojector != kInvalid;
+      case "previous"_hash:
+      case "sourceLink"_hash:
+      case "calibratedSourceLink"_hash:
+      case "referenceSurface"_hash:
+      case "measdim"_hash:
+      case "chi2"_hash:
+      case "pathLength"_hash:
+      case "typeFlags"_hash:
+        return true;
+      default:
+        return m_dynamic.find(key) != m_dynamic.end();
+    }
+  }
 
   std::size_t size_impl() const { return m_index.size(); }
 
   void clear_impl();
 
-  void* component_impl(HashedString key, IndexType istate);
+  template <HashedString key>
+  void* component_impl(IndexType istate) {
+    using namespace Acts::HashedStringLiteral;
+    switch (key) {
+      case "previous"_hash:
+        return &m_index[istate].iprevious;
+      case "predicted"_hash:
+        return &m_index[istate].ipredicted;
+      case "filtered"_hash:
+        return &m_index[istate].ifiltered;
+      case "smoothed"_hash:
+        return &m_index[istate].ismoothed;
+      case "calibrated"_hash:
+        return &m_index[istate].icalibrated;
+      case "jacobian"_hash:
+        return &m_index[istate].ijacobian;
+      case "projector"_hash:
+        return &m_projectors[m_index[istate].iprojector];
+      case "sourceLink"_hash:
+        return &m_sourceLinks[m_index[istate].iuncalibrated];
+      case "calibratedSourceLink"_hash:
+        return &m_sourceLinks[m_index[istate].icalibratedsourcelink];
+      case "referenceSurface"_hash:
+        return &m_referenceSurfaces[istate];
+      case "measdim"_hash:
+        return &m_index[istate].measdim;
+      case "chi2"_hash:
+        return &m_index[istate].chi2;
+      case "pathLength"_hash:
+        return &m_index[istate].pathLength;
+      case "typeFlags"_hash:
+        return &m_index[istate].typeFlags;
+      default:
+        auto it = m_dynamic.find(key);
+        if (it == m_dynamic.end()) {
+          throw std::runtime_error("Unable to handle this component");
+        }
+        auto& col = it->second;
+        assert(col && "Dynamic column is null");
+        return col->get(istate);
+    }
+  }
 
-  const void* component_impl(HashedString key, IndexType istate) const;
+  void* component_impl(HashedString key, IndexType istate) {
+    using namespace Acts::HashedStringLiteral;
+    switch (key) {
+      case "previous"_hash:
+        return &m_index[istate].iprevious;
+      case "predicted"_hash:
+        return &m_index[istate].ipredicted;
+      case "filtered"_hash:
+        return &m_index[istate].ifiltered;
+      case "smoothed"_hash:
+        return &m_index[istate].ismoothed;
+      case "calibrated"_hash:
+        return &m_index[istate].icalibrated;
+      case "jacobian"_hash:
+        return &m_index[istate].ijacobian;
+      case "projector"_hash:
+        return &m_projectors[m_index[istate].iprojector];
+      case "sourceLink"_hash:
+        return &m_sourceLinks[m_index[istate].iuncalibrated];
+      case "calibratedSourceLink"_hash:
+        return &m_sourceLinks[m_index[istate].icalibratedsourcelink];
+      case "referenceSurface"_hash:
+        return &m_referenceSurfaces[istate];
+      case "measdim"_hash:
+        return &m_index[istate].measdim;
+      case "chi2"_hash:
+        return &m_index[istate].chi2;
+      case "pathLength"_hash:
+        return &m_index[istate].pathLength;
+      case "typeFlags"_hash:
+        return &m_index[istate].typeFlags;
+      default:
+        auto it = m_dynamic.find(key);
+        if (it == m_dynamic.end()) {
+          throw std::runtime_error("Unable to handle this component");
+        }
+        auto& col = it->second;
+        assert(col && "Dynamic column is null");
+        return col->get(istate);
+    }
+  }
+
+  template <HashedString key>
+  constexpr const void* component_impl(IndexType istate) const {
+    using namespace Acts::HashedStringLiteral;
+    switch (key) {
+      case "previous"_hash:
+        return &m_index[istate].iprevious;
+      case "predicted"_hash:
+        return &m_index[istate].ipredicted;
+      case "filtered"_hash:
+        return &m_index[istate].ifiltered;
+      case "smoothed"_hash:
+        return &m_index[istate].ismoothed;
+      case "calibrated"_hash:
+        return &m_index[istate].icalibrated;
+      case "jacobian"_hash:
+        return &m_index[istate].ijacobian;
+      case "projector"_hash:
+        return &m_projectors[m_index[istate].iprojector];
+      case "sourceLink"_hash:
+        return &m_sourceLinks[m_index[istate].iuncalibrated];
+      case "calibratedSourceLink"_hash:
+        return &m_sourceLinks[m_index[istate].icalibratedsourcelink];
+      case "referenceSurface"_hash:
+        return &m_referenceSurfaces[istate];
+      case "measdim"_hash:
+        return &m_index[istate].measdim;
+      case "chi2"_hash:
+        return &m_index[istate].chi2;
+      case "pathLength"_hash:
+        return &m_index[istate].pathLength;
+      case "typeFlags"_hash:
+        return &m_index[istate].typeFlags;
+      default:
+        assert(false);
+    }
+  }
+
+  const void* component_impl(HashedString key, IndexType istate) const {
+    using namespace Acts::HashedStringLiteral;
+    switch (key) {
+      case "previous"_hash:
+        return &m_index[istate].iprevious;
+      case "predicted"_hash:
+        return &m_index[istate].ipredicted;
+      case "filtered"_hash:
+        return &m_index[istate].ifiltered;
+      case "smoothed"_hash:
+        return &m_index[istate].ismoothed;
+      case "calibrated"_hash:
+        return &m_index[istate].icalibrated;
+      case "jacobian"_hash:
+        return &m_index[istate].ijacobian;
+      case "projector"_hash:
+        return &m_projectors[m_index[istate].iprojector];
+      case "sourceLink"_hash:
+        return &m_sourceLinks[m_index[istate].iuncalibrated];
+      case "calibratedSourceLink"_hash:
+        return &m_sourceLinks[m_index[istate].icalibratedsourcelink];
+      case "referenceSurface"_hash:
+        return &m_referenceSurfaces[istate];
+      case "measdim"_hash:
+        return &m_index[istate].measdim;
+      case "chi2"_hash:
+        return &m_index[istate].chi2;
+      case "pathLength"_hash:
+        return &m_index[istate].pathLength;
+      case "typeFlags"_hash:
+        return &m_index[istate].typeFlags;
+      default:
+        auto it = m_dynamic.find(key);
+        if (it == m_dynamic.end()) {
+          throw std::runtime_error("Unable to handle this component");
+        }
+        auto& col = it->second;
+        assert(col && "Dynamic column is null");
+        return col->get(istate);
+    }
+  }
+
+  template <typename T>
+  constexpr void addColumn_impl(HashedString key) {
+    m_dynamic.insert({key, std::make_unique<DynamicColumn<T>>()});
+  }
+
+  constexpr bool hasColumn_impl(HashedString key) const {
+    using namespace Acts::HashedStringLiteral;
+    switch (key) {
+      case "predicted"_hash:
+      case "filtered"_hash:
+      case "smoothed"_hash:
+      case "calibrated"_hash:
+      case "jacobian"_hash:
+      case "projector"_hash:
+      case "previous"_hash:
+      case "sourceLink"_hash:
+      case "calibratedSourceLink"_hash:
+      case "referenceSurface"_hash:
+      case "measdim"_hash:
+      case "chi2"_hash:
+      case "pathLength"_hash:
+      case "typeFlags"_hash:
+        return true;
+      default:
+        return m_dynamic.find(key) != m_dynamic.end();
+    }
+  }
 
   // END INTERFACE
 
@@ -132,34 +378,6 @@ class VectorMultiTrajectory final
   };
 
  protected:
-  template <typename T>
-  constexpr void addColumnImpl(HashedString key) {
-    m_dynamic.insert({key, std::make_unique<DynamicColumn<T>>()});
-  }
-
-  constexpr bool hasColumnImpl(HashedString key) {
-    using namespace Acts::HashedStringLiteral;
-    switch (key) {
-      case "predicted"_hash:
-      case "filtered"_hash:
-      case "smoothed"_hash:
-      case "calibrated"_hash:
-      case "jacobian"_hash:
-      case "projector"_hash:
-      case "previous"_hash:
-      case "sourceLink"_hash:
-      case "calibratedSourceLink"_hash:
-      case "referenceSurface"_hash:
-      case "measdim"_hash:
-      case "chi2"_hash:
-      case "pathLength"_hash:
-      case "typeFlags"_hash:
-        return true;
-      default:
-        return m_dynamic.find(key) != m_dynamic.end();
-    }
-  }
-
  private:
   /// index to map track states to the corresponding
   std::vector<IndexData> m_index;

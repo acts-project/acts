@@ -156,35 +156,6 @@ void VectorMultiTrajectory::unset_impl(TrackStatePropMask target,
   }
 }
 
-bool VectorMultiTrajectory::has_impl(HashedString key, IndexType istate) const {
-  using namespace Acts::HashedStringLiteral;
-  switch (key) {
-    case "predicted"_hash:
-      return m_index[istate].ipredicted != kInvalid;
-    case "filtered"_hash:
-      return m_index[istate].ifiltered != kInvalid;
-    case "smoothed"_hash:
-      return m_index[istate].ismoothed != kInvalid;
-    case "calibrated"_hash:
-      return m_index[istate].icalibrated != kInvalid;
-    case "jacobian"_hash:
-      return m_index[istate].ijacobian != kInvalid;
-    case "projector"_hash:
-      return m_index[istate].iprojector != kInvalid;
-    case "previous"_hash:
-    case "sourceLink"_hash:
-    case "calibratedSourceLink"_hash:
-    case "referenceSurface"_hash:
-    case "measdim"_hash:
-    case "chi2"_hash:
-    case "pathLength"_hash:
-    case "typeFlags"_hash:
-      return true;
-    default:
-      return m_dynamic.find(key) != m_dynamic.end();
-  }
-}
-
 void VectorMultiTrajectory::clear_impl() {
   m_index.clear();
   m_params.clear();
@@ -197,92 +168,6 @@ void VectorMultiTrajectory::clear_impl() {
   m_referenceSurfaces.clear();
   for (auto& [key, vec] : m_dynamic) {
     vec->clear();
-  }
-}
-
-void* VectorMultiTrajectory::component_impl(HashedString key,
-                                            IndexType istate) {
-  using namespace Acts::HashedStringLiteral;
-  switch (key) {
-    case "previous"_hash:
-      return &m_index[istate].iprevious;
-    case "predicted"_hash:
-      return &m_index[istate].ipredicted;
-    case "filtered"_hash:
-      return &m_index[istate].ifiltered;
-    case "smoothed"_hash:
-      return &m_index[istate].ismoothed;
-    case "calibrated"_hash:
-      return &m_index[istate].icalibrated;
-    case "jacobian"_hash:
-      return &m_index[istate].ijacobian;
-    case "projector"_hash:
-      return &m_projectors[m_index[istate].iprojector];
-    case "sourceLink"_hash:
-      return &m_sourceLinks[m_index[istate].iuncalibrated];
-    case "calibratedSourceLink"_hash:
-      return &m_sourceLinks[m_index[istate].icalibratedsourcelink];
-    case "referenceSurface"_hash:
-      return &m_referenceSurfaces[istate];
-    case "measdim"_hash:
-      return &m_index[istate].measdim;
-    case "chi2"_hash:
-      return &m_index[istate].chi2;
-    case "pathLength"_hash:
-      return &m_index[istate].pathLength;
-    case "typeFlags"_hash:
-      return &m_index[istate].typeFlags;
-    default:
-      auto it = m_dynamic.find(key);
-      if (it == m_dynamic.end()) {
-        throw std::runtime_error("Unable to handle this component");
-      }
-      auto& col = it->second;
-      assert(col && "Dynamic column is null");
-      return col->get(istate);
-  }
-}
-
-const void* VectorMultiTrajectory::component_impl(HashedString key,
-                                                  IndexType istate) const {
-  using namespace Acts::HashedStringLiteral;
-  switch (key) {
-    case "previous"_hash:
-      return &m_index[istate].iprevious;
-    case "predicted"_hash:
-      return &m_index[istate].ipredicted;
-    case "filtered"_hash:
-      return &m_index[istate].ifiltered;
-    case "smoothed"_hash:
-      return &m_index[istate].ismoothed;
-    case "calibrated"_hash:
-      return &m_index[istate].icalibrated;
-    case "jacobian"_hash:
-      return &m_index[istate].ijacobian;
-    case "projector"_hash:
-      return &m_projectors[m_index[istate].iprojector];
-    case "sourceLink"_hash:
-      return &m_sourceLinks[m_index[istate].iuncalibrated];
-    case "calibratedSourceLink"_hash:
-      return &m_sourceLinks[m_index[istate].icalibratedsourcelink];
-    case "referenceSurface"_hash:
-      return &m_referenceSurfaces[istate];
-    case "measdim"_hash:
-      return &m_index[istate].measdim;
-    case "chi2"_hash:
-      return &m_index[istate].chi2;
-    case "pathLength"_hash:
-      return &m_index[istate].pathLength;
-    case "typeFlags"_hash:
-      return &m_index[istate].typeFlags;
-    default:
-      auto it = m_dynamic.find(key);
-      if (it == m_dynamic.end()) {
-        throw std::runtime_error("Unable to handle this component");
-      }
-      auto& col = it->second;
-      assert(col && "Dynamic column is null");
-      return col->get(istate);
   }
 }
 

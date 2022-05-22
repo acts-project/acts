@@ -327,11 +327,11 @@ class TrackStateProxy {
 
   template <HashedString key>
   constexpr bool has() const {
-    return has(key);
+    return m_traj->template has<key>(m_istate);
   }
 
   constexpr bool has(HashedString key) const {
-    return m_traj->self().has(key, m_istate);
+    return m_traj->has(key, m_istate);
   }
 
   constexpr bool has(std::string_view key) const {
@@ -345,42 +345,42 @@ class TrackStateProxy {
 
   template <typename T, HashedString key>
   constexpr T& component() {
-    return m_traj->self().template component<T, key>(m_istate);
+    return m_traj->template component<T, key>(m_istate);
   }
 
   template <typename T>
   constexpr T& component(HashedString key) {
-    return m_traj->self().template component<T>(key, m_istate);
+    return m_traj->template component<T>(key, m_istate);
   }
 
   template <typename T>
   constexpr T& component(std::string_view key) {
-    return m_traj->self().template component<T>(hashString(key), m_istate);
+    return m_traj->template component<T>(hashString(key), m_istate);
   }
 
   template <typename T, typename K>
   constexpr T& component(K key) {
-    return m_traj->self().template component<T>(hashString(key), m_istate);
+    return m_traj->template component<T>(hashString(key), m_istate);
   }
 
   template <typename T, HashedString key>
   constexpr const T& component() const {
-    return m_traj->self().template component<T, key>(m_istate);
+    return m_traj->template component<T, key>(m_istate);
   }
 
   template <typename T>
   constexpr const T& component(HashedString key) const {
-    return m_traj->self().template component<T>(key, m_istate);
+    return m_traj->template component<T>(key, m_istate);
   }
 
   template <typename T, typename K>
   constexpr const T& component(K key) const {
-    return m_traj->self().template component<T>(hashString(key), m_istate);
+    return m_traj->template component<T>(hashString(key), m_istate);
   }
 
   template <typename T>
   constexpr const T& component(std::string_view key) const {
-    return m_traj->self().template component<T>(hashString(key), m_istate);
+    return m_traj->template component<T>(hashString(key), m_istate);
   }
 
   /// Track parameters vector. This tries to be somewhat smart and return the
@@ -854,9 +854,23 @@ class MultiTrajectory {
     return self().addTrackState_impl(mask, iprevious);
   }
 
+  template <typename T>
+  constexpr void addColumn(HashedString key) {
+    self().template addColumn_impl<T>(key);
+  }
+
+  constexpr bool hasColumn(HashedString key) const {
+    return self().hasColumn_impl(key);
+  }
+
  protected:
   constexpr bool has(HashedString key, IndexType istate) const {
     return self().has_impl(key, istate);
+  }
+
+  template <HashedString key>
+  constexpr bool has(IndexType istate) const {
+    return self().template has_impl<key>(istate);
   }
 
   constexpr typename TrackStateProxy::Parameters parameters(IndexType parIdx) {
@@ -913,25 +927,25 @@ class MultiTrajectory {
 
   template <typename T, HashedString key>
   constexpr T& component(IndexType istate) {
-    assert(self().has(key, istate));
-    return *static_cast<T*>(self().component_impl(key, istate));
+    assert(has<key>(istate));
+    return *static_cast<T*>(self().template component_impl<key>(istate));
   }
 
   template <typename T>
   constexpr T& component(HashedString key, IndexType istate) {
-    assert(self().has(key, istate));
+    assert(has(key, istate));
     return *static_cast<T*>(self().component_impl(key, istate));
   }
 
   template <typename T, HashedString key>
   constexpr const T& component(IndexType istate) const {
-    assert(self().has(key, istate));
-    return *static_cast<const T*>(self().component_impl(key, istate));
+    assert(has<key>(istate));
+    return *static_cast<const T*>(self().template component_impl<key>(istate));
   }
 
   template <typename T>
   constexpr const T& component(HashedString key, IndexType istate) const {
-    assert(self().has(key, istate));
+    assert(has(key, istate));
     return *static_cast<const T*>(self().component_impl(key, istate));
   }
 

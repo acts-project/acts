@@ -1005,68 +1005,66 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyShare) {
   }
 }
 
-// BOOST_AUTO_TEST_CASE(MultiTrajectoryExtraColumns) {
-// using namespace HashedStringLiteral;
-// using MTJ = MultiTrajectory;
+BOOST_AUTO_TEST_CASE(MultiTrajectoryExtraColumns) {
+  using namespace HashedStringLiteral;
+  using MTJ = VectorMultiTrajectory;
 
-// struct TestColumn {
-// double value;
-// };
+  struct TestColumn {
+    double value;
+  };
 
-// std::unique_ptr<MultiTrajectory> tptr = MultiTrajectory::createWithBackend(
-// std::make_unique<VectorMultiTrajectory>(),
-// MTJ::C<"extra_column"_hash, int>{},
-// MTJ::C<"another_column"_hash, TestColumn>{});
+  MTJ traj;
+  traj.addColumn<int>("extra_column"_hash);
+  traj.addColumn<TestColumn>("another_column"_hash);
 
-// MultiTrajectory& traj = *tptr;
-// auto ts1 = traj.getTrackState(traj.addTrackState());
-// auto ts2 = traj.getTrackState(
-// traj.addTrackState(TrackStatePropMask::All, ts1.index()));
-// auto ts3 = traj.getTrackState(
-// traj.addTrackState(TrackStatePropMask::All, ts2.index()));
+  auto ts1 = traj.getTrackState(traj.addTrackState());
+  auto ts2 = traj.getTrackState(
+      traj.addTrackState(TrackStatePropMask::All, ts1.index()));
+  auto ts3 = traj.getTrackState(
+      traj.addTrackState(TrackStatePropMask::All, ts2.index()));
 
-// BOOST_CHECK(ts1.has<"extra_column"_hash>());
-// BOOST_CHECK(ts2.has<"extra_column"_hash>());
-// BOOST_CHECK(ts3.has<"extra_column"_hash>());
+  BOOST_CHECK(ts1.has<"extra_column"_hash>());
+  BOOST_CHECK(ts2.has<"extra_column"_hash>());
+  BOOST_CHECK(ts3.has<"extra_column"_hash>());
 
-// BOOST_CHECK(ts1.has<"another_column"_hash>());
-// BOOST_CHECK(ts2.has<"another_column"_hash>());
-// BOOST_CHECK(ts3.has<"another_column"_hash>());
+  BOOST_CHECK(ts1.has<"another_column"_hash>());
+  BOOST_CHECK(ts2.has<"another_column"_hash>());
+  BOOST_CHECK(ts3.has<"another_column"_hash>());
 
-// ts2.component<int, "extra_column"_hash>() = 6;
+  ts2.component<int, "extra_column"_hash>() = 6;
 
-// BOOST_CHECK_EQUAL((ts2.component<int, "extra_column"_hash>()), 6);
+  BOOST_CHECK_EQUAL((ts2.component<int, "extra_column"_hash>()), 6);
 
-// ts3.component<TestColumn, "another_column"_hash>().value = 7;
-// BOOST_CHECK_EQUAL((ts3.component<TestColumn, "another_column"_hash>().value),
-// 7);
-// }
+  ts3.component<TestColumn, "another_column"_hash>().value = 7;
+  BOOST_CHECK_EQUAL((ts3.component<TestColumn, "another_column"_hash>().value),
+                    7);
+}
 
-// BOOST_AUTO_TEST_CASE(MultiTrajectoryExtraColumnsRuntime) {
-// auto runTest = [](auto&& fn) {
-// VectorMultiTrajectory mt;
-// std::vector<std::string> columns = {"one", "two", "three", "four"};
-// for (const auto& c : columns) {
-// BOOST_CHECK(!mt.hasColumn(fn(c)));
-// mt.addColumn<int>(fn(c));
-// BOOST_CHECK(mt.hasColumn(fn(c)));
-// }
-// for (const auto& c : columns) {
-// auto ts1 = mt.getTrackState(mt.addTrackState());
-// auto ts2 = mt.getTrackState(mt.addTrackState());
-// BOOST_CHECK(ts1.has(fn(c)));
-// BOOST_CHECK(ts2.has(fn(c)));
-// ts1.component<int>(fn(c)) = 674;
-// ts2.component<int>(fn(c)) = 421;
-// BOOST_CHECK_EQUAL(ts1.component<int>(fn(c)), 674);
-// BOOST_CHECK_EQUAL(ts2.component<int>(fn(c)), 421);
-// }
-// };
+BOOST_AUTO_TEST_CASE(MultiTrajectoryExtraColumnsRuntime) {
+  auto runTest = [](auto&& fn) {
+    VectorMultiTrajectory mt;
+    std::vector<std::string> columns = {"one", "two", "three", "four"};
+    for (const auto& c : columns) {
+      BOOST_CHECK(!mt.hasColumn(fn(c)));
+      mt.addColumn<int>(fn(c));
+      BOOST_CHECK(mt.hasColumn(fn(c)));
+    }
+    for (const auto& c : columns) {
+      auto ts1 = mt.getTrackState(mt.addTrackState());
+      auto ts2 = mt.getTrackState(mt.addTrackState());
+      BOOST_CHECK(ts1.has(fn(c)));
+      BOOST_CHECK(ts2.has(fn(c)));
+      ts1.component<int>(fn(c)) = 674;
+      ts2.component<int>(fn(c)) = 421;
+      BOOST_CHECK_EQUAL(ts1.component<int>(fn(c)), 674);
+      BOOST_CHECK_EQUAL(ts2.component<int>(fn(c)), 421);
+    }
+  };
 
-// runTest([](const std::string& c) { return hashString(c.c_str()); });
-// runTest([](const std::string& c) { return c.c_str(); });
-// runTest([](const std::string& c) { return c; });
-// runTest([](std::string_view c) { return c; });
-// }
+  runTest([](const std::string& c) { return hashString(c.c_str()); });
+  // runTest([](const std::string& c) { return c.c_str(); });
+  // runTest([](const std::string& c) { return c; });
+  // runTest([](std::string_view c) { return c; });
+}
 
 BOOST_AUTO_TEST_SUITE_END()
