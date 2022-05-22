@@ -8,4 +8,39 @@
 
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 
-namespace Acts {}  // namespace Acts
+namespace Acts {
+
+double MeasurementSelector::calculateChi2(
+    TrackStateTraits::Measurement fullCalibrated,
+    TrackStateTraits::MeasurementCovariance fullCalibratedCovariance,
+    TrackStateTraits::Parameters predicted,
+    TrackStateTraits::Covariance predictedCovariance,
+    TrackStateTraits::Projector projector, unsigned int calibratedSize) const {
+  return visit_measurement(
+      fullCalibrated, fullCalibratedCovariance, calibratedSize,
+      [&](const auto calibrated, const auto calibratedCovariance) -> double {
+        constexpr size_t kMeasurementSize =
+            decltype(calibrated)::RowsAtCompileTime;
+
+        using ParametersVector = ActsVector<kMeasurementSize>;
+
+        // Take the projector (measurement mapping function)
+        const auto H =
+            projector.template topLeftCorner<kMeasurementSize, eBoundSize>()
+                .eval();
+
+        // Get the residuals
+        ParametersVector res;
+        res = calibrated - H * predicted;
+
+        // Get the chi2
+        return (res.transpose() *
+                ((calibratedCovariance +
+                  H * predictedCovariance * H.transpose()))
+                    .inverse() *
+                res)
+            .eval()(0, 0);
+      });
+}
+
+}  // namespace Acts

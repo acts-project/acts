@@ -46,6 +46,9 @@ struct MeasurementSelectorCuts {
 /// chi2 will be selected and the status will be tagged as an outlier
 ///
 class MeasurementSelector {
+  using TrackStateTraits =
+      TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax, false>;
+
  public:
   /// Geometry-dependent cut configuration.
   ///
@@ -111,42 +114,21 @@ class MeasurementSelector {
     // Loop over all measurements to select the compatible measurements
     for (auto& trackState : candidates) {
       // Take the parameter covariance
-      const auto predicted = trackState.predicted();
-      const auto predictedCovariance = trackState.predictedCovariance();
-      visit_measurement(
+      // const auto predicted = tackState.predicted();
+      // const auto predictedCovariance = trackState.predictedCovariance();
+
+      double chi2 = calculateChi2(
           trackState.calibrated(), trackState.calibratedCovariance(),
-          trackState.calibratedSize(),
-          [&](const auto calibrated, const auto calibratedCovariance) {
-            constexpr size_t kMeasurementSize =
-                decltype(calibrated)::RowsAtCompileTime;
+          trackState.predicted(), trackState.predictedCovariance(),
+          trackState.projector(), trackState.calibratedSize());
 
-            using ParametersVector = ActsVector<kMeasurementSize>;
+      trackState.chi2() = chi2;
 
-            // Take the projector (measurement mapping function)
-            const auto H =
-                trackState.projector()
-                    .template topLeftCorner<kMeasurementSize, eBoundSize>()
-                    .eval();
-
-            // Get the residuals
-            ParametersVector res;
-            res = calibrated - H * predicted;
-
-            // Get the chi2
-            double& chi2 = trackState.chi2();
-            chi2 = (res.transpose() *
-                    ((calibratedCovariance +
-                      H * predictedCovariance * H.transpose()))
-                        .inverse() *
-                    res)
-                       .eval()(0, 0);
-
-            // Search for the measurement with the min chi2
-            if (chi2 < minChi2) {
-              minChi2 = chi2;
-              minIndex = index;
-            }
-          });
+      // Search for the measurement with the min chi2
+      if (chi2 < minChi2) {
+        minChi2 = chi2;
+        minIndex = index;
+      }
 
       index++;
     }
@@ -230,6 +212,14 @@ class MeasurementSelector {
     ACTS_VERBOSE("Variable cut for eta=" << eta << ": " << cuts[bin]);
     return cuts[bin];
   }
+
+  double calculateChi2(
+      TrackStateTraits::Measurement fullCalibrated,
+      TrackStateTraits::MeasurementCovariance fullCalibratedCovariance,
+      TrackStateTraits::Parameters predicted,
+      TrackStateTraits::Covariance predictedCovariance,
+      TrackStateTraits::Projector projector, unsigned int calibratedSize) const;
+
   Config m_config;
 };
 
