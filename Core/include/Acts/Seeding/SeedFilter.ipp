@@ -48,9 +48,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
                        : seedConfRange.nTopForSmallR;
   }
 
-  size_t minWeightSeedIndex = 0;
-  bool minWeightSeed = false;
-  float weightMin = -std::numeric_limits<float>::max();
+  size_t maxWeightSeedIndex = 0;
+  bool maxWeightSeed = false;
+  float weightMax = -std::numeric_limits<float>::max();
 
   // initialize original index locations
   std::vector<size_t> idx(topSpVec.size());
@@ -182,12 +182,11 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
                             weight, outCont);
         }
 
-      } else if (weight > weightMin) {
-        // store index of lower quality seeds with a weight greater than the
-        // minimum
-        weightMin = weight;
-        minWeightSeedIndex = i;
-        minWeightSeed = true;
+      } else if (weight > weightMax) {
+        // store weight and index of the best "lower quality" seed
+        weightMax = weight;
+        maxWeightSeedIndex = i;
+        maxWeightSeed = true;
       }
     } else {
       // keep the normal behavior without seed quality confirmation
@@ -208,21 +207,21 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
   }
   // if no high quality seed was found for a certain middle+bottom SP pair,
   // lower quality seeds can be accepted
-  if (m_cfg.seedConfirmation and minWeightSeed and !numQualitySeeds) {
+  if (m_cfg.seedConfirmation and maxWeightSeed and !numQualitySeeds) {
     // if we have not yet reached our max number of seeds we add the new seed to
     // outCont
     if (numSeeds < m_cfg.maxSeedsPerSpMConf) {
       // fill seed
       ++numSeeds;
       outCont.push_back(std::make_pair(
-          weightMin,
+          weightMax,
           std::make_unique<const InternalSeed<external_spacepoint_t>>(
-              bottomSP, middleSP, *topSpVec[minWeightSeedIndex], zOrigin,
+              bottomSP, middleSP, *topSpVec[maxWeightSeedIndex], zOrigin,
               false)));
     } else {
       // otherwise we check if there is a lower quality seed to remove
-      checkReplaceSeeds(bottomSP, middleSP, *topSpVec[minWeightSeedIndex],
-                        zOrigin, false, weightMin, outCont);
+      checkReplaceSeeds(bottomSP, middleSP, *topSpVec[maxWeightSeedIndex],
+                        zOrigin, false, weightMax, outCont);
     }
   }
 }
