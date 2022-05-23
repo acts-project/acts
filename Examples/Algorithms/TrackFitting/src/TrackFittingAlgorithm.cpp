@@ -158,7 +158,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
     if (result.ok()) {
       // Get the fit output object
-      const auto& fitOutput = result.value();
+      auto& fitOutput = result.value();
       // The track entry indices container. One element here.
       std::vector<size_t> trackTips;
       trackTips.reserve(1);

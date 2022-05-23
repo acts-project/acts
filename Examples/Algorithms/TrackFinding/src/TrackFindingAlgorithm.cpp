@@ -103,7 +103,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
     auto& result = results[iseed];
     if (result.ok()) {
       // Get the track finding output object
-      const auto& trackFindingOutput = result.value();
+      auto& trackFindingOutput = result.value();
       // Create a Trajectories result struct
       trajectories.emplace_back(
           std::move(trackFindingOutput.fittedStates),

@@ -1305,7 +1305,7 @@ class CombinatorialKalmanFilter {
         continue;
       }
 
-      const auto& propRes = *result;
+      auto& propRes = *result;
 
       /// Get the result of the CombinatorialKalmanFilter
       auto combKalmanResult = std::move(

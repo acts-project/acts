@@ -1067,10 +1067,10 @@ class KalmanFitter {
       return result.error();
     }
 
-    const auto& propRes = *result;
+    auto& propRes = *result;
 
     /// Get the result of the fit
-    auto kalmanResult = propRes.template get<KalmanResult>();
+    auto kalmanResult = std::move(propRes.template get<KalmanResult>());
 
     /// It could happen that the fit ends in zero measurement states.
     /// The result gets meaningless so such case is regarded as fit failure.
