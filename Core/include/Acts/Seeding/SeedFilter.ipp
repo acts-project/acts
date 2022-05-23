@@ -31,7 +31,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     int numSeeds,
     std::vector<std::pair<
         float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
-        outIt) const {
+        outCont) const {
   // seed confirmation
   int nTopSeedConf = 0;
   if (m_cfg.seedConfirmation) {
@@ -169,18 +169,18 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
       if (deltaSeedConf) {
         // if we have not yet reached our max number of quality seeds we add the
-        // new seed to outIt
+        // new seed to outCont
         if (numQualitySeeds < m_cfg.maxQualitySeedsPerSpMConf) {
           // fill high quality seed
           ++numQualitySeeds;
-          outIt.push_back(std::make_pair(
+          outCont.push_back(std::make_pair(
               weight,
               std::make_unique<const InternalSeed<external_spacepoint_t>>(
                   bottomSP, middleSP, *topSpVec[i], zOrigin, true)));
         } else {
           // otherwise we check if there is a lower quality seed to remove
           checkReplaceSeeds(bottomSP, middleSP, *topSpVec[i], zOrigin, true,
-                            weight, outIt);
+                            weight, outCont);
         }
 
       } else if (weight > weightMin) {
@@ -193,17 +193,17 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     } else {
       // keep the normal behavior without seed quality confirmation
       // if we have not yet reached our max number of seeds we add the new seed
-      // to outIt
+      // to outCont
       if (numSeeds < m_cfg.maxSeedsPerSpMConf) {
         // fill seed
         ++numSeeds;
-        outIt.push_back(std::make_pair(
+        outCont.push_back(std::make_pair(
             weight, std::make_unique<const InternalSeed<external_spacepoint_t>>(
                         bottomSP, middleSP, *topSpVec[i], zOrigin, false)));
       } else {
         // otherwise we check if there is a lower quality seed to remove
         checkReplaceSeeds(bottomSP, middleSP, *topSpVec[i], zOrigin, false,
-                          weight, outIt);
+                          weight, outCont);
       }
     }
   }
@@ -211,11 +211,11 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
   // lower quality seeds can be accepted
   if (m_cfg.seedConfirmation and minWeightSeed and !numQualitySeeds) {
     // if we have not yet reached our max number of seeds we add the new seed to
-    // outIt
+    // outCont
     if (numSeeds < m_cfg.maxSeedsPerSpMConf) {
       // fill seed
       ++numSeeds;
-      outIt.push_back(std::make_pair(
+      outCont.push_back(std::make_pair(
           weightMin,
           std::make_unique<const InternalSeed<external_spacepoint_t>>(
               bottomSP, middleSP, *topSpVec[minWeightSeedIndex], zOrigin,
@@ -223,7 +223,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     } else {
       // otherwise we check if there is a lower quality seed to remove
       checkReplaceSeeds(bottomSP, middleSP, *topSpVec[minWeightSeedIndex],
-                        zOrigin, false, weightMin, outIt);
+                        zOrigin, false, weightMin, outCont);
     }
   }
 }
@@ -314,38 +314,38 @@ void SeedFilter<external_spacepoint_t>::checkReplaceSeeds(
     bool isQualitySeed, float weight,
     std::vector<std::pair<
         float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
-        outIt) const {
-  // find the index of the seeds with qualitySeed() == isQualitySeed in outIt
+        outCont) const {
+  // find the index of the seeds with qualitySeed() == isQualitySeed in outCont
   // and store in seed_indices
   std::vector<size_t> seed_indices;
-  seed_indices.reserve(outIt.size());
+  seed_indices.reserve(outCont.size());
   auto it = std::find_if(
-      outIt.begin(), outIt.end(),
+      outCont.begin(), outCont.end(),
       [&](std::pair<float,
                     std::unique_ptr<const InternalSeed<external_spacepoint_t>>>&
               weight_seed) {
         return weight_seed.second->qualitySeed() == isQualitySeed;
       });
-  while (it != outIt.end()) {
-    seed_indices.emplace_back(std::distance(std::begin(outIt), it));
+  while (it != outCont.end()) {
+    seed_indices.emplace_back(std::distance(std::begin(outCont), it));
     it = std::find_if(
-        std::next(it), outIt.end(),
+        std::next(it), outCont.end(),
         [&](std::pair<
             float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>&
-                outItCheck) {
-          return outItCheck.second->qualitySeed() == isQualitySeed;
+                outContCheck) {
+          return outContCheck.second->qualitySeed() == isQualitySeed;
         });
   }
 
   // find index of the seed with the minimum weight
   size_t index =
       *std::min_element(std::begin(seed_indices), std::end(seed_indices),
-                        [&outIt](const size_t& a, const size_t& b) {
-                          return outIt.at(a).first < outIt.at(b).first;
+                        [&outCont](const size_t& a, const size_t& b) {
+                          return outCont.at(a).first < outCont.at(b).first;
                         });
   // replace that seed with the new one if new one is better
-  if (outIt.at(index).first < weight) {
-    outIt.at(index) = std::make_pair(
+  if (outCont.at(index).first < weight) {
+    outCont.at(index) = std::make_pair(
         weight, std::make_unique<const InternalSeed<external_spacepoint_t>>(
                     bottomSP, middleSP, topSp, zOrigin, isQualitySeed));
   }

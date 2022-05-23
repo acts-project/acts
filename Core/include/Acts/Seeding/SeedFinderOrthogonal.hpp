@@ -96,11 +96,11 @@ class SeedFinderOrthogonal {
    * @tparam output_container_t The type of the output seed container.
    *
    * @param spacePoints The input spacepoints from which to create seeds.
-   * @param out_it The output iterator to write seeds to.
+   * @param out_cont The output container to write seeds to.
    */
   template <typename input_container_t, typename output_container_t>
   void createSeeds(const input_container_t &spacePoints,
-                   output_container_t &out_it) const;
+                   output_container_t &out_cont) const;
 
   /**
    * @brief Perform seed finding, returning a new container of seeds.
@@ -190,32 +190,32 @@ class SeedFinderOrthogonal {
    * @brief Filter potential candidate pairs, and output seeds into an
    * iterator.
    *
-   * @tparam output_it_t The type of the output iterator.
+   * @tparam output_container_t The type of the output container.
    *
    * @param middle The (singular) middle spacepoint.
    * @param bottom The (vector of) candidate bottom spacepoints.
    * @param top The (vector of) candidate top spacepoints.
    * @param numQualitySeeds number of high quality seeds in seed confirmation.
-   * @param it The iterator to write the resulting seeds to.
+   * @param cont The container to write the resulting seeds to.
    */
-  template <typename output_it_t>
+  template <typename output_container_t>
   void filterCandidates(internal_sp_t &middle,
                         std::vector<internal_sp_t *> &bottom,
                         std::vector<internal_sp_t *> &top, int numQualitySeeds,
-                        output_it_t &it) const;
+                        output_container_t &cont) const;
 
   /**
    * @brief Search for seeds starting from a given middle space point.
    *
    * @tparam NDims Number of dimensions for our spatial embedding (probably 3).
-   * @tparam output_it_t Type of the output iterator.
+   * @tparam output_container_t Type of the output container.
    *
    * @param tree The k-d tree to use for searching.
-   * @param out_it The iteratorto write output seeds to.
+   * @param out_cont The container write output seeds to.
    * @param middle_p The middle spacepoint to find seeds for.
    */
-  template <typename output_it_t>
-  void processFromMiddleSP(const tree_t &tree, output_it_t &out_it,
+  template <typename output_container_t>
+  void processFromMiddleSP(const tree_t &tree, output_container_t &out_cont,
                            const typename tree_t::pair_t &middle_p) const;
 
   /**

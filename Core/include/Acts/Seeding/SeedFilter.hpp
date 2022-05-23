@@ -41,7 +41,7 @@ class SeedFilter {
   /// @param zOrigin on the z axis as defined by bottom and middle space point
   /// @param numQualitySeeds number of high quality seeds in seed confirmation
   /// @param numSeeds number of low quality seeds in seed confirmation
-  /// @param outIt Output iterator for the seeds
+  /// @param outCont Output container for the seeds
   virtual void filterSeeds_2SpFixed(
       InternalSpacePoint<external_spacepoint_t>& bottomSP,
       InternalSpacePoint<external_spacepoint_t>& middleSP,
@@ -51,7 +51,7 @@ class SeedFilter {
       int numQualitySeeds, int numSeeds,
       std::vector<std::pair<
           float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
-          outIt) const;
+          outCont) const;
 
   /// Filter seeds once all seeds for one middle space point have been created
   /// @param seedsPerSpM vector of pairs containing weight and seed for all
@@ -73,7 +73,7 @@ class SeedFilter {
   /// @param zOrigin on the z axis as defined by bottom and middle space point
   /// @param isQualitySeed information whether the seed is quality confirmed or not
   /// @param weight weight of the seed
-  /// @param outIt iterator for the seeds
+  /// @param outCont container for the seeds
   virtual void checkReplaceSeeds(
       InternalSpacePoint<external_spacepoint_t>& bottomSP,
       InternalSpacePoint<external_spacepoint_t>& middleSP,
@@ -81,7 +81,7 @@ class SeedFilter {
       bool isQualitySeed, float weight,
       std::vector<std::pair<
           float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
-          outIt) const;
+          outCont) const;
 
   const SeedFilterConfig getSeedFilterConfig() const { return m_cfg; }
   const IExperimentCuts<external_spacepoint_t>* getExperimentCuts() const {
