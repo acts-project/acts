@@ -187,6 +187,7 @@ void addInput(Context& ctx) {
     ACTS_PYTHON_MEMBER(inputStem);
     ACTS_PYTHON_MEMBER(inputCollection);
     ACTS_PYTHON_MEMBER(outputSpacePoints);
+    ACTS_PYTHON_MEMBER(extendCollection);
     ACTS_PYTHON_STRUCT_END();
   }
 }
