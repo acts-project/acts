@@ -89,7 +89,6 @@ class VectorMultiTrajectory final
 
   void unset_impl(TrackStatePropMask target, IndexType istate);
 
-
   constexpr bool has_impl(HashedString key, IndexType istate) const {
     using namespace Acts::HashedStringLiteral;
     switch (key) {
