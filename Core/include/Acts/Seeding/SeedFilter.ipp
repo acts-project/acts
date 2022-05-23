@@ -27,26 +27,25 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     InternalSpacePoint<external_spacepoint_t>& middleSP,
     std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
     std::vector<float>& invHelixDiameterVec,
-    std::vector<float>& impactParametersVec, float zOrigin, int numQualitySeeds,
-    int numSeeds,
+    std::vector<float>& impactParametersVec, float zOrigin,
+    int& numQualitySeeds, int& numSeeds,
     std::vector<std::pair<
         float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
         outCont) const {
   // seed confirmation
   int nTopSeedConf = 0;
   if (m_cfg.seedConfirmation) {
-    float rMaxSeedConfirmation =
-        std::abs(bottomSP.z()) < m_cfg.centralSeedConfirmationRange.zMaxSeedConf
-            ? m_cfg.centralSeedConfirmationRange.rMaxSeedConf
-            : m_cfg.forwardSeedConfirmationRange.rMaxSeedConf;
-    SeedConfirmationRangeConfig seedConfRange =
-        (middleSP.z() > m_cfg.centralSeedConfirmationRange.zMaxSeedConf ||
-         middleSP.z() < m_cfg.centralSeedConfirmationRange.zMinSeedConf)
-            ? m_cfg.forwardSeedConfirmationRange
-            : m_cfg.centralSeedConfirmationRange;
-    nTopSeedConf = seedConfRange.nTopForSmallR;
-    if (bottomSP.radius() > rMaxSeedConfirmation)
-      nTopSeedConf = seedConfRange.nTopForLargeR;
+    // check if bottom SP is in the central or forward region
+    SeedConfirmationRange seedConfRange =
+        (bottomSP.z() > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
+         bottomSP.z() < m_config.centralSeedConfirmationRange.zMinSeedConf)
+            ? m_config.forwardSeedConfirmationRange
+            : m_config.centralSeedConfirmationRange;
+    // set the minimum number of top SP depending on whether the bottom SP is
+    // in the central or forward region
+    nTopSeedConf = bottomSP.radius() > seedConfRange.rMaxSeedConf
+                       ? seedConfRange.nTopForLargeR
+                       : seedConfRange.nTopForSmallR;
   }
 
   size_t minWeightSeedIndex = 0;
@@ -88,11 +87,6 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       float otherTop_r = m_cfg.useDeltaRorTopRadius ? topSpVec[j]->deltaR()
                                                     : topSpVec[j]->radius();
 
-      // compared top SP should have at least deltaRMin distance
-      float deltaR = currentTop_r - otherTop_r;
-      if (std::abs(deltaR) < m_cfg.deltaRMin) {
-        continue;
-      }
       // curvature difference within limits?
       if (invHelixDiameterVec[j] < lowerLimitCurv) {
         continue;
@@ -101,6 +95,11 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         if (m_cfg.curvatureSortingInFilter) {
           break;
         }
+        continue;
+      }
+      // compared top SP should have at least deltaRMin distance
+      float deltaR = currentTop_r - otherTop_r;
+      if (std::abs(deltaR) < m_cfg.deltaRMin) {
         continue;
       }
       bool newCompSeed = true;
@@ -234,7 +233,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     std::vector<std::pair<
         float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
         seedsPerSpM,
-    int numQualitySeeds,
+    int& numQualitySeeds,
     std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
     const {
   // sort by weight and iterate only up to configured max number of seeds per
