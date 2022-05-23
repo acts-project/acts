@@ -28,7 +28,7 @@ def getOpenDataDetector(mdecorator=None):
         lib_name = "libOpenDataDetector.so"
     elif sys.platform == "darwin":
         env_vars = ["DYLD_LIBRARY_PATH", "DD4HEP_LIBRARY_PATH"]
-        lib_name = "libOpenDataDetector.dyld"
+        lib_name = "libOpenDataDetector.dylib"
 
     if lib_name is not None and len(env_vars) > 0:
         found = False
@@ -41,7 +41,7 @@ def getOpenDataDetector(mdecorator=None):
         if not found:
             msg = (
                 "Unable to find OpenDataDetector factory library. "
-                f"You might need to point {'/'.join(env_vars)} at it"
+                f"You might need to point {'/'.join(env_vars)} to build/thirdparty/OpenDataDetector/factory or other ODD install location"
             )
             raise RuntimeError(msg)
 

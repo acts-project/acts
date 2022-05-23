@@ -24,8 +24,8 @@ Currently, there are two configurable criteria to select compatible source links
 * Global maximum number of measurements on a surface. This could be set up via ``--ckf-selection-nmax`` 
 
 The digitization of the truth hits must also be configured. Since the command-line configuration of this step can get unwieldy,
-an example json configuration file for the smearing digitizer is provided with the source code.
-The detector volumes and layers used in the space point maker are also configured using another example json file in the source code.
+an example JSON configuration file for the smearing digitizer is provided with the source code.
+The detector volumes and layers used in the space point maker are also configured using another example JSON file in the source code.
 
 .. code-block:: console
 
@@ -50,11 +50,11 @@ This file includes a few efficiency plots showing the CKF efficiency, fake rate,
 
 Example plots to show the CKF efficiency, fake rate and duplication rate for the ttbar sample generated above:
 
-.. image:: ../figures/performance/CKF/trackeff_vs_eta_ttbar_pu200.png
+.. image:: ../../figures/performance/CKF/trackeff_vs_eta_ttbar_pu200.png
    :width: 300
 
-.. image:: ../figures/performance/CKF/fakerate_vs_eta_ttbar_pu200.png
+.. image:: ../../figures/performance/CKF/fakerate_vs_eta_ttbar_pu200.png
    :width: 300
 
-.. image:: ../figures/performance/CKF/duplicationrate_vs_eta_ttbar_pu200.png
+.. image:: ../../figures/performance/CKF/duplicationrate_vs_eta_ttbar_pu200.png
    :width: 300
