@@ -29,7 +29,7 @@ namespace ActsExamples {
 struct Trajectories final {
  public:
   /// (Reconstructed) trajectory with multiple states.
-  using MultiTrajectory = ::Acts::MultiTrajectory<Acts::VectorMultiTrajectory>;
+  using MultiTrajectory = Acts::VectorMultiTrajectory;
   /// Fitted parameters identified by indices in the multi trajectory.
   using IndexedParameters = std::unordered_map<size_t, TrackParameters>;
 
@@ -41,8 +41,7 @@ struct Trajectories final {
   /// @param multiTraj The multi trajectory
   /// @param tTips Tip indices that identify valid trajectories
   /// @param parameters Fitted track parameters indexed by trajectory index
-  Trajectories(std::shared_ptr<MultiTrajectory> multiTraj,
-               const std::vector<size_t>& tTips,
+  Trajectories(MultiTrajectory multiTraj, const std::vector<size_t>& tTips,
                const IndexedParameters& parameters)
       : m_multiTrajectory(std::move(multiTraj)),
         m_trackTips(tTips),
@@ -89,7 +88,7 @@ struct Trajectories final {
 
  private:
   // The multiTrajectory
-  std::shared_ptr<MultiTrajectory> m_multiTrajectory;
+  std::optional<MultiTrajectory> m_multiTrajectory;
   // The entry indices of trajectories stored in multiTrajectory
   std::vector<size_t> m_trackTips = {};
   // The fitted parameters at the provided surface for individual trajectories

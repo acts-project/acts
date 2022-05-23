@@ -35,6 +35,28 @@ class VectorMultiTrajectory final
   };
 
  public:
+  VectorMultiTrajectory() = default;
+
+  VectorMultiTrajectory(const VectorMultiTrajectory& other)
+      : m_index{other.m_index},
+        m_previous{other.m_previous},
+        m_params{other.m_params},
+        m_cov{other.m_cov},
+        m_meas{other.m_meas},
+        m_measCov{other.m_measCov},
+        m_jac{other.m_jac},
+        m_sourceLinks{other.m_sourceLinks},
+        m_projectors{other.m_projectors},
+        m_referenceSurfaces{other.m_referenceSurfaces} {
+    for (const auto& [key, value] : other.m_dynamic) {
+      m_dynamic.insert({key, value->clone()});
+    }
+  };
+
+  VectorMultiTrajectory(VectorMultiTrajectory&&) = default;
+  VectorMultiTrajectory& operator=(const VectorMultiTrajectory&) = default;
+  VectorMultiTrajectory& operator=(VectorMultiTrajectory&&) = default;
+
   // BEGIN INTERFACE
   TrackStateProxy::Parameters parameters_impl(IndexType parIdx) {
     return TrackStateProxy::Parameters{m_params[parIdx].data()};
@@ -244,6 +266,8 @@ class VectorMultiTrajectory final
 
     virtual void add() = 0;
     virtual void clear() = 0;
+
+    virtual std::unique_ptr<DynamicColumnBase> clone() const = 0;
   };
 
   template <typename T>
@@ -262,6 +286,10 @@ class VectorMultiTrajectory final
 
     void add() override { m_vector.emplace_back(); }
     void clear() override { m_vector.clear(); }
+
+    std::unique_ptr<DynamicColumnBase> clone() const override {
+      return std::make_unique<DynamicColumn<T>>(*this);
+    }
 
     std::vector<T> m_vector;
   };
