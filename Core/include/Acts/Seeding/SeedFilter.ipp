@@ -37,8 +37,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
   if (m_cfg.seedConfirmation) {
     // check if bottom SP is in the central or forward region
     SeedConfirmationRange seedConfRange =
-        (bottomSP.z() > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
-         bottomSP.z() < m_config.centralSeedConfirmationRange.zMinSeedConf)
+        (bottomSP.z() > m_cfg.centralSeedConfirmationRange.zMaxSeedConf ||
+         bottomSP.z() < m_cfg.centralSeedConfirmationRange.zMinSeedConf)
             ? m_config.forwardSeedConfirmationRange
             : m_config.centralSeedConfirmationRange;
     // set the minimum number of top SP depending on whether the bottom SP is
