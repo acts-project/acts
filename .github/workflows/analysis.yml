@@ -12,7 +12,7 @@ on:
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
-  CCACHE_MAXSIZE: 10G
+  CCACHE_MAXSIZE: 2G
   CCACHE_KEY_SUFFIX: r1
 
 # NOTE this only builds core unittests to reduce the output size. if we
@@ -29,7 +29,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache-linux_ubuntu_debug_${{ env.CCACHE_KEY_SUFFIX }}
+          key: ${{ runner.os  }}-ccache-linux_ubuntu_debug_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os  }}-ccache-linux_ubuntu_debug_${{ env.CCACHE_KEY_SUFFIX }}_
 
       - name: Configure
         run: >
