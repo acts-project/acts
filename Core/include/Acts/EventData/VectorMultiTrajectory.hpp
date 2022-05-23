@@ -122,8 +122,7 @@ class VectorMultiTrajectory final
 
   void clear_impl();
 
-  template <HashedString key>
-  void* component_impl(IndexType istate) {
+  std::any component_impl(HashedString key, IndexType istate) {
     using namespace Acts::HashedStringLiteral;
     switch (key) {
       case "previous"_hash:
@@ -165,86 +164,7 @@ class VectorMultiTrajectory final
     }
   }
 
-  void* component_impl(HashedString key, IndexType istate) {
-    using namespace Acts::HashedStringLiteral;
-    switch (key) {
-      case "previous"_hash:
-        return &m_index[istate].iprevious;
-      case "predicted"_hash:
-        return &m_index[istate].ipredicted;
-      case "filtered"_hash:
-        return &m_index[istate].ifiltered;
-      case "smoothed"_hash:
-        return &m_index[istate].ismoothed;
-      case "calibrated"_hash:
-        return &m_index[istate].icalibrated;
-      case "jacobian"_hash:
-        return &m_index[istate].ijacobian;
-      case "projector"_hash:
-        return &m_projectors[m_index[istate].iprojector];
-      case "sourceLink"_hash:
-        return &m_sourceLinks[m_index[istate].iuncalibrated];
-      case "calibratedSourceLink"_hash:
-        return &m_sourceLinks[m_index[istate].icalibratedsourcelink];
-      case "referenceSurface"_hash:
-        return &m_referenceSurfaces[istate];
-      case "measdim"_hash:
-        return &m_index[istate].measdim;
-      case "chi2"_hash:
-        return &m_index[istate].chi2;
-      case "pathLength"_hash:
-        return &m_index[istate].pathLength;
-      case "typeFlags"_hash:
-        return &m_index[istate].typeFlags;
-      default:
-        auto it = m_dynamic.find(key);
-        if (it == m_dynamic.end()) {
-          throw std::runtime_error("Unable to handle this component");
-        }
-        auto& col = it->second;
-        assert(col && "Dynamic column is null");
-        return col->get(istate);
-    }
-  }
-
-  template <HashedString key>
-  constexpr const void* component_impl(IndexType istate) const {
-    using namespace Acts::HashedStringLiteral;
-    switch (key) {
-      case "previous"_hash:
-        return &m_index[istate].iprevious;
-      case "predicted"_hash:
-        return &m_index[istate].ipredicted;
-      case "filtered"_hash:
-        return &m_index[istate].ifiltered;
-      case "smoothed"_hash:
-        return &m_index[istate].ismoothed;
-      case "calibrated"_hash:
-        return &m_index[istate].icalibrated;
-      case "jacobian"_hash:
-        return &m_index[istate].ijacobian;
-      case "projector"_hash:
-        return &m_projectors[m_index[istate].iprojector];
-      case "sourceLink"_hash:
-        return &m_sourceLinks[m_index[istate].iuncalibrated];
-      case "calibratedSourceLink"_hash:
-        return &m_sourceLinks[m_index[istate].icalibratedsourcelink];
-      case "referenceSurface"_hash:
-        return &m_referenceSurfaces[istate];
-      case "measdim"_hash:
-        return &m_index[istate].measdim;
-      case "chi2"_hash:
-        return &m_index[istate].chi2;
-      case "pathLength"_hash:
-        return &m_index[istate].pathLength;
-      case "typeFlags"_hash:
-        return &m_index[istate].typeFlags;
-      default:
-        assert(false);
-    }
-  }
-
-  const void* component_impl(HashedString key, IndexType istate) const {
+  std::any component_impl(HashedString key, IndexType istate) const {
     using namespace Acts::HashedStringLiteral;
     switch (key) {
       case "previous"_hash:
@@ -319,8 +239,8 @@ class VectorMultiTrajectory final
   struct DynamicColumnBase {
     virtual ~DynamicColumnBase() = 0;
 
-    virtual void* get(size_t i) = 0;
-    virtual const void* get(size_t i) const = 0;
+    virtual std::any get(size_t i) = 0;
+    virtual std::any get(size_t i) const = 0;
 
     virtual void add() = 0;
     virtual void clear() = 0;
@@ -330,12 +250,12 @@ class VectorMultiTrajectory final
   struct DynamicColumn : public VectorMultiTrajectory::DynamicColumnBase {
     ~DynamicColumn() override = default;
 
-    void* get(size_t i) override {
+    std::any get(size_t i) override {
       assert(i < m_vector.size() && "DynamicColumn out of bounds");
       return &m_vector[i];
     }
 
-    const void* get(size_t i) const override {
+    std::any get(size_t i) const override {
       assert(i < m_vector.size() && "DynamicColumn out of bounds");
       return &m_vector[i];
     }

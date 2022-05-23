@@ -928,25 +928,25 @@ class MultiTrajectory {
   template <typename T, HashedString key>
   constexpr T& component(IndexType istate) {
     assert(has(key, istate));
-    return *static_cast<T*>(self().template component_impl<key>(istate));
+    return *std::any_cast<T*>(self().component_impl(key, istate));
   }
 
   template <typename T>
   constexpr T& component(HashedString key, IndexType istate) {
     assert(has(key, istate));
-    return *static_cast<T*>(self().component_impl(key, istate));
+    return *std::any_cast<T*>(self().component_impl(key, istate));
   }
 
   template <typename T, HashedString key>
   constexpr const T& component(IndexType istate) const {
     assert(has(key, istate));
-    return *static_cast<const T*>(self().template component_impl<key>(istate));
+    return *std::any_cast<const T*>(self().component_impl(key, istate));
   }
 
   template <typename T>
   constexpr const T& component(HashedString key, IndexType istate) const {
     assert(has(key, istate));
-    return *static_cast<const T*>(self().component_impl(key, istate));
+    return *std::any_cast<const T*>(self().component_impl(key, istate));
   }
 
  private:
