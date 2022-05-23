@@ -39,8 +39,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     SeedConfirmationRangeConfig seedConfRange =
         (bottomSP.z() > m_cfg.centralSeedConfirmationRange.zMaxSeedConf ||
          bottomSP.z() < m_cfg.centralSeedConfirmationRange.zMinSeedConf)
-            ? m_config.forwardSeedConfirmationRange
-            : m_config.centralSeedConfirmationRange;
+            ? m_cfg.forwardSeedConfirmationRange
+            : m_cfg.centralSeedConfirmationRange;
     // set the minimum number of top SP depending on whether the bottom SP is
     // in the central or forward region
     nTopSeedConf = bottomSP.radius() > seedConfRange.rMaxSeedConf
@@ -50,7 +50,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
   size_t minWeightSeedIndex = 0;
   bool minWeightSeed = false;
-  float weightMin = std::numeric_limits<float>::min();
+  float weightMin = -std::numeric_limits<float>::max();
 
   // initialize original index locations
   std::vector<size_t> idx(topSpVec.size());
