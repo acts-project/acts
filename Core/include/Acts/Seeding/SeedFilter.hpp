@@ -40,7 +40,7 @@ class SeedFilter {
   /// @param impactParametersVec vector containing the impact parameters
   /// @param zOrigin on the z axis as defined by bottom and middle space point
   /// @param numQualitySeeds number of high quality seeds in seed confirmation
-  /// @param numSeeds number of low quality seeds in seed confirmation
+  /// @param numSeeds number of seeds that did not pass the quality confirmation but were still accepted, if quality confirmation is not used this is the total number of seeds
   /// @param outCont Output container for the seeds
   virtual void filterSeeds_2SpFixed(
       InternalSpacePoint<external_spacepoint_t>& bottomSP,

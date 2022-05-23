@@ -44,7 +44,10 @@ struct SeedFilterConfig {
   float seedWeightIncrement = 0;
   float numSeedIncrement = std::numeric_limits<float>::infinity();
 
-  // seed confirmation
+  // seedConfirmation enables seed confirmation cuts - keep seeds if they have
+  // specific values of impact parameter, z-origin and number of compatible
+  // seeds inside a pre-defined range that also depends on the region of the
+  // detector (i.e. forward or central region) defined by SeedConfirmationRange
   bool seedConfirmation = false;
   // contains parameters for central seed confirmation
   SeedConfirmationRangeConfig centralSeedConfirmationRange;
