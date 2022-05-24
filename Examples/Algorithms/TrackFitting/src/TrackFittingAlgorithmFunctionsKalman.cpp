@@ -35,7 +35,8 @@ struct SimpleReverseFilteringLogic {
   double momentumThreshold;
 
   bool doBackwardFiltering(
-      Acts::MultiTrajectory::ConstTrackStateProxy trackState) const {
+      Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::ConstTrackStateProxy
+          trackState) const {
     auto momentum = fabs(1 / trackState.filtered()[Acts::eBoundQOverP]);
     return (momentum <= momentumThreshold);
   }
@@ -45,7 +46,7 @@ template <typename TrackFitterFunktion>
 auto makeKfOptions(
     const TrackFitterFunktion& f,
     ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions options) {
-  Acts::KalmanFitterExtensions extensions;
+  Acts::KalmanFitterExtensions<Acts::VectorMultiTrajectory> extensions;
   extensions.updater.connect<
       &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
       &f.kfUpdater);
@@ -56,7 +57,7 @@ auto makeKfOptions(
       .connect<&SimpleReverseFilteringLogic::doBackwardFiltering>(
           &f.reverseFilteringLogic);
 
-  Acts::KalmanFitterOptions kfOptions(
+  Acts::KalmanFitterOptions<Acts::VectorMultiTrajectory> kfOptions(
       options.geoContext, options.magFieldContext, options.calibrationContext,
       extensions, options.logger, Acts::PropagatorPlainOptions(),
       &(*options.referenceSurface));
