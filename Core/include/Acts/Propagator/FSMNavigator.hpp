@@ -86,7 +86,7 @@ class FSMNavigator {
                            states::LayerToLayer, states::SurfaceToSurface,
                            states::ToBoundarySurface, states::Finished> {
     /// Externally provided surfaces - these are tried to be hit
-    std::multimap<const Layer*, const Surface*> externalSurfaces = {};
+    ExternalSurfaces externalSurfaces = {};
 
     /// Navigation sate: the world volume
     const TrackingVolume* worldVolume = nullptr;
@@ -140,6 +140,42 @@ class FSMNavigator {
 
     friend FSMNavigator;
     friend fsm_base;
+
+    /// Reset state
+    ///
+    /// @param geoContext is the geometry context
+    /// @param pos is the global position
+    /// @param dir is the momentum direction
+    /// @param navDir is the navigation direction
+    /// @param ssurface is the new starting surface
+    /// @param tsurface is the target surface
+    void reset(const GeometryContext& geoContext, const Vector3& pos,
+               const Vector3& dir, NavigationDirection navDir,
+               const Surface* ssurface, const Surface* tsurface) {
+      // Reset everything first
+      *this = State();
+
+      // Set the start, current and target objects
+      startSurface = ssurface;
+      if (ssurface->associatedLayer() != nullptr) {
+        startLayer = ssurface->associatedLayer();
+      }
+      if (startLayer->trackingVolume() != nullptr) {
+        startVolume = startLayer->trackingVolume();
+      }
+      currentSurface = startSurface;
+      currentVolume = startVolume;
+      targetSurface = tsurface;
+
+      // Get the compatible layers (including the current layer)
+      NavigationOptions<Layer> navOpts(navDir, true, true, true, true, nullptr,
+                                       nullptr);
+      navLayers =
+          currentVolume->compatibleLayers(geoContext, pos, dir, navOpts);
+
+      // Set the iterator to the first
+      navLayerIter = navLayers.begin();
+    }
 
     // everything below is private to the FSMNavigator, and shouldn't be touched
     // from the outside

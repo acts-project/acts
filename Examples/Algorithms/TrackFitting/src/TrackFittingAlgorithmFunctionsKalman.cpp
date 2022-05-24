@@ -11,6 +11,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/SharedBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/FSMNavigator.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -25,7 +26,8 @@ namespace {
 using Updater = Acts::GainMatrixUpdater;
 using Smoother = Acts::GainMatrixSmoother;
 using Stepper = Acts::EigenStepper<>;
-using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
+using Navigator = Acts::FSMNavigator;
+using Propagator = Acts::Propagator<Stepper, Navigator>;
 using Fitter = Acts::KalmanFitter<Propagator>;
 using DirectPropagator = Acts::Propagator<Stepper, Acts::DirectNavigator>;
 using DirectFitter = Acts::KalmanFitter<DirectPropagator>;
@@ -133,11 +135,11 @@ ActsExamples::TrackFittingAlgorithm::makeKalmanFitterFunction(
     double reverseFilteringMomThreshold,
     Acts::FreeToBoundCorrection freeToBoundCorrection) {
   Stepper stepper(std::move(magneticField));
-  Acts::Navigator::Config cfg{trackingGeometry};
+  Navigator::Config cfg{trackingGeometry};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
-  Acts::Navigator navigator(cfg);
+  Navigator navigator(cfg);
   Propagator propagator(std::move(stepper), std::move(navigator));
   Fitter trackFitter(std::move(propagator));
 
