@@ -9,18 +9,6 @@ import acts.examples
 u = acts.UnitConstants
 
 
-<<<<<<< HEAD
-def configureDigitization(
-    trackingGeometry,
-    field,
-    outputDir: Path,
-    particlesInput: Optional[Path] = None,
-    outputRoot=True,
-    outputCsv=True,
-    s=None,
-    doMerge=False,
-):
-=======
 def addDigitization(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
@@ -29,9 +17,9 @@ def addDigitization(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
+    doMerge: Optional[bool] = None
 ) -> acts.examples.Sequencer:
     """This function steers the digitization step
->>>>>>> acts-project/main
 
     Parameters
     ----------
