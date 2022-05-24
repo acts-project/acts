@@ -1,15 +1,17 @@
-from typing import Type
-import inspect
-
-from helpers import dd4hepEnabled
-from common import getOpenDataDetectorDirectory, getOpenDataDetector
-
 import pytest
 
-from helpers import geant4Enabled, AssertCollectionExistsAlg
+from helpers import (
+    geant4Enabled,
+    edm4hepEnabled,
+    AssertCollectionExistsAlg,
+)
+
+from common import (
+    getOpenDataDetectorDirectory,
+    getOpenDataDetector,
+)
 
 import acts
-
 from acts import PlanarModuleStepper
 from acts.examples import (
     RootParticleWriter,
@@ -24,9 +26,7 @@ from acts.examples import (
     CsvSimHitReader,
     CsvPlanarClusterWriter,
     CsvPlanarClusterReader,
-    EDM4hepSimHitReader,
     PlanarSteppingAlgorithm,
-    BareAlgorithm,
     Sequencer,
 )
 
@@ -309,8 +309,11 @@ def test_csv_clusters_reader(tmp_path, fatras, conf_const, trk_geo, rng):
         assert alg.events_seen == 10
 
 
-@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")
+@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 def test_edm4hep_simhits_reader(tmp_path):
+    from acts.examples.edm4hep import (
+        EDM4hepSimHitReader,
+    )
     from DDSim.DD4hepSimulation import DD4hepSimulation
 
     odd_xml = getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml"

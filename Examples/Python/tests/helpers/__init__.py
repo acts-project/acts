@@ -40,6 +40,14 @@ try:
 except:
     hepmc3Enabled = False
 
+try:
+    import acts.examples.edm4hep
+
+    edm4hepEnabled = True
+except Exception as e:
+    print(e)
+    edm4hepEnabled = False
+
 isCI = os.environ.get("CI", "false") == "true"
 
 

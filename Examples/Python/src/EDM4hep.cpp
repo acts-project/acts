@@ -22,12 +22,14 @@ namespace Acts::Python {
 void addEDM4hep(Context& ctx) {
   auto mex = ctx.get("examples");
 
+  auto edm4hep = mex.def_submodule("_edm4hep");
+
   {
     using Reader = ActsExamples::EDM4hepSimHitReader;
     using Config = Reader::Config;
     auto reader =
         py::class_<Reader, ActsExamples::IReader, std::shared_ptr<Reader>>(
-            mex, "EDM4hepSimHitReader")
+            edm4hep, "EDM4hepSimHitReader")
             .def(py::init<const Config&, Acts::Logging::Level>(),
                  py::arg("config"), py::arg("level"))
             .def_property_readonly("config", &Reader::config);

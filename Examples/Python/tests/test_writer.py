@@ -14,7 +14,6 @@ from helpers import (
     AssertCollectionExistsAlg,
 )
 
-
 import acts
 
 from common import getOpenDataDetectorDirectory
@@ -43,13 +42,11 @@ from acts.examples import (
     CsvMultiTrajectoryWriter,
     CsvTrackingGeometryWriter,
     CsvMeasurementWriter,
-    TrackParamsEstimationAlgorithm,
     PlanarSteppingAlgorithm,
     JsonMaterialWriter,
     JsonFormat,
     Sequencer,
     GenericDetector,
-    RootNuclearInteractionParametersWriter,
 )
 
 
