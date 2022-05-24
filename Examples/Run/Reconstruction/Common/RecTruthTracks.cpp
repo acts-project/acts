@@ -132,6 +132,7 @@ int runRecTruthTracks(int argc, char* argv[],
   }
 
   // setup the fitter
+  const double reverseFilteringMomThreshold = 0.0;
   TrackFittingAlgorithm::Config fitter;
   fitter.inputMeasurements = digiCfg.outputMeasurements;
   fitter.inputSourceLinks = digiCfg.outputSourceLinks;
@@ -143,16 +144,19 @@ int runRecTruthTracks(int argc, char* argv[],
       particleSmearingCfg.outputTrackParameters;
   fitter.outputTrajectories = "trajectories";
   fitter.directNavigation = dirNav;
-  fitter.multipleScattering =
-      vm["fit-multiple-scattering-correction"].as<bool>();
-  fitter.energyLoss = vm["fit-energy-loss-correction"].as<bool>();
-  fitter.freeToBoundCorrection = Acts::FreeToBoundCorrection(
-      vm["fit-ftob-nonlinear-correction"].as<bool>());
   fitter.pickTrack = vm["fit-pick-track"].as<int>();
   fitter.trackingGeometry = trackingGeometry;
-  fitter.dFit = TrackFittingAlgorithm::makeTrackFitterFunction(magneticField);
-  fitter.fit = TrackFittingAlgorithm::makeTrackFitterFunction(trackingGeometry,
-                                                              magneticField);
+  fitter.dFit = TrackFittingAlgorithm::makeKalmanFitterFunction(
+      magneticField, vm["fit-multiple-scattering-correction"].as<bool>(),
+      vm["fit-energy-loss-correction"].as<bool>(), reverseFilteringMomThreshold,
+      Acts::FreeToBoundCorrection(
+          vm["fit-ftob-nonlinear-correction"].as<bool>()));
+  fitter.fit = TrackFittingAlgorithm::makeKalmanFitterFunction(
+      trackingGeometry, magneticField,
+      vm["fit-multiple-scattering-correction"].as<bool>(),
+      vm["fit-energy-loss-correction"].as<bool>(), reverseFilteringMomThreshold,
+      Acts::FreeToBoundCorrection(
+          vm["fit-ftob-nonlinear-correction"].as<bool>()));
   sequencer.addAlgorithm(
       std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
 
