@@ -102,6 +102,7 @@ def configureDigitization(
     outputRoot: bool = True,
     outputCsv: bool = True,
     s: Optional[acts.examples.Sequencer] = None,
+    doMerge: Optional[bool] = None,
 ) -> acts.examples.Sequencer:
 
     from particle_gun import addParticleGun, EtaConfig, PhiConfig, ParticleConfig
@@ -148,6 +149,7 @@ def configureDigitization(
         outputDirCsv=outputDir / "csv" if outputCsv else None,
         outputDirRoot=outputDir if outputRoot else None,
         rnd=rnd,
+        doMerge=doMerge,
     )
 
     return s
