@@ -88,7 +88,8 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
             [40.0, 90.0],
         ],  # if useVariableMiddleSPRange is set to false, the vector rRangeMiddleSP can be used to define a fixed r range for each z bin: {{rMin, rMax}, ...}. If useVariableMiddleSPRange is set to false and the vector is empty, the cuts won't be applied
         useVariableMiddleSPRange=True,  # if useVariableMiddleSPRange is true, the values in rRangeMiddleSP will be calculated based on r values of the SPs and deltaRMiddleSPRange
-        deltaRMiddleSPRange=10,
+        deltaRMiddleMinSPRange=10,
+        deltaRMiddleMaxSPRange=10,
         seedConfirmation=True,
         centralSeedConfirmationRange=acts.SeedConfirmationRange(
             zMinSeedConf=250 * u.mm,
