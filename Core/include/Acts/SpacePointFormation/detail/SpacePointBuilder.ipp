@@ -81,40 +81,41 @@ inline double differenceOfMeasurementsChecked(const Vector3& pos1,
   return diffTheta2 + diffPhi2;
 }
 
-/// @brief This function finds the top and bottom end of a detector segment in
-/// local coordinates
-///
-/// @param [in] local Local position of the Measurement
-/// @param [in] segment Segmentation of the detector element
-///
-/// @return Pair containing the top and bottom end
-inline std::pair<Vector2, Vector2> findLocalTopAndBottomEnd(
-    const Vector2& local, const Segmentation* segment) {
-  auto& binData = segment->binUtility().binningData();
-  auto& boundariesX = binData[0].boundaries();
-  auto& boundariesY = binData[1].boundaries();
-  // Search the x-/y-bin of the Measurement
-  size_t binX = binData[0].searchLocal(local);
-  size_t binY = binData[1].searchLocal(local);
-  // Storage of the local top (first) and bottom (second) end
-  std::pair<Vector2, Vector2> topBottomLocal;
+// /// @brief This function finds the top and bottom end of a detector segment in
+// /// local coordinates
+// ///
+// /// @param [in] local Local position of the Measurement
+// /// @param [in] segment Segmentation of the detector element
+// ///
+// /// @return Pair containing the top and bottom end
+// inline std::pair<Vector2, Vector2> findLocalTopAndBottomEnd(
+//     const Vector2& local, const Segmentation* segment) {
+//   auto& binData = segment->binUtility().binningData();
+//   auto& boundariesX = binData[0].boundaries();
+//   auto& boundariesY = binData[1].boundaries();
+//   // Search the x-/y-bin of the Measurement
+//   size_t binX = binData[0].searchLocal(local);
+//   size_t binY = binData[1].searchLocal(local);
+//   // Storage of the local top (first) and bottom (second) end
+//   std::pair<Vector2, Vector2> topBottomLocal;
 
-  if (boundariesX[binX + 1] - boundariesX[binX] <
-      boundariesY[binY + 1] - boundariesY[binY]) {
-    topBottomLocal.first = {(boundariesX[binX] + boundariesX[binX + 1]) / 2,
-                            boundariesY[binY + 1]};
-    topBottomLocal.second = {(boundariesX[binX] + boundariesX[binX + 1]) / 2,
-                             boundariesY[binY]};
-  } else {
-    // Set the top and bottom end of the strip in local coordinates
-    topBottomLocal.first = {boundariesX[binX],
-                            (boundariesY[binY] + boundariesY[binY + 1]) / 2};
-    topBottomLocal.second = {boundariesX[binX + 1],
-                             (boundariesY[binY] + boundariesY[binY + 1]) / 2};
-  }
+//   if (boundariesX[binX + 1] - boundariesX[binX] <
+//       boundariesY[binY + 1] - boundariesY[binY]) {
+//     topBottomLocal.first = {(boundariesX[binX] + boundariesX[binX + 1]) / 2,
+//                             boundariesY[binY + 1]};
+//     topBottomLocal.second = {(boundariesX[binX] + boundariesX[binX + 1]) / 2,
+//                              boundariesY[binY]};
+//   } else {
+//     // Set the top and bottom end of the strip in local coordinates
+//     topBottomLocal.first = {boundariesX[binX],
+//                             (boundariesY[binY] + boundariesY[binY + 1]) / 2};
+//     topBottomLocal.second = {boundariesX[binX + 1],
+//                              (boundariesY[binY] + boundariesY[binY + 1]) /
+//                              2};
+//   }
 
-  return topBottomLocal;
-}
+//   return topBottomLocal;
+// }
 
 /// @brief Calculates a space point whithout using the vertex
 /// @note This is mostly to resolve space points from cosmic data
@@ -305,59 +306,8 @@ SpacePointBuilder<spacepoint_t>::SpacePointBuilder(
                      boost::container::static_vector<const SourceLink*, 2>)>
         func,
     std::unique_ptr<const Logger> logger)
-    : m_config(cfg), m_spConstructor(func), m_logger(std::move(logger)) {}
-
-template <typename spacepoint_t>
-std::pair<Vector3, Vector2> SpacePointBuilder<spacepoint_t>::globalCoords(
-    const GeometryContext& gctx, const Measurement& meas) const {
-  const auto& slink =
-      std::visit([](const auto& x) { return &x.sourceLink(); }, meas);
-  const auto geoId = slink->geometryId();
-
-  const Surface* surface = m_config.trackingGeometry->findSurface(geoId);
-  auto [localPos, localCov] = std::visit(
-      [](const auto& measurement) {
-        auto expander = measurement.expander();
-        BoundVector par = expander * measurement.parameters();
-        BoundSymMatrix cov =
-            expander * measurement.covariance() * expander.transpose();
-        // extract local position
-        Vector2 lpar(par[eBoundLoc0], par[eBoundLoc1]);
-        // extract local position covariance.
-        SymMatrix2 lcov = cov.block<2, 2>(eBoundLoc0, eBoundLoc0);
-        return std::make_pair(lpar, lcov);
-      },
-      meas);
-  Vector3 globalPos = surface->localToGlobal(gctx, localPos, Vector3());
-  RotationMatrix3 rotLocalToGlobal =
-      surface->referenceFrame(gctx, globalPos, Vector3());
-
-  // the space point requires only the variance of the transverse and
-  // longitudinal position. reduce computations by transforming the
-  // covariance directly from local to rho/z.
-  //
-  // compute Jacobian from global coordinates to rho/z
-  //
-  //         rho = sqrt(x² + y²)
-  // drho/d{x,y} = (1 / sqrt(x² + y²)) * 2 * {x,y}
-  //             = 2 * {x,y} / r
-  //       dz/dz = 1 (duuh!)
-  //
-  auto x = globalPos[ePos0];
-  auto y = globalPos[ePos1];
-  auto scale = 2 / std::hypot(x, y);
-  ActsMatrix<2, 3> jacXyzToRhoZ = ActsMatrix<2, 3>::Zero();
-  jacXyzToRhoZ(0, ePos0) = scale * x;
-  jacXyzToRhoZ(0, ePos1) = scale * y;
-  jacXyzToRhoZ(1, ePos2) = 1;
-  // compute Jacobian from local coordinates to rho/z
-  ActsMatrix<2, 2> jac =
-      jacXyzToRhoZ * rotLocalToGlobal.block<3, 2>(ePos0, ePos0);
-  // compute rho/z variance
-  ActsVector<2> var = (jac * localCov * jac.transpose()).diagonal();
-
-  auto gcov = Vector2(var[0], var[1]);
-  return std::make_pair(globalPos, gcov);
+    : m_config(cfg), m_spConstructor(func), m_logger(std::move(logger)) {
+  m_spUtility = std::make_shared<SpacePointUtility>(cfg);
 }
 
 template <typename spacepoint_t>
@@ -367,8 +317,8 @@ void SpacePointBuilder<spacepoint_t>::calculateSingleHitSpacePoints(
     const std::vector<const Measurement*>& measurements,
     std::back_insert_iterator<container_t<spacepoint_t>> spacePointIt) const {
   for (const auto& meas : measurements) {
-    auto [gPos, gCov] = globalCoords(gctx, *meas);
-
+    auto [gPos, gCov] = m_spUtility->globalCoords(gctx, *meas);
+    m_spUtility->test();
     const auto& slink =
         std::visit([](const auto& x) { return &x.sourceLink(); }, *meas);
 
@@ -403,10 +353,10 @@ void SpacePointBuilder<spacepoint_t>::makeMeasurementPairs(
     measurementMinDist = measurementsBack.size();
     for (unsigned int iMeasurementsBack = 0;
          iMeasurementsBack < measurementsBack.size(); iMeasurementsBack++) {
-      auto [gposFront, gcovFront] =
-          globalCoords(gctx, *(measurementsFront[iMeasurementsFront]));
-      auto [gposBack, gcovBack] =
-          globalCoords(gctx, *(measurementsBack[iMeasurementsBack]));
+      auto [gposFront, gcovFront] = m_spUtility->globalCoords(
+          gctx, *(measurementsFront[iMeasurementsFront]));
+      auto [gposBack, gcovBack] = m_spUtility->globalCoords(
+          gctx, *(measurementsBack[iMeasurementsBack]));
 
       currentDiff = detail::differenceOfMeasurementsChecked(
           gposFront, gposBack, m_config.vertex, m_config.diffDist,
@@ -447,8 +397,10 @@ void SpacePointBuilder<spacepoint_t>::calculateDoubleHitSpacePoint(
   spaPoPa.q = ends1.first - ends1.second;
   spaPoPa.r = ends2.first - ends2.second;
 
-  const auto& slink_front = getSourceLink(*(measurementPair.first));
-  const auto& slink_back = getSourceLink(*(measurementPair.second));
+  const auto& slink_front =
+      m_spUtility->getSourceLink(*(measurementPair.first));
+  const auto& slink_back =
+      m_spUtility->getSourceLink(*(measurementPair.second));
 
   boost::container::static_vector<const SourceLink*, 2> slinks;
   slinks.emplace_back(slink_front);
@@ -461,8 +413,8 @@ void SpacePointBuilder<spacepoint_t>::calculateDoubleHitSpacePoint(
       Vector3 gPos = ends1.first + resultPerpProj * spaPoPa.q;
       double theta = acos(spaPoPa.q.dot(spaPoPa.r) /
                           (spaPoPa.q.norm() * spaPoPa.r.norm()));
-      const auto gCov = calcGlobalVars(gctx, *(measurementPair.first),
-                                       *(measurementPair.second), theta);
+      const auto gCov = m_spUtility->calcGlobalVars(
+          gctx, *(measurementPair.first), *(measurementPair.second), theta);
 
       *spacePoint = m_spConstructor(gPos, gCov, std::move(slinks));
     }
@@ -480,107 +432,11 @@ void SpacePointBuilder<spacepoint_t>::calculateDoubleHitSpacePoint(
     double theta =
         acos(spaPoPa.q.dot(spaPoPa.r) / (spaPoPa.q.norm() * spaPoPa.r.norm()));
 
-    const auto gCov = calcGlobalVars(gctx, *(measurementPair.first),
-                                     *(measurementPair.second), theta);
+    const auto gCov = m_spUtility->calcGlobalVars(
+        gctx, *(measurementPair.first), *(measurementPair.second), theta);
 
     *spacePoint = m_spConstructor(gPos, gCov, std::move(slinks));
   }
 }
 
-template <typename spacepoint_t>
-Vector2 SpacePointBuilder<spacepoint_t>::calcGlobalVars(
-    const GeometryContext& gctx, const Measurement& measFront,
-    const Measurement& measBack, const double theta) const {
-  const auto var1 = getLoc0Var(measFront);
-  const auto var2 = getLoc0Var(measBack);
-  // strip1 and strip2 are tilted at +/- theta/2
-
-  double sigma_x = std::hypot(var1, var2) / (2 * sin(theta * 0.5));
-  double sigma_y = std::hypot(var1, var2) / (2 * cos(theta * 0.5));
-
-  // projection to the surface with strip1.
-  double sig_x1 = sigma_x * cos(0.5 * theta) + sigma_y * sin(0.5 * theta);
-  double sig_y1 = sigma_y * cos(0.5 * theta) + sigma_x * sin(0.5 * theta);
-  SymMatrix2 lcov;
-  lcov << sig_x1, 0, 0, sig_y1;
-
-  auto [localPos, localCov] = getLocalPosCov(measFront);
-
-  const auto& slink_meas1 =
-      std::visit([](const auto& x) { return &x.sourceLink(); }, measFront);
-
-  const auto geoId = slink_meas1->geometryId();
-
-  auto gcov = globalCov(gctx, geoId, localPos, lcov);
-
-  return gcov;
-}
-
-template <typename spacepoint_t>
-double SpacePointBuilder<spacepoint_t>::getLoc0Var(
-    const Measurement& meas) const {
-  auto cov = std::visit(
-      [](const auto& x) {
-        auto expander = x.expander();
-        BoundSymMatrix bcov = expander * x.covariance() * expander.transpose();
-        SymMatrix2 lcov = bcov.block<2, 2>(eBoundLoc0, eBoundLoc0);
-        return lcov;
-      },
-      meas);
-  return cov(0, 0);
-}
-
-template <typename spacepoint_t>
-std::pair<Vector2, SymMatrix2> SpacePointBuilder<spacepoint_t>::getLocalPosCov(
-    const Measurement& meas) const {
-  return std::visit(
-      [](const auto& x) {
-        auto expander = x.expander();
-        BoundVector par = expander * x.parameters();
-        BoundSymMatrix cov = expander * x.covariance() * expander.transpose();
-        Vector2 lpar(par[BoundIndices::eBoundLoc0],
-                     par[BoundIndices::eBoundLoc1]);
-        SymMatrix2 lcov = cov.block<2, 2>(eBoundLoc0, eBoundLoc0);
-        return std::make_pair(lpar, lcov);
-      },
-      meas);
-}
-
-template <typename spacepoint_t>
-Vector2 SpacePointBuilder<spacepoint_t>::globalCov(
-    const GeometryContext& gctx, const GeometryIdentifier& geoId,
-    const Vector2& localPos, const SymMatrix2& localCov) const {
-  Vector3 globalFakeMom(1, 1, 1);
-
-  const Surface* surface = m_config.trackingGeometry->findSurface(geoId);
-
-  Vector3 globalPos = surface->localToGlobal(gctx, localPos, globalFakeMom);
-  RotationMatrix3 rotLocalToGlobal =
-      surface->referenceFrame(gctx, globalPos, globalFakeMom);
-
-  auto x = globalPos[ePos0];
-  auto y = globalPos[ePos1];
-  auto scale = 2 / std::hypot(x, y);
-  ActsMatrix<2, 3> jacXyzToRhoZ = ActsMatrix<2, 3>::Zero();
-  jacXyzToRhoZ(0, ePos0) = scale * x;
-  jacXyzToRhoZ(0, ePos1) = scale * y;
-  jacXyzToRhoZ(1, ePos2) = 1;
-  // compute Jacobian from local coordinates to rho/z
-  ActsMatrix<2, 2> jac =
-      jacXyzToRhoZ * rotLocalToGlobal.block<3, 2>(ePos0, ePos0);
-  // compute rho/z variance
-  ActsVector<2> var = (jac * localCov * jac.transpose()).diagonal();
-
-  auto gcov = Vector2(var[0], var[1]);
-
-  return gcov;
-}
-
-template <typename spacepoint_t>
-const SourceLink* SpacePointBuilder<spacepoint_t>::getSourceLink(
-    const Measurement meas) const {
-  const SourceLink* slink =
-      std::visit([](const auto& x) { return &x.sourceLink(); }, meas);
-  return slink;
-}
 }  // namespace Acts
