@@ -15,7 +15,7 @@ sys.path += [
 os.environ["ACTS_LOG_FAILURE_THRESHOLD"] = "FATAL"
 import acts.examples
 
-from truth_tracking import runTruthTracking
+from truth_tracking_kalman import runTruthTrackingKalman
 from ckf_tracks import runCKFTracks
 from common import getOpenDataDetector
 
@@ -52,7 +52,7 @@ s = acts.examples.Sequencer(
 
 with tempfile.TemporaryDirectory() as temp:
     tp = Path(temp)
-    runTruthTracking(
+    runTruthTrackingKalman(
         trackingGeometry,
         field,
         digiConfigFile=digiConfig,
