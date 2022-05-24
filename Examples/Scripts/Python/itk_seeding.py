@@ -17,9 +17,9 @@ def runITkSeeding(field, csvInputDir, outputDir, inputSpacePointsType, s=None):
     if inputSpacePointsType=="PixelSpacePoints":
         inputCollection="pixel"
         outputSeeds="PixelSeeds"
+        allowSeparateRMax=False
         rMaxGridConfig=320 * u.mm
         rMaxSeedFinderConfig=rMaxGridConfig
-        allowSeparateRMax=False
         deltaRMinSP=6 * u.mm
         deltaRMax=280 * u.mm
         deltaRMaxTopSP=280 * u.mm
@@ -56,18 +56,23 @@ def runITkSeeding(field, csvInputDir, outputDir, inputSpacePointsType, s=None):
             [-1, 0],
             [-1, 0],
         ]
-        deltaRMiddleMinSPRange=10 * u.mm;
-        deltaRMiddleMaxSPRange=10 * u.mm;
-        impactWeightFactor = 100
-        compatSeedLimit = 3
-        numSeedIncrement = float("inf")
-        seedWeightIncrement = 0
+        deltaRMiddleMinSPRange=10 * u.mm
+        deltaRMiddleMaxSPRange=10 * u.mm
+        seedConfirmationFilter=True,
+        impactWeightFactor=100
+        compatSeedLimit=3
+        numSeedIncrement=10**100 # inf
+        seedWeightIncrement=0
+        useDetailedDoubleMeasurementInfo=False
+        maxSeedsPerSpMConf=5
+        maxQualitySeedsPerSpMConf=5
+        useDeltaRorTopRadius=True
     else:
         inputCollection="strip"
         outputSeeds="StripSeeds"
+        allowSeparateRMax=True
         rMaxGridConfig=1000. * u.mm
         rMaxSeedFinderConfig=1200. * u.mm
-        allowSeparateRMax=True
         deltaRMinSP=20 * u.mm
         deltaRMax=600 * u.mm
         deltaRMaxTopSP=300 * u.mm
@@ -104,13 +109,17 @@ def runITkSeeding(field, csvInputDir, outputDir, inputSpacePointsType, s=None):
             [-1, 0],
             [-1, 0],
         ]
-        deltaRMiddleMinSPRange=30 * u.mm;
-        deltaRMiddleMaxSPRange=150 * u.mm;
-        impactWeightFactor = 1
-        compatSeedLimit = 4
-        numSeedIncrement = 1
-        seedWeightIncrement = 10100
-
+        deltaRMiddleMinSPRange=30 * u.mm
+        deltaRMiddleMaxSPRange=150 * u.mm
+        seedConfirmationFilter=False
+        impactWeightFactor=1
+        compatSeedLimit=4
+        numSeedIncrement=1
+        seedWeightIncrement=10100
+        useDetailedDoubleMeasurementInfo=True
+				maxSeedsPerSpMConf=10**100
+        maxQualitySeedsPerSpMConf=10**100
+				useDeltaRorTopRadius=False
 
     # Read input space points from input csv files
     evReader = CsvSpacePointReader(
@@ -189,8 +198,8 @@ def runITkSeeding(field, csvInputDir, outputDir, inputSpacePointsType, s=None):
             [40.0, 90.0],
         ],  # if useVariableMiddleSPRange is set to false, the vector rRangeMiddleSP can be used to define a fixed r range for each z bin: {{rMin, rMax}, ...}. If useVariableMiddleSPRange is set to false and the vector is empty, the cuts won't be applied
         useVariableMiddleSPRange=True,  # if useVariableMiddleSPRange is true, the values in rRangeMiddleSP will be calculated based on r values of the SPs and deltaRMiddleSPRange
-#        deltaRMiddleMinSPRange=deltaRMiddleMinSPRange,
-#        deltaRMiddleMaxSPRange=deltaRMiddleMaxSPRange,
+        deltaRMiddleMinSPRange=deltaRMiddleMinSPRange,
+        deltaRMiddleMaxSPRange=deltaRMiddleMaxSPRange,
         seedConfirmation=True,
         centralSeedConfirmationRange=acts.SeedConfirmationRange(
             zMinSeedConf=250 * u.mm,
@@ -206,7 +215,7 @@ def runITkSeeding(field, csvInputDir, outputDir, inputSpacePointsType, s=None):
             nTopForLargeR=1,
             nTopForSmallR=2,
         ),
-        useDetailedDoubleMeasurementInfo=False,
+        useDetailedDoubleMeasurementInfo=useDetailedDoubleMeasurementInfo,
     )
 
     seedFilterConfig = acts.SeedFilterConfig(
@@ -215,12 +224,16 @@ def runITkSeeding(field, csvInputDir, outputDir, inputSpacePointsType, s=None):
         impactWeightFactor=impactWeightFactor,
         compatSeedWeight=100,
         compatSeedLimit=compatSeedLimit,
-#        numSeedIncrement=numSeedIncrement,
-#        seedWeightIncrement=seedWeightIncrement,
-#        seedConfirmation=seedFinderConfig.seedConfirmation,
-#        centralSeedConfirmationRange=seedFinderConfig.centralSeedConfirmationRange,
-#        forwardSeedConfirmationRange=seedFinderConfig.forwardSeedConfirmationRange,
+        numSeedIncrement=numSeedIncrement,
+        seedWeightIncrement=seedWeightIncrement,
+        seedConfirmation=seedFinderConfig.seedConfirmation,
+        seedConfirmation=seedConfirmationFilter,
+        centralSeedConfirmationRange=seedFinderConfig.centralSeedConfirmationRange,
+        forwardSeedConfirmationRange=seedFinderConfig.forwardSeedConfirmationRange,
         curvatureSortingInFilter=True,
+        maxSeedsPerSpMConf=maxSeedsPerSpMConf,
+        maxQualitySeedsPerSpMConf=maxQualitySeedsPerSpMConf,
+        useDeltaRorTopRadius=useDeltaRorTopRadius,
     )
 
     seedingAlg = acts.examples.SeedingAlgorithm(
@@ -235,6 +248,7 @@ def runITkSeeding(field, csvInputDir, outputDir, inputSpacePointsType, s=None):
         zBinNeighborsTop=zBinNeighborsTop,
         zBinNeighborsBottom=zBinNeighborsBottom,
         numPhiNeighbors=1,
+        allowSeparateRMax=allowSeparateRMax,
     )
 
     s = s or acts.examples.Sequencer(
