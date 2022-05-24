@@ -68,7 +68,7 @@ struct PseudoStepper {
     double q;
 
     /// the navigation direction
-    NavigationDirection navDir = forward;
+    NavigationDirection navDir = NavigationDirection::Forward;
 
     // accummulated path length cache
     double pathAccumulated = 0.;
@@ -147,10 +147,17 @@ struct PseudoStepper {
     detail::updateSingleStepSize<PseudoStepper>(state, oIntersection, release);
   }
 
-  void setStepSize(State& state, double stepSize,
-                   ConstrainedStep::Type stype = ConstrainedStep::actor) const {
+  double getStepSize(const State& state,
+                     Acts::ConstrainedStep::Type stype) const {
+    return state.stepSize.value(stype);
+  }
+
+  void setStepSize(
+      State& state, double stepSize,
+      Acts::ConstrainedStep::Type stype = Acts::ConstrainedStep::actor,
+      bool release = true) const {
     state.previousStepSize = state.stepSize;
-    state.stepSize.update(stepSize, stype, true);
+    state.stepSize.update(stepSize, stype, release);
   }
 
   void releaseStepSize(State& state) const {
@@ -161,12 +168,13 @@ struct PseudoStepper {
     return state.stepSize.toString();
   }
 
-  Result<BoundState> boundState(State& state, const Surface& surface,
-                                bool /*unused*/
+  Acts::Result<BoundState> boundState(
+      State& state, const Acts::Surface& surface, bool /*unused*/,
+      const Acts::FreeToBoundCorrection& /*unused*/
   ) const {
-    auto bound =
-        BoundTrackParameters::create(surface.getSharedPtr(), tgContext,
-                                     state.pos4, state.dir, state.p, state.q);
+    auto bound = Acts::BoundTrackParameters::create(
+        surface.getSharedPtr(), state.geoContext, state.pos4, state.dir,
+        state.p, state.q);
     if (!bound.ok()) {
       return bound.error();
     }
@@ -195,8 +203,10 @@ struct PseudoStepper {
 
   void transportCovarianceToCurvilinear(State& /*state*/) const {}
 
-  void transportCovarianceToBound(State& /*unused*/,
-                                  const Surface& /*surface*/) const {}
+  void transportCovarianceToBound(
+      State& /*unused*/, const Acts::Surface& /*surface*/,
+      const Acts::FreeToBoundCorrection& /*freeToBoundCorrection*/ =
+          Acts::FreeToBoundCorrection{false}) const {}
 
   Result<Vector3> getField(State& /*state*/, const Vector3& /*pos*/) const {
     // get the field from the cell

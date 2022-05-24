@@ -67,13 +67,16 @@ class FSMNavigator {
     };
   };
 
-  using NavigationSurfaces = std::vector<SurfaceIntersection>;
+  using NavigationSurfaces =
+      boost::container::small_vector<SurfaceIntersection, 10>;
   using NavigationSurfaceIter = NavigationSurfaces::iterator;
 
-  using NavigationLayers = std::vector<LayerIntersection>;
+  using NavigationLayers =
+      boost::container::small_vector<LayerIntersection, 10>;
   using NavigationLayerIter = NavigationLayers::iterator;
 
-  using NavigationBoundaries = std::vector<BoundaryIntersection>;
+  using NavigationBoundaries =
+      boost::container::small_vector<BoundaryIntersection, 4>;
   using NavigationBoundaryIter = NavigationBoundaries::iterator;
 
   using ExternalSurfaces = std::multimap<uint64_t, GeometryIdentifier>;
@@ -792,6 +795,11 @@ class FSMNavigator {
     //   ACTS_VERBOSE(volInfo(state) << "FSM process_event: <" << E::name <<
     //   ">");
     // }
+
+    template <typename E, typename... Args>
+    event_return on_event(const states::Finished&, const E&, Args&&...) {
+      return states::Finished{};
+    }
 
     // catch all handlers
 

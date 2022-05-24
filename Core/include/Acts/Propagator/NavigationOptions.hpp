@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Definitions/Units.hpp"
 
 #include <limits>
 
@@ -24,7 +24,7 @@ namespace Acts {
 template <typename object_t>
 struct NavigationOptions {
   /// The navigation direction
-  NavigationDirection navDir = forward;
+  NavigationDirection navDir = NavigationDirection::Forward;
 
   /// The boundary check directive
   BoundaryCheck boundaryCheck = true;

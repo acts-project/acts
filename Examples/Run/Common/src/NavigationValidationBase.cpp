@@ -69,7 +69,7 @@ struct PseudoStepper {
     double q;
 
     /// the navigation direction
-    Acts::NavigationDirection navDir = Acts::forward;
+    Acts::NavigationDirection navDir = Acts::NavigationDirection::Forward;
 
     // accummulated path length cache
     double pathAccumulated = 0.;
@@ -85,6 +85,15 @@ struct PseudoStepper {
 
     Acts::GeometryContext geoContext = Acts::GeometryContext();
   };
+
+  double getStepSize(const State& state,
+                     Acts::ConstrainedStep::Type stype) const {
+    return state.stepSize.value(stype);
+  }
+
+  void releaseStepSize(State& state) const {
+    state.stepSize.release(Acts::ConstrainedStep::actor);
+  }
 
   void step(State& sstate, double fraction = 1) {
     // update the cache position
@@ -155,22 +164,19 @@ struct PseudoStepper {
 
   void setStepSize(
       State& state, double stepSize,
-      Acts::ConstrainedStep::Type stype = Acts::ConstrainedStep::actor) const {
+      Acts::ConstrainedStep::Type stype = Acts::ConstrainedStep::actor,
+      bool release = true) const {
     state.previousStepSize = state.stepSize;
-    state.stepSize.update(stepSize, stype, true);
-  }
-
-  void releaseStepSize(State& state) const {
-    state.stepSize.release(Acts::ConstrainedStep::actor);
+    state.stepSize.update(stepSize, stype, release);
   }
 
   std::string outputStepSize(const State& state) const {
     return state.stepSize.toString();
   }
 
-  Acts::Result<BoundState> boundState(State& state,
-                                      const Acts::Surface& surface,
-                                      bool /*unused*/
+  Acts::Result<BoundState> boundState(
+      State& state, const Acts::Surface& surface, bool /*unused*/,
+      const Acts::FreeToBoundCorrection& /*unused*/
   ) const {
     auto bound = Acts::BoundTrackParameters::create(
         surface.getSharedPtr(), state.geoContext, state.pos4, state.dir,
@@ -203,8 +209,10 @@ struct PseudoStepper {
 
   void transportCovarianceToCurvilinear(State& /*state*/) const {}
 
-  void transportCovarianceToBound(State& /*unused*/,
-                                  const Acts::Surface& /*surface*/) const {}
+  void transportCovarianceToBound(
+      State& /*unused*/, const Acts::Surface& /*surface*/,
+      const Acts::FreeToBoundCorrection& /*freeToBoundCorrection*/ =
+          Acts::FreeToBoundCorrection{false}) const {}
 
   Acts::Result<Acts::Vector3> getField(State& /*state*/,
                                        const Acts::Vector3& /*pos*/) const {
@@ -310,7 +318,10 @@ class NavigationValidationAlgorithm : public BareAlgorithm {
         }
       };
 
+      size_t s = 1;
+
       auto checkConsistency = [&]() {
+        ACTS_INFO("Checking navigator consistency at step " << s);
         auto* sA = stateA.navigation.currentSurface;
         auto* sB = stateB.navigation.currentSurface;
 
@@ -342,6 +353,8 @@ class NavigationValidationAlgorithm : public BareAlgorithm {
                      << stateB.stepping.dir.transpose());
           return ProcessCode::ABORT;
         }
+        ACTS_INFO("Navigators consistent at step " << s);
+        s++;
         return ProcessCode::SUCCESS;
       };
 
@@ -489,8 +502,8 @@ int navigationValidation(int argc, char* argv[],
 
   // Check what output exists, if none exists, the SteppingLogger
   // will switch to sterile.
-  bool rootOutput = vm["output-root"].template as<bool>();
-  bool objOutput = vm["output-obj"].template as<bool>();
+  // bool rootOutput = vm["output-root"].template as<bool>();
+  // bool objOutput = vm["output-obj"].template as<bool>();
 
   // ---------------------------------------------------------------------------------
   // Output directory
