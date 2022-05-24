@@ -50,6 +50,7 @@ target_link_libraries(ActsPythonBindings PUBLIC
   ActsExamplesVertexing
   ActsExamplesFatras
   ActsExamplesPrinters
+  ActsExamplesDetectorTelescope
 )
 
 set(py_files 
@@ -144,9 +145,8 @@ else()
 endif()
 
 add_custom_target(ActsPythonGlueCode)
-configure_file(setup.sh.in ${_python_dir}/setup.sh COPYONLY)
+configure_file(setup.sh.in ${_python_dir}/setup.sh @ONLY)
 install(FILES setup.sh.in DESTINATION "python" RENAME setup.sh)
-
 
 foreach(f ${py_files})
 set(_target ${_python_dir}/acts/${f})

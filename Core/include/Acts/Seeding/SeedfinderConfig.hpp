@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 
 #include <memory>
 
@@ -56,7 +57,8 @@ struct SeedfinderConfig {
   // radial range for middle SP
   std::vector<std::vector<float>> rRangeMiddleSP;
   bool useVariableMiddleSPRange = false;
-  float deltaRMiddleSPRange = 10. * Acts::UnitConstants::mm;
+  float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
+  float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
 
   // seed confirmation
   bool seedConfirmation = false;
@@ -72,12 +74,15 @@ struct SeedfinderConfig {
   // enable cut on the compatibility between interaction point and SPs
   bool interactionPointCut = false;
 
+  // use arithmetic average in the calculation of the squared error on the
+  // difference in tan(theta)
+  bool arithmeticAverageCotTheta = false;
+
   // non equidistant binning in z
   std::vector<float> zBinEdges;
 
-  // sort the SP in transformCoordinates method and enables compatibility cuts
-  // based on the sorting of cotTheta
-  bool enableCutsForSortedSP = false;
+  // additional cut to skip top SPs when producing triplets
+  bool skipPreviousTopSP = false;
 
   // FIXME: this is not used yet
   //        float upperPtResolutionPerSeed = 20* Acts::GeV;
@@ -97,6 +102,10 @@ struct SeedfinderConfig {
 
   // for how many seeds can one SpacePoint be the middle SpacePoint?
   unsigned int maxSeedsPerSpM = 5;
+
+  // tolerance parameter used to check the compatibility of SPs coordinates in
+  // xyz
+  float toleranceParam = 1.1 * Acts::UnitConstants::mm;
 
   // Geometry Settings
   // Detector ROI
@@ -151,6 +160,25 @@ struct SeedfinderConfig {
   int nTrplPerSpBLimit = 100;
   int nAvgTrplPerSpBLimit = 2;
 
+  // Delegates for accessors to detailed information on double measurement that
+  // produced the space point.
+  // This is mainly referring to space points produced when combining
+  // measurement from strips on back-to-back modules.
+  // Enables setting of the following delegates.
+  bool useDetailedDoubleMeasurementInfo = false;
+  // Returns half of the length of the top strip.
+  Delegate<float(const SpacePoint&)> getTopHalfStripLength;
+  // Returns half of the length of the bottom strip.
+  Delegate<float(const SpacePoint&)> getBottomHalfStripLength;
+  // Returns direction of the top strip.
+  Delegate<Acts::Vector3(const SpacePoint&)> getTopStripDirection;
+  // Returns direction of the bottom strip.
+  Delegate<Acts::Vector3(const SpacePoint&)> getBottomStripDirection;
+  // Returns distance between the centers of the two strips.
+  Delegate<Acts::Vector3(const SpacePoint&)> getStripCenterDistance;
+  // Returns position of the center of the bottom strip.
+  Delegate<Acts::Vector3(const SpacePoint&)> getBottomStripCenterPosition;
+
   SeedfinderConfig toInternalUnits() const {
     using namespace Acts::UnitLiterals;
     SeedfinderConfig config = *this;
@@ -161,7 +189,8 @@ struct SeedfinderConfig {
     config.deltaRMaxTopSP /= 1_mm;
     config.deltaRMinBottomSP /= 1_mm;
     config.deltaRMaxBottomSP /= 1_mm;
-    config.deltaRMiddleSPRange /= 1_mm;
+    config.deltaRMiddleMinSPRange /= 1_mm;
+    config.deltaRMiddleMaxSPRange /= 1_mm;
     config.impactMax /= 1_mm;
     config.maxPtScattering /= 1_MeV;  // correct?
     config.collisionRegionMin /= 1_mm;
@@ -178,6 +207,8 @@ struct SeedfinderConfig {
 
     config.zAlign /= 1_mm;
     config.rAlign /= 1_mm;
+
+    config.toleranceParam /= 1_mm;
 
     return config;
   }

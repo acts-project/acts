@@ -5,6 +5,7 @@ import tempfile
 import shutil
 import os
 import sys
+import subprocess
 
 sys.path += [
     str(Path(__file__).parent.parent.parent / "Examples/Scripts/Python/"),
@@ -14,7 +15,7 @@ sys.path += [
 os.environ["ACTS_LOG_FAILURE_THRESHOLD"] = "FATAL"
 import acts.examples
 
-from truth_tracking import runTruthTracking
+from truth_tracking_kalman import runTruthTrackingKalman
 from ckf_tracks import runCKFTracks
 from common import getOpenDataDetector
 
@@ -51,7 +52,7 @@ s = acts.examples.Sequencer(
 
 with tempfile.TemporaryDirectory() as temp:
     tp = Path(temp)
-    runTruthTracking(
+    runTruthTrackingKalman(
         trackingGeometry,
         field,
         digiConfigFile=digiConfig,
@@ -97,3 +98,22 @@ for truthSmeared, truthEstimated, label in [
         perf_file = tp / "performance_ckf.root"
         assert perf_file.exists(), "Performance file not found"
         shutil.copy(perf_file, outdir / f"performance_ckf_tracks_{label}.root")
+
+        if not truthSmeared and not truthEstimated:
+            residual_app = srcdir / "build/bin/ActsAnalysisResidualsAndPulls"
+            # @TODO: Add try/except
+            subprocess.check_call(
+                [
+                    str(residual_app),
+                    "--predicted",
+                    "--filtered",
+                    "--smoothed",
+                    "--silent",
+                    "-i",
+                    str(tp / "trackstates_ckf.root"),
+                    "-o",
+                    str(outdir / "acts_analysis_residuals_and_pulls.root"),
+                    "--save",
+                    "",
+                ]
+            )

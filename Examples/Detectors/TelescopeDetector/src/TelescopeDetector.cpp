@@ -25,45 +25,58 @@ void TelescopeDetector::addOptions(
 
 auto TelescopeDetector::finalize(
     const boost::program_options::variables_map& vm,
-    std::shared_ptr<const Acts::IMaterialDecorator> /*mdecorator*/)
+    std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
-  // --------------------------------------------------------------------------------
-  DetectorElement::ContextType nominalContext;
-  auto positions = vm["geo-tele-positions"]
-                       .template as<ActsExamples::Options::VariableReals>()
-                       .values;
-  auto offsets =
+  Config cfg;
+
+  cfg.positions = vm["geo-tele-positions"]
+                      .template as<ActsExamples::Options::VariableReals>()
+                      .values;
+  cfg.offsets =
       vm["geo-tele-offsets"].template as<ActsExamples::Options::Reals<2>>();
   // The bounds values are taken as (halfX, halfY) for plane surface and
   // (minR, maxR) for disc surface
-  auto bounds =
+  cfg.bounds =
       vm["geo-tele-bounds"].template as<ActsExamples::Options::Reals<2>>();
   // Translate the thickness in unit of mm
-  auto thickness = vm["geo-tele-thickness"].template as<double>() * 0.001;
-  auto surfaceType = vm["geo-tele-surface"].template as<int>();
-  auto binValue = vm["geo-tele-alignaxis"].template as<int>();
-  if (surfaceType > 1) {
+  cfg.thickness = vm["geo-tele-thickness"].template as<double>() * 0.001;
+  cfg.surfaceType = vm["geo-tele-surface"].template as<int>();
+  cfg.binValue = vm["geo-tele-alignaxis"].template as<int>();
+
+  return finalize(cfg, std::move(mdecorator));
+}
+
+auto TelescopeDetector::finalize(
+    const Config& cfg,
+    std::shared_ptr<const Acts::IMaterialDecorator> /* mdecorator */)
+    -> std::pair<TrackingGeometryPtr, ContextDecorators> {
+  DetectorElement::ContextType nominalContext;
+
+  if (cfg.surfaceType > 1) {
     throw std::invalid_argument(
         "The surface type could either be 0 for plane surface or 1 for disc "
         "surface.");
   }
-  if (binValue > 2) {
+  if (cfg.binValue > 2) {
     throw std::invalid_argument("The axis value could only be 0, 1, or 2.");
   }
   // Check if the bounds values are valid
-  if (surfaceType == 1 and bounds[0] >= bounds[1]) {
+  if (cfg.surfaceType == 1 and cfg.bounds[0] >= cfg.bounds[1]) {
     throw std::invalid_argument(
         "The minR should be smaller than the maxR for disc surface bounds.");
   }
 
   // Sort the provided distances
+  std::vector<double> positions = cfg.positions;
   std::sort(positions.begin(), positions.end());
 
   /// Return the telescope detector
   TrackingGeometryPtr gGeometry = ActsExamples::Telescope::buildDetector(
-      nominalContext, detectorStore, positions, offsets, bounds, thickness,
-      static_cast<ActsExamples::Telescope::TelescopeSurfaceType>(surfaceType),
-      static_cast<Acts::BinningValue>(binValue));
+      nominalContext, detectorStore, positions, cfg.offsets, cfg.bounds,
+      cfg.thickness,
+      static_cast<ActsExamples::Telescope::TelescopeSurfaceType>(
+          cfg.surfaceType),
+      static_cast<Acts::BinningValue>(cfg.binValue));
   ContextDecorators gContextDecorators = {};
   // return the pair of geometry and empty decorators
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(

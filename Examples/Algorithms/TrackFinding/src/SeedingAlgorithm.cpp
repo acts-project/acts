@@ -39,8 +39,12 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Missing seeds output collection");
   }
 
-  if (m_cfg.gridConfig.rMax != m_cfg.seedFinderConfig.rMax) {
-    throw std::invalid_argument("Inconsistent config rMax");
+  if (m_cfg.gridConfig.rMax != m_cfg.seedFinderConfig.rMax and
+      m_cfg.allowSeparateRMax == false) {
+    throw std::invalid_argument(
+        "Inconsistent config rMax: using different values in gridConfig and "
+        "seedFinderConfig. If values are intentional set allowSeparateRMax to "
+        "true");
   }
 
   if (m_cfg.seedFilterConfig.deltaRMin != m_cfg.seedFinderConfig.deltaRMin) {
@@ -99,6 +103,38 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
             "bins as zBinEdges");
       }
     }
+  }
+
+  if (m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo) {
+    m_cfg.seedFinderConfig.getTopHalfStripLength.connect(
+        [](const void*, const SimSpacePoint& sp) -> float {
+          return sp.topHalfStripLength();
+        });
+
+    m_cfg.seedFinderConfig.getBottomHalfStripLength.connect(
+        [](const void*, const SimSpacePoint& sp) -> float {
+          return sp.bottomHalfStripLength();
+        });
+
+    m_cfg.seedFinderConfig.getTopStripDirection.connect(
+        [](const void*, const SimSpacePoint& sp) -> Acts::Vector3 {
+          return sp.topStripDirection();
+        });
+
+    m_cfg.seedFinderConfig.getBottomStripDirection.connect(
+        [](const void*, const SimSpacePoint& sp) -> Acts::Vector3 {
+          return sp.bottomStripDirection();
+        });
+
+    m_cfg.seedFinderConfig.getStripCenterDistance.connect(
+        [](const void*, const SimSpacePoint& sp) -> Acts::Vector3 {
+          return sp.stripCenterDistance();
+        });
+
+    m_cfg.seedFinderConfig.getBottomStripCenterPosition.connect(
+        [](const void*, const SimSpacePoint& sp) -> Acts::Vector3 {
+          return sp.bottomStripCenterPosition();
+        });
   }
 
   m_cfg.seedFinderConfig.seedFilter =

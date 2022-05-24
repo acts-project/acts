@@ -107,6 +107,7 @@ struct KalmanFitterOptions {
   /// @param eLoss Whether to include energy loss
   /// @param rFiltering Whether to run filtering in reversed direction as smoothing
   /// @param rfScaling Scale factor for the covariance matrix before the backward filtering
+  /// @param freeToBoundCorrection_ Correction for non-linearity effect during transform from free to bound
   KalmanFitterOptions(const GeometryContext& gctx,
                       const MagneticFieldContext& mctx,
                       std::reference_wrapper<const CalibrationContext> cctx,
@@ -114,7 +115,9 @@ struct KalmanFitterOptions {
                       const PropagatorPlainOptions& pOptions,
                       const Surface* rSurface = nullptr,
                       bool mScattering = true, bool eLoss = true,
-                      bool rFiltering = false, double rfScaling = 1.0)
+                      bool rFiltering = false, double rfScaling = 1.0,
+                      const FreeToBoundCorrection& freeToBoundCorrection_ =
+                          FreeToBoundCorrection(false))
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
@@ -125,6 +128,7 @@ struct KalmanFitterOptions {
         energyLoss(eLoss),
         reversedFiltering(rFiltering),
         reversedFilteringCovarianceScaling(rfScaling),
+        freeToBoundCorrection(freeToBoundCorrection_),
         logger(logger_) {}
   /// Contexts are required and the options must not be default-constructible.
   KalmanFitterOptions() = delete;
@@ -159,6 +163,10 @@ struct KalmanFitterOptions {
   /// is true or if the ReverseFilteringLogic return true for the track of
   /// interest)
   double reversedFilteringCovarianceScaling = 1.0;
+
+  /// Whether to include non-linear correction during global to local
+  /// transformation
+  FreeToBoundCorrection freeToBoundCorrection;
 
   /// Logger
   LoggerWrapper logger;
@@ -207,7 +215,8 @@ struct KalmanFitterResult {
   // Measurement surfaces without hits
   std::vector<const Surface*> missedActiveSurfaces;
 
-  // Measurement surfaces handled in both forward and backward filtering
+  // Measurement surfaces handled in both forward and
+  // backward filtering
   std::vector<const Surface*> passedAgainSurfaces;
 
   Result<void> result{Result<void>::success()};
@@ -284,6 +293,10 @@ class KalmanFitter {
     // Scale the covariance before the reversed filtering
     double reversedFilteringCovarianceScaling = 1.0;
 
+    /// Whether to include non-linear correction during global to local
+    /// transformation
+    FreeToBoundCorrection freeToBoundCorrection;
+
     /// @brief Kalman actor operation
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
@@ -320,7 +333,8 @@ class KalmanFitter {
       // - Waiting for a current surface
       auto surface = state.navigation.currentSurface;
       std::string direction =
-          (state.stepping.navDir == forward) ? "forward" : "backward";
+          (state.stepping.navDir == NavigationDirection::Forward) ? "forward"
+                                                                  : "backward";
       if (surface != nullptr) {
         // Check if the surface is in the measurement map
         // -> Get the measurement / calibrate
@@ -410,7 +424,8 @@ class KalmanFitter {
         } else if (targetReached(state, stepper, *targetSurface)) {
           ACTS_VERBOSE("Completing with fitted track parameter");
           // Transport & bind the parameter to the final surface
-          auto res = stepper.boundState(state.stepping, *targetSurface);
+          auto res = stepper.boundState(state.stepping, *targetSurface, true,
+                                        freeToBoundCorrection);
           if (!res.ok()) {
             ACTS_ERROR("Error in " << direction << " filter: " << res.error());
             result.result = res.error();
@@ -462,12 +477,14 @@ class KalmanFitter {
         return KalmanFitterError::ReverseNavigationFailed;
       }
 
-      // Remember the navigation direciton has been reversed
+      // Remember the navigation direction has been reversed
       result.reversed = true;
 
       // Reverse navigation direction
       state.stepping.navDir =
-          (state.stepping.navDir == forward) ? backward : forward;
+          (state.stepping.navDir == NavigationDirection::Forward)
+              ? NavigationDirection::Backward
+              : NavigationDirection::Forward;
 
       // Reset propagator options
       state.options.maxStepSize =
@@ -525,13 +542,15 @@ class KalmanFitter {
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
         // Transport the covariance to the surface
-        stepper.transportCovarianceToBound(state.stepping, *surface);
+        stepper.transportCovarianceToBound(state.stepping, *surface,
+                                           freeToBoundCorrection);
 
         // Update state and stepper with pre material effects
         materialInteractor(surface, state, stepper,
                            MaterialUpdateStage::PreUpdate);
 
-        // do the kalman update
+        // do the kalman update (no need to perform covTransport here, hence no
+        // point in performing globalToLocal correction)
         auto trackStateProxyRes = detail::kalmanHandleMeasurement(
             state, stepper, extensions, *surface, sourcelink_it->second,
             result.fittedStates, result.lastTrackIndex, false);
@@ -580,7 +599,7 @@ class KalmanFitter {
             surface->surfaceMaterial() != nullptr) {
           auto trackStateProxyRes = detail::kalmanHandleNoMeasurement(
               state, stepper, *surface, result.fittedStates,
-              result.lastTrackIndex, true);
+              result.lastTrackIndex, true, freeToBoundCorrection);
 
           if (!trackStateProxyRes.ok()) {
             return trackStateProxyRes.error();
@@ -636,7 +655,8 @@ class KalmanFitter {
         }
 
         // Transport the covariance to the surface
-        stepper.transportCovarianceToBound(state.stepping, *surface);
+        stepper.transportCovarianceToBound(state.stepping, *surface,
+                                           freeToBoundCorrection);
 
         // Update state and stepper with pre material effects
         materialInteractor(surface, state, stepper,
@@ -916,7 +936,9 @@ class KalmanFitter {
             "Reverse navigation direction after smoothing for reaching the "
             "target surface");
         state.stepping.navDir =
-            (state.stepping.navDir == forward) ? backward : forward;
+            (state.stepping.navDir == NavigationDirection::Forward)
+                ? NavigationDirection::Backward
+                : NavigationDirection::Forward;
       }
       // Reset the step size
       state.stepping.stepSize = ConstrainedStep(
@@ -1012,6 +1034,8 @@ class KalmanFitter {
     kalmanActor.reversedFiltering = kfOptions.reversedFiltering;
     kalmanActor.reversedFilteringCovarianceScaling =
         kfOptions.reversedFilteringCovarianceScaling;
+    kalmanActor.freeToBoundCorrection =
+        std::move(kfOptions.freeToBoundCorrection);
     kalmanActor.extensions = std::move(kfOptions.extensions);
 
     // Run the fitter

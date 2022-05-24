@@ -105,17 +105,17 @@ def buildITkGeometry(
 
     matDeco = None
     if material:
-        file = geo_dir / "atlas/itk-hgtd/material-maps-ITk-HGTD.json"
+        file = geo_dir / "itk-hgtd/material-maps-ITk-HGTD.json"
         logger.info("Adding material from %s", file.absolute())
         matDeco = acts.IMaterialDecorator.fromFile(
             file,
             level=acts.logging.Level(min(acts.logging.INFO.value, logLevel.value)),
         )
 
-    tgeo_fileName = geo_dir / "atlas/itk-hgtd/ATLAS-ITk-HGTD.tgeo.root"
+    tgeo_fileName = geo_dir / "itk-hgtd/ATLAS-ITk-HGTD.tgeo.root"
 
     if jsonconfig:
-        jsonFile = geo_dir / "atlas/itk-hgtd/tgeo-atlas-itk-hgtd.json"
+        jsonFile = geo_dir / "itk-hgtd/tgeo-atlas-itk-hgtd.json"
         logger.info("Create geometry from %s", jsonFile.absolute())
         return TGeoDetector.create(
             jsonFile=str(jsonFile),
