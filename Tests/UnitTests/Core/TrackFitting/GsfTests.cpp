@@ -28,20 +28,15 @@ using namespace Acts;
 using namespace Acts::Test;
 using namespace Acts::UnitLiterals;
 
-using KalmanUpdater = Acts::GainMatrixUpdater;
-using KalmanSmoother = Acts::GainMatrixSmoother;
+Acts::GainMatrixUpdater kfUpdater;
 
-KalmanUpdater kfUpdater;
-KalmanSmoother kfSmoother;
-
-KalmanFitterExtensions<VectorMultiTrajectory> getExtensions() {
-  KalmanFitterExtensions<VectorMultiTrajectory> extensions;
+GsfExtensions<VectorMultiTrajectory> getExtensions() {
+  GsfExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
-  extensions.updater.connect<&KalmanUpdater::operator()<VectorMultiTrajectory>>(
-      &kfUpdater);
-  extensions.smoother
-      .connect<&KalmanSmoother::operator()<VectorMultiTrajectory>>(&kfSmoother);
+  extensions.updater
+      .connect<&Acts::GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
+          &kfUpdater);
   return extensions;
 }
 

@@ -16,6 +16,7 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GsfError.hpp"
+#include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/TrackFitting/detail/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/detail/GsfSmoothing.hpp"
@@ -109,7 +110,7 @@ struct GsfActor {
     bool abortOnError = false;
 
     /// The extensions
-    KalmanFitterExtensions<traj_t> extensions;
+    GsfExtensions<traj_t> extensions;
   } m_cfg;
 
   /// Stores meta information about the components

@@ -12,6 +12,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MultiStepperAborters.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/TrackFitting/detail/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/detail/GsfActor.hpp"
@@ -40,27 +41,6 @@ struct IsMultiComponentBoundParameters<MultiComponentBoundTrackParameters<T>>
     : public std::true_type {};
 
 }  // namespace detail
-
-template <typename traj_t>
-struct GsfOptions {
-  std::reference_wrapper<const GeometryContext> geoContext;
-  std::reference_wrapper<const MagneticFieldContext> magFieldContext;
-  std::reference_wrapper<const CalibrationContext> calibrationContext;
-
-  KalmanFitterExtensions<traj_t> extensions;
-
-  LoggerWrapper logger;
-
-  PropagatorPlainOptions propagatorPlainOptions;
-
-  const Surface* referenceSurface = nullptr;
-
-  bool abortOnError = true;
-
-  std::size_t maxComponents = 4;
-
-  bool disableAllMaterialHandling = false;
-};
 
 /// Gaussian Sum Fitter implementation.
 /// @tparam propagator_t The propagator type on which the algorithm is built on
