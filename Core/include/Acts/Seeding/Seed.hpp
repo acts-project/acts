@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include <array>
 #include <limits>
 #include <vector>
 
