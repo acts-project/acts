@@ -2,7 +2,7 @@ from typing import Type
 import inspect
 
 from helpers import dd4hepEnabled
-from common import getOpenDataDetector
+from common import getOpenDataDetectorDirectory, getOpenDataDetector
 
 import pytest
 
@@ -310,18 +310,27 @@ def test_csv_clusters_reader(tmp_path, fatras, conf_const, trk_geo, rng):
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")
-def test_edm4hep_simhits_reader(conf_const):
-    import acts.examples.dd4hep
+def test_edm4hep_simhits_reader(tmp_path):
+    from DDSim.DD4hepSimulation import DD4hepSimulation
+
+    odd_xml = getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml"
+    ddsim = DD4hepSimulation()
+    ddsim.compactFile = str(odd_xml)
+    ddsim.enableGun = True
+    ddsim.gun.direction = (1, 0, 0)
+    ddsim.gun.distribution = "eta"
+    ddsim.numberOfEvents = 10
+    ddsim.outputFile = str(tmp_path / "output_edm4hep.root")
+    ddsim.run()
 
     detector, _, _ = getOpenDataDetector()
 
     s = Sequencer(numThreads=1)
 
     s.addReader(
-        conf_const(
-            EDM4hepSimHitReader,
+        EDM4hepSimHitReader(
             level=acts.logging.INFO,
-            inputPath=str("/home/andreas/cern/output_edm4hep.root"),  # TODO
+            inputPath=str(tmp_path / "output_edm4hep.root"),
             outputSimHits="simhits",
             dd4hepGeometryService=detector.geometryService,
         )
@@ -332,4 +341,4 @@ def test_edm4hep_simhits_reader(conf_const):
 
     s.run()
 
-    assert alg.events_seen == 100
+    assert alg.events_seen == 10
