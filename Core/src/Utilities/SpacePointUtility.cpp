@@ -10,9 +10,6 @@
 
 #include <iostream>
 namespace Acts {
-void SpacePointUtility::test() const {
-  std::cout << "test" << std::endl;
-}
 
 std::pair<Vector2, SymMatrix2> SpacePointUtility::getLocalPosCov(
     const Measurement& meas) const {

@@ -31,8 +31,6 @@ class SpacePointUtility {
   /// Constructor
   SpacePointUtility(SpacePointBuilderConfig cfg) : m_config(cfg) {}
 
-  void test() const;
-
   /// @brief Getter method for the local coordinates of a measurement and its covariance
   ///
   /// @param meas measurement that holds the neccesary information of the hit position.

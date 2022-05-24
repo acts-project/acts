@@ -282,7 +282,6 @@ void SpacePointBuilder<spacepoint_t>::calculateSingleHitSpacePoints(
     std::back_insert_iterator<container_t<spacepoint_t>> spacePointIt) const {
   for (const auto& meas : measurements) {
     auto [gPos, gCov] = m_spUtility->globalCoords(gctx, *meas);
-    m_spUtility->test();
     const auto& slink =
         std::visit([](const auto& x) { return &x.sourceLink(); }, *meas);
 
