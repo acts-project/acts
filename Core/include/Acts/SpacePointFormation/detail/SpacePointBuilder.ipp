@@ -81,42 +81,6 @@ inline double differenceOfMeasurementsChecked(const Vector3& pos1,
   return diffTheta2 + diffPhi2;
 }
 
-// /// @brief This function finds the top and bottom end of a detector segment in
-// /// local coordinates
-// ///
-// /// @param [in] local Local position of the Measurement
-// /// @param [in] segment Segmentation of the detector element
-// ///
-// /// @return Pair containing the top and bottom end
-// inline std::pair<Vector2, Vector2> findLocalTopAndBottomEnd(
-//     const Vector2& local, const Segmentation* segment) {
-//   auto& binData = segment->binUtility().binningData();
-//   auto& boundariesX = binData[0].boundaries();
-//   auto& boundariesY = binData[1].boundaries();
-//   // Search the x-/y-bin of the Measurement
-//   size_t binX = binData[0].searchLocal(local);
-//   size_t binY = binData[1].searchLocal(local);
-//   // Storage of the local top (first) and bottom (second) end
-//   std::pair<Vector2, Vector2> topBottomLocal;
-
-//   if (boundariesX[binX + 1] - boundariesX[binX] <
-//       boundariesY[binY + 1] - boundariesY[binY]) {
-//     topBottomLocal.first = {(boundariesX[binX] + boundariesX[binX + 1]) / 2,
-//                             boundariesY[binY + 1]};
-//     topBottomLocal.second = {(boundariesX[binX] + boundariesX[binX + 1]) / 2,
-//                              boundariesY[binY]};
-//   } else {
-//     // Set the top and bottom end of the strip in local coordinates
-//     topBottomLocal.first = {boundariesX[binX],
-//                             (boundariesY[binY] + boundariesY[binY + 1]) / 2};
-//     topBottomLocal.second = {boundariesX[binX + 1],
-//                              (boundariesY[binY] + boundariesY[binY + 1]) /
-//                              2};
-//   }
-
-//   return topBottomLocal;
-// }
-
 /// @brief Calculates a space point whithout using the vertex
 /// @note This is mostly to resolve space points from cosmic data
 /// @param a vector to the top end of the first SDE
@@ -380,7 +344,6 @@ void SpacePointBuilder<spacepoint_t>::makeMeasurementPairs(
 }
 
 template <typename spacepoint_t>
-// template <template <typename...> typename container_t>
 void SpacePointBuilder<spacepoint_t>::calculateDoubleHitSpacePoint(
     const GeometryContext& gctx,
     const std::pair<const Measurement*, const Measurement*>& measurementPair,
