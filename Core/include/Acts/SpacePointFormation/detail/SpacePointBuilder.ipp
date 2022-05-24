@@ -349,7 +349,7 @@ void SpacePointBuilder<spacepoint_t>::calculateDoubleHitSpacePoint(
     const std::pair<const Measurement*, const Measurement*>& measurementPair,
     const std::pair<const std::pair<Vector3, Vector3>,
                     const std::pair<Vector3, Vector3>>& stripEndsPair,
-    spacepoint_t* spacePoint) const {
+    std::shared_ptr<spacepoint_t> spacePoint) const {
   // Source of algorithm: Athena, SiSpacePointMakerTool::makeSCT_SpacePoint()
 
   detail::SpacePointParameters spaPoPa;
@@ -379,7 +379,7 @@ void SpacePointBuilder<spacepoint_t>::calculateDoubleHitSpacePoint(
       const auto gCov = m_spUtility->calcGlobalVars(
           gctx, *(measurementPair.first), *(measurementPair.second), theta);
 
-      *spacePoint = m_spConstructor(gPos, gCov, std::move(slinks));
+      spacePoint = std::make_shared<spacepoint_t>(m_spConstructor(gPos, gCov, std::move(slinks)));
     }
   }
 
@@ -398,7 +398,7 @@ void SpacePointBuilder<spacepoint_t>::calculateDoubleHitSpacePoint(
     const auto gCov = m_spUtility->calcGlobalVars(
         gctx, *(measurementPair.first), *(measurementPair.second), theta);
 
-    *spacePoint = m_spConstructor(gPos, gCov, std::move(slinks));
+      spacePoint = std::make_shared<spacepoint_t>(m_spConstructor(gPos, gCov, std::move(slinks)));
   }
 }
 
