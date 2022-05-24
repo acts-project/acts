@@ -145,13 +145,12 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       // pre-defined range that also depends on the region of the detector (i.e.
       // forward or central region) defined by SeedConfirmationRange
       deltaSeedConf = compatibleSeedR.size() + 1 - nTopSeedConf;
-      if (deltaSeedConf < 0 || (numQualitySeeds and !deltaSeedConf)) {
+      if (deltaSeedConf < 0 || (numQualitySeeds and deltaSeedConf == 0)) {
         continue;
       }
-      bool seedConfMinRange =
-          bottomSP.radius() < m_cfg.seedConfMinBottomRadius ||
-          std::abs(zOrigin) > m_cfg.seedConfMaxZOrigin;
-      if (seedConfMinRange and !deltaSeedConf and
+      bool seedRangeCuts = bottomSP.radius() < m_cfg.seedConfMinBottomRadius ||
+                           std::abs(zOrigin) > m_cfg.seedConfMaxZOrigin;
+      if (seedRangeCuts and deltaSeedConf == 0 and
           impact > m_cfg.minImpactSeedConf) {
         continue;
       }
@@ -166,7 +165,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         continue;
       }
 
-      if (deltaSeedConf) {
+      if (deltaSeedConf > 0) {
         // if we have not yet reached our max number of quality seeds we add the
         // new seed to outCont
         if (numQualitySeeds < m_cfg.maxQualitySeedsPerSpMConf) {
