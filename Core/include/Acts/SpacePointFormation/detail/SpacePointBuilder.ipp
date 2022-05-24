@@ -379,7 +379,8 @@ void SpacePointBuilder<spacepoint_t>::calculateDoubleHitSpacePoint(
       const auto gCov = m_spUtility->calcGlobalVars(
           gctx, *(measurementPair.first), *(measurementPair.second), theta);
 
-      spacePoint = std::make_shared<spacepoint_t>(m_spConstructor(gPos, gCov, std::move(slinks)));
+      spacePoint = std::make_shared<spacepoint_t>(
+          m_spConstructor(gPos, gCov, std::move(slinks)));
     }
   }
 
@@ -398,7 +399,8 @@ void SpacePointBuilder<spacepoint_t>::calculateDoubleHitSpacePoint(
     const auto gCov = m_spUtility->calcGlobalVars(
         gctx, *(measurementPair.first), *(measurementPair.second), theta);
 
-      spacePoint = std::make_shared<spacepoint_t>(m_spConstructor(gPos, gCov, std::move(slinks)));
+    spacePoint = std::make_shared<spacepoint_t>(
+        m_spConstructor(gPos, gCov, std::move(slinks)));
   }
 }
 
