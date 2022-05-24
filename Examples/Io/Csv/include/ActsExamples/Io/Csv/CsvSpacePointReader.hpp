@@ -39,6 +39,8 @@ class CsvSpacePointReader final : public IReader {
     std::string inputCollection;
     /// Output space point collections.
     std::string outputSpacePoints;
+    /// Read extended collections
+    bool extendCollection;
   };
 
   /// Construct the simhit reader.

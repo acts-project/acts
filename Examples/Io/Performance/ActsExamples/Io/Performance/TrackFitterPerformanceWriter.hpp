@@ -25,7 +25,7 @@ namespace ActsExamples {
 ///
 /// Efficiency here is the fraction of smoothed tracks compared to all tracks.
 ///
-/// A common file can be provided for to the writer to attach his TTree,
+/// A common file can be provided for the writer to attach his TTree,
 /// this is done by setting the Config::rootFile pointer to an existing file
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.

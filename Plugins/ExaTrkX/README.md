@@ -7,7 +7,7 @@ This plugin contains a track finding module based on Graph Neural Networks (GNNs
 To build the plugin, enable the appropriate CMake options:
 
 ```cmake
-cmake -B <builddir> -S <srcdir> \
+cmake -B <build> -S <source> \
   -D ACTS_BUILD_EXATRKX_PLUGIN=ON \
   -D ACTS_BUILD_EXAMPLES_EXATRKX=ON \
   -D ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON \
@@ -32,7 +32,7 @@ The Examples of this plugin provide a python-script using the python-bindings to
 /Examples/Scripts/Python/ExaTrkX.py
 ```
 
-In order that python can find the `acts.examples` module, setup your `PYTHONPATH` with `source <builddir>/python/setup.sh.
+In order that python can find the `acts.examples` module, setup your `PYTHONPATH` with `source <build>/python/setup.sh.
 
 ## Required files
 

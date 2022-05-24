@@ -131,6 +131,10 @@ struct ConstrainedStep {
 
   /// return the split value as string for debugging
   std::string toString() const;
+
+  /// Number of iterations needed by the stepsize finder
+  /// (e.g. Runge-Kutta) of the stepper.
+  int nStepTrials = std::numeric_limits<int>::max();
 };
 
 inline std::string ConstrainedStep::toString() const {
