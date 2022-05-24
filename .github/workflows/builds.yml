@@ -203,7 +203,7 @@ jobs:
           && source build/python/setup.sh
           && export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
           && pip3 install -r Examples/Python/tests/requirements.txt
-          && pytest -rFs
+          && pytest -r -s
 
   linux_physmon:
     runs-on: ubuntu-latest
@@ -313,7 +313,6 @@ jobs:
         run: >
           ${SETUP} &&
           cmake -B build -S .
-          -GNinja
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
@@ -334,7 +333,6 @@ jobs:
         run: >
           ${SETUP} &&
           cmake -B build-downstream-nodeps -S Tests/DownstreamProjectNodeps
-          -GNinja
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
