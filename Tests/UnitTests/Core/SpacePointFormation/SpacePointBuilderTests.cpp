@@ -189,7 +189,7 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   spBuilder.makeMeasurementPairs(tgContext, frontMeasurements, backMeasurements,
                                  measPairs);
 
-  TestSpacePoint* spacePoint = nullptr;
+  std::shared_ptr<const TestSpacePoint> spacePoint = nullptr;
   for (auto& measPair : measPairs) {
     const std::pair<Vector3, Vector3> frontEnds;
     const std::pair<Vector3, Vector3> backEnds;

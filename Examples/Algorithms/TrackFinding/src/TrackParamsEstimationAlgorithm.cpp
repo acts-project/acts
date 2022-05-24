@@ -84,10 +84,10 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
       ACTS_WARNING("Missing soucelink in space point");
       continue;
     }
-    const auto slink =
-        static_cast<const IndexSourceLink&>(*(sp.sourceLinks()[0]));
-    spMap.emplace(slink.index(),
-                  &sp);  // The second measurement is ignored for strips
+    for (const auto& slink : sp.sourceLinks()) {
+      const auto islink = static_cast<const IndexSourceLink&>(*slink);
+      spMap.emplace(islink.index(), &sp);
+    }
   }
 
   for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {

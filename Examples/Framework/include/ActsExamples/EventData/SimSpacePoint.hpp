@@ -23,6 +23,8 @@ namespace ActsExamples {
 
 /// Space point representation of a measurement suitable for track seeding.
 class SimSpacePoint {
+  using Scalar = Acts::ActsScalar;
+
  public:
   /// Construct the space point from global position and selected variances.
   ///
@@ -33,7 +35,7 @@ class SimSpacePoint {
   /// @param measurementIndex Index of the underlying measurement
   template <typename position_t>
   SimSpacePoint(
-      const Eigen::MatrixBase<position_t>& pos, float varRho, float varZ,
+      const Eigen::MatrixBase<position_t>& pos, Scalar varRho, Scalar varZ,
       boost::container::static_vector<const Acts::SourceLink*, 2> sourceLinks)
       : m_x(pos[Acts::ePos0]),
         m_y(pos[Acts::ePos1]),
@@ -45,12 +47,12 @@ class SimSpacePoint {
     EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(position_t, 3);
   }
 
-  constexpr float x() const { return m_x; }
-  constexpr float y() const { return m_y; }
-  constexpr float z() const { return m_z; }
-  constexpr float r() const { return m_rho; }
-  constexpr float varianceR() const { return m_varianceRho; }
-  constexpr float varianceZ() const { return m_varianceZ; }
+  constexpr Scalar x() const { return m_x; }
+  constexpr Scalar y() const { return m_y; }
+  constexpr Scalar z() const { return m_z; }
+  constexpr Scalar r() const { return m_rho; }
+  constexpr Scalar varianceR() const { return m_varianceRho; }
+  constexpr Scalar varianceZ() const { return m_varianceZ; }
 
   const boost::container::static_vector<const Acts::SourceLink*, 2>
   sourceLinks() const {
@@ -59,13 +61,13 @@ class SimSpacePoint {
 
  private:
   // Global position
-  float m_x;
-  float m_y;
-  float m_z;
-  float m_rho;
+  Scalar m_x;
+  Scalar m_y;
+  Scalar m_z;
+  Scalar m_rho;
   // Variance in rho/z of the global coordinates
-  float m_varianceRho;
-  float m_varianceZ;
+  Scalar m_varianceRho;
+  Scalar m_varianceZ;
   // SourceLinks of the corresponding measurements. A Pixel (strip) SP has one
   // (two) sourceLink(s).
   boost::container::static_vector<const Acts::SourceLink*, 2> m_sourceLinks;

@@ -18,6 +18,7 @@
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.h"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/SpacePointUtility.hpp"
 
 #include <boost/container/static_vector.hpp>
 
@@ -87,58 +88,9 @@ class SpacePointBuilder {
       const std::pair<const Measurement*, const Measurement*>& measurementPair,
       const std::pair<const std::pair<Vector3, Vector3>,
                       const std::pair<Vector3, Vector3>>& stripEndsPair,
-      spacepoint_t* spacePoint) const;
+      std::shared_ptr<const spacepoint_t> spacePoint) const;
 
  protected:
-  /// @brief Getter method for the local coordinates of a measurement
-  /// on its corresponding surface
-  ///
-  /// @param meas measurement that holds the neccesary information of the hit position.
-  /// @return vector of the local coordinates of the measurement on the surface
-  Vector2 getLocalPos(const Measurement& meas) const;
-  std::pair<Acts::Vector2, Acts::SymMatrix2> getLocalPosCov(
-      const Measurement& meas) const;
-
-  /// @brief Getter method for the global coordinates of a measurement
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param meas measurement that holds the necessary
-  /// information
-  /// @return vectors of the global coordinates and covariance of the measurement
-  std::pair<Vector3, Vector2> globalCoords(const GeometryContext& gctx,
-                                           const Measurement& meas) const;
-
-  /// @brief Get global covariance from the local position and covariance
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param geoId The geometry ID
-  /// @param localPos The local position
-  /// @param localCov The local covariance matrix
-  /// @return (rho, z) components of the global covariance
-  Acts::Vector2 globalCov(const Acts::GeometryContext& gctx,
-                          const Acts::GeometryIdentifier& geoId,
-                          const Acts::Vector2& localPos,
-                          const Acts::SymMatrix2& localCov) const;
-
-  /// @brief Get the first component of the local covariance.
-  /// @param meas The measurement
-  /// @return the (0, 0) component of the local covariance
-  double getLoc0Var(const Measurement& meas) const;
-
-  /// @brief Calculate the global covariance from the front and back measurement in the strip SP formation
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param measFront The measurement on the front layer
-  /// @param measBack The measurement on the back layer
-  /// @param theta The angle between the two strips
-  /// @return (rho, z) components of the global covariance
-  Acts::Vector2 calcGlobalVars(const Acts::GeometryContext& gctx,
-                               const Measurement& measFront,
-                               const Measurement& measBack,
-                               const double theta) const;
-
-  /// @brief Get source link from the measurement
-  /// @param meas The measurement
-  const Acts::SourceLink* getSourceLink(const Measurement meas) const;
-
   // configuration of the single hit space point builder
   SpacePointBuilderConfig m_config;
 
@@ -152,6 +104,8 @@ class SpacePointBuilder {
 
   /// the logging instance
   std::unique_ptr<const Acts::Logger> m_logger;
+
+  std::shared_ptr<const SpacePointUtility> m_spUtility;
 
   const Logger& logger() const { return *m_logger; }
 };
