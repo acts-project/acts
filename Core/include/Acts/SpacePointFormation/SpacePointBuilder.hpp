@@ -88,7 +88,7 @@ class SpacePointBuilder {
       const std::pair<const Measurement*, const Measurement*>& measurementPair,
       const std::pair<const std::pair<Vector3, Vector3>,
                       const std::pair<Vector3, Vector3>>& stripEndsPair,
-      std::shared_ptr<spacepoint_t> spacePoint) const;
+      std::shared_ptr<const spacepoint_t> spacePoint) const;
 
  protected:
   // configuration of the single hit space point builder
