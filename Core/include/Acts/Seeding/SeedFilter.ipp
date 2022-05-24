@@ -298,7 +298,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
 
     outIt = Seed<external_spacepoint_t>{
         (*it).second->sp[0]->sp(), (*it).second->sp[1]->sp(),
-        (*it).second->sp[2]->sp(), (*it).second->z()};
+        (*it).second->sp[2]->sp(), (*it).second->z(),
+        bestSeedQuality};
     numTotalSeeds += 1;
   }
 }
