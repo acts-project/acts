@@ -122,8 +122,8 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
             (cot_theta * cot_theta) * (varianceRM + sp->varianceR())) *
            iDeltaR2;
 
-    l.x = sp->x();
-    l.y = sp->y();
+    l.x = x;
+    l.y = y;
     l.z = sp->z();
     l.r = sp->radius();
 
