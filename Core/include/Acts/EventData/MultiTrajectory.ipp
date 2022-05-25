@@ -135,9 +135,9 @@ inline auto TrackStateProxy<D, M, ReadOnly>::projector() const -> Projector {
 template <typename D, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::uncalibrated() const
     -> const SourceLink& {
-  assert(has<hashString("sourceLink")>());
+  assert(has<hashString("uncalibrated")>());
   using T = const SourceLink*;
-  const T& sl = component<const SourceLink*, hashString("sourceLink")>();
+  const T& sl = component<const SourceLink*, hashString("uncalibrated")>();
   assert(sl != nullptr);
   return *sl;
 }

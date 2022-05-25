@@ -228,9 +228,9 @@ class TrackStateProxy {
       }
 
       // need to do it this way since other might be nullptr
-      component<const SourceLink*, hashString("sourceLink")>() =
+      component<const SourceLink*, hashString("uncalibrated")>() =
           other.template component<const SourceLink*,
-                                   hashString("sourceLink")>();
+                                   hashString("uncalibrated")>();
 
       if (ACTS_CHECK_BIT(src, PM::Jacobian)) {
         jacobian() = other.jacobian();
@@ -267,9 +267,9 @@ class TrackStateProxy {
       }
 
       // need to do it this way since other might be nullptr
-      component<const SourceLink*, hashString("sourceLink")>() =
+      component<const SourceLink*, hashString("uncalibrated")>() =
           other.template component<const SourceLink*,
-                                   hashString("sourceLink")>();
+                                   hashString("uncalibrated")>();
 
       if (ACTS_CHECK_BIT(mask, PM::Jacobian) && has<hashString("jacobian")>() &&
           other.template has<hashString("jacobian")>()) {
@@ -504,16 +504,16 @@ class TrackStateProxy {
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void setUncalibrated(const SourceLink& sourceLink) {
     using T = const SourceLink*;
-    T& sl = component<const SourceLink*, hashString("sourceLink")>();
+    T& sl = component<const SourceLink*, hashString("uncalibrated")>();
     sl = &sourceLink;
 
-    assert(
-        (component<const SourceLink*, hashString("sourceLink")>() != nullptr));
+    assert((component<const SourceLink*, hashString("uncalibrated")>() !=
+            nullptr));
   }
 
   /// Check if the point has an associated uncalibrated measurement.
   /// @return Whether it is set
-  bool hasUncalibrated() const { return has<hashString("sourceLink")>(); }
+  bool hasUncalibrated() const { return has<hashString("uncalibrated")>(); }
 
   /// Check if the point has an associated calibrated measurement.
   /// @return Whether it is set
@@ -528,7 +528,7 @@ class TrackStateProxy {
   /// @param sourceLink The source link to set
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void setCalibratedSourceLink(const SourceLink& sourceLink) {
-    assert(has<hashString("sourceLink")>());
+    assert(has<hashString("calibratedSourceLink")>());
     m_traj->self().template component<const SourceLink*>(
         "calibratedSourceLink", m_istate) = &sourceLink;
 

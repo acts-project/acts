@@ -126,7 +126,7 @@ class VectorMultiTrajectory final
         return m_index[istate].ijacobian != kInvalid;
       case "projector"_hash:
         return m_index[istate].iprojector != kInvalid;
-      case "sourceLink"_hash: {
+      case "uncalibrated"_hash: {
         const auto& sl = m_sourceLinks[m_index[istate].iuncalibrated];
         return sl != nullptr;
       }
@@ -164,7 +164,7 @@ class VectorMultiTrajectory final
         return &m_index[istate].ijacobian;
       case "projector"_hash:
         return &m_projectors[m_index[istate].iprojector];
-      case "sourceLink"_hash:
+      case "uncalibrated"_hash:
         return &m_sourceLinks[m_index[istate].iuncalibrated];
       case "calibratedSourceLink"_hash:
         return &m_sourceLinks[m_index[istate].icalibratedsourcelink];
@@ -206,7 +206,7 @@ class VectorMultiTrajectory final
         return &m_index[istate].ijacobian;
       case "projector"_hash:
         return &m_projectors[m_index[istate].iprojector];
-      case "sourceLink"_hash:
+      case "uncalibrated"_hash:
         return &m_sourceLinks[m_index[istate].iuncalibrated];
       case "calibratedSourceLink"_hash:
         return &m_sourceLinks[m_index[istate].icalibratedsourcelink];
@@ -246,7 +246,7 @@ class VectorMultiTrajectory final
       case "jacobian"_hash:
       case "projector"_hash:
       case "previous"_hash:
-      case "sourceLink"_hash:
+      case "uncalibrated"_hash:
       case "calibratedSourceLink"_hash:
       case "referenceSurface"_hash:
       case "measdim"_hash:

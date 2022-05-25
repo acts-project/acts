@@ -625,7 +625,8 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyAllocations) {
   BOOST_CHECK(!tsnone.has<"jacobian"_hash>());
   BOOST_CHECK(!tsnone.has<"calibrated"_hash>());
   BOOST_CHECK(!tsnone.has<"projector"_hash>());
-  BOOST_CHECK(!tsnone.has<"sourceLink"_hash>());  // separate optional mechanism
+  BOOST_CHECK(
+      !tsnone.has<"uncalibrated"_hash>());  // separate optional mechanism
   BOOST_CHECK(tsnone.has<"calibratedSourceLink"_hash>());
   BOOST_CHECK(tsnone.has<"referenceSurface"_hash>());
   BOOST_CHECK(tsnone.has<"measdim"_hash>());
@@ -640,8 +641,8 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyAllocations) {
   BOOST_CHECK(tsall.has<"jacobian"_hash>());
   BOOST_CHECK(tsall.has<"calibrated"_hash>());
   BOOST_CHECK(tsall.has<"projector"_hash>());
-  BOOST_CHECK(
-      !tsall.has<"sourceLink"_hash>());  // separate optional mechanism: nullptr
+  BOOST_CHECK(!tsall.has<"uncalibrated"_hash>());  // separate optional
+                                                   // mechanism: nullptr
   BOOST_CHECK(tsall.has<"calibratedSourceLink"_hash>());
   BOOST_CHECK(tsall.has<"referenceSurface"_hash>());
   BOOST_CHECK(tsall.has<"measdim"_hash>());
