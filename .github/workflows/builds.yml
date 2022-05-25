@@ -17,7 +17,7 @@ env:
 jobs:
   lcg:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v24
+    container: ghcr.io/acts-project/${{ matrix.image }}:v26
     strategy:
       matrix:
         image:
@@ -92,7 +92,7 @@ jobs:
 
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v24
+    container: ghcr.io/acts-project/ubuntu2004:v26
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -168,7 +168,7 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v24
+    container: ghcr.io/acts-project/ubuntu2004:v26
     needs: [linux_ubuntu]
     env:
       ACTS_LOG_FAILURE_THRESHOLD: FATAL
@@ -203,11 +203,11 @@ jobs:
           && source build/python/setup.sh
           && export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
           && pip3 install -r Examples/Python/tests/requirements.txt
-          && pytest Examples/Python/tests/test_reader.py -rfE -s
+          && pytest -rfE -s
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v24
+    container: ghcr.io/acts-project/ubuntu2004:v26
     needs: [linux_ubuntu]
     env:
       ACTS_LOG_FAILURE_THRESHOLD: FATAL
@@ -357,7 +357,7 @@ jobs:
           brew install cmake eigen ninja ccache
           && sudo mkdir /usr/local/acts
           && sudo chown $USER /usr/local/acts
-          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ci/macOS/deps.7620a70.tar.gz
+          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ci/macOS/deps.99e9612.tar.gz
           && tar -xf deps.tar.gz -C /usr/local/acts
 
       - name: Cache build
@@ -412,7 +412,7 @@ jobs:
 
   cuda:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu1804_cuda:v24
+    container: ghcr.io/acts-project/ubuntu1804_cuda:v26
     steps:
       - uses: actions/checkout@v2
 
@@ -440,7 +440,7 @@ jobs:
 
   exatrkx:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v24
+    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v26
     steps:
       - uses: actions/checkout@v2
 
@@ -467,7 +467,7 @@ jobs:
 
   sycl:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_oneapi:v24
+    container: ghcr.io/acts-project/ubuntu2004_oneapi:v26
     defaults:
       run:
         shell: bash
@@ -501,7 +501,7 @@ jobs:
 
   docs:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v24
+    container: ghcr.io/acts-project/ubuntu2004:v26
     env:
         DOXYGEN_WARN_AS_ERROR: YES
     steps:
