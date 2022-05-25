@@ -10,22 +10,12 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
 #include <memory>
 
 namespace Acts {
-
-struct SeedConfirmationRange {
-  float zMinSeedConf =
-      std::numeric_limits<float>::min() * Acts::UnitConstants::mm;
-  float zMaxSeedConf =
-      std::numeric_limits<float>::max() * Acts::UnitConstants::mm;
-  float rMaxSeedConf =
-      std::numeric_limits<float>::max() * Acts::UnitConstants::mm;
-  size_t nTopForLargeR = 0;
-  size_t nTopForSmallR = 0;
-};
 
 // forward declaration to avoid cyclic dependence
 template <typename T>
@@ -63,9 +53,9 @@ struct SeedfinderConfig {
   // seed confirmation
   bool seedConfirmation = false;
   // parameters for central seed confirmation
-  SeedConfirmationRange centralSeedConfirmationRange;
+  SeedConfirmationRangeConfig centralSeedConfirmationRange;
   // parameters for forward seed confirmation
-  SeedConfirmationRange forwardSeedConfirmationRange;
+  SeedConfirmationRangeConfig forwardSeedConfirmationRange;
 
   // cut to the maximum value of delta z between SPs
   float deltaZMax =
