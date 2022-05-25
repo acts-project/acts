@@ -74,7 +74,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     size_t nTopSeedConf = 0;
     if (m_config.seedConfirmation == true) {
       // check if middle SP is in the central or forward region
-      SeedConfirmationRange seedConfRange =
+      SeedConfirmationRangeConfig seedConfRange =
           (zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
            zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
               ? m_config.forwardSeedConfirmationRange
@@ -249,6 +249,9 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     size_t numBotSP = state.compatBottomSP.size();
     size_t numTopSP = state.compatTopSP.size();
+
+    int numQualitySeeds = 0;
+    int numSeeds = 0;
 
     size_t t0 = 0;
 
@@ -507,10 +510,12 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       if (!state.topSpVec.empty()) {
         m_config.seedFilter->filterSeeds_2SpFixed(
             *state.compatBottomSP[b], *spM, state.topSpVec, state.curvatures,
-            state.impactParameters, Zob, std::back_inserter(state.seedsPerSpM));
+            state.impactParameters, Zob, numQualitySeeds, numSeeds,
+            state.seedsPerSpM);
       }
     }
-    m_config.seedFilter->filterSeeds_1SpFixed(state.seedsPerSpM, outIt);
+    m_config.seedFilter->filterSeeds_1SpFixed(state.seedsPerSpM,
+                                              numQualitySeeds, outIt);
   }
 }
 

@@ -129,6 +129,8 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
 
     linCircleVec.push_back(l);
     sp->setCotTheta(cot_theta);
+
+    sp->setDeltaR(std::sqrt((x * x) + (y * y) + (deltaZ * deltaZ)));
   }
   // sort the SP in order of cotTheta
   std::sort(vec.begin(), vec.end(),
