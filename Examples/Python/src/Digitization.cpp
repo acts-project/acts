@@ -45,7 +45,7 @@ void addDigitization(Context& ctx) {
 
     auto c = py::class_<Config>(mex, "DigitizationConfig")
                  .def(py::init<Acts::GeometryHierarchyMap<
-                          ActsExamples::DigiComponentsConfig>>());
+                          std::vector<ActsExamples::DigiComponentsConfig>>>());
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputSimHits);
@@ -66,11 +66,14 @@ void addDigitization(Context& ctx) {
     patchKwargsConstructor(c);
 
     py::class_<DigiComponentsConfig>(mex, "DigiComponentsConfig");
+    py::class_<std::vector<DigiComponentsConfig>>(mex,
+                                                  "DigiComponentsConfigList");
 
-    py::class_<Acts::GeometryHierarchyMap<ActsExamples::DigiComponentsConfig>>(
-        mex, "GeometryHierarchyMap_DigiComponentsConfig")
-        .def(py::init<std::vector<
-                 std::pair<GeometryIdentifier, DigiComponentsConfig>>>());
+    py::class_<Acts::GeometryHierarchyMap<
+        std::vector<ActsExamples::DigiComponentsConfig>>>(
+        mex, "GeometryHierarchyMap_DigiComponentsConfigList")
+        .def(py::init<std::vector<std::pair<
+                 GeometryIdentifier, std::vector<DigiComponentsConfig>>>>());
   }
 
   {

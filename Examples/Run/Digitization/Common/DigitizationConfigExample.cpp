@@ -61,7 +61,7 @@ int runDigitizationConfigExample(
 
   geometry.first->visitSurfaces(digiConfigurator);
 
-  Acts::GeometryHierarchyMap<DigiComponentsConfig> outputConfig(
+  Acts::GeometryHierarchyMap<std::vector<DigiComponentsConfig>> outputConfig(
       digiConfigurator.outputDigiComponents);
 
   if (not vm["dump-digi-config"].as<std::string>().empty()) {

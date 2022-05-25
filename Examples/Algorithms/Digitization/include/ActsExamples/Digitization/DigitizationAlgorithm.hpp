@@ -91,14 +91,16 @@ class DigitizationAlgorithm final : public BareAlgorithm {
   };
 
   // Support max 4 digitization dimensions - either digital or smeared
-  using Digitizer = std::variant<CombinedDigitizer<0>, CombinedDigitizer<1>,
-                                 CombinedDigitizer<2>, CombinedDigitizer<3>,
-                                 CombinedDigitizer<4>>;
+  using Digitizer =
+      std::pair<std::variant<CombinedDigitizer<0>, CombinedDigitizer<1>,
+                             CombinedDigitizer<2>, CombinedDigitizer<3>,
+                             CombinedDigitizer<4>>,
+                DigiConstraint>;
 
   /// Configuration of the Algorithm
   DigitizationConfig m_cfg;
   /// Digitizers within geometry hierarchy
-  Acts::GeometryHierarchyMap<Digitizer> m_digitizers;
+  Acts::GeometryHierarchyMap<std::vector<Digitizer>> m_digitizers;
   /// Geometric digtizers
   ActsFatras::PlanarSurfaceDrift m_surfaceDrift;
   ActsFatras::PlanarSurfaceMask m_surfaceMask;
@@ -122,7 +124,7 @@ class DigitizationAlgorithm final : public BareAlgorithm {
       impl.smearing.smearFunctions[i] =
           cfg.smearingDigiConfig.at(i).smearFunction;
     }
-    return impl;
+    return {impl, std::move(cfg.constraint)};
   }
 };
 

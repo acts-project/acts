@@ -35,7 +35,7 @@ enum SmearingTypes : int {
 
 ActsExamples::DigitizationConfig::DigitizationConfig(
     const Options::Variables& vars,
-    Acts::GeometryHierarchyMap<DigiComponentsConfig>&& digiCfgs)
+    Acts::GeometryHierarchyMap<std::vector<DigiComponentsConfig>>&& digiCfgs)
     : doMerge(vars["digi-merge"].as<bool>()),
       mergeNsigma(vars["digi-merge-nsigma"].as<double>()),
       mergeCommonCorner(vars["digi-merge-common-corner"].as<bool>()) {
@@ -43,7 +43,7 @@ ActsExamples::DigitizationConfig::DigitizationConfig(
 }
 
 ActsExamples::DigitizationConfig::DigitizationConfig(
-    Acts::GeometryHierarchyMap<DigiComponentsConfig>&& digiCfgs)
+    Acts::GeometryHierarchyMap<std::vector<DigiComponentsConfig>>&& digiCfgs)
     : doMerge(false), mergeNsigma(1.0), mergeCommonCorner(false) {
   digitizationConfigs = std::move(digiCfgs);
 }
@@ -55,9 +55,12 @@ ActsExamples::DigitizationConfig::getBoundIndices() const {
       std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
       bIndexInput;
 
+  throw std::runtime_error("not correctly implemented at the moment");
+
   for (size_t ibi = 0; ibi < digitizationConfigs.size(); ++ibi) {
     Acts::GeometryIdentifier geoID = digitizationConfigs.idAt(ibi);
-    const auto dCfg = digitizationConfigs.valueAt(ibi);
+    // TODO this is just a workaround for now to make it compile
+    const auto dCfg = digitizationConfigs.valueAt(ibi).front();
     std::vector<Acts::BoundIndices> boundIndices;
     boundIndices.insert(boundIndices.end(),
                         dCfg.geometricDigiConfig.indices.begin(),
