@@ -17,18 +17,6 @@
 
 #include <stdexcept>
 
-namespace {
-struct SimpleReverseFilteringLogic {
-  double momentumThreshold;
-
-  bool doBackwardFiltering(
-      Acts::MultiTrajectory::ConstTrackStateProxy trackState) const {
-    auto momentum = fabs(1 / trackState.filtered()[Acts::eBoundQOverP]);
-    return (momentum <= momentumThreshold);
-  }
-};
-}  // namespace
-
 ActsExamples::TrackFittingAlgorithm::TrackFittingAlgorithm(
     Config config, Acts::Logging::Level level)
     : ActsExamples::BareAlgorithm("TrackFittingAlgorithm", level),
@@ -80,30 +68,15 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
 
-  // Set the KalmanFitter options
-  Acts::KalmanFitterExtensions extensions;
-  MeasurementCalibrator calibrator{measurements};
-  extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
-  Acts::GainMatrixUpdater kfUpdater;
-  Acts::GainMatrixSmoother kfSmoother;
-  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(&kfUpdater);
-  extensions.smoother.connect<&Acts::GainMatrixSmoother::operator()>(
-      &kfSmoother);
+  // Measurement calibrator must be instantiated here, because we need the
+  // measurements to construct it. The other extensions are hold by the
+  // fit-function-object
+  ActsExamples::MeasurementCalibrator calibrator(measurements);
 
-  SimpleReverseFilteringLogic reverseFilteringLogic{
-      m_cfg.reverseFilteringMomThreshold};
-  extensions.reverseFilteringLogic
-      .connect<&SimpleReverseFilteringLogic::doBackwardFiltering>(
-          &reverseFilteringLogic);
-
-  Acts::KalmanFitterOptions kfOptions(
-      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, extensions,
-      Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(),
-      &(*pSurface));
-
-  kfOptions.multipleScattering = m_cfg.multipleScattering;
-  kfOptions.energyLoss = m_cfg.energyLoss;
-  kfOptions.freeToBoundCorrection = m_cfg.freeToBoundCorrection;
+  GeneralFitterOptions options{
+      ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
+      calibrator,     &(*pSurface),        Acts::LoggerWrapper{logger()},
+  };
 
   // Perform the fit for each input track
   std::vector<std::reference_wrapper<const IndexSourceLink>> trackSourceLinks;
@@ -150,7 +123,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
     ACTS_DEBUG("Invoke fitter");
     auto result =
-        fitTrack(trackSourceLinks, initialParams, kfOptions, surfSequence);
+        fitTrack(trackSourceLinks, initialParams, options, surfSequence);
 
     if (result.ok()) {
       // Get the fit output object

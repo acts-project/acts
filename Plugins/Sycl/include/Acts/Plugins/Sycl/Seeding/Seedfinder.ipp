@@ -140,7 +140,8 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
           weight, std::make_unique<const InternalSeed<external_spacepoint_t>>(
                       bottomSP, middleSP, topSP, 0)));
     }
-    m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSPM,
+    int numQualitySeeds = 0;  // not used but needs to be fixed
+    m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSPM, numQualitySeeds,
                                               std::back_inserter(outputVec));
   }
   return outputVec;

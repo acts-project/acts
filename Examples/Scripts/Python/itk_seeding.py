@@ -20,6 +20,7 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
         inputCollection="pixel",
         inputDir=csvInputDir,
         outputSpacePoints="PixelSpacePoints",
+        extendCollection=False,
     )
 
     gridConfig = acts.SpacePointGridConfig(
@@ -87,22 +88,24 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
             [40.0, 90.0],
         ],  # if useVariableMiddleSPRange is set to false, the vector rRangeMiddleSP can be used to define a fixed r range for each z bin: {{rMin, rMax}, ...}. If useVariableMiddleSPRange is set to false and the vector is empty, the cuts won't be applied
         useVariableMiddleSPRange=True,  # if useVariableMiddleSPRange is true, the values in rRangeMiddleSP will be calculated based on r values of the SPs and deltaRMiddleSPRange
-        deltaRMiddleSPRange=10,
+        deltaRMiddleMinSPRange=10,
+        deltaRMiddleMaxSPRange=10,
         seedConfirmation=True,
-        centralSeedConfirmationRange=acts.SeedConfirmationRange(
+        centralSeedConfirmationRange=acts.SeedConfirmationRangeConfig(
             zMinSeedConf=250 * u.mm,
             zMaxSeedConf=250 * u.mm,
             rMaxSeedConf=140 * u.mm,
             nTopForLargeR=1,
             nTopForSmallR=2,
         ),  # contains parameters for seed confirmation
-        forwardSeedConfirmationRange=acts.SeedConfirmationRange(
+        forwardSeedConfirmationRange=acts.SeedConfirmationRangeConfig(
             zMinSeedConf=3000 * u.mm,
             zMaxSeedConf=-3000 * u.mm,
             rMaxSeedConf=140 * u.mm,
             nTopForLargeR=1,
             nTopForSmallR=2,
         ),
+        useDetailedDoubleMeasurementInfo=False,
     )
 
     seedFilterConfig = acts.SeedFilterConfig(
@@ -112,6 +115,10 @@ def runITkSeeding(field, csvInputDir, outputDir, s=None):
         compatSeedWeight=100,
         compatSeedLimit=3,
         curvatureSortingInFilter=True,
+        seedConfirmation=True,
+        centralSeedConfirmationRange=seedFinderConfig.centralSeedConfirmationRange,
+        forwardSeedConfirmationRange=seedFinderConfig.forwardSeedConfirmationRange,
+        useDeltaRorTopRadius=True,
     )
 
     seedingAlg = acts.examples.SeedingAlgorithm(
@@ -173,7 +180,7 @@ if "__main__" == __name__:
             + "/event000000000-spacepoints_pixel.csv"
         )
         temp.write(
-            "measurement_id,sp_type,module_idhash,sp_x,sp_y,sp_z,sp_radius,sp_covr,sp_covz\n 1,0,3139,32.67557144165039,-5.311902523040771,-47.65000152587891,33.10452270507812,0.05999999865889549,0.02999880164861679\n 2,0,3422,95.14442443847656,-15.46361255645752,-52.125,96.39286804199219,0.05999999865889549,0.01687432639300823\n 3,0,3650,102.8257064819336,-16.71612739562988,-52.67499923706055,104.1755981445312,0.05999999865889549,0.001875000074505806\n 4,0,4223,159.4266204833984,-25.91166687011719,-56.75,161.5186157226562,0.05999999865889549,0.02999880164861679\n 5,0,5015,224.07958984375,-36.37123107910156,-61.40000152587891,227.0121765136719,0.05999999865889549,0.007499700412154198\n 6,0,6023,284.1485595703125,-46.0638542175293,-65.72499847412109,287.8580932617188,0.05999999865889549,0.001875000074505806"
+            "measurement_id,sp_type,module_idhash,sp_x,sp_y,sp_z,sp_radius,sp_covr,sp_covz,sp_topHalfStripLength,sp_bottomHalfStripLength,sp_topStripDirection[0],sp_topStripDirection[1],sp_topStripDirection[2],sp_bottomStripDirection[0],sp_bottomStripDirection[1],sp_bottomStripDirection[2],sp_stripCenterDistance[0],sp_stripCenterDistance[1],sp_stripCenterDistance[2],sp_bottomStripCenterPosition[0],sp_bottomStripCenterPosition[1],sp_bottomStripCenterPosition[2]\n 1,0,3139,32.67557144165039,-5.311902523040771,-47.65000152587891,33.10452270507812,0.05999999865889549,0.02999880164861679,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n 2,0,3422,95.14442443847656,-15.46361255645752,-52.125,96.39286804199219,0.05999999865889549,0.01687432639300823,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n 3,0,3650,102.8257064819336,-16.71612739562988,-52.67499923706055,104.1755981445312,0.05999999865889549,0.001875000074505806,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n 4,0,4223,159.4266204833984,-25.91166687011719,-56.75,161.5186157226562,0.05999999865889549,0.02999880164861679,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n 5,0,5015,224.07958984375,-36.37123107910156,-61.40000152587891,227.0121765136719,0.05999999865889549,0.007499700412154198,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n 6,0,6023,284.1485595703125,-46.0638542175293,-65.72499847412109,287.8580932617188,0.05999999865889549,0.001875000074505806,0,0,0,0,0,0,0,0,0,0,0,0,0,0"
         )
         temp.read()
 

@@ -14,6 +14,8 @@
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/MagneticField/FieldMapRootIo.hpp"
+#include "ActsExamples/MagneticField/FieldMapTextIo.hpp"
 #include "ActsExamples/MagneticField/ScalableBFieldService.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
@@ -23,9 +25,6 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
-
-#include "FieldMapRootIo.hpp"
-#include "FieldMapTextIo.hpp"
 
 void ActsExamples::Options::addMagneticFieldOptions(Description& desc) {
   using boost::program_options::bool_switch;

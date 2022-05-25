@@ -465,10 +465,10 @@ def test_csv_multitrajectory_writer(tmp_path):
     detector, trackingGeometry, decorators = GenericDetector.create()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    from truth_tracking import runTruthTracking
+    from truth_tracking_kalman import runTruthTrackingKalman
 
     s = Sequencer(numThreads=1, events=10)
-    runTruthTracking(
+    runTruthTrackingKalman(
         trackingGeometry,
         field,
         digiConfigFile=Path(

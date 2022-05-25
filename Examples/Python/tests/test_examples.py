@@ -377,7 +377,7 @@ def test_event_recording(tmp_path):
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.parametrize("revFiltMomThresh", [0 * u.GeV, 1 * u.TeV])
 def test_truth_tracking(tmp_path, assert_root_hash, revFiltMomThresh):
-    from truth_tracking import runTruthTracking
+    from truth_tracking_kalman import runTruthTrackingKalman
 
     detector, trackingGeometry, _ = getOpenDataDetector()
 
@@ -396,7 +396,7 @@ def test_truth_tracking(tmp_path, assert_root_hash, revFiltMomThresh):
         fp = tmp_path / fn
         assert not fp.exists()
 
-    runTruthTracking(
+    runTruthTrackingKalman(
         trackingGeometry,
         field,
         digiConfigFile=Path(
@@ -940,10 +940,10 @@ def test_vertex_fitting_reading(
 
     inputTrackSummary = None
     if inputTracks:
-        from truth_tracking import runTruthTracking
+        from truth_tracking_kalman import runTruthTrackingKalman
 
         s2 = Sequencer(numThreads=1, events=100)
-        runTruthTracking(
+        runTruthTrackingKalman(
             trackingGeometry,
             field,
             digiConfigFile=Path(
@@ -1001,6 +1001,8 @@ def test_vertex_fitting_reading(
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_full_chain_odd_example(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
+    getOpenDataDetector()  # just to make sure it can build
+
     script = (
         Path(__file__).parent.parent.parent.parent
         / "Examples"
