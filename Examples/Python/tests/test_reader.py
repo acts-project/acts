@@ -309,6 +309,7 @@ def test_csv_clusters_reader(tmp_path, fatras, conf_const, trk_geo, rng):
         assert alg.events_seen == 10
 
 
+@pytest.mark.slow
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 def test_edm4hep_simhits_reader(tmp_path):
     from acts.examples.edm4hep import (
