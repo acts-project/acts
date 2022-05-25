@@ -122,8 +122,8 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
             (cot_theta * cot_theta) * (varianceRM + sp->varianceR())) *
            iDeltaR2;
 
-    l.x = sp->x();
-    l.y = sp->y();
+    l.x = x;
+    l.y = y;
     l.z = sp->z();
     l.r = sp->radius();
 
@@ -197,9 +197,8 @@ bool xyzCoordinateCheck(Acts::SeedfinderConfig<external_spacepoint_t> m_config,
 
   // compatibility check using distance between strips to evaluate if
   // spacepointPosition is inside the top detector element
-  double s0 =
-      -(stripCenterDistance[0] * d0[0] + stripCenterDistance[1] * d0[1] +
-        stripCenterDistance[2] * d0[2]);
+  double s0 = (stripCenterDistance[0] * d0[0] + stripCenterDistance[1] * d0[1] +
+               stripCenterDistance[2] * d0[2]);
   if (std::abs(s0) > std::abs(bd1) * toleranceParam)
     return false;
 

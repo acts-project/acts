@@ -355,13 +355,13 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
             continue;
           }
 
-          // correcting other variables
-          float xB = rBTransf[0] - rTTransf[0];
-          float yB = rBTransf[1] - rTTransf[1];
-          float zB = rBTransf[2] - rTTransf[2];
-          float xT = rBTransf[0] - rTTransf[0];
-          float yT = rBTransf[1] - rTTransf[1];
-          float zT = rBTransf[2] - rTTransf[2];
+          // bottom and top coordinates in the spM reference frame
+          float xB = rBTransf[0] - rMTransf[0];
+          float yB = rBTransf[1] - rMTransf[1];
+          float zB = rBTransf[2] - rMTransf[2];
+          float xT = rTTransf[0] - rMTransf[0];
+          float yT = rTTransf[1] - rMTransf[1];
+          float zT = rTTransf[2] - rMTransf[2];
 
           float iDeltaRB2 = 1. / (xB * xB + yB * yB);
           float iDeltaRT2 = 1. / (xT * xT + yT * yT);
