@@ -503,7 +503,6 @@ class TrackStateProxy {
   /// @param sourceLink The uncalibrated source link to set
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void setUncalibrated(const SourceLink& sourceLink) {
-    assert(has<hashString("sourceLink")>());
     using T = const SourceLink*;
     T& sl = component<const SourceLink*, hashString("sourceLink")>();
     sl = &sourceLink;
@@ -511,6 +510,10 @@ class TrackStateProxy {
     assert(
         (component<const SourceLink*, hashString("sourceLink")>() != nullptr));
   }
+
+  /// Check if the point has an associated uncalibrated measurement.
+  /// @return Whether it is set
+  bool hasUncalibrated() const { return has<hashString("sourceLink")>(); }
 
   /// Check if the point has an associated calibrated measurement.
   /// @return Whether it is set
@@ -806,6 +809,21 @@ class MultiTrajectory {
   Derived& self() { return static_cast<Derived&>(*this); }
   const Derived& self() const { return static_cast<const Derived&>(*this); }
 
+  bool checkOptional(HashedString key, IndexType istate) const {
+    using namespace Acts::HashedStringLiteral;
+    switch (key) {
+      case "predicted"_hash:
+      case "filtered"_hash:
+      case "smoothed"_hash:
+      case "calibrated"_hash:
+      case "jacobian"_hash:
+      case "projector"_hash:
+        return self().has_impl(key, istate);
+      default:
+        return true;
+    }
+  }
+
  public:
   /// Access a read-only point on the trajectory by index.
   /// @param istate The index to access
@@ -927,25 +945,25 @@ class MultiTrajectory {
 
   template <typename T, HashedString key>
   constexpr T& component(IndexType istate) {
-    assert(has(key, istate));
+    assert(checkOptional(key, istate));
     return *std::any_cast<T*>(self().component_impl(key, istate));
   }
 
   template <typename T>
   constexpr T& component(HashedString key, IndexType istate) {
-    assert(has(key, istate));
+    assert(checkOptional(key, istate));
     return *std::any_cast<T*>(self().component_impl(key, istate));
   }
 
   template <typename T, HashedString key>
   constexpr const T& component(IndexType istate) const {
-    assert(has(key, istate));
+    assert(checkOptional(key, istate));
     return *std::any_cast<const T*>(self().component_impl(key, istate));
   }
 
   template <typename T>
   constexpr const T& component(HashedString key, IndexType istate) const {
-    assert(has(key, istate));
+    assert(checkOptional(key, istate));
     return *std::any_cast<const T*>(self().component_impl(key, istate));
   }
 

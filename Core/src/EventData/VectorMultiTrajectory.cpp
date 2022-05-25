@@ -54,7 +54,7 @@ std::size_t VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
     p.ijacobian = m_jac.size() - 1;
   }
 
-  m_sourceLinks.emplace_back();
+  m_sourceLinks.push_back(nullptr);
   p.iuncalibrated = m_sourceLinks.size() - 1;
 
   if (ACTS_CHECK_BIT(mask, PropMask::Calibrated)) {
@@ -62,7 +62,7 @@ std::size_t VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
     m_measCov.emplace_back();
     p.icalibrated = m_meas.size() - 1;
 
-    m_sourceLinks.emplace_back();
+    m_sourceLinks.push_back(nullptr);
     p.icalibratedsourcelink = m_sourceLinks.size() - 1;
 
     m_projectors.emplace_back();

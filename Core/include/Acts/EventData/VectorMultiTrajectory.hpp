@@ -126,8 +126,11 @@ class VectorMultiTrajectory final
         return m_index[istate].ijacobian != kInvalid;
       case "projector"_hash:
         return m_index[istate].iprojector != kInvalid;
+      case "sourceLink"_hash: {
+        const auto& sl = m_sourceLinks[m_index[istate].iuncalibrated];
+        return sl != nullptr;
+      }
       case "previous"_hash:
-      case "sourceLink"_hash:
       case "calibratedSourceLink"_hash:
       case "referenceSurface"_hash:
       case "measdim"_hash:
