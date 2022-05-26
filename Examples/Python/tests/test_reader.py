@@ -1,4 +1,6 @@
 import pytest
+import os
+import subprocess
 
 from helpers import (
     geant4Enabled,
@@ -312,20 +314,33 @@ def test_csv_clusters_reader(tmp_path, fatras, conf_const, trk_geo, rng):
 @pytest.mark.slow
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 def test_edm4hep_simhits_reader(tmp_path):
-    from acts.examples.edm4hep import (
-        EDM4hepSimHitReader,
-    )
-    from DDSim.DD4hepSimulation import DD4hepSimulation
+    from acts.examples.edm4hep import EDM4hepSimHitReader
 
-    odd_xml = getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml"
-    ddsim = DD4hepSimulation()
-    ddsim.compactFile = str(odd_xml)
-    ddsim.enableGun = True
-    ddsim.gun.direction = (1, 0, 0)
-    ddsim.gun.distribution = "eta"
-    ddsim.numberOfEvents = 10
-    ddsim.outputFile = str(tmp_path / "output_edm4hep.root")
-    ddsim.run()
+    tmp_file = str(tmp_path / "output_edm4hep.root")
+    odd_xml_file = str(getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml")
+
+    subprocess.run(
+        [
+            "ddsim",
+            "--compactFile",
+            odd_xml_file,
+            "--runType",
+            "batch",
+            "--enableGun",
+            "--gun.particle",
+            "mu-",
+            "--gun.direction",
+            "1 0 0",
+            "--gun.distribution",
+            "eta",
+            "--numberOfEvents",
+            "10",
+            "--outputFile",
+            tmp_file,
+        ]
+    )
+
+    assert os.path.exists(tmp_file)
 
     detector, _, _ = getOpenDataDetector()
 
@@ -334,7 +349,7 @@ def test_edm4hep_simhits_reader(tmp_path):
     s.addReader(
         EDM4hepSimHitReader(
             level=acts.logging.INFO,
-            inputPath=str(tmp_path / "output_edm4hep.root"),
+            inputPath=tmp_file,
             outputSimHits="simhits",
             dd4hepGeometryService=detector.geometryService,
         )
