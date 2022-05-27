@@ -524,7 +524,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     with geo_map.open() as fh:
         assert json.load(fh)
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(
+    _, trackingGeometry, decorators = getOpenDataDetector(
         mdecorator=acts.IMaterialDecorator.fromFile(geo_map)
     )
 

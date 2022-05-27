@@ -1,6 +1,8 @@
+from audioop import mul
 import pytest
 import os
 import subprocess
+import multiprocessing
 
 from helpers import (
     geant4Enabled,
@@ -319,27 +321,19 @@ def test_edm4hep_simhits_reader(tmp_path):
     tmp_file = str(tmp_path / "output_edm4hep.root")
     odd_xml_file = str(getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml")
 
-    subprocess.run(
-        [
-            "python3",
-            "ddsim",
-            "--compactFile",
-            odd_xml_file,
-            "--runType",
-            "batch",
-            "--enableGun",
-            "--gun.particle",
-            "mu-",
-            "--gun.direction",
-            "1 0 0",
-            "--gun.distribution",
-            "eta",
-            "--numberOfEvents",
-            "10",
-            "--outputFile",
-            tmp_file,
-        ]
-    )
+    def generate_input():
+        from DDSim.DD4hepSimulation import DD4hepSimulation
+        ddsim = DD4hepSimulation()
+        ddsim.compactFile = str(odd_xml_file)
+        ddsim.enableGun = True
+        ddsim.gun.direction = (1, 0, 0)
+        ddsim.gun.distribution = "eta"
+        ddsim.numberOfEvents = 10
+        ddsim.outputFile = str(tmp_path / "output_edm4hep.root")
+        ddsim.run()
+    p = multiprocessing.Process(target=generate_input)
+    p.start()
+    p.join()
 
     assert os.path.exists(tmp_file)
 
