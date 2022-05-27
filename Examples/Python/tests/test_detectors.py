@@ -3,7 +3,11 @@ from pathlib import Path
 import pytest
 
 from helpers import dd4hepEnabled
-from common import getOpenDataDetector
+
+from common import (
+    getOpenDataDetectorDirectory,
+    getOpenDataDetector,
+)
 
 import acts.examples
 
