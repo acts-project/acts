@@ -314,6 +314,7 @@ def test_csv_clusters_reader(tmp_path, fatras, conf_const, trk_geo, rng):
 
 def generate_input_test_edm4hep_simhits_reader(input, output):
     from DDSim.DD4hepSimulation import DD4hepSimulation
+
     ddsim = DD4hepSimulation()
     ddsim.compactFile = input
     ddsim.enableGun = True
@@ -332,7 +333,7 @@ def test_edm4hep_simhits_reader(tmp_path):
     tmp_file = str(tmp_path / "output_edm4hep.root")
     odd_xml_file = str(getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml")
 
-    with multiprocessing.get_context('spawn').Pool() as pool:
+    with multiprocessing.get_context("spawn").Pool() as pool:
         pool.apply(generate_input_test_edm4hep_simhits_reader, (odd_xml_file, tmp_file))
 
     assert os.path.exists(tmp_file)
