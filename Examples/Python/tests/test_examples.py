@@ -12,6 +12,8 @@ from helpers import (
     dd4hepEnabled,
     hepmc3Enabled,
     AssertCollectionExistsAlg,
+    isCI,
+    doHashChecks,
 )
 
 pytestmark = pytest.mark.skipif(not rootEnabled, reason="ROOT not set up")
