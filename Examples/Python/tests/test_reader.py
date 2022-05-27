@@ -321,6 +321,7 @@ def test_edm4hep_simhits_reader(tmp_path):
 
     subprocess.run(
         [
+            "python3",
             "ddsim",
             "--compactFile",
             odd_xml_file,
