@@ -1,7 +1,6 @@
-from audioop import mul
 import pytest
 import os
-import subprocess
+import sys
 import multiprocessing
 
 from helpers import (
@@ -313,6 +312,18 @@ def test_csv_clusters_reader(tmp_path, fatras, conf_const, trk_geo, rng):
         assert alg.events_seen == 10
 
 
+def generate_input_test_edm4hep_simhits_reader(input, output):
+    from DDSim.DD4hepSimulation import DD4hepSimulation
+    ddsim = DD4hepSimulation()
+    ddsim.compactFile = input
+    ddsim.enableGun = True
+    ddsim.gun.direction = (1, 0, 0)
+    ddsim.gun.distribution = "eta"
+    ddsim.numberOfEvents = 10
+    ddsim.outputFile = output
+    ddsim.run()
+
+
 @pytest.mark.slow
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 def test_edm4hep_simhits_reader(tmp_path):
@@ -321,19 +332,8 @@ def test_edm4hep_simhits_reader(tmp_path):
     tmp_file = str(tmp_path / "output_edm4hep.root")
     odd_xml_file = str(getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml")
 
-    def generate_input():
-        from DDSim.DD4hepSimulation import DD4hepSimulation
-        ddsim = DD4hepSimulation()
-        ddsim.compactFile = str(odd_xml_file)
-        ddsim.enableGun = True
-        ddsim.gun.direction = (1, 0, 0)
-        ddsim.gun.distribution = "eta"
-        ddsim.numberOfEvents = 10
-        ddsim.outputFile = str(tmp_path / "output_edm4hep.root")
-        ddsim.run()
-    p = multiprocessing.Process(target=generate_input)
-    p.start()
-    p.join()
+    with multiprocessing.get_context('spawn').Pool() as pool:
+        pool.apply(generate_input_test_edm4hep_simhits_reader, (odd_xml_file, tmp_file))
 
     assert os.path.exists(tmp_file)
 
