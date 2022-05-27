@@ -69,6 +69,9 @@ option(ACTS_USE_SYSTEM_BOOST "Use a system-provided boost" ON)
 option(ACTS_SETUP_EIGEN3 "Explicitly set up Eigen3 for the project" ON)
 option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" ON)
 option(ACTS_BUILD_ODD "Build the OpenDataDetector" OFF)
+# profiling related optios
+option(ACTS_ENABLE_CPU_PROFILING "Enable CPU profiling using gperftools" OFF)
+option(ACTS_ENABLE_MEMORY_PROFILING "Enable memory profiling using gperftools" OFF)
 
 # handle option inter-dependencies and the everything flag
 # NOTE: ordering is important here. dependencies must come before dependees
@@ -337,6 +340,12 @@ add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
 if(ACTS_BUILD_BENCHMARKS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_UNITTESTS)
   enable_testing() # must be set in the main CMakeLists.txt
   add_subdirectory(Tests)
+endif()
+
+#generate debug information
+if(ACTS_ENABLE_CPU_PROFILING)
+  message(STATUS "Added -g compile flag")
+  add_compile_options(-g)
 endif()
 
 # documentation

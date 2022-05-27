@@ -37,6 +37,24 @@ if(ACTS_LOG_FAILURE_THRESHOLD)
     PUBLIC -DACTS_LOG_FAILURE_THRESHOLD=${ACTS_LOG_FAILURE_THRESHOLD})
 endif()
 
+if(ACTS_ENABLE_CPU_PROFILING)
+  message(STATUS "added lprofiler")
+  target_link_libraries(
+    ActsCore
+    PUBLIC -lprofiler)
+
+  target_link_options(
+    ActsCore
+      PUBLIC "LINKER:-no-as-needed")
+endif()
+
+if(ACTS_ENABLE_MEMORY_PROFILING)
+  message(STATUS "added ltcmalloc")
+  target_link_libraries(
+    ActsCore
+    PUBLIC -ltcmalloc)
+endif()
+
 install(
   TARGETS ActsCore
   EXPORT ActsCoreTargets
