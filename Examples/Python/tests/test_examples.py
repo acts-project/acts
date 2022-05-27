@@ -377,7 +377,7 @@ def test_event_recording(tmp_path):
 def test_truth_tracking(tmp_path, assert_root_hash, revFiltMomThresh):
     from truth_tracking_kalman import runTruthTrackingKalman
 
-    _, trackingGeometry, _ = getOpenDataDetector()
+    detector, trackingGeometry, _ = getOpenDataDetector()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
@@ -450,7 +450,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     s = Sequencer(numThreads=1)
 
-    _, trackingGeometry, decorators = getOpenDataDetector()
+    detector, trackingGeometry, decorators = getOpenDataDetector()
 
     from material_mapping import runMaterialMapping
 
@@ -489,7 +489,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     # del trackingGeometry
     # del detector
 
-    _, trackingGeometry, decorators = getOpenDataDetector(
+    detector, trackingGeometry, decorators = getOpenDataDetector(
         mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
     )
 
@@ -524,7 +524,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     with geo_map.open() as fh:
         assert json.load(fh)
 
-    _, trackingGeometry, decorators = getOpenDataDetector(
+    detector, trackingGeometry, decorators = getOpenDataDetector(
         mdecorator=acts.IMaterialDecorator.fromFile(geo_map)
     )
 
@@ -888,7 +888,7 @@ def test_ckf_tracks_example(
 @pytest.mark.slow
 @pytest.mark.filterwarnings("ignore::UserWarning")
 def test_vertex_fitting(tmp_path):
-    getOpenDataDetector()
+    detector, trackingGeometry, decorators = getOpenDataDetector()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
