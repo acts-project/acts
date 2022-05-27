@@ -70,7 +70,7 @@ You can do the same thing with the tcmalloc library for memory profiling:
 LD_PRELOAD="<path/to/libtcmalloc.so>" <other_options> <path/to/binary> <binary_flags>
 ```
 
-Using the LD_PRELOAD methd is not recommended by the developers of gperftools so using the build options is prefereable. Both CPU and memory profiling can be enabled at the same time but note that turning on memory profiling (or the heap checker) will affect performance.
+Using the LD_PRELOAD method is not recommended by the developers of gperftools so using the build options is prefereable. Both CPU and memory profiling can be enabled at the same time but note that turning on memory profiling (or the heap checker) will affect performance.
 Specify multiple libraries to load with LD_PRELOAD using a space-separated list e.g.
 
 ```
@@ -107,7 +107,7 @@ To run the heap checker for checking for memory leaks run the following command:
 PPROF_PATH=<path/to/pprof> HEAPCHECK=normal <path/to/binary> [binary args]
 ```
 
-The CPU profiler, memory profiler ad heap checker can be used in tandem.
+The CPU profiler, memory profiler and heap checker can be used in tandem.
 
 ## Using pprof
 
