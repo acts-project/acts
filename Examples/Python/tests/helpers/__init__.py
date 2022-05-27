@@ -37,7 +37,7 @@ try:
     import acts.examples.hepmc3
 
     hepmc3Enabled = True
-except:
+except ImportError:
     hepmc3Enabled = False
 
 try:

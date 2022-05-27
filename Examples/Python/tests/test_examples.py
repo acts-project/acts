@@ -12,8 +12,6 @@ from helpers import (
     dd4hepEnabled,
     hepmc3Enabled,
     AssertCollectionExistsAlg,
-    isCI,
-    doHashChecks,
 )
 
 pytestmark = pytest.mark.skipif(not rootEnabled, reason="ROOT not set up")
@@ -379,7 +377,7 @@ def test_event_recording(tmp_path):
 def test_truth_tracking(tmp_path, assert_root_hash, revFiltMomThresh):
     from truth_tracking_kalman import runTruthTrackingKalman
 
-    detector, trackingGeometry, _ = getOpenDataDetector()
+    _, trackingGeometry, _ = getOpenDataDetector()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
@@ -488,8 +486,8 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     # test the validation as well
 
     # we need to destroy the ODD to reload with material
-    # del trackingGeometry
-    # del detector
+    del trackingGeometry
+    del detector
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
         mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
@@ -565,8 +563,8 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     # test the validation as well
 
     # we need to destroy the ODD to reload with material
-    # del trackingGeometry
-    # del detector
+    del trackingGeometry
+    del detector
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
         mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
@@ -890,7 +888,8 @@ def test_ckf_tracks_example(
 @pytest.mark.slow
 @pytest.mark.filterwarnings("ignore::UserWarning")
 def test_vertex_fitting(tmp_path):
-    detector, trackingGeometry, decorators = getOpenDataDetector()
+    # This test literally only ensures that the full chain example can run without erroring out
+    getOpenDataDetector()  # just to make sure it can build
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
