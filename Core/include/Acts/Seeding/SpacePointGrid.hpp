@@ -37,6 +37,10 @@ struct SpacePointGridConfig {
   float cotThetaMax;
   // maximum impact parameter in mm
   float impactMax;
+  // minimum phi value for phiAxis construction
+  float phiMin = -M_PI;
+  // maximum phi value for phiAxis construction
+  float phiMax = M_PI;
   // Multiplicator for the number of phi-bins. The minimum number of phi-bins
   // depends on min_pt, magnetic field: 2*M_PI/(minPT particle phi-deflection).
   // phiBinDeflectionCoverage is a multiplier for this number. If
