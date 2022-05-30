@@ -43,6 +43,10 @@ struct SeedfinderConfig {
   float deltaRMinBottomSP = 5 * Acts::UnitConstants::mm;
   // maximum distance in r between middle and bottom SP
   float deltaRMaxBottomSP = 270 * Acts::UnitConstants::mm;
+  // radial bin size for filling space point grid
+  float binSizeR = 1. * Acts::UnitConstants::mm;
+  // force sorting in R in space point grid bins
+  bool forceRadialSorting = false;
 
   // radial range for middle SP
   std::vector<std::vector<float>> rRangeMiddleSP;
@@ -175,6 +179,7 @@ struct SeedfinderConfig {
     config.minPt /= 1_MeV;
     config.deltaRMin /= 1_mm;
     config.deltaRMax /= 1_mm;
+    config.binSizeR /= 1_mm;
     config.deltaRMinTopSP /= 1_mm;
     config.deltaRMaxTopSP /= 1_mm;
     config.deltaRMinBottomSP /= 1_mm;
