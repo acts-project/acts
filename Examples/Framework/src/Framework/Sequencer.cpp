@@ -270,7 +270,6 @@ int ActsExamples::Sequencer::run() {
                                                       Duration::zero());
 
           for (size_t event = r.begin(); event != r.end(); ++event) {
-             std::cerr <<"JAA sequence 0" << std::endl;
             m_cfg.iterationCallback();
             // Use per-event store
             WhiteBoard eventStore(Acts::getDefaultLogger(
@@ -279,13 +278,11 @@ int ActsExamples::Sequencer::run() {
             // changed to Algorithm context copies
             AlgorithmContext context(0, event, eventStore);
             size_t ialgo = 0;
-             std::cerr <<"JAA sequence 1" << std::endl;
             // Prepare event store w/ service information
             for (auto& service : m_services) {
               StopWatch sw(localClocksAlgorithms[ialgo++]);
               service->prepare(++context);
             }
-             std::cerr <<"JAA sequence 2" << std::endl;
             /// Decorate the context
             for (auto& cdr : m_decorators) {
               StopWatch sw(localClocksAlgorithms[ialgo++]);
@@ -294,7 +291,6 @@ int ActsExamples::Sequencer::run() {
                 throw std::runtime_error("Failed to decorate event context");
               }
             }
-             std::cerr <<"JAA sequence 3" << std::endl;
             ACTS_VERBOSE("Execute readers");
             for (auto& rdr : m_readers) {
               StopWatch sw(localClocksAlgorithms[ialgo++]);
@@ -303,7 +299,6 @@ int ActsExamples::Sequencer::run() {
                 throw std::runtime_error("Failed to read input data");
               }
             }
-             std::cerr <<"JAA sequence 4" << std::endl;
             ACTS_VERBOSE("Execute algorithms");
             for (auto& alg : m_algorithms) {
               StopWatch sw(localClocksAlgorithms[ialgo++]);
@@ -312,7 +307,6 @@ int ActsExamples::Sequencer::run() {
                 throw std::runtime_error("Failed to process event data");
               }
             }
-             std::cerr <<"JAA sequence 5" << std::endl;
             ACTS_VERBOSE("Execute writers");
             for (auto& wrt : m_writers) {
               StopWatch sw(localClocksAlgorithms[ialgo++]);
@@ -321,7 +315,6 @@ int ActsExamples::Sequencer::run() {
                 throw std::runtime_error("Failed to write output data");
               }
             }
-             std::cerr <<"JAA sequence 6" << std::endl;
             nProcessedEvents++;
             if (nTotalEvents <= 100) {
               ACTS_INFO("finished event " << event);
@@ -342,7 +335,6 @@ int ActsExamples::Sequencer::run() {
           }
         });
   });
-  std::cerr <<"JAA sequence 7" << std::endl;
   // run end-of-run hooks
   for (auto& wrt : m_writers) {
     names.push_back("Writer:" + wrt->name() + ":endRun");
@@ -352,7 +344,6 @@ int ActsExamples::Sequencer::run() {
       return EXIT_FAILURE;
     }
   }
-  std::cerr <<"JAA sequence 8" << std::endl;
     
   // summarize timing
   Duration totalWall = Clock::now() - clockWallStart;
@@ -370,7 +361,6 @@ int ActsExamples::Sequencer::run() {
   storeTiming(names, clocksAlgorithms, numEvents,
               joinPaths(m_cfg.outputDir, m_cfg.outputTimingFile));
 
-    std::cerr <<"JAA sequence 9" << std::endl;
 
   return EXIT_SUCCESS;
 }

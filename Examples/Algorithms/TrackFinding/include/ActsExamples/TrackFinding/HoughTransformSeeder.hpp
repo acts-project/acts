@@ -61,7 +61,7 @@
 
 #pragma once
 
-
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
@@ -69,6 +69,7 @@
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughVectors.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include <string>
 #include <vector>
 #include <utility>
@@ -79,9 +80,13 @@
 // like a convolution. Also stored are all hits that contributed to each bin.
 // Size m_imageSize_y * m_imageSize_x. (NOTE y is row coordinate)
     
+namespace Acts {
+class TrackingGeometry;
+}
 
 namespace ActsExamples {
-typedef vector2D<std::pair<int, std::unordered_set<const ActsExamples::SimSpacePoint*>>> Image;
+typedef vector2D<std::pair<int, std::unordered_set<Index>>> Image;
+////typedef vector2D<std::pair<int, std::unordered_set<const ActsExamples::SimSpacePoint*>>> Image;
 
 /// Construct track seeds from space points.
 class HoughTransformSeeder final : public BareAlgorithm {
@@ -97,11 +102,52 @@ class HoughTransformSeeder final : public BareAlgorithm {
     /// Output track seed collection.
     std::string outputSeeds;
     /// Output hough track collection.
-    std::string outputHoughTracks;
+    std::string outputProtoTracks;
+    /// Input source links collection.
+    std::string inputSourceLinks;
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
+    /// For which part of the detector geometry should space points be created.
+    ///
+    /// Only volumes and layers can be set. Zero values can be used as wildcards
+    /// to select larger parts of the hierarchy, i.e. setting only the volume
+    /// selects all measurements within that volume. Adding a single identifier
+    /// with all components set to zero selects all available measurements. The
+    /// selection must not have duplicates.
+    std::vector<Acts::GeometryIdentifier> geometrySelection;
 
     Acts::SeedFilterConfig seedFilterConfig;
     Acts::SeedfinderConfig<SimSpacePoint> seedFinderConfig;
     Acts::SpacePointGridConfig gridConfig;
+
+     /// Input measurements collection.
+     std::string inputMeasurements;
+     
+     int m_subRegion = -1; // -1 for entire region (no slicing), slicing is to be added TODO
+
+     unsigned m_nLayers=10;  
+     
+     // Trace each hit that goes in a bin
+     // Disabling this will save memory/time since each bin doesn't have to store all its hits
+     // but the roads created won't have hits from convolution, etc.
+     bool m_traceHits = true;
+     
+     bool m_fieldCorrection = true;
+     
+     float m_xMin = 0; // minphi
+     float m_xMax = 2*3.14159; // maxphi
+     float m_yMin = -0.5; // min q/pt, -1/1 GeV JAAAAA check units
+     float m_yMax = 0.5; // max q/pt, +1/1 GeV JAAAAA check units
+     
+     unsigned m_imageSize_x = 7000; // i.e. number of bins in phi_track
+     unsigned m_imageSize_y = 216; // i.e. number of bins in q/pT
+     
+     std::vector<unsigned> m_hitExtend_x = {1,1,0,0,0,0,0,0,0,0}; // Hit lines will fill extra bins in x by this amount on each side, size == nLayers
+     
+     // === Seeds ==
+     std::vector<int> m_threshold = {9}; // Minimum point value post-convolution to accept as a road (inclusive)
+     int m_localMaxWindowSize = 0; // Only create roads from a local maximum, requires traceHits
+     double kA = 0.0003; // Assume B = 2T constant. 
+     
   };
 
   /// Construct the seeding algorithm.
@@ -119,15 +165,13 @@ class HoughTransformSeeder final : public BareAlgorithm {
   /// Const access to the config
   const Config& config() const { return m_cfg; }
 
-  double getMinX() const { return m_xMin; }
-  double getMaxX() const { return m_xMax; }
-  double getMinY() const { return m_yMin; }
-  double getMaxY() const { return m_yMax; }
-  unsigned getThreshold() const { return m_threshold[m_threshold.size() / 2]; }
-  int getSubRegion() const { return m_subRegion; }
+  double getMinX() const { return m_cfg.m_xMin; }
+  double getMaxX() const { return m_cfg.m_xMax; }
+  double getMinY() const { return m_cfg.m_yMin; }
+  double getMaxY() const { return m_cfg.m_yMax; }
+  unsigned getThreshold() const { return m_cfg.m_threshold[m_cfg.m_threshold.size() / 2]; }
+  int getSubRegion() const { return m_cfg.m_subRegion; }
 
-  static constexpr double kA = 0.0003; // Assume B = 2T constant. TODO Make this a parameter
- 
   // Apply correction due to B != 2T everywhere. This correction should be ADDED to
   // phi_track. // for now this does nothing!
   static double fieldCorrection(unsigned region, double y, double r); 
@@ -136,34 +180,10 @@ class HoughTransformSeeder final : public BareAlgorithm {
 
  private:
   Config m_cfg;
-  int m_subRegion = 0; // -1 for entire region (no slicing), slicing is to be added TODO
-
-  // Trace each hit that goes in a bin
-  // Disabling this will save memory/time since each bin doesn't have to store all its hits
-  // but the roads created won't have hits from convolution, etc.
-  bool m_traceHits = true;
-
-  bool m_fieldCorrection = true;
-
-  // === Image ===
-  float m_xMin = 0; // minphi
-  float m_xMax = 2*3.14159; // maxphi
-  float m_yMin = -0.5; // min q/pt, -1/1 GeV JAAAAA check units
-  float m_yMax = 0.5; // max q/pt, +1/1 GeV JAAAAA check units
-
-  unsigned m_imageSize_x = 216; // i.e. number of bins in phi_track
-  unsigned m_imageSize_y = 216; // i.e. number of bins in q/pT
-  
-  std::vector<unsigned> m_hitExtend_x = {2,1,0,0,0,0,0,0}; // Hit lines will fill extra bins in x by this amount on each side, size == nLayers
-
-  // === Seeds ==
-  std::vector<int> m_threshold = {1}; // Minimum point value post-convolution to accept as a road (inclusive)
-  int m_localMaxWindowSize = 0; // Only create roads from a local maximum, requires traceHits
   
   ///////////////////////////////////////////////////////////////////////
   // Convenience
   
-  unsigned m_nLayers=20; 
 
   double m_step_x = 0; // step size of the bin boundaries in x
   double m_step_y = 0; // step size of the bin boundaries in y
@@ -175,9 +195,17 @@ class HoughTransformSeeder final : public BareAlgorithm {
   ///////////////////////////////////////////////////////////////////////
   // Core
 
+  struct MeasurementKludge {
+     unsigned layer;
+     double phi;
+     double radius;
+     Index index;
+     MeasurementKludge(unsigned l, double p, double r, Index i) : layer(l), phi(p), radius(r), index(i) {}
+  };
+
   
-  Image createLayerImage(unsigned layer, std::vector<const SimSpacePoint*> & spacepoints) const;
-  Image createImage(std::vector<const SimSpacePoint*> & spacepoints) const;
+  Image createLayerImage(unsigned layer, std::vector<const SimSpacePoint*> & spacepoints, std::vector<std::shared_ptr<const MeasurementKludge >> & kludges) const;
+  Image createImage(std::vector<const SimSpacePoint*> & spacepoints, std::vector<std::shared_ptr<const MeasurementKludge >> & kludges) const;
 
   ///////////////////////////////////////////////////////////////////////
   // Helpers
@@ -186,6 +214,11 @@ class HoughTransformSeeder final : public BareAlgorithm {
   unsigned getExtension(unsigned y, unsigned layer) const;
   bool passThreshold(Image const & image, unsigned x, unsigned y) const;
   void drawImage(Image const & image, std::string const & name);
+
+  unsigned FindLayerKludge(const SimSpacePoint* sp) const;
+  unsigned FindLayerKludgeMeasurement(double r) const;
+
+
 };
 
 }  // namespace ActsExamples
