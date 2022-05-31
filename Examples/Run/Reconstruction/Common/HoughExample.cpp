@@ -112,111 +112,135 @@ int runHoughExample(int argc, char* argv[],
   spCfg.trackingGeometry = tGeometry;
   sequencer.addAlgorithm(std::make_shared<SpacePointMaker>(spCfg, logLevel));
 
-  // Seeding algorithm
-  ActsExamples::HoughTransformSeeder::Config seedingCfg;
-  seedingCfg.inputSpacePoints = {
+  // Hough algorithm
+  ActsExamples::HoughTransformSeeder::Config houghCfg;
+  houghCfg.inputSpacePoints = {
       spCfg.outputSpacePoints,
   };
-  seedingCfg.outputSeeds = "seeds";
-  seedingCfg.outputHoughTracks = "houghtracks";
-  seedingCfg.gridConfig.rMax = 200._mm;
-  seedingCfg.seedFinderConfig.rMax = seedingCfg.gridConfig.rMax;
+  houghCfg.outputSeeds = "seeds";
+  houghCfg.outputProtoTracks = "prototracks";
+  houghCfg.gridConfig.rMax = 200._mm;
+  houghCfg.seedFinderConfig.rMax = houghCfg.gridConfig.rMax;
 
-  seedingCfg.seedFilterConfig.deltaRMin = 1_mm;
-  seedingCfg.seedFinderConfig.deltaRMin = seedingCfg.seedFilterConfig.deltaRMin;
-  seedingCfg.seedFinderConfig.deltaRMinTopSP =
-      seedingCfg.seedFilterConfig.deltaRMin;
-  seedingCfg.seedFinderConfig.deltaRMinBottomSP =
-      seedingCfg.seedFilterConfig.deltaRMin;
+  houghCfg.inputMeasurements = digiCfg.outputMeasurements;
+  houghCfg.trackingGeometry = tGeometry;
+  houghCfg.inputSourceLinks = digiCfg.outputSourceLinks;
+  houghCfg.geometrySelection = {Acts::GeometryIdentifier().setVolume(0)};
 
-  seedingCfg.gridConfig.deltaRMax = 60._mm;
-  seedingCfg.seedFinderConfig.deltaRMax = seedingCfg.gridConfig.deltaRMax;
-  seedingCfg.seedFinderConfig.deltaRMaxTopSP = seedingCfg.gridConfig.deltaRMax;
-  seedingCfg.seedFinderConfig.deltaRMaxBottomSP =
-      seedingCfg.gridConfig.deltaRMax;
+  houghCfg.seedFilterConfig.deltaRMin = 1_mm;
+  houghCfg.seedFinderConfig.deltaRMin = houghCfg.seedFilterConfig.deltaRMin;
+  houghCfg.seedFinderConfig.deltaRMinTopSP =
+      houghCfg.seedFilterConfig.deltaRMin;
+  houghCfg.seedFinderConfig.deltaRMinBottomSP =
+      houghCfg.seedFilterConfig.deltaRMin;
 
-  seedingCfg.seedFinderConfig.collisionRegionMin = -250_mm;
-  seedingCfg.seedFinderConfig.collisionRegionMax = 250._mm;
+  houghCfg.gridConfig.deltaRMax = 60._mm;
+  houghCfg.seedFinderConfig.deltaRMax = houghCfg.gridConfig.deltaRMax;
+  houghCfg.seedFinderConfig.deltaRMaxTopSP = houghCfg.gridConfig.deltaRMax;
+  houghCfg.seedFinderConfig.deltaRMaxBottomSP =
+      houghCfg.gridConfig.deltaRMax;
 
-  seedingCfg.gridConfig.zMin = -2000._mm;
-  seedingCfg.gridConfig.zMax = 2000._mm;
-  seedingCfg.seedFinderConfig.zMin = seedingCfg.gridConfig.zMin;
-  seedingCfg.seedFinderConfig.zMax = seedingCfg.gridConfig.zMax;
+  houghCfg.seedFinderConfig.collisionRegionMin = -250_mm;
+  houghCfg.seedFinderConfig.collisionRegionMax = 250._mm;
 
-  seedingCfg.seedFilterConfig.maxSeedsPerSpM = 1;
-  seedingCfg.seedFinderConfig.maxSeedsPerSpM =
-      seedingCfg.seedFilterConfig.maxSeedsPerSpM;
+  houghCfg.gridConfig.zMin = -2000._mm;
+  houghCfg.gridConfig.zMax = 2000._mm;
+  houghCfg.seedFinderConfig.zMin = houghCfg.gridConfig.zMin;
+  houghCfg.seedFinderConfig.zMax = houghCfg.gridConfig.zMax;
 
-  seedingCfg.gridConfig.cotThetaMax = 7.40627;  // 2.7 eta
-  seedingCfg.seedFinderConfig.cotThetaMax = seedingCfg.gridConfig.cotThetaMax;
+  houghCfg.seedFilterConfig.maxSeedsPerSpM = 1;
+  houghCfg.seedFinderConfig.maxSeedsPerSpM =
+      houghCfg.seedFilterConfig.maxSeedsPerSpM;
 
-  seedingCfg.seedFinderConfig.sigmaScattering = 5;
-  seedingCfg.seedFinderConfig.radLengthPerSeed = 0.5;
+  houghCfg.gridConfig.cotThetaMax = 7.40627;  // 2.7 eta
+  houghCfg.seedFinderConfig.cotThetaMax = houghCfg.gridConfig.cotThetaMax;
 
-  seedingCfg.gridConfig.minPt = 500._MeV;
-  seedingCfg.seedFinderConfig.minPt = seedingCfg.gridConfig.minPt;
+  houghCfg.seedFinderConfig.sigmaScattering = 5;
+  houghCfg.seedFinderConfig.radLengthPerSeed = 0.5;
 
-  seedingCfg.gridConfig.bFieldInZ = 1.99724_T;
-  seedingCfg.seedFinderConfig.bFieldInZ = seedingCfg.gridConfig.bFieldInZ;
+  houghCfg.gridConfig.minPt = 500._MeV;
+  houghCfg.seedFinderConfig.minPt = houghCfg.gridConfig.minPt;
 
-  seedingCfg.seedFinderConfig.beamPos = {0_mm, 0_mm};
+  houghCfg.gridConfig.bFieldInZ = 1.99724_T;
+  houghCfg.seedFinderConfig.bFieldInZ = houghCfg.gridConfig.bFieldInZ;
 
-  seedingCfg.seedFinderConfig.impactMax = 3._mm;
+  houghCfg.seedFinderConfig.beamPos = {0_mm, 0_mm};
+
+  houghCfg.seedFinderConfig.impactMax = 3._mm;
+
+  houghCfg.m_subRegion = -1;
+  houghCfg.m_traceHits = true;
+     
+  houghCfg.m_fieldCorrection = true;
+     
+  houghCfg.m_xMin = 0; // minphi
+  houghCfg.m_xMax = 2*3.14159; // maxphi
+  houghCfg.m_yMin = -1; // min q/pt, -1/1 GeV JAAAAA check units
+  houghCfg.m_yMax = 1; // max q/pt, +1/1 GeV JAAAAA check units
+     
+  houghCfg.m_imageSize_x = 7000; // i.e. number of bins in phi_track
+  houghCfg.m_imageSize_y = 216; // i.e. number of bins in q/pT
+  houghCfg.m_hitExtend_x = {2,1,0,0,0,0,0,0,0,0}; // Hit lines will fill extra bins in x by this amount on each side, size == nLayers
+  houghCfg.m_nLayers = 10;
+
+  houghCfg.m_threshold = {9}; // Minimum point value post-convolution to accept as a road (inclusive)
+
+  houghCfg.m_localMaxWindowSize = 0; // Only create roads from a local maximum, requires traceHits
+  houghCfg.kA = 0.0003; // Assume B = 2T constant. 
+
+
   sequencer.addAlgorithm(
-       std::make_shared<HoughTransformSeeder>(seedingCfg, logLevel));
+       std::make_shared<HoughTransformSeeder>(houghCfg, logLevel));
 
   // Algorithm estimating track parameter from seed
-  TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
-  paramsEstimationCfg.inputProtoTracks = seedingCfg.outputHoughTracks;
-  paramsEstimationCfg.inputSpacePoints = {
-      spCfg.outputSpacePoints,
-  };
-  paramsEstimationCfg.inputSourceLinks = digiCfg.outputSourceLinks;
-  paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
-  paramsEstimationCfg.outputProtoTracks = "houghtracks_estimated";
-  paramsEstimationCfg.trackingGeometry = tGeometry;
-  paramsEstimationCfg.magneticField = magneticField;
-//  sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
-  //                          paramsEstimationCfg, logLevel)); ///Object 'houghtracks' does not exists
+  // TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
+  // paramsEstimationCfg.inputPrototracks = houghCfg.outputPrototracks;
+  // paramsEstimationCfg.inputSpacePoints = {
+  //     spCfg.outputSpacePoints,
+  // };
+  // paramsEstimationCfg.inputSourceLinks = digiCfg.outputSourceLinks;
+  // paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
+  // paramsEstimationCfg.outputPrototracks = "prototracks_estimated";
+  // paramsEstimationCfg.trackingGeometry = tGeometry;
+  // paramsEstimationCfg.magneticField = magneticField;
+  // sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
+  //                           paramsEstimationCfg, logLevel)); ///Object 'prototracks' does not exists
 
   // Seeding performance Writers
   TrackFinderPerformanceWriter::Config tfPerfCfg;
-  tfPerfCfg.inputProtoTracks = seedingCfg.outputHoughTracks;
-  std::cerr << "JAAAAAAAAAAAAAAA5" << std::endl;
+  tfPerfCfg.inputProtoTracks = houghCfg.outputProtoTracks;
   tfPerfCfg.inputParticles = inputParticles;
   tfPerfCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
   tfPerfCfg.filePath = outputDir + "/performance_seeding_trees.root";
-  // sequencer.addWriter(
-  //     std::make_shared<TrackFinderPerformanceWriter>(tfPerfCfg, logLevel));
+   sequencer.addWriter(
+      std::make_shared<TrackFinderPerformanceWriter>(tfPerfCfg, logLevel));
 
-  std::cerr << "JAAAAAAAAAAAAAAA6" << std::endl;
   SeedingPerformanceWriter::Config seedPerfCfg;
-  seedPerfCfg.inputProtoTracks = seedingCfg.outputHoughTracks;
+  seedPerfCfg.inputProtoTracks = houghCfg.outputProtoTracks;
   seedPerfCfg.inputParticles = inputParticles;
   seedPerfCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
   seedPerfCfg.filePath = outputDir + "/performance_seeding_hists.root";
-  // sequencer.addWriter(
-  //     std::make_shared<SeedingPerformanceWriter>(seedPerfCfg, logLevel));
+   sequencer.addWriter(
+       std::make_shared<SeedingPerformanceWriter>(seedPerfCfg, logLevel));
 
-  std::cerr << "JAAAAAAAAAAAAAAA7" << std::endl;
   // The track parameters estimation writer
-  RootTrackParameterWriter::Config trackParamsWriterCfg;
-  trackParamsWriterCfg.inputTrackParameters =
-      paramsEstimationCfg.outputTrackParameters;
-  trackParamsWriterCfg.inputProtoTracks = paramsEstimationCfg.outputProtoTracks;
-  trackParamsWriterCfg.inputParticles = particleReader.outputParticles;
-  trackParamsWriterCfg.inputSimHits = simHitReaderCfg.outputSimHits;
-  trackParamsWriterCfg.inputMeasurementParticlesMap =
-      digiCfg.outputMeasurementParticlesMap;
-  trackParamsWriterCfg.inputMeasurementSimHitsMap =
-      digiCfg.outputMeasurementSimHitsMap;
-  trackParamsWriterCfg.filePath = outputDir + "/estimatedparams.root";
-  trackParamsWriterCfg.treeName = "estimatedparams";
-  // sequencer.addWriter(std::make_shared<RootTrackParameterWriter>(
-  //     trackParamsWriterCfg, logLevel));
-  std::cerr << "JAAAAAAAAAAAAAAA8" << std::endl;
+  // RootTrackParameterWriter::Config trackParamsWriterCfg;
+  // trackParamsWriterCfg.inputTrackParameters =
+  //     paramsEstimationCfg.outputTrackParameters;
+  // trackParamsWriterCfg.inputPrototracks = paramsEstimationCfg.outputPrototracks;
+  // trackParamsWriterCfg.inputParticles = particleReader.outputParticles;
+  // trackParamsWriterCfg.inputSimHits = simHitReaderCfg.outputSimHits;
+  // trackParamsWriterCfg.inputMeasurementParticlesMap =
+  //     digiCfg.outputMeasurementParticlesMap;
+  // trackParamsWriterCfg.inputMeasurementSimHitsMap =
+  //     digiCfg.outputMeasurementSimHitsMap;
+  // trackParamsWriterCfg.filePath = outputDir + "/estimatedparams.root";
+  // trackParamsWriterCfg.treeName = "estimatedparams";
+  //  sequencer.addWriter(std::make_shared<RootTrackParameterWriter>(
+  //      trackParamsWriterCfg, logLevel));
+
+
   return sequencer.run();
-  std::cerr << "JAAAAAAAAAAAAAAA9" << std::endl;
 }
