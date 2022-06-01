@@ -226,8 +226,7 @@ struct SpacePointData {
                  sp_bottomStripDirection[0], sp_bottomStripDirection[1],
                  sp_bottomStripDirection[2], sp_stripCenterDistance[0],
                  sp_stripCenterDistance[1], sp_stripCenterDistance[2],
-                 sp_topStripCenterPosition[0],
-                 sp_topStripCenterPosition[1],
+                 sp_topStripCenterPosition[0], sp_topStripCenterPosition[1],
                  sp_topStripCenterPosition[2]);
 };
 
