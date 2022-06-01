@@ -131,9 +131,9 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
           return sp.stripCenterDistance();
         });
 
-    m_cfg.seedFinderConfig.getBottomStripCenterPosition.connect(
+    m_cfg.seedFinderConfig.getTopStripCenterPosition.connect(
         [](const void*, const SimSpacePoint& sp) -> Acts::Vector3 {
-          return sp.bottomStripCenterPosition();
+          return sp.topStripCenterPosition();
         });
   }
 

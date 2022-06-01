@@ -75,16 +75,16 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointReader::read(
         Acts::Vector3 stripCenterDistance(data.sp_stripCenterDistance[0],
                                           data.sp_stripCenterDistance[1],
                                           data.sp_stripCenterDistance[2]);
-        Acts::Vector3 bottomStripCenterPosition(
-            data.sp_bottomStripCenterPosition[0],
-            data.sp_bottomStripCenterPosition[1],
-            data.sp_bottomStripCenterPosition[2]);
+        Acts::Vector3 topStripCenterPosition(
+            data.sp_topStripCenterPosition[0],
+            data.sp_topStripCenterPosition[1],
+            data.sp_topStripCenterPosition[2]);
 
         spacePoints.emplace_back(
             globalPos, data.sp_covr, data.sp_covz, data.measurement_id,
             data.sp_topHalfStripLength, data.sp_bottomHalfStripLength,
             topStripDirection, bottomStripDirection, stripCenterDistance,
-            bottomStripCenterPosition);
+            topStripCenterPosition);
       } else {
         spacePoints.emplace_back(globalPos, data.sp_covr, data.sp_covz,
                                  data.measurement_id);
