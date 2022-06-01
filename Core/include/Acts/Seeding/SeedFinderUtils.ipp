@@ -208,8 +208,8 @@ bool xyzCoordinateCheck(Acts::SeedfinderConfig<external_spacepoint_t> m_config,
   const Acts::Vector3 topStripCenterPosition =
       m_config.getTopStripCenterPosition(sp->sp());
 
-  // spacepointPosition corected with respect to the top strip position and direction and
-  // the distance between the strips
+  // spacepointPosition corected with respect to the top strip position and
+  // direction and the distance between the strips
   s0 = s0 / bd1;
   outputCoordinates[0] = topStripCenterPosition[0] +
                          (topHalfStripLength * topStripDirection[0]) * s0;
