@@ -15,22 +15,34 @@ u = acts.UnitConstants
 def runITkSeeding(field, inputSPs, outputDir, inputSpacePointsType, s=None):
 
     # variables that change for pixel and strip SP
-    if inputSpacePointsType=="PixelSpacePoints":
-        outputSeeds="PixelSeeds"
-        allowSeparateRMax=False
-        rMaxGridConfig=320 * u.mm
-        rMaxSeedFinderConfig=rMaxGridConfig
-        deltaRMinSP=6 * u.mm
-        deltaRMax=280 * u.mm
-        deltaRMaxTopSP=280 * u.mm
-        deltaRMaxBottomSP=120 * u.mm
-        interactionPointCut=True
-        arithmeticAverageCotTheta=False
-        deltaZMax=600 * u.mm
-        impactMax=2 * u.mm
-        zBinsCustomLooping=[1, 2, 3, 4, 11, 10, 9, 8, 6, 5, 7] # enable custom z looping when searching for SPs, must contain numbers from 1 to the total number of bin in zBinEdges
-        skipPreviousTopSP=True
-        zBinNeighborsTop=[
+    if inputSpacePointsType == "PixelSpacePoints":
+        outputSeeds = "PixelSeeds"
+        allowSeparateRMax = False
+        rMaxGridConfig = 320 * u.mm
+        rMaxSeedFinderConfig = rMaxGridConfig
+        deltaRMinSP = 6 * u.mm
+        deltaRMax = 280 * u.mm
+        deltaRMaxTopSP = 280 * u.mm
+        deltaRMaxBottomSP = 120 * u.mm
+        interactionPointCut = True
+        arithmeticAverageCotTheta = False
+        deltaZMax = 600 * u.mm
+        impactMax = 2 * u.mm
+        zBinsCustomLooping = [
+            1,
+            2,
+            3,
+            4,
+            11,
+            10,
+            9,
+            8,
+            6,
+            5,
+            7,
+        ]  # enable custom z looping when searching for SPs, must contain numbers from 1 to the total number of bin in zBinEdges
+        skipPreviousTopSP = True
+        zBinNeighborsTop = [
             [0, 0],
             [-1, 0],
             [-1, 0],
@@ -43,7 +55,7 @@ def runITkSeeding(field, inputSPs, outputDir, inputSpacePointsType, s=None):
             [0, 1],
             [0, 0],
         ]  # allows to specify the number of neighbors desired for each bin, [-1,1] means one neighbor on the left and one on the right, if the vector is empty the algorithm returns the 8 surrounding bins
-        zBinNeighborsBottom=[
+        zBinNeighborsBottom = [
             [0, 1],
             [0, 1],
             [0, 1],
@@ -56,33 +68,33 @@ def runITkSeeding(field, inputSPs, outputDir, inputSpacePointsType, s=None):
             [-1, 0],
             [-1, 0],
         ]
-        deltaRMiddleMinSPRange=10 * u.mm
-        deltaRMiddleMaxSPRange=10 * u.mm
-        seedConfirmationFilter=True,
-        impactWeightFactor=100
-        compatSeedLimit=3
-        numSeedIncrement=10**100 # inf
-        seedWeightIncrement=0
-        useDetailedDoubleMeasurementInfo=False
-        maxSeedsPerSpMConf=5
-        maxQualitySeedsPerSpMConf=5
-        useDeltaRorTopRadius=True
+        deltaRMiddleMinSPRange = 10 * u.mm
+        deltaRMiddleMaxSPRange = 10 * u.mm
+        seedConfirmationFilter = (True,)
+        impactWeightFactor = 100
+        compatSeedLimit = 3
+        numSeedIncrement = 10**100  # inf
+        seedWeightIncrement = 0
+        useDetailedDoubleMeasurementInfo = False
+        maxSeedsPerSpMConf = 5
+        maxQualitySeedsPerSpMConf = 5
+        useDeltaRorTopRadius = True
     else:
-        outputSeeds="StripSeeds"
-        allowSeparateRMax=True
-        rMaxGridConfig=1000. * u.mm
-        rMaxSeedFinderConfig=1200. * u.mm
-        deltaRMinSP=20 * u.mm
-        deltaRMax=600 * u.mm
-        deltaRMaxTopSP=300 * u.mm
-        deltaRMaxBottomSP=deltaRMaxTopSP
-        interactionPointCut=False
-        arithmeticAverageCotTheta=True
-        deltaZMax=900 * u.mm
-        impactMax=20 * u.mm
-        zBinsCustomLooping=[6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1]
-        skipPreviousTopSP=False
-        zBinNeighborsTop=[
+        outputSeeds = "StripSeeds"
+        allowSeparateRMax = True
+        rMaxGridConfig = 1000.0 * u.mm
+        rMaxSeedFinderConfig = 1200.0 * u.mm
+        deltaRMinSP = 20 * u.mm
+        deltaRMax = 600 * u.mm
+        deltaRMaxTopSP = 300 * u.mm
+        deltaRMaxBottomSP = deltaRMaxTopSP
+        interactionPointCut = False
+        arithmeticAverageCotTheta = True
+        deltaZMax = 900 * u.mm
+        impactMax = 20 * u.mm
+        zBinsCustomLooping = [6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1]
+        skipPreviousTopSP = False
+        zBinNeighborsTop = [
             [0, 0],
             [-1, 0],
             [-1, 0],
@@ -95,7 +107,7 @@ def runITkSeeding(field, inputSPs, outputDir, inputSpacePointsType, s=None):
             [0, 1],
             [0, 0],
         ]
-        zBinNeighborsBottom=[
+        zBinNeighborsBottom = [
             [0, 1],
             [0, 1],
             [0, 1],
@@ -108,17 +120,17 @@ def runITkSeeding(field, inputSPs, outputDir, inputSpacePointsType, s=None):
             [-1, 0],
             [-1, 0],
         ]
-        deltaRMiddleMinSPRange=30 * u.mm
-        deltaRMiddleMaxSPRange=150 * u.mm
-        seedConfirmationFilter=False
-        impactWeightFactor=1
-        compatSeedLimit=4
-        numSeedIncrement=1
-        seedWeightIncrement=10100
-        useDetailedDoubleMeasurementInfo=True
-        maxSeedsPerSpMConf=10**100
-        maxQualitySeedsPerSpMConf=10**100
-        useDeltaRorTopRadius=False
+        deltaRMiddleMinSPRange = 30 * u.mm
+        deltaRMiddleMaxSPRange = 150 * u.mm
+        seedConfirmationFilter = False
+        impactWeightFactor = 1
+        compatSeedLimit = 4
+        numSeedIncrement = 1
+        seedWeightIncrement = 10100
+        useDetailedDoubleMeasurementInfo = True
+        maxSeedsPerSpMConf = 10**100
+        maxQualitySeedsPerSpMConf = 10**100
+        useDeltaRorTopRadius = False
 
     gridConfig = acts.SpacePointGridConfig(
         bFieldInZ=2 * u.T,
@@ -268,26 +280,30 @@ def runITkSeedingFromCsv():
 
         # set magnetic field
         field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-        
+
         # Read input space points from input csv files
         evReader = CsvSpacePointReader(
-          level=acts.logging.INFO,
-          inputStem="spacepoints",
-          inputCollection="pixel",
-          inputDir=os.path.dirname(temp.name),
-          outputSpacePoints="PixelSpacePoints",
-          extendCollection=False,
+            level=acts.logging.INFO,
+            inputStem="spacepoints",
+            inputCollection="pixel",
+            inputDir=os.path.dirname(temp.name),
+            outputSpacePoints="PixelSpacePoints",
+            extendCollection=False,
         )
-        
-        s = acts.examples.Sequencer(
-          events=1, numThreads=-1, logLevel=acts.logging.INFO
-        )
+
+        s = acts.examples.Sequencer(events=1, numThreads=-1, logLevel=acts.logging.INFO)
 
         s.addReader(evReader)
 
         # run seeding
-        runITkSeeding(field, evReader, outputDir=os.getcwd(), inputSpacePointsType="PixelSpacePoints", s=s).run()
-    
+        runITkSeeding(
+            field,
+            evReader,
+            outputDir=os.getcwd(),
+            inputSpacePointsType="PixelSpacePoints",
+            s=s,
+        ).run()
+
     # create temporary file with strips SPs and run the seeding
     with tempfile.TemporaryDirectory() as tmpdirname:
         temp = open(tmpdirname + "/event000000000-spacepoints_strip.csv", "w+t")
@@ -306,22 +322,26 @@ def runITkSeedingFromCsv():
 
         # Read input space points from input csv files
         evReader = CsvSpacePointReader(
-          level=acts.logging.INFO,
-          inputStem="spacepoints",
-          inputCollection="strip",
-          inputDir=os.path.dirname(temp.name),
-          outputSpacePoints="StripSpacePoints",
-          extendCollection=False,
+            level=acts.logging.INFO,
+            inputStem="spacepoints",
+            inputCollection="strip",
+            inputDir=os.path.dirname(temp.name),
+            outputSpacePoints="StripSpacePoints",
+            extendCollection=False,
         )
-        
-        s = acts.examples.Sequencer(
-          events=1, numThreads=-1, logLevel=acts.logging.INFO
-        )
+
+        s = acts.examples.Sequencer(events=1, numThreads=-1, logLevel=acts.logging.INFO)
 
         s.addReader(evReader)
 
         # run seeding
-        runITkSeeding(field, evReader, outputDir=os.getcwd(), inputSpacePointsType="StripSpacePoints", s=s).run()
+        runITkSeeding(
+            field,
+            evReader,
+            outputDir=os.getcwd(),
+            inputSpacePointsType="StripSpacePoints",
+            s=s,
+        ).run()
 
 
 if "__main__" == __name__:
