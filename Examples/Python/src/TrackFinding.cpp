@@ -114,6 +114,8 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(rRangeMiddleSP);
     ACTS_PYTHON_MEMBER(useVariableMiddleSPRange);
     ACTS_PYTHON_MEMBER(deltaRMiddleSPRange);
+		ACTS_PYTHON_MEMBER(binSizeR);
+		ACTS_PYTHON_MEMBER(forceRadialSorting);
     ACTS_PYTHON_MEMBER(seedConfirmation);
     ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
     ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
@@ -184,6 +186,8 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(rMax);
     ACTS_PYTHON_MEMBER(zMax);
     ACTS_PYTHON_MEMBER(zMin);
+		ACTS_PYTHON_MEMBER(phiMin);
+		ACTS_PYTHON_MEMBER(phiMax);
     ACTS_PYTHON_MEMBER(deltaRMax);
     ACTS_PYTHON_MEMBER(cotThetaMax);
     ACTS_PYTHON_MEMBER(phiBinDeflectionCoverage);

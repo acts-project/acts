@@ -2,6 +2,7 @@
 import os
 import argparse
 import tempfile
+import argparse
 
 import acts
 import acts.examples
@@ -11,11 +12,10 @@ from acts.examples import CsvSpacePointReader
 u = acts.UnitConstants
 
 
-def runITkSeeding(field, csvInputDir, outputDir, inputSpacePointsType, s=None):
+def runITkSeeding(field, inputSPs, outputDir, inputSpacePointsType, s=None):
 
     # variables that change for pixel and strip SP
     if inputSpacePointsType=="PixelSpacePoints":
-        inputCollection="pixel"
         outputSeeds="PixelSeeds"
         allowSeparateRMax=False
         rMaxGridConfig=320 * u.mm
@@ -68,7 +68,6 @@ def runITkSeeding(field, csvInputDir, outputDir, inputSpacePointsType, s=None):
         maxQualitySeedsPerSpMConf=5
         useDeltaRorTopRadius=True
     else:
-        inputCollection="strip"
         outputSeeds="StripSeeds"
         allowSeparateRMax=True
         rMaxGridConfig=1000. * u.mm
@@ -117,19 +116,9 @@ def runITkSeeding(field, csvInputDir, outputDir, inputSpacePointsType, s=None):
         numSeedIncrement=1
         seedWeightIncrement=10100
         useDetailedDoubleMeasurementInfo=True
-				maxSeedsPerSpMConf=10**100
+        maxSeedsPerSpMConf=10**100
         maxQualitySeedsPerSpMConf=10**100
-				useDeltaRorTopRadius=False
-
-    # Read input space points from input csv files
-    evReader = CsvSpacePointReader(
-        level=acts.logging.INFO,
-        inputStem="spacepoints",
-        inputCollection=inputCollection,
-        inputDir=csvInputDir,
-        outputSpacePoints=inputSpacePointsType,
-        extendCollection=False,
-    )
+        useDeltaRorTopRadius=False
 
     gridConfig = acts.SpacePointGridConfig(
         bFieldInZ=2 * u.T,
@@ -137,6 +126,8 @@ def runITkSeeding(field, csvInputDir, outputDir, inputSpacePointsType, s=None):
         rMax=rMaxGridConfig,
         zMax=3000 * u.mm,
         zMin=-3000 * u.mm,
+        phiMin=0,
+        phiMax=2 * acts.M_PI,
         deltaRMax=deltaRMax,
         cotThetaMax=27.2899,
         impactMax=impactMax,
@@ -200,6 +191,8 @@ def runITkSeeding(field, csvInputDir, outputDir, inputSpacePointsType, s=None):
         useVariableMiddleSPRange=True,  # if useVariableMiddleSPRange is true, the values in rRangeMiddleSP will be calculated based on r values of the SPs and deltaRMiddleSPRange
         deltaRMiddleMinSPRange=deltaRMiddleMinSPRange,
         deltaRMiddleMaxSPRange=deltaRMiddleMaxSPRange,
+        binSizeR=1 * u.mm,
+        forceRadialSorting=True,
         seedConfirmation=True,
         centralSeedConfirmationRange=acts.SeedConfirmationRange(
             zMinSeedConf=250 * u.mm,
@@ -226,7 +219,6 @@ def runITkSeeding(field, csvInputDir, outputDir, inputSpacePointsType, s=None):
         compatSeedLimit=compatSeedLimit,
         numSeedIncrement=numSeedIncrement,
         seedWeightIncrement=seedWeightIncrement,
-        seedConfirmation=seedFinderConfig.seedConfirmation,
         seedConfirmation=seedConfirmationFilter,
         centralSeedConfirmationRange=seedFinderConfig.centralSeedConfirmationRange,
         forwardSeedConfirmationRange=seedFinderConfig.forwardSeedConfirmationRange,
@@ -238,7 +230,7 @@ def runITkSeeding(field, csvInputDir, outputDir, inputSpacePointsType, s=None):
 
     seedingAlg = acts.examples.SeedingAlgorithm(
         level=acts.logging.VERBOSE,
-        inputSpacePoints=[evReader.config.outputSpacePoints],
+        inputSpacePoints=[inputSPs.config.outputSpacePoints],
         outputSeeds=outputSeeds,
         outputProtoTracks="prototracks",
         allowSeparateRMax=allowSeparateRMax,
@@ -248,20 +240,18 @@ def runITkSeeding(field, csvInputDir, outputDir, inputSpacePointsType, s=None):
         zBinNeighborsTop=zBinNeighborsTop,
         zBinNeighborsBottom=zBinNeighborsBottom,
         numPhiNeighbors=1,
-        allowSeparateRMax=allowSeparateRMax,
     )
 
     s = s or acts.examples.Sequencer(
         events=1, numThreads=-1, logLevel=acts.logging.INFO
     )
 
-    s.addReader(evReader)
     s.addAlgorithm(seedingAlg)
 
     return s
 
 
-if "__main__" == __name__:
+def runITkSeedingFromCsv():
 
     # create temporary file with pixel SPs and run the seeding
     with tempfile.TemporaryDirectory() as tmpdirname:
@@ -278,9 +268,25 @@ if "__main__" == __name__:
 
         # set magnetic field
         field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+        
+        # Read input space points from input csv files
+        evReader = CsvSpacePointReader(
+          level=acts.logging.INFO,
+          inputStem="spacepoints",
+          inputCollection="pixel",
+          inputDir=os.path.dirname(temp.name),
+          outputSpacePoints="PixelSpacePoints",
+          extendCollection=False,
+        )
+        
+        s = acts.examples.Sequencer(
+          events=1, numThreads=-1, logLevel=acts.logging.INFO
+        )
+
+        s.addReader(evReader)
 
         # run seeding
-        runITkSeeding(field, os.path.dirname(temp.name), outputDir=os.getcwd(), inputSpacePointsType="PixelSpacePoints").run()
+        runITkSeeding(field, evReader, outputDir=os.getcwd(), inputSpacePointsType="PixelSpacePoints", s=s).run()
     
     # create temporary file with strips SPs and run the seeding
     with tempfile.TemporaryDirectory() as tmpdirname:
@@ -298,5 +304,29 @@ if "__main__" == __name__:
         # set magnetic field
         field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
+        # Read input space points from input csv files
+        evReader = CsvSpacePointReader(
+          level=acts.logging.INFO,
+          inputStem="spacepoints",
+          inputCollection="strip",
+          inputDir=os.path.dirname(temp.name),
+          outputSpacePoints="StripSpacePoints",
+          extendCollection=False,
+        )
+        
+        s = acts.examples.Sequencer(
+          events=1, numThreads=-1, logLevel=acts.logging.INFO
+        )
+
+        s.addReader(evReader)
+
         # run seeding
-        runITkSeeding(field, os.path.dirname(temp.name), outputDir=os.getcwd(), inputSpacePointsType="StripSpacePoints").run()
+        runITkSeeding(field, evReader, outputDir=os.getcwd(), inputSpacePointsType="StripSpacePoints", s=s).run()
+
+
+if "__main__" == __name__:
+    p = argparse.ArgumentParser(
+        description="Example script to run ITk seed finding",
+    )
+
+    runITkSeedingFromCsv()
