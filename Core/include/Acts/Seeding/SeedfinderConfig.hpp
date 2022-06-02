@@ -10,22 +10,12 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
 #include <memory>
 
 namespace Acts {
-
-struct SeedConfirmationRange {
-  float zMinSeedConf =
-      std::numeric_limits<float>::min() * Acts::UnitConstants::mm;
-  float zMaxSeedConf =
-      std::numeric_limits<float>::max() * Acts::UnitConstants::mm;
-  float rMaxSeedConf =
-      std::numeric_limits<float>::max() * Acts::UnitConstants::mm;
-  size_t nTopForLargeR = 0;
-  size_t nTopForSmallR = 0;
-};
 
 // forward declaration to avoid cyclic dependence
 template <typename T>
@@ -53,18 +43,23 @@ struct SeedfinderConfig {
   float deltaRMinBottomSP = 5 * Acts::UnitConstants::mm;
   // maximum distance in r between middle and bottom SP
   float deltaRMaxBottomSP = 270 * Acts::UnitConstants::mm;
+  // radial bin size for filling space point grid
+  float binSizeR = 1. * Acts::UnitConstants::mm;
+  // force sorting in R in space point grid bins
+  bool forceRadialSorting = false;
 
   // radial range for middle SP
   std::vector<std::vector<float>> rRangeMiddleSP;
   bool useVariableMiddleSPRange = false;
-  float deltaRMiddleSPRange = 10. * Acts::UnitConstants::mm;
+  float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
+  float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
 
   // seed confirmation
   bool seedConfirmation = false;
   // parameters for central seed confirmation
-  SeedConfirmationRange centralSeedConfirmationRange;
+  SeedConfirmationRangeConfig centralSeedConfirmationRange;
   // parameters for forward seed confirmation
-  SeedConfirmationRange forwardSeedConfirmationRange;
+  SeedConfirmationRangeConfig forwardSeedConfirmationRange;
 
   // cut to the maximum value of delta z between SPs
   float deltaZMax =
@@ -184,11 +179,13 @@ struct SeedfinderConfig {
     config.minPt /= 1_MeV;
     config.deltaRMin /= 1_mm;
     config.deltaRMax /= 1_mm;
+    config.binSizeR /= 1_mm;
     config.deltaRMinTopSP /= 1_mm;
     config.deltaRMaxTopSP /= 1_mm;
     config.deltaRMinBottomSP /= 1_mm;
     config.deltaRMaxBottomSP /= 1_mm;
-    config.deltaRMiddleSPRange /= 1_mm;
+    config.deltaRMiddleMinSPRange /= 1_mm;
+    config.deltaRMiddleMaxSPRange /= 1_mm;
     config.impactMax /= 1_mm;
     config.maxPtScattering /= 1_MeV;  // correct?
     config.collisionRegionMin /= 1_mm;

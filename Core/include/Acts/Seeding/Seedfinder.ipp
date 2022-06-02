@@ -52,9 +52,9 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     /// check if spM is outside our radial region of interest
     if (m_config.useVariableMiddleSPRange) {
       float rMinMiddleSP = std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
-                           m_config.deltaRMiddleSPRange;
+                           m_config.deltaRMiddleMinSPRange;
       float rMaxMiddleSP = std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2 -
-                           m_config.deltaRMiddleSPRange;
+                           m_config.deltaRMiddleMaxSPRange;
       if (rM < rMinMiddleSP || rM > rMaxMiddleSP) {
         continue;
       }
@@ -74,7 +74,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     size_t nTopSeedConf = 0;
     if (m_config.seedConfirmation == true) {
       // check if middle SP is in the central or forward region
-      SeedConfirmationRange seedConfRange =
+      SeedConfirmationRangeConfig seedConfRange =
           (zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
            zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
               ? m_config.forwardSeedConfirmationRange
@@ -250,6 +250,9 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     size_t numBotSP = state.compatBottomSP.size();
     size_t numTopSP = state.compatTopSP.size();
 
+    int numQualitySeeds = 0;
+    int numSeeds = 0;
+
     size_t t0 = 0;
 
     for (size_t b = 0; b < numBotSP; b++) {
@@ -352,13 +355,13 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
             continue;
           }
 
-          // correcting other variables
-          float xB = rBTransf[0] - rTTransf[0];
-          float yB = rBTransf[1] - rTTransf[1];
-          float zB = rBTransf[2] - rTTransf[2];
-          float xT = rBTransf[0] - rTTransf[0];
-          float yT = rBTransf[1] - rTTransf[1];
-          float zT = rBTransf[2] - rTTransf[2];
+          // bottom and top coordinates in the spM reference frame
+          float xB = rBTransf[0] - rMTransf[0];
+          float yB = rBTransf[1] - rMTransf[1];
+          float zB = rBTransf[2] - rMTransf[2];
+          float xT = rTTransf[0] - rMTransf[0];
+          float yT = rTTransf[1] - rMTransf[1];
+          float zT = rTTransf[2] - rMTransf[2];
 
           float iDeltaRB2 = 1. / (xB * xB + yB * yB);
           float iDeltaRT2 = 1. / (xT * xT + yT * yT);
@@ -507,10 +510,12 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       if (!state.topSpVec.empty()) {
         m_config.seedFilter->filterSeeds_2SpFixed(
             *state.compatBottomSP[b], *spM, state.topSpVec, state.curvatures,
-            state.impactParameters, Zob, std::back_inserter(state.seedsPerSpM));
+            state.impactParameters, Zob, numQualitySeeds, numSeeds,
+            state.seedsPerSpM);
       }
     }
-    m_config.seedFilter->filterSeeds_1SpFixed(state.seedsPerSpM, outIt);
+    m_config.seedFilter->filterSeeds_1SpFixed(state.seedsPerSpM,
+                                              numQualitySeeds, outIt);
   }
 }
 
