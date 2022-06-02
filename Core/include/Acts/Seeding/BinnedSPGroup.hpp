@@ -216,7 +216,7 @@ class BinnedSPGroupIterator {
                         BinFinder<external_spacepoint_t>* botBinFinder,
                         BinFinder<external_spacepoint_t>* tBinFinder,
                         size_t phiInd, size_t zInd,
-												std::vector<size_t> bins = {}) {
+                        std::vector<size_t> bins = {}) {
     m_bottomBinFinder = botBinFinder;
     m_topBinFinder = tBinFinder;
     grid = spgrid;
@@ -252,7 +252,7 @@ class BinnedSPGroupIterator {
   std::array<long unsigned int, 2ul> phiZbins;
   BinFinder<external_spacepoint_t>* m_bottomBinFinder;
   BinFinder<external_spacepoint_t>* m_topBinFinder;
-	std::vector<size_t> customZorder;
+  std::vector<size_t> customZorder;
   // 	bool start = true;
 };
 
