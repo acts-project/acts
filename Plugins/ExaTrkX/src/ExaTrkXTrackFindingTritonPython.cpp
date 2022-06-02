@@ -1,29 +1,16 @@
-#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFinding.hpp"
-#include "Acts/Plugins/ExaTrkX/ExaTrkXUtils.hpp"
+#include "ExaTrkXTrackFindingTritonPython.hpp"
+#include "ExaTrkXUtils.hpp"
 
-#include <torch/torch.h>
-#include <torch/script.h>
-using namespace torch::indexing;
+#include "grpc_client.h"
+#include "grpc_service.pb.h"
+namespace tc = triton::client;
 
-#include <grid.h>
-#include <insert_points.h>
-#include <counting_sort.h>
-#include <prefix_sum.h>
-#include <find_nbrs.h>
-#include "cuda.h"
-#include "cuda_runtime_api.h"
-// #include "mmio_read.h"
 
-namespace Acts {
-
-ExaTrkXTrackFinding::ExaTrkXTrackFinding(
-    const ExaTrkXTrackFinding::Config& config): 
-    ExaTrkXTrackFindingBase("ExaTrkXTrackFinding", config.verbose), m_cfg(config)
+ExaTrkXTrackFindingTritonPython::ExaTrkXTrackFindingTritonPython(
+    const ExaTrkXTrackFindingTritonPython::Config& config):
+    ExaTrkXTrackFindingBase("ExaTrkXTrackFindingTritonPython", config.verbose), m_cfg(config)
 {
-    initTrainedModels();
-}
 
-void ExaTrkXTrackFinding::initTrainedModels(){
     std::string l_embedModelPath(m_cfg.modelDir + "/torchscript/embed.pt");
     std::string l_filterModelPath(m_cfg.modelDir + "/torchscript/filter.pt");
     std::string l_gnnModelPath(m_cfg.modelDir + "/torchscript/gnn.pt");
@@ -38,12 +25,17 @@ void ExaTrkXTrackFinding::initTrainedModels(){
     } catch (const c10::Error& e) {
         throw std::invalid_argument("Failed to load models: " + e.msg()); 
     }
-}
 
+    bool verbose = false;
+    uint32_t client_timeout = 0;
+    std::string model_version = "";
+    b_client_ = std::make_unique<ExaTrkXTriton>(m_cfg.buildingModelName, m_cfg.url, model_version, client_timeout, verbose);
+    l_client_ = std::make_unique<ExaTrkXTriton>(m_cfg.labelingModelName, m_cfg.url, model_version, client_timeout, verbose);
+}
 
 // The main function that runs the Exa.TrkX ExaTrkXTrackFindingence pipeline
 // Be care of sharpe corners.
-void ExaTrkXTrackFinding::getTracks(
+void ExaTrkXTrackFindingTritonPython::getTracks(
     std::vector<float>& inputValues,
     std::vector<int>& spacepointIDs,
     std::vector<std::vector<int> >& trackCandidates,
@@ -56,7 +48,7 @@ void ExaTrkXTrackFinding::getTracks(
     bool debug = true;
     torch::Device device(torch::kCUDA);
 
-     // printout the r,phi,z of the first spacepoint
+    /// printout the r,phi,z of the first spacepoint
     // std::cout <<"First spacepoint information: ";
     // std::copy(inputValues.begin(), inputValues.begin() + 3,
     //           std::ostream_iterator<float>(std::cout, " "));
@@ -84,13 +76,25 @@ void ExaTrkXTrackFinding::getTracks(
 
     timeInfo.embedding = timer.stopAndGetElapsedTime();
     
-    // ************
-    // Building Edges
-    // ************
+    /// ************
+    /// Building Edges
+    /// ************
     timer.start();
-    torch::Tensor edgeList = buildEdges(
-        eOutput, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal, m_cfg.knnVal);
-    int64_t numEdges = edgeList.size(1);
+    b_client_->ClearInput();
+    eOutput = eOutput.cpu();
+    b_client_->AddInputFromTorch<float>("INPUT0", eOutput);
+    std::vector<int64_t> edgeListData;
+    std::vector<int64_t> edgeListShape{2, -1};
+    b_client_->GetOutput<int64_t>("OUTPUT0", edgeListData, edgeListShape);
+
+    int64_t numEdges = edgeListData.size() / 2;
+    edgeListShape[1] = numEdges;
+    auto edges_opts = torch::TensorOptions().dtype(torch::kInt64);
+    auto edgeList = torch::from_blob(edgeListData.data(), edgeListShape, edges_opts);
+
+    // torch::Tensor edgeList = buildEdges(
+    //     eOutput, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal, m_cfg.knnVal);
+    // int64_t numEdges = edgeList.size(1);
 
     // std::cout << "Built " << edgeList.size(1) << " edges. " <<  edgeList.size(0) << std::endl;
     // std::cout << edgeList.slice(1, 0, 5) << std::endl;
@@ -138,40 +142,64 @@ void ExaTrkXTrackFinding::getTracks(
 
     // std::cout << "GNN scores for " << gOutput.size(0) << " edges." << std::endl;
     // std::cout << gOutput.slice(0, 0, 5) << std::endl;
-    
     // ************
     // Track Labeling with cugraph::connected_components
     // ************
     timer.start();
 
-    using vertex_t = int32_t;
-    std::vector<vertex_t> rowIndices;
-    std::vector<vertex_t> colIndices;
-    std::vector<float> edgeWeights;
-    std::vector<vertex_t> trackLabels(numSpacepoints);
-    std::copy(
-        edgesAfterF.data_ptr<int64_t>(),
-        edgesAfterF.data_ptr<int64_t>()+numEdgesAfterF,
-        std::back_insert_iterator(rowIndices));
-    std::copy(
-        edgesAfterF.data_ptr<int64_t>()+numEdgesAfterF,
-        edgesAfterF.data_ptr<int64_t>() + numEdgesAfterF+numEdgesAfterF,
-        std::back_insert_iterator(colIndices));
-    std::copy(
-        gOutput.data_ptr<float>(),
-        gOutput.data_ptr<float>() + numEdgesAfterF,
-        std::back_insert_iterator(edgeWeights));
+    ///*** replace the following block with python-backend.
+    // using vertex_t = int32_t;
+    // std::vector<vertex_t> rowIndices;
+    // std::vector<vertex_t> colIndices;
+    // std::vector<float> edgeWeights;
+    // std::vector<vertex_t> trackLabels(numSpacepoints);
+    // std::copy(
+    //     edgesAfterF.data_ptr<int64_t>(),
+    //     edgesAfterF.data_ptr<int64_t>()+numEdgesAfterF,
+    //     std::back_insert_iterator(rowIndices));
+    // std::copy(
+    //     edgesAfterF.data_ptr<int64_t>()+numEdgesAfterF,
+    //     edgesAfterF.data_ptr<int64_t>() + numEdgesAfterF+numEdgesAfterF,
+    //     std::back_insert_iterator(colIndices));
+    // std::copy(
+    //     gOutput.data_ptr<float>(),
+    //     gOutput.data_ptr<float>() + numEdgesAfterF,
+    //     std::back_insert_iterator(edgeWeights));
 
-    weaklyConnectedComponents<int32_t,int32_t,float>(
-        numSpacepoints, 
-        rowIndices, colIndices, edgeWeights, trackLabels);
-
-    // weakly_connected_components<int32_t,int32_t,float>(
+    // weaklyConnectedComponents<int32_t,int32_t,float>(
+    //     numSpacepoints, 
     //     rowIndices, colIndices, edgeWeights, trackLabels);
+    ///**********************
 
     // std::cout << "size of components: " << trackLabels.size() << std::endl;
-    if (trackLabels.size() == 0)  return;
+    ///***********************************************************
+    
+    // The following two hard copy are needed in order to produce sensible results!
+    edgesAfterF = edgesAfterF.cpu();
+    std::vector<int64_t> gEdgeShape{2, numEdgesAfterF};
+    std::vector<int64_t> gOutputShape{numEdgesAfterF};
+    std::vector<int64_t> edgesAfterFiltering;
+    std::copy(
+        edgesAfterF.data_ptr<int64_t>(),
+        edgesAfterF.data_ptr<int64_t>() + edgesAfterF.numel(),
+        std::back_inserter(edgesAfterFiltering));
 
+    std::vector<float> gOutputData;
+    std::copy(
+        gOutput.data_ptr<float>(),
+        gOutput.data_ptr<float>() + gOutput.numel(),
+        std::back_inserter(gOutputData));
+
+    l_client_->ClearInput();
+    std::vector<int64_t> numSpacepointsV{numSpacepoints};
+    // l_client_->AddInput<int64_t>("NUMNODES", {1}, numSpacepointsV);
+    l_client_->AddInput<int64_t>("INPUT0", gEdgeShape, edgesAfterFiltering);
+    l_client_->AddInput<float>("INPUT1", gOutputShape, gOutputData);
+    std::vector<int64_t> trackLabels;
+    std::vector<int64_t> trackLabelsShape{-1, 1};
+    l_client_->GetOutput<int64_t>("OUTPUT0", trackLabels, trackLabelsShape);
+    ///***********************************************************
+    if (trackLabels.size() == 0)  return;
 
     trackCandidates.clear();
 
@@ -198,6 +226,4 @@ void ExaTrkXTrackFinding::getTracks(
     }
     timeInfo.labeling = timer.stopAndGetElapsedTime();
     timeInfo.total = tot_timer.stopAndGetElapsedTime();
-}
-
 }

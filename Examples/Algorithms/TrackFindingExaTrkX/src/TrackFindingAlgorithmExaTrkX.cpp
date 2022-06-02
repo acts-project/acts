@@ -40,7 +40,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   ACTS_INFO("Received " << num_spacepoints << " spacepoints");
 
   std::vector<float> inputValues;
-  std::vector<uint32_t> spacepointIDs;
+  std::vector<int> spacepointIDs;
   inputValues.reserve(spacepoints.size() * 3);
   spacepointIDs.reserve(spacepoints.size());
   for (const auto& sp : spacepoints) {
@@ -57,7 +57,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   }
 
   // ProtoTrackContainer protoTracks;
-  std::vector<std::vector<uint32_t> > trackCandidates;
+  std::vector<std::vector<int> > trackCandidates;
   m_cfg.trackFinderML->getTracks(inputValues, spacepointIDs, trackCandidates);
 
   std::vector<ProtoTrack> protoTracks;

@@ -40,7 +40,8 @@ void addExaTrkXTrackFinding(Context& ctx) {
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputMLModuleDir);
+    ACTS_PYTHON_MEMBER(modelDir);
+    ACTS_PYTHON_MEMBER(verbose);
     ACTS_PYTHON_MEMBER(spacepointFeatures);
     ACTS_PYTHON_MEMBER(embeddingDim);
     ACTS_PYTHON_MEMBER(rVal);

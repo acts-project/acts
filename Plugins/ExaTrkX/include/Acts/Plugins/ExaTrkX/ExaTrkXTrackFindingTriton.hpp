@@ -1,22 +1,17 @@
 #pragma once
-
-#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingBase.hpp"
+#include "ExaTrkXTriton.hpp"
+#include "ExaTrkXTrackFindingBase.hpp"
 
 #include <string>
 #include <vector>
 #include <memory>
 
-#include <torch/torch.h>
-#include <torch/script.h>
-using namespace torch::indexing;
-
-namespace Acts {
-
-class ExaTrkXTrackFinding : public ExaTrkXTrackFindingBase
+class ExaTrkXTrackFindingTriton : public ExaTrkXTrackFindingBase
 {
 public:
     struct Config{
-        std::string modelDir;
+        std::string modelName;
+        std::string url;
         bool verbose = false;
 
         // hyperparameters in the pipeline.
@@ -27,9 +22,8 @@ public:
         float filterCut = 0.21;
     };
 
-
-    ExaTrkXTrackFinding(const Config& config);
-    virtual ~ExaTrkXTrackFinding() {}
+    ExaTrkXTrackFindingTriton(const Config& config);
+    virtual ~ExaTrkXTrackFindingTriton() {}
 
     void getTracks(
         std::vector<float>& inputValues,
@@ -38,15 +32,8 @@ public:
         ExaTrkXTime& timeInfo) const final;
 
     const Config& config() const { return m_cfg; }
-
-private:
-    void initTrainedModels();
-
+    
 private:
     Config m_cfg;
-    mutable torch::jit::script::Module e_model;
-    mutable torch::jit::script::Module f_model;
-    mutable torch::jit::script::Module g_model;
+    std::unique_ptr<ExaTrkXTriton> m_client;
 };
-
-}
