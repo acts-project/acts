@@ -57,7 +57,7 @@ For convenience, it is possible to build the required boost and eigen3 dependenc
 Other options are also
 available and are discussed in the [Building Acts](#building-acts) section.
 
-The prerequisites for profiling the ACTS project with gperftools are detailed in docs/howto/profiling.md
+[Profiling](howto/profiling.md) details the prerequisites for profiling the ACTS project with gperftools.
 
 ## Building Acts
 
@@ -279,6 +279,7 @@ components.
 | ACTS_USE_SYSTEM_ACTSDD4HEP          | Use ActsDD4hep glue library externally (and don't include it in the build)                            |                            
 | ACTS_ENABLE_CPU_PROFILING           | Link the profiler library to enable gperftool's CPU profiler                                          |
 | ACTS_ENABLE_MEMORY_PROFILING        | Link the tcmalloc library to enable gperftool's memory profiler and heap checker                      |
+| GPERF_INSTALL_DIR                   | Path to the directory that gperftools is installed in                                                 |
 
 All Acts-specific options are disabled or empty by default and must be
 specifically requested. Some of the options have interdependencies that are

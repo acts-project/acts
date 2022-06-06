@@ -20,12 +20,15 @@ Alternatively, you can use the following commands to install it:
 ```
 git clone https://github.com/gperftools/gperftools
 cd gperftools
+git tag -l # checkout the latest release version
+git checkout <gperftools-X.x>
 ./autogen.sh
 ./configure
-make
-make install
+make prefix=/usr libdir=<your/desired/install/dir>
+make prefix=/usr libdir=<your/desired/install/dir> install
 ```
 
+If you wish to install gperftools to a directory that is not one of the standard directories for libraries and therefore not findable by the `-l` compiler flag, you will need to specify the path to it with the `GPERF_INSTALL_DIR` option at build time.
 Further information about installing gperftools is [here](https://github.com/gperftools/gperftools/blob/master/INSTALL).
 
 ## pprof
