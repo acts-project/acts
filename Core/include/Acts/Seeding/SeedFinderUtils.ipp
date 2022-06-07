@@ -122,13 +122,15 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
             (cot_theta * cot_theta) * (varianceRM + sp->varianceR())) *
            iDeltaR2;
 
-    l.x = sp->x();
-    l.y = sp->y();
+    l.x = x;
+    l.y = y;
     l.z = sp->z();
     l.r = sp->radius();
 
     linCircleVec.push_back(l);
     sp->setCotTheta(cot_theta);
+
+    sp->setDeltaR(std::sqrt((x * x) + (y * y) + (deltaZ * deltaZ)));
   }
   // sort the SP in order of cotTheta
   std::sort(vec.begin(), vec.end(),
@@ -195,26 +197,25 @@ bool xyzCoordinateCheck(Acts::SeedfinderConfig<external_spacepoint_t> m_config,
 
   // compatibility check using distance between strips to evaluate if
   // spacepointPosition is inside the top detector element
-  double s0 =
-      -(stripCenterDistance[0] * d0[0] + stripCenterDistance[1] * d0[1] +
-        stripCenterDistance[2] * d0[2]);
+  double s0 = (stripCenterDistance[0] * d0[0] + stripCenterDistance[1] * d0[1] +
+               stripCenterDistance[2] * d0[2]);
   if (std::abs(s0) > std::abs(bd1) * toleranceParam)
     return false;
 
   // if arive here spacepointPosition is compatible with strip directions and
   // detector elements
 
-  const Acts::Vector3 bottomStripCenterPosition =
-      m_config.getBottomStripCenterPosition(sp->sp());
+  const Acts::Vector3 topStripCenterPosition =
+      m_config.getTopStripCenterPosition(sp->sp());
 
-  // spacepointPosition corected with respect to the bottom strip direction and
-  // the distance between the strips
+  // spacepointPosition corected with respect to the top strip position and
+  // direction and the distance between the strips
   s0 = s0 / bd1;
-  outputCoordinates[0] = bottomStripCenterPosition[0] +
+  outputCoordinates[0] = topStripCenterPosition[0] +
                          (topHalfStripLength * topStripDirection[0]) * s0;
-  outputCoordinates[1] = bottomStripCenterPosition[1] +
+  outputCoordinates[1] = topStripCenterPosition[1] +
                          (topHalfStripLength * topStripDirection[1]) * s0;
-  outputCoordinates[2] = bottomStripCenterPosition[2] +
+  outputCoordinates[2] = topStripCenterPosition[2] +
                          (topHalfStripLength * topStripDirection[2]) * s0;
   return true;
 }
