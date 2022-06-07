@@ -5,6 +5,8 @@ gperftools is a software profiling package. It contains a CPU profiler, thread-c
 
 ## Install gperftools
 
+It is strongly recommended to install [libunwind](http://download.savannah.gnu.org/releases/libunwind/libunwind-0.99-beta.tar.gz) before trying to configure or install gperftools.
+
 ### Ubuntu
 
 If you're using Ubuntu you can use the following command to install gperftools:
@@ -23,10 +25,12 @@ cd gperftools
 git tag -l # checkout the latest release version
 git checkout <gperftools-X.x>
 ./autogen.sh
-./configure
-make prefix=/usr libdir=<your/desired/install/dir>
-make prefix=/usr libdir=<your/desired/install/dir> install
+./configure --prefix=<your/desired/install/dir>
+make
+make install
 ```
+
+This will install gperftools in `your/desired/install/dir/lib` which is the path you should use when specifying where gperftools is, if necessary.
 
 If you wish to install gperftools to a directory that is not one of the standard directories for libraries and therefore not findable by the `-l` compiler flag, you will need to specify the path to it with the `GPERF_INSTALL_DIR` option at build time.
 Further information about installing gperftools is [here](https://github.com/gperftools/gperftools/blob/master/INSTALL).
@@ -61,7 +65,9 @@ Similarly, to enable the memory profiler the following build option should be us
 -DACTS_ENABLE_MEMORY_PROFILING=ON
 ```
 
-Alternatively, you can avoid rebuiding the project by pointing the LD_PRELOAD environment variable to the profiler library for CPU profiling:
+## Alternative to Recompiling
+
+Alternatively, you can avoid rebuiding the project by pointing the `LD_PRELOAD` environment variable to the profiler library for CPU profiling:
 
 ```
 LD_PRELOAD="<path/to/libprofiler.so>" <other_options> <path/to/binary> <binary_flags>
@@ -73,8 +79,8 @@ You can do the same thing with the tcmalloc library for memory profiling:
 LD_PRELOAD="<path/to/libtcmalloc.so>" <other_options> <path/to/binary> <binary_flags>
 ```
 
-Using the LD_PRELOAD method is not recommended by the developers of gperftools so using the build options is prefereable. Both CPU and memory profiling can be enabled at the same time but note that turning on memory profiling (or the heap checker) will affect performance.
-Specify multiple libraries to load with LD_PRELOAD using a space-separated list e.g.
+Using the `LD_PRELOAD` method is not recommended by the developers of gperftools so using the build options is preferable. Both CPU and memory profiling can be enabled at the same time but note that turning on memory profiling (or the heap checker) will affect performance.
+Specify multiple libraries to load with `LD_PRELOAD` using a space-separated list e.g.
 
 ```
 LD_PRELOAD="<path/to/first/library> <path/to/second/library>"
@@ -84,7 +90,7 @@ Note that these steps don't turn on profiling, they only enable it to work. The 
 
 ## Produce a CPU Profile
 
-To turn on CPU profiling when running an executable define the CPUPROFILE environment variable when executing the program:
+To turn on CPU profiling when running an executable define the `CPUPROFILE` environment variable when executing the program:
 
 ```
 CPUPROFILE=<path/to/profile> <path/to/binary> [binary args]
@@ -122,7 +128,7 @@ A graphical representaion of a profile can be produced using:
 pprof -pdf <path/to/binary> <path/to/profile> > <path/to/pdf>
 ```
 
-Where path/to/binary is the binary is used to produce the profile in the first place.
+Where `path/to/binary` is the binary is used to produce the profile in the first place.
 Other output formats are available.
 
 The following opens the graph in your web browser:
