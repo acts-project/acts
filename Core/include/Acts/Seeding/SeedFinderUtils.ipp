@@ -205,17 +205,17 @@ bool xyzCoordinateCheck(Acts::SeedfinderConfig<external_spacepoint_t> m_config,
   // if arive here spacepointPosition is compatible with strip directions and
   // detector elements
 
-  const Acts::Vector3 bottomStripCenterPosition =
-      m_config.getBottomStripCenterPosition(sp->sp());
+  const Acts::Vector3 topStripCenterPosition =
+      m_config.getTopStripCenterPosition(sp->sp());
 
-  // spacepointPosition corected with respect to the bottom strip direction and
-  // the distance between the strips
+  // spacepointPosition corected with respect to the top strip position and
+  // direction and the distance between the strips
   s0 = s0 / bd1;
-  outputCoordinates[0] = bottomStripCenterPosition[0] +
+  outputCoordinates[0] = topStripCenterPosition[0] +
                          (topHalfStripLength * topStripDirection[0]) * s0;
-  outputCoordinates[1] = bottomStripCenterPosition[1] +
+  outputCoordinates[1] = topStripCenterPosition[1] +
                          (topHalfStripLength * topStripDirection[1]) * s0;
-  outputCoordinates[2] = bottomStripCenterPosition[2] +
+  outputCoordinates[2] = topStripCenterPosition[2] +
                          (topHalfStripLength * topStripDirection[2]) * s0;
   return true;
 }
