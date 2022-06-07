@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1140,6 +1140,7 @@ class AtlasStepper {
     bool Helix = false;
     // if (std::abs(S) < m_cfg.helixStep) Helix = true;
 
+    size_t nStepTrials = 0;
     while (h != 0.) {
       // PS2 is h/(2*momentum) in EigenStepper
       double S3 = (1. / 3.) * h, S4 = .25 * h, PS2 = Pi * h;
@@ -1224,6 +1225,7 @@ class AtlasStepper {
       if (EST > state.options.tolerance) {
         h = h * .5;
         //        dltm = 0.;
+        nStepTrials++;
         continue;
       }
 
@@ -1354,6 +1356,7 @@ class AtlasStepper {
       }
 
       state.stepping.pathAccumulated += h;
+      state.stepping.stepSize.nStepTrials = nStepTrials;
       return h;
     }
 
