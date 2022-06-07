@@ -170,8 +170,8 @@ struct SeedfinderConfig {
   Delegate<Acts::Vector3(const SpacePoint&)> getBottomStripDirection;
   // Returns distance between the centers of the two strips.
   Delegate<Acts::Vector3(const SpacePoint&)> getStripCenterDistance;
-  // Returns position of the center of the bottom strip.
-  Delegate<Acts::Vector3(const SpacePoint&)> getBottomStripCenterPosition;
+  // Returns position of the center of the top strip.
+  Delegate<Acts::Vector3(const SpacePoint&)> getTopStripCenterPosition;
 
   SeedfinderConfig toInternalUnits() const {
     using namespace Acts::UnitLiterals;
