@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementWriter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitReader.hpp"
 
 #include <memory>
@@ -19,6 +20,7 @@ using namespace pybind11::literals;
 using namespace Acts;
 
 namespace Acts::Python {
+
 void addEDM4hep(Context& ctx) {
   auto mex = ctx.get("examples");
 
@@ -41,5 +43,24 @@ void addEDM4hep(Context& ctx) {
     ACTS_PYTHON_MEMBER(dd4hepGeometryService);
     ACTS_PYTHON_STRUCT_END();
   }
+
+  {
+    using Writer = ActsExamples::EDM4hepMeasurementWriter;
+    using Config = Writer::Config;
+    auto w = py::class_<Writer, ActsExamples::IWriter, std::shared_ptr<Writer>>(
+                 edm4hep, "EDM4hepMeasurementWriter")
+                 .def(py::init<const Config&, Acts::Logging::Level>(),
+                      py::arg("config"), py::arg("level"));
+
+    auto c = py::class_<Config>(w, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(inputMeasurements);
+    ACTS_PYTHON_MEMBER(inputClusters);
+    ACTS_PYTHON_MEMBER(inputSimHits);
+    ACTS_PYTHON_MEMBER(inputMeasurementSimHitsMap);
+    ACTS_PYTHON_MEMBER(outputPath);
+    ACTS_PYTHON_STRUCT_END();
+  }
 }
+
 }  // namespace Acts::Python

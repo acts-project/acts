@@ -11,6 +11,7 @@ from helpers import (
     dd4hepEnabled,
     hepmc3Enabled,
     geant4Enabled,
+    edm4hepEnabled,
     AssertCollectionExistsAlg,
 )
 
@@ -496,7 +497,6 @@ def test_csv_multitrajectory_writer(tmp_path):
 
 @pytest.fixture(scope="session")
 def hepmc_data_impl(tmp_path_factory):
-
     import subprocess
 
     script = (
@@ -537,7 +537,6 @@ def hepmc_data(hepmc_data_impl: Path, tmp_path):
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 @pytest.mark.slow
 def test_hepmc3_histogram(hepmc_data, tmp_path):
-
     from acts.examples.hepmc3 import (
         HepMC3AsciiReader,
         HepMCProcessExtractor,
@@ -575,3 +574,29 @@ def test_hepmc3_histogram(hepmc_data, tmp_path):
     s.addAlgorithm(alg)
 
     s.run()
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
+def test_edm4hep_measurement_writer(tmp_path, fatras):
+    from acts.examples.edm4hep import EDM4hepMeasurementWriter
+
+    s = Sequencer(numThreads=1, events=10)
+    evGen, simAlg, digiAlg = fatras(s)
+
+    out = tmp_path / "measurements.root"
+
+    s.addWriter(
+        EDM4hepMeasurementWriter(
+            level=acts.logging.VERBOSE,
+            inputMeasurements=digiAlg.config.outputMeasurements,
+            inputClusters=digiAlg.config.outputClusters,
+            inputSimHits=simAlg.config.outputSimHits,
+            inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
+            outputPath=str(out),
+        )
+    )
+    s.run()
+
+    assert os.path.isfile(out)
+    assert os.stat(out).st_size > 10

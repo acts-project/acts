@@ -1,5 +1,6 @@
 add_library(
   ActsExamplesIoEDM4hep SHARED
+  src/EDM4hepMeasurementWriter.cpp
   src/EDM4hepSimHitReader.cpp)
 target_include_directories(
   ActsExamplesIoEDM4hep
