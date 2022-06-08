@@ -76,6 +76,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   GeneralFitterOptions options{
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
       calibrator,     &(*pSurface),        Acts::LoggerWrapper{logger()},
+      Acts::PropagatorPlainOptions()
   };
 
   // Perform the fit for each input track
