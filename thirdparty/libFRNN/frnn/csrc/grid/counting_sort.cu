@@ -1,4 +1,4 @@
-#include "counting_sort.h"
+#include "grid/counting_sort.h"
 
 __global__ void CountingSort2DKernel(
     const float *__restrict__ points,   // (N, P, 2)
@@ -167,7 +167,7 @@ void CountingSortCUDA(const at::Tensor points, const at::Tensor lengths,
     //     sorted_points.contiguous().data_ptr<float>(),
     //     sorted_points_idxs.contiguous().data_ptr<int>(), N, P, G);
 
-    DispatchKernel1D<CountingSortNDKernelFunctor, MIN_D, MAX_D>(
+    DispatchKernel1D<CountingSortNDKernelFunctor, V0_MIN_D, V0_MAX_D>(
         D, blocks, threads, points.contiguous().data_ptr<float>(),
         lengths.contiguous().data_ptr<long>(),
         grid_cell.contiguous().data_ptr<int>(),

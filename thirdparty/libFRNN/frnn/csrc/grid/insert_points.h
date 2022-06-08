@@ -1,5 +1,5 @@
-#include "grid.h"
-#include "dispatch.h"
+#include "grid/grid.h"
+#include "utils/dispatch.h"
 
 // TODO: add docs
 void InsertPointsCUDA(const at::Tensor points,   // (N, P, 2/3)

@@ -4,11 +4,11 @@
 #include <torch/script.h>
 using namespace torch::indexing;
 
-#include <grid.h>
-#include <insert_points.h>
-#include <counting_sort.h>
-#include <prefix_sum.h>
-#include <find_nbrs.h>
+#include <grid/grid.h>
+#include <grid/insert_points.h>
+#include <grid/counting_sort.h>
+#include <grid/prefix_sum.h>
+#include <grid/find_nbrs.h>
 #include "cuda.h"
 #include "cuda_runtime_api.h"
 

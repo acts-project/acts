@@ -48,7 +48,7 @@ def addExaTrkx(
     # It takes all the source links created from truth hit smearing, seeds from
     # truth particle smearing and source link selection config
     exaTrkxFinding = acts.examples.ExaTrkXTrackFinding(
-        inputMLModuleDir=str(onnxModelDir),
+        modelDir=str(onnxModelDir),
         spacepointFeatures=3,
         embeddingDim=8,
         rVal=1.6,

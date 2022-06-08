@@ -56,7 +56,22 @@ public:
     if (_size < K) {
       keys[_size] = key;
       vals[_size] = val;
+      if (_size == 0 || key > max_key) {
+        max_key = key;
+        max_idx = _size;
+      }
       _size++;
+    } else if (key < max_key) {
+      keys[max_idx] = key;
+      vals[max_idx] = val;
+      max_key = key;
+      for (int k = 0; k < K; ++k) {
+        key_t cur_key = keys[k];
+        if (cur_key > max_key) {
+          max_key = cur_key;
+          max_idx = k;
+        }
+      }
     }
   }
 

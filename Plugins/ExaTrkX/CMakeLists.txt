@@ -40,12 +40,32 @@ target_include_directories(
      #/workspace/install/include
 )
 
+target_link_directories(
+  ActsPluginExaTrkX
+  PUBLIC
+    /home/iwsatlas1/bhuth/thirdparty/torch_scatter/lib/x86_64-linux-gnu
+)
+
 target_link_libraries(
   ActsPluginExaTrkX
   PUBLIC
     ${TORCH_LIBRARIES}
     Boost::boost
 )
+
+# Should not discard TorchScatter even if its not needed at this point since we need the scatter_max operation in the torch script later
+target_link_options(
+  ActsPluginExaTrkX
+  PUBLIC
+    "-Wl,-no-as-needed"
+)
+
+target_link_libraries(
+  ActsPluginExaTrkX
+  PUBLIC
+    TorchScatter::TorchScatter
+)
+
 
 target_link_libraries(
   ActsPluginExaTrkX
@@ -62,3 +82,18 @@ install(
 install(
   DIRECTORY include/Acts
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+
+add_executable(
+  TestEdgeBuilding
+  src/TestEdgeBuilding.cpp
+)
+
+target_link_libraries(
+  TestEdgeBuilding
+  ActsPluginExaTrkX
+  frnn
+  Eigen3::Eigen
+)
+
+set_target_properties(ActsPluginExaTrkX PROPERTIES CXX_STANDARD 17)

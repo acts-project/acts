@@ -5,11 +5,11 @@
 #include <torch/script.h>
 using namespace torch::indexing;
 
-#include <grid.h>
-#include <insert_points.h>
-#include <counting_sort.h>
-#include <prefix_sum.h>
-#include <find_nbrs.h>
+#include <grid/grid.h>
+#include <grid/insert_points.h>
+#include <grid/counting_sort.h>
+#include <grid/prefix_sum.h>
+#include <grid/find_nbrs.h>
 #include "cuda.h"
 #include "cuda_runtime_api.h"
 // #include "mmio_read.h"
@@ -57,10 +57,10 @@ void ExaTrkXTrackFinding::getTracks(
     torch::Device device(torch::kCUDA);
 
      // printout the r,phi,z of the first spacepoint
-    // std::cout <<"First spacepoint information: ";
-    // std::copy(inputValues.begin(), inputValues.begin() + 3,
-    //           std::ostream_iterator<float>(std::cout, " "));
-    // std::cout << std::endl;
+    std::cout <<"First spacepoint information: ";
+    std::copy(inputValues.begin(), inputValues.begin() + 3,
+              std::ostream_iterator<float>(std::cout, " "));
+    std::cout << std::endl;
 
     ExaTrkXTimer timer;
     // ************
@@ -78,9 +78,9 @@ void ExaTrkXTrackFinding::getTracks(
 
     eInputTensorJit.push_back(eLibInputTensor.to(device));
     at::Tensor eOutput = e_model.forward(eInputTensorJit).toTensor();
-    // std::cout <<"Embedding space of libtorch the first SP: \n";
-    // std::cout << eOutput.slice(/*dim=*/0, /*start=*/0, /*end=*/1) << std::endl;
-    // std::cout << std::endl;
+    std::cout <<"Embedding space of libtorch the first SP: \n";
+    std::cout << eOutput.slice(/*dim=*/0, /*start=*/0, /*end=*/1) << std::endl;
+    std::cout << std::endl;
 
     timeInfo.embedding = timer.stopAndGetElapsedTime();
     
@@ -92,15 +92,15 @@ void ExaTrkXTrackFinding::getTracks(
         eOutput, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal, m_cfg.knnVal);
     int64_t numEdges = edgeList.size(1);
 
-    // std::cout << "Built " << edgeList.size(1) << " edges. " <<  edgeList.size(0) << std::endl;
-    // std::cout << edgeList.slice(1, 0, 5) << std::endl;
+    std::cout << "Built " << edgeList.size(1) << " edges. " <<  edgeList.size(0) << std::endl;
+    std::cout << edgeList.slice(1, 0, 5) << std::endl;
 
     timeInfo.building = timer.stopAndGetElapsedTime();
 
     // ************
     // Filtering
     // ************
-    // std::cout << "Get scores for " << numEdges<< " edges." << std::endl;
+    std::cout << "Get scores for " << numEdges<< " edges." << std::endl;
     
     timer.start();
     std::vector<torch::jit::IValue> fInputTensorJit;
@@ -110,15 +110,16 @@ void ExaTrkXTrackFinding::getTracks(
     fOutput.squeeze_();
     fOutput.sigmoid_();
 
-    // std::cout << "After filtering: " << fOutput.size(0) << " " << fOutput.size(1) << std::endl;
-    // std::cout << fOutput.slice(/*dim=*/0, /*start=*/0, /*end=*/9) << std::endl;
+    //std::cout << "After filtering: " << fOutput.size(0) << " " << fOutput.size(1) << std::endl;
+    std::cout << "After filtering: " << fOutput.size(0) << std::endl;
+    std::cout << fOutput.slice(/*dim=*/0, /*start=*/0, /*end=*/9) << std::endl;
 
     torch::Tensor filterMask = fOutput > m_cfg.filterCut;
     torch::Tensor edgesAfterF = edgeList.index({Slice(), filterMask});
     edgesAfterF = edgesAfterF.to(torch::kInt64);
     int64_t numEdgesAfterF = edgesAfterF.size(1);
 
-    // std::cout << "After filtering: " << numEdgesAfterF << " edges." << std::endl;
+    std::cout << "After filtering: " << numEdgesAfterF << " edges." << std::endl;
 
     timeInfo.filtering = timer.stopAndGetElapsedTime();
 
@@ -136,8 +137,8 @@ void ExaTrkXTrackFinding::getTracks(
     gOutput = gOutput.cpu();
     timeInfo.gnn = timer.stopAndGetElapsedTime();
 
-    // std::cout << "GNN scores for " << gOutput.size(0) << " edges." << std::endl;
-    // std::cout << gOutput.slice(0, 0, 5) << std::endl;
+    std::cout << "GNN scores for " << gOutput.size(0) << " edges." << std::endl;
+    std::cout << gOutput.slice(0, 0, 5) << std::endl;
     
     // ************
     // Track Labeling with cugraph::connected_components
@@ -169,7 +170,7 @@ void ExaTrkXTrackFinding::getTracks(
     // weakly_connected_components<int32_t,int32_t,float>(
     //     rowIndices, colIndices, edgeWeights, trackLabels);
 
-    // std::cout << "size of components: " << trackLabels.size() << std::endl;
+    std::cout << "size of components: " << trackLabels.size() << std::endl;
     if (trackLabels.size() == 0)  return;
 
 
