@@ -71,6 +71,7 @@ target_link_libraries(
   ActsPluginExaTrkX
   PRIVATE
     frnn  
+    TBB::tbb
     #/workspace/install/lib/libgrpcclient.so
     #/workspace/build/third-party/protobuf/lib/libprotobuf.a
 )
@@ -83,7 +84,7 @@ install(
   DIRECTORY include/Acts
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-
+# Test for edge building
 add_executable(
   TestEdgeBuilding
   src/TestEdgeBuilding.cpp
@@ -96,4 +97,20 @@ target_link_libraries(
   Eigen3::Eigen
 )
 
-set_target_properties(ActsPluginExaTrkX PROPERTIES CXX_STANDARD 17)
+set_property(TARGET TestEdgeBuilding PROPERTY CXX_STANDARD 17)
+
+# Test for pipeline in c++
+add_executable(
+  TestPipelineWithCsv
+  src/TestPipelineWithCsv.cpp
+)
+
+target_link_libraries(
+  TestPipelineWithCsv
+  ActsPluginExaTrkX
+  frnn
+  Eigen3::Eigen
+)
+
+set_property(TARGET TestPipelineWithCsv PROPERTY CXX_STANDARD 17)
+

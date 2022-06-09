@@ -41,9 +41,9 @@ struct ExaTrkXTimeList {
         total.push_back(time.total);
     }
 
-    ExaTrkXTime get(int evtid) {
+    ExaTrkXTime get(size_t evtid) {
         if (evtid >= embedding.size()) {
-            printf("Error: event id %d is out of range.\n", evtid);
+            printf("Error: event id %ld is out of range.\n", evtid);
             return ExaTrkXTime();
         }
         ExaTrkXTime timing {
@@ -57,10 +57,10 @@ struct ExaTrkXTimeList {
         return timing;
     }
 
-    void summary(int start=0) {
+    void summary(size_t start=0) {
         size_t num = embedding.size();
         if (num <= start) {
-            printf("Not enough data. %ld total and %d skipped\n", num, start);
+            printf("Not enough data. %ld total and %ld skipped\n", num, start);
             return;
         }
         num -= start;
@@ -102,7 +102,7 @@ struct ExaTrkXTimeList {
             return;
         }
         fprintf(fp, "embedding,building,filtering,gnn,labeling,total\n");
-        for (int i = 0; i < embedding.size(); i++) {
+        for (auto i = 0ul; i < embedding.size(); i++) {
             fprintf(fp, "%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
                 embedding[i], building[i], filtering[i], gnn[i], labeling[i], total[i]);
         }

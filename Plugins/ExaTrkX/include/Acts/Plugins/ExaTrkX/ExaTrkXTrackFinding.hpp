@@ -25,6 +25,7 @@ public:
         float rVal = 1.6;
         int knnVal = 500;
         float filterCut = 0.21;
+        float edgeCut = 0.5;
     };
 
 

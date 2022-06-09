@@ -28,8 +28,10 @@ class TrackFindingAlgorithmExaTrkX final : public BareAlgorithm {
     /// ML based track finder
     std::shared_ptr<Acts::ExaTrkXTrackFindingBase> trackFinderML;
 
-    // NOTE the other config parameters for the Exa.TrkX class for now are just
-    // initialized as the defaults
+    /// Scaling of the input features
+    float rScale = 1.f;
+    float phiScale = 1.f;
+    float zScale = 1.f;
   };
 
   /// Constructor of the track finding algorithm

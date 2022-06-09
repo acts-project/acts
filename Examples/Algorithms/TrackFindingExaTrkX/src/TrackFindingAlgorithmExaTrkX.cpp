@@ -49,9 +49,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     float z = sp.z();
     float r = sp.r();
     float phi = std::atan2(y, x);
-    inputValues.push_back(r);
-    inputValues.push_back(phi);
-    inputValues.push_back(z);
+    inputValues.push_back(r / m_cfg.rScale);
+    inputValues.push_back(phi / m_cfg.phiScale);
+    inputValues.push_back(z / m_cfg.zScale);
 
     spacepointIDs.push_back(sp.measurementIndex());
   }

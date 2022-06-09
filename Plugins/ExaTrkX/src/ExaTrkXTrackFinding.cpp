@@ -53,14 +53,18 @@ void ExaTrkXTrackFinding::getTracks(
     tot_timer.start();
     // hardcoded debugging information
     c10::InferenceMode guard(true);
-    bool debug = true;
     torch::Device device(torch::kCUDA);
 
      // printout the r,phi,z of the first spacepoint
-    std::cout <<"First spacepoint information: ";
-    std::copy(inputValues.begin(), inputValues.begin() + 3,
-              std::ostream_iterator<float>(std::cout, " "));
-    std::cout << std::endl;
+    if( m_cfg.verbose ) {
+        std::cout <<"First spacepoint information: ";
+        std::copy(inputValues.begin(), inputValues.begin() + 3,
+                std::ostream_iterator<float>(std::cout, " "));
+        std::cout << std::endl;
+        std::cout <<"Max and min spacepoint:"
+                <<*std::max_element(inputValues.begin(), inputValues.end()) << " "
+                <<*std::min_element(inputValues.begin(), inputValues.end()) << "\n";
+    }
 
     ExaTrkXTimer timer;
     // ************
@@ -78,9 +82,12 @@ void ExaTrkXTrackFinding::getTracks(
 
     eInputTensorJit.push_back(eLibInputTensor.to(device));
     at::Tensor eOutput = e_model.forward(eInputTensorJit).toTensor();
-    std::cout <<"Embedding space of libtorch the first SP: \n";
-    std::cout << eOutput.slice(/*dim=*/0, /*start=*/0, /*end=*/1) << std::endl;
-    std::cout << std::endl;
+
+    if( m_cfg.verbose ) {
+        std::cout <<"Embedding space of libtorch the first SP: \n";
+        std::cout << eOutput.slice(/*dim=*/0, /*start=*/0, /*end=*/1) << std::endl;
+        std::cout << std::endl;
+    }
 
     timeInfo.embedding = timer.stopAndGetElapsedTime();
     
@@ -90,18 +97,25 @@ void ExaTrkXTrackFinding::getTracks(
     timer.start();
     torch::Tensor edgeList = buildEdges(
         eOutput, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal, m_cfg.knnVal);
-    int64_t numEdges = edgeList.size(1);
+//     torch::Tensor edgeList = buildEdgesBruteForce(
+//         eOutput, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal, m_cfg.knnVal);
 
-    std::cout << "Built " << edgeList.size(1) << " edges. " <<  edgeList.size(0) << std::endl;
-    std::cout << edgeList.slice(1, 0, 5) << std::endl;
+    if( m_cfg.verbose ) {
+        std::cout << "Built " << edgeList.size(1) << " edges. " <<  edgeList.size(0) << std::endl;
+        std::cout << edgeList.slice(1, 0, 5) << std::endl;
+
+//         std::ofstream file("reconstruction/edges_after_embedding.csv");
+//         file << "e0,e1\n";
+//         for(int i=0; i<edgeList.size(1); ++i) {
+//             file << edgeList[0][i].item<float>() << "," << edgeList[1][i].item<float>() << "\n";
+//         }
+    }
 
     timeInfo.building = timer.stopAndGetElapsedTime();
 
     // ************
     // Filtering
     // ************
-    std::cout << "Get scores for " << numEdges<< " edges." << std::endl;
-    
     timer.start();
     std::vector<torch::jit::IValue> fInputTensorJit;
     fInputTensorJit.push_back(eLibInputTensor.to(device));
@@ -110,16 +124,26 @@ void ExaTrkXTrackFinding::getTracks(
     fOutput.squeeze_();
     fOutput.sigmoid_();
 
-    //std::cout << "After filtering: " << fOutput.size(0) << " " << fOutput.size(1) << std::endl;
-    std::cout << "After filtering: " << fOutput.size(0) << std::endl;
-    std::cout << fOutput.slice(/*dim=*/0, /*start=*/0, /*end=*/9) << std::endl;
+
+    if( m_cfg.verbose ) {
+        std::cout << "After filtering network: " << fOutput.size(0) << std::endl;
+        std::cout << fOutput.slice(/*dim=*/0, /*start=*/0, /*end=*/9) << std::endl;
+    }
 
     torch::Tensor filterMask = fOutput > m_cfg.filterCut;
     torch::Tensor edgesAfterF = edgeList.index({Slice(), filterMask});
     edgesAfterF = edgesAfterF.to(torch::kInt64);
     int64_t numEdgesAfterF = edgesAfterF.size(1);
 
-    std::cout << "After filtering: " << numEdgesAfterF << " edges." << std::endl;
+    if( m_cfg.verbose ) {
+        std::cout << "After filter cut: " << numEdgesAfterF << " edges." << std::endl;
+
+//         std::ofstream file("reconstruction/edges_after_filter.csv");
+//         file << "e0,e1\n";
+//         for(int i=0; i<edgesAfterF.size(1); ++i) {
+//             file << edgesAfterF[0][i].item<float>() << "," << edgesAfterF[1][i].item<float>() << "\n";
+//         }
+    }
 
     timeInfo.filtering = timer.stopAndGetElapsedTime();
 
@@ -127,18 +151,37 @@ void ExaTrkXTrackFinding::getTracks(
     // GNN
     // ************
     timer.start();
+    
+    auto bidirEdgesAfterF = torch::cat({ edgesAfterF, edgesAfterF.flip(0) }, 1);
+    
+    if( m_cfg.verbose ) {
+        std::cout << "bidir edges shape " << bidirEdgesAfterF.size(0) << ", " << bidirEdgesAfterF.size(1) << "\n";
+    }
+    
 
     std::vector<torch::jit::IValue> gInputTensorJit;
-    auto g_opts = torch::TensorOptions().dtype(torch::kInt64);
+    //auto g_opts = torch::TensorOptions().dtype(torch::kInt64);
     gInputTensorJit.push_back(eLibInputTensor.to(device));
-    gInputTensorJit.push_back(edgesAfterF.to(device));
-    auto gOutput = g_model.forward(gInputTensorJit).toTensor();
-    gOutput.sigmoid_();
-    gOutput = gOutput.cpu();
+    gInputTensorJit.push_back(bidirEdgesAfterF.to(device));
+    
+    auto gOutputBidir = g_model.forward(gInputTensorJit).toTensor();
+    gOutputBidir.sigmoid_();
+    gOutputBidir = gOutputBidir.cpu();
+    
+    auto gOutput = gOutputBidir.index({Slice(None, gOutputBidir.size(0)/2)});
+    
     timeInfo.gnn = timer.stopAndGetElapsedTime();
 
-    std::cout << "GNN scores for " << gOutput.size(0) << " edges." << std::endl;
-    std::cout << gOutput.slice(0, 0, 5) << std::endl;
+    if( m_cfg.verbose ) {
+        std::cout << "GNN scores for " << gOutput.size(0) << " edges." << std::endl;
+        std::cout << "(Bidir scores size: " << gOutputBidir.size(0) << std::endl;
+        std::cout << gOutput.slice(0, 0, 5) << std::endl;
+//         std::ofstream file("reconstruction/gnn_scores.csv");
+//         file << "score\n";
+//         for(int i=0; i<edgesAfterF.size(1); ++i) {
+//             file << gOutput[i].item<float>() << "\n";
+//         }
+    }
     
     // ************
     // Track Labeling with cugraph::connected_components
@@ -165,12 +208,20 @@ void ExaTrkXTrackFinding::getTracks(
 
     weaklyConnectedComponents<int32_t,int32_t,float>(
         numSpacepoints, 
-        rowIndices, colIndices, edgeWeights, trackLabels);
+        rowIndices, colIndices, edgeWeights, trackLabels, m_cfg.edgeCut);
 
     // weakly_connected_components<int32_t,int32_t,float>(
     //     rowIndices, colIndices, edgeWeights, trackLabels);
 
-    std::cout << "size of components: " << trackLabels.size() << std::endl;
+
+    if( m_cfg.verbose ) {
+        std::cout << "size of components: " << trackLabels.size() << std::endl;
+        std::vector<vertex_t> sorted(trackLabels);
+        std::sort(sorted.begin(), sorted.end());
+        sorted.erase(std::unique(sorted.begin(), sorted.end()), sorted.end());
+        std::cout << "unique components: " << sorted.size() << std::endl;
+    }
+
     if (trackLabels.size() == 0)  return;
 
 

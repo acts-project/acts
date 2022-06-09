@@ -1,12 +1,15 @@
 #include "Acts/Plugins/ExaTrkX/ExaTrkXUtils.hpp"
 
+#include <tbb/parallel_for_each.h>
+
+
 torch::Tensor buildEdges(
     at::Tensor& embedFeatures, int64_t numSpacepoints,
     int dim, float rVal, int kVal
 )
 {
     torch::Device device(torch::kCUDA);
-    auto options = torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA);
+    //auto options = torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA);
 
     int grid_params_size;
     int grid_delta_idx;
@@ -127,7 +130,7 @@ torch::Tensor buildEdges(
     // std::cout << "copy edges to std::vector" << std::endl;
 }
 
-
+/*
 void buildEdges(
     std::vector<float>& embedFeatures,
     std::vector<int64_t>& edgeList,
@@ -278,3 +281,160 @@ void buildEdges(
             stackedEdges.data_ptr<int64_t>() + stackedEdges.numel(),
             std::back_inserter(edgeList));
 }
+*/
+
+torch::Tensor buildEdgesBruteForce(
+    at::Tensor& embedFeatures, int64_t numSpacepoints,
+    int dim, float rVal, int
+)
+{
+    unsigned threads = 20;
+
+    try {
+        auto env = std::getenv("NUM_THREADS");
+        if( env ) {
+            threads = std::atoi(env);
+        }
+    }
+    catch(...) {
+
+    }
+
+    auto distance = [](const at::Tensor &a, const at::Tensor &b) {
+        return std::sqrt(((a-b)*(a-b)).sum().item().to<float>());
+    };
+
+    struct TwoRanges {
+        int i_min, i_max, j_min, j_max;
+    };
+
+
+    torch::Tensor data = embedFeatures.reshape({numSpacepoints, dim}).to(torch::kCPU);
+    std::cout << "data: " << data.size(0) << " " << data.size(1) << "\n";
+
+    const int n_chunks = std::min(threads, std::thread::hardware_concurrency());
+    const int per_chunk = numSpacepoints / n_chunks;
+
+    std::vector<TwoRanges> ranges;
+
+    for(int i=0; i<n_chunks; ++i) {
+        for(int j=i; j<n_chunks; ++j) {
+            TwoRanges r;
+
+            r.i_min=i*per_chunk;
+
+            if( i<n_chunks-1 ) {
+                r.i_max=(i+1)*per_chunk;
+            } else {
+                r.i_max=numSpacepoints;
+            }
+
+            r.j_min=j*per_chunk;
+
+            if( j<n_chunks-1 ) {
+                r.j_max=(j+1)*per_chunk;
+            } else {
+                r.j_max=numSpacepoints;
+            }
+
+            ranges.push_back(r);
+        }
+    }
+    std::cout << "#ranges: " << ranges.size() << "\n";
+
+    std::vector<int> all_edges;
+    all_edges.reserve(2*numSpacepoints*10);
+
+    std::mutex res_mutex;
+    std::mutex int_mutex;
+    std::mutex progress_mutex;
+    std::vector<float> progress(ranges.size());
+    int index = -1;
+    int print_id = 1;
+
+    tbb::parallel_for_each(ranges.begin(), ranges.end(), [&](const TwoRanges &r) {
+        const int my_id = [&](){
+            std::lock_guard<std::mutex> guard(int_mutex);
+            return ++index;
+        }();
+
+        std::vector<int> edges;
+
+        auto action = [&](int i, int j) {
+            const auto d = distance(data[i], data[j]);
+
+            if( d < rVal ) {
+                edges.push_back(i);
+                edges.push_back(j);
+            }
+        };
+
+        auto print_progress = [&](int i){
+            if( i % 50 == 0 )
+            {
+                std::lock_guard<std::mutex> guard(progress_mutex);
+                progress[my_id] = (100.0 * (i-r.i_min)) / (r.i_max-r.i_min);
+                if( my_id == print_id ) {
+                    const float p = std::accumulate(progress.begin(), progress.end(), 0.f) / progress.size();
+                    std::cout << "Average progress: " << p << "%           \n";
+                    print_id = std::distance(progress.begin(), std::min_element(progress.begin(), progress.end()));
+                }
+
+
+            }
+        };
+
+        if( r.i_min == r.j_min && r.i_max == r.j_max ) {
+            for(int i=r.i_min; i < r.i_max; ++i) {
+                print_progress(i);
+                for(int j=i+1; j<r.i_max; ++j) {
+                    action(i,j);
+                }
+            }
+        } else {
+            for(int i=r.i_min; i < r.i_max; ++i) {
+                print_progress(i);
+                for(int j=r.j_min; j<r.j_max; ++j) {
+                    action(i,j);
+                }
+            }
+        }
+
+        std::lock_guard<std::mutex> guard(res_mutex);
+        for(auto &p : edges) {
+            all_edges.emplace_back(std::move(p));
+        }
+    });
+
+//     std::vector<int> edges;
+//     edges.reserve(2*numSpacepoints*10);
+//
+//     torch::Tensor data = embedFeatures.reshape({numSpacepoints, dim}).to(torch::kCPU);
+//
+//     for(auto i=0l; i<numSpacepoints; ++i) {
+//         if( i % 10 == 0 ) {
+//             std::cout << "edge building: " << std::setprecision(2) << 100.0*i/numSpacepoints << "%    \r" << std::flush;
+//         }
+//         for(auto j=i+1; j<numSpacepoints; ++j) {
+//             const auto d = distance(data[i], data[j]);
+//
+//             if( d < rVal ) {
+//                 edges.push_back(i);
+//                 edges.push_back(j);
+//             }
+//         }
+//     }
+//     std::cout << std::endl;
+
+    auto edge_index = torch::tensor(all_edges).clone().reshape({static_cast<int>(all_edges.size()/2), 2}).transpose(0,1);
+
+    for(int i=0; i<5; ++i) {
+        if( (edge_index[0][i].item<int>() != all_edges[2*i]) || (edge_index[1][i].item<int>() != all_edges[2*i+1]) ) {
+            throw std::runtime_error("reshape error");
+        }
+    }
+
+    return edge_index;
+}
+
+

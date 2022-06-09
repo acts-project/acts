@@ -53,6 +53,7 @@ void addExaTrkXTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(rVal);
     ACTS_PYTHON_MEMBER(knnVal);
     ACTS_PYTHON_MEMBER(filterCut);
+    ACTS_PYTHON_MEMBER(edgeCut);
     ACTS_PYTHON_STRUCT_END();
   }
 
@@ -72,6 +73,9 @@ void addExaTrkXTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(inputSpacePoints);
     ACTS_PYTHON_MEMBER(outputProtoTracks);
     ACTS_PYTHON_MEMBER(trackFinderML);
+    ACTS_PYTHON_MEMBER(rScale);
+    ACTS_PYTHON_MEMBER(phiScale);
+    ACTS_PYTHON_MEMBER(zScale);
     ACTS_PYTHON_STRUCT_END();
   }
 }
