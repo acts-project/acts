@@ -90,12 +90,12 @@ class DisjointSets {
       m_parent.resize(m_size);
       m_ds = boost::disjoint_sets<size_t*, size_t*>(&m_rank[0], &m_parent[0]);
     }
-    m_ds.makeSet(m_globalId);
+    m_ds.make_set(m_globalId);
     return static_cast<Label>(m_globalId++);
   }
 
-  void unionSet(size_t x, size_t y) { m_ds.unionSet(x, y); }
-  Label findSet(size_t x) { return static_cast<Label>(m_ds.findSet(x)); }
+  void unionSet(size_t x, size_t y) { m_ds.union_set(x, y); }
+  Label findSet(size_t x) { return static_cast<Label>(m_ds.find_set(x)); }
 
  private:
   size_t m_globalId;
@@ -106,7 +106,6 @@ class DisjointSets {
 };
 
 // Cell collection logic
-// TODO: add template parameter to extend matching logic?
 template <typename Cell, typename Connect>
 int getConnections(typename std::vector<Cell>::iterator it,
                     std::vector<Cell>& set, Connect connect,
@@ -159,8 +158,9 @@ ConnectResult DefaultConnect<Cell>::operator()(const Cell& a, const Cell& b) {
   return ConnectResult::eNoConn;
 }
 
-template <typename Cell, typename CellCollection, typename Connect>
+template <typename CellCollection, typename Connect>
 void labelClusters(CellCollection& cells, Connect connect) {
+  using Cell = typename CellCollection::value_type;
   internal::staticCheckCellType<Cell>();
 
   internal::DisjointSets ds{};
@@ -201,9 +201,10 @@ void labelClusters(CellCollection& cells, Connect connect) {
   }
 }
 
-template <typename Cell, typename Cluster, typename CellCollection,
-          typename ClusterCollection>
+template <typename CellCollection, typename ClusterCollection>
 ClusterCollection mergeClusters(CellCollection& cells) {
+  using Cell = typename CellCollection::value_type;
+  using Cluster = typename ClusterCollection::value_type;
   internal::staticCheckCellType<Cell>();
   internal::staticCheckClusterType<Cluster&, const Cell&>();
 
@@ -235,13 +236,14 @@ ClusterCollection mergeClusters(CellCollection& cells) {
   return outv;
 }
 
-template <typename Cell, typename Cluster, typename Connect,
-          typename CellCollection, typename ClusterCollection>
+template <typename CellCollection, typename ClusterCollection, typename Connect>
 ClusterCollection createClusters(CellCollection& cells, Connect connect) {
+  using Cell = typename CellCollection::value_type;
+  using Cluster = typename ClusterCollection::value_type;
   internal::staticCheckCellType<Cell>();
   internal::staticCheckClusterType<Cluster&, const Cell&>();
-  labelClusters<Cell, CellCollection, Connect>(cells, connect);
-  return mergeClusters<Cell, Cluster>(cells);
+  labelClusters<CellCollection, Connect>(cells, connect);
+  return mergeClusters<CellCollection, ClusterCollection>(cells);
 }
 
 }  // namespace Ccl

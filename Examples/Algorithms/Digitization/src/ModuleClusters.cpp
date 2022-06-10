@@ -57,25 +57,25 @@ ModuleClusters::digitizedParameters() {
 }
 
 // Needed for clusterization
-int get_cell_row(const ModuleValue& mval) {
+int getCellRow(const ModuleValue& mval) {
   if (std::holds_alternative<ActsExamples::Cluster::Cell>(mval.value)) {
     return std::get<ActsExamples::Cluster::Cell>(mval.value).bin[0];
   }
   throw std::domain_error("ModuleValue does not contain cell!");
 }
 
-int get_cell_column(const ActsExamples::ModuleValue& mval) {
+int getCellColumn(const ActsExamples::ModuleValue& mval) {
   if (std::holds_alternative<ActsExamples::Cluster::Cell>(mval.value)) {
     return std::get<ActsExamples::Cluster::Cell>(mval.value).bin[1];
   }
   throw std::domain_error("ModuleValue does not contain cell!");
 }
 
-int& get_cell_label(ActsExamples::ModuleValue& mval) {
+int& getCellLabel(ActsExamples::ModuleValue& mval) {
   return mval.label;
 }
 
-void cluster_add_cell(std::vector<ModuleValue>& cl, const ModuleValue& ce) {
+void clusterAddCell(std::vector<ModuleValue>& cl, const ModuleValue& ce) {
   cl.push_back(ce);
 }
 
@@ -97,7 +97,7 @@ void ModuleClusters::merge() {
   if (not cells.empty()) {
     // Case where we actually have geometric clusters
     std::vector<std::vector<ModuleValue>> merged =
-        Acts::Ccl::createClusters<ModuleValue, std::vector<ModuleValue>>(
+        Acts::Ccl::createClusters<std::vector<ModuleValue>, std::vector<std::vector<ModuleValue>>>(
             cells, Acts::Ccl::DefaultConnect<ModuleValue>(m_commonCorner));
 
     for (std::vector<ModuleValue>& cellv : merged) {

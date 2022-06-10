@@ -43,13 +43,10 @@ struct DefaultConnect {
 ///   int  getCellRow(const Cell&),
 ///   int  getCellColumn(const Cell&)
 ///   int& getCellLabel(Cell&)
-/// If a particular Cell type does not have a label slot, use the
-/// provided LabeledCell<Cell> wrapper type.
 ///
 /// @param [in] cells the cell collection to be labeled
 /// @param [in] connect the connection type (see DefaultConnect)
-template <typename Cell, typename CellCollection,
-          typename Connect = DefaultConnect<Cell>>
+template <typename CellCollection, typename Connect = DefaultConnect<typename CellCollection::value_type>>
 void labelClusters(CellCollection& cells, Connect connect = Connect());
 
 /// @brief mergeClusters
@@ -57,20 +54,17 @@ void labelClusters(CellCollection& cells, Connect connect = Connect());
 /// Merge a set of cells previously labeled (for instance with `labelClusters`)
 /// into actual clusters. The Cluster type must have the following function
 /// defined:
-///   void cluster_add_cell(Cluster&, const Cell&)
+///   void clusterAddCell(Cluster&, const Cell&)
 ///
 /// @param [in] cells the labeled cell collection
 /// @return nothing
-template <typename Cell, typename Cluster, typename CellCollection,
-          typename ClusterCollection = std::vector<Cluster>>
+template <typename CellCollection, typename ClusterCollection>
 ClusterCollection mergeClusters(CellCollection& cells);
 
 /// @brief createClusters
 /// Conveniance function which runs both labelClusters and createClusters.
-template <typename Cell, typename Cluster,
-          typename Connect = DefaultConnect<Cell>,
-          typename CellCollection = std::vector<Cell>,
-          typename ClusterCollection = std::vector<Cluster>>
+template <typename CellCollection, typename ClusterCollection,
+	  typename Connect = DefaultConnect<typename CellCollection::value_type>>
 ClusterCollection createClusters(CellCollection& cells,
                                  Connect connect = Connect());
 
