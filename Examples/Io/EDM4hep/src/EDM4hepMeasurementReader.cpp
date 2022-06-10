@@ -8,6 +8,11 @@
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementReader.hpp"
 
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
+
 #include "edm4hep/TrackerHit.h"
 #include "edm4hep/TrackerHitCollection.h"
 #include "edm4hep/TrackerHitPlane.h"
@@ -40,7 +45,11 @@ std::pair<size_t, size_t> EDM4hepMeasurementReader::availableEvents() const {
 }
 
 ProcessCode EDM4hepMeasurementReader::read(const AlgorithmContext& ctx) {
-  // TODO
+  ClusterContainer clusters;
+
+  if (not m_cfg.outputClusters.empty()) {
+    ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
+  }
 
   return ProcessCode::SUCCESS;
 }

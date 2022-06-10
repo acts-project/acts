@@ -31,12 +31,11 @@ void addEDM4hep(Context& ctx) {
   {
     using Reader = ActsExamples::EDM4hepSimHitReader;
     using Config = Reader::Config;
-    auto r =
-        py::class_<Reader, ActsExamples::IReader, std::shared_ptr<Reader>>(
-            edm4hep, "EDM4hepSimHitReader")
-            .def(py::init<const Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Reader::config);
+    auto r = py::class_<Reader, ActsExamples::IReader, std::shared_ptr<Reader>>(
+                 edm4hep, "EDM4hepSimHitReader")
+                 .def(py::init<const Config&, Acts::Logging::Level>(),
+                      py::arg("config"), py::arg("level"))
+                 .def_property_readonly("config", &Reader::config);
 
     auto c = py::class_<Config>(r, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
@@ -64,12 +63,11 @@ void addEDM4hep(Context& ctx) {
   {
     using Reader = ActsExamples::EDM4hepMeasurementReader;
     using Config = Reader::Config;
-    auto r =
-        py::class_<Reader, ActsExamples::IReader, std::shared_ptr<Reader>>(
-            edm4hep, "EDM4hepMeasurementReader")
-            .def(py::init<const Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Reader::config);
+    auto r = py::class_<Reader, ActsExamples::IReader, std::shared_ptr<Reader>>(
+                 edm4hep, "EDM4hepMeasurementReader")
+                 .def(py::init<const Config&, Acts::Logging::Level>(),
+                      py::arg("config"), py::arg("level"))
+                 .def_property_readonly("config", &Reader::config);
 
     auto c = py::class_<Config>(r, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
