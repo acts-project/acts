@@ -199,10 +199,11 @@ SeedFinderOrthogonal<external_spacepoint_t>::SeedFinderOrthogonal(
 }
 
 template <typename external_spacepoint_t>
-template <typename output_it_t>
+template <typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     internal_sp_t &middle, std::vector<internal_sp_t *> &bottom,
-    std::vector<internal_sp_t *> &top, output_it_t it) const {
+    std::vector<internal_sp_t *> &top, int numQualitySeeds,
+    output_container_t &cont) const {
   float rM = middle.radius();
   float varianceRM = middle.varianceR();
   float varianceZM = middle.varianceZ();
@@ -240,6 +241,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     tanMT.push_back(std::atan2(top[t]->radius() - middle.radius(),
                                top[t]->z() - middle.z()));
   }
+
+  int numSeeds = 0;
 
   for (size_t b = 0; b < numBotSP; b++) {
     auto lb = linCircleBottom[b];
@@ -347,15 +350,16 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     }
     if (!top_valid.empty()) {
       m_config.seedFilter->filterSeeds_2SpFixed(
-          *bottom[b], middle, top_valid, curvatures, impactParameters, Zob, it);
+          *bottom[b], middle, top_valid, curvatures, impactParameters, Zob,
+          numQualitySeeds, numSeeds, cont);
     }
   }
 }
 
 template <typename external_spacepoint_t>
-template <typename output_it_t>
+template <typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
-    const tree_t &tree, output_it_t out_it,
+    const tree_t &tree, output_container_t &out_cont,
     const typename tree_t::pair_t &middle_p) const {
   using range_t = typename tree_t::range_t;
   internal_sp_t &middle = *middle_p.second;
@@ -505,26 +509,29 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
       float, std::unique_ptr<const InternalSeed<ActsExamples::SimSpacePoint>>>>
       protoseeds;
 
+  int numQualitySeeds = 0;
+
   /*
    * If we have candidates for increasing z tracks, we try to combine them.
    */
   if (!bottom_lh_v.empty() && !top_lh_v.empty()) {
-    filterCandidates(middle, bottom_lh_v, top_lh_v,
-                     std::back_inserter(protoseeds));
+    filterCandidates(middle, bottom_lh_v, top_lh_v, numQualitySeeds,
+                     protoseeds);
   }
 
   /*
    * Try to combine candidates for decreasing z tracks.
    */
   if (!bottom_hl_v.empty() && !top_hl_v.empty()) {
-    filterCandidates(middle, bottom_hl_v, top_hl_v,
-                     std::back_inserter(protoseeds));
+    filterCandidates(middle, bottom_hl_v, top_hl_v, numQualitySeeds,
+                     protoseeds);
   }
 
   /*
    * Run a seed filter, just like in other seeding algorithms.
    */
-  m_config.seedFilter->filterSeeds_1SpFixed(protoseeds, out_it);
+  m_config.seedFilter->filterSeeds_1SpFixed(protoseeds, numQualitySeeds,
+                                            std::back_inserter(out_cont));
 }
 
 template <typename external_spacepoint_t>
@@ -553,8 +560,7 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::createTree(
 template <typename external_spacepoint_t>
 template <typename input_container_t, typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
-    const input_container_t &spacePoints,
-    std::back_insert_iterator<output_container_t> out_it) const {
+    const input_container_t &spacePoints, output_container_t &out_cont) const {
   /*
    * The template parameters we accept are a little too generic, so we want to
    * run some basic checks to make sure the containers have the correct value
@@ -591,7 +597,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
    * seeing what happens if we take them to be our middle spacepoint.
    */
   for (const typename tree_t::pair_t &middle_p : tree) {
-    processFromMiddleSP(tree, out_it, middle_p);
+    processFromMiddleSP(tree, out_cont, middle_p);
   }
 
   /*
@@ -609,7 +615,7 @@ SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
     const input_container_t &spacePoints) const {
   std::vector<seed_t> r;
 
-  createSeeds(spacePoints, std::back_inserter(r));
+  createSeeds(spacePoints, r);
 
   return r;
 }

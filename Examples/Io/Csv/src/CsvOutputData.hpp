@@ -217,7 +217,7 @@ struct SpacePointData {
   // distance between the center of the two strips
   Acts::Vector3 sp_stripCenterDistance;
   // position of the center of the bottom strip
-  Acts::Vector3 sp_bottomStripCenterPosition;
+  Acts::Vector3 sp_topStripCenterPosition;
 
   DFE_NAMEDTUPLE(SpacePointData, measurement_id, sp_x, sp_y, sp_z, sp_radius,
                  sp_covr, sp_covz, sp_topHalfStripLength,
@@ -226,9 +226,8 @@ struct SpacePointData {
                  sp_bottomStripDirection[0], sp_bottomStripDirection[1],
                  sp_bottomStripDirection[2], sp_stripCenterDistance[0],
                  sp_stripCenterDistance[1], sp_stripCenterDistance[2],
-                 sp_bottomStripCenterPosition[0],
-                 sp_bottomStripCenterPosition[1],
-                 sp_bottomStripCenterPosition[2]);
+                 sp_topStripCenterPosition[0], sp_topStripCenterPosition[1],
+                 sp_topStripCenterPosition[2]);
 };
 
 struct SurfaceGridData {

@@ -32,7 +32,7 @@ class SimSpacePoint {
   /// @param topStripDirection direction of the top strip
   /// @param bottomStripDirection direction of the bottom strip
   /// @param stripCenterDistance distance between the center of the two strips
-  /// @param bottomStripCenterPosition position of the center of the bottom strip
+  /// @param topStripCenterPosition position of the center of the top strip
   /// @param validDoubleMeasurementDetails boolean to check if double measurements are valid
   template <typename position_t>
   SimSpacePoint(const Eigen::MatrixBase<position_t>& pos, float varRho,
@@ -42,7 +42,7 @@ class SimSpacePoint {
                 const Acts::Vector3 topStripDirection,
                 const Acts::Vector3 bottomStripDirection,
                 const Acts::Vector3 stripCenterDistance,
-                const Acts::Vector3 bottomStripCenterPosition)
+                const Acts::Vector3 topStripCenterPosition)
       : m_x(pos[Acts::ePos0]),
         m_y(pos[Acts::ePos1]),
         m_z(pos[Acts::ePos2]),
@@ -55,7 +55,7 @@ class SimSpacePoint {
         m_topStripDirection(topStripDirection),
         m_bottomStripDirection(bottomStripDirection),
         m_stripCenterDistance(stripCenterDistance),
-        m_bottomStripCenterPosition(bottomStripCenterPosition),
+        m_topStripCenterPosition(topStripCenterPosition),
         m_validDoubleMeasurementDetails(true) {
     EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(position_t, 3);
   }
@@ -96,8 +96,8 @@ class SimSpacePoint {
   Acts::Vector3 topStripDirection() const { return m_topStripDirection; }
   Acts::Vector3 bottomStripDirection() const { return m_bottomStripDirection; }
   Acts::Vector3 stripCenterDistance() const { return m_stripCenterDistance; }
-  Acts::Vector3 bottomStripCenterPosition() const {
-    return m_bottomStripCenterPosition;
+  Acts::Vector3 topStripCenterPosition() const {
+    return m_topStripCenterPosition;
   }
   constexpr bool validDoubleMeasurementDetails() const {
     return m_validDoubleMeasurementDetails;
@@ -126,7 +126,7 @@ class SimSpacePoint {
   // distance between the center of the two strips
   Acts::Vector3 m_stripCenterDistance = {0, 0, 0};
   // position of the center of the bottom strip
-  Acts::Vector3 m_bottomStripCenterPosition = {0, 0, 0};
+  Acts::Vector3 m_topStripCenterPosition = {0, 0, 0};
   bool m_validDoubleMeasurementDetails = false;
 };
 
