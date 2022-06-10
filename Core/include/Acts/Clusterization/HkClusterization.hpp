@@ -46,7 +46,8 @@ struct DefaultConnect {
 ///
 /// @param [in] cells the cell collection to be labeled
 /// @param [in] connect the connection type (see DefaultConnect)
-template <typename CellCollection, typename Connect = DefaultConnect<typename CellCollection::value_type>>
+template <typename CellCollection, typename Connect = DefaultConnect<
+                                       typename CellCollection::value_type>>
 void labelClusters(CellCollection& cells, Connect connect = Connect());
 
 /// @brief mergeClusters
@@ -63,8 +64,9 @@ ClusterCollection mergeClusters(CellCollection& cells);
 
 /// @brief createClusters
 /// Conveniance function which runs both labelClusters and createClusters.
-template <typename CellCollection, typename ClusterCollection,
-	  typename Connect = DefaultConnect<typename CellCollection::value_type>>
+template <
+    typename CellCollection, typename ClusterCollection,
+    typename Connect = DefaultConnect<typename CellCollection::value_type>>
 ClusterCollection createClusters(CellCollection& cells,
                                  Connect connect = Connect());
 

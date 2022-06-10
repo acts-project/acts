@@ -27,8 +27,7 @@ template <typename T>
 struct cellTypeHasRequiredFunctions<
     T, void_t<decltype(getCellRow(std::declval<T>())),
               decltype(getCellColumn(std::declval<T>())),
-              decltype(getCellLabel(std::declval<T&>()))>> : std::true_type {
-};
+              decltype(getCellLabel(std::declval<T&>()))>> : std::true_type {};
 
 template <typename, typename, typename T = void>
 struct clusterTypeHasRequiredFunctions : std::false_type {};
@@ -108,8 +107,8 @@ class DisjointSets {
 // Cell collection logic
 template <typename Cell, typename Connect>
 int getConnections(typename std::vector<Cell>::iterator it,
-                    std::vector<Cell>& set, Connect connect,
-                    std::array<Label, 4>& seen) {
+                   std::vector<Cell>& set, Connect connect,
+                   std::array<Label, 4>& seen) {
   int nconn = 0;
   seen[0] = seen[1] = seen[2] = seen[3] = NO_LABEL;
   typename std::vector<Cell>::iterator it_2{it};
@@ -180,7 +179,7 @@ void labelClusters(CellCollection& cells, Connect connect) {
       // Sanity check: first element should always have
       // label if nconn > 0
       if (seen[0] == NO_LABEL) {
-	  throw std::logic_error("nconn > 0 but seen[0] == NO_LABEL");
+        throw std::logic_error("nconn > 0 but seen[0] == NO_LABEL");
       }
 
       // Record equivalences
