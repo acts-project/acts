@@ -1,0 +1,62 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2022 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/Framework/WriterT.hpp"
+
+#include <string>
+
+#include "edm4hep/MCParticle.h"
+#include "edm4hep/SimTrackerHit.h"
+#include "edm4hep/SimTrackerHitCollection.h"
+#include "podio/EventStore.h"
+#include "podio/ROOTWriter.h"
+
+namespace ActsExamples {
+
+class EDM4hepSimHitWriter final : public WriterT<SimHitContainer> {
+ public:
+  struct Config {
+    /// Which simulated (truth) hits collection to use.
+    std::string inputSimHits;
+    /// WWhere to write the output file to.
+    std::string outputPath;
+  };
+
+  /// Construct the cluster writer.
+  ///
+  /// @param config is the configuration object
+  /// @param level is the logging level
+  EDM4hepSimHitWriter(const Config& config, Acts::Logging::Level level);
+
+  /// Virtual destructor
+  ~EDM4hepSimHitWriter() final override;
+
+  /// Readonly access to the config
+  const Config& config() const { return m_cfg; }
+
+ protected:
+  /// Type-specific write implementation.
+  ///
+  /// @param[in] ctx is the algorithm context
+  /// @param[in] simHits are the simhits to be written
+  ProcessCode writeT(const AlgorithmContext& ctx,
+                     const SimHitContainer& simHits) final override;
+
+ private:
+  Config m_cfg;
+
+  podio::ROOTWriter m_writer;
+  podio::EventStore m_store;
+
+  edm4hep::SimTrackerHitCollection* m_simTrackerHitCollection;
+};
+
+}  // namespace ActsExamples

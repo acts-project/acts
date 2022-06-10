@@ -7,8 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementReader.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementWriter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitReader.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepSimHitWriter.hpp"
 
 #include <memory>
 
@@ -29,18 +31,53 @@ void addEDM4hep(Context& ctx) {
   {
     using Reader = ActsExamples::EDM4hepSimHitReader;
     using Config = Reader::Config;
-    auto reader =
+    auto r =
         py::class_<Reader, ActsExamples::IReader, std::shared_ptr<Reader>>(
             edm4hep, "EDM4hepSimHitReader")
             .def(py::init<const Config&, Acts::Logging::Level>(),
                  py::arg("config"), py::arg("level"))
             .def_property_readonly("config", &Reader::config);
 
-    auto c = py::class_<Config>(reader, "Config").def(py::init<>());
+    auto c = py::class_<Config>(r, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputPath);
     ACTS_PYTHON_MEMBER(outputSimHits);
     ACTS_PYTHON_MEMBER(dd4hepGeometryService);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    using Writer = ActsExamples::EDM4hepSimHitWriter;
+    using Config = Writer::Config;
+    auto w = py::class_<Writer, ActsExamples::IWriter, std::shared_ptr<Writer>>(
+                 edm4hep, "EDM4hepSimHitWriter")
+                 .def(py::init<const Config&, Acts::Logging::Level>(),
+                      py::arg("config"), py::arg("level"));
+
+    auto c = py::class_<Config>(w, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(inputSimHits);
+    ACTS_PYTHON_MEMBER(outputPath);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    using Reader = ActsExamples::EDM4hepMeasurementReader;
+    using Config = Reader::Config;
+    auto r =
+        py::class_<Reader, ActsExamples::IReader, std::shared_ptr<Reader>>(
+            edm4hep, "EDM4hepMeasurementReader")
+            .def(py::init<const Config&, Acts::Logging::Level>(),
+                 py::arg("config"), py::arg("level"))
+            .def_property_readonly("config", &Reader::config);
+
+    auto c = py::class_<Config>(r, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(inputPath);
+    ACTS_PYTHON_MEMBER(outputMeasurements);
+    ACTS_PYTHON_MEMBER(outputMeasurementSimHitsMap);
+    ACTS_PYTHON_MEMBER(outputSourceLinks);
+    ACTS_PYTHON_MEMBER(outputClusters);
     ACTS_PYTHON_STRUCT_END();
   }
 

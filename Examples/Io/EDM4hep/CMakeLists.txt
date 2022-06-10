@@ -1,7 +1,9 @@
 add_library(
   ActsExamplesIoEDM4hep SHARED
+  src/EDM4hepMeasurementReader.cpp
   src/EDM4hepMeasurementWriter.cpp
-  src/EDM4hepSimHitReader.cpp)
+  src/EDM4hepSimHitReader.cpp
+  src/EDM4hepSimHitWriter.cpp)
 target_include_directories(
   ActsExamplesIoEDM4hep
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
