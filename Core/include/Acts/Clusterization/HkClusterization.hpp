@@ -40,9 +40,9 @@ struct DefaultConnect {
 ///
 /// In-place connected component labelling using the Hoshen-Kopelman algorithm.
 /// The `Cell` type must have the following functions defined:
-///   int  get_cell_row(const Cell&),
-///   int  get_cell_column(const Cell&)
-///   int& get_cell_label(Cell&)
+///   int  getCellRow(const Cell&),
+///   int  getCellColumn(const Cell&)
+///   int& getCellLabel(Cell&)
 /// If a particular Cell type does not have a label slot, use the
 /// provided LabeledCell<Cell> wrapper type.
 ///
