@@ -88,6 +88,7 @@ ActsExamples::ProcessCode ActsExamples::EDM4hepSimHitReader::read(
   m_store.clear();
   m_reader.goToEvent(ctx.eventNumber);
 
+  // TODO does it make sense to query all of them?
   for (const auto& name : m_simHitCollections) {
     auto& collection = m_store.get<podio::CollectionBase>(name);
 

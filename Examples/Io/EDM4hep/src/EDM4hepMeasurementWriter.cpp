@@ -54,9 +54,6 @@ ActsExamples::ProcessCode EDM4hepMeasurementWriter::endRun() {
 
 ActsExamples::ProcessCode EDM4hepMeasurementWriter::writeT(
     const AlgorithmContext& ctx, const MeasurementContainer& measurements) {
-  const auto& measurementSimHitsMap = ctx.eventStore.get<IndexMultimap<Index>>(
-      m_cfg.inputMeasurementSimHitsMap);
-
   ClusterContainer clusters;
 
   if (not m_cfg.inputClusters.empty()) {
@@ -84,10 +81,9 @@ ActsExamples::ProcessCode EDM4hepMeasurementWriter::writeT(
           trackerHitPlane.setTime(parameters[Acts::eBoundTime] /
                                   Acts::UnitConstants::ns);
           trackerHitPlane.setU(
-              {parameters[Acts::eBoundLoc0], parameters[Acts::eBoundLoc1]});
+              {(float)parameters[Acts::eBoundLoc0], (float)parameters[Acts::eBoundLoc1]});
 
-          auto covariance =
-              (m.expander() * m.covariance() * m.expander().transpose()).eval();
+          // auto covariance = (m.expander() * m.covariance() * m.expander().transpose()).eval();
 
           if (!clusters.empty()) {
             auto cluster = clusters[hitIdx];
