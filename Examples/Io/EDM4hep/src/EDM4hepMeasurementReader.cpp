@@ -9,8 +9,8 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementReader.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include "edm4hep/TrackerHit.h"
@@ -33,7 +33,11 @@ EDM4hepMeasurementReader::EDM4hepMeasurementReader(
 
   m_eventsRange = std::make_pair(0, m_reader.getEntries());
 
-  m_simHitCollections = m_reader.getCollectionIDTable()->names();
+  m_trackerHitPlaneCollection =
+      &m_store.get<edm4hep::TrackerHitPlaneCollection>(
+          "ActsTrackerHitsPlane");
+  m_trackerHitRawCollection =
+      &m_store.create<edm4hep::TrackerHitCollection>("ActsTrackerHitsRaw");
 }
 
 std::string EDM4hepMeasurementReader::EDM4hepMeasurementReader::name() const {
@@ -45,11 +49,28 @@ std::pair<size_t, size_t> EDM4hepMeasurementReader::availableEvents() const {
 }
 
 ProcessCode EDM4hepMeasurementReader::read(const AlgorithmContext& ctx) {
+  GeometryIdMultimap<Measurement> orderedMeasurements;
   ClusterContainer clusters;
 
+  m_store.clear();
+  m_reader.goToEvent(ctx.eventNumber);
+
+  for (const auto& trackerHitPlane : *m_trackerHitPlaneCollection) {
+    // TODO
+  }
+
+  MeasurementContainer measurements;
+  for (auto& [_, meas] : orderedMeasurements) {
+    measurements.emplace_back(std::move(meas));
+  }
+
+  // Write the data to the EventStore
+  ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
   if (not m_cfg.outputClusters.empty()) {
     ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
   }
+  
+  m_reader.endOfEvent();
 
   return ProcessCode::SUCCESS;
 }

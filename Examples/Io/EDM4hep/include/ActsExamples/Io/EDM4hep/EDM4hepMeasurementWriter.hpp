@@ -13,9 +13,7 @@
 
 #include <string>
 
-#include "edm4hep/TrackerHit.h"
 #include "edm4hep/TrackerHitCollection.h"
-#include "edm4hep/TrackerHitPlane.h"
 #include "edm4hep/TrackerHitPlaneCollection.h"
 #include "podio/EventStore.h"
 #include "podio/ROOTWriter.h"

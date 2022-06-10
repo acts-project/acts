@@ -13,8 +13,6 @@
 
 #include <string>
 
-#include "edm4hep/MCParticle.h"
-#include "edm4hep/SimTrackerHit.h"
 #include "edm4hep/SimTrackerHitCollection.h"
 #include "podio/EventStore.h"
 #include "podio/ROOTWriter.h"

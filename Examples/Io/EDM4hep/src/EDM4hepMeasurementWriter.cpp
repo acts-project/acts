@@ -94,6 +94,8 @@ ActsExamples::ProcessCode EDM4hepMeasurementWriter::writeT(
               trackerHitPlane.addToRawHits(trackerHitRaw.getObjectID());
 
               trackerHitRaw.setCellID(trackerHitPlane.getCellID());
+              // TODO get EDM4hep fixed
+              // misusing some fields to store ACTS specific information
               // don't ask ...
               trackerHitRaw.setType(c.bin[0]);
               trackerHitRaw.setQuality(c.bin[1]);

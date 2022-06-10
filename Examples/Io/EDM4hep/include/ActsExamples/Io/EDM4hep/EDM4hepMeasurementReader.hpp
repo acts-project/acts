@@ -13,6 +13,8 @@
 #include <memory>
 #include <string>
 
+#include "edm4hep/TrackerHitCollection.h"
+#include "edm4hep/TrackerHitPlaneCollection.h"
 #include "podio/EventStore.h"
 #include "podio/ROOTReader.h"
 
@@ -58,7 +60,8 @@ class EDM4hepMeasurementReader final : public IReader {
   podio::ROOTReader m_reader;
   podio::EventStore m_store;
 
-  std::vector<std::string> m_simHitCollections;
+  const edm4hep::TrackerHitPlaneCollection* m_trackerHitPlaneCollection;
+  const edm4hep::TrackerHitCollection* m_trackerHitRawCollection;
 
   const Acts::Logger& logger() const { return *m_logger; }
 };

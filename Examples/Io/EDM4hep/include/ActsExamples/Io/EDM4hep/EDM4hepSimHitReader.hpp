@@ -57,7 +57,7 @@ class EDM4hepSimHitReader final : public IReader {
   podio::ROOTReader m_reader;
   podio::EventStore m_store;
 
-  std::vector<std::string> m_simHitCollections;
+  std::vector<std::string> m_collections;
 
   const Acts::Logger& logger() const { return *m_logger; }
 };

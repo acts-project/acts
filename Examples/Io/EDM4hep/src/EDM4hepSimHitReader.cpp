@@ -27,7 +27,7 @@ ActsExamples::EDM4hepSimHitReader::EDM4hepSimHitReader(
 
   m_eventsRange = std::make_pair(0, m_reader.getEntries());
 
-  m_simHitCollections = m_reader.getCollectionIDTable()->names();
+  m_collections = m_reader.getCollectionIDTable()->names();
 }
 
 std::string ActsExamples::EDM4hepSimHitReader::EDM4hepSimHitReader::name()
@@ -91,7 +91,7 @@ ActsExamples::ProcessCode ActsExamples::EDM4hepSimHitReader::read(
   m_reader.goToEvent(ctx.eventNumber);
 
   // TODO does it make sense to query all of them?
-  for (const auto& name : m_simHitCollections) {
+  for (const auto& name : m_collections) {
     auto& collection = m_store.get<podio::CollectionBase>(name);
 
     if (!collection.isValid()) {
