@@ -80,10 +80,11 @@ ActsExamples::ProcessCode EDM4hepMeasurementWriter::writeT(
           trackerHitPlane.setCellID(geoId.value());
           trackerHitPlane.setTime(parameters[Acts::eBoundTime] /
                                   Acts::UnitConstants::ns);
-          trackerHitPlane.setU(
-              {(float)parameters[Acts::eBoundLoc0], (float)parameters[Acts::eBoundLoc1]});
+          trackerHitPlane.setU({(float)parameters[Acts::eBoundLoc0],
+                                (float)parameters[Acts::eBoundLoc1]});
 
-          // auto covariance = (m.expander() * m.covariance() * m.expander().transpose()).eval();
+          // auto covariance = (m.expander() * m.covariance() *
+          // m.expander().transpose()).eval();
 
           if (!clusters.empty()) {
             auto cluster = clusters[hitIdx];
