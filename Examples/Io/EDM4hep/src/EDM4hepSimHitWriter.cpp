@@ -36,7 +36,7 @@ EDM4hepSimHitWriter::~EDM4hepSimHitWriter() {
   m_writer.finish();
 }
 
-ProcessCode EDM4hepSimHitWriter::writeT(const AlgorithmContext& ctx,
+ProcessCode EDM4hepSimHitWriter::writeT(const AlgorithmContext&,
                                         const SimHitContainer& simHits) {
   for (const auto& simHit : simHits) {
     auto simTrackerHit = m_simTrackerHitCollection->create();

@@ -116,7 +116,6 @@ ActsExamples::ProcessCode ActsExamples::EDM4hepSimHitReader::read(
 
   m_reader.endOfEvent();
 
-  // write the ordered data to the EventStore (according to geometry_id).
   SimHitContainer simHits;
   simHits.insert(unordered.begin(), unordered.end());
   ctx.eventStore.add(m_cfg.outputSimHits, std::move(simHits));
