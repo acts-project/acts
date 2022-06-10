@@ -119,14 +119,17 @@ int getConnections(typename std::vector<Cell>::iterator it,
     it_2 = std::prev(it_2);
 
     ConnectResult cr = connect(*it, *it_2);
-    if (cr == eNoConnStop)
+    if (cr == eNoConnStop) {
       break;
-    if (cr == eNoConn)
+    }
+    if (cr == eNoConn) {
       continue;
+    }
     if (cr == eConn) {
       seen[nconn++] = getCellLabel(*it_2);
-      if (nconn == 4)
+      if (nconn == 4) {
         break;
+      }
     }
   }
   return nconn;
@@ -140,16 +143,19 @@ ConnectResult DefaultConnect<Cell>::operator()(const Cell& a, const Cell& b) {
   int deltaCol = std::abs(getCellColumn(a) - getCellColumn(b));
   // Iteration is column-wise, so if too far in column, can
   // safely stop
-  if (deltaCol > 1)
+  if (deltaCol > 1) {
     return ConnectResult::eNoConnStop;
+  }
   // For same reason, if too far in row we know the pixel is not
   // connected, but need to keep iterating
-  if (deltaRow > 1)
+  if (deltaRow > 1) {
     return ConnectResult::eNoConn;
+  }
   // Decide whether or not cluster is connected based on 4- or
   // 8-connectivity
-  if ((deltaRow + deltaCol) <= (conn8 ? 2 : 1))
+  if ((deltaRow + deltaCol) <= (conn8 ? 2 : 1)) {
     return ConnectResult::eConn;
+  }
   return ConnectResult::eNoConn;
 }
 
@@ -173,8 +179,9 @@ void labelClusters(CellCollection& cells, Connect connect) {
     } else {
       // Sanity check: first element should always have
       // label if nconn > 0
-      if (seen[0] == NO_LABEL)
-        throw std::logic_error("nconn > 0 but seen[0] == NO_LABEL");
+      if (seen[0] == NO_LABEL) {
+	  throw std::logic_error("nconn > 0 but seen[0] == NO_LABEL");
+      }
 
       // Record equivalences
       for (size_t i = 1; i < 4; i++) {
@@ -200,8 +207,9 @@ ClusterCollection mergeClusters(CellCollection& cells) {
   internal::staticCheckCellType<Cell>();
   internal::staticCheckClusterType<Cluster&, const Cell&>();
 
-  if (cells.empty())
+  if (cells.empty()) {
     return {};
+  }
 
   // Sort the cells by their cluster label
   std::sort(cells.begin(), cells.end(), [](Cell& lhs, Cell& rhs) {
