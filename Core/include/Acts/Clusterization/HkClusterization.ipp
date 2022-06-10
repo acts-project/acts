@@ -119,11 +119,11 @@ int get_connections(typename std::vector<Cell>::iterator it,
     it_2 = std::prev(it_2);
 
     ConnectResult cr = connect(*it, *it_2);
-    if (cr == NO_CONN_STOP)
+    if (cr == eNoConnStop)
       break;
-    if (cr == NO_CONN)
+    if (cr == eNoConn)
       continue;
-    if (cr == CONN) {
+    if (cr == eConn) {
       seen[nconn++] = get_cell_label(*it_2);
       if (nconn == 4)
         break;
@@ -141,16 +141,16 @@ ConnectResult DefaultConnect<Cell>::operator()(const Cell& a, const Cell& b) {
   // Iteration is column-wise, so if too far in column, can
   // safely stop
   if (delta_col > 1)
-    return ConnectResult::NO_CONN_STOP;
+    return ConnectResult::eNoConnStop;
   // For same reason, if too far in row we know the pixel is not
   // connected, but need to keep iterating
   if (delta_row > 1)
-    return ConnectResult::NO_CONN;
+    return ConnectResult::eNoConn;
   // Decide whether or not cluster is connected based on 4- or
   // 8-connectivity
   if ((delta_row + delta_col) <= (conn8 ? 2 : 1))
-    return ConnectResult::CONN;
-  return ConnectResult::NO_CONN;
+    return ConnectResult::eConn;
+  return ConnectResult::eNoConn;
 }
 
 template <typename Cell, typename CellCollection, typename Connect>

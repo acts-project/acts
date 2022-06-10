@@ -22,9 +22,9 @@ constexpr Label NO_LABEL = 0;
 // the cells are globally sorted column-wise, the connection function
 // can therefore tell when the search should be stopped.
 enum ConnectResult {
-  NO_CONN,       // No connections, keep looking
-  NO_CONN_STOP,  // No connections, stop looking
-  CONN           // Found connection
+  eNoConn,      // No connections, keep looking
+  eNoConnStop,  // No connections, stop looking
+  eConn         // Found connection
 };
 
 // Default connection type: 4- or 8-cell connectivity
