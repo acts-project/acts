@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Measurement.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <stdexcept>
 

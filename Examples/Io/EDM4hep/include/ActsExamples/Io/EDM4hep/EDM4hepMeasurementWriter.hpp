@@ -13,13 +13,12 @@
 
 #include <string>
 
+#include "edm4hep/TrackerHit.h"
+#include "edm4hep/TrackerHitCollection.h"
+#include "edm4hep/TrackerHitPlane.h"
+#include "edm4hep/TrackerHitPlaneCollection.h"
 #include "podio/EventStore.h"
 #include "podio/ROOTWriter.h"
-
-#include "edm4hep/TrackerHitPlane.h"
-#include "edm4hep/TrackerHit.h"
-#include "edm4hep/TrackerHitPlaneCollection.h"
-#include "edm4hep/TrackerHitCollection.h"
 
 namespace ActsExamples {
 
@@ -64,8 +63,8 @@ class EDM4hepMeasurementWriter final : public WriterT<MeasurementContainer> {
   podio::ROOTWriter m_writer;
   podio::EventStore m_store;
 
-  edm4hep::TrackerHitPlaneCollection *m_trackerHitPlaneCollection;
-  edm4hep::TrackerHitCollection *m_trackerHitRawCollection;
+  edm4hep::TrackerHitPlaneCollection* m_trackerHitPlaneCollection;
+  edm4hep::TrackerHitCollection* m_trackerHitRawCollection;
 };
 
 }  // namespace ActsExamples
