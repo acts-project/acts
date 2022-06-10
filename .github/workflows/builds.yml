@@ -56,8 +56,6 @@ jobs:
           -DACTS_BUILD_EVERYTHING=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
           -DACTS_FORCE_ASSERTIONS=ON
-          -DACTS_BUILD_PLUGIN_EDM4HEP=OFF
-          -DACTS_BUILD_EXAMPLES_EDM4HEP=OFF
 
       - name: Build
         run: ${SETUP} && cmake --build build --
@@ -130,6 +128,7 @@ jobs:
           -DACTS_BUILD_EVERYTHING=ON
           -DACTS_BUILD_ODD=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
           -DACTS_FORCE_ASSERTIONS=ON
           -DACTS_BUILD_ANALYSIS_APPS=ON
 
@@ -387,6 +386,7 @@ jobs:
           -DACTS_BUILD_ODD=ON
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
           -DACTS_FORCE_ASSERTIONS=ON
+          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
       - name: Build
         run: cmake --build build  --
       - name: Unit tests
@@ -425,7 +425,6 @@ jobs:
           key: ${{ runner.os  }}-ccache-cuda_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
           restore-keys: |
             ${{ runner.os  }}-ccache-cuda_${{ env.CCACHE_KEY_SUFFIX }}_
-
 
       - name: Configure
         run: >
