@@ -576,7 +576,7 @@ def test_hepmc3_histogram(hepmc_data, tmp_path):
     s.run()
 
 
-@pytest.mark.slow
+@pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 def test_edm4hep_measurement_writer(tmp_path, fatras):
     from acts.examples.edm4hep import EDM4hepMeasurementWriter
@@ -584,7 +584,7 @@ def test_edm4hep_measurement_writer(tmp_path, fatras):
     s = Sequencer(numThreads=1, events=10)
     evGen, simAlg, digiAlg = fatras(s)
 
-    out = tmp_path / "measurements.root"
+    out = tmp_path / "measurements_edm4hep.root"
 
     s.addWriter(
         EDM4hepMeasurementWriter(
@@ -600,3 +600,28 @@ def test_edm4hep_measurement_writer(tmp_path, fatras):
 
     assert os.path.isfile(out)
     assert os.stat(out).st_size > 10
+
+
+@pytest.mark.edm4hep
+@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
+def test_edm4hep_simhit_writer(tmp_path, fatras, conf_const):
+    from acts.examples.edm4hep import EDM4hepSimHitWriter
+
+    s = Sequencer(numThreads=1, events=10)
+    evGen, simAlg, digiAlg = fatras(s)
+
+    out = tmp_path / "simhits_edm4hep.root"
+
+    s.addWriter(
+        conf_const(
+            EDM4hepSimHitWriter,
+            level=acts.logging.INFO,
+            inputSimHits=simAlg.config.outputSimHits,
+            outputPath=str(out),
+        )
+    )
+
+    s.run()
+
+    assert os.path.isfile(out)
+    assert os.stat(out).st_size > 200

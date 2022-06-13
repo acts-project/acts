@@ -33,6 +33,7 @@ from acts.examples import (
 )
 
 
+@pytest.mark.root
 def test_root_particle_reader(tmp_path, conf_const, ptcl_gun):
     # need to write out some particles first
     s = Sequencer(numThreads=1, events=10, logLevel=acts.logging.WARNING)
@@ -75,6 +76,7 @@ def test_root_particle_reader(tmp_path, conf_const, ptcl_gun):
     assert alg.events_seen == 10
 
 
+@pytest.mark.csv
 def test_csv_particle_reader(tmp_path, conf_const, ptcl_gun):
     s = Sequencer(numThreads=1, events=10, logLevel=acts.logging.WARNING)
     evGen = ptcl_gun(s)
@@ -311,7 +313,7 @@ def test_csv_clusters_reader(tmp_path, fatras, conf_const, trk_geo, rng):
         assert alg.events_seen == 10
 
 
-def generate_input_test_edm4hep_simhits_reader(input, output):
+def generate_input_test_edm4hep_simhit_reader(input, output):
     from DDSim.DD4hepSimulation import DD4hepSimulation
 
     ddsim = DD4hepSimulation()
@@ -325,15 +327,16 @@ def generate_input_test_edm4hep_simhits_reader(input, output):
 
 
 @pytest.mark.slow
+@pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
-def test_edm4hep_simhits_reader(tmp_path):
+def test_edm4hep_simhit_reader(tmp_path):
     from acts.examples.edm4hep import EDM4hepSimHitReader
 
     tmp_file = str(tmp_path / "output_edm4hep.root")
     odd_xml_file = str(getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml")
 
     with multiprocessing.get_context("spawn").Pool() as pool:
-        pool.apply(generate_input_test_edm4hep_simhits_reader, (odd_xml_file, tmp_file))
+        pool.apply(generate_input_test_edm4hep_simhit_reader, (odd_xml_file, tmp_file))
 
     assert os.path.exists(tmp_file)
 
@@ -356,3 +359,53 @@ def test_edm4hep_simhits_reader(tmp_path):
     s.run()
 
     assert alg.events_seen == 10
+
+
+@pytest.mark.edm4hep
+@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
+def test_edm4hep_measurement_reader(tmp_path, fatras, conf_const):
+    from acts.examples.edm4hep import (
+        EDM4hepMeasurementWriter,
+        EDM4hepMeasurementReader,
+    )
+
+    s = Sequencer(numThreads=1, events=10)
+    evGen, simAlg, digiAlg = fatras(s)
+
+    out = tmp_path / "measurements_edm4hep.root"
+
+    config = EDM4hepMeasurementWriter.Config(
+        inputMeasurements=digiAlg.config.outputMeasurements,
+        inputClusters=digiAlg.config.outputClusters,
+        inputSimHits=simAlg.config.outputSimHits,
+        inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
+        outputPath=str(out),
+    )
+    s.addWriter(EDM4hepMeasurementWriter(level=acts.logging.INFO, config=config))
+    s.run()
+
+    # read back in
+    s = Sequencer(numThreads=1)
+
+    s.addReader(
+        conf_const(
+            EDM4hepMeasurementReader,
+            level=acts.logging.WARNING,
+            outputMeasurements="measurements",
+            outputMeasurementSimHitsMap="simhitsmap",
+            outputSourceLinks="sourcelinks",
+            inputPath=str(out),
+        )
+    )
+
+    algs = [
+        AssertCollectionExistsAlg(k, f"check_alg_{k}", acts.logging.WARNING)
+        for k in ("measurements", "simhitsmap", "sourcelinks")
+    ]
+    for alg in algs:
+        s.addAlgorithm(alg)
+
+    s.run()
+
+    for alg in algs:
+        assert alg.events_seen == 10

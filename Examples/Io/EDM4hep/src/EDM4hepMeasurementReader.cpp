@@ -13,6 +13,8 @@
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <list>
+
 #include "edm4hep/TrackerHit.h"
 #include "edm4hep/TrackerHitCollection.h"
 #include "edm4hep/TrackerHitPlane.h"
@@ -34,8 +36,7 @@ EDM4hepMeasurementReader::EDM4hepMeasurementReader(
   m_eventsRange = std::make_pair(0, m_reader.getEntries());
 
   m_trackerHitPlaneCollection =
-      &m_store.get<edm4hep::TrackerHitPlaneCollection>(
-          "ActsTrackerHitsPlane");
+      &m_store.get<edm4hep::TrackerHitPlaneCollection>("ActsTrackerHitsPlane");
   m_trackerHitRawCollection =
       &m_store.create<edm4hep::TrackerHitCollection>("ActsTrackerHitsRaw");
 }
@@ -49,8 +50,19 @@ std::pair<size_t, size_t> EDM4hepMeasurementReader::availableEvents() const {
 }
 
 ProcessCode EDM4hepMeasurementReader::read(const AlgorithmContext& ctx) {
+  // Prepare containers for the hit data using the framework event data types
   GeometryIdMultimap<Measurement> orderedMeasurements;
   ClusterContainer clusters;
+  IndexMultimap<Index> measurementSimHitsMap;
+  IndexSourceLinkContainer sourceLinks;
+  // need list here for stable addresses
+  std::list<IndexSourceLink> sourceLinkStorage;
+
+  // TODO reserve space for the containers
+  // orderedMeasurements.reserve(measurementData.size());
+  // Safe long as we have single particle to sim hit association
+  // measurementSimHitsMap.reserve(measurementData.size());
+  // sourceLinks.reserve(measurementData.size());
 
   m_store.clear();
   m_reader.goToEvent(ctx.eventNumber);
@@ -66,10 +78,15 @@ ProcessCode EDM4hepMeasurementReader::read(const AlgorithmContext& ctx) {
 
   // Write the data to the EventStore
   ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
+  ctx.eventStore.add(m_cfg.outputMeasurementSimHitsMap,
+                     std::move(measurementSimHitsMap));
+  ctx.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));
+  ctx.eventStore.add(m_cfg.outputSourceLinks + "__storage",
+                     std::move(sourceLinkStorage));
   if (not m_cfg.outputClusters.empty()) {
     ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
   }
-  
+
   m_reader.endOfEvent();
 
   return ProcessCode::SUCCESS;
