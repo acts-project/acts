@@ -625,3 +625,30 @@ def test_edm4hep_simhit_writer(tmp_path, fatras, conf_const):
 
     assert os.path.isfile(out)
     assert os.stat(out).st_size > 200
+
+
+@pytest.mark.edm4hep
+@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
+def test_edm4hep_particle_writer(tmp_path, conf_const, ptcl_gun):
+    from acts.examples.edm4hep import EDM4hepParticleWriter
+
+    s = Sequencer(numThreads=1, events=10)
+    evGen = ptcl_gun(s)
+
+    out = tmp_path / "particles_edm4hep.root"
+
+    out.mkdir()
+
+    s.addWriter(
+        conf_const(
+            EDM4hepParticleWriter,
+            acts.logging.INFO,
+            inputParticles=evGen.config.outputParticles,
+            outputPath=str(out),
+        )
+    )
+
+    s.run()
+
+    assert os.path.isfile(out)
+    assert os.stat(out).st_size > 200

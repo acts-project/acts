@@ -409,3 +409,52 @@ def test_edm4hep_measurement_reader(tmp_path, fatras, conf_const):
 
     for alg in algs:
         assert alg.events_seen == 10
+
+
+@pytest.mark.edm4hep
+@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
+def test_edm4hep_particle_reader(tmp_path, conf_const, ptcl_gun):
+    from acts.examples.edm4hep import (
+        EDM4hepParticleWriter,
+        EDM4hepParticleReader,
+    )
+
+    s = Sequencer(numThreads=1, events=10, logLevel=acts.logging.WARNING)
+    evGen = ptcl_gun(s)
+
+    out = tmp_path / "particles_edm4hep.root"
+
+    out.mkdir()
+
+    s.addWriter(
+        conf_const(
+            EDM4hepParticleWriter,
+            acts.logging.WARNING,
+            inputParticles=evGen.config.outputParticles,
+            outputPath=str(out),
+        )
+    )
+
+    s.run()
+
+    # reset the seeder
+    s = Sequencer(numThreads=1, logLevel=acts.logging.WARNING)
+
+    s.addReader(
+        conf_const(
+            EDM4hepParticleReader,
+            acts.logging.WARNING,
+            inputPath=str(out),
+            outputParticles="input_particles",
+        )
+    )
+
+    alg = AssertCollectionExistsAlg(
+        "input_particles", "check_alg", acts.logging.WARNING
+    )
+
+    s.addAlgorithm(alg)
+
+    s.run()
+
+    assert alg.events_seen == 10

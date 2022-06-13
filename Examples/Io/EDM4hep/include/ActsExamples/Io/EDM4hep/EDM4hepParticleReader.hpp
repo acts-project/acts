@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 
 #include <memory>
@@ -20,22 +19,20 @@
 
 namespace ActsExamples {
 
-class EDM4hepSimHitReader final : public IReader {
+class EDM4hepParticleReader final : public IReader {
  public:
   struct Config {
-    /// Where to the read input file from.
+    /// Where to read input file from.
     std::string inputPath;
-    /// Output simulated (truth) hits collection.
-    std::string outputSimHits;
-    /// DD4hep geometry service for cellID resolution.
-    std::shared_ptr<DD4hep::DD4hepGeometryService> dd4hepGeometryService;
+    /// Which particle collection to read into.
+    std::string outputParticles;
   };
 
-  /// Construct the simhit reader.
+  /// Construct the particle reader.
   ///
   /// @param config is the configuration object
   /// @param level is the logging level
-  EDM4hepSimHitReader(const Config& config, Acts::Logging::Level level);
+  EDM4hepParticleReader(const Config& config, Acts::Logging::Level level);
 
   std::string name() const final override;
 
@@ -55,8 +52,6 @@ class EDM4hepSimHitReader final : public IReader {
 
   podio::ROOTReader m_reader;
   podio::EventStore m_store;
-
-  std::vector<std::string> m_collections;
 
   const Acts::Logger& logger() const { return *m_logger; }
 };

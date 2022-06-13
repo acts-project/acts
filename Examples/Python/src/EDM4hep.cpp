@@ -9,6 +9,8 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementReader.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementWriter.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepParticleReader.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepParticleWriter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitReader.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitWriter.hpp"
 
@@ -93,6 +95,37 @@ void addEDM4hep(Context& ctx) {
     ACTS_PYTHON_MEMBER(inputClusters);
     ACTS_PYTHON_MEMBER(inputSimHits);
     ACTS_PYTHON_MEMBER(inputMeasurementSimHitsMap);
+    ACTS_PYTHON_MEMBER(outputPath);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    using Reader = ActsExamples::EDM4hepParticleReader;
+    using Config = Reader::Config;
+    auto r = py::class_<Reader, ActsExamples::IReader, std::shared_ptr<Reader>>(
+                 edm4hep, "EDM4hepParticleReader")
+                 .def(py::init<const Config&, Acts::Logging::Level>(),
+                      py::arg("config"), py::arg("level"))
+                 .def_property_readonly("config", &Reader::config);
+
+    auto c = py::class_<Config>(r, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(inputPath);
+    ACTS_PYTHON_MEMBER(outputParticles);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    using Writer = ActsExamples::EDM4hepParticleWriter;
+    using Config = Writer::Config;
+    auto w = py::class_<Writer, ActsExamples::IWriter, std::shared_ptr<Writer>>(
+                 edm4hep, "EDM4hepParticleWriter")
+                 .def(py::init<const Config&, Acts::Logging::Level>(),
+                      py::arg("config"), py::arg("level"));
+
+    auto c = py::class_<Config>(w, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(inputParticles);
     ACTS_PYTHON_MEMBER(outputPath);
     ACTS_PYTHON_STRUCT_END();
   }

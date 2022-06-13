@@ -13,6 +13,7 @@
 
 #include <string>
 
+#include "edm4hep/MCParticleCollection.h"
 #include "edm4hep/SimTrackerHitCollection.h"
 #include "podio/EventStore.h"
 #include "podio/ROOTWriter.h"
@@ -54,6 +55,7 @@ class EDM4hepSimHitWriter final : public WriterT<SimHitContainer> {
   podio::ROOTWriter m_writer;
   podio::EventStore m_store;
 
+  edm4hep::MCParticleCollection* m_mcParticleCollection;
   edm4hep::SimTrackerHitCollection* m_simTrackerHitCollection;
 };
 

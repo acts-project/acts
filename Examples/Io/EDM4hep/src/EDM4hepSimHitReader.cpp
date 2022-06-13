@@ -17,9 +17,10 @@
 #include "edm4hep/SimTrackerHit.h"
 #include "edm4hep/SimTrackerHitCollection.h"
 
-ActsExamples::EDM4hepSimHitReader::EDM4hepSimHitReader(
-    const ActsExamples::EDM4hepSimHitReader::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+EDM4hepSimHitReader::EDM4hepSimHitReader(
+    const EDM4hepSimHitReader::Config& config, Acts::Logging::Level level)
     : m_cfg(config),
       m_logger(Acts::getDefaultLogger("EDM4hepSimHitReader", level)) {
   m_reader.openFile(m_cfg.inputPath);
@@ -30,26 +31,29 @@ ActsExamples::EDM4hepSimHitReader::EDM4hepSimHitReader(
   m_collections = m_reader.getCollectionIDTable()->names();
 }
 
-std::string ActsExamples::EDM4hepSimHitReader::EDM4hepSimHitReader::name()
-    const {
+std::string EDM4hepSimHitReader::EDM4hepSimHitReader::name() const {
   return "EDM4hepSimHitReader";
 }
 
-std::pair<size_t, size_t> ActsExamples::EDM4hepSimHitReader::availableEvents()
-    const {
+std::pair<size_t, size_t> EDM4hepSimHitReader::availableEvents() const {
   return m_eventsRange;
 }
 
 namespace {
 ActsFatras::Hit convertEDM4hepSimHit(
     const edm4hep::SimTrackerHit& simTrackerHit,
-    ActsExamples::DD4hep::DD4hepGeometryService& geometryService) {
+    DD4hep::DD4hepGeometryService& geometryService) {
   auto detElement = geometryService.lcdd()->volumeManager().lookupDetElement(
       simTrackerHit.getCellID());
 
   const auto geometryId = detElement.volumeID();
   ActsFatras::Barcode particleId;
-  particleId.setParticle(simTrackerHit.getMCParticle().id());
+  // misuse generatorStatus as particleId
+  if (simTrackerHit.getMCParticle().getGeneratorStatus() != 0) {
+    particleId.setParticle(simTrackerHit.getMCParticle().getGeneratorStatus());
+  } else {
+    particleId.setParticle(simTrackerHit.getMCParticle().id());
+  }
 
   const auto mass = simTrackerHit.getMCParticle().getMass();
   const Acts::ActsVector<3> momentum{
@@ -83,8 +87,7 @@ ActsFatras::Hit convertEDM4hepSimHit(
 }
 }  // namespace
 
-ActsExamples::ProcessCode ActsExamples::EDM4hepSimHitReader::read(
-    const ActsExamples::AlgorithmContext& ctx) {
+ProcessCode EDM4hepSimHitReader::read(const AlgorithmContext& ctx) {
   SimHitContainer::sequence_type unordered;
 
   m_store.clear();
@@ -120,5 +123,7 @@ ActsExamples::ProcessCode ActsExamples::EDM4hepSimHitReader::read(
   simHits.insert(unordered.begin(), unordered.end());
   ctx.eventStore.add(m_cfg.outputSimHits, std::move(simHits));
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

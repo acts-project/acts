@@ -14,6 +14,9 @@
 
 #include <stdexcept>
 
+#include "edm4hep/MCParticle.h"
+#include "edm4hep/SimTrackerHit.h"
+
 namespace ActsExamples {
 
 EDM4hepSimHitWriter::EDM4hepSimHitWriter(
@@ -27,6 +30,9 @@ EDM4hepSimHitWriter::EDM4hepSimHitWriter(
     throw std::invalid_argument("Missing simulated hits input collection");
   }
 
+  m_mcParticleCollection =
+      &m_store.create<edm4hep::MCParticleCollection>("MCParticles");
+
   m_simTrackerHitCollection =
       &m_store.create<edm4hep::SimTrackerHitCollection>("ActsSimTrackerHits");
   m_writer.registerForWrite("ActsSimTrackerHits");
@@ -38,6 +44,9 @@ EDM4hepSimHitWriter::~EDM4hepSimHitWriter() {
 
 ProcessCode EDM4hepSimHitWriter::writeT(const AlgorithmContext&,
                                         const SimHitContainer& simHits) {
+  std::unordered_map<ActsFatras::Barcode, edm4hep::MCParticle>
+      mcParticleMapping;
+
   for (const auto& simHit : simHits) {
     auto simTrackerHit = m_simTrackerHitCollection->create();
 
@@ -46,8 +55,18 @@ ProcessCode EDM4hepSimHitWriter::writeT(const AlgorithmContext&,
     const Acts::Vector4& momentum4Before = simHit.momentum4Before();
     const auto delta4 = simHit.momentum4After() - momentum4Before;
 
-    // TODO set particle
+    if (auto it = mcParticleMapping.find(simHit.particleId());
+        it != mcParticleMapping.end()) {
+      simTrackerHit.setMCParticle(it->second);
+    } else {
+      auto particle = m_mcParticleCollection->create();
+      // misuse generatorStatus as particleId
+      particle.setGeneratorStatus(simHit.particleId().particle());
+      simTrackerHit.setMCParticle(particle);
+      mcParticleMapping[simHit.particleId()] = std::move(particle);
+    }
 
+    // TODO what about the digitization?
     simTrackerHit.setCellID(simHit.geometryId().value());
 
     simTrackerHit.setTime(globalPos4[Acts::eTime] / Acts::UnitConstants::ns);
