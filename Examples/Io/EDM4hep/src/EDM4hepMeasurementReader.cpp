@@ -67,9 +67,8 @@ ProcessCode EDM4hepMeasurementReader::read(const AlgorithmContext& ctx) {
   m_store.clear();
   m_reader.goToEvent(ctx.eventNumber);
 
-  for (const auto& trackerHitPlane : *m_trackerHitPlaneCollection) {
-    // TODO
-  }
+  // TODO
+  // for (const auto& trackerHitPlane : *m_trackerHitPlaneCollection) { }
 
   MeasurementContainer measurements;
   for (auto& [_, meas] : orderedMeasurements) {
