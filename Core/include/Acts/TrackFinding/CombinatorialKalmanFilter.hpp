@@ -1262,10 +1262,6 @@ class CombinatorialKalmanFilter {
     combKalmanActor.m_sourcelinkAccessor = tfOptions.sourcelinkAccessor;
     combKalmanActor.m_extensions = tfOptions.extensions;
 
-    using FullResultType =
-        typename propagator_t::template action_list_t_result_t<
-            CurvilinearTrackParameters, Actors>;
-
     // Run the CombinatorialKalmanFilter.
     // @todo The same target surface is used for all the initial track
     // parameters, which is not necessarily the case.
@@ -1274,16 +1270,8 @@ class CombinatorialKalmanFilter {
     // Loop over all initial track parameters. Return the results for all
     // initial track parameters including those failed ones.
     for (size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
-      FullResultType inputResult;
-      // @TODO: Add these to the arguments
-      // inputResult.template get<CombinatorialKalmanFilterResult<traj_t>>()
-      // .fittedStates = std::make_shared<VectorMultiTrajectory>();
-      // inputResult.template get<CombinatorialKalmanFilterResult<traj_t>>()
-      // .stateBuffer = std::make_shared<VectorMultiTrajectory>();
-
       const auto& sParameters = initialParameters[iseed];
-      auto result = m_propagator.template propagate(sParameters, propOptions,
-                                                    std::move(inputResult));
+      auto result = m_propagator.template propagate(sParameters, propOptions);
 
       if (!result.ok()) {
         ACTS_ERROR("Propapation failed: "
