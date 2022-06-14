@@ -336,8 +336,6 @@ struct GaussianSumFitter {
               fwdGsfResult.weightsOfStates.at(idx);
 
           // Because we are backwards, we use forward filtered as predicted
-          // @FIXME: MTJ direct index access
-          // proxy.data().ipredicted = proxy.data().ifiltered;
           using PM = TrackStatePropMask;
           proxy.shareFrom(proxy, PM::Filtered, PM::Predicted);
 

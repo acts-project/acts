@@ -700,56 +700,6 @@ constexpr bool VisitorConcept = Concepts ::require<
 
 }  // namespace detail_lt
 
-// template <typename derived_t>
-// class MultiTrajectoryBackend {
-// public:
-// using Derived = derived_t;
-
-// template <typename T>
-// constexpr void addColumn(HashedString key) {
-// Derived& self = static_cast<Derived&>(*this);
-// assert(self.size() == 0 &&
-// "Adding columns not supported after track states have been added");
-// self.template addColumnImpl<T>(key);
-// }
-
-// template <HashedString key, typename T>
-// constexpr void addColumn() {
-// return addColumn<T>(key);
-// }
-
-// template <typename T>
-// constexpr void addColumn(std::string_view key) {
-// return addColumn<T>(hashString(key));
-// }
-
-// template <typename T, typename K>
-// constexpr void addColumn(K key) {
-// return addColumn<T>(hashString(key));
-// }
-
-// template <HashedString key>
-// constexpr bool hasColumn() {
-// return hasColumn(key);
-// }
-
-// constexpr bool hasColumn(HashedString key) {
-// Derived& self = static_cast<Derived&>(*this);
-// return self.hasColumnImpl(key);
-// }
-
-// constexpr bool hasColumn(std::string_view key) {
-// Derived& self = static_cast<Derived&>(*this);
-// return self.hasColumnImpl(hashString(key));
-// }
-
-// template <typename K>
-// constexpr bool hasColumn(K key) {
-// Derived& self = static_cast<Derived&>(*this);
-// return self.hasColumnImpl(hashString(key));
-// }
-// };
-
 namespace MultiTrajectoryTraits {
 constexpr unsigned int MeasurementSizeMax = eBoundSize;
 }
@@ -779,29 +729,6 @@ class MultiTrajectory {
   static constexpr IndexType kInvalid = TrackStateProxy::kInvalid;
   static constexpr IndexType kNoPrevious = TrackStateProxy::kNoPrevious;
 
-  template <HashedString K, typename T>
-  struct Column {
-    constexpr static HashedString key = K;
-    using type = T;
-  };
-
-  // This is just for convenience, maybe remove
-  template <HashedString K, typename T>
-  using C = MultiTrajectory::Column<K, T>;
-
-  // template <typename T, typename... Args>
-  // std::unique_ptr<MultiTrajectory> static createWithBackend(
-  // std::unique_ptr<T> backend, Args&&... args) {
-  // MultiTrajectoryBackend<typename T::Derived>& impl = *backend;
-  // auto addColumns = [&impl](auto&& column) {
-  // using column_t = std::decay_t<decltype(column)>;
-  // impl.template addColumn<column_t::key, typename column_t::type>();
-  // };
-  // (addColumns(std::forward<Args>(args)), ...);
-  // return backend;
-  // }
-
-  // virtual ~MultiTrajectory() = 0;
  protected:
   MultiTrajectory() = default;  // pseudo abstract base class
 

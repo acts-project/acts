@@ -220,8 +220,6 @@ auto smoothAndCombineTrajectories(
 
       proxy.predicted() = mean;
       proxy.predictedCovariance() = cov.value();
-      // @FIXME: MTJ direct index access
-      // proxy.data().ifiltered = proxy.data().ipredicted;
       using PM = TrackStatePropMask;
       proxy.shareFrom(proxy, PM::Predicted, PM::Filtered);
 

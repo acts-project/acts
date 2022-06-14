@@ -805,10 +805,7 @@ class CombinatorialKalmanFilter {
           ts.jacobian() = jacobian;
         } else {
           // subsequent track states can reuse
-          // @FIXME: MTJ direct index access
           auto& first = result.trackStateCandidates.front();
-          // ts.data().ipredicted = first.data().ipredicted;
-          // ts.data().ijacobian = first.data().ijacobian;
           ts.shareFrom(first, PM::Predicted);
           ts.shareFrom(first, PM::Jacobian);
         }
@@ -871,9 +868,6 @@ class CombinatorialKalmanFilter {
 
         if (it != begin) {
           // assign indices pointing to first track state
-          // @FIXME: MTJ direct index access
-          // trackState.data().ipredicted = firstTrackState->data().ipredicted;
-          // trackState.data().ijacobian = firstTrackState->data().ijacobian;
           trackState.shareFrom(*firstTrackState, PM::Predicted);
           trackState.shareFrom(*firstTrackState, PM::Jacobian);
         } else {
@@ -908,8 +902,6 @@ class CombinatorialKalmanFilter {
           // No Kalman update for outlier
           // Set the filtered parameter index to be the same with predicted
           // parameter
-          // @FIXME: MTJ direct index access
-          // trackState.data().ifiltered = trackState.data().ipredicted;
           trackState.shareFrom(PM::Predicted, PM::Filtered);
 
         } else {
@@ -989,8 +981,6 @@ class CombinatorialKalmanFilter {
         typeFlags.set(TrackStateFlag::HoleFlag);
       }
 
-      // @FIXME: MTJ direct index access
-      // trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
       using PM = TrackStatePropMask;
       trackStateProxy.shareFrom(PM::Predicted, PM::Filtered);
 
