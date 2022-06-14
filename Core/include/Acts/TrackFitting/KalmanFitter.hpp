@@ -1038,8 +1038,17 @@ class KalmanFitter {
         std::move(kfOptions.freeToBoundCorrection);
     kalmanActor.extensions = std::move(kfOptions.extensions);
 
+    using FullResultType =
+        typename propagator_t::template action_list_t_result_t<
+            CurvilinearTrackParameters, Actors>;
+
+    FullResultType inputResult;
+    // inputResult.template get<KalmanResult>().fittedStates =
+    // std::make_shared<VectorMultiTrajectory>();
+
     // Run the fitter
-    auto result = m_propagator.template propagate(sParameters, kalmanOptions);
+    auto result = m_propagator.template propagate(sParameters, kalmanOptions,
+                                                  std::move(inputResult));
 
     if (!result.ok()) {
       ACTS_ERROR("Propapation failed: " << result.error());
