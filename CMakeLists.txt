@@ -342,12 +342,6 @@ if(ACTS_BUILD_BENCHMARKS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_UNITTESTS)
   add_subdirectory(Tests)
 endif()
 
-#generate debug information
-if(ACTS_ENABLE_CPU_PROFILING)
-  message(STATUS "Added -g compile flag")
-  add_compile_options(-g)
-endif()
-
 # documentation
 add_subdirectory_if(docs ACTS_BUILD_DOCS)
 
