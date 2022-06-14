@@ -63,6 +63,14 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(maxSeedsPerSpM);
     ACTS_PYTHON_MEMBER(compatSeedLimit);
     ACTS_PYTHON_MEMBER(curvatureSortingInFilter);
+    ACTS_PYTHON_MEMBER(seedConfirmation);
+    ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
+    ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
+    ACTS_PYTHON_MEMBER(useDeltaRorTopRadius);
+    ACTS_PYTHON_MEMBER(seedWeightIncrement);
+    ACTS_PYTHON_MEMBER(numSeedIncrement);
+    ACTS_PYTHON_MEMBER(maxSeedsPerSpMConf);
+    ACTS_PYTHON_MEMBER(maxQualitySeedsPerSpMConf);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }
@@ -124,8 +132,9 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
-    using seedConf = Acts::SeedConfirmationRange;
-    auto c = py::class_<seedConf>(m, "SeedConfirmationRange").def(py::init<>());
+    using seedConf = Acts::SeedConfirmationRangeConfig;
+    auto c = py::class_<seedConf>(m, "SeedConfirmationRangeConfig")
+                 .def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, seedConf);
     ACTS_PYTHON_MEMBER(zMinSeedConf);
     ACTS_PYTHON_MEMBER(zMaxSeedConf);
@@ -184,6 +193,8 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(rMax);
     ACTS_PYTHON_MEMBER(zMax);
     ACTS_PYTHON_MEMBER(zMin);
+    ACTS_PYTHON_MEMBER(phiMin);
+    ACTS_PYTHON_MEMBER(phiMax);
     ACTS_PYTHON_MEMBER(deltaRMax);
     ACTS_PYTHON_MEMBER(cotThetaMax);
     ACTS_PYTHON_MEMBER(phiBinDeflectionCoverage);
