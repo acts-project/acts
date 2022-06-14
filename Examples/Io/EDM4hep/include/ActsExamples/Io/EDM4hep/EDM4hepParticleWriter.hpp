@@ -23,7 +23,7 @@ class EDM4hepParticleWriter final : public WriterT<SimParticleContainer> {
  public:
   struct Config {
     /// Input particles collection to write.
-    std::string inputParticles;
+    std::string inputParticles = "MCParticles";
     /// Where to place the output file.
     std::string outputPath;
   };

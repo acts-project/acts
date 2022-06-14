@@ -25,6 +25,8 @@ class EDM4hepParticleReader final : public IReader {
   struct Config {
     /// Where to read input file from.
     std::string inputPath;
+    /// Name of the particle collection in EDM4hep.
+    std::string inputParticles = "MCParticles";
     /// Which particle collection to read into.
     std::string outputParticles;
   };

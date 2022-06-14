@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitReader.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
@@ -27,6 +28,9 @@ EDM4hepSimHitReader::EDM4hepSimHitReader(
   m_eventsRange = std::make_pair(0, m_reader.getEntries());
 
   m_collections = m_reader.getCollectionIDTable()->names();
+
+  m_mcParticleCollection =
+      &m_store.get<edm4hep::MCParticleCollection>(m_cfg.inputParticles);
 }
 
 std::string EDM4hepSimHitReader::EDM4hepSimHitReader::name() const {
@@ -38,10 +42,30 @@ std::pair<size_t, size_t> EDM4hepSimHitReader::availableEvents() const {
 }
 
 ProcessCode EDM4hepSimHitReader::read(const AlgorithmContext& ctx) {
-  SimHitContainer::sequence_type unordered;
-
   m_store.clear();
   m_reader.goToEvent(ctx.eventNumber);
+
+  if (!m_cfg.outputParticles.empty()) {
+    SimParticleContainer::sequence_type unordered;
+
+    for (const auto& mcParticle : *m_mcParticleCollection) {
+      auto particle = EDM4hepUtil::fromParticle(
+          mcParticle, [](edm4hep::MCParticle particle) {
+            ActsFatras::Barcode result;
+            // TODO dont use podio internal id
+            result.setParticle(particle.id());
+            return result;
+          });
+      unordered.push_back(particle);
+    }
+
+    // Write ordered particles container to the EventStore
+    SimParticleContainer particles;
+    particles.insert(unordered.begin(), unordered.end());
+    ctx.eventStore.add(m_cfg.outputParticles, std::move(particles));
+  }
+
+  SimHitContainer::sequence_type unordered;
 
   // TODO does it make sense to query all of them?
   for (const auto& name : m_collections) {

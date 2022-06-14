@@ -15,6 +15,7 @@
 #include <memory>
 #include <string>
 
+#include "edm4hep/MCParticleCollection.h"
 #include "podio/EventStore.h"
 #include "podio/ROOTReader.h"
 
@@ -25,6 +26,10 @@ class EDM4hepSimHitReader final : public IReader {
   struct Config {
     /// Where to the read input file from.
     std::string inputPath;
+    /// Name of the particle collection in EDM4hep.
+    std::string inputParticles = "MCParticles";
+    /// Which particle collection to read into.
+    std::string outputParticles;
     /// Output simulated (truth) hits collection.
     std::string outputSimHits;
     /// DD4hep geometry service for cellID resolution.
@@ -57,6 +62,8 @@ class EDM4hepSimHitReader final : public IReader {
   podio::EventStore m_store;
 
   std::vector<std::string> m_collections;
+
+  const edm4hep::MCParticleCollection* m_mcParticleCollection;
 
   const Acts::Logger& logger() const { return *m_logger; }
 };

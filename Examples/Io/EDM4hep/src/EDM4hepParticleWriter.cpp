@@ -31,7 +31,7 @@ EDM4hepParticleWriter::EDM4hepParticleWriter(
   }
 
   m_mcParticleCollection =
-      &m_store.create<edm4hep::MCParticleCollection>("MCParticles");
+      &m_store.create<edm4hep::MCParticleCollection>(m_cfg.inputParticles);
 }
 
 EDM4hepParticleWriter::~EDM4hepParticleWriter() {

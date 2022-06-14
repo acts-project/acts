@@ -27,6 +27,10 @@ class EDM4hepSimHitWriter final : public WriterT<SimHitContainer> {
     std::string inputSimHits;
     /// WWhere to write the output file to.
     std::string outputPath;
+    /// Name of the particle collection in EDM4hep.
+    std::string outputParticles = "MCParticles";
+    /// Name of the particle collection in EDM4hep.
+    std::string outputSimTrackerHits = "ActsSimTrackerHits";
   };
 
   /// Construct the cluster writer.
