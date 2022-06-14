@@ -13,6 +13,10 @@
 
 #include <string>
 
+#include "edm4hep/MCParticleCollection.h"
+#include "podio/EventStore.h"
+#include "podio/ROOTWriter.h"
+
 namespace ActsExamples {
 
 class EDM4hepParticleWriter final : public WriterT<SimParticleContainer> {
@@ -30,6 +34,9 @@ class EDM4hepParticleWriter final : public WriterT<SimParticleContainer> {
   /// @params lvl is the logging level
   EDM4hepParticleWriter(const Config& cfg, Acts::Logging::Level lvl);
 
+  /// Virtual destructor
+  ~EDM4hepParticleWriter() final override;
+
  protected:
   /// Type-specific write implementation.
   ///
@@ -40,6 +47,11 @@ class EDM4hepParticleWriter final : public WriterT<SimParticleContainer> {
 
  private:
   Config m_cfg;  //!< Nested configuration struct
+
+  podio::ROOTWriter m_writer;
+  podio::EventStore m_store;
+
+  edm4hep::MCParticleCollection* m_mcParticleCollection;
 };
 
 }  // namespace ActsExamples

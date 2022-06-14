@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <stdexcept>
@@ -29,6 +30,9 @@ EDM4hepParticleReader::EDM4hepParticleReader(
   m_store.setReader(&m_reader);
 
   m_eventsRange = std::make_pair(0, m_reader.getEntries());
+
+  m_mcParticleCollection =
+      &m_store.get<edm4hep::MCParticleCollection>("MCParticles");
 }
 
 std::string EDM4hepParticleReader::name() const {
@@ -42,7 +46,19 @@ std::pair<size_t, size_t> EDM4hepParticleReader::availableEvents() const {
 ProcessCode EDM4hepParticleReader::read(const AlgorithmContext& ctx) {
   SimParticleContainer::sequence_type unordered;
 
-  // TODO
+  m_store.clear();
+  m_reader.goToEvent(ctx.eventNumber);
+
+  for (const auto& mcParticle : *m_mcParticleCollection) {
+    auto particle =
+        EDM4hepUtil::fromParticle(mcParticle, [](edm4hep::MCParticle particle) {
+          ActsFatras::Barcode result;
+          // TODO dont use podio internal id
+          result.setParticle(particle.id());
+          return result;
+        });
+    unordered.push_back(particle);
+  }
 
   // Write ordered particles container to the EventStore
   SimParticleContainer particles;

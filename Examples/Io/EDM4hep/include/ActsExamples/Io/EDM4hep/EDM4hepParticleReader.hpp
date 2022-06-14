@@ -14,6 +14,7 @@
 #include <memory>
 #include <string>
 
+#include "edm4hep/MCParticleCollection.h"
 #include "podio/EventStore.h"
 #include "podio/ROOTReader.h"
 
@@ -52,6 +53,8 @@ class EDM4hepParticleReader final : public IReader {
 
   podio::ROOTReader m_reader;
   podio::EventStore m_store;
+
+  const edm4hep::MCParticleCollection* m_mcParticleCollection;
 
   const Acts::Logger& logger() const { return *m_logger; }
 };

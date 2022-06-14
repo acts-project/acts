@@ -10,21 +10,44 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <stdexcept>
 
+#include "edm4hep/MCParticle.h"
+
 namespace ActsExamples {
 
 EDM4hepParticleWriter::EDM4hepParticleWriter(
-    const EDM4hepParticleWriter::Config& cfg, Acts::Logging::Level lvl)
-    : WriterT(cfg.inputParticles, "EDM4hepParticleWriter", lvl), m_cfg(cfg) {
-  // TODO
+    const EDM4hepParticleWriter::Config& config, Acts::Logging::Level lvl)
+    : WriterT(config.inputParticles, "EDM4hepParticleWriter", lvl),
+      m_cfg(config),
+      m_writer(config.outputPath, &m_store) {
+  ACTS_VERBOSE("Created output file " << config.outputPath);
+
+  if (m_cfg.inputParticles.empty()) {
+    throw std::invalid_argument("Missing particles input collection");
+  }
+
+  m_mcParticleCollection =
+      &m_store.create<edm4hep::MCParticleCollection>("MCParticles");
+}
+
+EDM4hepParticleWriter::~EDM4hepParticleWriter() {
+  m_writer.finish();
 }
 
 ProcessCode EDM4hepParticleWriter::writeT(
     const AlgorithmContext& ctx, const SimParticleContainer& particles) {
-  // TODO
+  for (const auto& particle : particles) {
+    EDM4hepUtil::toParticle(particle, [](ActsFatras::Barcode particleId) {
+      return edm4hep::MCParticle();  // TODO
+    });
+  }
+
+  m_writer.writeEvent();
+  m_store.clearCollections();
 
   return ProcessCode::SUCCESS;
 }

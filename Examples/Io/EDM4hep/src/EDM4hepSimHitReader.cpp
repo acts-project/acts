@@ -11,10 +11,8 @@
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsFatras/EventData/Hit.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 
-#include "edm4hep/MCParticle.h"
-#include "edm4hep/SimTrackerHit.h"
 #include "edm4hep/SimTrackerHitCollection.h"
 
 namespace ActsExamples {
@@ -39,54 +37,6 @@ std::pair<size_t, size_t> EDM4hepSimHitReader::availableEvents() const {
   return m_eventsRange;
 }
 
-namespace {
-ActsFatras::Hit convertEDM4hepSimHit(
-    const edm4hep::SimTrackerHit& simTrackerHit,
-    DD4hep::DD4hepGeometryService& geometryService) {
-  auto detElement = geometryService.lcdd()->volumeManager().lookupDetElement(
-      simTrackerHit.getCellID());
-
-  const auto geometryId = detElement.volumeID();
-  ActsFatras::Barcode particleId;
-  // misuse generatorStatus as particleId
-  if (simTrackerHit.getMCParticle().getGeneratorStatus() != 0) {
-    particleId.setParticle(simTrackerHit.getMCParticle().getGeneratorStatus());
-  } else {
-    particleId.setParticle(simTrackerHit.getMCParticle().id());
-  }
-
-  const auto mass = simTrackerHit.getMCParticle().getMass();
-  const Acts::ActsVector<3> momentum{
-      simTrackerHit.getMomentum().x * Acts::UnitConstants::GeV,
-      simTrackerHit.getMomentum().y * Acts::UnitConstants::GeV,
-      simTrackerHit.getMomentum().z * Acts::UnitConstants::GeV,
-  };
-  const auto energy = std::sqrt(momentum.squaredNorm() + mass * mass);
-
-  ActsFatras::Hit::Vector4 pos4{
-      simTrackerHit.getPosition().x * Acts::UnitConstants::mm,
-      simTrackerHit.getPosition().y * Acts::UnitConstants::mm,
-      simTrackerHit.getPosition().z * Acts::UnitConstants::mm,
-      simTrackerHit.getTime() * Acts::UnitConstants::ns,
-  };
-  ActsFatras::Hit::Vector4 mom4{
-      momentum.x(),
-      momentum.y(),
-      momentum.z(),
-      energy,
-  };
-  ActsFatras::Hit::Vector4 delta4{
-      0 * Acts::UnitConstants::GeV, 0 * Acts::UnitConstants::GeV,
-      0 * Acts::UnitConstants::GeV,
-      0 * Acts::UnitConstants::GeV,  // sth.getEDep()
-  };
-  int32_t index = -1;
-
-  return ActsFatras::Hit(geometryId, particleId, pos4, mom4, mom4 + delta4,
-                         index);
-}
-}  // namespace
-
 ProcessCode EDM4hepSimHitReader::read(const AlgorithmContext& ctx) {
   SimHitContainer::sequence_type unordered;
 
@@ -105,8 +55,21 @@ ProcessCode EDM4hepSimHitReader::read(const AlgorithmContext& ctx) {
       for (const auto& simTrackerHit :
            (const edm4hep::SimTrackerHitCollection&)collection) {
         try {
-          auto hit =
-              convertEDM4hepSimHit(simTrackerHit, *m_cfg.dd4hepGeometryService);
+          auto hit = EDM4hepUtil::fromSimHit(
+              simTrackerHit,
+              [](edm4hep::MCParticle particle) {
+                ActsFatras::Barcode result;
+                // TODO dont use podio internal id
+                result.setParticle(particle.id());
+                return result;
+              },
+              [&](std::uint64_t cellId) {
+                auto detElement = m_cfg.dd4hepGeometryService->lcdd()
+                                      ->volumeManager()
+                                      .lookupDetElement(cellId);
+                Acts::GeometryIdentifier result = detElement.volumeID();
+                return result;
+              });
           unordered.push_back(std::move(hit));
         } catch (...) {
           m_logger->log(Acts::Logging::Level::ERROR,
