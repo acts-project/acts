@@ -245,9 +245,6 @@ struct GaussianSumFitter {
       actor.m_cfg.abortOnError = options.abortOnError;
       actor.m_cfg.disableAllMaterialHandling =
           options.disableAllMaterialHandling;
-      actor.m_cfg.resultInitializer = [](auto& result, auto) {
-        result.fittedStates = std::make_shared<VectorMultiTrajectory>();
-      };
 
       fwdPropOptions.direction = gsfForward;
 
@@ -297,7 +294,7 @@ struct GaussianSumFitter {
     auto bwdResult = [&]() {
       // Use last forward state as start parameters for backward propagation
       const auto params = detail::extractMultiComponentState(
-          *fwdGsfResult.fittedStates, fwdGsfResult.lastMeasurementTips,
+          fwdGsfResult.fittedStates, fwdGsfResult.lastMeasurementTips,
           fwdGsfResult.weightsOfStates, detail::StatesType::eFiltered);
 
       auto bwdPropOptions = bwdPropInitializer(options, logger);
@@ -316,7 +313,6 @@ struct GaussianSumFitter {
       actor.m_cfg.resultInitializer = [&fwdGsfResult](auto& result,
                                                       const auto& gsf_logger) {
         result.currentTips.clear();
-        result.fittedStates = std::make_shared<VectorMultiTrajectory>();
 
         // Manually expand the logging macro here since a function parameter
         // named 'logger' seems to trigger a false-positive for gcc's
@@ -327,11 +323,11 @@ struct GaussianSumFitter {
 
         for (const auto idx : fwdGsfResult.lastMeasurementTips) {
           result.currentTips.push_back(
-              result.fittedStates->addTrackState(TrackStatePropMask::All));
+              result.fittedStates.addTrackState(TrackStatePropMask::All));
 
           auto proxy =
-              result.fittedStates->getTrackState(result.currentTips.back());
-          proxy.copyFrom(fwdGsfResult.fittedStates->getTrackState(idx));
+              result.fittedStates.getTrackState(result.currentTips.back());
+          proxy.copyFrom(fwdGsfResult.fittedStates.getTrackState(idx));
           result.weightsOfStates[result.currentTips.back()] =
               fwdGsfResult.weightsOfStates.at(idx);
 
@@ -389,8 +385,8 @@ struct GaussianSumFitter {
                                               << bwdGsfResult.measurementHoles);
 
     auto smoothResult = detail::smoothAndCombineTrajectories<traj_t, true>(
-        *fwdGsfResult.fittedStates, fwdGsfResult.currentTips,
-        fwdGsfResult.weightsOfStates, *bwdGsfResult.fittedStates,
+        fwdGsfResult.fittedStates, fwdGsfResult.currentTips,
+        fwdGsfResult.weightsOfStates, bwdGsfResult.fittedStates,
         bwdGsfResult.currentTips, bwdGsfResult.weightsOfStates, logger);
 
     // Cannot use structured binding since they cannot be captured in lambda
@@ -451,7 +447,6 @@ struct GaussianSumFitter {
         // that the material effects are not applied twice
         actor.m_cfg.resultInitializer = [id = surface->geometryId()](
                                             auto& result, const auto&) {
-          result.fittedStates = std::make_shared<VectorMultiTrajectory>();
           result.visitedSurfaces.insert(id);
         };
 

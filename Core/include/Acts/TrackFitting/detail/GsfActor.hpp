@@ -35,7 +35,7 @@ namespace detail {
 template <typename traj_t>
 struct GsfResult {
   /// The multi-trajectory which stores the graph of components
-  std::shared_ptr<MultiTrajectory<traj_t>> fittedStates;
+  traj_t fittedStates;
 
   /// This provides the weights for the states in the MultiTrajectory. Each
   /// entry maps to one track state. TODO This is a workaround until the
@@ -191,8 +191,6 @@ struct GsfActor {
       result.haveInitializedResult = true;
     }
 
-    assert(result.fittedStates && "Output MultiTrajectory not set");
-
     // Initialize the tips if they are empty (should only happen at first pass)
     if (result.parentTips.empty()) {
       result.parentTips.resize(stepper.numberComponents(state.stepping),
@@ -318,7 +316,7 @@ struct GsfActor {
                            std::vector<ComponentCache>& componentCache) const {
     auto cmps = stepper.componentIterable(state.stepping);
     for (auto [idx, cmp] : zip(result.currentTips, cmps)) {
-      auto proxy = result.fittedStates->getTrackState(idx);
+      auto proxy = result.fittedStates.getTrackState(idx);
 
       MetaCache mcache;
       mcache.parentIndex = idx;
@@ -516,7 +514,7 @@ struct GsfActor {
         continue;
       }
 
-      auto proxy = result.fittedStates->getTrackState(idx);
+      auto proxy = result.fittedStates.getTrackState(idx);
 
       cmp.pars() =
           MultiTrajectoryHelpers::freeFiltered(state.options.geoContext, proxy);
@@ -602,7 +600,7 @@ struct GsfActor {
 
       auto trackStateProxyRes = detail::kalmanHandleMeasurement(
           singleState, singleStepper, m_cfg.extensions, surface, source_link,
-          *result.fittedStates, idx, false);
+          result.fittedStates, idx, false);
 
       if (!trackStateProxyRes.ok()) {
         return trackStateProxyRes.error();
@@ -621,7 +619,7 @@ struct GsfActor {
       result.weightsOfStates[result.currentTips.back()] = cmp.weight();
     }
 
-    computePosteriorWeights(*result.fittedStates, result.currentTips,
+    computePosteriorWeights(result.fittedStates, result.currentTips,
                             result.weightsOfStates);
 
     detail::normalizeWeights(result.currentTips, [&](auto idx) -> double& {
@@ -666,7 +664,7 @@ struct GsfActor {
       // There is some redundant checking inside this function, but do this for
       // now until we measure this is significant
       auto trackStateProxyRes = detail::kalmanHandleNoMeasurement(
-          singleState, singleStepper, surface, *result.fittedStates, idx,
+          singleState, singleStepper, surface, result.fittedStates, idx,
           doCovTransport);
 
       if (!trackStateProxyRes.ok()) {
