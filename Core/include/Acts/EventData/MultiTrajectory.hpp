@@ -109,7 +109,7 @@ class TrackStateProxy {
   using IndexType = typename TrackStateTraits<M, ReadOnly>::IndexType;
   static constexpr IndexType kInvalid = TrackStateTraits<M, ReadOnly>::kInvalid;
   static constexpr IndexType kNoPrevious =
-      TrackStateTraits<M, ReadOnly>::kInvalid;
+      TrackStateTraits<M, ReadOnly>::kNoPrevious;
 
   // as opposed to the types above, this is an actual Matrix (rather than a
   // map)
@@ -777,7 +777,7 @@ class MultiTrajectory {
 
   using IndexType = typename TrackStateProxy::IndexType;
   static constexpr IndexType kInvalid = TrackStateProxy::kInvalid;
-  static constexpr IndexType kNoPrevious = kInvalid - 1;
+  static constexpr IndexType kNoPrevious = TrackStateProxy::kNoPrevious;
 
   template <HashedString K, typename T>
   struct Column {
