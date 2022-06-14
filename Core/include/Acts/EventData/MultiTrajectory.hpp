@@ -873,7 +873,7 @@ class MultiTrajectory {
   }
 
   template <typename T>
-  constexpr void addColumn(HashedString key) {
+  constexpr void addColumn(const std::string& key) {
     self().template addColumn_impl<T>(key);
   }
 

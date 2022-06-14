@@ -1015,8 +1015,8 @@ BOOST_AUTO_TEST_CASE(MultiTrajectoryExtraColumns) {
   };
 
   MTJ traj;
-  traj.addColumn<int>("extra_column"_hash);
-  traj.addColumn<TestColumn>("another_column"_hash);
+  traj.addColumn<int>("extra_column");
+  traj.addColumn<TestColumn>("another_column");
 
   auto ts1 = traj.getTrackState(traj.addTrackState());
   auto ts2 = traj.getTrackState(
@@ -1047,7 +1047,7 @@ BOOST_AUTO_TEST_CASE(MultiTrajectoryExtraColumnsRuntime) {
     std::vector<std::string> columns = {"one", "two", "three", "four"};
     for (const auto& c : columns) {
       BOOST_CHECK(!mt.hasColumn(fn(c)));
-      mt.addColumn<int>(fn(c));
+      mt.addColumn<int>(c);
       BOOST_CHECK(mt.hasColumn(fn(c)));
     }
     for (const auto& c : columns) {

@@ -232,8 +232,8 @@ class VectorMultiTrajectory final
   }
 
   template <typename T>
-  constexpr void addColumn_impl(HashedString key) {
-    m_dynamic.insert({key, std::make_unique<DynamicColumn<T>>()});
+  constexpr void addColumn_impl(const std::string& key) {
+    m_dynamic.insert({hashString(key), std::make_unique<DynamicColumn<T>>()});
   }
 
   constexpr bool hasColumn_impl(HashedString key) const {
