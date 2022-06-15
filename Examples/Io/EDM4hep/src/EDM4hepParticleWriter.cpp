@@ -41,7 +41,7 @@ EDM4hepParticleWriter::~EDM4hepParticleWriter() {
 ProcessCode EDM4hepParticleWriter::writeT(
     const AlgorithmContext& ctx, const SimParticleContainer& particles) {
   for (const auto& particle : particles) {
-    EDM4hepUtil::toParticle(particle, [](ActsFatras::Barcode particleId) {
+    EDM4hepUtil::toParticle(particle, [](ActsFatras::Barcode) {
       return edm4hep::MCParticle();  // TODO
     });
   }

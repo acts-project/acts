@@ -51,10 +51,10 @@ ProcessCode EDM4hepParticleReader::read(const AlgorithmContext& ctx) {
 
   for (const auto& mcParticle : *m_mcParticleCollection) {
     auto particle =
-        EDM4hepUtil::fromParticle(mcParticle, [](edm4hep::MCParticle particle) {
+        EDM4hepUtil::fromParticle(mcParticle, [](edm4hep::MCParticle p) {
           ActsFatras::Barcode result;
           // TODO dont use podio internal id
-          result.setParticle(particle.id());
+          result.setParticle(p.id());
           return result;
         });
     unordered.push_back(particle);
