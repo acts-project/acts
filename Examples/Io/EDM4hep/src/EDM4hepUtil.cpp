@@ -13,6 +13,46 @@
 
 namespace ActsExamples {
 
+ActsFatras::Particle EDM4hepUtil::fromParticle(
+    edm4hep::MCParticle from, MapParticleIdFrom particleMapper) {
+  ActsFatras::Barcode particleId = particleMapper(from);
+
+  ActsFatras::Particle to(particleId, (Acts::PdgParticle)from.getPDG(),
+                          from.getCharge() * Acts::UnitConstants::e,
+                          from.getMass() * Acts::UnitConstants::GeV);
+
+  // TODO do we have that in EDM4hep?
+  // particle.setProcess(static_cast<ActsFatras::ProcessType>(data.process));
+
+  to.setPosition4(from.getVertex()[0] * Acts::UnitConstants::mm,
+                  from.getVertex()[1] * Acts::UnitConstants::mm,
+                  from.getVertex()[2] * Acts::UnitConstants::mm,
+                  from.getTime() * Acts::UnitConstants::ns);
+
+  // Only used for direction; normalization/units do not matter
+  to.setDirection(from.getMomentum()[0], from.getMomentum()[1],
+                  from.getMomentum()[2]);
+  to.setAbsoluteMomentum(std::hypot(from.getMomentum()[0],
+                                    from.getMomentum()[1],
+                                    from.getMomentum()[2]) *
+                         Acts::UnitConstants::GeV);
+
+  return to;
+}
+
+void EDM4hepUtil::toParticle(const ActsFatras::Particle& from,
+                             edm4hep::MutableMCParticle to) {
+  // TODO what about particleId?
+
+  to.setPDG(from.pdg());
+  to.setCharge(from.charge() / Acts::UnitConstants::e);
+  to.setMass(from.mass() / Acts::UnitConstants::GeV);
+  to.setVertex({from.position().x(), from.position().y(), from.position().z()});
+  to.setMomentum({(float)from.fourMomentum().x(),
+                  (float)from.fourMomentum().y(),
+                  (float)from.fourMomentum().z()});
+}
+
 ActsFatras::Hit EDM4hepUtil::fromSimHit(const edm4hep::SimTrackerHit& from,
                                         MapParticleIdFrom particleMapper,
                                         MapGeometryIdFrom geometryMapper) {
@@ -82,44 +122,45 @@ void EDM4hepUtil::toSimHit(const ActsFatras::Hit& from,
   to.setEDep(delta4[Acts::eEnergy] / Acts::UnitConstants::GeV);
 }
 
-ActsFatras::Particle EDM4hepUtil::fromParticle(
-    edm4hep::MCParticle from, MapParticleIdFrom particleMapper) {
-  ActsFatras::Barcode particleId = particleMapper(from);
+void EDM4hepUtil::toMeasurement(const ActsExamples::Measurement& from,
+                                edm4hep::MutableTrackerHitPlane to,
+                                const Cluster* fromCluster,
+                                edm4hep::TrackerHitCollection& toClusters) {
+  std::visit(
+      [&](const auto& m) {
+        Acts::GeometryIdentifier geoId = m.sourceLink().geometryId();
 
-  ActsFatras::Particle to(particleId, (Acts::PdgParticle)from.getPDG(),
-                          from.getCharge() * Acts::UnitConstants::e,
-                          from.getMass() * Acts::UnitConstants::GeV);
+        auto parameters = (m.expander() * m.parameters()).eval();
 
-  // TODO do we have that in EDM4hep?
-  // particle.setProcess(static_cast<ActsFatras::ProcessType>(data.process));
+        // TODO map to DD4hep?
+        to.setCellID(geoId.value());
 
-  to.setPosition4(from.getVertex()[0] * Acts::UnitConstants::mm,
-                  from.getVertex()[1] * Acts::UnitConstants::mm,
-                  from.getVertex()[2] * Acts::UnitConstants::mm,
-                  from.getTime() * Acts::UnitConstants::ns);
+        to.setTime(parameters[Acts::eBoundTime] / Acts::UnitConstants::ns);
 
-  // Only used for direction; normalization/units do not matter
-  to.setDirection(from.getMomentum()[0], from.getMomentum()[1],
-                  from.getMomentum()[2]);
-  to.setAbsoluteMomentum(std::hypot(from.getMomentum()[0],
-                                    from.getMomentum()[1],
-                                    from.getMomentum()[2]) *
-                         Acts::UnitConstants::GeV);
+        to.setU({(float)parameters[Acts::eBoundLoc0],
+                 (float)parameters[Acts::eBoundLoc1]});
 
-  return to;
-}
+        // auto covariance = (m.expander() * m.covariance() *
+        // m.expander().transpose()).eval();
 
-void EDM4hepUtil::toParticle(const ActsFatras::Particle& from,
-                             edm4hep::MutableMCParticle to) {
-  // TODO what about particleId?
+        if (fromCluster != nullptr) {
+          for (auto& c : fromCluster->channels) {
+            auto toChannel = toClusters.create();
+            to.addToRawHits(toChannel.getObjectID());
 
-  to.setPDG(from.pdg());
-  to.setCharge(from.charge() / Acts::UnitConstants::e);
-  to.setMass(from.mass() / Acts::UnitConstants::GeV);
-  to.setVertex({from.position().x(), from.position().y(), from.position().z()});
-  to.setMomentum({(float)from.fourMomentum().x(),
-                  (float)from.fourMomentum().y(),
-                  (float)from.fourMomentum().z()});
+            // TODO map to DD4hep?
+            toChannel.setCellID(to.getCellID());
+
+            // TODO get EDM4hep fixed
+            // misusing some fields to store ACTS specific information
+            // don't ask ...
+            toChannel.setType(c.bin[0]);
+            toChannel.setQuality(c.bin[1]);
+            toChannel.setTime(c.activation);
+          }
+        }
+      },
+      from);
 }
 
 }  // namespace ActsExamples

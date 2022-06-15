@@ -12,6 +12,7 @@
 #include "Acts/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 
 #include <stdexcept>
 
@@ -64,46 +65,13 @@ ActsExamples::ProcessCode EDM4hepMeasurementWriter::writeT(
   ACTS_VERBOSE("Writing " << measurements.size()
                           << " measurements in this event.");
 
-  // TODO we have to distinquish between different events
-
   for (Index hitIdx = 0u; hitIdx < measurements.size(); ++hitIdx) {
-    const auto& measurement = measurements[hitIdx];
+    const auto& from = measurements[hitIdx];
+    Cluster* fromCluster = clusters.empty() ? nullptr : &clusters[hitIdx];
 
-    auto trackerHitPlane = m_trackerHitPlaneCollection->create();
-
-    std::visit(
-        [&](const auto& m) {
-          Acts::GeometryIdentifier geoId = m.sourceLink().geometryId();
-
-          auto parameters = (m.expander() * m.parameters()).eval();
-
-          trackerHitPlane.setCellID(geoId.value());
-          trackerHitPlane.setTime(parameters[Acts::eBoundTime] /
-                                  Acts::UnitConstants::ns);
-          trackerHitPlane.setU({(float)parameters[Acts::eBoundLoc0],
-                                (float)parameters[Acts::eBoundLoc1]});
-
-          // auto covariance = (m.expander() * m.covariance() *
-          // m.expander().transpose()).eval();
-
-          if (!clusters.empty()) {
-            auto cluster = clusters[hitIdx];
-
-            for (auto& c : cluster.channels) {
-              auto trackerHitRaw = m_trackerHitRawCollection->create();
-              trackerHitPlane.addToRawHits(trackerHitRaw.getObjectID());
-
-              trackerHitRaw.setCellID(trackerHitPlane.getCellID());
-              // TODO get EDM4hep fixed
-              // misusing some fields to store ACTS specific information
-              // don't ask ...
-              trackerHitRaw.setType(c.bin[0]);
-              trackerHitRaw.setQuality(c.bin[1]);
-              trackerHitRaw.setTime(c.activation);
-            }
-          }
-        },
-        measurement);
+    auto to = m_trackerHitPlaneCollection->create();
+    EDM4hepUtil::toMeasurement(from, to, fromCluster,
+                               *m_trackerHitRawCollection);
   }
 
   m_writer.writeEvent();
