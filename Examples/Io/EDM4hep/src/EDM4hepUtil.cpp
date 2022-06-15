@@ -82,4 +82,17 @@ ActsFatras::Particle EDM4hepUtil::fromParticle(
   return result;
 }
 
+void EDM4hepUtil::toParticle(const ActsFatras::Particle& from,
+                             edm4hep::MutableMCParticle to) {
+  // TODO what about particleId?
+
+  to.setPDG(from.pdg());
+  to.setCharge(from.charge() / Acts::UnitConstants::e);
+  to.setMass(from.mass() / Acts::UnitConstants::GeV);
+  to.setVertex({from.position().x(), from.position().y(), from.position().z()});
+  to.setMomentum({(float)from.fourMomentum().x(),
+                  (float)from.fourMomentum().y(),
+                  (float)from.fourMomentum().z()});
+}
+
 }  // namespace ActsExamples

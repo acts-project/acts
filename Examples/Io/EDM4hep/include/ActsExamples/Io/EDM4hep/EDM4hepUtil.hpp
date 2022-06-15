@@ -13,6 +13,7 @@
 #include <functional>
 
 #include "edm4hep/MCParticle.h"
+#include "edm4hep/MutableMCParticle.h"
 #include "edm4hep/SimTrackerHit.h"
 #include "edm4hep/TrackerHit.h"
 #include "edm4hep/TrackerHitPlane.h"
@@ -37,8 +38,8 @@ ActsFatras::Hit fromSimHit(const edm4hep::SimTrackerHit& simTrackerHit,
 ActsFatras::Particle fromParticle(edm4hep::MCParticle particle,
                                   MapParticleIdFrom particleMapper);
 
-edm4hep::MCParticle toParticle(const ActsFatras::Particle& particle,
-                               MapParticleIdTo particleMapper);
+void toParticle(const ActsFatras::Particle& from,
+                edm4hep::MutableMCParticle to);
 
 }  // namespace EDM4hepUtil
 }  // namespace ActsExamples
