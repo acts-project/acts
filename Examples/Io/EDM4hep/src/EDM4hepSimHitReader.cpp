@@ -9,8 +9,8 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitReader.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 
@@ -49,11 +49,11 @@ ProcessCode EDM4hepSimHitReader::read(const AlgorithmContext& ctx) {
     SimParticleContainer::sequence_type unordered;
 
     for (const auto& mcParticle : *m_mcParticleCollection) {
-      auto particle = EDM4hepUtil::fromParticle(
-          mcParticle, [](edm4hep::MCParticle particle) {
+      auto particle =
+          EDM4hepUtil::fromParticle(mcParticle, [](edm4hep::MCParticle p) {
             ActsFatras::Barcode result;
             // TODO dont use podio internal id
-            result.setParticle(particle.id());
+            result.setParticle(p.id());
             return result;
           });
       unordered.push_back(particle);
