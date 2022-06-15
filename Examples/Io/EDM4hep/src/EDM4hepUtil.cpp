@@ -13,27 +13,25 @@
 
 namespace ActsExamples {
 
-ActsFatras::Hit EDM4hepUtil::fromSimHit(
-    const edm4hep::SimTrackerHit& simTrackerHit,
-    MapParticleIdFrom particleMapper, MapGeometryIdFrom geometryMapper) {
-  ActsFatras::Barcode particleId =
-      particleMapper(simTrackerHit.getMCParticle());
-  Acts::GeometryIdentifier geometryId =
-      geometryMapper(simTrackerHit.getCellID());
+ActsFatras::Hit EDM4hepUtil::fromSimHit(const edm4hep::SimTrackerHit& from,
+                                        MapParticleIdFrom particleMapper,
+                                        MapGeometryIdFrom geometryMapper) {
+  ActsFatras::Barcode particleId = particleMapper(from.getMCParticle());
+  Acts::GeometryIdentifier geometryId = geometryMapper(from.getCellID());
 
-  const auto mass = simTrackerHit.getMCParticle().getMass();
+  const auto mass = from.getMCParticle().getMass();
   const Acts::ActsVector<3> momentum{
-      simTrackerHit.getMomentum().x * Acts::UnitConstants::GeV,
-      simTrackerHit.getMomentum().y * Acts::UnitConstants::GeV,
-      simTrackerHit.getMomentum().z * Acts::UnitConstants::GeV,
+      from.getMomentum().x * Acts::UnitConstants::GeV,
+      from.getMomentum().y * Acts::UnitConstants::GeV,
+      from.getMomentum().z * Acts::UnitConstants::GeV,
   };
   const auto energy = std::hypot(momentum.norm(), mass);
 
   ActsFatras::Hit::Vector4 pos4{
-      simTrackerHit.getPosition().x * Acts::UnitConstants::mm,
-      simTrackerHit.getPosition().y * Acts::UnitConstants::mm,
-      simTrackerHit.getPosition().z * Acts::UnitConstants::mm,
-      simTrackerHit.getTime() * Acts::UnitConstants::ns,
+      from.getPosition().x * Acts::UnitConstants::mm,
+      from.getPosition().y * Acts::UnitConstants::mm,
+      from.getPosition().z * Acts::UnitConstants::mm,
+      from.getTime() * Acts::UnitConstants::ns,
   };
   ActsFatras::Hit::Vector4 mom4{
       momentum.x(),
@@ -56,30 +54,30 @@ ActsFatras::Hit EDM4hepUtil::fromSimHit(
 }
 
 ActsFatras::Particle EDM4hepUtil::fromParticle(
-    edm4hep::MCParticle particle, MapParticleIdFrom particleMapper) {
-  ActsFatras::Barcode particleId = particleMapper(particle);
+    edm4hep::MCParticle from, MapParticleIdFrom particleMapper) {
+  ActsFatras::Barcode particleId = particleMapper(from);
 
-  ActsFatras::Particle result(particleId, Acts::PdgParticle(particle.getPDG()),
-                              particle.getCharge() * Acts::UnitConstants::e,
-                              particle.getMass() * Acts::UnitConstants::GeV);
+  ActsFatras::Particle to(particleId, (Acts::PdgParticle)from.getPDG(),
+                          from.getCharge() * Acts::UnitConstants::e,
+                          from.getMass() * Acts::UnitConstants::GeV);
 
   // TODO do we have that in EDM4hep?
   // particle.setProcess(static_cast<ActsFatras::ProcessType>(data.process));
 
-  result.setPosition4(particle.getVertex()[0] * Acts::UnitConstants::mm,
-                      particle.getVertex()[1] * Acts::UnitConstants::mm,
-                      particle.getVertex()[2] * Acts::UnitConstants::mm,
-                      particle.getTime() * Acts::UnitConstants::ns);
+  to.setPosition4(from.getVertex()[0] * Acts::UnitConstants::mm,
+                  from.getVertex()[1] * Acts::UnitConstants::mm,
+                  from.getVertex()[2] * Acts::UnitConstants::mm,
+                  from.getTime() * Acts::UnitConstants::ns);
 
   // Only used for direction; normalization/units do not matter
-  result.setDirection(particle.getMomentum()[0], particle.getMomentum()[1],
-                      particle.getMomentum()[2]);
-  result.setAbsoluteMomentum(std::hypot(particle.getMomentum()[0],
-                                        particle.getMomentum()[1],
-                                        particle.getMomentum()[2]) *
-                             Acts::UnitConstants::GeV);
+  to.setDirection(from.getMomentum()[0], from.getMomentum()[1],
+                  from.getMomentum()[2]);
+  to.setAbsoluteMomentum(std::hypot(from.getMomentum()[0],
+                                    from.getMomentum()[1],
+                                    from.getMomentum()[2]) *
+                         Acts::UnitConstants::GeV);
 
-  return result;
+  return to;
 }
 
 void EDM4hepUtil::toParticle(const ActsFatras::Particle& from,

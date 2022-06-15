@@ -31,11 +31,14 @@ using MapGeometryIdFrom =
 using MapGeometryIdTo =
     std::function<std::uint64_t(Acts::GeometryIdentifier geometryId)>;
 
-ActsFatras::Hit fromSimHit(const edm4hep::SimTrackerHit& simTrackerHit,
+ActsFatras::Hit fromSimHit(const edm4hep::SimTrackerHit& from,
                            MapParticleIdFrom particleMapper,
                            MapGeometryIdFrom geometryMapper);
 
-ActsFatras::Particle fromParticle(edm4hep::MCParticle particle,
+void toSimHit(const ActsFatras::Hit& from, edm4hep::MutableMCParticle to,
+              MapParticleIdTo particleMapper, MapGeometryIdTo geometryMapper);
+
+ActsFatras::Particle fromParticle(edm4hep::MCParticle from,
                                   MapParticleIdFrom particleMapper);
 
 void toParticle(const ActsFatras::Particle& from,

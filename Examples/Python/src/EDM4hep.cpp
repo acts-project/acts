@@ -42,6 +42,7 @@ void addEDM4hep(Context& ctx) {
     auto c = py::class_<Config>(r, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputPath);
+    ACTS_PYTHON_MEMBER(inputParticles);
     ACTS_PYTHON_MEMBER(outputSimHits);
     ACTS_PYTHON_MEMBER(dd4hepGeometryService);
     ACTS_PYTHON_STRUCT_END();
@@ -59,6 +60,8 @@ void addEDM4hep(Context& ctx) {
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputSimHits);
     ACTS_PYTHON_MEMBER(outputPath);
+    ACTS_PYTHON_MEMBER(outputParticles);
+    ACTS_PYTHON_MEMBER(outputSimTrackerHits);
     ACTS_PYTHON_STRUCT_END();
   }
 
@@ -111,6 +114,7 @@ void addEDM4hep(Context& ctx) {
     auto c = py::class_<Config>(r, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputPath);
+    ACTS_PYTHON_MEMBER(inputParticles);
     ACTS_PYTHON_MEMBER(outputParticles);
     ACTS_PYTHON_STRUCT_END();
   }
