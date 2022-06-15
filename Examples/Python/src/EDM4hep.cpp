@@ -132,6 +132,7 @@ void addEDM4hep(Context& ctx) {
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputParticles);
     ACTS_PYTHON_MEMBER(outputPath);
+    ACTS_PYTHON_MEMBER(outputParticles);
     ACTS_PYTHON_STRUCT_END();
   }
 }

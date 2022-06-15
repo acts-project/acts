@@ -101,10 +101,14 @@ void EDM4hepUtil::toSimHit(const ActsFatras::Hit& from,
   const Acts::Vector4& momentum4Before = from.momentum4Before();
   const auto delta4 = from.momentum4After() - momentum4Before;
 
-  to.setMCParticle(particleMapper(from.particleId()));
+  if (particleMapper != nullptr) {
+    to.setMCParticle(particleMapper(from.particleId()));
+  }
 
-  // TODO what about the digitization?
-  to.setCellID(geometryMapper(from.geometryId()));
+  if (geometryMapper != nullptr) {
+    // TODO what about the digitization?
+    to.setCellID(geometryMapper(from.geometryId()));
+  }
 
   to.setTime(globalPos4[Acts::eTime] / Acts::UnitConstants::ns);
   to.setPosition({
