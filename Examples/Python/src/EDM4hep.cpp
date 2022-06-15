@@ -59,6 +59,7 @@ void addEDM4hep(Context& ctx) {
     auto c = py::class_<Config>(w, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputSimHits);
+    ACTS_PYTHON_MEMBER(inputParticles);
     ACTS_PYTHON_MEMBER(outputPath);
     ACTS_PYTHON_MEMBER(outputParticles);
     ACTS_PYTHON_MEMBER(outputSimTrackerHits);

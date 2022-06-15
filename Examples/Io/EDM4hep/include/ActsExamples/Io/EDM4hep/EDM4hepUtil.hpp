@@ -14,6 +14,7 @@
 
 #include "edm4hep/MCParticle.h"
 #include "edm4hep/MutableMCParticle.h"
+#include "edm4hep/MutableSimTrackerHit.h"
 #include "edm4hep/SimTrackerHit.h"
 #include "edm4hep/TrackerHit.h"
 #include "edm4hep/TrackerHitPlane.h"
@@ -35,7 +36,7 @@ ActsFatras::Hit fromSimHit(const edm4hep::SimTrackerHit& from,
                            MapParticleIdFrom particleMapper,
                            MapGeometryIdFrom geometryMapper);
 
-void toSimHit(const ActsFatras::Hit& from, edm4hep::MutableMCParticle to,
+void toSimHit(const ActsFatras::Hit& from, edm4hep::MutableSimTrackerHit to,
               MapParticleIdTo particleMapper, MapGeometryIdTo geometryMapper);
 
 ActsFatras::Particle fromParticle(edm4hep::MCParticle from,

@@ -53,6 +53,35 @@ ActsFatras::Hit EDM4hepUtil::fromSimHit(const edm4hep::SimTrackerHit& from,
                          index);
 }
 
+void EDM4hepUtil::toSimHit(const ActsFatras::Hit& from,
+                           edm4hep::MutableSimTrackerHit to,
+                           MapParticleIdTo particleMapper,
+                           MapGeometryIdTo geometryMapper) {
+  const Acts::Vector4& globalPos4 = from.fourPosition();
+  const Acts::Vector4& momentum4Before = from.momentum4Before();
+  const auto delta4 = from.momentum4After() - momentum4Before;
+
+  to.setMCParticle(particleMapper(from.particleId()));
+
+  // TODO what about the digitization?
+  to.setCellID(geometryMapper(from.geometryId()));
+
+  to.setTime(globalPos4[Acts::eTime] / Acts::UnitConstants::ns);
+  to.setPosition({
+      globalPos4[Acts::ePos0] / Acts::UnitConstants::mm,
+      globalPos4[Acts::ePos1] / Acts::UnitConstants::mm,
+      globalPos4[Acts::ePos2] / Acts::UnitConstants::mm,
+  });
+
+  to.setMomentum({
+      (float)(momentum4Before[Acts::eMom0] / Acts::UnitConstants::GeV),
+      (float)(momentum4Before[Acts::eMom1] / Acts::UnitConstants::GeV),
+      (float)(momentum4Before[Acts::eMom2] / Acts::UnitConstants::GeV),
+  });
+
+  to.setEDep(delta4[Acts::eEnergy] / Acts::UnitConstants::GeV);
+}
+
 ActsFatras::Particle EDM4hepUtil::fromParticle(
     edm4hep::MCParticle from, MapParticleIdFrom particleMapper) {
   ActsFatras::Barcode particleId = particleMapper(from);

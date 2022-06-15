@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 
@@ -44,39 +45,36 @@ EDM4hepSimHitWriter::~EDM4hepSimHitWriter() {
   m_writer.finish();
 }
 
-ProcessCode EDM4hepSimHitWriter::writeT(const AlgorithmContext&,
+ProcessCode EDM4hepSimHitWriter::writeT(const AlgorithmContext& ctx,
                                         const SimHitContainer& simHits) {
-  if (!m_cfg.outputParticles.empty()) {
-    // TODO write particles
+  EDM4hepUtil::MapParticleIdTo particleMapper;
+  std::unordered_map<ActsFatras::Barcode, edm4hep::MutableMCParticle>
+      particleMap;
+
+  if (!m_cfg.inputParticles.empty()) {
+    auto particles =
+        ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
+
+    for (const auto& particle : particles) {
+      auto p = m_mcParticleCollection->create();
+      particleMap[particle.particleId()] = p;
+      EDM4hepUtil::toParticle(particle, p);
+    }
+
+    particleMapper = [&](ActsFatras::Barcode particleId) {
+      auto it = particleMap.find(particleId);
+      if (it == particleMap.end()) {
+        throw std::runtime_error("Particle not found in map");
+      }
+      return it->second;
+    };
   }
 
   for (const auto& simHit : simHits) {
     auto simTrackerHit = m_simTrackerHitCollection->create();
-
-    // local simhit information in global coord.
-    const Acts::Vector4& globalPos4 = simHit.fourPosition();
-    const Acts::Vector4& momentum4Before = simHit.momentum4Before();
-    const auto delta4 = simHit.momentum4After() - momentum4Before;
-
-    // TODO set particle
-
-    // TODO what about the digitization?
-    simTrackerHit.setCellID(simHit.geometryId().value());
-
-    simTrackerHit.setTime(globalPos4[Acts::eTime] / Acts::UnitConstants::ns);
-    simTrackerHit.setPosition({
-        globalPos4[Acts::ePos0] / Acts::UnitConstants::mm,
-        globalPos4[Acts::ePos1] / Acts::UnitConstants::mm,
-        globalPos4[Acts::ePos2] / Acts::UnitConstants::mm,
-    });
-
-    simTrackerHit.setMomentum({
-        (float)(momentum4Before[Acts::eMom0] / Acts::UnitConstants::GeV),
-        (float)(momentum4Before[Acts::eMom1] / Acts::UnitConstants::GeV),
-        (float)(momentum4Before[Acts::eMom2] / Acts::UnitConstants::GeV),
-    });
-
-    simTrackerHit.setEDep(delta4[Acts::eEnergy] / Acts::UnitConstants::GeV);
+    EDM4hepUtil::toSimHit(
+        simHit, simTrackerHit, particleMapper,
+        [](Acts::GeometryIdentifier id) { return id.value(); });
   }
 
   m_writer.writeEvent();

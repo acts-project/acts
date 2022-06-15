@@ -25,6 +25,8 @@ class EDM4hepSimHitWriter final : public WriterT<SimHitContainer> {
   struct Config {
     /// Which simulated (truth) hits collection to use.
     std::string inputSimHits;
+    /// Which simulated (truth) particle collection to use.
+    std::string inputParticles = "MCParticles";
     /// WWhere to write the output file to.
     std::string outputPath;
     /// Name of the particle collection in EDM4hep.
