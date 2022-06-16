@@ -73,4 +73,4 @@ ClusterCollection createClusters(CellCollection& cells,
 }  // namespace Ccl
 }  // namespace Acts
 
-#include "Acts/Clusterization/HkClusterization.ipp"
+#include "Acts/Clusterization/Clusterization.ipp"
