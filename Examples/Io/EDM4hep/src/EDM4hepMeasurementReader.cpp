@@ -12,13 +12,12 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 
 #include <list>
 
 #include "edm4hep/TrackerHit.h"
-#include "edm4hep/TrackerHitCollection.h"
 #include "edm4hep/TrackerHitPlane.h"
-#include "edm4hep/TrackerHitPlaneCollection.h"
 
 namespace ActsExamples {
 
@@ -50,29 +49,24 @@ std::pair<size_t, size_t> EDM4hepMeasurementReader::availableEvents() const {
 }
 
 ProcessCode EDM4hepMeasurementReader::read(const AlgorithmContext& ctx) {
-  // Prepare containers for the hit data using the framework event data types
-  GeometryIdMultimap<Measurement> orderedMeasurements;
+  MeasurementContainer measurements;
   ClusterContainer clusters;
+  // TODO what about those?
   IndexMultimap<Index> measurementSimHitsMap;
   IndexSourceLinkContainer sourceLinks;
-  // need list here for stable addresses
   std::list<IndexSourceLink> sourceLinkStorage;
-
-  // TODO reserve space for the containers
-  // orderedMeasurements.reserve(measurementData.size());
-  // Safe long as we have single particle to sim hit association
-  // measurementSimHitsMap.reserve(measurementData.size());
-  // sourceLinks.reserve(measurementData.size());
 
   m_store.clear();
   m_reader.goToEvent(ctx.eventNumber);
 
-  // TODO
-  // for (const auto& trackerHitPlane : *m_trackerHitPlaneCollection) { }
+  for (const auto& trackerHitPlane : *m_trackerHitPlaneCollection) {
+    Cluster cluster;
+    auto measurement = EDM4hepUtil::fromMeasurement(
+        trackerHitPlane, m_trackerHitRawCollection, &cluster,
+        [](std::uint64_t cellId) { return Acts::GeometryIdentifier(cellId); });
 
-  MeasurementContainer measurements;
-  for (auto& [_, meas] : orderedMeasurements) {
-    measurements.emplace_back(std::move(meas));
+    measurements.push_back(measurement);
+    clusters.push_back(cluster);
   }
 
   // Write the data to the EventStore

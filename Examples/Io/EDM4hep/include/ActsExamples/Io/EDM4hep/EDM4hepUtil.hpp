@@ -27,6 +27,8 @@
 namespace ActsExamples {
 namespace EDM4hepUtil {
 
+static constexpr std::int32_t EDM4HEP_ACTS_POSITION_TYPE = 42;
+
 using MapParticleIdFrom =
     std::function<ActsFatras::Barcode(edm4hep::MCParticle particle)>;
 using MapParticleIdTo =
@@ -50,10 +52,15 @@ ActsFatras::Hit fromSimHit(const edm4hep::SimTrackerHit& from,
 void toSimHit(const ActsFatras::Hit& from, edm4hep::MutableSimTrackerHit to,
               MapParticleIdTo particleMapper, MapGeometryIdTo geometryMapper);
 
-void toMeasurement(const ActsExamples::Measurement& from,
-                   edm4hep::MutableTrackerHitPlane to,
+Measurement fromMeasurement(edm4hep::TrackerHitPlane from,
+                            const edm4hep::TrackerHitCollection* fromClusters,
+                            Cluster* toCluster,
+                            MapGeometryIdFrom geometryMapper);
+
+void toMeasurement(const Measurement& from, edm4hep::MutableTrackerHitPlane to,
                    const Cluster* fromCluster,
-                   edm4hep::TrackerHitCollection& toClusters);
+                   edm4hep::TrackerHitCollection& toClusters,
+                   MapGeometryIdTo geometryMapper);
 
 }  // namespace EDM4hepUtil
 }  // namespace ActsExamples

@@ -9,6 +9,9 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "ActsExamples/Digitization/MeasurementCreation.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 
 namespace ActsExamples {
@@ -32,6 +35,7 @@ ActsFatras::Particle EDM4hepUtil::fromParticle(
   // Only used for direction; normalization/units do not matter
   to.setDirection(from.getMomentum()[0], from.getMomentum()[1],
                   from.getMomentum()[2]);
+
   to.setAbsoluteMomentum(std::hypot(from.getMomentum()[0],
                                     from.getMomentum()[1],
                                     from.getMomentum()[2]) *
@@ -73,6 +77,7 @@ ActsFatras::Hit EDM4hepUtil::fromSimHit(const edm4hep::SimTrackerHit& from,
       from.getPosition().z * Acts::UnitConstants::mm,
       from.getTime() * Acts::UnitConstants::ns,
   };
+
   ActsFatras::Hit::Vector4 mom4{
       momentum.x(),
       momentum.y(),
@@ -86,6 +91,7 @@ ActsFatras::Hit EDM4hepUtil::fromSimHit(const edm4hep::SimTrackerHit& from,
       0 * Acts::UnitConstants::GeV,
       0 * Acts::UnitConstants::GeV,  // sth.getEDep()
   };
+
   // TODO no EDM4hep equivalent?
   int32_t index = -1;
 
@@ -111,6 +117,7 @@ void EDM4hepUtil::toSimHit(const ActsFatras::Hit& from,
   }
 
   to.setTime(globalPos4[Acts::eTime] / Acts::UnitConstants::ns);
+
   to.setPosition({
       globalPos4[Acts::ePos0] / Acts::UnitConstants::mm,
       globalPos4[Acts::ePos1] / Acts::UnitConstants::mm,
@@ -123,37 +130,100 @@ void EDM4hepUtil::toSimHit(const ActsFatras::Hit& from,
       (float)(momentum4Before[Acts::eMom2] / Acts::UnitConstants::GeV),
   });
 
-  to.setEDep(delta4[Acts::eEnergy] / Acts::UnitConstants::GeV);
+  to.setEDep(-delta4[Acts::eEnergy] / Acts::UnitConstants::GeV);
 }
 
-void EDM4hepUtil::toMeasurement(const ActsExamples::Measurement& from,
+Measurement EDM4hepUtil::fromMeasurement(
+    edm4hep::TrackerHitPlane from,
+    const edm4hep::TrackerHitCollection* fromClusters, Cluster* toCluster,
+    MapGeometryIdFrom geometryMapper) {
+  // no need for digitization as we only want to identify the sensor
+  Acts::GeometryIdentifier geometryId = geometryMapper(from.getCellID());
+
+  // TODO what about the hit index?
+  IndexSourceLink sourceLink{geometryId, 0};
+
+  auto pos = from.getPosition();
+  auto cov = from.getCovMatrix();
+
+  DigitizedParameters dParameters;
+
+  dParameters.indices.push_back(Acts::eBoundLoc0);
+  dParameters.values.push_back(pos.x);
+  dParameters.variances.push_back(cov[0]);
+
+  // TODO cut this out for 1D
+  dParameters.indices.push_back(Acts::eBoundLoc1);
+  dParameters.values.push_back(pos.y);
+  dParameters.variances.push_back(cov[2]);
+
+  dParameters.indices.push_back(Acts::eBoundTime);
+  dParameters.values.push_back(pos.z);
+  dParameters.variances.push_back(cov[5]);
+
+  auto to = createMeasurement(dParameters, sourceLink);
+
+  if (fromClusters != nullptr) {
+    for (auto objectId : from.getRawHits()) {
+      const auto& c = fromClusters->at(objectId.index);
+
+      // TODO get EDM4hep fixed
+      // misusing some fields to store ACTS specific information
+      // don't ask ...
+      ActsFatras::Channelizer::Bin2D bin{(unsigned int)c.getType(),
+                                         (unsigned int)c.getQuality()};
+      ActsFatras::Channelizer::Segment2D path2D;
+      double activation = c.getTime();
+      ActsFatras::Channelizer::ChannelSegment cell{bin, path2D, activation};
+
+      toCluster->channels.push_back(cell);
+    }
+  }
+
+  return to;
+}
+
+void EDM4hepUtil::toMeasurement(const Measurement& from,
                                 edm4hep::MutableTrackerHitPlane to,
                                 const Cluster* fromCluster,
-                                edm4hep::TrackerHitCollection& toClusters) {
+                                edm4hep::TrackerHitCollection& toClusters,
+                                MapGeometryIdTo geometryMapper) {
   std::visit(
       [&](const auto& m) {
         Acts::GeometryIdentifier geoId = m.sourceLink().geometryId();
 
-        auto parameters = (m.expander() * m.parameters()).eval();
+        if (geometryMapper != nullptr) {
+          // no need for digitization as we only want to identify the sensor
+          to.setCellID(geometryMapper(geoId));
+        }
 
-        // TODO map to DD4hep?
-        to.setCellID(geoId.value());
+        auto parameters = (m.expander() * m.parameters()).eval();
 
         to.setTime(parameters[Acts::eBoundTime] / Acts::UnitConstants::ns);
 
-        to.setU({(float)parameters[Acts::eBoundLoc0],
-                 (float)parameters[Acts::eBoundLoc1]});
+        to.setType(EDM4hepUtil::EDM4HEP_ACTS_POSITION_TYPE);
+        // TODO set uv (which are in global spherical coordinates with r=1)
+        to.setPosition({parameters[Acts::eBoundLoc0],
+                        parameters[Acts::eBoundLoc1],
+                        parameters[Acts::eBoundTime]});
 
-        // auto covariance = (m.expander() * m.covariance() *
-        // m.expander().transpose()).eval();
+        auto covariance =
+            (m.expander() * m.covariance() * m.expander().transpose()).eval();
+        to.setCovMatrix({
+            (float)covariance(Acts::eBoundLoc0, Acts::eBoundLoc0),
+            (float)covariance(Acts::eBoundLoc1, Acts::eBoundLoc0),
+            (float)covariance(Acts::eBoundLoc1, Acts::eBoundLoc1),
+            0,
+            0,
+            0,
+        });
 
         if (fromCluster != nullptr) {
           for (auto& c : fromCluster->channels) {
             auto toChannel = toClusters.create();
             to.addToRawHits(toChannel.getObjectID());
 
-            // TODO map to DD4hep?
-            toChannel.setCellID(to.getCellID());
+            // TODO digitization channel
 
             // TODO get EDM4hep fixed
             // misusing some fields to store ACTS specific information

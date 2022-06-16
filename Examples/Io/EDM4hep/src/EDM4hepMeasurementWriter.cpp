@@ -57,7 +57,7 @@ ActsExamples::ProcessCode EDM4hepMeasurementWriter::writeT(
     const AlgorithmContext& ctx, const MeasurementContainer& measurements) {
   ClusterContainer clusters;
 
-  if (not m_cfg.inputClusters.empty()) {
+  if (!m_cfg.inputClusters.empty()) {
     ACTS_VERBOSE("Fetch clusters for writing: " << m_cfg.inputClusters);
     clusters = ctx.eventStore.get<ClusterContainer>(m_cfg.inputClusters);
   }
@@ -70,8 +70,9 @@ ActsExamples::ProcessCode EDM4hepMeasurementWriter::writeT(
     Cluster* fromCluster = clusters.empty() ? nullptr : &clusters[hitIdx];
 
     auto to = m_trackerHitPlaneCollection->create();
-    EDM4hepUtil::toMeasurement(from, to, fromCluster,
-                               *m_trackerHitRawCollection);
+    EDM4hepUtil::toMeasurement(
+        from, to, fromCluster, *m_trackerHitRawCollection,
+        [](Acts::GeometryIdentifier id) { return id.value(); });
   }
 
   m_writer.writeEvent();
