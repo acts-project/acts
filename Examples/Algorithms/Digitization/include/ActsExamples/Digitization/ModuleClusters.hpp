@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Clusterization/HkClusterization.hpp"
+#include "Acts/Clusterization/Clusterization.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
