@@ -9,6 +9,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementReader.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementWriter.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepMultiTrajectoryWriter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepParticleReader.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepParticleWriter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitReader.hpp"
@@ -133,6 +134,22 @@ void addEDM4hep(Context& ctx) {
     ACTS_PYTHON_MEMBER(inputParticles);
     ACTS_PYTHON_MEMBER(outputPath);
     ACTS_PYTHON_MEMBER(outputParticles);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    using Writer = ActsExamples::EDM4hepMultiTrajectoryWriter;
+    using Config = Writer::Config;
+    auto w = py::class_<Writer, ActsExamples::IWriter, std::shared_ptr<Writer>>(
+                 edm4hep, "EDM4hepMultiTrajectoryWriter")
+                 .def(py::init<const Config&, Acts::Logging::Level>(),
+                      py::arg("config"), py::arg("level"));
+
+    auto c = py::class_<Config>(w, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(inputTrajectories);
+    ACTS_PYTHON_MEMBER(inputMeasurementParticlesMap);
+    ACTS_PYTHON_MEMBER(outputPath);
     ACTS_PYTHON_STRUCT_END();
   }
 }

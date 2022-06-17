@@ -9,6 +9,7 @@
 
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
@@ -17,6 +18,7 @@
 #include "edm4hep/MCParticle.h"
 #include "edm4hep/MutableMCParticle.h"
 #include "edm4hep/MutableSimTrackerHit.h"
+#include "edm4hep/MutableTrack.h"
 #include "edm4hep/MutableTrackerHit.h"
 #include "edm4hep/MutableTrackerHitPlane.h"
 #include "edm4hep/SimTrackerHit.h"
@@ -39,28 +41,34 @@ using MapGeometryIdFrom =
 using MapGeometryIdTo =
     std::function<std::uint64_t(Acts::GeometryIdentifier geometryId)>;
 
-ActsFatras::Particle fromParticle(edm4hep::MCParticle from,
+ActsFatras::Particle readParticle(edm4hep::MCParticle from,
                                   MapParticleIdFrom particleMapper);
 
-void toParticle(const ActsFatras::Particle& from,
-                edm4hep::MutableMCParticle to);
+void writeParticle(const ActsFatras::Particle& from,
+                   edm4hep::MutableMCParticle to);
 
-ActsFatras::Hit fromSimHit(const edm4hep::SimTrackerHit& from,
+ActsFatras::Hit readSimHit(const edm4hep::SimTrackerHit& from,
                            MapParticleIdFrom particleMapper,
                            MapGeometryIdFrom geometryMapper);
 
-void toSimHit(const ActsFatras::Hit& from, edm4hep::MutableSimTrackerHit to,
-              MapParticleIdTo particleMapper, MapGeometryIdTo geometryMapper);
+void writeSimHit(const ActsFatras::Hit& from, edm4hep::MutableSimTrackerHit to,
+                 MapParticleIdTo particleMapper,
+                 MapGeometryIdTo geometryMapper);
 
-Measurement fromMeasurement(edm4hep::TrackerHitPlane from,
+Measurement readMeasurement(edm4hep::TrackerHitPlane from,
                             const edm4hep::TrackerHitCollection* fromClusters,
                             Cluster* toCluster,
                             MapGeometryIdFrom geometryMapper);
 
-void toMeasurement(const Measurement& from, edm4hep::MutableTrackerHitPlane to,
-                   const Cluster* fromCluster,
-                   edm4hep::TrackerHitCollection& toClusters,
-                   MapGeometryIdTo geometryMapper);
+void writeMeasurement(const Measurement& from,
+                      edm4hep::MutableTrackerHitPlane to,
+                      const Cluster* fromCluster,
+                      edm4hep::TrackerHitCollection& toClusters,
+                      MapGeometryIdTo geometryMapper);
+
+void writeMultiTrajectory(
+    const Trajectories& from, edm4hep::MutableTrack to, std::size_t fromIndex,
+    const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap);
 
 }  // namespace EDM4hepUtil
 }  // namespace ActsExamples

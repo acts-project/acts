@@ -50,7 +50,7 @@ ProcessCode EDM4hepSimHitReader::read(const AlgorithmContext& ctx) {
 
     for (const auto& mcParticle : *m_mcParticleCollection) {
       auto particle =
-          EDM4hepUtil::fromParticle(mcParticle, [](edm4hep::MCParticle p) {
+          EDM4hepUtil::readParticle(mcParticle, [](edm4hep::MCParticle p) {
             ActsFatras::Barcode result;
             // TODO dont use podio internal id
             result.setParticle(p.id());
@@ -79,7 +79,7 @@ ProcessCode EDM4hepSimHitReader::read(const AlgorithmContext& ctx) {
       for (const auto& simTrackerHit :
            (const edm4hep::SimTrackerHitCollection&)collection) {
         try {
-          auto hit = EDM4hepUtil::fromSimHit(
+          auto hit = EDM4hepUtil::readSimHit(
               simTrackerHit,
               [](edm4hep::MCParticle particle) {
                 ActsFatras::Barcode result;

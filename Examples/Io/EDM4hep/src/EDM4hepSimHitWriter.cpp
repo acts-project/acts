@@ -58,7 +58,7 @@ ProcessCode EDM4hepSimHitWriter::writeT(const AlgorithmContext& ctx,
     for (const auto& particle : particles) {
       auto p = m_mcParticleCollection->create();
       particleMap[particle.particleId()] = p;
-      EDM4hepUtil::toParticle(particle, p);
+      EDM4hepUtil::writeParticle(particle, p);
     }
 
     particleMapper = [&](ActsFatras::Barcode particleId) {
@@ -72,7 +72,7 @@ ProcessCode EDM4hepSimHitWriter::writeT(const AlgorithmContext& ctx,
 
   for (const auto& simHit : simHits) {
     auto simTrackerHit = m_simTrackerHitCollection->create();
-    EDM4hepUtil::toSimHit(
+    EDM4hepUtil::writeSimHit(
         simHit, simTrackerHit, particleMapper,
         [](Acts::GeometryIdentifier id) { return id.value(); });
   }

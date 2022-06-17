@@ -9,14 +9,18 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/Validation/TrackClassification.hpp"
+
+#include "edm4hep/TrackState.h"
 
 namespace ActsExamples {
 
-ActsFatras::Particle EDM4hepUtil::fromParticle(
+ActsFatras::Particle EDM4hepUtil::readParticle(
     edm4hep::MCParticle from, MapParticleIdFrom particleMapper) {
   ActsFatras::Barcode particleId = particleMapper(from);
 
@@ -44,8 +48,8 @@ ActsFatras::Particle EDM4hepUtil::fromParticle(
   return to;
 }
 
-void EDM4hepUtil::toParticle(const ActsFatras::Particle& from,
-                             edm4hep::MutableMCParticle to) {
+void EDM4hepUtil::writeParticle(const ActsFatras::Particle& from,
+                                edm4hep::MutableMCParticle to) {
   // TODO what about particleId?
 
   to.setPDG(from.pdg());
@@ -57,7 +61,7 @@ void EDM4hepUtil::toParticle(const ActsFatras::Particle& from,
                   (float)from.fourMomentum().z()});
 }
 
-ActsFatras::Hit EDM4hepUtil::fromSimHit(const edm4hep::SimTrackerHit& from,
+ActsFatras::Hit EDM4hepUtil::readSimHit(const edm4hep::SimTrackerHit& from,
                                         MapParticleIdFrom particleMapper,
                                         MapGeometryIdFrom geometryMapper) {
   ActsFatras::Barcode particleId = particleMapper(from.getMCParticle());
@@ -99,10 +103,10 @@ ActsFatras::Hit EDM4hepUtil::fromSimHit(const edm4hep::SimTrackerHit& from,
                          index);
 }
 
-void EDM4hepUtil::toSimHit(const ActsFatras::Hit& from,
-                           edm4hep::MutableSimTrackerHit to,
-                           MapParticleIdTo particleMapper,
-                           MapGeometryIdTo geometryMapper) {
+void EDM4hepUtil::writeSimHit(const ActsFatras::Hit& from,
+                              edm4hep::MutableSimTrackerHit to,
+                              MapParticleIdTo particleMapper,
+                              MapGeometryIdTo geometryMapper) {
   const Acts::Vector4& globalPos4 = from.fourPosition();
   const Acts::Vector4& momentum4Before = from.momentum4Before();
   const auto delta4 = from.momentum4After() - momentum4Before;
@@ -133,7 +137,7 @@ void EDM4hepUtil::toSimHit(const ActsFatras::Hit& from,
   to.setEDep(-delta4[Acts::eEnergy] / Acts::UnitConstants::GeV);
 }
 
-Measurement EDM4hepUtil::fromMeasurement(
+Measurement EDM4hepUtil::readMeasurement(
     edm4hep::TrackerHitPlane from,
     const edm4hep::TrackerHitCollection* fromClusters, Cluster* toCluster,
     MapGeometryIdFrom geometryMapper) {
@@ -183,11 +187,11 @@ Measurement EDM4hepUtil::fromMeasurement(
   return to;
 }
 
-void EDM4hepUtil::toMeasurement(const Measurement& from,
-                                edm4hep::MutableTrackerHitPlane to,
-                                const Cluster* fromCluster,
-                                edm4hep::TrackerHitCollection& toClusters,
-                                MapGeometryIdTo geometryMapper) {
+void EDM4hepUtil::writeMeasurement(const Measurement& from,
+                                   edm4hep::MutableTrackerHitPlane to,
+                                   const Cluster* fromCluster,
+                                   edm4hep::TrackerHitCollection& toClusters,
+                                   MapGeometryIdTo geometryMapper) {
   std::visit(
       [&](const auto& m) {
         Acts::GeometryIdentifier geoId = m.sourceLink().geometryId();
@@ -235,6 +239,43 @@ void EDM4hepUtil::toMeasurement(const Measurement& from,
         }
       },
       from);
+}
+
+void EDM4hepUtil::writeMultiTrajectory(
+    const Trajectories& from, edm4hep::MutableTrack to, std::size_t fromIndex,
+    const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap) {
+  const auto& multiTrajectory = from.multiTrajectory();
+  auto trajectoryState =
+      Acts::MultiTrajectoryHelpers::trajectoryState(multiTrajectory, fromIndex);
+
+  std::vector<ParticleHitCount> particleHitCount;
+  identifyContributingParticles(hitParticlesMap, from, fromIndex,
+                                particleHitCount);
+
+  to.setChi2(trajectoryState.chi2Sum / trajectoryState.NDF);
+  to.setNdf(trajectoryState.NDF);
+
+  multiTrajectory.visitBackwards(fromIndex, [&](const auto& state) {
+    // we only fill the track states with non-outlier measurement
+    auto typeFlags = state.typeFlags();
+    if (!typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
+      return true;
+    }
+
+    // expand the local measurements into the full bound space
+    // Acts::BoundVector meas = state.projector().transpose() *
+    // state.calibrated();
+
+    edm4hep::TrackState trackState;
+    trackState.D0 = 0;         // TODO
+    trackState.phi = 0;        // TODO
+    trackState.omega = 0;      // TODO
+    trackState.Z0 = 0;         // TODO
+    trackState.tanLambda = 0;  // TODO
+    to.addToTrackStates(trackState);
+
+    return true;
+  });
 }
 
 }  // namespace ActsExamples

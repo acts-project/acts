@@ -70,7 +70,7 @@ ActsExamples::ProcessCode EDM4hepMeasurementWriter::writeT(
     Cluster* fromCluster = clusters.empty() ? nullptr : &clusters[hitIdx];
 
     auto to = m_trackerHitPlaneCollection->create();
-    EDM4hepUtil::toMeasurement(
+    EDM4hepUtil::writeMeasurement(
         from, to, fromCluster, *m_trackerHitRawCollection,
         [](Acts::GeometryIdentifier id) { return id.value(); });
   }
