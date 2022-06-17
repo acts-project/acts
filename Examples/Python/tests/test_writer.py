@@ -652,3 +652,43 @@ def test_edm4hep_particle_writer(tmp_path, conf_const, ptcl_gun):
 
     assert os.path.isfile(out)
     assert os.stat(out).st_size > 200
+
+
+@pytest.mark.edm4hep
+@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
+def test_edm4hep_multitrajectory_writer(tmp_path):
+    from acts.examples.edm4hep import EDM4hepMultiTrajectoryWriter
+
+    detector, trackingGeometry, decorators = GenericDetector.create()
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+    from truth_tracking_kalman import runTruthTrackingKalman
+
+    s = Sequencer(numThreads=1, events=10)
+    runTruthTrackingKalman(
+        trackingGeometry,
+        field,
+        digiConfigFile=Path(
+            str(
+                Path(__file__).parent.parent.parent.parent
+                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            )
+        ),
+        outputDir=tmp_path,
+        s=s,
+    )
+
+    out = tmp_path / "trajectories_edm4hep.root"
+
+    s.addWriter(
+        EDM4hepMultiTrajectoryWriter(
+            level=acts.logging.INFO,
+            inputTrajectories="trajectories",
+            inputMeasurementParticlesMap="measurement_particles_map",
+            outputPath=str(out),
+        )
+    )
+    s.run()
+
+    assert os.path.isfile(out)
+    assert os.stat(out).st_size > 200
