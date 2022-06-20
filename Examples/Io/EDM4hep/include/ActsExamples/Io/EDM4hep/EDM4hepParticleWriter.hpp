@@ -55,7 +55,7 @@ class EDM4hepParticleWriter final : public WriterT<SimParticleContainer> {
                      const SimParticleContainer& particles) final;
 
  private:
-  Config m_cfg;  //!< Nested configuration struct
+  Config m_cfg;
 
   podio::ROOTWriter m_writer;
   podio::EventStore m_store;
