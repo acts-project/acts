@@ -283,6 +283,7 @@ void EDM4hepUtil::writeTrajectory(
     trackState.referencePoint = {0, 0, 0};
 
     // TODO apply jacobian to covariance
+    // TODO apply permutation
 
     // EDM4hep doc:
     // lower triangular covariance matrix of the track parameters.  the order of
