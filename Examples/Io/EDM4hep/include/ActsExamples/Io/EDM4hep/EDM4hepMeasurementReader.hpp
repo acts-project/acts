@@ -21,6 +21,15 @@
 namespace ActsExamples {
 
 /// Read in a measurement cluster collection from EDM4hep.
+///
+/// Inpersistent information:
+/// - hit index
+/// - 1D local coords?
+/// - segment path
+///
+/// Known issues:
+/// - cluster channels are read from inappropriate fields
+/// - local 2D coordinates and time are read from position
 class EDM4hepMeasurementReader final : public IReader {
  public:
   struct Config {

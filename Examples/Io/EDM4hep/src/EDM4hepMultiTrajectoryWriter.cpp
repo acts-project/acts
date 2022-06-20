@@ -35,6 +35,8 @@ EDM4hepMultiTrajectoryWriter::~EDM4hepMultiTrajectoryWriter() {
 
 ProcessCode EDM4hepMultiTrajectoryWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
+  ACTS_VERBOSE("asdfasdfasd");
+
   const auto& hitParticlesMap =
       ctx.eventStore.get<IndexMultimap<ActsFatras::Barcode>>(
           m_cfg.inputMeasurementParticlesMap);

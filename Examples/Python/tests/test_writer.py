@@ -660,7 +660,7 @@ def test_edm4hep_particle_writer(tmp_path, conf_const, ptcl_gun):
 def test_edm4hep_multitrajectory_writer(tmp_path):
     from acts.examples.edm4hep import EDM4hepMultiTrajectoryWriter
 
-    _, trackingGeometry, _ = GenericDetector.create()
+    detector, trackingGeometry, decorators = GenericDetector.create()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     from truth_tracking_kalman import runTruthTrackingKalman
@@ -683,7 +683,7 @@ def test_edm4hep_multitrajectory_writer(tmp_path):
 
     s.addWriter(
         EDM4hepMultiTrajectoryWriter(
-            level=acts.logging.INFO,
+            level=acts.logging.VERBOSE,
             inputTrajectories="trajectories",
             inputMeasurementParticlesMap="measurement_particles_map",
             outputPath=str(out),

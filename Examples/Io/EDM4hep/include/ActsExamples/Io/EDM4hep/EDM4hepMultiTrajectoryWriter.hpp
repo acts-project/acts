@@ -21,6 +21,14 @@ namespace ActsExamples {
 
 /// Write out the tracks reconstructed using Combinatorial Kalman Filter to
 /// EDM4hep.
+///
+/// Inpersistent information:
+/// - trajectory state incomplete
+///
+/// Known issues:
+/// - curvature parameter
+/// - track state local coordinates are written to (D0,Z0)
+/// - covariance incorrect
 class EDM4hepMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
  public:
   struct Config {

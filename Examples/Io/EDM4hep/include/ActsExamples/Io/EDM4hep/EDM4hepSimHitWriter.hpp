@@ -21,6 +21,12 @@
 namespace ActsExamples {
 
 /// Write out a simhit collection to EDM4hep.
+///
+/// Inpersistent information:
+/// - particle ID
+/// - after4 momentum
+/// - hit index
+/// - digitization channel
 class EDM4hepSimHitWriter final : public WriterT<SimHitContainer> {
  public:
   struct Config {

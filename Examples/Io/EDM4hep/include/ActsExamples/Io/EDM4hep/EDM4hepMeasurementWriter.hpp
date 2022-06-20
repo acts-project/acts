@@ -21,13 +21,22 @@
 namespace ActsExamples {
 
 /// Write out a measurement cluster collection to EDM4hep.
+///
+/// Inpersistent information:
+/// - hit index
+/// - 1D local coords?
+/// - segment path
+///
+/// Known issues:
+/// - cluster channels are written to inappropriate fields
+/// - local 2D coordinates and time are written to position
 class EDM4hepMeasurementWriter final : public WriterT<MeasurementContainer> {
  public:
   struct Config {
     /// Which measurement collection to write.
     std::string inputMeasurements;
     /// Which cluster collection to write (optional)
-    std::string inputClusters = "";
+    std::string inputClusters;
     /// Which simulated (truth) hits collection to use.
     std::string inputSimHits;
     /// Input collection to map measured hits to simulated hits.

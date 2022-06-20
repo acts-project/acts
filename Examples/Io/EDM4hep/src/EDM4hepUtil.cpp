@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
@@ -66,6 +67,8 @@ ActsFatras::Hit EDM4hepUtil::readSimHit(const edm4hep::SimTrackerHit& from,
                                         MapParticleIdFrom particleMapper,
                                         MapGeometryIdFrom geometryMapper) {
   ActsFatras::Barcode particleId = particleMapper(from.getMCParticle());
+
+  // TODO what about the digitization?
   Acts::GeometryIdentifier geometryId = geometryMapper(from.getCellID());
 
   const auto mass = from.getMCParticle().getMass();
@@ -266,8 +269,9 @@ void EDM4hepUtil::writeTrajectory(
       return true;
     }
 
-    auto meas = state.smoothed();
-    auto cov = state.smoothedCovariance();
+    Acts::BoundVector meas = state.projector().transpose() * state.parameters();
+    Acts::BoundMatrix cov =
+        state.projector() * state.covariance() * state.projector().transpose();
 
     edm4hep::TrackState trackState;
 

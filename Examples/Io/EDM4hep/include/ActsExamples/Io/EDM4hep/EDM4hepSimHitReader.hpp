@@ -22,6 +22,12 @@
 namespace ActsExamples {
 
 /// Read in a simhit collection from EDM4hep.
+///
+/// Inpersistent information:
+/// - particle ID
+/// - after4 momentum
+/// - hit index
+/// - digitization channel
 class EDM4hepSimHitReader final : public IReader {
  public:
   struct Config {

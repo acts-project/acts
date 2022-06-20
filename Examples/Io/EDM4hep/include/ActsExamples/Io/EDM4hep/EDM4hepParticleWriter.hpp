@@ -20,6 +20,10 @@
 namespace ActsExamples {
 
 /// Write particles to EDM4hep
+///
+/// Inpersistent information:
+/// - particle ID
+/// - process
 class EDM4hepParticleWriter final : public WriterT<SimParticleContainer> {
  public:
   struct Config {

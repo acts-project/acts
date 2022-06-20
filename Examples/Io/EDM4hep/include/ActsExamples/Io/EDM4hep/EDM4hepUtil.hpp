@@ -41,55 +41,82 @@ using MapGeometryIdFrom =
 using MapGeometryIdTo =
     std::function<std::uint64_t(Acts::GeometryIdentifier geometryId)>;
 
-/// Read a Fatras particle from EDM4hep.
+/// Reads a Fatras particle from EDM4hep.
 ///
-/// Note: The particle ID is not persitent in EDM4hep.
+/// Inpersistent information:
+/// - particle ID
+/// - process
 ActsFatras::Particle readParticle(edm4hep::MCParticle from,
                                   MapParticleIdFrom particleMapper);
 
 /// Write a Fatras particle into EDM4hep.
 ///
-/// Note: The particle ID is not persitent in EDM4hep.
+/// Inpersistent information:
+/// - particle ID
+/// - process
 void writeParticle(const ActsFatras::Particle& from,
                    edm4hep::MutableMCParticle to);
 
-/// Read a Fatras hit from EDM4hep.
+/// Reads a Fatras hit from EDM4hep.
 ///
-/// Note: The hit index is not persitent.
+/// Inpersistent information:
+/// - after4 momentum
+/// - hit index
+/// - digitization channel
 ActsFatras::Hit readSimHit(const edm4hep::SimTrackerHit& from,
                            MapParticleIdFrom particleMapper,
                            MapGeometryIdFrom geometryMapper);
 
-/// Write a Fatras hit to EDM4hep.
+/// Writes a Fatras hit to EDM4hep.
 ///
-/// Note: The hit index is not persitent.
+/// Inpersistent information:
+/// - after4 momentum
+/// - hit index
+/// - digitization channel
 void writeSimHit(const ActsFatras::Hit& from, edm4hep::MutableSimTrackerHit to,
                  MapParticleIdTo particleMapper,
                  MapGeometryIdTo geometryMapper);
 
-/// Read a measurement cluster from EDM4hep.
+/// Reads a measurement cluster from EDM4hep.
 ///
-/// Note: The hit index is not persitent.
-/// Note: 1D not supported.
-/// Note: Clusters are written to inappropriate fields.
-/// Note: Digitization is not supported.
+/// Inpersistent information:
+/// - hit index
+/// - 1D local coords?
+/// - segment path
+///
+/// Known issues:
+/// - cluster channels are read from inappropriate fields
+/// - local 2D coordinates and time are read from position
 Measurement readMeasurement(edm4hep::TrackerHitPlane from,
                             const edm4hep::TrackerHitCollection* fromClusters,
                             Cluster* toCluster,
                             MapGeometryIdFrom geometryMapper);
 
-/// Write a measurement cluster to EDM4hep.
+/// Writes a measurement cluster to EDM4hep.
 ///
-/// Note: The hit index is not persitent.
-/// Note: 1D not supported.
-/// Note: Clusters are written to inappropriate fields.
-/// Note: Digitization is not supported.
+/// Inpersistent information:
+/// - hit index
+/// - 1D local coords?
+/// - segment path
+///
+/// Known issues:
+/// - cluster channels are written to inappropriate fields
+/// - local 2D coordinates and time are written to position
 void writeMeasurement(const Measurement& from,
                       edm4hep::MutableTrackerHitPlane to,
                       const Cluster* fromCluster,
                       edm4hep::TrackerHitCollection& toClusters,
                       MapGeometryIdTo geometryMapper);
 
+/// Writes a trajectory to EDM4hep.
+///
+/// Inpersistent information:
+/// - trajectory state incomplete
+///
+/// Known issues:
+/// - curvature parameter
+/// - track state local coordinates are written to (D0,Z0)
+/// - covariance incorrect
 void writeTrajectory(const Trajectories& from, edm4hep::MutableTrack to,
                      std::size_t fromIndex,
                      const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap);

@@ -21,6 +21,10 @@
 namespace ActsExamples {
 
 /// Read particles from EDM4hep.
+///
+/// Inpersistent information:
+/// - particle ID
+/// - process
 class EDM4hepParticleReader final : public IReader {
  public:
   struct Config {
