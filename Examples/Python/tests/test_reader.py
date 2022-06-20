@@ -370,7 +370,7 @@ def test_edm4hep_measurement_reader(tmp_path, fatras, conf_const):
     )
 
     s = Sequencer(numThreads=1, events=10)
-    evGen, simAlg, digiAlg = fatras(s)
+    _, simAlg, digiAlg = fatras(s)
 
     out = tmp_path / "measurements_edm4hep.root"
 

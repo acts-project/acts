@@ -582,7 +582,7 @@ def test_edm4hep_measurement_writer(tmp_path, fatras):
     from acts.examples.edm4hep import EDM4hepMeasurementWriter
 
     s = Sequencer(numThreads=1, events=10)
-    evGen, simAlg, digiAlg = fatras(s)
+    _, simAlg, digiAlg = fatras(s)
 
     out = tmp_path / "measurements_edm4hep.root"
 
@@ -596,6 +596,7 @@ def test_edm4hep_measurement_writer(tmp_path, fatras):
             outputPath=str(out),
         )
     )
+
     s.run()
 
     assert os.path.isfile(out)
@@ -608,7 +609,7 @@ def test_edm4hep_simhit_writer(tmp_path, fatras, conf_const):
     from acts.examples.edm4hep import EDM4hepSimHitWriter
 
     s = Sequencer(numThreads=1, events=10)
-    evGen, simAlg, digiAlg = fatras(s)
+    _, simAlg, _ = fatras(s)
 
     out = tmp_path / "simhits_edm4hep.root"
 
@@ -659,7 +660,7 @@ def test_edm4hep_particle_writer(tmp_path, conf_const, ptcl_gun):
 def test_edm4hep_multitrajectory_writer(tmp_path):
     from acts.examples.edm4hep import EDM4hepMultiTrajectoryWriter
 
-    detector, trackingGeometry, decorators = GenericDetector.create()
+    _, trackingGeometry, _ = GenericDetector.create()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     from truth_tracking_kalman import runTruthTrackingKalman
@@ -688,6 +689,7 @@ def test_edm4hep_multitrajectory_writer(tmp_path):
             outputPath=str(out),
         )
     )
+
     s.run()
 
     assert os.path.isfile(out)
