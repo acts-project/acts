@@ -20,6 +20,7 @@
 
 namespace ActsExamples {
 
+/// Read particles from EDM4hep.
 class EDM4hepParticleReader final : public IReader {
  public:
   struct Config {

@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -241,7 +242,7 @@ void EDM4hepUtil::writeMeasurement(const Measurement& from,
       from);
 }
 
-void EDM4hepUtil::writeMultiTrajectory(
+void EDM4hepUtil::writeTrajectory(
     const Trajectories& from, edm4hep::MutableTrack to, std::size_t fromIndex,
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap) {
   const auto& multiTrajectory = from.multiTrajectory();
@@ -251,6 +252,9 @@ void EDM4hepUtil::writeMultiTrajectory(
   std::vector<ParticleHitCount> particleHitCount;
   identifyContributingParticles(hitParticlesMap, from, fromIndex,
                                 particleHitCount);
+
+  // TODO write track params
+  // auto trackParameters = from.trackParameters(fromIndex);
 
   to.setChi2(trajectoryState.chi2Sum / trajectoryState.NDF);
   to.setNdf(trajectoryState.NDF);
@@ -262,16 +266,18 @@ void EDM4hepUtil::writeMultiTrajectory(
       return true;
     }
 
-    // expand the local measurements into the full bound space
-    // Acts::BoundVector meas = state.projector().transpose() *
-    // state.calibrated();
+    auto meas = state.smoothed();
 
     edm4hep::TrackState trackState;
-    trackState.D0 = 0;         // TODO
-    trackState.phi = 0;        // TODO
-    trackState.omega = 0;      // TODO
-    trackState.Z0 = 0;         // TODO
+
+    trackState.D0 = meas[Acts::eBoundLoc0];
+    trackState.Z0 = meas[Acts::eBoundLoc1];
+    trackState.phi = meas[Acts::eBoundPhi];
     trackState.tanLambda = 0;  // TODO
+    trackState.omega = 0;      // TODO
+
+    // TODO covariance
+
     to.addToTrackStates(trackState);
 
     return true;

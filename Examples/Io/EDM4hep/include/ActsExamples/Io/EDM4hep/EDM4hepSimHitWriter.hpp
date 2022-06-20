@@ -20,6 +20,7 @@
 
 namespace ActsExamples {
 
+/// Write out a simhit collection to EDM4hep.
 class EDM4hepSimHitWriter final : public WriterT<SimHitContainer> {
  public:
   struct Config {

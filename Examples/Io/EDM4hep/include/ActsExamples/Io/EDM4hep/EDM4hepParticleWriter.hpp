@@ -19,6 +19,7 @@
 
 namespace ActsExamples {
 
+/// Write particles to EDM4hep
 class EDM4hepParticleWriter final : public WriterT<SimParticleContainer> {
  public:
   struct Config {

@@ -19,6 +19,8 @@
 
 namespace ActsExamples {
 
+/// Write out the tracks reconstructed using Combinatorial Kalman Filter to
+/// EDM4hep.
 class EDM4hepMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
  public:
   struct Config {

@@ -20,6 +20,7 @@
 
 namespace ActsExamples {
 
+/// Read in a measurement cluster collection from EDM4hep.
 class EDM4hepMeasurementReader final : public IReader {
  public:
   struct Config {

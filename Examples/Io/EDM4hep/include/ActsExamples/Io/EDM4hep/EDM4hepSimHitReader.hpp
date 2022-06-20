@@ -21,6 +21,7 @@
 
 namespace ActsExamples {
 
+/// Read in a simhit collection from EDM4hep.
 class EDM4hepSimHitReader final : public IReader {
  public:
   struct Config {

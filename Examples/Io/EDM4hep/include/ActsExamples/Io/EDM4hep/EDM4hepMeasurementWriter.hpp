@@ -20,6 +20,7 @@
 
 namespace ActsExamples {
 
+/// Write out a measurement cluster collection to EDM4hep.
 class EDM4hepMeasurementWriter final : public WriterT<MeasurementContainer> {
  public:
   struct Config {
