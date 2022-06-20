@@ -35,8 +35,10 @@ EDM4hepParticleWriter::EDM4hepParticleWriter(
   m_writer.registerForWrite(m_cfg.outputParticles);
 }
 
-EDM4hepParticleWriter::~EDM4hepParticleWriter() {
+ActsExamples::ProcessCode EDM4hepParticleWriter::endRun() {
   m_writer.finish();
+
+  return ProcessCode::SUCCESS;
 }
 
 ProcessCode EDM4hepParticleWriter::writeT(

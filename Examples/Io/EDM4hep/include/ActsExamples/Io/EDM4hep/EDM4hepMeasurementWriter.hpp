@@ -50,8 +50,6 @@ class EDM4hepMeasurementWriter final : public WriterT<MeasurementContainer> {
   /// @param level logging level
   EDM4hepMeasurementWriter(const Config& config, Acts::Logging::Level level);
 
-  ~EDM4hepMeasurementWriter() final;
-
   ProcessCode endRun() final;
 
   /// Readonly access to the config

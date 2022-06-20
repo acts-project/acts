@@ -44,12 +44,9 @@ EDM4hepMeasurementWriter::EDM4hepMeasurementWriter(
   m_writer.registerForWrite("ActsTrackerHitsRaw");
 }
 
-EDM4hepMeasurementWriter::~EDM4hepMeasurementWriter() {
-  m_writer.finish();
-}
-
 ActsExamples::ProcessCode EDM4hepMeasurementWriter::endRun() {
-  // Write the tree
+  m_writer.finish();
+
   return ProcessCode::SUCCESS;
 }
 

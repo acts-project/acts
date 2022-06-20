@@ -29,8 +29,10 @@ EDM4hepMultiTrajectoryWriter::EDM4hepMultiTrajectoryWriter(
   m_writer.registerForWrite("ActsTracks");
 }
 
-EDM4hepMultiTrajectoryWriter::~EDM4hepMultiTrajectoryWriter() {
+ActsExamples::ProcessCode EDM4hepMultiTrajectoryWriter::endRun() {
   m_writer.finish();
+
+  return ProcessCode::SUCCESS;
 }
 
 ProcessCode EDM4hepMultiTrajectoryWriter::writeT(
