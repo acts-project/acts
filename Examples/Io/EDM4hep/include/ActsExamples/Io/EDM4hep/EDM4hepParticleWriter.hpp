@@ -41,8 +41,10 @@ class EDM4hepParticleWriter final : public WriterT<SimParticleContainer> {
   /// @params lvl is the logging level
   EDM4hepParticleWriter(const Config& cfg, Acts::Logging::Level lvl);
 
-  /// Virtual destructor
-  ~EDM4hepParticleWriter() final override;
+  ~EDM4hepParticleWriter() final;
+
+  /// Readonly access to the config
+  const Config& config() const { return m_cfg; }
 
  protected:
   /// Type-specific write implementation.
@@ -50,7 +52,7 @@ class EDM4hepParticleWriter final : public WriterT<SimParticleContainer> {
   /// @param[in] ctx is the algorithm context
   /// @param[in] particles are the particle to be written
   ProcessCode writeT(const ActsExamples::AlgorithmContext& ctx,
-                     const SimParticleContainer& particles) final override;
+                     const SimParticleContainer& particles) final;
 
  private:
   Config m_cfg;  //!< Nested configuration struct

@@ -51,13 +51,13 @@ class EDM4hepMeasurementReader final : public IReader {
   /// @param level is the logging level
   EDM4hepMeasurementReader(const Config& config, Acts::Logging::Level level);
 
-  std::string name() const final override;
+  std::string name() const final;
 
   /// Return the available events range.
-  std::pair<size_t, size_t> availableEvents() const final override;
+  std::pair<size_t, size_t> availableEvents() const final;
 
   /// Read out data from the input stream.
-  ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final override;
+  ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -72,8 +72,6 @@ class EDM4hepMeasurementReader final : public IReader {
 
   const edm4hep::TrackerHitPlaneCollection* m_trackerHitPlaneCollection;
   const edm4hep::TrackerHitCollection* m_trackerHitRawCollection;
-
-  const Acts::Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace ActsExamples

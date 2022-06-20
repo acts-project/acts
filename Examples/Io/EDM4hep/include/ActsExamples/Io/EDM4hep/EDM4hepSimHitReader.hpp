@@ -49,13 +49,13 @@ class EDM4hepSimHitReader final : public IReader {
   /// @param level is the logging level
   EDM4hepSimHitReader(const Config& config, Acts::Logging::Level level);
 
-  std::string name() const final override;
+  std::string name() const final;
 
   /// Return the available events range.
-  std::pair<size_t, size_t> availableEvents() const final override;
+  std::pair<size_t, size_t> availableEvents() const final;
 
   /// Read out data from the input stream.
-  ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final override;
+  ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -71,8 +71,6 @@ class EDM4hepSimHitReader final : public IReader {
   std::vector<std::string> m_collections;
 
   const edm4hep::MCParticleCollection* m_mcParticleCollection;
-
-  const Acts::Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace ActsExamples

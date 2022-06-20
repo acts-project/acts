@@ -46,7 +46,7 @@ class EDM4hepMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
   EDM4hepMultiTrajectoryWriter(
       const Config& config, Acts::Logging::Level level = Acts::Logging::INFO);
 
-  ~EDM4hepMultiTrajectoryWriter() override;
+  ~EDM4hepMultiTrajectoryWriter() final;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -56,7 +56,7 @@ class EDM4hepMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
   /// @param [in] context is the algorithm context for consistency
   /// @param [in] tracks is the track collection
   ProcessCode writeT(const AlgorithmContext& context,
-                     const TrajectoriesContainer& trajectories) final override;
+                     const TrajectoriesContainer& trajectories) final;
 
  private:
   Config m_cfg;  //!< Nested configuration struct

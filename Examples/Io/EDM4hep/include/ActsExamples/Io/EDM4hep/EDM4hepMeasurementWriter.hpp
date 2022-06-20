@@ -50,11 +50,12 @@ class EDM4hepMeasurementWriter final : public WriterT<MeasurementContainer> {
   /// @param level logging level
   EDM4hepMeasurementWriter(const Config& config, Acts::Logging::Level level);
 
-  /// Virtual destructor
-  ~EDM4hepMeasurementWriter() final override;
+  ~EDM4hepMeasurementWriter() final;
 
-  /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode endRun() final;
+
+  /// Readonly access to the config
+  const Config& config() const { return m_cfg; }
 
  protected:
   /// This implementation holds the actual writing method
@@ -63,7 +64,7 @@ class EDM4hepMeasurementWriter final : public WriterT<MeasurementContainer> {
   /// @param ctx The Algorithm context with per event information
   /// @param measurements is the data to be written out
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const MeasurementContainer& measurements) final override;
+                     const MeasurementContainer& measurements) final;
 
  private:
   Config m_cfg;

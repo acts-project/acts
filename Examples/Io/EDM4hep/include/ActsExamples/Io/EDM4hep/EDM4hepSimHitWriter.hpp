@@ -48,8 +48,7 @@ class EDM4hepSimHitWriter final : public WriterT<SimHitContainer> {
   /// @param level is the logging level
   EDM4hepSimHitWriter(const Config& config, Acts::Logging::Level level);
 
-  /// Virtual destructor
-  ~EDM4hepSimHitWriter() final override;
+  ~EDM4hepSimHitWriter() final;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -60,7 +59,7 @@ class EDM4hepSimHitWriter final : public WriterT<SimHitContainer> {
   /// @param[in] ctx is the algorithm context
   /// @param[in] simHits are the simhits to be written
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const SimHitContainer& simHits) final override;
+                     const SimHitContainer& simHits) final;
 
  private:
   Config m_cfg;
