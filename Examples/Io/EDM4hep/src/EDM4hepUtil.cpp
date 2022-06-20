@@ -267,16 +267,28 @@ void EDM4hepUtil::writeTrajectory(
     }
 
     auto meas = state.smoothed();
+    auto cov = state.smoothedCovariance();
 
     edm4hep::TrackState trackState;
 
     trackState.D0 = meas[Acts::eBoundLoc0];
     trackState.Z0 = meas[Acts::eBoundLoc1];
     trackState.phi = meas[Acts::eBoundPhi];
-    trackState.tanLambda = 0;  // TODO
-    trackState.omega = 0;      // TODO
+    trackState.tanLambda = std::tan(M_PI_2 - meas[Acts::eBoundTheta]);
+    trackState.omega = meas[Acts::eBoundQOverP];  // TODO convert
+    trackState.referencePoint = {0, 0, 0};
 
-    // TODO covariance
+    // TODO apply jacobian to covariance
+
+    // EDM4hep doc:
+    // lower triangular covariance matrix of the track parameters.  the order of
+    // parameters is  d0, phi, omega, z0, tan(lambda). the array is a row-major
+    // flattening of the matrix.
+    trackState.covMatrix = {
+        (float)cov(0, 0), (float)cov(1, 0), (float)cov(1, 1), (float)cov(2, 0),
+        (float)cov(2, 1), (float)cov(2, 2), (float)cov(3, 0), (float)cov(3, 1),
+        (float)cov(3, 2), (float)cov(3, 3), (float)cov(4, 0), (float)cov(4, 1),
+        (float)cov(4, 2), (float)cov(4, 3), (float)cov(4, 4)};
 
     to.addToTrackStates(trackState);
 
