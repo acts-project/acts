@@ -255,6 +255,7 @@ void EDM4hepUtil::writeTrajectory(
   std::vector<ParticleHitCount> particleHitCount;
   identifyContributingParticles(hitParticlesMap, from, fromIndex,
                                 particleHitCount);
+  // TODO use particles
 
   // TODO write track params
   // auto trackParameters = from.trackParameters(fromIndex);

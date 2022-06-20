@@ -112,6 +112,7 @@ void writeMeasurement(const Measurement& from,
 ///
 /// Inpersistent information:
 /// - trajectory state incomplete
+/// - relation to the particles
 ///
 /// Known issues:
 /// - curvature parameter
