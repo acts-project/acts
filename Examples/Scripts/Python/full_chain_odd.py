@@ -71,7 +71,6 @@ s = addVertexFitting(
     s,
     field,
     vertexFinder=VertexFinder.Truth,
-    associatedParticles="particles_input",
     outputDirRoot=outputDir,
 )
 
