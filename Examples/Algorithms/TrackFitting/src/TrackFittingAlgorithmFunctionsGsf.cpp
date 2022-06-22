@@ -36,7 +36,7 @@ auto makeGsfOptions(
                               options.calibrationContext,
                               extensions,
                               options.logger,
-                              Acts::PropagatorPlainOptions(),
+                              options.propOptions,
                               &(*options.referenceSurface),
                               f.maxComponents,
                               f.abortOnError,
