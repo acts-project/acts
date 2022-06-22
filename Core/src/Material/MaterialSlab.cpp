@@ -44,8 +44,8 @@ Acts::MaterialSlab::MaterialSlab(const std::vector<MaterialSlab>& layers)
 }
 
 void Acts::MaterialSlab::scaleThickness(float scale) {
-  if (scale <= 0) {
-    throw std::runtime_error("scale <= 0");
+  if (scale < 0) {
+    throw std::runtime_error("scale < 0");
   }
 
   m_thickness *= scale;
