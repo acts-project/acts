@@ -377,7 +377,7 @@ def test_event_recording(tmp_path):
 def test_truth_tracking(tmp_path, assert_root_hash, revFiltMomThresh):
     from truth_tracking_kalman import runTruthTrackingKalman
 
-    _, trackingGeometry, _ = getOpenDataDetector()
+    detector, trackingGeometry, _ = getOpenDataDetector()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
