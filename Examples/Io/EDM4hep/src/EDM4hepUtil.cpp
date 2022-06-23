@@ -67,8 +67,6 @@ ActsFatras::Hit EDM4hepUtil::readSimHit(const edm4hep::SimTrackerHit& from,
                                         MapParticleIdFrom particleMapper,
                                         MapGeometryIdFrom geometryMapper) {
   ActsFatras::Barcode particleId = particleMapper(from.getMCParticle());
-
-  // TODO what about the digitization?
   Acts::GeometryIdentifier geometryId = geometryMapper(from.getCellID());
 
   const auto mass = from.getMCParticle().getMass();
@@ -148,8 +146,7 @@ Measurement EDM4hepUtil::readMeasurement(
   // no need for digitization as we only want to identify the sensor
   Acts::GeometryIdentifier geometryId = geometryMapper(from.getCellID());
 
-  // TODO what about the hit index?
-  IndexSourceLink sourceLink{geometryId, 0};
+  IndexSourceLink sourceLink{geometryId, from.id()};
 
   auto pos = from.getPosition();
   auto cov = from.getCovMatrix();
