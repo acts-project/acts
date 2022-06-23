@@ -38,7 +38,6 @@ try:
 
     hepmc3Enabled = True
 except Exception as e:
-    print(e)
     hepmc3Enabled = False
 
 try:
@@ -46,7 +45,6 @@ try:
 
     edm4hepEnabled = True
 except Exception as e:
-    print(e)
     edm4hepEnabled = False
 
 isCI = os.environ.get("CI", "false") == "true"
