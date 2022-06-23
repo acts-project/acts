@@ -11,7 +11,7 @@ env:
   CTEST_OUTPUT_ON_FAILURE: 1
   HOMEBREW_NO_INSTALL_CLEANUP: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
-  CCACHE_MAXSIZE: 2G
+  CCACHE_MAXSIZE: 500M
   CCACHE_KEY_SUFFIX: r1
 
 jobs:
@@ -304,7 +304,7 @@ jobs:
           -DACTS_USE_SYSTEM_EIGEN3=OFF
           -DACTS_BUILD_PLUGIN_JSON=ON
       - name: Build
-        run: ${SETUP} && cmake --build build --
+        run: ${SETUP} && ( cmake --build build -- || cmake --build build -- )
       - name: Unit tests
         run: ${SETUP} && ${PRELOAD} && cmake --build build -- test
       - name: Integration tests
