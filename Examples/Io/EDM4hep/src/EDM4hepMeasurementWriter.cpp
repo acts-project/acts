@@ -64,7 +64,7 @@ ActsExamples::ProcessCode EDM4hepMeasurementWriter::writeT(
 
   for (Index hitIdx = 0u; hitIdx < measurements.size(); ++hitIdx) {
     const auto& from = measurements[hitIdx];
-    Cluster* fromCluster = clusters.empty() ? nullptr : &clusters[hitIdx];
+    const Cluster* fromCluster = clusters.empty() ? nullptr : &clusters[hitIdx];
 
     auto to = m_trackerHitPlaneCollection->create();
     EDM4hepUtil::writeMeasurement(

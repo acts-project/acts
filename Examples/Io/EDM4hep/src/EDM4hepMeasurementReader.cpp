@@ -65,8 +65,8 @@ ProcessCode EDM4hepMeasurementReader::read(const AlgorithmContext& ctx) {
         trackerHitPlane, m_trackerHitRawCollection, &cluster,
         [](std::uint64_t cellId) { return Acts::GeometryIdentifier(cellId); });
 
-    measurements.push_back(measurement);
-    clusters.push_back(cluster);
+    measurements.push_back(std::move(measurement));
+    clusters.push_back(std::move(cluster));
   }
 
   // Write the data to the EventStore
