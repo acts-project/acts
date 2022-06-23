@@ -58,9 +58,9 @@ void EDM4hepUtil::writeParticle(const ActsFatras::Particle& from,
   to.setCharge(from.charge() / Acts::UnitConstants::e);
   to.setMass(from.mass() / Acts::UnitConstants::GeV);
   to.setVertex({from.position().x(), from.position().y(), from.position().z()});
-  to.setMomentum({(float)from.fourMomentum().x(),
-                  (float)from.fourMomentum().y(),
-                  (float)from.fourMomentum().z()});
+  to.setMomentum({static_cast<float>(from.fourMomentum().x()),
+                  static_cast<float>(from.fourMomentum().y()),
+                  static_cast<float>(from.fourMomentum().z())});
 }
 
 ActsFatras::Hit EDM4hepUtil::readSimHit(const edm4hep::SimTrackerHit& from,
@@ -133,9 +133,9 @@ void EDM4hepUtil::writeSimHit(const ActsFatras::Hit& from,
   });
 
   to.setMomentum({
-      (float)(momentum4Before[Acts::eMom0] / Acts::UnitConstants::GeV),
-      (float)(momentum4Before[Acts::eMom1] / Acts::UnitConstants::GeV),
-      (float)(momentum4Before[Acts::eMom2] / Acts::UnitConstants::GeV),
+      static_cast<float>(momentum4Before[Acts::eMom0] / Acts::UnitConstants::GeV),
+      static_cast<float>(momentum4Before[Acts::eMom1] / Acts::UnitConstants::GeV),
+      static_cast<float>(momentum4Before[Acts::eMom2] / Acts::UnitConstants::GeV),
   });
 
   to.setEDep(-delta4[Acts::eEnergy] / Acts::UnitConstants::GeV);
@@ -178,8 +178,9 @@ Measurement EDM4hepUtil::readMeasurement(
       // TODO get EDM4hep fixed
       // misusing some fields to store ACTS specific information
       // don't ask ...
-      ActsFatras::Channelizer::Bin2D bin{(unsigned int)c.getType(),
-                                         (unsigned int)c.getQuality()};
+      ActsFatras::Channelizer::Bin2D bin{
+          static_cast<unsigned int>(c.getType()),
+          static_cast<unsigned int>(c.getQuality())};
       ActsFatras::Channelizer::Segment2D path2D;
       double activation = c.getTime();
       ActsFatras::Channelizer::ChannelSegment cell{bin, path2D, activation};
@@ -218,9 +219,9 @@ void EDM4hepUtil::writeMeasurement(const Measurement& from,
         auto covariance =
             (m.expander() * m.covariance() * m.expander().transpose()).eval();
         to.setCovMatrix({
-            (float)covariance(Acts::eBoundLoc0, Acts::eBoundLoc0),
-            (float)covariance(Acts::eBoundLoc1, Acts::eBoundLoc0),
-            (float)covariance(Acts::eBoundLoc1, Acts::eBoundLoc1),
+            static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)),
+            static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc0)),
+            static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)),
             0,
             0,
             0,
@@ -291,10 +292,14 @@ void EDM4hepUtil::writeTrajectory(
     // parameters is  d0, phi, omega, z0, tan(lambda). the array is a row-major
     // flattening of the matrix.
     trackState.covMatrix = {
-        (float)cov(0, 0), (float)cov(1, 0), (float)cov(1, 1), (float)cov(2, 0),
-        (float)cov(2, 1), (float)cov(2, 2), (float)cov(3, 0), (float)cov(3, 1),
-        (float)cov(3, 2), (float)cov(3, 3), (float)cov(4, 0), (float)cov(4, 1),
-        (float)cov(4, 2), (float)cov(4, 3), (float)cov(4, 4)};
+        static_cast<float>(cov(0, 0)), static_cast<float>(cov(1, 0)),
+        static_cast<float>(cov(1, 1)), static_cast<float>(cov(2, 0)),
+        static_cast<float>(cov(2, 1)), static_cast<float>(cov(2, 2)),
+        static_cast<float>(cov(3, 0)), static_cast<float>(cov(3, 1)),
+        static_cast<float>(cov(3, 2)), static_cast<float>(cov(3, 3)),
+        static_cast<float>(cov(4, 0)), static_cast<float>(cov(4, 1)),
+        static_cast<float>(cov(4, 2)), static_cast<float>(cov(4, 3)),
+        static_cast<float>(cov(4, 4))};
 
     to.addToTrackStates(trackState);
 
