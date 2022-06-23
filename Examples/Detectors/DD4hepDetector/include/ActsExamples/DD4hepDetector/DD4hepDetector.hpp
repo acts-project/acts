@@ -19,7 +19,7 @@ namespace ActsExamples {
 namespace DD4hep {
 
 struct DD4hepDetector : public IBaseDetector {
-  std::shared_ptr<DD4hepGeometryService> m_geometryService;
+  std::shared_ptr<DD4hepGeometryService> geometryService;
 
   void addOptions(
       boost::program_options::options_description& opt) const override;

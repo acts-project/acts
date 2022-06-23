@@ -56,7 +56,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
                      std::shared_ptr<const Acts::IMaterialDecorator>>(
                      &DD4hep::DD4hepDetector::finalize));
     ACTS_PYTHON_STRUCT_BEGIN(gd, DD4hep::DD4hepDetector);
-    ACTS_PYTHON_MEMBER(m_geometryService);
+    ACTS_PYTHON_MEMBER(geometryService);
     ACTS_PYTHON_STRUCT_END();
   }
 }
