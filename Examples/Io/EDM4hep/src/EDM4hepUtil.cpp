@@ -115,11 +115,11 @@ void EDM4hepUtil::writeSimHit(const ActsFatras::Hit& from,
   const Acts::Vector4& momentum4Before = from.momentum4Before();
   const auto delta4 = from.momentum4After() - momentum4Before;
 
-  if (particleMapper != nullptr) {
+  if (particleMapper) {
     to.setMCParticle(particleMapper(from.particleId()));
   }
 
-  if (geometryMapper != nullptr) {
+  if (geometryMapper) {
     // TODO what about the digitization?
     to.setCellID(geometryMapper(from.geometryId()));
   }
@@ -171,7 +171,7 @@ Measurement EDM4hepUtil::readMeasurement(
 
   auto to = createMeasurement(dParameters, sourceLink);
 
-  if (fromClusters != nullptr) {
+  if (fromClusters) {
     for (auto objectId : from.getRawHits()) {
       const auto& c = fromClusters->at(objectId.index);
 
@@ -200,7 +200,7 @@ void EDM4hepUtil::writeMeasurement(const Measurement& from,
       [&](const auto& m) {
         Acts::GeometryIdentifier geoId = m.sourceLink().geometryId();
 
-        if (geometryMapper != nullptr) {
+        if (geometryMapper) {
           // no need for digitization as we only want to identify the sensor
           to.setCellID(geometryMapper(geoId));
         }
@@ -226,7 +226,7 @@ void EDM4hepUtil::writeMeasurement(const Measurement& from,
             0,
         });
 
-        if (fromCluster != nullptr) {
+        if (fromCluster) {
           for (auto& c : fromCluster->channels) {
             auto toChannel = toClusters.create();
             to.addToRawHits(toChannel.getObjectID());
