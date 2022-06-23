@@ -45,7 +45,7 @@ def test_odd():
         level=acts.logging.WARNING,
     )
 
-    _, geo, _ = getOpenDataDetector(matDeco)
+    detector, geo, _ = getOpenDataDetector(matDeco)
 
     assert count_surfaces(geo) == 18824
 
