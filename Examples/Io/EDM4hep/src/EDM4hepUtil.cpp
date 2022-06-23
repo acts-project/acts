@@ -131,9 +131,12 @@ void EDM4hepUtil::writeSimHit(const ActsFatras::Hit& from,
   });
 
   to.setMomentum({
-      static_cast<float>(momentum4Before[Acts::eMom0] / Acts::UnitConstants::GeV),
-      static_cast<float>(momentum4Before[Acts::eMom1] / Acts::UnitConstants::GeV),
-      static_cast<float>(momentum4Before[Acts::eMom2] / Acts::UnitConstants::GeV),
+      static_cast<float>(momentum4Before[Acts::eMom0] /
+                         Acts::UnitConstants::GeV),
+      static_cast<float>(momentum4Before[Acts::eMom1] /
+                         Acts::UnitConstants::GeV),
+      static_cast<float>(momentum4Before[Acts::eMom2] /
+                         Acts::UnitConstants::GeV),
   });
 
   to.setEDep(-delta4[Acts::eEnergy] / Acts::UnitConstants::GeV);
