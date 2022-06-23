@@ -888,8 +888,7 @@ def test_ckf_tracks_example(
 @pytest.mark.slow
 @pytest.mark.filterwarnings("ignore::UserWarning")
 def test_vertex_fitting(tmp_path):
-    # This test literally only ensures that the full chain example can run without erroring out
-    getOpenDataDetector()  # just to make sure it can build
+    detector, trackingGeometry, decorators = getOpenDataDetector()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
