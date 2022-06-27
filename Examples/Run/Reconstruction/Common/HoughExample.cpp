@@ -27,6 +27,7 @@
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/TrackFinding/DefaultHoughFunctions.hpp"
 
 #include <memory>
 
@@ -171,10 +172,8 @@ int runHoughExample(int argc, char* argv[],
   houghCfg.m_subRegion = -1;
   houghCfg.m_traceHits = true;
      
-  houghCfg.m_fieldCorrection = true;
-     
-  houghCfg.m_xMin = 0; // minphi
-  houghCfg.m_xMax = 2*3.14159; // maxphi
+  houghCfg.m_xMin = -3.14159; // minphi
+  houghCfg.m_xMax = 3.14159; // maxphi
   houghCfg.m_yMin = -1; // min q/pt, -1/1 GeV JAAAAA check units
   houghCfg.m_yMax = 1; // max q/pt, +1/1 GeV JAAAAA check units
      
@@ -188,6 +187,9 @@ int runHoughExample(int argc, char* argv[],
   houghCfg.m_localMaxWindowSize = 0; // Only create roads from a local maximum, requires traceHits
   houghCfg.kA = 0.0003; // Assume B = 2T constant. 
 
+  houghCfg.fieldCorrection = &fieldCorrectionDefault;
+  houghCfg.findLayerIDSP = &findLayerIDSPDefault;
+  houghCfg.findLayerIDMeasurement = &findLayerIDMeasurementDefault;
 
   sequencer.addAlgorithm(
        std::make_shared<HoughTransformSeeder>(houghCfg, logLevel));
