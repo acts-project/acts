@@ -131,8 +131,6 @@ class HoughTransformSeeder final : public BareAlgorithm {
      // but the roads created won't have hits from convolution, etc.
      bool m_traceHits = true;
      
-     bool m_fieldCorrection = true;
-     
      float m_xMin = 0; // minphi
      float m_xMax = 2*3.14159; // maxphi
      float m_yMin = -0.5; // min q/pt, -1/1 GeV JAAAAA check units
@@ -147,6 +145,12 @@ class HoughTransformSeeder final : public BareAlgorithm {
      std::vector<int> m_threshold = {9}; // Minimum point value post-convolution to accept as a road (inclusive)
      int m_localMaxWindowSize = 0; // Only create roads from a local maximum, requires traceHits
      double kA = 0.0003; // Assume B = 2T constant. 
+     
+     
+     // Function to apply correction due to B field not being constant everywhere. The returned correction should be ADDED to phi_track
+     double (*fieldCorrection)(unsigned, double, double); // (unsigned region, double y, double r)
+     double (*findLayerIDSP)(double); // (double r)
+     double (*findLayerIDMeasurement)(double); // (double r)
      
   };
 
@@ -172,10 +176,7 @@ class HoughTransformSeeder final : public BareAlgorithm {
   unsigned getThreshold() const { return m_cfg.m_threshold[m_cfg.m_threshold.size() / 2]; }
   int getSubRegion() const { return m_cfg.m_subRegion; }
 
-  // Apply correction due to B != 2T everywhere. This correction should be ADDED to
-  // phi_track. // for now this does nothing!
-  static double fieldCorrection(unsigned region, double y, double r); 
-  
+ 
   double yToX(double y, double r, double phi) const;
 
  private:
@@ -214,10 +215,6 @@ class HoughTransformSeeder final : public BareAlgorithm {
   unsigned getExtension(unsigned y, unsigned layer) const;
   bool passThreshold(Image const & image, unsigned x, unsigned y) const;
   void drawImage(Image const & image, std::string const & name);
-
-  unsigned FindLayerKludge(const SimSpacePoint* sp) const;
-  unsigned FindLayerKludgeMeasurement(double r) const;
-
 
 };
 

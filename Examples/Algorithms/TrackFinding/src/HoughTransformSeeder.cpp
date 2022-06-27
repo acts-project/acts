@@ -34,14 +34,26 @@ ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
   if (m_cfg.inputSpacePoints.empty()) {
     throw std::invalid_argument("Missing space point input collections");
   }
+
+  // require spacepoints or input measurements (or both), but at least one kind of input
+  bool foundInput = false;
   for (const auto& i : m_cfg.inputSpacePoints) {
-    if (i.empty()) {
-      throw std::invalid_argument("Invalid space point input collection");
+     if (!(i.empty())) {
+        foundInput = true;
+        if (m_cfg.findLayerIDSP == nullptr) 
+           throw std::invalid_argument("We are using some spacepoints but don't have a function pointer to find the ID");
     }
   }
-  if (m_cfg.inputMeasurements.empty()) {
-    throw std::invalid_argument("Missing measurements input collection");
+  if (!(m_cfg.inputMeasurements.empty())) {
+     foundInput = true;
+     if (m_cfg.findLayerIDMeasurement == nullptr) 
+        throw std::invalid_argument("We are using some input measurements but don't have a function pointer to find the ID");
   }
+
+  if (!foundInput) {
+    throw std::invalid_argument("Missing some kind of input");
+  }
+
   if (m_cfg.outputProtoTracks.empty()) {
     throw std::invalid_argument("Missing hough tracks output collection");
   }
@@ -134,7 +146,6 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
       nSpacePoints += ctx.eventStore.get<SimSpacePointContainer>(isp).size();
    }
 
-
    std::vector<const SimSpacePoint*> spacePointPtrs;
    spacePointPtrs.reserve(nSpacePoints);
    for (const auto& isp : m_cfg.inputSpacePoints) {
@@ -199,7 +210,7 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
                surface->localToGlobal(ctx.geoContext, localPos, globalFakeMom);
             double r = sqrt(globalPos[Acts::ePos0]*globalPos[Acts::ePos0] + globalPos[Acts::ePos1]*globalPos[Acts::ePos1]);
             double phi = atan2(globalPos[Acts::ePos1],globalPos[Acts::ePos0]);
-            unsigned hitlayer = FindLayerKludgeMeasurement(r);
+            unsigned hitlayer = (*(m_cfg.findLayerIDMeasurement))(r);
             std::shared_ptr<const MeasurementKludge> kludge = std::shared_ptr<const MeasurementKludge>(new MeasurementKludge(hitlayer,phi,r,sourceLink.get().index()));
             measurementKludges.push_back(kludge);
          }
@@ -234,9 +245,9 @@ ActsExamples::Image ActsExamples::HoughTransformSeeder::createLayerImage(unsigne
 
     for (auto sp : spacepoints) 
     {
-       unsigned hitlayer = FindLayerKludge(sp);
-       if (hitlayer != layer) continue; 
        float r = sqrt(sp->x()*sp->x()+sp->y()*sp->y());
+       unsigned hitlayer = (*(m_cfg.findLayerIDSP))(r);
+       if (hitlayer != layer) continue; 
        float phi = atan2(sp->y(),sp->x());
 
        // This scans over y (pT) because that is more efficient in memory, in C.
@@ -367,18 +378,13 @@ static inline std::string to_string(std::vector<T> v)
 }
 
 
-double ActsExamples::HoughTransformSeeder::fieldCorrection(unsigned region, double qpt, double r)
-{
-   // can ultimately derive field corrections here!
-   return 0;
-}
 
 double ActsExamples::HoughTransformSeeder::yToX(double y, double r, double phi) const
 {
    double d0 = 0; // d0 correction TO DO allow for this
    double x = asin(r * ActsExamples::HoughTransformSeeder::m_cfg.kA * y - d0 / r) + phi;
     
-   if (m_cfg.m_fieldCorrection) x += fieldCorrection(0, y, r);
+   if (m_cfg.fieldCorrection) x += (*(m_cfg.fieldCorrection))(0, y, r);
 
    return x;
 }
@@ -425,23 +431,3 @@ unsigned ActsExamples::HoughTransformSeeder::getExtension(unsigned y, unsigned l
 }
 
 
-unsigned ActsExamples::HoughTransformSeeder::FindLayerKludge(const SimSpacePoint* sp) const
-{
-   if (sp->r() < 50) return 0;
-   else if (sp->r() < 100) return 1;
-   else if (sp->r() < 150) return 2;
-   else if (sp->r() < 200) return 3;
-   return 9999; /// for now pixel only
-}
-
-unsigned ActsExamples::HoughTransformSeeder::FindLayerKludgeMeasurement(double r) const
-{
-   if (r < 200) return 9999; // this is a pixel, ignore
-   else if (r < 300) return 4;
-   else if (r < 400) return 5;
-   else if (r < 550) return 6;
-   else if (r < 700) return 7;
-   else if (r < 900) return 8;
-   else if (r < 1100) return 9;
-   return 9999; /// shouldn't be here
-}
