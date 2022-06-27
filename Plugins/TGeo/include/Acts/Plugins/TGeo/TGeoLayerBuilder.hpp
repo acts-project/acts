@@ -78,6 +78,16 @@ class TGeoLayerBuilder : public ILayerBuilder {
                                              1 * UnitConstants::mm)) {}
   };
 
+  using ElementFactory = std::function<std::shared_ptr<TGeoDetectorElement>(
+      const Identifier&, const TGeoNode&, const TGeoMatrix& tGeoMatrix,
+      const std::string& axes, double scalor,
+      std::shared_ptr<const Acts::ISurfaceMaterial> material)>;
+
+  static std::shared_ptr<TGeoDetectorElement> defaultElementFactory(
+      const Identifier& identifier, const TGeoNode& tGeoNode,
+      const TGeoMatrix& tGeoMatrix, const std::string& axes, double scalor,
+      std::shared_ptr<const Acts::ISurfaceMaterial> material);
+
   /// @struct Config
   /// @brief nested configuration struct for steering of the layer builder
   struct Config {
@@ -90,6 +100,8 @@ class TGeoLayerBuilder : public ILayerBuilder {
     /// Split TGeoElement if a splitter is provided
     std::shared_ptr<const ITGeoDetectorElementSplitter>
         detectorElementSplitter = nullptr;
+    /// Factory for creating detector elements based on TGeoNodes
+    ElementFactory elementFactory = defaultElementFactory;
     /// Layer creator
     std::shared_ptr<const LayerCreator> layerCreator = nullptr;
     /// ProtoLayer helper
