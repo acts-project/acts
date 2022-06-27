@@ -27,7 +27,7 @@ file(GLOB_RECURSE SrcFiles *.cu)
 add_library(frnn SHARED ${SrcFiles})
 
 target_include_directories(frnn
-    PUBLIC
+    SYSTEM PUBLIC
         ${Python3_INCLUDE_DIRS}
         ${TORCH_INCLUDE_DIRS}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/frnn/csrc>

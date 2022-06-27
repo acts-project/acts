@@ -68,9 +68,10 @@ void ExaTrkXTrackFinding::getTracks(
   }
 
   ExaTrkXTimer timer;
-  // ************
+  
+  // **********
   // Embedding
-  // ************
+  // **********
 
   timer.start();
   int64_t numSpacepoints = inputValues.size() / m_cfg.spacepointFeatures;
@@ -92,33 +93,36 @@ void ExaTrkXTrackFinding::getTracks(
 
   timeInfo.embedding = timer.stopAndGetElapsedTime();
 
-  // ************
+  // ****************
   // Building Edges
-  // ************
+  // ****************
+  
   timer.start();
+  
   torch::Tensor edgeList = buildEdges(
       eOutput, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal, m_cfg.knnVal);
-  //     torch::Tensor edgeList = buildEdgesBruteForce(
-  //         eOutput, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal,
-  //         m_cfg.knnVal);
+  // torch::Tensor edgeList = buildEdgesBruteForce(
+  //   eOutput, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal,
+  //   m_cfg.knnVal);
 
   if (m_cfg.verbose) {
     std::cout << "Built " << edgeList.size(1) << " edges. " << edgeList.size(0)
               << std::endl;
     std::cout << edgeList.slice(1, 0, 5) << std::endl;
 
-    //         std::ofstream file("reconstruction/edges_after_embedding.csv");
-    //         file << "e0,e1\n";
-    //         for(int i=0; i<edgeList.size(1); ++i) {
-    //             file << edgeList[0][i].item<float>() << "," << edgeList[1][i].item<float>() << "\n";
-    //         }
+    // std::ofstream file("reconstruction/edges_after_embedding.csv");
+    // file << "e0,e1\n";
+    // for(int i=0; i<edgeList.size(1); ++i) {
+    //     file << edgeList[0][i].item<float>() << "," << edgeList[1][i].item<float>() << "\n";
+    // }
   }
 
   timeInfo.building = timer.stopAndGetElapsedTime();
 
-  // ************
+  // **********
   // Filtering
-  // ************
+  // **********
+  
   timer.start();
   std::vector<torch::jit::IValue> fInputTensorJit;
   fInputTensorJit.push_back(eLibInputTensor.to(device));
@@ -141,18 +145,19 @@ void ExaTrkXTrackFinding::getTracks(
     std::cout << "After filter cut: " << numEdgesAfterF << " edges."
               << std::endl;
 
-    //         std::ofstream file("reconstruction/edges_after_filter.csv");
-    //         file << "e0,e1\n";
-    //         for(int i=0; i<edgesAfterF.size(1); ++i) {
-    //             file << edgesAfterF[0][i].item<float>() << "," << edgesAfterF[1][i].item<float>() << "\n";
-    //         }
+    // std::ofstream file("reconstruction/edges_after_filter.csv");
+    // file << "e0,e1\n";
+    // for(int i=0; i<edgesAfterF.size(1); ++i) {
+    //     file << edgesAfterF[0][i].item<float>() << "," << edgesAfterF[1][i].item<float>() << "\n";
+    // }
   }
 
   timeInfo.filtering = timer.stopAndGetElapsedTime();
 
-  // ************
+  // ****
   // GNN
-  // ************
+  // ****
+  
   timer.start();
 
   auto bidirEdgesAfterF = torch::cat({edgesAfterF, edgesAfterF.flip(0)}, 1);
@@ -179,16 +184,17 @@ void ExaTrkXTrackFinding::getTracks(
     std::cout << "GNN scores for " << gOutput.size(0) << " edges." << std::endl;
     std::cout << "(Bidir scores size: " << gOutputBidir.size(0) << std::endl;
     std::cout << gOutput.slice(0, 0, 5) << std::endl;
-    //         std::ofstream file("reconstruction/gnn_scores.csv");
-    //         file << "score\n";
-    //         for(int i=0; i<edgesAfterF.size(1); ++i) {
-    //             file << gOutput[i].item<float>() << "\n";
-    //         }
+    // std::ofstream file("reconstruction/gnn_scores.csv");
+    // file << "score\n";
+    // for(int i=0; i<edgesAfterF.size(1); ++i) {
+    //     file << gOutput[i].item<float>() << "\n";
+    // }
   }
 
-  // ************
-  // Track Labeling with cugraph::connected_components
-  // ************
+  // ***************
+  // Track Labeling
+  // ***************
+  
   timer.start();
 
   using vertex_t = int32_t;
