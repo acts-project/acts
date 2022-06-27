@@ -12,6 +12,8 @@
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
+#include <stdexcept>
+
 namespace ActsExamples {
 
 EDM4hepMultiTrajectoryWriter::EDM4hepMultiTrajectoryWriter(
@@ -41,8 +43,8 @@ ProcessCode EDM4hepMultiTrajectoryWriter::writeT(
       ctx.eventStore.get<IndexMultimap<ActsFatras::Barcode>>(
           m_cfg.inputMeasurementParticlesMap);
 
-  for (auto& from : trajectories) {
-    for (const size_t& trackTip : from.tips()) {
+  for (const auto& from : trajectories) {
+    for (const std::size_t& trackTip : from.tips()) {
       auto to = m_trackCollection->create();
       EDM4hepUtil::writeTrajectory(from, to, trackTip, hitParticlesMap);
     }

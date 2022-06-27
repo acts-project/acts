@@ -26,7 +26,8 @@ ActsFatras::Particle EDM4hepUtil::readParticle(
     edm4hep::MCParticle from, MapParticleIdFrom particleMapper) {
   ActsFatras::Barcode particleId = particleMapper(from);
 
-  ActsFatras::Particle to(particleId, (Acts::PdgParticle)from.getPDG(),
+  ActsFatras::Particle to(particleId,
+                          static_cast<Acts::PdgParticle>(from.getPDG()),
                           from.getCharge() * Acts::UnitConstants::e,
                           from.getMass() * Acts::UnitConstants::GeV);
 
@@ -172,7 +173,7 @@ Measurement EDM4hepUtil::readMeasurement(
   auto to = createMeasurement(dParameters, sourceLink);
 
   if (fromClusters) {
-    for (auto objectId : from.getRawHits()) {
+    for (const auto objectId : from.getRawHits()) {
       const auto& c = fromClusters->at(objectId.index);
 
       // TODO get EDM4hep fixed
@@ -228,7 +229,7 @@ void EDM4hepUtil::writeMeasurement(const Measurement& from,
         });
 
         if (fromCluster) {
-          for (auto& c : fromCluster->channels) {
+          for (const auto& c : fromCluster->channels) {
             auto toChannel = toClusters.create();
             to.addToRawHits(toChannel.getObjectID());
 

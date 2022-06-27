@@ -286,7 +286,7 @@ jobs:
             ${{ runner.os  }}-ccache-linux-nodeps_${{ env.CCACHE_KEY_SUFFIX }}_
 
       - name: Configure
-        run: > # diabling ninja because of race condition
+        run: > # disabling ninja because of race condition
           cmake -B build -S .
           -DCMAKE_CXX_COMPILER_LAUNCHER=$(find / -type f -name "ccache")
           -DCMAKE_BUILD_TYPE=Release
