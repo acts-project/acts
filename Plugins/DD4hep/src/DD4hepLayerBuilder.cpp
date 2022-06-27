@@ -17,6 +17,7 @@
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Plugins/DD4hep/ConvertDD4hepMaterial.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -30,6 +31,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include "DD4hep/Detector.h"
+#include "DDRec/DetectorData.h"
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
 
@@ -65,6 +67,7 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
       // access the extension of the layer
       // at this stage all layer detElements have extension (checked in
       // ConvertDD4hepDetector)
+      auto& params = getParams(detElement);
       Acts::ActsExtension* detExtension =
           detElement.extension<Acts::ActsExtension>();
       // collect the sensitive detector elements possibly contained by the layer
@@ -77,15 +80,17 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
           detElement.placement().ptr()->GetVolume()->GetShape();
       // create the proto layer
       ProtoLayer pl(gctx, layerSurfaces);
-      if (detExtension->hasValue("r_min", "envelope") &&
-          detExtension->hasValue("r_max", "envelope") &&
-          detExtension->hasValue("z_min", "envelope") &&
-          detExtension->hasValue("z_max", "envelope")) {
-        // set the values of the proto layer in case enevelopes are handed over
-        pl.envelope[Acts::binR] = {detExtension->getValue("r_min", "envelope"),
-                                   detExtension->getValue("r_max", "envelope")};
-        pl.envelope[Acts::binZ] = {detExtension->getValue("z_min", "envelope"),
-                                   detExtension->getValue("z_max", "envelope")};
+
+      if (params.contains("envelope_r_min") &&
+          params.contains("envelope_r_max") &&
+          params.contains("envelope_z_min") &&
+          params.contains("envelope_z_max")) {
+        // set the values of the proto layer in case enevelopes are handed
+        // over
+        pl.envelope[Acts::binR] = {params.get<double>("envelope_r_min"),
+                                   params.get<double>("envelope_r_max")};
+        pl.envelope[Acts::binZ] = {params.get<double>("envelope_z_min"),
+                                   params.get<double>("envelope_z_max")};
       } else if (geoShape != nullptr) {
         TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
         if (tube == nullptr) {
@@ -108,8 +113,8 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
         // check if layer has surfaces
         if (layerSurfaces.empty()) {
           ACTS_VERBOSE(" Disc layer has no sensitive surfaces.");
-          // in case no surfaces are handed over the layer thickness will be set
-          // to a default value to allow attaching material layers
+          // in case no surfaces are handed over the layer thickness will be
+          // set to a default value to allow attaching material layers
           double z = (zMin + zMax) * 0.5;
           // create layer without surfaces
           // manually create a proto layer
@@ -141,17 +146,16 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
       std::shared_ptr<Layer> endcapLayer = nullptr;
 
       // Check if DD4hep pre-defines the surface binning
-      bool hasSurfaceBinning = detExtension->hasCategory("surface_binning");
+      bool hasSurfaceBinning =
+          getParamOr<bool>("surface_binning", detElement, true);
       size_t nPhi = 1;
       size_t nR = 1;
       if (hasSurfaceBinning) {
-        if (detExtension->hasValue("n_phi", "surface_binning")) {
-          nPhi = static_cast<size_t>(
-              detExtension->getValue("n_phi", "surface_binning"));
+        if (params.contains("surface_binning_n_phi")) {
+          nPhi = static_cast<size_t>(params.get<int>("surface_binning_n_phi"));
         }
-        if (detExtension->hasValue("n_r", "surface_binning")) {
-          nR = static_cast<size_t>(
-              detExtension->getValue("n_r", "surface_binning"));
+        if (params.contains("surface_binning_n_r")) {
+          nR = static_cast<size_t>(params.get<int>("surface_binning_n_r"));
         }
         hasSurfaceBinning = nR * nPhi > 1;
       }
