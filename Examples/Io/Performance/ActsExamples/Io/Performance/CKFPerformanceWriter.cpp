@@ -184,11 +184,13 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
       if (pT < m_cfg.ptMin) {
         continue;
       }
+      /*
       //const auto eta = 
       // Add minPt and minEta here for efficiency calculations
-      //if (pT < m_cfg.ptMin || pT > m_cfg.ptMax || eta > m_cfg.etaMax || eta < m_cfg.etaMin) {
-      //  continue;
-      //}
+      if (pT < m_cfg.ptMin || pT > m_cfg.ptMax || eta > m_cfg.etaMax || eta < m_cfg.etaMin) {
+        continue;
+      }
+      */
       // Fill the trajectory summary info
       // Only need to do this if not ML output
       if (!m_cfg.outputIsML) {
@@ -291,16 +293,17 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
   
   for (const auto& particle : particles) {
     const auto eta = Acts::VectorHelpers::eta(particle.unitDirection());
-    /*
+    
     if (particle.transverseMomentum() < m_cfg.ptMin || 
         particle.transverseMomentum() > m_cfg.ptMax || eta < m_cfg.etaMin
         || eta > m_cfg.etaMax) {
       continue;
     }
-    */
+    /* 
    if (particle.transverseMomentum() < m_cfg.ptMin) {
      continue;
    }
+    */
     auto particleId = particle.particleId();
     // Investigate the truth-matched tracks
     size_t nMatchedTracks = 0;
