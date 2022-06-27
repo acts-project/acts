@@ -397,6 +397,7 @@ def test_truth_tracking_kalman(
 
     runTruthTrackingKalman(
         trackingGeometry=detector_config.trackingGeometry,
+        decorators=detector_config.decorators,
         field=field,
         digiConfigFile=detector_config.digiConfigFile,
         outputDir=tmp_path,
@@ -435,6 +436,7 @@ def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
 
     runTruthTrackingGsf(
         trackingGeometry=detector_config.trackingGeometry,
+        decorators=detector_config.decorators,
         field=field,
         digiConfigFile=detector_config.digiConfigFile,
         outputDir=tmp_path,
