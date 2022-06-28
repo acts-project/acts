@@ -296,4 +296,4 @@ Acts::TGeoLayerBuilder::defaultElementFactory(
     std::shared_ptr<const Acts::ISurfaceMaterial> material) {
   return std::make_shared<TGeoDetectorElement>(identifier, tGeoNode, tGeoMatrix,
                                                axes, scalor, material);
-};
+}
