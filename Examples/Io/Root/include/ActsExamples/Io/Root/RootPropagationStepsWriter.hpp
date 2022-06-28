@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -87,7 +87,7 @@ class RootPropagationStepsWriter
   std::vector<float> m_step_act;   ///< actor check
   std::vector<float> m_step_abt;   ///< aborter
   std::vector<float> m_step_usr;   ///< user
-  std::vector<int>
+  std::vector<size_t>
       m_nStepTrials;  ///< Number of iterations needed by the stepsize
                       ///  finder (e.g. Runge-Kutta) of the stepper.
 };
