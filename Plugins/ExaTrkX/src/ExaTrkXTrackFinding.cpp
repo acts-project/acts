@@ -12,9 +12,25 @@ using namespace torch::indexing;
 #include <grid/insert_points.h>
 #include <grid/prefix_sum.h>
 
-#include "cuda.h"
-#include "cuda_runtime_api.h"
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <cuda_runtime_api.h>
 // #include "mmio_read.h"
+
+namespace {
+  void print_current_cuda_meminfo() {
+    constexpr int kb = 1024;
+    constexpr int mb = kb * kb;
+    
+    int device;
+    std::size_t free, total;
+    //c10::cuda::CUDACachingAllocator::emptyCache();
+    cudaMemGetInfo( &free, &total );
+    cudaGetDevice( &device );
+    
+    std::cout << "Current CUDA device - used / total [in MB]: " << (total - free) / mb << " / " << total / mb << std::endl;
+  }
+}
 
 namespace Acts {
 
@@ -31,12 +47,12 @@ void ExaTrkXTrackFinding::initTrainedModels() {
   std::string l_gnnModelPath(m_cfg.modelDir + "/torchscript/gnn.pt");
   c10::InferenceMode guard(true);
   try {
-    e_model = torch::jit::load(l_embedModelPath.c_str());
-    e_model.eval();
-    f_model = torch::jit::load(l_filterModelPath.c_str());
-    f_model.eval();
-    g_model = torch::jit::load(l_gnnModelPath.c_str());
-    g_model.eval();
+    m_embeddingModel = torch::jit::load(l_embedModelPath.c_str());
+    m_embeddingModel.eval();
+    m_filterModel = torch::jit::load(l_filterModelPath.c_str());
+    m_filterModel.eval();
+    m_gnnModel = torch::jit::load(l_gnnModelPath.c_str());
+    m_gnnModel.eval();
   } catch (const c10::Error& e) {
     throw std::invalid_argument("Failed to load models: " + e.msg());
   }
@@ -53,6 +69,11 @@ void ExaTrkXTrackFinding::getTracks(
   // hardcoded debugging information
   c10::InferenceMode guard(true);
   torch::Device device(torch::kCUDA);
+  
+  // Clone models (solve memory leak? members can be const...)
+  auto e_model = m_embeddingModel.clone();
+  auto f_model = m_filterModel.clone();
+  auto g_model = m_gnnModel.clone();
 
   // printout the r,phi,z of the first spacepoint
   if (m_cfg.verbose) {
@@ -65,6 +86,7 @@ void ExaTrkXTrackFinding::getTracks(
               << " "
               << *std::min_element(inputValues.begin(), inputValues.end())
               << "\n";
+    print_current_cuda_meminfo();
   }
 
   ExaTrkXTimer timer;
@@ -83,12 +105,13 @@ void ExaTrkXTrackFinding::getTracks(
           .to(torch::kFloat32);
 
   eInputTensorJit.push_back(eLibInputTensor.to(device));
-  at::Tensor eOutput = e_model.forward(eInputTensorJit).toTensor();
+  std::optional<at::Tensor> eOutput = e_model.forward(eInputTensorJit).toTensor();
+  eInputTensorJit.clear();
 
   if (m_cfg.verbose) {
     std::cout << "Embedding space of libtorch the first SP: \n";
-    std::cout << eOutput.slice(/*dim=*/0, /*start=*/0, /*end=*/1) << std::endl;
-    std::cout << std::endl;
+    std::cout << eOutput->slice(/*dim=*/0, /*start=*/0, /*end=*/1) << std::endl;
+    print_current_cuda_meminfo();
   }
 
   timeInfo.embedding = timer.stopAndGetElapsedTime();
@@ -99,16 +122,18 @@ void ExaTrkXTrackFinding::getTracks(
   
   timer.start();
   
-  torch::Tensor edgeList = buildEdges(
-      eOutput, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal, m_cfg.knnVal);
+  std::optional<torch::Tensor> edgeList = buildEdges(
+      *eOutput, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal, m_cfg.knnVal);
+  eOutput.reset();
   // torch::Tensor edgeList = buildEdgesBruteForce(
   //   eOutput, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal,
   //   m_cfg.knnVal);
 
   if (m_cfg.verbose) {
-    std::cout << "Built " << edgeList.size(1) << " edges. " << edgeList.size(0)
+    std::cout << "Built " << edgeList->size(1) << " edges. " << edgeList->size(0)
               << std::endl;
-    std::cout << edgeList.slice(1, 0, 5) << std::endl;
+    std::cout << edgeList->slice(1, 0, 5) << std::endl;
+    print_current_cuda_meminfo();
 
     // std::ofstream file("reconstruction/edges_after_embedding.csv");
     // file << "e0,e1\n";
@@ -124,20 +149,32 @@ void ExaTrkXTrackFinding::getTracks(
   // **********
   
   timer.start();
-  std::vector<torch::jit::IValue> fInputTensorJit;
-  fInputTensorJit.push_back(eLibInputTensor.to(device));
-  fInputTensorJit.push_back(edgeList.to(device));
-  at::Tensor fOutput = f_model.forward(fInputTensorJit).toTensor();
-  fOutput.squeeze_();
-  fOutput.sigmoid_();
+  
+  const auto chunks = at::chunk(at::arange(edgeList->size(1)), m_cfg.n_chunks);
+  std::vector<at::Tensor> results;
+  
+  for(const auto &chunk : chunks) {
+    std::vector<torch::jit::IValue> fInputTensorJit;
+    fInputTensorJit.push_back(eLibInputTensor.to(device));
+    fInputTensorJit.push_back(edgeList->index({Slice(), chunk}).to(device));
+  
+    results.push_back(f_model.forward(fInputTensorJit).toTensor());
+    results.back().squeeze_();
+    results.back().sigmoid_();
+  }
+  
+  auto fOutput = torch::cat(results);
+  results.clear();
 
   if (m_cfg.verbose) {
     std::cout << "After filtering network: " << fOutput.size(0) << std::endl;
     std::cout << fOutput.slice(/*dim=*/0, /*start=*/0, /*end=*/9) << std::endl;
+    print_current_cuda_meminfo();
   }
 
   torch::Tensor filterMask = fOutput > m_cfg.filterCut;
-  torch::Tensor edgesAfterF = edgeList.index({Slice(), filterMask});
+  torch::Tensor edgesAfterF = edgeList->index({Slice(), filterMask});
+  edgeList.reset();
   edgesAfterF = edgesAfterF.to(torch::kInt64);
   int64_t numEdgesAfterF = edgesAfterF.size(1);
 
@@ -150,6 +187,7 @@ void ExaTrkXTrackFinding::getTracks(
     // for(int i=0; i<edgesAfterF.size(1); ++i) {
     //     file << edgesAfterF[0][i].item<float>() << "," << edgesAfterF[1][i].item<float>() << "\n";
     // }
+    print_current_cuda_meminfo();
   }
 
   timeInfo.filtering = timer.stopAndGetElapsedTime();
@@ -165,6 +203,7 @@ void ExaTrkXTrackFinding::getTracks(
   if (m_cfg.verbose) {
     std::cout << "bidir edges shape " << bidirEdgesAfterF.size(0) << ", "
               << bidirEdgesAfterF.size(1) << "\n";
+    print_current_cuda_meminfo();
   }
 
   std::vector<torch::jit::IValue> gInputTensorJit;
@@ -173,6 +212,7 @@ void ExaTrkXTrackFinding::getTracks(
   gInputTensorJit.push_back(bidirEdgesAfterF.to(device));
 
   auto gOutputBidir = g_model.forward(gInputTensorJit).toTensor();
+  gInputTensorJit.clear();
   gOutputBidir.sigmoid_();
   gOutputBidir = gOutputBidir.cpu();
 
@@ -189,6 +229,7 @@ void ExaTrkXTrackFinding::getTracks(
     // for(int i=0; i<edgesAfterF.size(1); ++i) {
     //     file << gOutput[i].item<float>() << "\n";
     // }
+    print_current_cuda_meminfo();
   }
 
   // ***************
@@ -225,6 +266,7 @@ void ExaTrkXTrackFinding::getTracks(
     std::sort(sorted.begin(), sorted.end());
     sorted.erase(std::unique(sorted.begin(), sorted.end()), sorted.end());
     std::cout << "unique components: " << sorted.size() << std::endl;
+    print_current_cuda_meminfo();
   }
 
   if (trackLabels.size() == 0)
@@ -255,6 +297,7 @@ void ExaTrkXTrackFinding::getTracks(
   }
   timeInfo.labeling = timer.stopAndGetElapsedTime();
   timeInfo.total = tot_timer.stopAndGetElapsedTime();
+  c10::cuda::CUDACachingAllocator::emptyCache();
 }
 
 }  // namespace Acts

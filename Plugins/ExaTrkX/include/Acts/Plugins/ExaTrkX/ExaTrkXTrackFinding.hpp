@@ -24,6 +24,7 @@ class ExaTrkXTrackFinding : public ExaTrkXTrackFindingBase {
     float rVal = 1.6;
     int knnVal = 500;
     float filterCut = 0.21;
+    int n_chunks = 5;
     float edgeCut = 0.5;
   };
 
@@ -42,9 +43,9 @@ class ExaTrkXTrackFinding : public ExaTrkXTrackFindingBase {
 
  private:
   Config m_cfg;
-  mutable torch::jit::script::Module e_model;
-  mutable torch::jit::script::Module f_model;
-  mutable torch::jit::script::Module g_model;
+  torch::jit::script::Module m_embeddingModel;
+  torch::jit::script::Module m_filterModel;
+  torch::jit::script::Module m_gnnModel;
 };
 
 }  // namespace Acts

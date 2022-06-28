@@ -55,6 +55,7 @@ void addExaTrkXTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(rVal);
     ACTS_PYTHON_MEMBER(knnVal);
     ACTS_PYTHON_MEMBER(filterCut);
+    ACTS_PYTHON_MEMBER(n_chunks);
     ACTS_PYTHON_MEMBER(edgeCut);
     ACTS_PYTHON_STRUCT_END();
   }
