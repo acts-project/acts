@@ -22,6 +22,80 @@ void LoggerWrapper::log(const Logging::Level& lvl,
 
 namespace Logging {
 
+std::string_view levelName(Level level) {
+  switch (level) {
+    case Level::VERBOSE:
+      return "VERBOSE";
+    case Level::DEBUG:
+      return "DEBUG";
+    case Level::INFO:
+      return "INFO";
+    case Level::WARNING:
+      return "WARNING";
+    case Level::ERROR:
+      return "ERROR";
+    case Level::FATAL:
+      return "FATAL";
+    case Level::MAX:
+      return "MAX";
+    default:
+      throw std::invalid_argument{"Unknown level"};
+  }
+}
+
+#if defined(ACTS_ENABLE_LOG_FAILURE_THRESHOLD) and \
+    not defined(ACTS_LOG_FAILURE_THRESHOLD)
+namespace {
+Level& getFailureThresholdMutable() {
+  static Level _level = []() {
+    Level level = Level::MAX;
+
+    const char* envvar = std::getenv("ACTS_LOG_FAILURE_THRESHOLD");
+    if (envvar == nullptr) {
+      return level;
+    }
+    std::string slevel = envvar;
+    if (slevel == "VERBOSE") {
+      level = std::min(level, Level::VERBOSE);
+    } else if (slevel == "DEBUG") {
+      level = std::min(level, Level::DEBUG);
+    } else if (slevel == "INFO") {
+      level = std::min(level, Level::INFO);
+    } else if (slevel == "WARNING") {
+      level = std::min(level, Level::WARNING);
+    } else if (slevel == "ERROR") {
+      level = std::min(level, Level::ERROR);
+    } else if (slevel == "FATAL") {
+      level = std::min(level, Level::FATAL);
+    } else {
+      std::cerr << "ACTS_LOG_FAILURE_THRESHOLD environment variable is set to "
+                   "unknown value: "
+                << slevel << std::endl;
+    }
+    return level;
+  }();
+
+  return _level;
+}
+}  // namespace
+
+Level getFailureThreshold() {
+  return getFailureThresholdMutable();
+}
+
+void setFailureThreshold(Level level) {
+  getFailureThresholdMutable() = level;
+}
+
+#else
+
+void setFailureThreshold(Level) {
+  throw std::logic_error{
+      "Compile-time log failure threshold defined, unable to override"};
+}
+
+#endif
+
 namespace {
 class NeverFilterPolicy final : public OutputFilterPolicy {
  public:
