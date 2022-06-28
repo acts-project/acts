@@ -13,7 +13,8 @@ class TrajectoriesToPrototracks final : public BareAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  TrajectoriesToPrototracks(Config cfg, Acts::Logging::Level lvl);
+  TrajectoriesToPrototracks(Config cfg, Acts::Logging::Level lvl)
+      : BareAlgorithm("TrajectoriesToPrototracks", lvl), m_cfg(cfg) {}
 
   /// Run the algorithm.
   ///
@@ -28,5 +29,4 @@ class TrajectoriesToPrototracks final : public BareAlgorithm {
   Config m_cfg;
 };
 
-}  // namespace ActsExamples 
-
+}  // namespace ActsExamples
