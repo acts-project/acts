@@ -56,7 +56,8 @@ Result<void> GainMatrixSmoother::operator()(const GeometryContext& gctx,
     ACTS_VERBOSE("Jacobian:\n" << prev_ts.jacobian());
     ACTS_VERBOSE("Prev. predicted covariance\n"
                  << prev_ts.predictedCovariance() << "\n, inverse: \n"
-                 << prev_ts.predictedCovariance().inverse() << "\n, regularized inverse: \n"
+                 << prev_ts.predictedCovariance().inverse()
+                 << "\n, regularized inverse: \n"
                  << (prev_ts.predictedCovariance() + regularization).inverse());
 
     // Gain smoothing matrix
