@@ -37,7 +37,7 @@ def addVertexFitting(
     field,
     outputDirRoot: Optional[Union[Path, str]] = None,
     associatedParticles: str = "particles_input",
-    trackParameters: str = "estimatedparameters",
+    trackParameters: str = "trackparameters",
     vertexFinder: VertexFinder = VertexFinder.Truth,
     logLevel: Optional[acts.logging.Level] = None,
 ):
@@ -88,7 +88,6 @@ def addVertexFitting(
             outputVertices=outputVertices,
         )
         s.addAlgorithm(fitVertices)
-
     elif vertexFinder == VertexFinder.Iterative:
         findVertices = IterativeVertexFinderAlgorithm(
             level=customLogLevel(),
@@ -108,7 +107,6 @@ def addVertexFitting(
             outputVertices=outputVertices,
             outputTime=outputTime,
         )
-
         s.addAlgorithm(findVertices)
     else:
         raise RuntimeError("Invalid finder argument")
