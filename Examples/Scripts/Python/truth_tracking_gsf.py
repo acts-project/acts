@@ -9,7 +9,7 @@ import acts
 from acts import UnitConstants as u
 
 
-def addGsfTracks(
+def addTruthTrackingGsf(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
@@ -40,17 +40,14 @@ def addGsfTracks(
     return s
 
 
-def runGsfTracks(
+def runTruthTrackingGsf(
     trackingGeometry,
-    decorators,
-    geometrySelection: Path,
     digiConfigFile: Path,
     field,
     outputDir: Path,
-    truthSmearedSeeded=False,
-    truthEstimatedSeeded=False,
     outputCsv=True,
     inputParticlePath: Optional[Path] = None,
+    decorators=[],
     s=None,
 ):
 
@@ -123,7 +120,7 @@ def runGsfTracks(
 
     s.addAlgorithm(truthTrkFndAlg)
 
-    s = addGsfTracks(s, trackingGeometry, field)
+    s = addTruthTrackingGsf(s, trackingGeometry, field)
 
     # Output
     s.addWriter(
@@ -162,17 +159,13 @@ if "__main__" == __name__:
     if not inputParticlePath.exists():
         inputParticlePath = None
 
-    runGsfTracks(
+    runTruthTrackingGsf(
         trackingGeometry,
         decorators,
         field=field,
-        geometrySelection=srcdir
-        / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
         digiConfigFile=srcdir
         / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
         outputCsv=True,
-        truthSmearedSeeded=False,
-        truthEstimatedSeeded=False,
         inputParticlePath=inputParticlePath,
         outputDir=Path.cwd(),
     ).run()
