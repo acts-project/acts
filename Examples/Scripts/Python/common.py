@@ -80,9 +80,9 @@ def addPythia8(
 
     NB. this version is included here only for compatibility. Please use pythia8.addPythia8 instead.
     """
-    import pythia8
+    import acts.examples.sumulation
 
-    evGen = pythia8.addPythia8(
+    evGen = acts.examples.simulation.addPythia8(
         sequencer,
         rnd=rnd,
         nhard=nhard,
