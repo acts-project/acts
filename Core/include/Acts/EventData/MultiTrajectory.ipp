@@ -183,7 +183,7 @@ void MultiTrajectory<D>::visitBackwards(size_t iendpoint, F&& callable) const {
       bool proceed = callable(ts);
       // this point has no parent and ends the trajectory, or a break was
       // requested
-      if (!ts.hasPrevious() || !proceed) {
+      if (!proceed || !ts.hasPrevious()) {
         break;
       }
     } else {
@@ -210,7 +210,7 @@ void MultiTrajectory<D>::applyBackwards(size_t iendpoint, F&& callable) {
       bool proceed = callable(ts);
       // this point has no parent and ends the trajectory, or a break was
       // requested
-      if (!ts.hasPrevious() || !proceed) {
+      if (!proceed || !ts.hasPrevious()) {
         break;
       }
     } else {

@@ -16,6 +16,8 @@ namespace Acts {
 
 class VectorMultiTrajectory final
     : public MultiTrajectory<VectorMultiTrajectory> {
+  friend MultiTrajectory<VectorMultiTrajectory>;
+
   struct IndexData {
     size_t iprevious = kInvalid;
     IndexType ipredicted = kInvalid;
@@ -57,6 +59,7 @@ class VectorMultiTrajectory final
   VectorMultiTrajectory& operator=(const VectorMultiTrajectory&) = default;
   VectorMultiTrajectory& operator=(VectorMultiTrajectory&&) = default;
 
+ private:
   // BEGIN INTERFACE
   TrackStateProxy::Parameters parameters_impl(IndexType parIdx) {
     return TrackStateProxy::Parameters{m_params[parIdx].data()};
@@ -297,8 +300,6 @@ class VectorMultiTrajectory final
     std::vector<T> m_vector;
   };
 
- protected:
- private:
   /// index to map track states to the corresponding
   std::vector<IndexData> m_index;
   std::vector<size_t> m_previous;

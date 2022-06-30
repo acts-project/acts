@@ -665,7 +665,6 @@ class TrackStateProxy {
                   size_t istate);
 
   const std::shared_ptr<const Surface>& referenceSurfacePointer() const {
-    assert(has<hashString("referenceSurface")>());
     return component<std::shared_ptr<const Surface>,
                      hashString("referenceSurface")>();
   }
