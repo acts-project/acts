@@ -158,7 +158,26 @@ enum Level {
   MAX           ///< Must be kept above the maximum supported debug level
 };
 
-std::string_view levelName(Level level);
+inline std::string_view levelName(Level level) {
+  switch (level) {
+    case Level::VERBOSE:
+      return "VERBOSE";
+    case Level::DEBUG:
+      return "DEBUG";
+    case Level::INFO:
+      return "INFO";
+    case Level::WARNING:
+      return "WARNING";
+    case Level::ERROR:
+      return "ERROR";
+    case Level::FATAL:
+      return "FATAL";
+    case Level::MAX:
+      return "MAX";
+    default:
+      throw std::invalid_argument{"Unknown level"};
+  }
+}
 
 /// @brief Get debug level above which an exception will be thrown after logging
 ///

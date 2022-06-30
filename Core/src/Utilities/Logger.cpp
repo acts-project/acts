@@ -22,27 +22,6 @@ void LoggerWrapper::log(const Logging::Level& lvl,
 
 namespace Logging {
 
-std::string_view levelName(Level level) {
-  switch (level) {
-    case Level::VERBOSE:
-      return "VERBOSE";
-    case Level::DEBUG:
-      return "DEBUG";
-    case Level::INFO:
-      return "INFO";
-    case Level::WARNING:
-      return "WARNING";
-    case Level::ERROR:
-      return "ERROR";
-    case Level::FATAL:
-      return "FATAL";
-    case Level::MAX:
-      return "MAX";
-    default:
-      throw std::invalid_argument{"Unknown level"};
-  }
-}
-
 #if defined(ACTS_ENABLE_LOG_FAILURE_THRESHOLD) and \
     not defined(ACTS_LOG_FAILURE_THRESHOLD)
 namespace {
