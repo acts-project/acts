@@ -62,7 +62,7 @@ def addCKFTracks(
         inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",
         outputTrajectories="trajectories",
-        outputTrackParameters="trackparameters",
+        outputTrackParameters="fittedTrackParameters",
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field
         ),

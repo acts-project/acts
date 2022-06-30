@@ -67,10 +67,22 @@ s = addCKFTracks(
     CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
     outputDirRoot=outputDir,
 )
+s.addAlgorithm(
+    acts.examples.TrackSelector(
+        level=acts.logging.INFO,
+        inputTrackParameters="fittedTrackParameters",
+        outputTrackParameters="trackparameters",
+        outputTrackIndices="outputTrackIndices",
+        removeNeutral=True,
+        absEtaMax=2.5,
+        loc0Max=4.0 * u.mm,  # rho max
+        ptMin=500 * u.MeV,
+    )
+)
 s = addVertexFitting(
     s,
     field,
-    vertexFinder=VertexFinder.AMVF,
+    vertexFinder=VertexFinder.Truth,
     outputDirRoot=outputDir,
     logLevel=acts.logging.VERBOSE,
 )

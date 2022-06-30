@@ -88,6 +88,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     inputTrackPtrCollection.clear();
     inputTrackPtrCollection.reserve(protoVertex.size());
     for (const auto& trackIdx : protoVertex) {
+      ACTS_INFO("VertexFitterAlgorithm protoVertex trackIdx: " << trackIdx);
       inputTrackPtrCollection.push_back(&trackParameters[trackIdx]);
     }
 
