@@ -59,7 +59,7 @@ auto makeKfOptions(
 
   Acts::KalmanFitterOptions<Acts::VectorMultiTrajectory> kfOptions(
       options.geoContext, options.magFieldContext, options.calibrationContext,
-      extensions, options.logger, Acts::PropagatorPlainOptions(),
+      extensions, options.logger, options.propOptions,
       &(*options.referenceSurface));
 
   kfOptions.multipleScattering = f.multipleScattering;

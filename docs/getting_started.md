@@ -57,6 +57,8 @@ For convenience, it is possible to build the required boost and eigen3 dependenc
 Other options are also
 available and are discussed in the [Building Acts](#building-acts) section.
 
+[Profiling](howto/profiling.md) details the prerequisites for profiling the ACTS project with gperftools.
+
 ## Building Acts
 
 Acts uses [CMake](https://cmake.org) to configure, build, and install the
@@ -243,7 +245,7 @@ components.
 | ACTS_BUILD_EVERYTHING               | Build with most options enabled (except HepMC3 and documentation)                                     |
 | ACTS_BUILD_PLUGIN_CUDA              | Build CUDA plugin                                                                                     |
 | ACTS_BUILD_PLUGIN_DD4HEP            | Build DD4hep geometry plugin                                                                          |
-| ACTS_BUILD_PLUGIN_EXATRKX           | Build Exa.TrkX plugin                                                                             |
+| ACTS_BUILD_PLUGIN_EXATRKX           | Build Exa.TrkX plugin                                                                                 |
 | ACTS_BUILD_PLUGIN_IDENTIFICATION    | Build Identification plugin                                                                           |
 | ACTS_BUILD_PLUGIN_JSON              | Build Json plugin                                                                                     |
 | ACTS_BUILD_PLUGIN_LEGACY            | Build legacy plugin                                                                                   |
@@ -274,7 +276,10 @@ components.
 | ACTS_USE_SYSTEM_EIGEN3              | Use the system eigen3 libraries (defaults to ON)                                                      |
 | ACTS_USE_SYSTEM_VECMEM              | Use system provided vecmem installation                                                               |
 | ACTS_USE_SYSTEM_PYBIND11            | Use pybind11 installed in the system                                                                  |
-| ACTS_USE_SYSTEM_ACTSDD4HEP          | Use ActsDD4hep glue library externally (and don't include it in the build)                            |
+| ACTS_USE_SYSTEM_ACTSDD4HEP          | Use ActsDD4hep glue library externally (and don't include it in the build)                            |                            
+| ACTS_ENABLE_CPU_PROFILING           | Link the profiler library to enable gperftool's CPU profiler                                          |
+| ACTS_ENABLE_MEMORY_PROFILING        | Link the tcmalloc library to enable gperftool's memory profiler and heap checker                      |
+| GPERF_INSTALL_DIR                   | Path to the directory that gperftools is installed in                                                 |
 
 All Acts-specific options are disabled or empty by default and must be
 specifically requested. Some of the options have interdependencies that are

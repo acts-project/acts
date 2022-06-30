@@ -37,6 +37,42 @@ if(ACTS_LOG_FAILURE_THRESHOLD)
     PUBLIC -DACTS_LOG_FAILURE_THRESHOLD=${ACTS_LOG_FAILURE_THRESHOLD})
 endif()
 
+if(ACTS_ENABLE_CPU_PROFILING)
+  message(STATUS "added lprofiler")
+
+  if(DEFINED GPERF_INSTALL_DIR)
+    find_library(PROFILER_LIBRARY profiler HINTS ${GPERF_INSTALL_DIR})
+
+    target_link_libraries(
+      ActsCore
+      PUBLIC ${PROFILER_LIBRARY})
+  else()
+    target_link_libraries(
+      ActsCore
+      PUBLIC -lprofiler)
+  endif()
+
+  target_link_options(
+    ActsCore
+      PUBLIC "LINKER:-no-as-needed")
+endif()
+
+if(ACTS_ENABLE_MEMORY_PROFILING)
+  message(STATUS "added ltcmalloc")
+
+  if(DEFINED GPERF_INSTALL_DIR)
+    find_library(TCMALLOC_LIBRARY tcmalloc HINTS ${GPERF_INSTALL_DIR})
+
+    target_link_libraries(
+      ActsCore
+      PUBLIC ${TCMALLOC_LIBRARY})
+  else()
+    target_link_libraries(
+      ActsCore
+      PUBLIC -ltcmalloc)
+  endif()
+endif()
+
 install(
   TARGETS ActsCore
   EXPORT ActsCoreTargets

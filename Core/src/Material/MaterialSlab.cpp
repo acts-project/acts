@@ -12,6 +12,7 @@
 
 #include <limits>
 #include <ostream>
+#include <stdexcept>
 
 static constexpr auto eps = 2 * std::numeric_limits<float>::epsilon();
 
@@ -22,6 +23,9 @@ Acts::MaterialSlab::MaterialSlab(const Material& material, float thickness)
       m_thickness(thickness),
       m_thicknessInX0((eps < material.X0()) ? (thickness / material.X0()) : 0),
       m_thicknessInL0((eps < material.L0()) ? (thickness / material.L0()) : 0) {
+  if (thickness < 0) {
+    throw std::runtime_error("thickness < 0");
+  }
 }
 
 Acts::MaterialSlab::MaterialSlab(const std::vector<MaterialSlab>& layers)
@@ -40,6 +44,10 @@ Acts::MaterialSlab::MaterialSlab(const std::vector<MaterialSlab>& layers)
 }
 
 void Acts::MaterialSlab::scaleThickness(float scale) {
+  if (scale < 0) {
+    throw std::runtime_error("scale < 0");
+  }
+
   m_thickness *= scale;
   m_thicknessInX0 *= scale;
   m_thicknessInL0 *= scale;

@@ -33,17 +33,16 @@ auto makeGsfOptions(
       &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
       &f.updater);
 
-  Acts::GsfOptions<Acts::VectorMultiTrajectory> gsfOptions{
-      options.geoContext,
-      options.magFieldContext,
-      options.calibrationContext,
-      extensions,
-      options.logger,
-      Acts::PropagatorPlainOptions(),
-      &(*options.referenceSurface),
-      f.maxComponents,
-      f.abortOnError,
-      f.disableAllMaterialHandling};
+  Acts::GsfOptions gsfOptions{options.geoContext,
+                              options.magFieldContext,
+                              options.calibrationContext,
+                              extensions,
+                              options.logger,
+                              options.propOptions,
+                              &(*options.referenceSurface),
+                              f.maxComponents,
+                              f.abortOnError,
+                              f.disableAllMaterialHandling};
 
   return gsfOptions;
 }
