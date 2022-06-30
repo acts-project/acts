@@ -70,6 +70,7 @@ run \
     $outdir/acts_analysis_residuals_and_pulls.root \
     $refdir/acts_analysis_residuals_and_pulls.root \
     --title "full_chain_odd" \
+    -c CI/physmon/full_chain_odd.yml \
 
 
 exit $ec
