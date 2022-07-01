@@ -14,6 +14,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -61,6 +62,43 @@ CurvilinearTrackParameters makeParameters(double phi, double theta, double p,
   // Let the particle starts from the origin
   Vector4 mPos4(-3_m, 0., 0., 0.);
   return CurvilinearTrackParameters(mPos4, phi, theta, p, q, cov);
+}
+
+const Vector2 getLocalPos(const TestMeasurement* meas) {
+  return std::visit(
+      [](const auto& x) {
+        auto expander = x.expander();
+        BoundVector par = expander * x.parameters();
+        Vector2 local(par[BoundIndices::eBoundLoc0],
+                      par[BoundIndices::eBoundLoc1]);
+        return local;
+      },
+      *meas);
+}
+
+std::pair<Vector3, Vector3> stripEnds(
+    const std::shared_ptr<const TrackingGeometry> geo,
+    const GeometryContext& gctx, const TestMeasurement* meas) {
+  const auto lpos = getLocalPos(meas);
+  Vector3 globalFakeMom(1, 1, 1);
+  const SourceLink* slink =
+      std::visit([](const auto& x) { return &x.sourceLink(); }, *meas);
+  const auto geoId = slink->geometryId();
+  const Surface* surface = geo->findSurface(geoId);
+
+  const double theta = 0.02;
+  const double stripLength = 40;
+  double frac = 0.4;
+  double end1x = lpos[0] + stripLength * frac * cos(theta);
+  double end1y = lpos[1] + stripLength * frac * sin(theta);
+  double end2x = lpos[0] - stripLength * frac * cos(theta);
+  double end2y = lpos[1] - stripLength * frac * sin(theta);
+  Vector2 lpos1(end1x, end1y);
+  Vector2 lpos2(end2x, end2y);
+
+  auto gPos1 = surface->localToGlobal(gctx, lpos1, globalFakeMom);
+  auto gPos2 = surface->localToGlobal(gctx, lpos2, globalFakeMom);
+  return std::make_pair(gPos1, gPos2);
 }
 
 // Create a test context
@@ -133,19 +171,24 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   std::vector<const TestMeasurement*> frontMeasurements;
   std::vector<const TestMeasurement*> backMeasurements;
   std::vector<const TestMeasurement*> singleHitMeasurements;
+
+  std::vector<const Vector3*> frontStripEnds;
+  std::vector<const Vector3*> backStripEnds;
+
   for (auto& sl : sourceLinks) {
     const auto geoId = sl.geometryId();
     const auto volumeId = geoId.volume();
     if (volumeId == 2) {  // pixel type detector
+
       const TestMeasurement* meas = new TestMeasurement(makeMeasurement(
           sl, sl.parameters, sl.covariance, sl.indices[0], sl.indices[1]));
       singleHitMeasurements.emplace_back(meas);
     } else if (volumeId == 3) {  // strip type detector
+
       const auto layerId = geoId.layer();
-      // Use the center of the strip as the second coordinate
-      Acts::Vector2 param_digi = Acts::Vector2(sl.parameters[0], 0.);
+
       const TestMeasurement* meas = new TestMeasurement(makeMeasurement(
-          sl, param_digi, sl.covariance, sl.indices[0], sl.indices[1]));
+          sl, sl.parameters, sl.covariance, sl.indices[0], sl.indices[1]));
 
       if (layerId == 2 || layerId == 6) {
         frontMeasurements.emplace_back(meas);
@@ -159,9 +202,6 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   BOOST_CHECK_EQUAL(backMeasurements.size(), 2);
 
   Acts::Vector3 vertex = Vector3(-3_m, 0., 0.);
-  auto spBuilderConfig = SpacePointBuilderConfig();
-  spBuilderConfig.trackingGeometry = geometry;
-  spBuilderConfig.vertex = vertex;
 
   std::function<TestSpacePoint(
       Acts::Vector3, Acts::Vector2,
@@ -171,62 +211,74 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
              boost::container::static_vector<const Acts::SourceLink*, 2> slinks)
       -> TestSpacePoint { return TestSpacePoint(pos, cov[0], cov[1], slinks); };
 
+  auto spBuilderConfig = SpacePointBuilderConfig();
+  spBuilderConfig.trackingGeometry = geometry;
+  spBuilderConfig.vertex = vertex;
+
   auto spBuilder =
       Acts::SpacePointBuilder<TestSpacePoint>(spBuilderConfig, spConstructor);
 
+  // for cosmic  without vertex constraint, usePerpProj = true
+  auto spBuilderConfig_perp = SpacePointBuilderConfig();
+  spBuilderConfig_perp.trackingGeometry = geometry;
+  spBuilderConfig_perp.vertex = vertex;
+  spBuilderConfig_perp.usePerpProj = true;
+
+  auto spBuilder_perp = Acts::SpacePointBuilder<TestSpacePoint>(
+      spBuilderConfig_perp, spConstructor);
+
   TestSpacePointContainer spacePoints;
 
-  // pixel SP building
-  spBuilder.calculateSingleHitSpacePoints(tgContext, singleHitMeasurements,
-                                          std::back_inserter(spacePoints));
+  for (auto& meas : singleHitMeasurements) {
+    std::vector<const TestMeasurement*> measVect;
+    measVect.emplace_back(meas);
 
-  BOOST_CHECK_EQUAL(spacePoints.size(), 2);
+    SpacePointOptions spOpt;
+    spBuilder.buildSpacePoint(geoCtx, measVect, spOpt,
+                              std::back_inserter(spacePoints));
+  }
 
   std::vector<std::pair<const TestMeasurement*, const TestMeasurement*>>
       measPairs;
 
   // strip SP building
+
   spBuilder.makeMeasurementPairs(tgContext, frontMeasurements, backMeasurements,
                                  measPairs);
 
-  std::shared_ptr<const TestSpacePoint> spacePoint = nullptr;
+  BOOST_CHECK_EQUAL(measPairs.size(), 2);
+
   for (auto& measPair : measPairs) {
-    const std::pair<Vector3, Vector3> frontEnds;
-    const std::pair<Vector3, Vector3> backEnds;
+    const auto meas1 = measPair.first;
+    const auto meas2 = measPair.second;
 
-    spBuilder.calculateDoubleHitSpacePoint(
-        tgContext, measPair, std::make_pair(frontEnds, backEnds), spacePoint);
+    const std::pair<Vector3, Vector3> end1 = stripEnds(geometry, geoCtx, meas1);
+    const std::pair<Vector3, Vector3> end2 = stripEnds(geometry, geoCtx, meas2);
+
+    std::shared_ptr<const TestSpacePoint> spacePoint = nullptr;
+    std::pair<const std::pair<Vector3, Vector3>,
+              const std::pair<Vector3, Vector3>>
+        strippair = std::make_pair(end1, end2);
+    std::vector<const TestMeasurement*> measVect;
+    measVect.emplace_back(meas1);
+    measVect.emplace_back(meas2);
+
+    SpacePointOptions spOpt{strippair};
+
+    spBuilder.buildSpacePoint(geoCtx, measVect, spOpt,
+                              std::back_inserter(spacePoints));
+
+    spBuilder_perp.buildSpacePoint(geoCtx, measVect, spOpt,
+                                   std::back_inserter(spacePoints));
   }
-
-  std::cout << "number of meas pairs " << measPairs.size() << std::endl;
 
   for (auto& sp : spacePoints) {
     std::cout << "space point (" << sp.x() << " " << sp.y() << " " << sp.z()
               << ") var (r,z): " << sp.varianceR() << " " << sp.varianceZ()
               << std::endl;
   }
-  BOOST_CHECK_EQUAL(spacePoints.size(), 4);
 
-  // for cosmic  without vertex constraint, usePerpProj = true
-
-  auto spBuilderConfig_perp = SpacePointBuilderConfig();
-  spBuilderConfig_perp.trackingGeometry = geometry;
-  spBuilderConfig_perp.usePerpProj = true;
-
-  TestSpacePointContainer spacePoints_perp;
-  auto spBuilder_perp = Acts::SpacePointBuilder<TestSpacePoint>(
-      spBuilderConfig_perp, spConstructor);
-  // strip SP building
-  spBuilder.makeMeasurementPairs(tgContext, frontMeasurements, backMeasurements,
-                                 measPairs);
-
-  for (auto& sp : spacePoints_perp) {
-    std::cout << "space point (usePerpProj) (" << sp.x() << " " << sp.y() << " "
-              << sp.z() << ") var (r,z): " << sp.varianceR() << " "
-              << sp.varianceZ() << std::endl;
-  }
-
-  BOOST_CHECK_EQUAL(spacePoints_perp.size(), 2);
+  BOOST_CHECK_EQUAL(spacePoints.size(), 6);
 }
 
 }  // end of namespace Test
