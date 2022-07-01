@@ -374,12 +374,11 @@ def test_event_recording(tmp_path):
     assert alg.events_seen == 1
 
 
-@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.parametrize("revFiltMomThresh", [0 * u.GeV, 1 * u.TeV])
-def test_truth_tracking(tmp_path, assert_root_hash, revFiltMomThresh):
-    from truth_tracking import runTruthTracking
-
-    detector, trackingGeometry, _ = getOpenDataDetector()
+def test_truth_tracking_kalman(
+    tmp_path, assert_root_hash, revFiltMomThresh, detector_config
+):
+    from truth_tracking_kalman import runTruthTrackingKalman
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
@@ -396,12 +395,11 @@ def test_truth_tracking(tmp_path, assert_root_hash, revFiltMomThresh):
         fp = tmp_path / fn
         assert not fp.exists()
 
-    runTruthTracking(
-        trackingGeometry,
-        field,
-        digiConfigFile=Path(
-            "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",
-        ),
+    runTruthTrackingKalman(
+        trackingGeometry=detector_config.trackingGeometry,
+        decorators=detector_config.decorators,
+        field=field,
+        digiConfigFile=detector_config.digiConfigFile,
         outputDir=tmp_path,
         reverseFilteringMomThreshold=revFiltMomThresh,
         s=seq,
@@ -417,6 +415,43 @@ def test_truth_tracking(tmp_path, assert_root_hash, revFiltMomThresh):
         assert fp.stat().st_size > 1024
         if tn is not None:
             assert_entries(fp, tn, ee)
+            assert_root_hash(fn, fp)
+
+
+def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
+    from truth_tracking_gsf import runTruthTrackingGsf
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+    seq = Sequencer(events=10, numThreads=1)
+
+    root_files = [
+        ("trackstates_gsf.root", "trackstates"),
+        ("tracksummary_gsf.root", "tracksummary"),
+    ]
+
+    for fn, _ in root_files:
+        fp = tmp_path / fn
+        assert not fp.exists()
+
+    runTruthTrackingGsf(
+        trackingGeometry=detector_config.trackingGeometry,
+        decorators=detector_config.decorators,
+        field=field,
+        digiConfigFile=detector_config.digiConfigFile,
+        outputDir=tmp_path,
+        s=seq,
+    )
+
+    seq.run()
+
+    del seq
+
+    for fn, tn in root_files:
+        fp = tmp_path / fn
+        assert fp.exists()
+        assert fp.stat().st_size > 1024
+        if tn is not None:
             assert_root_hash(fn, fp)
 
 
@@ -777,13 +812,6 @@ def test_digitization_config_example(trk_geo, tmp_path):
 
 
 @pytest.mark.parametrize(
-    "detector",
-    [
-        "generic",
-        "odd",
-    ],
-)
-@pytest.mark.parametrize(
     "truthSmeared,truthEstimated",
     [
         [False, False],
@@ -793,39 +821,13 @@ def test_digitization_config_example(trk_geo, tmp_path):
     ids=["full_seeding", "truth_estimated", "truth_smeared"],
 )
 def test_ckf_tracks_example(
-    tmp_path, assert_root_hash, truthSmeared, truthEstimated, detector
+    tmp_path, assert_root_hash, truthSmeared, truthEstimated, detector_config
 ):
     csv = tmp_path / "csv"
 
     assert not csv.exists()
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
-    if detector == "generic":
-        detector, trackingGeometry, decorators = GenericDetector.create()
-        geometrySelection = (
-            srcdir
-            / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
-        )
-        digiConfigFile = (
-            srcdir
-            / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-        )
-    elif detector == "odd":
-
-        matDeco = acts.IMaterialDecorator.fromFile(
-            srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
-            level=acts.logging.INFO,
-        )
-        detector, trackingGeometry, decorators = getOpenDataDetector(matDeco)
-        digiConfigFile = (
-            srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
-        )
-        geometrySelection = (
-            srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json"
-        )
-
-    else:
-        raise ValueError(f"Invalid detector {detector}")
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
     events = 100
@@ -860,13 +862,13 @@ def test_ckf_tracks_example(
     from ckf_tracks import runCKFTracks
 
     runCKFTracks(
-        trackingGeometry,
-        decorators,
+        detector_config.trackingGeometry,
+        detector_config.decorators,
         field=field,
         outputCsv=True,
         outputDir=tmp_path,
-        geometrySelection=geometrySelection,
-        digiConfigFile=digiConfigFile,
+        geometrySelection=detector_config.geometrySelection,
+        digiConfigFile=detector_config.digiConfigFile,
         truthSmearedSeeded=truthSmeared,
         truthEstimatedSeeded=truthEstimated,
         s=s,
@@ -940,10 +942,10 @@ def test_vertex_fitting_reading(
 
     inputTrackSummary = None
     if inputTracks:
-        from truth_tracking import runTruthTracking
+        from truth_tracking_kalman import runTruthTrackingKalman
 
         s2 = Sequencer(numThreads=1, events=100)
-        runTruthTracking(
+        runTruthTrackingKalman(
             trackingGeometry,
             field,
             digiConfigFile=Path(
@@ -1001,6 +1003,8 @@ def test_vertex_fitting_reading(
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_full_chain_odd_example(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
+    getOpenDataDetector()  # just to make sure it can build
+
     script = (
         Path(__file__).parent.parent.parent.parent
         / "Examples"

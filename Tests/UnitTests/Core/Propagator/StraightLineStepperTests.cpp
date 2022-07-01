@@ -331,7 +331,9 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_ABS(slsState.stepSize, 2, 1e-6);
 
   // Test the bound state construction
-  auto boundState = sls.boundState(slsState, *plane).value();
+  FreeToBoundCorrection freeToBoundCorrection(false);
+  auto boundState =
+      sls.boundState(slsState, *plane, true, freeToBoundCorrection).value();
   auto boundPars = std::get<0>(boundState);
   CHECK_CLOSE_ABS(boundPars.position(tgContext), bp.position(tgContext), 1e-6);
   CHECK_CLOSE_ABS(boundPars.momentum(), bp.momentum(), 1e-6);
@@ -344,7 +346,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_ABS(std::get<2>(boundState), 0., 1e-6);
 
   // Transport the covariance in the context of a surface
-  sls.transportCovarianceToBound(slsState, *plane);
+  sls.transportCovarianceToBound(slsState, *plane, freeToBoundCorrection);
   BOOST_CHECK_NE(slsState.cov, cov);
   BOOST_CHECK_NE(slsState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_EQUAL(slsState.jacTransport, FreeMatrix::Identity());

@@ -67,9 +67,30 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointReader::read(
     if (m_cfg.inputCollection == "pixel" || m_cfg.inputCollection == "strip" ||
         m_cfg.inputCollection == "overlap") {
       boost::container::static_vector<const Acts::SourceLink*, 2> sLinks;
-      auto sp = SimSpacePoint(globalPos, data.sp_covr, data.sp_covz, sLinks);
-      spacePoints.emplace_back(sp);
+      // auto sp = SimSpacePoint(globalPos, data.sp_covr, data.sp_covz, sLinks);
 
+      if (m_cfg.extendCollection) {
+        Acts::Vector3 topStripDirection(data.sp_topStripDirection[0],
+                                        data.sp_topStripDirection[1],
+                                        data.sp_topStripDirection[2]);
+        Acts::Vector3 bottomStripDirection(data.sp_bottomStripDirection[0],
+                                           data.sp_bottomStripDirection[1],
+                                           data.sp_bottomStripDirection[2]);
+        Acts::Vector3 stripCenterDistance(data.sp_stripCenterDistance[0],
+                                          data.sp_stripCenterDistance[1],
+                                          data.sp_stripCenterDistance[2]);
+        Acts::Vector3 topStripCenterPosition(data.sp_topStripCenterPosition[0],
+                                             data.sp_topStripCenterPosition[1],
+                                             data.sp_topStripCenterPosition[2]);
+
+        spacePoints.emplace_back(globalPos, data.sp_covr, data.sp_covz, sLinks,
+                                 data.sp_topHalfStripLength,
+                                 data.sp_bottomHalfStripLength,
+                                 topStripDirection, bottomStripDirection,
+                                 stripCenterDistance, topStripCenterPosition);
+      } else {
+        spacePoints.emplace_back(globalPos, data.sp_covr, data.sp_covz, sLinks);
+      }
     } else {
       ACTS_ERROR("Invalid space point type " << m_cfg.inputStem);
       return ProcessCode::ABORT;
@@ -79,6 +100,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointReader::read(
   ACTS_DEBUG("Created " << spacePoints.size() << " " << m_cfg.inputCollection
                         << " space points");
   ctx.eventStore.add("PixelSpacePoints", std::move(spacePoints));
+  ctx.eventStore.add("StripSpacePoints", std::move(spacePoints));
 
   return ProcessCode::SUCCESS;
 }

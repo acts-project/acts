@@ -122,13 +122,15 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
             (cot_theta * cot_theta) * (varianceRM + sp->varianceR())) *
            iDeltaR2;
 
-    l.x = sp->x();
-    l.y = sp->y();
+    l.x = x;
+    l.y = y;
     l.z = sp->z();
     l.r = sp->radius();
 
     linCircleVec.push_back(l);
     sp->setCotTheta(cot_theta);
+
+    sp->setDeltaR(std::sqrt((x * x) + (y * y) + (deltaZ * deltaZ)));
   }
   // sort the SP in order of cotTheta
   std::sort(vec.begin(), vec.end(),
@@ -139,5 +141,82 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
             [](const LinCircle& a, const LinCircle& b) -> bool {
               return (a.cotTheta < b.cotTheta);
             });
+}
+
+template <typename external_spacepoint_t, typename sp_range_t>
+bool xyzCoordinateCheck(Acts::SeedfinderConfig<external_spacepoint_t> m_config,
+                        sp_range_t sp, const double* spacepointPosition,
+                        const float toleranceParam, double* outputCoordinates) {
+  // check the compatibility of SPs coordinates in xyz assuming the
+  // Bottom-Middle direction with the strip measurement details
+
+  const float topHalfStripLength = m_config.getTopHalfStripLength(sp->sp());
+  const float bottomHalfStripLength =
+      m_config.getBottomHalfStripLength(sp->sp());
+  const Acts::Vector3 topStripDirection =
+      m_config.getTopStripDirection(sp->sp());
+  const Acts::Vector3 bottomStripDirection =
+      m_config.getBottomStripDirection(sp->sp());
+  const Acts::Vector3 stripCenterDistance =
+      m_config.getStripCenterDistance(sp->sp());
+
+  // cross product between top strip vector and spacepointPosition
+  double d1[3] = {
+      (topHalfStripLength * topStripDirection[1]) * spacepointPosition[2] -
+          (topHalfStripLength * topStripDirection[2]) * spacepointPosition[1],
+      (topHalfStripLength * topStripDirection[2]) * spacepointPosition[0] -
+          (topHalfStripLength * topStripDirection[0]) * spacepointPosition[2],
+      (topHalfStripLength * topStripDirection[0]) * spacepointPosition[1] -
+          (topHalfStripLength * topStripDirection[1]) * spacepointPosition[0]};
+
+  // scalar product between bottom strip vector and d1
+  double bd1 = (bottomHalfStripLength * bottomStripDirection[0]) * d1[0] +
+               (bottomHalfStripLength * bottomStripDirection[1]) * d1[1] +
+               (bottomHalfStripLength * bottomStripDirection[2]) * d1[2];
+
+  // compatibility check using distance between strips to evaluate if
+  // spacepointPosition is inside the bottom detector element
+  double s1 = (stripCenterDistance[0] * d1[0] + stripCenterDistance[1] * d1[1] +
+               stripCenterDistance[2] * d1[2]);
+  if (std::abs(s1) > std::abs(bd1) * toleranceParam)
+    return false;
+
+  // cross product between bottom strip vector and spacepointPosition
+  double d0[3] = {(bottomHalfStripLength * bottomStripDirection[1]) *
+                          spacepointPosition[2] -
+                      (bottomHalfStripLength * bottomStripDirection[2]) *
+                          spacepointPosition[1],
+                  (bottomHalfStripLength * bottomStripDirection[2]) *
+                          spacepointPosition[0] -
+                      (bottomHalfStripLength * bottomStripDirection[0]) *
+                          spacepointPosition[2],
+                  (bottomHalfStripLength * bottomStripDirection[0]) *
+                          spacepointPosition[1] -
+                      (bottomHalfStripLength * bottomStripDirection[1]) *
+                          spacepointPosition[0]};
+
+  // compatibility check using distance between strips to evaluate if
+  // spacepointPosition is inside the top detector element
+  double s0 = (stripCenterDistance[0] * d0[0] + stripCenterDistance[1] * d0[1] +
+               stripCenterDistance[2] * d0[2]);
+  if (std::abs(s0) > std::abs(bd1) * toleranceParam)
+    return false;
+
+  // if arive here spacepointPosition is compatible with strip directions and
+  // detector elements
+
+  const Acts::Vector3 topStripCenterPosition =
+      m_config.getTopStripCenterPosition(sp->sp());
+
+  // spacepointPosition corected with respect to the top strip position and
+  // direction and the distance between the strips
+  s0 = s0 / bd1;
+  outputCoordinates[0] = topStripCenterPosition[0] +
+                         (topHalfStripLength * topStripDirection[0]) * s0;
+  outputCoordinates[1] = topStripCenterPosition[1] +
+                         (topHalfStripLength * topStripDirection[1]) * s0;
+  outputCoordinates[2] = topStripCenterPosition[2] +
+                         (topHalfStripLength * topStripDirection[2]) * s0;
+  return true;
 }
 }  // namespace Acts
