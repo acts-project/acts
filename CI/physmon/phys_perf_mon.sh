@@ -66,12 +66,11 @@ run \
     -p $outdir/truth_tracking_plots \
 
 
-# temporarily disabled because it gets stuck or fails
-#run \
-#    $outdir/acts_analysis_residuals_and_pulls.root \
-#    $refdir/acts_analysis_residuals_and_pulls.root \
-#    --title "full_chain_odd" \
-#    -c CI/physmon/full_chain_odd.yml \
+run \
+    $outdir/acts_analysis_residuals_and_pulls.root \
+    $refdir/acts_analysis_residuals_and_pulls.root \
+    --title "full_chain_odd" \
+    -c CI/physmon/full_chain_odd.yml \
 
 
 exit $ec

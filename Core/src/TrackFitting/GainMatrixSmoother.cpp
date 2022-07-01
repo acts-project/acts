@@ -48,7 +48,7 @@ Result<void> GainMatrixSmoother::operator()(const GeometryContext& gctx,
     assert(prev_ts.hasPredicted());
     assert(prev_ts.hasJacobian());
 
-    static constexpr double epsilon = 1e-6;
+    static constexpr double epsilon = 1e-13;
     auto regularization = BoundMatrix::Identity() * epsilon;
 
     ACTS_VERBOSE("Calculate smoothing matrix:");
