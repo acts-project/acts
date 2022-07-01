@@ -12,7 +12,7 @@ on:
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
-  CCACHE_MAXSIZE: 150M
+  CCACHE_MAXSIZE: 500M
   CCACHE_KEY_SUFFIX: r1
 
 # NOTE this only builds core unittests to reduce the output size. if we

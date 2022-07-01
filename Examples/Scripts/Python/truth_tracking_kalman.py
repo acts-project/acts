@@ -71,6 +71,7 @@ def runTruthTrackingKalman(
     field: acts.MagneticFieldProvider,
     outputDir: Path,
     digiConfigFile: Path,
+    decorators=[],
     directNavigation=False,
     reverseFilteringMomThreshold=0 * u.GeV,
     s: acts.examples.Sequencer = None,
