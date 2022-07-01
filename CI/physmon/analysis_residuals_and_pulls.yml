@@ -10,6 +10,3 @@ checks:
       threshold: 3
     IntegralCheck:
       threshold: 3
-
-  all_prof_res_smt_loc0:
-    Chi2Test: null
