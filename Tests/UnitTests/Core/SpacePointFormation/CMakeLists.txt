@@ -1,2 +1,1 @@
 add_unittest(SpacePointBuilder SpacePointBuilderTests.cpp)
-target_link_libraries(ActsUnitTestSpacePointBuilder PRIVATE ActsCore ActsPluginIdentification)
