@@ -72,8 +72,7 @@ target_link_libraries(
   PRIVATE
     frnn  
     TBB::tbb
-    #/workspace/install/lib/libgrpcclient.so
-    #/workspace/build/third-party/protobuf/lib/libprotobuf.a
+    Boost::boost
 )
 
 install(

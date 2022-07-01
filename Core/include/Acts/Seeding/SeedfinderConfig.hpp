@@ -43,6 +43,10 @@ struct SeedfinderConfig {
   float deltaRMinBottomSP = 5 * Acts::UnitConstants::mm;
   // maximum distance in r between middle and bottom SP
   float deltaRMaxBottomSP = 270 * Acts::UnitConstants::mm;
+  // radial bin size for filling space point grid
+  float binSizeR = 1. * Acts::UnitConstants::mm;
+  // force sorting in R in space point grid bins
+  bool forceRadialSorting = false;
 
   // radial range for middle SP
   std::vector<std::vector<float>> rRangeMiddleSP;
@@ -118,7 +122,7 @@ struct SeedfinderConfig {
   Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
                         0 * Acts::UnitConstants::mm};
 
-  boost::container::small_vector<size_t, 20> zBinsCustomLooping = {};
+  std::vector<size_t> zBinsCustomLooping = {};
 
   // average radiation lengths of material on the length of a seed. used for
   // scattering.
@@ -166,8 +170,8 @@ struct SeedfinderConfig {
   Delegate<Acts::Vector3(const SpacePoint&)> getBottomStripDirection;
   // Returns distance between the centers of the two strips.
   Delegate<Acts::Vector3(const SpacePoint&)> getStripCenterDistance;
-  // Returns position of the center of the bottom strip.
-  Delegate<Acts::Vector3(const SpacePoint&)> getBottomStripCenterPosition;
+  // Returns position of the center of the top strip.
+  Delegate<Acts::Vector3(const SpacePoint&)> getTopStripCenterPosition;
 
   SeedfinderConfig toInternalUnits() const {
     using namespace Acts::UnitLiterals;
@@ -175,6 +179,7 @@ struct SeedfinderConfig {
     config.minPt /= 1_MeV;
     config.deltaRMin /= 1_mm;
     config.deltaRMax /= 1_mm;
+    config.binSizeR /= 1_mm;
     config.deltaRMinTopSP /= 1_mm;
     config.deltaRMaxTopSP /= 1_mm;
     config.deltaRMinBottomSP /= 1_mm;

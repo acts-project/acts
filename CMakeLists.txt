@@ -69,6 +69,9 @@ option(ACTS_USE_SYSTEM_BOOST "Use a system-provided boost" ON)
 option(ACTS_SETUP_EIGEN3 "Explicitly set up Eigen3 for the project" ON)
 option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" ON)
 option(ACTS_BUILD_ODD "Build the OpenDataDetector" OFF)
+# profiling related optios
+option(ACTS_ENABLE_CPU_PROFILING "Enable CPU profiling using gperftools" OFF)
+option(ACTS_ENABLE_MEMORY_PROFILING "Enable memory profiling using gperftools" OFF)
 
 # handle option inter-dependencies and the everything flag
 # NOTE: ordering is important here. dependencies must come before dependees

@@ -26,6 +26,10 @@ struct is_constructible<std::reference_wrapper<const std::any>,
     : public true_type {};
 template <>
 struct is_constructible<std::reference_wrapper<const std::any>,
+                        std::reference_wrapper<const std::any>&&>
+    : public true_type {};
+template <>
+struct is_constructible<std::reference_wrapper<const std::any>,
                         std::reference_wrapper<const std::any>&>
     : public true_type {};
 template <>

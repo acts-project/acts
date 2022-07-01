@@ -78,7 +78,7 @@ Acts::SpacePointGridCreator::createGrid(
 
   Acts::detail::Axis<detail::AxisType::Equidistant,
                      detail::AxisBoundaryType::Closed>
-      phiAxis(-M_PI, M_PI, phiBins);
+      phiAxis(config.phiMin, config.phiMax, phiBins);
 
   // vector that will store the edges of the bins of z
   std::vector<AxisScalar> zValues;
