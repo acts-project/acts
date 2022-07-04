@@ -146,7 +146,7 @@ class TrackStateProxy {
   /// Return whather this track state has a previous (parent) track state.
   /// @return Boolean indicating whether a previous track state exists
   bool hasPrevious() const {
-    return component<IndexType, hashString("previous")>() < kInvalid;
+    return component<IndexType, hashString("previous")>() != kInvalid;
   }
 
   /// Build a mask that represents all the allocated components of this track
@@ -748,6 +748,9 @@ constexpr IndexType kInvalid =
     TrackStateTraits<MeasurementSizeMax, true>::kInvalid;
 }  // namespace MultiTrajectoryTraits
 
+template <typename T>
+struct isReadOnlyMultiTrajectory;
+
 /// Store a trajectory of track states with multiple components.
 ///
 /// This container supports both simple, sequential trajectories as well
@@ -760,6 +763,8 @@ template <typename derived_t>
 class MultiTrajectory {
  public:
   using Derived = derived_t;
+
+  static constexpr bool ReadOnly = isReadOnlyMultiTrajectory<Derived>::value;
 
   // Pull out type alias and re-expose them for ease of use.
   //
@@ -813,7 +818,10 @@ class MultiTrajectory {
   /// Access a writable point on the trajectory by index.
   /// @param istate The index to access
   /// @return Read-write proxy to the stored track state
-  TrackStateProxy getTrackState(IndexType istate) { return {*this, istate}; }
+  template <bool RO = ReadOnly, typename = std::enable_if<!RO>>
+  TrackStateProxy getTrackState(IndexType istate) {
+    return {*this, istate};
+  }
 
   /// Visit all previous states starting at a given endpoint.
   ///
@@ -829,11 +837,46 @@ class MultiTrajectory {
   ///
   /// @warning If the trajectory contains multiple components with common
   ///          points, this can have an impact on the other components.
-  template <typename F>
-  void applyBackwards(IndexType iendpoint, F&& callable);
+  template <typename F, bool RO = ReadOnly, typename = std::enable_if<!RO>>
+  void applyBackwards(IndexType iendpoint, F&& callable) {
+    static_assert(detail_lt::VisitorConcept<F, TrackStateProxy>,
+                  "Callable needs to satisfy VisitorConcept");
+
+    while (true) {
+      auto ts = getTrackState(iendpoint);
+      if constexpr (std::is_same_v<std::invoke_result_t<F, TrackStateProxy>,
+                                   bool>) {
+        bool proceed = callable(ts);
+        // this point has no parent and ends the trajectory, or a break was
+        // requested
+        if (!proceed || !ts.hasPrevious()) {
+          break;
+        }
+      } else {
+        callable(ts);
+        // this point has no parent and ends the trajectory
+        if (!ts.hasPrevious()) {
+          break;
+        }
+      }
+      iendpoint = ts.previous();
+    }
+  }
+
+  auto&& convertToReadOnly() const {
+    auto&& cv = self().convertToReadOnly_impl();
+    static_assert(
+        isReadOnlyMultiTrajectory<decltype(cv)>::value,
+        "convertToReadOnly_impl does not return something that reports "
+        "being ReadOnly.");
+    return cv;
+  }
 
   /// Clear the @c MultiTrajectory. Leaves the underlying storage untouched
-  constexpr void clear() { self().clear_impl(); }
+  template <bool RO = ReadOnly, typename = std::enable_if<!RO>>
+  constexpr void clear() {
+    self().clear_impl();
+  }
 
   /// Returns the number of track states contained
   constexpr IndexType size() const { return self().size_impl(); }
@@ -844,6 +887,7 @@ class MultiTrajectory {
   /// which to leave invalid
   /// @param iprevious index of the previous state, kInvalid if first
   /// @return Index of the newly added track state
+  template <bool RO = ReadOnly, typename = std::enable_if<!RO>>
   constexpr IndexType addTrackState(
       TrackStatePropMask mask = TrackStatePropMask::All,
       IndexType iprevious = kInvalid) {
@@ -854,7 +898,7 @@ class MultiTrajectory {
   /// @tparam T Type of the column values to add
   /// @note This takes a string argument rather than a hashed string to maintain
   ///       compatibility with backends.
-  template <typename T>
+  template <typename T, bool RO = ReadOnly, typename = std::enable_if<!RO>>
   constexpr void addColumn(const std::string& key) {
     self().template addColumn_impl<T>(key);
   }
@@ -904,6 +948,7 @@ class MultiTrajectory {
   /// Retrieve a covariance proxy instance for a covariance at a given index
   /// @param covIdx Index into the covariance column
   /// @return Mutable proxy
+  template <bool RO = ReadOnly, typename = std::enable_if<!RO>>
   constexpr typename TrackStateProxy::Covariance covariance(IndexType covIdx) {
     return self().covariance_impl(covIdx);
   }
@@ -919,8 +964,9 @@ class MultiTrajectory {
   /// Retrieve a jacobian proxy instance for a jacobian at a given index
   /// @param jacIdx Index into the jacobian column
   /// @return Mutable proxy
-  constexpr typename TrackStateProxy::Covariance jacobian(IndexType jacIdx) {
-    return self().jacobian_impl(jacIdx);
+  template <bool RO = ReadOnly, typename = std::enable_if<!RO>>
+  constexpr typename TrackStateProxy::Covariance jacobian(IndexType covIdx) {
+    return self().jacobian_impl(covIdx);
   }
 
   /// Retrieve a jacobian proxy instance for a jacobian at a given index
@@ -934,6 +980,7 @@ class MultiTrajectory {
   /// Retrieve a measurement proxy instance for a measurement at a given index
   /// @param measIdx Index into the measurement column
   /// @return Mutable proxy
+  template <bool RO = ReadOnly, typename = std::enable_if<!RO>>
   constexpr typename TrackStateProxy::Measurement measurement(
       IndexType measIdx) {
     return self().measurement_impl(measIdx);
@@ -951,6 +998,7 @@ class MultiTrajectory {
   /// given index
   /// @param covIdx Index into the measurement covariance column
   /// @return Mutable proxy
+  template <bool RO = ReadOnly, typename = std::enable_if<!RO>>
   constexpr typename TrackStateProxy::MeasurementCovariance
   measurementCovariance(IndexType covIdx) {
     return self().measurementCovariance_impl(covIdx);
@@ -975,6 +1023,7 @@ class MultiTrajectory {
   ///       or projector. See @c TrackStatePropMask.
   /// @note The track states both need to be stored in the
   ///       same @c MultiTrajectory instance
+  template <bool RO = ReadOnly, typename = std::enable_if<!RO>>
   constexpr void shareFrom(IndexType iself, IndexType iother,
                            TrackStatePropMask shareSource,
                            TrackStatePropMask shareTarget) {
@@ -984,6 +1033,7 @@ class MultiTrajectory {
   /// Unset an optional track state component
   /// @param target The component to unset
   /// @param istate The track state index to operate on
+  template <bool RO = ReadOnly, typename = std::enable_if<!RO>>
   constexpr void unset(TrackStatePropMask target, IndexType istate) {
     self().unset_impl(target, istate);
   }
@@ -993,7 +1043,8 @@ class MultiTrajectory {
   /// @tparam key String key for the component to access
   /// @param istate The track state index to operate on
   /// @return Mutable reference to the component given by @p key
-  template <typename T, HashedString key>
+  template <typename T, HashedString key, bool RO = ReadOnly,
+            typename = std::enable_if<!RO>>
   constexpr T& component(IndexType istate) {
     assert(checkOptional(key, istate));
     return *std::any_cast<T*>(self().component_impl(key, istate));
@@ -1004,7 +1055,7 @@ class MultiTrajectory {
   /// @param key String key for the component to access
   /// @param istate The track state index to operate on
   /// @return Mutable reference to the component given by @p key
-  template <typename T>
+  template <typename T, bool RO = ReadOnly, typename = std::enable_if<!RO>>
   constexpr T& component(HashedString key, IndexType istate) {
     assert(checkOptional(key, istate));
     return *std::any_cast<T*>(self().component_impl(key, istate));

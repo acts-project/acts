@@ -10,7 +10,8 @@
 
 namespace Acts {
 
-VectorMultiTrajectory::DynamicColumnBase::~DynamicColumnBase() = default;
+detail_vmt::VectorMultiTrajectoryBase::DynamicColumnBase::~DynamicColumnBase() =
+    default;
 
 auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
                                                IndexType iprevious)
@@ -19,11 +20,9 @@ auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
 
   m_index.emplace_back();
   IndexData& p = m_index.back();
-  size_t index = m_index.size() - 1;
+  IndexType index = m_index.size() - 1;
 
-  if (iprevious != kInvalid) {
-    p.iprevious = iprevious;
-  }
+  p.iprevious = iprevious;
 
   // always set, but can be null
   m_referenceSurfaces.emplace_back(nullptr);
