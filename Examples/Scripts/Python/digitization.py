@@ -17,6 +17,7 @@ def addDigitization(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
+    doMerge: Optional[bool] = None,
 ) -> acts.examples.Sequencer:
     """This function steers the digitization step
 
@@ -54,6 +55,7 @@ def addDigitization(
         outputMeasurements="measurements",
         outputMeasurementParticlesMap="measurement_particles_map",
         outputMeasurementSimHitsMap="measurement_simhits_map",
+        doMerge=doMerge,
     )
     digiAlg = acts.examples.DigitizationAlgorithm(digiCfg, s.config.logLevel)
 
@@ -100,6 +102,7 @@ def configureDigitization(
     outputRoot: bool = True,
     outputCsv: bool = True,
     s: Optional[acts.examples.Sequencer] = None,
+    doMerge: Optional[bool] = None,
 ) -> acts.examples.Sequencer:
 
     from particle_gun import addParticleGun, EtaConfig, PhiConfig, ParticleConfig
@@ -146,6 +149,7 @@ def configureDigitization(
         outputDirCsv=outputDir / "csv" if outputCsv else None,
         outputDirRoot=outputDir if outputRoot else None,
         rnd=rnd,
+        doMerge=doMerge,
     )
 
     return s
