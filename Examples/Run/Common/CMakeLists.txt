@@ -20,6 +20,7 @@ target_link_libraries(
     ActsExamplesMaterialMapping ActsExamplesIoCsv ActsExamplesIoJson
     ActsExamplesIoRoot ActsExamplesIoObj ActsExamplesIoPerformance
     ActsExamplesDigitization ActsExamplesTrackFitting
+    ActsExamplesTrackFittingChi2
     ActsExamplesTrackFinding ActsExamplesTruthTracking
     ActsExamplesIoCsv)
 
