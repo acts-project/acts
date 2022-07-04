@@ -35,10 +35,6 @@ constexpr int length(const char* str) {
 }
 }  // namespace detail
 
-constexpr HashedString hashString(const char* s) {
-  return detail::fnv1a_32(s, detail::length(s));
-}
-
 constexpr HashedString hashString(std::string_view s) {
   return detail::fnv1a_32(s);
 }

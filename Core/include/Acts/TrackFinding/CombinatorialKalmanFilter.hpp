@@ -984,8 +984,8 @@ class CombinatorialKalmanFilter {
         typeFlags.set(TrackStateFlag::HoleFlag);
       }
 
-      using PM = TrackStatePropMask;
-      trackStateProxy.shareFrom(PM::Predicted, PM::Filtered);
+      trackStateProxy.shareFrom(TrackStatePropMask::Predicted,
+                                TrackStatePropMask::Filtered);
 
       return currentTip;
     }

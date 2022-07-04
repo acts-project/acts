@@ -320,7 +320,6 @@ class TrackStateProxy {
   /// @note This overload is only present in case @c ReadOnly is false.
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void setReferenceSurface(std::shared_ptr<const Surface> srf) {
-    assert(has<hashString("referenceSurface")>());
     component<std::shared_ptr<const Surface>,
               hashString("referenceSurface")>() = std::move(srf);
   }
@@ -358,11 +357,6 @@ class TrackStateProxy {
     return m_traj->template component<T>(hashString(key), m_istate);
   }
 
-  template <typename T, typename K>
-  constexpr T& component(K key) {
-    return m_traj->template component<T>(hashString(key), m_istate);
-  }
-
   template <typename T, HashedString key>
   constexpr const T& component() const {
     return m_traj->template component<T, key>(m_istate);
@@ -371,11 +365,6 @@ class TrackStateProxy {
   template <typename T>
   constexpr const T& component(HashedString key) const {
     return m_traj->template component<T>(key, m_istate);
-  }
-
-  template <typename T, typename K>
-  constexpr const T& component(K key) const {
-    return m_traj->template component<T>(hashString(key), m_istate);
   }
 
   template <typename T>
