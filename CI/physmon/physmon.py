@@ -78,6 +78,7 @@ for truthSmeared, truthEstimated, label in [
     )
 
     with tempfile.TemporaryDirectory() as temp:
+        temp = "/home/andreas/cern/source/ACTS/tmp"
         tp = Path(temp)
         runCKFTracks(
             trackingGeometry,
@@ -86,7 +87,7 @@ for truthSmeared, truthEstimated, label in [
             digiConfigFile=digiConfig,
             geometrySelection=geoSel,
             outputDir=tp,
-            outputCsv=False,
+            outputCsv=True,
             truthSmearedSeeded=truthSmeared,
             truthEstimatedSeeded=truthEstimated,
             s=s,
