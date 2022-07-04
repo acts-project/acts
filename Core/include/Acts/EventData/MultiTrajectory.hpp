@@ -83,7 +83,6 @@ struct TrackStateTraits {
 
   using IndexType = std::uint32_t;
   static constexpr IndexType kInvalid = std::numeric_limits<IndexType>::max();
-  static constexpr IndexType kNoPrevious = kInvalid - 1;
 
   constexpr static auto ProjectorFlags = Eigen::RowMajor | Eigen::AutoAlign;
   using Projector =
@@ -108,8 +107,6 @@ class TrackStateProxy {
 
   using IndexType = typename TrackStateTraits<M, ReadOnly>::IndexType;
   static constexpr IndexType kInvalid = TrackStateTraits<M, ReadOnly>::kInvalid;
-  static constexpr IndexType kNoPrevious =
-      TrackStateTraits<M, ReadOnly>::kNoPrevious;
 
   // as opposed to the types above, this is an actual Matrix (rather than a
   // map)
@@ -147,7 +144,7 @@ class TrackStateProxy {
   }
 
   bool hasPrevious() const {
-    return component<IndexType, hashString("previous")>() < kNoPrevious;
+    return component<IndexType, hashString("previous")>() < kInvalid;
   }
 
   /// Build a mask that represents all the allocated components of this track
@@ -691,8 +688,6 @@ constexpr bool VisitorConcept = Concepts ::require<
 namespace MultiTrajectoryTraits {
 constexpr unsigned int MeasurementSizeMax = eBoundSize;
 using IndexType = TrackStateTraits<MeasurementSizeMax, true>::IndexType;
-constexpr IndexType kNoPrevious =
-    TrackStateTraits<MeasurementSizeMax, true>::kNoPrevious;
 constexpr IndexType kInvalid =
     TrackStateTraits<MeasurementSizeMax, true>::kInvalid;
 }  // namespace MultiTrajectoryTraits
@@ -720,7 +715,6 @@ class MultiTrajectory {
 
   using IndexType = typename TrackStateProxy::IndexType;
   static constexpr IndexType kInvalid = TrackStateProxy::kInvalid;
-  static constexpr IndexType kNoPrevious = TrackStateProxy::kNoPrevious;
 
  protected:
   MultiTrajectory() = default;  // pseudo abstract base class
@@ -790,7 +784,7 @@ class MultiTrajectory {
   /// @return Index of the newly added track state
   constexpr IndexType addTrackState(
       TrackStatePropMask mask = TrackStatePropMask::All,
-      IndexType iprevious = kNoPrevious) {
+      IndexType iprevious = kInvalid) {
     return self().addTrackState_impl(mask, iprevious);
   }
 

@@ -21,7 +21,7 @@ auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
   IndexData& p = m_index.back();
   size_t index = m_index.size() - 1;
 
-  if (iprevious != kNoPrevious) {
+  if (iprevious != kInvalid) {
     p.iprevious = iprevious;
   }
 

@@ -106,7 +106,7 @@ class VectorMultiTrajectory final
 
   IndexType addTrackState_impl(
       TrackStatePropMask mask = TrackStatePropMask::All,
-      IndexType iprevious = kNoPrevious);
+      IndexType iprevious = kInvalid);
 
   void shareFrom_impl(IndexType iself, IndexType iother,
                       TrackStatePropMask shareSource,

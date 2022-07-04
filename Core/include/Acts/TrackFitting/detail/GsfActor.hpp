@@ -194,7 +194,7 @@ struct GsfActor {
     // Initialize the tips if they are empty (should only happen at first pass)
     if (result.parentTips.empty()) {
       result.parentTips.resize(stepper.numberComponents(state.stepping),
-                               MultiTrajectoryTraits::kNoPrevious);
+                               MultiTrajectoryTraits::kInvalid);
     }
 
     if (result.parentTips.size() != stepper.numberComponents(state.stepping)) {
