@@ -179,8 +179,6 @@ def runCKFTracks(
             PhiConfig(0.0, 360.0 * u.degree),
             multiplicity=2,
             rnd=rnd,
-            outputDirRoot=outputDir,
-            outputDirCsv=outputDir / "csv" if outputCsv else None,
         )
     else:
         acts.logging.getLogger("CKFExample").info(
