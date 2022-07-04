@@ -86,9 +86,9 @@ auto bayesianSmoothing(component_iterator_t fwdBegin,
 template <StatesType type, typename traj_t>
 struct MultiTrajectoryProjector {
   const MultiTrajectory<traj_t> &mt;
-  const std::map<std::size_t, double> &weights;
+  const std::map<MultiTrajectoryTraits::IndexType, double> &weights;
 
-  auto operator()(std::size_t idx) const {
+  auto operator()(MultiTrajectoryTraits::IndexType idx) const {
     const auto proxy = mt.getTrackState(idx);
     switch (type) {
       case StatesType::ePredicted:
@@ -116,11 +116,11 @@ struct MultiTrajectoryProjector {
 template <typename traj_t, bool ReturnSmootedStates = false>
 auto smoothAndCombineTrajectories(
     const MultiTrajectory<traj_t> &fwd,
-    const std::vector<std::size_t> &fwdStartTips,
-    const std::map<std::size_t, double> &fwdWeights,
+    const std::vector<MultiTrajectoryTraits::IndexType> &fwdStartTips,
+    const std::map<MultiTrajectoryTraits::IndexType, double> &fwdWeights,
     const MultiTrajectory<traj_t> &bwd,
-    const std::vector<std::size_t> &bwdStartTips,
-    const std::map<std::size_t, double> &bwdWeights,
+    const std::vector<MultiTrajectoryTraits::IndexType> &bwdStartTips,
+    const std::map<MultiTrajectoryTraits::IndexType, double> &bwdWeights,
     LoggerWrapper logger = getDummyLogger()) {
   // This vector gets only filled if ReturnSmootedStates is true
   std::vector<std::pair<const Surface *,
@@ -130,16 +130,16 @@ auto smoothAndCombineTrajectories(
 
   // Use backward trajectory as basic trajectory, so that final trajectory is
   // ordered correctly. We ensure also that they are unique.
-  std::vector<std::size_t> bwdTips = bwdStartTips;
+  std::vector<MultiTrajectoryTraits::IndexType> bwdTips = bwdStartTips;
 
-  // Ensures that the bwd tips are unique and do not contain MAX_SIZE which
+  // Ensures that the bwd tips are unique and do not contain kInvalid which
   // represents an invalid trajectory state
   auto sortUniqueValidateBwdTips = [&]() {
     std::sort(bwdTips.begin(), bwdTips.end());
     bwdTips.erase(std::unique(bwdTips.begin(), bwdTips.end()), bwdTips.end());
 
     auto invalid_it = std::find(bwdTips.begin(), bwdTips.end(),
-                                std::numeric_limits<uint16_t>::max());
+                                MultiTrajectoryTraits::kInvalid);
     if (invalid_it != bwdTips.end()) {
       bwdTips.erase(invalid_it);
     }
@@ -167,7 +167,7 @@ auto smoothAndCombineTrajectories(
 
     // Search corresponding forward tips
     const auto bwdGeoId = currentSurface.geometryId();
-    std::vector<std::size_t> fwdTips;
+    std::vector<MultiTrajectoryTraits::IndexType> fwdTips;
 
     for (const auto tip : fwdStartTips) {
       fwd.visitBackwards(tip, [&](const auto &state) {

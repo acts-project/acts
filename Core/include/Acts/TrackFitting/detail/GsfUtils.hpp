@@ -152,9 +152,10 @@ ActsScalar calculateDeterminant(
 /// PosteriorWeightsCalculator.cxx
 /// @note The weights are not renormalized!
 template <typename D>
-void computePosteriorWeights(const MultiTrajectory<D> &mt,
-                             const std::vector<std::size_t> &tips,
-                             std::map<std::size_t, double> &weights) {
+void computePosteriorWeights(
+    const MultiTrajectory<D> &mt,
+    const std::vector<MultiTrajectoryTraits::IndexType> &tips,
+    std::map<MultiTrajectoryTraits::IndexType, double> &weights) {
   // @TODO: Put back into compilation unit
   // Helper Function to compute detR
 
@@ -195,11 +196,11 @@ inline std::ostream &operator<<(std::ostream &os, StatesType type) {
 
 /// @brief Extracts a MultiComponentState from a MultiTrajectory and a given list of indices
 template <typename D>
-auto extractMultiComponentState(const MultiTrajectory<D> &traj,
-                                const std::vector<size_t> &tips,
-                                const std::map<size_t, ActsScalar> &weights,
-                                StatesType type)
-    -> MultiComponentBoundTrackParameters<SinglyCharged> {
+auto extractMultiComponentState(
+    const MultiTrajectory<D> &traj,
+    const std::vector<MultiTrajectoryTraits::IndexType> &tips,
+    const std::map<MultiTrajectoryTraits::IndexType, ActsScalar> &weights,
+    StatesType type) -> MultiComponentBoundTrackParameters<SinglyCharged> {
   // @TODO: Put back into compilation unit
   throw_assert(
       !tips.empty(),

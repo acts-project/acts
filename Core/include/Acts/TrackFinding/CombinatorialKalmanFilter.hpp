@@ -221,17 +221,20 @@ struct CombinatorialKalmanFilterResult {
 
   // This is the indices of the 'tip' of the tracks stored in multitrajectory.
   // This correspond to the last measurment state in the multitrajectory.
-  std::vector<size_t> lastMeasurementIndices;
+  std::vector<MultiTrajectoryTraits::IndexType> lastMeasurementIndices;
 
   // This is the indices of the 'tip' of the tracks stored in multitrajectory.
   // This correspond to the last state in the multitrajectory.
-  std::vector<size_t> lastTrackIndices;
+  std::vector<MultiTrajectoryTraits::IndexType> lastTrackIndices;
 
   // The Parameters at the provided surface for separate tracks
-  std::unordered_map<size_t, BoundTrackParameters> fittedParameters;
+  std::unordered_map<MultiTrajectoryTraits::IndexType, BoundTrackParameters>
+      fittedParameters;
 
   // The indices of the 'tip' of the unfinished tracks
-  std::vector<std::pair<size_t, CombinatorialKalmanFilterTipState>> activeTips;
+  std::vector<std::pair<MultiTrajectoryTraits::IndexType,
+                        CombinatorialKalmanFilterTipState>>
+      activeTips;
 
   // The indices of track states and corresponding source links on different
   // surfaces
@@ -245,7 +248,7 @@ struct CombinatorialKalmanFilterResult {
   bool smoothed = false;
 
   // The index for the current smoothing track
-  size_t iSmoothed = 0;
+  MultiTrajectoryTraits::IndexType iSmoothed = 0;
 
   // Indicator if track finding has been done
   bool finished = false;

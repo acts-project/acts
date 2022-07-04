@@ -19,7 +19,7 @@ class VectorMultiTrajectory final
   friend MultiTrajectory<VectorMultiTrajectory>;
 
   struct IndexData {
-    size_t iprevious = kInvalid;
+    IndexType iprevious = kInvalid;
     IndexType ipredicted = kInvalid;
     IndexType ifiltered = kInvalid;
     IndexType ismoothed = kInvalid;
@@ -104,9 +104,9 @@ class VectorMultiTrajectory final
         m_measCov[parIdx].data()};
   }
 
-  std::size_t addTrackState_impl(
+  IndexType addTrackState_impl(
       TrackStatePropMask mask = TrackStatePropMask::All,
-      size_t iprevious = kNoPrevious);
+      IndexType iprevious = kNoPrevious);
 
   void shareFrom_impl(IndexType iself, IndexType iother,
                       TrackStatePropMask shareSource,
@@ -146,7 +146,7 @@ class VectorMultiTrajectory final
     }
   }
 
-  std::size_t size_impl() const { return m_index.size(); }
+  IndexType size_impl() const { return m_index.size(); }
 
   void clear_impl();
 
@@ -302,7 +302,7 @@ class VectorMultiTrajectory final
 
   /// index to map track states to the corresponding
   std::vector<IndexData> m_index;
-  std::vector<size_t> m_previous;
+  std::vector<IndexType> m_previous;
   std::vector<typename detail_lt::Types<eBoundSize>::Coefficients> m_params;
   std::vector<typename detail_lt::Types<eBoundSize>::Covariance> m_cov;
   std::vector<typename detail_lt::Types<MeasurementSizeMax>::Coefficients>

@@ -81,7 +81,7 @@ struct TrackStateTraits {
   using MeasurementCovariance =
       typename detail_lt::Types<M, ReadOnly>::CovarianceMap;
 
-  using IndexType = std::uint16_t;
+  using IndexType = std::uint32_t;
   static constexpr IndexType kInvalid = std::numeric_limits<IndexType>::max();
   static constexpr IndexType kNoPrevious = kInvalid - 1;
 
@@ -138,16 +138,16 @@ class TrackStateProxy {
 
   /// Index within the trajectory.
   /// @return the index
-  size_t index() const { return m_istate; }
+  IndexType index() const { return m_istate; }
 
   /// Return the index of the track state 'previous' in the track sequence
   /// @return The index of the previous track state.
-  size_t previous() const {
-    return component<size_t, hashString("previous")>();
+  IndexType previous() const {
+    return component<IndexType, hashString("previous")>();
   }
 
   bool hasPrevious() const {
-    return component<size_t, hashString("previous")>() < kNoPrevious;
+    return component<IndexType, hashString("previous")>() < kNoPrevious;
   }
 
   /// Build a mask that represents all the allocated components of this track
@@ -662,7 +662,7 @@ class TrackStateProxy {
  private:
   // Private since it can only be created by the trajectory.
   TrackStateProxy(ConstIf<MultiTrajectory<Trajectory>, ReadOnly>& trajectory,
-                  size_t istate);
+                  IndexType istate);
 
   const std::shared_ptr<const Surface>& referenceSurfacePointer() const {
     return component<std::shared_ptr<const Surface>,
@@ -681,7 +681,7 @@ class TrackStateProxy {
   }
 
   ConstIf<MultiTrajectory<Trajectory>, ReadOnly>* m_traj;
-  size_t m_istate;
+  IndexType m_istate;
 
   friend class Acts::MultiTrajectory<Trajectory>;
   friend class TrackStateProxy<Trajectory, M, true>;
@@ -701,7 +701,12 @@ constexpr bool VisitorConcept = Concepts ::require<
 
 namespace MultiTrajectoryTraits {
 constexpr unsigned int MeasurementSizeMax = eBoundSize;
-}
+using IndexType = TrackStateTraits<MeasurementSizeMax, true>::IndexType;
+constexpr IndexType kNoPrevious =
+    TrackStateTraits<MeasurementSizeMax, true>::kNoPrevious;
+constexpr IndexType kInvalid =
+    TrackStateTraits<MeasurementSizeMax, true>::kInvalid;
+}  // namespace MultiTrajectoryTraits
 
 /// Store a trajectory of track states with multiple components.
 ///
@@ -732,10 +737,12 @@ class MultiTrajectory {
   MultiTrajectory() = default;  // pseudo abstract base class
 
  private:
-  Derived& self() { return static_cast<Derived&>(*this); }
-  const Derived& self() const { return static_cast<const Derived&>(*this); }
+  constexpr Derived& self() { return static_cast<Derived&>(*this); }
+  constexpr const Derived& self() const {
+    return static_cast<const Derived&>(*this);
+  }
 
-  bool checkOptional(HashedString key, IndexType istate) const {
+  constexpr bool checkOptional(HashedString key, IndexType istate) const {
     using namespace Acts::HashedStringLiteral;
     switch (key) {
       case "predicted"_hash:
@@ -754,21 +761,21 @@ class MultiTrajectory {
   /// Access a read-only point on the trajectory by index.
   /// @param istate The index to access
   /// @return Read only proxy to the stored track state
-  ConstTrackStateProxy getTrackState(size_t istate) const {
+  ConstTrackStateProxy getTrackState(IndexType istate) const {
     return {*this, istate};
   }
 
   /// Access a writable point on the trajectory by index.
   /// @param istate The index to access
   /// @return Read-write proxy to the stored track state
-  TrackStateProxy getTrackState(size_t istate) { return {*this, istate}; }
+  TrackStateProxy getTrackState(IndexType istate) { return {*this, istate}; }
 
   /// Visit all previous states starting at a given endpoint.
   ///
   /// @param iendpoint  index of the last state
   /// @param callable   non-modifying functor to be called with each point
   template <typename F>
-  void visitBackwards(size_t iendpoint, F&& callable) const;
+  void visitBackwards(IndexType iendpoint, F&& callable) const;
 
   /// Apply a function to all previous states starting at a given endpoint.
   ///
@@ -778,13 +785,13 @@ class MultiTrajectory {
   /// @warning If the trajectory contains multiple components with common
   ///          points, this can have an impact on the other components.
   template <typename F>
-  void applyBackwards(size_t iendpoint, F&& callable);
+  void applyBackwards(IndexType iendpoint, F&& callable);
 
   /// Clear the @c MultiTrajectory. Leaves the underlying storage untouched
   constexpr void clear() { self().clear_impl(); }
 
   /// Returns the number of track states contained
-  constexpr size_t size() const { return self().size_impl(); }
+  constexpr IndexType size() const { return self().size_impl(); }
 
   /// Add a track state without providing explicit information. Which components
   /// of the track state are initialized/allocated can be controlled via @p mask
@@ -792,9 +799,9 @@ class MultiTrajectory {
   /// which to leave invalid
   /// @param iprevious index of the previous state, kInvalid if first
   /// @return Index of the newly added track state
-  constexpr size_t addTrackState(
+  constexpr IndexType addTrackState(
       TrackStatePropMask mask = TrackStatePropMask::All,
-      size_t iprevious = kNoPrevious) {
+      IndexType iprevious = kNoPrevious) {
     return self().addTrackState_impl(mask, iprevious);
   }
 

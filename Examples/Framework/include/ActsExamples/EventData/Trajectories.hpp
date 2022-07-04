@@ -31,7 +31,9 @@ struct Trajectories final {
   /// (Reconstructed) trajectory with multiple states.
   using MultiTrajectory = Acts::VectorMultiTrajectory;
   /// Fitted parameters identified by indices in the multi trajectory.
-  using IndexedParameters = std::unordered_map<size_t, TrackParameters>;
+  using IndexedParameters =
+      std::unordered_map<Acts::MultiTrajectoryTraits::IndexType,
+                         TrackParameters>;
 
   /// Default construct an empty object. Required for container compatibility
   /// and to signal an error.
@@ -41,7 +43,8 @@ struct Trajectories final {
   /// @param multiTraj The multi trajectory
   /// @param tTips Tip indices that identify valid trajectories
   /// @param parameters Fitted track parameters indexed by trajectory index
-  Trajectories(MultiTrajectory multiTraj, const std::vector<size_t>& tTips,
+  Trajectories(MultiTrajectory multiTraj,
+               const std::vector<Acts::MultiTrajectoryTraits::IndexType>& tTips,
                const IndexedParameters& parameters)
       : m_multiTrajectory(std::move(multiTraj)),
         m_trackTips(tTips),
@@ -54,13 +57,15 @@ struct Trajectories final {
   const MultiTrajectory& multiTrajectory() const { return *m_multiTrajectory; }
 
   /// Access the tip indices that identify valid trajectories.
-  const std::vector<size_t>& tips() const { return m_trackTips; }
+  const std::vector<Acts::MultiTrajectoryTraits::IndexType>& tips() const {
+    return m_trackTips;
+  }
 
   /// Check if a trajectory exists for the given index.
   ///
   /// @param entryIndex The trajectory entry index
   /// @return Whether there is trajectory with provided entry index
-  bool hasTrajectory(size_t entryIndex) const {
+  bool hasTrajectory(Acts::MultiTrajectoryTraits::IndexType entryIndex) const {
     return (0 < std::count(m_trackTips.begin(), m_trackTips.end(), entryIndex));
   }
 
@@ -68,7 +73,8 @@ struct Trajectories final {
   ///
   /// @param entryIndex The trajectory entry index
   /// @return Whether having fitted track parameters or not
-  bool hasTrackParameters(size_t entryIndex) const {
+  bool hasTrackParameters(
+      Acts::MultiTrajectoryTraits::IndexType entryIndex) const {
     return (0 < m_trackParameters.count(entryIndex));
   }
 
@@ -76,7 +82,8 @@ struct Trajectories final {
   ///
   /// @param entryIndex The trajectory entry index
   /// @return The fitted track parameters of the trajectory
-  const TrackParameters& trackParameters(size_t entryIndex) const {
+  const TrackParameters& trackParameters(
+      Acts::MultiTrajectoryTraits::IndexType entryIndex) const {
     auto it = m_trackParameters.find(entryIndex);
     if (it == m_trackParameters.end()) {
       throw std::runtime_error(
@@ -90,7 +97,7 @@ struct Trajectories final {
   // The multiTrajectory
   std::optional<MultiTrajectory> m_multiTrajectory;
   // The entry indices of trajectories stored in multiTrajectory
-  std::vector<size_t> m_trackTips = {};
+  std::vector<Acts::MultiTrajectoryTraits::IndexType> m_trackTips = {};
   // The fitted parameters at the provided surface for individual trajectories
   IndexedParameters m_trackParameters = {};
 };

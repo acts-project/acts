@@ -20,7 +20,7 @@ namespace Acts {
 namespace detail_lt {
 template <typename D, size_t M, bool ReadOnly>
 inline TrackStateProxy<D, M, ReadOnly>::TrackStateProxy(
-    ConstIf<MultiTrajectory<D>, ReadOnly>& trajectory, size_t istate)
+    ConstIf<MultiTrajectory<D>, ReadOnly>& trajectory, IndexType istate)
     : m_traj(&trajectory), m_istate(istate) {}
 
 template <typename D, size_t M, bool ReadOnly>
@@ -172,7 +172,8 @@ inline auto TrackStateProxy<D, M, ReadOnly>::calibratedCovariance() const
 
 template <typename D>
 template <typename F>
-void MultiTrajectory<D>::visitBackwards(size_t iendpoint, F&& callable) const {
+void MultiTrajectory<D>::visitBackwards(IndexType iendpoint,
+                                        F&& callable) const {
   static_assert(detail_lt::VisitorConcept<F, ConstTrackStateProxy>,
                 "Callable needs to satisfy VisitorConcept");
 
@@ -199,7 +200,7 @@ void MultiTrajectory<D>::visitBackwards(size_t iendpoint, F&& callable) const {
 
 template <typename D>
 template <typename F>
-void MultiTrajectory<D>::applyBackwards(size_t iendpoint, F&& callable) {
+void MultiTrajectory<D>::applyBackwards(IndexType iendpoint, F&& callable) {
   static_assert(detail_lt::VisitorConcept<F, TrackStateProxy>,
                 "Callable needs to satisfy VisitorConcept");
 

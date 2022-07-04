@@ -12,8 +12,9 @@ namespace Acts {
 
 VectorMultiTrajectory::DynamicColumnBase::~DynamicColumnBase() = default;
 
-std::size_t VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
-                                                      size_t iprevious) {
+auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
+                                               IndexType iprevious)
+    -> IndexType {
   using PropMask = TrackStatePropMask;
 
   m_index.emplace_back();
