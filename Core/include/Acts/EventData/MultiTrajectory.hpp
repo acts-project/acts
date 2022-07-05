@@ -101,9 +101,9 @@ class TrackStateProxy {
  public:
   using Parameters = typename TrackStateTraits<M, ReadOnly>::Parameters;
   using Covariance = typename TrackStateTraits<M, ReadOnly>::Covariance;
-  using Measurement = typename TrackStateTraits<M, ReadOnly>::Parameters;
+  using Measurement = typename TrackStateTraits<M, ReadOnly>::Measurement;
   using MeasurementCovariance =
-      typename TrackStateTraits<M, ReadOnly>::Covariance;
+      typename TrackStateTraits<M, ReadOnly>::MeasurementCovariance;
 
   using IndexType = typename TrackStateTraits<M, ReadOnly>::IndexType;
   static constexpr IndexType kInvalid = TrackStateTraits<M, ReadOnly>::kInvalid;
@@ -152,21 +152,21 @@ class TrackStateProxy {
   /// @return The generated mask
   TrackStatePropMask getMask() const;
 
-  template <bool RO = ReadOnly, typename = std::enable_if<!RO>>
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void shareFrom(TrackStatePropMask shareSource,
                  TrackStatePropMask shareTarget) {
     shareFrom(*this, shareSource, shareTarget);
   }
 
   template <bool RO = ReadOnly, bool ReadOnlyOther,
-            typename = std::enable_if<!RO>>
+            typename = std::enable_if_t<!RO>>
   void shareFrom(const TrackStateProxy<Trajectory, M, ReadOnlyOther>& other,
                  TrackStatePropMask component) {
     shareFrom(other, component, component);
   }
 
   template <bool RO = ReadOnly, bool ReadOnlyOther,
-            typename = std::enable_if<!RO>>
+            typename = std::enable_if_t<!RO>>
   void shareFrom(const TrackStateProxy<Trajectory, M, ReadOnlyOther>& other,
                  TrackStatePropMask shareSource,
                  TrackStatePropMask shareTarget) {
@@ -190,7 +190,7 @@ class TrackStateProxy {
   /// @note The mask parameter will not cause a copy of components that are
   ///       not allocated in the source track state proxy.
   template <bool RO = ReadOnly, bool ReadOnlyOther,
-            typename = std::enable_if<!RO>>
+            typename = std::enable_if_t<!RO>>
   void copyFrom(const TrackStateProxy<Trajectory, M, ReadOnlyOther>& other,
                 TrackStatePropMask mask = TrackStatePropMask::All,
                 bool onlyAllocated = true) {
@@ -299,7 +299,7 @@ class TrackStateProxy {
 
   /// Unset an optional track state component
   /// @param target The component to unset
-  template <bool RO = ReadOnly, typename = std::enable_if<!RO>>
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void unset(TrackStatePropMask target) {
     m_traj->self().unset(target, m_istate);
   }
@@ -339,17 +339,18 @@ class TrackStateProxy {
     return has(hashString(key));
   }
 
-  template <typename T, HashedString key>
+  template <typename T, HashedString key, bool RO = ReadOnly,
+            typename = std::enable_if_t<!RO>>
   constexpr T& component() {
     return m_traj->template component<T, key>(m_istate);
   }
 
-  template <typename T>
+  template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   constexpr T& component(HashedString key) {
     return m_traj->template component<T>(key, m_istate);
   }
 
-  template <typename T>
+  template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   constexpr T& component(std::string_view key) {
     return m_traj->template component<T>(hashString(key), m_istate);
   }
