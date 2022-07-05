@@ -409,7 +409,7 @@ class Chi2Fitter {
           typeFlags.set(TrackStateFlag::MeasurementFlag);
           ++result.measurementStates;
         } else {
-          ACTS_INFO("chi2 | Measurement is determined to be an outlier.");
+          ACTS_VERBOSE("chi2 | Measurement is determined to be an outlier.");
           typeFlags.set(TrackStateFlag::OutlierFlag);
         }
 
@@ -718,7 +718,7 @@ class Chi2Fitter {
           [delta_start_parameters, logger, i](auto&& prevParams) {
             BoundVector newParamsVec =
                 prevParams.parameters() - delta_start_parameters;
-            ACTS_INFO("chi2 | it=" << i << " | updated parameters = "
+            ACTS_VERBOSE("chi2 | it=" << i << " | updated parameters = "
                                    << newParamsVec.transpose());
 
             return BoundTrackParameters(
