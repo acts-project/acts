@@ -447,7 +447,9 @@ def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
         s=seq,
     )
 
-    seq.run()
+    # See https://github.com/acts-project/acts/issues/1300
+    with failure_threshold(acts.logging.FATAL):
+        seq.run()
 
     del seq
 
